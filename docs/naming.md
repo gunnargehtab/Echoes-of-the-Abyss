@@ -1,39 +1,28 @@
-Echoes of the Abyss — Naming & Identity
+# Echoes of the Abyss — Naming & Identity
 
-Final Game Name
+## Final Game Name
 
-Echoes of the Abyss
+**Echoes of the Abyss**
 
-Why It Works
+## Why It Works
 
-Atmospheric
+- Atmospheric
+- Mysterious
+- Industrial
+- Dramatic
+- Unique
+- Evokes depth, danger, and resonance
 
-Mysterious
+## Tagline Concepts
 
-Industrial
+- War reverberates in the deep.
+- Pressure shapes all who descend.
+- In the abyss, every echo is a warning.
+- Four factions. One rift. Endless depth.
 
-Dramatic
+## Logo Direction
 
-Unique
-
-Evokes depth, danger, and resonance
-
-Tagline Concepts
-
-War reverberates in the deep.
-
-Pressure shapes all who descend.
-
-In the abyss, every echo is a warning.
-
-Four factions. One rift. Endless depth.
-
-Logo Direction
-
-Sonar rings
-
-Resonance crystals
-
-Pressure gauge motifs
-
-Abyssal silhouettes
+- Sonar rings
+- Resonance crystals
+- Pressure gauge motifs
+- Abyssal silhouettes

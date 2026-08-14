@@ -1,35 +1,26 @@
-Echoes of the Abyss — Tech Stack
+# Echoes of the Abyss — Tech Stack
 
-Frontend
+## Frontend
 
-TypeScript
+- TypeScript
+- PixiJS (rendering)
+- bitecs (ECS)
+- Howler.js (audio)
+- Optional: React for menus/lobby
 
-PixiJS (rendering)
+## Backend
 
-bitecs (ECS)
+- Node.js
+- Colyseus (multiplayer)
+- Redis (real-time caching)
+- PostgreSQL (persistent data)
 
-Howler.js (audio)
+## Build Tools
 
-Optional: React for menus/lobby
+- Vite
+- ESBuild
 
-Backend
+## Deployment
 
-Node.js
-
-Colyseus (multiplayer)
-
-Redis (real-time caching)
-
-PostgreSQL (persistent data)
-
-Build Tools
-
-Vite
-
-ESBuild
-
-Deployment
-
-Vercel (frontend)
-
-Hetzner Cloud (game servers)
+- Vercel (frontend)
+- Hetzner Cloud (game servers)
