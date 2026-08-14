@@ -132,10 +132,11 @@ Dynamic, readable, faction-flavored threats that shape strategy.
 - Collision causes heavy damage
 - Can destroy buildings
 - Can be lured with bait structures
+- Fauna are drawn to noise — high-SIG activity near creature territory increases migration and aggro risk (see [systems-echo.md](systems-echo.md))
 
 ### Faction Interactions
 
-- Abyssal Directorate can temporarily control creatures
+- Abyssal Directorate can temporarily control creatures, and harvests fauna for Biomass — they are structurally rewarded for letting enemies be loud near their ecosystem
 - Pelagia can pacify them
 - Hadron can repel them with sonic pulses
 - Bathyarch can harvest remains for rare resources

@@ -14,6 +14,20 @@ The world must feel:
 
 RTS readability always wins over realism.
 
+## Acoustics — PropagationFactor by Biome
+
+Every biome is also an acoustic space: terrain sets how far sound travels under [the Echo Layer](systems-echo.md). PropagationFactor (PF) scales a unit's Acoustic Signature before it reaches enemy listeners — low PF masks you, high PF carries you.
+
+| Biome | PropagationFactor | Acoustic Effect |
+|---|---|---|
+| Thermal Veins | **0.45** | Vent roar masks you — natural ambush terrain |
+| Kelp Forest Plateaus | **0.55** | Absorption muffles movement — the stealth biome |
+| Abyssal Trenches | **1.60 (axial)** | Trench walls channel sound impossibly far down the axis — no secrets, only distances |
+| Resonance Fields | **0.70 (scattered)** | Bearings lie — pings return false contacts |
+| Coral Ruins | **0.80 (occluded)** | Hard shadows behind structures — the only biome that changes during a match |
+
+The map is also a **living ecosystem** — see [hazards.md](hazards.md) for creature migration and fauna interactions. It responds to noise, hunger, and over-extraction, and can be permanently degraded: the winner of a long, loud match can inherit a corpse of a biome.
+
 ## Major Biomes (Primary Play Spaces)
 
 ### 1. Thermal Veins — Geothermal Hotspots
@@ -29,6 +43,7 @@ High-energy zones powering Bathyarch industry.
 **Materials:** Basalt, heat-scorched steel, magma glass deposits
 
 **Gameplay Readability**
+- PF 0.45 — vent roar masks approaching units
 - Bright warm palette → easy to spot
 - High contrast silhouettes
 - Clear "danger zones" around vents
@@ -48,6 +63,7 @@ Home of Pelagia Commune.
 **Materials:** Algae composites, coral stone, biopolymer membranes
 
 **Gameplay Readability**
+- PF 0.55 — absorption is the Commune's home advantage
 - Soft green palette
 - High vertical silhouettes (kelp pillars)
 - Clear paths carved through vegetation
@@ -67,6 +83,7 @@ The domain of the Abyssal Directorate.
 **Materials:** Abyssal chitin, hardened stone, blackened steel
 
 **Gameplay Readability**
+- PF 1.60 axial — trench walls carry sound impossibly far along the channel
 - Dark palette with bright faction accents
 - Strong rim-lighting on units
 - Fog layers for depth separation
@@ -86,6 +103,7 @@ Sacred territory of the Hadron Knights.
 **Materials:** Crystal composites, polished alloys, magnetic rails
 
 **Gameplay Readability**
+- PF 0.70 scattered — bearings lie, pings return false contacts
 - Purple/blue palette
 - Crystals act as natural light sources
 - Clear geometric shapes
@@ -96,9 +114,11 @@ Sacred territory of the Hadron Knights.
 
 ### Coral Ruins
 
+- PF 0.80, occluded — hard acoustic shadows behind structures
 - Remnants of pre-collapse cities
 - Overgrown with coral and algae
 - Broken domes, collapsed tunnels
+- The only biome that changes state during a match
 - Perfect for campaign missions
 
 ### Toxic Brine Zones

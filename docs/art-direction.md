@@ -38,14 +38,25 @@ Use gradients to show depth: dark → darker → pitch black → bioluminescent 
 
 ## Faction Art Styles
 
-Each faction has a full visual identity sheet (silhouette language, materials, palette, FX, UI, environmental presence) in [factions.md](factions.md). Summary:
+Each faction has a full visual identity sheet (silhouette language, materials, palette, FX, UI, environmental presence, doctrine) in [factions.md](factions.md). Reference palette:
 
-| Faction | Shapes | Colors | Silhouette |
+| Faction | Shapes | Palette | Silhouette |
 |---|---|---|---|
-| Bathyarch Consortium | Boxy, reinforced, riveted | Iron grey, hazard yellow | Heavy, slow, angular |
-| Pelagia Commune | Curved, manta-like, grown not built | Teal, green, soft white | Sleek, stealthy |
-| Abyssal Directorate | Spiked, armored, predatory | Black, crimson, abyss blue | Swarm-like, insectoid |
-| Hadron Knights | Symmetrical, blade-like | Silver, violet | Elite, sharp, aerodynamic |
+| Bathyarch Consortium | Boxy, riveted, over-engineered rectangles and cylinders | `#F2B233` hazard amber · `#8C8378` iron grey · `#3D2B1F` oxide brown · `#0E1418` hull black | Heavy, slow, angular — visibly patchworked repairs |
+| Pelagia Commune | Organic, curved, asymmetric — leaves, seed-pods, swimming things | `#1FA67A` algae teal · `#8FE36B` bioluminescent green · `#E8F0A3` spore pale · `#0B241E` deep chlorophyll | Sleek, stealthy — bioluminescence pulses with unit health |
+| Abyssal Directorate | Spiked, insectoid, chitinous — crustacean, segmented, many-limbed | `#7A1B2E` abyssal red · `#2D1B3D` bruise violet · `#0A0710` trench black · `#C2465E` biolight crimson | Grown yet disciplined — organic forms in rigid formation |
+| Hadron Knights | Symmetrical, blade-like, crystalline — instruments and blades | `#8B5CF6` resonance violet · `#E6E9F2` alloy white · `#3B2E5A` shadow indigo · `#C9A6FF` crystal glow | Elite, precise, mirror-finish — the only faction with true bilateral symmetry |
+
+## Concept Art — Pressure Cartography
+
+Four survey plates establish the visual language: **the discipline of measuring things that resist measurement.**
+
+| Plate | Subject |
+|---|---|
+| [I — Depth Strata](concept-art/plate-01-depth-strata.png) | Vertical cross-section, propagation field, the Mouth |
+| [II — Four Powers](concept-art/plate-02-four-powers.png) | Shape language, palettes, silhouettes, signature doctrine |
+| [III — The Echo Layer](concept-art/plate-03-echo-layer.png) | Resolution tiers and the cost of the ping |
+| [IV — The Mouth](concept-art/plate-04-the-mouth.png) | Concentric banding, return anomaly, unresolved |
 
 ## Unit Art Direction
 
@@ -107,6 +118,16 @@ Each faction has a full visual identity sheet (silhouette language, materials, p
 - Sonar pings
 - Pressure warnings
 - Cavitation distortion on damage
+
+### Echo Layer Requirements
+
+The Echo Layer (see [systems-echo.md](systems-echo.md)) only works if it's readable at a glance:
+
+- The minimap is a **sonar scope**, not a map — contacts render as returns with tier-appropriate fidelity
+- The player's own Acoustic Signature is a permanent HUD element: a horizontal meter, always visible, colour-shifting amber → red
+- Selected-unit detection radius renders as a soft ring on the terrain
+- Ping cost is previewed before commit — hovering the ping button shows the 2,400 m reveal radius in threat-red
+- Audio mix is the primary channel: a Tier-1 contact should be *heard* before it is *seen* on the minimap
 
 ## Atmosphere & Mood
 
