@@ -1,12 +1,25 @@
-# Game Identity
+Echoes of the Abyss — Game Identity
 
-## Overview
-Echoes of the Abyss is an underwater real-time strategy game. Players explore and fight over pressure zones on the ocean floor amid faction conflict.
+Genre
 
-## Pillars
-- Atmospheric, mysterious, industrial, dramatic
-- Exploration under constant pressure (literal and strategic)
-- Territory worth fighting over
+Real-time strategy (RTS) set in a deep-sea dystopian world.
 
-## Elevator Pitch
-_TBD_
+Core Fantasy
+
+Command powerful underwater factions fighting for survival in the Pelagion Rift.
+
+Pillars
+
+Atmospheric underwater world
+
+Industrial + organic tech contrast
+
+Tactical depth and pressure-zone combat
+
+Strong faction identity
+
+Dynamic environmental hazards
+
+High-Level Pitch
+
+Echoes of the Abyss is an underwater RTS where four factions battle across geothermal vents, kelp forests, abyssal trenches, and resonance fields. Environmental hazards shape strategy, biomes define identity, and pressure zones create constant tension.
