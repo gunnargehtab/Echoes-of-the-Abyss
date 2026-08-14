@@ -1,0 +1,143 @@
+# Copilot Instructions — Echoes of the Abyss
+
+This repository is the **design bible** for Echoes of the Abyss, a browser-native underwater RTS. It contains worldbuilding, mechanics documentation, art direction, and technical architecture — not yet game code.
+
+---
+
+## High-Level Architecture
+
+**Echoes of the Abyss** is built on **two interdependent core systems** that all game design descends from:
+
+### 1. The Echo Layer — Acoustic Fog of War
+- **No line-of-sight vision.** Instead, every unit and structure continuously emits an **Acoustic Signature (SIG, 0–100)** based on idle state, movement speed, construction, firing weapons, etc.
+- Detection is **not binary.** Enemies resolve you across **five resolution tiers** — from "something is out there" (Tier 1) to a full track with velocity (Tier 5).
+- **Key mechanic:** Active sonar reveals everything within 900 m — but reveals *you* to everything within 2,400 m. Alpha strikes are loud. Economy is loud. Stealth and power are in direct tension.
+- **Server-authoritative.** Detection is computed server-side per-player (Colyseus + spatial hash at 5 Hz, 2 ms/tick budget) and only the resolved result is sent to each client. Maphack prevention is the entire threat model.
+- Read: **[systems-echo.md](../docs/systems-echo.md)**
+
+### 2. Depth — The Axis of Commitment
+- Maps are vertical stacks: **Shelf (0–400 m)**, **Mid-Water (400–1,800 m)**, **Abyssal (1,800+ m).**
+- **Value increases with depth; cost increases with depth.** Units below their **Pressure Rating (PR)** take unhealable crush attrition.
+- Descent is fast and loud (SIG burst). Ascent is slow and silent. Deep raids are a real bet: you cannot both hit the richest ground and retreat quickly.
+- Each faction has a different expensive answer to depth access (buy refits, terraform terrain, born to it, instant tech-refits via Resonance).
+- Read: **[systems-depth.md](../docs/systems-depth.md)**
+
+### Factions as Arguments
+All four factions are coherent answers to the same problem — **noise** — and their mechanics *are* their worldview:
+
+| Faction | Noise Doctrine | Wins By | Depth Strategy |
+|---|---|---|---|
+| **Bathyarch Consortium** | Loudest in the game | Attrition | Buys access (PR-2) |
+| **Pelagia Commune** | Quietest, fragile | Map control + evasion | Terraforms (PR-1, converts terrain) |
+| **Abyssal Directorate** | Listens better than anyone | Information + numbers | Born to depth (PR-3, no refits needed) |
+| **Hadron Knights** | Weaponises it directionally | Positioning + burst | Projects access (PR-2, Sounding Spires grant +1 PR) |
+
+No faction is written as the villain. Read: **[factions.md](../docs/factions.md)**
+
+---
+
+## Tech Stack & Implementation
+
+This is the target stack for the game itself (when code is written):
+
+- **Frontend:** TypeScript · PixiJS (WebGL rendering) · bitecs (ECS) · Howler.js + raw Web Audio · React (menus only)
+- **Backend:** Node.js · Colyseus (multiplayer state sync) · Redis (real-time caching) · PostgreSQL (accounts/saves)
+- **Build:** Vite · ESBuild
+- **Deployment:** Vercel (frontend) · Hetzner Cloud (game servers, low latency in EU)
+
+**Echo Layer performance:** Spatial hash evaluated at 5 Hz with a hard 2 ms/tick budget to stay inside Colyseus frame budget. Detection is **computed server-side and per-player** — client never receives unexplored map state.
+
+Read: **[tech-stack.md](../docs/tech-stack.md)**
+
+---
+
+## Documentation Structure & Editing Rules
+
+### Start Here
+1. **[game-identity.md](../docs/game-identity.md)** — Pitch, pillars, target emotion
+2. **[systems-echo.md](../docs/systems-echo.md)** — The acoustic fog of war
+3. **[systems-depth.md](../docs/systems-depth.md)** — Depth and commitment
+
+### Narrative & World
+- **[world.md](../docs/world.md)** — The Pelagion Rift, the Salinity Collapse, the Mouth, culture
+- **[factions.md](../docs/factions.md)** — Four factions, their doctrines and politics
+- **[characters.md](../docs/characters.md)** — Twelve commanders and neutrals
+
+### Gameplay
+- **[environments.md](../docs/environments.md)** — Five biomes with propagation factors and mechanical effects
+- **[hazards.md](../docs/hazards.md)** — Eight hazards and faction interactions
+- **[maps.md](../docs/maps.md)** — Six map archetypes
+
+### Presentation
+- **[art-direction.md](../docs/art-direction.md)** — Palettes, shape language, silhouette law, UI requirements
+- **[naming.md](../docs/naming.md)** — Title direction and taglines
+- **[concept-art/](../docs/concept-art/)** — Four visual survey plates in the Pressure Cartography language
+
+### Editing Conventions
+1. **Numbers are design intent, not balance-final.** They exist to prototype the systems against something real. When iterating, update the numbers in-place and document the change.
+2. **All major mechanics must be an argument about sound or depth** (see systems-echo.md and systems-depth.md). If a faction trait or unit ability is not anchored to one of these two axes, it's arbitrary and should be reconsidered.
+3. **Cross-link generously.** Every doc should end with a "Related" section. Keep links current as docs change.
+4. **The glossary (when written) is authoritative.** If a term appears in two docs with two meanings, resolve it in the glossary first, then update all instances.
+5. **Forward references are intentional.** Several linked docs don't exist yet (timeline.md, glossary.md, units.md, audio-direction.md, ui-ux.md, campaign.md) — these are roadmap markers, not broken links.
+
+---
+
+## Key Conventions
+
+### Acoustic Signature (SIG) as a Design Axis
+- Every source of SIG is a design choice. If you add a unit ability, consider: *Is it loud? How loud? Does the noise fit the faction's doctrine?*
+- The Consortium embraces loudness. The Commune hides. The Directorate listens. The Knights weaponise precision. Every choice should map back to sound.
+
+### Propagation Factor (PF)
+- Biomes are defined by how sound travels through them:
+  - **Thermal Veins (PF 0.45):** Vent roar masks you — the Consortium is quieter here
+  - **Kelp Forest (PF 0.55):** The stealth biome
+  - **Trenches (PF 1.60 axial):** Sound carries impossibly far — no secrets, only distances
+  - **Resonance Fields (PF 0.70 scattered):** Bearings lie. False pings.
+  - **Coral Ruins (PF 0.80 occluded):** The human biome, changes during matches
+
+- When designing gameplay, PF is a **lever**: changing terrain PF changes which factions thrive where.
+
+### Depth Band Mechanics
+- **Shelf (0–400 m):** Low value, exposed, where the Pelagia Commune is strong
+- **Mid-Water (400–1,800 m):** The contested middle
+- **Abyssal (1,800+ m):** Highest value, Resonance Crystal lives here, highest pressure risk
+
+- Depth is not just a vertical hazard. It's a **commitment timer**. Deep raids must succeed, retreat, or die.
+
+---
+
+## When Writing or Extending Docs
+
+1. **Introduce concepts via the two core systems first.** If a new mechanic is unrelated to sound or depth, reconsider whether it belongs.
+2. **Use concrete numbers.** Say "takes 45 SIG while idle with systems live" not "takes moderate SIG while idle."
+3. **Explain faction interactions with each biome.** Every faction behaves differently in each biome (due to PF and PR). When you add a biome variant or hazard, say how each faction experiences it.
+4. **Mention the player's emotional intent.** The target emotion is dread (partial information, always listening), not confusion. If a rule is confusing rather than dreadful, simplify it.
+5. **Link to related systems.** Avoid repeating explanations; cross-link to the canonical source.
+
+---
+
+## Roadmap & Not-Yet-Written Docs
+
+These are intentionally linked but don't exist yet (they're the design roadmap):
+- **glossary.md** — Authoritative term definitions
+- **timeline.md** — Historical events leading to the Salinity Collapse and current war
+- **culture.md** — How each faction speaks, thinks, and values things
+- **campaign.md** — Story arc across four faction campaigns
+- **units.md** — Unit roster, stats, faction-specific variants
+- **economy.md** — Resource generation, refinement, storage mechanics
+- **bestiary.md** — The living ecosystem (fauna attracted by noise)
+- **audio-direction.md** — Soundscape design, how tiers resolve sonically
+- **ui-ux.md** — Echo Layer UI, how players perceive resolution tiers
+- **concept-art/DESIGN-PHILOSOPHY.md** — Pressure Cartography visual language philosophy
+
+Fill these in as content is authored. They are not mistakes.
+
+---
+
+## Getting Help
+
+- **Need to understand the core loop?** Start with [systems-echo.md](../docs/systems-echo.md) + [systems-depth.md](../docs/systems-depth.md).
+- **Adding a unit or ability?** Check [factions.md](../docs/factions.md) and [systems-echo.md](../docs/systems-echo.md) — does your addition fit the faction's noise doctrine?
+- **Designing a biome variant?** See [environments.md](../docs/environments.md) and [tech-stack.md](../docs/tech-stack.md) (propagation factors).
+- **Stuck on lore/character consistency?** Check [world.md](../docs/world.md), [characters.md](../docs/characters.md), and [factions.md](../docs/factions.md).
