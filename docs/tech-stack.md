@@ -29,6 +29,14 @@ For a browser-based RTS (PC-first), the stack needs to give high performance for
 - Vercel (frontend)
 - Hetzner Cloud (game servers, low latency in Germany)
 
+## Echo Layer Implementation Notes
+
+Detection (see [systems-echo.md](systems-echo.md)) is **server-authoritative and per-player** — in a game about hidden information, a client-side maphack is the whole threat model, so acoustic resolution tiers must be computed server-side and only the resolved result sent to each client.
+
+- The Echo Layer runs on a **spatial hash**, evaluated at **5 Hz**
+- Hard budget: **2 ms/tick** for the full detection pass, to stay inside the simulation's frame budget under Colyseus
+- Howler.js handles standard audio playback; raw Web Audio is layered on top for the mix requirements in [art-direction.md](art-direction.md) (Tier-1 contacts must be heard before they're seen)
+
 ## Rationale & Alternatives Considered
 
 ### Core Engine
