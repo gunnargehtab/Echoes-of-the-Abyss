@@ -1,63 +1,46 @@
-Echoes of the Abyss — Environments
+# Echoes of the Abyss — Environments
 
-Biome Overview
+## Biome Overview
 
 Echoes of the Abyss features distinct underwater biomes that define gameplay, atmosphere, and faction identity.
 
-Thermal Veins
+## Thermal Veins
 
-Magma-lit cracks
+- Magma-lit cracks
+- Steam plumes
+- Industrial mining rigs
+- High-risk, high-reward zones
 
-Steam plumes
+## Kelp Forest Plateaus
 
-Industrial mining rigs
+- Dense kelp strands
+- Coral towers
+- Bioluminescent flora
+- Stealth-friendly terrain
 
-High-risk, high-reward zones
+## Abyssal Trenches
 
-Kelp Forest Plateaus
+- Pitch-black voids
+- Heavy fog
+- Pressure damage zones
+- Abyssal fauna
 
-Dense kelp strands
+## Resonance Fields
 
-Coral towers
+- Giant crystals
+- Sonic ripple distortions
+- Magnetic debris
+- Tech-rich territory
 
-Bioluminescent flora
+## Coral Ruins
 
-Stealth-friendly terrain
+- Collapsed domes
+- Overgrown structures
+- Multi-layer vertical combat
 
-Abyssal Trenches
+## Lighting & Atmosphere
 
-Pitch-black voids
-
-Heavy fog
-
-Pressure damage zones
-
-Abyssal fauna
-
-Resonance Fields
-
-Giant crystals
-
-Sonic ripple distortions
-
-Magnetic debris
-
-Tech-rich territory
-
-Coral Ruins
-
-Collapsed domes
-
-Overgrown structures
-
-Multi-layer vertical combat
-
-Lighting & Atmosphere
-
-Depth gradients
-
-Bioluminescent highlights
-
-Volumetric fog
-
-Strong rim lighting for unit readability
+- Depth gradients
+- Bioluminescent highlights
+- Volumetric fog
+- Strong rim lighting for unit readability

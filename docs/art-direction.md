@@ -1,51 +1,43 @@
-Echoes of the Abyss — Art Direction Guide
+# Echoes of the Abyss — Art Direction Guide
 
-Visual Identity
+## Visual Identity
 
 Atmospheric, industrial, abyssal, bioluminescent.
 
-Color Palette
+## Color Palette
 
-Deep blues, blacks
+- Deep blues, blacks
+- Rust orange, iron grey
+- Toxic green, algae teal
+- Volcanic red, magma gold
+- Violet resonance
 
-Rust orange, iron grey
+## Faction Art Styles
 
-Toxic green, algae teal
-
-Volcanic red, magma gold
-
-Violet resonance
-
-Faction Art Styles
-
-Bathyarch Consortium
+### Bathyarch Consortium
 
 Industrial, blocky, reinforced.
 
-Pelagia Commune
+### Pelagia Commune
 
 Organic, curved, bioluminescent.
 
-Abyssal Directorate
+### Abyssal Directorate
 
 Predatory, spiked, insectoid.
 
-Hadron Knights
+### Hadron Knights
 
 Symmetrical, blade-like, crystalline.
 
-Unit Silhouette Rules
+## Unit Silhouette Rules
 
-Exaggerated shapes
+- Exaggerated shapes
+- Clear faction identity
+- Strong rim lighting
 
-Clear faction identity
+## UI Direction
 
-Strong rim lighting
-
-UI Direction
-
-Transparent glass panels
-
-Sonar-inspired minimap
-
-Pressure gauge motifs
+- Transparent glass panels
+- Sonar-inspired minimap
+- Pressure gauge motifs

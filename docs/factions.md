@@ -1,65 +1,65 @@
-Echoes of the Abyss — Factions
+# Echoes of the Abyss — Factions
 
-Bathyarch Consortium
+## Bathyarch Consortium
 
-Industrial megacorp dominating deep‑sea mining.
+Industrial megacorp dominating deep-sea mining.
 
-Visual Identity
+### Visual Identity
 
 Blocky, reinforced silhouettes; steel, tungsten, hazard yellow.
 
-Playstyle
+### Playstyle
 
 Heavy industry, strong economy, slow but powerful units.
 
-Superweapon
+### Superweapon
 
 Thermal Lance — melts enemy bases with concentrated heat.
 
-Pelagia Commune
+## Pelagia Commune
 
-Eco‑radical bio‑collective living in kelp forests.
+Eco-radical bio-collective living in kelp forests.
 
-Visual Identity
+### Visual Identity
 
 Organic, curved shapes; algae composites; bioluminescent accents.
 
-Playstyle
+### Playstyle
 
 Fast, stealthy units; biological tech; high mobility.
 
-Superweapon
+### Superweapon
 
 Bloom Surge — disables enemy sensors with organic spores.
 
-Abyssal Directorate
+## Abyssal Directorate
 
-Authoritarian trench‑dwellers using bio‑engineered soldiers.
+Authoritarian trench-dwellers using bio-engineered soldiers.
 
-Visual Identity
+### Visual Identity
 
 Spiked, insectoid silhouettes; abyssal chitin; red biolights.
 
-Playstyle
+### Playstyle
 
-Swarm tactics, cheap units, trench‑adapted hulls.
+Swarm tactics, cheap units, trench-adapted hulls.
 
-Superweapon
+### Superweapon
 
 Trench Awakening — summons abyssal creatures.
 
-Hadron Knights
+## Hadron Knights
 
-Magneto‑kinetic techno‑order.
+Magneto-kinetic techno-order.
 
-Visual Identity
+### Visual Identity
 
-Symmetrical, blade‑like shapes; polished alloys; violet resonance.
+Symmetrical, blade-like shapes; polished alloys; violet resonance.
 
-Playstyle
+### Playstyle
 
-Elite units, high micro, strong mid‑game.
+Elite units, high micro, strong mid-game.
 
-Superweapon
+### Superweapon
 
-Resonance Collapse — area‑wide sonic stun.
+Resonance Collapse — area-wide sonic stun.
