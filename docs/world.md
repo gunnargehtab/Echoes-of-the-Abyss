@@ -14,25 +14,7 @@ Echoes of the Abyss takes place in the Pelagion Rift, a vast underwater region f
 
 ## Biomes
 
-### Thermal Veins
-
-Geothermal hotspots powering industrial operations. Bright magma glow, steam plumes, basalt formations.
-
-### Kelp Forest Plateaus
-
-Bio-rich regions dominated by algae, coral towers, and bioluminescent flora.
-
-### Abyssal Trenches
-
-Pitch-black pressure zones with jagged rock walls, sonar distortion, and abyssal creatures.
-
-### Resonance Fields
-
-Crystal-rich magnetic zones emitting violet light and sonic ripples.
-
-### Coral Ruins
-
-Remnants of pre-collapse cities overtaken by coral and algae.
+Thermal Veins, Kelp Forest Plateaus, Abyssal Trenches, Resonance Fields, and Coral Ruins. See [environments.md](environments.md) for the full biome-by-biome art and gameplay guide.
 
 ## Atmosphere & Tone
 

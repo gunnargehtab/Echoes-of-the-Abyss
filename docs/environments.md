@@ -1,46 +1,184 @@
 # Echoes of the Abyss — Environments
 
-## Biome Overview
+Atmospheric, industrial, abyssal — built for RTS readability and faction identity.
 
-Echoes of the Abyss features distinct underwater biomes that define gameplay, atmosphere, and faction identity.
+## Environment Philosophy
 
-## Thermal Veins
+The world must feel:
 
-- Magma-lit cracks
-- Steam plumes
-- Industrial mining rigs
-- High-risk, high-reward zones
+- **Deep** — crushing pressure, darkness, volumetric fog
+- **Industrial** — welded steel, mining rigs, pipelines
+- **Alive** — bioluminescent flora and fauna
+- **Hostile** — trenches, volcanic vents, toxic zones
+- **Readable** — clear silhouettes, distinct biomes, faction color cues
 
-## Kelp Forest Plateaus
+RTS readability always wins over realism.
 
-- Dense kelp strands
-- Coral towers
-- Bioluminescent flora
-- Stealth-friendly terrain
+## Major Biomes (Primary Play Spaces)
 
-## Abyssal Trenches
+### 1. Thermal Veins — Geothermal Hotspots
 
+High-energy zones powering Bathyarch industry.
+
+**Visual Identity**
+- Magma-lit cracks in the seabed
+- Red/orange glow bleeding through fog
+- Steam plumes and micro-eruption particles
+- Metallic mining rigs anchored into rock
+
+**Materials:** Basalt, heat-scorched steel, magma glass deposits
+
+**Gameplay Readability**
+- Bright warm palette → easy to spot
+- High contrast silhouettes
+- Clear "danger zones" around vents
+
+**Faction Tie-In:** Bathyarch structures dominate these regions; hazard-yellow industrial lights.
+
+### 2. Kelp Forest Plateaus — Bio-Rich Regions
+
+Home of Pelagia Commune.
+
+**Visual Identity**
+- Tall kelp strands swaying with currents
+- Soft green/teal bioluminescence
+- Coral towers and algae farms
+- Schools of small glowing fish
+
+**Materials:** Algae composites, coral stone, biopolymer membranes
+
+**Gameplay Readability**
+- Soft green palette
+- High vertical silhouettes (kelp pillars)
+- Clear paths carved through vegetation
+
+**Faction Tie-In:** Pelagia's organic buildings blend into flora; bioluminescent trails mark territory.
+
+### 3. Abyssal Trenches — Deep Pressure Zones
+
+The domain of the Abyssal Directorate.
+
+**Visual Identity**
 - Pitch-black voids
-- Heavy fog
-- Pressure damage zones
-- Abyssal fauna
+- Jagged rock walls
+- Occasional red biolights from abyssal creatures
+- Thick volumetric fog
 
-## Resonance Fields
+**Materials:** Abyssal chitin, hardened stone, blackened steel
 
-- Giant crystals
-- Sonic ripple distortions
-- Magnetic debris
-- Tech-rich territory
+**Gameplay Readability**
+- Dark palette with bright faction accents
+- Strong rim-lighting on units
+- Fog layers for depth separation
 
-## Coral Ruins
+**Faction Tie-In:** Directorate fortresses embedded in trench walls; red sonar-distortion FX.
 
-- Collapsed domes
-- Overgrown structures
-- Multi-layer vertical combat
+### 4. Resonance Fields — Crystal & Magnetic Zones
 
-## Lighting & Atmosphere
+Sacred territory of the Hadron Knights.
 
-- Depth gradients
-- Bioluminescent highlights
-- Volumetric fog
-- Strong rim lighting for unit readability
+**Visual Identity**
+- Giant resonance crystals emitting violet light
+- Magnetic pylons humming with energy
+- Floating metallic shards
+- Sonic ripple distortions in water
+
+**Materials:** Crystal composites, polished alloys, magnetic rails
+
+**Gameplay Readability**
+- Purple/blue palette
+- Crystals act as natural light sources
+- Clear geometric shapes
+
+**Faction Tie-In:** Hadron structures mirror crystal geometry; sonic pulse FX on buildings.
+
+## Secondary Biomes (Detail Layers)
+
+### Coral Ruins
+
+- Remnants of pre-collapse cities
+- Overgrown with coral and algae
+- Broken domes, collapsed tunnels
+- Perfect for campaign missions
+
+### Toxic Brine Zones
+
+- Greenish fog
+- Chemical waste barrels
+- Damaged fauna
+- Slow damage over time
+
+### Bioluminescent Caverns
+
+- Glowing flora
+- Soft blue/pink lights
+- Peaceful but eerie atmosphere
+
+### Industrial Scrap Fields
+
+- Submarine wrecks
+- Rusted pipelines
+- Floating debris
+- High-risk navigation
+
+## Lighting & Atmosphere Guide
+
+### Global Lighting Rules
+
+- Depth gradient: brighter near surface, darker downward
+- Bioluminescence: used as natural light sources
+- Volumetric fog: defines depth and direction
+- Rim lighting: ensures unit readability
+
+### Color Temperature
+
+- Warm in geothermal zones
+- Cool in kelp forests
+- Neutral in industrial areas
+- Cold violet in resonance fields
+
+## Material Library
+
+**Natural:** Basalt, coral stone, algae membranes, abyssal chitin
+
+**Industrial:** Pressure-forge steel, rusted iron, tungsten plating, magnetic alloys
+
+**FX Materials:** Bioluminescent nodes, resonance crystals, magma glass
+
+## Gameplay Readability Rules
+
+### Terrain
+
+- Clear silhouettes
+- Strong contrast between passable vs. blocked areas
+- Faction-colored highlights for bases
+
+### Hazards
+
+- Always visually telegraphed
+- Pulsing glow for geothermal vents
+- Toxic fog for brine zones
+- Sonic ripple for resonance fields
+
+(See [hazards.md](hazards.md) for full hazard mechanics.)
+
+### Pathing
+
+- Use kelp gaps, rock corridors, crystal formations
+- Avoid overly noisy backgrounds
+
+## Environmental Storytelling
+
+### Techniques
+
+- Abandoned mining rigs → Bathyarch overreach
+- Coral-covered ruins → Pelagia reclamation
+- Chitin growths → Directorate bio-engineering
+- Crystal shrines → Hadron rituals
+
+### Campaign Hooks
+
+- Collapsing vent fields
+- Toxic spill disasters
+- Abyssal creature migrations
+- Crystal resonance storms
