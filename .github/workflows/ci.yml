@@ -24,6 +24,12 @@ jobs:
       - name: Run client build (if any)
         run: |
           if [ -f client/package.json ]; then npm --prefix client run build; fi
-      - name: Lint docs (basic)
+      - name: Install root dependencies
         run: |
-          echo "No linter configured. Add eslint/markdownlint steps as needed."
+          npm ci
+      - name: Run ESLint (workspace)
+        run: |
+          npm run lint
+      - name: Run Prettier check
+        run: |
+          npx prettier --check .
