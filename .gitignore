@@ -1,8 +1,10 @@
 # Dependencies
 node_modules/
-package-lock.json
 pnpm-lock.yaml
 yarn.lock
+
+# package-lock.json is intentionally committed: CI uses `npm ci`, which
+# requires a lockfile, and without one dependency versions drift between runs.
 
 # Build outputs
 dist/
