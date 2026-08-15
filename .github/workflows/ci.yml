@@ -42,21 +42,19 @@ jobs:
         run: npm run build
 
       # --- Documentation checks -------------------------------------------
-      # Both steps below are REPORTING ONLY (continue-on-error) because they
-      # currently fail on pre-existing content debt in docs/, not on anything
-      # the code gates above cover:
+      # markdownlint is now blocking (#38 fixed the ~270 structural issues).
+      # The link-check step below is still REPORTING ONLY: it fails on
+      # pre-existing content debt, not on anything the code gates above
+      # cover.
       #
-      #   * markdownlint reports ~270 structural issues (heading spacing,
-      #     multiple H1s, table pipe style) across the authored design docs.
       #   * link check finds 7 documents referenced but never written:
       #     audio-direction, bestiary, campaign, culture, economy, timeline,
       #     ui-ux.
       #
-      # Tracked in #38 (markdownlint) and #39 (missing documents). Flip both
-      # back to blocking once those are closed.
+      # Tracked in #39 (missing documents). Flip back to blocking once that's
+      # closed.
 
-      - name: Run markdownlint on docs (reporting only)
-        continue-on-error: true
+      - name: Run markdownlint on docs
         # The previous glob "**/docs/**/*.md" also matched node_modules, so this
         # was linting dependency documentation.
         run: |

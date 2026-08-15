@@ -19,7 +19,7 @@ RTS readability always wins over realism.
 Every biome is also an acoustic space: terrain sets how far sound travels under [the Echo Layer](systems-echo.md). PropagationFactor (PF) scales a unit's Acoustic Signature before it reaches enemy listeners — low PF masks you, high PF carries you.
 
 | Biome | PropagationFactor | Acoustic Effect |
-|---|---|---|
+| --- | --- | --- |
 | Thermal Veins | **0.45** | Vent roar masks you — natural ambush terrain |
 | Kelp Forest Plateaus | **0.55** | Absorption muffles movement — the stealth biome |
 | Abyssal Trenches | **1.60 (axial)** | Trench walls channel sound impossibly far down the axis — no secrets, only distances |
@@ -35,6 +35,7 @@ The map is also a **living ecosystem** — see [hazards.md](hazards.md) for crea
 High-energy zones powering Bathyarch industry.
 
 **Visual Identity**
+
 - Magma-lit cracks in the seabed
 - Red/orange glow bleeding through fog
 - Steam plumes and micro-eruption particles
@@ -43,6 +44,7 @@ High-energy zones powering Bathyarch industry.
 **Materials:** Basalt, heat-scorched steel, magma glass deposits
 
 **Gameplay Readability**
+
 - PF 0.45 — vent roar masks approaching units
 - Bright warm palette → easy to spot
 - High contrast silhouettes
@@ -55,6 +57,7 @@ High-energy zones powering Bathyarch industry.
 Home of Pelagia Commune.
 
 **Visual Identity**
+
 - Tall kelp strands swaying with currents
 - Soft green/teal bioluminescence
 - Coral towers and algae farms
@@ -63,6 +66,7 @@ Home of Pelagia Commune.
 **Materials:** Algae composites, coral stone, biopolymer membranes
 
 **Gameplay Readability**
+
 - PF 0.55 — absorption is the Commune's home advantage
 - Soft green palette
 - High vertical silhouettes (kelp pillars)
@@ -75,6 +79,7 @@ Home of Pelagia Commune.
 The domain of the Abyssal Directorate.
 
 **Visual Identity**
+
 - Pitch-black voids
 - Jagged rock walls
 - Occasional red biolights from abyssal creatures
@@ -83,6 +88,7 @@ The domain of the Abyssal Directorate.
 **Materials:** Abyssal chitin, hardened stone, blackened steel
 
 **Gameplay Readability**
+
 - PF 1.60 axial — trench walls carry sound impossibly far along the channel
 - Dark palette with bright faction accents
 - Strong rim-lighting on units
@@ -95,6 +101,7 @@ The domain of the Abyssal Directorate.
 Sacred territory of the Hadron Knights.
 
 **Visual Identity**
+
 - Giant resonance crystals emitting violet light
 - Magnetic pylons humming with energy
 - Floating metallic shards
@@ -103,6 +110,7 @@ Sacred territory of the Hadron Knights.
 **Materials:** Crystal composites, polished alloys, magnetic rails
 
 **Gameplay Readability**
+
 - PF 0.70 scattered — bearings lie, pings return false contacts
 - Purple/blue palette
 - Crystals act as natural light sources

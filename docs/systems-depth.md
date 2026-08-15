@@ -11,7 +11,7 @@
 Maps are stacks, not planes. Every map is built from three vertical bands:
 
 | Band | Range | Character |
-|---|---|---|
+| --- | --- | --- |
 | **Shelf** | 0–400 m | Shallow, exposed, low value |
 | **Mid-Water** | 400–1,800 m | The contested middle — where most factions live |
 | **Abyssal** | 1,800 m+ | Highest value, highest cost |
@@ -30,7 +30,7 @@ Every unit has a **Pressure Rating**. A unit operating below its PR takes **unhe
 Depth access is one of the two axes (with sound) that every faction's mechanics are built from. See [factions.md](factions.md) for full doctrine.
 
 | Faction | Baseline PR | Depth Strategy |
-|---|---|---|
+| --- | --- | --- |
 | **Bathyarch Consortium** | PR-2 | **Buys** access — cheapest refits in the game, but pays for every metre |
 | **Pelagia Commune** | PR-1 | **Terraforms** access — poor refits, but Deepbloom structures slowly convert Abyssal tiles to habitable ground; they don't survive the deep, they change it |
 | **Abyssal Directorate** | PR-3 | **Born to it** — no refit needed, free access to the map's richest third; the trade-off is shallow water poisons them (−20% speed, −15% HP above 400 m) |
