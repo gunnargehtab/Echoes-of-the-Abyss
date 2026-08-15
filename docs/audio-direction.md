@@ -1,0 +1,200 @@
+# Audio Direction — The Mix Is the Fog of War
+
+> [systems-echo.md](systems-echo.md) §9 states it as a requirement: *"Audio mix is the primary channel. A Tier-1 contact should be heard before it is seen."* This document is that requirement, specified.
+
+**Glossary:** See [Glossary](glossary.md) for authoritative term definitions (SIG, PF, HYD, PR, Resolution Tiers, Active Sonar, Silent Running, Echo Marks).
+
+---
+
+## 1. Premise
+
+In most games audio is confirmation — the explosion you already saw. Here it is **delivery**. The Echo Layer resolves what each player is allowed to know ([systems-echo.md](systems-echo.md) §4), and the mix is the first place that knowledge arrives. Muting the game does not make it prettier and harder; it makes it a different, worse game, and the design accepts that trade openly by requiring a full visual mirror for accessibility (§11).
+
+Three laws govern everything below.
+
+1. **Audio leads.** Every detection event is audible before it is visible.
+2. **Fidelity is honest.** The mix may never sound more certain than the server is. A directionless contact must not be pannable, because panning is a claim about bearing.
+3. **Your own noise is audible to you.** Players must *hear* themselves being loud, not read it off a meter and take it on trust.
+
+---
+
+## 2. The Precedence Law
+
+The Echo Layer ticks at **5 Hz** ([tech-stack.md](tech-stack.md)), so a detection can be up to 200 ms old before the client ever learns about it. Within a tick, the ear must beat the eye:
+
+| Event | Timing, relative to snapshot applied |
+| --- | --- |
+| Contact voice onset | ≤ 30 ms |
+| Minimap mark begins to fade in | ≥ 150 ms |
+| Minimap mark reaches full opacity | ≥ 400 ms |
+| World-space contact mark begins to fade in | ≥ 250 ms |
+
+The fade-in is not decoration; it is the budget that keeps the precedence law true on every machine. A mark that pops instantly races the audio device's own output latency and will sometimes win.
+
+**Failure mode this prevents:** if the eye leads, players stop listening within one match, the mix becomes ambience, and the Echo Layer degrades into a conventional fog-of-war with a nice soundtrack.
+
+---
+
+## 3. Sonifying the Resolution Tiers
+
+Each tier gets a **voice** — a looping or one-shot sound bound to that contact for as long as the contact is tracked, including its 20 s ghost decay ([systems-echo.md](systems-echo.md) §4).
+
+| Tier | Sound | Spatialisation | What it must never do |
+| --- | --- | --- | --- |
+| **1 — Contact** | A low pressure-thump, 40–90 Hz, irregular period 1.2–2.5 s | **None.** Dead centre, no distance attenuation | Pan. Change pitch with range. Sound like a specific thing |
+| **2 — Bearing** | Thump plus a filtered wash | Panned to bearing; low-pass and level track distance | Carry class information in its timbre |
+| **3 — Classification** | Drive signature of the unit's family (§8), still lightly veiled | Full azimuth, distance-filtered | Reveal health or exact position |
+| **4 — Track** | Full drive loop, cavitation detail, and a single short lock tone on acquisition | Full azimuth and distance, matched to the rendered position | Sustain the lock tone — it fires once |
+
+### Panning is information
+
+This is the rule the whole section exists to protect. Stereo position is the player's ear reporting a bearing, and at Tier 1 the server has not given them one. A Tier-1 voice is therefore **mono, centred, and level-locked**, and it is the only sound in the game with that treatment — which makes it instantly identifiable as *"something is out there and I do not know where."*
+
+### Decay
+
+Ghost markers decay over 20 s. Their voices decay with them: level falls on the same curve as marker alpha, and the loop's period lengthens by up to 40% so a fading contact audibly slows rather than simply thinning. Contacts refreshed by a new detection snap back to full level in 80 ms — the return of a sound that was dying is itself a warning.
+
+---
+
+## 4. Your Own Loudness
+
+The SIG meter ([ui-ux.md](ui-ux.md) §3) is the readout. The **self-noise bed** is the feeling.
+
+| Your peak SIG | Self-noise bed | Effect on the rest of the mix |
+| --- | --- | --- |
+| 0–15 | Hull creak, distant water movement | World bus open, contacts clearly audible |
+| 16–40 | Drive hum enters, low harmonic | Neutral |
+| 41–65 | Machinery layer, rhythmic | World bus −3 dB: you are starting to drown yourself out |
+| 66–100 | Full plant noise, cavitation, structural rattle | World bus −8 dB, contact band partially masked |
+
+**Being loud makes you deaf.** This is not a simulated hydrophone limitation applied to detection maths — detection is unaffected — it is a mix behaviour that makes the cost of noise felt before it is understood. A player at SIG 80 is, correctly, having trouble hearing.
+
+Silent Running inverts it: the self bus drops **−18 dB** over 600 ms and the world bus opens **+6 dB**. The world gets louder because you got quieter, and the first time a player toggles it the map audibly fills with things that were always there. That moment is the sales pitch for the entire system.
+
+---
+
+## 5. Active Sonar
+
+The ping is the game's signature decision ([systems-echo.md](systems-echo.md) §5) and it needs **three distinct audio events**, none of which may be confused for another.
+
+- **Transmit** — a 1.5 s outgoing sweep, dry, loud, unmistakably *yours*. It is a commitment sound: it must feel like slamming a door.
+- **Return** — echoes arriving over the following 3 s, ordered by range so near contacts return first. The player literally hears the sweep resolve the map. In a **Resonance Field** the returns arrive from wrong bearings and one to three of them are false ([environments.md](environments.md)) — audibly wrong, so the terrain teaches its own rule.
+- **Exposure** — what an *enemy* ping sounds like when it resolves you: a hard, close, panned strike, followed by a two-second tail. There is no visual equivalent that arrives sooner. **If you have been lit, you know.**
+
+Every unit that pings also triples its fauna aggro contribution ([bestiary.md](bestiary.md) §2). The Sounder's answering call is a distinct, extremely low, non-directional sound that plays before any fauna contact resolves — the only sound in the game that means *you have made a mistake that is now coming.*
+
+---
+
+## 6. Echo Marks — The Sound of the Past
+
+Echo Marks are residue, not presence ([systems-echo.md](systems-echo.md) §7), and the mix must say so. Their rule is simple: **no transients.** A mark's sound is reverb-only — the tail of an event with the event removed, band-limited to 120–800 Hz, and always at least 6 dB below the live contact bus.
+
+| Mark | Sound | Duration |
+| --- | --- | --- |
+| Battle site | Overlapping metallic decay, no strikes | ~90 s |
+| Destroyed structure | Slow settling groan, descending | ~3 min |
+| Industrial hum | Steady, tonal, unhurried — the sound of someone else's economy | Slow decay |
+
+If a player can mistake a mark for a contact, the mark is mixed wrong. If a player can mistake a mark for *nothing*, it is mixed wrong in the other direction, and the scouting economy dies.
+
+---
+
+## 7. Fauna
+
+Fauna share the Tier-1 sound space **on purpose**. A thump at 40–90 Hz may be a Hollow drifting past a trench wall or a Consortium column at the edge of hearing, and at Tier 1 the game will not tell you which. This is where dread comes from: the ambiguity is real, generous, and constant, rather than rare and punishing.
+
+Fauna voices resolve upward like any other contact — at Tier 3 a Rasp swarm is unmistakably not a fleet. Full behaviour, thresholds and per-species tells are in [bestiary.md](bestiary.md).
+
+---
+
+## 8. Faction Timbre Families
+
+A player must identify a faction at Tier 3 by ear alone, with no visual. Each family owns a distinct mechanism of sound production, not just a distinct EQ curve.
+
+| Faction | Sound of | Core material | Signature |
+| --- | --- | --- | --- |
+| **Bathyarch Consortium** | Machinery under load | Steel, reciprocating, rhythmic | Repeating mechanical period; the only faction with a *beat*. Audible from absurd range and completely unbothered about it |
+| **Pelagia Commune** | Breathing | Muscle, fluid, arrhythmic | No periodicity. Pulses that never quite repeat. Nearly gone under 20 SIG |
+| **Abyssal Directorate** | Many small things agreeing | Chitin ticks, layered voices | Clicks that phase into unison as cohorts converge — you hear them *organise* |
+| **Hadron Knights** | Pure tone | Crystal, sustained, harmonic | Narrow-band pitched drones. Directional in the mix exactly as their SIG is directional: deafening in the cone, nearly silent on the flank |
+
+The Knights' entry is the one that must not be softened. Their emissions are a cone ([factions.md](factions.md)), so the mix places them off-axis at up to −20 dB. A player who walks into the beam hears the volume change and that *is* the tell.
+
+---
+
+## 9. Biome Acoustics — PF as Signal Processing
+
+PropagationFactor is a number in the detection maths and a **DSP chain** in the mix. The two must agree; a biome that masks you mechanically but sounds open is a lie.
+
+| Biome | PF | Filter | Space | Special |
+| --- | --- | --- | --- | --- |
+| Open mid-water | 1.0 | Neutral | Medium tail, ~2.5 s | Reference |
+| Thermal Vein | 0.45 | Broadband vent roar raises the noise floor +12 dB | Short, chaotic | Masking is *audible as masking* — you can hear that you cannot hear |
+| Kelp Forest | 0.55 | Steep HF absorption above 2 kHz | Very short tail, ~0.8 s | Everything sounds close and dead |
+| Abyssal Trench | 1.6 axial | Neutral on-axis, HF loss off-axis | Long delay taps along the axis, 180–400 ms | Contacts arrive *twice*; the second arrival is the trench, not a second unit |
+| Resonance Field | 0.7 scattered | Comb filtering, slow phase drift | Diffuse, unlocatable | Returns from wrong bearings; false contacts sound identical to true ones |
+| Coral Ruins | 0.8 occluded | Hard occlusion behind geometry | Strong early reflections | Acoustic shadows are sharp — one step sideways restores a contact |
+| Thermocline boundary | 0.3 across / 1.2 along | Heavy low-pass across the layer | — | Crossing it is a *whoomp*: the map changes state in the mix |
+
+---
+
+## 10. Music
+
+The score is dread, not action, and it is subordinate to information. Rules:
+
+- Music occupies **above 800 Hz and below 40 Hz**. The 40–160 Hz contact band belongs to contacts, permanently.
+- The music bus is side-chained to the contact bus at a 4:1 ratio, 40 ms attack. A new contact ducks the score. The score never ducks a contact.
+- No stingers on detection. The contact voice is the stinger.
+- Combat does not trigger "combat music." Loudness does — the score follows the player's own SIG, which means the music swells when they are *exposed*, not when they are winning.
+
+---
+
+## 11. Accessibility — Audio-Only Information Is a Bug
+
+Because audio carries primary information, every audible fact **must** have a visual equivalent, and the game must be fully playable with the mix muted. This is a hard requirement, not a setting to be added later.
+
+- **Contact log** — a running, timestamped text feed of every detection event, at the fidelity the player earned: `T+04:12 · TIER 1 · bearing unknown`. Specified in [ui-ux.md](ui-ux.md) §10.
+- **Visual-first preset** — inverts the precedence law: marks appear at ≤ 30 ms and audio follows. One toggle, no other behavioural change.
+- **Exposure indicator** — the "you have been pinged" cue also renders as a screen-edge flash on the bearing of the pinging emitter.
+- **Mono mode and HRTF off** — spatialisation is a rendering choice, never a source of information the mono mix lacks. Tier-2 bearing must remain readable in mono via the contact log and the minimap.
+- **Independent buses** — contacts, self-noise, world, music, UI, each with its own slider. Contacts may be boosted to +12 dB above the reference mix.
+- **Speaker profile** — a compressed, small-speaker mix that preserves the 40–160 Hz contact band by adding harmonics rather than relying on fundamentals no laptop can reproduce.
+
+---
+
+## 12. Technical Specification
+
+**Split of responsibilities** ([tech-stack.md](tech-stack.md)): Howler.js owns UI sounds, music playback and one-shots — anything where a simple play/stop API is sufficient. The **contact bus is raw Web Audio**, because it needs per-voice filtering, side-chaining and sample-accurate scheduling that a wrapper cannot give.
+
+```text
+AudioContext
+├── musicBus ──────────► compressor (sidechain from contactBus) ─┐
+├── worldBus  (ambience, biome beds, fauna) ─────────────────────┤
+├── contactBus ─────────────────────────────────────────────────┼─► master ─► destination
+│    └── per-contact voice: source → biomeFilter → panner → gain │
+├── selfBus   (own hull, drive, cavitation) ────────────────────┤
+└── uiBus     (Howler) ─────────────────────────────────────────┘
+```
+
+| Constraint | Value | Reason |
+| --- | --- | --- |
+| Simultaneous contact voices | 24 | Beyond this the low band turns to mud and nothing is legible |
+| Voice stealing order | Lowest tier first, then oldest, then quietest | Never steal a Tier-4 track; it is the only exact information the player has |
+| Voice scheduling | Aligned to the 5 Hz Echo tick | Contacts arrive on the tick; anything smoother implies knowledge the server did not send |
+| Audio thread budget | 1 ms per Echo tick on the main thread | The Echo Layer already owns 2 ms server-side; the client must not spend it again |
+| Format | Opus in WebM, AAC fallback | Browser coverage without shipping two full banks at full size |
+| Loudness target | −18 LUFS integrated, −1 dBTP | Headroom for the exposure cue, which is deliberately the loudest event in the game |
+| Tab blur | Suspend the context, hold state | An unfocused tab that keeps emitting contact voices is a nuisance, not a feature |
+
+**Determinism note:** audio is presentation only. No audio state may feed back into the simulation, and the mix must never be the reason two clients disagree.
+
+---
+
+## 13. Related
+
+- **[systems-echo.md](systems-echo.md)** — the mechanic this mix carries
+- **[ui-ux.md](ui-ux.md)** — the visual half, and the accessibility mirror
+- **[bestiary.md](bestiary.md)** — what shares the Tier-1 band with you
+- **[environments.md](environments.md)** — biome PF values the DSP chain implements
+- **[art-direction.md](art-direction.md)** — the visual language this sits inside
+- **[tech-stack.md](tech-stack.md)** — Howler.js, Web Audio, and the performance budget

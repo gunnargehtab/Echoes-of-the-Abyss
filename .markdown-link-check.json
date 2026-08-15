@@ -1,0 +1,11 @@
+{
+  "timeout": "20s",
+  "retryOn429": true,
+  "retryCount": 5,
+  "fallbackRetryDelay": "30s",
+  "aliveStatusCodes": [200, 206],
+  "ignorePatterns": [
+    { "pattern": "^https?://localhost" },
+    { "pattern": "^https://github\\.com/gunnargehtab/Echoes-of-the-Abyss" }
+  ]
+}

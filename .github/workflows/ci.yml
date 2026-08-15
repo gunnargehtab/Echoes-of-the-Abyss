@@ -42,17 +42,23 @@ jobs:
         run: npm run build
 
       # --- Documentation checks -------------------------------------------
-      # markdownlint is now blocking (#38 fixed the ~270 structural issues).
-      # The link-check step below is still REPORTING ONLY: it fails on
-      # pre-existing content debt, not on anything the code gates above
-      # cover.
+      # Both doc gates are blocking. #38 fixed the ~270 markdownlint issues
+      # and #39 wrote the seven documents that were linked but never
+      # authored, so a dead link in docs/ is now a real regression rather
+      # than pre-existing content debt.
       #
-      #   * link check finds 7 documents referenced but never written:
-      #     audio-direction, bestiary, campaign, culture, economy, timeline,
-      #     ui-ux.
+      # Config for the link checker lives in .markdown-link-check.json:
       #
-      # Tracked in #39 (missing documents). Flip back to blocking once that's
-      # closed.
+      #   * retryOn429 — docs/ROADMAP.md links ~20 GitHub issues, and an
+      #     unauthenticated runner gets rate-limited without it.
+      #   * this repo's own github.com URLs are ignored. The repo is
+      #     private, so unauthenticated requests to its issues and clone URL
+      #     return 404 and every one of those links would fail forever.
+      #
+      # The file list needs :(glob) magic. Git pathspecs are fnmatch without
+      # FNM_PATHNAME by default, so a bare 'docs/**/*.md' requires a second
+      # literal slash and therefore matched NOTHING under docs/ — the link
+      # check was silently running over zero files.
 
       - name: Run markdownlint on docs
         # The previous glob "**/docs/**/*.md" also matched node_modules, so this
@@ -60,10 +66,9 @@ jobs:
         run: |
           npx -y markdownlint-cli "docs/**/*.md" "docs/*.md" --ignore node_modules
 
-      - name: Check markdown links in docs (reporting only)
-        continue-on-error: true
+      - name: Check markdown links in docs
         run: |
-          git ls-files 'docs/**/*.md' | while read -r file; do
+          git ls-files ':(glob)docs/**/*.md' | while read -r file; do
             echo "Checking links in $file"
-            npx -y markdown-link-check "$file" || exit 1
+            npx -y markdown-link-check --config .markdown-link-check.json "$file" || exit 1
           done

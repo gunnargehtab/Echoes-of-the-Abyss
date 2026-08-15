@@ -59,5 +59,8 @@ Related
 
 - systems-echo.md — the Echo Layer and detailed detection rules
 - systems-depth.md — depth bands, PR, and pressure mechanics
-- units.md — per-unit SIG, HYD, and PR values (when authored)
+- units.md — per-unit SIG, HYD, and PR values
 - audio-direction.md — audio mix and player perception
+- ui-ux.md — how resolution tiers are rendered and read
+- bestiary.md — fauna as listeners, and what SIG attracts
+- economy.md — resources, the noise curve, and per-faction economies
