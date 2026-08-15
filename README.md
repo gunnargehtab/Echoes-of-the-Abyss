@@ -113,3 +113,37 @@ Detection is **server-authoritative and per-player** — in a game about hidden 
 4. **The map is alive and can be killed**
 5. **Asymmetry that means something** — mechanics *are* worldview
 6. **No villains** — every faction is correct from inside
+
+---
+
+## Getting started (developer)
+
+Prerequisites
+- Node.js 18.x, npm 8/9+ (or compatible), Git
+
+Quick setup
+1. Clone: git clone https://github.com/gunnargehtab/Echoes-of-the-Abyss.git
+2. Install deps: npm ci
+
+Common commands (root workspace)
+- Start development (frontend + backend): npm run dev
+- Build all: npm run build
+- Run tests: npm run test
+- Lint (workspace): npm run lint
+- Check formatting: npx prettier --check .
+
+Workspace tips
+- Frontend: packages/frontend
+- Backend: packages/backend
+- To run a single workspace: npm -w packages/frontend run dev
+
+Contribution workflow
+- Create a topic branch (e.g., feat/short-description or ci/add-...)
+- Make small, focused commits and reference related issues in the commit or PR
+- Open a PR against main and request review
+- CI runs lint, formatting, and docs checks; update docs in /docs and link related design notes
+
+More
+- Developer-focused quickstart: docs/DEVELOPER_QUICKSTART.md
+- CI workflow: .github/workflows/ci.yml
+
