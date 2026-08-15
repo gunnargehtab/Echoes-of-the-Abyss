@@ -17,22 +17,30 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | Doc | What it covers |
 | --- | --- |
 | **[world.md](world.md)** | The Pelagion Rift, the Salinity Collapse, the Mouth, culture and language |
+| **[timeline.md](timeline.md)** | Two centuries, from the Collapse to 214 PC, and the Mouth's anomaly log |
 | **[factions.md](factions.md)** | The four powers — doctrine, politics, weakness |
 | **[characters.md](characters.md)** | Twelve commanders and the neutrals |
+| **[culture.md](culture.md)** | How the Rift speaks — four registers, names, rituals, writing guide |
+| **[campaign.md](campaign.md)** | 29 missions, four campaigns, four irreconcilable endings |
 
 ## Gameplay
 
 | Doc | What it covers |
 | --- | --- |
 | **[environments.md](environments.md)** | Five biomes: look, sound (PropagationFactor), mechanics, inhabitants |
+| **[bestiary.md](bestiary.md)** | The Drift — fauna as listeners, Biomass, and Drift Health |
 | **[hazards.md](hazards.md)** | Eight hazards with faction interactions |
 | **[maps.md](maps.md)** | Six map archetypes |
+| **[economy.md](economy.md)** | Four resources, the noise curve, and four faction economies |
+| **[units.md](units.md)** | Prototype roster, SIG/PR stats, playtest plan |
 
 ## Presentation
 
 | Doc | What it covers |
 | --- | --- |
 | **[art-direction.md](art-direction.md)** | Palettes, shape language, silhouette law, Echo Layer UI requirements |
+| **[audio-direction.md](audio-direction.md)** | The mix as the primary information channel; tier sonification |
+| **[ui-ux.md](ui-ux.md)** | The Echo Layer HUD, sonar scope, ping preview, accessibility |
 | **[naming.md](naming.md)** | Title, taglines, logo direction |
 | **[concept-art/](concept-art/)** | Four survey plates in the Pressure Cartography visual language |
 
@@ -53,4 +61,6 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 
 ## Planned / Not Yet Written
 
-Several docs above and elsewhere are referenced ([timeline.md](timeline.md), [culture.md](culture.md), [campaign.md](campaign.md), [glossary.md](glossary.md), [units.md](units.md), [economy.md](economy.md), [bestiary.md](bestiary.md), [audio-direction.md](audio-direction.md), [ui-ux.md](ui-ux.md), `concept-art/DESIGN-PHILOSOPHY.md`) but don't exist yet. Their links are intentional forward references marking the roadmap, not mistakes — fill them in as that content is written.
+One forward reference remains: `concept-art/DESIGN-PHILOSOPHY.md`, linked from the root README, which would set out the Pressure Cartography visual language behind the four survey plates.
+
+**Links in `docs/` are checked in CI and the check is blocking** — a link to a document that does not exist will fail the build. If you want to mark future work, add it to this section as plain text rather than as a link.

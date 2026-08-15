@@ -60,16 +60,24 @@ Read: **[tech-stack.md](../docs/tech-stack.md)**
 
 ### Narrative & World
 - **[world.md](../docs/world.md)** — The Pelagion Rift, the Salinity Collapse, the Mouth, culture
+- **[timeline.md](../docs/timeline.md)** — Two centuries of history; the present is 214 PC
 - **[factions.md](../docs/factions.md)** — Four factions, their doctrines and politics
 - **[characters.md](../docs/characters.md)** — Twelve commanders and neutrals
+- **[culture.md](../docs/culture.md)** — Four registers, naming conventions, and the dialogue writing guide
+- **[campaign.md](../docs/campaign.md)** — 29 missions and four irreconcilable endings
 
 ### Gameplay
 - **[environments.md](../docs/environments.md)** — Five biomes with propagation factors and mechanical effects
+- **[bestiary.md](../docs/bestiary.md)** — The Drift: fauna as listeners, Biomass, Drift Health
 - **[hazards.md](../docs/hazards.md)** — Eight hazards and faction interactions
 - **[maps.md](../docs/maps.md)** — Six map archetypes
+- **[economy.md](../docs/economy.md)** — Four resources and the noise curve
+- **[units.md](../docs/units.md)** — Prototype roster and playtest plan
 
 ### Presentation
 - **[art-direction.md](../docs/art-direction.md)** — Palettes, shape language, silhouette law, UI requirements
+- **[audio-direction.md](../docs/audio-direction.md)** — The mix as primary information channel; tier sonification
+- **[ui-ux.md](../docs/ui-ux.md)** — Echo Layer HUD, sonar scope, ping preview, accessibility
 - **[naming.md](../docs/naming.md)** — Title direction and taglines
 - **[concept-art/](../docs/concept-art/)** — Four visual survey plates in the Pressure Cartography language
 
@@ -77,8 +85,8 @@ Read: **[tech-stack.md](../docs/tech-stack.md)**
 1. **Numbers are design intent, not balance-final.** They exist to prototype the systems against something real. When iterating, update the numbers in-place and document the change.
 2. **All major mechanics must be an argument about sound or depth** (see systems-echo.md and systems-depth.md). If a faction trait or unit ability is not anchored to one of these two axes, it's arbitrary and should be reconsidered.
 3. **Cross-link generously.** Every doc should end with a "Related" section. Keep links current as docs change.
-4. **The glossary (when written) is authoritative.** If a term appears in two docs with two meanings, resolve it in the glossary first, then update all instances.
-5. **Forward references are intentional.** Several linked docs don't exist yet (timeline.md, glossary.md, units.md, audio-direction.md, ui-ux.md, campaign.md) — these are roadmap markers, not broken links.
+4. **The glossary is authoritative.** If a term appears in two docs with two meanings, resolve it in [glossary.md](../docs/glossary.md) first, then update all instances.
+5. **Don't link a document that doesn't exist.** Link checking on `docs/` is blocking in CI. Planned work goes in the "Planned / Not Yet Written" section of [docs/README.md](../docs/README.md) as plain text, not as a link.
 
 ---
 
@@ -119,19 +127,11 @@ Read: **[tech-stack.md](../docs/tech-stack.md)**
 
 ## Roadmap & Not-Yet-Written Docs
 
-These are intentionally linked but don't exist yet (they're the design roadmap):
-- **glossary.md** — Authoritative term definitions
-- **timeline.md** — Historical events leading to the Salinity Collapse and current war
-- **culture.md** — How each faction speaks, thinks, and values things
-- **campaign.md** — Story arc across four faction campaigns
-- **units.md** — Unit roster, stats, faction-specific variants
-- **economy.md** — Resource generation, refinement, storage mechanics
-- **bestiary.md** — The living ecosystem (fauna attracted by noise)
-- **audio-direction.md** — Soundscape design, how tiers resolve sonically
-- **ui-ux.md** — Echo Layer UI, how players perceive resolution tiers
-- **concept-art/DESIGN-PHILOSOPHY.md** — Pressure Cartography visual language philosophy
+The design bible is now complete for the docs listed above. One planned document remains unwritten:
 
-Fill these in as content is authored. They are not mistakes.
+- **concept-art/DESIGN-PHILOSOPHY.md** — Pressure Cartography visual language philosophy, behind the four survey plates
+
+It is referenced from the root README. Until it is authored, do not add further links to it — link checking on `docs/` is blocking in CI, and a link to a missing file fails the build.
 
 ---
 
