@@ -124,28 +124,33 @@ curve cannot silently break the spec'd ping radii.
 Things a future change should address, recorded here so they are not mistaken
 for finished work:
 
-- **Resolution tiers disagree across docs.** docs/systems-echo.md §4 defines
-  tiers 0–4; docs/glossary.md and `tools/echo-sim` describe 0–5 (adding a "Full
-  Lock" tier). The code implements **0–4**, following the detailed system doc.
-  The docs should be reconciled.
-- **Per-unit HYD is invented.** docs/units.md lists SIG, PR, cost and speed, and
+- **[#34](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/34) —
+  Resolution tiers disagree across docs.** docs/systems-echo.md §4 defines tiers
+  0–4; docs/glossary.md and `tools/echo-sim` describe 0–5 (adding a "Full Lock"
+  tier). The code implements **0–4**, following the detailed system doc.
+- **[#35](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/35) —
+  Per-unit HYD is invented.** docs/units.md lists SIG, PR, cost and speed, and
   its own "Next steps" notes that HYD values are not yet authored. The values in
   `packages/shared/src/units.ts` are prototype guesses and are the least
   trustworthy numbers in the codebase.
-- **PropagationFactor is sampled at the emitter**, not integrated along the path
+- **[#36](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/36) —
+  `tools/echo-sim` uses a different formula** from `@echoes/shared`. It predates
+  the shared package and is now a second, diverging source of truth for
+  detection — with no HYD input at all.
+- **[#37](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/37) —
+  PropagationFactor is sampled at the emitter**, not integrated along the path
   to the listener. A unit therefore gains no cover from a kelp bed it is merely
-  hiding behind. Path integration is the natural upgrade once the Echo pass has
-  headroom against its budget.
-- **`tools/echo-sim` uses a different formula** from `@echoes/shared`. It
-  predates the shared package and is now a second, diverging source of truth for
-  detection.
+  hiding behind, and the trench's "carries far down the axis" behaviour has no
+  axis. Path integration is the natural upgrade once the Echo pass has headroom
+  against its budget.
+- **[#38](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/38) and
+  [#39](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/39) — the two
+  documentation CI gates are reporting-only.** markdownlint finds ~270
+  structural issues in docs/, and seven linked documents were never written.
+  Both steps go back to blocking once those are resolved.
 - **No combat, economy, production, fauna, or Echo Marks yet.** Weapons exist
-  only as `applyFiringSpike`; the roster spawns as a fixed opening force.
-- **`client/` is a stale duplicate.** It is a separate PixiJS **v7** scaffold
-  outside the npm workspace, superseded by `packages/frontend` (v8). It should
-  probably be deleted.
-- **Repo-wide `prettier --check` fails** on ~30 pre-existing files (docs,
-  README, `tools/`). CI runs it, so that gate is red independently of this work.
+  only as `applyFiringSpike`; the roster spawns as a fixed opening force. This
+  is unbuilt scope rather than a defect.
 
 ## Related
 

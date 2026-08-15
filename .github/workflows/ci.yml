@@ -52,8 +52,8 @@ jobs:
       #     audio-direction, bestiary, campaign, culture, economy, timeline,
       #     ui-ux.
       #
-      # Flip these back to blocking once docs/ is cleaned up and the missing
-      # documents exist.
+      # Tracked in #38 (markdownlint) and #39 (missing documents). Flip both
+      # back to blocking once those are closed.
 
       - name: Run markdownlint on docs (reporting only)
         continue-on-error: true
