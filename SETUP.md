@@ -1,114 +1,155 @@
 # Echoes of the Abyss — Development Setup
 
-This is a monorepo with separate frontend and backend packages built with the tech stack defined in [docs/tech-stack.md](docs/tech-stack.md).
+A monorepo built on the stack defined in [docs/tech-stack.md](docs/tech-stack.md):
+TypeScript, PixiJS v8, bitecs, Colyseus, Vite.
 
 ## Project Structure
 
 ```
 packages/
+├── shared/            # Simulation rules shared by client and server
+│   ├── src/
+│   │   ├── constants.ts   # SIG, PropagationFactor, tiers, depth bands
+│   │   ├── echo.ts        # Echo Layer detection math (pure)
+│   │   ├── units.ts       # Prototype roster from docs/units.md
+│   │   └── types.ts       # Wire contract (Contact, OwnUnit, EchoSnapshot)
+│   └── test/              # Detection math tests
 ├── frontend/          # Web client (PixiJS + React + TypeScript)
 │   ├── src/
-│   │   ├── main.tsx   # Entry point
-│   │   ├── App.tsx    # Root component
-│   │   └── ...
-│   ├── index.html     # HTML template
-│   ├── vite.config.ts # Vite configuration
-│   └── package.json
+│   │   ├── game/          # EchoRenderer, palette, React mount
+│   │   └── net/           # Colyseus client
+│   └── vite.config.ts
 └── backend/           # Game server (Node.js + Colyseus)
     ├── src/
-    │   ├── index.ts   # Server entry point
-    │   └── ...
-    ├── package.json
-    └── tsconfig.json
+    │   ├── sim/           # ECS world, terrain, systems
+    │   │   └── systems/   # movement, acoustics, pressure, echoLayer
+    │   ├── rooms/         # MatchRoom — the network boundary
+    │   └── schema/        # Colyseus room state (lobby data only)
+    └── test/              # Simulation integration tests
 ```
+
+### Why a shared package
+
+`@echoes/shared` exists so the numbers in the design docs are transcribed
+**once**. Both sides need them — the server to resolve detection authoritatively,
+the client to draw its own SIG meter and ping-cost preview — and a constant
+duplicated across two packages will eventually disagree with itself.
+
+It is compiled ahead of the other two, so `build:shared` runs first in every
+root script that depends on it.
 
 ## Installation
 
-Requires Node.js 24+ and npm 11+. Install once at the root:
+Requires Node.js 22+ (24 recommended) and npm 10+.
 
 ```bash
 npm install
 ```
 
-This installs dependencies for all workspaces using npm's monorepo support.
-
 ## Development
 
-### Frontend
-```bash
-npm -w packages/frontend run dev
-```
-Starts Vite dev server on `http://localhost:5173`
-
-### Backend
-```bash
-npm -w packages/backend run dev
-```
-Starts the Colyseus server with hot reload on `http://localhost:3000`
-
-### Both together
 ```bash
 npm run dev
 ```
-Runs frontend and backend in parallel (in background shells).
 
-## Build
-
-### Frontend only
-```bash
-npm -w packages/frontend run build
-```
-Output: `packages/frontend/dist/`
-
-### Backend only
-```bash
-npm -w packages/backend run build
-```
-Output: `packages/backend/dist/index.js`
-
-### All
-```bash
-npm run build
-```
-
-## Type checking
+Builds `shared`, then runs the backend (`:3000`) and frontend (`:5173`) together
+via `concurrently`. Individually:
 
 ```bash
-npm -w packages/frontend run type-check
-npm -w packages/backend run type-check
+npm run build:shared            # required once before either package runs
+npm -w packages/backend run dev  # Colyseus server, tsx watch
+npm -w packages/frontend run dev # Vite dev server
 ```
 
-## Linting
+Point the client at a non-default server with `VITE_SERVER_URL`.
+
+## Controls
+
+| Input | Action |
+|---|---|
+| Left click | Select own unit (shift to add) |
+| Right click | Move order for selection |
+| Middle drag | Pan |
+| Wheel | Zoom at cursor |
+| `Space` | Toggle Silent Running |
+| `P` | Active sonar ping |
+| Hold `Shift` | Preview ping cost — 900 m reveal, 2,400 m self-reveal |
+
+## Build, test, lint
 
 ```bash
-npm -w packages/frontend run lint
-npm -w packages/backend run lint
+npm run build       # shared -> frontend -> backend
+npm test            # 31 tests across shared + backend
+npm run type-check
+npm run lint
 ```
 
-## Tech Stack Overview
+## Architecture Notes
 
-| Layer | Tech | Why |
-|---|---|---|
-| Frontend rendering | PixiJS | Fast WebGL for isometric RTS rendering |
-| Game logic | bitecs (ECS) | High-performance entity-component system |
-| Audio | Howler.js + Web Audio | Flexible audio playback for Echo Layer sonar |
-| Networking | Colyseus | Real-time state sync, server-authoritative |
-| Backend runtime | Node.js + Express | TypeScript, easy deployment |
-| Build | Vite + ESBuild | Fast development and production builds |
+### The Echo Layer is server-authoritative
 
-## Echo Layer Implementation Notes
+Detection runs only on the server, per player, and **only resolved results are
+sent to each client** (docs/glossary.md, "Acoustic Fog of War"). This is not a
+performance decision — in a game whose core system is hidden information, a
+client holding unresolved world state is a maphack no matter what it draws.
 
-- **Server-authoritative detection** — acoustic resolution tiers computed server-side per-player (prevents maphack)
-- **5 Hz tick rate** — spatial hash evaluation at 5 Hz with **2 ms/tick budget**
-- **Per-player state** — only resolved detection result sent to each client, never raw map state
+Two consequences show up in the code:
 
-See [docs/systems-echo.md](docs/systems-echo.md) and [docs/tech-stack.md](docs/tech-stack.md) for full details.
+- The Colyseus room schema deliberately contains **no** entity data. Schema
+  state is broadcast to everyone in the room, which makes it the wrong channel
+  for anything secret. Units travel over per-client messages instead.
+- Contact payloads **omit** fields below the tier that earns them. A Tier-2
+  contact has no `kind`, `hp` or `faction` at all, rather than sending them with
+  a "don't render this" flag.
 
-## Next Steps
+### Two clocks
 
-1. **Frontend**: Set up PixiJS canvas renderer and ECS game loop
-2. **Backend**: Define game room, unit entities, and Echo Layer spatial hash
-3. **Networking**: Sync Echo Layer detection results to clients via Colyseus
-4. **Audio**: Integrate Howler.js playback for sonar pings and resolution tiers
+The simulation steps at a fixed 60 Hz so behaviour never varies with server
+load. The Echo Layer resolves at 5 Hz against a 2 ms budget
+(docs/tech-stack.md), because detection is the expensive pass and no player can
+perceive 60 Hz changes in a sonar return. `Match.update()` converts wall-clock
+time into fixed steps and caps catch-up to avoid a spiral of death.
 
-See [.github/copilot-instructions.md](.github/copilot-instructions.md) for architecture and design conventions.
+### The propagation model is calibrated, not guessed
+
+docs/systems-echo.md gives the detection *relationship*
+(`SIG × PF ≥ Threshold(distance, HYD)`) and the tier multipliers, but never
+defines `Threshold()`. The implementation derives its one free parameter from a
+figure the docs *do* pin down: a ping reveals the pinger at Tier 4 to listeners
+exactly 2,400 m away. A test asserts this holds, so retuning the attenuation
+curve cannot silently break the spec'd ping radii.
+
+## Known gaps and inconsistencies
+
+Things a future change should address, recorded here so they are not mistaken
+for finished work:
+
+- **Resolution tiers disagree across docs.** docs/systems-echo.md §4 defines
+  tiers 0–4; docs/glossary.md and `tools/echo-sim` describe 0–5 (adding a "Full
+  Lock" tier). The code implements **0–4**, following the detailed system doc.
+  The docs should be reconciled.
+- **Per-unit HYD is invented.** docs/units.md lists SIG, PR, cost and speed, and
+  its own "Next steps" notes that HYD values are not yet authored. The values in
+  `packages/shared/src/units.ts` are prototype guesses and are the least
+  trustworthy numbers in the codebase.
+- **PropagationFactor is sampled at the emitter**, not integrated along the path
+  to the listener. A unit therefore gains no cover from a kelp bed it is merely
+  hiding behind. Path integration is the natural upgrade once the Echo pass has
+  headroom against its budget.
+- **`tools/echo-sim` uses a different formula** from `@echoes/shared`. It
+  predates the shared package and is now a second, diverging source of truth for
+  detection.
+- **No combat, economy, production, fauna, or Echo Marks yet.** Weapons exist
+  only as `applyFiringSpike`; the roster spawns as a fixed opening force.
+- **`client/` is a stale duplicate.** It is a separate PixiJS **v7** scaffold
+  outside the npm workspace, superseded by `packages/frontend` (v8). It should
+  probably be deleted.
+- **Repo-wide `prettier --check` fails** on ~30 pre-existing files (docs,
+  README, `tools/`). CI runs it, so that gate is red independently of this work.
+
+## Related
+
+- [docs/systems-echo.md](docs/systems-echo.md) — the Echo Layer design
+- [docs/systems-depth.md](docs/systems-depth.md) — depth and Pressure Rating
+- [docs/tech-stack.md](docs/tech-stack.md) — stack rationale
+- [.github/copilot-instructions.md](.github/copilot-instructions.md) — conventions

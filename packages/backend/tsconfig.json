@@ -4,7 +4,12 @@
     "module": "ESNext",
     "lib": ["ES2020"],
     "skipLibCheck": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
+
+    /* @colyseus/schema uses legacy decorators for @type(). useDefineForClassFields
+       must stay false or the decorated field initialisers overwrite the metadata. */
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "strict": true,

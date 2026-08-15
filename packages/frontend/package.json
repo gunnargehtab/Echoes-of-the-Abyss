@@ -11,6 +11,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@echoes/shared": "*",
     "pixi.js": "^8.2.0",
     "bitecs": "^0.3.40",
     "howler": "^2.2.4",
