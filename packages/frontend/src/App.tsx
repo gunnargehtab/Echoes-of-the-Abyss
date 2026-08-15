@@ -1,13 +1,12 @@
-import React from 'react'
-import './App.css'
+import './App.css';
+import { GameCanvas } from './game/GameCanvas.tsx';
 
 function App() {
   return (
     <div className="app">
-      <h1>Echoes of the Abyss</h1>
-      <p>Web client loading...</p>
+      <GameCanvas />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

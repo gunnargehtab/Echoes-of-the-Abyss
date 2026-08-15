@@ -6,7 +6,7 @@
  * Returns integer tier 1..5
  */
 function detect(sig, distance, pf) {
-  const effective = (sig * pf) / Math.max(distance,1);
+  const effective = (sig * pf) / Math.max(distance, 1);
   if (effective > 75) return 5;
   if (effective > 40) return 4;
   if (effective > 20) return 3;
@@ -24,12 +24,12 @@ function runScenario(scenario) {
   const results = {
     name: scenario.name || 'unnamed',
     pf,
-    runs: []
+    runs: [],
   };
 
   for (const a of scenario.actors || []) {
     const actorResult = { name: a.name, sig: a.sig, detections: [] };
-    const distances = a.distances || scenario.distances || [100,500,1200,2500];
+    const distances = a.distances || scenario.distances || [100, 500, 1200, 2500];
     for (const d of distances) {
       const tier = detect(a.sig, d, pf);
       actorResult.detections.push({ distance: d, tier });

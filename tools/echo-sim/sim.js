@@ -1,11 +1,11 @@
 // Minimal echo layer simulation prototype (scenario-driven)
 const fs = require('fs');
 
-const tiers = [1,2,3,4,5];
+const tiers = [1, 2, 3, 4, 5];
 
 function detect(sig, distance, pf) {
   // Simplified detection: effective = sig * pf / distance
-  const effective = (sig * pf) / Math.max(distance,1);
+  const effective = (sig * pf) / Math.max(distance, 1);
   if (effective > 75) return 5;
   if (effective > 40) return 4;
   if (effective > 20) return 3;
@@ -18,12 +18,12 @@ function runScenario(scenario) {
   const results = {
     name: scenario.name || 'unnamed',
     pf,
-    runs: []
+    runs: [],
   };
 
   for (const a of scenario.actors || []) {
     const actorResult = { name: a.name, sig: a.sig, detections: [] };
-    const distances = a.distances || scenario.distances || [100,500,1200,2500];
+    const distances = a.distances || scenario.distances || [100, 500, 1200, 2500];
     for (const d of distances) {
       const tier = detect(a.sig, d, pf);
       actorResult.detections.push({ distance: d, tier });
@@ -48,9 +48,9 @@ if (arg) {
 } else {
   // Backwards-compatible sample
   const actors = [
-    {name: 'Scout', sig: 6},
-    {name: 'Corvette', sig: 28},
-    {name: 'Cruiser', sig: 55}
+    { name: 'Scout', sig: 6 },
+    { name: 'Corvette', sig: 28 },
+    { name: 'Cruiser', sig: 55 },
   ];
   const sample = { name: 'builtin-sample', propagationFactor: 1.0, actors };
   const out = runScenario(sample);

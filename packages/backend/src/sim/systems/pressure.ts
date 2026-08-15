@@ -1,0 +1,42 @@
+/**
+ * Pressure system — depth as a rented resource, on a clock.
+ *
+ * A unit operating below its Pressure Rating takes crush attrition that
+ * ignores repair and regeneration (docs/systems-depth.md §2). Nothing here
+ * respects healing because the damage is defined as unhealable: when a repair
+ * system arrives it must not undo this, so the attrition is applied directly to
+ * hp rather than routed through a damage pipeline that a healer could reverse.
+ */
+
+import { defineQuery, removeEntity } from 'bitecs';
+import { crushAttritionPerSecond } from '@echoes/shared';
+import { Health, Position, Pressure } from '../components.ts';
+import type { SimWorld } from '../world.ts';
+
+const crushable = defineQuery([Position, Pressure, Health]);
+
+/**
+ * Applies crush attrition and reaps anything it kills.
+ * Returns the entity ids destroyed this tick, so callers can raise Echo Marks
+ * or score events for them.
+ */
+export function pressureSystem(world: SimWorld, destroyed: number[]): void {
+  const dt = world.dt;
+  const entities = crushable(world);
+
+  for (let i = 0; i < entities.length; i++) {
+    const eid = entities[i]!;
+    const dps = crushAttritionPerSecond(Pressure.rating[eid]!, Position.depth[eid]!);
+    if (dps <= 0) continue;
+
+    Health.hp[eid] = Health.hp[eid]! - dps * dt;
+    if (Health.hp[eid]! <= 0) {
+      destroyed.push(eid);
+    }
+  }
+
+  // Reap after the loop: removing entities mid-query invalidates the iteration.
+  for (let i = 0; i < destroyed.length; i++) {
+    removeEntity(world, destroyed[i]!);
+  }
+}
