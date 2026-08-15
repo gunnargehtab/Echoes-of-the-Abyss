@@ -2,6 +2,8 @@
 
 > The Echo Layer is *what* you know. Depth is *what it costs* to go get it.
 
+**Glossary:** See [Glossary](glossary.md) for authoritative term definitions (SIG, PF, HYD, PR, Resolution Tiers, Active Sonar, Silent Running, Echo Marks).
+
 ---
 
 ## 1. Premise

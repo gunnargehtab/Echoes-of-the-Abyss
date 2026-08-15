@@ -1,5 +1,7 @@
 # The Four Powers
 
+**Glossary:** See [Glossary](glossary.md) for authoritative term definitions (SIG, PF, HYD, PR, Resolution Tiers, Active Sonar, Silent Running, Echo Marks).
+
 Every faction in the Rift is defined by four things: **what they need, what they fear, what they refuse, and what they'd never admit.** A faction that only has aesthetics is a skin. A faction with all four is a culture.
 
 Each is also anchored to one axis of asymmetry — their relationship to **sound** (see [systems-echo.md](systems-echo.md)) and to **depth** (see [systems-depth.md](systems-depth.md)) — so that their mechanics and their politics are the same argument.

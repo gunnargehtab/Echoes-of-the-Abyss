@@ -1,5 +1,7 @@
 Units — Prototype roster
 
+**Glossary:** See [Glossary](glossary.md) for authoritative term definitions (SIG, PF, HYD, PR, Resolution Tiers, Active Sonar, Silent Running, Echo Marks).
+
 This is a prototype unit roster. Numbers are intent for prototyping; refine after playtests.
 
 Light Scout (Pelagia-friendly)

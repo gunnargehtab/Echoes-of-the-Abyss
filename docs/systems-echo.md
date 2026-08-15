@@ -2,6 +2,8 @@
 
 > The game is called *Echoes of the Abyss*. This is the system that earns the title.
 
+**Glossary:** See [Glossary](glossary.md) for authoritative term definitions (SIG, PF, HYD, PR, Resolution Tiers, Active Sonar, Silent Running, Echo Marks).
+
 ---
 
 ## 1. Premise
