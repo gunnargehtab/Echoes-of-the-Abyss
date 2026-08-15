@@ -1,0 +1,36 @@
+{
+  "name": "simple-scenario",
+  "pf": 1,
+  "runs": [
+    {
+      "name": "Scout",
+      "sig": 6,
+      "detections": [
+        { "distance": 100, "tier": 1 },
+        { "distance": 500, "tier": 1 },
+        { "distance": 1200, "tier": 1 },
+        { "distance": 2500, "tier": 1 }
+      ]
+    },
+    {
+      "name": "Corvette",
+      "sig": 28,
+      "detections": [
+        { "distance": 100, "tier": 1 },
+        { "distance": 500, "tier": 1 },
+        { "distance": 1200, "tier": 1 },
+        { "distance": 2500, "tier": 1 }
+      ]
+    },
+    {
+      "name": "Cruiser",
+      "sig": 55,
+      "detections": [
+        { "distance": 100, "tier": 1 },
+        { "distance": 500, "tier": 1 },
+        { "distance": 1200, "tier": 1 },
+        { "distance": 2500, "tier": 1 }
+      ]
+    }
+  ]
+}

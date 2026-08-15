@@ -1,0 +1,10 @@
+{
+  "name": "simple-scenario",
+  "propagationFactor": 1.0,
+  "distances": [100, 500, 1200, 2500],
+  "actors": [
+    { "name": "Scout", "sig": 6 },
+    { "name": "Corvette", "sig": 28 },
+    { "name": "Cruiser", "sig": 55 }
+  ]
+}
