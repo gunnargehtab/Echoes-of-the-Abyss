@@ -6,9 +6,21 @@ This roadmap scopes the first sprint of work to establish core design docs, infr
 
 Milestones
 
-1) Project setup & planning (1 week)
-   - Create project roadmap (owner: @owner) — Issue #8
-   - Define owners, priorities, and missing docs map
+1) Project setup & planning (3–7 days)
+   - Define owners & roles (Project Lead, Tech Lead, Design Lead) — Issue: https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/14
+     Acceptance: Owners assigned in ROADMAP.md or GitHub team; responsibilities documented.
+   - Set up project board (GitHub Projects / Kanban) — Issue: https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/15
+     Acceptance: Board exists with columns Backlog / To do / In progress / Review / Done and current issues added.
+   - Create CONTRIBUTING.md and contributor quickstart — Issue: https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/16
+     Acceptance: CONTRIBUTING.md added with PR, branching, and review guidelines; links to DEVELOPER_QUICKSTART.md.
+   - Add GitHub labels & issue/PR templates — Issue: https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/17
+     Acceptance: Label set published and templates present in .github/.
+   - Define branching & commit guidelines (main, feature/*) — Issue: https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/18
+     Acceptance: Guidelines in CONTRIBUTING.md.
+   - Schedule kickoff meeting & set up communication channel (Slack/Discord) — Issue: https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/19
+     Acceptance: Calendar event scheduled and meeting notes posted to docs/.
+   - Timeline: aim to complete within 3–7 days.
+   - Deliverables: CONTRIBUTING.md, project board link, label list, meeting notes.
 
 2) Canonical definitions (1 week)
    - Write glossary.md (SIG, PF, PR, resolution tiers) — Issue #6
