@@ -2,6 +2,7 @@
   "name": "echo-sim",
   "version": "0.0.1",
   "private": true,
+  "main": "lib.js",
   "scripts": {
     "start": "node sim.js"
   }
