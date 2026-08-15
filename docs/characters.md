@@ -6,9 +6,10 @@ Design rule: every commander has a **conviction**, a **cost they've already paid
 
 ---
 
-# Bathyarch Consortium
+## Bathyarch Consortium
 
-## Executor Odile Varr-Kest
+### Executor Odile Varr-Kest
+
 *Chair of the Ninth Board · b. 1,180 m · age 61*
 
 Third-generation Board. Trained as an actuary, not an executive, and it shows: she talks about human lives in confidence intervals because that is genuinely how she thinks about them, and she is genuinely trying to minimise the number that die.
@@ -23,7 +24,8 @@ She has read Item 9. She has read the Ninefold projections. She knows the Consor
 
 ---
 
-## Foreman Corwin Osk
+### Foreman Corwin Osk
+
 *Ninefold Vein site chief · b. 940 m · age 48*
 
 Twenty-nine years on the Vein, second-generation debt-berth, and the most trusted man in Consortium territory because he is the only manager who has ever refused a Board order and survived it. Osk is not a rebel. He is a **union**, in a society that outlawed the word.
@@ -38,7 +40,8 @@ He knows Ninefold is dying. He hasn't told his crews. He's trying to negotiate t
 
 ---
 
-## Underwriter Baen Tull
+### Underwriter Baen Tull
+
 *Risk & Actuarial Division · b. 610 m · age 34*
 
 Varr-Kest's protégé and the Consortium's internal antagonist. Tull's job is to model catastrophic outcomes, and his private model says the Board's war math is wrong by an order of magnitude — not because the numbers are bad but because the model has no variable for the Mouth.
@@ -51,9 +54,10 @@ He wants Item 9 declassified. He is the only Consortium character who might defe
 
 ---
 
-# Pelagia Commune
+## Pelagia Commune
 
-## Tidespeaker Ysolde Marr
+### Tidespeaker Ysolde Marr
+
 *Rotating coordinator · b. 320 m · age 55*
 
 The most beloved person in the Rift and the least powerful head of state in it. Marr can persuade, convene, and refuse. She cannot order. She has spent thirty years making that limitation look like a strength, and she is now facing the first situation where it might kill everyone she represents.
@@ -68,7 +72,8 @@ She opposes the second Deepbloom seeding. She will not stop it, because stopping
 
 ---
 
-## Bloomwright Sefa Anholt
+### Bloomwright Sefa Anholt
+
 *Deepbloom programme lead · b. 210 m · age 39*
 
 The scientist who proved the deep can be made habitable, and the Rift's most dangerous idealist. Anholt does not want war. She wants to end the thousand-year argument about who deserves the deep by making the deep available to everybody. She cannot understand why the Directorate reads this as annihilation.
@@ -83,7 +88,8 @@ She is going to seed again. Marr can't stop her. Anholt has the votes.
 
 ---
 
-## Warden Juno Teel
+### Warden Juno Teel
+
 *Plateau defence coordinator · b. 380 m · age 44*
 
 The Commune's reluctant general — a farm-warden who became a soldier because the alternative was watching plateaus burn. Teel is the internal voice arguing the Commune's pacifism is a subsidy paid in other people's children, and she is not obviously wrong.
@@ -94,9 +100,10 @@ The Commune's reluctant general — a farm-warden who became a soldier because t
 
 ---
 
-# Abyssal Directorate
+## Abyssal Directorate
 
-## Undermarshal Setha Korrin
+### Undermarshal Setha Korrin
+
 *Supreme command · b. 2,780 m · age 58*
 
 Fourth-generation Deep Cohort. Physically, she cannot survive above 400 m without a pressure suit; her body is built for a world that would kill the player's other commanders instantly. She has never seen the Shelf and considers this a form of cleanliness.
@@ -113,7 +120,8 @@ So she is preparing for something she cannot name, and everyone beneath her thin
 
 ---
 
-## First Cantor Vehl Ossary
+### First Cantor Vehl Ossary
+
 *Head of the Cantorate · b. 3,100 m · age 71*
 
 The Directorate's theological authority and Korrin's chief obstacle. Ossary is not a fanatic. He is a **careful** man who has concluded that a society organised around an unanswerable question stays humble, and a society that thinks it has the answer starts killing people.
@@ -126,7 +134,8 @@ He is right. Korrin is also right. This is the Directorate's civil war, conducte
 
 ---
 
-## Cohort-Prime Adze
+### Cohort-Prime Adze
+
 *Field commander, 9th Trench Cohort · b. 3,400 m · age 29*
 
 The most modified human alive — a fifth-generation cohort at the programme's theoretical limit. Adze does not remember being asked. Adze does not experience this as a grievance. Adze is genuinely, uncomplicatedly happy, extremely good at their job, and functionally unable to survive anywhere but the trench floor.
@@ -141,9 +150,10 @@ Adze is the game's argument in a body: **is a life you didn't choose, but genuin
 
 ---
 
-# Hadron Knights
+## Hadron Knights
 
-## Choirmaster Ivane Sull
+### Choirmaster Ivane Sull
+
 *Ninth Chapter-House · b. 1,900 m · age 46*
 
 Great-great-granddaughter of Anwen Sull, the surveyor who recorded the Mouth's anomaly in 88 PC and was fired for falsifying data. Ivane has spent her life proving her ancestor right, and has now succeeded, and is discovering that being right is worse.
@@ -160,7 +170,8 @@ She also knows the mute technicians' writings match the Directorate's dream tran
 
 ---
 
-## Chapter-Master Halden Vrey
+### Chapter-Master Halden Vrey
+
 *Third Chapter-House · b. 1,450 m · age 62*
 
 The Knights' conservative — a master crystal-wright who believes the Order's purpose is *stewardship*, not contact. Vrey argues the First Chord's reply was a warning, not an invitation, and that Sull is about to knock on a door for the second time after the first knock cost three people their voices.
@@ -171,7 +182,8 @@ The Knights' conservative — a master crystal-wright who believes the Order's p
 
 ---
 
-## Voice Ren Kalliso
+### Voice Ren Kalliso
+
 *Field-commander, Resonance Fields · b. 2,050 m · age 31*
 
 The Order's best field officer and its most ordinary person — a soldier, not a mystic, who joined at nine because she was good at hearing and stayed because she was good at fighting. Kalliso's function in the story is to be the one who asks *what happens to the people who live here* while everyone else discusses cosmology.
@@ -182,16 +194,18 @@ The Order's best field officer and its most ordinary person — a soldier, not a
 
 ---
 
-# Neutrals
+## Neutrals
 
-## Arbiter Mosk Halloran
+### Arbiter Mosk Halloran
+
 *Sorrowgate Arbitration Court · b. unknown · age ~70*
 
 Runs the Rift's only functioning neutral court out of a collapsed transit dome. All four powers use it, all four deny using it. Halloran's authority rests on nothing but the fact that everybody needs somewhere to swap prisoners.
 
 **Campaign role:** hub character, quest-giver, and the only person who can get all four commanders in one room.
 
-## The Three
+### The Three
+
 *The mute technicians · First Chord survivors · location classified*
 
 Alive at 2,900 m. They do not speak. They **write**, continuously, and have for thirty-six years. The writing is not in any known language, and it matches the Directorate's dream transcripts exactly.
@@ -201,4 +215,5 @@ Alive at 2,900 m. They do not speak. They **write**, continuously, and have for 
 ---
 
 ## Related
+
 - **[factions.md](factions.md)** · **[campaign.md](campaign.md)** · **[culture.md](culture.md)**

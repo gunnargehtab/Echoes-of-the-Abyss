@@ -7,7 +7,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 ## Start here
 
 | Doc | What it covers |
-|---|---|
+| --- | --- |
 | **[game-identity.md](game-identity.md)** | Pitch, pillars, target experience |
 | **[systems-echo.md](systems-echo.md)** | ⭐ The acoustic fog of war. The game's central system |
 | **[systems-depth.md](systems-depth.md)** | ⭐ Pressure ratings, depth bands, crush attrition |
@@ -15,7 +15,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 ## World & narrative
 
 | Doc | What it covers |
-|---|---|
+| --- | --- |
 | **[world.md](world.md)** | The Pelagion Rift, the Salinity Collapse, the Mouth, culture and language |
 | **[factions.md](factions.md)** | The four powers — doctrine, politics, weakness |
 | **[characters.md](characters.md)** | Twelve commanders and the neutrals |
@@ -23,7 +23,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 ## Gameplay
 
 | Doc | What it covers |
-|---|---|
+| --- | --- |
 | **[environments.md](environments.md)** | Five biomes: look, sound (PropagationFactor), mechanics, inhabitants |
 | **[hazards.md](hazards.md)** | Eight hazards with faction interactions |
 | **[maps.md](maps.md)** | Six map archetypes |
@@ -31,7 +31,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 ## Presentation
 
 | Doc | What it covers |
-|---|---|
+| --- | --- |
 | **[art-direction.md](art-direction.md)** | Palettes, shape language, silhouette law, Echo Layer UI requirements |
 | **[naming.md](naming.md)** | Title, taglines, logo direction |
 | **[concept-art/](concept-art/)** | Four survey plates in the Pressure Cartography visual language |
@@ -39,7 +39,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 ## Technical
 
 | Doc | What it covers |
-|---|---|
+| --- | --- |
 | **[tech-stack.md](tech-stack.md)** | Stack, rationale, Echo Layer performance budget |
 
 ---

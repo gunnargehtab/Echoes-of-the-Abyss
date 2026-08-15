@@ -1,9 +1,11 @@
 Playtest Checklist — Unit Tests & Balancing
 
 Purpose
+
 - Provide a short checklist for unit playtests and a standard CSV/JSON capture schema for reproducible balancing sessions.
 
 Checklist
+
 1. Scenario name and seed: record map, biome, PF, and random seed.
 2. Participants: faction, unit list, counts, and commander abilities used.
 3. Objectives: win conditions (kill all, capture node, survive time T).
@@ -13,6 +15,7 @@ Checklist
 7. Post-run analysis: aggregate detection events, losses, resource delta, and echo mark usage.
 
 CSV capture schema (recommended columns)
+
 - timestamp, run_id, scenario, seed, actor_id, actor_faction, actor_type, event_type, SIG, PF, HYD, distance, tier, position_x, position_y, position_z, hp, resource_delta, note
 
 JSON schema (example event)
@@ -39,10 +42,12 @@ JSON schema (example event)
 }
 
 Notes
+
 - Use ISO-8601 timestamps and consistent run_id naming (e.g., test-scenario-YYYYMMDD-001).
 - Keep CSV for quick spreadsheet analysis; use JSON for nested events or complex metadata.
 - Record audio mix levels if evaluating player perception (optional).
 
 Related
+
 - docs/units.md — playtest plan examples
 - docs/glossary.md — authoritative terms (SIG, PF, HYD, PR)
