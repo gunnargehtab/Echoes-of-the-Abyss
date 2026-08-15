@@ -22,23 +22,37 @@ Milestones
    - Timeline: aim to complete within 3–7 days.
    - Deliverables: CONTRIBUTING.md, project board link, label list, meeting notes.
 
-2) Canonical definitions (1 week)
-   - Write glossary.md (SIG, PF, PR, resolution tiers) — Issue #6
+2) Canonical definitions (3–7 days)
+   - Review & finalize glossary (audit examples, remove inconsistencies) — Issue: https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/20
+     Acceptance: glossary.md reviewed, examples added, and inconsistent terms resolved across docs.
+   - Add glossary cross-links & references across docs — Issue: https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/21
+     Acceptance: all core docs link to glossary.md and use canonical terms.
 
-3) Design foundation (1-2 weeks)
-   - Draft units.md (unit roster & stats) — Issue #7
-   - Ensure unit stats reference glossary terms and echo/depth systems
+3) Design foundation (1–2 weeks)
+   - Expand units.md with detailed stats, cost, and playtest plan — Issue: https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/22
+     Acceptance: units.md contains stat tables, SIG/PR interactions, and example loadouts.
+   - Create unit playtest checklist & data capture format — Issue: https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/23
+     Acceptance: checklist and JSON/CSV schema added to docs/playtests/.
 
 4) Engineering scaffold (1 week)
-   - Scaffold frontend starter (TypeScript + PixiJS, Vite) — Issue #9
+   - Add example scene & input handling to client — Issue: https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/24
+     Acceptance: client/src/examples shows entity rendering and basic input; developer can run it locally.
+   - Integrate client build into CI — Issue: https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/25
+     Acceptance: CI runs client build and fails on build errors.
 
-5) Prototype & validation (1-2 weeks)
-   - Prototype echo layer simulation (node) — Issue #10
-   - Use prototype to validate detection tiers and SIG math
+5) Prototype & validation (1–2 weeks)
+   - Add echo-sim scenarios & datasets for deterministic tests — Issue: https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/26
+     Acceptance: scenarios in tools/echo-sim/scenarios/ with expected outputs for tests.
+   - Document echo-sim usage & convert to module for testing/integration — Issue: https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/27
+     Acceptance: tools/echo-sim/README.md + exported functions for test harness.
 
 6) Quality & developer UX (continuous)
-   - Add CI and linting (ESLint/Prettier, docs checks) — Issue #11
-   - Update README with developer quickstart — Issue #12
+   - Add ESLint & Prettier and enable checks in CI — Issue: https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/28
+     Acceptance: ESLint/Prettier configs present and CI enforces style on push/PR.
+   - Add markdownlint and docs checks to CI — Issue: https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/29
+     Acceptance: markdownlint runs in CI and reports issues.
+   - Refine README & developer quickstart — Issue: https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/30
+     Acceptance: README and DEVELOPER_QUICKSTART.md polished with troubleshooting and platform notes.
 
 Notes
 
