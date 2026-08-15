@@ -33,3 +33,12 @@ jobs:
       - name: Run Prettier check
         run: |
           npx prettier --check .
+      - name: Run markdownlint on docs
+        run: |
+          npx -y markdownlint-cli "**/docs/**/*.md" "**/docs/*.md"
+      - name: Check markdown links in docs
+        run: |
+          git ls-files 'docs/**/*.md' | while read -r file; do
+            echo "Checking links in $file"
+            npx -y markdown-link-check "$file" || exit 1
+          done
