@@ -1,0 +1,29 @@
+# Standard label set for this repository, synced by
+# .github/workflows/labels.yml via crazy-max/ghaction-github-labeler.
+#
+# Edit this file to add/remove/recolor labels — do not edit labels
+# directly in the GitHub UI, since the sync workflow will overwrite them.
+
+- name: bug
+  color: d73a4a
+  description: Something isn't working
+
+- name: enhancement
+  color: a2eeef
+  description: New feature or request
+
+- name: docs
+  color: 0075ca
+  description: Improvements or additions to documentation
+
+- name: infra
+  color: 5319e7
+  description: Build, CI/CD, tooling, and repository infrastructure
+
+- name: epic
+  color: 3e4b9e
+  description: Large body of work tracked across multiple issues
+
+- name: triage
+  color: fbca04
+  description: Needs review to confirm validity, scope, or priority

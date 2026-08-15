@@ -1,0 +1,27 @@
+name: Documentation
+description: Report a gap, error, or improvement in the design docs
+labels: [docs, triage]
+body:
+  - type: input
+    id: location
+    attributes:
+      label: Location
+      description: Which doc(s) or section(s)? (e.g. docs/systems-echo.md#detection-tiers)
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue
+    attributes:
+      label: What's wrong or missing?
+      description: Describe the error, inconsistency, or gap.
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested fix
+      description: If you have a proposed wording or structure, include it here.
+    validations:
+      required: false
