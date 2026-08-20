@@ -43,9 +43,9 @@ git ls-files ':(glob)docs/**/*.md' | while read -r f; do
 done
 ```
 
-**Node 22+ is required**, not the 18 that `docs/DEVELOPER_QUICKSTART.md` still claims. The
-backend dev and test scripts use `node --import tsx` and the stable `node:test` runner; CI
-pins Node 22.
+**Node 22+ is required.** The backend dev and test scripts use `node --import tsx` and the
+stable `node:test` runner, and CI pins Node 22. Older runtimes fail with errors that do not
+obviously point at the Node version.
 
 ## Build order — the thing that breaks first
 

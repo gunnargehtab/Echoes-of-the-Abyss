@@ -1,57 +1,133 @@
-Developer Quickstart
+# Developer Quickstart
 
-This quickstart is a brief guide for contributors to get a local dev environment running and to make small documentation or design changes.
+A brief guide for contributors: get a local dev environment running, and make
+small code or documentation changes with confidence they will pass CI.
 
-Prerequisites
+## Prerequisites
 
-- Node.js 18.x, npm 8/9+
+- **Node.js 22 or newer**, npm 10+
 - Git
 
-Repository layout
+Node 22 is a hard floor, not a recommendation. The backend dev and test scripts
+use `node --import tsx` and the stable `node:test` runner, and CI pins Node 22.
+Older runtimes fail with errors that do not obviously point at the Node version.
 
-- Root uses npm workspaces: packages/frontend and packages/backend
-- Design docs live in /docs
+## Repository layout
 
-Setup
+Root is an npm workspace with three packages, plus standalone tooling:
 
-1. Clone the repo:
-   git clone <https://github.com/gunnargehtab/Echoes-of-the-Abyss.git>
-2. Install dependencies (from repo root):
-   npm ci
+- `packages/shared` — `@echoes/shared`: types, tuning constants, Echo Layer math
+- `packages/backend` — Colyseus game server; owns the authoritative simulation
+- `packages/frontend` — React shell and PixiJS renderer
+- `tools/echo-sim` — deterministic Echo scenario harness (not a workspace)
+- `docs/` — the design bible
 
-Running the project
+## Setup
 
-- Start both front- and back-end (dev):
-  npm run dev
-- Build all packages:
-  npm run build
-- Run tests:
-  npm run test
-- Lint (workspace):
-  npm run lint
+Clone the repo:
 
-Run a single workspace directly
+```bash
+git clone https://github.com/gunnargehtab/Echoes-of-the-Abyss.git
+cd Echoes-of-the-Abyss
+```
 
-- Frontend dev server:
-  npm -w packages/frontend run dev
-- Backend dev server:
-  npm -w packages/backend run dev
+Install dependencies from the repo root:
 
-Echo simulator (optional)
+```bash
+npm ci
+```
 
-- If present: cd tools/echo-sim && node sim.js
+## Running the project
 
-Docs and CI
+```bash
+npm run dev            # backend + frontend together
+npm run build          # build all packages
+npm test               # run all tests
+npm run type-check     # type-check frontend and backend
+npm run lint           # ESLint across workspaces
+npm run format:check   # Prettier check (npm run format to fix)
+```
 
-- Docs live in /docs — edit and open PRs for doc updates
-- CI workflow: .github/workflows/ci.yml — it runs lint and formatting checks. The repository also includes markdown checks in CI (markdownlint / markdown-link-check).
+The frontend dev server serves on `:5173`; the backend listens on `:3000` and
+exposes `/health`.
 
-Contributing
+### Build the shared package first
 
-- Use descriptive branch names (feat/, fix/, ci/, docs/)
-- Keep PRs focused; reference the related issue (e.g., "Fixes #30")
-- Update docs in /docs and link to related system docs when adding mechanics
+`packages/frontend` and `packages/backend` import `@echoes/shared` by its build
+output (`dist/`), not its source. Every root script above already runs
+`npm run build:shared` first, so the commands in this section are safe as-is.
 
-Related docs
+If you run a single workspace script directly after editing `packages/shared`,
+rebuild it yourself or you will see stale types and confusing resolution errors:
 
-- systems-echo.md, systems-depth.md, ROADMAP.md
+```bash
+npm run build:shared
+```
+
+## Run a single workspace
+
+```bash
+npm -w packages/frontend run dev
+npm -w packages/backend run dev
+npm -w packages/shared run test
+```
+
+Run one backend test file:
+
+```bash
+npm -w packages/backend exec -- node --import tsx --test test/match.test.ts
+```
+
+## Echo simulator
+
+A standalone deterministic harness for Echo Layer scenarios:
+
+```bash
+cd tools/echo-sim
+node sim.js                             # built-in sample, prints JSON
+node sim.js scenarios/simple-scenario.json
+```
+
+See [tools/echo-sim/README.md](../tools/echo-sim/README.md) for the scenario
+format and the programmatic API.
+
+## Docs and CI
+
+CI (`.github/workflows/ci.yml`) runs on every push and pull request: build
+shared, type-check, ESLint, Prettier check, tests, full build, then two
+documentation gates over `docs/` — markdownlint and a link check.
+
+**Both documentation gates are blocking.** In particular, linking a file that
+does not exist fails the build. Planned-but-unwritten documents belong in the
+"Planned / Not Yet Written" section of [README.md](README.md) as plain text,
+not as links.
+
+Run the doc gates locally exactly as CI does:
+
+```bash
+npx -y markdownlint-cli "docs/**/*.md" "docs/*.md" --ignore node_modules
+git ls-files ':(glob)docs/**/*.md' | while read -r file; do
+  npx -y markdown-link-check --config .markdown-link-check.json "$file" || exit 1
+done
+```
+
+Prettier deliberately does not cover `docs/`. Design docs are authored prose and
+are linted by markdownlint instead of being reformatted.
+
+## Contributing
+
+- Use descriptive branch prefixes: `feat/`, `fix/`, `ci/`, `docs/`
+- Keep pull requests focused and reference the issue they close (e.g. `Fixes #30`)
+- Run type-check, lint, format:check and tests before pushing
+- When adding a mechanic, update the relevant design doc and cross-link it
+
+Agent-facing guidance on architecture and conventions lives in
+[CLAUDE.md](../CLAUDE.md) at the repository root; it is a useful orientation for
+human contributors too.
+
+## Related
+
+- [systems-echo.md](systems-echo.md) — the acoustic fog of war
+- [systems-depth.md](systems-depth.md) — depth and commitment
+- [tech-stack.md](tech-stack.md) — target stack and Echo Layer implementation notes
+- [ROADMAP.md](ROADMAP.md) — current milestones

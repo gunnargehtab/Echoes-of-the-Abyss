@@ -1,6 +1,13 @@
 # Copilot Instructions — Echoes of the Abyss
 
-This repository is the **design bible** for Echoes of the Abyss, a browser-native underwater RTS. It contains worldbuilding, mechanics documentation, art direction, and technical architecture — not yet game code.
+This repository holds two things for Echoes of the Abyss, a browser-native underwater RTS, and they must stay in agreement:
+
+1. **The design bible** (`docs/`) — worldbuilding, mechanics, art and audio direction. It came first and remains canonical: it is the source of the numbers.
+2. **A playable scaffold** (`packages/`) — a TypeScript monorepo implementing the Echo Layer simulation, a Colyseus match server, and a PixiJS client.
+
+Code transcribes the docs. When the two disagree, that is a bug in one of them — say which one you are changing and why.
+
+For engineering conventions, build order, and the runtime gotchas that cost the most time, read **[CLAUDE.md](../CLAUDE.md)** at the repository root. This file covers the design side.
 
 ---
 
@@ -38,16 +45,38 @@ No faction is written as the villain. Read: **[factions.md](../docs/factions.md)
 
 ## Tech Stack & Implementation
 
-This is the target stack for the game itself (when code is written):
-
 - **Frontend:** TypeScript · PixiJS (WebGL rendering) · bitecs (ECS) · Howler.js + raw Web Audio · React (menus only)
 - **Backend:** Node.js · Colyseus (multiplayer state sync) · Redis (real-time caching) · PostgreSQL (accounts/saves)
-- **Build:** Vite · ESBuild
+- **Build:** Vite · ESBuild · npm workspaces
 - **Deployment:** Vercel (frontend) · Hetzner Cloud (game servers, low latency in EU)
 
-**Echo Layer performance:** Spatial hash evaluated at 5 Hz with a hard 2 ms/tick budget to stay inside Colyseus frame budget. Detection is **computed server-side and per-player** — client never receives unexplored map state.
+**Node 22+ is required.** The backend dev and test scripts use `node --import tsx` and the stable `node:test` runner; CI pins Node 22.
 
-Read: **[tech-stack.md](../docs/tech-stack.md)**
+### What is implemented today
+
+The scaffold is playable end to end, not a stub: a fixed-step simulation, per-player acoustic detection, and a client that renders only what the server resolved for it.
+
+```text
+packages/shared    @echoes/shared — types, tuning constants, Echo Layer math.
+                   Compiled to dist/; frontend and backend import the OUTPUT,
+                   so run `npm run build:shared` after editing it.
+packages/backend   Colyseus server. Owns the simulation.
+                   sim/match.ts — 60 Hz fixed step, 5 Hz Echo Layer pass
+                   sim/systems/echoLayer.ts — per-player detection resolution
+                   rooms/MatchRoom.ts — the network boundary; rules live in sim/
+packages/frontend  React shell + PixiJS renderer. A terminal, not a simulation.
+tools/echo-sim     Standalone deterministic Echo scenario harness.
+```
+
+Redis and PostgreSQL are declared dependencies for accounts and caching but are not yet wired into the match path.
+
+**Tuning constants live in exactly one place:** `packages/shared/src/constants.ts`. Each is tagged **SPEC** (transcribed from a design doc — change the doc first, and cite the section) or **TUNABLE** (a prototype number the docs do not pin down). Some are *derived* rather than chosen: `BASE_THRESHOLD` is solved from the spec'd 2,400 m active-sonar self-reveal so the documented ping radii fall out of the general propagation model. Do not replace a derived value with a literal to make a test pass.
+
+**Echo Layer performance:** spatial hash evaluated at 5 Hz against a hard 2 ms/tick budget, to stay inside the Colyseus frame budget. `Match` tracks the rolling worst-case cost, so a regression is observable rather than theoretical.
+
+**Detection is computed server-side and per-player.** This is a hard rule, not a preference: the whole game is hidden information, so a client that receives unresolved world state is a maphack regardless of what it chooses to draw. Contacts are reported under opaque per-observer handles rather than raw entity ids, so a client cannot infer the map-wide unit count from contacts it legitimately detected. Never send the client anything it has not resolved — not "temporarily", not behind a debug flag that ships.
+
+Read: **[tech-stack.md](../docs/tech-stack.md)** · **[CLAUDE.md](../CLAUDE.md)**
 
 ---
 
@@ -82,7 +111,7 @@ Read: **[tech-stack.md](../docs/tech-stack.md)**
 - **[concept-art/](../docs/concept-art/)** — Four visual survey plates in the Pressure Cartography language
 
 ### Editing Conventions
-1. **Numbers are design intent, not balance-final.** They exist to prototype the systems against something real. When iterating, update the numbers in-place and document the change.
+1. **Numbers are design intent, not balance-final.** They exist to prototype the systems against something real. When iterating, update the numbers in-place and document the change — and if the number is marked SPEC in `packages/shared/src/constants.ts`, update that constant in the same change so code and docs do not drift.
 2. **All major mechanics must be an argument about sound or depth** (see systems-echo.md and systems-depth.md). If a faction trait or unit ability is not anchored to one of these two axes, it's arbitrary and should be reconsidered.
 3. **Cross-link generously.** Every doc should end with a "Related" section. Keep links current as docs change.
 4. **The glossary is authoritative.** If a term appears in two docs with two meanings, resolve it in [glossary.md](../docs/glossary.md) first, then update all instances.
@@ -141,3 +170,5 @@ It is referenced from the root README. Until it is authored, do not add further 
 - **Adding a unit or ability?** Check [factions.md](../docs/factions.md) and [systems-echo.md](../docs/systems-echo.md) — does your addition fit the faction's noise doctrine?
 - **Designing a biome variant?** See [environments.md](../docs/environments.md) and [tech-stack.md](../docs/tech-stack.md) (propagation factors).
 - **Stuck on lore/character consistency?** Check [world.md](../docs/world.md), [characters.md](../docs/characters.md), and [factions.md](../docs/factions.md).
+- **Writing or changing code?** Read [CLAUDE.md](../CLAUDE.md) first — build order, per-package import conventions, and the Colyseus import rule are all places where the obvious approach fails at runtime.
+- **Setting up locally?** [DEVELOPER_QUICKSTART.md](../docs/DEVELOPER_QUICKSTART.md) and [SETUP.md](../SETUP.md).
