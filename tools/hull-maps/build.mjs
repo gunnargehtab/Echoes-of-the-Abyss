@@ -50,6 +50,7 @@ const UNITS = [
   { slug: 'cruiser-bathyarch', model: 'cruiser-bathyarch.glb', lengthM: 130 },
   { slug: 'corvette-directorate', model: 'corvette-directorate.glb', lengthM: 80 },
   { slug: 'harvester-directorate', model: 'harvester-directorate.glb', lengthM: 75 },
+  { slug: 'cruiser-directorate', model: 'cruiser-directorate.glb', lengthM: 130 },
 ];
 
 /**
