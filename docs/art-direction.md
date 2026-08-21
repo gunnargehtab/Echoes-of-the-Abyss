@@ -216,6 +216,7 @@ Claustrophobic, industrial, oppressive, bioluminescent, cold, metallic, alien.
 
 ## Related
 
+- [graphics-standards.md](graphics-standards.md) — the acceptance bar that enforces this direction
 - [factions.md](factions.md) — full faction visual identity sheets
 - [style-neon-noir.md](style-neon-noir.md) — presentation-layer palette tokens and glow rules
 - [asset-prompts-3d.md](asset-prompts-3d.md) — prompt kit that transcribes this doc for 3D model generation

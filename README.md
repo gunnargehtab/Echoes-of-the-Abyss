@@ -138,6 +138,7 @@ Workspace tips
 - To run a single workspace: npm -w packages/frontend run dev
 
 Contribution workflow
+- The conventions — branches, commits, PRs, labels, code and docs rules — live in [CONTRIBUTING.md](CONTRIBUTING.md)
 - Create a topic branch (e.g., feat/short-description or ci/add-...)
 - Make small, focused commits and reference related issues in the commit or PR
 - Open a PR against main and request review

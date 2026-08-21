@@ -42,6 +42,25 @@ both publish prebuilt `android-arm64` binaries, and the only native optional
 dependencies (`fsevents`, `msgpackr-extract`) are skipped or fall back to pure
 JS.
 
+## Verify the install
+
+Before playing, prove the deployment works with one command:
+
+```bash
+node tools/android-check.mjs
+```
+
+It checks the Node version, that `npm ci` completed, builds `@echoes/shared`,
+runs the full test suite, then boots the real server tree, probes both ports,
+and shuts it down cleanly. Every check prints `ok` or `FAIL` with the fix,
+and the whole thing exits non-zero if the phone cannot run the game — so it
+also works as a pass/fail gate after a `git pull`.
+
+`--quick` skips the test suite if you only want the boot check. Expect the
+full run to take a few minutes on a phone; the server boot alone is allowed
+up to three minutes because the first boot rebuilds `@echoes/shared`. If a
+check fails, the symptom table below has the common causes.
+
 ## Play
 
 ```bash

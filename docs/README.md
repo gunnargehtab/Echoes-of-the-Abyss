@@ -39,6 +39,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | Doc | What it covers |
 | --- | --- |
 | **[art-direction.md](art-direction.md)** | Palettes, shape language, silhouette law, Echo Layer UI requirements |
+| **[graphics-standards.md](graphics-standards.md)** | The acceptance bar: pipeline of record, seven shipping gates, art PR checklist |
 | **[audio-direction.md](audio-direction.md)** | The mix as the primary information channel; tier sonification |
 | **[ui-ux.md](ui-ux.md)** | The Echo Layer HUD, sonar scope, ping preview, accessibility |
 | **[style-neon-noir.md](style-neon-noir.md)** | Neon-noir presentation register: palette tokens, glow rules, UI chrome |

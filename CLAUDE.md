@@ -187,10 +187,13 @@ Run the same checks locally before pushing; the full sequence is cheap.
 
 ## Contributing
 
-Branch names use `feat/`, `fix/`, `ci/`, `docs/` prefixes. Keep PRs focused and reference
-the issue they close (`Fixes #30`). Issue and PR templates live in `.github/`.
+The full conventions live in `CONTRIBUTING.md` — the short version: branch names use
+`feat/`, `fix/`, `ci/`, `docs/` prefixes; commit subjects use the matching prefixes; keep
+PRs focused and reference the issue they close (`Fixes #30`). Issue and PR templates live
+in `.github/`. Anything visual must clear the gates in `docs/graphics-standards.md`,
+screenshot included.
 
-Related: `README.md` · `SETUP.md` · `SETUP-ANDROID.md` (the whole game — server included —
+Related: `README.md` · `CONTRIBUTING.md` · `SETUP.md` · `SETUP-ANDROID.md` (the whole game — server included —
 runs on-device in Termux) · `docs/README.md` · `docs/DEVELOPER_QUICKSTART.md` ·
 `.github/copilot-instructions.md` (the design-side companion to this file: faction noise
 doctrines, biome PF table, and the doc-by-doc map of `docs/`)
