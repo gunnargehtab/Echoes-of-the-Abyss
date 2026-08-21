@@ -43,6 +43,7 @@ import {
   type ResourceNodeInfo,
 } from '@echoes/shared';
 import { BIOME_COLOR, FACTION_PALETTE, TIER_STYLE, UI, sigColor } from './palette.ts';
+import { drawStructureSilhouette, drawUnitSilhouette, HULL_LENGTH_M } from './silhouettes.ts';
 import type { TerrainPayload } from '../net/GameClient.ts';
 
 /** A contact plus when we last actually heard it, for ghost decay. */
@@ -195,6 +196,13 @@ export class EchoRenderer {
     typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
   /** The camera opens on the player's own base exactly once. */
   private cameraCentered = false;
+  /**
+   * Last known heading per own unit, derived client-side from position deltas
+   * between snapshots — the server does not send headings for own units, and
+   * a hull that snapped back to 0° whenever it stopped would read as broken.
+   */
+  private readonly headings = new Map<number, number>();
+  private readonly lastPositions = new Map<number, { x: number; y: number }>();
 
   private destroyed = false;
   private detachInput: (() => void) | null = null;
@@ -221,12 +229,15 @@ export class EchoRenderer {
 
     host.appendChild(this.app.canvas);
 
+    // Contacts render above own structures: a tracked intruder inside your
+    // base perimeter is the most urgent pixel on the screen, and must never
+    // hide behind your own Bastion.
     this.world.addChild(
       this.terrainLayer,
       this.nodeLayer,
       this.ringLayer,
-      this.contactLayer,
       this.structureLayer,
+      this.contactLayer,
       this.unitLayer
     );
     this.hud.addChild(
@@ -985,6 +996,20 @@ export class EchoRenderer {
     this.peakSig = snapshot.peakSig;
     this.nodules = snapshot.nodules;
 
+    // Track headings from motion; a stationary hull keeps its last bearing.
+    for (const unit of snapshot.units) {
+      const prev = this.lastPositions.get(unit.id);
+      if (prev !== undefined) {
+        const dx = unit.x - prev.x;
+        const dy = unit.y - prev.y;
+        if (Math.hypot(dx, dy) > 1) this.headings.set(unit.id, Math.atan2(dy, dx));
+        prev.x = unit.x;
+        prev.y = unit.y;
+      } else {
+        this.lastPositions.set(unit.id, { x: unit.x, y: unit.y });
+      }
+    }
+
     // First sight of our own force: open the camera on the base rather than
     // the whole map. fitCamera's map-fit letterboxes a portrait phone into an
     // unreadable band; a commander starts at home in any case.
@@ -1019,13 +1044,17 @@ export class EchoRenderer {
       this.tracked.set(contact.id, { contact, lastSeenMs: now });
     }
 
-    // Drop selections for entities that no longer exist.
-    if (this.selected.size > 0) {
-      const alive = new Set<number>();
-      for (const unit of this.units) alive.add(unit.id);
-      for (const structure of this.structures) alive.add(structure.id);
-      for (const id of this.selected) {
-        if (!alive.has(id)) this.selected.delete(id);
+    // Drop selections and motion history for entities that no longer exist.
+    const alive = new Set<number>();
+    for (const unit of this.units) alive.add(unit.id);
+    for (const structure of this.structures) alive.add(structure.id);
+    for (const id of this.selected) {
+      if (!alive.has(id)) this.selected.delete(id);
+    }
+    for (const id of this.lastPositions.keys()) {
+      if (!alive.has(id)) {
+        this.lastPositions.delete(id);
+        this.headings.delete(id);
       }
     }
   }
@@ -1114,15 +1143,23 @@ export class EchoRenderer {
       // A construction site renders as scaffolding: dim fill, dashed feel.
       const alpha = building ? 0.35 : 0.9;
 
-      g.rect(structure.x - radius, structure.y - radius, radius * 2, radius * 2).fill({
-        color: palette.primary,
-        alpha: alpha * 0.5,
-      });
-      g.rect(structure.x - radius, structure.y - radius, radius * 2, radius * 2).stroke({
-        width: (isSelected ? 4 : 2) * inverseScale,
-        color: isSelected ? UI.text : palette.accent,
-        alpha,
-      });
+      if (isSelected) {
+        g.circle(structure.x, structure.y, radius + 14).stroke({
+          width: 2 * inverseScale,
+          color: UI.text,
+          alpha: 0.8,
+        });
+      }
+
+      drawStructureSilhouette(
+        g,
+        structure.kind,
+        structure.x,
+        structure.y,
+        radius,
+        { color: palette.primary, accent: palette.accent, alpha, detail: !building },
+        2 * inverseScale
+      );
 
       // The structure's own loudness ring, same language as units.
       g.circle(structure.x, structure.y, radius + 10 + structure.sig * 0.35).stroke({
@@ -1281,16 +1318,34 @@ export class EchoRenderer {
         }
         case ResolutionTier.Track: {
           const color = this.contactColor(contact, style.color);
-          g.circle(contact.x, contact.y, style.radius).fill({ color, alpha });
-
-          if (contact.heading !== undefined) {
-            const length = style.radius * 2.6;
-            g.moveTo(contact.x, contact.y)
-              .lineTo(
-                contact.x + Math.cos(contact.heading) * length,
-                contact.y + Math.sin(contact.heading) * length
-              )
-              .stroke({ width: 2 * inverseScale, color, alpha });
+          // A track earns the resolved outline — the shape, its heading, its
+          // hull — but never the livery. Asymmetric Fidelity Law,
+          // docs/art-direction.md.
+          // Faction-colour fill (Tier 4 knows identity), threat-red outline
+          // so a track reads against any biome its faction happens to match.
+          if (contact.kind !== undefined && contact.faction !== undefined) {
+            drawUnitSilhouette(
+              g,
+              contact.kind,
+              contact.faction,
+              contact.x,
+              contact.y,
+              contact.heading ?? 0,
+              { color, accent: UI.threat, alpha, detail: false },
+              2 * inverseScale
+            );
+          } else if (contact.structure !== undefined) {
+            drawStructureSilhouette(
+              g,
+              contact.structure,
+              contact.x,
+              contact.y,
+              structureStatsFor(contact.structure).radiusM,
+              { color, accent: UI.threat, alpha, detail: false },
+              2 * inverseScale
+            );
+          } else {
+            g.circle(contact.x, contact.y, style.radius).fill({ color, alpha });
           }
 
           if (contact.hp !== undefined && contact.maxHp !== undefined && contact.maxHp > 0) {
@@ -1318,6 +1373,10 @@ export class EchoRenderer {
     return FACTION_PALETTE[contact.faction]?.primary ?? fallback;
   }
 
+  private headingFor(unit: OwnUnit): number {
+    return this.headings.get(unit.id) ?? 0;
+  }
+
   private drawUnits(): void {
     const g = this.unitLayer;
     g.clear();
@@ -1325,8 +1384,7 @@ export class EchoRenderer {
     const palette = FACTION_PALETTE[this.faction];
 
     for (const unit of this.units) {
-      const stats = statsFor(unit.kind);
-      const radius = 10 + stats.maxHp / 120;
+      const radius = HULL_LENGTH_M[unit.kind] / 2;
       const isSelected = this.selected.has(unit.id);
 
       // Silent-running units render dimmed: quiet is a visible state, because
@@ -1334,12 +1392,25 @@ export class EchoRenderer {
       // and toothless.
       const alpha = unit.silentRunning ? 0.45 : 1;
 
-      g.circle(unit.x, unit.y, radius).fill({ color: palette.primary, alpha });
-      g.circle(unit.x, unit.y, radius).stroke({
-        width: (isSelected ? 3 : 1) * inverseScale,
-        color: isSelected ? UI.text : palette.accent,
-        alpha,
-      });
+      if (isSelected) {
+        g.circle(unit.x, unit.y, radius + 8).stroke({
+          width: 2 * inverseScale,
+          color: UI.text,
+          alpha: 0.8,
+        });
+      }
+
+      // Own force renders at full fidelity: hull, heading, faction livery.
+      drawUnitSilhouette(
+        g,
+        unit.kind,
+        this.faction,
+        unit.x,
+        unit.y,
+        this.headingFor(unit),
+        { color: palette.primary, accent: palette.accent, alpha, detail: true },
+        1.5 * inverseScale
+      );
 
       // A small tick of the unit's own loudness, drawn on the unit itself.
       g.circle(unit.x, unit.y, radius + 6 + unit.sig * 0.35).stroke({
@@ -1349,9 +1420,9 @@ export class EchoRenderer {
       });
 
       if (unit.maxHp > 0 && unit.hp < unit.maxHp) {
-        const width = radius * 3;
+        const width = radius * 2.4;
         const fraction = Math.max(0, unit.hp / unit.maxHp);
-        const barY = unit.y - radius * 2.2;
+        const barY = unit.y - radius - 12 * inverseScale;
         g.rect(unit.x - width / 2, barY, width, 3 * inverseScale).fill({
           color: 0x000000,
           alpha: 0.6,
