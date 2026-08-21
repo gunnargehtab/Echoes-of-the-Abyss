@@ -63,4 +63,10 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 
 One forward reference remains: `concept-art/DESIGN-PHILOSOPHY.md`, linked from the root README, which would set out the Pressure Cartography visual language behind the four survey plates.
 
+Deferred design questions, parked here as plain text until decided:
+
+- **Supply / berth capacity** — a population cap (berth tonnage granted by structures)
+  in the classic RTS mould. Deliberately deferred until the current economy loop has
+  been playtested; nodule cost and build time are the only production limiters for now.
+
 **Links in `docs/` are checked in CI and the check is blocking** — a link to a document that does not exist will fail the build. If you want to mark future work, add it to this section as plain text rather than as a link.

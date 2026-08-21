@@ -60,6 +60,23 @@ Four survey plates establish the visual language: **the discipline of measuring 
 
 ## Unit Art Direction
 
+### Rendering Target
+
+The presentation target is **detailed sprite art** in the classic RTS mould — rendered
+hulls with rim light, running lights, cavitation trails, and animated bases — not
+abstract markers. The playable prototype currently draws primitives as placeholders;
+that is a scaffold state, not the direction.
+
+### The Asymmetric Fidelity Law
+
+Detail is something you *own*, never something you are shown. The player's base and
+force render at full fidelity — lit, animated, alive. The enemy renders **only at the
+fidelity their detection earned**: a Tier-1 return is a smudge, a Tier-2 a blurred blob,
+and even a Tier-4 track is a resolved silhouette, never the full-detail sprite. A
+fully-lit battlefield where both sides gleam would be a lie the renderer tells against
+the Echo Layer; the contrast between the rich home base and the black ocean past the
+sonar line is where the dread lives.
+
 ### Silhouette Rules
 
 - Every faction must be recognizable at a glance
@@ -105,6 +122,23 @@ Four survey plates establish the visual language: **the discipline of measuring 
 - Soft blue holographic overlays
 - Pressure gauge motifs
 - Sonar-inspired minimap
+
+### HUD Layout
+
+Classic command layout, three bands:
+
+- **Top bar** — stockpiles and the SIG meter, always visible. Resources read left to
+  right; the player's own loudness is a first-class resource and sits beside them.
+- **Bottom left** — the sonar scope (minimap). It renders *only what the player has
+  earned*: own units and structures at full clarity, contacts at tier fidelity,
+  nodule fields as chart data. Terrain is chart data too. Clicking it moves the camera.
+- **Bottom centre** — the command panel, tabbed (Build / Units; later Upgrades and
+  Special Abilities). Buttons carry cost and dim when unaffordable.
+- **Bottom right** — the selected-entity panel: name, hull, SIG, and state (silent
+  running, throttle, cargo, production queue), with the unit's command buttons.
+
+On phones the same bands compress: the scope shrinks, the info panel folds to a
+status line, and the command panel keeps full-size touch targets.
 
 ### Fonts
 
