@@ -1,0 +1,168 @@
+<!doctype html>
+<!--
+  Bake page for hull-intake. Loaded by bake.mjs in headless Chromium; not a
+  standalone tool. Renders one GLB from a fixed top-down orthographic camera
+  in four passes (albedo / normal / emissive / height) so the driver can save
+  each as a PNG. The passes exist because packages/frontend/src/game/
+  hullTextures.ts composes exactly these channels when it bakes a sprite —
+  today from a guessed heightfield, eventually from these maps.
+
+  Query params (all set by bake.mjs): model, lengthM, ppm.
+-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/deps/node_modules/three/build/three.module.js",
+          "three/addons/": "/deps/node_modules/three/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body style="margin: 0; background: #000">
+    <script type="module">
+      import * as THREE from 'three';
+      import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+      const params = new URLSearchParams(location.search);
+      const lengthM = Number(params.get('lengthM'));
+      const ppm = Number(params.get('ppm')) || 2;
+      const modelUrl = params.get('model') || '/model.glb';
+
+      const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        // toDataURL after render needs the buffer kept; the extra memory is
+        // irrelevant for a one-shot bake.
+        preserveDrawingBuffer: true,
+      });
+      document.body.appendChild(renderer.domElement);
+
+      const scene = new THREE.Scene();
+
+      try {
+        const gltf = await new GLTFLoader().loadAsync(modelUrl);
+        const model = gltf.scene;
+        scene.add(model);
+
+        // --- Measure the export as delivered, before touching it.
+        const rawBox = new THREE.Box3().setFromObject(model);
+        const rawSize = rawBox.getSize(new THREE.Vector3());
+
+        // Convention: length runs along X. Exporters disagree about which
+        // horizontal axis is "forward", so if the Z footprint is longer,
+        // treat Z as the length axis and yaw the model onto X.
+        let rotated = false;
+        if (rawSize.z > rawSize.x) {
+          model.rotation.y = Math.PI / 2;
+          rotated = true;
+        }
+
+        // Rescale so hull length matches the design length in metres
+        // (HULL_LENGTH_M in packages/frontend/src/game/silhouettes.ts).
+        const preBox = new THREE.Box3().setFromObject(model);
+        const preSize = preBox.getSize(new THREE.Vector3());
+        const scale = lengthM > 0 ? lengthM / preSize.x : 1;
+        model.scale.setScalar(scale);
+
+        // Centre on the origin so the camera frame is symmetric.
+        const box = new THREE.Box3().setFromObject(model);
+        const size = box.getSize(new THREE.Vector3());
+        const centre = box.getCenter(new THREE.Vector3());
+        model.position.sub(centre);
+
+        // --- Top-down orthographic camera: X → image right, Z → image down.
+        const wPx = Math.max(2, Math.ceil(size.x * ppm));
+        const hPx = Math.max(2, Math.ceil(size.z * ppm));
+        renderer.setSize(wPx, hPx);
+        const camera = new THREE.OrthographicCamera(
+          -size.x / 2,
+          size.x / 2,
+          size.z / 2,
+          -size.z / 2,
+          0.1,
+          size.y + 2
+        );
+        camera.position.set(0, size.y / 2 + 1, 0);
+        camera.up.set(0, 0, -1);
+        camera.lookAt(0, 0, 0);
+
+        // --- Inventory materials once; the passes swap them in and out.
+        const meshes = [];
+        let emissiveCount = 0;
+        const materials = [];
+        model.traverse((o) => {
+          if (!o.isMesh) return;
+          meshes.push(o);
+          for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
+            const hasEmissive =
+              (m.emissive && (m.emissive.r || m.emissive.g || m.emissive.b)) || m.emissiveMap;
+            if (hasEmissive) emissiveCount++;
+            materials.push({ name: m.name || '(unnamed)', emissive: !!hasEmissive });
+          }
+        });
+        const original = new Map(meshes.map((m) => [m, m.material]));
+        const restore = () => meshes.forEach((m) => (m.material = original.get(m)));
+        const swap = (fn) =>
+          meshes.forEach((mesh) => {
+            const mats = original.get(mesh);
+            mesh.material = Array.isArray(mats) ? mats.map(fn) : fn(mats);
+          });
+
+        const passes = {
+          // Unlit base colour on transparent ground — doubles as the sprite mask.
+          albedo() {
+            renderer.setClearColor(0x000000, 0);
+            swap((m) => new THREE.MeshBasicMaterial({ color: m.color, map: m.map || null }));
+          },
+          // World-space normals; lighting downstream is relit per faction.
+          normal() {
+            renderer.setClearColor(0x000000, 0);
+            scene.overrideMaterial = new THREE.MeshNormalMaterial();
+          },
+          // Emissive channel only — the glow layer. Black means silent.
+          emissive() {
+            renderer.setClearColor(0x000000, 1);
+            swap((m) => {
+              const c = (m.emissive || new THREE.Color(0)).clone();
+              if (m.emissiveIntensity) c.multiplyScalar(Math.min(m.emissiveIntensity, 1));
+              return new THREE.MeshBasicMaterial({ color: c, map: m.emissiveMap || null });
+            });
+          },
+          // Depth from above = heightfield; near (top of hull) renders bright.
+          height() {
+            renderer.setClearColor(0x000000, 1);
+            scene.overrideMaterial = new THREE.MeshDepthMaterial();
+          },
+        };
+
+        window.__bake = (name) => {
+          const setup = passes[name];
+          if (!setup) throw new Error(`unknown pass: ${name}`);
+          setup();
+          renderer.render(scene, camera);
+          const url = renderer.domElement.toDataURL('image/png');
+          scene.overrideMaterial = null;
+          restore();
+          return url;
+        };
+
+        window.__stats = {
+          rawSize: { x: rawSize.x, y: rawSize.y, z: rawSize.z },
+          rotatedZtoX: rotated,
+          scaleApplied: scale,
+          sizeM: { length: size.x, height: size.y, beam: size.z },
+          imagePx: { width: wPx, height: hPx },
+          meshCount: meshes.length,
+          materials,
+          emissiveMaterialCount: emissiveCount,
+        };
+        window.__ready = true;
+      } catch (err) {
+        window.__error = String(err && err.message ? err.message : err);
+      }
+    </script>
+  </body>
+</html>
