@@ -6,8 +6,8 @@
  *
  * A structure with no entry here keeps the procedural architecture bake in
  * structureTextures.ts. That is the normal state for a structure whose model
- * has not been approved yet (Foundry and Sentinel Turret at time of writing),
- * not an error.
+ * has not been approved yet (the Sentinel Turret at time of writing), not an
+ * error.
  */
 
 import { StructureKind } from '@echoes/shared';
@@ -19,6 +19,9 @@ import bastionEmissive from '../assets/structures/maps/bastion-emissive.png';
 import refineryAlbedo from '../assets/structures/maps/refinery-albedo.png';
 import refineryHeight from '../assets/structures/maps/refinery-height.png';
 import refineryEmissive from '../assets/structures/maps/refinery-emissive.png';
+import foundryAlbedo from '../assets/structures/maps/foundry-albedo.png';
+import foundryHeight from '../assets/structures/maps/foundry-height.png';
+import foundryEmissive from '../assets/structures/maps/foundry-emissive.png';
 
 /**
  * Pixels per world metre the structure maps were baked at — the contract with
@@ -40,6 +43,11 @@ const MAP_URL: Partial<
     albedo: refineryAlbedo,
     height: refineryHeight,
     emissive: refineryEmissive,
+  },
+  [StructureKind.Foundry]: {
+    albedo: foundryAlbedo,
+    height: foundryHeight,
+    emissive: foundryEmissive,
   },
 };
 
