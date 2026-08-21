@@ -69,6 +69,9 @@ import cruiserHadEmissive from '../assets/hulls/maps/cruiser-hadron-emissive.png
 import harvesterHadAlbedo from '../assets/hulls/maps/harvester-hadron-albedo.png';
 import harvesterHadHeight from '../assets/hulls/maps/harvester-hadron-height.png';
 import harvesterHadEmissive from '../assets/hulls/maps/harvester-hadron-emissive.png';
+import abyssalHadAlbedo from '../assets/hulls/maps/abyssal-submersible-hadron-albedo.png';
+import abyssalHadHeight from '../assets/hulls/maps/abyssal-submersible-hadron-height.png';
+import abyssalHadEmissive from '../assets/hulls/maps/abyssal-submersible-hadron-emissive.png';
 
 /**
  * Pixels per world metre the maps were baked at. The maps carry no metadata,
@@ -169,6 +172,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<UnitKind, MapUrls>
       albedo: harvesterHadAlbedo,
       height: harvesterHadHeight,
       emissive: harvesterHadEmissive,
+    },
+    [UnitKind.AbyssalSubmersible]: {
+      albedo: abyssalHadAlbedo,
+      height: abyssalHadHeight,
+      emissive: abyssalHadEmissive,
     },
   },
 };

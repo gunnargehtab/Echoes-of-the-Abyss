@@ -54,6 +54,7 @@ const UNITS = [
   { slug: 'corvette-hadron', model: 'corvette-hadron.glb', lengthM: 80 },
   { slug: 'cruiser-hadron', model: 'cruiser-hadron.glb', lengthM: 130 },
   { slug: 'harvester-hadron', model: 'harvester-hadron.glb', lengthM: 75 },
+  { slug: 'abyssal-submersible-hadron', model: 'abyssal-submersible-hadron.glb', lengthM: 95 },
 ];
 
 /**
