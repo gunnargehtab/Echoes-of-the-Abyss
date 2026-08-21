@@ -42,6 +42,9 @@ import harvesterEmissive from '../assets/hulls/maps/harvester-emissive.png';
 import abyssalAlbedo from '../assets/hulls/maps/abyssal-submersible-albedo.png';
 import abyssalHeight from '../assets/hulls/maps/abyssal-submersible-height.png';
 import abyssalEmissive from '../assets/hulls/maps/abyssal-submersible-emissive.png';
+import corvetteBathAlbedo from '../assets/hulls/maps/corvette-bathyarch-albedo.png';
+import corvetteBathHeight from '../assets/hulls/maps/corvette-bathyarch-height.png';
+import corvetteBathEmissive from '../assets/hulls/maps/corvette-bathyarch-emissive.png';
 
 /**
  * Pixels per world metre the maps were baked at. The maps carry no metadata,
@@ -92,7 +95,15 @@ const KIND_MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
  * KIND_MAP_URL entries; slugs in build.mjs carry the faction suffix
  * (e.g. corvette-bathyarch).
  */
-const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<UnitKind, MapUrls>>>> = {};
+const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<UnitKind, MapUrls>>>> = {
+  [Faction.Bathyarch]: {
+    [UnitKind.Corvette]: {
+      albedo: corvetteBathAlbedo,
+      height: corvetteBathHeight,
+      emissive: corvetteBathEmissive,
+    },
+  },
+};
 
 export interface HullMap {
   /** Alpha is the hull mask; RGB is the model's own (faction-specific) livery. */
