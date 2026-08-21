@@ -36,7 +36,7 @@ import { Texture } from 'pixi.js';
 import { Faction, UnitKind } from '@echoes/shared';
 import { FACTION_PALETTE } from './palette.ts';
 import { HULL_LENGTH_M, HULL_OUTLINE } from './silhouettes.ts';
-import { channel, cssColor, distanceTransform, glowDot, lightAndCompose } from './bake.ts';
+import { bakeModelSprite, cssColor, distanceTransform, glowDot, lightAndCompose } from './bake.ts';
 import { hullMap, loadHullMaps, MAP_PPM, type HullMap } from './hullMaps.ts';
 
 import raiderUrl from '../assets/hulls/raider.png';
@@ -140,128 +140,15 @@ function bake(kind: UnitKind, faction: Faction): Texture {
 }
 
 /**
- * Bake a hull whose geometry is known: mask and relief come from the model's
- * maps, so the lighting pass is describing the hull that was designed rather
- * than a cylinder inferred from an outline.
+ * Bake a hull whose geometry is known. The shared model path (bake.ts) does
+ * the work; the one hull-specific mark is the red bow light, which structures
+ * do not carry — a building has no heading.
  */
 function bakeFromModel(faction: Faction, map: HullMap): Texture {
-  const mw = map.widthPx;
-  const mh = map.heightPx;
-  const w = mw + 2 * MARGIN_PX;
-  const h = mh + 2 * MARGIN_PX;
-
-  const canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
-
-  // 1. Mask and cladding, both from the model's albedo pass: alpha is the
-  //    silhouette, and the colour is reduced to luminance before being
-  //    recoloured in the faction's primary below. The models are dressed in
-  //    one faction's palette, so their hue is not shareable — but their
-  //    *value* is the panel, ridge and frill shading of this specific hull,
-  //    which is exactly the detail the stretched plate crop never had.
-  ctx.drawImage(map.albedo, MARGIN_PX, MARGIN_PX);
-  const modelAlbedo = ctx.getImageData(0, 0, w, h).data;
-  const mask = new Uint8Array(w * h);
-  for (let i = 0; i < mask.length; i++) mask[i] = modelAlbedo[i * 4 + 3]!;
-
-  // 2. Heightfield: depth from above, renormalised across the hull's own
-  //    range. The map stores absolute camera depth, but the lighting model
-  //    wants 0 at the silhouette edge and 1 along the spine, and only the
-  //    masked pixels say where those actually fall.
-  ctx.clearRect(0, 0, w, h);
-  ctx.drawImage(map.height, MARGIN_PX, MARGIN_PX);
-  const depth = ctx.getImageData(0, 0, w, h).data;
-  let lo = 255;
-  let hi = 0;
-  for (let i = 0; i < mask.length; i++) {
-    if (mask[i] === 0) continue;
-    const v = depth[i * 4]!;
-    if (v < lo) lo = v;
-    if (v > hi) hi = v;
-  }
-  const span = Math.max(1, hi - lo);
-  const height = new Float32Array(w * h);
-  for (let i = 0; i < height.length; i++) {
-    if (mask[i] === 0) continue;
-    height[i] = (depth[i * 4]! - lo) / span;
-  }
-
-  // 3. Cladding: the model's shading in the faction's colours. Luminance is
-  //    lifted off the floor first — a Pelagia hull is deep chlorophyll, near
-  //    black, and multiplying that raw would bury the livery the faction is
-  //    supposed to be recognised by at RTS zoom.
-  const palette = FACTION_PALETTE[faction];
-  const primaryR = channel(palette.primary, 16);
-  const primaryG = channel(palette.primary, 8);
-  const primaryB = channel(palette.primary, 0);
-  const albedo = new Uint8ClampedArray(w * h * 4);
-  for (let i = 0; i < mask.length; i++) {
-    if (mask[i] === 0) continue;
-    const j = i * 4;
-    const luma =
-      (0.299 * modelAlbedo[j]! + 0.587 * modelAlbedo[j + 1]! + 0.114 * modelAlbedo[j + 2]!) / 255;
-    // Kept deliberately low: bake.ts lifts the albedo by ×1.5 before lighting
-    // it, so a mid-grey base here clips to white the moment specular lands.
-    const v = 0.22 + 0.3 * luma;
-    albedo[j] = v * primaryR;
-    albedo[j + 1] = v * primaryG;
-    albedo[j + 2] = v * primaryB;
-    albedo[j + 3] = 255;
-  }
-
-  // Half the beam is the same relief scale the procedural bake uses, so both
-  // paths curve by the same amount relative to the hull's size.
-  lightAndCompose(ctx, w, h, mask, albedo, height, faction, mh / 2);
-
-  drawModelLights(ctx, map, faction);
-  drawBowLight(ctx, w / 2 + 0.44 * mw, h / 2);
-
+  const canvas = bakeModelSprite(faction, map, MARGIN_PX);
+  const ctx = canvas.getContext('2d')!;
+  drawBowLight(ctx, canvas.width / 2 + 0.44 * map.widthPx, canvas.height / 2);
   return Texture.from(canvas);
-}
-
-/**
- * The model's lights, recoloured to the faction glow colour and bloomed.
- *
- * Placement is the model's — a Cruiser's lit vein lattice and a Light Scout's
- * five navigation marks encode their SIG bands (docs/style-neon-noir.md, glow
- * encodes loudness), and that budget should come from the design rather than
- * from a dot pattern hardcoded per faction here.
- */
-function drawModelLights(ctx: CanvasRenderingContext2D, map: HullMap, faction: Faction): void {
-  const glow = FACTION_PALETTE[faction].glow;
-  const r = channel(glow, 16);
-  const g = channel(glow, 8);
-  const b = channel(glow, 0);
-
-  const lights = document.createElement('canvas');
-  lights.width = map.widthPx;
-  lights.height = map.heightPx;
-  const lctx = lights.getContext('2d', { willReadFrequently: true })!;
-  lctx.drawImage(map.emissive, 0, 0);
-
-  const data = lctx.getImageData(0, 0, lights.width, lights.height);
-  for (let i = 0; i < data.data.length; i += 4) {
-    // The emissive pass renders on black, so brightness alone says "lit here".
-    const luma = Math.max(data.data[i]!, data.data[i + 1]!, data.data[i + 2]!) / 255;
-    data.data[i] = r;
-    data.data[i + 1] = g;
-    data.data[i + 2] = b;
-    data.data[i + 3] = Math.min(255, luma * 320);
-  }
-  lctx.putImageData(data, 0, 0);
-
-  ctx.globalCompositeOperation = 'lighter';
-  // Bloom first, then the sharp marks on top: a light in black water is a
-  // halo with a hot centre, never a flat sticker.
-  ctx.filter = 'blur(3px)';
-  ctx.globalAlpha = 0.85;
-  ctx.drawImage(lights, MARGIN_PX, MARGIN_PX);
-  ctx.filter = 'none';
-  ctx.globalAlpha = 1;
-  ctx.drawImage(lights, MARGIN_PX, MARGIN_PX);
-  ctx.globalCompositeOperation = 'source-over';
 }
 
 /** The bow running light every navy carries: heading, readable at a glance. */

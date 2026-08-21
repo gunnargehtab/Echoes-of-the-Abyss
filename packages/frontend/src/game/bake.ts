@@ -136,6 +136,151 @@ export function lightAndCompose(
   ctx.putImageData(out, 0, 0);
 }
 
+/** Decoded offline-baked maps for one 3D model (see tools/hull-maps). */
+export interface ModelMaps {
+  /** Alpha is the silhouette mask; RGB is the model's own one-faction livery. */
+  albedo: HTMLImageElement;
+  /** Depth from directly above, bright = high. */
+  height: HTMLImageElement;
+  /** Where the model's lights are; black means unlit. */
+  emissive: HTMLImageElement;
+  widthPx: number;
+  heightPx: number;
+}
+
+/**
+ * Bake a sprite from a model's offline maps — the shared model-backed path for
+ * units (hullTextures.ts) and structures (structureTextures.ts), kept here for
+ * the same reason as the lighting model: one implementation, one look.
+ *
+ * Mask and relief are the designed geometry's own. The cladding is the model
+ * albedo's *luminance* recoloured in the faction primary: models are dressed
+ * in one faction's palette, so their hue is not shareable, but their value is
+ * the panel/ridge shading of this specific shape. Lights come from the
+ * emissive map, recoloured to the faction glow and bloomed, so each design's
+ * approved light budget survives into the sprite (glow encodes loudness).
+ *
+ * Returns the canvas; callers wrap it in a texture and may add their own
+ * marks (the hulls' bow light) on top.
+ */
+export function bakeModelSprite(
+  faction: Faction,
+  map: ModelMaps,
+  marginPx: number
+): HTMLCanvasElement {
+  const mw = map.widthPx;
+  const mh = map.heightPx;
+  const w = mw + 2 * marginPx;
+  const h = mh + 2 * marginPx;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+
+  // 1. Mask from the albedo pass's alpha.
+  ctx.drawImage(map.albedo, marginPx, marginPx);
+  const modelAlbedo = ctx.getImageData(0, 0, w, h).data;
+  const mask = new Uint8Array(w * h);
+  for (let i = 0; i < mask.length; i++) mask[i] = modelAlbedo[i * 4 + 3]!;
+
+  // 2. Heightfield, renormalised across the shape's own range: the map stores
+  //    absolute camera depth, but the lighting model wants 0 at the silhouette
+  //    edge and 1 at the highest point, and only the masked pixels say where
+  //    those actually fall.
+  ctx.clearRect(0, 0, w, h);
+  ctx.drawImage(map.height, marginPx, marginPx);
+  const depth = ctx.getImageData(0, 0, w, h).data;
+  let lo = 255;
+  let hi = 0;
+  for (let i = 0; i < mask.length; i++) {
+    if (mask[i] === 0) continue;
+    const v = depth[i * 4]!;
+    if (v < lo) lo = v;
+    if (v > hi) hi = v;
+  }
+  const span = Math.max(1, hi - lo);
+  const height = new Float32Array(w * h);
+  for (let i = 0; i < height.length; i++) {
+    if (mask[i] === 0) continue;
+    height[i] = (depth[i * 4]! - lo) / span;
+  }
+
+  // 3. Cladding: luminance recoloured in the faction primary, lifted off the
+  //    floor (dark liveries would otherwise bury the faction colour) but kept
+  //    low overall — lightAndCompose lifts by ×1.5, and a mid-grey base here
+  //    clips to white the moment specular lands.
+  const palette = FACTION_PALETTE[faction];
+  const primaryR = channel(palette.primary, 16);
+  const primaryG = channel(palette.primary, 8);
+  const primaryB = channel(palette.primary, 0);
+  const albedo = new Uint8ClampedArray(w * h * 4);
+  for (let i = 0; i < mask.length; i++) {
+    if (mask[i] === 0) continue;
+    const j = i * 4;
+    const luma =
+      (0.299 * modelAlbedo[j]! + 0.587 * modelAlbedo[j + 1]! + 0.114 * modelAlbedo[j + 2]!) / 255;
+    const v = 0.22 + 0.3 * luma;
+    albedo[j] = v * primaryR;
+    albedo[j + 1] = v * primaryG;
+    albedo[j + 2] = v * primaryB;
+    albedo[j + 3] = 255;
+  }
+
+  // Half the minor extent keeps relief curvature proportional to the shape's
+  // size, matching what the procedural bakes use.
+  lightAndCompose(ctx, w, h, mask, albedo, height, faction, Math.min(mw, mh) / 2);
+
+  drawModelLights(ctx, map, faction, marginPx);
+
+  return canvas;
+}
+
+/**
+ * The model's lights, recoloured to the faction glow colour and bloomed.
+ * Placement and budget are the model's — approved at intake against the
+ * design's SIG band, never a hardcoded per-faction dot pattern here.
+ */
+function drawModelLights(
+  ctx: CanvasRenderingContext2D,
+  map: ModelMaps,
+  faction: Faction,
+  marginPx: number
+): void {
+  const glow = FACTION_PALETTE[faction].glow;
+  const r = channel(glow, 16);
+  const g = channel(glow, 8);
+  const b = channel(glow, 0);
+
+  const lights = document.createElement('canvas');
+  lights.width = map.widthPx;
+  lights.height = map.heightPx;
+  const lctx = lights.getContext('2d', { willReadFrequently: true })!;
+  lctx.drawImage(map.emissive, 0, 0);
+
+  const data = lctx.getImageData(0, 0, lights.width, lights.height);
+  for (let i = 0; i < data.data.length; i += 4) {
+    // The emissive pass renders on black, so brightness alone says "lit here".
+    const luma = Math.max(data.data[i]!, data.data[i + 1]!, data.data[i + 2]!) / 255;
+    data.data[i] = r;
+    data.data[i + 1] = g;
+    data.data[i + 2] = b;
+    data.data[i + 3] = Math.min(255, luma * 320);
+  }
+  lctx.putImageData(data, 0, 0);
+
+  ctx.globalCompositeOperation = 'lighter';
+  // Bloom first, then the sharp marks on top: a light in black water is a
+  // halo with a hot centre, never a flat sticker.
+  ctx.filter = 'blur(3px)';
+  ctx.globalAlpha = 0.85;
+  ctx.drawImage(lights, marginPx, marginPx);
+  ctx.filter = 'none';
+  ctx.globalAlpha = 1;
+  ctx.drawImage(lights, marginPx, marginPx);
+  ctx.globalCompositeOperation = 'source-over';
+}
+
 /** A soft additive glow dot — running lights, silo floods, bioluminescence. */
 export function glowDot(
   ctx: CanvasRenderingContext2D,

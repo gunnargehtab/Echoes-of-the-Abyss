@@ -4,10 +4,11 @@
  * These PNGs are rendered offline from the approved 3D models in
  * docs/concept-art/models by `node tools/hull-maps/build.mjs`, which is also
  * where the maps' meaning is defined:
- *   - albedo:   unlit base colour on a transparent ground. Only its ALPHA is
- *               used here, as the hull mask — the colour a hull wears is the
- *               faction's business, not the model's (the models are dressed in
- *               one faction's palette; their shape is shared).
+ *   - albedo:   unlit base colour on a transparent ground. Its ALPHA is the
+ *               hull mask and its LUMINANCE is the cladding shading; the hue
+ *               is discarded — the colour a hull wears is the faction's
+ *               business, not the model's (the models are dressed in one
+ *               faction's palette; their shape and shading are shared).
  *   - height:   depth from directly above, bright = high. Replaces the
  *               distance-transform guess that stood in before there was any
  *               geometry to ask.
