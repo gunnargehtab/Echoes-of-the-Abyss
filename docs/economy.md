@@ -115,19 +115,26 @@ Deep economy is a **round trip with a clock on it**. Descent is fast and deafeni
 
 ## 8. Prototype Mapping
 
-The simulation scaffold collapses this document into a single abstract pool: `UnitStats.cost` in `packages/shared/src/units.ts`, spent against a Harvester producing a flat 5 units/minute ([units.md](units.md)). That is deliberate — the Echo Layer can be validated without a resource model, and a resource model added on top would only slow the tuning loop.
-
-When the economy is implemented, the mapping is:
+The simulation scaffold implements the Nodule economy as the classic C&C harvester loop:
+drive to a field, mine, haul home, deposit at a Bastion or Refinery. Constants live in
+`ECONOMY` and `HARVEST_THROTTLE` in `packages/shared/src/constants.ts`; the loop itself is
+`packages/backend/src/sim/systems/harvest.ts`.
 
 | Doc concept | Prototype today | Implementation note |
 | --- | --- | --- |
-| Nodule | The abstract pool | Rename in place; no formula change |
+| Nodule | **Implemented** — per-player stockpile, spent on units and structures | Harvesters carry 50 nodules per trip, mining 10/s at Standard throttle |
+| Throttle states | **Implemented** — all four states of §3, per harvester | Mining SIG follows the throttle (12/25/45/68); yield scales 0/0.4/1.0/1.4 |
+| Refining SIG | **Implemented** — the Refinery holds 65 SIG sustained (§4) | Forward refineries are real: any deposit structure works, the loud one is optional |
 | Thermal Draw | Not modelled | A continuous rate, never a stockpile — needs its own accumulator |
 | Biomass | Not modelled | Requires the Drift simulation first |
 | Resonance Crystal | Not modelled | Needs the Abyssal band populated with nodes |
-| Throttle states | Not modelled | The harvester already carries a distinct mining SIG (40) vs idle (18); throttle generalises that pair into four |
+| Industrial hum (§5) | Not modelled | Requires the Echo Mark terrain layer first |
 
-The throttle row is the one to build first: it is a small change to an existing value, and it puts the economy's central decision — *how loud am I willing to be paid* — into the prototype where it can be played.
+An earlier draft of the scaffold used a flat 5 nodules/minute abstraction; the cargo loop
+replaced it because a positional economy — where the *route* between field and depot is
+the thing you defend — is the half of the design the abstraction could not exercise, and
+because 5/minute could never fund the roster's 50-750 nodule price range in a playable
+match. [units.md](units.md) carries the current harvester figures.
 
 ---
 

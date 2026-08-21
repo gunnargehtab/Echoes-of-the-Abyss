@@ -7,7 +7,15 @@
  */
 
 import { Client, type Room } from 'colyseus.js';
-import type { EchoSnapshot, Faction } from '@echoes/shared';
+import type {
+  EchoSnapshot,
+  Faction,
+  GameOverPayload,
+  HarvestThrottle,
+  ResourceNodeInfo,
+  StructureKind,
+  UnitKind,
+} from '@echoes/shared';
 
 export interface TerrainPayload {
   cols: number;
@@ -23,8 +31,10 @@ export interface AssignedPayload {
 
 export interface GameClientHandlers {
   onTerrain(terrain: TerrainPayload): void;
+  onNodes(nodes: ResourceNodeInfo[]): void;
   onAssigned(assigned: AssignedPayload): void;
   onEcho(snapshot: EchoSnapshot): void;
+  onGameOver(payload: GameOverPayload): void;
   onStatus(status: ConnectionStatus, detail?: string): void;
 }
 
@@ -49,8 +59,10 @@ export class GameClient {
       this.room = room;
 
       room.onMessage('terrain', (payload: TerrainPayload) => this.handlers.onTerrain(payload));
+      room.onMessage('nodes', (payload: ResourceNodeInfo[]) => this.handlers.onNodes(payload));
       room.onMessage('assigned', (payload: AssignedPayload) => this.handlers.onAssigned(payload));
       room.onMessage('echo', (payload: EchoSnapshot) => this.handlers.onEcho(payload));
+      room.onMessage('gameOver', (payload: GameOverPayload) => this.handlers.onGameOver(payload));
       room.onLeave(() => this.handlers.onStatus('closed'));
       room.onError((code, message) => this.handlers.onStatus('error', `${code}: ${message ?? ''}`));
 
@@ -75,6 +87,30 @@ export class GameClient {
   /** The big red button. Cost is previewed in the HUD before this is called. */
   activeSonar(unitId: number): void {
     this.room?.send('ping', { unitId });
+  }
+
+  /** Attack a heard contact, by its opaque per-observer handle. */
+  attackContact(unitIds: number[], contactId: number): void {
+    if (unitIds.length === 0) return;
+    this.room?.send('attack', { unitIds, contactId });
+  }
+
+  harvest(unitIds: number[], nodeId: number): void {
+    if (unitIds.length === 0) return;
+    this.room?.send('harvest', { unitIds, nodeId });
+  }
+
+  setThrottle(unitIds: number[], throttle: HarvestThrottle): void {
+    if (unitIds.length === 0) return;
+    this.room?.send('throttle', { unitIds, throttle });
+  }
+
+  build(kind: StructureKind, x: number, y: number): void {
+    this.room?.send('build', { kind, x, y });
+  }
+
+  produce(structureId: number, kind: UnitKind): void {
+    this.room?.send('produce', { structureId, kind });
   }
 
   disconnect(): void {

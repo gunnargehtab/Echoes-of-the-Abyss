@@ -9,9 +9,26 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { Faction, ResolutionTier, SIM, UnitKind } from '@echoes/shared';
+import {
+  ECONOMY,
+  Faction,
+  HarvestThrottle,
+  ResolutionTier,
+  SIM,
+  StructureKind,
+  UnitKind,
+  statsFor,
+  structureStatsFor,
+} from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
-import { Position, Acoustic, SilentRunning } from '../src/sim/components.ts';
+import {
+  Position,
+  Acoustic,
+  Harvester,
+  HarvestMode,
+  Health,
+  SilentRunning,
+} from '../src/sim/components.ts';
 import type { EchoSnapshot } from '@echoes/shared';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
@@ -120,7 +137,12 @@ describe('Echo Layer', () => {
     advance(match, 1);
 
     const mine = advance(match, 0.2)!.get(0)!.units[0]!;
-    const theirs = advance(match, 0.2)!.get(1)!.units[0]!;
+    // A Corvette (idle SIG 28): loud enough to be tracked at this range, and
+    // quiet enough to vanish under Silent Running. The Light Scout would be
+    // inaudible here even when loud, proving nothing.
+    const theirs = advance(match, 0.2)!
+      .get(1)!
+      .units.find((u) => u.kind === UnitKind.Corvette)!;
     Position.x[theirs.id] = Position.x[mine.id]! + 1200;
     Position.y[theirs.id] = Position.y[mine.id]!;
 
@@ -195,6 +217,203 @@ describe('command validation', () => {
 
     match.setSilentRunning(0, theirs.id, true);
     assert.equal(SilentRunning.active[theirs.id], 0);
+  });
+});
+
+describe('economy', () => {
+  it('starts each player with a base, an escort, and the stockpile', () => {
+    const match = twoPlayerMatch();
+    const snapshot = advance(match, 0.5)!.get(0)!;
+    assert.equal(snapshot.nodules, ECONOMY.STARTING_NODULES);
+    const kinds = snapshot.structures.map((s) => s.kind).sort();
+    assert.deepEqual(kinds, [StructureKind.Bastion, StructureKind.Foundry]);
+    assert.ok(snapshot.units.some((u) => u.kind === UnitKind.Harvester));
+  });
+
+  it('runs the harvest loop: mine loudly, haul home, bank the cargo', () => {
+    const match = twoPlayerMatch();
+    // The starting harvester self-assigns the home field. Give it time for at
+    // least one full trip: ~700 m out at 40 m/s, 5 s mining, ~700 m back.
+    const snapshots = advance(match, 60)!;
+    const snapshot = snapshots.get(0)!;
+    assert.ok(
+      snapshot.nodules > ECONOMY.STARTING_NODULES,
+      `expected deposits above the starting ${ECONOMY.STARTING_NODULES}, got ${snapshot.nodules}`
+    );
+  });
+
+  it('mining loudness follows the throttle', () => {
+    const match = twoPlayerMatch();
+    advance(match, 0.2);
+    const harvester = advance(match, 0.2)!
+      .get(0)!
+      .units.find((u) => u.kind === UnitKind.Harvester)!;
+
+    // Park the harvester in mining state and compare throttle SIGs directly.
+    Harvester.mode[harvester.id] = HarvestMode.Mining;
+    match.setThrottle(0, harvester.id, HarvestThrottle.Overburden);
+    advance(match, 0.2);
+    const loud = Acoustic.sig[harvester.id]!;
+    Harvester.mode[harvester.id] = HarvestMode.Mining;
+    match.setThrottle(0, harvester.id, HarvestThrottle.Trickle);
+    advance(match, 0.2);
+    const quiet = Acoustic.sig[harvester.id]!;
+    assert.ok(loud > quiet, `Overburden (${loud}) must be louder than Trickle (${quiet})`);
+  });
+});
+
+describe('construction and production', () => {
+  it('builds a structure for its cost, loudly, then quiets to its idle SIG', () => {
+    const match = twoPlayerMatch();
+    const before = advance(match, 0.5)!.get(0)!;
+    const bastion = before.structures.find((s) => s.kind === StructureKind.Bastion)!;
+
+    const placed = match.build(0, StructureKind.Refinery, bastion.x, bastion.y + 700);
+    assert.ok(placed, 'placement beside the Bastion should be legal');
+
+    const during = advance(match, 1)!.get(0)!;
+    const stats = structureStatsFor(StructureKind.Refinery);
+    assert.equal(during.nodules, before.nodules - stats.cost);
+    const site = during.structures.find((s) => s.kind === StructureKind.Refinery)!;
+    assert.ok(site.buildProgress < 1);
+    assert.ok(
+      site.sig > stats.sigIdle,
+      'a construction site must be louder than the finished hull'
+    );
+
+    advance(match, stats.buildTimeS);
+    const done = advance(match, 0.5)!
+      .get(0)!
+      .structures.find((s) => s.kind === StructureKind.Refinery)!;
+    assert.equal(done.buildProgress, 1);
+    assert.equal(done.hp, done.maxHp);
+    assert.equal(done.sig, stats.sigIdle);
+  });
+
+  it('rejects builds that are unfunded, unanchored, or overlapping', () => {
+    const match = twoPlayerMatch();
+    advance(match, 0.5);
+    const bastion = advance(match, 0.2)!
+      .get(0)!
+      .structures.find((s) => s.kind === StructureKind.Bastion)!;
+
+    // Far from every own structure: no anchor.
+    assert.equal(match.build(0, StructureKind.Refinery, 4000, 4000), false);
+    // Directly on the Bastion: overlapping.
+    assert.equal(match.build(0, StructureKind.Refinery, bastion.x, bastion.y), false);
+    // The Bastion itself is never for sale.
+    assert.equal(match.build(0, StructureKind.Bastion, bastion.x, bastion.y + 700), false);
+  });
+
+  it('produces a queued unit after its build time, for its cost', () => {
+    const match = twoPlayerMatch();
+    const before = advance(match, 0.5)!.get(0)!;
+    const foundry = before.structures.find((s) => s.kind === StructureKind.Foundry)!;
+    const unitCountBefore = before.units.length;
+
+    assert.ok(match.produce(0, foundry.id, UnitKind.LightScout));
+    const queued = advance(match, 0.5)!.get(0)!;
+    assert.equal(queued.nodules, before.nodules - statsFor(UnitKind.LightScout).cost);
+    assert.equal(queued.structures.find((s) => s.id === foundry.id)!.queue.length, 1);
+
+    advance(match, statsFor(UnitKind.LightScout).buildTimeS + 1);
+    const after = advance(match, 0.5)!.get(0)!;
+    assert.equal(after.units.length, unitCountBefore + 1);
+    assert.equal(after.structures.find((s) => s.id === foundry.id)!.queue.length, 0);
+  });
+
+  it('refuses production of combat hulls at the Bastion', () => {
+    const match = twoPlayerMatch();
+    advance(match, 0.5);
+    const bastion = advance(match, 0.2)!
+      .get(0)!
+      .structures.find((s) => s.kind === StructureKind.Bastion)!;
+    assert.equal(match.produce(0, bastion.id, UnitKind.Cruiser), false);
+    assert.ok(match.produce(0, bastion.id, UnitKind.Harvester));
+  });
+});
+
+describe('combat', () => {
+  /** Park an armed unit of each player within weapon range of the other. */
+  function stageBrawl(match: Match): { attacker: number; victim: number } {
+    advance(match, 0.5);
+    const snapshots = advance(match, 0.2)!;
+    const attacker = snapshots.get(0)!.units.find((u) => u.kind === UnitKind.Corvette)!;
+    const victim = snapshots.get(1)!.units.find((u) => u.kind === UnitKind.LightScout)!;
+    Position.x[victim.id] = Position.x[attacker.id]! + 300;
+    Position.y[victim.id] = Position.y[attacker.id]!;
+    return { attacker: attacker.id, victim: victim.id };
+  }
+
+  it('auto-engages an enemy inside weapon range and raises the firing SIG', () => {
+    const match = twoPlayerMatch();
+    const { attacker, victim } = stageBrawl(match);
+    const hpBefore = Health.hp[victim]!;
+
+    advance(match, 1);
+    assert.ok(Health.hp[victim]! < hpBefore, 'a corvette must return fire at 300 m');
+    assert.ok(
+      Acoustic.sig[attacker]! > statsFor(UnitKind.Corvette).sigIdle,
+      'firing must spike SIG above idle'
+    );
+  });
+
+  it('a silent unit holds its fire until ordered', () => {
+    const match = twoPlayerMatch();
+    const { victim } = stageBrawl(match);
+    // Silence the whole escort — the victim sits inside several weapon ranges.
+    for (const unit of advance(match, 0.2)!.get(0)!.units) {
+      match.setSilentRunning(0, unit.id, true);
+    }
+    const hpBefore = Health.hp[victim]!;
+    advance(match, 1);
+    assert.equal(Health.hp[victim], hpBefore, 'silent running must suppress auto-fire');
+  });
+
+  it('destroying the Bastion eliminates the player and ends the match', () => {
+    const match = twoPlayerMatch();
+    advance(match, 0.5);
+    const bastion = advance(match, 0.2)!
+      .get(1)!
+      .structures.find((s) => s.kind === StructureKind.Bastion)!;
+
+    Health.hp[bastion.id] = 1;
+    // Any kill path works; crush it via the pressure system by pretending the
+    // structure sank. Structures have no Pressure component, so use combat:
+    // park an enemy cruiser next to it instead.
+    const cruiser = advance(match, 0.2)!
+      .get(0)!
+      .units.find((u) => u.kind === UnitKind.Corvette)!;
+    Position.x[cruiser.id] = Position.x[bastion.id]! + 200;
+    Position.y[cruiser.id] = Position.y[bastion.id]!;
+
+    advance(match, 2);
+    assert.ok(match.result !== null, 'the match must resolve');
+    assert.equal(match.result!.winnerSlot, 0);
+    const final = advance(match, 0.5)!;
+    assert.equal(final.get(1)!.units.length, 0, 'the eliminated force must scuttle');
+  });
+});
+
+describe('structures in the Echo Layer', () => {
+  it('classifies a heard structure by its structure kind, not a unit kind', () => {
+    const match = twoPlayerMatch();
+    advance(match, 0.5);
+    // Park a high-HYD listener right on top of the enemy Bastion.
+    const listener = advance(match, 0.2)!
+      .get(0)!
+      .units.find((u) => u.kind === UnitKind.LightScout)!;
+    const bastion = advance(match, 0.2)!
+      .get(1)!
+      .structures.find((s) => s.kind === StructureKind.Bastion)!;
+    Position.x[listener.id] = bastion.x + 300;
+    Position.y[listener.id] = bastion.y;
+
+    const contacts = advance(match, 0.5)!.get(0)!.contacts;
+    const heard = contacts.find((c) => c.structure !== undefined);
+    assert.ok(heard !== undefined, 'a Bastion at 300 m must classify');
+    assert.equal(heard.structure, StructureKind.Bastion);
+    assert.equal(heard.kind, undefined, 'a structure contact must not claim a unit kind');
   });
 });
 

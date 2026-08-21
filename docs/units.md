@@ -59,12 +59,69 @@ Abyssal Submersible (Directorate)
 Harvester
 
 - Role: Resource production (economy)
-- SIG: 18 (idle) / 40 (mining)
+- SIG: 18 (idle) / mining follows the throttle — 12 / 25 / 45 / 68 (see economy.md §3)
 - PR: 1–2 (variant)
 - Cost: 80
 - Build time: 20s
-- Production: 5 resource / minute (baseline)
+- Production: 50-nodule cargo per trip, mined at 10/s on the node at Standard throttle;
+  income is the round trip, so route length is part of the price
 - Notes: Mining is loud; economy is a noise source. Pelagia harvesters are quieter by design (see factions.md).
+
+---
+
+Core structures — the base-building loop
+
+Every faction fields these four; they are the C&C skeleton the faction-specific structures
+below decorate. Numbers are transcribed into `packages/shared/src/structures.ts`.
+
+Bastion (Structure — all factions)
+
+- Role: HQ, structure commissioning, harvester deposits — and the match's stake
+- SIG: 35 sustained
+- HYD: 60 (a base mounts the largest fixed arrays a faction owns)
+- HP: 5000
+- Cost: — (one per player, never rebuilt; losing it is elimination)
+- Produces: Harvesters
+- Notes: The win condition. A settlement hums; it can never run silent.
+
+Nodule Refinery (Structure — all factions)
+
+- Role: Harvester deposit point
+- SIG: 65 sustained (economy.md §4 — the loudest permanent thing you own)
+- HP: 1500
+- Cost: 300
+- Build time: 45s
+- Notes: Enables refine-forward play: a refinery beside a contested field shortens the
+  haul and plants a 65-SIG beacon on contested ground. That trade is the economy.
+
+Foundry (Structure — all factions)
+
+- Role: Unit production
+- SIG: 25 idle / 55 while the line runs
+- HP: 2000
+- Cost: 400
+- Build time: 60s
+- Produces: all combat hulls and harvesters
+- Notes: A producing base is audibly producing.
+
+Sentinel Turret (Structure — all factions)
+
+- Role: Static defence
+- SIG: 12 idle / +30 firing burst
+- HYD: 55
+- HP: 1000
+- Cost: 250
+- Build time: 30s
+- Damage: 24 at 700 m, 1.5s cycle (prototype values)
+- Notes: An ambush predator — near-silent until it fires, then it tells the region.
+
+Construction rules (prototype): sites must rise within 1,200 m of an existing own
+structure, broadcast at SIG 70 for the whole build time, and start at 10% hull. See
+economy.md and systems-echo.md §2 — construction is loud.
+
+---
+
+Faction structures
 
 Baffle Barge (Structure — Consortium)
 
@@ -100,6 +157,10 @@ Design notes
 
 - Numbers are prototyping intent. Exact costs and timings are tuneable.
 - Every unit lists SIG and PR so designers can simulate detection interactions without needing full gameplay code.
+- Combat hulls carry prototype weapon stats in `packages/shared/src/units.ts` (damage,
+  range, cooldown) so the scaffold's combat loop can run; the doc-authored number is the
+  firing-burst SIG, which is the design-relevant one. Damage figures are placeholders
+  until a combat design doc exists.
 
 ---
 

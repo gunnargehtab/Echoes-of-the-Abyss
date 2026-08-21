@@ -22,14 +22,28 @@ import {
   resolveTier,
   type Contact,
   type Faction,
+  type StructureKind,
   type UnitKind,
 } from '@echoes/shared';
-import { Acoustic, ActivePing, Health, Owner, Position, Unit, Velocity } from '../components.ts';
+import {
+  Acoustic,
+  ActivePing,
+  Health,
+  Owner,
+  Position,
+  Structure,
+  Unit,
+  Velocity,
+} from '../components.ts';
 import { SpatialHash } from '../spatialHash.ts';
 import type { SimWorld } from '../world.ts';
 
-/** Everything that both emits and can be heard. */
-const acousticEntities = defineQuery([Position, Acoustic, Owner, Unit, Health]);
+/**
+ * Everything that both emits and can be heard — units and structures alike.
+ * A base is a broadcast tower (docs/economy.md §1); it is found the same way
+ * an army is.
+ */
+const acousticEntities = defineQuery([Position, Acoustic, Owner, Health]);
 
 interface BestContact {
   tier: ResolutionTier;
@@ -62,6 +76,20 @@ export class EchoLayer {
   private readonly handles = new Map<number, Map<number, number>>();
   private readonly nextHandle = new Map<number, number>();
   private readonly results = new Map<number, Contact[]>();
+
+  /**
+   * Reverse a per-observer contact handle back to the entity it names, for
+   * validating attack orders. Only handles this slot was actually issued
+   * resolve — a client cannot guess its way to entities it never heard.
+   */
+  entityForHandle(slot: number, handle: number): number | undefined {
+    const slotHandles = this.handles.get(slot);
+    if (slotHandles === undefined) return undefined;
+    for (const [eid, issued] of slotHandles) {
+      if (issued === handle) return eid;
+    }
+    return undefined;
+  }
 
   private handleFor(slot: number, eid: number): number {
     let slotHandles = this.handles.get(slot);
@@ -220,7 +248,11 @@ export class EchoLayer {
         }
 
         if (resolved.tier >= ResolutionTier.Classification) {
-          contact.kind = Unit.kind[eid] as UnitKind;
+          if (hasComponent(world, Unit, eid)) {
+            contact.kind = Unit.kind[eid] as UnitKind;
+          } else if (hasComponent(world, Structure, eid)) {
+            contact.structure = Structure.kind[eid] as StructureKind;
+          }
           contact.faction = Owner.faction[eid] as Faction;
           contact.depth = Position.depth[eid]!;
         }
@@ -228,7 +260,9 @@ export class EchoLayer {
         if (resolved.tier >= ResolutionTier.Track) {
           contact.hp = Health.hp[eid]!;
           contact.maxHp = Health.max[eid]!;
-          contact.heading = Math.atan2(Velocity.y[eid]!, Velocity.x[eid]!);
+          if (hasComponent(world, Velocity, eid)) {
+            contact.heading = Math.atan2(Velocity.y[eid]!, Velocity.x[eid]!);
+          }
         }
 
         out.push(contact);

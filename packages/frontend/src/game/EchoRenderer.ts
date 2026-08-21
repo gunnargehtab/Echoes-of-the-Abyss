@@ -24,15 +24,22 @@ import {
   ACTIVE_SONAR,
   Biome,
   Faction,
+  HarvestThrottle,
   PERSISTENCE,
   PROPAGATION_FACTOR,
   PROPAGATION_MODEL,
   ResolutionTier,
+  StructureKind,
+  UnitKind,
   maxAudibleRangeM,
   statsFor,
+  structureStatsFor,
   type Contact,
   type EchoSnapshot,
+  type GameOverPayload,
+  type OwnStructure,
   type OwnUnit,
+  type ResourceNodeInfo,
 } from '@echoes/shared';
 import { BIOME_COLOR, FACTION_PALETTE, TIER_STYLE, UI, sigColor } from './palette.ts';
 import type { TerrainPayload } from '../net/GameClient.ts';
@@ -47,36 +54,77 @@ export interface RendererCallbacks {
   onMoveOrder(unitIds: number[], x: number, y: number): void;
   onToggleSilent(unitIds: number[], active: boolean): void;
   onPing(unitId: number): void;
+  onAttackOrder(unitIds: number[], contactId: number): void;
+  onHarvestOrder(unitIds: number[], nodeId: number): void;
+  onThrottle(unitIds: number[], throttle: HarvestThrottle): void;
+  onBuild(kind: StructureKind, x: number, y: number): void;
+  onProduce(structureId: number, kind: UnitKind): void;
 }
 
 const SELECT_RADIUS_M = 140;
+/** How close a right-click must land to a contact or node to mean it. */
+const TARGET_RADIUS_M = 160;
+
+/** Production hotkeys 1-5, in docs/units.md roster order. */
+const PRODUCE_KEYS: Record<string, UnitKind> = {
+  Digit1: UnitKind.LightScout,
+  Digit2: UnitKind.Corvette,
+  Digit3: UnitKind.Cruiser,
+  Digit4: UnitKind.AbyssalSubmersible,
+  Digit5: UnitKind.Harvester,
+};
+
+/** Build hotkeys: R refinery, F foundry, T turret. */
+const BUILD_KEYS: Record<string, StructureKind> = {
+  KeyR: StructureKind.Refinery,
+  KeyF: StructureKind.Foundry,
+  KeyT: StructureKind.SentinelTurret,
+};
+
+const THROTTLE_LABEL: Record<HarvestThrottle, string> = {
+  [HarvestThrottle.Idle]: 'idle',
+  [HarvestThrottle.Trickle]: 'trickle',
+  [HarvestThrottle.Standard]: 'standard',
+  [HarvestThrottle.Overburden]: 'OVERBURDEN',
+};
 
 export class EchoRenderer {
   private readonly app = new Application();
   private readonly world = new Container();
   private readonly terrainLayer = new Graphics();
+  private readonly nodeLayer = new Graphics();
   private readonly ringLayer = new Graphics();
   private readonly contactLayer = new Graphics();
+  private readonly structureLayer = new Graphics();
   private readonly unitLayer = new Graphics();
   private readonly hud = new Container();
   private readonly hudGraphics = new Graphics();
 
   private sigLabel!: Text;
+  private resourceLabel!: Text;
   private statusLabel!: Text;
   private selectionLabel!: Text;
+  private bannerLabel!: Text;
 
   private readonly callbacks: RendererCallbacks;
 
   private terrain: TerrainPayload | null = null;
   private units: OwnUnit[] = [];
+  private structures: OwnStructure[] = [];
+  private nodes: ResourceNodeInfo[] = [];
   private readonly tracked = new Map<number, TrackedContact>();
   private selected = new Set<number>();
   private peakSig = 0;
+  private nodules = 0;
   private status = 'connecting';
+  private slot = 0;
   private faction: Faction = Faction.Bathyarch;
+  private gameOver: GameOverPayload | null = null;
 
   /** True while the ping-cost preview is being shown. */
   private previewPing = false;
+  /** Non-null while the next left-click places this structure. */
+  private pendingBuild: StructureKind | null = null;
 
   private destroyed = false;
   private detachInput: (() => void) | null = null;
@@ -103,7 +151,14 @@ export class EchoRenderer {
 
     host.appendChild(this.app.canvas);
 
-    this.world.addChild(this.terrainLayer, this.ringLayer, this.contactLayer, this.unitLayer);
+    this.world.addChild(
+      this.terrainLayer,
+      this.nodeLayer,
+      this.ringLayer,
+      this.contactLayer,
+      this.structureLayer,
+      this.unitLayer
+    );
     this.hud.addChild(this.hudGraphics);
     this.app.stage.addChild(this.world, this.hud);
 
@@ -119,19 +174,34 @@ export class EchoRenderer {
     this.sigLabel = new Text({ text: 'SIG --', style: { ...mono, fontSize: 13 } });
     this.sigLabel.position.set(20, 22);
 
+    this.resourceLabel = new Text({ text: '', style: { ...mono, fontSize: 13 } });
+    this.resourceLabel.position.set(20, 64);
+
     this.statusLabel = new Text({
       text: '',
       style: { ...mono, fontSize: 12, fill: UI.textDim },
     });
-    this.statusLabel.position.set(20, 64);
+    this.statusLabel.position.set(20, 86);
 
     this.selectionLabel = new Text({
       text: '',
       style: { ...mono, fontSize: 12, fill: UI.textDim },
     });
-    this.selectionLabel.position.set(20, 82);
+    this.selectionLabel.position.set(20, 104);
 
-    this.hud.addChild(this.sigLabel, this.statusLabel, this.selectionLabel);
+    this.bannerLabel = new Text({
+      text: '',
+      style: { ...mono, fontSize: 28 },
+    });
+    this.bannerLabel.anchor.set(0.5);
+
+    this.hud.addChild(
+      this.sigLabel,
+      this.resourceLabel,
+      this.statusLabel,
+      this.selectionLabel,
+      this.bannerLabel
+    );
   }
 
   // --- Input ---------------------------------------------------------------
@@ -164,21 +234,26 @@ export class EchoRenderer {
       }
 
       if (e.button === 2) {
-        // Right click: move order for the current selection.
-        if (this.selected.size > 0) {
-          this.callbacks.onMoveOrder([...this.selected], world.x, world.y);
-        }
+        this.handleContextOrder(world.x, world.y);
         return;
       }
 
-      // Left click: select the nearest own unit, or clear.
-      const hit = this.nearestOwnUnit(world.x, world.y);
+      // Left click while a build is pending: place it. The server rejects
+      // illegal sites; the client does not pre-simulate placement rules.
+      if (this.pendingBuild !== null) {
+        this.callbacks.onBuild(this.pendingBuild, world.x, world.y);
+        this.pendingBuild = null;
+        return;
+      }
+
+      // Left click: select the nearest own unit or structure, or clear.
+      const hit = this.nearestOwnEntity(world.x, world.y);
       if (hit === null) {
         if (!e.shiftKey) this.selected.clear();
         return;
       }
       if (!e.shiftKey) this.selected.clear();
-      this.selected.add(hit.id);
+      this.selected.add(hit);
     };
 
     const onPointerMove = (e: PointerEvent) => {
@@ -209,17 +284,48 @@ export class EchoRenderer {
     };
 
     const onKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Escape') {
+        this.pendingBuild = null;
+        return;
+      }
+      const buildKind = BUILD_KEYS[e.code];
+      if (buildKind !== undefined) {
+        this.pendingBuild = buildKind;
+        return;
+      }
       if (this.selected.size === 0) return;
-      const ids = [...this.selected];
+
+      const selectedUnits = this.units.filter((u) => this.selected.has(u.id));
+      const unitIds = selectedUnits.map((u) => u.id);
+
+      const produceKind = PRODUCE_KEYS[e.code];
+      if (produceKind !== undefined) {
+        // 1-5 queue units at every selected production structure.
+        for (const structure of this.structures) {
+          if (this.selected.has(structure.id)) {
+            this.callbacks.onProduce(structure.id, produceKind);
+          }
+        }
+        return;
+      }
 
       if (e.code === 'Space') {
         e.preventDefault();
         // Toggle based on the first selected unit's current state.
-        const first = this.units.find((u) => u.id === ids[0]);
-        this.callbacks.onToggleSilent(ids, !(first?.silentRunning ?? false));
+        this.callbacks.onToggleSilent(unitIds, !(selectedUnits[0]?.silentRunning ?? false));
       } else if (e.code === 'KeyP') {
-        this.callbacks.onPing(ids[0]!);
+        if (unitIds.length > 0) this.callbacks.onPing(unitIds[0]!);
         this.previewPing = false;
+      } else if (e.code === 'KeyV') {
+        // Cycle the harvest throttle: how loud am I willing to be paid.
+        const harvesters = selectedUnits.filter((u) => u.throttle !== undefined);
+        if (harvesters.length > 0) {
+          const next = ((harvesters[0]!.throttle! + 1) % 4) as HarvestThrottle;
+          this.callbacks.onThrottle(
+            harvesters.map((u) => u.id),
+            next
+          );
+        }
       } else if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
         // Hold shift to preview what a ping would cost you.
         this.previewPing = true;
@@ -249,14 +355,80 @@ export class EchoRenderer {
     };
   }
 
-  private nearestOwnUnit(x: number, y: number): OwnUnit | null {
-    let best: OwnUnit | null = null;
+  /**
+   * Right click is the classic RTS context order: a nodule field sends
+   * harvesters to work, a heard contact is an attack order, open water is a
+   * move. The server re-validates everything; this is only intent.
+   */
+  private handleContextOrder(x: number, y: number): void {
+    if (this.selected.size === 0) return;
+    const selectedUnits = this.units.filter((u) => this.selected.has(u.id));
+    const unitIds = selectedUnits.map((u) => u.id);
+
+    const node = this.nearestNode(x, y);
+    const harvesterIds = selectedUnits.filter((u) => u.throttle !== undefined).map((u) => u.id);
+    if (node !== null && harvesterIds.length > 0) {
+      this.callbacks.onHarvestOrder(harvesterIds, node.id);
+      // Everything else in the selection escorts the harvesters.
+      const rest = unitIds.filter((id) => !harvesterIds.includes(id));
+      if (rest.length > 0) this.callbacks.onMoveOrder(rest, x, y);
+      return;
+    }
+
+    const contact = this.nearestContact(x, y);
+    if (contact !== null && unitIds.length > 0) {
+      this.callbacks.onAttackOrder(unitIds, contact.id);
+      return;
+    }
+
+    if (unitIds.length > 0) this.callbacks.onMoveOrder(unitIds, x, y);
+  }
+
+  private nearestNode(x: number, y: number): ResourceNodeInfo | null {
+    let best: ResourceNodeInfo | null = null;
+    let bestDistance = TARGET_RADIUS_M;
+    for (const node of this.nodes) {
+      const distance = Math.hypot(node.x - x, node.y - y);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        best = node;
+      }
+    }
+    return best;
+  }
+
+  private nearestContact(x: number, y: number): Contact | null {
+    let best: Contact | null = null;
+    let bestDistance = TARGET_RADIUS_M;
+    for (const { contact } of this.tracked.values()) {
+      // A Tier-1 smudge has no usable position to click on.
+      if (contact.tier < ResolutionTier.Bearing) continue;
+      const distance = Math.hypot(contact.x - x, contact.y - y);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        best = contact;
+      }
+    }
+    return best;
+  }
+
+  /** Nearest own unit or structure id, for selection. */
+  private nearestOwnEntity(x: number, y: number): number | null {
+    let best: number | null = null;
     let bestDistance = SELECT_RADIUS_M;
     for (const unit of this.units) {
       const distance = Math.hypot(unit.x - x, unit.y - y);
       if (distance < bestDistance) {
         bestDistance = distance;
-        best = unit;
+        best = unit.id;
+      }
+    }
+    for (const structure of this.structures) {
+      const reach = structureStatsFor(structure.kind).radiusM + 40;
+      const distance = Math.hypot(structure.x - x, structure.y - y);
+      if (distance < Math.max(bestDistance, reach) && distance < reach) {
+        bestDistance = distance;
+        best = structure.id;
       }
     }
     return best;
@@ -268,7 +440,8 @@ export class EchoRenderer {
     this.status = status;
   }
 
-  setFaction(faction: Faction): void {
+  setIdentity(slot: number, faction: Faction): void {
+    this.slot = slot;
     this.faction = faction;
   }
 
@@ -278,18 +451,31 @@ export class EchoRenderer {
     this.fitCamera();
   }
 
+  setNodes(nodes: ResourceNodeInfo[]): void {
+    this.nodes = nodes;
+    this.drawNodes();
+  }
+
+  setGameOver(payload: GameOverPayload): void {
+    this.gameOver = payload;
+  }
+
   applySnapshot(snapshot: EchoSnapshot): void {
     this.units = snapshot.units;
+    this.structures = snapshot.structures;
     this.peakSig = snapshot.peakSig;
+    this.nodules = snapshot.nodules;
 
     const now = performance.now();
     for (const contact of snapshot.contacts) {
       this.tracked.set(contact.id, { contact, lastSeenMs: now });
     }
 
-    // Drop selections for units that no longer exist.
+    // Drop selections for entities that no longer exist.
     if (this.selected.size > 0) {
-      const alive = new Set(this.units.map((u) => u.id));
+      const alive = new Set<number>();
+      for (const unit of this.units) alive.add(unit.id);
+      for (const structure of this.structures) alive.add(structure.id);
       for (const id of this.selected) {
         if (!alive.has(id)) this.selected.delete(id);
       }
@@ -336,8 +522,103 @@ export class EchoRenderer {
   private draw(): void {
     this.drawRings();
     this.drawContacts();
+    this.drawStructures();
     this.drawUnits();
     this.drawHud();
+  }
+
+  /**
+   * Nodule fields — public survey-chart data, drawn once. Deliberately dim:
+   * they are geography, not intel.
+   */
+  private drawNodes(): void {
+    const g = this.nodeLayer;
+    g.clear();
+    for (const node of this.nodes) {
+      const radius = 60 + (node.initialAmount / 3000) * 40;
+      g.circle(node.x, node.y, radius).fill({ color: 0xf2b233, alpha: 0.1 });
+      g.circle(node.x, node.y, radius).stroke({ width: 2, color: 0xf2b233, alpha: 0.3 });
+      // A scatter of nodules, deterministic per node so the map is stable.
+      for (let i = 0; i < 7; i++) {
+        const angle = (i / 7) * Math.PI * 2 + node.id;
+        const r = radius * 0.55 * (0.4 + ((i * 37 + node.id * 13) % 10) / 16);
+        g.circle(node.x + Math.cos(angle) * r, node.y + Math.sin(angle) * r, 6).fill({
+          color: 0xf2b233,
+          alpha: 0.45,
+        });
+      }
+    }
+  }
+
+  private drawStructures(): void {
+    const g = this.structureLayer;
+    g.clear();
+    const inverseScale = 1 / this.world.scale.x;
+    const palette = FACTION_PALETTE[this.faction];
+
+    for (const structure of this.structures) {
+      const radius = structureStatsFor(structure.kind).radiusM;
+      const isSelected = this.selected.has(structure.id);
+      const building = structure.buildProgress < 1;
+      // A construction site renders as scaffolding: dim fill, dashed feel.
+      const alpha = building ? 0.35 : 0.9;
+
+      g.rect(structure.x - radius, structure.y - radius, radius * 2, radius * 2).fill({
+        color: palette.primary,
+        alpha: alpha * 0.5,
+      });
+      g.rect(structure.x - radius, structure.y - radius, radius * 2, radius * 2).stroke({
+        width: (isSelected ? 4 : 2) * inverseScale,
+        color: isSelected ? UI.text : palette.accent,
+        alpha,
+      });
+
+      // The structure's own loudness ring, same language as units.
+      g.circle(structure.x, structure.y, radius + 10 + structure.sig * 0.35).stroke({
+        width: 1 * inverseScale,
+        color: sigColor(structure.sig),
+        alpha: 0.25,
+      });
+
+      const barWidth = radius * 2;
+      const barY = structure.y - radius - 14 * inverseScale;
+      if (building) {
+        g.rect(structure.x - radius, barY, barWidth, 6 * inverseScale).fill({
+          color: 0x000000,
+          alpha: 0.6,
+        });
+        g.rect(
+          structure.x - radius,
+          barY,
+          barWidth * structure.buildProgress,
+          6 * inverseScale
+        ).fill({ color: UI.sigMid });
+      } else if (structure.queue.length > 0) {
+        // Production progress plus how deep the queue runs.
+        g.rect(structure.x - radius, barY, barWidth, 6 * inverseScale).fill({
+          color: 0x000000,
+          alpha: 0.6,
+        });
+        g.rect(
+          structure.x - radius,
+          barY,
+          barWidth * structure.queueProgress,
+          6 * inverseScale
+        ).fill({ color: UI.friendly });
+      }
+
+      if (structure.hp < structure.maxHp) {
+        const hpY = structure.y + radius + 8 * inverseScale;
+        const fraction = Math.max(0, structure.hp / structure.maxHp);
+        g.rect(structure.x - radius, hpY, barWidth, 4 * inverseScale).fill({
+          color: 0x000000,
+          alpha: 0.6,
+        });
+        g.rect(structure.x - radius, hpY, barWidth * fraction, 4 * inverseScale).fill({
+          color: UI.friendly,
+        });
+      }
+    }
   }
 
   /**
@@ -544,8 +825,8 @@ export class EchoRenderer {
     const meterWidth = 240;
     const meterHeight = 12;
 
-    g.rect(meterX - 8, meterY - 30, meterWidth + 16, 100).fill({ color: UI.glass, alpha: 0.75 });
-    g.rect(meterX - 8, meterY - 30, meterWidth + 16, 100).stroke({
+    g.rect(meterX - 8, meterY - 30, meterWidth + 16, 122).fill({ color: UI.glass, alpha: 0.75 });
+    g.rect(meterX - 8, meterY - 30, meterWidth + 16, 122).stroke({
       width: 1,
       color: UI.glassStroke,
       alpha: 0.8,
@@ -564,14 +845,47 @@ export class EchoRenderer {
     this.sigLabel.text = `SIG ${this.peakSig.toFixed(0).padStart(3, ' ')} / 100`;
     this.sigLabel.style.fill = sigColor(this.peakSig);
 
+    this.resourceLabel.text = `NODULES ${this.nodules.toFixed(0)}`;
+    this.resourceLabel.style.fill = 0xf2b233;
+
     const contactCount = this.tracked.size;
     this.statusLabel.text = `${this.status}  ·  ${contactCount} contact${
       contactCount === 1 ? '' : 's'
     }`;
-    this.selectionLabel.text =
-      this.selected.size > 0
-        ? `${this.selected.size} selected  ·  RMB move  ·  SPACE silent  ·  P ping  ·  SHIFT preview`
-        : 'LMB select  ·  MMB pan  ·  wheel zoom';
+    this.selectionLabel.text = this.hintLine();
+
+    if (this.gameOver !== null) {
+      const won = this.gameOver.winnerSlot === this.slot;
+      this.bannerLabel.text = won ? 'THE RIFT FALLS SILENT — VICTORY' : 'BASTION LOST — DEFEAT';
+      this.bannerLabel.style.fill = won ? UI.friendly : UI.threat;
+      this.bannerLabel.position.set(this.app.screen.width / 2, this.app.screen.height / 2);
+    } else {
+      this.bannerLabel.text = '';
+    }
+  }
+
+  private hintLine(): string {
+    if (this.pendingBuild !== null) {
+      const stats = structureStatsFor(this.pendingBuild);
+      return `placing ${stats.name} (${stats.cost})  ·  LMB place  ·  ESC cancel`;
+    }
+    if (this.selected.size === 0) {
+      return 'LMB select  ·  MMB pan  ·  R/F/T build  ·  wheel zoom';
+    }
+    const structure = this.structures.find((s) => this.selected.has(s.id));
+    if (structure !== undefined) {
+      const queue = structure.queue.length > 0 ? `  ·  queue ${structure.queue.length}` : '';
+      return `${structureStatsFor(structure.kind).name}${queue}  ·  1-5 produce  ·  R/F/T build`;
+    }
+    const harvester = this.units.find((u) => this.selected.has(u.id) && u.throttle !== undefined);
+    if (harvester !== undefined) {
+      const throttle = THROTTLE_LABEL[harvester.throttle!];
+      return (
+        `harvester [${throttle}] ${harvester.cargo?.toFixed(0) ?? 0} cargo  ·  ` +
+        'RMB node/move  ·  V throttle'
+      );
+    }
+    return `${this.selected.size} selected  ·  RMB attack/move  ·  SPACE silent  ·  P ping  ·  SHIFT preview`;
   }
 
   destroy(): void {
