@@ -51,6 +51,9 @@ import harvesterBathEmissive from '../assets/hulls/maps/harvester-bathyarch-emis
 import cruiserBathAlbedo from '../assets/hulls/maps/cruiser-bathyarch-albedo.png';
 import cruiserBathHeight from '../assets/hulls/maps/cruiser-bathyarch-height.png';
 import cruiserBathEmissive from '../assets/hulls/maps/cruiser-bathyarch-emissive.png';
+import corvetteDirAlbedo from '../assets/hulls/maps/corvette-directorate-albedo.png';
+import corvetteDirHeight from '../assets/hulls/maps/corvette-directorate-height.png';
+import corvetteDirEmissive from '../assets/hulls/maps/corvette-directorate-emissive.png';
 
 /**
  * Pixels per world metre the maps were baked at. The maps carry no metadata,
@@ -117,6 +120,13 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<UnitKind, MapUrls>
       albedo: cruiserBathAlbedo,
       height: cruiserBathHeight,
       emissive: cruiserBathEmissive,
+    },
+  },
+  [Faction.Directorate]: {
+    [UnitKind.Corvette]: {
+      albedo: corvetteDirAlbedo,
+      height: corvetteDirHeight,
+      emissive: corvetteDirEmissive,
     },
   },
 };
