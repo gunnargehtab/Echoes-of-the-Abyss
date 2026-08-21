@@ -1,16 +1,16 @@
 /**
- * Procedural hull and structure silhouettes — the placeholder step toward the
- * detailed sprite art the design targets (docs/art-direction.md "Rendering
- * Target"). Everything here is drawn, not loaded, so it costs nothing to ship
- * and gets replaced sprite-for-sprite later without touching the renderer's
- * structure.
- *
- * Two fidelity modes, enforcing the Asymmetric Fidelity Law:
- *   - detail: true  — the player's OWN force: body + faction accent marks
- *     (rivets, glow, spines, blade) in the faction's shape language.
+ * Procedural hull and structure silhouettes. Own units now render as baked,
+ * lit sprites (see hullTextures.ts), but this module remains load-bearing in
+ * two places, both mandated by the Asymmetric Fidelity Law:
  *   - detail: false — a Tier-4 TRACK of an enemy: the resolved outline alone,
  *     flat, in whatever colour the tier styling dictates. A track earns the
- *     shape, never the livery.
+ *     shape, never the livery — and NEVER the textured sprite.
+ *   - detail: true  — the fallback for the player's own force while the hull
+ *     art is still decoding: body + faction accent marks in the faction's
+ *     shape language.
+ *
+ * HULL_OUTLINE is also the geometric source of truth for the sprite baker, so
+ * the fallback, the track, and the textured sprite all share one hull shape.
  */
 
 import type { Graphics } from 'pixi.js';
@@ -39,7 +39,7 @@ export const HULL_LENGTH_M: Record<UnitKind, number> = {
  * Silhouette-first, per docs/art-direction.md: each kind must read at a
  * glance from shape alone.
  */
-const HULL_OUTLINE: Record<UnitKind, number[][]> = {
+export const HULL_OUTLINE: Record<UnitKind, number[][]> = {
   // A dart: all bow, no belly. The scout is speed wearing a hull.
   [UnitKind.LightScout]: [
     [0.5, 0],

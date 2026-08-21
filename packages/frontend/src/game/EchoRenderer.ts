@@ -19,7 +19,7 @@
  *   +- hud          (screen space, never transformed)
  */
 
-import { Application, Container, Graphics, Text } from 'pixi.js';
+import { Application, Container, Graphics, Sprite, Text } from 'pixi.js';
 import {
   ACTIVE_SONAR,
   Biome,
@@ -44,6 +44,7 @@ import {
 } from '@echoes/shared';
 import { BIOME_COLOR, FACTION_PALETTE, TIER_STYLE, UI, sigColor } from './palette.ts';
 import { drawStructureSilhouette, drawUnitSilhouette, HULL_LENGTH_M } from './silhouettes.ts';
+import { destroyHullTextures, hullSpriteSizeM, hullTexture, loadHullArt } from './hullTextures.ts';
 import type { TerrainPayload } from '../net/GameClient.ts';
 
 /** A contact plus when we last actually heard it, for ghost decay. */
@@ -145,6 +146,9 @@ export class EchoRenderer {
   private readonly ringLayer = new Graphics();
   private readonly contactLayer = new Graphics();
   private readonly structureLayer = new Graphics();
+  /** Baked hull sprites for own units; the Graphics layer above draws overlays. */
+  private readonly unitSpriteLayer = new Container();
+  private readonly unitSprites = new Map<number, Sprite>();
   private readonly unitLayer = new Graphics();
   private readonly hud = new Container();
   private readonly hudGraphics = new Graphics();
@@ -238,6 +242,7 @@ export class EchoRenderer {
       this.ringLayer,
       this.structureLayer,
       this.contactLayer,
+      this.unitSpriteLayer,
       this.unitLayer
     );
     this.hud.addChild(
@@ -251,6 +256,10 @@ export class EchoRenderer {
 
     this.buildHudText();
     this.attachInput();
+
+    // Decode the concept-art hull patches in the background. Until they land
+    // (or if they never do), drawUnits falls back to the vector silhouettes.
+    loadHullArt().catch(() => {});
 
     this.app.ticker.add(() => this.draw());
   }
@@ -1380,11 +1389,48 @@ export class EchoRenderer {
     return this.headings.get(unit.id) ?? 0;
   }
 
+  /**
+   * Keep one hull sprite per own unit in sync with the snapshot. Returns true
+   * when the sprite exists and is showing, so the caller can skip the vector
+   * fallback for that unit.
+   */
+  private syncUnitSprite(unit: OwnUnit, alpha: number): boolean {
+    const texture = hullTexture(unit.kind, this.faction);
+    if (texture === null) return false;
+
+    let sprite = this.unitSprites.get(unit.id);
+    if (sprite === undefined) {
+      sprite = new Sprite();
+      sprite.anchor.set(0.5);
+      this.unitSprites.set(unit.id, sprite);
+      this.unitSpriteLayer.addChild(sprite);
+    }
+    if (sprite.texture !== texture) {
+      sprite.texture = texture;
+      // World units are metres; the bake reports its canvas size in metres.
+      const size = hullSpriteSizeM(unit.kind);
+      sprite.width = size.widthM;
+      sprite.height = size.heightM;
+    }
+    sprite.position.set(unit.x, unit.y);
+    sprite.rotation = this.headingFor(unit);
+    sprite.alpha = alpha;
+    return true;
+  }
+
   private drawUnits(): void {
     const g = this.unitLayer;
     g.clear();
     const inverseScale = 1 / this.world.scale.x;
     const palette = FACTION_PALETTE[this.faction];
+
+    // Drop sprites for units that no longer exist.
+    for (const [id, sprite] of this.unitSprites) {
+      if (!this.units.some((u) => u.id === id)) {
+        sprite.destroy();
+        this.unitSprites.delete(id);
+      }
+    }
 
     for (const unit of this.units) {
       const radius = HULL_LENGTH_M[unit.kind] / 2;
@@ -1403,17 +1449,20 @@ export class EchoRenderer {
         });
       }
 
-      // Own force renders at full fidelity: hull, heading, faction livery.
-      drawUnitSilhouette(
-        g,
-        unit.kind,
-        this.faction,
-        unit.x,
-        unit.y,
-        this.headingFor(unit),
-        { color: palette.primary, accent: palette.accent, alpha, detail: true },
-        1.5 * inverseScale
-      );
+      // Own force renders at full fidelity: the baked, lit, concept-art hull
+      // (docs/art-direction.md "Rendering Target"); vectors until it decodes.
+      if (!this.syncUnitSprite(unit, alpha)) {
+        drawUnitSilhouette(
+          g,
+          unit.kind,
+          this.faction,
+          unit.x,
+          unit.y,
+          this.headingFor(unit),
+          { color: palette.primary, accent: palette.accent, alpha, detail: true },
+          1.5 * inverseScale
+        );
+      }
 
       // A small tick of the unit's own loudness, drawn on the unit itself.
       g.circle(unit.x, unit.y, radius + 6 + unit.sig * 0.35).stroke({
@@ -1658,6 +1707,10 @@ export class EchoRenderer {
     this.detachInput?.();
     this.detachInput = null;
     this.tracked.clear();
+    this.unitSprites.clear();
+    // The bake cache is module-level; drop it so a remount re-bakes rather
+    // than serving textures the GPU no longer holds.
+    destroyHullTextures();
     // Pixi tears down the ticker, canvas and all child display objects.
     if (this.app.renderer !== null && this.app.renderer !== undefined) {
       this.app.destroy(true, { children: true });
