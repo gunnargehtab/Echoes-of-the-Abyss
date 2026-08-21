@@ -5,9 +5,8 @@
  * build.mjs`; see hullMaps.ts for what each map carries.
  *
  * A structure with no entry here keeps the procedural architecture bake in
- * structureTextures.ts. That is the normal state for a structure whose model
- * has not been approved yet (the Sentinel Turret at time of writing), not an
- * error.
+ * structureTextures.ts. All four current structures are model-backed; the
+ * fallback remains for future structures and for decode failures.
  */
 
 import { StructureKind } from '@echoes/shared';
@@ -22,6 +21,9 @@ import refineryEmissive from '../assets/structures/maps/refinery-emissive.png';
 import foundryAlbedo from '../assets/structures/maps/foundry-albedo.png';
 import foundryHeight from '../assets/structures/maps/foundry-height.png';
 import foundryEmissive from '../assets/structures/maps/foundry-emissive.png';
+import turretAlbedo from '../assets/structures/maps/sentinel-turret-albedo.png';
+import turretHeight from '../assets/structures/maps/sentinel-turret-height.png';
+import turretEmissive from '../assets/structures/maps/sentinel-turret-emissive.png';
 
 /**
  * Pixels per world metre the structure maps were baked at — the contract with
@@ -48,6 +50,11 @@ const MAP_URL: Partial<
     albedo: foundryAlbedo,
     height: foundryHeight,
     emissive: foundryEmissive,
+  },
+  [StructureKind.SentinelTurret]: {
+    albedo: turretAlbedo,
+    height: turretHeight,
+    emissive: turretEmissive,
   },
 };
 

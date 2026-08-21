@@ -54,6 +54,7 @@ const STRUCTURES = [
   { slug: 'bastion', model: 'bastion-bathyarch.glb', lengthM: 440 },
   { slug: 'refinery', model: 'refinery-bathyarch.glb', lengthM: 280 },
   { slug: 'foundry', model: 'foundry-bathyarch.glb', lengthM: 320 },
+  { slug: 'sentinel-turret', model: 'sentinel-turret-bathyarch.glb', lengthM: 120 },
 ];
 
 const JOBS = [
