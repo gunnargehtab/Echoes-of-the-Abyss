@@ -68,7 +68,9 @@ packages/shared    @echoes/shared — types, tuning constants, Echo Layer math.
 packages/backend   Colyseus server. Owns the simulation. Node + esbuild bundle.
 packages/frontend  React shell + PixiJS renderer. A terminal, not a simulation.
 tools/echo-sim     Standalone CommonJS harness for deterministic Echo scenarios.
-                   Not an npm workspace; run it directly with node.
+                   Not an npm workspace; run it directly:
+                   node tools/echo-sim/sim.js [tools/echo-sim/scenarios/<name>.json]
+                   Tests can also require('./lib') for detect/runScenario.
 docs/              The design bible. Prose, and the source of every SPEC number.
 ```
 
@@ -188,4 +190,7 @@ Run the same checks locally before pushing; the full sequence is cheap.
 Branch names use `feat/`, `fix/`, `ci/`, `docs/` prefixes. Keep PRs focused and reference
 the issue they close (`Fixes #30`). Issue and PR templates live in `.github/`.
 
-Related: `README.md` · `SETUP.md` · `docs/README.md` · `docs/DEVELOPER_QUICKSTART.md`
+Related: `README.md` · `SETUP.md` · `SETUP-ANDROID.md` (the whole game — server included —
+runs on-device in Termux) · `docs/README.md` · `docs/DEVELOPER_QUICKSTART.md` ·
+`.github/copilot-instructions.md` (the design-side companion to this file: faction noise
+doctrines, biome PF table, and the doc-by-doc map of `docs/`)
