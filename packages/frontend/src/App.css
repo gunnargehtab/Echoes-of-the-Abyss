@@ -3,7 +3,11 @@
 .app {
   width: 100vw;
   height: 100vh;
+  /* dvh tracks the collapsing browser chrome on phones; vh does not. */
+  height: 100dvh;
   overflow: hidden;
+  /* Rubber-band scroll at the map edge would fight the pan gesture. */
+  overscroll-behavior: none;
   background: #03080e;
 }
 
