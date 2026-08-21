@@ -1457,7 +1457,7 @@ export class EchoRenderer {
     if (sprite.texture !== texture) {
       sprite.texture = texture;
       // World units are metres; the bake reports its canvas size in metres.
-      const size = hullSpriteSizeM(unit.kind);
+      const size = hullSpriteSizeM(unit.kind, this.faction);
       sprite.width = size.widthM;
       sprite.height = size.heightM;
     }

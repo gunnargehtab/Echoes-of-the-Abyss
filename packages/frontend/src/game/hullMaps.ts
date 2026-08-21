@@ -16,12 +16,16 @@
  *               glow budget a property of the model rather than of a hardcoded
  *               dot pattern in the renderer.
  *
- * A unit with no entry here keeps the procedural fallback in hullTextures.ts.
- * That is the normal state for a hull whose model has not been approved yet,
- * not an error.
+ * Lookup is two-level: a faction-specific variant model wins when one has
+ * been approved for that faction; otherwise the kind's canonical model (the
+ * one the hull was first designed in — Pelagia for the shared hulls, the
+ * Directorate for the Abyssal Submersible) serves every faction, recoloured
+ * by the bake. A unit with no entry at all keeps the procedural fallback in
+ * hullTextures.ts. Both gaps are normal states for models not yet approved,
+ * not errors.
  */
 
-import { UnitKind } from '@echoes/shared';
+import { Faction, UnitKind } from '@echoes/shared';
 
 import lightScoutAlbedo from '../assets/hulls/maps/light-scout-albedo.png';
 import lightScoutHeight from '../assets/hulls/maps/light-scout-height.png';
@@ -53,7 +57,8 @@ interface MapUrls {
   emissive: string;
 }
 
-const MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
+/** Canonical model per kind — serves every faction until a variant lands. */
+const KIND_MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
   [UnitKind.LightScout]: {
     albedo: lightScoutAlbedo,
     height: lightScoutHeight,
@@ -81,6 +86,14 @@ const MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
   },
 };
 
+/**
+ * Faction-specific variant models: a hull re-designed in another faction's
+ * shape language, not just recoloured. Added per approved model, exactly like
+ * KIND_MAP_URL entries; slugs in build.mjs carry the faction suffix
+ * (e.g. corvette-bathyarch).
+ */
+const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<UnitKind, MapUrls>>>> = {};
+
 export interface HullMap {
   /** Alpha is the hull mask; RGB is the model's own (faction-specific) livery. */
   albedo: HTMLImageElement;
@@ -91,43 +104,54 @@ export interface HullMap {
   heightPx: number;
 }
 
-const maps = new Map<UnitKind, HullMap>();
+/** Keyed 'kind' for canonical models, 'faction:kind' for variants. */
+const maps = new Map<string, HullMap>();
+
+async function decodeInto(key: string, urls: MapUrls): Promise<void> {
+  const decode = async (src: string): Promise<HTMLImageElement> => {
+    const img = new Image();
+    img.src = src;
+    await img.decode();
+    return img;
+  };
+  try {
+    const [albedo, height, emissive] = await Promise.all([
+      decode(urls.albedo),
+      decode(urls.height),
+      decode(urls.emissive),
+    ]);
+    maps.set(key, {
+      albedo,
+      height,
+      emissive,
+      widthPx: albedo.naturalWidth,
+      heightPx: albedo.naturalHeight,
+    });
+  } catch {
+    // Absent map => next fallback level. Not fatal.
+  }
+}
 
 /**
  * Decode every hull map. A map that fails to decode is simply absent, which
- * drops that hull to the procedural bake rather than breaking the renderer —
- * the same failure posture as the concept-art plates.
+ * drops that lookup to its fallback (variant -> canonical -> procedural)
+ * rather than breaking the renderer — the same failure posture as the
+ * concept-art plates.
  */
 export async function loadHullMaps(): Promise<void> {
-  await Promise.all(
-    Object.entries(MAP_URL).map(async ([kind, urls]) => {
-      const decode = async (src: string): Promise<HTMLImageElement> => {
-        const img = new Image();
-        img.src = src;
-        await img.decode();
-        return img;
-      };
-      try {
-        const [albedo, height, emissive] = await Promise.all([
-          decode(urls.albedo),
-          decode(urls.height),
-          decode(urls.emissive),
-        ]);
-        maps.set(Number(kind) as UnitKind, {
-          albedo,
-          height,
-          emissive,
-          widthPx: albedo.naturalWidth,
-          heightPx: albedo.naturalHeight,
-        });
-      } catch {
-        // Absent map => procedural fallback. Not fatal.
-      }
-    })
-  );
+  await Promise.all([
+    ...Object.entries(KIND_MAP_URL).map(([kind, urls]) => decodeInto(kind, urls)),
+    ...Object.entries(VARIANT_MAP_URL).flatMap(([faction, byKind]) =>
+      Object.entries(byKind).map(([kind, urls]) => decodeInto(`${faction}:${kind}`, urls))
+    ),
+  ]);
 }
 
-/** The decoded maps for a hull, or null when it has none (or none yet). */
-export function hullMap(kind: UnitKind): HullMap | null {
-  return maps.get(kind) ?? null;
+/**
+ * The decoded maps for a hull as a faction fields it: the faction's own
+ * variant when one is approved, the kind's canonical model otherwise, null
+ * when the kind has no model at all.
+ */
+export function hullMap(kind: UnitKind, faction: Faction): HullMap | null {
+  return maps.get(`${faction}:${kind}`) ?? maps.get(`${kind}`) ?? null;
 }
