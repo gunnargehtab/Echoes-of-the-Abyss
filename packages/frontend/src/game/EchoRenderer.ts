@@ -26,6 +26,7 @@ import {
   Faction,
   HarvestThrottle,
   PERSISTENCE,
+  PRODUCIBLE,
   PROPAGATION_FACTOR,
   PROPAGATION_MODEL,
   ResolutionTier,
@@ -88,6 +89,40 @@ const THROTTLE_LABEL: Record<HarvestThrottle, string> = {
   [HarvestThrottle.Overburden]: 'OVERBURDEN',
 };
 
+/** Compact unit names for command-bar buttons on narrow screens. */
+const UNIT_SHORT: Record<UnitKind, string> = {
+  [UnitKind.LightScout]: 'SCT',
+  [UnitKind.Corvette]: 'CRV',
+  [UnitKind.Cruiser]: 'CRZ',
+  [UnitKind.AbyssalSubmersible]: 'SUB',
+  [UnitKind.Harvester]: 'HRV',
+};
+
+/** Compact structure names for the build buttons. */
+const STRUCTURE_SHORT: Record<StructureKind, string> = {
+  [StructureKind.Bastion]: 'BAS',
+  [StructureKind.Refinery]: 'REF',
+  [StructureKind.Foundry]: 'FND',
+  [StructureKind.SentinelTurret]: 'TUR',
+};
+
+/** One command-bar button: screen-space bounds plus what pressing it does. */
+interface BarButton {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  label: string;
+  enabled: boolean;
+  /** Rendered highlighted (e.g. Silent Running currently on). */
+  active: boolean;
+  action: () => void;
+}
+
+/** Command bar geometry, CSS px. */
+const BAR_HEIGHT = 56;
+const BAR_BUTTON_HEIGHT = 40;
+
 export class EchoRenderer {
   private readonly app = new Application();
   private readonly world = new Container();
@@ -99,6 +134,11 @@ export class EchoRenderer {
   private readonly unitLayer = new Graphics();
   private readonly hud = new Container();
   private readonly hudGraphics = new Graphics();
+  private readonly barGraphics = new Graphics();
+  /** Pooled Text objects for bar labels — button count varies per context. */
+  private readonly barTexts: Text[] = [];
+  /** Last frame's button layout, hit-tested by pressBarButton. */
+  private barButtons: BarButton[] = [];
 
   private sigLabel!: Text;
   private resourceLabel!: Text;
@@ -125,6 +165,11 @@ export class EchoRenderer {
   private previewPing = false;
   /** Non-null while the next left-click places this structure. */
   private pendingBuild: StructureKind | null = null;
+  /** Coarse pointer = phone/tablet: hints speak gestures, not keys. */
+  private readonly isTouch =
+    typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+  /** The camera opens on the player's own base exactly once. */
+  private cameraCentered = false;
 
   private destroyed = false;
   private detachInput: (() => void) | null = null;
@@ -159,7 +204,7 @@ export class EchoRenderer {
       this.structureLayer,
       this.unitLayer
     );
-    this.hud.addChild(this.hudGraphics);
+    this.hud.addChild(this.hudGraphics, this.barGraphics);
     this.app.stage.addChild(this.world, this.hud);
 
     this.buildHudText();
@@ -216,20 +261,76 @@ export class EchoRenderer {
 
   private attachInput(): void {
     const canvas = this.app.canvas;
+    // Two input dialects share this handler. Mouse keeps the classic RTS
+    // bindings (LMB select, RMB order, MMB pan, wheel zoom). Touch gets one
+    // vocabulary a phone can actually speak: tap = select-or-order, drag =
+    // pan, pinch = zoom; everything else lives on the command bar.
     let panning = false;
     let lastX = 0;
     let lastY = 0;
 
+    /** Live touch points, for one-finger pan and two-finger pinch. */
+    const touches = new Map<number, { x: number; y: number }>();
+    /** Candidate tap: cleared the moment the finger travels or a second lands. */
+    let tapPointerId: number | null = null;
+    let tapStartX = 0;
+    let tapStartY = 0;
+    /** Finger travel below this many CSS px still counts as a tap. */
+    const TAP_SLOP_PX = 12;
+    let pinchDistance = 0;
+
     const onContextMenu = (e: Event) => e.preventDefault();
 
+    // A pointer can be gone before we capture it (lifted mid-handler, or a
+    // synthetic event); losing the capture only costs drag-past-edge, never
+    // the gesture itself, so it must not throw the handler dead.
+    const capture = (pointerId: number) => {
+      try {
+        canvas.setPointerCapture(pointerId);
+      } catch {
+        /* no active pointer — nothing to capture */
+      }
+    };
+
+    const zoomAbout = (clientX: number, clientY: number, factor: number) => {
+      const next = Math.min(4, Math.max(0.05, this.world.scale.x * factor));
+      // Zoom about the cursor/pinch centre rather than the origin.
+      const before = this.screenToWorld(clientX, clientY);
+      this.world.scale.set(next);
+      const after = this.screenToWorld(clientX, clientY);
+      this.world.x += (after.x - before.x) * next;
+      this.world.y += (after.y - before.y) * next;
+    };
+
     const onPointerDown = (e: PointerEvent) => {
+      // The command bar swallows presses from every pointer type.
+      if (e.button === 0 && this.pressBarButton(e.clientX, e.clientY)) return;
+
+      if (e.pointerType === 'touch') {
+        touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        capture(e.pointerId);
+        if (touches.size === 1) {
+          tapPointerId = e.pointerId;
+          tapStartX = e.clientX;
+          tapStartY = e.clientY;
+        } else {
+          // A second finger is a gesture, never a tap.
+          tapPointerId = null;
+          if (touches.size === 2) {
+            const [a, b] = [...touches.values()];
+            pinchDistance = Math.hypot(a!.x - b!.x, a!.y - b!.y);
+          }
+        }
+        return;
+      }
+
       const world = this.screenToWorld(e.clientX, e.clientY);
 
       if (e.button === 1) {
         panning = true;
         lastX = e.clientX;
         lastY = e.clientY;
-        canvas.setPointerCapture(e.pointerId);
+        capture(e.pointerId);
         return;
       }
 
@@ -257,6 +358,37 @@ export class EchoRenderer {
     };
 
     const onPointerMove = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') {
+        const prev = touches.get(e.pointerId);
+        if (prev === undefined) return;
+
+        if (touches.size === 1) {
+          if (
+            tapPointerId === e.pointerId &&
+            Math.hypot(e.clientX - tapStartX, e.clientY - tapStartY) > TAP_SLOP_PX
+          ) {
+            tapPointerId = null;
+          }
+          // One finger down and moving: pan. Harmless during a would-be tap —
+          // sub-slop movement pans invisibly little.
+          this.world.x += e.clientX - prev.x;
+          this.world.y += e.clientY - prev.y;
+        }
+
+        prev.x = e.clientX;
+        prev.y = e.clientY;
+
+        if (touches.size === 2) {
+          const [a, b] = [...touches.values()];
+          const distance = Math.hypot(a!.x - b!.x, a!.y - b!.y);
+          if (pinchDistance > 0 && distance > 0) {
+            zoomAbout((a!.x + b!.x) / 2, (a!.y + b!.y) / 2, distance / pinchDistance);
+          }
+          pinchDistance = distance;
+        }
+        return;
+      }
+
       if (!panning) return;
       this.world.x += e.clientX - lastX;
       this.world.y += e.clientY - lastY;
@@ -265,6 +397,19 @@ export class EchoRenderer {
     };
 
     const onPointerUp = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') {
+        if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+        const wasTap = e.type === 'pointerup' && tapPointerId === e.pointerId;
+        touches.delete(e.pointerId);
+        tapPointerId = null;
+        pinchDistance = 0;
+        if (wasTap) {
+          const world = this.screenToWorld(e.clientX, e.clientY);
+          this.handleTap(world.x, world.y);
+        }
+        return;
+      }
+
       if (panning && canvas.hasPointerCapture(e.pointerId)) {
         canvas.releasePointerCapture(e.pointerId);
       }
@@ -273,14 +418,7 @@ export class EchoRenderer {
 
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-      const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
-      const next = Math.min(4, Math.max(0.05, this.world.scale.x * factor));
-      // Zoom about the cursor rather than the origin.
-      const before = this.screenToWorld(e.clientX, e.clientY);
-      this.world.scale.set(next);
-      const after = this.screenToWorld(e.clientX, e.clientY);
-      this.world.x += (after.x - before.x) * next;
-      this.world.y += (after.y - before.y) * next;
+      zoomAbout(e.clientX, e.clientY, e.deltaY < 0 ? 1.1 : 1 / 1.1);
     };
 
     const onKeyDown = (e: KeyboardEvent) => {
@@ -295,37 +433,19 @@ export class EchoRenderer {
       }
       if (this.selected.size === 0) return;
 
-      const selectedUnits = this.units.filter((u) => this.selected.has(u.id));
-      const unitIds = selectedUnits.map((u) => u.id);
-
       const produceKind = PRODUCE_KEYS[e.code];
       if (produceKind !== undefined) {
-        // 1-5 queue units at every selected production structure.
-        for (const structure of this.structures) {
-          if (this.selected.has(structure.id)) {
-            this.callbacks.onProduce(structure.id, produceKind);
-          }
-        }
+        this.commandProduce(produceKind);
         return;
       }
 
       if (e.code === 'Space') {
         e.preventDefault();
-        // Toggle based on the first selected unit's current state.
-        this.callbacks.onToggleSilent(unitIds, !(selectedUnits[0]?.silentRunning ?? false));
+        this.commandToggleSilent();
       } else if (e.code === 'KeyP') {
-        if (unitIds.length > 0) this.callbacks.onPing(unitIds[0]!);
-        this.previewPing = false;
+        this.commandPing();
       } else if (e.code === 'KeyV') {
-        // Cycle the harvest throttle: how loud am I willing to be paid.
-        const harvesters = selectedUnits.filter((u) => u.throttle !== undefined);
-        if (harvesters.length > 0) {
-          const next = ((harvesters[0]!.throttle! + 1) % 4) as HarvestThrottle;
-          this.callbacks.onThrottle(
-            harvesters.map((u) => u.id),
-            next
-          );
-        }
+        this.commandCycleThrottle();
       } else if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
         // Hold shift to preview what a ping would cost you.
         this.previewPing = true;
@@ -340,6 +460,9 @@ export class EchoRenderer {
     canvas.addEventListener('pointerdown', onPointerDown);
     canvas.addEventListener('pointermove', onPointerMove);
     canvas.addEventListener('pointerup', onPointerUp);
+    // A stolen gesture (browser navigation, notification shade) must clear
+    // touch state or the next finger inherits a phantom pinch.
+    canvas.addEventListener('pointercancel', onPointerUp);
     canvas.addEventListener('wheel', onWheel, { passive: false });
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
@@ -349,10 +472,239 @@ export class EchoRenderer {
       canvas.removeEventListener('pointerdown', onPointerDown);
       canvas.removeEventListener('pointermove', onPointerMove);
       canvas.removeEventListener('pointerup', onPointerUp);
+      canvas.removeEventListener('pointercancel', onPointerUp);
       canvas.removeEventListener('wheel', onWheel);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
     };
+  }
+
+  // --- Command bar ----------------------------------------------------------
+
+  /**
+   * Run the button under a screen point, if any. Returns true when the press
+   * was consumed, so world input never fires through the bar.
+   */
+  private pressBarButton(clientX: number, clientY: number): boolean {
+    const rect = this.app.canvas.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    if (y < this.app.screen.height - BAR_HEIGHT) return false;
+    for (const button of this.barButtons) {
+      if (x >= button.x && x <= button.x + button.w && y >= button.y && y <= button.y + button.h) {
+        if (button.enabled) button.action();
+        return true;
+      }
+    }
+    // A press on the bar's dead space is still the bar's, not the world's.
+    return true;
+  }
+
+  /**
+   * What the bar offers depends on what is selected — the C&C sidebar
+   * collapsed into one contextual row. Every action here also has a keyboard
+   * binding; the bar exists so a touchscreen can reach them at all.
+   */
+  private buildBarModel(): Array<Omit<BarButton, 'x' | 'y' | 'w' | 'h'>> {
+    const buttons: Array<Omit<BarButton, 'x' | 'y' | 'w' | 'h'>> = [];
+
+    if (this.pendingBuild !== null) {
+      const stats = structureStatsFor(this.pendingBuild);
+      buttons.push({
+        label: `CANCEL ${STRUCTURE_SHORT[this.pendingBuild]} ${stats.cost}`,
+        enabled: true,
+        active: true,
+        action: () => {
+          this.pendingBuild = null;
+        },
+      });
+      return buttons;
+    }
+
+    const structure = this.structures.find((s) => this.selected.has(s.id));
+    const producible = structure !== undefined ? PRODUCIBLE[structure.kind] : undefined;
+    const units = this.selectedUnits();
+
+    if (structure !== undefined && producible !== undefined && producible.length > 0) {
+      for (const kind of producible) {
+        const cost = statsFor(kind).cost;
+        buttons.push({
+          label: `${UNIT_SHORT[kind]} ${cost}`,
+          enabled: structure.buildProgress >= 1 && this.nodules >= cost,
+          active: false,
+          action: () => this.commandProduce(kind),
+        });
+      }
+    } else if (units.length > 0) {
+      const first = units[0]!;
+      buttons.push({
+        label: 'SILENT',
+        enabled: true,
+        active: first.silentRunning,
+        action: () => this.commandToggleSilent(),
+      });
+      buttons.push({
+        label: 'PING',
+        enabled: true,
+        active: false,
+        action: () => this.commandPing(),
+      });
+      const harvester = units.find((u) => u.throttle !== undefined);
+      if (harvester !== undefined) {
+        buttons.push({
+          label: `THR ${THROTTLE_LABEL[harvester.throttle!]}`,
+          enabled: true,
+          active: harvester.throttle === HarvestThrottle.Overburden,
+          action: () => this.commandCycleThrottle(),
+        });
+      }
+    } else {
+      for (const kind of [
+        StructureKind.Refinery,
+        StructureKind.Foundry,
+        StructureKind.SentinelTurret,
+      ]) {
+        const stats = structureStatsFor(kind);
+        buttons.push({
+          label: `${STRUCTURE_SHORT[kind]} ${stats.cost}`,
+          enabled: this.nodules >= stats.cost,
+          active: false,
+          action: () => {
+            this.pendingBuild = kind;
+          },
+        });
+      }
+    }
+
+    if (this.selected.size > 0) {
+      buttons.push({
+        label: '✕',
+        enabled: true,
+        active: false,
+        action: () => this.selected.clear(),
+      });
+    }
+    return buttons;
+  }
+
+  private barText(index: number): Text {
+    let text = this.barTexts[index];
+    if (text === undefined) {
+      text = new Text({
+        text: '',
+        style: { fontFamily: 'ui-monospace, Consolas, monospace', fontSize: 12, fill: UI.text },
+      });
+      text.anchor.set(0.5);
+      this.barTexts.push(text);
+      this.hud.addChild(text);
+    }
+    return text;
+  }
+
+  private drawCommandBar(): void {
+    const g = this.barGraphics;
+    g.clear();
+
+    const screenWidth = this.app.screen.width;
+    const barY = this.app.screen.height - BAR_HEIGHT;
+    g.rect(0, barY, screenWidth, BAR_HEIGHT).fill({ color: UI.glass, alpha: 0.92 });
+    g.rect(0, barY, screenWidth, 1).fill({ color: UI.glassStroke });
+
+    const model = this.buildBarModel();
+    const gap = 8;
+    const buttonY = barY + (BAR_HEIGHT - BAR_BUTTON_HEIGHT) / 2;
+    let x = 10;
+
+    this.barButtons = model.map((entry) => {
+      const w = Math.max(44, entry.label.length * 7.5 + 18);
+      const button: BarButton = { ...entry, x, y: buttonY, w, h: BAR_BUTTON_HEIGHT };
+      x += w + gap;
+      return button;
+    });
+
+    this.barButtons.forEach((button, i) => {
+      const alpha = button.enabled ? 1 : 0.35;
+      g.roundRect(button.x, button.y, button.w, button.h, 6).fill({
+        color: button.active ? UI.glassStroke : 0x000000,
+        alpha: alpha * (button.active ? 0.9 : 0.45),
+      });
+      g.roundRect(button.x, button.y, button.w, button.h, 6).stroke({
+        width: 1,
+        color: button.active ? UI.friendly : UI.glassStroke,
+        alpha,
+      });
+      const text = this.barText(i);
+      text.visible = true;
+      text.text = button.label;
+      text.style.fill = button.enabled ? UI.text : UI.textDim;
+      text.position.set(button.x + button.w / 2, button.y + button.h / 2);
+    });
+    for (let i = this.barButtons.length; i < this.barTexts.length; i++) {
+      this.barTexts[i]!.visible = false;
+    }
+  }
+
+  // --- Commands shared by keyboard and the command bar ----------------------
+
+  private selectedUnits(): OwnUnit[] {
+    return this.units.filter((u) => this.selected.has(u.id));
+  }
+
+  /** Queue a unit at every selected production structure. */
+  private commandProduce(kind: UnitKind): void {
+    for (const structure of this.structures) {
+      if (this.selected.has(structure.id)) {
+        this.callbacks.onProduce(structure.id, kind);
+      }
+    }
+  }
+
+  private commandToggleSilent(): void {
+    const units = this.selectedUnits();
+    if (units.length === 0) return;
+    // Toggle based on the first selected unit's current state.
+    this.callbacks.onToggleSilent(
+      units.map((u) => u.id),
+      !(units[0]?.silentRunning ?? false)
+    );
+  }
+
+  private commandPing(): void {
+    const units = this.selectedUnits();
+    if (units.length > 0) this.callbacks.onPing(units[0]!.id);
+    this.previewPing = false;
+  }
+
+  /** Cycle the harvest throttle: how loud am I willing to be paid. */
+  private commandCycleThrottle(): void {
+    const harvesters = this.selectedUnits().filter((u) => u.throttle !== undefined);
+    if (harvesters.length === 0) return;
+    const next = ((harvesters[0]!.throttle! + 1) % 4) as HarvestThrottle;
+    this.callbacks.onThrottle(
+      harvesters.map((u) => u.id),
+      next
+    );
+  }
+
+  /**
+   * A touch tap collapses select and order into one gesture: tapping an own
+   * entity selects it; tapping anywhere else with a selection issues the same
+   * context order a right-click would. Deselection lives on the command bar,
+   * because "tap empty water" already means "move there".
+   */
+  private handleTap(x: number, y: number): void {
+    if (this.pendingBuild !== null) {
+      this.callbacks.onBuild(this.pendingBuild, x, y);
+      this.pendingBuild = null;
+      return;
+    }
+    const hit = this.nearestOwnEntity(x, y);
+    if (hit !== null) {
+      this.selected.clear();
+      this.selected.add(hit);
+      return;
+    }
+    if (this.selected.size > 0) this.handleContextOrder(x, y);
   }
 
   /**
@@ -466,6 +818,35 @@ export class EchoRenderer {
     this.peakSig = snapshot.peakSig;
     this.nodules = snapshot.nodules;
 
+    // First sight of our own force: open the camera on the base rather than
+    // the whole map. fitCamera's map-fit letterboxes a portrait phone into an
+    // unreadable band; a commander starts at home in any case.
+    if (!this.cameraCentered && (this.units.length > 0 || this.structures.length > 0)) {
+      this.cameraCentered = true;
+      let cx = 0;
+      let cy = 0;
+      let count = 0;
+      for (const u of this.units) {
+        cx += u.x;
+        cy += u.y;
+        count++;
+      }
+      for (const s of this.structures) {
+        cx += s.x;
+        cy += s.y;
+        count++;
+      }
+      // Show roughly 3.5 km across the smaller screen axis — the base and its
+      // home field, with water enough to read approach vectors.
+      const scale = Math.min(
+        4,
+        Math.max(0.05, Math.min(this.app.screen.width, this.app.screen.height) / 3500)
+      );
+      this.world.scale.set(scale);
+      this.world.x = this.app.screen.width / 2 - (cx / count) * scale;
+      this.world.y = this.app.screen.height / 2 - (cy / count) * scale;
+    }
+
     const now = performance.now();
     for (const contact of snapshot.contacts) {
       this.tracked.set(contact.id, { contact, lastSeenMs: now });
@@ -525,6 +906,7 @@ export class EchoRenderer {
     this.drawStructures();
     this.drawUnits();
     this.drawHud();
+    this.drawCommandBar();
   }
 
   /**
@@ -865,27 +1247,35 @@ export class EchoRenderer {
   }
 
   private hintLine(): string {
+    // Touch players get gesture words; everything else is on the bar.
     if (this.pendingBuild !== null) {
       const stats = structureStatsFor(this.pendingBuild);
-      return `placing ${stats.name} (${stats.cost})  ·  LMB place  ·  ESC cancel`;
+      return this.isTouch
+        ? `placing ${stats.name} (${stats.cost})  ·  tap to place`
+        : `placing ${stats.name} (${stats.cost})  ·  LMB place  ·  ESC cancel`;
     }
     if (this.selected.size === 0) {
-      return 'LMB select  ·  MMB pan  ·  R/F/T build  ·  wheel zoom';
+      return this.isTouch
+        ? 'tap select  ·  drag pan  ·  pinch zoom'
+        : 'LMB select  ·  MMB pan  ·  R/F/T build  ·  wheel zoom';
     }
     const structure = this.structures.find((s) => this.selected.has(s.id));
     if (structure !== undefined) {
       const queue = structure.queue.length > 0 ? `  ·  queue ${structure.queue.length}` : '';
-      return `${structureStatsFor(structure.kind).name}${queue}  ·  1-5 produce  ·  R/F/T build`;
+      const name = structureStatsFor(structure.kind).name;
+      return this.isTouch ? `${name}${queue}` : `${name}${queue}  ·  1-5 produce  ·  R/F/T build`;
     }
     const harvester = this.units.find((u) => this.selected.has(u.id) && u.throttle !== undefined);
     if (harvester !== undefined) {
       const throttle = THROTTLE_LABEL[harvester.throttle!];
-      return (
-        `harvester [${throttle}] ${harvester.cargo?.toFixed(0) ?? 0} cargo  ·  ` +
-        'RMB node/move  ·  V throttle'
-      );
+      const state = `harvester [${throttle}] ${harvester.cargo?.toFixed(0) ?? 0} cargo`;
+      return this.isTouch
+        ? `${state}  ·  tap a field`
+        : `${state}  ·  RMB node/move  ·  V throttle`;
     }
-    return `${this.selected.size} selected  ·  RMB attack/move  ·  SPACE silent  ·  P ping  ·  SHIFT preview`;
+    return this.isTouch
+      ? `${this.selected.size} selected  ·  tap map to order`
+      : `${this.selected.size} selected  ·  RMB attack/move  ·  SPACE silent  ·  P ping  ·  SHIFT preview`;
   }
 
   destroy(): void {

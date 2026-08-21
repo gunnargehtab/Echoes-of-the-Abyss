@@ -32,6 +32,5 @@ body {
   text-align: center;
 }
 
-.app {
-  padding: 2rem;
-}
+/* .app is sized (and unpadded) in App.css: the canvas must fill the viewport
+   exactly, or the command bar hangs below the fold on phones. */

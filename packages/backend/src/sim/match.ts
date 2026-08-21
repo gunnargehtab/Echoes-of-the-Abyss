@@ -20,6 +20,7 @@ import {
   CONSTRUCTION,
   Faction,
   HarvestThrottle,
+  PRODUCIBLE,
   SIM,
   StructureKind,
   UnitKind,
@@ -79,19 +80,6 @@ const MAX_QUEUE_LENGTH = 8;
 
 /** Minimum clearance between a new structure's footprint and anything else. */
 const PLACEMENT_CLEARANCE_M = 40;
-
-/** What each structure kind is allowed to produce. The classic tech split:
- * the Bastion can always rebuild an economy; combat hulls need a Foundry. */
-const PRODUCIBLE: Partial<Record<StructureKind, readonly UnitKind[]>> = {
-  [StructureKind.Bastion]: [UnitKind.Harvester],
-  [StructureKind.Foundry]: [
-    UnitKind.LightScout,
-    UnitKind.Corvette,
-    UnitKind.Cruiser,
-    UnitKind.AbyssalSubmersible,
-    UnitKind.Harvester,
-  ],
-};
 
 export class Match {
   readonly world: SimWorld;

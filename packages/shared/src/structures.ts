@@ -10,7 +10,7 @@
  * prototype numbers in the same spirit as units.ts.
  */
 
-import { StructureKind } from './types.js';
+import { StructureKind, UnitKind } from './types.js';
 
 export interface StructureStats {
   kind: StructureKind;
@@ -108,3 +108,20 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
 export function structureStatsFor(kind: StructureKind): StructureStats {
   return STRUCTURE_STATS[kind];
 }
+
+/**
+ * What each structure kind is allowed to produce — the classic tech split:
+ * the Bastion can always rebuild an economy; combat hulls need a Foundry.
+ * Shared because the server validates against it and the client's command
+ * bar renders from it; two copies would eventually disagree.
+ */
+export const PRODUCIBLE: Partial<Record<StructureKind, readonly UnitKind[]>> = {
+  [StructureKind.Bastion]: [UnitKind.Harvester],
+  [StructureKind.Foundry]: [
+    UnitKind.LightScout,
+    UnitKind.Corvette,
+    UnitKind.Cruiser,
+    UnitKind.AbyssalSubmersible,
+    UnitKind.Harvester,
+  ],
+};
