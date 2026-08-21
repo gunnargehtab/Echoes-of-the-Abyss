@@ -35,6 +35,11 @@ export function GameCanvas() {
         onMoveOrder: (unitIds, x, y) => client?.moveTo(unitIds, x, y),
         onToggleSilent: (unitIds, active) => client?.setSilentRunning(unitIds, active),
         onPing: (unitId) => client?.activeSonar(unitId),
+        onAttackOrder: (unitIds, contactId) => client?.attackContact(unitIds, contactId),
+        onHarvestOrder: (unitIds, nodeId) => client?.harvest(unitIds, nodeId),
+        onThrottle: (unitIds, throttle) => client?.setThrottle(unitIds, throttle),
+        onBuild: (kind, x, y) => client?.build(kind, x, y),
+        onProduce: (structureId, kind) => client?.produce(structureId, kind),
       });
 
       await activeRenderer.init(host);
@@ -46,8 +51,10 @@ export function GameCanvas() {
 
       client = new GameClient({
         onTerrain: (terrain) => activeRenderer.setTerrain(terrain),
-        onAssigned: ({ faction }) => activeRenderer.setFaction(faction),
+        onNodes: (nodes) => activeRenderer.setNodes(nodes),
+        onAssigned: ({ slot, faction }) => activeRenderer.setIdentity(slot, faction),
         onEcho: (snapshot: EchoSnapshot) => activeRenderer.applySnapshot(snapshot),
+        onGameOver: (payload) => activeRenderer.setGameOver(payload),
         onStatus: (next, why) => {
           if (cancelled) return;
           setStatus(next);

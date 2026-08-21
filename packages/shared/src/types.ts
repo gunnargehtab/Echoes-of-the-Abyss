@@ -59,6 +59,32 @@ export enum UnitKind {
   Harvester = 4,
 }
 
+/** Prototype structure roster. Stats live in structures.ts. See docs/units.md. */
+export enum StructureKind {
+  /**
+   * The command bastion — HQ. Commissions new structures, accepts harvester
+   * deposits, and is the match's stake: lose it and you are eliminated.
+   */
+  Bastion = 0,
+  /** Deposit point for harvesters. Loudest permanent thing you own. */
+  Refinery = 1,
+  /** Unit production. Loud while the line is running. */
+  Foundry = 2,
+  /** Static defence. Quiet listener until it fires. */
+  SentinelTurret = 3,
+}
+
+/**
+ * Harvester throttle — the economy's central decision surface: how loud am I
+ * willing to be paid. docs/economy.md §3.
+ */
+export enum HarvestThrottle {
+  Idle = 0,
+  Trickle = 1,
+  Standard = 2,
+  Overburden = 3,
+}
+
 /**
  * One resolved enemy contact, as delivered to a single player.
  *
@@ -75,8 +101,9 @@ export interface Contact {
   y: number;
   /** Depth in metres. Only present at Tier 3+. */
   depth?: number;
-  /** Only known at Tier 3+ (classification). */
+  /** Only known at Tier 3+ (classification). Exactly one of kind/structure. */
   kind?: UnitKind;
+  structure?: StructureKind;
   faction?: Faction;
   /** Only known at Tier 4 (track). */
   hp?: number;
@@ -99,13 +126,57 @@ export interface OwnUnit {
   /** Live acoustic signature, 0-100. Drives the HUD meter. */
   sig: number;
   silentRunning: boolean;
+  /** Harvesters only: nodules aboard and the current throttle setting. */
+  cargo?: number;
+  throttle?: HarvestThrottle;
+}
+
+/** A structure the player owns. Always full detail — it is theirs. */
+export interface OwnStructure {
+  id: number;
+  kind: StructureKind;
+  x: number;
+  y: number;
+  depth: number;
+  hp: number;
+  maxHp: number;
+  /** Live acoustic signature, 0-100. */
+  sig: number;
+  /** 0-1. Below 1 the structure is still being commissioned — loudly. */
+  buildProgress: number;
+  /** Unit kinds queued at this structure; index 0 is in production. */
+  queue: UnitKind[];
+  /** 0-1 progress of queue[0]. Meaningless when the queue is empty. */
+  queueProgress: number;
+}
+
+/**
+ * A nodule field, sent once on join. Node *positions* are map data, exactly
+ * like terrain — every commander has the same survey charts. What is NOT
+ * broadcast is depletion: how much a node has left changes only through
+ * someone mining it, and mining is information you earn by hearing it.
+ */
+export interface ResourceNodeInfo {
+  id: number;
+  x: number;
+  y: number;
+  /** Nodules in the field at match start. */
+  initialAmount: number;
 }
 
 /** Payload pushed to each client on every Echo Layer tick. */
 export interface EchoSnapshot {
   tick: number;
   units: OwnUnit[];
+  structures: OwnStructure[];
   contacts: Contact[];
   /** Loudest SIG across the player's units — the headline HUD number. */
   peakSig: number;
+  /** The player's nodule stockpile — the C&C-style spendable pool. */
+  nodules: number;
+}
+
+/** Broadcast once when the match resolves. Elimination is public. */
+export interface GameOverPayload {
+  winnerSlot: number;
 }

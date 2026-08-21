@@ -32,6 +32,14 @@ export interface UnitStats {
   speed: number;
   cost: number;
   buildTimeS: number;
+  /**
+   * Weapon stats. TUNABLE — docs/units.md authors each unit's firing-burst SIG
+   * but not damage numbers; these exist so the combat loop can run. A damage of
+   * 0 means unarmed.
+   */
+  attackDamage: number;
+  attackRangeM: number;
+  attackCooldownS: number;
 }
 
 export const UNIT_STATS: Record<UnitKind, UnitStats> = {
@@ -47,6 +55,9 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     speed: 120,
     cost: 50,
     buildTimeS: 12,
+    attackDamage: 8,
+    attackRangeM: 400,
+    attackCooldownS: 1,
   },
   [UnitKind.Corvette]: {
     kind: UnitKind.Corvette,
@@ -60,6 +71,9 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     speed: 85,
     cost: 120,
     buildTimeS: 30,
+    attackDamage: 22,
+    attackRangeM: 550,
+    attackCooldownS: 1.2,
   },
   [UnitKind.Cruiser]: {
     kind: UnitKind.Cruiser,
@@ -74,6 +88,9 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     speed: 45,
     cost: 420,
     buildTimeS: 90,
+    attackDamage: 60,
+    attackRangeM: 900,
+    attackCooldownS: 2.5,
   },
   [UnitKind.AbyssalSubmersible]: {
     kind: UnitKind.AbyssalSubmersible,
@@ -88,6 +105,9 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     speed: 60,
     cost: 260,
     buildTimeS: 45,
+    attackDamage: 35,
+    attackRangeM: 650,
+    attackCooldownS: 1.8,
   },
   [UnitKind.Harvester]: {
     kind: UnitKind.Harvester,
@@ -102,6 +122,9 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     speed: 40,
     cost: 80,
     buildTimeS: 20,
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
   },
 };
 

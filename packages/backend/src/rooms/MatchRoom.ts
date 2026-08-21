@@ -11,7 +11,14 @@
 // cannot see, so `import { Room } from 'colyseus'` fails at runtime under an
 // unbundled ESM loader (the dev server) while working fine once bundled.
 import { Room, type Client } from '@colyseus/core';
-import { Faction, SIM, type EchoSnapshot } from '@echoes/shared';
+import {
+  Faction,
+  HarvestThrottle,
+  SIM,
+  StructureKind,
+  UnitKind,
+  type EchoSnapshot,
+} from '@echoes/shared';
 import { Match } from '../sim/match.ts';
 import { MatchState, PlayerState } from '../schema/MatchState.ts';
 
@@ -28,6 +35,33 @@ interface SilentRunningMessage {
 
 interface PingMessage {
   unitId: number;
+}
+
+interface AttackMessage {
+  unitIds: number[];
+  /** Opaque per-observer contact handle, not an entity id. */
+  contactId: number;
+}
+
+interface HarvestMessage {
+  unitIds: number[];
+  nodeId: number;
+}
+
+interface ThrottleMessage {
+  unitIds: number[];
+  throttle: HarvestThrottle;
+}
+
+interface BuildMessage {
+  kind: StructureKind;
+  x: number;
+  y: number;
+}
+
+interface ProduceMessage {
+  structureId: number;
+  kind: UnitKind;
 }
 
 const FACTION_BY_SLOT: Faction[] = [
@@ -72,6 +106,47 @@ export class MatchRoom extends Room<MatchState> {
       this.match.activeSonar(slot, message.unitId);
     });
 
+    this.onMessage('attack', (client, message: AttackMessage) => {
+      const slot = this.slotBySession.get(client.sessionId);
+      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      if (!Number.isFinite(message.contactId)) return;
+      for (const unitId of message.unitIds) {
+        this.match.orderAttackContact(slot, unitId, message.contactId);
+      }
+    });
+
+    this.onMessage('harvest', (client, message: HarvestMessage) => {
+      const slot = this.slotBySession.get(client.sessionId);
+      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      if (!Number.isFinite(message.nodeId)) return;
+      for (const unitId of message.unitIds) {
+        this.match.orderHarvest(slot, unitId, message.nodeId);
+      }
+    });
+
+    this.onMessage('throttle', (client, message: ThrottleMessage) => {
+      const slot = this.slotBySession.get(client.sessionId);
+      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      if (!Number.isFinite(message.throttle)) return;
+      for (const unitId of message.unitIds) {
+        this.match.setThrottle(slot, unitId, message.throttle);
+      }
+    });
+
+    this.onMessage('build', (client, message: BuildMessage) => {
+      const slot = this.slotBySession.get(client.sessionId);
+      if (slot === undefined || !Number.isFinite(message?.kind)) return;
+      if (!Number.isFinite(message.x) || !Number.isFinite(message.y)) return;
+      this.match.build(slot, message.kind, message.x, message.y);
+    });
+
+    this.onMessage('produce', (client, message: ProduceMessage) => {
+      const slot = this.slotBySession.get(client.sessionId);
+      if (slot === undefined || !Number.isFinite(message?.structureId)) return;
+      if (!Number.isFinite(message.kind)) return;
+      this.match.produce(slot, message.structureId, message.kind);
+    });
+
     // Colyseus drives wall-clock; Match converts it into fixed steps itself.
     this.setSimulationInterval((deltaMs) => this.update(deltaMs), 1000 / SIM.TICK_HZ);
   }
@@ -94,6 +169,9 @@ export class MatchRoom extends Room<MatchState> {
     // than per-tick because it does not change (Coral Ruins aside; see
     // docs/environments.md).
     client.send('terrain', this.match.world.terrain.serialize());
+    // Nodule fields are map data too — every commander has the same survey
+    // charts. Depletion is never broadcast; see docs/economy.md.
+    client.send('nodes', this.match.resourceNodes);
     client.send('assigned', { slot, faction });
   }
 
@@ -114,8 +192,17 @@ export class MatchRoom extends Room<MatchState> {
     );
   }
 
+  /** Broadcast the result exactly once. */
+  private gameOverSent = false;
+
   private update(deltaMs: number): void {
     const snapshots = this.match.update(deltaMs);
+
+    if (!this.gameOverSent && this.match.result !== null) {
+      this.gameOverSent = true;
+      this.broadcast('gameOver', this.match.result);
+    }
+
     if (snapshots === null) return;
 
     this.state.tick = this.match.tick;

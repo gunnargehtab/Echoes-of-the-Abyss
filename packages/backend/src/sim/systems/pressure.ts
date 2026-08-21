@@ -8,7 +8,7 @@
  * hp rather than routed through a damage pipeline that a healer could reverse.
  */
 
-import { defineQuery, removeEntity } from 'bitecs';
+import { defineQuery } from 'bitecs';
 import { crushAttritionPerSecond } from '@echoes/shared';
 import { Health, Position, Pressure } from '../components.ts';
 import type { SimWorld } from '../world.ts';
@@ -16,9 +16,10 @@ import type { SimWorld } from '../world.ts';
 const crushable = defineQuery([Position, Pressure, Health]);
 
 /**
- * Applies crush attrition and reaps anything it kills.
- * Returns the entity ids destroyed this tick, so callers can raise Echo Marks
- * or score events for them.
+ * Applies crush attrition and records anything it kills into `destroyed`.
+ * Reaping happens once per tick in Match, after every system that can kill has
+ * run — combat and pressure may both claim the same hull in one step, and the
+ * win-condition check needs to see every death in one place.
  */
 export function pressureSystem(world: SimWorld, destroyed: number[]): void {
   const dt = world.dt;
@@ -30,13 +31,8 @@ export function pressureSystem(world: SimWorld, destroyed: number[]): void {
     if (dps <= 0) continue;
 
     Health.hp[eid] = Health.hp[eid]! - dps * dt;
-    if (Health.hp[eid]! <= 0) {
+    if (Health.hp[eid]! <= 0 && !destroyed.includes(eid)) {
       destroyed.push(eid);
     }
-  }
-
-  // Reap after the loop: removing entities mid-query invalidates the iteration.
-  for (let i = 0; i < destroyed.length; i++) {
-    removeEntity(world, destroyed[i]!);
   }
 }

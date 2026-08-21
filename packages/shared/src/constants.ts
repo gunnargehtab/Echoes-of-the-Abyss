@@ -7,7 +7,7 @@
  * to move during playtesting (see docs/units.md "Playtest plan").
  */
 
-import { Biome, DepthBand } from './types.js';
+import { Biome, DepthBand, HarvestThrottle } from './types.js';
 
 /** SPEC — docs/systems-depth.md §1. Metres. */
 export const DEPTH_BANDS: Record<DepthBand, { min: number; max: number }> = {
@@ -137,3 +137,45 @@ export const SIM = {
 
 /** TUNABLE — Tier 2 reports position blurred by this fraction. SPEC says 15%. */
 export const BEARING_BLUR_FRACTION = 0.15;
+
+/**
+ * The classic RTS economic loop: node -> mine (loudly) -> haul home -> deposit.
+ * All TUNABLE except where noted; the *shape* — that income is a continuous
+ * noise source — is SPEC (docs/economy.md §1).
+ */
+export const ECONOMY = {
+  /** Nodules each player holds at match start. */
+  STARTING_NODULES: 600,
+  /** Nodules a harvester can carry per trip. */
+  CARGO_CAPACITY_NODULES: 50,
+  /** Fill rate at Standard throttle, nodules per second on the node. */
+  MINING_RATE_PER_S: 10,
+  /** Close enough to a node to mine it, metres. */
+  MINING_RANGE_M: 80,
+  /** Extra reach beyond a depot structure's footprint to dock and deposit. */
+  DEPOSIT_RANGE_M: 60,
+  /** Nodules in a field at match start. */
+  NODE_STARTING_AMOUNT: 3000,
+} as const;
+
+/**
+ * SPEC — docs/economy.md §3, the noise curve: yield and SIG are tied by rate,
+ * and a harvester that works slower is quieter. SIG values are the mid-points
+ * of the doc's bands.
+ */
+export const HARVEST_THROTTLE: Record<HarvestThrottle, { yieldMultiplier: number; sig: number }> = {
+  [HarvestThrottle.Idle]: { yieldMultiplier: 0, sig: 12 },
+  [HarvestThrottle.Trickle]: { yieldMultiplier: 0.4, sig: 25 },
+  [HarvestThrottle.Standard]: { yieldMultiplier: 1.0, sig: 45 },
+  [HarvestThrottle.Overburden]: { yieldMultiplier: 1.4, sig: 68 },
+};
+
+/** Base building. Construction is loud — SPEC in kind (docs/systems-echo.md §2), TUNABLE in number. */
+export const CONSTRUCTION = {
+  /** Sustained SIG at the site while a structure is being commissioned. */
+  SITE_SIG: 70,
+  /** New structures must rise within this range of an existing own structure. */
+  BUILD_RADIUS_M: 1200,
+  /** Fraction of max HP a structure has the moment the site is placed. */
+  INITIAL_HP_FRACTION: 0.1,
+} as const;

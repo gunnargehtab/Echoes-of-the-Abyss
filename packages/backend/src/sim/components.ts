@@ -73,3 +73,54 @@ export const SilentRunning = defineComponent({
 export const ActivePing = defineComponent({
   remainingS: Types.f32,
 });
+
+/** Index into the StructureKind enum. Mutually exclusive with Unit. */
+export const Structure = defineComponent({
+  kind: Types.ui8,
+});
+
+/** A structure still being commissioned. Removed when construction completes. */
+export const UnderConstruction = defineComponent({
+  remainingS: Types.f32,
+  totalS: Types.f32,
+});
+
+/**
+ * A mineable nodule field. Not owned, not acoustic, not a combatant — it is
+ * terrain with a quantity attached.
+ */
+export const ResourceNode = defineComponent({
+  remaining: Types.f32,
+});
+
+/**
+ * The harvester's C&C loop, as a small state machine.
+ * mode: 0 idle, 1 travelling to node, 2 mining, 3 hauling to depot.
+ */
+export const Harvester = defineComponent({
+  mode: Types.ui8,
+  cargo: Types.f32,
+  /** Entity id of the target node; only meaningful in modes 1-2. */
+  nodeEid: Types.eid,
+  /** Entity id of the depot being hauled to; only meaningful in mode 3. */
+  depotEid: Types.eid,
+  /** HarvestThrottle ordinal. docs/economy.md §3. */
+  throttle: Types.ui8,
+});
+
+export const HarvestMode = {
+  Idle: 0,
+  ToNode: 1,
+  Mining: 2,
+  ToDepot: 3,
+} as const;
+
+/**
+ * Anything that can shoot: armed units and the Sentinel Turret.
+ * A zero targetEid means no target (entity 0 is never spawned as a combatant).
+ */
+export const Weapon = defineComponent({
+  cooldownRemainingS: Types.f32,
+  /** Explicit attack order from the player; cleared when the target dies. */
+  orderedTargetEid: Types.eid,
+});

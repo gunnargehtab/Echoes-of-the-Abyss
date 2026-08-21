@@ -8,11 +8,32 @@
  */
 
 import { defineQuery, hasComponent } from 'bitecs';
-import { ACTIVE_SONAR, SILENT_RUNNING, statsFor, type UnitKind } from '@echoes/shared';
-import { Acoustic, ActivePing, SilentRunning, Unit, Velocity } from '../components.ts';
+import {
+  ACTIVE_SONAR,
+  CONSTRUCTION,
+  HARVEST_THROTTLE,
+  SILENT_RUNNING,
+  statsFor,
+  structureStatsFor,
+  type HarvestThrottle,
+  type StructureKind,
+  type UnitKind,
+} from '@echoes/shared';
+import {
+  Acoustic,
+  ActivePing,
+  Harvester,
+  HarvestMode,
+  SilentRunning,
+  Structure,
+  UnderConstruction,
+  Unit,
+  Velocity,
+} from '../components.ts';
 import type { SimWorld } from '../world.ts';
 
 const emitters = defineQuery([Acoustic, Unit, Velocity, SilentRunning]);
+const structureEmitters = defineQuery([Acoustic, Structure]);
 
 /** Below this speed the unit counts as stationary rather than cruising. */
 const MOVING_EPSILON = 0.01;
@@ -27,6 +48,16 @@ const MOVING_EPSILON = 0.01;
 function silentRunningSig(idleSig: number): number {
   const t = Math.min(1, Math.max(0, idleSig / 60));
   return SILENT_RUNNING.SIG_MIN + (SILENT_RUNNING.SIG_MAX - SILENT_RUNNING.SIG_MIN) * t;
+}
+
+/** Transient spikes (firing, breaking silence) stack on the current baseline. */
+function applySpikeDecay(world: SimWorld, eid: number, sig: number): number {
+  if (Acoustic.spikeRemainingS[eid]! > 0) {
+    sig += Acoustic.spikeAmount[eid]!;
+    Acoustic.spikeRemainingS[eid] = Math.max(0, Acoustic.spikeRemainingS[eid]! - world.dt);
+    if (Acoustic.spikeRemainingS[eid] === 0) Acoustic.spikeAmount[eid] = 0;
+  }
+  return sig;
 }
 
 export function acousticsSystem(world: SimWorld): void {
@@ -45,19 +76,34 @@ export function acousticsSystem(world: SimWorld): void {
       ActivePing.remainingS[eid] = Math.max(0, ActivePing.remainingS[eid]! - dt);
     } else if (SilentRunning.active[eid]) {
       sig = silentRunningSig(stats.sigIdle);
+    } else if (hasComponent(world, Harvester, eid) && Harvester.mode[eid] === HarvestMode.Mining) {
+      // Mining loudness follows the throttle, not the hull — the economy's
+      // central decision surface (docs/economy.md §3).
+      sig = HARVEST_THROTTLE[Harvester.throttle[eid] as HarvestThrottle].sig;
     } else {
       const speed = Math.hypot(Velocity.x[eid]!, Velocity.y[eid]!);
       sig = speed > MOVING_EPSILON ? stats.sigCruise : stats.sigIdle;
     }
 
-    // Transient spikes (firing, breaking silence) decay on their own clock and
-    // stack on top of whatever the unit's baseline currently is.
-    if (Acoustic.spikeRemainingS[eid]! > 0) {
-      sig += Acoustic.spikeAmount[eid]!;
-      Acoustic.spikeRemainingS[eid] = Math.max(0, Acoustic.spikeRemainingS[eid]! - dt);
-      if (Acoustic.spikeRemainingS[eid] === 0) Acoustic.spikeAmount[eid] = 0;
-    }
+    sig = applySpikeDecay(world, eid, sig);
+    Acoustic.sig[eid] = Math.min(100, Math.max(0, sig));
+  }
 
+  // Structures cannot run silent and cannot move; their loudness is a function
+  // of what stage of life they are in. A construction site broadcasts, a
+  // refinery hums forever, a foundry is loud exactly while its line runs.
+  const sites = structureEmitters(world);
+  for (let i = 0; i < sites.length; i++) {
+    const eid = sites[i]!;
+    let sig: number;
+    if (hasComponent(world, UnderConstruction, eid)) {
+      sig = CONSTRUCTION.SITE_SIG;
+    } else {
+      const stats = structureStatsFor(Structure.kind[eid] as StructureKind);
+      const producing = (world.production.get(eid)?.queue.length ?? 0) > 0;
+      sig = producing ? stats.sigActive : stats.sigIdle;
+    }
+    sig = applySpikeDecay(world, eid, sig);
     Acoustic.sig[eid] = Math.min(100, Math.max(0, sig));
   }
 }

@@ -4,19 +4,46 @@
  */
 
 import { createWorld, addEntity, addComponent, type IWorld } from 'bitecs';
-import { Faction, UnitKind, statsFor } from '@echoes/shared';
+import {
+  CONSTRUCTION,
+  ECONOMY,
+  Faction,
+  HarvestThrottle,
+  StructureKind,
+  UnitKind,
+  statsFor,
+  structureStatsFor,
+} from '@echoes/shared';
 import {
   Acoustic,
+  Harvester,
+  HarvestMode,
   Health,
   MoveOrder,
   Owner,
   Position,
   Pressure,
+  ResourceNode,
   SilentRunning,
+  Structure,
+  UnderConstruction,
   Unit,
   Velocity,
+  Weapon,
 } from './components.ts';
 import { Terrain } from './terrain.ts';
+
+/** Per-player mutable economy state. Lives outside the ECS: it is per-slot, not per-entity. */
+export interface PlayerEconomy {
+  nodules: number;
+}
+
+/** One structure's production line: FIFO of unit kinds, head in progress. */
+export interface ProductionQueue {
+  queue: UnitKind[];
+  /** Seconds of build time remaining on queue[0]. */
+  remainingS: number;
+}
 
 export interface SimWorld extends IWorld {
   terrain: Terrain;
@@ -24,6 +51,10 @@ export interface SimWorld extends IWorld {
   tick: number;
   /** Seconds per fixed step. */
   dt: number;
+  /** slot -> stockpile. */
+  economies: Map<number, PlayerEconomy>;
+  /** producing structure eid -> its queue. */
+  production: Map<number, ProductionQueue>;
 }
 
 export function createSimWorld(terrain: Terrain, dt: number): SimWorld {
@@ -31,7 +62,22 @@ export function createSimWorld(terrain: Terrain, dt: number): SimWorld {
   world.terrain = terrain;
   world.tick = 0;
   world.dt = dt;
+  world.economies = new Map();
+  world.production = new Map();
+  // Burn entity id 0 so components can use eid 0 as a "none" sentinel
+  // (Weapon.orderedTargetEid, Harvester.nodeEid). bitecs hands out dense ids
+  // from 0, so without this the first spawned entity would be untargetable.
+  addEntity(world);
   return world;
+}
+
+export function economyFor(world: SimWorld, slot: number): PlayerEconomy {
+  let economy = world.economies.get(slot);
+  if (economy === undefined) {
+    economy = { nodules: ECONOMY.STARTING_NODULES };
+    world.economies.set(slot, economy);
+  }
+  return economy;
 }
 
 export interface SpawnOptions {
@@ -57,7 +103,9 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   addComponent(world, Position, eid);
   Position.x[eid] = opts.x;
   Position.y[eid] = opts.y;
-  Position.depth[eid] = opts.depth ?? 600;
+  // Default to the deepest band the hull is rated for (capped at Mid-Water):
+  // a PR-1 scout delivered at 600 m would take crush attrition from birth.
+  Position.depth[eid] = opts.depth ?? (stats.pressureRating >= 2 ? 600 : 300);
 
   addComponent(world, Velocity, eid);
   Velocity.x[eid] = 0;
@@ -89,5 +137,91 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   addComponent(world, SilentRunning, eid);
   SilentRunning.active[eid] = 0;
 
+  if (stats.attackDamage > 0) {
+    addComponent(world, Weapon, eid);
+    Weapon.cooldownRemainingS[eid] = 0;
+    Weapon.orderedTargetEid[eid] = 0;
+  }
+
+  if (opts.kind === UnitKind.Harvester) {
+    addComponent(world, Harvester, eid);
+    Harvester.mode[eid] = HarvestMode.Idle;
+    Harvester.cargo[eid] = 0;
+    Harvester.nodeEid[eid] = 0;
+    Harvester.depotEid[eid] = 0;
+    Harvester.throttle[eid] = HarvestThrottle.Standard;
+  }
+
+  return eid;
+}
+
+export interface SpawnStructureOptions {
+  kind: StructureKind;
+  slot: number;
+  faction: Faction;
+  x: number;
+  y: number;
+  depth?: number;
+  /**
+   * Pre-built structures (the starting base) skip the construction phase;
+   * everything commissioned mid-match rises loudly over its build time.
+   */
+  prebuilt?: boolean;
+}
+
+export function spawnStructure(world: SimWorld, opts: SpawnStructureOptions): number {
+  const stats = structureStatsFor(opts.kind);
+  const eid = addEntity(world);
+
+  addComponent(world, Position, eid);
+  Position.x[eid] = opts.x;
+  Position.y[eid] = opts.y;
+  Position.depth[eid] = opts.depth ?? 600;
+
+  addComponent(world, Acoustic, eid);
+  Acoustic.sig[eid] = opts.prebuilt ? stats.sigIdle : CONSTRUCTION.SITE_SIG;
+  Acoustic.hyd[eid] = stats.hyd;
+  Acoustic.spikeRemainingS[eid] = 0;
+  Acoustic.spikeAmount[eid] = 0;
+
+  addComponent(world, Health, eid);
+  Health.max[eid] = stats.maxHp;
+  Health.hp[eid] = opts.prebuilt ? stats.maxHp : stats.maxHp * CONSTRUCTION.INITIAL_HP_FRACTION;
+
+  addComponent(world, Owner, eid);
+  Owner.slot[eid] = opts.slot;
+  Owner.faction[eid] = opts.faction;
+
+  addComponent(world, Structure, eid);
+  Structure.kind[eid] = opts.kind;
+
+  if (!opts.prebuilt) {
+    addComponent(world, UnderConstruction, eid);
+    UnderConstruction.remainingS[eid] = stats.buildTimeS;
+    UnderConstruction.totalS[eid] = stats.buildTimeS;
+  }
+
+  if (stats.attackDamage !== undefined) {
+    addComponent(world, Weapon, eid);
+    Weapon.cooldownRemainingS[eid] = 0;
+    Weapon.orderedTargetEid[eid] = 0;
+  }
+
+  return eid;
+}
+
+export function spawnResourceNode(
+  world: SimWorld,
+  x: number,
+  y: number,
+  amount: number = ECONOMY.NODE_STARTING_AMOUNT
+): number {
+  const eid = addEntity(world);
+  addComponent(world, Position, eid);
+  Position.x[eid] = x;
+  Position.y[eid] = y;
+  Position.depth[eid] = 600;
+  addComponent(world, ResourceNode, eid);
+  ResourceNode.remaining[eid] = amount;
   return eid;
 }
