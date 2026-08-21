@@ -119,9 +119,22 @@ interface BarButton {
   action: () => void;
 }
 
-/** Command bar geometry, CSS px. */
-const BAR_HEIGHT = 56;
+/** Command panel geometry, CSS px. docs/art-direction.md "HUD Layout". */
+const TAB_HEIGHT = 24;
+const BUTTON_ROW_HEIGHT = 56;
+const BAR_HEIGHT = TAB_HEIGHT + BUTTON_ROW_HEIGHT;
 const BAR_BUTTON_HEIGHT = 40;
+/** Top resource strip. */
+const TOP_BAR_HEIGHT = 30;
+
+/** The command panel's three pages. 'squad' appears only while units are selected. */
+type CommandTab = 'build' | 'units' | 'squad';
+
+const TAB_LABEL: Record<CommandTab, string> = {
+  build: 'BUILD',
+  units: 'UNITS',
+  squad: 'SQUAD',
+};
 
 export class EchoRenderer {
   private readonly app = new Application();
@@ -139,6 +152,18 @@ export class EchoRenderer {
   private readonly barTexts: Text[] = [];
   /** Last frame's button layout, hit-tested by pressBarButton. */
   private barButtons: BarButton[] = [];
+  private activeTab: CommandTab = 'build';
+
+  /** Sonar scope. Terrain cached; overlay redrawn per frame. */
+  private readonly minimapTerrainG = new Graphics();
+  private readonly minimapOverlayG = new Graphics();
+  private minimapCachedSize = 0;
+
+  /** Selected-entity panel (wide screens). */
+  private readonly infoGraphics = new Graphics();
+  private infoName!: Text;
+  private infoLine1!: Text;
+  private infoLine2!: Text;
 
   private sigLabel!: Text;
   private resourceLabel!: Text;
@@ -204,7 +229,13 @@ export class EchoRenderer {
       this.structureLayer,
       this.unitLayer
     );
-    this.hud.addChild(this.hudGraphics, this.barGraphics);
+    this.hud.addChild(
+      this.hudGraphics,
+      this.minimapTerrainG,
+      this.minimapOverlayG,
+      this.infoGraphics,
+      this.barGraphics
+    );
     this.app.stage.addChild(this.world, this.hud);
 
     this.buildHudText();
@@ -216,23 +247,22 @@ export class EchoRenderer {
   private buildHudText(): void {
     const mono = { fontFamily: 'ui-monospace, Consolas, monospace', fill: UI.text };
 
-    this.sigLabel = new Text({ text: 'SIG --', style: { ...mono, fontSize: 13 } });
-    this.sigLabel.position.set(20, 22);
-
+    // Top strip, left to right: nodules, SIG meter + value, contacts/status.
     this.resourceLabel = new Text({ text: '', style: { ...mono, fontSize: 13 } });
-    this.resourceLabel.position.set(20, 64);
+    this.resourceLabel.position.set(12, 8);
+
+    this.sigLabel = new Text({ text: 'SIG --', style: { ...mono, fontSize: 13 } });
 
     this.statusLabel = new Text({
       text: '',
       style: { ...mono, fontSize: 12, fill: UI.textDim },
     });
-    this.statusLabel.position.set(20, 86);
 
+    // Hint line sits just above the command panel.
     this.selectionLabel = new Text({
       text: '',
       style: { ...mono, fontSize: 12, fill: UI.textDim },
     });
-    this.selectionLabel.position.set(20, 104);
 
     this.bannerLabel = new Text({
       text: '',
@@ -240,12 +270,19 @@ export class EchoRenderer {
     });
     this.bannerLabel.anchor.set(0.5);
 
+    this.infoName = new Text({ text: '', style: { ...mono, fontSize: 13 } });
+    this.infoLine1 = new Text({ text: '', style: { ...mono, fontSize: 12, fill: UI.textDim } });
+    this.infoLine2 = new Text({ text: '', style: { ...mono, fontSize: 12, fill: UI.textDim } });
+
     this.hud.addChild(
       this.sigLabel,
       this.resourceLabel,
       this.statusLabel,
       this.selectionLabel,
-      this.bannerLabel
+      this.bannerLabel,
+      this.infoName,
+      this.infoLine1,
+      this.infoLine2
     );
   }
 
@@ -302,8 +339,17 @@ export class EchoRenderer {
       this.world.y += (after.y - before.y) * next;
     };
 
+    /** True while a press is scrubbing the sonar scope. */
+    let minimapDrag = false;
+
     const onPointerDown = (e: PointerEvent) => {
-      // The command bar swallows presses from every pointer type.
+      // The sonar scope and the command bar swallow presses from every
+      // pointer type before any world interpretation happens.
+      if (e.button === 0 && this.pressMinimap(e.clientX, e.clientY)) {
+        minimapDrag = true;
+        capture(e.pointerId);
+        return;
+      }
       if (e.button === 0 && this.pressBarButton(e.clientX, e.clientY)) return;
 
       if (e.pointerType === 'touch') {
@@ -351,13 +397,19 @@ export class EchoRenderer {
       const hit = this.nearestOwnEntity(world.x, world.y);
       if (hit === null) {
         if (!e.shiftKey) this.selected.clear();
-        return;
+      } else {
+        if (!e.shiftKey) this.selected.clear();
+        this.selected.add(hit);
       }
-      if (!e.shiftKey) this.selected.clear();
-      this.selected.add(hit);
+      this.onSelectionChanged();
     };
 
     const onPointerMove = (e: PointerEvent) => {
+      if (minimapDrag) {
+        this.pressMinimap(e.clientX, e.clientY);
+        return;
+      }
+
       if (e.pointerType === 'touch') {
         const prev = touches.get(e.pointerId);
         if (prev === undefined) return;
@@ -397,6 +449,12 @@ export class EchoRenderer {
     };
 
     const onPointerUp = (e: PointerEvent) => {
+      if (minimapDrag) {
+        minimapDrag = false;
+        if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+        return;
+      }
+
       if (e.pointerType === 'touch') {
         if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
         const wasTap = e.type === 'pointerup' && tapPointerId === e.pointerId;
@@ -500,10 +558,73 @@ export class EchoRenderer {
     return true;
   }
 
+  // --- Sonar scope (minimap) ------------------------------------------------
+
+  /** The scope's screen rect. Sized down on narrow screens. */
+  private minimapRect(): { x: number; y: number; size: number } {
+    const size = this.app.screen.width < 700 ? 110 : 170;
+    return { x: 10, y: this.app.screen.height - BAR_HEIGHT - size - 10, size };
+  }
+
+  /** Map metres per scope pixel. */
+  private minimapScale(size: number): number {
+    const terrain = this.terrain;
+    if (terrain === null) return 1;
+    return size / Math.max(terrain.cols * terrain.cellM, terrain.rows * terrain.cellM);
+  }
+
   /**
-   * What the bar offers depends on what is selected — the C&C sidebar
-   * collapsed into one contextual row. Every action here also has a keyboard
-   * binding; the bar exists so a touchscreen can reach them at all.
+   * A press on the scope jumps the camera there; a drag scrubs it. Returns
+   * true when the point was inside the scope.
+   */
+  private pressMinimap(clientX: number, clientY: number): boolean {
+    const rect = this.app.canvas.getBoundingClientRect();
+    const px = clientX - rect.left;
+    const py = clientY - rect.top;
+    const { x, y, size } = this.minimapRect();
+    if (px < x || px > x + size || py < y || py > y + size) return false;
+    const k = this.minimapScale(size);
+    if (k <= 0) return true;
+    const worldX = (px - x) / k;
+    const worldY = (py - y) / k;
+    const scale = this.world.scale.x;
+    this.world.x = this.app.screen.width / 2 - worldX * scale;
+    this.world.y = this.app.screen.height / 2 - worldY * scale;
+    return true;
+  }
+
+  // --- Command panel model --------------------------------------------------
+
+  /**
+   * Where a produce order lands when no factory is selected: the classic
+   * sidebar behaviour — the first completed structure able to build the kind,
+   * preferring the Foundry (it builds everything) over the Bastion.
+   */
+  private produceTargetFor(kind: UnitKind): OwnStructure | undefined {
+    const eligible = (s: OwnStructure) =>
+      s.buildProgress >= 1 && (PRODUCIBLE[s.kind]?.includes(kind) ?? false);
+    const selected = this.structures.find((s) => this.selected.has(s.id) && eligible(s));
+    if (selected !== undefined) return selected;
+    const foundry = this.structures.find((s) => s.kind === StructureKind.Foundry && eligible(s));
+    return foundry ?? this.structures.find(eligible);
+  }
+
+  /** Auto-open the page that matches what was just selected. */
+  private onSelectionChanged(): void {
+    const structure = this.structures.find((s) => this.selected.has(s.id));
+    if (structure !== undefined && (PRODUCIBLE[structure.kind]?.length ?? 0) > 0) {
+      this.activeTab = 'units';
+    } else if (this.selectedUnits().length > 0) {
+      this.activeTab = 'squad';
+    } else if (this.selected.size === 0) {
+      this.activeTab = 'build';
+    }
+  }
+
+  /**
+   * What the panel offers depends on the open tab — the C&C sidebar as one
+   * contextual row under a tab strip. Every action here also has a keyboard
+   * binding; the panel exists so a touchscreen can reach them at all.
    */
   private buildBarModel(): Array<Omit<BarButton, 'x' | 'y' | 'w' | 'h'>> {
     const buttons: Array<Omit<BarButton, 'x' | 'y' | 'w' | 'h'>> = [];
@@ -521,31 +642,32 @@ export class EchoRenderer {
       return buttons;
     }
 
-    const structure = this.structures.find((s) => this.selected.has(s.id));
-    const producible = structure !== undefined ? PRODUCIBLE[structure.kind] : undefined;
-    const units = this.selectedUnits();
-
-    if (structure !== undefined && producible !== undefined && producible.length > 0) {
-      for (const kind of producible) {
+    if (this.activeTab === 'units') {
+      // One row of the whole roster; each button routes to a structure that
+      // can actually build it, selected or not.
+      const roster = PRODUCIBLE[StructureKind.Foundry] ?? [];
+      for (const kind of roster) {
         const cost = statsFor(kind).cost;
+        const target = this.produceTargetFor(kind);
         buttons.push({
           label: `${UNIT_SHORT[kind]} ${cost}`,
-          enabled: structure.buildProgress >= 1 && this.nodules >= cost,
+          enabled: target !== undefined && this.nodules >= cost,
           active: false,
           action: () => this.commandProduce(kind),
         });
       }
-    } else if (units.length > 0) {
-      const first = units[0]!;
+    } else if (this.activeTab === 'squad') {
+      const units = this.selectedUnits();
+      const first = units[0];
       buttons.push({
         label: 'SILENT',
-        enabled: true,
-        active: first.silentRunning,
+        enabled: units.length > 0,
+        active: first?.silentRunning ?? false,
         action: () => this.commandToggleSilent(),
       });
       buttons.push({
         label: 'PING',
-        enabled: true,
+        enabled: units.length > 0,
         active: false,
         action: () => this.commandPing(),
       });
@@ -581,7 +703,10 @@ export class EchoRenderer {
         label: '✕',
         enabled: true,
         active: false,
-        action: () => this.selected.clear(),
+        action: () => {
+          this.selected.clear();
+          this.onSelectionChanged();
+        },
       });
     }
     return buttons;
@@ -610,17 +735,48 @@ export class EchoRenderer {
     g.rect(0, barY, screenWidth, BAR_HEIGHT).fill({ color: UI.glass, alpha: 0.92 });
     g.rect(0, barY, screenWidth, 1).fill({ color: UI.glassStroke });
 
+    // Tab strip. 'squad' only exists while units are selected.
+    const tabs: CommandTab[] =
+      this.selectedUnits().length > 0 ? ['build', 'units', 'squad'] : ['build', 'units'];
+    const tabButtons: BarButton[] = [];
+    let tabX = 10;
+    for (const tab of tabs) {
+      const w = TAB_LABEL[tab].length * 7.5 + 22;
+      tabButtons.push({
+        x: tabX,
+        y: barY,
+        w,
+        h: TAB_HEIGHT,
+        label: TAB_LABEL[tab],
+        enabled: true,
+        active: this.activeTab === tab,
+        action: () => {
+          this.activeTab = tab;
+        },
+      });
+      tabX += w + 4;
+    }
+
     const model = this.buildBarModel();
     const gap = 8;
-    const buttonY = barY + (BAR_HEIGHT - BAR_BUTTON_HEIGHT) / 2;
-    let x = 10;
+    const buttonY = barY + TAB_HEIGHT + (BUTTON_ROW_HEIGHT - BAR_BUTTON_HEIGHT) / 2;
 
+    const widthFor = (label: string) => Math.max(44, label.length * 7.5 + 18);
+    // A full row must fit a phone: when it would overflow, drop the cost
+    // suffix from every label ("CRV 120" -> "CRV") and keep the buttons.
+    const total = model.reduce((sum, entry) => sum + widthFor(entry.label) + gap, 10);
+    if (total > screenWidth) {
+      for (const entry of model) entry.label = entry.label.split(' ')[0]!;
+    }
+
+    let x = 10;
     this.barButtons = model.map((entry) => {
-      const w = Math.max(44, entry.label.length * 7.5 + 18);
+      const w = widthFor(entry.label);
       const button: BarButton = { ...entry, x, y: buttonY, w, h: BAR_BUTTON_HEIGHT };
       x += w + gap;
       return button;
     });
+    this.barButtons.push(...tabButtons);
 
     this.barButtons.forEach((button, i) => {
       const alpha = button.enabled ? 1 : 0.35;
@@ -650,13 +806,20 @@ export class EchoRenderer {
     return this.units.filter((u) => this.selected.has(u.id));
   }
 
-  /** Queue a unit at every selected production structure. */
+  /**
+   * Queue a unit: at every selected structure that can build it, else at the
+   * sidebar's default factory (see produceTargetFor).
+   */
   private commandProduce(kind: UnitKind): void {
-    for (const structure of this.structures) {
-      if (this.selected.has(structure.id)) {
-        this.callbacks.onProduce(structure.id, kind);
-      }
+    const selectedTargets = this.structures.filter(
+      (s) => this.selected.has(s.id) && (PRODUCIBLE[s.kind]?.includes(kind) ?? false)
+    );
+    if (selectedTargets.length > 0) {
+      for (const structure of selectedTargets) this.callbacks.onProduce(structure.id, kind);
+      return;
     }
+    const target = this.produceTargetFor(kind);
+    if (target !== undefined) this.callbacks.onProduce(target.id, kind);
   }
 
   private commandToggleSilent(): void {
@@ -702,6 +865,7 @@ export class EchoRenderer {
     if (hit !== null) {
       this.selected.clear();
       this.selected.add(hit);
+      this.onSelectionChanged();
       return;
     }
     if (this.selected.size > 0) this.handleContextOrder(x, y);
@@ -801,11 +965,14 @@ export class EchoRenderer {
     this.terrain = terrain;
     this.drawTerrain();
     this.fitCamera();
+    this.minimapCachedSize = 0;
   }
 
   setNodes(nodes: ResourceNodeInfo[]): void {
     this.nodes = nodes;
     this.drawNodes();
+    // Nodes are baked into the scope's cached terrain layer.
+    this.minimapCachedSize = 0;
   }
 
   setGameOver(payload: GameOverPayload): void {
@@ -907,6 +1074,8 @@ export class EchoRenderer {
     this.drawUnits();
     this.drawHud();
     this.drawCommandBar();
+    this.drawMinimap();
+    this.drawInfoPanel();
   }
 
   /**
@@ -1202,48 +1371,180 @@ export class EchoRenderer {
     const g = this.hudGraphics;
     g.clear();
 
-    const meterX = 20;
-    const meterY = 42;
-    const meterWidth = 240;
+    const screenWidth = this.app.screen.width;
+
+    // Top strip: stockpile, then the SIG meter — the player's own loudness is
+    // a first-class resource and sits beside the others (docs/art-direction.md).
+    g.rect(0, 0, screenWidth, TOP_BAR_HEIGHT).fill({ color: UI.glass, alpha: 0.92 });
+    g.rect(0, TOP_BAR_HEIGHT - 1, screenWidth, 1).fill({ color: UI.glassStroke });
+
+    this.resourceLabel.text = `NODULES ${this.nodules.toFixed(0)}`;
+    this.resourceLabel.style.fill = 0xf2b233;
+
+    const meterX = this.resourceLabel.x + this.resourceLabel.width + 18;
+    const meterWidth = Math.min(120, screenWidth - meterX - 150);
+    const meterY = 9;
     const meterHeight = 12;
-
-    g.rect(meterX - 8, meterY - 30, meterWidth + 16, 122).fill({ color: UI.glass, alpha: 0.75 });
-    g.rect(meterX - 8, meterY - 30, meterWidth + 16, 122).stroke({
-      width: 1,
-      color: UI.glassStroke,
-      alpha: 0.8,
-    });
-
     g.rect(meterX, meterY, meterWidth, meterHeight).fill({ color: 0x000000, alpha: 0.5 });
     const fraction = Math.max(0, Math.min(1, this.peakSig / 100));
     g.rect(meterX, meterY, meterWidth * fraction, meterHeight).fill({
       color: sigColor(this.peakSig),
     });
-    g.rect(meterX, meterY, meterWidth, meterHeight).stroke({
-      width: 1,
-      color: UI.glassStroke,
-    });
+    g.rect(meterX, meterY, meterWidth, meterHeight).stroke({ width: 1, color: UI.glassStroke });
 
-    this.sigLabel.text = `SIG ${this.peakSig.toFixed(0).padStart(3, ' ')} / 100`;
+    this.sigLabel.text = `SIG ${this.peakSig.toFixed(0)}`;
     this.sigLabel.style.fill = sigColor(this.peakSig);
-
-    this.resourceLabel.text = `NODULES ${this.nodules.toFixed(0)}`;
-    this.resourceLabel.style.fill = 0xf2b233;
+    this.sigLabel.position.set(meterX + meterWidth + 8, 8);
 
     const contactCount = this.tracked.size;
-    this.statusLabel.text = `${this.status}  ·  ${contactCount} contact${
-      contactCount === 1 ? '' : 's'
-    }`;
+    this.statusLabel.text =
+      this.status === 'connected'
+        ? `${contactCount} contact${contactCount === 1 ? '' : 's'}`
+        : this.status;
+    this.statusLabel.position.set(screenWidth - this.statusLabel.width - 12, 9);
+
+    // Hint line rides just above the command panel, clear of the scope.
+    const scope = this.minimapRect();
     this.selectionLabel.text = this.hintLine();
+    this.selectionLabel.position.set(
+      scope.x + scope.size + 12,
+      this.app.screen.height - BAR_HEIGHT - 20
+    );
 
     if (this.gameOver !== null) {
       const won = this.gameOver.winnerSlot === this.slot;
       this.bannerLabel.text = won ? 'THE RIFT FALLS SILENT — VICTORY' : 'BASTION LOST — DEFEAT';
       this.bannerLabel.style.fill = won ? UI.friendly : UI.threat;
-      this.bannerLabel.position.set(this.app.screen.width / 2, this.app.screen.height / 2);
+      this.bannerLabel.position.set(screenWidth / 2, this.app.screen.height / 2);
     } else {
       this.bannerLabel.text = '';
     }
+  }
+
+  /**
+   * The sonar scope. It renders only what the player has earned: own force at
+   * full clarity, contacts at tier fidelity, terrain and nodule fields as
+   * chart data every commander holds (docs/art-direction.md "HUD Layout").
+   */
+  private drawMinimap(): void {
+    const { x, y, size } = this.minimapRect();
+    const terrain = this.terrain;
+    const k = this.minimapScale(size);
+
+    // Terrain is static; redraw the cached layer only when the scope resizes.
+    if (terrain !== null && size !== this.minimapCachedSize) {
+      this.minimapCachedSize = size;
+      const tg = this.minimapTerrainG;
+      tg.clear();
+      tg.rect(0, 0, size, size).fill({ color: 0x000000, alpha: 0.85 });
+      const cell = terrain.cellM * k;
+      for (let row = 0; row < terrain.rows; row++) {
+        for (let col = 0; col < terrain.cols; col++) {
+          const biome = terrain.biomes[row * terrain.cols + col] as Biome;
+          tg.rect(col * cell, row * cell, cell + 0.5, cell + 0.5).fill({
+            color: BIOME_COLOR[biome] ?? BIOME_COLOR[Biome.OpenWater],
+          });
+        }
+      }
+      for (const node of this.nodes) {
+        tg.circle(node.x * k, node.y * k, 2.5).fill({ color: 0xf2b233, alpha: 0.8 });
+      }
+      tg.rect(0, 0, size, size).stroke({ width: 1, color: UI.glassStroke });
+    }
+    this.minimapTerrainG.position.set(x, y);
+
+    const og = this.minimapOverlayG;
+    og.clear();
+    og.position.set(x, y);
+    if (terrain === null || k <= 0) return;
+
+    const palette = FACTION_PALETTE[this.faction];
+    for (const structure of this.structures) {
+      og.rect(structure.x * k - 2, structure.y * k - 2, 4, 4).fill({ color: palette.primary });
+    }
+    for (const unit of this.units) {
+      og.circle(unit.x * k, unit.y * k, 1.5).fill({ color: palette.accent });
+    }
+    for (const { contact } of this.tracked.values()) {
+      if (contact.tier === ResolutionTier.Silent) continue;
+      const style = TIER_STYLE[contact.tier as Exclude<ResolutionTier, ResolutionTier.Silent>];
+      if (style === undefined) continue;
+      og.circle(contact.x * k, contact.y * k, contact.tier >= ResolutionTier.Track ? 2.5 : 2).fill({
+        color: style.color,
+        alpha: Math.max(0.5, style.alpha),
+      });
+    }
+
+    // Camera viewport, so the scope doubles as a navigator. Clamped to the
+    // scope's square — a zoomed-in camera would otherwise draw past its frame.
+    const scale = this.world.scale.x;
+    const viewX = Math.max(0, (-this.world.x / scale) * k);
+    const viewY = Math.max(0, (-this.world.y / scale) * k);
+    const viewR = Math.min(size, ((-this.world.x + this.app.screen.width) / scale) * k);
+    const viewB = Math.min(size, ((-this.world.y + this.app.screen.height) / scale) * k);
+    if (viewR > viewX && viewB > viewY) {
+      og.rect(viewX, viewY, viewR - viewX, viewB - viewY).stroke({
+        width: 1,
+        color: UI.text,
+        alpha: 0.6,
+      });
+    }
+  }
+
+  /** Selected-entity readout, wide screens only; phones keep the hint line. */
+  private drawInfoPanel(): void {
+    const g = this.infoGraphics;
+    g.clear();
+    const wide = this.app.screen.width >= 900;
+    const structure = this.structures.find((s) => this.selected.has(s.id));
+    const unit = this.units.find((u) => this.selected.has(u.id));
+    const any = structure ?? unit;
+    if (!wide || any === undefined) {
+      this.infoName.visible = false;
+      this.infoLine1.visible = false;
+      this.infoLine2.visible = false;
+      return;
+    }
+
+    const w = 250;
+    const h = 96;
+    const x = this.app.screen.width - w - 10;
+    const y = this.app.screen.height - BAR_HEIGHT - h - 10;
+    g.roundRect(x, y, w, h, 6).fill({ color: UI.glass, alpha: 0.92 });
+    g.roundRect(x, y, w, h, 6).stroke({ width: 1, color: UI.glassStroke });
+
+    const name =
+      structure !== undefined ? structureStatsFor(structure.kind).name : statsFor(unit!.kind).name;
+    this.infoName.visible = true;
+    this.infoName.text = this.selected.size > 1 ? `${name} +${this.selected.size - 1}` : name;
+    this.infoName.position.set(x + 12, y + 10);
+
+    const barX = x + 12;
+    const barY = y + 34;
+    const barW = w - 24;
+    g.rect(barX, barY, barW, 8).fill({ color: 0x000000, alpha: 0.5 });
+    g.rect(barX, barY, barW * Math.max(0, Math.min(1, any.hp / any.maxHp)), 8).fill({
+      color: UI.friendly,
+    });
+
+    this.infoLine1.visible = true;
+    this.infoLine1.text = `HULL ${any.hp.toFixed(0)}/${any.maxHp.toFixed(0)}   SIG ${any.sig.toFixed(0)}`;
+    this.infoLine1.position.set(x + 12, y + 48);
+
+    this.infoLine2.visible = true;
+    if (structure !== undefined) {
+      this.infoLine2.text =
+        structure.buildProgress < 1
+          ? `constructing ${(structure.buildProgress * 100).toFixed(0)}%`
+          : structure.queue.length > 0
+            ? `producing · queue ${structure.queue.length}`
+            : 'online';
+    } else if (unit !== undefined && unit.throttle !== undefined) {
+      this.infoLine2.text = `throttle ${THROTTLE_LABEL[unit.throttle]} · cargo ${unit.cargo?.toFixed(0) ?? 0}`;
+    } else if (unit !== undefined) {
+      this.infoLine2.text = unit.silentRunning ? 'SILENT RUNNING' : 'systems live';
+    }
+    this.infoLine2.position.set(x + 12, y + 68);
   }
 
   private hintLine(): string {
