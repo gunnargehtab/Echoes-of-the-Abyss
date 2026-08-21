@@ -71,7 +71,20 @@ start() {
   stop || return 1
 
   echo "dev.sh: starting (log: $LOG)"
-  ( cd "$REPO" && setsid npm run dev > "$LOG" 2>&1 < /dev/null & )
+
+  # Detaching properly matters more than it looks. Plain `setsid` only forks
+  # when its caller is already a process-group leader; otherwise it calls
+  # setsid() and execs in place, leaving the server tree a direct child of this
+  # script. The caller's shell then waits on an stdout pipe that a descendant
+  # still holds, and `dev.sh start` appears to hang forever even though the
+  # game came up fine seconds earlier. `--fork` makes the fork unconditional,
+  # and redirecting the subshell itself ensures nothing inherits our stdout.
+  local setsid_cmd=(setsid --fork)
+  if ! setsid --fork true 2>/dev/null; then
+    command -v setsid > /dev/null && setsid_cmd=(setsid) || setsid_cmd=()
+  fi
+  ( cd "$REPO" && "${setsid_cmd[@]}" npm run dev > "$LOG" 2>&1 < /dev/null & ) \
+    > /dev/null 2>&1 < /dev/null
 
   local deadline=$((SECONDS + 90))
   while [ $SECONDS -lt $deadline ]; do
