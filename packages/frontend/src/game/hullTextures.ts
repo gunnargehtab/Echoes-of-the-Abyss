@@ -92,12 +92,19 @@ function halfBeamFraction(kind: UnitKind): number {
   return max;
 }
 
-/** World-metre size of the baked canvas, so the renderer can scale the sprite. */
-export function hullSpriteSizeM(kind: UnitKind): { widthM: number; heightM: number } {
+/**
+ * World-metre size of the baked canvas, so the renderer can scale the sprite.
+ * Faction matters: a faction's variant model can have different proportions
+ * than the kind's canonical one.
+ */
+export function hullSpriteSizeM(
+  kind: UnitKind,
+  faction: Faction
+): { widthM: number; heightM: number } {
   // A model-backed hull is as wide as its model, not as its outline: the maps
   // include fins and tendrils the schematic outline never had, and clipping
   // them to the outline's beam would squash the sprite.
-  const map = hullMap(kind);
+  const map = hullMap(kind, faction);
   if (map !== null) {
     return {
       widthM: (map.widthPx + 2 * MARGIN_PX) / MAP_PPM,
@@ -134,7 +141,7 @@ export function destroyHullTextures(): void {
 }
 
 function bake(kind: UnitKind, faction: Faction): Texture {
-  const map = hullMap(kind);
+  const map = hullMap(kind, faction);
   if (map !== null) return bakeFromModel(faction, map);
   return bakeProcedural(kind, faction);
 }

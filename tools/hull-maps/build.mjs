@@ -43,6 +43,9 @@ const UNITS = [
   { slug: 'cruiser', model: 'cruiser-pelagia.glb', lengthM: 130 },
   { slug: 'harvester', model: 'harvester-pelagia.glb', lengthM: 75 },
   { slug: 'abyssal-submersible', model: 'abyssal-submersible-directorate.glb', lengthM: 95 },
+  // Faction variants: same kind, another navy's shape language. The slug's
+  // faction suffix pairs with VARIANT_MAP_URL in hullMaps.ts.
+  { slug: 'corvette-bathyarch', model: 'corvette-bathyarch.glb', lengthM: 80 },
 ];
 
 /**
