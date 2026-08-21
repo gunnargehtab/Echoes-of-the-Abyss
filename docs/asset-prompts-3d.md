@@ -198,6 +198,7 @@ crystal when active; heat-shimmer distortion.
 ## Related
 
 - [art-direction.md](art-direction.md) — silhouette law, rendering target, Asymmetric Fidelity Law
+- [graphics-standards.md](graphics-standards.md) — the shipping gates a generated model must clear
 - [factions.md](factions.md) — full faction visual identity sheets these blocks quote
 - [style-neon-noir.md](style-neon-noir.md) — glow rules and palette tokens
 - [units.md](units.md) — the roster and the SIG/PR numbers cited here
