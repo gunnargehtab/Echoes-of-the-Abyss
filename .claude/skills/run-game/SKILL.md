@@ -21,10 +21,10 @@ are all things a passing exit code will happily hide from you.
 ```
 
 This clears any leftover servers, starts the tree in its own session, and
-returns only once **both** :5173 (Vite) and :3000 (Colyseus) answer. It also
-rebuilds `@echoes/shared` on the way, which matters because the other two
-packages import its `dist/` — skipping that produces confusing type and
-resolution errors.
+returns only once **both** :5173 (Vite) and :3000 (Colyseus) answer — normally
+about five seconds. The root `npm run dev` it invokes rebuilds `@echoes/shared`
+first, which matters because the other two packages import its `dist/`;
+skipping that produces confusing type and resolution errors.
 
 Use the script rather than a bare `npm run dev &`. Two reasons, both of which
 bite in practice: the servers must be stoppable as a unit (see step 3), and a
@@ -33,9 +33,22 @@ over from a previous run** — the probe goes green while your own backend is
 still crash-looping on `EADDRINUSE`. `dev.sh start` clears the ports first, so
 a green result can only mean the server it just started.
 
-`dev.sh status` reports what holds each port. Server output goes to
-`/tmp/echoes-dev.log`, with both sides interleaved under `[frontend]` and
-`[backend]` prefixes.
+**If `start` ever seems to hang after printing that both ports are up, the game
+is running** — trust the message, not the prompt. That symptom means something
+in the tree inherited the script's stdout, so the calling shell is waiting on a
+pipe that never closes. `dev.sh` forks the tree into its own session precisely
+to avoid this, but if you hit it, carry on and verify independently with
+`dev.sh status`; `stop` will still clean up.
+
+**On a shared machine, check before you start.** `dev.sh start` clears :3000
+and :5173 as its first act, so starting while a colleague or another agent has
+a session running will kill their servers mid-run. `dev.sh status` tells you
+whether anything already holds the ports, and `/tmp/echoes-dev.log` shows
+whether a match is live. If someone else is on the box, just drive their
+already-running server — step 2 does not care who started it.
+
+Server output goes to `/tmp/echoes-dev.log`, with both sides interleaved under
+`[frontend]` and `[backend]` prefixes.
 
 ## 2. Drive it
 
@@ -53,7 +66,9 @@ than assuming the ones written here, since `--out` moves them.
 
 - A top bar with `NODULES`, a `SIG` bar, and a contact count.
 - An amber hub with outbuildings and a handful of unit glyphs.
-- The minimap bottom-left, a BUILD bar along the bottom.
+- The minimap bottom-left, and `BUILD` / `UNITS` tabs over a build bar along
+  the bottom. (A third `SQUAD` tab appears only once something is selected, so
+  its absence on the first frame is correct.)
 
 Judge it on whether a match rendered, not on a checklist of rings. Signature
 radius rings are sized to each unit's current SIG, so a quiet unit legitimately
@@ -82,38 +97,57 @@ export default async ({ page, shot }) => {
 
 The controls, all handled on the canvas by `EchoRenderer`:
 
-| Input | Effect |
-| --- | --- |
-| Left click | Select nearest owned unit or structure (shift adds) |
-| Right click | Context order — move, or attack/harvest a contact under the cursor |
-| Middle drag / wheel | Pan / zoom |
-| `P` | Active sonar ping |
-| `Space` | Toggle silent running |
-| `V` | Cycle throttle |
-| `R` / `F` / `T` | Arm a build (then left click to place) |
-| Hold `Shift` | Preview what a ping would cost you |
-| `Escape` | Cancel a pending build |
+| Input | Effect | Needs a selection? |
+| --- | --- | --- |
+| Left click | Select nearest owned unit or structure (shift adds) — **unless a build is armed, which swallows the click to place it** | no |
+| Right click | Context order — move, or attack/harvest a contact under the cursor | yes |
+| Middle drag | Pan | no |
+| Wheel | Zoom about the cursor | no |
+| `R` / `F` / `T` | Arm a refinery / foundry / turret, then left click to place | no |
+| `1`–`5` | Produce scout / corvette / cruiser / submersible / harvester | yes |
+| `P` | Active sonar ping | yes |
+| `Space` | Toggle silent running | yes |
+| `V` | Cycle harvest throttle | yes |
+| Hold `Shift` | Preview what a ping would cost you | yes |
+| `Escape` | Cancel a pending build — handled before every other key, so it is safe to press unconditionally | no |
 
-Keys other than build hotkeys need a selection first, which is why the examples
-click before they press.
+The "needs a selection" column is the thing that catches people: `EchoRenderer`
+returns early on most keys when nothing is selected, so a bare `page.keyboard
+.press('KeyP')` on a fresh connect silently does nothing. Click a unit first.
+Build and production keys are the exception in opposite directions — `R`/`F`/`T`
+work with nothing selected, while `1`–`5` route through a structure that can
+build the unit and so need one.
 
-**Prefer keys to clicks — there is nothing to select against.** The page is one
-canvas and about 17 DOM elements; `document.body.innerText` is empty, and the
-HUD you can see (the `BUILD` / `UNITS` / `SQUAD` tabs, `SILENT`, `PING`, the
-build buttons) is drawn by Pixi, not rendered as DOM. So `page.click('text=PING')`
-matches nothing, and every Playwright selector strategy is unavailable by
-construction. Keyboard shortcuts do the same work and are the only stable
-handle.
+**There is nothing to select against, so commands go through the keyboard.**
+The page is one canvas and about 17 DOM elements; `document.body.innerText` is
+empty, and the HUD you can see (the `BUILD` / `UNITS` / `SQUAD` tabs, `SILENT`,
+`PING`, the build buttons) is drawn by Pixi, not rendered as DOM. So
+`page.click('text=PING')` matches nothing, and every Playwright selector
+strategy is unavailable by construction.
 
-When you genuinely need a click, remember the coordinates are load-bearing:
-`(655, 484)` assumes `drive.mjs`'s **1440×900** viewport, in which the playfield
-spans roughly x 390–1355 with the HUD drawn over the dark bands either side.
-Change the viewport and those coordinates click empty water. Unit selection is
-forgiving — it picks the *nearest* owned entity rather than hit-testing a
-sprite, so landing anywhere near the friendly cluster works. HUD button
-positions are not forgiving: they shift with the active tab and with how many
-buttons the current selection produces, so drive those through their shortcuts
-instead of guessing pixels.
+Clicks are still how you *select* and *place* — there is no keyboard equivalent
+for either — so the pattern is click to choose a target, then press a key to
+act on it. What to avoid is clicking HUD **buttons**: they shift with the active
+tab and with how many buttons the current selection produces, so a pixel that
+hits `PING` in one frame hits `SILENT` in the next. Their shortcuts don't move.
+
+Coordinates are load-bearing. `(655, 484)` assumes `drive.mjs`'s **1440×900**
+viewport, in which the playfield spans roughly x 390–1355 with the HUD drawn
+over the dark bands either side; change the viewport and those coordinates
+click empty water. Two things make this less fragile than it sounds: unit
+selection picks the *nearest* owned entity rather than hit-testing a sprite, so
+landing anywhere near the friendly cluster works, and the minimap is a fixed
+bottom-left rectangle you can click or drag to jump the view.
+
+Identifying *which* glyph is which is the genuine gap — the silhouettes are
+faction shapes, not labels. Select one and read the inspector panel that
+appears bottom-right; it names the unit (`Light Scout`, `Harvester`) along with
+hull, SIG, and throttle. Expect to select-and-check rather than to know from
+the pixels.
+
+One mechanical catch: `page.mouse.wheel` only zooms if the pointer is already
+over the canvas, because the listener is on the canvas rather than the window.
+Call `page.mouse.move(x, y)` into the playfield first.
 
 ## 3. Stop the servers
 
