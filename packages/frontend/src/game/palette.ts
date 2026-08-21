@@ -7,12 +7,19 @@
 
 import { Biome, Faction, ResolutionTier } from '@echoes/shared';
 
-/** Faction palettes — docs/art-direction.md "Faction Art Styles". */
-export const FACTION_PALETTE: Record<Faction, { primary: number; accent: number }> = {
-  [Faction.Bathyarch]: { primary: 0xf2b233, accent: 0x8c8378 },
-  [Faction.Pelagia]: { primary: 0x1fa67a, accent: 0x8fe36b },
-  [Faction.Directorate]: { primary: 0x7a1b2e, accent: 0xc2465e },
-  [Faction.Hadron]: { primary: 0x8b5cf6, accent: 0xc9a6ff },
+/**
+ * Faction palettes — docs/art-direction.md "Faction Art Styles".
+ *
+ * `glow` is the colour a faction's lights burn: bioluminescence, deck lamps,
+ * crystal shine. It equals `accent` except for Bathyarch, whose accent is
+ * iron grey — cladding, not light. Their lamps are hazard amber (factions.md);
+ * a grey glow would read as dirt on the hull.
+ */
+export const FACTION_PALETTE: Record<Faction, { primary: number; accent: number; glow: number }> = {
+  [Faction.Bathyarch]: { primary: 0xf2b233, accent: 0x8c8378, glow: 0xf2b233 },
+  [Faction.Pelagia]: { primary: 0x1fa67a, accent: 0x8fe36b, glow: 0x8fe36b },
+  [Faction.Directorate]: { primary: 0x7a1b2e, accent: 0xc2465e, glow: 0xc2465e },
+  [Faction.Hadron]: { primary: 0x8b5cf6, accent: 0xc9a6ff, glow: 0xc9a6ff },
 };
 
 /**
