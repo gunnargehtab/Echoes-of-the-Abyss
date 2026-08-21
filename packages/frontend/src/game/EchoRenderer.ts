@@ -45,6 +45,12 @@ import {
 import { BIOME_COLOR, FACTION_PALETTE, TIER_STYLE, UI, sigColor } from './palette.ts';
 import { drawStructureSilhouette, drawUnitSilhouette, HULL_LENGTH_M } from './silhouettes.ts';
 import { destroyHullTextures, hullSpriteSizeM, hullTexture, loadHullArt } from './hullTextures.ts';
+import {
+  destroyStructureTextures,
+  loadStructureArt,
+  structureSpriteSizeM,
+  structureTexture,
+} from './structureTextures.ts';
 import type { TerrainPayload } from '../net/GameClient.ts';
 
 /** A contact plus when we last actually heard it, for ghost decay. */
@@ -149,6 +155,8 @@ export class EchoRenderer {
   /** Baked hull sprites for own units; the Graphics layer above draws overlays. */
   private readonly unitSpriteLayer = new Container();
   private readonly unitSprites = new Map<number, Sprite>();
+  private readonly structureSpriteLayer = new Container();
+  private readonly structureSprites = new Map<number, Sprite>();
   private readonly unitLayer = new Graphics();
   private readonly hud = new Container();
   private readonly hudGraphics = new Graphics();
@@ -240,6 +248,7 @@ export class EchoRenderer {
       this.terrainLayer,
       this.nodeLayer,
       this.ringLayer,
+      this.structureSpriteLayer,
       this.structureLayer,
       this.contactLayer,
       this.unitSpriteLayer,
@@ -257,9 +266,10 @@ export class EchoRenderer {
     this.buildHudText();
     this.attachInput();
 
-    // Decode the concept-art hull patches in the background. Until they land
-    // (or if they never do), drawUnits falls back to the vector silhouettes.
+    // Decode the concept-art plating in the background. Until it lands (or if
+    // it never does), units and structures fall back to the vector shapes.
     loadHullArt().catch(() => {});
+    loadStructureArt().catch(() => {});
 
     this.app.ticker.add(() => this.draw());
   }
@@ -1142,11 +1152,46 @@ export class EchoRenderer {
     }
   }
 
+  /**
+   * Keep one baked sprite per own COMPLETED structure in sync. Construction
+   * sites never get a sprite — a half-built structure is schematic, and the
+   * scaffold rendering says so. Returns true when the sprite is showing.
+   */
+  private syncStructureSprite(structure: OwnStructure): boolean {
+    const texture = structureTexture(structure.kind, this.faction);
+    if (texture === null) return false;
+
+    let sprite = this.structureSprites.get(structure.id);
+    if (sprite === undefined) {
+      sprite = new Sprite();
+      sprite.anchor.set(0.5);
+      this.structureSprites.set(structure.id, sprite);
+      this.structureSpriteLayer.addChild(sprite);
+    }
+    if (sprite.texture !== texture) {
+      sprite.texture = texture;
+      const size = structureSpriteSizeM(structure.kind);
+      sprite.width = size.widthM;
+      sprite.height = size.heightM;
+    }
+    sprite.position.set(structure.x, structure.y);
+    return true;
+  }
+
   private drawStructures(): void {
     const g = this.structureLayer;
     g.clear();
     const inverseScale = 1 / this.world.scale.x;
     const palette = FACTION_PALETTE[this.faction];
+
+    // Drop sprites for structures that are gone (or regressed to sites).
+    for (const [id, sprite] of this.structureSprites) {
+      const live = this.structures.find((s) => s.id === id);
+      if (live === undefined || live.buildProgress < 1) {
+        sprite.destroy();
+        this.structureSprites.delete(id);
+      }
+    }
 
     for (const structure of this.structures) {
       const radius = structureStatsFor(structure.kind).radiusM;
@@ -1163,15 +1208,19 @@ export class EchoRenderer {
         });
       }
 
-      drawStructureSilhouette(
-        g,
-        structure.kind,
-        structure.x,
-        structure.y,
-        radius,
-        { color: palette.primary, accent: palette.accent, alpha, detail: !building },
-        2 * inverseScale
-      );
+      // Completed structures wear the baked, lit architecture; sites and the
+      // pre-decode window stay on the vector scaffold.
+      if (building || !this.syncStructureSprite(structure)) {
+        drawStructureSilhouette(
+          g,
+          structure.kind,
+          structure.x,
+          structure.y,
+          radius,
+          { color: palette.primary, accent: palette.accent, alpha, detail: !building },
+          2 * inverseScale
+        );
+      }
 
       // The structure's own loudness ring, same language as units.
       g.circle(structure.x, structure.y, radius + 10 + structure.sig * 0.35).stroke({
@@ -1708,9 +1757,11 @@ export class EchoRenderer {
     this.detachInput = null;
     this.tracked.clear();
     this.unitSprites.clear();
-    // The bake cache is module-level; drop it so a remount re-bakes rather
-    // than serving textures the GPU no longer holds.
+    this.structureSprites.clear();
+    // The bake caches are module-level; drop them so a remount re-bakes
+    // rather than serving textures the GPU no longer holds.
     destroyHullTextures();
+    destroyStructureTextures();
     // Pixi tears down the ticker, canvas and all child display objects.
     if (this.app.renderer !== null && this.app.renderer !== undefined) {
       this.app.destroy(true, { children: true });
