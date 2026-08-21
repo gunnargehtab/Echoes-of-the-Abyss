@@ -46,6 +46,7 @@ const UNITS = [
   // Faction variants: same kind, another navy's shape language. The slug's
   // faction suffix pairs with VARIANT_MAP_URL in hullMaps.ts.
   { slug: 'corvette-bathyarch', model: 'corvette-bathyarch.glb', lengthM: 80 },
+  { slug: 'harvester-bathyarch', model: 'harvester-bathyarch.glb', lengthM: 75 },
 ];
 
 /**
