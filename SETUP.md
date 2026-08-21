@@ -5,24 +5,26 @@ TypeScript, PixiJS v8, bitecs, Colyseus, Vite.
 
 ## Project Structure
 
-```
+```text
 packages/
 ├── shared/            # Simulation rules shared by client and server
 │   ├── src/
-│   │   ├── constants.ts   # SIG, PropagationFactor, tiers, depth bands
+│   │   ├── constants.ts   # SIG, PropagationFactor, tiers, depth, economy
 │   │   ├── echo.ts        # Echo Layer detection math (pure)
 │   │   ├── units.ts       # Prototype roster from docs/units.md
+│   │   ├── structures.ts  # Structure roster, costs, PRODUCIBLE tech split
 │   │   └── types.ts       # Wire contract (Contact, OwnUnit, EchoSnapshot)
 │   └── test/              # Detection math tests
 ├── frontend/          # Web client (PixiJS + React + TypeScript)
 │   ├── src/
-│   │   ├── game/          # EchoRenderer, palette, React mount
+│   │   ├── game/          # EchoRenderer, silhouettes, palette, React mount
 │   │   └── net/           # Colyseus client
 │   └── vite.config.ts
 └── backend/           # Game server (Node.js + Colyseus)
     ├── src/
     │   ├── sim/           # ECS world, terrain, systems
-    │   │   └── systems/   # movement, acoustics, pressure, echoLayer
+    │   │   └── systems/   # movement, acoustics, pressure, echoLayer,
+    │   │                  # harvest, production, construction, combat
     │   ├── rooms/         # MatchRoom — the network boundary
     │   └── schema/        # Colyseus room state (lobby data only)
     └── test/              # Simulation integration tests
@@ -61,30 +63,74 @@ npm -w packages/backend run dev  # Colyseus server, tsx watch
 npm -w packages/frontend run dev # Vite dev server
 ```
 
-Point the client at a non-default server with `VITE_SERVER_URL`.
+Point the client at a non-default server with `VITE_SERVER_URL`. To reach the
+dev server from another device on the same network, add `--host` to the Vite
+script — the client derives its WebSocket endpoint from whatever host served
+the page, so no further configuration is needed. See
+[SETUP-ANDROID.md](SETUP-ANDROID.md) for playing on a phone.
 
 ## Controls
 
+A match is the classic RTS loop — harvest, build, produce, destroy the enemy
+Bastion — so the client speaks both mouse-and-keyboard and touch. Every command
+reachable by keyboard is also on the bottom command panel, which is what makes
+the game playable on a phone.
+
+### Mouse and keyboard
+
 | Input | Action |
-|---|---|
-| Left click | Select own unit (shift to add) |
-| Right click | Move order for selection |
+| --- | --- |
+| Left click | Select own unit or structure (shift to add) |
+| Right click | Context order — nodule field harvests, heard contact attacks, open water moves |
 | Middle drag | Pan |
 | Wheel | Zoom at cursor |
+| `1`–`5` | Queue Scout / Corvette / Cruiser / Submersible / Harvester |
+| `R` / `F` / `T` | Build Refinery / Foundry / Sentinel Turret, then click a site |
+| `Esc` | Cancel a pending build |
 | `Space` | Toggle Silent Running |
+| `V` | Cycle harvest throttle — idle, trickle, standard, overburden |
 | `P` | Active sonar ping |
 | Hold `Shift` | Preview ping cost — 900 m reveal, 2,400 m self-reveal |
+
+### Touch
+
+| Gesture | Action |
+| --- | --- |
+| Tap | Select; with a selection, tap the map to issue the context order |
+| Drag / pinch | Pan / zoom |
+| Tap the sonar scope | Jump the camera; drag to scrub |
+| BUILD / UNITS / SQUAD tabs | Structures, production, and per-unit commands |
+| `✕` | Clear the selection — tapping open water is a move order, not a deselect |
 
 ## Build, test, lint
 
 ```bash
 npm run build       # shared -> frontend -> backend
-npm test            # 31 tests across shared + backend
+npm test            # 42 tests across shared + backend
 npm run type-check
 npm run lint
 ```
 
 ## Architecture Notes
+
+### The match is a classic RTS loop with the Echo Layer underneath
+
+`Match.step()` runs the systems in a fixed order every tick: harvest, combat,
+movement, construction, production, acoustics, pressure, then a single reap.
+Deaths from every source land in one list so the win condition sees them
+together — destroying a player's Bastion eliminates them, and the last
+commander with a Bastion standing wins.
+
+What makes it this game rather than any RTS is that every step of the loop is
+audible. Mining loudness follows the harvester's throttle, a construction site
+broadcasts at SIG 70 for its whole build time, a refinery hums at 65 forever,
+and a Foundry is loud exactly while its line runs. Economy is not a safe rear
+area; it is the largest continuous noise source a player owns
+([docs/economy.md](docs/economy.md)).
+
+Costs and the structure tech split live in `packages/shared/src/structures.ts`
+as `PRODUCIBLE`, shared because the server validates production against it and
+the client's command panel renders from it.
 
 ### The Echo Layer is server-authoritative
 
@@ -143,18 +189,28 @@ for finished work:
   hiding behind, and the trench's "carries far down the axis" behaviour has no
   axis. Path integration is the natural upgrade once the Echo pass has headroom
   against its budget.
-- **[#38](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/38) and
-  [#39](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/39) — the two
-  documentation CI gates are reporting-only.** markdownlint finds ~270
-  structural issues in docs/, and seven linked documents were never written.
-  Both steps go back to blocking once those are resolved.
-- **No combat, economy, production, fauna, or Echo Marks yet.** Weapons exist
-  only as `applyFiringSpike`; the roster spawns as a fixed opening force. This
-  is unbuilt scope rather than a defect.
+- **Rendering is procedural placeholder art.** Hulls and structures are drawn
+  as faction-shaped silhouettes in `packages/frontend/src/game/silhouettes.ts`,
+  not loaded as sprites. That module is the seam:
+  [docs/art-direction.md](docs/art-direction.md) targets detailed sprite art,
+  and swapping it in is a per-shape replacement inside one file.
+- **One resource of four.** Only Nodules are implemented. Thermal Draw, Biomass
+  and Resonance Crystal — and the industrial hum that makes economies audible
+  from range — are still unbuilt ([docs/economy.md](docs/economy.md) §8).
+- **Factions are cosmetic so far.** All four share one roster and one economy;
+  the doctrinal asymmetry described in [docs/factions.md](docs/factions.md) is
+  not yet mechanical, beyond Pelagia's cheaper Silent Running.
+- **No fauna, Echo Marks, upgrades, or abilities.** The Drift, acoustic residue
+  on the terrain layer, and per-unit special abilities are unbuilt scope rather
+  than defects. A supply/berth cap is deliberately deferred pending playtesting
+  (recorded in [docs/README.md](docs/README.md)).
 
 ## Related
 
+- [SETUP-ANDROID.md](SETUP-ANDROID.md) — running the whole game on a phone
 - [docs/systems-echo.md](docs/systems-echo.md) — the Echo Layer design
 - [docs/systems-depth.md](docs/systems-depth.md) — depth and Pressure Rating
+- [docs/economy.md](docs/economy.md) — the harvest loop and why income is loud
+- [docs/art-direction.md](docs/art-direction.md) — HUD layout and the sprite target
 - [docs/tech-stack.md](docs/tech-stack.md) — stack rationale
 - [.github/copilot-instructions.md](.github/copilot-instructions.md) — conventions
