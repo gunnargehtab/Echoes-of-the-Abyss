@@ -51,6 +51,8 @@ const UNITS = [
   { slug: 'corvette-directorate', model: 'corvette-directorate.glb', lengthM: 80 },
   { slug: 'harvester-directorate', model: 'harvester-directorate.glb', lengthM: 75 },
   { slug: 'cruiser-directorate', model: 'cruiser-directorate.glb', lengthM: 130 },
+  { slug: 'corvette-hadron', model: 'corvette-hadron.glb', lengthM: 80 },
+  { slug: 'cruiser-hadron', model: 'cruiser-hadron.glb', lengthM: 130 },
 ];
 
 /**
