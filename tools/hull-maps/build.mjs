@@ -23,6 +23,12 @@ import { fileURLToPath } from 'node:url';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const MAP_PPM = 4;
+/**
+ * Structures bake at lower density: they are an order of magnitude larger
+ * than hulls, and 1.5 px/m keeps the Bastion's maps in the same memory class
+ * as its procedural bake. Contract with STRUCT_MAP_PPM in structureMaps.ts.
+ */
+const STRUCT_PPM = 1.5;
 const PASSES = ['albedo', 'height', 'emissive'];
 
 /**
@@ -39,36 +45,55 @@ const UNITS = [
   { slug: 'abyssal-submersible', model: 'abyssal-submersible-directorate.glb', lengthM: 95 },
 ];
 
-const outDir = join(repo, 'packages/frontend/src/assets/hulls/maps');
-const tmpRoot = join(repo, '.hull-maps-tmp');
-mkdirSync(outDir, { recursive: true });
+/**
+ * Structure models, baked against the footprint diameter (2 × radiusM in
+ * packages/shared/src/structures.ts). Absent structures keep the procedural
+ * architecture bake in structureTextures.ts.
+ */
+const STRUCTURES = [
+  { slug: 'bastion', model: 'bastion-bathyarch.glb', lengthM: 440 },
+  { slug: 'refinery', model: 'refinery-bathyarch.glb', lengthM: 280 },
+];
 
-for (const unit of UNITS) {
-  const model = join(repo, 'docs/concept-art/models', unit.model);
-  const tmp = join(tmpRoot, unit.slug);
-  const result = spawnSync(
-    'node',
-    [
-      join(repo, '.claude/skills/hull-intake/scripts/bake.mjs'),
-      model,
-      '--length-m',
-      String(unit.lengthM),
-      '--ppm',
-      String(MAP_PPM),
-      '--out',
-      tmp,
-    ],
-    { stdio: 'inherit' }
-  );
-  if (result.status !== 0) {
-    console.error(`bake failed for ${unit.slug}`);
-    process.exit(1);
+const JOBS = [
+  { entries: UNITS, ppm: MAP_PPM, outDir: join(repo, 'packages/frontend/src/assets/hulls/maps') },
+  {
+    entries: STRUCTURES,
+    ppm: STRUCT_PPM,
+    outDir: join(repo, 'packages/frontend/src/assets/structures/maps'),
+  },
+];
+
+const tmpRoot = join(repo, '.hull-maps-tmp');
+for (const job of JOBS) {
+  mkdirSync(job.outDir, { recursive: true });
+  for (const entry of job.entries) {
+    const model = join(repo, 'docs/concept-art/models', entry.model);
+    const tmp = join(tmpRoot, entry.slug);
+    const result = spawnSync(
+      'node',
+      [
+        join(repo, '.claude/skills/hull-intake/scripts/bake.mjs'),
+        model,
+        '--length-m',
+        String(entry.lengthM),
+        '--ppm',
+        String(job.ppm),
+        '--out',
+        tmp,
+      ],
+      { stdio: 'inherit' }
+    );
+    if (result.status !== 0) {
+      console.error(`bake failed for ${entry.slug}`);
+      process.exit(1);
+    }
+    for (const pass of PASSES) {
+      copyFileSync(join(tmp, `${pass}.png`), join(job.outDir, `${entry.slug}-${pass}.png`));
+    }
+    console.log(`${entry.slug}: wrote ${PASSES.length} maps (${job.ppm} px/m)`);
   }
-  for (const pass of PASSES) {
-    copyFileSync(join(tmp, `${pass}.png`), join(outDir, `${unit.slug}-${pass}.png`));
-  }
-  console.log(`${unit.slug}: wrote ${PASSES.length} maps`);
 }
 
 rmSync(tmpRoot, { recursive: true, force: true });
-console.log(`\nmaps in ${outDir} (${MAP_PPM} px/m)`);
+console.log(`\ndone: units at ${MAP_PPM} px/m, structures at ${STRUCT_PPM} px/m`);

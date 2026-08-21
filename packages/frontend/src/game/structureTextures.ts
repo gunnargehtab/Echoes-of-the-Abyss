@@ -2,27 +2,33 @@
  * Baked 3D structure sprites for the player's OWN base — the same treatment
  * hullTextures.ts gives units, applied to the four structure footprints.
  *
- * How a structure sprite is made, once, at load time:
- *   1. The footprint from silhouettes.ts (octagon / block / hall / mount) is
- *      rasterised to a mask, so the sprite, the scaffold fallback, and the
- *      enemy track all share one shape.
- *   2. A heightfield is composed from architecture rather than a hull section:
- *      a bevelled slab for the footprint, with a pressure dome on the Bastion,
- *      silo domes on the Refinery, a recessed launch bay in the Foundry, and a
- *      dome-and-barrel on the turret.
- *   3. The shared lighting model (bake.ts) lights it over concept-art plating,
- *      tinted toward the faction palette, and industrial glow marks go on top.
+ * Like the hulls, there are two bakes, chosen by whether an approved 3D model
+ * exists for the structure (see structureMaps.ts):
  *
- * Construction sites deliberately stay on the flat scaffold rendering — a
- * half-built structure is schematic, not architecture — and the Asymmetric
- * Fidelity Law is enforced by who calls this: only the own-force draw path
- * requests baked sprites. Enemy tracks stay on silhouettes.ts.
+ *   MODEL-BACKED — mask, relief and light placement rendered offline from the
+ *   model in docs/concept-art/models, through the shared model path in
+ *   bake.ts. The Bastion's real dome-and-ribs and the Refinery's silo rank,
+ *   conveyors and docking apron stand in the height map because they exist.
+ *
+ *   PROCEDURAL — the stand-in for structures with no model yet: the footprint
+ *   from silhouettes.ts is rasterised to a mask, a bevelled slab plus each
+ *   kind's landmark volume (dome / silo domes / bay pit / mount-and-barrel)
+ *   approximates the architecture, and hardcoded glow marks go on top.
+ *
+ * A model-backed sprite no longer shares its exact outline with the scaffold
+ * fallback and the enemy track, which keep the schematic footprint — the same
+ * deliberate asymmetry as the hulls: a track earns a shape, never the
+ * architecture. Construction sites deliberately stay on the flat scaffold
+ * rendering — a half-built structure is schematic, not architecture — and the
+ * Asymmetric Fidelity Law is enforced by who calls this: only the own-force
+ * draw path requests baked sprites. Enemy tracks stay on silhouettes.ts.
  */
 
 import { Texture } from 'pixi.js';
 import { Faction, StructureKind, structureStatsFor } from '@echoes/shared';
 import { FACTION_PALETTE } from './palette.ts';
-import { cssColor, distanceTransform, glowDot, lightAndCompose } from './bake.ts';
+import { bakeModelSprite, cssColor, distanceTransform, glowDot, lightAndCompose } from './bake.ts';
+import { loadStructureMaps, structureMap, STRUCT_MAP_PPM } from './structureMaps.ts';
 
 import cruiserUrl from '../assets/hulls/cruiser.png';
 import siegeUrl from '../assets/hulls/siege.png';
@@ -57,14 +63,17 @@ const baked = new Map<string, Texture>();
 
 /** Decode the plating patches. Failure is non-fatal: scaffolding stays up. */
 export async function loadStructureArt(): Promise<void> {
-  await Promise.all(
-    Object.entries(STRUCT_ART_URL).map(async ([kind, url]) => {
+  await Promise.all([
+    ...Object.entries(STRUCT_ART_URL).map(async ([kind, url]) => {
       const img = new Image();
       img.src = url;
       await img.decode();
       artImages.set(Number(kind) as StructureKind, img);
-    })
-  );
+    }),
+    // Model maps decode alongside; a structure whose maps fail simply bakes
+    // procedurally, so this never blocks the art from loading.
+    loadStructureMaps(),
+  ]);
   artLoaded = true;
 }
 
@@ -86,6 +95,15 @@ function halfExtentsM(kind: StructureKind): { hx: number; hy: number } {
 
 /** World-metre size of the baked canvas, so the renderer can scale the sprite. */
 export function structureSpriteSizeM(kind: StructureKind): { widthM: number; heightM: number } {
+  // A model-backed structure is as big as its model: the maps carry crane
+  // arms and aprons the schematic footprint never had.
+  const map = structureMap(kind);
+  if (map !== null) {
+    return {
+      widthM: (map.widthPx + 2 * MARGIN_PX) / STRUCT_MAP_PPM,
+      heightM: (map.heightPx + 2 * MARGIN_PX) / STRUCT_MAP_PPM,
+    };
+  }
   const { hx, hy } = halfExtentsM(kind);
   return {
     widthM: (2 * hx * PX_PER_M + 2 * MARGIN_PX) / PX_PER_M,
@@ -140,6 +158,14 @@ function addDome(
 }
 
 function bake(kind: StructureKind, faction: Faction): Texture {
+  // Model-backed when a model exists; buildings carry no bow light, so the
+  // shared bake's output is the finished sprite.
+  const map = structureMap(kind);
+  if (map !== null) return Texture.from(bakeModelSprite(faction, map, MARGIN_PX));
+  return bakeProcedural(kind, faction);
+}
+
+function bakeProcedural(kind: StructureKind, faction: Faction): Texture {
   const r = structureStatsFor(kind).radiusM * PX_PER_M;
   const { hx, hy } = halfExtentsM(kind);
   const w = Math.ceil(2 * hx * PX_PER_M + 2 * MARGIN_PX);
