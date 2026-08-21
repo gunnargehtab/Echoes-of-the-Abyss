@@ -1,21 +1,42 @@
-/* Frontend styles */
+/* Frontend styles.
+   Chrome colours transcribe docs/style-neon-noir.md — change the doc first. */
 :root {
+  /* The blacks (the canvas) */
+  --abyss-void: #03080e;
+  --abyss-floor: #070e1a;
+  --abyss-panel: #0a1424;
+  --abyss-glass: #0d1c28;
+
+  /* The neons (the signal): cyan tells you, magenta asks you, red warns you */
+  --neon-cyan: #35e0ff;
+  --neon-magenta: #ff3da6;
+  --neon-violet: #8b5cf6;
+  --neon-amber: #f2b233;
+  --neon-red: #ff3b30;
+  --neon-teal: #5fd0c0;
+
+  /* Text */
+  --text-bright: #d6e6f0;
+  --text-dim: #6f8a9c;
+  --text-cyan: #a8d0e0;
+
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  /* The abyss has no light theme. */
+  color-scheme: dark;
+  color: var(--text-bright);
+  background-color: var(--abyss-void);
 }
 
 a {
-  color: #646cff;
+  color: var(--neon-cyan);
   text-decoration: none;
 }
 
 a:hover {
-  color: #535bf2;
+  color: var(--neon-magenta);
 }
 
 body {

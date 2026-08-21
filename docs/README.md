@@ -41,8 +41,9 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | **[art-direction.md](art-direction.md)** | Palettes, shape language, silhouette law, Echo Layer UI requirements |
 | **[audio-direction.md](audio-direction.md)** | The mix as the primary information channel; tier sonification |
 | **[ui-ux.md](ui-ux.md)** | The Echo Layer HUD, sonar scope, ping preview, accessibility |
+| **[style-neon-noir.md](style-neon-noir.md)** | Neon-noir presentation register: palette tokens, glow rules, UI chrome |
 | **[naming.md](naming.md)** | Title, taglines, logo direction |
-| **[concept-art/](concept-art/)** | Four survey plates in the Pressure Cartography visual language |
+| **[concept-art/](concept-art/)** | Four survey plates in the Pressure Cartography language, plus two neon-noir presentation plates |
 
 ## Technical
 

@@ -49,7 +49,7 @@ Each faction has a full visual identity sheet (silhouette language, materials, p
 
 ## Concept Art — Pressure Cartography
 
-Four survey plates establish the visual language: **the discipline of measuring things that resist measurement.**
+Four survey plates establish the visual language: **the discipline of measuring things that resist measurement.** Two presentation plates extend it into the neon-noir register that governs key art and the command UI (see [style-neon-noir.md](style-neon-noir.md)).
 
 | Plate | Subject |
 | --- | --- |
@@ -57,6 +57,8 @@ Four survey plates establish the visual language: **the discipline of measuring 
 | [II — Four Powers](concept-art/plate-02-four-powers.png) | Shape language, palettes, silhouettes, signature doctrine |
 | [III — The Echo Layer](concept-art/plate-03-echo-layer.png) | Resolution tiers and the cost of the ping |
 | [IV — The Mouth](concept-art/plate-04-the-mouth.png) | Concentric banding, return anomaly, unresolved |
+| [V — Submarine Classes](concept-art/plate-05-submarine-classes.png) | Neon-noir key art: hull line-up surfaced at night, magenta/cyan signage |
+| [VI — Build Menu UI](concept-art/plate-06-build-menu-ui.jpg) | Neon-noir command panel mock: glass cards, magenta bevels, cyan headers |
 
 ## Unit Art Direction
 
@@ -115,6 +117,10 @@ sonar line is where the dread lives.
 - Hadron: magnetic pylons, resonance towers
 
 ## UI Direction
+
+The interface register is **neon-noir** — tokens, glow rules, and the panel
+anatomy live in [style-neon-noir.md](style-neon-noir.md), which is the source
+of every chrome colour in the frontend.
 
 ### Style
 

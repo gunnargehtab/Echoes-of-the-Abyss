@@ -51,11 +51,17 @@ export const TIER_STYLE: Record<
   [ResolutionTier.Track]: { color: 0xff6b5b, alpha: 0.9, radius: 16, label: 'track' },
 };
 
-/** HUD chrome — "transparent glass panels, soft blue holographic overlays". */
+/**
+ * HUD chrome — neon-noir, transcribed from docs/style-neon-noir.md.
+ * Cyan tells you, magenta asks you, red warns you.
+ */
 export const UI = {
   background: 0x03080e,
   glass: 0x0d1c28,
-  glassStroke: 0x2b5568,
+  /** Panel bevel: the "chrome voice". An edge colour, never a fill. */
+  glassStroke: 0xff3da6,
+  /** Interface voice: headers, holographic linework, readout names. */
+  accent: 0x35e0ff,
   text: 0xd6e6f0,
   textDim: 0x6f8a9c,
   /** Own units. */

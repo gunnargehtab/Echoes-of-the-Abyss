@@ -281,7 +281,8 @@ export class EchoRenderer {
     });
     this.bannerLabel.anchor.set(0.5);
 
-    this.infoName = new Text({ text: '', style: { ...mono, fontSize: 13 } });
+    // The card's header takes the cyan "interface voice" (docs/style-neon-noir.md).
+    this.infoName = new Text({ text: '', style: { ...mono, fontSize: 13, fill: UI.accent } });
     this.infoLine1 = new Text({ text: '', style: { ...mono, fontSize: 12, fill: UI.textDim } });
     this.infoLine2 = new Text({ text: '', style: { ...mono, fontSize: 12, fill: UI.textDim } });
 
@@ -791,14 +792,16 @@ export class EchoRenderer {
 
     this.barButtons.forEach((button, i) => {
       const alpha = button.enabled ? 1 : 0.35;
+      // Neon is edges, never fills (docs/style-neon-noir.md): activeness lives
+      // in the bevel's brightness; inactive bevels dim to 40 %.
       g.roundRect(button.x, button.y, button.w, button.h, 6).fill({
-        color: button.active ? UI.glassStroke : 0x000000,
+        color: button.active ? UI.glass : 0x000000,
         alpha: alpha * (button.active ? 0.9 : 0.45),
       });
       g.roundRect(button.x, button.y, button.w, button.h, 6).stroke({
         width: 1,
-        color: button.active ? UI.friendly : UI.glassStroke,
-        alpha,
+        color: UI.glassStroke,
+        alpha: alpha * (button.active ? 1 : 0.4),
       });
       const text = this.barText(i);
       text.visible = true;
