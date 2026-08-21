@@ -66,8 +66,13 @@ Four survey plates establish the visual language: **the discipline of measuring 
 
 The presentation target is **detailed sprite art** in the classic RTS mould — rendered
 hulls with rim light, running lights, cavitation trails, and animated bases — not
-abstract markers. The playable prototype currently draws primitives as placeholders;
-that is a scaffold state, not the direction.
+abstract markers. The prototype now takes its first step there: the player's own units
+render as lit, textured hull sprites baked at load time from
+[Plate V — Submarine Classes](concept-art/plate-05-submarine-classes.png) — a
+pressure-hull heightfield lit per pixel, with rim light and running lights in the
+faction's accent colour. Vector primitives remain in two deliberate places: the fallback
+while the art decodes, and every enemy contact, which the law below caps at a flat
+silhouette. Cavitation trails and animated bases are still to come.
 
 ### The Asymmetric Fidelity Law
 
