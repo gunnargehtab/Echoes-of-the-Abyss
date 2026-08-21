@@ -62,6 +62,10 @@ Four survey plates establish the visual language: **the discipline of measuring 
 
 ## Unit Art Direction
 
+3D concept models of the roster are generated from the prompt kit in
+[asset-prompts-3d.md](asset-prompts-3d.md), which transcribes the silhouette and glow
+law below into copy-paste prompts — change this doc first, then the kit.
+
 ### Rendering Target
 
 The presentation target is **detailed sprite art** in the classic RTS mould — rendered
@@ -205,3 +209,10 @@ Claustrophobic, industrial, oppressive, bioluminescent, cold, metallic, alien.
 - Resource scarcity
 - Environmental collapse
 - Faction propaganda
+
+## Related
+
+- [factions.md](factions.md) — full faction visual identity sheets
+- [style-neon-noir.md](style-neon-noir.md) — presentation-layer palette tokens and glow rules
+- [asset-prompts-3d.md](asset-prompts-3d.md) — prompt kit that transcribes this doc for 3D model generation
+- [ui-ux.md](ui-ux.md) — the Echo Layer HUD this direction serves
