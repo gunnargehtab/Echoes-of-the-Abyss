@@ -71,12 +71,15 @@ law below into copy-paste prompts — change this doc first, then the kit.
 The presentation target is **detailed sprite art** in the classic RTS mould — rendered
 hulls with rim light, running lights, cavitation trails, and animated bases — not
 abstract markers. The prototype's own-force rendering is now there in still form: units
-*and* completed structures render as lit, textured sprites baked at load time from the
-plating in [Plate V — Submarine Classes](concept-art/plate-05-submarine-classes.png) —
-units as a pressure-hull heightfield, structures as architecture (the Bastion's dome,
-the Refinery's silo rank, the Foundry's recessed launch bay, the turret's mount and
-barrel), all lit per pixel with rim light and glow marks in the faction's accent
-colour. Vector primitives remain in three deliberate places: the fallback while the art
+*and* completed structures render as lit, textured sprites baked at load time. A unit
+with an approved 3D model in `concept-art/models/` bakes from maps rendered offline
+from that model (mask, heightfield, and light placement are the designed hull's own —
+see `tools/hull-maps/`), recoloured per faction; a unit without one falls back to a
+pressure-hull heightfield guessed from its outline and clad in the plating of
+[Plate V — Submarine Classes](concept-art/plate-05-submarine-classes.png). Structures
+bake as architecture (the Bastion's dome, the Refinery's silo rank, the Foundry's
+recessed launch bay, the turret's mount and barrel). Everything is lit per pixel with
+rim light and glow marks in the faction's colours. Vector primitives remain in three deliberate places: the fallback while the art
 decodes, every enemy contact, which the law below caps at a flat silhouette, and
 **construction sites** — a half-built structure is schematic on purpose, and reads as
 scaffolding until it is commissioned. Cavitation trails and animated bases are still to
