@@ -119,7 +119,7 @@ Detection is **server-authoritative and per-player** — in a game about hidden 
 ## Getting started (developer)
 
 Prerequisites
-- Node.js 18.x, npm 8/9+ (or compatible), Git
+- Node.js 22+ (24 recommended), npm 10+, Git
 
 Quick setup
 1. Clone: git clone https://github.com/gunnargehtab/Echoes-of-the-Abyss.git
@@ -145,5 +145,6 @@ Contribution workflow
 
 More
 - Developer-focused quickstart: docs/DEVELOPER_QUICKSTART.md
+- Playing on Android, entirely on-device: SETUP-ANDROID.md
 - CI workflow: .github/workflows/ci.yml
 
