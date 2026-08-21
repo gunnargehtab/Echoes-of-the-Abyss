@@ -36,6 +36,7 @@ const UNITS = [
   { slug: 'corvette', model: 'corvette-pelagia.glb', lengthM: 80 },
   { slug: 'cruiser', model: 'cruiser-pelagia.glb', lengthM: 130 },
   { slug: 'harvester', model: 'harvester-pelagia.glb', lengthM: 75 },
+  { slug: 'abyssal-submersible', model: 'abyssal-submersible-directorate.glb', lengthM: 95 },
 ];
 
 const outDir = join(repo, 'packages/frontend/src/assets/hulls/maps');

@@ -34,6 +34,9 @@ import cruiserEmissive from '../assets/hulls/maps/cruiser-emissive.png';
 import harvesterAlbedo from '../assets/hulls/maps/harvester-albedo.png';
 import harvesterHeight from '../assets/hulls/maps/harvester-height.png';
 import harvesterEmissive from '../assets/hulls/maps/harvester-emissive.png';
+import abyssalAlbedo from '../assets/hulls/maps/abyssal-submersible-albedo.png';
+import abyssalHeight from '../assets/hulls/maps/abyssal-submersible-height.png';
+import abyssalEmissive from '../assets/hulls/maps/abyssal-submersible-emissive.png';
 
 /**
  * Pixels per world metre the maps were baked at. The maps carry no metadata,
@@ -69,6 +72,11 @@ const MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
     albedo: harvesterAlbedo,
     height: harvesterHeight,
     emissive: harvesterEmissive,
+  },
+  [UnitKind.AbyssalSubmersible]: {
+    albedo: abyssalAlbedo,
+    height: abyssalHeight,
+    emissive: abyssalEmissive,
   },
 };
 
