@@ -94,10 +94,14 @@ function halfExtentsM(kind: StructureKind): { hx: number; hy: number } {
 }
 
 /** World-metre size of the baked canvas, so the renderer can scale the sprite. */
-export function structureSpriteSizeM(kind: StructureKind): { widthM: number; heightM: number } {
+export function structureSpriteSizeM(
+  kind: StructureKind,
+  faction: Faction
+): { widthM: number; heightM: number } {
   // A model-backed structure is as big as its model: the maps carry crane
-  // arms and aprons the schematic footprint never had.
-  const map = structureMap(kind);
+  // arms and aprons the schematic footprint never had. Variants may differ
+  // in extent from the canonical model, so size follows the same lookup.
+  const map = structureMap(kind, faction);
   if (map !== null) {
     return {
       widthM: (map.widthPx + 2 * MARGIN_PX) / STRUCT_MAP_PPM,
@@ -160,7 +164,7 @@ function addDome(
 function bake(kind: StructureKind, faction: Faction): Texture {
   // Model-backed when a model exists; buildings carry no bow light, so the
   // shared bake's output is the finished sprite.
-  const map = structureMap(kind);
+  const map = structureMap(kind, faction);
   if (map !== null) return Texture.from(bakeModelSprite(faction, map, MARGIN_PX));
   return bakeProcedural(kind, faction);
 }

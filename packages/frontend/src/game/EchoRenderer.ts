@@ -1170,7 +1170,7 @@ export class EchoRenderer {
     }
     if (sprite.texture !== texture) {
       sprite.texture = texture;
-      const size = structureSpriteSizeM(structure.kind);
+      const size = structureSpriteSizeM(structure.kind, this.faction);
       sprite.width = size.widthM;
       sprite.height = size.heightM;
     }
