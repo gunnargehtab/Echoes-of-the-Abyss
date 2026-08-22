@@ -51,6 +51,20 @@ export function detectionRatio(sig: number, pf: number, distanceM: number, hyd: 
 }
 
 /**
+ * The tier a detection ratio resolves to — the §4 table, keyed off multiples
+ * of the listener's threshold. Split out so a caller that already has the
+ * ratio (the Echo Layer computes it incrementally per pair) need not pay the
+ * propagation pow twice.
+ */
+export function tierFromRatio(ratio: number): ResolutionTier {
+  if (ratio >= TIER_THRESHOLD_MULTIPLIER.TRACK) return ResolutionTier.Track;
+  if (ratio >= TIER_THRESHOLD_MULTIPLIER.CLASSIFICATION) return ResolutionTier.Classification;
+  if (ratio >= TIER_THRESHOLD_MULTIPLIER.BEARING) return ResolutionTier.Bearing;
+  if (ratio >= TIER_THRESHOLD_MULTIPLIER.CONTACT) return ResolutionTier.Contact;
+  return ResolutionTier.Silent;
+}
+
+/**
  * Resolve what a listener learns about an emitter. The core of the game.
  * Returns ResolutionTier.Silent when the emitter is below threshold.
  */
@@ -60,12 +74,7 @@ export function resolveTier(
   distanceM: number,
   hyd: number
 ): ResolutionTier {
-  const ratio = detectionRatio(sig, pf, distanceM, hyd);
-  if (ratio >= TIER_THRESHOLD_MULTIPLIER.TRACK) return ResolutionTier.Track;
-  if (ratio >= TIER_THRESHOLD_MULTIPLIER.CLASSIFICATION) return ResolutionTier.Classification;
-  if (ratio >= TIER_THRESHOLD_MULTIPLIER.BEARING) return ResolutionTier.Bearing;
-  if (ratio >= TIER_THRESHOLD_MULTIPLIER.CONTACT) return ResolutionTier.Contact;
-  return ResolutionTier.Silent;
+  return tierFromRatio(detectionRatio(sig, pf, distanceM, hyd));
 }
 
 /**

@@ -5,15 +5,16 @@
  * PropagationFactor, so the same army is a different army in a different biome
  * (docs/systems-echo.md §3). This is the map doing the work.
  *
- * SIMPLIFICATION: detection uses the PropagationFactor at the *emitter's*
- * position, not an integral along the emitter-to-listener path. That matches
- * how the docs describe the effect ("Thermal Vein masks you", "Kelp Forest
- * muffles") and is far cheaper, but it means a unit does not gain cover from a
- * kelp bed it is merely hiding behind. Path integration is the obvious upgrade
- * once the Echo pass has headroom against its 2 ms budget.
+ * Detection integrates PF along the emitter-to-listener path
+ * (pathPropagation, issue #37): a unit gains cover from a kelp bed it is
+ * hiding *behind*, and the Abyssal Trench carries sound far down its axis —
+ * an along-path route accumulates PF 1.6 the whole way, while a crossing
+ * only picks it up for the trench's width. Truly anisotropic biomes (the
+ * docs' "0.3 across / 1.2 along" thermocline) would need PF as a function
+ * of bearing, which this model does not attempt.
  */
 
-import { Biome, PROPAGATION_FACTOR } from '@echoes/shared';
+import { Biome, MAX_PROPAGATION_FACTOR, PROPAGATION_FACTOR } from '@echoes/shared';
 
 export class Terrain {
   readonly widthM: number;
@@ -22,6 +23,12 @@ export class Terrain {
   private readonly cols: number;
   private readonly rows: number;
   private readonly biomes: Uint8Array;
+  /**
+   * PF per cell, maintained alongside `biomes`. The Echo pass walks tens of
+   * thousands of path samples per tick; a flat Float32Array read is the
+   * difference between that walk fitting the 2 ms budget and not.
+   */
+  private readonly pf: Float32Array;
 
   constructor(widthM: number, heightM: number, cellM: number) {
     this.widthM = widthM;
@@ -30,6 +37,7 @@ export class Terrain {
     this.cols = Math.ceil(widthM / cellM);
     this.rows = Math.ceil(heightM / cellM);
     this.biomes = new Uint8Array(this.cols * this.rows).fill(Biome.OpenWater);
+    this.pf = new Float32Array(this.cols * this.rows).fill(PROPAGATION_FACTOR[Biome.OpenWater]);
   }
 
   private index(x: number, y: number): number {
@@ -46,6 +54,55 @@ export class Terrain {
     return PROPAGATION_FACTOR[this.biomeAt(x, y)];
   }
 
+  /**
+   * Mean PropagationFactor along the segment from (x0,y0) to (x1,y1) —
+   * the path integral the Echo Layer prices sound with (issue #37).
+   *
+   * Midpoint Riemann sum over sub-segments no longer than a grid cell:
+   * every cell the path crosses contributes in proportion to the length
+   * crossed, so masking is cumulative (a thin kelp band buys a little
+   * cover, a deep one buys a lot) rather than best/worst-case. Degenerate
+   * paths (same cell, zero length) reduce exactly to propagationAt.
+   *
+   * `abortBelow`: when the caller only cares whether the mean reaches a
+   * bar (the Echo pass knows the exact PF a pair needs to be audible), the
+   * walk stops as soon as even all-trench water for the remaining samples
+   * could not lift the mean that high. The return value is then some value
+   * below the bar, not the true mean — callers comparing against the bar
+   * see the same decision either way.
+   */
+  pathPropagation(x0: number, y0: number, x1: number, y1: number, abortBelow = 0): number {
+    const distance = Math.hypot(x1 - x0, y1 - y0);
+    const samples = Math.max(1, Math.ceil(distance / this.cellM));
+    // Hoisted to locals: this walk runs tens of thousands of times per Echo
+    // tick, and property/record lookups in the loop are what it cannot afford.
+    const { cols, rows, cellM, pf } = this;
+    const maxCx = cols - 1;
+    const maxCy = rows - 1;
+    const sx = (x1 - x0) / samples;
+    const sy = (y1 - y0) / samples;
+    let px = x0 + sx * 0.5;
+    let py = y0 + sy * 0.5;
+    const abortSum = abortBelow * samples;
+    let headroom = MAX_PROPAGATION_FACTOR * samples;
+    let sum = 0;
+    for (let i = 0; i < samples; i++) {
+      let cx = (px / cellM) | 0;
+      let cy = (py / cellM) | 0;
+      if (cx < 0) cx = 0;
+      else if (cx > maxCx) cx = maxCx;
+      if (cy < 0) cy = 0;
+      else if (cy > maxCy) cy = maxCy;
+      sum += pf[cy * cols + cx]!;
+      headroom -= MAX_PROPAGATION_FACTOR;
+      // Even all-trench water for the rest cannot reach the caller's bar.
+      if (sum + headroom < abortSum) return (sum + headroom) / samples;
+      px += sx;
+      py += sy;
+    }
+    return sum / samples;
+  }
+
   /** Paint an axis-aligned rectangle of biome, in world metres. */
   fillRect(x: number, y: number, w: number, h: number, biome: Biome): void {
     const x0 = Math.max(0, Math.floor(x / this.cellM));
@@ -55,6 +112,7 @@ export class Terrain {
     for (let cy = y0; cy <= y1; cy++) {
       for (let cx = x0; cx <= x1; cx++) {
         this.biomes[cy * this.cols + cx] = biome;
+        this.pf[cy * this.cols + cx] = PROPAGATION_FACTOR[biome];
       }
     }
   }

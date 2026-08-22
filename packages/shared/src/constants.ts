@@ -30,6 +30,14 @@ export const PROPAGATION_FACTOR: Record<Biome, number> = {
 };
 
 /**
+ * Derived — the loudest water on the map. The Echo Layer's broadphase must
+ * bound the audible range of a path it has not walked yet, and the only safe
+ * bound is "the whole path is trench". Derived so a new biome cannot
+ * silently break the bound.
+ */
+export const MAX_PROPAGATION_FACTOR = Math.max(...Object.values(PROPAGATION_FACTOR));
+
+/**
  * SPEC — docs/systems-echo.md §4. A contact resolves to a tier when the
  * perceived loudness reaches this multiple of the listener's threshold.
  */
