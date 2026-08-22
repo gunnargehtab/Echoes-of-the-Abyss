@@ -42,6 +42,9 @@ import harvesterEmissive from '../assets/hulls/maps/harvester-emissive.png';
 import abyssalAlbedo from '../assets/hulls/maps/abyssal-submersible-albedo.png';
 import abyssalHeight from '../assets/hulls/maps/abyssal-submersible-height.png';
 import abyssalEmissive from '../assets/hulls/maps/abyssal-submersible-emissive.png';
+import lightScoutBathAlbedo from '../assets/hulls/maps/light-scout-bathyarch-albedo.png';
+import lightScoutBathHeight from '../assets/hulls/maps/light-scout-bathyarch-height.png';
+import lightScoutBathEmissive from '../assets/hulls/maps/light-scout-bathyarch-emissive.png';
 import corvetteBathAlbedo from '../assets/hulls/maps/corvette-bathyarch-albedo.png';
 import corvetteBathHeight from '../assets/hulls/maps/corvette-bathyarch-height.png';
 import corvetteBathEmissive from '../assets/hulls/maps/corvette-bathyarch-emissive.png';
@@ -124,6 +127,11 @@ const KIND_MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
  */
 const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<UnitKind, MapUrls>>>> = {
   [Faction.Bathyarch]: {
+    [UnitKind.LightScout]: {
+      albedo: lightScoutBathAlbedo,
+      height: lightScoutBathHeight,
+      emissive: lightScoutBathEmissive,
+    },
     [UnitKind.Corvette]: {
       albedo: corvetteBathAlbedo,
       height: corvetteBathHeight,

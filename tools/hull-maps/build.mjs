@@ -56,6 +56,7 @@ const UNITS = [
   { slug: 'abyssal-submersible', model: 'abyssal-submersible-directorate.glb', lengthM: 95, sig: 22 },
   // Faction variants: same kind, another navy's shape language. The slug's
   // faction suffix pairs with VARIANT_MAP_URL in hullMaps.ts.
+  { slug: 'light-scout-bathyarch', model: 'light-scout-bathyarch.glb', lengthM: 60, sig: 6 },
   { slug: 'corvette-bathyarch', model: 'corvette-bathyarch.glb', lengthM: 80, sig: 28 },
   { slug: 'harvester-bathyarch', model: 'harvester-bathyarch.glb', lengthM: 75, sig: 18 },
   { slug: 'cruiser-bathyarch', model: 'cruiser-bathyarch.glb', lengthM: 130, sig: 55 },
