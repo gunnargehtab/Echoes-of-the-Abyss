@@ -66,6 +66,12 @@ const UNITS = [
     lengthM: 60,
     sig: 6,
   },
+  {
+    slug: 'abyssal-submersible-bathyarch',
+    model: 'abyssal-submersible-bathyarch.glb',
+    lengthM: 95,
+    sig: 22,
+  },
   { slug: 'corvette-directorate', model: 'corvette-directorate.glb', lengthM: 80, sig: 28 },
   { slug: 'harvester-directorate', model: 'harvester-directorate.glb', lengthM: 75, sig: 18 },
   { slug: 'cruiser-directorate', model: 'cruiser-directorate.glb', lengthM: 130, sig: 55 },
