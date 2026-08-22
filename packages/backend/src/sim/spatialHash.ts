@@ -67,6 +67,24 @@ export class SpatialHash {
     const minY = this.cellCoord(y - radius);
     const maxY = this.cellCoord(y + radius);
 
+    // A loud emitter's radius can span most of the map, and walking every
+    // cell of that rectangle is mostly Map misses on empty water. When the
+    // rectangle holds more cells than the hash holds buckets, invert: sweep
+    // the occupied buckets and test their coordinates against the rectangle.
+    const rectCells = (maxX - minX + 1) * (maxY - minY + 1);
+    if (rectCells > this.cells.size) {
+      for (const [k, bucket] of this.cells) {
+        if (bucket.length === 0) continue;
+        const cx = Math.floor(k / 65536) - 32768;
+        const cy = (k % 65536) - 32768;
+        if (cx < minX || cx > maxX || cy < minY || cy > maxY) continue;
+        for (let i = 0; i < bucket.length; i++) {
+          out.push(bucket[i]!);
+        }
+      }
+      return out;
+    }
+
     for (let cx = minX; cx <= maxX; cx++) {
       for (let cy = minY; cy <= maxY; cy++) {
         const bucket = this.cells.get(this.key(cx, cy));

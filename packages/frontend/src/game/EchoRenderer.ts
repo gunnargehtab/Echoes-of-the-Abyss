@@ -1299,6 +1299,9 @@ export class EchoRenderer {
     for (const unit of this.units) {
       if (!this.selected.has(unit.id)) continue;
 
+      // The server prices detection along each emitter-listener path, so the
+      // true audible region is anisotropic; a circle at local PF is the
+      // honest isotropic preview of it (and all this client is entitled to).
       const pf = this.propagationAt(unit.x, unit.y);
       const range = maxAudibleRangeM(unit.sig, pf, PROPAGATION_MODEL.BASELINE_HYD);
 

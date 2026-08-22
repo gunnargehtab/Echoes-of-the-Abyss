@@ -14,12 +14,15 @@
 import { defineQuery, hasComponent } from 'bitecs';
 import {
   ACTIVE_SONAR,
+  MAX_PROPAGATION_FACTOR,
   PROPAGATION_MODEL,
   ResolutionTier,
   SIM,
+  TIER_THRESHOLD_MULTIPLIER,
   blurBearing,
+  detectionThreshold,
   maxAudibleRangeM,
-  resolveTier,
+  tierFromRatio,
   type Contact,
   type Faction,
   type StructureKind,
@@ -76,6 +79,29 @@ export class EchoLayer {
   private readonly handles = new Map<number, Map<number, number>>();
   private readonly nextHandle = new Map<number, number>();
   private readonly results = new Map<number, Contact[]>();
+  /**
+   * Per-HYD lookup tables, indexed by the integer rating (HYD is 0-100 and
+   * every source of it — stats, auras, the blind floor — is integral).
+   *
+   * `rangeScale[h]` is (h / MAX_EXPECTED_HYD)^(1/ATTENUATION_EXPONENT): an
+   * emitter's broadphase radius is computed once at the sharpest possible
+   * ears, and a real listener's audible range is exactly that radius times
+   * this factor (both come from the same power law). `threshold[h]` is the
+   * listener's detection threshold. Typed arrays rather than Maps because
+   * the pair loop reads both tens of thousands of times per pass.
+   */
+  private readonly rangeScaleByHyd = new Float64Array(101);
+  private readonly thresholdByHyd = new Float64Array(101);
+
+  constructor() {
+    for (let h = 0; h <= 100; h++) {
+      this.rangeScaleByHyd[h] = Math.pow(
+        Math.max(h, 1) / PROPAGATION_MODEL.MAX_EXPECTED_HYD,
+        1 / PROPAGATION_MODEL.ATTENUATION_EXPONENT
+      );
+      this.thresholdByHyd[h] = detectionThreshold(Math.max(h, 1));
+    }
+  }
 
   /**
    * Reverse a per-observer contact handle back to the entity it names, for
@@ -157,30 +183,65 @@ export class EchoLayer {
 
       const ex = Position.x[emitter]!;
       const ey = Position.y[emitter]!;
-      // Terrain PF, bent by any Baffle Barge bubble the emitter sits inside
-      // (auras system; `|| 1` covers the tick before the first aura pass).
-      const pf = terrain.propagationAt(ex, ey) * (Acoustic.pfFactor[emitter]! || 1);
+      // A Baffle Barge bubble masks at the source, whatever water the sound
+      // crosses afterwards (`|| 1` covers the tick before the first aura pass).
+      const pfFactor = Acoustic.pfFactor[emitter]! || 1;
       const emitterSlot = Owner.slot[emitter]!;
 
       // Only listeners inside this radius can possibly hear the emitter, even
       // with the sharpest ears in the game. This bound is what keeps the pass
-      // off an all-pairs comparison.
-      const range = maxAudibleRangeM(sig, pf, PROPAGATION_MODEL.MAX_EXPECTED_HYD);
+      // off an all-pairs comparison. PF is a path integral (issue #37) and no
+      // path has been walked yet, so bound with the loudest water on the map.
+      const range = maxAudibleRangeM(
+        sig,
+        MAX_PROPAGATION_FACTOR * pfFactor,
+        PROPAGATION_MODEL.MAX_EXPECTED_HYD
+      );
       if (range <= 0) continue;
 
       const candidates = this.hash.queryRadius(ex, ey, range, this.queryBuffer);
+
+      const sigMasked = sig * pfFactor;
+      const { REFERENCE_DISTANCE_M, ATTENUATION_EXPONENT } = PROPAGATION_MODEL;
 
       for (let j = 0; j < candidates.length; j++) {
         const listener = candidates[j]!;
         const listenerSlot = Owner.slot[listener]!;
         if (listenerSlot === emitterSlot) continue;
 
+        // Prune in squared-distance space against THIS listener's true
+        // audible range (emitter bound × cached hyd scale): far pairs —
+        // the majority — cost two multiplies, no sqrt, no pow, no walk.
+        const hyd = Acoustic.hyd[listener]! | 0;
+        const maxD = range * this.rangeScaleByHyd[hyd > 100 ? 100 : hyd]!;
         const lx = Position.x[listener]!;
         const ly = Position.y[listener]!;
-        const distance = Math.hypot(ex - lx, ey - ly);
-        if (distance > range) continue; // grid is a broadphase; confirm exactly
+        const dx = ex - lx;
+        const dy = ey - ly;
+        const d2 = dx * dx + dy * dy;
+        if (d2 > maxD * maxD) continue;
 
-        const tier = resolveTier(sig, pf, distance, Acoustic.hyd[listener]!);
+        // One pow gives what the pair perceives per unit of PF, and from it
+        // the exact PF this path would need to be audible at all. Pairs that
+        // would stay silent even through all-trench water skip the walk, and
+        // the walk itself aborts once its mean can no longer reach the bar.
+        const distance = Math.sqrt(d2);
+        const perceivedPerPf =
+          sigMasked *
+          Math.pow(
+            REFERENCE_DISTANCE_M / Math.max(distance, REFERENCE_DISTANCE_M),
+            ATTENUATION_EXPONENT
+          );
+        const threshold = this.thresholdByHyd[hyd > 100 ? 100 : hyd]!;
+        const pfNeeded = (threshold * TIER_THRESHOLD_MULTIPLIER.CONTACT) / perceivedPerPf;
+        if (pfNeeded > MAX_PROPAGATION_FACTOR) continue;
+
+        // The water between them prices this pair: cover is something you
+        // can hide *behind*, and a trench carries sound down its whole axis.
+        const pf = terrain.pathPropagation(ex, ey, lx, ly, pfNeeded);
+        if (pf < pfNeeded) continue;
+
+        const tier = tierFromRatio((perceivedPerPf * pf) / threshold);
         if (tier === ResolutionTier.Silent) continue;
 
         this.record(listenerSlot, emitter, tier, lx, ly);

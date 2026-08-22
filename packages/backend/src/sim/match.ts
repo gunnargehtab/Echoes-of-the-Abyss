@@ -84,7 +84,8 @@ const PLACEMENT_CLEARANCE_M = 40;
 
 export class Match {
   readonly world: SimWorld;
-  private readonly echo = new EchoLayer();
+  /** Public for bench/echo-pass.mjs, which times the pass in isolation. */
+  readonly echo = new EchoLayer();
   private readonly slots: number[] = [];
   private readonly eliminated = new Set<number>();
   private readonly destroyedScratch: number[] = [];
