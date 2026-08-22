@@ -41,11 +41,19 @@ export const Acoustic = defineComponent({
   spikeRemainingS: Types.f32,
   /** Magnitude of that spike. */
   spikeAmount: Types.f32,
+  /**
+   * Emission-side propagation multiplier, 1 unless inside an allied Baffle
+   * Barge bubble. Written by the auras system each tick; the Echo Layer
+   * multiplies terrain PF by it, so masking composes with biome cover.
+   */
+  pfFactor: Types.f32,
 });
 
 /** Depth resilience. Below this rating's band, the unit takes crush attrition. */
 export const Pressure = defineComponent({
   rating: Types.ui8,
+  /** Aura-granted rating bonus (Sounding Spire). Rewritten each tick. */
+  bonus: Types.ui8,
 });
 
 export const Health = defineComponent({

@@ -10,7 +10,7 @@
  * prototype numbers in the same spirit as units.ts.
  */
 
-import { StructureKind, UnitKind } from './types.js';
+import { Faction, StructureKind, UnitKind } from './types.js';
 
 export interface StructureStats {
   kind: StructureKind;
@@ -30,6 +30,11 @@ export interface StructureStats {
   acceptsDeposits: boolean;
   /** May be queued for construction. The Bastion deliberately cannot. */
   constructible: boolean;
+  /**
+   * Faction signature structures: only this faction may build it. Absent on
+   * the core four, which every navy fields (docs/units.md).
+   */
+  faction?: Faction;
   /** Armed structures only (the Sentinel Turret). */
   attackDamage?: number;
   attackRangeM?: number;
@@ -103,6 +108,69 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
     attackCooldownS: 1.5,
     sigFiringBurst: 30,
   },
+  [StructureKind.BaffleBarge]: {
+    kind: StructureKind.BaffleBarge,
+    name: 'Baffle Barge',
+    // SPEC — docs/units.md: SIG 30 idle / 40 active; cost 600; build 120 s.
+    // The Consortium's answer to being the loudest navy afloat: it does not
+    // get quieter, it buys a bubble where loudness carries less.
+    sigIdle: 30,
+    sigActive: 40,
+    hyd: 40,
+    maxHp: 1400,
+    cost: 600,
+    buildTimeS: 120,
+    radiusM: 90,
+    acceptsDeposits: false,
+    constructible: true,
+    faction: Faction.Bathyarch,
+  },
+  [StructureKind.Cantor]: {
+    kind: StructureKind.Cantor,
+    name: 'Cantor',
+    // SPEC — docs/units.md: SIG 35 idle; cost 300; build 80 s. The dome's
+    // +25 HYD (cap 95) aura is in STRUCTURE_AURAS.
+    sigIdle: 35,
+    sigActive: 35,
+    // The dome itself is one of the fixed arrays it grants everyone else.
+    hyd: 80,
+    maxHp: 1200,
+    cost: 300,
+    buildTimeS: 80,
+    radiusM: 80,
+    acceptsDeposits: false,
+    constructible: true,
+    faction: Faction.Directorate,
+  },
+  [StructureKind.SoundingSpire]: {
+    kind: StructureKind.SoundingSpire,
+    name: 'Sounding Spire',
+    // SPEC — docs/units.md: SIG 80 when active (directional); cost 750;
+    // build 150 s. Idle hum is TUNABLE — the doc authors only the active
+    // figure. Active means projecting depth access (any allied unit riding
+    // the PR aura), which is why deep play under a spire is never quiet.
+    sigIdle: 30,
+    sigActive: 80,
+    hyd: 45,
+    maxHp: 1800,
+    cost: 750,
+    buildTimeS: 150,
+    radiusM: 70,
+    acceptsDeposits: false,
+    constructible: true,
+    faction: Faction.Hadron,
+  },
+};
+
+/**
+ * The signature structure each navy may add to the core four, if any.
+ * Pelagia deliberately has none: the Commune's identity lives in its hulls
+ * and its quiet economy, not in another building (docs/factions.md).
+ */
+export const FACTION_STRUCTURE: Partial<Record<Faction, StructureKind>> = {
+  [Faction.Bathyarch]: StructureKind.BaffleBarge,
+  [Faction.Directorate]: StructureKind.Cantor,
+  [Faction.Hadron]: StructureKind.SoundingSpire,
 };
 
 export function structureStatsFor(kind: StructureKind): StructureStats {

@@ -65,6 +65,15 @@ import foundryHadEmissive from '../assets/structures/maps/foundry-hadron-emissiv
 import turretHadAlbedo from '../assets/structures/maps/sentinel-turret-hadron-albedo.png';
 import turretHadHeight from '../assets/structures/maps/sentinel-turret-hadron-height.png';
 import turretHadEmissive from '../assets/structures/maps/sentinel-turret-hadron-emissive.png';
+import bargeAlbedo from '../assets/structures/maps/baffle-barge-albedo.png';
+import bargeHeight from '../assets/structures/maps/baffle-barge-height.png';
+import bargeEmissive from '../assets/structures/maps/baffle-barge-emissive.png';
+import cantorAlbedo from '../assets/structures/maps/cantor-albedo.png';
+import cantorHeight from '../assets/structures/maps/cantor-height.png';
+import cantorEmissive from '../assets/structures/maps/cantor-emissive.png';
+import spireAlbedo from '../assets/structures/maps/sounding-spire-albedo.png';
+import spireHeight from '../assets/structures/maps/sounding-spire-height.png';
+import spireEmissive from '../assets/structures/maps/sounding-spire-emissive.png';
 
 /**
  * Pixels per world metre the structure maps were baked at — the contract with
@@ -101,6 +110,23 @@ const MAP_URL: Partial<Record<StructureKind, MapUrls>> = {
     albedo: turretAlbedo,
     height: turretHeight,
     emissive: turretEmissive,
+  },
+  // Faction signature structures are canonical, not variants: only one navy
+  // ever builds each, so the kind-level entry IS the native model.
+  [StructureKind.BaffleBarge]: {
+    albedo: bargeAlbedo,
+    height: bargeHeight,
+    emissive: bargeEmissive,
+  },
+  [StructureKind.Cantor]: {
+    albedo: cantorAlbedo,
+    height: cantorHeight,
+    emissive: cantorEmissive,
+  },
+  [StructureKind.SoundingSpire]: {
+    albedo: spireAlbedo,
+    height: spireHeight,
+    emissive: spireEmissive,
   },
 };
 

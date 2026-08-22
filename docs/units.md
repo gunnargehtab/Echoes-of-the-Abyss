@@ -132,6 +132,11 @@ economy.md and systems-echo.md §2 — construction is loud.
 
 Faction structures
 
+Each navy may add exactly one signature structure to the core four; Pelagia deliberately
+has none — the Commune's identity lives in its hulls and its quiet economy. Numbers and
+effects are transcribed into `packages/shared/src/structures.ts` and `STRUCTURE_AURAS`
+in `packages/shared/src/constants.ts`.
+
 Baffle Barge (Structure — Consortium)
 
 - Role: Noise masking support
@@ -158,7 +163,9 @@ Cantor (Support — Directorate)
 Hadron Spire / Sounding Spire (Structure — Knights)
 
 - Role: Projected depth access / resonance node
-- SIG: 80 when active (directional)
+- SIG: 30 idle hum (tunable) / 80 when active — "active" means the depth grant is
+  load-bearing: some allied unit under the aura is genuinely below its own PR. Deep
+  play under a spire is never quiet; that is the price of rented depth.
 - PR: 2
 - Cost: 750
 - Build time: 150s

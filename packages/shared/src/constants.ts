@@ -179,3 +179,28 @@ export const CONSTRUCTION = {
   /** Fraction of max HP a structure has the moment the site is placed. */
   INITIAL_HP_FRACTION: 0.1,
 } as const;
+
+/**
+ * Faction signature structure auras (docs/units.md, faction structures).
+ * Each is an argument about sound or depth: the Barge bends propagation, the
+ * Cantor sharpens ears, the Spire rents out depth. All apply to completed,
+ * allied structures only — a construction site projects nothing.
+ */
+export const STRUCTURE_AURAS = {
+  /** SPEC — Baffle Barge: allied units inside emit through PF × this. */
+  BAFFLE_BARGE: {
+    RADIUS_M: 400,
+    PF_FACTOR: 0.6,
+  },
+  /** SPEC — Cantor: allied units inside listen at HYD + bonus, capped. */
+  CANTOR: {
+    RADIUS_M: 1200,
+    HYD_BONUS: 25,
+    HYD_CAP: 95,
+  },
+  /** SPEC — Sounding Spire: allied units inside operate at PR + 1. */
+  SOUNDING_SPIRE: {
+    RADIUS_M: 600,
+    PR_BONUS: 1,
+  },
+} as const;

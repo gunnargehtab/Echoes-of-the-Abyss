@@ -27,7 +27,10 @@ export function pressureSystem(world: SimWorld, destroyed: number[]): void {
 
   for (let i = 0; i < entities.length; i++) {
     const eid = entities[i]!;
-    const dps = crushAttritionPerSecond(Pressure.rating[eid]!, Position.depth[eid]!);
+    // Effective rating includes any Sounding Spire grant — rented depth is
+    // real depth for exactly as long as the aura holds.
+    const rating = Pressure.rating[eid]! + Pressure.bonus[eid]!;
+    const dps = crushAttritionPerSecond(rating, Position.depth[eid]!);
     if (dps <= 0) continue;
 
     Health.hp[eid] = Health.hp[eid]! - dps * dt;
