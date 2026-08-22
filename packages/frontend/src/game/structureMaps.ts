@@ -41,6 +41,30 @@ import foundryPelEmissive from '../assets/structures/maps/foundry-pelagia-emissi
 import turretPelAlbedo from '../assets/structures/maps/sentinel-turret-pelagia-albedo.png';
 import turretPelHeight from '../assets/structures/maps/sentinel-turret-pelagia-height.png';
 import turretPelEmissive from '../assets/structures/maps/sentinel-turret-pelagia-emissive.png';
+import bastionDirAlbedo from '../assets/structures/maps/bastion-directorate-albedo.png';
+import bastionDirHeight from '../assets/structures/maps/bastion-directorate-height.png';
+import bastionDirEmissive from '../assets/structures/maps/bastion-directorate-emissive.png';
+import refineryDirAlbedo from '../assets/structures/maps/refinery-directorate-albedo.png';
+import refineryDirHeight from '../assets/structures/maps/refinery-directorate-height.png';
+import refineryDirEmissive from '../assets/structures/maps/refinery-directorate-emissive.png';
+import foundryDirAlbedo from '../assets/structures/maps/foundry-directorate-albedo.png';
+import foundryDirHeight from '../assets/structures/maps/foundry-directorate-height.png';
+import foundryDirEmissive from '../assets/structures/maps/foundry-directorate-emissive.png';
+import turretDirAlbedo from '../assets/structures/maps/sentinel-turret-directorate-albedo.png';
+import turretDirHeight from '../assets/structures/maps/sentinel-turret-directorate-height.png';
+import turretDirEmissive from '../assets/structures/maps/sentinel-turret-directorate-emissive.png';
+import bastionHadAlbedo from '../assets/structures/maps/bastion-hadron-albedo.png';
+import bastionHadHeight from '../assets/structures/maps/bastion-hadron-height.png';
+import bastionHadEmissive from '../assets/structures/maps/bastion-hadron-emissive.png';
+import refineryHadAlbedo from '../assets/structures/maps/refinery-hadron-albedo.png';
+import refineryHadHeight from '../assets/structures/maps/refinery-hadron-height.png';
+import refineryHadEmissive from '../assets/structures/maps/refinery-hadron-emissive.png';
+import foundryHadAlbedo from '../assets/structures/maps/foundry-hadron-albedo.png';
+import foundryHadHeight from '../assets/structures/maps/foundry-hadron-height.png';
+import foundryHadEmissive from '../assets/structures/maps/foundry-hadron-emissive.png';
+import turretHadAlbedo from '../assets/structures/maps/sentinel-turret-hadron-albedo.png';
+import turretHadHeight from '../assets/structures/maps/sentinel-turret-hadron-height.png';
+import turretHadEmissive from '../assets/structures/maps/sentinel-turret-hadron-emissive.png';
 
 /**
  * Pixels per world metre the structure maps were baked at — the contract with
@@ -108,6 +132,50 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<StructureKind, Map
       albedo: turretPelAlbedo,
       height: turretPelHeight,
       emissive: turretPelEmissive,
+    },
+  },
+  [Faction.Directorate]: {
+    [StructureKind.Bastion]: {
+      albedo: bastionDirAlbedo,
+      height: bastionDirHeight,
+      emissive: bastionDirEmissive,
+    },
+    [StructureKind.Refinery]: {
+      albedo: refineryDirAlbedo,
+      height: refineryDirHeight,
+      emissive: refineryDirEmissive,
+    },
+    [StructureKind.Foundry]: {
+      albedo: foundryDirAlbedo,
+      height: foundryDirHeight,
+      emissive: foundryDirEmissive,
+    },
+    [StructureKind.SentinelTurret]: {
+      albedo: turretDirAlbedo,
+      height: turretDirHeight,
+      emissive: turretDirEmissive,
+    },
+  },
+  [Faction.Hadron]: {
+    [StructureKind.Bastion]: {
+      albedo: bastionHadAlbedo,
+      height: bastionHadHeight,
+      emissive: bastionHadEmissive,
+    },
+    [StructureKind.Refinery]: {
+      albedo: refineryHadAlbedo,
+      height: refineryHadHeight,
+      emissive: refineryHadEmissive,
+    },
+    [StructureKind.Foundry]: {
+      albedo: foundryHadAlbedo,
+      height: foundryHadHeight,
+      emissive: foundryHadEmissive,
+    },
+    [StructureKind.SentinelTurret]: {
+      albedo: turretHadAlbedo,
+      height: turretHadHeight,
+      emissive: turretHadEmissive,
     },
   },
 };
