@@ -165,11 +165,14 @@
         };
 
         // Glow energy per graphics-standards.md gate 3: sum of v/255 over
-        // emissive pixels with v > 32 (v = max RGB), per 1,000 hull-mask
-        // pixels. With targetE > 0, scales the emissive channel onto the
-        // target — intensity is the spec's, placement stays the model's —
-        // and returns the calibrated PNG. Gain is capped at ×64: past that
-        // the light geometry, not its intensity, is what is wrong.
+        // all emissive pixels (v = max RGB), per 1,000 hull-mask pixels.
+        // Deliberately no brightness cutoff — a cutoff makes E(gain) jump
+        // discontinuously for a large uniformly lit surface (a launch bay),
+        // so it could never be dimmed onto a low target. With targetE > 0,
+        // scales the emissive channel onto the target — intensity is the
+        // spec's, placement stays the model's — and returns the calibrated
+        // PNG. Gain is capped at ×64: past that the light geometry, not its
+        // intensity, is what is wrong.
         window.__glow = (targetE) => {
           const albedo = readPass('albedo').image.data;
           let maskPx = 0;
@@ -180,8 +183,7 @@
           const energyAt = (gain) => {
             let e = 0;
             for (let i = 0; i < px.length; i += 4) {
-              const v = Math.min(255, Math.round(Math.max(px[i], px[i + 1], px[i + 2]) * gain));
-              if (v > 32) e += v / 255;
+              e += Math.min(255, Math.round(Math.max(px[i], px[i + 1], px[i + 2]) * gain)) / 255;
             }
             return (e / maskPx) * 1000;
           };

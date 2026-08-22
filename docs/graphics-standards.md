@@ -70,9 +70,12 @@ exactly as a loud unit rendered dark is. Firing bursts may flare; the resting st
 match the number.
 
 The rule is measured, not eyeballed. On the shipped maps, **glow energy** is the sum of
-`v / 255` over emissive pixels brighter than `v = 32` (`v` = the max of R, G, B), per
-1,000 hull-mask pixels (albedo alpha > 16), at the record densities of gate 6. The target
-curve is:
+`v / 255` over all emissive pixels (`v` = the max of R, G, B), per 1,000 hull-mask pixels
+(albedo alpha > 16), at the record densities of gate 6. There is deliberately no
+brightness cutoff in the metric: the renderer shows sub-cutoff light, and a cutoff makes
+a large uniformly lit surface — a launch bay, a floodlit deck — impossible to calibrate,
+because its energy would jump from everything to nothing at the cutoff instead of
+dimming smoothly. The target curve is:
 
 ```text
 E(SIG) = 0.45 × e^(SIG / 14)
