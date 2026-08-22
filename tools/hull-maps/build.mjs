@@ -104,6 +104,12 @@ const STRUCTURES = [
   { slug: 'refinery', model: 'refinery-bathyarch.glb', lengthM: 280, sig: 65 },
   { slug: 'foundry', model: 'foundry-bathyarch.glb', lengthM: 320, sig: 25 },
   { slug: 'sentinel-turret', model: 'sentinel-turret-bathyarch.glb', lengthM: 120, sig: 12 },
+  // Faction variants: the same settlement grown in another navy's
+  // architecture. Slug suffix pairs with VARIANT_MAP_URL in structureMaps.ts.
+  { slug: 'bastion-pelagia', model: 'bastion-pelagia.glb', lengthM: 440, sig: 35 },
+  { slug: 'refinery-pelagia', model: 'refinery-pelagia.glb', lengthM: 280, sig: 65 },
+  { slug: 'foundry-pelagia', model: 'foundry-pelagia.glb', lengthM: 320, sig: 25 },
+  { slug: 'sentinel-turret-pelagia', model: 'sentinel-turret-pelagia.glb', lengthM: 120, sig: 12 },
 ];
 
 const JOBS = [
