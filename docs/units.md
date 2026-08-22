@@ -7,6 +7,7 @@ This document expands the prototype roster with concise stat tables, cost/produc
 Unit stat format
 
 - SIG: reported as (idle / cruise / firing-burst)
+- HYD: Hydrophone Rating, 0–100 — passive listening sensitivity (see systems-echo.md §3)
 - PR: Pressure Rating (integer)
 - Cost: abstract resource units for prototyping
 - Build time: seconds (prototype simulation)
@@ -19,6 +20,7 @@ Light Scout (Pelagia)
 
 - Role: Recon / map control
 - SIG: 6 / 12 / +15
+- HYD: 70 (the sensor suite is most of the hull; it finds things, it does not fight them)
 - PR: 1
 - Cost: 50
 - Build time: 12s
@@ -29,6 +31,7 @@ Corvette
 
 - Role: Strike / raiding
 - SIG: 28 / 28 / +25
+- HYD: 50 (the baseline listener — the propagation model's BASELINE_HYD is calibrated to it)
 - PR: 2
 - Cost: 120
 - Build time: 30s
@@ -39,6 +42,7 @@ Cruiser
 
 - Role: Fleet anchor / command
 - SIG: 55 / 65 (active systems) / +30
+- HYD: 65 (the "heavy sensors" below, made a number — a command hull hears for the fleet)
 - PR: 2
 - Cost: 420
 - Build time: 90s
@@ -50,6 +54,8 @@ Abyssal Submersible (Directorate)
 
 - Role: Deep operations / raiding
 - SIG: 22 / 28 / +20
+- HYD: 85 (the best mobile ears in the game — the Directorate's "best HYD by a wide margin",
+  systems-echo.md §8, is carried by their native hull)
 - PR: 3
 - Cost: 260
 - Build time: 45s
@@ -60,6 +66,9 @@ Harvester
 
 - Role: Resource production (economy)
 - SIG: 18 (idle) / mining follows the throttle — 12 / 25 / 45 / 68 (see economy.md §3)
+- HYD: 30 (dredge gear deafens its own hydrophones — deliberately below the HYD-40 floor
+  for reading Echo Marks, systems-echo.md §7: a harvester cannot even read the residue
+  of a fight, so escorting the economy is a real job)
 - PR: 1–2 (variant)
 - Cost: 80
 - Build time: 20s
@@ -140,8 +149,11 @@ Cantor (Support — Directorate)
 - PR: 2
 - Cost: 300
 - Build time: 80s
-- Effect: Grants allied units +1 effective HYD (prototype) within a 1,200 m dome
-- Notes: Increases detection resolution for allies; central to Directorate doctrine.
+- Effect: Grants allied units +25 HYD, capped at 95, within a 1,200 m dome
+- Notes: Increases detection resolution for allies; central to Directorate doctrine. The
+  bonus lifts a Corvette (HYD 50) past a Cruiser's ears and an Abyssal Submersible to the
+  cap — inside the dome, everything listens like a Listener. (An earlier draft said
+  "+1 effective HYD", which is not meaningful against the 0–100 HYD scale.)
 
 Hadron Spire / Sounding Spire (Structure — Knights)
 
@@ -156,6 +168,15 @@ Hadron Spire / Sounding Spire (Structure — Knights)
 Design notes
 
 - Numbers are prototyping intent. Exact costs and timings are tuneable.
+- **HYD is a flat hull property.** Silent Running changes what a unit *emits* (SIG), never
+  what it *hears* — throttling engines does not unplug the hydrophones. Anything that
+  modifies listening does so as an explicit HYD modifier (the Cantor's dome), so the
+  detection formula keeps exactly two listening-side inputs: distance and HYD.
+- **The Directorate's listening doctrine is carried by numbers, not a special case.** Their
+  native hull owns the highest mobile HYD (85) and their Cantor raises allied HYD in an
+  area. The "passively detect one tier higher" phrasing in systems-echo.md §8 is realised
+  through these HYD values — a separate tier bonus would be a second lever for the same
+  effect and harder to balance.
 - Every unit lists SIG and PR so designers can simulate detection interactions without needing full gameplay code.
 - Combat hulls carry prototype weapon stats in `packages/shared/src/units.ts` (damage,
   range, cooldown) so the scaffold's combat loop can run; the doc-authored number is the
@@ -227,8 +248,10 @@ Notes for testers
 Next steps
 
 - Author unit variants for each faction (transports, artillery, static defence)
-- Add per-unit HYD values where relevant (sensors vs combat hulls)
-- Link these stats into a simple simulator (spreadsheet or minimal Node script) to iterate quickly on thresholds
+- Done: per-unit HYD values are authored in the stat blocks above and transcribed into
+  `packages/shared/src/units.ts`
+- Done: `tools/echo-sim` runs these stats through the shared detection model
+  (`@echoes/shared`) for fast threshold iteration
 
 Related
 

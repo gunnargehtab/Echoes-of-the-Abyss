@@ -1,31 +1,42 @@
 Echo-sim
 
-Small deterministic echo-layer simulation harness for scenarios.
+Small deterministic echo-layer scenario harness — a thin CLI over the ONE
+detection implementation in `@echoes/shared` (`packages/shared/src/echo.ts`).
+This tool has no physics of its own: it exists so designers can iterate on
+SIG/HYD/PF thresholds without booting the game, and its conclusions transfer
+because it runs the shipping model (issue #36 replaced the previous local
+formula, which had no HYD input, 1/d falloff, and a 1-5 tier scale).
+
+Prerequisite: `npm run build:shared` from the repo root (Node 22+ — the tool
+requires the shared package's ESM build via require(esm)).
 
 CLI usage:
-  node sim.js                          # run built-in sample (JSON printed)
+  node sim.js                             # shipped roster (UNIT_STATS) vs a HYD-50 listener
   node sim.js scenarios/my-scenario.json  # run scenario and print JSON
 
 Module usage (for tests/integration):
-  const { runScenario, detect } = require('./lib');
-  const scenario = require('./scenarios/simple-scenario.json');
-  const result = runScenario(scenario);
-  // assert against expected output
+  const { runScenario, detect, rosterActors } = require('./lib');
+  detect(sig, distanceM, pf, hyd)   // -> ResolutionTier 0 (Silent) .. 4 (Track)
+  const result = runScenario(require('./scenarios/simple-scenario.json'));
+  // assert against the matching .expected.json
 
 Scenario format (example in scenarios/):
 {
   "name": "simple",
   "propagationFactor": 1.0,
+  "hyd": 50,                    // listener HYD for every run (default: BASELINE_HYD 50)
+  "distances": [100, 500, 1200, 2500],
   "actors": [
-    { "name": "Scout", "sig": 6, "distances": [100,500,1200,2500] }
+    { "name": "Scout", "sig": 6 },
+    { "name": "Cruiser vs sub ears", "sig": 55, "hyd": 85 }   // per-run listener override
   ]
 }
 
-Acceptance criteria (for issue #26):
-- scenarios/ contains at least one scenario JSON and a corresponding expected output file.
-- sim.js accepts a scenario path and prints deterministic JSON suitable for tests.
+Each actor is an EMITTER; `hyd` names the listening ear evaluating it. Output
+rows carry the resolved tier (0-4 per docs/systems-echo.md §4), its name, and
+the detection ratio against the listener's threshold — 1.0 is exactly
+detectable, and the tier table keys off multiples of it.
 
-Acceptance criteria (for issue #27):
-- tools/echo-sim exposes an API for test harnesses: lib.js exports detect and runScenario.
-- package.json points to the main entry for programmatic requires (main: lib.js).
-- README documents both CLI and module usage with an example.
+Regenerating a fixture after a tuning change in `@echoes/shared`:
+  node sim.js scenarios/simple-scenario.json > scenarios/simple-scenario.expected.json
+Review the diff like a test: the fixture pins the shipped model's output.

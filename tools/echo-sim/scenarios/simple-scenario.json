@@ -1,10 +1,12 @@
 {
   "name": "simple-scenario",
   "propagationFactor": 1.0,
+  "hyd": 50,
   "distances": [100, 500, 1200, 2500],
   "actors": [
     { "name": "Scout", "sig": 6 },
     { "name": "Corvette", "sig": 28 },
-    { "name": "Cruiser", "sig": 55 }
+    { "name": "Cruiser", "sig": 55 },
+    { "name": "Cruiser (heard by Abyssal Submersible)", "sig": 55, "hyd": 85 }
   ]
 }

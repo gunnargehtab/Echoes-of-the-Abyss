@@ -5,11 +5,10 @@
  * function of what it is doing, not what it is — that is the whole premise of
  * the Echo Layer.
  *
- * CAVEAT: docs/units.md lists SIG, PR, cost, build time and speed, but its
- * "Next steps" section explicitly notes that per-unit HYD values are not yet
- * authored. The `hyd` figures below are prototype values invented for this
- * scaffold so detection can run at all. They are the least trustworthy numbers
- * here and should be replaced when the design doc catches up.
+ * The `hyd` figures are SPEC — authored per unit in docs/units.md (issue #35),
+ * alongside the design note there settling that HYD is a flat hull property
+ * (Silent Running changes SIG, never hearing) and that the Directorate's
+ * listening doctrine is carried by these numbers rather than a special case.
  */
 
 import { UnitKind } from './types.js';

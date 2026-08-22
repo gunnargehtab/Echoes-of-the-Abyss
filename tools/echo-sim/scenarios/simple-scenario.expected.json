@@ -1,35 +1,130 @@
 {
   "name": "simple-scenario",
   "pf": 1,
+  "hyd": 50,
   "runs": [
     {
       "name": "Scout",
       "sig": 6,
+      "hyd": 50,
       "detections": [
-        { "distance": 100, "tier": 1 },
-        { "distance": 500, "tier": 1 },
-        { "distance": 1200, "tier": 1 },
-        { "distance": 2500, "tier": 1 }
+        {
+          "distance": 100,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 40.816
+        },
+        {
+          "distance": 500,
+          "tier": 3,
+          "tierName": "Classification",
+          "ratio": 3.108
+        },
+        {
+          "distance": 1200,
+          "tier": 0,
+          "tierName": "Silent",
+          "ratio": 0.766
+        },
+        {
+          "distance": 2500,
+          "tier": 0,
+          "tierName": "Silent",
+          "ratio": 0.237
+        }
       ]
     },
     {
       "name": "Corvette",
       "sig": 28,
+      "hyd": 50,
       "detections": [
-        { "distance": 100, "tier": 1 },
-        { "distance": 500, "tier": 1 },
-        { "distance": 1200, "tier": 1 },
-        { "distance": 2500, "tier": 1 }
+        {
+          "distance": 100,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 190.473
+        },
+        {
+          "distance": 500,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 14.504
+        },
+        {
+          "distance": 1200,
+          "tier": 3,
+          "tierName": "Classification",
+          "ratio": 3.574
+        },
+        {
+          "distance": 2500,
+          "tier": 1,
+          "tierName": "Contact",
+          "ratio": 1.104
+        }
       ]
     },
     {
       "name": "Cruiser",
       "sig": 55,
+      "hyd": 50,
       "detections": [
-        { "distance": 100, "tier": 1 },
-        { "distance": 500, "tier": 1 },
-        { "distance": 1200, "tier": 1 },
-        { "distance": 2500, "tier": 1 }
+        {
+          "distance": 100,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 374.143
+        },
+        {
+          "distance": 500,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 28.49
+        },
+        {
+          "distance": 1200,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 7.02
+        },
+        {
+          "distance": 2500,
+          "tier": 2,
+          "tierName": "Bearing",
+          "ratio": 2.169
+        }
+      ]
+    },
+    {
+      "name": "Cruiser (heard by Abyssal Submersible)",
+      "sig": 55,
+      "hyd": 85,
+      "detections": [
+        {
+          "distance": 100,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 636.042
+        },
+        {
+          "distance": 500,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 48.432
+        },
+        {
+          "distance": 1200,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 11.934
+        },
+        {
+          "distance": 2500,
+          "tier": 3,
+          "tierName": "Classification",
+          "ratio": 3.688
+        }
       ]
     }
   ]
