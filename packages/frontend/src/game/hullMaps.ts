@@ -57,6 +57,9 @@ import cruiserBathEmissive from '../assets/hulls/maps/cruiser-bathyarch-emissive
 import lightScoutDirAlbedo from '../assets/hulls/maps/light-scout-directorate-albedo.png';
 import lightScoutDirHeight from '../assets/hulls/maps/light-scout-directorate-height.png';
 import lightScoutDirEmissive from '../assets/hulls/maps/light-scout-directorate-emissive.png';
+import abyssalBathAlbedo from '../assets/hulls/maps/abyssal-submersible-bathyarch-albedo.png';
+import abyssalBathHeight from '../assets/hulls/maps/abyssal-submersible-bathyarch-height.png';
+import abyssalBathEmissive from '../assets/hulls/maps/abyssal-submersible-bathyarch-emissive.png';
 import corvetteDirAlbedo from '../assets/hulls/maps/corvette-directorate-albedo.png';
 import corvetteDirHeight from '../assets/hulls/maps/corvette-directorate-height.png';
 import corvetteDirEmissive from '../assets/hulls/maps/corvette-directorate-emissive.png';
@@ -152,6 +155,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<UnitKind, MapUrls>
       albedo: cruiserBathAlbedo,
       height: cruiserBathHeight,
       emissive: cruiserBathEmissive,
+    },
+    [UnitKind.AbyssalSubmersible]: {
+      albedo: abyssalBathAlbedo,
+      height: abyssalBathHeight,
+      emissive: abyssalBathEmissive,
     },
   },
   [Faction.Directorate]: {
