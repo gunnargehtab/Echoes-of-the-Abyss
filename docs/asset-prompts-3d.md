@@ -176,6 +176,15 @@ acoustic dampening panels (SIG 30 idle). Dim amber running lights.
 ```
 
 ```text
+STRUCTURE — Spore Veil (pair with Pelagia): the Veil Mother — a low,
+breathing spore bed grown into the seabed: broad overlapping lobes, paired
+gill organs with vent slits exhaling a faint haze, slender spore stalks
+swaying above (SIG 20 idle — the cloud itself is silent). Nearly dark;
+faint bioluminescent breathing lines around the gills and dim lit tips on
+the stalks only.
+```
+
+```text
 STRUCTURE — Cantor (pair with Directorate): listening dome — a grown,
 chitinous hemispherical shell studded with hydrophone spines (SIG 35 idle).
 Dim red photophore constellation across the dome.
