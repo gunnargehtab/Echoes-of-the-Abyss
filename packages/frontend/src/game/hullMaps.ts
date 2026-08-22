@@ -66,6 +66,9 @@ import harvesterDirEmissive from '../assets/hulls/maps/harvester-directorate-emi
 import cruiserDirAlbedo from '../assets/hulls/maps/cruiser-directorate-albedo.png';
 import cruiserDirHeight from '../assets/hulls/maps/cruiser-directorate-height.png';
 import cruiserDirEmissive from '../assets/hulls/maps/cruiser-directorate-emissive.png';
+import lightScoutHadAlbedo from '../assets/hulls/maps/light-scout-hadron-albedo.png';
+import lightScoutHadHeight from '../assets/hulls/maps/light-scout-hadron-height.png';
+import lightScoutHadEmissive from '../assets/hulls/maps/light-scout-hadron-emissive.png';
 import corvetteHadAlbedo from '../assets/hulls/maps/corvette-hadron-albedo.png';
 import corvetteHadHeight from '../assets/hulls/maps/corvette-hadron-height.png';
 import corvetteHadEmissive from '../assets/hulls/maps/corvette-hadron-emissive.png';
@@ -174,6 +177,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<UnitKind, MapUrls>
     },
   },
   [Faction.Hadron]: {
+    [UnitKind.LightScout]: {
+      albedo: lightScoutHadAlbedo,
+      height: lightScoutHadHeight,
+      emissive: lightScoutHadEmissive,
+    },
     [UnitKind.Corvette]: {
       albedo: corvetteHadAlbedo,
       height: corvetteHadHeight,
