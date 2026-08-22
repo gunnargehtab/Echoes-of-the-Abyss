@@ -60,6 +60,12 @@ const UNITS = [
   { slug: 'corvette-bathyarch', model: 'corvette-bathyarch.glb', lengthM: 80, sig: 28 },
   { slug: 'harvester-bathyarch', model: 'harvester-bathyarch.glb', lengthM: 75, sig: 18 },
   { slug: 'cruiser-bathyarch', model: 'cruiser-bathyarch.glb', lengthM: 130, sig: 55 },
+  {
+    slug: 'light-scout-directorate',
+    model: 'light-scout-directorate.glb',
+    lengthM: 60,
+    sig: 6,
+  },
   { slug: 'corvette-directorate', model: 'corvette-directorate.glb', lengthM: 80, sig: 28 },
   { slug: 'harvester-directorate', model: 'harvester-directorate.glb', lengthM: 75, sig: 18 },
   { slug: 'cruiser-directorate', model: 'cruiser-directorate.glb', lengthM: 130, sig: 55 },
