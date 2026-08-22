@@ -149,6 +149,77 @@
           return url;
         };
 
+        // WebGL buffers can't be read directly with getImageData; bounce
+        // through a 2D canvas.
+        const readPass = (name) => {
+          passes[name]();
+          renderer.render(scene, camera);
+          const c = document.createElement('canvas');
+          c.width = renderer.domElement.width;
+          c.height = renderer.domElement.height;
+          const ctx = c.getContext('2d');
+          ctx.drawImage(renderer.domElement, 0, 0);
+          scene.overrideMaterial = null;
+          restore();
+          return { canvas: c, ctx, image: ctx.getImageData(0, 0, c.width, c.height) };
+        };
+
+        // Glow energy per graphics-standards.md gate 3: sum of v/255 over
+        // emissive pixels with v > 32 (v = max RGB), per 1,000 hull-mask
+        // pixels. With targetE > 0, scales the emissive channel onto the
+        // target — intensity is the spec's, placement stays the model's —
+        // and returns the calibrated PNG. Gain is capped at ×64: past that
+        // the light geometry, not its intensity, is what is wrong.
+        window.__glow = (targetE) => {
+          const albedo = readPass('albedo').image.data;
+          let maskPx = 0;
+          for (let i = 3; i < albedo.length; i += 4) if (albedo[i] > 16) maskPx++;
+
+          const emissive = readPass('emissive');
+          const px = emissive.image.data;
+          const energyAt = (gain) => {
+            let e = 0;
+            for (let i = 0; i < px.length; i += 4) {
+              const v = Math.min(255, Math.round(Math.max(px[i], px[i + 1], px[i + 2]) * gain));
+              if (v > 32) e += v / 255;
+            }
+            return (e / maskPx) * 1000;
+          };
+
+          const rawE = energyAt(1);
+          if (!(targetE > 0)) return { rawE, maskPx };
+
+          // E(gain) is monotone non-decreasing; bisect, then keep the closer bound.
+          let lo = 1 / 64;
+          let hi = 64;
+          if (energyAt(hi) <= targetE) lo = hi;
+          else if (energyAt(lo) >= targetE) hi = lo;
+          else
+            for (let i = 0; i < 48; i++) {
+              const mid = (lo + hi) / 2;
+              if (energyAt(mid) < targetE) lo = mid;
+              else hi = mid;
+            }
+          const gain =
+            Math.abs(energyAt(lo) - targetE) <= Math.abs(energyAt(hi) - targetE) ? lo : hi;
+
+          for (let i = 0; i < px.length; i += 4) {
+            px[i] = Math.min(255, Math.round(px[i] * gain));
+            px[i + 1] = Math.min(255, Math.round(px[i + 1] * gain));
+            px[i + 2] = Math.min(255, Math.round(px[i + 2] * gain));
+          }
+          emissive.ctx.putImageData(emissive.image, 0, 0);
+          // px was scaled in place, so energyAt(1) now measures the result.
+          return {
+            rawE,
+            maskPx,
+            targetE,
+            gain,
+            achievedE: energyAt(1),
+            url: emissive.canvas.toDataURL('image/png'),
+          };
+        };
+
         window.__stats = {
           rawSize: { x: rawSize.x, y: rawSize.y, z: rawSize.z },
           rotatedZtoX: rotated,
