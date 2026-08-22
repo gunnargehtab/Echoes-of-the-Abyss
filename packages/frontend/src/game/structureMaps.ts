@@ -74,6 +74,9 @@ import cantorEmissive from '../assets/structures/maps/cantor-emissive.png';
 import spireAlbedo from '../assets/structures/maps/sounding-spire-albedo.png';
 import spireHeight from '../assets/structures/maps/sounding-spire-height.png';
 import spireEmissive from '../assets/structures/maps/sounding-spire-emissive.png';
+import veilAlbedo from '../assets/structures/maps/spore-veil-albedo.png';
+import veilHeight from '../assets/structures/maps/spore-veil-height.png';
+import veilEmissive from '../assets/structures/maps/spore-veil-emissive.png';
 
 /**
  * Pixels per world metre the structure maps were baked at — the contract with
@@ -127,6 +130,11 @@ const MAP_URL: Partial<Record<StructureKind, MapUrls>> = {
     albedo: spireAlbedo,
     height: spireHeight,
     emissive: spireEmissive,
+  },
+  [StructureKind.SporeVeil]: {
+    albedo: veilAlbedo,
+    height: veilHeight,
+    emissive: veilEmissive,
   },
 };
 

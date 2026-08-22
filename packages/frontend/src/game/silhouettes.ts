@@ -327,5 +327,27 @@ export function drawStructureSilhouette(
       }
       break;
     }
+    case StructureKind.SporeVeil: {
+      // A low grown bed: soft irregular lobes rather than an engineered shape.
+      const points: number[] = [];
+      for (let i = 0; i < 10; i++) {
+        const angle = (i / 10) * Math.PI * 2;
+        const wobble = 1 + 0.18 * Math.sin(i * 2.7);
+        points.push(x + Math.cos(angle) * radiusM * wobble, y + Math.sin(angle) * radiusM * wobble);
+      }
+      g.poly(points).fill(body);
+      g.poly(points).stroke(edge);
+      if (style.detail) {
+        g.circle(x - radiusM * 0.35, y, radiusM * 0.2).fill({
+          color: style.accent,
+          alpha: style.alpha * 0.6,
+        });
+        g.circle(x + radiusM * 0.35, y, radiusM * 0.2).fill({
+          color: style.accent,
+          alpha: style.alpha * 0.6,
+        });
+      }
+      break;
+    }
   }
 }

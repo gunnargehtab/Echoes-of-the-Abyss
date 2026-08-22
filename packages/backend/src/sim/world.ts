@@ -125,6 +125,7 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   Acoustic.sig[eid] = stats.sigIdle;
   Acoustic.hyd[eid] = stats.hyd;
   Acoustic.pfFactor[eid] = 1;
+  Acoustic.sigFactor[eid] = 1;
   Acoustic.spikeRemainingS[eid] = 0;
   Acoustic.spikeAmount[eid] = 0;
 
@@ -191,6 +192,7 @@ export function spawnStructure(world: SimWorld, opts: SpawnStructureOptions): nu
   Acoustic.sig[eid] = opts.prebuilt ? stats.sigIdle : CONSTRUCTION.SITE_SIG;
   Acoustic.hyd[eid] = stats.hyd;
   Acoustic.pfFactor[eid] = 1;
+  Acoustic.sigFactor[eid] = 1;
   Acoustic.spikeRemainingS[eid] = 0;
   Acoustic.spikeAmount[eid] = 0;
 

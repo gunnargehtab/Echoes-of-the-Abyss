@@ -203,4 +203,16 @@ export const STRUCTURE_AURAS = {
     RADIUS_M: 600,
     PR_BONUS: 1,
   },
+  /**
+   * SPEC — Spore Veil (docs/systems-echo.md §8): SYMMETRIC, unlike the other
+   * three — everything inside, friend or foe, emits at SIG_FACTOR and
+   * listens at BLIND_HYD. It hides them from you and you from them.
+   */
+  SPORE_VEIL: {
+    /** TUNABLE — the cloud's reach; the doc pins the effect, not the size. */
+    RADIUS_M: 350,
+    SIG_FACTOR: 0.4,
+    /** Hydrophone-blind: threshold 10× baseline; deaf past point blank. */
+    BLIND_HYD: 5,
+  },
 } as const;

@@ -22,7 +22,7 @@ import {
   structureStatsFor,
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
-import { spawnStructure } from '../src/sim/world.ts';
+import { spawnStructure, spawnUnit } from '../src/sim/world.ts';
 import {
   Position,
   Acoustic,
@@ -557,6 +557,60 @@ describe('faction structure auras', () => {
       match.build(0, StructureKind.BaffleBarge, x, y),
       true,
       'the Consortium may commission its own barge on the same spot'
+    );
+  });
+});
+
+describe('Spore Veil', () => {
+  it('quiets and deafens everything inside — friend and foe alike', () => {
+    const match = new Match();
+    match.addPlayer(0, Faction.Pelagia);
+    match.addPlayer(1, Faction.Bathyarch);
+    advance(match, 0.5);
+
+    // Harvesters, in open water: no weapons, no orders — nothing fires or
+    // moves, so derived SIG is exactly the idle figure and the only thing
+    // acting on it is the cloud.
+    const spot = { x: 4000, y: 4000 };
+    const spawnIdleHarvester = (slot: number, faction: Faction, dx: number) =>
+      spawnUnit(match.world, {
+        kind: UnitKind.Harvester,
+        slot,
+        faction,
+        x: spot.x + dx,
+        y: spot.y,
+      });
+    const mine = spawnIdleHarvester(0, Faction.Pelagia, 0);
+    const theirs = spawnIdleHarvester(1, Faction.Bathyarch, 120);
+    const bystander = spawnIdleHarvester(1, Faction.Bathyarch, 2000);
+
+    spawnStructure(match.world, {
+      kind: StructureKind.SporeVeil,
+      slot: 0,
+      faction: Faction.Pelagia,
+      x: spot.x,
+      y: spot.y,
+      prebuilt: true,
+    });
+    advance(match, 0.2);
+
+    const { SIG_FACTOR, BLIND_HYD } = STRUCTURE_AURAS.SPORE_VEIL;
+    const close = (a: number, b: number) => Math.abs(a - b) < 1e-3;
+    const idle = statsFor(UnitKind.Harvester).sigIdle;
+
+    assert.ok(close(Acoustic.sig[mine]!, idle * SIG_FACTOR), 'ally inside emits muffled');
+    assert.ok(
+      close(Acoustic.sig[theirs]!, idle * SIG_FACTOR),
+      'enemy inside emits muffled too — the veil is symmetric'
+    );
+    assert.equal(Acoustic.hyd[mine], BLIND_HYD, 'ally inside is hydrophone-blind');
+    assert.equal(Acoustic.hyd[theirs], BLIND_HYD, 'enemy inside is hydrophone-blind too');
+
+    assert.ok(close(Acoustic.sig[bystander]!, idle), 'a unit outside the cloud emits normally');
+    assert.equal(
+      Acoustic.hyd[bystander],
+      statsFor(UnitKind.Harvester).hyd,
+      'a unit outside the cloud listens normally'
     );
   });
 });

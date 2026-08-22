@@ -86,6 +86,9 @@ export function acousticsSystem(world: SimWorld): void {
     }
 
     sig = applySpikeDecay(world, eid, sig);
+    // A Spore Veil muffles the *derived* SIG — whatever the unit is doing,
+    // the cloud takes its cut last (auras system, symmetric).
+    sig *= Acoustic.sigFactor[eid]! || 1;
     Acoustic.sig[eid] = Math.min(100, Math.max(0, sig));
   }
 
@@ -108,6 +111,7 @@ export function acousticsSystem(world: SimWorld): void {
       sig = producing || projecting ? stats.sigActive : stats.sigIdle;
     }
     sig = applySpikeDecay(world, eid, sig);
+    sig *= Acoustic.sigFactor[eid]! || 1;
     Acoustic.sig[eid] = Math.min(100, Math.max(0, sig));
   }
 }

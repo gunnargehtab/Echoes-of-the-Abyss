@@ -47,6 +47,12 @@ export const Acoustic = defineComponent({
    * multiplies terrain PF by it, so masking composes with biome cover.
    */
   pfFactor: Types.f32,
+  /**
+   * Emission multiplier, 1 unless inside a Spore Veil cloud (symmetric —
+   * friend or foe). Written by the auras system each tick; acoustics applies
+   * it to the derived SIG, so the veil quiets whatever the entity is doing.
+   */
+  sigFactor: Types.f32,
 });
 
 /** Depth resilience. Below this rating's band, the unit takes crush attrition. */

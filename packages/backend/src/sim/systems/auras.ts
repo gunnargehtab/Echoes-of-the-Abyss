@@ -20,6 +20,7 @@ import {
   StructureKind,
   requiredPressureRating,
   statsFor,
+  structureStatsFor,
   type UnitKind,
 } from '@echoes/shared';
 import {
@@ -48,6 +49,7 @@ interface Aura {
 const barges: Aura[] = [];
 const cantors: Aura[] = [];
 const spires: Aura[] = [];
+const veils: Aura[] = [];
 
 function inRange(unit: number, auras: Aura[], slot: number, radiusM: number): boolean {
   const ux = Position.x[unit]!;
@@ -64,6 +66,7 @@ export function aurasSystem(world: SimWorld): void {
   barges.length = 0;
   cantors.length = 0;
   spires.length = 0;
+  veils.length = 0;
   world.spireActive.clear();
 
   // A construction site projects nothing — the aura arrives with commission.
@@ -79,14 +82,24 @@ export function aurasSystem(world: SimWorld): void {
           ? cantors
           : kind === StructureKind.SoundingSpire
             ? spires
-            : null;
+            : kind === StructureKind.SporeVeil
+              ? veils
+              : null;
     if (list === null) continue;
     list.push({ eid, x: Position.x[eid]!, y: Position.y[eid]!, slot: Owner.slot[eid]! });
   }
 
-  // Baseline: everything emits through unmodified terrain PF.
+  // Baseline: everything emits through unmodified terrain PF at full SIG,
+  // and structures listen at their spawned rating (units get theirs below).
   const all = emitters(world);
-  for (let i = 0; i < all.length; i++) Acoustic.pfFactor[all[i]!] = 1;
+  for (let i = 0; i < all.length; i++) {
+    const eid = all[i]!;
+    Acoustic.pfFactor[eid] = 1;
+    Acoustic.sigFactor[eid] = 1;
+    if (hasComponent(world, Structure, eid)) {
+      Acoustic.hyd[eid] = structureStatsFor(Structure.kind[eid] as StructureKind).hyd;
+    }
+  }
 
   const { BAFFLE_BARGE, CANTOR, SOUNDING_SPIRE } = STRUCTURE_AURAS;
   const roster = units(world);
@@ -124,6 +137,25 @@ export function aurasSystem(world: SimWorld): void {
         }
       }
       Pressure.bonus[eid] = bonus;
+    }
+  }
+
+  // Spore Veil — last, and SYMMETRIC: everything inside the cloud, friend or
+  // foe, structure or hull, emits muffled and listens blind. Deliberately
+  // after the Cantor pass: inside the veil even a Listener's ears are moss.
+  if (veils.length > 0) {
+    const { RADIUS_M, SIG_FACTOR, BLIND_HYD } = STRUCTURE_AURAS.SPORE_VEIL;
+    for (let i = 0; i < all.length; i++) {
+      const eid = all[i]!;
+      const ex = Position.x[eid]!;
+      const ey = Position.y[eid]!;
+      for (let v = 0; v < veils.length; v++) {
+        const veil = veils[v]!;
+        if (Math.hypot(veil.x - ex, veil.y - ey) > RADIUS_M) continue;
+        Acoustic.sigFactor[eid] = SIG_FACTOR;
+        Acoustic.hyd[eid] = BLIND_HYD;
+        break;
+      }
     }
   }
 }

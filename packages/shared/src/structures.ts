@@ -160,15 +160,33 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
     constructible: true,
     faction: Faction.Hadron,
   },
+  [StructureKind.SporeVeil]: {
+    kind: StructureKind.SporeVeil,
+    name: 'Spore Veil',
+    // SPEC — docs/units.md: SIG 20 idle; cost 450; build 90 s. The cloud's
+    // symmetric quiet-and-blind effect is in STRUCTURE_AURAS.
+    sigIdle: 20,
+    sigActive: 20,
+    // The bed's own hydrophones sit inside its own cloud — blind by design.
+    hyd: 30,
+    maxHp: 900,
+    cost: 450,
+    buildTimeS: 90,
+    radiusM: 85,
+    acceptsDeposits: false,
+    constructible: true,
+    faction: Faction.Pelagia,
+  },
 };
 
 /**
- * The signature structure each navy may add to the core four, if any.
- * Pelagia deliberately has none: the Commune's identity lives in its hulls
- * and its quiet economy, not in another building (docs/factions.md).
+ * The signature structure each navy adds to the core four. Together they
+ * cover the detection formula's four levers: PF (Barge), HYD (Cantor),
+ * PR (Spire), and SIG itself (Veil) — docs/units.md, faction structures.
  */
 export const FACTION_STRUCTURE: Partial<Record<Faction, StructureKind>> = {
   [Faction.Bathyarch]: StructureKind.BaffleBarge,
+  [Faction.Pelagia]: StructureKind.SporeVeil,
   [Faction.Directorate]: StructureKind.Cantor,
   [Faction.Hadron]: StructureKind.SoundingSpire,
 };

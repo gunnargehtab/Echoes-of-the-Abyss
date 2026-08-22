@@ -48,6 +48,7 @@ const STRUCT_ART_URL: Record<StructureKind, string> = {
   [StructureKind.BaffleBarge]: siegeUrl,
   [StructureKind.Cantor]: cruiserUrl,
   [StructureKind.SoundingSpire]: corvetteUrl,
+  [StructureKind.SporeVeil]: raiderUrl,
 };
 
 /**
@@ -97,6 +98,7 @@ function halfExtentsM(kind: StructureKind): { hx: number; hy: number } {
       return { hx: r * 1.1, hy: r * 0.7 };
     case StructureKind.Cantor:
     case StructureKind.SoundingSpire:
+    case StructureKind.SporeVeil:
       return { hx: r, hy: r };
   }
 }
@@ -217,7 +219,8 @@ function bakeProcedural(kind: StructureKind, faction: Faction): Texture {
       break;
     case StructureKind.Cantor:
     case StructureKind.SoundingSpire:
-      // Fallback: a round dome/mount plinth, like the turret without a barrel.
+    case StructureKind.SporeVeil:
+      // Fallback: a round dome/mound plinth, like the turret without a barrel.
       ctx.arc(cx, cy, r, 0, Math.PI * 2);
       break;
     case StructureKind.SentinelTurret: {
@@ -304,6 +307,12 @@ function bakeProcedural(kind: StructureKind, faction: Faction): Texture {
       // A narrow, tall resonance core on a plinth.
       addDome(height, w, h, cx, cy, r * 0.55, 0.8);
       addDome(height, w, h, cx, cy, r * 0.2, 1);
+      break;
+    case StructureKind.SporeVeil:
+      // A low breathing bed: broad shallow mound, two gill humps.
+      addDome(height, w, h, cx, cy, r * 0.9, 0.55);
+      addDome(height, w, h, cx - r * 0.35, cy, r * 0.3, 0.8);
+      addDome(height, w, h, cx + r * 0.35, cy, r * 0.3, 0.8);
       break;
     case StructureKind.Foundry: {
       // The launch bay is a pit cut into the slab; the hall rim stays high,
@@ -403,6 +412,11 @@ function drawGlow(
     case StructureKind.SoundingSpire:
       // The crystal core burning at the node's heart.
       glowDot(ctx, cx, cy, r * 0.22, accent, 0.9);
+      break;
+    case StructureKind.SporeVeil:
+      // Faint biolum breathing along the gill humps — a quiet organism.
+      glowDot(ctx, cx - r * 0.35, cy, r * 0.09, accent, 0.5);
+      glowDot(ctx, cx + r * 0.35, cy, r * 0.09, accent, 0.5);
       break;
     case StructureKind.SentinelTurret: {
       // Muzzle lamp at the barrel tip; targeting eye on the dome.

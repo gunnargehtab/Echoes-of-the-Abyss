@@ -78,6 +78,8 @@ export enum StructureKind {
   Cantor = 5,
   /** Hadron only: resonance node — projects depth access (PR+1) around it. */
   SoundingSpire = 6,
+  /** Pelagia only: living spore cloud — quiets and deafens everything inside. */
+  SporeVeil = 7,
 }
 
 /**

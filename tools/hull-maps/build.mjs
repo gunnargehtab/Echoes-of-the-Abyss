@@ -129,6 +129,7 @@ const STRUCTURES = [
   { slug: 'baffle-barge', model: 'baffle-barge-bathyarch.glb', lengthM: 180, sig: 30 },
   { slug: 'cantor', model: 'cantor-directorate.glb', lengthM: 160, sig: 35 },
   { slug: 'sounding-spire', model: 'sounding-spire-hadron.glb', lengthM: 140, sig: 30 },
+  { slug: 'spore-veil', model: 'spore-veil-pelagia.glb', lengthM: 170, sig: 20 },
 ];
 
 const JOBS = [

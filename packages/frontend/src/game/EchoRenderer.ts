@@ -116,6 +116,7 @@ const STRUCTURE_SHORT: Record<StructureKind, string> = {
   [StructureKind.BaffleBarge]: 'BAF',
   [StructureKind.Cantor]: 'CAN',
   [StructureKind.SoundingSpire]: 'SPI',
+  [StructureKind.SporeVeil]: 'VEI',
 };
 
 /** One command-bar button: screen-space bounds plus what pressing it does. */
