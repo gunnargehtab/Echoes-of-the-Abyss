@@ -22,14 +22,16 @@ Pressure Rating (PR)
 - Integer rating describing a unit's depth resilience. Operating below a unit's PR causes unhealable crush attrition.
 - PR is used by faction mechanics and depth-affecting abilities (see systems-depth.md).
 
-Resolution Tiers (0–5)
+Resolution Tiers (0–4)
 
 - Tier 0 — Silent: not detected.
-- Tier 1 — Presence/Contact: something is out there; minimal information.
+- Tier 1 — Contact: something is out there; minimal information.
 - Tier 2 — Bearing: direction and rough range band.
-- Tier 3 — Classification/Contact: unit type and count estimates.
-- Tier 4 — Track: exact unit, velocity, heading, detailed state.
-- Tier 5 — Full Lock: complete identity, precise position, and state (rare; typically via sustained tracking or special abilities).
+- Tier 3 — Classification: unit type and count estimates.
+- Tier 4 — Track: full resolution — exact unit, health, facing; the terminal tier.
+  There is no tier above Track: it already reveals everything the Echo Layer models,
+  so a further "Full Lock" tier would have nothing left to add. (An earlier draft
+  listed one; systems-echo.md §4 is the tier table of record.)
 
 Active Sonar
 

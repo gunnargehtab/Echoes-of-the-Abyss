@@ -16,9 +16,9 @@ export enum Faction {
 /**
  * Detection is graded, not binary. See docs/systems-echo.md §4.
  *
- * NOTE: docs/glossary.md describes tiers 0-5 (adding a "Full Lock" tier 5),
- * while systems-echo.md — the detailed system doc — defines 0-4. We implement
- * 0-4 as canonical; see docs/README or the scaffold notes for the discrepancy.
+ * Tiers run 0-4, ending at Track: it reveals everything the Echo Layer
+ * models, so there is nothing above it. The glossary agrees since the
+ * tier-count resolution (issue #34); an earlier draft listed a fifth tier.
  */
 export enum ResolutionTier {
   /** Not detected. Nothing is shown. */
