@@ -35,9 +35,12 @@ renders four top-down orthographic passes in headless Chromium
 | `emissive.png` | Emissive channel only, black ground | The glow layer — bright = loud |
 | `height.png` | Depth from above, bright = high | Replaces the distance-transform guess |
 
-`meta.json` records mesh/material inventory, sizes, the scale applied, and
-warnings. Default `--ppm 2` (pixels per metre) matches sprite scale; raise it
-for archival maps.
+`meta.json` records mesh/material inventory, sizes, the scale applied, glow
+energy (the gate-3 metric in `docs/graphics-standards.md`), and warnings.
+Default `--ppm 2` (pixels per metre) matches sprite scale; raise it for
+archival maps. `--glow-e <target>` calibrates the emissive map onto a target
+glow energy — `tools/hull-maps/build.mjs` passes it from the unit's SIG, so
+intake runs measure raw and the shipped maps land on the curve.
 
 **The bake fails if no material is emissive** — that almost always means the
 export dropped the channel, and a glow-less hull is a style bug, not a
@@ -49,8 +52,11 @@ deliberately dark hull earns the override).
 Open the four PNGs (the Read tool renders them). Check against the
 consistency checklist in `docs/asset-prompts-3d.md`, and specifically:
 
-- **emissive**: are the lights where the design says, and scaled to the
-  unit's SIG band? A Light Scout showing more than navigation marks is wrong.
+- **emissive**: are the lights where the design says, and does the reported
+  glow energy sit near the unit's gate-3 target? Intensity is normalised by
+  the pipeline, but placement is not — a Light Scout showing more than
+  navigation marks is wrong, and a hull whose energy undershoots even at max
+  gain needs its lights reworked as strips, bars or patches.
 - **albedo**: faction palette, not generic grey; silhouette readable at
   actual sprite size (the default bake IS actual size — squint test it).
 - **height**: raised features (fins, domes, spines) visibly brighter than

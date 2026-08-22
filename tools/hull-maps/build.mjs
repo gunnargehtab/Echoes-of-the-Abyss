@@ -32,41 +32,58 @@ const STRUCT_PPM = 1.5;
 const PASSES = ['albedo', 'height', 'emissive'];
 
 /**
- * Which model clads which unit, and the design length it is baked against
- * (HULL_LENGTH_M in packages/frontend/src/game/silhouettes.ts). A unit absent
+ * Glow is spec'd, not inherited: every emissive map is calibrated onto the
+ * gate-3 target curve in docs/graphics-standards.md, E(SIG) = 0.45·e^(SIG/14),
+ * from the idle/cruise SIG in docs/units.md (SPEC). The models keep their own
+ * light placement; only intensity is normalised — without this, each
+ * generation run's arbitrary emissive levels would leak into the Echo Layer's
+ * visual law (quiet subs outshining loud cruisers, sister hulls 7× apart).
+ */
+const glowTarget = (sig) => 0.45 * Math.exp(sig / 14);
+
+/**
+ * Which model clads which unit, the design length it is baked against
+ * (HULL_LENGTH_M in packages/frontend/src/game/silhouettes.ts), and the
+ * idle/cruise SIG its glow is calibrated to (docs/units.md). A unit absent
  * here keeps the distance-transform fallback — that is the intended state for
  * hulls whose model has not been approved yet.
  */
 const UNITS = [
-  { slug: 'light-scout', model: 'light-scout-pelagia.glb', lengthM: 60 },
-  { slug: 'corvette', model: 'corvette-pelagia.glb', lengthM: 80 },
-  { slug: 'cruiser', model: 'cruiser-pelagia.glb', lengthM: 130 },
-  { slug: 'harvester', model: 'harvester-pelagia.glb', lengthM: 75 },
-  { slug: 'abyssal-submersible', model: 'abyssal-submersible-directorate.glb', lengthM: 95 },
+  { slug: 'light-scout', model: 'light-scout-pelagia.glb', lengthM: 60, sig: 6 },
+  { slug: 'corvette', model: 'corvette-pelagia.glb', lengthM: 80, sig: 28 },
+  { slug: 'cruiser', model: 'cruiser-pelagia.glb', lengthM: 130, sig: 55 },
+  { slug: 'harvester', model: 'harvester-pelagia.glb', lengthM: 75, sig: 18 },
+  { slug: 'abyssal-submersible', model: 'abyssal-submersible-directorate.glb', lengthM: 95, sig: 22 },
   // Faction variants: same kind, another navy's shape language. The slug's
   // faction suffix pairs with VARIANT_MAP_URL in hullMaps.ts.
-  { slug: 'corvette-bathyarch', model: 'corvette-bathyarch.glb', lengthM: 80 },
-  { slug: 'harvester-bathyarch', model: 'harvester-bathyarch.glb', lengthM: 75 },
-  { slug: 'cruiser-bathyarch', model: 'cruiser-bathyarch.glb', lengthM: 130 },
-  { slug: 'corvette-directorate', model: 'corvette-directorate.glb', lengthM: 80 },
-  { slug: 'harvester-directorate', model: 'harvester-directorate.glb', lengthM: 75 },
-  { slug: 'cruiser-directorate', model: 'cruiser-directorate.glb', lengthM: 130 },
-  { slug: 'corvette-hadron', model: 'corvette-hadron.glb', lengthM: 80 },
-  { slug: 'cruiser-hadron', model: 'cruiser-hadron.glb', lengthM: 130 },
-  { slug: 'harvester-hadron', model: 'harvester-hadron.glb', lengthM: 75 },
-  { slug: 'abyssal-submersible-hadron', model: 'abyssal-submersible-hadron.glb', lengthM: 95 },
+  { slug: 'corvette-bathyarch', model: 'corvette-bathyarch.glb', lengthM: 80, sig: 28 },
+  { slug: 'harvester-bathyarch', model: 'harvester-bathyarch.glb', lengthM: 75, sig: 18 },
+  { slug: 'cruiser-bathyarch', model: 'cruiser-bathyarch.glb', lengthM: 130, sig: 55 },
+  { slug: 'corvette-directorate', model: 'corvette-directorate.glb', lengthM: 80, sig: 28 },
+  { slug: 'harvester-directorate', model: 'harvester-directorate.glb', lengthM: 75, sig: 18 },
+  { slug: 'cruiser-directorate', model: 'cruiser-directorate.glb', lengthM: 130, sig: 55 },
+  { slug: 'corvette-hadron', model: 'corvette-hadron.glb', lengthM: 80, sig: 28 },
+  { slug: 'cruiser-hadron', model: 'cruiser-hadron.glb', lengthM: 130, sig: 55 },
+  { slug: 'harvester-hadron', model: 'harvester-hadron.glb', lengthM: 75, sig: 18 },
+  {
+    slug: 'abyssal-submersible-hadron',
+    model: 'abyssal-submersible-hadron.glb',
+    lengthM: 95,
+    sig: 22,
+  },
 ];
 
 /**
  * Structure models, baked against the footprint diameter (2 × radiusM in
- * packages/shared/src/structures.ts). Absent structures keep the procedural
- * architecture bake in structureTextures.ts.
+ * packages/shared/src/structures.ts); SIG is the idle figure in docs/units.md.
+ * Absent structures keep the procedural architecture bake in
+ * structureTextures.ts.
  */
 const STRUCTURES = [
-  { slug: 'bastion', model: 'bastion-bathyarch.glb', lengthM: 440 },
-  { slug: 'refinery', model: 'refinery-bathyarch.glb', lengthM: 280 },
-  { slug: 'foundry', model: 'foundry-bathyarch.glb', lengthM: 320 },
-  { slug: 'sentinel-turret', model: 'sentinel-turret-bathyarch.glb', lengthM: 120 },
+  { slug: 'bastion', model: 'bastion-bathyarch.glb', lengthM: 440, sig: 35 },
+  { slug: 'refinery', model: 'refinery-bathyarch.glb', lengthM: 280, sig: 65 },
+  { slug: 'foundry', model: 'foundry-bathyarch.glb', lengthM: 320, sig: 25 },
+  { slug: 'sentinel-turret', model: 'sentinel-turret-bathyarch.glb', lengthM: 120, sig: 12 },
 ];
 
 const JOBS = [
@@ -93,6 +110,8 @@ for (const job of JOBS) {
         String(entry.lengthM),
         '--ppm',
         String(job.ppm),
+        '--glow-e',
+        String(glowTarget(entry.sig)),
         '--out',
         tmp,
       ],

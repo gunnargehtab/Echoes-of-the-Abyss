@@ -69,6 +69,23 @@ preference — a quiet unit that glows brightly is lying to the player about the
 exactly as a loud unit rendered dark is. Firing bursts may flare; the resting state must
 match the number.
 
+The rule is measured, not eyeballed. On the shipped maps, **glow energy** is the sum of
+`v / 255` over emissive pixels brighter than `v = 32` (`v` = the max of R, G, B), per
+1,000 hull-mask pixels (albedo alpha > 16), at the record densities of gate 6. The target
+curve is:
+
+```text
+E(SIG) = 0.45 × e^(SIG / 14)
+```
+
+anchored so the prototype roster lands at: SIG 6 → 0.7 · 12 → 1.1 · 18 → 1.6 ·
+22 → 2.2 · 25 → 2.7 · 28 → 3.3 · 35 → 5.5 · 55 → 23 · 65 → 47.
+`tools/hull-maps/build.mjs` normalises every emissive map's *intensity* onto this curve —
+light *placement* stays the model's own, per the pipeline of record. A model whose lit
+features are too small or dim to reach its target even at maximum gain (×64) fails
+review: lit features must read as strips, bars or patches — sub-pixel dots vanish at
+sprite scale, and no gain can bring them back.
+
 ### 4. Palette discipline — hue belongs to the faction constant
 
 Every colour on screen traces to a source of truth: faction palettes to the four-row table
@@ -117,7 +134,8 @@ it is, *how loud* it is, and *whether it is theirs* in under a second?
   no bypasses, no one-offs
 - [ ] Any new GLB passed hull-intake, and its four review maps were actually looked at
   (gate 2)
-- [ ] Emissive matches the unit's SIG band in [units.md](units.md) (gate 3)
+- [ ] Emissive matches the unit's SIG band in [units.md](units.md), and the shipped maps
+  sit on the gate-3 energy curve (`node tools/hull-maps/build.mjs` reports it)
 - [ ] Every colour traces to a documented palette or token; no new hex values outside the
   style docs (gate 4)
 - [ ] Enemy-facing rendering still caps at tier fidelity; own-force-only detail stayed

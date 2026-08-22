@@ -11,7 +11,11 @@
  *
  * Usage:
  *   node bake.mjs <model.glb> --length-m <metres> [--out <dir>] [--ppm <px>]
- *                 [--allow-no-emissive]
+ *                 [--allow-no-emissive] [--glow-e <target>]
+ *
+ * --glow-e calibrates the emissive map onto a target glow energy (the gate-3
+ * metric in docs/graphics-standards.md); without it the raw energy is still
+ * measured and reported for intake review.
  *
  * --length-m is the design hull length: HULL_LENGTH_M in
  * packages/frontend/src/game/silhouettes.ts (e.g. Light Scout = 60).
@@ -42,6 +46,9 @@ const lengthM = Number(flag('--length-m'));
 const outDir = resolve(flag('--out') || 'hull-intake-out');
 const ppm = Number(flag('--ppm') || 2);
 const allowNoEmissive = args.includes('--allow-no-emissive');
+// Target glow energy (graphics-standards.md gate 3). When set, the emissive
+// map is scaled onto it — placement stays the model's, intensity is spec'd.
+const glowE = Number(flag('--glow-e') || 0);
 
 if (!modelPath || !existsSync(modelPath) || !(lengthM > 0)) {
   console.error('usage: node bake.mjs <model.glb> --length-m <metres> [--out dir] [--ppm px]');
@@ -139,13 +146,23 @@ try {
   const stats = await page.evaluate(() => window.__stats);
 
   mkdirSync(outDir, { recursive: true });
+  let glow;
   for (const pass of ['albedo', 'normal', 'emissive', 'height']) {
-    const dataUrl = await page.evaluate((p) => window.__bake(p), pass);
+    let dataUrl;
+    if (pass === 'emissive' && glowE > 0) {
+      glow = await page.evaluate((t) => window.__glow(t), glowE);
+      dataUrl = glow.url;
+    } else {
+      dataUrl = await page.evaluate((p) => window.__bake(p), pass);
+    }
     const png = Buffer.from(dataUrl.slice('data:image/png;base64,'.length), 'base64');
     const path = join(outDir, `${pass}.png`);
     writeFileSync(path, png);
     console.log(`map: ${path}`);
   }
+  // Raw glow energy is reported even uncalibrated — intake review reads it
+  // against the gate-3 curve.
+  if (!glow) glow = await page.evaluate(() => window.__glow(0));
 
   // --- validation verdicts -------------------------------------------------
   const warnings = [];
@@ -162,8 +179,24 @@ try {
       `export was not in metres (rescaled ×${stats.scaleApplied.toFixed(3)} to ` +
         `${lengthM} m). Harmless, but a metre-true export skips the guess.`
     );
+  if (glow.targetE) {
+    console.log(
+      `glow: raw E=${glow.rawE.toFixed(2)} → calibrated E=${glow.achievedE.toFixed(2)} ` +
+        `(target ${glow.targetE.toFixed(2)}, gain ×${glow.gain.toFixed(3)})`
+    );
+    if (glow.achievedE < glow.targetE * 0.75)
+      warnings.push(
+        `glow undershoots its SIG target even at max gain (E=${glow.achievedE.toFixed(2)} ` +
+          `of ${glow.targetE.toFixed(2)}) — the lit features are too small or dim. Rework ` +
+          'lights as strips, bars or patches; sub-pixel dots vanish at sprite scale ' +
+          '(graphics-standards.md gate 3).'
+      );
+  } else {
+    console.log(`glow: raw E=${glow.rawE.toFixed(2)} per 1000 mask px (gate-3 metric)`);
+  }
 
-  const meta = { source: resolve(modelPath), lengthM, ppm, ...stats, warnings };
+  const { url: _url, ...glowMeta } = glow;
+  const meta = { source: resolve(modelPath), lengthM, ppm, ...stats, glow: glowMeta, warnings };
   writeFileSync(join(outDir, 'meta.json'), JSON.stringify(meta, null, 2) + '\n');
   console.log(`meta: ${join(outDir, 'meta.json')}`);
 
