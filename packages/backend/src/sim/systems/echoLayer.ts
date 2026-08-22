@@ -157,7 +157,9 @@ export class EchoLayer {
 
       const ex = Position.x[emitter]!;
       const ey = Position.y[emitter]!;
-      const pf = terrain.propagationAt(ex, ey);
+      // Terrain PF, bent by any Baffle Barge bubble the emitter sits inside
+      // (auras system; `|| 1` covers the tick before the first aura pass).
+      const pf = terrain.propagationAt(ex, ey) * (Acoustic.pfFactor[emitter]! || 1);
       const emitterSlot = Owner.slot[emitter]!;
 
       // Only listeners inside this radius can possibly hear the emitter, even

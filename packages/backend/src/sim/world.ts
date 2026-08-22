@@ -55,6 +55,12 @@ export interface SimWorld extends IWorld {
   economies: Map<number, PlayerEconomy>;
   /** producing structure eid -> its queue. */
   production: Map<number, ProductionQueue>;
+  /**
+   * Sounding Spires whose PR grant is load-bearing this tick — an allied
+   * unit under the aura is actually below its own rating. Written by the
+   * auras system, read by acoustics: a projecting spire sings at SIG 80.
+   */
+  spireActive: Set<number>;
 }
 
 export function createSimWorld(terrain: Terrain, dt: number): SimWorld {
@@ -64,6 +70,7 @@ export function createSimWorld(terrain: Terrain, dt: number): SimWorld {
   world.dt = dt;
   world.economies = new Map();
   world.production = new Map();
+  world.spireActive = new Set();
   // Burn entity id 0 so components can use eid 0 as a "none" sentinel
   // (Weapon.orderedTargetEid, Harvester.nodeEid). bitecs hands out dense ids
   // from 0, so without this the first spawned entity would be untargetable.
@@ -117,11 +124,14 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   addComponent(world, Acoustic, eid);
   Acoustic.sig[eid] = stats.sigIdle;
   Acoustic.hyd[eid] = stats.hyd;
+  Acoustic.pfFactor[eid] = 1;
+  Acoustic.sigFactor[eid] = 1;
   Acoustic.spikeRemainingS[eid] = 0;
   Acoustic.spikeAmount[eid] = 0;
 
   addComponent(world, Pressure, eid);
   Pressure.rating[eid] = stats.pressureRating;
+  Pressure.bonus[eid] = 0;
 
   addComponent(world, Health, eid);
   Health.hp[eid] = stats.maxHp;
@@ -181,6 +191,8 @@ export function spawnStructure(world: SimWorld, opts: SpawnStructureOptions): nu
   addComponent(world, Acoustic, eid);
   Acoustic.sig[eid] = opts.prebuilt ? stats.sigIdle : CONSTRUCTION.SITE_SIG;
   Acoustic.hyd[eid] = stats.hyd;
+  Acoustic.pfFactor[eid] = 1;
+  Acoustic.sigFactor[eid] = 1;
   Acoustic.spikeRemainingS[eid] = 0;
   Acoustic.spikeAmount[eid] = 0;
 

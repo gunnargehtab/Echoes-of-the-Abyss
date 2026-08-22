@@ -283,5 +283,71 @@ export function drawStructureSilhouette(
       }
       break;
     }
+    case StructureKind.BaffleBarge: {
+      // A moored hull block ringed by baffle vanes: the masking ship.
+      const w = radiusM * 2.2;
+      const h = radiusM * 1.4;
+      g.rect(x - w / 2, y - h / 2, w, h).fill(body);
+      g.rect(x - w / 2, y - h / 2, w, h).stroke(edge);
+      if (style.detail) {
+        for (const t of [-0.3, 0, 0.3]) {
+          g.rect(x + w * t - w * 0.04, y - h * 0.62, w * 0.08, h * 1.24).fill({
+            color: style.color,
+            alpha: style.alpha * 0.8,
+          });
+        }
+      }
+      break;
+    }
+    case StructureKind.Cantor: {
+      // The listening dome, studded with hydrophone spines.
+      g.circle(x, y, radiusM).fill(body);
+      g.circle(x, y, radiusM).stroke(edge);
+      if (style.detail) {
+        for (let i = 0; i < 6; i++) {
+          const angle = (i / 6) * Math.PI * 2 + 0.4;
+          const sx = x + Math.cos(angle) * radiusM;
+          const sy = y + Math.sin(angle) * radiusM;
+          g.moveTo(sx, sy)
+            .lineTo(x + Math.cos(angle) * radiusM * 1.35, y + Math.sin(angle) * radiusM * 1.35)
+            .stroke(edge);
+        }
+        g.circle(x, y, radiusM * 0.35).fill({ color: style.accent, alpha: style.alpha * 0.7 });
+      }
+      break;
+    }
+    case StructureKind.SoundingSpire: {
+      // A spire from above: a diamond core inside its resonance ring.
+      g.circle(x, y, radiusM).stroke(edge);
+      const d = radiusM * 0.55;
+      g.poly([x, y - d, x + d, y, x, y + d, x - d, y]).fill(body);
+      g.poly([x, y - d, x + d, y, x, y + d, x - d, y]).stroke(edge);
+      if (style.detail) {
+        g.circle(x, y, radiusM * 0.18).fill({ color: style.accent, alpha: style.alpha });
+      }
+      break;
+    }
+    case StructureKind.SporeVeil: {
+      // A low grown bed: soft irregular lobes rather than an engineered shape.
+      const points: number[] = [];
+      for (let i = 0; i < 10; i++) {
+        const angle = (i / 10) * Math.PI * 2;
+        const wobble = 1 + 0.18 * Math.sin(i * 2.7);
+        points.push(x + Math.cos(angle) * radiusM * wobble, y + Math.sin(angle) * radiusM * wobble);
+      }
+      g.poly(points).fill(body);
+      g.poly(points).stroke(edge);
+      if (style.detail) {
+        g.circle(x - radiusM * 0.35, y, radiusM * 0.2).fill({
+          color: style.accent,
+          alpha: style.alpha * 0.6,
+        });
+        g.circle(x + radiusM * 0.35, y, radiusM * 0.2).fill({
+          color: style.accent,
+          alpha: style.alpha * 0.6,
+        });
+      }
+      break;
+    }
   }
 }

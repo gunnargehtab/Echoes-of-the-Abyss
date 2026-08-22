@@ -123,6 +123,13 @@ const STRUCTURES = [
   { slug: 'refinery-hadron', model: 'refinery-hadron.glb', lengthM: 280, sig: 65 },
   { slug: 'foundry-hadron', model: 'foundry-hadron.glb', lengthM: 320, sig: 25 },
   { slug: 'sentinel-turret-hadron', model: 'sentinel-turret-hadron.glb', lengthM: 120, sig: 12 },
+  // Faction signature structures: canonical per kind — only one navy ever
+  // builds each, so no variant dimension. Model filenames keep the
+  // <unit>-<faction> convention; glow calibrates on the idle SIG.
+  { slug: 'baffle-barge', model: 'baffle-barge-bathyarch.glb', lengthM: 180, sig: 30 },
+  { slug: 'cantor', model: 'cantor-directorate.glb', lengthM: 160, sig: 35 },
+  { slug: 'sounding-spire', model: 'sounding-spire-hadron.glb', lengthM: 140, sig: 30 },
+  { slug: 'spore-veil', model: 'spore-veil-pelagia.glb', lengthM: 170, sig: 20 },
 ];
 
 const JOBS = [

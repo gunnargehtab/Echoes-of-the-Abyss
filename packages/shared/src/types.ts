@@ -72,6 +72,14 @@ export enum StructureKind {
   Foundry = 2,
   /** Static defence. Quiet listener until it fires. */
   SentinelTurret = 3,
+  /** Consortium only: noise-masking support — a PF bubble for loud armies. */
+  BaffleBarge = 4,
+  /** Directorate only: listening dome — raises allied HYD under it. */
+  Cantor = 5,
+  /** Hadron only: resonance node — projects depth access (PR+1) around it. */
+  SoundingSpire = 6,
+  /** Pelagia only: living spore cloud — quiets and deafens everything inside. */
+  SporeVeil = 7,
 }
 
 /**

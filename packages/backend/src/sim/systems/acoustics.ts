@@ -86,6 +86,9 @@ export function acousticsSystem(world: SimWorld): void {
     }
 
     sig = applySpikeDecay(world, eid, sig);
+    // A Spore Veil muffles the *derived* SIG — whatever the unit is doing,
+    // the cloud takes its cut last (auras system, symmetric).
+    sig *= Acoustic.sigFactor[eid]! || 1;
     Acoustic.sig[eid] = Math.min(100, Math.max(0, sig));
   }
 
@@ -100,10 +103,15 @@ export function acousticsSystem(world: SimWorld): void {
       sig = CONSTRUCTION.SITE_SIG;
     } else {
       const stats = structureStatsFor(Structure.kind[eid] as StructureKind);
+      // "Active" is per structure kind: a foundry is loud while its line
+      // runs; a Sounding Spire is loud while its depth grant is load-bearing
+      // (world.spireActive, written by the auras system this tick).
       const producing = (world.production.get(eid)?.queue.length ?? 0) > 0;
-      sig = producing ? stats.sigActive : stats.sigIdle;
+      const projecting = world.spireActive.has(eid);
+      sig = producing || projecting ? stats.sigActive : stats.sigIdle;
     }
     sig = applySpikeDecay(world, eid, sig);
+    sig *= Acoustic.sigFactor[eid]! || 1;
     Acoustic.sig[eid] = Math.min(100, Math.max(0, sig));
   }
 }

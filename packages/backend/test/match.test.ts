@@ -15,12 +15,14 @@ import {
   HarvestThrottle,
   ResolutionTier,
   SIM,
+  STRUCTURE_AURAS,
   StructureKind,
   UnitKind,
   statsFor,
   structureStatsFor,
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
+import { spawnStructure, spawnUnit } from '../src/sim/world.ts';
 import {
   Position,
   Acoustic,
@@ -436,5 +438,179 @@ describe('depth', () => {
       .units.find((u) => u.id === shallow.id);
     assert.ok(after !== undefined, 'unit should still be alive after 2s');
     assert.ok(after.hp < hpBefore, 'overreaching depth must cost hull');
+  });
+});
+
+describe('faction structure auras', () => {
+  it('a Baffle Barge bubble masks allied emitters only', () => {
+    const match = twoPlayerMatch(); // slot 0 is Bathyarch, the barge's navy
+    advance(match, 0.5);
+    const snapshots = advance(match, 0.2)!;
+    const mine = snapshots.get(0)!.units[0]!;
+    const theirs = snapshots.get(1)!.units[0]!;
+    // Park the enemy inside the bubble too: allied masking must not leak.
+    Position.x[theirs.id] = Position.x[mine.id]! + 100;
+    Position.y[theirs.id] = Position.y[mine.id]!;
+
+    spawnStructure(match.world, {
+      kind: StructureKind.BaffleBarge,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: Position.x[mine.id]!,
+      y: Position.y[mine.id]!,
+      prebuilt: true,
+    });
+    advance(match, 0.2);
+
+    // pfFactor is an f32 lane; compare within float32 quantisation.
+    const { PF_FACTOR } = STRUCTURE_AURAS.BAFFLE_BARGE;
+    assert.ok(
+      Math.abs(Acoustic.pfFactor[mine.id]! - PF_FACTOR) < 1e-6,
+      'ally inside should be masked'
+    );
+    assert.equal(Acoustic.pfFactor[theirs.id], 1, 'enemy inside must not be masked');
+  });
+
+  it('a Cantor dome lends allied ears the bonus, capped', () => {
+    const match = new Match();
+    match.addPlayer(0, Faction.Directorate);
+    match.addPlayer(1, Faction.Pelagia);
+    advance(match, 0.5);
+    const snapshots = advance(match, 0.2)!;
+    const corvette = snapshots.get(0)!.units.find((u) => u.kind === UnitKind.Corvette)!;
+
+    spawnStructure(match.world, {
+      kind: StructureKind.Cantor,
+      slot: 0,
+      faction: Faction.Directorate,
+      x: Position.x[corvette.id]! + 500,
+      y: Position.y[corvette.id]!,
+      prebuilt: true,
+    });
+    advance(match, 0.2);
+
+    const { HYD_BONUS, HYD_CAP, RADIUS_M } = STRUCTURE_AURAS.CANTOR;
+    const base = statsFor(UnitKind.Corvette).hyd;
+    assert.equal(
+      Acoustic.hyd[corvette.id],
+      Math.min(HYD_CAP, base + HYD_BONUS),
+      'corvette under the dome should listen sharper'
+    );
+
+    // Walk it out of the dome: HYD falls back to the hull rating.
+    Position.x[corvette.id] = Position.x[corvette.id]! + RADIUS_M + 600;
+    advance(match, 0.2);
+    assert.equal(Acoustic.hyd[corvette.id], base, 'outside the dome the bonus is gone');
+  });
+
+  it('a Sounding Spire rents depth, and sings while doing it', () => {
+    const match = new Match();
+    match.addPlayer(0, Faction.Hadron);
+    match.addPlayer(1, Faction.Pelagia);
+    advance(match, 0.5);
+    const snapshots = advance(match, 0.2)!;
+    const scout = snapshots.get(0)!.units.find((u) => u.kind === UnitKind.LightScout)!;
+
+    // A PR-1 scout at 600 m is a full band over its head: unhealable crush.
+    Position.depth[scout.id] = 600;
+    const spire = spawnStructure(match.world, {
+      kind: StructureKind.SoundingSpire,
+      slot: 0,
+      faction: Faction.Hadron,
+      x: Position.x[scout.id]! + 300,
+      y: Position.y[scout.id]!,
+      prebuilt: true,
+    });
+    advance(match, 0.2);
+
+    const hpBefore = Health.hp[scout.id]!;
+    advance(match, 2);
+    assert.equal(Health.hp[scout.id], hpBefore, 'rented depth must stop crush attrition');
+    assert.equal(
+      Acoustic.sig[spire],
+      structureStatsFor(StructureKind.SoundingSpire).sigActive,
+      'a projecting spire sings at its active SIG'
+    );
+
+    // Out of the aura the deficit is real again — and the spire goes quiet.
+    Position.x[scout.id] = Position.x[scout.id]! + 2000;
+    advance(match, 2);
+    assert.ok(Health.hp[scout.id]! < hpBefore, 'outside the aura the depth bill comes due');
+    assert.equal(
+      Acoustic.sig[spire],
+      structureStatsFor(StructureKind.SoundingSpire).sigIdle,
+      'an idle spire hums at its idle SIG'
+    );
+  });
+
+  it('another navy cannot commission a signature structure', () => {
+    const match = twoPlayerMatch(); // slot 0 is Bathyarch
+    advance(match, 0.5);
+    const bastion = advance(match, 0.2)!
+      .get(0)!
+      .structures.find((s) => s.kind === StructureKind.Bastion)!;
+    // Clear of both the Bastion (r 220) and the starting Foundry 450 m east.
+    const x = bastion.x + 500;
+    const y = bastion.y + 500;
+    assert.equal(match.build(0, StructureKind.Cantor, x, y), false, 'Cantor is Directorate-only');
+    assert.equal(
+      match.build(0, StructureKind.BaffleBarge, x, y),
+      true,
+      'the Consortium may commission its own barge on the same spot'
+    );
+  });
+});
+
+describe('Spore Veil', () => {
+  it('quiets and deafens everything inside — friend and foe alike', () => {
+    const match = new Match();
+    match.addPlayer(0, Faction.Pelagia);
+    match.addPlayer(1, Faction.Bathyarch);
+    advance(match, 0.5);
+
+    // Harvesters, in open water: no weapons, no orders — nothing fires or
+    // moves, so derived SIG is exactly the idle figure and the only thing
+    // acting on it is the cloud.
+    const spot = { x: 4000, y: 4000 };
+    const spawnIdleHarvester = (slot: number, faction: Faction, dx: number) =>
+      spawnUnit(match.world, {
+        kind: UnitKind.Harvester,
+        slot,
+        faction,
+        x: spot.x + dx,
+        y: spot.y,
+      });
+    const mine = spawnIdleHarvester(0, Faction.Pelagia, 0);
+    const theirs = spawnIdleHarvester(1, Faction.Bathyarch, 120);
+    const bystander = spawnIdleHarvester(1, Faction.Bathyarch, 2000);
+
+    spawnStructure(match.world, {
+      kind: StructureKind.SporeVeil,
+      slot: 0,
+      faction: Faction.Pelagia,
+      x: spot.x,
+      y: spot.y,
+      prebuilt: true,
+    });
+    advance(match, 0.2);
+
+    const { SIG_FACTOR, BLIND_HYD } = STRUCTURE_AURAS.SPORE_VEIL;
+    const close = (a: number, b: number) => Math.abs(a - b) < 1e-3;
+    const idle = statsFor(UnitKind.Harvester).sigIdle;
+
+    assert.ok(close(Acoustic.sig[mine]!, idle * SIG_FACTOR), 'ally inside emits muffled');
+    assert.ok(
+      close(Acoustic.sig[theirs]!, idle * SIG_FACTOR),
+      'enemy inside emits muffled too — the veil is symmetric'
+    );
+    assert.equal(Acoustic.hyd[mine], BLIND_HYD, 'ally inside is hydrophone-blind');
+    assert.equal(Acoustic.hyd[theirs], BLIND_HYD, 'enemy inside is hydrophone-blind too');
+
+    assert.ok(close(Acoustic.sig[bystander]!, idle), 'a unit outside the cloud emits normally');
+    assert.equal(
+      Acoustic.hyd[bystander],
+      statsFor(UnitKind.Harvester).hyd,
+      'a unit outside the cloud listens normally'
+    );
   });
 });

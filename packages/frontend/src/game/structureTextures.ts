@@ -45,6 +45,10 @@ const STRUCT_ART_URL: Record<StructureKind, string> = {
   [StructureKind.Refinery]: siegeUrl,
   [StructureKind.Foundry]: corvetteUrl,
   [StructureKind.SentinelTurret]: raiderUrl,
+  [StructureKind.BaffleBarge]: siegeUrl,
+  [StructureKind.Cantor]: cruiserUrl,
+  [StructureKind.SoundingSpire]: corvetteUrl,
+  [StructureKind.SporeVeil]: raiderUrl,
 };
 
 /**
@@ -90,6 +94,12 @@ function halfExtentsM(kind: StructureKind): { hx: number; hy: number } {
     case StructureKind.SentinelTurret:
       // The 45° barrel reaches 1.7r; keep the canvas square around it.
       return { hx: r * 1.35, hy: r * 1.35 };
+    case StructureKind.BaffleBarge:
+      return { hx: r * 1.1, hy: r * 0.7 };
+    case StructureKind.Cantor:
+    case StructureKind.SoundingSpire:
+    case StructureKind.SporeVeil:
+      return { hx: r, hy: r };
   }
 }
 
@@ -199,8 +209,19 @@ function bakeProcedural(kind: StructureKind, faction: Faction): Texture {
     case StructureKind.Refinery:
       ctx.rect(cx - r * 0.85, cy - r * 0.575, r * 1.7, r * 1.15);
       break;
+    case StructureKind.BaffleBarge:
+      // The procedural fallback treats the barge as a moored hull block; the
+      // approved model is the real look (structureMaps.ts).
+      ctx.rect(cx - r * 1.1, cy - r * 0.7, r * 2.2, r * 1.4);
+      break;
     case StructureKind.Foundry:
       ctx.rect(cx - r * 0.9, cy - r * 0.625, r * 1.8, r * 1.25);
+      break;
+    case StructureKind.Cantor:
+    case StructureKind.SoundingSpire:
+    case StructureKind.SporeVeil:
+      // Fallback: a round dome/mound plinth, like the turret without a barrel.
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
       break;
     case StructureKind.SentinelTurret: {
       ctx.arc(cx, cy, r, 0, Math.PI * 2);
@@ -272,6 +293,26 @@ function bakeProcedural(kind: StructureKind, faction: Faction): Texture {
       for (const t of [-0.3, 0, 0.3]) {
         addDome(height, w, h, cx + r * 1.7 * t, cy - r * 1.15 * 0.18, r * 0.26, 0.95);
       }
+      break;
+    case StructureKind.BaffleBarge:
+      // A low hull with two baffle-stack humps.
+      addDome(height, w, h, cx - r * 0.45, cy, r * 0.4, 0.7);
+      addDome(height, w, h, cx + r * 0.45, cy, r * 0.4, 0.7);
+      break;
+    case StructureKind.Cantor:
+      // The listening dome itself.
+      addDome(height, w, h, cx, cy, r * 0.85, 1);
+      break;
+    case StructureKind.SoundingSpire:
+      // A narrow, tall resonance core on a plinth.
+      addDome(height, w, h, cx, cy, r * 0.55, 0.8);
+      addDome(height, w, h, cx, cy, r * 0.2, 1);
+      break;
+    case StructureKind.SporeVeil:
+      // A low breathing bed: broad shallow mound, two gill humps.
+      addDome(height, w, h, cx, cy, r * 0.9, 0.55);
+      addDome(height, w, h, cx - r * 0.35, cy, r * 0.3, 0.8);
+      addDome(height, w, h, cx + r * 0.35, cy, r * 0.3, 0.8);
       break;
     case StructureKind.Foundry: {
       // The launch bay is a pit cut into the slab; the hall rim stays high,
@@ -348,6 +389,34 @@ function drawGlow(
       glowDot(ctx, cx, cy, r * 0.3, accent, 0.55);
       glowDot(ctx, cx - r * 0.7, cy - r * 0.45, r * 0.07, '#f2b233', 0.6);
       glowDot(ctx, cx + r * 0.7, cy - r * 0.45, r * 0.07, '#f2b233', 0.6);
+      break;
+    case StructureKind.BaffleBarge:
+      // Dim running lights at the baffle stacks — a masking ship keeps quiet.
+      glowDot(ctx, cx - r * 0.45, cy, r * 0.08, accent, 0.5);
+      glowDot(ctx, cx + r * 0.45, cy, r * 0.08, accent, 0.5);
+      break;
+    case StructureKind.Cantor:
+      // A photophore constellation across the dome.
+      for (let i = 0; i < 5; i++) {
+        const angle = (i / 5) * Math.PI * 2 + 0.6;
+        glowDot(
+          ctx,
+          cx + Math.cos(angle) * r * 0.5,
+          cy + Math.sin(angle) * r * 0.5,
+          r * 0.06,
+          accent,
+          0.6
+        );
+      }
+      break;
+    case StructureKind.SoundingSpire:
+      // The crystal core burning at the node's heart.
+      glowDot(ctx, cx, cy, r * 0.22, accent, 0.9);
+      break;
+    case StructureKind.SporeVeil:
+      // Faint biolum breathing along the gill humps — a quiet organism.
+      glowDot(ctx, cx - r * 0.35, cy, r * 0.09, accent, 0.5);
+      glowDot(ctx, cx + r * 0.35, cy, r * 0.09, accent, 0.5);
       break;
     case StructureKind.SentinelTurret: {
       // Muzzle lamp at the barrel tip; targeting eye on the dome.

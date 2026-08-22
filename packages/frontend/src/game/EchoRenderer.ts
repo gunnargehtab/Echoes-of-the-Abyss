@@ -35,6 +35,7 @@ import {
   maxAudibleRangeM,
   statsFor,
   structureStatsFor,
+  FACTION_STRUCTURE,
   type Contact,
   type EchoSnapshot,
   type GameOverPayload,
@@ -112,6 +113,10 @@ const STRUCTURE_SHORT: Record<StructureKind, string> = {
   [StructureKind.Refinery]: 'REF',
   [StructureKind.Foundry]: 'FND',
   [StructureKind.SentinelTurret]: 'TUR',
+  [StructureKind.BaffleBarge]: 'BAF',
+  [StructureKind.Cantor]: 'CAN',
+  [StructureKind.SoundingSpire]: 'SPI',
+  [StructureKind.SporeVeil]: 'VEI',
 };
 
 /** One command-bar button: screen-space bounds plus what pressing it does. */
@@ -520,6 +525,15 @@ export class EchoRenderer {
         this.pendingBuild = buildKind;
         return;
       }
+      // B arms the faction's signature structure, when its navy has one —
+      // the kind depends on who is playing, so it cannot live in BUILD_KEYS.
+      if (e.code === 'KeyB') {
+        const signature = FACTION_STRUCTURE[this.faction];
+        if (signature !== undefined) {
+          this.pendingBuild = signature;
+          return;
+        }
+      }
       if (this.selected.size === 0) return;
 
       const produceKind = PRODUCE_KEYS[e.code];
@@ -712,11 +726,10 @@ export class EchoRenderer {
         });
       }
     } else {
-      for (const kind of [
-        StructureKind.Refinery,
-        StructureKind.Foundry,
-        StructureKind.SentinelTurret,
-      ]) {
+      const roster = [StructureKind.Refinery, StructureKind.Foundry, StructureKind.SentinelTurret];
+      const signature = FACTION_STRUCTURE[this.faction];
+      if (signature !== undefined) roster.push(signature);
+      for (const kind of roster) {
         const stats = structureStatsFor(kind);
         buttons.push({
           label: `${STRUCTURE_SHORT[kind]} ${stats.cost}`,
@@ -1730,13 +1743,13 @@ export class EchoRenderer {
     if (this.selected.size === 0) {
       return this.isTouch
         ? 'tap select  ·  drag pan  ·  pinch zoom'
-        : 'LMB select  ·  MMB pan  ·  R/F/T build  ·  wheel zoom';
+        : 'LMB select  ·  MMB pan  ·  R/F/T/B build  ·  wheel zoom';
     }
     const structure = this.structures.find((s) => this.selected.has(s.id));
     if (structure !== undefined) {
       const queue = structure.queue.length > 0 ? `  ·  queue ${structure.queue.length}` : '';
       const name = structureStatsFor(structure.kind).name;
-      return this.isTouch ? `${name}${queue}` : `${name}${queue}  ·  1-5 produce  ·  R/F/T build`;
+      return this.isTouch ? `${name}${queue}` : `${name}${queue}  ·  1-5 produce  ·  R/F/T/B build`;
     }
     const harvester = this.units.find((u) => this.selected.has(u.id) && u.throttle !== undefined);
     if (harvester !== undefined) {

@@ -132,6 +132,12 @@ economy.md and systems-echo.md §2 — construction is loud.
 
 Faction structures
 
+Each navy adds exactly one signature structure to the core four, and each is an argument
+about one input of the detection formula — the four structures cover the four levers:
+the Barge bends PF, the Cantor raises HYD, the Spire grants PR, and the Veil suppresses
+SIG itself. Numbers and effects are transcribed into `packages/shared/src/structures.ts`
+and `STRUCTURE_AURAS` in `packages/shared/src/constants.ts`.
+
 Baffle Barge (Structure — Consortium)
 
 - Role: Noise masking support
@@ -141,6 +147,20 @@ Baffle Barge (Structure — Consortium)
 - Build time: 120s
 - Effect: Projects a 400 m noise-masking bubble that reduces PF for units inside by 0.6× (prototype value)
 - Notes: Expensive support structure that enables loud armies to advance.
+
+Spore Veil (Structure — Commune)
+
+- Role: Living spore cloud / mutual concealment
+- SIG: 20 idle (a breathing bed; the cloud itself is silent)
+- HP: 900
+- Cost: 450
+- Build time: 90s
+- Effect: Maintains a 350 m spore cloud (radius tunable). Everything inside — friend or
+  foe alike — emits at 40% SIG and is hydrophone-blind (effective HYD 5). The symmetry
+  is the design (systems-echo.md §8): it hides them from you and you from them.
+- Notes: The Commune does not weaponise the bloom; it is simply the only navy whose
+  doctrine already works silent and blind. Anyone who follows them into the veil fights
+  on Commune terms.
 
 Cantor (Support — Directorate)
 
@@ -158,7 +178,9 @@ Cantor (Support — Directorate)
 Hadron Spire / Sounding Spire (Structure — Knights)
 
 - Role: Projected depth access / resonance node
-- SIG: 80 when active (directional)
+- SIG: 30 idle hum (tunable) / 80 when active — "active" means the depth grant is
+  load-bearing: some allied unit under the aura is genuinely below its own PR. Deep
+  play under a spire is never quiet; that is the price of rented depth.
 - PR: 2
 - Cost: 750
 - Build time: 150s

@@ -50,6 +50,7 @@ import {
 } from './components.ts';
 import { EchoLayer } from './systems/echoLayer.ts';
 import { acousticsSystem } from './systems/acoustics.ts';
+import { aurasSystem } from './systems/auras.ts';
 import { combatSystem } from './systems/combat.ts';
 import { constructionSystem } from './systems/construction.ts';
 import { harvestSystem } from './systems/harvest.ts';
@@ -272,6 +273,9 @@ export class Match {
   build(slot: number, kind: StructureKind, x: number, y: number): boolean {
     const stats = structureStatsFor(kind);
     if (!stats.constructible) return false;
+    // Faction signature structures are exactly that — another navy's order
+    // for one is rejected server-side no matter what the client asked.
+    if (stats.faction !== undefined && stats.faction !== this.factionOf(slot)) return false;
     if (!Number.isFinite(x) || !Number.isFinite(y)) return false;
     const { widthM, heightM } = this.world.terrain;
     if (
@@ -380,6 +384,9 @@ export class Match {
     movementSystem(this.world);
     constructionSystem(this.world);
     productionSystem(this.world);
+    // Auras before acoustics: the spire's SIG-80 "projecting" state and
+    // every effective HYD/PF value must be this tick's, not last tick's.
+    aurasSystem(this.world);
     acousticsSystem(this.world);
     pressureSystem(this.world, this.destroyedScratch);
     this.reap();
