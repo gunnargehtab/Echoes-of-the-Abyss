@@ -67,6 +67,12 @@ const UNITS = [
     sig: 6,
   },
   {
+    slug: 'abyssal-submersible-pelagia',
+    model: 'abyssal-submersible-pelagia.glb',
+    lengthM: 95,
+    sig: 22,
+  },
+  {
     slug: 'abyssal-submersible-bathyarch',
     model: 'abyssal-submersible-bathyarch.glb',
     lengthM: 95,

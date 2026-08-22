@@ -57,6 +57,9 @@ import cruiserBathEmissive from '../assets/hulls/maps/cruiser-bathyarch-emissive
 import lightScoutDirAlbedo from '../assets/hulls/maps/light-scout-directorate-albedo.png';
 import lightScoutDirHeight from '../assets/hulls/maps/light-scout-directorate-height.png';
 import lightScoutDirEmissive from '../assets/hulls/maps/light-scout-directorate-emissive.png';
+import abyssalPelAlbedo from '../assets/hulls/maps/abyssal-submersible-pelagia-albedo.png';
+import abyssalPelHeight from '../assets/hulls/maps/abyssal-submersible-pelagia-height.png';
+import abyssalPelEmissive from '../assets/hulls/maps/abyssal-submersible-pelagia-emissive.png';
 import abyssalBathAlbedo from '../assets/hulls/maps/abyssal-submersible-bathyarch-albedo.png';
 import abyssalBathHeight from '../assets/hulls/maps/abyssal-submersible-bathyarch-height.png';
 import abyssalBathEmissive from '../assets/hulls/maps/abyssal-submersible-bathyarch-emissive.png';
@@ -135,6 +138,15 @@ const KIND_MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
  * (e.g. corvette-bathyarch).
  */
 const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<UnitKind, MapUrls>>>> = {
+  // Pelagia is the canonical navy for most hulls, so its only variant is the
+  // one kind whose canonical model belongs to another faction.
+  [Faction.Pelagia]: {
+    [UnitKind.AbyssalSubmersible]: {
+      albedo: abyssalPelAlbedo,
+      height: abyssalPelHeight,
+      emissive: abyssalPelEmissive,
+    },
+  },
   [Faction.Bathyarch]: {
     [UnitKind.LightScout]: {
       albedo: lightScoutBathAlbedo,
