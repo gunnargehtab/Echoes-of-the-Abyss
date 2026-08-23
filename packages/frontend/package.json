@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src --ext .ts,.tsx",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "node --import tsx --test \"test/*.test.ts\""
   },
   "dependencies": {
     "@echoes/shared": "*",
@@ -28,6 +29,7 @@
     "@vitejs/plugin-react": "^4.0.0",
     "eslint": "^8.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0"
+    "@typescript-eslint/parser": "^6.0.0",
+    "tsx": "^4.0.0"
   }
 }

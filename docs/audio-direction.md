@@ -188,6 +188,27 @@ AudioContext
 
 **Determinism note:** audio is presentation only. No audio state may feed back into the simulation, and the mix must never be the reason two clients disagree.
 
+### Scaffold status
+
+The engine exists (`packages/frontend/src/audio/`): the bus graph above, the 24-voice
+contact budget with its stealing policy, tick-aligned scheduling, tab-blur suspend, and the
+first-gesture unlock. Measured in the headless client at **0.2 ms** per Echo tick against
+the 1 ms budget. Sonification of contacts and of the player's own loudness sit on top of it
+and are separate work.
+
+Two departures from the diagram above, both deliberate:
+
+**The music sidechain is a measured duck, not a compressor sidechain.** Web Audio's
+`DynamicsCompressorNode` has no sidechain input — there is no way to key one node's
+compression from another node's level. The music bus therefore passes through a gain node
+driven from the contact bus's measured peak, updated on the Echo tick. Same audible result,
+different mechanism, and worth knowing before someone tries to "fix" it into a compressor.
+
+**Voices are synthesised rather than sampled.** The repository ships no audio assets, and
+sonar is unusually well suited to synthesis — tonal returns and filtered noise beds are what
+the material actually is. The buffer path is in place for when banks exist; the Opus/AAC
+format requirement in the table above applies to those banks, not to the prototype.
+
 ---
 
 ## 13. Related
