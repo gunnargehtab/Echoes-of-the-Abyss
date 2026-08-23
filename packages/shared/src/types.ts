@@ -134,6 +134,12 @@ export interface OwnUnit {
   /** Live acoustic signature, 0-100. Drives the HUD meter. */
   sig: number;
   silentRunning: boolean;
+  /**
+   * Depth the unit has been ordered to, when a depth change is in progress.
+   * Absent once it arrives. The player's own order coming back to them, so
+   * the HUD can draw where a hull is headed as well as where it is.
+   */
+  depthOrder?: number;
   /** Harvesters only: nodules aboard and the current throttle setting. */
   cargo?: number;
   throttle?: HarvestThrottle;

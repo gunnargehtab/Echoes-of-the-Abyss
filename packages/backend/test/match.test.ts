@@ -10,11 +10,13 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  DEPTH,
   ECONOMY,
   Faction,
   HarvestThrottle,
   ResolutionTier,
   SIM,
+  SILENT_RUNNING,
   STRUCTURE_AURAS,
   StructureKind,
   UnitKind,
@@ -26,6 +28,7 @@ import { spawnStructure, spawnUnit } from '../src/sim/world.ts';
 import {
   Position,
   Acoustic,
+  DepthOrder,
   Harvester,
   HarvestMode,
   Health,
@@ -438,6 +441,228 @@ describe('depth', () => {
       .units.find((u) => u.id === shallow.id);
     assert.ok(after !== undefined, 'unit should still be alive after 2s');
     assert.ok(after.hp < hpBefore, 'overreaching depth must cost hull');
+  });
+
+  it('descends toward an ordered depth, and reports the order back', () => {
+    const match = new Match();
+    match.addPlayer(0, Faction.Directorate);
+    advance(match, 0.5);
+    // A PR-3 submersible can be sent deep without the crush confusing the read.
+    const sub = spawnUnit(match.world, {
+      kind: UnitKind.AbyssalSubmersible,
+      slot: 0,
+      faction: Faction.Directorate,
+      x: 4000,
+      y: 4000,
+      depth: 600,
+    });
+
+    assert.equal(match.orderDepth(0, sub, 2000), true, 'a rated dive is accepted');
+    advance(match, 1);
+
+    const depth = Position.depth[sub]!;
+    assert.ok(depth > 600, 'the hull should have started down');
+    assert.ok(depth < 2000, 'and should not teleport to the ordered depth');
+
+    const unit = advance(match, 0.2)!
+      .get(0)!
+      .units.find((u) => u.id === sub)!;
+    assert.equal(unit.depthOrder, 2000, 'the player is told where their own hull is headed');
+
+    // Long enough to cover the remaining 1,400 m at the descent rate.
+    advance(match, 2000 / DEPTH.DESCENT_RATE_MPS + 1);
+    assert.equal(Position.depth[sub], 2000, 'an arrived order settles exactly on target');
+    assert.equal(DepthOrder.active[sub], 0, 'and clears itself');
+    const arrived = advance(match, 0.2)!
+      .get(0)!
+      .units.find((u) => u.id === sub)!;
+    assert.equal(arrived.depthOrder, undefined, 'a completed order stops being reported');
+  });
+
+  it('is fast and deafening down, slow and silent up', () => {
+    const match = new Match();
+    match.addPlayer(0, Faction.Directorate);
+    advance(match, 0.5);
+    const sub = spawnUnit(match.world, {
+      kind: UnitKind.AbyssalSubmersible,
+      slot: 0,
+      faction: Faction.Directorate,
+      x: 4000,
+      y: 4000,
+      depth: 600,
+    });
+
+    const idleSig = Acoustic.sig[sub]!;
+    match.orderDepth(0, sub, 2000);
+    advance(match, 1);
+
+    const descentSig = Acoustic.sig[sub]!;
+    const descended = Position.depth[sub]! - 600;
+    assert.ok(descentSig >= DEPTH.DESCENT_SIG, 'a descent is deafening');
+    assert.ok(descentSig > idleSig, 'and louder than the same hull holding station');
+
+    // Now send it back up from where it got to, over the same wall-clock.
+    const apex = Position.depth[sub]!;
+    match.orderDepth(0, sub, 600);
+    advance(match, 1);
+
+    const ascended = apex - Position.depth[sub]!;
+    assert.ok(ascended < descended, 'ascent is slower than descent');
+    assert.ok(
+      Acoustic.sig[sub]! <= idleSig,
+      'and adds nothing to the hull: rising is the quiet direction'
+    );
+  });
+
+  it('cannot be done quietly — a dive breaks silent running and stays loud', () => {
+    const match = new Match();
+    match.addPlayer(0, Faction.Directorate);
+    advance(match, 0.5);
+    const sub = spawnUnit(match.world, {
+      kind: UnitKind.AbyssalSubmersible,
+      slot: 0,
+      faction: Faction.Directorate,
+      x: 4000,
+      y: 4000,
+      depth: 600,
+    });
+
+    match.setSilentRunning(0, sub, true);
+    match.orderDepth(0, sub, 2000);
+    assert.equal(SilentRunning.active[sub], 0, 'ordering a dive breaks silence');
+
+    // Re-asserting silence mid-dive must not buy quiet either.
+    match.setSilentRunning(0, sub, true);
+    advance(match, 0.5);
+    assert.ok(
+      Acoustic.sig[sub]! >= DEPTH.DESCENT_SIG,
+      'a hull running silent while descending is still descending'
+    );
+
+    // Ascending, by contrast, is compatible with running silent.
+    match.orderDepth(0, sub, 600);
+    match.setSilentRunning(0, sub, true);
+    advance(match, 0.5);
+    assert.equal(SilentRunning.active[sub], 1, 'ascent does not break silence');
+    assert.ok(
+      Acoustic.sig[sub]! <= SILENT_RUNNING.SIG_MAX,
+      'and a silent ascent stays inside the silent-running band'
+    );
+  });
+
+  it('accepts a dive below the hull rating, and the pressure system bills for it', () => {
+    const match = new Match();
+    match.addPlayer(0, Faction.Bathyarch);
+    advance(match, 0.5);
+    const corvette = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 4000,
+      y: 4000,
+      depth: 600,
+    });
+
+    // PR-2 covers Mid-Water. The Abyssal band needs PR-3, and the order still
+    // goes through: renting depth you cannot survive is the mechanic.
+    assert.equal(match.orderDepth(0, corvette, 2400), true, 'an unrated dive is still an order');
+    advance(match, 2400 / DEPTH.DESCENT_RATE_MPS + 1);
+    assert.ok(Position.depth[corvette]! > 1800, 'the hull reached the Abyssal band');
+
+    const hpAtDepth = Health.hp[corvette]!;
+    advance(match, 2);
+    assert.ok(Health.hp[corvette]! < hpAtDepth, 'and is now paying crush attrition for it');
+  });
+
+  it('rents survivable depth from a Sounding Spire, and loses it on leaving', () => {
+    const match = new Match();
+    match.addPlayer(0, Faction.Hadron);
+    advance(match, 0.5);
+    const corvette = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Hadron,
+      x: 4000,
+      y: 4000,
+      depth: 600,
+    });
+    spawnStructure(match.world, {
+      kind: StructureKind.SoundingSpire,
+      slot: 0,
+      faction: Faction.Hadron,
+      x: 4000,
+      y: 4000,
+      prebuilt: true,
+    });
+
+    // PR-2 + 1 rented = PR-3: the Abyssal band becomes survivable ground.
+    match.orderDepth(0, corvette, 2400);
+    advance(match, 2400 / DEPTH.DESCENT_RATE_MPS + 1);
+    assert.ok(Position.depth[corvette]! > 1800, 'the hull descended into the Abyssal band');
+
+    const hpInAura = Health.hp[corvette]!;
+    advance(match, 2);
+    assert.equal(Health.hp[corvette], hpInAura, 'inside the spire the depth is rented, not paid');
+
+    // Step outside the 600 m aura at the same depth: the bill resumes.
+    Position.x[corvette] = Position.x[corvette]! + STRUCTURE_AURAS.SOUNDING_SPIRE.RADIUS_M + 400;
+    advance(match, 2);
+    assert.ok(Health.hp[corvette]! < hpInAura, 'outside it, the same depth costs hull');
+  });
+
+  it('refuses a depth outside the map rather than clamping it', () => {
+    const match = new Match();
+    match.addPlayer(0, Faction.Bathyarch);
+    match.addPlayer(1, Faction.Pelagia);
+    advance(match, 0.5);
+    const mine = advance(match, 0.2)!.get(0)!.units[0]!;
+    const theirs = advance(match, 0.2)!.get(1)!.units[0]!;
+    const before = Position.depth[mine.id]!;
+
+    assert.equal(match.orderDepth(0, mine.id, DEPTH.MAX_M + 1), false, 'below the map floor');
+    assert.equal(match.orderDepth(0, mine.id, DEPTH.MIN_M - 1), false, 'above the surface');
+    assert.equal(match.orderDepth(0, mine.id, Number.NaN), false, 'not a number');
+    assert.equal(match.orderDepth(0, theirs.id, 1000), false, "another commander's hull");
+
+    advance(match, 1);
+    assert.equal(Position.depth[mine.id], before, 'a refused order moves nothing');
+  });
+
+  it('never reports a contact depth the listener has not earned', () => {
+    const match = twoPlayerMatch();
+    advance(match, 0.5);
+    const listener = advance(match, 0.2)!.get(0)!.units[0]!;
+
+    // A descending hull is loud (>= 72), so parking one near the listener
+    // resolves it high; walking it away drops the tier back down.
+    const loud = spawnUnit(match.world, {
+      kind: UnitKind.Cruiser,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: listener.x + 300,
+      y: listener.y,
+      depth: 600,
+    });
+    match.orderDepth(1, loud, 2000);
+
+    let sawClassified = 0;
+    let sawBelow = 0;
+    for (let i = 0; i < 12; i++) {
+      const contacts = advance(match, 0.4)!.get(0)!.contacts;
+      for (const contact of contacts) {
+        if (contact.tier >= ResolutionTier.Classification) {
+          sawClassified++;
+          assert.ok(contact.depth !== undefined, 'Tier 3+ has earned a depth read');
+        } else {
+          sawBelow++;
+          assert.equal(contact.depth, undefined, 'below Tier 3, depth is not sent at all');
+        }
+      }
+      Position.x[loud] = Position.x[loud]! + 900;
+    }
+    // Without both halves this test could pass by never resolving anything.
+    assert.ok(sawClassified > 0, 'the walk should have produced a classified contact');
+    assert.ok(sawBelow > 0, 'and a lower-tier one as it withdrew');
   });
 });
 

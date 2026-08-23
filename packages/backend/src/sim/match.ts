@@ -18,6 +18,7 @@ import { addComponent, hasComponent, removeEntity } from 'bitecs';
 import {
   ACTIVE_SONAR,
   CONSTRUCTION,
+  DEPTH,
   Faction,
   HarvestThrottle,
   PRODUCIBLE,
@@ -35,6 +36,7 @@ import {
 import {
   Acoustic,
   ActivePing,
+  DepthOrder,
   Harvester,
   HarvestMode,
   Health,
@@ -53,6 +55,7 @@ import { acousticsSystem } from './systems/acoustics.ts';
 import { aurasSystem } from './systems/auras.ts';
 import { combatSystem } from './systems/combat.ts';
 import { constructionSystem } from './systems/construction.ts';
+import { depthSystem } from './systems/depth.ts';
 import { harvestSystem } from './systems/harvest.ts';
 import { movementSystem } from './systems/movement.ts';
 import { pressureSystem } from './systems/pressure.ts';
@@ -255,6 +258,31 @@ export class Match {
     SilentRunning.active[eid] = active ? 1 : 0;
   }
 
+  /**
+   * Order a depth change. docs/systems-depth.md §2.
+   *
+   * Deliberately absent: any check that the unit is *rated* for the depth it
+   * is being sent to. Renting depth you cannot survive is the mechanic — the
+   * pressure system bills for it — so the order is accepted and the hull pays.
+   *
+   * Returns false when the order is refused, so the caller can tell "rejected"
+   * from "accepted"; the room ignores the result, but the tests do not.
+   */
+  orderDepth(slot: number, eid: number, depthM: number): boolean {
+    if (!this.owns(slot, eid) || !hasComponent(this.world, DepthOrder, eid)) return false;
+    if (!Number.isFinite(depthM)) return false;
+    // Rejected rather than clamped: a client asking for the impossible is told
+    // no, instead of quietly being given something it did not ask for.
+    if (depthM < DEPTH.MIN_M || depthM > DEPTH.MAX_M) return false;
+
+    DepthOrder.targetM[eid] = depthM;
+    DepthOrder.active[eid] = 1;
+    // Diving is not something you do quietly, for the same reason pinging is
+    // not: the descent itself is the noise. Ascending keeps its silence.
+    if (depthM > Position.depth[eid]!) SilentRunning.active[eid] = 0;
+    return true;
+  }
+
   /** The big red button. docs/systems-echo.md §5. */
   activeSonar(slot: number, eid: number): void {
     if (!this.owns(slot, eid) || !hasComponent(this.world, Unit, eid)) return;
@@ -383,6 +411,10 @@ export class Match {
     harvestSystem(this.world);
     combatSystem(this.world, this.destroyedScratch);
     movementSystem(this.world);
+    // The vertical axis, right beside the horizontal one — and necessarily
+    // before acoustics (which prices the descent) and pressure (which bills
+    // for where the hull has just arrived).
+    depthSystem(this.world);
     constructionSystem(this.world);
     productionSystem(this.world);
     // Auras before acoustics: the spire's SIG-80 "projecting" state and
@@ -479,6 +511,9 @@ export class Match {
         sig: Acoustic.sig[eid]!,
         silentRunning: SilentRunning.active[eid] === 1,
       };
+      if (hasComponent(this.world, DepthOrder, eid) && DepthOrder.active[eid] === 1) {
+        unit.depthOrder = DepthOrder.targetM[eid]!;
+      }
       if (hasComponent(this.world, Harvester, eid)) {
         unit.cargo = Harvester.cargo[eid]!;
         unit.throttle = Harvester.throttle[eid] as HarvestThrottle;

@@ -11,6 +11,7 @@ import { defineQuery, hasComponent } from 'bitecs';
 import {
   ACTIVE_SONAR,
   CONSTRUCTION,
+  DEPTH,
   HARVEST_THROTTLE,
   SILENT_RUNNING,
   statsFor,
@@ -22,6 +23,7 @@ import {
 import {
   Acoustic,
   ActivePing,
+  DepthOrder,
   Harvester,
   HarvestMode,
   SilentRunning,
@@ -83,6 +85,16 @@ export function acousticsSystem(world: SimWorld): void {
     } else {
       const speed = Math.hypot(Velocity.x[eid]!, Velocity.y[eid]!);
       sig = speed > MOVING_EPSILON ? stats.sigCruise : stats.sigIdle;
+    }
+
+    // Descent is a floor on loudness rather than a value that replaces the
+    // chain above: blowing ballast is the loudest thing a hull does short of a
+    // ping, and it must never make an already-louder unit quieter
+    // (docs/systems-depth.md §2). Applied outside the chain so it also holds
+    // for a hull that goes silent mid-dive — you cannot dive quietly.
+    // Ascent deliberately contributes nothing; rising is the quiet direction.
+    if (hasComponent(world, DepthOrder, eid) && DepthOrder.descending[eid] === 1) {
+      sig = Math.max(sig, DEPTH.DESCENT_SIG);
     }
 
     sig = applySpikeDecay(world, eid, sig);

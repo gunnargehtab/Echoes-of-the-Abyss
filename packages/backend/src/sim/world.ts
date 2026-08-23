@@ -16,6 +16,7 @@ import {
 } from '@echoes/shared';
 import {
   Acoustic,
+  DepthOrder,
   Harvester,
   HarvestMode,
   Health,
@@ -120,6 +121,14 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
 
   addComponent(world, MoveOrder, eid);
   MoveOrder.active[eid] = 0;
+
+  // Units carry a depth order from birth; structures never get one. The
+  // component is what makes a hull orderable vertically at all, so the
+  // ownership check in Match.orderDepth rejects structures for free.
+  addComponent(world, DepthOrder, eid);
+  DepthOrder.active[eid] = 0;
+  DepthOrder.descending[eid] = 0;
+  DepthOrder.targetM[eid] = Position.depth[eid]!;
 
   addComponent(world, Acoustic, eid);
   Acoustic.sig[eid] = stats.sigIdle;

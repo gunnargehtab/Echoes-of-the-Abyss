@@ -55,6 +55,25 @@ export const Acoustic = defineComponent({
   sigFactor: Types.f32,
 });
 
+/**
+ * Where the unit is trying to get to vertically. docs/systems-depth.md §2.
+ *
+ * Separate from MoveOrder because the two axes are genuinely independent: a
+ * hull can dive while crossing ground, and the vertical leg obeys its own
+ * asymmetric rates rather than the hull's speed stat.
+ */
+export const DepthOrder = defineComponent({
+  /** Ordered depth in metres. Meaningless while `active` is 0. */
+  targetM: Types.f32,
+  active: Types.ui8,
+  /**
+   * 1 on ticks where the hull is actually descending. Written by the depth
+   * system and read by acoustics, so "descent is loud" is a fact about this
+   * tick rather than something two systems each re-derive and disagree on.
+   */
+  descending: Types.ui8,
+});
+
 /** Depth resilience. Below this rating's band, the unit takes crush attrition. */
 export const Pressure = defineComponent({
   rating: Types.ui8,
