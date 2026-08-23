@@ -145,7 +145,23 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     sigCruise: 40,
     sigFiringBurst: 0,
     hyd: 30,
-    pressureRating: 1,
+    /**
+     * SPEC — docs/units.md gives the Harvester "PR: 1-2 (variant)", and this
+     * has to be the 2.
+     *
+     * Nodule fields sit at 600 m, which is Mid-Water, which requires PR-2. At
+     * PR-1 the standard worker took 4 HP/s of unhealable crush the entire time
+     * it stood on the standard working ground, and died after seventy-five
+     * seconds of doing its job — so every economy in every match collapsed at
+     * about the two-minute mark, on both sides, without anything having
+     * happened. docs/economy.md §7 calls Mid-Water "standard refits, standard
+     * risk"; a band that eats the hull that works it is neither.
+     *
+     * PR-2 still leaves the crystal gate exactly where §7 wants it: the
+     * Abyssal band is 1,800 m down and needs PR-3, so a Harvester cannot
+     * follow the crystal, and going deep stays a decision somebody makes.
+     */
+    pressureRating: 2,
     maxHp: 300,
     speed: 40,
     hullLengthM: 75,

@@ -8,7 +8,13 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { LIFECYCLE, MatchPhase, type EchoSnapshot, type Faction } from '@echoes/shared';
+import {
+  LIFECYCLE,
+  MatchPhase,
+  type AiDifficulty,
+  type EchoSnapshot,
+  type Faction,
+} from '@echoes/shared';
 import { EchoRenderer, type ContactLogEntry } from './EchoRenderer.ts';
 import { ContactLog } from './ContactLog.tsx';
 import { Lobby } from './Lobby.tsx';
@@ -36,6 +42,8 @@ export function GameCanvas() {
    */
   const [lobby, setLobby] = useState<LobbyView | null>(null);
   const [mapName, setMapName] = useState('');
+  /** Seats this map has. A map's spawn list is its player count. */
+  const [maxSlots, setMaxSlots] = useState(4);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const rendererRef = useRef<EchoRenderer | null>(null);
   const clientRef = useRef<GameClient | null>(null);
@@ -153,6 +161,7 @@ export function GameCanvas() {
         onMap: (map) => {
           activeRenderer.setMap(map);
           setMapName(map.name);
+          setMaxSlots(map.seats);
         },
         onNodes: (nodes) => activeRenderer.setNodes(nodes),
         onAssigned: ({ slot, faction }) => activeRenderer.setIdentity(slot, faction),
@@ -218,6 +227,18 @@ export function GameCanvas() {
     clientRef.current?.setReady(ready);
   }, []);
 
+  const addAi = useCallback((difficulty: AiDifficulty) => {
+    clientRef.current?.addAi(difficulty);
+  }, []);
+
+  const removeAi = useCallback((id: string) => {
+    clientRef.current?.removeAi(id);
+  }, []);
+
+  const setAiDifficulty = useCallback((id: string, difficulty: AiDifficulty) => {
+    clientRef.current?.setAiDifficulty(id, difficulty);
+  }, []);
+
   const phase = lobby?.phase ?? MatchPhase.Lobby;
   const live = status === 'connected';
 
@@ -230,8 +251,14 @@ export function GameCanvas() {
           mapName={mapName}
           players={lobby.players}
           sessionId={sessionId}
+          // The server knows the real cap — a map's spawn list is its player
+          // count — and refuses a seat past it. This only greys the button.
+          canAddAi={lobby.players.length < maxSlots}
           onChooseFaction={chooseFaction}
           onReady={setReady}
+          onAddAi={addAi}
+          onRemoveAi={removeAi}
+          onAiDifficulty={setAiDifficulty}
         />
       )}
       {live && phase === MatchPhase.Ended && lobby !== null && (

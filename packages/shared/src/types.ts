@@ -291,6 +291,22 @@ export enum MatchPhase {
   Ended = 2,
 }
 
+/**
+ * How well an AI opponent is being commanded.
+ *
+ * **Decision quality, and nothing else.** A harder commander reacts sooner,
+ * masses before it commits, and manages its own loudness; it never hears
+ * anything a weaker one did not. Lives in shared rather than beside the AI
+ * because it is a lobby-level fact — the other commander is entitled to know
+ * what they agreed to play against.
+ */
+export enum AiDifficulty {
+  /** Slow to react, fights with what it has, ignores its own exposure. */
+  Recruit = 0,
+  /** Reacts on the tick, masses before committing, manages loudness. */
+  Veteran = 1,
+}
+
 /** Lobby-level facts a client needs, all of them public by nature. */
 export interface LobbyPlayerView {
   sessionId: string;
@@ -299,6 +315,10 @@ export interface LobbyPlayerView {
   faction: Faction;
   ready: boolean;
   connected: boolean;
+  /** True for a seat driven by the skirmish AI rather than by a person. */
+  isAi: boolean;
+  /** Meaningful only when `isAi`. */
+  difficulty: AiDifficulty;
 }
 
 /** A unit the player owns. Always full detail — it is theirs. */

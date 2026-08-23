@@ -10,6 +10,7 @@ import { Client, type Room } from 'colyseus.js';
 import {
   LIFECYCLE,
   MatchPhase,
+  type AiDifficulty,
   type EchoSnapshot,
   type Faction,
   type GameOverPayload,
@@ -33,6 +34,8 @@ export interface MapPayload {
   idealUse: string;
   widthM: number;
   heightM: number;
+  /** Seats this map has. A map's spawn list is its player count. */
+  seats: number;
   hazards: {
     x: number;
     y: number;
@@ -253,6 +256,8 @@ export class GameClient {
         faction: player.faction,
         ready: player.ready,
         connected: player.connected,
+        isAi: player.isAi,
+        difficulty: player.difficulty,
       });
     });
     players.sort((a, b) => a.slot - b.slot);
@@ -284,6 +289,19 @@ export class GameClient {
   /** Ready up, or call a rematch — the server reads it as whichever applies. */
   setReady(ready: boolean): void {
     this.room?.send('ready', { ready });
+  }
+
+  /** Seat a commander. It takes a slot and a navy exactly as a person does. */
+  addAi(difficulty: AiDifficulty): void {
+    this.room?.send('addAi', { difficulty });
+  }
+
+  removeAi(sessionId: string): void {
+    this.room?.send('removeAi', { sessionId });
+  }
+
+  setAiDifficulty(sessionId: string, difficulty: AiDifficulty): void {
+    this.room?.send('aiDifficulty', { sessionId, difficulty });
   }
 
   // --- Intents -------------------------------------------------------------

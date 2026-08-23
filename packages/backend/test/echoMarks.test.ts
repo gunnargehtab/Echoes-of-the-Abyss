@@ -224,12 +224,36 @@ describe('marks in a match', () => {
   it('lays down an industrial hum as cargo is delivered', () => {
     const match = flatMatch(24);
     match.addPlayer(0, Faction.Bathyarch);
-    // Long enough for the opening harvester to complete a round trip.
-    advance(match, 90);
 
-    const hums = match.world.marks.all.filter((m) => m.kind === EchoMarkKind.IndustrialHum);
-    assert.ok(hums.length > 0, 'a working economy should hum');
-    assert.ok(hums[0]!.intensity > 0, 'and the hum should have intensity');
+    // Watched across the run rather than sampled at the end, and that is not
+    // a stylistic preference — it is a bug this test used to have.
+    //
+    // A mark's life is `decay x intensity`, and one delivery is worth 0.12,
+    // so a single hum lives 45 x 0.12 = 5.4 s while a harvester's round trip
+    // takes twenty-five to forty. The hum therefore blinks on for five
+    // seconds every half-minute and is gone the rest of the time, so a
+    // single end-of-run sample was a coin toss that happened to be landing
+    // heads. Any change that shifted the round trip by a few seconds — even
+    // one that made harvesters *healthier* — flipped it to tails and this
+    // test failed for a reason that had nothing to do with marks.
+    //
+    // Whether a working economy ought to hum *continuously* is a tuning
+    // question about docs/economy.md §5, not one this test should decide by
+    // asserting it. What it can honestly check is the causal claim in its own
+    // name: deliveries produce hums, at the depot, with intensity.
+    let sawHum = false;
+    let peak = 0;
+    for (let second = 0; second < 120; second++) {
+      advance(match, 1);
+      for (const mark of match.world.marks.all) {
+        if (mark.kind !== EchoMarkKind.IndustrialHum) continue;
+        sawHum = true;
+        peak = Math.max(peak, mark.intensity);
+      }
+    }
+
+    assert.ok(sawHum, 'a working economy should hum');
+    assert.ok(peak > 0, 'and the hum should have intensity');
   });
 
   it('collapses the hum when the deliveries stop', () => {

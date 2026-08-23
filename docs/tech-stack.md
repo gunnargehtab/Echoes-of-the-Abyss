@@ -241,3 +241,88 @@ here only by resolving the Echo Layer *again*, per spectator, against the 2 ms b
 product, not a shortcut taken because it was cheaper.
 
 Related: [systems-echo.md](systems-echo.md) · [ui-ux.md](ui-ux.md) · [maps.md](maps.md)
+
+---
+
+## The skirmish AI
+
+A conventional RTS AI reads world state and nobody minds. Here that would not be merely
+unfair — it would be a **different game played in the same room**. The whole design is the
+act of deciding under partial acoustic information, so an opponent that knows where your
+hulls are is not a hard version of this game, it is an easy version of a different one.
+
+So the constraint comes first, and everything else is arranged around it.
+
+### What the commander can see
+
+| Channel | Contents | Why it is legitimate |
+| --- | --- | --- |
+| The briefing, once | Terrain grid, spawn positions, nodule fields, its own slot and navy | Map data. Every human client is sent the same on join; a start position is painted on the ground |
+| The snapshot, per Echo tick | Its own units and structures in full; contacts already resolved at whatever tier it earned | Identical to what a player's client receives — same payload, same opaque contact handles |
+| Stat tables | `statsFor`, `structureStatsFor`, the depth bands | Static game data, shipped in the client bundle and printed in the HUD |
+
+Nothing else. `packages/backend/src/ai/commander.ts` imports from `@echoes/shared` and from
+its own two siblings, and **ESLint fails the build if it imports from `sim/`, `rooms/` or
+`bitecs`** — the rule lives in `.eslintrc.cjs` with the reasoning attached. `ai/seat.ts` is
+the single deliberate crossing point: it applies commands to the `Match` and assembles the
+briefing, and it is short enough to audit in one sitting for exactly that reason.
+
+The behavioural half of the same guarantee is `test/ai.test.ts`, which runs a full match and
+checks **every command against the snapshot that produced it**: unit ids from its own force,
+structure ids from its own base, contact handles from its own contact list, node ids from
+the public survey charts. An AI that read the ECS would have to name something that never
+appeared in any snapshot it was given, and that is the assertion that fails.
+
+It also infers the same wrong things a player does. Anything classified as fauna is skipped
+and anything *unclassified* is not, so the commander will occasionally march an army at a
+Draymaw — which is not a defect to paper over. At Tier 1 there is no marker separating a
+grazer from a cruiser, and that is the point of having fauna at all.
+
+### Difficulty is decision quality
+
+`AiDifficulty` has two levels and neither of them changes what the AI perceives. The whole
+table:
+
+| Knob | Recruit | Veteran |
+| --- | --- | --- |
+| Echo ticks between decisions | 15 (three seconds) | 3 |
+| Manages its throttle when exposed | no | yes |
+| Uses Silent Running | no | yes |
+| Pings to classify | no | yes |
+| Patience before committing | 0.7× doctrine | 1× |
+
+There is no vision multiplier and there must never be one. That is enforced structurally
+rather than by intent: `AiTuning` has no field that could carry one, and a test enumerates
+its keys, so adding a fifth knob called `detectionBonus` fails the suite by name. Measured
+against a passive opponent on the Ventfront Divide, a Veteran resolves the match in **7.9
+minutes** and a Recruit in **15.5** — the same information, twice the time.
+
+### Doctrine is the faction's argument about sound
+
+`ai/doctrine.ts` turns each faction's line from [factions.md](factions.md) into numbers. The
+Consortium's is "stealth is a rounding error", so its commander harvests on Overburden,
+never runs silent, pings freely and pushes at four hulls. The Commune's is "lowest SIG in
+the game", so its commander trickles when exposed, approaches silently, and waits for six.
+The Directorate pings least of anyone, because it already hears a tier further and a
+transmission buys it the least for the same self-reveal.
+
+Every field in that table has to be justifiable by a sentence about being heard or hearing.
+One that is not is a knob, not a doctrine.
+
+### What it does, and what it deliberately does not
+
+It harvests and assigns fields once (the harvest loop cycles by itself, and a commander
+cannot see a harvester's mode — a player cannot either), manages throttle against its own
+exposure, builds a Refinery then a Vent Tap when Thermal Draw tightens then a Turret once
+something has actually been heard near home, produces to a doctrine composition, scouts the
+enemy start with a Light Scout, rallies between home and the enemy, and pushes when it has
+the hulls. It prioritises a Bastion over any other structure and any structure over any
+hull — an ordering only available at Tier 3, so it is information it earned.
+
+It does **not** manoeuvre in depth, and that is a deliberate omission rather than a gap.
+Depth currently has no acoustic consequence: the Echo Layer reads depth only to report it at
+Tier 3. An AI diving for stealth would be modelling a mechanic the simulation does not have.
+When depth becomes acoustic, that decision belongs in `commandArmy`.
+
+Related: [factions.md](factions.md) · [systems-echo.md](systems-echo.md) ·
+[economy.md](economy.md)

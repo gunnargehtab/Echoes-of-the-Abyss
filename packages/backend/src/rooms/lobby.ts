@@ -34,6 +34,8 @@ export interface RosterEntry {
   faction: Faction;
   ready: boolean;
   connected: boolean;
+  /** A seat the skirmish AI is sitting in. Always present, always ready. */
+  isAi: boolean;
 }
 
 /**
@@ -89,10 +91,13 @@ export function canChooseFaction(
  *
  * Disconnected players are not counted: a lobby whose fourth member closed
  * their tab should still be startable by the three who did not. An empty
- * lobby never starts, whatever `minPlayers` is set to.
+ * lobby never starts, whatever `minPlayers` is set to — and neither does one
+ * containing only AI seats, which would otherwise start a match nobody asked
+ * for and nobody is watching the moment the last human left.
  */
 export function everyoneIsReady(roster: readonly RosterEntry[], minPlayers: number): boolean {
   const present = roster.filter((entry) => entry.connected);
   if (present.length === 0 || present.length < minPlayers) return false;
+  if (!present.some((entry) => !entry.isAi)) return false;
   return present.every((entry) => entry.ready);
 }

@@ -1,0 +1,521 @@
+/**
+ * The skirmish AI.
+ *
+ * The first suite is the one that justifies the rest. A conventional RTS AI
+ * cheats by reading world state and nobody minds; here that would not be
+ * merely unfair, it would be a different game played in the same room. So the
+ * central test does not check that the AI is *good* — it checks that every
+ * command it issues names only something it was told about: its own units and
+ * structures, contact handles it earned, nodule fields printed on the map.
+ *
+ * An AI that read the ECS would have to name an entity that never appeared in
+ * any snapshot it was given, and that is exactly what fails here.
+ */
+
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+
+import {
+  AiDifficulty,
+  Faction,
+  HarvestThrottle,
+  ResolutionTier,
+  SIM,
+  StructureKind,
+  UnitKind,
+  type Contact,
+  type EchoSnapshot,
+} from '@echoes/shared';
+import { AiCommander } from '../src/ai/commander.ts';
+import { TUNING } from '../src/ai/doctrine.ts';
+import { AiSeat, briefingFor } from '../src/ai/seat.ts';
+import type { AiBriefing, AiCommand } from '../src/ai/types.ts';
+import { Match } from '../src/sim/match.ts';
+
+const SEED = 0xa1;
+
+/** A match with a commander in slot 1 and a scripted human in slot 0. */
+function skirmish(difficulty = AiDifficulty.Veteran): { match: Match; seat: AiSeat } {
+  const match = new Match(undefined, { fauna: false, seed: SEED });
+  match.addPlayer(0, Faction.Bathyarch);
+  match.addPlayer(1, Faction.Pelagia);
+  const seat = new AiSeat(match, briefingFor(match, 1, Faction.Pelagia, difficulty));
+  return { match, seat };
+}
+
+/** Run the match, feeding the commander its own snapshot on every Echo tick. */
+function play(match: Match, seat: AiSeat, seconds: number): void {
+  const stepMs = 1000 / SIM.TICK_HZ;
+  for (let tick = 0; tick < seconds * SIM.TICK_HZ; tick++) {
+    const snapshots = match.update(stepMs);
+    const own = snapshots?.get(seat.slot);
+    if (own !== undefined) seat.observe(own);
+  }
+}
+
+describe('the AI plays with the information a player has', () => {
+  it('names only what its own snapshot told it about', () => {
+    // The acceptance criterion of the whole feature, as an assertion. Every
+    // command is checked against the snapshot that produced it: unit ids from
+    // its own force, structure ids from its own base, contact handles from
+    // its own contact list, node ids from the public survey charts.
+    const match = new Match(undefined, { fauna: false, seed: SEED });
+    match.addPlayer(0, Faction.Bathyarch);
+    match.addPlayer(1, Faction.Pelagia);
+    const briefing = briefingFor(match, 1, Faction.Pelagia, AiDifficulty.Veteran);
+    const commander = new AiCommander(briefing);
+    const nodeIds = new Set(briefing.nodes.map((n) => n.id));
+
+    const stepMs = 1000 / SIM.TICK_HZ;
+    let commandsSeen = 0;
+
+    for (let tick = 0; tick < 90 * SIM.TICK_HZ; tick++) {
+      const snapshots = match.update(stepMs);
+      const own = snapshots?.get(1);
+      if (own === undefined) continue;
+
+      const unitIds = new Set(own.units.map((u) => u.id));
+      const structureIds = new Set(own.structures.map((s) => s.id));
+      const contactIds = new Set(own.contacts.map((c) => c.id));
+
+      for (const command of commander.observe(own)) {
+        commandsSeen++;
+        assertOnlyKnown(command, { unitIds, structureIds, contactIds, nodeIds, briefing });
+        // Apply it, so the match the commander is reasoning about is the one
+        // its own orders produced. A test that never applied them would only
+        // check the opening position.
+        applyTo(match, 1, command);
+      }
+    }
+
+    assert.ok(commandsSeen > 20, `the commander should be doing something (${commandsSeen})`);
+  });
+
+  it('cannot see a contact it has not resolved', () => {
+    // The negative case, stated directly: hand it a snapshot with an empty
+    // contact list while an enemy fleet is unquestionably out there, and it
+    // must not produce an attack order. There is no handle for it to use.
+    const { match } = skirmish();
+    const commander = new AiCommander(briefingFor(match, 1, Faction.Pelagia, AiDifficulty.Veteran));
+    const stepMs = 1000 / SIM.TICK_HZ;
+
+    let attacks = 0;
+    for (let tick = 0; tick < 60 * SIM.TICK_HZ; tick++) {
+      const snapshots = match.update(stepMs);
+      const own = snapshots?.get(1);
+      if (own === undefined) continue;
+      const deafened: EchoSnapshot = { ...own, contacts: [] };
+      for (const command of commander.observe(deafened)) {
+        if (command.kind === 'attack') attacks++;
+      }
+    }
+    assert.equal(attacks, 0, 'no contacts means no attack orders, whatever is really out there');
+  });
+});
+
+describe('the AI plays the game', () => {
+  it('harvests, and keeps its nodule income running', () => {
+    const { match, seat } = skirmish();
+    play(match, seat, 60);
+    const snapshot = lastSnapshot(match, 1);
+    assert.ok(snapshot.nodules > 0, `it should be earning (${snapshot.nodules})`);
+    assert.ok(seat.commandsIssued > 0, 'and issuing orders to do it');
+  });
+
+  it('builds, produces and expands its force', () => {
+    const { match, seat } = skirmish();
+    play(match, seat, 130);
+    const snapshot = lastSnapshot(match, 1);
+
+    assert.ok(
+      snapshot.structures.length > 2,
+      `it should have built something beyond its opening (${snapshot.structures.length})`
+    );
+    const army = snapshot.units.filter((u) => u.kind !== UnitKind.Harvester);
+    assert.ok(army.length >= 3, `and produced hulls (${army.length})`);
+    const harvesters = snapshot.units.filter((u) => u.kind === UnitKind.Harvester);
+    assert.ok(
+      harvesters.length >= 2,
+      `and more harvesters than it started with (${harvesters.length})`
+    );
+  });
+
+  it('sets a throttle rather than leaving the default', () => {
+    const { match, seat } = skirmish();
+    play(match, seat, 40);
+    const snapshot = lastSnapshot(match, 1);
+    const harvesters = snapshot.units.filter((u) => u.kind === UnitKind.Harvester);
+    assert.ok(harvesters.length > 0);
+    // Pelagia's doctrine rests at Standard: the Commune buys quiet.
+    assert.ok(
+      harvesters.every((h) => h.throttle === HarvestThrottle.Standard),
+      'the Commune should be working at its resting throttle'
+    );
+  });
+
+  it('moves its army off the spawn instead of sitting on the Bastion', () => {
+    const { match, seat } = skirmish();
+    const start = match.map.spawns[1]!;
+    play(match, seat, 120);
+    const snapshot = lastSnapshot(match, 1);
+    const army = snapshot.units.filter((u) => u.kind !== UnitKind.Harvester);
+    assert.ok(army.length > 0, 'it has an army at all');
+    const moved = army.some((u) => Math.hypot(u.x - start.x, u.y - start.y) > 800);
+    assert.ok(moved, 'something should have left the base');
+  });
+});
+
+describe('difficulty is decision quality, not information', () => {
+  it('gives both difficulties the same snapshot and gets different play', () => {
+    const recruit = skirmish(AiDifficulty.Recruit);
+    const veteran = skirmish(AiDifficulty.Veteran);
+    play(recruit.match, recruit.seat, 60);
+    play(veteran.match, veteran.seat, 60);
+
+    // A Veteran re-decides five times as often, so it issues more orders from
+    // the same stream of snapshots. That is the entire difference.
+    assert.ok(
+      veteran.seat.commandsIssued > recruit.seat.commandsIssued,
+      `veteran ${veteran.seat.commandsIssued} vs recruit ${recruit.seat.commandsIssued}`
+    );
+  });
+
+  it('has no tuning field that could widen what the AI perceives', () => {
+    // Structural rather than behavioural, and deliberately: the promise is
+    // that a harder AI never hears more, and the way to keep that promise is
+    // for there to be nowhere to put a vision multiplier. If someone adds one,
+    // this test names it.
+    const allowed = new Set([
+      'cadenceTicks',
+      'managesExposure',
+      'usesSilentRunning',
+      'pingsToClassify',
+      'patience',
+    ]);
+    for (const tuning of Object.values(TUNING)) {
+      for (const key of Object.keys(tuning)) {
+        assert.ok(allowed.has(key), `unexpected difficulty knob "${key}" — does it grant vision?`);
+      }
+    }
+  });
+
+  it('reacts to its own exposure only when it is good enough to', () => {
+    const recruit = new AiCommander(briefing(AiDifficulty.Recruit));
+    const veteran = new AiCommander(briefing(AiDifficulty.Veteran));
+    const exposed = exposedSnapshot();
+
+    // Warm both up so the first observation is not the one being measured,
+    // then feed the identical snapshot to each.
+    const settle = (c: AiCommander): void => {
+      for (let i = 0; i < 30; i++) c.observe(exposed);
+    };
+    settle(recruit);
+    settle(veteran);
+
+    const throttleOf = (c: AiCommander): HarvestThrottle | null => {
+      for (let i = 0; i < 30; i++) {
+        for (const command of c.observe(exposed)) {
+          if (command.kind === 'throttle') return command.throttle;
+        }
+      }
+      return null;
+    };
+
+    assert.equal(
+      throttleOf(veteran),
+      HarvestThrottle.Trickle,
+      'a Veteran Commune quiets down when something has a bearing on it'
+    );
+    assert.equal(
+      throttleOf(recruit),
+      null,
+      'a Recruit already set Standard and never reconsiders it'
+    );
+  });
+});
+
+describe('it pings and hides for reasons', () => {
+  /**
+   * A fresh commander, fed an army already in the water.
+   *
+   * Deliberately not warmed up: a commander decides on its very first
+   * observation, and an earlier version of this helper spent that decision on
+   * a throwaway snapshot — which swallowed the one Silent Running order the
+   * test was looking for and made a working commander look broken.
+   */
+  function fielded(difficulty = AiDifficulty.Veteran): AiCommander {
+    return new AiCommander(briefing(difficulty));
+  }
+
+  function pingsAt(commander: AiCommander, contacts: Contact[]): boolean {
+    for (let i = 0; i < 12; i++) {
+      for (const command of commander.observe(armySnapshot(contacts))) {
+        if (command.kind === 'ping') return true;
+      }
+    }
+    return false;
+  }
+
+  it('transmits to classify a smudge sitting next to its army', () => {
+    // The one situation active sonar buys something a hydrophone will not:
+    // the thing is already known to be there, and the question is what it is.
+    assert.ok(pingsAt(fielded(), [contact({ tier: ResolutionTier.Contact, x: 2600, y: 2000 })]));
+  });
+
+  it('does not transmit into empty water', () => {
+    // Pinging with nothing to resolve pays the whole cost — 2,400 m of
+    // self-reveal — for no information at all.
+    assert.equal(pingsAt(fielded(), []), false);
+  });
+
+  it('does not transmit at something it has already classified', () => {
+    // Tier 3 already names the hull. A ping would buy health and heading at
+    // the price of telling the map exactly where the pinger is.
+    assert.equal(
+      pingsAt(fielded(), [contact({ tier: ResolutionTier.Classification, x: 2600, y: 2000 })]),
+      false
+    );
+  });
+
+  it('never transmits at a Recruit difficulty', () => {
+    assert.equal(
+      pingsAt(fielded(AiDifficulty.Recruit), [
+        contact({ tier: ResolutionTier.Contact, x: 2600, y: 2000 }),
+      ]),
+      false
+    );
+  });
+
+  it('runs silent while approaching and drops it to fight', () => {
+    // Silent Running trades weapons for quiet (docs/systems-echo.md §6), so a
+    // commander that stayed silent into contact would arrive unable to shoot.
+    const commander = fielded();
+    const silentDecisions: boolean[] = [];
+    const observe = (contacts: Contact[]): void => {
+      for (const command of commander.observe(armySnapshot(contacts))) {
+        if (command.kind === 'silent') silentDecisions.push(command.active);
+      }
+    };
+
+    // Nothing heard, army at strength: the Commune approaches quietly.
+    for (let i = 0; i < 10; i++) observe([]);
+    assert.equal(silentDecisions.at(-1), true, 'quiet on the way in');
+
+    // Something within engagement range: weapons back on.
+    for (let i = 0; i < 10; i++) {
+      observe([contact({ tier: ResolutionTier.Classification, x: 2450, y: 2050 })]);
+    }
+    assert.equal(silentDecisions.at(-1), false, 'loud once there is something to shoot');
+  });
+
+  it('turns for home when something is heard near the Bastion', () => {
+    // Losing the Bastion is losing, so a raid outranks a push regardless of
+    // how well the push was going.
+    const commander = fielded();
+    const home = briefing(AiDifficulty.Veteran).spawns[1]!;
+    let recalled = false;
+    for (let i = 0; i < 12; i++) {
+      const raid = contact({ tier: ResolutionTier.Bearing, x: home.x + 400, y: home.y + 400 });
+      for (const command of commander.observe(armySnapshot([raid]))) {
+        if (command.kind === 'move' && Math.hypot(command.x - home.x, command.y - home.y) < 1200) {
+          recalled = true;
+        }
+        if (command.kind === 'attack' && command.contactId === raid.id) recalled = true;
+      }
+    }
+    assert.ok(recalled, 'the army should have come home');
+  });
+});
+
+// --- helpers ---------------------------------------------------------------
+
+function briefing(difficulty: AiDifficulty): AiBriefing {
+  const match = new Match(undefined, { fauna: false, seed: SEED });
+  match.addPlayer(1, Faction.Pelagia);
+  return briefingFor(match, 1, Faction.Pelagia, difficulty);
+}
+
+/** A snapshot of one harvester on Standard, with someone holding a bearing. */
+function exposedSnapshot(): EchoSnapshot {
+  return {
+    tick: 600,
+    units: [
+      {
+        id: 1,
+        kind: UnitKind.Harvester,
+        x: 1000,
+        y: 1000,
+        depth: 300,
+        hp: 100,
+        maxHp: 100,
+        heading: 0,
+        sig: 40,
+        silentRunning: false,
+        pressureBonus: 0,
+        crushDamage: 0,
+        cargo: 0,
+        throttle: HarvestThrottle.Standard,
+      },
+    ],
+    structures: [],
+    contacts: [],
+    peakSig: 40,
+    nodules: 0,
+    crystal: 0,
+    biomass: 0,
+    exposure: { tier: ResolutionTier.Bearing, trackedCount: 1 },
+    selfEvents: [],
+    draw: { capacity: 6, demand: 0, satisfaction: 1 },
+    driftHealth: [],
+    hazards: [],
+    marks: [],
+  };
+}
+
+let contactSeq = 0;
+
+function contact(overrides: Partial<Contact> & { tier: ResolutionTier }): Contact {
+  return { id: ++contactSeq, x: 0, y: 0, tick: 600, ...overrides };
+}
+
+/**
+ * Six armed hulls parked at 2,400 / 2,000, with a Bastion behind them.
+ *
+ * Six because Pelagia's doctrine commits at six: below the threshold the
+ * commander is rallying rather than deciding anything, and every test in this
+ * suite is about what it does once it has an army.
+ */
+function armySnapshot(contacts: Contact[]): EchoSnapshot {
+  const base = exposedSnapshot();
+  const hull = (id: number): EchoSnapshot['units'][number] => ({
+    id,
+    kind: UnitKind.Corvette,
+    x: 2400,
+    y: 2000,
+    depth: 300,
+    hp: 100,
+    maxHp: 100,
+    heading: 0,
+    sig: 30,
+    silentRunning: false,
+    pressureBonus: 0,
+    crushDamage: 0,
+  });
+  return {
+    ...base,
+    exposure: { tier: ResolutionTier.Silent, trackedCount: 0 },
+    units: [10, 11, 12, 13, 14, 15].map(hull),
+    structures: [
+      {
+        id: 20,
+        kind: StructureKind.Bastion,
+        x: 1000,
+        y: 1000,
+        depth: 300,
+        hp: 5000,
+        maxHp: 5000,
+        sig: 35,
+        buildProgress: 1,
+        queue: [],
+        queueProgress: 0,
+      },
+    ],
+    contacts,
+  };
+}
+
+function lastSnapshot(match: Match, slot: number): EchoSnapshot {
+  const stepMs = 1000 / SIM.TICK_HZ;
+  for (let i = 0; i < SIM.TICK_HZ; i++) {
+    const snapshots = match.update(stepMs);
+    const own = snapshots?.get(slot);
+    if (own !== undefined) return own;
+  }
+  throw new Error('no snapshot');
+}
+
+interface Known {
+  unitIds: Set<number>;
+  structureIds: Set<number>;
+  contactIds: Set<number>;
+  nodeIds: Set<number>;
+  briefing: AiBriefing;
+}
+
+function assertOnlyKnown(command: AiCommand, known: Known): void {
+  const owns = (ids: number[]): void => {
+    for (const id of ids) {
+      assert.ok(known.unitIds.has(id), `command ${command.kind} named unit ${id} it was not sent`);
+    }
+  };
+  const inBounds = (x: number, y: number): void => {
+    assert.ok(
+      x >= 0 && x <= known.briefing.widthM && y >= 0 && y <= known.briefing.heightM,
+      `command ${command.kind} pointed off the map at ${x},${y}`
+    );
+  };
+
+  switch (command.kind) {
+    case 'move':
+      owns(command.unitIds);
+      inBounds(command.x, command.y);
+      return;
+    case 'attack':
+      owns(command.unitIds);
+      assert.ok(
+        known.contactIds.has(command.contactId),
+        `attacked contact ${command.contactId}, which was never resolved for this slot`
+      );
+      return;
+    case 'harvest':
+      owns(command.unitIds);
+      assert.ok(known.nodeIds.has(command.nodeId), `harvested unknown field ${command.nodeId}`);
+      return;
+    case 'throttle':
+    case 'silent':
+      owns(command.unitIds);
+      return;
+    case 'ping':
+      owns([command.unitId]);
+      return;
+    case 'build':
+      inBounds(command.x, command.y);
+      return;
+    case 'produce':
+      assert.ok(
+        known.structureIds.has(command.structureId),
+        `produced at structure ${command.structureId}, which is not one of its own`
+      );
+      return;
+  }
+}
+
+/** The same translation AiSeat does, inline so the test drives it explicitly. */
+function applyTo(match: Match, slot: number, command: AiCommand): void {
+  switch (command.kind) {
+    case 'move':
+      for (const id of command.unitIds) match.orderMove(slot, id, command.x, command.y);
+      return;
+    case 'attack':
+      for (const id of command.unitIds) match.orderAttackContact(slot, id, command.contactId);
+      return;
+    case 'harvest':
+      for (const id of command.unitIds) match.orderHarvest(slot, id, command.nodeId);
+      return;
+    case 'throttle':
+      for (const id of command.unitIds) match.setThrottle(slot, id, command.throttle);
+      return;
+    case 'silent':
+      for (const id of command.unitIds) match.setSilentRunning(slot, id, command.active);
+      return;
+    case 'ping':
+      match.activeSonar(slot, command.unitId);
+      return;
+    case 'build':
+      match.build(slot, command.structure, command.x, command.y);
+      return;
+    case 'produce':
+      match.produce(slot, command.structureId, command.unit);
+      return;
+  }
+}

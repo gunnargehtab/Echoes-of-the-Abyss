@@ -12,7 +12,7 @@
  */
 
 import type { Faction, LobbyPlayerView } from '@echoes/shared';
-import { LIFECYCLE } from '@echoes/shared';
+import { AiDifficulty, LIFECYCLE } from '@echoes/shared';
 import { FACTION_DOCTRINE, FACTION_FULL_NAME, FACTION_SUMMARY } from './factions.ts';
 import { FACTION_PALETTE } from './palette.ts';
 
@@ -21,16 +21,37 @@ const FACTIONS: Faction[] = [0, 1, 2, 3] as Faction[];
 
 const hex = (value: number): string => `#${value.toString(16).padStart(6, '0')}`;
 
+/** Difficulty labels, and the one sentence that says what changes. */
+const DIFFICULTY_LABEL: Record<AiDifficulty, string> = {
+  [AiDifficulty.Recruit]: 'Recruit',
+  [AiDifficulty.Veteran]: 'Veteran',
+};
+
 export interface LobbyProps {
   mapName: string;
   players: LobbyPlayerView[];
   /** This client's own seat, or null before the room has assigned one. */
   sessionId: string | null;
+  /** False when every slot on this map is taken. */
+  canAddAi: boolean;
   onChooseFaction(faction: Faction): void;
   onReady(ready: boolean): void;
+  onAddAi(difficulty: AiDifficulty): void;
+  onRemoveAi(sessionId: string): void;
+  onAiDifficulty(sessionId: string, difficulty: AiDifficulty): void;
 }
 
-export function Lobby({ mapName, players, sessionId, onChooseFaction, onReady }: LobbyProps) {
+export function Lobby({
+  mapName,
+  players,
+  sessionId,
+  canAddAi,
+  onChooseFaction,
+  onReady,
+  onAddAi,
+  onRemoveAi,
+  onAiDifficulty,
+}: LobbyProps) {
   const self = players.find((player) => player.sessionId === sessionId) ?? null;
   const takenBy = new Map<Faction, LobbyPlayerView>();
   for (const player of players) takenBy.set(player.faction as Faction, player);
@@ -84,19 +105,53 @@ export function Lobby({ mapName, players, sessionId, onChooseFaction, onReady }:
               key={player.sessionId}
               className={`lobby-roster-row${player.ready ? ' ready' : ''}${
                 player.connected ? '' : ' dropped'
-              }`}
+              }${player.isAi ? ' ai' : ''}`}
             >
               <span className="lobby-roster-name">
                 {player.name}
                 {player.sessionId === sessionId ? ' (you)' : ''}
               </span>
               <span className="lobby-roster-faction">{FACTION_FULL_NAME[player.faction]}</span>
-              <span className="lobby-roster-state">
-                {!player.connected ? 'dropped' : player.ready ? 'ready' : 'choosing'}
-              </span>
+              {player.isAi ? (
+                <span className="lobby-roster-ai">
+                  {/* Difficulty is shown, and shown as a button, because it is
+                      a term of the game both commanders agreed to. */}
+                  <button
+                    type="button"
+                    className="lobby-chip"
+                    onClick={() =>
+                      onAiDifficulty(
+                        player.sessionId,
+                        player.difficulty === AiDifficulty.Veteran
+                          ? AiDifficulty.Recruit
+                          : AiDifficulty.Veteran
+                      )
+                    }
+                  >
+                    {DIFFICULTY_LABEL[player.difficulty]}
+                  </button>
+                  <button
+                    type="button"
+                    className="lobby-chip"
+                    aria-label={`Remove ${player.name}`}
+                    onClick={() => onRemoveAi(player.sessionId)}
+                  >
+                    ×
+                  </button>
+                </span>
+              ) : (
+                <span className="lobby-roster-state">
+                  {!player.connected ? 'dropped' : player.ready ? 'ready' : 'choosing'}
+                </span>
+              )}
             </li>
           ))}
         </ul>
+
+        <p className="lobby-ai-note">
+          A commander hears exactly what you hear: its own resolved contacts, and nothing else.
+          Difficulty changes how well it plays, never how much it knows.
+        </p>
 
         <footer className="lobby-foot">
           <button
@@ -106,6 +161,14 @@ export function Lobby({ mapName, players, sessionId, onChooseFaction, onReady }:
             disabled={self === null}
           >
             {self?.ready === true ? 'Stand down' : 'Ready'}
+          </button>
+          <button
+            type="button"
+            className="lobby-add-ai"
+            onClick={() => onAddAi(AiDifficulty.Veteran)}
+            disabled={!canAddAi}
+          >
+            Add opponent
           </button>
           <p className="lobby-hint">
             {shortHanded

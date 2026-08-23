@@ -16,6 +16,7 @@
 // unbundled ESM loader (the dev server) while working fine once bundled.
 import { Room, type Client } from '@colyseus/core';
 import {
+  AiDifficulty,
   Faction,
   HarvestThrottle,
   LIFECYCLE,
@@ -25,6 +26,7 @@ import {
   UnitKind,
   type EchoSnapshot,
 } from '@echoes/shared';
+import { AiSeat, briefingFor } from '../ai/seat.ts';
 import { Match } from '../sim/match.ts';
 import { DEFAULT_MAP_ID, mapById } from '../sim/maps/index.ts';
 import type { MapDefinition } from '../sim/maps/types.ts';
@@ -98,6 +100,24 @@ interface ReadyMessage {
   ready?: boolean;
 }
 
+interface AddAiMessage {
+  difficulty?: AiDifficulty;
+}
+
+interface AiSeatMessage {
+  sessionId: string;
+  difficulty?: AiDifficulty;
+}
+
+/**
+ * An AI seat's stand-in session id.
+ *
+ * Slot-derived rather than random so the same seat keeps the same id across a
+ * rematch, and prefixed so nothing can mistake it for a socket: no client ever
+ * holds one, so an AI row can never be commanded from the wire.
+ */
+const aiSessionId = (slot: number): string => `ai:${slot}`;
+
 /** Options a room may be created with. `mapId` selects the authored map. */
 export interface MatchRoomOptions {
   mapId?: string;
@@ -109,6 +129,8 @@ export class MatchRoom extends Room<MatchState> {
   private match!: Match;
   private map!: MapDefinition;
   private readonly slotBySession = new Map<string, number>();
+  /** Live AI commanders, by slot. Rebuilt from the roster on every start. */
+  private readonly aiSeats = new Map<number, AiSeat>();
 
   override onCreate(options?: MatchRoomOptions): void {
     // An unknown id falls back to the default rather than failing the room:
@@ -226,6 +248,32 @@ export class MatchRoom extends Room<MatchState> {
       this.startIfEveryoneIsReady();
     });
 
+    this.onMessage('addAi', (client, message: AddAiMessage) => {
+      if (this.state.phase !== MatchPhase.Lobby) return;
+      if (!this.state.players.has(client.sessionId)) return;
+      this.addAiSeat(message?.difficulty);
+    });
+
+    this.onMessage('removeAi', (client, message: AiSeatMessage) => {
+      if (this.state.phase !== MatchPhase.Lobby) return;
+      if (!this.state.players.has(client.sessionId)) return;
+      const seat = this.state.players.get(message?.sessionId ?? '');
+      // Only an AI row: this must never become a kick button for a person.
+      if (seat === undefined || !seat.isAi) return;
+      this.releasePlayer(seat.sessionId);
+      this.startIfEveryoneIsReady();
+    });
+
+    this.onMessage('aiDifficulty', (client, message: AiSeatMessage) => {
+      if (this.state.phase !== MatchPhase.Lobby) return;
+      if (!this.state.players.has(client.sessionId)) return;
+      const seat = this.state.players.get(message?.sessionId ?? '');
+      if (seat === undefined || !seat.isAi) return;
+      const difficulty = Math.trunc(message?.difficulty ?? AiDifficulty.Recruit);
+      if (difficulty !== AiDifficulty.Recruit && difficulty !== AiDifficulty.Veteran) return;
+      seat.difficulty = difficulty;
+    });
+
     // Colyseus drives wall-clock; Match converts it into fixed steps itself.
     this.setSimulationInterval((deltaMs) => this.update(deltaMs), 1000 / SIM.TICK_HZ);
   }
@@ -252,9 +300,36 @@ export class MatchRoom extends Room<MatchState> {
         faction: player.faction as Faction,
         ready: player.ready,
         connected: player.connected,
+        isAi: player.isAi,
       });
     });
     return rows;
+  }
+
+  /**
+   * Seat a commander.
+   *
+   * It takes a slot and a navy exactly as a person does, and is marked ready
+   * on arrival because there is nothing for it to wait for. Everything else
+   * about it — what it can see, what it can order — is identical to a human
+   * seat; see packages/backend/src/ai/types.ts.
+   */
+  private addAiSeat(difficulty?: AiDifficulty): void {
+    const slot = allocateSlot(this.roster(), this.maxClients);
+    if (slot === undefined) return;
+
+    const seat = new PlayerState();
+    seat.sessionId = aiSessionId(slot);
+    seat.slot = slot;
+    seat.faction = defaultFaction(this.roster());
+    seat.isAi = true;
+    seat.connected = true;
+    seat.ready = true;
+    seat.difficulty =
+      difficulty === AiDifficulty.Veteran ? AiDifficulty.Veteran : AiDifficulty.Recruit;
+    seat.name = `${seat.difficulty === AiDifficulty.Veteran ? 'Veteran' : 'Recruit'} ${slot + 1}`;
+    this.state.players.set(seat.sessionId, seat);
+    this.startIfEveryoneIsReady();
   }
 
   override onJoin(client: Client, options?: { name?: string }): void {
@@ -295,6 +370,9 @@ export class MatchRoom extends Room<MatchState> {
       idealUse: this.map.idealUse,
       widthM: this.map.widthM,
       heightM: this.map.heightM,
+      // A map's spawn list is its player count, so this is how many seats the
+      // room has — the number the lobby needs to grey out "add opponent".
+      seats: this.map.spawns.length,
       // Marked so the client can draw an inert site as ground and leave the
       // simulated ones to the live hazard layer, rather than drawing both.
       hazards: this.map.hazards.map((site) => ({
@@ -340,10 +418,27 @@ export class MatchRoom extends Room<MatchState> {
 
   private startMatch(): void {
     const players = [...this.state.players.values()].sort((a, b) => a.slot - b.slot);
+    // A rematch is a new world, so last match's commanders are holding entity
+    // ids that no longer mean anything. They are rebuilt, never reused.
+    this.aiSeats.clear();
     for (const player of players) {
       this.slotBySession.set(player.sessionId, player.slot);
       this.match.addPlayer(player.slot, player.faction as Faction);
       player.ready = false;
+      if (player.isAi) {
+        this.aiSeats.set(
+          player.slot,
+          new AiSeat(
+            this.match,
+            briefingFor(
+              this.match,
+              player.slot,
+              player.faction as Faction,
+              player.difficulty as AiDifficulty
+            )
+          )
+        );
+      }
     }
 
     this.state.phase = MatchPhase.Playing;
@@ -449,6 +544,13 @@ export class MatchRoom extends Room<MatchState> {
 
     this.state.tick = this.match.tick;
 
+    // Commanders observe on the same Echo tick a player's client does, from
+    // the same per-slot snapshot. They get no extra pass and no extra data.
+    for (const [slot, seat] of this.aiSeats) {
+      const snapshot = snapshots.get(slot);
+      if (snapshot !== undefined) seat.observe(snapshot);
+    }
+
     for (const client of this.clients) {
       const slot = this.slotBySession.get(client.sessionId);
       if (slot === undefined) continue;
@@ -459,6 +561,7 @@ export class MatchRoom extends Room<MatchState> {
   }
 
   private endMatch(winnerSlot: number): void {
+    this.aiSeats.clear();
     this.state.phase = MatchPhase.Ended;
     this.state.winnerSlot = winnerSlot;
     for (const player of this.state.players.values()) player.ready = false;
