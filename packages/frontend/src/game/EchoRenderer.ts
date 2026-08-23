@@ -46,6 +46,7 @@ import {
   FACTION_STRUCTURE,
   type Contact,
   HazardPhase,
+  type DrawReport,
   type EchoMarkInfo,
   type HazardState,
   type EchoSnapshot,
@@ -228,11 +229,13 @@ const DIGIT_KEYS: Record<string, number> = {
   Digit9: 9,
 };
 
-/** Build hotkeys: R refinery, F foundry, T turret. */
+/** Build hotkeys: R refinery, F foundry, T turret, G vent tap. */
 const BUILD_KEYS: Record<string, StructureKind> = {
   KeyR: StructureKind.Refinery,
   KeyF: StructureKind.Foundry,
   KeyT: StructureKind.SentinelTurret,
+  // G for generator. V, P and D are already spoken for, and T is the turret.
+  KeyG: StructureKind.VentTap,
 };
 
 const THROTTLE_LABEL: Record<HarvestThrottle, string> = {
@@ -259,6 +262,7 @@ const STRUCTURE_SHORT: Record<StructureKind, string> = {
   [StructureKind.SentinelTurret]: 'TUR',
   [StructureKind.BaffleBarge]: 'BAF',
   [StructureKind.Cantor]: 'CAN',
+  [StructureKind.VentTap]: 'TAP',
   [StructureKind.SoundingSpire]: 'SPI',
   [StructureKind.SporeVeil]: 'VEI',
 };
@@ -402,6 +406,8 @@ export class EchoRenderer {
   private bandLabel!: Text;
   /** "TRACKED" — the continuous half of the exposure report. */
   private exposureLabel!: Text;
+  /** Thermal Draw, as capacity over demand. */
+  private drawLabel!: Text;
   /** The map's name, so a player can tell which ground they are on. */
   private mapLabel!: Text;
   private resourceLabel!: Text;
@@ -449,6 +455,10 @@ export class EchoRenderer {
    * read is not a telegraph.
    */
   private hazards: HazardState[] = [];
+  /**
+   * Thermal Draw. A rate, so it is drawn as one — see `drawHud`.
+   */
+  private drawReport: DrawReport = { capacity: 0, demand: 0, satisfaction: 1 };
   private nodules = 0;
   private crystal = 0;
   private status = 'connecting';
@@ -589,6 +599,8 @@ export class EchoRenderer {
     });
     this.mapLabel.visible = false;
 
+    this.drawLabel = new Text({ text: '', style: { ...mono, fontSize: 13 } });
+
     this.statusLabel = new Text({
       text: '',
       style: { ...mono, fontSize: 12, fill: UI.textDim },
@@ -629,6 +641,7 @@ export class EchoRenderer {
       this.bandLabel,
       this.exposureLabel,
       this.mapLabel,
+      this.drawLabel,
       this.resourceLabel,
       this.crystalLabel,
       this.statusLabel,
@@ -1273,7 +1286,12 @@ export class EchoRenderer {
         });
       }
     } else {
-      const roster = [StructureKind.Refinery, StructureKind.Foundry, StructureKind.SentinelTurret];
+      const roster = [
+        StructureKind.Refinery,
+        StructureKind.Foundry,
+        StructureKind.SentinelTurret,
+        StructureKind.VentTap,
+      ];
       const signature = FACTION_STRUCTURE[this.faction];
       if (signature !== undefined) roster.push(signature);
       for (const kind of roster) {
@@ -1620,6 +1638,7 @@ export class EchoRenderer {
     this.exposure = snapshot.exposure;
     this.marks = snapshot.marks;
     this.hazards = snapshot.hazards;
+    this.drawReport = snapshot.draw;
     this.callbacks.onHazards(snapshot.hazards);
     this.nodules = snapshot.nodules;
     this.crystal = snapshot.crystal;
@@ -2708,10 +2727,32 @@ export class EchoRenderer {
     this.crystalLabel.style.fill = RESOURCE_COLOR[ResourceKind.ResonanceCrystal];
     this.crystalLabel.position.set(this.resourceLabel.x + this.resourceLabel.width + 16, 8);
 
-    const meterX =
-      (showCrystal
-        ? this.crystalLabel.x + this.crystalLabel.width
-        : this.resourceLabel.x + this.resourceLabel.width) + 18;
+    // Thermal Draw, drawn as a *rate* and deliberately not like the stockpiles
+    // beside it. docs/economy.md §2 makes it the one resource that is never
+    // banked, so it reads "6/4" — what you make over what you owe — with a
+    // segmented bar rather than a filling one. A number that could be mistaken
+    // for a balance would be teaching the player the wrong thing about it.
+    const drawX = this.crystalLabel.visible
+      ? this.crystalLabel.x + this.crystalLabel.width + 16
+      : this.resourceLabel.x + this.resourceLabel.width + 16;
+    const deficit = this.drawReport.satisfaction < 1;
+    this.drawLabel.text = `DRAW ${this.drawReport.capacity.toFixed(0)}/${this.drawReport.demand.toFixed(0)}`;
+    this.drawLabel.style.fill = deficit ? UI.threat : UI.accent;
+    this.drawLabel.position.set(drawX, 8);
+
+    // Segments, one per unit of demand, filled up to what capacity covers.
+    // Discrete because draw is discrete: you have four taps or you do not.
+    const segments = Math.max(1, Math.min(12, Math.ceil(this.drawReport.demand)));
+    const covered = Math.round(segments * this.drawReport.satisfaction);
+    const segX = drawX + this.drawLabel.width + 8;
+    for (let i = 0; i < segments; i++) {
+      g.rect(segX + i * 6, 11, 4, 9).fill({
+        color: i < covered ? (deficit ? UI.threat : UI.accent) : UI.glassStroke,
+        alpha: i < covered ? 0.9 : 0.35,
+      });
+    }
+
+    const meterX = segX + segments * 6 + 18;
     const meterWidth = Math.min(120, screenWidth - meterX - 150);
     const meterY = 9;
     const meterHeight = 12;

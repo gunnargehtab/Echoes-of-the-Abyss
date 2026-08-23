@@ -22,12 +22,13 @@ import {
   PROPAGATION_FACTOR,
   ResolutionTier,
   SIM,
+  StructureKind,
   UnitKind,
   statsFor,
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { Terrain } from '../src/sim/terrain.ts';
-import { spawnUnit } from '../src/sim/world.ts';
+import { spawnStructure, spawnUnit } from '../src/sim/world.ts';
 import { Acoustic, Health, Position } from '../src/sim/components.ts';
 import { VENTFRONT_DIVIDE, type MapDefinition } from '../src/sim/maps/index.ts';
 
@@ -171,6 +172,32 @@ describe('geothermal vent eruptions', () => {
       Acoustic.sig[victim]! > idle * 2,
       `caught SIG ${Acoustic.sig[victim]} should dwarf idle ${idle}`
     );
+  });
+
+  it('damages structures too, at a reduced rate', () => {
+    // doc §1: "Buildings take reduced damage (but still vulnerable)". This is
+    // a regression test: the first implementation queried the separation
+    // system's unit grid, which holds *units only* — so structures were never
+    // found, and STRUCTURE_DAMAGE_MULTIPLIER was documented, tested against
+    // nothing, and could never fire.
+    const match = matchWith(hazardMap('geothermal-eruption'));
+    const building = spawnStructure(match.world, {
+      kind: StructureKind.Refinery,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 4000,
+      y: 4000,
+      prebuilt: true,
+    });
+    const full = Health.hp[building]!;
+    runUntilPhase(match, HazardPhase.Active);
+    for (let i = 0; i < SIM.TICK_HZ; i++) match.update(STEP_MS);
+
+    const lost = full - Health.hp[building]!;
+    assert.ok(lost > 0, 'a building in a plume is still vulnerable');
+    // ...and less than a hull in the same place would lose.
+    const hullLoss = HAZARDS.ERUPTION.DAMAGE_PER_S;
+    assert.ok(lost < hullLoss, `structure lost ${lost}, a hull would lose about ${hullLoss}`);
   });
 
   it('hurts organic hulls more, per doc §1', () => {

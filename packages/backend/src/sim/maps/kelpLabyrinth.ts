@@ -74,6 +74,13 @@ export const KELP_LABYRINTH: MapDefinition = {
       biome: Biome.AbyssalTrench,
       note: 'Central pocket — the fast way across, and the loud one',
     },
+    // Thermal vents on the ring. The doc's biome list for this map does not
+    // include them, but Thermal Draw is tapped from veins and a map with none
+    // would put its players permanently on the Bastion's own plant with no way
+    // to scale. Sited on the open ring rather than in the maze, so taking one
+    // is exposed — which is the trade the resource is supposed to create.
+    { x: 3200, y: 900, widthM: 1600, heightM: 500, biome: Biome.ThermalVein },
+    { x: 3200, y: H - 1400, widthM: 1600, heightM: 500, biome: Biome.ThermalVein },
     // "Hidden tunnels connecting corners" — on the diagonals, and clear of
     // the spawns. They sat *on* the corner spawns in the first draft, which
     // would have started two players in the deepest, loudest biome on the map.

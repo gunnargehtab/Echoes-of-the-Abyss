@@ -77,6 +77,7 @@ import { hashWorld } from './stateHash.ts';
 import { Terrain } from './terrain.ts';
 import { VENTFRONT_DIVIDE, terrainFor, type MapDefinition } from './maps/index.ts';
 import { hazardStates, hazardsSystem, isSimulated } from './systems/hazards.ts';
+import { drawFor, thermalSystem } from './systems/thermal.ts';
 import {
   createSimWorld,
   economyFor,
@@ -538,6 +539,17 @@ export class Match {
       return false;
     }
 
+    // Terrain requirement, enforced server-side like every other placement
+    // rule. A vent tap only works on a vent: docs/economy.md §2 puts Thermal
+    // Draw in Thermal Veins, and that constraint is the point — the tap drags
+    // players onto the game's best masking terrain and makes them loud there.
+    if (
+      stats.requiresBiome !== undefined &&
+      this.world.terrain.biomeAt(x, y) !== stats.requiresBiome
+    ) {
+      return false;
+    }
+
     const economy = economyFor(this.world, slot);
     if (economy.nodules < stats.cost) return false;
     // Crystal-locked structures are the faction signatures: the upper tech
@@ -679,6 +691,9 @@ export class Match {
     // Hazards after pressure and before reap: a hull killed by an eruption
     // should die on the tick the eruption killed it, not the next one.
     hazardsSystem(this.world);
+    // After hazards, so a tap destroyed by its own vent stops powering
+    // anything on the same tick it dies.
+    thermalSystem(this.world);
     this.reap();
     // After reap, so a structure destroyed this tick has already left its
     // mark and does not lose a tick of the three minutes it is owed.
@@ -788,6 +803,7 @@ export class Match {
         // Public, unlike everything else here: docs/maps.md requires hazard
         // telegraphing, and a telegraph only one player can read is not one.
         hazards: hazardStates(this.world),
+        draw: { ...drawFor(this.world, slot) },
       });
     }
     return snapshots;

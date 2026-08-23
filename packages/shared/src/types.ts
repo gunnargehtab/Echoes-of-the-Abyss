@@ -94,6 +94,15 @@ export enum StructureKind {
   SoundingSpire = 6,
   /** Pelagia only: living spore cloud — quiets and deafens everything inside. */
   SporeVeil = 7,
+  /**
+   * Vent tap — Thermal Draw capacity, buildable only on Thermal Vein terrain.
+   *
+   * The structure that gives the game's best masking terrain (PF 0.45) a
+   * reason to be contested. It is loud precisely where the ground is quiet:
+   * a tap turns your best hiding place into a beacon, which is the tension
+   * the whole resource exists to create (docs/economy.md §2).
+   */
+  VentTap = 8,
 }
 
 /**
@@ -222,6 +231,32 @@ export interface HazardState {
   progress: number;
   /** Seconds left in the current phase — the number the HUD can show. */
   remainingS: number;
+}
+
+/**
+ * Thermal Draw — a rate, never a stockpile. docs/economy.md §2.
+ *
+ * "Consumed continuously rather than stockpiled." That is the whole point and
+ * it is why this is a report rather than a balance: a stockpile lets a player
+ * save up and spend at a moment of their choosing, while a rate means capacity
+ * is a standing commitment tied to a place on the map — a vent tap you have to
+ * hold, that is loud the entire time it is producing.
+ *
+ * Surplus is simply lost. Anything that banked it would turn this back into a
+ * stockpile with extra steps.
+ */
+export interface DrawReport {
+  /** Units of draw your taps are producing. */
+  capacity: number;
+  /** Units your structures are asking for. */
+  demand: number;
+  /**
+   * 0-1: how much of demand capacity covers.
+   *
+   * Below 1 everything that needs power runs slower. Recoverable by building a
+   * tap or losing a consumer — a deficit is a setback, never a spiral.
+   */
+  satisfaction: number;
 }
 
 /** A unit the player owns. Always full detail — it is theirs. */
@@ -387,6 +422,8 @@ export interface EchoSnapshot {
   exposure: ExposureReport;
   /** Discrete things that happened to your own force on this tick. */
   selfEvents: SelfEvent[];
+  /** Thermal Draw, as a rate. Never accumulates — see DrawReport. */
+  draw: DrawReport;
   /** Every hazard on the map, in whatever phase it is in. Public. */
   hazards: HazardState[];
   /**

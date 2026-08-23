@@ -250,4 +250,6 @@ These are why hazards are asymmetric content rather than weather. §1 and §5 ar
 
 - §5's *"Abyssal creatures panic (reduced control)"* is about **fauna**, which does not exist yet. It is left unimplemented rather than approximated with something the doc does not say.
 
+§1's *"Bathyarch can stabilize vents for energy boosts"* pays in **Thermal Draw capacity** ([economy.md](economy.md) §2) — *energy* is what the doc says, and draw is the power resource. The first implementation paid a nodule trickle only because Thermal Draw did not exist yet.
+
 Related: [maps.md](maps.md) · [environments.md](environments.md) · [systems-echo.md](systems-echo.md)

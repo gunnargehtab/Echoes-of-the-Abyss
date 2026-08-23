@@ -168,6 +168,38 @@ export const ECHO_MARKS = {
 } as const;
 
 /**
+ * Thermal Draw — docs/economy.md §2.
+ *
+ * The only resource in the design that is a **rate**. SPEC fixes the tap's
+ * sustained signature at 55-75; everything else here is TUNABLE.
+ *
+ * The numbers are sized so a player who builds nothing but a Bastion never has
+ * a deficit, and a player running a Foundry and a Refinery needs one tap.
+ * Power should be a thing you plan for, not a tax you pay for existing.
+ */
+export const THERMAL_DRAW = {
+  /** Capacity one working tap provides. */
+  CAPACITY_PER_TAP: 6,
+  /**
+   * Floor on how slowly a starved consumer runs.
+   *
+   * Not zero. A deficit has to be a setback the player can trade their way out
+   * of, and a production line frozen solid is a spiral: you cannot build the
+   * tap that would fix it.
+   */
+  MIN_SATISFACTION: 0.25,
+  /**
+   * Bonus capacity a Bathyarch hull earns by stabilising a vent.
+   *
+   * docs/hazards.md §1: "Bathyarch can stabilize vents for energy boosts."
+   * *Energy* — so the boost is draw capacity, which is the power resource,
+   * rather than the nodule trickle the first implementation paid out before
+   * Thermal Draw existed.
+   */
+  STABILISE_CAPACITY: 4,
+} as const;
+
+/**
  * Environmental hazards — docs/hazards.md §1 and §5.
  *
  * TUNABLE throughout: the doc specifies behaviour and faction interactions,

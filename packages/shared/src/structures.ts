@@ -10,7 +10,8 @@
  * prototype numbers in the same spirit as units.ts.
  */
 
-import { Faction, StructureKind, UnitKind } from './types.js';
+import { THERMAL_DRAW } from './constants.js';
+import { Biome, Faction, StructureKind, UnitKind } from './types.js';
 
 export interface StructureStats {
   kind: StructureKind;
@@ -49,6 +50,23 @@ export interface StructureStats {
   attackCooldownS?: number;
   /** Additive SIG burst while firing, same contract as UnitStats. */
   sigFiringBurst?: number;
+  /**
+   * Thermal Draw this structure produces, per docs/economy.md §2.
+   *
+   * Only the vent tap produces. A rate, not a stockpile: it counts while the
+   * structure is alive and stops the moment it is not.
+   */
+  drawCapacity?: number;
+  /**
+   * Thermal Draw this structure consumes.
+   *
+   * Kept to a small, legible set. The Bastion demands nothing on purpose — a
+   * player whose power fails should be slowed, never bricked, and a base that
+   * needed power to accept deposits would be exactly that.
+   */
+  drawDemand?: number;
+  /** Buildable only on this biome, when set. The vent tap is the only one. */
+  requiresBiome?: Biome;
 }
 
 export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
@@ -66,6 +84,20 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
     radiusM: 220,
     acceptsDeposits: true,
     constructible: false,
+    /**
+     * The settlement's own plant.
+     *
+     * docs/economy.md §2 places Thermal Draw in "Thermal Veins, Shelf and
+     * Mid-Water" — the vein is the concentrated source, not the only one, and
+     * a bastion sits on working ground. Sized to cover the opening kit exactly
+     * (a pre-built Foundry at 4 plus a first Refinery at 2), so a player is
+     * never starved for existing and the *first expansion* is the decision.
+     *
+     * Without this the pre-built Foundry starts every match in deficit, which
+     * would make a vent tap a compulsory opening rather than a choice — and
+     * would be unplayable on a map with no vein terrain at all.
+     */
+    drawCapacity: 6,
   },
   [StructureKind.Refinery]: {
     kind: StructureKind.Refinery,
@@ -81,6 +113,7 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
     radiusM: 140,
     acceptsDeposits: true,
     constructible: true,
+    drawDemand: 2,
   },
   [StructureKind.Foundry]: {
     kind: StructureKind.Foundry,
@@ -96,6 +129,9 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
     radiusM: 160,
     acceptsDeposits: false,
     constructible: true,
+    // The largest consumer, and the one whose starvation the player feels:
+    // production is what a deficit slows down.
+    drawDemand: 4,
   },
   [StructureKind.SentinelTurret]: {
     kind: StructureKind.SentinelTurret,
@@ -188,6 +224,27 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
     acceptsDeposits: false,
     constructible: true,
     faction: Faction.Pelagia,
+  },
+  [StructureKind.VentTap]: {
+    kind: StructureKind.VentTap,
+    name: 'Vent Tap',
+    // SPEC — docs/economy.md §2: "55-75 sustained at the tap". A tap is never
+    // quiet, and that is the deal: the best masking terrain in the game
+    // (PF 0.45) becomes worth holding, and holding it makes you audible.
+    sigIdle: 55,
+    sigActive: 75,
+    // A tap is machinery bolted to a vent, not a listening post.
+    hyd: 20,
+    // Deliberately fragile. A power source planted in the most contested
+    // terrain on the map should be a raid target, not a bunker.
+    maxHp: 900,
+    cost: 250,
+    buildTimeS: 35,
+    radiusM: 90,
+    acceptsDeposits: false,
+    constructible: true,
+    drawCapacity: THERMAL_DRAW.CAPACITY_PER_TAP,
+    requiresBiome: Biome.ThermalVein,
   },
 };
 

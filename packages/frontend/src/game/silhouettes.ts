@@ -356,5 +356,22 @@ export function drawStructureSilhouette(
       }
       break;
     }
+    case StructureKind.VentTap: {
+      // A collar clamped over a vent, with offtake pipes. Reads as machinery
+      // sitting *on* something rather than as a building in its own right,
+      // which is exactly what it is.
+      g.circle(x, y, radiusM).stroke(edge);
+      g.circle(x, y, radiusM * 0.45).fill(body);
+      if (style.detail) {
+        for (let i = 0; i < 4; i++) {
+          const angle = (i / 4) * Math.PI * 2 + Math.PI / 4;
+          g.moveTo(x + Math.cos(angle) * radiusM * 0.45, y + Math.sin(angle) * radiusM * 0.45)
+            .lineTo(x + Math.cos(angle) * radiusM, y + Math.sin(angle) * radiusM)
+            .stroke(edge);
+        }
+        g.circle(x, y, radiusM * 0.18).fill({ color: style.accent, alpha: style.alpha });
+      }
+      break;
+    }
   }
 }
