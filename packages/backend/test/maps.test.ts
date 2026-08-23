@@ -246,7 +246,7 @@ describe('Kelp Labyrinth', () => {
 describe('a match on an authored map', () => {
   it('spawns each player at an authored spawn, not at a computed corner', () => {
     for (const map of MAPS) {
-      const match = new Match(map, { seed: 3 });
+      const match = new Match(map, { fauna: false, seed: 3 });
       const factions = [Faction.Bathyarch, Faction.Pelagia, Faction.Directorate, Faction.Hadron];
       for (let slot = 0; slot < map.spawns.length; slot++) {
         match.addPlayer(slot, factions[slot]!);
@@ -272,7 +272,7 @@ describe('a match on an authored map', () => {
     // bitecs entity ids are process-global, so a scan of `Position` sees every
     // entity every *other* test in this process created, on their own maps —
     // the same trap that broke the state hash and replays before it.
-    const match = new Match(ABYSSAL_RIFT_CORRIDOR, { seed: 9 });
+    const match = new Match(ABYSSAL_RIFT_CORRIDOR, { fauna: false, seed: 9 });
     match.addPlayer(0, Faction.Bathyarch);
     match.addPlayer(1, Faction.Pelagia);
 
@@ -299,7 +299,7 @@ describe('a match on an authored map', () => {
 
   it('gives a harvester a field to work on every map', () => {
     for (const map of MAPS) {
-      const match = new Match(map, { seed: 4 });
+      const match = new Match(map, { fauna: false, seed: 4 });
       match.addPlayer(0, Faction.Bathyarch);
       for (let i = 0; i < SIM.TICK_HZ * 3; i++) match.update(1000 / SIM.TICK_HZ);
       const snapshot = match.update(1000 / SIM.TICK_HZ);

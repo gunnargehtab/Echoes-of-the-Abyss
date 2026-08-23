@@ -45,7 +45,7 @@ function veinMap(): MapDefinition {
 }
 
 function matchOnVeins(seed = 51) {
-  const match = new Match(veinMap(), { seed, terrain: veinTerrain() });
+  const match = new Match(veinMap(), { fauna: false, seed, terrain: veinTerrain() });
   match.addPlayer(0, Faction.Bathyarch);
   return match;
 }
@@ -262,7 +262,7 @@ describe('vents and taps together', () => {
       regions: [],
       hazards: [{ x: 4000, y: 4000, radiusM: 700, kind: 'geothermal-eruption' }],
     };
-    const match = new Match(map, { seed: 58, terrain: veinTerrain() });
+    const match = new Match(map, { fauna: false, seed: 58, terrain: veinTerrain() });
     match.addPlayer(0, Faction.Bathyarch);
     const baseline = advance(match, 1)!.get(0)!.draw.capacity;
 
@@ -294,7 +294,7 @@ describe('vents and taps together', () => {
       regions: [],
       hazards: [{ x: 4000, y: 4000, radiusM: 700, kind: 'geothermal-eruption' }],
     };
-    const match = new Match(map, { seed: 59, terrain: veinTerrain() });
+    const match = new Match(map, { fauna: false, seed: 59, terrain: veinTerrain() });
     match.addPlayer(0, Faction.Bathyarch);
     const tap = spawnStructure(match.world, {
       kind: StructureKind.VentTap,

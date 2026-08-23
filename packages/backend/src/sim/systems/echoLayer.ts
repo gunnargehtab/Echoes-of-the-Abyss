@@ -26,6 +26,7 @@ import {
   tierFromRatio,
   type Contact,
   type EchoMarkInfo,
+  type FaunaSpecies,
   type ExposureReport,
   type Faction,
   type StructureKind,
@@ -34,6 +35,7 @@ import {
 import {
   Acoustic,
   ActivePing,
+  Fauna,
   Health,
   Owner,
   Position,
@@ -639,10 +641,25 @@ export class EchoLayer {
         if (resolved.tier >= ResolutionTier.Classification) {
           if (hasComponent(world, Unit, eid)) {
             contact.kind = Unit.kind[eid] as UnitKind;
+            contact.faction = Owner.faction[eid] as Faction;
           } else if (hasComponent(world, Structure, eid)) {
             contact.structure = Structure.kind[eid] as StructureKind;
+            contact.faction = Owner.faction[eid] as Faction;
+          } else if (hasComponent(world, Fauna, eid)) {
+            // docs/bestiary.md §3: "Classification at Tier 3 is the moment you
+            // find out, and it is a genuine relief or a genuine problem."
+            //
+            // This is the *only* place in the pass that knows fauna exist, and
+            // it sits below the tier where a unit gets named. Everything above
+            // — the broadphase, the pair loop, the tier maths — treats a
+            // creature exactly as it treats a cruiser, which is what makes a
+            // Tier-1 smudge genuinely ambiguous rather than ambiguous-looking.
+            //
+            // No faction: a creature belongs to nobody, and sending a
+            // meaningless slot would let a client infer that this is fauna one
+            // tier earlier than it earned.
+            contact.fauna = Fauna.species[eid] as FaunaSpecies;
           }
-          contact.faction = Owner.faction[eid] as Faction;
           contact.depth = Position.depth[eid]!;
         }
 

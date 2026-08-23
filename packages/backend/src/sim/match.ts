@@ -29,7 +29,11 @@ import {
   UnitKind,
   statsFor,
   structureStatsFor,
+  Biome,
+  DRIFT,
   EchoMarkKind,
+  FaunaSpecies,
+  faunaStatsFor,
   HAZARDS,
   HazardPhase,
   ResolutionTier,
@@ -50,6 +54,7 @@ import {
   Health,
   MoveOrder,
   Owner,
+  Fauna,
   Position,
   Pressure,
   ResourceNode,
@@ -76,6 +81,7 @@ import { ReplayRecorder, type Replay, type ReplayCommand } from './replay.ts';
 import { hashWorld } from './stateHash.ts';
 import { Terrain } from './terrain.ts';
 import { VENTFRONT_DIVIDE, terrainFor, type MapDefinition } from './maps/index.ts';
+import { countFauna, DRIFT_SLOT, faunaSystem } from './systems/fauna.ts';
 import { hazardStates, hazardsSystem, isSimulated } from './systems/hazards.ts';
 import { drawFor, thermalSystem } from './systems/thermal.ts';
 import {
@@ -83,6 +89,7 @@ import {
   economyFor,
   localIdOf,
   spawnResourceNode,
+  spawnFauna,
   spawnStructure,
   spawnUnit,
   type SimWorld,
@@ -95,6 +102,14 @@ export interface MatchOptions {
   seed?: number;
   /** Capture a replay as the match runs. */
   record?: boolean;
+  /**
+   * Populate the Drift. On by default — a normal match has fauna.
+   *
+   * Tests of other subsystems turn it off, for the same reason they pass a
+   * flat terrain: a world full of animals is noise when the thing under test
+   * is a harvester round trip.
+   */
+  fauna?: boolean;
   /**
    * Override the terrain the map would paint.
    *
@@ -153,9 +168,13 @@ export class Match {
     this.map = map;
     this.seed = options.seed ?? randomSeed();
     this.world = createSimWorld(options.terrain ?? terrainFor(map), FIXED_DT, this.seed);
-    this.recorder = options.record === true ? new ReplayRecorder(this.seed, map.id) : null;
+    this.recorder =
+      options.record === true
+        ? new ReplayRecorder(this.seed, map.id, options.fauna !== false)
+        : null;
     this.seedResourceNodes();
     this.seedHazards();
+    if (options.fauna !== false) this.seedFauna();
   }
 
   /**
@@ -253,6 +272,50 @@ export class Match {
         stabilisedS: 0,
       });
     }
+  }
+
+  /**
+   * Populate the Drift.
+   *
+   * Placed deterministically from the seeded RNG, and capped hard at
+   * `DRIFT.MAX_POPULATION`. Fauna are entities in the Echo pass, which owns a
+   * 2 ms budget #90 had to fight for, so the cap is what turns "should be fine"
+   * into a guarantee — the PR reports the measured cost at the cap.
+   *
+   * Species are placed where the doc puts them: Ashgrazers on the vent fields
+   * they feed in, Draymaws in open mid-water where they can shadow industry,
+   * and a single Sounder, because there is only ever one colossus.
+   */
+  private seedFauna(): void {
+    const { widthM, heightM } = this.world.terrain;
+    const rng = this.world.rng.fork('drift');
+    const budget = DRIFT.MAX_POPULATION;
+
+    const place = (species: FaunaSpecies, count: number, wantVein: boolean): void => {
+      for (let i = 0; i < count; i++) {
+        if (countFauna(this.world) >= budget) return;
+        // A handful of tries to find ground the species belongs on; if the map
+        // has none, the herd simply does not appear there.
+        for (let attempt = 0; attempt < 12; attempt++) {
+          const x = rng.range(400, widthM - 400);
+          const y = rng.range(400, heightM - 400);
+          const onVein = this.world.terrain.biomeAt(x, y) === Biome.ThermalVein;
+          if (wantVein !== onVein) continue;
+          if (!this.world.drift.spawnsAllowed(x, y)) continue;
+          // Never on someone's doorstep: see DRIFT.SPAWN_EXCLUSION_M.
+          if (this.map.spawns.some((s) => Math.hypot(s.x - x, s.y - y) < DRIFT.SPAWN_EXCLUSION_M)) {
+            continue;
+          }
+          spawnFauna(this.world, { species, x, y });
+          break;
+        }
+      }
+    };
+
+    // A herd and a couple of packs, then the colossus.
+    place(FaunaSpecies.Ashgrazer, 16, true);
+    place(FaunaSpecies.Draymaw, 15, false);
+    place(FaunaSpecies.Sounder, 1, false);
   }
 
   private addNode(x: number, y: number, amount?: number, kind = ResourceKind.Nodule): void {
@@ -694,11 +757,35 @@ export class Match {
     // After hazards, so a tap destroyed by its own vent stops powering
     // anything on the same tick it dies.
     thermalSystem(this.world);
+    faunaSystem(this.world);
+    this.driftTick();
     this.reap();
     // After reap, so a structure destroyed this tick has already left its
     // mark and does not lose a tick of the three minutes it is owed.
     this.world.marks.tick(FIXED_DT);
     this.world.tick++;
+  }
+
+  /**
+   * Wear the Drift down, and let it recover.
+   *
+   * Noise is summed per region from live emitters, so a player who chooses to
+   * be poor and safe is also choosing not to strip the ground they stand on.
+   * Everything that makes you strong makes you loud, and loud is what kills
+   * the map (docs/bestiary.md §6).
+   */
+  private driftTick(): void {
+    this.world.driftNoise.fill(0);
+    for (let eid = 0; eid < Acoustic.sig.length; eid++) {
+      if (!hasComponent(this.world, Acoustic, eid)) continue;
+      if (!hasComponent(this.world, Owner, eid)) continue;
+      if (Owner.slot[eid] === DRIFT_SLOT) continue;
+      const sig = Acoustic.sig[eid]!;
+      if (sig <= 0) continue;
+      const region = this.world.drift.regionIndex(Position.x[eid]!, Position.y[eid]!);
+      this.world.driftNoise[region] = (this.world.driftNoise[region] ?? 0) + sig;
+    }
+    this.world.drift.tick(FIXED_DT, this.world.driftNoise);
   }
 
   /** One place where deaths are made real, so the win condition sees them all. */
@@ -708,6 +795,17 @@ export class Match {
     const lostBastions: number[] = [];
     for (const eid of this.destroyedScratch) {
       if (!hasComponent(this.world, Owner, eid)) continue;
+
+      // A dead creature is Biomass and a bite out of the region it died in
+      // (docs/bestiary.md §5, §6). Paid to whoever killed it, at the
+      // Directorate's full rate or everyone else's rendering-contract share.
+      if (hasComponent(this.world, Fauna, eid)) {
+        this.payBiomass(eid);
+        this.world.drift.recordKill(Position.x[eid]!, Position.y[eid]!);
+        removeEntity(this.world, eid);
+        continue;
+      }
+
       if (hasComponent(this.world, Structure, eid)) {
         // Residue outlives the thing that made it — three minutes for a
         // structure against ninety seconds for a fight (docs/systems-echo.md
@@ -739,6 +837,44 @@ export class Match {
         this.matchResult = { winnerSlot: standing[0]! };
       }
     }
+  }
+
+  /**
+   * Award Biomass for a kill.
+   *
+   * §5: only the Directorate processes it at scale; everyone else sells
+   * remains through Consortium rendering contracts at a fraction. Yield also
+   * scales with the region's Drift Health, which is the guard-rail against a
+   * Directorate snowball (docs/economy.md §9) — over-harvesting kills the
+   * region that pays them.
+   *
+   * The killer is whoever was shooting it, which the simulation does not
+   * record; attributed instead to the nearest player entity, which is the same
+   * answer in every case that matters and needs no new bookkeeping.
+   */
+  private payBiomass(eid: number): void {
+    const stats = faunaStatsFor(Fauna.species[eid] as FaunaSpecies);
+    const x = Position.x[eid]!;
+    const y = Position.y[eid]!;
+
+    let bestSlot = -1;
+    let bestD2 = Infinity;
+    let bestFaction = Faction.Bathyarch;
+    for (let other = 0; other < Owner.slot.length; other++) {
+      if (!hasComponent(this.world, Owner, other)) continue;
+      if (Owner.slot[other] === DRIFT_SLOT) continue;
+      if (!hasComponent(this.world, Position, other)) continue;
+      const d2 = (Position.x[other]! - x) ** 2 + (Position.y[other]! - y) ** 2;
+      if (d2 >= bestD2) continue;
+      bestD2 = d2;
+      bestSlot = Owner.slot[other]!;
+      bestFaction = Owner.faction[other] as Faction;
+    }
+    if (bestSlot < 0) return;
+
+    const rate = bestFaction === Faction.Directorate ? 1 : DRIFT.RENDERING_CONTRACT_RATE;
+    const yieldScale = this.world.drift.yieldMultiplier(x, y);
+    economyFor(this.world, bestSlot).biomass += stats.biomass * rate * yieldScale;
   }
 
   private resolveEcho(): Map<number, EchoSnapshot> {
@@ -804,6 +940,8 @@ export class Match {
         // telegraphing, and a telegraph only one player can read is not one.
         hazards: hazardStates(this.world),
         draw: { ...drawFor(this.world, slot) },
+        biomass: economyFor(this.world, slot).biomass,
+        driftHealth: this.world.drift.snapshot(),
       });
     }
     return snapshots;

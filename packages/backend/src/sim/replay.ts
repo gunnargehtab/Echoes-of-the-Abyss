@@ -37,6 +37,8 @@ import { eidOfLocalId } from './world.ts';
 
 /** The current replay wire format. Bump when a change breaks old files. */
 /**
+ * 3: replays carry whether the Drift was populated.
+ *
  * 2: replays carry the map they were played on.
  *
  * Version 1 replays cannot be upgraded, because the information is simply not
@@ -46,7 +48,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 2;
+export const REPLAY_FORMAT_VERSION = 3;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =
@@ -83,6 +85,8 @@ export interface Replay {
   seed: number;
   /** Id of the authored map, so playback starts from the same ground. */
   mapId: string;
+  /** Whether the Drift was populated. Part of the setup, like the map. */
+  fauna: boolean;
   players: ReplayPlayer[];
   commands: ReplayCommand[];
   /**
@@ -108,6 +112,7 @@ export class ReplayRecorder {
   private readonly players: ReplayPlayer[] = [];
   private readonly seed: number;
   private readonly mapId: string;
+  private readonly fauna: boolean;
   private readonly checkpointInterval: number;
   /**
    * Negative infinity rather than -1 so the *first* call checkpoints tick 0.
@@ -117,9 +122,10 @@ export class ReplayRecorder {
    */
   private lastCheckpointTick = Number.NEGATIVE_INFINITY;
 
-  constructor(seed: number, mapId: string, checkpointIntervalTicks = 300) {
+  constructor(seed: number, mapId: string, fauna: boolean, checkpointIntervalTicks = 300) {
     this.seed = seed;
     this.mapId = mapId;
+    this.fauna = fauna;
     this.checkpointInterval = checkpointIntervalTicks;
   }
 
@@ -144,6 +150,7 @@ export class ReplayRecorder {
       version: REPLAY_FORMAT_VERSION,
       seed: this.seed,
       mapId: this.mapId,
+      fauna: this.fauna,
       // Sorted so a replay of the same match is byte-identical regardless of
       // the order players happened to connect in.
       players: [...this.players].sort((a, b) => a.slot - b.slot),
@@ -179,10 +186,10 @@ export function playReplay(replay: Replay, terrain?: Terrain): ReplayResult {
     throw new Error(`replay was recorded on unknown map "${replay.mapId}"`);
   }
 
-  const match = new Match(
-    map,
-    terrain === undefined ? { seed: replay.seed } : { seed: replay.seed, terrain }
-  );
+  // `fauna` matters as much as the map: a match with animals in it and the
+  // same match without are different matches.
+  const options = { seed: replay.seed, fauna: replay.fauna };
+  const match = new Match(map, terrain === undefined ? options : { ...options, terrain });
   for (const player of replay.players) match.addPlayer(player.slot, player.faction);
 
   // Commands are keyed by the tick they landed on; a tick may carry several.

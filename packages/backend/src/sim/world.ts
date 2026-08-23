@@ -13,7 +13,10 @@ import {
   HarvestThrottle,
   ResourceKind,
   SelfEventKind,
+  FaunaStage,
+  faunaStatsFor,
   type DrawReport,
+  type FaunaSpecies,
   StructureKind,
   UnitKind,
   statsFor,
@@ -24,6 +27,7 @@ import {
   DepthOrder,
   Harvester,
   HarvestMode,
+  Fauna,
   Health,
   MoveOrder,
   Owner,
@@ -37,6 +41,8 @@ import {
   Velocity,
   Weapon,
 } from './components.ts';
+import { DriftHealth } from './drift.ts';
+import { DRIFT_SLOT } from './systems/fauna.ts';
 import { EchoMarkLayer } from './echoMarks.ts';
 import type { Hazard } from './systems/hazards.ts';
 import { Rng } from './rng.ts';
@@ -49,6 +55,15 @@ export interface PlayerEconomy {
   nodules: number;
   /** Resonance Crystal — the tech gate, mined only in the Abyssal band. */
   crystal: number;
+  /**
+   * Biomass — rendered fauna (docs/economy.md §2, docs/bestiary.md §5).
+   *
+   * The Directorate's channel at full rate, everyone else at a fraction via
+   * Consortium rendering contracts. The elegant part of the faction design:
+   * fauna are drawn to your noise, and the Directorate is paid for what your
+   * noise attracts.
+   */
+  biomass: number;
 }
 
 /** One structure's production line: FIFO of unit kinds, head in progress. */
@@ -139,6 +154,10 @@ export interface SimWorld extends IWorld {
    * one (docs/economy.md §2).
    */
   draw: Map<number, DrawReport>;
+  /** Drift Health per region — docs/bestiary.md §6. The map can be killed. */
+  drift: DriftHealth;
+  /** Scratch: summed SIG per Drift region, rebuilt each tick. */
+  driftNoise: Float32Array;
 }
 
 /** A self-event before it is bucketed by slot. `eid`, not a match-local id. */
@@ -193,6 +212,8 @@ export function createSimWorld(terrain: Terrain, dt: number, seed: number): SimW
   world.marks = new EchoMarkLayer();
   world.hazards = [];
   world.draw = new Map();
+  world.drift = new DriftHealth(terrain.widthM, terrain.heightM);
+  world.driftNoise = new Float32Array(world.drift.regionCount);
   // Burn entity id 0 so components can use eid 0 as a "none" sentinel
   // (Weapon.orderedTargetEid, Harvester.nodeEid). bitecs hands out dense ids
   // from 0, so without this the first spawned entity would be untargetable.
@@ -203,10 +224,70 @@ export function createSimWorld(terrain: Terrain, dt: number, seed: number): SimW
 export function economyFor(world: SimWorld, slot: number): PlayerEconomy {
   let economy = world.economies.get(slot);
   if (economy === undefined) {
-    economy = { nodules: ECONOMY.STARTING_NODULES, crystal: 0 };
+    economy = { nodules: ECONOMY.STARTING_NODULES, crystal: 0, biomass: 0 };
     world.economies.set(slot, economy);
   }
   return economy;
+}
+
+/**
+ * Put a creature on the map.
+ *
+ * Owned by `DRIFT_SLOT`, which is not a player — so the Echo Layer's
+ * "different slot" test admits it for everybody, and every player resolves the
+ * Drift exactly as they resolve each other. That is the whole trick behind
+ * docs/bestiary.md §3: fauna are contacts because nothing marks them out as
+ * anything else.
+ */
+export function spawnFauna(
+  world: SimWorld,
+  options: { species: FaunaSpecies; x: number; y: number; depth?: number }
+): number {
+  const stats = faunaStatsFor(options.species);
+  const eid = addEntity(world);
+  registerEntity(world, eid);
+
+  addComponent(world, Position, eid);
+  Position.x[eid] = options.x;
+  Position.y[eid] = options.y;
+  Position.depth[eid] = options.depth ?? 300;
+
+  addComponent(world, Acoustic, eid);
+  Acoustic.sig[eid] = stats.sigIdle;
+  Acoustic.hyd[eid] = stats.hyd;
+  Acoustic.pfFactor[eid] = 1;
+  Acoustic.sigFactor[eid] = 1;
+
+  addComponent(world, Health, eid);
+  Health.hp[eid] = stats.maxHp;
+  Health.max[eid] = stats.maxHp;
+
+  addComponent(world, Owner, eid);
+  Owner.slot[eid] = DRIFT_SLOT;
+  // Faction is meaningless for a creature; it is never sent, because the
+  // contact assembly only reads it for entities that are Units or Structures.
+  Owner.faction[eid] = 0;
+
+  addComponent(world, Fauna, eid);
+  Fauna.species[eid] = options.species;
+  Fauna.stage[eid] = FaunaStage.Ambient;
+  Fauna.interestS[eid] = 0;
+  Fauna.quietS[eid] = 0;
+  Fauna.interestedS[eid] = 0;
+  Fauna.coolingS[eid] = 0;
+  Fauna.targetEid[eid] = 0;
+  Fauna.heard[eid] = 0;
+  // Staggered, so a whole herd does not listen on the same tick.
+  //
+  // From the *match-local* id, never the entity id. bitecs allocates entity
+  // ids from a counter global to the process, so two matches built in one
+  // process would stagger their herds differently and diverge — the same trap
+  // that bit the state hash and replays.
+  Fauna.senseS[eid] = ((localIdOf(world, eid) ?? 0) % 30) / 60;
+  Fauna.homeX[eid] = options.x;
+  Fauna.homeY[eid] = options.y;
+
+  return eid;
 }
 
 export interface SpawnOptions {

@@ -168,6 +168,80 @@ export const ECHO_MARKS = {
 } as const;
 
 /**
+ * The Drift — docs/bestiary.md §2, §5, §6.
+ *
+ * The aggro ladder's durations are SPEC (§2's table); the population and yield
+ * figures are TUNABLE prototype numbers.
+ */
+export const DRIFT = {
+  /** SPEC — §2. Seconds at or above Interest before a creature turns toward you. */
+  INTEREST_DWELL_S: 4,
+  /** SPEC — §2. An Interested creature commits after this long regardless. */
+  COMMIT_AFTER_INTERESTED_S: 20,
+  /** SPEC — §2. Below Interest for this long and it starts to disengage. */
+  COOL_AFTER_S: 30,
+  /** SPEC — §2. How long disengaging takes. */
+  COOLING_S: 45,
+  /** SPEC — §2. An Interested creature closes to about here. */
+  INTEREST_APPROACH_M: 1200,
+  /** SPEC — §2. "Fresh kill or wreck within 800 m: +15 flat." */
+  WRECK_RADIUS_M: 800,
+  WRECK_AGGRO_BONUS: 15,
+  /** SPEC — §2. "Target is a Directorate unit: ×0.4." They taste worse. */
+  DIRECTORATE_AGGRO_MULTIPLIER: 0.4,
+
+  /**
+   * Hard cap on live fauna.
+   *
+   * Fauna are entities in the Echo pass, which owns a 2 ms budget that #90
+   * already had to fight for. The issue that asked for the Drift was explicit:
+   * do not merge a population that pushes a normal match over budget. The cap
+   * is what makes that a guarantee rather than a hope, and the PR reports the
+   * measured cost at the cap.
+   */
+  MAX_POPULATION: 48,
+  /** How often a creature re-evaluates what it can hear, in seconds. */
+  SENSE_INTERVAL_S: 0.5,
+
+  /**
+   * No creature is seeded within this of a starting position.
+   *
+   * A creature that begins the match on top of a base was not *drawn* to
+   * anything — it was placed there, and the opening becomes a siege nobody
+   * chose. §5's proposition is that fauna answer your noise, which needs them
+   * to start somewhere else and come to you.
+   *
+   * Measured: without this, a Draymaw pack had the Ventfront Divide's opening
+   * Bastion down to 3,051 of 5,000 hull inside a minute of a fresh match.
+   */
+  SPAWN_EXCLUSION_M: 2600,
+
+  /** SPEC — §5. Non-Directorate players sell remains through rendering contracts. */
+  RENDERING_CONTRACT_RATE: 0.3,
+
+  /**
+   * Drift Health — §6. "The map can be killed."
+   *
+   * A coarse region grid rather than per-biome, because health is a thing that
+   * happens to *places*: you can strip one vent field bare while the trench a
+   * kilometre away is untouched.
+   */
+  HEALTH_REGIONS: 4,
+  HEALTH_START: 88,
+  /** Health lost per fauna kill in a region. */
+  HEALTH_PER_KILL: 4,
+  /** Health lost per second per unit of SIG above the threshold, in a region. */
+  HEALTH_SIG_THRESHOLD: 60,
+  HEALTH_SIG_DRAIN_PER_S: 0.02,
+  /** Recovery. §6: "far more slowly than a match lasts." */
+  HEALTH_RECOVERY_PER_S: 0.06,
+  /** §6's table, as thresholds. */
+  HEALTH_STRAINED: 75,
+  HEALTH_FAILING: 50,
+  HEALTH_COLLAPSING: 25,
+} as const;
+
+/**
  * Thermal Draw — docs/economy.md §2.
  *
  * The only resource in the design that is a **rate**. SPEC fixes the tap's

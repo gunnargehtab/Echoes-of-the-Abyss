@@ -5,6 +5,8 @@
  * (packages/backend) and the renderer (packages/frontend).
  */
 
+import type { FaunaSpecies } from './fauna.js';
+
 /** The four powers. See docs/factions.md. */
 export enum Faction {
   Bathyarch = 0,
@@ -136,6 +138,18 @@ export interface Contact {
   kind?: UnitKind;
   structure?: StructureKind;
   faction?: Faction;
+  /**
+   * Fauna species, at Tier 3+ only.
+   *
+   * docs/bestiary.md §3: "At Tier 1 and Tier 2 there is no marker, colour, or
+   * sound that distinguishes fauna from an army. Classification at Tier 3 is
+   * the moment you find out, and it is a genuine relief or a genuine problem."
+   *
+   * So this field appears at exactly the tier that names a *unit*, and never
+   * before. A creature and a cruiser are the same smudge until then, which is
+   * the whole reason fauna are worth having.
+   */
+  fauna?: FaunaSpecies;
   /** Only known at Tier 4 (track). */
   hp?: number;
   maxHp?: number;
@@ -418,12 +432,28 @@ export interface EchoSnapshot {
   nodules: number;
   /** Resonance Crystal stockpile. Everything crystal-locked is bought here. */
   crystal: number;
+  /**
+   * Biomass — rendered fauna (docs/economy.md §2).
+   *
+   * The Directorate's channel at full rate; everyone else sells remains
+   * through Consortium rendering contracts at a fraction.
+   */
+  biomass: number;
   /** What the rest of the map currently knows about you. */
   exposure: ExposureReport;
   /** Discrete things that happened to your own force on this tick. */
   selfEvents: SelfEvent[];
   /** Thermal Draw, as a rate. Never accumulates — see DrawReport. */
   draw: DrawReport;
+  /**
+   * Drift Health per region, 0-100, row-major over a DRIFT.HEALTH_REGIONS grid.
+   *
+   * Public, like terrain and hazards: docs/bestiary.md §6 makes killing a
+   * region a strategic act available to everyone, and an act nobody can see is
+   * not one. A dead region is quieter, more legible and worth less — which
+   * helps exactly one faction.
+   */
+  driftHealth: number[];
   /** Every hazard on the map, in whatever phase it is in. Public. */
   hazards: HazardState[];
   /**

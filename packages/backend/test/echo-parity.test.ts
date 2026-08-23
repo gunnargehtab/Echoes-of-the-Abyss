@@ -89,7 +89,7 @@ function bruteForce(world: SimWorld, slots: number[]): Map<string, ResolutionTie
 }
 
 function scenario(unitsPerSlot: number, seed: number): Match {
-  const match = new Match(undefined, { seed });
+  const match = new Match(undefined, { fauna: false, seed });
   for (let slot = 0; slot < 4; slot++) match.addPlayer(slot, slot as Faction);
   for (let slot = 0; slot < 4; slot++) {
     for (let i = 0; i < unitsPerSlot; i++) {

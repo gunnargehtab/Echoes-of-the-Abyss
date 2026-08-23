@@ -36,7 +36,7 @@ function scout(match: Match, x: number, y: number): number {
 }
 
 function fresh(seed: number): Match {
-  const match = new Match(undefined, { seed });
+  const match = new Match(undefined, { fauna: false, seed });
   match.addPlayer(0, Faction.Bathyarch);
   advance(match, 0.5);
   return match;
@@ -193,7 +193,7 @@ describe('order queue', () => {
   });
 
   it('refuses to queue for a unit another commander owns', () => {
-    const match = new Match(undefined, { seed: 18 });
+    const match = new Match(undefined, { fauna: false, seed: 18 });
     match.addPlayer(0, Faction.Bathyarch);
     match.addPlayer(1, Faction.Pelagia);
     advance(match, 0.5);

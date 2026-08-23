@@ -31,7 +31,7 @@ function nextSnapshot(match: Match) {
 }
 
 function twoSides(gapM: number) {
-  const match = new Match(undefined, { seed: 11 });
+  const match = new Match(undefined, { fauna: false, seed: 11 });
   match.addPlayer(0, Faction.Bathyarch);
   match.addPlayer(1, Faction.Pelagia);
   const mine = spawnUnit(match.world, {
@@ -148,7 +148,7 @@ describe('exposure report', () => {
   });
 
   it('raises a break-silence event when a silent unit opens fire', () => {
-    const match = new Match(undefined, { seed: 5 });
+    const match = new Match(undefined, { fauna: false, seed: 5 });
     match.addPlayer(0, Faction.Bathyarch);
     match.addPlayer(1, Faction.Pelagia);
     const ambusher = spawnUnit(match.world, {

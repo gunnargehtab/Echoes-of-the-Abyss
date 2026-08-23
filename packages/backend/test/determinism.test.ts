@@ -150,8 +150,8 @@ describe('seeded RNG', () => {
 
 describe('determinism', () => {
   it('runs the same match twice from one seed', () => {
-    const first = twoPlayers(new Match(undefined, { seed: SEED }));
-    const second = twoPlayers(new Match(undefined, { seed: SEED }));
+    const first = twoPlayers(new Match(undefined, { fauna: false, seed: SEED }));
+    const second = twoPlayers(new Match(undefined, { fauna: false, seed: SEED }));
 
     runScripted(first, 400);
     runScripted(second, 400);
@@ -166,8 +166,8 @@ describe('determinism', () => {
   it('notices when the two runs are not the same match', () => {
     // The guard on the test above: if hashWorld ignored the thing that
     // changed, the equality assertion would pass for the wrong reason.
-    const first = twoPlayers(new Match(undefined, { seed: SEED }));
-    const second = twoPlayers(new Match(undefined, { seed: SEED }));
+    const first = twoPlayers(new Match(undefined, { fauna: false, seed: SEED }));
+    const second = twoPlayers(new Match(undefined, { fauna: false, seed: SEED }));
 
     runScripted(first, 400);
     runScripted(second, 400);
@@ -184,8 +184,8 @@ describe('determinism', () => {
   });
 
   it('is not sensitive to how wall-clock is chopped into steps', () => {
-    const steady = twoPlayers(new Match(undefined, { seed: SEED }));
-    const jerky = twoPlayers(new Match(undefined, { seed: SEED }));
+    const steady = twoPlayers(new Match(undefined, { fauna: false, seed: SEED }));
+    const jerky = twoPlayers(new Match(undefined, { fauna: false, seed: SEED }));
 
     const stepMs = 1000 / SIM.TICK_HZ;
     for (let i = 0; i < 300; i++) steady.update(stepMs);
@@ -203,7 +203,7 @@ describe('determinism', () => {
 
 describe('replay', () => {
   function record(ticks: number): { replay: Replay; hash: number } {
-    const match = twoPlayers(new Match(undefined, { seed: SEED, record: true }));
+    const match = twoPlayers(new Match(undefined, { fauna: false, seed: SEED, record: true }));
     runScripted(match, ticks);
     return { replay: match.replay()!, hash: hashWorld(match.world) };
   }

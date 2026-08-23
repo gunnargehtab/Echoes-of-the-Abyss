@@ -54,7 +54,7 @@ function advance(match: Match, seconds: number): Map<number, EchoSnapshot> | nul
 }
 
 function twoPlayerMatch(): Match {
-  const match = new Match();
+  const match = new Match(undefined, { fauna: false });
   match.addPlayer(0, Faction.Bathyarch);
   match.addPlayer(1, Faction.Pelagia);
   return match;
@@ -286,7 +286,7 @@ describe('Resonance Crystal', () => {
   }
 
   it('places crystal in the Abyssal band, where it cannot be worked casually', () => {
-    const match = new Match();
+    const match = new Match(undefined, { fauna: false });
     match.addPlayer(0, Faction.Directorate);
     const field = crystalField(match);
     assert.ok(field !== undefined, 'the map seeds a crystal field');
@@ -298,7 +298,7 @@ describe('Resonance Crystal', () => {
   });
 
   it('runs a full crystal cycle: descend, cut, climb, bank', () => {
-    const match = new Match();
+    const match = new Match(undefined, { fauna: false });
     match.addPlayer(0, Faction.Directorate);
     advance(match, 0.5);
     const field = crystalField(match);
@@ -365,7 +365,7 @@ describe('Resonance Crystal', () => {
   });
 
   it('makes the climb home the slow half of the round trip', () => {
-    const match = new Match();
+    const match = new Match(undefined, { fauna: false });
     match.addPlayer(0, Faction.Directorate);
     advance(match, 0.5);
     const field = crystalField(match);
@@ -411,7 +411,7 @@ describe('Resonance Crystal', () => {
   });
 
   it('gates the upper tech tier behind crystal, server-side', () => {
-    const match = new Match();
+    const match = new Match(undefined, { fauna: false });
     match.addPlayer(0, Faction.Hadron);
     match.addPlayer(1, Faction.Pelagia);
     advance(match, 0.5);
@@ -435,7 +435,7 @@ describe('Resonance Crystal', () => {
   });
 
   it('refuses a crystal-locked hull until the crystal is in hand', () => {
-    const match = new Match();
+    const match = new Match(undefined, { fauna: false });
     match.addPlayer(0, Faction.Directorate);
     advance(match, 0.5);
     const foundry = advance(match, 0.4)!
@@ -621,7 +621,7 @@ describe('structures in the Echo Layer', () => {
 
 describe('depth', () => {
   it("inflicts unhealable crush attrition below a unit's pressure rating", () => {
-    const match = new Match();
+    const match = new Match(undefined, { fauna: false });
     match.addPlayer(0, Faction.Bathyarch);
     advance(match, 0.5);
 
@@ -641,7 +641,7 @@ describe('depth', () => {
   });
 
   it('descends toward an ordered depth, and reports the order back', () => {
-    const match = new Match();
+    const match = new Match(undefined, { fauna: false });
     match.addPlayer(0, Faction.Directorate);
     advance(match, 0.5);
     // A PR-3 submersible can be sent deep without the crush confusing the read.
@@ -677,7 +677,7 @@ describe('depth', () => {
   });
 
   it('is fast and deafening down, slow and silent up', () => {
-    const match = new Match();
+    const match = new Match(undefined, { fauna: false });
     match.addPlayer(0, Faction.Directorate);
     advance(match, 0.5);
     const sub = spawnUnit(match.world, {
@@ -712,7 +712,7 @@ describe('depth', () => {
   });
 
   it('cannot be done quietly — a dive breaks silent running and stays loud', () => {
-    const match = new Match();
+    const match = new Match(undefined, { fauna: false });
     match.addPlayer(0, Faction.Directorate);
     advance(match, 0.5);
     const sub = spawnUnit(match.world, {
@@ -748,7 +748,7 @@ describe('depth', () => {
   });
 
   it('accepts a dive below the hull rating, and the pressure system bills for it', () => {
-    const match = new Match();
+    const match = new Match(undefined, { fauna: false });
     match.addPlayer(0, Faction.Bathyarch);
     advance(match, 0.5);
     const corvette = spawnUnit(match.world, {
@@ -772,7 +772,7 @@ describe('depth', () => {
   });
 
   it('rents survivable depth from a Sounding Spire, and loses it on leaving', () => {
-    const match = new Match();
+    const match = new Match(undefined, { fauna: false });
     match.addPlayer(0, Faction.Hadron);
     advance(match, 0.5);
     const corvette = spawnUnit(match.world, {
@@ -808,7 +808,7 @@ describe('depth', () => {
   });
 
   it('refuses a depth outside the map rather than clamping it', () => {
-    const match = new Match();
+    const match = new Match(undefined, { fauna: false });
     match.addPlayer(0, Faction.Bathyarch);
     match.addPlayer(1, Faction.Pelagia);
     advance(match, 0.5);
@@ -826,7 +826,7 @@ describe('depth', () => {
   });
 
   it('reports rented rating and crush damage so the HUD can tell them apart', () => {
-    const match = new Match();
+    const match = new Match(undefined, { fauna: false });
     match.addPlayer(0, Faction.Hadron);
     advance(match, 0.5);
     const corvette = spawnUnit(match.world, {
@@ -948,7 +948,7 @@ describe('faction structure auras', () => {
   });
 
   it('a Cantor dome lends allied ears the bonus, capped', () => {
-    const match = new Match();
+    const match = new Match(undefined, { fauna: false });
     match.addPlayer(0, Faction.Directorate);
     match.addPlayer(1, Faction.Pelagia);
     advance(match, 0.5);
@@ -980,7 +980,7 @@ describe('faction structure auras', () => {
   });
 
   it('a Sounding Spire rents depth, and sings while doing it', () => {
-    const match = new Match();
+    const match = new Match(undefined, { fauna: false });
     match.addPlayer(0, Faction.Hadron);
     match.addPlayer(1, Faction.Pelagia);
     advance(match, 0.5);
@@ -1042,7 +1042,7 @@ describe('faction structure auras', () => {
 
 describe('Spore Veil', () => {
   it('quiets and deafens everything inside — friend and foe alike', () => {
-    const match = new Match();
+    const match = new Match(undefined, { fauna: false });
     match.addPlayer(0, Faction.Pelagia);
     match.addPlayer(1, Faction.Bathyarch);
     advance(match, 0.5);

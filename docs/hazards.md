@@ -248,7 +248,7 @@ The implemented pair was chosen to exercise opposite ends of the framework:
 
 These are why hazards are asymmetric content rather than weather. §1 and §5 are implemented in full, with one exception:
 
-- §5's *"Abyssal creatures panic (reduced control)"* is about **fauna**, which does not exist yet. It is left unimplemented rather than approximated with something the doc does not say.
+- §5's *"Abyssal creatures panic (reduced control)"* is about **fauna**, which now exist ([bestiary.md](bestiary.md)) but have no player-controlled variety for a storm to disrupt. It remains unimplemented rather than approximated: what the doc describes is the Directorate losing control of animals they command, and nothing commands animals yet.
 
 §1's *"Bathyarch can stabilize vents for energy boosts"* pays in **Thermal Draw capacity** ([economy.md](economy.md) §2) — *energy* is what the doc says, and draw is the power resource. The first implementation paid a nodule trickle only because Thermal Draw did not exist yet.
 
