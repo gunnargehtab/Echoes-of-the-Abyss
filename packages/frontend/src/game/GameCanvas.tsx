@@ -40,6 +40,7 @@ export function GameCanvas() {
         onThrottle: (unitIds, throttle) => client?.setThrottle(unitIds, throttle),
         onBuild: (kind, x, y) => client?.build(kind, x, y),
         onProduce: (structureId, kind) => client?.produce(structureId, kind),
+        onDepthOrder: (unitIds, depth) => client?.setDepth(unitIds, depth),
       });
 
       await activeRenderer.init(host);

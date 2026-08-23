@@ -43,6 +43,7 @@ import {
   MoveOrder,
   Owner,
   Position,
+  Pressure,
   ResourceNode,
   SilentRunning,
   Structure,
@@ -510,6 +511,8 @@ export class Match {
         heading: 0,
         sig: Acoustic.sig[eid]!,
         silentRunning: SilentRunning.active[eid] === 1,
+        pressureBonus: Pressure.bonus[eid]!,
+        crushDamage: Pressure.crushTaken[eid]!,
       };
       if (hasComponent(this.world, DepthOrder, eid) && DepthOrder.active[eid] === 1) {
         unit.depthOrder = DepthOrder.targetM[eid]!;

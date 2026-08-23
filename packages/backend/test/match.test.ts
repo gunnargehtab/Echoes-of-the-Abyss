@@ -628,6 +628,60 @@ describe('depth', () => {
     assert.equal(Position.depth[mine.id], before, 'a refused order moves nothing');
   });
 
+  it('reports rented rating and crush damage so the HUD can tell them apart', () => {
+    const match = new Match();
+    match.addPlayer(0, Faction.Hadron);
+    advance(match, 0.5);
+    const corvette = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Hadron,
+      x: 4000,
+      y: 4000,
+      depth: 2400,
+    });
+
+    let unit = advance(match, 0.4)!
+      .get(0)!
+      .units.find((u) => u.id === corvette)!;
+    assert.equal(unit.pressureBonus, 0, 'an unaided hull rents nothing');
+
+    // PR-2 in the Abyssal band: crush accrues, and is reported separately from
+    // the hull total so the bar can draw it as unrecoverable.
+    advance(match, 2);
+    unit = advance(match, 0.4)!
+      .get(0)!
+      .units.find((u) => u.id === corvette)!;
+    assert.ok(unit.crushDamage > 0, 'the deep took something');
+    assert.ok(
+      Math.abs(unit.crushDamage - (unit.maxHp - unit.hp)) < 1,
+      'with no other damage source, every point lost is crush'
+    );
+
+    // A spire overhead rents the missing band; the bonus shows as rented.
+    spawnStructure(match.world, {
+      kind: StructureKind.SoundingSpire,
+      slot: 0,
+      faction: Faction.Hadron,
+      x: 4000,
+      y: 4000,
+      prebuilt: true,
+    });
+    advance(match, 0.4);
+    unit = advance(match, 0.4)!
+      .get(0)!
+      .units.find((u) => u.id === corvette)!;
+    assert.equal(unit.pressureBonus, 1, 'the spire lends exactly one band');
+
+    // And the crush already taken does not heal when the rating arrives.
+    const scarred = unit.crushDamage;
+    advance(match, 2);
+    unit = advance(match, 0.4)!
+      .get(0)!
+      .units.find((u) => u.id === corvette)!;
+    assert.equal(unit.crushDamage, scarred, 'rented depth stops the bleeding, it does not undo it');
+  });
+
   it('never reports a contact depth the listener has not earned', () => {
     const match = twoPlayerMatch();
     advance(match, 0.5);

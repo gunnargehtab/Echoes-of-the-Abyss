@@ -140,6 +140,18 @@ export interface OwnUnit {
    * the HUD can draw where a hull is headed as well as where it is.
    */
   depthOrder?: number;
+  /**
+   * Pressure Rating currently granted by an aura, on top of the hull's own
+   * (docs/systems-depth.md §3, the Sounding Spire). Sent so the HUD can show
+   * a rented rating as rented — it vanishes the moment the unit leaves.
+   */
+  pressureBonus: number;
+  /**
+   * Hull permanently lost to crush attrition, in HP. Distinct from ordinary
+   * damage because no repair may ever refill it (docs/ui-ux.md §8), so the
+   * health bar has to draw it differently.
+   */
+  crushDamage: number;
   /** Harvesters only: nodules aboard and the current throttle setting. */
   cargo?: number;
   throttle?: HarvestThrottle;
