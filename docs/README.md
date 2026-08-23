@@ -52,6 +52,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | Doc | What it covers |
 | --- | --- |
 | **[tech-stack.md](tech-stack.md)** | Stack, rationale, Echo Layer performance budget |
+| **[ROADMAP.md](ROADMAP.md)** | Where the build stands against the bible, and what is planned next |
 
 ---
 
