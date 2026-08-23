@@ -57,6 +57,7 @@ import {
   UI,
   sigColor,
 } from './palette.ts';
+import type { ContactAudioEntry, ContactAudioFrame } from '../audio/contactMixer.ts';
 import { drawStructureSilhouette, drawUnitSilhouette, HULL_LENGTH_M } from './silhouettes.ts';
 import { destroyHullTextures, hullSpriteSizeM, hullTexture, loadHullArt } from './hullTextures.ts';
 import {
@@ -85,6 +86,15 @@ export interface RendererCallbacks {
   onDepthOrder(unitIds: number[], depth: number): void;
   /** A new detection event, for the contact log. */
   onContactEvent(entry: ContactLogEntry): void;
+  /**
+   * The contact picture, reduced to what the mix may know, once per Echo tick.
+   *
+   * Emitted from here rather than assembled in the audio layer because this is
+   * where the tracked-contact map, the terrain and the camera already live —
+   * and because withholding Tier-1 bearing has to happen at the source, not at
+   * the consumer.
+   */
+  onContactAudio(frame: ContactAudioFrame): void;
 }
 
 /**
@@ -107,6 +117,17 @@ export interface ContactLogEntry {
   focusX?: number;
   focusY?: number;
 }
+
+/**
+ * How long the Tier-4 acquisition brackets stay on screen, milliseconds.
+ *
+ * The visual half of §3's lock tone. docs/audio-direction.md §11 makes
+ * audio-only information a bug, and the lock tone is the one genuinely *new*
+ * audible event this layer introduces — every other cue restates something
+ * already drawn. So it gets a mark of its own, on the same one-shot rule: it
+ * fires once per acquisition and never sustains.
+ */
+const LOCK_FLASH_MS = 700;
 
 const SELECT_RADIUS_M = 140;
 /** How close a right-click must land to a contact or node to mean it. */
@@ -333,6 +354,8 @@ export class EchoRenderer {
     typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
   /** The camera opens on the player's own base exactly once. */
   private cameraCentered = false;
+  /** Contact handle to the moment it reached Tier 4, for the lock brackets. */
+  private readonly lockFlash = new Map<number, number>();
   /**
    * Last known heading per own unit, derived client-side from position deltas
    * between snapshots — the server does not send headings for own units, and
@@ -1482,8 +1505,19 @@ export class EchoRenderer {
       if (previous === undefined || previous.contact.tier !== contact.tier) {
         this.emitContactEvent(contact, snapshot.tick, previous === undefined);
       }
+      // Acquisition, not merely "is a track": a contact that flickers at the
+      // Tier-4 boundary must not strobe. Same one-shot rule the lock tone
+      // follows, so the two cues stay in step.
+      if (
+        contact.tier >= ResolutionTier.Track &&
+        (previous === undefined || previous.contact.tier < ResolutionTier.Track)
+      ) {
+        this.lockFlash.set(contact.id, now);
+      }
       this.tracked.set(contact.id, { contact, lastSeenMs: now });
     }
+
+    this.callbacks.onContactAudio(this.contactAudioFrame(snapshot.tick, now));
 
     // Drop selections and motion history for entities that no longer exist.
     const alive = new Set<number>();
@@ -1498,6 +1532,59 @@ export class EchoRenderer {
         this.headings.delete(id);
       }
     }
+  }
+
+  /**
+   * The contact picture as the mix is allowed to hear it.
+   *
+   * Two things this method exists to guarantee, both from
+   * docs/audio-direction.md §3:
+   *
+   * - **Freshness is shared with the ghost markers.** It is computed here from
+   *   the same `tracked` map and the same `PERSISTENCE.GHOST_MARKER_DECAY_S`
+   *   that `drawContacts` fades on, so a voice and its marker cannot end up
+   *   telling the player different things about how stale a contact is.
+   * - **Tier 1 carries no bearing and no range.** Not blurred ones, not
+   *   placeholder ones: the fields are absent. A Tier-1 contact's reported
+   *   position *is* the listener's own, so there is genuinely nothing to
+   *   report, and a consumer downstream cannot misuse a field that is not
+   *   there.
+   *
+   * Bearing is measured from the camera centre, because the Tier-4 row of §3's
+   * table asks for spatialisation "matched to the rendered position" — the ear
+   * is where the player is looking.
+   */
+  private contactAudioFrame(tick: number, now: number): ContactAudioFrame {
+    const decayMs = PERSISTENCE.GHOST_MARKER_DECAY_S * 1000;
+    const ear = {
+      x: (this.app.screen.width / 2 - this.world.x) / this.world.scale.x,
+      y: (this.app.screen.height / 2 - this.world.y) / this.world.scale.y,
+    };
+
+    const entries: ContactAudioEntry[] = [];
+    for (const entry of this.tracked.values()) {
+      const contact = entry.contact;
+      if (contact.tier === ResolutionTier.Silent) continue;
+      const age = now - entry.lastSeenMs;
+      if (age > decayMs) continue;
+
+      const audio: ContactAudioEntry = {
+        id: contact.id,
+        tier: contact.tier,
+        biome: this.biomeAt(contact.x, contact.y),
+        freshness: 1 - age / decayMs,
+      };
+      if (contact.faction !== undefined) audio.faction = contact.faction;
+      if (contact.tier >= ResolutionTier.Bearing) {
+        const dx = contact.x - ear.x;
+        const dy = contact.y - ear.y;
+        audio.bearing = Math.atan2(dy, dx);
+        audio.rangeM = Math.hypot(dx, dy);
+      }
+      entries.push(audio);
+    }
+
+    return { tick, entries };
   }
 
   /**
@@ -1809,13 +1896,58 @@ export class EchoRenderer {
     }
   }
 
-  private propagationAt(x: number, y: number): number {
+  /**
+   * The visual half of the Tier-4 lock tone (docs/audio-direction.md §11).
+   *
+   * Four brackets that close onto the contact over 700 ms and stop. Closing
+   * rather than pulsing, because the thing being reported is a *transition* —
+   * "this became exact" — and a pulse would read as a standing state. It
+   * decays to nothing on its own, so a player who looks away and back sees a
+   * track, not a permanent decoration still claiming to be news.
+   */
+  private drawLockFlash(
+    g: Graphics,
+    id: number,
+    contact: Contact,
+    now: number,
+    inverseScale: number
+  ): void {
+    const at = this.lockFlash.get(id);
+    if (at === undefined) return;
+    const t = (now - at) / LOCK_FLASH_MS;
+    if (t >= 1) {
+      this.lockFlash.delete(id);
+      return;
+    }
+
+    // Sized off the thing itself, so the brackets frame a corvette and a
+    // foundry equally rather than swallowing one and rattling round the other.
+    const hull = contact.kind !== undefined ? HULL_LENGTH_M[contact.kind] : 140;
+    const spread = hull * (2.2 - 1.2 * t);
+    const arm = hull * 0.5;
+    const alpha = 1 - t;
+    for (const sx of [-1, 1]) {
+      for (const sy of [-1, 1]) {
+        const cx = contact.x + sx * spread;
+        const cy = contact.y + sy * spread;
+        g.moveTo(cx - sx * arm, cy)
+          .lineTo(cx, cy)
+          .lineTo(cx, cy - sy * arm)
+          .stroke({ width: 1.5 * inverseScale, color: UI.threat, alpha });
+      }
+    }
+  }
+
+  private biomeAt(x: number, y: number): Biome {
     const terrain = this.terrain;
-    if (terrain === null) return 1;
+    if (terrain === null) return Biome.OpenWater;
     const col = Math.min(terrain.cols - 1, Math.max(0, Math.floor(x / terrain.cellM)));
     const row = Math.min(terrain.rows - 1, Math.max(0, Math.floor(y / terrain.cellM)));
-    const biome = terrain.biomes[row * terrain.cols + col] as Biome;
-    return PROPAGATION_FACTOR[biome] ?? 1;
+    return terrain.biomes[row * terrain.cols + col] as Biome;
+  }
+
+  private propagationAt(x: number, y: number): number {
+    return PROPAGATION_FACTOR[this.biomeAt(x, y)] ?? 1;
   }
 
   private drawContacts(): void {
@@ -1831,6 +1963,7 @@ export class EchoRenderer {
       if (age > decayMs) {
         // "A retreating enemy leaves a fading trail of last-known positions."
         this.tracked.delete(id);
+        this.lockFlash.delete(id);
         continue;
       }
 
@@ -1844,6 +1977,8 @@ export class EchoRenderer {
       // just less of it.
       const freshness = 1 - age / decayMs;
       const alpha = style.alpha * freshness;
+
+      this.drawLockFlash(g, id, contact, now, inverseScale);
 
       switch (contact.tier) {
         case ResolutionTier.Contact: {

@@ -60,7 +60,11 @@ export function GameCanvas() {
       sampleRate: audio.audioContext?.sampleRate ?? null,
       voiceCapacity: audio.voices.capacity,
       activeVoices: audio.voices.size,
+      contactVoices: audio.activeContactVoices,
+      spatialisation: audio.spatialisationMode,
       worstTickMs: Number(audio.worstTickCostMs.toFixed(4)),
+      lastTickMs: Number(audio.lastTickCostMs.toFixed(4)),
+      lastTickBuilt: audio.lastTickVoicesBuilt,
     });
 
     /**
@@ -88,6 +92,10 @@ export function GameCanvas() {
         onBuild: (kind, x, y) => client?.build(kind, x, y),
         onProduce: (structureId, kind) => client?.produce(structureId, kind),
         onDepthOrder: (unitIds, depth) => client?.setDepth(unitIds, depth),
+        // Contacts, reduced to what the mix is allowed to know. Buffered by
+        // the engine and applied on the tick, so the cost is measured and the
+        // mix never moves between ticks (docs/audio-direction.md §12).
+        onContactAudio: (frame) => audio.applyContacts(frame),
         onContactEvent: (entry) =>
           // Capped: a long match would otherwise grow an unbounded list, and
           // nobody scrolls back past a few hundred detections.

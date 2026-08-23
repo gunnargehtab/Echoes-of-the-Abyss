@@ -234,6 +234,25 @@ Audio carries primary information, so accessibility here is a correctness requir
 - **Full rebinding**, including a one-handed layout, and no timing-critical chords.
 - **Motion and flash limits** — a reduced-motion mode replaces the sonar sweep, screen-edge exposure flash and meter pulse with static equivalents that carry the same information.
 
+### Audible cue to visual equivalent
+
+The parity table. Every row is a claim that the mix tells the player nothing the screen does not, and it is the artefact to check when a cue is added — an audible fact with no row here is a bug, not a backlog item.
+
+| Audible cue | Visual equivalent |
+| --- | --- |
+| Tier-1 thump — mono, centred, level-locked | Directionless haze drawn on the *listener's* position, and a contact-log row reading `bearing unknown` |
+| Tier-2 wash, panned at partial authority | Blurred blob at the reported position; log row carries bearing and approximate range |
+| Tier-3 faction drive signature | Faction-coloured mark with its glyph; log row names the faction and unit class |
+| Tier-4 full drive loop | Resolved silhouette with heading; log row in threat colour |
+| **Tier-4 lock tone** — one short tone on acquisition | **Acquisition brackets** that close onto the contact over 700 ms, once per acquisition, plus the log row for the tier change |
+| A voice fading as its contact goes stale | Ghost marker fading on the same clock, `PERSISTENCE.GHOST_MARKER_DECAY_S` |
+| A voice snapping back to full level | The marker returning to full alpha on the same tick |
+| Biome colouring of a return | Biome tint under the contact, and the propagation overlay on the player's own units |
+
+Only the lock tone is genuinely *new* information in the mix; every other row restates something the renderer already draws. That is the intended ratio, and it is why the brackets ship with the tone rather than after it.
+
+**Mono is a rendering choice, never a loss.** Collapsing every pan to centre costs the convenience of hearing where something is; bearing remains in the contact log and on the sonar scope, so nothing becomes unknowable.
+
 ---
 
 ## 12. Latency and Feedback
@@ -259,7 +278,9 @@ What the current client implements against this spec, so nobody re-implements wh
 | Depth ribbon, PR badge, crush hatching | Implemented (`D` dive, `A` rise; hold `Shift` to preview the dive cost) |
 | Sonar-scope minimap | Implemented — terrain, tier-fidelity returns, sweep, range rings; Echo Marks layer pending |
 | Contact log | Implemented — DOM, live region, click-to-focus; ping and mark rows pending |
-| Accessibility presets and palettes | Not started |
+| Contact voices, per-tier | Implemented — pan authority by tier, biome voicing, faction timbre at Tier 3+ |
+| Tier-4 acquisition brackets | Implemented — the visual half of the lock tone |
+| Accessibility presets and palettes | Not started — mono spatialisation exists in the mix but has no toggle yet |
 | Box select, control groups, order queue | Implemented |
 
 ---
