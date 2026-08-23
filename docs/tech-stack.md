@@ -70,3 +70,37 @@ Detection (see [systems-echo.md](systems-echo.md)) is **server-authoritative and
 - **Tools:** Blender (submarine models, terrain), TexturePacker (spritesheets), Spine or DragonBones (unit animations)
 
 This stack gives high performance, easy development, and long-term stability.
+
+---
+
+## Determinism and Replay
+
+The simulation is deterministic by construction — fixed 60 Hz steps, no wall-clock inside
+the step path, hand-authored terrain rather than a seeded generator — and that property is
+now *tested* rather than assumed.
+
+| Piece | Where | What it does |
+| --- | --- | --- |
+| Seeded RNG | `packages/backend/src/sim/rng.ts` | The simulation's only randomness. `world.rng`, seeded per match; `fork(name)` gives a subsystem its own stream, so adding a die roll to fauna cannot shift every later hazard roll |
+| Lint gate | `.eslintrc.cjs` | `Math.random()` and `Date` are errors anywhere under `sim/`. `rng.ts` is the single exemption, because picking a seed is the one place entropy legitimately enters |
+| State hash | `sim/stateHash.ts` | FNV-1a over positions, health, acoustics, orders, economies and production queues |
+| Replay | `sim/replay.ts` | Seed, roster, and every command attempt with the tick it landed on, plus periodic checkpoints |
+
+Two details are load-bearing and easy to get wrong, both for the same underlying reason:
+**bitecs allocates entity ids from a counter global to the process, not to the world.** Two
+matches constructed in one process hold identical values under different ids.
+
+- The **state hash** mixes each entity's ordinal position within its own world rather than
+  its raw id. Hashing raw ids reports a perfectly reproducible match as divergent, purely
+  because of how many matches ran before it.
+- **Replays** name entities by *match-local id* — a per-world counter assigned at spawn —
+  not by entity id. A replay full of raw ids addresses entities that do not exist in the
+  world it is replayed into, and silently no-ops its own commands.
+
+Commands are recorded as attempts, including refused ones, so replay re-exercises the
+validation path: a regression that starts accepting something it used to reject surfaces as
+a divergence rather than as a subtly different match nobody notices.
+
+Checkpoints are what make a divergence *findable*. `playReplay` reports the first tick whose
+hash disagreed, so the answer is "it broke at tick 300", not "the twenty-minute match ended
+differently".

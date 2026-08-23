@@ -63,15 +63,27 @@ import { harvestSystem } from './systems/harvest.ts';
 import { movementSystem } from './systems/movement.ts';
 import { pressureSystem } from './systems/pressure.ts';
 import { productionSystem } from './systems/production.ts';
+import { randomSeed } from './rng.ts';
+import { ReplayRecorder, type Replay, type ReplayCommand } from './replay.ts';
+import { hashWorld } from './stateHash.ts';
 import { Terrain } from './terrain.ts';
 import {
   createSimWorld,
   economyFor,
+  localIdOf,
   spawnResourceNode,
   spawnStructure,
   spawnUnit,
   type SimWorld,
 } from './world.ts';
+
+/** Construction options for a match. Both default to "a normal live match". */
+export interface MatchOptions {
+  /** Fixed seed, for reproducing a match. Omitted means pick one and record it. */
+  seed?: number;
+  /** Capture a replay as the match runs. */
+  record?: boolean;
+}
 
 const FIXED_DT = 1 / SIM.TICK_HZ;
 const ECHO_INTERVAL_S = 1 / SIM.ECHO_HZ;
@@ -102,9 +114,39 @@ export class Match {
   private worstEchoMs = 0;
   private matchResult: GameOverPayload | null = null;
 
-  constructor(terrain: Terrain = Terrain.demo()) {
-    this.world = createSimWorld(terrain, FIXED_DT);
+  /** Non-null while this match is being recorded. */
+  private readonly recorder: ReplayRecorder | null;
+  readonly seed: number;
+
+  constructor(terrain: Terrain = Terrain.demo(), options: MatchOptions = {}) {
+    this.seed = options.seed ?? randomSeed();
+    this.world = createSimWorld(terrain, FIXED_DT, this.seed);
+    this.recorder = options.record === true ? new ReplayRecorder(this.seed) : null;
     this.seedResourceNodes();
+  }
+
+  /**
+   * The replay of this match so far, or null when it is not being recorded.
+   * Safe to call mid-match; the recording keeps going.
+   */
+  replay(): Replay | null {
+    return this.recorder?.finish(this.world.tick) ?? null;
+  }
+
+  /** Skips the work entirely when nothing is recording. */
+  private recordCommand(command: ReplayCommand): void {
+    this.recorder?.record(command);
+  }
+
+  /**
+   * Match-local id for an entity, for the replay log.
+   *
+   * -1 for an entity this world never spawned, which is what a malformed or
+   * hostile command carries. It survives the round trip as "no such entity"
+   * and gets rejected on replay exactly as it was rejected live.
+   */
+  private localId(eid: number): number {
+    return localIdOf(this.world, eid) ?? -1;
   }
 
   get tick(): number {
@@ -171,6 +213,7 @@ export class Match {
   }
 
   addPlayer(slot: number, faction: Faction): void {
+    this.recorder?.addPlayer(slot, faction);
     if (!this.slots.includes(slot)) this.slots.push(slot);
     economyFor(this.world, slot);
     this.spawnStartingBase(slot, faction);
@@ -239,6 +282,14 @@ export class Match {
   }
 
   orderMove(slot: number, eid: number, x: number, y: number): void {
+    this.recordCommand({
+      tick: this.world.tick,
+      type: 'move',
+      slot,
+      unit: this.localId(eid),
+      x,
+      y,
+    });
     if (!this.owns(slot, eid) || !hasComponent(this.world, MoveOrder, eid)) return;
     MoveOrder.x[eid] = x;
     MoveOrder.y[eid] = y;
@@ -250,6 +301,13 @@ export class Match {
 
   /** Attack a contact the player has actually heard, by its opaque handle. */
   orderAttackContact(slot: number, eid: number, contactHandle: number): void {
+    this.recordCommand({
+      tick: this.world.tick,
+      type: 'attack',
+      slot,
+      unit: this.localId(eid),
+      contact: contactHandle,
+    });
     if (!this.owns(slot, eid) || !hasComponent(this.world, Weapon, eid)) return;
     const target = this.echo.entityForHandle(slot, contactHandle);
     if (target === undefined) return;
@@ -260,6 +318,13 @@ export class Match {
 
   /** Send a harvester to a specific nodule field. */
   orderHarvest(slot: number, eid: number, nodeEid: number): void {
+    this.recordCommand({
+      tick: this.world.tick,
+      type: 'harvest',
+      slot,
+      unit: this.localId(eid),
+      node: this.localId(nodeEid),
+    });
     if (!this.owns(slot, eid) || !hasComponent(this.world, Harvester, eid)) return;
     if (!hasComponent(this.world, ResourceNode, nodeEid)) return;
     Harvester.nodeEid[eid] = nodeEid;
@@ -268,12 +333,26 @@ export class Match {
 
   /** docs/economy.md §3 — how loud am I willing to be paid. */
   setThrottle(slot: number, eid: number, throttle: HarvestThrottle): void {
+    this.recordCommand({
+      tick: this.world.tick,
+      type: 'throttle',
+      slot,
+      unit: this.localId(eid),
+      throttle,
+    });
     if (!this.owns(slot, eid) || !hasComponent(this.world, Harvester, eid)) return;
     if (!(throttle in HarvestThrottle)) return;
     Harvester.throttle[eid] = throttle;
   }
 
   setSilentRunning(slot: number, eid: number, active: boolean): void {
+    this.recordCommand({
+      tick: this.world.tick,
+      type: 'silent',
+      slot,
+      unit: this.localId(eid),
+      active,
+    });
     if (!this.owns(slot, eid) || !hasComponent(this.world, SilentRunning, eid)) return;
     SilentRunning.active[eid] = active ? 1 : 0;
   }
@@ -289,6 +368,13 @@ export class Match {
    * from "accepted"; the room ignores the result, but the tests do not.
    */
   orderDepth(slot: number, eid: number, depthM: number): boolean {
+    this.recordCommand({
+      tick: this.world.tick,
+      type: 'depth',
+      slot,
+      unit: this.localId(eid),
+      depth: depthM,
+    });
     if (!this.owns(slot, eid) || !hasComponent(this.world, DepthOrder, eid)) return false;
     if (!Number.isFinite(depthM)) return false;
     // Rejected rather than clamped: a client asking for the impossible is told
@@ -305,6 +391,7 @@ export class Match {
 
   /** The big red button. docs/systems-echo.md §5. */
   activeSonar(slot: number, eid: number): void {
+    this.recordCommand({ tick: this.world.tick, type: 'ping', slot, unit: this.localId(eid) });
     if (!this.owns(slot, eid) || !hasComponent(this.world, Unit, eid)) return;
     if (!hasComponent(this.world, ActivePing, eid)) {
       addComponent(this.world, ActivePing, eid);
@@ -320,6 +407,7 @@ export class Match {
    * every existing footprint and nodule field.
    */
   build(slot: number, kind: StructureKind, x: number, y: number): boolean {
+    this.recordCommand({ tick: this.world.tick, type: 'build', slot, kind, x, y });
     const stats = structureStatsFor(kind);
     if (!stats.constructible) return false;
     // Faction signature structures are exactly that — another navy's order
@@ -371,6 +459,13 @@ export class Match {
 
   /** Queue a unit at a production structure. Cost is paid on enqueue. */
   produce(slot: number, structureEid: number, kind: UnitKind): boolean {
+    this.recordCommand({
+      tick: this.world.tick,
+      type: 'produce',
+      slot,
+      structure: this.localId(structureEid),
+      kind,
+    });
     if (!this.owns(slot, structureEid)) return false;
     if (!hasComponent(this.world, Structure, structureEid)) return false;
     if (hasComponent(this.world, UnderConstruction, structureEid)) return false;
@@ -432,7 +527,19 @@ export class Match {
     return this.resolveEcho();
   }
 
+  /**
+   * Advance exactly one fixed step.
+   *
+   * Public for replay playback, which drives the simulation by tick rather
+   * than by wall-clock — feeding it deltaMs would reintroduce the very
+   * timing dependence a replay exists to eliminate.
+   */
+  stepOnce(): void {
+    this.step();
+  }
+
   private step(): void {
+    this.recorder?.maybeCheckpoint(this.world.tick, () => hashWorld(this.world));
     this.destroyedScratch.length = 0;
     harvestSystem(this.world);
     combatSystem(this.world, this.destroyedScratch);
