@@ -14,7 +14,7 @@
  */
 
 import type { Graphics } from 'pixi.js';
-import { Faction, StructureKind, UnitKind } from '@echoes/shared';
+import { Faction, StructureKind, UnitKind, statsFor } from '@echoes/shared';
 
 export interface SilhouetteStyle {
   color: number;
@@ -26,12 +26,19 @@ export interface SilhouetteStyle {
 }
 
 /** Hull length overall in metres, per kind. TUNABLE for readability. */
+/**
+ * Hull lengths, read from the shared roster rather than restated here.
+ *
+ * They used to live in this file, which meant the renderer and the simulation
+ * each held their own idea of how big a hull is — and the simulation started
+ * needing one when hulls stopped being allowed to overlap.
+ */
 export const HULL_LENGTH_M: Record<UnitKind, number> = {
-  [UnitKind.LightScout]: 60,
-  [UnitKind.Corvette]: 80,
-  [UnitKind.Cruiser]: 130,
-  [UnitKind.AbyssalSubmersible]: 95,
-  [UnitKind.Harvester]: 75,
+  [UnitKind.LightScout]: statsFor(UnitKind.LightScout).hullLengthM,
+  [UnitKind.Corvette]: statsFor(UnitKind.Corvette).hullLengthM,
+  [UnitKind.Cruiser]: statsFor(UnitKind.Cruiser).hullLengthM,
+  [UnitKind.AbyssalSubmersible]: statsFor(UnitKind.AbyssalSubmersible).hullLengthM,
+  [UnitKind.Harvester]: statsFor(UnitKind.Harvester).hullLengthM,
 };
 
 /**

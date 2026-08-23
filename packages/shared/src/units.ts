@@ -29,6 +29,16 @@ export interface UnitStats {
   maxHp: number;
   /** Metres per second. */
   speed: number;
+  /**
+   * Hull length in metres.
+   *
+   * Lives here rather than in the renderer because both sides need to agree:
+   * the client draws the silhouette at this length, and the simulation keeps
+   * hulls from occupying the same water using half of it as a radius. A hull
+   * that looked one size and collided at another would be a bug nobody could
+   * see.
+   */
+  hullLengthM: number;
   cost: number;
   /**
    * Resonance Crystal cost, when the hull is crystal-locked. The Abyssal
@@ -47,6 +57,14 @@ export interface UnitStats {
   attackCooldownS: number;
 }
 
+/** Half a hull's length: the radius the simulation keeps clear around it. */
+export function unitRadiusM(kind: UnitKind): number {
+  return UNIT_STATS[kind].hullLengthM / 2;
+}
+
+/** The largest radius in the roster, for sizing separation queries. */
+export const MAX_UNIT_RADIUS_M = 130 / 2;
+
 export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.LightScout]: {
     kind: UnitKind.LightScout,
@@ -58,6 +76,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     pressureRating: 1,
     maxHp: 180,
     speed: 120,
+    hullLengthM: 60,
     cost: 50,
     buildTimeS: 12,
     attackDamage: 8,
@@ -74,6 +93,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     pressureRating: 2,
     maxHp: 420,
     speed: 85,
+    hullLengthM: 80,
     cost: 120,
     buildTimeS: 30,
     attackDamage: 22,
@@ -91,6 +111,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     pressureRating: 2,
     maxHp: 1200,
     speed: 45,
+    hullLengthM: 130,
     cost: 420,
     buildTimeS: 90,
     attackDamage: 60,
@@ -108,6 +129,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     pressureRating: 3,
     maxHp: 520,
     speed: 60,
+    hullLengthM: 95,
     cost: 260,
     crystalCost: 80,
     buildTimeS: 45,
@@ -126,6 +148,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     pressureRating: 1,
     maxHp: 300,
     speed: 40,
+    hullLengthM: 75,
     cost: 80,
     buildTimeS: 20,
     attackDamage: 0,

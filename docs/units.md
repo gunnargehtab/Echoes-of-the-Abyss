@@ -200,6 +200,12 @@ Design notes
   through these HYD values — a separate tier bonus would be a second lever for the same
   effect and harder to balance.
 - Every unit lists SIG and PR so designers can simulate detection interactions without needing full gameplay code.
+- **Hull length is a stat, not a drawing detail.** `hullLengthM` lives in
+  `packages/shared/src/units.ts` because both sides need to agree on it: the renderer draws
+  the silhouette at that length, and the simulation keeps hulls from occupying the same
+  water using half of it as a radius. A hull that looked one size and collided at another
+  would be a bug nobody could see. Formation matters acoustically — a stack of hulls at one
+  coordinate would be a single acoustic position, and the Echo Layer would report it as one.
 - Combat hulls carry prototype weapon stats in `packages/shared/src/units.ts` (damage,
   range, cooldown) so the scaffold's combat loop can run; the doc-authored number is the
   firing-burst SIG, which is the design-relevant one. Damage figures are placeholders
