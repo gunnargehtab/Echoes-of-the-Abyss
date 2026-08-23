@@ -119,6 +119,7 @@ export function GameCanvas() {
 
       client = new GameClient({
         onTerrain: (terrain) => activeRenderer.setTerrain(terrain),
+        onMap: (map) => activeRenderer.setMap(map),
         onNodes: (nodes) => activeRenderer.setNodes(nodes),
         onAssigned: ({ slot, faction }) => activeRenderer.setIdentity(slot, faction),
         onEcho: (snapshot: EchoSnapshot) => {

@@ -72,6 +72,7 @@ import { randomSeed } from './rng.ts';
 import { ReplayRecorder, type Replay, type ReplayCommand } from './replay.ts';
 import { hashWorld } from './stateHash.ts';
 import { Terrain } from './terrain.ts';
+import { VENTFRONT_DIVIDE, terrainFor, type MapDefinition } from './maps/index.ts';
 import {
   createSimWorld,
   economyFor,
@@ -89,6 +90,15 @@ export interface MatchOptions {
   seed?: number;
   /** Capture a replay as the match runs. */
   record?: boolean;
+  /**
+   * Override the terrain the map would paint.
+   *
+   * For tests only, and specifically for the ones that want a blank or
+   * hand-built grid so the thing under test is not also being asked to survive
+   * an authored map's biomes. A match started this way still takes its spawns
+   * and resource fields from the map.
+   */
+  terrain?: Terrain;
 }
 
 const FIXED_DT = 1 / SIM.TICK_HZ;
@@ -124,10 +134,21 @@ export class Match {
   private readonly recorder: ReplayRecorder | null;
   readonly seed: number;
 
-  constructor(terrain: Terrain = Terrain.demo(), options: MatchOptions = {}) {
+  /**
+   * The authored map this match is being played on.
+   *
+   * Everything that used to be arithmetic over `widthM`/`heightM` — spawn
+   * corners, resource fields — now reads from here. That arithmetic assumed a
+   * square map with four usable corners, which stopped being true the moment
+   * a corridor map existed.
+   */
+  readonly map: MapDefinition;
+
+  constructor(map: MapDefinition = VENTFRONT_DIVIDE, options: MatchOptions = {}) {
+    this.map = map;
     this.seed = options.seed ?? randomSeed();
-    this.world = createSimWorld(terrain, FIXED_DT, this.seed);
-    this.recorder = options.record === true ? new ReplayRecorder(this.seed) : null;
+    this.world = createSimWorld(options.terrain ?? terrainFor(map), FIXED_DT, this.seed);
+    this.recorder = options.record === true ? new ReplayRecorder(this.seed, map.id) : null;
     this.seedResourceNodes();
   }
 
@@ -179,31 +200,12 @@ export class Match {
    * bait every C&C map is built around.
    */
   private seedResourceNodes(): void {
-    const { widthM, heightM } = this.world.terrain;
-    const corners: Array<[number, number]> = [
-      [0.15, 0.15],
-      [0.85, 0.15],
-      [0.15, 0.85],
-      [0.85, 0.85],
-    ];
-    for (const [fx, fy] of corners) {
-      // Offset toward the centre so the field sits just off the base apron.
-      const towardCentreX = fx < 0.5 ? 1 : -1;
-      const towardCentreY = fy < 0.5 ? 1 : -1;
-      this.addNode(widthM * fx + towardCentreX * 700, heightM * fy + towardCentreY * 250);
+    for (const node of this.map.resources) {
+      const amount =
+        node.amount ??
+        (node.kind === ResourceKind.ResonanceCrystal ? CRYSTAL.FIELD_STARTING_AMOUNT : undefined);
+      this.addNode(node.x, node.y, amount, node.kind);
     }
-    this.addNode(widthM * 0.5, heightM * 0.32, 6000);
-    this.addNode(widthM * 0.5, heightM * 0.68, 6000);
-
-    // Crystal sits dead centre and Abyssal — the one field nobody can work
-    // without committing to the descent, and the one both sides must contest
-    // to reach their upper tech tier (docs/economy.md §2, §7).
-    this.addNode(
-      widthM * 0.5,
-      heightM * 0.5,
-      CRYSTAL.FIELD_STARTING_AMOUNT,
-      ResourceKind.ResonanceCrystal
-    );
   }
 
   private addNode(x: number, y: number, amount?: number, kind = ResourceKind.Nodule): void {
@@ -236,10 +238,32 @@ export class Match {
    * else is earned.
    */
   private spawnStartingBase(slot: number, faction: Faction): void {
-    const { widthM, heightM } = this.world.terrain;
-    // Alternate corners so the two sides start out of earshot of each other.
-    const baseX = slot % 2 === 0 ? widthM * 0.15 : widthM * 0.85;
-    const baseY = slot < 2 ? heightM * 0.15 : heightM * 0.85;
+    // A map's spawn list *is* its player count. A slot past the end has
+    // nowhere legal to start, so it gets no base rather than one placed by
+    // guesswork somewhere off the authored ground.
+    const spawn = this.map.spawns[slot];
+    if (spawn === undefined) return;
+
+    const baseX = spawn.x;
+    const baseY = spawn.y;
+
+    // The escort deploys *perpendicular* to the Foundry and spreads *along*
+    // it — the axis the Foundry occupies is the one with room, and the axis it
+    // does not is where a hull can sit clear of both footprints.
+    //
+    // Derived from the authored offset rather than from which half of the map
+    // the slot is in, which is what the old corner arithmetic did and what
+    // stops being meaningful on a map that is not a square.
+    const length = Math.hypot(spawn.foundryOffsetX, spawn.foundryOffsetY) || 1;
+    const alongX = spawn.foundryOffsetX / length;
+    const alongY = spawn.foundryOffsetY / length;
+    let awayX = -alongY;
+    let awayY = alongX;
+    // ...and point that perpendicular into the map rather than at the wall.
+    if (awayX * (this.map.widthM / 2 - baseX) + awayY * (this.map.heightM / 2 - baseY) < 0) {
+      awayX = -awayX;
+      awayY = -awayY;
+    }
 
     spawnStructure(this.world, {
       kind: StructureKind.Bastion,
@@ -253,8 +277,8 @@ export class Match {
       kind: StructureKind.Foundry,
       slot,
       faction,
-      x: baseX + (slot % 2 === 0 ? 450 : -450),
-      y: baseY,
+      x: baseX + spawn.foundryOffsetX,
+      y: baseY + spawn.foundryOffsetY,
       prebuilt: true,
     });
 
@@ -264,8 +288,8 @@ export class Match {
         kind,
         slot,
         faction,
-        x: baseX + (i - 1) * 180,
-        y: baseY + (slot < 2 ? 350 : -350),
+        x: baseX + alongX * (i - 1) * 180 + awayX * 350,
+        y: baseY + alongY * (i - 1) * 180 + awayY * 350,
       });
     });
 
@@ -273,8 +297,8 @@ export class Match {
       kind: UnitKind.Harvester,
       slot,
       faction,
-      x: baseX,
-      y: baseY + (slot < 2 ? 250 : -250),
+      x: baseX + awayX * 250,
+      y: baseY + awayY * 250,
     });
     // Income from second zero: the harvester self-assigns the nearest field.
     Harvester.mode[harvester] = HarvestMode.ToNode;

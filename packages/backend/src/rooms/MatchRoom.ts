@@ -20,6 +20,7 @@ import {
   type EchoSnapshot,
 } from '@echoes/shared';
 import { Match } from '../sim/match.ts';
+import { DEFAULT_MAP_ID, mapById } from '../sim/maps/index.ts';
 import { MatchState, PlayerState } from '../schema/MatchState.ts';
 
 interface MoveMessage {
@@ -81,14 +82,27 @@ const FACTION_BY_SLOT: Faction[] = [
   Faction.Hadron,
 ];
 
+/** Options a room may be created with. `mapId` selects the authored map. */
+export interface MatchRoomOptions {
+  mapId?: string;
+}
+
 export class MatchRoom extends Room<MatchState> {
   maxClients = 4;
 
-  private readonly match = new Match();
+  private match!: Match;
   private readonly slotBySession = new Map<string, number>();
   private nextSlot = 0;
 
-  override onCreate(): void {
+  override onCreate(options?: MatchRoomOptions): void {
+    // An unknown id falls back to the default rather than failing the room:
+    // a client asking for a map this build does not have should get a game,
+    // and the map it actually got is sent on join either way.
+    const map = mapById(options?.mapId ?? DEFAULT_MAP_ID) ?? mapById(DEFAULT_MAP_ID)!;
+    this.match = new Match(map);
+    // A map's spawn list is its player count.
+    this.maxClients = Math.min(this.maxClients, map.spawns.length);
+
     this.setState(new MatchState());
 
     this.onMessage('move', (client, message: MoveMessage) => {
@@ -190,6 +204,16 @@ export class MatchRoom extends Room<MatchState> {
     // than per-tick because it does not change (Coral Ruins aside; see
     // docs/environments.md).
     client.send('terrain', this.match.world.terrain.serialize());
+    // Which map this is. Public by definition — both players are standing on
+    // it — and the client needs it to name the ground in the HUD.
+    client.send('map', {
+      id: this.match.map.id,
+      name: this.match.map.name,
+      idealUse: this.match.map.idealUse,
+      widthM: this.match.map.widthM,
+      heightM: this.match.map.heightM,
+      hazards: this.match.map.hazards,
+    });
     // Nodule fields are map data too — every commander has the same survey
     // charts. Depletion is never broadcast; see docs/economy.md.
     client.send('nodes', this.match.resourceNodes);

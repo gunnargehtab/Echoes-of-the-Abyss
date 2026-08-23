@@ -128,9 +128,16 @@ export class Terrain {
   }
 
   /**
-   * A deterministic scratch map for bring-up, loosely after "The Ventfront
-   * Divide" in docs/maps.md: a vent line splitting the map, kelp on one flank,
-   * a trench running down the middle as an acoustic highway.
+   * **Test fixture.** Not a playable map.
+   *
+   * The scratch grid every match ran on before `sim/maps/` existed, kept
+   * because a good deal of the test suite is written against its geometry and
+   * because a hand-built grid is sometimes exactly what a test wants — one
+   * whose PF landscape is not also under test.
+   *
+   * Playable maps live in `sim/maps/` and are selected by id. This is not one
+   * of them: it has no spawns, no resource fields and no hazards, and nothing
+   * outside tests should reach for it.
    *
    * Deliberately hand-placed rather than generated — an RTS simulation must be
    * reproducible, and a seeded generator is one refactor away from not being.

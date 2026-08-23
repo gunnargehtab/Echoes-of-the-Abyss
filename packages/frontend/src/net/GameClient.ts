@@ -17,6 +17,22 @@ import type {
   UnitKind,
 } from '@echoes/shared';
 
+/**
+ * Which map this match is on.
+ *
+ * Public by definition — both players are standing on it. Hazard sites are
+ * included because docs/maps.md makes hazard telegraphing a core principle:
+ * "players must see danger before entering."
+ */
+export interface MapPayload {
+  id: string;
+  name: string;
+  idealUse: string;
+  widthM: number;
+  heightM: number;
+  hazards: { x: number; y: number; radiusM: number; kind: string; note?: string }[];
+}
+
 export interface TerrainPayload {
   cols: number;
   rows: number;
@@ -31,6 +47,7 @@ export interface AssignedPayload {
 
 export interface GameClientHandlers {
   onTerrain(terrain: TerrainPayload): void;
+  onMap(map: MapPayload): void;
   onNodes(nodes: ResourceNodeInfo[]): void;
   onAssigned(assigned: AssignedPayload): void;
   onEcho(snapshot: EchoSnapshot): void;
@@ -55,10 +72,19 @@ export class GameClient {
   async connect(name?: string): Promise<void> {
     this.handlers.onStatus('connecting');
     try {
-      const room = await this.client.joinOrCreate('match', { name });
+      // `?map=<id>` selects the archetype when this client is the one that
+      // creates the room; joining an existing room takes the map it is on, and
+      // the server sends back which that was either way. A real picker belongs
+      // to the lobby, which is separate work — this is the seam it will use.
+      const mapId =
+        typeof window === 'undefined'
+          ? undefined
+          : (new URLSearchParams(window.location.search).get('map') ?? undefined);
+      const room = await this.client.joinOrCreate('match', { name, mapId });
       this.room = room;
 
       room.onMessage('terrain', (payload: TerrainPayload) => this.handlers.onTerrain(payload));
+      room.onMessage('map', (payload: MapPayload) => this.handlers.onMap(payload));
       room.onMessage('nodes', (payload: ResourceNodeInfo[]) => this.handlers.onNodes(payload));
       room.onMessage('assigned', (payload: AssignedPayload) => this.handlers.onAssigned(payload));
       room.onMessage('echo', (payload: EchoSnapshot) => this.handlers.onEcho(payload));

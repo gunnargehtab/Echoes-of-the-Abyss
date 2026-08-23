@@ -42,7 +42,10 @@ const gameServer = new Server({
   transport: new WebSocketTransport({ server: httpServer }),
 });
 
-gameServer.define('match', MatchRoom);
+// Filtered by map, so `joinOrCreate` never drops a player who asked for one
+// archetype into a match already running on another. Without it the first
+// room created wins every subsequent join regardless of what was requested.
+gameServer.define('match', MatchRoom).filterBy(['mapId']);
 
 app.get('/', (_req, res) => {
   res.send('Echoes of the Abyss - Server running');
