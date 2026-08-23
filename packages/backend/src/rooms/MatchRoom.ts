@@ -33,6 +33,12 @@ interface SilentRunningMessage {
   active: boolean;
 }
 
+interface DepthMessage {
+  unitIds: number[];
+  /** Ordered depth in metres. Validated and range-checked in the sim. */
+  depth: number;
+}
+
 interface PingMessage {
   unitId: number;
 }
@@ -97,6 +103,17 @@ export class MatchRoom extends Room<MatchState> {
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;
       for (const unitId of message.unitIds) {
         this.match.setSilentRunning(slot, unitId, Boolean(message.active));
+      }
+    });
+
+    this.onMessage('depth', (client, message: DepthMessage) => {
+      const slot = this.slotBySession.get(client.sessionId);
+      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      if (!Number.isFinite(message.depth)) return;
+      for (const unitId of message.unitIds) {
+        // Range and ownership are both re-checked inside the sim; an
+        // out-of-range depth is refused there rather than clamped here.
+        this.match.orderDepth(slot, unitId, message.depth);
       }
     });
 

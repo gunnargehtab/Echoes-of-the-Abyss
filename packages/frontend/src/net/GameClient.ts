@@ -84,6 +84,15 @@ export class GameClient {
     this.room?.send('silent', { unitIds, active });
   }
 
+  /**
+   * Order a depth change. Descent is fast and loud, ascent slow and silent —
+   * the server owns both rates and refuses a depth outside the map's range.
+   */
+  setDepth(unitIds: number[], depth: number): void {
+    if (unitIds.length === 0) return;
+    this.room?.send('depth', { unitIds, depth });
+  }
+
   /** The big red button. Cost is previewed in the HUD before this is called. */
   activeSonar(unitId: number): void {
     this.room?.send('ping', { unitId });

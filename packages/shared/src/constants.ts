@@ -64,6 +64,38 @@ export const ACTIVE_SONAR = {
   ALLY_ACCURACY_BONUS: 0.2,
 } as const;
 
+/**
+ * Depth as an ordered state. docs/systems-depth.md §2.
+ *
+ * The *asymmetry* is SPEC and load-bearing — "descent is fast and deafening,
+ * ascent is slow and silent" — because it is what makes depth the axis of
+ * commitment (§5): a raid that goes deep arrives announced and cannot leave in
+ * a hurry. The numbers realising it are TUNABLE; the doc pins the shape only.
+ *
+ * DESCENT_SIG is a *floor* rather than a replacement value: blowing ballast is
+ * the loudest thing a hull does short of an active ping, and it must never
+ * make a unit that was already louder somehow quieter. It sits above every
+ * cruise SIG in the roster (loudest: Cruiser, 65) and below the ping's 95.
+ */
+export const DEPTH = {
+  /** Metres per second while diving. */
+  DESCENT_RATE_MPS: 45,
+  /** Metres per second while rising — deliberately a third of the descent. */
+  ASCENT_RATE_MPS: 15,
+  /** Sustained SIG floor while descending. Ascent adds nothing at all. */
+  DESCENT_SIG: 72,
+  /** Close enough to the ordered depth to count as arrived, metres. */
+  ARRIVAL_EPSILON_M: 2,
+  /** Shallowest orderable depth: the surface. */
+  MIN_M: 0,
+  /**
+   * Deepest orderable depth — the map floor. TUNABLE, and temporary: it
+   * belongs to the map rather than to the ruleset, and moves into map data
+   * when authored maps land (see docs/ROADMAP.md, Phase 3).
+   */
+  MAX_M: 3000,
+} as const;
+
 /** SPEC — docs/systems-echo.md §6. */
 export const SILENT_RUNNING = {
   /** Movement speed multiplier while silent (-45%). */

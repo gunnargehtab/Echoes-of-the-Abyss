@@ -47,6 +47,31 @@ Depth access shows up directly as commander and unit abilities, not just as a pa
 
 Depth is the axis of **commitment**. A raid that goes deep goes in loud (the descent) and comes out slow (the ascent), which means every deep push is a real bet: you cannot both strike the richest ground on the map and retreat from it quickly. Combined with the Echo Layer, the two systems mean the same question is always on the table — *is what's down there worth what it will cost to get it, and to get back?*
 
+## 6. Prototype Mapping
+
+What the simulation scaffold implements against this document, so nobody re-implements
+what exists or assumes what does not. Constants live in `DEPTH` in
+`packages/shared/src/constants.ts`; the travel itself is
+`packages/backend/src/sim/systems/depth.ts`.
+
+| Doc concept | Prototype today | Implementation note |
+| --- | --- | --- |
+| Depth bands (§1) | **Implemented** | `DEPTH_BANDS`, and `depthBandFor()` in the shared echo module |
+| Pressure Rating (§2) | **Implemented** | Per-unit `pressureRating`; crush attrition applied directly to hull so no future repair system can undo it |
+| Depth as an order (§2) | **Implemented** | `Match.orderDepth()`, validated server-side; a depth outside the map is refused, not clamped |
+| Descent is fast and deafening (§2) | **Implemented** | 45 m/s, and a SIG floor of 72 — above every cruise SIG in the roster, below the ping's 95. Ordering a dive breaks Silent Running, and re-asserting it mid-dive does not buy quiet |
+| Ascent is slow and silent (§2) | **Implemented** | 15 m/s, one third of the descent rate, and no SIG contribution at all. Compatible with Silent Running |
+| Sounding Spire rents depth (§3, §4) | **Implemented** | `STRUCTURE_AURAS.SOUNDING_SPIRE`; the grant is real while the aura holds and lost on leaving it |
+| Directorate shallow-water penalty (§3) | Not modelled | −20% speed, −15% HP above 400 m; needs a per-faction modifier pass |
+| Pelagia Deepbloom terraforming (§3) | Not modelled | Requires terrain that can change band, which the biome grid does not yet support |
+| Commander abilities, e.g. Seeding (§4) | Not modelled | No commander-ability layer exists yet |
+| Map floor | Placeholder | `DEPTH.MAX_M` is a flat 3,000 m for every map; it belongs to map data once authored maps land |
+
+The descent and ascent *rates* are TUNABLE — this document pins the asymmetry, not the
+numbers. The asymmetry itself is not tunable: it is what §5 above is about.
+
+---
+
 ## Related
 
 - **[systems-echo.md](systems-echo.md)** — the acoustic axis
