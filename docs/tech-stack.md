@@ -37,6 +37,44 @@ Detection (see [systems-echo.md](systems-echo.md)) is **server-authoritative and
 - Hard budget: **2 ms/tick** for the full detection pass, to stay inside the simulation's frame budget under Colyseus
 - Howler.js handles standard audio playback; raw Web Audio is layered on top for the mix requirements in [art-direction.md](art-direction.md) (Tier-1 contacts must be heard before they're seen)
 
+### What keeps the pass inside 2 ms
+
+The cost of detection is the number of emitter–listener pairs that survive pruning, which
+grows roughly quadratically with army size. Measured with `npm -w packages/backend run bench`:
+
+| Entities | Median | p90 |
+| --- | --- | --- |
+| ~84 | 0.37 ms | 0.43 ms |
+| ~164 | 1.30 ms | 2.30 ms |
+| ~324 | 3.30 ms | 4.10 ms |
+
+Layers, cheapest first:
+
+1. **Spatial hash broadphase** bounds each emitter by the range at which the sharpest ears
+   in the game could hear it through the loudest water on the map.
+2. **Per-HYD lookup tables** turn "this listener's real audible range" into a table read.
+3. **One squared-distance test** then rejects most pairs before any square root, `pow` or
+   path walk — see below.
+4. **Aborting path walks**: `Terrain.pathPropagation` gives up as soon as even all-trench
+   water for the remaining samples could not reach the bar it was given.
+
+The third layer is the one worth understanding, because it is not obvious. Only the *best*
+resolution per side ever ships — a player learns the most any one of their listeners
+resolved. So a pair that cannot beat the tier that side already holds for that emitter
+contributes nothing, and must not cost a path integral to discard. Because the propagation
+model is invertible, "must beat tier T" converts into a distance, and the whole test folds
+into one comparison in squared-distance space. A side already holding a Track rejects every
+remaining listener outright.
+
+This is lossless, and `test/echo-parity.test.ts` holds it to that: it recomputes detection
+the slow all-pairs way, straight from the shared propagation math, and asserts the optimised
+pass resolves exactly the same tier for every emitter and every side.
+
+Two things measured and rejected along the way, recorded so nobody re-runs the experiment:
+sorting candidates nearest-first made the pass **slower** (a comparator sort costs more than
+the walks its ordering avoids), and so did approximating that ordering with a two-sweep split
+at a distance cut.
+
 ## Rationale & Alternatives Considered
 
 ### Core Engine
