@@ -11,6 +11,7 @@ import { hasComponent } from 'bitecs';
 import { statsFor, structureStatsFor, type Faction, type StructureKind } from '@echoes/shared';
 import { Health, Owner, Position, Structure, UnderConstruction } from '../components.ts';
 import { spawnUnit, type SimWorld } from '../world.ts';
+import { powerRate } from './thermal.ts';
 
 export function productionSystem(world: SimWorld): void {
   const dt = world.dt;
@@ -25,7 +26,10 @@ export function productionSystem(world: SimWorld): void {
     // A structure still being commissioned cannot run its line yet.
     if (hasComponent(world, UnderConstruction, eid)) continue;
 
-    line.remainingS -= dt;
+    // The single consequence of a Thermal Draw deficit: a starved line runs
+    // slower. Slower and never stopped — a frozen line is a spiral, because a
+    // player cannot build the tap that would fix it (docs/economy.md §2).
+    line.remainingS -= dt * powerRate(world, Owner.slot[eid]!);
     if (line.remainingS > 0) continue;
 
     const kind = line.queue.shift()!;

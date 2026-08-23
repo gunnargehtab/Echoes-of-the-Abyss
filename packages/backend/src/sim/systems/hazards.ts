@@ -33,8 +33,24 @@ import {
   type HazardKind,
   type HazardState,
 } from '@echoes/shared';
-import { Acoustic, Health, Owner, Position, Structure, Unit } from '../components.ts';
+import { defineQuery, hasComponent } from 'bitecs';
+import { Acoustic, Health, Owner, Position, Structure } from '../components.ts';
 import type { SimWorld } from '../world.ts';
+
+/**
+ * Everything a hazard can act on.
+ *
+ * Its own query rather than the separation system's `unitGrid`, which holds
+ * **units only** and bails out entirely below two of them. Borrowing it meant
+ * structures were never found: `STRUCTURE_DAMAGE_MULTIPLIER` existed, was
+ * documented, and could never fire, so buildings quietly took no eruption
+ * damage at all.
+ *
+ * A linear scan is the right shape here. Hazards are few and their radii are
+ * small, so this is a few hundred distance checks a tick — cheaper than
+ * maintaining a second spatial index, and impossible to leave stale.
+ */
+const affected = defineQuery([Position, Health, Owner]);
 
 /** Per-phase durations for a kind, in seconds. */
 interface Cycle {
@@ -122,10 +138,11 @@ function anyFactionWithin(
   faction: Faction,
   radiusM: number
 ): boolean {
-  const found = world.unitGrid.queryRadius(hazard.x, hazard.y, radiusM, world.separationBuffer);
-  for (let i = 0; i < found.length; i++) {
-    const eid = found[i]!;
+  const entities = affected(world);
+  for (let i = 0; i < entities.length; i++) {
+    const eid = entities[i]!;
     if (Owner.faction[eid] !== faction) continue;
+    if (Health.hp[eid]! <= 0) continue;
     const dx = Position.x[eid]! - hazard.x;
     const dy = Position.y[eid]! - hazard.y;
     if (dx * dx + dy * dy <= radiusM * radiusM) return true;
@@ -157,7 +174,9 @@ export function hazardsSystem(world: SimWorld): void {
           HAZARDS.ERUPTION.BATHYARCH_STABILISE_S,
           hazard.stabilisedS + dt
         );
-        creditStabiliser(world, hazard, dt);
+        // The "energy boost" half of doc §1 is paid in Thermal Draw capacity
+        // by the thermal system, which is what "energy" means now that the
+        // power resource exists. This system owns only the *stabilising*.
       }
     }
 
@@ -224,24 +243,6 @@ function stormTaper(): number {
   return (HAZARDS.STORM.PF_MULTIPLIER + 1) / 2;
 }
 
-function creditStabiliser(world: SimWorld, hazard: Hazard, dt: number): void {
-  const found = world.unitGrid.queryRadius(
-    hazard.x,
-    hazard.y,
-    hazard.radiusM,
-    world.separationBuffer
-  );
-  for (let i = 0; i < found.length; i++) {
-    const eid = found[i]!;
-    if (Owner.faction[eid] !== Faction.Bathyarch) continue;
-    const economy = world.economies.get(Owner.slot[eid]!);
-    if (economy === undefined) continue;
-    // "Energy boosts": a trickle for holding the vent, not a second economy.
-    economy.nodules += HAZARDS.ERUPTION.BATHYARCH_ENERGY_PER_S * dt;
-    return;
-  }
-}
-
 function applyEffects(world: SimWorld, hazard: Hazard, dt: number): void {
   if (hazard.phase !== HazardPhase.Active && hazard.phase !== HazardPhase.Decay) return;
   // Decay does half damage: subsiding, not stopped.
@@ -252,14 +253,10 @@ function applyEffects(world: SimWorld, hazard: Hazard, dt: number): void {
 }
 
 function applyEruption(world: SimWorld, hazard: Hazard, dt: number): void {
-  const found = world.unitGrid.queryRadius(
-    hazard.x,
-    hazard.y,
-    hazard.radiusM,
-    world.separationBuffer
-  );
-  for (let i = 0; i < found.length; i++) {
-    const eid = found[i]!;
+  const entities = affected(world);
+  for (let i = 0; i < entities.length; i++) {
+    const eid = entities[i]!;
+    if (Health.hp[eid]! <= 0) continue;
     const dx = Position.x[eid]! - hazard.x;
     const dy = Position.y[eid]! - hazard.y;
     const distance = Math.hypot(dx, dy);
@@ -270,7 +267,10 @@ function applyEruption(world: SimWorld, hazard: Hazard, dt: number): void {
     const falloff = 1 - distance / hazard.radiusM;
     let damage = HAZARDS.ERUPTION.DAMAGE_PER_S * falloff * dt;
 
-    const isStructure = Structure.kind[eid] !== undefined && Unit.kind[eid] === undefined;
+    // hasComponent, not an undefined check: `Structure.kind` is a typed array
+    // and indexing one never yields undefined, so the original test was always
+    // false — buildings took full hull damage *and* were knocked back.
+    const isStructure = hasComponent(world, Structure, eid);
     if (isStructure) damage *= HAZARDS.ERUPTION.STRUCTURE_DAMAGE_MULTIPLIER;
     if (Owner.faction[eid] === Faction.Pelagia) {
       damage *= HAZARDS.ERUPTION.PELAGIA_DAMAGE_MULTIPLIER;
@@ -300,19 +300,15 @@ function applyEruption(world: SimWorld, hazard: Hazard, dt: number): void {
 }
 
 function applyStorm(world: SimWorld, hazard: Hazard, dt: number): void {
-  const found = world.unitGrid.queryRadius(
-    hazard.x,
-    hazard.y,
-    hazard.radiusM,
-    world.separationBuffer
-  );
-  for (let i = 0; i < found.length; i++) {
-    const eid = found[i]!;
+  const entities = affected(world);
+  for (let i = 0; i < entities.length; i++) {
+    const eid = entities[i]!;
+    if (Health.hp[eid]! <= 0) continue;
     const dx = Position.x[eid]! - hazard.x;
     const dy = Position.y[eid]! - hazard.y;
     if (dx * dx + dy * dy > hazard.radiusM * hazard.radiusM) continue;
 
-    const isStructure = Structure.kind[eid] !== undefined && Unit.kind[eid] === undefined;
+    const isStructure = hasComponent(world, Structure, eid);
     let damage = HAZARDS.STORM.DAMAGE_PER_S * dt;
     if (isStructure) damage *= HAZARDS.STORM.STRUCTURE_DAMAGE_MULTIPLIER;
     Health.hp[eid] = Health.hp[eid]! - damage;

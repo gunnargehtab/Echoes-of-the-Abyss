@@ -13,6 +13,7 @@ import {
   HarvestThrottle,
   ResourceKind,
   SelfEventKind,
+  type DrawReport,
   StructureKind,
   UnitKind,
   statsFor,
@@ -130,6 +131,14 @@ export interface SimWorld extends IWorld {
    * and never changes, but its phase and timers are part of the match.
    */
   hazards: Hazard[];
+  /**
+   * Thermal Draw per slot. A rate, recomputed every tick and never banked.
+   *
+   * Kept beside the economies rather than inside them precisely so nobody is
+   * tempted to add to it — `PlayerEconomy` holds stockpiles, and this is not
+   * one (docs/economy.md §2).
+   */
+  draw: Map<number, DrawReport>;
 }
 
 /** A self-event before it is bucketed by slot. `eid`, not a match-local id. */
@@ -183,6 +192,7 @@ export function createSimWorld(terrain: Terrain, dt: number, seed: number): SimW
   world.selfEvents = [];
   world.marks = new EchoMarkLayer();
   world.hazards = [];
+  world.draw = new Map();
   // Burn entity id 0 so components can use eid 0 as a "none" sentinel
   // (Weapon.orderedTargetEid, Harvester.nodeEid). bitecs hands out dense ids
   // from 0, so without this the first spawned entity would be untargetable.

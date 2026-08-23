@@ -49,6 +49,9 @@ const STRUCT_ART_URL: Record<StructureKind, string> = {
   [StructureKind.Cantor]: cruiserUrl,
   [StructureKind.SoundingSpire]: corvetteUrl,
   [StructureKind.SporeVeil]: raiderUrl,
+  // Industrial plant bolted to a vent: the same siege plating the refinery
+  // wears, because a tap is refinery machinery pointed at heat.
+  [StructureKind.VentTap]: siegeUrl,
 };
 
 /**
@@ -99,6 +102,7 @@ function halfExtentsM(kind: StructureKind): { hx: number; hy: number } {
     case StructureKind.Cantor:
     case StructureKind.SoundingSpire:
     case StructureKind.SporeVeil:
+    case StructureKind.VentTap:
       return { hx: r, hy: r };
   }
 }

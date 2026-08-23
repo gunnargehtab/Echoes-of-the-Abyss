@@ -125,11 +125,25 @@ drive to a field, mine, haul home, deposit at a Bastion or Refinery. Constants l
 | Nodule | **Implemented** — per-player stockpile, spent on units and structures | Harvesters carry 50 nodules per trip, mining 10/s at Standard throttle |
 | Throttle states | **Implemented** — all four states of §3, per harvester | Mining SIG follows the throttle (12/25/45/68); yield scales 0/0.4/1.0/1.4 |
 | Refining SIG | **Implemented** — the Refinery holds 65 SIG sustained (§4) | Forward refineries are real: any deposit structure works, the loud one is optional |
-| Thermal Draw | Not modelled | A continuous rate, never a stockpile — needs its own accumulator |
+| Thermal Draw | **Implemented** — a rate, recomputed every tick and never banked | Vent taps on Thermal Vein terrain supply it; Foundries and Refineries consume it; a deficit slows production and nothing else |
 | Biomass | Not modelled | Requires the Drift simulation first |
 | Resonance Crystal | **Implemented** — Abyssal field, second stockpile, tech gate | See below |
 | Depth economics (§7) | **Implemented** — the round trip has a clock on it | Harvesters issue their own depth orders: loud descent to the field, slow climb home |
 | Industrial hum (§5) | **Implemented** — a decaying Echo Mark at the depot, intensity per delivered cargo | Keyed to throughput, not to the building: a refinery nobody hauls to is silent, and throttling collapses the hum as the deliveries stop |
+
+### Thermal Draw in the scaffold
+
+The only resource in the game that is a **rate**, and it is implemented as one: capacity and demand are recomputed from live structures every tick and the report is thrown away. Nothing accumulates, because anything that banked a surplus would turn this back into a stockpile with extra steps.
+
+**The vent tap** is buildable only on Thermal Vein terrain, enforced server-side, and sustains 55–75 SIG per §2. That is the whole point of the structure: it is loud precisely where the ground is quiet, so tapping the game's best masking terrain (PF 0.45) is what makes that terrain worth contesting. Before it existed, the safest place to hide on any map was worth nothing.
+
+**The deficit consequence is production speed, and only that.** A starved line runs slower, never stops — a frozen line is a spiral, because a player cannot build the tap that would fix it. The floor is 25%.
+
+**The opening kit is self-sufficient.** The Bastion carries its own plant, sized to cover the pre-built Foundry and a first Refinery exactly. §2 places Thermal Draw in "Thermal Veins, Shelf and Mid-Water" — the vein is the concentrated source, not the only one — so a bastion on working ground has a trickle of its own. Without that the pre-built Foundry would start every match in deficit, making a tap a compulsory opening rather than a choice, and would be unplayable on a map with no vein terrain at all.
+
+**Reaching a tap is a commitment.** New structures must rise within 1,200 m of one you already own, so on the Ventfront Divide a tap is two build-hops out from the base and sits in the contested middle. Capacity is tied to a place you have to reach and then hold, which is what makes a rate feel different from a stockpile at the table.
+
+The [hazards](hazards.md) §1 interaction lands here too: a Consortium hull stabilising a vent earns **draw capacity**, since "energy boosts" is what the doc says and draw is now the power resource. And the best tap sites are in the vein band, which is exactly where vents erupt — a tap is a raid target and a weather casualty both.
 
 ### Resonance Crystal in the scaffold
 
