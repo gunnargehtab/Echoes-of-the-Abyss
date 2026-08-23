@@ -12,6 +12,7 @@ import {
   Faction,
   HarvestThrottle,
   ResourceKind,
+  SelfEventKind,
   StructureKind,
   UnitKind,
   statsFor,
@@ -104,6 +105,28 @@ export interface SimWorld extends IWorld {
    * get their plan back (see sim/systems/orderQueue.ts).
    */
   orderQueues: Map<number, QueuedOrder[]>;
+  /**
+   * Things that happened to a player's own force this tick, drained into the
+   * Echo snapshot and cleared.
+   *
+   * Held on the world rather than passed back through return values because
+   * they are raised deep inside systems — a firing spike is raised by combat,
+   * a transmission by the command path — and threading a channel through every
+   * one of those would be a worse cost than a list the drain empties.
+   */
+  selfEvents: PendingSelfEvent[];
+}
+
+/** A self-event before it is bucketed by slot. `eid`, not a match-local id. */
+export interface PendingSelfEvent {
+  kind: SelfEventKind;
+  eid: number;
+  bearing?: number;
+}
+
+/** Raise a self-event. No-op for an entity the world has already destroyed. */
+export function raiseSelfEvent(world: SimWorld, event: PendingSelfEvent): void {
+  world.selfEvents.push(event);
 }
 
 /**
@@ -142,6 +165,7 @@ export function createSimWorld(terrain: Terrain, dt: number, seed: number): SimW
   world.unitGrid = new SpatialHash(SEPARATION.CELL_M);
   world.separationBuffer = [];
   world.orderQueues = new Map();
+  world.selfEvents = [];
   // Burn entity id 0 so components can use eid 0 as a "none" sentinel
   // (Weapon.orderedTargetEid, Harvester.nodeEid). bitecs hands out dense ids
   // from 0, so without this the first spawned entity would be untargetable.

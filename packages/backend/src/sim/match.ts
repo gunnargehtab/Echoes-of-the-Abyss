@@ -29,7 +29,10 @@ import {
   UnitKind,
   statsFor,
   structureStatsFor,
+  ResolutionTier,
+  SelfEventKind,
   type EchoSnapshot,
+  type SelfEvent,
   type GameOverPayload,
   type OwnStructure,
   type OwnUnit,
@@ -77,6 +80,7 @@ import {
   spawnStructure,
   spawnUnit,
   type SimWorld,
+  raiseSelfEvent,
 } from './world.ts';
 
 /** Construction options for a match. Both default to "a normal live match". */
@@ -436,6 +440,7 @@ export class Match {
       addComponent(this.world, ActivePing, eid);
     }
     ActivePing.remainingS[eid] = ACTIVE_SONAR.REVEAL_DURATION_S;
+    raiseSelfEvent(this.world, { kind: SelfEventKind.Ping, eid });
     // Pinging breaks silence by definition.
     SilentRunning.active[eid] = 0;
   }
@@ -645,6 +650,36 @@ export class Match {
     const result = this.echo.run(this.world, this.slots);
     if (result.elapsedMs > this.worstEchoMs) this.worstEchoMs = result.elapsedMs;
 
+    // Self-events, bucketed by whoever they happened to. Drained here rather
+    // than at the end of the tick because the Echo snapshot is the only thing
+    // that carries them, and it is built at 5 Hz while events are raised at
+    // 60 Hz — so a tick's worth of them accumulates and ships together.
+    const eventsBySlot = new Map<number, SelfEvent[]>();
+    for (const slot of this.slots) eventsBySlot.set(slot, []);
+    for (const pending of this.world.selfEvents) {
+      if (!hasComponent(this.world, Owner, pending.eid)) continue;
+      const bucket = eventsBySlot.get(Owner.slot[pending.eid]!);
+      if (bucket === undefined) continue;
+      const event: SelfEvent = { kind: pending.kind, unitId: pending.eid };
+      if (pending.bearing !== undefined) event.bearing = pending.bearing;
+      bucket.push(event);
+    }
+    this.world.selfEvents.length = 0;
+
+    // Being lit is raised by the Echo pass itself, so it arrives separately
+    // from the 60 Hz channel above and is folded in here.
+    for (const [slot, hits] of result.litBySlot) {
+      const bucket = eventsBySlot.get(slot);
+      if (bucket === undefined) continue;
+      for (const hit of hits) {
+        bucket.push({
+          kind: SelfEventKind.Exposed,
+          unitId: hit.unitId,
+          bearing: hit.bearing,
+        });
+      }
+    }
+
     const snapshots = new Map<number, EchoSnapshot>();
     for (const slot of this.slots) {
       const units = this.collectOwnUnits(slot);
@@ -664,6 +699,11 @@ export class Match {
         peakSig,
         nodules: economyFor(this.world, slot).nodules,
         crystal: economyFor(this.world, slot).crystal,
+        exposure: result.exposureBySlot.get(slot) ?? {
+          tier: ResolutionTier.Silent,
+          trackedCount: 0,
+        },
+        selfEvents: eventsBySlot.get(slot) ?? [],
       });
     }
     return snapshots;

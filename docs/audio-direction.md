@@ -196,7 +196,39 @@ first-gesture unlock.
 
 Contacts are sonified (§3): a voice per contact, panned with the authority its tier earned,
 filtered by the biome it arrived through (§9), and carrying the faction's drive signature
-from Tier 3 up (§8). The player's own loudness (§4) is still separate work.
+from Tier 3 up (§8).
+
+The player's own loudness is implemented too — §4's four bands with their world-bus
+attenuation, Silent Running's inversion, §5's three active-sonar events, the break-silence
+transient, and §2's Precedence Law in both of its halves (the fade-in budget that keeps the
+ear ahead of the eye, and the ducking chain that decides what wins when several things
+sound at once).
+
+**Nothing about the player's own force is inferred.** The Echo pass reports exposure
+directly: `EchoSnapshot.exposure` says how well the player is currently seen, and
+`EchoSnapshot.selfEvents` carries the discrete moments — transmitted, broke silence, was
+lit. All of it is resolved information about the player's own units, so it leaks nothing,
+and the alternative was guessing. A SIG jump could be a broken silence, a discharge or a
+descent; "am I being pinged" cannot be read off own-SIG at all, and §5's cue is far too loud
+to fire on a guess.
+
+The one thing deliberately withheld is the pinger's **position**. The victim gets a bearing,
+which is what §11's screen-edge flash asks for. A ping resolves by hard radius while the
+pinger's own self-reveal travels by propagation, so in a masking biome a player can be lit
+by something they cannot hear back — sending coordinates would close that gap on their
+behalf.
+
+**The self bed follows fleet SIG, not `peakSig`.** The HUD number folds in structures, and a
+base six kilometres away would pin the bed at "full plant" for the whole match, making the
+entire scale — Silent Running's inversion included — inaudible. So the HUD can read `SIG 35`
+while the bed reads `SILENT RUNNING`: the base is loud, the fleet is not, and both
+statements are true.
+
+**Being lit is an event, not a state.** A ping reveals for three seconds, which is fifteen
+Echo ticks; the first implementation fired the strike on every one of them, measured at 42
+strikes for a single ping. The pass now tracks which hulls a given transmission has already
+lit, so a hull is told once — and a hull that enters the radius part-way through is still
+told, because it was just lit.
 
 **Where fidelity is enforced.** The renderer assembles the contact picture the mix is
 allowed to hear and *withholds* bearing and range at Tier 1 rather than blurring them —

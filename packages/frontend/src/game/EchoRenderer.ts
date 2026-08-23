@@ -34,6 +34,7 @@ import {
   PROPAGATION_MODEL,
   ResolutionTier,
   ResourceKind,
+  SelfEventKind,
   StructureKind,
   UnitKind,
   depthBandFor,
@@ -44,6 +45,7 @@ import {
   FACTION_STRUCTURE,
   type Contact,
   type EchoSnapshot,
+  type ExposureReport,
   type GameOverPayload,
   type OwnStructure,
   type OwnUnit,
@@ -58,6 +60,9 @@ import {
   sigColor,
 } from './palette.ts';
 import type { ContactAudioEntry, ContactAudioFrame } from '../audio/contactMixer.ts';
+import type { PingReturn, SelfAudioFrame } from '../audio/selfMixer.ts';
+import { PRECEDENCE_MS, markOpacity } from '../audio/precedence.ts';
+import { selfMixFor } from '../audio/selfNoise.ts';
 import { drawStructureSilhouette, drawUnitSilhouette, HULL_LENGTH_M } from './silhouettes.ts';
 import { destroyHullTextures, hullSpriteSizeM, hullTexture, loadHullArt } from './hullTextures.ts';
 import {
@@ -72,6 +77,15 @@ import type { TerrainPayload } from '../net/GameClient.ts';
 interface TrackedContact {
   contact: Contact;
   lastSeenMs: number;
+  /**
+   * When this contact first appeared, for the Precedence Law's fade-in.
+   *
+   * Distinct from `lastSeenMs` on purpose: the fade-in is a budget spent once,
+   * when a mark *arrives*, so that the ear beats the eye (docs/audio-direction.md
+   * §2). Keying it to the last refresh instead would re-fade a contact five
+   * times a second and leave it invisible.
+   */
+  firstSeenMs: number;
 }
 
 export interface RendererCallbacks {
@@ -95,6 +109,8 @@ export interface RendererCallbacks {
    * the consumer.
    */
   onContactAudio(frame: ContactAudioFrame): void;
+  /** What is true of the player's own force, once per Echo tick. */
+  onSelfAudio(frame: SelfAudioFrame): void;
 }
 
 /**
@@ -128,6 +144,32 @@ export interface ContactLogEntry {
  * fires once per acquisition and never sustains.
  */
 const LOCK_FLASH_MS = 700;
+
+/**
+ * How long the screen-edge exposure flash lasts, milliseconds.
+ *
+ * Matched to the audio tail (§5's two seconds) rather than chosen: the flash
+ * and the strike are one event, and a flash that outlived the sound would keep
+ * claiming the player is being lit after they have stopped being lit.
+ */
+const EXPOSURE_FLASH_MS = 2000;
+
+/** How long a broken-silence ring stays on the hull that broke it. */
+const BREAK_SILENCE_FLASH_MS = 2000;
+
+/**
+ * When a world-space contact mark fades in, milliseconds after it arrives.
+ *
+ * §2 fixes the start at 250 ms but names no end for the world layer, so the
+ * ramp is given the same 250 ms width the minimap's is (150 -> 400). Derived
+ * rather than invented: the two layers should feel like one rule.
+ */
+const WORLD_FADE_MS = {
+  start: PRECEDENCE_MS.WORLD_FADE_START,
+  full:
+    PRECEDENCE_MS.WORLD_FADE_START +
+    (PRECEDENCE_MS.MINIMAP_FADE_FULL - PRECEDENCE_MS.MINIMAP_FADE_START),
+} as const;
 
 const SELECT_RADIUS_M = 140;
 /** How close a right-click must land to a contact or node to mean it. */
@@ -309,6 +351,18 @@ export class EchoRenderer {
   private infoBadge!: Text;
 
   private sigLabel!: Text;
+  /**
+   * §4's band, in words.
+   *
+   * The visual equivalent of the self-noise bed: the bed says "you are hard
+   * to hear past" and the meter alone does not, because the meter is a number
+   * about the *world's* view of you while the bed is about your own hearing.
+   * docs/audio-direction.md §11 makes an audible fact with no visible one a
+   * bug, and "the world just got quieter" is very much an audible fact.
+   */
+  private bandLabel!: Text;
+  /** "TRACKED" — the continuous half of the exposure report. */
+  private exposureLabel!: Text;
   private resourceLabel!: Text;
   private crystalLabel!: Text;
   private statusLabel!: Text;
@@ -324,6 +378,11 @@ export class EchoRenderer {
   private readonly tracked = new Map<number, TrackedContact>();
   private selected = new Set<number>();
   private peakSig = 0;
+  /** Loudest SIG across own *units* — the self bed's input, see selfAudioFrame. */
+  private fleetSig = 0;
+  private fleetSilent = false;
+  /** What the rest of the map currently holds on the player, server-sent. */
+  private exposure: ExposureReport = { tier: ResolutionTier.Silent, trackedCount: 0 };
   private nodules = 0;
   private crystal = 0;
   private status = 'connecting';
@@ -356,6 +415,18 @@ export class EchoRenderer {
   private cameraCentered = false;
   /** Contact handle to the moment it reached Tier 4, for the lock brackets. */
   private readonly lockFlash = new Map<number, number>();
+  /**
+   * The player's own ping in flight: where it went out from and when.
+   *
+   * Kept so the returns can be ordered by range *from the pinging hull*, which
+   * is the range that produced them — not from the camera, which happens to be
+   * wherever the player was looking.
+   */
+  private ownPing: { x: number; y: number; atMs: number } | null = null;
+  /** Live exposure strikes: bearing and the moment they landed. */
+  private readonly exposureFlashes: { bearing: number; atMs: number }[] = [];
+  /** Own units that broke silence, and when, for the visible transient. */
+  private readonly brokeSilence = new Map<number, number>();
   /**
    * Last known heading per own unit, derived client-side from position deltas
    * between snapshots — the server does not send headings for own units, and
@@ -435,6 +506,17 @@ export class EchoRenderer {
 
     this.sigLabel = new Text({ text: 'SIG --', style: { ...mono, fontSize: 13 } });
 
+    this.bandLabel = new Text({
+      text: '',
+      style: { ...mono, fontSize: 11, fill: UI.textDim },
+    });
+
+    this.exposureLabel = new Text({
+      text: '',
+      style: { ...mono, fontSize: 11, fill: UI.threat },
+    });
+    this.exposureLabel.visible = false;
+
     this.statusLabel = new Text({
       text: '',
       style: { ...mono, fontSize: 12, fill: UI.textDim },
@@ -472,6 +554,8 @@ export class EchoRenderer {
 
     this.hud.addChild(
       this.sigLabel,
+      this.bandLabel,
+      this.exposureLabel,
       this.resourceLabel,
       this.crystalLabel,
       this.statusLabel,
@@ -1450,6 +1534,7 @@ export class EchoRenderer {
     this.units = snapshot.units;
     this.structures = snapshot.structures;
     this.peakSig = snapshot.peakSig;
+    this.exposure = snapshot.exposure;
     this.nodules = snapshot.nodules;
     this.crystal = snapshot.crystal;
 
@@ -1514,10 +1599,15 @@ export class EchoRenderer {
       ) {
         this.lockFlash.set(contact.id, now);
       }
-      this.tracked.set(contact.id, { contact, lastSeenMs: now });
+      this.tracked.set(contact.id, {
+        contact,
+        lastSeenMs: now,
+        firstSeenMs: previous?.firstSeenMs ?? now,
+      });
     }
 
     this.callbacks.onContactAudio(this.contactAudioFrame(snapshot.tick, now));
+    this.callbacks.onSelfAudio(this.selfAudioFrame(snapshot, now));
 
     // Drop selections and motion history for entities that no longer exist.
     const alive = new Set<number>();
@@ -1532,6 +1622,91 @@ export class EchoRenderer {
         this.headings.delete(id);
       }
     }
+  }
+
+  /**
+   * The player's own force, reduced to what the mix needs.
+   *
+   * Also where the server's self-events are turned into things the *screen*
+   * shows, because §11 makes an audible fact with no visual equivalent a bug —
+   * and the exposure strike is the one cue in the game the doc admits has "no
+   * visual equivalent that arrives sooner". Sooner is not the same as never:
+   * it gets a screen-edge flash on the same bearing, arriving with the sound
+   * rather than before it.
+   */
+  private selfAudioFrame(snapshot: EchoSnapshot, now: number): SelfAudioFrame {
+    for (const event of snapshot.selfEvents) {
+      switch (event.kind) {
+        case SelfEventKind.Ping: {
+          const unit = this.units.find((u) => u.id === event.unitId);
+          if (unit !== undefined) this.ownPing = { x: unit.x, y: unit.y, atMs: now };
+          break;
+        }
+        case SelfEventKind.BreakSilence:
+          this.brokeSilence.set(event.unitId, now);
+          break;
+        case SelfEventKind.Exposed:
+          if (event.bearing !== undefined) {
+            this.exposureFlashes.push({ bearing: event.bearing, atMs: now });
+          }
+          break;
+      }
+    }
+
+    // Fleet SIG, not `peakSig`: the HUD number folds in structures, and a base
+    // six kilometres away would pin the self bed at "full plant" for the whole
+    // match. See SelfAudioFrame.fleetSig.
+    let fleetSig = 0;
+    let allSilent = this.units.length > 0;
+    for (const unit of this.units) {
+      if (unit.sig > fleetSig) fleetSig = unit.sig;
+      if (!unit.silentRunning) allSilent = false;
+    }
+
+    // Kept for the HUD too: the band label reads the same numbers the bed
+    // does, so the words and the sound cannot disagree.
+    this.fleetSig = fleetSig;
+    this.fleetSilent = allSilent;
+
+    return {
+      tick: snapshot.tick,
+      fleetSig,
+      silentRunning: allSilent,
+      events: snapshot.selfEvents,
+      returns: this.pingReturns(now),
+    };
+  }
+
+  /**
+   * Echoes from the player's own ping, ranged from the hull that sent it.
+   *
+   * Only while a ping is actually resolving: outside that window a Tier-4
+   * contact is one the player earned some other way, and giving it a return
+   * would tell them a ping found something it never touched.
+   */
+  private pingReturns(now: number): PingReturn[] {
+    const ping = this.ownPing;
+    if (ping === null) return [];
+    if (now - ping.atMs > ACTIVE_SONAR.REVEAL_DURATION_S * 1000) {
+      this.ownPing = null;
+      return [];
+    }
+
+    const out: PingReturn[] = [];
+    for (const entry of this.tracked.values()) {
+      const contact = entry.contact;
+      if (contact.tier < ResolutionTier.Track) continue;
+      const dx = contact.x - ping.x;
+      const dy = contact.y - ping.y;
+      const rangeM = Math.hypot(dx, dy);
+      if (rangeM > ACTIVE_SONAR.REVEAL_RADIUS_M) continue;
+      out.push({ rangeM, pan: rangeM === 0 ? 0 : dx / rangeM });
+    }
+    // Returns are only scheduled on the tick the sweep goes out; after that
+    // the same contacts are still resolved, and replaying them every tick
+    // would turn a sweep into a stutter.
+    this.ownPing = null;
+    return out;
   }
 
   /**
@@ -1690,6 +1865,8 @@ export class EchoRenderer {
     this.drawUnits();
     this.drawOrderPlans();
     this.drawHud();
+    // After the HUD, so the flash sits over the panels it warns through.
+    this.drawExposureFlashes();
     this.drawMarquee();
     this.drawDepthRibbon();
     this.drawCommandBar();
@@ -1897,6 +2074,84 @@ export class EchoRenderer {
   }
 
   /**
+   * The exposure flash — docs/audio-direction.md §11.
+   *
+   * "The 'you have been pinged' cue also renders as a screen-edge flash on the
+   * bearing of the pinging emitter." A band of light on the edge the strike
+   * came from, and nothing else: the server sent a bearing, so the screen may
+   * show a direction and must not show a place.
+   *
+   * Drawn in screen space rather than world space on purpose. A world-space
+   * marker would sit at a *position*, which is precisely the thing that was
+   * not sent.
+   */
+  private drawExposureFlashes(): void {
+    const g = this.hudGraphics;
+    const now = performance.now();
+    const width = this.app.screen.width;
+    const height = this.app.screen.height;
+
+    for (let i = this.exposureFlashes.length - 1; i >= 0; i--) {
+      const flash = this.exposureFlashes[i]!;
+      const t = (now - flash.atMs) / EXPOSURE_FLASH_MS;
+      if (t >= 1) {
+        this.exposureFlashes.splice(i, 1);
+        continue;
+      }
+
+      // Hard on arrival, then a long decay — the shape of the sound.
+      const alpha = Math.pow(1 - t, 2) * 0.55;
+      const cx = width / 2;
+      const cy = height / 2;
+      const dx = Math.cos(flash.bearing);
+      const dy = Math.sin(flash.bearing);
+      // Where a ray on this bearing leaves the screen. Scaling by the larger
+      // of the two axis ratios lands it on the nearer edge either way.
+      const scale = Math.min(
+        dx === 0 ? Infinity : Math.abs(cx / dx),
+        dy === 0 ? Infinity : Math.abs(cy / dy)
+      );
+      const ex = cx + dx * scale;
+      const ey = cy + dy * scale;
+
+      const band = Math.min(width, height) * 0.22;
+      g.circle(ex, ey, band).fill({ color: UI.threat, alpha: alpha * 0.5 });
+      g.circle(ex, ey, band * 0.55).fill({ color: UI.threat, alpha });
+    }
+  }
+
+  /**
+   * A ring on the hull that just broke silence.
+   *
+   * The SIG meter already spikes, but a meter is a number about the whole
+   * force: it cannot say *which* hull gave the ambush away. The audio cue is
+   * per-event, so its visual equivalent has to be per-hull too.
+   */
+  private drawBreakSilence(g: Graphics, inverseScale: number): void {
+    const now = performance.now();
+    for (const [id, at] of this.brokeSilence) {
+      const t = (now - at) / BREAK_SILENCE_FLASH_MS;
+      if (t >= 1) {
+        this.brokeSilence.delete(id);
+        continue;
+      }
+      const unit = this.units.find((u) => u.id === id);
+      if (unit === undefined) {
+        this.brokeSilence.delete(id);
+        continue;
+      }
+      // Expanding outward, unlike the lock brackets which close in: this is
+      // noise leaving the hull, and it should read that way.
+      const radius = HULL_LENGTH_M[unit.kind] * (1 + t * 3);
+      g.circle(unit.x, unit.y, radius).stroke({
+        width: 2 * inverseScale,
+        color: UI.threat,
+        alpha: (1 - t) * 0.8,
+      });
+    }
+  }
+
+  /**
    * The visual half of the Tier-4 lock tone (docs/audio-direction.md §11).
    *
    * Four brackets that close onto the contact over 700 ms and stop. Closing
@@ -1957,6 +2212,7 @@ export class EchoRenderer {
     const now = performance.now();
     const decayMs = PERSISTENCE.GHOST_MARKER_DECAY_S * 1000;
     const inverseScale = 1 / this.world.scale.x;
+    this.drawBreakSilence(g, inverseScale);
 
     for (const [id, entry] of this.tracked) {
       const age = now - entry.lastSeenMs;
@@ -1976,7 +2232,13 @@ export class EchoRenderer {
       // Ghosts fade rather than vanish; a stale contact is still information,
       // just less of it.
       const freshness = 1 - age / decayMs;
-      const alpha = style.alpha * freshness;
+      // ...and a *new* mark fades in, which is the Precedence Law's budget
+      // rather than a flourish: a mark that pops instantly races the audio
+      // device's own output latency and will sometimes win (§2). The two
+      // curves compose — one contact fading out while another fades in is
+      // exactly what the player should see.
+      const arrival = markOpacity(now - entry.firstSeenMs, WORLD_FADE_MS.start, WORLD_FADE_MS.full);
+      const alpha = style.alpha * freshness * arrival;
 
       this.drawLockFlash(g, id, contact, now, inverseScale);
 
@@ -2234,6 +2496,24 @@ export class EchoRenderer {
     this.sigLabel.text = `SIG ${this.peakSig.toFixed(0)}`;
     this.sigLabel.style.fill = sigColor(this.peakSig);
     this.sigLabel.position.set(meterX + meterWidth + 8, 8);
+
+    // What your own noise is doing to your hearing, in words. The bed makes
+    // this audible; §11 requires it also be readable.
+    const mix = selfMixFor(this.fleetSig, this.fleetSilent);
+    const deaf = mix.worldGain < 1 ? '  \u2013 masking' : mix.worldGain > 1 ? '  \u2013 open' : '';
+    this.bandLabel.text = `${mix.label.toUpperCase()}${deaf}`;
+    this.bandLabel.style.fill = this.fleetSilent ? UI.accent : UI.textDim;
+    this.bandLabel.position.set(this.sigLabel.x + this.sigLabel.width + 12, 10);
+
+    // The continuous half of the exposure report. Deliberately says only how
+    // well you are seen, never by whom or from where — that is all the server
+    // sends, and the HUD must not imply otherwise.
+    const tracked = this.exposure.tier >= ResolutionTier.Bearing;
+    this.exposureLabel.visible = tracked;
+    if (tracked) {
+      this.exposureLabel.text = `TRACKED \u00d7${this.exposure.trackedCount}`;
+      this.exposureLabel.position.set(this.bandLabel.x + this.bandLabel.width + 14, 10);
+    }
 
     const contactCount = this.tracked.size;
     this.statusLabel.text =
@@ -2536,22 +2816,32 @@ export class EchoRenderer {
     // Returns carry the same tier fidelity as the world view, scaled down.
     // They used to be uniform dots, which drew a Tier-1 haze as crisply as a
     // Tier-4 track — the scope asserting precision the server never sent.
-    for (const { contact } of this.tracked.values()) {
+    const scopeNow = performance.now();
+    for (const { contact, firstSeenMs } of this.tracked.values()) {
       if (contact.tier === ResolutionTier.Silent) continue;
       const style = TIER_STYLE[contact.tier as Exclude<ResolutionTier, ResolutionTier.Silent>];
       if (style === undefined) continue;
       const smear = SCOPE_RETURN_RADIUS_PX[contact.tier as 1 | 2 | 3 | 4];
+      // §2's fade-in, on the scope's own budget: it may start at 150 ms and
+      // reach full at 400 ms, ahead of the world layer but still behind the
+      // voice. The whole point is that the ear gets there first.
+      const arrival = markOpacity(
+        scopeNow - firstSeenMs,
+        PRECEDENCE_MS.MINIMAP_FADE_START,
+        PRECEDENCE_MS.MINIMAP_FADE_FULL
+      );
+      if (arrival <= 0) continue;
       // Soft at low tiers: a haze is drawn as a haze, and its size is the
       // uncertainty rather than the contact.
       og.circle(contact.x * k, contact.y * k, smear).fill({
         color: style.color,
-        alpha: contact.tier >= ResolutionTier.Classification ? 0.85 : 0.22,
+        alpha: (contact.tier >= ResolutionTier.Classification ? 0.85 : 0.22) * arrival,
       });
       if (contact.tier >= ResolutionTier.Classification) {
         og.circle(contact.x * k, contact.y * k, smear).stroke({
           width: 1,
           color: style.color,
-          alpha: 0.9,
+          alpha: 0.9 * arrival,
         });
       }
     }

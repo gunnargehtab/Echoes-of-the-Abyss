@@ -62,6 +62,8 @@ export function GameCanvas() {
       activeVoices: audio.voices.size,
       contactVoices: audio.activeContactVoices,
       spatialisation: audio.spatialisationMode,
+      selfRung: audio.activeRung,
+      selfCues: audio.selfCuesFired,
       worstTickMs: Number(audio.worstTickCostMs.toFixed(4)),
       lastTickMs: Number(audio.lastTickCostMs.toFixed(4)),
       lastTickBuilt: audio.lastTickVoicesBuilt,
@@ -96,6 +98,8 @@ export function GameCanvas() {
         // the engine and applied on the tick, so the cost is measured and the
         // mix never moves between ticks (docs/audio-direction.md §12).
         onContactAudio: (frame) => audio.applyContacts(frame),
+        // The other half of the mix: what is true of the player's own force.
+        onSelfAudio: (frame) => audio.applySelf(frame),
         onContactEvent: (entry) =>
           // Capped: a long match would otherwise grow an unbounded list, and
           // nobody scrolls back past a few hundred detections.

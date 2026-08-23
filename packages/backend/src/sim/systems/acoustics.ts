@@ -141,14 +141,20 @@ export function acousticsSystem(world: SimWorld): void {
  * Breaking Silent Running to fire adds the +40 ambush spike on top of the
  * weapon's own noise — the first shot of an ambush is always the loudest, and
  * always tells the whole map an ambush happened (docs/systems-echo.md §6).
+ *
+ * Returns whether this discharge broke silence, so the caller can raise the
+ * self-event the mix needs: the break is a discrete moment, not the gradual
+ * SIG change a client could read off the meter.
  */
-export function applyFiringSpike(eid: number, weaponSig: number): void {
+export function applyFiringSpike(eid: number, weaponSig: number): boolean {
   let amount = weaponSig;
   const duration = SILENT_RUNNING.BREAK_SILENCE_DURATION_S;
 
+  let brokeSilence = false;
   if (SilentRunning.active[eid]) {
     amount += SILENT_RUNNING.BREAK_SILENCE_SIG_SPIKE;
     SilentRunning.active[eid] = 0;
+    brokeSilence = true;
   }
 
   // A new spike replaces a weaker one rather than summing, so rapid fire does
@@ -159,4 +165,8 @@ export function applyFiringSpike(eid: number, weaponSig: number): void {
   } else {
     Acoustic.spikeRemainingS[eid] = Math.max(Acoustic.spikeRemainingS[eid]!, duration);
   }
+
+  // Returned rather than raised here: this module has no world handle, and the
+  // caller is the one that knows an event channel exists.
+  return brokeSilence;
 }

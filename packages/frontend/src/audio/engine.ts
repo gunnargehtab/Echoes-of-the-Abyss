@@ -37,6 +37,15 @@
 import { SIM } from '@echoes/shared';
 import { ContactMixer, type ContactAudioFrame, type Spatialisation } from './contactMixer.ts';
 import { ContactVoice, ensureNoiseBuffer } from './contactVoice.ts';
+import { duckFor } from './precedence.ts';
+import { SelfMixer, type SelfAudioFrame } from './selfMixer.ts';
+import {
+  SelfBed,
+  playBreakSilence,
+  playExposure,
+  playPingReturn,
+  playPingTransmit,
+} from './selfVoice.ts';
 import { MAX_CONTACT_VOICES, VoiceAllocator } from './voiceAllocator.ts';
 
 /** SPEC — docs/audio-direction.md §12. Milliseconds per Echo tick. */
@@ -79,6 +88,9 @@ export class AudioEngine {
 
   readonly voices = new VoiceAllocator(MAX_CONTACT_VOICES);
   private mixer: ContactMixer | null = null;
+  private selfMixer: SelfMixer | null = null;
+  private selfBed: SelfBed | null = null;
+  private pendingSelf: SelfAudioFrame | null = null;
   /**
    * The most recent contact picture, held until the tick consumes it.
    *
@@ -193,6 +205,19 @@ export class AudioEngine {
       this.lastTickBuilt++;
       return new ContactVoice(context, contact);
     });
+
+    // The self bus carries both the continuous bed and the one-shots, so the
+    // Precedence Law can duck everything below it from a single place.
+    const bed = new SelfBed(context, self);
+    this.selfBed = bed;
+    this.selfMixer = new SelfMixer({
+      bed: (mix, now) => bed.update(mix, now),
+      world: (gain, now) => world.gain.setTargetAtTime(gain, now, 0.2),
+      transmit: (at) => playPingTransmit(context, self, at),
+      ret: (at, pan) => playPingReturn(context, self, at, pan),
+      exposure: (at, pan) => playExposure(context, self, at, pan),
+      breakSilence: (at) => playBreakSilence(context, self, at),
+    });
     this.mixer.setSpatialisation(this.spatialisation);
     this.duckGain = duck;
     this.contactAnalyser = analyser;
@@ -256,6 +281,23 @@ export class AudioEngine {
       mixer.update(frame, this.context.currentTime);
     }
 
+    const selfMixer = this.selfMixer;
+    const selfFrame = this.pendingSelf;
+    this.pendingSelf = null;
+    if (selfMixer !== null && selfFrame !== null && this.context !== null) {
+      selfMixer.update(selfFrame, this.context.currentTime);
+      // The rest of the chain. `world` is set inside the self mixer, because
+      // it also carries §4's own-noise attenuation; the others are pure
+      // precedence and belong here.
+      const rung = selfMixer.activeRung;
+      const buses = this.buses;
+      if (buses !== null) {
+        const now = this.context.currentTime;
+        buses.contact.gain.setTargetAtTime(duckFor('contact', rung), now, 0.15);
+        buses.music.gain.setTargetAtTime(duckFor('music', rung), now, 0.25);
+      }
+    }
+
     const analyser = this.contactAnalyser;
     const duck = this.duckGain;
     const context = this.context;
@@ -284,6 +326,21 @@ export class AudioEngine {
    */
   applyContacts(frame: ContactAudioFrame): void {
     this.pendingFrame = frame;
+  }
+
+  /** Hand the mix what is true of the player's own force on this tick. */
+  applySelf(frame: SelfAudioFrame): void {
+    this.pendingSelf = frame;
+  }
+
+  /** How many of each self-event this session has played. */
+  get selfCuesFired(): Record<string, number> {
+    return this.selfMixer?.firedCounts ?? {};
+  }
+
+  /** Which rung of the Precedence Law is currently sounding, if any. */
+  get activeRung(): string | null {
+    return this.selfMixer?.activeRung ?? null;
   }
 
   get activeContactVoices(): number {
@@ -325,6 +382,11 @@ export class AudioEngine {
     this.detachLifecycle = null;
     this.mixer?.clear(this.context?.currentTime ?? 0);
     this.mixer = null;
+    this.selfBed?.stop(this.context?.currentTime ?? 0);
+    this.selfBed = null;
+    this.selfMixer?.reset();
+    this.selfMixer = null;
+    this.pendingSelf = null;
     this.pendingFrame = null;
     this.voices.clear();
     const context = this.context;
