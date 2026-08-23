@@ -192,9 +192,26 @@ AudioContext
 
 The engine exists (`packages/frontend/src/audio/`): the bus graph above, the 24-voice
 contact budget with its stealing policy, tick-aligned scheduling, tab-blur suspend, and the
-first-gesture unlock. Measured in the headless client at **0.2 ms** per Echo tick against
-the 1 ms budget. Sonification of contacts and of the player's own loudness sit on top of it
-and are separate work.
+first-gesture unlock.
+
+Contacts are sonified (§3): a voice per contact, panned with the authority its tier earned,
+filtered by the biome it arrived through (§9), and carrying the faction's drive signature
+from Tier 3 up (§8). The player's own loudness (§4) is still separate work.
+
+**Where fidelity is enforced.** The renderer assembles the contact picture the mix is
+allowed to hear and *withholds* bearing and range at Tier 1 rather than blurring them —
+there is nothing to blur, because a Tier-1 resolution reports the listener's own position.
+The mixer forwards what it is given and never re-derives geometry, and the voice refuses to
+pan a tier that has no bearing even if handed one. Three layers, all defaulting to silence
+about what was not sent.
+
+**Measured** in the headless client with two clients in a live engagement: **0.1–0.3 ms**
+per Echo tick with six contact voices sounding, against the 1 ms budget. A single client
+peaks at 0.4 ms; the 2–3 ms outliers seen in the two-client runs are two pages contending
+inside one headless browser process, and appear on ticks where no voice is built at all.
+The engine reports both the worst case and the most recent tick, because a budget blown
+only while *building* voices is a different problem from one blown every tick, and a
+worst-case figure alone cannot tell them apart.
 
 Two departures from the diagram above, both deliberate:
 
@@ -208,6 +225,11 @@ different mechanism, and worth knowing before someone tries to "fix" it into a c
 sonar is unusually well suited to synthesis — tonal returns and filtered noise beds are what
 the material actually is. The buffer path is in place for when banks exist; the Opus/AAC
 format requirement in the table above applies to those banks, not to the prototype.
+
+Two rows of §9's table are deliberately **not** voiced, because the simulation does not
+model what they describe: the thermocline boundary, which has no biome, and the Abyssal
+Trench's *axial* behaviour, which needs PF as a function of bearing. Voicing either would
+be the mix claiming to know something the game does not.
 
 ---
 

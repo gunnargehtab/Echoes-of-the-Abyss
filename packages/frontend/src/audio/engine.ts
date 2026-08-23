@@ -35,6 +35,8 @@
  */
 
 import { SIM } from '@echoes/shared';
+import { ContactMixer, type ContactAudioFrame, type Spatialisation } from './contactMixer.ts';
+import { ContactVoice, ensureNoiseBuffer } from './contactVoice.ts';
 import { MAX_CONTACT_VOICES, VoiceAllocator } from './voiceAllocator.ts';
 
 /** SPEC — docs/audio-direction.md §12. Milliseconds per Echo tick. */
@@ -76,9 +78,31 @@ export class AudioEngine {
   private analyserBuffer = new Float32Array(new ArrayBuffer(0));
 
   readonly voices = new VoiceAllocator(MAX_CONTACT_VOICES);
+  private mixer: ContactMixer | null = null;
+  /**
+   * The most recent contact picture, held until the tick consumes it.
+   *
+   * Buffered rather than applied on arrival so the mixing cost lands inside
+   * the measured tick and counts against AUDIO_BUDGET_MS. A frame that
+   * arrives twice before a tick is simply superseded — the newer one is
+   * strictly better information.
+   */
+  private pendingFrame: ContactAudioFrame | null = null;
+  private spatialisation: Spatialisation = 'stereo';
 
   /** Rolling worst-case cost of a tick's audio work, against AUDIO_BUDGET_MS. */
   private worstTickMs = 0;
+  /**
+   * Cost of the most recent tick.
+   *
+   * Reported alongside the worst case because the two answer different
+   * questions: a budget blown only on the tick that *builds* voices is a
+   * different problem from one blown every tick, and the worst-case figure
+   * alone cannot tell them apart.
+   */
+  private lastTickMs = 0;
+  /** New voices built on the most recent tick. */
+  private lastTickBuilt = 0;
   private detachLifecycle: (() => void) | null = null;
 
   get state(): AudioEngineState {
@@ -90,6 +114,14 @@ export class AudioEngine {
 
   get worstTickCostMs(): number {
     return this.worstTickMs;
+  }
+
+  get lastTickCostMs(): number {
+    return this.lastTickMs;
+  }
+
+  get lastTickVoicesBuilt(): number {
+    return this.lastTickBuilt;
   }
 
   /** The bus graph, once started. Exposed so voice sources can attach. */
@@ -154,6 +186,14 @@ export class AudioEngine {
     this.analyserBuffer = new Float32Array(new ArrayBuffer(analyser.fftSize * 4));
 
     this.buses = { music, world, contact, self, ui, master };
+    // Built here, at the unlock gesture, so the first contact of a match does
+    // not pay 44,100 samples of noise inside a 1 ms tick.
+    ensureNoiseBuffer(context);
+    this.mixer = new ContactMixer(this.voices, () => {
+      this.lastTickBuilt++;
+      return new ContactVoice(context, contact);
+    });
+    this.mixer.setSpatialisation(this.spatialisation);
     this.duckGain = duck;
     this.contactAnalyser = analyser;
 
@@ -208,6 +248,14 @@ export class AudioEngine {
   onEchoTick(): void {
     const started = performance.now();
 
+    this.lastTickBuilt = 0;
+    const mixer = this.mixer;
+    const frame = this.pendingFrame;
+    this.pendingFrame = null;
+    if (mixer !== null && frame !== null && this.context !== null) {
+      mixer.update(frame, this.context.currentTime);
+    }
+
     const analyser = this.contactAnalyser;
     const duck = this.duckGain;
     const context = this.context;
@@ -224,7 +272,38 @@ export class AudioEngine {
     }
 
     const cost = performance.now() - started;
+    this.lastTickMs = cost;
     if (cost > this.worstTickMs) this.worstTickMs = cost;
+  }
+
+  /**
+   * Hand the mix the contact picture resolved on this tick.
+   *
+   * Separate from `onEchoTick` so the caller cannot accidentally mix on a
+   * frame boundary: this only records, and the tick applies.
+   */
+  applyContacts(frame: ContactAudioFrame): void {
+    this.pendingFrame = frame;
+  }
+
+  get activeContactVoices(): number {
+    return this.mixer?.activeCount ?? 0;
+  }
+
+  /**
+   * Mono collapses every pan to centre (docs/audio-direction.md §11).
+   *
+   * Safe because bearing is never audio-only: it is in the contact log and on
+   * the sonar scope, so mono costs the convenience of hearing where something
+   * is, never the fact of it.
+   */
+  setSpatialisation(mode: Spatialisation): void {
+    this.spatialisation = mode;
+    this.mixer?.setSpatialisation(mode);
+  }
+
+  get spatialisationMode(): Spatialisation {
+    return this.spatialisation;
   }
 
   /**
@@ -244,6 +323,9 @@ export class AudioEngine {
   async destroy(): Promise<void> {
     this.detachLifecycle?.();
     this.detachLifecycle = null;
+    this.mixer?.clear(this.context?.currentTime ?? 0);
+    this.mixer = null;
+    this.pendingFrame = null;
     this.voices.clear();
     const context = this.context;
     this.context = null;
