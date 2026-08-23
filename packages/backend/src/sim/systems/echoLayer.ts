@@ -41,6 +41,38 @@ import {
 import { SpatialHash } from '../spatialHash.ts';
 import type { SimWorld } from '../world.ts';
 
+/** Player slots the room admits. Sized for the flat per-slot scratch arrays. */
+const MAX_SLOTS = 8;
+
+/**
+ * The threshold multiple a pair must reach to *improve* on a tier already
+ * resolved. Indexed by the tier a slot currently holds for this emitter, so
+ * index 4 (Track) is unbeatable and index 0 (Silent) just needs Tier 1.
+ *
+ * This is what lets the pass skip work rather than merely abandon it early:
+ * a listener that cannot beat what its own side already heard contributes
+ * nothing, because only the best resolution per slot ever ships.
+ */
+const RATIO_TO_BEAT = [
+  TIER_THRESHOLD_MULTIPLIER.CONTACT,
+  TIER_THRESHOLD_MULTIPLIER.BEARING,
+  TIER_THRESHOLD_MULTIPLIER.CLASSIFICATION,
+  TIER_THRESHOLD_MULTIPLIER.TRACK,
+  Number.POSITIVE_INFINITY,
+];
+
+/**
+ * `RATIO_TO_BEAT`, turned into a squared distance scale.
+ *
+ * Requiring r times the detection threshold shrinks the audible radius by
+ * r^(1/exponent); squaring it lets the pair loop stay in squared-distance
+ * space and never take a square root to reject a pair. Index 4 is zero, so a
+ * slot already holding a Track rejects every remaining listener outright.
+ */
+const RATIO_SCALE_SQ = RATIO_TO_BEAT.map((ratio) =>
+  Number.isFinite(ratio) ? Math.pow(ratio, -2 / PROPAGATION_MODEL.ATTENUATION_EXPONENT) : 0
+);
+
 /**
  * Everything that both emits and can be heard — units and structures alike.
  * A base is a broadcast tower (docs/economy.md §1); it is found the same way
@@ -91,7 +123,15 @@ export class EchoLayer {
    * the pair loop reads both tens of thousands of times per pass.
    */
   private readonly rangeScaleByHyd = new Float64Array(101);
+  /** rangeScaleByHyd squared, so the distance prune needs no extra multiply. */
+  private readonly rangeScaleSqByHyd = new Float64Array(101);
   private readonly thresholdByHyd = new Float64Array(101);
+  /**
+   * Best tier each slot has resolved for the emitter currently being walked.
+   * Reset per emitter; mirrors what `record` holds, but as a flat array read
+   * once per candidate pair instead of two Map lookups.
+   */
+  private readonly bestTierThisEmitter = new Int8Array(MAX_SLOTS);
 
   constructor() {
     for (let h = 0; h <= 100; h++) {
@@ -99,6 +139,7 @@ export class EchoLayer {
         Math.max(h, 1) / PROPAGATION_MODEL.MAX_EXPECTED_HYD,
         1 / PROPAGATION_MODEL.ATTENUATION_EXPONENT
       );
+      this.rangeScaleSqByHyd[h] = this.rangeScaleByHyd[h]! * this.rangeScaleByHyd[h]!;
       this.thresholdByHyd[h] = detectionThreshold(Math.max(h, 1));
     }
   }
@@ -204,47 +245,68 @@ export class EchoLayer {
       const sigMasked = sig * pfFactor;
       const { REFERENCE_DISTANCE_M, ATTENUATION_EXPONENT } = PROPAGATION_MODEL;
 
+      this.bestTierThisEmitter.fill(ResolutionTier.Silent);
+
+      const range2 = range * range;
+
       for (let j = 0; j < candidates.length; j++) {
-        const listener = candidates[j]!;
-        const listenerSlot = Owner.slot[listener]!;
-        if (listenerSlot === emitterSlot) continue;
+        {
+          const listener = candidates[j]!;
+          const listenerSlot = Owner.slot[listener]!;
+          if (listenerSlot === emitterSlot) continue;
 
-        // Prune in squared-distance space against THIS listener's true
-        // audible range (emitter bound × cached hyd scale): far pairs —
-        // the majority — cost two multiplies, no sqrt, no pow, no walk.
-        const hyd = Acoustic.hyd[listener]! | 0;
-        const maxD = range * this.rangeScaleByHyd[hyd > 100 ? 100 : hyd]!;
-        const lx = Position.x[listener]!;
-        const ly = Position.y[listener]!;
-        const dx = ex - lx;
-        const dy = ey - ly;
-        const d2 = dx * dx + dy * dy;
-        if (d2 > maxD * maxD) continue;
+          const lx = Position.x[listener]!;
+          const ly = Position.y[listener]!;
+          const dx = ex - lx;
+          const dy = ey - ly;
+          const d2 = dx * dx + dy * dy;
 
-        // One pow gives what the pair perceives per unit of PF, and from it
-        // the exact PF this path would need to be audible at all. Pairs that
-        // would stay silent even through all-trench water skip the walk, and
-        // the walk itself aborts once its mean can no longer reach the bar.
-        const distance = Math.sqrt(d2);
-        const perceivedPerPf =
-          sigMasked *
-          Math.pow(
-            REFERENCE_DISTANCE_M / Math.max(distance, REFERENCE_DISTANCE_M),
-            ATTENUATION_EXPONENT
-          );
-        const threshold = this.thresholdByHyd[hyd > 100 ? 100 : hyd]!;
-        const pfNeeded = (threshold * TIER_THRESHOLD_MULTIPLIER.CONTACT) / perceivedPerPf;
-        if (pfNeeded > MAX_PROPAGATION_FACTOR) continue;
+          // One squared-distance test does the work of three.
+          //
+          // It folds together: is this listener in range at all; could the
+          // pair be audible even through all-trench water; and — the
+          // expensive one to get wrong — could it *improve* on what this
+          // slot already resolved for this emitter. Only the best resolution
+          // per slot ever ships, so a pair that cannot beat the standing tier
+          // contributes nothing and must not cost a path integral, a square
+          // root or a pow to discard.
+          //
+          // The tier bar becomes a distance because the propagation model is
+          // invertible: needing `r` times the threshold shrinks the audible
+          // radius by r^(1/exponent), which is `ratioScale` below, computed
+          // once at construction.
+          const hyd = Acoustic.hyd[listener]! | 0;
+          const clamped = hyd > 100 ? 100 : hyd;
+          const bestTier = this.bestTierThisEmitter[listenerSlot]!;
+          const cutoff2 = range2 * this.rangeScaleSqByHyd[clamped]! * RATIO_SCALE_SQ[bestTier]!;
+          if (d2 > cutoff2) continue;
 
-        // The water between them prices this pair: cover is something you
-        // can hide *behind*, and a trench carries sound down its whole axis.
-        const pf = terrain.pathPropagation(ex, ey, lx, ly, pfNeeded);
-        if (pf < pfNeeded) continue;
+          // Survivors — a small minority — pay for the pow.
+          const distance = Math.sqrt(d2);
+          const perceivedPerPf =
+            sigMasked *
+            Math.pow(
+              REFERENCE_DISTANCE_M / Math.max(distance, REFERENCE_DISTANCE_M),
+              ATTENUATION_EXPONENT
+            );
+          const threshold = this.thresholdByHyd[clamped]!;
+          // The PF this path must average to clear the bar. The cutoff above
+          // already guarantees this is within reach of all-trench water; it
+          // is computed here to tell the walk when to give up.
+          const pfNeeded = (threshold * RATIO_TO_BEAT[bestTier]!) / perceivedPerPf;
 
-        const tier = tierFromRatio((perceivedPerPf * pf) / threshold);
-        if (tier === ResolutionTier.Silent) continue;
+          // The water between them prices this pair: cover is something you
+          // can hide *behind*, and a trench carries sound down its whole
+          // axis. The walk aborts once its mean cannot reach that same bar.
+          const pf = terrain.pathPropagation(ex, ey, lx, ly, pfNeeded);
+          if (pf < pfNeeded) continue;
 
-        this.record(listenerSlot, emitter, tier, lx, ly);
+          const tier = tierFromRatio((perceivedPerPf * pf) / threshold);
+          if (tier === ResolutionTier.Silent) continue;
+
+          this.bestTierThisEmitter[listenerSlot] = tier;
+          this.record(listenerSlot, emitter, tier, lx, ly);
+        }
       }
     }
 
