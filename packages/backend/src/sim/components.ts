@@ -106,6 +106,38 @@ export const Unit = defineComponent({
   kind: Types.ui8,
 });
 
+/**
+ * A creature of the Drift — docs/bestiary.md.
+ *
+ * Deliberately *not* a Unit. Fauna carry Position, Acoustic, Owner and Health
+ * like everything else, so the Echo Layer resolves them with no special case
+ * at all — which is what makes §3's central claim true: at Tier 1 and Tier 2
+ * nothing distinguishes a grazer from a cruiser. Only classification at Tier 3
+ * tells them apart, because only then does the pass look at what components an
+ * entity has.
+ */
+export const Fauna = defineComponent({
+  species: Types.ui8,
+  /** FaunaStage. */
+  stage: Types.ui8,
+  /** Seconds spent at or above Interest, and below it. */
+  interestS: Types.f32,
+  quietS: Types.f32,
+  /** Seconds spent Interested, for §2's 20 s auto-commit. */
+  interestedS: Types.f32,
+  /** Seconds left of the Cooling disengage. */
+  coolingS: Types.f32,
+  /** The entity it is currently answering — the loudest, not the nearest. */
+  targetEid: Types.eid,
+  /** Perceived loudness of that target, last time it listened. */
+  heard: Types.f32,
+  /** Countdown to the next sense pass, so not every creature listens per tick. */
+  senseS: Types.f32,
+  /** Where it drifts back to when it cools off. */
+  homeX: Types.f32,
+  homeY: Types.f32,
+});
+
 /** Tag-ish component: silent running trades speed and weapons for quiet. */
 export const SilentRunning = defineComponent({
   active: Types.ui8,

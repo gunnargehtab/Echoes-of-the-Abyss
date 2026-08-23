@@ -12,3 +12,4 @@ export * from './constants.js';
 export * from './echo.js';
 export * from './units.js';
 export * from './structures.js';
+export * from './fauna.js';

@@ -43,7 +43,7 @@ function advance(match: Match, seconds: number) {
 
 /** A match on flat open water, so PF never confounds what is being measured. */
 function flatMatch(seed = 21) {
-  return new Match(VENTFRONT_DIVIDE, { seed, terrain: new Terrain(8000, 8000, 250) });
+  return new Match(VENTFRONT_DIVIDE, { fauna: false, seed, terrain: new Terrain(8000, 8000, 250) });
 }
 
 describe('the residue layer', () => {

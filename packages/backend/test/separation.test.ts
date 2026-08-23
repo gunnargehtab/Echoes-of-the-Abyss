@@ -45,7 +45,7 @@ function spread(eids: number[]): number {
 
 describe('separation', () => {
   it('spreads a fleet given one move order instead of stacking it', () => {
-    const match = new Match(undefined, { seed: 4 });
+    const match = new Match(undefined, { fauna: false, seed: 4 });
     match.addPlayer(0, Faction.Bathyarch);
     advance(match, 0.5);
 
@@ -75,7 +75,7 @@ describe('separation', () => {
   });
 
   it('separates hulls stacked at exactly the same point', () => {
-    const match = new Match(undefined, { seed: 5 });
+    const match = new Match(undefined, { fauna: false, seed: 5 });
     match.addPlayer(0, Faction.Bathyarch);
     advance(match, 0.5);
 
@@ -101,7 +101,7 @@ describe('separation', () => {
   });
 
   it('keeps hulls out of structure footprints', () => {
-    const match = new Match(undefined, { seed: 6 });
+    const match = new Match(undefined, { fauna: false, seed: 6 });
     match.addPlayer(0, Faction.Bathyarch);
     advance(match, 0.5);
 
@@ -141,7 +141,7 @@ describe('separation', () => {
   it('does not change what movement was already for', () => {
     // Separation is a correction, not a replacement: a lone unit must still
     // arrive exactly where it was sent, and silent running must still be slow.
-    const match = new Match(undefined, { seed: 7 });
+    const match = new Match(undefined, { fauna: false, seed: 7 });
     match.addPlayer(0, Faction.Bathyarch);
     advance(match, 0.5);
 
@@ -175,7 +175,7 @@ describe('separation', () => {
   });
 
   it('stays inside the 60 Hz per-tick budget with a crowd', () => {
-    const match = new Match(undefined, { seed: 8 });
+    const match = new Match(undefined, { fauna: false, seed: 8 });
     for (let slot = 0; slot < 4; slot++) match.addPlayer(slot, slot as Faction);
     // 200 hulls, deliberately clustered so separation has real work to do.
     for (let i = 0; i < 200; i++) {
@@ -202,7 +202,7 @@ describe('separation', () => {
 
   it('is deterministic', () => {
     const run = () => {
-      const match = new Match(undefined, { seed: 9 });
+      const match = new Match(undefined, { fauna: false, seed: 9 });
       match.addPlayer(0, Faction.Bathyarch);
       advance(match, 0.5);
       const fleet = Array.from({ length: 8 }, (_, i) =>

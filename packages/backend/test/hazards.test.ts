@@ -45,7 +45,7 @@ function hazardMap(kind: 'geothermal-eruption' | 'resonance-storm', radiusM = 70
 }
 
 function matchWith(map: MapDefinition, seed = 31) {
-  const match = new Match(map, { seed, terrain: new Terrain(8000, 8000, 250) });
+  const match = new Match(map, { fauna: false, seed, terrain: new Terrain(8000, 8000, 250) });
   match.addPlayer(0, Faction.Bathyarch);
   return match;
 }

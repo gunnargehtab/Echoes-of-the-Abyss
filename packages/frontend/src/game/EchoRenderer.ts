@@ -41,6 +41,8 @@ import {
   depthBandFor,
   maxAudibleRangeM,
   requiredPressureRating,
+  FaunaSpecies,
+  faunaStatsFor,
   statsFor,
   structureStatsFor,
   FACTION_STRUCTURE,
@@ -152,6 +154,15 @@ export interface ContactLogEntry {
  * already drawn. So it gets a mark of its own, on the same one-shot rule: it
  * fires once per acquisition and never sustains.
  */
+/**
+ * Fauna get a colour of their own, but only from Tier 3.
+ *
+ * A cold organic green, distinct from every faction palette and from the
+ * threat red a track wears: once you know it is an animal, you should know
+ * instantly, and you should never mistake it for someone's navy.
+ */
+const FAUNA_COLOR = 0x5fa88a;
+
 const LOCK_FLASH_MS = 700;
 
 /**
@@ -210,6 +221,58 @@ const WORLD_FADE_MS = {
     PRECEDENCE_MS.WORLD_FADE_START +
     (PRECEDENCE_MS.MINIMAP_FADE_FULL - PRECEDENCE_MS.MINIMAP_FADE_START),
 } as const;
+
+/**
+ * A classified creature — docs/bestiary.md §3.
+ *
+ * Drawn in a colour of its own, and only ever at Tier 3 or above. Below that a
+ * fauna contact goes through exactly the same haze and blob as a hull, which
+ * is the whole mechanic: "at Tier 1 and Tier 2 there is no marker, colour, or
+ * sound that distinguishes fauna from an army".
+ *
+ * Organic outlines rather than hull shapes, so classification is legible at a
+ * glance — the relief (or the problem) should not need reading.
+ */
+function drawFaunaSilhouette(
+  g: Graphics,
+  species: FaunaSpecies,
+  x: number,
+  y: number,
+  alpha: number,
+  inverseScale: number
+): void {
+  const stats = faunaStatsFor(species);
+  const r = stats.lengthM / 2;
+  const body = { color: FAUNA_COLOR, alpha: alpha * 0.75 };
+  const edge = { width: 1.5 * inverseScale, color: FAUNA_COLOR, alpha };
+
+  switch (species) {
+    case FaunaSpecies.Ashgrazer: {
+      // Broad and armoured: a flattened shell.
+      g.ellipse(x, y, r, r * 0.6).fill(body);
+      g.ellipse(x, y, r, r * 0.6).stroke(edge);
+      break;
+    }
+    case FaunaSpecies.Draymaw: {
+      // A lean wedge, pack-shaped.
+      g.poly([x - r, y - r * 0.5, x + r, y, x - r, y + r * 0.5]).fill(body);
+      g.poly([x - r, y - r * 0.5, x + r, y, x - r, y + r * 0.5]).stroke(edge);
+      break;
+    }
+    case FaunaSpecies.Sounder: {
+      // The colossus, drawn as a long body with a resonance halo. Big enough
+      // that finding one at Tier 3 is unmistakably a different kind of news.
+      g.ellipse(x, y, r, r * 0.35).fill(body);
+      g.ellipse(x, y, r, r * 0.35).stroke(edge);
+      g.circle(x, y, r * 1.4).stroke({
+        width: 1 * inverseScale,
+        color: FAUNA_COLOR,
+        alpha: alpha * 0.4,
+      });
+      break;
+    }
+  }
+}
 
 const SELECT_RADIUS_M = 140;
 /** How close a right-click must land to a contact or node to mean it. */
@@ -408,6 +471,8 @@ export class EchoRenderer {
   private exposureLabel!: Text;
   /** Thermal Draw, as capacity over demand. */
   private drawLabel!: Text;
+  /** Biomass stockpile, shown only once a player has any. */
+  private biomassLabel!: Text;
   /** The map's name, so a player can tell which ground they are on. */
   private mapLabel!: Text;
   private resourceLabel!: Text;
@@ -459,6 +524,9 @@ export class EchoRenderer {
    * Thermal Draw. A rate, so it is drawn as one — see `drawHud`.
    */
   private drawReport: DrawReport = { capacity: 0, demand: 0, satisfaction: 1 };
+  private biomass = 0;
+  /** Drift Health per region — docs/bestiary.md §6. Public, like terrain. */
+  private driftHealth: number[] = [];
   private nodules = 0;
   private crystal = 0;
   private status = 'connecting';
@@ -601,6 +669,9 @@ export class EchoRenderer {
 
     this.drawLabel = new Text({ text: '', style: { ...mono, fontSize: 13 } });
 
+    this.biomassLabel = new Text({ text: '', style: { ...mono, fontSize: 13 } });
+    this.biomassLabel.visible = false;
+
     this.statusLabel = new Text({
       text: '',
       style: { ...mono, fontSize: 12, fill: UI.textDim },
@@ -642,6 +713,7 @@ export class EchoRenderer {
       this.exposureLabel,
       this.mapLabel,
       this.drawLabel,
+      this.biomassLabel,
       this.resourceLabel,
       this.crystalLabel,
       this.statusLabel,
@@ -1639,6 +1711,8 @@ export class EchoRenderer {
     this.marks = snapshot.marks;
     this.hazards = snapshot.hazards;
     this.drawReport = snapshot.draw;
+    this.biomass = snapshot.biomass;
+    this.driftHealth = snapshot.driftHealth;
     this.callbacks.onHazards(snapshot.hazards);
     this.nodules = snapshot.nodules;
     this.crystal = snapshot.crystal;
@@ -1908,12 +1982,16 @@ export class EchoRenderer {
 
   private contactLabel(contact: Contact): string {
     if (contact.tier >= ResolutionTier.Classification) {
+      // Fauna are named at Tier 3 and never before, which is the moment
+      // docs/bestiary.md §3 calls "a genuine relief or a genuine problem".
       const name =
         contact.kind !== undefined
           ? statsFor(contact.kind).name
           : contact.structure !== undefined
             ? structureStatsFor(contact.structure).name
-            : 'contact';
+            : contact.fauna !== undefined
+              ? faunaStatsFor(contact.fauna).name
+              : 'contact';
       const faction = contact.faction !== undefined ? FACTION_NAME[contact.faction] : '';
       return faction === '' ? name : `${faction} ${name}`;
     }
@@ -2512,6 +2590,10 @@ export class EchoRenderer {
         }
         case ResolutionTier.Classification: {
           const color = this.contactColor(contact, style.color);
+          if (contact.fauna !== undefined) {
+            drawFaunaSilhouette(g, contact.fauna, contact.x, contact.y, alpha, inverseScale);
+            break;
+          }
           g.circle(contact.x, contact.y, style.radius).fill({ color, alpha });
           g.circle(contact.x, contact.y, style.radius * 1.6).stroke({
             width: 1 * inverseScale,
@@ -2548,6 +2630,8 @@ export class EchoRenderer {
               { color, accent: UI.threat, alpha, detail: false },
               2 * inverseScale
             );
+          } else if (contact.fauna !== undefined) {
+            drawFaunaSilhouette(g, contact.fauna, contact.x, contact.y, alpha, inverseScale);
           } else {
             g.circle(contact.x, contact.y, style.radius).fill({ color, alpha });
           }
@@ -2727,14 +2811,27 @@ export class EchoRenderer {
     this.crystalLabel.style.fill = RESOURCE_COLOR[ResourceKind.ResonanceCrystal];
     this.crystalLabel.position.set(this.resourceLabel.x + this.resourceLabel.width + 16, 8);
 
+    // Biomass appears only once a player has killed something. An always-on
+    // zero would be chrome, and this HUD spends its space on decisions.
+    this.biomassLabel.visible = this.biomass > 0;
+    if (this.biomassLabel.visible) {
+      this.biomassLabel.text = `BIOMASS ${this.biomass.toFixed(0)}`;
+      this.biomassLabel.style.fill = FAUNA_COLOR;
+      const anchorLabel = showCrystal ? this.crystalLabel : this.resourceLabel;
+      this.biomassLabel.position.set(anchorLabel.x + anchorLabel.width + 16, 8);
+    }
+
     // Thermal Draw, drawn as a *rate* and deliberately not like the stockpiles
     // beside it. docs/economy.md §2 makes it the one resource that is never
     // banked, so it reads "6/4" — what you make over what you owe — with a
     // segmented bar rather than a filling one. A number that could be mistaken
     // for a balance would be teaching the player the wrong thing about it.
-    const drawX = this.crystalLabel.visible
-      ? this.crystalLabel.x + this.crystalLabel.width + 16
-      : this.resourceLabel.x + this.resourceLabel.width + 16;
+    const beforeDraw = this.biomassLabel.visible
+      ? this.biomassLabel
+      : this.crystalLabel.visible
+        ? this.crystalLabel
+        : this.resourceLabel;
+    const drawX = beforeDraw.x + beforeDraw.width + 16;
     const deficit = this.drawReport.satisfaction < 1;
     this.drawLabel.text = `DRAW ${this.drawReport.capacity.toFixed(0)}/${this.drawReport.demand.toFixed(0)}`;
     this.drawLabel.style.fill = deficit ? UI.threat : UI.accent;
@@ -3093,6 +3190,25 @@ export class EchoRenderer {
     // Returns carry the same tier fidelity as the world view, scaled down.
     // They used to be uniform dots, which drew a Tier-1 haze as crisply as a
     // Tier-4 track — the scope asserting precision the server never sent.
+    // Drift Health, on the scope. docs/bestiary.md §6 makes killing a region a
+    // strategic act available to everyone, and an act nobody can see is not
+    // one — so a stripped region reads as a dead patch on the sonar picture,
+    // which is exactly what it is: quieter, more legible, and worth less.
+    if (this.driftHealth.length > 0) {
+      const regions = Math.round(Math.sqrt(this.driftHealth.length));
+      const cell = size / regions;
+      for (let i = 0; i < this.driftHealth.length; i++) {
+        const health = this.driftHealth[i]!;
+        if (health >= 75) continue;
+        const rx = (i % regions) * cell;
+        const ry = Math.floor(i / regions) * cell;
+        og.rect(rx, ry, cell, cell).fill({
+          color: 0x000000,
+          alpha: 0.16 + (1 - health / 75) * 0.3,
+        });
+      }
+    }
+
     const scopeNow = performance.now();
     for (const { contact, firstSeenMs } of this.tracked.values()) {
       if (contact.tier === ResolutionTier.Silent) continue;

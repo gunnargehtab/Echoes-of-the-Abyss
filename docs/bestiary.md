@@ -196,3 +196,39 @@ In campaign play, Drift Health persists between missions on the same map ([campa
 - **[hazards.md](hazards.md)** — migration corridors as a map hazard
 - **[environments.md](environments.md)** — which biome carries which population
 - **[factions.md](factions.md)** — Trench Awakening, and the Directorate's fauna doctrine
+
+---
+
+## Implementation Status
+
+Three species are simulated, one per behaviour class. The framework is the deliverable; the rest of the roster is additions to it.
+
+| Species | Class | Status |
+| --- | --- | --- |
+| Ashgrazer | Grazer | **Implemented** — herd, full aggro ladder, stampede SIG, Biomass |
+| Draymaw | Predator | **Implemented** — the staple pack, and the animal most likely to answer a careless economy |
+| Sounder | Megafauna | **Implemented** — answers pings, destroys structures by transit, ignores small units |
+| Lampfry | Ambient | Not started — the scatter tell is a *visual* channel with no acoustic component, so it needs renderer work rather than simulation |
+| Tetherjelly | Ambient | Not started — living terrain that lowers local PF; the hazard framework's PF hook is the seam it will use |
+| Rasp | Scavenger | Not started — drawn to Echo Marks rather than to live units, which now exist ([systems-echo.md](systems-echo.md) §7), so this is the cheapest of the remaining four |
+| Hollow | Predator | Not started |
+
+### How fauna are contacts
+
+They carry Position, Acoustic, Owner and Health like anything else and are owned by a slot no player can hold, so the Echo Layer's "different slot" test admits them for everybody. **Nothing in the detection pass knows fauna exist** — not the broadphase, not the pair loop, not the tier maths. The only place in the whole pass that mentions them is the classification step at Tier 3, which is exactly where §3 says a player finds out.
+
+That is what makes a Tier-1 smudge genuinely ambiguous rather than ambiguous-looking. A creature and a cruiser take the same code path until the moment one of them is named.
+
+### How the thresholds are read
+
+§2's Interest and Commit are compared against the **detection ratio** — how many times over the creature can hear a thing at all. That scale is what makes the doc's numbers behave like the animals it describes: a Draymaw (22 / 45) grows interested in a working harvester at about 800 m and commits at about 500 m, which is "shadow harvesting operations at the edge of hearing and commit when yield noise peaks". An Ashgrazer (30 / 65, and much deafer) stays reluctant until something is nearly on its feeding ground.
+
+Two other readings were tried and measured first. Scaling the ratio by a constant had Draymaws hearing a Bastion from two kilometres and eating the opening base of every match. Using raw perceived loudness went the other way — the propagation model's reference distance is 100 m and its exponent 1.6, so a SIG-70 harvester reads 12 at 300 m and fauna went deaf to anything not touching them.
+
+No creature is seeded within 2,600 m of a starting position. A creature that begins the match on top of a base was not *drawn* to anything; §5's proposition is that fauna answer your noise, which needs them to start somewhere else and come to you.
+
+### Population and cost
+
+Capped at 48 live creatures. Fauna are entities in the Echo pass, which owns a 2 ms budget, so the cap turns "should be fine" into a guarantee. Measured with a full population on the Ventfront Divide and four players: **0.7–1.0 ms worst case**, against 2 ms.
+
+Related: [economy.md](economy.md) · [systems-echo.md](systems-echo.md) · [audio-direction.md](audio-direction.md)

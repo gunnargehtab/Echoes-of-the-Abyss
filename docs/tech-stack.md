@@ -143,9 +143,16 @@ Checkpoints are what make a divergence *findable*. `playReplay` reports the firs
 hash disagreed, so the answer is "it broke at tick 300", not "the twenty-minute match ended
 differently".
 
-A replay also records **which map it was played on**, since authored archetypes exist. Format
-version 2 carries a `mapId`; version 1 replays are rejected rather than upgraded, because the
+A replay also records **which map it was played on** and **whether the Drift was
+populated**, since both are part of the setup rather than of the play. Format version 3
+carries `mapId` and `fauna`; older replays are rejected rather than upgraded, because the
 information is simply not in them — a v1 replay was recorded on whatever `Terrain.demo()` was
 at the time, and replaying it on any other ground diverges at the first checkpoint. Rejecting
 it says "this replay is too old"; replaying it on a default map would report a divergence
 about determinism when the real fault was the replay's age.
+
+A footnote worth keeping, because it cost an hour: the `fauna` flag was added to the format
+and then *not read back* on playback, so every replay of a fauna-free match was replayed with
+thirty animals in it and diverged at tick 0. The recording said one thing and the playback
+did another, and the divergence report blamed determinism. When a replay diverges at tick 0,
+suspect the setup before the simulation.
