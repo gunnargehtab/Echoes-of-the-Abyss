@@ -7,7 +7,7 @@
  * to move during playtesting (see docs/units.md "Playtest plan").
  */
 
-import { Biome, DepthBand, HarvestThrottle } from './types.js';
+import { Biome, DepthBand, HarvestThrottle, ResourceKind } from './types.js';
 
 /** SPEC — docs/systems-depth.md §1. Metres. */
 export const DEPTH_BANDS: Record<DepthBand, { min: number; max: number }> = {
@@ -196,6 +196,46 @@ export const ECONOMY = {
   DEPOSIT_RANGE_M: 60,
   /** Nodules in a field at match start. */
   NODE_STARTING_AMOUNT: 3000,
+} as const;
+
+/**
+ * Per-resource extraction character. docs/economy.md §2 and §7.
+ *
+ * The crystal's whole argument is depth: it is worth having only because
+ * reaching it costs a commitment. So it is slower to cut, louder to cut, and
+ * lives in water that bills you for standing in it — SPEC in shape, TUNABLE in
+ * number.
+ *
+ * `miningSigPremium` is added to whatever the throttle is already emitting
+ * (§3), which lands Standard-throttle crystal work at 65 SIG — the middle of
+ * the doc's 60-70 band — while keeping the throttle a live decision surface
+ * rather than something the resource overrides.
+ */
+export const RESOURCE: Record<
+  ResourceKind,
+  { name: string; miningSigPremium: number; rateMultiplier: number }
+> = {
+  [ResourceKind.Nodule]: { name: 'Nodule', miningSigPremium: 0, rateMultiplier: 1 },
+  [ResourceKind.ResonanceCrystal]: {
+    name: 'Resonance Crystal',
+    miningSigPremium: 20,
+    rateMultiplier: 0.45,
+  },
+};
+
+/**
+ * The Abyssal crystal economy. docs/economy.md §7 — "a round trip with a clock
+ * on it", run as raids rather than expansions by everyone but the Directorate.
+ */
+export const CRYSTAL = {
+  /** Working depth of a crystal field. Abyssal band, so PR-3 or crush. */
+  FIELD_DEPTH_M: 2400,
+  /** Units in a crystal field at match start. Scarcity is the match clock. */
+  FIELD_STARTING_AMOUNT: 900,
+  /** A hold carries less crystal than nodules — it is dense, awkward cargo. */
+  CARGO_CAPACITY: 20,
+  /** Crystal nodes ignore the depth check within this tolerance, metres. */
+  WORKING_DEPTH_TOLERANCE_M: 60,
 } as const;
 
 /**

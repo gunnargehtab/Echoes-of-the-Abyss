@@ -50,6 +50,20 @@ export enum DepthBand {
   Abyssal = 2,
 }
 
+/**
+ * Extractable resources. docs/economy.md §2 lists four; two are modelled.
+ *
+ * The pair here is deliberate: Nodule is the bulk resource that funds the
+ * ordinary game, and Resonance Crystal is "the reason anybody goes deep at
+ * all" (§2) — the tech gate, and almost entirely Abyssal (§7). Thermal Draw
+ * is a rate rather than a stockpile and Biomass needs the Drift, so both wait
+ * for their own systems.
+ */
+export enum ResourceKind {
+  Nodule = 0,
+  ResonanceCrystal = 1,
+}
+
 /** Prototype unit roster. Stats live in units.ts. See docs/units.md. */
 export enum UnitKind {
   LightScout = 0,
@@ -152,8 +166,9 @@ export interface OwnUnit {
    * health bar has to draw it differently.
    */
   crushDamage: number;
-  /** Harvesters only: nodules aboard and the current throttle setting. */
+  /** Harvesters only: cargo aboard, what it is, and the throttle setting. */
   cargo?: number;
+  cargoKind?: ResourceKind;
   throttle?: HarvestThrottle;
 }
 
@@ -186,7 +201,14 @@ export interface ResourceNodeInfo {
   id: number;
   x: number;
   y: number;
-  /** Nodules in the field at match start. */
+  kind: ResourceKind;
+  /**
+   * Depth of the field in metres. Crystal sits in the Abyssal band, so this is
+   * what tells a commander a field cannot be worked without committing to the
+   * descent (docs/economy.md §7).
+   */
+  depth: number;
+  /** Units of the field's resource at match start. */
   initialAmount: number;
 }
 
@@ -200,6 +222,8 @@ export interface EchoSnapshot {
   peakSig: number;
   /** The player's nodule stockpile — the C&C-style spendable pool. */
   nodules: number;
+  /** Resonance Crystal stockpile. Everything crystal-locked is bought here. */
+  crystal: number;
 }
 
 /** Broadcast once when the match resolves. Elimination is public. */

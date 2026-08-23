@@ -10,9 +10,18 @@
  */
 
 import { defineQuery, hasComponent, removeEntity } from 'bitecs';
-import { ECONOMY, HARVEST_THROTTLE, structureStatsFor, type StructureKind } from '@echoes/shared';
+import {
+  CRYSTAL,
+  ECONOMY,
+  HARVEST_THROTTLE,
+  RESOURCE,
+  ResourceKind,
+  structureStatsFor,
+  type StructureKind,
+} from '@echoes/shared';
 import type { HarvestThrottle } from '@echoes/shared';
 import {
+  DepthOrder,
   Harvester,
   HarvestMode,
   Health,
@@ -69,6 +78,32 @@ function nearestDepot(world: SimWorld, slot: number, x: number, y: number): numb
   return best;
 }
 
+/** How much of a given resource a hold takes. Crystal is dense, awkward cargo. */
+function capacityFor(kind: ResourceKind): number {
+  return kind === ResourceKind.ResonanceCrystal
+    ? CRYSTAL.CARGO_CAPACITY
+    : ECONOMY.CARGO_CAPACITY_NODULES;
+}
+
+/**
+ * Send a hull to a depth, if it is not already going there.
+ *
+ * The harvest loop is the first system to issue depth orders of its own, and
+ * it is what turns a crystal field into docs/economy.md §7's "round trip with
+ * a clock on it": the descent to the field is loud, and the climb home with a
+ * full hold is slow.
+ */
+function orderDepth(eid: number, depthM: number): void {
+  if (DepthOrder.active[eid] === 1 && Math.abs(DepthOrder.targetM[eid]! - depthM) < 1) return;
+  if (Math.abs(Position.depth[eid]! - depthM) <= CRYSTAL.WORKING_DEPTH_TOLERANCE_M) return;
+  DepthOrder.targetM[eid] = depthM;
+  DepthOrder.active[eid] = 1;
+}
+
+function atDepth(eid: number, depthM: number): boolean {
+  return Math.abs(Position.depth[eid]! - depthM) <= CRYSTAL.WORKING_DEPTH_TOLERANCE_M;
+}
+
 function nodeAlive(world: SimWorld, eid: number): boolean {
   return eid !== 0 && hasComponent(world, ResourceNode, eid) && ResourceNode.remaining[eid]! > 0;
 }
@@ -107,9 +142,17 @@ export function harvestSystem(world: SimWorld): void {
           continue;
         }
       }
-      if (distanceTo(eid, Position.x[node]!, Position.y[node]!) <= ECONOMY.MINING_RANGE_M) {
-        Harvester.mode[eid] = HarvestMode.Mining;
+      const fieldDepth = Position.depth[node]!;
+      const inRange =
+        distanceTo(eid, Position.x[node]!, Position.y[node]!) <= ECONOMY.MINING_RANGE_M;
+      if (inRange) {
         MoveOrder.active[eid] = 0;
+        // Over the field but not yet down to it: dive, and only start cutting
+        // once actually there. A crystal field is Abyssal, so this is where
+        // the hull starts paying — in noise on the way down, and in crush if
+        // it is not rated for where it is going.
+        orderDepth(eid, fieldDepth);
+        if (atDepth(eid, fieldDepth)) Harvester.mode[eid] = HarvestMode.Mining;
       } else {
         MoveOrder.x[eid] = Position.x[node]!;
         MoveOrder.y[eid] = Position.y[node]!;
@@ -125,10 +168,19 @@ export function harvestSystem(world: SimWorld): void {
         Harvester.mode[eid] = Harvester.cargo[eid]! > 0 ? HarvestMode.ToDepot : HarvestMode.ToNode;
         continue;
       }
+      const kind = ResourceNode.kind[node] as ResourceKind;
+      // Switching fields mid-hold would mix cargo the deposit cannot split;
+      // bank what is aboard first.
+      if (Harvester.cargo[eid]! > 0 && Harvester.cargoKind[eid] !== kind) {
+        Harvester.mode[eid] = HarvestMode.ToDepot;
+        continue;
+      }
+      Harvester.cargoKind[eid] = kind;
       const throttle = HARVEST_THROTTLE[Harvester.throttle[eid] as HarvestThrottle];
+      const capacity = capacityFor(kind);
       const mined = Math.min(
-        ECONOMY.MINING_RATE_PER_S * throttle.yieldMultiplier * dt,
-        ECONOMY.CARGO_CAPACITY_NODULES - Harvester.cargo[eid]!,
+        ECONOMY.MINING_RATE_PER_S * RESOURCE[kind].rateMultiplier * throttle.yieldMultiplier * dt,
+        capacity - Harvester.cargo[eid]!,
         ResourceNode.remaining[node]!
       );
       Harvester.cargo[eid] = Harvester.cargo[eid]! + mined;
@@ -139,7 +191,7 @@ export function harvestSystem(world: SimWorld): void {
         // sending a harvester, not something the server announces.
         removeEntity(world, node);
       }
-      if (Harvester.cargo[eid]! >= ECONOMY.CARGO_CAPACITY_NODULES) {
+      if (Harvester.cargo[eid]! >= capacity) {
         Harvester.mode[eid] = HarvestMode.ToDepot;
       }
       continue;
@@ -156,10 +208,24 @@ export function harvestSystem(world: SimWorld): void {
         continue;
       }
     }
+    // The climb home starts the moment the hold is full, not on arrival: the
+    // ascent is the slow half of the round trip (docs/economy.md §7), and a
+    // hauler that waited until it was over the depot to start rising would be
+    // hiding the cost the design wants the player to feel.
+    orderDepth(eid, Position.depth[depot]!);
+
     const dockRange =
       structureStatsFor(Structure.kind[depot] as StructureKind).radiusM + ECONOMY.DEPOSIT_RANGE_M;
-    if (distanceTo(eid, Position.x[depot]!, Position.y[depot]!) <= dockRange) {
-      economyFor(world, slot).nodules += Harvester.cargo[eid]!;
+    if (
+      distanceTo(eid, Position.x[depot]!, Position.y[depot]!) <= dockRange &&
+      atDepth(eid, Position.depth[depot]!)
+    ) {
+      const economy = economyFor(world, slot);
+      if ((Harvester.cargoKind[eid] as ResourceKind) === ResourceKind.ResonanceCrystal) {
+        economy.crystal += Harvester.cargo[eid]!;
+      } else {
+        economy.nodules += Harvester.cargo[eid]!;
+      }
       Harvester.cargo[eid] = 0;
       MoveOrder.active[eid] = 0;
       Harvester.mode[eid] = nodeAlive(world, Harvester.nodeEid[eid]!)
