@@ -168,6 +168,35 @@ export const ECHO_MARKS = {
 } as const;
 
 /**
+ * Match lifecycle — docs/tech-stack.md.
+ *
+ * TUNABLE. The one number with an argument behind it is the reconnection
+ * grace window: long enough to survive a dropped connection or a browser
+ * refresh, short enough that a match is not held hostage by someone who has
+ * closed the tab and gone to lunch.
+ */
+export const LIFECYCLE = {
+  /** Seconds a dropped player keeps their slot and their fleet. */
+  RECONNECT_GRACE_S: 90,
+  /**
+   * Players a lobby needs before it will start.
+   *
+   * One, not two, and deliberately: there is no AI opponent yet, so a solo
+   * lobby is the only way to exercise the game at all. Raising this to 2 the
+   * day an opponent exists is a one-line change; shipping a lobby nobody can
+   * leave until a second human arrives would not be.
+   */
+  MIN_PLAYERS: 1,
+  /**
+   * Seconds a resolved match lingers before the room closes itself.
+   *
+   * Long enough to read the result and call a rematch; short enough that an
+   * abandoned room does not hold a slot on the server forever.
+   */
+  POST_MATCH_S: 180,
+} as const;
+
+/**
  * The Drift — docs/bestiary.md §2, §5, §6.
  *
  * The aggro ladder's durations are SPEC (§2's table); the population and yield

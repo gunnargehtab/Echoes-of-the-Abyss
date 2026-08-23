@@ -822,20 +822,41 @@ export class Match {
 
     // Losing the Bastion is elimination — the C&C short game. The rest of the
     // force scuttles rather than lingering as an unwinnable nuisance.
-    for (const slot of lostBastions) {
-      this.eliminated.add(slot);
-      for (let eid = 0; eid < Owner.slot.length; eid++) {
-        if (!hasComponent(this.world, Owner, eid) || Owner.slot[eid] !== slot) continue;
-        this.world.production.delete(eid);
-        removeEntity(this.world, eid);
-      }
-    }
+    for (const slot of lostBastions) this.eliminate(slot);
 
-    if (this.matchResult === null && this.slots.length >= 2) {
-      const standing = this.slots.filter((slot) => !this.eliminated.has(slot));
-      if (standing.length === 1) {
-        this.matchResult = { winnerSlot: standing[0]! };
-      }
+    this.resolveVictory();
+  }
+
+  /**
+   * A slot leaves the match without being beaten: abandoned, or out of grace
+   * on a disconnect (docs/tech-stack.md "Match lifecycle").
+   *
+   * Resolved as elimination rather than as "never here". Quietly dropping the
+   * slot from the roster would leave a one-commander match, and the victory
+   * check needs two rosters to declare a winner — so the survivor would sit in
+   * a game they had already won, waiting for an enemy that no longer exists.
+   */
+  resign(slot: number): void {
+    this.eliminate(slot);
+    this.resolveVictory();
+  }
+
+  /** Mark a slot out and scuttle everything it owned. */
+  private eliminate(slot: number): void {
+    if (this.eliminated.has(slot)) return;
+    this.eliminated.add(slot);
+    for (let eid = 0; eid < Owner.slot.length; eid++) {
+      if (!hasComponent(this.world, Owner, eid) || Owner.slot[eid] !== slot) continue;
+      this.world.production.delete(eid);
+      removeEntity(this.world, eid);
+    }
+  }
+
+  private resolveVictory(): void {
+    if (this.matchResult !== null || this.slots.length < 2) return;
+    const standing = this.slots.filter((slot) => !this.eliminated.has(slot));
+    if (standing.length === 1) {
+      this.matchResult = { winnerSlot: standing[0]! };
     }
   }
 

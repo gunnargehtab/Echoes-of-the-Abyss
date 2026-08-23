@@ -156,3 +156,88 @@ and then *not read back* on playback, so every replay of a fauna-free match was 
 thirty animals in it and diverged at tick 0. The recording said one thing and the playback
 did another, and the divergence report blamed determinism. When a replay diverges at tick 0,
 suspect the setup before the simulation.
+
+---
+
+## Match lifecycle
+
+A match has three phases, and the room is in exactly one of them:
+**Lobby → Playing → Ended**, with a rematch running Ended → Playing again on the same
+ground. `MatchPhase` lives in `@echoes/shared`; the room's phase is broadcast in the
+Colyseus schema, because who is in the room and what the room is doing are public facts
+about it.
+
+The simulation steps **only in Playing**. Before that change the room began simulating the
+moment it was created, which handed the first player to load a head start measured in
+however long their opponent took to open a browser tab.
+
+### The lobby
+
+| Rule | Where | Why |
+| --- | --- | --- |
+| Faction choice, uniqueness enforced server-side | `rooms/lobby.ts` | Four asymmetric navies is the game's entire asymmetry axis. Assigning one by arrival order made the most consequential decision in a match a coin flip |
+| A pick is *refused*, never corrected | `canChooseFaction` | Silently handing a client a different navy is how a commander ends up leading a fleet they did not choose and cannot explain |
+| Lowest free slot, not a counter | `allocateSlot` | A `nextSlot++` counter is why reconnection could not work: a returning player was handed a fresh empty slot while their fleet sat in the water under the old one |
+| Changing your pick clears your ready | `MatchRoom` | Otherwise "everyone is ready" can be true of a roster nobody has looked at since it last changed |
+| Disconnected players are not waited on | `everyoneIsReady` | One closed tab should not hold three other people hostage |
+
+`LIFECYCLE.MIN_PLAYERS` is **1**, deliberately: until there is an AI opponent, a solo lobby
+is the only way to exercise the game at all. It becomes 2 the day one exists.
+
+The lobby rules are pure functions over a roster rather than methods on the room, because a
+Colyseus room is a network object — transports, timers, a matchmaker listing — and none of
+that is what "which slot does this player get" is about. Pulled out, each rule is four
+lines with a truth table, and the truth table is what `test/lifecycle.test.ts` checks.
+
+### Reconnection, and what your fleet does while you are gone
+
+A dropped client keeps its seat for `LIFECYCLE.RECONNECT_GRACE_S` (90 s) through Colyseus
+`allowReconnection()`. The slot, the faction and every entity survive. The client persists
+its reconnection token in `sessionStorage`, so a **page reload** resumes the match too —
+per-tab and dying with the tab is exactly the right lifetime for a bearer credential to one
+seat in one match.
+
+**The fleet keeps making noise.** It is not frozen, hidden, or lifted out of the world:
+hulls hold station and keep emitting, and an opponent listening in the right place hears an
+unpiloted fleet exactly as it hears a piloted one. Anything gentler would make pulling your
+network cable the cheapest stealth in the game — in a game whose whole subject is being
+heard. `PlayerState.connected` is broadcast, so the flag itself costs the dropped player
+something: an opponent who can read the roster knows whose hulls are now unattended.
+
+Running out of grace is a **resignation**, and so is walking out of a live match. Both call
+`Match.resign(slot)`, which eliminates the slot and scuttles its force down the same path a
+lost Bastion takes. The tempting alternative — quietly drop the player from the roster —
+leaves the survivor in a game they have already won, forever, because the victory check
+needs two rosters to declare a winner.
+
+### The result, and the rematch
+
+A resolved match sets `winnerSlot`, clears every ready flag and shows a result screen. That
+screen reports **one fact: who won.** No kill tally, no resource graph, no map of where the
+other commander actually was. A post-match report that reveals the match is a delayed
+maphack — the next game on the same ground would be played with knowledge the last one
+refused to give. The player's own contact log stays on screen behind it, which is the
+honest version of a post-match report: what you knew, not what was true.
+
+Ready doubles as the rematch vote, because it is the same question both times — *is this
+commander waiting on anyone else?* A rematch builds a **new** `Match` on the same map
+rather than resetting the old one in place: a `Match` owns an ECS world, and unwinding one
+in place is how stale entities survive into game two. The client mirrors that with
+`EchoRenderer.resetForNewMatch()`, since every entity id it is holding — selections,
+control groups, tracked contacts — now refers to something that no longer exists or, worse,
+to a different thing handed the same id.
+
+A room with no rematch closes itself after `LIFECYCLE.POST_MATCH_S` rather than lingering
+until the process restarts. A running room is **locked**, so `joinOrCreate` routes a late
+arrival into a fresh lobby instead of dropping them into a game already in progress.
+
+### Spectators
+
+Not implemented, and the omission is deliberate rather than an oversight. A spectator is a
+client, and a client that receives unresolved world state is a maphack whatever it chooses
+to draw — the same rule that governs players, for the same reason. Spectators can exist
+here only by resolving the Echo Layer *again*, per spectator, against the 2 ms budget; a
+"spectator sees everything" mode would have to be a documented decision about a different
+product, not a shortcut taken because it was cheaper.
+
+Related: [systems-echo.md](systems-echo.md) · [ui-ux.md](ui-ux.md) · [maps.md](maps.md)

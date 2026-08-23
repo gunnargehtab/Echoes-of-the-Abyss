@@ -5,10 +5,10 @@ description: Launch Echoes of the Abyss and drive it in a headless browser to se
 
 # Running Echoes of the Abyss
 
-The game has no menu and no login. The client auto-joins a Colyseus room, gets
-assigned a slot and faction, and drops you straight into a live match — so
-"running it" is just: bring up both servers, point a headless Chromium at the
-dev server, and look at what rendered.
+The game has no login and no room browser. The client auto-joins a Colyseus
+room and lands in a **lobby**: pick a navy, ready up, and the match starts. So
+"running it" is: bring up both servers, point a headless Chromium at the dev
+server, ready up, and look at what rendered.
 
 Looking at the screenshot is the point. This is a game about hidden
 information, and a black frame, an empty HUD, or a stuck "Listening…" overlay
@@ -56,11 +56,17 @@ Server output goes to `/tmp/echoes-dev.log`, with both sides interleaved under
 node .claude/skills/run-game/scripts/drive.mjs --out /tmp/run-game
 ```
 
-The default run is the smoke test worth having: connect, select a unit, fire
-active sonar, and screenshot each step. It exits non-zero if the client never
-joins a match or if anything hit the browser console, and prints the path of
-each screenshot as `shot: <path>` — read those paths from the output rather
-than assuming the ones written here, since `--out` moves them.
+The default run is the smoke test worth having: connect, **ready up**, select a
+unit, fire active sonar, and screenshot each step. It exits non-zero if the
+client never joins a match or if anything hit the browser console, and prints
+the path of each screenshot as `shot: <path>` — read those paths from the
+output rather than assuming the ones written here, since `--out` moves them.
+
+The ready-up step is not optional and not cosmetic: **the simulation does not
+step until every connected commander has readied**. A `--steps` module runs
+*after* `drive.mjs` has readied this client, so it always starts in a live
+match — but if you drive the page yourself, a script that skips the lobby
+drives an ocean that is not moving.
 
 **Then actually open the screenshots.** What a healthy first frame looks like:
 
@@ -166,12 +172,27 @@ is safe even against a server someone started with a bare `npm run dev &`.
 
 ## Gotchas that will cost you time
 
-**Readiness is the overlay, not the port.** The client shows a `.game-overlay`
-reading "Listening…" until the room assigns it a slot. Vite answering on :5173
-only means Vite is up; the canvas existing only means Pixi mounted. The overlay
-becoming detached is the one signal that means a match is live, and it's what
-`drive.mjs` waits for. If the backend is unreachable the overlay stays and
-reads "No signal", which the script reports rather than timing out opaquely.
+**Readiness is two signals, not the port.** The client shows a `.game-overlay`
+reading "Listening…" until the room answers; that overlay detaching means the
+*server* was reached, and lands you in the lobby. The match is live only once
+`.lobby` detaches, after a ready. Vite answering on :5173 only means Vite is
+up; the canvas existing only means Pixi mounted. If the backend is unreachable
+the overlay stays and reads "No signal", which the script reports rather than
+timing out opaquely.
+
+**The lobby is the one screen made of real DOM.** Everything else you can see
+is drawn by Pixi, so selectors match nothing — but `.lobby-ready`,
+`.lobby-faction`, `.lobby-roster-row` and `.result-rematch` are ordinary
+buttons, and Playwright can read and click them normally. If you need a
+specific navy, click its `.lobby-faction` card before readying; a card another
+commander already holds is disabled, because uniqueness is enforced on the
+server.
+
+**A dropped connection is not the end of the run.** The client keeps its seat
+for 90 s and re-takes it automatically, and it parks its reconnection token in
+`sessionStorage`, so `page.reload()` resumes the same match rather than
+starting a new one. That is worth knowing when a step reloads to clear state
+and the state does not clear.
 
 **Playwright is a global install, and it's CommonJS.** `import { chromium }
 from 'playwright'` fails twice over: ESM ignores `NODE_PATH`, so the global
