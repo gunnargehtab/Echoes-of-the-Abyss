@@ -80,3 +80,122 @@
   font-size: 0.75rem;
   opacity: 0.7;
 }
+
+/*
+ * Contact log — docs/ui-ux.md §10.
+ *
+ * DOM rather than canvas so entries are selectable, copy-pasteable and
+ * reachable by a screen reader: §11 makes this the accessible mirror of the
+ * audio channel, and a Pixi-drawn log could be none of those things.
+ */
+.contact-log {
+  position: absolute;
+  top: 38px;
+  right: 10px;
+  width: min(340px, 32vw);
+  max-height: 40vh;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(255, 61, 166, 0.45);
+  border-radius: 4px;
+  background: var(--abyss-glass);
+  font-family: ui-monospace, Consolas, monospace;
+  pointer-events: auto;
+}
+
+/* Narrow screens give their space to the map; the HUD carries the essentials. */
+@media (max-width: 900px) {
+  .contact-log {
+    display: none;
+  }
+}
+
+.contact-log-title {
+  padding: 4px 8px;
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  color: var(--text-cyan);
+  border-bottom: 1px solid rgba(255, 61, 166, 0.3);
+}
+
+.contact-log-entries {
+  overflow-y: auto;
+  /* Text selection is the point: post-match "when did they hear me" analysis
+     is a real activity this log exists to support. */
+  user-select: text;
+}
+
+.contact-log-empty {
+  margin: 0;
+  padding: 8px;
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  opacity: 0.6;
+}
+
+.contact-log-row {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  gap: 8px;
+  width: 100%;
+  padding: 3px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 0.66rem;
+  text-align: left;
+  cursor: pointer;
+  user-select: text;
+}
+
+.contact-log-row:disabled {
+  cursor: default;
+}
+
+.contact-log-row:hover:not(:disabled) {
+  background: rgba(53, 224, 255, 0.08);
+}
+
+.contact-log-row:focus-visible {
+  outline: 1px solid var(--text-cyan);
+  outline-offset: -1px;
+}
+
+.contact-log-time {
+  opacity: 0.55;
+}
+
+/*
+ * Tier is encoded in weight and brightness as well as hue, per §11: the scale
+ * has to survive any colour vision deficiency, so colour is never alone.
+ */
+.contact-log-row.tier-1 .contact-log-tier {
+  color: #4a7a8c;
+  opacity: 0.75;
+}
+
+.contact-log-row.tier-2 .contact-log-tier {
+  color: #6fa8bf;
+}
+
+.contact-log-row.tier-3 .contact-log-tier {
+  color: #a8d0e0;
+  font-weight: 700;
+}
+
+.contact-log-row.tier-4 .contact-log-tier {
+  color: #ff6b5b;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+/* A first sighting is the event worth noticing; a tier change is a follow-up. */
+.contact-log-row.fresh .contact-log-label {
+  color: var(--text-bright);
+}
+
+.contact-log-detail {
+  opacity: 0.7;
+  white-space: nowrap;
+}

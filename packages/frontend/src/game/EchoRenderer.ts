@@ -83,6 +83,29 @@ export interface RendererCallbacks {
   onBuild(kind: StructureKind, x: number, y: number): void;
   onProduce(structureId: number, kind: UnitKind): void;
   onDepthOrder(unitIds: number[], depth: number): void;
+  /** A new detection event, for the contact log. */
+  onContactEvent(entry: ContactLogEntry): void;
+}
+
+/**
+ * One line of the contact log (docs/ui-ux.md §10).
+ *
+ * Carries only what the tier earned. Bearing and range are absent at Tier 1
+ * by construction, not by omission: a Tier-1 report *is* the listener's own
+ * position, so there is no bearing in it to show.
+ */
+export interface ContactLogEntry {
+  id: string;
+  tick: number;
+  tier: ResolutionTier;
+  /** True when this contact had never been resolved before. */
+  fresh: boolean;
+  label: string;
+  bearingDeg?: number;
+  rangeM?: number;
+  /** Where to send the camera, when the entry carries a real position. */
+  focusX?: number;
+  focusY?: number;
 }
 
 const SELECT_RADIUS_M = 140;
@@ -165,6 +188,26 @@ const DRAG_SLOP_PX = 6;
 const DOUBLE_CLICK_MS = 320;
 /** Recalling the same control group twice this fast centres the camera on it. */
 const DOUBLE_TAP_MS = 400;
+
+/**
+ * Scope return sizes by tier, in scope pixels.
+ *
+ * Inverted on purpose: a Tier-1 return is the *largest* mark on the scope and
+ * the softest, because its size is the uncertainty rather than the contact. A
+ * Tier-4 track is a tight point, because that is what the player earned.
+ */
+const SCOPE_RETURN_RADIUS_PX: Record<1 | 2 | 3 | 4, number> = { 1: 7, 2: 4.5, 3: 2.5, 4: 2 };
+
+/** One sweep revolution. Deliberately not a multiple of the 5 Hz Echo tick. */
+const SCOPE_SWEEP_MS = 4000;
+
+/** Faction names for the contact log. docs/factions.md. */
+const FACTION_NAME: Record<Faction, string> = {
+  [Faction.Bathyarch]: 'Consortium',
+  [Faction.Pelagia]: 'Commune',
+  [Faction.Directorate]: 'Directorate',
+  [Faction.Hadron]: 'Knights',
+};
 
 /** Depth ribbon geometry — a narrow strip down the left edge. */
 const RIBBON_X = 12;
@@ -904,6 +947,25 @@ export class EchoRenderer {
     return { x: 10, y: this.app.screen.height - BAR_HEIGHT - size - 10, size };
   }
 
+  /**
+   * What the scope's rings and sweep are centred on: the player's Bastion,
+   * falling back to their centre of mass. The rings measure the ping from
+   * where the player actually is, which is the only place the numbers mean
+   * anything.
+   */
+  private scopeAnchor(): { x: number; y: number } | null {
+    const bastion = this.structures.find((st) => st.kind === StructureKind.Bastion);
+    if (bastion !== undefined) return { x: bastion.x, y: bastion.y };
+    if (this.units.length === 0) return null;
+    let sx = 0;
+    let sy = 0;
+    for (const unit of this.units) {
+      sx += unit.x;
+      sy += unit.y;
+    }
+    return { x: sx / this.units.length, y: sy / this.units.length };
+  }
+
   /** Map metres per scope pixel. */
   private minimapScale(size: number): number {
     const terrain = this.terrain;
@@ -1413,6 +1475,13 @@ export class EchoRenderer {
 
     const now = performance.now();
     for (const contact of snapshot.contacts) {
+      // Log an event when a contact is first heard, and again whenever what
+      // the player knows about it *changes* tier. Re-reporting an unchanged
+      // contact five times a second would bury the events that matter.
+      const previous = this.tracked.get(contact.id);
+      if (previous === undefined || previous.contact.tier !== contact.tier) {
+        this.emitContactEvent(contact, snapshot.tick, previous === undefined);
+      }
       this.tracked.set(contact.id, { contact, lastSeenMs: now });
     }
 
@@ -1429,6 +1498,65 @@ export class EchoRenderer {
         this.headings.delete(id);
       }
     }
+  }
+
+  /**
+   * Turn a resolution into a log line.
+   *
+   * The rule the whole log rests on: it reports what was told, at the
+   * fidelity it was told, and never sharpens an old entry when a better
+   * resolution of the same contact arrives later. A log that improved its own
+   * history would let a player reconstruct positions they never earned, and
+   * would also destroy the thing the log is *for* — reasoning about what was
+   * knowable at the time (docs/ui-ux.md §10).
+   */
+  private emitContactEvent(contact: Contact, tick: number, fresh: boolean): void {
+    const entry: ContactLogEntry = {
+      // Tier is part of the id: one contact climbing 1 -> 3 is two events.
+      id: `${tick}:${contact.id}:${contact.tier}`,
+      tick,
+      tier: contact.tier,
+      fresh,
+      label: this.contactLabel(contact),
+    };
+
+    // A Tier-1 report carries the *listener's* position, not the emitter's,
+    // so there is no bearing in it to show. Saying "bearing unknown" is the
+    // honest rendering; inventing one from the listener would be a lie.
+    if (contact.tier >= ResolutionTier.Bearing) {
+      const from = this.scopeAnchor();
+      if (from !== null) {
+        const dx = contact.x - from.x;
+        const dy = contact.y - from.y;
+        entry.bearingDeg = (((Math.atan2(dy, dx) * 180) / Math.PI + 450) % 360) | 0;
+        entry.rangeM = Math.hypot(dx, dy);
+      }
+      entry.focusX = contact.x;
+      entry.focusY = contact.y;
+    }
+
+    this.callbacks.onContactEvent(entry);
+  }
+
+  private contactLabel(contact: Contact): string {
+    if (contact.tier >= ResolutionTier.Classification) {
+      const name =
+        contact.kind !== undefined
+          ? statsFor(contact.kind).name
+          : contact.structure !== undefined
+            ? structureStatsFor(contact.structure).name
+            : 'contact';
+      const faction = contact.faction !== undefined ? FACTION_NAME[contact.faction] : '';
+      return faction === '' ? name : `${faction} ${name}`;
+    }
+    return 'contact';
+  }
+
+  /** Move the camera to a logged position. */
+  focusOn(x: number, y: number): void {
+    const scale = this.world.scale.x;
+    this.world.x = this.app.screen.width / 2 - x * scale;
+    this.world.y = this.app.screen.height / 2 - y * scale;
   }
 
   // --- Draw ----------------------------------------------------------------
@@ -2248,6 +2376,20 @@ export class EchoRenderer {
     og.position.set(x, y);
     if (terrain === null || k <= 0) return;
 
+    // Range rings at the ping's two radii — the two distances that decide
+    // every use of the loudest button in the game, drawn permanently so the
+    // decision never needs a mental conversion (docs/ui-ux.md §5).
+    const centre = this.scopeAnchor();
+    if (centre !== null) {
+      for (const radius of [ACTIVE_SONAR.REVEAL_RADIUS_M, ACTIVE_SONAR.SELF_REVEAL_RADIUS_M]) {
+        og.circle(centre.x * k, centre.y * k, radius * k).stroke({
+          width: 1,
+          color: UI.accent,
+          alpha: 0.18,
+        });
+      }
+    }
+
     const palette = FACTION_PALETTE[this.faction];
     for (const structure of this.structures) {
       og.rect(structure.x * k - 2, structure.y * k - 2, 4, 4).fill({ color: palette.primary });
@@ -2255,14 +2397,39 @@ export class EchoRenderer {
     for (const unit of this.units) {
       og.circle(unit.x * k, unit.y * k, 1.5).fill({ color: palette.accent });
     }
+
+    // Returns carry the same tier fidelity as the world view, scaled down.
+    // They used to be uniform dots, which drew a Tier-1 haze as crisply as a
+    // Tier-4 track — the scope asserting precision the server never sent.
     for (const { contact } of this.tracked.values()) {
       if (contact.tier === ResolutionTier.Silent) continue;
       const style = TIER_STYLE[contact.tier as Exclude<ResolutionTier, ResolutionTier.Silent>];
       if (style === undefined) continue;
-      og.circle(contact.x * k, contact.y * k, contact.tier >= ResolutionTier.Track ? 2.5 : 2).fill({
+      const smear = SCOPE_RETURN_RADIUS_PX[contact.tier as 1 | 2 | 3 | 4];
+      // Soft at low tiers: a haze is drawn as a haze, and its size is the
+      // uncertainty rather than the contact.
+      og.circle(contact.x * k, contact.y * k, smear).fill({
         color: style.color,
-        alpha: Math.max(0.5, style.alpha),
+        alpha: contact.tier >= ResolutionTier.Classification ? 0.85 : 0.22,
       });
+      if (contact.tier >= ResolutionTier.Classification) {
+        og.circle(contact.x * k, contact.y * k, smear).stroke({
+          width: 1,
+          color: style.color,
+          alpha: 0.9,
+        });
+      }
+    }
+
+    // The sweep. Cosmetic, and deliberately out of phase with the 5 Hz
+    // detection tick (4 s a revolution) so that no player ever comes to
+    // believe the sweep is what finds things.
+    if (centre !== null) {
+      const angle = ((performance.now() % SCOPE_SWEEP_MS) / SCOPE_SWEEP_MS) * Math.PI * 2;
+      const reach = size;
+      og.moveTo(centre.x * k, centre.y * k)
+        .lineTo(centre.x * k + Math.cos(angle) * reach, centre.y * k + Math.sin(angle) * reach)
+        .stroke({ width: 1, color: UI.accent, alpha: 0.22 });
     }
 
     // Camera viewport, so the scope doubles as a navigator. Clamped to the

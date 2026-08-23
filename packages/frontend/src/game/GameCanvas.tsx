@@ -7,15 +7,26 @@
  * renderer and only connection status crosses back into React.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { EchoSnapshot } from '@echoes/shared';
-import { EchoRenderer } from './EchoRenderer.ts';
+import { EchoRenderer, type ContactLogEntry } from './EchoRenderer.ts';
+import { ContactLog } from './ContactLog.tsx';
 import { GameClient, type ConnectionStatus } from '../net/GameClient.ts';
+
+/** Longest log a player will ever scroll back through. */
+const MAX_LOG_ENTRIES = 300;
 
 export function GameCanvas() {
   const hostRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<ConnectionStatus>('connecting');
   const [detail, setDetail] = useState<string>('');
+  /**
+   * The log is the one piece of game state React owns, and it can: it changes
+   * only when a detection changes, not every frame, so it does not drag React
+   * into the render loop the way animating the canvas would.
+   */
+  const [log, setLog] = useState<ContactLogEntry[]>([]);
+  const rendererRef = useRef<EchoRenderer | null>(null);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -42,6 +53,13 @@ export function GameCanvas() {
         onBuild: (kind, x, y) => client?.build(kind, x, y),
         onProduce: (structureId, kind) => client?.produce(structureId, kind),
         onDepthOrder: (unitIds, depth) => client?.setDepth(unitIds, depth),
+        onContactEvent: (entry) =>
+          // Capped: a long match would otherwise grow an unbounded list, and
+          // nobody scrolls back past a few hundred detections.
+          setLog((previous) => {
+            const next = [...previous, entry];
+            return next.length > MAX_LOG_ENTRIES ? next.slice(-MAX_LOG_ENTRIES) : next;
+          }),
       });
 
       await activeRenderer.init(host);
@@ -50,6 +68,7 @@ export function GameCanvas() {
         return;
       }
       renderer = activeRenderer;
+      rendererRef.current = activeRenderer;
 
       client = new GameClient({
         onTerrain: (terrain) => activeRenderer.setTerrain(terrain),
@@ -74,12 +93,18 @@ export function GameCanvas() {
       cancelled = true;
       client?.disconnect();
       renderer?.destroy();
+      rendererRef.current = null;
     };
+  }, []);
+
+  const focusOn = useCallback((x: number, y: number) => {
+    rendererRef.current?.focusOn(x, y);
   }, []);
 
   return (
     <div className="game-root">
       <div ref={hostRef} className="game-host" />
+      {status === 'connected' && <ContactLog entries={log} onFocus={focusOn} />}
       {status !== 'connected' && (
         <div className="game-overlay">
           <h2>
