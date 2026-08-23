@@ -11,6 +11,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { EchoSnapshot } from '@echoes/shared';
 import { EchoRenderer, type ContactLogEntry } from './EchoRenderer.ts';
 import { ContactLog } from './ContactLog.tsx';
+import { AudioEngine } from '../audio/engine.ts';
 import { GameClient, type ConnectionStatus } from '../net/GameClient.ts';
 
 /** Longest log a player will ever scroll back through. */
@@ -27,6 +28,12 @@ export function GameCanvas() {
    */
   const [log, setLog] = useState<ContactLogEntry[]>([]);
   const rendererRef = useRef<EchoRenderer | null>(null);
+  /**
+   * The mix. Built once and kept for the session — the AudioContext is a
+   * device handle, not per-match state, and browsers limit how many a page
+   * may open.
+   */
+  const audioRef = useRef<AudioEngine | null>(null);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -40,6 +47,34 @@ export function GameCanvas() {
      * leave an orphaned canvas attached.
      */
     let cancelled = false;
+
+    const audio = new AudioEngine();
+    audioRef.current = audio;
+
+    // A read-only window into the mix, for the headless harness. Reports
+    // state only; it can neither drive the engine nor reach the simulation.
+    (window as unknown as { __audioProbe?: () => unknown }).__audioProbe = () => ({
+      state: audio.state,
+      contextState: audio.audioContext?.state ?? null,
+      buses: audio.graph === null ? [] : Object.keys(audio.graph),
+      sampleRate: audio.audioContext?.sampleRate ?? null,
+      voiceCapacity: audio.voices.capacity,
+      activeVoices: audio.voices.size,
+      worstTickMs: Number(audio.worstTickCostMs.toFixed(4)),
+    });
+
+    /**
+     * Autoplay policy blocks an AudioContext created without a user gesture,
+     * so the mix starts on the first real input rather than at mount. A game
+     * whose primary information channel is audio cannot leave the player
+     * hunting for a start button that looks like a mute button
+     * (docs/audio-direction.md §12).
+     */
+    const unlock = () => {
+      void audio.unlock();
+    };
+    window.addEventListener('pointerdown', unlock, { once: true });
+    window.addEventListener('keydown', unlock, { once: true });
 
     const start = async () => {
       const activeRenderer = new EchoRenderer({
@@ -74,7 +109,13 @@ export function GameCanvas() {
         onTerrain: (terrain) => activeRenderer.setTerrain(terrain),
         onNodes: (nodes) => activeRenderer.setNodes(nodes),
         onAssigned: ({ slot, faction }) => activeRenderer.setIdentity(slot, faction),
-        onEcho: (snapshot: EchoSnapshot) => activeRenderer.applySnapshot(snapshot),
+        onEcho: (snapshot: EchoSnapshot) => {
+          activeRenderer.applySnapshot(snapshot);
+          // Audio work happens on the tick contacts arrive on, never per
+          // frame: anything smoother would imply knowledge the server did
+          // not send.
+          audio.onEchoTick();
+        },
         onGameOver: (payload) => activeRenderer.setGameOver(payload),
         onStatus: (next, why) => {
           if (cancelled) return;
@@ -94,6 +135,10 @@ export function GameCanvas() {
       client?.disconnect();
       renderer?.destroy();
       rendererRef.current = null;
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+      void audio.destroy();
+      audioRef.current = null;
     };
   }, []);
 
