@@ -12,6 +12,7 @@
  */
 
 import { Schema, MapSchema, type } from '@colyseus/schema';
+import { MatchPhase } from '@echoes/shared';
 
 export class PlayerState extends Schema {
   @type('string') sessionId = '';
@@ -19,11 +20,36 @@ export class PlayerState extends Schema {
   @type('uint8') slot = 0;
   /** Faction enum ordinal. Public — everyone knows who they are playing. */
   @type('uint8') faction = 0;
+  /**
+   * False while a dropped player is inside the reconnection grace window.
+   *
+   * Public on purpose, and it costs the dropped player something: their fleet
+   * stays in the water and keeps making noise (docs/tech-stack.md "Match lifecycle"), so an
+   * opponent who can see the flag knows exactly whose hulls are now unpiloted.
+   */
   @type('boolean') connected = true;
+  /**
+   * Readied up. Carries two meanings across two phases — "start the match" in
+   * the lobby, "call a rematch" after one ends — because it is the same
+   * question both times: is this commander waiting on anyone else?
+   */
+  @type('boolean') ready = false;
 }
 
 export class MatchState extends Schema {
   /** Authoritative simulation tick, so clients can order and age snapshots. */
   @type('uint32') tick = 0;
+  /** MatchPhase ordinal. The simulation only steps in Playing. */
+  @type('uint8') phase: number = MatchPhase.Lobby;
+  /** Which authored map this room is on. Chosen at creation, fixed for its life. */
+  @type('string') mapId = '';
+  /**
+   * Winning slot, or -1 while a match is unresolved.
+   *
+   * int8 rather than uint8 so "nobody has won" is a representable value
+   * instead of a sentinel that collides with slot 0 — the slot a player is
+   * most likely to be holding.
+   */
+  @type('int8') winnerSlot = -1;
   @type({ map: PlayerState }) players = new MapSchema<PlayerState>();
 }

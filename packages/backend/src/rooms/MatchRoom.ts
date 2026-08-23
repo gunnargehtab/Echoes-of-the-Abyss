@@ -4,6 +4,10 @@
  * Responsibilities are kept narrow on purpose: translate client messages into
  * validated commands, drive the simulation clock, and fan resolved snapshots
  * out to the players who earned them. All game rules live in sim/.
+ *
+ * The room also owns the *lifecycle* around a match — lobby, play, result,
+ * rematch (docs/tech-stack.md "Match lifecycle"). That is deliberately here rather than in
+ * sim/: `Match` knows about hulls and sound, and nothing about sockets.
  */
 
 // Imported from @colyseus/core rather than the `colyseus` meta-package: the
@@ -14,6 +18,8 @@ import { Room, type Client } from '@colyseus/core';
 import {
   Faction,
   HarvestThrottle,
+  LIFECYCLE,
+  MatchPhase,
   SIM,
   StructureKind,
   UnitKind,
@@ -21,8 +27,16 @@ import {
 } from '@echoes/shared';
 import { Match } from '../sim/match.ts';
 import { DEFAULT_MAP_ID, mapById } from '../sim/maps/index.ts';
+import type { MapDefinition } from '../sim/maps/types.ts';
 import { isSimulated } from '../sim/systems/hazards.ts';
 import { MatchState, PlayerState } from '../schema/MatchState.ts';
+import {
+  allocateSlot,
+  canChooseFaction,
+  defaultFaction,
+  everyoneIsReady,
+  type RosterEntry,
+} from './lobby.ts';
 
 interface MoveMessage {
   unitIds: number[];
@@ -76,12 +90,13 @@ interface ProduceMessage {
   kind: UnitKind;
 }
 
-const FACTION_BY_SLOT: Faction[] = [
-  Faction.Bathyarch,
-  Faction.Pelagia,
-  Faction.Directorate,
-  Faction.Hadron,
-];
+interface FactionMessage {
+  faction: Faction;
+}
+
+interface ReadyMessage {
+  ready?: boolean;
+}
 
 /** Options a room may be created with. `mapId` selects the authored map. */
 export interface MatchRoomOptions {
@@ -92,22 +107,23 @@ export class MatchRoom extends Room<MatchState> {
   maxClients = 4;
 
   private match!: Match;
+  private map!: MapDefinition;
   private readonly slotBySession = new Map<string, number>();
-  private nextSlot = 0;
 
   override onCreate(options?: MatchRoomOptions): void {
     // An unknown id falls back to the default rather than failing the room:
     // a client asking for a map this build does not have should get a game,
     // and the map it actually got is sent on join either way.
-    const map = mapById(options?.mapId ?? DEFAULT_MAP_ID) ?? mapById(DEFAULT_MAP_ID)!;
-    this.match = new Match(map);
+    this.map = mapById(options?.mapId ?? DEFAULT_MAP_ID) ?? mapById(DEFAULT_MAP_ID)!;
+    this.match = new Match(this.map);
     // A map's spawn list is its player count.
-    this.maxClients = Math.min(this.maxClients, map.spawns.length);
+    this.maxClients = Math.min(this.maxClients, this.map.spawns.length);
 
     this.setState(new MatchState());
+    this.state.mapId = this.map.id;
 
     this.onMessage('move', (client, message: MoveMessage) => {
-      const slot = this.slotBySession.get(client.sessionId);
+      const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;
       if (!Number.isFinite(message.x) || !Number.isFinite(message.y)) return;
       for (const unitId of message.unitIds) {
@@ -118,7 +134,7 @@ export class MatchRoom extends Room<MatchState> {
     });
 
     this.onMessage('silent', (client, message: SilentRunningMessage) => {
-      const slot = this.slotBySession.get(client.sessionId);
+      const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;
       for (const unitId of message.unitIds) {
         this.match.setSilentRunning(slot, unitId, Boolean(message.active));
@@ -126,7 +142,7 @@ export class MatchRoom extends Room<MatchState> {
     });
 
     this.onMessage('depth', (client, message: DepthMessage) => {
-      const slot = this.slotBySession.get(client.sessionId);
+      const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;
       if (!Number.isFinite(message.depth)) return;
       for (const unitId of message.unitIds) {
@@ -137,13 +153,13 @@ export class MatchRoom extends Room<MatchState> {
     });
 
     this.onMessage('ping', (client, message: PingMessage) => {
-      const slot = this.slotBySession.get(client.sessionId);
+      const slot = this.commandSlot(client);
       if (slot === undefined || !Number.isFinite(message?.unitId)) return;
       this.match.activeSonar(slot, message.unitId);
     });
 
     this.onMessage('attack', (client, message: AttackMessage) => {
-      const slot = this.slotBySession.get(client.sessionId);
+      const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;
       if (!Number.isFinite(message.contactId)) return;
       for (const unitId of message.unitIds) {
@@ -152,7 +168,7 @@ export class MatchRoom extends Room<MatchState> {
     });
 
     this.onMessage('harvest', (client, message: HarvestMessage) => {
-      const slot = this.slotBySession.get(client.sessionId);
+      const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;
       if (!Number.isFinite(message.nodeId)) return;
       for (const unitId of message.unitIds) {
@@ -161,7 +177,7 @@ export class MatchRoom extends Room<MatchState> {
     });
 
     this.onMessage('throttle', (client, message: ThrottleMessage) => {
-      const slot = this.slotBySession.get(client.sessionId);
+      const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;
       if (!Number.isFinite(message.throttle)) return;
       for (const unitId of message.unitIds) {
@@ -170,69 +186,237 @@ export class MatchRoom extends Room<MatchState> {
     });
 
     this.onMessage('build', (client, message: BuildMessage) => {
-      const slot = this.slotBySession.get(client.sessionId);
+      const slot = this.commandSlot(client);
       if (slot === undefined || !Number.isFinite(message?.kind)) return;
       if (!Number.isFinite(message.x) || !Number.isFinite(message.y)) return;
       this.match.build(slot, message.kind, message.x, message.y);
     });
 
     this.onMessage('produce', (client, message: ProduceMessage) => {
-      const slot = this.slotBySession.get(client.sessionId);
+      const slot = this.commandSlot(client);
       if (slot === undefined || !Number.isFinite(message?.structureId)) return;
       if (!Number.isFinite(message.kind)) return;
       this.match.produce(slot, message.structureId, message.kind);
+    });
+
+    // --- Lifecycle messages ------------------------------------------------
+
+    this.onMessage('faction', (client, message: FactionMessage) => {
+      if (this.state.phase !== MatchPhase.Lobby) return;
+      const player = this.state.players.get(client.sessionId);
+      if (player === undefined || !Number.isFinite(message?.faction)) return;
+      const faction = Math.trunc(message.faction);
+      // Uniqueness is enforced here and nowhere else — see lobby.ts.
+      if (!canChooseFaction(this.roster(), client.sessionId, faction)) return;
+
+      player.faction = faction;
+      // Changing your pick un-readies you. Otherwise "everyone is ready" could
+      // be true of a roster nobody has looked at since it last changed.
+      player.ready = false;
+      client.send('assigned', { slot: player.slot, faction: player.faction });
+    });
+
+    this.onMessage('ready', (client, message: ReadyMessage) => {
+      const player = this.state.players.get(client.sessionId);
+      if (player === undefined) return;
+      // Ready means "start" in the lobby and "rematch" after a result. Same
+      // question, same flag, one code path — see PlayerState.ready.
+      if (this.state.phase === MatchPhase.Playing) return;
+      player.ready = message?.ready !== false;
+      this.startIfEveryoneIsReady();
     });
 
     // Colyseus drives wall-clock; Match converts it into fixed steps itself.
     this.setSimulationInterval((deltaMs) => this.update(deltaMs), 1000 / SIM.TICK_HZ);
   }
 
+  /**
+   * The slot allowed to issue a game command right now.
+   *
+   * Undefined outside a running match, which is the only reason this is not
+   * just a map lookup: a queued-up "produce" fired during the lobby would
+   * otherwise reach a `Match` that has not spawned anybody's base yet.
+   */
+  private commandSlot(client: Client): number | undefined {
+    if (this.state.phase !== MatchPhase.Playing) return undefined;
+    return this.slotBySession.get(client.sessionId);
+  }
+
+  /** The roster, as the plain rows lobby.ts reasons over. */
+  private roster(): RosterEntry[] {
+    const rows: RosterEntry[] = [];
+    this.state.players.forEach((player) => {
+      rows.push({
+        sessionId: player.sessionId,
+        slot: player.slot,
+        faction: player.faction as Faction,
+        ready: player.ready,
+        connected: player.connected,
+      });
+    });
+    return rows;
+  }
+
   override onJoin(client: Client, options?: { name?: string }): void {
-    const slot = this.nextSlot++;
-    const faction = FACTION_BY_SLOT[slot % FACTION_BY_SLOT.length]!;
-    this.slotBySession.set(client.sessionId, slot);
+    // A running room is locked, so joinOrCreate routes a late arrival to a
+    // fresh one. This is the belt to that braces: a direct joinById to a room
+    // mid-match is refused rather than dropped into a game already in progress.
+    if (this.state.phase !== MatchPhase.Lobby) {
+      throw new Error('This match has already started.');
+    }
+    const slot = allocateSlot(this.roster(), this.maxClients);
+    if (slot === undefined) throw new Error('This match is full.');
 
     const player = new PlayerState();
     player.sessionId = client.sessionId;
     player.name = options?.name?.slice(0, 32) || `Commander ${slot + 1}`;
     player.slot = slot;
-    player.faction = faction;
+    player.faction = defaultFaction(this.roster());
     this.state.players.set(client.sessionId, player);
+    this.slotBySession.set(client.sessionId, slot);
 
-    this.match.addPlayer(slot, faction);
+    this.sendMapData(client);
+    client.send('assigned', { slot, faction: player.faction });
+  }
 
-    // Terrain is public information — it is the map. Sent once on join rather
-    // than per-tick because it does not change (Coral Ruins aside; see
+  /**
+   * Everything about the ground, which is public by definition — both
+   * commanders are standing on it — and true before a match starts, so the
+   * lobby can name and preview the map it is about to be played on.
+   */
+  private sendMapData(client: Client): void {
+    // Terrain is public information — it is the map. Sent once rather than
+    // per-tick because it does not change (Coral Ruins aside; see
     // docs/environments.md).
     client.send('terrain', this.match.world.terrain.serialize());
-    // Which map this is. Public by definition — both players are standing on
-    // it — and the client needs it to name the ground in the HUD.
     client.send('map', {
-      id: this.match.map.id,
-      name: this.match.map.name,
-      idealUse: this.match.map.idealUse,
-      widthM: this.match.map.widthM,
-      heightM: this.match.map.heightM,
+      id: this.map.id,
+      name: this.map.name,
+      idealUse: this.map.idealUse,
+      widthM: this.map.widthM,
+      heightM: this.map.heightM,
       // Marked so the client can draw an inert site as ground and leave the
       // simulated ones to the live hazard layer, rather than drawing both.
-      hazards: this.match.map.hazards.map((site) => ({
+      hazards: this.map.hazards.map((site) => ({
         ...site,
         simulated: isSimulated(site.kind),
       })),
     });
+  }
+
+  /**
+   * Per-match data: which entity ids the nodule fields have in *this* match,
+   * and which slot and navy the client ended up commanding.
+   *
+   * Re-sent on every start and on every reconnection, because a rematch
+   * rebuilds the world and the ids do not survive it.
+   */
+  private sendMatchData(client: Client): void {
+    const player = this.state.players.get(client.sessionId);
+    if (player === undefined) return;
     // Nodule fields are map data too — every commander has the same survey
     // charts. Depletion is never broadcast; see docs/economy.md.
     client.send('nodes', this.match.resourceNodes);
-    client.send('assigned', { slot, faction });
+    client.send('assigned', { slot: player.slot, faction: player.faction });
   }
 
-  override onLeave(client: Client): void {
-    const slot = this.slotBySession.get(client.sessionId);
+  /**
+   * Start once nobody is being waited on.
+   *
+   * Disconnected players are not counted: a lobby whose fourth member closed
+   * their tab should still be startable by the three who did not.
+   */
+  private startIfEveryoneIsReady(): void {
+    if (!everyoneIsReady(this.roster(), LIFECYCLE.MIN_PLAYERS)) return;
+
+    if (this.state.phase === MatchPhase.Ended) {
+      // A rematch is a new world on the same ground with the same roster —
+      // rebuilt rather than reset, because a Match owns an ECS world and
+      // unwinding one in place is how stale entities survive into game two.
+      this.match = new Match(this.map);
+    }
+    this.startMatch();
+  }
+
+  private startMatch(): void {
+    const players = [...this.state.players.values()].sort((a, b) => a.slot - b.slot);
+    for (const player of players) {
+      this.slotBySession.set(player.sessionId, player.slot);
+      this.match.addPlayer(player.slot, player.faction as Faction);
+      player.ready = false;
+    }
+
+    this.state.phase = MatchPhase.Playing;
+    this.state.winnerSlot = -1;
+    this.state.tick = 0;
+    this.gameOverSent = false;
+    this.postMatchTimeout?.clear();
+    this.postMatchTimeout = null;
+    // Nobody joins a match in progress. Unlocked again only if the room
+    // returns to a lobby, which today it does not — a rematch keeps its roster.
+    this.lock();
+
+    for (const client of this.clients) this.sendMatchData(client);
+    this.broadcast('phase', { phase: MatchPhase.Playing });
+  }
+
+  /**
+   * A client dropped.
+   *
+   * In the lobby, that is simply a departure: the slot is freed and someone
+   * else can take it. Mid-match it is not, because the fleet is still in the
+   * water — see the grace window below.
+   */
+  override async onLeave(client: Client, consented?: boolean): Promise<void> {
     const player = this.state.players.get(client.sessionId);
-    if (player) player.connected = false;
-    if (slot !== undefined) this.match.removePlayer(slot);
-    this.slotBySession.delete(client.sessionId);
-    this.state.players.delete(client.sessionId);
+    if (player === undefined) return;
+    player.connected = false;
+
+    if (this.state.phase !== MatchPhase.Playing) {
+      this.releasePlayer(client.sessionId);
+      // Someone leaving may be the last thing a ready lobby was waiting on.
+      this.startIfEveryoneIsReady();
+      return;
+    }
+
+    if (consented === true) {
+      // Walking out of a live match is a resignation, not a disconnection.
+      // Without this the survivor's opponent is gone from the roster but not
+      // beaten, and the victory check — which needs two rosters — never fires,
+      // so the winner sits in a won game waiting for nobody.
+      this.forfeit(client.sessionId);
+      return;
+    }
+
+    try {
+      // The grace window. The player's units are NOT frozen, hidden, or lifted
+      // out of the world while it runs: they hold station and keep emitting,
+      // and an opponent listening in the right place hears an unpiloted fleet
+      // exactly as it hears a piloted one (docs/tech-stack.md "Match lifecycle"). Anything
+      // gentler would make dropping out the cheapest stealth in the game.
+      await this.allowReconnection(client, LIFECYCLE.RECONNECT_GRACE_S);
+      const returning = this.state.players.get(client.sessionId);
+      if (returning !== undefined) {
+        returning.connected = true;
+        this.sendMatchData(client);
+        client.send('phase', { phase: this.state.phase });
+      }
+    } catch {
+      // Out of grace. Same answer as walking out: abandoning is losing.
+      this.forfeit(client.sessionId);
+    }
+  }
+
+  /** Give up a slot's match and clear its seat. */
+  private forfeit(sessionId: string): void {
+    const slot = this.slotBySession.get(sessionId);
+    if (slot !== undefined) this.match.resign(slot);
+    this.releasePlayer(sessionId);
+  }
+
+  private releasePlayer(sessionId: string): void {
+    this.slotBySession.delete(sessionId);
+    this.state.players.delete(sessionId);
   }
 
   override onDispose(): void {
@@ -245,13 +429,20 @@ export class MatchRoom extends Room<MatchState> {
 
   /** Broadcast the result exactly once. */
   private gameOverSent = false;
+  /** Live while a resolved match waits for a rematch that may never come. */
+  private postMatchTimeout: { clear(): void } | null = null;
 
   private update(deltaMs: number): void {
+    // The lobby and the result screen are not the match. Stepping through
+    // either would give whoever loaded first a head start measured in however
+    // long their opponent took to pick a navy.
+    if (this.state.phase !== MatchPhase.Playing) return;
+
     const snapshots = this.match.update(deltaMs);
 
     if (!this.gameOverSent && this.match.result !== null) {
       this.gameOverSent = true;
-      this.broadcast('gameOver', this.match.result);
+      this.endMatch(this.match.result.winnerSlot);
     }
 
     if (snapshots === null) return;
@@ -265,5 +456,19 @@ export class MatchRoom extends Room<MatchState> {
       if (snapshot === undefined) continue;
       client.send('echo', snapshot);
     }
+  }
+
+  private endMatch(winnerSlot: number): void {
+    this.state.phase = MatchPhase.Ended;
+    this.state.winnerSlot = winnerSlot;
+    for (const player of this.state.players.values()) player.ready = false;
+    this.broadcast('gameOver', { winnerSlot });
+
+    // A room whose match is over holds a slot on the server and answers no
+    // useful question. It gets long enough for a rematch to be called, then
+    // closes itself rather than lingering until the process restarts.
+    this.postMatchTimeout = this.clock.setTimeout(() => {
+      if (this.state.phase === MatchPhase.Ended) this.disconnect();
+    }, LIFECYCLE.POST_MATCH_S * 1000);
   }
 }

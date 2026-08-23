@@ -8,11 +8,13 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { EchoSnapshot } from '@echoes/shared';
+import { LIFECYCLE, MatchPhase, type EchoSnapshot, type Faction } from '@echoes/shared';
 import { EchoRenderer, type ContactLogEntry } from './EchoRenderer.ts';
 import { ContactLog } from './ContactLog.tsx';
+import { Lobby } from './Lobby.tsx';
+import { MatchResult } from './MatchResult.tsx';
 import { AudioEngine } from '../audio/engine.ts';
-import { GameClient, type ConnectionStatus } from '../net/GameClient.ts';
+import { GameClient, type ConnectionStatus, type LobbyView } from '../net/GameClient.ts';
 
 /** Longest log a player will ever scroll back through. */
 const MAX_LOG_ENTRIES = 300;
@@ -27,7 +29,16 @@ export function GameCanvas() {
    * into the render loop the way animating the canvas would.
    */
   const [log, setLog] = useState<ContactLogEntry[]>([]);
+  /**
+   * The room's public roster and phase. Like the log, it changes on events
+   * rather than on frames — a faction pick, a ready, a result — so React is
+   * the right owner for it.
+   */
+  const [lobby, setLobby] = useState<LobbyView | null>(null);
+  const [mapName, setMapName] = useState('');
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const rendererRef = useRef<EchoRenderer | null>(null);
+  const clientRef = useRef<GameClient | null>(null);
   /**
    * The mix. Built once and kept for the session — the AudioContext is a
    * device handle, not per-match state, and browsers limit how many a page
@@ -139,7 +150,10 @@ export function GameCanvas() {
 
       client = new GameClient({
         onTerrain: (terrain) => activeRenderer.setTerrain(terrain),
-        onMap: (map) => activeRenderer.setMap(map),
+        onMap: (map) => {
+          activeRenderer.setMap(map);
+          setMapName(map.name);
+        },
         onNodes: (nodes) => activeRenderer.setNodes(nodes),
         onAssigned: ({ slot, faction }) => activeRenderer.setIdentity(slot, faction),
         onEcho: (snapshot: EchoSnapshot) => {
@@ -150,6 +164,20 @@ export function GameCanvas() {
           audio.onEchoTick();
         },
         onGameOver: (payload) => activeRenderer.setGameOver(payload),
+        onLobby: (view) => {
+          // A rematch reuses the room and the connection, so nothing else
+          // would tell the renderer its entity ids just became meaningless.
+          setLobby((previous) => {
+            if (previous !== null && previous.phase !== view.phase) {
+              if (view.phase === MatchPhase.Playing) {
+                activeRenderer.resetForNewMatch();
+                setLog([]);
+              }
+            }
+            return view;
+          });
+          setSessionId(client?.sessionId ?? null);
+        },
         onStatus: (next, why) => {
           if (cancelled) return;
           setStatus(next);
@@ -158,7 +186,9 @@ export function GameCanvas() {
         },
       });
 
+      clientRef.current = client;
       await client.connect();
+      setSessionId(client.sessionId);
     };
 
     void start();
@@ -166,6 +196,7 @@ export function GameCanvas() {
     return () => {
       cancelled = true;
       client?.disconnect();
+      clientRef.current = null;
       renderer?.destroy();
       rendererRef.current = null;
       window.removeEventListener('pointerdown', unlock);
@@ -179,17 +210,52 @@ export function GameCanvas() {
     rendererRef.current?.focusOn(x, y);
   }, []);
 
+  const chooseFaction = useCallback((faction: Faction) => {
+    clientRef.current?.chooseFaction(faction);
+  }, []);
+
+  const setReady = useCallback((ready: boolean) => {
+    clientRef.current?.setReady(ready);
+  }, []);
+
+  const phase = lobby?.phase ?? MatchPhase.Lobby;
+  const live = status === 'connected';
+
   return (
     <div className="game-root">
       <div ref={hostRef} className="game-host" />
-      {status === 'connected' && <ContactLog entries={log} onFocus={focusOn} />}
-      {status !== 'connected' && (
+      {live && phase !== MatchPhase.Lobby && <ContactLog entries={log} onFocus={focusOn} />}
+      {live && phase === MatchPhase.Lobby && lobby !== null && (
+        <Lobby
+          mapName={mapName}
+          players={lobby.players}
+          sessionId={sessionId}
+          onChooseFaction={chooseFaction}
+          onReady={setReady}
+        />
+      )}
+      {live && phase === MatchPhase.Ended && lobby !== null && (
+        <MatchResult
+          winnerSlot={lobby.winnerSlot}
+          players={lobby.players}
+          sessionId={sessionId}
+          onRematch={setReady}
+        />
+      )}
+      {!live && (
         <div className="game-overlay">
           <h2>
             {status === 'connecting' && 'Listening…'}
+            {status === 'reconnecting' && 'Signal lost — re-acquiring'}
             {status === 'error' && 'No signal'}
             {status === 'closed' && 'Connection closed'}
           </h2>
+          {status === 'reconnecting' && (
+            <p>
+              Your fleet is still in the water and still making noise. Holding the slot for up to{' '}
+              {LIFECYCLE.RECONNECT_GRACE_S} seconds.
+            </p>
+          )}
           {status === 'error' && (
             <p>
               Could not reach the game server. Start it with{' '}

@@ -66,6 +66,7 @@ import {
   UI,
   sigColor,
 } from './palette.ts';
+import { FACTION_NAME } from './factions.ts';
 import type { ContactAudioEntry, ContactAudioFrame } from '../audio/contactMixer.ts';
 import type { PingReturn, SelfAudioFrame } from '../audio/selfMixer.ts';
 import { PRECEDENCE_MS, markOpacity } from '../audio/precedence.ts';
@@ -369,14 +370,6 @@ const SCOPE_RETURN_RADIUS_PX: Record<1 | 2 | 3 | 4, number> = { 1: 7, 2: 4.5, 3:
 
 /** One sweep revolution. Deliberately not a multiple of the 5 Hz Echo tick. */
 const SCOPE_SWEEP_MS = 4000;
-
-/** Faction names for the contact log. docs/factions.md. */
-const FACTION_NAME: Record<Faction, string> = {
-  [Faction.Bathyarch]: 'Consortium',
-  [Faction.Pelagia]: 'Commune',
-  [Faction.Directorate]: 'Directorate',
-  [Faction.Hadron]: 'Knights',
-};
 
 /** Depth ribbon geometry — a narrow strip down the left edge. */
 const RIBBON_X = 12;
@@ -1701,6 +1694,35 @@ export class EchoRenderer {
 
   setGameOver(payload: GameOverPayload): void {
     this.gameOver = payload;
+  }
+
+  /**
+   * Forget the match that just ended, keeping the ground it was played on.
+   *
+   * A rematch builds a *new* ECS world, so every entity id the renderer is
+   * holding — selections, control groups, tracked contacts, the residue it can
+   * hear — now refers to something that no longer exists or, worse, to a
+   * different thing that has been handed the same id. Terrain and the map
+   * survive because they are the same ground; nodes do not, and arrive again.
+   */
+  resetForNewMatch(): void {
+    this.gameOver = null;
+    this.units = [];
+    this.structures = [];
+    this.tracked.clear();
+    this.selected.clear();
+    this.controlGroups.clear();
+    this.marks = [];
+    this.hazards = [];
+    this.peakSig = 0;
+    this.fleetSig = 0;
+    this.fleetSilent = false;
+    this.exposure = { tier: ResolutionTier.Silent, trackedCount: 0 };
+    this.drawReport = { capacity: 0, demand: 0, satisfaction: 1 };
+    this.biomass = 0;
+    this.nodules = 0;
+    this.crystal = 0;
+    this.pendingBuild = null;
   }
 
   applySnapshot(snapshot: EchoSnapshot): void {

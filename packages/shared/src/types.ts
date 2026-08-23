@@ -273,6 +273,34 @@ export interface DrawReport {
   satisfaction: number;
 }
 
+/**
+ * Where a room is in its life — docs/tech-stack.md.
+ *
+ * The room used to have no phases at all: it began simulating the moment it
+ * was created and handed out identity by arrival order. That meant the first
+ * player got a head start proportional to how long their friend took to load,
+ * and nobody chose their navy — in a game whose four factions are its entire
+ * asymmetry axis.
+ */
+export enum MatchPhase {
+  /** Choosing factions and readying up. The simulation is not running. */
+  Lobby = 0,
+  /** Simulating. */
+  Playing = 1,
+  /** Resolved. A result stands, and a rematch can be called. */
+  Ended = 2,
+}
+
+/** Lobby-level facts a client needs, all of them public by nature. */
+export interface LobbyPlayerView {
+  sessionId: string;
+  name: string;
+  slot: number;
+  faction: Faction;
+  ready: boolean;
+  connected: boolean;
+}
+
 /** A unit the player owns. Always full detail — it is theirs. */
 export interface OwnUnit {
   id: number;

@@ -109,10 +109,13 @@ const shot = async (name) => {
 await page.goto(URL, { waitUntil: 'domcontentloaded' });
 
 /**
- * The client auto-joins — there is no menu and no login. It shows a
- * ".game-overlay" until the room assigns it a slot, so that element going away
- * is the only trustworthy "we are in a match" signal. Polling the port only
+ * The client auto-joins — there is no login, and no room to pick. It shows a
+ * ".game-overlay" until the room answers, so that element going away is the
+ * only trustworthy "we reached the server" signal. Polling the port only
  * proves Vite is serving; waiting for the canvas only proves Pixi mounted.
+ *
+ * Reaching the server lands you in the *lobby*, not in a match — see the
+ * ready-up step below.
  */
 // Both branches carry their own rejection handler. Whichever loses the race
 // still rejects when its 45s timeout expires, and an unhandled rejection is
@@ -136,6 +139,36 @@ if (outcome !== 'ok') {
 }
 
 await page.waitForSelector('canvas', { timeout: 15000 });
+
+/**
+ * Ready up.
+ *
+ * The lobby is the one screen in this game that is real DOM rather than Pixi,
+ * which is why a selector works here and nowhere else. The simulation does not
+ * step until every connected commander has readied, so without this the rest
+ * of the script drives an empty ocean.
+ *
+ * The default faction is whichever navy was free when this client joined; pass
+ * --steps if you want to click a specific card first.
+ */
+const readyButton = await page.waitForSelector('.lobby-ready', { timeout: 15000 }).catch(() => null);
+if (readyButton !== null) {
+  await shot('lobby');
+  await readyButton.click();
+  const started = await page
+    .waitForSelector('.lobby', { state: 'detached', timeout: 20000 })
+    .then(() => true, () => false);
+  if (!started) {
+    await shot('lobby-stuck');
+    console.error(
+      'The lobby never started. It waits for every connected commander to ready ' +
+        'up — check whether a second client is sitting in the same room.'
+    );
+    await browser.close();
+    process.exit(1);
+  }
+}
+
 // Let a few 5 Hz Echo Layer passes land so terrain and contacts are populated.
 await page.waitForTimeout(4000);
 
