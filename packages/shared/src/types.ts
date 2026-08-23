@@ -229,6 +229,60 @@ export interface ResourceNodeInfo {
 }
 
 /** Payload pushed to each client on every Echo Layer tick. */
+/**
+ * Something that happened to *your own* force, which the mix must react to.
+ *
+ * These exist because the alternative is the client inferring them, and every
+ * inference available to it is sometimes wrong. A SIG jump could be a broken
+ * silence, a weapon discharge or a descent; "am I being pinged" cannot be read
+ * off own-SIG at all. docs/audio-direction.md §5 makes the exposure cue the
+ * loudest event in the game, and a cue that loud must never fire on a guess.
+ *
+ * Everything here is resolved information about the player's own units, so
+ * sending it leaks nothing — the same reason `OwnUnit` is sent in full.
+ */
+export enum SelfEventKind {
+  /** One of your units transmitted on active sonar. */
+  Ping = 0,
+  /** One of your units broke Silent Running to fire. */
+  BreakSilence = 1,
+  /** An enemy active sonar resolved one of your units. */
+  Exposed = 2,
+}
+
+export interface SelfEvent {
+  kind: SelfEventKind;
+  /** The entity of yours this happened to. */
+  unitId: number;
+  /**
+   * `Exposed` only: bearing in radians from your unit toward the emitter that
+   * lit it.
+   *
+   * A bearing and not a position, deliberately. docs/audio-direction.md §11
+   * asks for a screen-edge flash "on the bearing of the pinging emitter", and
+   * a bearing carries no range — so this hands over a direction, not a
+   * location. That distinction matters: a ping resolves by hard radius while
+   * the pinger's own self-reveal travels by propagation, so in a masking biome
+   * you can be lit by someone you cannot hear back. Sending their position
+   * would be the server closing a gap the design left open on purpose.
+   */
+  bearing?: number;
+}
+
+/**
+ * What other players currently know about you.
+ *
+ * The continuous half of the same idea as `SelfEvent`: not an event, a state.
+ * Deliberately says nothing about *who* holds the resolution or where they
+ * are — only how well you are being seen.
+ */
+export interface ExposureReport {
+  /** Best tier any other player currently holds on any entity of yours. */
+  tier: ResolutionTier;
+  /** How many of your entities are resolved at Bearing or better. */
+  trackedCount: number;
+}
+
 export interface EchoSnapshot {
   tick: number;
   units: OwnUnit[];
@@ -240,6 +294,10 @@ export interface EchoSnapshot {
   nodules: number;
   /** Resonance Crystal stockpile. Everything crystal-locked is bought here. */
   crystal: number;
+  /** What the rest of the map currently knows about you. */
+  exposure: ExposureReport;
+  /** Discrete things that happened to your own force on this tick. */
+  selfEvents: SelfEvent[];
 }
 
 /** Broadcast once when the match resolves. Elimination is public. */

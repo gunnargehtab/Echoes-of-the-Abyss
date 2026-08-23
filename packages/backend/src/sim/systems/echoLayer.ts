@@ -24,6 +24,7 @@ import {
   maxAudibleRangeM,
   tierFromRatio,
   type Contact,
+  type ExposureReport,
   type Faction,
   type StructureKind,
   type UnitKind,
@@ -90,6 +91,20 @@ interface BestContact {
 export interface EchoResult {
   /** Resolved enemy contacts, keyed by player slot. */
   contactsBySlot: Map<number, Contact[]>;
+  /**
+   * What each slot's opponents have resolved about *them*, keyed by slot.
+   *
+   * Falls out of the same `best` map the contact payloads are built from: the
+   * pass already knows, for every listener, the best tier it holds on every
+   * emitter. Reading it the other way round costs one extra walk of data
+   * already in cache, and saves the client from guessing (see `ExposureReport`).
+   */
+  exposureBySlot: Map<number, ExposureReport>;
+  /**
+   * Slot -> the entities of theirs an enemy ping lit this tick, each with the
+   * bearing toward the emitter that lit it.
+   */
+  litBySlot: Map<number, { unitId: number; bearing: number }[]>;
   /** Wall-clock cost of the pass, measured against SIM.ECHO_BUDGET_MS. */
   elapsedMs: number;
 }
@@ -111,6 +126,22 @@ export class EchoLayer {
   private readonly handles = new Map<number, Map<number, number>>();
   private readonly nextHandle = new Map<number, number>();
   private readonly results = new Map<number, Contact[]>();
+  private readonly exposure = new Map<number, ExposureReport>();
+  private readonly lit = new Map<number, { unitId: number; bearing: number }[]>();
+  /**
+   * Pinger -> the entities its current transmission has already lit.
+   *
+   * A ping reveals for three seconds, which is fifteen Echo ticks, but being
+   * lit is an *event* and not a state: docs/audio-direction.md §5 makes it "a
+   * hard, close, panned strike", and a strike that repeats fifteen times is a
+   * drone. Without this the loudest cue in the game fires once per lit hull
+   * per tick — measured at 42 strikes for a single ping in the headless
+   * client, which is what led to this map existing.
+   *
+   * A hull that enters the radius part-way through is still new to the set, so
+   * it is still told, which is correct: it was just lit.
+   */
+  private readonly litAlready = new Map<number, Set<number>>();
   /**
    * Per-HYD lookup tables, indexed by the integer rating (HYD is 0-100 and
    * every source of it — stats, auras, the blind floor — is integral).
@@ -207,6 +238,12 @@ export class EchoLayer {
       const bucket = this.results.get(slot);
       if (bucket === undefined) this.results.set(slot, []);
       else bucket.length = 0;
+
+      const litBucket = this.lit.get(slot);
+      if (litBucket === undefined) this.lit.set(slot, []);
+      else litBucket.length = 0;
+
+      this.exposure.set(slot, { tier: ResolutionTier.Silent, trackedCount: 0 });
     }
 
     // --- Broadphase: index every listener once. -----------------------------
@@ -315,10 +352,24 @@ export class EchoLayer {
     // 900 m resolves to Tier 4 outright, terrain and stealth notwithstanding
     // (docs/systems-echo.md §5). The pinger's own catastrophic exposure is
     // already handled above — SIG 95 is calibrated to reach exactly 2,400 m.
+    // Drop the bookkeeping for transmissions that have finished, so the next
+    // ping from the same hull is a new event rather than a suppressed one.
+    for (const pinger of this.litAlready.keys()) {
+      const stillPinging =
+        hasComponent(world, ActivePing, pinger) && ActivePing.remainingS[pinger]! > 0;
+      if (!stillPinging) this.litAlready.delete(pinger);
+    }
+
     for (let i = 0; i < entities.length; i++) {
       const pinger = entities[i]!;
       if (!hasComponent(world, ActivePing, pinger)) continue;
       if (ActivePing.remainingS[pinger]! <= 0) continue;
+
+      let alreadyLit = this.litAlready.get(pinger);
+      if (alreadyLit === undefined) {
+        alreadyLit = new Set();
+        this.litAlready.set(pinger, alreadyLit);
+      }
 
       const px = Position.x[pinger]!;
       const py = Position.y[pinger]!;
@@ -332,10 +383,21 @@ export class EchoLayer {
 
       for (let j = 0; j < revealed.length; j++) {
         const target = revealed[j]!;
-        if (Owner.slot[target]! === pingerSlot) continue;
-        const distance = Math.hypot(px - Position.x[target]!, py - Position.y[target]!);
+        const targetSlot = Owner.slot[target]!;
+        if (targetSlot === pingerSlot) continue;
+        const tx = Position.x[target]!;
+        const ty = Position.y[target]!;
+        const distance = Math.hypot(px - tx, py - ty);
         if (distance > ACTIVE_SONAR.REVEAL_RADIUS_M) continue;
         this.record(pingerSlot, target, ResolutionTier.Track, px, py);
+
+        // The victim's side of the same event. Bearing only, from their hull
+        // toward the emitter — see SelfEvent.bearing for why not a position.
+        const litForSlot = this.lit.get(targetSlot);
+        if (litForSlot !== undefined && !alreadyLit.has(target)) {
+          alreadyLit.add(target);
+          litForSlot.push({ unitId: target, bearing: Math.atan2(py - ty, px - tx) });
+        }
       }
     }
 
@@ -348,6 +410,16 @@ export class EchoLayer {
       if (slotBest === undefined) continue;
 
       for (const [eid, resolved] of slotBest) {
+        // The mirror image of this contact, from the point of view of whoever
+        // owns it: they are being seen this well, by someone. Accumulated
+        // here rather than in a second pass because `slotBest` is already the
+        // exact set of "who has resolved what", just indexed the other way.
+        const victim = this.exposure.get(Owner.slot[eid]!);
+        if (victim !== undefined) {
+          if (resolved.tier > victim.tier) victim.tier = resolved.tier;
+          if (resolved.tier >= ResolutionTier.Bearing) victim.trackedCount++;
+        }
+
         const trueX = Position.x[eid]!;
         const trueY = Position.y[eid]!;
         const handle = this.handleFor(slot, eid);
@@ -396,6 +468,8 @@ export class EchoLayer {
 
     return {
       contactsBySlot: this.results,
+      exposureBySlot: this.exposure,
+      litBySlot: this.lit,
       elapsedMs: performance.now() - started,
     };
   }

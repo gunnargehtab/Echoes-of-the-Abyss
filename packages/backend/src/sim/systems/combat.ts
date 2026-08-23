@@ -17,7 +17,13 @@
  */
 
 import { defineQuery, hasComponent } from 'bitecs';
-import { statsFor, structureStatsFor, type StructureKind, type UnitKind } from '@echoes/shared';
+import {
+  SelfEventKind,
+  statsFor,
+  structureStatsFor,
+  type StructureKind,
+  type UnitKind,
+} from '@echoes/shared';
 import {
   Health,
   MoveOrder,
@@ -30,6 +36,7 @@ import {
   Weapon,
 } from '../components.ts';
 import { applyFiringSpike } from './acoustics.ts';
+import { raiseSelfEvent } from '../world.ts';
 import type { SimWorld } from '../world.ts';
 
 const shooters = defineQuery([Weapon, Position, Owner, Health]);
@@ -130,7 +137,9 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
 
     if (Weapon.cooldownRemainingS[eid]! > 0) continue;
     Weapon.cooldownRemainingS[eid] = profile.cooldownS;
-    applyFiringSpike(eid, profile.firingSig);
+    if (applyFiringSpike(eid, profile.firingSig)) {
+      raiseSelfEvent(world, { kind: SelfEventKind.BreakSilence, eid });
+    }
     Health.hp[target] = Health.hp[target]! - profile.damage;
     if (Health.hp[target]! <= 0 && !destroyed.includes(target)) {
       destroyed.push(target);

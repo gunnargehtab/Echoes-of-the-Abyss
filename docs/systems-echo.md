@@ -172,6 +172,16 @@ The Echo Layer only works if it's readable at a glance. See **[ui-ux.md](ui-ux.m
 - **Ping cost is previewed before commit** — hovering the ping button shows the 2,400 m reveal radius in threat-red. Never let a ping be an accident.
 - **Audio mix is the primary channel.** A Tier-1 contact should be *heard* before it is *seen* on the minimap. See **[audio-direction.md](audio-direction.md)**.
 
+### The resolution runs both ways
+
+The pass already knows, for every listener, the best tier it holds on every emitter. Read the other way round, that is each player's **exposure**: how well the rest of the map currently sees *them*. The Echo snapshot carries it, alongside the discrete moments — a hull transmitted, a hull broke silence to fire, a hull was lit by an enemy ping.
+
+This is resolved information about a player's own units, so sending it leaks nothing. It is sent because the alternative is the client guessing, and every guess available to it is sometimes wrong: a SIG jump could be a broken silence, a weapon discharge or a descent, and "am I being pinged" cannot be read off own-SIG at all.
+
+One thing is deliberately withheld. A player who is lit gets the **bearing** toward the emitter, never its position. Active sonar reveals by hard radius while the pinger's own self-reveal travels by propagation, so in a masking biome a hull can be lit by something it cannot hear back — and that gap is the design working, not a bug to be papered over by the server.
+
+Being lit is an **event**, not a state: a transmission tells each hull once, however many ticks its three-second reveal spans.
+
 ---
 
 ## 10. Balance Guard-Rails

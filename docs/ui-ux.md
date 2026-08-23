@@ -248,8 +248,17 @@ The parity table. Every row is a claim that the mix tells the player nothing the
 | A voice fading as its contact goes stale | Ghost marker fading on the same clock, `PERSISTENCE.GHOST_MARKER_DECAY_S` |
 | A voice snapping back to full level | The marker returning to full alpha on the same tick |
 | Biome colouring of a return | Biome tint under the contact, and the propagation overlay on the player's own units |
+| Self-noise bed rising with your SIG | The SIG meter, plus a band label naming what the plant is doing (`DRIVE HUM`, `FULL PLANT`) |
+| The world bus giving way to your own noise | `– masking` beside that label: you are drowning yourself out, and it says so |
+| Silent Running's inversion — the world opening up | `SILENT RUNNING – open`, and the dimmed hulls already drawn for the mode |
+| **Exposure strike** — you have been lit | **Screen-edge flash on the bearing of the emitter**, decaying over the same two seconds as the tail |
+| Being tracked, continuously | `TRACKED ×n` in the top bar — how well you are seen, never by whom |
+| Breaking silence to fire | An expanding ring on the hull that broke it, so the player knows *which* one gave the ambush away |
+| Active sonar transmit and its returns | The ping wavefront already drawn, expanding on the same clock |
 
-Only the lock tone is genuinely *new* information in the mix; every other row restates something the renderer already draws. That is the intended ratio, and it is why the brackets ship with the tone rather than after it.
+Two rows are genuinely *new* information in the mix — the Tier-4 lock tone and the exposure strike — and both ship with the visual half in the same change. Everything else restates something the renderer already draws. That is the intended ratio.
+
+The exposure strike is the harder of the two, and [audio-direction.md](audio-direction.md) §5 says why: "there is no visual equivalent that arrives sooner." Sooner is not the same as never. The flash arrives *with* the sound rather than before it, on the same bearing and the same two-second decay, and it is drawn in screen space rather than world space on purpose — a world-space marker would sit at a position, which is exactly what the server did not send.
 
 **Mono is a rendering choice, never a loss.** Collapsing every pan to centre costs the convenience of hearing where something is; bearing remains in the contact log and on the sonar scope, so nothing becomes unknowable.
 
@@ -279,6 +288,11 @@ What the current client implements against this spec, so nobody re-implements wh
 | Sonar-scope minimap | Implemented — terrain, tier-fidelity returns, sweep, range rings; Echo Marks layer pending |
 | Contact log | Implemented — DOM, live region, click-to-focus; ping and mark rows pending |
 | Contact voices, per-tier | Implemented — pan authority by tier, biome voicing, faction timbre at Tier 3+ |
+| Self-noise bed, SIG band label, masking readout | Implemented — server-sent, never inferred |
+| Exposure strike and screen-edge flash | Implemented — fires from `EchoSnapshot.selfEvents`, bearing only |
+| Active sonar transmit, returns ordered by range | Implemented |
+| Break-silence transient and its per-hull ring | Implemented |
+| Precedence Law — mark fade-in, ducking chain | Implemented; the visual-first preset exists in code but has no toggle yet |
 | Tier-4 acquisition brackets | Implemented — the visual half of the lock tone |
 | Accessibility presets and palettes | Not started — mono spatialisation exists in the mix but has no toggle yet |
 | Box select, control groups, order queue | Implemented |
