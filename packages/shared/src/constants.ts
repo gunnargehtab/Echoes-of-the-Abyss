@@ -167,6 +167,85 @@ export const ECHO_MARKS = {
   MAX_MARKS: 256,
 } as const;
 
+/**
+ * Environmental hazards — docs/hazards.md §1 and §5.
+ *
+ * TUNABLE throughout: the doc specifies behaviour and faction interactions,
+ * not numbers. The one figure that is a *design* constraint rather than a
+ * tuning knob is the warning duration, and it is long on purpose — `CLAUDE.md`
+ * makes the target emotion dread rather than confusion, and a hazard the
+ * player cannot walk out of is confusion.
+ */
+export const HAZARDS = {
+  ERUPTION: {
+    /** Quiet between eruptions. */
+    DORMANT_S: 55,
+    /**
+     * Telegraph.
+     *
+     * Sized against the *slowest* hull in the roster clearing the *largest*
+     * authored plume: a Harvester at 40 m/s needs 17.5 s to cross 700 m from
+     * the centre. The first draft was 9 s, which meant a Harvester parked on a
+     * vent could not escape however early it started — a warning nobody can
+     * act on is not a warning, and `CLAUDE.md` calls that confusion rather
+     * than dread. There is a test that keeps this honest.
+     */
+    WARNING_S: 20,
+    /** Erupting. */
+    ACTIVE_S: 4,
+    /** Subsiding: damage tapers rather than stopping dead. */
+    DECAY_S: 5,
+    /** Hull damage per second at the centre, falling off to the rim. */
+    DAMAGE_PER_S: 90,
+    /** Structures "take reduced damage (but still vulnerable)" — doc §1. */
+    STRUCTURE_DAMAGE_MULTIPLIER: 0.35,
+    /** Metres per second a caught hull is pushed outward. */
+    KNOCKBACK_MPS: 110,
+    /**
+     * SIG added to a hull caught in the plume.
+     *
+     * The reason an eruption is an *acoustic* event and not just damage: a
+     * unit battered by a vent rings like a struck bell, and the whole map can
+     * hear it. Being hurt and being found are the same moment.
+     */
+    CAUGHT_SIG: 55,
+    /** Pelagia "suffers extra damage (organic hulls)" — doc §1. */
+    PELAGIA_DAMAGE_MULTIPLIER: 1.5,
+    /** Directorate "units resist knockback" — doc §1. */
+    DIRECTORATE_KNOCKBACK_MULTIPLIER: 0.25,
+    /** Hadron "can predict eruptions via resonance sensors" — doc §1. */
+    HADRON_WARNING_BONUS_S: 6,
+    /** Bathyarch "can stabilize vents for energy boosts" — doc §1. */
+    BATHYARCH_STABILISE_S: 30,
+    BATHYARCH_ENERGY_PER_S: 1.5,
+  },
+  STORM: {
+    DORMANT_S: 100,
+    WARNING_S: 12,
+    ACTIVE_S: 30,
+    DECAY_S: 8,
+    /**
+     * What the storm multiplies PropagationFactor by inside its area.
+     *
+     * Below 1, so sound scatters and resolution collapses: the storm is an
+     * attack on *information*, not on hulls, which is what makes it a
+     * different shape of hazard from an eruption. It reaches the Echo Layer as
+     * a write to the per-cell PF array rather than as a new code path, so
+     * biome and storm compose for free.
+     */
+    PF_MULTIPLIER: 0.35,
+    /** Light damage from "random sonic shockwaves" — doc §5. */
+    DAMAGE_PER_S: 12,
+    STRUCTURE_DAMAGE_MULTIPLIER: 0.35,
+    /** Hadron Knights "gain temporary buffs" — doc §5. Added HYD. */
+    HADRON_HYD_BONUS: 25,
+    /** Pelagia "organic tech becomes unstable" — doc §5. Added SIG. */
+    PELAGIA_SIG_PENALTY: 20,
+    /** Bathyarch "machinery malfunctions" — doc §5. Speed multiplier. */
+    BATHYARCH_SPEED_MULTIPLIER: 0.7,
+  },
+} as const;
+
 /** SPEC — docs/systems-echo.md §4 and §7. Seconds. */
 export const PERSISTENCE = {
   /** Tier 1-2 contacts linger as ghost markers, then fade. */

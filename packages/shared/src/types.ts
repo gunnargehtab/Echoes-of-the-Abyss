@@ -169,6 +169,61 @@ export interface EchoMarkInfo {
   intensity: number;
 }
 
+/**
+ * Environmental hazards — docs/hazards.md.
+ *
+ * Eight are specified; two are implemented. The rest are listed in the doc
+ * with a status marker so the next contributor knows what exists.
+ */
+export type HazardKind =
+  | 'geothermal-eruption'
+  | 'toxic-brine'
+  | 'kelp-entanglement'
+  | 'cold-shock'
+  | 'pressure-zone'
+  | 'resonance-storm';
+
+/**
+ * Where a hazard is in its cycle.
+ *
+ * The **warning** phase is not decoration and not optional. `CLAUDE.md` fixes
+ * the target emotion as "dread, not confusion", and an unannounced instant
+ * kill is confusion: the player learns that the map is arbitrary rather than
+ * that the map is dangerous. Every hazard therefore telegraphs before it acts,
+ * and the telegraph is long enough to leave.
+ */
+export enum HazardPhase {
+  /** Quiet. Visible as a site, doing nothing. */
+  Dormant = 0,
+  /** Telegraphing. Nothing is damaged yet. */
+  Warning = 1,
+  /** Acting. */
+  Active = 2,
+  /** Subsiding — effects taper rather than stop dead. */
+  Decay = 3,
+}
+
+/**
+ * A hazard, as every client sees it.
+ *
+ * Deliberately **public**, unlike almost everything else in this game.
+ * docs/maps.md's core principles require hazard telegraphing — "players must
+ * see danger before entering" — and a telegraph only one player can read is
+ * not a telegraph. Hazards are terrain that moves, and terrain is public.
+ */
+export interface HazardState {
+  id: number;
+  kind: HazardKind;
+  x: number;
+  y: number;
+  radiusM: number;
+  phase: HazardPhase;
+  /** 0-1 through the current phase, so the client can animate a countdown. */
+  progress: number;
+  /** Seconds left in the current phase — the number the HUD can show. */
+  remainingS: number;
+}
+
 /** A unit the player owns. Always full detail — it is theirs. */
 export interface OwnUnit {
   id: number;
@@ -332,6 +387,8 @@ export interface EchoSnapshot {
   exposure: ExposureReport;
   /** Discrete things that happened to your own force on this tick. */
   selfEvents: SelfEvent[];
+  /** Every hazard on the map, in whatever phase it is in. Public. */
+  hazards: HazardState[];
   /**
    * Acoustic residue this player's units can currently read.
    *

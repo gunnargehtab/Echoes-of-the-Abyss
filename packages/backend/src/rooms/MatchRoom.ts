@@ -21,6 +21,7 @@ import {
 } from '@echoes/shared';
 import { Match } from '../sim/match.ts';
 import { DEFAULT_MAP_ID, mapById } from '../sim/maps/index.ts';
+import { isSimulated } from '../sim/systems/hazards.ts';
 import { MatchState, PlayerState } from '../schema/MatchState.ts';
 
 interface MoveMessage {
@@ -212,7 +213,12 @@ export class MatchRoom extends Room<MatchState> {
       idealUse: this.match.map.idealUse,
       widthM: this.match.map.widthM,
       heightM: this.match.map.heightM,
-      hazards: this.match.map.hazards,
+      // Marked so the client can draw an inert site as ground and leave the
+      // simulated ones to the live hazard layer, rather than drawing both.
+      hazards: this.match.map.hazards.map((site) => ({
+        ...site,
+        simulated: isSimulated(site.kind),
+      })),
     });
     // Nodule fields are map data too — every commander has the same survey
     // charts. Depletion is never broadcast; see docs/economy.md.

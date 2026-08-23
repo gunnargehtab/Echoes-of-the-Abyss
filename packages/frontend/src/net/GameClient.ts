@@ -30,7 +30,15 @@ export interface MapPayload {
   idealUse: string;
   widthM: number;
   heightM: number;
-  hazards: { x: number; y: number; radiusM: number; kind: string; note?: string }[];
+  hazards: {
+    x: number;
+    y: number;
+    radiusM: number;
+    kind: string;
+    note?: string;
+    /** True when the hazard framework runs this one; false means site only. */
+    simulated: boolean;
+  }[];
 }
 
 export interface TerrainPayload {

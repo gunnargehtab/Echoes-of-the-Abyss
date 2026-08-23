@@ -9,6 +9,7 @@
 import { defineQuery } from 'bitecs';
 import { Faction, SILENT_RUNNING, statsFor, type UnitKind } from '@echoes/shared';
 import { MoveOrder, Owner, Position, SilentRunning, Unit, Velocity } from '../components.ts';
+import { stormModifiers } from './hazards.ts';
 import type { SimWorld } from '../world.ts';
 
 const movable = defineQuery([Position, Velocity, MoveOrder, Unit, SilentRunning, Owner]);
@@ -16,11 +17,18 @@ const movable = defineQuery([Position, Velocity, MoveOrder, Unit, SilentRunning,
 /** Close enough to count as arrived, in metres. */
 const ARRIVAL_EPSILON_M = 5;
 
-function speedMultiplier(eid: number): number {
-  if (!SilentRunning.active[eid]) return 1;
-  return Owner.faction[eid] === Faction.Pelagia
-    ? SILENT_RUNNING.PELAGIA_SPEED_MULTIPLIER
-    : SILENT_RUNNING.SPEED_MULTIPLIER;
+function speedMultiplier(world: SimWorld, eid: number): number {
+  // Storm interference stacks with silent running rather than replacing it
+  // (docs/hazards.md §5, "Bathyarch machinery malfunctions"): a Consortium
+  // hull creeping through a storm is slow for two separate reasons.
+  const weather = stormModifiers(world, eid).speed;
+  if (!SilentRunning.active[eid]) return weather;
+  return (
+    weather *
+    (Owner.faction[eid] === Faction.Pelagia
+      ? SILENT_RUNNING.PELAGIA_SPEED_MULTIPLIER
+      : SILENT_RUNNING.SPEED_MULTIPLIER)
+  );
 }
 
 export function movementSystem(world: SimWorld): void {
@@ -48,7 +56,7 @@ export function movementSystem(world: SimWorld): void {
     }
 
     const stats = statsFor(Unit.kind[eid] as UnitKind);
-    const speed = stats.speed * speedMultiplier(eid);
+    const speed = stats.speed * speedMultiplier(world, eid);
     // Never overshoot the target within a single step.
     const step = Math.min(speed * dt, distance);
     const nx = dx / distance;
