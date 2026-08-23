@@ -146,15 +146,39 @@ Implemented in the client scaffold today (`packages/frontend/src/game/EchoRender
 
 | Input | Action |
 | --- | --- |
-| Left click | Select nearest own unit; shift to add |
-| Right click | Move order for the selection |
+| Left click | Select nearest own unit; `Shift` adds, `Ctrl` subtracts |
+| Left drag | Box select own units; `Shift` adds, `Ctrl` subtracts |
+| Double click | Select every visible unit of that class (`Alt`-click does the same) |
+| Right click | Context order — move, attack a contact, or work a field |
+| `Shift` + right click | Queue the order behind the unit's current plan |
+| `1`–`9` | Recall control group; `Ctrl` + digit assigns; recall twice to centre |
 | Middle drag | Pan |
 | Wheel | Zoom about the cursor |
 | `Space` | Toggle Silent Running for the selection |
 | `P` | Active sonar ping from the first selected unit |
-| Hold `Shift` | Ping-cost preview rings |
+| `D` / `A` | Dive / rise one depth band |
+| `R` / `F` / `T` / `B` | Arm a Refinery / Foundry / Turret / faction structure |
+| Hold `Alt` | Ping-cost preview rings |
 
-Planned, and specified here so the scaffold has a target: box select, control groups `1`–`9`, double-click select-all-of-type, `F` for ping-at-cursor, order queueing with `Shift`, and a repeat-last-order binding. Every added binding must respect §1.5 — no destructive-to-information action lands on a single unmodified click.
+Still planned: a repeat-last-order binding, and ping-at-cursor — which needs a key that is
+not `F`, since that arms the Foundry.
+
+**Two bindings this table settles, because the document previously specified both sides of
+a conflict.** Order queueing and the ping-cost preview were both assigned to `Shift`;
+queueing keeps it, as the RTS convention and by far the more frequent action, and the
+preview moved to `Alt`. Control groups and unit production were both assigned to the digits;
+control groups keep them, because production also has the command bar's UNITS tab and
+control groups have no alternative route at all.
+
+Every added binding must respect §1.5 — no destructive-to-information action lands on a
+single unmodified click.
+
+**Order queues are server state.** A queued route is a *plan about sound* — the player is
+buying quiet with travel time — so it lives in the simulation rather than the renderer: a
+reconnecting player gets their plan back, and two clients watching one slot cannot disagree
+about what a fleet is doing. Each queued order is drawn at the position it was *issued* at.
+For a queued attack that matters: the player is entitled to where they saw the contact when
+they gave the order, not to a live feed of where it is now.
 
 ---
 
@@ -212,7 +236,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | Sonar-scope minimap | Implemented — terrain and own force; contact fidelity still to audit against §5 |
 | Contact log | Not started |
 | Accessibility presets and palettes | Not started |
-| Box select, control groups, order queue | Not started |
+| Box select, control groups, order queue | Implemented |
 
 ---
 

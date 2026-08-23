@@ -60,6 +60,7 @@ import { combatSystem } from './systems/combat.ts';
 import { constructionSystem } from './systems/construction.ts';
 import { depthSystem } from './systems/depth.ts';
 import { separationSystem } from './systems/separation.ts';
+import { clearQueue, enqueue, orderQueueSystem, queueView } from './systems/orderQueue.ts';
 import { harvestSystem } from './systems/harvest.ts';
 import { movementSystem } from './systems/movement.ts';
 import { pressureSystem } from './systems/pressure.ts';
@@ -282,7 +283,7 @@ export class Match {
     return hasComponent(this.world, Owner, eid) && Owner.slot[eid] === slot;
   }
 
-  orderMove(slot: number, eid: number, x: number, y: number): void {
+  orderMove(slot: number, eid: number, x: number, y: number, queued = false): void {
     this.recordCommand({
       tick: this.world.tick,
       type: 'move',
@@ -290,8 +291,18 @@ export class Match {
       unit: this.localId(eid),
       x,
       y,
+      queued,
     });
     if (!this.owns(slot, eid) || !hasComponent(this.world, MoveOrder, eid)) return;
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+
+    if (queued) {
+      enqueue(this.world, eid, { kind: 'move', x, y });
+      return;
+    }
+
+    // An unqueued order replaces the whole plan, not just its current leg.
+    clearQueue(this.world, eid);
     MoveOrder.x[eid] = x;
     MoveOrder.y[eid] = y;
     MoveOrder.active[eid] = 1;
@@ -301,33 +312,60 @@ export class Match {
   }
 
   /** Attack a contact the player has actually heard, by its opaque handle. */
-  orderAttackContact(slot: number, eid: number, contactHandle: number): void {
+  orderAttackContact(slot: number, eid: number, contactHandle: number, queued = false): void {
     this.recordCommand({
       tick: this.world.tick,
       type: 'attack',
       slot,
       unit: this.localId(eid),
       contact: contactHandle,
+      queued,
     });
     if (!this.owns(slot, eid) || !hasComponent(this.world, Weapon, eid)) return;
     const target = this.echo.entityForHandle(slot, contactHandle);
     if (target === undefined) return;
     if (!hasComponent(this.world, Owner, target) || Owner.slot[target] === slot) return;
     if (!hasComponent(this.world, Health, target) || Health.hp[target]! <= 0) return;
+
+    if (queued) {
+      // The anchor is where the contact is *now*, which is what the player
+      // just resolved and acted on. It is never refreshed afterwards, so the
+      // drawn plan cannot become a live feed of an enemy position.
+      enqueue(this.world, eid, {
+        kind: 'attack',
+        x: Position.x[target]!,
+        y: Position.y[target]!,
+        target,
+      });
+      return;
+    }
+    clearQueue(this.world, eid);
     Weapon.orderedTargetEid[eid] = target;
   }
 
   /** Send a harvester to a specific nodule field. */
-  orderHarvest(slot: number, eid: number, nodeEid: number): void {
+  orderHarvest(slot: number, eid: number, nodeEid: number, queued = false): void {
     this.recordCommand({
       tick: this.world.tick,
       type: 'harvest',
       slot,
       unit: this.localId(eid),
       node: this.localId(nodeEid),
+      queued,
     });
     if (!this.owns(slot, eid) || !hasComponent(this.world, Harvester, eid)) return;
     if (!hasComponent(this.world, ResourceNode, nodeEid)) return;
+
+    if (queued) {
+      enqueue(this.world, eid, {
+        kind: 'harvest',
+        x: Position.x[nodeEid]!,
+        y: Position.y[nodeEid]!,
+        node: nodeEid,
+      });
+      return;
+    }
+    clearQueue(this.world, eid);
     Harvester.nodeEid[eid] = nodeEid;
     Harvester.mode[eid] = HarvestMode.ToNode;
   }
@@ -553,6 +591,9 @@ export class Match {
     // is a correction to where hulls ended up, and detection must see the
     // corrected picture rather than a stack that no longer exists.
     separationSystem(this.world);
+    // After the systems that can finish an order: a unit that arrived this
+    // tick starts its next leg on the next one.
+    orderQueueSystem(this.world);
     constructionSystem(this.world);
     productionSystem(this.world);
     // Auras before acoustics: the spire's SIG-80 "projecting" state and
@@ -652,6 +693,10 @@ export class Match {
         pressureBonus: Pressure.bonus[eid]!,
         crushDamage: Pressure.crushTaken[eid]!,
       };
+      const queue = queueView(this.world, eid);
+      if (queue !== undefined) {
+        unit.queuedOrders = queue.map((order) => ({ kind: order.kind, x: order.x, y: order.y }));
+      }
       if (hasComponent(this.world, DepthOrder, eid) && DepthOrder.active[eid] === 1) {
         unit.depthOrder = DepthOrder.targetM[eid]!;
       }

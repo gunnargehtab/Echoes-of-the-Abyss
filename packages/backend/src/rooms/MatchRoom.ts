@@ -26,6 +26,8 @@ interface MoveMessage {
   unitIds: number[];
   x: number;
   y: number;
+  /** Append to the unit's plan instead of replacing it. */
+  queued?: boolean;
 }
 
 interface SilentRunningMessage {
@@ -47,11 +49,13 @@ interface AttackMessage {
   unitIds: number[];
   /** Opaque per-observer contact handle, not an entity id. */
   contactId: number;
+  queued?: boolean;
 }
 
 interface HarvestMessage {
   unitIds: number[];
   nodeId: number;
+  queued?: boolean;
 }
 
 interface ThrottleMessage {
@@ -94,7 +98,7 @@ export class MatchRoom extends Room<MatchState> {
       for (const unitId of message.unitIds) {
         // Ownership is re-checked inside the sim; the client is never trusted
         // to only send units it owns.
-        this.match.orderMove(slot, unitId, message.x, message.y);
+        this.match.orderMove(slot, unitId, message.x, message.y, message.queued === true);
       }
     });
 
@@ -128,7 +132,7 @@ export class MatchRoom extends Room<MatchState> {
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;
       if (!Number.isFinite(message.contactId)) return;
       for (const unitId of message.unitIds) {
-        this.match.orderAttackContact(slot, unitId, message.contactId);
+        this.match.orderAttackContact(slot, unitId, message.contactId, message.queued === true);
       }
     });
 
@@ -137,7 +141,7 @@ export class MatchRoom extends Room<MatchState> {
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;
       if (!Number.isFinite(message.nodeId)) return;
       for (const unitId of message.unitIds) {
-        this.match.orderHarvest(slot, unitId, message.nodeId);
+        this.match.orderHarvest(slot, unitId, message.nodeId, message.queued === true);
       }
     });
 

@@ -74,11 +74,11 @@ interface TrackedContact {
 }
 
 export interface RendererCallbacks {
-  onMoveOrder(unitIds: number[], x: number, y: number): void;
+  onMoveOrder(unitIds: number[], x: number, y: number, queued: boolean): void;
   onToggleSilent(unitIds: number[], active: boolean): void;
   onPing(unitId: number): void;
-  onAttackOrder(unitIds: number[], contactId: number): void;
-  onHarvestOrder(unitIds: number[], nodeId: number): void;
+  onAttackOrder(unitIds: number[], contactId: number, queued: boolean): void;
+  onHarvestOrder(unitIds: number[], nodeId: number, queued: boolean): void;
   onThrottle(unitIds: number[], throttle: HarvestThrottle): void;
   onBuild(kind: StructureKind, x: number, y: number): void;
   onProduce(structureId: number, kind: UnitKind): void;
@@ -90,12 +90,17 @@ const SELECT_RADIUS_M = 140;
 const TARGET_RADIUS_M = 160;
 
 /** Production hotkeys 1-5, in docs/units.md roster order. */
-const PRODUCE_KEYS: Record<string, UnitKind> = {
-  Digit1: UnitKind.LightScout,
-  Digit2: UnitKind.Corvette,
-  Digit3: UnitKind.Cruiser,
-  Digit4: UnitKind.AbyssalSubmersible,
-  Digit5: UnitKind.Harvester,
+/** Digit codes to control-group numbers. docs/ui-ux.md §9. */
+const DIGIT_KEYS: Record<string, number> = {
+  Digit1: 1,
+  Digit2: 2,
+  Digit3: 3,
+  Digit4: 4,
+  Digit5: 5,
+  Digit6: 6,
+  Digit7: 7,
+  Digit8: 8,
+  Digit9: 9,
 };
 
 /** Build hotkeys: R refinery, F foundry, T turret. */
@@ -153,6 +158,13 @@ const BAR_HEIGHT = TAB_HEIGHT + BUTTON_ROW_HEIGHT;
 const BAR_BUTTON_HEIGHT = 40;
 /** Top resource strip. */
 const TOP_BAR_HEIGHT = 30;
+
+/** Past this much pointer travel, a left drag is a marquee rather than a click. */
+const DRAG_SLOP_PX = 6;
+/** Two clicks inside this window on the same spot select all of that class. */
+const DOUBLE_CLICK_MS = 320;
+/** Recalling the same control group twice this fast centres the camera on it. */
+const DOUBLE_TAP_MS = 400;
 
 /** Depth ribbon geometry — a narrow strip down the left edge. */
 const RIBBON_X = 12;
@@ -256,7 +268,21 @@ export class EchoRenderer {
   private gameOver: GameOverPayload | null = null;
 
   /** True while the ping-cost preview is being shown. */
+  /**
+   * Ping preview moved from Shift to Alt.
+   *
+   * docs/ui-ux.md §9 specifies order queueing on Shift, which is the RTS
+   * convention and the far more frequent action; the doc listed both on Shift,
+   * which is a conflict in the doc rather than a choice. Alt was free.
+   */
   private previewPing = false;
+
+  /** Drag-select rectangle in screen space, null when not dragging. */
+  private marquee: { x0: number; y0: number; x1: number; y1: number } | null = null;
+  /** Control groups 1-9, holding own entity ids. */
+  private readonly controlGroups = new Map<number, number[]>();
+  private lastGroupRecall = { group: -1, at: 0 };
+  private lastClick = { at: 0, x: 0, y: 0 };
   /** Non-null while the next left-click places this structure. */
   private pendingBuild: StructureKind | null = null;
   /** Coarse pointer = phone/tablet: hints speak gestures, not keys. */
@@ -489,7 +515,8 @@ export class EchoRenderer {
       }
 
       if (e.button === 2) {
-        this.handleContextOrder(world.x, world.y);
+        // Shift queues the order behind whatever the unit is already doing.
+        this.handleContextOrder(world.x, world.y, e.shiftKey);
         return;
       }
 
@@ -501,20 +528,22 @@ export class EchoRenderer {
         return;
       }
 
-      // Left click: select the nearest own unit or structure, or clear.
-      const hit = this.nearestOwnEntity(world.x, world.y);
-      if (hit === null) {
-        if (!e.shiftKey) this.selected.clear();
-      } else {
-        if (!e.shiftKey) this.selected.clear();
-        this.selected.add(hit);
-      }
-      this.onSelectionChanged();
+      // Left button starts a marquee. Whether it *is* one is decided on
+      // release: under the slop threshold it was a click, and clicking is
+      // still how you pick a single hull out of a crowd.
+      this.marquee = { x0: e.clientX, y0: e.clientY, x1: e.clientX, y1: e.clientY };
+      capture(e.pointerId);
     };
 
     const onPointerMove = (e: PointerEvent) => {
       if (minimapDrag) {
         this.pressMinimap(e.clientX, e.clientY);
+        return;
+      }
+
+      if (this.marquee !== null) {
+        this.marquee.x1 = e.clientX;
+        this.marquee.y1 = e.clientY;
         return;
       }
 
@@ -576,6 +605,14 @@ export class EchoRenderer {
         return;
       }
 
+      if (this.marquee !== null) {
+        const box = this.marquee;
+        this.marquee = null;
+        if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+        this.resolveSelection(box, e.shiftKey, e.ctrlKey || e.metaKey, e.altKey);
+        return;
+      }
+
       if (panning && canvas.hasPointerCapture(e.pointerId)) {
         canvas.releasePointerCapture(e.pointerId);
       }
@@ -606,13 +643,17 @@ export class EchoRenderer {
           return;
         }
       }
-      if (this.selected.size === 0) return;
-
-      const produceKind = PRODUCE_KEYS[e.code];
-      if (produceKind !== undefined) {
-        this.commandProduce(produceKind);
+      // Digits are control groups (docs/ui-ux.md §9), Ctrl to assign. They
+      // used to produce units; production keeps its command-bar buttons, and
+      // the doc's binding wins because control groups have no alternative
+      // route while production does.
+      const digit = DIGIT_KEYS[e.code];
+      if (digit !== undefined) {
+        this.controlGroup(digit, e.ctrlKey || e.metaKey);
         return;
       }
+
+      if (this.selected.size === 0) return;
 
       if (e.code === 'Space') {
         e.preventDefault();
@@ -627,14 +668,17 @@ export class EchoRenderer {
         this.commandDepthStep(1);
       } else if (e.code === 'KeyA') {
         this.commandDepthStep(-1);
-      } else if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
-        // Hold shift to preview what a ping would cost you.
+      } else if (e.code === 'AltLeft' || e.code === 'AltRight') {
+        // Hold Alt to preview what a ping would cost you. This lived on Shift
+        // until Shift was needed for order queueing, which is the more
+        // frequent action and the one the RTS convention expects there.
+        e.preventDefault();
         this.previewPing = true;
       }
     };
 
     const onKeyUp = (e: KeyboardEvent) => {
-      if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') this.previewPing = false;
+      if (e.code === 'AltLeft' || e.code === 'AltRight') this.previewPing = false;
     };
 
     canvas.addEventListener('contextmenu', onContextMenu);
@@ -658,6 +702,177 @@ export class EchoRenderer {
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
     };
+  }
+
+  // --- Selection ------------------------------------------------------------
+
+  /** Screen-space rect, normalised so x0/y0 is always the top-left corner. */
+  private static normalise(box: { x0: number; y0: number; x1: number; y1: number }) {
+    return {
+      left: Math.min(box.x0, box.x1),
+      right: Math.max(box.x0, box.x1),
+      top: Math.min(box.y0, box.y1),
+      bottom: Math.max(box.y0, box.y1),
+    };
+  }
+
+  /**
+   * Turn a completed drag into a selection.
+   *
+   * Under the slop threshold it was a click, not a drag — the two are the same
+   * gesture until the mouse moves, and a player picking one hull out of a
+   * crowd must not have their selection replaced by a one-pixel marquee.
+   *
+   * Selection carries no information risk: a player's own force is fully known
+   * to them, so nothing here needs to be resolved server-side. Contacts are
+   * deliberately not selectable — they are things heard, not things owned.
+   */
+  private resolveSelection(
+    box: { x0: number; y0: number; x1: number; y1: number },
+    add: boolean,
+    subtract: boolean,
+    selectAllOfType: boolean
+  ): void {
+    const rect = EchoRenderer.normalise(box);
+    const dragged = Math.hypot(rect.right - rect.left, rect.bottom - rect.top) > DRAG_SLOP_PX;
+
+    if (!dragged) {
+      const now = performance.now();
+      const doubled =
+        now - this.lastClick.at < DOUBLE_CLICK_MS &&
+        Math.hypot(box.x0 - this.lastClick.x, box.y0 - this.lastClick.y) < DRAG_SLOP_PX * 2;
+      this.lastClick = { at: now, x: box.x0, y: box.y0 };
+
+      const world = this.screenToWorld(box.x0, box.y0);
+      const hit = this.nearestOwnEntity(world.x, world.y);
+
+      if (hit === null) {
+        if (!add && !subtract) this.selected.clear();
+        this.onSelectionChanged();
+        return;
+      }
+
+      // Double-click, or Alt-click, takes every visible hull of that class —
+      // the standard "select all of type" without needing a second gesture.
+      if (doubled || selectAllOfType) {
+        const kind = this.units.find((u) => u.id === hit)?.kind;
+        if (kind !== undefined) {
+          if (!add) this.selected.clear();
+          for (const unit of this.unitsOnScreen()) {
+            if (unit.kind === kind) this.selected.add(unit.id);
+          }
+          this.onSelectionChanged();
+          return;
+        }
+      }
+
+      if (subtract) this.selected.delete(hit);
+      else {
+        if (!add) this.selected.clear();
+        this.selected.add(hit);
+      }
+      this.onSelectionChanged();
+      return;
+    }
+
+    // A real marquee. Structures are excluded: dragging across your own base
+    // to grab an escort should not also grab the Bastion, and a mixed
+    // selection makes the command panel meaningless.
+    const inside: number[] = [];
+    for (const unit of this.units) {
+      const screen = this.worldToScreen(unit.x, unit.y);
+      if (
+        screen.x >= rect.left &&
+        screen.x <= rect.right &&
+        screen.y >= rect.top &&
+        screen.y <= rect.bottom
+      ) {
+        inside.push(unit.id);
+      }
+    }
+
+    if (subtract) {
+      for (const id of inside) this.selected.delete(id);
+    } else {
+      if (!add) this.selected.clear();
+      for (const id of inside) this.selected.add(id);
+    }
+    this.onSelectionChanged();
+  }
+
+  private worldToScreen(x: number, y: number): { x: number; y: number } {
+    return {
+      x: x * this.world.scale.x + this.world.x,
+      y: y * this.world.scale.y + this.world.y,
+    };
+  }
+
+  private unitsOnScreen(): OwnUnit[] {
+    const width = this.app.screen.width;
+    const height = this.app.screen.height;
+    return this.units.filter((unit) => {
+      const s = this.worldToScreen(unit.x, unit.y);
+      return s.x >= 0 && s.x <= width && s.y >= 0 && s.y <= height;
+    });
+  }
+
+  // --- Control groups -------------------------------------------------------
+
+  /**
+   * Assign the live selection to a group, or recall one.
+   *
+   * Recalling twice in quick succession centres the camera on the group —
+   * the binding every RTS player already has in their hands.
+   */
+  private controlGroup(group: number, assign: boolean): void {
+    if (assign) {
+      if (this.selected.size === 0) this.controlGroups.delete(group);
+      else this.controlGroups.set(group, [...this.selected]);
+      return;
+    }
+
+    const members = this.controlGroups.get(group);
+    if (members === undefined) return;
+    // Dead units are pruned on recall rather than on death: the snapshot is
+    // the only place the client learns a hull is gone.
+    const alive = members.filter(
+      (id) => this.units.some((u) => u.id === id) || this.structures.some((st) => st.id === id)
+    );
+    if (alive.length === 0) {
+      this.controlGroups.delete(group);
+      return;
+    }
+    this.controlGroups.set(group, alive);
+
+    this.selected.clear();
+    for (const id of alive) this.selected.add(id);
+    this.onSelectionChanged();
+
+    const now = performance.now();
+    if (this.lastGroupRecall.group === group && now - this.lastGroupRecall.at < DOUBLE_TAP_MS) {
+      this.centreOnSelection();
+    }
+    this.lastGroupRecall = { group, at: now };
+  }
+
+  private centreOnSelection(): void {
+    const members = [...this.selected];
+    if (members.length === 0) return;
+    let sx = 0;
+    let sy = 0;
+    let n = 0;
+    for (const id of members) {
+      const entity =
+        this.units.find((u) => u.id === id) ?? this.structures.find((st) => st.id === id);
+      if (entity === undefined) continue;
+      sx += entity.x;
+      sy += entity.y;
+      n++;
+    }
+    if (n === 0) return;
+    const scale = this.world.scale.x;
+    this.world.x = this.app.screen.width / 2 - (sx / n) * scale;
+    this.world.y = this.app.screen.height / 2 - (sy / n) * scale;
   }
 
   // --- Command bar ----------------------------------------------------------
@@ -1035,7 +1250,7 @@ export class EchoRenderer {
       this.onSelectionChanged();
       return;
     }
-    if (this.selected.size > 0) this.handleContextOrder(x, y);
+    if (this.selected.size > 0) this.handleContextOrder(x, y, false);
   }
 
   /**
@@ -1043,7 +1258,7 @@ export class EchoRenderer {
    * harvesters to work, a heard contact is an attack order, open water is a
    * move. The server re-validates everything; this is only intent.
    */
-  private handleContextOrder(x: number, y: number): void {
+  private handleContextOrder(x: number, y: number, queued = false): void {
     if (this.selected.size === 0) return;
     const selectedUnits = this.units.filter((u) => this.selected.has(u.id));
     const unitIds = selectedUnits.map((u) => u.id);
@@ -1051,20 +1266,20 @@ export class EchoRenderer {
     const node = this.nearestNode(x, y);
     const harvesterIds = selectedUnits.filter((u) => u.throttle !== undefined).map((u) => u.id);
     if (node !== null && harvesterIds.length > 0) {
-      this.callbacks.onHarvestOrder(harvesterIds, node.id);
+      this.callbacks.onHarvestOrder(harvesterIds, node.id, queued);
       // Everything else in the selection escorts the harvesters.
       const rest = unitIds.filter((id) => !harvesterIds.includes(id));
-      if (rest.length > 0) this.callbacks.onMoveOrder(rest, x, y);
+      if (rest.length > 0) this.callbacks.onMoveOrder(rest, x, y, queued);
       return;
     }
 
     const contact = this.nearestContact(x, y);
     if (contact !== null && unitIds.length > 0) {
-      this.callbacks.onAttackOrder(unitIds, contact.id);
+      this.callbacks.onAttackOrder(unitIds, contact.id, queued);
       return;
     }
 
-    if (unitIds.length > 0) this.callbacks.onMoveOrder(unitIds, x, y);
+    if (unitIds.length > 0) this.callbacks.onMoveOrder(unitIds, x, y, queued);
   }
 
   private nearestNode(x: number, y: number): ResourceNodeInfo | null {
@@ -1258,7 +1473,9 @@ export class EchoRenderer {
     this.drawContacts();
     this.drawStructures();
     this.drawUnits();
+    this.drawOrderPlans();
     this.drawHud();
+    this.drawMarquee();
     this.drawDepthRibbon();
     this.drawCommandBar();
     this.drawMinimap();
@@ -1801,6 +2018,59 @@ export class EchoRenderer {
     g.rect(x, y, w, h).stroke({ width: 1, color, alpha: 0.6 });
   }
 
+  /**
+   * The marquee, drawn in screen space over everything.
+   *
+   * Deliberately thin and unfilled: it sits on top of contacts, and a solid
+   * box would hide the one thing the player is most likely watching while
+   * they drag.
+   */
+  private drawMarquee(): void {
+    const g = this.hudGraphics;
+    if (this.marquee === null) return;
+    const rect = EchoRenderer.normalise(this.marquee);
+    const w = rect.right - rect.left;
+    const h = rect.bottom - rect.top;
+    if (Math.hypot(w, h) <= DRAG_SLOP_PX) return;
+    g.rect(rect.left, rect.top, w, h).fill({ color: UI.accent, alpha: 0.06 });
+    g.rect(rect.left, rect.top, w, h).stroke({ width: 1, color: UI.accent, alpha: 0.9 });
+  }
+
+  /**
+   * Queued orders, drawn as the route they are.
+   *
+   * Only for the selection: every unit drawing its plan at once would bury
+   * the map in lines. Anchors are where each order pointed when it was
+   * given — for a queued attack that is deliberately not the target's live
+   * position, which the player may no longer be entitled to.
+   */
+  private drawOrderPlans(): void {
+    const g = this.ringLayer;
+    const inverseScale = 1 / this.world.scale.x;
+
+    for (const unit of this.units) {
+      if (!this.selected.has(unit.id)) continue;
+      const plan = unit.queuedOrders;
+      if (plan === undefined || plan.length === 0) continue;
+
+      let fromX = unit.x;
+      let fromY = unit.y;
+      for (const order of plan) {
+        g.moveTo(fromX, fromY)
+          .lineTo(order.x, order.y)
+          .stroke({ width: 1.5 * inverseScale, color: UI.accent, alpha: 0.45 });
+        const marker = order.kind === 'move' ? 7 : 11;
+        g.circle(order.x, order.y, marker * inverseScale).stroke({
+          width: 1.5 * inverseScale,
+          color: order.kind === 'attack' ? UI.threat : UI.accent,
+          alpha: 0.8,
+        });
+        fromX = order.x;
+        fromY = order.y;
+      }
+    }
+  }
+
   /** Effective Pressure Rating: what the hull owns plus what it is renting. */
   private effectivePr(unit: OwnUnit): number {
     return statsFor(unit.kind).pressureRating + unit.pressureBonus;
@@ -2142,13 +2412,15 @@ export class EchoRenderer {
     if (this.selected.size === 0) {
       return this.isTouch
         ? 'tap select  ·  drag pan  ·  pinch zoom'
-        : 'LMB select  ·  MMB pan  ·  R/F/T/B build  ·  wheel zoom';
+        : 'LMB drag select  ·  MMB pan  ·  R/F/T/B build  ·  1-9 groups  ·  wheel zoom';
     }
     const structure = this.structures.find((s) => this.selected.has(s.id));
     if (structure !== undefined) {
       const queue = structure.queue.length > 0 ? `  ·  queue ${structure.queue.length}` : '';
       const name = structureStatsFor(structure.kind).name;
-      return this.isTouch ? `${name}${queue}` : `${name}${queue}  ·  1-5 produce  ·  R/F/T/B build`;
+      return this.isTouch
+        ? `${name}${queue}`
+        : `${name}${queue}  ·  UNITS tab to produce  ·  R/F/T/B build`;
     }
     const harvester = this.units.find((u) => this.selected.has(u.id) && u.throttle !== undefined);
     if (harvester !== undefined) {
@@ -2160,7 +2432,7 @@ export class EchoRenderer {
     }
     return this.isTouch
       ? `${this.selected.size} selected  ·  tap map to order`
-      : `${this.selected.size} selected  ·  RMB move  ·  SPACE silent  ·  P ping  ·  D dive  ·  A rise`;
+      : `${this.selected.size} selected  ·  RMB move (SHIFT queue)  ·  SPACE silent  ·  P ping  ·  D dive  ·  A rise  ·  CTRL+1-9 group`;
   }
 
   destroy(): void {
