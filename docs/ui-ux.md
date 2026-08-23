@@ -131,6 +131,13 @@ The vertical axis needs permanent, glanceable representation ([systems-depth.md]
 - **Crush attrition must not look like damage.** It ignores repair, so it renders differently: the lost portion of the health bar is hatched and does not refill, making the permanence visible rather than discovered later.
 - **Descent and ascent** — descending shows the SIG cost as a live spike on the meter; ascending shows a time-to-surface estimate, because the ascent is the part players underestimate.
 
+Implemented in the client scaffold: the ribbon runs down the left edge with a marker per
+selected hull and a ghost marker at its ordered depth; the PR badge sits in the selection
+card and shows a Sounding Spire's grant as `PR2+1` so a rented rating reads as rented; the
+crushed portion of the health bar is hatched, and its texture rather than its hue is what
+distinguishes it, so it survives colour-vision differences (§11). Depth orders step band to
+band — `D` dives, `A` rises — because the bands are what the player reasons about.
+
 ---
 
 ## 9. Selection, Orders, Controls
@@ -201,9 +208,9 @@ What the current client implements against this spec, so nobody re-implements wh
 | Selected-unit detection ring | Implemented |
 | Ping preview rings, ping commit | Implemented (hold `Shift`, `P`) |
 | Silent-running dimming | Implemented |
-| Sonar-scope minimap | Not started |
+| Depth ribbon, PR badge, crush hatching | Implemented (`D` dive, `A` rise; hold `Shift` to preview the dive cost) |
+| Sonar-scope minimap | Implemented — terrain and own force; contact fidelity still to audit against §5 |
 | Contact log | Not started |
-| Depth ribbon, PR badge, crush hatching | Not started |
 | Accessibility presets and palettes | Not started |
 | Box select, control groups, order queue | Not started |
 

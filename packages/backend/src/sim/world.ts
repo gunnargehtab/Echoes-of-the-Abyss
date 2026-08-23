@@ -141,6 +141,7 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   addComponent(world, Pressure, eid);
   Pressure.rating[eid] = stats.pressureRating;
   Pressure.bonus[eid] = 0;
+  Pressure.crushTaken[eid] = 0;
 
   addComponent(world, Health, eid);
   Health.hp[eid] = stats.maxHp;

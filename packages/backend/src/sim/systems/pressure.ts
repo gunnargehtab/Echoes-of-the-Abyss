@@ -33,7 +33,12 @@ export function pressureSystem(world: SimWorld, destroyed: number[]): void {
     const dps = crushAttritionPerSecond(rating, Position.depth[eid]!);
     if (dps <= 0) continue;
 
-    Health.hp[eid] = Health.hp[eid]! - dps * dt;
+    const bite = dps * dt;
+    Health.hp[eid] = Health.hp[eid]! - bite;
+    // Remember what the deep took, so the HUD can show it as unrecoverable
+    // rather than as ordinary damage. Capped at max so a long overreach cannot
+    // report more lost hull than the hull ever had.
+    Pressure.crushTaken[eid] = Math.min(Health.max[eid]!, Pressure.crushTaken[eid]! + bite);
     if (Health.hp[eid]! <= 0 && !destroyed.includes(eid)) {
       destroyed.push(eid);
     }

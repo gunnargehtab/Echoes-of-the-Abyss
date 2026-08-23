@@ -23,6 +23,9 @@ import { Application, Container, Graphics, Sprite, Text } from 'pixi.js';
 import {
   ACTIVE_SONAR,
   Biome,
+  DEPTH,
+  DEPTH_BANDS,
+  DepthBand,
   Faction,
   HarvestThrottle,
   PERSISTENCE,
@@ -32,7 +35,9 @@ import {
   ResolutionTier,
   StructureKind,
   UnitKind,
+  depthBandFor,
   maxAudibleRangeM,
+  requiredPressureRating,
   statsFor,
   structureStatsFor,
   FACTION_STRUCTURE,
@@ -69,6 +74,7 @@ export interface RendererCallbacks {
   onThrottle(unitIds: number[], throttle: HarvestThrottle): void;
   onBuild(kind: StructureKind, x: number, y: number): void;
   onProduce(structureId: number, kind: UnitKind): void;
+  onDepthOrder(unitIds: number[], depth: number): void;
 }
 
 const SELECT_RADIUS_M = 140;
@@ -140,6 +146,36 @@ const BAR_BUTTON_HEIGHT = 40;
 /** Top resource strip. */
 const TOP_BAR_HEIGHT = 30;
 
+/** Depth ribbon geometry — a narrow strip down the left edge. */
+const RIBBON_X = 12;
+const RIBBON_WIDTH = 14;
+const RIBBON_TOP_PAD = 18;
+const RIBBON_BOTTOM_PAD = 16;
+
+/**
+ * Where a hull sits when ordered into a band.
+ *
+ * Depth orders step band to band rather than metre to metre, because the bands
+ * are what the player reasons about — docs/ui-ux.md §8 puts the boundaries on
+ * the ribbon, not the absolute figure. These are the working depths inside
+ * each band, kept clear of the boundaries so a unit is never ambiguously "at"
+ * two bands at once.
+ */
+const BAND_STATION_DEPTH_M: Record<DepthBand, number> = {
+  [DepthBand.Shelf]: 200,
+  [DepthBand.MidWater]: 1000,
+  [DepthBand.Abyssal]: 2400,
+};
+
+const BAND_LABEL: Record<DepthBand, string> = {
+  [DepthBand.Shelf]: 'SHELF',
+  [DepthBand.MidWater]: 'MID',
+  [DepthBand.Abyssal]: 'ABYSS',
+};
+
+/** The ribbon's vertical range. Past this the strip would imply map we lack. */
+const RIBBON_MAX_DEPTH_M = DEPTH.MAX_M;
+
 /** The command panel's three pages. 'squad' appears only while units are selected. */
 type CommandTab = 'build' | 'units' | 'squad';
 
@@ -178,10 +214,15 @@ export class EchoRenderer {
   private minimapCachedSize = 0;
 
   /** Selected-entity panel (wide screens). */
+  private readonly ribbonGraphics = new Graphics();
+  private readonly ribbonLabels: Text[] = [];
+  private ribbonReadout!: Text;
+
   private readonly infoGraphics = new Graphics();
   private infoName!: Text;
   private infoLine1!: Text;
   private infoLine2!: Text;
+  private infoBadge!: Text;
 
   private sigLabel!: Text;
   private resourceLabel!: Text;
@@ -261,6 +302,7 @@ export class EchoRenderer {
     );
     this.hud.addChild(
       this.hudGraphics,
+      this.ribbonGraphics,
       this.minimapTerrainG,
       this.minimapOverlayG,
       this.infoGraphics,
@@ -309,6 +351,19 @@ export class EchoRenderer {
     this.infoName = new Text({ text: '', style: { ...mono, fontSize: 13, fill: UI.accent } });
     this.infoLine1 = new Text({ text: '', style: { ...mono, fontSize: 12, fill: UI.textDim } });
     this.infoLine2 = new Text({ text: '', style: { ...mono, fontSize: 12, fill: UI.textDim } });
+    this.infoBadge = new Text({ text: '', style: { ...mono, fontSize: 10, fill: UI.textDim } });
+    this.infoBadge.anchor.set(0.5);
+
+    // One label per band, plus a readout under the strip for the selection's
+    // actual depth — the bands are for reasoning, the number is for confirming.
+    for (const band of [DepthBand.Shelf, DepthBand.MidWater, DepthBand.Abyssal]) {
+      const label = new Text({
+        text: BAND_LABEL[band],
+        style: { ...mono, fontSize: 9, fill: UI.textDim },
+      });
+      this.ribbonLabels.push(label);
+    }
+    this.ribbonReadout = new Text({ text: '', style: { ...mono, fontSize: 10, fill: UI.accent } });
 
     this.hud.addChild(
       this.sigLabel,
@@ -318,7 +373,10 @@ export class EchoRenderer {
       this.bannerLabel,
       this.infoName,
       this.infoLine1,
-      this.infoLine2
+      this.infoLine2,
+      this.infoBadge,
+      this.ribbonReadout,
+      ...this.ribbonLabels
     );
   }
 
@@ -549,6 +607,12 @@ export class EchoRenderer {
         this.commandPing();
       } else if (e.code === 'KeyV') {
         this.commandCycleThrottle();
+      } else if (e.code === 'KeyD') {
+        // D dives, A ascends. Mnemonic beats convention here: the camera is on
+        // the middle mouse button and the wheel, so WASD is not spoken for.
+        this.commandDepthStep(1);
+      } else if (e.code === 'KeyA') {
+        this.commandDepthStep(-1);
       } else if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
         // Hold shift to preview what a ping would cost you.
         this.previewPing = true;
@@ -715,6 +779,18 @@ export class EchoRenderer {
         enabled: units.length > 0,
         active: false,
         action: () => this.commandPing(),
+      });
+      buttons.push({
+        label: 'DIVE',
+        enabled: units.length > 0 && this.stepDepthTarget(units, 1) !== null,
+        active: units.some((u) => u.depthOrder !== undefined && u.depthOrder > u.depth),
+        action: () => this.commandDepthStep(1),
+      });
+      buttons.push({
+        label: 'RISE',
+        enabled: units.length > 0 && this.stepDepthTarget(units, -1) !== null,
+        active: units.some((u) => u.depthOrder !== undefined && u.depthOrder < u.depth),
+        action: () => this.commandDepthStep(-1),
       });
       const harvester = units.find((u) => u.throttle !== undefined);
       if (harvester !== undefined) {
@@ -885,6 +961,37 @@ export class EchoRenderer {
   }
 
   /** Cycle the harvest throttle: how loud am I willing to be paid. */
+  /**
+   * The depth a step in `direction` would take the selection to (+1 deeper,
+   * -1 shallower), or null when the whole selection is already at the end of
+   * the stack. Orders step band to band; see BAND_STATION_DEPTH_M.
+   *
+   * The lead unit decides the target so a mixed-depth squad moves as one
+   * formation rather than fanning out across two bands.
+   */
+  private stepDepthTarget(units: OwnUnit[], direction: 1 | -1): number | null {
+    const lead = units[0];
+    if (lead === undefined) return null;
+    // Step from where the hull is headed if it is already moving, so repeated
+    // presses queue deeper rather than re-issuing the same order.
+    const reference = lead.depthOrder ?? lead.depth;
+    const band = depthBandFor(reference);
+    const next = band + direction;
+    if (next < DepthBand.Shelf || next > DepthBand.Abyssal) return null;
+    return BAND_STATION_DEPTH_M[next as DepthBand];
+  }
+
+  private commandDepthStep(direction: 1 | -1): void {
+    const units = this.selectedUnits();
+    if (units.length === 0) return;
+    const target = this.stepDepthTarget(units, direction);
+    if (target === null) return;
+    this.callbacks.onDepthOrder(
+      units.map((u) => u.id),
+      target
+    );
+  }
+
   private commandCycleThrottle(): void {
     const harvesters = this.selectedUnits().filter((u) => u.throttle !== undefined);
     if (harvesters.length === 0) return;
@@ -1137,6 +1244,7 @@ export class EchoRenderer {
     this.drawStructures();
     this.drawUnits();
     this.drawHud();
+    this.drawDepthRibbon();
     this.drawCommandBar();
     this.drawMinimap();
     this.drawInfoPanel();
@@ -1536,17 +1644,39 @@ export class EchoRenderer {
         alpha: 0.25,
       });
 
+      // Overreaching its rating is drawn on the hull itself, not only in the
+      // selection card: a squad crushing at the bottom of a dive is something
+      // the player must see without having clicked anything (docs/ui-ux.md §8).
+      if (this.isCrushing(unit)) {
+        g.circle(unit.x, unit.y, radius + 4).stroke({
+          width: 2 * inverseScale,
+          color: UI.threat,
+          alpha: 0.9,
+        });
+      }
+
       if (unit.maxHp > 0 && unit.hp < unit.maxHp) {
         const width = radius * 2.4;
         const fraction = Math.max(0, unit.hp / unit.maxHp);
         const barY = unit.y - radius - 12 * inverseScale;
-        g.rect(unit.x - width / 2, barY, width, 3 * inverseScale).fill({
+        const barX = unit.x - width / 2;
+        g.rect(barX, barY, width, 3 * inverseScale).fill({
           color: 0x000000,
           alpha: 0.6,
         });
-        g.rect(unit.x - width / 2, barY, width * fraction, 3 * inverseScale).fill({
+        g.rect(barX, barY, width * fraction, 3 * inverseScale).fill({
           color: UI.friendly,
         });
+        // The crushed stub, in threat red at the far end. Too small at map
+        // scale for hatching to read, so the colour carries it here and the
+        // texture carries it in the card.
+        if (unit.crushDamage > 0) {
+          const lost = Math.min(1, unit.crushDamage / unit.maxHp);
+          g.rect(barX + width * (1 - lost), barY, width * lost, 3 * inverseScale).fill({
+            color: UI.threat,
+            alpha: 0.85,
+          });
+        }
       }
     }
   }
@@ -1607,6 +1737,164 @@ export class EchoRenderer {
     } else {
       this.bannerLabel.text = '';
     }
+  }
+
+  /**
+   * Diagonal hatching inside a rect.
+   *
+   * Reserved for crush damage: it must never be mistaken for the ordinary
+   * damage a repair will undo, and a distinct *texture* survives colour-vision
+   * differences in a way a distinct hue would not (docs/ui-ux.md §11).
+   */
+  private hatch(g: Graphics, x: number, y: number, w: number, h: number, color: number): void {
+    if (w <= 0 || h <= 0) return;
+    g.rect(x, y, w, h).fill({ color: 0x000000, alpha: 0.55 });
+    const step = 4;
+    for (let offset = 0; offset < w + h; offset += step) {
+      const x0 = x + Math.min(offset, w);
+      const y0 = y + Math.max(0, offset - w);
+      const x1 = x + Math.max(0, offset - h);
+      const y1 = y + Math.min(offset, h);
+      g.moveTo(x0, y0).lineTo(x1, y1).stroke({ width: 1, color, alpha: 0.85 });
+    }
+    g.rect(x, y, w, h).stroke({ width: 1, color, alpha: 0.6 });
+  }
+
+  /** Effective Pressure Rating: what the hull owns plus what it is renting. */
+  private effectivePr(unit: OwnUnit): number {
+    return statsFor(unit.kind).pressureRating + unit.pressureBonus;
+  }
+
+  /** True when the hull is deeper than its effective rating can survive. */
+  private isCrushing(unit: OwnUnit): boolean {
+    return requiredPressureRating(unit.depth) > this.effectivePr(unit);
+  }
+
+  /** Screen y for a depth, inside the ribbon's vertical span. */
+  private ribbonY(depthM: number, top: number, height: number): number {
+    const t = Math.max(0, Math.min(1, depthM / RIBBON_MAX_DEPTH_M));
+    return top + height * t;
+  }
+
+  /**
+   * The depth ribbon (docs/ui-ux.md §8).
+   *
+   * Depth is the axis the player commits on, so it gets permanent screen space
+   * rather than living inside a selection card. What it shows is the band
+   * structure — Shelf / Mid-Water / Abyssal and the boundaries between them —
+   * with a marker per selected hull, because the bands are what a commander
+   * reasons about; the metre figure is only ever a confirmation.
+   *
+   * While Shift is held it also previews the dive: the band a descent would
+   * take the selection to, and what that descent would cost in SIG. Same
+   * bargain as the ping preview — see the price before you pay it.
+   */
+  private drawDepthRibbon(): void {
+    const g = this.ribbonGraphics;
+    g.clear();
+
+    const selected = this.selectedUnits();
+    // Nothing selected: the ribbon would be decoration, and screen space in
+    // this game is spent on information the player can act on.
+    if (selected.length === 0) {
+      for (const label of this.ribbonLabels) label.visible = false;
+      this.ribbonReadout.visible = false;
+      return;
+    }
+
+    const scope = this.minimapRect();
+    const top = TOP_BAR_HEIGHT + RIBBON_TOP_PAD;
+    const bottom = scope.y - RIBBON_BOTTOM_PAD;
+    const height = bottom - top;
+    if (height < 60) {
+      // Too short to read; better absent than misleading.
+      for (const label of this.ribbonLabels) label.visible = false;
+      this.ribbonReadout.visible = false;
+      return;
+    }
+
+    g.rect(RIBBON_X, top, RIBBON_WIDTH, height).fill({ color: UI.glass, alpha: 0.85 });
+
+    // Band bodies, darkening with depth: the strip should read as a descent
+    // before any label is parsed.
+    const bands: Array<[DepthBand, number]> = [
+      [DepthBand.Shelf, 0.1],
+      [DepthBand.MidWater, 0.2],
+      [DepthBand.Abyssal, 0.34],
+    ];
+    for (const [band, alpha] of bands) {
+      const bandTop = this.ribbonY(DEPTH_BANDS[band].min, top, height);
+      const bandMax = Math.min(DEPTH_BANDS[band].max, RIBBON_MAX_DEPTH_M);
+      const bandBottom = this.ribbonY(bandMax, top, height);
+      g.rect(RIBBON_X, bandTop, RIBBON_WIDTH, bandBottom - bandTop).fill({
+        color: 0x000000,
+        alpha,
+      });
+    }
+
+    // Boundaries at 400 m and 1,800 m — the two numbers §8 asks for by name.
+    for (const band of [DepthBand.MidWater, DepthBand.Abyssal]) {
+      const y = this.ribbonY(DEPTH_BANDS[band].min, top, height);
+      g.rect(RIBBON_X, y, RIBBON_WIDTH, 1).fill({ color: UI.glassStroke, alpha: 0.7 });
+    }
+    g.rect(RIBBON_X, top, RIBBON_WIDTH, height).stroke({ width: 1, color: UI.glassStroke });
+
+    // Band labels, each parked just inside the top of its own band.
+    this.ribbonLabels.forEach((label, i) => {
+      const band = [DepthBand.Shelf, DepthBand.MidWater, DepthBand.Abyssal][i]!;
+      label.visible = true;
+      label.position.set(
+        RIBBON_X + RIBBON_WIDTH + 5,
+        this.ribbonY(DEPTH_BANDS[band].min, top, height) + 2
+      );
+    });
+
+    // A marker per selected hull, and its ordered depth as a ghost above it.
+    for (const unit of selected) {
+      const y = this.ribbonY(unit.depth, top, height);
+      const crushing = this.isCrushing(unit);
+
+      if (unit.depthOrder !== undefined) {
+        const orderY = this.ribbonY(unit.depthOrder, top, height);
+        g.rect(RIBBON_X - 2, orderY - 1, RIBBON_WIDTH + 4, 2).fill({
+          color: UI.accent,
+          alpha: 0.45,
+        });
+        // A hairline from here to there: the commitment, drawn as distance.
+        g.rect(RIBBON_X + RIBBON_WIDTH / 2, Math.min(y, orderY), 1, Math.abs(orderY - y)).fill({
+          color: UI.accent,
+          alpha: 0.3,
+        });
+      }
+
+      g.rect(RIBBON_X - 3, y - 1.5, RIBBON_WIDTH + 6, 3).fill({
+        color: crushing ? UI.threat : UI.friendly,
+      });
+    }
+
+    // Dive preview: where the next band down is, and what getting there costs.
+    if (this.previewPing) {
+      const target = this.stepDepthTarget(selected, 1);
+      if (target !== null) {
+        const targetY = this.ribbonY(target, top, height);
+        g.rect(RIBBON_X - 4, targetY - 2, RIBBON_WIDTH + 8, 4).fill({
+          color: sigColor(DEPTH.DESCENT_SIG),
+          alpha: 0.8,
+        });
+      }
+    }
+
+    const lead = selected[0]!;
+    this.ribbonReadout.visible = true;
+    this.ribbonReadout.text = this.previewPing
+      ? `DIVE ${DEPTH.DESCENT_SIG} SIG`
+      : `${lead.depth.toFixed(0)}m`;
+    this.ribbonReadout.style.fill = this.previewPing
+      ? sigColor(DEPTH.DESCENT_SIG)
+      : this.isCrushing(lead)
+        ? UI.threat
+        : UI.accent;
+    this.ribbonReadout.position.set(RIBBON_X, bottom + 4);
   }
 
   /**
@@ -1691,6 +1979,7 @@ export class EchoRenderer {
       this.infoName.visible = false;
       this.infoLine1.visible = false;
       this.infoLine2.visible = false;
+      this.infoBadge.visible = false;
       return;
     }
 
@@ -1714,10 +2003,58 @@ export class EchoRenderer {
     g.rect(barX, barY, barW * Math.max(0, Math.min(1, any.hp / any.maxHp)), 8).fill({
       color: UI.friendly,
     });
+    // Crush is the one wound no repair will ever close, so it is drawn as a
+    // hatched stub at the far end of the bar rather than as absent hull: the
+    // permanence is visible now instead of discovered later (docs/ui-ux.md §8).
+    if (unit !== undefined && unit.crushDamage > 0) {
+      this.hatch(
+        g,
+        barX + barW * Math.max(0, 1 - unit.crushDamage / unit.maxHp),
+        barY,
+        barW * Math.min(1, unit.crushDamage / unit.maxHp),
+        8,
+        UI.threat
+      );
+    }
 
     this.infoLine1.visible = true;
     this.infoLine1.text = `HULL ${any.hp.toFixed(0)}/${any.maxHp.toFixed(0)}   SIG ${any.sig.toFixed(0)}`;
     this.infoLine1.position.set(x + 12, y + 48);
+
+    // PR badge. A rented rating is drawn as rented — it evaporates the moment
+    // the hull leaves the aura that granted it (docs/systems-depth.md §3).
+    if (unit !== undefined) {
+      const base = statsFor(unit.kind).pressureRating;
+      const crushing = this.isCrushing(unit);
+      const badgeW = 44;
+      const badgeH = 16;
+      const badgeX = x + w - badgeW - 12;
+      const badgeY = y + 8;
+      // Under-rated inverts *and pulses* (docs/ui-ux.md §8): filled in threat
+      // red rather than outlined, and breathing, because a hull losing
+      // unrecoverable tonnage should not sit as still on screen as a healthy
+      // one. Driven off wall-clock — this is presentation, never simulation.
+      if (crushing) {
+        const pulse = 0.62 + 0.3 * (0.5 + 0.5 * Math.sin(performance.now() / 260));
+        g.roundRect(badgeX, badgeY, badgeW, badgeH, 3).fill({ color: UI.threat, alpha: pulse });
+      } else {
+        g.roundRect(badgeX, badgeY, badgeW, badgeH, 3).stroke({
+          width: 1,
+          color: unit.pressureBonus > 0 ? UI.accent : UI.textDim,
+        });
+      }
+      this.infoBadge.visible = true;
+      this.infoBadge.text =
+        unit.pressureBonus > 0 ? `PR${base}+${unit.pressureBonus}` : `PR${base}`;
+      this.infoBadge.style.fill = crushing
+        ? UI.text
+        : unit.pressureBonus > 0
+          ? UI.accent
+          : UI.textDim;
+      this.infoBadge.position.set(badgeX + badgeW / 2, badgeY + badgeH / 2);
+    } else {
+      this.infoBadge.visible = false;
+    }
 
     this.infoLine2.visible = true;
     if (structure !== undefined) {
@@ -1727,10 +2064,23 @@ export class EchoRenderer {
           : structure.queue.length > 0
             ? `producing · queue ${structure.queue.length}`
             : 'online';
+    } else if (unit !== undefined && unit.depthOrder !== undefined) {
+      // Ascent is the leg players underestimate, so it is the one that gets a
+      // clock rather than a percentage (docs/ui-ux.md §8).
+      const descending = unit.depthOrder > unit.depth;
+      const metres = Math.abs(unit.depthOrder - unit.depth);
+      const seconds = metres / (descending ? DEPTH.DESCENT_RATE_MPS : DEPTH.ASCENT_RATE_MPS);
+      this.infoLine2.text = descending
+        ? `DIVING to ${unit.depthOrder.toFixed(0)}m · ${seconds.toFixed(0)}s · loud`
+        : `rising to ${unit.depthOrder.toFixed(0)}m · ${seconds.toFixed(0)}s`;
+    } else if (unit !== undefined && this.isCrushing(unit)) {
+      this.infoLine2.text = `CRUSHING at ${unit.depth.toFixed(0)}m · rise or lose the hull`;
     } else if (unit !== undefined && unit.throttle !== undefined) {
       this.infoLine2.text = `throttle ${THROTTLE_LABEL[unit.throttle]} · cargo ${unit.cargo?.toFixed(0) ?? 0}`;
     } else if (unit !== undefined) {
-      this.infoLine2.text = unit.silentRunning ? 'SILENT RUNNING' : 'systems live';
+      this.infoLine2.text = unit.silentRunning
+        ? `SILENT RUNNING · ${unit.depth.toFixed(0)}m`
+        : `systems live · ${unit.depth.toFixed(0)}m`;
     }
     this.infoLine2.position.set(x + 12, y + 68);
   }
@@ -1764,7 +2114,7 @@ export class EchoRenderer {
     }
     return this.isTouch
       ? `${this.selected.size} selected  ·  tap map to order`
-      : `${this.selected.size} selected  ·  RMB attack/move  ·  SPACE silent  ·  P ping  ·  SHIFT preview`;
+      : `${this.selected.size} selected  ·  RMB move  ·  SPACE silent  ·  P ping  ·  D dive  ·  A rise`;
   }
 
   destroy(): void {

@@ -79,6 +79,15 @@ export const Pressure = defineComponent({
   rating: Types.ui8,
   /** Aura-granted rating bonus (Sounding Spire). Rewritten each tick. */
   bonus: Types.ui8,
+  /**
+   * Cumulative crush attrition this hull has taken, in HP.
+   *
+   * Tracked separately from `Health.hp` because crush is the one damage source
+   * that no repair may ever undo (docs/systems-depth.md §2), so the HUD has to
+   * be able to draw the permanently lost portion of the bar differently from
+   * the part a future repair system will refill (docs/ui-ux.md §8).
+   */
+  crushTaken: Types.f32,
 });
 
 export const Health = defineComponent({
