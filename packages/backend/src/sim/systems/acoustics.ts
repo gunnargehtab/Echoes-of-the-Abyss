@@ -34,6 +34,7 @@ import {
   Unit,
   Velocity,
 } from '../components.ts';
+import { stormModifiers } from './hazards.ts';
 import type { SimWorld } from '../world.ts';
 
 const emitters = defineQuery([Acoustic, Unit, Velocity, SilentRunning]);
@@ -105,6 +106,10 @@ export function acousticsSystem(world: SimWorld): void {
     }
 
     sig = applySpikeDecay(world, eid, sig);
+    // A Resonance Storm destabilises organic tech (docs/hazards.md §5), which
+    // is added before the veil takes its cut: the cloud muffles whatever the
+    // hull is doing, and being rattled by a storm is part of that.
+    sig += stormModifiers(world, eid).sig;
     // A Spore Veil muffles the *derived* SIG — whatever the unit is doing,
     // the cloud takes its cut last (auras system, symmetric).
     sig *= Acoustic.sigFactor[eid]! || 1;

@@ -234,7 +234,7 @@ Regions are rectangles, painted in order so a later one overwrites an earlier on
 
 A map's **spawn list is its player count**, which is why the Abyssal Rift Corridor has two and the others four. The old spawn logic computed corners from the map's width and height, which quietly assumed every map is a square — false the moment a corridor map exists.
 
-**Hazard sites are placed but not simulated.** The hazard framework is separate work. They are drawn into the terrain layer so the *telegraphing* promise in the core principles above is kept from the first frame, and they are drawn as hatched rings rather than filled zones, because a solid marker would imply an effect that does not exist yet.
+**Hazard sites are placed; two kinds are simulated.** Geothermal eruptions and resonance storms run a full lifecycle — see [hazards.md](hazards.md) for the status of all eight. A simulated hazard is drawn live, with a phase and a closing countdown ring; an inert site is drawn into the static terrain layer as hatched ground, because a solid marker would imply an effect that does not exist yet. Either way the site is visible from the first frame, which is what the telegraphing principle above requires.
 
 `Terrain.demo()` remains, explicitly as a **test fixture**: a hand-built grid with no spawns, resources or hazards, for tests that want ground whose PF landscape is not also under test.
 

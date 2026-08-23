@@ -50,8 +50,17 @@ export class Terrain {
     return this.biomes[this.index(x, y)] as Biome;
   }
 
+  /**
+   * PropagationFactor at a point, hazards included.
+   *
+   * Reads the `pf` array rather than deriving from the biome, so it agrees
+   * with `pathPropagation` — which has always read `pf`. While nothing wrote
+   * that array except `fillRect` the two were identical; the moment a hazard
+   * could modify PF they diverged, and a Resonance Storm was invisible to
+   * every caller of this method while being fully visible to detection.
+   */
   propagationAt(x: number, y: number): number {
-    return PROPAGATION_FACTOR[this.biomeAt(x, y)];
+    return this.pf[this.index(x, y)]!;
   }
 
   /**
@@ -113,6 +122,49 @@ export class Terrain {
       for (let cx = x0; cx <= x1; cx++) {
         this.biomes[cy * this.cols + cx] = biome;
         this.pf[cy * this.cols + cx] = PROPAGATION_FACTOR[biome];
+      }
+    }
+  }
+
+  /**
+   * Apply the PropagationFactor modifiers currently in force.
+   *
+   * The issue that asked for this put it well: "a hazard that changes PF is a
+   * write to that array, not a new code path". The Echo Layer already reads a
+   * per-cell PF array on every path integral, so a Resonance Storm degrading
+   * resolution inside its area needs nothing new in detection at all — biome
+   * and hazard compose for free.
+   *
+   * **Recomputed from the biome, never inverted.** Every cell is reset to its
+   * biome's baseline and then multiplied by each modifier covering it. That
+   * matters more than it looks: an "undo" that divided by the multiplier would
+   * accumulate float error over a long match and would give the wrong answer
+   * outright when two hazards overlapped the same cell. Recomputing is exact,
+   * order-independent, and cannot drift.
+   *
+   * Clamped to MAX_PROPAGATION_FACTOR because the Echo pass sizes its
+   * broadphase from that ceiling: a hazard that pushed PF past it would make
+   * units audible beyond the radius the pass is willing to search for them,
+   * which reads as detection silently failing.
+   */
+  applyPropagationModifiers(
+    mods: readonly { x: number; y: number; radiusM: number; scale: number }[]
+  ): void {
+    for (let cy = 0; cy < this.rows; cy++) {
+      const wy = (cy + 0.5) * this.cellM;
+      for (let cx = 0; cx < this.cols; cx++) {
+        const index = cy * this.cols + cx;
+        let value = PROPAGATION_FACTOR[this.biomes[index] as Biome];
+        if (mods.length > 0) {
+          const wx = (cx + 0.5) * this.cellM;
+          for (let m = 0; m < mods.length; m++) {
+            const mod = mods[m]!;
+            const dx = wx - mod.x;
+            const dy = wy - mod.y;
+            if (dx * dx + dy * dy <= mod.radiusM * mod.radiusM) value *= mod.scale;
+          }
+        }
+        this.pf[index] = Math.min(value, MAX_PROPAGATION_FACTOR);
       }
     }
   }

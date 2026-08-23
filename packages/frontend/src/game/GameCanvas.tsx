@@ -100,6 +100,17 @@ export function GameCanvas() {
         onContactAudio: (frame) => audio.applyContacts(frame),
         // The other half of the mix: what is true of the player's own force.
         onSelfAudio: (frame) => audio.applySelf(frame),
+        onHazards: (hazards) => {
+          // Read-only, for the headless harness. Hazards are public anyway.
+          (window as unknown as { __hazardProbe?: () => unknown }).__hazardProbe = () =>
+            hazards.length === 0
+              ? null
+              : {
+                  phase: hazards[0]!.phase,
+                  remainingS: Number(hazards[0]!.remainingS.toFixed(1)),
+                  kind: hazards[0]!.kind,
+                };
+        },
         onMarkAudio: (totals) => {
           audio.applyMarks(totals);
           // Read-only, for the headless harness. Reports counts only, and

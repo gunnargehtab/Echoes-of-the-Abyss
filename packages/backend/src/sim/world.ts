@@ -37,6 +37,7 @@ import {
   Weapon,
 } from './components.ts';
 import { EchoMarkLayer } from './echoMarks.ts';
+import type { Hazard } from './systems/hazards.ts';
 import { Rng } from './rng.ts';
 import { SpatialHash } from './spatialHash.ts';
 import type { QueuedOrder } from './systems/orderQueue.ts';
@@ -122,6 +123,13 @@ export interface SimWorld extends IWorld {
    * neither — it is match state, resolved per listener.
    */
   marks: EchoMarkLayer;
+  /**
+   * Environmental hazards, seeded from the map.
+   *
+   * Simulation state and not map data: a hazard's *site* comes from the map
+   * and never changes, but its phase and timers are part of the match.
+   */
+  hazards: Hazard[];
 }
 
 /** A self-event before it is bucketed by slot. `eid`, not a match-local id. */
@@ -174,6 +182,7 @@ export function createSimWorld(terrain: Terrain, dt: number, seed: number): SimW
   world.orderQueues = new Map();
   world.selfEvents = [];
   world.marks = new EchoMarkLayer();
+  world.hazards = [];
   // Burn entity id 0 so components can use eid 0 as a "none" sentinel
   // (Weapon.orderedTargetEid, Harvester.nodeEid). bitecs hands out dense ids
   // from 0, so without this the first spawned entity would be untargetable.

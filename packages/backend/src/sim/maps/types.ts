@@ -18,7 +18,7 @@
  * at match start, and it costs no loader and no schema validator to get that.
  */
 
-import type { Biome, ResourceKind } from '@echoes/shared';
+import type { Biome, HazardKind, ResourceKind } from '@echoes/shared';
 
 /**
  * A painted region. Rectangles only, and deliberately so: every layout in
@@ -72,20 +72,13 @@ export interface MapResource {
 /**
  * Hazards in docs/maps.md, as sites.
  *
- * Carried by the format because the issue asks for hazard sites to come from
- * the map rather than from code, and because a map's hazards are part of what
- * makes it that map. **No behaviour is attached yet** — the hazard framework is
- * separate work. These are placements waiting for a system, and are explicitly
- * not simulated: nothing reads them but the map tests and the client's
- * knowledge that they exist.
+ * A site is where a hazard *lives*; its phase and timers are match state and
+ * belong to the simulation. Two kinds are simulated — geothermal eruptions and
+ * resonance storms — and the rest are sites only, drawn and telegraphed but
+ * inert until their behaviour is written. `docs/hazards.md` carries the
+ * status of all eight.
  */
-export type HazardKind =
-  | 'geothermal-eruption'
-  | 'toxic-brine'
-  | 'kelp-entanglement'
-  | 'cold-shock'
-  | 'pressure-zone'
-  | 'resonance-storm';
+export type { HazardKind } from '@echoes/shared';
 
 export interface MapHazardSite {
   x: number;

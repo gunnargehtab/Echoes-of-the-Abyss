@@ -45,7 +45,9 @@ import {
   structureStatsFor,
   FACTION_STRUCTURE,
   type Contact,
+  HazardPhase,
   type EchoMarkInfo,
+  type HazardState,
   type EchoSnapshot,
   type ExposureReport,
   type GameOverPayload,
@@ -115,6 +117,8 @@ export interface RendererCallbacks {
   onSelfAudio(frame: SelfAudioFrame): void;
   /** How much residue of each kind the player can hear (§6). */
   onMarkAudio(intensityByKind: Map<EchoMarkKind, number>): void;
+  /** Live hazards, once per Echo tick. Public to every player by design. */
+  onHazards(hazards: HazardState[]): void;
 }
 
 /**
@@ -157,6 +161,20 @@ const LOCK_FLASH_MS = 700;
  * for the mix; it holds for the screen too), and it must never be mistaken for
  * nothing either, "or the scouting economy dies".
  */
+/**
+ * How each hazard phase is drawn.
+ *
+ * Dormant is faint but never invisible: a hazard the player forgets is a
+ * hazard that will surprise them, and surprise is the failure mode the warning
+ * phase exists to prevent.
+ */
+const HAZARD_STYLE: Record<HazardPhase, { width: number; alpha: number }> = {
+  [HazardPhase.Dormant]: { width: 2, alpha: 0.22 },
+  [HazardPhase.Warning]: { width: 3, alpha: 0.7 },
+  [HazardPhase.Active]: { width: 4, alpha: 0.95 },
+  [HazardPhase.Decay]: { width: 3, alpha: 0.5 },
+};
+
 const MARK_STYLE: Record<EchoMarkKind, { color: number; alpha: number; radiusM: number }> = {
   [EchoMarkKind.Battle]: { color: 0xb4553c, alpha: 0.3, radiusM: 320 },
   [EchoMarkKind.DestroyedStructure]: { color: 0x8c6a44, alpha: 0.34, radiusM: 420 },
@@ -422,6 +440,15 @@ export class EchoRenderer {
    * actually hear, so drawing all of them is correct by construction.
    */
   private marks: EchoMarkInfo[] = [];
+  /**
+   * Live hazards, public to every player.
+   *
+   * docs/maps.md makes hazard telegraphing a core principle — "players must
+   * see danger before entering" — so this is the one channel in the game that
+   * is deliberately not resolved per player. A telegraph only one side can
+   * read is not a telegraph.
+   */
+  private hazards: HazardState[] = [];
   private nodules = 0;
   private crystal = 0;
   private status = 'connecting';
@@ -1592,6 +1619,8 @@ export class EchoRenderer {
     this.peakSig = snapshot.peakSig;
     this.exposure = snapshot.exposure;
     this.marks = snapshot.marks;
+    this.hazards = snapshot.hazards;
+    this.callbacks.onHazards(snapshot.hazards);
     this.nodules = snapshot.nodules;
     this.crystal = snapshot.crystal;
 
@@ -1907,6 +1936,10 @@ export class EchoRenderer {
     // behaviour yet (the hazard framework is separate work), and a solid
     // marker would imply an effect that does not exist.
     for (const site of this.map?.hazards ?? []) {
+      // Simulated hazards are drawn live, with a phase and a countdown. Only
+      // the inert ones belong in the static layer, as ground that is merely
+      // marked dangerous.
+      if (site.simulated) continue;
       g.circle(site.x, site.y, site.radiusM).stroke({
         width: 3,
         color: UI.threat,
@@ -2157,6 +2190,54 @@ export class EchoRenderer {
   }
 
   /**
+   * Live hazards — docs/hazards.md, docs/maps.md core principles.
+   *
+   * The warning phase is the reason this method exists. `CLAUDE.md` fixes the
+   * target emotion as dread rather than confusion, and dread requires the
+   * player to *see it coming*: a countdown ring that closes as the eruption
+   * approaches, so leaving is a decision they get to make and regret.
+   *
+   * Dormant sites stay drawn — faintly — because a hazard you can forget about
+   * is a hazard that will surprise you, and surprise is the failure mode.
+   */
+  private drawHazards(g: Graphics, inverseScale: number): void {
+    for (const hazard of this.hazards) {
+      const style = HAZARD_STYLE[hazard.phase];
+      const color = hazard.kind === 'resonance-storm' ? UI.accent : UI.threat;
+
+      g.circle(hazard.x, hazard.y, hazard.radiusM).stroke({
+        width: style.width * inverseScale,
+        color,
+        alpha: style.alpha,
+      });
+
+      if (hazard.phase === HazardPhase.Warning) {
+        // The countdown: a second ring closing on the first. When they meet,
+        // it fires. Nothing else on screen behaves like this, so it does not
+        // have to be learned twice.
+        const closing = hazard.radiusM * (1.9 - 0.9 * hazard.progress);
+        g.circle(hazard.x, hazard.y, closing).stroke({
+          width: 2 * inverseScale,
+          color,
+          alpha: 0.35 + hazard.progress * 0.5,
+        });
+      }
+
+      if (hazard.phase === HazardPhase.Active || hazard.phase === HazardPhase.Decay) {
+        const heat = hazard.phase === HazardPhase.Active ? 1 : 1 - hazard.progress;
+        g.circle(hazard.x, hazard.y, hazard.radiusM).fill({ color, alpha: 0.18 * heat });
+        for (let ring = 1; ring <= 3; ring++) {
+          g.circle(hazard.x, hazard.y, hazard.radiusM * (ring / 3)).stroke({
+            width: 1.5 * inverseScale,
+            color,
+            alpha: 0.3 * heat,
+          });
+        }
+      }
+    }
+  }
+
+  /**
    * Summed intensity per kind, for the residue beds.
    *
    * A sum and not a list: §6 makes marks reverb-only with no transients, so
@@ -2358,6 +2439,7 @@ export class EchoRenderer {
     const now = performance.now();
     const decayMs = PERSISTENCE.GHOST_MARKER_DECAY_S * 1000;
     const inverseScale = 1 / this.world.scale.x;
+    this.drawHazards(g, inverseScale);
     this.drawEchoMarks(g, inverseScale);
     this.drawBreakSilence(g, inverseScale);
 

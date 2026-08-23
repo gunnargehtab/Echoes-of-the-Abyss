@@ -30,6 +30,8 @@ import {
   statsFor,
   structureStatsFor,
   EchoMarkKind,
+  HAZARDS,
+  HazardPhase,
   ResolutionTier,
   SelfEventKind,
   type EchoSnapshot,
@@ -74,6 +76,7 @@ import { ReplayRecorder, type Replay, type ReplayCommand } from './replay.ts';
 import { hashWorld } from './stateHash.ts';
 import { Terrain } from './terrain.ts';
 import { VENTFRONT_DIVIDE, terrainFor, type MapDefinition } from './maps/index.ts';
+import { hazardStates, hazardsSystem, isSimulated } from './systems/hazards.ts';
 import {
   createSimWorld,
   economyFor,
@@ -151,6 +154,7 @@ export class Match {
     this.world = createSimWorld(options.terrain ?? terrainFor(map), FIXED_DT, this.seed);
     this.recorder = options.record === true ? new ReplayRecorder(this.seed, map.id) : null;
     this.seedResourceNodes();
+    this.seedHazards();
   }
 
   /**
@@ -221,6 +225,32 @@ export class Match {
         node.amount ??
         (node.kind === ResourceKind.ResonanceCrystal ? CRYSTAL.FIELD_STARTING_AMOUNT : undefined);
       this.addNode(node.x, node.y, amount, node.kind);
+    }
+  }
+
+  /**
+   * Hazards from the map's authored sites.
+   *
+   * Staggered so a map's vents do not all erupt on the same beat, which would
+   * turn a hazard into a metronome the player tunes out. The offset is derived
+   * from the site's own position rather than drawn from the RNG: hazard timing
+   * has to be identical across a replay, and position is already identical.
+   */
+  private seedHazards(): void {
+    let id = 1;
+    for (const site of this.map.hazards) {
+      if (!isSimulated(site.kind)) continue;
+      const stagger = (Math.abs(Math.round(site.x * 7 + site.y * 13)) % 97) / 97;
+      this.world.hazards.push({
+        id: id++,
+        kind: site.kind,
+        x: site.x,
+        y: site.y,
+        radiusM: site.radiusM,
+        phase: HazardPhase.Dormant,
+        elapsedS: stagger * HAZARDS.ERUPTION.DORMANT_S,
+        stabilisedS: 0,
+      });
     }
   }
 
@@ -646,6 +676,9 @@ export class Match {
     aurasSystem(this.world);
     acousticsSystem(this.world);
     pressureSystem(this.world, this.destroyedScratch);
+    // Hazards after pressure and before reap: a hull killed by an eruption
+    // should die on the tick the eruption killed it, not the next one.
+    hazardsSystem(this.world);
     this.reap();
     // After reap, so a structure destroyed this tick has already left its
     // mark and does not lose a tick of the three minutes it is owed.
@@ -752,6 +785,9 @@ export class Match {
         },
         selfEvents: eventsBySlot.get(slot) ?? [],
         marks: result.marksBySlot.get(slot) ?? [],
+        // Public, unlike everything else here: docs/maps.md requires hazard
+        // telegraphing, and a telegraph only one player can read is not one.
+        hazards: hazardStates(this.world),
       });
     }
     return snapshots;

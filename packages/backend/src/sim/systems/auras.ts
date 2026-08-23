@@ -32,6 +32,7 @@ import {
   UnderConstruction,
   Unit,
 } from '../components.ts';
+import { stormModifiers } from './hazards.ts';
 import type { SimWorld } from '../world.ts';
 
 const structures = defineQuery([Structure, Position, Owner]);
@@ -111,8 +112,13 @@ export function aurasSystem(world: SimWorld): void {
       Acoustic.pfFactor[eid] = BAFFLE_BARGE.PF_FACTOR;
     }
 
-    // HYD is derived state exactly like SIG: base hull rating, plus the dome.
-    const baseHyd = statsFor(Unit.kind[eid] as UnitKind).hyd;
+    // HYD is derived state exactly like SIG: base hull rating, plus the dome,
+    // plus whatever weather is doing to it. A Resonance Storm is applied here
+    // rather than by the hazard system for the same reason auras are — this
+    // pass rewrites HYD from scratch every tick, so anything that wrote it
+    // earlier in the step would simply be overwritten.
+    const weather = stormModifiers(world, eid);
+    const baseHyd = statsFor(Unit.kind[eid] as UnitKind).hyd + weather.hyd;
     Acoustic.hyd[eid] =
       cantors.length > 0 && inRange(eid, cantors, slot, CANTOR.RADIUS_M)
         ? Math.min(CANTOR.HYD_CAP, baseHyd + CANTOR.HYD_BONUS)
