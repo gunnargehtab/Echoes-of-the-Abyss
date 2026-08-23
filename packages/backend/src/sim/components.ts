@@ -133,6 +133,9 @@ export const UnderConstruction = defineComponent({
  */
 export const ResourceNode = defineComponent({
   remaining: Types.f32,
+  /** ResourceKind ordinal. Nodule fields and crystal fields are worked alike
+   *  but priced, paced and placed differently (docs/economy.md §2, §7). */
+  kind: Types.ui8,
 });
 
 /**
@@ -148,6 +151,8 @@ export const Harvester = defineComponent({
   depotEid: Types.eid,
   /** HarvestThrottle ordinal. docs/economy.md §3. */
   throttle: Types.ui8,
+  /** ResourceKind ordinal of whatever is in the hold. */
+  cargoKind: Types.ui8,
 });
 
 export const HarvestMode = {

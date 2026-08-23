@@ -6,9 +6,11 @@
 import { createWorld, addEntity, addComponent, type IWorld } from 'bitecs';
 import {
   CONSTRUCTION,
+  CRYSTAL,
   ECONOMY,
   Faction,
   HarvestThrottle,
+  ResourceKind,
   StructureKind,
   UnitKind,
   statsFor,
@@ -37,6 +39,8 @@ import { Terrain } from './terrain.ts';
 /** Per-player mutable economy state. Lives outside the ECS: it is per-slot, not per-entity. */
 export interface PlayerEconomy {
   nodules: number;
+  /** Resonance Crystal — the tech gate, mined only in the Abyssal band. */
+  crystal: number;
 }
 
 /** One structure's production line: FIFO of unit kinds, head in progress. */
@@ -82,7 +86,7 @@ export function createSimWorld(terrain: Terrain, dt: number): SimWorld {
 export function economyFor(world: SimWorld, slot: number): PlayerEconomy {
   let economy = world.economies.get(slot);
   if (economy === undefined) {
-    economy = { nodules: ECONOMY.STARTING_NODULES };
+    economy = { nodules: ECONOMY.STARTING_NODULES, crystal: 0 };
     world.economies.set(slot, economy);
   }
   return economy;
@@ -232,18 +236,31 @@ export function spawnStructure(world: SimWorld, opts: SpawnStructureOptions): nu
   return eid;
 }
 
+/**
+ * Working depth of a nodule field: Mid-Water, where §7 puts the density and
+ * where a PR-2 hull is at home. Named rather than inline so the contrast with
+ * CRYSTAL.FIELD_DEPTH_M is legible.
+ */
+const NODULE_FIELD_DEPTH_M = 600;
+
 export function spawnResourceNode(
   world: SimWorld,
   x: number,
   y: number,
-  amount: number = ECONOMY.NODE_STARTING_AMOUNT
+  amount: number = ECONOMY.NODE_STARTING_AMOUNT,
+  kind: ResourceKind = ResourceKind.Nodule
 ): number {
   const eid = addEntity(world);
   addComponent(world, Position, eid);
   Position.x[eid] = x;
   Position.y[eid] = y;
-  Position.depth[eid] = 600;
+  // Crystal lies in the Abyssal band, which is the entire point of it: the
+  // field cannot be worked without committing to the descent, and the descent
+  // is loud and the return is slow (docs/economy.md §7).
+  Position.depth[eid] =
+    kind === ResourceKind.ResonanceCrystal ? CRYSTAL.FIELD_DEPTH_M : NODULE_FIELD_DEPTH_M;
   addComponent(world, ResourceNode, eid);
   ResourceNode.remaining[eid] = amount;
+  ResourceNode.kind[eid] = kind;
   return eid;
 }

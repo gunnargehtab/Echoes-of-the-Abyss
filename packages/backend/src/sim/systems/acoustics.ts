@@ -13,6 +13,8 @@ import {
   CONSTRUCTION,
   DEPTH,
   HARVEST_THROTTLE,
+  RESOURCE,
+  ResourceKind,
   SILENT_RUNNING,
   statsFor,
   structureStatsFor,
@@ -80,8 +82,13 @@ export function acousticsSystem(world: SimWorld): void {
       sig = silentRunningSig(stats.sigIdle);
     } else if (hasComponent(world, Harvester, eid) && Harvester.mode[eid] === HarvestMode.Mining) {
       // Mining loudness follows the throttle, not the hull — the economy's
-      // central decision surface (docs/economy.md §3).
-      sig = HARVEST_THROTTLE[Harvester.throttle[eid] as HarvestThrottle].sig;
+      // central decision surface (docs/economy.md §3) — plus whatever the
+      // resource itself costs to cut. Crystal carries a premium, which puts
+      // Standard-throttle crystal work in the doc's 60-70 band (§2) without
+      // taking the throttle decision away from the player.
+      sig =
+        HARVEST_THROTTLE[Harvester.throttle[eid] as HarvestThrottle].sig +
+        RESOURCE[Harvester.cargoKind[eid] as ResourceKind].miningSigPremium;
     } else {
       const speed = Math.hypot(Velocity.x[eid]!, Velocity.y[eid]!);
       sig = speed > MOVING_EPSILON ? stats.sigCruise : stats.sigIdle;

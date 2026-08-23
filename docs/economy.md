@@ -127,8 +127,33 @@ drive to a field, mine, haul home, deposit at a Bastion or Refinery. Constants l
 | Refining SIG | **Implemented** — the Refinery holds 65 SIG sustained (§4) | Forward refineries are real: any deposit structure works, the loud one is optional |
 | Thermal Draw | Not modelled | A continuous rate, never a stockpile — needs its own accumulator |
 | Biomass | Not modelled | Requires the Drift simulation first |
-| Resonance Crystal | Not modelled | Needs the Abyssal band populated with nodes |
+| Resonance Crystal | **Implemented** — Abyssal field, second stockpile, tech gate | See below |
+| Depth economics (§7) | **Implemented** — the round trip has a clock on it | Harvesters issue their own depth orders: loud descent to the field, slow climb home |
 | Industrial hum (§5) | Not modelled | Requires the Echo Mark terrain layer first |
+
+### Resonance Crystal in the scaffold
+
+One crystal field is seeded dead centre of the map at 2,400 m — Abyssal, so it cannot be
+worked without committing to the descent, and contested because both sides need it for the
+same reason. Constants live in `CRYSTAL` and `RESOURCE` in
+`packages/shared/src/constants.ts`.
+
+| Property | Value | Why |
+| --- | --- | --- |
+| Extraction SIG | Throttle SIG **+20** | Puts Standard-throttle crystal work at 65, mid-band for §2's 60-70, while leaving the throttle a live decision rather than something the resource overrides |
+| Cut rate | 45% of nodule rate | The deep is slow work, which lengthens the exposure |
+| Hold capacity | 20 (vs 50 nodules) | Dense, awkward cargo; more trips, more descents |
+| Field depth | 2,400 m | Abyssal: PR-3, or crush attrition on a clock |
+
+**The tech gate.** The four faction signature structures — Baffle Barge, Cantor, Sounding
+Spire, Spore Veil — cost 120 crystal each, and the Abyssal Submersible costs 80. That is
+one crystal-locked producible per navy plus the hull built to live where the crystal is,
+which is §2's "every faction's upper tech tier is crystal-locked" at prototype scale.
+
+**What makes it a raid rather than an expansion** (§7) is that the harvest loop issues its
+own depth orders. A hauler dives to the field — loudly, because descent is deafening — cuts
+slowly, and then climbs home at a third of the speed it went down. The exposure is not a
+number in a table; it is the shape of the trip.
 
 An earlier draft of the scaffold used a flat 5 nodules/minute abstraction; the cargo loop
 replaced it because a positional economy — where the *route* between field and depot is

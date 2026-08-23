@@ -33,6 +33,7 @@ import {
   PROPAGATION_FACTOR,
   PROPAGATION_MODEL,
   ResolutionTier,
+  ResourceKind,
   StructureKind,
   UnitKind,
   depthBandFor,
@@ -48,7 +49,14 @@ import {
   type OwnUnit,
   type ResourceNodeInfo,
 } from '@echoes/shared';
-import { BIOME_COLOR, FACTION_PALETTE, TIER_STYLE, UI, sigColor } from './palette.ts';
+import {
+  BIOME_COLOR,
+  FACTION_PALETTE,
+  RESOURCE_COLOR,
+  TIER_STYLE,
+  UI,
+  sigColor,
+} from './palette.ts';
 import { drawStructureSilhouette, drawUnitSilhouette, HULL_LENGTH_M } from './silhouettes.ts';
 import { destroyHullTextures, hullSpriteSizeM, hullTexture, loadHullArt } from './hullTextures.ts';
 import {
@@ -226,6 +234,7 @@ export class EchoRenderer {
 
   private sigLabel!: Text;
   private resourceLabel!: Text;
+  private crystalLabel!: Text;
   private statusLabel!: Text;
   private selectionLabel!: Text;
   private bannerLabel!: Text;
@@ -240,6 +249,7 @@ export class EchoRenderer {
   private selected = new Set<number>();
   private peakSig = 0;
   private nodules = 0;
+  private crystal = 0;
   private status = 'connecting';
   private slot = 0;
   private faction: Faction = Faction.Bathyarch;
@@ -328,6 +338,9 @@ export class EchoRenderer {
     this.resourceLabel = new Text({ text: '', style: { ...mono, fontSize: 13 } });
     this.resourceLabel.position.set(12, 8);
 
+    this.crystalLabel = new Text({ text: '', style: { ...mono, fontSize: 13 } });
+    this.crystalLabel.visible = false;
+
     this.sigLabel = new Text({ text: 'SIG --', style: { ...mono, fontSize: 13 } });
 
     this.statusLabel = new Text({
@@ -368,6 +381,7 @@ export class EchoRenderer {
     this.hud.addChild(
       this.sigLabel,
       this.resourceLabel,
+      this.crystalLabel,
       this.statusLabel,
       this.selectionLabel,
       this.bannerLabel,
@@ -1137,6 +1151,7 @@ export class EchoRenderer {
     this.structures = snapshot.structures;
     this.peakSig = snapshot.peakSig;
     this.nodules = snapshot.nodules;
+    this.crystal = snapshot.crystal;
 
     // Track headings from motion; a stationary hull keeps its last bearing.
     for (const unit of snapshot.units) {
@@ -1258,17 +1273,31 @@ export class EchoRenderer {
     const g = this.nodeLayer;
     g.clear();
     for (const node of this.nodes) {
+      const crystal = node.kind === ResourceKind.ResonanceCrystal;
+      const color = RESOURCE_COLOR[node.kind];
       const radius = 60 + (node.initialAmount / 3000) * 40;
-      g.circle(node.x, node.y, radius).fill({ color: 0xf2b233, alpha: 0.1 });
-      g.circle(node.x, node.y, radius).stroke({ width: 2, color: 0xf2b233, alpha: 0.3 });
-      // A scatter of nodules, deterministic per node so the map is stable.
+      g.circle(node.x, node.y, radius).fill({ color, alpha: 0.1 });
+      g.circle(node.x, node.y, radius).stroke({ width: 2, color, alpha: 0.3 });
+      // A scatter of ore, deterministic per node so the map is stable.
       for (let i = 0; i < 7; i++) {
         const angle = (i / 7) * Math.PI * 2 + node.id;
         const r = radius * 0.55 * (0.4 + ((i * 37 + node.id * 13) % 10) / 16);
         g.circle(node.x + Math.cos(angle) * r, node.y + Math.sin(angle) * r, 6).fill({
-          color: 0xf2b233,
+          color,
           alpha: 0.45,
         });
+      }
+      // A field you cannot reach without diving reads as a depth, not just a
+      // colour: the dashed ring says "this is somewhere else vertically".
+      if (crystal) {
+        const dashes = 24;
+        for (let i = 0; i < dashes; i += 2) {
+          const a0 = (i / dashes) * Math.PI * 2;
+          const a1 = ((i + 1) / dashes) * Math.PI * 2;
+          g.moveTo(node.x + Math.cos(a0) * (radius + 14), node.y + Math.sin(a0) * (radius + 14))
+            .arc(node.x, node.y, radius + 14, a0, a1)
+            .stroke({ width: 2, color, alpha: 0.55 });
+        }
       }
     }
   }
@@ -1697,9 +1726,21 @@ export class EchoRenderer {
     g.rect(0, TOP_BAR_HEIGHT - 1, screenWidth, 1).fill({ color: UI.glassStroke });
 
     this.resourceLabel.text = `NODULES ${this.nodules.toFixed(0)}`;
-    this.resourceLabel.style.fill = 0xf2b233;
+    this.resourceLabel.style.fill = RESOURCE_COLOR[ResourceKind.Nodule];
 
-    const meterX = this.resourceLabel.x + this.resourceLabel.width + 18;
+    // Crystal appears only once a player has some or has seen a field: an
+    // always-on zero would be chrome, and this HUD spends space on decisions.
+    const showCrystal =
+      this.crystal > 0 || this.nodes.some((n) => n.kind === ResourceKind.ResonanceCrystal);
+    this.crystalLabel.visible = showCrystal;
+    this.crystalLabel.text = `CRYSTAL ${this.crystal.toFixed(0)}`;
+    this.crystalLabel.style.fill = RESOURCE_COLOR[ResourceKind.ResonanceCrystal];
+    this.crystalLabel.position.set(this.resourceLabel.x + this.resourceLabel.width + 16, 8);
+
+    const meterX =
+      (showCrystal
+        ? this.crystalLabel.x + this.crystalLabel.width
+        : this.resourceLabel.x + this.resourceLabel.width) + 18;
     const meterWidth = Math.min(120, screenWidth - meterX - 150);
     const meterY = 9;
     const meterHeight = 12;
@@ -1923,7 +1964,10 @@ export class EchoRenderer {
         }
       }
       for (const node of this.nodes) {
-        tg.circle(node.x * k, node.y * k, 2.5).fill({ color: 0xf2b233, alpha: 0.8 });
+        tg.circle(node.x * k, node.y * k, 2.5).fill({
+          color: RESOURCE_COLOR[node.kind],
+          alpha: 0.8,
+        });
       }
       tg.rect(0, 0, size, size).stroke({ width: 1, color: UI.glassStroke });
     }
@@ -2076,7 +2120,9 @@ export class EchoRenderer {
     } else if (unit !== undefined && this.isCrushing(unit)) {
       this.infoLine2.text = `CRUSHING at ${unit.depth.toFixed(0)}m · rise or lose the hull`;
     } else if (unit !== undefined && unit.throttle !== undefined) {
-      this.infoLine2.text = `throttle ${THROTTLE_LABEL[unit.throttle]} · cargo ${unit.cargo?.toFixed(0) ?? 0}`;
+      const held =
+        unit.cargoKind === ResourceKind.ResonanceCrystal && (unit.cargo ?? 0) > 0 ? ' crystal' : '';
+      this.infoLine2.text = `throttle ${THROTTLE_LABEL[unit.throttle]} · cargo ${unit.cargo?.toFixed(0) ?? 0}${held}`;
     } else if (unit !== undefined) {
       this.infoLine2.text = unit.silentRunning
         ? `SILENT RUNNING · ${unit.depth.toFixed(0)}m`

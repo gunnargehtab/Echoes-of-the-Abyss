@@ -30,6 +30,12 @@ export interface UnitStats {
   /** Metres per second. */
   speed: number;
   cost: number;
+  /**
+   * Resonance Crystal cost, when the hull is crystal-locked. The Abyssal
+   * Submersible is: it is the hull built to live where the crystal is, so it
+   * is the one the crystal pays for (docs/economy.md §2, §7).
+   */
+  crystalCost?: number;
   buildTimeS: number;
   /**
    * Weapon stats. TUNABLE — docs/units.md authors each unit's firing-burst SIG
@@ -103,6 +109,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     maxHp: 520,
     speed: 60,
     cost: 260,
+    crystalCost: 80,
     buildTimeS: 45,
     attackDamage: 35,
     attackRangeM: 650,

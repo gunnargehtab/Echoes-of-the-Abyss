@@ -23,6 +23,14 @@ export interface StructureStats {
   hyd: number;
   maxHp: number;
   cost: number;
+  /**
+   * Resonance Crystal cost, when the thing is crystal-locked.
+   *
+   * The four faction signature structures are exactly the "upper tech tier"
+   * docs/economy.md §2 says every faction gates behind crystal — one per navy,
+   * and each is the structure that expresses that navy's doctrine.
+   */
+  crystalCost?: number;
   buildTimeS: number;
   /** Footprint radius in metres, for placement checks and rendering. */
   radiusM: number;
@@ -119,6 +127,7 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
     hyd: 40,
     maxHp: 1400,
     cost: 600,
+    crystalCost: 120,
     buildTimeS: 120,
     radiusM: 90,
     acceptsDeposits: false,
@@ -136,6 +145,7 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
     hyd: 80,
     maxHp: 1200,
     cost: 300,
+    crystalCost: 120,
     buildTimeS: 80,
     radiusM: 80,
     acceptsDeposits: false,
@@ -154,6 +164,7 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
     hyd: 45,
     maxHp: 1800,
     cost: 750,
+    crystalCost: 120,
     buildTimeS: 150,
     radiusM: 70,
     acceptsDeposits: false,
@@ -171,6 +182,7 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
     hyd: 30,
     maxHp: 900,
     cost: 450,
+    crystalCost: 120,
     buildTimeS: 90,
     radiusM: 85,
     acceptsDeposits: false,

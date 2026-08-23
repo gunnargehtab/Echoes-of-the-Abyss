@@ -10,11 +10,14 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  CRYSTAL,
   DEPTH,
   ECONOMY,
   Faction,
+  HARVEST_THROTTLE,
   HarvestThrottle,
   ResolutionTier,
+  ResourceKind,
   SIM,
   SILENT_RUNNING,
   STRUCTURE_AURAS,
@@ -32,6 +35,7 @@ import {
   Harvester,
   HarvestMode,
   Health,
+  Pressure,
   SilentRunning,
 } from '../src/sim/components.ts';
 import type { EchoSnapshot } from '@echoes/shared';
@@ -264,6 +268,186 @@ describe('economy', () => {
     advance(match, 0.2);
     const quiet = Acoustic.sig[harvester.id]!;
     assert.ok(loud > quiet, `Overburden (${loud}) must be louder than Trickle (${quiet})`);
+  });
+});
+
+describe('Resonance Crystal', () => {
+  /** The crystal field this map seeds, dead centre and Abyssal. */
+  function crystalField(match: Match) {
+    return match.resourceNodes.find((n) => n.kind === ResourceKind.ResonanceCrystal)!;
+  }
+
+  it('places crystal in the Abyssal band, where it cannot be worked casually', () => {
+    const match = new Match();
+    match.addPlayer(0, Faction.Directorate);
+    const field = crystalField(match);
+    assert.ok(field !== undefined, 'the map seeds a crystal field');
+    assert.ok(field.depth >= 1800, 'and puts it in the Abyssal band');
+    assert.ok(
+      match.resourceNodes.some((n) => n.kind === ResourceKind.Nodule && n.depth < 1800),
+      'while nodule fields stay in the working middle'
+    );
+  });
+
+  it('runs a full crystal cycle: descend, cut, climb, bank', () => {
+    const match = new Match();
+    match.addPlayer(0, Faction.Directorate);
+    advance(match, 0.5);
+    const field = crystalField(match);
+
+    // A forward refinery over the field — docs/economy.md §4's "refine forward
+    // and accept a loud installation on contested ground". It makes the haul
+    // purely vertical, which is the leg this test is about.
+    spawnStructure(match.world, {
+      kind: StructureKind.Refinery,
+      slot: 0,
+      faction: Faction.Directorate,
+      x: field.x,
+      y: field.y,
+      prebuilt: true,
+    });
+
+    // A PR-3 hull survives the field, so the cycle is not confounded by crush.
+    const hauler = spawnUnit(match.world, {
+      kind: UnitKind.Harvester,
+      slot: 0,
+      faction: Faction.Directorate,
+      x: field.x,
+      y: field.y,
+      depth: 600,
+    });
+    Pressure.rating[hauler] = 3;
+    match.orderHarvest(0, hauler, field.id);
+
+    // Watch the whole trip rather than sampling it at guessed instants: the
+    // hold fills in seconds, so "on station" is a moment, not a phase.
+    let sawDescentNoise = false;
+    let sawOnStationCutting = false;
+    let loudestWhileCutting = 0;
+    let deepest = 0;
+    let banked = 0;
+    for (let i = 0; i < 400; i++) {
+      const snapshot = advance(match, 1);
+      const depth = Position.depth[hauler]!;
+      deepest = Math.max(deepest, depth);
+      if (DepthOrder.descending[hauler] === 1 && Acoustic.sig[hauler]! >= DEPTH.DESCENT_SIG) {
+        sawDescentNoise = true;
+      }
+      if (Harvester.mode[hauler] === HarvestMode.Mining) {
+        loudestWhileCutting = Math.max(loudestWhileCutting, Acoustic.sig[hauler]!);
+        if (Math.abs(depth - field.depth) <= 100) sawOnStationCutting = true;
+      }
+      banked = Math.max(banked, snapshot?.get(0)?.crystal ?? banked);
+      if (banked > 0) break;
+    }
+
+    assert.ok(sawDescentNoise, 'the descent to the field announces itself');
+    assert.ok(deepest >= field.depth - 100, 'the hauler actually reached the Abyssal field');
+    assert.ok(sawOnStationCutting, 'and only cut once it was down there');
+    assert.ok(
+      loudestWhileCutting > HARVEST_THROTTLE[HarvestThrottle.Standard].sig,
+      'crystal costs more noise to cut than nodules do at the same throttle'
+    );
+    assert.ok(banked > 0, 'the hold made it home and became stockpile');
+  });
+
+  it('makes the climb home the slow half of the round trip', () => {
+    const match = new Match();
+    match.addPlayer(0, Faction.Directorate);
+    advance(match, 0.5);
+    const field = crystalField(match);
+    spawnStructure(match.world, {
+      kind: StructureKind.Refinery,
+      slot: 0,
+      faction: Faction.Directorate,
+      x: field.x,
+      y: field.y,
+      prebuilt: true,
+    });
+    const hauler = spawnUnit(match.world, {
+      kind: UnitKind.Harvester,
+      slot: 0,
+      faction: Faction.Directorate,
+      x: field.x,
+      y: field.y,
+      depth: 600,
+    });
+    Pressure.rating[hauler] = 3;
+    match.orderHarvest(0, hauler, field.id);
+
+    let downSeconds = 0;
+    let upSeconds = 0;
+    let reachedField = false;
+    for (let i = 0; i < 400; i++) {
+      advance(match, 1);
+      if (DepthOrder.active[hauler] === 1) {
+        if (DepthOrder.descending[hauler] === 1) downSeconds++;
+        else upSeconds++;
+      }
+      if (Position.depth[hauler]! >= field.depth - 100) reachedField = true;
+      // Home again — but only once it has actually been down there, or the
+      // loop would exit on the first tick, at the surface with an empty hold.
+      if (reachedField && Math.abs(Position.depth[hauler]! - 600) < 60) break;
+    }
+
+    assert.ok(downSeconds > 0 && upSeconds > 0, 'the trip had both legs');
+    assert.ok(
+      upSeconds > downSeconds * 2,
+      `ascent must dominate the round trip (down ${downSeconds}s, up ${upSeconds}s)`
+    );
+  });
+
+  it('gates the upper tech tier behind crystal, server-side', () => {
+    const match = new Match();
+    match.addPlayer(0, Faction.Hadron);
+    match.addPlayer(1, Faction.Pelagia);
+    advance(match, 0.5);
+    const bastion = advance(match, 0.4)!
+      .get(0)!
+      .structures.find((s) => s.kind === StructureKind.Bastion)!;
+
+    // Plenty of nodules, no crystal: the signature structure is refused.
+    match.world.economies.get(0)!.nodules = 5000;
+    const x = bastion.x + 500;
+    const y = bastion.y + 500;
+    assert.equal(
+      match.build(0, StructureKind.SoundingSpire, x, y),
+      false,
+      'nodules alone do not buy the upper tech tier'
+    );
+
+    match.world.economies.get(0)!.crystal = 500;
+    assert.equal(match.build(0, StructureKind.SoundingSpire, x, y), true, 'crystal does');
+    assert.ok(match.world.economies.get(0)!.crystal < 500, 'and is spent on it');
+  });
+
+  it('refuses a crystal-locked hull until the crystal is in hand', () => {
+    const match = new Match();
+    match.addPlayer(0, Faction.Directorate);
+    advance(match, 0.5);
+    const foundry = advance(match, 0.4)!
+      .get(0)!
+      .structures.find((s) => s.kind === StructureKind.Foundry)!;
+
+    match.world.economies.get(0)!.nodules = 5000;
+    match.world.economies.get(0)!.crystal = 0;
+    assert.equal(
+      match.produce(0, foundry.id, UnitKind.AbyssalSubmersible),
+      false,
+      'the deep hull is crystal-locked'
+    );
+    assert.equal(
+      match.produce(0, foundry.id, UnitKind.Corvette),
+      true,
+      'the ordinary roster is not'
+    );
+
+    match.world.economies.get(0)!.crystal = 200;
+    assert.equal(
+      match.produce(0, foundry.id, UnitKind.AbyssalSubmersible),
+      true,
+      'with crystal aboard it builds'
+    );
   });
 });
 
@@ -832,6 +1016,9 @@ describe('faction structure auras', () => {
     const x = bastion.x + 500;
     const y = bastion.y + 500;
     assert.equal(match.build(0, StructureKind.Cantor, x, y), false, 'Cantor is Directorate-only');
+    // Signature structures are the crystal-locked tech tier, so fund it first;
+    // this test is about whose navy may build what, not about affordability.
+    match.world.economies.get(0)!.crystal = 500;
     assert.equal(
       match.build(0, StructureKind.BaffleBarge, x, y),
       true,

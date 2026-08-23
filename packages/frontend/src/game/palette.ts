@@ -5,7 +5,7 @@
  * direction is a design document, and the code should be diffable against it.
  */
 
-import { Biome, Faction, ResolutionTier } from '@echoes/shared';
+import { Biome, Faction, ResolutionTier, ResourceKind } from '@echoes/shared';
 
 /**
  * Faction palettes — docs/art-direction.md "Faction Art Styles".
@@ -56,6 +56,19 @@ export const TIER_STYLE: Record<
     label: 'classified',
   },
   [ResolutionTier.Track]: { color: 0xff6b5b, alpha: 0.9, radius: 16, label: 'track' },
+};
+
+/**
+ * Resource field colours.
+ *
+ * Nodules take the amber of ordinary industry; Resonance Crystal takes the
+ * Hadron violet the art direction reserves for resonance itself. They must be
+ * distinguishable at scope size, because "can I even reach that field" is a
+ * different question from "is that field worth the trip" (docs/economy.md §7).
+ */
+export const RESOURCE_COLOR: Record<ResourceKind, number> = {
+  [ResourceKind.Nodule]: 0xf2b233,
+  [ResourceKind.ResonanceCrystal]: 0xb98cff,
 };
 
 /**

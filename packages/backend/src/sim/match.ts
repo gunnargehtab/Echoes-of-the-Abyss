@@ -18,10 +18,12 @@ import { addComponent, hasComponent, removeEntity } from 'bitecs';
 import {
   ACTIVE_SONAR,
   CONSTRUCTION,
+  CRYSTAL,
   DEPTH,
   Faction,
   HarvestThrottle,
   PRODUCIBLE,
+  ResourceKind,
   SIM,
   StructureKind,
   UnitKind,
@@ -144,11 +146,28 @@ export class Match {
     }
     this.addNode(widthM * 0.5, heightM * 0.32, 6000);
     this.addNode(widthM * 0.5, heightM * 0.68, 6000);
+
+    // Crystal sits dead centre and Abyssal — the one field nobody can work
+    // without committing to the descent, and the one both sides must contest
+    // to reach their upper tech tier (docs/economy.md §2, §7).
+    this.addNode(
+      widthM * 0.5,
+      heightM * 0.5,
+      CRYSTAL.FIELD_STARTING_AMOUNT,
+      ResourceKind.ResonanceCrystal
+    );
   }
 
-  private addNode(x: number, y: number, amount?: number): void {
-    const eid = spawnResourceNode(this.world, x, y, amount);
-    this.nodes.push({ id: eid, x, y, initialAmount: ResourceNode.remaining[eid]! });
+  private addNode(x: number, y: number, amount?: number, kind = ResourceKind.Nodule): void {
+    const eid = spawnResourceNode(this.world, x, y, amount, kind);
+    this.nodes.push({
+      id: eid,
+      x,
+      y,
+      kind,
+      depth: Position.depth[eid]!,
+      initialAmount: ResourceNode.remaining[eid]!,
+    });
   }
 
   addPlayer(slot: number, faction: Faction): void {
@@ -319,6 +338,9 @@ export class Match {
 
     const economy = economyFor(this.world, slot);
     if (economy.nodules < stats.cost) return false;
+    // Crystal-locked structures are the faction signatures: the upper tech
+    // tier the deep pays for (docs/economy.md §2).
+    if (economy.crystal < (stats.crystalCost ?? 0)) return false;
 
     let anchored = false;
     for (let eid = 0; eid < Structure.kind.length; eid++) {
@@ -336,6 +358,7 @@ export class Match {
     }
 
     economy.nodules -= stats.cost;
+    economy.crystal -= stats.crystalCost ?? 0;
     spawnStructure(this.world, {
       kind,
       slot,
@@ -363,8 +386,10 @@ export class Match {
     }
     if (line.queue.length >= MAX_QUEUE_LENGTH) return false;
     if (economy.nodules < stats.cost) return false;
+    if (economy.crystal < (stats.crystalCost ?? 0)) return false;
 
     economy.nodules -= stats.cost;
+    economy.crystal -= stats.crystalCost ?? 0;
     line.queue.push(kind);
     if (line.queue.length === 1) line.remainingS = stats.buildTimeS;
     return true;
@@ -485,6 +510,7 @@ export class Match {
         contacts: result.contactsBySlot.get(slot) ?? [],
         peakSig,
         nodules: economyFor(this.world, slot).nodules,
+        crystal: economyFor(this.world, slot).crystal,
       });
     }
     return snapshots;
@@ -519,6 +545,7 @@ export class Match {
       }
       if (hasComponent(this.world, Harvester, eid)) {
         unit.cargo = Harvester.cargo[eid]!;
+        unit.cargoKind = Harvester.cargoKind[eid] as ResourceKind;
         unit.throttle = Harvester.throttle[eid] as HarvestThrottle;
       }
       out.push(unit);
