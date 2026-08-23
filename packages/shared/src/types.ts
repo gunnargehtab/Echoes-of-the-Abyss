@@ -166,10 +166,26 @@ export interface OwnUnit {
    * health bar has to draw it differently.
    */
   crushDamage: number;
+  /**
+   * Orders waiting behind the current one, oldest first.
+   *
+   * Each carries the position it was issued at rather than a live one. For a
+   * queued attack that matters: the player is entitled to where they saw the
+   * contact when they gave the order, not to where it is now.
+   */
+  queuedOrders?: QueuedOrderView[];
   /** Harvesters only: cargo aboard, what it is, and the throttle setting. */
   cargo?: number;
   cargoKind?: ResourceKind;
   throttle?: HarvestThrottle;
+}
+
+/** One pending order, as much of it as the client needs to draw the plan. */
+export interface QueuedOrderView {
+  kind: 'move' | 'attack' | 'harvest';
+  /** Where the order pointed when it was given. */
+  x: number;
+  y: number;
 }
 
 /** A structure the player owns. Always full detail — it is theirs. */

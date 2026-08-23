@@ -39,10 +39,18 @@ export const REPLAY_FORMAT_VERSION = 1;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =
-  | { tick: number; type: 'move'; slot: number; unit: number; x: number; y: number }
+  | {
+      tick: number;
+      type: 'move';
+      slot: number;
+      unit: number;
+      x: number;
+      y: number;
+      queued: boolean;
+    }
   | { tick: number; type: 'depth'; slot: number; unit: number; depth: number }
-  | { tick: number; type: 'attack'; slot: number; unit: number; contact: number }
-  | { tick: number; type: 'harvest'; slot: number; unit: number; node: number }
+  | { tick: number; type: 'attack'; slot: number; unit: number; contact: number; queued: boolean }
+  | { tick: number; type: 'harvest'; slot: number; unit: number; node: number; queued: boolean }
   | { tick: number; type: 'throttle'; slot: number; unit: number; throttle: HarvestThrottle }
   | { tick: number; type: 'silent'; slot: number; unit: number; active: boolean }
   | { tick: number; type: 'ping'; slot: number; unit: number }
@@ -184,16 +192,16 @@ function applyCommand(match: Match, command: ReplayCommand): void {
 
   switch (command.type) {
     case 'move':
-      match.orderMove(command.slot, eid(command.unit), command.x, command.y);
+      match.orderMove(command.slot, eid(command.unit), command.x, command.y, command.queued);
       break;
     case 'depth':
       match.orderDepth(command.slot, eid(command.unit), command.depth);
       break;
     case 'attack':
-      match.orderAttackContact(command.slot, eid(command.unit), command.contact);
+      match.orderAttackContact(command.slot, eid(command.unit), command.contact, command.queued);
       break;
     case 'harvest':
-      match.orderHarvest(command.slot, eid(command.unit), eid(command.node));
+      match.orderHarvest(command.slot, eid(command.unit), eid(command.node), command.queued);
       break;
     case 'throttle':
       match.setThrottle(command.slot, eid(command.unit), command.throttle);

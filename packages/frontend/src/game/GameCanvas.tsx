@@ -32,11 +32,12 @@ export function GameCanvas() {
 
     const start = async () => {
       const activeRenderer = new EchoRenderer({
-        onMoveOrder: (unitIds, x, y) => client?.moveTo(unitIds, x, y),
+        onMoveOrder: (unitIds, x, y, queued) => client?.moveTo(unitIds, x, y, queued),
         onToggleSilent: (unitIds, active) => client?.setSilentRunning(unitIds, active),
         onPing: (unitId) => client?.activeSonar(unitId),
-        onAttackOrder: (unitIds, contactId) => client?.attackContact(unitIds, contactId),
-        onHarvestOrder: (unitIds, nodeId) => client?.harvest(unitIds, nodeId),
+        onAttackOrder: (unitIds, contactId, queued) =>
+          client?.attackContact(unitIds, contactId, queued),
+        onHarvestOrder: (unitIds, nodeId, queued) => client?.harvest(unitIds, nodeId, queued),
         onThrottle: (unitIds, throttle) => client?.setThrottle(unitIds, throttle),
         onBuild: (kind, x, y) => client?.build(kind, x, y),
         onProduce: (structureId, kind) => client?.produce(structureId, kind),

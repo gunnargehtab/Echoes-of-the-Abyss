@@ -74,9 +74,9 @@ export class GameClient {
 
   // --- Intents -------------------------------------------------------------
 
-  moveTo(unitIds: number[], x: number, y: number): void {
+  moveTo(unitIds: number[], x: number, y: number, queued = false): void {
     if (unitIds.length === 0) return;
-    this.room?.send('move', { unitIds, x, y });
+    this.room?.send('move', { unitIds, x, y, queued });
   }
 
   setSilentRunning(unitIds: number[], active: boolean): void {
@@ -99,14 +99,14 @@ export class GameClient {
   }
 
   /** Attack a heard contact, by its opaque per-observer handle. */
-  attackContact(unitIds: number[], contactId: number): void {
+  attackContact(unitIds: number[], contactId: number, queued = false): void {
     if (unitIds.length === 0) return;
-    this.room?.send('attack', { unitIds, contactId });
+    this.room?.send('attack', { unitIds, contactId, queued });
   }
 
-  harvest(unitIds: number[], nodeId: number): void {
+  harvest(unitIds: number[], nodeId: number, queued = false): void {
     if (unitIds.length === 0) return;
-    this.room?.send('harvest', { unitIds, nodeId });
+    this.room?.send('harvest', { unitIds, nodeId, queued });
   }
 
   setThrottle(unitIds: number[], throttle: HarvestThrottle): void {
