@@ -255,6 +255,8 @@ The parity table. Every row is a claim that the mix tells the player nothing the
 | Being tracked, continuously | `TRACKED ×n` in the top bar — how well you are seen, never by whom |
 | Breaking silence to fire | An expanding ring on the hull that broke it, so the player knows *which* one gave the ambush away |
 | Active sonar transmit and its returns | The ping wavefront already drawn, expanding on the same clock |
+| Echo Mark beds — the sound of the past | Residue stains on the seabed, sized and faded by intensity |
+| Industrial hum in the mix | The same stain in a cooler colour and a wider radius, so an economy reads differently from a fight at a glance |
 
 Two rows are genuinely *new* information in the mix — the Tier-4 lock tone and the exposure strike — and both ship with the visual half in the same change. Everything else restates something the renderer already draws. That is the intended ratio.
 
@@ -293,6 +295,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | Active sonar transmit, returns ordered by range | Implemented |
 | Break-silence transient and its per-hull ring | Implemented |
 | Precedence Law — mark fade-in, ducking chain | Implemented; the visual-first preset exists in code but has no toggle yet |
+| Echo Mark residue, drawn and voiced | Implemented — server-resolved against HYD, so a client only holds what it could hear |
 | Tier-4 acquisition brackets | Implemented — the visual half of the lock tone |
 | Accessibility presets and palettes | Not started — mono spatialisation exists in the mix but has no toggle yet |
 | Box select, control groups, order queue | Implemented |

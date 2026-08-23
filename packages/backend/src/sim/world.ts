@@ -36,6 +36,7 @@ import {
   Velocity,
   Weapon,
 } from './components.ts';
+import { EchoMarkLayer } from './echoMarks.ts';
 import { Rng } from './rng.ts';
 import { SpatialHash } from './spatialHash.ts';
 import type { QueuedOrder } from './systems/orderQueue.ts';
@@ -115,6 +116,12 @@ export interface SimWorld extends IWorld {
    * one of those would be a worse cost than a list the drain empties.
    */
   selfEvents: PendingSelfEvent[];
+  /**
+   * Acoustic residue. Lives on the world rather than on the terrain because
+   * terrain is static map data shipped to clients wholesale, and residue is
+   * neither — it is match state, resolved per listener.
+   */
+  marks: EchoMarkLayer;
 }
 
 /** A self-event before it is bucketed by slot. `eid`, not a match-local id. */
@@ -166,6 +173,7 @@ export function createSimWorld(terrain: Terrain, dt: number, seed: number): SimW
   world.separationBuffer = [];
   world.orderQueues = new Map();
   world.selfEvents = [];
+  world.marks = new EchoMarkLayer();
   // Burn entity id 0 so components can use eid 0 as a "none" sentinel
   // (Weapon.orderedTargetEid, Harvester.nodeEid). bitecs hands out dense ids
   // from 0, so without this the first spawned entity would be untargetable.

@@ -109,6 +109,64 @@ export const SILENT_RUNNING = {
   BREAK_SILENCE_DURATION_S: 2,
 } as const;
 
+/**
+ * TUNABLE — how loud a piece of acoustic residue is, and how it merges.
+ *
+ * Echo Marks are priced through the same propagation model as everything else
+ * (docs/systems-echo.md §7): a mark is an emitter whose SIG is its intensity
+ * times the figure below, so a mark in a Thermal Vein is as hard to find as a
+ * unit in one. Anything else would make residue a second, parallel detection
+ * system that biomes did not apply to.
+ *
+ * The SIG figures are low on purpose, and the rule behind them is that
+ * **residue is always quieter than the thing that made it**. An idle Corvette
+ * is audible to a Light Scout at roughly 3.3 km; the echo of a destroyed
+ * building reaches about 2.5 km, and a battle site under 2 km. A mark must be
+ * findable by a scout that *goes there* and invisible to one that does not —
+ * the doc calls this "the scouting economy", and it stops being one if the map
+ * announces every fight to every base.
+ *
+ * The first draft had these at 32/46, which made the echo of a fight carry
+ * further than the ships that fought it. That is not faint residue; that is a
+ * second, louder detection system.
+ */
+export const ECHO_MARKS = {
+  /** SIG a fresh battle site radiates at full intensity. ~1.9 km to HYD 70. */
+  BATTLE_SIG: 12,
+  /** A destroyed structure: bigger event, longer memory, ~2.5 km. */
+  DESTROYED_STRUCTURE_SIG: 18,
+  /**
+   * Ceiling for the industrial hum.
+   *
+   * docs/economy.md §5 wants a listener to "estimate income within roughly
+   * ±20% without ever seeing a structure", so the hum has to be loud enough to
+   * find and its intensity has to mean something. It is capped below a
+   * destroyed structure because an economy is a state, not an event.
+   */
+  HUM_SIG: 14,
+  /**
+   * Intensity one delivered cargo adds to the hum, as a fraction of full.
+   *
+   * Throughput, not existence: a refinery nobody hauls to is quiet, and
+   * throttling to Trickle collapses the hum within seconds because the
+   * deposits stop arriving. That is the counter-play docs/economy.md §5
+   * promises, and it falls out of hooking this to the deposit rather than to
+   * the building.
+   */
+  HUM_PER_DELIVERY: 0.12,
+  /** Seconds for an unreinforced hum to fade from full to nothing. */
+  HUM_DECAY_S: 45,
+  /**
+   * Marks of one kind within this radius reinforce rather than accumulate.
+   *
+   * Without it a long fight leaves hundreds of overlapping marks and the
+   * residue layer becomes both a performance problem and an unreadable smear.
+   */
+  MERGE_RADIUS_M: 320,
+  /** Hard cap on live marks, so a pathological match cannot unbound the pass. */
+  MAX_MARKS: 256,
+} as const;
+
 /** SPEC — docs/systems-echo.md §4 and §7. Seconds. */
 export const PERSISTENCE = {
   /** Tier 1-2 contacts linger as ghost markers, then fade. */

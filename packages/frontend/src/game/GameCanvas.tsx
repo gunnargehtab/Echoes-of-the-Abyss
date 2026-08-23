@@ -100,6 +100,15 @@ export function GameCanvas() {
         onContactAudio: (frame) => audio.applyContacts(frame),
         // The other half of the mix: what is true of the player's own force.
         onSelfAudio: (frame) => audio.applySelf(frame),
+        onMarkAudio: (totals) => {
+          audio.applyMarks(totals);
+          // Read-only, for the headless harness. Reports counts only, and
+          // only what the server already resolved for this player.
+          (window as unknown as { __markProbe?: () => unknown }).__markProbe = () => ({
+            byKind: Object.fromEntries(totals),
+            total: [...totals.values()].reduce((a, b) => a + b, 0),
+          });
+        },
         onContactEvent: (entry) =>
           // Capped: a long match would otherwise grow an unbounded list, and
           // nobody scrolls back past a few hundred detections.

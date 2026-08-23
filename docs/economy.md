@@ -129,7 +129,7 @@ drive to a field, mine, haul home, deposit at a Bastion or Refinery. Constants l
 | Biomass | Not modelled | Requires the Drift simulation first |
 | Resonance Crystal | **Implemented** — Abyssal field, second stockpile, tech gate | See below |
 | Depth economics (§7) | **Implemented** — the round trip has a clock on it | Harvesters issue their own depth orders: loud descent to the field, slow climb home |
-| Industrial hum (§5) | Not modelled | Requires the Echo Mark terrain layer first |
+| Industrial hum (§5) | **Implemented** — a decaying Echo Mark at the depot, intensity per delivered cargo | Keyed to throughput, not to the building: a refinery nobody hauls to is silent, and throttling collapses the hum as the deliveries stop |
 
 ### Resonance Crystal in the scaffold
 

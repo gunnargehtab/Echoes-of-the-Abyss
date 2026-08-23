@@ -34,6 +34,7 @@ import {
   PROPAGATION_MODEL,
   ResolutionTier,
   ResourceKind,
+  EchoMarkKind,
   SelfEventKind,
   StructureKind,
   UnitKind,
@@ -44,6 +45,7 @@ import {
   structureStatsFor,
   FACTION_STRUCTURE,
   type Contact,
+  type EchoMarkInfo,
   type EchoSnapshot,
   type ExposureReport,
   type GameOverPayload,
@@ -111,6 +113,8 @@ export interface RendererCallbacks {
   onContactAudio(frame: ContactAudioFrame): void;
   /** What is true of the player's own force, once per Echo tick. */
   onSelfAudio(frame: SelfAudioFrame): void;
+  /** How much residue of each kind the player can hear (§6). */
+  onMarkAudio(intensityByKind: Map<EchoMarkKind, number>): void;
 }
 
 /**
@@ -144,6 +148,23 @@ export interface ContactLogEntry {
  * fires once per acquisition and never sustains.
  */
 const LOCK_FLASH_MS = 700;
+
+/**
+ * How each kind of residue is drawn.
+ *
+ * Deliberately dim and desaturated against the contact palette: a mark must
+ * never be mistaken for a contact (docs/audio-direction.md §6 states the rule
+ * for the mix; it holds for the screen too), and it must never be mistaken for
+ * nothing either, "or the scouting economy dies".
+ */
+const MARK_STYLE: Record<EchoMarkKind, { color: number; alpha: number; radiusM: number }> = {
+  [EchoMarkKind.Battle]: { color: 0xb4553c, alpha: 0.3, radiusM: 320 },
+  [EchoMarkKind.DestroyedStructure]: { color: 0x8c6a44, alpha: 0.34, radiusM: 420 },
+  // The hum reads cooler and wider: it is a state, not an event, and a player
+  // should be able to tell at a glance that they have found an economy rather
+  // than a fight.
+  [EchoMarkKind.IndustrialHum]: { color: 0x3f7f86, alpha: 0.28, radiusM: 520 },
+};
 
 /**
  * How long the screen-edge exposure flash lasts, milliseconds.
@@ -394,6 +415,13 @@ export class EchoRenderer {
   private fleetSilent = false;
   /** What the rest of the map currently holds on the player, server-sent. */
   private exposure: ExposureReport = { tier: ResolutionTier.Silent, trackedCount: 0 };
+  /**
+   * Acoustic residue this player can read (docs/systems-echo.md §7).
+   *
+   * Server-resolved: a client only ever holds marks its own units could
+   * actually hear, so drawing all of them is correct by construction.
+   */
+  private marks: EchoMarkInfo[] = [];
   private nodules = 0;
   private crystal = 0;
   private status = 'connecting';
@@ -1563,6 +1591,7 @@ export class EchoRenderer {
     this.structures = snapshot.structures;
     this.peakSig = snapshot.peakSig;
     this.exposure = snapshot.exposure;
+    this.marks = snapshot.marks;
     this.nodules = snapshot.nodules;
     this.crystal = snapshot.crystal;
 
@@ -1636,6 +1665,7 @@ export class EchoRenderer {
 
     this.callbacks.onContactAudio(this.contactAudioFrame(snapshot.tick, now));
     this.callbacks.onSelfAudio(this.selfAudioFrame(snapshot, now));
+    this.callbacks.onMarkAudio(this.markIntensity());
 
     // Drop selections and motion history for entities that no longer exist.
     const alive = new Set<number>();
@@ -2127,6 +2157,69 @@ export class EchoRenderer {
   }
 
   /**
+   * Summed intensity per kind, for the residue beds.
+   *
+   * A sum and not a list: §6 makes marks reverb-only with no transients, so
+   * the mix asks "how much of the past is around me" rather than "where is
+   * each piece of it". Where they are is on screen, which is where the
+   * accessibility rule wants it.
+   */
+  private markIntensity(): Map<EchoMarkKind, number> {
+    const totals = new Map<EchoMarkKind, number>();
+    for (const mark of this.marks) {
+      totals.set(mark.kind, (totals.get(mark.kind) ?? 0) + mark.intensity);
+    }
+    return totals;
+  }
+
+  /**
+   * Acoustic residue — docs/systems-echo.md §7.
+   *
+   * Drawn as a stain rather than a marker, and drawn *before* live contacts so
+   * a contact always sits on top of the residue near it. The distinction the
+   * mix makes in docs/audio-direction.md §6 — "if a player can mistake a mark
+   * for a contact, the mark is mixed wrong" — has to hold visually too, so
+   * marks get no outline, no glyph and no crisp edge: nothing that reads as a
+   * *thing*, only as ground that remembers.
+   *
+   * The intensity is the information. For a battle site it is how much
+   * shooting happened; for the industrial hum it is throughput, which
+   * docs/economy.md §5 wants a player to read income off. So the drawing
+   * scales with it rather than merely fading.
+   */
+  private drawEchoMarks(g: Graphics, inverseScale: number): void {
+    for (const mark of this.marks) {
+      const style = MARK_STYLE[mark.kind];
+      if (style === undefined) continue;
+      const radius = style.radiusM * (0.55 + mark.intensity * 0.45);
+
+      // Three soft rings rather than a disc: residue has no edge, and a disc
+      // at any alpha reads as an object sitting on the seabed.
+      for (let ring = 0; ring < 3; ring++) {
+        const t = (ring + 1) / 3;
+        g.circle(mark.x, mark.y, radius * t).fill({
+          color: style.color,
+          alpha: mark.intensity * style.alpha * (1 - t * 0.6),
+        });
+      }
+      // A dashed arc, so a mark is still findable at low intensity without
+      // being drawn as something solid.
+      const dashes = 10;
+      for (let i = 0; i < dashes; i++) {
+        const a0 = (i / dashes) * Math.PI * 2;
+        const a1 = a0 + Math.PI / dashes;
+        g.moveTo(mark.x + Math.cos(a0) * radius, mark.y + Math.sin(a0) * radius)
+          .lineTo(mark.x + Math.cos(a1) * radius, mark.y + Math.sin(a1) * radius)
+          .stroke({
+            width: 1 * inverseScale,
+            color: style.color,
+            alpha: mark.intensity * 0.5,
+          });
+      }
+    }
+  }
+
+  /**
    * The exposure flash — docs/audio-direction.md §11.
    *
    * "The 'you have been pinged' cue also renders as a screen-edge flash on the
@@ -2265,6 +2358,7 @@ export class EchoRenderer {
     const now = performance.now();
     const decayMs = PERSISTENCE.GHOST_MARKER_DECAY_S * 1000;
     const inverseScale = 1 / this.world.scale.x;
+    this.drawEchoMarks(g, inverseScale);
     this.drawBreakSilence(g, inverseScale);
 
     for (const [id, entry] of this.tracked) {

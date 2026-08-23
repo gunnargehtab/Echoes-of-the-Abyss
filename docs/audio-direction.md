@@ -97,6 +97,10 @@ Echo Marks are residue, not presence ([systems-echo.md](systems-echo.md) §7), a
 
 If a player can mistake a mark for a contact, the mark is mixed wrong. If a player can mistake a mark for *nothing*, it is mixed wrong in the other direction, and the scouting economy dies.
 
+**Implemented as three continuous beds, one per mark kind, rather than a voice per mark.** A voice per mark would have onsets, and an onset is a transient: the moment a scout drifted into range of a ninety-second-old battle site, the mix would announce it like a detection. The past does not announce itself. Each bed's level follows the summed intensity of that kind of residue the player can currently read, saturating rather than adding linearly, on a ramp far too slow to be heard as an attack.
+
+The beds ride the **world** bus, not the contact bus. Residue is the environment remembering, not a detection — which also means §4's own-noise attenuation makes a loud player deaf to the past exactly as it does to the present. They carry no pan: a bed that panned would claim a bearing the mark layer never resolved. Where residue *is* lives on the screen, which is where [ui-ux.md](ui-ux.md) §11 wants it.
+
 ---
 
 ## 7. Fauna

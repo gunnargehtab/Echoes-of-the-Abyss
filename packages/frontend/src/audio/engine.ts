@@ -34,9 +34,10 @@
  *    applies to those banks and not to the prototype.
  */
 
-import { SIM } from '@echoes/shared';
+import { SIM, type EchoMarkKind } from '@echoes/shared';
 import { ContactMixer, type ContactAudioFrame, type Spatialisation } from './contactMixer.ts';
 import { ContactVoice, ensureNoiseBuffer } from './contactVoice.ts';
+import { MarkBed } from './markBed.ts';
 import { duckFor } from './precedence.ts';
 import { SelfMixer, type SelfAudioFrame } from './selfMixer.ts';
 import {
@@ -90,6 +91,8 @@ export class AudioEngine {
   private mixer: ContactMixer | null = null;
   private selfMixer: SelfMixer | null = null;
   private selfBed: SelfBed | null = null;
+  private markBed: MarkBed | null = null;
+  private pendingMarks: Map<EchoMarkKind, number> | null = null;
   private pendingSelf: SelfAudioFrame | null = null;
   /**
    * The most recent contact picture, held until the tick consumes it.
@@ -208,6 +211,11 @@ export class AudioEngine {
 
     // The self bus carries both the continuous bed and the one-shots, so the
     // Precedence Law can duck everything below it from a single place.
+    // Residue rides the world bus, not the contact bus: it is the environment
+    // remembering, not a detection, and §4's own-noise attenuation should make
+    // a loud player deaf to the past exactly as it does to the present.
+    this.markBed = new MarkBed(context, world);
+
     const bed = new SelfBed(context, self);
     this.selfBed = bed;
     this.selfMixer = new SelfMixer({
@@ -281,6 +289,13 @@ export class AudioEngine {
       mixer.update(frame, this.context.currentTime);
     }
 
+    const markBed = this.markBed;
+    const marks = this.pendingMarks;
+    this.pendingMarks = null;
+    if (markBed !== null && marks !== null && this.context !== null) {
+      markBed.update(marks, this.context.currentTime);
+    }
+
     const selfMixer = this.selfMixer;
     const selfFrame = this.pendingSelf;
     this.pendingSelf = null;
@@ -326,6 +341,11 @@ export class AudioEngine {
    */
   applyContacts(frame: ContactAudioFrame): void {
     this.pendingFrame = frame;
+  }
+
+  /** Hand the mix the residue the player can currently read (§6). */
+  applyMarks(intensityByKind: Map<EchoMarkKind, number>): void {
+    this.pendingMarks = intensityByKind;
   }
 
   /** Hand the mix what is true of the player's own force on this tick. */
@@ -382,6 +402,9 @@ export class AudioEngine {
     this.detachLifecycle = null;
     this.mixer?.clear(this.context?.currentTime ?? 0);
     this.mixer = null;
+    this.markBed?.stop(this.context?.currentTime ?? 0);
+    this.markBed = null;
+    this.pendingMarks = null;
     this.selfBed?.stop(this.context?.currentTime ?? 0);
     this.selfBed = null;
     this.selfMixer?.reset();

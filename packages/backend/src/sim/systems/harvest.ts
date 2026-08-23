@@ -12,7 +12,9 @@
 import { defineQuery, hasComponent, removeEntity } from 'bitecs';
 import {
   CRYSTAL,
+  ECHO_MARKS,
   ECONOMY,
+  EchoMarkKind,
   HARVEST_THROTTLE,
   RESOURCE,
   ResourceKind,
@@ -226,6 +228,21 @@ export function harvestSystem(world: SimWorld): void {
       } else {
         economy.nodules += Harvester.cargo[eid]!;
       }
+      // Industrial hum, at the depot and scaled by what actually arrived.
+      //
+      // Hooked to the *delivery* rather than to the building, which is what
+      // makes docs/economy.md §5's counter-play real: a refinery nobody hauls
+      // to is quiet, and throttling to Trickle collapses the hum within
+      // seconds because the deposits stop coming. A hum keyed to the structure
+      // would just be a second way of drawing the structure.
+      world.marks.add(
+        EchoMarkKind.IndustrialHum,
+        Position.x[depot]!,
+        Position.y[depot]!,
+        (Harvester.cargo[eid]! / capacityFor(Harvester.cargoKind[eid] as ResourceKind)) *
+          ECHO_MARKS.HUM_PER_DELIVERY
+      );
+
       Harvester.cargo[eid] = 0;
       MoveOrder.active[eid] = 0;
       Harvester.mode[eid] = nodeAlive(world, Harvester.nodeEid[eid]!)
