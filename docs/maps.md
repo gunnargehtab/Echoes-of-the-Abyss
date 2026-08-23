@@ -210,3 +210,39 @@ A macro-focused map with four distinct biome quadrants.
 ### Ideal Use
 
 1v1, 2v2, 4-player FFA; balanced competitive map.
+
+---
+
+## Scaffold Status
+
+Three archetypes are implemented, in `packages/backend/src/sim/maps/`. They were chosen to span the PropagationFactor range rather than for variety — PF is the game's main lever, and the point of having more than one map is having more than one PF landscape to test a faction on:
+
+| Archetype | Implemented | The argument it makes |
+| --- | --- | --- |
+| Map Type 1 — The Ventfront Divide | Yes (default) | A **masked middle** at PF 0.45 with loud flanks: the contested ground is the quiet ground, and the fast routes are the loud ones |
+| Map Type 2 — Kelp Labyrinth | Yes | **Broken sightlines** — kelp does not hide an army so much as destroy your sense of how far away one is |
+| Map Type 3 — Abyssal Rift Corridor | Yes | A PF 1.6 highway with **no secrets** down its length |
+| Map Type 4 — Crystal Convergence | Not yet | |
+| Map Type 5 — Sunken Metropolis | Not yet | |
+| Map Type 6 — The Fourfold Frontier | Not yet | |
+
+### How a map is written
+
+Authored data, never generated. `Terrain.demo()`'s own comment makes the case and it still holds: "an RTS simulation must be reproducible, and a seeded generator is one refactor away from not being." A map is a literal — regions, spawns, resource fields, hazard sites — with no procedural step anywhere in it.
+
+Regions are rectangles, painted in order so a later one overwrites an earlier one. Every layout above is corridors, plateaus, bands and quadrants, all of which are rectangles or unions of them; a richer shape vocabulary would be more expressive than anything this document asks for.
+
+A map's **spawn list is its player count**, which is why the Abyssal Rift Corridor has two and the others four. The old spawn logic computed corners from the map's width and height, which quietly assumed every map is a square — false the moment a corridor map exists.
+
+**Hazard sites are placed but not simulated.** The hazard framework is separate work. They are drawn into the terrain layer so the *telegraphing* promise in the core principles above is kept from the first frame, and they are drawn as hatched rings rather than filled zones, because a solid marker would imply an effect that does not exist yet.
+
+`Terrain.demo()` remains, explicitly as a **test fixture**: a hand-built grid with no spawns, resources or hazards, for tests that want ground whose PF landscape is not also under test.
+
+### Two authoring faults the tests caught
+
+Both were found by writing down an invariant rather than by looking at the map:
+
+- The Kelp Labyrinth's corner pressure pockets sat exactly on its corner spawns, which would have started two players in the deepest and loudest biome on the map.
+- The Abyssal Rift Corridor's trench ran the full width, putting both bases inside PF 1.6 and making the opening a permanent broadcast. The trench is now *central*, with coral base aprons at either end — committing to the rift is something a player does, not something they wake up in.
+
+Related: [environments.md](environments.md) · [hazards.md](hazards.md) · [systems-echo.md](systems-echo.md)

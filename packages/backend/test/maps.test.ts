@@ -1,0 +1,311 @@
+/**
+ * The authored maps, against the doc that specifies them (#107).
+ *
+ * PF is the game's main lever — `CLAUDE.md`: "changing a biome's PF changes
+ * which factions thrive there" — so a map *is* its PF landscape, and a map
+ * whose middle quietly stopped being a masked one would change the game
+ * without changing a single number in `constants.ts`.
+ *
+ * These tests are therefore written against the claims docs/maps.md makes
+ * about each archetype, not against the rectangles that happen to implement
+ * them. The three maps were chosen to span the PF range, so the sharpest test
+ * is the one that checks they actually differ.
+ */
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { Biome, Faction, PROPAGATION_FACTOR, ResourceKind, SIM, UnitKind } from '@echoes/shared';
+import {
+  ABYSSAL_RIFT_CORRIDOR,
+  DEFAULT_MAP_ID,
+  KELP_LABYRINTH,
+  MAPS,
+  VENTFRONT_DIVIDE,
+  mapById,
+  terrainFor,
+} from '../src/sim/maps/index.ts';
+import { Match } from '../src/sim/match.ts';
+import type { MapDefinition } from '../src/sim/maps/index.ts';
+
+/** Step a match until it produces an Echo snapshot. */
+function advanceToSnapshot(match: Match) {
+  for (let i = 0; i < SIM.TICK_HZ; i++) {
+    const snapshots = match.update(1000 / SIM.TICK_HZ);
+    if (snapshots !== null) return snapshots;
+  }
+  throw new Error('no snapshot within a second');
+}
+
+/** Mean PF over a rectangle, sampled on a grid. */
+function meanPf(map: MapDefinition, x: number, y: number, w: number, h: number): number {
+  const terrain = terrainFor(map);
+  let total = 0;
+  let n = 0;
+  for (let sy = y; sy < y + h; sy += map.cellM) {
+    for (let sx = x; sx < x + w; sx += map.cellM) {
+      total += terrain.propagationAt(sx, sy);
+      n++;
+    }
+  }
+  return total / n;
+}
+
+/** Share of the whole map painted with a given biome. */
+function share(map: MapDefinition, biome: Biome): number {
+  const terrain = terrainFor(map);
+  let hits = 0;
+  let n = 0;
+  for (let y = 0; y < map.heightM; y += map.cellM) {
+    for (let x = 0; x < map.widthM; x += map.cellM) {
+      if (terrain.biomeAt(x, y) === biome) hits++;
+      n++;
+    }
+  }
+  return hits / n;
+}
+
+describe('the map catalogue', () => {
+  it('has a default that resolves', () => {
+    assert.ok(mapById(DEFAULT_MAP_ID) !== undefined);
+    assert.equal(mapById('no-such-map'), undefined);
+  });
+
+  it('gives every map a unique id and at least two spawns', () => {
+    const ids = new Set(MAPS.map((m) => m.id));
+    assert.equal(ids.size, MAPS.length);
+    for (const map of MAPS) {
+      assert.ok(map.spawns.length >= 2, `${map.id} needs at least two spawns`);
+    }
+  });
+
+  it('keeps every authored point inside its own map', () => {
+    // A spawn or field off the edge would clamp silently into the border cell
+    // rather than fail, which is the kind of thing nobody notices until a
+    // harvester walks into a wall.
+    for (const map of MAPS) {
+      const inside = (x: number, y: number, what: string) => {
+        assert.ok(x >= 0 && x <= map.widthM, `${map.id}: ${what} x=${x} outside`);
+        assert.ok(y >= 0 && y <= map.heightM, `${map.id}: ${what} y=${y} outside`);
+      };
+      for (const spawn of map.spawns) inside(spawn.x, spawn.y, 'spawn');
+      for (const node of map.resources) inside(node.x, node.y, 'resource');
+      for (const site of map.hazards) inside(site.x, site.y, 'hazard');
+      for (const region of map.regions) {
+        assert.ok(region.widthM > 0 && region.heightM > 0, `${map.id}: empty region`);
+      }
+    }
+  });
+
+  it('never starts a player in an Abyssal Trench', () => {
+    // The Kelp Labyrinth's first draft put its corner pressure pockets exactly
+    // on its corner spawns, starting two players in the deepest and loudest
+    // biome on the map. Cheap to write down, and it stays true for every map
+    // added later.
+    for (const map of MAPS) {
+      const terrain = terrainFor(map);
+      for (const [slot, spawn] of map.spawns.entries()) {
+        assert.notEqual(
+          terrain.biomeAt(spawn.x, spawn.y),
+          Biome.AbyssalTrench,
+          `${map.id}: slot ${slot} starts in a trench`
+        );
+      }
+    }
+  });
+
+  it('keeps spawns far enough apart to start out of earshot', () => {
+    // Two bases within hearing of each other is not an opening, it is a fight
+    // — and the Echo Layer would resolve both sides at tick zero.
+    for (const map of MAPS) {
+      for (let a = 0; a < map.spawns.length; a++) {
+        for (let b = a + 1; b < map.spawns.length; b++) {
+          const first = map.spawns[a]!;
+          const second = map.spawns[b]!;
+          const d = Math.hypot(first.x - second.x, first.y - second.y);
+          assert.ok(d > 3000, `${map.id}: spawns ${a} and ${b} are only ${d.toFixed(0)} m apart`);
+        }
+      }
+    }
+  });
+
+  it('gives every map a crystal field, since the tech tier depends on one', () => {
+    for (const map of MAPS) {
+      const crystal = map.resources.filter((r) => r.kind === ResourceKind.ResonanceCrystal);
+      assert.equal(crystal.length, 1, `${map.id} should have exactly one crystal field`);
+    }
+  });
+
+  it('gives every map at least one field per spawn', () => {
+    for (const map of MAPS) {
+      const nodules = map.resources.filter((r) => r.kind === ResourceKind.Nodule);
+      assert.ok(
+        nodules.length >= map.spawns.length,
+        `${map.id}: ${nodules.length} fields for ${map.spawns.length} spawns`
+      );
+    }
+  });
+});
+
+describe('Ventfront Divide', () => {
+  it('masks its middle and carries sound on its flanks', () => {
+    // "Center: Thermal Veins" (PF 0.45) with "North/South: Abyssal Trenches"
+    // (PF 1.6). The map's whole proposition is that the contested ground is
+    // the quiet ground and the fast routes are the loud ones.
+    const middle = meanPf(VENTFRONT_DIVIDE, 3000, 3400, 2000, 1200);
+    const north = meanPf(VENTFRONT_DIVIDE, 3000, 0, 2000, 800);
+
+    assert.ok(middle < PROPAGATION_FACTOR[Biome.OpenWater], `middle PF ${middle} should mask`);
+    assert.ok(north > PROPAGATION_FACTOR[Biome.OpenWater], `flank PF ${north} should carry`);
+    assert.ok(north > middle * 2, 'the flanks must be dramatically louder than the middle');
+  });
+
+  it('puts its contested fields inside the masked band', () => {
+    const terrain = terrainFor(VENTFRONT_DIVIDE);
+    const contested = VENTFRONT_DIVIDE.resources.filter(
+      (r) => r.kind === ResourceKind.Nodule && (r.amount ?? 0) > 5000
+    );
+    assert.ok(contested.length >= 2);
+    for (const node of contested) {
+      assert.equal(
+        terrain.biomeAt(node.x, node.y),
+        Biome.ThermalVein,
+        'the expansion bait belongs in the vents'
+      );
+    }
+  });
+});
+
+describe('Abyssal Rift Corridor', () => {
+  it('is long and narrow rather than square', () => {
+    // "central trench corridor (long, narrow, deep)" — a square map cannot
+    // express that, which is why map dimensions are authored per map.
+    assert.ok(
+      ABYSSAL_RIFT_CORRIDOR.widthM > ABYSSAL_RIFT_CORRIDOR.heightM * 1.5,
+      'the corridor needs a long axis'
+    );
+  });
+
+  it('carries sound the entire length of the rift', () => {
+    const terrain = terrainFor(ABYSSAL_RIFT_CORRIDOR);
+    const y = ABYSSAL_RIFT_CORRIDOR.heightM / 2;
+    // Sampled end to end rather than at the middle: "no secrets" is a claim
+    // about the whole corridor, and a trench with a gap in it is a different
+    // map from the one the doc describes.
+    // Sampled across the rift itself rather than the base aprons at either
+    // end — "no secrets" is a claim about the corridor, and a trench with a
+    // gap in it is a different map from the one the doc describes.
+    const alongAxis = terrain.pathPropagation(2000, y, ABYSSAL_RIFT_CORRIDOR.widthM - 2000, y);
+    assert.ok(alongAxis > 1.2, `PF along the rift was ${alongAxis}, expected a highway`);
+  });
+
+  it('is louder down its axis than the Ventfront middle is', () => {
+    // The reason both maps exist: the same army is a different army on each.
+    const rift = meanPf(ABYSSAL_RIFT_CORRIDOR, 2000, 2400, 4000, 1200);
+    const vents = meanPf(VENTFRONT_DIVIDE, 3000, 3400, 2000, 1200);
+    assert.ok(rift > vents * 2.5, `rift ${rift} vs vents ${vents}`);
+  });
+
+  it('has only two spawns, and they face down the long axis', () => {
+    assert.equal(ABYSSAL_RIFT_CORRIDOR.spawns.length, 2);
+    const [west, east] = ABYSSAL_RIFT_CORRIDOR.spawns;
+    assert.ok(west!.x < east!.x);
+    assert.equal(west!.y, east!.y, 'a 1v1 corridor should be symmetric across its long axis');
+  });
+});
+
+describe('Kelp Labyrinth', () => {
+  it('is mostly kelp and coral rather than open water', () => {
+    // "A dense maze of kelp forests" with a coral outer ring. If open water
+    // dominates, the maze is not a maze.
+    const kelp = share(KELP_LABYRINTH, Biome.KelpForest);
+    const coral = share(KELP_LABYRINTH, Biome.CoralRuins);
+    assert.ok(kelp > 0.12, `kelp covers ${(kelp * 100).toFixed(0)}%, expected a dense maze`);
+    assert.ok(coral > 0.2, `coral ring covers ${(coral * 100).toFixed(0)}%`);
+  });
+
+  it('is quieter across its middle than the other two maps', () => {
+    const kelpMid = meanPf(KELP_LABYRINTH, 2000, 2000, 4000, 4000);
+    const ventMid = meanPf(VENTFRONT_DIVIDE, 2000, 2000, 4000, 4000);
+    const riftMid = meanPf(ABYSSAL_RIFT_CORRIDOR, 2000, 1500, 4000, 3000);
+    assert.ok(kelpMid < riftMid, 'the labyrinth must be quieter than the rift');
+    assert.ok(kelpMid < 1, `labyrinth mid PF ${kelpMid} should be below open water`);
+    assert.ok(ventMid < riftMid);
+  });
+
+  it('spans the PF range across the three maps', () => {
+    // The point of shipping three: one masked, one loud, one broken. If two
+    // of them land on the same PF landscape, the third is doing no work.
+    const values = [
+      meanPf(KELP_LABYRINTH, 2000, 2000, 4000, 4000),
+      meanPf(VENTFRONT_DIVIDE, 3000, 3400, 2000, 1200),
+      meanPf(ABYSSAL_RIFT_CORRIDOR, 2000, 2400, 4000, 1200),
+    ].sort((a, b) => a - b);
+    assert.ok(values[2]! / values[0]! > 2, `PF range ${values[0]}..${values[2]} is too narrow`);
+  });
+});
+
+describe('a match on an authored map', () => {
+  it('spawns each player at an authored spawn, not at a computed corner', () => {
+    for (const map of MAPS) {
+      const match = new Match(map, { seed: 3 });
+      const factions = [Faction.Bathyarch, Faction.Pelagia, Faction.Directorate, Faction.Hadron];
+      for (let slot = 0; slot < map.spawns.length; slot++) {
+        match.addPlayer(slot, factions[slot]!);
+      }
+
+      // Again from the snapshot, for the same process-global-id reason.
+      const snapshots = advanceToSnapshot(match);
+      for (let slot = 0; slot < map.spawns.length; slot++) {
+        const spawn = map.spawns[slot]!;
+        const found = snapshots
+          .get(slot)!
+          .structures.some((s) => Math.hypot(s.x - spawn.x, s.y - spawn.y) < 1);
+        assert.ok(found, `${map.id}: slot ${slot} has no structure on its spawn`);
+      }
+    }
+  });
+
+  it('runs without a unit leaving the map', () => {
+    // The corridor map is the one that would catch a leftover assumption
+    // about square maps: its height is 6 km against a width of 10 km.
+    //
+    // Read from the snapshots rather than by scanning the component arrays.
+    // bitecs entity ids are process-global, so a scan of `Position` sees every
+    // entity every *other* test in this process created, on their own maps —
+    // the same trap that broke the state hash and replays before it.
+    const match = new Match(ABYSSAL_RIFT_CORRIDOR, { seed: 9 });
+    match.addPlayer(0, Faction.Bathyarch);
+    match.addPlayer(1, Faction.Pelagia);
+
+    let checked = 0;
+    for (let i = 0; i < SIM.TICK_HZ * 10; i++) {
+      const snapshots = match.update(1000 / SIM.TICK_HZ);
+      if (snapshots === null) continue;
+      for (const snapshot of snapshots.values()) {
+        for (const thing of [...snapshot.units, ...snapshot.structures]) {
+          checked++;
+          assert.ok(
+            thing.x >= 0 && thing.x <= ABYSSAL_RIFT_CORRIDOR.widthM,
+            `${thing.id} at x=${thing.x} left the map`
+          );
+          assert.ok(
+            thing.y >= 0 && thing.y <= ABYSSAL_RIFT_CORRIDOR.heightM,
+            `${thing.id} at y=${thing.y} left the map`
+          );
+        }
+      }
+    }
+    assert.ok(checked > 0, 'nothing was actually checked');
+  });
+
+  it('gives a harvester a field to work on every map', () => {
+    for (const map of MAPS) {
+      const match = new Match(map, { seed: 4 });
+      match.addPlayer(0, Faction.Bathyarch);
+      for (let i = 0; i < SIM.TICK_HZ * 3; i++) match.update(1000 / SIM.TICK_HZ);
+      const snapshot = match.update(1000 / SIM.TICK_HZ);
+      if (snapshot === null) continue;
+      const harvester = snapshot.get(0)!.units.find((u) => u.kind === UnitKind.Harvester);
+      assert.ok(harvester !== undefined, `${map.id}: no harvester`);
+    }
+  });
+});

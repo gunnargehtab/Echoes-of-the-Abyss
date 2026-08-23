@@ -30,12 +30,23 @@
 
 import { Faction, HarvestThrottle, StructureKind, UnitKind } from '@echoes/shared';
 import { Match } from './match.ts';
+import { mapById } from './maps/index.ts';
 import { hashWorld } from './stateHash.ts';
 import { Terrain } from './terrain.ts';
 import { eidOfLocalId } from './world.ts';
 
 /** The current replay wire format. Bump when a change breaks old files. */
-export const REPLAY_FORMAT_VERSION = 1;
+/**
+ * 2: replays carry the map they were played on.
+ *
+ * Version 1 replays cannot be upgraded, because the information is simply not
+ * in them — a v1 replay was recorded on whatever `Terrain.demo()` was at the
+ * time, and reproducing it on any other ground diverges at the first
+ * checkpoint. Rejecting them is honest; silently replaying them on a default
+ * map would produce a divergence report about determinism when the real fault
+ * was the replay's own age.
+ */
+export const REPLAY_FORMAT_VERSION = 2;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =
@@ -70,6 +81,8 @@ export interface ReplayCheckpoint {
 export interface Replay {
   version: number;
   seed: number;
+  /** Id of the authored map, so playback starts from the same ground. */
+  mapId: string;
   players: ReplayPlayer[];
   commands: ReplayCommand[];
   /**
@@ -94,6 +107,7 @@ export class ReplayRecorder {
   private readonly checkpoints: ReplayCheckpoint[] = [];
   private readonly players: ReplayPlayer[] = [];
   private readonly seed: number;
+  private readonly mapId: string;
   private readonly checkpointInterval: number;
   /**
    * Negative infinity rather than -1 so the *first* call checkpoints tick 0.
@@ -103,8 +117,9 @@ export class ReplayRecorder {
    */
   private lastCheckpointTick = Number.NEGATIVE_INFINITY;
 
-  constructor(seed: number, checkpointIntervalTicks = 300) {
+  constructor(seed: number, mapId: string, checkpointIntervalTicks = 300) {
     this.seed = seed;
+    this.mapId = mapId;
     this.checkpointInterval = checkpointIntervalTicks;
   }
 
@@ -128,6 +143,7 @@ export class ReplayRecorder {
     return {
       version: REPLAY_FORMAT_VERSION,
       seed: this.seed,
+      mapId: this.mapId,
       // Sorted so a replay of the same match is byte-identical regardless of
       // the order players happened to connect in.
       players: [...this.players].sort((a, b) => a.slot - b.slot),
@@ -153,12 +169,20 @@ export interface ReplayResult {
  * `divergedAtTick` is the useful output: null means the replay reproduced,
  * and a tick number means determinism broke, there and not later.
  */
-export function playReplay(replay: Replay, terrain: Terrain = Terrain.demo()): ReplayResult {
+export function playReplay(replay: Replay, terrain?: Terrain): ReplayResult {
   if (replay.version !== REPLAY_FORMAT_VERSION) {
     throw new Error(`replay format ${replay.version} is not this build's ${REPLAY_FORMAT_VERSION}`);
   }
 
-  const match = new Match(terrain, { seed: replay.seed });
+  const map = mapById(replay.mapId);
+  if (map === undefined) {
+    throw new Error(`replay was recorded on unknown map "${replay.mapId}"`);
+  }
+
+  const match = new Match(
+    map,
+    terrain === undefined ? { seed: replay.seed } : { seed: replay.seed, terrain }
+  );
   for (const player of replay.players) match.addPlayer(player.slot, player.faction);
 
   // Commands are keyed by the tick they landed on; a tick may carry several.

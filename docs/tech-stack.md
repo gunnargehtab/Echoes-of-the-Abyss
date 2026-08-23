@@ -114,7 +114,7 @@ This stack gives high performance, easy development, and long-term stability.
 ## Determinism and Replay
 
 The simulation is deterministic by construction — fixed 60 Hz steps, no wall-clock inside
-the step path, hand-authored terrain rather than a seeded generator — and that property is
+the step path, hand-authored maps rather than a seeded generator — and that property is
 now *tested* rather than assumed.
 
 | Piece | Where | What it does |
@@ -122,7 +122,7 @@ now *tested* rather than assumed.
 | Seeded RNG | `packages/backend/src/sim/rng.ts` | The simulation's only randomness. `world.rng`, seeded per match; `fork(name)` gives a subsystem its own stream, so adding a die roll to fauna cannot shift every later hazard roll |
 | Lint gate | `.eslintrc.cjs` | `Math.random()` and `Date` are errors anywhere under `sim/`. `rng.ts` is the single exemption, because picking a seed is the one place entropy legitimately enters |
 | State hash | `sim/stateHash.ts` | FNV-1a over positions, health, acoustics, orders, economies and production queues |
-| Replay | `sim/replay.ts` | Seed, roster, and every command attempt with the tick it landed on, plus periodic checkpoints |
+| Replay | `sim/replay.ts` | Map, seed, roster, and every command attempt with the tick it landed on, plus periodic checkpoints |
 
 Two details are load-bearing and easy to get wrong, both for the same underlying reason:
 **bitecs allocates entity ids from a counter global to the process, not to the world.** Two
@@ -142,3 +142,10 @@ a divergence rather than as a subtly different match nobody notices.
 Checkpoints are what make a divergence *findable*. `playReplay` reports the first tick whose
 hash disagreed, so the answer is "it broke at tick 300", not "the twenty-minute match ended
 differently".
+
+A replay also records **which map it was played on**, since authored archetypes exist. Format
+version 2 carries a `mapId`; version 1 replays are rejected rather than upgraded, because the
+information is simply not in them — a v1 replay was recorded on whatever `Terrain.demo()` was
+at the time, and replaying it on any other ground diverges at the first checkpoint. Rejecting
+it says "this replay is too old"; replaying it on a default map would report a divergence
+about determinism when the real fault was the replay's age.

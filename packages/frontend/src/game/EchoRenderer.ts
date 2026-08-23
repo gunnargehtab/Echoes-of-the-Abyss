@@ -71,7 +71,7 @@ import {
   structureSpriteSizeM,
   structureTexture,
 } from './structureTextures.ts';
-import type { TerrainPayload } from '../net/GameClient.ts';
+import type { MapPayload, TerrainPayload } from '../net/GameClient.ts';
 
 /** A contact plus when we last actually heard it, for ghost decay. */
 interface TrackedContact {
@@ -363,6 +363,8 @@ export class EchoRenderer {
   private bandLabel!: Text;
   /** "TRACKED" — the continuous half of the exposure report. */
   private exposureLabel!: Text;
+  /** The map's name, so a player can tell which ground they are on. */
+  private mapLabel!: Text;
   private resourceLabel!: Text;
   private crystalLabel!: Text;
   private statusLabel!: Text;
@@ -372,6 +374,15 @@ export class EchoRenderer {
   private readonly callbacks: RendererCallbacks;
 
   private terrain: TerrainPayload | null = null;
+  /**
+   * The map this match is on.
+   *
+   * Kept for its name in the HUD and its hazard sites, which docs/maps.md
+   * requires be *telegraphed*: "players must see danger before entering."
+   * They carry no behaviour yet — the hazard framework is separate work — so
+   * they are drawn as ground, not as threats.
+   */
+  private map: MapPayload | null = null;
   private units: OwnUnit[] = [];
   private structures: OwnStructure[] = [];
   private nodes: ResourceNodeInfo[] = [];
@@ -517,6 +528,12 @@ export class EchoRenderer {
     });
     this.exposureLabel.visible = false;
 
+    this.mapLabel = new Text({
+      text: '',
+      style: { ...mono, fontSize: 11, fill: UI.textDim },
+    });
+    this.mapLabel.visible = false;
+
     this.statusLabel = new Text({
       text: '',
       style: { ...mono, fontSize: 12, fill: UI.textDim },
@@ -556,6 +573,7 @@ export class EchoRenderer {
       this.sigLabel,
       this.bandLabel,
       this.exposureLabel,
+      this.mapLabel,
       this.resourceLabel,
       this.crystalLabel,
       this.statusLabel,
@@ -1512,6 +1530,16 @@ export class EchoRenderer {
     this.faction = faction;
   }
 
+  setMap(map: MapPayload): void {
+    this.map = map;
+    this.mapLabel.text = map.name.toUpperCase();
+    this.mapLabel.visible = true;
+    // Hazard sites are baked into the terrain layer alongside the biomes,
+    // because that is what they are: ground you can read before you enter it.
+    this.drawTerrain();
+    this.minimapCachedSize = 0;
+  }
+
   setTerrain(terrain: TerrainPayload): void {
     this.terrain = terrain;
     this.drawTerrain();
@@ -1836,6 +1864,31 @@ export class EchoRenderer {
         g.rect(col * terrain.cellM, row * terrain.cellM, terrain.cellM, terrain.cellM).fill({
           color: BIOME_COLOR[biome] ?? BIOME_COLOR[Biome.OpenWater],
         });
+      }
+    }
+
+    // Hazard sites, telegraphed. docs/maps.md's core principles list "hazard
+    // telegraphing — players must see danger before entering", and drawing
+    // them into the static terrain layer is how that promise is kept: a
+    // hazard is part of the ground, visible from the moment the map loads,
+    // not something that announces itself once you are inside it.
+    //
+    // Drawn as a hatched ring rather than a filled disc: they carry no
+    // behaviour yet (the hazard framework is separate work), and a solid
+    // marker would imply an effect that does not exist.
+    for (const site of this.map?.hazards ?? []) {
+      g.circle(site.x, site.y, site.radiusM).stroke({
+        width: 3,
+        color: UI.threat,
+        alpha: 0.28,
+      });
+      const step = Math.max(60, site.radiusM / 4);
+      for (let offset = -site.radiusM; offset <= site.radiusM; offset += step) {
+        // Chord length at this offset, so the hatching stays inside the ring.
+        const half = Math.sqrt(Math.max(0, site.radiusM * site.radiusM - offset * offset));
+        g.moveTo(site.x + offset - half, site.y + offset + half)
+          .lineTo(site.x + offset + half, site.y + offset - half)
+          .stroke({ width: 1.5, color: UI.threat, alpha: 0.12 });
       }
     }
 
@@ -2521,6 +2574,13 @@ export class EchoRenderer {
         ? `${contactCount} contact${contactCount === 1 ? '' : 's'}`
         : this.status;
     this.statusLabel.position.set(screenWidth - this.statusLabel.width - 12, 9);
+
+    // Left of the contact count, on the same line: the ground you are on is
+    // context, not a live number. On the top bar rather than over the world,
+    // because everything drawn over the world is information about the match.
+    if (this.mapLabel.visible) {
+      this.mapLabel.position.set(this.statusLabel.x - this.mapLabel.width - 16, 10);
+    }
 
     // Hint line rides just above the command panel, clear of the scope.
     const scope = this.minimapRect();
