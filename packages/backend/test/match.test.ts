@@ -272,6 +272,14 @@ describe('economy', () => {
 });
 
 describe('Resonance Crystal', () => {
+  /**
+   * How far a forward refinery sits from the field it serves. Clear of the
+   * footprint plus the hull, so a harvester can still reach the node, and
+   * inside the docking range so it can still unload — the same window
+   * Match.build's placement rules leave for a real player.
+   */
+  const FORWARD_REFINERY_OFFSET_M = 220;
+
   /** The crystal field this map seeds, dead centre and Abyssal. */
   function crystalField(match: Match) {
     return match.resourceNodes.find((n) => n.kind === ResourceKind.ResonanceCrystal)!;
@@ -295,14 +303,19 @@ describe('Resonance Crystal', () => {
     advance(match, 0.5);
     const field = crystalField(match);
 
-    // A forward refinery over the field — docs/economy.md §4's "refine forward
-    // and accept a loud installation on contested ground". It makes the haul
-    // purely vertical, which is the leg this test is about.
+    // A forward refinery beside the field — docs/economy.md §4's "refine
+    // forward and accept a loud installation on contested ground". It makes
+    // the haul essentially vertical, which is the leg this test is about.
+    //
+    // Beside, not on top: hulls are kept out of structure footprints, so a
+    // refinery centred on the field would shove its own harvesters out of
+    // mining range. Match.build already refuses that placement for real
+    // players; this offset respects the same rule.
     spawnStructure(match.world, {
       kind: StructureKind.Refinery,
       slot: 0,
       faction: Faction.Directorate,
-      x: field.x,
+      x: field.x + FORWARD_REFINERY_OFFSET_M,
       y: field.y,
       prebuilt: true,
     });
@@ -360,7 +373,7 @@ describe('Resonance Crystal', () => {
       kind: StructureKind.Refinery,
       slot: 0,
       faction: Faction.Directorate,
-      x: field.x,
+      x: field.x + FORWARD_REFINERY_OFFSET_M,
       y: field.y,
       prebuilt: true,
     });

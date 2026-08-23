@@ -8,6 +8,7 @@ import {
   CONSTRUCTION,
   CRYSTAL,
   ECONOMY,
+  SEPARATION,
   Faction,
   HarvestThrottle,
   ResourceKind,
@@ -35,6 +36,7 @@ import {
   Weapon,
 } from './components.ts';
 import { Rng } from './rng.ts';
+import { SpatialHash } from './spatialHash.ts';
 import { Terrain } from './terrain.ts';
 
 /** Per-player mutable economy state. Lives outside the ECS: it is per-slot, not per-entity. */
@@ -87,6 +89,14 @@ export interface SimWorld extends IWorld {
   localOfEid: Map<number, number>;
   eidOfLocal: Map<number, number>;
   nextLocalId: number;
+  /**
+   * Broadphase for hull separation, rebuilt every tick. Separate from the
+   * Echo Layer's: that one is sized for kilometre-scale audibility, this one
+   * for hull-scale overlap, and sharing a grid would make both worse.
+   */
+  unitGrid: SpatialHash;
+  /** Reused query buffer, so separation allocates nothing per tick. */
+  separationBuffer: number[];
 }
 
 /**
@@ -122,6 +132,8 @@ export function createSimWorld(terrain: Terrain, dt: number, seed: number): SimW
   world.localOfEid = new Map();
   world.eidOfLocal = new Map();
   world.nextLocalId = 0;
+  world.unitGrid = new SpatialHash(SEPARATION.CELL_M);
+  world.separationBuffer = [];
   // Burn entity id 0 so components can use eid 0 as a "none" sentinel
   // (Weapon.orderedTargetEid, Harvester.nodeEid). bitecs hands out dense ids
   // from 0, so without this the first spawned entity would be untargetable.

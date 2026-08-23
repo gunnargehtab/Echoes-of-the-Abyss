@@ -59,6 +59,7 @@ import { aurasSystem } from './systems/auras.ts';
 import { combatSystem } from './systems/combat.ts';
 import { constructionSystem } from './systems/construction.ts';
 import { depthSystem } from './systems/depth.ts';
+import { separationSystem } from './systems/separation.ts';
 import { harvestSystem } from './systems/harvest.ts';
 import { movementSystem } from './systems/movement.ts';
 import { pressureSystem } from './systems/pressure.ts';
@@ -548,6 +549,10 @@ export class Match {
     // before acoustics (which prices the descent) and pressure (which bills
     // for where the hull has just arrived).
     depthSystem(this.world);
+    // After movement and depth, before anything reads positions: separation
+    // is a correction to where hulls ended up, and detection must see the
+    // corrected picture rather than a stack that no longer exists.
+    separationSystem(this.world);
     constructionSystem(this.world);
     productionSystem(this.world);
     // Auras before acoustics: the spire's SIG-80 "projecting" state and

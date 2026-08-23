@@ -175,6 +175,27 @@ export const SIM = {
   SPATIAL_CELL_M: 600,
 } as const;
 
+/**
+ * Keeping hulls out of each other's water.
+ *
+ * TUNABLE throughout — the docs never specify collision, and they would not,
+ * because this is not a mechanic. What it protects *is* spec'd, though: a
+ * stack of hulls at one coordinate is one acoustic position, which would let
+ * the renderer and the Echo Layer disagree with each other about how large a
+ * force is (docs/systems-echo.md §4).
+ */
+export const SEPARATION = {
+  /**
+   * Fraction of an overlap resolved per tick. Below 1 so a crowd settles
+   * instead of oscillating; high enough that a fleet spreads within a second.
+   */
+  STIFFNESS: 0.45,
+  /** Closer than this counts as exactly stacked, with no axis to push along. */
+  COINCIDENT_EPSILON_M: 0.01,
+  /** Spatial-hash cell for the separation query. A few hull lengths. */
+  CELL_M: 200,
+} as const;
+
 /** TUNABLE — Tier 2 reports position blurred by this fraction. SPEC says 15%. */
 export const BEARING_BLUR_FRACTION = 0.15;
 
