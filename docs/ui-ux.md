@@ -92,6 +92,13 @@ Not a map with markers on it. A scope.
 - **Echo Marks** — a separate dimmer layer, drawn beneath returns, in a colder hue. Past and present must never share an ink.
 - **No fog.** There is no explored/unexplored state anywhere in this game. Terrain is always fully drawn; what is hidden is *occupancy*, and occupancy is drawn only as returns. Any "unexplored black" would be the wrong game.
 
+Implemented: terrain wash, tier-fidelity returns, the sweep, the two range rings, and the
+camera viewport. Returns are sized *inversely* to tier — a Tier-1 return is the largest and
+softest mark on the scope, because its size is the uncertainty rather than the contact,
+while a Tier-4 track is a tight point. They were previously uniform dots, which drew a
+Tier-1 haze as crisply as a Tier-4 track: the scope asserting precision the server never
+sent. The Echo Marks layer waits on the marks themselves.
+
 ---
 
 ## 6. Active Sonar
@@ -196,6 +203,23 @@ T+03:51  MARK    industrial hum   bearing 310°   decaying
 
 Entries are click-to-focus (camera moves to the last known position) and copy-pasteable, because post-match analysis of *"when did they hear me"* is a real activity this game should support.
 
+**The log is DOM, not canvas, and that is a design decision rather than an implementation
+detail.** §11 makes it the accessible mirror of the audio channel and the line above makes
+it copy-pasteable; a Pixi-drawn log could be neither, because canvas text is not selectable
+and not reachable by a screen reader. It is marked up as an `aria-live` log region so
+detections are announced as they happen, and it follows the tail only while the player has
+not scrolled up to read something.
+
+An entry is written when a contact is first heard and again whenever its tier *changes* —
+not every 5 Hz tick, which would bury the events that matter. Entries are never rewritten:
+a log that sharpened its own history when a better resolution arrived would let a player
+reconstruct positions they never earned, and would destroy what the log is for.
+
+Two rows in the sample above are not yet implemented, and are blocked rather than skipped:
+`you were pinged` needs the server-sent exposure flag that the audio work introduces, and
+`MARK` needs Echo Marks to exist. Tier-3 rows currently name the hull and faction rather
+than estimating a count, because the Echo Layer does not model counts.
+
 ---
 
 ## 11. Accessibility
@@ -233,8 +257,8 @@ What the current client implements against this spec, so nobody re-implements wh
 | Ping preview rings, ping commit | Implemented (hold `Shift`, `P`) |
 | Silent-running dimming | Implemented |
 | Depth ribbon, PR badge, crush hatching | Implemented (`D` dive, `A` rise; hold `Shift` to preview the dive cost) |
-| Sonar-scope minimap | Implemented — terrain and own force; contact fidelity still to audit against §5 |
-| Contact log | Not started |
+| Sonar-scope minimap | Implemented — terrain, tier-fidelity returns, sweep, range rings; Echo Marks layer pending |
+| Contact log | Implemented — DOM, live region, click-to-focus; ping and mark rows pending |
 | Accessibility presets and palettes | Not started |
 | Box select, control groups, order queue | Implemented |
 
