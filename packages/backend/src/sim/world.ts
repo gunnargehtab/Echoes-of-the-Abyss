@@ -34,6 +34,7 @@ import {
   Velocity,
   Weapon,
 } from './components.ts';
+import { Rng } from './rng.ts';
 import { Terrain } from './terrain.ts';
 
 /** Per-player mutable economy state. Lives outside the ECS: it is per-slot, not per-entity. */
@@ -66,9 +67,50 @@ export interface SimWorld extends IWorld {
    * auras system, read by acoustics: a projecting spire sings at SIG 80.
    */
   spireActive: Set<number>;
+  /**
+   * The simulation's only source of randomness. Seeded per match and part of
+   * simulation state — see sim/rng.ts. Nothing in sim/ may call Math.random().
+   */
+  rng: Rng;
+  /**
+   * Match-local entity ids, and the reverse map.
+   *
+   * bitecs allocates entity ids from a *process*-global counter, so the same
+   * match run twice in one process gets different ids for the same hulls.
+   * That is harmless while an id never leaves the process — but a replay is
+   * exactly an id leaving the process, and replaying raw ids into a fresh
+   * world addresses entities that do not exist there.
+   *
+   * So every spawned entity also gets an id that counts from zero within this
+   * world. Replays speak that language; see sim/replay.ts.
+   */
+  localOfEid: Map<number, number>;
+  eidOfLocal: Map<number, number>;
+  nextLocalId: number;
 }
 
-export function createSimWorld(terrain: Terrain, dt: number): SimWorld {
+/**
+ * Give an entity its match-local id. Called by every spawn path, so an entity
+ * that can be commanded always has one.
+ */
+export function registerEntity(world: SimWorld, eid: number): number {
+  const local = world.nextLocalId++;
+  world.localOfEid.set(eid, local);
+  world.eidOfLocal.set(local, eid);
+  return local;
+}
+
+/** Match-local id for an entity, or undefined if it was never registered. */
+export function localIdOf(world: SimWorld, eid: number): number | undefined {
+  return world.localOfEid.get(eid);
+}
+
+/** Entity for a match-local id, or 0 — which every command path rejects. */
+export function eidOfLocalId(world: SimWorld, local: number): number {
+  return world.eidOfLocal.get(local) ?? 0;
+}
+
+export function createSimWorld(terrain: Terrain, dt: number, seed: number): SimWorld {
   const world = createWorld() as SimWorld;
   world.terrain = terrain;
   world.tick = 0;
@@ -76,6 +118,10 @@ export function createSimWorld(terrain: Terrain, dt: number): SimWorld {
   world.economies = new Map();
   world.production = new Map();
   world.spireActive = new Set();
+  world.rng = new Rng(seed);
+  world.localOfEid = new Map();
+  world.eidOfLocal = new Map();
+  world.nextLocalId = 0;
   // Burn entity id 0 so components can use eid 0 as a "none" sentinel
   // (Weapon.orderedTargetEid, Harvester.nodeEid). bitecs hands out dense ids
   // from 0, so without this the first spawned entity would be untargetable.
@@ -111,6 +157,7 @@ export interface SpawnOptions {
 export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   const stats = statsFor(opts.kind);
   const eid = addEntity(world);
+  registerEntity(world, eid);
 
   addComponent(world, Position, eid);
   Position.x[eid] = opts.x;
@@ -196,6 +243,7 @@ export interface SpawnStructureOptions {
 export function spawnStructure(world: SimWorld, opts: SpawnStructureOptions): number {
   const stats = structureStatsFor(opts.kind);
   const eid = addEntity(world);
+  registerEntity(world, eid);
 
   addComponent(world, Position, eid);
   Position.x[eid] = opts.x;
@@ -251,6 +299,7 @@ export function spawnResourceNode(
   kind: ResourceKind = ResourceKind.Nodule
 ): number {
   const eid = addEntity(world);
+  registerEntity(world, eid);
   addComponent(world, Position, eid);
   Position.x[eid] = x;
   Position.y[eid] = y;
