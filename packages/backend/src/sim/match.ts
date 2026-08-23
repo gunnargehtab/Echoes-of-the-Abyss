@@ -29,6 +29,7 @@ import {
   UnitKind,
   statsFor,
   structureStatsFor,
+  EchoMarkKind,
   ResolutionTier,
   SelfEventKind,
   type EchoSnapshot,
@@ -182,6 +183,21 @@ export class Match {
 
   get worstEchoPassMs(): number {
     return this.worstEchoMs;
+  }
+
+  /**
+   * Worst-case cost of the residue read, which is a slice of the pass above.
+   *
+   * Reported separately because it is the newest thing inside the 2 ms budget
+   * and therefore the first suspect when that budget starts slipping.
+   */
+  get worstMarkCostMs(): number {
+    return this.echo.worstMarkCostMs;
+  }
+
+  /** Path integrals the residue read did on the most recent Echo pass. */
+  get markPathWalksLastPass(): number {
+    return this.echo.markPathWalksLastPass;
   }
 
   /** Non-null once a winner exists. Checked by the room after each update. */
@@ -631,6 +647,9 @@ export class Match {
     acousticsSystem(this.world);
     pressureSystem(this.world, this.destroyedScratch);
     this.reap();
+    // After reap, so a structure destroyed this tick has already left its
+    // mark and does not lose a tick of the three minutes it is owed.
+    this.world.marks.tick(FIXED_DT);
     this.world.tick++;
   }
 
@@ -641,11 +660,15 @@ export class Match {
     const lostBastions: number[] = [];
     for (const eid of this.destroyedScratch) {
       if (!hasComponent(this.world, Owner, eid)) continue;
-      if (
-        hasComponent(this.world, Structure, eid) &&
-        Structure.kind[eid] === StructureKind.Bastion
-      ) {
-        lostBastions.push(Owner.slot[eid]!);
+      if (hasComponent(this.world, Structure, eid)) {
+        // Residue outlives the thing that made it — three minutes for a
+        // structure against ninety seconds for a fight (docs/systems-echo.md
+        // §7). Recorded here because reap() is the one place a death is made
+        // real, so a mark can never disagree with what actually died.
+        this.world.marks.add(EchoMarkKind.DestroyedStructure, Position.x[eid]!, Position.y[eid]!);
+        if (Structure.kind[eid] === StructureKind.Bastion) {
+          lostBastions.push(Owner.slot[eid]!);
+        }
       }
       this.world.production.delete(eid);
       removeEntity(this.world, eid);
@@ -728,6 +751,7 @@ export class Match {
           trackedCount: 0,
         },
         selfEvents: eventsBySlot.get(slot) ?? [],
+        marks: result.marksBySlot.get(slot) ?? [],
       });
     }
     return snapshots;

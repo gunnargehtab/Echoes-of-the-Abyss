@@ -135,6 +135,40 @@ export interface Contact {
   tick: number;
 }
 
+/**
+ * Kinds of acoustic residue — docs/systems-echo.md §7.
+ *
+ * Deliberately coarse. A mark reports that this water was recently violent,
+ * or that someone has been working here; it never reports whose, or what was
+ * lost. The scouting economy is built on the player doing that inference,
+ * and a mark that named its owner would do the interesting half for them.
+ */
+export enum EchoMarkKind {
+  /** A fight happened here. ~90 s. */
+  Battle = 0,
+  /** Something was destroyed here. ~3 minutes. */
+  DestroyedStructure = 1,
+  /** Someone is working here. Intensity tracks throughput. */
+  IndustrialHum = 2,
+}
+
+/**
+ * One piece of residue, as the player who read it receives it.
+ *
+ * Resolved server-side against the listener's HYD, so a client only ever
+ * holds marks its own units could actually hear — the same rule as contacts,
+ * for the same reason.
+ */
+export interface EchoMarkInfo {
+  /** Stable per-match id, so a client can watch one mark decay. */
+  id: number;
+  x: number;
+  y: number;
+  kind: EchoMarkKind;
+  /** 0-1. For the hum this is the thing worth reading: it tracks throughput. */
+  intensity: number;
+}
+
 /** A unit the player owns. Always full detail — it is theirs. */
 export interface OwnUnit {
   id: number;
@@ -298,6 +332,13 @@ export interface EchoSnapshot {
   exposure: ExposureReport;
   /** Discrete things that happened to your own force on this tick. */
   selfEvents: SelfEvent[];
+  /**
+   * Acoustic residue this player's units can currently read.
+   *
+   * Empty for a force with no listener at HYD >= 40, which is the point: the
+   * past is a stat you buy, and it is the only thing HYD is a hard wall for.
+   */
+  marks: EchoMarkInfo[];
 }
 
 /** Broadcast once when the match resolves. Elimination is public. */

@@ -18,6 +18,7 @@
 
 import { defineQuery, hasComponent } from 'bitecs';
 import {
+  EchoMarkKind,
   SelfEventKind,
   statsFor,
   structureStatsFor,
@@ -38,6 +39,15 @@ import {
 import { applyFiringSpike } from './acoustics.ts';
 import { raiseSelfEvent } from '../world.ts';
 import type { SimWorld } from '../world.ts';
+
+/**
+ * Battle-site intensity added per discharge.
+ *
+ * TUNABLE. Sized so a brief exchange leaves a faint mark and a sustained fight
+ * saturates one: roughly a dozen shots on the same ground reads as a full
+ * battle site. Residue should reward a scout for arriving, not for existing.
+ */
+const BATTLE_MARK_PER_SHOT = 0.09;
 
 const shooters = defineQuery([Weapon, Position, Owner, Health]);
 const targetables = defineQuery([Position, Owner, Health]);
@@ -140,6 +150,19 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
     if (applyFiringSpike(eid, profile.firingSig)) {
       raiseSelfEvent(world, { kind: SelfEventKind.BreakSilence, eid });
     }
+    // Residue, laid down at the target rather than the shooter: a scout that
+    // finds a battle site should find where the fighting *was*, and the losing
+    // side is the one that stayed still (docs/systems-echo.md §7).
+    //
+    // A small increment per discharge, merged by the layer, so intensity ends
+    // up meaning "how much shooting happened here" rather than "shooting
+    // happened here" — a skirmish and a massacre read differently.
+    world.marks.add(
+      EchoMarkKind.Battle,
+      Position.x[target]!,
+      Position.y[target]!,
+      BATTLE_MARK_PER_SHOT
+    );
     Health.hp[target] = Health.hp[target]! - profile.damage;
     if (Health.hp[target]! <= 0 && !destroyed.includes(target)) {
       destroyed.push(target);

@@ -133,6 +133,23 @@ Sound persists. High-SIG events leave **Echo Marks** on the terrain layer: faint
 
 **This is the scouting economy.** A skilled player doesn't scout to find the enemy army — they scout to find *where the enemy has been*, and infer everything else. The Rift keeps records.
 
+### How the residue layer works
+
+Marks are written from the seams where the events they record already become real: a battle site from each weapon discharge (at the *target*, since the losing side is the one that stayed still), a destroyed structure from `Match.reap()`, and the industrial hum from the moment a hauler unloads.
+
+Two rules govern what a mark may say:
+
+- **A mark reports that something happened, never what or to whom.** The wire format carries a position, a kind and an intensity. No owner, no casualties. The player does the inference; that is the mechanic.
+- **A mark is priced by the same propagation model as a unit.** It is an emitter whose SIG is its intensity times a per-kind figure, so residue in a Thermal Vein is as hard to find as a hull in one. A separate rule would make the past a second detection system that biomes did not apply to.
+
+Residue is always **quieter than the thing that made it**. An idle Corvette carries roughly 3.3 km to a Light Scout; the echo of a destroyed building reaches about 2.5 km and a battle site under 2 km. A mark must be findable by a scout that goes there and inaudible to one that does not — otherwise the map announces every fight to every base, and the scouting economy the section exists for never starts.
+
+Marks within 320 m of one kind **reinforce** rather than accumulate, so a thirty-second fight is one battle site whose intensity says how much shooting happened, not four hundred overlapping ones.
+
+The HYD ≥ 40 gate is enforced **server-side**, before anything is sent. HYD is a soft stat everywhere else; here it decides whether the past exists for you at all, which is what makes it worth building for. A force of Harvesters (HYD 30) is blind to residue a single Light Scout (HYD 70) reads from a kilometre away.
+
+**The residue read is swept, not recomputed.** The whole mark set is re-resolved across five Echo ticks — one second at 5 Hz — and each player's readings persist in between, refreshed in place so they keep fading. That is not only a budget measure: residue is *the past*, and a second of latency on a ninety-second echo is undetectable. Contacts are resolved every tick because they are the present.
+
 ---
 
 ## 8. Faction Relationships to Sound

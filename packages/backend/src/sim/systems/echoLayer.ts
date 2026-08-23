@@ -15,6 +15,7 @@ import { defineQuery, hasComponent } from 'bitecs';
 import {
   ACTIVE_SONAR,
   MAX_PROPAGATION_FACTOR,
+  PERSISTENCE,
   PROPAGATION_MODEL,
   ResolutionTier,
   SIM,
@@ -24,6 +25,7 @@ import {
   maxAudibleRangeM,
   tierFromRatio,
   type Contact,
+  type EchoMarkInfo,
   type ExposureReport,
   type Faction,
   type StructureKind,
@@ -44,6 +46,16 @@ import type { SimWorld } from '../world.ts';
 
 /** Player slots the room admits. Sized for the flat per-slot scratch arrays. */
 const MAX_SLOTS = 8;
+
+/**
+ * Echo ticks one full sweep of the residue layer takes.
+ *
+ * Five, so the whole mark set is re-resolved once a second at SIM.ECHO_HZ. The
+ * shortest-lived mark is the industrial hum at 45 s, so a second of latency is
+ * about 2% of the fastest thing here — and residue is the past, which is
+ * exactly the information that does not need to be current.
+ */
+const MARK_SWEEP_TICKS = 5;
 
 /**
  * The threshold multiple a pair must reach to *improve* on a tier already
@@ -105,6 +117,14 @@ export interface EchoResult {
    * bearing toward the emitter that lit it.
    */
   litBySlot: Map<number, { unitId: number; bearing: number }[]>;
+  /**
+   * Acoustic residue each slot can currently read, keyed by slot.
+   *
+   * Resolved here rather than shipped wholesale for the same reason contacts
+   * are: a client that holds marks its units could not hear knows where the
+   * fighting has been without having scouted for it.
+   */
+  marksBySlot: Map<number, EchoMarkInfo[]>;
   /** Wall-clock cost of the pass, measured against SIM.ECHO_BUDGET_MS. */
   elapsedMs: number;
 }
@@ -127,6 +147,40 @@ export class EchoLayer {
   private readonly nextHandle = new Map<number, number>();
   private readonly results = new Map<number, Contact[]>();
   private readonly exposure = new Map<number, ExposureReport>();
+  private readonly markResults = new Map<number, EchoMarkInfo[]>();
+  /** Listeners that clear the HYD wall this pass. */
+  private readonly markListeners: number[] = [];
+  /**
+   * Those listeners only, spatially indexed.
+   *
+   */
+  /** What each slot currently holds, by mark id. Persists between sweeps. */
+  private readonly markState = new Map<number, Map<number, EchoMarkInfo>>();
+  /**
+   * Mark id to its index in the layer, rebuilt each pass.
+   *
+   * An index and not a copy: holding `{x, y, intensity}` per mark allocated
+   * 256 short-lived objects every pass and cost more than the entire read it
+   * was serving.
+   */
+  private readonly liveMarkIds = new Map<number, number>();
+  /** Where the next sweep slice starts. */
+  private markCursor = 0;
+  /** Which slots have already been told about the mark in hand. */
+  private readonly markHeard = new Uint8Array(MAX_SLOTS);
+  /** Rolling worst-case cost of the residue read, against the 2 ms budget. */
+  private worstMarkMs = 0;
+  /** Path integrals the residue read did on the most recent pass. */
+  private markWalks = 0;
+
+  get worstMarkCostMs(): number {
+    return this.worstMarkMs;
+  }
+
+  /** Path integrals the residue read performed on the most recent pass. */
+  get markPathWalksLastPass(): number {
+    return this.markWalks;
+  }
   private readonly lit = new Map<number, { unitId: number; bearing: number }[]>();
   /**
    * Pinger -> the entities its current transmission has already lit.
@@ -228,6 +282,140 @@ export class EchoLayer {
     }
   }
 
+  /**
+   * Which residue each slot can read — docs/systems-echo.md §7.
+   *
+   * **Swept, not recomputed.** The whole mark set is re-resolved across
+   * `MARK_SWEEP_TICKS` Echo ticks rather than every tick, and each slot's
+   * results persist in between. That is not only a budget trick, it is the
+   * right behaviour: residue is *the past*, and a second of latency on a
+   * ninety-second echo is undetectable. Contacts get resolved every tick
+   * because they are the present.
+   *
+   * Getting here took three attempts and two wrong guesses, all measured:
+   *
+   * - Listener-major ("which marks can I hear") re-walked every mark once per
+   *   hull: **1.37 ms**, 68% of the whole 2 ms pass.
+   * - Mark-major with an early exit once every slot has heard it: **0.92 ms**.
+   *   The exit rarely fires, because most marks are heard by nobody.
+   * - A dedicated index of listeners above the HYD wall: **1.20 ms** — worse,
+   *   because most hulls clear the wall anyway and rebuilding the index cost
+   *   more than it saved.
+   *
+   * The measurement that mattered: the broadphase radius and the cheap prune
+   * are computed from the *same* bound, so the prune rejected almost nothing
+   * and nearly every candidate paid for a path integral (0.20 us each). The
+   * same shape of mistake as the `pfNeeded` prune in #90. Volume was the
+   * problem, so the fix had to reduce volume rather than filter it.
+   */
+  private resolveMarks(world: SimWorld, slots: readonly number[], entities: number[]): void {
+    const started = performance.now();
+    const layer = world.marks;
+    layer.pathWalks = 0;
+
+    // Drop anything whose mark has decayed away, whatever the sweep is doing.
+    // A slot must never keep reporting residue that no longer exists.
+    this.liveMarkIds.clear();
+    const marks = layer.all;
+    for (let i = 0; i < marks.length; i++) this.liveMarkIds.set(marks[i]!.id, i);
+
+    for (const slot of slots) {
+      let held = this.markState.get(slot);
+      if (held === undefined) {
+        held = new Map();
+        this.markState.set(slot, held);
+      }
+      for (const id of held.keys()) {
+        if (!this.liveMarkIds.has(id)) held.delete(id);
+      }
+    }
+
+    if (marks.length > 0) {
+      // Listeners that clear the HYD wall. Most of a force does not — a
+      // Harvester at HYD 30 can never read residue — and the wall is free to
+      // check, so it is checked before any geometry.
+      let bestHyd = 0;
+      this.markListeners.length = 0;
+      for (let i = 0; i < entities.length; i++) {
+        const eid = entities[i]!;
+        const hyd = Acoustic.hyd[eid]!;
+        if (hyd < PERSISTENCE.ECHO_MARK_MIN_HYD) continue;
+        this.markListeners.push(eid);
+        if (hyd > bestHyd) bestHyd = hyd;
+      }
+
+      if (this.markListeners.length > 0) {
+        const slice = Math.ceil(marks.length / MARK_SWEEP_TICKS);
+        for (let n = 0; n < slice; n++) {
+          const mark = marks[(this.markCursor + n) % marks.length];
+          if (mark === undefined) continue;
+          const radius = layer.audibleRadiusM(mark, bestHyd);
+
+          this.markHeard.fill(0);
+          let remaining = slots.length;
+          for (let i = 0; i < this.markListeners.length && remaining > 0; i++) {
+            const listener = this.markListeners[i]!;
+            const slot = Owner.slot[listener]!;
+            if (slot >= MAX_SLOTS || this.markHeard[slot] === 1) continue;
+            const held = this.markState.get(slot);
+            if (held === undefined) continue;
+
+            const lx = Position.x[listener]!;
+            const ly = Position.y[listener]!;
+            // Cheap rejection before the exact test: the broadphase radius is
+            // an upper bound over every listener, so a hull outside it cannot
+            // hear this mark however good its ears.
+            if ((lx - mark.x) ** 2 + (ly - mark.y) ** 2 > radius * radius) continue;
+            if (!layer.audible(world.terrain, mark, lx, ly, Acoustic.hyd[listener]!)) continue;
+
+            this.markHeard[slot] = 1;
+            remaining--;
+            held.set(mark.id, {
+              id: mark.id,
+              x: mark.x,
+              y: mark.y,
+              kind: mark.kind,
+              intensity: mark.intensity,
+            });
+          }
+
+          // A mark this slot used to hear and no longer can — the scout moved
+          // on, or it faded below the threshold. Dropped on the same sweep, so
+          // a stale reading never outlives the sweep that would refresh it.
+          for (const slot of slots) {
+            if (this.markHeard[slot] === 1) continue;
+            this.markState.get(slot)?.delete(mark.id);
+          }
+        }
+        this.markCursor = marks.length === 0 ? 0 : (this.markCursor + slice) % marks.length;
+      }
+    }
+
+    for (const slot of slots) {
+      const out = this.markResults.get(slot)!;
+      const held = this.markState.get(slot);
+      if (held === undefined) continue;
+      for (const info of held.values()) {
+        // Refreshed from the live mark rather than emitted as stored, so a
+        // held reading *fades* with the thing it describes instead of freezing
+        // at whatever it was when the sweep last touched it. Position too: a
+        // reinforced battle site drifts, and a client watching one mark should
+        // see it drift.
+        const index = this.liveMarkIds.get(info.id);
+        if (index === undefined) continue;
+        const live = marks[index]!;
+        info.x = live.x;
+        info.y = live.y;
+        info.intensity = live.intensity;
+        out.push(info);
+      }
+    }
+
+    this.markWalks = layer.pathWalks;
+    const cost = performance.now() - started;
+    if (cost > this.worstMarkMs) this.worstMarkMs = cost;
+  }
+
   run(world: SimWorld, slots: readonly number[]): EchoResult {
     const started = performance.now();
     const terrain = world.terrain;
@@ -244,6 +432,10 @@ export class EchoLayer {
       else litBucket.length = 0;
 
       this.exposure.set(slot, { tier: ResolutionTier.Silent, trackedCount: 0 });
+
+      const markBucket = this.markResults.get(slot);
+      if (markBucket === undefined) this.markResults.set(slot, []);
+      else markBucket.length = 0;
     }
 
     // --- Broadphase: index every listener once. -----------------------------
@@ -466,9 +658,12 @@ export class EchoLayer {
       }
     }
 
+    this.resolveMarks(world, slots, entities);
+
     return {
       contactsBySlot: this.results,
       exposureBySlot: this.exposure,
+      marksBySlot: this.markResults,
       litBySlot: this.lit,
       elapsedMs: performance.now() - started,
     };
