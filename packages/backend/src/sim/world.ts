@@ -15,6 +15,9 @@ import {
   SelfEventKind,
   FaunaStage,
   faunaStatsFor,
+  ordnanceStatsFor,
+  ORDNANCE,
+  OrdnanceKind,
   type DrawReport,
   type FaunaSpecies,
   StructureKind,
@@ -29,7 +32,9 @@ import {
   HarvestMode,
   Fauna,
   Health,
+  Magazine,
   MoveOrder,
+  Ordnance,
   Owner,
   Position,
   Pressure,
@@ -290,6 +295,85 @@ export function spawnFauna(
   return eid;
 }
 
+export interface SpawnOrdnanceOptions {
+  kind: OrdnanceKind;
+  slot: number;
+  faction: Faction;
+  x: number;
+  y: number;
+  depth: number;
+  /** Radians. Where it is pointing at release. */
+  heading?: number;
+  /** Where the launch believed the target was — the ghost, at Tier 2. */
+  aimX?: number;
+  aimY?: number;
+  /** Seeker sensitivity; 0 for ordnance that does not seek. */
+  seekerHyd?: number;
+  /** Inherited from the launcher. Below the depth it covers, ordnance implodes. */
+  pressureRating: number;
+}
+
+/**
+ * Put ordnance in the water.
+ *
+ * It gets Position, Acoustic, Owner and Health and nothing else a hull would
+ * have — no MoveOrder, no DepthOrder, no SilentRunning, no Unit. That is what
+ * keeps movement, separation, production and the acoustics system from ever
+ * seeing it: each of them queries on components ordnance does not carry, so
+ * ordnance drops out of them by construction rather than by a check somebody
+ * has to remember to write.
+ *
+ * `Acoustic.hyd` is left at zero on purpose. It is the field that makes an
+ * entity a listener *for its owner* — the Echo pass and the residue read both
+ * key off it — and a torpedo that scouted for the player who fired it would
+ * turn the alpha-strike weapon into a reconnaissance one. The seeker's own ears
+ * are `Ordnance.seekerHyd`, and they report to nobody.
+ */
+export function spawnOrdnance(world: SimWorld, opts: SpawnOrdnanceOptions): number {
+  const stats = ordnanceStatsFor(opts.kind);
+  const eid = addEntity(world);
+  registerEntity(world, eid);
+
+  addComponent(world, Position, eid);
+  Position.x[eid] = opts.x;
+  Position.y[eid] = opts.y;
+  Position.depth[eid] = opts.depth;
+
+  addComponent(world, Acoustic, eid);
+  Acoustic.sig[eid] = stats.sig;
+  // Deaf to the Echo Layer by construction — see the note above.
+  Acoustic.hyd[eid] = 0;
+  Acoustic.pfFactor[eid] = 1;
+  Acoustic.sigFactor[eid] = 1;
+  Acoustic.spikeRemainingS[eid] = 0;
+  Acoustic.spikeAmount[eid] = 0;
+
+  addComponent(world, Health, eid);
+  // Ordnance that cannot be shot down still carries Health, because the Echo
+  // pass and every targeting query select on it. One hit point rather than
+  // zero: it is alive, and nothing points a gun at it (see combat.ts).
+  Health.max[eid] = stats.maxHp > 0 ? stats.maxHp : 1;
+  Health.hp[eid] = Health.max[eid]!;
+
+  addComponent(world, Owner, eid);
+  Owner.slot[eid] = opts.slot;
+  Owner.faction[eid] = opts.faction;
+
+  addComponent(world, Ordnance, eid);
+  Ordnance.kind[eid] = opts.kind;
+  Ordnance.remainingS[eid] = stats.lifetimeS;
+  Ordnance.heading[eid] = opts.heading ?? 0;
+  Ordnance.seekerHyd[eid] = opts.seekerHyd ?? 0;
+  Ordnance.targetEid[eid] = 0;
+  Ordnance.aimX[eid] = opts.aimX ?? opts.x;
+  Ordnance.aimY[eid] = opts.aimY ?? opts.y;
+  Ordnance.pressureRating[eid] = opts.pressureRating;
+  Ordnance.seekerCooldownS[eid] = 0;
+  Ordnance.wakeCooldownS[eid] = 0;
+
+  return eid;
+}
+
 export interface SpawnOptions {
   kind: UnitKind;
   slot: number;
@@ -364,6 +448,12 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
     addComponent(world, Weapon, eid);
     Weapon.cooldownRemainingS[eid] = 0;
     Weapon.orderedTargetEid[eid] = 0;
+  }
+
+  if (stats.carriesTorpedoes) {
+    addComponent(world, Magazine, eid);
+    Magazine.torpedoes[eid] = ORDNANCE.TORPEDO.MAGAZINE;
+    Magazine.rearmRemainingS[eid] = 0;
   }
 
   if (opts.kind === UnitKind.Harvester) {

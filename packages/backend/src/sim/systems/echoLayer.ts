@@ -28,6 +28,7 @@ import {
   type EchoMarkInfo,
   type FaunaSpecies,
   type ExposureReport,
+  type OrdnanceKind,
   type Faction,
   type StructureKind,
   type UnitKind,
@@ -37,6 +38,7 @@ import {
   ActivePing,
   Fauna,
   Health,
+  Ordnance,
   Owner,
   Position,
   Structure,
@@ -678,6 +680,13 @@ export class EchoLayer {
             // meaningless slot would let a client infer that this is fauna one
             // tier earlier than it earned.
             contact.fauna = Fauna.species[eid] as FaunaSpecies;
+          } else if (hasComponent(world, Ordnance, eid)) {
+            // docs/systems-combat.md §1: a torpedo must be *audible* its whole
+            // run, not identifiable for it. Below Tier 3 a closing contact
+            // could be ordnance or a scout, and the seconds a player spends
+            // deciding which are the mechanic — so the kind sits behind the
+            // same wall that names a hull, exactly like a creature's species.
+            contact.ordnance = Ordnance.kind[eid] as OrdnanceKind;
           }
           contact.depth = Position.depth[eid]!;
         }

@@ -18,6 +18,8 @@ import {
   DepthOrder,
   Harvester,
   Health,
+  Magazine,
+  Ordnance,
   Owner,
   Position,
   Pressure,
@@ -112,6 +114,20 @@ export function hashWorld(world: SimWorld): number {
     if (hasComponent(world, ResourceNode, eid)) {
       h = mixFloat(h, ResourceNode.remaining[eid]!);
       h = mixU32(h, ResourceNode.kind[eid]!);
+    }
+    if (hasComponent(world, Ordnance, eid)) {
+      h = mixU32(h, Ordnance.kind[eid]!);
+      h = mixFloat(h, Ordnance.remainingS[eid]!);
+      h = mixFloat(h, Ordnance.heading[eid]!);
+      // Ordinal, not the raw eid, for the reason the whole function exists:
+      // two identical worlds must hash alike whichever process built them.
+      h = mixU32(h, ordinalOf.get(Ordnance.targetEid[eid]!) ?? -1);
+    }
+    if (hasComponent(world, Magazine, eid)) {
+      // A match where one side has spent its torpedoes and the other has not
+      // has diverged just as surely as one where a hull moved.
+      h = mixU32(h, Magazine.torpedoes[eid]!);
+      h = mixFloat(h, Magazine.rearmRemainingS[eid]!);
     }
   }
 

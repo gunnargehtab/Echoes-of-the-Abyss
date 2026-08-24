@@ -70,6 +70,7 @@ export type ReplayCommand =
     }
   | { tick: number; type: 'depth'; slot: number; unit: number; depth: number }
   | { tick: number; type: 'attack'; slot: number; unit: number; contact: number; queued: boolean }
+  | { tick: number; type: 'torpedo'; slot: number; unit: number; contact: number }
   | { tick: number; type: 'harvest'; slot: number; unit: number; node: number; queued: boolean }
   | { tick: number; type: 'throttle'; slot: number; unit: number; throttle: HarvestThrottle }
   | { tick: number; type: 'silent'; slot: number; unit: number; active: boolean }
@@ -237,6 +238,9 @@ function applyCommand(match: Match, command: ReplayCommand): void {
       break;
     case 'attack':
       match.orderAttackContact(command.slot, eid(command.unit), command.contact, command.queued);
+      break;
+    case 'torpedo':
+      match.orderLaunchTorpedo(command.slot, eid(command.unit), command.contact);
       break;
     case 'harvest':
       match.orderHarvest(command.slot, eid(command.unit), eid(command.node), command.queued);

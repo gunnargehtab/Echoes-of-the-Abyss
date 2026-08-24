@@ -36,11 +36,13 @@ import {
   faunaStatsFor,
   HAZARDS,
   HazardPhase,
+  OrdnanceKind,
   ResolutionTier,
   SelfEventKind,
   type EchoSnapshot,
   type SelfEvent,
   type GameOverPayload,
+  type OwnOrdnance,
   type OwnStructure,
   type OwnUnit,
   type ResourceNodeInfo,
@@ -52,7 +54,9 @@ import {
   Harvester,
   HarvestMode,
   Health,
+  Magazine,
   MoveOrder,
+  Ordnance,
   Owner,
   Fauna,
   Position,
@@ -74,6 +78,7 @@ import { separationSystem } from './systems/separation.ts';
 import { clearQueue, enqueue, orderQueueSystem, queueView } from './systems/orderQueue.ts';
 import { harvestSystem } from './systems/harvest.ts';
 import { movementSystem } from './systems/movement.ts';
+import { launchTorpedo, ordnanceSystem } from './systems/ordnance.ts';
 import { pressureSystem } from './systems/pressure.ts';
 import { productionSystem } from './systems/production.ts';
 import { randomSeed } from './rng.ts';
@@ -514,6 +519,35 @@ export class Match {
     Weapon.orderedTargetEid[eid] = target;
   }
 
+  /**
+   * Launch a torpedo at a contact the player has heard.
+   *
+   * By opaque handle, exactly like `orderAttackContact`, and for the same
+   * reason: the handle is the proof that this slot resolved this emitter. A
+   * client cannot guess its way to a firing solution on something it never
+   * detected, which is the whole of the acoustic fog of war applied to the
+   * weapon that would most reward cheating it.
+   *
+   * Returns the ordnance entity, or 0 when the shot is refused — the room
+   * ignores the result, the tests do not.
+   */
+  orderLaunchTorpedo(slot: number, eid: number, contactHandle: number): number {
+    this.recordCommand({
+      tick: this.world.tick,
+      type: 'torpedo',
+      slot,
+      unit: this.localId(eid),
+      contact: contactHandle,
+    });
+    if (!this.owns(slot, eid) || !hasComponent(this.world, Magazine, eid)) return 0;
+    const target = this.echo.entityForHandle(slot, contactHandle);
+    if (target === undefined) return 0;
+    if (!hasComponent(this.world, Owner, target) || Owner.slot[target] === slot) return 0;
+    if (!hasComponent(this.world, Health, target) || Health.hp[target]! <= 0) return 0;
+
+    return launchTorpedo(this.world, eid, Position.x[target]!, Position.y[target]!);
+  }
+
   /** Send a harvester to a specific nodule field. */
   orderHarvest(slot: number, eid: number, nodeEid: number, queued = false): void {
     this.recordCommand({
@@ -778,6 +812,11 @@ export class Match {
     // is a correction to where hulls ended up, and detection must see the
     // corrected picture rather than a stack that no longer exists.
     separationSystem(this.world);
+    // Ordnance last of the movers, so a fuse checks against where hulls
+    // actually finished the tick rather than where they started it. A torpedo
+    // that detonated on a position its target had already left would be the
+    // one weapon in the game you could outrun by a single frame.
+    ordnanceSystem(this.world, this.destroyedScratch);
     const physicsCost = performance.now() - physicsStarted;
     if (physicsCost > this.worstPhysicsMs) this.worstPhysicsMs = physicsCost;
     // After the systems that can finish an order: a unit that arrived this
@@ -992,6 +1031,7 @@ export class Match {
         tick: this.world.tick,
         units,
         structures,
+        ordnance: this.collectOwnOrdnance(slot),
         contacts: result.contactsBySlot.get(slot) ?? [],
         peakSig,
         nodules: economyFor(this.world, slot).nodules,
@@ -1044,12 +1084,48 @@ export class Match {
       if (hasComponent(this.world, DepthOrder, eid) && DepthOrder.active[eid] === 1) {
         unit.depthOrder = DepthOrder.targetM[eid]!;
       }
+      if (hasComponent(this.world, Magazine, eid)) {
+        unit.torpedoes = Magazine.torpedoes[eid]!;
+        if (Magazine.rearmRemainingS[eid]! > 0) {
+          unit.rearmRemainingS = Magazine.rearmRemainingS[eid]!;
+        }
+      }
       if (hasComponent(this.world, Harvester, eid)) {
         unit.cargo = Harvester.cargo[eid]!;
         unit.cargoKind = Harvester.cargoKind[eid] as ResourceKind;
         unit.throttle = Harvester.throttle[eid] as HarvestThrottle;
       }
       out.push(unit);
+    }
+    return out;
+  }
+
+  /**
+   * A player's own ordnance in the water.
+   *
+   * Sent in full, like their hulls, and for the same reason: it is theirs. The
+   * enemy's view of the same torpedo goes through the Echo Layer as an ordinary
+   * contact, which is what makes "you always hear it coming" a property of the
+   * simulation rather than a favour the renderer does.
+   */
+  private collectOwnOrdnance(slot: number): OwnOrdnance[] {
+    const out: OwnOrdnance[] = [];
+    for (let eid = 0; eid < Owner.slot.length; eid++) {
+      if (!hasComponent(this.world, Owner, eid)) continue;
+      if (Owner.slot[eid] !== slot) continue;
+      if (!hasComponent(this.world, Ordnance, eid)) continue;
+
+      out.push({
+        id: eid,
+        kind: Ordnance.kind[eid] as OrdnanceKind,
+        x: Position.x[eid]!,
+        y: Position.y[eid]!,
+        depth: Position.depth[eid]!,
+        heading: Ordnance.heading[eid]!,
+        sig: Acoustic.sig[eid]!,
+        remainingS: Ordnance.remainingS[eid]!,
+        locked: Ordnance.targetEid[eid]! !== 0,
+      });
     }
     return out;
   }

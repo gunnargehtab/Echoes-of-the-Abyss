@@ -195,6 +195,11 @@ const MARK_STYLE: Record<EchoMarkKind, { color: number; alpha: number; radiusM: 
   // should be able to tell at a glance that they have found an economy rather
   // than a fight.
   [EchoMarkKind.IndustrialHum]: { color: 0x3f7f86, alpha: 0.28, radiusM: 520 },
+  // Tight and pale, because a wake is the one piece of residue whose *shape*
+  // carries information: laid down once a second along a torpedo's run, a
+  // string of small marks draws the track it took, and a wide blob would smear
+  // the line back into a single vague area (docs/systems-combat.md §12).
+  [EchoMarkKind.TorpedoWake]: { color: 0x9fb6c4, alpha: 0.24, radiusM: 160 },
 };
 
 /**

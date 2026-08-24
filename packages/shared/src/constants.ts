@@ -110,6 +110,76 @@ export const SILENT_RUNNING = {
 } as const;
 
 /**
+ * Ordnance — docs/systems-combat.md.
+ *
+ * The combat doc's §3 table is the acoustic contract for everything a weapon
+ * puts in the water, and it is SPEC: a weapon in this game is differentiated by
+ * *loudness, direction and delivery* rather than by a damage type, so these
+ * numbers are the mechanic and not a tuning of it.
+ *
+ * The rule the whole group answers to is §1's second: **nothing lethal is
+ * inaudible**. A torpedo runs at SIG 60 for its entire twenty seconds, which is
+ * louder than every cruise SIG in the roster — that is what makes a short
+ * time-to-kill survivable rather than arbitrary, and it is asserted by test
+ * rather than left as an intention.
+ */
+export const ORDNANCE = {
+  /** SPEC — §5. The alpha-strike weapon, and the reason silence is a defence. */
+  TORPEDO: {
+    /** Sustained SIG of a running torpedo. §3. */
+    SIG_RUNNING: 60,
+    /** Burst added at the launcher on release. §3. */
+    LAUNCH_SIG: 25,
+    /** Metres per second — faster than every hull in the roster. §5. */
+    SPEED_MPS: 160,
+    /** Seconds before it goes inert. 20 s x 160 m/s is the 3,200 m run. §5. */
+    RUN_TIME_S: 20,
+    /** Full angle of the seeker's forward cone, degrees. §5. */
+    SEEKER_CONE_DEG: 60,
+    /** Baseline seeker sensitivity. Factions differ — §11. */
+    SEEKER_HYD: 50,
+    /** §5, and §9's band: a Corvette dies to one, a Cruiser to two. */
+    DAMAGE: 700,
+    /** §5 — one or two gun cycles kill it, if the gun is free. */
+    MAX_HP: 40,
+    /** Torpedoes aboard a launcher. Scarcity is the class identity. §5. */
+    MAGAZINE: 2,
+    /** TUNABLE — §5 puts rearm at a Bastion or Foundry, at this reach. */
+    REARM_RANGE_M: 300,
+    /** TUNABLE — seconds per torpedo taken aboard. §5. */
+    REARM_TIME_S: 15,
+    /**
+     * TUNABLE — how sharply it can turn, degrees per second.
+     *
+     * Not decoration: at 160 m/s this is a turn radius of about 150 m, so a
+     * hull that breaks across the seeker's nose late can make it overshoot.
+     * A torpedo that turned instantly would be a hitscan weapon with travel
+     * time, and §2's counter cycle needs it to be dodgeable as well as
+     * decoyable.
+     */
+    TURN_RATE_DEG_S: 60,
+    /** TUNABLE — metres per second it changes depth to follow a target. */
+    DEPTH_RATE_MPS: 60,
+    /** TUNABLE — proximity fuse margin beyond the target's own hull radius. */
+    FUSE_MARGIN_M: 25,
+    /**
+     * Seconds between seeker re-evaluations.
+     *
+     * Deliberately the Echo Layer's own beat (1 / SIM.ECHO_HZ): a seeker is a
+     * detection pass, detection is the expensive thing in this simulation, and
+     * a torpedo has no more right to resolve the world at 60 Hz than a player
+     * does. It also means a decoy deployed now is heard by the seeker within
+     * the same 200 ms window a listener would have taken to notice it.
+     */
+    SEEKER_INTERVAL_S: 0.2,
+    /** TUNABLE — seconds between wake marks laid along the run. */
+    WAKE_MARK_INTERVAL_S: 1,
+    /** TUNABLE — intensity each of those adds. A wake is faint by design. */
+    WAKE_MARK_INTENSITY: 0.05,
+  },
+} as const;
+
+/**
  * TUNABLE — how loud a piece of acoustic residue is, and how it merges.
  *
  * Echo Marks are priced through the same propagation model as everything else
@@ -144,6 +214,15 @@ export const ECHO_MARKS = {
    * destroyed structure because an economy is a state, not an event.
    */
   HUM_SIG: 14,
+  /**
+   * A torpedo wake — the faintest residue there is, ~1.2 km to HYD 70.
+   *
+   * Quieter than a battle site because a wake is disturbed water rather than an
+   * event: it should be readable by a scout that crosses the track and
+   * invisible to one a kilometre off it, or the map would draw every torpedo
+   * run for everybody and §12's inference stops being work.
+   */
+  TORPEDO_WAKE_SIG: 8,
   /**
    * Intensity one delivered cargo adds to the hum, as a fraction of full.
    *
@@ -468,6 +547,14 @@ export const PERSISTENCE = {
   /** Echo Marks: acoustic residue left on the terrain layer. */
   BATTLE_SITE_S: 90,
   DESTROYED_STRUCTURE_S: 180,
+  /**
+   * A torpedo wake — TUNABLE, and the shortest memory the layer keeps.
+   *
+   * Half a battle site: a wake is water that was pushed aside and is already
+   * closing again, and a track that outlived the fight it belonged to would
+   * tell a scout where ordnance flew long after that stopped being news.
+   */
+  TORPEDO_WAKE_S: 45,
   /** Minimum HYD required to read Echo Marks at all. */
   ECHO_MARK_MIN_HYD: 40,
 } as const;

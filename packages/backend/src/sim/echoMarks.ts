@@ -40,6 +40,7 @@ const SIG_BY_KIND: Record<EchoMarkKind, number> = {
   [EchoMarkKind.Battle]: ECHO_MARKS.BATTLE_SIG,
   [EchoMarkKind.DestroyedStructure]: ECHO_MARKS.DESTROYED_STRUCTURE_SIG,
   [EchoMarkKind.IndustrialHum]: ECHO_MARKS.HUM_SIG,
+  [EchoMarkKind.TorpedoWake]: ECHO_MARKS.TORPEDO_WAKE_SIG,
 };
 
 /**
@@ -61,6 +62,7 @@ const LIFETIME_BY_KIND: Record<EchoMarkKind, number> = {
   [EchoMarkKind.Battle]: PERSISTENCE.BATTLE_SITE_S,
   [EchoMarkKind.DestroyedStructure]: PERSISTENCE.DESTROYED_STRUCTURE_S,
   [EchoMarkKind.IndustrialHum]: ECHO_MARKS.HUM_DECAY_S,
+  [EchoMarkKind.TorpedoWake]: PERSISTENCE.TORPEDO_WAKE_S,
 };
 
 export interface Mark {

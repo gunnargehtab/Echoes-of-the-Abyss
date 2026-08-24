@@ -28,6 +28,7 @@ import {
 import {
   Health,
   MoveOrder,
+  Ordnance,
   Owner,
   Position,
   SilentRunning,
@@ -118,6 +119,18 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
         for (let j = 0; j < candidates.length; j++) {
           const other = candidates[j]!;
           if (Owner.slot[other] === slot || Health.hp[other]! <= 0) continue;
+          // Ordnance is never auto-acquired by a gun.
+          //
+          // The header's licence for ignoring resolution tiers is that weapon
+          // ranges sit inside the distance at which any combat *hull* is
+          // audible, so "in range" implies "heard". Ordnance breaks that: a
+          // mine sits at SIG 2 and is inaudible at any range, so a turret that
+          // swung onto one would be shooting something it could not possibly
+          // have detected — a maphack expressed as gunfire. Engaging a torpedo
+          // is point defence, and point defence is a deliberate act
+          // (docs/systems-combat.md §5), so it gets its own path rather than
+          // falling out of the auto-acquire loop.
+          if (hasComponent(world, Ordnance, other)) continue;
           const d = Math.hypot(Position.x[other]! - x, Position.y[other]! - y);
           if (d <= bestDistance) {
             bestDistance = d;

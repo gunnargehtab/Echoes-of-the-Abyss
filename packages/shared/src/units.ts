@@ -55,6 +55,18 @@ export interface UnitStats {
   attackDamage: number;
   attackRangeM: number;
   attackCooldownS: number;
+  /**
+   * Does this hull carry torpedo tubes? docs/systems-combat.md §5.
+   *
+   * A stat rather than a list in the ordnance system, because "which hulls can
+   * launch" is a roster fact the design bible owns — and because a list kept
+   * beside the weapon would be the second place the roster is written down.
+   *
+   * The Light Scout does not: docs/units.md gives it a sensor suite for a hull
+   * and says it "finds things, it does not fight them", and a scout that could
+   * one-shot a Corvette from a Tier-2 bearing would be doing both.
+   */
+  carriesTorpedoes: boolean;
 }
 
 /** Half a hull's length: the radius the simulation keeps clear around it. */
@@ -79,6 +91,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     attackDamage: 8,
     attackRangeM: 400,
     attackCooldownS: 1,
+    carriesTorpedoes: false,
   },
   [UnitKind.Corvette]: {
     kind: UnitKind.Corvette,
@@ -96,6 +109,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     attackDamage: 22,
     attackRangeM: 550,
     attackCooldownS: 1.2,
+    carriesTorpedoes: true,
   },
   [UnitKind.Cruiser]: {
     kind: UnitKind.Cruiser,
@@ -114,6 +128,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     attackDamage: 60,
     attackRangeM: 900,
     attackCooldownS: 2.5,
+    carriesTorpedoes: true,
   },
   [UnitKind.AbyssalSubmersible]: {
     kind: UnitKind.AbyssalSubmersible,
@@ -133,6 +148,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     attackDamage: 35,
     attackRangeM: 650,
     attackCooldownS: 1.8,
+    carriesTorpedoes: true,
   },
   [UnitKind.Harvester]: {
     kind: UnitKind.Harvester,
@@ -167,6 +183,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     attackDamage: 0,
     attackRangeM: 0,
     attackCooldownS: 0,
+    carriesTorpedoes: false,
   },
 };
 

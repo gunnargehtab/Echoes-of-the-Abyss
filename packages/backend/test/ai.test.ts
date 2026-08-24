@@ -466,6 +466,7 @@ function briefing(difficulty: AiDifficulty): AiBriefing {
 function exposedSnapshot(): EchoSnapshot {
   return {
     tick: 600,
+    ordnance: [],
     units: [
       {
         id: 1,

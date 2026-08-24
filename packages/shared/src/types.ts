@@ -108,6 +108,27 @@ export enum StructureKind {
 }
 
 /**
+ * Ordnance — things a weapon puts in the water rather than damage it applies.
+ * docs/systems-combat.md §2, the weapon triangle.
+ *
+ * Deliberately *not* UnitKind. Ordnance carries Position, Acoustic, Owner and
+ * Health like a hull, so the Echo Layer resolves it with no special case — a
+ * running torpedo is a contact because nothing marks it out as anything else,
+ * and the defender hears it coming (§1, rule 2). What separates it from a hull
+ * is that nobody steers it: it has no MoveOrder, and its seeker is its own.
+ */
+export enum OrdnanceKind {
+  /** §5 — physical, homing, scarce. Emits SIG 60 its whole run. */
+  Torpedo = 0,
+  /** §6 — silent, patient, positional. A listener that waits for you to be loud. */
+  Mine = 1,
+  /** §5 — a decoy that saves the hull by being louder than it. */
+  Noisemaker = 2,
+  /** §8 — the weapon that crosses depth bands. */
+  DepthCharge = 3,
+}
+
+/**
  * Harvester throttle — the economy's central decision surface: how loud am I
  * willing to be paid. docs/economy.md §3.
  */
@@ -150,6 +171,16 @@ export interface Contact {
    * the whole reason fauna are worth having.
    */
   fauna?: FaunaSpecies;
+  /**
+   * Ordnance kind, at Tier 3+ only — the same wall `kind` and `fauna` sit
+   * behind, for the same reason.
+   *
+   * docs/systems-combat.md §1 requires that a torpedo be audible its whole
+   * run, not that it be *identifiable*: at Tier 1 a closing contact could be a
+   * torpedo or a scout, and the seconds spent deciding which are the mechanic.
+   * Classification is the moment you find out, and by then it is close.
+   */
+  ordnance?: OrdnanceKind;
   /** Only known at Tier 4 (track). */
   hp?: number;
   maxHp?: number;
@@ -173,6 +204,16 @@ export enum EchoMarkKind {
   DestroyedStructure = 1,
   /** Someone is working here. Intensity tracks throughput. */
   IndustrialHum = 2,
+  /**
+   * A torpedo ran through here — docs/systems-combat.md §12.
+   *
+   * The faintest and shortest-lived residue in the game, and the most
+   * *directional* information any of it carries: a line of wake marks says
+   * which way ordnance flew, and therefore roughly where it was launched from
+   * and what it was aimed at. A scout that arrives late reads the geometry of
+   * a fight it did not see.
+   */
+  TorpedoWake = 3,
 }
 
 /**
@@ -364,6 +405,41 @@ export interface OwnUnit {
   cargo?: number;
   cargoKind?: ResourceKind;
   throttle?: HarvestThrottle;
+  /**
+   * Torpedoes aboard, for hulls that carry them.
+   *
+   * Sent because scarcity is the class identity (docs/systems-combat.md §5):
+   * the gun never runs dry and the torpedo always might, and a player who
+   * cannot see the count cannot make the decision that fact exists to force.
+   */
+  torpedoes?: number;
+  /** Seconds until the next torpedo is aboard, while rearming at a depot. */
+  rearmRemainingS?: number;
+}
+
+/**
+ * A piece of the player's own ordnance in the water.
+ *
+ * Sent in full, like `OwnUnit`, and for the same reason: it is theirs, so
+ * sending it leaks nothing. The enemy's view of the same torpedo is a
+ * `Contact`, resolved by the Echo Layer exactly as a hull is — which is what
+ * makes "you always hear it coming" a fact about the simulation rather than a
+ * promise the renderer keeps.
+ */
+export interface OwnOrdnance {
+  id: number;
+  kind: OrdnanceKind;
+  x: number;
+  y: number;
+  depth: number;
+  /** Radians. Where it is pointing, which for a seeker is where it is going. */
+  heading: number;
+  /** Live acoustic signature, 0-100 — a running torpedo is loud. */
+  sig: number;
+  /** Seconds of run, lifetime or decoy life left. */
+  remainingS: number;
+  /** True once a seeker has something. Absent for ordnance that never seeks. */
+  locked?: boolean;
 }
 
 /** One pending order, as much of it as the client needs to draw the plan. */
@@ -473,6 +549,8 @@ export interface EchoSnapshot {
   tick: number;
   units: OwnUnit[];
   structures: OwnStructure[];
+  /** The player's own ordnance in the water — torpedoes, mines, decoys. */
+  ordnance: OwnOrdnance[];
   contacts: Contact[];
   /** Loudest SIG across the player's units — the headline HUD number. */
   peakSig: number;
