@@ -15,6 +15,7 @@
 import { hasComponent } from 'bitecs';
 import {
   Acoustic,
+  Countermeasure,
   DepthOrder,
   Harvester,
   Health,
@@ -122,6 +123,9 @@ export function hashWorld(world: SimWorld): number {
       // Ordinal, not the raw eid, for the reason the whole function exists:
       // two identical worlds must hash alike whichever process built them.
       h = mixU32(h, ordinalOf.get(Ordnance.targetEid[eid]!) ?? -1);
+    }
+    if (hasComponent(world, Countermeasure, eid)) {
+      h = mixFloat(h, Countermeasure.cooldownRemainingS[eid]!);
     }
     if (hasComponent(world, Magazine, eid)) {
       // A match where one side has spent its torpedoes and the other has not

@@ -177,6 +177,37 @@ export const ORDNANCE = {
     /** TUNABLE — intensity each of those adds. A wake is faint by design. */
     WAKE_MARK_INTENSITY: 0.05,
   },
+
+  /**
+   * SPEC — §5. The decoy, and the reason a seeker re-acquires every pass.
+   *
+   * A noisemaker works by being **louder than the hull it protects** — SIG 70
+   * against a Cruiser's 65 — which is also its whole cost: it is real noise at
+   * your real position, so saving the hull spends the formation's quiet. Every
+   * other listener on the map hears it too.
+   */
+  NOISEMAKER: {
+    /** Sustained SIG for its short life. §3. */
+    SIG: 70,
+    /** Seconds it stays loud. §5. */
+    DURATION_S: 8,
+    /** Seconds before the same hull can deploy another. TUNABLE. */
+    COOLDOWN_S: 20,
+    /** TUNABLE — how far behind the hull it is released, metres. */
+    DEPLOY_OFFSET_M: 60,
+  },
+
+  /**
+   * SPEC — §5. Point defence: a gun choosing to shoot at ordnance.
+   *
+   * "Not a shield; a gun *choosing*" — every cycle spent on a torpedo is a
+   * cycle not spent on the hull that launched it, which is what keeps a
+   * saturation volley a real answer to it.
+   */
+  POINT_DEFENCE: {
+    /** Terminal range at which a gun may engage inbound ordnance. §5. */
+    RANGE_M: 250,
+  },
 } as const;
 
 /**

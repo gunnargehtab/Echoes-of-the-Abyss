@@ -46,11 +46,11 @@ export const ORDNANCE_STATS: Record<OrdnanceKind, OrdnanceStats> = {
     damage: ORDNANCE.TORPEDO.DAMAGE,
     radiusM: 10,
   },
-  // The remaining three arrive with the systems that fire them — mines (#165),
-  // countermeasures (#164) and depth charges (#167). Their stat blocks are
-  // authored here rather than left blank because docs/systems-combat.md §3
-  // already fixes their acoustics, and a table that disagreed with the doc
-  // while waiting for its system would be the exact drift CLAUDE.md forbids.
+  // Mines (#165) and depth charges (#167) arrive with the systems that fire
+  // them. Their stat blocks are authored here rather than left blank because
+  // docs/systems-combat.md §3 already fixes their acoustics, and a table that
+  // disagreed with the doc while waiting for its system would be the exact
+  // drift CLAUDE.md forbids.
   [OrdnanceKind.Mine]: {
     kind: OrdnanceKind.Mine,
     name: 'Mine',
@@ -64,10 +64,10 @@ export const ORDNANCE_STATS: Record<OrdnanceKind, OrdnanceStats> = {
   [OrdnanceKind.Noisemaker]: {
     kind: OrdnanceKind.Noisemaker,
     name: 'Noisemaker',
-    sig: 70,
+    sig: ORDNANCE.NOISEMAKER.SIG,
     maxHp: 0,
     speed: 0,
-    lifetimeS: 8,
+    lifetimeS: ORDNANCE.NOISEMAKER.DURATION_S,
     damage: 0,
     radiusM: 6,
   },

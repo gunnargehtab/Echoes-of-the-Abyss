@@ -50,6 +50,7 @@ import {
 import {
   Acoustic,
   ActivePing,
+  Countermeasure,
   DepthOrder,
   Harvester,
   HarvestMode,
@@ -78,7 +79,7 @@ import { separationSystem } from './systems/separation.ts';
 import { clearQueue, enqueue, orderQueueSystem, queueView } from './systems/orderQueue.ts';
 import { harvestSystem } from './systems/harvest.ts';
 import { movementSystem } from './systems/movement.ts';
-import { launchTorpedo, ordnanceSystem } from './systems/ordnance.ts';
+import { deployNoisemaker, launchTorpedo, ordnanceSystem } from './systems/ordnance.ts';
 import { pressureSystem } from './systems/pressure.ts';
 import { productionSystem } from './systems/production.ts';
 import { randomSeed } from './rng.ts';
@@ -546,6 +547,26 @@ export class Match {
     if (!hasComponent(this.world, Health, target) || Health.hp[target]! <= 0) return 0;
 
     return launchTorpedo(this.world, eid, Position.x[target]!, Position.y[target]!);
+  }
+
+  /**
+   * Drop a noisemaker — docs/systems-combat.md §5.
+   *
+   * No target and no handle, unlike a launch: a decoy is a reflex, aimed at
+   * nothing and thrown behind you. It needs no information gate for the same
+   * reason, since it reveals only where you already were.
+   *
+   * Returns the decoy entity, or 0 when the suite is still cold.
+   */
+  deployNoisemaker(slot: number, eid: number): number {
+    this.recordCommand({
+      tick: this.world.tick,
+      type: 'noisemaker',
+      slot,
+      unit: this.localId(eid),
+    });
+    if (!this.owns(slot, eid)) return 0;
+    return deployNoisemaker(this.world, eid);
   }
 
   /** Send a harvester to a specific nodule field. */
@@ -1083,6 +1104,12 @@ export class Match {
       }
       if (hasComponent(this.world, DepthOrder, eid) && DepthOrder.active[eid] === 1) {
         unit.depthOrder = DepthOrder.targetM[eid]!;
+      }
+      if (
+        hasComponent(this.world, Countermeasure, eid) &&
+        Countermeasure.cooldownRemainingS[eid]! > 0
+      ) {
+        unit.decoyCooldownS = Countermeasure.cooldownRemainingS[eid]!;
       }
       if (hasComponent(this.world, Magazine, eid)) {
         unit.torpedoes = Magazine.torpedoes[eid]!;

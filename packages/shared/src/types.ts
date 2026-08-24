@@ -415,6 +415,14 @@ export interface OwnUnit {
   torpedoes?: number;
   /** Seconds until the next torpedo is aboard, while rearming at a depot. */
   rearmRemainingS?: number;
+  /**
+   * Seconds until the decoy suite can fire again. Absent when it is ready.
+   *
+   * Sent for the same reason the magazine is: a countermeasure the player
+   * cannot see the state of is one they will reach for at the moment it is
+   * not there (docs/systems-combat.md §5).
+   */
+  decoyCooldownS?: number;
 }
 
 /**

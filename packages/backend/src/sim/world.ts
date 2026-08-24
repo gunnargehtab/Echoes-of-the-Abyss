@@ -27,6 +27,7 @@ import {
 } from '@echoes/shared';
 import {
   Acoustic,
+  Countermeasure,
   DepthOrder,
   Harvester,
   HarvestMode,
@@ -454,6 +455,15 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
     addComponent(world, Magazine, eid);
     Magazine.torpedoes[eid] = ORDNANCE.TORPEDO.MAGAZINE;
     Magazine.rearmRemainingS[eid] = 0;
+  }
+
+  // "Any combat hull can deploy one" (docs/systems-combat.md §5) — so the gate
+  // is being armed at all, not being a torpedo carrier. A Light Scout has no
+  // tubes and still gets a decoy, which is the point: the hull most likely to
+  // be caught alone is the one that most needs a way out.
+  if (stats.attackDamage > 0) {
+    addComponent(world, Countermeasure, eid);
+    Countermeasure.cooldownRemainingS[eid] = 0;
   }
 
   if (opts.kind === UnitKind.Harvester) {

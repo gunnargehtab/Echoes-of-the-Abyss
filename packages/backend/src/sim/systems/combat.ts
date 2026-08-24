@@ -19,6 +19,8 @@
 import { defineQuery, hasComponent } from 'bitecs';
 import {
   EchoMarkKind,
+  ORDNANCE,
+  OrdnanceKind,
   SelfEventKind,
   statsFor,
   structureStatsFor,
@@ -38,6 +40,7 @@ import {
   Weapon,
 } from '../components.ts';
 import { applyFiringSpike } from './acoustics.ts';
+import { isInterceptable } from './ordnance.ts';
 import { raiseSelfEvent } from '../world.ts';
 import type { SimWorld } from '../world.ts';
 
@@ -52,6 +55,8 @@ const BATTLE_MARK_PER_SHOT = 0.09;
 
 const shooters = defineQuery([Weapon, Position, Owner, Health]);
 const targetables = defineQuery([Position, Owner, Health]);
+/** Ordnance a gun could engage — the point-defence candidate set. */
+const interceptable = defineQuery([Ordnance, Position, Owner, Health]);
 
 interface WeaponProfile {
   damage: number;
@@ -81,6 +86,41 @@ function profileFor(world: SimWorld, eid: number): WeaponProfile {
 
 function targetAlive(world: SimWorld, eid: number): boolean {
   return eid !== 0 && hasComponent(world, Health, eid) && Health.hp[eid]! > 0;
+}
+
+/**
+ * The nearest interceptable piece of enemy ordnance inside terminal range, or 0.
+ *
+ * Bounded by the *smaller* of the weapon's own reach and the point-defence
+ * range: a Cruiser's 900 m gun does not get a 900 m anti-torpedo umbrella, and
+ * a short-ranged hull cannot reach further at ordnance than it can at a ship.
+ * §5 is explicit that this is a terminal engagement — the last quarter
+ * kilometre, not an escort screen.
+ */
+function nearestInboundOrdnance(
+  world: SimWorld,
+  shooter: number,
+  x: number,
+  y: number,
+  slot: number,
+  weaponRangeM: number
+): number {
+  const reach = Math.min(weaponRangeM, ORDNANCE.POINT_DEFENCE.RANGE_M);
+  const inbound = interceptable(world);
+  let best = 0;
+  let bestD = reach;
+
+  for (let i = 0; i < inbound.length; i++) {
+    const other = inbound[i]!;
+    if (other === shooter || Owner.slot[other] === slot) continue;
+    if (Health.hp[other]! <= 0) continue;
+    if (!isInterceptable(Ordnance.kind[other] as OrdnanceKind)) continue;
+    const d = Math.hypot(Position.x[other]! - x, Position.y[other]! - y);
+    if (d > bestD) continue;
+    bestD = d;
+    best = other;
+  }
+  return best;
 }
 
 export function combatSystem(world: SimWorld, destroyed: number[]): void {
@@ -114,7 +154,23 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
       // Auto-acquire: nearest live enemy in range. Silent hulls hold fire, and
       // units already travelling somewhere do not stop to brawl on their own.
       const busy = isMobile && MoveOrder.active[eid] === 1;
-      if (!silent && !busy) {
+
+      // Point defence first, and only inside the terminal range
+      // (docs/systems-combat.md §5). A gun with an inbound torpedo 250 m away
+      // has something better to shoot than the hull that launched it — but the
+      // choice is the mechanic, not a shield: this consumes the same cooldown
+      // as any other shot, so a saturation volley still gets through and the
+      // launcher gets a free cycle out of every torpedo it spends.
+      //
+      // Unlike the hull loop below, ordnance here is not a detection problem:
+      // a torpedo runs at SIG 60, which is louder than most of the roster's
+      // cruise, and at 250 m it is not merely audible but deafening. The
+      // header's "in range implies heard" licence holds here for real.
+      if (!silent) {
+        target = nearestInboundOrdnance(world, eid, x, y, slot, profile.rangeM);
+      }
+
+      if (target === 0 && !silent && !busy) {
         let bestDistance = profile.rangeM;
         for (let j = 0; j < candidates.length; j++) {
           const other = candidates[j]!;

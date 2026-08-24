@@ -264,3 +264,17 @@ export const Magazine = defineComponent({
   /** Seconds until the next torpedo is aboard; only counts down at a depot. */
   rearmRemainingS: Types.f32,
 });
+
+/**
+ * A hull's countermeasure suite — docs/systems-combat.md §5.
+ *
+ * A cooldown rather than a magazine, unlike torpedoes, and the asymmetry is
+ * deliberate: a torpedo is an offensive commitment you can run out of, while a
+ * decoy is a reflex you can only use so often. What limits it is not supply
+ * but the fact that deploying one makes real noise at your real position — so
+ * the interesting cost is acoustic, and a stock count would only add a second,
+ * duller one on top.
+ */
+export const Countermeasure = defineComponent({
+  cooldownRemainingS: Types.f32,
+});

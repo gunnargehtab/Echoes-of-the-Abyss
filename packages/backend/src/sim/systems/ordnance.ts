@@ -41,6 +41,7 @@ import {
 } from '@echoes/shared';
 import {
   Acoustic,
+  Countermeasure,
   Health,
   Magazine,
   Ordnance,
@@ -49,6 +50,7 @@ import {
   Pressure,
   Structure,
   Unit,
+  Velocity,
 } from '../components.ts';
 import { applyFiringSpike } from './acoustics.ts';
 import { raiseSelfEvent, spawnOrdnance, type SimWorld } from '../world.ts';
@@ -58,6 +60,7 @@ const ordnanceEntities = defineQuery([Ordnance, Position, Owner, Health]);
 const audible = defineQuery([Position, Acoustic, Owner, Health]);
 const magazines = defineQuery([Magazine, Position, Owner]);
 const depots = defineQuery([Structure, Position, Owner]);
+const suites = defineQuery([Countermeasure]);
 
 /**
  * How close a torpedo must come to detonate on a target.
@@ -224,33 +227,104 @@ function isRearmDepot(kind: number): boolean {
   return kind === StructureKind.Bastion || kind === StructureKind.Foundry;
 }
 
+/** Decoy suites recharging. Unlike rearming, this needs no depot. */
+function countermeasureCooldowns(world: SimWorld): void {
+  const hulls = suites(world);
+  for (let i = 0; i < hulls.length; i++) {
+    const eid = hulls[i]!;
+    if (Countermeasure.cooldownRemainingS[eid]! <= 0) continue;
+    Countermeasure.cooldownRemainingS[eid] = Math.max(
+      0,
+      Countermeasure.cooldownRemainingS[eid]! - world.dt
+    );
+  }
+}
+
+/**
+ * Drop a noisemaker. Returns the decoy entity, or 0 when the suite is cold.
+ *
+ * Released *behind* the hull, on the reciprocal of its heading, because that is
+ * the geometry that saves it: a seeker re-acquiring onto a decoy dropped ahead
+ * would still be flying at the hull. Behind means the torpedo turns away.
+ *
+ * The cost is not the cooldown. A noisemaker is SIG 70 at the hull's real
+ * position — louder than every cruise signature in the roster — so every
+ * listener on the map hears the moment a formation panicked, and where it was
+ * standing when it did (docs/systems-combat.md §5, §13).
+ */
+export function deployNoisemaker(world: SimWorld, hull: number): number {
+  if (!hasComponent(world, Countermeasure, hull)) return 0;
+  if (Countermeasure.cooldownRemainingS[hull]! > 0) return 0;
+  Countermeasure.cooldownRemainingS[hull] = ORDNANCE.NOISEMAKER.COOLDOWN_S;
+
+  // Behind means behind whatever it was doing: its heading of travel, or — for
+  // a hull sitting still — the reciprocal of nothing, which is as good a
+  // direction as any and at least deterministic.
+  const vx = Velocity.x[hull] ?? 0;
+  const vy = Velocity.y[hull] ?? 0;
+  const heading = vx === 0 && vy === 0 ? 0 : Math.atan2(vy, vx);
+  const behind = heading + Math.PI;
+
+  return spawnOrdnance(world, {
+    kind: OrdnanceKind.Noisemaker,
+    slot: Owner.slot[hull]!,
+    faction: Owner.faction[hull]!,
+    x: world.terrain.clampXM(
+      Position.x[hull]! + Math.cos(behind) * ORDNANCE.NOISEMAKER.DEPLOY_OFFSET_M
+    ),
+    y: world.terrain.clampYM(
+      Position.y[hull]! + Math.sin(behind) * ORDNANCE.NOISEMAKER.DEPLOY_OFFSET_M
+    ),
+    depth: Position.depth[hull]!,
+    heading: behind,
+    // A decoy neither seeks nor cares how deep it is: it is a noise source,
+    // and the water it sits in is the water its hull was already surviving.
+    pressureRating: Pressure.rating[hull]!,
+  });
+}
+
+/**
+ * Can a gun shoot this piece of ordnance out of the water?
+ *
+ * Only what the doc gives a hull to: a torpedo has 40 HP and "one or two gun
+ * cycles kill it" (§5). A mine or a decoy has none, so point defence has
+ * nothing to engage — which is what keeps mines a wall you route around rather
+ * than a wall you shoot down.
+ */
+export function isInterceptable(kind: OrdnanceKind): boolean {
+  return ordnanceStatsFor(kind).maxHp > 0;
+}
+
 export function ordnanceSystem(world: SimWorld, destroyed: number[]): void {
   const dt = world.dt;
   rearmSystem(world);
+  countermeasureCooldowns(world);
 
   const entities = ordnanceEntities(world);
   for (let i = 0; i < entities.length; i++) {
     const eid = entities[i]!;
     if (Health.hp[eid]! <= 0) continue;
-    // Only torpedoes run. Mines, decoys and depth charges are ordnance too and
-    // get their own systems; this loop would steer them into the seabed.
-    if (Ordnance.kind[eid] !== OrdnanceKind.Torpedo) continue;
+    const kind = Ordnance.kind[eid] as OrdnanceKind;
 
     // Ordnance is not in the acoustics query — it carries no Unit or Structure
     // component, which is exactly what keeps it out of every hull system — so
-    // its live SIG is maintained here. Constant, and deliberately: a running
-    // torpedo does not have a quiet mode. The veil factor still applies,
-    // because a Spore Veil is symmetric about everything inside it.
-    Acoustic.sig[eid] =
-      ordnanceStatsFor(OrdnanceKind.Torpedo).sig * (Acoustic.sigFactor[eid]! || 1);
+    // its live SIG is maintained here. Constant, and deliberately: neither a
+    // running torpedo nor a screaming decoy has a quiet mode. The veil factor
+    // still applies, because a Spore Veil is symmetric about everything inside.
+    Acoustic.sig[eid] = ordnanceStatsFor(kind).sig * (Acoustic.sigFactor[eid]! || 1);
 
     Ordnance.remainingS[eid] = Ordnance.remainingS[eid]! - dt;
     if (Ordnance.remainingS[eid]! <= 0) {
-      // Out of run. It goes inert rather than detonating: a torpedo that
-      // exploded wherever it ran dry would be an area weapon nobody aimed.
+      // Out of run, or burnt out. It goes inert rather than detonating: a
+      // torpedo that exploded wherever it ran dry would be an area weapon
+      // nobody aimed, and a decoy that exploded would be a grenade.
       expire(eid, destroyed);
       continue;
     }
+
+    // Only torpedoes run. A noisemaker drifts where it was dropped and simply
+    // shouts; mines and depth charges get their own systems.
+    if (kind !== OrdnanceKind.Torpedo) continue;
 
     // --- Seeker ----------------------------------------------------------
     Ordnance.seekerCooldownS[eid] = Ordnance.seekerCooldownS[eid]! - dt;
