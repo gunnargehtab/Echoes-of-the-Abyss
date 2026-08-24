@@ -21,7 +21,7 @@ one with an argument behind it:
 node tools/balance/run.mjs --matchup consortium,commune --matches 10 \
   --out baselines/before.md
 node tools/balance/run.mjs --matchup consortium,commune --matches 10 \
-  --set HARVEST_THROTTLE.Overburden.yieldMultiplier=1.0 \
+  --set HARVEST_THROTTLE.Overburden.cargoMultiplier=1.0 \
   --out baselines/after.md
 ```
 

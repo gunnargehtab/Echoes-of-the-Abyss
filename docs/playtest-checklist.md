@@ -16,7 +16,7 @@ node tools/balance/run.mjs --matchup consortium,commune --matches 10
 
 # Argue with a TUNABLE constant using before/after numbers.
 node tools/balance/run.mjs --matchup consortium,commune --matches 10 \
-  --set HARVEST_THROTTLE.Overburden.yieldMultiplier=1.0 \
+  --set HARVEST_THROTTLE.Overburden.cargoMultiplier=1.0 \
   --out tools/balance/baselines/my-question.md
 
 node tools/balance/run.mjs --help
@@ -51,40 +51,51 @@ is evidence, not proof, and the sample size is printed beside it.
 
 ## A worked example — is Overburden a trap option?
 
-`HARVEST_THROTTLE[Overburden]` pays a 1.4x yield for 68 SIG against Standard's 1.0 at 45.
+`HARVEST_THROTTLE[Overburden]` hauls a 1.4x load for 68 SIG against Standard's 1.0 at 45.
 Whether that trade is worth taking is the kind of question the guard-rail tables raise and
 nobody could previously answer. So:
 
 ```bash
 node tools/balance/run.mjs --matchup consortium,commune --matches 10 --seed 7000   --max-minutes 25 --out tools/balance/baselines/overburden-before.md
-node tools/balance/run.mjs --matchup consortium,commune --matches 10 --seed 7000   --max-minutes 25 --set HARVEST_THROTTLE.Overburden.yieldMultiplier=1.0   --out tools/balance/baselines/overburden-after.md
+node tools/balance/run.mjs --matchup consortium,commune --matches 10 --seed 7000   --max-minutes 25 --set HARVEST_THROTTLE.Overburden.cargoMultiplier=1.0   --out tools/balance/baselines/overburden-after.md
 ```
 
 The Consortium is the faction whose doctrine harvests on Overburden; the Commune does not.
 
 | | Consortium income | Consortium win rate | Consortium tracked | Match length |
 | --- | --- | --- | --- | --- |
-| Yield 1.4 | 263 nodules/min | 14% (1 of 7 decided) | 922 s | 1047 s |
-| Yield 1.0 | 157 nodules/min | 50% (4 of 8 decided) | 765 s | 800 s |
+| Cargo 1.4 | 214 nodules/min | 40% (4 of 10 decided) | 659 s | 564 s |
+| Cargo 1.0 | 140 nodules/min | 63% (5 of 8 decided) | 642 s | 507 s |
 
 **What this supports.** The constant reaches the economy exactly where it should and with the
-magnitude it should: removing the premium cut the income of the faction that uses it by 40%,
-and left the faction that does not alone (220 to 242, inside the noise). That is the causal
-chain working end to end, and it is what makes the tool trustworthy for the next question.
+magnitude it should: removing the premium cut the income of the faction that uses it by 35%,
+and left the faction that does not alone (104 to 103). That is the causal chain working end
+to end, and it is what makes the tool trustworthy for the next question.
 
-**What this does not support.** The win rate moved from 14% to 50%, which is one win against
-four across seven and eight decided matches. That is well inside binomial noise at this
+**What this does not support.** The win rate moved from 40% to 63%, which is four wins
+against five across ten and eight decided matches. That is well inside binomial noise at this
 sample size, and reading it as "Overburden is a trap" would be exactly the mistake this
-harness exists to prevent. The suggestive part is that a 40% income cut did not visibly
-*hurt* — but suggestive is the correct word, and settling it needs a larger batch, more
-matchups, and ideally a Consortium mirror where the throttle is the only variable.
+harness exists to prevent. The suggestive part is that a 35% income *cut* did not hurt and
+may have helped — but suggestive is the correct word, and settling it needs a larger batch,
+more matchups, and ideally a Consortium mirror where the throttle is the only variable.
 
-**A property worth knowing before running the same experiment on a shorter match.** The yield
-multiplier sets how fast a hold fills, cargo is capped at 50 a trip, and a round trip is
-dominated by travel — so tripling the multiplier in a three-minute match produces
-*byte-identical* income, because it saves about three seconds out of forty and never buys a
-whole extra delivery. The lever only bites over a long game. That is a real property of the
-economy, not an artifact.
+**Read the guard-rail column, not just the verdict.** "Loud economies are unplayable" reads
+**breached** at cargo 1.4 and **held** at 1.0. The rule fires when the Consortium is *both*
+tracked the most and winning the least, and at 1.4 it leads the tracked column by eighteen
+seconds — 659 s against the Commune's 641 s — while winning 40% against 60%. Eighteen
+seconds out of six hundred is a tie, and four wins against six is a coin. So the verdict is
+resting on both halves of an AND that this sample cannot separate. The numbers are the
+reading; the word beside them is a tripwire, and this one is set finer than the measurement
+that feeds it.
+
+**A property this experiment found, and the bug it turned into.** The multiplier used to
+scale the *fill rate*, and against the fill rate it barely reached the economy at all: a hold
+capped at 50 a trip either way and a round trip is dominated by travel, so tripling it in a
+three-minute match produced *byte-identical* income. The 40% swing above was real but
+second-order, arriving through expansion over a full match rather than through the trip the
+lever is attached to — which meant Overburden earned what Standard earned for 23 more SIG.
+The multiplier now scales the load itself ([economy.md](economy.md) §3), so it bites on the
+first trip and a short match measures it. The harness found that, which is what it is for.
 
 Both reports are committed under `tools/balance/baselines/`, each with the command that
 produced it in its header.

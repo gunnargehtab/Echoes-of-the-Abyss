@@ -82,11 +82,29 @@ function nearestDepot(world: SimWorld, slot: number, x: number, y: number): numb
   return best;
 }
 
-/** How much of a given resource a hold takes. Crystal is dense, awkward cargo. */
+/**
+ * A full Standard-throttle hold of a given resource. Crystal is dense, awkward
+ * cargo. This is the unit the industrial hum is measured in, so it stays free
+ * of the throttle.
+ */
 function capacityFor(kind: ResourceKind): number {
   return kind === ResourceKind.ResonanceCrystal
     ? CRYSTAL.CARGO_CAPACITY
     : ECONOMY.CARGO_CAPACITY_NODULES;
+}
+
+/**
+ * What this trip actually takes: the throttle scales the *load*, not the cut.
+ *
+ * docs/economy.md §3 sells the throttle as "how loud am I willing to be paid",
+ * and against the fill rate it was not — a hold caps at fifty either way and a
+ * round trip is dominated by travel, so a louder setting bought back about a
+ * second and earned exactly what Standard earned. Against the load it pays
+ * what the doc says, and because MINING_RATE_PER_S is fixed the bigger load
+ * also costs longer on the node at the louder SIG.
+ */
+function holdFor(kind: ResourceKind, cargoMultiplier: number): number {
+  return capacityFor(kind) * cargoMultiplier;
 }
 
 /**
@@ -181,9 +199,20 @@ export function harvestSystem(world: SimWorld): void {
       }
       Harvester.cargoKind[eid] = kind;
       const throttle = HARVEST_THROTTLE[Harvester.throttle[eid] as HarvestThrottle];
-      const capacity = capacityFor(kind);
+      const capacity = holdFor(kind, throttle.cargoMultiplier);
+      // Idle is a full stop, not a slow cut: sit over the field at Idle SIG and
+      // wait the contact out (docs/economy.md §3). Falling through with a hold
+      // of zero would read as "full" and start a delivery loop hauling nothing.
+      if (capacity <= 0) continue;
+      // A hold that shrank under a mid-trip downshift is already over its new
+      // limit. Bank it — mining a negative amount would put cargo back in the
+      // field.
+      if (Harvester.cargo[eid]! >= capacity) {
+        Harvester.mode[eid] = HarvestMode.ToDepot;
+        continue;
+      }
       const mined = Math.min(
-        ECONOMY.MINING_RATE_PER_S * RESOURCE[kind].rateMultiplier * throttle.yieldMultiplier * dt,
+        ECONOMY.MINING_RATE_PER_S * RESOURCE[kind].rateMultiplier * dt,
         capacity - Harvester.cargo[eid]!,
         ResourceNode.remaining[node]!
       );
@@ -241,13 +270,15 @@ export function harvestSystem(world: SimWorld): void {
       } else {
         economy.nodules += Harvester.cargo[eid]!;
       }
-      // Industrial hum, at the depot and scaled by what actually arrived.
+      // Industrial hum, at the depot and scaled by what actually arrived —
+      // measured in Standard holds, so an Overburden delivery pushes it 1.4
+      // holds' worth and a Trickle delivery 0.4.
       //
       // Hooked to the *delivery* rather than to the building, which is what
       // makes docs/economy.md §5's counter-play real: a refinery nobody hauls
-      // to is quiet, and throttling to Trickle collapses the hum within
-      // seconds because the deposits stop coming. A hum keyed to the structure
-      // would just be a second way of drawing the structure.
+      // to is quiet, and throttling down drops the hum because both halves of
+      // throughput fall — smaller loads, and no more often. A hum keyed to the
+      // structure would just be a second way of drawing the structure.
       world.marks.add(
         EchoMarkKind.IndustrialHum,
         Position.x[depot]!,

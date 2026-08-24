@@ -559,9 +559,9 @@ export const BEARING_BLUR_FRACTION = 0.15;
 export const ECONOMY = {
   /** Nodules each player holds at match start. */
   STARTING_NODULES: 600,
-  /** Nodules a harvester can carry per trip. */
+  /** Nodules a harvester carries per trip at Standard throttle. */
   CARGO_CAPACITY_NODULES: 50,
-  /** Fill rate at Standard throttle, nodules per second on the node. */
+  /** Fill rate on the node, nodules per second. Throttle-independent. */
   MINING_RATE_PER_S: 10,
   /** Close enough to a node to mine it, metres. */
   MINING_RANGE_M: 80,
@@ -612,15 +612,24 @@ export const CRYSTAL = {
 } as const;
 
 /**
- * SPEC — docs/economy.md §3, the noise curve: yield and SIG are tied by rate,
- * and a harvester that works slower is quieter. SIG values are the mid-points
- * of the doc's bands.
+ * SPEC — docs/economy.md §3, the noise curve: yield and SIG are tied, and a
+ * harvester that takes less is quieter. SIG values are the mid-points of the
+ * doc's bands.
+ *
+ * The multiplier scales *how much a trip brings home*, not how fast the hold
+ * fills. Scaling the fill rate was the obvious reading and was measurably
+ * wrong: cargo is capped per trip and a round trip is dominated by travel, so
+ * Overburden saved about a second out of forty-five and earned Standard's
+ * income for Standard-plus-23 SIG — strictly dominated, with no upside at all.
+ * Against cargo the lever bites directly, and the time cost survives too: the
+ * fill rate is fixed, so a bigger hold means longer on the node at the louder
+ * setting.
  */
-export const HARVEST_THROTTLE: Record<HarvestThrottle, { yieldMultiplier: number; sig: number }> = {
-  [HarvestThrottle.Idle]: { yieldMultiplier: 0, sig: 12 },
-  [HarvestThrottle.Trickle]: { yieldMultiplier: 0.4, sig: 25 },
-  [HarvestThrottle.Standard]: { yieldMultiplier: 1.0, sig: 45 },
-  [HarvestThrottle.Overburden]: { yieldMultiplier: 1.4, sig: 68 },
+export const HARVEST_THROTTLE: Record<HarvestThrottle, { cargoMultiplier: number; sig: number }> = {
+  [HarvestThrottle.Idle]: { cargoMultiplier: 0, sig: 12 },
+  [HarvestThrottle.Trickle]: { cargoMultiplier: 0.4, sig: 25 },
+  [HarvestThrottle.Standard]: { cargoMultiplier: 1.0, sig: 45 },
+  [HarvestThrottle.Overburden]: { cargoMultiplier: 1.4, sig: 68 },
 };
 
 /** Base building. Construction is loud — SPEC in kind (docs/systems-echo.md §2), TUNABLE in number. */

@@ -410,7 +410,7 @@ it.
 
 ### `--set`, and why it is allowlisted
 
-`--set HARVEST_THROTTLE.Overburden.yieldMultiplier=1.0` patches a constant before the batch
+`--set HARVEST_THROTTLE.Overburden.cargoMultiplier=1.0` patches a constant before the batch
 runs, so a change can be argued from one shell history rather than from a rebuild in
 between. Only TUNABLE roots are reachable. Anything the docs pin down as SPEC is absent on
 purpose: changing one of those is a documentation change first and a code change second, and

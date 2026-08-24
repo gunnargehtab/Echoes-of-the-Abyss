@@ -33,14 +33,28 @@ Nodules and Thermal Draw are the working economy. Biomass is a faction-shaped bo
 
 ## 3. The Noise Curve
 
-Yield and SIG are tied by rate, not by resource. A harvester that works slower is quieter, and every faction can choose to be poorer and safer.
+Yield and SIG are tied to each other, not to the resource. A harvester that takes less is quieter, and every faction can choose to be poorer and safer.
 
-| Throttle | Yield | Harvester SIG | Typical use |
+| Throttle | Yield per trip | Harvester SIG | Typical use |
 | --- | --- | --- | --- |
 | **Idle** | 0 | 8–18 | Waiting out a contact |
 | **Trickle** | 40% | 22–28 | Contested ground, early scouting window |
 | **Standard** | 100% | 40–50 | The default, and the reason you get found |
 | **Overburden** | 140% | 62–75 | Deliberate. A four-minute announcement |
+
+**Yield is the load, not the cut.** The throttle sets how much a hauler takes before it turns for home — seventy nodules at Overburden where Standard takes fifty — and the cut rate is fixed, so the heavy load also holds the hull on the node longer at the louder setting. Scaling the *cut rate* instead is the reading that does not work, and it was in the scaffold long enough to be measured: a hold caps out either way and a round trip is dominated by travel, so a louder throttle saved a second and a half out of forty-five and banked exactly what Standard banked. A premium that pays nothing is not a decision surface, whatever the table says.
+
+Six minutes on a home field, one harvester, one throttle held throughout:
+
+| Throttle | Nodules/min | Mean harvester SIG | Against Standard |
+| --- | --- | --- | --- |
+| **Trickle** | 53 | 38.7 | 46% of the income |
+| **Standard** | 117 | 41.0 | — |
+| **Overburden** | 152 | 47.0 | 130% of the income |
+
+Income tracks the load without matching it exactly, because time on the node is real: Trickle's short cut buys back a little of the forty per cent it gives up, and Overburden's long one costs a little of the forty per cent it takes. Mean SIG moves much less than the throttle's own SIG for the same reason in reverse — most of a round trip is travel, and the throttle only changes what a harvester sounds like while it is working.
+
+**The throttle is also a lever on the map's clock.** Those numbers are nodules leaving the ground as well as nodules arriving home, so Overburden strips a field around 30% faster than Standard and Trickle takes half as much out of it. Against the cut rate that was not true — every setting emptied a field at nearly the same speed, because a hold capped at fifty either way — so "spend the field faster" is a decision the throttle now carries and did not before. On a map whose fields are finite it is the difference between a home field that outlasts the match and one that sends its haulers looking further out.
 
 Overburden is not a trap option — the Consortium's whole doctrine is that being heard is survivable ([factions.md](factions.md)), and a Klaxon push funded by overburdened harvesters is a legitimate way to play. The point is that the throttle is a *decision surface*, visible on the SIG meter ([ui-ux.md](ui-ux.md) §3), not an efficiency setting nobody looks at.
 
@@ -71,7 +85,18 @@ Expansions are how a player scales and how a player gets located. Two mechanics 
 
 Counter-play is real and cheap: **stopping the hauling** collapses the hum's intensity within a decay window, and a refinery placed inside a Thermal Vein field (PF 0.45) is meaningfully harder to locate than the same building in open water. Terrain is an economic decision.
 
-**Measured, and one clause of that does not currently hold.** The hum is a leaky integrator — deliveries push its level up, time bleeds it down, and where it rests is throughput. Idling the harvesters drops it to nothing (audible in 9% of samples, mean intensity 0.004). Throttling to *Trickle* barely moves it (0.238 against Standard's 0.299), because a throttle changes how fast a hold fills and a round trip is dominated by travel — so throughput, and therefore the hum, is nearly unchanged. That is a property of §3's throttle rather than of the hum, and it is tracked separately.
+**Measured, and it holds.** The hum is a leaky integrator — deliveries push its level up, time bleeds it down, and where it rests is throughput. One harvester on flat water, one throttle held, resting level sampled over ninety seconds:
+
+| Throttle | Nodules delivered | Resting hum | Hum per nodule |
+| --- | --- | --- | --- |
+| **Idle** | 0 | 0.000 | — |
+| **Trickle** | 120 | 0.134 | 0.00111 |
+| **Standard** | 250 | 0.289 | 0.00116 |
+| **Overburden** | 350 | 0.398 | 0.00114 |
+
+The last column is the bullet above, tested: the hum reads income to within a few per cent whichever throttle produced it, so a listener over the ±20% bar is reading a budget and not a hull count. Idling stops the deliveries outright and the mark decays away.
+
+It did not hold until §3's throttle was fixed to scale the load rather than the cut rate. While it scaled the cut rate, throttling down to *Trickle* barely moved the hum — 0.238 against Standard's 0.299 — because it barely moved throughput, and this section had to carry a note saying so.
 
 ---
 
@@ -130,14 +155,14 @@ drive to a field, mine, haul home, deposit at a Bastion or Refinery. Constants l
 
 | Doc concept | Prototype today | Implementation note |
 | --- | --- | --- |
-| Nodule | **Implemented** — per-player stockpile, spent on units and structures | Harvesters carry 50 nodules per trip, mining 10/s at Standard throttle |
-| Throttle states | **Implemented** — all four states of §3, per harvester | Mining SIG follows the throttle (12/25/45/68); yield scales 0/0.4/1.0/1.4 |
+| Nodule | **Implemented** — per-player stockpile, spent on units and structures | Harvesters cut 10/s and carry 50 nodules per trip at Standard throttle |
+| Throttle states | **Implemented** — all four states of §3, per harvester | Mining SIG follows the throttle (12/25/45/68); the load scales 0/0.4/1.0/1.4, so a trip brings home 0/20/50/70 |
 | Refining SIG | **Implemented** — the Refinery holds 65 SIG sustained (§4) | Forward refineries are real: any deposit structure works, the loud one is optional |
 | Thermal Draw | **Implemented** — a rate, recomputed every tick and never banked | Vent taps on Thermal Vein terrain supply it; Foundries and Refineries consume it; a deficit slows production and nothing else |
 | Biomass | **Implemented** — paid on a fauna kill, Directorate at full rate and everyone else at 30% | Yield scales with the region's Drift Health, which is the guard-rail against a Directorate snowball (§9): over-harvesting kills the region that pays them |
 | Resonance Crystal | **Implemented** — Abyssal field, second stockpile, tech gate | See below |
 | Depth economics (§7) | **Implemented** — the round trip has a clock on it | Harvesters issue their own depth orders: loud descent to the field, slow climb home |
-| Industrial hum (§5) | **Implemented** — a decaying Echo Mark at the depot, intensity per delivered cargo | Keyed to throughput, not to the building: a refinery nobody hauls to is silent, and throttling collapses the hum as the deliveries stop |
+| Industrial hum (§5) | **Implemented** — a decaying Echo Mark at the depot, intensity per delivered cargo | Keyed to throughput, not to the building: a refinery nobody hauls to is silent, and throttling down drops the hum because the loads shrink with it |
 
 ### Thermal Draw in the scaffold
 
@@ -164,7 +189,7 @@ same reason. Constants live in `CRYSTAL` and `RESOURCE` in
 | --- | --- | --- |
 | Extraction SIG | Throttle SIG **+20** | Puts Standard-throttle crystal work at 65, mid-band for §2's 60-70, while leaving the throttle a live decision rather than something the resource overrides |
 | Cut rate | 45% of nodule rate | The deep is slow work, which lengthens the exposure |
-| Hold capacity | 20 (vs 50 nodules) | Dense, awkward cargo; more trips, more descents |
+| Hold capacity | 20 at Standard (vs 50 nodules) | Dense, awkward cargo; more trips, more descents. The §3 throttle scales it like any other hold |
 | Field depth | 2,400 m | Abyssal: PR-3, or crush attrition on a clock |
 
 **The tech gate.** The four faction signature structures — Baffle Barge, Cantor, Sounding

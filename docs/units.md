@@ -72,8 +72,9 @@ Harvester
 - PR: 1–2 (variant)
 - Cost: 80
 - Build time: 20s
-- Production: 50-nodule cargo per trip, mined at 10/s on the node at Standard throttle;
-  income is the round trip, so route length is part of the price
+- Production: 50-nodule cargo per trip at Standard throttle, cut at a flat 10/s on the node;
+  the throttle scales the load, not the cut, so Overburden hauls 70 and stands there longer
+  for it (economy.md §3). Income is the round trip, so route length is part of the price
 - Notes: Mining is loud; economy is a noise source. Pelagia harvesters are quieter by design (see factions.md).
 
 ---
