@@ -4,3 +4,9 @@ build
 coverage
 *.log
 .github
+
+# Balance harness output. The JSON sibling of every report is generated and is
+# not committed (see tools/balance/baselines/.gitignore) — but it sits in the
+# working tree after a run, and Prettier's tools/**/*.json glob would other-
+# wise fail format:check for anyone who has actually used the harness.
+tools/balance/baselines
