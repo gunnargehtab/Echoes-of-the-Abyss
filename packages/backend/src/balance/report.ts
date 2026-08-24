@@ -107,6 +107,20 @@ function distribution(values: number[]): Distribution {
 const mean = (values: number[]): number =>
   values.length === 0 ? 0 : values.reduce((a, b) => a + b, 0) / values.length;
 
+/**
+ * Minutes this player was actually in the match.
+ *
+ * Not the match length, which is the bug this replaces. A commander eliminated
+ * at five minutes of a twenty-five-minute game had their income averaged over
+ * the twenty minutes they spent dead, reporting an economy a fifth of its real
+ * size — and doing it worst to exactly the factions that lose early, which is
+ * the population a balance report is most often asked about.
+ */
+function lifetimeMinutes(row: { player: PlayerTelemetry; result: MatchTelemetryResult }): number {
+  const ticks = row.player.eliminatedTick ?? row.result.finalTick;
+  return Math.max(1 / 60, ticks / SIM.TICK_HZ / 60);
+}
+
 export function summarise(results: MatchTelemetryResult[]): BatchSummary {
   const byFaction = new Map<Faction, { player: PlayerTelemetry; result: MatchTelemetryResult }[]>();
   for (const result of results) {
@@ -126,12 +140,8 @@ export function summarise(results: MatchTelemetryResult[]): BatchSummary {
       matches: rows.length,
       wins,
       winRate: decided.length === 0 ? 0 : wins / decided.length,
-      incomePerMinute: mean(
-        rows.map((r) => r.player.nodulesEarned / Math.max(1, r.result.lengthS / 60))
-      ),
-      biomassPerMinute: mean(
-        rows.map((r) => r.player.biomassEarned / Math.max(1, r.result.lengthS / 60))
-      ),
+      incomePerMinute: mean(rows.map((r) => r.player.nodulesEarned / lifetimeMinutes(r))),
+      biomassPerMinute: mean(rows.map((r) => r.player.biomassEarned / lifetimeMinutes(r))),
       meanPeakSig: mean(rows.map((r) => mean(r.player.peakSig))),
       secondsTracked: mean(rows.map((r) => r.player.secondsTracked)),
       lossesPerMatch: mean(
@@ -325,7 +335,7 @@ function judge(results: MatchTelemetryResult[], factions: FactionSummary[]): Gua
 
 // --- Markdown --------------------------------------------------------------
 
-export function toMarkdown(summary: BatchSummary, title: string): string {
+export function toMarkdown(summary: BatchSummary, title: string, command?: string): string {
   const pct = (v: number): string => `${Math.round(v * 100)}%`;
   const dist = (d: Distribution): string =>
     `${d.median.toFixed(0)} (${d.p10.toFixed(0)}–${d.p90.toFixed(0)})`;
@@ -333,6 +343,14 @@ export function toMarkdown(summary: BatchSummary, title: string): string {
   const lines: string[] = [];
   lines.push(`# ${title}`);
   lines.push('');
+  if (command !== undefined) {
+    // The exact invocation, so a committed baseline can be reproduced rather
+    // than merely admired. A result nobody can regenerate is a screenshot.
+    lines.push('```bash');
+    lines.push(command);
+    lines.push('```');
+    lines.push('');
+  }
   lines.push(
     `${summary.matches} matches on \`${summary.mapId}\`, seeds ` +
       `${summary.seeds[0]}–${summary.seeds[summary.seeds.length - 1]}. ` +

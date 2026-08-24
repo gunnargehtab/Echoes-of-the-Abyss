@@ -188,7 +188,12 @@ function main(): void {
 
   const results = runBatch(run, matches);
   const summary = summarise(results);
-  let markdown = toMarkdown(summary, title);
+  // Quoted so a title with spaces round-trips through a shell unchanged.
+  const command = [
+    'node tools/balance/run.mjs',
+    ...process.argv.slice(2).map((arg) => (arg.includes(' ') ? `'${arg}'` : arg)),
+  ].join(' ');
+  let markdown = toMarkdown(summary, title, command);
   if (!varies && matches > 1) {
     markdown +=
       `\n> **These runs are not independent.** \`--no-fauna\` makes the seed inert, ` +

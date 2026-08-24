@@ -184,11 +184,45 @@ describe('the guard-rail table answers the docs', () => {
     assert.equal(directorate.verdict, 'no data', 'no Directorate seat in a two-faction duel');
   });
 
+  it("rates income over a player's lifetime, not over the match", () => {
+    // A commander eliminated at five minutes of a twenty-five minute game used
+    // to have their income averaged over the twenty minutes they spent dead,
+    // reporting an economy a fifth of its real size. It did that worst to
+    // exactly the factions that lose early, which is the population a balance
+    // report is most often asked about.
+    const result = runMatch({ seats: DUEL, seed: 63, maxMinutes: 2, fauna: false });
+    // Fake an elimination a quarter of the way in, leaving the income intact.
+    const shortened: typeof result = {
+      ...result,
+      players: result.players.map((p, i) =>
+        i === 0 ? { ...p, eliminatedTick: Math.floor(result.finalTick / 4) } : p
+      ),
+    };
+
+    const full = summarise([result]).factions.find((f) => f.faction === Faction.Bathyarch)!;
+    const cut = summarise([shortened]).factions.find((f) => f.faction === Faction.Bathyarch)!;
+    assert.ok(
+      cut.incomePerMinute > full.incomePerMinute * 3,
+      `a quarter of the time should read as roughly four times the rate: ${cut.incomePerMinute} vs ${full.incomePerMinute}`
+    );
+    // The survivor is untouched — this is per player, not per match.
+    const communeFull = summarise([result]).factions.find((f) => f.faction === Faction.Pelagia)!;
+    const communeCut = summarise([shortened]).factions.find((f) => f.faction === Faction.Pelagia)!;
+    assert.equal(communeCut.incomePerMinute, communeFull.incomePerMinute);
+  });
+
   it('produces Markdown a pull request can diff', () => {
     const results = runBatch({ seats: DUEL, seed: 61, maxMinutes: 1, fauna: false }, 2);
-    const markdown = toMarkdown(summarise(results), 'Test run');
+    const markdown = toMarkdown(
+      summarise(results),
+      'Test run',
+      'node tools/balance/run.mjs --matches 2'
+    );
 
     assert.match(markdown, /^# Test run$/m);
+    // The command that produced it, so a committed baseline can be
+    // regenerated rather than merely admired.
+    assert.match(markdown, /node tools\/balance\/run\.mjs/);
     assert.match(markdown, /## Guard-rails/);
     assert.match(markdown, /\| Consortium \|/);
     // Tables, not prose: a diff of a paragraph is unreadable, a diff of a row
