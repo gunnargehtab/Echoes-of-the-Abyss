@@ -54,6 +54,8 @@ Six minutes on a home field, one harvester, one throttle held throughout:
 
 Income tracks the load without matching it exactly, because time on the node is real: Trickle's short cut buys back a little of the forty per cent it gives up, and Overburden's long one costs a little of the forty per cent it takes. Mean SIG moves much less than the throttle's own SIG for the same reason in reverse — most of a round trip is travel, and the throttle only changes what a harvester sounds like while it is working.
 
+**The throttle is also a lever on the map's clock.** Those numbers are nodules leaving the ground as well as nodules arriving home, so Overburden strips a field around 30% faster than Standard and Trickle takes half as much out of it. Against the cut rate that was not true — every setting emptied a field at nearly the same speed, because a hold capped at fifty either way — so "spend the field faster" is a decision the throttle now carries and did not before. On a map whose fields are finite it is the difference between a home field that outlasts the match and one that sends its haulers looking further out.
+
 Overburden is not a trap option — the Consortium's whole doctrine is that being heard is survivable ([factions.md](factions.md)), and a Klaxon push funded by overburdened harvesters is a legitimate way to play. The point is that the throttle is a *decision surface*, visible on the SIG meter ([ui-ux.md](ui-ux.md) §3), not an efficiency setting nobody looks at.
 
 ---
