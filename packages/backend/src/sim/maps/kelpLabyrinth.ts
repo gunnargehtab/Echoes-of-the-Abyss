@@ -43,6 +43,9 @@ export const KELP_LABYRINTH: MapDefinition = {
   widthM: W,
   heightM: H,
   cellM: 250,
+  // Mid-Water throughout. This map's argument is broken sightlines, not
+  // pressure, so the ground is mostly level and the maze does the work.
+  floorM: 1800,
   regions: [
     // "Outer ring: Coral Ruins" — painted first, as the ground everything
     // else sits on. Hard shadows, so the ring is where ambushes start.
@@ -72,6 +75,9 @@ export const KELP_LABYRINTH: MapDefinition = {
       widthM: 800,
       heightM: 800,
       biome: Biome.AbyssalTrench,
+      // Deep enough for the crystal field seated at 2,400 m. "Behind the maze"
+      // is now also "below it".
+      floorM: 2600,
       note: 'Central pocket — the fast way across, and the loud one',
     },
     // Thermal vents on the ring. The doc's biome list for this map does not
@@ -84,8 +90,44 @@ export const KELP_LABYRINTH: MapDefinition = {
     // "Hidden tunnels connecting corners" — on the diagonals, and clear of
     // the spawns. They sat *on* the corner spawns in the first draft, which
     // would have started two players in the deepest, loudest biome on the map.
-    { x: 1800, y: 1800, widthM: 600, heightM: 600, biome: Biome.AbyssalTrench },
-    { x: W - 2400, y: H - 2400, widthM: 600, heightM: 600, biome: Biome.AbyssalTrench },
+    { x: 1800, y: 1800, widthM: 600, heightM: 600, biome: Biome.AbyssalTrench, floorM: 2600 },
+    {
+      x: W - 2400,
+      y: H - 2400,
+      widthM: 600,
+      heightM: 600,
+      biome: Biome.AbyssalTrench,
+      floorM: 2600,
+    },
+    // "Hidden tunnels connecting corners" — the Layout Logic bullet this map
+    // has carried since it was written, with no way to express it until ground
+    // could have a roof.
+    //
+    // One under each side wall, joining that side's two corners beneath the
+    // coral ring. The ceiling sits below the 600 m that structures and nodule
+    // fields are seated at, so nothing can be built in one: it is a road, not
+    // ground. Entering costs a dive, and a maze whose walls you can pass under
+    // is a different maze to a scout who thought of it.
+    {
+      x: 400,
+      y: 2000,
+      widthM: 500,
+      heightM: 4000,
+      biome: Biome.CoralRuins,
+      ceilingM: 700,
+      floorM: 1800,
+      note: 'West wall tunnel — joins the two western corners, out of sight',
+    },
+    {
+      x: W - 900,
+      y: 2000,
+      widthM: 500,
+      heightM: 4000,
+      biome: Biome.CoralRuins,
+      ceilingM: 700,
+      floorM: 1800,
+      note: 'East wall tunnel',
+    },
   ],
   // Diagonal spawns: the doc's "hidden tunnels connecting corners" makes the
   // diagonal the interesting axis, so the two players sit on it.
