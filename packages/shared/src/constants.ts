@@ -185,6 +185,69 @@ export const ECHO_MARKS = {
 } as const;
 
 /**
+ * The Hadron tithe — docs/economy.md §6.
+ *
+ * "Knights take a tithe: fixed periodic income from each chapter-house,
+ * independent of extraction, plus crystal cut at unmatched efficiency."
+ *
+ * **Flat, not per-structure**, and that is forced rather than chosen. §6's next
+ * sentence is that they are "the only faction whose economy does not scale
+ * with map control", and an income paid per Sounding Spire would scale with
+ * exactly that. The chapter-houses are the Order's nine home institutions in
+ * Resonance Fields (docs/factions.md), not battlefield buildings: they tithe to
+ * the Order, the Order funds the expedition, and taking ground does not change
+ * the stipend. It stops when the Bastion falls, because that is the expedition
+ * ending rather than the Order's income drying up.
+ */
+export const HADRON = {
+  /**
+   * Nodules per second, paid while a Knight commander's Bastion stands.
+   *
+   * TUNABLE, and set by measurement rather than by taste. §6 makes their
+   * economy "the thinnest in the game" and §9 makes their ceiling low and
+   * their win condition early, so this has to be a floor that does not fall
+   * rather than an income that competes.
+   *
+   * Swept against a Consortium opponent, three seeds each, reading gross
+   * income per minute (Hadron against Consortium):
+   *
+   *     0.0/s ->  29 v 275      1.5/s -> 165-181 v ~276
+   *     0.5/s ->  59 v ~280     2.0/s -> 148-176 v ~275
+   *     1.0/s ->  89 v 283
+   *
+   * 1.5 looked like the knee there and was wrong, for a reason worth keeping:
+   * **a flat income is proportionally larger in a poorer game.** That sweep is
+   * a duel, where the field earns about 275 a minute. The four-faction
+   * baseline earns 165, so the same 90-a-minute tithe took the Knights to 177
+   * — the *richest* faction on the map, which flatly contradicts §6's
+   * "thinnest economy in the game". Calibrating a flat number against a single
+   * matchup is how you ship that mistake.
+   *
+   * At 1.0 they land on 108 in the four-faction baseline: the poorest of the
+   * four (against 191, 178 and 145) and well clear of the 65 they starved at,
+   * which is what §6's "thinnest economy in the game" should look like. Their
+   * win rate comes out level with the two richest factions, and the guard-rail
+   * reads held at 66% of the field's income across long matches — a floor,
+   * not a competitor.
+   *
+   * The step from 0.5 to 1.0 is superlinear, and that is the mechanism §6
+   * describes: it is the point where the budget covers a hull, and a hull
+   * earns. "Their economy is really a budget, spent once."
+   */
+  TITHE_PER_S: 1,
+  /**
+   * SPEC — §6: crystal "cut at unmatched efficiency (2.2x everyone else's
+   * yield per node)".
+   *
+   * Per *node*, so the field depletes by what was cut and the Knights bank
+   * 2.2x the value of it. A better cut, not faster mining — which also keeps
+   * the Abyssal round trip exactly as expensive for them as for anybody, and
+   * that trip is the whole reason crystal is worth having.
+   */
+  CRYSTAL_YIELD_MULTIPLIER: 2.2,
+} as const;
+
+/**
  * Match lifecycle — docs/tech-stack.md.
  *
  * TUNABLE. The one number with an argument behind it is the reconnection

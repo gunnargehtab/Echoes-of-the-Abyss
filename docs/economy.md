@@ -99,6 +99,12 @@ Their real economy is the Abyssal band: free PR-3 access means they harvest Reso
 
 Thinnest economy in the game, by design and by population — 30,000 people cannot run an industrial base ([factions.md](factions.md)). Knights take a **tithe**: fixed periodic income from each chapter-house, independent of extraction, plus crystal cut at unmatched efficiency (2.2× everyone else's yield per node).
 
+**Implemented flat per commander, not per structure**, and the next paragraph is why: an income paid per building would scale with map control, which is the one thing this economy is defined as not doing. The chapter-houses are the Order's nine home institutions in Resonance Fields ([factions.md](factions.md)) rather than things a player builds — they tithe to the Order, the Order funds the expedition, and taking ground does not change the stipend. It stops when the Bastion falls, because that is the expedition ending rather than the Order's income drying up.
+
+The rate was set by measurement, and the first answer was wrong in a way worth recording: **a flat income is proportionally larger in a poorer game.** Swept in a duel, where the field earns about 275 nodules a minute, 1.5/s looked like the knee. In the four-faction baseline the field earns 165, so the same tithe took the Knights to 177 — the richest faction on the map, contradicting this section's own first sentence. At 1.0/s they land on 108, the poorest of the four against 191, 178 and 145, and well clear of the 65 they starved at. Their win rate comes out level with the two richest factions, which is what a low ceiling over a floor that holds is supposed to look like.
+
+The step is superlinear either way, because it is the point where the budget covers a hull and a hull earns — which is this section's claim about a budget spent once, showing up in the numbers.
+
 They are the only faction whose economy does not scale with map control, which means a Knight player who has not converted their mid-game tech advantage into a decision loses to arithmetic. Every Knight loss is permanent — units cost lives the Order cannot replace — so their economy is really a *budget*, spent once.
 
 ---

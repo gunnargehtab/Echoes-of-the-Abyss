@@ -84,6 +84,7 @@ import { VENTFRONT_DIVIDE, terrainFor, type MapDefinition } from './maps/index.t
 import { countFauna, DRIFT_SLOT, faunaSystem } from './systems/fauna.ts';
 import { hazardStates, hazardsSystem, isSimulated } from './systems/hazards.ts';
 import { drawFor, thermalSystem } from './systems/thermal.ts';
+import { titheSystem } from './systems/tithe.ts';
 import {
   createSimWorld,
   economyFor,
@@ -757,6 +758,10 @@ export class Match {
     // After hazards, so a tap destroyed by its own vent stops powering
     // anything on the same tick it dies.
     thermalSystem(this.world);
+    // After thermal and before reap: the tithe is income, not production, so
+    // it does not care about Draw satisfaction — but a Bastion destroyed this
+    // tick should not pay out on the tick it dies.
+    titheSystem(this.world);
     faunaSystem(this.world);
     this.driftTick();
     this.reap();
