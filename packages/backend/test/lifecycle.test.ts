@@ -15,7 +15,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { Faction, LIFECYCLE } from '@echoes/shared';
+import { Faction, LIFECYCLE, UnitKind } from '@echoes/shared';
 import { hasComponent } from 'bitecs';
 import {
   allocateSlot,
@@ -26,7 +26,9 @@ import {
   type RosterEntry,
 } from '../src/rooms/lobby.ts';
 import { Match } from '../src/sim/match.ts';
-import { Owner, Position } from '../src/sim/components.ts';
+import { Terrain } from '../src/sim/terrain.ts';
+import { spawnUnit } from '../src/sim/world.ts';
+import { Health, Owner, Position, Unit } from '../src/sim/components.ts';
 
 function seat(overrides: Partial<RosterEntry> & { sessionId: string }): RosterEntry {
   return {
@@ -203,5 +205,49 @@ describe('resignation', () => {
 
     match.resign(1);
     assert.equal(heard(), 0, 'and hear nothing once it has been scuttled');
+  });
+});
+describe('what a death leaves behind', () => {
+  it('drops a dead unit’s queued plan, so a recycled id does not inherit it', () => {
+    // bitecs hands entity ids back out, and anything keyed by eid *outside* the
+    // ECS has to be dropped when the entity dies or it comes back attached to
+    // whatever inherits that id. `world.orderQueues` was not being dropped, so
+    // a brand-new hull could be handed a dead one's last waypoint and walk off
+    // across the map to finish it — with the owning player seeing it in
+    // `queuedOrders` as though they had ordered it.
+    //
+    // Asserted on the queue itself rather than by churning a thousand entities
+    // to force a recycle: the leak is that the entry outlives the entity, and
+    // that is the thing worth pinning. Whether bitecs reissues this particular
+    // id on this particular run is bitecs's business.
+    const terrain = new Terrain(12000, 12000, 200);
+    const match = new Match(undefined, { fauna: false, seed: 17, terrain });
+    match.addPlayer(0, Faction.Bathyarch);
+
+    const hull = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 4000,
+      y: 3000,
+    });
+    for (let i = 0; i < 12; i++) match.update(1000 / 60);
+
+    match.orderMove(0, hull, 5000, 3000);
+    match.orderMove(0, hull, 9000, 9000, true);
+    assert.ok(
+      (match.world.orderQueues.get(hull)?.length ?? 0) > 0,
+      'the hull should be carrying a queued leg, or this proves nothing'
+    );
+
+    Health.hp[hull] = 0;
+    for (let i = 0; i < 4; i++) match.update(1000 / 60);
+
+    assert.equal(hasComponent(match.world, Unit, hull), false, 'the hull is gone');
+    assert.equal(
+      match.world.orderQueues.has(hull),
+      false,
+      'and its plan went with it, rather than waiting for the next tenant of that id'
+    );
   });
 });

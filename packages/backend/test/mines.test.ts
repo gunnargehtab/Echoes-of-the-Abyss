@@ -20,6 +20,7 @@ import {
   Biome,
   Faction,
   MINE_TRIGGER_LOUDNESS,
+  perceivedLoudness,
   ORDNANCE,
   OrdnanceKind,
   ResolutionTier,
@@ -127,6 +128,48 @@ describe('mines', () => {
 
     assert.ok(Health.hp[scout]! > 0, 'a silent scout must survive crossing a minefield');
     assert.ok(liveMines(match).includes(mine), 'and the mine should still be waiting');
+  });
+
+  it('will not reach past 150 m for a hull loud enough to be heard further', () => {
+    // The ceiling, and the half of §6 an earlier draft of the doc got wrong. It
+    // claimed the loudness bar worked in both directions, so a Cruiser would
+    // trip mines further out than the Corvette the bar was calibrated on. It
+    // does not: the radius check is a hard gate that runs *before* the loudness
+    // test, so 150 m is a property of the field rather than of whatever is
+    // driving into it.
+    //
+    // A Cruiser is the right probe because it is unambiguously loud enough —
+    // SIG 65 reads 34.0 at 150 m against a bar of 14.6, so if the gate were a
+    // soft one it would have detonated this mine from well outside.
+    const match = openWaterMatch();
+    const mine = armedMineAt(match, 6000, 6000);
+
+    const cruiser = spawnUnit(match.world, {
+      kind: UnitKind.Cruiser,
+      slot: 1,
+      faction: Faction.Pelagia,
+      // Just outside the ceiling, and far inside where its noise would carry.
+      x: 6000 + ORDNANCE.MINE.TRIGGER_RADIUS_M + 25,
+      y: 6000,
+    });
+    advance(match, 3);
+
+    assert.ok(
+      perceivedLoudness(Acoustic.sig[cruiser]!, 1, ORDNANCE.MINE.TRIGGER_RADIUS_M + 25) >
+        MINE_TRIGGER_LOUDNESS,
+      'the probe must be loud enough that only the radius gate can be saving it'
+    );
+    assert.ok(
+      liveMines(match).includes(mine),
+      'a mine must not reach past its radius, however loud the target is'
+    );
+    assert.equal(Health.hp[cruiser], statsFor(UnitKind.Cruiser).maxHp, 'and it takes no damage');
+
+    // ...and the same hull one step inside the ceiling does set it off, so the
+    // test is about the boundary rather than about a mine that never works.
+    match.orderMove(1, cruiser, 6000 + ORDNANCE.MINE.TRIGGER_RADIUS_M - 40, 6000);
+    advance(match, 12);
+    assert.ok(!liveMines(match).includes(mine), 'inside the ceiling it triggers normally');
   });
 
   it('cannot hear a Light Scout at all, even at cruise', () => {

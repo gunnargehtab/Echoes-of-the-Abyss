@@ -243,13 +243,25 @@ Biome PF applies — it is the same formula. A mine in a Thermal Vein (PF 0.45) 
 deaf, and a minefield in a trench (PF 1.6) hears you coming from outside its own lethal
 radius. Where minefields work is a property of the map, exactly like everything else.
 
-**The 150 m radius belongs to the calibration hull, not to every hull.** Because the
-trigger is a loudness bar rather than a proximity fuse, each hull has its own effective
-trigger radius: a Cruiser is heard further out than a Corvette, and anything quieter than
-the bar is never heard at all. A Light Scout at cruise (SIG 12) sits below it — a mine
-cannot detect one at any range, even directly overhead. That is intended. A minefield is a
-wall against a *committed push*, and a scout is exactly the thing you send ahead of one:
-it survives finding the field, it does not clear it, and the army behind it still dies.
+**The 150 m is a ceiling, and the loudness bar can only bring a hull closer than it.** The
+two rules compose in one direction rather than both: nothing outside 150 m is considered at
+all, and inside it a hull still has to clear the bar. So being *louder* than a cruising
+Corvette buys nothing — a Cruiser at SIG 65 is heard at 150 m and not a metre further, the
+same as the Corvette the bar was calibrated on. Being quieter costs you: the effective
+trigger radius shrinks with signature until it disappears.
+
+That last step is the one worth stating plainly. A Light Scout at cruise (SIG 12) reads
+6.3 at 150 m against a bar of 14.6, and because `perceivedLoudness` clamps at the reference
+distance it never clears the bar at any range — **a mine cannot detect a Light Scout at
+all, even directly overhead.** That is intended. A minefield is a wall against a *committed
+push*, and a scout is exactly the thing you send ahead of one: it survives finding the
+field, it does not clear it, and the army behind it still dies.
+
+An earlier draft of this section had the ceiling working in both directions, with a Cruiser
+tripping mines further out than a Corvette. It never did — the radius check is a hard gate
+ahead of the loudness test — and the version that ships is the better rule anyway: a
+minefield's footprint is a property of the field, so a commander can look at one and know
+what it covers without first knowing what is about to drive into it.
 
 ### The blast
 

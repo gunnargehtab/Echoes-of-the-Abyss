@@ -138,7 +138,23 @@ export interface MatchOptions {
 }
 
 const FIXED_DT = 1 / SIM.TICK_HZ;
-const ECHO_INTERVAL_S = 1 / SIM.ECHO_HZ;
+/**
+ * Simulation ticks between Echo passes.
+ *
+ * The pass used to be driven by an accumulator of wall-clock `deltaMs`, which
+ * made *when* detection happened a function of how the server was being called
+ * rather than of simulation time. That is fine for a live match and fatal for a
+ * replay: `stepOnce` drives the tick loop directly and never touched the
+ * accumulator, so playback resolved the Echo Layer exactly zero times. Every
+ * command gated on a contact — a torpedo launch needs Tier 2 (§7) — was
+ * therefore refused on playback while having been accepted live, and the replay
+ * reported a clean run because the divergence fell between two checkpoints.
+ *
+ * Tick-driven, both paths resolve on the same ticks. For the common
+ * `update(1000 / 60)` call this is exactly the old cadence, one pass every
+ * twelve ticks; it only differs where the old code was already wrong.
+ */
+const ECHO_TICK_INTERVAL = Math.round(SIM.TICK_HZ / SIM.ECHO_HZ);
 /**
  * Cap on steps per update. Without it, a long stall makes the next update try
  * to catch up in one go, which takes even longer — the classic spiral of death.
@@ -166,7 +182,8 @@ export class Match {
   private readonly healthQuery = defineQuery([Health, Owner]);
   private readonly nodes: ResourceNodeInfo[] = [];
   private accumulator = 0;
-  private echoAccumulator = 0;
+  /** Snapshots produced by an Echo pass inside `step`, collected by `update`. */
+  private pendingSnapshots: Map<number, EchoSnapshot> | null = null;
   /** Rolling worst-case Echo pass cost, for budget checks. */
   private worstEchoMs = 0;
   /**
@@ -884,6 +901,7 @@ export class Match {
    */
   update(deltaMs: number): Map<number, EchoSnapshot> | null {
     this.accumulator += deltaMs / 1000;
+    this.pendingSnapshots = null;
 
     let steps = 0;
     while (this.accumulator >= FIXED_DT && steps < MAX_STEPS_PER_UPDATE) {
@@ -896,10 +914,10 @@ export class Match {
       this.accumulator = 0;
     }
 
-    this.echoAccumulator += deltaMs / 1000;
-    if (this.echoAccumulator < ECHO_INTERVAL_S) return null;
-    this.echoAccumulator = 0;
-    return this.resolveEcho();
+    // Whatever the steps resolved on their way past an Echo tick. Null when
+    // this update did not cross one, which is what the room uses to decide
+    // there is nothing new to send.
+    return this.pendingSnapshots;
   }
 
   /**
@@ -965,6 +983,9 @@ export class Match {
     // mark and does not lose a tick of the three minutes it is owed.
     this.world.marks.tick(FIXED_DT);
     this.world.tick++;
+    if (this.world.tick % ECHO_TICK_INTERVAL === 0) {
+      this.pendingSnapshots = this.resolveEcho();
+    }
     const stepCost = performance.now() - stepStarted;
     if (stepCost > this.worstStepMs) this.worstStepMs = stepCost;
   }
@@ -1042,10 +1063,13 @@ export class Match {
         }
       }
       this.world.production.delete(eid);
-      // Before the id goes back into bitecs's free list: a contact handle that
-      // outlived the entity it named would eventually name whatever inherits
-      // that id (see EchoLayer.forget).
+      // Before the id goes back into bitecs's free list: anything keyed by eid
+      // outside the ECS has to be dropped, or it comes back attached to
+      // whatever inherits the id. A contact handle would name a hull the player
+      // never detected (see EchoLayer.forget); a queued order would be executed
+      // — a brand-new unit walking off to finish a dead one's last waypoint.
       this.echo.forget(eid);
+      clearQueue(this.world, eid);
       removeEntity(this.world, eid);
     }
 
@@ -1078,6 +1102,7 @@ export class Match {
       if (!hasComponent(this.world, Owner, eid) || Owner.slot[eid] !== slot) continue;
       this.world.production.delete(eid);
       this.echo.forget(eid);
+      clearQueue(this.world, eid);
       removeEntity(this.world, eid);
     }
   }

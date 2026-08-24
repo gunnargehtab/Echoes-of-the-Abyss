@@ -318,3 +318,62 @@ describe('replay', () => {
     );
   });
 });
+
+describe('a recorded torpedo launch replays', () => {
+  it('reproduces a launch that is gated on a contact', () => {
+    // The command that could not round-trip, and the reason is worth keeping.
+    // A launch needs Tier 2 on the target (§7), which means it needs the Echo
+    // Layer to have run. The pass used to be driven by an accumulator of
+    // wall-clock `deltaMs` fed by `update`, and `playReplay` drives `stepOnce`
+    // — so playback resolved detection exactly zero times and refused every
+    // recorded launch. Nothing caught it: the divergence fell between two
+    // 300-tick checkpoints, so the replay reported a clean run on a match it
+    // had failed to reproduce.
+    //
+    // This is the test that would have. It asserts on the final hash rather
+    // than on the checkpoints for the same reason.
+    const live = twoPlayers(new Match(undefined, { seed: SEED, fauna: false, record: true }));
+    matchWorld = live.world;
+
+    // Everything here has to be a *recorded command*, or the replay starts from
+    // a different world and diverges at tick 0 for reasons that have nothing to
+    // do with the launch. So: the opening escort (which includes two Corvettes,
+    // the hull that carries torpedoes) driven together with orderMove.
+    const shooter = ownedUnit(0, (kind) => kind === UnitKind.Corvette);
+    const target = ownedUnit(1, (kind) => kind === UnitKind.Corvette);
+    assert.notEqual(shooter, 0, 'slot 0 should open with a Corvette');
+    assert.notEqual(target, 0, 'and so should slot 1');
+
+    const midX = live.map.widthM / 2;
+    const midY = live.map.heightM / 2;
+    live.orderMove(0, shooter, midX, midY);
+    live.orderMove(1, target, midX + 400, midY);
+
+    let launched = 0;
+    for (let tick = 0; tick < 5400; tick++) {
+      const snapshots = live.update(1000 / SIM.TICK_HZ);
+      if (launched !== 0) continue;
+      const view = snapshots?.get(0);
+      if (view === undefined) continue;
+      const contact = view.contacts.find((c) => c.tier >= ResolutionTier.Bearing);
+      if (contact === undefined) continue;
+      launched = live.orderLaunchTorpedo(0, shooter, contact.id);
+    }
+
+    assert.notEqual(launched, 0, 'the live match should have got a torpedo into the water');
+    const liveHash = hashWorld(live.world);
+    const replay = live.replay()!;
+    assert.ok(
+      replay.commands.some((c) => c.type === 'torpedo'),
+      'and the launch should have been recorded'
+    );
+
+    const played = playReplay(replay);
+    assert.equal(played.divergedAtTick, null, 'no checkpoint should disagree');
+    assert.equal(
+      played.finalHash,
+      liveHash,
+      'and the replayed world must end up identical — a refused launch shows up here'
+    );
+  });
+});
