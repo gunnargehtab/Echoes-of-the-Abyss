@@ -209,7 +209,7 @@ Systems this asymmetric fail in predictable ways. Known risks and mitigations:
 | --- | --- |
 | Stealth turtling — Commune never engages | Bloom-share economy requires *surface plateau* nodes; their income is on contested ground by design |
 | Information starvation feels bad | Tier-1 contacts are generous. You always know *something* is happening |
-| Ping never worth pressing | Ping grants a 3 s **+20% accuracy** buff to allies — it's an offensive tool, not just an info tool |
+| Ping never worth pressing | Ping grants **Tier-4 firing solutions** for its 3 s window and sweeps minefields — an offensive tool, not just an info tool (see [systems-combat.md](systems-combat.md) §7; an earlier draft said "+20% accuracy buff", superseded by physical solution quality — there are no to-hit rolls) |
 | Directorate always knows everything | Their HYD advantage is passive-only; they are the worst faction at *acting* on late information (slowest units) |
 | Snowballing via Echo Marks | Marks show *past*, never *present*. They reward inference, not omniscience |
 
@@ -217,6 +217,7 @@ Systems this asymmetric fail in predictable ways. Known risks and mitigations:
 
 ## Related
 
+- **[systems-combat.md](systems-combat.md)** — the weapon triangle; where detection terminates in firing solutions
 - **[systems-depth.md](systems-depth.md)** — the vertical axis
 - **[bestiary.md](bestiary.md)** — what your noise attracts
 - **[audio-direction.md](audio-direction.md)** — making the mix carry the mechanic
