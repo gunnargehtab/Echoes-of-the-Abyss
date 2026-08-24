@@ -53,6 +53,18 @@ export enum DepthBand {
 }
 
 /**
+ * Which side of the thermocline a depth sits on — docs/systems-echo.md §3.
+ *
+ * Contiguous 0/1/2 on purpose: it indexes the pair-factor table, and a gap or
+ * a reorder there silently reads the wrong multiplier.
+ */
+export enum ThermoclineZone {
+  Above = 0,
+  Duct = 1,
+  Below = 2,
+}
+
+/**
  * Extractable resources. docs/economy.md §2 lists four; two are modelled.
  *
  * The pair here is deliberate: Nodule is the bulk resource that funds the

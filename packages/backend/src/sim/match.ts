@@ -247,6 +247,11 @@ export class Match {
     return this.echo.markPathWalksLastPass;
   }
 
+  /** Path integrals the contact pass did on the most recent Echo pass. */
+  get contactPathWalksLastPass(): number {
+    return this.echo.contactPathWalksLastPass;
+  }
+
   /** Non-null once a winner exists. Checked by the room after each update. */
   get result(): GameOverPayload | null {
     return this.matchResult;
@@ -862,7 +867,12 @@ export class Match {
         // structure against ninety seconds for a fight (docs/systems-echo.md
         // §7). Recorded here because reap() is the one place a death is made
         // real, so a mark can never disagree with what actually died.
-        this.world.marks.add(EchoMarkKind.DestroyedStructure, Position.x[eid]!, Position.y[eid]!);
+        this.world.marks.add(
+          EchoMarkKind.DestroyedStructure,
+          Position.x[eid]!,
+          Position.y[eid]!,
+          Position.depth[eid]!
+        );
         if (Structure.kind[eid] === StructureKind.Bastion) {
           lostBastions.push(Owner.slot[eid]!);
         }

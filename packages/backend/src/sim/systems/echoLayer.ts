@@ -15,6 +15,9 @@ import { defineQuery, hasComponent } from 'bitecs';
 import {
   ACTIVE_SONAR,
   MAX_PROPAGATION_FACTOR,
+  THERMOCLINE_PAIR_FACTOR,
+  THERMOCLINE_ZONE_MAX,
+  thermoclineZone,
   PERSISTENCE,
   PROPAGATION_MODEL,
   ResolutionTier,
@@ -174,6 +177,16 @@ export class EchoLayer {
   private worstMarkMs = 0;
   /** Path integrals the residue read did on the most recent pass. */
   private markWalks = 0;
+  /**
+   * Path integrals the *contact* pass did on the most recent run.
+   *
+   * The residue read has had this since it went over budget once; the contact
+   * pass gets it for the same reason. Its broadphase radius is a product of
+   * three ceilings now, and each one that grows multiplies the candidate set —
+   * so a widening that looks harmless in a doc becomes measurable here instead
+   * of becoming a frame-time report from someone else.
+   */
+  private contactWalks = 0;
 
   get worstMarkCostMs(): number {
     return this.worstMarkMs;
@@ -182,6 +195,11 @@ export class EchoLayer {
   /** Path integrals the residue read performed on the most recent pass. */
   get markPathWalksLastPass(): number {
     return this.markWalks;
+  }
+
+  /** Path integrals the contact pass performed on the most recent run. */
+  get contactPathWalksLastPass(): number {
+    return this.contactWalks;
   }
   private readonly lit = new Map<number, { unitId: number; bearing: number }[]>();
   /**
@@ -364,11 +382,12 @@ export class EchoLayer {
 
             const lx = Position.x[listener]!;
             const ly = Position.y[listener]!;
+            const ld = Position.depth[listener]!;
             // Cheap rejection before the exact test: the broadphase radius is
             // an upper bound over every listener, so a hull outside it cannot
             // hear this mark however good its ears.
             if ((lx - mark.x) ** 2 + (ly - mark.y) ** 2 > radius * radius) continue;
-            if (!layer.audible(world.terrain, mark, lx, ly, Acoustic.hyd[listener]!)) continue;
+            if (!layer.audible(world.terrain, mark, lx, ly, ld, Acoustic.hyd[listener]!)) continue;
 
             this.markHeard[slot] = 1;
             remaining--;
@@ -441,6 +460,7 @@ export class EchoLayer {
     }
 
     // --- Broadphase: index every listener once. -----------------------------
+    this.contactWalks = 0;
     this.hash.clear();
     for (let i = 0; i < entities.length; i++) {
       const eid = entities[i]!;
@@ -459,6 +479,11 @@ export class EchoLayer {
       // crosses afterwards (`|| 1` covers the tick before the first aura pass).
       const pfFactor = Acoustic.pfFactor[emitter]! || 1;
       const emitterSlot = Owner.slot[emitter]!;
+      // Which side of the thermocline this emitter is on (docs/systems-echo.md
+      // §3). Hoisted per emitter because it cannot change inside the candidate
+      // loop, and the row index saves a multiply per pair.
+      const eZone = thermoclineZone(Position.depth[emitter]!);
+      const eRow = eZone * 3;
 
       // Only listeners inside this radius can possibly hear the emitter, even
       // with the sharpest ears in the game. This bound is what keeps the pass
@@ -466,7 +491,14 @@ export class EchoLayer {
       // path has been walked yet, so bound with the loudest water on the map.
       const range = maxAudibleRangeM(
         sig,
-        MAX_PROPAGATION_FACTOR * pfFactor,
+        // ...and the loudest the *layer* can make a path from this emitter's
+        // zone, which is 1.0 for everything except a hull sitting in the duct.
+        // Omitting it is the quiet way to lose this feature: a duct pair
+        // between 89% and 100% of its true audible range would be cut by the
+        // exact test below and never walked, and the loss is a clean annulus
+        // several hundred metres wide — precisely where the faint long-range
+        // contacts this game is built on live.
+        MAX_PROPAGATION_FACTOR * pfFactor * THERMOCLINE_ZONE_MAX[eZone]!,
         PROPAGATION_MODEL.MAX_EXPECTED_HYD
       );
       if (range <= 0) continue;
@@ -514,7 +546,22 @@ export class EchoLayer {
 
           // Survivors — a small minority — pay for the pow.
           const distance = Math.sqrt(d2);
+          // The thermocline is folded in *here*, into the loudness, and
+          // deliberately nowhere else — the Baffle Barge precedent above, with
+          // the one difference that this is a property of the pair and so
+          // cannot hoist out of the candidate loop.
+          //
+          // Doing it here rather than to the walk's result is not a style
+          // choice. `pfNeeded` below is derived from this number, so the walk
+          // receives its bar in the raw-terrain units it actually returns, and
+          // the `pf < pfNeeded` guard keeps quarantining the optimistic value
+          // an aborted walk hands back. Multiply that returned value by a
+          // factor above 1 instead and the quarantine breaks: an aborted walk
+          // returns an upper bound, not a mean, and the tier would be computed
+          // from it — a contact the server invents and then believes.
+          const k = THERMOCLINE_PAIR_FACTOR[eRow + thermoclineZone(Position.depth[listener]!)]!;
           const perceivedPerPf =
+            k *
             sigMasked *
             Math.pow(
               REFERENCE_DISTANCE_M / Math.max(distance, REFERENCE_DISTANCE_M),
@@ -529,6 +576,7 @@ export class EchoLayer {
           // The water between them prices this pair: cover is something you
           // can hide *behind*, and a trench carries sound down its whole
           // axis. The walk aborts once its mean cannot reach that same bar.
+          this.contactWalks++;
           const pf = terrain.pathPropagation(ex, ey, lx, ly, pfNeeded);
           if (pf < pfNeeded) continue;
 

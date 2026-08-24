@@ -262,10 +262,14 @@ sonar is unusually well suited to synthesis — tonal returns and filtered noise
 the material actually is. The buffer path is in place for when banks exist; the Opus/AAC
 format requirement in the table above applies to those banks, not to the prototype.
 
-Two rows of §9's table are deliberately **not** voiced, because the simulation does not
-model what they describe: the thermocline boundary, which has no biome, and the Abyssal
-Trench's *axial* behaviour, which needs PF as a function of bearing. Voicing either would
-be the mix claiming to know something the game does not.
+Two rows of §9's table are deliberately **not** voiced. The Abyssal Trench's *axial*
+behaviour needs PF as a function of bearing, which the simulation does not model — voicing
+it would be the mix claiming to know something the game does not. The thermocline boundary
+is a different case: the simulation *does* model it, but as a property of a listening pair's
+depths rather than of a place, so there is no biome for the voicing table to key on. That
+one is a gap, not an impossibility — the mix would have to read the local hull's own depth
+instead, and the *whoomp* of crossing the layer is a real event the player now experiences
+without hearing.
 
 ---
 

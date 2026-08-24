@@ -25,6 +25,8 @@ import {
   FaunaStage,
   ResolutionTier,
   SIM,
+  THERMOCLINE_DUCT_BOTTOM_M,
+  THERMOCLINE_DUCT_TOP_M,
   UnitKind,
   detectionRatio,
   faunaStatsFor,
@@ -163,6 +165,53 @@ describe('fauna hear you', () => {
       loud,
       'the creature must answer the loud thing further away, not the quiet thing beside it'
     );
+  });
+
+  it('hear across the thermocline no better than a player does', () => {
+    // Fauna hearing is the same propagation model players are detected by, so
+    // the layer has to reach it too — otherwise the Drift is the one thing on
+    // the map that a deep raid cannot hide from, and depth stops being cover.
+    //
+    // Symmetric by construction: two identical harvesters, one on each side of
+    // the layer, equidistant from a creature that is put on one side and then
+    // the other. Whichever side the creature is on is the one it answers.
+    const targetFrom = (creatureDepthM: number) => {
+      const match = emptyMatch(76);
+      const creature = spawnFauna(match.world, {
+        species: FaunaSpecies.Draymaw,
+        x: 4000,
+        y: 4000,
+        depth: creatureDepthM,
+      });
+      const shallow = spawnUnit(match.world, {
+        kind: UnitKind.Harvester,
+        slot: 0,
+        faction: Faction.Bathyarch,
+        x: 4900,
+        y: 4000,
+        depth: THERMOCLINE_DUCT_TOP_M - 600,
+      });
+      const deep = spawnUnit(match.world, {
+        kind: UnitKind.Harvester,
+        slot: 0,
+        faction: Faction.Bathyarch,
+        x: 4000,
+        y: 4900,
+        depth: THERMOCLINE_DUCT_BOTTOM_M + 600,
+      });
+      advance(match, 3);
+      return { picked: Fauna.targetEid[creature], shallow, deep };
+    };
+
+    const fromAbove = targetFrom(THERMOCLINE_DUCT_TOP_M - 600);
+    assert.equal(
+      fromAbove.picked,
+      fromAbove.shallow,
+      'a creature above the layer answers above it'
+    );
+
+    const fromBelow = targetFrom(THERMOCLINE_DUCT_BOTTOM_M + 600);
+    assert.equal(fromBelow.picked, fromBelow.deep, 'and one below the layer answers below it');
   });
 
   it('climb the aggro ladder rather than snapping to it', () => {

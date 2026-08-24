@@ -33,6 +33,13 @@ import { VENTFRONT_DIVIDE } from '../src/sim/maps/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 
+/**
+ * Every mark and listener below sits at this depth unless a test is about the
+ * thermocline, so the layer's factor is exactly 1 and cannot confound what is
+ * being measured. 600 m is Mid-Water — where most of the roster lives.
+ */
+const D = 600;
+
 function advance(match: Match, seconds: number) {
   let last = null;
   for (let i = 0; i < seconds * SIM.TICK_HZ; i++) {
@@ -71,15 +78,15 @@ describe('the residue layer', () => {
     // Without this a thirty-second fight leaves hundreds of overlapping marks
     // and the layer is both a performance problem and an unreadable smear.
     const layer = new EchoMarkLayer();
-    for (let i = 0; i < 40; i++) layer.add(EchoMarkKind.Battle, 4000, 4000, 0.05);
+    for (let i = 0; i < 40; i++) layer.add(EchoMarkKind.Battle, 4000, 4000, D, 0.05);
     assert.equal(layer.count, 1);
     assert.ok(layer.all[0]!.intensity > 0.9, 'repeated events should saturate one mark');
   });
 
   it('keeps marks of different kinds separate at the same place', () => {
     const layer = new EchoMarkLayer();
-    layer.add(EchoMarkKind.Battle, 4000, 4000);
-    layer.add(EchoMarkKind.DestroyedStructure, 4000, 4000);
+    layer.add(EchoMarkKind.Battle, 4000, 4000, D);
+    layer.add(EchoMarkKind.DestroyedStructure, 4000, 4000, D);
     assert.equal(layer.count, 2);
   });
 
@@ -87,15 +94,15 @@ describe('the residue layer', () => {
     // A running battle should leave residue over the ground it covered, not
     // jump its mark to wherever the last shot landed.
     const layer = new EchoMarkLayer();
-    layer.add(EchoMarkKind.Battle, 4000, 4000, 0.5);
-    layer.add(EchoMarkKind.Battle, 4200, 4000, 0.5);
+    layer.add(EchoMarkKind.Battle, 4000, 4000, D, 0.5);
+    layer.add(EchoMarkKind.Battle, 4200, 4000, D, 0.5);
     const mark = layer.all[0]!;
     assert.ok(mark.x > 4000 && mark.x < 4200, `mark drifted to ${mark.x}`);
   });
 
   it('decays on the spec clock and then disappears', () => {
     const layer = new EchoMarkLayer();
-    layer.add(EchoMarkKind.Battle, 4000, 4000);
+    layer.add(EchoMarkKind.Battle, 4000, 4000, D);
     const start = layer.all[0]!.intensity;
 
     layer.tick(PERSISTENCE.BATTLE_SITE_S / 2);
@@ -116,15 +123,15 @@ describe('the residue layer', () => {
   it('is silent to a listener below the HYD wall, at any range', () => {
     const terrain = new Terrain(8000, 8000, 250);
     const layer = new EchoMarkLayer();
-    layer.add(EchoMarkKind.DestroyedStructure, 4000, 4000);
+    layer.add(EchoMarkKind.DestroyedStructure, 4000, 4000, D);
 
     const out: number[] = [];
     // Standing on top of it, with the loudest mark in the game, one point
     // below the gate.
-    layer.readableBy(terrain, 4000, 4000, PERSISTENCE.ECHO_MARK_MIN_HYD - 1, 8000, out);
+    layer.readableBy(terrain, 4000, 4000, D, PERSISTENCE.ECHO_MARK_MIN_HYD - 1, 8000, out);
     assert.deepEqual(out, [], 'below 40 HYD the past does not exist');
 
-    layer.readableBy(terrain, 4000, 4000, PERSISTENCE.ECHO_MARK_MIN_HYD, 8000, out);
+    layer.readableBy(terrain, 4000, 4000, D, PERSISTENCE.ECHO_MARK_MIN_HYD, 8000, out);
     assert.equal(out.length, 1, 'and at exactly 40 it does');
   });
 
@@ -137,13 +144,13 @@ describe('the residue layer', () => {
 
     const place = (terrain: Terrain) => {
       const layer = new EchoMarkLayer();
-      layer.add(EchoMarkKind.DestroyedStructure, 500, 2000);
+      layer.add(EchoMarkKind.DestroyedStructure, 500, 2000, D);
       const out: number[] = [];
       // A range where the open-water case is audible and the masked one is
       // the question.
       // 1,700 m: inside the open-water reach of a structure echo and outside
       // the same echo through a thermal vein.
-      layer.readableBy(terrain, 2200, 2000, 70, 6000, out);
+      layer.readableBy(terrain, 2200, 2000, D, 70, 6000, out);
       return out.length;
     };
 
@@ -212,15 +219,15 @@ describe('marks in a match', () => {
       y: 4000,
     });
     // Residue right on top of it, of the loudest kind there is.
-    match.world.marks.add(EchoMarkKind.DestroyedStructure, 4600, 4000);
+    match.world.marks.add(EchoMarkKind.DestroyedStructure, 4600, 4000, D);
 
     const out: number[] = [];
-    match.world.marks.readableBy(match.world.terrain, 4600, 4000, 30, 8000, out);
+    match.world.marks.readableBy(match.world.terrain, 4600, 4000, D, 30, 8000, out);
     assert.deepEqual(out, [], 'HYD 30 is below the wall, at any range');
     assert.ok(harvester > 0);
 
     // ...and the same mark is readable by a scout standing in the same spot.
-    match.world.marks.readableBy(match.world.terrain, 4600, 4000, 70, 8000, out);
+    match.world.marks.readableBy(match.world.terrain, 4600, 4000, D, 70, 8000, out);
     assert.equal(out.length, 1, 'the only difference is the stat');
   });
 
@@ -317,7 +324,7 @@ describe('marks in a match', () => {
     // and must still last the ~90 s docs/systems-echo.md §7 specifies. Untying
     // life from intensity must not have quietly extended or shortened them.
     const layer = new EchoMarkLayer();
-    layer.add(EchoMarkKind.Battle, 4000, 4000);
+    layer.add(EchoMarkKind.Battle, 4000, 4000, D);
     assert.equal(layer.all.length, 1);
 
     layer.tick(PERSISTENCE.BATTLE_SITE_S - 1);
@@ -330,7 +337,7 @@ describe('marks in a match', () => {
     // docs/economy.md §5's counter-play: the hum is keyed to throughput, not
     // to the building, so it fades on its own once hauling stops.
     const layer = new EchoMarkLayer();
-    for (let i = 0; i < 10; i++) layer.add(EchoMarkKind.IndustrialHum, 4000, 4000, 0.12);
+    for (let i = 0; i < 10; i++) layer.add(EchoMarkKind.IndustrialHum, 4000, 4000, D, 0.12);
     const busy = layer.all[0]!.intensity;
 
     layer.tick(ECHO_MARKS.HUM_DECAY_S * 0.75);
@@ -346,11 +353,11 @@ describe('marks in a match', () => {
     const terrain = new Terrain(8000, 8000, 250);
     const layer = new EchoMarkLayer();
     for (let i = 0; i < 8; i++) {
-      layer.add(EchoMarkKind.IndustrialHum, 4000, 4000, ECHO_MARKS.HUM_PER_DELIVERY);
+      layer.add(EchoMarkKind.IndustrialHum, 4000, 4000, D, ECHO_MARKS.HUM_PER_DELIVERY);
     }
 
     const out: number[] = [];
-    layer.readableBy(terrain, 5400, 4000, 70, 8000, out);
+    layer.readableBy(terrain, 5400, 4000, D, 70, 8000, out);
     assert.equal(out.length, 1, 'a scout at 1,400 m should hear the economy');
   });
 
@@ -361,12 +368,12 @@ describe('marks in a match', () => {
     const reach = (deliveries: number) => {
       const layer = new EchoMarkLayer();
       for (let i = 0; i < deliveries; i++) {
-        layer.add(EchoMarkKind.IndustrialHum, 4000, 4000, ECHO_MARKS.HUM_PER_DELIVERY);
+        layer.add(EchoMarkKind.IndustrialHum, 4000, 4000, D, ECHO_MARKS.HUM_PER_DELIVERY);
       }
       let far = 0;
       for (let d = 200; d < 4000; d += 100) {
         const out: number[] = [];
-        layer.readableBy(terrain, 4000 + d, 4000, 70, 8000, out);
+        layer.readableBy(terrain, 4000 + d, 4000, D, 70, 8000, out);
         if (out.length > 0) far = d;
       }
       return far;
@@ -390,7 +397,7 @@ describe('marks in a match', () => {
       x: 4000,
       y: 4000,
     });
-    match.world.marks.add(EchoMarkKind.Battle, 4000, 4000);
+    match.world.marks.add(EchoMarkKind.Battle, 4000, 4000, D);
 
     const first = advance(match, 1)!
       .get(0)!
@@ -428,7 +435,8 @@ describe('marks in a match', () => {
       match.world.marks.add(
         i % 3 === 0 ? EchoMarkKind.Battle : EchoMarkKind.DestroyedStructure,
         400 + ((i * 613) % 7200),
-        400 + ((i * 331) % 7200)
+        400 + ((i * 331) % 7200),
+        D
       );
     }
 
@@ -452,7 +460,7 @@ describe('marks in a match', () => {
   it('caps the number of live marks', () => {
     const layer = new EchoMarkLayer();
     for (let i = 0; i < ECHO_MARKS.MAX_MARKS * 2; i++) {
-      layer.add(EchoMarkKind.Battle, i * (ECHO_MARKS.MERGE_RADIUS_M + 50), 0);
+      layer.add(EchoMarkKind.Battle, i * (ECHO_MARKS.MERGE_RADIUS_M + 50), 0, D);
     }
     assert.ok(layer.count <= ECHO_MARKS.MAX_MARKS, `${layer.count} marks exceeds the cap`);
   });

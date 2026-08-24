@@ -9,9 +9,14 @@
  * (pathPropagation, issue #37): a unit gains cover from a kelp bed it is
  * hiding *behind*, and the Abyssal Trench carries sound far down its axis —
  * an along-path route accumulates PF 1.6 the whole way, while a crossing
- * only picks it up for the trench's width. Truly anisotropic biomes (the
- * docs' "0.3 across / 1.2 along" thermocline) would need PF as a function
- * of bearing, which this model does not attempt.
+ * only picks it up for the trench's width.
+ *
+ * The thermocline is *not* in this grid, and deliberately so. Its "0.3 across
+ * / 1.2 along" (docs/systems-echo.md §3) is anisotropic in **depth**, not in
+ * bearing: it depends on which side of 1,200 m each end of the path is on,
+ * which is a property of the pair rather than of any cell the path crosses.
+ * It is applied as a multiplier on this walk's result, in the Echo pass and
+ * in the mark layer, where both depths are in hand.
  */
 
 import { Biome, DEPTH, MAX_PROPAGATION_FACTOR, PROPAGATION_FACTOR } from '@echoes/shared';
@@ -295,6 +300,14 @@ export class Terrain {
    * broadphase from that ceiling: a hazard that pushed PF past it would make
    * units audible beyond the radius the pass is willing to search for them,
    * which reads as detection silently failing.
+   *
+   * The clamp bounds a **cell**, which is not the same number as the bound on
+   * a **pair**: the thermocline multiplies this walk's result afterwards, so
+   * the broadphase's ceiling is MAX_PATH_PROPAGATION_FACTOR, not this one.
+   * Keep them distinct — collapsing them would either shrink the duct's reach
+   * or let a hazard write cells the walk's headroom early-out assumes cannot
+   * exist. (It is also why a doc'd Standing Wave at PF 2.0 would be truncated
+   * here rather than carried: that would be a change to this ceiling.)
    */
   applyPropagationModifiers(
     mods: readonly { x: number; y: number; radiusM: number; scale: number }[]

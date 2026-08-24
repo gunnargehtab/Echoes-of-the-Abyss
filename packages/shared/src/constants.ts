@@ -38,6 +38,73 @@ export const PROPAGATION_FACTOR: Record<Biome, number> = {
 export const MAX_PROPAGATION_FACTOR = Math.max(...Object.values(PROPAGATION_FACTOR));
 
 /**
+ * SPEC (the factors) / TUNABLE (the depth) — docs/systems-echo.md §3.
+ *
+ * The one row in §3's PropagationFactor table that is not a biome. A biome is a
+ * footprint on the sea floor, so it lives in the terrain grid; the thermocline
+ * is a horizontal surface in the water column, and that grid has no vertical
+ * axis to put it in. It is priced per emitter-listener *pair* from the two
+ * endpoint depths — which is the honest model anyway, because a crossing is a
+ * property of the pair's vertical geometry and not of the water in any cell.
+ *
+ * §3 spec'd the factors and never spec'd where the layer sits; see its "Where
+ * the layer sits" for why 1,200 m, and why nothing the game seats by default
+ * begins a match split across it.
+ */
+export const THERMOCLINE = {
+  DEPTH_M: 1200,
+  DUCT_HALF_WIDTH_M: 100,
+  ACROSS: 0.3,
+  ALONG: 1.2,
+} as const;
+
+/** Derived, so the zone test compares against numbers rather than expressions. */
+export const THERMOCLINE_DUCT_TOP_M = THERMOCLINE.DEPTH_M - THERMOCLINE.DUCT_HALF_WIDTH_M;
+export const THERMOCLINE_DUCT_BOTTOM_M = THERMOCLINE.DEPTH_M + THERMOCLINE.DUCT_HALF_WIDTH_M;
+
+/**
+ * The pair factor, indexed `zoneA * 3 + zoneB`.
+ *
+ * Symmetric by construction: a path is a property of the pair, so the layer
+ * hides them from you exactly as much as it hides you from them. Duct-to-
+ * outside is 1.0 rather than ALONG, because a sound channel needs both ends
+ * inside it — a duct that made you louder to everyone would be a trap rather
+ * than a decision.
+ */
+const THERMOCLINE_ROWS: readonly (readonly number[])[] = [
+  // Rows are the emitter's zone, columns the listener's, both in the order of
+  // ThermoclineZone: Above, Duct, Below.
+  /* Above */ [1, 1, THERMOCLINE.ACROSS],
+  /* Duct  */ [1, THERMOCLINE.ALONG, 1],
+  /* Below */ [THERMOCLINE.ACROSS, 1, 1],
+];
+
+export const THERMOCLINE_PAIR_FACTOR = Float64Array.from(THERMOCLINE_ROWS.flat());
+
+/**
+ * Derived — the loudest a path *from* each zone can be, over every listener
+ * zone. Row maxima, so a new entry in the table above cannot silently outgrow
+ * the broadphase bounds that read this.
+ */
+export const THERMOCLINE_ZONE_MAX = Float64Array.from(
+  THERMOCLINE_ROWS.map((row) => Math.max(...row))
+);
+
+/**
+ * Derived — the loudest an emitter-listener *pair* can be: the loudest cell
+ * times the loudest pair multiplier.
+ *
+ * **A different question from MAX_PROPAGATION_FACTOR, with a different answer**
+ * (1.92 against 1.6). That one bounds a *cell*: it keeps the path walk's
+ * early-out honest and clamps hazard-modified PF, and raising it would tax
+ * every walk in the match to fix a bound that matters for one depth band. This
+ * one bounds a *path*, and is what a broadphase reaching for "the loudest this
+ * could possibly be" wants. Conflating them is how contacts go quietly missing.
+ */
+export const MAX_PATH_PROPAGATION_FACTOR =
+  MAX_PROPAGATION_FACTOR * Math.max(...THERMOCLINE_ZONE_MAX);
+
+/**
  * SPEC — docs/systems-echo.md §4. A contact resolves to a tier when the
  * perceived loudness reaches this multiple of the listener's threshold.
  */

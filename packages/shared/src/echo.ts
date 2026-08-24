@@ -15,8 +15,11 @@ import {
   TIER_THRESHOLD_MULTIPLIER,
   BEARING_BLUR_FRACTION,
   DEPTH_BANDS,
+  THERMOCLINE_DUCT_TOP_M,
+  THERMOCLINE_DUCT_BOTTOM_M,
+  THERMOCLINE_PAIR_FACTOR,
 } from './constants.js';
-import { ResolutionTier, DepthBand } from './types.js';
+import { ResolutionTier, DepthBand, ThermoclineZone } from './types.js';
 
 const { REFERENCE_DISTANCE_M, ATTENUATION_EXPONENT, BASE_THRESHOLD, BASELINE_HYD } =
   PROPAGATION_MODEL;
@@ -139,6 +142,26 @@ export function depthBandFor(depthM: number): DepthBand {
   if (depthM < DEPTH_BANDS[DepthBand.Shelf].max) return DepthBand.Shelf;
   if (depthM < DEPTH_BANDS[DepthBand.MidWater].max) return DepthBand.MidWater;
   return DepthBand.Abyssal;
+}
+
+/** Which side of the thermocline a depth sits on. docs/systems-echo.md §3. */
+export function thermoclineZone(depthM: number): ThermoclineZone {
+  if (depthM < THERMOCLINE_DUCT_TOP_M) return ThermoclineZone.Above;
+  if (depthM > THERMOCLINE_DUCT_BOTTOM_M) return ThermoclineZone.Below;
+  return ThermoclineZone.Duct;
+}
+
+/**
+ * PropagationFactor multiplier for a path between two depths — the thermocline
+ * row of docs/systems-echo.md §3, which is the one row that is not a biome.
+ *
+ * Symmetric, because a path is a property of the pair: the layer hides them
+ * from you exactly as much as it hides you from them. Two float compares per
+ * call and no per-sample work, which is why the layer can exist at all inside
+ * the Echo pass's budget.
+ */
+export function thermoclineFactor(depthA: number, depthB: number): number {
+  return THERMOCLINE_PAIR_FACTOR[thermoclineZone(depthA) * 3 + thermoclineZone(depthB)]!;
 }
 
 /**

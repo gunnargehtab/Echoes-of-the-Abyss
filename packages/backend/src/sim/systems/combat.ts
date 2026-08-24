@@ -161,6 +161,7 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
       EchoMarkKind.Battle,
       Position.x[target]!,
       Position.y[target]!,
+      Position.depth[target]!,
       BATTLE_MARK_PER_SHOT
     );
     Health.hp[target] = Health.hp[target]! - profile.damage;

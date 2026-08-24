@@ -38,12 +38,22 @@ Most ground has a ceiling of 0: open water from the surface down to the seabed. 
 
 That last case is why this is a pair and not a single seabed depth. One number can describe a trench and a plateau, but it draws a tunnel as an open ditch — and [maps.md](maps.md) asks for caverns, for tunnels beneath the main lanes, and for vertical chokepoints. A map that cannot say "there is rock above this water" cannot say any of them.
 
+### Depth also decides who can hear you
+
+The bands price what being somewhere costs. The **thermocline** — the temperature boundary at 1,200 m — decides something else: which half of the map can hear you at all.
+
+Sound crossing that boundary is cut to roughly a third. Sound running *along* it, inside the hundred metres either side where the water ducts, carries further than open water does. Two hulls on the same side of the layer hear each other normally; two hulls on opposite sides are nearly deaf to one another, whatever the biome between them.
+
+This is the third thing depth means, and it is not a restatement of the first two. The bands say a raid into the Abyssal is expensive. The floor-and-ceiling pair says where a hull physically fits. The thermocline says that a fleet at 2,000 m and a fleet at 400 m are, acoustically, on different maps — and that the moment either one crosses 1,200 m, it is not. [systems-echo.md](systems-echo.md) §3 has the numbers and the geometry.
+
 ## 2. Pressure Rating (PR)
 
 Every unit has a **Pressure Rating**. A unit operating below its PR takes **unhealable crush attrition** — damage that ignores repair and regeneration. Depth is not a hazard you route around; it is a resource you rent, on a clock.
 
 - **Descent is fast and deafening.** Diving is quick, but it's loud — see [systems-echo.md](systems-echo.md) for how SIG scales with movement and construction.
-- **Ascent is slow and silent.** Retreating to shallower, safer water costs time, not noise.
+- **Ascent is slow and silent.** Retreating to shallower water costs time, not noise.
+
+Shallower is not the same as safer. Rising out of a deep raid does not make you louder — but crossing 1,200 m hands you to a different set of ears. Below the layer you were nearly inaudible to everything above it; above the layer you are audible to all of it, and nearly deaf to the ground you just left. The ascent is silent and it is still a decision.
 
 ### Ground you do not fit through
 
@@ -98,6 +108,7 @@ what exists or assumes what does not. Constants live in `DEPTH` in
 | Map floor (§1) | **Implemented** | Per-region, authored in the map. `DEPTH.MAX_M` is now only the ruleset's ceiling on what a map may author and what may be ordered |
 | Map ceiling (§1) | **Implemented** | Per-region, 0 on open water. Two maps author roofed passages: the Ventfront flanking tunnels and the Kelp Labyrinth's wall runs |
 | Ground you do not fit through (§2) | **Implemented** | `movementSystem` resolves each step against the water column and slides along ground it cannot enter, rather than refusing the order |
+| Thermocline (§1) | **Implemented** | Depth-dependent multiplier on detection, applied to contacts, Echo Marks and fauna hearing alike. `THERMOCLINE` in shared constants; the layer sits at 1,200 m and is not terrain, because it depends on both ends of a listening pair rather than on any cell |
 | Terrain raises, never lowers (§2) | **Implemented** | `depthSystem` holds a hull no deeper than the ground allows, at the ascent rate, without touching its depth order. Fauna get the horizontal refusal only — they carry no depth order, so nothing would lift them again |
 
 The descent and ascent *rates* are TUNABLE — this document pins the asymmetry, not the
