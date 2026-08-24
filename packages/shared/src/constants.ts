@@ -153,9 +153,26 @@ export const ECHO_MARKS = {
    * promises, and it falls out of hooking this to the deposit rather than to
    * the building.
    */
-  HUM_PER_DELIVERY: 0.12,
-  /** Seconds for an unreinforced hum to fade from full to nothing. */
+  HUM_PER_DELIVERY: 0.5,
+  /**
+   * Seconds an unreinforced hum survives before the mark is dropped, and — at
+   * a third of that — the time constant its level bleeds away on.
+   *
+   * The two together are what make the hum a measurement of a *rate*. It is a
+   * leaky integrator: deliveries push the level up, time bleeds it down, and
+   * where it settles is throughput. With the tau at 15 s, one harvester on a
+   * forty-second round trip rests near 0.2 and four on a ten-second one rest
+   * near 0.75, which is the spread §5 needs for "estimate income within
+   * roughly ±20% without ever seeing a structure".
+   */
   HUM_DECAY_S: 45,
+  /**
+   * Below this, a mark is dropped rather than kept as an inaudible entry.
+   *
+   * The residue read walks a path integral per mark per listener inside the
+   * 2 ms Echo budget (#90, #106), so a mark radiating 0.3 SIG is pure cost.
+   */
+  MIN_AUDIBLE_INTENSITY: 0.02,
   /**
    * Marks of one kind within this radius reinforce rather than accumulate.
    *
