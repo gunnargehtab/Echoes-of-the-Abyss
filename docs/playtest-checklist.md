@@ -49,6 +49,46 @@ warns and marks the report when that happens.
 A verdict of "held" means the failure that guard-rail names did not appear in these runs. It
 is evidence, not proof, and the sample size is printed beside it.
 
+## A worked example — is Overburden a trap option?
+
+`HARVEST_THROTTLE[Overburden]` pays a 1.4x yield for 68 SIG against Standard's 1.0 at 45.
+Whether that trade is worth taking is the kind of question the guard-rail tables raise and
+nobody could previously answer. So:
+
+```bash
+node tools/balance/run.mjs --matchup consortium,commune --matches 10 --seed 7000   --max-minutes 25 --out tools/balance/baselines/overburden-before.md
+node tools/balance/run.mjs --matchup consortium,commune --matches 10 --seed 7000   --max-minutes 25 --set HARVEST_THROTTLE.Overburden.yieldMultiplier=1.0   --out tools/balance/baselines/overburden-after.md
+```
+
+The Consortium is the faction whose doctrine harvests on Overburden; the Commune does not.
+
+| | Consortium income | Consortium win rate | Consortium tracked | Match length |
+| --- | --- | --- | --- | --- |
+| Yield 1.4 | 263 nodules/min | 14% (1 of 7 decided) | 922 s | 1047 s |
+| Yield 1.0 | 157 nodules/min | 50% (4 of 8 decided) | 765 s | 800 s |
+
+**What this supports.** The constant reaches the economy exactly where it should and with the
+magnitude it should: removing the premium cut the income of the faction that uses it by 40%,
+and left the faction that does not alone (220 to 242, inside the noise). That is the causal
+chain working end to end, and it is what makes the tool trustworthy for the next question.
+
+**What this does not support.** The win rate moved from 14% to 50%, which is one win against
+four across seven and eight decided matches. That is well inside binomial noise at this
+sample size, and reading it as "Overburden is a trap" would be exactly the mistake this
+harness exists to prevent. The suggestive part is that a 40% income cut did not visibly
+*hurt* — but suggestive is the correct word, and settling it needs a larger batch, more
+matchups, and ideally a Consortium mirror where the throttle is the only variable.
+
+**A property worth knowing before running the same experiment on a shorter match.** The yield
+multiplier sets how fast a hold fills, cargo is capped at 50 a trip, and a round trip is
+dominated by travel — so tripling the multiplier in a three-minute match produces
+*byte-identical* income, because it saves about three seconds out of forty and never buys a
+whole extra delivery. The lever only bites over a long game. That is a real property of the
+economy, not an artifact.
+
+Both reports are committed under `tools/balance/baselines/`, each with the command that
+produced it in its header.
+
 ## Human-only — nothing here can be automated, and none of it should be faked
 
 These are the questions the whole design rests on, and a metric that appeared to answer one

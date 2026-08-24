@@ -45,3 +45,10 @@ the command recorded in each file's header.
 
 Related: `docs/playtest-checklist.md` · `docs/tech-stack.md` · `docs/economy.md` §9 ·
 `docs/bestiary.md` §8
+
+## What is committed here
+
+The Markdown reports, and not their JSON siblings. A committed baseline exists so a future
+change has something to be compared against *in a diff*, and a 200 KB JSON diff is not
+something anyone reads. Each report carries the command that produced it, so the JSON is one
+command away when you want to plot a series.
