@@ -36,6 +36,20 @@ export interface MapRegion {
   widthM: number;
   heightM: number;
   biome: Biome;
+  /**
+   * How deep the water goes here, in metres. Omitted inherits the map's
+   * `floorM` — which is what almost every region wants, because a map is
+   * mostly its own base seabed with a few things cut into it.
+   */
+  floorM?: number;
+  /**
+   * Rock above the water, in metres. Omitted means 0: open to the surface.
+   *
+   * Non-zero is a roofed passage — a tunnel, a cavern, an overhang — water
+   * reachable only from below. A ceiling deeper than the region's floor is
+   * solid ground and admits nothing at any depth (docs/systems-depth.md §1).
+   */
+  ceilingM?: number;
   /** Why this region exists, in the doc's terms. Kept with the data. */
   note?: string;
 }
@@ -100,6 +114,11 @@ export interface MapDefinition {
   widthM: number;
   heightM: number;
   cellM: number;
+  /**
+   * The seabed this map starts at, before any region carves into it. Omitted
+   * keeps the flat 3,000 m every map had before floors were authorable.
+   */
+  floorM?: number;
   regions: MapRegion[];
   spawns: MapSpawn[];
   resources: MapResource[];

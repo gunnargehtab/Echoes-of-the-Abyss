@@ -14,7 +14,7 @@
  * of bearing, which this model does not attempt.
  */
 
-import { Biome, MAX_PROPAGATION_FACTOR, PROPAGATION_FACTOR } from '@echoes/shared';
+import { Biome, DEPTH, MAX_PROPAGATION_FACTOR, PROPAGATION_FACTOR } from '@echoes/shared';
 
 export class Terrain {
   readonly widthM: number;
@@ -29,8 +29,27 @@ export class Terrain {
    * difference between that walk fitting the 2 ms budget and not.
    */
   private readonly pf: Float32Array;
+  /**
+   * The water column, per cell: how deep the water goes and what is above it
+   * (docs/systems-depth.md §1). Integer metres, so a comparison against a band
+   * boundary is exact rather than nearly so.
+   *
+   * Two arrays rather than one seabed depth because a single number draws a
+   * tunnel as an open ditch. `ceiling` is 0 almost everywhere — open water from
+   * the surface down — and non-zero only for a roofed passage.
+   *
+   * Uint16 caps a map at 65,535 m, which is twenty times the deepest water the
+   * ruleset will currently order a hull into.
+   */
+  private readonly floor: Uint16Array;
+  private readonly ceiling: Uint16Array;
 
-  constructor(widthM: number, heightM: number, cellM: number) {
+  /**
+   * `floorM` is the seabed the whole map starts at, before any region carves
+   * into it. An options object rather than a fourth positional number: the two
+   * are both depths in metres and would be silently interchangeable.
+   */
+  constructor(widthM: number, heightM: number, cellM: number, options: { floorM?: number } = {}) {
     this.widthM = widthM;
     this.heightM = heightM;
     this.cellM = cellM;
@@ -38,6 +57,11 @@ export class Terrain {
     this.rows = Math.ceil(heightM / cellM);
     this.biomes = new Uint8Array(this.cols * this.rows).fill(Biome.OpenWater);
     this.pf = new Float32Array(this.cols * this.rows).fill(PROPAGATION_FACTOR[Biome.OpenWater]);
+    // Defaults to the ruleset's deepest orderable depth, which is exactly the
+    // flat 3,000 m every map had before floors existed. A map that authors
+    // nothing therefore behaves as it always did.
+    this.floor = new Uint16Array(this.cols * this.rows).fill(options.floorM ?? DEPTH.MAX_M);
+    this.ceiling = new Uint16Array(this.cols * this.rows);
   }
 
   /**
@@ -82,6 +106,34 @@ export class Terrain {
    */
   propagationAt(x: number, y: number): number {
     return this.pf[this.index(x, y)]!;
+  }
+
+  /** How deep the water goes here, in metres. */
+  floorAt(x: number, y: number): number {
+    return this.floor[this.index(x, y)]!;
+  }
+
+  /** Rock above the water here, in metres. 0 is open to the surface. */
+  ceilingAt(x: number, y: number): number {
+    return this.ceiling[this.index(x, y)]!;
+  }
+
+  /**
+   * Does the ground here admit a hull at this depth?
+   *
+   * **The only question gameplay should ask of the water column.** Callers that
+   * reach for `floorAt` directly bake in the assumption that water runs from
+   * the surface to the seabed, which is exactly the assumption a tunnel breaks
+   * — and it is the assumption that would have to be found and unpicked in
+   * every call site the day roofed ground is authored. Ask this instead and the
+   * ceiling costs nothing to add.
+   *
+   * Ground with its ceiling below its floor admits nothing at any depth, which
+   * is how solid rock is spelled (docs/systems-depth.md §1).
+   */
+  admits(x: number, y: number, depthM: number): boolean {
+    const index = this.index(x, y);
+    return depthM >= this.ceiling[index]! && depthM <= this.floor[index]!;
   }
 
   /**
@@ -148,6 +200,39 @@ export class Terrain {
   }
 
   /**
+   * Shape the water column over an axis-aligned rectangle, in world metres.
+   *
+   * Separate from `fillRect` because biome and ground are independent: a kelp
+   * bed is kelp whether it stands on a plateau or in a trench, and a tunnel is
+   * cut through whatever biome it passes under. Painting them together would
+   * force an author to restate one every time the other changed.
+   *
+   * Painted in call order, later over earlier, exactly like `fillRect` — which
+   * is what lets a tunnel be authored as a narrow strip laid across a plateau
+   * rather than as four rectangles around it.
+   */
+  fillGround(
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    ground: { floorM?: number; ceilingM?: number }
+  ): void {
+    if (ground.floorM === undefined && ground.ceilingM === undefined) return;
+    const x0 = Math.max(0, Math.floor(x / this.cellM));
+    const y0 = Math.max(0, Math.floor(y / this.cellM));
+    const x1 = Math.min(this.cols - 1, Math.floor((x + w) / this.cellM));
+    const y1 = Math.min(this.rows - 1, Math.floor((y + h) / this.cellM));
+    for (let cy = y0; cy <= y1; cy++) {
+      for (let cx = x0; cx <= x1; cx++) {
+        const index = cy * this.cols + cx;
+        if (ground.floorM !== undefined) this.floor[index] = ground.floorM;
+        if (ground.ceilingM !== undefined) this.ceiling[index] = ground.ceilingM;
+      }
+    }
+  }
+
+  /**
    * Apply the PropagationFactor modifiers currently in force.
    *
    * The issue that asked for this put it well: "a hazard that changes PF is a
@@ -191,12 +276,21 @@ export class Terrain {
   }
 
   /** Flat copy of the grid, for shipping to the client. Terrain is public. */
-  serialize(): { cols: number; rows: number; cellM: number; biomes: number[] } {
+  serialize(): {
+    cols: number;
+    rows: number;
+    cellM: number;
+    biomes: number[];
+    floor: number[];
+    ceiling: number[];
+  } {
     return {
       cols: this.cols,
       rows: this.rows,
       cellM: this.cellM,
       biomes: Array.from(this.biomes),
+      floor: Array.from(this.floor),
+      ceiling: Array.from(this.ceiling),
     };
   }
 
