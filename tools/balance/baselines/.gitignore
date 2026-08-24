@@ -1,0 +1,5 @@
+# The JSON sibling of every report is generated, large, and unreadable as a
+# diff. The Markdown is the artifact a pull request argues with; the JSON is
+# for plotting, and regenerating it is one command away — recorded in the
+# header of the report next to it.
+*.json

@@ -326,3 +326,112 @@ When depth becomes acoustic, that decision belongs in `commandArmy`.
 
 Related: [factions.md](factions.md) · [systems-echo.md](systems-echo.md) ·
 [economy.md](economy.md)
+
+---
+
+## The balance harness
+
+`packages/shared/src/constants.ts` is full of numbers tagged TUNABLE and described as
+"expected to move during playtesting", and until now there was no way to move one with an
+argument behind it. `docs/economy.md` §9 and `docs/bestiary.md` §8 name specific ways this
+design could fail; testing any of them meant two humans and a calendar.
+
+```bash
+node tools/balance/run.mjs --matchup consortium,commune,directorate,knights --matches 10
+node tools/balance/run.mjs --help
+```
+
+The harness lives in `packages/backend/src/balance/` and `tools/balance/run.mjs` is the
+launcher. It is split that way because the runner has to import `Match` and `AiSeat` —
+backend TypeScript with real `.ts` import extensions under `moduleResolution: bundler` —
+and standing that up outside the workspace would mean a second copy of the backend's build
+configuration whose only job is to drift out of sync with the first.
+
+`Match` needed no headless entry point. It was already independent of Colyseus and of the
+renderer; the room only ever translated messages into its methods.
+
+### Every seat is an AI
+
+Which is why this could not exist before [the skirmish AI](#the-skirmish-ai) did. A balance
+question about the Commune's economy is a question about the Commune *being played*, and a
+scripted opening answers something narrower than the guard-rail tables ask.
+
+### Telemetry comes from the snapshots, not the world
+
+Every series is read from the players' own `EchoSnapshot`s — the same payloads a client
+receives. Not for purity: the union of every player's snapshot *is* ground truth for
+everything worth measuring, and taking it from there means the harness measures the game as
+it is actually delivered rather than a parallel version that could quietly diverge.
+
+Two measurements were harder than they look, and both are worth recording because the
+obvious answer is wrong.
+
+**Income is not the final stockpile.** A competent commander ends a match near zero, so
+reading the leftover pile says the winner had no economy. Reconstructing the spend from what
+they built is closer and still wrong: production deducts when an item is *queued* while the
+hull only appears when it *finishes*, so the two ledgers disagree by whatever is in flight.
+Only mining raises a stockpile and only spending lowers it, so gross income is the sum of
+the rises — measured at the Echo tick, not derived.
+
+**First contact is not when the commanders met.** With the Drift populated, first contact is
+the first frame: a creature is in earshot of a spawn immediately. So `firstEnemyContactTick`
+is tracked separately and keyed on the one signal a creature cannot produce — a contact
+carrying a `faction`. Classification names a faction for a hull and a *species* for a
+creature, never both. Below Tier 3 there is no way to tell, and no oracle is invented to
+pretend otherwise.
+
+### What the seed varies — read this before trusting a batch
+
+`world.rng` is drawn from in exactly **one** place in the whole simulation: placing the
+Drift. Terrain is authored, hazard timings are derived from site positions, combat rolls
+nothing, and the commanders draw no dice.
+
+So with `--no-fauna` the seed is inert and every match in a batch is identical — ten runs of
+one match, reported as ten samples. That is a feature of the simulation (it is what makes
+replays and the state hash work) and a trap for this harness, so the CLI warns and the
+report is marked when it happens.
+
+### The guard-rail table
+
+Each risk the docs name is paired with a number that would detect it failing:
+
+| Risk | Metric |
+| --- | --- |
+| Quiet economies simply win | Commune win rate, and nodules per minute per point of mean SIG |
+| Loud economies are unplayable | Consortium seconds tracked, against Consortium win rate |
+| Directorate Biomass snowballs | Biomass per minute against final Drift Health |
+| Knights starve out of every long game | Hadron win rate, bucketed either side of the median match length |
+| Fauna decide matches | First blood against first *classified enemy* |
+
+A rail the matchup cannot test reports "no data" rather than being omitted — a missing row
+reads as "fine", and that is not what happened. A verdict of "held" means the failure did
+not appear in these runs; it is evidence, not proof, and the sample size is printed beside
+it.
+
+### `--set`, and why it is allowlisted
+
+`--set HARVEST_THROTTLE.Overburden.yieldMultiplier=1.0` patches a constant before the batch
+runs, so a change can be argued from one shell history rather than from a rebuild in
+between. Only TUNABLE roots are reachable. Anything the docs pin down as SPEC is absent on
+purpose: changing one of those is a documentation change first and a code change second, and
+a harness that let you skip that step would make it easy to "balance" the game by quietly
+contradicting its own design bible.
+
+A path that does not resolve throws rather than warning. A typo'd override that silently did
+nothing would produce a before/after where nothing changed and a conclusion of "this
+constant does not matter" — the most expensive possible failure for a tool whose entire job
+is to answer that question.
+
+### It found a bug the first time it ran
+
+Every commander of every faction was transmitting active sonar 0.4 seconds into the match.
+The Drift places creatures near a spawn, so there was always an unclassified contact beside
+the opening force, and the AI's "ping to classify" rule fired on it — announcing the base to
+everything within 2,400 m before anyone had done anything. Neither the unit tests nor a
+five-minute run in the real client had shown it, because neither was looking at a whole
+match from the outside.
+
+Baselines live in `tools/balance/baselines/`.
+
+Related: [playtest-checklist.md](playtest-checklist.md) · [economy.md](economy.md) ·
+[bestiary.md](bestiary.md)

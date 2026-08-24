@@ -262,6 +262,43 @@ describe('it pings and hides for reasons', () => {
     assert.ok(pingsAt(fielded(), [contact({ tier: ResolutionTier.Contact, x: 2600, y: 2000 })]));
   });
 
+  it('does not transmit from its own doorstep', () => {
+    // Half of a bug the balance harness caught: every commander of every
+    // faction used to transmit 0.4 s into the match. The Drift puts creatures
+    // near a spawn, so there was always something unclassified beside the
+    // opening force — and naming it cost 2,400 m of self-reveal to identify
+    // a fish. A force that has not deployed has nothing to learn.
+    const commander = fielded();
+    const home = briefing(AiDifficulty.Veteran).spawns[1]!;
+    const smudge = [contact({ tier: ResolutionTier.Contact, x: home.x + 200, y: home.y })];
+    const atHome = (): EchoSnapshot => {
+      const snapshot = armySnapshot(smudge);
+      return { ...snapshot, units: snapshot.units.map((u) => ({ ...u, x: home.x, y: home.y })) };
+    };
+
+    let pinged = false;
+    for (let i = 0; i < 12; i++) {
+      for (const command of commander.observe(atHome())) {
+        if (command.kind === 'ping') pinged = true;
+      }
+    }
+    assert.equal(pinged, false);
+  });
+
+  it('holds its first transmission until the opening is over', () => {
+    // The other half. Even deployed, a commander waits one doctrine interval
+    // before its first ping, so an opening cannot be given away for free.
+    const commander = fielded();
+    const smudge = [contact({ tier: ResolutionTier.Contact, x: 2600, y: 2000 })];
+    let pinged = false;
+    for (let i = 0; i < 12; i++) {
+      for (const command of commander.observe(armySnapshot(smudge, 60))) {
+        if (command.kind === 'ping') pinged = true;
+      }
+    }
+    assert.equal(pinged, false, 'one minute in is too early for the Commune');
+  });
+
   it('does not transmit into empty water', () => {
     // Pinging with nothing to resolve pays the whole cost — 2,400 m of
     // self-reveal — for no information at all.
@@ -375,7 +412,7 @@ function exposedSnapshot(): EchoSnapshot {
 let contactSeq = 0;
 
 function contact(overrides: Partial<Contact> & { tier: ResolutionTier }): Contact {
-  return { id: ++contactSeq, x: 0, y: 0, tick: 600, ...overrides };
+  return { id: ++contactSeq, x: 0, y: 0, tick: 6000, ...overrides };
 }
 
 /**
@@ -385,7 +422,7 @@ function contact(overrides: Partial<Contact> & { tier: ResolutionTier }): Contac
  * commander is rallying rather than deciding anything, and every test in this
  * suite is about what it does once it has an army.
  */
-function armySnapshot(contacts: Contact[]): EchoSnapshot {
+function armySnapshot(contacts: Contact[], tick = 6000): EchoSnapshot {
   const base = exposedSnapshot();
   const hull = (id: number): EchoSnapshot['units'][number] => ({
     id,
@@ -403,6 +440,9 @@ function armySnapshot(contacts: Contact[]): EchoSnapshot {
   });
   return {
     ...base,
+    // Past every doctrine's opening quiet period, so a test about *why* a
+    // commander transmits is not silently answered by "it is too early".
+    tick,
     exposure: { tier: ResolutionTier.Silent, trackedCount: 0 },
     units: [10, 11, 12, 13, 14, 15].map(hull),
     structures: [
