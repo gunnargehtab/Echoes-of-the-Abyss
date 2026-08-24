@@ -137,6 +137,49 @@ export class Terrain {
   }
 
   /**
+   * Where a hull at `depthM` actually ends up when it tries to move from
+   * (fromX, fromY) to (toX, toY).
+   *
+   * Ground stops a step; it does not stop a hull. A move refused outright
+   * would pin a fleet against every ridge it grazed, so a blocked step is
+   * retried on each axis alone and the hull slides along the obstacle instead
+   * — which is also what the map edge has wanted since the bounds clamp
+   * landed, and what separation's structure pass left as this issue's problem.
+   *
+   * The axes are tried in a fixed order, so this is a pure function of its
+   * arguments and the map. It has no opinion about *which* way is better,
+   * because an opinion would need a tie-break, and a tie-break is where
+   * determinism goes to die in this codebase.
+   */
+  resolveStep(
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+    depthM: number,
+    out: { x: number; y: number }
+  ): void {
+    const x = this.clampXM(toX);
+    const y = this.clampYM(toY);
+    // Written into a caller-owned scratch rather than returned: this runs once
+    // per moving hull per 60 Hz tick, and a fresh object each time is garbage
+    // the tick budget should not be generating.
+    if (this.admits(x, y, depthM)) {
+      out.x = x;
+      out.y = y;
+    } else if (this.admits(x, fromY, depthM)) {
+      out.x = x;
+      out.y = fromY;
+    } else if (this.admits(fromX, y, depthM)) {
+      out.x = fromX;
+      out.y = y;
+    } else {
+      out.x = fromX;
+      out.y = fromY;
+    }
+  }
+
+  /**
    * Mean PropagationFactor along the segment from (x0,y0) to (x1,y1) —
    * the path integral the Echo Layer prices sound with (issue #37).
    *

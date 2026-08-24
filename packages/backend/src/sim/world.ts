@@ -400,7 +400,7 @@ export function spawnStructure(world: SimWorld, opts: SpawnStructureOptions): nu
   addComponent(world, Position, eid);
   Position.x[eid] = opts.x;
   Position.y[eid] = opts.y;
-  Position.depth[eid] = opts.depth ?? 600;
+  Position.depth[eid] = opts.depth ?? CONSTRUCTION.WORKING_DEPTH_M;
 
   addComponent(world, Acoustic, eid);
   Acoustic.sig[eid] = opts.prebuilt ? stats.sigIdle : CONSTRUCTION.SITE_SIG;

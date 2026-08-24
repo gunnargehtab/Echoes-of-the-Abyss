@@ -646,6 +646,16 @@ export const HARVEST_THROTTLE: Record<HarvestThrottle, { cargoMultiplier: number
 
 /** Base building. Construction is loud — SPEC in kind (docs/systems-echo.md §2), TUNABLE in number. */
 export const CONSTRUCTION = {
+  /**
+   * The depth a structure sits at, and the depth the ground must admit it at.
+   *
+   * Mid-Water, where a PR-2 hull is at home. Lives here because three places
+   * need to agree about it now that ground can refuse: the spawn that seats a
+   * structure, the placement rule that rejects one over shallow ground, and the
+   * map tests that hold authored maps to the same bar. A structure cannot rise
+   * the way a hull can, so a disagreement here is a building inside a plateau.
+   */
+  WORKING_DEPTH_M: 600,
   /** Sustained SIG at the site while a structure is being commissioned. */
   SITE_SIG: 70,
   /** New structures must rise within this range of an existing own structure. */
