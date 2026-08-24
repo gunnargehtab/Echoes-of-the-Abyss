@@ -24,9 +24,10 @@
  * Echo pass and the residue read already use.
  */
 
-import { defineQuery, hasComponent } from 'bitecs';
+import { addComponent, defineQuery, hasComponent } from 'bitecs';
 import {
   EchoMarkKind,
+  MINE_TRIGGER_LOUDNESS,
   ORDNANCE,
   OrdnanceKind,
   SelfEventKind,
@@ -43,11 +44,13 @@ import {
   Acoustic,
   Countermeasure,
   Health,
+  Laying,
   Magazine,
   Ordnance,
   Owner,
   Position,
   Pressure,
+  SilentRunning,
   Structure,
   Unit,
   Velocity,
@@ -61,6 +64,7 @@ const audible = defineQuery([Position, Acoustic, Owner, Health]);
 const magazines = defineQuery([Magazine, Position, Owner]);
 const depots = defineQuery([Structure, Position, Owner]);
 const suites = defineQuery([Countermeasure]);
+const laying = defineQuery([Laying]);
 
 /**
  * How close a torpedo must come to detonate on a target.
@@ -284,6 +288,153 @@ export function deployNoisemaker(world: SimWorld, hull: number): number {
 }
 
 /**
+ * Lay a mine. Returns the mine entity, or 0 when the shot is refused.
+ *
+ * Refused for two reasons, both server-side facts: the player is already at
+ * their cap, or the hull is still laying the last one. Neither is an
+ * information gate — a mine is aimed at nothing, so there is nothing to have
+ * heard first.
+ */
+export function layMine(world: SimWorld, hull: number, capPerPlayer: number): number {
+  if (!hasComponent(world, Countermeasure, hull)) return 0;
+  if (hasComponent(world, Laying, hull) && Laying.remainingS[hull]! > 0) return 0;
+  const slot = Owner.slot[hull]!;
+  if (liveMineCount(world, slot) >= capPerPlayer) return 0;
+
+  const mine = spawnOrdnance(world, {
+    kind: OrdnanceKind.Mine,
+    slot,
+    faction: Owner.faction[hull]!,
+    x: Position.x[hull]!,
+    y: Position.y[hull]!,
+    depth: Position.depth[hull]!,
+    // A mine neither seeks nor steers; its listening lives in the trigger,
+    // which is a loudness bar rather than a seeker (docs/systems-combat.md §6).
+    pressureRating: Pressure.rating[hull]!,
+  });
+  Ordnance.armingS[mine] = ORDNANCE.MINE.ARMING_S;
+
+  // The field is silent; making it is not. The laying hull broadcasts at
+  // construction grade for exactly as long as the mine takes to arm, which is
+  // the counter-play §6 asks for: you cannot see a minefield, but you can hear
+  // one being built, and residue remembers where.
+  if (!hasComponent(world, Laying, hull)) addComponent(world, Laying, hull);
+  Laying.remainingS[hull] = ORDNANCE.MINE.ARMING_S;
+  SilentRunning.active[hull] = 0;
+
+  return mine;
+}
+
+/** Armed and arming mines a slot currently holds, for the cap. */
+export function liveMineCount(world: SimWorld, slot: number): number {
+  const all = ordnanceEntities(world);
+  let count = 0;
+  for (let i = 0; i < all.length; i++) {
+    const eid = all[i]!;
+    if (Ordnance.kind[eid] !== OrdnanceKind.Mine) continue;
+    if (Owner.slot[eid] !== slot) continue;
+    if (Health.hp[eid]! <= 0) continue;
+    count++;
+  }
+  return count;
+}
+
+/** Laying clocks, which tick down wherever the hull is and whatever it does. */
+function layingSystem(world: SimWorld): void {
+  const layers = laying(world);
+  for (let i = 0; i < layers.length; i++) {
+    const eid = layers[i]!;
+    if (Laying.remainingS[eid]! <= 0) continue;
+    Laying.remainingS[eid] = Math.max(0, Laying.remainingS[eid]! - world.dt);
+  }
+}
+
+/**
+ * One armed mine, listening.
+ *
+ * This is the detection formula pointed backwards, and it is deliberately the
+ * *same* formula: perceived loudness after propagation and after terrain,
+ * compared against a bar. A mine in a Thermal Vein is half deaf and a minefield
+ * in a trench hears you coming from outside its own lethal radius, and neither
+ * of those is a rule anybody wrote — they fall out of pricing the trigger the
+ * way everything else in this game is priced.
+ */
+function tickMine(world: SimWorld, eid: number, destroyed: number[]): void {
+  if (Ordnance.armingS[eid]! > 0) {
+    Ordnance.armingS[eid] = Math.max(0, Ordnance.armingS[eid]! - world.dt);
+    return;
+  }
+
+  Ordnance.seekerCooldownS[eid] = Ordnance.seekerCooldownS[eid]! - world.dt;
+  if (Ordnance.seekerCooldownS[eid]! > 0) return;
+  Ordnance.seekerCooldownS[eid] = ORDNANCE.MINE.SENSE_INTERVAL_S;
+
+  const x = Position.x[eid]!;
+  const y = Position.y[eid]!;
+  const slot = Owner.slot[eid]!;
+  const candidates = audible(world);
+
+  for (let i = 0; i < candidates.length; i++) {
+    const other = candidates[i]!;
+    if (Owner.slot[other] === slot) continue;
+    if (Health.hp[other]! <= 0) continue;
+    // A mine does not trigger on ordnance. It is waiting for somebody to walk
+    // into it, and a torpedo passing overhead is not somebody.
+    if (hasComponent(world, Ordnance, other)) continue;
+
+    const distance = Math.hypot(Position.x[other]! - x, Position.y[other]! - y);
+    if (distance > ORDNANCE.MINE.TRIGGER_RADIUS_M) continue;
+
+    const pf = world.terrain.pathPropagation(Position.x[other]!, Position.y[other]!, x, y);
+    const heard = perceivedLoudness(
+      Acoustic.sig[other]! * (Acoustic.pfFactor[other]! || 1),
+      pf,
+      distance
+    );
+    if (heard < MINE_TRIGGER_LOUDNESS) continue;
+
+    detonateMine(world, eid, destroyed);
+    return;
+  }
+}
+
+/**
+ * A mine goes off: area damage with linear falloff, and a battle site.
+ *
+ * The mine keeps ringing for `DETONATION_ECHO_S` afterwards rather than
+ * vanishing, so its SPEC'd SIG 90 is something a listener can actually resolve
+ * — the Echo pass runs at 5 Hz, and a one-tick event at 60 Hz would be a
+ * signature nobody in the game could ever hear. It does no further damage while
+ * it rings and cannot trigger twice.
+ */
+function detonateMine(world: SimWorld, eid: number, destroyed: number[]): void {
+  const x = Position.x[eid]!;
+  const y = Position.y[eid]!;
+  const slot = Owner.slot[eid]!;
+
+  Ordnance.detonatingS[eid] = ORDNANCE.MINE.DETONATION_ECHO_S;
+  world.marks.add(EchoMarkKind.Battle, x, y, 1);
+
+  const candidates = audible(world);
+  for (let i = 0; i < candidates.length; i++) {
+    const other = candidates[i]!;
+    if (other === eid) continue;
+    if (Owner.slot[other] === slot) continue;
+    if (Health.hp[other]! <= 0) continue;
+    if (hasComponent(world, Ordnance, other)) continue;
+
+    const distance = Math.hypot(Position.x[other]! - x, Position.y[other]! - y);
+    if (distance >= ORDNANCE.MINE.BLAST_RADIUS_M) continue;
+
+    // Linear falloff to zero at the rim (docs/systems-combat.md §6), so a
+    // minefield kills in numbers or not at all: one mine is a warning.
+    const share = 1 - distance / ORDNANCE.MINE.BLAST_RADIUS_M;
+    Health.hp[other] = Health.hp[other]! - ORDNANCE.MINE.DAMAGE * share;
+    if (Health.hp[other]! <= 0 && !destroyed.includes(other)) destroyed.push(other);
+  }
+}
+
+/**
  * Can a gun shoot this piece of ordnance out of the water?
  *
  * Only what the doc gives a hull to: a torpedo has 40 HP and "one or two gun
@@ -299,6 +450,7 @@ export function ordnanceSystem(world: SimWorld, destroyed: number[]): void {
   const dt = world.dt;
   rearmSystem(world);
   countermeasureCooldowns(world);
+  layingSystem(world);
 
   const entities = ordnanceEntities(world);
   for (let i = 0; i < entities.length; i++) {
@@ -311,19 +463,36 @@ export function ordnanceSystem(world: SimWorld, destroyed: number[]): void {
     // its live SIG is maintained here. Constant, and deliberately: neither a
     // running torpedo nor a screaming decoy has a quiet mode. The veil factor
     // still applies, because a Spore Veil is symmetric about everything inside.
-    Acoustic.sig[eid] = ordnanceStatsFor(kind).sig * (Acoustic.sigFactor[eid]! || 1);
+    const ringing = Ordnance.detonatingS[eid]! > 0;
+    const sig = ringing ? ORDNANCE.MINE.SIG_DETONATION : ordnanceStatsFor(kind).sig;
+    Acoustic.sig[eid] = sig * (Acoustic.sigFactor[eid]! || 1);
+
+    if (ringing) {
+      // Spent, and only still here so the bang can be heard. It does no
+      // further damage and cannot trigger again.
+      Ordnance.detonatingS[eid] = Ordnance.detonatingS[eid]! - dt;
+      if (Ordnance.detonatingS[eid]! <= 0) expire(eid, destroyed);
+      continue;
+    }
 
     Ordnance.remainingS[eid] = Ordnance.remainingS[eid]! - dt;
     if (Ordnance.remainingS[eid]! <= 0) {
-      // Out of run, or burnt out. It goes inert rather than detonating: a
-      // torpedo that exploded wherever it ran dry would be an area weapon
-      // nobody aimed, and a decoy that exploded would be a grenade.
+      // Out of run, or burnt out, or scuttled at the end of its watch. It goes
+      // inert rather than detonating: a torpedo that exploded wherever it ran
+      // dry would be an area weapon nobody aimed, a decoy that exploded would
+      // be a grenade, and a mine that went off on its own timer would kill
+      // whoever happened to be nearest five minutes later.
       expire(eid, destroyed);
       continue;
     }
 
+    if (kind === OrdnanceKind.Mine) {
+      tickMine(world, eid, destroyed);
+      continue;
+    }
+
     // Only torpedoes run. A noisemaker drifts where it was dropped and simply
-    // shouts; mines and depth charges get their own systems.
+    // shouts; depth charges get their own system.
     if (kind !== OrdnanceKind.Torpedo) continue;
 
     // --- Seeker ----------------------------------------------------------

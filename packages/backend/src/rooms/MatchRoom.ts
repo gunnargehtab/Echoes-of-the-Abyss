@@ -80,6 +80,10 @@ interface NoisemakerMessage {
   unitIds: number[];
 }
 
+interface MineMessage {
+  unitIds: number[];
+}
+
 interface HarvestMessage {
   unitIds: number[];
   nodeId: number;
@@ -216,6 +220,16 @@ export class MatchRoom extends Room<MatchState> {
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;
       for (const unitId of message.unitIds) {
         this.match.deployNoisemaker(slot, unitId);
+      }
+    });
+
+    this.onMessage('mine', (client, message: MineMessage) => {
+      const slot = this.commandSlot(client);
+      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      for (const unitId of message.unitIds) {
+        // The per-player cap and the arming occupancy are both enforced in the
+        // sim; a client spamming this gets one mine and a lot of noise.
+        this.match.layMine(slot, unitId);
       }
     });
 

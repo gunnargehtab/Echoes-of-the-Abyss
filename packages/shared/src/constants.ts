@@ -208,6 +208,60 @@ export const ORDNANCE = {
     /** Terminal range at which a gun may engage inbound ordnance. §5. */
     RANGE_M: 250,
   },
+
+  /**
+   * SPEC — §6. The detection formula pointed backwards.
+   *
+   * A mine does not emit and then wait to be found; it **listens, and waits for
+   * you to be loud**. That inversion is the third pole of the weapon triangle:
+   * silence walks through a minefield and a committed push does not.
+   *
+   * See `MINE_TRIGGER_LOUDNESS` below for the derivation, which is the
+   * interesting part — the trigger is *solved* from two behaviours the doc
+   * fixes, not chosen and hoped over.
+   */
+  MINE: {
+    /** SIG while armed — the powered-down band. §3. */
+    SIG_ARMED: 2,
+    /** Burst on detonation. §3. */
+    SIG_DETONATION: 90,
+    /** Sustained SIG at the layer while a mine arms. Construction-grade. §6. */
+    SIG_LAYING: 55,
+    /** Seconds a mine takes to arm, and that the laying hull broadcasts for. §6. */
+    ARMING_S: 10,
+    /** The mine's listening sensitivity. §6. */
+    HYD: 45,
+    /** It hears out to here, and no further. §6. */
+    TRIGGER_RADIUS_M: 150,
+    /** Damage at the centre of the blast. §6. */
+    DAMAGE: 300,
+    /** ...falling linearly to zero at this radius. §6. */
+    BLAST_RADIUS_M: 200,
+    /** Live mines one player may hold. §6. */
+    CAP_PER_PLAYER: 12,
+    /** Seconds an armed mine survives before it is scuttled. §6. */
+    LIFETIME_S: 300,
+    /** Seconds between a mine re-checking what it can hear. TUNABLE. */
+    SENSE_INTERVAL_S: 0.2,
+    /**
+     * Seconds a detonation keeps ringing, TUNABLE.
+     *
+     * Long enough for the Echo Layer to resolve it at least once: the pass runs
+     * at SIM.ECHO_HZ, so an event that existed for a single 60 Hz tick would
+     * carry a SPEC'd SIG of 90 that no listener in the game could ever hear.
+     * The bang outliving the bomb by half a second is also simply true.
+     */
+    DETONATION_ECHO_S: 0.6,
+    /**
+     * The SIG the trigger is calibrated against — a Corvette at cruise.
+     *
+     * Written here rather than imported from the roster so this module stays
+     * dependency-free, and guarded by a test that fails if the roster moves:
+     * a trigger calibrated against a hull that no longer emits this much would
+     * be a derivation from a number nobody could find.
+     */
+    TRIGGER_REFERENCE_SIG: 28,
+  },
 } as const;
 
 /**
@@ -619,6 +673,30 @@ const BASE_THRESHOLD =
   (ACTIVE_SONAR.EMITTER_SIG *
     Math.pow(REFERENCE_DISTANCE_M / ACTIVE_SONAR.SELF_REVEAL_RADIUS_M, ATTENUATION_EXPONENT)) /
   TIER_THRESHOLD_MULTIPLIER.TRACK;
+
+/**
+ * The loudness a mine triggers at — **derived, not chosen**.
+ *
+ * docs/systems-combat.md §6 fixes two behaviours and leaves the number to fall
+ * out of them, exactly as `BASE_THRESHOLD` is solved from the spec'd 2,400 m
+ * self-reveal rather than picked:
+ *
+ *   1. a mine must **never** trigger on a Silent Running hull, at any range;
+ *   2. a mine **must** trigger on a cruising Corvette inside its 150 m radius.
+ *
+ * Solving (2) at exactly the trigger radius fixes the bar, and (1) then holds
+ * as a consequence rather than as a second rule: `perceivedLoudness` clamps
+ * distance at the reference distance, so the loudest a SIG-8 hull can ever read
+ * is 8 — and the bar lands at 14.7. There is a test that asserts that margin,
+ * because it is the whole reason silence is a way through a minefield.
+ *
+ * Consequence, and the point of deriving rather than choosing: widen the
+ * trigger radius or change the attenuation exponent and the bar recalibrates
+ * itself, instead of silently starting to eat scouts.
+ */
+export const MINE_TRIGGER_LOUDNESS =
+  ORDNANCE.MINE.TRIGGER_REFERENCE_SIG *
+  Math.pow(REFERENCE_DISTANCE_M / ORDNANCE.MINE.TRIGGER_RADIUS_M, ATTENUATION_EXPONENT);
 
 export const PROPAGATION_MODEL = {
   /** Distance at which SIG is taken at face value, metres. */

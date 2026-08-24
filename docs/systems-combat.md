@@ -182,6 +182,14 @@ Biome PF applies — it is the same formula. A mine in a Thermal Vein (PF 0.45) 
 deaf, and a minefield in a trench (PF 1.6) hears you coming from outside its own lethal
 radius. Where minefields work is a property of the map, exactly like everything else.
 
+**The 150 m radius belongs to the calibration hull, not to every hull.** Because the
+trigger is a loudness bar rather than a proximity fuse, each hull has its own effective
+trigger radius: a Cruiser is heard further out than a Corvette, and anything quieter than
+the bar is never heard at all. A Light Scout at cruise (SIG 12) sits below it — a mine
+cannot detect one at any range, even directly overhead. That is intended. A minefield is a
+wall against a *committed push*, and a scout is exactly the thing you send ahead of one:
+it survives finding the field, it does not clear it, and the army behind it still dies.
+
 ### The blast
 
 - **Damage 300** at centre, linear falloff to zero at **200 m**. A Light Scout dies; a
@@ -369,10 +377,10 @@ what exists or assumes what does not. The combat loop lives in
 | Doc concept | Prototype today | Implementation note |
 | --- | --- | --- |
 | Guns (§4) | **Implemented** | Hitscan with cooldown; chase on ordered targets, auto-return-fire, silent hulls hold fire; every discharge spikes SIG and lays battle residue |
-| Ordnance acoustics (§3) | Partial | Gun bursts and break-silence exist; no torpedo/mine/noisemaker rows yet |
-| Torpedoes (§5) | Not modelled | Needs projectile entities resolved through the Echo Layer |
-| Countermeasures (§5) | Not modelled | Noisemakers and point defence follow torpedoes |
-| Mines (§6) | Not modelled | Trigger threshold to be derived from the two SPEC behaviours |
+| Ordnance acoustics (§3) | **Implemented** | The `ORDNANCE` group in `packages/shared/src/constants.ts` carries the §3 table |
+| Torpedoes (§5) | **Implemented** | `Ordnance` entities with their own SIG; seekers run the standard propagation model in `sim/systems/ordnance.ts` |
+| Countermeasures (§5) | **Implemented** | Noisemaker decoys, and point defence as a target priority inside the terminal range in `sim/systems/combat.ts` |
+| Mines (§6) | **Implemented** | `MINE_TRIGGER_LOUDNESS`, solved from the two SPEC behaviours; caps, arming noise and blast falloff in `sim/systems/ordnance.ts` |
 | Firing solutions (§7) | Not modelled | Combat currently ignores tiers (defensible for guns only, per §4) |
 | Vertical combat (§8) | Not modelled | Ordnance PR, depth charges, pursuit-below-PR warning |
 | TTK bands (§9) | **Not met** | Current damage numbers predate this doc; retune within the bands |

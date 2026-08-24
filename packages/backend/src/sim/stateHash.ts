@@ -19,6 +19,7 @@ import {
   DepthOrder,
   Harvester,
   Health,
+  Laying,
   Magazine,
   Ordnance,
   Owner,
@@ -116,9 +117,14 @@ export function hashWorld(world: SimWorld): number {
       h = mixFloat(h, ResourceNode.remaining[eid]!);
       h = mixU32(h, ResourceNode.kind[eid]!);
     }
+    if (hasComponent(world, Laying, eid)) {
+      h = mixFloat(h, Laying.remainingS[eid]!);
+    }
     if (hasComponent(world, Ordnance, eid)) {
       h = mixU32(h, Ordnance.kind[eid]!);
       h = mixFloat(h, Ordnance.remainingS[eid]!);
+      h = mixFloat(h, Ordnance.armingS[eid]!);
+      h = mixFloat(h, Ordnance.detonatingS[eid]!);
       h = mixFloat(h, Ordnance.heading[eid]!);
       // Ordinal, not the raw eid, for the reason the whole function exists:
       // two identical worlds must hash alike whichever process built them.

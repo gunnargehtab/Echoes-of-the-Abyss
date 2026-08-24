@@ -36,6 +36,7 @@ import {
   faunaStatsFor,
   HAZARDS,
   HazardPhase,
+  ORDNANCE,
   OrdnanceKind,
   ResolutionTier,
   SelfEventKind,
@@ -79,7 +80,7 @@ import { separationSystem } from './systems/separation.ts';
 import { clearQueue, enqueue, orderQueueSystem, queueView } from './systems/orderQueue.ts';
 import { harvestSystem } from './systems/harvest.ts';
 import { movementSystem } from './systems/movement.ts';
-import { deployNoisemaker, launchTorpedo, ordnanceSystem } from './systems/ordnance.ts';
+import { deployNoisemaker, launchTorpedo, layMine, ordnanceSystem } from './systems/ordnance.ts';
 import { pressureSystem } from './systems/pressure.ts';
 import { productionSystem } from './systems/production.ts';
 import { randomSeed } from './rng.ts';
@@ -567,6 +568,28 @@ export class Match {
     });
     if (!this.owns(slot, eid)) return 0;
     return deployNoisemaker(this.world, eid);
+  }
+
+  /**
+   * Lay a mine at the hull's own position — docs/systems-combat.md §6.
+   *
+   * No target and no handle, like a decoy: a mine is aimed at nobody. What it
+   * costs is the ten seconds of construction-grade noise the laying hull pays
+   * while it arms, which is the counter-play the doc asks for — you cannot see
+   * a minefield, but you can hear one being built.
+   *
+   * Returns the mine entity, or 0 when the player is at their cap or the hull
+   * is still laying the last one.
+   */
+  layMine(slot: number, eid: number): number {
+    this.recordCommand({
+      tick: this.world.tick,
+      type: 'mine',
+      slot,
+      unit: this.localId(eid),
+    });
+    if (!this.owns(slot, eid)) return 0;
+    return layMine(this.world, eid, ORDNANCE.MINE.CAP_PER_PLAYER);
   }
 
   /** Send a harvester to a specific nodule field. */

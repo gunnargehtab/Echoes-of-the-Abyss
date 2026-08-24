@@ -249,6 +249,24 @@ export const Ordnance = defineComponent({
   seekerCooldownS: Types.f32,
   /** Countdown to the next wake mark. */
   wakeCooldownS: Types.f32,
+  /**
+   * Seconds a mine still needs before it can trigger.
+   *
+   * A mine you dropped this second is not yet a mine. It is also what the
+   * laying hull is broadcasting through (docs/systems-combat.md §6): the field
+   * is silent, but *making* it is not, so the arming clock and the noise are
+   * the same clock.
+   */
+  armingS: Types.f32,
+  /**
+   * Seconds this piece of ordnance keeps ringing after it went off.
+   *
+   * A detonation is SPEC'd at SIG 90, and an event that existed for one 60 Hz
+   * tick would carry a signature no listener in the game could ever resolve —
+   * the Echo pass runs at 5 Hz. So the bang outlives the bomb, does no further
+   * damage, and cannot trigger again.
+   */
+  detonatingS: Types.f32,
 });
 
 /**
@@ -277,4 +295,16 @@ export const Magazine = defineComponent({
  */
 export const Countermeasure = defineComponent({
   cooldownRemainingS: Types.f32,
+});
+
+/**
+ * A hull in the act of laying a mine — docs/systems-combat.md §6.
+ *
+ * Exists so the *laying* can be loud while the field is silent. Read by
+ * acoustics as a SIG floor, exactly like a descent: you cannot lay a minefield
+ * quietly, and a scout that hears construction-grade noise in open water and
+ * finds no structure there has learned something worth knowing.
+ */
+export const Laying = defineComponent({
+  remainingS: Types.f32,
 });
