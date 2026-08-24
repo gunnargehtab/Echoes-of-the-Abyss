@@ -8,39 +8,46 @@ live checkboxes; this document carries the reasoning.
 
 ## Where the build stands
 
-The scaffold in `packages/` is a working vertical slice:
+Every issue in Phases 1 through 5 is closed. The scaffold in `packages/` is no longer a
+vertical slice — it is a game you can sit down and play alone:
 
-- the Echo Layer resolving per player at 5 Hz inside its 2 ms budget, with
+- the **Echo Layer** resolving per player at 5 Hz inside its 2 ms budget, with
   PropagationFactor integrated along the emitter-to-listener path;
-- the nodule economy — harvester cargo loop, all four throttle states, deposit structures;
-- construction, production queues, direct-fire combat, and the Bastion win condition;
-- the four faction signature structures and their auras;
-- a PixiJS client that draws tier-graded contacts with ghost decay, ping previews, and a
-  SIG meter.
+- **depth as an order** — descent fast and deafening, ascent slow and silent, crush
+  attrition that no repair undoes, and Resonance Crystal at the bottom of it;
+- **the mix** — a bus graph, contacts sonified by resolution tier, and the player's own
+  loudness as a bed the exposure cue cuts through;
+- **a map that argues back** — three authored archetypes, vent eruptions and resonance
+  storms, Echo Marks as acoustic residue, and Thermal Draw as a rate rather than a pile;
+- **the Drift** — fauna that listen, answer the loudest thing, and are indistinguishable
+  from a warship until Tier 3;
+- **a lobby, a skirmish AI, reconnection and a rematch**, so a solo player can reach a win
+  or a loss;
+- **a balance harness** that runs ten matches headless and reports every guard-rail in
+  [economy.md](economy.md) §9 and [bestiary.md](bestiary.md) §8 against a number.
 
-Two commanders can connect and fight a match to a conclusion. That is roughly a fifth of
-the game the design bible describes.
+What is *not* done is the long tail the harness has started to surface, and the campaign,
+and everything in [world.md](world.md) that is still only prose.
 
 ---
 
 ## The two pillars, honestly assessed
 
 `CLAUDE.md` states the design axis: every mechanic in this game is an argument about
-**sound** or **depth**. Measured against that, the build is lopsided.
+**sound** or **depth**. Both pillars now stand.
 
 | Pillar | Status |
 | --- | --- |
 | Echo Layer — SIG, PF, resolution tiers, silent running, active sonar | Implemented and load-bearing |
-| The mix — which [audio-direction.md](audio-direction.md) calls the *primary* information channel | Not started; no audio code exists |
+| The mix — which [audio-direction.md](audio-direction.md) calls the *primary* information channel | Implemented: bus graph, tier sonification, self bus, exposure cue |
 | Pressure ratings, crush attrition, the Sounding Spire's PR grant | Implemented |
-| Depth as something a player can change | Not started; `Position.depth` is written at spawn and never again |
+| Depth as something a player can change | Implemented: depth orders, the ribbon, the crystal gate |
 
-Those two gaps set the order of everything below. Depth is currently a spawn constant, so
-"depth is the axis of commitment" ([systems-depth.md](systems-depth.md) §5) is a claim the
-simulation cannot make — and `pressureSystem` is unreachable in a normal match, because the
-spawn code is careful never to place a unit below its rating.
-
----
+One asymmetry is worth naming because it shapes what comes next: **depth has no acoustic
+consequence.** The Echo Layer reads `Position.depth` only to report it at Tier 3. Descent
+is loud and ascent is silent, so depth costs *time* and *noise while moving* — but sitting
+at 1,500 m sounds exactly like sitting at 300 m to everyone listening. Whether that is
+correct or a gap is a design question [systems-echo.md](systems-echo.md) has not answered.
 
 ## Phase 1 — Make the second pillar playable
 
@@ -124,6 +131,29 @@ model works.
 
 ---
 
+## Phase 6 — What the harness found
+
+The balance harness ([#115](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/115))
+exists to turn design claims into numbers, and the first numbers it produced were about
+mechanics the docs specify and the code does not have.
+
+| Work | Issue |
+| --- | --- |
+| Industrial hum lives 5 s, so a working economy does not hum ([economy.md](economy.md) §5) | [#136](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/136) |
+| The Hadron tithe is specified in [economy.md](economy.md) §6 and implemented nowhere | [#140](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/140) |
+
+**Both were found the same way**, and it is the way this phase is meant to work: a
+guard-rail read as breached, the number underneath it pointed at a specific doc section,
+and that section turned out to describe something nobody had built. The Knights lose every
+long game because the mitigation §9 names for exactly that risk — the tithe — does not
+exist. A scout sweeping a depot hears nothing four times in five because a hum's lifetime
+is its intensity times its decay, and one delivery buys 5.4 seconds against a forty-second
+round trip.
+
+Neither is a balance tuning question. Both are "the doc says this and the code does not".
+
+---
+
 ## Sequencing notes
 
 Three dependencies survive any reordering of the phases:
@@ -152,6 +182,27 @@ Three dependencies survive any reordering of the phases:
   depth is arbitrary, and should be reconsidered before it is implemented.
 
 ---
+
+## Completed — Sprint 2 (August 2026)
+
+Phases 1 through 5, in order, each landing as its own pull request against a green `main`.
+Depth became an order and the crystal gate opened; the game about sound started making
+sound; the map grew fauna, hazards, residue, archetypes and a power rate; a lobby, an AI
+and a rematch turned it into something one person can play; and a balance harness turned
+the design bible's guard-rail tables into a command you can run.
+
+Three bugs found along the way are worth remembering, because none of them failed a test
+and all three were only reachable from the outside:
+
+- **Every harvester in every match was dying of crush.** Nodule fields sit at 600 m, which
+  needs PR-2; the Harvester was PR-1. Both economies collapsed around the two-minute mark
+  of every match and nothing caught it, because no test ran an economy for longer than a
+  minute.
+- **Every commander pinged 0.4 s into the match**, at the local wildlife, announcing its
+  base across 2,400 m before anything had happened.
+- **The Tier-2 bearing blur was keyed on a process-global entity id**, so the same match
+  run twice blurred differently. Latent from the day it was written; live from the day an
+  AI started walking an army toward a blurred position.
 
 ## Completed — Sprint 1 (August 2026)
 

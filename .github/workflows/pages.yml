@@ -1,0 +1,76 @@
+# The roadmap site — docs/ROADMAP.md rendered against live issue state.
+#
+# Publishing is **opt-in and off by default**, which is deliberate. This
+# repository is private; a Pages site is not. Merging a workflow should never
+# be the thing that decides to make part of a private repository public, so the
+# deploy job runs only once someone has knowingly turned it on:
+#
+#   1. Settings -> Pages -> Source: "GitHub Actions"
+#   2. Settings -> Secrets and variables -> Actions -> Variables:
+#      add PUBLISH_ROADMAP = true
+#
+# Until both are done this workflow builds the site, uploads it as an artifact
+# you can download and open locally, and skips the deploy. It stays green
+# either way, so an un-enabled Pages setup is not a red X on every push.
+name: Roadmap site
+
+on:
+  push:
+    branches: [main]
+    # Only when something that feeds the page changes.
+    paths:
+      - 'docs/ROADMAP.md'
+      - 'tools/roadmap/**'
+      - '.github/workflows/pages.yml'
+  # Issue state is half the page, and it changes without any push at all.
+  issues:
+    types: [closed, reopened, edited]
+  # A backstop for anything the events above miss.
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: read
+
+concurrency:
+  group: roadmap-site
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # No install step: the generator is dependency-free by design, so the
+      # site cannot fail to build because of something in node_modules.
+      - name: Build the site
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node tools/roadmap/build.mjs --out dist/roadmap
+      - uses: actions/upload-artifact@v4
+        with:
+          name: roadmap-site
+          path: dist/roadmap
+      - uses: actions/upload-pages-artifact@v3
+        if: vars.PUBLISH_ROADMAP == 'true'
+        with:
+          path: dist/roadmap
+
+  deploy:
+    needs: build
+    if: vars.PUBLISH_ROADMAP == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
