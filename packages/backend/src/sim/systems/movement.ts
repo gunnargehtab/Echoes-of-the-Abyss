@@ -7,15 +7,12 @@
  */
 
 import { defineQuery } from 'bitecs';
-import { Faction, SILENT_RUNNING, statsFor, type UnitKind } from '@echoes/shared';
+import { Faction, MOVEMENT, SILENT_RUNNING, statsFor, type UnitKind } from '@echoes/shared';
 import { MoveOrder, Owner, Position, SilentRunning, Unit, Velocity } from '../components.ts';
 import { stormModifiers } from './hazards.ts';
 import type { SimWorld } from '../world.ts';
 
 const movable = defineQuery([Position, Velocity, MoveOrder, Unit, SilentRunning, Owner]);
-
-/** Close enough to count as arrived, in metres. */
-const ARRIVAL_EPSILON_M = 5;
 
 function speedMultiplier(world: SimWorld, eid: number): number {
   // Storm interference stacks with silent running rather than replacing it
@@ -48,7 +45,7 @@ export function movementSystem(world: SimWorld): void {
     const dy = MoveOrder.y[eid]! - Position.y[eid]!;
     const distance = Math.hypot(dx, dy);
 
-    if (distance <= ARRIVAL_EPSILON_M) {
+    if (distance <= MOVEMENT.ARRIVAL_EPSILON_M) {
       MoveOrder.active[eid] = 0;
       Velocity.x[eid] = 0;
       Velocity.y[eid] = 0;

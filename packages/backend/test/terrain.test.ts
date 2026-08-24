@@ -53,10 +53,66 @@ describe('Terrain.pathPropagation', () => {
   });
 });
 
+describe('Terrain bounds', () => {
+  /**
+   * Direct cover for `clampXM`/`clampYM`, the single authority every system
+   * that displaces a hull now writes through — separation, eruption knockback
+   * and `Match.orderMove`.
+   *
+   * These are API tests, not regression tests: the methods are new, so there is
+   * no older behaviour for them to fail against. They exist because the clamps
+   * are otherwise only ever observed as a side effect three systems downstream,
+   * where a wrong answer arrives as a strange unit position rather than as a
+   * failing bound.
+   *
+   * Deliberately not square. With widthM === heightM a `clampYM` that consulted
+   * widthM would be indistinguishable from a correct one.
+   */
+  const t = new Terrain(4000, 3000, 250);
+
+  it('leaves a position already inside the map alone', () => {
+    assert.equal(t.clampXM(1234.5), 1234.5);
+    assert.equal(t.clampYM(1234.5), 1234.5);
+  });
+
+  it('counts both edges as part of the map', () => {
+    // Inclusive, because being pinned against the wall has to be a legal place
+    // to be — that is the whole outcome the knockback clamp is aiming for — and
+    // because the biome grid already floors widthM into its last cell rather
+    // than off the end.
+    assert.equal(t.clampXM(0), 0);
+    assert.equal(t.clampYM(0), 0);
+    assert.equal(t.clampXM(t.widthM), t.widthM);
+    assert.equal(t.clampYM(t.heightM), t.heightM);
+  });
+
+  it('pulls anything past an edge back onto it', () => {
+    assert.equal(t.clampXM(-0.5), 0);
+    assert.equal(t.clampYM(-0.5), 0);
+    assert.equal(t.clampXM(t.widthM + 0.5), t.widthM);
+    assert.equal(t.clampYM(t.heightM + 0.5), t.heightM);
+    // However hard it was thrown. Knockback scales with plume falloff, so the
+    // overshoot is not bounded by anything the clamp gets to assume.
+    assert.equal(t.clampXM(-1e6), 0);
+    assert.equal(t.clampYM(1e6), t.heightM);
+  });
+
+  it('clamps each axis against its own dimension', () => {
+    assert.equal(t.clampXM(3500), 3500, 'inside the width');
+    assert.equal(t.clampYM(3500), t.heightM, 'and past the height');
+  });
+});
+
 describe('Echo Layer path integration', () => {
   /** Two hostile corvettes 1,500 m apart on a chosen terrain. */
   function resolveAcross(terrain: Terrain): ResolutionTier {
-    const world = createSimWorld(terrain, 1 / 60);
+    // The seed is passed because `createSimWorld` asks for one. This call used
+    // to hand a three-argument signature two arguments and lean on `Rng`'s
+    // `seed >>> 0` turning the missing one into 0; tests are not type-checked,
+    // so nothing objected. Nothing on this path draws from the RNG and both
+    // calls below were already getting the same generator, so this fixes no
+    // divergence — it just stops the fixture depending on a coercion.
+    const world = createSimWorld(terrain, 1 / 60, 7);
     spawnUnit(world, {
       kind: UnitKind.Corvette,
       slot: 0,

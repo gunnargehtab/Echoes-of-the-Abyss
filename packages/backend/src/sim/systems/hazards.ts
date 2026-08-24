@@ -294,8 +294,13 @@ function applyEruption(world: SimWorld, hazard: Hazard, dt: number): void {
     if (Owner.faction[eid] === Faction.Directorate) {
       push *= HAZARDS.ERUPTION.DIRECTORATE_KNOCKBACK_MULTIPLIER;
     }
-    Position.x[eid] = Position.x[eid]! + (dx / distance) * push;
-    Position.y[eid] = Position.y[eid]! + (dy / distance) * push;
+    // Clamped at the write. Knockback is the one system that moves a hull
+    // along an axis nobody chose, it runs after separation, and a vent near
+    // the map edge threw hulls clean off the map — still simulated, still
+    // audible, and out of reach of any order the player could give.
+    const terrain = world.terrain;
+    Position.x[eid] = terrain.clampXM(Position.x[eid]! + (dx / distance) * push);
+    Position.y[eid] = terrain.clampYM(Position.y[eid]! + (dy / distance) * push);
   }
 }
 

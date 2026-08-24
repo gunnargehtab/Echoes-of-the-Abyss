@@ -154,6 +154,47 @@ Neither is a balance tuning question. Both are "the doc says this and the code d
 
 ---
 
+## Phase 7 — What the physics audit found
+
+Epic [#121](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/121) asked whether to
+adopt a third-party physics engine. The answer is no, and the reasoning is on the issue: the
+simulation's whole physics is a few hundred lines of deliberate steering, determinism here is
+load-bearing for replays, the state hash and the balance harness, and an impulse solver would
+inject energy into a game where position *is* information. What the question exposed is that
+nobody had audited those few hundred lines.
+
+| Work | Issue |
+| --- | --- |
+| Separation correctness, world-bounds authority, derived constants, 60 Hz instrumentation | [#149](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/149) |
+| Terrain passability — the unshipped third of [#113](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/113) | [#150](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/150) |
+| Cold shock currents ([hazards.md](hazards.md) §8), the first simulated current | [#151](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/151) |
+| Kelp entanglement fields ([hazards.md](hazards.md) §4) | [#152](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/152) |
+| Sounder transit collision ([bestiary.md](bestiary.md), [hazards.md](hazards.md) §6) | [#153](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/153) |
+| Directorate shallow-water penalty ([factions.md](factions.md), [systems-depth.md](systems-depth.md) §6) | [#154](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/154) |
+
+The first row is different in kind from the other five. #149 is defects — a hull overlapping
+three neighbours separated from one of them, a stacked-hull tie-break seeded from
+process-global entity ids in a codebase that has already been bitten by exactly that twice,
+and a vent eruption at the map edge throwing hulls off the map, where they stayed simulated,
+stayed audible, and could not be ordered back. None of that was reachable by the tests,
+because there was no movement test at all.
+
+The other five are Phase 6's pattern again: the doc says this and the code does not. Every
+force named in [hazards.md](hazards.md) except vent knockback is an authored site with no
+behaviour — currents that push, kelp that entangles, a megafauna that is supposed to destroy
+structures by transit and instead stops and gnaws at attack range.
+
+Two known gaps are deliberately not on this list. **Travelling munitions** are the largest
+physics commitment the docs gesture at — [tech-stack.md](tech-stack.md) promises an ECS for
+projectiles and combat is hit-scan — but [units.md](units.md) admits its weapon numbers are
+placeholders "until a combat design doc exists", and that doc does not exist yet. Filing the
+implementation before the design would be building on sand, and munitions are also the one
+thing that could genuinely reopen the engine question. **Fauna separation** is a design
+question rather than a defect: creatures currently overlap hulls, structures and each other
+freely, which may well be right, but nobody has decided it in writing.
+
+---
+
 ## Sequencing notes
 
 Three dependencies survive any reordering of the phases:

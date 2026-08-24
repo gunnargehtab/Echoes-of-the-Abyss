@@ -37,6 +37,13 @@ import { eidOfLocalId } from './world.ts';
 
 /** The current replay wire format. Bump when a change breaks old files. */
 /**
+ * 4: separation resolves every neighbour of a hull rather than only the last,
+ * seeds its coincident tie-break from match-local ids rather than process-
+ * global entity ids, and positions are clamped to the map. The file layout is
+ * unchanged — this bump is about the rules, not the format. A v3 recording
+ * replayed under these rules diverges at its first crowded checkpoint, and
+ * rejecting it names the real fault instead of reporting a determinism bug.
+ *
  * 3: replays carry whether the Drift was populated.
  *
  * 2: replays carry the map they were played on.
@@ -48,7 +55,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 3;
+export const REPLAY_FORMAT_VERSION = 4;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =

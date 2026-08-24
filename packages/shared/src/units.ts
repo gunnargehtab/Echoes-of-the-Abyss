@@ -62,9 +62,6 @@ export function unitRadiusM(kind: UnitKind): number {
   return UNIT_STATS[kind].hullLengthM / 2;
 }
 
-/** The largest radius in the roster, for sizing separation queries. */
-export const MAX_UNIT_RADIUS_M = 130 / 2;
-
 export const UNIT_STATS: Record<UnitKind, UnitStats> = {
   [UnitKind.LightScout]: {
     kind: UnitKind.LightScout,
@@ -176,3 +173,14 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
 export function statsFor(kind: UnitKind): UnitStats {
   return UNIT_STATS[kind];
 }
+
+/**
+ * The largest radius in the roster, for sizing separation queries.
+ *
+ * Derived from the roster rather than written down: separation queries a
+ * broadphase for neighbours within `ownRadius + this`, so a hull longer than
+ * the hardcoded figure would simply not be found by the hulls it was
+ * overlapping — a collision bug that reads as an unrelated formation glitch.
+ */
+export const MAX_UNIT_RADIUS_M =
+  Math.max(...Object.values(UNIT_STATS).map((stats) => stats.hullLengthM)) / 2;

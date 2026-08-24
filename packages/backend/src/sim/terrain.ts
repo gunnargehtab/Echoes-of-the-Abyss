@@ -40,6 +40,27 @@ export class Terrain {
     this.pf = new Float32Array(this.cols * this.rows).fill(PROPAGATION_FACTOR[Biome.OpenWater]);
   }
 
+  /**
+   * Clamp a horizontal coordinate onto the map.
+   *
+   * The one bounds authority. Position is written by movement, separation and
+   * hazard knockback, and only movement was ever bounded — by accident, in
+   * that it steers toward a target rather than displacing. Knockback and
+   * separation both push a hull along an axis they did not choose, which at
+   * the map edge pushed it off the map entirely: still simulated, still
+   * audible, and unreachable by an order the player could give.
+   *
+   * Terrain owns this because Terrain owns widthM/heightM, and every system
+   * that writes a position already holds the world's terrain.
+   */
+  clampXM(x: number): number {
+    return x < 0 ? 0 : x > this.widthM ? this.widthM : x;
+  }
+
+  clampYM(y: number): number {
+    return y < 0 ? 0 : y > this.heightM ? this.heightM : y;
+  }
+
   private index(x: number, y: number): number {
     const cx = Math.min(this.cols - 1, Math.max(0, Math.floor(x / this.cellM)));
     const cy = Math.min(this.rows - 1, Math.max(0, Math.floor(y / this.cellM)));

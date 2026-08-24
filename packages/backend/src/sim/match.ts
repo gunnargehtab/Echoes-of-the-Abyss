@@ -149,6 +149,18 @@ export class Match {
   private echoAccumulator = 0;
   /** Rolling worst-case Echo pass cost, for budget checks. */
   private worstEchoMs = 0;
+  /**
+   * Rolling worst-case cost of a whole simulation step, and of the three
+   * systems that move things within it.
+   *
+   * The Echo pass has had a measured budget since it was written, and the
+   * 60 Hz step has had none — so a regression on the tick path was only ever
+   * visible as a test that got slower, on a machine somebody happened to be
+   * watching. Movement, depth and separation are timed as a group because
+   * they are the part of the step that scales with the fleet.
+   */
+  private worstStepMs = 0;
+  private worstPhysicsMs = 0;
   private matchResult: GameOverPayload | null = null;
 
   /** Non-null while this match is being recorded. */
@@ -208,6 +220,16 @@ export class Match {
 
   get worstEchoPassMs(): number {
     return this.worstEchoMs;
+  }
+
+  /** Worst-case cost of a full simulation step, against the 60 Hz budget. */
+  get worstStepMsCost(): number {
+    return this.worstStepMs;
+  }
+
+  /** Worst-case cost of movement + depth + separation within a step. */
+  get worstPhysicsMsCost(): number {
+    return this.worstPhysicsMs;
   }
 
   /**
@@ -434,6 +456,16 @@ export class Match {
     });
     if (!this.owns(slot, eid) || !hasComponent(this.world, MoveOrder, eid)) return;
     if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+
+    // Clamped rather than rejected, unlike orderDepth. A click past the edge
+    // of the map is a legible instruction — go as far that way as the water
+    // goes — where a depth below the sea floor names a place that is not
+    // there. Clamping here also keeps a move order from being the one way to
+    // walk a hull off the map under its own power.
+    // Runs after recordCommand, so a replay re-derives the clamp rather than
+    // inheriting it, and the validation path is exercised on playback too.
+    x = this.world.terrain.clampXM(x);
+    y = this.world.terrain.clampYM(y);
 
     if (queued) {
       enqueue(this.world, eid, { kind: 'move', x, y });
@@ -729,10 +761,14 @@ export class Match {
   }
 
   private step(): void {
+    // Wall-clock only, and deliberately never mixed into the state hash: the
+    // simulation must not be able to notice how long it took to run.
+    const stepStarted = performance.now();
     this.recorder?.maybeCheckpoint(this.world.tick, () => hashWorld(this.world));
     this.destroyedScratch.length = 0;
     harvestSystem(this.world);
     combatSystem(this.world, this.destroyedScratch);
+    const physicsStarted = performance.now();
     movementSystem(this.world);
     // The vertical axis, right beside the horizontal one — and necessarily
     // before acoustics (which prices the descent) and pressure (which bills
@@ -742,6 +778,8 @@ export class Match {
     // is a correction to where hulls ended up, and detection must see the
     // corrected picture rather than a stack that no longer exists.
     separationSystem(this.world);
+    const physicsCost = performance.now() - physicsStarted;
+    if (physicsCost > this.worstPhysicsMs) this.worstPhysicsMs = physicsCost;
     // After the systems that can finish an order: a unit that arrived this
     // tick starts its next leg on the next one.
     orderQueueSystem(this.world);
@@ -769,6 +807,8 @@ export class Match {
     // mark and does not lose a tick of the three minutes it is owed.
     this.world.marks.tick(FIXED_DT);
     this.world.tick++;
+    const stepCost = performance.now() - stepStarted;
+    if (stepCost > this.worstStepMs) this.worstStepMs = stepCost;
   }
 
   /**
