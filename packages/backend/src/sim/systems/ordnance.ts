@@ -26,6 +26,7 @@
 
 import { addComponent, defineQuery, hasComponent } from 'bitecs';
 import {
+  DEPTH,
   EchoMarkKind,
   MINE_TRIGGER_LOUDNESS,
   ORDNANCE,
@@ -399,20 +400,34 @@ function tickMine(world: SimWorld, eid: number, destroyed: number[]): void {
 }
 
 /**
- * A mine goes off: area damage with linear falloff, and a battle site.
+ * An area detonation: linear falloff to the rim, a battle site, and a bang that
+ * outlives the bomb.
  *
- * The mine keeps ringing for `DETONATION_ECHO_S` afterwards rather than
- * vanishing, so its SPEC'd SIG 90 is something a listener can actually resolve
- * — the Echo pass runs at 5 Hz, and a one-tick event at 60 Hz would be a
- * signature nobody in the game could ever hear. It does no further damage while
- * it rings and cannot trigger twice.
+ * Shared by mines and depth charges because every part of it is identical
+ * except two numbers and a dimension — the falloff, the residue, the
+ * `destroyed` dedupe, and the ring that lets a 5 Hz detection pass hear a
+ * 60 Hz event. Two copies would drift, and the half that drifted would be the
+ * one nobody was looking at.
+ *
+ * `volumetric` is the one real difference, and it is the whole of §8. A mine's
+ * blast is measured on the map, because a minefield is a wall you walk into and
+ * the water column above it is not part of the wall. A depth charge's blast is
+ * measured in three dimensions, because attacking *across bands* is its entire
+ * reason to exist — a 2-D blast would reach a hull 1,500 m below and the depth
+ * envelope would apply to nothing.
  */
-function detonateMine(world: SimWorld, eid: number, destroyed: number[]): void {
+function blast(
+  world: SimWorld,
+  eid: number,
+  options: { damage: number; radiusM: number; echoS: number; volumetric: boolean },
+  destroyed: number[]
+): void {
   const x = Position.x[eid]!;
   const y = Position.y[eid]!;
+  const depth = Position.depth[eid]!;
   const slot = Owner.slot[eid]!;
 
-  Ordnance.detonatingS[eid] = ORDNANCE.MINE.DETONATION_ECHO_S;
+  Ordnance.detonatingS[eid] = options.echoS;
   world.marks.add(EchoMarkKind.Battle, x, y, 1);
 
   const candidates = audible(world);
@@ -423,15 +438,119 @@ function detonateMine(world: SimWorld, eid: number, destroyed: number[]): void {
     if (Health.hp[other]! <= 0) continue;
     if (hasComponent(world, Ordnance, other)) continue;
 
-    const distance = Math.hypot(Position.x[other]! - x, Position.y[other]! - y);
-    if (distance >= ORDNANCE.MINE.BLAST_RADIUS_M) continue;
+    const dz = options.volumetric ? Position.depth[other]! - depth : 0;
+    const distance = Math.hypot(Position.x[other]! - x, Position.y[other]! - y, dz);
+    if (distance >= options.radiusM) continue;
 
     // Linear falloff to zero at the rim (docs/systems-combat.md §6), so a
     // minefield kills in numbers or not at all: one mine is a warning.
-    const share = 1 - distance / ORDNANCE.MINE.BLAST_RADIUS_M;
-    Health.hp[other] = Health.hp[other]! - ORDNANCE.MINE.DAMAGE * share;
+    const share = 1 - distance / options.radiusM;
+    Health.hp[other] = Health.hp[other]! - options.damage * share;
     if (Health.hp[other]! <= 0 && !destroyed.includes(other)) destroyed.push(other);
   }
+}
+
+/** How loud each kind is while its detonation is still ringing. §3. */
+function detonationSig(kind: OrdnanceKind): number {
+  return kind === OrdnanceKind.DepthCharge
+    ? ORDNANCE.DEPTH_CHARGE.SIG_DETONATION
+    : ORDNANCE.MINE.SIG_DETONATION;
+}
+
+/** A mine goes off. Flat blast: a minefield is a wall on the map. */
+function detonateMine(world: SimWorld, eid: number, destroyed: number[]): void {
+  blast(
+    world,
+    eid,
+    {
+      damage: ORDNANCE.MINE.DAMAGE,
+      radiusM: ORDNANCE.MINE.BLAST_RADIUS_M,
+      echoS: ORDNANCE.MINE.DETONATION_ECHO_S,
+      volumetric: false,
+    },
+    destroyed
+  );
+}
+
+/**
+ * A depth charge, falling.
+ *
+ * It travels **only in depth** — it is dropped, not thrown — at the standard
+ * descent and ascent rates, so a charge set below you sinks and one set above
+ * you floats. The asymmetry those rates encode is doing real work here: a
+ * charge dropped downward arrives in a third of the time one sent upward does,
+ * which is why attacking the band below you is the natural direction and
+ * attacking the band above is a commitment.
+ *
+ * Audible the whole way down at SIG 30, per §1's rule. The defender hears it
+ * coming and has the fall time to move — which, given that the blast is 180 m
+ * and hulls are faster than the charge, is a real out for anyone paying
+ * attention.
+ */
+function tickDepthCharge(world: SimWorld, eid: number, destroyed: number[]): void {
+  const depth = Position.depth[eid]!;
+  const wanted = Ordnance.targetDepthM[eid]!;
+  const delta = wanted - depth;
+
+  if (Math.abs(delta) <= DEPTH.ARRIVAL_EPSILON_M) {
+    blast(
+      world,
+      eid,
+      {
+        damage: ORDNANCE.DEPTH_CHARGE.DAMAGE,
+        radiusM: ORDNANCE.DEPTH_CHARGE.BLAST_RADIUS_M,
+        echoS: ORDNANCE.DEPTH_CHARGE.DETONATION_ECHO_S,
+        volumetric: true,
+      },
+      destroyed
+    );
+    return;
+  }
+
+  const rate = delta > 0 ? DEPTH.DESCENT_RATE_MPS : DEPTH.ASCENT_RATE_MPS;
+  const step = Math.min(Math.abs(delta), rate * world.dt);
+  Position.depth[eid] = depth + Math.sign(delta) * step;
+
+  // Ordnance is only rated for the water its launcher was rated for (§8), so a
+  // charge set deeper than its own envelope implodes on the way down rather
+  // than arriving. Cheap hulls cannot bomb the deep by proxy.
+  if (requiredPressureRating(Position.depth[eid]!) > Ordnance.pressureRating[eid]!) {
+    expire(eid, destroyed);
+  }
+}
+
+/**
+ * Drop a depth charge, set to detonate at `depthM`.
+ *
+ * A depth and no target, unlike a torpedo. You are bombing *water*, not a
+ * contact — so there is nothing to have resolved first, and no tier gate. What
+ * the tier decides is whether you know which depth to set: a contact's depth is
+ * only sent at Tier 3 and above (docs/systems-echo.md §4), so a commander who
+ * has not classified what is under them is guessing at the one number that
+ * matters. That is §7's rule arriving by a different road.
+ *
+ * Returns the charge, or 0 when the rack is cold.
+ */
+export function dropDepthCharge(world: SimWorld, hull: number, depthM: number): number {
+  if (!hasComponent(world, Countermeasure, hull)) return 0;
+  if (Countermeasure.cooldownRemainingS[hull]! > 0) return 0;
+  Countermeasure.cooldownRemainingS[hull] = ORDNANCE.DEPTH_CHARGE.COOLDOWN_S;
+
+  const eid = spawnOrdnance(world, {
+    kind: OrdnanceKind.DepthCharge,
+    slot: Owner.slot[hull]!,
+    faction: Owner.faction[hull]!,
+    x: Position.x[hull]!,
+    y: Position.y[hull]!,
+    depth: Position.depth[hull]!,
+    targetDepthM: depthM,
+    pressureRating: Pressure.rating[hull]!,
+  });
+
+  if (applyFiringSpike(hull, ORDNANCE.DEPTH_CHARGE.LAUNCH_SIG)) {
+    raiseSelfEvent(world, { kind: SelfEventKind.BreakSilence, eid: hull });
+  }
+  return eid;
 }
 
 /**
@@ -464,7 +583,7 @@ export function ordnanceSystem(world: SimWorld, destroyed: number[]): void {
     // running torpedo nor a screaming decoy has a quiet mode. The veil factor
     // still applies, because a Spore Veil is symmetric about everything inside.
     const ringing = Ordnance.detonatingS[eid]! > 0;
-    const sig = ringing ? ORDNANCE.MINE.SIG_DETONATION : ordnanceStatsFor(kind).sig;
+    const sig = ringing ? detonationSig(kind) : ordnanceStatsFor(kind).sig;
     Acoustic.sig[eid] = sig * (Acoustic.sigFactor[eid]! || 1);
 
     if (ringing) {
@@ -488,6 +607,10 @@ export function ordnanceSystem(world: SimWorld, destroyed: number[]): void {
 
     if (kind === OrdnanceKind.Mine) {
       tickMine(world, eid, destroyed);
+      continue;
+    }
+    if (kind === OrdnanceKind.DepthCharge) {
+      tickDepthCharge(world, eid, destroyed);
       continue;
     }
 

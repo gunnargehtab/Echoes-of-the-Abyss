@@ -125,6 +125,7 @@ export function hashWorld(world: SimWorld): number {
       h = mixFloat(h, Ordnance.remainingS[eid]!);
       h = mixFloat(h, Ordnance.armingS[eid]!);
       h = mixFloat(h, Ordnance.detonatingS[eid]!);
+      h = mixFloat(h, Ordnance.targetDepthM[eid]!);
       h = mixFloat(h, Ordnance.heading[eid]!);
       // Ordinal, not the raw eid, for the reason the whole function exists:
       // two identical worlds must hash alike whichever process built them.

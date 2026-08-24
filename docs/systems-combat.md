@@ -93,6 +93,11 @@ carries one. This is the class the prototype already implements, and its rules s
 - **In range implies heard.** Gun ranges (400–900 m) sit far inside the distances at which
   any combat hull is passively audible, so guns need no resolution-tier gate — if you can
   shoot it, you have already heard it.
+- **Range is measured in three dimensions**, unlike detection. The Echo Layer resolves on
+  horizontal distance alone, because depth is a commitment timer in the acoustic model —
+  but a gun is not a hydrophone, and §8's claim that a hull below you is safe from guns is
+  only true if the water column is in the arithmetic. Hearing something and being able to
+  shoot it are different facts.
 - **Silent hulls hold fire.** A unit under Silent Running never fires on its own — the
   +40 spike is a decision the player makes, not one the AI volunteers.
 - **Every discharge is loud** (+25 kinetic / +10 energy) and lays battle-site residue at
@@ -391,8 +396,8 @@ what exists or assumes what does not. The combat loop lives in
 | Torpedoes (§5) | **Implemented** | `Ordnance` entities with their own SIG; seekers run the standard propagation model in `sim/systems/ordnance.ts` |
 | Countermeasures (§5) | **Implemented** | Noisemaker decoys, and point defence as a target priority inside the terminal range in `sim/systems/combat.ts` |
 | Mines (§6) | **Implemented** | `MINE_TRIGGER_LOUDNESS`, solved from the two SPEC behaviours; caps, arming noise and blast falloff in `sim/systems/ordnance.ts` |
-| Firing solutions (§7) | Not modelled | Combat currently ignores tiers (defensible for guns only, per §4) |
-| Vertical combat (§8) | Not modelled | Ordnance PR, depth charges, pursuit-below-PR warning |
+| Firing solutions (§7) | **Implemented** | `EchoLayer.firingSolution` gates launches at Tier 2 and hands over the same ghost the contact payload carried |
+| Vertical combat (§8) | **Implemented** | Ordnance inherits launcher PR and implodes; depth charges fall at `DEPTH`'s rates with a volumetric blast; the depth ribbon warns before a dive that would crush |
 | TTK bands (§9) | **Not met** | Current damage numbers predate this doc; retune within the bands |
 | Retreat dynamics (§10) | Emergent | Falls out of existing ascent/descent and Silent Running rules once seekers exist |
 | Faction kits (§11) | Not modelled | Klaxon bonus, seeker grades, energy class, mine caps |

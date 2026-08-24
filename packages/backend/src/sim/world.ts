@@ -312,6 +312,8 @@ export interface SpawnOrdnanceOptions {
   seekerHyd?: number;
   /** Inherited from the launcher. Below the depth it covers, ordnance implodes. */
   pressureRating: number;
+  /** Depth a charge is set to detonate at. Defaults to where it was released. */
+  targetDepthM?: number;
 }
 
 /**
@@ -378,6 +380,7 @@ export function spawnOrdnance(world: SimWorld, opts: SpawnOrdnanceOptions): numb
   // detonation SIG, never ran, and expired a fraction of a second later.
   Ordnance.armingS[eid] = 0;
   Ordnance.detonatingS[eid] = 0;
+  Ordnance.targetDepthM[eid] = opts.targetDepthM ?? opts.depth;
 
   return eid;
 }

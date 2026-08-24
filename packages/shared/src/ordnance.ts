@@ -74,11 +74,11 @@ export const ORDNANCE_STATS: Record<OrdnanceKind, OrdnanceStats> = {
   [OrdnanceKind.DepthCharge]: {
     kind: OrdnanceKind.DepthCharge,
     name: 'Depth Charge',
-    sig: 30,
+    sig: ORDNANCE.DEPTH_CHARGE.SIG_FALLING,
     maxHp: 0,
     speed: 0,
-    lifetimeS: 30,
-    damage: 200,
+    lifetimeS: ORDNANCE.DEPTH_CHARGE.LIFETIME_S,
+    damage: ORDNANCE.DEPTH_CHARGE.DAMAGE,
     radiusM: 8,
   },
 };

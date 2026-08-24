@@ -73,6 +73,7 @@ export type ReplayCommand =
   | { tick: number; type: 'torpedo'; slot: number; unit: number; contact: number }
   | { tick: number; type: 'noisemaker'; slot: number; unit: number }
   | { tick: number; type: 'mine'; slot: number; unit: number }
+  | { tick: number; type: 'depthcharge'; slot: number; unit: number; depth: number }
   | { tick: number; type: 'harvest'; slot: number; unit: number; node: number; queued: boolean }
   | { tick: number; type: 'throttle'; slot: number; unit: number; throttle: HarvestThrottle }
   | { tick: number; type: 'silent'; slot: number; unit: number; active: boolean }
@@ -249,6 +250,9 @@ function applyCommand(match: Match, command: ReplayCommand): void {
       break;
     case 'mine':
       match.layMine(command.slot, eid(command.unit));
+      break;
+    case 'depthcharge':
+      match.orderDepthCharge(command.slot, eid(command.unit), command.depth);
       break;
     case 'harvest':
       match.orderHarvest(command.slot, eid(command.unit), eid(command.node), command.queued);

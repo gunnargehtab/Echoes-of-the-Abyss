@@ -260,6 +260,47 @@ export const ORDNANCE = {
      */
     TRIGGER_REFERENCE_SIG: 28,
   },
+
+  /**
+   * §8. The weapon that crosses depth bands.
+   *
+   * The cross-band *role* is SPEC and the numbers are TUNABLE, per §8. It
+   * travels only in depth — it is dropped, not thrown — at the standard
+   * descent and ascent rates from `DEPTH`, which are deliberately not
+   * re-authored here: that asymmetry is docs/systems-depth.md's to own, and a
+   * second copy of it would eventually disagree.
+   *
+   * This is the shallow factions' answer to the PR-3 sanctuary: a Directorate
+   * hull below you is safe from guns and not from ordnance that falls.
+   */
+  DEPTH_CHARGE: {
+    /** §8. */
+    DAMAGE: 200,
+    /** §8 — and the blast is measured in three dimensions, unlike a mine's. */
+    BLAST_RADIUS_M: 180,
+    /** Burst at detonation depth. §3. */
+    SIG_DETONATION: 85,
+    /** Sustained while it falls. Audible: the defender hears it coming down. */
+    SIG_FALLING: 30,
+    /**
+     * Seconds before an un-detonated charge is scuttled — a fuse-failure
+     * backstop, and **derived so it can never be shorter than the fall**.
+     *
+     * The first draft was a flat 30 s, which is less than the 31 s a charge
+     * needs to fall from Mid-Water into the Abyssal band: every shot at the
+     * deep band expired one second short of the target it was set for, and the
+     * weapon whose entire purpose is crossing bands could not cross one.
+     * Sized against the whole water column, with margin, so the number cannot
+     * silently go stale when the map floor moves.
+     */
+    LIFETIME_S: Math.ceil((DEPTH.MAX_M / DEPTH.DESCENT_RATE_MPS) * 1.35),
+    /** Burst at the launcher on release. TUNABLE. */
+    LAUNCH_SIG: 20,
+    /** Seconds the detonation keeps ringing — see the mine's note. */
+    DETONATION_ECHO_S: 0.6,
+    /** Seconds before the same hull can drop another. TUNABLE. */
+    COOLDOWN_S: 12,
+  },
 } as const;
 
 /**

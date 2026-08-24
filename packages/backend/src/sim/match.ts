@@ -80,7 +80,13 @@ import { separationSystem } from './systems/separation.ts';
 import { clearQueue, enqueue, orderQueueSystem, queueView } from './systems/orderQueue.ts';
 import { harvestSystem } from './systems/harvest.ts';
 import { movementSystem } from './systems/movement.ts';
-import { deployNoisemaker, launchTorpedo, layMine, ordnanceSystem } from './systems/ordnance.ts';
+import {
+  deployNoisemaker,
+  dropDepthCharge,
+  launchTorpedo,
+  layMine,
+  ordnanceSystem,
+} from './systems/ordnance.ts';
 import { pressureSystem } from './systems/pressure.ts';
 import { productionSystem } from './systems/production.ts';
 import { randomSeed } from './rng.ts';
@@ -603,6 +609,33 @@ export class Match {
     });
     if (!this.owns(slot, eid)) return 0;
     return layMine(this.world, eid, ORDNANCE.MINE.CAP_PER_PLAYER);
+  }
+
+  /**
+   * Drop a depth charge set to detonate at `depthM` — docs/systems-combat.md §8.
+   *
+   * A depth and no target: you are bombing water, not a contact, so there is
+   * nothing to have resolved first. The information gate arrives sideways
+   * instead — a contact's depth is only sent at Tier 3 and above, so a
+   * commander who has not classified what is under them is guessing at the one
+   * number the weapon needs.
+   *
+   * The depth is refused rather than clamped when it names water that is not
+   * there, matching `orderDepth`: a client asking for the impossible is told
+   * no, not quietly given something else.
+   */
+  orderDepthCharge(slot: number, eid: number, depthM: number): number {
+    this.recordCommand({
+      tick: this.world.tick,
+      type: 'depthcharge',
+      slot,
+      unit: this.localId(eid),
+      depth: depthM,
+    });
+    if (!this.owns(slot, eid)) return 0;
+    if (!Number.isFinite(depthM)) return 0;
+    if (depthM < DEPTH.MIN_M || depthM > DEPTH.MAX_M) return 0;
+    return dropDepthCharge(this.world, eid, depthM);
   }
 
   /** Send a harvester to a specific nodule field. */

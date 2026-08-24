@@ -267,6 +267,14 @@ export const Ordnance = defineComponent({
    * damage, and cannot trigger again.
    */
   detonatingS: Types.f32,
+  /**
+   * Depth a falling charge is set to detonate at, in metres.
+   *
+   * Its own field rather than a reuse of `aimX`/`aimY`, because those name a
+   * place on the surface of the map and this names a place in the water column.
+   * A depth charge is the one weapon whose aim is entirely vertical.
+   */
+  targetDepthM: Types.f32,
 });
 
 /**

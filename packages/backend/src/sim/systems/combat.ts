@@ -89,6 +89,30 @@ function targetAlive(world: SimWorld, eid: number): boolean {
 }
 
 /**
+ * Distance from a shooter to a target, **including depth**.
+ *
+ * Guns used to measure on the map alone, and the consequence was not subtle:
+ * a hull could shoot something 1,400 m below it as easily as something
+ * alongside, because the water column simply was not in the arithmetic. That
+ * made docs/systems-combat.md §8 false in its most load-bearing sentence — "the
+ * Directorate below is safe from guns, not from ordnance that falls" — and left
+ * depth charges answering a problem that did not exist.
+ *
+ * The Echo Layer still resolves on horizontal distance alone, and that
+ * asymmetry is deliberate rather than an oversight: depth is a commitment timer
+ * in the acoustic model and a real distance in the physical one. Hearing
+ * something is not the same as being able to shoot it, and this is the line
+ * between those two facts.
+ */
+function engagementRangeM(shooter: number, target: number): number {
+  return Math.hypot(
+    Position.x[target]! - Position.x[shooter]!,
+    Position.y[target]! - Position.y[shooter]!,
+    Position.depth[target]! - Position.depth[shooter]!
+  );
+}
+
+/**
  * The nearest interceptable piece of enemy ordnance inside terminal range, or 0.
  *
  * Bounded by the *smaller* of the weapon's own reach and the point-defence
@@ -100,8 +124,6 @@ function targetAlive(world: SimWorld, eid: number): boolean {
 function nearestInboundOrdnance(
   world: SimWorld,
   shooter: number,
-  x: number,
-  y: number,
   slot: number,
   weaponRangeM: number
 ): number {
@@ -115,7 +137,7 @@ function nearestInboundOrdnance(
     if (other === shooter || Owner.slot[other] === slot) continue;
     if (Health.hp[other]! <= 0) continue;
     if (!isInterceptable(Ordnance.kind[other] as OrdnanceKind)) continue;
-    const d = Math.hypot(Position.x[other]! - x, Position.y[other]! - y);
+    const d = engagementRangeM(shooter, other);
     if (d > bestD) continue;
     bestD = d;
     best = other;
@@ -140,8 +162,6 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
     const profile = profileFor(world, eid);
     if (profile.damage <= 0) continue;
 
-    const x = Position.x[eid]!;
-    const y = Position.y[eid]!;
     const slot = Owner.slot[eid]!;
     const isMobile = hasComponent(world, MoveOrder, eid);
     const silent = hasComponent(world, SilentRunning, eid) && SilentRunning.active[eid] === 1;
@@ -167,7 +187,7 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
       // cruise, and at 250 m it is not merely audible but deafening. The
       // header's "in range implies heard" licence holds here for real.
       if (!silent) {
-        target = nearestInboundOrdnance(world, eid, x, y, slot, profile.rangeM);
+        target = nearestInboundOrdnance(world, eid, slot, profile.rangeM);
       }
 
       if (target === 0 && !silent && !busy) {
@@ -187,7 +207,7 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
           // (docs/systems-combat.md §5), so it gets its own path rather than
           // falling out of the auto-acquire loop.
           if (hasComponent(world, Ordnance, other)) continue;
-          const d = Math.hypot(Position.x[other]! - x, Position.y[other]! - y);
+          const d = engagementRangeM(eid, other);
           if (d <= bestDistance) {
             bestDistance = d;
             target = other;
@@ -197,7 +217,7 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
     }
     if (target === 0) continue;
 
-    const distance = Math.hypot(Position.x[target]! - x, Position.y[target]! - y);
+    const distance = engagementRangeM(eid, target);
     if (distance > profile.rangeM) {
       // Only an explicit order chases; auto-acquired targets were in range by
       // construction. Turrets have no MoveOrder and simply wait.

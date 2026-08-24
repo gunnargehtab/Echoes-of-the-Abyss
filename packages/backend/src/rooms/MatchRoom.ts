@@ -84,6 +84,11 @@ interface MineMessage {
   unitIds: number[];
 }
 
+interface DepthChargeMessage {
+  unitIds: number[];
+  depth: number;
+}
+
 interface HarvestMessage {
   unitIds: number[];
   nodeId: number;
@@ -230,6 +235,17 @@ export class MatchRoom extends Room<MatchState> {
         // The per-player cap and the arming occupancy are both enforced in the
         // sim; a client spamming this gets one mine and a lot of noise.
         this.match.layMine(slot, unitId);
+      }
+    });
+
+    this.onMessage('depthcharge', (client, message: DepthChargeMessage) => {
+      const slot = this.commandSlot(client);
+      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      if (!Number.isFinite(message.depth)) return;
+      for (const unitId of message.unitIds) {
+        // Depth range and ownership are both re-checked inside the sim; an
+        // out-of-range depth is refused there rather than clamped here.
+        this.match.orderDepthCharge(slot, unitId, message.depth);
       }
     });
 

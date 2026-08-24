@@ -3020,9 +3020,22 @@ export class EchoRenderer {
     return statsFor(unit.kind).pressureRating + unit.pressureBonus;
   }
 
+  /**
+   * Would this hull be crushed at that depth?
+   *
+   * One predicate, two questions. Asked of where a hull *is*, it is the
+   * reactive warning that has always been here — the hull is already dying.
+   * Asked of where an order would *send* it, it is the warning
+   * docs/systems-combat.md §8 requires, and the difference between crush-baiting
+   * beating the inattentive (intended) and beating the uninformed (not).
+   */
+  private wouldCrush(unit: OwnUnit, depthM: number): boolean {
+    return requiredPressureRating(depthM) > this.effectivePr(unit);
+  }
+
   /** True when the hull is deeper than its effective rating can survive. */
   private isCrushing(unit: OwnUnit): boolean {
-    return requiredPressureRating(unit.depth) > this.effectivePr(unit);
+    return this.wouldCrush(unit, unit.depth);
   }
 
   /** Screen y for a depth, inside the ribbon's vertical span. */
@@ -3128,24 +3141,34 @@ export class EchoRenderer {
     }
 
     // Dive preview: where the next band down is, and what getting there costs.
-    if (this.previewPing) {
-      const target = this.stepDepthTarget(selected, 1);
-      if (target !== null) {
-        const targetY = this.ribbonY(target, top, height);
-        g.rect(RIBBON_X - 4, targetY - 2, RIBBON_WIDTH + 8, 4).fill({
-          color: sigColor(DEPTH.DESCENT_SIG),
-          alpha: 0.8,
-        });
-      }
+    // The cost is two things, and until now the ribbon only showed one of them:
+    // the descent is loud, *and* it may be deeper than the hull is rated for.
+    // docs/systems-combat.md §8 asks for the second warning before the order,
+    // not after — "the bait should beat the inattentive, never the uninformed".
+    // It stays a warning and never a refusal, because renting depth you cannot
+    // survive is the mechanic (Match.orderDepth deliberately does not check).
+    const previewTarget = this.previewPing ? this.stepDepthTarget(selected, 1) : null;
+    const previewCrushes =
+      previewTarget !== null && selected.some((unit) => this.wouldCrush(unit, previewTarget));
+    if (previewTarget !== null) {
+      const targetY = this.ribbonY(previewTarget, top, height);
+      g.rect(RIBBON_X - 4, targetY - 2, RIBBON_WIDTH + 8, 4).fill({
+        color: previewCrushes ? UI.threat : sigColor(DEPTH.DESCENT_SIG),
+        alpha: previewCrushes ? 1 : 0.8,
+      });
     }
 
     const lead = selected[0]!;
     this.ribbonReadout.visible = true;
     this.ribbonReadout.text = this.previewPing
-      ? `DIVE ${DEPTH.DESCENT_SIG} SIG`
+      ? previewCrushes
+        ? `DIVE ${DEPTH.DESCENT_SIG} SIG · CRUSH`
+        : `DIVE ${DEPTH.DESCENT_SIG} SIG`
       : `${lead.depth.toFixed(0)}m`;
     this.ribbonReadout.style.fill = this.previewPing
-      ? sigColor(DEPTH.DESCENT_SIG)
+      ? previewCrushes
+        ? UI.threat
+        : sigColor(DEPTH.DESCENT_SIG)
       : this.isCrushing(lead)
         ? UI.threat
         : UI.accent;
