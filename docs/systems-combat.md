@@ -400,7 +400,7 @@ what exists or assumes what does not. The combat loop lives in
 | Vertical combat (§8) | **Implemented** | Ordnance inherits launcher PR and implodes; depth charges fall at `DEPTH`'s rates with a volumetric blast; the depth ribbon warns before a dive that would crush |
 | TTK bands (§9) | **Not met** | Current damage numbers predate this doc; retune within the bands |
 | Retreat dynamics (§10) | Emergent | Falls out of existing ascent/descent and Silent Running rules once seekers exist |
-| Faction kits (§11) | Not modelled | Klaxon bonus, seeker grades, energy class, mine caps |
+| Faction kits (§11) | **Implemented** | `FACTION_COMBAT` in `packages/shared/src/constants.ts`, read through `packages/shared/src/combat.ts` |
 
 ---
 

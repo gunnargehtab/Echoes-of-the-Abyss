@@ -7,7 +7,7 @@
  * to move during playtesting (see docs/units.md "Playtest plan").
  */
 
-import { Biome, DepthBand, HarvestThrottle, ResourceKind } from './types.js';
+import { Biome, DepthBand, Faction, HarvestThrottle, ResourceKind } from './types.js';
 
 /** SPEC — docs/systems-depth.md §1. Metres. */
 export const DEPTH_BANDS: Record<DepthBand, { min: number; max: number }> = {
@@ -301,6 +301,69 @@ export const ORDNANCE = {
     /** Seconds before the same hull can drop another. TUNABLE. */
     COOLDOWN_S: 12,
   },
+} as const;
+
+/**
+ * Per-faction combat doctrine — docs/systems-combat.md §11, docs/factions.md.
+ *
+ * Four traits, one per navy, and each is an argument about sound rather than a
+ * stat bonus wearing a faction's colours. That is the bar `CLAUDE.md` sets for
+ * a faction trait existing at all, and it is why these are here rather than in
+ * the roster: they are doctrine, and doctrine belongs beside the rules it bends.
+ *
+ * Everything absent from a table below falls back to the general case, so a
+ * faction with no entry is not penalised — it simply has no opinion.
+ */
+export const FACTION_COMBAT = {
+  /**
+   * SPEC — §11 and docs/factions.md: "+12% damage while SIG > 60."
+   *
+   * Reads the hull's *live* signature rather than a stat, so the Consortium
+   * turns this on by being loud — descending, firing, working, or standing in a
+   * storm. It is the one damage bonus in the design that a player switches on
+   * by accepting a cost, which is the whole of the Klaxon doctrine: they win by
+   * being found and being fine about it.
+   */
+  KLAXON: {
+    FACTION: Faction.Bathyarch,
+    SIG_THRESHOLD: 60,
+    DAMAGE_MULTIPLIER: 1.12,
+  },
+
+  /**
+   * SPEC — §3 and §11. The Knights fight with energy weapons, and an energy
+   * discharge is the quiet class: +10 burst against the kinetic +25.
+   *
+   * A faction modifier rather than a per-hull stat because the roster has no
+   * Hadron-specific hulls yet, and because it *is* a faction fact — the Order
+   * builds resonance weapons, whatever it hangs them on. It replaces the hull's
+   * own firing burst rather than scaling it, so a Knight discharge is quiet in
+   * absolute terms and not merely quieter than it would have been.
+   */
+  ENERGY: {
+    FACTION: Faction.Hadron,
+    FIRING_SIG: 10,
+  },
+
+  /**
+   * SPEC — §11: the Directorate's torpedoes carry "the best mobile ears in the
+   * game, miniaturised".
+   *
+   * Kept clear of `PROPAGATION_MODEL.MAX_EXPECTED_HYD` (90), which the Echo
+   * broadphase trusts as a hard ceiling — a faction that exceeded it would
+   * quietly break the bound that keeps detection off an all-pairs comparison.
+   */
+  SEEKER_HYD: {
+    [Faction.Directorate]: 70,
+  } as Partial<Record<Faction, number>>,
+
+  /**
+   * TUNABLE — §11 makes the Commune the mine faction: "grown, living mines,
+   * cheaper and more of them".
+   */
+  MINE_CAP: {
+    [Faction.Pelagia]: 18,
+  } as Partial<Record<Faction, number>>,
 } as const;
 
 /**

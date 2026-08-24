@@ -36,8 +36,8 @@ import {
   faunaStatsFor,
   HAZARDS,
   HazardPhase,
-  ORDNANCE,
   OrdnanceKind,
+  mineCapFor,
   ResolutionTier,
   SelfEventKind,
   type EchoSnapshot,
@@ -608,7 +608,7 @@ export class Match {
       unit: this.localId(eid),
     });
     if (!this.owns(slot, eid)) return 0;
-    return layMine(this.world, eid, ORDNANCE.MINE.CAP_PER_PLAYER);
+    return layMine(this.world, eid, mineCapFor(this.factionOf(slot)));
   }
 
   /**

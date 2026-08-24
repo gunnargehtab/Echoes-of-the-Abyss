@@ -28,6 +28,8 @@ import { addComponent, defineQuery, hasComponent } from 'bitecs';
 import {
   DEPTH,
   EchoMarkKind,
+  Faction,
+  seekerHydFor,
   MINE_TRIGGER_LOUDNESS,
   ORDNANCE,
   OrdnanceKind,
@@ -781,7 +783,7 @@ export function launchTorpedo(
     heading,
     aimX,
     aimY,
-    seekerHyd: ORDNANCE.TORPEDO.SEEKER_HYD,
+    seekerHyd: seekerHydFor(Owner.faction[launcher] as Faction),
     // Inherited, per §8: the ordnance is only rated for the water its launcher
     // was rated for, so a shallow hull cannot reach into the deep by proxy.
     pressureRating: Pressure.rating[launcher]!,

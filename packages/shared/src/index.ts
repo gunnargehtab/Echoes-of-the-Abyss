@@ -13,4 +13,5 @@ export * from './echo.js';
 export * from './units.js';
 export * from './structures.js';
 export * from './ordnance.js';
+export * from './combat.js';
 export * from './fauna.js';

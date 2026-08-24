@@ -19,15 +19,19 @@
 import { defineQuery, hasComponent } from 'bitecs';
 import {
   EchoMarkKind,
+  Faction,
   ORDNANCE,
   OrdnanceKind,
   SelfEventKind,
+  damageMultiplierFor,
+  firingSigFor,
   statsFor,
   structureStatsFor,
   type StructureKind,
   type UnitKind,
 } from '@echoes/shared';
 import {
+  Acoustic,
   Health,
   MoveOrder,
   Ordnance,
@@ -65,22 +69,41 @@ interface WeaponProfile {
   firingSig: number;
 }
 
+/**
+ * What this shooter's weapon does, doctrine included.
+ *
+ * The single place a damage number and a firing signature are produced, which
+ * is why the two faction traits that bend them belong here rather than at the
+ * call sites (docs/systems-combat.md §11):
+ *
+ *   - the **Klaxon** reads the hull's live SIG, so the Consortium switches its
+ *     own bonus on by being loud rather than by owning a stat;
+ *   - the **energy class** replaces the hull's kinetic burst outright for the
+ *     Knights, because §3 lists the two as different weapons rather than as a
+ *     discount on one.
+ *
+ * Structures take the same doctrine as the navy that built them: a Consortium
+ * Sentinel Turret is a Consortium gun.
+ */
 function profileFor(world: SimWorld, eid: number): WeaponProfile {
+  const faction = Owner.faction[eid] as Faction;
+  const multiplier = damageMultiplierFor(faction, Acoustic.sig[eid] ?? 0);
+
   if (hasComponent(world, Unit, eid)) {
     const stats = statsFor(Unit.kind[eid] as UnitKind);
     return {
-      damage: stats.attackDamage,
+      damage: stats.attackDamage * multiplier,
       rangeM: stats.attackRangeM,
       cooldownS: stats.attackCooldownS,
-      firingSig: stats.sigFiringBurst,
+      firingSig: firingSigFor(faction, stats.sigFiringBurst),
     };
   }
   const stats = structureStatsFor(Structure.kind[eid] as StructureKind);
   return {
-    damage: stats.attackDamage ?? 0,
+    damage: (stats.attackDamage ?? 0) * multiplier,
     rangeM: stats.attackRangeM ?? 0,
     cooldownS: stats.attackCooldownS ?? 1,
-    firingSig: stats.sigFiringBurst ?? 0,
+    firingSig: firingSigFor(faction, stats.sigFiringBurst ?? 0),
   };
 }
 
