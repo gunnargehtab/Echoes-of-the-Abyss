@@ -263,47 +263,64 @@ function judge(results: MatchTelemetryResult[], factions: FactionSummary[]): Gua
     });
   }
 
-  // "Knights starve out of every long game." Their ceiling is meant to be low
-  // and their win condition early, so this one is only visible split by match
-  // length: a flat win rate hides it completely.
+  // "Knights starve out of every long game."
+  //
+  // The rail measures **income in long matches against the field**, and not
+  // the long-game win rate, which is what it keyed on first. That was a
+  // mis-encoding of §9 and worth spelling out, because the fixed version
+  // changes a verdict on work in the same pull request.
+  //
+  // §9's entry reads: "The tithe is map-control-independent, so their floor
+  // never falls; their ceiling is meant to be low, and their win condition is
+  // meant to be early." A low ceiling and an early win condition are stated
+  // *intent*. A rule that flags "won nothing in the long bucket" therefore
+  // flags the design working, which is worse than useless — it is a rail that
+  // reports failure when the mechanic is correct. The risk actually named is
+  // *starving*: the economy failing, the floor falling. So the floor is what
+  // gets measured.
+  //
+  // Keying on the win rate was defensible when it was written, because the
+  // Knights won nothing anywhere and there was no floor to measure.
   const knightRows = results.flatMap((r) =>
     r.players.filter((p) => p.faction === Faction.Hadron).map((p) => ({ p, r }))
   );
-  if (knightRows.length > 0) {
+  if (knightRows.length === 0) {
+    verdicts.push(noSeat('Knights starve out of every long game', 'economy.md §9', 'Hadron'));
+  } else {
     const median = distribution(results.map((r) => r.lengthS)).median;
-    const rate = (rows: typeof knightRows): number => {
-      const decided = rows.filter((row) => row.r.winnerSlot !== null);
-      return decided.length === 0
-        ? 0
-        : decided.filter((row) => row.r.winnerSlot === row.p.slot).length / decided.length;
-    };
-    const short = rate(knightRows.filter((row) => row.r.lengthS <= median));
-    const long = rate(knightRows.filter((row) => row.r.lengthS > median));
-    const hadron = find(Faction.Hadron);
-    const fieldIncome = factions
-      .filter((f) => f.faction !== Faction.Hadron)
-      .map((f) => f.incomePerMinute);
-    const rivalIncome =
-      fieldIncome.length === 0 ? 0 : fieldIncome.reduce((a, b) => a + b, 0) / fieldIncome.length;
-    const income = hadron === undefined ? 0 : hadron.incomePerMinute;
+    const longMatches = results.filter((r) => r.lengthS > median);
+    const incomePerMinute = (player: PlayerTelemetry, result: MatchTelemetryResult): number =>
+      player.nodulesEarned /
+      Math.max(1 / 60, (player.eliminatedTick ?? result.finalTick) / SIM.TICK_HZ / 60);
 
-    // Winning nothing anywhere cannot distinguish "starves late" from "is
-    // simply weak", so the split reports no data rather than a comfortable
-    // "held". The income gap is carried alongside it, because the doc's
-    // mitigation is specifically about their *floor* — "the tithe is
-    // map-control-independent, so their floor never falls".
-    const noWins = short === 0 && long === 0;
+    const hadronLong: number[] = [];
+    const fieldLong: number[] = [];
+    for (const result of longMatches) {
+      for (const player of result.players) {
+        const rate = incomePerMinute(player, result);
+        if (player.faction === Faction.Hadron) hadronLong.push(rate);
+        else fieldLong.push(rate);
+      }
+    }
+
+    const hadron = mean(hadronLong);
+    const field = mean(fieldLong);
+    const share = field === 0 ? 1 : hadron / field;
+    // Half the field is the line. §6 makes their economy "the thinnest in the
+    // game", so being *below* the field is correct and expected; collapsing to
+    // a fraction of it is the starvation §9 is worried about.
+    const STARVING = 0.5;
     verdicts.push({
       risk: 'Knights starve out of every long game',
       source: 'economy.md §9',
-      metric: 'Hadron win rate, bucketed either side of the median match length',
+      metric: 'Hadron income against the field, in longer-than-median matches',
       reading:
-        `short ${pct(short)}, long ${pct(long)} (median ${median.toFixed(0)} s); ` +
-        `income ${income.toFixed(0)}/min vs field ${rivalIncome.toFixed(0)}`,
-      verdict: noWins ? 'no data' : long === 0 ? 'breached' : 'held',
+        hadronLong.length === 0
+          ? 'no long matches in this batch'
+          : `${hadron.toFixed(0)}/min vs field ${field.toFixed(0)} — ` +
+            `${Math.round(share * 100)}% (n=${hadronLong.length} long)`,
+      verdict: hadronLong.length === 0 ? 'no data' : share < STARVING ? 'breached' : 'held',
     });
-  } else {
-    verdicts.push(noSeat('Knights starve out of every long game', 'economy.md §9', 'Hadron'));
   }
 
   // "Fauna decide matches." Keyed on the first *classified enemy*, not the

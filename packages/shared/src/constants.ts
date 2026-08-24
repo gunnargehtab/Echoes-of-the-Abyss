@@ -215,18 +215,22 @@ export const HADRON = {
    *     0.5/s ->  59 v ~280     2.0/s -> 148-176 v ~275
    *     1.0/s ->  89 v 283
    *
-   * 1.5 is the knee. Below it they cannot afford to produce at all, so the
-   * tithe is the whole income and they stay at a third of the field; at 1.5
-   * they reach about two thirds, which is thin by design rather than
-   * unplayable. Above it nothing improves — 2.0 is no better and noisier,
-   * because the binding constraint stops being money.
+   * 1.5 looked like the knee there and was wrong, for a reason worth keeping:
+   * **a flat income is proportionally larger in a poorer game.** That sweep is
+   * a duel, where the field earns about 275 a minute. The four-faction
+   * baseline earns 165, so the same 90-a-minute tithe took the Knights to 177
+   * — the *richest* faction on the map, which flatly contradicts §6's
+   * "thinnest economy in the game". Calibrating a flat number against a single
+   * matchup is how you ship that mistake.
    *
-   * The jump from 1.0 to 1.5 is superlinear (+0.5/s of tithe buying +76/min of
-   * income) and that is the mechanism §6 describes: it is the point where the
-   * budget covers a hull, and a hull earns. "Their economy is really a budget,
-   * spent once."
+   * At 1.0 they land near 125 in the four-faction game: clearly below a field
+   * of 165, clearly above the 65 they starved at. The step from 0.5 to 1.0 is
+   * still superlinear — half a nodule per second of tithe buying more than
+   * thirty a minute of income — and that is the mechanism §6 describes. It is
+   * the point where the budget covers a hull, and a hull earns. "Their economy
+   * is really a budget, spent once."
    */
-  TITHE_PER_S: 1.5,
+  TITHE_PER_S: 1,
   /**
    * SPEC — §6: crystal "cut at unmatched efficiency (2.2x everyone else's
    * yield per node)".
