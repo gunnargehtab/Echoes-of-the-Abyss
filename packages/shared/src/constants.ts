@@ -223,12 +223,16 @@ export const HADRON = {
    * "thinnest economy in the game". Calibrating a flat number against a single
    * matchup is how you ship that mistake.
    *
-   * At 1.0 they land near 125 in the four-faction game: clearly below a field
-   * of 165, clearly above the 65 they starved at. The step from 0.5 to 1.0 is
-   * still superlinear — half a nodule per second of tithe buying more than
-   * thirty a minute of income — and that is the mechanism §6 describes. It is
-   * the point where the budget covers a hull, and a hull earns. "Their economy
-   * is really a budget, spent once."
+   * At 1.0 they land on 108 in the four-faction baseline: the poorest of the
+   * four (against 191, 178 and 145) and well clear of the 65 they starved at,
+   * which is what §6's "thinnest economy in the game" should look like. Their
+   * win rate comes out level with the two richest factions, and the guard-rail
+   * reads held at 66% of the field's income across long matches — a floor,
+   * not a competitor.
+   *
+   * The step from 0.5 to 1.0 is superlinear, and that is the mechanism §6
+   * describes: it is the point where the budget covers a hull, and a hull
+   * earns. "Their economy is really a budget, spent once."
    */
   TITHE_PER_S: 1,
   /**
