@@ -99,6 +99,10 @@ Their real economy is the Abyssal band: free PR-3 access means they harvest Reso
 
 Thinnest economy in the game, by design and by population — 30,000 people cannot run an industrial base ([factions.md](factions.md)). Knights take a **tithe**: fixed periodic income from each chapter-house, independent of extraction, plus crystal cut at unmatched efficiency (2.2× everyone else's yield per node).
 
+**Implemented flat per commander, not per structure**, and the next paragraph is why: an income paid per building would scale with map control, which is the one thing this economy is defined as not doing. The chapter-houses are the Order's nine home institutions in Resonance Fields ([factions.md](factions.md)) rather than things a player builds — they tithe to the Order, the Order funds the expedition, and taking ground does not change the stipend. It stops when the Bastion falls, because that is the expedition ending rather than the Order's income drying up.
+
+The rate was set by measurement, not taste. Below 1.5 nodules/s the tithe *is* their whole income, because they cannot afford to produce at all and so never earn anything else; at 1.5 they reach roughly two thirds of the richest faction's income, which is thin rather than unplayable. Above it nothing improves. The step is superlinear because it is the point where the budget covers a hull, and a hull earns — which is this section's own claim about a budget spent once, showing up in the numbers.
+
 They are the only faction whose economy does not scale with map control, which means a Knight player who has not converted their mid-game tech advantage into a decision loses to arithmetic. Every Knight loss is permanent — units cost lives the Order cannot replace — so their economy is really a *budget*, spent once.
 
 ---

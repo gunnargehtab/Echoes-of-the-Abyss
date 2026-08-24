@@ -15,6 +15,8 @@ import {
   ECHO_MARKS,
   ECONOMY,
   EchoMarkKind,
+  Faction,
+  HADRON,
   HARVEST_THROTTLE,
   RESOURCE,
   ResourceKind,
@@ -224,7 +226,18 @@ export function harvestSystem(world: SimWorld): void {
     ) {
       const economy = economyFor(world, slot);
       if ((Harvester.cargoKind[eid] as ResourceKind) === ResourceKind.ResonanceCrystal) {
-        economy.crystal += Harvester.cargo[eid]!;
+        // SPEC — docs/economy.md §6: the Knights cut crystal "at unmatched
+        // efficiency (2.2x everyone else's yield per node)".
+        //
+        // Applied at the deposit rather than at the cut, which is what makes
+        // it *per node*: the field was depleted by what the hold actually
+        // holds, and the Order banks more value out of the same ore. Scaling
+        // the mining rate instead would have made the Abyssal round trip
+        // cheaper for them, and that trip is the entire reason crystal is
+        // worth having (§7).
+        const efficiency =
+          Owner.faction[eid] === Faction.Hadron ? HADRON.CRYSTAL_YIELD_MULTIPLIER : 1;
+        economy.crystal += Harvester.cargo[eid]! * efficiency;
       } else {
         economy.nodules += Harvester.cargo[eid]!;
       }

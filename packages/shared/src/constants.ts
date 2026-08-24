@@ -185,6 +185,61 @@ export const ECHO_MARKS = {
 } as const;
 
 /**
+ * The Hadron tithe — docs/economy.md §6.
+ *
+ * "Knights take a tithe: fixed periodic income from each chapter-house,
+ * independent of extraction, plus crystal cut at unmatched efficiency."
+ *
+ * **Flat, not per-structure**, and that is forced rather than chosen. §6's next
+ * sentence is that they are "the only faction whose economy does not scale
+ * with map control", and an income paid per Sounding Spire would scale with
+ * exactly that. The chapter-houses are the Order's nine home institutions in
+ * Resonance Fields (docs/factions.md), not battlefield buildings: they tithe to
+ * the Order, the Order funds the expedition, and taking ground does not change
+ * the stipend. It stops when the Bastion falls, because that is the expedition
+ * ending rather than the Order's income drying up.
+ */
+export const HADRON = {
+  /**
+   * Nodules per second, paid while a Knight commander's Bastion stands.
+   *
+   * TUNABLE, and set by measurement rather than by taste. §6 makes their
+   * economy "the thinnest in the game" and §9 makes their ceiling low and
+   * their win condition early, so this has to be a floor that does not fall
+   * rather than an income that competes.
+   *
+   * Swept against a Consortium opponent, three seeds each, reading gross
+   * income per minute (Hadron against Consortium):
+   *
+   *     0.0/s ->  29 v 275      1.5/s -> 165-181 v ~276
+   *     0.5/s ->  59 v ~280     2.0/s -> 148-176 v ~275
+   *     1.0/s ->  89 v 283
+   *
+   * 1.5 is the knee. Below it they cannot afford to produce at all, so the
+   * tithe is the whole income and they stay at a third of the field; at 1.5
+   * they reach about two thirds, which is thin by design rather than
+   * unplayable. Above it nothing improves — 2.0 is no better and noisier,
+   * because the binding constraint stops being money.
+   *
+   * The jump from 1.0 to 1.5 is superlinear (+0.5/s of tithe buying +76/min of
+   * income) and that is the mechanism §6 describes: it is the point where the
+   * budget covers a hull, and a hull earns. "Their economy is really a budget,
+   * spent once."
+   */
+  TITHE_PER_S: 1.5,
+  /**
+   * SPEC — §6: crystal "cut at unmatched efficiency (2.2x everyone else's
+   * yield per node)".
+   *
+   * Per *node*, so the field depletes by what was cut and the Knights bank
+   * 2.2x the value of it. A better cut, not faster mining — which also keeps
+   * the Abyssal round trip exactly as expensive for them as for anybody, and
+   * that trip is the whole reason crystal is worth having.
+   */
+  CRYSTAL_YIELD_MULTIPLIER: 2.2,
+} as const;
+
+/**
  * Match lifecycle — docs/tech-stack.md.
  *
  * TUNABLE. The one number with an argument behind it is the reconnection
