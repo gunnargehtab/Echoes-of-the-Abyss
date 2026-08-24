@@ -23,6 +23,7 @@ import {
   SIM,
   StructureKind,
   UnitKind,
+  statsFor,
   type Contact,
   type EchoSnapshot,
 } from '@echoes/shared';
@@ -162,6 +163,95 @@ describe('the AI plays the game', () => {
     assert.ok(army.length > 0, 'it has an army at all');
     const moved = army.some((u) => Math.hypot(u.x - start.x, u.y - start.y) > 800);
     assert.ok(moved, 'something should have left the base');
+  });
+});
+
+describe('production does not deadlock', () => {
+  /**
+   * A commander with a full harvester complement and an empty wallet.
+   *
+   * The Knights are the case that broke: their composition opens with a
+   * 420-nodule Cruiser, and a commander that could not afford one queued
+   * nothing — so its army never grew, so the cycle index never moved, so the
+   * next decision picked the same unaffordable Cruiser. Forever.
+   */
+  function broke(faction: Faction, nodules: number): EchoSnapshot {
+    const base = exposedSnapshot();
+    const hull = (id: number, kind: UnitKind): EchoSnapshot['units'][number] => ({
+      id,
+      kind,
+      x: 1000,
+      y: 1000,
+      depth: 300,
+      hp: 100,
+      maxHp: 100,
+      heading: 0,
+      sig: 30,
+      silentRunning: false,
+      pressureBonus: 0,
+      crushDamage: 0,
+      ...(kind === UnitKind.Harvester ? { cargo: 0, throttle: HarvestThrottle.Standard } : {}),
+    });
+    return {
+      ...base,
+      tick: 6000,
+      nodules,
+      exposure: { tier: ResolutionTier.Silent, trackedCount: 0 },
+      // Four harvesters, so nothing is wanted there, and three armed hulls —
+      // the opening escort, and the army length that selects a Cruiser.
+      units: [
+        ...[1, 2, 3, 4].map((id) => hull(id, UnitKind.Harvester)),
+        ...[5, 6, 7].map((id) => hull(id, UnitKind.Corvette)),
+      ],
+      structures: [
+        {
+          id: 20,
+          kind: StructureKind.Foundry,
+          x: 1000,
+          y: 1000,
+          depth: 300,
+          hp: 1500,
+          maxHp: 1500,
+          sig: 35,
+          buildProgress: 1,
+          queue: [],
+          queueProgress: 0,
+        },
+      ],
+      contacts: [],
+    };
+  }
+
+  function produced(faction: Faction, nodules: number): UnitKind[] {
+    const commander = new AiCommander({ ...briefing(AiDifficulty.Veteran), faction });
+    const built: UnitKind[] = [];
+    for (let i = 0; i < 12; i++) {
+      for (const command of commander.observe(broke(faction, nodules))) {
+        if (command.kind === 'produce') built.push(command.unit);
+      }
+    }
+    return built;
+  }
+
+  it('buys its second choice when it cannot afford its first', () => {
+    // 200 nodules: a Cruiser is 420, a Corvette 120. It must buy the Corvette.
+    const built = produced(Faction.Hadron, 200);
+    assert.ok(built.length > 0, 'a commander with money in hand must build something');
+    assert.ok(
+      built.every((kind) => statsFor(kind).cost <= 200),
+      `it can only buy what it can pay for: ${built.map((k) => statsFor(k).name).join(', ')}`
+    );
+  });
+
+  it('still takes its first choice when it can afford one', () => {
+    // The guard on the test above: a fallback that fired unconditionally would
+    // reduce every doctrine to whatever is cheapest, which is not a doctrine.
+    const built = produced(Faction.Hadron, 5000);
+    assert.ok(built.includes(UnitKind.Cruiser), 'the Knights are supposed to field Cruisers');
+  });
+
+  it('builds nothing at all when it can afford nothing at all', () => {
+    assert.deepEqual(produced(Faction.Hadron, 10), []);
   });
 });
 
