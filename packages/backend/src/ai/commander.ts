@@ -444,10 +444,26 @@ export class AiCommander implements AiPlayer {
     // Composition cycles rather than being solved: it keeps the mix roughly
     // the doctrine's shape without needing a counter-composition model the
     // information available could not support anyway.
-    const wanted = this.doctrine.composition[army.length % this.doctrine.composition.length]!;
-    const yard = this.freeYard(snapshot.structures, wanted);
-    if (yard !== null && this.affordUnit(wanted, purse)) {
+    //
+    // The *fallback* is the part that matters, and it is there because its
+    // absence deadlocked a whole faction. Hadron's composition opens with a
+    // 420-nodule Cruiser. A commander that could not afford one queued
+    // nothing — so its army never grew, so `army.length` never changed, so the
+    // next decision selected the same unaffordable Cruiser, forever. Ten
+    // matches, zero production, zero wins, and 2.2 hull losses against a field
+    // average of sixteen: they were not losing fights, they were not having
+    // them. Every other faction's composition happens to open with something
+    // cheap, so nobody else ever hit it.
+    //
+    // A commander that cannot buy its first choice buys its second, which is
+    // what a player does.
+    const cycled = this.doctrine.composition[army.length % this.doctrine.composition.length]!;
+    for (const wanted of [cycled, ...affordableFirst(this.doctrine.composition, purse.nodules)]) {
+      const yard = this.freeYard(snapshot.structures, wanted);
+      if (yard === null) continue;
+      if (!this.affordUnit(wanted, purse)) continue;
       out.push({ kind: 'produce', structureId: yard.id, unit: wanted });
+      return;
     }
   }
 
@@ -656,6 +672,20 @@ function priority(contact: Contact): number {
 
 function distance(a: { x: number; y: number }, b: { x: number; y: number }): number {
   return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+/**
+ * The doctrine's hulls it could actually pay for, cheapest first.
+ *
+ * Cheapest rather than "the most expensive it can afford", deliberately: a
+ * commander that has been priced out of its first choice is having a bad
+ * economy, and the answer to a bad economy is *something in the water now*,
+ * not the grandest thing that happens to fit.
+ */
+function affordableFirst(composition: readonly UnitKind[], nodules: number): UnitKind[] {
+  return [...new Set(composition)]
+    .filter((kind) => statsFor(kind).cost <= nodules)
+    .sort((a, b) => statsFor(a).cost - statsFor(b).cost);
 }
 
 /** Distance from the closest of these hulls to a point. */
