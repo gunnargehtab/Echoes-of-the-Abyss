@@ -175,7 +175,7 @@ describe('production does not deadlock', () => {
    * nothing — so its army never grew, so the cycle index never moved, so the
    * next decision picked the same unaffordable Cruiser. Forever.
    */
-  function broke(faction: Faction, nodules: number): EchoSnapshot {
+  function broke(nodules: number): EchoSnapshot {
     const base = exposedSnapshot();
     const hull = (id: number, kind: UnitKind): EchoSnapshot['units'][number] => ({
       id,
@@ -226,7 +226,7 @@ describe('production does not deadlock', () => {
     const commander = new AiCommander({ ...briefing(AiDifficulty.Veteran), faction });
     const built: UnitKind[] = [];
     for (let i = 0; i < 12; i++) {
-      for (const command of commander.observe(broke(faction, nodules))) {
+      for (const command of commander.observe(broke(nodules))) {
         if (command.kind === 'produce') built.push(command.unit);
       }
     }

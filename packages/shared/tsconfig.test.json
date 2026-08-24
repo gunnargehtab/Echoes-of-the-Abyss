@@ -1,0 +1,24 @@
+/*
+ * Type-checking config for the tests.
+ *
+ * The build config cannot carry them: it emits, with rootDir "src" and outDir
+ * "dist", so including test/ would try to emit the tests into the package's
+ * published output. This config checks the same sources plus the tests and
+ * emits nothing.
+ *
+ * The tests import from '../dist/index.js' — the build output, per this
+ * package's convention — so `npm run build` has to have run before this is
+ * meaningful. Both the test and type-check scripts arrange that.
+ */
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "rootDir": "."
+  },
+  "include": ["src", "test"],
+  "exclude": ["node_modules", "dist"]
+}
