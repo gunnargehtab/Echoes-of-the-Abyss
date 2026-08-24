@@ -95,8 +95,17 @@ export class AiCommander implements AiPlayer {
 
   /** Observations seen, which is the commander's only clock for cadence. */
   private observations = -1;
-  /** Sim tick the next active sonar transmission is allowed on. */
-  private nextPingTick = 0;
+  /**
+   * Sim tick the next active sonar transmission is allowed on.
+   *
+   * Starts at one full doctrine interval rather than at zero, which is a bug
+   * the balance harness caught: at zero, every commander of every faction
+   * transmitted 0.4 seconds into the match. The Drift puts creatures near a
+   * spawn, so there was always an unclassified contact beside the opening
+   * force, and the "ping to classify" rule fired on it — announcing the base
+   * to everything within 2,400 m before anybody had done anything.
+   */
+  private nextPingTick: number;
   /** Which field each harvester was sent to. Assigned once; the loop cycles. */
   private readonly nodeByHarvester = new Map<number, number>();
   /** Rotates a rejected build placement, since a refusal is silent. */
@@ -118,6 +127,7 @@ export class AiCommander implements AiPlayer {
       y: briefing.heightM / 2,
     };
     this.enemyStarts = briefing.spawns.filter((_, index) => index !== briefing.slot);
+    this.nextPingTick = this.doctrine.pingIntervalS * SIM.TICK_HZ;
   }
 
   observe(snapshot: EchoSnapshot): AiCommand[] {
@@ -590,12 +600,16 @@ export class AiCommander implements AiPlayer {
   /**
    * Ping to find out *what* something is, never to find out whether it exists.
    *
-   * The trigger is an unresolved contact — Tier 1 or 2 — near the force. That
-   * is the one situation where active sonar buys something a hydrophone will
-   * not: the smudge is already known to be there, and the question is whether
-   * it is a cruiser or a grazer. Pinging into empty water would be paying the
-   * whole cost (2,400 m of self-reveal) for nothing, which is the mistake this
-   * condition exists to avoid.
+   * The trigger is an unresolved contact — Tier 1 or 2 — near a force that has
+   * actually deployed. That is the one situation where active sonar buys
+   * something a hydrophone will not: the smudge is already known to be there,
+   * and the question is whether it is a cruiser or a grazer.
+   *
+   * Two conditions guard it, and both were learned the same way — by measuring.
+   * Pinging into empty water pays the whole cost, 2,400 m of self-reveal, for
+   * nothing. And pinging from *home* pays it to identify the local wildlife,
+   * which is worse: it tells the map exactly where the base is, in exchange for
+   * the name of a creature that was never going to matter.
    */
   private commandSonar(snapshot: EchoSnapshot, army: readonly OwnUnit[], out: AiCommand[]): void {
     if (!this.tuning.pingsToClassify) return;
@@ -603,6 +617,9 @@ export class AiCommander implements AiPlayer {
     if (army.length === 0) return;
 
     const centre = centroid(army);
+    // Not from the doorstep. A force still sitting on its own spawn has
+    // nothing to gain from naming what is drifting past it.
+    if (distance(centre, this.home) < RANGE.RALLY_M) return;
     const ambiguous = snapshot.contacts.find(
       (c) => c.tier <= ResolutionTier.Bearing && distance(centre, c) < RANGE.PING_CLASSIFY_M
     );

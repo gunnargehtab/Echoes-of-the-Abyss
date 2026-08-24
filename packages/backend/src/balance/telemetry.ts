@@ -1,0 +1,299 @@
+/**
+ * What a match looked like, as numbers.
+ *
+ * The series here exist to answer specific questions, and the questions are
+ * the balance guard-rails in docs/economy.md §9 and docs/bestiary.md §8. Those
+ * tables name four ways this design could fail — "quiet economies simply win",
+ * "loud economies are unplayable", "Directorate Biomass snowballs", "Knights
+ * starve out of every long game" — and until now there was no way to test any
+ * of them except by playing, which needed two humans and a calendar.
+ *
+ * **Everything is read from the players' own snapshots**, the same payloads a
+ * client receives, rather than from the ECS. Not for purity — an analyst is
+ * entitled to ground truth — but because the union of every player's snapshot
+ * *is* ground truth for everything worth measuring here, and taking it from
+ * there means the harness measures the game as it is actually delivered. A
+ * metric read out of the world could quietly diverge from what any player
+ * could ever have experienced.
+ *
+ * One honest limit follows from that, and it drove the shape of two fields.
+ * `firstContactTick` is the first tick *anyone resolved anything*, and with
+ * the Drift populated that is almost always tick 0 — a creature is in earshot
+ * of a spawn from the first frame. Which is true, and useless as a measure of
+ * when the two commanders found each other.
+ *
+ * So `firstEnemyContactTick` is tracked separately, and keyed on the one
+ * signal that cannot be a creature: a contact carrying a `faction`.
+ * Classification at Tier 3 names a faction for a hull and a *species* for a
+ * creature, never both, so a contact with a faction is another player by
+ * construction. Below Tier 3 there is no way to tell, and no oracle is
+ * invented to pretend otherwise — contact handles are per-observer and name
+ * no entity. Ambiguity is the game.
+ */
+
+import {
+  DepthBand,
+  ResolutionTier,
+  SIM,
+  depthBandFor,
+  type EchoSnapshot,
+  type Faction,
+} from '@echoes/shared';
+
+/** How often a series is sampled, in seconds of simulated time. */
+export const SAMPLE_INTERVAL_S = 10;
+
+/** One player's story, from their own snapshots. */
+export interface PlayerTelemetry {
+  slot: number;
+  faction: Faction;
+  /** Cumulative nodules banked, sampled every SAMPLE_INTERVAL_S. */
+  nodules: number[];
+  crystal: number[];
+  biomass: number[];
+  /** Loudest own unit at each sample. */
+  peakSig: number[];
+  /** Own hulls and structures alive at each sample. */
+  hulls: number[];
+  structures: number[];
+  /** Seconds spent with someone holding Bearing or better on anything of theirs. */
+  secondsTracked: number;
+  /** Seconds spent with someone holding a full Track. */
+  secondsHardTracked: number;
+  /** Seconds of hull-time spent in each depth band, summed over the force. */
+  hullSecondsByBand: Record<DepthBand, number>;
+  /** Units lost, by kind ordinal. Counted by id disappearing from their own list. */
+  lossesByKind: Record<number, number>;
+  structuresLost: number;
+  /**
+   * Gross income: every rise in the stockpile, summed.
+   *
+   * Income cannot be read off the *final* stockpile, because a competent
+   * commander ends a match near zero and would report as having had no
+   * economy. It also cannot be reconstructed from what they built, which was
+   * the first attempt here and was wrong twice over: production deducts when
+   * an item is queued but the hull only appears when it finishes, so the two
+   * ledgers disagree by whatever is in flight — and a structure is charged at
+   * placement while its site takes a minute to rise.
+   *
+   * Measured instead of derived. Only mining raises a stockpile and only
+   * spending lowers it, so summing the rises is gross income by definition.
+   * Accumulated at the Echo tick rather than at the ten-second series
+   * interval so a purchase cannot mask a delivery; a delivery and a purchase
+   * inside the same 200 ms still net out, which makes this a slight
+   * *under*count and never an over-count.
+   */
+  nodulesEarned: number;
+  crystalEarned: number;
+  biomassEarned: number;
+  /** Tick this slot stopped receiving snapshots, or null if it survived. */
+  eliminatedTick: number | null;
+}
+
+export interface MatchTelemetryResult {
+  seed: number;
+  mapId: string;
+  /** Null when nobody won inside the time budget. */
+  winnerSlot: number | null;
+  timedOut: boolean;
+  finalTick: number;
+  lengthS: number;
+  /** First tick any player resolved any contact. Usually fauna — see above. */
+  firstContactTick: number | null;
+  /** First tick anyone classified another *player*. Null if they never met. */
+  firstEnemyContactTick: number | null;
+  /** First tick anything belonging to anybody was destroyed. */
+  firstBloodTick: number | null;
+  /** Mean Drift Health across regions at the end, 0-100. */
+  driftHealthFinal: number;
+  players: PlayerTelemetry[];
+}
+
+const SAMPLE_TICKS = SAMPLE_INTERVAL_S * SIM.TICK_HZ;
+
+export class MatchTelemetry {
+  private readonly players = new Map<number, PlayerTelemetry>();
+  /** Own entity ids seen last tick, per slot, to spot a loss as a deletion. */
+  private readonly lastUnits = new Map<number, Map<number, number>>();
+  private readonly lastStructures = new Map<number, Map<number, number>>();
+  private firstContact: number | null = null;
+  private firstEnemyContact: number | null = null;
+  private firstBlood: number | null = null;
+  private drift: number[] = [];
+  private lastSampleTick = -SAMPLE_TICKS;
+  private lastObservedTick = 0;
+  /** Last stockpile seen per slot, for the income deltas. */
+  private readonly lastPurse = new Map<
+    number,
+    { nodules: number; crystal: number; biomass: number }
+  >();
+
+  constructor(
+    private readonly seed: number,
+    private readonly mapId: string,
+    roster: { slot: number; faction: Faction }[]
+  ) {
+    for (const { slot, faction } of roster) {
+      this.players.set(slot, {
+        slot,
+        faction,
+        nodules: [],
+        crystal: [],
+        biomass: [],
+        peakSig: [],
+        hulls: [],
+        structures: [],
+        secondsTracked: 0,
+        secondsHardTracked: 0,
+        hullSecondsByBand: {
+          [DepthBand.Shelf]: 0,
+          [DepthBand.MidWater]: 0,
+          [DepthBand.Abyssal]: 0,
+        },
+        lossesByKind: {},
+        structuresLost: 0,
+        nodulesEarned: 0,
+        crystalEarned: 0,
+        biomassEarned: 0,
+        eliminatedTick: null,
+      });
+      this.lastUnits.set(slot, new Map());
+      this.lastStructures.set(slot, new Map());
+    }
+  }
+
+  /**
+   * One Echo tick's worth of every player's view.
+   *
+   * Called with whatever `Match.update` returned, so a slot missing from the
+   * map is a slot with nothing left — which is how elimination is detected
+   * without asking the simulation.
+   */
+  observe(tick: number, snapshots: Map<number, EchoSnapshot>): void {
+    const dt = (tick - this.lastObservedTick) / SIM.TICK_HZ;
+    this.lastObservedTick = tick;
+    const sampling = tick - this.lastSampleTick >= SAMPLE_TICKS;
+    if (sampling) this.lastSampleTick = tick;
+
+    for (const [slot, player] of this.players) {
+      const snapshot = snapshots.get(slot);
+      if (snapshot === undefined) {
+        if (player.eliminatedTick === null && tick > 0) player.eliminatedTick = tick;
+        if (sampling) this.sampleEmpty(player);
+        continue;
+      }
+
+      if (this.firstContact === null && snapshot.contacts.length > 0) this.firstContact = tick;
+      if (this.firstEnemyContact === null) {
+        // A faction on a contact means classification named a hull, which a
+        // creature can never produce. See the note at the top of this file.
+        if (snapshot.contacts.some((c) => c.faction !== undefined)) {
+          this.firstEnemyContact = tick;
+        }
+      }
+
+      // Exposure is continuous state, so it is integrated rather than sampled:
+      // "how long were you being held" is the question the loud-economy
+      // guard-rail actually asks, and a ten-second sample would miss a raid.
+      if (snapshot.exposure.tier >= ResolutionTier.Bearing) player.secondsTracked += dt;
+      if (snapshot.exposure.tier >= ResolutionTier.Track) player.secondsHardTracked += dt;
+
+      for (const unit of snapshot.units) {
+        player.hullSecondsByBand[depthBandFor(unit.depth)] += dt;
+      }
+
+      this.accrueIncome(player, snapshot);
+      this.countLosses(tick, player, snapshot);
+      if (snapshot.driftHealth.length > 0) this.drift = snapshot.driftHealth;
+      if (sampling) this.sample(player, snapshot);
+    }
+  }
+
+  private sample(player: PlayerTelemetry, snapshot: EchoSnapshot): void {
+    player.nodules.push(Math.round(snapshot.nodules));
+    player.crystal.push(Math.round(snapshot.crystal));
+    player.biomass.push(Math.round(snapshot.biomass));
+    player.peakSig.push(Math.round(snapshot.peakSig));
+    player.hulls.push(snapshot.units.length);
+    player.structures.push(snapshot.structures.length);
+  }
+
+  private sampleEmpty(player: PlayerTelemetry): void {
+    player.nodules.push(0);
+    player.crystal.push(0);
+    player.biomass.push(0);
+    player.peakSig.push(0);
+    player.hulls.push(0);
+    player.structures.push(0);
+  }
+
+  /**
+   * Gross income, as the rises in a stockpile.
+   *
+   * The opening stockpile is not income — it is a gift — so the first
+   * observation only records a baseline. Nothing is credited for the base a
+   * player was handed.
+   */
+  private accrueIncome(player: PlayerTelemetry, snapshot: EchoSnapshot): void {
+    const previous = this.lastPurse.get(player.slot);
+    const current = {
+      nodules: snapshot.nodules,
+      crystal: snapshot.crystal,
+      biomass: snapshot.biomass,
+    };
+    this.lastPurse.set(player.slot, current);
+    if (previous === undefined) return;
+    player.nodulesEarned += Math.max(0, current.nodules - previous.nodules);
+    player.crystalEarned += Math.max(0, current.crystal - previous.crystal);
+    player.biomassEarned += Math.max(0, current.biomass - previous.biomass);
+  }
+
+  /**
+   * A loss is an id that was in this player's own list and is not any more.
+   *
+   * Their own units are always sent in full, so this is exact — no inference,
+   * no fog. The kind is remembered from the last tick the hull existed,
+   * because by the time it is gone there is nothing left to ask.
+   */
+  private countLosses(tick: number, player: PlayerTelemetry, snapshot: EchoSnapshot): void {
+    const previousUnits = this.lastUnits.get(player.slot)!;
+    const currentUnits = new Map<number, number>();
+    for (const unit of snapshot.units) currentUnits.set(unit.id, unit.kind);
+
+    for (const [id, kind] of previousUnits) {
+      if (currentUnits.has(id)) continue;
+      player.lossesByKind[kind] = (player.lossesByKind[kind] ?? 0) + 1;
+      if (this.firstBlood === null) this.firstBlood = tick;
+    }
+    this.lastUnits.set(player.slot, currentUnits);
+
+    const previousStructures = this.lastStructures.get(player.slot)!;
+    const currentStructures = new Map<number, number>();
+    for (const structure of snapshot.structures) {
+      currentStructures.set(structure.id, structure.kind);
+    }
+    for (const [id] of previousStructures) {
+      if (currentStructures.has(id)) continue;
+      player.structuresLost++;
+      if (this.firstBlood === null) this.firstBlood = tick;
+    }
+    this.lastStructures.set(player.slot, currentStructures);
+  }
+
+  finish(finalTick: number, winnerSlot: number | null, timedOut: boolean): MatchTelemetryResult {
+    return {
+      seed: this.seed,
+      mapId: this.mapId,
+      winnerSlot,
+      timedOut,
+      finalTick,
+      lengthS: finalTick / SIM.TICK_HZ,
+      firstContactTick: this.firstContact,
+      firstEnemyContactTick: this.firstEnemyContact,
+      firstBloodTick: this.firstBlood,
+      driftHealthFinal:
+        this.drift.length === 0 ? 100 : this.drift.reduce((a, b) => a + b, 0) / this.drift.length,
+      players: [...this.players.values()].sort((a, b) => a.slot - b.slot),
+    };
+  }
+}

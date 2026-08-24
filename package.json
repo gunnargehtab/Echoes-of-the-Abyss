@@ -13,6 +13,7 @@
     "build:shared": "npm -w packages/shared run build",
     "build": "npm run build:shared && npm -w packages/frontend run build && npm -w packages/backend run build",
     "test": "npm run build:shared && npm -w packages/shared run test --if-present && npm -w packages/frontend run test --if-present && npm -w packages/backend run test --if-present",
+    "balance": "node tools/balance/run.mjs",
     "type-check": "npm run build:shared && npm -w packages/frontend run type-check && npm -w packages/backend run type-check",
     "lint": "npm -w packages/frontend run lint && npm -w packages/backend run lint",
     "format:check": "prettier --check \"packages/**/*.{ts,tsx,css,json}\" \"tools/**/*.{js,json}\" \"*.json\"",
