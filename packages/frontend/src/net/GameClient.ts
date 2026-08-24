@@ -52,6 +52,12 @@ export interface TerrainPayload {
   rows: number;
   cellM: number;
   biomes: number[];
+  /**
+   * The water column per cell, parallel to `biomes`. `ceiling` is 0 on open
+   * water; non-zero is a roofed passage (docs/systems-depth.md §1).
+   */
+  floor: number[];
+  ceiling: number[];
 }
 
 export interface AssignedPayload {

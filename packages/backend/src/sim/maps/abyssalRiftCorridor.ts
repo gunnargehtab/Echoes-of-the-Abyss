@@ -28,6 +28,10 @@ export const ABYSSAL_RIFT_CORRIDOR: MapDefinition = {
   widthM: W,
   heightM: H,
   cellM: 250,
+  // The shelf either side of the rift. "Vertical depth layers with fog
+  // separation" is this map's third Layout Logic bullet, and it is the floors
+  // that deliver it: the corridor is not just narrow, it is a step down.
+  floorM: 1400,
   regions: [
     // "Center: Abyssal Trenches" — the corridor, running the long axis.
     //
@@ -42,17 +46,32 @@ export const ABYSSAL_RIFT_CORRIDOR: MapDefinition = {
       widthM: W - 3600,
       heightM: 1600,
       biome: Biome.AbyssalTrench,
+      // "Long, narrow, deep", and deep enough for the crystal field seated at
+      // 2,400 m in the middle of it. Dropping into the rift is a descent, which
+      // is the loud direction — the map charges you to use its fast road twice.
+      floorM: 2900,
       note: 'The rift. PF 1.6 for its whole length — nothing crosses it unheard.',
     },
     // Base aprons. Coral: hard acoustic shadows, so a base is defensible
     // without being silent.
-    { x: 0, y: 1800, widthM: 1800, heightM: 2400, biome: Biome.CoralRuins, note: 'West apron' },
+    {
+      x: 0,
+      y: 1800,
+      widthM: 1800,
+      heightM: 2400,
+      biome: Biome.CoralRuins,
+      // "Side plateaus for expansions": 700 m clears the 600 m structures and
+      // nodule fields sit at, and leaves no room to lurk deep over a base.
+      floorM: 700,
+      note: 'West apron',
+    },
     {
       x: W - 1800,
       y: 1800,
       widthM: 1800,
       heightM: 2400,
       biome: Biome.CoralRuins,
+      floorM: 700,
       note: 'East apron',
     },
     // "Side: Thermal Veins + Coral Ruins" — the only cover on the map.
@@ -80,9 +99,12 @@ export const ABYSSAL_RIFT_CORRIDOR: MapDefinition = {
       widthM: 400,
       heightM: 1600,
       biome: Biome.CoralRuins,
+      // Shelf ground, like the Ventfront dividers: a choke you rise over
+      // rather than one you route around.
+      floorM: 380,
       note: 'West choke',
     },
-    { x: W - 3700, y: 2200, widthM: 400, heightM: 1600, biome: Biome.CoralRuins },
+    { x: W - 3700, y: 2200, widthM: 400, heightM: 1600, biome: Biome.CoralRuins, floorM: 380 },
   ],
   spawns: [
     { x: 900, y: H / 2, foundryOffsetX: 0, foundryOffsetY: -450 },

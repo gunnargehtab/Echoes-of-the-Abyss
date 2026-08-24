@@ -13,7 +13,16 @@
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { Biome, Faction, PROPAGATION_FACTOR, ResourceKind, SIM, UnitKind } from '@echoes/shared';
+import {
+  Biome,
+  CRYSTAL,
+  DEPTH,
+  Faction,
+  PROPAGATION_FACTOR,
+  ResourceKind,
+  SIM,
+  UnitKind,
+} from '@echoes/shared';
 import {
   ABYSSAL_RIFT_CORRIDOR,
   DEFAULT_MAP_ID,
@@ -308,4 +317,103 @@ describe('a match on an authored map', () => {
       assert.ok(harvester !== undefined, `${map.id}: no harvester`);
     }
   });
+});
+
+describe('every map has water where it seats things', () => {
+  // Structures, resource fields and spawns are placed at fixed depths and
+  // cannot rise. Hulls can — terrain lifts them (docs/systems-depth.md §2) —
+  // so a shallow floor is a cost to a fleet and a fatal authoring error to a
+  // refinery. These invariants are the difference between the two.
+  //
+  // world.ts seats structures at 600 m and nodule fields at 600 m; crystal
+  // fields sit at CRYSTAL.FIELD_DEPTH_M. None of them consult the seabed, so
+  // nothing but this test stands between a map and a Bastion inside a plateau.
+  const STRUCTURE_DEPTH_M = 600;
+  const NODULE_DEPTH_M = 600;
+
+  for (const map of MAPS) {
+    describe(map.name, () => {
+      it('seats every spawn and its Foundry over deep enough water', () => {
+        const terrain = terrainFor(map);
+        for (const spawn of map.spawns) {
+          assert.ok(
+            terrain.admits(spawn.x, spawn.y, STRUCTURE_DEPTH_M),
+            `${map.name}: a Bastion at ${spawn.x},${spawn.y} does not fit — floor is ` +
+              `${terrain.floorAt(spawn.x, spawn.y)}m, ceiling ${terrain.ceilingAt(spawn.x, spawn.y)}m`
+          );
+          const fx = spawn.x + spawn.foundryOffsetX;
+          const fy = spawn.y + spawn.foundryOffsetY;
+          assert.ok(
+            terrain.admits(fx, fy, STRUCTURE_DEPTH_M),
+            `${map.name}: the Foundry at ${fx},${fy} does not fit — floor is ${terrain.floorAt(fx, fy)}m`
+          );
+        }
+      });
+
+      it('seats every resource field over water deep enough to work it', () => {
+        const terrain = terrainFor(map);
+        for (const node of map.resources) {
+          const depth =
+            node.kind === ResourceKind.ResonanceCrystal ? CRYSTAL.FIELD_DEPTH_M : NODULE_DEPTH_M;
+          assert.ok(
+            terrain.admits(node.x, node.y, depth),
+            `${map.name}: a ${node.kind} field at ${node.x},${node.y} works at ${depth}m, ` +
+              `but the floor there is ${terrain.floorAt(node.x, node.y)}m`
+          );
+        }
+      });
+
+      it('authors no ground the ruleset cannot describe', () => {
+        for (const region of map.regions) {
+          if (region.floorM !== undefined) {
+            assert.ok(
+              region.floorM > 0 && region.floorM <= DEPTH.MAX_M,
+              `${map.name}: a floor of ${region.floorM}m is outside the orderable range`
+            );
+          }
+          // A ceiling deeper than its floor is solid ground. Legal, but no map
+          // authors one yet, and doing it by accident would silently wall off a
+          // region nobody meant to close.
+          if (region.ceilingM !== undefined) {
+            assert.ok(
+              region.ceilingM < (region.floorM ?? map.floorM ?? DEPTH.MAX_M),
+              `${map.name}: a ceiling of ${region.ceilingM}m is at or below its own floor, ` +
+                `which is solid rock — say so in a note if it is deliberate`
+            );
+          }
+        }
+      });
+
+      it('never makes a dive the only way across', () => {
+        // The AI has no depth command at all: its vocabulary is attack, build,
+        // harvest, move, ping, produce, silent and throttle. A roofed passage
+        // is therefore a route only a human can take, so no map may depend on
+        // one — the balance harness seats an AI in every slot and would report
+        // matches that never make contact.
+        const terrain = terrainFor(map);
+        for (const spawn of map.spawns) {
+          for (const other of map.spawns) {
+            if (other === spawn) continue;
+            const steps = 200;
+            let blocked = 0;
+            for (let i = 0; i <= steps; i++) {
+              const t = i / steps;
+              const x = spawn.x + (other.x - spawn.x) * t;
+              const y = spawn.y + (other.y - spawn.y) * t;
+              // A hull rises to fit, so the question is never "is this deep
+              // enough" — it is "is there any water here at all".
+              if (terrain.ceilingAt(x, y) > terrain.floorAt(x, y)) blocked++;
+            }
+            assert.equal(
+              blocked,
+              0,
+              `${map.name}: the straight line from ${spawn.x},${spawn.y} to ` +
+                `${other.x},${other.y} crosses ${blocked} samples of solid ground, and ` +
+                `nothing in the simulation can path around it`
+            );
+          }
+        }
+      });
+    });
+  }
 });
