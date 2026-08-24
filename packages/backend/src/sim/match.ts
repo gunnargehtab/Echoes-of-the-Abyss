@@ -547,7 +547,20 @@ export class Match {
     if (!hasComponent(this.world, Owner, target) || Owner.slot[target] === slot) return 0;
     if (!hasComponent(this.world, Health, target) || Health.hp[target]! <= 0) return 0;
 
-    return launchTorpedo(this.world, eid, Position.x[target]!, Position.y[target]!);
+    // docs/systems-combat.md §7 — resolution tier is the firing solution.
+    //
+    // Below Tier 2 there is no launch: a Tier-1 contact is a directionless
+    // smudge reported at the *listener's* own position, so a torpedo aimed at
+    // it would be aimed at your own hull. The gate is not a balance choice, it
+    // is the only honest reading of what the player was told.
+    //
+    // At Tier 2 the aim point is the blurred ghost, which lies by up to 15% of
+    // range. The torpedo swims at the lie and the seeker has the run to find
+    // the truth. At Tier 3 and above the solution is exact.
+    const solution = this.echo.firingSolution(this.world, slot, target);
+    if (solution === undefined || solution.tier < ResolutionTier.Bearing) return 0;
+
+    return launchTorpedo(this.world, eid, solution.x, solution.y);
   }
 
   /**

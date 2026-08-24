@@ -247,6 +247,48 @@ export class EchoLayer {
     return undefined;
   }
 
+  /**
+   * The firing solution a slot currently holds on an emitter, or undefined.
+   *
+   * This is the single place docs/systems-combat.md §7 is enforced, and the
+   * position it returns is **exactly the position that slot was last told** —
+   * the true position at Tier 3 and above, and at Tier 2 the same blurred ghost
+   * the contact payload carried, from the same seed and the same listener.
+   *
+   * Recomputing the blur here rather than storing it is what guarantees they
+   * agree: a launch that aimed anywhere other than where the player was told
+   * the target was would either be the server quietly correcting them, or the
+   * server quietly lying twice. `blurBearing` is deterministic on those three
+   * inputs, so one call reproduces the other exactly.
+   *
+   * Reflects the last completed pass, which is correct: a player acts on what
+   * they were last told, not on what is true this instant.
+   */
+  firingSolution(
+    world: SimWorld,
+    slot: number,
+    eid: number
+  ): { tier: ResolutionTier; x: number; y: number } | undefined {
+    const resolved = this.best.get(slot)?.get(eid);
+    if (resolved === undefined) return undefined;
+
+    const trueX = Position.x[eid]!;
+    const trueY = Position.y[eid]!;
+    if (resolved.tier !== ResolutionTier.Bearing) {
+      return { tier: resolved.tier, x: trueX, y: trueY };
+    }
+    // Seeded from the match-local id, exactly as the contact payload is — see
+    // the note there about process-global entity ids.
+    const blurred = blurBearing(
+      trueX,
+      trueY,
+      resolved.listenerX,
+      resolved.listenerY,
+      localIdOf(world, eid) ?? eid
+    );
+    return { tier: resolved.tier, x: blurred.x, y: blurred.y };
+  }
+
   private handleFor(slot: number, eid: number): number {
     let slotHandles = this.handles.get(slot);
     if (slotHandles === undefined) {
