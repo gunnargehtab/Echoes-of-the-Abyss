@@ -13,6 +13,7 @@
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { hasComponent } from 'bitecs';
 import {
   Biome,
   Faction,
@@ -29,7 +30,7 @@ import {
 import { Match } from '../src/sim/match.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { spawnStructure, spawnUnit } from '../src/sim/world.ts';
-import { Acoustic, Health, Position } from '../src/sim/components.ts';
+import { Acoustic, Health, Position, Unit } from '../src/sim/components.ts';
 import { VENTFRONT_DIVIDE, type MapDefinition } from '../src/sim/maps/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
@@ -587,5 +588,68 @@ describe('resonance storms', () => {
         `budget ${SIM.ECHO_BUDGET_MS} ms`
     );
     assert.ok(match.world.hazards[0]!.phase !== undefined);
+  });
+});
+
+describe('a hazard kill is a real death', () => {
+  it('removes what it kills, rather than stranding it at zero HP forever', () => {
+    // `step()` has always claimed a hull killed by an eruption "should die on
+    // the tick the eruption killed it" — but `hazardsSystem` took no `destroyed`
+    // array and reported nothing, so `reap()` never heard about it. The entity
+    // stayed in the world at hp <= 0 with every component intact: still drawn,
+    // still emitting, still a contact every listener on the map could resolve,
+    // permanently. Nothing swept for it, because the convention here is that a
+    // system which deals damage reports its kills.
+    //
+    // Combat ordnance made this reachable in a new way — a depth charge caught
+    // in an eruption becomes an immortal SIG-30 emitter that never detonates
+    // and never expires — but the bug was never specific to ordnance, and a
+    // hull is the clearest way to state it.
+    const match = matchWith(hazardMap('geothermal-eruption'));
+    const victim = spawnUnit(match.world, {
+      kind: UnitKind.LightScout,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 4000,
+      y: 4000,
+    });
+    // Sitting at the centre of the plume with almost nothing left, so the
+    // eruption is unambiguously what kills it.
+    Health.hp[victim] = 1;
+
+    runUntilPhase(match, HazardPhase.Active);
+    for (let i = 0; i < SIM.TICK_HZ * 5; i++) match.update(STEP_MS);
+
+    assert.ok(Health.hp[victim]! <= 0, 'the eruption should have killed it');
+    assert.equal(
+      hasComponent(match.world, Unit, victim),
+      false,
+      'and it should be gone from the world, not stranded at zero HP'
+    );
+  });
+
+  it('does the same for a creature bite, which reported nothing either', () => {
+    // `faunaSystem` had the identical shape: it damages hulls and structures
+    // and never told `reap()`. A hull chewed to death by a Sounder stayed on
+    // the board exactly as an eruption victim did.
+    const match = matchWith(hazardMap('geothermal-eruption'));
+    const prey = spawnUnit(match.world, {
+      kind: UnitKind.LightScout,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 1200,
+      y: 1200,
+    });
+    Health.hp[prey] = 1;
+    // Reproduce what a bite does — damage with no report — and require reap to
+    // still find it. This is the invariant, independent of which system is at
+    // fault next time.
+    Health.hp[prey] = -1;
+    for (let i = 0; i < SIM.TICK_HZ * 3; i++) match.update(STEP_MS);
+    assert.equal(
+      hasComponent(match.world, Unit, prey),
+      false,
+      'an entity at zero HP must not survive the tick it reached zero'
+    );
   });
 });

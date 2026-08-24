@@ -14,7 +14,7 @@
  * Bastion standing wins.
  */
 
-import { addComponent, hasComponent, removeEntity } from 'bitecs';
+import { addComponent, defineQuery, hasComponent, removeEntity } from 'bitecs';
 import {
   ACTIVE_SONAR,
   CONSTRUCTION,
@@ -159,6 +159,11 @@ export class Match {
   private readonly slots: number[] = [];
   private readonly eliminated = new Set<number>();
   private readonly destroyedScratch: number[] = [];
+  /**
+   * Every entity that can die, for `reap`'s zero-HP backstop. Held on the
+   * instance because a bitecs query caches its result set per world.
+   */
+  private readonly healthQuery = defineQuery([Health, Owner]);
   private readonly nodes: ResourceNodeInfo[] = [];
   private accumulator = 0;
   private echoAccumulator = 0;
@@ -945,7 +950,7 @@ export class Match {
     pressureSystem(this.world, this.destroyedScratch);
     // Hazards after pressure and before reap: a hull killed by an eruption
     // should die on the tick the eruption killed it, not the next one.
-    hazardsSystem(this.world);
+    hazardsSystem(this.world, this.destroyedScratch);
     // After hazards, so a tap destroyed by its own vent stops powering
     // anything on the same tick it dies.
     thermalSystem(this.world);
@@ -953,7 +958,7 @@ export class Match {
     // it does not care about Draw satisfaction — but a Bastion destroyed this
     // tick should not pay out on the tick it dies.
     titheSystem(this.world);
-    faunaSystem(this.world);
+    faunaSystem(this.world, this.destroyedScratch);
     this.driftTick();
     this.reap();
     // After reap, so a structure destroyed this tick has already left its
@@ -988,6 +993,27 @@ export class Match {
 
   /** One place where deaths are made real, so the win condition sees them all. */
   private reap(): void {
+    // Backstop before the early return: anything sitting at zero HP dies here
+    // even if nothing reported it.
+    //
+    // The convention is that a system dealing damage appends its kills to
+    // `destroyed`, and twice now a system has not — `hazardsSystem` and
+    // `faunaSystem` both damaged hulls and told nobody. The result was silent
+    // and permanent rather than merely wrong: the entity kept every component,
+    // so it stayed on the board at hp <= 0, still emitting, a contact every
+    // listener could resolve and nothing could ever kill. Ordnance made it
+    // vivid (a depth charge caught in an eruption becomes an immortal SIG-30
+    // emitter that never detonates and never expires) but any hull did it.
+    //
+    // Both systems now report, which is what gives a kill its attribution.
+    // This sweep is the invariant underneath that convention, so the next
+    // system to forget is wrong for one tick instead of forever.
+    const alive = this.healthQuery(this.world);
+    for (let i = 0; i < alive.length; i++) {
+      const eid = alive[i]!;
+      if (Health.hp[eid]! <= 0) this.destroyedScratch.push(eid);
+    }
+
     if (this.destroyedScratch.length === 0) return;
 
     const lostBastions: number[] = [];
