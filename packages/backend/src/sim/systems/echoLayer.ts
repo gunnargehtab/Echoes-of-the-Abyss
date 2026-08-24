@@ -44,7 +44,7 @@ import {
   Velocity,
 } from '../components.ts';
 import { SpatialHash } from '../spatialHash.ts';
-import type { SimWorld } from '../world.ts';
+import { localIdOf, type SimWorld } from '../world.ts';
 
 /** Player slots the room admits. Sized for the flat per-slot scratch arrays. */
 const MAX_SLOTS = 8;
@@ -633,7 +633,26 @@ export class EchoLayer {
           contact.x = resolved.listenerX;
           contact.y = resolved.listenerY;
         } else if (resolved.tier === ResolutionTier.Bearing) {
-          const blurred = blurBearing(trueX, trueY, resolved.listenerX, resolved.listenerY, eid);
+          // Seeded with the *match-local* id, not the entity id.
+          //
+          // Third instance of the trap docs/tech-stack.md already records
+          // twice: bitecs allocates entity ids from a counter global to the
+          // process, so the same match run twice in one process holds
+          // identical values under different ids — and a blur keyed on the raw
+          // id therefore lands somewhere else on the second run.
+          //
+          // It went unnoticed while only humans read this field, because a
+          // blurred position is drawn and never acted on by the simulation.
+          // The skirmish AI reads it and walks an army to it, which turns a
+          // cosmetic difference into a divergent match: the balance harness
+          // caught two runs of one seed ending thirty-nine ticks apart.
+          const blurred = blurBearing(
+            trueX,
+            trueY,
+            resolved.listenerX,
+            resolved.listenerY,
+            localIdOf(world, eid) ?? eid
+          );
           contact.x = blurred.x;
           contact.y = blurred.y;
         }

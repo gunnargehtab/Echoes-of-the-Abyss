@@ -15,7 +15,14 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { Faction, HarvestThrottle, SIM, StructureKind, UnitKind } from '@echoes/shared';
+import {
+  Faction,
+  HarvestThrottle,
+  ResolutionTier,
+  SIM,
+  StructureKind,
+  UnitKind,
+} from '@echoes/shared';
 import { hasComponent } from 'bitecs';
 import { Match } from '../src/sim/match.ts';
 import { Owner, Structure, Unit } from '../src/sim/components.ts';
@@ -198,6 +205,52 @@ describe('determinism', () => {
       hashWorld(jerky.world),
       'a laggy server must not produce a different match'
     );
+  });
+});
+
+describe('the Tier-2 blur is stable across matches', () => {
+  it('blurs the same contact to the same place in two identical matches', () => {
+    // bitecs allocates entity ids from a counter global to the *process*, so
+    // the second match in a test run holds identical values under different
+    // ids. Anything keyed on a raw entity id therefore differs between two
+    // runs of the same seed — the trap this file's header already describes
+    // for the state hash and for replays.
+    //
+    // The blur was the third instance and the last to be found, because it
+    // took an actor that *reads* a blurred position to expose it. A human
+    // client draws the blob and never acts on it, so nothing diverged; the
+    // skirmish AI walks an army to it, and two runs of one seed ended thirty-
+    // nine ticks apart. The balance harness caught it.
+    const positions = [0, 1].map(() => {
+      const match = twoPlayers(new Match(undefined, { fauna: false, seed: SEED }));
+      matchWorld = match.world;
+      // Walk both forces at the middle of the map so somebody resolves at
+      // Bearing: the spawns are kilometres apart and nothing is audible from
+      // there, which is the whole point of the map.
+      const centre = { x: match.map.widthM / 2, y: match.map.heightM / 2 };
+      for (let eid = 0; eid < Owner.slot.length; eid++) {
+        if (!hasComponent(match.world, Unit, eid)) continue;
+        const slot = Owner.slot[eid]!;
+        if (slot !== 0 && slot !== 1) continue;
+        match.orderMove(slot, eid, centre.x, centre.y);
+      }
+
+      const contacts: string[] = [];
+      for (let tick = 0; tick < 120 * SIM.TICK_HZ; tick++) {
+        const snapshots = match.update(1000 / SIM.TICK_HZ);
+        if (snapshots === null) continue;
+        for (const [slot, snapshot] of snapshots) {
+          for (const contact of snapshot.contacts) {
+            if (contact.tier !== ResolutionTier.Bearing) continue;
+            contacts.push(`${slot}:${contact.x.toFixed(3)},${contact.y.toFixed(3)}`);
+          }
+        }
+      }
+      return contacts;
+    });
+
+    assert.ok(positions[0]!.length > 0, 'the scenario has to produce a Tier-2 contact at all');
+    assert.deepEqual(positions[0], positions[1], 'the same seed must blur to the same place');
   });
 });
 
