@@ -23,7 +23,14 @@ try {
   );
 }
 
-const { resolveTier, detectionRatio, ResolutionTier, PROPAGATION_MODEL, UNIT_STATS } = shared;
+const {
+  resolveTier,
+  detectionRatio,
+  ResolutionTier,
+  PROPAGATION_MODEL,
+  UNIT_STATS,
+  ORDNANCE_STATS,
+} = shared;
 
 const TIER_NAME = Object.fromEntries(
   Object.entries(ResolutionTier)
@@ -92,4 +99,21 @@ function rosterActors(sigField = 'sigCruise') {
   return Object.values(UNIT_STATS).map((u) => ({ name: u.name, sig: u[sigField] }));
 }
 
-module.exports = { detect, runScenario, rosterActors, TIER_NAME };
+/**
+ * Ordnance as scenario actors, straight from ORDNANCE_STATS.
+ *
+ * The reason this exists: docs/systems-combat.md §1 rests on a claim that is
+ * purely a detection question — "nothing lethal is inaudible" — and the only
+ * honest way to check it is to run the shipping propagation model over the
+ * shipping ordnance signatures and read off the ranges. A torpedo that stopped
+ * being audible across its own run would break the rule that makes a short
+ * time-to-kill fair, and it would break it silently.
+ *
+ * Emitters only. A seeker's own hearing is not modelled here for the same
+ * reason the tool has no physics: it belongs to the simulation.
+ */
+function ordnanceActors() {
+  return Object.values(ORDNANCE_STATS).map((o) => ({ name: o.name, sig: o.sig }));
+}
+
+module.exports = { detect, runScenario, rosterActors, ordnanceActors, TIER_NAME };

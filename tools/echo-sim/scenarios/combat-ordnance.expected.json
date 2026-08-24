@@ -1,0 +1,351 @@
+{
+  "name": "combat-ordnance",
+  "pf": 1,
+  "hyd": 50,
+  "runs": [
+    {
+      "name": "Torpedo (running)",
+      "sig": 60,
+      "hyd": 50,
+      "detections": [
+        {
+          "distance": 100,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 408.155
+        },
+        {
+          "distance": 400,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 44.415
+        },
+        {
+          "distance": 900,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 12.135
+        },
+        {
+          "distance": 1600,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 4.833
+        },
+        {
+          "distance": 2400,
+          "tier": 3,
+          "tierName": "Classification",
+          "ratio": 2.526
+        },
+        {
+          "distance": 3200,
+          "tier": 2,
+          "tierName": "Bearing",
+          "ratio": 1.594
+        }
+      ]
+    },
+    {
+      "name": "Torpedo (running, heard by Directorate ears)",
+      "sig": 60,
+      "hyd": 85,
+      "detections": [
+        {
+          "distance": 100,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 693.864
+        },
+        {
+          "distance": 400,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 75.505
+        },
+        {
+          "distance": 900,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 20.629
+        },
+        {
+          "distance": 1600,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 8.216
+        },
+        {
+          "distance": 2400,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 4.295
+        },
+        {
+          "distance": 3200,
+          "tier": 3,
+          "tierName": "Classification",
+          "ratio": 2.71
+        }
+      ]
+    },
+    {
+      "name": "Noisemaker decoy",
+      "sig": 70,
+      "hyd": 50,
+      "detections": [
+        {
+          "distance": 100,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 476.181
+        },
+        {
+          "distance": 400,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 51.817
+        },
+        {
+          "distance": 900,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 14.157
+        },
+        {
+          "distance": 1600,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 5.639
+        },
+        {
+          "distance": 2400,
+          "tier": 3,
+          "tierName": "Classification",
+          "ratio": 2.947
+        },
+        {
+          "distance": 3200,
+          "tier": 2,
+          "tierName": "Bearing",
+          "ratio": 1.86
+        }
+      ]
+    },
+    {
+      "name": "Cruiser at cruise (what the decoy out-shouts)",
+      "sig": 65,
+      "hyd": 50,
+      "detections": [
+        {
+          "distance": 100,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 442.168
+        },
+        {
+          "distance": 400,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 48.116
+        },
+        {
+          "distance": 900,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 13.146
+        },
+        {
+          "distance": 1600,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 5.236
+        },
+        {
+          "distance": 2400,
+          "tier": 3,
+          "tierName": "Classification",
+          "ratio": 2.737
+        },
+        {
+          "distance": 3200,
+          "tier": 2,
+          "tierName": "Bearing",
+          "ratio": 1.727
+        }
+      ]
+    },
+    {
+      "name": "Mine (armed)",
+      "sig": 2,
+      "hyd": 50,
+      "detections": [
+        {
+          "distance": 100,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 13.605
+        },
+        {
+          "distance": 400,
+          "tier": 1,
+          "tierName": "Contact",
+          "ratio": 1.48
+        },
+        {
+          "distance": 900,
+          "tier": 0,
+          "tierName": "Silent",
+          "ratio": 0.404
+        },
+        {
+          "distance": 1600,
+          "tier": 0,
+          "tierName": "Silent",
+          "ratio": 0.161
+        },
+        {
+          "distance": 2400,
+          "tier": 0,
+          "tierName": "Silent",
+          "ratio": 0.084
+        },
+        {
+          "distance": 3200,
+          "tier": 0,
+          "tierName": "Silent",
+          "ratio": 0.053
+        }
+      ]
+    },
+    {
+      "name": "Mine (detonating)",
+      "sig": 90,
+      "hyd": 50,
+      "detections": [
+        {
+          "distance": 100,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 612.233
+        },
+        {
+          "distance": 400,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 66.622
+        },
+        {
+          "distance": 900,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 18.202
+        },
+        {
+          "distance": 1600,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 7.25
+        },
+        {
+          "distance": 2400,
+          "tier": 3,
+          "tierName": "Classification",
+          "ratio": 3.789
+        },
+        {
+          "distance": 3200,
+          "tier": 2,
+          "tierName": "Bearing",
+          "ratio": 2.392
+        }
+      ]
+    },
+    {
+      "name": "Depth charge (falling)",
+      "sig": 30,
+      "hyd": 50,
+      "detections": [
+        {
+          "distance": 100,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 204.078
+        },
+        {
+          "distance": 400,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 22.207
+        },
+        {
+          "distance": 900,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 6.067
+        },
+        {
+          "distance": 1600,
+          "tier": 2,
+          "tierName": "Bearing",
+          "ratio": 2.417
+        },
+        {
+          "distance": 2400,
+          "tier": 1,
+          "tierName": "Contact",
+          "ratio": 1.263
+        },
+        {
+          "distance": 3200,
+          "tier": 0,
+          "tierName": "Silent",
+          "ratio": 0.797
+        }
+      ]
+    },
+    {
+      "name": "Depth charge (detonating)",
+      "sig": 85,
+      "hyd": 50,
+      "detections": [
+        {
+          "distance": 100,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 578.22
+        },
+        {
+          "distance": 400,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 62.921
+        },
+        {
+          "distance": 900,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 17.191
+        },
+        {
+          "distance": 1600,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 6.847
+        },
+        {
+          "distance": 2400,
+          "tier": 3,
+          "tierName": "Classification",
+          "ratio": 3.579
+        },
+        {
+          "distance": 3200,
+          "tier": 2,
+          "tierName": "Bearing",
+          "ratio": 2.259
+        }
+      ]
+    }
+  ]
+}

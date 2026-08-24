@@ -48,9 +48,17 @@ export interface UnitStats {
   crystalCost?: number;
   buildTimeS: number;
   /**
-   * Weapon stats. TUNABLE — docs/units.md authors each unit's firing-burst SIG
-   * but not damage numbers; these exist so the combat loop can run. A damage of
-   * 0 means unarmed.
+   * Weapon stats.
+   *
+   * TUNABLE, but **within the time-to-kill bands of docs/systems-combat.md §9**,
+   * which are SPEC. The bands fix what a fight feels like — a Corvette falls to
+   * another in eight to ten seconds, an anchor does not fall to chip damage —
+   * and these numbers are solved from them rather than chosen. There is a test
+   * that holds every band, including under the Consortium's Klaxon bonus, which
+   * is the constraint that decided the Corvette's figure: at any more than 51,
+   * a loud Consortium Corvette kills a Cruiser inside the 25 s floor §9 sets.
+   *
+   * A damage of 0 means unarmed.
    */
   attackDamage: number;
   attackRangeM: number;
@@ -88,7 +96,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     hullLengthM: 60,
     cost: 50,
     buildTimeS: 12,
-    attackDamage: 8,
+    attackDamage: 18,
     attackRangeM: 400,
     attackCooldownS: 1,
     carriesTorpedoes: false,
@@ -106,7 +114,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     hullLengthM: 80,
     cost: 120,
     buildTimeS: 30,
-    attackDamage: 22,
+    attackDamage: 50,
     attackRangeM: 550,
     attackCooldownS: 1.2,
     carriesTorpedoes: true,
@@ -125,7 +133,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     hullLengthM: 130,
     cost: 420,
     buildTimeS: 90,
-    attackDamage: 60,
+    attackDamage: 150,
     attackRangeM: 900,
     attackCooldownS: 2.5,
     carriesTorpedoes: true,
@@ -145,7 +153,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     cost: 260,
     crystalCost: 80,
     buildTimeS: 45,
-    attackDamage: 35,
+    attackDamage: 80,
     attackRangeM: 650,
     attackCooldownS: 1.8,
     carriesTorpedoes: true,

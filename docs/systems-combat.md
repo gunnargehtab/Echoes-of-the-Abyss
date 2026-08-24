@@ -171,7 +171,16 @@ resolves**. Consequences, all deliberate:
 ## 6. Mines — the listening weapon
 
 A mine is the detection formula pointed backwards: it does not emit, it **waits to hear
-you**. Armed SIG 2 — the powered-down band, passively invisible in practice.
+you**. Armed SIG 2 — the powered-down band.
+
+That is quiet, not silent, and the difference is a mechanic rather than a leak. Against a
+baseline listener an armed mine is a directionless smudge from about 400 m and can be
+classified from about 290 m — both *outside* its own 150 m trigger. So a commander creeping
+forward and paying attention can find a field and route around it, while a committed push
+at speed walks into it, which is precisely the discrimination §2 asks the third pole of the
+triangle to make. Past roughly 500 m a mine is inaudible, so a field never announces itself
+at map scale, and active sonar keeps its job: it resolves the whole field to Tier 4 at
+900 m, far beyond anything passive listening reaches.
 
 ### The trigger
 
@@ -398,8 +407,8 @@ what exists or assumes what does not. The combat loop lives in
 | Mines (§6) | **Implemented** | `MINE_TRIGGER_LOUDNESS`, solved from the two SPEC behaviours; caps, arming noise and blast falloff in `sim/systems/ordnance.ts` |
 | Firing solutions (§7) | **Implemented** | `EchoLayer.firingSolution` gates launches at Tier 2 and hands over the same ghost the contact payload carried |
 | Vertical combat (§8) | **Implemented** | Ordnance inherits launcher PR and implodes; depth charges fall at `DEPTH`'s rates with a volumetric blast; the depth ribbon warns before a dive that would crush |
-| TTK bands (§9) | **Not met** | Current damage numbers predate this doc; retune within the bands |
-| Retreat dynamics (§10) | Emergent | Falls out of existing ascent/descent and Silent Running rules once seekers exist |
+| TTK bands (§9) | **Implemented** | Weapon damage solved from the bands; `test/ttkBands.test.ts` holds every one, including under the Klaxon |
+| Retreat dynamics (§10) | Emergent | Falls out of the existing ascent/descent and Silent Running rules, now that seekers exist to be starved |
 | Faction kits (§11) | **Implemented** | `FACTION_COMBAT` in `packages/shared/src/constants.ts`, read through `packages/shared/src/combat.ts` |
 
 ---

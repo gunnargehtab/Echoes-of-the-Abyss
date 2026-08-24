@@ -174,6 +174,17 @@ describe('torpedoes', () => {
   });
 
   it('kills a Corvette in one hit, per the §9 band', () => {
+    // The target runs silent, and that is load-bearing rather than incidental.
+    // Since the §9 retune a Corvette's gun does 50 against a torpedo's 40 hull,
+    // so any armed hull with a free cycle shoots one down inside the terminal
+    // 250 m — which is §5 working as intended, and makes an unmodified version
+    // of this test measure point defence rather than the damage band.
+    //
+    // A silent hull holds its fire, so the torpedo connects. It also starves
+    // the seeker, which does not matter here: the aim point is the hull's own
+    // position and it is not going anywhere, so the fuse does the work. That is
+    // the real shape of the trade — going quiet saves you from being *found*,
+    // not from a torpedo already aimed at where you are standing.
     const match = openWaterMatch();
     const launcher = spawnUnit(match.world, {
       kind: UnitKind.Corvette,
@@ -189,7 +200,8 @@ describe('torpedoes', () => {
       x: 4400,
       y: 6000,
     });
-    advance(match, 0.2);
+    match.setSilentRunning(1, prey, true);
+    advance(match, 0.5);
 
     launchTorpedo(match.world, launcher, Position.x[prey]!, Position.y[prey]!);
     // 1.4 km at 160 m/s is about nine seconds of run, well inside the twenty

@@ -1,0 +1,192 @@
+{
+  "name": "combat-torpedo-run",
+  "pf": 1,
+  "hyd": 50,
+  "runs": [
+    {
+      "name": "Torpedo vs Harvester ears (HYD 30)",
+      "sig": 60,
+      "hyd": 30,
+      "detections": [
+        {
+          "distance": 400,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 26.649
+        },
+        {
+          "distance": 800,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 8.791
+        },
+        {
+          "distance": 1600,
+          "tier": 3,
+          "tierName": "Classification",
+          "ratio": 2.9
+        },
+        {
+          "distance": 2400,
+          "tier": 2,
+          "tierName": "Bearing",
+          "ratio": 1.516
+        },
+        {
+          "distance": 3200,
+          "tier": 0,
+          "tierName": "Silent",
+          "ratio": 0.957
+        }
+      ]
+    },
+    {
+      "name": "Torpedo vs Corvette ears (HYD 50)",
+      "sig": 60,
+      "hyd": 50,
+      "detections": [
+        {
+          "distance": 400,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 44.415
+        },
+        {
+          "distance": 800,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 14.651
+        },
+        {
+          "distance": 1600,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 4.833
+        },
+        {
+          "distance": 2400,
+          "tier": 3,
+          "tierName": "Classification",
+          "ratio": 2.526
+        },
+        {
+          "distance": 3200,
+          "tier": 2,
+          "tierName": "Bearing",
+          "ratio": 1.594
+        }
+      ]
+    },
+    {
+      "name": "Torpedo vs Cruiser ears (HYD 65)",
+      "sig": 60,
+      "hyd": 65,
+      "detections": [
+        {
+          "distance": 400,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 57.739
+        },
+        {
+          "distance": 800,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 19.047
+        },
+        {
+          "distance": 1600,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 6.283
+        },
+        {
+          "distance": 2400,
+          "tier": 3,
+          "tierName": "Classification",
+          "ratio": 3.284
+        },
+        {
+          "distance": 3200,
+          "tier": 2,
+          "tierName": "Bearing",
+          "ratio": 2.073
+        }
+      ]
+    },
+    {
+      "name": "Torpedo vs Light Scout ears (HYD 70)",
+      "sig": 60,
+      "hyd": 70,
+      "detections": [
+        {
+          "distance": 400,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 62.181
+        },
+        {
+          "distance": 800,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 20.512
+        },
+        {
+          "distance": 1600,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 6.766
+        },
+        {
+          "distance": 2400,
+          "tier": 3,
+          "tierName": "Classification",
+          "ratio": 3.537
+        },
+        {
+          "distance": 3200,
+          "tier": 2,
+          "tierName": "Bearing",
+          "ratio": 2.232
+        }
+      ]
+    },
+    {
+      "name": "Torpedo vs Abyssal Submersible ears (HYD 85)",
+      "sig": 60,
+      "hyd": 85,
+      "detections": [
+        {
+          "distance": 400,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 75.505
+        },
+        {
+          "distance": 800,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 24.908
+        },
+        {
+          "distance": 1600,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 8.216
+        },
+        {
+          "distance": 2400,
+          "tier": 4,
+          "tierName": "Track",
+          "ratio": 4.295
+        },
+        {
+          "distance": 3200,
+          "tier": 3,
+          "tierName": "Classification",
+          "ratio": 2.71
+        }
+      ]
+    }
+  ]
+}

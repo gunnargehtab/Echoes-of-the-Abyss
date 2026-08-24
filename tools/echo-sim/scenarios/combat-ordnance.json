@@ -1,0 +1,16 @@
+{
+  "name": "combat-ordnance",
+  "propagationFactor": 1.0,
+  "hyd": 50,
+  "distances": [100, 400, 900, 1600, 2400, 3200],
+  "actors": [
+    { "name": "Torpedo (running)", "sig": 60 },
+    { "name": "Torpedo (running, heard by Directorate ears)", "sig": 60, "hyd": 85 },
+    { "name": "Noisemaker decoy", "sig": 70 },
+    { "name": "Cruiser at cruise (what the decoy out-shouts)", "sig": 65 },
+    { "name": "Mine (armed)", "sig": 2 },
+    { "name": "Mine (detonating)", "sig": 90 },
+    { "name": "Depth charge (falling)", "sig": 30 },
+    { "name": "Depth charge (detonating)", "sig": 85 }
+  ]
+}
