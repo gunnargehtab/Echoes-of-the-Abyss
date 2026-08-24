@@ -102,6 +102,23 @@ interface BestContact {
   /** Position of the listener that resolved it, for bearing blur. */
   listenerX: number;
   listenerY: number;
+  /**
+   * The position this pass actually *reported* for the emitter — the ghost at
+   * Tier 2, the listener's own position at Tier 1, the truth at Tier 3+.
+   *
+   * Stored rather than recomputed because a firing solution has to aim at the
+   * point the player was shown. `firingSolution` used to re-derive the blur
+   * from `Position` at the moment of launch, which is a different point: the
+   * target has moved since the pass, so the ghost moves with it. The player
+   * clicks a marker and the torpedo is sent somewhere else — nearby, but not
+   * where they aimed, and drifting further the faster the target is going.
+   *
+   * §7 makes shooting on a Tier-2 bearing a real gamble: the ghost lies by up
+   * to 15% of range and you take the shot anyway. It has to be *that* lie,
+   * though, not a second one the player never saw.
+   */
+  reportedX: number;
+  reportedY: number;
 }
 
 export interface EchoResult {
@@ -252,41 +269,35 @@ export class EchoLayer {
    *
    * This is the single place docs/systems-combat.md §7 is enforced, and the
    * position it returns is **exactly the position that slot was last told** —
-   * the true position at Tier 3 and above, and at Tier 2 the same blurred ghost
-   * the contact payload carried, from the same seed and the same listener.
+   * the true position at Tier 3 and above, and at Tier 2 the blurred ghost the
+   * contact payload carried.
    *
-   * Recomputing the blur here rather than storing it is what guarantees they
-   * agree: a launch that aimed anywhere other than where the player was told
-   * the target was would either be the server quietly correcting them, or the
-   * server quietly lying twice. `blurBearing` is deterministic on those three
-   * inputs, so one call reproduces the other exactly.
+   * It returns the stored one rather than recomputing it, which is a
+   * correction. The first version re-derived the blur here, reasoning that
+   * `blurBearing` is deterministic on its inputs so a second call must
+   * reproduce the first. It is, and it does — but one of those inputs is the
+   * target's position, and that is read live. Between Echo passes the target
+   * moves and the ghost moves with it, so a player clicked a marker and the
+   * torpedo was aimed somewhere else — measured at 4.5 m for a Cruiser launched
+   * on a tenth of a second after the pass, and rising to roughly 24 m for a
+   * Light Scout at full speed across a whole 200 ms interval.
+   *
+   * §7 asks the player to accept that a Tier-2 ghost lies by up to 15% of
+   * range. It does not ask them to accept a second lie they were never shown.
    *
    * Reflects the last completed pass, which is correct: a player acts on what
    * they were last told, not on what is true this instant.
    */
   firingSolution(
-    world: SimWorld,
     slot: number,
     eid: number
   ): { tier: ResolutionTier; x: number; y: number } | undefined {
     const resolved = this.best.get(slot)?.get(eid);
     if (resolved === undefined) return undefined;
 
-    const trueX = Position.x[eid]!;
-    const trueY = Position.y[eid]!;
-    if (resolved.tier !== ResolutionTier.Bearing) {
-      return { tier: resolved.tier, x: trueX, y: trueY };
-    }
-    // Seeded from the match-local id, exactly as the contact payload is — see
-    // the note there about process-global entity ids.
-    const blurred = blurBearing(
-      trueX,
-      trueY,
-      resolved.listenerX,
-      resolved.listenerY,
-      localIdOf(world, eid) ?? eid
-    );
-    return { tier: resolved.tier, x: blurred.x, y: blurred.y };
+    // Exactly the point the player was shown, rather than a fresh blur of
+    // wherever the target has got to since — see `BestContact.reportedX`.
+    return { tier: resolved.tier, x: resolved.reportedX, y: resolved.reportedY };
   }
 
   /**
@@ -341,7 +352,16 @@ export class EchoLayer {
     // Multiple listeners may hear the same emitter; the player learns the most
     // any single one of them resolved.
     if (existing === undefined) {
-      slotBest.set(eid, { tier, listenerX, listenerY });
+      // Reported position is filled in when the contact payload is built,
+      // which is the only place that knows what each tier discloses. Seeded
+      // with the truth so a read before then is never a wild value.
+      slotBest.set(eid, {
+        tier,
+        listenerX,
+        listenerY,
+        reportedX: Position.x[eid]!,
+        reportedY: Position.y[eid]!,
+      });
     } else if (tier > existing.tier) {
       existing.tier = tier;
       existing.listenerX = listenerX;
@@ -745,6 +765,9 @@ export class EchoLayer {
           contact.x = blurred.x;
           contact.y = blurred.y;
         }
+        // What this pass disclosed, for `firingSolution` to aim at.
+        resolved.reportedX = contact.x;
+        resolved.reportedY = contact.y;
 
         if (resolved.tier >= ResolutionTier.Classification) {
           if (hasComponent(world, Unit, eid)) {

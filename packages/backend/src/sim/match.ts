@@ -600,7 +600,7 @@ export class Match {
     // At Tier 2 the aim point is the blurred ghost, which lies by up to 15% of
     // range. The torpedo swims at the lie and the seeker has the run to find
     // the truth. At Tier 3 and above the solution is exact.
-    const solution = this.echo.firingSolution(this.world, slot, target);
+    const solution = this.echo.firingSolution(slot, target);
     if (solution === undefined || solution.tier < ResolutionTier.Bearing) return 0;
 
     return launchTorpedo(this.world, eid, solution.x, solution.y);

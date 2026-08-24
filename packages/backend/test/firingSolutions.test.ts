@@ -208,6 +208,69 @@ describe('firing solutions', () => {
     );
   });
 
+  it('aims at the ghost the player was shown, even when the target is moving', () => {
+    // The same claim as the test above, with the one variable that made the
+    // original implementation wrong: motion.
+    //
+    // `firingSolution` used to re-derive the blur at launch instead of storing
+    // what the pass reported, on the reasoning that `blurBearing` is
+    // deterministic so a second call must reproduce the first. It is — but one
+    // of its inputs is the target's live position. A stationary Cruiser hides
+    // that completely, which is why the stationary test passed against the bug.
+    // With the target under way the ghost drifts with it between passes, and
+    // the torpedo goes somewhere the player never clicked.
+    const match = openWaterMatch(23);
+    const launcher = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 3000,
+      y: 8000,
+    });
+    const prey = spawnUnit(match.world, {
+      kind: UnitKind.Cruiser,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: 3000 + rangeForTier(ResolutionTier.Bearing),
+      y: 8000,
+    });
+    // Across the line of bearing, so movement moves the ghost rather than just
+    // changing the range to it.
+    match.orderMove(1, prey, Position.x[prey]!, 2000);
+
+    let handle = 0;
+    let ghostX = 0;
+    let ghostY = 0;
+    for (let i = 0; i < 600; i++) {
+      const snapshots = match.update(STEP_MS);
+      const view = snapshots?.get(0);
+      if (view === undefined) continue;
+      const contact = view.contacts.find((c) => c.tier === ResolutionTier.Bearing);
+      if (contact === undefined) continue;
+      handle = contact.id;
+      ghostX = contact.x;
+      ghostY = contact.y;
+      break;
+    }
+    assert.notEqual(handle, 0, 'the launcher should hold a bearing on the moving Cruiser');
+
+    // Launch a few ticks *after* the pass that produced the marker, which is
+    // the ordinary case: a player sees a contact and reacts to it. Short of a
+    // full Echo interval, so the marker on their screen is still this one.
+    const before = Position.y[prey]!;
+    advance(match, 0.1);
+    assert.notEqual(Position.y[prey], before, 'the target should actually be under way');
+
+    const torpedo = match.orderLaunchTorpedo(0, launcher, handle);
+    assert.notEqual(torpedo, 0, 'a bearing is enough to shoot on');
+    assert.ok(
+      Math.hypot(Ordnance.aimX[torpedo]! - ghostX, Ordnance.aimY[torpedo]! - ghostY) < 1,
+      `the torpedo must swim at the ghost the player clicked, not a re-blur of where ` +
+        `the target has since got to (off by ` +
+        `${Math.hypot(Ordnance.aimX[torpedo]! - ghostX, Ordnance.aimY[torpedo]! - ghostY).toFixed(1)} m)`
+    );
+  });
+
   it('gives an exact solution once the target classifies', () => {
     const match = openWaterMatch();
     const launcher = spawnUnit(match.world, {
