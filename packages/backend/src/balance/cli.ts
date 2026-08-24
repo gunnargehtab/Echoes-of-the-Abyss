@@ -233,7 +233,7 @@ const USAGE = `Balance harness — headless matches, telemetry, and the guard-ra
   --map <id>           Map archetype. Default is the room's default.
   --no-fauna           Empty the Drift. Off by default: a normal match has it.
   --set <Path=value>   Patch a TUNABLE constant before the batch, e.g.
-                       --set HARVEST_THROTTLE.Overburden.yieldMultiplier=1.0
+                       --set HARVEST_THROTTLE.Overburden.cargoMultiplier=1.0
                        Roots: ${Object.keys(TUNABLE_ROOTS).join(' ')}
   --title <text>       Heading for the report.
   --out <file.md>      Write Markdown here, plus a .json sibling. Default

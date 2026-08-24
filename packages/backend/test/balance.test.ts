@@ -238,29 +238,30 @@ describe('tunable overrides', () => {
     // conclusion would be "this constant does not matter" — the most
     // expensive way for this tool to be wrong.
     //
-    // The lever is a yield of *zero*, deliberately. An earlier version tripled
-    // the Standard yield and got byte-identical income, which looked like a
-    // broken override and was not: the multiplier sets how fast a hold fills,
-    // cargo is capped at fifty a trip, and a round trip is dominated by
-    // travel. Tripling the fill rate saves about three seconds out of forty
-    // and does not buy a whole extra delivery inside a short match. That is a
-    // real property of the economy — and the reason "is Overburden a trap?"
-    // is a question worth pointing this harness at.
+    // The lever is a cargo multiplier of *zero*, deliberately. An earlier
+    // version tripled the Standard multiplier and got byte-identical income,
+    // which looked like a broken override and was not: back then the
+    // multiplier set how fast a hold filled, cargo was capped at fifty a trip,
+    // and a round trip is dominated by travel — so tripling it saved about
+    // three seconds out of forty and never bought a whole extra delivery. That
+    // reading was the bug behind "is Overburden a trap?", and the multiplier
+    // now scales the load itself, so a fractional patch would move income
+    // here. Zero stays the assertion because it is the unambiguous one.
     // Every working throttle, not just Standard: a commander drops to Trickle
     // the moment somebody holds a bearing on it, so zeroing one setting only
     // moves the mining to another and the income keeps arriving.
     const working = [HarvestThrottle.Trickle, HarvestThrottle.Standard, HarvestThrottle.Overburden];
-    const before = working.map((t) => HARVEST_THROTTLE[t].yieldMultiplier);
+    const before = working.map((t) => HARVEST_THROTTLE[t].cargoMultiplier);
     const baseline = runMatch({ seats: DUEL, seed: 62, maxMinutes: 3, fauna: false });
     try {
-      for (const throttle of working) HARVEST_THROTTLE[throttle].yieldMultiplier = 0;
+      for (const throttle of working) HARVEST_THROTTLE[throttle].cargoMultiplier = 0;
       const variant = runMatch({ seats: DUEL, seed: 62, maxMinutes: 3, fauna: false });
       const earned = (r: typeof baseline): number => r.players[1]!.nodulesEarned;
 
       assert.ok(earned(baseline) > 0, 'the baseline economy works');
-      assert.equal(earned(variant), 0, 'a zero yield must reach the simulation');
+      assert.equal(earned(variant), 0, 'a zero cargo multiplier must reach the simulation');
     } finally {
-      working.forEach((t, i) => (HARVEST_THROTTLE[t].yieldMultiplier = before[i]!));
+      working.forEach((t, i) => (HARVEST_THROTTLE[t].cargoMultiplier = before[i]!));
     }
   });
 });

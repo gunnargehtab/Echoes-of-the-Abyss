@@ -269,6 +269,76 @@ describe('economy', () => {
     const quiet = Acoustic.sig[harvester.id]!;
     assert.ok(loud > quiet, `Overburden (${loud}) must be louder than Trickle (${quiet})`);
   });
+
+  /**
+   * The throttle has to be a decision, and a decision needs a trade.
+   *
+   * It did not have one. The multiplier used to scale the fill *rate*, which
+   * only decides how long a harvester stands on the node — five seconds
+   * against Overburden's three and a half, out of a forty-five second round
+   * trip dominated by travel. Measured over six minutes, Overburden and
+   * Standard banked the identical number of nodules while Overburden emitted
+   * 23 more SIG: not a marginal trap but strict domination, a 40% premium that
+   * bought nothing at all.
+   *
+   * So this test is the property that was missing rather than three numbers:
+   * walk the throttles in order of loudness and require income to rise with
+   * noise every step. Any future retuning that reintroduces a setting which
+   * earns no more while emitting more fails here.
+   *
+   * Three real matches, three simulated minutes each, which is what it costs
+   * to measure a round-trip economy end to end. The sim is deterministic with
+   * fauna off and no AI seats, so the numbers are exact rather than sampled.
+   */
+  it('pays for noise: a louder throttle earns strictly more', () => {
+    const MINUTES = 3;
+
+    function income(throttle: HarvestThrottle): { earned: number; meanSig: number } {
+      const match = twoPlayerMatch();
+      // Long enough for the first snapshot to name the starting harvester.
+      const first = advance(match, 1)!;
+      const harvester = first.get(0)!.units.find((u) => u.kind === UnitKind.Harvester)!;
+      match.setThrottle(0, harvester.id, throttle);
+
+      let sigTotal = 0;
+      let samples = 0;
+      let latest = first;
+      const steps = Math.ceil((MINUTES * 60 * 1000) / STEP_MS);
+      for (let i = 0; i < steps; i++) {
+        const snapshots = match.update(STEP_MS);
+        if (snapshots !== null) latest = snapshots;
+        sigTotal += Acoustic.sig[harvester.id]!;
+        samples++;
+      }
+      return {
+        earned: latest.get(0)!.nodules - ECONOMY.STARTING_NODULES,
+        meanSig: sigTotal / samples,
+      };
+    }
+
+    // Ordered by what the throttle costs, quietest first (docs/economy.md §3).
+    const ladder = [HarvestThrottle.Trickle, HarvestThrottle.Standard, HarvestThrottle.Overburden];
+    const measured = ladder.map((throttle) => ({ throttle, ...income(throttle) }));
+
+    for (let i = 1; i < measured.length; i++) {
+      const quieter = measured[i - 1]!;
+      const louder = measured[i]!;
+      const name = (m: (typeof measured)[number]): string =>
+        `${HarvestThrottle[m.throttle]} (${m.earned.toFixed(0)} nodules, mean SIG ${m.meanSig.toFixed(1)})`;
+
+      assert.ok(
+        HARVEST_THROTTLE[louder.throttle].sig > HARVEST_THROTTLE[quieter.throttle].sig,
+        `the ladder must run quiet to loud: ${name(quieter)} then ${name(louder)}`
+      );
+      // Materially more, not a rounding win: a premium smaller than the
+      // measurement's own granularity — one delivery — is not a decision
+      // surface either.
+      assert.ok(
+        louder.earned > quieter.earned * 1.1,
+        `${name(louder)} costs more noise than ${name(quieter)} and must earn materially more`
+      );
+    }
+  });
 });
 
 describe('Resonance Crystal', () => {
