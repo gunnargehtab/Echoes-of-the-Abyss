@@ -18,12 +18,42 @@ Maps are stacks, not planes. Every map is built from three vertical bands:
 
 **Value increases with depth. So does the cost of being there.** The richest resource on the map — Resonance Crystal, the tech gate for every faction — is almost entirely Abyssal. Everyone must eventually descend, and each faction has a different, expensive answer to how.
 
+Maps are stacks, not planes — and the stack is not the same height everywhere.
+
+The three bands above are the **ruleset**: they say what 600 m means, and they mean the same thing on every map. How much water actually stands over a given patch of ground is **map data**. A trench floor may lie at 2,800 m while the plateau beside it stops at 380 m, and the band boundaries do not move to accommodate either.
+
+Every point on a map therefore carries two numbers, not one:
+
+| | What it is | The common case |
+| --- | --- | --- |
+| **Floor** | How deep the water goes before it becomes ground | The seabed |
+| **Ceiling** | How shallow the water goes before it becomes ground | 0 m — open to the surface |
+
+Between them is the water a hull may occupy. A hull at depth *D* fits at a point when **ceiling ≤ D ≤ floor**, and nowhere else.
+
+Most ground has a ceiling of 0: open water from the surface down to the seabed. The other two cases are what the pair buys:
+
+- **A ceiling deeper than its floor** — no water at all. Solid rock, a wall, the sheer side of a trench. Nothing fits at any depth.
+- **A ceiling deeper than 0, with the floor deeper still** — a roofed passage. A tunnel under a ridge, a cavern mouth, an overhang. Water you can only be in by being *under* something, which means water nobody reaches by accident.
+
+That last case is why this is a pair and not a single seabed depth. One number can describe a trench and a plateau, but it draws a tunnel as an open ditch — and [maps.md](maps.md) asks for caverns, for tunnels beneath the main lanes, and for vertical chokepoints. A map that cannot say "there is rock above this water" cannot say any of them.
+
 ## 2. Pressure Rating (PR)
 
 Every unit has a **Pressure Rating**. A unit operating below its PR takes **unhealable crush attrition** — damage that ignores repair and regeneration. Depth is not a hazard you route around; it is a resource you rent, on a clock.
 
 - **Descent is fast and deafening.** Diving is quick, but it's loud — see [systems-echo.md](systems-echo.md) for how SIG scales with movement and construction.
 - **Ascent is slow and silent.** Retreating to shallower, safer water costs time, not noise.
+
+### Ground you do not fit through
+
+A hull whose depth is deeper than the floor beneath it does not fit there, and movement will not take it there: an order across a plateau stops at the plateau's edge rather than driving the hull into rock.
+
+It does not stop for long. **Terrain may raise a hull. It may never lower one.** A hull standing in water shallower than its own depth rises, at the ordinary ascent rate, until it fits — and then carries on. The order is not cancelled and the hull's own depth order is not overwritten; the seabed simply holds it no deeper than the ground allows, and releases it when the ground falls away again.
+
+The asymmetry is the one stated just above, applied to terrain. Ascent is slow and silent, so terrain lifting a hull spends the player's time and nothing else. Descent is fast and deafening, and below a hull's Pressure Rating it is fatal — so terrain that could push a hull *down* would be spending a commitment the player never made, and could feed a hull into crush attrition it never ordered. Nothing in this game should be able to do that on your behalf.
+
+The consequence is that a roofed passage is enterable only by a deliberate dive. A tunnel is not a shortcut you fall into; it is a route you have to read the map to find, and pay the loud descent to use. That is the right price for a path nobody can watch you take.
 
 ## 3. Faction Relationships to Depth
 
@@ -63,9 +93,12 @@ what exists or assumes what does not. Constants live in `DEPTH` in
 | Ascent is slow and silent (§2) | **Implemented** | 15 m/s, one third of the descent rate, and no SIG contribution at all. Compatible with Silent Running |
 | Sounding Spire rents depth (§3, §4) | **Implemented** | `STRUCTURE_AURAS.SOUNDING_SPIRE`; the grant is real while the aura holds and lost on leaving it |
 | Directorate shallow-water penalty (§3) | Not modelled | −20% speed, −15% HP above 400 m; needs a per-faction modifier pass |
-| Pelagia Deepbloom terraforming (§3) | Not modelled | Requires terrain that can change band, which the biome grid does not yet support |
+| Pelagia Deepbloom terraforming (§3) | Not modelled | Requires terrain that can change band. The per-region floor is the substrate for it; what is missing is the ability to write to it mid-match |
 | Commander abilities, e.g. Seeding (§4) | Not modelled | No commander-ability layer exists yet |
-| Map floor | Placeholder | `DEPTH.MAX_M` is a flat 3,000 m for every map; it belongs to map data once authored maps land |
+| Map floor (§1) | Not modelled | `DEPTH.MAX_M` is still a flat 3,000 m for every map. Becomes a per-region authored value, with the constant demoted to a sanity ceiling on what a map may author (issue #150) |
+| Map ceiling (§1) | Not modelled | Per-region, 0 on open water; non-zero is a roofed passage. Nothing in the terrain grid carries it yet (issue #150) |
+| Ground you do not fit through (§2) | Not modelled | `movementSystem` reads no terrain at all today; every hull passes through everything (issue #150) |
+| Terrain raises, never lowers (§2) | Not modelled | The rule this document commits to before the code exists, so the code has something to be wrong against (issue #150) |
 
 The descent and ascent *rates* are TUNABLE — this document pins the asymmetry, not the
 numbers. The asymmetry itself is not tunable: it is what §5 above is about.
