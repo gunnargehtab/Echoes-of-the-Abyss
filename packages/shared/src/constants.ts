@@ -229,8 +229,6 @@ export const ORDNANCE = {
     SIG_LAYING: 55,
     /** Seconds a mine takes to arm, and that the laying hull broadcasts for. §6. */
     ARMING_S: 10,
-    /** The mine's listening sensitivity. §6. */
-    HYD: 45,
     /** It hears out to here, and no further. §6. */
     TRIGGER_RADIUS_M: 150,
     /** Damage at the centre of the blast. §6. */

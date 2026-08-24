@@ -170,13 +170,23 @@ you**. Armed SIG 2 — the powered-down band, passively invisible in practice.
 
 ### The trigger
 
-A mine has **HYD 45** and detonates when it resolves a hostile emitter within **150 m**.
+A mine detonates when a hostile emitter within **150 m** is louder, at the mine, than a
+fixed **trigger loudness**.
 The trigger threshold is *derived*, not chosen — solved from two SPEC behaviours, in the
 same way `BASE_THRESHOLD` is solved from the active-sonar self-reveal:
 
 - A mine must **never** trigger on a Silent Running hull (SIG ≤ 8) at any range in open
   water. Silence walks through minefields. That is the point of both systems.
 - A mine **must** trigger on a cruising Corvette (SIG 28) inside 150 m in open water.
+
+A **loudness bar and not a hydrophone rating**, and the distinction is load-bearing. An
+earlier draft of this section gave the mine HYD 45 and had it "resolve" contacts like any
+listener. That would have made the trigger *threshold-scaled*, and therefore movable:
+anything that modifies a listener's HYD — a Cantor dome overhead, a Resonance Storm — would
+have changed how sensitive somebody's minefield was, at a distance, invisibly. A minefield
+whose trigger drifts because a support structure went up two kilometres away is exactly the
+confusion this game trades away for dread. The bar is fixed, and only the water between you
+and it can change what reaches it.
 
 Biome PF applies — it is the same formula. A mine in a Thermal Vein (PF 0.45) is half
 deaf, and a minefield in a trench (PF 1.6) hears you coming from outside its own lethal

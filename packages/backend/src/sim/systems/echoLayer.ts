@@ -530,6 +530,21 @@ export class EchoLayer {
           const listenerSlot = Owner.slot[listener]!;
           if (listenerSlot === emitterSlot) continue;
 
+          // Deaf things do not listen.
+          //
+          // HYD 0 means "no ears", not "poor ears" — the per-HYD tables above
+          // clamp to 1 only to keep their lookups in range, and that clamp used
+          // to make ordnance a listener. Ordnance carries Acoustic so the Echo
+          // pass can hear *it*; `spawnOrdnance` sets its HYD to zero so it
+          // cannot hear back. Without this line a torpedo resolved contacts out
+          // to ~235 m and reported them to the player who fired it — measured —
+          // and a twelve-mine field became a permanent passive sonar picket.
+          // Neither is authorised: docs/systems-combat.md §6 has a mine wait to
+          // hear you, not tell anyone about it.
+          //
+          // It is also a strict prune, so it costs the pair loop nothing.
+          if (Acoustic.hyd[listener]! <= 0) continue;
+
           const lx = Position.x[listener]!;
           const ly = Position.y[listener]!;
           const dx = ex - lx;

@@ -54,11 +54,11 @@ export const ORDNANCE_STATS: Record<OrdnanceKind, OrdnanceStats> = {
   [OrdnanceKind.Mine]: {
     kind: OrdnanceKind.Mine,
     name: 'Mine',
-    sig: 2,
+    sig: ORDNANCE.MINE.SIG_ARMED,
     maxHp: 0,
     speed: 0,
-    lifetimeS: 300,
-    damage: 300,
+    lifetimeS: ORDNANCE.MINE.LIFETIME_S,
+    damage: ORDNANCE.MINE.DAMAGE,
     radiusM: 6,
   },
   [OrdnanceKind.Noisemaker]: {

@@ -371,6 +371,13 @@ export function spawnOrdnance(world: SimWorld, opts: SpawnOrdnanceOptions): numb
   Ordnance.pressureRating[eid] = opts.pressureRating;
   Ordnance.seekerCooldownS[eid] = 0;
   Ordnance.wakeCooldownS[eid] = 0;
+  // Every field, every time — bitecs recycles entity ids, so anything left
+  // unwritten here is inherited from whatever last held this id. These two
+  // were missed when mines were added, and a torpedo born on a detonated
+  // mine's id came into the world already ringing: it emitted the mine's
+  // detonation SIG, never ran, and expired a fraction of a second later.
+  Ordnance.armingS[eid] = 0;
+  Ordnance.detonatingS[eid] = 0;
 
   return eid;
 }
