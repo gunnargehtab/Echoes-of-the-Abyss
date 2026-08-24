@@ -32,6 +32,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | **[hazards.md](hazards.md)** | Eight hazards with faction interactions |
 | **[maps.md](maps.md)** | Six map archetypes |
 | **[economy.md](economy.md)** | Four resources, the noise curve, and four faction economies |
+| **[systems-combat.md](systems-combat.md)** | The weapon triangle: guns, torpedoes, mines, firing solutions, TTK bands |
 | **[units.md](units.md)** | Prototype roster, SIG/PR stats, playtest plan |
 
 ## Presentation

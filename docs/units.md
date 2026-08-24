@@ -209,8 +209,9 @@ Design notes
   coordinate would be a single acoustic position, and the Echo Layer would report it as one.
 - Combat hulls carry prototype weapon stats in `packages/shared/src/units.ts` (damage,
   range, cooldown) so the scaffold's combat loop can run; the doc-authored number is the
-  firing-burst SIG, which is the design-relevant one. Damage figures are placeholders
-  until a combat design doc exists.
+  firing-burst SIG, which is the design-relevant one. Damage figures are TUNABLE within
+  the time-to-kill bands of [systems-combat.md](systems-combat.md) §9, which is the combat
+  spec of record; the current numbers predate it and are due a retune.
 
 ---
 
