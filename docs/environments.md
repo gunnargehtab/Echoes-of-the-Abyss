@@ -178,7 +178,9 @@ Sacred territory of the Hadron Knights.
 ### Terrain
 
 - Clear silhouettes
-- Strong contrast between passable vs. blocked areas
+- Strong contrast between passable and blocked ground — and blocked is relative to the
+  viewer's own depth, not absolute. A ridge that stops a deep-running hull is open water
+  to a shallow one, so the map has to show which it is for the units currently selected.
 - Faction-colored highlights for bases
 
 ### Hazards
@@ -192,7 +194,11 @@ Sacred territory of the Hadron Knights.
 
 ### Pathing
 
-- Use kelp gaps, rock corridors, crystal formations
+- Use kelp gaps, rock corridors and crystal formations. These are readability aids, not
+  barriers: kelp never blocks a hull, it slows and hides one ([hazards.md](hazards.md) §4).
+  What blocks is ground.
+- Where a route passes under a ridge rather than around it, the map must make the roof
+  legible — a passage nobody can see is a passage nobody takes.
 - Avoid overly noisy backgrounds
 
 ## Environmental Storytelling

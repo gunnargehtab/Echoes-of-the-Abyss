@@ -9,7 +9,11 @@ Readable, tactical, atmospheric — built for the underwater world.
 - Hazard telegraphing — players must see danger before entering
 - Multiple attack routes — no single dominant path
 - Factions interact differently with terrain and hazards
-- Verticality through depth — trenches, plateaus, caverns
+- **Verticality through depth.** Every region carries a seabed depth, and may carry a roof.
+  Trenches are deep floors, plateaus are shallow ones, and caverns and tunnels are regions
+  with a ceiling — water under rock, reachable only from below. A route over a ridge and a
+  route under it are different routes with different costs, and only one of them can be
+  seen from above. See [systems-depth.md](systems-depth.md) §1.
 
 ## Map Type 1 — The Ventfront Divide
 
@@ -226,11 +230,19 @@ Three archetypes are implemented, in `packages/backend/src/sim/maps/`. They were
 | Map Type 5 — Sunken Metropolis | Not yet | |
 | Map Type 6 — The Fourfold Frontier | Not yet | |
 
+**Floors and ceilings are specified here and not yet built.** The three maps above are flat: every region sits over the same 3,000 m of water, because that is all the terrain grid can currently say. Authoring them is issue #150, and [systems-depth.md](systems-depth.md) §6 tracks what the simulation actually enforces. Until then, read the verticality in the archetype descriptions below as the design the maps are being written toward rather than as ground you can currently sail into.
+
 ### How a map is written
 
 Authored data, never generated. `Terrain.demo()`'s own comment makes the case and it still holds: "an RTS simulation must be reproducible, and a seeded generator is one refactor away from not being." A map is a literal — regions, spawns, resource fields, hazard sites — with no procedural step anywhere in it.
 
 Regions are rectangles, painted in order so a later one overwrites an earlier one. Every layout above is corridors, plateaus, bands and quadrants, all of which are rectangles or unions of them; a richer shape vocabulary would be more expressive than anything this document asks for.
+
+Regions may also set a **floor** and a **ceiling**. Both are optional: a region with neither is open water over the map's base seabed, which is what most of a map is. A floor is how deep the water goes there; a ceiling is rock above the water, 0 on open water and non-zero only for a roofed passage.
+
+Because regions paint in order, terrain is authored the way it reads — the ground, then what was cut into it. The same property that lets a trench cut *through* a vent line in two lines of data lets a tunnel run *under* a ridge in two: paint the plateau, then paint a narrower region across it with a ceiling and a deeper floor. Read in order, that is a shelf with a hole bored through it.
+
+The ruleset does not care how deep a map goes. The depth bands mean the same thing on every map ([systems-depth.md](systems-depth.md) §1), and the maximum-floor constant is only a sanity ceiling on what a map may author, so a mistyped floor of 300,000 m fails a map test rather than producing a match.
 
 A map's **spawn list is its player count**, which is why the Abyssal Rift Corridor has two and the others four. The old spawn logic computed corners from the map's width and height, which quietly assumed every map is a square — false the moment a corridor map exists.
 
