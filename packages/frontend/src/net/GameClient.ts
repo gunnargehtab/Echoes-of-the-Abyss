@@ -336,6 +336,37 @@ export class GameClient {
     this.room?.send('ping', { unitId });
   }
 
+  /**
+   * Launch a torpedo at a heard contact — docs/systems-combat.md §5, §7.
+   *
+   * The same opaque handle an attack order uses, and for the same reason: it is
+   * the proof this player resolved this emitter. The server re-checks the
+   * resolution tier as well as the provenance, so a handle held on a Tier-1
+   * smudge buys nothing.
+   */
+  launchTorpedo(unitIds: number[], contactId: number): void {
+    if (unitIds.length === 0) return;
+    this.room?.send('torpedo', { unitIds, contactId });
+  }
+
+  /** Drop a noisemaker decoy. Aimed at nothing; heard by everything. */
+  deployNoisemaker(unitIds: number[]): void {
+    if (unitIds.length === 0) return;
+    this.room?.send('noisemaker', { unitIds });
+  }
+
+  /** Lay a mine at the hull's own position. Loud to lay, silent once laid. */
+  layMine(unitIds: number[]): void {
+    if (unitIds.length === 0) return;
+    this.room?.send('mine', { unitIds });
+  }
+
+  /** Drop a depth charge set to detonate at `depth`. Bombing water, not a contact. */
+  dropDepthCharge(unitIds: number[], depth: number): void {
+    if (unitIds.length === 0) return;
+    this.room?.send('depthcharge', { unitIds, depth });
+  }
+
   /** Attack a heard contact, by its opaque per-observer handle. */
   attackContact(unitIds: number[], contactId: number, queued = false): void {
     if (unitIds.length === 0) return;

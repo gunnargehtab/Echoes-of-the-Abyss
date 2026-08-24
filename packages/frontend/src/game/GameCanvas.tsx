@@ -108,6 +108,10 @@ export function GameCanvas() {
         onPing: (unitId) => client?.activeSonar(unitId),
         onAttackOrder: (unitIds, contactId, queued) =>
           client?.attackContact(unitIds, contactId, queued),
+        onLaunchTorpedo: (unitIds, contactId) => client?.launchTorpedo(unitIds, contactId),
+        onDeployNoisemaker: (unitIds) => client?.deployNoisemaker(unitIds),
+        onLayMine: (unitIds) => client?.layMine(unitIds),
+        onDepthCharge: (unitIds, depth) => client?.dropDepthCharge(unitIds, depth),
         onHarvestOrder: (unitIds, nodeId, queued) => client?.harvest(unitIds, nodeId, queued),
         onThrottle: (unitIds, throttle) => client?.setThrottle(unitIds, throttle),
         onBuild: (kind, x, y) => client?.build(kind, x, y),
