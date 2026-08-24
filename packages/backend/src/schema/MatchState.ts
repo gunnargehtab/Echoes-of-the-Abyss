@@ -12,7 +12,7 @@
  */
 
 import { Schema, MapSchema, type } from '@colyseus/schema';
-import { MatchPhase } from '@echoes/shared';
+import { AiDifficulty, MatchPhase } from '@echoes/shared';
 
 export class PlayerState extends Schema {
   @type('string') sessionId = '';
@@ -34,6 +34,17 @@ export class PlayerState extends Schema {
    * question both times: is this commander waiting on anyone else?
    */
   @type('boolean') ready = false;
+  /**
+   * A seat driven by the skirmish AI rather than by a person.
+   *
+   * Public, and it has to be: an opponent is entitled to know whether they
+   * agreed to play a human. So is the difficulty below — "decision quality,
+   * never information" is only a promise the other commander can hold you to
+   * if they can see which setting was chosen.
+   */
+  @type('boolean') isAi = false;
+  /** AiDifficulty ordinal. Meaningless unless `isAi`. */
+  @type('uint8') difficulty: number = AiDifficulty.Recruit;
 }
 
 export class MatchState extends Schema {

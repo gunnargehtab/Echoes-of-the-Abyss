@@ -452,3 +452,73 @@
   font-size: 0.7rem;
   letter-spacing: 0.08em;
 }
+
+/*
+ * AI seats in the roster.
+ *
+ * Deliberately shown as a row like any other, with its difficulty on the face
+ * of it: an opponent is entitled to know whether they agreed to play a person,
+ * and on what setting. The note beneath the roster says the thing that
+ * actually matters — difficulty is decision quality, never information.
+ */
+.lobby-roster-row.ai .lobby-roster-name {
+  color: var(--text-cyan);
+}
+
+.lobby-roster-ai {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.lobby-chip {
+  padding: 0 0.5rem;
+  border: 1px solid rgba(53, 224, 255, 0.4);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-cyan);
+  font: inherit;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.lobby-chip:hover {
+  background: rgba(53, 224, 255, 0.12);
+}
+
+.lobby-chip:focus-visible {
+  outline: 1px solid var(--text-cyan);
+  outline-offset: 1px;
+}
+
+.lobby-ai-note {
+  margin: -0.4rem 0 0;
+  font-size: 0.62rem;
+  line-height: 1.6;
+  letter-spacing: 0.04em;
+  opacity: 0.55;
+}
+
+/* Secondary to Ready: adding an opponent is setup, readying is commitment. */
+.lobby-add-ai {
+  padding: 0.45rem 1.1rem;
+  border: 1px solid rgba(255, 61, 166, 0.5);
+  border-radius: 3px;
+  background: var(--abyss-glass);
+  color: var(--text-cyan);
+  font: inherit;
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.lobby-add-ai:hover:not(:disabled) {
+  background: rgba(255, 61, 166, 0.12);
+}
+
+.lobby-add-ai:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
