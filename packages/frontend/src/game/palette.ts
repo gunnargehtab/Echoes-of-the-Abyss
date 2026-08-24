@@ -37,6 +37,39 @@ export const BIOME_COLOR: Record<Biome, number> = {
 };
 
 /**
+ * Shade a biome fill by how deep the water is over it.
+ *
+ * docs/art-direction.md: "use gradients to show depth: dark -> darker -> pitch
+ * black", and the sea floor section applies that to the map itself. The biome
+ * keeps its hue — a plateau in kelp is still kelp-green, only paler — because
+ * hue belongs to the biome and the biome is what sound is priced by. Only the
+ * luminance moves, which is the same trick the hull bake uses to keep a shared
+ * shape asset out of any one faction's palette.
+ *
+ * `shallowest` and `deepest` bracket the map's own range rather than the
+ * ruleset's, so a shallow map still reads as terrain instead of as one flat
+ * wash of near-black.
+ */
+export function depthShade(color: number, floorM: number, shallowest: number, deepest: number) {
+  const span = deepest - shallowest;
+  // A flat map has nothing to say about depth, so it says nothing.
+  if (span <= 0) return color;
+  const t = Math.min(1, Math.max(0, (floorM - shallowest) / span));
+  // Darkens only. The authored biome fill is the *shallow* end and nothing is
+  // ever drawn brighter than it: those fills are deliberately low-contrast and
+  // desaturated so terrain never competes with a contact, and a shading pass
+  // that lifted them would be quietly overruling that decision — which it did,
+  // in the first version of this, turning a kelp plateau into the loudest thing
+  // on screen. Deep ground is pushed down toward black without reaching it,
+  // because pure black reads as a hole in the map rather than as deep water.
+  const gain = 1 - t * 0.45;
+  const r = Math.min(255, Math.round(((color >> 16) & 0xff) * gain));
+  const g = Math.min(255, Math.round(((color >> 8) & 0xff) * gain));
+  const b = Math.min(255, Math.round((color & 0xff) * gain));
+  return (r << 16) | (g << 8) | b;
+}
+
+/**
  * How each resolution tier renders.
  *
  * Fidelity is the whole point: the visual precision of a contact must match the

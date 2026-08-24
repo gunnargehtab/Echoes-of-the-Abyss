@@ -29,6 +29,33 @@ Use gradients to show depth: dark → darker → pitch black → bioluminescent 
 - Bioluminescent flora/fauna as natural light sources
 - Flickering industrial lamps in bases
 
+### Reading the Sea Floor
+
+The ground has a shape now ([systems-depth.md](systems-depth.md) §1), and the player has to
+be able to read it without being told. Three things, in order of how loudly they should
+speak:
+
+- **Depth is luminance.** The gradient rule above, applied to the map itself: shallow ground
+  is the brighter end of its biome's colour and deep water the darker. It carries no hue of
+  its own — a plateau in kelp is still kelp-green, only paler — because hue belongs to the
+  biome and the biome is what the Echo Layer prices sound by. A player should be able to see
+  the trench, the shelf and the vent line as terrain before they know any of the numbers.
+- **Ground you cannot enter speaks in the interface voice.** Whether ground blocks you is not
+  a property of the ground, it is a relationship between the ground and *your* hulls: a ridge
+  that stops a deep raider is open water to a scout. So it is drawn only while something is
+  selected, in the cyan the HUD uses to tell you things
+  ([style-neon-noir.md](style-neon-noir.md)) — never in threat-red. Being unable to cross a
+  ridge is not danger; it is information, and the difference matters when the same screen has
+  to show both.
+- **A roofed passage is drawn as a route, not as a hole.** A tunnel is the one piece of
+  terrain that is invisible from above by construction, so the map marks its line rather than
+  its opening. It is public map data like every other part of the ground: everyone can see
+  that the passage exists, and nobody can see who is in it.
+
+The order matters. Terrain must stay quieter than contacts — "RTS readability > realism" —
+so none of this may compete with a return for attention. If a player cannot find the enemy
+because the seabed is shouting, the seabed is wrong.
+
 ### Environmental Shapes
 
 - Jagged rock formations
