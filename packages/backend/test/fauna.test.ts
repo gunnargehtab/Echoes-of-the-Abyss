@@ -32,7 +32,7 @@ import {
 import { Match } from '../src/sim/match.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { spawnFauna, spawnUnit } from '../src/sim/world.ts';
-import { Acoustic, Fauna, Health, Position } from '../src/sim/components.ts';
+import { Fauna, Health, Position } from '../src/sim/components.ts';
 import { countFauna, DRIFT_SLOT } from '../src/sim/systems/fauna.ts';
 import { VENTFRONT_DIVIDE, type MapDefinition } from '../src/sim/maps/index.ts';
 

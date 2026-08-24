@@ -15,7 +15,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { Biome, Faction, HADRON, ResourceKind, SIM, StructureKind } from '@echoes/shared';
+import { Faction, HADRON, ResourceKind, SIM, StructureKind } from '@echoes/shared';
 import { hasComponent } from 'bitecs';
 import { Match } from '../src/sim/match.ts';
 import { Terrain } from '../src/sim/terrain.ts';
@@ -30,7 +30,10 @@ function quietMatch(seed = 31): Match {
   return new Match(undefined, {
     fauna: false,
     seed,
-    terrain: new Terrain(32, 32, 250, Biome.OpenWater),
+    // Metres, not cells — 8000 m of water on a 250 m grid, the size the
+    // authored maps use. The arithmetic under test does not care, but a map
+    // smaller than a Cruiser is a fixture that means nothing.
+    terrain: new Terrain(8000, 8000, 250),
   });
 }
 

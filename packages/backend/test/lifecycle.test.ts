@@ -34,6 +34,9 @@ function seat(overrides: Partial<RosterEntry> & { sessionId: string }): RosterEn
     faction: Faction.Bathyarch,
     ready: false,
     connected: true,
+    // Required on RosterEntry, and every seat this helper builds is a human
+    // one; the AI seats are constructed by the room, not by the lobby tests.
+    isAi: false,
     ...overrides,
   };
 }
