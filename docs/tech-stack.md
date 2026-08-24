@@ -319,10 +319,15 @@ enemy start with a Light Scout, rallies between home and the enemy, and pushes w
 the hulls. It prioritises a Bastion over any other structure and any structure over any
 hull — an ordering only available at Tier 3, so it is information it earned.
 
-It does **not** manoeuvre in depth, and that is a deliberate omission rather than a gap.
-Depth currently has no acoustic consequence: the Echo Layer reads depth only to report it at
-Tier 3. An AI diving for stealth would be modelling a mechanic the simulation does not have.
-When depth becomes acoustic, that decision belongs in `commandArmy`.
+It does **not** manoeuvre in depth, and until recently that was a deliberate omission rather
+than a gap: depth had no acoustic consequence, so an AI diving for stealth would have been
+modelling a mechanic the simulation did not have.
+
+**That is no longer true.** The thermocline gives depth an acoustic meaning
+([systems-echo.md](systems-echo.md) §3), so this is now a real gap and the decision belongs in
+`commandArmy` as this section always said it would. Note what it costs to close: the
+commander's vocabulary has no depth command in it at all, so diving is not a parameter it can
+tune — it is a verb the AI does not yet have.
 
 Related: [factions.md](factions.md) · [systems-echo.md](systems-echo.md) ·
 [economy.md](economy.md)

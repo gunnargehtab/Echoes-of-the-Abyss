@@ -2365,6 +2365,12 @@ export class EchoRenderer {
       // The server prices detection along each emitter-listener path, so the
       // true audible region is anisotropic; a circle at local PF is the
       // honest isotropic preview of it (and all this client is entitled to).
+      //
+      // The thermocline is left out for a stronger reason than bearing: its
+      // factor depends on the *listener's* depth, which is the enemy's, which
+      // is precisely the hidden information this client must not be holding.
+      // The ring therefore prices the same-side case, and crossing the layer
+      // can only ever make you quieter than it draws.
       const pf = this.propagationAt(unit.x, unit.y);
       const range = maxAudibleRangeM(unit.sig, pf, PROPAGATION_MODEL.BASELINE_HYD);
 

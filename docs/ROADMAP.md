@@ -43,11 +43,16 @@ and everything in [world.md](world.md) that is still only prose.
 | Pressure ratings, crush attrition, the Sounding Spire's PR grant | Implemented |
 | Depth as something a player can change | Implemented: depth orders, the ribbon, the crystal gate |
 
-One asymmetry is worth naming because it shapes what comes next: **depth has no acoustic
-consequence.** The Echo Layer reads `Position.depth` only to report it at Tier 3. Descent
-is loud and ascent is silent, so depth costs *time* and *noise while moving* — but sitting
-at 1,500 m sounds exactly like sitting at 300 m to everyone listening. Whether that is
-correct or a gap is a design question [systems-echo.md](systems-echo.md) has not answered.
+One asymmetry shaped everything that came after it: for a long time **depth had no acoustic
+consequence.** The Echo Layer read `Position.depth` only to report it at Tier 3, so sitting at
+1,500 m sounded exactly like sitting at 300 m to everyone listening, and depth cost *time* and
+*noise while moving* and nothing else.
+
+This entry used to call that "a design question [systems-echo.md](systems-echo.md) has not
+answered", and that was wrong on the doc's own terms: §3's PropagationFactor table has carried
+a thermocline row since it was written. The gap was in the code, not in the design — which is
+worth remembering, because a doc read as silent for long enough starts to be treated as
+undecided. The layer is implemented now (§3, "Where the layer sits").
 
 ## Phase 1 — Make the second pillar playable
 

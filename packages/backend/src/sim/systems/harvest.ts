@@ -283,6 +283,7 @@ export function harvestSystem(world: SimWorld): void {
         EchoMarkKind.IndustrialHum,
         Position.x[depot]!,
         Position.y[depot]!,
+        Position.depth[depot]!,
         (Harvester.cargo[eid]! / capacityFor(Harvester.cargoKind[eid] as ResourceKind)) *
           ECHO_MARKS.HUM_PER_DELIVERY
       );

@@ -67,6 +67,53 @@ detected  if   SIG(target) × PropagationFactor ≥ Threshold(distance, HYD(list
 | Thermocline boundary | **0.3 across, 1.2 along** | Layer-hiding: sit under it and vanish |
 | Coral Ruins | 0.8, occluded | Hard shadows behind structures |
 
+### Where the layer sits
+
+The thermocline is the one row above that is **not a biome**. A biome is a footprint on the
+sea floor, so it lives in the map's grid; the thermocline is a horizontal surface in the water
+column, present on every map and authored on none of them. Its factor is therefore a property
+of the **pair** — the emitter and the listener — rather than of the water in any one place.
+
+**The layer sits at 1,200 m, with a duct 100 m either side of it.** Three zones follow: above
+the duct, inside it, below it.
+
+| | Above | In the duct | Below |
+| --- | --- | --- | --- |
+| **Above** | 1.0 | 1.0 | **0.3** |
+| **In the duct** | 1.0 | **1.2** | 1.0 |
+| **Below** | **0.3** | 1.0 | 1.0 |
+
+*Across* means the two ends sit on opposite sides of the duct. *Along* means **both** ends are
+inside it — a sound channel needs both ends in the channel, and a duct that made you louder to
+everyone would be a trap rather than a decision. These are relations between **depths**, not
+bearings.
+
+**The factor multiplies the biome's.** A crossing inside a Thermal Vein is 0.45 × 0.3 = 0.135;
+a duct run down an Abyssal Trench is 1.6 × 1.2 = 1.92. That word is load-bearing — read as a
+lookup instead of a multiplier, the loudest a path can be looks like 1.6 when it is really
+1.92, and every range bound built on it comes out short.
+
+**It is symmetric.** Under the layer you are hidden from the surface *and deaf to it*, in equal
+measure. That is what stops "sit under it and vanish" from being free, and it is the same trade
+§8 already asks of the Spore Veil.
+
+1,200 m is chosen so that the layer is a property of the map rather than of a stat block. It
+sits well inside Mid-Water, so a PR-2 hull can live on either side of it without crushing. It
+is deeper than everything the game *seats* by default — hulls at 600 m, PR-1 hulls and fauna at
+300 m, structures and nodule fields at 600 m — so no force begins a match split across it and
+**every crossing is an order somebody gave**. And it is far below the shallowest authored
+ground, so terrain lifting a hull ([systems-depth.md](systems-depth.md) §2) can never push one
+*into* hiding. Structures sit at 600 m and can never use the layer at all.
+
+The one thing seated on the far side is the **Resonance Crystal field, at 2,400 m** — and that
+is the point. The map's richest ground is under the layer, so working it means crossing, and a
+fleet down there is acoustically alone: it cannot hear the surface war and the surface war
+cannot hear it. Depth was already a commitment timer ([systems-depth.md](systems-depth.md) §5);
+this makes it an information blackout as well.
+
+The boundary is a wall rather than a gradient, like the depth bands themselves. Crossing it is
+meant to be a moment.
+
 **Consequence:** the same army is a different army in a different biome. Positioning is not just about chokepoints — it's about *acoustics*.
 
 ---
@@ -98,6 +145,17 @@ Any unit may fire an **active ping**.
 - **Additional cost:** the ping's SIG contribution to fauna aggro is **tripled**.
 
 You learn everything. Everyone learns where you are. **Twice as far.**
+
+**Against the thermocline, a ping is the exception that makes the layer worth having.** The
+2,400 m self-reveal is the open-water figure: it falls out of the propagation model, so it
+moves with the layer like anything else — a duct-to-duct ping carries further, a cross-layer
+ping roughly half as far. The 900 m Tier-4 reveal does **not**. It is a hard radius applied
+outside the model and it punches straight through the layer.
+
+So "sit under it and vanish" is false against active sonar, and deliberately: hiding under the
+thermocline beats *listening*, and loses to somebody willing to spend a ping and be heard for
+kilometres doing it. A player will test this within a minute of learning the mechanic, and the
+answer should be a rule rather than a surprise.
 
 This is the game's signature decision. Good players ping *late, briefly, and just before committing* — the ping is the last thing you do before you're already winning the fight. Bad players ping when they're nervous, which is how the Rift eats them.
 
@@ -140,6 +198,7 @@ Marks are written from the seams where the events they record already become rea
 Two rules govern what a mark may say:
 
 - **A mark reports that something happened, never what or to whom.** The wire format carries a position, a kind and an intensity. No owner, no casualties. The player does the inference; that is the mechanic.
+- **A mark carries the depth of the event that made it**, and is priced across the thermocline like anything else (§3). It has to: the rule below says residue is priced exactly as a unit is, and a depthless mark would need its own answer for what "across the layer" means — which is the separate rule that same line forbids. So a battle below the layer leaves residue that a listener above it can barely hear, and reinforcement never merges two marks from opposite sides, because residue that got *louder* by averaging two quiet events would be a lie about what happened.
 - **A mark is priced by the same propagation model as a unit.** It is an emitter whose SIG is its intensity times a per-kind figure, so residue in a Thermal Vein is as hard to find as a hull in one. A separate rule would make the past a second detection system that biomes did not apply to.
 
 Residue is always **quieter than the thing that made it**. An idle Corvette carries roughly 3.3 km to a Light Scout; the echo of a destroyed building reaches about 2.5 km and a battle site under 2 km. A mark must be findable by a scout that goes there and inaudible to one that does not — otherwise the map announces every fight to every base, and the scouting economy the section exists for never starts.

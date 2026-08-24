@@ -38,11 +38,17 @@ export interface BiomeVoicing {
  * Voicings per biome, transcribed from §9's table.
  *
  * Two rows in that table have no counterpart here and are not modelled:
- * the thermocline boundary, which the simulation has no biome for, and the
- * Abyssal Trench's *axial* behaviour — the trench is neutral on-axis and
+ *
+ * The thermocline boundary. The simulation *does* model it now, but as a
+ * property of a listening pair's depths rather than of any cell — there is no
+ * biome to key a voicing to, and this table is indexed by biome. Voicing it
+ * would mean keying off the local hull's own depth instead, which is a real
+ * gap rather than an impossibility.
+ *
+ * The Abyssal Trench's *axial* behaviour — the trench is neutral on-axis and
  * loses highs off-axis, which needs PF as a function of bearing. The
- * simulation does not model that either (see the note in sim/terrain.ts), so
- * voicing it would be the mix claiming to know something the game does not.
+ * simulation does not model that (see the note in sim/terrain.ts), so voicing
+ * it would be the mix claiming to know something the game does not.
  */
 export const BIOME_VOICING: Record<Biome, BiomeVoicing> = {
   [Biome.OpenWater]: {

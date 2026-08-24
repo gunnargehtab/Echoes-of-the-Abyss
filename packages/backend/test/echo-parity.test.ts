@@ -23,7 +23,10 @@ import {
   Faction,
   ResolutionTier,
   SIM,
+  THERMOCLINE,
   detectionRatio,
+  thermoclineFactor,
+  thermoclineZone,
   tierFromRatio,
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
@@ -60,7 +63,14 @@ function bruteForce(world: SimWorld, slots: number[]): Map<string, ResolutionTie
       const ly = Position.y[listener]!;
       const distance = Math.hypot(ex - lx, ey - ly);
       if (sig > 0) {
-        const pf = world.terrain.pathPropagation(ex, ey, lx, ly) * pfFactor;
+        // The thermocline is part of the rules this reference states, so it is
+        // computed here the obvious way — straight from the two depths, with
+        // no row table and no hoisting — precisely so that the fast path's
+        // bookkeeping has something independent to be wrong against.
+        const pf =
+          world.terrain.pathPropagation(ex, ey, lx, ly) *
+          pfFactor *
+          thermoclineFactor(Position.depth[emitter]!, Position.depth[listener]!);
         note(
           slot,
           emitter,
@@ -88,6 +98,21 @@ function bruteForce(world: SimWorld, slots: number[]): Map<string, ResolutionTie
   return best;
 }
 
+/**
+ * Spawn depths, cycled per unit so every scenario straddles the thermocline.
+ *
+ * Named off the constant rather than written as literals: the default spawn
+ * depths are 300 m and 600 m, both above the layer, so a scenario that took
+ * them would resolve every pair at a factor of exactly 1 and this test would
+ * agree with the fast path about a rule neither of them ran.
+ */
+const DEPTHS_M = [
+  THERMOCLINE.DEPTH_M - 700,
+  THERMOCLINE.DEPTH_M,
+  THERMOCLINE.DEPTH_M + 700,
+  THERMOCLINE.DEPTH_M - 50,
+];
+
 function scenario(unitsPerSlot: number, seed: number): Match {
   const match = new Match(undefined, { fauna: false, seed });
   for (let slot = 0; slot < 4; slot++) match.addPlayer(slot, slot as Faction);
@@ -100,11 +125,22 @@ function scenario(unitsPerSlot: number, seed: number): Match {
         faction: slot as Faction,
         x: 400 + ((n * 487 + seed * 131) % 7200),
         y: 400 + ((n * 911 + seed * 373) % 7200),
+        depth: DEPTHS_M[(n + seed) % DEPTHS_M.length]!,
       });
     }
   }
   for (let i = 0; i < 120; i++) match.update(1000 / SIM.TICK_HZ);
   return match;
+}
+
+/** How many distinct thermocline zones the live units actually occupy. */
+function zonesOccupied(world: SimWorld): number {
+  const seen = new Set<number>();
+  for (let eid = 0; eid < Position.x.length; eid++) {
+    if (!hasComponent(world, Acoustic, eid) || !hasComponent(world, Owner, eid)) continue;
+    seen.add(thermoclineZone(Position.depth[eid]!));
+  }
+  return seen.size;
 }
 
 describe('echo pass', () => {
@@ -119,6 +155,11 @@ describe('echo pass', () => {
       [75, 3],
     ] as Array<[number, number]>) {
       const match = scenario(units, seed);
+      assert.equal(
+        zonesOccupied(match.world),
+        3,
+        `seed ${seed} must put units on both sides of the layer and in the duct`
+      );
       const expected = bruteForce(match.world, slots);
       const actual = match.echo.run(match.world, slots);
 

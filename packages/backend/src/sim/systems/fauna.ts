@@ -33,6 +33,9 @@ import {
   faunaStatsFor,
   maxAudibleRangeM,
   MAX_PROPAGATION_FACTOR,
+  THERMOCLINE_ZONE_MAX,
+  thermoclineFactor,
+  thermoclineZone,
 } from '@echoes/shared';
 import { defineQuery, hasComponent } from 'bitecs';
 import {
@@ -110,10 +113,17 @@ function listen(
 ): void {
   const fx = Position.x[eid]!;
   const fy = Position.y[eid]!;
+  const fd = Position.depth[eid]!;
   const hyd = Acoustic.hyd[eid]!;
+  // Which side of the thermocline the *listener* is on, hoisted because it is
+  // the same for every candidate this creature considers.
+  const fZone = thermoclineZone(fd);
   // Bounded by the loudest thing that could exist, so the prune below can
-  // never reject something the exact test would have accepted.
-  const reach = maxAudibleRangeM(100, MAX_PROPAGATION_FACTOR, hyd);
+  // never reject something the exact test would have accepted. The bound has
+  // to cover the thermocline too: a creature in the duct hears along it at
+  // 1.2x, so a reach computed at the biome ceiling alone would prune away
+  // sources the exact test accepts (docs/systems-echo.md §3).
+  const reach = maxAudibleRangeM(100, MAX_PROPAGATION_FACTOR * THERMOCLINE_ZONE_MAX[fZone]!, hyd);
   const reach2 = reach * reach;
 
   let bestEid = 0;
@@ -135,11 +145,17 @@ function listen(
     if (sig <= 0) continue;
     const distance = Math.sqrt(d2);
 
+    // The exact thermocline factor for this pair, not the row maximum: both
+    // ends are in hand here, so the prune can be as tight as the test.
+    const tf = thermoclineFactor(Position.depth[other]!, fd);
     // Cheap rejection before the path walk, the same shape as the contact
     // pass's (#90) and the residue read's.
-    if (detectionRatio(sig, MAX_PROPAGATION_FACTOR, distance, hyd) < 1) continue;
+    if (detectionRatio(sig, MAX_PROPAGATION_FACTOR * tf, distance, hyd) < 1) continue;
 
-    const pf = world.terrain.pathPropagation(Position.x[other]!, Position.y[other]!, fx, fy);
+    // Multiplying the walk's result is safe here because no `abortBelow` is
+    // passed: the walk returns the true path factor rather than bailing early
+    // against a threshold that knows nothing about the layer.
+    const pf = world.terrain.pathPropagation(Position.x[other]!, Position.y[other]!, fx, fy) * tf;
     // §2's thresholds read against the detection ratio — how many times over
     // the creature can hear this thing at all. That is the scale that makes
     // the doc's numbers behave like the animals it describes: a Draymaw
@@ -179,6 +195,11 @@ function listen(
   // "Fresh kill or wreck within 800 m: +15 flat, decaying over 90 s." The Echo
   // Mark layer already tracks exactly that, with exactly that decay — so this
   // is a read rather than a second bookkeeping system.
+  //
+  // Deliberately a proximity test rather than an audibility one: §2 words this
+  // modifier as a distance, and 800 m of scavenging range is not the same claim
+  // as "can hear it from there". The thermocline gates what a creature *hears*
+  // (the loop above), not what it can smell in the water beside it.
   bestHeard += wreckBonus(world, fx, fy);
 
   Fauna.targetEid[eid] = bestEid;

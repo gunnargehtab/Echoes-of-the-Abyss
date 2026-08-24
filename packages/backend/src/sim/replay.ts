@@ -37,6 +37,14 @@ import { eidOfLocalId } from './world.ts';
 
 /** The current replay wire format. Bump when a change breaks old files. */
 /**
+ * 6: the thermocline is modelled. Detection between a hull above 1,100 m and
+ * one below 1,300 m is multiplied by 0.3, and both ends inside the duct by
+ * 1.2 (docs/systems-echo.md §3). Echo Marks gained the depth of the event and
+ * no longer merge across the layer. The file layout is unchanged — every v5
+ * recording is still readable as data — but a v5 match replayed under these
+ * rules diverges the moment anything crosses 1,200 m, which on any authored
+ * map is early.
+ *
  * 5: ground stops hulls. Movement refuses a step into water that does not
  * admit the hull at its depth and slides it along the edge instead, and the
  * seabed holds a hull no deeper than the ground allows. The format is
@@ -61,7 +69,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 5;
+export const REPLAY_FORMAT_VERSION = 6;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =

@@ -26,6 +26,8 @@ Every biome is also an acoustic space: terrain sets how far sound travels under 
 | Resonance Fields | **0.70 (scattered)** | Bearings lie — pings return false contacts |
 | Coral Ruins | **0.80 (occluded)** | Hard shadows behind structures — the only biome that changes during a match |
 
+PF is a property of a *place*, and it is not the only thing that scales a signature. The **thermocline** at 1,200 m applies a second multiplier that no cell of the map carries, because it depends on the depths of both ends of the path: 0.3 across the layer, 1.2 along its duct, 1.0 otherwise. It multiplies the biome's PF rather than replacing it — crossing the layer inside a Thermal Vein is quieter than crossing it in open water. See [systems-echo.md](systems-echo.md) §3.
+
 The map is also a **living ecosystem** — see [hazards.md](hazards.md) for creature migration and fauna interactions. It responds to noise, hunger, and over-extraction, and can be permanently degraded: the winner of a long, loud match can inherit a corpse of a biome.
 
 ## Major Biomes (Primary Play Spaces)

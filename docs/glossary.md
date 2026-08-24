@@ -12,6 +12,7 @@ Propagation Factor (PF)
 - A per-location scalar that modifies how sound attenuates or carries through the water. Applied multiplicatively to SIG when resolving detections, and integrated along the path between emitter and listener rather than sampled at either end.
 - Its base value comes from the biome, but it is not fixed by it: hazards modify PF while they last, and some abilities modify it permanently.
 - Example base values: Thermal Veins (0.45), Kelp Forest (0.55), Coral Ruins (0.80), Resonance Fields (0.70), Trenches (1.60).
+- PF is not the only multiplier on a detection. The Thermocline applies a second one, and it is not per-location: it depends on the depths of *both* ends of the path, so no single point on the map has a thermocline factor the way it has a PF.
 
 Hydrophone Rating (HYD)
 
@@ -72,6 +73,12 @@ Plateau
 
 - Terrain: a raised area of seabed — ground whose floor is shallower than the water around it. Becomes mechanical once floors are authored, since a plateau is ground that deep-running hulls cannot cross without rising.
 - The Commune's usage in culture.md and economy.md is the same word for the same ground, used for the community that tends it: bloom-share is anchored to Shelf-band plateau nodes, and a Commune name is the plateau a person farms. "The plateaus voted" is metonymy, not a second definition.
+
+Thermocline
+
+- The temperature boundary at 1,200 m, and the acoustic divide between the map's upper and lower halves. Not a biome and not terrain: it has no cells, and it modifies a listening pair rather than a place.
+- Sound crossing it is multiplied by 0.3. Sound whose emitter and listener are both inside the duct — the 100 m either side of the boundary — is multiplied by 1.2 and carries further than open water. Everything else is unaffected.
+- The factor multiplies the path's PF; it does not replace it. Crossing the layer inside a Thermal Vein is quieter than crossing it in open water. See systems-echo.md §3.
 
 Acoustic Fog of War
 

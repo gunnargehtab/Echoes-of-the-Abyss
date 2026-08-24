@@ -29,8 +29,11 @@ import {
   EchoMarkKind,
   MAX_PROPAGATION_FACTOR,
   PERSISTENCE,
+  THERMOCLINE_ZONE_MAX,
   detectionRatio,
   maxAudibleRangeM,
+  thermoclineFactor,
+  thermoclineZone,
 } from '@echoes/shared';
 import { SpatialHash } from './spatialHash.ts';
 import type { Terrain } from './terrain.ts';
@@ -66,6 +69,18 @@ const LIFETIME_BY_KIND: Record<EchoMarkKind, number> = {
 export interface Mark {
   x: number;
   y: number;
+  /**
+   * Depth of the event that wrote this, in metres.
+   *
+   * docs/systems-echo.md §7 prices a mark exactly as it prices a unit, so
+   * residue needs a depth for the same reason a hull does: without one there
+   * is no answer to what "across the thermocline" means for it, and inventing
+   * an answer is precisely the separate rule §7 refuses.
+   *
+   * Server-side pricing only — it never reaches `EchoMarkInfo`, because a mark
+   * reports that something happened and never what or to whom.
+   */
+  depth: number;
   kind: EchoMarkKind;
   /**
    * 0-1. Scales the mark's SIG, and what the client draws.
@@ -129,9 +144,9 @@ export class EchoMarkLayer {
    * not four hundred overlapping ones — and without merging the industrial hum
    * would lay down a fresh mark on every single delivered cargo.
    */
-  add(kind: EchoMarkKind, x: number, y: number, intensity = 1): void {
+  add(kind: EchoMarkKind, x: number, y: number, depthM: number, intensity = 1): void {
     const lifetime = LIFETIME_BY_KIND[kind];
-    const existing = this.nearby(kind, x, y);
+    const existing = this.nearby(kind, x, y, depthM);
     if (existing !== undefined) {
       // Reinforced marks pull toward the new event rather than jumping to it:
       // a running battle should leave residue over the ground it covered, not
@@ -139,6 +154,10 @@ export class EchoMarkLayer {
       const weight = intensity / (existing.intensity + intensity);
       existing.x += (x - existing.x) * weight;
       existing.y += (y - existing.y) * weight;
+      // Depth lerps with position, for the same reason: residue sits over the
+      // water the fight actually happened in. Safe to average because `nearby`
+      // refused to hand back a mark from the other side of the layer.
+      existing.depth += (depthM - existing.depth) * weight;
       existing.intensity = Math.min(1, existing.intensity + intensity);
       // A fresh full window, not a window scaled by intensity. See the note on
       // `remainingS` in the Mark interface: how loud a mark is and how long it
@@ -163,6 +182,7 @@ export class EchoMarkLayer {
     this.marks.push({
       x,
       y,
+      depth: depthM,
       kind,
       intensity: Math.min(1, intensity),
       remainingS: lifetime,
@@ -171,11 +191,17 @@ export class EchoMarkLayer {
     this.hashDirty = true;
   }
 
-  private nearby(kind: EchoMarkKind, x: number, y: number): Mark | undefined {
+  private nearby(kind: EchoMarkKind, x: number, y: number, depthM: number): Mark | undefined {
+    const zone = thermoclineZone(depthM);
     let best: Mark | undefined;
     let bestD2 = ECHO_MARKS.MERGE_RADIUS_M * ECHO_MARKS.MERGE_RADIUS_M;
     for (const mark of this.marks) {
       if (mark.kind !== kind) continue;
+      // Never merge across the thermocline. A battle at 600 m and a battle at
+      // 2,400 m over the same ground would otherwise average into a mark near
+      // the layer — in the duct, and so louder than either event that made it.
+      // Residue that gains loudness by being averaged is a lie about the past.
+      if (thermoclineZone(mark.depth) !== zone) continue;
       const d2 = (mark.x - x) ** 2 + (mark.y - y) ** 2;
       if (d2 <= bestD2) {
         bestD2 = d2;
@@ -233,7 +259,14 @@ export class EchoMarkLayer {
    * and the Echo pass's mark-major loop cannot drift apart about what "heard"
    * means.
    */
-  audible(terrain: Terrain, mark: Mark, x: number, y: number, hyd: number): boolean {
+  audible(
+    terrain: Terrain,
+    mark: Mark,
+    x: number,
+    y: number,
+    listenerDepthM: number,
+    hyd: number
+  ): boolean {
     // The gate, and it is absolute: below it a listener perceives nothing at
     // any range. HYD is otherwise a soft stat, so this is the one place it is
     // a wall — which is what makes it worth building for.
@@ -247,13 +280,23 @@ export class EchoMarkLayer {
     // best any terrain could do is MAX_PROPAGATION_FACTOR, so a mark inaudible
     // even at that is inaudible full stop — and the walk is by far the most
     // expensive thing in here.
-    if (detectionRatio(sig, MAX_PROPAGATION_FACTOR, distance, hyd) < 1) return false;
+    // Both depths are in hand here, so this uses the exact thermocline factor
+    // rather than a ceiling — strictly tighter than before for a pair across
+    // the layer, and identical for one that does not cross it.
+    const k = thermoclineFactor(mark.depth, listenerDepthM);
+    if (detectionRatio(sig, MAX_PROPAGATION_FACTOR * k, distance, hyd) < 1) return false;
 
     // The same propagation model as a live emitter, path integral included.
     // Residue behind a kelp bed is as hard to find as a hull behind one.
+    //
+    // Multiplying the walk's return is safe *here* and is not safe in the
+    // contact pass: this call passes no `abortBelow`, so the walk always runs
+    // to completion and returns a true mean. Where a bar is passed, the walk
+    // may return an optimistic upper bound instead, and scaling that up would
+    // let it past the guard that exists to contain it.
     this.pathWalks++;
     const pf = terrain.pathPropagation(mark.x, mark.y, x, y);
-    return detectionRatio(sig, pf, distance, hyd) >= 1;
+    return detectionRatio(sig, pf * k, distance, hyd) >= 1;
   }
 
   /**
@@ -263,7 +306,16 @@ export class EchoMarkLayer {
   audibleRadiusM(mark: Mark, bestHyd: number): number {
     const sig = SIG_BY_KIND[mark.kind] * mark.intensity;
     if (sig <= 0) return 0;
-    return maxAudibleRangeM(sig, MAX_PROPAGATION_FACTOR, bestHyd);
+    // Only the mark's own depth is known here, so this bounds over every
+    // listener zone. Left on the bare cell ceiling, a mark in the duct would be
+    // pruned from the outer tenth of the range its own exact test accepts —
+    // see "sizes its own broadphase to cover the duct" in the thermocline
+    // tests, which needs a trench to make the gap appear at all.
+    return maxAudibleRangeM(
+      sig,
+      MAX_PROPAGATION_FACTOR * THERMOCLINE_ZONE_MAX[thermoclineZone(mark.depth)]!,
+      bestHyd
+    );
   }
 
   /**
@@ -278,6 +330,7 @@ export class EchoMarkLayer {
     terrain: Terrain,
     x: number,
     y: number,
+    listenerDepthM: number,
     hyd: number,
     radiusM: number,
     out: number[],
@@ -296,7 +349,7 @@ export class EchoMarkLayer {
       const mark = this.marks[index];
       if (mark === undefined) continue;
       if (skipIds !== undefined && skipIds.has(mark.id)) continue;
-      if (this.audible(terrain, mark, x, y, hyd)) out.push(index);
+      if (this.audible(terrain, mark, x, y, listenerDepthM, hyd)) out.push(index);
     }
   }
 
