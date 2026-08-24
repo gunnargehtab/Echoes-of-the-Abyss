@@ -23,11 +23,12 @@ import {
   StructureKind,
   UnitKind,
 } from '@echoes/shared';
+import { hasComponent } from 'bitecs';
 import { Match } from '../src/sim/match.ts';
 import { EchoMarkLayer } from '../src/sim/echoMarks.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { spawnStructure, spawnUnit } from '../src/sim/world.ts';
-import { Health, Position } from '../src/sim/components.ts';
+import { Harvester, Health, Owner, Position, Structure } from '../src/sim/components.ts';
 import { VENTFRONT_DIVIDE } from '../src/sim/maps/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
@@ -42,6 +43,25 @@ function advance(match: Match, seconds: number) {
 }
 
 /** A match on flat open water, so PF never confounds what is being measured. */
+function ownedHarvesters(match: Match): number[] {
+  const found: number[] = [];
+  for (let eid = 0; eid < Owner.slot.length; eid++) {
+    if (!hasComponent(match.world, Harvester, eid) || Owner.slot[eid] !== 0) continue;
+    found.push(eid);
+  }
+  return found;
+}
+
+/** The Bastion this slot starts with, so the test can queue harvesters at it. */
+function ownedStructure(match: Match, kind: StructureKind): number {
+  for (let eid = 0; eid < Owner.slot.length; eid++) {
+    if (!hasComponent(match.world, Structure, eid)) continue;
+    if (Owner.slot[eid] !== 0 || Structure.kind[eid] !== kind) continue;
+    return eid;
+  }
+  throw new Error(`no owned ${StructureKind[kind]}`);
+}
+
 function flatMatch(seed = 21) {
   return new Match(VENTFRONT_DIVIDE, { fauna: false, seed, terrain: new Terrain(8000, 8000, 250) });
 }
@@ -221,39 +241,89 @@ describe('marks in a match', () => {
     }
   });
 
-  it('lays down an industrial hum as cargo is delivered', () => {
+  it('hums continuously while an economy is working', () => {
+    // The bug this replaces: a mark's life was `lifetime x intensity`, and one
+    // delivery is worth a fraction of full — so a hum blinked on for a few
+    // seconds every half-minute and was absent the rest of the time. A scout
+    // sweeping a working depot heard nothing four times in five, which reads
+    // as a detection bug rather than as a design.
+    //
+    // docs/economy.md §5 wants residue that "reveals economic activity long
+    // after the harvesters have left", so continuity is the property, not
+    // presence at some lucky instant.
     const match = flatMatch(24);
     match.addPlayer(0, Faction.Bathyarch);
 
-    // Watched across the run rather than sampled at the end, and that is not
-    // a stylistic preference — it is a bug this test used to have.
-    //
-    // A mark's life is `decay x intensity`, and one delivery is worth 0.12,
-    // so a single hum lives 45 x 0.12 = 5.4 s while a harvester's round trip
-    // takes twenty-five to forty. The hum therefore blinks on for five
-    // seconds every half-minute and is gone the rest of the time, so a
-    // single end-of-run sample was a coin toss that happened to be landing
-    // heads. Any change that shifted the round trip by a few seconds — even
-    // one that made harvesters *healthier* — flipped it to tails and this
-    // test failed for a reason that had nothing to do with marks.
-    //
-    // Whether a working economy ought to hum *continuously* is a tuning
-    // question about docs/economy.md §5, not one this test should decide by
-    // asserting it. What it can honestly check is the causal claim in its own
-    // name: deliveries produce hums, at the depot, with intensity.
-    let sawHum = false;
-    let peak = 0;
-    for (let second = 0; second < 120; second++) {
+    let audible = 0;
+    let samples = 0;
+    for (let second = 0; second < 180; second++) {
       advance(match, 1);
-      for (const mark of match.world.marks.all) {
-        if (mark.kind !== EchoMarkKind.IndustrialHum) continue;
-        sawHum = true;
-        peak = Math.max(peak, mark.intensity);
-      }
+      // Sampled after the first round trip: before anyone has delivered
+      // anything there is correctly nothing to hear.
+      if (second < 60) continue;
+      samples++;
+      if (match.world.marks.all.some((m) => m.kind === EchoMarkKind.IndustrialHum)) audible++;
     }
 
-    assert.ok(sawHum, 'a working economy should hum');
-    assert.ok(peak > 0, 'and the hum should have intensity');
+    assert.ok(
+      audible / samples > 0.95,
+      `a working economy should hum continuously, heard ${audible}/${samples}`
+    );
+  });
+
+  it('rests at a level that scales with throughput', () => {
+    // §5's central claim: "hum intensity scales with throughput", so a listener
+    // "can estimate income within roughly ±20% without ever seeing a
+    // structure". That only means anything if the level actually separates a
+    // busy depot from a quiet one.
+    const level = (harvesters: number): number => {
+      const match = flatMatch(24);
+      match.addPlayer(0, Faction.Bathyarch);
+      const bastion = ownedStructure(match, StructureKind.Bastion);
+      for (let i = 1; i < harvesters; i++) {
+        match.produce(0, bastion, UnitKind.Harvester);
+        advance(match, 21);
+      }
+      // Send every hull to the same field. A produced harvester is idle until
+      // somebody tells it what to do — only the opening one auto-harvests —
+      // so without this, "four harvesters" is one working and three parked,
+      // and the test reads the same number twice.
+      const field = match.resourceNodes[0]!.id;
+      for (const eid of ownedHarvesters(match)) match.orderHarvest(0, eid, field);
+
+      let total = 0;
+      let samples = 0;
+      for (let second = 0; second < 150; second++) {
+        advance(match, 1);
+        if (second < 60) continue;
+        samples++;
+        const hums = match.world.marks.all.filter((m) => m.kind === EchoMarkKind.IndustrialHum);
+        total += hums.reduce((best, m) => Math.max(best, m.intensity), 0);
+      }
+      return total / samples;
+    };
+
+    const lean = level(1);
+    const busy = level(4);
+    assert.ok(lean > 0, `one harvester should be audible at all, got ${lean.toFixed(3)}`);
+    assert.ok(
+      busy > lean * 1.4,
+      `four harvesters should read louder than one: ${busy.toFixed(3)} vs ${lean.toFixed(3)}`
+    );
+  });
+
+  it("still gives a one-shot mark its full spec'd lifetime", () => {
+    // The guard on the change: battle marks are added once at full intensity
+    // and must still last the ~90 s docs/systems-echo.md §7 specifies. Untying
+    // life from intensity must not have quietly extended or shortened them.
+    const layer = new EchoMarkLayer();
+    layer.add(EchoMarkKind.Battle, 4000, 4000);
+    assert.equal(layer.all.length, 1);
+
+    layer.tick(PERSISTENCE.BATTLE_SITE_S - 1);
+    assert.equal(layer.all.length, 1, 'still there just before its lifetime is up');
+    layer.tick(2);
+    assert.equal(layer.all.length, 0, 'and gone just after');
   });
 
   it('collapses the hum when the deliveries stop', () => {

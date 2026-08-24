@@ -42,6 +42,20 @@ const SIG_BY_KIND: Record<EchoMarkKind, number> = {
   [EchoMarkKind.IndustrialHum]: ECHO_MARKS.HUM_SIG,
 };
 
+/**
+ * How fast intensity bleeds away, as an exponential time constant in seconds.
+ *
+ * A third of the mark's lifetime, so a mark left alone is down to about 5% of
+ * its level by the time it expires — a tail, not a cliff. For the hum this is
+ * also what makes docs/economy.md §5's counter-play real: throttling down
+ * drops the delivery rate, and the level follows it within a couple of time
+ * constants, which is the "throttling to Trickle for 40 s collapses the hum"
+ * the doc promises.
+ */
+function tauFor(kind: EchoMarkKind): number {
+  return LIFETIME_BY_KIND[kind] / 3;
+}
+
 /** Full lifetime of each kind, seconds. The spec'd numbers, in one place. */
 const LIFETIME_BY_KIND: Record<EchoMarkKind, number> = {
   [EchoMarkKind.Battle]: PERSISTENCE.BATTLE_SITE_S,
@@ -53,9 +67,26 @@ export interface Mark {
   x: number;
   y: number;
   kind: EchoMarkKind;
-  /** 0-1. Scales the mark's SIG, and what the client draws. */
+  /**
+   * 0-1. Scales the mark's SIG, and what the client draws.
+   *
+   * A level, not a countdown. Events add to it and time bleeds it away, so for
+   * the industrial hum it settles at whatever the delivery rate sustains —
+   * which is the whole of docs/economy.md §5's "hum intensity scales with
+   * throughput".
+   */
   intensity: number;
-  /** Seconds left before it is gone. */
+  /**
+   * Seconds left before it is gone, reset in full every time the mark is
+   * reinforced.
+   *
+   * Deliberately **not** scaled by intensity, which is the bug this replaces.
+   * When life was `lifetime x intensity`, one delivery at 0.12 bought 5.4
+   * seconds against a forty-second round trip: the hum blinked on for five
+   * seconds every half-minute and was absent the rest of the time, so a scout
+   * sweeping a working depot heard nothing four times in five. How loud a mark
+   * is and how long it exists are different questions.
+   */
   remainingS: number;
   /**
    * Stable id, so a client can track one mark decaying rather than seeing a
@@ -109,7 +140,11 @@ export class EchoMarkLayer {
       existing.x += (x - existing.x) * weight;
       existing.y += (y - existing.y) * weight;
       existing.intensity = Math.min(1, existing.intensity + intensity);
-      existing.remainingS = Math.max(existing.remainingS, lifetime * existing.intensity);
+      // A fresh full window, not a window scaled by intensity. See the note on
+      // `remainingS` in the Mark interface: how loud a mark is and how long it
+      // exists are different questions, and tying them together is what made a
+      // working economy inaudible four seconds in five.
+      existing.remainingS = lifetime;
       return;
     }
 
@@ -130,7 +165,7 @@ export class EchoMarkLayer {
       y,
       kind,
       intensity: Math.min(1, intensity),
-      remainingS: lifetime * Math.min(1, intensity),
+      remainingS: lifetime,
       id: this.nextId++,
     });
     this.hashDirty = true;
@@ -161,10 +196,18 @@ export class EchoMarkLayer {
       const mark = this.marks[read]!;
       mark.remainingS -= dt;
       if (mark.remainingS <= 0) continue;
-      // Intensity tracks the remaining life, so a mark audibly *fades* rather
-      // than holding steady and then vanishing (docs/audio-direction.md §6
-      // makes marks reverb tails, and a tail that cuts off is not a tail).
-      mark.intensity = mark.remainingS / LIFETIME_BY_KIND[mark.kind];
+      // Intensity decays on its own clock, exponentially, so a mark audibly
+      // *fades* rather than holding steady and then vanishing
+      // (docs/audio-direction.md §6 makes marks reverb tails, and a tail that
+      // cuts off is not a tail).
+      //
+      // Exponential rather than linear because the hum is a measurement of a
+      // *rate*: this is a leaky integrator, deliveries push it up and time
+      // bleeds it down, and its resting level is throughput. That is what
+      // docs/economy.md §5 asks for when it says a listener can "estimate
+      // income within roughly ±20% without ever seeing a structure".
+      mark.intensity *= Math.exp(-dt / tauFor(mark.kind));
+      if (mark.intensity < ECHO_MARKS.MIN_AUDIBLE_INTENSITY) continue;
       this.marks[write++] = mark;
     }
     if (write !== this.marks.length) {

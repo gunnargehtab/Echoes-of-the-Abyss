@@ -69,7 +69,9 @@ Expansions are how a player scales and how a player gets located. Two mechanics 
 - **Industrial hum.** Mining leaves a slow-decaying Echo Mark ([systems-echo.md](systems-echo.md) §7) that reveals economic activity long after the harvesters have left. A scout that finds a hum has found not the enemy army but the enemy *budget*, which is more useful.
 - **Read the hum, not the base.** Hum intensity scales with throughput, so an opponent with HYD ≥ 40 can estimate income within roughly ±20% without ever seeing a structure. Skilled play scouts economies, not armies.
 
-Counter-play is real and cheap: throttling to Trickle for 40 s collapses the hum's intensity, and a refinery placed inside a Thermal Vein field (PF 0.45) is meaningfully harder to locate than the same building in open water. Terrain is an economic decision.
+Counter-play is real and cheap: **stopping the hauling** collapses the hum's intensity within a decay window, and a refinery placed inside a Thermal Vein field (PF 0.45) is meaningfully harder to locate than the same building in open water. Terrain is an economic decision.
+
+**Measured, and one clause of that does not currently hold.** The hum is a leaky integrator — deliveries push its level up, time bleeds it down, and where it rests is throughput. Idling the harvesters drops it to nothing (audible in 9% of samples, mean intensity 0.004). Throttling to *Trickle* barely moves it (0.238 against Standard's 0.299), because a throttle changes how fast a hold fills and a round trip is dominated by travel — so throughput, and therefore the hum, is nearly unchanged. That is a property of §3's throttle rather than of the hum, and it is tracked separately.
 
 ---
 
