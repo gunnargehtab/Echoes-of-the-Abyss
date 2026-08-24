@@ -289,6 +289,27 @@ export class EchoLayer {
     return { tier: resolved.tier, x: blurred.x, y: blurred.y };
   }
 
+  /**
+   * Forget everything this pass knows about an entity that has died.
+   *
+   * Handles were never pruned, and that was a real hole rather than a leak of
+   * memory. `entityForHandle` scans a permanent map, bitecs reissues entity ids
+   * once a thousand have been freed, and the short-lived ordnance this epic
+   * added makes crossing that threshold routine — so a handle minted for a
+   * torpedo that died minutes ago could come to name a *live hull the player
+   * had never detected*. `orderAttackContact` would accept it, and combat.ts
+   * republishes an ordered target's position into MoveOrder every tick, which
+   * turns a stale handle into a permanent tracker.
+   *
+   * Called from `Match.reap` for every death, which is the one place the
+   * simulation makes a death real.
+   */
+  forget(eid: number): void {
+    for (const slotHandles of this.handles.values()) slotHandles.delete(eid);
+    for (const slotBest of this.best.values()) slotBest.delete(eid);
+    this.litAlready.delete(eid);
+  }
+
   private handleFor(slot: number, eid: number): number {
     let slotHandles = this.handles.get(slot);
     if (slotHandles === undefined) {
@@ -667,7 +688,16 @@ export class EchoLayer {
         // owns it: they are being seen this well, by someone. Accumulated
         // here rather than in a second pass because `slotBest` is already the
         // exact set of "who has resolved what", just indexed the other way.
-        const victim = this.exposure.get(Owner.slot[eid]!);
+        // Exposure is a report about the player's *force*, not about the
+        // things their weapons left in the water. An enemy resolving your
+        // minefield used to raise your own exposure to Tier 3 — telling you an
+        // opponent was near a mine you laid, which is reconnaissance you never
+        // earned, and simultaneously lying about how well your hulls are seen.
+        // Ordnance is skipped here for the same reason fauna are: it is not
+        // somebody's fleet (docs/systems-combat.md §6).
+        const victim = hasComponent(world, Ordnance, eid)
+          ? undefined
+          : this.exposure.get(Owner.slot[eid]!);
         if (victim !== undefined) {
           if (resolved.tier > victim.tier) victim.tier = resolved.tier;
           if (resolved.tier >= ResolutionTier.Bearing) victim.trackedCount++;

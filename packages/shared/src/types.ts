@@ -446,8 +446,6 @@ export interface OwnOrdnance {
   sig: number;
   /** Seconds of run, lifetime or decoy life left. */
   remainingS: number;
-  /** True once a seeker has something. Absent for ordnance that never seeks. */
-  locked?: boolean;
 }
 
 /** One pending order, as much of it as the client needs to draw the plan. */

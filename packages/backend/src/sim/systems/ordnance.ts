@@ -37,6 +37,7 @@ import {
   detectionThreshold,
   StructureKind,
   ordnanceStatsFor,
+  structureStatsFor,
   perceivedLoudness,
   requiredPressureRating,
   unitRadiusM,
@@ -79,10 +80,29 @@ const laying = defineQuery([Laying]);
  * nor fair to the hull that paid for the tonnage.
  */
 function fuseRadiusM(world: SimWorld, target: number): number {
-  const hull = hasComponent(world, Unit, target)
-    ? unitRadiusM(Unit.kind[target] as UnitKind)
-    : ordnanceStatsFor(Ordnance.kind[target] as OrdnanceKind).radiusM;
-  return hull + ORDNANCE.TORPEDO.FUSE_MARGIN_M;
+  if (hasComponent(world, Unit, target)) {
+    return unitRadiusM(Unit.kind[target] as UnitKind) + ORDNANCE.TORPEDO.FUSE_MARGIN_M;
+  }
+  if (hasComponent(world, Structure, target)) {
+    // A Foundry is 160 m across. The first version of this function had no
+    // structure branch and fell through to reading `Ordnance.kind` on an
+    // entity that has no Ordnance component — a typed-array slot holding
+    // whatever was last there — so a torpedo flew 63 m *inside* a building's
+    // footprint before its fuse noticed. Measured.
+    return (
+      structureStatsFor(Structure.kind[target] as StructureKind).radiusM +
+      ORDNANCE.TORPEDO.FUSE_MARGIN_M
+    );
+  }
+  if (hasComponent(world, Ordnance, target)) {
+    return (
+      ordnanceStatsFor(Ordnance.kind[target] as OrdnanceKind).radiusM +
+      ORDNANCE.TORPEDO.FUSE_MARGIN_M
+    );
+  }
+  // Fauna and anything else that emits: no hull length to read, so the fuse
+  // gets its margin alone rather than a number read off the wrong component.
+  return ORDNANCE.TORPEDO.FUSE_MARGIN_M;
 }
 
 /**

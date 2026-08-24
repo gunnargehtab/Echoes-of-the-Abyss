@@ -328,9 +328,17 @@ export interface SpawnOrdnanceOptions {
  *
  * `Acoustic.hyd` is left at zero on purpose. It is the field that makes an
  * entity a listener *for its owner* — the Echo pass and the residue read both
- * key off it — and a torpedo that scouted for the player who fired it would
- * turn the alpha-strike weapon into a reconnaissance one. The seeker's own ears
- * are `Ordnance.seekerHyd`, and they report to nobody.
+ * key off it — so a torpedo never adds a contact to its owner's picture.
+ *
+ * That closes the direct channel, and it is worth being precise about what it
+ * does not close. A seeker steers at what it hears, its owner is shown their
+ * own ordnance, and a hull watching its torpedo turn can read a bearing off it.
+ * An earlier version of this comment claimed the seeker "reports to nobody",
+ * which was not true: the `locked` flag used to hand over "I have a firm
+ * solution on a real hull" with no inference required, and it has been removed.
+ * What remains is a track the player must interpret, bought with a scarce
+ * weapon — the same bargain Echo Marks strike (docs/systems-echo.md §7), and
+ * documented as intended in docs/systems-combat.md §5 rather than left implicit.
  */
 export function spawnOrdnance(world: SimWorld, opts: SpawnOrdnanceOptions): number {
   const stats = ordnanceStatsFor(opts.kind);

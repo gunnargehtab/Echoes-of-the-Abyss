@@ -331,6 +331,44 @@ describe('mines', () => {
     );
   });
 
+  it('cannot be shot out of the water, even by an ordered attack', () => {
+    // §5 gives a torpedo 40 HP and everything else none, and that stat is what
+    // keeps a minefield a wall you route around rather than one you delete.
+    // The auto-acquire path always refused ordnance; an *ordered* attack did
+    // not — and a player who pings a field holds a Tier-4 handle on every mine
+    // in it, which is precisely when this would have been abused.
+    const match = openWaterMatch();
+    const mine = armedMineAt(match, 6000, 6000);
+
+    const gunboat = spawnUnit(match.world, {
+      kind: UnitKind.Cruiser,
+      slot: 1,
+      faction: Faction.Pelagia,
+      // Inside the Cruiser's 900 m reach, outside the mine's 150 m trigger.
+      x: 6700,
+      y: 6000,
+    });
+    advance(match, 0.5);
+    match.activeSonar(1, gunboat);
+
+    // Whatever handles the ping just minted, try every one of them.
+    let ordered = 0;
+    for (let i = 0; i < 40; i++) {
+      const snapshots = match.update(STEP_MS);
+      const view = snapshots?.get(1);
+      if (view === undefined) continue;
+      for (const contact of view.contacts) {
+        if (contact.ordnance !== OrdnanceKind.Mine) continue;
+        match.orderAttackContact(1, gunboat, contact.id);
+        ordered++;
+      }
+    }
+    assert.ok(ordered > 0, 'the ping should have lit the mine up for the attacker to try');
+
+    advance(match, 20);
+    assert.ok(liveMines(match).includes(mine), 'and the mine should still be sitting there');
+  });
+
   it('never triggers on its own side', () => {
     const match = openWaterMatch();
     armedMineAt(match, 6000, 6000);

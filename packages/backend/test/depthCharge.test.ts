@@ -84,15 +84,17 @@ describe('depth charges', () => {
     const bomber = deepBomber(match, 6000, 6000, 600);
     advance(match, 0.2);
 
-    const charge = match.orderDepthCharge(0, bomber, 1500);
+    // Into the Abyssal band: a charge must cross a band, so a target depth in
+    // the launcher's own band is refused outright (§8).
+    const charge = match.orderDepthCharge(0, bomber, 2000);
     assert.notEqual(charge, 0, 'the drop should be accepted');
     assert.equal(Position.depth[charge], 600, 'released at the hull, not at the target depth');
 
-    const fallS = (1500 - 600) / DEPTH.DESCENT_RATE_MPS;
+    const fallS = (2000 - 600) / DEPTH.DESCENT_RATE_MPS;
     advance(match, fallS * 0.5);
     assert.ok(
-      Position.depth[charge]! > 900 && Position.depth[charge]! < 1200,
-      `halfway down it should be around 1,050 m, was ${Position.depth[charge]}`
+      Position.depth[charge]! > 1150 && Position.depth[charge]! < 1450,
+      `halfway down it should be around 1,300 m, was ${Position.depth[charge]}`
     );
 
     advance(match, fallS);
@@ -163,7 +165,7 @@ describe('depth charges', () => {
     const bomber = deepBomber(match, 6000, 6000, 600);
     advance(match, 0.2);
 
-    const charge = match.orderDepthCharge(0, bomber, 1400);
+    const charge = match.orderDepthCharge(0, bomber, 2000);
     advance(match, 1);
     assert.equal(
       Acoustic.sig[charge],
@@ -173,7 +175,7 @@ describe('depth charges', () => {
 
     // Catch it mid-ring: the detonation is loud, and stays loud long enough for
     // a 5 Hz detection pass to resolve it at all.
-    const fallS = (1400 - 600) / DEPTH.DESCENT_RATE_MPS;
+    const fallS = (2000 - 600) / DEPTH.DESCENT_RATE_MPS;
     advance(match, fallS + 0.1);
     assert.equal(
       Acoustic.sig[charge],
@@ -215,7 +217,36 @@ describe('depth charges', () => {
     assert.equal(liveCharges(match).length, 0, 'it imploded on the way down');
   });
 
-  it('refuses a depth the map does not have', () => {
+  it('floats upward across a band, which §8 asks for and two drafts could not do', () => {
+    // "dropped (or floated) into the band above or below". Floating is the
+    // half that nearly did not ship: ascent is a third of descent, so a charge
+    // sent up needs three times the clock, and a lifetime derived from the
+    // descent rate expired two seconds short of crossing one band. The failure
+    // was invisible from outside — the charge simply never arrived.
+    const match = emptyMatch();
+    const bomber = deepBomber(match, 6000, 6000, 2000);
+    const above = spawnUnit(match.world, {
+      kind: UnitKind.AbyssalSubmersible,
+      slot: 1,
+      faction: Faction.Directorate,
+      x: 6060,
+      y: 6000,
+      depth: 600,
+    });
+    advance(match, 0.2);
+
+    assert.notEqual(match.orderDepthCharge(0, bomber, 600), 0, 'the drop should be accepted');
+    removeEntity(match.world, bomber);
+    const before = Health.hp[above]!;
+
+    // The full float, plus margin. At ASCENT_RATE this is deliberately slow.
+    advance(match, (2000 - 600) / DEPTH.ASCENT_RATE_MPS + 3);
+
+    assert.ok(Health.hp[above]! < before, 'a floated charge should reach the band above');
+    assert.equal(liveCharges(match).length, 0, 'and detonate rather than expire on the way');
+  });
+
+  it('refuses a depth the map does not have, or one in its own band', () => {
     const match = emptyMatch();
     const bomber = deepBomber(match, 6000, 6000, 600);
     advance(match, 0.2);
@@ -223,6 +254,14 @@ describe('depth charges', () => {
     assert.equal(match.orderDepthCharge(0, bomber, DEPTH.MAX_M + 1), 0, 'below the floor');
     assert.equal(match.orderDepthCharge(0, bomber, -1), 0, 'above the surface');
     assert.equal(match.orderDepthCharge(0, bomber, Number.NaN), 0, 'not a depth at all');
+
+    // The band check, and it is not pedantry. Without it a charge set to the
+    // launcher's own depth arrived on the tick it was dropped — and since a
+    // blast skips its owner's slot, that was a free, instant, uncounterable
+    // area attack centred on a hull it could not hurt. The fall is the cost.
+    assert.equal(match.orderDepthCharge(0, bomber, 600), 0, 'its own depth');
+    assert.equal(match.orderDepthCharge(0, bomber, 1500), 0, 'and anywhere else in its own band');
+    assert.notEqual(match.orderDepthCharge(0, bomber, 2000), 0, 'the band below is the point');
   });
 
   it('shares its rack cooldown with the decoy suite, so a hull picks one', () => {
@@ -232,7 +271,7 @@ describe('depth charges', () => {
     const bomber = deepBomber(match, 6000, 6000, 600);
     advance(match, 0.2);
 
-    assert.notEqual(match.orderDepthCharge(0, bomber, 1200), 0);
+    assert.notEqual(match.orderDepthCharge(0, bomber, 2000), 0);
     assert.equal(match.deployNoisemaker(0, bomber), 0, 'the rack is busy');
     advance(match, ORDNANCE.DEPTH_CHARGE.COOLDOWN_S + 0.5);
     assert.notEqual(match.deployNoisemaker(0, bomber), 0, 'and free again afterwards');

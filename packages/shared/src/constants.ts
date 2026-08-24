@@ -286,14 +286,20 @@ export const ORDNANCE = {
      * Seconds before an un-detonated charge is scuttled — a fuse-failure
      * backstop, and **derived so it can never be shorter than the fall**.
      *
-     * The first draft was a flat 30 s, which is less than the 31 s a charge
-     * needs to fall from Mid-Water into the Abyssal band: every shot at the
-     * deep band expired one second short of the target it was set for, and the
-     * weapon whose entire purpose is crossing bands could not cross one.
-     * Sized against the whole water column, with margin, so the number cannot
-     * silently go stale when the map floor moves.
+     * Sized against the **ascent** rate, which is the slow direction and
+     * therefore the worst case. §8 says a charge is "dropped (or floated) into
+     * the band above or below", and floating is the half that nearly did not
+     * work: two drafts of this number were too short. A flat 30 s could not
+     * reach the Abyssal band going down; deriving it from the descent rate gave
+     * 91 s, which is still two seconds less than the 93 s a charge needs to
+     * float up one band. Both failures looked identical from the outside — the
+     * charge simply never arrived.
+     *
+     * Long, and harmlessly so: this is a fuse-failure backstop, not a travel
+     * budget. A charge that reaches its set depth detonates there, and one that
+     * cannot is imploding rather than idling.
      */
-    LIFETIME_S: Math.ceil((DEPTH.MAX_M / DEPTH.DESCENT_RATE_MPS) * 1.35),
+    LIFETIME_S: Math.ceil((DEPTH.MAX_M / DEPTH.ASCENT_RATE_MPS) * 1.35),
     /** Burst at the launcher on release. TUNABLE. */
     LAUNCH_SIG: 20,
     /** Seconds the detonation keeps ringing — see the mine's note. */

@@ -37,6 +37,7 @@ import {
   HAZARDS,
   HazardPhase,
   OrdnanceKind,
+  depthBandFor,
   mineCapFor,
   ResolutionTier,
   SelfEventKind,
@@ -83,6 +84,7 @@ import { movementSystem } from './systems/movement.ts';
 import {
   deployNoisemaker,
   dropDepthCharge,
+  isInterceptable,
   launchTorpedo,
   layMine,
   ordnanceSystem,
@@ -510,6 +512,19 @@ export class Match {
     if (target === undefined) return;
     if (!hasComponent(this.world, Owner, target) || Owner.slot[target] === slot) return;
     if (!hasComponent(this.world, Health, target) || Health.hp[target]! <= 0) return;
+    // docs/systems-combat.md §5: only ordnance with a hull to shoot off may be
+    // engaged. A torpedo has 40 HP and point defence is a real answer to it; a
+    // mine has none, and a minefield you could delete with gunfire would stop
+    // being a wall you route around. The auto-acquire path already refuses
+    // these, but an *ordered* attack reached them — and a player who pings a
+    // field holds a Tier-4 handle on every mine in it, which is exactly the
+    // moment this would have been abused.
+    if (
+      hasComponent(this.world, Ordnance, target) &&
+      !isInterceptable(Ordnance.kind[target] as OrdnanceKind)
+    ) {
+      return;
+    }
 
     if (queued) {
       // The anchor is where the contact is *now*, which is what the player
@@ -635,6 +650,15 @@ export class Match {
     if (!this.owns(slot, eid)) return 0;
     if (!Number.isFinite(depthM)) return 0;
     if (depthM < DEPTH.MIN_M || depthM > DEPTH.MAX_M) return 0;
+    // It must cross a band. §8 calls this "a pattern dropped (or floated) into
+    // the band above or below", and the fall is the weapon's entire cost — the
+    // defender hears it coming and has that time to move.
+    //
+    // Without this a charge set to the launcher's own depth arrived on the tick
+    // it was dropped: `blast` skips the owner's own slot, so it was a free,
+    // instant, uncounterable 200-damage area attack centred on a hull that
+    // could not be hurt by it. Refused rather than clamped, matching orderDepth.
+    if (depthBandFor(depthM) === depthBandFor(Position.depth[eid]!)) return 0;
     return dropDepthCharge(this.world, eid, depthM);
   }
 
@@ -976,6 +1000,7 @@ export class Match {
       if (hasComponent(this.world, Fauna, eid)) {
         this.payBiomass(eid);
         this.world.drift.recordKill(Position.x[eid]!, Position.y[eid]!);
+        this.echo.forget(eid);
         removeEntity(this.world, eid);
         continue;
       }
@@ -991,6 +1016,10 @@ export class Match {
         }
       }
       this.world.production.delete(eid);
+      // Before the id goes back into bitecs's free list: a contact handle that
+      // outlived the entity it named would eventually name whatever inherits
+      // that id (see EchoLayer.forget).
+      this.echo.forget(eid);
       removeEntity(this.world, eid);
     }
 
@@ -1022,6 +1051,7 @@ export class Match {
     for (let eid = 0; eid < Owner.slot.length; eid++) {
       if (!hasComponent(this.world, Owner, eid) || Owner.slot[eid] !== slot) continue;
       this.world.production.delete(eid);
+      this.echo.forget(eid);
       removeEntity(this.world, eid);
     }
   }
@@ -1220,7 +1250,6 @@ export class Match {
         heading: Ordnance.heading[eid]!,
         sig: Acoustic.sig[eid]!,
         remainingS: Ordnance.remainingS[eid]!,
-        locked: Ordnance.targetEid[eid]! !== 0,
       });
     }
     return out;

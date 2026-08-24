@@ -142,6 +142,22 @@ resolves**. Consequences, all deliberate:
   Thermal Vein masks whatever hides in it. Where you fight decides what torpedoes can do.
 - **Seekers re-acquire.** The loudest emitter *now* wins — which is why noisemakers work.
 
+### What the launcher is told
+
+A commander sees their own torpedo in full — where it is, which way it points, how loud it
+is, how many seconds of run are left — for the same reason they see their own hulls: it is
+theirs, so showing it leaks nothing.
+
+They are never told what the seeker has **found**. There is no lock indicator, and the
+absence is deliberate rather than an omission: "I have a firm solution on a real hull" is a
+detection the commander did not make, and handing it over as a boolean would let a torpedo
+buy the one thing this game never sells cheaply. A seeker steers; it does not report.
+
+What is left is inference, and that part is intended. A torpedo that turns has heard
+something, and the direction it turns is a bearing. That bearing costs a torpedo — one of
+two — and it dies with the weapon twenty seconds later. It is the bargain Echo Marks strike
+([systems-echo.md](systems-echo.md) §7): the ocean answers, late and never for free.
+
 ### Countermeasures
 
 - **Noisemaker decoy:** any combat hull can deploy one — a drifting emitter at SIG 70 for

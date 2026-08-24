@@ -17,6 +17,15 @@
  *      `Ordnance` field except the two the mine work added. A torpedo born on a
  *      detonated mine's id inherited `detonatingS > 0` and spent its whole life
  *      as an echo of somebody else's explosion.
+ *
+ *   3. **The own-ordnance payload must not smuggle a target.** Added after a
+ *      review found a third leak that the first two tests structurally could not
+ *      see: they count `view.contacts`, and the leak was in `view.ordnance`. A
+ *      `locked` flag published "this seeker has a firm solution on a real hull"
+ *      — a detection the player had not made, handed over as a boolean. The
+ *      guard below is a *shape* assertion rather than a value one, because the
+ *      failure mode is somebody adding a helpful field, not somebody computing
+ *      an existing one wrongly.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -201,5 +210,71 @@ describe('ordnance and the fog of war', () => {
         Math.abs(Position.x[torpedo]! - startX) > ORDNANCE.TORPEDO.SPEED_MPS * 0.5,
       'and it actually runs, rather than sitting still ringing'
     );
+  });
+
+  it('tells its owner nothing about what its seeker has found', () => {
+    // A torpedo that has *acquired* is the interesting case: if anything in the
+    // payload varies with what the seeker heard, this is where it shows up.
+    const match = emptyMatch(53);
+    const launcher = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 6000,
+      y: 8000,
+    });
+    // Loud, close, and straight ahead — a seeker cannot miss it.
+    spawnUnit(match.world, {
+      kind: UnitKind.Cruiser,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: 7200,
+      y: 8000,
+    });
+    advance(match, 0.2);
+
+    const torpedo = launchTorpedo(match.world, launcher, 7200, 8000);
+    let payload: Record<string, unknown> | undefined;
+    let sawLock = false;
+    for (let i = 0; i < 60 * 12; i++) {
+      const snapshots = match.update(STEP_MS);
+      if (!hasComponent(match.world, Ordnance, torpedo)) break;
+      if (Ordnance.targetEid[torpedo]! === 0) continue;
+      sawLock = true;
+      const mine = snapshots?.get(0)?.ordnance?.find((o) => o.id === torpedo);
+      if (mine !== undefined) {
+        payload = mine as unknown as Record<string, unknown>;
+        break;
+      }
+    }
+    assert.ok(sawLock, 'the seeker should have acquired, or this proves nothing');
+    assert.ok(payload !== undefined, 'and the owner should be shown their own torpedo');
+
+    // Exactly the fields docs/systems-combat.md §5 says a commander may have:
+    // where their weapon is, which way it points, how loud it is, how long it
+    // has left. Every one describes the torpedo itself. Nothing describes what
+    // it can hear. A new key here is a fog-of-war decision, so it should have to
+    // be made deliberately rather than land in a snapshot unnoticed.
+    assert.deepEqual(
+      Object.keys(payload!).sort(),
+      ['depth', 'heading', 'id', 'kind', 'remainingS', 'sig', 'x', 'y'],
+      'the own-ordnance payload grew a field — is it about the weapon, or about its target?'
+    );
+
+    // And the other side of the same wall: the launcher's torpedo is never in
+    // the defender's own-ordnance list. They have to hear it. Snapshots arrive
+    // on the 5 Hz Echo tick rather than every step, so this waits for one.
+    let defenderChecked = false;
+    for (let i = 0; i < 60 && !defenderChecked; i++) {
+      const view = match.update(STEP_MS)?.get(1);
+      if (view === undefined) continue;
+      assert.equal(
+        view.ordnance?.some((o) => o.id === torpedo) ?? false,
+        false,
+        'own-ordnance means own'
+      );
+      defenderChecked = true;
+    }
+    assert.ok(defenderChecked, 'the defender should have been sent a snapshot to check');
   });
 });
