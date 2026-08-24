@@ -528,6 +528,18 @@ export const SIM = {
 } as const;
 
 /**
+ * Horizontal movement.
+ *
+ * TUNABLE. Deliberately not shared with DEPTH.ARRIVAL_EPSILON_M: the two axes
+ * move at different speeds and answer to different orders, so one number
+ * serving both would couple two tunings that have no reason to agree.
+ */
+export const MOVEMENT = {
+  /** Close enough to a move target to count as arrived, in metres. */
+  ARRIVAL_EPSILON_M: 5,
+} as const;
+
+/**
  * Keeping hulls out of each other's water.
  *
  * TUNABLE throughout — the docs never specify collision, and they would not,

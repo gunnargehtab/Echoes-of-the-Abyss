@@ -518,7 +518,10 @@ export class MatchRoom extends Room<MatchState> {
     console.log(
       `[MatchRoom ${this.roomId}] disposed at tick ${this.match.tick}; ` +
         `worst Echo pass ${this.match.worstEchoPassMs.toFixed(3)} ms ` +
-        `(budget ${SIM.ECHO_BUDGET_MS} ms)`
+        `(budget ${SIM.ECHO_BUDGET_MS} ms); ` +
+        `worst sim step ${this.match.worstStepMsCost.toFixed(3)} ms, ` +
+        `of which physics ${this.match.worstPhysicsMsCost.toFixed(3)} ms ` +
+        `(budget ${(1000 / SIM.TICK_HZ).toFixed(1)} ms)`
     );
   }
 

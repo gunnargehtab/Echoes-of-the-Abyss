@@ -34,6 +34,9 @@ import { VENTFRONT_DIVIDE, type MapDefinition } from '../src/sim/maps/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 
+/** Side of the square test map, so wall-relative fixtures can name an edge. */
+const MAP_M = 8000;
+
 /** A one-hazard map on flat water, so nothing else is under test. */
 function hazardMap(kind: 'geothermal-eruption' | 'resonance-storm', radiusM = 700): MapDefinition {
   return {
@@ -45,7 +48,7 @@ function hazardMap(kind: 'geothermal-eruption' | 'resonance-storm', radiusM = 70
 }
 
 function matchWith(map: MapDefinition, seed = 31) {
-  const match = new Match(map, { fauna: false, seed, terrain: new Terrain(8000, 8000, 250) });
+  const match = new Match(map, { fauna: false, seed, terrain: new Terrain(MAP_M, MAP_M, 250) });
   match.addPlayer(0, Faction.Bathyarch);
   return match;
 }
@@ -152,6 +155,125 @@ describe('geothermal vent eruptions', () => {
     assert.ok(Health.hp[victim]! < full, 'the plume should hurt');
     assert.ok(Position.x[victim]! > 4200, 'and push outward from the vent');
   });
+
+  it('batters a hull against the map edge rather than through it', () => {
+    // Knockback is the one force that moves a hull along an axis nobody chose,
+    // and a vent near a boundary aims that axis at the wall. Unclamped, the
+    // plume threw anything caught between vent and edge clean out of the world:
+    // still simulated, still audible, still costing supply, and out of reach of
+    // every order its owner could give. Being pinned against the wall is a fair
+    // outcome; being outside it is not a position the game has rules for.
+    //
+    // The same authored 700 m plume as everywhere else in this file, moved hard
+    // against the western wall — the warning window is sized against that radius
+    // and is not up for renegotiation here.
+    const map = hazardMap('geothermal-eruption');
+    map.hazards = [{ ...map.hazards[0]!, x: 300, y: 4000 }];
+
+    const match = matchWith(map);
+    const { widthM, heightM } = match.world.terrain;
+    const victim = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 150, // between the vent and the wall, with nowhere outward to go
+      y: 4000,
+    });
+    const full = Health.hp[victim]!;
+    const from = Position.x[victim]!;
+
+    runUntilPhase(match, HazardPhase.Active);
+    let ticks = 0;
+    while (match.world.hazards[0]!.phase === HazardPhase.Active) {
+      match.update(STEP_MS);
+      ticks++;
+      const x = Position.x[victim]!;
+      const y = Position.y[victim]!;
+      assert.ok(x >= 0 && x <= widthM, `thrown to x=${x} after ${ticks} ticks of plume`);
+      assert.ok(y >= 0 && y <= heightM, `thrown to y=${y} after ${ticks} ticks of plume`);
+    }
+
+    // ...and it was genuinely caught, so the bounds above cannot be satisfied by
+    // a hull the eruption simply never reached.
+    assert.ok(Health.hp[victim]! < full, 'the hull has to actually be in the plume');
+    assert.ok(Position.x[victim]! < from, `and pushed wallward from ${from}`);
+  });
+
+  // The western case above states the rule but exercises a quarter of it. Vent
+  // and hull share a y there, so dy is exactly 0, the y write adds nothing every
+  // tick, and `y >= 0 && y <= heightM` cannot fail however y is clamped; the
+  // push is westward, so `x <= widthM` cannot fail either. Only `x >= 0` is
+  // load-bearing, and a bounds authority written as `Math.max(0, x)` and nothing
+  // else would pass it unchanged.
+  //
+  // A map has four walls and a vent can sit against any of them, so the same
+  // battering runs at each remaining edge: the two vertical walls move an axis
+  // the western case never moves at all, and the two far walls test the arm a
+  // floor-only clamp would not have.
+  //
+  // One `it` per wall rather than a loop inside one, so that a clamp broken on a
+  // single edge is reported as that edge failing instead of hiding behind
+  // whichever case happens to run first.
+  //
+  // Geometry mirrors the western case exactly — plume 300 m off the wall, hull
+  // 150 m inside it — so every one is the same authored 700 m eruption on the
+  // same warning window, only rotated. No hazard number moves.
+  const walls = [
+    { wall: 'northern', vent: { x: 4000, y: 300 }, hull: { x: 4000, y: 150 }, axis: 'y', edge: 0 },
+    {
+      wall: 'eastern',
+      vent: { x: MAP_M - 300, y: 4000 },
+      hull: { x: MAP_M - 150, y: 4000 },
+      axis: 'x',
+      edge: MAP_M,
+    },
+    {
+      wall: 'southern',
+      vent: { x: 4000, y: MAP_M - 300 },
+      hull: { x: 4000, y: MAP_M - 150 },
+      axis: 'y',
+      edge: MAP_M,
+    },
+  ] as const;
+
+  for (const { wall, vent, hull, axis, edge } of walls) {
+    it(`batters a hull against the ${wall} edge rather than through it`, () => {
+      const map = hazardMap('geothermal-eruption');
+      map.hazards = [{ ...map.hazards[0]!, ...vent }];
+
+      const match = matchWith(map);
+      const { widthM, heightM } = match.world.terrain;
+      assert.equal(widthM, MAP_M, 'the wall fixtures are written against this map size');
+      assert.equal(heightM, MAP_M, 'the wall fixtures are written against this map size');
+
+      const victim = spawnUnit(match.world, {
+        kind: UnitKind.Corvette,
+        slot: 0,
+        faction: Faction.Bathyarch,
+        ...hull,
+      });
+      const full = Health.hp[victim]!;
+
+      runUntilPhase(match, HazardPhase.Active);
+      let ticks = 0;
+      while (match.world.hazards[0]!.phase === HazardPhase.Active) {
+        match.update(STEP_MS);
+        ticks++;
+        const x = Position.x[victim]!;
+        const y = Position.y[victim]!;
+        assert.ok(x >= 0 && x <= widthM, `thrown to x=${x} after ${ticks} ticks of plume`);
+        assert.ok(y >= 0 && y <= heightM, `thrown to y=${y} after ${ticks} ticks of plume`);
+      }
+
+      // The plume outlasts the 150 m of water between hull and wall, so a hull
+      // that merely sat still would satisfy the bounds above for the wrong
+      // reason. It has to arrive at the wall — and then stop on it, because
+      // pinned against the boundary is a position the game has rules for.
+      assert.ok(Health.hp[victim]! < full, 'the hull has to actually be in the plume');
+      const pinned = axis === 'x' ? Position.x[victim]! : Position.y[victim]!;
+      assert.equal(pinned, edge, 'a battered hull ends up against the wall, on it');
+    });
+  }
 
   it('makes a caught hull loud, through the ordinary SIG path', () => {
     // The reason an eruption is an acoustic event and not just damage: being
