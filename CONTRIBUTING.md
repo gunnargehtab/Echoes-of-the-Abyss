@@ -19,14 +19,63 @@ short contract every change is reviewed against.
    [docs/graphics-standards.md](docs/graphics-standards.md), including a screenshot in
    the PR.
 
+## Running it locally
+
+```bash
+npm ci
+npm run dev          # server on :3000, client on :5173
+```
+
+[docs/DEVELOPER_QUICKSTART.md](docs/DEVELOPER_QUICKSTART.md) is the orientation for a first
+contribution: repository layout, what each workspace is, how to run one of them on its own,
+and how to drive the standalone Echo simulator.
+[SETUP.md](SETUP.md) is the full setup, and [CLAUDE.md](CLAUDE.md) explains the build order,
+which is the thing that breaks first: `frontend` and `backend` import `@echoes/shared` by
+its **build output**, so a stale `dist/` produces confusing errors in both. Every root
+script rebuilds it for you; if you invoke a workspace script directly after editing
+`packages/shared`, run `npm run build:shared` yourself.
+
+**Node 22+ is required.** Older runtimes fail with errors that do not obviously point at
+the Node version.
+
 ## Branches and commits
 
+**Trunk-based.** `main` is the only long-lived branch, and it is always green and always
+deployable — every gate below is blocking in CI, so a red `main` is an incident rather than
+a Tuesday.
+
+- Branch off `main`, keep the branch short-lived, and open one PR from it.
 - Branch names use `feat/`, `fix/`, `ci/`, `docs/` prefixes: `feat/harvest-throttle`,
   `docs/bestiary-drift-health`.
 - Commit subjects use the matching prefixes (`feat:`, `fix:`, `ci:`, `docs:`, plus
   `test:` and `refactor:` where they fit), imperative mood, and say what the change
   *does*: `feat: bake structure sprites from the approved 3D models`.
 - Keep commits small and focused; a commit that needs "and" in its subject is usually two.
+- **Squash-merge**, so `main`'s history is one commit per PR and each one is revertable on
+  its own. The PR body is where the reasoning lives; the squash subject is where you find
+  it again.
+- Never rewrite history on a branch someone else may have checked out. On your own branch
+  before review, rebase freely.
+
+## Releases and tags
+
+**There are none yet, and that is deliberate rather than an oversight.**
+
+Nothing here is versioned or published: the packages are `private`, `0.0.1`, and consumed
+only by each other. Tagging a repository nobody installs from would be ceremony that costs
+something (a tag implies a promise about what it contains) and buys nothing.
+
+The condition that starts it: **the first tag is cut when the game is playable end to end
+by someone who did not build it** — lobby, a match against an opponent, a win or a loss,
+without a README open beside them. At that point:
+
+- Semantic versioning on `main` only, tagged `v0.MINOR.PATCH`, staying below `1.0.0` until
+  the design bible and the code agree everywhere.
+- A tag is cut from a green `main`, never from a branch.
+- The tag's annotation names the issues it closes; `docs/ROADMAP.md` is the running record
+  of what is left.
+
+Until then, `main` is the release, and the way to get a change to people is to merge it.
 
 ## Pull requests
 
@@ -115,5 +164,7 @@ node tools/android-check.mjs
 - [CLAUDE.md](CLAUDE.md) — architecture, build order, and the reasoning behind these rules
 - [README.md](README.md) — what the game is
 - [SETUP.md](SETUP.md) — full development setup
+- [docs/DEVELOPER_QUICKSTART.md](docs/DEVELOPER_QUICKSTART.md) — repository layout, running
+  a single workspace, and the Echo simulator
 - [docs/README.md](docs/README.md) — the design bible's index and editing rules
 - [docs/graphics-standards.md](docs/graphics-standards.md) — the acceptance bar for anything visual
