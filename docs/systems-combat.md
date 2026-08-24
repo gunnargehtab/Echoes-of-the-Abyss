@@ -158,6 +158,27 @@ something, and the direction it turns is a bearing. That bearing costs a torpedo
 two — and it dies with the weapon twenty seconds later. It is the bargain Echo Marks strike
 ([systems-echo.md](systems-echo.md) §7): the ocean answers, late and never for free.
 
+Two things follow from that, and both are consequences rather than oversights. A seeker's
+pursuit is visible because a commander must be able to see where their own weapon is, and a
+weapon's position is three-dimensional:
+
+- **The chase reveals depth, which nothing else does at that range.** A torpedo matches its
+  target's depth (§8 — that is what makes the crush envelope bite), so a commander watching
+  their own weapon descend learns roughly how deep the thing it is chasing sits. Everywhere
+  else depth arrives only at Tier 3. Here it arrives because the player is watching an
+  object they own, doing what a homing weapon does. Hiding a torpedo's own depth from the
+  commander who launched it would be the more absurd rule.
+- **A seeker may report on a hull you never shot at.** It takes the loudest emitter in its
+  cone, which need not be the contact you aimed at, so a torpedo fired down a corridor can
+  turn toward something you hold no resolution on at all. This is the same rule that makes
+  noisemakers work, read in the other direction, and it is a fair one: the loud hull that
+  stole the torpedo is the hull that was making itself the easiest thing in the water to
+  find.
+
+Neither channel can be closed without hiding a player's own asset from them, so the design
+owns them rather than claiming otherwise. What is bounded is the *price*: both require a
+launched torpedo, both end when it does, and neither is available without spending one.
+
 ### Countermeasures
 
 - **Noisemaker decoy:** any combat hull can deploy one — a drifting emitter at SIG 70 for

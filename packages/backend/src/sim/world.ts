@@ -331,14 +331,28 @@ export interface SpawnOrdnanceOptions {
  * key off it — so a torpedo never adds a contact to its owner's picture.
  *
  * That closes the direct channel, and it is worth being precise about what it
- * does not close. A seeker steers at what it hears, its owner is shown their
- * own ordnance, and a hull watching its torpedo turn can read a bearing off it.
- * An earlier version of this comment claimed the seeker "reports to nobody",
- * which was not true: the `locked` flag used to hand over "I have a firm
- * solution on a real hull" with no inference required, and it has been removed.
- * What remains is a track the player must interpret, bought with a scarce
- * weapon — the same bargain Echo Marks strike (docs/systems-echo.md §7), and
- * documented as intended in docs/systems-combat.md §5 rather than left implicit.
+ * does not close. An earlier version of this comment claimed the seeker
+ * "reports to nobody", which was not true, and the imprecision is what let a
+ * `locked` flag sit in the snapshot handing over "I have a firm solution on a
+ * real hull" with no inference required. That flag is gone. What remains is a
+ * *pursuit*, and a pursuit is visible because the commander must be able to see
+ * where their own weapon is:
+ *
+ *   - `heading` is not the leak it looks like, and removing it would close
+ *     nothing: `ordnanceSystem` moves the torpedo along its heading, so two
+ *     consecutive positions — which the owner must be sent — give it back
+ *     exactly. It is published because deriving it client-side is busywork.
+ *   - The depth chase is the sharper one, and is also inherent. A torpedo
+ *     matches its target's depth, so its own depth readout is roughly the
+ *     target's, at a tier where `Contact.depth` would still be withheld.
+ *   - A seeker takes the loudest emitter in its cone, which need not be what
+ *     the player aimed at, so either channel can concern a hull they hold no
+ *     contact on.
+ *
+ * All three are consequences of showing a player their own asset, so they are
+ * documented as intended in docs/systems-combat.md §5 rather than papered over
+ * here. What is bounded is the price: each costs a launched torpedo and expires
+ * with it — the bargain Echo Marks strike (docs/systems-echo.md §7).
  */
 export function spawnOrdnance(world: SimWorld, opts: SpawnOrdnanceOptions): number {
   const stats = ordnanceStatsFor(opts.kind);

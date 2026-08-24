@@ -277,4 +277,62 @@ describe('ordnance and the fog of war', () => {
     }
     assert.ok(defenderChecked, 'the defender should have been sent a snapshot to check');
   });
+
+  it('chases its target’s depth, which is a real channel the design keeps on purpose', () => {
+    // The one piece of the seeker's pursuit that cannot be closed and should not
+    // be quietly hidden. A torpedo matches its target's depth — that is what
+    // makes §8's crush envelope bite — so a commander watching their own weapon
+    // descend learns roughly how deep the thing it is chasing sits, at a tier
+    // where `Contact.depth` would still be withheld.
+    //
+    // Pinned here rather than left implicit because the alternative fixes are
+    // both worse: hiding a torpedo's own depth from the player who launched it,
+    // or breaking the chase and with it §8. docs/systems-combat.md §5 states the
+    // channel and its price. If someone later removes the chase, this fails and
+    // the doc is wrong — which is the point of the test.
+    const match = emptyMatch(59);
+    const launcher = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 5000,
+      y: 8000,
+      depth: 200,
+    });
+    // The geometry has to give the chase time to finish, and the first draft did
+    // not: a 1,000 m depth gap needs 16.7 s at DEPTH_RATE_MPS, but a target
+    // 1,400 m away arrives in 8.75 s, so the torpedo was still 493 m above it at
+    // closest approach. That is the mechanism working and the test asserting the
+    // wrong thing. A 500 m gap over a 2,400 m run closes with room to spare.
+    //
+    // Deep enough to be a different band, shallow enough that a Corvette's PR-2
+    // ordnance survives the trip (the implosion case is torpedo.test.ts's).
+    const prey = spawnUnit(match.world, {
+      kind: UnitKind.Cruiser,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: 7400,
+      y: 8000,
+      depth: 700,
+    });
+    advance(match, 0.5);
+
+    const torpedo = launchTorpedo(match.world, launcher, 7400, 8000);
+    assert.equal(
+      Position.depth[torpedo],
+      200,
+      'it leaves at the launcher’s depth, knowing nothing'
+    );
+
+    let closest = Infinity;
+    for (let i = 0; i < 60 * 22; i++) {
+      match.update(STEP_MS);
+      if (!hasComponent(match.world, Ordnance, torpedo)) break;
+      closest = Math.min(closest, Math.abs(Position.depth[torpedo]! - Position.depth[prey]!));
+    }
+    assert.ok(
+      closest < 25,
+      `a seeker should converge on its target’s depth; closest approach was ${closest.toFixed(0)} m`
+    );
+  });
 });
