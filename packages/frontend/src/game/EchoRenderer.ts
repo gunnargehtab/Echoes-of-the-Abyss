@@ -60,6 +60,7 @@ import {
 } from '@echoes/shared';
 import {
   BIOME_COLOR,
+  depthShade,
   FACTION_PALETTE,
   RESOURCE_COLOR,
   TIER_STYLE,
@@ -414,6 +415,8 @@ export class EchoRenderer {
   private readonly app = new Application();
   private readonly world = new Container();
   private readonly terrainLayer = new Graphics();
+  /** Ground the current selection cannot enter. Dynamic: it depends on who is selected. */
+  private readonly groundLayer = new Graphics();
   private readonly nodeLayer = new Graphics();
   private readonly ringLayer = new Graphics();
   private readonly contactLayer = new Graphics();
@@ -602,6 +605,7 @@ export class EchoRenderer {
     // hide behind your own Bastion.
     this.world.addChild(
       this.terrainLayer,
+      this.groundLayer,
       this.nodeLayer,
       this.ringLayer,
       this.structureSpriteLayer,
@@ -2036,12 +2040,43 @@ export class EchoRenderer {
     const g = this.terrainLayer;
     g.clear();
 
+    // The map's own depth range, not the ruleset's: a shallow map should still
+    // read as terrain rather than as one flat wash of near-black.
+    let shallowest = Number.POSITIVE_INFINITY;
+    let deepest = 0;
+    for (let i = 0; i < terrain.floor.length; i++) {
+      const f = terrain.floor[i]!;
+      if (f < shallowest) shallowest = f;
+      if (f > deepest) deepest = f;
+    }
+
     for (let row = 0; row < terrain.rows; row++) {
       for (let col = 0; col < terrain.cols; col++) {
-        const biome = terrain.biomes[row * terrain.cols + col] as Biome;
+        const index = row * terrain.cols + col;
+        const biome = terrain.biomes[index] as Biome;
+        const base = BIOME_COLOR[biome] ?? BIOME_COLOR[Biome.OpenWater];
         g.rect(col * terrain.cellM, row * terrain.cellM, terrain.cellM, terrain.cellM).fill({
-          color: BIOME_COLOR[biome] ?? BIOME_COLOR[Biome.OpenWater],
+          // Depth is luminance (docs/art-direction.md, "Reading the Sea Floor").
+          // The hue stays the biome's, because hue is what sound is priced by.
+          color: depthShade(base, terrain.floor[index]!, shallowest, deepest),
         });
+      }
+    }
+
+    // Roofed passages, marked as routes rather than as openings.
+    //
+    // A tunnel is the one piece of terrain invisible from above by
+    // construction, so drawing its mouth would say nothing — the line is what
+    // a player needs. Public map data like the rest of the ground: everyone
+    // can see the passage is there, nobody can see who is inside it.
+    for (let row = 0; row < terrain.rows; row++) {
+      for (let col = 0; col < terrain.cols; col++) {
+        if (terrain.ceiling[row * terrain.cols + col]! === 0) continue;
+        const x = col * terrain.cellM;
+        const y = row * terrain.cellM;
+        g.moveTo(x, y + terrain.cellM / 2)
+          .lineTo(x + terrain.cellM, y + terrain.cellM / 2)
+          .stroke({ width: 2, color: UI.accent, alpha: 0.22 });
       }
     }
 
@@ -2094,6 +2129,7 @@ export class EchoRenderer {
   }
 
   private draw(): void {
+    this.drawBlockedGround();
     this.drawRings();
     this.drawContacts();
     this.drawStructures();
@@ -2107,6 +2143,52 @@ export class EchoRenderer {
     this.drawCommandBar();
     this.drawMinimap();
     this.drawInfoPanel();
+  }
+
+  /**
+   * Ground the current selection cannot enter.
+   *
+   * Whether ground blocks you is not a property of the ground: it is a
+   * relationship between the ground and *your* hulls, and a ridge that stops a
+   * deep raider is open water to a scout (docs/environments.md, Pathing). So
+   * this is drawn only while something is selected, and only for the depth
+   * that selection is actually at.
+   *
+   * Cyan, because the HUD's cyan is the voice that tells you things
+   * (docs/style-neon-noir.md). Never threat-red: being unable to cross a ridge
+   * is information, not danger, and the same screen has to show both.
+   *
+   * The deepest hull in the selection decides. A mixed group moving together
+   * is limited by the one that fits through least, and showing the optimistic
+   * answer would draw a route half the group cannot take.
+   */
+  private drawBlockedGround(): void {
+    const g = this.groundLayer;
+    g.clear();
+    const terrain = this.terrain;
+    if (terrain === null || this.selected.size === 0) return;
+
+    let depth = -1;
+    for (const unit of this.units) {
+      if (this.selected.has(unit.id) && unit.depth > depth) depth = unit.depth;
+    }
+    if (depth < 0) return;
+
+    for (let row = 0; row < terrain.rows; row++) {
+      for (let col = 0; col < terrain.cols; col++) {
+        const index = row * terrain.cols + col;
+        if (depth >= terrain.ceiling[index]! && depth <= terrain.floor[index]!) continue;
+        const x = col * terrain.cellM;
+        const y = row * terrain.cellM;
+        // Hatched rather than filled: a solid block would bury the biome
+        // underneath it, and the biome is what the player reads sound by.
+        // Terrain must stay quieter than contacts.
+        g.rect(x, y, terrain.cellM, terrain.cellM).fill({ color: UI.accent, alpha: 0.07 });
+        g.moveTo(x, y + terrain.cellM)
+          .lineTo(x + terrain.cellM, y)
+          .stroke({ width: 1, color: UI.accent, alpha: 0.16 });
+      }
+    }
   }
 
   /**
