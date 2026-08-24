@@ -14,6 +14,9 @@ import type { SimWorld } from '../world.ts';
 
 const movable = defineQuery([Position, Velocity, MoveOrder, Unit, SilentRunning, Owner]);
 
+/** Reused across hulls and ticks: resolveStep writes here rather than allocating. */
+const step = { x: 0, y: 0 };
+
 function speedMultiplier(world: SimWorld, eid: number): number {
   // Storm interference stacks with silent running rather than replacing it
   // (docs/hazards.md §5, "Bathyarch machinery malfunctions"): a Consortium
@@ -55,12 +58,29 @@ export function movementSystem(world: SimWorld): void {
     const stats = statsFor(Unit.kind[eid] as UnitKind);
     const speed = stats.speed * speedMultiplier(world, eid);
     // Never overshoot the target within a single step.
-    const step = Math.min(speed * dt, distance);
+    const travel = Math.min(speed * dt, distance);
     const nx = dx / distance;
     const ny = dy / distance;
 
-    Position.x[eid] = Position.x[eid]! + nx * step;
-    Position.y[eid] = Position.y[eid]! + ny * step;
+    // Ground has a say now (docs/systems-depth.md §2). A hull too deep for the
+    // water ahead does not drive into it; resolveStep slides it along the edge
+    // instead, and depthSystem lifts it until it fits — so a plateau costs a
+    // fleet time and a detour rather than stopping it dead. That matters more
+    // than it looks: nothing in this simulation can path around an obstacle,
+    // and the AI has no depth command at all, so ground that merely blocked
+    // would strand every hull that met it.
+    const fromX = Position.x[eid]!;
+    const fromY = Position.y[eid]!;
+    world.terrain.resolveStep(
+      fromX,
+      fromY,
+      fromX + nx * travel,
+      fromY + ny * travel,
+      Position.depth[eid]!,
+      step
+    );
+    Position.x[eid] = step.x;
+    Position.y[eid] = step.y;
     Velocity.x[eid] = nx * speed;
     Velocity.y[eid] = ny * speed;
   }

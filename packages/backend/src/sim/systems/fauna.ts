@@ -51,6 +51,9 @@ import type { SimWorld } from '../world.ts';
 export const DRIFT_SLOT = 200;
 
 const creatures = defineQuery([Fauna, Position, Acoustic, Health]);
+
+/** Reused scratch for terrain step resolution — see movement.ts. */
+const faunaStep = { x: 0, y: 0 };
 /** Everything a creature can hear: players' hulls and buildings. */
 const audible = defineQuery([Position, Acoustic, Owner, Health]);
 
@@ -289,9 +292,23 @@ function act(
   const dy = toY - y;
   const distance = Math.hypot(dx, dy);
   if (distance > stopAtM) {
-    const step = Math.min(stats.speed * dt, distance - stopAtM);
-    Position.x[eid] = x + (dx / distance) * step;
-    Position.y[eid] = y + (dy / distance) * step;
+    const travel = Math.min(stats.speed * dt, distance - stopAtM);
+    // Ground refuses a creature the same way it refuses a hull, and for the
+    // same reason: a Sounder inside a plateau is an emitter nobody can reach.
+    // Fauna get the horizontal half only — they carry no DepthOrder, so
+    // nothing would ever lift them again. A refused step is harmless here in a
+    // way it would not be for a hull: a fish that cannot go where it was
+    // heading simply wanders somewhere else, having been given no orders.
+    world.terrain.resolveStep(
+      x,
+      y,
+      x + (dx / distance) * travel,
+      y + (dy / distance) * travel,
+      Position.depth[eid]!,
+      faunaStep
+    );
+    Position.x[eid] = faunaStep.x;
+    Position.y[eid] = faunaStep.y;
   }
 
   if (stage !== FaunaStage.Committed || target === 0) return;

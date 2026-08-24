@@ -635,6 +635,12 @@ export class Match {
       return false;
     }
 
+    // A structure cannot rise the way a hull can, so ground that does not admit
+    // it at its working depth is a refusal rather than a detour. Authored maps
+    // are held to this by maps.test.ts; this is the same rule for the
+    // structures a player puts down mid-match.
+    if (!this.world.terrain.admits(x, y, CONSTRUCTION.WORKING_DEPTH_M)) return false;
+
     // Terrain requirement, enforced server-side like every other placement
     // rule. A vent tap only works on a vent: docs/economy.md §2 puts Thermal
     // Draw in Thermal Veins, and that constraint is the point — the tap drags

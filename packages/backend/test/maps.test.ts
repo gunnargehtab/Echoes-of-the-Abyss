@@ -15,6 +15,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   Biome,
+  CONSTRUCTION,
   CRYSTAL,
   DEPTH,
   Faction,
@@ -328,8 +329,8 @@ describe('every map has water where it seats things', () => {
   // world.ts seats structures at 600 m and nodule fields at 600 m; crystal
   // fields sit at CRYSTAL.FIELD_DEPTH_M. None of them consult the seabed, so
   // nothing but this test stands between a map and a Bastion inside a plateau.
-  const STRUCTURE_DEPTH_M = 600;
-  const NODULE_DEPTH_M = 600;
+  const STRUCTURE_DEPTH_M = CONSTRUCTION.WORKING_DEPTH_M;
+  const NODULE_DEPTH_M = CONSTRUCTION.WORKING_DEPTH_M;
 
   for (const map of MAPS) {
     describe(map.name, () => {

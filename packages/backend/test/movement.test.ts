@@ -22,6 +22,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  DEPTH,
   Faction,
   HAZARDS,
   MOVEMENT,
@@ -32,7 +33,8 @@ import {
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { spawnUnit } from '../src/sim/world.ts';
-import { MoveOrder, Position, Velocity } from '../src/sim/components.ts';
+import { Terrain } from '../src/sim/terrain.ts';
+import { DepthOrder, MoveOrder, Position, Velocity } from '../src/sim/components.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 
@@ -315,5 +317,155 @@ describe('movement', () => {
         `hull ${eid} came to rest off the map at ${x.toFixed(1)}, ${y.toFixed(1)}`
       );
     }
+  });
+});
+
+describe('ground stops hulls', () => {
+  // docs/systems-depth.md §2. The rule under test is asymmetric on purpose:
+  // terrain may raise a hull and may never lower one, so a plateau costs a
+  // fleet time and a detour while a roofed passage stays a deliberate dive.
+  const MAP_M = 8000;
+
+  /** A deep map with a shallow bar across the middle of it. */
+  function barredMatch(): Match {
+    const terrain = new Terrain(MAP_M, MAP_M, 250, { floorM: 2600 });
+    // A full-width shelf, so a hull heading north-south must deal with it and
+    // cannot simply go round the end.
+    terrain.fillGround(0, 3000, MAP_M, 1000, { floorM: 380 });
+    const match = new Match(undefined, { fauna: false, seed: 11, terrain });
+    match.addPlayer(0, Faction.Bathyarch);
+    advance(match, 0.5);
+    return match;
+  }
+
+  function hullAt(match: Match, x: number, y: number, depth: number): number {
+    const eid = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x,
+      y,
+    });
+    Position.depth[eid] = depth;
+    return eid;
+  }
+
+  it('will not drive a deep hull into a shelf', () => {
+    const match = barredMatch();
+    const hull = hullAt(match, 4000, 2000, 900);
+    match.orderMove(0, hull, 4000, 6000);
+    // Long enough to matter: the shelf is 1,000 m away and a Corvette covers
+    // that in twelve seconds. Measured, because a shorter window passes whether
+    // or not ground does anything — the hull simply never arrives at the wall.
+    advance(match, 20);
+
+    // Pinned at the near edge. Ignoring ground it reaches y≈3,700 by now, deep
+    // inside a shelf that has 380 m of water over it.
+    assert.ok(
+      Position.y[hull]! < 3100,
+      `a hull at 900m entered a 380m shelf: y=${Position.y[hull]!.toFixed(0)}`
+    );
+    assert.ok(Position.y[hull]! > 2900, 'and it did travel all the way to the shelf');
+  });
+
+  it('lets the same hull through once the ground has lifted it', () => {
+    const match = barredMatch();
+    const hull = hullAt(match, 4000, 2000, 900);
+    match.orderMove(0, hull, 4000, 6000);
+    // The other half of the test above, and the half that does not discriminate
+    // on its own: a hull ignoring ground crosses too. Together the pair is the
+    // rule — deep is refused, shallow is admitted — and the test above is the
+    // one that fails when ground stops mattering.
+    //
+    // Ordering it shallow is what buys the crossing. 900 -> 380 at 15 m/s is
+    // ~35 s of rising, and the hull is stopped at the bar for that whole time.
+    match.orderDepth(0, hull, 300);
+    advance(match, 90);
+
+    assert.ok(
+      Position.y[hull]! > 4000,
+      `a hull at 300m should cross a 380m shelf, got y=${Position.y[hull]!.toFixed(0)}`
+    );
+  });
+
+  it('slides along ground rather than sticking on it', () => {
+    const terrain = new Terrain(MAP_M, MAP_M, 250, { floorM: 2600 });
+    // A bar with a gap: something that can slide will find its way past.
+    terrain.fillGround(0, 3000, 3000, 1000, { floorM: 380 });
+    const match = new Match(undefined, { fauna: false, seed: 12, terrain });
+    match.addPlayer(0, Faction.Bathyarch);
+    advance(match, 0.5);
+
+    const hull = hullAt(match, 1000, 2850, 900);
+    // Aimed diagonally at the bar's flank. Three outcomes are distinguishable
+    // here, which is the point of asserting on both axes: ground ignored sails
+    // through to y≈4,160; ground that merely stopped a hull leaves it at the
+    // wall with x barely past 1,000; ground that slides pins y at the bar and
+    // carries x east to ≈1,965.
+    match.orderMove(0, hull, 3600, 6000);
+    advance(match, 20);
+
+    assert.ok(Position.y[hull]! <= 3000, `the bar must hold: y=${Position.y[hull]!.toFixed(0)}`);
+    assert.ok(
+      Position.x[hull]! > 1900,
+      `a blocked hull should slide along the obstacle, not stop on it: ` +
+        `x=${Position.x[hull]!.toFixed(0)}`
+    );
+  });
+
+  it('lifts a hull the seabed has come up under, and does not touch its order', () => {
+    const match = barredMatch();
+    // Standing on the shelf at a depth the shelf does not admit — the state
+    // knockback or separation can produce, since both write positions directly.
+    const hull = hullAt(match, 4000, 3500, 900);
+    match.orderDepth(0, hull, 2000);
+    advance(match, 1);
+
+    assert.ok(
+      Position.depth[hull]! < 900,
+      `the seabed should have lifted the hull, depth=${Position.depth[hull]!.toFixed(0)}`
+    );
+    assert.ok(
+      Position.depth[hull]! >= 900 - DEPTH.ASCENT_RATE_MPS * 1.2,
+      'and lifted it at the ascent rate rather than teleporting it'
+    );
+    // The order it was given is still the order it has. The ground holds the
+    // hull; it does not argue with the player about where they wanted to go.
+    assert.equal(DepthOrder.targetM[hull], 2000, 'terrain must not rewrite a depth order');
+    assert.ok(DepthOrder.active[hull], 'nor cancel it');
+  });
+
+  it('never lowers a hull into a roofed passage', () => {
+    const terrain = new Terrain(MAP_M, MAP_M, 250, { floorM: 400 });
+    // A tunnel under shallow ground: water from 800 m down, rock above it.
+    terrain.fillGround(3000, 0, 1000, MAP_M, { ceilingM: 800, floorM: 1600 });
+    const match = new Match(undefined, { fauna: false, seed: 13, terrain });
+    match.addPlayer(0, Faction.Bathyarch);
+    advance(match, 0.5);
+
+    const hull = hullAt(match, 1000, 4000, 300);
+    match.orderMove(0, hull, 7000, 4000);
+    advance(match, 40);
+
+    // The hull is at 300 m and the passage starts at 800 m. Terrain lifts, so
+    // it cannot fall in, and nothing in the simulation will dive for it.
+    assert.ok(
+      Position.x[hull]! < 3000,
+      `a shallow hull must not be lowered into a tunnel: x=${Position.x[hull]!.toFixed(0)}`
+    );
+    assert.ok(
+      Position.depth[hull]! <= 400,
+      `and must not have been pushed deeper, depth=${Position.depth[hull]!.toFixed(0)}`
+    );
+  });
+
+  it('refuses to seat a structure on ground that cannot hold it', () => {
+    const match = barredMatch();
+    // A structure cannot rise, so shallow ground is a refusal rather than a
+    // detour — the one place this rule is not asymmetric.
+    const economy = match.world.economies.get(0);
+    if (economy) economy.nodules = 100000;
+    const onShelf = match.build(0, 3 as never, 4000, 3500);
+    assert.equal(onShelf, false, 'a structure must not be seated inside a shelf');
   });
 });

@@ -95,10 +95,10 @@ what exists or assumes what does not. Constants live in `DEPTH` in
 | Directorate shallow-water penalty (§3) | Not modelled | −20% speed, −15% HP above 400 m; needs a per-faction modifier pass |
 | Pelagia Deepbloom terraforming (§3) | Not modelled | Requires terrain that can change band. The per-region floor is the substrate for it; what is missing is the ability to write to it mid-match |
 | Commander abilities, e.g. Seeding (§4) | Not modelled | No commander-ability layer exists yet |
-| Map floor (§1) | Not modelled | `DEPTH.MAX_M` is still a flat 3,000 m for every map. Becomes a per-region authored value, with the constant demoted to a sanity ceiling on what a map may author (issue #150) |
-| Map ceiling (§1) | Not modelled | Per-region, 0 on open water; non-zero is a roofed passage. Nothing in the terrain grid carries it yet (issue #150) |
-| Ground you do not fit through (§2) | Not modelled | `movementSystem` reads no terrain at all today; every hull passes through everything (issue #150) |
-| Terrain raises, never lowers (§2) | Not modelled | The rule this document commits to before the code exists, so the code has something to be wrong against (issue #150) |
+| Map floor (§1) | **Implemented** | Per-region, authored in the map. `DEPTH.MAX_M` is now only the ruleset's ceiling on what a map may author and what may be ordered |
+| Map ceiling (§1) | **Implemented** | Per-region, 0 on open water. Two maps author roofed passages: the Ventfront flanking tunnels and the Kelp Labyrinth's wall runs |
+| Ground you do not fit through (§2) | **Implemented** | `movementSystem` resolves each step against the water column and slides along ground it cannot enter, rather than refusing the order |
+| Terrain raises, never lowers (§2) | **Implemented** | `depthSystem` holds a hull no deeper than the ground allows, at the ascent rate, without touching its depth order. Fauna get the horizontal refusal only — they carry no depth order, so nothing would lift them again |
 
 The descent and ascent *rates* are TUNABLE — this document pins the asymmetry, not the
 numbers. The asymmetry itself is not tunable: it is what §5 above is about.
