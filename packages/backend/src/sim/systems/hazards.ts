@@ -158,6 +158,21 @@ export function isSimulated(kind: HazardKind): boolean {
 }
 
 /**
+ * How long this kind waits before it first stirs, in seconds. Zero for a
+ * hazard with no cycle to wait in.
+ *
+ * Exported for `Match.seedHazards`, which staggers each site into its dormancy
+ * so a map's hazards do not all fire together. That stagger has to scale by
+ * *this kind's* wait: scaling every kind by the eruption's meant a storm could
+ * only ever begin somewhere in the first 55 s of a 100 s dormancy, so every
+ * storm on a map started in the back half of its own cycle and the stagger
+ * quietly did a third of its job.
+ */
+export function dormantSecondsFor(kind: HazardKind): number {
+  return CYCLES[kind]?.dormantS ?? 0;
+}
+
+/**
  * How long the current phase lasts for this hazard, right now.
  *
  * Not a constant, because §1's Hadron interaction — "can predict eruptions via
