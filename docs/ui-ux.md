@@ -294,11 +294,89 @@ What the current client implements against this spec, so nobody re-implements wh
 | Exposure strike and screen-edge flash | Implemented — fires from `EchoSnapshot.selfEvents`, bearing only |
 | Active sonar transmit, returns ordered by range | Implemented |
 | Break-silence transient and its per-hull ring | Implemented |
-| Precedence Law — mark fade-in, ducking chain | Implemented; the visual-first preset exists in code but has no toggle yet |
+| Precedence Law — mark fade-in, ducking chain | Implemented — the visual-first preset is a settings toggle (§14) |
 | Echo Mark residue, drawn and voiced | Implemented — server-resolved against HYD, so a client only holds what it could hear |
 | Tier-4 acquisition brackets | Implemented — the visual half of the lock tone |
-| Accessibility presets and palettes | Not started — mono spatialisation exists in the mix but has no toggle yet |
+| Accessibility presets and palettes | Partial — mono and visual-first are settings toggles (§14); colour-vision palettes, UI scale and reduced motion not started |
 | Box select, control groups, order queue | Implemented |
+| The shell — title, setup, settings, credits | Implemented (§14) — campaign and tutorial entries are disabled placeholders pending the mission runtime |
+| Settings persistence and per-bus volume | Implemented (§14) — `localStorage`, applied at match mount |
+
+---
+
+## 14. The Shell
+
+Everything before a room is joined and after one is left. The in-match interface above ends
+at the hull; the shell is the port. It is DOM and only DOM, for the same reasons §10 gives
+for the contact log — focus rings, keyboard traversal, screen readers — and it draws every
+colour from the tokens transcribed out of [style-neon-noir.md](style-neon-noir.md): cyan
+tells you, magenta asks you, red warns you. The reflection glow that document licenses "on
+key art and menus only" belongs to the title screen; the in-match HUD still may not use it.
+
+### Screens
+
+```text
+title ──▶ setup (solo | multiplayer) ──▶ match (in-room lobby ▶ playing ▶ result)
+  │  ▲                                        │
+  │  └── settings · credits ── back           └── "Return to port" ▶ title
+  └── resume banner ─────────────────────▶ match (seat resumed)
+```
+
+The screen state is a plain discriminated union in `App.tsx` — no router, no history
+integration. Browser back mid-match would mean "leave the match" as an accident, and §1.5
+forbids exactly that class of accident. The one deep link that exists, `?map=<id>`, is kept:
+a URL carrying it boots straight into a match, which is also what keeps the headless
+harness and dev muscle memory working.
+
+- **Title** — the game's name, one tagline from [naming.md](naming.md), and the entries:
+  Resume (only while a seat is held, see below), Campaign, Solo Game, Multiplayer,
+  Tutorial, Settings, Credits. There is no Quit; this is a browser.
+- **Setup** — shared by Solo and Multiplayer: a commander-name field and one card per map
+  archetype (name, doctrine line, seats), from the shared catalogue. Faction choice and AI
+  opponents stay in the in-room ready room, because faction uniqueness is enforced by the
+  room and a pick is a request the room may refuse ([tech-stack.md](tech-stack.md)) — the
+  shell does not promise what the server may deny.
+- **Settings** — see below.
+- **Credits** — static, and honest: the technology roll from
+  [tech-stack.md](tech-stack.md) and a note that every sound is synthesised. No invented
+  names.
+
+**Disabled entries are visible, with the reason attached.** Campaign and Tutorial exist on
+the title screen before the mission runtime does, dimmed to 40% per style-neon-noir's
+disabled rule — a dead console still has phosphor in it — each carrying one line saying
+what it waits on. The shape of the finished game is on screen; a menu that hides its
+missing rooms would misrepresent the build.
+
+### Resume
+
+A held seat survives a reload (the reconnection token in `sessionStorage`, inside the
+server's grace window), so the title screen surfaces it as its first entry, autofocused —
+one keypress back into the match. Resuming is offered, never automatic: the player may be
+reloading precisely because they are done. Leaving on purpose — "Return to port" — clears
+the token, so a stale banner never offers a seat that is gone.
+
+### Settings, v1
+
+Only what wires to behaviour that exists. Each control names its effect in the mix or on
+the screen, not a technology.
+
+| Control | Range | Wires to |
+| --- | --- | --- |
+| Master volume | 0–100% | Master gain, composed under the −18 LUFS / −1 dBTP targets in [audio-direction.md](audio-direction.md) §12 |
+| Music · World · Self · UI | 0 dB max | Per-bus trims ([audio-direction.md](audio-direction.md) §11 — independent buses) |
+| Contacts | up to **+12 dB** | The one boostable bus, per the same section; the boost trades headroom for audibility and is capped so the true-peak target survives |
+| Mono audio | toggle | The mix's existing mono spatialisation — a rendering choice, never a loss (§11) |
+| Visual-first | toggle | Removes the §1.3 fade-in delay so marks arrive at ≤ 30 ms (§11) |
+
+User volume lives on trim nodes *beside* the ducking chain, never on the ducked gains —
+the Precedence Law's ducking writes those every tick, and a user slider fighting it would
+turn the mix's grammar into noise. The commander name and every setting persist in
+`localStorage` as a device preference; the reconnection token stays per-tab, because a seat
+is not a preference.
+
+Deferred to their own issues, so v1 does not promise them: key rebinding (§11 requires
+full rebinding and a one-handed layout, and the bindings are not yet data), the three
+colour-vision palettes, UI scale, and reduced motion.
 
 ---
 
