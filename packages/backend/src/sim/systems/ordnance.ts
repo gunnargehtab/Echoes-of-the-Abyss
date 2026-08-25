@@ -64,6 +64,7 @@ import {
 } from '../components.ts';
 import { applyFiringSpike } from './acoustics.ts';
 import { raiseSelfEvent, spawnOrdnance, type SimWorld } from '../world.ts';
+import { suppressKelpAt } from './hazards.ts';
 
 const ordnanceEntities = defineQuery([Ordnance, Position, Owner, Health]);
 /** Everything a seeker could conceivably home on: anything that makes noise. */
@@ -454,6 +455,10 @@ function blast(
 
   Ordnance.detonatingS[eid] = options.echoS;
   world.marks.add(EchoMarkKind.Battle, x, y, 1);
+  // "Explosions clear kelp temporarily" — docs/hazards.md §4. This is the only
+  // place in the simulation that knows a detonation happened somewhere, so it
+  // is the only place that can tear a canopy open.
+  suppressKelpAt(world, x, y);
 
   const candidates = audible(world);
   for (let i = 0; i < candidates.length; i++) {

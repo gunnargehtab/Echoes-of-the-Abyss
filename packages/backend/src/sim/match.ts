@@ -96,7 +96,7 @@ import { hashWorld } from './stateHash.ts';
 import { Terrain } from './terrain.ts';
 import { VENTFRONT_DIVIDE, terrainFor, type MapDefinition } from './maps/index.ts';
 import { countFauna, DRIFT_SLOT, faunaSystem } from './systems/fauna.ts';
-import { hazardStates, hazardsSystem, isSimulated } from './systems/hazards.ts';
+import { hazardStates, hazardsSystem, isPermanent, isSimulated } from './systems/hazards.ts';
 import { drawFor, thermalSystem } from './systems/thermal.ts';
 import { titheSystem } from './systems/tithe.ts';
 import {
@@ -331,7 +331,9 @@ export class Match {
         x: site.x,
         y: site.y,
         radiusM: site.radiusM,
-        phase: HazardPhase.Dormant,
+        // Kelp has no cycle to wait in — it begins the match gripping
+        // (docs/hazards.md §4). Everything else telegraphs first.
+        phase: isPermanent(site.kind) ? HazardPhase.Active : HazardPhase.Dormant,
         elapsedS: stagger * HAZARDS.ERUPTION.DORMANT_S,
         // Authored in degrees and stored in radians: docs/hazards.md §8 makes a
         // current's direction map data, and the per-tick path should never pay
@@ -339,6 +341,8 @@ export class Match {
         // which maps.test.ts refuses rather than silently shipping still water.
         flowRad: ((site.flowDeg ?? 0) * Math.PI) / 180,
         stabilisedS: 0,
+        suppressedS: 0,
+        burnedS: 0,
       });
     }
   }

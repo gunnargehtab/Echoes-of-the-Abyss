@@ -30,11 +30,22 @@ import {
   HAZARDS,
   HazardPhase,
   SILENT_RUNNING,
+  statsFor,
   type HazardKind,
   type HazardState,
+  type UnitKind,
 } from '@echoes/shared';
 import { defineQuery, hasComponent } from 'bitecs';
-import { Acoustic, Fauna, Health, Owner, Position, Structure, Velocity } from '../components.ts';
+import {
+  Acoustic,
+  Fauna,
+  Health,
+  Owner,
+  Position,
+  Structure,
+  Unit,
+  Velocity,
+} from '../components.ts';
 import type { SimWorld } from '../world.ts';
 
 /**
@@ -100,6 +111,21 @@ export interface Hazard {
    */
   flowRad: number;
   /**
+   * Seconds a blast is holding this field open for. Kelp only — counts down
+   * every tick. Thermal cutters are tracked separately, because they hold a
+   * field open rather than buying it a fixed span.
+   */
+  suppressedS: number;
+  /**
+   * Progress toward a Bathyarch hull cutting this field open, in seconds of
+   * continuous presence, capped at `HAZARDS.KELP.BATHYARCH_BURN_S`.
+   *
+   * Charges while they are inside and bleeds when they are not, so the field
+   * comes apart slowly and closes slowly. That is what makes burning a
+   * commitment rather than a thing that happens because somebody walked past.
+   */
+  burnedS: number;
+  /**
    * Extra dormancy bought by a Bathyarch presence.
    *
    * doc §1: "Bathyarch can stabilize vents for energy boosts". Stabilising is
@@ -109,9 +135,26 @@ export interface Hazard {
   stabilisedS: number;
 }
 
+/**
+ * Hazards with no cycle at all — always on, and stopped only by something
+ * actively holding them back.
+ *
+ * Kelp is the first of these. An eruption fires and subsides, a current runs
+ * and slackens; kelp is simply *there* (docs/hazards.md §4), so there is no
+ * dormant phase for it to wait in. It sits Active for the whole match and
+ * drops to Dormant only while suppressed, which is exactly what that phase has
+ * always meant: visible as a site, doing nothing.
+ */
+const PERMANENT: ReadonlySet<HazardKind> = new Set<HazardKind>(['kelp-entanglement']);
+
+/** Does this kind begin its match already acting, rather than dormant? */
+export function isPermanent(kind: HazardKind): boolean {
+  return PERMANENT.has(kind);
+}
+
 /** Hazards the framework knows how to run. The rest are sites only. */
 export function isSimulated(kind: HazardKind): boolean {
-  return CYCLES[kind] !== undefined;
+  return CYCLES[kind] !== undefined || PERMANENT.has(kind);
 }
 
 /**
@@ -194,6 +237,21 @@ export function hazardsSystem(world: SimWorld, destroyed: number[]): void {
       }
     }
 
+    // Kelp does not advance through phases; it grips or it does not. Doc §4:
+    // a blast tears the canopy open and a Bathyarch hull holds it open with
+    // thermal cutters, so suppression is refreshed while they stand in it and
+    // lapses shortly after they leave. Burning a path is a commitment to stay.
+    if (hazard.kind === 'kelp-entanglement') {
+      const cutters = anyFactionWithin(world, hazard, Faction.Bathyarch, hazard.radiusM);
+      hazard.burnedS = cutters
+        ? Math.min(HAZARDS.KELP.BATHYARCH_BURN_S, hazard.burnedS + dt)
+        : Math.max(0, hazard.burnedS - dt);
+      hazard.suppressedS = Math.max(0, hazard.suppressedS - dt);
+      const open = hazard.burnedS >= HAZARDS.KELP.BATHYARCH_BURN_S || hazard.suppressedS > 0;
+      hazard.phase = open ? HazardPhase.Dormant : HazardPhase.Active;
+      continue;
+    }
+
     hazard.elapsedS += dt;
     const duration = phaseDuration(world, hazard);
     if (hazard.elapsedS >= duration) {
@@ -262,6 +320,7 @@ function applyEffects(world: SimWorld, hazard: Hazard, dt: number, destroyed: nu
   // Decay does half damage: subsiding, not stopped.
   const taper = hazard.phase === HazardPhase.Active ? 1 : 0.5;
 
+  if (hazard.kind === 'kelp-entanglement') return; // drag is read, never applied
   if (hazard.kind === 'geothermal-eruption') applyEruption(world, hazard, dt * taper, destroyed);
   else if (hazard.kind === 'resonance-storm') applyStorm(world, hazard, dt * taper, destroyed);
   else if (hazard.kind === 'cold-shock') applyCurrent(world, hazard, dt * taper);
@@ -318,6 +377,86 @@ function applyCurrent(world: SimWorld, hazard: Hazard, dt: number): void {
     terrain.resolveStep(x, y, x + flowX * push, y + flowY * push, Position.depth[eid]!, drift);
     Position.x[eid] = drift.x;
     Position.y[eid] = drift.y;
+  }
+}
+
+/**
+ * What a kelp field costs a hull: speed always, SIG only if it is moving.
+ *
+ * Returned rather than written, like `stormModifiers` and `currentModifiers`,
+ * because SIG is rebuilt from scratch by the acoustics pass every tick.
+ *
+ * Doc §4's trade, and the reason kelp is a decision rather than mud: the biome
+ * already masks at PF 0.55, so the field's only cost is *movement*. A hull that
+ * stops is silent and hidden; a hull pushing through pays in proportion to how
+ * hard the kelp is dragging on it, which makes the loudest thing in the
+ * quietest biome a Cruiser in a hurry. Pelagia pay nothing at all, because
+ * nothing drags on them — "moves freely" is both halves.
+ *
+ * Reads `Velocity` and `Unit`, so it may only be called for hulls.
+ */
+export function kelpModifiers(world: SimWorld, eid: number): { speed: number; sig: number } {
+  const none = { speed: 1, sig: 0 };
+  if (world.hazards.length === 0) return none;
+
+  const x = Position.x[eid]!;
+  const y = Position.y[eid]!;
+  let gripping = false;
+  for (const hazard of world.hazards) {
+    if (hazard.kind !== 'kelp-entanglement') continue;
+    if (hazard.phase !== HazardPhase.Active) continue;
+    const dx = x - hazard.x;
+    const dy = y - hazard.y;
+    if (dx * dx + dy * dy <= hazard.radiusM * hazard.radiusM) {
+      gripping = true;
+      break;
+    }
+  }
+  if (!gripping) return none;
+
+  const faction = Owner.faction[eid];
+  let speed: number;
+  if (faction === Faction.Pelagia) speed = HAZARDS.KELP.PELAGIA_SPEED_MULTIPLIER;
+  else if (faction === Faction.Hadron) speed = HAZARDS.KELP.HADRON_SPEED_MULTIPLIER;
+  else if (faction === Faction.Directorate) speed = HAZARDS.KELP.DIRECTORATE_SPEED_MULTIPLIER;
+  else speed = HAZARDS.KELP.BATHYARCH_SPEED_MULTIPLIER;
+
+  // Large hulls shoulder through rather than slip past, whoever owns them —
+  // but never worse than the faction already manages, so "moves freely" and
+  // "tears through" are not quietly undone by building a Cruiser.
+  const hull = statsFor(Unit.kind[eid] as UnitKind).hullLengthM;
+  if (hull >= HAZARDS.KELP.LARGE_HULL_M && faction !== Faction.Pelagia) {
+    speed = Math.min(speed, HAZARDS.KELP.LARGE_SPEED_MULTIPLIER);
+  }
+
+  // Thermal cutters run whether the hull is moving or not — unlike drag,
+  // cutting is work you are doing on purpose, and it is what stops burning
+  // being a free counter to the map (doc §4).
+  const cutting = Owner.faction[eid] === Faction.Bathyarch ? HAZARDS.KELP.CUTTER_SIG : 0;
+
+  const vx = Velocity.x[eid]!;
+  const vy = Velocity.y[eid]!;
+  // Stopped is silent: a hull that is not pushing is not working.
+  if (vx === 0 && vy === 0) return { speed, sig: cutting };
+  return { speed, sig: cutting + HAZARDS.KELP.DRAG_SIG * (1 - speed) };
+}
+
+/**
+ * Tear the canopy open — doc §4's "explosions clear kelp temporarily".
+ *
+ * Called by the ordnance pass from inside a blast, which is the only place in
+ * the simulation that knows a detonation happened somewhere. A field is
+ * suppressed if the blast went off anywhere inside it; the canopy does not
+ * open in proportion to how close the charge was, because a hole in kelp is a
+ * hole.
+ */
+export function suppressKelpAt(world: SimWorld, x: number, y: number): void {
+  for (const hazard of world.hazards) {
+    if (hazard.kind !== 'kelp-entanglement') continue;
+    const dx = x - hazard.x;
+    const dy = y - hazard.y;
+    if (dx * dx + dy * dy > hazard.radiusM * hazard.radiusM) continue;
+    hazard.suppressedS = Math.max(hazard.suppressedS, HAZARDS.KELP.BLAST_CLEAR_S);
   }
 }
 
@@ -509,7 +648,12 @@ export function hazardStates(world: SimWorld): HazardState[] {
   const out: HazardState[] = [];
   for (const hazard of world.hazards) {
     if (!isSimulated(hazard.kind)) continue;
-    const duration = phaseDuration(world, hazard);
+    // A permanent hazard has no phase clock — its duration is Infinity, and
+    // shipping that would reach the client as null. What it does have is a
+    // suppression countdown, which is the only number about it worth showing:
+    // how long until the kelp closes again.
+    const permanent = isPermanent(hazard.kind);
+    const duration = permanent ? 0 : phaseDuration(world, hazard);
     out.push({
       id: hazard.id,
       kind: hazard.kind,
@@ -517,8 +661,8 @@ export function hazardStates(world: SimWorld): HazardState[] {
       y: hazard.y,
       radiusM: hazard.radiusM,
       phase: hazard.phase,
-      progress: duration === 0 ? 1 : Math.min(1, hazard.elapsedS / duration),
-      remainingS: Math.max(0, duration - hazard.elapsedS),
+      progress: permanent ? 0 : duration === 0 ? 1 : Math.min(1, hazard.elapsedS / duration),
+      remainingS: permanent ? hazard.suppressedS : Math.max(0, duration - hazard.elapsedS),
       ...(hazard.kind === 'cold-shock' ? { flowRad: hazard.flowRad } : {}),
     });
   }
