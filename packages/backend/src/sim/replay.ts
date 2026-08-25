@@ -37,6 +37,13 @@ import { eidOfLocalId } from './world.ts';
 
 /** The current replay wire format. Bump when a change breaks old files. */
 /**
+ * 9: the Drift has a depth. Creatures are seeded at their species' working
+ * depth rather than a flat 300 m, pursue vertically within a band, and bite in
+ * three dimensions; the Sounder ploughs through what it is committed to rather
+ * than stopping at weapons range, grinding structures and large hulls along
+ * the path it swept (docs/bestiary.md §4). Every v8 recording with fauna in it
+ * diverges at the first creature that moves, which is the first tick.
+ *
  * 8: kelp entanglement fields grip. A `kelp-entanglement` site is now the
  * first *permanent* hazard — no cycle, Active from the first tick — dragging
  * hulls by faction and hull size, adding SIG to anything moving through, and
@@ -84,7 +91,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 8;
+export const REPLAY_FORMAT_VERSION = 9;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =

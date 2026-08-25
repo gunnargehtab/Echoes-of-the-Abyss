@@ -62,12 +62,33 @@ export interface FaunaStats {
   groupSize: number;
   /** Rough body length, for the renderer. */
   lengthM: number;
+  /**
+   * The depth this species works at, in metres — docs/bestiary.md §4.
+   *
+   * SPEC in the sense that the *habitat* is: §4's roster names where each
+   * animal lives, and this is that sentence as a number. The numbers
+   * themselves are TUNABLE.
+   */
+  workingDepthM: number;
+  /**
+   * How far above or below its working depth a creature will chase, in metres.
+   *
+   * A limit on pursuit, not on where it sits. A herd is tied to its feeding
+   * ground and barely leaves it; a migratory colossus ranges nearly three
+   * times as far. This is what makes depth cover from part of the Drift and
+   * exposure to the rest (§4, "Where the Drift lives").
+   */
+  depthBandM: number;
 }
 
 /** SPEC — docs/bestiary.md §4 stat blocks, transcribed. */
 export const FAUNA_STATS: Record<FaunaSpecies, FaunaStats> = {
   [FaunaSpecies.Ashgrazer]: {
     species: FaunaSpecies.Ashgrazer,
+    // "Thermal Veins" (§4). A herd grazes a fixed vent field and barely
+    // leaves it, so the band is the tightest in the roster.
+    workingDepthM: 600,
+    depthBandM: 250,
     name: 'Ashgrazer',
     sigIdle: 14,
     // A committed herd is a stampede, and a stampede is loud.
@@ -86,6 +107,11 @@ export const FAUNA_STATS: Record<FaunaSpecies, FaunaStats> = {
   },
   [FaunaSpecies.Draymaw]: {
     species: FaunaSpecies.Draymaw,
+    // "Mid-water, follows industry" (§4) — which puts the nodule fields at
+    // 600 m and the thermocline duct both inside its reach, and the crystal
+    // at 2,400 m well outside it.
+    workingDepthM: 900,
+    depthBandM: 400,
     name: 'Draymaw',
     sigIdle: 26,
     sigActive: 40,
@@ -104,6 +130,11 @@ export const FAUNA_STATS: Record<FaunaSpecies, FaunaStats> = {
   },
   [FaunaSpecies.Sounder]: {
     species: FaunaSpecies.Sounder,
+    // "Between deep basins" (§4). The band reaches the Resonance Crystal at
+    // 2,400 m and up into the thermocline duct: the deep economy has a
+    // predator, and it is this one.
+    workingDepthM: 2000,
+    depthBandM: 700,
     name: 'Sounder',
     sigIdle: 45,
     // "100 calling" — one of the largest sustained emissions on the map.

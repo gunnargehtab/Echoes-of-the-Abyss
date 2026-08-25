@@ -293,7 +293,12 @@ export function spawnFauna(
   addComponent(world, Position, eid);
   Position.x[eid] = options.x;
   Position.y[eid] = options.y;
-  Position.depth[eid] = options.depth ?? 300;
+  // Where the species lives (docs/bestiary.md §4), capped by the ground under
+  // it — a creature cannot sit below the sea floor any more than a hull can.
+  // Every creature used to be seeded at a flat 300 m, which made the roster's
+  // habitats decoration and put the Sounder on the Shelf.
+  Position.depth[eid] =
+    options.depth ?? Math.min(stats.workingDepthM, world.terrain.floorAt(options.x, options.y));
 
   addComponent(world, Acoustic, eid);
   Acoustic.sig[eid] = stats.sigIdle;

@@ -279,7 +279,7 @@ Four of the eight are simulated. The framework is the deliverable; the remaining
 | 3. Abyssal Pressure Zones | Site only. Crush attrition already exists as a depth mechanic ([systems-depth.md](systems-depth.md)); a *zone* would layer on top of it |
 | 4. Kelp Entanglement Fields | **Implemented** — permanent drag with a large-hull floor, the acoustic cost of pushing through, blast and thermal-cutter suppression, all four faction interactions. Immobilisation and stealth concealment deliberately not modelled — see §4 |
 | 5. Resonance Storms | **Implemented** — full cycle, PF degradation, light damage, three of four faction interactions |
-| 6. Abyssal Creature Migration | Not started — needs the fauna simulation first |
+| 6. Abyssal Creature Migration | Partly — "collision causes heavy damage" and "can destroy buildings" ship as Sounder transit ([bestiary.md](bestiary.md) §4). Fixed corridors, bait structures and the four faction interactions are still unwritten |
 | 7. Chemical Spill Zones | Site only |
 | 8. Cold Shock Currents | **Implemented** — full cycle, directional drift, speed penalty, the acoustic cost of fighting it, three of four faction interactions |
 

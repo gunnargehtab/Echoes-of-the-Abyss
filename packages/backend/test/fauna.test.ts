@@ -520,8 +520,13 @@ describe('a creature kill is a real death', () => {
     // depend on how hard a Draymaw hits.
     Health.hp[prey] = 1;
 
+    // Long enough for the creature to *get* there. A Draymaw works at 900 m
+    // and the Harvester sits at 600 m, so the pack now has 300 m to close
+    // vertically at 12 m/s before it is in reach at all — the bite is measured
+    // in three dimensions since #178, and it used to be able to eat this hull
+    // from any depth at all.
     let killed = false;
-    for (let i = 0; i < SIM.TICK_HZ * 5 && !killed; i++) {
+    for (let i = 0; i < SIM.TICK_HZ * 40 && !killed; i++) {
       Fauna.stage[creature] = FaunaStage.Committed;
       Fauna.targetEid[creature] = prey;
       match.update(STEP_MS);

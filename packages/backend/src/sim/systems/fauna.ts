@@ -26,6 +26,11 @@ import {
   ACTIVE_SONAR,
   DRIFT,
   EchoMarkKind,
+  SILENT_RUNNING,
+  statsFor,
+  structureStatsFor,
+  type StructureKind,
+  type UnitKind,
   Faction,
   FaunaSpecies,
   FaunaStage,
@@ -60,6 +65,12 @@ const creatures = defineQuery([Fauna, Position, Acoustic, Health]);
 const faunaStep = { x: 0, y: 0 };
 /** Everything a creature can hear: players' hulls and buildings. */
 const audible = defineQuery([Position, Acoustic, Owner, Health]);
+/**
+ * What a Sounder can grind through: anything owned with a body and hull points.
+ * Its own query rather than `audible`, because transit does not care whether a
+ * thing makes noise — a half-built refinery is just as much in the way.
+ */
+const transitTargets = defineQuery([Position, Owner, Health]);
 
 /** How many creatures are alive. Used to hold the population under its cap. */
 export function countFauna(world: SimWorld): number {
@@ -208,6 +219,93 @@ function listen(
   void stats;
 }
 
+/**
+ * Grind through whatever the Sounder just swam over — docs/bestiary.md §4.
+ *
+ * A swept test against the segment the colossus actually covered this tick,
+ * not a point check at its new position: at 30 m/s a 60 Hz step is half a
+ * metre, but the test has to survive anyone raising the tick budget or the
+ * creature's speed, and a colossus that teleported past a turret between two
+ * frames would be a bug nobody could reproduce.
+ *
+ * Damage is the Sounder's own `damagePerS`, dt-scaled, applied for as long as
+ * it is inside the footprint — so how badly a structure fares is how large it
+ * is, and a Bastion survives a crossing while a turret does not.
+ */
+function transit(
+  world: SimWorld,
+  eid: number,
+  stats: ReturnType<typeof faunaStatsFor>,
+  fromX: number,
+  fromY: number,
+  toX: number,
+  toY: number,
+  dt: number,
+  destroyed: number[]
+): void {
+  const body = stats.lengthM / 2;
+  const depth = Position.depth[eid]!;
+  const damage = stats.damagePerS * dt;
+  const segX = toX - fromX;
+  const segY = toY - fromY;
+  const segLen2 = segX * segX + segY * segY;
+
+  const candidates = transitTargets(world);
+  for (let i = 0; i < candidates.length; i++) {
+    const other = candidates[i]!;
+    if (other === eid) continue;
+    if (Health.hp[other]! <= 0) continue;
+    if (Owner.slot[other] === DRIFT_SLOT) continue;
+
+    const isStructure = hasComponent(world, Structure, other);
+    let radius: number;
+    if (isStructure) {
+      radius = structureStatsFor(Structure.kind[other] as StructureKind).radiusM;
+    } else if (hasComponent(world, Unit, other)) {
+      // "Ignores small units" (§4) — a Sounder does not notice them.
+      const hull = statsFor(Unit.kind[other] as UnitKind).hullLengthM;
+      if (hull < DRIFT.TRANSIT_MIN_HULL_M) continue;
+      radius = hull / 2;
+    } else {
+      continue;
+    }
+
+    const reach = body + radius;
+    // Vertically it is a body, not a column: a colossus at 2,000 m does not
+    // grind a refinery moored at 600 m.
+    if (Math.abs(Position.depth[other]! - depth) > reach) continue;
+
+    // Closest approach of the swept segment to the target's centre.
+    const px = Position.x[other]! - fromX;
+    const py = Position.y[other]! - fromY;
+    let t = segLen2 === 0 ? 0 : (px * segX + py * segY) / segLen2;
+    if (t < 0) t = 0;
+    else if (t > 1) t = 1;
+    const nearX = px - segX * t;
+    const nearY = py - segY * t;
+    if (nearX * nearX + nearY * nearY > reach * reach) continue;
+
+    Health.hp[other] = Health.hp[other]! - damage;
+    // The map hears a building come apart. Structural failure under a colossus
+    // is louder than being battered by a vent, which is the eruption's own
+    // argument one step up.
+    if (Acoustic.spikeAmount[other] !== undefined) {
+      if (DRIFT.TRANSIT_SIG >= Acoustic.spikeAmount[other]!) {
+        Acoustic.spikeAmount[other] = DRIFT.TRANSIT_SIG;
+      }
+      Acoustic.spikeRemainingS[other] = Math.max(
+        Acoustic.spikeRemainingS[other]!,
+        SILENT_RUNNING.BREAK_SILENCE_DURATION_S
+      );
+    }
+    if (Health.hp[other]! <= 0 && !destroyed.includes(other)) {
+      destroyed.push(other);
+      // Nobody rendered this either — the same case hazards.ts makes.
+      world.environmentalDeaths.add(other);
+    }
+  }
+}
+
 /** Aggro added by nearby battle residue, per §2's modifier table. */
 function wreckBonus(world: SimWorld, x: number, y: number): number {
   let bonus = 0;
@@ -308,7 +406,40 @@ function act(
   } else if (stage === FaunaStage.Committed && target !== 0) {
     toX = Position.x[target]!;
     toY = Position.y[target]!;
-    stopAtM = stats.attackRangeM * 0.7;
+    // A Sounder does not stop at weapons range. "It destroys structures by
+    // transit" (docs/bestiary.md §4), and a colossus that halted politely
+    // outside a refinery to gnaw is exactly the thing that sentence is not
+    // describing — it was also, until this was written, all the Sounder ever
+    // did. It ploughs to the target and keeps going; `disengageAfterPass`
+    // below sends it on its way once it is through, which is what makes a pass
+    // a pass rather than a colossus parked on a building.
+    stopAtM = Fauna.species[eid] === FaunaSpecies.Sounder ? 0 : stats.attackRangeM * 0.7;
+  }
+
+  // Vertical pursuit, bounded by the species' band (docs/bestiary.md §4).
+  //
+  // A creature holds its working depth until something worth chasing pulls it
+  // off, and it will only follow so far: a Draymaw pack tracks a harvester at
+  // a nodule field and gives up on one that dives for the crystal, while the
+  // colossus already down there does not. That is what makes depth cover from
+  // part of the Drift and exposure to the rest, and it is the reason the
+  // bestiary bothered to name a habitat for every entry.
+  const chasing =
+    target !== 0 && (stage === FaunaStage.Interested || stage === FaunaStage.Committed);
+  const home = stats.workingDepthM;
+  let wantDepth = home;
+  if (chasing) {
+    const theirs = Position.depth[target]!;
+    wantDepth = Math.min(home + stats.depthBandM, Math.max(home - stats.depthBandM, theirs));
+  }
+  // Ground still has the last word: a creature cannot sit under the sea floor
+  // any more than a hull can.
+  const floor = world.terrain.floorAt(x, y);
+  if (wantDepth > floor) wantDepth = floor;
+  const depthNow = Position.depth[eid]!;
+  if (depthNow !== wantDepth) {
+    const stepM = Math.min(DRIFT.VERTICAL_SPEED_MPS * dt, Math.abs(wantDepth - depthNow));
+    Position.depth[eid] = depthNow + (wantDepth > depthNow ? stepM : -stepM);
   }
 
   const dx = toX - x;
@@ -337,6 +468,31 @@ function act(
     );
     Position.x[eid] = faunaStep.x;
     Position.y[eid] = faunaStep.y;
+
+    // "It destroys structures by transit" (docs/bestiary.md §4). The Sounder is
+    // the one creature tested for overlap along the path it actually swept
+    // this tick, rather than stopping at weapons range and gnawing — a
+    // colossus that waited politely outside a refinery is not what that
+    // sentence describes. Everything else in the Drift passes through hulls
+    // freely and always has; fauna are not in the separation pass, which is
+    // intended rather than pending (§4, "Fauna do not collide").
+    if (Fauna.species[eid] === FaunaSpecies.Sounder) {
+      transit(world, eid, stats, x, y, faunaStep.x, faunaStep.y, dt, destroyed);
+    }
+  } else if (
+    Fauna.species[eid] === FaunaSpecies.Sounder &&
+    stage === FaunaStage.Committed &&
+    target !== 0
+  ) {
+    // Through, and done. One commitment is one pass: the colossus arrives,
+    // grinds whatever was in the way on the way in and on the way out, and loses
+    // interest rather than settling on top of a building it failed to kill.
+    // That is what leaves a Bastion standing after a crossing and dead after a
+    // few, without an animal nobody steers ever camping the elimination
+    // condition.
+    Fauna.targetEid[eid] = 0;
+    Fauna.stage[eid] = FaunaStage.Cooling;
+    Fauna.coolingS[eid] = DRIFT.COOLING_S;
   }
 
   if (stage !== FaunaStage.Committed || target === 0) return;
@@ -344,7 +500,16 @@ function act(
     Fauna.targetEid[eid] = 0;
     return;
   }
-  if (distance > stats.attackRangeM) return;
+  // Reach is measured in three dimensions. It used to be the horizontal
+  // distance alone, which let a pack at 300 m take a hull at 2,400 m from full
+  // health to nothing without ever descending — the creature heard it a third
+  // as well through the thermocline and ate it exactly as fast.
+  const bite = Math.hypot(
+    Position.x[target]! - Position.x[eid]!,
+    Position.y[target]! - Position.y[eid]!,
+    Position.depth[target]! - Position.depth[eid]!
+  );
+  if (bite > stats.attackRangeM) return;
 
   // The Sounder "destroys structures by transit, ignores small units" (§4), so
   // it does not chew on hulls it could swim past.
