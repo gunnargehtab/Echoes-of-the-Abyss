@@ -20,9 +20,17 @@ export interface MatchResultProps {
   players: LobbyPlayerView[];
   sessionId: string | null;
   onRematch(ready: boolean): void;
+  /** Leave the room for the shell. Abandons the seat — a rematch needs it. */
+  onExitToMenu(): void;
 }
 
-export function MatchResult({ winnerSlot, players, sessionId, onRematch }: MatchResultProps) {
+export function MatchResult({
+  winnerSlot,
+  players,
+  sessionId,
+  onRematch,
+  onExitToMenu,
+}: MatchResultProps) {
   const self = players.find((player) => player.sessionId === sessionId) ?? null;
   const winner = players.find((player) => player.slot === winnerSlot) ?? null;
   const won = self !== null && self.slot === winnerSlot;
@@ -49,6 +57,9 @@ export function MatchResult({ winnerSlot, players, sessionId, onRematch }: Match
             disabled={self === null}
           >
             {self?.ready === true ? 'Waiting…' : 'Rematch'}
+          </button>
+          <button type="button" className="result-exit" onClick={onExitToMenu}>
+            Return to port
           </button>
         </div>
         <p className="result-hint">

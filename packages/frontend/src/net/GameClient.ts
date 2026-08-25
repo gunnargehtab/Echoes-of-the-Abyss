@@ -129,6 +129,28 @@ function recallToken(): string | null {
   }
 }
 
+/**
+ * Whether this tab is still holding a seat it could resume. The title screen
+ * reads this to decide whether to offer Resume; only `connect` can find out
+ * whether the server is in fact still holding the other end.
+ */
+export function hasStoredSession(): boolean {
+  return recallToken() !== null;
+}
+
+export interface ConnectOptions {
+  /** Commander name, sent on join. The server truncates and defaults. */
+  name?: string;
+  /** Which archetype to create, if this client ends up creating the room. */
+  mapId?: string;
+  /**
+   * Whether a held seat should be redeemed. Omitted means yes — a reload is a
+   * disconnection like any other. Explicitly false abandons the seat first:
+   * the shell's "Solo game" must start a new match, not resurrect an old one.
+   */
+  resume?: boolean;
+}
+
 export class GameClient {
   private readonly client: Client;
   private readonly handlers: GameClientHandlers;
@@ -148,11 +170,13 @@ export class GameClient {
     this.handlers = handlers;
   }
 
-  async connect(name?: string): Promise<void> {
+  async connect(options: ConnectOptions = {}): Promise<void> {
     this.handlers.onStatus('connecting');
     // A reload is a disconnection like any other, and the server is still
     // holding the seat. Resuming it is tried first, and failing costs one
-    // round trip — the ordinary path is the joinOrCreate below.
+    // round trip — the ordinary path is the joinOrCreate below. A deliberate
+    // new match abandons the seat instead, so a held token cannot hijack it.
+    if (options.resume === false) rememberToken(null);
     const stored = recallToken();
     if (stored !== null) {
       try {
@@ -164,13 +188,17 @@ export class GameClient {
       }
     }
     try {
-      // `?map=<id>` selects the archetype when this client is the one that
-      // creates the room; joining an existing room takes the map it is on, and
-      // the server sends back which that was either way.
+      // The shell passes the archetype in; `?map=<id>` stays honoured as the
+      // fallback so a pasted URL (and the headless harness) still lands on the
+      // right map. Either selects only when this client creates the room;
+      // joining an existing room takes the map it is on, and the server sends
+      // back which that was either way.
       const mapId =
-        typeof window === 'undefined'
+        options.mapId ??
+        (typeof window === 'undefined'
           ? undefined
-          : (new URLSearchParams(window.location.search).get('map') ?? undefined);
+          : (new URLSearchParams(window.location.search).get('map') ?? undefined));
+      const name = options.name === undefined || options.name === '' ? undefined : options.name;
       this.attach(await this.client.joinOrCreate('match', { name, mapId }));
       this.handlers.onStatus('connected');
     } catch (error) {

@@ -522,3 +522,413 @@
   cursor: default;
   opacity: 0.35;
 }
+
+/*
+ * The shell — docs/ui-ux.md §14, docs/style-neon-noir.md.
+ *
+ * Same plate anatomy as the lobby and result screens: glass fills, magenta
+ * bevels for what asks, cyan for what tells, tokens only. The wordmark is the
+ * one place the reflection glow is licensed — "on key art and menus only" —
+ * and the in-match HUD may not copy it.
+ */
+.menu-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  overflow-y: auto;
+  background: linear-gradient(var(--abyss-floor), var(--abyss-void) 55%, #000);
+  font-family: ui-monospace, Consolas, monospace;
+  color: var(--text-dim);
+}
+
+.menu-panel {
+  width: min(560px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.menu-masthead {
+  text-align: center;
+  margin-bottom: 0.4rem;
+}
+
+.menu-wordmark {
+  margin: 0;
+  font-size: clamp(1.4rem, 4vw, 2.1rem);
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--neon-cyan);
+  /* Core, halo, and the menu-only reflection: the colour repeated below,
+     faint and vertically smeared. */
+  text-shadow:
+    0 0 1px var(--neon-cyan),
+    0 0 10px rgba(53, 224, 255, 0.35),
+    0 22px 26px rgba(53, 224, 255, 0.14);
+}
+
+.menu-tagline {
+  margin: 0.5rem 0 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.menu-head h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 8px rgba(53, 224, 255, 0.35);
+}
+
+.menu-subtitle {
+  margin: 0.35rem 0 0;
+  font-size: 0.68rem;
+  line-height: 1.6;
+  letter-spacing: 0.06em;
+  opacity: 0.65;
+}
+
+.menu-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.menu-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid rgba(255, 61, 166, 0.45);
+  border-radius: 4px;
+  background: var(--abyss-glass);
+  color: var(--text-bright);
+  font: inherit;
+  font-size: 0.8rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu-entry:hover:not(:disabled) {
+  border-color: var(--neon-magenta);
+  background: rgba(255, 61, 166, 0.08);
+  box-shadow: 0 0 12px rgba(255, 61, 166, 0.2);
+}
+
+.menu-entry:focus-visible {
+  outline: 1px solid var(--text-cyan);
+  outline-offset: 2px;
+}
+
+/* Dimmed to 40%, never greyed out: a dead console still has phosphor in it.
+   The reason line stays readable — the shape of the finished game is on
+   screen, and it says what it waits on. */
+.menu-entry:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.menu-entry-label {
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.menu-entry-note {
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+
+/* A held seat asks; magenta is the ink that asks. */
+.menu-resume {
+  border-color: var(--neon-magenta);
+  box-shadow: 0 0 12px rgba(255, 61, 166, 0.25);
+}
+
+.menu-resume .menu-entry-label {
+  color: var(--neon-magenta);
+}
+
+.menu-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.menu-field-label {
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-cyan);
+}
+
+.menu-input {
+  padding: 0.45rem 0.7rem;
+  border: 1px solid rgba(255, 61, 166, 0.45);
+  border-radius: 3px;
+  background: var(--abyss-glass);
+  color: var(--text-bright);
+  font: inherit;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+}
+
+.menu-input:focus-visible {
+  outline: 1px solid var(--neon-magenta);
+  outline-offset: 1px;
+}
+
+.menu-input::placeholder {
+  color: var(--text-dim);
+  opacity: 0.6;
+}
+
+.menu-maps {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.menu-map {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid rgba(53, 224, 255, 0.3);
+  border-radius: 4px;
+  background: var(--abyss-glass);
+  color: var(--text-dim);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu-map:hover {
+  border-color: var(--neon-cyan);
+  background: rgba(53, 224, 255, 0.06);
+}
+
+.menu-map:focus-visible {
+  outline: 1px solid var(--text-cyan);
+  outline-offset: 2px;
+}
+
+.menu-map.mine {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 12px rgba(53, 224, 255, 0.22);
+}
+
+.menu-map-name {
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-bright);
+}
+
+.menu-map.mine .menu-map-name {
+  color: var(--neon-cyan);
+}
+
+.menu-map-meta {
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.menu-map-use {
+  font-size: 0.66rem;
+  line-height: 1.5;
+  opacity: 0.8;
+}
+
+.menu-foot {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.menu-commit {
+  padding: 0.45rem 1.4rem;
+  border: 1px solid var(--neon-cyan);
+  border-radius: 3px;
+  background: var(--abyss-glass);
+  color: var(--neon-cyan);
+  font: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(53, 224, 255, 0.18);
+}
+
+.menu-commit:hover {
+  background: rgba(53, 224, 255, 0.12);
+}
+
+.menu-back {
+  padding: 0.45rem 1.1rem;
+  border: 1px solid rgba(255, 61, 166, 0.5);
+  border-radius: 3px;
+  background: var(--abyss-glass);
+  color: var(--text-cyan);
+  font: inherit;
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.menu-back:hover {
+  background: rgba(255, 61, 166, 0.12);
+}
+
+.menu-commit:focus-visible,
+.menu-back:focus-visible {
+  outline: 1px solid var(--text-cyan);
+  outline-offset: 2px;
+}
+
+.menu-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.menu-slider-row {
+  display: grid;
+  grid-template-columns: 8.5rem 1fr 3.5rem;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 0.7rem;
+}
+
+.menu-slider-label {
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-cyan);
+}
+
+.menu-slider-row input[type='range'] {
+  accent-color: var(--neon-magenta);
+}
+
+.menu-slider-value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+
+.menu-toggle-row {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: baseline;
+  gap: 0.6rem;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.menu-toggle-row input[type='checkbox'] {
+  accent-color: var(--neon-magenta);
+}
+
+.menu-toggle-label {
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-cyan);
+}
+
+.menu-toggle-note {
+  font-size: 0.64rem;
+  line-height: 1.5;
+  opacity: 0.6;
+}
+
+.menu-note {
+  margin: 0;
+  font-size: 0.62rem;
+  line-height: 1.6;
+  letter-spacing: 0.04em;
+  opacity: 0.55;
+}
+
+.menu-credits {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+  border: 1px solid rgba(255, 61, 166, 0.35);
+  border-radius: 4px;
+  background: var(--abyss-glass);
+  padding: 0.7rem 0.9rem;
+}
+
+.menu-credit-row {
+  display: grid;
+  grid-template-columns: 8rem 1fr;
+  gap: 0.8rem;
+  font-size: 0.7rem;
+}
+
+.menu-credit-row dt {
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-cyan);
+}
+
+.menu-credit-row dd {
+  margin: 0;
+  opacity: 0.8;
+}
+
+/* Exit routes back to the shell, from the result card and the dead-end
+   overlays. Secondary to Rematch: leaving is the quieter choice. */
+.result-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.result-exit,
+.game-overlay-back {
+  padding: 0.45rem 1.1rem;
+  border: 1px solid rgba(255, 61, 166, 0.5);
+  border-radius: 3px;
+  background: var(--abyss-glass);
+  color: var(--text-cyan);
+  font: inherit;
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.result-exit:hover,
+.game-overlay-back:hover {
+  background: rgba(255, 61, 166, 0.12);
+}
+
+.result-exit:focus-visible,
+.game-overlay-back:focus-visible {
+  outline: 1px solid var(--text-cyan);
+  outline-offset: 2px;
+}
+
+/* The overlay itself swallows clicks by design; its one button may not. */
+.game-overlay-back {
+  pointer-events: auto;
+  margin-top: 0.6rem;
+}

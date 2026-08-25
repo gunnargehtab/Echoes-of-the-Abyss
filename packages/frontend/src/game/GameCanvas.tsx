@@ -19,13 +19,29 @@ import { EchoRenderer, type ContactLogEntry } from './EchoRenderer.ts';
 import { ContactLog } from './ContactLog.tsx';
 import { Lobby } from './Lobby.tsx';
 import { MatchResult } from './MatchResult.tsx';
-import { AudioEngine } from '../audio/engine.ts';
+import { AudioEngine, dbToGain } from '../audio/engine.ts';
 import { GameClient, type ConnectionStatus, type LobbyView } from '../net/GameClient.ts';
+import { loadSettings, subscribeSettings, type Settings } from '../settings/store.ts';
 
 /** Longest log a player will ever scroll back through. */
 const MAX_LOG_ENTRIES = 300;
 
-export function GameCanvas() {
+export interface GameCanvasProps {
+  /** Commander name from the setup screen; empty lets the server assign one. */
+  playerName: string;
+  /** Archetype to create, when this client is the one creating the room. */
+  mapId: string;
+  /** Whether a held seat should be redeemed rather than a new match joined. */
+  resume: boolean;
+  /**
+   * Leave the match and return to the shell. The teardown in the unmount
+   * effect is the actual exit — disconnecting clears the reconnection token,
+   * so the title screen does not offer to resume a seat left on purpose.
+   */
+  onExit(): void;
+}
+
+export function GameCanvas({ playerName, mapId, resume, onExit }: GameCanvasProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<ConnectionStatus>('connecting');
   const [detail, setDetail] = useState<string>('');
@@ -48,9 +64,10 @@ export function GameCanvas() {
   const rendererRef = useRef<EchoRenderer | null>(null);
   const clientRef = useRef<GameClient | null>(null);
   /**
-   * The mix. Built once and kept for the session — the AudioContext is a
-   * device handle, not per-match state, and browsers limit how many a page
-   * may open.
+   * The mix. One engine per mount, closed on unmount — the AudioContext is a
+   * device handle and browsers limit how many a page may hold *open*, so the
+   * shell mounts this component only while a match is on and the teardown
+   * below releases the device before the next one is opened.
    */
   const audioRef = useRef<AudioEngine | null>(null);
 
@@ -199,15 +216,38 @@ export function GameCanvas() {
         },
       });
 
+      // The player's stored preferences, applied to the live handles. Audio
+      // values buffer safely before the graph exists; the renderer needs the
+      // instance, which is why this lives here rather than at mount.
+      const applySettings = (settings: Settings) => {
+        audio.setMasterVolume(settings.masterVolume);
+        audio.setBusTrim('music', settings.busVolumes.music);
+        audio.setBusTrim('world', settings.busVolumes.world);
+        audio.setBusTrim('self', settings.busVolumes.self);
+        audio.setBusTrim('ui', settings.busVolumes.ui);
+        audio.setBusTrim(
+          'contact',
+          settings.busVolumes.contact * dbToGain(settings.contactBoostDb)
+        );
+        audio.setSpatialisation(settings.mono ? 'mono' : 'stereo');
+        activeRenderer.setPrecedenceMode(settings.visualFirst ? 'visual-first' : 'ear-first');
+      };
+      applySettings(loadSettings());
+      // Nothing writes settings while a match is on screen today, but the
+      // esc menu (#187) will; subscribing now is what makes that live-apply.
+      unsubscribeSettings = subscribeSettings(applySettings);
+
       clientRef.current = client;
-      await client.connect();
+      await client.connect({ name: playerName, mapId, resume });
       setSessionId(client.sessionId);
     };
 
+    let unsubscribeSettings: (() => void) | null = null;
     void start();
 
     return () => {
       cancelled = true;
+      unsubscribeSettings?.();
       client?.disconnect();
       clientRef.current = null;
       renderer?.destroy();
@@ -217,7 +257,9 @@ export function GameCanvas() {
       void audio.destroy();
       audioRef.current = null;
     };
-  }, []);
+    // The identity of a mount is the match it joins: the shell never changes
+    // these props on a live canvas, it unmounts and remounts.
+  }, [playerName, mapId, resume]);
 
   const focusOn = useCallback((x: number, y: number) => {
     rendererRef.current?.focusOn(x, y);
@@ -271,6 +313,7 @@ export function GameCanvas() {
           players={lobby.players}
           sessionId={sessionId}
           onRematch={setReady}
+          onExitToMenu={onExit}
         />
       )}
       {!live && (
@@ -294,6 +337,11 @@ export function GameCanvas() {
             </p>
           )}
           {detail !== '' && <p className="game-overlay-detail">{detail}</p>}
+          {(status === 'error' || status === 'closed') && (
+            <button type="button" className="game-overlay-back" onClick={onExit}>
+              Return to port
+            </button>
+          )}
         </div>
       )}
     </div>
