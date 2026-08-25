@@ -15,7 +15,7 @@
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { hasComponent } from 'bitecs';
+import { hasComponent, removeEntity } from 'bitecs';
 import {
   Biome,
   Faction,
@@ -24,6 +24,8 @@ import {
   ORDNANCE,
   OrdnanceKind,
   ResolutionTier,
+  maxAudibleRangeM,
+  type QueuedOrderView,
   SILENT_RUNNING,
   SIM,
   UnitKind,
@@ -31,7 +33,8 @@ import {
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { spawnUnit } from '../src/sim/world.ts';
-import { Acoustic, Health, Ordnance } from '../src/sim/components.ts';
+import { deployNoisemaker } from '../src/sim/systems/ordnance.ts';
+import { Acoustic, Health, Ordnance, Owner, Structure, Unit } from '../src/sim/components.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
@@ -388,6 +391,126 @@ describe('mines', () => {
     assert.ok(
       liveMines(match).length <= ORDNANCE.MINE.CAP_PER_PLAYER,
       'and never more than the cap should be in the water'
+    );
+  });
+
+  it('refuses the shot without telling the player what they aimed at', () => {
+    // The fix above, done wrong, is a fog-of-war leak — and it was, for four
+    // commits. Refusing an ordered attack on hull-less ordnance inside
+    // `orderAttackContact` returned *before* the plan was touched, so accepting
+    // and refusing left the ordering player's own hull in visibly different
+    // states, and `queuedOrders` handed that difference straight back. One
+    // attack order answered "is this a mine or a decoy?" — a Tier-3
+    // classification — while holding only a Tier-2 smudge.
+    //
+    // The probe is a Noisemaker because it is the sharpest case: SIG 70, as
+    // loud as a cruising Cruiser and designed to be mistaken for one. If a
+    // single free order unmasks it, it is not a decoy.
+    //
+    // Three things have to be true or this test proves nothing, and the first
+    // two drafts each got one of them wrong:
+    //
+    //   - the contact must resolve at **Tier 2**, not Tier 4. At Tier 3+ the
+    //     payload carries `ordnance` outright, so there is no secret to leak
+    //     and both branches trivially agree. The first draft put the decoy
+    //     close enough to Track it.
+    //   - the ordering hull must have a **non-empty plan** at the moment it is
+    //     ordered, because the plan being wiped is the whole observable. The
+    //     first draft's waypoints were near enough to be finished already, so
+    //     both branches compared `undefined` to `undefined`.
+    //   - the decoy must be the **only** thing its side has in the water. The
+    //     second draft left the hull that deployed it alive, so slot 0 simply
+    //     resolved that Corvette — a perfectly valid target — and both branches
+    //     ordered an attack on a hull.
+    const rangeForBearingTier = (sig: number): number => {
+      const outer = maxAudibleRangeM(sig, 1, statsFor(UnitKind.Corvette).hyd);
+      const upper = outer * Math.pow(1.5, -1 / 1.6);
+      const lower = outer * Math.pow(2.5, -1 / 1.6);
+      return (upper + lower) / 2;
+    };
+
+    const planAfterOrdering = (decoy: boolean): QueuedOrderView[] | undefined => {
+      // A cleared board, not `openWaterMatch`'s. Two reasons, and the first
+      // draft fell into both: the opening escort means `units.find(kind ===
+      // Corvette)` returns some *other* Corvette with no plan, and the enemy
+      // Bastion is a loud Tier-2 contact that the probe would lock onto instead
+      // of the decoy.
+      const match = openWaterMatch();
+      for (let e = 0; e < Owner.slot.length; e++) {
+        if (!hasComponent(match.world, Owner, e)) continue;
+        if (!hasComponent(match.world, Unit, e) && !hasComponent(match.world, Structure, e)) {
+          continue;
+        }
+        removeEntity(match.world, e);
+      }
+      const shooter = spawnUnit(match.world, {
+        kind: UnitKind.Corvette,
+        slot: 0,
+        faction: Faction.Bathyarch,
+        x: 5000,
+        y: 8000,
+      });
+
+      if (decoy) {
+        const layer = spawnUnit(match.world, {
+          kind: UnitKind.Corvette,
+          slot: 1,
+          faction: Faction.Pelagia,
+          x: 5000 + rangeForBearingTier(ORDNANCE.NOISEMAKER.SIG),
+          y: 8000,
+        });
+        deployNoisemaker(match.world, layer);
+        removeEntity(match.world, layer);
+      } else {
+        spawnUnit(match.world, {
+          kind: UnitKind.Cruiser,
+          slot: 1,
+          faction: Faction.Pelagia,
+          x: 5000 + rangeForBearingTier(statsFor(UnitKind.Cruiser).sigCruise),
+          y: 8000,
+        });
+      }
+
+      // A long plan, so it is still pending when the attack order lands and the
+      // wipe is actually visible.
+      match.orderMove(0, shooter, 5000, 2000, true);
+      match.orderMove(0, shooter, 5000, 1000, true);
+
+      let ordered = false;
+      for (let i = 0; i < 120 && !ordered; i++) {
+        const snapshots = match.update(STEP_MS);
+        const view = snapshots?.get(0);
+        if (view === undefined) continue;
+        const contact = view.contacts.find((c) => c.tier === ResolutionTier.Bearing);
+        if (contact === undefined) continue;
+        assert.equal(contact.ordnance, undefined, 'a Tier-2 contact must not name ordnance');
+        assert.ok(
+          (match.world.orderQueues.get(shooter)?.length ?? 0) > 0,
+          'the shooter needs a pending plan for the wipe to be observable'
+        );
+        match.orderAttackContact(0, shooter, contact.id);
+        ordered = true;
+      }
+      assert.ok(ordered, `should have held a Tier-2 contact (decoy=${decoy})`);
+
+      // The FIRST snapshot after the order, and the shooter by its own id.
+      // Reading later lets the pending leg drain as the hull travels, which
+      // erases the very difference under test.
+      //
+      // `OwnUnit.id` is the raw entity id, not the match-local one — own units
+      // are the player's own, so only *contacts* go behind opaque handles.
+      for (let i = 0; i < 30; i++) {
+        const snapshots = match.update(STEP_MS);
+        const view = snapshots?.get(0);
+        if (view !== undefined) return view.units.find((u) => u.id === shooter)?.queuedOrders;
+      }
+      return undefined;
+    };
+
+    assert.deepEqual(
+      planAfterOrdering(true),
+      planAfterOrdering(false),
+      'a decoy and a hull must be indistinguishable from the order alone'
     );
   });
 

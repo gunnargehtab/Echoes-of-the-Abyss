@@ -276,7 +276,11 @@ function applyEruption(world: SimWorld, hazard: Hazard, dt: number, destroyed: n
       damage *= HAZARDS.ERUPTION.PELAGIA_DAMAGE_MULTIPLIER;
     }
     Health.hp[eid] = Health.hp[eid]! - damage;
-    if (Health.hp[eid]! <= 0) destroyed.push(eid);
+    if (Health.hp[eid]! <= 0) {
+      destroyed.push(eid);
+      // Nobody rendered this — see SimWorld.environmentalDeaths.
+      world.environmentalDeaths.add(eid);
+    }
 
     // The acoustic half. A hull being battered rings, and the whole map can
     // hear it: an eruption does not only hurt you, it finds you.
@@ -318,7 +322,10 @@ function applyStorm(world: SimWorld, hazard: Hazard, dt: number, destroyed: numb
     let damage = HAZARDS.STORM.DAMAGE_PER_S * dt;
     if (isStructure) damage *= HAZARDS.STORM.STRUCTURE_DAMAGE_MULTIPLIER;
     Health.hp[eid] = Health.hp[eid]! - damage;
-    if (Health.hp[eid]! <= 0) destroyed.push(eid);
+    if (Health.hp[eid]! <= 0) {
+      destroyed.push(eid);
+      world.environmentalDeaths.add(eid);
+    }
   }
 }
 

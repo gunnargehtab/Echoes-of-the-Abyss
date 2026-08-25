@@ -183,6 +183,21 @@ export interface SimWorld extends IWorld {
   drift: DriftHealth;
   /** Scratch: summed SIG per Drift region, rebuilt each tick. */
   driftNoise: Float32Array;
+  /**
+   * Entities the *map* killed this tick, cleared at the top of every step.
+   *
+   * Biomass is rendered fauna — you killed it, you are paid for it
+   * (docs/bestiary.md §5). `payBiomass` approximates "you" as the nearest
+   * entity with an owner, and defends that with "the same answer in every case
+   * that matters", which held while every fauna death was a weapon kill. Once
+   * hazards began reporting their kills that stopped being true: an eruption
+   * kills a creature with no player involved, and the nearest hull could be
+   * kilometres away and asleep. Deaths listed here skip the payout.
+   *
+   * Drift health is *not* excused: the region really did lose a creature, so
+   * `recordKill` still runs.
+   */
+  environmentalDeaths: Set<number>;
 }
 
 /** A self-event before it is bucketed by slot. `eid`, not a match-local id. */
@@ -241,6 +256,7 @@ export function createSimWorld(terrain: Terrain, dt: number, seed: number): SimW
   world.draw = new Map();
   world.drift = new DriftHealth(terrain.widthM, terrain.heightM);
   world.driftNoise = new Float32Array(world.drift.regionCount);
+  world.environmentalDeaths = new Set();
   // Burn entity id 0 so components can use eid 0 as a "none" sentinel
   // (Weapon.orderedTargetEid, Harvester.nodeEid). bitecs hands out dense ids
   // from 0, so without this the first spawned entity would be untargetable.

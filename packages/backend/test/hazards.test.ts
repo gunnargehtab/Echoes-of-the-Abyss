@@ -628,10 +628,14 @@ describe('a hazard kill is a real death', () => {
     );
   });
 
-  it('does the same for a creature bite, which reported nothing either', () => {
-    // `faunaSystem` had the identical shape: it damages hulls and structures
-    // and never told `reap()`. A hull chewed to death by a Sounder stayed on
-    // the board exactly as an eruption victim did.
+  it('reaps a zero-HP hull even when nothing at all reported it', () => {
+    // The backstop on its own, stated honestly. An earlier version of this was
+    // called "does the same for a creature bite" — a name it could not earn,
+    // because `matchWith` passes `fauna: false`, so `faunaSystem` early-returns
+    // with no creatures in the world and the test drove HP to -1 by hand. It
+    // never touched fauna. `faunaSystem`'s kill reporting is covered in
+    // fauna.test.ts instead; what this covers is the invariant underneath both,
+    // and it is deliberately indifferent to which system forgets next.
     const match = matchWith(hazardMap('geothermal-eruption'));
     const prey = spawnUnit(match.world, {
       kind: UnitKind.LightScout,

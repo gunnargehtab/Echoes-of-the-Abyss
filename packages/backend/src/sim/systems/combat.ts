@@ -107,8 +107,36 @@ function profileFor(world: SimWorld, eid: number): WeaponProfile {
   };
 }
 
+/**
+ * Whether a gun may still hold this as its ordered target.
+ *
+ * The ordnance clause is a fog-of-war fix as much as a combat rule, and it
+ * lives *here* rather than in `Match.orderAttackContact` for that reason.
+ *
+ * Only ordnance with a hull to shoot off may be engaged: a torpedo has 40 HP
+ * and point defence is a real answer to it, while a mine has none and a
+ * minefield you could delete with gunfire would stop being a wall you route
+ * around (docs/systems-combat.md §5). That much was always the intent.
+ *
+ * Refusing it at the *order* was the mistake. The refusal returned before the
+ * plan was touched, so accepting and refusing left the ordering player's own
+ * hull in visibly different states — plan wiped or plan intact — and that
+ * difference is published straight back to them in `queuedOrders`. It answered
+ * "is this ordnance without a hull?" for free, at Tier 1 or 2, when the Echo
+ * Layer does not attach `contact.ordnance` until Tier 3. The sharpest case is
+ * the Noisemaker: SIG 70, as loud as a cruising Cruiser and meant to be
+ * mistaken for one, unmasked by a single attack order costing nothing.
+ *
+ * Declining here instead makes the order behave exactly like any other, and
+ * the target simply reads as no longer valid — the same thing the player sees
+ * when a contact dies or slips away. The gun falls through to auto-acquire.
+ */
 function targetAlive(world: SimWorld, eid: number): boolean {
-  return eid !== 0 && hasComponent(world, Health, eid) && Health.hp[eid]! > 0;
+  if (eid === 0 || !hasComponent(world, Health, eid) || Health.hp[eid]! <= 0) return false;
+  if (hasComponent(world, Ordnance, eid) && !isInterceptable(Ordnance.kind[eid] as OrdnanceKind)) {
+    return false;
+  }
+  return true;
 }
 
 /**

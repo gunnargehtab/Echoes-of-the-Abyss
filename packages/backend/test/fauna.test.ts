@@ -16,6 +16,7 @@
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { hasComponent } from 'bitecs';
 import {
   ACTIVE_SONAR,
   Biome,
@@ -31,8 +32,8 @@ import {
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { Terrain } from '../src/sim/terrain.ts';
-import { spawnFauna, spawnUnit } from '../src/sim/world.ts';
-import { Fauna, Health, Position } from '../src/sim/components.ts';
+import { economyFor, spawnFauna, spawnUnit } from '../src/sim/world.ts';
+import { Fauna, Health, Position, Unit } from '../src/sim/components.ts';
 import { countFauna, DRIFT_SLOT } from '../src/sim/systems/fauna.ts';
 import { VENTFRONT_DIVIDE, type MapDefinition } from '../src/sim/maps/index.ts';
 
@@ -436,5 +437,93 @@ describe('the Drift in a normal match', () => {
     assert.ok(DRIFT_SLOT > 3, 'the Drift slot must be outside the player range');
     assert.ok(faunaStatsFor(FaunaSpecies.Sounder).biomass > 0);
     assert.ok(Position.x.length > 0);
+  });
+});
+
+describe('a creature kill is a real death', () => {
+  it('removes the hull a creature chews through', () => {
+    // `faunaSystem` damages hulls and structures and, until recently, told
+    // `reap()` nothing — so a hull chewed to death by a Draymaw stayed on the
+    // board at zero HP, still drawn, still emitting, still a contact, and
+    // unkillable. This is the test that could not have been written against
+    // `hazards.test.ts`'s fixture, which runs with `fauna: false` and so never
+    // reaches `faunaSystem` at all.
+    //
+    // The creature is put into Committed with its target set directly rather
+    // than being coaxed up the interest ladder. The ladder has its own test
+    // above; what is under test here is the single line that reports the kill,
+    // and routing to it through forty seconds of stage transitions would make
+    // this test about the ladder instead.
+    const match = emptyMatch(91);
+    const creature = spawnFauna(match.world, {
+      species: FaunaSpecies.Draymaw,
+      x: 4000,
+      y: 4000,
+    });
+    const prey = spawnUnit(match.world, {
+      kind: UnitKind.Harvester,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 4030,
+      y: 4000,
+    });
+    // Nearly dead already, so a single bite finishes it and the test does not
+    // depend on how hard a Draymaw hits.
+    Health.hp[prey] = 1;
+
+    let killed = false;
+    for (let i = 0; i < SIM.TICK_HZ * 5 && !killed; i++) {
+      Fauna.stage[creature] = FaunaStage.Committed;
+      Fauna.targetEid[creature] = prey;
+      match.update(STEP_MS);
+      if (!hasComponent(match.world, Unit, prey)) killed = true;
+    }
+
+    assert.ok(killed, 'a committed creature should finish a 1 HP hull');
+    assert.equal(
+      hasComponent(match.world, Unit, prey),
+      false,
+      'and the hull must leave the world rather than linger at zero HP'
+    );
+  });
+
+  it('pays no Biomass for a creature the map killed', () => {
+    // Biomass is *rendered* fauna: you killed it, you are paid for it
+    // (docs/bestiary.md §5). `payBiomass` approximates "you" as the nearest
+    // entity with an owner, which was sound while every fauna death was a
+    // weapon kill.
+    //
+    // Making hazard kills real broke that precondition. An eruption kills a
+    // creature with nobody involved, and the payout went to whichever hull
+    // happened to be closest — potentially kilometres away, asleep, and never
+    // in the plume. That is free income from a kill nobody made, every eruption
+    // cycle, for the player who parked one scout nearest the vents.
+    const terrain = new Terrain(8000, 8000, 250);
+    const map = {
+      ...bareMap(),
+      hazards: [{ x: 4000, y: 4000, radiusM: 700, kind: 'geothermal-eruption' as const }],
+    };
+    const match = new Match(map, { fauna: false, seed: 93, terrain });
+    match.addPlayer(0, Faction.Bathyarch);
+
+    spawnFauna(match.world, { species: FaunaSpecies.Draymaw, x: 4000, y: 4000 });
+    // The only player entity, and far from the plume: under the old rule this
+    // is exactly the bystander that got paid.
+    spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 200,
+      y: 200,
+    });
+
+    const before = economyFor(match.world, 0).biomass;
+    for (let i = 0; i < SIM.TICK_HZ * 130; i++) match.update(STEP_MS);
+
+    assert.equal(
+      economyFor(match.world, 0).biomass,
+      before,
+      'an eruption renders nothing, so it pays nobody'
+    );
   });
 });

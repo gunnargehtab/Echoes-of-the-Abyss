@@ -84,7 +84,6 @@ import { movementSystem } from './systems/movement.ts';
 import {
   deployNoisemaker,
   dropDepthCharge,
-  isInterceptable,
   launchTorpedo,
   layMine,
   ordnanceSystem,
@@ -534,19 +533,14 @@ export class Match {
     if (target === undefined) return;
     if (!hasComponent(this.world, Owner, target) || Owner.slot[target] === slot) return;
     if (!hasComponent(this.world, Health, target) || Health.hp[target]! <= 0) return;
-    // docs/systems-combat.md §5: only ordnance with a hull to shoot off may be
-    // engaged. A torpedo has 40 HP and point defence is a real answer to it; a
-    // mine has none, and a minefield you could delete with gunfire would stop
-    // being a wall you route around. The auto-acquire path already refuses
-    // these, but an *ordered* attack reached them — and a player who pings a
-    // field holds a Tier-4 handle on every mine in it, which is exactly the
-    // moment this would have been abused.
-    if (
-      hasComponent(this.world, Ordnance, target) &&
-      !isInterceptable(Ordnance.kind[target] as OrdnanceKind)
-    ) {
-      return;
-    }
+    // Deliberately NOT refused here when the target is ordnance with no hull to
+    // shoot off. That check lives in combat.ts's `targetAlive`, because
+    // refusing at the order leaks: this path returns before the plan is
+    // touched, so accepting and refusing leave the player's own hull in
+    // visibly different states and `queuedOrders` reports which. That answered
+    // "is this a mine or a decoy?" for free, two tiers before the Echo Layer
+    // is willing to say. The order is accepted like any other; the gun then
+    // finds the target is not one it can engage.
 
     if (queued) {
       // The anchor is where the contact is *now*, which is what the player
@@ -937,6 +931,7 @@ export class Match {
     const stepStarted = performance.now();
     this.recorder?.maybeCheckpoint(this.world.tick, () => hashWorld(this.world));
     this.destroyedScratch.length = 0;
+    this.world.environmentalDeaths.clear();
     harvestSystem(this.world);
     combatSystem(this.world, this.destroyedScratch);
     const physicsStarted = performance.now();
@@ -1045,7 +1040,10 @@ export class Match {
       // (docs/bestiary.md §5, §6). Paid to whoever killed it, at the
       // Directorate's full rate or everyone else's rendering-contract share.
       if (hasComponent(this.world, Fauna, eid)) {
-        this.payBiomass(eid);
+        // A creature the map killed pays nobody: biomass is *rendered* fauna,
+        // and an eruption renders nothing (see SimWorld.environmentalDeaths).
+        // The Drift still loses the creature, so recordKill stays.
+        if (!this.world.environmentalDeaths.has(eid)) this.payBiomass(eid);
         this.world.drift.recordKill(Position.x[eid]!, Position.y[eid]!);
         this.echo.forget(eid);
         removeEntity(this.world, eid);
