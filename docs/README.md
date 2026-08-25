@@ -11,6 +11,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | **[game-identity.md](game-identity.md)** | Pitch, pillars, target experience |
 | **[systems-echo.md](systems-echo.md)** | ⭐ The acoustic fog of war. The game's central system |
 | **[systems-depth.md](systems-depth.md)** | ⭐ Pressure ratings, depth bands, crush attrition |
+| **[glossary.md](glossary.md)** | The authoritative definitions. A term that means two things in two docs is resolved here first |
 
 ## World & narrative
 
@@ -20,8 +21,9 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | **[timeline.md](timeline.md)** | Two centuries, from the Collapse to 214 PC, and the Mouth's anomaly log |
 | **[factions.md](factions.md)** | The four powers — doctrine, politics, weakness |
 | **[characters.md](characters.md)** | Twelve commanders and the neutrals |
-| **[culture.md](culture.md)** | How the Rift speaks — four registers, names, rituals, writing guide |
-| **[campaign.md](campaign.md)** | 29 missions, four campaigns, four irreconcilable endings |
+| **[culture.md](culture.md)** | How the Rift speaks — five registers, names, rituals, writing guide |
+| **[campaign.md](campaign.md)** | 29 missions designed, four campaigns, four irreconcilable endings — one of the 29 is built |
+| **[mission-sorrowgate.md](mission-sorrowgate.md)** | The prologue, specified: the court, the flight, the silence order, the ping, and what answers it |
 
 ## Gameplay
 
@@ -59,7 +61,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 
 ## Editing rules
 
-1. **The glossary is authoritative** once one exists. If a term appears in two docs with two meanings, fix the glossary first.
+1. **The glossary is authoritative.** If a term appears in two docs with two meanings, fix the glossary first.
 2. **Numbers are design intent, not balance-final.** They exist so the systems can be prototyped against something real.
 3. **Cross-link.** Every doc should end with a Related section. Keep it current.
 4. **Don't add a faction trait that isn't an argument about sound or depth.** That's the asymmetry axis (see [systems-echo.md](systems-echo.md) and [systems-depth.md](systems-depth.md)); traits outside it make the roster arbitrary.
@@ -67,6 +69,28 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 ## Planned / Not Yet Written
 
 One forward reference remains: `concept-art/DESIGN-PHILOSOPHY.md`, linked from the root README, which would set out the Pressure Cartography visual language behind the four survey plates.
+
+The prologue is built and the campaign around it is not. What follows is designed, or already
+stated in a doc that ships, and unbuilt — named in plain text because none of it has a document
+to point at yet:
+
+- **The remaining 28 missions.** campaign.md §4–§7 gives them titles, teaching targets and
+  beats, which is not a specification. Each needs a document of its own — one doc per mission,
+  the pattern mission-sorrowgate.md sets — before it needs code.
+- **Campaign progression and unlock state.** Nothing records that a mission was played, so the
+  prologue is replayable, remembers nothing, and the Tutorial and campaign doors are the same
+  door.
+- **Cross-mission Drift Health.** campaign.md §2 rule 5 has a map carry its damage forward to
+  the next mission played on it. There is no forward while there is one mission.
+- **Permanent roster attrition.** Knights mission 3, *Nineteen*, spends units for the rest of a
+  campaign. Today nothing outlives the match it was built in.
+- **Mid-match Coral Ruins state change.** Stated in environments.md and campaign.md §10 as the
+  one biome that changes during a match. The prologue neither relies on it nor implements it.
+- **"Already seen" briefing variants.** campaign.md §1 intends a scene you witnessed from the
+  other side to change its briefing text and never its mission. Nothing tracks what you have
+  seen.
+- **In-mission character speech.** No channel carries a character's line while a mission is
+  running, which is why Sorrowgate's four voices in the water are written and not heard.
 
 Deferred design questions, parked here as plain text until decided:
 

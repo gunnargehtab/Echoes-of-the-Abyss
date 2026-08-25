@@ -123,7 +123,7 @@ The one interaction the UI is allowed to be pushy about.
 Silent Running trades away most of what a unit can do ([systems-echo.md](systems-echo.md) §6), so its state must be unmissable and its cost must be legible at the moment of the trade.
 
 - Silent units render at **0.45 alpha** — quiet is a visible state.
-- Weapon, shield, repair, mine and build actions grey out **with a reason attached** (`disabled — silent running`), never silently.
+- Weapon, shield, repair, mine and build actions grey out **with a reason attached** (`disabled — silent running`, or `disabled — silence order` where a mission rule is what withholds them), never silently.
 - The selection panel shows the live speed penalty as a number, and shows the Commune's reduced penalty as the same number, differently — no faction reads a different UI.
 - Issuing an attack order to a silent unit raises a **break-silence confirmation** the first three times per match, showing the +40 SIG spike it will produce. After that it is trusted and the confirmation stops.
 
@@ -222,6 +222,47 @@ than estimating a count, because the Echo Layer does not model counts.
 
 ---
 
+## 10.5 The Objectives Panel
+
+It sits here, next to the log, because it is the log's argument applied a second time; and
+it is numbered 10.5 rather than 11 because §10, §11 and the rest are cited by number from
+other documents ([audio-direction.md](audio-direction.md),
+[playtest-checklist.md](playtest-checklist.md)) and renumbering them would break those
+citations to no purpose.
+
+A mission states what it wants of the player ([campaign.md](campaign.md) §10), and the panel
+is where it says so. It is in-match chrome, present only while a mission is running: a
+skirmish has no objectives and draws no empty box for them.
+
+**DOM, not Pixi, for §10's reasons exactly.** A canvas objective is not selectable and not
+reachable by a screen reader, and an objective the player cannot copy into a bug report or
+have read aloud is worse than no objective at all. Where the contact log is a `role="log"`
+region because its entries *append*, the panel is `role="status"` with `aria-live="polite"`,
+because its rows change **in place** — a status going pending to met is one row saying
+something new, and a log role would re-announce the whole panel every time a counter moved.
+
+- **Rows are focusable, and focusing one recentres the camera on its marker** — the same
+  gesture click-to-focus already teaches in the log. A marker is an authored place (the
+  Concourse, the service lock), never an entity, so the camera moves to somewhere the mission
+  named and never to something the player has not detected.
+- **Objective text is authored per mission and rendered verbatim.** Never templated. The
+  court says *the flight stays under twenty* ([mission-sorrowgate.md](mission-sorrowgate.md)
+  §12); a shared string would say "maintain SIG below 20", which is a sentence no faction in
+  this setting speaks, and three of the four would have to be broken to make one template fit.
+- **A locked ability shows its reason**, in the §7 form and in the panel as well as on the
+  affordance: `disabled — silence order`. The lock is continuous state, not a reply to a
+  click — the player learns the rule before pressing, because a refusal delivered afterwards
+  teaches nothing and §1.5 forbids finding out what something cost by paying it.
+
+**The panel may only ever show the player's own force and what they have resolved.** A row
+reading `3 of 5 hostiles remaining` is a maphack in a numeral: it is precisely the map-wide
+unit count that opaque contact handles exist to withhold ([tech-stack.md](tech-stack.md)),
+handed over in a friendlier font. Progress counters are computed from the observer's own
+resolved snapshot and from nothing else, which is why an objective may say *get both tenders
+out* and may never say how many of anybody else's hulls are left.
+
+---
+
 ## 11. Accessibility
 
 Audio carries primary information, so accessibility here is a correctness requirement, not a feature tier. The full audio-side commitments are in [audio-direction.md](audio-direction.md) §11; the UI owes:
@@ -299,7 +340,9 @@ What the current client implements against this spec, so nobody re-implements wh
 | Tier-4 acquisition brackets | Implemented — the visual half of the lock tone |
 | Accessibility presets and palettes | Partial — mono and visual-first are settings toggles (§14); colour-vision palettes, UI scale and reduced motion not started |
 | Box select, control groups, order queue | Implemented |
-| The shell — title, setup, settings, credits | Implemented (§14) — campaign and tutorial entries are disabled placeholders pending the mission runtime |
+| The shell — title, setup, briefing, settings, credits | Implemented (§14) |
+| Mission runtime and the prologue | Implemented (#190) — one mission; the campaign entry is still a disabled placeholder |
+| Objectives panel | Implemented (§10.5) — DOM, `role="status"`, focusable rows, own-force counters only |
 | Settings persistence and per-bus volume | Implemented (§14) — `localStorage`, applied at match mount |
 
 ---
@@ -318,15 +361,18 @@ key art and menus only" belongs to the title screen; the in-match HUD still may 
 ```text
 title ──▶ setup (solo | multiplayer) ──▶ match (in-room lobby ▶ playing ▶ result)
   │  ▲                                        │
-  │  └── settings · credits ── back           └── "Return to port" ▶ title
+  │  ├── settings · credits ── back           └── "Return to port" ▶ title
+  │  └── briefing ───────────────────────▶ mission (playing ▶ result)
   └── resume banner ─────────────────────▶ match (seat resumed)
 ```
 
 The screen state is a plain discriminated union in `App.tsx` — no router, no history
 integration. Browser back mid-match would mean "leave the match" as an accident, and §1.5
-forbids exactly that class of accident. The one deep link that exists, `?map=<id>`, is kept:
-a URL carrying it boots straight into a match, which is also what keeps the headless
-harness and dev muscle memory working.
+forbids exactly that class of accident. Two deep links exist and both are kept: `?map=<id>`
+boots straight into a match, and `?mission=<id>` boots straight into a mission the same way,
+past the briefing. That is what keeps the headless harness and dev muscle memory working,
+and it is a machine's door rather than a player's — a player reaches a mission through the
+title screen, and reads the briefing on the way in.
 
 - **Title** — the game's name, one tagline from [naming.md](naming.md), and the entries:
   Resume (only while a seat is held, see below), Campaign, Solo Game, Multiplayer,
@@ -336,16 +382,26 @@ harness and dev muscle memory working.
   opponents stay in the in-room ready room, because faction uniqueness is enforced by the
   room and a pick is a request the room may refuse ([tech-stack.md](tech-stack.md)) — the
   shell does not promise what the server may deny.
+- **Briefing** — a mission's own setup: its name, its premise, and the briefing text read
+  verbatim in the register of whoever is speaking it
+  ([mission-sorrowgate.md](mission-sorrowgate.md) §12). It is a screen and not an overlay on
+  the match, because the match mounts the audio context and a briefing has no business
+  holding one open. It commits with the same "Descend" the setup screen uses.
 - **Settings** — see below.
 - **Credits** — static, and honest: the technology roll from
   [tech-stack.md](tech-stack.md) and a note that every sound is synthesised. No invented
   names.
 
-**Disabled entries are visible, with the reason attached.** Campaign and Tutorial exist on
-the title screen before the mission runtime does, dimmed to 40% per style-neon-noir's
-disabled rule — a dead console still has phosphor in it — each carrying one line saying
-what it waits on. The shape of the finished game is on screen; a menu that hides its
-missing rooms would misrepresent the build.
+**Disabled entries are visible, with the reason attached.** Tutorial is no longer one of
+them: it launches the prologue, *Sorrowgate*
+([mission-sorrowgate.md](mission-sorrowgate.md)), which is the same content the campaign's
+first slot will launch — one mission behind two doors, because a separate tutorial would be
+a second first mission teaching the same four systems ([campaign.md](campaign.md) §10).
+Campaign is still dimmed to 40% per style-neon-noir's disabled rule — a dead console still
+has phosphor in it — and its one line now reads `Awaits the faction campaigns`, because the
+runtime it used to wait on exists and the twenty-eight missions after the prologue do not.
+The shape of the finished game is on screen; a menu that hides its missing rooms would
+misrepresent the build.
 
 ### Resume
 

@@ -24,7 +24,7 @@ Every biome is also an acoustic space: terrain sets how far sound travels under 
 | Kelp Forest Plateaus | **0.55** | Absorption muffles movement — the stealth biome |
 | Abyssal Trenches | **1.60 (axial)** | Trench walls channel sound impossibly far down the axis — no secrets, only distances |
 | Resonance Fields | **0.70 (scattered)** | Bearings lie — pings return false contacts |
-| Coral Ruins | **0.80 (occluded)** | Hard shadows behind structures — the only biome that changes during a match |
+| Coral Ruins | **0.80 (occluded)** | Hard shadows behind structures — the only biome *specified* to change during a match, not yet built |
 
 PF is a property of a *place*, and it is not the only thing that scales a signature. The **thermocline** at 1,200 m applies a second multiplier that no cell of the map carries, because it depends on the depths of both ends of the path: 0.3 across the layer, 1.2 along its duct, 1.0 otherwise. It multiplies the biome's PF rather than replacing it — crossing the layer inside a Thermal Vein is quieter than crossing it in open water. See [systems-echo.md](systems-echo.md) §3.
 
@@ -128,8 +128,17 @@ Sacred territory of the Hadron Knights.
 - Remnants of pre-collapse cities
 - Overgrown with coral and algae
 - Broken domes, collapsed tunnels
-- The only biome that changes state during a match
+- **Specified** as the only biome that changes state during a match — not yet built
 - Perfect for campaign missions
+
+The state change is specified here and belongs here rather than in any other biome: a dome
+that comes down or a tunnel that silts up moves the acoustic shadows a player was already
+fighting from, and a ruin is the only terrain in the game where that reads as a building
+failing rather than as the seabed misbehaving. What is missing is the plumbing, not the
+intent — terrain is painted once when a match is built and the whole grid reaches the
+client on join as static public data, so a mid-match repaint needs a replication path that
+does not exist yet. [campaign.md](campaign.md) §10 states the same gap from the mission
+side; the two lines move together.
 
 ### Toxic Brine Zones
 

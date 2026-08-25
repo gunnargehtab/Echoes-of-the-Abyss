@@ -227,8 +227,10 @@ Three archetypes are implemented, in `packages/backend/src/sim/maps/`. They were
 | Map Type 2 — Kelp Labyrinth | Yes | **Broken sightlines** — kelp does not hide an army so much as destroy your sense of how far away one is |
 | Map Type 3 — Abyssal Rift Corridor | Yes | A PF 1.6 highway with **no secrets** down its length |
 | Map Type 4 — Crystal Convergence | Not yet | |
-| Map Type 5 — Sunken Metropolis | Not yet | |
+| Map Type 5 — Sunken Metropolis | Not yet | Sorrowgate is cut from this shape, but a one-seat chamber is not the four-seat archetype |
 | Map Type 6 — The Fourfold Frontier | Not yet | |
+
+That count is a count of **archetypes**, which is the only thing this catalogue holds. A mission map is authored per mission and answers to that mission's document instead: it is not an archetype, it is not required to be multi-seat or balanced, and it is **not in the public catalogue** — it is resolved by mission id and cannot be selected in a skirmish. The ones that exist are listed under Mission maps below.
 
 **Floors and ceilings are specified here and not yet built.** The three maps above are flat: every region sits over the same 3,000 m of water, because that is all the terrain grid can currently say. Authoring them is issue #150, and [systems-depth.md](systems-depth.md) §6 tracks what the simulation actually enforces. Until then, read the verticality in the archetype descriptions below as the design the maps are being written toward rather than as ground you can currently sail into.
 
@@ -246,9 +248,21 @@ The ruleset does not care how deep a map goes. The depth bands mean the same thi
 
 A map's **spawn list is its player count**, which is why the Abyssal Rift Corridor has two and the others four. The old spawn logic computed corners from the map's width and height, which quietly assumed every map is a square — false the moment a corridor map exists.
 
+A mission map is the one carve-out, and it is not a counter-example. It carries a single spawn because the player commands a single force; every other party in the water is placed by the mission, with its own hulls and its own standing, and the map never hears about them. Reading a mission map's spawn list as a player count is therefore correct and tells you almost nothing about how crowded the water is.
+
 **Hazard sites are placed; two kinds are simulated.** Geothermal eruptions and resonance storms run a full lifecycle — see [hazards.md](hazards.md) for the status of all eight. A simulated hazard is drawn live, with a phase and a closing countdown ring; an inert site is drawn into the static terrain layer as hatched ground, because a solid marker would imply an effect that does not exist yet. Either way the site is visible from the first frame, which is what the telegraphing principle above requires.
 
 `Terrain.demo()` remains, explicitly as a **test fixture**: a hand-built grid with no spawns, resources or hazards, for tests that want ground whose PF landscape is not also under test.
+
+### Mission maps
+
+A mission map is authored the same way — a literal, regions painted in order — and is held to a different set of obligations, because a mission owns its own water. It is written against the mission's document, it carries whatever seats, spawns and empty resource lists that document asks for, and it is never offered to a player choosing a map. Balance does not apply to a chamber the player is scripted into.
+
+| Mission map | Implemented | What it is |
+| --- | --- | --- |
+| Sorrowgate | Implemented (#190) | One seat, no economy, not selectable in skirmish |
+
+Sorrowgate is specified in full in [mission-sorrowgate.md](mission-sorrowgate.md) — its regions, its floors, its single spawn and the parties the mission seats around it — and that document, not this one, owns those numbers. It is cut from Map Type 5's shape, which is what that archetype's *Ideal Use* line asks of it; it is not a Sunken Metropolis, and Map Type 5 stays *Not yet* in the archetype table, because ticking it would promise a four-seat competitive layout that nobody has written.
 
 ### Two authoring faults the tests caught
 
@@ -257,4 +271,4 @@ Both were found by writing down an invariant rather than by looking at the map:
 - The Kelp Labyrinth's corner pressure pockets sat exactly on its corner spawns, which would have started two players in the deepest and loudest biome on the map.
 - The Abyssal Rift Corridor's trench ran the full width, putting both bases inside PF 1.6 and making the opening a permanent broadcast. The trench is now *central*, with coral base aprons at either end — committing to the rift is something a player does, not something they wake up in.
 
-Related: [environments.md](environments.md) · [hazards.md](hazards.md) · [systems-echo.md](systems-echo.md)
+Related: [environments.md](environments.md) · [hazards.md](hazards.md) · [systems-echo.md](systems-echo.md) · [mission-sorrowgate.md](mission-sorrowgate.md)

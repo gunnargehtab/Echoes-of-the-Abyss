@@ -45,6 +45,11 @@ Silent Running
 - A tactical mode that heavily reduces SIG (typically to single digits) at the cost of disabling weapons, shields/regeneration, and reducing movement speed.
 - Silent Running enables ambush and infiltration but requires a commitment: breaking silence produces a large SIG spike.
 
+Ghost Markers
+
+- The decaying last-known position of a contact a listener has already detected. Tier 1 and Tier 2 contacts persist this way and fade over 20 s (systems-echo.md §4). A ghost marker is your own stale reading of a live unit, and it lies to you by exactly as much as that unit has moved since you heard it.
+- **Not Echo Marks**, which are the opposite thing. A ghost is a unit you heard; a mark is a thing that happened. The ghost belongs to one listener and tracks a contact that still exists; the mark is residue the world keeps of a past event, attached to no contact and readable by anyone with the HYD for it.
+
 Echo Marks
 
 - Decaying acoustic residues left by high-SIG events (battles, construction, mining, destruction). Echo Marks are visible/usable by units with sufficient HYD.
@@ -84,6 +89,35 @@ Acoustic Fog of War
 
 - The principle that all detection and resolution is computed server-authoritatively and delivered to each player as resolved results only; clients never receive unexplored map state.
 
+Mission
+
+- The campaign's unit of play: one authored scenario, of which there are 29 (campaign.md). Not "sortie", not "operation" — the bible uses one word for this and this is it.
+
+Objective
+
+- A single stated goal within a mission, carrying a status of pending, met or failed.
+- "Objective" is the name of the field, not a word any character says. The text of an objective is authored in the register of whoever set it (campaign.md §10), which is why there is no shared template: the court states a fact about the room and the Commune will not use the imperative at all.
+
+Briefing
+
+- The authored mission text a player is given before a mission runs, in the voice of whoever is speaking (campaign.md §10).
+- **It is not the join-time map payload.** tech-stack.md used "briefing" for the terrain grid and spawn data every client receives on join; that is corrected to *survey chart*, because a briefing is addressed to somebody and a terrain grid is not. campaign.md's usage is the older and load-bearing one, so the technical doc is the one that moves.
+
+Mission Outcome
+
+- How a mission ends. A mission concludes on its own authored terms — a count read aloud, a retreat completed, a refusal — rather than resolving a winner the way a skirmish match does; three of the 29 are winnable only as evacuations (campaign.md §2).
+- A partial outcome is an outcome. It ends the mission and is read out as what it is, rather than being scored as a soft failure the player is asked to replay.
+
+Silence Order
+
+- A mission-imposed SIG ceiling on the player's force, enforced server-side like every other rule about who hears what. Its penalty is a loss of listening, never a loss of the mission: exceed it and the instrument you were lent is withdrawn until the debt is paid.
+- Introduced by the Sorrowgate court, which is also where its numbers are set (mission-sorrowgate.md §4).
+
+Silence-Debt
+
+- The Rift's social ledger for interrupting a listener: you owe the silence back, and you repay it by being quiet the next time that person listens (culture.md §5).
+- Informal in three factions and written down in the fourth (culture.md §5). At Sorrowgate it is neither: it is a condition of admission counted in seconds, and it is the mechanical form the silence order takes.
+
 Related
 
 - systems-echo.md — the Echo Layer and detailed detection rules
@@ -93,3 +127,5 @@ Related
 - ui-ux.md — how resolution tiers are rendered and read
 - bestiary.md — fauna as listeners, and what SIG attracts
 - economy.md — resources, the noise curve, and per-faction economies
+- campaign.md — missions, briefings, objectives, and how one ends
+- mission-sorrowgate.md — the prologue, where the silence order is set out with its numbers

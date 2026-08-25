@@ -157,6 +157,20 @@ thirty animals in it and diverged at tick 0. The recording said one thing and th
 did another, and the divergence report blamed determinism. When a replay diverges at tick 0,
 suspect the setup before the simulation.
 
+The format has moved on since, and version **11** adds one field for the same reason version 3
+added two: the **mission id**, null for a skirmish. A mission's forces, its beats and its
+objectives are authored data rather than commands, so none of them appears in the command log
+— without the id, a replayed mission is a one-seat map with nothing in the water. With it,
+playback resolves the mission, reconstructs its authored forces and re-derives every beat from
+`world.tick`, which is why the mission runtime is ticked from inside the fixed step rather than
+from the room: a subsystem the room drives fires zero times on playback. A v10 replay is
+rejected rather than upgraded, on exactly the grounds a v1 replay is.
+
+The match lifecycle pays the matching cost: a mission room is matched on **mission id as well
+as map id**, so a mission player is never routed into a skirmish forming on the same ground.
+"No mission" is the empty string and never `undefined`, because two encodings of it would quietly
+split the skirmish pool in half.
+
 ---
 
 ## Match lifecycle
@@ -210,6 +224,11 @@ lost Bastion takes. The tempting alternative — quietly drop the player from th
 leaves the survivor in a game they have already won, forever, because the victory check
 needs two rosters to declare a winner.
 
+A **mission does not go through that check at all.** It seats one slot and concludes on its
+own authored terms ([mission-sorrowgate.md](mission-sorrowgate.md) §8), so `resolveVictory`
+is not widened, guarded or special-cased for it: the two-roster rule stays exactly as written
+and simply stops being the only thing that can end a match.
+
 ### The result, and the rematch
 
 A resolved match sets `winnerSlot`, clears every ready flag and shows a result screen. That
@@ -218,6 +237,14 @@ other commander actually was. A post-match report that reveals the match is a de
 maphack — the next game on the same ground would be played with knowledge the last one
 refused to give. The player's own contact log stays on screen behind it, which is the
 honest version of a post-match report: what you knew, not what was true.
+
+A **mission concludes rather than resolving a winner.** `winnerSlot` stays -1 and the screen
+reports the outcome the mission's own objectives reached, in the register of whoever set them
+— at Sorrowgate, the court's reading of how many people came out
+([mission-sorrowgate.md](mission-sorrowgate.md) §8). The delayed-maphack rule is the same rule
+and survives intact: the result screen shows the objectives as the player was told them, and
+not where the colossus actually went. A mission is replayable, so the second run would be the
+one that benefited.
 
 Ready doubles as the rematch vote, because it is the same question both times — *is this
 commander waiting on anyone else?* A rematch builds a **new** `Match` on the same map
@@ -257,15 +284,27 @@ So the constraint comes first, and everything else is arranged around it.
 
 | Channel | Contents | Why it is legitimate |
 | --- | --- | --- |
-| The briefing, once | Terrain grid, spawn positions, nodule fields, its own slot and navy | Map data. Every human client is sent the same on join; a start position is painted on the ground |
+| The survey chart, once | Terrain grid, spawn positions, nodule fields, its own slot and navy | Map data. Every human client is sent the same on join; a start position is painted on the ground |
 | The snapshot, per Echo tick | Its own units and structures in full; contacts already resolved at whatever tier it earned | Identical to what a player's client receives — same payload, same opaque contact handles |
 | Stat tables | `statsFor`, `structureStatsFor`, the depth bands | Static game data, shipped in the client bundle and printed in the HUD |
 
 Nothing else. `packages/backend/src/ai/commander.ts` imports from `@echoes/shared` and from
 its own two siblings, and **ESLint fails the build if it imports from `sim/`, `rooms/` or
-`bitecs`** — the rule lives in `.eslintrc.cjs` with the reasoning attached. `ai/seat.ts` is
-the single deliberate crossing point: it applies commands to the `Match` and assembles the
-briefing, and it is short enough to audit in one sitting for exactly that reason.
+`bitecs`** — the rule lives in `.eslintrc.cjs` with the reasoning attached. There are exactly
+**two deliberate crossing points** where something that is not a human client drives the
+simulation: `ai/seat.ts`, which applies a commander's commands to the `Match` and assembles
+its survey chart, and `sim/missions/runtime.ts`, which applies an authored mission's beats and
+evaluates its objectives. Each is restricted to the same resolved payload a human client
+receives — the runtime reads the player through that player's own `EchoSnapshot` and through
+nothing else — and each is kept short enough to audit in one sitting for exactly that reason.
+Two is already one more than the rule wants; a third has to make the same argument these two
+make.
+
+It is the *survey chart*, not the briefing. [glossary.md](glossary.md) reserves "briefing" for
+authored mission text, and the bible was already calling this content chart data — the next
+paragraph does it — so one word is not asked to carry two things. The code has not caught up:
+`ai/types.ts` still names the payload `AiBriefing` and `ai/seat.ts` still builds it in
+`briefingFor`. That is a rename the AI seat owes, not a second meaning the bible keeps.
 
 The behavioural half of the same guarantee is `test/ai.test.ts`, which runs a full match and
 checks **every command against the snapshot that produced it**: unit ids from its own force,
