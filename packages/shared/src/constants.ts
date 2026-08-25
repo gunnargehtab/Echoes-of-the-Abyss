@@ -639,6 +639,48 @@ export const DRIFT = {
   DIRECTORATE_AGGRO_MULTIPLIER: 0.4,
 
   /**
+   * How fast a creature changes depth while chasing, in metres per second.
+   *
+   * Slower than any hull's descent (45 m/s): a fish repositions, it does not
+   * blow ballast. Fast enough that a pack closing horizontally arrives at the
+   * right depth around the same time it arrives at all.
+   */
+  VERTICAL_SPEED_MPS: 12,
+
+  /*
+   * Transit damage is deliberately *not* a constant of its own: a Sounder
+   * grinding through a building does what a Sounder does, at its own
+   * `damagePerS`, and the only difference from a bite is that transit needs no
+   * aggro. Applied per tick while overlapping, so how badly a structure fares
+   * is how long the colossus spends inside it — which is its radius, and
+   * therefore how big a thing you built in its way.
+   *
+   * At 220/s and 30 m/s of swim, a centre-line pass gives roughly: Sentinel
+   * Turret 6.5 s (destroyed), Refinery 11.8 s (destroyed), Foundry 13.2 s
+   * (destroyed), Bastion 17.2 s for 3,784 of 5,000 — badly hurt, still
+   * standing. A glancing pass costs less. That is docs/bestiary.md §4's
+   * "destroys structures by transit" with the elimination condition surviving
+   * one crossing, which is the line between dread and a coin nobody flipped.
+   */
+  /**
+   * Hull length at or above which a hull is in the Sounder's way at all.
+   *
+   * "Ignores small units" (§4). Set so the Cruiser and the Abyssal Submersible
+   * are hit and nothing else is — the same reading of "large" that kelp uses,
+   * and for the same reason: it is the roster's own break point.
+   */
+  TRANSIT_MIN_HULL_M: 95,
+  /**
+   * SIG spike on something a Sounder just ground through.
+   *
+   * A building coming apart under a colossus is the loudest thing that can
+   * happen to it, and the map should hear it — the same argument the eruption
+   * makes with CAUGHT_SIG, one step louder because this is structural failure
+   * rather than a battering.
+   */
+  TRANSIT_SIG: 70,
+
+  /**
    * Hard cap on live fauna.
    *
    * Fauna are entities in the Echo pass, which owns a 2 ms budget that #90

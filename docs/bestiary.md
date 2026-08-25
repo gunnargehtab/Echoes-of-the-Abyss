@@ -119,6 +119,8 @@ The staple. Draymaw packs shadow harvesting operations at the edge of hearing an
 
 **Sounder** — solitary migratory colossus, 60–90 m. Follows fixed migration corridors ([hazards.md](hazards.md) §6) between deep basins.
 
+**Transit is the weapon.** It does not attack a building; it swims through the space the building is in, and the building loses. Damage is dealt for as long as the colossus is inside the structure's footprint, which means **how badly a building fares is how big you built it** — a Sentinel Turret is gone in seconds, a Refinery and a Foundry are destroyed outright, and a Bastion takes roughly three quarters of its hull and is still standing. An animal nobody steers should not end a match in one crossing; that is the line between dread and a coin nobody flipped. Hulls large enough to be in the way are hit the same; small ones are ignored, exactly as the line says, because a Sounder does not notice them.
+
 | SIG | HYD | Interest | Commit | Biomass | HP |
 | --- | --- | --- | --- | --- | --- |
 | 45 cruise / 100 calling | 90 | 55 | 75 | 260 | 9,000 |
@@ -126,6 +128,30 @@ The staple. Draymaw packs shadow harvesting operations at the edge of hearing an
 The Sounder **answers pings.** An active sonar emission inside its migration corridor is read as a challenge call, and it will alter course toward the emitter and hold that course for two minutes. It destroys structures by transit, ignores small units, and cannot be reliably killed by any single player before the twenty-minute mark. The Directorate's **Trench Awakening** superweapon summons one and does not steer it ([factions.md](factions.md)).
 
 Design intent: the button that lets you see everything also calls the largest thing on the map. Nobody needs to explain the ping's cost twice.
+
+### Where the Drift lives, and what it can reach
+
+Every entry above names a habitat, and until now none of them meant anything: creatures were seeded at one depth and stayed there for the whole match, so a Draymaw documented as mid-water hunted from the Shelf and the Tetherjelly could never reach the boundary it is named for. Worse, a creature bit in **two dimensions** — a pack at 300 m took a hull at 2,400 m from full health to nothing without ever descending, because the attack test measured only the distance across the sea floor.
+
+Both are now wrong in the same way and fixed together. **A creature has a working depth and a band it will pursue within, and it bites in three dimensions.**
+
+| Species | Working depth | Pursues within | Reaches |
+| --- | --- | --- | --- |
+| **Ashgrazer** | 600 m | ±250 m | 350–850 m — the vent field it feeds on, and little else |
+| **Draymaw** | 900 m | ±400 m | 500–1,300 m — nodule fields, the shipping lanes, the thermocline duct |
+| **Sounder** | 2,000 m | ±700 m | 1,300–2,700 m — the deep basins, and the Resonance Crystal at 2,400 m |
+
+Read the third column as the mechanic. **Depth is cover from some of the Drift and exposure to the rest.** A harvester working a nodule field at 600 m is in Draymaw country; take the same harvester down to the crystal and the packs cannot follow — but something far larger is already there. Nothing in the Drift covers the whole water column, and that is deliberate: a creature that could reach anything would make depth meaningless against the one part of the map that does not negotiate.
+
+The band is not a leash on where a creature *is* — it is a limit on how far it will chase. A herd is tied to its feeding ground; a migratory colossus is not, and its band is nearly three times the grazer's.
+
+*Creatures do not yet migrate vertically on their own.* They hold their working depth until something worth chasing pulls them off it. Seeded migration along the corridors [hazards.md](hazards.md) §6 describes is still unwritten.
+
+### Fauna do not collide with anything, except when they do
+
+Creatures pass through hulls freely and always have — fauna are not in the separation pass, and this is intended rather than pending. Separation exists so a player's own formation does not pile up on itself; a creature swimming over a submarine is not a formation problem, and adding fauna to it would spend the 60 Hz budget making animals shove hulls around for no mechanical gain.
+
+The **Sounder** is the exception, because §4 says it is: it "destroys structures by transit". A colossus that stops politely at weapons range and gnaws is not what that sentence describes. It alone is tested for overlap along the path it actually swept this tick, and what it finds, it grinds through.
 
 ### Not classified
 
@@ -207,7 +233,7 @@ Three species are simulated, one per behaviour class. The framework is the deliv
 | --- | --- | --- |
 | Ashgrazer | Grazer | **Implemented** — herd, full aggro ladder, stampede SIG, Biomass |
 | Draymaw | Predator | **Implemented** — the staple pack, and the animal most likely to answer a careless economy |
-| Sounder | Megafauna | **Implemented** — answers pings, destroys structures by transit, ignores small units |
+| Sounder | Megafauna | **Implemented** — answers pings, destroys structures by transit, ignores small units. Migration along fixed corridors is still unwritten ([hazards.md](hazards.md) §6) |
 | Lampfry | Ambient | Not started — the scatter tell is a *visual* channel with no acoustic component, so it needs renderer work rather than simulation |
 | Tetherjelly | Ambient | Not started — living terrain that lowers local PF; the hazard framework's PF hook is the seam it will use |
 | Rasp | Scavenger | Not started — drawn to Echo Marks rather than to live units, which now exist ([systems-echo.md](systems-echo.md) §7), so this is the cheapest of the remaining four |

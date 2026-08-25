@@ -375,6 +375,10 @@ export class Match {
           const onVein = this.world.terrain.biomeAt(x, y) === Biome.ThermalVein;
           if (wantVein !== onVein) continue;
           if (!this.world.drift.spawnsAllowed(x, y)) continue;
+          // Deep enough for the species to live there. A Sounder seeded over a
+          // 700 m plateau would be a colossus in a puddle, and the roster's
+          // habitats are the reason the depths exist at all (bestiary.md §4).
+          if (this.world.terrain.floorAt(x, y) < faunaStatsFor(species).workingDepthM) continue;
           // Never on someone's doorstep: see DRIFT.SPAWN_EXCLUSION_M.
           if (this.map.spawns.some((s) => Math.hypot(s.x - x, s.y - y) < DRIFT.SPAWN_EXCLUSION_M)) {
             continue;
