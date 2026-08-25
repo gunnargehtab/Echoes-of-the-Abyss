@@ -932,3 +932,465 @@
   pointer-events: auto;
   margin-top: 0.6rem;
 }
+
+/*
+ * The mission chrome — docs/ui-ux.md §10, §11, §14.
+ *
+ * Same plate anatomy as the contact log and the lobby: glass fill, a bevel in
+ * the ink that matches the panel's job, and colour drawn from the tokens
+ * alone. Magenta asks, cyan tells, red warns — so the orders panel, which
+ * tells you what is being asked of you and takes a click, carries the magenta
+ * bevel the shell uses for anything interactive, and the mission log, which
+ * only ever tells, carries cyan.
+ */
+
+/*
+ * The briefing, read before any socket is open. It sits inside the shell's
+ * own .menu-panel, so only the record itself needs styling.
+ */
+.briefing-meta {
+  margin: 0.35rem 0 0;
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-cyan);
+  opacity: 0.7;
+}
+
+.briefing {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--neon-magenta) 35%, transparent);
+  border-radius: 4px;
+  background: var(--abyss-glass);
+  /* The briefing is the longest prose in the game and it is read once, from
+     top to bottom, before anything is at stake — so it gets a reading measure
+     and a scrollbar rather than being cut down to a HUD panel's density. */
+  max-height: 46vh;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.briefing-title {
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  color: var(--text-cyan);
+}
+
+.briefing-line {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.75;
+  letter-spacing: 0.02em;
+  color: var(--text-bright);
+}
+
+.briefing-withheld {
+  margin: 0;
+  font-size: 0.7rem;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+
+/*
+ * The objectives panel. Mirrors the contact log across the screen: what is
+ * being asked of you on the left, what you have heard on the right.
+ */
+.objectives {
+  position: absolute;
+  top: 38px;
+  /* Clear of the depth ribbon, which owns the first 26 px of the left edge. */
+  left: 40px;
+  width: min(340px, 32vw);
+  max-height: 38vh;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid color-mix(in srgb, var(--neon-magenta) 45%, transparent);
+  border-radius: 4px;
+  background: var(--abyss-glass);
+  font-family: ui-monospace, Consolas, monospace;
+  pointer-events: auto;
+}
+
+.objectives-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 4px 8px;
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  color: var(--text-cyan);
+  border-bottom: 1px solid color-mix(in srgb, var(--neon-magenta) 30%, transparent);
+}
+
+.objectives-ceiling {
+  letter-spacing: 0.1em;
+  opacity: 0.7;
+}
+
+.objectives-body {
+  overflow-y: auto;
+  padding-bottom: 2px;
+  user-select: text;
+}
+
+.objectives-empty {
+  margin: 0;
+  padding: 8px;
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  opacity: 0.6;
+}
+
+.objectives-row {
+  display: grid;
+  grid-template-columns: 3.2rem 1fr auto;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--text-bright);
+  font: inherit;
+  font-size: 0.66rem;
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+  user-select: text;
+}
+
+/* An objective with nowhere to send the camera is still readable text; it
+   simply is not a button. Same treatment the contact log gives a Tier-1 row. */
+.objectives-row:disabled {
+  cursor: default;
+}
+
+.objectives-row:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--neon-cyan) 8%, transparent);
+}
+
+.objectives-row:focus-visible {
+  outline: 1px solid var(--text-cyan);
+  outline-offset: -1px;
+}
+
+/* Status is carried by a word, a weight and a colour at once — never by hue
+   alone (§11) — because the whole scale has to survive a colour-vision
+   difference and a screen reader both. */
+.objectives-status {
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.58rem;
+}
+
+.objectives-row.pending .objectives-status {
+  color: var(--text-dim);
+}
+
+.objectives-row.met .objectives-status {
+  color: var(--neon-teal);
+  font-weight: 700;
+}
+
+.objectives-row.met .objectives-text {
+  color: var(--text-dim);
+}
+
+.objectives-row.failed .objectives-status {
+  color: var(--neon-red);
+  font-weight: 700;
+}
+
+.objectives-progress {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-cyan);
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+.objectives-locks {
+  margin: 4px 0 0;
+  padding: 6px 8px 2px;
+  list-style: none;
+  border-top: 1px solid color-mix(in srgb, var(--neon-magenta) 25%, transparent);
+}
+
+.objectives-lock {
+  display: grid;
+  grid-template-columns: 5.6rem 1fr;
+  gap: 8px;
+  font-size: 0.6rem;
+  line-height: 1.6;
+}
+
+/* Dimmed to 40%, never greyed out, per the shell's disabled rule — and the
+   reason beside it stays legible, because the reason is the point. */
+.objectives-lock-name {
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-bright);
+  opacity: 0.4;
+}
+
+.objectives-lock-reason {
+  color: var(--text-dim);
+}
+
+/* Debt is a warning about your own noise, so it warns. */
+.objectives-debt {
+  margin: 4px 0 0;
+  padding: 4px 8px 6px;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  color: var(--neon-red);
+}
+
+@media (max-width: 900px) {
+  /* The contact log hides at this width; the orders panel may not. It is the
+     only place the mission states what it wants, so it shrinks instead. */
+  .objectives {
+    left: 32px;
+    width: 46vw;
+    max-height: 26vh;
+  }
+}
+
+/*
+ * The mission log — the say channel, deliberately its own feed. Cyan, and no
+ * bevel in the ink that asks: nothing in it is interactive, and nothing in it
+ * is a detection.
+ */
+.mission-log {
+  position: absolute;
+  right: 10px;
+  /* Above the command bar (80 px) with a hand's breadth of clearance. */
+  bottom: 92px;
+  width: min(420px, 34vw);
+  max-height: 24vh;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid color-mix(in srgb, var(--neon-cyan) 35%, transparent);
+  border-radius: 4px;
+  background: var(--abyss-glass);
+  font-family: ui-monospace, Consolas, monospace;
+  pointer-events: auto;
+}
+
+.mission-log-title {
+  padding: 4px 8px;
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  color: var(--text-cyan);
+  border-bottom: 1px solid color-mix(in srgb, var(--neon-cyan) 25%, transparent);
+}
+
+.mission-log-entries {
+  overflow-y: auto;
+  user-select: text;
+}
+
+.mission-log-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 8px;
+  margin: 0;
+  padding: 5px 8px;
+  font-size: 0.64rem;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.mission-log-time {
+  color: var(--text-dim);
+  opacity: 0.55;
+}
+
+.mission-log-speaker {
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-cyan);
+}
+
+/* Speech spans both columns: it is prose, and prose wants the measure. */
+.mission-log-text {
+  grid-column: 1 / -1;
+  color: var(--text-bright);
+}
+
+@media (max-width: 900px) {
+  .mission-log {
+    width: calc(100vw - 20px);
+    max-height: 18vh;
+  }
+}
+
+/*
+ * The mission result. Lower third, like the match result and for the same
+ * reason: the canvas draws the outcome across the centre of the screen, and
+ * the contact log behind this panel is still the player's own record of what
+ * they heard.
+ */
+.mission-result {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 10vh;
+  pointer-events: none;
+  font-family: ui-monospace, Consolas, monospace;
+  color: var(--text-dim);
+}
+
+.mission-result-panel {
+  width: min(560px, 92%);
+  max-height: 46vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.6rem;
+  border: 1px solid color-mix(in srgb, var(--neon-magenta) 45%, transparent);
+  border-radius: 4px;
+  background: linear-gradient(
+    color-mix(in srgb, var(--abyss-floor) 90%, transparent),
+    color-mix(in srgb, var(--abyss-void) 94%, transparent)
+  );
+  pointer-events: auto;
+  text-align: center;
+}
+
+.mission-result-panel h2 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.mission-result-complete {
+  color: var(--neon-teal);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--neon-teal) 35%, transparent);
+}
+
+/* A partial result is a result, not a failure — so it is drawn in the ink
+   that tells, never the ink that warns. */
+.mission-result-partial {
+  color: var(--neon-cyan);
+}
+
+.mission-result-lost {
+  color: var(--neon-red);
+}
+
+/* The authored reading. It is the report, so it gets the reading measure. */
+.mission-result-line {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.75;
+  letter-spacing: 0.02em;
+  color: var(--text-bright);
+}
+
+.mission-result-objectives {
+  width: 100%;
+  margin: 0.2rem 0 0;
+  padding: 0.6rem 0 0;
+  list-style: none;
+  border-top: 1px solid color-mix(in srgb, var(--neon-magenta) 25%, transparent);
+}
+
+.mission-result-objective {
+  display: grid;
+  grid-template-columns: 3.2rem 1fr auto;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 0.64rem;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.mission-result-status {
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.58rem;
+  color: var(--text-dim);
+}
+
+.mission-result-objective.met .mission-result-status {
+  color: var(--neon-teal);
+  font-weight: 700;
+}
+
+.mission-result-objective.failed .mission-result-status {
+  color: var(--neon-red);
+  font-weight: 700;
+}
+
+.mission-result-text {
+  color: var(--text-bright);
+}
+
+.mission-result-progress {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-cyan);
+  white-space: nowrap;
+}
+
+.mission-result-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.mission-result-again {
+  padding: 0.45rem 1.4rem;
+  border: 1px solid var(--neon-cyan);
+  border-radius: 3px;
+  background: var(--abyss-glass);
+  color: var(--neon-cyan);
+  font: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--neon-cyan) 18%, transparent);
+}
+
+.mission-result-again:hover {
+  background: color-mix(in srgb, var(--neon-cyan) 12%, transparent);
+}
+
+/* Leaving is the quieter choice, so it is the quieter button. */
+.mission-result-exit {
+  padding: 0.45rem 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--neon-magenta) 50%, transparent);
+  border-radius: 3px;
+  background: var(--abyss-glass);
+  color: var(--text-cyan);
+  font: inherit;
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.mission-result-exit:hover {
+  background: color-mix(in srgb, var(--neon-magenta) 12%, transparent);
+}
+
+.mission-result-again:focus-visible,
+.mission-result-exit:focus-visible {
+  outline: 1px solid var(--text-cyan);
+  outline-offset: 2px;
+}
+
+.mission-result-hint {
+  margin: 0;
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+}

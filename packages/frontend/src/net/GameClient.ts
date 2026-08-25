@@ -16,6 +16,8 @@ import {
   type GameOverPayload,
   type HarvestThrottle,
   type LobbyPlayerView,
+  type MissionResultPayload,
+  type MissionView,
   type ResourceNodeInfo,
   type StructureKind,
   type UnitKind,
@@ -79,6 +81,20 @@ export interface LobbyView {
   players: LobbyPlayerView[];
 }
 
+/**
+ * One authored line of in-mission speech — docs/mission-sorrowgate.md §12.
+ *
+ * Stamped with the simulation tick it was spoken on, like every other thing
+ * this client timestamps: there is no wall-clock anywhere near the match.
+ * Carries no position and no entity, so it tells the player nothing about the
+ * water it was spoken into.
+ */
+export interface MissionLine {
+  tick: number;
+  speaker: string;
+  text: string;
+}
+
 export interface GameClientHandlers {
   onTerrain(terrain: TerrainPayload): void;
   onMap(map: MapPayload): void;
@@ -87,6 +103,11 @@ export interface GameClientHandlers {
   onEcho(snapshot: EchoSnapshot): void;
   onGameOver(payload: GameOverPayload): void;
   onLobby(view: LobbyView): void;
+  /** The objectives, the locks and the debt, resent only when they change. */
+  onMission(view: MissionView): void;
+  onMissionLine(line: MissionLine): void;
+  /** A mission concludes rather than resolving a winner; this is that. */
+  onMissionOver(payload: MissionResultPayload): void;
   onStatus(status: ConnectionStatus, detail?: string): void;
 }
 
@@ -144,6 +165,14 @@ export interface ConnectOptions {
   /** Which archetype to create, if this client ends up creating the room. */
   mapId?: string;
   /**
+   * Which authored mission to play, or absent for an ordinary skirmish.
+   *
+   * A mission room is a different room from a skirmish on the same water, so
+   * the server filters on this alongside the map — see `connect`, which is
+   * where the encoding of "no mission" is pinned down.
+   */
+  missionId?: string;
+  /**
    * Whether a held seat should be redeemed. Omitted means yes — a reload is a
    * disconnection like any other. Explicitly false abandons the seat first:
    * the shell's "Solo game" must start a new match, not resurrect an old one.
@@ -199,7 +228,13 @@ export class GameClient {
           ? undefined
           : (new URLSearchParams(window.location.search).get('map') ?? undefined));
       const name = options.name === undefined || options.name === '' ? undefined : options.name;
-      this.attach(await this.client.joinOrCreate('match', { name, mapId }));
+      // Always a string, and `''` for a skirmish. The server filters rooms on
+      // this key, and Colyseus matches filter keys by equality — a client
+      // sending `undefined` and one sending `''` would be asking for two
+      // different rooms, which would quietly split the skirmish matchmaking
+      // pool in half and give nobody an error to read.
+      const missionId = options.missionId ?? '';
+      this.attach(await this.client.joinOrCreate('match', { name, mapId, missionId }));
       this.handlers.onStatus('connected');
     } catch (error) {
       this.handlers.onStatus('error', error instanceof Error ? error.message : String(error));
@@ -222,6 +257,15 @@ export class GameClient {
     room.onMessage('assigned', (payload: AssignedPayload) => this.handlers.onAssigned(payload));
     room.onMessage('echo', (payload: EchoSnapshot) => this.handlers.onEcho(payload));
     room.onMessage('gameOver', (payload: GameOverPayload) => this.handlers.onGameOver(payload));
+    // The mission channel. Per-client rather than schema, because a mission's
+    // objectives are resolved for one observer the way a detection is — see
+    // packages/backend/src/rooms/MatchRoom.ts. `mission` arrives on change
+    // only, so there is nothing here to throttle.
+    room.onMessage('mission', (payload: MissionView) => this.handlers.onMission(payload));
+    room.onMessage('missionLine', (payload: MissionLine) => this.handlers.onMissionLine(payload));
+    room.onMessage('missionOver', (payload: MissionResultPayload) =>
+      this.handlers.onMissionOver(payload)
+    );
     // Sent on start and on reconnection. The schema carries the phase too;
     // this is the edge-triggered version, for anything that must happen once.
     room.onMessage('phase', () => this.pushLobby());

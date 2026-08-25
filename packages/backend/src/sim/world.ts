@@ -471,6 +471,23 @@ export interface SpawnOptions {
   x: number;
   y: number;
   depth?: number;
+  /**
+   * Spawn the hull with no Weapon, no Magazine and no Countermeasure.
+   *
+   * docs/campaign.md §3 — "weapons are disabled for the entire mission" — read
+   * as the hull having none rather than the button being hidden, because an
+   * order-layer gate cannot reach auto-engagement: `combatSystem` returns fire
+   * at anything hostile in range without an order ever being issued, and its
+   * query drops a Weapon-less hull entirely. Hostility is `Owner.slot` and the
+   * simulation has no notion of neutrality, so a court full of armed parties
+   * standing around one exchange opens fire on the first tick.
+   *
+   * The countermeasure clause is not an oversight either way: a hull stripped
+   * of guns but left its decoys could still seed the court's water with
+   * ordnance and still shout, which is the opposite of a silence order
+   * (docs/mission-sorrowgate.md §3).
+   */
+  weaponsCold?: boolean;
 }
 
 /**
@@ -534,13 +551,13 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   addComponent(world, SilentRunning, eid);
   SilentRunning.active[eid] = 0;
 
-  if (stats.attackDamage > 0) {
+  if (stats.attackDamage > 0 && opts.weaponsCold !== true) {
     addComponent(world, Weapon, eid);
     Weapon.cooldownRemainingS[eid] = 0;
     Weapon.orderedTargetEid[eid] = 0;
   }
 
-  if (stats.carriesTorpedoes) {
+  if (stats.carriesTorpedoes && opts.weaponsCold !== true) {
     addComponent(world, Magazine, eid);
     Magazine.torpedoes[eid] = ORDNANCE.TORPEDO.MAGAZINE;
     Magazine.rearmRemainingS[eid] = 0;
@@ -550,7 +567,7 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   // is being armed at all, not being a torpedo carrier. A Light Scout has no
   // tubes and still gets a decoy, which is the point: the hull most likely to
   // be caught alone is the one that most needs a way out.
-  if (stats.attackDamage > 0) {
+  if (stats.attackDamage > 0 && opts.weaponsCold !== true) {
     addComponent(world, Countermeasure, eid);
     Countermeasure.cooldownRemainingS[eid] = 0;
   }

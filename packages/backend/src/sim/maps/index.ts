@@ -15,10 +15,11 @@ import { Terrain } from '../terrain.ts';
 import { ABYSSAL_RIFT_CORRIDOR } from './abyssalRiftCorridor.ts';
 import { KELP_LABYRINTH } from './kelpLabyrinth.ts';
 import { VENTFRONT_DIVIDE } from './ventfrontDivide.ts';
+import { SORROWGATE } from './missions/sorrowgate.ts';
 import type { MapDefinition } from './types.ts';
 
 export * from './types.ts';
-export { ABYSSAL_RIFT_CORRIDOR, KELP_LABYRINTH, VENTFRONT_DIVIDE };
+export { ABYSSAL_RIFT_CORRIDOR, KELP_LABYRINTH, SORROWGATE, VENTFRONT_DIVIDE };
 
 export const MAPS: readonly MapDefinition[] = [
   VENTFRONT_DIVIDE,
@@ -32,6 +33,24 @@ export { DEFAULT_MAP_ID } from '@echoes/shared';
 
 export function mapById(id: string): MapDefinition | undefined {
   return MAPS.find((map) => map.id === id);
+}
+
+/**
+ * The mission maps — a separate catalogue, and separate on purpose.
+ *
+ * A mission map is authored for one scenario: one spawn, no economy, no
+ * balance, and no second seat. It is not an archetype. Putting it in `MAPS`
+ * would offer it in the skirmish setup screen, which renders the public
+ * catalogue wholesale — and a one-spawn skirmish is a match `resolveVictory`
+ * can never end, because that rule needs two rosters standing.
+ *
+ * So these resolve by mission id and by nothing else. `mapById` does not
+ * find them, and `MAP_HEADERS` does not list them.
+ */
+export const MISSION_MAPS: readonly MapDefinition[] = [SORROWGATE];
+
+export function missionMapById(id: string): MapDefinition | undefined {
+  return MISSION_MAPS.find((map) => map.id === id);
 }
 
 /**

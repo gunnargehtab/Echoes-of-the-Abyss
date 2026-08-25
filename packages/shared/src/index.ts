@@ -16,3 +16,4 @@ export * from './ordnance.js';
 export * from './combat.js';
 export * from './fauna.js';
 export * from './maps.js';
+export * from './missions.js';

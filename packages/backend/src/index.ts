@@ -45,7 +45,14 @@ const gameServer = new Server({
 // Filtered by map, so `joinOrCreate` never drops a player who asked for one
 // archetype into a match already running on another. Without it the first
 // room created wins every subsequent join regardless of what was requested.
-gameServer.define('match', MatchRoom).filterBy(['mapId']);
+//
+// Mission id is the second key for the same reason and a sharper one: a
+// mission is a single-seat authored scenario, so a skirmish player landing in
+// one — or a commander starting the prologue and being handed somebody else's
+// running match — is not a mismatched preference but a broken game. The client
+// always sends a string ('' for a skirmish), because two encodings of "no
+// mission" would split the skirmish pool in half.
+gameServer.define('match', MatchRoom).filterBy(['mapId', 'missionId']);
 
 app.get('/', (_req, res) => {
   res.send('Echoes of the Abyss - Server running');

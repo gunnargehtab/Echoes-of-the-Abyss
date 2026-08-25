@@ -30,7 +30,8 @@
 
 import { Faction, HarvestThrottle, StructureKind, UnitKind } from '@echoes/shared';
 import { Match } from './match.ts';
-import { mapById } from './maps/index.ts';
+import { mapById, missionMapById } from './maps/index.ts';
+import { missionById } from './missions/index.ts';
 import { hashWorld } from './stateHash.ts';
 import { Terrain } from './terrain.ts';
 import { eidOfLocalId } from './world.ts';
@@ -86,6 +87,13 @@ import { eidOfLocalId } from './world.ts';
  * replayed under these rules diverges at its first crowded checkpoint, and
  * rejecting it names the real fault instead of reporting a determinism bug.
  *
+ * 11: replays carry the mission they were played as, if any. A mission's
+ * authored forces and its beat schedule are installed by the Match
+ * constructor, so playback reproduces them from the id alone — but a v10
+ * replay of a mission would reconstruct an empty map and diverge on the first
+ * tick, and a v10 file cannot say which mission it was. The layout gained a
+ * field; the rules gained a second way a match can start.
+ *
  * 3: replays carry whether the Drift was populated.
  *
  * 2: replays carry the map they were played on.
@@ -97,7 +105,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 10;
+export const REPLAY_FORMAT_VERSION = 11;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =
@@ -140,6 +148,14 @@ export interface Replay {
   mapId: string;
   /** Whether the Drift was populated. Part of the setup, like the map. */
   fauna: boolean;
+  /**
+   * The authored mission, or null for a skirmish.
+   *
+   * Part of the setup in the same way the map is: a mission installs its own
+   * forces and beats in the Match constructor, so the id is the whole of what
+   * playback needs to rebuild them.
+   */
+  missionId: string | null;
   players: ReplayPlayer[];
   commands: ReplayCommand[];
   /**
@@ -166,6 +182,7 @@ export class ReplayRecorder {
   private readonly seed: number;
   private readonly mapId: string;
   private readonly fauna: boolean;
+  private readonly missionId: string | null;
   private readonly checkpointInterval: number;
   /**
    * Negative infinity rather than -1 so the *first* call checkpoints tick 0.
@@ -175,10 +192,17 @@ export class ReplayRecorder {
    */
   private lastCheckpointTick = Number.NEGATIVE_INFINITY;
 
-  constructor(seed: number, mapId: string, fauna: boolean, checkpointIntervalTicks = 300) {
+  constructor(
+    seed: number,
+    mapId: string,
+    fauna: boolean,
+    missionId: string | null = null,
+    checkpointIntervalTicks = 300
+  ) {
     this.seed = seed;
     this.mapId = mapId;
     this.fauna = fauna;
+    this.missionId = missionId;
     this.checkpointInterval = checkpointIntervalTicks;
   }
 
@@ -204,6 +228,7 @@ export class ReplayRecorder {
       seed: this.seed,
       mapId: this.mapId,
       fauna: this.fauna,
+      missionId: this.missionId,
       // Sorted so a replay of the same match is byte-identical regardless of
       // the order players happened to connect in.
       players: [...this.players].sort((a, b) => a.slot - b.slot),
@@ -234,15 +259,24 @@ export function playReplay(replay: Replay, terrain?: Terrain): ReplayResult {
     throw new Error(`replay format ${replay.version} is not this build's ${REPLAY_FORMAT_VERSION}`);
   }
 
-  const map = mapById(replay.mapId);
+  // A mission resolves its own map, which is deliberately not in the public
+  // catalogue `mapById` reads: a single-seat authored scenario is not an
+  // archetype anybody can pick.
+  const mission = replay.missionId === null ? undefined : missionById(replay.missionId);
+  if (replay.missionId !== null && mission === undefined) {
+    throw new Error(`replay was recorded on unknown mission "${replay.missionId}"`);
+  }
+  const map = mission === undefined ? mapById(replay.mapId) : missionMapById(mission.mapId);
   if (map === undefined) {
     throw new Error(`replay was recorded on unknown map "${replay.mapId}"`);
   }
 
   // `fauna` matters as much as the map: a match with animals in it and the
   // same match without are different matches.
-  const options = { seed: replay.seed, fauna: replay.fauna };
+  const options = { seed: replay.seed, fauna: replay.fauna, mission };
   const match = new Match(map, terrain === undefined ? options : { ...options, terrain });
+  // A mission seated itself and placed its own force in the constructor; the
+  // recorder never wrote a roster for one, so this loop is simply empty there.
   for (const player of replay.players) match.addPlayer(player.slot, player.faction);
 
   // Commands are keyed by the tick they landed on; a tick may carry several.

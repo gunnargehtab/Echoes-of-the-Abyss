@@ -13,8 +13,9 @@
 
 import { useState } from 'react';
 import './App.css';
-import { DEFAULT_MAP_ID } from '@echoes/shared';
+import { DEFAULT_MAP_ID, missionHeaderById, PROLOGUE_SORROWGATE_HEADER } from '@echoes/shared';
 import { GameCanvas } from './game/GameCanvas.tsx';
+import { BriefingScreen } from './menu/BriefingScreen.tsx';
 import { CreditsScreen } from './menu/CreditsScreen.tsx';
 import { SetupScreen } from './menu/SetupScreen.tsx';
 import { SettingsScreen } from './menu/SettingsScreen.tsx';
@@ -24,20 +25,44 @@ import { loadSettings } from './settings/store.ts';
 type Screen =
   | { kind: 'title' }
   | { kind: 'setup'; mode: 'solo' | 'multiplayer' }
+  | { kind: 'briefing'; missionId: string }
   | { kind: 'settings' }
   | { kind: 'credits' }
-  | { kind: 'match'; name: string; mapId: string; resume: boolean };
+  | { kind: 'match'; name: string; mapId: string; resume: boolean; missionId?: string };
 
 /**
- * `?map=<id>` boots straight into a match, skipping the title screen.
+ * The water a mission is played on. Public either way — the room sends the map
+ * on join — so reading it here only keeps the join request self-consistent.
+ */
+function mapForMission(missionId: string): string {
+  return missionHeaderById(missionId)?.mapId ?? DEFAULT_MAP_ID;
+}
+
+/**
+ * `?map=<id>` and `?mission=<id>` boot straight into a match, skipping the
+ * title screen.
  *
  * This is the pre-shell behaviour, kept on purpose: it is what the headless
  * harness (the run-game skill) drives, and what a pasted dev URL expects.
- * Resume stays on for this path — a reload mid-match carries the query
+ * `?mission=` deliberately skips the briefing as well as the title — it is a
+ * developer's door into the water, not a player's route through the fiction,
+ * and a screen that has to be clicked past is exactly what the harness cannot
+ * assume. Resume stays on for both — a reload mid-match carries the query
  * string, and reloading must not cost the seat.
  */
 function initialScreen(): Screen {
-  const mapId = new URLSearchParams(window.location.search).get('map');
+  const query = new URLSearchParams(window.location.search);
+  const missionId = query.get('mission');
+  if (missionId !== null) {
+    return {
+      kind: 'match',
+      name: loadSettings().profileName,
+      mapId: mapForMission(missionId),
+      resume: true,
+      missionId,
+    };
+  }
+  const mapId = query.get('map');
   if (mapId !== null) {
     return { kind: 'match', name: loadSettings().profileName, mapId, resume: true };
   }
@@ -65,6 +90,12 @@ function App() {
           }
           onSolo={() => setScreen({ kind: 'setup', mode: 'solo' })}
           onMultiplayer={() => setScreen({ kind: 'setup', mode: 'multiplayer' })}
+          // One mission exists, and the Tutorial entry is the door to it
+          // (docs/campaign.md §3: the prologue is one mission behind two
+          // doors). The campaign entry will be the other, when there is one.
+          onTutorial={() =>
+            setScreen({ kind: 'briefing', missionId: PROLOGUE_SORROWGATE_HEADER.id })
+          }
           onSettings={() => setScreen({ kind: 'settings' })}
           onCredits={() => setScreen({ kind: 'credits' })}
         />
@@ -76,12 +107,28 @@ function App() {
           onBack={toTitle}
         />
       )}
+      {screen.kind === 'briefing' && (
+        <BriefingScreen
+          missionId={screen.missionId}
+          onDescend={() =>
+            setScreen({
+              kind: 'match',
+              name: loadSettings().profileName,
+              mapId: mapForMission(screen.missionId),
+              resume: false,
+              missionId: screen.missionId,
+            })
+          }
+          onBack={toTitle}
+        />
+      )}
       {screen.kind === 'settings' && <SettingsScreen onBack={toTitle} />}
       {screen.kind === 'credits' && <CreditsScreen onBack={toTitle} />}
       {screen.kind === 'match' && (
         <GameCanvas
           playerName={screen.name}
           mapId={screen.mapId}
+          missionId={screen.missionId}
           resume={screen.resume}
           onExit={toTitle}
         />

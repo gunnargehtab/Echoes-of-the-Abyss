@@ -14,20 +14,28 @@ export interface TitleScreenProps {
   onResume(): void;
   onSolo(): void;
   onMultiplayer(): void;
+  /** The prologue. Live now that a mission runtime exists to run it. */
+  onTutorial(): void;
   onSettings(): void;
   onCredits(): void;
 }
 
-/** Entries that exist before their runtime does, each with its reason. */
-const DISABLED_ENTRIES: Array<{ label: string; reason: string }> = [
-  { label: 'Campaign', reason: 'Awaits the mission runtime' },
-  { label: 'Tutorial', reason: 'Prologue: Sorrowgate — awaits the mission runtime' },
-];
+/**
+ * The one entry that still exists before its runtime does.
+ *
+ * Tutorial used to be the other, and is not any more: the prologue is built,
+ * so it is a live button rather than a promise. What Campaign waits on is no
+ * longer the runtime — the runtime runs one mission today — but the
+ * twenty-eight faction missions that have not been written, and the reason
+ * line has to say the true thing or the rule in §14 is doing nothing.
+ */
+const CAMPAIGN_ENTRY = { label: 'Campaign', reason: 'Awaits the faction campaigns' };
 
 export function TitleScreen({
   onResume,
   onSolo,
   onMultiplayer,
+  onTutorial,
   onSettings,
   onCredits,
 }: TitleScreenProps) {
@@ -51,8 +59,8 @@ export function TitleScreen({
             </button>
           )}
           <button type="button" className="menu-entry" disabled aria-disabled="true">
-            <span className="menu-entry-label">{DISABLED_ENTRIES[0]!.label}</span>
-            <span className="menu-entry-note">{DISABLED_ENTRIES[0]!.reason}</span>
+            <span className="menu-entry-label">{CAMPAIGN_ENTRY.label}</span>
+            <span className="menu-entry-note">{CAMPAIGN_ENTRY.reason}</span>
           </button>
           <button type="button" className="menu-entry" onClick={onSolo} autoFocus={!held}>
             <span className="menu-entry-label">Solo game</span>
@@ -62,9 +70,11 @@ export function TitleScreen({
             <span className="menu-entry-label">Multiplayer</span>
             <span className="menu-entry-note">Join whoever is listening on the same water</span>
           </button>
-          <button type="button" className="menu-entry" disabled aria-disabled="true">
-            <span className="menu-entry-label">{DISABLED_ENTRIES[1]!.label}</span>
-            <span className="menu-entry-note">{DISABLED_ENTRIES[1]!.reason}</span>
+          <button type="button" className="menu-entry" onClick={onTutorial}>
+            <span className="menu-entry-label">Tutorial</span>
+            <span className="menu-entry-note">
+              Prologue: Sorrowgate — four hulls, no guns, and an order to be quiet
+            </span>
           </button>
           <button type="button" className="menu-entry" onClick={onSettings}>
             <span className="menu-entry-label">Settings</span>

@@ -14,13 +14,23 @@ import {
   type AiDifficulty,
   type EchoSnapshot,
   type Faction,
+  type MissionResultPayload,
+  type MissionView,
 } from '@echoes/shared';
 import { EchoRenderer, type ContactLogEntry } from './EchoRenderer.ts';
 import { ContactLog } from './ContactLog.tsx';
 import { Lobby } from './Lobby.tsx';
 import { MatchResult } from './MatchResult.tsx';
+import { MissionLog } from './MissionLog.tsx';
+import { MissionPanel } from './MissionPanel.tsx';
+import { MissionResult } from './MissionResult.tsx';
 import { AudioEngine, dbToGain } from '../audio/engine.ts';
-import { GameClient, type ConnectionStatus, type LobbyView } from '../net/GameClient.ts';
+import {
+  GameClient,
+  type ConnectionStatus,
+  type LobbyView,
+  type MissionLine,
+} from '../net/GameClient.ts';
 import { loadSettings, subscribeSettings, type Settings } from '../settings/store.ts';
 
 /** Longest log a player will ever scroll back through. */
@@ -31,6 +41,13 @@ export interface GameCanvasProps {
   playerName: string;
   /** Archetype to create, when this client is the one creating the room. */
   mapId: string;
+  /**
+   * The authored mission to play, or absent for an ordinary skirmish.
+   *
+   * A mission pins the navy and seats no other commanders, so its presence is
+   * also what tells this component there is no ready room to show.
+   */
+  missionId?: string;
   /** Whether a held seat should be redeemed rather than a new match joined. */
   resume: boolean;
   /**
@@ -41,7 +58,7 @@ export interface GameCanvasProps {
   onExit(): void;
 }
 
-export function GameCanvas({ playerName, mapId, resume, onExit }: GameCanvasProps) {
+export function GameCanvas({ playerName, mapId, missionId, resume, onExit }: GameCanvasProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<ConnectionStatus>('connecting');
   const [detail, setDetail] = useState<string>('');
@@ -57,6 +74,15 @@ export function GameCanvas({ playerName, mapId, resume, onExit }: GameCanvasProp
    * the right owner for it.
    */
   const [lobby, setLobby] = useState<LobbyView | null>(null);
+  /**
+   * The mission, as the server resolved it for this seat. Like the log and the
+   * roster it moves on events rather than on frames — the server resends it
+   * only when the view actually changes — so React owns it comfortably.
+   */
+  const [mission, setMission] = useState<MissionView | null>(null);
+  const [missionLines, setMissionLines] = useState<MissionLine[]>([]);
+  /** Non-null once the mission has concluded. Never a winner; an outcome. */
+  const [missionOver, setMissionOver] = useState<MissionResultPayload | null>(null);
   const [mapName, setMapName] = useState('');
   /** Seats this map has. A map's spawn list is its player count. */
   const [maxSlots, setMaxSlots] = useState(4);
@@ -194,6 +220,22 @@ export function GameCanvas({ playerName, mapId, resume, onExit }: GameCanvasProp
           audio.onEchoTick();
         },
         onGameOver: (payload) => activeRenderer.setGameOver(payload),
+        onMission: (view) => {
+          setMission(view);
+          // The renderer needs the locks, not the objectives: they decide
+          // which keys still do anything and what the hint bar says when one
+          // does not (docs/ui-ux.md §7).
+          activeRenderer.setMissionLocks(view.locks);
+        },
+        onMissionLine: (line) =>
+          setMissionLines((previous) => {
+            const next = [...previous, line];
+            return next.length > MAX_LOG_ENTRIES ? next.slice(-MAX_LOG_ENTRIES) : next;
+          }),
+        onMissionOver: (payload) => {
+          setMissionOver(payload);
+          activeRenderer.setMissionOver(payload);
+        },
         onLobby: (view) => {
           // A rematch reuses the room and the connection, so nothing else
           // would tell the renderer its entity ids just became meaningless.
@@ -202,6 +244,12 @@ export function GameCanvas({ playerName, mapId, resume, onExit }: GameCanvasProp
               if (view.phase === MatchPhase.Playing) {
                 activeRenderer.resetForNewMatch();
                 setLog([]);
+                // The mission starts again from nothing too: a stale result
+                // would sit over the new run, and stale lines would read as
+                // having been spoken in it.
+                setMission(null);
+                setMissionLines([]);
+                setMissionOver(null);
               }
             }
             return view;
@@ -238,7 +286,7 @@ export function GameCanvas({ playerName, mapId, resume, onExit }: GameCanvasProp
       unsubscribeSettings = subscribeSettings(applySettings);
 
       clientRef.current = client;
-      await client.connect({ name: playerName, mapId, resume });
+      await client.connect({ name: playerName, mapId, missionId, resume });
       setSessionId(client.sessionId);
     };
 
@@ -258,8 +306,10 @@ export function GameCanvas({ playerName, mapId, resume, onExit }: GameCanvasProp
       audioRef.current = null;
     };
     // The identity of a mount is the match it joins: the shell never changes
-    // these props on a live canvas, it unmounts and remounts.
-  }, [playerName, mapId, resume]);
+    // these props on a live canvas, it unmounts and remounts. The mission is
+    // part of that identity — the same water under a mission is a different
+    // room from the same water without one.
+  }, [playerName, mapId, missionId, resume]);
 
   const focusOn = useCallback((x: number, y: number) => {
     rendererRef.current?.focusOn(x, y);
@@ -287,12 +337,23 @@ export function GameCanvas({ playerName, mapId, resume, onExit }: GameCanvasProp
 
   const phase = lobby?.phase ?? MatchPhase.Lobby;
   const live = status === 'connected';
+  /** This seat's own readiness — what "Again" and "Rematch" toggle. */
+  const selfReady = lobby?.players.find((player) => player.sessionId === sessionId)?.ready ?? false;
 
   return (
     <div className="game-root">
       <div ref={hostRef} className="game-host" />
       {live && phase !== MatchPhase.Lobby && <ContactLog entries={log} onFocus={focusOn} />}
-      {live && phase === MatchPhase.Lobby && lobby !== null && (
+      {live && phase !== MatchPhase.Lobby && mission !== null && (
+        <MissionPanel view={mission} onFocus={focusOn} />
+      )}
+      {live && phase !== MatchPhase.Lobby && missionLines.length > 0 && (
+        <MissionLog lines={missionLines} />
+      )}
+      {/* A mission has no faction to pick and no readiness to declare — the
+          room pins both — so the ready room is not shown at all rather than
+          shown empty. */}
+      {live && phase === MatchPhase.Lobby && lobby !== null && missionId === undefined && (
         <Lobby
           mapName={mapName}
           players={lobby.players}
@@ -307,7 +368,19 @@ export function GameCanvas({ playerName, mapId, resume, onExit }: GameCanvasProp
           onAiDifficulty={setAiDifficulty}
         />
       )}
-      {live && phase === MatchPhase.Ended && lobby !== null && (
+      {/* A mission concluded and a match resolved are different endings, and
+          only one of them is on screen: `MatchResult` reads `winnerSlot`,
+          which a mission never sets, so it would report an evacuation as a
+          defeat. */}
+      {live && phase === MatchPhase.Ended && missionOver !== null && (
+        <MissionResult
+          result={missionOver}
+          ready={selfReady}
+          onAgain={setReady}
+          onExitToMenu={onExit}
+        />
+      )}
+      {live && phase === MatchPhase.Ended && missionOver === null && lobby !== null && (
         <MatchResult
           winnerSlot={lobby.winnerSlot}
           players={lobby.players}
