@@ -36,7 +36,7 @@ import {
   Unit,
   Velocity,
 } from '../components.ts';
-import { currentModifiers, stormModifiers } from './hazards.ts';
+import { currentModifiers, kelpModifiers, stormModifiers } from './hazards.ts';
 import type { SimWorld } from '../world.ts';
 
 const emitters = defineQuery([Acoustic, Unit, Velocity, SilentRunning]);
@@ -127,6 +127,10 @@ export function acousticsSystem(world: SimWorld): void {
     // still takes its cut of it. Riding the current adds nothing at all, which
     // is what makes crossing one a decision.
     sig += currentModifiers(world, eid).sig;
+    // Pushing through kelp is work, and work is noise (docs/hazards.md §4).
+    // The trade the masking biome exists for: sit still in it and you are the
+    // quietest thing on the map; drive through it and you are the loudest.
+    sig += kelpModifiers(world, eid).sig;
     // A Spore Veil muffles the *derived* SIG — whatever the unit is doing,
     // the cloud takes its cut last (auras system, symmetric).
     sig *= Acoustic.sigFactor[eid]! || 1;

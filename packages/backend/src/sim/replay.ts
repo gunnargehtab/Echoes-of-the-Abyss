@@ -37,6 +37,13 @@ import { eidOfLocalId } from './world.ts';
 
 /** The current replay wire format. Bump when a change breaks old files. */
 /**
+ * 8: kelp entanglement fields grip. A `kelp-entanglement` site is now the
+ * first *permanent* hazard — no cycle, Active from the first tick — dragging
+ * hulls by faction and hull size, adding SIG to anything moving through, and
+ * opening only to a blast or to Bathyarch thermal cutters (docs/hazards.md
+ * §4). A v7 recording on the Kelp Labyrinth diverges the first time anything
+ * enters the maze core, which is immediately.
+ *
  * 7: cold shock currents run. A `cold-shock` site is now a cycling hazard that
  * drifts hulls along an authored bearing, slows everything but the Knights,
  * adds SIG to anything driving against it, and freezes fauna while it flows
@@ -77,7 +84,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 7;
+export const REPLAY_FORMAT_VERSION = 8;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =

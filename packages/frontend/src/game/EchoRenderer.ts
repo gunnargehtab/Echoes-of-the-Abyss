@@ -2534,6 +2534,27 @@ export class EchoRenderer {
       const color = hazard.kind === 'geothermal-eruption' ? UI.threat : UI.accent;
       const isCurrent = hazard.kind === 'cold-shock';
 
+      // A kelp field is permanent, so it is chart data rather than an event and
+      // has to be drawn much quieter than one (docs/art-direction.md: "Terrain
+      // must stay quieter than contacts"). Two of them overlap the current at
+      // the centre of the Kelp Labyrinth, and three episodic treatments stacked
+      // there would be a wall of cyan for the whole match. It gets a soft rim
+      // and almost no fill; gripping is a slightly firmer rim than suppressed,
+      // which is the only state change it has.
+      if (hazard.kind === 'kelp-entanglement') {
+        const gripping = hazard.phase === HazardPhase.Active;
+        g.circle(hazard.x, hazard.y, hazard.radiusM).fill({
+          color,
+          alpha: gripping ? 0.05 : 0.02,
+        });
+        g.circle(hazard.x, hazard.y, hazard.radiusM).stroke({
+          width: (gripping ? 2 : 1) * inverseScale,
+          color,
+          alpha: gripping ? 0.3 : 0.14,
+        });
+        continue;
+      }
+
       g.circle(hazard.x, hazard.y, hazard.radiusM).stroke({
         width: style.width * inverseScale,
         color,

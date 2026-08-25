@@ -842,6 +842,78 @@ export const HAZARDS = {
      */
     FIGHTING_SIG: 18,
   },
+  KELP: {
+    /**
+     * "Bathyarch can burn kelp with thermal cutters" — doc §4, and note that
+     * cutting is *all* they get: the Consortium answer to kelp is to destroy
+     * it, not to swim better, so their own drag is the plain one.
+     *
+     * There is no faction without an opinion about kelp — §4 gives all four an
+     * interaction — so there is no neutral multiplier to fall back on.
+     */
+    BATHYARCH_SPEED_MULTIPLIER: 0.7,
+    /**
+     * Hull length at or above which "large units" begins — docs/hazards.md §4.
+     *
+     * Catches the Cruiser (130 m) and the Abyssal Submersible (95 m) and
+     * nothing else, which is the roster reading of "large". The Submersible is
+     * Directorate, and the Directorate tear through kelp anyway, so in practice
+     * this is the Cruiser's problem and the doc's "big things do badly in kelp"
+     * lands on exactly the hull it should.
+     */
+    LARGE_HULL_M: 95,
+    /**
+     * The floor a large hull drags at. Deliberately a floor and not a stop:
+     * §4 declines to model immobilisation, and something that never quite
+     * halts is the honest version of what that clause is for.
+     */
+    LARGE_SPEED_MULTIPLIER: 0.4,
+    /** "Pelagia moves freely" — doc §4. Untouched, and so also unheard. */
+    PELAGIA_SPEED_MULTIPLIER: 1,
+    /** "Abyssal bio-units tear through kelp" — doc §4. */
+    DIRECTORATE_SPEED_MULTIPLIER: 0.9,
+    /**
+     * "Hadron units get stuck more easily (sharp fins)" — doc §4.
+     *
+     * With immobilisation unmodelled, "stuck more easily" is the worst drag in
+     * the game rather than a seizure: sharp fins catch, and catching costs both
+     * speed and quiet.
+     */
+    HADRON_SPEED_MULTIPLIER: 0.5,
+    /**
+     * SIG added to a hull *moving* in a gripping field, scaled by how hard the
+     * field is actually dragging on it (1 - its own multiplier).
+     *
+     * The sound argument, and the trade the biome exists for: kelp is PF 0.55
+     * and hides you, but pushing through it is work and work is noise. A hull
+     * that stops is silent. Pelagia pay nothing because nothing drags on them.
+     */
+    DRAG_SIG: 30,
+    /** How long a blast holds the canopy open — doc §4. */
+    BLAST_CLEAR_S: 12,
+    /**
+     * Seconds of continuous Bathyarch presence needed to open a field, and the
+     * seconds it takes to close again once they leave.
+     *
+     * Cutting is deliberately *not* instant. Presence-suppression made a lone
+     * scout switch off a twelve-hundred-metre field by passing through it, and
+     * left the Consortium better in kelp than the faction whose doctrine is
+     * kelp. Charging up means burning a path is what §4 says it is: a
+     * commitment to stand in the quietest biome on the map, being loud, while
+     * the canopy comes apart.
+     */
+    BATHYARCH_BURN_S: 6,
+    /**
+     * SIG added to a Bathyarch hull inside a field, cutters running.
+     *
+     * The sound argument for their interaction, and what stops burning being a
+     * free counter to the map: thermal cutters are industrial machinery in the
+     * one biome built for hiding, so clearing the maze core announces that you
+     * are clearing the maze core. Paid whether the hull is moving or not —
+     * unlike drag, cutting is work you are doing on purpose.
+     */
+    CUTTER_SIG: 40,
+  },
 } as const;
 
 /** SPEC — docs/systems-echo.md §4 and §7. Seconds. */

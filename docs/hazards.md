@@ -94,6 +94,33 @@ Dynamic, readable, faction-flavored threats that shape strategy.
 - Hadron units get stuck more easily (sharp fins)
 - Bathyarch can burn kelp with thermal cutters
 
+### How a kelp field works
+
+Kelp is the first **permanent** hazard. An eruption fires and subsides, a current runs and slackens, but kelp is simply there — it has no cycle to be dormant in, so a field is always gripping unless something is actively holding it back. It sits in the Active phase for the whole match and drops to Dormant only while suppressed, which is what that phase has always meant: visible as a site, doing nothing.
+
+**It is drag, not a trap.** A hull inside the field moves at a fraction of its speed and keeps moving. Large hulls hit a harder floor than small ones — a Cruiser shoulders through kelp far worse than a Light Scout slips past it — but nothing is ever brought to a halt.
+
+*Temporary immobilisation is deliberately not modelled.* The clause above asks for it, and the honest way to build it is a roll per second against hull size, which is the one thing this design keeps refusing elsewhere: the equivalent guard-rail in [bestiary.md](bestiary.md) §8 answers "fauna aggro feels random" with "every threshold is deterministic against perceived loudness", and [CLAUDE.md](../CLAUDE.md) fixes the target emotion as dread rather than confusion. A Cruiser that crosses the same kelp twice and is seized only the second time has learned nothing. The speed floor delivers what the clause is *for* — big things do badly in kelp — without dice. If immobilisation returns, it should be a deterministic accumulation a player can see coming, not a coin.
+
+**Moving through kelp is loud.** This is the trade the biome exists to create, and the reason the field is a decision rather than mud. Kelp already masks: it is PropagationFactor 0.55, the quietest ground on the map bar the Thermal Veins ([environments.md](environments.md)). But *pushing* through it — thrashing a hull against a few hundred metres of holdfast — is work, and work is noise. SIG is added in proportion to how hard the field is dragging on that particular hull, so:
+
+- a hull sitting still in kelp is silent, and hidden;
+- a hull creeping through pays a little;
+- a Cruiser driving flat out through the maze core is the loudest thing in the quietest biome on the map.
+
+The quiet route is the slow route. Take it fast and it stops being the quiet route.
+
+**Something can clear it, briefly.** A field stops gripping when it is cut or burned, and comes back when whatever did that stops. Two things suppress a field:
+
+- **A blast inside it.** Any detonation with a radius — a mine, a depth charge ([systems-combat.md](systems-combat.md) §6) — tears a hole in the canopy that takes time to close.
+- **A Bathyarch hull standing in it**, running thermal cutters. This is not instant: the canopy takes seconds of continuous presence to come apart, holds open while they stay, and closes just as slowly once they go. Burning a path is therefore a commitment to *stand there*, the same bargain §1 strikes with vent stabilisation — and it is **loud**, because thermal cutters are industrial machinery running in the one biome built for hiding. Clearing the maze core announces that you are clearing the maze core.
+
+Cutting is also the whole of the Consortium's answer to kelp: they are dragged like anyone else while the canopy holds, because their doctrine is to destroy the obstacle rather than to swim better through it. Note that this means **every faction has an opinion about kelp** — there is no neutral case and no default multiplier to fall back on.
+
+A suppressed field is drawn but inert: no drag, no noise, nothing to route around. That is the counter-play, and it is loud in its own right — you either fire ordnance or park a hull where everyone can hear its cutters.
+
+*Bonus concealment for stealth units is not modelled either.* Kelp is already the masking biome, and stacking a second propagation multiplier on the one ground that already hides you risks turning the maze core into a hole in the map rather than cover. "Stealth units" also names no category the simulation has — Silent Running is a state any hull can enter, not a class of hull. If this clause returns it should say which of those two it means.
+
 ## 5. Resonance Storms
 
 ### Visual Cues
@@ -243,14 +270,14 @@ This does **not** break Silent Running. It is a load, not an event: SIG is added
 
 ## Implementation Status
 
-Three of the eight are simulated. The framework is the deliverable; the remaining five are additions to it rather than new systems.
+Four of the eight are simulated. The framework is the deliverable; the remaining four are additions to it rather than new systems.
 
 | Hazard | Status |
 | --- | --- |
 | 1. Geothermal Vent Eruptions | **Implemented** — full cycle, damage, knockback, acoustic spike, all four faction interactions |
 | 2. Toxic Brine Clouds | Site only — placed and telegraphed, no behaviour |
 | 3. Abyssal Pressure Zones | Site only. Crush attrition already exists as a depth mechanic ([systems-depth.md](systems-depth.md)); a *zone* would layer on top of it |
-| 4. Kelp Entanglement Fields | Site only |
+| 4. Kelp Entanglement Fields | **Implemented** — permanent drag with a large-hull floor, the acoustic cost of pushing through, blast and thermal-cutter suppression, all four faction interactions. Immobilisation and stealth concealment deliberately not modelled — see §4 |
 | 5. Resonance Storms | **Implemented** — full cycle, PF degradation, light damage, three of four faction interactions |
 | 6. Abyssal Creature Migration | Not started — needs the fauna simulation first |
 | 7. Chemical Spill Zones | Site only |
