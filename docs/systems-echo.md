@@ -246,6 +246,7 @@ The Echo Layer only works if it's readable at a glance. See **[ui-ux.md](ui-ux.m
 - **Your own SIG is a permanent HUD element** — a horizontal meter, always visible, colour-shifting amber → red. Players must feel their own loudness.
 - **Selected-unit detection radius** renders as a soft ring on the terrain.
 - **Ping cost is previewed before commit** — hovering the ping button shows the 2,400 m reveal radius in threat-red. Never let a ping be an accident.
+- **The thermocline is on the depth ribbon.** §3 says crossing it is meant to be a moment, and a moment needs a pixel: the layer is drawn at 1,200 m with its duct shaded, in the cyan of a passive readout rather than the ink the band boundaries use — it is not a fourth band. What may be drawn is bounded by what a client is entitled to know: the boundary depth is a published constant and identical on every map, and a hull's own zone is its own state, but the **factor** may never be rendered, because 0.3 is the *across* value and asserting it would assert a listener's depth.
 - **Audio mix is the primary channel.** A Tier-1 contact should be *heard* before it is *seen* on the minimap. See **[audio-direction.md](audio-direction.md)**.
 
 ### The resolution runs both ways
