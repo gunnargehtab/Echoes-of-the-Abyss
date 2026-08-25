@@ -2527,7 +2527,12 @@ export class EchoRenderer {
   private drawHazards(g: Graphics, inverseScale: number): void {
     for (const hazard of this.hazards) {
       const style = HAZARD_STYLE[hazard.phase];
-      const color = hazard.kind === 'resonance-storm' ? UI.accent : UI.threat;
+      // Red warns you, cyan tells you (docs/style-neon-noir.md). An eruption
+      // will kill you; a storm and a cold shock current will not — they are
+      // statements about the water, and a current painted as a threat would be
+      // the screen lying about what the simulation does.
+      const color = hazard.kind === 'geothermal-eruption' ? UI.threat : UI.accent;
+      const isCurrent = hazard.kind === 'cold-shock';
 
       g.circle(hazard.x, hazard.y, hazard.radiusM).stroke({
         width: style.width * inverseScale,
@@ -2550,14 +2555,78 @@ export class EchoRenderer {
       if (hazard.phase === HazardPhase.Active || hazard.phase === HazardPhase.Decay) {
         const heat = hazard.phase === HazardPhase.Active ? 1 : 1 - hazard.progress;
         g.circle(hazard.x, hazard.y, hazard.radiusM).fill({ color, alpha: 0.18 * heat });
-        for (let ring = 1; ring <= 3; ring++) {
-          g.circle(hazard.x, hazard.y, hazard.radiusM * (ring / 3)).stroke({
-            width: 1.5 * inverseScale,
-            color,
-            alpha: 0.3 * heat,
-          });
+        if (isCurrent) {
+          // A current is the only hazard with a direction, and direction is the
+          // whole decision it offers — ride it, cross it, or pay to fight it
+          // (docs/hazards.md §8). Rings radiating from a centre would say the
+          // opposite: that the danger comes from a point. Streaks along the
+          // flow are what §8's Visual Cues ask for, and they are unmistakable
+          // against every other hazard at a glance, which is gate 7's bar.
+          this.drawFlowStreaks(g, hazard, heat, inverseScale);
+        } else {
+          for (let ring = 1; ring <= 3; ring++) {
+            g.circle(hazard.x, hazard.y, hazard.radiusM * (ring / 3)).stroke({
+              width: 1.5 * inverseScale,
+              color,
+              alpha: 0.3 * heat,
+            });
+          }
         }
       }
+    }
+  }
+
+  /**
+   * Chevrons along a current's bearing — which way the water is going.
+   *
+   * Laid out on a grid rotated into the flow's frame so the streaks stay
+   * parallel however the site is turned, and clipped to the circle so the
+   * hazard keeps one silhouette. Nothing here is animated: the renderer draws
+   * simulation state, and a current's state is its direction, not a phase the
+   * client invents.
+   */
+  private drawFlowStreaks(
+    g: Graphics,
+    hazard: HazardState,
+    heat: number,
+    inverseScale: number
+  ): void {
+    const flow = hazard.flowRad ?? 0;
+    const fx = Math.cos(flow);
+    const fy = Math.sin(flow);
+    // Across-flow unit vector, for spacing the lanes.
+    const ax = -fy;
+    const ay = fx;
+    const r = hazard.radiusM;
+    const lanes = 5;
+    const spacing = (r * 2) / (lanes + 1);
+    const length = r * 0.34;
+    const head = length * 0.3;
+
+    for (let lane = 0; lane < lanes; lane++) {
+      // Offset of this lane from the centre line, across the flow.
+      const across = -r + spacing * (lane + 1);
+      // Half-chord of the circle at this offset, so a streak never pokes out.
+      const half = Math.sqrt(Math.max(0, r * r - across * across));
+      if (half < length) continue;
+      const cx = hazard.x + ax * across;
+      const cy = hazard.y + ay * across;
+      const tailX = cx - fx * length * 0.5;
+      const tailY = cy - fy * length * 0.5;
+      const tipX = cx + fx * length * 0.5;
+      const tipY = cy + fy * length * 0.5;
+
+      g.moveTo(tailX, tailY).lineTo(tipX, tipY);
+      // An arrowhead, so the streak reads as a direction rather than a hatch.
+      g.moveTo(tipX, tipY).lineTo(
+        tipX - fx * head + ax * head * 0.6,
+        tipY - fy * head + ay * head * 0.6
+      );
+      g.moveTo(tipX, tipY).lineTo(
+        tipX - fx * head - ax * head * 0.6,
+        tipY - fy * head - ay * head * 0.6
+      );
+      g.stroke({ width: 2 * inverseScale, color: UI.accent, alpha: 0.55 * heat });
     }
   }
 

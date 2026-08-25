@@ -99,6 +99,21 @@ export interface MapHazardSite {
   y: number;
   radiusM: number;
   kind: HazardKind;
+  /**
+   * Which way a current flows, in degrees, for `cold-shock` sites.
+   *
+   * Measured exactly as `Math.atan2(dy, dx)` measures — 0 is +X, 90 is +Y,
+   * which is south on screen — so it matches `contact.heading` and every other
+   * angle in the simulation. Authored rather than derived: docs/hazards.md §8
+   * makes the direction a published, learnable property of the map, and a
+   * bearing computed from the site's own coordinates would be stable but
+   * arbitrary, which reads as the map being random rather than dangerous.
+   *
+   * Ignored by every other kind. A `cold-shock` site without one does not
+   * flow, which is a map bug rather than a valid still current — `maps.test.ts`
+   * refuses it.
+   */
+  flowDeg?: number;
   note?: string;
 }
 

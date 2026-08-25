@@ -9,7 +9,7 @@
 import { defineQuery } from 'bitecs';
 import { Faction, MOVEMENT, SILENT_RUNNING, statsFor, type UnitKind } from '@echoes/shared';
 import { MoveOrder, Owner, Position, SilentRunning, Unit, Velocity } from '../components.ts';
-import { stormModifiers } from './hazards.ts';
+import { currentModifiers, stormModifiers } from './hazards.ts';
 import type { SimWorld } from '../world.ts';
 
 const movable = defineQuery([Position, Velocity, MoveOrder, Unit, SilentRunning, Owner]);
@@ -21,7 +21,12 @@ function speedMultiplier(world: SimWorld, eid: number): number {
   // Storm interference stacks with silent running rather than replacing it
   // (docs/hazards.md §5, "Bathyarch machinery malfunctions"): a Consortium
   // hull creeping through a storm is slow for two separate reasons.
-  const weather = stormModifiers(world, eid).speed;
+  //
+  // A cold shock current stacks the same way (docs/hazards.md §8): cold water
+  // is a separate reason to be slow from a storm rattling your machinery, and
+  // from creeping. Only the speed term is read here — the SIG term belongs to
+  // the acoustics pass, which runs after this one and so sees a fresh heading.
+  const weather = stormModifiers(world, eid).speed * currentModifiers(world, eid).speed;
   if (!SilentRunning.active[eid]) return weather;
   return (
     weather *

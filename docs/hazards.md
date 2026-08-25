@@ -187,6 +187,36 @@ Dynamic, readable, faction-flavored threats that shape strategy.
 - Bathyarch reactors stall
 - Abyssal creatures freeze briefly
 
+### How a current works
+
+A current is the first **sustained** force in the game. An eruption is a shove — four seconds, radial, and over. A current runs for its whole active phase and pushes one way the entire time, which makes it the first hazard a player routes *around* rather than only flees.
+
+**It flows one way, and the map says which way.** A current site carries an authored bearing, published to every client like the rest of a hazard state, and it does not change during a match. A player learns "the cold runs north-west to south-east through the labyrinth" the way they learn where the vents are. The alternative — a direction derived from the site, or one that rotates — would make the map arbitrary rather than dangerous, and [CLAUDE.md](../CLAUDE.md) fixes the target emotion as dread rather than confusion.
+
+Three consequences follow, and together they are the mechanic:
+
+- **Riding it is free, and fast.** A hull travelling with the flow is carried, and arrives sooner than its speed alone would allow.
+- **Crossing it costs you your line.** Drift is a displacement, not a change of heading: a hull under orders keeps steering at its target and crabs sideways, so it still arrives — by a longer, bowed path than the one its player drew.
+- **Fighting it costs noise.** See below. This is the half that makes a current a decision rather than a toll.
+
+**Holding station against a current is loud.** A hull driving into moving water is loading its engines against it, and in this game work is noise. SIG is added in proportion to how directly a hull opposes the flow: none at all when it rides with the current, most when it drives straight into it, and the whole range in between. Drifting is silent — a hull under no orders is *carried*, and being carried is not work.
+
+So the current is not a movement tax. It is a choice between the long way round with the water and the short way through it, and the short way announces itself. That is the same bargain [systems-depth.md](systems-depth.md) §5 strikes with depth — fast in, slow out — turned on its side.
+
+This does **not** break Silent Running. It is a load, not an event: SIG is added for as long as a hull fights and stops the moment it stops, the same shape as a Resonance Storm's SIG penalty on Pelagia hulls (§5). A silent hull can cross a current; it will simply not be as quiet as it thinks while it does.
+
+**A current does no damage.** Two of the Gameplay Mechanics bullets above are deliberately not modelled rather than approximated:
+
+- *Energy weapons lose effectiveness* needs a weapon taxonomy the roster does not have — nothing distinguishes an energy weapon from any other. It belongs with the combat design ([systems-combat.md](systems-combat.md)).
+- *Hull integrity drops temporarily* would be the only temporary maximum-HP effect in the game. What "temporarily" means — and what happens to a hull already below the reduced maximum — has to be specified before it is built.
+
+**Faction interactions**, of which three are modelled:
+
+- **Hadron are unaffected.** No drift, no slowing, no noise. Mag-propulsion does not care what the water is doing, and this is the one hazard a faction simply ignores.
+- **Pelagia slow dramatically.** A much harsher speed multiplier than everyone else's, so the faction that already trades speed for quiet pays twice here.
+- **Abyssal creatures freeze briefly.** Fauna caught in an active current stop moving until it subsides. They still hear, and they still bite what is beside them — a frozen predator is not a safe one.
+- **Bathyarch reactors stall** is *not* modelled, and the reason is worth writing down rather than deferring silently. "Reactors" points at Thermal Draw rather than at propulsion — a stall should cost capacity, not speed, or it is only Pelagia's interaction again. But the structures that carry draw capacity are the Bastion and the Vent Tap, a Vent Tap must stand on a thermal vein, and no vein on the Kelp Labyrinth is within 1,300 m of a current site. The reading is unreachable on the only map that has currents, so it needs a map change or a different spec first, and inventing a propulsion stall to fill the row would be the doc describing something it does not mean.
+
 ## Hazard Integration Rules (RTS-specific)
 
 ### Readability
@@ -213,7 +243,7 @@ Dynamic, readable, faction-flavored threats that shape strategy.
 
 ## Implementation Status
 
-Two of the eight are simulated. The framework is the deliverable; the remaining six are additions to it rather than new systems.
+Three of the eight are simulated. The framework is the deliverable; the remaining five are additions to it rather than new systems.
 
 | Hazard | Status |
 | --- | --- |
@@ -224,7 +254,7 @@ Two of the eight are simulated. The framework is the deliverable; the remaining 
 | 5. Resonance Storms | **Implemented** — full cycle, PF degradation, light damage, three of four faction interactions |
 | 6. Abyssal Creature Migration | Not started — needs the fauna simulation first |
 | 7. Chemical Spill Zones | Site only |
-| 8. Cold Shock Currents | Site only |
+| 8. Cold Shock Currents | **Implemented** — full cycle, directional drift, speed penalty, the acoustic cost of fighting it, three of four faction interactions |
 
 A **site** is a position and a radius authored into a map ([maps.md](maps.md)); a **simulated** hazard additionally has a phase, timers and effects. Sites are drawn either way, because hazard telegraphing is a core map principle and a site the player cannot see is a trap rather than a hazard.
 

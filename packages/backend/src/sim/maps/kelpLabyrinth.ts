@@ -156,14 +156,29 @@ export const KELP_LABYRINTH: MapDefinition = {
   hazards: [
     { x: 3400, y: 3400, radiusM: 1200, kind: 'kelp-entanglement', note: 'Maze core' },
     { x: 4600, y: 4600, radiusM: 1200, kind: 'kelp-entanglement' },
+    // "Cold shock currents in deeper pockets" (doc), and all three sit on the
+    // NW-SE diagonal — the same axis the two primary spawns and the hidden
+    // corner tunnels are on. So they are one current sampled three times, not
+    // three unrelated ones, and they all run the same way: 45 degrees, which
+    // is NW to SE.
+    //
+    // That is deliberately asymmetric, on the one map whose stated ideal use
+    // is asymmetric play. The north-west player attacks with the water and
+    // withdraws against it; the south-east player approaches against it and
+    // pulls out with it. Neither is strictly better — it is the depth bargain
+    // (fast in, slow out) rotated into the horizontal plane, handed to one
+    // side and reversed for the other. Worth watching in playtests; if it
+    // reads as a straight advantage rather than a different shape of game,
+    // turn the outer two to flow inward and leave the centre alone.
     {
       x: W / 2,
       y: H / 2,
       radiusM: 600,
       kind: 'cold-shock',
-      note: 'Cold shock currents in the deeper pockets (doc)',
+      flowDeg: 45,
+      note: 'Cold shock currents in the deeper pockets (doc) — over the crystal',
     },
-    { x: 2100, y: 2100, radiusM: 400, kind: 'cold-shock' },
-    { x: W - 2100, y: H - 2100, radiusM: 400, kind: 'cold-shock' },
+    { x: 2100, y: 2100, radiusM: 400, kind: 'cold-shock', flowDeg: 45 },
+    { x: W - 2100, y: H - 2100, radiusM: 400, kind: 'cold-shock', flowDeg: 45 },
   ],
 };

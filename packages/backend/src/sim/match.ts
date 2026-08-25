@@ -34,7 +34,6 @@ import {
   EchoMarkKind,
   FaunaSpecies,
   faunaStatsFor,
-  HAZARDS,
   HazardPhase,
   OrdnanceKind,
   depthBandFor,
@@ -96,7 +95,7 @@ import { hashWorld } from './stateHash.ts';
 import { Terrain } from './terrain.ts';
 import { VENTFRONT_DIVIDE, terrainFor, type MapDefinition } from './maps/index.ts';
 import { countFauna, DRIFT_SLOT, faunaSystem } from './systems/fauna.ts';
-import { hazardStates, hazardsSystem, isSimulated } from './systems/hazards.ts';
+import { dormantSecondsFor, hazardStates, hazardsSystem, isSimulated } from './systems/hazards.ts';
 import { drawFor, thermalSystem } from './systems/thermal.ts';
 import { titheSystem } from './systems/tithe.ts';
 import {
@@ -332,7 +331,12 @@ export class Match {
         y: site.y,
         radiusM: site.radiusM,
         phase: HazardPhase.Dormant,
-        elapsedS: stagger * HAZARDS.ERUPTION.DORMANT_S,
+        elapsedS: stagger * dormantSecondsFor(site.kind),
+        // Authored in degrees and stored in radians: docs/hazards.md §8 makes a
+        // current's direction map data, and the per-tick path should never pay
+        // for the conversion. A site that forgets it does not flow at all,
+        // which maps.test.ts refuses rather than silently shipping still water.
+        flowRad: ((site.flowDeg ?? 0) * Math.PI) / 180,
         stabilisedS: 0,
       });
     }

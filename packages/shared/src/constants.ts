@@ -798,6 +798,50 @@ export const HAZARDS = {
     /** Bathyarch "machinery malfunctions" — doc §5. Speed multiplier. */
     BATHYARCH_SPEED_MULTIPLIER: 0.7,
   },
+  COLD_SHOCK: {
+    DORMANT_S: 70,
+    /**
+     * Telegraph, sized the way the eruption's is: the *slowest* hull clearing
+     * the *largest* authored current from its centre. A Harvester at 40 m/s
+     * covers 720 m in this window against a 600 m site, so leaving is always
+     * possible for a player who starts when told. A current does no damage, so
+     * this is not a matter of survival — but doc "Readability" asks every
+     * hazard to telegraph, and a current you cannot see coming is one you can
+     * only discover by having already lost your line.
+     */
+    WARNING_S: 18,
+    /**
+     * Long, and that is the design. An eruption is an event you flee; a
+     * current is a condition you route around, and it has to outlast a
+     * crossing for routing to mean anything.
+     */
+    ACTIVE_S: 40,
+    DECAY_S: 8,
+    /**
+     * Metres per second the water carries a hull along the site's bearing.
+     *
+     * A quarter of the slowest hull's speed (Harvester, 40 m/s): enough that
+     * riding the flow is visibly faster and driving into it is visibly slower,
+     * without a current ever being a wall. Applied as displacement per tick,
+     * never as momentum — see the note in hazards.ts.
+     */
+    DRIFT_MPS: 10,
+    /** "Sudden movement speed reduction" — doc §8. Everyone but Hadron. */
+    SPEED_MULTIPLIER: 0.8,
+    /** "Pelagia slows dramatically" — doc §8. */
+    PELAGIA_SPEED_MULTIPLIER: 0.55,
+    /**
+     * SIG added to a hull driving *straight into* the flow, tapering to zero
+     * as its heading comes round to the current's.
+     *
+     * The sound argument, and the reason a current is a decision rather than a
+     * toll (doc §8, "Holding station against a current is loud"). Pitched
+     * between a storm's Pelagia penalty (20) and nothing: loud enough that a
+     * scout crossing head-on gives away a bearing it would rather keep, quiet
+     * enough that it is not an eruption's klaxon at 55.
+     */
+    FIGHTING_SIG: 18,
+  },
 } as const;
 
 /** SPEC — docs/systems-echo.md §4 and §7. Seconds. */
