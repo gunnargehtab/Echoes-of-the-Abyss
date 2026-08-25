@@ -37,8 +37,14 @@ import {
   EchoMarkKind,
   SelfEventKind,
   StructureKind,
+  THERMOCLINE,
+  THERMOCLINE_DUCT_BOTTOM_M,
+  THERMOCLINE_DUCT_TOP_M,
+  THERMOCLINE_ZONE_MAX,
+  ThermoclineZone,
   UnitKind,
   depthBandFor,
+  thermoclineZone,
   maxAudibleRangeM,
   requiredPressureRating,
   FaunaSpecies,
@@ -399,6 +405,16 @@ const RIBBON_X = 12;
 const RIBBON_WIDTH = 14;
 const RIBBON_TOP_PAD = 18;
 const RIBBON_BOTTOM_PAD = 16;
+/**
+ * Below this, the duct is drawn as its centre line alone.
+ *
+ * The duct is a fixed fraction of the strip, so its pixel height falls out of
+ * the window: about 50 px on a 1080p screen and about 4 px at the 60 px
+ * minimum the ribbon will draw at all. Four pixels of translucent fill under a
+ * one-pixel line is not a band a player can see — it is a thicker line that
+ * lies about having width.
+ */
+const RIBBON_DUCT_MIN_PX = 6;
 
 /**
  * Where a hull sits when ordered into a band.
@@ -414,6 +430,46 @@ const BAND_STATION_DEPTH_M: Record<DepthBand, number> = {
   [DepthBand.MidWater]: 1000,
   [DepthBand.Abyssal]: 2400,
 };
+
+/**
+ * The rungs a depth order steps between, shallow to deep.
+ *
+ * One per band, plus the thermocline — which is a rung and not a band, and is
+ * the reason this is a list rather than the band enum. Sound whose emitter and
+ * listener are *both* inside the duct is multiplied by 1.2 and carries further
+ * than open water (docs/glossary.md, docs/systems-echo.md §3), and until this
+ * rung existed no order a player could give could park a hull there: the three
+ * band stations are 200 / 1,000 / 2,400 m and the duct is 1,100–1,300 m. The
+ * server never had that limit — `Match.orderDepth` accepts any depth in range
+ * — so this was a client-side hole in the game's vocabulary, not a rule.
+ */
+const DEPTH_STATIONS_M: readonly number[] = [
+  BAND_STATION_DEPTH_M[DepthBand.Shelf],
+  BAND_STATION_DEPTH_M[DepthBand.MidWater],
+  THERMOCLINE.DEPTH_M,
+  BAND_STATION_DEPTH_M[DepthBand.Abyssal],
+];
+
+/** Which rung a depth counts as standing on. */
+const BAND_RUNG: Record<DepthBand, number> = {
+  [DepthBand.Shelf]: 0,
+  [DepthBand.MidWater]: 1,
+  [DepthBand.Abyssal]: 3,
+};
+
+/**
+ * The rung a hull at this depth is treated as occupying.
+ *
+ * Zone first, band second: a hull inside the duct is *on* the duct rung even
+ * though the duct sits within Mid-Water, because the duct is what it is there
+ * for. Everywhere else the ladder still steps band to band, so the only
+ * behaviour change is that descending out of Mid-Water now stops at the layer
+ * before continuing to the Abyssal.
+ */
+function rungFor(depthM: number): number {
+  if (thermoclineZone(depthM) === ThermoclineZone.Duct) return 2;
+  return BAND_RUNG[depthBandFor(depthM)];
+}
 
 const BAND_LABEL: Record<DepthBand, string> = {
   [DepthBand.Shelf]: 'SHELF',
@@ -467,6 +523,15 @@ export class EchoRenderer {
   private readonly ribbonGraphics = new Graphics();
   private readonly ribbonLabels: Text[] = [];
   private ribbonReadout!: Text;
+  /**
+   * The duct's own label, deliberately *not* a fourth entry in `ribbonLabels`.
+   *
+   * That array is positioned by index into a literal [Shelf, MidWater,
+   * Abyssal] list, so a fourth push would silently park the Abyssal label on
+   * the duct and leave one label unplaced. The duct is not a band; it does not
+   * belong in the band array.
+   */
+  private ductLabel!: Text;
 
   private readonly infoGraphics = new Graphics();
   private infoName!: Text;
@@ -742,6 +807,16 @@ export class EchoRenderer {
     }
     this.ribbonReadout = new Text({ text: '', style: { ...mono, fontSize: 10, fill: UI.accent } });
 
+    // Cyan, like every passive readout — docs/style-neon-noir.md: "cyan tells
+    // you, magenta asks you, red warns you". The band hairlines are the
+    // magenta chrome token, so reusing that here would draw the layer as a
+    // fourth band boundary: a different rule wearing the same ink.
+    this.ductLabel = new Text({
+      text: 'DUCT',
+      style: { ...mono, fontSize: 8, fill: UI.accent },
+    });
+    this.ductLabel.visible = false;
+
     this.hud.addChild(
       this.sigLabel,
       this.bandLabel,
@@ -759,6 +834,7 @@ export class EchoRenderer {
       this.infoLine2,
       this.infoBadge,
       this.ribbonReadout,
+      this.ductLabel,
       ...this.ribbonLabels
     );
   }
@@ -1605,7 +1681,7 @@ export class EchoRenderer {
   /**
    * The depth a step in `direction` would take the selection to (+1 deeper,
    * -1 shallower), or null when the whole selection is already at the end of
-   * the stack. Orders step band to band; see BAND_STATION_DEPTH_M.
+   * the stack. Orders step rung to rung; see DEPTH_STATIONS_M.
    *
    * The lead unit decides the target so a mixed-depth squad moves as one
    * formation rather than fanning out across two bands.
@@ -1616,10 +1692,9 @@ export class EchoRenderer {
     // Step from where the hull is headed if it is already moving, so repeated
     // presses queue deeper rather than re-issuing the same order.
     const reference = lead.depthOrder ?? lead.depth;
-    const band = depthBandFor(reference);
-    const next = band + direction;
-    if (next < DepthBand.Shelf || next > DepthBand.Abyssal) return null;
-    return BAND_STATION_DEPTH_M[next as DepthBand];
+    const next = rungFor(reference) + direction;
+    if (next < 0 || next >= DEPTH_STATIONS_M.length) return null;
+    return DEPTH_STATIONS_M[next]!;
   }
 
   private commandDepthStep(direction: 1 | -1): void {
@@ -2508,13 +2583,27 @@ export class EchoRenderer {
       // true audible region is anisotropic; a circle at local PF is the
       // honest isotropic preview of it (and all this client is entitled to).
       //
-      // The thermocline is left out for a stronger reason than bearing: its
-      // factor depends on the *listener's* depth, which is the enemy's, which
-      // is precisely the hidden information this client must not be holding.
-      // The ring therefore prices the same-side case, and crossing the layer
-      // can only ever make you quieter than it draws.
+      // The thermocline's *pair* factor is left out for a stronger reason than
+      // bearing: it depends on the listener's depth, which is the enemy's,
+      // which is precisely the hidden information this client must not hold.
+      //
+      // What is included is the row maximum for the hull's *own* zone — the
+      // loudest any pair starting from where this hull is standing could be.
+      // That computes from own depth alone, so it reveals nothing, and it is
+      // the same quantity the server's own broadphase bounds with.
+      //
+      // It has to be here. This comment used to claim that crossing the layer
+      // "can only ever make you quieter than it draws", which is true Above
+      // and Below and false in the duct: a duct-to-duct pair is 1.2x, so a
+      // hull in the duct is about 12% further audible than an unpriced ring
+      // shows. A preview that under-draws the danger is the one kind of
+      // inaccuracy this HUD may not have.
       const pf = this.propagationAt(unit.x, unit.y);
-      const range = maxAudibleRangeM(unit.sig, pf, PROPAGATION_MODEL.BASELINE_HYD);
+      const range = maxAudibleRangeM(
+        unit.sig,
+        pf * THERMOCLINE_ZONE_MAX[thermoclineZone(unit.depth)]!,
+        PROPAGATION_MODEL.BASELINE_HYD
+      );
 
       g.circle(unit.x, unit.y, range).stroke({
         width: 2 / this.world.scale.x,
@@ -3370,9 +3459,16 @@ export class EchoRenderer {
    * with a marker per selected hull, because the bands are what a commander
    * reasons about; the metre figure is only ever a confirmation.
    *
-   * While Shift is held it also previews the dive: the band a descent would
-   * take the selection to, and what that descent would cost in SIG. Same
-   * bargain as the ping preview — see the price before you pay it.
+   * It also draws the **thermocline** (docs/systems-echo.md §3): a cyan line
+   * at 1,200 m with the duct shaded around it. Not a band — it is not terrain
+   * and has no cells, it modifies a listening pair rather than a place — which
+   * is why it is cyan against the bands' magenta, and why it appears here and
+   * nowhere in the world view. Drawing it reveals nothing: the boundary is a
+   * published constant, identical on every map.
+   *
+   * While Alt is held it also previews the dive: the rung a descent would take
+   * the selection to, and what that descent would cost in SIG. Same bargain as
+   * the ping preview — see the price before you pay it.
    */
   private drawDepthRibbon(): void {
     const g = this.ribbonGraphics;
@@ -3384,6 +3480,7 @@ export class EchoRenderer {
     if (selected.length === 0) {
       for (const label of this.ribbonLabels) label.visible = false;
       this.ribbonReadout.visible = false;
+      this.ductLabel.visible = false;
       return;
     }
 
@@ -3395,6 +3492,7 @@ export class EchoRenderer {
       // Too short to read; better absent than misleading.
       for (const label of this.ribbonLabels) label.visible = false;
       this.ribbonReadout.visible = false;
+      this.ductLabel.visible = false;
       return;
     }
 
@@ -3422,7 +3520,48 @@ export class EchoRenderer {
       const y = this.ribbonY(DEPTH_BANDS[band].min, top, height);
       g.rect(RIBBON_X, y, RIBBON_WIDTH, 1).fill({ color: UI.glassStroke, alpha: 0.7 });
     }
+
+    // The thermocline (docs/systems-echo.md §3). Not a band and not terrain —
+    // it modifies a listening pair rather than a place — which is why it is
+    // drawn here, on the one widget that is about the water column, and
+    // nowhere in the world view or on the scope.
+    //
+    // Cyan against the bands' magenta, because it is a different rule and must
+    // not read as a fourth band boundary. Both bounds come from shared rather
+    // than from 1,200 ± 100 restated here.
+    const ductTop = this.ribbonY(THERMOCLINE_DUCT_TOP_M, top, height);
+    const ductBottom = this.ribbonY(THERMOCLINE_DUCT_BOTTOM_M, top, height);
+    const ductHeight = ductBottom - ductTop;
+    // The duct is a fixed 6.67% of a 0–3,000 m strip: ~50 px at 1080p, ~4 px
+    // at the 60 px floor this method already refuses to draw below. Under a
+    // few pixels a band and a line are the same picture, so the band is
+    // dropped rather than drawn as a smear that means something it does not.
+    if (ductHeight >= RIBBON_DUCT_MIN_PX) {
+      g.rect(RIBBON_X, ductTop, RIBBON_WIDTH, ductHeight).fill({
+        color: UI.accent,
+        alpha: 0.16,
+      });
+    }
+    // The boundary itself is always drawn. §3 calls it "a wall rather than a
+    // gradient, like the depth bands themselves", and a wall gets a line.
+    g.rect(RIBBON_X, this.ribbonY(THERMOCLINE.DEPTH_M, top, height), RIBBON_WIDTH, 1).fill({
+      color: UI.accent,
+      alpha: 0.85,
+    });
+
     g.rect(RIBBON_X, top, RIBBON_WIDTH, height).stroke({ width: 1, color: UI.glassStroke });
+
+    // Right of the strip, like the band labels — the ribbon sits 12 px from the
+    // window edge, so there is no room on its left and a label placed there is
+    // clipped by the viewport. It cannot collide with the band labels: those
+    // are parked at 0 m, 400 m and 1,800 m, and this one is at 1,200 m.
+    // Centred on the line rather than hung below it, because it names a
+    // boundary and not the water under it.
+    this.ductLabel.visible = ductHeight >= RIBBON_DUCT_MIN_PX;
+    this.ductLabel.position.set(
+      RIBBON_X + RIBBON_WIDTH + 5,
+      this.ribbonY(THERMOCLINE.DEPTH_M, top, height) - this.ductLabel.height / 2
+    );
 
     // Band labels, each parked just inside the top of its own band.
     this.ribbonLabels.forEach((label, i) => {
@@ -3477,11 +3616,22 @@ export class EchoRenderer {
 
     const lead = selected[0]!;
     this.ribbonReadout.visible = true;
+    // Which side of the layer the selection is on, from its own depth and
+    // nothing else — docs/ui-ux.md §1, "the client cannot know more than the
+    // player earned". The *pair* factor needs a listener's depth and so can
+    // never be shown; a hull's own zone is its own state.
+    //
+    // Only the two non-default zones are named. Above the layer is where most
+    // of the game happens, and a badge printed on every selection would be
+    // chrome rather than information.
+    const zone = thermoclineZone(lead.depth);
+    const zoneTag =
+      zone === ThermoclineZone.Duct ? ' · DUCT' : zone === ThermoclineZone.Below ? ' · UNDER' : '';
     this.ribbonReadout.text = this.previewPing
       ? previewCrushes
         ? `DIVE ${DEPTH.DESCENT_SIG} SIG · CRUSH`
         : `DIVE ${DEPTH.DESCENT_SIG} SIG`
-      : `${lead.depth.toFixed(0)}m`;
+      : `${lead.depth.toFixed(0)}m${zoneTag}`;
     this.ribbonReadout.style.fill = this.previewPing
       ? previewCrushes
         ? UI.threat

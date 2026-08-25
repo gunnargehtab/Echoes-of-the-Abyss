@@ -22,7 +22,6 @@ import {
   DEPTH,
   Faction,
   HarvestThrottle,
-  HAZARDS,
   PRODUCIBLE,
   ResourceKind,
   SIM,
@@ -96,7 +95,13 @@ import { hashWorld } from './stateHash.ts';
 import { Terrain } from './terrain.ts';
 import { VENTFRONT_DIVIDE, terrainFor, type MapDefinition } from './maps/index.ts';
 import { countFauna, DRIFT_SLOT, faunaSystem } from './systems/fauna.ts';
-import { hazardStates, hazardsSystem, isPermanent, isSimulated } from './systems/hazards.ts';
+import {
+  dormantSecondsFor,
+  hazardStates,
+  hazardsSystem,
+  isPermanent,
+  isSimulated,
+} from './systems/hazards.ts';
 import { drawFor, thermalSystem } from './systems/thermal.ts';
 import { titheSystem } from './systems/tithe.ts';
 import {
@@ -334,7 +339,11 @@ export class Match {
         // Kelp has no cycle to wait in — it begins the match gripping
         // (docs/hazards.md §4). Everything else telegraphs first.
         phase: isPermanent(site.kind) ? HazardPhase.Active : HazardPhase.Dormant,
-        elapsedS: stagger * HAZARDS.ERUPTION.DORMANT_S,
+        // Scaled by *this kind's* dormancy, not the eruption's. `elapsedS` is
+        // wait already spent, so a site with a large stagger fires sooner —
+        // and a span borrowed from another kind bunches every hazard of the
+        // longer-waiting kinds into the back half of their own cycle.
+        elapsedS: stagger * dormantSecondsFor(site.kind),
         // Authored in degrees and stored in radians: docs/hazards.md §8 makes a
         // current's direction map data, and the per-tick path should never pay
         // for the conversion. A site that forgets it does not flow at all,

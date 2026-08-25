@@ -24,11 +24,15 @@
  */
 
 import {
+  DEPTH,
+  DEPTH_BANDS,
+  DepthBand,
   EchoMarkKind,
   PRODUCIBLE,
   ResolutionTier,
   SIM,
   StructureKind,
+  THERMOCLINE_DUCT_BOTTOM_M,
   UnitKind,
   requiredPressureRating,
   statsFor,
@@ -72,8 +76,57 @@ const RANGE = {
   BUILD_MIN_M: 420,
 } as const;
 
+/**
+ * The two depths the army has words for.
+ *
+ * Depth is the axis of commitment (docs/systems-depth.md §5), so the commander
+ * gets exactly two: where it lives, and where it goes when it means it. A
+ * continuous depth would be a knob; a pair is a decision.
+ */
+const DEPTH_PLAN = {
+  /** Where the force sits when it is not crossing — its own spawn depth. */
+  CRUISE_M: 600,
+  /**
+   * Under the layer. Below THERMOCLINE_DUCT_BOTTOM_M rather than at 1,200 m,
+   * because the duct is the one zone that can make you *louder*: a duct-to-duct
+   * pair is 1.2×, so a naive "hide at the thermocline" aims at the only water
+   * on the axis that is worse than open. The stealth is in crossing past it.
+   */
+  CROSSING_M: THERMOCLINE_DUCT_BOTTOM_M + 100,
+  /**
+   * Clearance kept off a band boundary when a hull is clamped to its rating,
+   * so a hull parked at its own limit is never ambiguously in the band below.
+   */
+  BAND_MARGIN_M: 50,
+} as const;
+
 /** Longest a remembered enemy position stays worth walking to, in seconds. */
 const MEMORY_S = 90;
+
+/**
+ * The deepest water this Pressure Rating is actually rated for.
+ *
+ * The commander clamps every depth order through this. `Match.orderDepth`
+ * deliberately does not check ratings — renting depth you cannot survive is
+ * the mechanic, and a human may do it — but a PR-1 Light Scout ordered under
+ * the layer takes 4 HP/s of unhealable crush for a stealth benefit it will not
+ * live to use, and difficulty here is decision quality (see `AiTuning`). So the
+ * army splits vertically by what each hull can survive rather than refusing to
+ * dive at all: the rated hulls cross, and the scouts stay in the light.
+ *
+ * That split is not only a safety rule. Contacts resolve per slot, so a
+ * shallow scout keeps hearing on behalf of an army that has gone deaf under
+ * the layer — which is the one answer this commander has to §3's "hidden from
+ * the surface *and deaf to it*, in equal measure".
+ */
+function ratedDepthCeiling(pressureRating: number): number {
+  // requiredPressureRating(d) is depthBandFor(d) + 1, so a rating of r covers
+  // every band up to index r - 1. Derived from that rather than restated, so a
+  // fourth band could not silently strand this.
+  const band = Math.min(Math.max(pressureRating, 1), DepthBand.Abyssal + 1) - 1;
+  const max = DEPTH_BANDS[band as DepthBand].max;
+  return Number.isFinite(max) ? max - DEPTH_PLAN.BAND_MARGIN_M : DEPTH.MAX_M;
+}
 
 /** Sim ticks between Echo snapshots — the commander's clock unit. */
 const TICKS_PER_OBSERVATION = SIM.TICK_HZ / SIM.ECHO_HZ;
@@ -554,6 +607,7 @@ export class AiCommander implements AiPlayer {
     );
     if (athome !== null) {
       this.setSilent(ids, false, out);
+      this.setCrossed(army, false, out);
       out.push({ kind: 'attack', unitIds: ids, contactId: athome.id });
       return;
     }
@@ -564,6 +618,10 @@ export class AiCommander implements AiPlayer {
       // the push does not start from the back of the map.
       const rally = this.rallyPoint();
       this.setSilent(ids, false, out);
+      // Massing happens in the light. A force still gathering has not made the
+      // bet yet, and a hull that dove while waiting would spend the climb
+      // ascending when the order to go finally came.
+      this.setCrossed(army, false, out);
       if (nearest(army, rally) > RANGE.ARRIVE_M) {
         out.push({ kind: 'move', unitIds: ids, x: rally.x, y: rally.y });
       }
@@ -578,16 +636,74 @@ export class AiCommander implements AiPlayer {
     );
     if (engaging !== null) {
       // Silent Running trades weapons for quiet, so it comes off the moment
-      // there is something to shoot.
+      // there is something to shoot. The crossing is given back for the same
+      // reason and one more: under the layer the army is deaf to the surface
+      // in exactly the measure it is hidden from it, and a fight is the one
+      // moment it cannot afford to stop hearing.
       this.setSilent(ids, false, out);
+      this.setCrossed(army, false, out);
       out.push({ kind: 'attack', unitIds: ids, contactId: engaging.id });
       return;
     }
 
+    // The attack run, and the one place the layer is worth its price. The dive
+    // costs 72 SIG for ~16 s and the climb back takes ~47 s, so it is only
+    // ever paid by a force that has already decided to go — which is what
+    // makes it a commitment rather than a stealth toggle. Deliberately not
+    // triggered by being heard: a commander that dove whenever exposure rose
+    // would go deaf on the way down, lose the contact that justified the dive,
+    // surface, hear it again, and oscillate.
     const target = this.remembered ?? this.enemyStarts[0] ?? this.home;
     this.setSilent(ids, this.doctrine.approachesSilently && this.tuning.usesSilentRunning, out);
+    this.setCrossed(army, this.doctrine.crossesTheLayer, out);
     if (nearest(army, target) > RANGE.ARRIVE_M) {
       out.push({ kind: 'move', unitIds: ids, x: target.x, y: target.y });
+    }
+  }
+
+  /**
+   * Put the army under the layer, or bring it back.
+   *
+   * One command per distinct depth rather than one per hull: every hull is
+   * clamped to what its own Pressure Rating covers, so a mixed force splits
+   * into a rated group that crosses and an unrated one that stays shallow.
+   * Grouping keeps the command count proportional to the number of *depths*
+   * the force wants, which is two at worst.
+   */
+  private setCrossed(army: readonly OwnUnit[], crossed: boolean, out: AiCommand[]): void {
+    const wanted = crossed ? DEPTH_PLAN.CROSSING_M : DEPTH_PLAN.CRUISE_M;
+    const byDepth = new Map<number, number[]>();
+
+    for (const unit of army) {
+      const depthM = Math.min(wanted, ratedDepthCeiling(statsFor(unit.kind).pressureRating));
+      // Read the hull rather than a remembered intention. `armySilent` can get
+      // away with a believed flag because silence is one bit for the whole
+      // force; depth cannot, because reinforcements spawn at cruise depth long
+      // after the crossing was ordered — a belief would leave every hull built
+      // mid-push sitting above a layer the rest of the army is under.
+      //
+      // depthOrder is the hull's target while a dive is in flight and absent
+      // once it arrives, so this reads "where it is going, or where it is",
+      // which is exactly the question. A hull the seabed is holding above its
+      // target still carries the order, so terrain does not provoke a re-send.
+      const heading = unit.depthOrder ?? unit.depth;
+      if (Math.abs(heading - depthM) <= DEPTH.ARRIVAL_EPSILON_M) continue;
+      // Surfacing may never push a hull *down*. A PR-1 scout is seated at
+      // 300 m and its rated ceiling is shallower than cruise depth, so without
+      // this the order to come home is a 50 m descent — and a descent breaks
+      // Silent Running (see Match.orderDepth), every time a new scout is
+      // built. Coming back is an ascent or it is nothing.
+      if (!crossed && heading <= depthM) continue;
+
+      const group = byDepth.get(depthM);
+      if (group === undefined) byDepth.set(depthM, [unit.id]);
+      else group.push(unit.id);
+    }
+
+    // Insertion-ordered, and the army arrives in a stable order, so the command
+    // stream is identical run to run — which the replay log depends on.
+    for (const [depthM, unitIds] of byDepth) {
+      out.push({ kind: 'depth', unitIds, depthM });
     }
   }
 

@@ -74,6 +74,19 @@ export class AiSeat {
       case 'produce':
         this.match.produce(slot, command.structureId, command.unit);
         return;
+      case 'depth':
+        for (const id of command.unitIds) this.match.orderDepth(slot, id, command.depthM);
+        return;
+      default: {
+        // No silent gap. A variant the commander emits and this switch ignores
+        // produces an AI that looks like it decided something and then did
+        // nothing — indistinguishable, from the outside, from a commander that
+        // chose not to act. `depth` spent the whole of this file's history in
+        // exactly that state. The never-assignment turns the next one into a
+        // compile error instead of a behaviour nobody can see.
+        const unhandled: never = command;
+        throw new Error(`AiSeat: no case for command ${JSON.stringify(unhandled)}`);
+      }
     }
   }
 }

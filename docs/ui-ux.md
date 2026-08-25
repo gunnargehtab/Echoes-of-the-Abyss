@@ -133,7 +133,7 @@ Silent Running trades away most of what a unit can do ([systems-echo.md](systems
 
 The vertical axis needs permanent, glanceable representation ([systems-depth.md](systems-depth.md)).
 
-- **Depth ribbon** — a vertical strip on the left showing Shelf / Mid-Water / Abyssal, band boundaries at 400 m and 1,800 m, and a marker per selected unit.
+- **Depth ribbon** — a vertical strip on the left showing Shelf / Mid-Water / Abyssal, band boundaries at 400 m and 1,800 m, the **thermocline** at 1,200 m with its duct shaded around it, and a marker per selected unit. The layer is not a fourth band and must not read as one: bands are about pressure and what a hull survives, the thermocline is about who can hear whom, so it takes the cyan passive-readout ink rather than the magenta the band hairlines use (§11, [style-neon-noir.md](style-neon-noir.md)). Drawing it reveals nothing — the boundary is a published constant, identical on every map — but the *factor* may never be drawn, because it depends on the listener's depth, which is the enemy's.
 - **PR badge** — each unit carries its Pressure Rating; when it is under-rated for its current depth the badge inverts and pulses.
 - **Hull the deep keeps must not look like damage.** Crush attrition below a unit's Pressure Rating, and the shallow-water poisoning that costs the Directorate 15% above 400 m, both ignore repair, so they render differently: the lost portion of the health bar is hatched and does not refill, making the permanence visible rather than discovered later. One hatch for both, because the player asks one question of it — how much of this bar is gone for good.
 - **Descent and ascent** — descending shows the SIG cost as a live spike on the meter; ascending shows a time-to-surface estimate, because the ascent is the part players underestimate.
@@ -142,8 +142,14 @@ Implemented in the client scaffold: the ribbon runs down the left edge with a ma
 selected hull and a ghost marker at its ordered depth; the PR badge sits in the selection
 card and shows a Sounding Spire's grant as `PR2+1` so a rented rating reads as rented; the
 unrecoverable portion of the health bar is hatched, and its texture rather than its hue is
-what distinguishes it, so it survives colour-vision differences (§11). Depth orders step band to
-band — `D` dives, `A` rises — because the bands are what the player reasons about.
+what distinguishes it, so it survives colour-vision differences (§11). Depth orders step rung to
+rung — `D` dives, `A` rises — and the rungs are the three band stations plus the thermocline,
+because sound with both ends inside the duct carries 1.2× further than open water and until the
+duct became a rung no order a player could give could buy it. The readout names the selection's
+own zone when it is somewhere other than the default: `DUCT` inside the layer, `UNDER` below it.
+
+The duct is a fixed 6.67% of the strip, so on a short window it collapses to a few pixels; below
+that it is drawn as its centre line alone rather than as a smear pretending to have width.
 
 ---
 
@@ -284,9 +290,10 @@ What the current client implements against this spec, so nobody re-implements wh
 | SIG meter, peak value, colour stops | Implemented |
 | Tier-graded contact rendering, ghost decay | Implemented |
 | Selected-unit detection ring | Implemented |
-| Ping preview rings, ping commit | Implemented (hold `Shift`, `P`) |
+| Ping preview rings, ping commit | Implemented (hold `Alt`, `P`) |
 | Silent-running dimming | Implemented |
-| Depth ribbon, PR badge, unrecoverable-hull hatching | Implemented (`D` dive, `A` rise; hold `Shift` to preview the dive cost) |
+| Depth ribbon, PR badge, unrecoverable-hull hatching | Implemented (`D` dive, `A` rise; hold `Alt` to preview the dive cost) |
+| Thermocline on the ribbon, duct as a depth rung | Implemented — cyan line at 1,200 m, duct shaded, `DUCT` / `UNDER` in the readout |
 | Sonar-scope minimap | Implemented — terrain, tier-fidelity returns, sweep, range rings; Echo Marks layer pending |
 | Contact log | Implemented — DOM, live region, click-to-focus; ping and mark rows pending |
 | Contact voices, per-tier | Implemented — pan authority by tier, biome voicing, faction timbre at Tier 3+ |

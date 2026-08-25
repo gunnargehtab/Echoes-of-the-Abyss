@@ -32,7 +32,13 @@ import { Match } from '../src/sim/match.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { spawnStructure, spawnUnit } from '../src/sim/world.ts';
 import { Acoustic, Health, Position, Unit } from '../src/sim/components.ts';
-import { VENTFRONT_DIVIDE, type MapDefinition } from '../src/sim/maps/index.ts';
+import {
+  ABYSSAL_RIFT_CORRIDOR,
+  KELP_LABYRINTH,
+  VENTFRONT_DIVIDE,
+  type MapDefinition,
+} from '../src/sim/maps/index.ts';
+import { dormantSecondsFor, isPermanent, isSimulated } from '../src/sim/systems/hazards.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 
@@ -726,5 +732,71 @@ describe('eruption lethality is solved, not picked', () => {
       `and so must a Commune harvester: ` +
         `${(combined * HAZARDS.ERUPTION.PELAGIA_DAMAGE_MULTIPLIER).toFixed(0)} vs ${harvester} HP`
     );
+  });
+});
+
+describe('the stagger measures each hazard against its own clock (#181)', () => {
+  // Every site gets a head start into its dormancy so a map's hazards do not
+  // all fire together. The span that head start is drawn from used to be the
+  // eruption's 55 s for every kind, which meant a 100 s storm could only ever
+  // begin in the first 55 s of its wait — so all four storms on a map bunched
+  // into the back half of their cycle, and no test noticed because the one map
+  // with a stagger assertion carries only eruptions.
+  const MAPS: MapDefinition[] = [VENTFRONT_DIVIDE, ABYSSAL_RIFT_CORRIDOR, KELP_LABYRINTH];
+
+  it('never seeds a hazard past the end of the dormancy it is waiting in', () => {
+    let cycling = 0;
+    for (const map of MAPS) {
+      const match = matchWith(map, 1);
+      for (const hazard of match.world.hazards) {
+        if (isPermanent(hazard.kind)) {
+          assert.equal(hazard.elapsedS, 0, `${hazard.kind} has no dormancy to be staggered into`);
+          continue;
+        }
+        cycling++;
+        const dormancy = dormantSecondsFor(hazard.kind);
+        assert.ok(dormancy > 0, `${hazard.kind} is simulated, so it has a wait`);
+        assert.ok(
+          hazard.elapsedS >= 0 && hazard.elapsedS < dormancy,
+          `${hazard.kind} on ${map.id} seeded at ${hazard.elapsedS.toFixed(1)}s ` +
+            `of a ${dormancy}s dormancy`
+        );
+      }
+    }
+    assert.ok(cycling >= 3, `the fixture must actually carry cycling hazards, saw ${cycling}`);
+  });
+
+  it('spreads the longer-waiting kinds across their whole cycle, not its back half', () => {
+    // The regression this file could not see before. Storms wait 100 s; scaled
+    // by the eruption's 55 s, no storm could be seeded past 55 s, so every one
+    // of them had at least 45 s of wait left and none could fire early.
+    const storms = matchWith(ABYSSAL_RIFT_CORRIDOR, 1).world.hazards.filter(
+      (h) => h.kind === 'resonance-storm'
+    );
+    assert.ok(storms.length >= 2, `needs several storms to say anything, saw ${storms.length}`);
+
+    const dormancy = dormantSecondsFor('resonance-storm');
+    const eruption = dormantSecondsFor('geothermal-eruption');
+    assert.ok(eruption < dormancy, 'the two kinds must actually differ for this to mean anything');
+    assert.ok(
+      storms.some((h) => h.elapsedS > eruption),
+      `no storm was seeded past ${eruption}s, which is the old ceiling wearing a new name`
+    );
+  });
+
+  it('gives every simulated kind a wait to be staggered into, or none at all', () => {
+    // A fourth cycling kind that forgot its CYCLES row would seed at 0 and
+    // fire on the same tick as its neighbours, which is the bug this whole
+    // mechanism exists to prevent.
+    for (const map of MAPS) {
+      for (const site of map.hazards) {
+        if (!isSimulated(site.kind)) continue;
+        const dormancy = dormantSecondsFor(site.kind);
+        assert.ok(
+          isPermanent(site.kind) ? dormancy === 0 : dormancy > 0,
+          `${site.kind} is simulated but has no dormancy to wait in`
+        );
+      }
+    }
   });
 });

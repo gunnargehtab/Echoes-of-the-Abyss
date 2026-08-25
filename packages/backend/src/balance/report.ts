@@ -19,7 +19,7 @@
  * harness can honestly say.
  */
 
-import { Faction, SIM } from '@echoes/shared';
+import { Faction, SIM, ThermoclineZone } from '@echoes/shared';
 import type { MatchTelemetryResult, PlayerTelemetry } from './telemetry.ts';
 
 const FACTION_NAME: Record<Faction, string> = {
@@ -46,6 +46,12 @@ export interface FactionSummary {
   lossesPerMatch: number;
   /** Share of hull-time spent below the Shelf. */
   deepTimeShare: number;
+  /**
+   * Share of hull-time spent under the thermocline — the acoustic half of the
+   * question `deepTimeShare` asks about pressure. This is the number that says
+   * whether the layer is a decision anyone makes or a rule nobody reaches.
+   */
+  belowLayerShare: number;
 }
 
 export interface BatchSummary {
@@ -152,6 +158,13 @@ export function summarise(results: MatchTelemetryResult[]): BatchSummary {
           const bands = Object.values(r.player.hullSecondsByBand);
           const total = bands.reduce((a, b) => a + b, 0);
           return total === 0 ? 0 : (bands[1]! + bands[2]!) / total;
+        })
+      ),
+      belowLayerShare: mean(
+        rows.map((r) => {
+          const zones = r.player.hullSecondsByZone;
+          const total = Object.values(zones).reduce((a, b) => a + b, 0);
+          return total === 0 ? 0 : zones[ThermoclineZone.Below] / total;
         })
       ),
     });
@@ -397,15 +410,16 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
   lines.push('## Per faction');
   lines.push('');
   lines.push(
-    '| Faction | Matches | Win rate | Nodules/min | Biomass/min | Mean SIG | Tracked, s | Losses | Below the Shelf |'
+    '| Faction | Matches | Win rate | Nodules/min | Biomass/min | Mean SIG | Tracked, s | ' +
+      'Losses | Below the Shelf | Under the layer |'
   );
-  lines.push('| --- | --- | --- | --- | --- | --- | --- | --- | --- |');
+  lines.push('| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |');
   for (const f of summary.factions) {
     lines.push(
       `| ${FACTION_NAME[f.faction]} | ${f.matches} | ${pct(f.winRate)} | ` +
         `${f.incomePerMinute.toFixed(0)} | ${f.biomassPerMinute.toFixed(1)} | ` +
         `${f.meanPeakSig.toFixed(0)} | ${f.secondsTracked.toFixed(0)} | ` +
-        `${f.lossesPerMatch.toFixed(1)} | ${pct(f.deepTimeShare)} |`
+        `${f.lossesPerMatch.toFixed(1)} | ${pct(f.deepTimeShare)} | ${pct(f.belowLayerShare)} |`
     );
   }
   lines.push('');

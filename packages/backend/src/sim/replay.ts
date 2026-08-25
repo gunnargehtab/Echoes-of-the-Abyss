@@ -37,6 +37,17 @@ import { eidOfLocalId } from './world.ts';
 
 /** The current replay wire format. Bump when a change breaks old files. */
 /**
+ * 11: every hazard is staggered across its own dormancy. The head start each
+ * site gets into its wait used to be scaled by the eruption's 55 s whatever
+ * the kind, so a 100 s storm could never be seeded past 55 s and every storm
+ * on a map began in the back half of its cycle. On `abyssal-rift-corridor` at
+ * seed 1 the four storms move from 70 / 73 / 109 / 111 s to 36 / 41 / 106 /
+ * 111 s — the stagger finally spanning the whole cycle. A v10 recording on any
+ * map carrying a storm or a current diverges at its first hazard;
+ * `ventfront-divide` carries only eruptions, whose dormancy *is* the 55 s, so
+ * recordings on it are unaffected in substance and still refused, because a
+ * replay that quietly means something else is worse than one that is refused.
+ *
  * 10: shallow water poisons the Directorate. Their hulls run at 80% speed
  * above the Shelf line and bleed unhealable hull down to 85% of max while they
  * stay there (docs/systems-depth.md §3). A v9 recording of a match with a
@@ -97,7 +108,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 10;
+export const REPLAY_FORMAT_VERSION = 11;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =

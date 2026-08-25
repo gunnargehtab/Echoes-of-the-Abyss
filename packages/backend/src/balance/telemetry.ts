@@ -33,9 +33,11 @@
 
 import {
   DepthBand,
+  ThermoclineZone,
   ResolutionTier,
   SIM,
   depthBandFor,
+  thermoclineZone,
   type EchoSnapshot,
   type Faction,
 } from '@echoes/shared';
@@ -62,6 +64,18 @@ export interface PlayerTelemetry {
   secondsHardTracked: number;
   /** Seconds of hull-time spent in each depth band, summed over the force. */
   hullSecondsByBand: Record<DepthBand, number>;
+  /**
+   * The same hull-time, split by thermocline zone instead of by band.
+   *
+   * A different question from the band split, and the layer is why. Bands are
+   * about pressure and what a hull is rated to survive; zones are about who can
+   * hear whom, and a pair straddling the layer is cut to 0.3× (docs/systems-echo.md
+   * §3). Until the commander had a depth verb this read Above for every AI hull
+   * for whole matches, which meant every committed baseline was measured
+   * against players that never exercised a third of the acoustic model — and
+   * nothing in the harness could say so.
+   */
+  hullSecondsByZone: Record<ThermoclineZone, number>;
   /** Units lost, by kind ordinal. Counted by id disappearing from their own list. */
   lossesByKind: Record<number, number>;
   structuresLost: number;
@@ -150,6 +164,11 @@ export class MatchTelemetry {
           [DepthBand.MidWater]: 0,
           [DepthBand.Abyssal]: 0,
         },
+        hullSecondsByZone: {
+          [ThermoclineZone.Above]: 0,
+          [ThermoclineZone.Duct]: 0,
+          [ThermoclineZone.Below]: 0,
+        },
         lossesByKind: {},
         structuresLost: 0,
         nodulesEarned: 0,
@@ -200,6 +219,7 @@ export class MatchTelemetry {
 
       for (const unit of snapshot.units) {
         player.hullSecondsByBand[depthBandFor(unit.depth)] += dt;
+        player.hullSecondsByZone[thermoclineZone(unit.depth)] += dt;
       }
 
       this.accrueIncome(player, snapshot);
