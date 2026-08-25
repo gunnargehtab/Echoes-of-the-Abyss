@@ -109,8 +109,27 @@ const shot = async (name) => {
 await page.goto(URL, { waitUntil: 'domcontentloaded' });
 
 /**
- * The client auto-joins — there is no login, and no room to pick. It shows a
- * ".game-overlay" until the room answers, so that element going away is the
+ * The shell (docs/ui-ux.md §14): a bare URL lands on the title screen rather
+ * than auto-joining, so drive it like a player — Solo game, default map,
+ * Descend. A URL carrying `?map=<id>` skips the shell and boots straight into
+ * a match, which is why this block only acts when a menu actually shows.
+ */
+const title = await page.waitForSelector('.menu-screen', { timeout: 3000 }).catch(() => null);
+if (title !== null) {
+  await shot('title');
+  await page.click('.menu-entry:has-text("Solo game")');
+  await page.waitForSelector('.menu-commit', { timeout: 5000 });
+  await shot('setup');
+  await page.click('.menu-commit');
+  // Wait for the match screen to actually mount before racing on the
+  // overlay below — the race treats "no overlay" as connected, and for one
+  // frame after the click there is genuinely no overlay yet.
+  await page.waitForSelector('.game-overlay, .lobby', { timeout: 10000 }).catch(() => null);
+}
+
+/**
+ * Once past the shell there is no login and no room to pick. The client shows
+ * a ".game-overlay" until the room answers, so that element going away is the
  * only trustworthy "we reached the server" signal. Polling the port only
  * proves Vite is serving; waiting for the canvas only proves Pixi mounted.
  *
