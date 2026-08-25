@@ -70,7 +70,13 @@ import {
 import { FACTION_NAME } from './factions.ts';
 import type { ContactAudioEntry, ContactAudioFrame } from '../audio/contactMixer.ts';
 import type { PingReturn, SelfAudioFrame } from '../audio/selfMixer.ts';
-import { PRECEDENCE_MS, markOpacity } from '../audio/precedence.ts';
+import {
+  PRECEDENCE_MS,
+  markOpacity,
+  precedenceTiming,
+  type PrecedenceMode,
+  type PrecedenceTiming,
+} from '../audio/precedence.ts';
 import { selfMixFor } from '../audio/selfNoise.ts';
 import { drawStructureSilhouette, drawUnitSilhouette, HULL_LENGTH_M } from './silhouettes.ts';
 import { destroyHullTextures, hullSpriteSizeM, hullTexture, loadHullArt } from './hullTextures.ts';
@@ -229,13 +235,16 @@ const BREAK_SILENCE_FLASH_MS = 2000;
  * §2 fixes the start at 250 ms but names no end for the world layer, so the
  * ramp is given the same 250 ms width the minimap's is (150 -> 400). Derived
  * rather than invented: the two layers should feel like one rule.
+ *
+ * A function of the timing table in effect rather than a module constant,
+ * because the visual-first preset (§11) swaps the whole table at runtime.
  */
-const WORLD_FADE_MS = {
-  start: PRECEDENCE_MS.WORLD_FADE_START,
-  full:
-    PRECEDENCE_MS.WORLD_FADE_START +
-    (PRECEDENCE_MS.MINIMAP_FADE_FULL - PRECEDENCE_MS.MINIMAP_FADE_START),
-} as const;
+function worldFadeMs(timing: PrecedenceTiming): { start: number; full: number } {
+  return {
+    start: timing.WORLD_FADE_START,
+    full: timing.WORLD_FADE_START + (timing.MINIMAP_FADE_FULL - timing.MINIMAP_FADE_START),
+  };
+}
 
 /**
  * A classified creature — docs/bestiary.md §3.
@@ -543,6 +552,13 @@ export class EchoRenderer {
   private faction: Faction = Faction.Bathyarch;
   private gameOver: GameOverPayload | null = null;
 
+  /**
+   * The Precedence Law timing in effect. The visual-first preset (§11) swaps
+   * the whole table rather than branching at each fade site, which is the
+   * shape precedence.ts promises — one toggle, no other behavioural change.
+   */
+  private precedence: PrecedenceTiming = PRECEDENCE_MS;
+
   /** True while the ping-cost preview is being shown. */
   /**
    * Ping preview moved from Shift to Alt.
@@ -593,6 +609,15 @@ export class EchoRenderer {
 
   constructor(callbacks: RendererCallbacks) {
     this.callbacks = callbacks;
+  }
+
+  /**
+   * Ear-first (the law's default) or visual-first (docs/ui-ux.md §11: marks
+   * arrive at ≤ 30 ms). Applies from the next mark drawn; marks already
+   * fading keep the clock they started on.
+   */
+  setPrecedenceMode(mode: PrecedenceMode): void {
+    this.precedence = precedenceTiming(mode);
   }
 
   async init(host: HTMLElement): Promise<void> {
@@ -2880,7 +2905,8 @@ export class EchoRenderer {
       // device's own output latency and will sometimes win (§2). The two
       // curves compose — one contact fading out while another fades in is
       // exactly what the player should see.
-      const arrival = markOpacity(now - entry.firstSeenMs, WORLD_FADE_MS.start, WORLD_FADE_MS.full);
+      const worldFade = worldFadeMs(this.precedence);
+      const arrival = markOpacity(now - entry.firstSeenMs, worldFade.start, worldFade.full);
       const alpha = style.alpha * freshness * arrival;
 
       this.drawLockFlash(g, id, contact, now, inverseScale);
@@ -3560,8 +3586,8 @@ export class EchoRenderer {
       // voice. The whole point is that the ear gets there first.
       const arrival = markOpacity(
         scopeNow - firstSeenMs,
-        PRECEDENCE_MS.MINIMAP_FADE_START,
-        PRECEDENCE_MS.MINIMAP_FADE_FULL
+        this.precedence.MINIMAP_FADE_START,
+        this.precedence.MINIMAP_FADE_FULL
       );
       if (arrival <= 0) continue;
       // Soft at low tiers: a haze is drawn as a haze, and its size is the
