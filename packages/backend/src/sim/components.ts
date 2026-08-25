@@ -80,14 +80,21 @@ export const Pressure = defineComponent({
   /** Aura-granted rating bonus (Sounding Spire). Rewritten each tick. */
   bonus: Types.ui8,
   /**
-   * Cumulative crush attrition this hull has taken, in HP.
+   * Cumulative hull this unit has lost to depth and can never get back, in HP.
    *
-   * Tracked separately from `Health.hp` because crush is the one damage source
-   * that no repair may ever undo (docs/systems-depth.md §2), so the HUD has to
-   * be able to draw the permanently lost portion of the bar differently from
-   * the part a future repair system will refill (docs/ui-ux.md §8).
+   * Tracked separately from `Health.hp` because these are the damage sources no
+   * repair may ever undo, so the HUD has to be able to draw the permanently
+   * lost portion of the bar differently from the part a future repair system
+   * will refill (docs/ui-ux.md §8).
+   *
+   * Two writers, both in the pressure system and both depth: crush attrition
+   * below a hull's Pressure Rating (docs/systems-depth.md §2), and the
+   * Directorate's shallow-water poisoning above the Shelf line (§3). Named for
+   * what the number *means* rather than for either source, because the HUD asks
+   * one question of it — how much of this bar is gone for good — and the answer
+   * must not depend on which way the hull overreached.
    */
-  crushTaken: Types.f32,
+  unhealable: Types.f32,
 });
 
 export const Health = defineComponent({

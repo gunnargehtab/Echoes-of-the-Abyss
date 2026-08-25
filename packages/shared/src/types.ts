@@ -408,11 +408,13 @@ export interface OwnUnit {
    */
   pressureBonus: number;
   /**
-   * Hull permanently lost to crush attrition, in HP. Distinct from ordinary
-   * damage because no repair may ever refill it (docs/ui-ux.md §8), so the
-   * health bar has to draw it differently.
+   * Hull permanently lost to depth, in HP — crush attrition below the hull's
+   * Pressure Rating, and, for the Directorate, shallow water above the Shelf
+   * line (docs/systems-depth.md §2, §3). Distinct from ordinary damage because
+   * no repair may ever refill it (docs/ui-ux.md §8), so the health bar has to
+   * draw it differently.
    */
-  crushDamage: number;
+  unhealableDamage: number;
   /**
    * Orders waiting behind the current one, oldest first.
    *

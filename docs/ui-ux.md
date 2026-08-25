@@ -135,14 +135,14 @@ The vertical axis needs permanent, glanceable representation ([systems-depth.md]
 
 - **Depth ribbon** — a vertical strip on the left showing Shelf / Mid-Water / Abyssal, band boundaries at 400 m and 1,800 m, and a marker per selected unit.
 - **PR badge** — each unit carries its Pressure Rating; when it is under-rated for its current depth the badge inverts and pulses.
-- **Crush attrition must not look like damage.** It ignores repair, so it renders differently: the lost portion of the health bar is hatched and does not refill, making the permanence visible rather than discovered later.
+- **Hull the deep keeps must not look like damage.** Crush attrition below a unit's Pressure Rating, and the shallow-water poisoning that costs the Directorate 15% above 400 m, both ignore repair, so they render differently: the lost portion of the health bar is hatched and does not refill, making the permanence visible rather than discovered later. One hatch for both, because the player asks one question of it — how much of this bar is gone for good.
 - **Descent and ascent** — descending shows the SIG cost as a live spike on the meter; ascending shows a time-to-surface estimate, because the ascent is the part players underestimate.
 
 Implemented in the client scaffold: the ribbon runs down the left edge with a marker per
 selected hull and a ghost marker at its ordered depth; the PR badge sits in the selection
 card and shows a Sounding Spire's grant as `PR2+1` so a rented rating reads as rented; the
-crushed portion of the health bar is hatched, and its texture rather than its hue is what
-distinguishes it, so it survives colour-vision differences (§11). Depth orders step band to
+unrecoverable portion of the health bar is hatched, and its texture rather than its hue is
+what distinguishes it, so it survives colour-vision differences (§11). Depth orders step band to
 band — `D` dives, `A` rises — because the bands are what the player reasons about.
 
 ---
@@ -286,7 +286,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | Selected-unit detection ring | Implemented |
 | Ping preview rings, ping commit | Implemented (hold `Shift`, `P`) |
 | Silent-running dimming | Implemented |
-| Depth ribbon, PR badge, crush hatching | Implemented (`D` dive, `A` rise; hold `Shift` to preview the dive cost) |
+| Depth ribbon, PR badge, unrecoverable-hull hatching | Implemented (`D` dive, `A` rise; hold `Shift` to preview the dive cost) |
 | Sonar-scope minimap | Implemented — terrain, tier-fidelity returns, sweep, range rings; Echo Marks layer pending |
 | Contact log | Implemented — DOM, live region, click-to-focus; ping and mark rows pending |
 | Contact voices, per-tier | Implemented — pan authority by tier, biome voicing, faction timbre at Tier 3+ |

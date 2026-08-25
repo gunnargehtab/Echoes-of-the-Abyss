@@ -4,10 +4,24 @@
  * Speed is scaled by Silent Running, which is where the Echo Layer reaches
  * into movement: going quiet costs 45% of your speed (only 20% for Pelagia).
  * docs/systems-echo.md §6, docs/factions.md.
+ *
+ * Depth reaches in here too, and only for one faction: the Directorate lose 20%
+ * of their speed above the Shelf line, because shallow water poisons them
+ * (docs/systems-depth.md §3). That is the whole of their documented weakness on
+ * this side; the hull half of it lives in the pressure system, where the rest of
+ * the game's depth attrition already is.
  */
 
 import { defineQuery } from 'bitecs';
-import { Faction, MOVEMENT, SILENT_RUNNING, statsFor, type UnitKind } from '@echoes/shared';
+import {
+  DIRECTORATE_SHALLOW,
+  Faction,
+  MOVEMENT,
+  SILENT_RUNNING,
+  inDirectorateShallows,
+  statsFor,
+  type UnitKind,
+} from '@echoes/shared';
 import { MoveOrder, Owner, Position, SilentRunning, Unit, Velocity } from '../components.ts';
 import { currentModifiers, kelpModifiers, stormModifiers } from './hazards.ts';
 import type { SimWorld } from '../world.ts';
@@ -33,9 +47,23 @@ function speedMultiplier(world: SimWorld, eid: number): number {
     stormModifiers(world, eid).speed *
     currentModifiers(world, eid).speed *
     kelpModifiers(world, eid).speed;
-  if (!SilentRunning.active[eid]) return weather;
-  return (
+
+  // Shallow water poisons the Directorate (docs/factions.md, docs/systems-depth.md
+  // §3): above the Shelf line their hulls run at 80%. Unlike the three above it
+  // this one is not weather — it is where the hull *is*, and it follows the hull
+  // rather than the map, so a Directorate fleet cannot outrun it by leaving a
+  // site. It stacks multiplicatively for the same reason the others do: being
+  // in the wrong water is not the same fact as being in a storm, and a hull
+  // that is both should pay for both.
+  const water =
     weather *
+    (inDirectorateShallows(Owner.faction[eid] as Faction, Position.depth[eid]!)
+      ? DIRECTORATE_SHALLOW.SPEED_MULTIPLIER
+      : 1);
+
+  if (!SilentRunning.active[eid]) return water;
+  return (
+    water *
     (Owner.faction[eid] === Faction.Pelagia
       ? SILENT_RUNNING.PELAGIA_SPEED_MULTIPLIER
       : SILENT_RUNNING.SPEED_MULTIPLIER)

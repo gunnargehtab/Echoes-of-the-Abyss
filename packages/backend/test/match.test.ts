@@ -938,9 +938,9 @@ describe('depth', () => {
     unit = advance(match, 0.4)!
       .get(0)!
       .units.find((u) => u.id === corvette)!;
-    assert.ok(unit.crushDamage > 0, 'the deep took something');
+    assert.ok(unit.unhealableDamage > 0, 'the deep took something');
     assert.ok(
-      Math.abs(unit.crushDamage - (unit.maxHp - unit.hp)) < 1,
+      Math.abs(unit.unhealableDamage - (unit.maxHp - unit.hp)) < 1,
       'with no other damage source, every point lost is crush'
     );
 
@@ -960,12 +960,16 @@ describe('depth', () => {
     assert.equal(unit.pressureBonus, 1, 'the spire lends exactly one band');
 
     // And the crush already taken does not heal when the rating arrives.
-    const scarred = unit.crushDamage;
+    const scarred = unit.unhealableDamage;
     advance(match, 2);
     unit = advance(match, 0.4)!
       .get(0)!
       .units.find((u) => u.id === corvette)!;
-    assert.equal(unit.crushDamage, scarred, 'rented depth stops the bleeding, it does not undo it');
+    assert.equal(
+      unit.unhealableDamage,
+      scarred,
+      'rented depth stops the bleeding, it does not undo it'
+    );
   });
 
   it('never reports a contact depth the listener has not earned', () => {

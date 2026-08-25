@@ -37,6 +37,12 @@ import { eidOfLocalId } from './world.ts';
 
 /** The current replay wire format. Bump when a change breaks old files. */
 /**
+ * 10: shallow water poisons the Directorate. Their hulls run at 80% speed
+ * above the Shelf line and bleed unhealable hull down to 85% of max while they
+ * stay there (docs/systems-depth.md §3). A v9 recording of a match with a
+ * Directorate seat diverges the first time one of their units is above 400 m,
+ * which — because a PR-1 hull is seated at 300 m — is tick zero.
+ *
  * 9: the Drift has a depth. Creatures are seeded at their species' working
  * depth rather than a flat 300 m, pursue vertically within a band, and bite in
  * three dimensions; the Sounder ploughs through what it is committed to rather
@@ -91,7 +97,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 9;
+export const REPLAY_FORMAT_VERSION = 10;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =

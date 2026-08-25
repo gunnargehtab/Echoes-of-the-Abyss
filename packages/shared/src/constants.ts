@@ -163,6 +163,46 @@ export const DEPTH = {
   MAX_M: 3000,
 } as const;
 
+/**
+ * SPEC (the penalties) / TUNABLE (how fast the hull half lands) — docs/factions.md
+ * "Abyssal Directorate → Weakness", docs/systems-depth.md §3.
+ *
+ * "Shallow water poisons them": −20% speed and −15% HP above 400 m. The speed
+ * half is a straight multiplier. The hull half is a **bleed with a floor**
+ * rather than a max-HP debuff, because a hull that loses 15% the instant it
+ * crosses a line gives the player nothing to read — a bar draining while a
+ * fleet loiters shallow says *leave* in a way a step change does not. It is
+ * also the only reading of "poisons" that is a poison.
+ *
+ * The 400 m line is deliberately not restated here. It is DEPTH_BANDS' Shelf /
+ * Mid-Water boundary, and the test is `depthBandFor() === Shelf`, so moving the
+ * band moves the penalty with it.
+ */
+export const DIRECTORATE_SHALLOW = {
+  /** Movement speed multiplier while above the Shelf line (-20%). */
+  SPEED_MULTIPLIER: 0.8,
+  /**
+   * Hull floor as a fraction of max. The bleed stops here, which is what makes
+   * the penalty a cost rather than a countdown: shallow water can take 15% of a
+   * Directorate hull and never the sixteenth percent, so it can never kill.
+   */
+  HULL_FLOOR: 0.85,
+  /**
+   * TUNABLE — seconds a full hull takes to reach the floor. Sized so a raid
+   * above the line feels it and survives it: the Directorate can strike shallow
+   * and pull out having paid, which is the trade the doc describes. Fast enough
+   * that loitering is punished, slow enough that crossing is not.
+   */
+  BLEED_S: 20,
+} as const;
+
+/**
+ * Derived, so the rate and the floor cannot drift apart — a fraction of max
+ * hull per second. Retuning BLEED_S retunes the rate and nothing else.
+ */
+export const DIRECTORATE_SHALLOW_BLEED_PER_S =
+  (1 - DIRECTORATE_SHALLOW.HULL_FLOOR) / DIRECTORATE_SHALLOW.BLEED_S;
+
 /** SPEC — docs/systems-echo.md §6. */
 export const SILENT_RUNNING = {
   /** Movement speed multiplier while silent (-45%). */
