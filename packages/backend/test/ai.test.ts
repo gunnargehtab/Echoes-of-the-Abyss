@@ -189,7 +189,7 @@ describe('production does not deadlock', () => {
       sig: 30,
       silentRunning: false,
       pressureBonus: 0,
-      crushDamage: 0,
+      unhealableDamage: 0,
       ...(kind === UnitKind.Harvester ? { cargo: 0, throttle: HarvestThrottle.Standard } : {}),
     });
     return {
@@ -480,7 +480,7 @@ function exposedSnapshot(): EchoSnapshot {
         sig: 40,
         silentRunning: false,
         pressureBonus: 0,
-        crushDamage: 0,
+        unhealableDamage: 0,
         cargo: 0,
         throttle: HarvestThrottle.Standard,
       },
@@ -527,7 +527,7 @@ function armySnapshot(contacts: Contact[], tick = 6000): EchoSnapshot {
     sig: 30,
     silentRunning: false,
     pressureBonus: 0,
-    crushDamage: 0,
+    unhealableDamage: 0,
   });
   return {
     ...base,

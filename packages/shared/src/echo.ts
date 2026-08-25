@@ -18,8 +18,10 @@ import {
   THERMOCLINE_DUCT_TOP_M,
   THERMOCLINE_DUCT_BOTTOM_M,
   THERMOCLINE_PAIR_FACTOR,
+  DIRECTORATE_SHALLOW,
+  DIRECTORATE_SHALLOW_BLEED_PER_S,
 } from './constants.js';
-import { ResolutionTier, DepthBand, ThermoclineZone } from './types.js';
+import { ResolutionTier, DepthBand, Faction, ThermoclineZone } from './types.js';
 
 const { REFERENCE_DISTANCE_M, ATTENUATION_EXPONENT, BASE_THRESHOLD, BASELINE_HYD } =
   PROPAGATION_MODEL;
@@ -184,4 +186,47 @@ export function crushAttritionPerSecond(pressureRating: number, depthM: number):
   if (deficit <= 0) return 0;
   // Each full band of overreach hurts disproportionately more.
   return 4 * deficit * deficit;
+}
+
+/**
+ * True while a hull is in water the Abyssal Directorate cannot tolerate: the
+ * Shelf — above DEPTH_BANDS' 400 m line (docs/factions.md, docs/systems-depth.md §3).
+ *
+ * Expressed as a band test rather than a depth compare on purpose. The
+ * Directorate's weakness and the Shelf are the same fact stated twice, so they
+ * should move together; a hard 400 here would let one drift from the other.
+ */
+export function inDirectorateShallows(faction: Faction, depthM: number): boolean {
+  return faction === Faction.Directorate && depthBandFor(depthM) === DepthBand.Shelf;
+}
+
+/**
+ * Unhealable shallow-water attrition per second for a Directorate hull, in HP.
+ * Zero for everyone else, and zero at any depth the Shelf does not cover.
+ *
+ * Scaled by max hull, because the doc prices this as a *fraction* — 15% of a
+ * Cruiser is not 15% of a scout, and a flat DPS would make the penalty a
+ * rounding error for the one and lethal for the other.
+ *
+ * The floor is not applied here: this is a rate, and the caller owns the hp it
+ * would take. See `pressureSystem`, which clamps the bite so a hull lands *on*
+ * DIRECTORATE_SHALLOW.HULL_FLOOR rather than stepping through it by whatever
+ * fraction of a tick was left over.
+ */
+export function directorateShallowAttritionPerSecond(
+  faction: Faction,
+  depthM: number,
+  maxHp: number
+): number {
+  if (!inDirectorateShallows(faction, depthM)) return 0;
+  return maxHp * DIRECTORATE_SHALLOW_BLEED_PER_S;
+}
+
+/**
+ * The hull a Directorate unit keeps no matter how long it loiters shallow.
+ * Shallow water takes 15% and stops, so it can bleed a fleet but never kill it
+ * — the penalty is a cost, not a countdown.
+ */
+export function directorateShallowHullFloor(maxHp: number): number {
+  return maxHp * DIRECTORATE_SHALLOW.HULL_FLOOR;
 }

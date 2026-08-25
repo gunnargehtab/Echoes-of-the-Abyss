@@ -3087,11 +3087,12 @@ export class EchoRenderer {
         g.rect(barX, barY, width * fraction, 3 * inverseScale).fill({
           color: UI.friendly,
         });
-        // The crushed stub, in threat red at the far end. Too small at map
-        // scale for hatching to read, so the colour carries it here and the
-        // texture carries it in the card.
-        if (unit.crushDamage > 0) {
-          const lost = Math.min(1, unit.crushDamage / unit.maxHp);
+        // The unrecoverable stub, in threat red at the far end — hull the deep
+        // kept, whether by crushing the boat or by poisoning it in the
+        // shallows. Too small at map scale for hatching to read, so the colour
+        // carries it here and the texture carries it in the card.
+        if (unit.unhealableDamage > 0) {
+          const lost = Math.min(1, unit.unhealableDamage / unit.maxHp);
           g.rect(barX + width * (1 - lost), barY, width * lost, 3 * inverseScale).fill({
             color: UI.threat,
             alpha: 0.85,
@@ -3642,15 +3643,17 @@ export class EchoRenderer {
     g.rect(barX, barY, barW * Math.max(0, Math.min(1, any.hp / any.maxHp)), 8).fill({
       color: UI.friendly,
     });
-    // Crush is the one wound no repair will ever close, so it is drawn as a
-    // hatched stub at the far end of the bar rather than as absent hull: the
-    // permanence is visible now instead of discovered later (docs/ui-ux.md §8).
-    if (unit !== undefined && unit.crushDamage > 0) {
+    // Depth leaves the one wound no repair will ever close — crush below a
+    // hull's rating, and shallow-water poisoning above the Directorate's line —
+    // so it is drawn as a hatched stub at the far end of the bar rather than as
+    // absent hull: the permanence is visible now instead of discovered later
+    // (docs/ui-ux.md §8).
+    if (unit !== undefined && unit.unhealableDamage > 0) {
       this.hatch(
         g,
-        barX + barW * Math.max(0, 1 - unit.crushDamage / unit.maxHp),
+        barX + barW * Math.max(0, 1 - unit.unhealableDamage / unit.maxHp),
         barY,
-        barW * Math.min(1, unit.crushDamage / unit.maxHp),
+        barW * Math.min(1, unit.unhealableDamage / unit.maxHp),
         8,
         UI.threat
       );

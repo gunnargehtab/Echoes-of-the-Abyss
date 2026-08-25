@@ -1273,7 +1273,7 @@ export class Match {
         sig: Acoustic.sig[eid]!,
         silentRunning: SilentRunning.active[eid] === 1,
         pressureBonus: Pressure.bonus[eid]!,
-        crushDamage: Pressure.crushTaken[eid]!,
+        unhealableDamage: Pressure.unhealable[eid]!,
       };
       const queue = queueView(this.world, eid);
       if (queue !== undefined) {

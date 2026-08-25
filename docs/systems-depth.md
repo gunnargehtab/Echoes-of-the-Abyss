@@ -76,6 +76,33 @@ Depth access is one of the two axes (with sound) that every faction's mechanics 
 | **Abyssal Directorate** | PR-3 | **Born to it** — no refit needed, free access to the map's richest third; the trade-off is shallow water poisons them (−20% speed, −15% HP above 400 m) |
 | **Hadron Knights** | PR-2 | **Projects** access — instant refits paid in Resonance, and **Sounding Spire** structures grant allied units +1 PR within 600 m as a support ability |
 
+### What "shallow water poisons them" means
+
+The Directorate's weakness is the mirror of everyone else's: the rest of the Rift rents
+depth it has not earned, and the Directorate rents *shallows* it was engineered out of.
+Above 400 m — the Shelf, the same line the depth bands are drawn on — their hulls move at
+**80% speed** and are **poisoned**, losing hull for as long as they stay.
+
+The hull half is a **bleed with a floor**, not a stat debuff. A Directorate hull above the
+line loses unhealable hull until it has lost 15% of its maximum, and then stops. Three
+consequences follow, and all three are the point:
+
+- **It can never kill them.** Crush attrition runs to zero, because renting depth is a bet
+  and a bet can be lost. The shallows are not a bet — they are a region — so they price
+  ground rather than lives. A Shelf that killed would be a map edge, not a weakness.
+- **It is 15% once, not 15% per visit.** A hull that is already below the floor has nothing
+  left for the water to take. Coming up the second time is free; it is the *first* metre
+  above the line that is expensive.
+- **Leaving does not refund it.** The hull is gone the way crushed hull is gone, and shows
+  on the same unrecoverable segment of the health bar. Descending stops the bleeding; it
+  does not undo it.
+
+That is what makes the doctrine line true — *the Rift's most feared army can be beaten by
+refusing to descend*. A defender who never leaves the Shelf forces the Directorate to come
+up and pay, every engagement, for ground they cannot hold cheaply. What it does not do is
+let the defender win by waiting: the price is bounded, and a Directorate commander who
+accepts it arrives at 85% and still outnumbers you.
+
 ## 4. Depth as a Playable Ability
 
 Depth access shows up directly as commander and unit abilities, not just as a passive stat:
@@ -102,7 +129,7 @@ what exists or assumes what does not. Constants live in `DEPTH` in
 | Descent is fast and deafening (§2) | **Implemented** | 45 m/s, and a SIG floor of 72 — above every cruise SIG in the roster, below the ping's 95. Ordering a dive breaks Silent Running, and re-asserting it mid-dive does not buy quiet |
 | Ascent is slow and silent (§2) | **Implemented** | 15 m/s, one third of the descent rate, and no SIG contribution at all. Compatible with Silent Running |
 | Sounding Spire rents depth (§3, §4) | **Implemented** | `STRUCTURE_AURAS.SOUNDING_SPIRE`; the grant is real while the aura holds and lost on leaving it |
-| Directorate shallow-water penalty (§3) | Not modelled | −20% speed, −15% HP above 400 m; needs a per-faction modifier pass |
+| Directorate shallow-water penalty (§3) | **Implemented** | Speed in `movementSystem`, stacking multiplicatively with silent running, storms, currents and kelp; hull in `pressureSystem`, as a bleed to `DIRECTORATE_SHALLOW.HULL_FLOOR` that shares the unhealable ledger with crush. The 400 m line is `DEPTH_BANDS`' Shelf boundary rather than a number of its own |
 | Pelagia Deepbloom terraforming (§3) | Not modelled | Requires terrain that can change band. The per-region floor is the substrate for it; what is missing is the ability to write to it mid-match |
 | Commander abilities, e.g. Seeding (§4) | Not modelled | No commander-ability layer exists yet |
 | Map floor (§1) | **Implemented** | Per-region, authored in the map. `DEPTH.MAX_M` is now only the ruleset's ceiling on what a map may author and what may be ordered |

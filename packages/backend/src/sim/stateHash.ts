@@ -101,7 +101,7 @@ export function hashWorld(world: SimWorld): number {
     if (hasComponent(world, Pressure, eid)) {
       h = mixU32(h, Pressure.rating[eid]!);
       h = mixU32(h, Pressure.bonus[eid]!);
-      h = mixFloat(h, Pressure.crushTaken[eid]!);
+      h = mixFloat(h, Pressure.unhealable[eid]!);
     }
     if (hasComponent(world, DepthOrder, eid)) {
       h = mixU32(h, DepthOrder.active[eid]!);
