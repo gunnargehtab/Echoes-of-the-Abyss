@@ -688,6 +688,12 @@ export class AiCommander implements AiPlayer {
       // target still carries the order, so terrain does not provoke a re-send.
       const heading = unit.depthOrder ?? unit.depth;
       if (Math.abs(heading - depthM) <= DEPTH.ARRIVAL_EPSILON_M) continue;
+      // Surfacing may never push a hull *down*. A PR-1 scout is seated at
+      // 300 m and its rated ceiling is shallower than cruise depth, so without
+      // this the order to come home is a 50 m descent — and a descent breaks
+      // Silent Running (see Match.orderDepth), every time a new scout is
+      // built. Coming back is an ascent or it is nothing.
+      if (!crossed && heading <= depthM) continue;
 
       const group = byDepth.get(depthM);
       if (group === undefined) byDepth.set(depthM, [unit.id]);

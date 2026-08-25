@@ -202,6 +202,35 @@ describe('crossing is a commitment, not a stealth toggle', () => {
   });
 });
 
+describe('coming home is an ascent or it is nothing', () => {
+  it('never orders a shallow hull deeper in the name of surfacing', () => {
+    // Found by the balance telemetry, not by a unit test: a PR-1 scout is
+    // seated at 300 m and its rated ceiling is 350 m, shallower than the
+    // 600 m cruise depth. Clamping the surface target to the ceiling turned
+    // "come home" into a 50 m *descent* — and a descent breaks Silent
+    // Running, so every scout the Foundry produced was quietly un-silenced
+    // on the tick it appeared. Thirty such orders in a fifteen-minute match.
+    const scouts = [
+      ...Array.from({ length: 6 }, (_, i) => hull(i + 1, UnitKind.Corvette, 600)),
+      hull(90, UnitKind.LightScout, 300),
+      hull(91, UnitKind.LightScout, 300),
+    ];
+    const byId = new Map(scouts.map((u) => [u.id, u]));
+
+    // A doctrine that never crosses only ever surfaces, so every command it
+    // emits here is a surface command.
+    for (const command of depthCommands(Faction.Pelagia, scouts)) {
+      for (const id of command.unitIds) {
+        const from = byId.get(id)!.depth;
+        assert.ok(
+          command.depthM < from,
+          `hull at ${from} m ordered to ${command.depthM} m while surfacing`
+        );
+      }
+    }
+  });
+});
+
 describe('the army splits by what each hull can survive', () => {
   it('never orders a hull past its own Pressure Rating', () => {
     // Match.orderDepth deliberately permits this for a human — renting depth
