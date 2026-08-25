@@ -7,7 +7,7 @@
  * to move during playtesting (see docs/units.md "Playtest plan").
  */
 
-import { Biome, DepthBand, HarvestThrottle, ResourceKind } from './types.js';
+import { Biome, DepthBand, Faction, HarvestThrottle, ResourceKind } from './types.js';
 
 /** SPEC — docs/systems-depth.md §1. Metres. */
 export const DEPTH_BANDS: Record<DepthBand, { min: number; max: number }> = {
@@ -177,6 +177,269 @@ export const SILENT_RUNNING = {
 } as const;
 
 /**
+ * Ordnance — docs/systems-combat.md.
+ *
+ * The combat doc's §3 table is the acoustic contract for everything a weapon
+ * puts in the water, and it is SPEC: a weapon in this game is differentiated by
+ * *loudness, direction and delivery* rather than by a damage type, so these
+ * numbers are the mechanic and not a tuning of it.
+ *
+ * The rule the whole group answers to is §1's second: **nothing lethal is
+ * inaudible**. A torpedo runs at SIG 60 for its entire twenty seconds, which is
+ * louder than every cruise SIG in the roster — that is what makes a short
+ * time-to-kill survivable rather than arbitrary, and it is asserted by test
+ * rather than left as an intention.
+ */
+export const ORDNANCE = {
+  /** SPEC — §5. The alpha-strike weapon, and the reason silence is a defence. */
+  TORPEDO: {
+    /** Sustained SIG of a running torpedo. §3. */
+    SIG_RUNNING: 60,
+    /** Burst added at the launcher on release. §3. */
+    LAUNCH_SIG: 25,
+    /** Metres per second — faster than every hull in the roster. §5. */
+    SPEED_MPS: 160,
+    /** Seconds before it goes inert. 20 s x 160 m/s is the 3,200 m run. §5. */
+    RUN_TIME_S: 20,
+    /** Full angle of the seeker's forward cone, degrees. §5. */
+    SEEKER_CONE_DEG: 60,
+    /** Baseline seeker sensitivity. Factions differ — §11. */
+    SEEKER_HYD: 50,
+    /** §5, and §9's band: a Corvette dies to one, a Cruiser to two. */
+    DAMAGE: 700,
+    /** §5 — one or two gun cycles kill it, if the gun is free. */
+    MAX_HP: 40,
+    /** Torpedoes aboard a launcher. Scarcity is the class identity. §5. */
+    MAGAZINE: 2,
+    /** TUNABLE — §5 puts rearm at a Bastion or Foundry, at this reach. */
+    REARM_RANGE_M: 300,
+    /** TUNABLE — seconds per torpedo taken aboard. §5. */
+    REARM_TIME_S: 15,
+    /**
+     * TUNABLE — how sharply it can turn, degrees per second.
+     *
+     * Not decoration: at 160 m/s this is a turn radius of about 150 m, so a
+     * hull that breaks across the seeker's nose late can make it overshoot.
+     * A torpedo that turned instantly would be a hitscan weapon with travel
+     * time, and §2's counter cycle needs it to be dodgeable as well as
+     * decoyable.
+     */
+    TURN_RATE_DEG_S: 60,
+    /** TUNABLE — metres per second it changes depth to follow a target. */
+    DEPTH_RATE_MPS: 60,
+    /** TUNABLE — proximity fuse margin beyond the target's own hull radius. */
+    FUSE_MARGIN_M: 25,
+    /**
+     * Seconds between seeker re-evaluations.
+     *
+     * Deliberately the Echo Layer's own beat (1 / SIM.ECHO_HZ): a seeker is a
+     * detection pass, detection is the expensive thing in this simulation, and
+     * a torpedo has no more right to resolve the world at 60 Hz than a player
+     * does. It also means a decoy deployed now is heard by the seeker within
+     * the same 200 ms window a listener would have taken to notice it.
+     */
+    SEEKER_INTERVAL_S: 0.2,
+    /** TUNABLE — seconds between wake marks laid along the run. */
+    WAKE_MARK_INTERVAL_S: 1,
+    /** TUNABLE — intensity each of those adds. A wake is faint by design. */
+    WAKE_MARK_INTENSITY: 0.05,
+  },
+
+  /**
+   * SPEC — §5. The decoy, and the reason a seeker re-acquires every pass.
+   *
+   * A noisemaker works by being **louder than the hull it protects** — SIG 70
+   * against a Cruiser's 65 — which is also its whole cost: it is real noise at
+   * your real position, so saving the hull spends the formation's quiet. Every
+   * other listener on the map hears it too.
+   */
+  NOISEMAKER: {
+    /** Sustained SIG for its short life. §3. */
+    SIG: 70,
+    /** Seconds it stays loud. §5. */
+    DURATION_S: 8,
+    /** Seconds before the same hull can deploy another. TUNABLE. */
+    COOLDOWN_S: 20,
+    /** TUNABLE — how far behind the hull it is released, metres. */
+    DEPLOY_OFFSET_M: 60,
+  },
+
+  /**
+   * SPEC — §5. Point defence: a gun choosing to shoot at ordnance.
+   *
+   * "Not a shield; a gun *choosing*" — every cycle spent on a torpedo is a
+   * cycle not spent on the hull that launched it, which is what keeps a
+   * saturation volley a real answer to it.
+   */
+  POINT_DEFENCE: {
+    /** Terminal range at which a gun may engage inbound ordnance. §5. */
+    RANGE_M: 250,
+  },
+
+  /**
+   * SPEC — §6. The detection formula pointed backwards.
+   *
+   * A mine does not emit and then wait to be found; it **listens, and waits for
+   * you to be loud**. That inversion is the third pole of the weapon triangle:
+   * silence walks through a minefield and a committed push does not.
+   *
+   * See `MINE_TRIGGER_LOUDNESS` below for the derivation, which is the
+   * interesting part — the trigger is *solved* from two behaviours the doc
+   * fixes, not chosen and hoped over.
+   */
+  MINE: {
+    /** SIG while armed — the powered-down band. §3. */
+    SIG_ARMED: 2,
+    /** Burst on detonation. §3. */
+    SIG_DETONATION: 90,
+    /** Sustained SIG at the layer while a mine arms. Construction-grade. §6. */
+    SIG_LAYING: 55,
+    /** Seconds a mine takes to arm, and that the laying hull broadcasts for. §6. */
+    ARMING_S: 10,
+    /** It hears out to here, and no further. §6. */
+    TRIGGER_RADIUS_M: 150,
+    /** Damage at the centre of the blast. §6. */
+    DAMAGE: 300,
+    /** ...falling linearly to zero at this radius. §6. */
+    BLAST_RADIUS_M: 200,
+    /** Live mines one player may hold. §6. */
+    CAP_PER_PLAYER: 12,
+    /** Seconds an armed mine survives before it is scuttled. §6. */
+    LIFETIME_S: 300,
+    /** Seconds between a mine re-checking what it can hear. TUNABLE. */
+    SENSE_INTERVAL_S: 0.2,
+    /**
+     * Seconds a detonation keeps ringing, TUNABLE.
+     *
+     * Long enough for the Echo Layer to resolve it at least once: the pass runs
+     * at SIM.ECHO_HZ, so an event that existed for a single 60 Hz tick would
+     * carry a SPEC'd SIG of 90 that no listener in the game could ever hear.
+     * The bang outliving the bomb by half a second is also simply true.
+     */
+    DETONATION_ECHO_S: 0.6,
+    /**
+     * The SIG the trigger is calibrated against — a Corvette at cruise.
+     *
+     * Written here rather than imported from the roster so this module stays
+     * dependency-free, and guarded by a test that fails if the roster moves:
+     * a trigger calibrated against a hull that no longer emits this much would
+     * be a derivation from a number nobody could find.
+     */
+    TRIGGER_REFERENCE_SIG: 28,
+  },
+
+  /**
+   * §8. The weapon that crosses depth bands.
+   *
+   * The cross-band *role* is SPEC and the numbers are TUNABLE, per §8. It
+   * travels only in depth — it is dropped, not thrown — at the standard
+   * descent and ascent rates from `DEPTH`, which are deliberately not
+   * re-authored here: that asymmetry is docs/systems-depth.md's to own, and a
+   * second copy of it would eventually disagree.
+   *
+   * This is the shallow factions' answer to the PR-3 sanctuary: a Directorate
+   * hull below you is safe from guns and not from ordnance that falls.
+   */
+  DEPTH_CHARGE: {
+    /** §8. */
+    DAMAGE: 200,
+    /** §8 — and the blast is measured in three dimensions, unlike a mine's. */
+    BLAST_RADIUS_M: 180,
+    /** Burst at detonation depth. §3. */
+    SIG_DETONATION: 85,
+    /** Sustained while it falls. Audible: the defender hears it coming down. */
+    SIG_FALLING: 30,
+    /**
+     * Seconds before an un-detonated charge is scuttled — a fuse-failure
+     * backstop, and **derived so it can never be shorter than the fall**.
+     *
+     * Sized against the **ascent** rate, which is the slow direction and
+     * therefore the worst case. §8 says a charge is "dropped (or floated) into
+     * the band above or below", and floating is the half that nearly did not
+     * work: two drafts of this number were too short. A flat 30 s could not
+     * reach the Abyssal band going down; deriving it from the descent rate gave
+     * 91 s, which is still two seconds less than the 93 s a charge needs to
+     * float up one band. Both failures looked identical from the outside — the
+     * charge simply never arrived.
+     *
+     * Long, and harmlessly so: this is a fuse-failure backstop, not a travel
+     * budget. A charge that reaches its set depth detonates there, and one that
+     * cannot is imploding rather than idling.
+     */
+    LIFETIME_S: Math.ceil((DEPTH.MAX_M / DEPTH.ASCENT_RATE_MPS) * 1.35),
+    /** Burst at the launcher on release. TUNABLE. */
+    LAUNCH_SIG: 20,
+    /** Seconds the detonation keeps ringing — see the mine's note. */
+    DETONATION_ECHO_S: 0.6,
+    /** Seconds before the same hull can drop another. TUNABLE. */
+    COOLDOWN_S: 12,
+  },
+} as const;
+
+/**
+ * Per-faction combat doctrine — docs/systems-combat.md §11, docs/factions.md.
+ *
+ * Four traits, one per navy, and each is an argument about sound rather than a
+ * stat bonus wearing a faction's colours. That is the bar `CLAUDE.md` sets for
+ * a faction trait existing at all, and it is why these are here rather than in
+ * the roster: they are doctrine, and doctrine belongs beside the rules it bends.
+ *
+ * Everything absent from a table below falls back to the general case, so a
+ * faction with no entry is not penalised — it simply has no opinion.
+ */
+export const FACTION_COMBAT = {
+  /**
+   * SPEC — §11 and docs/factions.md: "+12% damage while SIG > 60."
+   *
+   * Reads the hull's *live* signature rather than a stat, so the Consortium
+   * turns this on by being loud — descending, firing, working, or standing in a
+   * storm. It is the one damage bonus in the design that a player switches on
+   * by accepting a cost, which is the whole of the Klaxon doctrine: they win by
+   * being found and being fine about it.
+   */
+  KLAXON: {
+    FACTION: Faction.Bathyarch,
+    SIG_THRESHOLD: 60,
+    DAMAGE_MULTIPLIER: 1.12,
+  },
+
+  /**
+   * SPEC — §3 and §11. The Knights fight with energy weapons, and an energy
+   * discharge is the quiet class: +10 burst against the kinetic +25.
+   *
+   * A faction modifier rather than a per-hull stat because the roster has no
+   * Hadron-specific hulls yet, and because it *is* a faction fact — the Order
+   * builds resonance weapons, whatever it hangs them on. It replaces the hull's
+   * own firing burst rather than scaling it, so a Knight discharge is quiet in
+   * absolute terms and not merely quieter than it would have been.
+   */
+  ENERGY: {
+    FACTION: Faction.Hadron,
+    FIRING_SIG: 10,
+  },
+
+  /**
+   * SPEC — §11: the Directorate's torpedoes carry "the best mobile ears in the
+   * game, miniaturised".
+   *
+   * Kept clear of `PROPAGATION_MODEL.MAX_EXPECTED_HYD` (90), which the Echo
+   * broadphase trusts as a hard ceiling — a faction that exceeded it would
+   * quietly break the bound that keeps detection off an all-pairs comparison.
+   */
+  SEEKER_HYD: {
+    [Faction.Directorate]: 70,
+  } as Partial<Record<Faction, number>>,
+
+  /**
+   * TUNABLE — §11 makes the Commune the mine faction: "grown, living mines,
+   * cheaper and more of them".
+   */
+  MINE_CAP: {
+    [Faction.Pelagia]: 18,
+  } as Partial<Record<Faction, number>>,
+} as const;
+
+/**
  * TUNABLE — how loud a piece of acoustic residue is, and how it merges.
  *
  * Echo Marks are priced through the same propagation model as everything else
@@ -211,6 +474,15 @@ export const ECHO_MARKS = {
    * destroyed structure because an economy is a state, not an event.
    */
   HUM_SIG: 14,
+  /**
+   * A torpedo wake — the faintest residue there is, ~1.2 km to HYD 70.
+   *
+   * Quieter than a battle site because a wake is disturbed water rather than an
+   * event: it should be readable by a scout that crosses the track and
+   * invisible to one a kilometre off it, or the map would draw every torpedo
+   * run for everybody and §12's inference stops being work.
+   */
+  TORPEDO_WAKE_SIG: 8,
   /**
    * Intensity one delivered cargo adds to the hum, as a fraction of full.
    *
@@ -535,6 +807,14 @@ export const PERSISTENCE = {
   /** Echo Marks: acoustic residue left on the terrain layer. */
   BATTLE_SITE_S: 90,
   DESTROYED_STRUCTURE_S: 180,
+  /**
+   * A torpedo wake — TUNABLE, and the shortest memory the layer keeps.
+   *
+   * Half a battle site: a wake is water that was pushed aside and is already
+   * closing again, and a track that outlived the fight it belonged to would
+   * tell a scout where ordnance flew long after that stopped being news.
+   */
+  TORPEDO_WAKE_S: 45,
   /** Minimum HYD required to read Echo Marks at all. */
   ECHO_MARK_MIN_HYD: 40,
 } as const;
@@ -568,6 +848,30 @@ const BASE_THRESHOLD =
   (ACTIVE_SONAR.EMITTER_SIG *
     Math.pow(REFERENCE_DISTANCE_M / ACTIVE_SONAR.SELF_REVEAL_RADIUS_M, ATTENUATION_EXPONENT)) /
   TIER_THRESHOLD_MULTIPLIER.TRACK;
+
+/**
+ * The loudness a mine triggers at — **derived, not chosen**.
+ *
+ * docs/systems-combat.md §6 fixes two behaviours and leaves the number to fall
+ * out of them, exactly as `BASE_THRESHOLD` is solved from the spec'd 2,400 m
+ * self-reveal rather than picked:
+ *
+ *   1. a mine must **never** trigger on a Silent Running hull, at any range;
+ *   2. a mine **must** trigger on a cruising Corvette inside its 150 m radius.
+ *
+ * Solving (2) at exactly the trigger radius fixes the bar, and (1) then holds
+ * as a consequence rather than as a second rule: `perceivedLoudness` clamps
+ * distance at the reference distance, so the loudest a SIG-8 hull can ever read
+ * is 8 — and the bar lands at 14.7. There is a test that asserts that margin,
+ * because it is the whole reason silence is a way through a minefield.
+ *
+ * Consequence, and the point of deriving rather than choosing: widen the
+ * trigger radius or change the attenuation exponent and the bar recalibrates
+ * itself, instead of silently starting to eat scouts.
+ */
+export const MINE_TRIGGER_LOUDNESS =
+  ORDNANCE.MINE.TRIGGER_REFERENCE_SIG *
+  Math.pow(REFERENCE_DISTANCE_M / ORDNANCE.MINE.TRIGGER_RADIUS_M, ATTENUATION_EXPONENT);
 
 export const PROPAGATION_MODEL = {
   /** Distance at which SIG is taken at face value, metres. */

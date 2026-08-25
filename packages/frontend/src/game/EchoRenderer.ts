@@ -102,6 +102,14 @@ export interface RendererCallbacks {
   onToggleSilent(unitIds: number[], active: boolean): void;
   onPing(unitId: number): void;
   onAttackOrder(unitIds: number[], contactId: number, queued: boolean): void;
+  /** docs/systems-combat.md §5 — launch at a contact this player has resolved. */
+  onLaunchTorpedo(unitIds: number[], contactId: number): void;
+  /** §5 — a decoy, aimed at nothing. */
+  onDeployNoisemaker(unitIds: number[]): void;
+  /** §6 — lay a mine where the hull is standing. */
+  onLayMine(unitIds: number[]): void;
+  /** §8 — drop a charge set to detonate at a depth. */
+  onDepthCharge(unitIds: number[], depth: number): void;
   onHarvestOrder(unitIds: number[], nodeId: number, queued: boolean): void;
   onThrottle(unitIds: number[], throttle: HarvestThrottle): void;
   onBuild(kind: StructureKind, x: number, y: number): void;
@@ -196,6 +204,11 @@ const MARK_STYLE: Record<EchoMarkKind, { color: number; alpha: number; radiusM: 
   // should be able to tell at a glance that they have found an economy rather
   // than a fight.
   [EchoMarkKind.IndustrialHum]: { color: 0x3f7f86, alpha: 0.28, radiusM: 520 },
+  // Tight and pale, because a wake is the one piece of residue whose *shape*
+  // carries information: laid down once a second along a torpedo's run, a
+  // string of small marks draws the track it took, and a wide blob would smear
+  // the line back into a single vague area (docs/systems-combat.md §12).
+  [EchoMarkKind.TorpedoWake]: { color: 0x9fb6c4, alpha: 0.24, radiusM: 160 },
 };
 
 /**
@@ -821,7 +834,7 @@ export class EchoRenderer {
 
       if (e.button === 2) {
         // Shift queues the order behind whatever the unit is already doing.
-        this.handleContextOrder(world.x, world.y, e.shiftKey);
+        this.handleContextOrder(world.x, world.y, e.shiftKey, e.ctrlKey || e.metaKey);
         return;
       }
 
@@ -967,6 +980,12 @@ export class EchoRenderer {
         this.commandPing();
       } else if (e.code === 'KeyV') {
         this.commandCycleThrottle();
+      } else if (e.code === 'KeyN') {
+        this.commandNoisemaker();
+      } else if (e.code === 'KeyM') {
+        this.commandLayMine();
+      } else if (e.code === 'KeyC') {
+        this.commandDepthCharge();
       } else if (e.code === 'KeyD') {
         // D dives, A ascends. Mnemonic beats convention here: the camera is on
         // the middle mouse button and the wheel, so WASD is not spoken for.
@@ -1345,6 +1364,45 @@ export class EchoRenderer {
         active: units.some((u) => u.depthOrder !== undefined && u.depthOrder < u.depth),
         action: () => this.commandDepthStep(-1),
       });
+      // Ordnance, docs/systems-combat.md §5, §6, §8. Each button reports its
+      // own scarcity rather than merely greying out: a torpedo count and a
+      // decoy cooldown are decisions the player is supposed to be making, and
+      // a weapon whose state is invisible is one they will reach for at the
+      // moment it is not there.
+      const armed = units.filter((u) => u.torpedoes !== undefined);
+      if (armed.length > 0) {
+        const aboard = armed[0]!.torpedoes ?? 0;
+        buttons.push({
+          label: `TORP ${aboard}`,
+          // No action of its own: a launch needs a contact, so it is
+          // CTRL+right-click. The button is the readout.
+          enabled: false,
+          active: aboard > 0,
+          action: () => {},
+        });
+      }
+      if (units.length > 0) {
+        const cooling = first?.decoyCooldownS;
+        buttons.push({
+          label: cooling === undefined ? 'DECOY' : `DECOY ${Math.ceil(cooling)}`,
+          enabled: cooling === undefined,
+          active: false,
+          action: () => this.commandNoisemaker(),
+        });
+        buttons.push({
+          label: 'MINE',
+          enabled: true,
+          active: false,
+          action: () => this.commandLayMine(),
+        });
+        buttons.push({
+          label: 'CHARGE',
+          enabled: this.stepDepthTarget(units, 1) !== null,
+          active: false,
+          action: () => this.commandDepthCharge(),
+        });
+      }
+
       const harvester = units.find((u) => u.throttle !== undefined);
       if (harvester !== undefined) {
         buttons.push({
@@ -1550,6 +1608,57 @@ export class EchoRenderer {
     );
   }
 
+  /**
+   * Launch at whatever contact the cursor is on — docs/systems-combat.md §5.
+   *
+   * Reuses `nearestContact`, which already refuses anything below Tier 2
+   * because a Tier-1 smudge carries no usable position. That is the same gate
+   * the server enforces in `Match.orderLaunchTorpedo`, arrived at independently
+   * from the same fact, so the button is never offered for a shot the server
+   * would refuse.
+   */
+  private commandLaunchTorpedo(x: number, y: number): void {
+    const units = this.selectedUnits().filter((u) => u.torpedoes !== undefined);
+    if (units.length === 0) return;
+    const contact = this.nearestContact(x, y);
+    if (contact === null) return;
+    this.callbacks.onLaunchTorpedo(
+      units.filter((u) => (u.torpedoes ?? 0) > 0).map((u) => u.id),
+      contact.id
+    );
+  }
+
+  private commandNoisemaker(): void {
+    const units = this.selectedUnits().filter((u) => u.decoyCooldownS === undefined);
+    if (units.length === 0) return;
+    this.callbacks.onDeployNoisemaker(units.map((u) => u.id));
+  }
+
+  private commandLayMine(): void {
+    const units = this.selectedUnits();
+    if (units.length === 0) return;
+    this.callbacks.onLayMine(units.map((u) => u.id));
+  }
+
+  /**
+   * Drop a charge into the band below — §8.
+   *
+   * The band below rather than an arbitrary depth, because that is the decision
+   * the weapon exists for: the hull under you is in the next band down, and
+   * getting a charge to it is the whole of the vertical argument. Reuses the
+   * same band stepping the dive order uses, so "one band down" means one thing.
+   */
+  private commandDepthCharge(): void {
+    const units = this.selectedUnits();
+    if (units.length === 0) return;
+    const target = this.stepDepthTarget(units, 1);
+    if (target === null) return;
+    this.callbacks.onDepthCharge(
+      units.map((u) => u.id),
+      target
+    );
+  }
+
   private commandCycleThrottle(): void {
     const harvesters = this.selectedUnits().filter((u) => u.throttle !== undefined);
     if (harvesters.length === 0) return;
@@ -1587,8 +1696,16 @@ export class EchoRenderer {
    * harvesters to work, a heard contact is an attack order, open water is a
    * move. The server re-validates everything; this is only intent.
    */
-  private handleContextOrder(x: number, y: number, queued = false): void {
+  private handleContextOrder(x: number, y: number, queued = false, torpedo = false): void {
     if (this.selected.size === 0) return;
+
+    // Ctrl+right-click is the launch. A modifier on the order that already
+    // means "engage that contact", rather than a key, because a torpedo needs
+    // the one thing a key press does not carry: which contact you meant.
+    if (torpedo) {
+      this.commandLaunchTorpedo(x, y);
+      return;
+    }
     const selectedUnits = this.units.filter((u) => this.selected.has(u.id));
     const unitIds = selectedUnits.map((u) => u.id);
 
@@ -3103,9 +3220,22 @@ export class EchoRenderer {
     return statsFor(unit.kind).pressureRating + unit.pressureBonus;
   }
 
+  /**
+   * Would this hull be crushed at that depth?
+   *
+   * One predicate, two questions. Asked of where a hull *is*, it is the
+   * reactive warning that has always been here — the hull is already dying.
+   * Asked of where an order would *send* it, it is the warning
+   * docs/systems-combat.md §8 requires, and the difference between crush-baiting
+   * beating the inattentive (intended) and beating the uninformed (not).
+   */
+  private wouldCrush(unit: OwnUnit, depthM: number): boolean {
+    return requiredPressureRating(depthM) > this.effectivePr(unit);
+  }
+
   /** True when the hull is deeper than its effective rating can survive. */
   private isCrushing(unit: OwnUnit): boolean {
-    return requiredPressureRating(unit.depth) > this.effectivePr(unit);
+    return this.wouldCrush(unit, unit.depth);
   }
 
   /** Screen y for a depth, inside the ribbon's vertical span. */
@@ -3211,24 +3341,34 @@ export class EchoRenderer {
     }
 
     // Dive preview: where the next band down is, and what getting there costs.
-    if (this.previewPing) {
-      const target = this.stepDepthTarget(selected, 1);
-      if (target !== null) {
-        const targetY = this.ribbonY(target, top, height);
-        g.rect(RIBBON_X - 4, targetY - 2, RIBBON_WIDTH + 8, 4).fill({
-          color: sigColor(DEPTH.DESCENT_SIG),
-          alpha: 0.8,
-        });
-      }
+    // The cost is two things, and until now the ribbon only showed one of them:
+    // the descent is loud, *and* it may be deeper than the hull is rated for.
+    // docs/systems-combat.md §8 asks for the second warning before the order,
+    // not after — "the bait should beat the inattentive, never the uninformed".
+    // It stays a warning and never a refusal, because renting depth you cannot
+    // survive is the mechanic (Match.orderDepth deliberately does not check).
+    const previewTarget = this.previewPing ? this.stepDepthTarget(selected, 1) : null;
+    const previewCrushes =
+      previewTarget !== null && selected.some((unit) => this.wouldCrush(unit, previewTarget));
+    if (previewTarget !== null) {
+      const targetY = this.ribbonY(previewTarget, top, height);
+      g.rect(RIBBON_X - 4, targetY - 2, RIBBON_WIDTH + 8, 4).fill({
+        color: previewCrushes ? UI.threat : sigColor(DEPTH.DESCENT_SIG),
+        alpha: previewCrushes ? 1 : 0.8,
+      });
     }
 
     const lead = selected[0]!;
     this.ribbonReadout.visible = true;
     this.ribbonReadout.text = this.previewPing
-      ? `DIVE ${DEPTH.DESCENT_SIG} SIG`
+      ? previewCrushes
+        ? `DIVE ${DEPTH.DESCENT_SIG} SIG · CRUSH`
+        : `DIVE ${DEPTH.DESCENT_SIG} SIG`
       : `${lead.depth.toFixed(0)}m`;
     this.ribbonReadout.style.fill = this.previewPing
-      ? sigColor(DEPTH.DESCENT_SIG)
+      ? previewCrushes
+        ? UI.threat
+        : sigColor(DEPTH.DESCENT_SIG)
       : this.isCrushing(lead)
         ? UI.threat
         : UI.accent;
@@ -3527,7 +3667,7 @@ export class EchoRenderer {
     }
     return this.isTouch
       ? `${this.selected.size} selected  ·  tap map to order`
-      : `${this.selected.size} selected  ·  RMB move (SHIFT queue)  ·  SPACE silent  ·  P ping  ·  D dive  ·  A rise  ·  CTRL+1-9 group`;
+      : `${this.selected.size} selected  ·  RMB move (SHIFT queue)  ·  CTRL+RMB torpedo  ·  SPACE silent  ·  P ping  ·  N decoy  ·  M mine  ·  C charge  ·  D dive  ·  A rise`;
   }
 
   destroy(): void {

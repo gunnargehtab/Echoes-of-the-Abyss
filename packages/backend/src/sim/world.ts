@@ -15,6 +15,9 @@ import {
   SelfEventKind,
   FaunaStage,
   faunaStatsFor,
+  ordnanceStatsFor,
+  ORDNANCE,
+  OrdnanceKind,
   type DrawReport,
   type FaunaSpecies,
   StructureKind,
@@ -24,12 +27,15 @@ import {
 } from '@echoes/shared';
 import {
   Acoustic,
+  Countermeasure,
   DepthOrder,
   Harvester,
   HarvestMode,
   Fauna,
   Health,
+  Magazine,
   MoveOrder,
+  Ordnance,
   Owner,
   Position,
   Pressure,
@@ -49,6 +55,14 @@ import { Rng } from './rng.ts';
 import { SpatialHash } from './spatialHash.ts';
 import type { QueuedOrder } from './systems/orderQueue.ts';
 import { Terrain } from './terrain.ts';
+
+/**
+ * How many buckets a seeker's first sense is spread across.
+ *
+ * Twelve, matching the 60 Hz ticks in one 0.2 s seeker interval, so consecutive
+ * ordnance lands on consecutive ticks and a salvo spreads perfectly flat.
+ */
+const SEEKER_STAGGER_STEPS = 12;
 
 /** Per-player mutable economy state. Lives outside the ECS: it is per-slot, not per-entity. */
 export interface PlayerEconomy {
@@ -118,6 +132,17 @@ export interface SimWorld extends IWorld {
   /** Reused query buffer, so separation allocates nothing per tick. */
   separationBuffer: number[];
   /**
+   * Broadphase for torpedo fuses, rebuilt each tick a torpedo is in the water.
+   *
+   * A third grid rather than a reuse of either of the others, for the reason
+   * given above: `unitGrid` holds only hulls, and a fuse has to be able to
+   * detonate on a Foundry. Sized for the fuse envelope (a few hundred metres at
+   * most) rather than for audibility.
+   */
+  fuseGrid: SpatialHash;
+  /** Reused query buffer for the above. */
+  fuseBuffer: number[];
+  /**
    * Pending orders per unit — the plan behind the order it is executing.
    * Simulation state, not a client convenience: a reconnecting player must
    * get their plan back (see sim/systems/orderQueue.ts).
@@ -158,6 +183,21 @@ export interface SimWorld extends IWorld {
   drift: DriftHealth;
   /** Scratch: summed SIG per Drift region, rebuilt each tick. */
   driftNoise: Float32Array;
+  /**
+   * Entities the *map* killed this tick, cleared at the top of every step.
+   *
+   * Biomass is rendered fauna — you killed it, you are paid for it
+   * (docs/bestiary.md §5). `payBiomass` approximates "you" as the nearest
+   * entity with an owner, and defends that with "the same answer in every case
+   * that matters", which held while every fauna death was a weapon kill. Once
+   * hazards began reporting their kills that stopped being true: an eruption
+   * kills a creature with no player involved, and the nearest hull could be
+   * kilometres away and asleep. Deaths listed here skip the payout.
+   *
+   * Drift health is *not* excused: the region really did lose a creature, so
+   * `recordKill` still runs.
+   */
+  environmentalDeaths: Set<number>;
 }
 
 /** A self-event before it is bucketed by slot. `eid`, not a match-local id. */
@@ -207,6 +247,8 @@ export function createSimWorld(terrain: Terrain, dt: number, seed: number): SimW
   world.nextLocalId = 0;
   world.unitGrid = new SpatialHash(SEPARATION.CELL_M);
   world.separationBuffer = [];
+  world.fuseGrid = new SpatialHash(SEPARATION.CELL_M);
+  world.fuseBuffer = [];
   world.orderQueues = new Map();
   world.selfEvents = [];
   world.marks = new EchoMarkLayer();
@@ -214,6 +256,7 @@ export function createSimWorld(terrain: Terrain, dt: number, seed: number): SimW
   world.draw = new Map();
   world.drift = new DriftHealth(terrain.widthM, terrain.heightM);
   world.driftNoise = new Float32Array(world.drift.regionCount);
+  world.environmentalDeaths = new Set();
   // Burn entity id 0 so components can use eid 0 as a "none" sentinel
   // (Weapon.orderedTargetEid, Harvester.nodeEid). bitecs hands out dense ids
   // from 0, so without this the first spawned entity would be untargetable.
@@ -286,6 +329,132 @@ export function spawnFauna(
   Fauna.senseS[eid] = ((localIdOf(world, eid) ?? 0) % 30) / 60;
   Fauna.homeX[eid] = options.x;
   Fauna.homeY[eid] = options.y;
+
+  return eid;
+}
+
+export interface SpawnOrdnanceOptions {
+  kind: OrdnanceKind;
+  slot: number;
+  faction: Faction;
+  x: number;
+  y: number;
+  depth: number;
+  /** Radians. Where it is pointing at release. */
+  heading?: number;
+  /** Where the launch believed the target was — the ghost, at Tier 2. */
+  aimX?: number;
+  aimY?: number;
+  /** Seeker sensitivity; 0 for ordnance that does not seek. */
+  seekerHyd?: number;
+  /** Inherited from the launcher. Below the depth it covers, ordnance implodes. */
+  pressureRating: number;
+  /** Depth a charge is set to detonate at. Defaults to where it was released. */
+  targetDepthM?: number;
+}
+
+/**
+ * Put ordnance in the water.
+ *
+ * It gets Position, Acoustic, Owner and Health and nothing else a hull would
+ * have — no MoveOrder, no DepthOrder, no SilentRunning, no Unit. That is what
+ * keeps movement, separation, production and the acoustics system from ever
+ * seeing it: each of them queries on components ordnance does not carry, so
+ * ordnance drops out of them by construction rather than by a check somebody
+ * has to remember to write.
+ *
+ * `Acoustic.hyd` is left at zero on purpose. It is the field that makes an
+ * entity a listener *for its owner* — the Echo pass and the residue read both
+ * key off it — so a torpedo never adds a contact to its owner's picture.
+ *
+ * That closes the direct channel, and it is worth being precise about what it
+ * does not close. An earlier version of this comment claimed the seeker
+ * "reports to nobody", which was not true, and the imprecision is what let a
+ * `locked` flag sit in the snapshot handing over "I have a firm solution on a
+ * real hull" with no inference required. That flag is gone. What remains is a
+ * *pursuit*, and a pursuit is visible because the commander must be able to see
+ * where their own weapon is:
+ *
+ *   - `heading` is not the leak it looks like, and removing it would close
+ *     nothing: `ordnanceSystem` moves the torpedo along its heading, so two
+ *     consecutive positions — which the owner must be sent — give it back
+ *     exactly. It is published because deriving it client-side is busywork.
+ *   - The depth chase is the sharper one, and is also inherent. A torpedo
+ *     matches its target's depth, so its own depth readout is roughly the
+ *     target's, at a tier where `Contact.depth` would still be withheld.
+ *   - A seeker takes the loudest emitter in its cone, which need not be what
+ *     the player aimed at, so either channel can concern a hull they hold no
+ *     contact on.
+ *
+ * All three are consequences of showing a player their own asset, so they are
+ * documented as intended in docs/systems-combat.md §5 rather than papered over
+ * here. What is bounded is the price: each costs a launched torpedo and expires
+ * with it — the bargain Echo Marks strike (docs/systems-echo.md §7).
+ */
+export function spawnOrdnance(world: SimWorld, opts: SpawnOrdnanceOptions): number {
+  const stats = ordnanceStatsFor(opts.kind);
+  const eid = addEntity(world);
+  registerEntity(world, eid);
+
+  addComponent(world, Position, eid);
+  Position.x[eid] = opts.x;
+  Position.y[eid] = opts.y;
+  Position.depth[eid] = opts.depth;
+
+  addComponent(world, Acoustic, eid);
+  Acoustic.sig[eid] = stats.sig;
+  // Deaf to the Echo Layer by construction — see the note above.
+  Acoustic.hyd[eid] = 0;
+  Acoustic.pfFactor[eid] = 1;
+  Acoustic.sigFactor[eid] = 1;
+  Acoustic.spikeRemainingS[eid] = 0;
+  Acoustic.spikeAmount[eid] = 0;
+
+  addComponent(world, Health, eid);
+  // Ordnance that cannot be shot down still carries Health, because the Echo
+  // pass and every targeting query select on it. One hit point rather than
+  // zero: it is alive, and nothing points a gun at it (see combat.ts).
+  Health.max[eid] = stats.maxHp > 0 ? stats.maxHp : 1;
+  Health.hp[eid] = Health.max[eid]!;
+
+  addComponent(world, Owner, eid);
+  Owner.slot[eid] = opts.slot;
+  Owner.faction[eid] = opts.faction;
+
+  addComponent(world, Ordnance, eid);
+  Ordnance.kind[eid] = opts.kind;
+  Ordnance.remainingS[eid] = stats.lifetimeS;
+  Ordnance.heading[eid] = opts.heading ?? 0;
+  Ordnance.seekerHyd[eid] = opts.seekerHyd ?? 0;
+  Ordnance.targetEid[eid] = 0;
+  Ordnance.aimX[eid] = opts.aimX ?? opts.x;
+  Ordnance.aimY[eid] = opts.aimY ?? opts.y;
+  Ordnance.pressureRating[eid] = opts.pressureRating;
+  // Staggered, so a salvo does not re-acquire in lockstep.
+  //
+  // Every seeker sensing on the same tick is the difference between a smooth
+  // cost and a spike: `acquire` walks the acoustic set and runs a terrain path
+  // integral per in-cone candidate, so forty torpedoes launched together did
+  // all of that work on one tick in twelve and none on the other eleven.
+  // Spreading the first sense over the interval turns the spike into the
+  // average without changing how often any individual seeker looks.
+  //
+  // From the *match-local* id and never the entity id, exactly as the fauna
+  // sense stagger above: bitecs allocates entity ids from a process-global
+  // counter, so keying on them would make two matches in one process stagger
+  // differently and diverge.
+  Ordnance.seekerCooldownS[eid] =
+    (((localIdOf(world, eid) ?? 0) % SEEKER_STAGGER_STEPS) / SEEKER_STAGGER_STEPS) *
+    ORDNANCE.TORPEDO.SEEKER_INTERVAL_S;
+  Ordnance.wakeCooldownS[eid] = 0;
+  // Every field, every time — bitecs recycles entity ids, so anything left
+  // unwritten here is inherited from whatever last held this id. These two
+  // were missed when mines were added, and a torpedo born on a detonated
+  // mine's id came into the world already ringing: it emitted the mine's
+  // detonation SIG, never ran, and expired a fraction of a second later.
+  Ordnance.armingS[eid] = 0;
+  Ordnance.detonatingS[eid] = 0;
+  Ordnance.targetDepthM[eid] = opts.targetDepthM ?? opts.depth;
 
   return eid;
 }
@@ -364,6 +533,21 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
     addComponent(world, Weapon, eid);
     Weapon.cooldownRemainingS[eid] = 0;
     Weapon.orderedTargetEid[eid] = 0;
+  }
+
+  if (stats.carriesTorpedoes) {
+    addComponent(world, Magazine, eid);
+    Magazine.torpedoes[eid] = ORDNANCE.TORPEDO.MAGAZINE;
+    Magazine.rearmRemainingS[eid] = 0;
+  }
+
+  // "Any combat hull can deploy one" (docs/systems-combat.md §5) — so the gate
+  // is being armed at all, not being a torpedo carrier. A Light Scout has no
+  // tubes and still gets a decoy, which is the point: the hull most likely to
+  // be caught alone is the one that most needs a way out.
+  if (stats.attackDamage > 0) {
+    addComponent(world, Countermeasure, eid);
+    Countermeasure.cooldownRemainingS[eid] = 0;
   }
 
   if (opts.kind === UnitKind.Harvester) {

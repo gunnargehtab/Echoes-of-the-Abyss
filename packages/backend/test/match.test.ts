@@ -26,6 +26,7 @@ import {
   structureStatsFor,
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
+import { VENTFRONT_DIVIDE, type MapDefinition } from '../src/sim/maps/index.ts';
 import { spawnStructure, spawnUnit } from '../src/sim/world.ts';
 import {
   Position,
@@ -354,6 +355,25 @@ describe('Resonance Crystal', () => {
     return match.resourceNodes.find((n) => n.kind === ResourceKind.ResonanceCrystal)!;
   }
 
+  /**
+   * The default map with its hazards taken out, for the two round-trip tests.
+   *
+   * They already neutralise the other confounders by hand — `fauna: false`, and
+   * a PR-3 hull "so the cycle is not confounded by crush" — and the eruption
+   * belongs on that list: it sits over the crystal field, and a harvester
+   * parked there for a full cut is inside the plume when it fires.
+   *
+   * It was silently neutralised before rather than deliberately. `hazardsSystem`
+   * never reported its kills, so a harvester the eruption killed carried on
+   * hauling at zero HP and banked its load anyway; the round trip was being
+   * completed by a corpse. Once hazard kills became real deaths these tests
+   * failed, which is the bug surfacing rather than a regression. Stated here so
+   * the isolation is a decision instead of an accident.
+   */
+  function calmMap(): MapDefinition {
+    return { ...VENTFRONT_DIVIDE, hazards: [] };
+  }
+
   it('places crystal in the Abyssal band, where it cannot be worked casually', () => {
     const match = new Match(undefined, { fauna: false });
     match.addPlayer(0, Faction.Directorate);
@@ -367,7 +387,7 @@ describe('Resonance Crystal', () => {
   });
 
   it('runs a full crystal cycle: descend, cut, climb, bank', () => {
-    const match = new Match(undefined, { fauna: false });
+    const match = new Match(calmMap(), { fauna: false });
     match.addPlayer(0, Faction.Directorate);
     advance(match, 0.5);
     const field = crystalField(match);
@@ -434,7 +454,7 @@ describe('Resonance Crystal', () => {
   });
 
   it('makes the climb home the slow half of the round trip', () => {
-    const match = new Match(undefined, { fauna: false });
+    const match = new Match(calmMap(), { fauna: false });
     match.addPlayer(0, Faction.Directorate);
     advance(match, 0.5);
     const field = crystalField(match);

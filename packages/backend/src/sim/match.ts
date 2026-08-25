@@ -14,7 +14,7 @@
  * Bastion standing wins.
  */
 
-import { addComponent, hasComponent, removeEntity } from 'bitecs';
+import { addComponent, defineQuery, hasComponent, removeEntity } from 'bitecs';
 import {
   ACTIVE_SONAR,
   CONSTRUCTION,
@@ -36,11 +36,15 @@ import {
   faunaStatsFor,
   HAZARDS,
   HazardPhase,
+  OrdnanceKind,
+  depthBandFor,
+  mineCapFor,
   ResolutionTier,
   SelfEventKind,
   type EchoSnapshot,
   type SelfEvent,
   type GameOverPayload,
+  type OwnOrdnance,
   type OwnStructure,
   type OwnUnit,
   type ResourceNodeInfo,
@@ -48,11 +52,14 @@ import {
 import {
   Acoustic,
   ActivePing,
+  Countermeasure,
   DepthOrder,
   Harvester,
   HarvestMode,
   Health,
+  Magazine,
   MoveOrder,
+  Ordnance,
   Owner,
   Fauna,
   Position,
@@ -74,6 +81,13 @@ import { separationSystem } from './systems/separation.ts';
 import { clearQueue, enqueue, orderQueueSystem, queueView } from './systems/orderQueue.ts';
 import { harvestSystem } from './systems/harvest.ts';
 import { movementSystem } from './systems/movement.ts';
+import {
+  deployNoisemaker,
+  dropDepthCharge,
+  launchTorpedo,
+  layMine,
+  ordnanceSystem,
+} from './systems/ordnance.ts';
 import { pressureSystem } from './systems/pressure.ts';
 import { productionSystem } from './systems/production.ts';
 import { randomSeed } from './rng.ts';
@@ -123,7 +137,23 @@ export interface MatchOptions {
 }
 
 const FIXED_DT = 1 / SIM.TICK_HZ;
-const ECHO_INTERVAL_S = 1 / SIM.ECHO_HZ;
+/**
+ * Simulation ticks between Echo passes.
+ *
+ * The pass used to be driven by an accumulator of wall-clock `deltaMs`, which
+ * made *when* detection happened a function of how the server was being called
+ * rather than of simulation time. That is fine for a live match and fatal for a
+ * replay: `stepOnce` drives the tick loop directly and never touched the
+ * accumulator, so playback resolved the Echo Layer exactly zero times. Every
+ * command gated on a contact — a torpedo launch needs Tier 2 (§7) — was
+ * therefore refused on playback while having been accepted live, and the replay
+ * reported a clean run because the divergence fell between two checkpoints.
+ *
+ * Tick-driven, both paths resolve on the same ticks. For the common
+ * `update(1000 / 60)` call this is exactly the old cadence, one pass every
+ * twelve ticks; it only differs where the old code was already wrong.
+ */
+const ECHO_TICK_INTERVAL = Math.round(SIM.TICK_HZ / SIM.ECHO_HZ);
 /**
  * Cap on steps per update. Without it, a long stall makes the next update try
  * to catch up in one go, which takes even longer — the classic spiral of death.
@@ -144,9 +174,15 @@ export class Match {
   private readonly slots: number[] = [];
   private readonly eliminated = new Set<number>();
   private readonly destroyedScratch: number[] = [];
+  /**
+   * Every entity that can die, for `reap`'s zero-HP backstop. Held on the
+   * instance because a bitecs query caches its result set per world.
+   */
+  private readonly healthQuery = defineQuery([Health, Owner]);
   private readonly nodes: ResourceNodeInfo[] = [];
   private accumulator = 0;
-  private echoAccumulator = 0;
+  /** Snapshots produced by an Echo pass inside `step`, collected by `update`. */
+  private pendingSnapshots: Map<number, EchoSnapshot> | null = null;
   /** Rolling worst-case Echo pass cost, for budget checks. */
   private worstEchoMs = 0;
   /**
@@ -502,6 +538,14 @@ export class Match {
     if (target === undefined) return;
     if (!hasComponent(this.world, Owner, target) || Owner.slot[target] === slot) return;
     if (!hasComponent(this.world, Health, target) || Health.hp[target]! <= 0) return;
+    // Deliberately NOT refused here when the target is ordnance with no hull to
+    // shoot off. That check lives in combat.ts's `targetAlive`, because
+    // refusing at the order leaks: this path returns before the plan is
+    // touched, so accepting and refusing leave the player's own hull in
+    // visibly different states and `queuedOrders` reports which. That answered
+    // "is this a mine or a decoy?" for free, two tiers before the Echo Layer
+    // is willing to say. The order is accepted like any other; the gun then
+    // finds the target is not one it can engage.
 
     if (queued) {
       // The anchor is where the contact is *now*, which is what the player
@@ -517,6 +561,126 @@ export class Match {
     }
     clearQueue(this.world, eid);
     Weapon.orderedTargetEid[eid] = target;
+  }
+
+  /**
+   * Launch a torpedo at a contact the player has heard.
+   *
+   * By opaque handle, exactly like `orderAttackContact`, and for the same
+   * reason: the handle is the proof that this slot resolved this emitter. A
+   * client cannot guess its way to a firing solution on something it never
+   * detected, which is the whole of the acoustic fog of war applied to the
+   * weapon that would most reward cheating it.
+   *
+   * Returns the ordnance entity, or 0 when the shot is refused — the room
+   * ignores the result, the tests do not.
+   */
+  orderLaunchTorpedo(slot: number, eid: number, contactHandle: number): number {
+    this.recordCommand({
+      tick: this.world.tick,
+      type: 'torpedo',
+      slot,
+      unit: this.localId(eid),
+      contact: contactHandle,
+    });
+    if (!this.owns(slot, eid) || !hasComponent(this.world, Magazine, eid)) return 0;
+    const target = this.echo.entityForHandle(slot, contactHandle);
+    if (target === undefined) return 0;
+    if (!hasComponent(this.world, Owner, target) || Owner.slot[target] === slot) return 0;
+    if (!hasComponent(this.world, Health, target) || Health.hp[target]! <= 0) return 0;
+
+    // docs/systems-combat.md §7 — resolution tier is the firing solution.
+    //
+    // Below Tier 2 there is no launch: a Tier-1 contact is a directionless
+    // smudge reported at the *listener's* own position, so a torpedo aimed at
+    // it would be aimed at your own hull. The gate is not a balance choice, it
+    // is the only honest reading of what the player was told.
+    //
+    // At Tier 2 the aim point is the blurred ghost, which lies by up to 15% of
+    // range. The torpedo swims at the lie and the seeker has the run to find
+    // the truth. At Tier 3 and above the solution is exact.
+    const solution = this.echo.firingSolution(slot, target);
+    if (solution === undefined || solution.tier < ResolutionTier.Bearing) return 0;
+
+    return launchTorpedo(this.world, eid, solution.x, solution.y);
+  }
+
+  /**
+   * Drop a noisemaker — docs/systems-combat.md §5.
+   *
+   * No target and no handle, unlike a launch: a decoy is a reflex, aimed at
+   * nothing and thrown behind you. It needs no information gate for the same
+   * reason, since it reveals only where you already were.
+   *
+   * Returns the decoy entity, or 0 when the suite is still cold.
+   */
+  deployNoisemaker(slot: number, eid: number): number {
+    this.recordCommand({
+      tick: this.world.tick,
+      type: 'noisemaker',
+      slot,
+      unit: this.localId(eid),
+    });
+    if (!this.owns(slot, eid)) return 0;
+    return deployNoisemaker(this.world, eid);
+  }
+
+  /**
+   * Lay a mine at the hull's own position — docs/systems-combat.md §6.
+   *
+   * No target and no handle, like a decoy: a mine is aimed at nobody. What it
+   * costs is the ten seconds of construction-grade noise the laying hull pays
+   * while it arms, which is the counter-play the doc asks for — you cannot see
+   * a minefield, but you can hear one being built.
+   *
+   * Returns the mine entity, or 0 when the player is at their cap or the hull
+   * is still laying the last one.
+   */
+  layMine(slot: number, eid: number): number {
+    this.recordCommand({
+      tick: this.world.tick,
+      type: 'mine',
+      slot,
+      unit: this.localId(eid),
+    });
+    if (!this.owns(slot, eid)) return 0;
+    return layMine(this.world, eid, mineCapFor(this.factionOf(slot)));
+  }
+
+  /**
+   * Drop a depth charge set to detonate at `depthM` — docs/systems-combat.md §8.
+   *
+   * A depth and no target: you are bombing water, not a contact, so there is
+   * nothing to have resolved first. The information gate arrives sideways
+   * instead — a contact's depth is only sent at Tier 3 and above, so a
+   * commander who has not classified what is under them is guessing at the one
+   * number the weapon needs.
+   *
+   * The depth is refused rather than clamped when it names water that is not
+   * there, matching `orderDepth`: a client asking for the impossible is told
+   * no, not quietly given something else.
+   */
+  orderDepthCharge(slot: number, eid: number, depthM: number): number {
+    this.recordCommand({
+      tick: this.world.tick,
+      type: 'depthcharge',
+      slot,
+      unit: this.localId(eid),
+      depth: depthM,
+    });
+    if (!this.owns(slot, eid)) return 0;
+    if (!Number.isFinite(depthM)) return 0;
+    if (depthM < DEPTH.MIN_M || depthM > DEPTH.MAX_M) return 0;
+    // It must cross a band. §8 calls this "a pattern dropped (or floated) into
+    // the band above or below", and the fall is the weapon's entire cost — the
+    // defender hears it coming and has that time to move.
+    //
+    // Without this a charge set to the launcher's own depth arrived on the tick
+    // it was dropped: `blast` skips the owner's own slot, so it was a free,
+    // instant, uncounterable 200-damage area attack centred on a hull that
+    // could not be hurt by it. Refused rather than clamped, matching orderDepth.
+    if (depthBandFor(depthM) === depthBandFor(Position.depth[eid]!)) return 0;
+    return dropDepthCharge(this.world, eid, depthM);
   }
 
   /** Send a harvester to a specific nodule field. */
@@ -742,6 +906,7 @@ export class Match {
    */
   update(deltaMs: number): Map<number, EchoSnapshot> | null {
     this.accumulator += deltaMs / 1000;
+    this.pendingSnapshots = null;
 
     let steps = 0;
     while (this.accumulator >= FIXED_DT && steps < MAX_STEPS_PER_UPDATE) {
@@ -754,10 +919,10 @@ export class Match {
       this.accumulator = 0;
     }
 
-    this.echoAccumulator += deltaMs / 1000;
-    if (this.echoAccumulator < ECHO_INTERVAL_S) return null;
-    this.echoAccumulator = 0;
-    return this.resolveEcho();
+    // Whatever the steps resolved on their way past an Echo tick. Null when
+    // this update did not cross one, which is what the room uses to decide
+    // there is nothing new to send.
+    return this.pendingSnapshots;
   }
 
   /**
@@ -777,6 +942,7 @@ export class Match {
     const stepStarted = performance.now();
     this.recorder?.maybeCheckpoint(this.world.tick, () => hashWorld(this.world));
     this.destroyedScratch.length = 0;
+    this.world.environmentalDeaths.clear();
     harvestSystem(this.world);
     combatSystem(this.world, this.destroyedScratch);
     const physicsStarted = performance.now();
@@ -789,6 +955,11 @@ export class Match {
     // is a correction to where hulls ended up, and detection must see the
     // corrected picture rather than a stack that no longer exists.
     separationSystem(this.world);
+    // Ordnance last of the movers, so a fuse checks against where hulls
+    // actually finished the tick rather than where they started it. A torpedo
+    // that detonated on a position its target had already left would be the
+    // one weapon in the game you could outrun by a single frame.
+    ordnanceSystem(this.world, this.destroyedScratch);
     const physicsCost = performance.now() - physicsStarted;
     if (physicsCost > this.worstPhysicsMs) this.worstPhysicsMs = physicsCost;
     // After the systems that can finish an order: a unit that arrived this
@@ -803,7 +974,7 @@ export class Match {
     pressureSystem(this.world, this.destroyedScratch);
     // Hazards after pressure and before reap: a hull killed by an eruption
     // should die on the tick the eruption killed it, not the next one.
-    hazardsSystem(this.world);
+    hazardsSystem(this.world, this.destroyedScratch);
     // After hazards, so a tap destroyed by its own vent stops powering
     // anything on the same tick it dies.
     thermalSystem(this.world);
@@ -811,13 +982,16 @@ export class Match {
     // it does not care about Draw satisfaction — but a Bastion destroyed this
     // tick should not pay out on the tick it dies.
     titheSystem(this.world);
-    faunaSystem(this.world);
+    faunaSystem(this.world, this.destroyedScratch);
     this.driftTick();
     this.reap();
     // After reap, so a structure destroyed this tick has already left its
     // mark and does not lose a tick of the three minutes it is owed.
     this.world.marks.tick(FIXED_DT);
     this.world.tick++;
+    if (this.world.tick % ECHO_TICK_INTERVAL === 0) {
+      this.pendingSnapshots = this.resolveEcho();
+    }
     const stepCost = performance.now() - stepStarted;
     if (stepCost > this.worstStepMs) this.worstStepMs = stepCost;
   }
@@ -846,6 +1020,27 @@ export class Match {
 
   /** One place where deaths are made real, so the win condition sees them all. */
   private reap(): void {
+    // Backstop before the early return: anything sitting at zero HP dies here
+    // even if nothing reported it.
+    //
+    // The convention is that a system dealing damage appends its kills to
+    // `destroyed`, and twice now a system has not — `hazardsSystem` and
+    // `faunaSystem` both damaged hulls and told nobody. The result was silent
+    // and permanent rather than merely wrong: the entity kept every component,
+    // so it stayed on the board at hp <= 0, still emitting, a contact every
+    // listener could resolve and nothing could ever kill. Ordnance made it
+    // vivid (a depth charge caught in an eruption becomes an immortal SIG-30
+    // emitter that never detonates and never expires) but any hull did it.
+    //
+    // Both systems now report, which is what gives a kill its attribution.
+    // This sweep is the invariant underneath that convention, so the next
+    // system to forget is wrong for one tick instead of forever.
+    const alive = this.healthQuery(this.world);
+    for (let i = 0; i < alive.length; i++) {
+      const eid = alive[i]!;
+      if (Health.hp[eid]! <= 0) this.destroyedScratch.push(eid);
+    }
+
     if (this.destroyedScratch.length === 0) return;
 
     const lostBastions: number[] = [];
@@ -856,8 +1051,12 @@ export class Match {
       // (docs/bestiary.md §5, §6). Paid to whoever killed it, at the
       // Directorate's full rate or everyone else's rendering-contract share.
       if (hasComponent(this.world, Fauna, eid)) {
-        this.payBiomass(eid);
+        // A creature the map killed pays nobody: biomass is *rendered* fauna,
+        // and an eruption renders nothing (see SimWorld.environmentalDeaths).
+        // The Drift still loses the creature, so recordKill stays.
+        if (!this.world.environmentalDeaths.has(eid)) this.payBiomass(eid);
         this.world.drift.recordKill(Position.x[eid]!, Position.y[eid]!);
+        this.echo.forget(eid);
         removeEntity(this.world, eid);
         continue;
       }
@@ -878,6 +1077,13 @@ export class Match {
         }
       }
       this.world.production.delete(eid);
+      // Before the id goes back into bitecs's free list: anything keyed by eid
+      // outside the ECS has to be dropped, or it comes back attached to
+      // whatever inherits the id. A contact handle would name a hull the player
+      // never detected (see EchoLayer.forget); a queued order would be executed
+      // — a brand-new unit walking off to finish a dead one's last waypoint.
+      this.echo.forget(eid);
+      clearQueue(this.world, eid);
       removeEntity(this.world, eid);
     }
 
@@ -909,6 +1115,8 @@ export class Match {
     for (let eid = 0; eid < Owner.slot.length; eid++) {
       if (!hasComponent(this.world, Owner, eid) || Owner.slot[eid] !== slot) continue;
       this.world.production.delete(eid);
+      this.echo.forget(eid);
+      clearQueue(this.world, eid);
       removeEntity(this.world, eid);
     }
   }
@@ -1008,6 +1216,7 @@ export class Match {
         tick: this.world.tick,
         units,
         structures,
+        ordnance: this.collectOwnOrdnance(slot),
         contacts: result.contactsBySlot.get(slot) ?? [],
         peakSig,
         nodules: economyFor(this.world, slot).nodules,
@@ -1060,12 +1269,53 @@ export class Match {
       if (hasComponent(this.world, DepthOrder, eid) && DepthOrder.active[eid] === 1) {
         unit.depthOrder = DepthOrder.targetM[eid]!;
       }
+      if (
+        hasComponent(this.world, Countermeasure, eid) &&
+        Countermeasure.cooldownRemainingS[eid]! > 0
+      ) {
+        unit.decoyCooldownS = Countermeasure.cooldownRemainingS[eid]!;
+      }
+      if (hasComponent(this.world, Magazine, eid)) {
+        unit.torpedoes = Magazine.torpedoes[eid]!;
+        if (Magazine.rearmRemainingS[eid]! > 0) {
+          unit.rearmRemainingS = Magazine.rearmRemainingS[eid]!;
+        }
+      }
       if (hasComponent(this.world, Harvester, eid)) {
         unit.cargo = Harvester.cargo[eid]!;
         unit.cargoKind = Harvester.cargoKind[eid] as ResourceKind;
         unit.throttle = Harvester.throttle[eid] as HarvestThrottle;
       }
       out.push(unit);
+    }
+    return out;
+  }
+
+  /**
+   * A player's own ordnance in the water.
+   *
+   * Sent in full, like their hulls, and for the same reason: it is theirs. The
+   * enemy's view of the same torpedo goes through the Echo Layer as an ordinary
+   * contact, which is what makes "you always hear it coming" a property of the
+   * simulation rather than a favour the renderer does.
+   */
+  private collectOwnOrdnance(slot: number): OwnOrdnance[] {
+    const out: OwnOrdnance[] = [];
+    for (let eid = 0; eid < Owner.slot.length; eid++) {
+      if (!hasComponent(this.world, Owner, eid)) continue;
+      if (Owner.slot[eid] !== slot) continue;
+      if (!hasComponent(this.world, Ordnance, eid)) continue;
+
+      out.push({
+        id: eid,
+        kind: Ordnance.kind[eid] as OrdnanceKind,
+        x: Position.x[eid]!,
+        y: Position.y[eid]!,
+        depth: Position.depth[eid]!,
+        heading: Ordnance.heading[eid]!,
+        sig: Acoustic.sig[eid]!,
+        remainingS: Ordnance.remainingS[eid]!,
+      });
     }
     return out;
   }

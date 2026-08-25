@@ -55,6 +55,10 @@ const VOICING: Record<EchoMarkKind, { centreHz: number; q: number; tone: number 
   [EchoMarkKind.DestroyedStructure]: { centreHz: 180, q: 1.1, tone: 63 },
   // "Steady, tonal, unhurried — the sound of someone else's economy."
   [EchoMarkKind.IndustrialHum]: { centreHz: 300, q: 6, tone: 97 },
+  // A wake is churned water closing again: bright, wide, and atonal — the
+  // least *settled* residue in the game, because it is the newest. No tone at
+  // all, so it never reads as a machine the way the hum does.
+  [EchoMarkKind.TorpedoWake]: { centreHz: 740, q: 0.9, tone: null },
 };
 
 export class MarkBed {
@@ -66,6 +70,7 @@ export class MarkBed {
       EchoMarkKind.Battle,
       EchoMarkKind.DestroyedStructure,
       EchoMarkKind.IndustrialHum,
+      EchoMarkKind.TorpedoWake,
     ]) {
       const voicing = VOICING[kind];
       const gain = context.createGain();

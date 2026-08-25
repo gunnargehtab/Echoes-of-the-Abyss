@@ -31,6 +31,7 @@ import {
   type EchoMarkInfo,
   type FaunaSpecies,
   type ExposureReport,
+  type OrdnanceKind,
   type Faction,
   type StructureKind,
   type UnitKind,
@@ -40,6 +41,7 @@ import {
   ActivePing,
   Fauna,
   Health,
+  Ordnance,
   Owner,
   Position,
   Structure,
@@ -103,6 +105,23 @@ interface BestContact {
   /** Position of the listener that resolved it, for bearing blur. */
   listenerX: number;
   listenerY: number;
+  /**
+   * The position this pass actually *reported* for the emitter — the ghost at
+   * Tier 2, the listener's own position at Tier 1, the truth at Tier 3+.
+   *
+   * Stored rather than recomputed because a firing solution has to aim at the
+   * point the player was shown. `firingSolution` used to re-derive the blur
+   * from `Position` at the moment of launch, which is a different point: the
+   * target has moved since the pass, so the ghost moves with it. The player
+   * clicks a marker and the torpedo is sent somewhere else — nearby, but not
+   * where they aimed, and drifting further the faster the target is going.
+   *
+   * §7 makes shooting on a Tier-2 bearing a real gamble: the ghost lies by up
+   * to 15% of range and you take the shot anyway. It has to be *that* lie,
+   * though, not a second one the player never saw.
+   */
+  reportedX: number;
+  reportedY: number;
 }
 
 export interface EchoResult {
@@ -263,6 +282,63 @@ export class EchoLayer {
     return undefined;
   }
 
+  /**
+   * The firing solution a slot currently holds on an emitter, or undefined.
+   *
+   * This is the single place docs/systems-combat.md §7 is enforced, and the
+   * position it returns is **exactly the position that slot was last told** —
+   * the true position at Tier 3 and above, and at Tier 2 the blurred ghost the
+   * contact payload carried.
+   *
+   * It returns the stored one rather than recomputing it, which is a
+   * correction. The first version re-derived the blur here, reasoning that
+   * `blurBearing` is deterministic on its inputs so a second call must
+   * reproduce the first. It is, and it does — but one of those inputs is the
+   * target's position, and that is read live. Between Echo passes the target
+   * moves and the ghost moves with it, so a player clicked a marker and the
+   * torpedo was aimed somewhere else — measured at 4.5 m for a Cruiser launched
+   * on a tenth of a second after the pass, and rising to roughly 24 m for a
+   * Light Scout at full speed across a whole 200 ms interval.
+   *
+   * §7 asks the player to accept that a Tier-2 ghost lies by up to 15% of
+   * range. It does not ask them to accept a second lie they were never shown.
+   *
+   * Reflects the last completed pass, which is correct: a player acts on what
+   * they were last told, not on what is true this instant.
+   */
+  firingSolution(
+    slot: number,
+    eid: number
+  ): { tier: ResolutionTier; x: number; y: number } | undefined {
+    const resolved = this.best.get(slot)?.get(eid);
+    if (resolved === undefined) return undefined;
+
+    // Exactly the point the player was shown, rather than a fresh blur of
+    // wherever the target has got to since — see `BestContact.reportedX`.
+    return { tier: resolved.tier, x: resolved.reportedX, y: resolved.reportedY };
+  }
+
+  /**
+   * Forget everything this pass knows about an entity that has died.
+   *
+   * Handles were never pruned, and that was a real hole rather than a leak of
+   * memory. `entityForHandle` scans a permanent map, bitecs reissues entity ids
+   * once a thousand have been freed, and the short-lived ordnance this epic
+   * added makes crossing that threshold routine — so a handle minted for a
+   * torpedo that died minutes ago could come to name a *live hull the player
+   * had never detected*. `orderAttackContact` would accept it, and combat.ts
+   * republishes an ordered target's position into MoveOrder every tick, which
+   * turns a stale handle into a permanent tracker.
+   *
+   * Called from `Match.reap` for every death, which is the one place the
+   * simulation makes a death real.
+   */
+  forget(eid: number): void {
+    for (const slotHandles of this.handles.values()) slotHandles.delete(eid);
+    for (const slotBest of this.best.values()) slotBest.delete(eid);
+    this.litAlready.delete(eid);
+  }
+
   private handleFor(slot: number, eid: number): number {
     let slotHandles = this.handles.get(slot);
     if (slotHandles === undefined) {
@@ -294,7 +370,16 @@ export class EchoLayer {
     // Multiple listeners may hear the same emitter; the player learns the most
     // any single one of them resolved.
     if (existing === undefined) {
-      slotBest.set(eid, { tier, listenerX, listenerY });
+      // Reported position is filled in when the contact payload is built,
+      // which is the only place that knows what each tier discloses. Seeded
+      // with the truth so a read before then is never a wild value.
+      slotBest.set(eid, {
+        tier,
+        listenerX,
+        listenerY,
+        reportedX: Position.x[eid]!,
+        reportedY: Position.y[eid]!,
+      });
     } else if (tier > existing.tier) {
       existing.tier = tier;
       existing.listenerX = listenerX;
@@ -518,6 +603,21 @@ export class EchoLayer {
           const listenerSlot = Owner.slot[listener]!;
           if (listenerSlot === emitterSlot) continue;
 
+          // Deaf things do not listen.
+          //
+          // HYD 0 means "no ears", not "poor ears" — the per-HYD tables above
+          // clamp to 1 only to keep their lookups in range, and that clamp used
+          // to make ordnance a listener. Ordnance carries Acoustic so the Echo
+          // pass can hear *it*; `spawnOrdnance` sets its HYD to zero so it
+          // cannot hear back. Without this line a torpedo resolved contacts out
+          // to ~235 m and reported them to the player who fired it — measured —
+          // and a twelve-mine field became a permanent passive sonar picket.
+          // Neither is authorised: docs/systems-combat.md §6 has a mine wait to
+          // hear you, not tell anyone about it.
+          //
+          // It is also a strict prune, so it costs the pair loop nothing.
+          if (Acoustic.hyd[listener]! <= 0) continue;
+
           const lx = Position.x[listener]!;
           const ly = Position.y[listener]!;
           const dx = ex - lx;
@@ -656,7 +756,16 @@ export class EchoLayer {
         // owns it: they are being seen this well, by someone. Accumulated
         // here rather than in a second pass because `slotBest` is already the
         // exact set of "who has resolved what", just indexed the other way.
-        const victim = this.exposure.get(Owner.slot[eid]!);
+        // Exposure is a report about the player's *force*, not about the
+        // things their weapons left in the water. An enemy resolving your
+        // minefield used to raise your own exposure to Tier 3 — telling you an
+        // opponent was near a mine you laid, which is reconnaissance you never
+        // earned, and simultaneously lying about how well your hulls are seen.
+        // Ordnance is skipped here for the same reason fauna are: it is not
+        // somebody's fleet (docs/systems-combat.md §6).
+        const victim = hasComponent(world, Ordnance, eid)
+          ? undefined
+          : this.exposure.get(Owner.slot[eid]!);
         if (victim !== undefined) {
           if (resolved.tier > victim.tier) victim.tier = resolved.tier;
           if (resolved.tier >= ResolutionTier.Bearing) victim.trackedCount++;
@@ -704,6 +813,9 @@ export class EchoLayer {
           contact.x = blurred.x;
           contact.y = blurred.y;
         }
+        // What this pass disclosed, for `firingSolution` to aim at.
+        resolved.reportedX = contact.x;
+        resolved.reportedY = contact.y;
 
         if (resolved.tier >= ResolutionTier.Classification) {
           if (hasComponent(world, Unit, eid)) {
@@ -726,6 +838,13 @@ export class EchoLayer {
             // meaningless slot would let a client infer that this is fauna one
             // tier earlier than it earned.
             contact.fauna = Fauna.species[eid] as FaunaSpecies;
+          } else if (hasComponent(world, Ordnance, eid)) {
+            // docs/systems-combat.md §1: a torpedo must be *audible* its whole
+            // run, not identifiable for it. Below Tier 3 a closing contact
+            // could be ordnance or a scout, and the seconds a player spends
+            // deciding which are the mechanic — so the kind sits behind the
+            // same wall that names a hull, exactly like a creature's species.
+            contact.ordnance = Ordnance.kind[eid] as OrdnanceKind;
           }
           contact.depth = Position.depth[eid]!;
         }

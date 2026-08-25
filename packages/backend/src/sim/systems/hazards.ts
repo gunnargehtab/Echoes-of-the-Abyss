@@ -157,7 +157,7 @@ function anyFactionWithin(
  * the *new* phase, so a hazard that became Active this tick acts this tick
  * rather than one tick late.
  */
-export function hazardsSystem(world: SimWorld): void {
+export function hazardsSystem(world: SimWorld, destroyed: number[]): void {
   const dt = world.dt;
   if (world.hazards.length === 0) return;
 
@@ -191,7 +191,7 @@ export function hazardsSystem(world: SimWorld): void {
       if (affectsPropagation(hazard.kind)) modifiersChanged = true;
     }
 
-    applyEffects(world, hazard, dt);
+    applyEffects(world, hazard, dt, destroyed);
   }
 
   if (modifiersChanged) rebuildPropagation(world);
@@ -243,16 +243,16 @@ function stormTaper(): number {
   return (HAZARDS.STORM.PF_MULTIPLIER + 1) / 2;
 }
 
-function applyEffects(world: SimWorld, hazard: Hazard, dt: number): void {
+function applyEffects(world: SimWorld, hazard: Hazard, dt: number, destroyed: number[]): void {
   if (hazard.phase !== HazardPhase.Active && hazard.phase !== HazardPhase.Decay) return;
   // Decay does half damage: subsiding, not stopped.
   const taper = hazard.phase === HazardPhase.Active ? 1 : 0.5;
 
-  if (hazard.kind === 'geothermal-eruption') applyEruption(world, hazard, dt * taper);
-  else if (hazard.kind === 'resonance-storm') applyStorm(world, hazard, dt * taper);
+  if (hazard.kind === 'geothermal-eruption') applyEruption(world, hazard, dt * taper, destroyed);
+  else if (hazard.kind === 'resonance-storm') applyStorm(world, hazard, dt * taper, destroyed);
 }
 
-function applyEruption(world: SimWorld, hazard: Hazard, dt: number): void {
+function applyEruption(world: SimWorld, hazard: Hazard, dt: number, destroyed: number[]): void {
   const entities = affected(world);
   for (let i = 0; i < entities.length; i++) {
     const eid = entities[i]!;
@@ -276,6 +276,11 @@ function applyEruption(world: SimWorld, hazard: Hazard, dt: number): void {
       damage *= HAZARDS.ERUPTION.PELAGIA_DAMAGE_MULTIPLIER;
     }
     Health.hp[eid] = Health.hp[eid]! - damage;
+    if (Health.hp[eid]! <= 0) {
+      destroyed.push(eid);
+      // Nobody rendered this — see SimWorld.environmentalDeaths.
+      world.environmentalDeaths.add(eid);
+    }
 
     // The acoustic half. A hull being battered rings, and the whole map can
     // hear it: an eruption does not only hurt you, it finds you.
@@ -304,7 +309,7 @@ function applyEruption(world: SimWorld, hazard: Hazard, dt: number): void {
   }
 }
 
-function applyStorm(world: SimWorld, hazard: Hazard, dt: number): void {
+function applyStorm(world: SimWorld, hazard: Hazard, dt: number, destroyed: number[]): void {
   const entities = affected(world);
   for (let i = 0; i < entities.length; i++) {
     const eid = entities[i]!;
@@ -317,6 +322,10 @@ function applyStorm(world: SimWorld, hazard: Hazard, dt: number): void {
     let damage = HAZARDS.STORM.DAMAGE_PER_S * dt;
     if (isStructure) damage *= HAZARDS.STORM.STRUCTURE_DAMAGE_MULTIPLIER;
     Health.hp[eid] = Health.hp[eid]! - damage;
+    if (Health.hp[eid]! <= 0) {
+      destroyed.push(eid);
+      world.environmentalDeaths.add(eid);
+    }
   }
 }
 

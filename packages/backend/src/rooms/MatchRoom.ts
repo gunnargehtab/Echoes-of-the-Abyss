@@ -70,6 +70,25 @@ interface AttackMessage {
   queued?: boolean;
 }
 
+/** Opaque per-observer contact handle, like AttackMessage — never an entity id. */
+interface TorpedoMessage {
+  unitIds: number[];
+  contactId: number;
+}
+
+interface NoisemakerMessage {
+  unitIds: number[];
+}
+
+interface MineMessage {
+  unitIds: number[];
+}
+
+interface DepthChargeMessage {
+  unitIds: number[];
+  depth: number;
+}
+
 interface HarvestMessage {
   unitIds: number[];
   nodeId: number;
@@ -186,6 +205,47 @@ export class MatchRoom extends Room<MatchState> {
       if (!Number.isFinite(message.contactId)) return;
       for (const unitId of message.unitIds) {
         this.match.orderAttackContact(slot, unitId, message.contactId, message.queued === true);
+      }
+    });
+
+    this.onMessage('torpedo', (client, message: TorpedoMessage) => {
+      const slot = this.commandSlot(client);
+      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      if (!Number.isFinite(message.contactId)) return;
+      for (const unitId of message.unitIds) {
+        // The handle is re-resolved per hull inside the sim: a contact one of
+        // this player's units heard is a firing solution for all of them, and
+        // a handle they were never issued resolves to nothing.
+        this.match.orderLaunchTorpedo(slot, unitId, message.contactId);
+      }
+    });
+
+    this.onMessage('noisemaker', (client, message: NoisemakerMessage) => {
+      const slot = this.commandSlot(client);
+      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      for (const unitId of message.unitIds) {
+        this.match.deployNoisemaker(slot, unitId);
+      }
+    });
+
+    this.onMessage('mine', (client, message: MineMessage) => {
+      const slot = this.commandSlot(client);
+      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      for (const unitId of message.unitIds) {
+        // The per-player cap and the arming occupancy are both enforced in the
+        // sim; a client spamming this gets one mine and a lot of noise.
+        this.match.layMine(slot, unitId);
+      }
+    });
+
+    this.onMessage('depthcharge', (client, message: DepthChargeMessage) => {
+      const slot = this.commandSlot(client);
+      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      if (!Number.isFinite(message.depth)) return;
+      for (const unitId of message.unitIds) {
+        // Depth range and ownership are both re-checked inside the sim; an
+        // out-of-range depth is refused there rather than clamped here.
+        this.match.orderDepthCharge(slot, unitId, message.depth);
       }
     });
 

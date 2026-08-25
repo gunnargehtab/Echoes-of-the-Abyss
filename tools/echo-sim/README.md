@@ -14,8 +14,17 @@ CLI usage:
   node sim.js                             # shipped roster (UNIT_STATS) vs a HYD-50 listener
   node sim.js scenarios/my-scenario.json  # run scenario and print JSON
 
+Combat scenarios (docs/systems-combat.md):
+  scenarios/combat-ordnance.json     # every ordnance signature vs a baseline ear
+  scenarios/combat-torpedo-run.json  # SIG 60 across a torpedo's 3,200 m run, per hull
+
+The second is the one that keeps §1's rule honest — "nothing lethal is
+inaudible" is a detection claim, and this is what checking it looks like. It is
+also how §6's description of an armed mine got corrected: the sweep showed a
+mine reads as a smudge at 400 m, where the doc had claimed it was invisible.
+
 Module usage (for tests/integration):
-  const { runScenario, detect, rosterActors } = require('./lib');
+  const { runScenario, detect, rosterActors, ordnanceActors } = require('./lib');
   detect(sig, distanceM, pf, hyd)   // -> ResolutionTier 0 (Silent) .. 4 (Track)
   const result = runScenario(require('./scenarios/simple-scenario.json'));
   // assert against the matching .expected.json

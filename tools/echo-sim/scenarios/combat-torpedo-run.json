@@ -1,0 +1,12 @@
+{
+  "name": "combat-torpedo-run",
+  "propagationFactor": 1.0,
+  "distances": [400, 800, 1600, 2400, 3200],
+  "actors": [
+    { "name": "Torpedo vs Harvester ears (HYD 30)", "sig": 60, "hyd": 30 },
+    { "name": "Torpedo vs Corvette ears (HYD 50)", "sig": 60, "hyd": 50 },
+    { "name": "Torpedo vs Cruiser ears (HYD 65)", "sig": 60, "hyd": 65 },
+    { "name": "Torpedo vs Light Scout ears (HYD 70)", "sig": 60, "hyd": 70 },
+    { "name": "Torpedo vs Abyssal Submersible ears (HYD 85)", "sig": 60, "hyd": 85 }
+  ]
+}

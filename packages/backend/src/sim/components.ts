@@ -203,3 +203,116 @@ export const Weapon = defineComponent({
   /** Explicit attack order from the player; cleared when the target dies. */
   orderedTargetEid: Types.eid,
 });
+
+/**
+ * Something a weapon put in the water — docs/systems-combat.md §2.
+ *
+ * Mutually exclusive with `Unit` and `Structure`, and that exclusivity is what
+ * every other system keys off: movement moves Units, production makes Units,
+ * separation spaces Units, and ordnance is none of those. What it *does* carry
+ * is Position, Acoustic, Owner and Health, so the Echo Layer resolves it with
+ * no special case at all — a running torpedo is a contact because nothing marks
+ * it out as anything else.
+ *
+ * The seeker's sensitivity lives here rather than in `Acoustic.hyd`, which is
+ * deliberately left at zero: `Acoustic.hyd` is what makes an entity a *listener
+ * for its owner*, and a torpedo must not double as a free scout. The seeker
+ * hears for itself and tells nobody.
+ */
+export const Ordnance = defineComponent({
+  /** Index into the OrdnanceKind enum. */
+  kind: Types.ui8,
+  /** Seconds of run, lifetime or decoy life left. Expiry is not detonation. */
+  remainingS: Types.f32,
+  /** Radians. Ordnance has no MoveOrder — it points, and it goes. */
+  heading: Types.f32,
+  /** The seeker's listening sensitivity. 0 for ordnance that does not seek. */
+  seekerHyd: Types.f32,
+  /** What the seeker currently holds, or 0. */
+  targetEid: Types.eid,
+  /**
+   * Where the launch believed the target was.
+   *
+   * For a Tier-2 bearing-only launch this is the *ghost* position, which lies
+   * by up to 15% of range (docs/systems-combat.md §7) — the torpedo swims at
+   * the lie and the seeker has to find the truth on the way. Steered toward
+   * whenever the seeker holds nothing.
+   */
+  aimX: Types.f32,
+  aimY: Types.f32,
+  /**
+   * Inherited from the launcher. Below the depth this rating covers, ordnance
+   * implodes rather than pressing on (docs/systems-combat.md §8).
+   */
+  pressureRating: Types.ui8,
+  /** Countdown to the next seeker re-evaluation, so seekers do not all fire on one tick. */
+  seekerCooldownS: Types.f32,
+  /** Countdown to the next wake mark. */
+  wakeCooldownS: Types.f32,
+  /**
+   * Seconds a mine still needs before it can trigger.
+   *
+   * A mine you dropped this second is not yet a mine. It is also what the
+   * laying hull is broadcasting through (docs/systems-combat.md §6): the field
+   * is silent, but *making* it is not, so the arming clock and the noise are
+   * the same clock.
+   */
+  armingS: Types.f32,
+  /**
+   * Seconds this piece of ordnance keeps ringing after it went off.
+   *
+   * A detonation is SPEC'd at SIG 90, and an event that existed for one 60 Hz
+   * tick would carry a signature no listener in the game could ever resolve —
+   * the Echo pass runs at 5 Hz. So the bang outlives the bomb, does no further
+   * damage, and cannot trigger again.
+   */
+  detonatingS: Types.f32,
+  /**
+   * Depth a falling charge is set to detonate at, in metres.
+   *
+   * Its own field rather than a reuse of `aimX`/`aimY`, because those name a
+   * place on the surface of the map and this names a place in the water column.
+   * A depth charge is the one weapon whose aim is entirely vertical.
+   */
+  targetDepthM: Types.f32,
+});
+
+/**
+ * Ordnance aboard a hull that can launch it.
+ *
+ * A magazine and not a cooldown, because scarcity is the torpedo's whole
+ * identity against the gun's endless ammo (docs/systems-combat.md §5): the
+ * decision a player makes is "is this worth one of my two", and a cooldown
+ * would ask them "can I be bothered to wait" instead.
+ */
+export const Magazine = defineComponent({
+  torpedoes: Types.ui8,
+  /** Seconds until the next torpedo is aboard; only counts down at a depot. */
+  rearmRemainingS: Types.f32,
+});
+
+/**
+ * A hull's countermeasure suite — docs/systems-combat.md §5.
+ *
+ * A cooldown rather than a magazine, unlike torpedoes, and the asymmetry is
+ * deliberate: a torpedo is an offensive commitment you can run out of, while a
+ * decoy is a reflex you can only use so often. What limits it is not supply
+ * but the fact that deploying one makes real noise at your real position — so
+ * the interesting cost is acoustic, and a stock count would only add a second,
+ * duller one on top.
+ */
+export const Countermeasure = defineComponent({
+  cooldownRemainingS: Types.f32,
+});
+
+/**
+ * A hull in the act of laying a mine — docs/systems-combat.md §6.
+ *
+ * Exists so the *laying* can be loud while the field is silent. Read by
+ * acoustics as a SIG floor, exactly like a descent: you cannot lay a minefield
+ * quietly, and a scout that hears construction-grade noise in open water and
+ * finds no structure there has learned something worth knowing.
+ */
+export const Laying = defineComponent({
+  remainingS: Types.f32,
+});

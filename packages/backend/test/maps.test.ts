@@ -184,6 +184,50 @@ describe('Ventfront Divide', () => {
   });
 });
 
+describe('Ventfront Divide — the crystal field sits inside both vents', () => {
+  it('records the overlap, because a harvester left on that field dies to it', () => {
+    // Map *data*, asserted deliberately rather than as trivia, because the
+    // gameplay consequence was hidden for a while and should not be again.
+    //
+    // The Resonance Crystal field is at (4000, 4000). Both geothermal
+    // eruptions — (4000, 3500) and (4000, 4500), radius 700 — reach it, from
+    // 500 m away each. Their staggers land about a second apart in an 84 s
+    // cycle, so they fire effectively together, and against ERUPTION
+    // .DAMAGE_PER_S 90 a 300 HP Harvester does not survive one combined pass.
+    // A hull put on the field by `Match.orderHarvest` — the ordinary standing
+    // order, which does not withdraw for a warning — is dead at roughly t+41 s
+    // having banked nothing.
+    //
+    // That was invisible until hazard kills became real deaths: the harvester
+    // was being killed and carrying on hauling at zero HP, so the round trip
+    // appeared to work and was completed by a corpse. The two round-trip tests
+    // in match.test.ts now run on a hazard-free map, which is the right way to
+    // test an economy mechanic in isolation — but it means nothing there will
+    // ever notice this again. Hence here.
+    //
+    // Whether it is a *defect* is a design question and deliberately not
+    // decided by this test. Crystal is meant to be dangerous ("nobody works it
+    // without committing"), the eruption gives a 20 s warning, and a commander
+    // who watches for it can pull out. What is not obviously intended is that
+    // the resource gating the whole tech tree cannot be worked at all by a
+    // standing order on the shipped default map. If either the field or a vent
+    // moves, this test fails and whoever moved it should read this note.
+    const map = VENTFRONT_DIVIDE;
+    const field = map.resources.find((r) => r.kind === ResourceKind.ResonanceCrystal)!;
+    assert.ok(field !== undefined, 'the map should seed a crystal field');
+
+    const reaching = map.hazards.filter(
+      (h) =>
+        h.kind === 'geothermal-eruption' && Math.hypot(h.x - field.x, h.y - field.y) <= h.radiusM
+    );
+    assert.equal(
+      reaching.length,
+      2,
+      'both vents currently cover the crystal field — see the note above if this changed'
+    );
+  });
+});
+
 describe('Abyssal Rift Corridor', () => {
   it('is long and narrow rather than square', () => {
     // "central trench corridor (long, narrow, deep)" — a square map cannot

@@ -74,7 +74,7 @@ export function countFauna(world: SimWorld): number {
  * per-candidate path integral, and doing it sixty times a second per creature
  * would put the Drift's cost above the pass it is supposed to live beside.
  */
-export function faunaSystem(world: SimWorld): void {
+export function faunaSystem(world: SimWorld, destroyed: number[]): void {
   const dt = world.dt;
   const all = creatures(world);
   if (all.length === 0) return;
@@ -94,7 +94,7 @@ export function faunaSystem(world: SimWorld): void {
     }
 
     advanceStage(eid, stats, dt);
-    act(world, eid, stats, dt);
+    act(world, eid, stats, dt, destroyed);
   }
 }
 
@@ -281,7 +281,8 @@ function act(
   world: SimWorld,
   eid: number,
   stats: ReturnType<typeof faunaStatsFor>,
-  dt: number
+  dt: number,
+  destroyed: number[]
 ): void {
   const stage = Fauna.stage[eid] as FaunaStage;
   const target = Fauna.targetEid[eid]!;
@@ -346,4 +347,5 @@ function act(
   if (!isStructure && !hasComponent(world, Unit, target)) return;
 
   Health.hp[target] = Health.hp[target]! - stats.damagePerS * dt;
+  if (Health.hp[target]! <= 0) destroyed.push(target);
 }

@@ -93,6 +93,11 @@ carries one. This is the class the prototype already implements, and its rules s
 - **In range implies heard.** Gun ranges (400–900 m) sit far inside the distances at which
   any combat hull is passively audible, so guns need no resolution-tier gate — if you can
   shoot it, you have already heard it.
+- **Range is measured in three dimensions**, unlike detection. The Echo Layer resolves on
+  horizontal distance alone, because depth is a commitment timer in the acoustic model —
+  but a gun is not a hydrophone, and §8's claim that a hull below you is safe from guns is
+  only true if the water column is in the arithmetic. Hearing something and being able to
+  shoot it are different facts.
 - **Silent hulls hold fire.** A unit under Silent Running never fires on its own — the
   +40 spike is a decision the player makes, not one the AI volunteers.
 - **Every discharge is loud** (+25 kinetic / +10 energy) and lays battle-site residue at
@@ -137,6 +142,43 @@ resolves**. Consequences, all deliberate:
   Thermal Vein masks whatever hides in it. Where you fight decides what torpedoes can do.
 - **Seekers re-acquire.** The loudest emitter *now* wins — which is why noisemakers work.
 
+### What the launcher is told
+
+A commander sees their own torpedo in full — where it is, which way it points, how loud it
+is, how many seconds of run are left — for the same reason they see their own hulls: it is
+theirs, so showing it leaks nothing.
+
+They are never told what the seeker has **found**. There is no lock indicator, and the
+absence is deliberate rather than an omission: "I have a firm solution on a real hull" is a
+detection the commander did not make, and handing it over as a boolean would let a torpedo
+buy the one thing this game never sells cheaply. A seeker steers; it does not report.
+
+What is left is inference, and that part is intended. A torpedo that turns has heard
+something, and the direction it turns is a bearing. That bearing costs a torpedo — one of
+two — and it dies with the weapon twenty seconds later. It is the bargain Echo Marks strike
+([systems-echo.md](systems-echo.md) §7): the ocean answers, late and never for free.
+
+Two things follow from that, and both are consequences rather than oversights. A seeker's
+pursuit is visible because a commander must be able to see where their own weapon is, and a
+weapon's position is three-dimensional:
+
+- **The chase reveals depth, which nothing else does at that range.** A torpedo matches its
+  target's depth (§8 — that is what makes the crush envelope bite), so a commander watching
+  their own weapon descend learns roughly how deep the thing it is chasing sits. Everywhere
+  else depth arrives only at Tier 3. Here it arrives because the player is watching an
+  object they own, doing what a homing weapon does. Hiding a torpedo's own depth from the
+  commander who launched it would be the more absurd rule.
+- **A seeker may report on a hull you never shot at.** It takes the loudest emitter in its
+  cone, which need not be the contact you aimed at, so a torpedo fired down a corridor can
+  turn toward something you hold no resolution on at all. This is the same rule that makes
+  noisemakers work, read in the other direction, and it is a fair one: the loud hull that
+  stole the torpedo is the hull that was making itself the easiest thing in the water to
+  find.
+
+Neither channel can be closed without hiding a player's own asset from them, so the design
+owns them rather than claiming otherwise. What is bounded is the *price*: both require a
+launched torpedo, both end when it does, and neither is available without spending one.
+
 ### Countermeasures
 
 - **Noisemaker decoy:** any combat hull can deploy one — a drifting emitter at SIG 70 for
@@ -166,11 +208,21 @@ resolves**. Consequences, all deliberate:
 ## 6. Mines — the listening weapon
 
 A mine is the detection formula pointed backwards: it does not emit, it **waits to hear
-you**. Armed SIG 2 — the powered-down band, passively invisible in practice.
+you**. Armed SIG 2 — the powered-down band.
+
+That is quiet, not silent, and the difference is a mechanic rather than a leak. Against a
+baseline listener an armed mine is a directionless smudge from about 400 m and can be
+classified from about 290 m — both *outside* its own 150 m trigger. So a commander creeping
+forward and paying attention can find a field and route around it, while a committed push
+at speed walks into it, which is precisely the discrimination §2 asks the third pole of the
+triangle to make. Past roughly 500 m a mine is inaudible, so a field never announces itself
+at map scale, and active sonar keeps its job: it resolves the whole field to Tier 4 at
+900 m, far beyond anything passive listening reaches.
 
 ### The trigger
 
-A mine has **HYD 45** and detonates when it resolves a hostile emitter within **150 m**.
+A mine detonates when a hostile emitter within **150 m** is louder, at the mine, than a
+fixed **trigger loudness**.
 The trigger threshold is *derived*, not chosen — solved from two SPEC behaviours, in the
 same way `BASE_THRESHOLD` is solved from the active-sonar self-reveal:
 
@@ -178,9 +230,38 @@ same way `BASE_THRESHOLD` is solved from the active-sonar self-reveal:
   water. Silence walks through minefields. That is the point of both systems.
 - A mine **must** trigger on a cruising Corvette (SIG 28) inside 150 m in open water.
 
+A **loudness bar and not a hydrophone rating**, and the distinction is load-bearing. An
+earlier draft of this section gave the mine HYD 45 and had it "resolve" contacts like any
+listener. That would have made the trigger *threshold-scaled*, and therefore movable:
+anything that modifies a listener's HYD — a Cantor dome overhead, a Resonance Storm — would
+have changed how sensitive somebody's minefield was, at a distance, invisibly. A minefield
+whose trigger drifts because a support structure went up two kilometres away is exactly the
+confusion this game trades away for dread. The bar is fixed, and only the water between you
+and it can change what reaches it.
+
 Biome PF applies — it is the same formula. A mine in a Thermal Vein (PF 0.45) is half
 deaf, and a minefield in a trench (PF 1.6) hears you coming from outside its own lethal
 radius. Where minefields work is a property of the map, exactly like everything else.
+
+**The 150 m is a ceiling, and the loudness bar can only bring a hull closer than it.** The
+two rules compose in one direction rather than both: nothing outside 150 m is considered at
+all, and inside it a hull still has to clear the bar. So being *louder* than a cruising
+Corvette buys nothing — a Cruiser at SIG 65 is heard at 150 m and not a metre further, the
+same as the Corvette the bar was calibrated on. Being quieter costs you: the effective
+trigger radius shrinks with signature until it disappears.
+
+That last step is the one worth stating plainly. A Light Scout at cruise (SIG 12) reads
+6.3 at 150 m against a bar of 14.6, and because `perceivedLoudness` clamps at the reference
+distance it never clears the bar at any range — **a mine cannot detect a Light Scout at
+all, even directly overhead.** That is intended. A minefield is a wall against a *committed
+push*, and a scout is exactly the thing you send ahead of one: it survives finding the
+field, it does not clear it, and the army behind it still dies.
+
+An earlier draft of this section had the ceiling working in both directions, with a Cruiser
+tripping mines further out than a Corvette. It never did — the radius check is a hard gate
+ahead of the loudness test — and the version that ships is the better rule anyway: a
+minefield's footprint is a property of the field, so a commander can look at one and know
+what it covers without first knowing what is about to drive into it.
 
 ### The blast
 
@@ -369,15 +450,15 @@ what exists or assumes what does not. The combat loop lives in
 | Doc concept | Prototype today | Implementation note |
 | --- | --- | --- |
 | Guns (§4) | **Implemented** | Hitscan with cooldown; chase on ordered targets, auto-return-fire, silent hulls hold fire; every discharge spikes SIG and lays battle residue |
-| Ordnance acoustics (§3) | Partial | Gun bursts and break-silence exist; no torpedo/mine/noisemaker rows yet |
-| Torpedoes (§5) | Not modelled | Needs projectile entities resolved through the Echo Layer |
-| Countermeasures (§5) | Not modelled | Noisemakers and point defence follow torpedoes |
-| Mines (§6) | Not modelled | Trigger threshold to be derived from the two SPEC behaviours |
-| Firing solutions (§7) | Not modelled | Combat currently ignores tiers (defensible for guns only, per §4) |
-| Vertical combat (§8) | Not modelled | Ordnance PR, depth charges, pursuit-below-PR warning |
-| TTK bands (§9) | **Not met** | Current damage numbers predate this doc; retune within the bands |
-| Retreat dynamics (§10) | Emergent | Falls out of existing ascent/descent and Silent Running rules once seekers exist |
-| Faction kits (§11) | Not modelled | Klaxon bonus, seeker grades, energy class, mine caps |
+| Ordnance acoustics (§3) | **Implemented** | The `ORDNANCE` group in `packages/shared/src/constants.ts` carries the §3 table |
+| Torpedoes (§5) | **Implemented** | `Ordnance` entities with their own SIG; seekers run the standard propagation model in `sim/systems/ordnance.ts` |
+| Countermeasures (§5) | **Implemented** | Noisemaker decoys, and point defence as a target priority inside the terminal range in `sim/systems/combat.ts` |
+| Mines (§6) | **Implemented** | `MINE_TRIGGER_LOUDNESS`, solved from the two SPEC behaviours; caps, arming noise and blast falloff in `sim/systems/ordnance.ts` |
+| Firing solutions (§7) | **Implemented** | `EchoLayer.firingSolution` gates launches at Tier 2 and hands over the same ghost the contact payload carried |
+| Vertical combat (§8) | **Implemented** | Ordnance inherits launcher PR and implodes; depth charges fall at `DEPTH`'s rates with a volumetric blast; the depth ribbon warns before a dive that would crush |
+| TTK bands (§9) | **Implemented** | Weapon damage solved from the bands; `test/ttkBands.test.ts` holds every one, including under the Klaxon |
+| Retreat dynamics (§10) | Emergent | Falls out of the existing ascent/descent and Silent Running rules, now that seekers exist to be starved |
+| Faction kits (§11) | **Implemented** | `FACTION_COMBAT` in `packages/shared/src/constants.ts`, read through `packages/shared/src/combat.ts` |
 
 ---
 

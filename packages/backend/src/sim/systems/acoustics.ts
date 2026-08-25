@@ -13,6 +13,7 @@ import {
   CONSTRUCTION,
   DEPTH,
   HARVEST_THROTTLE,
+  ORDNANCE,
   RESOURCE,
   ResourceKind,
   SILENT_RUNNING,
@@ -28,6 +29,7 @@ import {
   DepthOrder,
   Harvester,
   HarvestMode,
+  Laying,
   SilentRunning,
   Structure,
   UnderConstruction,
@@ -103,6 +105,15 @@ export function acousticsSystem(world: SimWorld): void {
     // Ascent deliberately contributes nothing; rising is the quiet direction.
     if (hasComponent(world, DepthOrder, eid) && DepthOrder.descending[eid] === 1) {
       sig = Math.max(sig, DEPTH.DESCENT_SIG);
+    }
+
+    // Laying a mine is construction, and construction is loud
+    // (docs/systems-combat.md §6). A floor for the same reason descent is one:
+    // it must never make an already-louder hull quieter, and it must hold
+    // through a hull that tries to go silent mid-lay. The field it produces is
+    // silent — the counter-play is hearing it *being built*.
+    if (hasComponent(world, Laying, eid) && Laying.remainingS[eid]! > 0) {
+      sig = Math.max(sig, ORDNANCE.MINE.SIG_LAYING);
     }
 
     sig = applySpikeDecay(world, eid, sig);
