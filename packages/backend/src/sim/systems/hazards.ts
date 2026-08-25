@@ -115,18 +115,6 @@ export function isSimulated(kind: HazardKind): boolean {
 }
 
 /**
- * How long this kind lies dormant between events.
- *
- * Exported so the seeder can stagger a hazard across *its own* cycle. It used
- * to stagger every kind across the eruption's 55 s, which left a storm's 100 s
- * dormancy only ever starting in its first 55 — never wrong, but a third kind
- * with a third dormancy made the wart worth removing rather than copying.
- */
-export function dormantSecondsFor(kind: HazardKind): number {
-  return CYCLES[kind]?.dormantS ?? 0;
-}
-
-/**
  * How long the current phase lasts for this hazard, right now.
  *
  * Not a constant, because §1's Hadron interaction — "can predict eruptions via
