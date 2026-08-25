@@ -12,21 +12,17 @@
  * A 1v1 map, so it has two spawns — the reason spawn counts are map data.
  */
 
-import { Biome, ResourceKind } from '@echoes/shared';
+import { ABYSSAL_RIFT_CORRIDOR_HEADER, Biome, ResourceKind } from '@echoes/shared';
 import type { MapDefinition } from './types.ts';
 
-const W = 10000;
-const H = 6000;
+// Long and narrow, because the doc's layout is "central trench corridor
+// (long, narrow, deep)" and a square map cannot express that.
+const W = ABYSSAL_RIFT_CORRIDOR_HEADER.widthM;
+const H = ABYSSAL_RIFT_CORRIDOR_HEADER.heightM;
 
 export const ABYSSAL_RIFT_CORRIDOR: MapDefinition = {
-  id: 'abyssal-rift-corridor',
-  name: 'Abyssal Rift Corridor',
+  ...ABYSSAL_RIFT_CORRIDOR_HEADER,
   doc: 'docs/maps.md — Map Type 3',
-  idealUse: '1v1 competitive; high-skill micro + positioning.',
-  // Long and narrow, because the doc's layout is "central trench corridor
-  // (long, narrow, deep)" and a square map cannot express that.
-  widthM: W,
-  heightM: H,
   cellM: 250,
   // The shelf either side of the rift. "Vertical depth layers with fog
   // separation" is this map's third Layout Logic bullet, and it is the floors

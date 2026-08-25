@@ -11,19 +11,15 @@
  * or quickly around the outside, never both.
  */
 
-import { Biome, ResourceKind } from '@echoes/shared';
+import { Biome, ResourceKind, VENTFRONT_DIVIDE_HEADER } from '@echoes/shared';
 import type { MapDefinition } from './types.ts';
 
-const W = 8000;
-const H = 8000;
+const W = VENTFRONT_DIVIDE_HEADER.widthM;
+const H = VENTFRONT_DIVIDE_HEADER.heightM;
 
 export const VENTFRONT_DIVIDE: MapDefinition = {
-  id: 'ventfront-divide',
-  name: 'The Ventfront Divide',
+  ...VENTFRONT_DIVIDE_HEADER,
   doc: 'docs/maps.md — Map Type 1',
-  idealUse: 'Competitive 1v1 or 2v2; high-pressure mid-control gameplay.',
-  widthM: W,
-  heightM: H,
   cellM: 250,
   // The seabed the map starts at, deep enough to hold the centre crystal field
   // at 2,400 m. Everything below carves into this (docs/systems-depth.md §1).
