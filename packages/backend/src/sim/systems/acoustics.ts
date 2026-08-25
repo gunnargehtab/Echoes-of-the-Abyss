@@ -36,7 +36,7 @@ import {
   Unit,
   Velocity,
 } from '../components.ts';
-import { stormModifiers } from './hazards.ts';
+import { currentModifiers, stormModifiers } from './hazards.ts';
 import type { SimWorld } from '../world.ts';
 
 const emitters = defineQuery([Acoustic, Unit, Velocity, SilentRunning]);
@@ -121,6 +121,12 @@ export function acousticsSystem(world: SimWorld): void {
     // is added before the veil takes its cut: the cloud muffles whatever the
     // hull is doing, and being rattled by a storm is part of that.
     sig += stormModifiers(world, eid).sig;
+    // Fighting a cold shock current is work, and work is noise
+    // (docs/hazards.md §8). Added in the same place and for the same reason as
+    // the storm's: it is something happening *to* the hull, so the veil below
+    // still takes its cut of it. Riding the current adds nothing at all, which
+    // is what makes crossing one a decision.
+    sig += currentModifiers(world, eid).sig;
     // A Spore Veil muffles the *derived* SIG — whatever the unit is doing,
     // the cloud takes its cut last (auras system, symmetric).
     sig *= Acoustic.sigFactor[eid]! || 1;

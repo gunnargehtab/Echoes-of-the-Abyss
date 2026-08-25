@@ -298,6 +298,14 @@ export interface HazardState {
   progress: number;
   /** Seconds left in the current phase — the number the HUD can show. */
   remainingS: number;
+  /**
+   * Which way a current flows, in radians, for `cold-shock` hazards.
+   *
+   * Public, like everything else on a hazard: docs/hazards.md §8 makes the
+   * direction a learnable property of the map rather than something a player
+   * discovers by losing their line to it. Absent for every other kind.
+   */
+  flowRad?: number;
 }
 
 /**

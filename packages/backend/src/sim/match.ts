@@ -22,6 +22,7 @@ import {
   DEPTH,
   Faction,
   HarvestThrottle,
+  HAZARDS,
   PRODUCIBLE,
   ResourceKind,
   SIM,
@@ -34,7 +35,6 @@ import {
   EchoMarkKind,
   FaunaSpecies,
   faunaStatsFor,
-  HAZARDS,
   HazardPhase,
   OrdnanceKind,
   depthBandFor,
@@ -333,6 +333,11 @@ export class Match {
         radiusM: site.radiusM,
         phase: HazardPhase.Dormant,
         elapsedS: stagger * HAZARDS.ERUPTION.DORMANT_S,
+        // Authored in degrees and stored in radians: docs/hazards.md §8 makes a
+        // current's direction map data, and the per-tick path should never pay
+        // for the conversion. A site that forgets it does not flow at all,
+        // which maps.test.ts refuses rather than silently shipping still water.
+        flowRad: ((site.flowDeg ?? 0) * Math.PI) / 180,
         stabilisedS: 0,
       });
     }

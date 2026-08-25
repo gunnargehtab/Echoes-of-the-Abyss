@@ -34,7 +34,7 @@ import {
   type HazardState,
 } from '@echoes/shared';
 import { defineQuery, hasComponent } from 'bitecs';
-import { Acoustic, Health, Owner, Position, Structure } from '../components.ts';
+import { Acoustic, Fauna, Health, Owner, Position, Structure, Velocity } from '../components.ts';
 import type { SimWorld } from '../world.ts';
 
 /**
@@ -73,6 +73,12 @@ const CYCLES: Partial<Record<HazardKind, Cycle>> = {
     activeS: HAZARDS.STORM.ACTIVE_S,
     decayS: HAZARDS.STORM.DECAY_S,
   },
+  'cold-shock': {
+    dormantS: HAZARDS.COLD_SHOCK.DORMANT_S,
+    warningS: HAZARDS.COLD_SHOCK.WARNING_S,
+    activeS: HAZARDS.COLD_SHOCK.ACTIVE_S,
+    decayS: HAZARDS.COLD_SHOCK.DECAY_S,
+  },
 };
 
 /** A hazard the simulation is running. */
@@ -85,6 +91,14 @@ export interface Hazard {
   phase: HazardPhase;
   /** Seconds spent in the current phase. */
   elapsedS: number;
+  /**
+   * Which way a current flows, in radians, for `cold-shock` sites.
+   *
+   * Converted from the map's authored degrees once, here, so the per-tick path
+   * never pays a conversion. Zero for every other kind, which is harmless
+   * because nothing else reads it.
+   */
+  flowRad: number;
   /**
    * Extra dormancy bought by a Bathyarch presence.
    *
@@ -250,6 +264,125 @@ function applyEffects(world: SimWorld, hazard: Hazard, dt: number, destroyed: nu
 
   if (hazard.kind === 'geothermal-eruption') applyEruption(world, hazard, dt * taper, destroyed);
   else if (hazard.kind === 'resonance-storm') applyStorm(world, hazard, dt * taper, destroyed);
+  else if (hazard.kind === 'cold-shock') applyCurrent(world, hazard, dt * taper);
+}
+
+/** Reused across hulls and ticks, like movement's — the drift allocates nothing. */
+const drift = { x: 0, y: 0 };
+
+/**
+ * Cold shock currents — docs/hazards.md §8.
+ *
+ * The first *sustained* force in the game, and the first directional one. An
+ * eruption shoves you away from a point for four seconds; a current carries you
+ * one way for forty, which is what makes it something a player routes around
+ * rather than only flees.
+ *
+ * Displacement, never momentum. Hulls in this simulation steer at their target
+ * every tick and carry no inertia, so a pushed hull re-aims next tick and crabs
+ * across the flow instead of being knocked off it — which is exactly "can push
+ * units off course" (doc §8) and costs the simulation no energy it would then
+ * have to take back out (see separation.ts on why that matters).
+ *
+ * Unlike eruption knockback this goes through `resolveStep`, so the water does
+ * not push a hull into ground it does not fit in. Knockback predates ground and
+ * still only clamps to the map; worth aligning, but that is a change to the
+ * eruption's behaviour and not this one's.
+ */
+function applyCurrent(world: SimWorld, hazard: Hazard, dt: number): void {
+  const flowX = Math.cos(hazard.flowRad);
+  const flowY = Math.sin(hazard.flowRad);
+  const push = HAZARDS.COLD_SHOCK.DRIFT_MPS * dt;
+  const terrain = world.terrain;
+  const entities = affected(world);
+
+  for (let i = 0; i < entities.length; i++) {
+    const eid = entities[i]!;
+    if (Health.hp[eid]! <= 0) continue;
+    // Anchored, exactly as they are against knockback.
+    if (hasComponent(world, Structure, eid)) continue;
+    // "Hadron unaffected (mag-propulsion)" — doc §8. The one hazard a faction
+    // simply ignores: no drift here, and no speed or SIG cost below.
+    if (Owner.faction[eid] === Faction.Hadron) continue;
+    // "Abyssal creatures freeze briefly" — doc §8. Frozen means still, so the
+    // water does not carry them either; faunaSystem holds them in place for
+    // the same reason and reads the same helper.
+    if (hasComponent(world, Fauna, eid)) continue;
+
+    const x = Position.x[eid]!;
+    const y = Position.y[eid]!;
+    const dx = x - hazard.x;
+    const dy = y - hazard.y;
+    if (dx * dx + dy * dy > hazard.radiusM * hazard.radiusM) continue;
+
+    terrain.resolveStep(x, y, x + flowX * push, y + flowY * push, Position.depth[eid]!, drift);
+    Position.x[eid] = drift.x;
+    Position.y[eid] = drift.y;
+  }
+}
+
+/**
+ * The current acting at a point, or undefined. Active phases only.
+ *
+ * Decay deliberately does not count here: a subsiding current still drifts (the
+ * taper in `applyEffects` halves it) but stops freezing fauna and stops costing
+ * speed and noise. Otherwise the tail of every current would be a second,
+ * quieter hazard with no telegraph of its own.
+ */
+export function activeCurrentAt(world: SimWorld, x: number, y: number): Hazard | undefined {
+  for (const hazard of world.hazards) {
+    if (hazard.kind !== 'cold-shock') continue;
+    if (hazard.phase !== HazardPhase.Active) continue;
+    const dx = x - hazard.x;
+    const dy = y - hazard.y;
+    if (dx * dx + dy * dy <= hazard.radiusM * hazard.radiusM) return hazard;
+  }
+  return undefined;
+}
+
+/**
+ * What a current costs a hull: speed always, SIG only if it fights.
+ *
+ * Returned rather than written, like `stormModifiers` and for the same reason —
+ * SIG is recomputed from scratch every tick by the acoustics pass, so a hazard
+ * writing it directly would be overwritten inside the same step.
+ *
+ * The SIG term is doc §8's sound argument: a hull driving into moving water is
+ * loading its engines against it, and work is noise. It scales with how
+ * *directly* the hull opposes the flow — nothing when riding it, all of it
+ * head-on — so drifting is free and silent, and crossing announces itself in
+ * proportion to how hard you insist on your own line.
+ *
+ * Reads `Velocity`, so it may only be called for entities that carry it. The
+ * acoustics pass runs after movement, so the heading it sees is this tick's.
+ */
+export function currentModifiers(world: SimWorld, eid: number): { speed: number; sig: number } {
+  const none = { speed: 1, sig: 0 };
+  if (world.hazards.length === 0) return none;
+  if (Owner.faction[eid] === Faction.Hadron) return none;
+
+  const hazard = activeCurrentAt(world, Position.x[eid]!, Position.y[eid]!);
+  if (hazard === undefined) return none;
+
+  // "Pelagia slows dramatically" — doc §8. The faction that already trades
+  // speed for quiet pays twice in cold water.
+  const speed =
+    Owner.faction[eid] === Faction.Pelagia
+      ? HAZARDS.COLD_SHOCK.PELAGIA_SPEED_MULTIPLIER
+      : HAZARDS.COLD_SHOCK.SPEED_MULTIPLIER;
+
+  const vx = Velocity.x[eid]!;
+  const vy = Velocity.y[eid]!;
+  const speedSq = vx * vx + vy * vy;
+  // Under no orders and going nowhere: carried, not working, and silent.
+  if (speedSq === 0) return { speed, sig: 0 };
+
+  const inverse = 1 / Math.sqrt(speedSq);
+  // -1 straight into the flow, +1 with it.
+  const alignment =
+    vx * inverse * Math.cos(hazard.flowRad) + vy * inverse * Math.sin(hazard.flowRad);
+  const opposition = (1 - alignment) / 2;
+  return { speed, sig: HAZARDS.COLD_SHOCK.FIGHTING_SIG * opposition };
 }
 
 function applyEruption(world: SimWorld, hazard: Hazard, dt: number, destroyed: number[]): void {
@@ -386,6 +519,7 @@ export function hazardStates(world: SimWorld): HazardState[] {
       phase: hazard.phase,
       progress: duration === 0 ? 1 : Math.min(1, hazard.elapsedS / duration),
       remainingS: Math.max(0, duration - hazard.elapsedS),
+      ...(hazard.kind === 'cold-shock' ? { flowRad: hazard.flowRad } : {}),
     });
   }
   return out;

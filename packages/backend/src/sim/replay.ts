@@ -37,6 +37,14 @@ import { eidOfLocalId } from './world.ts';
 
 /** The current replay wire format. Bump when a change breaks old files. */
 /**
+ * 7: cold shock currents run. A `cold-shock` site is now a cycling hazard that
+ * drifts hulls along an authored bearing, slows everything but the Knights,
+ * adds SIG to anything driving against it, and freezes fauna while it flows
+ * (docs/hazards.md §8). A v6 recording on the Kelp Labyrinth diverges the
+ * first time anything crosses a current site; recordings on the other two maps
+ * are unaffected in substance, but the format still moves, because a replay
+ * that silently means something different is worse than one that is refused.
+ *
  * 6: the thermocline is modelled. Detection between a hull above 1,100 m and
  * one below 1,300 m is multiplied by 0.3, and both ends inside the duct by
  * 1.2 (docs/systems-echo.md §3). Echo Marks gained the depth of the event and
@@ -69,7 +77,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 6;
+export const REPLAY_FORMAT_VERSION = 7;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =

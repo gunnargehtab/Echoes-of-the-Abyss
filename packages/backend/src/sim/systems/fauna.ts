@@ -48,6 +48,7 @@ import {
   Structure,
   Unit,
 } from '../components.ts';
+import { activeCurrentAt } from './hazards.ts';
 import type { SimWorld } from '../world.ts';
 
 /** Slot fauna are owned by. Never a player, so every player can hear them. */
@@ -313,7 +314,12 @@ function act(
   const dx = toX - x;
   const dy = toY - y;
   const distance = Math.hypot(dx, dy);
-  if (distance > stopAtM) {
+  // "Abyssal creatures freeze briefly" — docs/hazards.md §8. Movement only: a
+  // frozen creature still hears, still holds its target, and still bites what
+  // is already beside it, because a predator that went inert would make a cold
+  // shock a safe place to stand rather than a cold one. The water does not
+  // carry it either — hazards.ts skips fauna in the drift for the same reason.
+  if (distance > stopAtM && activeCurrentAt(world, x, y) === undefined) {
     const travel = Math.min(stats.speed * dt, distance - stopAtM);
     // Ground refuses a creature the same way it refuses a hull, and for the
     // same reason: a Sounder inside a plateau is an emitter nobody can reach.
