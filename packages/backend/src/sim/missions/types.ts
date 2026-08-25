@@ -120,7 +120,7 @@ export interface MissionParty {
 export type MissionPredicate =
   | { kind: 'extract'; role: MissionRole; region: string; count: number }
   | { kind: 'survive'; role: MissionRole; count: number }
-  | { kind: 'quiet'; ceilingSig: number }
+  | { kind: 'quiet'; role: MissionRole; ceilingSig: number }
   | { kind: 'endure'; ticks: number };
 
 export interface MissionObjective {

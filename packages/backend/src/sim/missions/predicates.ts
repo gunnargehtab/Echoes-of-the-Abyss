@@ -49,7 +49,9 @@ export function progressOf(
       if (region === undefined) return { done: 0, of: predicate.count };
       const ids = roleIds(predicate.role);
       const inside = own.units.filter((u) => ids.has(u.id) && inRegion(region, u.x, u.y));
-      return { done: inside.length, of: predicate.count };
+      // Capped, so a third hull arriving cannot render "2 of 1". The count
+      // is what the court reads out, and a court does not over-count.
+      return { done: Math.min(inside.length, predicate.count), of: predicate.count };
     }
     case 'survive': {
       const ids = roleIds(predicate.role);
@@ -57,10 +59,19 @@ export function progressOf(
       // which is why survival needs no death bookkeeping to read correctly.
       return { done: own.units.filter((u) => ids.has(u.id)).length, of: predicate.count };
     }
-    case 'quiet':
-      // peakSig is the loudest of the player's own hulls — the headline HUD
-      // number, and the same one the ceiling is stated against.
-      return { done: own.peakSig <= predicate.ceilingSig ? 1 : 0, of: 1 };
+    case 'quiet': {
+      // Measured over the hulls the order actually binds, never `own.peakSig`.
+      //
+      // That field is the peak across everything the player owns, structures
+      // included — and in the prologue the loudest thing on the player's slot
+      // is the court's own array, which sits there only so `aurasSystem` will
+      // grant it (docs/mission-sorrowgate.md §4). Reading it would have the
+      // court telling a faultless flight it was shoving, and then telling it
+      // it had complied at the moment the colossus destroyed the array.
+      const ids = roleIds(predicate.role);
+      const peak = peakSigOf(own, ids);
+      return { done: peak <= predicate.ceilingSig ? 1 : 0, of: 1 };
+    }
     case 'endure':
       return { done: Math.max(0, own.tick - startedTick), of: predicate.ticks };
   }
@@ -75,6 +86,22 @@ export function isMet(
 ): boolean {
   const { done, of } = progressOf(predicate, own, roleIds, regionById, startedTick);
   return done >= of;
+}
+
+/**
+ * The loudest of a named set of the player's own hulls.
+ *
+ * Shared by the `quiet` predicate and the runtime's silence ledger so the
+ * number the court enforces and the number it reads out are the same one. An
+ * empty set is silent rather than loud: a rule with nothing left to bind
+ * cannot be broken.
+ */
+export function peakSigOf(own: EchoSnapshot, ids: ReadonlySet<number>): number {
+  let peak = 0;
+  for (const unit of own.units) {
+    if (ids.has(unit.id) && unit.sig > peak) peak = unit.sig;
+  }
+  return peak;
 }
 
 /** Inclusive of the edges: a hull on the concourse line is on the concourse. */

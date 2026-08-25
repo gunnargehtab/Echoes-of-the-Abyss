@@ -49,7 +49,7 @@ import {
   type SimWorld,
 } from '../world.ts';
 import { projectMissionView, type MissionState } from './view.ts';
-import { isMet } from './predicates.ts';
+import { isMet, peakSigOf } from './predicates.ts';
 import type { MissionDefinition, MissionRole, MissionTag } from './types.ts';
 
 /** Simulation ticks between Echo passes — the cadence this runtime runs at. */
@@ -474,16 +474,12 @@ export class MissionRuntime {
    * court's own freight being what it is, and the array would be withdrawn for
    * a rule nobody broke.
    *
-   * Falls back to the fleet peak only if no escort is left to measure, which
-   * cannot happen in this mission — nothing can destroy the flight.
+   * Shares `peakSigOf` with the `quiet` predicate on purpose: the number the
+   * court enforces and the number it reads out to the player have to be the
+   * same one, and they were not until a test caught them disagreeing.
    */
   private flightPeakSig(own: EchoSnapshot): number {
-    const escorts = this.idsFor('escort');
-    let peak = -1;
-    for (const unit of own.units) {
-      if (escorts.has(unit.id) && unit.sig > peak) peak = unit.sig;
-    }
-    return peak < 0 ? 0 : peak;
+    return peakSigOf(own, this.idsFor('escort'));
   }
 
   /** True when any escort hull is inside the authored radius of this tender. */

@@ -393,7 +393,7 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       // The simulation does not clamp loudness; it notices it. Breaching this
       // costs the flight the array and never the mission, which is §4 stated
       // flatly so it stays true.
-      predicate: { kind: 'quiet', ceilingSig: 20 },
+      predicate: { kind: 'quiet', role: 'escort', ceilingSig: 20 },
     },
     {
       id: 'tender-one',
