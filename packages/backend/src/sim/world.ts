@@ -56,6 +56,14 @@ import { SpatialHash } from './spatialHash.ts';
 import type { QueuedOrder } from './systems/orderQueue.ts';
 import { Terrain } from './terrain.ts';
 
+/**
+ * How many buckets a seeker's first sense is spread across.
+ *
+ * Twelve, matching the 60 Hz ticks in one 0.2 s seeker interval, so consecutive
+ * ordnance lands on consecutive ticks and a salvo spreads perfectly flat.
+ */
+const SEEKER_STAGGER_STEPS = 12;
+
 /** Per-player mutable economy state. Lives outside the ECS: it is per-slot, not per-entity. */
 export interface PlayerEconomy {
   nodules: number;
@@ -123,6 +131,17 @@ export interface SimWorld extends IWorld {
   unitGrid: SpatialHash;
   /** Reused query buffer, so separation allocates nothing per tick. */
   separationBuffer: number[];
+  /**
+   * Broadphase for torpedo fuses, rebuilt each tick a torpedo is in the water.
+   *
+   * A third grid rather than a reuse of either of the others, for the reason
+   * given above: `unitGrid` holds only hulls, and a fuse has to be able to
+   * detonate on a Foundry. Sized for the fuse envelope (a few hundred metres at
+   * most) rather than for audibility.
+   */
+  fuseGrid: SpatialHash;
+  /** Reused query buffer for the above. */
+  fuseBuffer: number[];
   /**
    * Pending orders per unit — the plan behind the order it is executing.
    * Simulation state, not a client convenience: a reconnecting player must
@@ -213,6 +232,8 @@ export function createSimWorld(terrain: Terrain, dt: number, seed: number): SimW
   world.nextLocalId = 0;
   world.unitGrid = new SpatialHash(SEPARATION.CELL_M);
   world.separationBuffer = [];
+  world.fuseGrid = new SpatialHash(SEPARATION.CELL_M);
+  world.fuseBuffer = [];
   world.orderQueues = new Map();
   world.selfEvents = [];
   world.marks = new EchoMarkLayer();
@@ -393,7 +414,22 @@ export function spawnOrdnance(world: SimWorld, opts: SpawnOrdnanceOptions): numb
   Ordnance.aimX[eid] = opts.aimX ?? opts.x;
   Ordnance.aimY[eid] = opts.aimY ?? opts.y;
   Ordnance.pressureRating[eid] = opts.pressureRating;
-  Ordnance.seekerCooldownS[eid] = 0;
+  // Staggered, so a salvo does not re-acquire in lockstep.
+  //
+  // Every seeker sensing on the same tick is the difference between a smooth
+  // cost and a spike: `acquire` walks the acoustic set and runs a terrain path
+  // integral per in-cone candidate, so forty torpedoes launched together did
+  // all of that work on one tick in twelve and none on the other eleven.
+  // Spreading the first sense over the interval turns the spike into the
+  // average without changing how often any individual seeker looks.
+  //
+  // From the *match-local* id and never the entity id, exactly as the fauna
+  // sense stagger above: bitecs allocates entity ids from a process-global
+  // counter, so keying on them would make two matches in one process stagger
+  // differently and diverge.
+  Ordnance.seekerCooldownS[eid] =
+    (((localIdOf(world, eid) ?? 0) % SEEKER_STAGGER_STEPS) / SEEKER_STAGGER_STEPS) *
+    ORDNANCE.TORPEDO.SEEKER_INTERVAL_S;
   Ordnance.wakeCooldownS[eid] = 0;
   // Every field, every time — bitecs recycles entity ids, so anything left
   // unwritten here is inherited from whatever last held this id. These two

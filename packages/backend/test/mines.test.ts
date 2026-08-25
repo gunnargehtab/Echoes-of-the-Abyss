@@ -210,10 +210,14 @@ describe('mines', () => {
 
   it('kills a scout caught in a blast something louder set off', () => {
     // §9's band — "Mine (single) vs Light Scout: killed" — is about the blast,
-    // not the trigger. The blast reaches 200 m where the trigger hears only
-    // 150, so a scout escorting the hull that trips a mine dies with it. That
-    // gap between the two radii is what makes a minefield punish formations
-    // rather than individuals.
+    // not the trigger, and the two have nothing to do with each other: a scout
+    // cannot set a mine off at any range (see above), and still dies to one.
+    // That is what makes a minefield punish *formations* rather than
+    // individuals — the hull that trips it takes its neighbours with it.
+    //
+    // "Caught in the blast" means close, because damage falls off linearly to
+    // zero at the 200 m rim: a 180 HP scout needs a 0.6 share of 300, so it
+    // dies inside about 80 m and merely loses paint at 150.
     const match = openWaterMatch();
     armedMineAt(match, 6000, 6000);
 
@@ -224,15 +228,28 @@ describe('mines', () => {
       x: 5400,
       y: 6000,
     });
+    // Stationed inside the blast and outside the trigger, rather than racing
+    // the Corvette across the field.
+    //
+    // The first version had both hulls driving past, and it was measuring a
+    // coincidence: a Light Scout is much the faster of the two, so whether it
+    // was still inside the 200 m blast when the Corvette tripped the mine came
+    // down to which tick the mine happened to sense on. Sense phase is
+    // arbitrary — the interval is 0.2 s and nothing aligns it to an intruder's
+    // arrival — so the margin moved the moment mines were staggered, and the
+    // test failed without the claim it was written for having changed at all.
+    //
+    // 60 m off the mine: inside the lethal part of the blast, and a scout
+    // cannot trip a mine at any range regardless, so a detonation here can only
+    // have been the Corvette's doing.
     const escort = spawnUnit(match.world, {
       kind: UnitKind.LightScout,
       slot: 1,
       faction: Faction.Pelagia,
-      x: 5400,
+      x: 6000,
       y: 6060,
     });
     match.orderMove(1, corvette, 6600, 6000);
-    match.orderMove(1, escort, 6600, 6060);
     advance(match, 25);
 
     assert.ok(Health.hp[escort]! <= 0, 'the scout should die in the blast it did not trigger');
