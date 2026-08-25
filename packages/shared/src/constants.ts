@@ -749,8 +749,35 @@ export const HAZARDS = {
     ACTIVE_S: 4,
     /** Subsiding: damage tapers rather than stopping dead. */
     DECAY_S: 5,
-    /** Hull damage per second at the centre, falling off to the rim. */
-    DAMAGE_PER_S: 90,
+    /**
+     * Hull damage per second at the centre, falling off linearly to the rim.
+     *
+     * Solved rather than picked, from the rule the number should express: **one
+     * full pass at the centre of a plume is lethal to the most fragile hull in
+     * the roster.** A pass is ACTIVE_S at full rate plus DECAY_S at half, so
+     * `damage x (4 + 5/2) = damage x 6.5`, and a Harvester is 300 HP —
+     * 300 / 6.5 = 46.2, rounded up so the centre actually kills.
+     *
+     * It was 90, which is 585 at the centre: not "lethal to a Harvester" but
+     * lethal to nearly everything, twice over. That surfaced as a map problem
+     * rather than a tuning one (#179). On Ventfront Divide the Resonance
+     * Crystal field sits 500 m inside *both* authored plumes, where the falloff
+     * is 0.286 — and 90 put a combined pass at 334 HP against a 300 HP hull, so
+     * the resource that gates the tech tree could not be worked at all by a
+     * standing order. At this figure the same combined pass is 175, which
+     * wounds badly and leaves the trip possible.
+     *
+     * TUNABLE, like the rest of this group: docs/hazards.md fixes the
+     * behaviour and the faction interactions, never the figures. What it does
+     * fix is that the warning must be actionable (§ "the warning phase is a
+     * design constraint"), and this is the other half of that bargain — acting
+     * on the warning saves you, ignoring it costs you the hull.
+     *
+     * `hazards.test.ts` pins the derivation, so a change to the roster's
+     * frailest hull or to the phase durations fails loudly instead of quietly
+     * making eruptions toothless.
+     */
+    DAMAGE_PER_S: 47,
     /** Structures "take reduced damage (but still vulnerable)" — doc §1. */
     STRUCTURE_DAMAGE_MULTIPLIER: 0.35,
     /** Metres per second a caught hull is pushed outward. */

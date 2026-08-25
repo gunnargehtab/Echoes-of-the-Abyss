@@ -185,33 +185,36 @@ describe('Ventfront Divide', () => {
 });
 
 describe('Ventfront Divide — the crystal field sits inside both vents', () => {
-  it('records the overlap, because a harvester left on that field dies to it', () => {
+  it('records the overlap, which is what makes the eruption figure load-bearing', () => {
     // Map *data*, asserted deliberately rather than as trivia, because the
     // gameplay consequence was hidden for a while and should not be again.
     //
     // The Resonance Crystal field is at (4000, 4000). Both geothermal
     // eruptions — (4000, 3500) and (4000, 4500), radius 700 — reach it, from
-    // 500 m away each. Their staggers land about a second apart in an 84 s
-    // cycle, so they fire effectively together, and against ERUPTION
-    // .DAMAGE_PER_S 90 a 300 HP Harvester does not survive one combined pass.
-    // A hull put on the field by `Match.orderHarvest` — the ordinary standing
-    // order, which does not withdraw for a warning — is dead at roughly t+41 s
-    // having banked nothing.
+    // 500 m away each, where the linear falloff leaves 0.286 of centre damage.
+    // Their staggers land about a second apart in an 84 s cycle, so they fire
+    // effectively together and the field takes a *double* pass.
     //
-    // That was invisible until hazard kills became real deaths: the harvester
-    // was being killed and carrying on hauling at zero HP, so the round trip
-    // appeared to work and was completed by a corpse. The two round-trip tests
-    // in match.test.ts now run on a hazard-free map, which is the right way to
-    // test an economy mechanic in isolation — but it means nothing there will
-    // ever notice this again. Hence here.
+    // This is the geometry that makes ERUPTION.DAMAGE_PER_S load-bearing rather
+    // than cosmetic, which is why it is asserted rather than left as trivia. At
+    // the old figure of 90 a combined pass was 334 against a 300 HP Harvester,
+    // so a hull put here by `Match.orderHarvest` — the ordinary standing order,
+    // which does not withdraw for a warning — died at t+41 s having banked
+    // nothing, and the resource gating the tech tree could not be worked at all
+    // (#179). The figure is now solved from the lethality rule instead, and the
+    // same pass is 175; measured, a harvester banks at t+159 s and comes home.
     //
-    // Whether it is a *defect* is a design question and deliberately not
-    // decided by this test. Crystal is meant to be dangerous ("nobody works it
-    // without committing"), the eruption gives a 20 s warning, and a commander
-    // who watches for it can pull out. What is not obviously intended is that
-    // the resource gating the whole tech tree cannot be worked at all by a
-    // standing order on the shipped default map. If either the field or a vent
-    // moves, this test fails and whoever moved it should read this note.
+    // None of that was visible until hazard kills became real deaths: the
+    // harvester was being killed and carrying on hauling at zero HP, so the
+    // round trip appeared to work and was being completed by a corpse. The two
+    // round-trip tests in match.test.ts run on a hazard-free map, which is the
+    // right way to test an economy mechanic in isolation — but it means nothing
+    // there will ever notice this. Hence here.
+    //
+    // If either the field or a vent moves, this test fails, and whoever moved
+    // it should check `hazards.test.ts`'s "leaves the Ventfront crystal field
+    // workable" alongside it — that one asserts the consequence this one only
+    // records the cause of.
     const map = VENTFRONT_DIVIDE;
     const field = map.resources.find((r) => r.kind === ResourceKind.ResonanceCrystal)!;
     assert.ok(field !== undefined, 'the map should seed a crystal field');

@@ -25,6 +25,7 @@ import {
   SIM,
   StructureKind,
   UnitKind,
+  ResourceKind,
   statsFor,
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
@@ -654,6 +655,76 @@ describe('a hazard kill is a real death', () => {
       hasComponent(match.world, Unit, prey),
       false,
       'an entity at zero HP must not survive the tick it reached zero'
+    );
+  });
+});
+
+describe('eruption lethality is solved, not picked', () => {
+  const passDamageAtCentre = () =>
+    HAZARDS.ERUPTION.DAMAGE_PER_S * (HAZARDS.ERUPTION.ACTIVE_S + HAZARDS.ERUPTION.DECAY_S * 0.5);
+
+  it('kills the frailest hull in the roster at the centre of a plume, and no more than that', () => {
+    // The rule DAMAGE_PER_S expresses: one full pass at the centre is lethal to
+    // the most fragile hull, and is not a blanket delete. A pass is ACTIVE_S at
+    // full rate plus DECAY_S at half.
+    //
+    // It used to be 90, which put a centre pass at 585 — lethal to nearly the
+    // whole roster twice over, and the reason #179 existed: the Ventfront
+    // crystal field sits inside two plumes at once, so the resource gating the
+    // tech tree could not be worked at all.
+    //
+    // Two-sided on purpose. The lower bound stops the number drifting down
+    // until eruptions are scenery; the upper bound stops it drifting back up
+    // until every hull in a plume is simply removed, which is what made a
+    // 20 s warning pointless for anything that could not outrun it.
+    // Anchored on the Harvester, not on the literally frailest hull. The first
+    // version of this took `Math.min` across the roster, which is the Light
+    // Scout at 180 HP — a bound so loose it still passes at DAMAGE_PER_S 30,
+    // where a Harvester strolls through a plume centre and eruptions are
+    // scenery. Caught by mutating the constant: the test claimed to pin a
+    // derivation it did not pin.
+    //
+    // The Harvester is the right hull for the same reason docs/hazards.md
+    // already uses it to size the warning window ("the slowest hull in the
+    // roster clearing the largest authored plume"): it is the one with business
+    // sitting inside a plume, because that is where the resource fields are.
+    const centre = passDamageAtCentre();
+    const worker = statsFor(UnitKind.Harvester).maxHp;
+    assert.ok(
+      centre >= worker,
+      `a full pass at the centre should kill a Harvester (${worker} HP), deals ${centre.toFixed(0)}`
+    );
+    assert.ok(
+      centre < statsFor(UnitKind.Corvette).maxHp,
+      `...and should not also delete a warship outright, deals ${centre.toFixed(0)} vs ` +
+        `${statsFor(UnitKind.Corvette).maxHp} HP`
+    );
+  });
+
+  it('leaves the Ventfront crystal field workable, which is what #179 was about', () => {
+    // The map case, asserted as arithmetic rather than by running a harvester
+    // for three minutes. The field is 500 m from both authored plumes (see
+    // maps.test.ts), damage falls off linearly to the rim, and both vents fire
+    // effectively together.
+    const map = VENTFRONT_DIVIDE;
+    const field = map.resources.find((r) => r.kind === ResourceKind.ResonanceCrystal)!;
+    const combined = map.hazards
+      .filter((h) => h.kind === 'geothermal-eruption')
+      .map((h) => Math.hypot(h.x - field.x, h.y - field.y))
+      .filter((d) => d <= 700)
+      .reduce((sum, d) => sum + passDamageAtCentre() * (1 - d / 700), 0);
+
+    const harvester = statsFor(UnitKind.Harvester).maxHp;
+    assert.ok(
+      combined < harvester,
+      `a harvester on the crystal field must survive a combined pass: ${combined.toFixed(0)} ` +
+        `damage vs ${harvester} HP`
+    );
+    // Pelagia's organic hulls take half again as much and are the binding case.
+    assert.ok(
+      combined * HAZARDS.ERUPTION.PELAGIA_DAMAGE_MULTIPLIER < harvester,
+      `and so must a Commune harvester: ` +
+        `${(combined * HAZARDS.ERUPTION.PELAGIA_DAMAGE_MULTIPLIER).toFixed(0)} vs ${harvester} HP`
     );
   });
 });
