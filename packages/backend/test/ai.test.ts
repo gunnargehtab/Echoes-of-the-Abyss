@@ -17,6 +17,7 @@ import assert from 'node:assert/strict';
 
 import {
   AiDifficulty,
+  DEPTH,
   Faction,
   HarvestThrottle,
   ResolutionTier,
@@ -618,6 +619,21 @@ function assertOnlyKnown(command: AiCommand, known: Known): void {
         `produced at structure ${command.structureId}, which is not one of its own`
       );
       return;
+    case 'depth':
+      owns(command.unitIds);
+      assert.ok(
+        Number.isFinite(command.depthM) && command.depthM >= DEPTH.MIN_M,
+        `dived to ${command.depthM}, which is not a depth`
+      );
+      return;
+    default: {
+      // This audit is the acceptance criterion of the whole feature, and a
+      // switch with no default audits nothing it forgot. A new variant used to
+      // fall straight through here and pass — so the suite could certify an
+      // information model it had never looked at.
+      const unaudited: never = command;
+      throw new Error(`no information audit for command ${JSON.stringify(unaudited)}`);
+    }
   }
 }
 
@@ -648,5 +664,12 @@ function applyTo(match: Match, slot: number, command: AiCommand): void {
     case 'produce':
       match.produce(slot, command.structureId, command.unit);
       return;
+    case 'depth':
+      for (const id of command.unitIds) match.orderDepth(slot, id, command.depthM);
+      return;
+    default: {
+      const untranslated: never = command;
+      throw new Error(`applyTo has no case for ${JSON.stringify(untranslated)}`);
+    }
   }
 }

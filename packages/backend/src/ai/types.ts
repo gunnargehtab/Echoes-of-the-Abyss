@@ -11,9 +11,16 @@
  * handles that name no entity.
  *
  * **Out**: `AiCommand`s, one variant per message a client can send. Not a
- * resemblance — the list below and the room's `onMessage` handlers are the
- * same set, because "the AI plays through the interface a player plays
+ * resemblance — the list below and the room's in-match `onMessage` handlers
+ * are the same set, because "the AI plays through the interface a player plays
  * through" has to be literally true or it is decoration.
+ *
+ * It was not literally true for most of this file's life: `depth` was the
+ * exact set difference, so the sentence above described an intention rather
+ * than the code, and an AI that could not dive read as one that had chosen not
+ * to. The seat's switch now has no `default`, so the next variant to go
+ * missing is a compile error rather than a commander with a silent gap in its
+ * vocabulary.
  *
  * A conventional RTS AI reads the world and nobody minds. Here that would not
  * be unfair so much as a *category error*: the game is the act of deciding
@@ -91,7 +98,14 @@ export type AiCommand =
   | { kind: 'silent'; unitIds: number[]; active: boolean }
   | { kind: 'ping'; unitId: number }
   | { kind: 'build'; structure: StructureKind; x: number; y: number }
-  | { kind: 'produce'; structureId: number; unit: UnitKind };
+  | { kind: 'produce'; structureId: number; unit: UnitKind }
+  /**
+   * The vertical order. Carries one depth for a group, so a commander that
+   * wants two depths emits two commands — which is what happens whenever the
+   * force is mixed, because a hull may only be sent as deep as its own
+   * Pressure Rating allows.
+   */
+  | { kind: 'depth'; unitIds: number[]; depthM: number };
 
 /** What a commander is: snapshot in, commands out, and nothing else. */
 export interface AiPlayer {

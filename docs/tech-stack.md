@@ -319,15 +319,39 @@ enemy start with a Light Scout, rallies between home and the enemy, and pushes w
 the hulls. It prioritises a Bastion over any other structure and any structure over any
 hull — an ordering only available at Tier 3, so it is information it earned.
 
-It does **not** manoeuvre in depth, and until recently that was a deliberate omission rather
-than a gap: depth had no acoustic consequence, so an AI diving for stealth would have been
-modelling a mechanic the simulation did not have.
+It **manoeuvres in depth**, and for most of this file's life it did not. That was a deliberate
+omission before the thermocline — depth had no acoustic consequence, so an AI diving for
+stealth would have been modelling a mechanic the simulation did not have — and a real gap
+after it, because a pair straddling 1,200 m is cut to 0.3× and the AI was the only commander
+in the repository that could not reach the cheapest hiding place in the game.
 
-**That is no longer true.** The thermocline gives depth an acoustic meaning
-([systems-echo.md](systems-echo.md) §3), so this is now a real gap and the decision belongs in
-`commandArmy` as this section always said it would. Note what it costs to close: the
-commander's vocabulary has no depth command in it at all, so diving is not a parameter it can
-tune — it is a verb the AI does not yet have.
+Closing it cost a ninth verb. `AiCommand` had eight variants against the room's nine in-match
+handlers, and `depth` was the exact set difference, so "the AI plays through the interface a
+player plays through" was an intention rather than a fact. The seat's switch now has no
+`default`, which makes the next missing verb a compile error instead of a commander with a
+silent hole in its vocabulary.
+
+The rule itself is in `commandArmy`, and its shape is the argument. The army crosses **on the
+attack run** and surfaces on contact, so the layer prices a commitment
+([systems-depth.md](systems-depth.md) §5) rather than acting as a stealth toggle. It is
+deliberately *not* triggered by being heard: under the layer you are deaf to the surface in
+exactly the measure you are hidden from it, so a commander that dove whenever exposure rose
+would lose the contact that justified the dive, surface, hear it again, and oscillate. Two
+doctrines decline the crossing outright — the Consortium because it is heard regardless and
+quiet it cannot spend is quiet it will not buy, the Commune because it does not survive the
+deep, it terraforms it.
+
+Every hull is clamped to its own Pressure Rating on the way down, so a mixed force splits
+vertically: the rated hulls cross and the scouts stay in the light. `Match.orderDepth` still
+permits a human to rent depth they cannot survive — that is the mechanic — but difficulty
+here is decision quality, and a PR-1 scout taking 4 HP/s of unhealable crush for stealth it
+will not live to use is not a decision worth modelling. The split has a second effect the
+rule did not set out to buy: contacts resolve per slot, so a shallow scout keeps hearing on
+behalf of an army that has gone deaf underneath the layer.
+
+`hullSecondsByZone` in the balance telemetry is what makes any of this checkable. Until it
+existed, every committed baseline was measured against commanders that spent whole matches in
+one acoustic zone, and nothing in the harness could report that.
 
 Related: [factions.md](factions.md) · [systems-echo.md](systems-echo.md) ·
 [economy.md](economy.md)
