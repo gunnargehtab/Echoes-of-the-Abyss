@@ -1,6 +1,33 @@
 name: CI
 
-on: [push, pull_request]
+# Scoped to run **once** per commit rather than twice.
+#
+# This was `on: [push, pull_request]`, which fires two full runs for every push
+# to a branch with an open PR — a `push` run and a `pull_request` run, on the
+# same commit, doing identical work. A full run is 15-22 minutes, so each push
+# was billing ~40 minutes of Actions time and throwing half of it away. That is
+# what exhausted the account's minutes on 2026-08-25, which shows up not as a
+# test failure but as jobs completing in three seconds with `runner_id: 0` and
+# no logs at all.
+#
+# `push` is therefore limited to main, which keeps every merge verified, and
+# branches are covered by their pull request. The trade is real and worth
+# naming: a branch pushed *without* a PR now gets no CI until one is opened.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A superseded run is wasted money. Force-pushing an amended commit used to
+# leave the previous run grinding to completion for another twenty minutes;
+# now it is cancelled the moment its replacement starts.
+#
+# Except on main, where every commit is the record and deserves its own verdict:
+# cancelling a merge's run because the next merge landed would leave a commit on
+# the default branch that CI never actually checked.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   build:
