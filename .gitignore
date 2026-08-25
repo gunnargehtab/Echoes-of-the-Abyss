@@ -36,3 +36,7 @@ coverage/
 
 # Misc
 .turbo/
+
+# Scratch probes. A throwaway file under test/ is picked up by the
+# non-recursive test glob and by tsc, so one left behind fails CI.
+*.tmp.ts
