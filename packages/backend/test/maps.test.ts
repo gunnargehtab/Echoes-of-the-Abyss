@@ -19,10 +19,12 @@ import {
   CRYSTAL,
   DEPTH,
   Faction,
+  MAP_HEADERS,
   PROPAGATION_FACTOR,
   ResourceKind,
   SIM,
   UnitKind,
+  mapHeaderById,
 } from '@echoes/shared';
 import {
   ABYSSAL_RIFT_CORRIDOR,
@@ -84,6 +86,20 @@ describe('the map catalogue', () => {
     assert.equal(ids.size, MAPS.length);
     for (const map of MAPS) {
       assert.ok(map.spawns.length >= 2, `${map.id} needs at least two spawns`);
+    }
+  });
+
+  it('keeps the shared headers honest — seats is the spawn list, one header per map', () => {
+    // The shell lists maps from `MAP_HEADERS` before any room exists, so the
+    // header is a *claim* about the authored map. `seats` is the one field
+    // with independent ground truth — a map's spawn list is its player count
+    // — and this is the assertion that keeps a header edit from quietly
+    // promising a seat the map cannot spawn.
+    assert.equal(MAP_HEADERS.length, MAPS.length);
+    for (const map of MAPS) {
+      const header = mapHeaderById(map.id);
+      assert.ok(header !== undefined, `${map.id} missing from MAP_HEADERS`);
+      assert.equal(header.seats, map.spawns.length, `${map.id}: header seats vs spawns`);
     }
   });
 

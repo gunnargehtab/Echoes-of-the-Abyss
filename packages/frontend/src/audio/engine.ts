@@ -8,11 +8,16 @@
  * send, the ducking so a contact is never buried under music.
  *
  *   AudioContext
- *   ├── musicBus ──► duck ──┐
- *   ├── worldBus  ──────────┤
- *   ├── contactBus ─────────┼──► master ──► destination
- *   ├── selfBus   ──────────┤
- *   └── uiBus     ──────────┘
+ *   ├── musicBus ──► duck ──► trim ──┐
+ *   ├── worldBus  ──────────► trim ──┤
+ *   ├── contactBus ─────────► trim ──┼──► master ──► destination
+ *   ├── selfBus   ──────────► trim ──┤
+ *   └── uiBus     ──────────► trim ──┘
+ *
+ * The trims are user volume (docs/audio-direction.md §11 — independent buses,
+ * contacts boostable to +12 dB) and are deliberately separate nodes: the bus
+ * gains belong to the Precedence Law and the self mixer, which write them on
+ * the tick, and a user slider must not fight that.
  *
  * **Audio is presentation only.** No audio state may feed back into the
  * simulation, and the mix must never be the reason two clients disagree
@@ -64,6 +69,24 @@ const MASTER_GAIN = 0.5;
 /** How far music ducks when the contact bus is busy, and how fast it recovers. */
 const DUCK = { FLOOR: 0.35, ATTACK_S: 0.08, RELEASE_S: 0.6 } as const;
 
+/** Decibels to linear gain — the settings screen speaks dB, the graph gain. */
+export function dbToGain(db: number): number {
+  return Math.pow(10, db / 20);
+}
+
+/**
+ * SPEC — docs/audio-direction.md §11: "Contacts may be boosted to +12 dB above
+ * the reference mix." The one bus a user trim may take above unity, and the
+ * cap that keeps the boost from spending more than the headroom §12 reserves.
+ */
+export const CONTACT_BOOST_MAX_DB = 12;
+
+/** The buses a user volume trim exists for. Master is separate. */
+export type TrimBus = 'music' | 'world' | 'contact' | 'self' | 'ui';
+
+/** How the ramp of a user volume change is smoothed, in seconds. */
+const TRIM_RAMP_S = 0.03;
+
 export interface AudioBuses {
   music: GainNode;
   world: GainNode;
@@ -104,6 +127,19 @@ export class AudioEngine {
    */
   private pendingFrame: ContactAudioFrame | null = null;
   private spatialisation: Spatialisation = 'stereo';
+
+  /**
+   * User volume, held here and applied when the graph builds — the graph is
+   * lazy (see `start`), and settings load before the first gesture.
+   *
+   * These are *trim* nodes beside the ducking chain, never the bus gains
+   * themselves: `onEchoTick` writes `contact.gain` and `music.gain` every tick
+   * (the Precedence Law), and the self mixer owns `world.gain` (§4 own-noise
+   * attenuation). A user slider on those nodes would silently fight the law.
+   */
+  private masterVolume = 1;
+  private busTrims: Record<TrimBus, number> = { music: 1, world: 1, contact: 1, self: 1, ui: 1 };
+  private trimNodes: Record<TrimBus, GainNode> | null = null;
 
   /** Rolling worst-case cost of a tick's audio work, against AUDIO_BUDGET_MS. */
   private worstTickMs = 0;
@@ -167,7 +203,7 @@ export class AudioEngine {
     this.context = context;
 
     const master = context.createGain();
-    master.gain.value = MASTER_GAIN;
+    master.gain.value = MASTER_GAIN * this.masterVolume;
     master.connect(context.destination);
 
     const make = (): GainNode => {
@@ -186,12 +222,29 @@ export class AudioEngine {
     // through a duck so a contact is never buried under the score.
     const duck = context.createGain();
     duck.gain.value = 1;
-    music.connect(duck).connect(master);
 
-    world.connect(master);
-    contact.connect(master);
-    self.connect(master);
-    ui.connect(master);
+    // User volume, one trim per bus, buffered values applied at build time.
+    // Music's trim sits after the duck so turning the score up cannot undo
+    // the Precedence Law's dip.
+    const trim = (bus: TrimBus): GainNode => {
+      const node = context.createGain();
+      node.gain.value = this.busTrims[bus];
+      node.connect(master);
+      return node;
+    };
+    this.trimNodes = {
+      music: trim('music'),
+      world: trim('world'),
+      contact: trim('contact'),
+      self: trim('self'),
+      ui: trim('ui'),
+    };
+
+    music.connect(duck).connect(this.trimNodes.music);
+    world.connect(this.trimNodes.world);
+    contact.connect(this.trimNodes.contact);
+    self.connect(this.trimNodes.self);
+    ui.connect(this.trimNodes.ui);
 
     // Taps the contact bus to drive the duck. An analyser rather than a
     // ScriptProcessor: this is measured once per Echo tick, not per sample.
@@ -384,6 +437,46 @@ export class AudioEngine {
   }
 
   /**
+   * User master volume, 0–1, composed under the fixed MASTER_GAIN so the
+   * -18 LUFS / -1 dBTP targets remain the ceiling rather than the default.
+   * Safe before `start()`: the value is held and applied when the graph builds.
+   */
+  setMasterVolume(volume: number): void {
+    this.masterVolume = Math.min(1, Math.max(0, volume));
+    const buses = this.buses;
+    const context = this.context;
+    if (buses !== null && context !== null) {
+      buses.master.gain.setTargetAtTime(
+        MASTER_GAIN * this.masterVolume,
+        context.currentTime,
+        TRIM_RAMP_S
+      );
+    }
+  }
+
+  /**
+   * User volume for one bus, as a linear gain. Every bus caps at unity except
+   * contacts, which §11 allows up to +12 dB — information may be boosted,
+   * atmosphere may only be turned down. Safe before `start()`.
+   */
+  setBusTrim(bus: TrimBus, gain: number): void {
+    const cap = bus === 'contact' ? dbToGain(CONTACT_BOOST_MAX_DB) : 1;
+    this.busTrims[bus] = Math.min(cap, Math.max(0, gain));
+    const node = this.trimNodes?.[bus];
+    if (node !== undefined && this.context !== null) {
+      node.gain.setTargetAtTime(this.busTrims[bus], this.context.currentTime, TRIM_RAMP_S);
+    }
+  }
+
+  get masterVolumeValue(): number {
+    return this.masterVolume;
+  }
+
+  busTrim(bus: TrimBus): number {
+    return this.busTrims[bus];
+  }
+
+  /**
    * The audio-clock time the next Echo tick's sounds should start at.
    *
    * Voices are scheduled onto the shared clock rather than fired immediately,
@@ -417,6 +510,7 @@ export class AudioEngine {
     this.buses = null;
     this.duckGain = null;
     this.contactAnalyser = null;
+    this.trimNodes = null;
     if (context !== null) {
       try {
         await context.close();

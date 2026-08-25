@@ -18,7 +18,7 @@
  * at match start, and it costs no loader and no schema validator to get that.
  */
 
-import type { Biome, HazardKind, ResourceKind } from '@echoes/shared';
+import type { Biome, HazardKind, MapHeader, ResourceKind } from '@echoes/shared';
 
 /**
  * A painted region. Rectangles only, and deliberately so: every layout in
@@ -117,17 +117,16 @@ export interface MapHazardSite {
   note?: string;
 }
 
-export interface MapDefinition {
-  /** Stable identifier, used to select the map. */
-  id: string;
-  /** Display name, exactly as docs/maps.md titles it. */
-  name: string;
+/**
+ * The header half — id, name, idealUse, seats, dimensions — is the shared
+ * `MapHeader` from `@echoes/shared/maps`, spread into each literal so the
+ * shell's catalogue and the authored map cannot drift apart. `seats` is
+ * authored there and asserted against `spawns.length` in `maps.test.ts`,
+ * because the spawn list is the ground truth for player count.
+ */
+export interface MapDefinition extends MapHeader {
   /** The docs/maps.md section this transcribes, cited so drift is findable. */
   doc: string;
-  /** One line on what the map is for, from the doc's "Ideal Use". */
-  idealUse: string;
-  widthM: number;
-  heightM: number;
   cellM: number;
   /**
    * The seabed this map starts at, before any region carves into it. Omitted

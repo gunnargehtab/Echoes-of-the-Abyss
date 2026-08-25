@@ -5,10 +5,14 @@ description: Launch Echoes of the Abyss and drive it in a headless browser to se
 
 # Running Echoes of the Abyss
 
-The game has no login and no room browser. The client auto-joins a Colyseus
-room and lands in a **lobby**: pick a navy, ready up, and the match starts. So
-"running it" is: bring up both servers, point a headless Chromium at the dev
-server, ready up, and look at what rendered.
+The game has no login and no room browser. A bare URL lands on the **title
+screen** (the shell — docs/ui-ux.md §14); `?map=<id>` skips it and boots
+straight into a match, which is the fast path this harness leans on.
+`drive.mjs` handles both: when the title screen shows it clicks through Solo
+game → Descend itself. Either way the client then joins a Colyseus room and
+lands in a **lobby**: pick a navy, ready up, and the match starts. So "running
+it" is: bring up both servers, point a headless Chromium at the dev server,
+ready up, and look at what rendered.
 
 Looking at the screenshot is the point. This is a game about hidden
 information, and a black frame, an empty HUD, or a stuck "Listening…" overlay

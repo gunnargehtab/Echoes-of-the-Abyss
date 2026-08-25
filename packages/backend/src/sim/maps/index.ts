@@ -26,7 +26,9 @@ export const MAPS: readonly MapDefinition[] = [
   KELP_LABYRINTH,
 ];
 
-export const DEFAULT_MAP_ID = VENTFRONT_DIVIDE.id;
+// The default is declared with the public catalogue, beside the headers the
+// shell lists; the full definitions here are the private half of the same maps.
+export { DEFAULT_MAP_ID } from '@echoes/shared';
 
 export function mapById(id: string): MapDefinition | undefined {
   return MAPS.find((map) => map.id === id);

@@ -15,11 +15,11 @@
  * are the gaps.
  */
 
-import { Biome, ResourceKind } from '@echoes/shared';
+import { Biome, KELP_LABYRINTH_HEADER, ResourceKind } from '@echoes/shared';
 import type { MapDefinition } from './types.ts';
 
-const W = 8000;
-const H = 8000;
+const W = KELP_LABYRINTH_HEADER.widthM;
+const H = KELP_LABYRINTH_HEADER.heightM;
 
 /** Kelp blocks of the central maze. The corridors are what is left over. */
 const MAZE: Array<[number, number, number, number]> = [
@@ -36,12 +36,8 @@ const MAZE: Array<[number, number, number, number]> = [
 ];
 
 export const KELP_LABYRINTH: MapDefinition = {
-  id: 'kelp-labyrinth',
-  name: 'Kelp Labyrinth',
+  ...KELP_LABYRINTH_HEADER,
   doc: 'docs/maps.md — Map Type 2',
-  idealUse: 'Asymmetric campaign missions; stealth-heavy gameplay.',
-  widthM: W,
-  heightM: H,
   cellM: 250,
   // Mid-Water throughout. This map's argument is broken sightlines, not
   // pressure, so the ground is mostly level and the maze does the work.
