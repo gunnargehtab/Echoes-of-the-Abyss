@@ -69,8 +69,14 @@ export function MissionPanel({ view, onFocus }: MissionPanelProps) {
       <header className="objectives-title">
         <span>ORDERS</span>
         {/* The SIG budget is design metadata shown as a ceiling, never a live
-            threshold — nothing fails for crossing it (docs/campaign.md §10). */}
-        <span className="objectives-ceiling">SIG ≤ {view.sigBudget}</span>
+            threshold — nothing fails for crossing it (docs/campaign.md §10).
+            Named for what it binds, because the meter in the top bar is the
+            peak across everything the player owns and the court's order binds
+            only the flight: the tenders are the loudest thing in the convoy
+            and are not party to it (docs/mission-sorrowgate.md §4). Without
+            the word, a compliant flight reads as being in breach of its own
+            freight. */}
+        <span className="objectives-ceiling">flight SIG ≤ {view.sigBudget}</span>
       </header>
 
       <div className="objectives-body" role="status" aria-live="polite">

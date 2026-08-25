@@ -40,6 +40,7 @@ import {
 } from '@echoes/shared';
 import { Fauna, Health, MoveOrder, Owner, Position, Pressure } from '../components.ts';
 import {
+  economyFor,
   eidOfLocalId,
   localIdOf,
   spawnFauna,
@@ -172,6 +173,18 @@ export class MissionRuntime {
    */
   install(world: SimWorld, seat: (slot: number) => void): void {
     seat(this.definition.playerSlot);
+
+    // A mission grants no stockpile unless it authors one.
+    //
+    // `economyFor` hands out the skirmish opening balance to whoever asks
+    // first, which for the prologue would be six hundred nodules in a court
+    // with no fields, no refinery and nothing to spend them on
+    // (docs/mission-sorrowgate.md §11). Zeroed here rather than left to the
+    // client to hide, because affordability is the server's answer.
+    const economy = economyFor(world, this.definition.playerSlot);
+    economy.nodules = this.definition.startingNodules ?? 0;
+    economy.crystal = 0;
+    economy.biomass = 0;
 
     for (const party of this.definition.parties) {
       for (const unit of party.units) {

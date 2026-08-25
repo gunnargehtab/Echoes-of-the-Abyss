@@ -238,6 +238,14 @@ export interface MissionDefinition extends MissionHeader {
    * derived its own number from this would turn a note in the margin into a
    * rule, and §10 is explicit that the budget never fails a mission.
    */
+  /**
+   * Nodules the player opens with. Omitted is none.
+   *
+   * A skirmish opens on `ECONOMY.STARTING_NODULES`, which is the right answer
+   * for a match with fields to work and a refinery to build. A mission says
+   * what it wants, and most of them want nothing.
+   */
+  startingNodules?: number;
   sigBudget: number;
   /** The structure whose grant `courtSlot` withdraws. */
   arrayTag: MissionTag;
