@@ -35,7 +35,7 @@ The count is 1 + 4×7. Convergence and Ending are slots *inside* each campaign's
 
 You command four unarmed escort craft under a court-imposed silence order. Weapons are disabled for the entire mission. The exchange goes wrong; something loud arrives; you get people out.
 
-**Teaches:** SIG, listening, resolution tiers, ghost markers, and the exact feeling the game is built on — knowing something is there, needing to know what, and having no safe way to find out. The ping is *shown* here, used by someone else, and its cost is the reason the mission goes wrong.
+**Teaches:** SIG, listening, resolution tiers, what hearing is worth, and the exact feeling the game is built on — knowing something is there, needing to know what, and having no safe way to find out. The ping is *shown* here, used by someone else, and its cost is the reason the mission goes wrong. (Ghost markers were the fourth lesson until the mission was measured: the colossus is loud enough to hold Tier 4 the whole way out, so nothing in the prologue ever decays into one — see [mission-sorrowgate.md](mission-sorrowgate.md) §13.)
 
 Specified in full — map, forces, beats, numbers, register and text — in [mission-sorrowgate.md](mission-sorrowgate.md). The prologue is one mission behind two doors: the title screen's Tutorial entry and this campaign's first slot launch the same content, and only the campaign entry records it. A separate tutorial would be a second first mission teaching the same four systems, which is the rule in §10 arguing against itself.
 
@@ -133,7 +133,7 @@ Whichever campaign you are playing, the other three arrive. The convergence miss
 
 ## 10. Mission Conventions
 
-- **One system per mission**, introduced in the first three minutes and load-bearing by the last five. **The prologue is the one stated exception** — it teaches four, in the order set out in [mission-sorrowgate.md](mission-sorrowgate.md) §10, because none of the four can be handed to a player separately: a tier means nothing without SIG, and a ghost marker means nothing without a tier.
+- **One system per mission**, introduced in the first three minutes and load-bearing by the last five. **The prologue is the one stated exception** — it teaches four, in the order set out in [mission-sorrowgate.md](mission-sorrowgate.md) §10, because none of the four can be handed to a player separately: a tier means nothing without SIG, and knowing what a contact is worth means nothing without a tier.
 - **Active sonar is withheld until mission 3** of each campaign. Players must be genuinely uncomfortable with partial information before they are handed the button that ends it, or the ping's cost never lands.
 - **Every mission has a SIG budget** in its design notes: the loudness the mission is tuned to expect. Missions are playtested against a player who exceeds it, because most will.
 - **Length** is 12–25 minutes. Two exceptions run to 40 and both are sieges.

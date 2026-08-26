@@ -369,7 +369,7 @@ mission is decided on.
 | 1 | **SIG** | 00:00–04:00. A ceiling, a meter, and a flight that has to move under a number | Every minute after 10:40 |
 | 2 | **Listening (HYD)** | 04:00–06:20. The court's array. While you are quiet you hear the whole basin; the moment you are not, you hear yourself | The tender runs, where being deaf is being lost |
 | 3 | **Resolution tiers** | 06:20–09:00. Kalliso holds the interval quiet and is simply not there; twice she turns, and for a few seconds she is a Tier 2 that names nobody. The player learns what a tier is by watching a contact refuse to become one | 09:00, when someone else raises it for everyone at once |
-| 4 | **The layer** | 16:00–19:00, the climb. A SIG-100 colossus in the same basin is a Tier-4 track and stays one; what takes it away is the player's own ascent. Sound crosses the thermocline at a third ([systems-echo.md](systems-echo.md) §3), so somewhere above 1,200 m the loudest thing on the map thins to a ghost marker and then to nothing, and the player leaves without being told how it finished | The last three minutes, entirely |
+| 4 | **What hearing is worth** | 10:40–20:00. The colossus is a SIG-100 emitter in a PF-1.6 basin, so it is a Tier-4 track from the moment it turns and it stays one through the climb — exact position, exact heading, all the way out. The lesson is the inverse of the first three: the player has finally been given perfect information, and there is nothing whatever they can do with it | The last three minutes, entirely |
 
 The prologue does **not** teach Silent Running, and this closes an open question between
 [audio-direction.md](audio-direction.md) and [campaign.md](campaign.md) §5. On a hull with no
@@ -503,6 +503,7 @@ not.
 | Objectives, results, and the failure at adjournment | Implemented (#190) |
 | The briefing and the objective readings | Implemented (#190) |
 | The four voices in the water | Text only (#190) — the `say` beat carries speaker and line to a mission log beside the orders panel, at the times §12 gives. Nothing is *heard*: there is no speech audio and [audio-direction.md](audio-direction.md) does not yet own a bus for one, so a player with the sound on and their eyes on the water misses all four |
+| Ghost markers as a taught system | **Not taught here, and [campaign.md](campaign.md) §2 still says it is.** §10's fourth beat was written for a fading twenty-second trail; measured, the colossus holds Tier 4 from 09:00 to the adjournment in every drive — passive, escorted, and escorted-with-the-climb — because SIG 100 through PF 1.6 stays four times over threshold even across the thermocline. §10 row 4 has been rewritten to what the phase does teach. Whether the lesson moves to another mission or the colossus is made quieter is a campaign-level decision, not this document's |
 | Mid-match Coral Ruins state change | Not built, and not relied on ([environments.md](environments.md)) |
 | Campaign progression, and recording that the prologue was played | Not built — the prologue is replayable and remembers nothing |
 
