@@ -53,8 +53,15 @@ import type { AiBriefing, AiCommand, AiPlayer } from './types.ts';
  * argue with them.
  */
 const RANGE = {
-  /** A contact this close to the Bastion recalls the army, ready or not. */
+  /** The watch around the Bastion. A contact inside it is *considered*. */
   DEFEND_M: 2200,
+  /**
+   * Inside this, nothing is debated: a contact this close to the Bastion
+   * recalls the army immediately, whatever it turns out to be. The cost of
+   * being wrong about a grazer on your doorstep is a wasted trip; the cost of
+   * being wrong about a raid is the match.
+   */
+  DEFEND_URGENT_M: 900,
   /** How near a waypoint counts as reached. */
   ARRIVE_M: 700,
   /** An unclassified contact this close to the army is worth a ping. */
@@ -98,6 +105,31 @@ const DEPTH_PLAN = {
    * so a hull parked at its own limit is never ambiguously in the band below.
    */
   BAND_MARGIN_M: 50,
+} as const;
+
+/**
+ * Telling a raid from a fish, without being told which it is.
+ *
+ * The Drift is seeded near spawns, and at Tier 1 a grazer and a cruiser are
+ * the same smudge — `bestThreat` only skips contacts the Echo Layer has
+ * actually *classified* as fauna, which needs Tier 3. So "anything near home
+ * recalls the army" meant the army was recalled essentially always: measured
+ * over a fifteen-minute Directorate match, 41% of every decision was the
+ * defend branch and the push branch was reached **zero** times. With the Drift
+ * emptied and nothing else changed, the same commander pushed 920 times.
+ *
+ * The commander cannot be handed the answer — that is the game. What it can do
+ * is what a player does: watch. A grazer wanders and a raid *closes*, so a
+ * contact earns the alarm by having got nearer since it was first seen, and by
+ * having been watched long enough for that to mean something.
+ */
+const DEFEND_WATCH = {
+  /** Seconds a contact must be under observation before its trend is read. */
+  CONFIRM_S: 12,
+  /** How much nearer it must have come, in metres, to count as approaching. */
+  CLOSED_M: 350,
+  /** Forget a contact not seen for this long, so the watch list stays bounded. */
+  FORGET_S: 60,
 } as const;
 
 /** Longest a remembered enemy position stays worth walking to, in seconds. */
@@ -169,6 +201,17 @@ export class AiCommander implements AiPlayer {
   private remembered: Remembered | null = null;
   /** Silent Running state it believes the army is in, to avoid re-sending. */
   private armySilent = false;
+  /**
+   * What it has seen loitering near the Bastion, by contact handle.
+   *
+   * A handle is minted once per (slot, entity) and kept until that entity
+   * dies, so it is stable across ticks and safe to key on — and it still names
+   * nothing: the commander learns "that one" without learning what it is.
+   */
+  private readonly homeWatch = new Map<
+    number,
+    { seenTick: number; lastTick: number; farthest: number }
+  >();
 
   constructor(briefing: AiBriefing) {
     this.briefing = briefing;
@@ -601,10 +644,9 @@ export class AiCommander implements AiPlayer {
     const ids = army.map((u) => u.id);
 
     // Home first. A push that leaves the Bastion undefended trades the match
-    // for a raid, and losing the Bastion is losing.
-    const athome = this.bestThreat(
-      snapshot.contacts.filter((c) => distance(c, this.home) < RANGE.DEFEND_M)
-    );
+    // for a raid, and losing the Bastion is losing — but not everything near
+    // the Bastion is a raid. See `approachingHome`.
+    const athome = this.bestThreat(this.approachingHome(snapshot));
     if (athome !== null) {
       this.setSilent(ids, false, out);
       this.setCrossed(army, false, out);
@@ -705,6 +747,61 @@ export class AiCommander implements AiPlayer {
     for (const [depthM, unitIds] of byDepth) {
       out.push({ kind: 'depth', unitIds, depthM });
     }
+  }
+
+  /**
+   * The contacts near the Bastion that have earned the alarm.
+   *
+   * Everything inside DEFEND_URGENT_M qualifies outright. Beyond that a
+   * contact has to have *closed* — got at least CLOSED_M nearer than the
+   * farthest this commander has seen it while watching — and to have been
+   * watched for CONFIRM_S first, so a single noisy fix cannot start a recall.
+   *
+   * Measured against its farthest rather than its first position, because a
+   * contact that drifts out and comes back in is approaching on the way back,
+   * and a first-sight baseline would have already spent its budget.
+   *
+   * The watch list is pruned by age rather than by absence: a hull that goes
+   * quiet for twenty seconds and reappears nearer is the exact thing this is
+   * for, and forgetting it the moment it drops below threshold would hand it
+   * a fresh baseline every time it ran silent.
+   */
+  private approachingHome(snapshot: EchoSnapshot): Contact[] {
+    const out: Contact[] = [];
+
+    for (const contact of snapshot.contacts) {
+      const range = distance(contact, this.home);
+      if (range >= RANGE.DEFEND_M) continue;
+
+      if (range < RANGE.DEFEND_URGENT_M) {
+        out.push(contact);
+        continue;
+      }
+
+      const seen = this.homeWatch.get(contact.id);
+      if (seen === undefined) {
+        this.homeWatch.set(contact.id, {
+          seenTick: snapshot.tick,
+          lastTick: snapshot.tick,
+          farthest: range,
+        });
+        continue;
+      }
+      seen.lastTick = snapshot.tick;
+      seen.farthest = Math.max(seen.farthest, range);
+
+      const watchedS = (snapshot.tick - seen.seenTick) / SIM.TICK_HZ;
+      if (watchedS < DEFEND_WATCH.CONFIRM_S) continue;
+      if (seen.farthest - range >= DEFEND_WATCH.CLOSED_M) out.push(contact);
+    }
+
+    for (const [handle, seen] of this.homeWatch) {
+      if ((snapshot.tick - seen.lastTick) / SIM.TICK_HZ > DEFEND_WATCH.FORGET_S) {
+        this.homeWatch.delete(handle);
+      }
+    }
+
+    return out;
   }
 
   private setSilent(ids: number[], active: boolean, out: AiCommand[]): void {

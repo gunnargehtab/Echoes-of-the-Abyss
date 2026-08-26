@@ -358,6 +358,24 @@ enemy start with a Light Scout, rallies between home and the enemy, and pushes w
 the hulls. It prioritises a Bastion over any other structure and any structure over any
 hull — an ordering only available at Tier 3, so it is information it earned.
 
+**It decides for itself what counts as an attack on its base**, and that is a harder question
+than it sounds. A contact near the Bastion used to recall the whole army, unconditionally,
+which reads as caution and was ruinous: the Drift is seeded near spawns, and at Tier 1 a
+grazer and a cruiser are the same smudge — fauna are skipped only once *classified*, which
+needs Tier 3. Measured on `ventfront-divide`, 41% of every decision a Directorate commander
+made was the recall, and it never once reached the branch that attacks. Empty the Drift and
+the same commander pushes hundreds of times. The army was not failing to mass; it was being
+called home by wildlife.
+
+The commander is not told which it is — that is the game. It does what a player does: it
+watches, and it acts on the one thing that separates them, which is that **a raid closes and
+a grazer does not**. A contact earns the alarm by having come nearer than the farthest this
+commander has seen it, after being watched long enough for that to mean something; anything
+already on the doorstep skips the deliberation entirely, because being wrong about a grazer
+costs a wasted trip and being wrong about a raid costs the match. Measured against its
+farthest position rather than its first, so a hull that runs silent, drifts out and returns
+is approaching on the way back.
+
 It **manoeuvres in depth**, and for most of this file's life it did not. That was a deliberate
 omission before the thermocline — depth had no acoustic consequence, so an AI diving for
 stealth would have been modelling a mechanic the simulation did not have — and a real gap
