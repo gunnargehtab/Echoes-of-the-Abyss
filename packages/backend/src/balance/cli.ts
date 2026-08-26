@@ -32,6 +32,7 @@ import {
   THERMAL_DRAW,
 } from '@echoes/shared';
 import { runBatch, seedHasAnyEffect, DEFAULT_MAX_MINUTES, type Seat } from './runner.ts';
+import { DEFAULT_MAP_ID, MAPS, mapById } from '../sim/maps/index.ts';
 import { summarise, toMarkdown } from './report.ts';
 
 /**
@@ -167,6 +168,24 @@ function main(): void {
   const title = flag('title', 'Balance run')!;
 
   if (!Number.isFinite(matches) || matches < 1) throw new Error('--matches must be >= 1');
+
+  // A seat with no spawn never fields anything. The batch still runs, every
+  // match times out as a draw, and the report comes back with real-looking
+  // zeros in every column for the seats that were never in the water — which
+  // reads as a finding about those factions rather than as a malformed run.
+  // Refused here, naming the map and its spawn count, because the cheapest
+  // moment to catch it is before twenty-five minutes of simulation.
+  const map = mapById(mapId ?? DEFAULT_MAP_ID);
+  if (map === undefined) {
+    throw new Error(`--map ${mapId}: no such map (have ${MAPS.map((m) => m.id).join(', ')})`);
+  }
+  if (seats.length > map.spawns.length) {
+    throw new Error(
+      `${map.id} has ${map.spawns.length} spawns and --matchup names ${seats.length} seats. ` +
+        `Seats past the ${map.spawns.length}${map.spawns.length === 1 ? 'st' : 'nd'} would never ` +
+        `spawn, and every match would draw.`
+    );
+  }
 
   const started = Date.now();
   console.error(

@@ -92,6 +92,27 @@ export interface GuardRailVerdict {
  * docs name. A missing row reads as "fine"; an explicit "no data" reads as
  * "you did not ask this question", which is what actually happened.
  */
+/**
+ * The verdict a rail measured on **win rates** is entitled to.
+ *
+ * A win rate is a ratio over *decided* matches, so with none decided it is
+ * 0/0 — and 0/0 prints as 0%, which is indistinguishable on the page from a
+ * faction that played thirty matches and lost every one. That is how this
+ * report once announced "loud economies are unplayable — **breached**" from a
+ * batch in which the Consortium's opponents had never spawned: the sample size
+ * was printed, correctly, in the same cell as a verdict that could not follow
+ * from it.
+ *
+ * The other rails each guard their own emptiness (biomass income, long-match
+ * count, first-blood sample). This exists so the two that read win rates guard
+ * theirs the same way, and so a third one added later has an obvious thing to
+ * call.
+ */
+function fromWinRates(decided: number, breached: boolean): GuardRailVerdict['verdict'] {
+  if (decided === 0) return 'no data';
+  return breached ? 'breached' : 'held';
+}
+
 function noSeat(risk: string, source: string, faction: string): GuardRailVerdict {
   return {
     risk,
@@ -230,7 +251,7 @@ function judge(results: MatchTelemetryResult[], factions: FactionSummary[]): Gua
       reading:
         `win ${pct(commune.winRate)} vs best rival ${pct(bestWinRate)}, ` +
         `premium ${quietPremium(commune).toFixed(1)} vs ${bestPremium.toFixed(1)} (n=${decided})`,
-      verdict: breached ? 'breached' : 'held',
+      verdict: fromWinRates(decided, breached),
     });
   }
 
@@ -250,7 +271,7 @@ function judge(results: MatchTelemetryResult[], factions: FactionSummary[]): Gua
       reading:
         `${consortium.secondsTracked.toFixed(0)} s tracked per match, ` +
         `win ${pct(consortium.winRate)} (n=${decided})`,
-      verdict: loudest && worst ? 'breached' : 'held',
+      verdict: fromWinRates(decided, loudest && worst),
     });
   }
 
