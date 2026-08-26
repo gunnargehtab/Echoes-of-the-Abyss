@@ -10,8 +10,8 @@
  * thing a settings screen must not do.
  *
  * Writes go through the settings store on every change; the match applies
- * them at mount (and live, once the esc menu of #187 exists to open this
- * screen mid-match).
+ * them at mount, and live when the esc menu (#187) opens this screen
+ * mid-match — same screen, either door, one store.
  */
 
 import { useState } from 'react';
@@ -69,7 +69,7 @@ export function SettingsScreen({ onBack, onControls }: SettingsScreenProps) {
       <div className="menu-panel">
         <header className="menu-head">
           <h2>Settings</h2>
-          <p className="menu-subtitle">Saved on this device. Applies from your next dive.</p>
+          <p className="menu-subtitle">Saved on this device. Whatever is live takes it live.</p>
         </header>
 
         <div className="menu-settings">

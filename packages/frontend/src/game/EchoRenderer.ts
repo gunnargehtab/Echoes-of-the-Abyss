@@ -145,6 +145,12 @@ export interface RendererCallbacks {
   /** A new detection event, for the contact log. */
   onContactEvent(entry: ContactLogEntry): void;
   /**
+   * An `Escape` with nothing left to cancel (docs/ui-ux.md §9.5). The menu is
+   * DOM, so the renderer only reports the press; the shell owns what a menu
+   * is, and tells the renderer to stop listening via `setMenuOpen`.
+   */
+  onOpenMenu(): void;
+  /**
    * The contact picture, reduced to what the mix may know, once per Echo tick.
    *
    * Emitted from here rather than assembled in the audio layer because this is
@@ -708,6 +714,13 @@ export class EchoRenderer {
   private bindings: Bindings = { ...DEFAULT_BINDINGS };
 
   /**
+   * True while the esc menu is up (docs/ui-ux.md §9.5). Pointer input dies on
+   * the menu's own glass, but the keyboard listens on `window`, so it is
+   * guarded here — a slider adjusted mid-match must not also ping.
+   */
+  private menuOpen = false;
+
+  /**
    * HUD magnification — docs/ui-ux.md §11's 75-200%, "independent of world
    * zoom".
    *
@@ -1030,7 +1043,28 @@ export class EchoRenderer {
     /** True while a press is scrubbing the sonar scope. */
     let minimapDrag = false;
 
+    /**
+     * End every in-flight gesture. Pointer capture retargets a held drag to
+     * the canvas *through* the esc menu's glass, so the §9.5 guarantee that
+     * pointer input dies there has to be enforced here too: a pan or scope
+     * scrub held across the menu opening would otherwise keep driving the
+     * camera under a menu that promised it would not.
+     */
+    const endGesture = (e: PointerEvent) => {
+      touches.delete(e.pointerId);
+      tapPointerId = null;
+      pinchDistance = 0;
+      minimapDrag = false;
+      panning = false;
+      this.marquee = null;
+      if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+    };
+
     const onPointerDown = (e: PointerEvent) => {
+      if (this.menuOpen) {
+        endGesture(e);
+        return;
+      }
       // The sonar scope and the command bar swallow presses from every
       // pointer type before any world interpretation happens.
       if (e.button === 0 && this.pressMinimap(e.clientX, e.clientY)) {
@@ -1090,6 +1124,10 @@ export class EchoRenderer {
     };
 
     const onPointerMove = (e: PointerEvent) => {
+      if (this.menuOpen) {
+        endGesture(e);
+        return;
+      }
       if (minimapDrag) {
         this.pressMinimap(e.clientX, e.clientY);
         return;
@@ -1140,6 +1178,10 @@ export class EchoRenderer {
     };
 
     const onPointerUp = (e: PointerEvent) => {
+      if (this.menuOpen) {
+        endGesture(e);
+        return;
+      }
       if (minimapDrag) {
         minimapDrag = false;
         if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
@@ -1179,11 +1221,23 @@ export class EchoRenderer {
     };
 
     const onKeyDown = (e: KeyboardEvent) => {
+      // The menu owns the keyboard while it is up (§9.5). Its own Escape
+      // handling lives in the DOM beside the buttons it closes.
+      if (this.menuOpen) return;
       // Escape first and unconditionally — it is not a binding (§9), it is the
       // way out of a pending build, and a way out you have to aim for is not
       // one. `RESERVED_CODES` is what stops a rebinder taking it.
       if (e.code === 'Escape') {
-        this.pendingBuild = null;
+        if (this.pendingBuild !== null) {
+          this.pendingBuild = null;
+          return;
+        }
+        if (this.marquee !== null) {
+          this.marquee = null;
+          return;
+        }
+        // Nothing left to cancel: the same key is the way out of the water.
+        this.callbacks.onOpenMenu();
         return;
       }
       // Digits are control groups (docs/ui-ux.md §9), Ctrl to assign. They
@@ -1260,6 +1314,7 @@ export class EchoRenderer {
     };
 
     const onKeyUp = (e: KeyboardEvent) => {
+      if (this.menuOpen) return;
       if (actionFor(this.bindings, e.code) === 'pingPreview') this.previewPing = false;
     };
 
@@ -1798,6 +1853,21 @@ export class EchoRenderer {
       tabX += w + 4;
     }
 
+    // §9.5's menu, reachable by a finger. Esc is the keyboard's door, and a
+    // touchscreen has no Esc — the bar is how a touchscreen reaches anything
+    // at all, so the way out sits on it like everything else does.
+    const menuW = 'MENU'.length * 7.5 + 22;
+    tabButtons.push({
+      x: screenWidth - 10 - menuW,
+      y: barY,
+      w: menuW,
+      h: TAB_HEIGHT,
+      label: 'MENU',
+      enabled: true,
+      active: false,
+      action: () => this.callbacks.onOpenMenu(),
+    });
+
     const model = this.buildBarModel();
     const gap = 8;
     const buttonY = barY + TAB_HEIGHT + (BUTTON_ROW_HEIGHT - BAR_BUTTON_HEIGHT) / 2;
@@ -2183,6 +2253,21 @@ export class EchoRenderer {
     // A preview held down when its key moved would stick on forever, because
     // the keyup that would have cleared it names a code nothing matches now.
     this.previewPing = false;
+  }
+
+  /**
+   * The esc menu opened or closed (docs/ui-ux.md §9.5). While it is open the
+   * water cannot hear the keyboard — see `menuOpen` on the field.
+   */
+  setMenuOpen(open: boolean): void {
+    this.menuOpen = open;
+    if (open) {
+      // Holds do not survive the menu: the keyup that would have ended the
+      // preview lands on the menu's glass, where this renderer is not
+      // listening. A drag is the same story with a pointer.
+      this.previewPing = false;
+      this.marquee = null;
+    }
   }
 
   setMissionLocks(locks: AbilityLock[]): void {
