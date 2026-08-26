@@ -426,6 +426,24 @@ enemy start with a Light Scout, rallies between home and the enemy, and pushes w
 the hulls. It prioritises a Bastion over any other structure and any structure over any
 hull — an ordering only available at Tier 3, so it is information it earned.
 
+**It decides for itself what counts as an attack on its base**, and that is a harder question
+than it sounds. A contact near the Bastion used to recall the whole army, unconditionally,
+which reads as caution and was ruinous: the Drift is seeded near spawns, and at Tier 1 a
+grazer and a cruiser are the same smudge — fauna are skipped only once *classified*, which
+needs Tier 3. Measured on `ventfront-divide`, 41% of every decision a Directorate commander
+made was the recall, and it never once reached the branch that attacks. Empty the Drift and
+the same commander pushes hundreds of times. The army was not failing to mass; it was being
+called home by wildlife.
+
+The commander is not told which it is — that is the game. It does what a player does: it
+watches, and it acts on the one thing that separates them, which is that **a raid closes and
+a grazer does not**. A contact earns the alarm by having come nearer than the farthest this
+commander has seen it, after being watched long enough for that to mean something; anything
+already on the doorstep skips the deliberation entirely, because being wrong about a grazer
+costs a wasted trip and being wrong about a raid costs the match. Measured against its
+farthest position rather than its first, so a hull that runs silent, drifts out and returns
+is approaching on the way back.
+
 It **manoeuvres in depth**, and for most of this file's life it did not. That was a deliberate
 omission before the thermocline — depth had no acoustic consequence, so an AI diving for
 stealth would have been modelling a mechanic the simulation did not have — and a real gap
@@ -448,13 +466,18 @@ doctrines decline the crossing outright — the Consortium because it is heard r
 quiet it cannot spend is quiet it will not buy, the Commune because it does not survive the
 deep, it terraforms it.
 
-Every hull is clamped to its own Pressure Rating on the way down, so a mixed force splits
-vertically: the rated hulls cross and the scouts stay in the light. `Match.orderDepth` still
+Every hull is clamped to its own Pressure Rating on the way down. `Match.orderDepth` still
 permits a human to rent depth they cannot survive — that is the mechanic — but difficulty
-here is decision quality, and a PR-1 scout taking 4 HP/s of unhealable crush for stealth it
-will not live to use is not a decision worth modelling. The split has a second effect the
-rule did not set out to buy: contacts resolve per slot, so a shallow scout keeps hearing on
-behalf of an army that has gone deaf underneath the layer.
+here is decision quality, and a hull taking 4 HP/s of unhealable crush for stealth it will
+not live to use is not a decision worth modelling.
+
+The clamp used to split a mixed force vertically, with the rated hulls crossing and the
+scouts staying in the light — and buy an emergent property with it, since contacts resolve
+per slot and a shallow scout kept hearing for an army gone deaf underneath. **Implementing
+§3's baseline table ended that**: a navy that crosses has a baseline of at least PR-2, so
+every hull it fields is rated for the crossing and the whole force goes together. The clamp
+is unchanged and still guards any navy whose baseline leaves a hull short; there is not
+currently one. Worth knowing if the roster or the baselines move again.
 
 `hullSecondsByZone` in the balance telemetry is what makes any of this checkable. Until it
 existed, every committed baseline was measured against commanders that spent whole matches in

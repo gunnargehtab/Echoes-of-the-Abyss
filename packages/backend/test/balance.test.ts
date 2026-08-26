@@ -265,3 +265,51 @@ describe('tunable overrides', () => {
     }
   });
 });
+
+describe('a verdict never outruns its sample (#200)', () => {
+  /**
+   * A batch in which nothing was decided.
+   *
+   * Short enough that no side can win inside the cap, which is the same shape
+   * as the real failure this guards: a four-seat matchup on a two-spawn map,
+   * where two commanders never spawn and every match times out as a draw.
+   */
+  function undecided(): ReturnType<typeof summarise> {
+    const results = runBatch({ seats: DUEL, seed: 4242, maxMinutes: 0.3, fauna: false }, 1);
+    assert.equal(
+      results.filter((r) => r.winnerSlot !== null).length,
+      0,
+      'the fixture is only meaningful if nothing was decided'
+    );
+    return summarise(results);
+  }
+
+  it('reports no data rather than a verdict when no match was decided', () => {
+    // The bug: a win rate is a ratio over decided matches, so with none decided
+    // it is 0/0 — which prints as 0% and is indistinguishable from a faction
+    // that played and lost every game. The report announced "loud economies are
+    // unplayable — breached" off exactly that, with "(n=0)" printed beside it.
+    for (const rail of undecided().guardRails) {
+      assert.equal(
+        rail.verdict,
+        'no data',
+        `"${rail.risk}" returned "${rail.verdict}" from a batch that decided nothing`
+      );
+    }
+  });
+
+  it('still prints the sample size, so the reader can see why', () => {
+    const summary = undecided();
+    const loud = summary.guardRails.find((r) => r.risk === 'Loud economies are unplayable');
+    assert.ok(loud !== undefined, 'the Consortium is seated, so the rail must be present');
+    assert.match(loud.reading, /n=0/, 'the reading has to say how little it is standing on');
+  });
+
+  it('renders every one of them as no data in the markdown', () => {
+    // The table is what anyone actually reads, and "**breached**" in bold is
+    // the most authoritative thing this tool emits.
+    const markdown = toMarkdown(undecided(), 'Undecided', 'test');
+    assert.doesNotMatch(markdown, /\*\*breached\*\*/, 'a breach was asserted from nothing');
+    assert.doesNotMatch(markdown, /\*\*held\*\*/, 'and "held" is the same claim in the mirror');
+  });
+});

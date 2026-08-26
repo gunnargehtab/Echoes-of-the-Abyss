@@ -26,6 +26,7 @@ import {
   THERMOCLINE_DUCT_TOP_M,
   ThermoclineZone,
   UnitKind,
+  effectivePressureRating,
   statsFor,
   thermoclineZone,
   type EchoSnapshot,
@@ -244,7 +245,7 @@ describe('the army splits by what each hull can survive', () => {
     assert.ok(commands.length > 0, 'no depth orders at all, so this asserts nothing');
     for (const command of commands) {
       for (const id of command.unitIds) {
-        const rating = statsFor(byId.get(id)!.kind).pressureRating;
+        const rating = effectivePressureRating(byId.get(id)!.kind, Faction.Directorate);
         const band = DEPTH_BANDS[(rating - 1) as DepthBand];
         assert.ok(
           command.depthM < band.max,
@@ -254,12 +255,23 @@ describe('the army splits by what each hull can survive', () => {
     }
   });
 
-  it('so a mixed force ends up at two depths, not one', () => {
+  it("and with §3's baselines, no Directorate hull has to stay behind", () => {
+    // This test used to assert the opposite — that a mixed force split into a
+    // rated group that crossed and scouts that stayed in the light. That was
+    // true, and #201 ended it: the Directorate's PR-3 baseline lifts every
+    // hull they field, so the clamp no longer bites on any of them and the
+    // whole force crosses together.
+    //
+    // Worth stating rather than deleting, because the emergent property that
+    // split bought — a shallow scout still hearing for an army gone deaf under
+    // the layer — went with it. The clamp itself is unchanged and still guards
+    // any navy whose baseline leaves a hull short; the Directorate simply is
+    // not one any more.
     const depths = new Set(depthCommands(Faction.Directorate, MIXED_FORCE()).map((c) => c.depthM));
-    assert.ok(
-      depths.size >= 2,
-      `the whole force was sent to one depth (${[...depths].join(', ')}), ` +
-        'so either the scouts were crushed or the Corvettes never crossed'
+    assert.equal(
+      depths.size,
+      1,
+      `expected one crossing depth for a PR-3 navy, got ${[...depths].join(', ')}`
     );
   });
 });

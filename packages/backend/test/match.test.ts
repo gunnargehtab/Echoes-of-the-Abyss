@@ -1080,8 +1080,12 @@ describe('faction structure auras', () => {
     const snapshots = advance(match, 0.2)!;
     const scout = snapshots.get(0)!.units.find((u) => u.kind === UnitKind.LightScout)!;
 
-    // A PR-1 scout at 600 m is a full band over its head: unhealable crush.
-    Position.depth[scout.id] = 600;
+    // Deep enough that the Knights' own baseline runs out. Their PR-2 covers
+    // Mid-Water on its own (docs/systems-depth.md §3), so 600 m stopped being
+    // a demonstration of anything the moment the baselines landed — and §3
+    // says what the Spire is actually for: letting "a comparatively fragile
+    // faction contest deep ground". That is the Abyssal, and this is it.
+    Position.depth[scout.id] = 2000;
     const spire = spawnStructure(match.world, {
       kind: StructureKind.SoundingSpire,
       slot: 0,

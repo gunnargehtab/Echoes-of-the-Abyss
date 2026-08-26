@@ -44,6 +44,7 @@ import {
   ThermoclineZone,
   UnitKind,
   depthBandFor,
+  effectivePressureRating,
   thermoclineZone,
   maxAudibleRangeM,
   requiredPressureRating,
@@ -3798,7 +3799,7 @@ export class EchoRenderer {
 
   /** Effective Pressure Rating: what the hull owns plus what it is renting. */
   private effectivePr(unit: OwnUnit): number {
-    return statsFor(unit.kind).pressureRating + unit.pressureBonus;
+    return effectivePressureRating(unit.kind, this.faction) + unit.pressureBonus;
   }
 
   /**
@@ -4241,7 +4242,7 @@ export class EchoRenderer {
     // PR badge. A rented rating is drawn as rented — it evaporates the moment
     // the hull leaves the aura that granted it (docs/systems-depth.md §3).
     if (unit !== undefined) {
-      const base = statsFor(unit.kind).pressureRating;
+      const base = effectivePressureRating(unit.kind, this.faction);
       const crushing = this.isCrushing(unit);
       const badgeW = 44;
       const badgeH = 16;

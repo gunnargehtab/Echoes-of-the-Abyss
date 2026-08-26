@@ -164,6 +164,33 @@ export const DEPTH = {
 } as const;
 
 /**
+ * SPEC — docs/systems-depth.md §3, the "Baseline PR" column.
+ *
+ * The depth each navy is born rated for, before it buys, projects or
+ * terraforms a single metre. A **floor**, not an override: a hull whose own
+ * rating is higher keeps it, because the baseline is where a faction starts
+ * rather than where it stops.
+ *
+ * §3 has published this table since the doc existed and nothing read it, which
+ * made four documented depth identities into prose. It is also what makes the
+ * Directorate's weakness coherent at all: their PR-3 baseline is the other
+ * half of "shallow water poisons them". Without it a Directorate Light Scout
+ * is a PR-1 hull that crushes below 400 m and is poisoned above it — a unit
+ * with no depth in the entire water column where it is neither dying nor
+ * bleeding, which is not a trade-off, it is a hole.
+ */
+export const FACTION_PRESSURE_BASELINE: Record<Faction, number> = {
+  // "Buys access — cheapest refits in the game, but pays for every metre."
+  [Faction.Bathyarch]: 2,
+  // "Terraforms access — poor refits; they don't survive the deep, they change it."
+  [Faction.Pelagia]: 1,
+  // "Born to it — no refit needed, free access to the map's richest third."
+  [Faction.Directorate]: 3,
+  // "Projects access — instant refits paid in Resonance."
+  [Faction.Hadron]: 2,
+};
+
+/**
  * SPEC (the penalties) / TUNABLE (how fast the hull half lands) — docs/factions.md
  * "Abyssal Directorate → Weakness", docs/systems-depth.md §3.
  *

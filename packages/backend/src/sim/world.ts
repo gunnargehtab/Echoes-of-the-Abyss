@@ -23,6 +23,7 @@ import {
   StructureKind,
   UnitKind,
   statsFor,
+  effectivePressureRating,
   structureStatsFor,
 } from '@echoes/shared';
 import {
@@ -511,7 +512,14 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   Position.y[eid] = opts.y;
   // Default to the deepest band the hull is rated for (capped at Mid-Water):
   // a PR-1 scout delivered at 600 m would take crush attrition from birth.
-  Position.depth[eid] = opts.depth ?? (stats.pressureRating >= 2 ? 600 : 300);
+  //
+  // Rated *for this navy*, not for the roster. The Directorate's PR-3 baseline
+  // (docs/systems-depth.md §3) is what lets their scouts be seated below the
+  // Shelf line, and they have to be: since the shallow-water penalty landed,
+  // 300 m is inside their own faction's weakness, and a hull that begins the
+  // match already bleeding is a stat rather than a trade.
+  const rating = effectivePressureRating(opts.kind, opts.faction);
+  Position.depth[eid] = opts.depth ?? (rating >= 2 ? 600 : 300);
 
   addComponent(world, Velocity, eid);
   Velocity.x[eid] = 0;
@@ -537,7 +545,7 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   Acoustic.spikeAmount[eid] = 0;
 
   addComponent(world, Pressure, eid);
-  Pressure.rating[eid] = stats.pressureRating;
+  Pressure.rating[eid] = rating;
   Pressure.bonus[eid] = 0;
   Pressure.unhealable[eid] = 0;
 
