@@ -382,7 +382,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | Precedence Law — mark fade-in, ducking chain | Implemented — the visual-first preset is a settings toggle (§14) |
 | Echo Mark residue, drawn and voiced | Implemented — server-resolved against HYD, so a client only holds what it could hear |
 | Tier-4 acquisition brackets | Implemented — the visual half of the lock tone |
-| Accessibility presets and palettes | Partial — mono, visual-first and full rebinding are settings (§14); colour-vision palettes, UI scale and reduced motion not started |
+| Accessibility presets and palettes | Implemented (#192) — mono, visual-first, the three colour-vision palettes, UI scale and reduced motion are all settings (§14) |
 | Full rebinding, and the one-handed layout | Implemented (#191) — bindings are data, the Controls screen edits them, reserved codes refuse capture |
 | Box select, control groups, order queue | Implemented |
 | The shell — title, setup, briefing, settings, credits | Implemented (§14) |
@@ -468,6 +468,9 @@ the screen, not a technology.
 | Contacts | up to **+12 dB** | The one boostable bus, per the same section; the boost trades headroom for audibility and is capped so the true-peak target survives |
 | Mono audio | toggle | The mix's existing mono spatialisation — a rendering choice, never a loss (§11) |
 | Visual-first | toggle | Removes the §1.3 fade-in delay so marks arrive at ≤ 30 ms (§11) |
+| Colour vision | standard · deuteranopia · protanopia · tritanopia | The four palettes in [style-neon-noir.md](style-neon-noir.md); tier *shape* never moves, only its ink (§11) |
+| UI scale | 75–200% | A transform on the HUD layer and the DOM panels, never on the world (§11) |
+| Reduced motion | toggle | Static equivalents for the scope sweep, the exposure flash and the crush badge — same information, no movement (§11) |
 
 User volume lives on trim nodes *beside* the ducking chain, never on the ducked gains —
 the Precedence Law's ducking writes those every tick, and a user slider fighting it would
@@ -475,9 +478,28 @@ turn the mix's grammar into noise. The commander name and every setting persist 
 `localStorage` as a device preference; the reconnection token stays per-tab, because a seat
 is not a preference.
 
-Deferred to their own issues, so v1 does not promise them: key rebinding (§11 requires
-full rebinding and a one-handed layout, and the bindings are not yet data), the three
-colour-vision palettes, UI scale, and reduced motion.
+Everything §11 asks for is now on that list. The last three arrived with #192 and are
+renderer work rather than mixer work, so each names what it moves:
+
+- **Colour vision** swaps the ink of the tier scale, the four navies, the SIG ramp, the
+  resource fields and the fauna colour. It does not swap chrome, biome fills, or any part
+  of the fidelity encoding — size, alpha, edge hardness and shape are how a tier is read
+  before colour is consulted at all.
+- **UI scale** multiplies the HUD layer and the three DOM panels and leaves the world
+  transform alone, so zooming the interface never zooms the map or changes what is on
+  screen. The scope, the command bar and the depth ribbon re-lay out against the scaled
+  viewport rather than sliding off it, and pointer hits are divided back through the same
+  factor — a button that has moved must still be where the click lands. §11 names the SIG
+  meter and the ping preview as the two to scale first; the meter rides the HUD layer, and
+  the preview is the one element that had to be split — its *radii* stay world-space,
+  because 2,400 m is a fact about the water and not about the interface, while its strokes
+  take the scale like every other line on an instrument.
+- **Reduced motion** is an information-parity requirement, so it replaces rather than
+  removes: the sweep becomes a fixed cross-hair on the scope's anchor, the exposure flash
+  becomes a held wedge on the same bearing for the same two seconds, and the crush badge
+  becomes a filled badge with a rule under it. The ping wavefront, the acquisition
+  brackets and the ghost decay keep moving, because in those three the motion *is* the
+  message.
 
 ---
 

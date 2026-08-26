@@ -3,9 +3,11 @@
  *
  * Every control here wires to behaviour that already exists: the per-bus
  * trims and mono mode in the audio engine, the visual-first timing table in
- * the renderer, the binding table the rebinder edits. Nothing is listed until
- * it works — a settings screen offering a control that does nothing is the
- * shell lying, which is the one thing a settings screen must not do.
+ * the renderer, the binding table the rebinder edits, and §11's three
+ * accessibility controls — the colour-vision palettes, the HUD scale and
+ * reduced motion. Nothing is listed until it works — a settings screen
+ * offering a control that does nothing is the shell lying, which is the one
+ * thing a settings screen must not do.
  *
  * Writes go through the settings store on every change; the match applies
  * them at mount (and live, once the esc menu of #187 exists to open this
@@ -14,7 +16,14 @@
 
 import { useState } from 'react';
 import { CONTACT_BOOST_MAX_DB } from '../audio/engine.ts';
-import { loadSettings, saveSettings, type Settings } from '../settings/store.ts';
+import { PALETTE_LABEL, PALETTE_NAMES, type PaletteName } from '../game/palette.ts';
+import {
+  loadSettings,
+  saveSettings,
+  UI_SCALE_MAX,
+  UI_SCALE_MIN,
+  type Settings,
+} from '../settings/store.ts';
 import type { TrimBus } from '../audio/engine.ts';
 
 export interface SettingsScreenProps {
@@ -31,6 +40,20 @@ const BUS_ROWS: Array<{ bus: TrimBus; label: string; note: string }> = [
   { bus: 'music', label: 'Music', note: 'Always ducks under contacts' },
   { bus: 'ui', label: 'Interface', note: 'Confirmations and alerts' },
 ];
+
+/**
+ * What each palette is *for*, in one line.
+ *
+ * Named by the deficiency rather than by the colours, because a player looking
+ * for this control knows which one they have and does not know which hues this
+ * game happened to pick. The full tables are in docs/style-neon-noir.md.
+ */
+const PALETTE_NOTE: Record<PaletteName, string> = {
+  standard: 'The palette the art direction specifies',
+  deuteranopia: 'Red-green: green becomes sky blue, red becomes amber',
+  protanopia: 'Red-green, with reds dimmed: the same axis, every hot colour lifted',
+  tritanopia: 'Blue-yellow: amber becomes bone, violet becomes instrument teal',
+};
 
 export function SettingsScreen({ onBack, onControls }: SettingsScreenProps) {
   const [settings, setSettings] = useState<Settings>(() => loadSettings());
@@ -116,6 +139,57 @@ export function SettingsScreen({ onBack, onControls }: SettingsScreenProps) {
             <span className="menu-toggle-label">Visual-first</span>
             <span className="menu-toggle-note">
               Marks arrive within 30 ms instead of fading in behind the sound.
+            </span>
+          </label>
+
+          <fieldset className="menu-choice">
+            <legend className="menu-slider-label">Colour vision</legend>
+            <p className="menu-choice-note">
+              Tiers already differ in size, alpha and shape before they differ in colour. These
+              change the ink, never the encoding.
+            </p>
+            <div className="menu-choice-row">
+              {PALETTE_NAMES.map((name) => (
+                <button
+                  key={name}
+                  type="button"
+                  className={`menu-choice-option${settings.palette === name ? ' active' : ''}`}
+                  aria-pressed={settings.palette === name}
+                  onClick={() => patch({ palette: name })}
+                >
+                  {PALETTE_LABEL[name]}
+                </button>
+              ))}
+            </div>
+            <p className="menu-choice-note">{PALETTE_NOTE[settings.palette]}</p>
+          </fieldset>
+
+          <label
+            className="menu-slider-row"
+            title="The interface only — the map keeps its own zoom"
+          >
+            <span className="menu-slider-label">UI scale</span>
+            <input
+              type="range"
+              min={UI_SCALE_MIN * 100}
+              max={UI_SCALE_MAX * 100}
+              step={5}
+              value={Math.round(settings.uiScale * 100)}
+              onChange={(event) => patch({ uiScale: Number(event.target.value) / 100 })}
+            />
+            <span className="menu-slider-value">{percent(settings.uiScale)}</span>
+          </label>
+
+          <label className="menu-toggle-row">
+            <input
+              type="checkbox"
+              checked={settings.reducedMotion}
+              onChange={(event) => patch({ reducedMotion: event.target.checked })}
+            />
+            <span className="menu-toggle-label">Reduced motion</span>
+            <span className="menu-toggle-note">
+              The scope sweep, the exposure flash and the crush badge go still — each replaced by a
+              mark carrying the same thing it said.
             </span>
           </label>
         </div>

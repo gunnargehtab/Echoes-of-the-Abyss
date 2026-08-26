@@ -13,6 +13,8 @@ import {
   loadSettings,
   saveSettings,
   subscribeSettings,
+  UI_SCALE_MAX,
+  UI_SCALE_MIN,
 } from '../src/settings/store.ts';
 
 /** A minimal in-memory localStorage, installed per test. */
@@ -90,6 +92,65 @@ describe('the settings store', () => {
     assert.equal(loaded.contactBoostDb, 12);
     assert.equal(loaded.busVolumes.music, 0);
     assert.equal(loaded.busVolumes.contact, 1);
+  });
+
+  it('clamps the UI scale to the range §11 specifies', () => {
+    for (const [stored, expected] of [
+      [5, UI_SCALE_MAX],
+      [0.1, UI_SCALE_MIN],
+      [1.35, 1.35],
+      [Number.NaN, 1],
+      ['big', 1],
+    ] as const) {
+      backing.set('echoes.settings', JSON.stringify({ version: 1, uiScale: stored }));
+      assert.equal(loadSettings().uiScale, expected, `uiScale ${String(stored)}`);
+    }
+  });
+
+  it('falls back to the standard palette rather than to a name it cannot draw', () => {
+    backing.set('echoes.settings', JSON.stringify({ version: 1, palette: 'tritanopia' }));
+    assert.equal(loadSettings().palette, 'tritanopia');
+    for (const junk of ['monochrome', '', 7, null]) {
+      backing.set('echoes.settings', JSON.stringify({ version: 1, palette: junk }));
+      assert.equal(loadSettings().palette, 'standard', `palette ${String(junk)}`);
+    }
+  });
+
+  it('takes reduced motion from the OS until the player has answered for themselves', () => {
+    const media = (matches: boolean) => {
+      (globalThis as { matchMedia?: unknown }).matchMedia = (query: string) => ({
+        matches: query.includes('reduce') && matches,
+      });
+    };
+    try {
+      // No record at all, and a record that predates the setting: the OS answers.
+      media(true);
+      assert.equal(loadSettings().reducedMotion, true);
+      backing.set('echoes.settings', JSON.stringify({ version: 1, masterVolume: 0.5 }));
+      assert.equal(loadSettings().reducedMotion, true);
+
+      // An explicit answer outranks the OS in *both* directions — a player who
+      // turned it off should not have it turned back on every reload.
+      saveSettings({ reducedMotion: false });
+      assert.equal(loadSettings().reducedMotion, false);
+
+      media(false);
+      backing.delete('echoes.settings');
+      assert.equal(loadSettings().reducedMotion, false);
+    } finally {
+      delete (globalThis as { matchMedia?: unknown }).matchMedia;
+    }
+  });
+
+  it('survives a browser that throws on matchMedia instead of answering', () => {
+    (globalThis as { matchMedia?: unknown }).matchMedia = () => {
+      throw new Error('blocked');
+    };
+    try {
+      assert.equal(loadSettings().reducedMotion, false);
+    } finally {
+      delete (globalThis as { matchMedia?: unknown }).matchMedia;
+    }
   });
 
   it('notifies subscribers on save, and unsubscribe stops it', () => {

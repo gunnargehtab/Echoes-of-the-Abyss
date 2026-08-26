@@ -34,7 +34,7 @@
 
 import { Texture } from 'pixi.js';
 import { Faction, UnitKind } from '@echoes/shared';
-import { FACTION_PALETTE } from './palette.ts';
+import { ACTIVE_PALETTE, FACTION_PALETTE } from './palette.ts';
 import { HULL_LENGTH_M, HULL_OUTLINE } from './silhouettes.ts';
 import { bakeModelSprite, cssColor, distanceTransform, glowDot, lightAndCompose } from './bake.ts';
 import { hullMap, loadHullMaps, MAP_PPM, type HullMap } from './hullMaps.ts';
@@ -125,7 +125,11 @@ export function hullSpriteSizeM(
  */
 export function hullTexture(kind: UnitKind, faction: Faction): Texture | null {
   if (!artLoaded) return null;
-  const key = `${kind}:${faction}`;
+  // The palette is part of the key: a colour-vision palette recolours the
+  // faction's primary (docs/ui-ux.md §11), and a cache that ignored it would
+  // keep serving the sprite baked in the ink the player just switched away
+  // from. Four palettes x one faction x five hulls is still a handful.
+  const key = `${kind}:${faction}:${ACTIVE_PALETTE.name}`;
   let texture = baked.get(key);
   if (texture === undefined) {
     texture = bake(kind, faction);

@@ -13,7 +13,12 @@
  */
 
 import { ACTIONS, DEFAULT_BINDINGS, type Bindings, type LayoutName } from '../input/bindings.ts';
+import { PALETTES, type PaletteName } from '../game/palette.ts';
 import type { TrimBus } from '../audio/engine.ts';
+
+/** docs/ui-ux.md §11: "UI scale 75%-200%". */
+export const UI_SCALE_MIN = 0.75;
+export const UI_SCALE_MAX = 2;
 
 export interface Settings {
   version: 1;
@@ -38,6 +43,34 @@ export interface Settings {
   bindingLayout: LayoutName;
   /** Bindings that differ from the layout. Merged over it, never replacing it. */
   bindings: Bindings;
+  /** Colour-vision palette (ui-ux.md §11, tables in style-neon-noir.md). */
+  palette: PaletteName;
+  /** HUD magnification, 0.75-2. Never touches the world camera. */
+  uiScale: number;
+  /**
+   * Reduced motion (§11) — static equivalents for the sweep, the exposure
+   * flash and the crush badge.
+   *
+   * Defaults to the OS preference rather than to `false`: a player who has
+   * already told their system they want less movement should not have to tell
+   * this game too. The default only applies until they touch the control —
+   * once written, an explicit `false` is honoured over the OS.
+   */
+  reducedMotion: boolean;
+}
+
+/**
+ * The OS-level answer, when the record has not got one.
+ *
+ * Guarded twice over: `matchMedia` does not exist under the test runner, and
+ * some privacy modes throw on it rather than answering.
+ */
+function prefersReducedMotion(): boolean {
+  try {
+    return globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+  } catch {
+    return false;
+  }
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -50,6 +83,9 @@ export const DEFAULT_SETTINGS: Settings = {
   visualFirst: false,
   bindingLayout: 'default',
   bindings: { ...DEFAULT_BINDINGS },
+  palette: 'standard',
+  uiScale: 1,
+  reducedMotion: false,
 };
 
 const STORAGE_KEY = 'echoes.settings';
@@ -69,9 +105,9 @@ const clamp01 = (value: unknown, fallback: number): number =>
  * changed, so it loads as defaults.
  */
 function sanitise(raw: unknown): Settings {
-  if (typeof raw !== 'object' || raw === null) return DEFAULT_SETTINGS;
+  if (typeof raw !== 'object' || raw === null) return defaults();
   const record = raw as Record<string, unknown>;
-  if (record.version !== 1) return DEFAULT_SETTINGS;
+  if (record.version !== 1) return defaults();
   const buses = (record.busVolumes ?? {}) as Record<string, unknown>;
   return {
     version: 1,
@@ -95,7 +131,25 @@ function sanitise(raw: unknown): Settings {
         ? record.bindingLayout
         : 'default',
     bindings: sanitiseBindings(record.bindings),
+    palette:
+      typeof record.palette === 'string' && record.palette in PALETTES
+        ? (record.palette as PaletteName)
+        : 'standard',
+    uiScale:
+      typeof record.uiScale === 'number' && Number.isFinite(record.uiScale)
+        ? Math.min(UI_SCALE_MAX, Math.max(UI_SCALE_MIN, record.uiScale))
+        : 1,
+    reducedMotion:
+      typeof record.reducedMotion === 'boolean' ? record.reducedMotion : prefersReducedMotion(),
   };
+}
+
+/**
+ * The defaults as this device would have them — everything in
+ * `DEFAULT_SETTINGS`, plus whatever the OS has already said.
+ */
+function defaults(): Settings {
+  return { ...DEFAULT_SETTINGS, reducedMotion: prefersReducedMotion() };
 }
 
 /**
@@ -121,10 +175,10 @@ function sanitiseBindings(raw: unknown): Bindings {
 export function loadSettings(): Settings {
   try {
     const stored = globalThis.localStorage?.getItem(STORAGE_KEY);
-    if (stored === null || stored === undefined) return DEFAULT_SETTINGS;
+    if (stored === null || stored === undefined) return defaults();
     return sanitise(JSON.parse(stored));
   } catch {
-    return DEFAULT_SETTINGS;
+    return defaults();
   }
 }
 

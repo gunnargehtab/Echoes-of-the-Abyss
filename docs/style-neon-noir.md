@@ -149,6 +149,164 @@ running lights, wireframe silhouettes, and the player-colour trim only.
 | Abyssal Directorate | Biolight crimson `#C2465E` | Rows of small points (plate II's eye-lines), never area glow |
 | Hadron Knights | Resonance violet `#C9A6FF` | Razor-thin constant lines, mirror speculars — the only faction whose light never flickers |
 
+## Colour-vision palettes
+
+[ui-ux.md](ui-ux.md) §11 commits to three palettes beyond the standard one —
+deuteranopia, protanopia, tritanopia — and they ship regardless of whether
+anyone asks, because the tier scale is not allowed to depend on hue in the
+first place. Tiers already differ in **size, alpha, edge hardness and shape**
+before they differ in colour, and a Tier-3 contact carries its faction's glyph
+as well as its faction's ink. What these palettes fix is the second-order
+work colour still does: telling a quiet plant from a loud one at a glance,
+telling four navies apart in a crowded scope, telling an animal from a fleet.
+
+Three rules govern all three:
+
+1. **They move information colours only.** Chrome — `abyss-*`, `neon-cyan`,
+   `neon-magenta`, the text ramp — is identical in every palette. "Cyan tells
+   you, magenta asks you" survives every deficiency here: under the red-green
+   palettes both sit on the preserved blue axis, and under tritanopia cyan
+   reads cool and magenta reads warm. A bevel is not information.
+2. **Biome fills and Echo Mark residue do not move either.** The seafloor is
+   deliberately desaturated to 5–10 % luminance and carries no hue-only
+   meaning — propagation is read from the overlay and the numbers, never from
+   the tint. Residue is already the quietest layer on the scope and its four
+   kinds are told apart by radius and by which layer they sit in before they
+   are told apart by hue; a battle stain and an industrial hum keep their
+   warm/cool split under every deficiency here.
+3. **Four factions cannot be four hues.** Deuteranopia and protanopia leave one
+   usable hue *axis* (blue ↔ amber) and tritanopia leaves roughly two hue
+   families (red-warm, green-cool) plus neutrals. So each palette spreads the
+   four navies across **hue × luminance × saturation**, and the faction glyph
+   is what actually resolves identity. The colour is there to make the glyph
+   findable, not to replace it.
+
+### Deuteranopia and protanopia — blue and amber
+
+Both are red-green deficiencies and both are solved on the same axis, so the
+two tables are deliberately near-identical. They diverge only where red was
+carrying luminance: protanopia dims long wavelengths outright, so every hot
+colour is lifted and every dark ochre is lifted with it. Inventing more
+difference than that would be decoration.
+
+| Role | Standard | Deuteranopia | Protanopia |
+| --- | --- | --- | --- |
+| Tier 1 contact | `#4A7A8C` | `#3E6E8A` | `#3E6E8A` |
+| Tier 2 bearing | `#6FA8BF` | `#63A2C6` | `#63A2C6` |
+| Tier 3 classified | `#A8D0E0` | `#AFD6EC` | `#AFD6EC` |
+| Tier 4 track | `#FF6B5B` | `#FF8C26` | `#FFB84D` |
+| SIG low | `#3FA86A` | `#2F8FD6` | `#2F8FD6` |
+| SIG mid | `#F2B233` | `#B87E1A` | `#B87E1A` |
+| SIG high | `#E0452F` | `#FFD94A` | `#FFD94A` |
+| Threat | `#FF3B30` | `#D94010` | `#E06A00` |
+| Friendly | `#5FD0C0` | `#5FD0C0` | `#5FD0C0` |
+| Nodules | `#F2B233` | `#F5C542` | `#FFCF5C` |
+| Resonance Crystal | `#B98CFF` | `#7FA0F5` | `#7FA0F5` |
+| Fauna | `#5FA88A` | `#6E8C84` | `#6E8C84` |
+| Bathyarch primary · accent | `#F2B233` · `#8C8378` | `#F5C542` · `#8C8378` | `#FFCF5C` · `#8C8378` |
+| Pelagia primary · accent | `#1FA67A` · `#8FE36B` | `#2E9BD6` · `#9BE0FF` | `#2E9BD6` · `#9BE0FF` |
+| Directorate primary · accent | `#7A1B2E` · `#C2465E` | `#5E3A0F` · `#A8701C` | `#7A5218` · `#C98A2E` |
+| Hadron primary · accent | `#8B5CF6` · `#C9A6FF` | `#2323A0` · `#6660D8` | `#2323A0` · `#6660D8` |
+
+SIG runs cool → warm rather than green → red, and its three bands separate by
+**luminance** rather than by hue: deep blue, dark amber, bright amber. Brighter
+is louder, which is the reading the meter wants anyway. The green → amber → red
+of the standard ramp collapses to two barely distinguishable yellows here — the
+mid and high bands land 12–16 ΔE apart under simulation, which is "the same
+colour" — so hue alone could not have carried it. The band label (`DRIVE HUM`,
+`FULL PLANT`) and the number are beside the bar in every palette.
+
+Green leaves entirely. Pelagia's biolight becomes a sky blue and the Commune's
+"soft pulse, no hard edges" carries the identity that the hue used to. Fauna
+goes neutral, and the reason is worth stating plainly: the standard palette's
+cold organic green sits about 16 ΔE from Pelagia's algae teal to a *normal* eye
+and 5–7 ΔE under either red-green deficiency. A colourblind player has never
+been able to tell an animal from a Commune hull by colour at all — only by the
+organic outline, which is the identifier the bestiary always intended. These
+palettes put the colour back to work; they do not change the standard one,
+because that is an art-direction decision and this is an accessibility issue. Bathyarch keeps amber, because
+hazard amber is doctrine and amber is the one hue these deficiencies keep, and
+the Directorate takes the dark end of the same axis — its noir treatment is
+"rows of small points, never area glow", which survives being dim.
+
+### Tritanopia — red and green, no yellow, no violet
+
+Tritanopia confuses blue with green and yellow with pink, and leaves the
+red-green axis intact — so this palette is nearly the inverse of the two above.
+Crimson and algae teal are *already* correct and do not move. Amber and violet
+both go.
+
+| Role | Standard | Tritanopia |
+| --- | --- | --- |
+| Tier 1 contact | `#4A7A8C` | `#2E6A72` |
+| Tier 2 bearing | `#6FA8BF` | `#4FA6A8` |
+| Tier 3 classified | `#A8D0E0` | `#A6E0E4` |
+| Tier 4 track | `#FF6B5B` | `#FF4A4A` |
+| SIG low | `#3FA86A` | `#3FA8A0` |
+| SIG mid | `#F2B233` | `#9C4634` |
+| SIG high | `#E0452F` | `#FF3B30` |
+| Threat | `#FF3B30` | `#FF3B30` |
+| Friendly | `#5FD0C0` | `#5FD0C0` |
+| Nodules | `#F2B233` | `#F0E0C8` |
+| Resonance Crystal | `#B98CFF` | `#7FB8FF` |
+| Fauna | `#5FA88A` | `#7A7A88` |
+| Bathyarch primary · accent | `#F2B233` · `#8C8378` | `#F0E0C8` · `#8C8378` |
+| Pelagia primary · accent | `#1FA67A` · `#8FE36B` | `#1FA67A` · `#8FE36B` |
+| Directorate primary · accent | `#7A1B2E` · `#C2465E` | `#A02030` · `#E0566B` |
+| Hadron primary · accent | `#8B5CF6` · `#C9A6FF` | `#0A3348` · `#1F6EA0` |
+
+Bathyarch's sodium lamps go pale rather than saturated — under tritanopia a
+saturated amber reads pink and would collide with both the Directorate's
+crimson and the threat red, so the Consortium becomes bone-white work-light and
+keeps its iron-grey cladding. Nodules follow it, as they follow Bathyarch's
+amber in every other palette: ore is what the Consortium is *about*. Hadron's
+resonance violet becomes a deep instrument blue — violet loses its blue channel
+and drifts toward the Directorate — and the Knights' "razor-thin constant lines,
+mirror speculars" is the half of their identity that was never in the hue.
+Resonance Crystal follows Hadron into a cold blue, which is the same argument
+the standard palette makes with violet: the resource and the faction that is
+made of it should read as the same substance.
+
+Fauna is the hard case here and the table shows it honestly. Tritanopia's usable
+hues are red-warm, green-cool and neutral; the Commune already owns green and
+the tier ramp already owns teal, so the animals take a cool neutral rather than
+a fifth green that would be indistinguishable from both. They are only ever
+drawn from Tier 3 and always as organic outlines, so the shape is the identifier
+and the colour is what makes it findable.
+
+### What a palette may not do
+
+- It may not change **alpha, radius, edge hardness or shape** on the tier
+  scale. Those are the fidelity encoding, they are not colour, and a palette
+  that touched them would be re-encoding the Asymmetric Fidelity Law rather
+  than recolouring it.
+- It may not introduce a hue outside its own table. Gate 4 of
+  [graphics-standards.md](graphics-standards.md) applies to all four tables
+  equally: these *are* the source of truth, and `packages/frontend/src/game/palette.ts`
+  transcribes them.
+- It may not make anything invisible to make something else clearer. Every
+  entry above keeps the luminance class of the colour it replaces, so a
+  palette swap never costs contrast against `abyss-void`.
+
+## Reduced motion
+
+Three animations in the interface are decoration wrapped around information,
+and [ui-ux.md](ui-ux.md) §11 requires each to have a static equivalent
+"that carries the same information":
+
+| Animation | Static equivalent | What must survive |
+| --- | --- | --- |
+| The scope sweep (4 s a revolution) | A fixed cyan cross-hair on the scope's anchor, drawn at the same alpha | The sweep never carried information — it is out of phase with the 5 Hz tick on purpose so nobody believes it finds things. The anchor it rotates about *is* information: it is where the ping rings are measured from |
+| Screen-edge exposure flash (2 s decay) | A steady wedge on the same bearing, held for the same two seconds, then gone | The bearing, and the fact that it is *live*. A hold-then-cut keeps both without a ramp |
+| The crush-depth badge pulse (~0.5 Hz) | A filled badge at constant full alpha, with a hairline rule under it | "This hull is below its Pressure Rating and losing tonnage that will not heal." The pulse said *unrecoverable*; the rule says it without moving |
+
+Reduced motion does **not** touch the ping wavefront, the acquisition brackets,
+the mark fade-in, or the contact ghost decay. Those are not decoration: an
+expanding ring is the ping's radius over time, brackets closing are the
+acquisition, and a fading mark is decaying confidence. Removing them would
+remove information, which is the opposite of what the setting is for. The rule
+is: **if the motion is the message, it stays.**
+
 ## Motion and FX timing
 
 - **Sonar cadence is the heartbeat.** The Echo Layer resolves at 5 Hz

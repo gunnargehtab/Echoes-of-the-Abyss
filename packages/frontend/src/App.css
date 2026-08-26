@@ -88,12 +88,25 @@
  * reachable by a screen reader: §11 makes this the accessible mirror of the
  * audio channel, and a Pixi-drawn log could be none of those things.
  */
+/*
+ * The three DOM panels take docs/ui-ux.md §11's UI scale the same way the Pixi
+ * HUD does, through the `--ui-scale` variable GameCanvas sets on `.game-root`.
+ * A transform rather than a font-size cascade: each panel is anchored to a
+ * screen corner, and scaling from that corner keeps it anchored — a panel that
+ * grew about its centre would walk off the edge at 200%.
+ */
 .contact-log {
   position: absolute;
-  top: 38px;
-  right: 10px;
-  width: min(340px, 32vw);
-  max-height: 40vh;
+  /* Offsets scale with the panel: the top strip and the command bar the panels
+     clear are Pixi-drawn and scale too, so a fixed 38px would slide under the
+     strip at 200%. Extents divide by it instead, so a panel still occupies at
+     most its share of the viewport — larger rows, fewer of them. */
+  top: calc(38px * var(--ui-scale, 1));
+  right: calc(10px * var(--ui-scale, 1));
+  transform: scale(var(--ui-scale, 1));
+  transform-origin: top right;
+  width: min(340px, calc(32vw / var(--ui-scale, 1)));
+  max-height: calc(40vh / var(--ui-scale, 1));
   display: flex;
   flex-direction: column;
   border: 1px solid rgba(255, 61, 166, 0.45);
@@ -135,7 +148,11 @@
 
 .contact-log-row {
   display: grid;
-  grid-template-columns: auto auto 1fr auto;
+  /* The detail is the long cell and the flexible one, so it is the cell that
+     gives when the panel is narrow — which it is at 200% UI scale. An `auto`
+     track refuses to shrink below max-content, so leaving the detail on `auto`
+     made the columns overrun each other rather than wrap. */
+  grid-template-columns: auto auto auto minmax(0, 1fr);
   gap: 8px;
   width: 100%;
   padding: 3px 8px;
@@ -147,6 +164,14 @@
   text-align: left;
   cursor: pointer;
   user-select: text;
+}
+
+/* Grid children default to min-content, which lets a long cell push the row
+   wider than the panel. At 200% UI scale the panel is narrow enough for that
+   to happen, and a clipped log row is a log row that stops being the mirror
+   §11 requires it to be. */
+.contact-log-row > * {
+  min-width: 0;
 }
 
 .contact-log-row:disabled {
@@ -169,23 +194,29 @@
 /*
  * Tier is encoded in weight and brightness as well as hue, per §11: the scale
  * has to survive any colour vision deficiency, so colour is never alone.
+ *
+ * The hues come from the active palette rather than from literals here — the
+ * log is the accessible mirror of the audio channel, so it would be the last
+ * place that should keep drawing the standard tier ramp after the player has
+ * chosen another. GameCanvas sets `--tier-1..4` beside `--ui-scale`; the
+ * fallbacks are the standard palette, for a log rendered outside a match.
  */
 .contact-log-row.tier-1 .contact-log-tier {
-  color: #4a7a8c;
+  color: var(--tier-1, #4a7a8c);
   opacity: 0.75;
 }
 
 .contact-log-row.tier-2 .contact-log-tier {
-  color: #6fa8bf;
+  color: var(--tier-2, #6fa8bf);
 }
 
 .contact-log-row.tier-3 .contact-log-tier {
-  color: #a8d0e0;
+  color: var(--tier-3, #a8d0e0);
   font-weight: 700;
 }
 
 .contact-log-row.tier-4 .contact-log-tier {
-  color: #ff6b5b;
+  color: var(--tier-4, #ff6b5b);
   font-weight: 700;
   letter-spacing: 0.08em;
 }
@@ -197,7 +228,8 @@
 
 .contact-log-detail {
   opacity: 0.7;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  text-align: right;
 }
 
 /*
@@ -1000,11 +1032,13 @@
  */
 .objectives {
   position: absolute;
-  top: 38px;
+  top: calc(38px * var(--ui-scale, 1));
   /* Clear of the depth ribbon, which owns the first 26 px of the left edge. */
-  left: 40px;
-  width: min(340px, 32vw);
-  max-height: 38vh;
+  left: calc(40px * var(--ui-scale, 1));
+  transform: scale(var(--ui-scale, 1));
+  transform-origin: top left;
+  width: min(340px, calc(32vw / var(--ui-scale, 1)));
+  max-height: calc(38vh / var(--ui-scale, 1));
   display: flex;
   flex-direction: column;
   border: 1px solid color-mix(in srgb, var(--neon-magenta) 45%, transparent);
@@ -1167,11 +1201,13 @@ button.objectives-row:hover {
  */
 .mission-log {
   position: absolute;
-  right: 10px;
+  right: calc(10px * var(--ui-scale, 1));
   /* Above the command bar (80 px) with a hand's breadth of clearance. */
-  bottom: 92px;
-  width: min(420px, 34vw);
-  max-height: 24vh;
+  bottom: calc(92px * var(--ui-scale, 1));
+  transform: scale(var(--ui-scale, 1));
+  transform-origin: bottom right;
+  width: min(420px, calc(34vw / var(--ui-scale, 1)));
+  max-height: calc(24vh / var(--ui-scale, 1));
   display: flex;
   flex-direction: column;
   border: 1px solid color-mix(in srgb, var(--neon-cyan) 35%, transparent);
@@ -1562,4 +1598,52 @@ button.objectives-row:hover {
   border-color: color-mix(in srgb, var(--glass-stroke) 60%, transparent);
   color: var(--text-dim);
   cursor: default;
+}
+
+/*
+ * A radio group that is not a radio group — the colour-vision palettes
+ * (docs/ui-ux.md §11). Buttons rather than inputs because each one *applies*
+ * immediately: the whole point is to look at the screen in that palette and
+ * decide, so it is a choice you make by seeing it, not by submitting a form.
+ * `aria-pressed` keeps that legible to a screen reader.
+ */
+.menu-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.menu-choice-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.menu-choice-option {
+  flex: 1 1 7rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--glass-stroke);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-bright);
+  font: inherit;
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.menu-choice-option.active {
+  border-color: color-mix(in srgb, var(--neon-cyan) 60%, transparent);
+  background: color-mix(in srgb, var(--neon-cyan) 10%, transparent);
+}
+
+.menu-choice-note {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.58rem;
+  line-height: 1.5;
+  letter-spacing: 0.03em;
 }

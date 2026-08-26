@@ -7,10 +7,11 @@
  * renderer and only connection status crosses back into React.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import {
   LIFECYCLE,
   MatchPhase,
+  ResolutionTier,
   type AiDifficulty,
   type EchoSnapshot,
   type Faction,
@@ -18,6 +19,7 @@ import {
   type MissionView,
 } from '@echoes/shared';
 import { EchoRenderer, type ContactLogEntry } from './EchoRenderer.ts';
+import { paletteFor, type PaletteName } from './palette.ts';
 import { ContactLog } from './ContactLog.tsx';
 import { Lobby } from './Lobby.tsx';
 import { MatchResult } from './MatchResult.tsx';
@@ -36,6 +38,24 @@ import { loadSettings, subscribeSettings, type Settings } from '../settings/stor
 
 /** Longest log a player will ever scroll back through. */
 const MAX_LOG_ENTRIES = 300;
+
+/** `#rrggbb` for a Pixi colour int, so CSS can use the same table Pixi does. */
+const hex = (color: number) => `#${color.toString(16).padStart(6, '0')}`;
+
+/**
+ * What the DOM half of the interface needs from the settings the renderer
+ * already applied: the UI scale and the four tier inks.
+ */
+function cssVariables(uiScale: number, palette: PaletteName): CSSProperties {
+  const { tier } = paletteFor(palette);
+  return {
+    '--ui-scale': uiScale,
+    '--tier-1': hex(tier[ResolutionTier.Contact].color),
+    '--tier-2': hex(tier[ResolutionTier.Bearing].color),
+    '--tier-3': hex(tier[ResolutionTier.Classification].color),
+    '--tier-4': hex(tier[ResolutionTier.Track].color),
+  } as CSSProperties;
+}
 
 export interface GameCanvasProps {
   /** Commander name from the setup screen; empty lets the server assign one. */
@@ -85,6 +105,25 @@ export function GameCanvas({ playerName, mapId, missionId, resume, onExit }: Gam
   /** Non-null once the mission has concluded. Never a winner; an outcome. */
   const [missionOver, setMissionOver] = useState<MissionResultPayload | null>(null);
   const [mapName, setMapName] = useState('');
+  /**
+   * §11's UI scale, mirrored into React for the DOM half of the interface.
+   *
+   * The Pixi HUD is scaled by the renderer; the contact log, the objectives
+   * panel and the mission log are DOM, so they take the same factor through a
+   * CSS variable. Both halves must move together or the interface would be two
+   * sizes at once. React owns this because it changes on a settings event, not
+   * on a frame.
+   */
+  const [uiScale, setUiScale] = useState(1);
+  /**
+   * The active palette, for the DOM half of the interface.
+   *
+   * The contact log encodes tier in colour as well as in weight, and it is the
+   * accessible mirror of the audio channel (§11) — so it would be the worst
+   * place to keep drawing the standard tier ramp after the player has picked
+   * another. The four inks ride down as CSS variables.
+   */
+  const [palette, setPalette] = useState<PaletteName>('standard');
   /** Seats this map has. A map's spawn list is its player count. */
   const [maxSlots, setMaxSlots] = useState(4);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -295,6 +334,13 @@ export function GameCanvas({ playerName, mapId, missionId, resume, onExit }: Gam
         // rest, so rebinding from the esc menu takes effect without leaving
         // the water — a binding you cannot try is a binding you cannot judge.
         activeRenderer.setBindings(resolveBindings(settings.bindingLayout, settings.bindings));
+        // §11's accessibility wave 2. The palette and the reduced-motion rules
+        // are wholly the renderer's; the scale is shared with the DOM panels.
+        activeRenderer.setPalette(settings.palette);
+        setPalette(settings.palette);
+        activeRenderer.setReducedMotion(settings.reducedMotion);
+        activeRenderer.setUiScale(settings.uiScale);
+        setUiScale(settings.uiScale);
       };
       applySettings(loadSettings());
       // Nothing writes settings while a match is on screen today, but the
@@ -357,7 +403,7 @@ export function GameCanvas({ playerName, mapId, missionId, resume, onExit }: Gam
   const selfReady = lobby?.players.find((player) => player.sessionId === sessionId)?.ready ?? false;
 
   return (
-    <div className="game-root">
+    <div className="game-root" style={cssVariables(uiScale, palette)}>
       <div ref={hostRef} className="game-host" />
       {live && phase !== MatchPhase.Lobby && <ContactLog entries={log} onFocus={focusOn} />}
       {live && phase !== MatchPhase.Lobby && mission !== null && (
