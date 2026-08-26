@@ -48,6 +48,7 @@ import { hasComponent } from 'bitecs';
 import { MoveOrder } from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
 import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
+import { REPLAY_FORMAT_VERSION, playReplay } from '../src/sim/replay.ts';
 import { PROLOGUE_SORROWGATE } from '../src/sim/missions/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
@@ -494,6 +495,46 @@ describe('the mission view is sent on change', () => {
       last.objectives.length,
       PROLOGUE_SORROWGATE.objectives.length,
       'by the close every reading has been handed over'
+    );
+  });
+});
+
+describe('a mission replays', () => {
+  it('reproduces its own beats with no divergence', () => {
+    // The load-bearing claim of the whole design, and the reason the runtime
+    // is ticked from inside `Match.step()` rather than from the room: playback
+    // drives `stepOnce`, so a mission installed by the constructor and beats
+    // keyed on `world.tick` are reproduced with no new command types and no
+    // new hash inputs. Driven room-side this would replay as an empty map —
+    // which is exactly the failure the comment above ECHO_TICK_INTERVAL
+    // records for the Echo pass itself.
+    //
+    // Run long enough to cross the two beats that mutate the world hardest:
+    // Drenn's ping at 09:00 (SIG 95, a Tier-4 reveal, the player lit) and the
+    // transit at 10:40, which destroys the court's array.
+    const match = new Match(missionMapById(PROLOGUE_SORROWGATE.mapId)!, {
+      mission: PROLOGUE_SORROWGATE,
+      fauna: false,
+      seed: 21,
+      record: true,
+    });
+    for (let tick = 0; tick < SIM.TICK_HZ * 660; tick++) match.update(STEP_MS);
+
+    const replay = match.replay();
+    assert.ok(replay !== null, 'the match recorded');
+    assert.equal(replay.version, REPLAY_FORMAT_VERSION);
+    assert.equal(replay.missionId, PROLOGUE_SORROWGATE.id, 'the mission id is the setup');
+    // A mission seats itself in the constructor, so the recorder never wrote a
+    // roster for one. An empty `players` array here is correct, not a bug —
+    // and `playReplay`'s seating loop is simply empty.
+    assert.equal(replay.players.length, 0);
+    assert.ok(replay.checkpoints.length > 0, 'something was checkpointed');
+
+    const result = playReplay(replay);
+    assert.equal(
+      result.divergedAtTick,
+      null,
+      `a mission replay diverged at tick ${String(result.divergedAtTick)}`
     );
   });
 });
