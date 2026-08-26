@@ -201,6 +201,25 @@ export type MissionBeat =
     }
   | { atTick: number; kind: 'lose'; tag: MissionTag; note: string }
   | { atTick: number; kind: 'release'; tag: MissionTag; note: string }
+  /**
+   * Write the ground under a named region (#197).
+   *
+   * The one beat that changes the map rather than what is on it. Authored as a
+   * region so it reads like the map literal it is editing, and applied in beat
+   * order at the same tick — which is what lets a span be collapsed whole and
+   * a passage through it re-cut immediately after, exactly the way
+   * `sim/maps/types.ts` lets a tunnel be laid across a plateau.
+   *
+   * `SOLID` from `sim/terrain.ts` is how rock is spelled.
+   */
+  | {
+      atTick: number;
+      kind: 'ground';
+      region: string;
+      floorM?: number;
+      ceilingM?: number;
+      note: string;
+    }
   | { atTick: number; kind: 'objective'; id: string; status: ObjectiveStatus; note: string }
   | { atTick: number; kind: 'say'; speaker: string; text: string; note: string }
   | { atTick: number; kind: 'resolve'; note: string };

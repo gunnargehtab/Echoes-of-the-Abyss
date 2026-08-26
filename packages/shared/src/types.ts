@@ -382,6 +382,38 @@ export interface LobbyPlayerView {
   difficulty: AiDifficulty;
 }
 
+/**
+ * What a room tells the world about itself, before anyone is in it.
+ *
+ * The water and the seat count, and nothing else — not who is in there, not
+ * which navies they hold, not their names. The ready room negotiates factions
+ * among the people already in it; a public listing that named them would let a
+ * fourth player counter-pick a match before joining, and one that named
+ * commanders would let anyone choose who to avoid or who to hunt. This is a
+ * game about hidden information, and a lobby list is the easiest place to give
+ * it away by accident (docs/tech-stack.md, "Finding a match").
+ *
+ * Lives in shared because the room writes it and the browser reads it, and a
+ * listing whose two halves disagreed would be a browser sending players at
+ * rooms that are not there.
+ */
+export interface MatchListingMetadata {
+  mapId: string;
+  mapName: string;
+  seats: number;
+  /**
+   * Seats taken, counting AI. Colyseus's own client count reports only
+   * sockets, so a room holding one commander and two AI seats would advertise
+   * three free chairs and refuse two of them on arrival.
+   */
+  filled: number;
+}
+
+/** One row of the match browser: a listing, plus the id needed to join it. */
+export interface MatchListing extends MatchListingMetadata {
+  roomId: string;
+}
+
 /** A unit the player owns. Always full detail — it is theirs. */
 export interface OwnUnit {
   id: number;

@@ -7,10 +7,11 @@
  * renderer and only connection status crosses back into React.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import {
   LIFECYCLE,
   MatchPhase,
+  ResolutionTier,
   type AiDifficulty,
   type EchoSnapshot,
   type Faction,
@@ -18,6 +19,7 @@ import {
   type MissionView,
 } from '@echoes/shared';
 import { EchoRenderer, type ContactLogEntry } from './EchoRenderer.ts';
+import { paletteFor, type PaletteName } from './palette.ts';
 import { ContactLog } from './ContactLog.tsx';
 import { Lobby } from './Lobby.tsx';
 import { MatchResult } from './MatchResult.tsx';
@@ -31,10 +33,29 @@ import {
   type LobbyView,
   type MissionLine,
 } from '../net/GameClient.ts';
+import { resolveBindings } from '../input/bindings.ts';
 import { loadSettings, subscribeSettings, type Settings } from '../settings/store.ts';
 
 /** Longest log a player will ever scroll back through. */
 const MAX_LOG_ENTRIES = 300;
+
+/** `#rrggbb` for a Pixi colour int, so CSS can use the same table Pixi does. */
+const hex = (color: number) => `#${color.toString(16).padStart(6, '0')}`;
+
+/**
+ * What the DOM half of the interface needs from the settings the renderer
+ * already applied: the UI scale and the four tier inks.
+ */
+function cssVariables(uiScale: number, palette: PaletteName): CSSProperties {
+  const { tier } = paletteFor(palette);
+  return {
+    '--ui-scale': uiScale,
+    '--tier-1': hex(tier[ResolutionTier.Contact].color),
+    '--tier-2': hex(tier[ResolutionTier.Bearing].color),
+    '--tier-3': hex(tier[ResolutionTier.Classification].color),
+    '--tier-4': hex(tier[ResolutionTier.Track].color),
+  } as CSSProperties;
+}
 
 export interface GameCanvasProps {
   /** Commander name from the setup screen; empty lets the server assign one. */
@@ -48,6 +69,17 @@ export interface GameCanvasProps {
    * also what tells this component there is no ready room to show.
    */
   missionId?: string;
+  /**
+   * Join this exact room rather than matchmaking into one — a row in the match
+   * browser or a code the host handed over (docs/tech-stack.md, "Finding a
+   * match").
+   */
+  roomId?: string;
+  /**
+   * Create a room instead of joining one, and whether the world may see it.
+   * Absent means quick match, which is `joinOrCreate`.
+   */
+  create?: 'public' | 'private';
   /** Whether a held seat should be redeemed rather than a new match joined. */
   resume: boolean;
   /**
@@ -58,7 +90,15 @@ export interface GameCanvasProps {
   onExit(): void;
 }
 
-export function GameCanvas({ playerName, mapId, missionId, resume, onExit }: GameCanvasProps) {
+export function GameCanvas({
+  playerName,
+  mapId,
+  missionId,
+  roomId,
+  create,
+  resume,
+  onExit,
+}: GameCanvasProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<ConnectionStatus>('connecting');
   const [detail, setDetail] = useState<string>('');
@@ -84,9 +124,35 @@ export function GameCanvas({ playerName, mapId, missionId, resume, onExit }: Gam
   /** Non-null once the mission has concluded. Never a winner; an outcome. */
   const [missionOver, setMissionOver] = useState<MissionResultPayload | null>(null);
   const [mapName, setMapName] = useState('');
+  /**
+   * §11's UI scale, mirrored into React for the DOM half of the interface.
+   *
+   * The Pixi HUD is scaled by the renderer; the contact log, the objectives
+   * panel and the mission log are DOM, so they take the same factor through a
+   * CSS variable. Both halves must move together or the interface would be two
+   * sizes at once. React owns this because it changes on a settings event, not
+   * on a frame.
+   */
+  const [uiScale, setUiScale] = useState(1);
+  /**
+   * The active palette, for the DOM half of the interface.
+   *
+   * The contact log encodes tier in colour as well as in weight, and it is the
+   * accessible mirror of the audio channel (§11) — so it would be the worst
+   * place to keep drawing the standard tier ramp after the player has picked
+   * another. The four inks ride down as CSS variables.
+   */
+  const [palette, setPalette] = useState<PaletteName>('standard');
   /** Seats this map has. A map's spawn list is its player count. */
   const [maxSlots, setMaxSlots] = useState(4);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  /**
+   * The room's own id, which is the code a host hands somebody (§14). Shown
+   * only in the ready room: it is the one piece of a private room worth
+   * passing on, and the ready room is where the host is standing when they
+   * want to.
+   */
+  const [joinedRoomId, setJoinedRoomId] = useState<string | null>(null);
   const rendererRef = useRef<EchoRenderer | null>(null);
   const clientRef = useRef<GameClient | null>(null);
   /**
@@ -205,6 +271,7 @@ export function GameCanvas({ playerName, mapId, missionId, resume, onExit }: Gam
 
       client = new GameClient({
         onTerrain: (terrain) => activeRenderer.setTerrain(terrain),
+        onGround: (cells) => activeRenderer.applyGround(cells),
         onMap: (map) => {
           activeRenderer.setMap(map);
           setMapName(map.name);
@@ -290,6 +357,17 @@ export function GameCanvas({ playerName, mapId, missionId, resume, onExit }: Gam
         );
         audio.setSpatialisation(settings.mono ? 'mono' : 'stereo');
         activeRenderer.setPrecedenceMode(settings.visualFirst ? 'visual-first' : 'ear-first');
+        // §11's full rebinding. Applied through the same subscription as the
+        // rest, so rebinding from the esc menu takes effect without leaving
+        // the water — a binding you cannot try is a binding you cannot judge.
+        activeRenderer.setBindings(resolveBindings(settings.bindingLayout, settings.bindings));
+        // §11's accessibility wave 2. The palette and the reduced-motion rules
+        // are wholly the renderer's; the scale is shared with the DOM panels.
+        activeRenderer.setPalette(settings.palette);
+        setPalette(settings.palette);
+        activeRenderer.setReducedMotion(settings.reducedMotion);
+        activeRenderer.setUiScale(settings.uiScale);
+        setUiScale(settings.uiScale);
       };
       applySettings(loadSettings());
       // Nothing writes settings while a match is on screen today, but the
@@ -297,8 +375,9 @@ export function GameCanvas({ playerName, mapId, missionId, resume, onExit }: Gam
       unsubscribeSettings = subscribeSettings(applySettings);
 
       clientRef.current = client;
-      await client.connect({ name: playerName, mapId, missionId, resume });
+      await client.connect({ name: playerName, mapId, missionId, roomId, create, resume });
       setSessionId(client.sessionId);
+      setJoinedRoomId(client.roomId);
     };
 
     let unsubscribeSettings: (() => void) | null = null;
@@ -319,8 +398,10 @@ export function GameCanvas({ playerName, mapId, missionId, resume, onExit }: Gam
     // The identity of a mount is the match it joins: the shell never changes
     // these props on a live canvas, it unmounts and remounts. The mission is
     // part of that identity — the same water under a mission is a different
-    // room from the same water without one.
-  }, [playerName, mapId, missionId, resume]);
+    // room from the same water without one — and so is which door was used,
+    // because joining a named room and matchmaking into one are different
+    // matches even when every other prop agrees.
+  }, [playerName, mapId, missionId, roomId, create, resume]);
 
   const focusOn = useCallback((x: number, y: number) => {
     rendererRef.current?.focusOn(x, y);
@@ -352,7 +433,7 @@ export function GameCanvas({ playerName, mapId, missionId, resume, onExit }: Gam
   const selfReady = lobby?.players.find((player) => player.sessionId === sessionId)?.ready ?? false;
 
   return (
-    <div className="game-root">
+    <div className="game-root" style={cssVariables(uiScale, palette)}>
       <div ref={hostRef} className="game-host" />
       {live && phase !== MatchPhase.Lobby && <ContactLog entries={log} onFocus={focusOn} />}
       {live && phase !== MatchPhase.Lobby && mission !== null && (
@@ -369,6 +450,7 @@ export function GameCanvas({ playerName, mapId, missionId, resume, onExit }: Gam
           mapName={mapName}
           players={lobby.players}
           sessionId={sessionId}
+          roomId={joinedRoomId}
           // The server knows the real cap — a map's spawn list is its player
           // count — and refuses a seat past it. This only greys the button.
           canAddAi={lobby.players.length < maxSlots}

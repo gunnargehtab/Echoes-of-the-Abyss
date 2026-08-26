@@ -37,6 +37,7 @@ import {
   UnitKind,
 } from '@echoes/shared';
 
+import { SOLID } from '../terrain.ts';
 import type { MissionDefinition } from './types.ts';
 
 /**
@@ -125,6 +126,38 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       widthM: 1800,
       heightM: 700,
       note: 'The Upper Concourse — the passenger terminus, above the layer. Where the count is measured',
+    },
+    /**
+     * The arch, as a rectangle — §9's "the arch goes", and the two regions the
+     * 10:40 beats write.
+     *
+     * One cell row, 2,000-2,200 m, and that is the whole trick: on a 250 m grid
+     * it lands inside row 8 and nowhere else. Rows are what separate the
+     * chamber (from 2,300 m) from the Descent and the Concourse above it
+     * (to 1,600 m), so collapsing this row and re-cutting the lock through it
+     * makes the lock the only way north — which is what §9 has been claiming
+     * since before anything backed it.
+     *
+     * The height is 200 rather than 250 on purpose: `fillGround` takes an
+     * inclusive rect, so a 250 m band starting on a cell boundary would reach
+     * into the next row and take the top of the chamber with it. The mission
+     * test reads the ground afterwards rather than trusting this comment.
+     */
+    {
+      id: 'arch-span',
+      x: 0,
+      y: 2000,
+      widthM: 5000,
+      heightM: 200,
+      note: 'The arch — the span the city carried over the chamber district, and everything level with it',
+    },
+    {
+      id: 'service-lock',
+      x: 1900,
+      y: 1900,
+      widthM: 300,
+      heightM: 450,
+      note: 'The Service Lock, restated from the map so the collapse can be cut back through it',
     },
   ],
   markers: [
@@ -610,6 +643,28 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     // The dome holds. The service lock is now the only way out, and the flight
     // is on its own ears from here: the last phase runs deaf, against ghost
     // markers twenty seconds stale, which is what §10 says it teaches.
+    // The arch itself. Two writes, in this order, exactly as the map literal
+    // paints later regions over earlier ones: the span goes solid across the
+    // whole width, and the service lock is immediately cut back through it.
+    // Authored as two beats rather than one shaped rectangle because that is
+    // what actually happened — the city fell in and the maintenance passage
+    // did not — and because a single rect would have to know where the lock is
+    // and would stop agreeing with the map the first time either moved.
+    {
+      atTick: T(10, 40),
+      kind: 'ground',
+      region: 'arch-span',
+      ...SOLID,
+      note: 'The arch goes. The span north of the chamber is rock, at every depth',
+    },
+    {
+      atTick: T(10, 40),
+      kind: 'ground',
+      region: 'service-lock',
+      floorM: 1500,
+      ceilingM: 1300,
+      note: 'The lock holds. Roofed water, and now the only way north out of the chamber',
+    },
     {
       atTick: T(10, 40),
       kind: 'lose',
@@ -633,11 +688,18 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       kind: 'move',
       tag: 'commune-1',
       x: 1150,
-      y: 2000,
+      y: 2280,
+      // South of the span, on the southern end of the vein they came in over.
+      // These three used to withdraw *through* the arch — 2,000 and 2,150 and
+      // 1,800 metres, which is the row now closing on this exact tick and the
+      // row above it. Ordering a hull into ground that goes solid in the same
+      // beat list is how a delegation ends up stranded in rock instead of
+      // scattering, and it is why this mission's ground beat could not simply
+      // be added without reading what else fires at 10:40.
       note: 'The Commune withdraws onto the vein it came in over',
     },
-    { atTick: T(10, 40), kind: 'move', tag: 'commune-2', x: 1050, y: 2150, note: '' },
-    { atTick: T(10, 40), kind: 'move', tag: 'commune-3', x: 1200, y: 1800, note: '' },
+    { atTick: T(10, 40), kind: 'move', tag: 'commune-2', x: 1050, y: 2400, note: '' },
+    { atTick: T(10, 40), kind: 'move', tag: 'commune-3', x: 1250, y: 2300, note: '' },
     { atTick: T(10, 40), kind: 'move', tag: 'kalliso-1', x: 1600, y: 1350, note: '' },
     { atTick: T(10, 40), kind: 'move', tag: 'kalliso-2', x: 1680, y: 1280, note: '' },
     {

@@ -420,6 +420,19 @@ export class MissionRuntime {
       case 'release':
         this.heldUntil.delete(beat.tag);
         return;
+      case 'ground': {
+        const region = this.definition.regions.find((candidate) => candidate.id === beat.region);
+        // A beat naming a region that does not exist is an authoring error, and
+        // it is one the mission test catches by name. Silently doing nothing
+        // here is right at runtime: a mission mid-flight is not the place to
+        // throw, and the ground simply stays as the map authored it.
+        if (region === undefined) return;
+        world.terrain.fillGround(region.x, region.y, region.widthM, region.heightM, {
+          floorM: beat.floorM,
+          ceilingM: beat.ceilingM,
+        });
+        return;
+      }
       case 'objective':
         this.statuses.set(beat.id, beat.status);
         return;

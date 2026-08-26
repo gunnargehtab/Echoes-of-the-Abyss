@@ -149,6 +149,20 @@ export function hashWorld(world: SimWorld): number {
     }
   }
 
+  // The ground, once a mission has started writing it (#197). Only the
+  // mid-match changes are mixed, not the whole grid: the map is chosen by id
+  // and built identically on both sides of a replay, so hashing 300-odd
+  // constructed cells every checkpoint would cost the walk and prove nothing.
+  // What a replay can genuinely diverge on is *when* and *what* a beat wrote,
+  // and that is exactly the list — a match whose arch fell on a different tick
+  // now reports as divergent instead of quietly playing on different ground.
+  h = mixU32(h, world.terrain.revision);
+  for (const change of world.terrain.groundHistory) {
+    h = mixU32(h, change.index);
+    h = mixU32(h, change.floorM);
+    h = mixU32(h, change.ceilingM);
+  }
+
   // Economies live outside the ECS, and a match where one side is quietly
   // richer has diverged just as surely as one where a hull moved.
   const slots = [...world.economies.keys()].sort((a, b) => a - b);

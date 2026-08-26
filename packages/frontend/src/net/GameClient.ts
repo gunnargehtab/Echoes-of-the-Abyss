@@ -16,12 +16,15 @@ import {
   type GameOverPayload,
   type HarvestThrottle,
   type LobbyPlayerView,
+  type MatchListing,
+  type MatchListingMetadata,
   type MissionResultPayload,
   type MissionView,
   type ResourceNodeInfo,
   type StructureKind,
   type UnitKind,
 } from '@echoes/shared';
+import { toListings } from './rooms.ts';
 
 /**
  * Which map this match is on.
@@ -62,6 +65,19 @@ export interface TerrainPayload {
   ceiling: number[];
 }
 
+/**
+ * Cells whose water column changed mid-match, and the ground's revision after
+ * applying them.
+ *
+ * Cells rather than the rectangle a mission authored: a rect would make both
+ * sides redo the metres-to-cells arithmetic and agree about every `Math.floor`,
+ * and cells are what actually changed.
+ */
+export interface GroundDeltaPayload {
+  revision: number;
+  cells: { index: number; floorM: number; ceilingM: number }[];
+}
+
 export interface AssignedPayload {
   slot: number;
   faction: Faction;
@@ -97,6 +113,8 @@ export interface MissionLine {
 
 export interface GameClientHandlers {
   onTerrain(terrain: TerrainPayload): void;
+  /** Ground the match changed under the client's feet (#197). */
+  onGround(cells: GroundDeltaPayload['cells']): void;
   onMap(map: MapPayload): void;
   onNodes(nodes: ResourceNodeInfo[]): void;
   onAssigned(assigned: AssignedPayload): void;
@@ -188,11 +206,53 @@ export function storedMissionId(): string | null {
   }
 }
 
+/**
+ * The open rooms, for the match browser (docs/tech-stack.md, "Finding a match").
+ *
+ * A module function rather than a `GameClient` method because it runs *before*
+ * there is a match to be a client of, and it must not be the thing that opens a
+ * socket: browsing is looking, not joining.
+ *
+ * The matchmaker's availability query already filters `locked: false` and
+ * `private: false`, so a started room and a private one are absent rather than
+ * shown-and-refused. A room that has not published its metadata yet is dropped
+ * instead of guessed at — a row that could not say which water it was on would
+ * be asking the player to click and find out.
+ */
+export async function listMatches(endpoint: string = DEFAULT_ENDPOINT): Promise<MatchListing[]> {
+  try {
+    const rooms = await new Client(endpoint).getAvailableRooms<MatchListingMetadata>('match');
+    return toListings(rooms);
+  } catch {
+    // A server that is down is an empty list rather than an error screen: the
+    // browser also carries a code field and a host button, and neither of them
+    // stops working because the listing endpoint did.
+    return [];
+  }
+}
+
 export interface ConnectOptions {
   /** Commander name, sent on join. The server truncates and defaults. */
   name?: string;
   /** Which archetype to create, if this client ends up creating the room. */
   mapId?: string;
+  /**
+   * Join this specific room rather than matchmaking into one — the browser's
+   * rows and the room-code field both land here.
+   *
+   * A room id is not a secret in the sense a token is: it is the *whole* of
+   * what makes a private room reachable, which is exactly what a code is for.
+   * The server still refuses a locked room and a full one.
+   */
+  roomId?: string;
+  /**
+   * Create a room rather than joining one, and whether the world may see it.
+   *
+   * `private` is unlisted and unmatchable, reachable only by its id. Solo uses
+   * it because a solo game somebody else can be matched into is not a solo
+   * game — which is what the old `joinOrCreate` path quietly allowed.
+   */
+  create?: 'public' | 'private';
   /**
    * Which authored mission to play, or absent for an ordinary skirmish.
    *
@@ -260,6 +320,15 @@ export class GameClient {
       }
     }
     try {
+      // Three doors, and the caller has already chosen which one. A room id is
+      // the most specific and wins: it names a room, and matchmaking cannot
+      // improve on that.
+      if (options.roomId !== undefined && options.roomId !== '') {
+        const name = options.name === undefined || options.name === '' ? undefined : options.name;
+        this.attach(await this.client.joinById(options.roomId.trim(), { name }));
+        this.handlers.onStatus('connected');
+        return;
+      }
       // The shell passes the archetype in; `?map=<id>` stays honoured as the
       // fallback so a pasted URL (and the headless harness) still lands on the
       // right map. Either selects only when this client creates the room;
@@ -271,7 +340,20 @@ export class GameClient {
           ? undefined
           : (new URLSearchParams(window.location.search).get('map') ?? undefined));
       const name = options.name === undefined || options.name === '' ? undefined : options.name;
-      this.attach(await this.client.joinOrCreate('match', { name, mapId, missionId: wanted }));
+      const joinOptions = {
+        name,
+        mapId,
+        missionId: wanted,
+        ...(options.create === undefined ? {} : { private: options.create === 'private' }),
+      };
+      // `create` makes a room of its own rather than looking for one. Quick
+      // match keeps `joinOrCreate` — picking a map is picking a queue, and that
+      // is still the fastest way into a game with strangers.
+      this.attach(
+        options.create === undefined
+          ? await this.client.joinOrCreate('match', joinOptions)
+          : await this.client.create('match', joinOptions)
+      );
       this.handlers.onStatus('connected');
     } catch (error) {
       this.handlers.onStatus('error', error instanceof Error ? error.message : String(error));
@@ -289,6 +371,13 @@ export class GameClient {
     rememberToken(room.reconnectionToken, this.missionId);
 
     room.onMessage('terrain', (payload: TerrainPayload) => this.handlers.onTerrain(payload));
+    // Ground that changed after the join payload was sent (#197). A mission
+    // beat can collapse a span, and a client still drawing the route that is
+    // no longer there is worse than one drawing nothing — the player would be
+    // steering into rock they can see is open.
+    room.onMessage('ground', (payload: GroundDeltaPayload) =>
+      this.handlers.onGround(payload.cells ?? [])
+    );
     room.onMessage('map', (payload: MapPayload) => this.handlers.onMap(payload));
     room.onMessage('nodes', (payload: ResourceNodeInfo[]) => this.handlers.onNodes(payload));
     room.onMessage('assigned', (payload: AssignedPayload) => this.handlers.onAssigned(payload));
@@ -392,6 +481,14 @@ export class GameClient {
   /** This client's own seat, or null before the room has assigned one. */
   get sessionId(): string | null {
     return this.room?.sessionId ?? null;
+  }
+
+  /**
+   * The room's id — the code a host hands somebody so they can join a private
+   * match (docs/ui-ux.md §14). Null before a room has been joined.
+   */
+  get roomId(): string | null {
+    return this.room?.roomId ?? null;
   }
 
   // --- Lobby intents ---------------------------------------------------------

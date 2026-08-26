@@ -353,7 +353,7 @@ their hearing and never the mission.
 | 06:20–09:00 | The exchange runs. The flight's job is to hold and listen. Kalliso flickers — nothing, then Tier 2 for a few seconds as she turns, then nothing again. She never climbs past Tier 2, so the flight never learns whose she is |
 | **09:00** | **Drenn pings.** SIG 95. Three seconds in which everything is exact, and the player is lit for the first time in the game |
 | 09:20 | **The calling voice** |
-| **10:40** | **The transit.** The arch goes, and the court's array goes with it. The dome holds. The delegations scatter; not one of them engages, because nothing can. The service lock is now the only way out, and the flight is on its own ears from here. *The lock is authored as the only roofed water on the map (§11) but is not yet the only passable one — see §13* |
+| **10:40** | **The transit.** The arch goes, and the court's array goes with it. The dome holds. The delegations scatter; not one of them engages, because nothing can. The service lock is now the only way out, and the flight is on its own ears from here |
 | 11:20 | Tender One is loaded |
 | 13:40 | Tender Two is loaded |
 | **14:30** | **The second calling voice.** The colossus has turned |
@@ -363,6 +363,32 @@ their hearing and never the mission.
 The array is lost to an authored beat rather than to the colossus's pathing, because a mission's
 beats have to happen at the time the document says they happen. The colossus is why; the beat is
 when.
+
+### The arch, as ground
+
+"The service lock is now the only way out" is a claim about the map, so it is written into the
+map. Two beats fire at 10:40, in order, exactly as the map literal paints later regions over
+earlier ones: **the span goes solid** across the whole width of the map at the chamber's
+northern row, and **the lock is cut back through it**. Two writes rather than one shaped
+rectangle, because that is what happened — the city fell in and the maintenance passage did
+not — and because a single rect would have to know where the lock is and would stop agreeing
+with §11 the first time either moved.
+
+The span is one 250 m cell row, 2,000–2,200 m. That row is what separates the chamber (from
+2,300 m) from the Descent and the Concourse above it, so collapsing it leaves the lock's two
+columns as the only way north. It is deliberately *not* a full cell tall: the paint takes an
+inclusive rectangle, and a 250 m band starting on the row boundary would reach into the next
+row and seal the court inside its own dome.
+
+**The Commune's withdrawal moved with it.** All three of their 10:40 orders used to point into
+that row or the one above it, which is how a delegation ends up stranded in rock instead of
+scattering; they now withdraw onto the southern end of the vein they came in over. The east is
+untouched — the Consortium scatters at the chamber's own depth and never crosses the span.
+
+**Ground that closes over a hull does not hold it.** A hull caught in the span at 10:40 can
+still move out, because the ground stops a step being taken *into* it and not a hull already
+inside. Without that a flight parked on the arch would be entombed for the remaining nine
+minutes, with nothing on screen to say why.
 
 ---
 
@@ -504,7 +530,7 @@ not.
 | Requirement | Status |
 | --- | --- |
 | The map, its seven regions, the roofed service lock | Implemented (#190) |
-| The arch closing at the transit, making the lock the only way out | Not built — the lock is roofed, but nothing is walled: after 10:40 the flight can still run north over open water. Closing it needs terrain that changes mid-match, and a way to tell a client whose picture of the ground arrived once on join |
+| The arch closing at the transit, making the lock the only way out | Implemented (#197) — two `ground` beats at 10:40: the span goes solid across the map's width and the lock is cut straight back through it. A flood-fill test asserts that removing the lock leaves no route north at all |
 | The flight, admitted weapons-cold, PR-2 | Implemented (#190) |
 | Every party admitted weapons-cold | Implemented (#190) |
 | The silence order — ceiling, array, silence-debt | Implemented (#190) |

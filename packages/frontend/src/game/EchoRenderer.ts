@@ -72,11 +72,21 @@ import {
   BIOME_COLOR,
   depthShade,
   FACTION_PALETTE,
+  FAUNA_COLOR,
   RESOURCE_COLOR,
+  setActivePalette,
   TIER_STYLE,
   UI,
   sigColor,
+  type PaletteName,
 } from './palette.ts';
+import {
+  actionFor,
+  BUILD_ACTION_KIND,
+  DEFAULT_BINDINGS,
+  keyLabel,
+  type Bindings,
+} from '../input/bindings.ts';
 import { FACTION_NAME } from './factions.ts';
 import type { ContactAudioEntry, ContactAudioFrame } from '../audio/contactMixer.ts';
 import type { PingReturn, SelfAudioFrame } from '../audio/selfMixer.ts';
@@ -180,15 +190,6 @@ export interface ContactLogEntry {
  * already drawn. So it gets a mark of its own, on the same one-shot rule: it
  * fires once per acquisition and never sustains.
  */
-/**
- * Fauna get a colour of their own, but only from Tier 3.
- *
- * A cold organic green, distinct from every faction palette and from the
- * threat red a track wears: once you know it is an animal, you should know
- * instantly, and you should never mistake it for someone's navy.
- */
-const FAUNA_COLOR = 0x5fa88a;
-
 const LOCK_FLASH_MS = 700;
 
 /**
@@ -308,6 +309,18 @@ function drawFaunaSilhouette(
   }
 }
 
+/**
+ * Ground that admits nothing at any depth — how solid rock is spelled
+ * (packages/backend/src/sim/terrain.ts).
+ *
+ * `admits` wants a depth between the ceiling and the floor, so a ceiling below
+ * the floor leaves an empty interval. Read rather than sent as a flag: the
+ * client already has both numbers, and a third field could disagree with them.
+ */
+function isRock(terrain: TerrainPayload, index: number): boolean {
+  return terrain.ceiling[index]! > terrain.floor[index]!;
+}
+
 const SELECT_RADIUS_M = 140;
 /** How close a right-click must land to a contact or node to mean it. */
 const TARGET_RADIUS_M = 160;
@@ -322,12 +335,21 @@ const MISSION_REFUSAL_MS = 4000;
  * `winnerSlot`, which a mission never sets. Partial is drawn in the ink that
  * tells rather than the ink that warns, because the doc is explicit that it
  * is a result and not a soft failure.
+ *
+ * A function rather than a table because it reads the palette: a table built at
+ * import time would hold whichever ink was active when the module loaded, and
+ * a colour-vision palette moves two of these three (§11).
  */
-const MISSION_BANNER: Record<MissionOutcome, { text: string; fill: number }> = {
-  [MissionOutcome.Complete]: { text: 'MISSION COMPLETE', fill: UI.friendly },
-  [MissionOutcome.Partial]: { text: 'THE MISSION ENDS', fill: UI.accent },
-  [MissionOutcome.Lost]: { text: 'MISSION LOST', fill: UI.threat },
-};
+function missionBanner(outcome: MissionOutcome): { text: string; fill: number } {
+  switch (outcome) {
+    case MissionOutcome.Complete:
+      return { text: 'MISSION COMPLETE', fill: UI.friendly };
+    case MissionOutcome.Partial:
+      return { text: 'THE MISSION ENDS', fill: UI.accent };
+    case MissionOutcome.Lost:
+      return { text: 'MISSION LOST', fill: UI.threat };
+  }
+}
 
 /** Production hotkeys 1-5, in docs/units.md roster order. */
 /** Digit codes to control-group numbers. docs/ui-ux.md §9. */
@@ -343,14 +365,10 @@ const DIGIT_KEYS: Record<string, number> = {
   Digit9: 9,
 };
 
-/** Build hotkeys: R refinery, F foundry, T turret, G vent tap. */
-const BUILD_KEYS: Record<string, StructureKind> = {
-  KeyR: StructureKind.Refinery,
-  KeyF: StructureKind.Foundry,
-  KeyT: StructureKind.SentinelTurret,
-  // G for generator. V, P and D are already spoken for, and T is the turret.
-  KeyG: StructureKind.VentTap,
-};
+// Build hotkeys used to live here as an `e.code` table. They are bindings now
+// (`input/bindings.ts`), because §11 commits to full rebinding and a literal
+// in a key handler is a binding no screen can edit. `BUILD_ACTION_KIND` maps
+// the four build actions onto the structures they arm.
 
 const THROTTLE_LABEL: Record<HarvestThrottle, string> = {
   [HarvestThrottle.Idle]: 'idle',
@@ -579,6 +597,12 @@ export class EchoRenderer {
   private biomassLabel!: Text;
   /** The map's name, so a player can tell which ground they are on. */
   private mapLabel!: Text;
+  /**
+   * Whether the map has told us its name yet. Kept apart from the label's own
+   * `visible`, which `drawHud` reclaims each frame as the first thing to drop
+   * when the top strip runs out of room.
+   */
+  private mapNamed = false;
   private resourceLabel!: Text;
   private crystalLabel!: Text;
   private statusLabel!: Text;
@@ -672,6 +696,32 @@ export class EchoRenderer {
    * which is a conflict in the doc rather than a choice. Alt was free.
    */
   private previewPing = false;
+  /**
+   * The live binding table — §11's full rebinding, as the renderer sees it.
+   *
+   * Defaults rather than undefined so a renderer constructed without the shell
+   * ever calling `setBindings` still plays: the headless harness drives this
+   * class directly, and a keyboard that does nothing would look like a
+   * renderer bug rather than a missing call.
+   */
+  private bindings: Bindings = { ...DEFAULT_BINDINGS };
+
+  /**
+   * HUD magnification — docs/ui-ux.md §11's 75-200%, "independent of world
+   * zoom".
+   *
+   * Applied as a scale on the `hud` container, which is what makes it
+   * independent: the world layer keeps its own camera transform, so magnifying
+   * the interface never magnifies the map or changes what is on screen. The
+   * cost is that every HUD layout number is now in *virtual* pixels — see
+   * `hudWidth`.
+   */
+  private uiScale = 1;
+  /**
+   * Reduced motion (§11). Replaces three animations with static equivalents
+   * that carry the same information; it never simply removes one.
+   */
+  private reducedMotion = false;
 
   /** Drag-select rectangle in screen space, null when not dragging. */
   private marquee: { x0: number; y0: number; x1: number; y1: number } | null = null;
@@ -722,6 +772,51 @@ export class EchoRenderer {
    */
   setPrecedenceMode(mode: PrecedenceMode): void {
     this.precedence = precedenceTiming(mode);
+  }
+
+  /**
+   * Swap the colour-vision palette (§11).
+   *
+   * The ink is module state rather than renderer state (see palette.ts for
+   * why), so this call is the whole of it: the next frame reads the new
+   * tables, and the baked hull and structure sprites re-bake because their
+   * cache keys carry the palette's name.
+   */
+  setPalette(name: PaletteName): void {
+    setActivePalette(name);
+  }
+
+  /**
+   * Magnify the interface, 0.75-2.0 (§11).
+   *
+   * Clamped rather than trusted: this arrives from `localStorage`, and a HUD
+   * scaled to zero is a HUD the player cannot use to fix the setting.
+   */
+  setUiScale(scale: number): void {
+    const clamped = Number.isFinite(scale) ? Math.min(2, Math.max(0.75, scale)) : 1;
+    this.uiScale = clamped;
+    this.hud.scale.set(clamped);
+  }
+
+  /** Reduced motion (§11) — static equivalents, never removals. */
+  setReducedMotion(reduced: boolean): void {
+    this.reducedMotion = reduced;
+  }
+
+  /**
+   * The HUD's own viewport, in the units its layout is written in.
+   *
+   * The `hud` container is scaled, so its children live in a coordinate space
+   * `uiScale` times smaller than the canvas. Every HUD layout number goes
+   * through here — a panel anchored to `app.screen.width` at 150% would sit a
+   * third of the way off the right edge.
+   */
+  private hudWidth(): number {
+    return this.app.screen.width / this.uiScale;
+  }
+
+  private hudHeight(): number {
+    return this.app.screen.height / this.uiScale;
   }
 
   async init(host: HTMLElement): Promise<void> {
@@ -1083,11 +1178,31 @@ export class EchoRenderer {
     };
 
     const onKeyDown = (e: KeyboardEvent) => {
+      // Escape first and unconditionally — it is not a binding (§9), it is the
+      // way out of a pending build, and a way out you have to aim for is not
+      // one. `RESERVED_CODES` is what stops a rebinder taking it.
       if (e.code === 'Escape') {
         this.pendingBuild = null;
         return;
       }
-      const buildKind = BUILD_KEYS[e.code];
+      // Digits are control groups (docs/ui-ux.md §9), Ctrl to assign. They
+      // used to produce units; production keeps its command-bar buttons, and
+      // the doc's binding wins because control groups have no alternative
+      // route while production does. Also unbindable, for that reason.
+      const digit = DIGIT_KEYS[e.code];
+      if (digit !== undefined) {
+        this.controlGroup(digit, e.ctrlKey || e.metaKey);
+        return;
+      }
+
+      const action = actionFor(this.bindings, e.code);
+      if (action === null) return;
+
+      // Construction arms before the selection check: §9 gives the build keys
+      // no selection requirement, and a player with nothing selected still
+      // means to place a refinery.
+      const buildKind =
+        action === 'buildSignature' ? FACTION_STRUCTURE[this.faction] : BUILD_ACTION_KIND[action];
       if (buildKind !== undefined) {
         // Refused with the reason attached, rather than arming a placement
         // ghost for a click the server will drop. §7 forbids the silent drop,
@@ -1097,58 +1212,54 @@ export class EchoRenderer {
         this.pendingBuild = buildKind;
         return;
       }
-      // B arms the faction's signature structure, when its navy has one —
-      // the kind depends on who is playing, so it cannot live in BUILD_KEYS.
-      if (e.code === 'KeyB') {
-        const signature = FACTION_STRUCTURE[this.faction];
-        if (signature !== undefined) {
-          if (this.refusedByMission('construction')) return;
-          this.pendingBuild = signature;
-          return;
-        }
-      }
-      // Digits are control groups (docs/ui-ux.md §9), Ctrl to assign. They
-      // used to produce units; production keeps its command-bar buttons, and
-      // the doc's binding wins because control groups have no alternative
-      // route while production does.
-      const digit = DIGIT_KEYS[e.code];
-      if (digit !== undefined) {
-        this.controlGroup(digit, e.ctrlKey || e.metaKey);
+      // A faction with no signature structure has nothing to arm, and the key
+      // is simply inert rather than arming somebody else's building.
+      if (action === 'buildSignature') return;
+
+      // The preview is a hold, and it is the one action that works with an
+      // empty selection — it costs nothing to look.
+      if (action === 'pingPreview') {
+        e.preventDefault();
+        this.previewPing = true;
         return;
       }
 
       if (this.selected.size === 0) return;
 
-      if (e.code === 'Space') {
-        e.preventDefault();
-        this.commandToggleSilent();
-      } else if (e.code === 'KeyP') {
-        this.commandPing();
-      } else if (e.code === 'KeyV') {
-        this.commandCycleThrottle();
-      } else if (e.code === 'KeyN') {
-        this.commandNoisemaker();
-      } else if (e.code === 'KeyM') {
-        this.commandLayMine();
-      } else if (e.code === 'KeyC') {
-        this.commandDepthCharge();
-      } else if (e.code === 'KeyD') {
-        // D dives, A ascends. Mnemonic beats convention here: the camera is on
-        // the middle mouse button and the wheel, so WASD is not spoken for.
-        this.commandDepthStep(1);
-      } else if (e.code === 'KeyA') {
-        this.commandDepthStep(-1);
-      } else if (e.code === 'AltLeft' || e.code === 'AltRight') {
-        // Hold Alt to preview what a ping would cost you. This lived on Shift
-        // until Shift was needed for order queueing, which is the more
-        // frequent action and the one the RTS convention expects there.
-        e.preventDefault();
-        this.previewPing = true;
+      switch (action) {
+        case 'silentRunning':
+          e.preventDefault();
+          this.commandToggleSilent();
+          return;
+        case 'ping':
+          this.commandPing();
+          return;
+        case 'throttle':
+          this.commandCycleThrottle();
+          return;
+        case 'noisemaker':
+          this.commandNoisemaker();
+          return;
+        case 'mine':
+          this.commandLayMine();
+          return;
+        case 'depthCharge':
+          this.commandDepthCharge();
+          return;
+        case 'dive':
+          // Dive is down and rise is up. Mnemonic beats convention here: the
+          // camera is on the middle mouse button and the wheel, so WASD is not
+          // spoken for.
+          this.commandDepthStep(1);
+          return;
+        case 'rise':
+          this.commandDepthStep(-1);
+          return;
       }
     };
 
     const onKeyUp = (e: KeyboardEvent) => {
-      if (e.code === 'AltLeft' || e.code === 'AltRight') this.previewPing = false;
+      if (actionFor(this.bindings, e.code) === 'pingPreview') this.previewPing = false;
     };
 
     canvas.addEventListener('contextmenu', onContextMenu);
@@ -1353,9 +1464,11 @@ export class EchoRenderer {
    */
   private pressBarButton(clientX: number, clientY: number): boolean {
     const rect = this.app.canvas.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
-    if (y < this.app.screen.height - BAR_HEIGHT) return false;
+    // Back through the HUD's scale: the bar was laid out in virtual pixels, so
+    // a click has to be expressed in them before it can be compared.
+    const x = (clientX - rect.left) / this.uiScale;
+    const y = (clientY - rect.top) / this.uiScale;
+    if (y < this.hudHeight() - BAR_HEIGHT) return false;
     for (const button of this.barButtons) {
       if (x >= button.x && x <= button.x + button.w && y >= button.y && y <= button.y + button.h) {
         if (button.enabled) button.action();
@@ -1370,8 +1483,8 @@ export class EchoRenderer {
 
   /** The scope's screen rect. Sized down on narrow screens. */
   private minimapRect(): { x: number; y: number; size: number } {
-    const size = this.app.screen.width < 700 ? 110 : 170;
-    return { x: 10, y: this.app.screen.height - BAR_HEIGHT - size - 10, size };
+    const size = this.hudWidth() < 700 ? 110 : 170;
+    return { x: 10, y: this.hudHeight() - BAR_HEIGHT - size - 10, size };
   }
 
   /**
@@ -1406,8 +1519,8 @@ export class EchoRenderer {
    */
   private pressMinimap(clientX: number, clientY: number): boolean {
     const rect = this.app.canvas.getBoundingClientRect();
-    const px = clientX - rect.left;
-    const py = clientY - rect.top;
+    const px = (clientX - rect.left) / this.uiScale;
+    const py = (clientY - rect.top) / this.uiScale;
     const { x, y, size } = this.minimapRect();
     if (px < x || px > x + size || py < y || py > y + size) return false;
     const k = this.minimapScale(size);
@@ -1611,6 +1724,25 @@ export class EchoRenderer {
     return buttons;
   }
 
+  /**
+   * The build keys as currently bound, for the hint bar.
+   *
+   * Read from the table rather than written as `R/F/T/B`, because a hint that
+   * names a key the player has moved is worse than no hint: §7 rules out the
+   * silent refusal, and a *confidently wrong* instruction is the same failure
+   * wearing a better coat.
+   */
+  private buildKeyHint(): string {
+    const codes = [
+      this.bindings.buildRefinery,
+      this.bindings.buildFoundry,
+      this.bindings.buildTurret,
+      this.bindings.buildVentTap,
+    ];
+    if (FACTION_STRUCTURE[this.faction] !== undefined) codes.push(this.bindings.buildSignature);
+    return codes.map(keyLabel).join('/');
+  }
+
   private barText(index: number): Text {
     let text = this.barTexts[index];
     if (text === undefined) {
@@ -1629,8 +1761,8 @@ export class EchoRenderer {
     const g = this.barGraphics;
     g.clear();
 
-    const screenWidth = this.app.screen.width;
-    const barY = this.app.screen.height - BAR_HEIGHT;
+    const screenWidth = this.hudWidth();
+    const barY = this.hudHeight() - BAR_HEIGHT;
     g.rect(0, barY, screenWidth, BAR_HEIGHT).fill({ color: UI.glass, alpha: 0.92 });
     g.rect(0, barY, screenWidth, 1).fill({ color: UI.glassStroke });
 
@@ -1985,7 +2117,7 @@ export class EchoRenderer {
   setMap(map: MapPayload): void {
     this.map = map;
     this.mapLabel.text = map.name.toUpperCase();
-    this.mapLabel.visible = true;
+    this.mapNamed = true;
     // Hazard sites are baked into the terrain layer alongside the biomes,
     // because that is what they are: ground you can read before you enter it.
     this.drawTerrain();
@@ -1996,6 +2128,29 @@ export class EchoRenderer {
     this.terrain = terrain;
     this.drawTerrain();
     this.fitCamera();
+    this.minimapCachedSize = 0;
+  }
+
+  /**
+   * Ground that changed mid-match — docs/mission-sorrowgate.md §9 (#197).
+   *
+   * Cells rather than a rectangle, so there is no metres-to-cells arithmetic
+   * here to agree with the server about. The camera is deliberately *not*
+   * refitted: the map did not get bigger, a span of it fell in, and yanking
+   * the view at the moment the player is watching a colossus go through would
+   * take the event away from them.
+   */
+  applyGround(cells: readonly { index: number; floorM: number; ceilingM: number }[]): void {
+    const terrain = this.terrain;
+    if (terrain === null || cells.length === 0) return;
+    for (const cell of cells) {
+      if (cell.index < 0 || cell.index >= terrain.floor.length) continue;
+      terrain.floor[cell.index] = cell.floorM;
+      terrain.ceiling[cell.index] = cell.ceilingM;
+    }
+    this.drawTerrain();
+    // The scope caches its own terrain layer, and the ground it cached is the
+    // ground that just stopped existing.
     this.minimapCachedSize = 0;
   }
 
@@ -2017,6 +2172,18 @@ export class EchoRenderer {
    * check, and the client is not where the rule lives. It is what lets the
    * HUD say *why* instead of a key press vanishing into the socket.
    */
+  /**
+   * Install a binding table (docs/ui-ux.md §11). Live: the settings store's
+   * `subscribe` calls this mid-match, so a player who rebinds in the esc menu
+   * does not have to leave the water to find out whether it suits them.
+   */
+  setBindings(bindings: Bindings): void {
+    this.bindings = { ...bindings };
+    // A preview held down when its key moved would stick on forever, because
+    // the keyup that would have cleared it names a code nothing matches now.
+    this.previewPing = false;
+  }
+
   setMissionLocks(locks: AbilityLock[]): void {
     this.missionLocks = locks;
   }
@@ -2390,9 +2557,16 @@ export class EchoRenderer {
 
     // The map's own depth range, not the ruleset's: a shallow map should still
     // read as terrain rather than as one flat wash of near-black.
+    //
+    // Rock is excluded from the range, and that exclusion is load-bearing now
+    // that ground can be written mid-match (#197). A sealed cell carries a
+    // floor of zero, so one collapsed span left in the scan would drag
+    // `shallowest` to the surface and re-shade every other cell on the map —
+    // the whole seabed washing pale on the tick the arch fell.
     let shallowest = Number.POSITIVE_INFINITY;
     let deepest = 0;
     for (let i = 0; i < terrain.floor.length; i++) {
+      if (isRock(terrain, i)) continue;
       const f = terrain.floor[i]!;
       if (f < shallowest) shallowest = f;
       if (f > deepest) deepest = f;
@@ -2404,9 +2578,16 @@ export class EchoRenderer {
         const biome = terrain.biomes[index] as Biome;
         const base = BIOME_COLOR[biome] ?? BIOME_COLOR[Biome.OpenWater];
         g.rect(col * terrain.cellM, row * terrain.cellM, terrain.cellM, terrain.cellM).fill({
-          // Depth is luminance (docs/art-direction.md, "Reading the Sea Floor").
-          // The hue stays the biome's, because hue is what sound is priced by.
-          color: depthShade(base, terrain.floor[index]!, shallowest, deepest),
+          // Rock is not water and is not drawn as any depth of it. Ground that
+          // admits nothing gets the app background — the one colour on the map
+          // that is not somewhere you can be — because a collapsed span shaded
+          // like a shallow plateau would read as the easiest route out.
+          color: isRock(terrain, index)
+            ? UI.background
+            : // Depth is luminance (docs/art-direction.md, "Reading the Sea
+              // Floor"). The hue stays the biome's, because hue is what sound
+              // is priced by.
+              depthShade(base, terrain.floor[index]!, shallowest, deepest),
         });
       }
     }
@@ -2419,7 +2600,11 @@ export class EchoRenderer {
     // can see the passage is there, nobody can see who is inside it.
     for (let row = 0; row < terrain.rows; row++) {
       for (let col = 0; col < terrain.cols; col++) {
-        if (terrain.ceiling[row * terrain.cols + col]! === 0) continue;
+        const index = row * terrain.cols + col;
+        // Rock has a ceiling too — that is how rock is spelled — and drawing a
+        // route line through a collapsed span would tell the player the one
+        // thing that is now least true about it.
+        if (terrain.ceiling[index]! === 0 || isRock(terrain, index)) continue;
         const x = col * terrain.cellM;
         const y = row * terrain.cellM;
         g.moveTo(x, y + terrain.cellM / 2)
@@ -2736,8 +2921,17 @@ export class EchoRenderer {
         PROPAGATION_MODEL.BASELINE_HYD
       );
 
+      // These rings are world-space and their *radii* must stay world-space —
+      // 2,400 m is a fact about the water, not about the interface. Their
+      // stroke is the opposite: it is a line on an instrument, so it carries
+      // the UI scale (§11 names the ping preview as one of the two things to
+      // scale first). `/ world.scale.x` is what keeps a stroke a fixed number
+      // of screen pixels through the camera's zoom; `* uiScale` is what makes
+      // that number the player's chosen one.
+      const stroke = this.uiScale / this.world.scale.x;
+
       g.circle(unit.x, unit.y, range).stroke({
-        width: 2 / this.world.scale.x,
+        width: 2 * stroke,
         color: sigColor(unit.sig),
         alpha: 0.35,
       });
@@ -2745,12 +2939,12 @@ export class EchoRenderer {
       // Hold shift to see exactly how badly a ping would expose you.
       if (this.previewPing) {
         g.circle(unit.x, unit.y, ACTIVE_SONAR.REVEAL_RADIUS_M).stroke({
-          width: 2 / this.world.scale.x,
+          width: 2 * stroke,
           color: UI.friendly,
           alpha: 0.5,
         });
         g.circle(unit.x, unit.y, ACTIVE_SONAR.SELF_REVEAL_RADIUS_M).stroke({
-          width: 3 / this.world.scale.x,
+          width: 3 * stroke,
           color: UI.threat,
           alpha: 0.8,
         });
@@ -2974,8 +3168,8 @@ export class EchoRenderer {
   private drawExposureFlashes(): void {
     const g = this.hudGraphics;
     const now = performance.now();
-    const width = this.app.screen.width;
-    const height = this.app.screen.height;
+    const width = this.hudWidth();
+    const height = this.hudHeight();
 
     for (let i = this.exposureFlashes.length - 1; i >= 0; i--) {
       const flash = this.exposureFlashes[i]!;
@@ -2985,8 +3179,11 @@ export class EchoRenderer {
         continue;
       }
 
-      // Hard on arrival, then a long decay — the shape of the sound.
-      const alpha = Math.pow(1 - t, 2) * 0.55;
+      // Hard on arrival, then a long decay — the shape of the sound. Under
+      // reduced motion it holds level for the same two seconds and then cuts:
+      // the two facts the strike carries are the bearing and that it is *live*,
+      // and a hold-then-cut keeps both without a ramp (docs/ui-ux.md §11).
+      const alpha = this.reducedMotion ? 0.45 : Math.pow(1 - t, 2) * 0.55;
       const cx = width / 2;
       const cy = height / 2;
       const dx = Math.cos(flash.bearing);
@@ -3356,7 +3553,7 @@ export class EchoRenderer {
     const g = this.hudGraphics;
     g.clear();
 
-    const screenWidth = this.app.screen.width;
+    const screenWidth = this.hudWidth();
 
     // Top strip: stockpile, then the SIG meter — the player's own loudness is
     // a first-class resource and sits beside the others (docs/art-direction.md).
@@ -3414,7 +3611,11 @@ export class EchoRenderer {
     }
 
     const meterX = segX + segments * 6 + 18;
-    const meterWidth = Math.min(120, screenWidth - meterX - 150);
+    // Floored as well as capped. §11's UI scale can shrink the HUD's virtual
+    // viewport to 720 px at 200%, and a meter allowed to go to zero — or
+    // negative — would take the one element the design calls permanent
+    // ("players must feel their own loudness") off the screen first.
+    const meterWidth = Math.max(40, Math.min(120, screenWidth - meterX - 150));
     const meterY = 9;
     const meterHeight = 12;
     g.rect(meterX, meterY, meterWidth, meterHeight).fill({ color: 0x000000, alpha: 0.5 });
@@ -3441,6 +3642,10 @@ export class EchoRenderer {
     // sends, and the HUD must not imply otherwise.
     const tracked = this.exposure.tier >= ResolutionTier.Bearing;
     this.exposureLabel.visible = tracked;
+    // Re-inked per frame rather than at build time: the threat colour is one of
+    // the inks a colour-vision palette moves (§11), and a style set once in
+    // `buildHudText` would keep the palette the player just left.
+    this.exposureLabel.style.fill = UI.threat;
     if (tracked) {
       this.exposureLabel.text = `TRACKED \u00d7${this.exposure.trackedCount}`;
       this.exposureLabel.position.set(this.bandLabel.x + this.bandLabel.width + 14, 10);
@@ -3456,17 +3661,39 @@ export class EchoRenderer {
     // Left of the contact count, on the same line: the ground you are on is
     // context, not a live number. On the top bar rather than over the world,
     // because everything drawn over the world is information about the match.
+    //
+    // It is also the only thing on this strip that may be dropped when the
+    // strip runs out of room, and at 200% UI scale on a 1440 px window it has
+    // to be: everything to its left is either a live number or one of §11's
+    // audio-parity readouts, and the ground you are standing on does not change.
+    const leftEdge = tracked
+      ? this.exposureLabel.x + this.exposureLabel.width
+      : this.bandLabel.x + this.bandLabel.width;
+    this.mapLabel.visible =
+      this.mapNamed && this.statusLabel.x - 16 - leftEdge >= this.mapLabel.width + 16;
     if (this.mapLabel.visible) {
       this.mapLabel.position.set(this.statusLabel.x - this.mapLabel.width - 16, 10);
     }
 
     // Hint line rides just above the command panel, clear of the scope.
+    //
+    // Trimmed to the room it has, a whole clause at a time. The line is built
+    // from `  \u00b7  `-separated clauses in falling order of usefulness, and at
+    // 200% UI scale on a 1440 px window the full one is wider than the strip it
+    // sits in — a hint running off the screen edge reads as a broken HUD rather
+    // than as a long hint, and the clause that would be cut is always the least
+    // load-bearing one. A mission refusal carries no separators, so it is never
+    // what gets shortened.
     const scope = this.minimapRect();
+    const hintX = scope.x + scope.size + 12;
+    const hintRoom = this.hudWidth() - hintX - 12;
     this.selectionLabel.text = this.hintLine();
-    this.selectionLabel.position.set(
-      scope.x + scope.size + 12,
-      this.app.screen.height - BAR_HEIGHT - 20
-    );
+    while (this.selectionLabel.width > hintRoom) {
+      const cut = this.selectionLabel.text.lastIndexOf('  \u00b7  ');
+      if (cut < 0) break;
+      this.selectionLabel.text = this.selectionLabel.text.slice(0, cut);
+    }
+    this.selectionLabel.position.set(hintX, this.hudHeight() - BAR_HEIGHT - 20);
 
     if (this.missionOver !== null) {
       // Checked first, and never falling through to the match banner below:
@@ -3474,15 +3701,15 @@ export class EchoRenderer {
       // the HUD contradicting the only thing the mission was about, and a
       // mission leaves `winnerSlot` at -1 so that banner would read every
       // outcome as a defeat.
-      const banner = MISSION_BANNER[this.missionOver.outcome];
+      const banner = missionBanner(this.missionOver.outcome);
       this.bannerLabel.text = banner.text;
       this.bannerLabel.style.fill = banner.fill;
-      this.bannerLabel.position.set(screenWidth / 2, this.app.screen.height / 2);
+      this.bannerLabel.position.set(screenWidth / 2, this.hudHeight() / 2);
     } else if (this.gameOver !== null) {
       const won = this.gameOver.winnerSlot === this.slot;
       this.bannerLabel.text = won ? 'THE RIFT FALLS SILENT — VICTORY' : 'BASTION LOST — DEFEAT';
       this.bannerLabel.style.fill = won ? UI.friendly : UI.threat;
-      this.bannerLabel.position.set(screenWidth / 2, this.app.screen.height / 2);
+      this.bannerLabel.position.set(screenWidth / 2, this.hudHeight() / 2);
     } else {
       this.bannerLabel.text = '';
     }
@@ -3522,9 +3749,16 @@ export class EchoRenderer {
     const rect = EchoRenderer.normalise(this.marquee);
     const w = rect.right - rect.left;
     const h = rect.bottom - rect.top;
+    // Slop is a *pointer* distance, so it is judged before the HUD's scale is
+    // divided out: how far a hand moved does not change with UI scale.
     if (Math.hypot(w, h) <= DRAG_SLOP_PX) return;
-    g.rect(rect.left, rect.top, w, h).fill({ color: UI.accent, alpha: 0.06 });
-    g.rect(rect.left, rect.top, w, h).stroke({ width: 1, color: UI.accent, alpha: 0.9 });
+    // The marquee is recorded in client pixels and drawn into the scaled HUD
+    // layer, so it is divided back like every other pointer coordinate — at
+    // 150% an undivided box would trail the cursor by half its own width.
+    const k = 1 / this.uiScale;
+    const [x, y, bw, bh] = [rect.left * k, rect.top * k, w * k, h * k];
+    g.rect(x, y, bw, bh).fill({ color: UI.accent, alpha: 0.06 });
+    g.rect(x, y, bw, bh).stroke({ width: 1, color: UI.accent, alpha: 0.9 });
   }
 
   /**
@@ -3802,9 +4036,15 @@ export class EchoRenderer {
       const cell = terrain.cellM * k;
       for (let row = 0; row < terrain.rows; row++) {
         for (let col = 0; col < terrain.cols; col++) {
-          const biome = terrain.biomes[row * terrain.cols + col] as Biome;
+          const index = row * terrain.cols + col;
+          const biome = terrain.biomes[index] as Biome;
           tg.rect(col * cell, row * cell, cell + 0.5, cell + 0.5).fill({
-            color: BIOME_COLOR[biome] ?? BIOME_COLOR[Biome.OpenWater],
+            // Rock, on the scope as in the world: the route that closed has to
+            // close here too, or the player plans on the scope and discovers
+            // the collapse by pressing a fleet against it.
+            color: isRock(terrain, index)
+              ? UI.background
+              : (BIOME_COLOR[biome] ?? BIOME_COLOR[Biome.OpenWater]),
           });
         }
       }
@@ -3900,12 +4140,30 @@ export class EchoRenderer {
     // The sweep. Cosmetic, and deliberately out of phase with the 5 Hz
     // detection tick (4 s a revolution) so that no player ever comes to
     // believe the sweep is what finds things.
+    //
+    // Under reduced motion it becomes a fixed cross-hair at the same anchor and
+    // the same alpha. That is not a removal: the rotation never carried
+    // information, but the point it rotates about does — it is where the range
+    // rings are measured from, and losing it would lose the one thing the
+    // sweep was actually saying (docs/ui-ux.md §11).
     if (centre !== null) {
-      const angle = ((performance.now() % SCOPE_SWEEP_MS) / SCOPE_SWEEP_MS) * Math.PI * 2;
-      const reach = size;
-      og.moveTo(centre.x * k, centre.y * k)
-        .lineTo(centre.x * k + Math.cos(angle) * reach, centre.y * k + Math.sin(angle) * reach)
-        .stroke({ width: 1, color: UI.accent, alpha: 0.22 });
+      const cx = centre.x * k;
+      const cy = centre.y * k;
+      const ink = { width: 1, color: UI.accent, alpha: 0.22 };
+      if (this.reducedMotion) {
+        const arm = size * 0.06;
+        og.moveTo(cx - arm, cy)
+          .lineTo(cx + arm, cy)
+          .stroke(ink);
+        og.moveTo(cx, cy - arm)
+          .lineTo(cx, cy + arm)
+          .stroke(ink);
+      } else {
+        const angle = ((performance.now() % SCOPE_SWEEP_MS) / SCOPE_SWEEP_MS) * Math.PI * 2;
+        og.moveTo(cx, cy)
+          .lineTo(cx + Math.cos(angle) * size, cy + Math.sin(angle) * size)
+          .stroke(ink);
+      }
     }
 
     // Camera viewport, so the scope doubles as a navigator. Clamped to the
@@ -3928,7 +4186,7 @@ export class EchoRenderer {
   private drawInfoPanel(): void {
     const g = this.infoGraphics;
     g.clear();
-    const wide = this.app.screen.width >= 900;
+    const wide = this.hudWidth() >= 900;
     const structure = this.structures.find((s) => this.selected.has(s.id));
     const unit = this.units.find((u) => this.selected.has(u.id));
     const any = structure ?? unit;
@@ -3942,8 +4200,8 @@ export class EchoRenderer {
 
     const w = 250;
     const h = 96;
-    const x = this.app.screen.width - w - 10;
-    const y = this.app.screen.height - BAR_HEIGHT - h - 10;
+    const x = this.hudWidth() - w - 10;
+    const y = this.hudHeight() - BAR_HEIGHT - h - 10;
     g.roundRect(x, y, w, h, 6).fill({ color: UI.glass, alpha: 0.92 });
     g.roundRect(x, y, w, h, 6).stroke({ width: 1, color: UI.glassStroke });
 
@@ -3993,9 +4251,19 @@ export class EchoRenderer {
       // red rather than outlined, and breathing, because a hull losing
       // unrecoverable tonnage should not sit as still on screen as a healthy
       // one. Driven off wall-clock — this is presentation, never simulation.
+      //
+      // Reduced motion keeps the inversion and trades the breath for a hairline
+      // rule under the badge. The pulse's message was *unrecoverable* — this is
+      // not merely below spec, it is costing tonnage that will not come back —
+      // and the rule says that without moving (docs/ui-ux.md §11).
       if (crushing) {
-        const pulse = 0.62 + 0.3 * (0.5 + 0.5 * Math.sin(performance.now() / 260));
-        g.roundRect(badgeX, badgeY, badgeW, badgeH, 3).fill({ color: UI.threat, alpha: pulse });
+        if (this.reducedMotion) {
+          g.roundRect(badgeX, badgeY, badgeW, badgeH, 3).fill({ color: UI.threat, alpha: 0.92 });
+          g.rect(badgeX, badgeY + badgeH + 2, badgeW, 1).fill({ color: UI.threat, alpha: 0.92 });
+        } else {
+          const pulse = 0.62 + 0.3 * (0.5 + 0.5 * Math.sin(performance.now() / 260));
+          g.roundRect(badgeX, badgeY, badgeW, badgeH, 3).fill({ color: UI.threat, alpha: pulse });
+        }
       } else {
         g.roundRect(badgeX, badgeY, badgeW, badgeH, 3).stroke({
           width: 1,
@@ -4070,7 +4338,7 @@ export class EchoRenderer {
     if (this.selected.size === 0) {
       if (this.isTouch) return 'tap select  ·  drag pan  ·  pinch zoom';
       return canBuild
-        ? 'LMB drag select  ·  MMB pan  ·  R/F/T/B build  ·  1-9 groups  ·  wheel zoom'
+        ? `LMB drag select  ·  MMB pan  ·  ${this.buildKeyHint()} build  ·  1-9 groups  ·  wheel zoom`
         : 'LMB drag select  ·  MMB pan  ·  1-9 groups  ·  wheel zoom';
     }
     const structure = this.structures.find((s) => this.selected.has(s.id));
@@ -4078,7 +4346,7 @@ export class EchoRenderer {
       const queue = structure.queue.length > 0 ? `  ·  queue ${structure.queue.length}` : '';
       const name = structureStatsFor(structure.kind).name;
       if (this.isTouch || !canBuild) return `${name}${queue}`;
-      return `${name}${queue}  ·  UNITS tab to produce  ·  R/F/T/B build`;
+      return `${name}${queue}  ·  UNITS tab to produce  ·  ${this.buildKeyHint()} build`;
     }
     const harvester = this.units.find((u) => this.selected.has(u.id) && u.throttle !== undefined);
     if (harvester !== undefined) {

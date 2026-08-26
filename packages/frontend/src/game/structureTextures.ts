@@ -26,7 +26,7 @@
 
 import { Texture } from 'pixi.js';
 import { Faction, StructureKind, structureStatsFor } from '@echoes/shared';
-import { FACTION_PALETTE } from './palette.ts';
+import { ACTIVE_PALETTE, FACTION_PALETTE } from './palette.ts';
 import { bakeModelSprite, cssColor, distanceTransform, glowDot, lightAndCompose } from './bake.ts';
 import { loadStructureMaps, structureMap, STRUCT_MAP_PPM } from './structureMaps.ts';
 
@@ -135,7 +135,8 @@ export function structureSpriteSizeM(
  */
 export function structureTexture(kind: StructureKind, faction: Faction): Texture | null {
   if (!artLoaded) return null;
-  const key = `${kind}:${faction}`;
+  // Keyed by palette as well, for the reason hullTextures.ts gives.
+  const key = `${kind}:${faction}:${ACTIVE_PALETTE.name}`;
   let texture = baked.get(key);
   if (texture === undefined) {
     texture = bake(kind, faction);

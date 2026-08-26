@@ -176,6 +176,43 @@ Implemented in the client scaffold today (`packages/frontend/src/game/EchoRender
 Still planned: a repeat-last-order binding, and ping-at-cursor — which needs a key that is
 not `F`, since that arms the Foundry.
 
+**Every key in that table is a default, not a fact.** §11 owes full rebinding, and the
+bindings are data (`packages/frontend/src/input/bindings.ts`) that the Controls screen
+edits — so the table above is what a player starts with rather than what they are stuck
+with. Four things are deliberately *not* rebindable, and each is the resolved half of a
+conflict this document settled:
+
+| Fixed | Why it cannot move |
+| --- | --- |
+| `1`–`9` | Control groups have no alternative route; production has the UNITS tab |
+| `Shift` | Queues an order, and adds to a selection |
+| `Ctrl` | Subtracts from a selection, and assigns a control group |
+| `Esc` | Drops a pending build, and is handled before every other key |
+
+The point is not tidiness. Each of those loses to a *mouse* interaction, so a player who
+rebound one would not find a key that stopped working — they would find that clicking had
+quietly changed meaning, with nothing to press and notice.
+
+### The one-handed layout
+
+§11 owes a one-handed layout, and the default is not one: `P`, `N`, `M` and `B` sit under a
+right hand that is on the mouse. The alternative layout moves exactly those four and leaves
+the nine that were already within reach alone, because a layout that also shuffles the keys
+a player knows is a worse layout.
+
+| Action | Standard | One-handed |
+| --- | --- | --- |
+| Active sonar | `P` | `Q` |
+| Harvest throttle | `V` | `E` |
+| Noisemaker | `N` | `Z` |
+| Mine | `M` | `X` |
+| Faction structure | `B` | `V` |
+
+Everything else — `Space`, `A`, `D`, `C`, `R`, `F`, `T`, `G` and `Alt` — is unchanged.
+Control groups are the one thing this cannot fix: the digits are fixed for the reason above,
+and `6`–`9` are out of reach. That is a real limitation of playing one-handed rather than
+something the layout is hiding.
+
 **Two bindings this table settles, because the document previously specified both sides of
 a conflict.** Order queueing and the ping-cost preview were both assigned to `Shift`;
 queueing keeps it, as the RTS convention and by far the more frequent action, and the
@@ -345,12 +382,15 @@ What the current client implements against this spec, so nobody re-implements wh
 | Precedence Law — mark fade-in, ducking chain | Implemented — the visual-first preset is a settings toggle (§14) |
 | Echo Mark residue, drawn and voiced | Implemented — server-resolved against HYD, so a client only holds what it could hear |
 | Tier-4 acquisition brackets | Implemented — the visual half of the lock tone |
-| Accessibility presets and palettes | Partial — mono and visual-first are settings toggles (§14); colour-vision palettes, UI scale and reduced motion not started |
+| Accessibility presets and palettes | Implemented (#192) — mono, visual-first, the three colour-vision palettes, UI scale and reduced motion are all settings (§14) |
+| Full rebinding, and the one-handed layout | Implemented (#191) — bindings are data, the Controls screen edits them, reserved codes refuse capture |
 | Box select, control groups, order queue | Implemented |
-| The shell — title, setup, briefing, settings, credits | Implemented (§14) |
+| The shell — title, browse, setup, briefing, settings, credits | Implemented (§14) |
 | Mission runtime and the prologue | Implemented (#190) — one mission; the campaign entry is still a disabled placeholder |
 | Objectives panel | Implemented (§10.5) — DOM, `role="status"`, focusable rows, own-force counters only |
 | Settings persistence and per-bus volume | Implemented (§14) — `localStorage`, applied at match mount |
+| Match browser, private rooms, join by code | Implemented (#193) — a listing names the water and the seat count and nothing else; solo and missions are private |
+| Menu music | Implemented (#194) — the port's own bed on the `music` bus, a different piece from the score |
 
 ---
 
@@ -366,11 +406,13 @@ key art and menus only" belongs to the title screen; the in-match HUD still may 
 ### Screens
 
 ```text
-title ──▶ setup (solo | multiplayer) ──▶ match (in-room lobby ▶ playing ▶ result)
-  │  ▲                                        │
-  │  ├── settings · credits ── back           └── "Return to port" ▶ title
-  │  └── briefing ───────────────────────▶ mission (playing ▶ result)
-  └── resume banner ─────────────────────▶ match (seat resumed)
+title ──▶ setup (solo) ────────────────▶ match (in-room lobby ▶ playing ▶ result)
+  │  ▲                                       │
+  │  ├── browse ──▶ setup (host) ────────────┤   └── "Return to port" ▶ title
+  │  │       └──── join a listing, or a code ┤
+  │  ├── settings · credits · controls ── back
+  │  └── briefing ──────────────────────▶ mission (playing ▶ result)
+  └── resume banner ────────────────────▶ match (seat resumed)
 ```
 
 The screen state is a plain discriminated union in `App.tsx` — no router, no history
@@ -384,16 +426,27 @@ title screen, and reads the briefing on the way in.
 - **Title** — the game's name, one tagline from [naming.md](naming.md), and the entries:
   Resume (only while a seat is held, see below), Campaign, Solo Game, Multiplayer,
   Tutorial, Settings, Credits. There is no Quit; this is a browser.
-- **Setup** — shared by Solo and Multiplayer: a commander-name field and one card per map
+- **Setup** — shared by Solo and hosting: a commander-name field and one card per map
   archetype (name, doctrine line, seats), from the shared catalogue. Faction choice and AI
   opponents stay in the in-room ready room, because faction uniqueness is enforced by the
   room and a pick is a request the room may refuse ([tech-stack.md](tech-stack.md)) — the
-  shell does not promise what the server may deny.
+  shell does not promise what the server may deny. Hosting adds one control the solo path
+  does not have: whether the room is **listed or private**. Solo has no such choice, because
+  a solo game is always private (see below).
+- **Browse** — the multiplayer door. Open rooms, a field for a room code, and a button to
+  host one. A row says **the water and the seat count, and nothing else**: not who is in
+  there, not which navies they hold, not their names
+  ([tech-stack.md](tech-stack.md), "Finding a match"). Quick match is still there and still
+  the fastest way in — picking a map is picking a queue — but it is now one of three doors
+  rather than the only one. Rooms that have started are absent rather than greyed out,
+  because a started room is not a thing you can ask to join.
 - **Briefing** — a mission's own setup: its name, its premise, and the briefing text read
   verbatim in the register of whoever is speaking it
   ([mission-sorrowgate.md](mission-sorrowgate.md) §12). It is a screen and not an overlay on
-  the match, because the match mounts the audio context and a briefing has no business
-  holding one open. It commits with the same "Descend" the setup screen uses.
+  the match, because the match opens a socket and a simulation and a briefing has no
+  business holding either. The shell does hold an audio context of its own now (#194), but
+  it is the shell's and it is released on the way in — the briefing is still in the port,
+  and it still sounds like it. It commits with the same "Descend" the setup screen uses.
 - **Settings** — see below.
 - **Credits** — static, and honest: the technology roll from
   [tech-stack.md](tech-stack.md) and a note that every sound is synthesised. No invented
@@ -410,6 +463,18 @@ runtime it used to wait on exists and the twenty-eight missions after the prolog
 The shape of the finished game is on screen; a menu that hides its missing rooms would
 misrepresent the build.
 
+### Rooms, and who may see them
+
+A room is listed unless it says otherwise, and two kinds always say otherwise. **A solo game
+is private** — until this shipped it used the same matchmaking multiplayer did, so choosing
+Solo could drop you into a stranger's lobby and a stranger into yours. **A mission is
+private** for the same structural reason: it seats one commander and writes its own
+opposition. Neither offers a toggle, because neither has a question to ask.
+
+The host's room code is shown in the ready room, and only there: it is the one piece of a
+private room worth handing to somebody, and the ready room is where the host is standing
+when they want to.
+
 ### Resume
 
 A held seat survives a reload (the reconnection token in `sessionStorage`, inside the
@@ -417,6 +482,18 @@ server's grace window), so the title screen surfaces it as its first entry, auto
 one keypress back into the match. Resuming is offered, never automatic: the player may be
 reloading precisely because they are done. Leaving on purpose — "Return to port" — clears
 the token, so a stale banner never offers a seat that is gone.
+
+### The port has a sound
+
+The shell holds an audio context while it is on screen and closes it on the way into a
+match, so the two never hold the device at once. What plays on it is the menu bed of
+[audio-direction.md](audio-direction.md) §10 — a different piece from the in-game score,
+because the score is a function of a match and a menu has none. Nothing sounds before the
+first click or keypress, which is autoplay policy rather than a choice.
+
+One consequence is worth naming: the Master and Music sliders below are now audible *while
+you move them*, on the screen you move them on. Every other control in the table changes
+something you can only hear in the water.
 
 ### Settings, v1
 
@@ -430,6 +507,9 @@ the screen, not a technology.
 | Contacts | up to **+12 dB** | The one boostable bus, per the same section; the boost trades headroom for audibility and is capped so the true-peak target survives |
 | Mono audio | toggle | The mix's existing mono spatialisation — a rendering choice, never a loss (§11) |
 | Visual-first | toggle | Removes the §1.3 fade-in delay so marks arrive at ≤ 30 ms (§11) |
+| Colour vision | standard · deuteranopia · protanopia · tritanopia | The four palettes in [style-neon-noir.md](style-neon-noir.md); tier *shape* never moves, only its ink (§11) |
+| UI scale | 75–200% | A transform on the HUD layer and the DOM panels, never on the world (§11) |
+| Reduced motion | toggle | Static equivalents for the scope sweep, the exposure flash and the crush badge — same information, no movement (§11) |
 
 User volume lives on trim nodes *beside* the ducking chain, never on the ducked gains —
 the Precedence Law's ducking writes those every tick, and a user slider fighting it would
@@ -437,9 +517,28 @@ turn the mix's grammar into noise. The commander name and every setting persist 
 `localStorage` as a device preference; the reconnection token stays per-tab, because a seat
 is not a preference.
 
-Deferred to their own issues, so v1 does not promise them: key rebinding (§11 requires
-full rebinding and a one-handed layout, and the bindings are not yet data), the three
-colour-vision palettes, UI scale, and reduced motion.
+Everything §11 asks for is now on that list. The last three arrived with #192 and are
+renderer work rather than mixer work, so each names what it moves:
+
+- **Colour vision** swaps the ink of the tier scale, the four navies, the SIG ramp, the
+  resource fields and the fauna colour. It does not swap chrome, biome fills, or any part
+  of the fidelity encoding — size, alpha, edge hardness and shape are how a tier is read
+  before colour is consulted at all.
+- **UI scale** multiplies the HUD layer and the three DOM panels and leaves the world
+  transform alone, so zooming the interface never zooms the map or changes what is on
+  screen. The scope, the command bar and the depth ribbon re-lay out against the scaled
+  viewport rather than sliding off it, and pointer hits are divided back through the same
+  factor — a button that has moved must still be where the click lands. §11 names the SIG
+  meter and the ping preview as the two to scale first; the meter rides the HUD layer, and
+  the preview is the one element that had to be split — its *radii* stay world-space,
+  because 2,400 m is a fact about the water and not about the interface, while its strokes
+  take the scale like every other line on an instrument.
+- **Reduced motion** is an information-parity requirement, so it replaces rather than
+  removes: the sweep becomes a fixed cross-hair on the scope's anchor, the exposure flash
+  becomes a held wedge on the same bearing for the same two seconds, and the crush badge
+  becomes a filled badge with a rule under it. The ping wavefront, the acquisition
+  brackets and the ghost decay keep moving, because in those three the motion *is* the
+  message.
 
 ---
 
