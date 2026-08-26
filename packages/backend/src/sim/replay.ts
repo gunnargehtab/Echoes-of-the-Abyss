@@ -98,6 +98,13 @@ import { eidOfLocalId } from './world.ts';
  * replayed under these rules diverges at its first crowded checkpoint, and
  * rejecting it names the real fault instead of reporting a determinism bug.
  *
+ * 12: the state hash includes the ground. Terrain became writable mid-match
+ * (#197) — a mission beat can collapse a span — so a replay that reproduced
+ * every hull perfectly while the arch fell on a different tick used to agree
+ * at every checkpoint. It no longer does. The layout is unchanged; this bump
+ * is about the rules, and a v11 file replayed under them would report a
+ * divergence at its first checkpoint that is really its own age.
+ *
  * 11: replays carry the mission they were played as, if any. A mission's
  * authored forces and its beat schedule are installed by the Match
  * constructor, so playback reproduces them from the id alone — but a v10
@@ -116,7 +123,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 11;
+export const REPLAY_FORMAT_VERSION = 12;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =

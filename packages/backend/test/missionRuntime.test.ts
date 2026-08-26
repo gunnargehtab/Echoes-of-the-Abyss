@@ -50,7 +50,7 @@ import {
 import { defineQuery, hasComponent } from 'bitecs';
 import { Acoustic, Fauna, MoveOrder } from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
-import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
+import { missionMapById } from '../src/sim/maps/index.ts';
 import { REPLAY_FORMAT_VERSION, playReplay } from '../src/sim/replay.ts';
 import { PROLOGUE_SORROWGATE } from '../src/sim/missions/index.ts';
 
@@ -63,6 +63,23 @@ const PLAYER = PROLOGUE_SORROWGATE.playerSlot;
 
 /** §11's extraction point, in the middle of the Upper Concourse. */
 const CONCOURSE = { x: 2500, y: 350 };
+/**
+ * The route out, since the arch closed behind the transit (#197).
+ *
+ * §9's "the service lock is now the only way out" is ground now, so the run
+ * north is no longer a straight line and this test can no longer drive one.
+ * Movement has no pathfinder — `resolveStep` slides a hull along an obstacle
+ * and never searches — so a player heading for the Concourse steers through
+ * the lock themselves, and so does this.
+ *
+ * Two waypoints and then the Concourse: into the lock's own column, north
+ * through it, and out the far side. The second is deliberately at x 1,950 —
+ * the lock is columns 7 and 8 and only column 7 opens onto districts water
+ * north of it, because column 8 above the lock is the Descent's 900 m floor.
+ */
+const ROUTE = [{ x: 1980, y: 2120 }, { x: 1950, y: 1700 }, CONCOURSE] as const;
+/** How close is close enough to count a waypoint reached. */
+const WAYPOINT_M = 220;
 /** Above the thermocline, and above every floor on the route north. */
 const CLIMB_TO_M = 300;
 /**
@@ -134,6 +151,8 @@ function drive(options: DriveOptions): Run {
   let peakTenderSig = 0;
   let peakEscortSig = 0;
   let refusedWhileHeld = false;
+  /** Which waypoint each tender is currently steering for. */
+  const leg = new Map<number, number>();
 
   for (let tick = 0; tick < options.ticks; tick++) {
     const own = match.update(STEP_MS)?.get(PLAYER);
@@ -148,8 +167,24 @@ function drive(options: DriveOptions): Run {
     if (options.escort && last !== null && tick % REISSUE_TICKS === 0) {
       const escorts = escortsIn(last);
       for (const [index, tender] of tendersIn(last).entries()) {
-        match.orderMove(PLAYER, tender.id, CONCOURSE.x, CONCOURSE.y);
-        if (options.climb) match.orderDepth(PLAYER, tender.id, CLIMB_TO_M);
+        // Advance along the route as each waypoint is reached, exactly as a
+        // player clicking their way through the lock would.
+        let at = leg.get(tender.id) ?? 0;
+        while (
+          at < ROUTE.length - 1 &&
+          Math.hypot(tender.x - ROUTE[at]!.x, tender.y - ROUTE[at]!.y) < WAYPOINT_M
+        ) {
+          at++;
+        }
+        leg.set(tender.id, at);
+        const heading = ROUTE[at]!;
+        match.orderMove(PLAYER, tender.id, heading.x, heading.y);
+        // The climb is ordered only on the last leg. Rising inside the lock
+        // would put a hull against its 1,300 m roof, which is the one piece of
+        // ground on this map that is above a hull rather than below it.
+        if (options.climb && at === ROUTE.length - 1) {
+          match.orderDepth(PLAYER, tender.id, CLIMB_TO_M);
+        }
         // The refusal, observed directly. `holdsMovement` runs at order time
         // rather than only on the mission's own 5 Hz pass, because movement is
         // 60 Hz and a re-issued order would otherwise walk a held tender twelve
@@ -166,7 +201,9 @@ function drive(options: DriveOptions): Run {
           const escort = escorts[index * STATION.length + offset];
           if (escort === undefined) continue;
           match.orderMove(PLAYER, escort.id, tender.x + station.x, tender.y + station.y);
-          if (options.climb) match.orderDepth(PLAYER, escort.id, CLIMB_TO_M);
+          if (options.climb && at === ROUTE.length - 1) {
+            match.orderDepth(PLAYER, escort.id, CLIMB_TO_M);
+          }
         }
       }
     }
@@ -393,13 +430,19 @@ describe('a tender does not move until it is loaded', () => {
 });
 
 describe('the run north is a climb', () => {
-  it('stalls the freight against the Descent when the ascent is never ordered', () => {
-    // §11: the Descent's floor is 900 m and the tenders sit at 1,470 m, so the
-    // step north is refused by the ground itself — `resolveStep` will not put a
-    // hull in water that does not admit it, and terrain lifts a hull only once
-    // it is already over shallower ground. §9's "the run north and the climb"
-    // is therefore two instructions and not one, and a player who gives only
-    // the first watches the freight press against the step and stop.
+  it('stalls the freight below the Concourse when the ascent is never ordered', () => {
+    // §9's "the run north and the climb" is two instructions and not one, and
+    // this is the half a player can skip.
+    //
+    // The ground does some of the climbing for them, and deliberately: a hull
+    // pressed against shallower water is lifted until it fits, so a plateau
+    // costs a fleet time and a detour rather than stopping it dead
+    // (`systems/movement.ts`). That carries the freight up the Descent's 900 m
+    // step in the end. What it cannot do is put a hull on the Concourse: the
+    // lift fits a hull to the water it is *in*, and `resolveStep` refuses the
+    // step onto a 340 m floor before there is anything to fit it to. So the
+    // freight ends the run pressed against the terminus it was sent to, at a
+    // depth that cannot enter it.
     //
     // This is the mission's floor working in the other direction from §3's: the
     // basin below cannot be entered because the hulls are not rated for it, and
@@ -407,7 +450,10 @@ describe('the run north is a climb', () => {
     const run = unclimbedRun();
     assert.equal(run.match.missionOver, null, 'nothing should have resolved by 15:30');
 
-    const terrain = terrainFor(missionMapById(PROLOGUE_SORROWGATE.mapId)!);
+    // The *played* ground, not the authored map. Terrain is writable now
+    // (#197) and the arch closed at 10:40, so a terrain rebuilt from the
+    // literal disagrees with the one the freight is pressed against.
+    const terrain = run.match.world.terrain;
     const tenders = tendersIn(run.last);
     assert.equal(tenders.length, 2, 'both tenders are still in the water');
     for (const tender of tenders) {
@@ -416,10 +462,10 @@ describe('the run north is a climb', () => {
         `a tender reached ${tender.y.toFixed(0)} without ever being told to climb`
       );
       assert.ok(
-        !terrain.admits(tender.x, tender.y - 250, tender.depth),
-        `the tender at ${tender.x.toFixed(0)},${tender.y.toFixed(0)} at ${tender.depth}m is not ` +
-          'pressed against ground that refuses it — something else stopped it, and this test ' +
-          'is then measuring the wrong thing'
+        !terrain.admits(tender.x, CONCOURSE.y, tender.depth),
+        `the tender at ${tender.x.toFixed(0)},${tender.y.toFixed(0)} sits at ${tender.depth}m, ` +
+          'which the Concourse admits — it could have finished the run without ever climbing, ' +
+          'and this test is then measuring the wrong thing'
       );
     }
 

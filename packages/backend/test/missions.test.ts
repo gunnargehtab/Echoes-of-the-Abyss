@@ -283,6 +283,20 @@ describe('the beat schedule', () => {
           );
           continue;
         }
+        if (beat.kind === 'ground') {
+          // A ground beat names a region rather than a hull, and a region the
+          // map does not have would silently do nothing at runtime — the
+          // arch would simply never fall, and the mission would still finish.
+          assert.ok(
+            mission.regions.some((region) => region.id === beat.region),
+            `${mission.id}: a ground beat names region "${beat.region}", which is not authored`
+          );
+          assert.ok(
+            beat.floorM !== undefined || beat.ceilingM !== undefined,
+            `${mission.id}: a ground beat on "${beat.region}" writes neither floor nor ceiling`
+          );
+          continue;
+        }
         if (beat.kind === 'resolve' || beat.kind === 'say') continue;
         assert.ok(
           placed.has(beat.tag) || spawnedByBeat.has(beat.tag),

@@ -309,6 +309,18 @@ function drawFaunaSilhouette(
   }
 }
 
+/**
+ * Ground that admits nothing at any depth — how solid rock is spelled
+ * (packages/backend/src/sim/terrain.ts).
+ *
+ * `admits` wants a depth between the ceiling and the floor, so a ceiling below
+ * the floor leaves an empty interval. Read rather than sent as a flag: the
+ * client already has both numbers, and a third field could disagree with them.
+ */
+function isRock(terrain: TerrainPayload, index: number): boolean {
+  return terrain.ceiling[index]! > terrain.floor[index]!;
+}
+
 const SELECT_RADIUS_M = 140;
 /** How close a right-click must land to a contact or node to mean it. */
 const TARGET_RADIUS_M = 160;
@@ -2119,6 +2131,29 @@ export class EchoRenderer {
     this.minimapCachedSize = 0;
   }
 
+  /**
+   * Ground that changed mid-match — docs/mission-sorrowgate.md §9 (#197).
+   *
+   * Cells rather than a rectangle, so there is no metres-to-cells arithmetic
+   * here to agree with the server about. The camera is deliberately *not*
+   * refitted: the map did not get bigger, a span of it fell in, and yanking
+   * the view at the moment the player is watching a colossus go through would
+   * take the event away from them.
+   */
+  applyGround(cells: readonly { index: number; floorM: number; ceilingM: number }[]): void {
+    const terrain = this.terrain;
+    if (terrain === null || cells.length === 0) return;
+    for (const cell of cells) {
+      if (cell.index < 0 || cell.index >= terrain.floor.length) continue;
+      terrain.floor[cell.index] = cell.floorM;
+      terrain.ceiling[cell.index] = cell.ceilingM;
+    }
+    this.drawTerrain();
+    // The scope caches its own terrain layer, and the ground it cached is the
+    // ground that just stopped existing.
+    this.minimapCachedSize = 0;
+  }
+
   setNodes(nodes: ResourceNodeInfo[]): void {
     this.nodes = nodes;
     this.drawNodes();
@@ -2522,9 +2557,16 @@ export class EchoRenderer {
 
     // The map's own depth range, not the ruleset's: a shallow map should still
     // read as terrain rather than as one flat wash of near-black.
+    //
+    // Rock is excluded from the range, and that exclusion is load-bearing now
+    // that ground can be written mid-match (#197). A sealed cell carries a
+    // floor of zero, so one collapsed span left in the scan would drag
+    // `shallowest` to the surface and re-shade every other cell on the map —
+    // the whole seabed washing pale on the tick the arch fell.
     let shallowest = Number.POSITIVE_INFINITY;
     let deepest = 0;
     for (let i = 0; i < terrain.floor.length; i++) {
+      if (isRock(terrain, i)) continue;
       const f = terrain.floor[i]!;
       if (f < shallowest) shallowest = f;
       if (f > deepest) deepest = f;
@@ -2536,9 +2578,16 @@ export class EchoRenderer {
         const biome = terrain.biomes[index] as Biome;
         const base = BIOME_COLOR[biome] ?? BIOME_COLOR[Biome.OpenWater];
         g.rect(col * terrain.cellM, row * terrain.cellM, terrain.cellM, terrain.cellM).fill({
-          // Depth is luminance (docs/art-direction.md, "Reading the Sea Floor").
-          // The hue stays the biome's, because hue is what sound is priced by.
-          color: depthShade(base, terrain.floor[index]!, shallowest, deepest),
+          // Rock is not water and is not drawn as any depth of it. Ground that
+          // admits nothing gets the app background — the one colour on the map
+          // that is not somewhere you can be — because a collapsed span shaded
+          // like a shallow plateau would read as the easiest route out.
+          color: isRock(terrain, index)
+            ? UI.background
+            : // Depth is luminance (docs/art-direction.md, "Reading the Sea
+              // Floor"). The hue stays the biome's, because hue is what sound
+              // is priced by.
+              depthShade(base, terrain.floor[index]!, shallowest, deepest),
         });
       }
     }
@@ -2551,7 +2600,11 @@ export class EchoRenderer {
     // can see the passage is there, nobody can see who is inside it.
     for (let row = 0; row < terrain.rows; row++) {
       for (let col = 0; col < terrain.cols; col++) {
-        if (terrain.ceiling[row * terrain.cols + col]! === 0) continue;
+        const index = row * terrain.cols + col;
+        // Rock has a ceiling too — that is how rock is spelled — and drawing a
+        // route line through a collapsed span would tell the player the one
+        // thing that is now least true about it.
+        if (terrain.ceiling[index]! === 0 || isRock(terrain, index)) continue;
         const x = col * terrain.cellM;
         const y = row * terrain.cellM;
         g.moveTo(x, y + terrain.cellM / 2)
@@ -3983,9 +4036,15 @@ export class EchoRenderer {
       const cell = terrain.cellM * k;
       for (let row = 0; row < terrain.rows; row++) {
         for (let col = 0; col < terrain.cols; col++) {
-          const biome = terrain.biomes[row * terrain.cols + col] as Biome;
+          const index = row * terrain.cols + col;
+          const biome = terrain.biomes[index] as Biome;
           tg.rect(col * cell, row * cell, cell + 0.5, cell + 0.5).fill({
-            color: BIOME_COLOR[biome] ?? BIOME_COLOR[Biome.OpenWater],
+            // Rock, on the scope as in the world: the route that closed has to
+            // close here too, or the player plans on the scope and discovers
+            // the collapse by pressing a fleet against it.
+            color: isRock(terrain, index)
+              ? UI.background
+              : (BIOME_COLOR[biome] ?? BIOME_COLOR[Biome.OpenWater]),
           });
         }
       }

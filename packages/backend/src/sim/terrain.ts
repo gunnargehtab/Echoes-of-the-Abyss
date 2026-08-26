@@ -21,6 +21,29 @@
 
 import { Biome, DEPTH, MAX_PROPAGATION_FACTOR, PROPAGATION_FACTOR } from '@echoes/shared';
 
+/**
+ * One cell whose water column changed after the match began.
+ *
+ * Cells rather than rectangles, deliberately. A rect delta would make the
+ * client redo the metres-to-cells arithmetic and agree with the server about
+ * every `Math.floor`; cells are what actually changed, and there is nothing
+ * left to disagree about.
+ */
+export interface TerrainCellChange {
+  index: number;
+  floorM: number;
+  ceilingM: number;
+}
+
+/**
+ * Ground that admits nothing at any depth — how solid rock is spelled.
+ *
+ * `admits` asks for a depth between the ceiling and the floor, so a ceiling
+ * *below* the floor leaves an empty interval. Named rather than written out at
+ * the call site because `{ floorM: 0, ceilingM: 1 }` reads like a mistake.
+ */
+export const SOLID = { floorM: 0, ceilingM: 1 } as const;
+
 export class Terrain {
   readonly widthM: number;
   readonly heightM: number;
@@ -48,6 +71,25 @@ export class Terrain {
    */
   private readonly floor: Uint16Array;
   private readonly ceiling: Uint16Array;
+  /**
+   * Every cell write since the baseline, in order — the ground's own history.
+   *
+   * Kept because two consumers need to know what changed rather than what the
+   * grid now holds: the wire, which sent every client a full grid once and can
+   * only send the difference after that, and `hashWorld`, which would
+   * otherwise let a replay diverge on ground alone while every entity agreed.
+   *
+   * Reset by `markBaseline` when the match starts, so this holds mid-match
+   * change and never the map's own construction — the join payload already
+   * carries that, serialised from the live arrays.
+   *
+   * It grows without bound, and that is a deliberate bet rather than an
+   * oversight: ground is authored by mission beats, and a beat fires once. A
+   * future system that rewrote ground on a cadence — a tide, a collapsing
+   * biome — would need this compacted, and would notice, because the client's
+   * cursor is an index into exactly this list.
+   */
+  private changes: TerrainCellChange[] = [];
 
   /**
    * `floorM` is the seabed the whole map starts at, before any region carves
@@ -178,6 +220,17 @@ export class Terrain {
     } else if (this.admits(fromX, y, depthM)) {
       out.x = fromX;
       out.y = y;
+    } else if (!this.admits(fromX, fromY, depthM)) {
+      // Ground stops a hull entering; it does not hold one that is already
+      // inside. That distinction only started mattering when ground became
+      // writable mid-match (#197): a span that closes over a hull would
+      // otherwise entomb it for the rest of the match, because every branch
+      // above tests the *destination* and a hull in rock has no admitting
+      // neighbour to step to. It cannot be walked deeper into rock from
+      // outside, because reaching this branch at all requires already being in
+      // it, and the cheap `admits` is only paid on a step that was blocked.
+      out.x = x;
+      out.y = y;
     } else {
       out.x = fromX;
       out.y = fromY;
@@ -274,8 +327,21 @@ export class Terrain {
     for (let cy = y0; cy <= y1; cy++) {
       for (let cx = x0; cx <= x1; cx++) {
         const index = cy * this.cols + cx;
+        const beforeFloor = this.floor[index]!;
+        const beforeCeiling = this.ceiling[index]!;
         if (ground.floorM !== undefined) this.floor[index] = ground.floorM;
         if (ground.ceilingM !== undefined) this.ceiling[index] = ground.ceilingM;
+        // Recorded only when the cell actually moved. A mission that repaints
+        // ground it has already painted — Sorrowgate re-cuts the service lock
+        // straight after collapsing the span across it — should cost the wire
+        // nothing for the cells that did not change.
+        if (this.floor[index] !== beforeFloor || this.ceiling[index] !== beforeCeiling) {
+          this.changes.push({
+            index,
+            floorM: this.floor[index]!,
+            ceilingM: this.ceiling[index]!,
+          });
+        }
       }
     }
   }
@@ -329,6 +395,37 @@ export class Terrain {
         this.pf[index] = Math.min(value, MAX_PROPAGATION_FACTOR);
       }
     }
+  }
+
+  /**
+   * How many cell writes this ground has taken since the baseline.
+   *
+   * Doubles as the client's cursor: a client holding revision *n* has seen the
+   * first *n* changes, and `changesSince(n)` is exactly what it is missing.
+   */
+  get revision(): number {
+    return this.changes.length;
+  }
+
+  /**
+   * Forget the construction history. Called once, when the match takes the
+   * terrain, so "changed" means "changed during play".
+   */
+  markBaseline(): void {
+    this.changes = [];
+  }
+
+  /** The cell writes a client at `revision` has not seen. */
+  changesSince(revision: number): TerrainCellChange[] {
+    return this.changes.slice(Math.max(0, revision));
+  }
+
+  /**
+   * Every write since the baseline, without copying. For the state hash, which
+   * runs at every checkpoint and wants to read the list rather than own one.
+   */
+  get groundHistory(): readonly TerrainCellChange[] {
+    return this.changes;
   }
 
   /** Flat copy of the grid, for shipping to the client. Terrain is public. */

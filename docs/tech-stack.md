@@ -171,6 +171,36 @@ as map id**, so a mission player is never routed into a skirmish forming on the 
 "No mission" is the empty string and never `undefined`, because two encodings of it would quietly
 split the skirmish pool in half.
 
+Version **12** changes no field and one rule: **the state hash now includes the ground.**
+Terrain became writable mid-match — a mission beat can collapse a span
+([mission-sorrowgate.md](mission-sorrowgate.md) §9) — and until this a replay that reproduced
+every hull perfectly while the arch fell on a different tick agreed at every checkpoint. Only
+the *mid-match* writes are mixed, not the whole grid: the map is chosen by id and built
+identically on both sides of a replay, so hashing three hundred constructed cells every
+checkpoint would cost the walk and prove nothing. A v11 file replayed under these rules would
+report a divergence at its first checkpoint that is really its own age.
+
+### Ground that changes
+
+The map is a grid of cells carrying a floor and a ceiling, and it was written once at
+construction and read ever after. Making it writable took three things beyond the write
+itself, and each is a place this could have gone quietly wrong:
+
+- **A cursor, not a snapshot.** The terrain keeps its own change log and the client's cursor
+  into it is a revision number. A joining client is served the grid as it *is* — serialised
+  from the live arrays — so a reconnection at 15:00 lands on a map with the arch already down,
+  and the delta after that is only what it has not seen.
+- **Cells on the wire, not rectangles.** A rect delta would make both sides redo the
+  metres-to-cells arithmetic and agree about every `Math.floor`. Cells are what actually
+  changed and there is nothing left to disagree about. Cells that are written back to the
+  value they already held are not recorded at all, which is what lets a span be painted across
+  a passage and the passage cut straight back through it without the client being told to seal
+  a route and then unseal it.
+- **Ground stops a step, not a hull.** Every branch of the passability check tests the
+  *destination*, so a hull that ground closed over had no admitting neighbour to step to and
+  was entombed for the rest of the match. A hull already inside ground is not held by it. It
+  still cannot be walked into from outside.
+
 ---
 
 ## Match lifecycle

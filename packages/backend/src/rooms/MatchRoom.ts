@@ -171,6 +171,12 @@ export class MatchRoom extends Room<MatchState> {
   private readonly slotBySession = new Map<string, number>();
   /** Live AI commanders, by slot. Rebuilt from the roster on every start. */
   private readonly aiSeats = new Map<number, AiSeat>();
+  /**
+   * How much of the ground's change log every connected client has been told
+   * about. Room-wide rather than per-client because the delta is broadcast and
+   * a client that joins mid-match gets the whole grid instead.
+   */
+  private sentGroundRevision = 0;
 
   override async onCreate(options?: MatchRoomOptions): Promise<void> {
     const requested = options?.missionId ?? '';
@@ -516,10 +522,15 @@ export class MatchRoom extends Room<MatchState> {
    * lobby can name and preview the map it is about to be played on.
    */
   private sendMapData(client: Client): void {
-    // Terrain is public information — it is the map. Sent once rather than
-    // per-tick because it does not change (Coral Ruins aside; see
-    // docs/environments.md).
-    client.send('terrain', this.match.world.terrain.serialize());
+    // Terrain is public information — it is the map. Serialised from the live
+    // arrays, so a client joining after a mission has written the ground gets
+    // the ground as it *is* rather than as it was authored — which is what
+    // makes a reconnection at 15:00 land on a map with the arch already down.
+    // The revision it carries is that client's cursor into the change log.
+    client.send('terrain', {
+      ...this.match.world.terrain.serialize(),
+      revision: this.match.world.terrain.revision,
+    });
     client.send('map', {
       id: this.map.id,
       name: this.map.name,
@@ -597,7 +608,10 @@ export class MatchRoom extends Room<MatchState> {
       // A rematch is a new world on the same ground with the same roster —
       // rebuilt rather than reset, because a Match owns an ECS world and
       // unwinding one in place is how stale entities survive into game two.
+      // The new world builds fresh terrain, so the ground's change log starts
+      // over too and every client is re-sent the whole grid below.
       this.match = this.newMatch();
+      this.sentGroundRevision = 0;
     }
     this.startMatch();
   }
@@ -640,7 +654,13 @@ export class MatchRoom extends Room<MatchState> {
     // returns to a lobby, which today it does not — a rematch keeps its roster.
     this.lock();
 
-    for (const client of this.clients) this.sendMatchData(client);
+    for (const client of this.clients) {
+      // The whole grid, not a delta: a rematch is new ground, and a client
+      // still holding the last match's collapsed arch would draw rock across a
+      // map that no longer has any.
+      this.sendMapData(client);
+      this.sendMatchData(client);
+    }
     this.broadcast('phase', { phase: MatchPhase.Playing });
   }
 
@@ -756,6 +776,20 @@ export class MatchRoom extends Room<MatchState> {
     if (snapshots === null) return;
 
     this.state.tick = this.match.tick;
+
+    // Ground that changed on this tick (#197). A mission beat can collapse a
+    // span, and a client still drawing the route that is no longer there is
+    // worse than one drawing nothing: the player would be steering into rock
+    // they can see is open. Broadcast rather than per-client because terrain
+    // is public — both commanders are standing on it.
+    const groundRevision = this.match.world.terrain.revision;
+    if (groundRevision > this.sentGroundRevision) {
+      this.broadcast('ground', {
+        revision: groundRevision,
+        cells: this.match.world.terrain.changesSince(this.sentGroundRevision),
+      });
+      this.sentGroundRevision = groundRevision;
+    }
 
     // Commanders observe on the same Echo tick a player's client does, from
     // the same per-slot snapshot. They get no extra pass and no extra data.

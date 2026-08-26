@@ -236,6 +236,10 @@ export function eidOfLocalId(world: SimWorld, local: number): number {
 export function createSimWorld(terrain: Terrain, dt: number, seed: number): SimWorld {
   const world = createWorld() as SimWorld;
   world.terrain = terrain;
+  // The map is built; from here, a cell write is something that happened in
+  // the match. That is the distinction the wire and the state hash both need
+  // (#197) — the join payload already carries the constructed ground.
+  terrain.markBaseline();
   world.tick = 0;
   world.dt = dt;
   world.economies = new Map();

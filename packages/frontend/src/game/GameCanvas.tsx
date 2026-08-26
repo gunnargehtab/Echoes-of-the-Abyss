@@ -271,6 +271,7 @@ export function GameCanvas({
 
       client = new GameClient({
         onTerrain: (terrain) => activeRenderer.setTerrain(terrain),
+        onGround: (cells) => activeRenderer.applyGround(cells),
         onMap: (map) => {
           activeRenderer.setMap(map);
           setMapName(map.name);

@@ -65,6 +65,19 @@ export interface TerrainPayload {
   ceiling: number[];
 }
 
+/**
+ * Cells whose water column changed mid-match, and the ground's revision after
+ * applying them.
+ *
+ * Cells rather than the rectangle a mission authored: a rect would make both
+ * sides redo the metres-to-cells arithmetic and agree about every `Math.floor`,
+ * and cells are what actually changed.
+ */
+export interface GroundDeltaPayload {
+  revision: number;
+  cells: { index: number; floorM: number; ceilingM: number }[];
+}
+
 export interface AssignedPayload {
   slot: number;
   faction: Faction;
@@ -100,6 +113,8 @@ export interface MissionLine {
 
 export interface GameClientHandlers {
   onTerrain(terrain: TerrainPayload): void;
+  /** Ground the match changed under the client's feet (#197). */
+  onGround(cells: GroundDeltaPayload['cells']): void;
   onMap(map: MapPayload): void;
   onNodes(nodes: ResourceNodeInfo[]): void;
   onAssigned(assigned: AssignedPayload): void;
@@ -356,6 +371,13 @@ export class GameClient {
     rememberToken(room.reconnectionToken, this.missionId);
 
     room.onMessage('terrain', (payload: TerrainPayload) => this.handlers.onTerrain(payload));
+    // Ground that changed after the join payload was sent (#197). A mission
+    // beat can collapse a span, and a client still drawing the route that is
+    // no longer there is worse than one drawing nothing — the player would be
+    // steering into rock they can see is open.
+    room.onMessage('ground', (payload: GroundDeltaPayload) =>
+      this.handlers.onGround(payload.cells ?? [])
+    );
     room.onMessage('map', (payload: MapPayload) => this.handlers.onMap(payload));
     room.onMessage('nodes', (payload: ResourceNodeInfo[]) => this.handlers.onNodes(payload));
     room.onMessage('assigned', (payload: AssignedPayload) => this.handlers.onAssigned(payload));
