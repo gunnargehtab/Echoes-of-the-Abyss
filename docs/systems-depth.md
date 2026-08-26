@@ -76,6 +76,19 @@ Depth access is one of the two axes (with sound) that every faction's mechanics 
 | **Abyssal Directorate** | PR-3 | **Born to it** — no refit needed, free access to the map's richest third; the trade-off is shallow water poisons them (−20% speed, −15% HP above 400 m) |
 | **Hadron Knights** | PR-2 | **Projects** access — instant refits paid in Resonance, and **Sounding Spire** structures grant allied units +1 PR within 600 m as a support ability |
 
+### The baseline is what makes the weakness a trade
+
+The **Baseline PR** column above is a floor, not a stat block: a hull whose own rating is
+higher keeps it, and the baseline is simply the depth a navy is born rated for before it
+buys, projects or terraforms a single metre.
+
+It is load-bearing for the row below it. Crush attrition begins where a hull's rating runs
+out, and the Directorate's poison begins on the Shelf — so for a PR-1 hull those two regions
+are exact complements, and a Directorate scout without its navy's baseline would have had
+nowhere in three kilometres of water to stand: crushing below 400 m, bleeding above it. The
+PR-3 baseline is what turns "shallow water poisons them" from a hole into a choice, which is
+why the two halves of §3 have to ship together.
+
 ### What "shallow water poisons them" means
 
 The Directorate's weakness is the mirror of everyone else's: the rest of the Rift rents
@@ -128,6 +141,7 @@ what exists or assumes what does not. Constants live in `DEPTH` in
 | Depth as an order (§2) | **Implemented** | `Match.orderDepth()`, validated server-side; a depth outside the map is refused, not clamped |
 | Descent is fast and deafening (§2) | **Implemented** | 45 m/s, and a SIG floor of 72 — above every cruise SIG in the roster, below the ping's 95. Ordering a dive breaks Silent Running, and re-asserting it mid-dive does not buy quiet |
 | Ascent is slow and silent (§2) | **Implemented** | 15 m/s, one third of the descent rate, and no SIG contribution at all. Compatible with Silent Running |
+| Baseline PR per faction (§3) | **Implemented** | `FACTION_PRESSURE_BASELINE`, applied at spawn as a **floor** on the hull's own rating — a hull rated higher keeps it. Without it the Directorate's PR-3 line was prose, and a Directorate PR-1 hull had no depth in the water column where it was neither crushing nor poisoned |
 | Sounding Spire rents depth (§3, §4) | **Implemented** | `STRUCTURE_AURAS.SOUNDING_SPIRE`; the grant is real while the aura holds and lost on leaving it |
 | Directorate shallow-water penalty (§3) | **Implemented** | Speed in `movementSystem`, stacking multiplicatively with silent running, storms, currents and kelp; hull in `pressureSystem`, as a bleed to `DIRECTORATE_SHALLOW.HULL_FLOOR` that shares the unhealable ledger with crush. The 400 m line is `DEPTH_BANDS`' Shelf boundary rather than a number of its own |
 | Pelagia Deepbloom terraforming (§3) | Not modelled | Requires terrain that can change band. The per-region floor is the substrate for it; what is missing is the ability to write to it mid-match |

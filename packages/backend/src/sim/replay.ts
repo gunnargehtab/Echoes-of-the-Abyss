@@ -38,6 +38,14 @@ import { eidOfLocalId } from './world.ts';
 
 /** The current replay wire format. Bump when a change breaks old files. */
 /**
+ * 12: each navy carries the baseline Pressure Rating docs/systems-depth.md §3
+ * publishes for it — Consortium 2, Commune 1, Directorate 3, Knights 2 — as a
+ * floor on the hull's own rating. Directorate hulls are consequently rated
+ * deeper and seated below the Shelf line rather than at 300 m, and the
+ * commander no longer recalls its army for any contact near the Bastion, only
+ * for one that has closed on it. Both change what happens on the first tick of
+ * any match with those seats, so a v11 recording diverges immediately.
+ *
  * 11: every hazard is staggered across its own dormancy. The head start each
  * site gets into its wait used to be scaled by the eruption's 55 s whatever
  * the kind, so a 100 s storm could never be seeded past 55 s and every storm
@@ -116,7 +124,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 11;
+export const REPLAY_FORMAT_VERSION = 12;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =

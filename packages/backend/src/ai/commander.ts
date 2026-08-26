@@ -34,6 +34,7 @@ import {
   StructureKind,
   THERMOCLINE_DUCT_BOTTOM_M,
   UnitKind,
+  effectivePressureRating,
   requiredPressureRating,
   statsFor,
   structureStatsFor,
@@ -372,7 +373,7 @@ export class AiCommander implements AiPlayer {
    * data, not world state — the HUD prints them.
    */
   private pickNode(harvester: OwnUnit): ResourceNodeInfo | null {
-    const rating = statsFor(harvester.kind).pressureRating;
+    const rating = effectivePressureRating(harvester.kind, this.briefing.faction);
     const crowd = new Map<number, number>();
     for (const nodeId of this.nodeByHarvester.values()) {
       crowd.set(nodeId, (crowd.get(nodeId) ?? 0) + 1);
@@ -717,7 +718,10 @@ export class AiCommander implements AiPlayer {
     const byDepth = new Map<number, number[]>();
 
     for (const unit of army) {
-      const depthM = Math.min(wanted, ratedDepthCeiling(statsFor(unit.kind).pressureRating));
+      const depthM = Math.min(
+        wanted,
+        ratedDepthCeiling(effectivePressureRating(unit.kind, this.briefing.faction))
+      );
       // Read the hull rather than a remembered intention. `armySilent` can get
       // away with a believed flag because silence is one bit for the whole
       // force; depth cannot, because reinforcements spawn at cruise depth long

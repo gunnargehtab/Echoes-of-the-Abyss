@@ -398,13 +398,18 @@ doctrines decline the crossing outright — the Consortium because it is heard r
 quiet it cannot spend is quiet it will not buy, the Commune because it does not survive the
 deep, it terraforms it.
 
-Every hull is clamped to its own Pressure Rating on the way down, so a mixed force splits
-vertically: the rated hulls cross and the scouts stay in the light. `Match.orderDepth` still
+Every hull is clamped to its own Pressure Rating on the way down. `Match.orderDepth` still
 permits a human to rent depth they cannot survive — that is the mechanic — but difficulty
-here is decision quality, and a PR-1 scout taking 4 HP/s of unhealable crush for stealth it
-will not live to use is not a decision worth modelling. The split has a second effect the
-rule did not set out to buy: contacts resolve per slot, so a shallow scout keeps hearing on
-behalf of an army that has gone deaf underneath the layer.
+here is decision quality, and a hull taking 4 HP/s of unhealable crush for stealth it will
+not live to use is not a decision worth modelling.
+
+The clamp used to split a mixed force vertically, with the rated hulls crossing and the
+scouts staying in the light — and buy an emergent property with it, since contacts resolve
+per slot and a shallow scout kept hearing for an army gone deaf underneath. **Implementing
+§3's baseline table ended that**: a navy that crosses has a baseline of at least PR-2, so
+every hull it fields is rated for the crossing and the whole force goes together. The clamp
+is unchanged and still guards any navy whose baseline leaves a hull short; there is not
+currently one. Worth knowing if the roster or the baselines move again.
 
 `hullSecondsByZone` in the balance telemetry is what makes any of this checkable. Until it
 existed, every committed baseline was measured against commanders that spent whole matches in

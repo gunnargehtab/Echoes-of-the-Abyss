@@ -69,8 +69,8 @@ function hull(id: number, x: number, y: number): OwnUnit {
 }
 
 /** An unclassified smudge: Tier 1, no kind, no species. Could be anything. */
-function smudge(id: number, x: number, y: number): Contact {
-  return { id, tier: ResolutionTier.Contact, x, y };
+function smudge(id: number, x: number, y: number, tick: number): Contact {
+  return { id, tier: ResolutionTier.Contact, x, y, tick };
 }
 
 /**
@@ -93,7 +93,7 @@ function recalled(track: Array<{ x: number; y: number }>, secondsEach: number): 
         ...base,
         tick,
         units: army,
-        contacts: [smudge(77, at.x, at.y)],
+        contacts: [smudge(77, at.x, at.y, tick)],
       };
       for (const command of commander.observe(snapshot) as AiCommand[]) {
         if (command.kind === 'attack') attacked = true;

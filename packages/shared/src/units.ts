@@ -11,7 +11,8 @@
  * listening doctrine is carried by these numbers rather than a special case.
  */
 
-import { UnitKind } from './types.js';
+import { Faction, UnitKind } from './types.js';
+import { FACTION_PRESSURE_BASELINE } from './constants.js';
 
 export interface UnitStats {
   kind: UnitKind;
@@ -209,3 +210,19 @@ export function statsFor(kind: UnitKind): UnitStats {
  */
 export const MAX_UNIT_RADIUS_M =
   Math.max(...Object.values(UNIT_STATS).map((stats) => stats.hullLengthM)) / 2;
+
+/**
+ * The Pressure Rating a hull of this kind actually carries for this faction.
+ *
+ * The hull's own rating or its navy's baseline, whichever is greater
+ * (docs/systems-depth.md §3). Every reader of a unit's rating should come
+ * through here rather than `statsFor(kind).pressureRating`, which is the
+ * roster number and not what the hull in the water has.
+ *
+ * Aura grants — the Sounding Spire's +1 — are *on top* of this and live in
+ * `Pressure.bonus`, because a rented rating has to be able to evaporate and a
+ * baseline never does.
+ */
+export function effectivePressureRating(kind: UnitKind, faction: Faction): number {
+  return Math.max(UNIT_STATS[kind].pressureRating, FACTION_PRESSURE_BASELINE[faction]);
+}
