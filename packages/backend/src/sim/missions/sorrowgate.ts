@@ -145,9 +145,9 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       units: [
         // Four Light Scouts, court-refitted, hardpoints struck. HYD 70 is the
         // best mobile ears outside the Directorate and this is a mission about
-        // hearing; SIG 6 idle / 12 cruise makes it the one hull in the roster
-        // whose loudness the player moves, which a ceiling needs to teach
-        // anything at all (§3).
+        // hearing; SIG 6 idle / 12 cruise is the widest swing off the lowest
+        // floor in the roster, which is what a ceiling needs before moving is
+        // audibly a decision (§3).
         //
         // PR 1 covers the Shelf only and the court sits at 1,500 m, so the
         // refit rates them for Mid-Water and stops there. They cannot enter the
@@ -673,12 +673,12 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
   epilogue: {
     [MissionOutcome.Complete]:
       'Fourteen out. Nothing about this is finished, and the court has no part in the rest of it. The record is closed. The court adjourns.',
-    // §8 gives one reading for "nine out *or* five out", and it is written for
-    // the nine. Transcribed as it stands rather than paraphrased for the other
-    // half: inventing the court's words is not this file's job, and a second
-    // reading belongs in the document first.
+    // Either tender may be the one that gets through, so this reading names no
+    // number: the objectives are a count ladder rather than two identities, and
+    // a court that said "nine are out" would be reading a count it had not
+    // taken (§8).
     [MissionOutcome.Partial]:
-      'Nine are out. Five are in the record. The count will be read in this chamber when there is a chamber, and until then it stands as read.',
+      'One tender is through. The rest are in the record. The count will be read in this chamber when there is a chamber, and until then it stands as read.',
     [MissionOutcome.Lost]:
       'The gate is closed. Fourteen are behind it. The record will be read, and then the court will adjourn, and this court will not open again.',
   },

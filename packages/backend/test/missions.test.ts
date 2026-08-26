@@ -376,6 +376,30 @@ describe('the objectives', () => {
     }
   });
 
+  it('names every marker it authors from at least one objective', () => {
+    // The other half of the rule above, and the half `projectMissionView`
+    // depends on. A marker ships to the client only while an objective naming
+    // it is revealed — that is how the Upper Concourse stays off the wire
+    // until the court opens the gate — so a marker no objective ever names is
+    // not merely untidy, it is authored and then never sent. Caught here,
+    // where the author is looking, rather than in a playthrough where the
+    // symptom is a marker that silently does not exist.
+    for (const mission of MISSIONS) {
+      const named = new Set(
+        mission.objectives
+          .map((objective) => objective.markerId)
+          .filter((id): id is string => id !== undefined)
+      );
+      for (const marker of mission.markers) {
+        assert.ok(
+          named.has(marker.id),
+          `${mission.id}: marker "${marker.id}" is authored and no objective names it, ` +
+            `so it would never reach the client`
+        );
+      }
+    }
+  });
+
   it('asks for no more hulls in a role than the mission places', () => {
     // A count above the roster is unreachable, and unreachable in the quietest
     // possible way: the counter simply never fills.
@@ -500,7 +524,9 @@ describe('Sorrowgate, as docs/mission-sorrowgate.md states it', () => {
     // score — asserted by their opening words so a rewrite in the document is
     // felt here rather than absorbed silently.
     assert.match(PROLOGUE_SORROWGATE.epilogue[0], /^Fourteen out\./);
-    assert.match(PROLOGUE_SORROWGATE.epilogue[1], /^Nine are out\./);
+    // Names no number on purpose: either tender may be the one that gets
+    // through, so the court reads what it took rather than a count it did not.
+    assert.match(PROLOGUE_SORROWGATE.epilogue[1], /^One tender is through\./);
     assert.match(PROLOGUE_SORROWGATE.epilogue[2], /^The gate is closed\. Fourteen are behind it\./);
   });
 });

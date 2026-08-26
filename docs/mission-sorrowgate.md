@@ -74,7 +74,7 @@ asset is the gate, and the gate belongs to nobody.
 | Property | Value | Why |
 | --- | --- | --- |
 | Hull | Light Scout ×4 | The Commune's own hull ([units.md](units.md)). HYD 70 — the best mobile ears outside the Directorate, and this is a mission about hearing |
-| SIG | 6 idle / 12 cruise | The only hull in the roster whose SIG the *player* moves. A ceiling teaches nothing on a hull that emits one number whatever it does |
+| SIG | 6 idle / 12 cruise | The quietest hull in the roster, and the one whose SIG the *player* moves furthest — it doubles, off a floor of 6, where the Abyssal Submersible's 22 → 28 is a quarter and the Corvette emits 28 whatever it does ([units.md](units.md)). A ceiling teaches nothing unless moving is audibly a decision, and on this hull it is |
 | Pressure Rating | **2**, by refit | PR-1 covers the Shelf only ([systems-depth.md](systems-depth.md)), and the court is at 1,500 m. The Commune's refits are poor — so the court's hulls hold Mid-Water and stop there. They cannot enter the basin, which needs PR-3. That is the mission's floor and it is authored, not incidental |
 | Weapons | **None** | Below |
 | Countermeasures | **None** | Below |
@@ -282,30 +282,37 @@ player makes it with their ears.
 | Result | Condition | The court's reading |
 | --- | --- | --- |
 | **Fourteen out** | Both tenders reach the Upper Concourse | "Fourteen out. Nothing about this is finished, and the court has no part in the rest of it. The record is closed. The court adjourns." |
-| **Nine out** *or* **five out** | One tender reaches it | "Nine are out. Five are in the record. The count will be read in this chamber when there is a chamber, and until then it stands as read." |
+| **One tender out** | One tender reaches it | "One tender is through. The rest are in the record. The count will be read in this chamber when there is a chamber, and until then it stands as read." |
 | **The gate is closed** | Neither reaches it | "The gate is closed. Fourteen are behind it. The record will be read, and then the court will adjourn, and this court will not open again." |
+
+The partial reading names no number, and that is deliberate rather than vague: either tender may
+be the one that gets through, so a court that said "nine are out" would be reading a count it had
+not taken. It reads what it knows — one is through, the rest are in the record — and leaves the
+arithmetic to the people who have to live with it.
 
 A partial result **ends the mission and is a result.** It is not a soft failure and the player is
 not asked to replay it. Three missions across the campaign are winnable only as evacuations
 ([campaign.md](campaign.md) §2); this is the first, and it is where the game teaches that a
 number it read out loud is the whole outcome.
 
-### The failure, and what it sounds like sixty seconds out
+### The failure, and the sounds that precede it
 
 There is one failure condition and it is not a timer. **A tender still inside the chamber when
 the court adjourns is inside a collapsing dome**, and the dome comes down because the colossus
 came back through it.
 
-The precursor is diegetic, free, and enormous.
+The precursor is diegetic, free, and enormous. Times are mission time, on the same clock as §9's
+beat table; the court adjourns at 20:00.
 
-| Lead | What the player hears |
+| When | What the player hears |
 | --- | --- |
-| ~6:00 | The basin. A slow, non-directional presence at the very edge of hearing, from the moment the flight is admitted. The mission never names it and no character mentions it |
-| 90 s | **The second calling voice.** SIG 100, non-directional, from the far end of the basin — the colossus has turned. [audio-direction.md](audio-direction.md) §5 already owns this sound: *the only sound in the game that means you have made a mistake that is now coming* |
-| 60 s | **The gate.** The transit took the arch and the array and left the dome standing ([bestiary.md](bestiary.md)). A wounded dome under 1,500 m of water complains, continuously, and gets louder as the mass approaches it |
+| 00:00 | The basin. A slow, non-directional presence at the very edge of hearing, from the moment the flight is admitted. The mission never names it and no character mentions it |
+| 14:30 | **The second calling voice.** SIG 100, non-directional, from the far end of the basin — the colossus has turned. [audio-direction.md](audio-direction.md) §5 already owns this sound: *the only sound in the game that means you have made a mistake that is now coming* |
+| 19:00 | **The gate.** The transit took the arch and the array and left the dome standing ([bestiary.md](bestiary.md)). A wounded dome under 1,500 m of water complains, continuously, and gets louder as the mass approaches it |
 
-Ninety seconds of warning against a sixty-second requirement, delivered twice, by two different
-sounds, one of which the player has already learned the meaning of. [campaign.md](campaign.md)
+Five and a half minutes of warning against a run north that takes three (§9), delivered twice, by
+two different sounds, one of which the player has already learned the meaning of — and the second
+of them lands with a minute left, for a player who ignored the first. [campaign.md](campaign.md)
 §10 is satisfied with margin and it costs the mix nothing it does not already have.
 
 ---
@@ -328,7 +335,7 @@ their hearing and never the mission.
 | 06:20–09:00 | The exchange runs. The flight's job is to hold and listen. Kalliso flickers — nothing, then Tier 2 for a few seconds as she turns, then nothing again. She never climbs past Tier 2, so the flight never learns whose she is |
 | **09:00** | **Drenn pings.** SIG 95. Three seconds in which everything is exact, and the player is lit for the first time in the game |
 | 09:20 | **The calling voice** |
-| **10:40** | **The transit.** The arch goes, and the court's array goes with it. The dome holds. The delegations scatter; not one of them engages, because nothing can. The service lock is now the only way out, and the flight is on its own ears from here |
+| **10:40** | **The transit.** The arch goes, and the court's array goes with it. The dome holds. The delegations scatter; not one of them engages, because nothing can. The service lock is now the only way out, and the flight is on its own ears from here. *The lock is authored as the only roofed water on the map (§11) but is not yet the only passable one — see §13* |
 | 11:20 | Tender One is loaded |
 | 13:40 | Tender Two is loaded |
 | **14:30** | **The second calling voice.** The colossus has turned |
@@ -479,13 +486,14 @@ not.
 | Requirement | Status |
 | --- | --- |
 | The map, its seven regions, the roofed service lock | Implemented (#190) |
+| The arch closing at the transit, making the lock the only way out | Not built — the lock is roofed, but nothing is walled: after 10:40 the flight can still run north over open water. Closing it needs terrain that changes mid-match, and a way to tell a client whose picture of the ground arrived once on join |
 | The flight, admitted weapons-cold, PR-2 | Implemented (#190) |
 | Every party admitted weapons-cold | Implemented (#190) |
 | The silence order — ceiling, array, silence-debt | Implemented (#190) |
 | The beat schedule, including Drenn's ping and the transit | Implemented (#190) |
 | Objectives, results, and the failure at adjournment | Implemented (#190) |
 | The briefing and the objective readings | Implemented (#190) |
-| The four voices in the water | Not built — no channel exists for in-mission character speech |
+| The four voices in the water | Text only (#190) — the `say` beat carries speaker and line to a mission log beside the orders panel, at the times §12 gives. Nothing is *heard*: there is no speech audio and [audio-direction.md](audio-direction.md) does not yet own a bus for one, so a player with the sound on and their eyes on the water misses all four |
 | Mid-match Coral Ruins state change | Not built, and not relied on ([environments.md](environments.md)) |
 | Campaign progression, and recording that the prologue was played | Not built — the prologue is replayable and remembers nothing |
 
