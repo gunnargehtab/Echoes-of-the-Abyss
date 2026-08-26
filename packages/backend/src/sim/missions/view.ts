@@ -46,18 +46,34 @@ export function projectMissionView(
   own: EchoSnapshot
 ): MissionView {
   const objectives: ObjectiveView[] = [];
+  const named = new Set<string>();
   for (const objective of definition.objectives) {
     if (objective.revealAtTick !== undefined && own.tick < objective.revealAtTick) continue;
     objectives.push(objectiveView(definition, objective, state, own));
+    if (objective.markerId !== undefined) named.add(objective.markerId);
   }
   return {
     missionId: definition.id,
     tick: own.tick,
     objectives,
+    // Only the markers a *revealed* objective names, and this is the same
+    // withholding as `revealAtTick` rather than a tidiness pass. In the
+    // Prologue the sole marker is the Upper Concourse, and the court does not
+    // name where the tenders are going until it opens the gate at 11:20
+    // (docs/mission-sorrowgate.md §8) — shipping the marker with the first view
+    // would put the extraction point on the wire eleven minutes early, and a
+    // payload the client holds is a payload some later layer draws.
+    //
+    // Derived from the objectives rather than given its own reveal time so the
+    // two cannot drift apart; `missions.test.ts` asserts every authored marker
+    // is named by an objective, so a marker cannot go quietly unshipped.
+    //
     // Copied out rather than passed through: the definition's arrays are
     // readonly authored data and the wire types are not, and a payload that
     // aliased the literal would let one bad consumer edit the mission.
-    markers: definition.markers.map((marker): MissionMarker => ({ ...marker })),
+    markers: definition.markers
+      .filter((marker) => named.has(marker.id))
+      .map((marker): MissionMarker => ({ ...marker })),
     locks: definition.locks.map((lock): AbilityLock => ({ ...lock })),
     sigBudget: definition.sigBudget,
     debtS: state.debtS,

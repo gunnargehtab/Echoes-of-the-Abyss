@@ -58,6 +58,16 @@ const ECHO_TICK_INTERVAL = Math.round(SIM.TICK_HZ / SIM.ECHO_HZ);
 /** Seconds of simulation time one mission tick covers. */
 const TICK_DT_S = ECHO_TICK_INTERVAL / SIM.TICK_HZ;
 
+/**
+ * How long a creature under an authored commitment is deafened for, in seconds
+ * of its own sense timer — see `holdCommitments`.
+ *
+ * Any figure comfortably above `TICK_DT_S` would do, since it is rewritten on
+ * every mission tick. An hour is chosen so that it is unmistakably a pin rather
+ * than a tuning number somebody should try to balance.
+ */
+const SCRIPTED_SENSE_S = 3600;
+
 export interface MissionResolution {
   outcome: MissionOutcome;
   epilogue: string;
@@ -148,6 +158,8 @@ export class MissionRuntime {
   private view: MissionView | null = null;
   private viewKey = '';
   private resolution: MissionResolution | null = null;
+  /** A resolve beat has fired; the mission closes once this tick is derived. */
+  private resolveRequested = false;
   private worstMs = 0;
 
   constructor(definition: MissionDefinition) {
@@ -288,6 +300,7 @@ export class MissionRuntime {
     this.applyEscortHold(world, own);
     this.applySilenceLedger(world, own);
     this.deriveObjectives(world, own);
+    if (this.resolveRequested) this.resolve();
     this.rebuildView(own);
 
     const cost = performance.now() - started;
@@ -360,6 +373,15 @@ export class MissionRuntime {
           if (eid !== 0) this.register(world, beat.tag, eid);
         }
         if (eid === 0) return;
+        // One creature, one commitment: a second beat for the same tag
+        // *replaces* the first rather than joining it. Sorrowgate turns the
+        // colossus toward the basin at 10:40 while its 09:20 drive to the gate
+        // is still live to the tick, and `holdCommitments` walks the list
+        // backwards — so without this the older commitment writes last and the
+        // transit stutters back toward the chamber on the one tick the player
+        // is watching it leave.
+        const stale = this.commitments.findIndex((held) => held.tag === beat.tag);
+        if (stale !== -1) this.commitments.splice(stale, 1);
         this.commitments.push({
           tag: beat.tag,
           x: beat.driveTo.x,
@@ -386,7 +408,12 @@ export class MissionRuntime {
         this.lines.push({ tick: world.tick, speaker: beat.speaker, text: beat.text });
         return;
       case 'resolve':
-        this.resolve();
+        // Deferred, not applied here. Beats fire before objectives are
+        // re-derived, so resolving inside the beat would close the mission
+        // against last tick's world — and a tender that crossed the line in
+        // the final 0.2 s would be counted as behind the gate. The court reads
+        // the count it has, not the one it had.
+        this.resolveRequested = true;
         return;
     }
   }
@@ -400,12 +427,35 @@ export class MissionRuntime {
    * drives toward `homeX`/`homeY` and `Acoustic.sig` sits at the species'
    * active figure — which is what makes the approach the loudest thing on the
    * map, and audible long before it arrives.
+   *
+   * **A scripted creature is deafened, not merely corrected.** Clearing
+   * `targetEid` here is not enough on its own and it is worth being explicit
+   * about why: this runs at 5 Hz and `faunaSystem` runs at 60, so between two
+   * passes of this method `listen` can acquire a hull and `act` can steer at
+   * it, match its depth, and — for a Sounder, which does not stop at weapons
+   * range — grind straight through it. Roughly two ticks in five of a five-
+   * minute approach, with the flight under a silence order and unable to shoot
+   * back. So `senseS` is pinned instead: the creature never listens, so it
+   * never has a target to be corrected out of. That is also the fiction
+   * exactly — docs/mission-sorrowgate.md §7 has the colossus answering an
+   * emission and never noticing the flight at all, and a creature that does
+   * not listen is what that sentence describes.
    */
   private holdCommitments(world: SimWorld): void {
     for (let i = this.commitments.length - 1; i >= 0; i--) {
       const commitment = this.commitments[i]!;
       if (world.tick > commitment.untilTick) {
         this.commitments.splice(i, 1);
+        // Give the creature its ears back on the way out. `senseS` is pinned
+        // below for as long as the commitment holds, and left pinned it would
+        // outlast the mission: a released creature would be permanently deaf,
+        // drifting home and never hearing a thing. Set to the ordinary
+        // interval rather than to zero so it re-acquires on its own cadence
+        // instead of on the tick the beat happened to end.
+        const released = this.eidOf(world, commitment.tag);
+        if (released !== 0 && hasComponent(world, Fauna, released)) {
+          Fauna.senseS[released] = DRIFT.SENSE_INTERVAL_S;
+        }
         continue;
       }
       const eid = this.eidOf(world, commitment.tag);
@@ -423,6 +473,11 @@ export class MissionRuntime {
       Fauna.homeY[eid] = commitment.y;
       Fauna.targetEid[eid] = 0;
       Fauna.stage[eid] = FaunaStage.Committed;
+      // Deaf for the length of the commitment. `faunaSystem` counts this down
+      // by `dt` and only calls `listen` when it reaches zero, so a figure well
+      // past any Echo interval means it never reaches zero while the mission
+      // is holding this creature. The expiry branch above puts it back.
+      Fauna.senseS[eid] = SCRIPTED_SENSE_S;
       // A targetless Committed creature is moved to Cooling by the ladder on
       // the very next tick. That is fine and deliberate: Cooling still drives
       // toward home and still emits at `sigActive`, so the approach stays the

@@ -20,6 +20,7 @@ import { CreditsScreen } from './menu/CreditsScreen.tsx';
 import { SetupScreen } from './menu/SetupScreen.tsx';
 import { SettingsScreen } from './menu/SettingsScreen.tsx';
 import { TitleScreen } from './menu/TitleScreen.tsx';
+import { storedMissionId } from './net/GameClient.ts';
 import { loadSettings } from './settings/store.ts';
 
 type Screen =
@@ -48,7 +49,9 @@ function mapForMission(missionId: string): string {
  * developer's door into the water, not a player's route through the fiction,
  * and a screen that has to be clicked past is exactly what the harness cannot
  * assume. Resume stays on for both — a reload mid-match carries the query
- * string, and reloading must not cost the seat.
+ * string, and reloading must not cost the seat. It is safe to leave on
+ * unconditionally because `GameClient` redeems a parked token only for the
+ * room kind being asked for: a held skirmish seat cannot answer `?mission=`.
  */
 function initialScreen(): Screen {
   const query = new URLSearchParams(window.location.search);
@@ -77,17 +80,24 @@ function App() {
     <div className="app">
       {screen.kind === 'title' && (
         <TitleScreen
-          onResume={() =>
+          onResume={() => {
+            // Which room the held seat is in, so Resume returns to the match
+            // the player was actually playing. A token is only redeemed for
+            // the room kind the client asks for (see `GameClient.connect`), so
+            // resuming a mission seat as a skirmish would not merely land on
+            // the wrong screen — it would skip the token and abandon the seat.
+            const missionId = storedMissionId() ?? '';
             // The map id is moot on resume — the token names the room — but a
             // dead token falls back to an ordinary join, and that join should
             // land somewhere sensible.
             setScreen({
               kind: 'match',
               name: loadSettings().profileName,
-              mapId: DEFAULT_MAP_ID,
+              mapId: missionId === '' ? DEFAULT_MAP_ID : mapForMission(missionId),
               resume: true,
-            })
-          }
+              ...(missionId === '' ? {} : { missionId }),
+            });
+          }}
           onSolo={() => setScreen({ kind: 'setup', mode: 'solo' })}
           onMultiplayer={() => setScreen({ kind: 'setup', mode: 'multiplayer' })}
           // One mission exists, and the Tutorial entry is the door to it

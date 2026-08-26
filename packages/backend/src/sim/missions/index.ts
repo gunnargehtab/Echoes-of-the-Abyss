@@ -17,10 +17,8 @@ import type { MissionDefinition } from './types.ts';
 export * from './types.ts';
 export * from './predicates.ts';
 export * from './view.ts';
+export * from './runtime.ts';
 export { PROLOGUE_SORROWGATE };
-
-// The runtime that ticks these — beats, the escort hold, the silence ledger —
-// is wired separately in `runtime.ts` and re-exported from here once it lands.
 
 export const MISSIONS: readonly MissionDefinition[] = [PROLOGUE_SORROWGATE];
 

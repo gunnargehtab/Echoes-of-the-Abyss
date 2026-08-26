@@ -183,13 +183,19 @@ describe('a mission view says only what the player could have worked out', () =>
     // authored data and the wire types are not — so this is also the assertion
     // that the copy is faithful, and that nothing derived from the world was
     // folded into a marker's position on the way past.
+    const authored = new Map(
+      PROLOGUE_SORROWGATE.markers.map((marker) => [marker.id, { ...marker }])
+    );
     for (const { view } of sentViews()) {
       assert.equal(view.missionId, PROLOGUE_SORROWGATE.id);
       assert.equal(view.sigBudget, PROLOGUE_SORROWGATE.sigBudget);
-      assert.deepEqual(
-        view.markers,
-        PROLOGUE_SORROWGATE.markers.map((marker) => ({ ...marker }))
-      );
+      for (const marker of view.markers) {
+        assert.deepEqual(
+          marker,
+          authored.get(marker.id),
+          `marker "${marker.id}" is not as authored`
+        );
+      }
       assert.deepEqual(
         view.locks,
         PROLOGUE_SORROWGATE.locks.map((lock) => ({ ...lock }))
@@ -199,6 +205,36 @@ describe('a mission view says only what the player could have worked out', () =>
         `debt ${view.debtS}s is outside the authored ledger`
       );
     }
+  });
+
+  it('withholds a marker until an objective names it', () => {
+    // The Upper Concourse is where the tenders are going, and the court does
+    // not say so until it opens the gate at 11:20 — the objectives that name
+    // the marker carry `revealAtTick`, and the marker rides the same
+    // withholding rather than a reveal time of its own.
+    //
+    // Checked on the wire rather than on the panel, because "the client is not
+    // sent it" and "the client does not draw it" are different promises and
+    // only the first one holds when somebody adds a minimap.
+    const seen: number[] = [];
+    for (const { view } of sentViews()) {
+      const shipped = view.markers.some((marker) => marker.id === 'concourse');
+      const named = view.objectives.some((objective) => objective.markerId === 'concourse');
+      assert.equal(
+        shipped,
+        named,
+        `tick ${view.tick}: the concourse was ${shipped ? 'sent' : 'withheld'} and ` +
+          `${named ? 'named' : 'unnamed'} — a marker ships exactly while an objective names it`
+      );
+      if (shipped) seen.push(view.tick);
+    }
+    // Both halves have to happen inside the sampled run, or this asserts
+    // nothing: a marker that never ships would pass the equality above.
+    assert.ok(seen.length > 0, 'the concourse never reached the client at all');
+    assert.ok(
+      seen[0]! >= 11 * 60 * SIM.TICK_HZ + 20 * SIM.TICK_HZ,
+      `the concourse was on the wire at tick ${seen[0]}, before the gate opens at 11:20`
+    );
   });
 
   it("has no field that could hold another slot's state", () => {

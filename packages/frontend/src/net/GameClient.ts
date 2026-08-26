@@ -130,13 +130,28 @@ const RECONNECT_MAX_DELAY_MS = 4000;
  */
 const TOKEN_KEY = 'echoes.reconnection';
 
+/**
+ * What the parked token is a seat *in* — a mission id, or `''` for a skirmish.
+ *
+ * A token names one room and the client cannot tell which by looking at it, so
+ * without this a held skirmish token is redeemed on the way into the Prologue
+ * and quietly delivers the skirmish instead: a briefing screen, then somebody
+ * else's water. Stored beside the token and cleared with it.
+ */
+const TOKEN_MISSION_KEY = 'echoes.reconnection.mission';
+
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** Storage throws in some privacy modes; a missing token is only a re-join. */
-function rememberToken(token: string | null): void {
+function rememberToken(token: string | null, missionId = ''): void {
   try {
-    if (token === null) window.sessionStorage.removeItem(TOKEN_KEY);
-    else window.sessionStorage.setItem(TOKEN_KEY, token);
+    if (token === null) {
+      window.sessionStorage.removeItem(TOKEN_KEY);
+      window.sessionStorage.removeItem(TOKEN_MISSION_KEY);
+    } else {
+      window.sessionStorage.setItem(TOKEN_KEY, token);
+      window.sessionStorage.setItem(TOKEN_MISSION_KEY, missionId);
+    }
   } catch {
     // Nothing to do: the player re-joins instead of resuming.
   }
@@ -157,6 +172,20 @@ function recallToken(): string | null {
  */
 export function hasStoredSession(): boolean {
   return recallToken() !== null;
+}
+
+/**
+ * The mission the held seat belongs to — `''` for a skirmish, `null` for no
+ * seat at all. The shell reads this so its Resume entry sends the player back
+ * to the match they were actually in rather than to a fresh skirmish.
+ */
+export function storedMissionId(): string | null {
+  if (recallToken() === null) return null;
+  try {
+    return window.sessionStorage.getItem(TOKEN_MISSION_KEY) ?? '';
+  } catch {
+    return '';
+  }
 }
 
 export interface ConnectOptions {
@@ -184,6 +213,8 @@ export class GameClient {
   private readonly client: Client;
   private readonly handlers: GameClientHandlers;
   private room: Room | null = null;
+  /** Which room kind this client is in, so a parked token can be matched. */
+  private missionId = '';
   /** True once the player has deliberately left; suppresses reconnection. */
   private leaving = false;
   /**
@@ -201,13 +232,25 @@ export class GameClient {
 
   async connect(options: ConnectOptions = {}): Promise<void> {
     this.handlers.onStatus('connecting');
+    // Always a string, and `''` for a skirmish. The server filters rooms on
+    // this key, and Colyseus matches filter keys by equality — a client
+    // sending `undefined` and one sending `''` would be asking for two
+    // different rooms, which would quietly split the skirmish matchmaking
+    // pool in half and give nobody an error to read.
+    const wanted = options.missionId ?? '';
+    this.missionId = wanted;
     // A reload is a disconnection like any other, and the server is still
     // holding the seat. Resuming it is tried first, and failing costs one
     // round trip — the ordinary path is the joinOrCreate below. A deliberate
     // new match abandons the seat instead, so a held token cannot hijack it.
     if (options.resume === false) rememberToken(null);
     const stored = recallToken();
-    if (stored !== null) {
+    // Only a seat in the room the caller is asking for. A token is opaque, so
+    // a mismatch cannot be discovered by redeeming it — the reconnect would
+    // simply succeed and hand back the wrong match. Skipped rather than
+    // cleared: the caller wants a different room, not the end of that seat,
+    // and `attach` overwrites the token with the new room's anyway.
+    if (stored !== null && storedMissionId() === wanted) {
       try {
         this.attach(await this.client.reconnect(stored));
         this.handlers.onStatus('connected');
@@ -228,13 +271,7 @@ export class GameClient {
           ? undefined
           : (new URLSearchParams(window.location.search).get('map') ?? undefined));
       const name = options.name === undefined || options.name === '' ? undefined : options.name;
-      // Always a string, and `''` for a skirmish. The server filters rooms on
-      // this key, and Colyseus matches filter keys by equality — a client
-      // sending `undefined` and one sending `''` would be asking for two
-      // different rooms, which would quietly split the skirmish matchmaking
-      // pool in half and give nobody an error to read.
-      const missionId = options.missionId ?? '';
-      this.attach(await this.client.joinOrCreate('match', { name, mapId, missionId }));
+      this.attach(await this.client.joinOrCreate('match', { name, mapId, missionId: wanted }));
       this.handlers.onStatus('connected');
     } catch (error) {
       this.handlers.onStatus('error', error instanceof Error ? error.message : String(error));
@@ -249,7 +286,7 @@ export class GameClient {
   private attach(room: Room): void {
     this.room = room;
     this.lastLobbyKey = '';
-    rememberToken(room.reconnectionToken);
+    rememberToken(room.reconnectionToken, this.missionId);
 
     room.onMessage('terrain', (payload: TerrainPayload) => this.handlers.onTerrain(payload));
     room.onMessage('map', (payload: MapPayload) => this.handlers.onMap(payload));

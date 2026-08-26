@@ -83,19 +83,9 @@ export function MissionPanel({ view, onFocus }: MissionPanelProps) {
         {view.objectives.length === 0 && <p className="objectives-empty">no orders</p>}
         {view.objectives.map((objective) => {
           const marker = markerFor(objective);
-          return (
-            <button
-              key={objective.id}
-              type="button"
-              className={`objectives-row ${STATUS_CLASS[objective.status]}`}
-              // Focus only where the mission named somewhere to send the
-              // camera. An objective without a marker has nowhere honest to go.
-              disabled={marker === undefined}
-              title={marker === undefined ? undefined : marker.label}
-              onClick={() => {
-                if (marker !== undefined) onFocus(marker.x, marker.y);
-              }}
-            >
+          const className = `objectives-row ${STATUS_CLASS[objective.status]}`;
+          const body = (
+            <>
               <span className="objectives-status">{STATUS_WORD[objective.status]}</span>
               {/* Authored, in-register, verbatim. A mission states its goals in
                   the voice of whoever is setting them; the client never
@@ -106,6 +96,29 @@ export function MissionPanel({ view, onFocus }: MissionPanelProps) {
                   {objective.progress.done} of {objective.progress.of}
                 </span>
               )}
+            </>
+          );
+          // Focus only where the mission named somewhere to send the camera.
+          // An objective without a marker has nowhere honest to go — so it is
+          // not a button at all, rather than a disabled one. A disabled button
+          // is out of the tab order and skipped by some screen readers in
+          // browse mode, which would put the *order itself* out of reach; the
+          // whole point of this panel being DOM is that the text is readable.
+          // The rule the mission is stating does not stop being content
+          // because there is nowhere to fly to.
+          return marker === undefined ? (
+            <p key={objective.id} className={className}>
+              {body}
+            </p>
+          ) : (
+            <button
+              key={objective.id}
+              type="button"
+              className={className}
+              title={marker.label}
+              onClick={() => onFocus(marker.x, marker.y)}
+            >
+              {body}
             </button>
           );
         })}

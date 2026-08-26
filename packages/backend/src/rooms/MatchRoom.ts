@@ -165,10 +165,21 @@ export class MatchRoom extends Room<MatchState> {
   private readonly aiSeats = new Map<number, AiSeat>();
 
   override onCreate(options?: MatchRoomOptions): void {
+    const requested = options?.missionId ?? '';
+    this.mission = requested === '' ? null : (missionById(requested) ?? null);
+    // A mission that does not resolve fails the room, and deliberately does not
+    // take the map's fallback below. An unknown *map* can be swapped for the
+    // default because the client asked for a skirmish and a skirmish is what it
+    // gets — the map it actually got is sent on join. An unknown *mission* has
+    // no such substitute: falling through would seat the player in a skirmish
+    // on a mission-only map, with a briefing screen behind them, waiting on
+    // orders that are never coming. Better a named error the shell can show.
+    if (requested !== '' && this.mission === null) {
+      throw new Error(`unknown mission: ${requested}`);
+    }
     // An unknown id falls back to the default rather than failing the room:
     // a client asking for a map this build does not have should get a game,
     // and the map it actually got is sent on join either way.
-    this.mission = missionById(options?.missionId ?? '') ?? null;
     this.map =
       this.mission !== null
         ? missionMapById(this.mission.mapId)!
@@ -625,6 +636,10 @@ export class MatchRoom extends Room<MatchState> {
   }
 
   override onDispose(): void {
+    // A room whose `onCreate` refused an unknown mission never built a match,
+    // and reading one here would throw a TypeError on top of the real error —
+    // burying the one line that says what the client actually asked for.
+    if (this.match === undefined) return;
     console.log(
       `[MatchRoom ${this.roomId}] disposed at tick ${this.match.tick}; ` +
         `worst Echo pass ${this.match.worstEchoPassMs.toFixed(3)} ms ` +

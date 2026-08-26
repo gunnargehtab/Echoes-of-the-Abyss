@@ -1062,12 +1062,15 @@
 }
 
 /* An objective with nowhere to send the camera is still readable text; it
-   simply is not a button. Same treatment the contact log gives a Tier-1 row. */
-.objectives-row:disabled {
+   simply is not a button — it is rendered as a paragraph, so it stays
+   selectable and reachable rather than being disabled out of the tab order.
+   Same treatment the contact log gives a Tier-1 row. */
+p.objectives-row {
+  margin: 0;
   cursor: default;
 }
 
-.objectives-row:hover:not(:disabled) {
+button.objectives-row:hover {
   background: color-mix(in srgb, var(--neon-cyan) 8%, transparent);
 }
 

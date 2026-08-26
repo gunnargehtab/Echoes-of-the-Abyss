@@ -36,7 +36,9 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  DRIFT,
   Faction,
+  FaunaSpecies,
   MissionOutcome,
   ObjectiveStatus,
   ResolutionTier,
@@ -45,8 +47,8 @@ import {
   type EchoSnapshot,
   type MissionView,
 } from '@echoes/shared';
-import { hasComponent } from 'bitecs';
-import { MoveOrder } from '../src/sim/components.ts';
+import { defineQuery, hasComponent } from 'bitecs';
+import { Fauna, MoveOrder } from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
 import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import { REPLAY_FORMAT_VERSION, playReplay } from '../src/sim/replay.ts';
@@ -54,6 +56,9 @@ import { PROLOGUE_SORROWGATE } from '../src/sim/missions/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 const SEED = 7;
+
+/** Every creature in the water, for the commitment guard at the foot of this file. */
+const faunaQuery = defineQuery([Fauna]);
 const PLAYER = PROLOGUE_SORROWGATE.playerSlot;
 
 /** §11's extraction point, in the middle of the Upper Concourse. */
@@ -573,6 +578,98 @@ describe('the Knight nobody invited stays unresolved', () => {
     assert.ok(
       nw.every((tier) => tier <= ResolutionTier.Bearing),
       `the Knight was graded: tiers ${[...new Set(nw)].join(', ')}`
+    );
+  });
+});
+
+describe('a creature under a commitment never notices the flight', () => {
+  it('holds no target through the approach, on every tick and not every twelfth', () => {
+    // docs/mission-sorrowgate.md §7: the colossus answers Drenn's emission and
+    // never notices the flight at all. The runtime holds it on course from the
+    // Echo tick, at 5 Hz, and `faunaSystem` runs at 60 — so a target acquired
+    // between two mission passes is live for up to twelve simulation ticks, and
+    // a Sounder with a target does not stop at weapons range. It steers at the
+    // hull, matches its depth and grinds through it, against a flight under a
+    // silence order that cannot shoot back.
+    //
+    // Sampled every tick rather than every Echo tick, because every-Echo-tick
+    // sampling is exactly the blind spot the bug lived in: the runtime always
+    // left `targetEid` at zero on the ticks it ran.
+    const match = new Match(missionMapById(PROLOGUE_SORROWGATE.mapId)!, {
+      mission: PROLOGUE_SORROWGATE,
+      fauna: false,
+      seed: SEED,
+    });
+    const world = match.world;
+    const targeted: number[] = [];
+    // Through the calling voice at 09:20, the transit at 10:40 and the second
+    // calling voice at 14:30 — every tick the colossus is under commitment.
+    for (let tick = 0; tick < SIM.TICK_HZ * 16 * 60; tick++) {
+      match.update(STEP_MS);
+      for (const eid of faunaQuery(world)) {
+        if (Fauna.targetEid[eid] !== 0) targeted.push(world.tick);
+      }
+    }
+    assert.deepEqual(
+      targeted.slice(0, 5),
+      [],
+      `the colossus acquired a target on ${targeted.length} ticks, first at ${targeted[0]}`
+    );
+  });
+
+  it('gives the creature its ears back when the commitment expires', () => {
+    // The other end of the deafening, and unreachable in Sorrowgate's own beat
+    // list: every commitment there is either replaced by the next beat or runs
+    // to the resolve, so nothing ever expires with the creature still in the
+    // water. Left untested it would be exactly the kind of thing that works
+    // until the second mission — a released creature deaf for the rest of the
+    // match, drifting home and hearing nothing.
+    //
+    // A fixture rather than the Prologue, because the property is about a beat
+    // list the Prologue does not have. Everything else is the Prologue's, so
+    // the world it runs in is the authored one.
+    const RELEASE_AT = SIM.TICK_HZ * 20;
+    const fixture = {
+      ...PROLOGUE_SORROWGATE,
+      beats: [
+        {
+          atTick: SIM.TICK_HZ * 2,
+          kind: 'creature',
+          tag: 'sounder',
+          species: FaunaSpecies.Sounder,
+          spawnAt: { x: 2600, y: 3600, depthM: 2200 },
+          driveTo: { x: 2550, y: 2750 },
+          untilTick: RELEASE_AT,
+          loud: true,
+          note: 'a commitment that ends with the creature still alive',
+        },
+      ],
+    } as unknown as typeof PROLOGUE_SORROWGATE;
+
+    const match = new Match(missionMapById(PROLOGUE_SORROWGATE.mapId)!, {
+      mission: fixture,
+      fauna: false,
+      seed: SEED,
+    });
+    const world = match.world;
+    const senseWhileHeld: number[] = [];
+    let senseAfter = Number.NaN;
+    for (let tick = 0; tick < RELEASE_AT + SIM.TICK_HZ * 3; tick++) {
+      match.update(STEP_MS);
+      const [eid] = faunaQuery(world);
+      if (eid === undefined) continue;
+      if (world.tick < RELEASE_AT) senseWhileHeld.push(Fauna.senseS[eid]!);
+      else senseAfter = Fauna.senseS[eid]!;
+    }
+
+    assert.ok(
+      senseWhileHeld.some((s) => s > DRIFT.SENSE_INTERVAL_S),
+      'the creature was never deafened, so this proves nothing about undoing it'
+    );
+    assert.ok(
+      senseAfter <= DRIFT.SENSE_INTERVAL_S,
+      `the released creature is still deaf: senseS ${senseAfter}s against an ` +
+        `interval of ${DRIFT.SENSE_INTERVAL_S}s`
     );
   });
 });

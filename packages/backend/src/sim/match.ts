@@ -901,6 +901,10 @@ export class Match {
       unit: this.localId(eid),
       depth: depthM,
     });
+    // The same hold as `orderMove`. Without it the vertical half of the route
+    // is flyable while the tender is still being loaded and with no escort in
+    // range — and the run north is a climb, so that is most of the journey.
+    if (this.missionRuntime?.holdsMovement(slot, eid) === true) return false;
     return this.applyDepth(slot, eid, depthM);
   }
 

@@ -232,13 +232,6 @@ export interface MissionDefinition extends MissionHeader {
   /** Populate the Drift. False when a mission's only creature is authored. */
   fauna: boolean;
   /**
-   * docs/campaign.md §10 — the loudness the mission is tuned for.
-   *
-   * Metadata, shown as a ceiling. Never a live threshold: a predicate that
-   * derived its own number from this would turn a note in the margin into a
-   * rule, and §10 is explicit that the budget never fails a mission.
-   */
-  /**
    * Nodules the player opens with. Omitted is none.
    *
    * A skirmish opens on `ECONOMY.STARTING_NODULES`, which is the right answer
@@ -246,6 +239,13 @@ export interface MissionDefinition extends MissionHeader {
    * what it wants, and most of them want nothing.
    */
   startingNodules?: number;
+  /**
+   * docs/campaign.md §10 — the loudness the mission is tuned for.
+   *
+   * Metadata, shown as a ceiling. Never a live threshold: a predicate that
+   * derived its own number from this would turn a note in the margin into a
+   * rule, and §10 is explicit that the budget never fails a mission.
+   */
   sigBudget: number;
   /** The structure whose grant `courtSlot` withdraws. */
   arrayTag: MissionTag;
