@@ -9,10 +9,13 @@
  * The match screen mounts `GameCanvas` and nothing else does — the renderer,
  * the socket and the AudioContext live exactly as long as the screen that
  * needs them, and the unmount teardown is what makes "Return to port" true.
+ * The shell holds an AudioContext of its own for the menu bed, on the same
+ * terms and never at the same time: see `useMenuAudio`.
  */
 
 import { useState } from 'react';
 import './App.css';
+import { useMenuAudio } from './audio/useMenuAudio.ts';
 import { DEFAULT_MAP_ID, missionHeaderById, PROLOGUE_SORROWGATE_HEADER } from '@echoes/shared';
 import { GameCanvas } from './game/GameCanvas.tsx';
 import { BriefingScreen } from './menu/BriefingScreen.tsx';
@@ -77,6 +80,10 @@ function initialScreen(): Screen {
 function App() {
   const [screen, setScreen] = useState<Screen>(initialScreen);
   const toTitle = () => setScreen({ kind: 'title' });
+  // The port has music; the ocean has its own mix (#194). Held for exactly as
+  // long as the shell is on screen, so the shell's AudioContext is closed
+  // before the match opens one — a device handle, not a singleton.
+  useMenuAudio(screen.kind !== 'match');
 
   return (
     <div className="app">

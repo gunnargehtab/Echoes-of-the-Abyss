@@ -430,8 +430,10 @@ title screen, and reads the briefing on the way in.
 - **Briefing** — a mission's own setup: its name, its premise, and the briefing text read
   verbatim in the register of whoever is speaking it
   ([mission-sorrowgate.md](mission-sorrowgate.md) §12). It is a screen and not an overlay on
-  the match, because the match mounts the audio context and a briefing has no business
-  holding one open. It commits with the same "Descend" the setup screen uses.
+  the match, because the match opens a socket and a simulation and a briefing has no
+  business holding either. The shell does hold an audio context of its own now (#194), but
+  it is the shell's and it is released on the way in — the briefing is still in the port,
+  and it still sounds like it. It commits with the same "Descend" the setup screen uses.
 - **Settings** — see below.
 - **Credits** — static, and honest: the technology roll from
   [tech-stack.md](tech-stack.md) and a note that every sound is synthesised. No invented
@@ -455,6 +457,18 @@ server's grace window), so the title screen surfaces it as its first entry, auto
 one keypress back into the match. Resuming is offered, never automatic: the player may be
 reloading precisely because they are done. Leaving on purpose — "Return to port" — clears
 the token, so a stale banner never offers a seat that is gone.
+
+### The port has a sound
+
+The shell holds an audio context while it is on screen and closes it on the way into a
+match, so the two never hold the device at once. What plays on it is the menu bed of
+[audio-direction.md](audio-direction.md) §10 — a different piece from the in-game score,
+because the score is a function of a match and a menu has none. Nothing sounds before the
+first click or keypress, which is autoplay policy rather than a choice.
+
+One consequence is worth naming: the Master and Music sliders below are now audible *while
+you move them*, on the screen you move them on. Every other control in the table changes
+something you can only hear in the water.
 
 ### Settings, v1
 

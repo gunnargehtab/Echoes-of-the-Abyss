@@ -155,6 +155,26 @@ The score is dread, not action, and it is subordinate to information. Rules:
 - No stingers on detection. The contact voice is the stinger.
 - Combat does not trigger "combat music." Loudness does — the score follows the player's own SIG, which means the music swells when they are *exposed*, not when they are winning.
 
+### The port
+
+The shell ([ui-ux.md](ui-ux.md) §14) gets a bed of its own, and it is a **different piece**, not a loop of the score. The score above is a function of a match — side-chained to contacts, following the player's own SIG — and there is neither in a menu. Trying to loop it would produce the one thing §10 forbids most: music that swells for no reason.
+
+The port's bed keeps every rule that is not about a match:
+
+| Rule | How the port keeps it |
+| --- | --- |
+| Above 800 Hz and below 40 Hz | A pedal at ~33 Hz and cold partials from 880 Hz up. Nothing between |
+| The 40–160 Hz band belongs to contacts | Even here, where no contact is sounding. The port is where a player learns the vocabulary, and a menu that filled that band would spend itself teaching them to ignore the one the ocean speaks in |
+| No stingers | Nothing is triggered by anything. There is no event in a menu worth a sound the game has not already given a meaning |
+| Dread, not action | Sparse: one onset every two seconds or so, each lasting several, so the texture drifts rather than pulses. No melody — the port is a room, not a theme tune |
+| −18 LUFS / −1 dBTP, headroom for the exposure cue | The bed sits well under the master ceiling before the user's Music slider touches it. A main menu is not where a mix should spend its headroom |
+
+Two things it adds that the score does not. Onsets quantise to the 200 ms Echo grid ([style-neon-noir.md](style-neon-noir.md), "sonar cadence is the heartbeat"), so the game's pulse is set before the player is in the water. And the piece is *composed*, deterministically: the same music every launch, a different phrase every loop, so the loop point never becomes a hook.
+
+It plays on the same `music` bus the score will, which is how the Music slider and the master volume reach it without the bed knowing they exist — and it is the first thing in the game those sliders can be *heard* moving, which is the only way a volume control can honestly be judged.
+
+**The shell owns an AudioContext while it is on screen, and never at the same time as the match does.** A context is a device handle and browsers cap how many a page may hold open; the screen union in the shell makes the two mutually exclusive, and the menu's context is faded out and closed on the way into the water. Nothing plays before the first gesture — autoplay policy, and a game whose primary channel is audio cannot afford to look broken on its title screen.
+
 ---
 
 ## 11. Accessibility — Audio-Only Information Is a Bug
@@ -201,6 +221,11 @@ AudioContext
 The engine exists (`packages/frontend/src/audio/`): the bus graph above, the 24-voice
 contact budget with its stealing policy, tick-aligned scheduling, tab-blur suspend, and the
 first-gesture unlock.
+
+The **music bus now carries the port's bed** (§10, "The port") — the shell's own engine,
+opened on the first gesture in a menu and closed on the way into a match. The in-game score
+is still unwritten: the bus ducks and trims correctly and has one piece to play, in the
+place where a match is not.
 
 Contacts are sonified (§3): a voice per contact, panned with the authority its tier earned,
 filtered by the biome it arrived through (§9), and carrying the faction's drive signature
