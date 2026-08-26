@@ -25,6 +25,7 @@ import {
   StructureKind,
   UnitKind,
   type EchoSnapshot,
+  type MatchListingMetadata,
 } from '@echoes/shared';
 import { AiSeat, briefingFor } from '../ai/seat.ts';
 import { Match } from '../sim/match.ts';
@@ -151,6 +152,13 @@ export interface MatchRoomOptions {
    * player into a single-seat scenario.
    */
   missionId?: string;
+  /**
+   * Create the room unlisted and unmatchable — reachable only by its room id
+   * (docs/tech-stack.md, "Finding a match").
+   *
+   * Ignored for a mission, which is private whatever anyone asks for.
+   */
+  private?: boolean;
 }
 
 export class MatchRoom extends Room<MatchState> {
@@ -164,7 +172,7 @@ export class MatchRoom extends Room<MatchState> {
   /** Live AI commanders, by slot. Rebuilt from the roster on every start. */
   private readonly aiSeats = new Map<number, AiSeat>();
 
-  override onCreate(options?: MatchRoomOptions): void {
+  override async onCreate(options?: MatchRoomOptions): Promise<void> {
     const requested = options?.missionId ?? '';
     this.mission = requested === '' ? null : (missionById(requested) ?? null);
     // A mission that does not resolve fails the room, and deliberately does not
@@ -191,6 +199,17 @@ export class MatchRoom extends Room<MatchState> {
 
     this.setState(new MatchState());
     this.state.mapId = this.map.id;
+
+    // Awaited rather than fired and forgotten, and this is why `onCreate` is
+    // async: the matchmaker awaits `onCreate` before marking the room created,
+    // so a privacy flag set here lands before anyone can be matched into it.
+    // Set from a `void` call it would resolve a tick later, leaving a window in
+    // which somebody's `joinOrCreate` could be handed a solo game.
+    //
+    // A mission is private whatever the client asked for: it seats one
+    // commander and writes its own opposition, so it is nobody else's to join.
+    if (this.mission !== null || options?.private === true) await this.setPrivate(true);
+    await this.publishListing();
 
     this.onMessage('move', (client, message: MoveMessage) => {
       const slot = this.commandSlot(client);
@@ -386,6 +405,23 @@ export class MatchRoom extends Room<MatchState> {
     return this.slotBySession.get(client.sessionId);
   }
 
+  /**
+   * Republish what this room tells the world. Called wherever the roster
+   * changes, because "two of four seats taken" stops being true the moment it
+   * does — a listing that went stale would send players at rooms that are full.
+   */
+  private publishListing(): Promise<void> {
+    const metadata: MatchListingMetadata = {
+      mapId: this.map.id,
+      mapName: this.map.name,
+      seats: this.maxClients,
+      filled: this.state.players.size,
+    };
+    // Never allowed to fail a join or a leave: a listing is a convenience, and
+    // a room that could not advertise itself is still a room people can play.
+    return this.setMetadata(metadata).catch(() => {});
+  }
+
   /** The roster, as the plain rows lobby.ts reasons over. */
   private roster(): RosterEntry[] {
     const rows: RosterEntry[] = [];
@@ -425,6 +461,7 @@ export class MatchRoom extends Room<MatchState> {
       difficulty === AiDifficulty.Veteran ? AiDifficulty.Veteran : AiDifficulty.Recruit;
     seat.name = `${seat.difficulty === AiDifficulty.Veteran ? 'Veteran' : 'Recruit'} ${slot + 1}`;
     this.state.players.set(seat.sessionId, seat);
+    void this.publishListing();
     this.startIfEveryoneIsReady();
   }
 
@@ -445,6 +482,7 @@ export class MatchRoom extends Room<MatchState> {
     player.faction = defaultFaction(this.roster());
     this.state.players.set(client.sessionId, player);
     this.slotBySession.set(client.sessionId, slot);
+    void this.publishListing();
 
     if (this.mission !== null) {
       // A mission pins the navy and seats no commanders, so there is nothing
@@ -669,6 +707,7 @@ export class MatchRoom extends Room<MatchState> {
   private releasePlayer(sessionId: string): void {
     this.slotBySession.delete(sessionId);
     this.state.players.delete(sessionId);
+    void this.publishListing();
   }
 
   override onDispose(): void {

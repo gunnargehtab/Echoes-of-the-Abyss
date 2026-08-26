@@ -385,10 +385,12 @@ What the current client implements against this spec, so nobody re-implements wh
 | Accessibility presets and palettes | Implemented (#192) — mono, visual-first, the three colour-vision palettes, UI scale and reduced motion are all settings (§14) |
 | Full rebinding, and the one-handed layout | Implemented (#191) — bindings are data, the Controls screen edits them, reserved codes refuse capture |
 | Box select, control groups, order queue | Implemented |
-| The shell — title, setup, briefing, settings, credits | Implemented (§14) |
+| The shell — title, browse, setup, briefing, settings, credits | Implemented (§14) |
 | Mission runtime and the prologue | Implemented (#190) — one mission; the campaign entry is still a disabled placeholder |
 | Objectives panel | Implemented (§10.5) — DOM, `role="status"`, focusable rows, own-force counters only |
 | Settings persistence and per-bus volume | Implemented (§14) — `localStorage`, applied at match mount |
+| Match browser, private rooms, join by code | Implemented (#193) — a listing names the water and the seat count and nothing else; solo and missions are private |
+| Menu music | Implemented (#194) — the port's own bed on the `music` bus, a different piece from the score |
 
 ---
 
@@ -404,11 +406,13 @@ key art and menus only" belongs to the title screen; the in-match HUD still may 
 ### Screens
 
 ```text
-title ──▶ setup (solo | multiplayer) ──▶ match (in-room lobby ▶ playing ▶ result)
-  │  ▲                                        │
-  │  ├── settings · credits ── back           └── "Return to port" ▶ title
-  │  └── briefing ───────────────────────▶ mission (playing ▶ result)
-  └── resume banner ─────────────────────▶ match (seat resumed)
+title ──▶ setup (solo) ────────────────▶ match (in-room lobby ▶ playing ▶ result)
+  │  ▲                                       │
+  │  ├── browse ──▶ setup (host) ────────────┤   └── "Return to port" ▶ title
+  │  │       └──── join a listing, or a code ┤
+  │  ├── settings · credits · controls ── back
+  │  └── briefing ──────────────────────▶ mission (playing ▶ result)
+  └── resume banner ────────────────────▶ match (seat resumed)
 ```
 
 The screen state is a plain discriminated union in `App.tsx` — no router, no history
@@ -422,11 +426,20 @@ title screen, and reads the briefing on the way in.
 - **Title** — the game's name, one tagline from [naming.md](naming.md), and the entries:
   Resume (only while a seat is held, see below), Campaign, Solo Game, Multiplayer,
   Tutorial, Settings, Credits. There is no Quit; this is a browser.
-- **Setup** — shared by Solo and Multiplayer: a commander-name field and one card per map
+- **Setup** — shared by Solo and hosting: a commander-name field and one card per map
   archetype (name, doctrine line, seats), from the shared catalogue. Faction choice and AI
   opponents stay in the in-room ready room, because faction uniqueness is enforced by the
   room and a pick is a request the room may refuse ([tech-stack.md](tech-stack.md)) — the
-  shell does not promise what the server may deny.
+  shell does not promise what the server may deny. Hosting adds one control the solo path
+  does not have: whether the room is **listed or private**. Solo has no such choice, because
+  a solo game is always private (see below).
+- **Browse** — the multiplayer door. Open rooms, a field for a room code, and a button to
+  host one. A row says **the water and the seat count, and nothing else**: not who is in
+  there, not which navies they hold, not their names
+  ([tech-stack.md](tech-stack.md), "Finding a match"). Quick match is still there and still
+  the fastest way in — picking a map is picking a queue — but it is now one of three doors
+  rather than the only one. Rooms that have started are absent rather than greyed out,
+  because a started room is not a thing you can ask to join.
 - **Briefing** — a mission's own setup: its name, its premise, and the briefing text read
   verbatim in the register of whoever is speaking it
   ([mission-sorrowgate.md](mission-sorrowgate.md) §12). It is a screen and not an overlay on
@@ -449,6 +462,18 @@ has phosphor in it — and its one line now reads `Awaits the faction campaigns`
 runtime it used to wait on exists and the twenty-eight missions after the prologue do not.
 The shape of the finished game is on screen; a menu that hides its missing rooms would
 misrepresent the build.
+
+### Rooms, and who may see them
+
+A room is listed unless it says otherwise, and two kinds always say otherwise. **A solo game
+is private** — until this shipped it used the same matchmaking multiplayer did, so choosing
+Solo could drop you into a stranger's lobby and a stranger into yours. **A mission is
+private** for the same structural reason: it seats one commander and writes its own
+opposition. Neither offers a toggle, because neither has a question to ask.
+
+The host's room code is shown in the ready room, and only there: it is the one piece of a
+private room worth handing to somebody, and the ready room is where the host is standing
+when they want to.
 
 ### Resume
 

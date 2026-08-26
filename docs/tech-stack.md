@@ -185,6 +185,44 @@ The simulation steps **only in Playing**. Before that change the room began simu
 moment it was created, which handed the first player to load a head start measured in
 however long their opponent took to open a browser tab.
 
+### Finding a match
+
+Three ways into a room, and each exists because the other two cannot do its job:
+
+| Route | What it does | For |
+| --- | --- | --- |
+| **Quick match** | `joinOrCreate`, filtered by water and mission | Picking a map is picking a queue. Honest, and the fastest way into a game with strangers |
+| **The browser** | Lists open rooms; joining one is `joinById` | Seeing what is actually open, rather than hoping the queue you chose has somebody in it |
+| **A code** | `joinById` on a room id typed in or pasted | Playing with a specific person, which no amount of matchmaking can arrange |
+
+**A listing names the water and the seat count, and nothing else.** Not who is in the room,
+not which navies they took, not their commander names. The ready room negotiates factions
+*among the people in it*; a public listing that named them would let a fourth player
+counter-pick a match before joining it, and one that named commanders would let anyone
+choose who to avoid or who to hunt. This is a game about hidden information, and a lobby
+list is the easiest place to give it away by accident.
+
+**Private rooms are unlisted and unmatchable**, reachable only by their room id. Colyseus's
+`setPrivate` is exactly this: the matchmaker's availability query filters on
+`private: false`, so a private room is invisible to both `getAvailableRooms` and
+`joinOrCreate`, while `joinById` still finds it. That is what a room code is.
+
+Two room kinds are private by construction rather than by choice:
+
+- **A solo game.** It was not, until this existed: solo used the same `joinOrCreate` the
+  multiplayer entry did, so a player who chose Solo could be dropped into a stranger's
+  lobby on the same map, and a stranger could be dropped into theirs. A solo game that
+  someone else can join is not a solo game.
+- **A mission.** It seats one slot and authors its own opposition
+  ([campaign.md](campaign.md)); it is nobody else's to join, and it was already excluded
+  from matchmaking by the `missionId` filter. Private makes that structural rather than
+  incidental.
+
+The same query filters on `locked: false`, and a room locks the moment its match starts.
+So "nobody joins a match in progress" and "there are no spectators" hold here for free: a
+started room drops out of every listing, and `joinById` against it fails with the room id
+reported as invalid rather than dropping an arrival into a game already under way.
+
 ### The lobby
 
 | Rule | Where | Why |

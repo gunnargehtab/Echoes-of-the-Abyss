@@ -69,6 +69,17 @@ export interface GameCanvasProps {
    * also what tells this component there is no ready room to show.
    */
   missionId?: string;
+  /**
+   * Join this exact room rather than matchmaking into one — a row in the match
+   * browser or a code the host handed over (docs/tech-stack.md, "Finding a
+   * match").
+   */
+  roomId?: string;
+  /**
+   * Create a room instead of joining one, and whether the world may see it.
+   * Absent means quick match, which is `joinOrCreate`.
+   */
+  create?: 'public' | 'private';
   /** Whether a held seat should be redeemed rather than a new match joined. */
   resume: boolean;
   /**
@@ -79,7 +90,15 @@ export interface GameCanvasProps {
   onExit(): void;
 }
 
-export function GameCanvas({ playerName, mapId, missionId, resume, onExit }: GameCanvasProps) {
+export function GameCanvas({
+  playerName,
+  mapId,
+  missionId,
+  roomId,
+  create,
+  resume,
+  onExit,
+}: GameCanvasProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<ConnectionStatus>('connecting');
   const [detail, setDetail] = useState<string>('');
@@ -127,6 +146,13 @@ export function GameCanvas({ playerName, mapId, missionId, resume, onExit }: Gam
   /** Seats this map has. A map's spawn list is its player count. */
   const [maxSlots, setMaxSlots] = useState(4);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  /**
+   * The room's own id, which is the code a host hands somebody (§14). Shown
+   * only in the ready room: it is the one piece of a private room worth
+   * passing on, and the ready room is where the host is standing when they
+   * want to.
+   */
+  const [joinedRoomId, setJoinedRoomId] = useState<string | null>(null);
   const rendererRef = useRef<EchoRenderer | null>(null);
   const clientRef = useRef<GameClient | null>(null);
   /**
@@ -348,8 +374,9 @@ export function GameCanvas({ playerName, mapId, missionId, resume, onExit }: Gam
       unsubscribeSettings = subscribeSettings(applySettings);
 
       clientRef.current = client;
-      await client.connect({ name: playerName, mapId, missionId, resume });
+      await client.connect({ name: playerName, mapId, missionId, roomId, create, resume });
       setSessionId(client.sessionId);
+      setJoinedRoomId(client.roomId);
     };
 
     let unsubscribeSettings: (() => void) | null = null;
@@ -370,8 +397,10 @@ export function GameCanvas({ playerName, mapId, missionId, resume, onExit }: Gam
     // The identity of a mount is the match it joins: the shell never changes
     // these props on a live canvas, it unmounts and remounts. The mission is
     // part of that identity — the same water under a mission is a different
-    // room from the same water without one.
-  }, [playerName, mapId, missionId, resume]);
+    // room from the same water without one — and so is which door was used,
+    // because joining a named room and matchmaking into one are different
+    // matches even when every other prop agrees.
+  }, [playerName, mapId, missionId, roomId, create, resume]);
 
   const focusOn = useCallback((x: number, y: number) => {
     rendererRef.current?.focusOn(x, y);
@@ -420,6 +449,7 @@ export function GameCanvas({ playerName, mapId, missionId, resume, onExit }: Gam
           mapName={mapName}
           players={lobby.players}
           sessionId={sessionId}
+          roomId={joinedRoomId}
           // The server knows the real cap — a map's spawn list is its player
           // count — and refuses a seat past it. This only greys the button.
           canAddAi={lobby.players.length < maxSlots}

@@ -32,6 +32,12 @@ export interface LobbyProps {
   players: LobbyPlayerView[];
   /** This client's own seat, or null before the room has assigned one. */
   sessionId: string | null;
+  /**
+   * The room's id, which is the code that reaches a private room
+   * (docs/tech-stack.md, "Finding a match"). Shown here and nowhere else:
+   * this is where a host is standing when they want to hand it over.
+   */
+  roomId: string | null;
   /** False when every slot on this map is taken. */
   canAddAi: boolean;
   onChooseFaction(faction: Faction): void;
@@ -45,6 +51,7 @@ export function Lobby({
   mapName,
   players,
   sessionId,
+  roomId,
   canAddAi,
   onChooseFaction,
   onReady,
@@ -70,6 +77,15 @@ export function Lobby({
         <header className="lobby-head">
           <h2>Standing by</h2>
           <p className="lobby-map">{mapName}</p>
+          {roomId !== null && (
+            <p className="lobby-code">
+              <span className="lobby-code-label">Room code</span>
+              <code className="lobby-code-value">{roomId}</code>
+              {/* Selectable rather than a copy button: clipboard access is a
+                  permission prompt in some browsers and a silent no-op in
+                  others, and a code you can read is a code you can send. */}
+            </p>
+          )}
         </header>
 
         <ul className="lobby-factions">

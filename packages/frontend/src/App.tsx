@@ -20,7 +20,9 @@ import { DEFAULT_MAP_ID, missionHeaderById, PROLOGUE_SORROWGATE_HEADER } from '@
 import { GameCanvas } from './game/GameCanvas.tsx';
 import { BriefingScreen } from './menu/BriefingScreen.tsx';
 import { CreditsScreen } from './menu/CreditsScreen.tsx';
+import { BrowseScreen } from './menu/BrowseScreen.tsx';
 import { SetupScreen } from './menu/SetupScreen.tsx';
+import { doorFor, type SetupMode } from './net/rooms.ts';
 import { ControlsScreen } from './menu/ControlsScreen.tsx';
 import { SettingsScreen } from './menu/SettingsScreen.tsx';
 import { TitleScreen } from './menu/TitleScreen.tsx';
@@ -29,12 +31,25 @@ import { loadSettings } from './settings/store.ts';
 
 type Screen =
   | { kind: 'title' }
-  | { kind: 'setup'; mode: 'solo' | 'multiplayer' }
+  | { kind: 'setup'; mode: SetupMode }
+  | { kind: 'browse' }
   | { kind: 'briefing'; missionId: string }
   | { kind: 'settings' }
   | { kind: 'controls' }
   | { kind: 'credits' }
-  | { kind: 'match'; name: string; mapId: string; resume: boolean; missionId?: string };
+  | {
+      kind: 'match';
+      name: string;
+      mapId: string;
+      resume: boolean;
+      missionId?: string;
+      /**
+       * How this room is reached — the three doors of docs/tech-stack.md,
+       * "Finding a match". Absent means quick match, which is `joinOrCreate`.
+       */
+      roomId?: string;
+      create?: 'public' | 'private';
+    };
 
 /**
  * The water a mission is played on. Public either way — the room sends the map
@@ -108,7 +123,7 @@ function App() {
             });
           }}
           onSolo={() => setScreen({ kind: 'setup', mode: 'solo' })}
-          onMultiplayer={() => setScreen({ kind: 'setup', mode: 'multiplayer' })}
+          onMultiplayer={() => setScreen({ kind: 'browse' })}
           // One mission exists, and the Tutorial entry is the door to it
           // (docs/campaign.md §3: the prologue is one mission behind two
           // doors). The campaign entry will be the other, when there is one.
@@ -122,7 +137,37 @@ function App() {
       {screen.kind === 'setup' && (
         <SetupScreen
           mode={screen.mode}
-          onEngage={(name, mapId) => setScreen({ kind: 'match', name, mapId, resume: false })}
+          onEngage={(name, mapId, listed) =>
+            setScreen({
+              kind: 'match',
+              name,
+              mapId,
+              resume: false,
+              // Which door: solo and an unlisted host create a private room,
+              // a listed host creates a public one, quick match matchmakes.
+              // The rule is in net/rooms.ts, where it can be tested.
+              ...doorFor(screen.mode, listed),
+            })
+          }
+          onBack={screen.mode === 'solo' ? toTitle : () => setScreen({ kind: 'browse' })}
+        />
+      )}
+      {screen.kind === 'browse' && (
+        <BrowseScreen
+          onJoin={(roomId) =>
+            setScreen({
+              kind: 'match',
+              name: loadSettings().profileName,
+              // Moot on a join: the room is already on its water and sends it
+              // back. Kept honest rather than blank so a failed join falls back
+              // somewhere sensible.
+              mapId: DEFAULT_MAP_ID,
+              resume: false,
+              roomId,
+            })
+          }
+          onHost={() => setScreen({ kind: 'setup', mode: 'host' })}
+          onQuickMatch={() => setScreen({ kind: 'setup', mode: 'quick' })}
           onBack={toTitle}
         />
       )}
@@ -153,6 +198,8 @@ function App() {
           playerName={screen.name}
           mapId={screen.mapId}
           missionId={screen.missionId}
+          roomId={screen.roomId}
+          create={screen.create}
           resume={screen.resume}
           onExit={toTitle}
         />

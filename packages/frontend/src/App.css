@@ -1647,3 +1647,158 @@ button.objectives-row:hover {
   line-height: 1.5;
   letter-spacing: 0.03em;
 }
+
+/*
+ * The match browser — docs/ui-ux.md §14, docs/tech-stack.md "Finding a match".
+ *
+ * A row carries three things and cannot carry a fourth, because the server
+ * never sends one: the water, the seats, and whether there is room. Anything
+ * about who is in there would be the listing giving away the hidden
+ * information the whole game is built on.
+ */
+.menu-browse-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.menu-browse {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 34vh;
+  overflow-y: auto;
+}
+
+.menu-browse-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: baseline;
+  gap: 0.8rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--glass-stroke);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-bright);
+  font: inherit;
+  font-size: 0.7rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu-browse-row:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--neon-cyan) 60%, transparent);
+  background: color-mix(in srgb, var(--neon-cyan) 8%, transparent);
+}
+
+/* Disabled dims to 40% and never greys out — style-neon-noir.md's rule: a dead
+   console still has phosphor in it. */
+.menu-browse-row:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.menu-browse-map {
+  letter-spacing: 0.08em;
+}
+
+.menu-browse-seats {
+  color: var(--text-dim);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+}
+
+.menu-browse-action {
+  color: var(--text-cyan);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.menu-browse-empty {
+  margin: 0;
+  padding: 0.7rem;
+  border: 1px dashed color-mix(in srgb, var(--glass-stroke) 55%, transparent);
+  border-radius: 3px;
+  color: var(--text-dim);
+  font-size: 0.64rem;
+  line-height: 1.5;
+}
+
+.menu-code {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 0.6rem;
+  /* Left, like the ROOMS label above it — the panel centres its header, not
+     its controls. */
+  text-align: left;
+}
+
+.menu-chip {
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--glass-stroke);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-bright);
+  font: inherit;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.menu-chip:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Quick match sits beside the commit rather than under it: a second way in,
+   not a lesser one. */
+.menu-subscreen-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--glass-stroke);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-bright);
+  font: inherit;
+  font-size: 0.7rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* The room code, in the ready room and nowhere else. Monospace and selectable:
+   it exists to be read out or pasted. */
+.lobby-code {
+  margin: 0.5rem 0 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.lobby-code-label {
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.lobby-code-value {
+  padding: 0.15rem 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--neon-cyan) 40%, transparent);
+  border-radius: 3px;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--text-cyan);
+  user-select: all;
+}
