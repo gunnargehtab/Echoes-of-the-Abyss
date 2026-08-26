@@ -305,6 +305,17 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
       BATTLE_MARK_PER_SHOT
     );
     Health.hp[target] = Health.hp[target]! - profile.damage;
+    // The victim's owner is told a blow landed (docs/ui-ux.md §5). An event,
+    // not an inference: a client watching its own hp could not tell a shell
+    // from crush attrition, and §8 keeps those on different channels.
+    //
+    // Hulls only. Point defence shoots *ordnance*, and a torpedo is not one of
+    // your units — telling its owner their plating was struck would be a cue
+    // with nothing behind it, and would quietly report that somebody's unseen
+    // gun engaged their fish.
+    if (!hasComponent(world, Ordnance, target)) {
+      raiseSelfEvent(world, { kind: SelfEventKind.Damaged, eid: target });
+    }
     if (Health.hp[target]! <= 0 && !destroyed.includes(target)) {
       destroyed.push(target);
     }

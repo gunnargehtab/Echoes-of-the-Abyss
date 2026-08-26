@@ -15,7 +15,8 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { ResolutionTier, SIM } from '@echoes/shared';
+import { ResolutionTier } from '@echoes/shared';
+import { stamp } from './clock.ts';
 import type { ContactLogEntry } from './EchoRenderer.ts';
 
 const TIER_LABEL: Record<ResolutionTier, string> = {
@@ -26,21 +27,17 @@ const TIER_LABEL: Record<ResolutionTier, string> = {
   [ResolutionTier.Track]: 'TIER 4',
 };
 
-/** Match clock from the simulation tick — no wall-clock anywhere near it. */
-function stamp(tick: number): string {
-  const seconds = Math.floor(tick / SIM.TICK_HZ);
-  const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
-  const ss = String(seconds % 60).padStart(2, '0');
-  return `T+${mm}:${ss}`;
-}
-
 function detail(entry: ContactLogEntry): string {
-  if (entry.bearingDeg === undefined || entry.rangeM === undefined) {
+  if (entry.bearingDeg === undefined) {
     // Tier 1 carries the listener's own position, not the emitter's. There is
     // no bearing in the report, so the log says so rather than inventing one.
     return 'bearing unknown';
   }
   const bearing = String(entry.bearingDeg).padStart(3, '0');
+  // A bearing without a range is the "you were pinged" row (docs/ui-ux.md
+  // §10): the server sent a direction and nothing else, and the log shows
+  // exactly that much.
+  if (entry.rangeM === undefined) return `bearing ${bearing}°`;
   // Range is approximate at Tier 2 by design (15% blur) and exact at 3+; the
   // tilde is on both because a player should not have to remember which.
   return `bearing ${bearing}°   ~${Math.round(entry.rangeM / 100) * 100} m`;

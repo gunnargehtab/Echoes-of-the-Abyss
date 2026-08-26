@@ -240,10 +240,24 @@ sound at once).
 **Nothing about the player's own force is inferred.** The Echo pass reports exposure
 directly: `EchoSnapshot.exposure` says how well the player is currently seen, and
 `EchoSnapshot.selfEvents` carries the discrete moments — transmitted, broke silence, was
-lit. All of it is resolved information about the player's own units, so it leaks nothing,
-and the alternative was guessing. A SIG jump could be a broken silence, a discharge or a
-descent; "am I being pinged" cannot be read off own-SIG at all, and §5's cue is far too loud
-to fire on a guess.
+lit, was hit, ran out of work. All of it is resolved information about the player's own
+units, so it leaks nothing, and the alternative was guessing. A SIG jump could be a broken
+silence, a discharge or a descent; "am I being pinged" cannot be read off own-SIG at all,
+and §5's cue is far too loud to fire on a guess.
+
+**A blow on the hull is audible once per engagement.** The `Damaged` event fires for
+violence only — a gun, ordnance, a creature — never for crush attrition or the shallow
+bleed, which are costs being paid rather than attacks being made. Its cue is a dull knock
+and a rattle of plating, deliberately below the exposure strike, and the mixer collapses a
+sustained battering into one blow per ten quiet seconds per hull: the log records the
+first blow of an engagement (docs/ui-ux.md §5), and the ear and the record share the
+window so they cannot disagree about what one engagement is.
+
+**The ui bus finally carries something.** The idle-harvester notice — two soft descending
+taps — is its first producer, and it sets the bus's register: the interface speaking, not
+the water. It claims no precedence rung and ducks nothing, because a chore may not quiet
+a contact; that the ui bus sits outside the ducking chain is now load-bearing rather than
+incidental.
 
 The one thing deliberately withheld is the pinger's **position**. The victim gets a bearing,
 which is what §11's screen-edge flash asks for. A ping resolves by hard radius while the

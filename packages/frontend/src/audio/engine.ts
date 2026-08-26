@@ -49,8 +49,10 @@ import {
   SelfBed,
   playBreakSilence,
   playExposure,
+  playNotice,
   playPingReturn,
   playPingTransmit,
+  playUnderFire,
 } from './selfVoice.ts';
 import { MAX_CONTACT_VOICES, VoiceAllocator } from './voiceAllocator.ts';
 
@@ -278,6 +280,10 @@ export class AudioEngine {
       ret: (at, pan) => playPingReturn(context, self, at, pan),
       exposure: (at, pan) => playExposure(context, self, at, pan),
       breakSilence: (at) => playBreakSilence(context, self, at),
+      underFire: (at) => playUnderFire(context, self, at),
+      // The interface's own voice: the one producer the ui bus has, and the
+      // reason its slider finally trims something.
+      notice: (at) => playNotice(context, ui, at),
     });
     this.mixer.setSpatialisation(this.spatialisation);
     this.duckGain = duck;

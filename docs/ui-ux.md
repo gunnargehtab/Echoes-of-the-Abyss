@@ -110,17 +110,30 @@ return is something the server actually sent.
   two seconds. On the rim and never at a position, because the server sent a bearing and
   nothing else.
 - **A hull losing hull is a fact about your own force**, which the snapshot carries in
-  full — so the scope pulses at that hull's position when it takes damage, and the contact
-  log records the first blow of an engagement rather than every round of it. What neither
-  may ever do is point back at the shooter: the hit is yours to know; the firer is still
-  only whatever tier your listeners earned.
+  full — so the scope pulses at that hull's position when violence lands on it, and the
+  contact log records the first blow of an engagement rather than every round of it: a
+  hull hit again within ten seconds is the same fight (`PERSISTENCE.UNDER_FIRE_REARM_S`).
+  Violence means a gun, ordnance, or fauna — never crush attrition or the shallow bleed,
+  which are §8's to draw, and never a hazard, which announces itself. What no cue may
+  ever do is point back at the shooter: the hit is yours to know; the firer is still only
+  whatever tier your listeners earned.
+- **A harvester with nothing to do is a chore, not a threat**, and the scope says so in
+  the interface's own ink: a dim breathing marker on the hull while the stall lasts, and
+  one log row naming the reason the server actually has — the water is mined out, or no
+  yard is left to land the load. A harvester the player *throttled* or parked raises
+  nothing, because a chosen quiet is not a stall. Its notice speaks on the ui bus and
+  claims no precedence rung: a chore may not duck the water.
 - **No player-to-player markers, yet.** There are no allies in the water to signal — and
   when team play exists, a marker is a message, and messages will be server state for §9's
   reason exactly: two clients watching one slot cannot disagree about what was marked.
 
-None of this is implemented yet (§13). The two cues are design waiting on renderer work —
-and on their audio half first, because §1.3 says the ear leads: a visible blow with no
-audible one would be the one mark in the game that arrives eye-first.
+Every cue here is a server-sent event, never a client inference — a falling hp number
+cannot tell a shell from crush attrition. The wedge is the one that needed no new sound:
+it is the exposure strike's own mark moved onto the scope, and that strike has been the
+loudest thing in the game since §11's flash. The two genuinely new facts — a blow landing
+and a harvester stalling — each shipped with their audio half in the same change, because
+§1.3 says the ear leads. Under reduced motion the wedge holds, the pulse becomes a steady
+ring, and the idle marker stops breathing; each still says what it said.
 
 ---
 
@@ -345,10 +358,14 @@ not every 5 Hz tick, which would bury the events that matter. Entries are never 
 a log that sharpened its own history when a better resolution arrived would let a player
 reconstruct positions they never earned, and would destroy what the log is for.
 
-Two rows in the sample above are not yet implemented, and are blocked rather than skipped:
-`you were pinged` needs the server-sent exposure flag that the audio work introduces, and
-`MARK` needs Echo Marks to exist. Tier-3 rows currently name the hull and faction rather
-than estimating a count, because the Echo Layer does not model counts.
+The `you were pinged` row is implemented (#206, alongside the own-force rows it shares a
+shape with): it writes from the server-sent exposure flag at the fidelity sent — a bearing, never a position — under the `---` tier the log
+reserves for events that are not detections. The log also carries the own-force rows §5
+licenses, in the same form: `Corvette under fire`, `Harvester idle — mined out`, each
+focusable because the hull is the player's own. One row remains pending rather than
+skipped: `MARK` waits on the log learning to read the Echo Marks the renderer already
+draws. Tier-3 rows currently name the hull and faction rather than estimating a count,
+because the Echo Layer does not model counts.
 
 ---
 
@@ -428,8 +445,10 @@ The parity table. Every row is a claim that the mix tells the player nothing the
 | Active sonar transmit and its returns | The ping wavefront already drawn, expanding on the same clock |
 | Echo Mark beds — the sound of the past | Residue stains on the seabed, sized and faded by intensity |
 | Industrial hum in the mix | The same stain in a cooler colour and a wider radius, so an economy reads differently from a fight at a glance |
+| **Hull impact** — a blow on your own plating, once per engagement | **Scope pulse on the hull that was hit** and a log row for the first blow; the world view already carries the health bar |
+| **Idle notice** — two soft taps in the interface's voice, on the ui bus | The dim scope marker holding on the stalled harvester, and its log row naming the reason |
 
-Two rows are genuinely *new* information in the mix — the Tier-4 lock tone and the exposure strike — and both ship with the visual half in the same change. Everything else restates something the renderer already draws. That is the intended ratio.
+Three rows are genuinely *new* information in the mix — the Tier-4 lock tone, the exposure strike, and the hull impact — and each ships with the visual half in the same change. The idle notice is the odd one out in the other direction: the interface speaking rather than the water, and the first sound the ui bus has ever carried. Everything else restates something the renderer already draws. That is the intended ratio.
 
 The exposure strike is the harder of the two, and [audio-direction.md](audio-direction.md) §5 says why: "there is no visual equivalent that arrives sooner." Sooner is not the same as never. The flash arrives *with* the sound rather than before it, on the same bearing and the same two-second decay, and it is drawn in screen space rather than world space on purpose — a world-space marker would sit at a position, which is exactly what the server did not send.
 
@@ -466,8 +485,13 @@ Where faction identity *does* reach the interface, it already has its places:
 
 - **Ink** — each navy's primary, accent and glow ([factions.md](factions.md), transcribed
   into `palette.ts` and re-derived per colour-vision palette), carried by hulls,
-  structures and Tier-3+ contacts. §11 owes every faction colour its glyph so ink is
-  never the only identifier — a debt the renderer has not yet paid (§13).
+  structures and Tier-3+ contacts — never alone: the glyph rides beside it (§11, #207).
+  It is drawn from Tier 3 up — at Tier 3 because the mark is otherwise a dot wearing a
+  colour, and at Tier 4 because the silhouette a track earns names the *hull class* and
+  not the navy: every faction sails the same five shapes, so without the glyph the fill
+  colour would be the only thing saying whose it is. Its geometry never moves with the
+  colour-vision palette, because shape is what survives one, and it carries a minimum size
+  in screen space so a pulled-back camera cannot shrink it back into hue alone.
 - **Silhouette** — rectangles and cylinders, leaves and seed-pods, chitin, blades: the
   hull is the faction sprite ([factions.md](factions.md), "Visual identity").
 - **Timbre** — the Tier-3 drive signature and the faction voicing of the mix
@@ -497,7 +521,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | Depth ribbon, PR badge, unrecoverable-hull hatching | Implemented (`D` dive, `A` rise; hold `Alt` to preview the dive cost) |
 | Thermocline on the ribbon, duct as a depth rung | Implemented — cyan line at 1,200 m, duct shaded, `DUCT` / `UNDER` in the readout |
 | Sonar-scope minimap | Implemented — terrain, tier-fidelity returns, sweep, range rings; Echo Marks layer pending |
-| Contact log | Implemented — DOM, live region, click-to-focus; ping and mark rows pending |
+| Contact log | Implemented — DOM, live region, click-to-focus; the `MARK` row is still pending |
 | Contact voices, per-tier | Implemented — pan authority by tier, biome voicing, faction timbre at Tier 3+ |
 | Self-noise bed, SIG band label, masking readout | Implemented — server-sent, never inferred |
 | Exposure strike and screen-edge flash | Implemented — fires from `EchoSnapshot.selfEvents`, bearing only |
@@ -516,8 +540,10 @@ What the current client implements against this spec, so nobody re-implements wh
 | Match browser, private rooms, join by code | Implemented (#193) — a listing names the water and the seat count and nothing else; solo and missions are private |
 | Menu music | Implemented (#194) — the port's own bed on the `music` bus, a different piece from the score |
 | The esc menu | Implemented (§9.5, #187) — settings and the rebinder open over a live match; leaving is armed |
-| Attention on the scope | Pending (§5) — the exposure wedge and the under-fire pulse wait on their audio half |
-| Faction glyphs at Tier 3+ | Pending (§11) — colour carries the faction alone until the glyph ships |
+| Attention on the scope | Implemented (§5, #206, #209) — exposure wedge, under-fire pulse, idle marker, each with its audio half and its reduced-motion equivalent |
+| Faction glyphs | Implemented (§12.5, #207) — one glyph per navy beside the mark's ink at Tier 3 and Tier 4, in the world view; the scope names no faction, so it owes none |
+| The match clock | Implemented (#208) — the log's T+ axis live in the top strip, from the server tick both share |
+| Own-force log rows | Implemented (§10, #206, #209) — `you were pinged`, `under fire`, `idle — mined out`; the `MARK` row is still pending |
 
 ---
 

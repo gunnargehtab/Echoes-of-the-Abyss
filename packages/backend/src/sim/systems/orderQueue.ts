@@ -62,6 +62,14 @@ function begin(world: SimWorld, eid: number, order: QueuedOrder): void {
       MoveOrder.x[eid] = order.x;
       MoveOrder.y[eid] = order.y;
       MoveOrder.active[eid] = 1;
+      // A queued move is the player parking the hull, exactly as an immediate
+      // one is (Match.applyMove) — so a stalled harvester stops being stalled
+      // the moment its leg begins, rather than driving the player's order with
+      // an idle marker still breathing on it.
+      if (hasComponent(world, Harvester, eid)) {
+        Harvester.mode[eid] = HarvestMode.Idle;
+        Harvester.idleReason[eid] = 0;
+      }
       break;
     case 'attack':
       // The target may have died while the order waited its turn. Dropping it
@@ -75,6 +83,7 @@ function begin(world: SimWorld, eid: number, order: QueuedOrder): void {
       if (hasComponent(world, ResourceNode, order.node)) {
         Harvester.nodeEid[eid] = order.node;
         Harvester.mode[eid] = HarvestMode.ToNode;
+        Harvester.idleReason[eid] = 0;
       }
       break;
   }

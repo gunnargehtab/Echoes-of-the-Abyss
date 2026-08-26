@@ -13,10 +13,16 @@
  * thoroughly than having no cue at all.
  */
 
-import { SelfEventKind, type SelfEvent } from '@echoes/shared';
+import { PERSISTENCE, SIM, SelfEventKind, type SelfEvent } from '@echoes/shared';
 import { PING_RETURN_WINDOW_S } from './selfVoice.ts';
 import { selfMixFor, type SelfMix } from './selfNoise.ts';
 import { duckFor, type BusRung } from './precedence.ts';
+
+/**
+ * How long one engagement lasts, in simulation ticks — the same window the
+ * renderer applies to its log rows (docs/ui-ux.md §5).
+ */
+const UNDER_FIRE_REARM_TICKS = PERSISTENCE.UNDER_FIRE_REARM_S * SIM.TICK_HZ;
 
 /** One echo coming back from the player's own ping. */
 export interface PingReturn {
@@ -61,12 +67,28 @@ export interface SelfSink {
   ret(at: number, pan: number): void;
   exposure(at: number, pan: number): void;
   breakSilence(at: number): void;
+  /** A blow on your own plating — docs/ui-ux.md §5, once per engagement. */
+  underFire(at: number): void;
+  /** A chore in the interface's voice, on the ui bus — the idle notice. */
+  notice(at: number): void;
 }
 
 export class SelfMixer {
   /** Events already played, so a resend cannot double-fire a one-shot. */
   private readonly played = new Set<string>();
   private lastTick = -1;
+  /**
+   * The server tick each hull was last hit on, for the engagement window
+   * (docs/ui-ux.md §5).
+   *
+   * Ticks rather than either local clock, and that is the whole point: the
+   * renderer measures the same window for its log rows, and the two must
+   * agree about what one engagement is. `AudioContext.currentTime` stops
+   * while a tab is hidden and `performance.now` does not, so a mixer keyed to
+   * the audio clock would fall behind the log by exactly the time the player
+   * spent looking elsewhere. The tick is the one clock both halves are handed.
+   */
+  private readonly underFireTick = new Map<number, number>();
 
   constructor(private readonly sink: SelfSink) {}
 
@@ -110,23 +132,11 @@ export class SelfMixer {
       const key = `${frame.tick}:${event.kind}:${event.unitId}`;
       if (this.played.has(key)) continue;
       this.played.add(key);
-      this.fired.set(event.kind, (this.fired.get(event.kind) ?? 0) + 1);
-
-      switch (event.kind) {
-        case SelfEventKind.Ping:
-          this.sink.transmit(now);
-          this.raise('self', now, 1.5);
-          break;
-        case SelfEventKind.BreakSilence:
-          this.sink.breakSilence(now);
-          this.raise('self', now, 2);
-          break;
-        case SelfEventKind.Exposed:
-          // cos, for the same reason the contact voices use it: the bearing is
-          // measured from world +x and stereo is the horizontal axis.
-          this.sink.exposure(now, event.bearing === undefined ? 0 : Math.cos(event.bearing));
-          this.raise('self-exposure', now, 2);
-          break;
+      // Counted only when a cue actually sounded: a Damaged event folded into
+      // a running engagement is delivered but not played, and the harness
+      // reads this counter to ask "did it sound".
+      if (this.voice(event, now, frame.tick)) {
+        this.fired.set(event.kind, (this.fired.get(event.kind) ?? 0) + 1);
       }
     }
 
@@ -164,6 +174,39 @@ export class SelfMixer {
     }
   }
 
+  /** Voice one event. Returns whether a cue actually sounded. */
+  private voice(event: SelfEvent, now: number, tick: number): boolean {
+    switch (event.kind) {
+      case SelfEventKind.Ping:
+        this.sink.transmit(now);
+        this.raise('self', now, 1.5);
+        return true;
+      case SelfEventKind.BreakSilence:
+        this.sink.breakSilence(now);
+        this.raise('self', now, 2);
+        return true;
+      case SelfEventKind.Exposed:
+        // cos, for the same reason the contact voices use it: the bearing is
+        // measured from world +x and stereo is the horizontal axis.
+        this.sink.exposure(now, event.bearing === undefined ? 0 : Math.cos(event.bearing));
+        this.raise('self-exposure', now, 2);
+        return true;
+      case SelfEventKind.Damaged: {
+        const last = this.underFireTick.get(event.unitId);
+        this.underFireTick.set(event.unitId, tick);
+        if (last !== undefined && tick - last < UNDER_FIRE_REARM_TICKS) return false;
+        this.sink.underFire(now);
+        this.raise('self', now, 0.5);
+        return true;
+      }
+      case SelfEventKind.HarvesterIdle:
+        // No rung: a chore may not duck the water. The ui bus sits outside
+        // the precedence chain, and this cue is one reason that stays true.
+        this.sink.notice(now);
+        return true;
+    }
+  }
+
   private raise(rung: BusRung, now: number, seconds: number): void {
     // Exposure outranks everything, so it is never displaced by a cue raised
     // after it — the door does not stop slamming because you pressed ping.
@@ -175,6 +218,7 @@ export class SelfMixer {
   reset(): void {
     this.played.clear();
     this.fired.clear();
+    this.underFireTick.clear();
     this.loudest = null;
     this.loudestUntil = 0;
   }

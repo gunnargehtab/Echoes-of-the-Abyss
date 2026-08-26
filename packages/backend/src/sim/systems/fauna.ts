@@ -38,6 +38,7 @@ import {
   faunaStatsFor,
   maxAudibleRangeM,
   MAX_PROPAGATION_FACTOR,
+  SelfEventKind,
   THERMOCLINE_ZONE_MAX,
   thermoclineFactor,
   thermoclineZone,
@@ -54,7 +55,7 @@ import {
   Unit,
 } from '../components.ts';
 import { activeCurrentAt } from './hazards.ts';
-import type { SimWorld } from '../world.ts';
+import { raiseSelfEvent, type SimWorld } from '../world.ts';
 
 /** Slot fauna are owned by. Never a player, so every player can hear them. */
 export const DRIFT_SLOT = 200;
@@ -286,6 +287,9 @@ function transit(
     if (nearX * nearX + nearY * nearY > reach * reach) continue;
 
     Health.hp[other] = Health.hp[other]! - damage;
+    // A transit crush is fauna violence, not weather: the owner is told
+    // (docs/ui-ux.md §5), where a hazard would instead announce itself.
+    raiseSelfEvent(world, { kind: SelfEventKind.Damaged, eid: other });
     // The map hears a building come apart. Structural failure under a colossus
     // is louder than being battered by a vent, which is the eruption's own
     // argument one step up.
@@ -518,5 +522,8 @@ function act(
   if (!isStructure && !hasComponent(world, Unit, target)) return;
 
   Health.hp[target] = Health.hp[target]! - stats.damagePerS * dt;
+  // Being eaten is being attacked (docs/ui-ux.md §5). The mixer collapses a
+  // sustained bite to one cue per engagement, so raising per sim tick is safe.
+  raiseSelfEvent(world, { kind: SelfEventKind.Damaged, eid: target });
   if (Health.hp[target]! <= 0) destroyed.push(target);
 }

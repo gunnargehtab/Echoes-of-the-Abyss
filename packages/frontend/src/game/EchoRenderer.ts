@@ -27,6 +27,7 @@ import {
   DEPTH_BANDS,
   DepthBand,
   Faction,
+  HarvestIdleReason,
   HarvestThrottle,
   PERSISTENCE,
   PRODUCIBLE,
@@ -34,6 +35,7 @@ import {
   PROPAGATION_MODEL,
   ResolutionTier,
   ResourceKind,
+  SIM,
   EchoMarkKind,
   SelfEventKind,
   StructureKind,
@@ -99,7 +101,13 @@ import {
   type PrecedenceTiming,
 } from '../audio/precedence.ts';
 import { selfMixFor } from '../audio/selfNoise.ts';
-import { drawStructureSilhouette, drawUnitSilhouette, HULL_LENGTH_M } from './silhouettes.ts';
+import { stamp } from './clock.ts';
+import {
+  drawFactionGlyph,
+  drawStructureSilhouette,
+  drawUnitSilhouette,
+  HULL_LENGTH_M,
+} from './silhouettes.ts';
 import { destroyHullTextures, hullSpriteSizeM, hullTexture, loadHullArt } from './hullTextures.ts';
 import {
   destroyStructureTextures,
@@ -188,6 +196,11 @@ export interface ContactLogEntry {
   focusY?: number;
 }
 
+/** A world-frame bearing in radians, as the log's compass-north degrees. */
+function compassDeg(bearing: number): number {
+  return (((bearing * 180) / Math.PI + 450) % 360) | 0;
+}
+
 /**
  * How long the Tier-4 acquisition brackets stay on screen, milliseconds.
  *
@@ -246,6 +259,31 @@ const EXPOSURE_FLASH_MS = 2000;
 
 /** How long a broken-silence ring stays on the hull that broke it. */
 const BREAK_SILENCE_FLASH_MS = 2000;
+
+/**
+ * How long the under-fire pulse rings on the scope, milliseconds (§5).
+ *
+ * The pulse is news and lives two seconds like the other transients; the
+ * engagement *window* is `PERSISTENCE.UNDER_FIRE_REARM_S` and lives on the
+ * same timestamp — one clock, two readers.
+ */
+const UNDER_FIRE_PULSE_MS = 2000;
+
+/**
+ * The faction glyph's smallest half-extent on screen, pixels.
+ *
+ * TUNABLE. Sized so the four glyphs stay apart at the zoom a player surveys
+ * a fight from: below this the Directorate's chevrons merge into the
+ * Bathyarch's plate and the shape stops carrying what §11 asks it to carry.
+ */
+const GLYPH_MIN_PX = 7;
+
+/**
+ * How long one engagement lasts, in simulation ticks (docs/ui-ux.md §5).
+ * The mixer derives the same number from the same constant, which is what
+ * lets the log and the cue agree about what one fight is.
+ */
+const UNDER_FIRE_REARM_TICKS = PERSISTENCE.UNDER_FIRE_REARM_S * SIM.TICK_HZ;
 
 /**
  * When a world-space contact mark fades in, milliseconds after it arrives.
@@ -605,6 +643,14 @@ export class EchoRenderer {
   /** The map's name, so a player can tell which ground they are on. */
   private mapLabel!: Text;
   /**
+   * The match clock (#208) — the log's T+ axis, live. Fed by the server tick
+   * through the same formatter the log's rows use, so the clock and the log
+   * cannot disagree about what time it is.
+   */
+  private clockLabel!: Text;
+  /** The newest snapshot's tick, which is the only time this HUD believes in. */
+  private lastTick = 0;
+  /**
    * Whether the map has told us its name yet. Kept apart from the label's own
    * `visible`, which `drawHud` reclaims each frame as the first thing to drop
    * when the top strip runs out of room.
@@ -765,12 +811,45 @@ export class EchoRenderer {
   /** Own units that broke silence, and when, for the visible transient. */
   private readonly brokeSilence = new Map<number, number>();
   /**
+   * Own entities last hit by violence: the tick it happened on, the wall
+   * clock for the animation, and where the hull was standing.
+   *
+   * Three fields because three different questions are asked of one event.
+   * The engagement window is measured in *ticks*, which is the clock the
+   * mixer is also handed — the two must agree about what one engagement is,
+   * and no local clock is shared between them (docs/ui-ux.md §5). The pulse
+   * is animated off `atMs`. And the position is resolved once, here, rather
+   * than looked up at draw time: the blow that kills a hull is the one worth
+   * drawing most, and by the next frame that hull is gone from the roster.
+   */
+  private readonly underFire = new Map<
+    number,
+    { tick: number; atMs: number; x: number; y: number }
+  >();
+  /**
+   * Serial for own-force log rows. Contact rows key on `tick:id:tier`, which
+   * is unique by construction; event rows have no tier to lean on, and two
+   * pingers can light the same hull on one tick — so these rows carry a
+   * serial instead of hoping.
+   */
+  private ownRowSeq = 0;
+  /**
    * Last known heading per own unit, derived client-side from position deltas
    * between snapshots — the server does not send headings for own units, and
    * a hull that snapped back to 0° whenever it stopped would read as broken.
    */
   private readonly headings = new Map<number, number>();
   private readonly lastPositions = new Map<number, { x: number; y: number }>();
+  /**
+   * The force as it stood at the previous snapshot.
+   *
+   * Self-events describe the interval that *ended* with the snapshot carrying
+   * them, so the roster that can name their subject is the one from before
+   * it — a hull destroyed by the blow being reported is already absent from
+   * the roster that reports it.
+   */
+  private previousUnits: OwnUnit[] = [];
+  private previousStructures: OwnStructure[] = [];
 
   private destroyed = false;
   private detachInput: (() => void) | null = null;
@@ -915,6 +994,13 @@ export class EchoRenderer {
     });
     this.mapLabel.visible = false;
 
+    // Yields only after the map name has, and only to keep off §11's parity
+    // readouts — see the ordering in `drawHud`.
+    this.clockLabel = new Text({
+      text: 'T+00:00',
+      style: { ...mono, fontSize: 11, fill: UI.textDim },
+    });
+
     this.drawLabel = new Text({ text: '', style: { ...mono, fontSize: 13 } });
 
     this.biomassLabel = new Text({ text: '', style: { ...mono, fontSize: 13 } });
@@ -970,6 +1056,7 @@ export class EchoRenderer {
       this.bandLabel,
       this.exposureLabel,
       this.mapLabel,
+      this.clockLabel,
       this.drawLabel,
       this.biomassLabel,
       this.resourceLabel,
@@ -2314,6 +2401,14 @@ export class EchoRenderer {
     this.missionOver = null;
     this.units = [];
     this.structures = [];
+    this.previousUnits = [];
+    this.previousStructures = [];
+    // A rematch is T+00:00 again, and the water carries none of the last
+    // match's blows into it.
+    this.lastTick = 0;
+    this.underFire.clear();
+    this.exposureFlashes.length = 0;
+    this.brokeSilence.clear();
     this.tracked.clear();
     this.selected.clear();
     this.controlGroups.clear();
@@ -2331,6 +2426,9 @@ export class EchoRenderer {
   }
 
   applySnapshot(snapshot: EchoSnapshot): void {
+    this.lastTick = snapshot.tick;
+    this.previousUnits = this.units;
+    this.previousStructures = this.structures;
     this.units = snapshot.units;
     this.structures = snapshot.structures;
     this.peakSig = snapshot.peakSig;
@@ -2429,6 +2527,11 @@ export class EchoRenderer {
         this.headings.delete(id);
       }
     }
+    // Pruned by age, never by aliveness: the blow that killed a hull outlives
+    // it by design, and an entry is moot once its engagement window has run.
+    for (const [id, hit] of this.underFire) {
+      if (snapshot.tick - hit.tick >= UNDER_FIRE_REARM_TICKS) this.underFire.delete(id);
+    }
   }
 
   /**
@@ -2455,7 +2558,46 @@ export class EchoRenderer {
         case SelfEventKind.Exposed:
           if (event.bearing !== undefined) {
             this.exposureFlashes.push({ bearing: event.bearing, atMs: now });
+            // §10's long-pending row, now that the flag exists to write it
+            // from. Logged at the fidelity sent: a bearing, never a position.
+            this.callbacks.onContactEvent({
+              id: `own:${this.ownRowSeq++}`,
+              tick: snapshot.tick,
+              tier: ResolutionTier.Silent,
+              fresh: true,
+              label: 'you were pinged',
+              bearingDeg: compassDeg(event.bearing),
+            });
           }
+          break;
+        case SelfEventKind.Damaged: {
+          // The first blow of an engagement gets the row and the cue; the
+          // rounds after it are the same fight (docs/ui-ux.md §5). The scope
+          // pulse refreshes regardless — it is state, not news — and the
+          // mixer measures this same window in the same ticks, so the ear and
+          // the record cannot disagree about what one engagement is.
+          const subject = this.ownEntity(event.unitId);
+          const last = this.underFire.get(event.unitId);
+          if (subject !== undefined) {
+            this.underFire.set(event.unitId, {
+              tick: snapshot.tick,
+              atMs: now,
+              x: subject.x,
+              y: subject.y,
+            });
+          }
+          if (last === undefined || snapshot.tick - last.tick >= UNDER_FIRE_REARM_TICKS) {
+            this.emitOwnForceEvent(snapshot.tick, event.unitId, 'under fire');
+          }
+          break;
+        }
+        case SelfEventKind.HarvesterIdle:
+          // The name prefix makes this read "Harvester idle — mined out".
+          this.emitOwnForceEvent(
+            snapshot.tick,
+            event.unitId,
+            event.idleReason === HarvestIdleReason.NoDepot ? 'idle — no yard' : 'idle — mined out'
+          );
           break;
       }
     }
@@ -2579,6 +2721,54 @@ export class EchoRenderer {
    * would also destroy the thing the log is *for* — reasoning about what was
    * knowable at the time (docs/ui-ux.md §10).
    */
+  /**
+   * An own hull or structure, from this snapshot or the one before it.
+   *
+   * The fallback is what makes a killing blow reportable: the event describes
+   * the interval that ended with this snapshot, and a hull the blow destroyed
+   * is no longer in it.
+   */
+  private ownEntity(entityId: number): { x: number; y: number; name: string } | undefined {
+    const unit =
+      this.units.find((u) => u.id === entityId) ??
+      this.previousUnits.find((u) => u.id === entityId);
+    if (unit !== undefined) return { x: unit.x, y: unit.y, name: statsFor(unit.kind).name };
+    const structure =
+      this.structures.find((s) => s.id === entityId) ??
+      this.previousStructures.find((s) => s.id === entityId);
+    if (structure === undefined) return undefined;
+    return { x: structure.x, y: structure.y, name: structureStatsFor(structure.kind).name };
+  }
+
+  /**
+   * A log row about the player's own force — an under-fire first blow, or a
+   * harvester's stall (docs/ui-ux.md §5, §10). Bearing and range are measured
+   * from the scope anchor like every contact row, and focus goes to the hull
+   * itself: it is the player's own, fully known, so the camera may.
+   */
+  private emitOwnForceEvent(tick: number, entityId: number, what: string): void {
+    const subject = this.ownEntity(entityId);
+    if (subject === undefined) return;
+    const name = subject.name;
+    const entry: ContactLogEntry = {
+      id: `own:${this.ownRowSeq++}`,
+      tick,
+      tier: ResolutionTier.Silent,
+      fresh: true,
+      label: `${name} ${what}`,
+      focusX: subject.x,
+      focusY: subject.y,
+    };
+    const from = this.scopeAnchor();
+    if (from !== null) {
+      const dx = subject.x - from.x;
+      const dy = subject.y - from.y;
+      entry.bearingDeg = (((Math.atan2(dy, dx) * 180) / Math.PI + 450) % 360) | 0;
+      entry.rangeM = Math.hypot(dx, dy);
+    }
+    this.callbacks.onContactEvent(entry);
+  }
+
   private emitContactEvent(contact: Contact, tick: number, fresh: boolean): void {
     const entry: ContactLogEntry = {
       // Tier is part of the id: one contact climbing 1 -> 3 is two events.
@@ -3446,6 +3636,7 @@ export class EchoRenderer {
             color,
             alpha: alpha * 0.6,
           });
+          this.drawGlyph(g, contact, color, alpha, style.radius, inverseScale);
           break;
         }
         case ResolutionTier.Track: {
@@ -3482,6 +3673,8 @@ export class EchoRenderer {
             g.circle(contact.x, contact.y, style.radius).fill({ color, alpha });
           }
 
+          this.drawGlyph(g, contact, color, alpha, style.radius, inverseScale);
+
           if (contact.hp !== undefined && contact.maxHp !== undefined && contact.maxHp > 0) {
             const width = style.radius * 3;
             const fraction = Math.max(0, Math.min(1, contact.hp / contact.maxHp));
@@ -3502,6 +3695,45 @@ export class EchoRenderer {
   }
 
   /** Faction colour, but only once the tier is high enough to know it. */
+  /**
+   * The faction glyph beside a mark that has earned a faction (§11, #207).
+   *
+   * Drawn at Tier 3 *and* Tier 4. The silhouette a track earns names the hull
+   * class, not the navy — every faction sails the same five shapes — so at
+   * Tier 4 the fill colour would otherwise be the only thing saying whose it
+   * is, which is precisely what §11 forbids. Fauna and ordnance carry no
+   * faction and get no glyph.
+   *
+   * Its size has a screen-space floor. The geometry is world-space, so a
+   * pulled-back camera would otherwise shrink the glyph under its own stroke
+   * and hand faction identity back to hue alone at exactly the zoom a player
+   * surveys a fight from.
+   */
+  private drawGlyph(
+    g: Graphics,
+    contact: Contact,
+    color: number,
+    alpha: number,
+    radiusM: number,
+    inverseScale: number
+  ): void {
+    if (contact.faction === undefined) return;
+    const size = Math.max(radiusM * 0.55, GLYPH_MIN_PX * inverseScale);
+    // Above everything the mark already draws upward: the Tier-3 count ring
+    // sits at 1.6 radii and the Tier-4 health bar at 2.4, so the glyph clears
+    // the taller of the two rather than crowding whichever tier it lands on.
+    drawFactionGlyph(
+      g,
+      contact.faction,
+      contact.x,
+      contact.y - radiusM * 2.4 - size * 1.3,
+      size,
+      color,
+      alpha,
+      1.5 * inverseScale
+    );
+  }
+
   private contactColor(contact: Contact, fallback: number): number {
     if (contact.faction === undefined) return fallback;
     return FACTION_PALETTE[contact.faction]?.primary ?? fallback;
@@ -3752,13 +3984,30 @@ export class EchoRenderer {
     // strip runs out of room, and at 200% UI scale on a 1440 px window it has
     // to be: everything to its left is either a live number or one of §11's
     // audio-parity readouts, and the ground you are standing on does not change.
+    //
+    // The clock sits between them (#208): it is the log's T+ axis made live —
+    // the same stamp() the log's rows use, so the two agree to the second by
+    // construction.
+    //
+    // Two things yield when the strip runs out of room, in this order: the
+    // map name, which is context rather than a number, and then the clock
+    // itself. Nothing further down gives way, because everything to the left
+    // is either a live number or one of §11's audio-parity readouts — and a
+    // clock printed *over* `TRACKED ×n` would cost the player the readout
+    // that tells them how well they are seen. A missing clock is a smaller
+    // loss than an unreadable one.
     const leftEdge = tracked
       ? this.exposureLabel.x + this.exposureLabel.width
       : this.bandLabel.x + this.bandLabel.width;
-    this.mapLabel.visible =
-      this.mapNamed && this.statusLabel.x - 16 - leftEdge >= this.mapLabel.width + 16;
+    this.clockLabel.text = stamp(this.lastTick);
+    this.clockLabel.visible = this.statusLabel.x - 16 - leftEdge >= this.clockLabel.width + 16;
+    const rightEdge = this.clockLabel.visible
+      ? this.statusLabel.x - this.clockLabel.width - 16
+      : this.statusLabel.x;
+    if (this.clockLabel.visible) this.clockLabel.position.set(rightEdge, 10);
+    this.mapLabel.visible = this.mapNamed && rightEdge - 16 - leftEdge >= this.mapLabel.width + 16;
     if (this.mapLabel.visible) {
-      this.mapLabel.position.set(this.statusLabel.x - this.mapLabel.width - 16, 10);
+      this.mapLabel.position.set(rightEdge - this.mapLabel.width - 16, 10);
     }
 
     // Hint line rides just above the command panel, clear of the scope.
@@ -4223,6 +4472,11 @@ export class EchoRenderer {
       }
     }
 
+    // Attention on the scope (docs/ui-ux.md §5): own-force facts only, drawn
+    // among the returns they answer to. Nothing in this pass points at an
+    // enemy — a wedge is a bearing, a pulse is your own hull.
+    this.drawScopeAttention(og, k, size, scopeNow);
+
     // The sweep. Cosmetic, and deliberately out of phase with the 5 Hz
     // detection tick (4 s a revolution) so that no player ever comes to
     // believe the sweep is what finds things.
@@ -4265,6 +4519,76 @@ export class EchoRenderer {
         color: UI.text,
         alpha: 0.6,
       });
+    }
+  }
+
+  /**
+   * Attention on the scope — docs/ui-ux.md §5 (#206, #209). Three cues,
+   * every one an own-force fact: the exposure wedge on the rim (a bearing,
+   * never a position), the under-fire pulse on the hull that was hit, and
+   * the idle marker on a harvester with nothing to do.
+   */
+  private drawScopeAttention(og: Graphics, k: number, size: number, now: number): void {
+    // The exposure wedge: §11's screen-edge flash given its scope-space twin
+    // — same bearing, same two-second decay, and under reduced motion the
+    // same held equivalent. On the rim and never at a position, because the
+    // server sent a bearing and nothing else.
+    const half = size / 2;
+    for (const flash of this.exposureFlashes) {
+      const t = (now - flash.atMs) / EXPOSURE_FLASH_MS;
+      if (t >= 1) continue; // spliced out by the screen-edge pass
+      const alpha = this.reducedMotion ? 0.5 : Math.pow(1 - t, 2) * 0.7;
+      const dx = Math.cos(flash.bearing);
+      const dy = Math.sin(flash.bearing);
+      const reach = 1 / Math.max(Math.abs(dx) / half, Math.abs(dy) / half);
+      const inX = half + dx * (reach - 9);
+      const inY = half + dy * (reach - 9);
+      // Pulled a base-width inside the rim so the wedge's own corners cannot
+      // spill past the scope's frame on a diagonal bearing — a mark that
+      // painted outside the instrument would read as a glitch, not a warning.
+      const px = -dy;
+      const py = dx;
+      const rim = Math.max(0, reach - 6);
+      const bx = half + dx * rim;
+      const by = half + dy * rim;
+      og.poly([bx + px * 6, by + py * 6, bx - px * 6, by - py * 6, inX, inY]).fill({
+        color: UI.threat,
+        alpha,
+      });
+    }
+
+    // The under-fire pulse: the break-silence ring's scope cousin, in threat
+    // ink, on the hull or structure the blow landed on. The timestamp lives
+    // longer than the pulse — the engagement window reads it after this
+    // stops drawing.
+    for (const hit of this.underFire.values()) {
+      const t = (now - hit.atMs) / UNDER_FIRE_PULSE_MS;
+      if (t >= 1) continue;
+      // The place is the one recorded when the blow landed, not a fresh
+      // lookup: a hull the blow destroyed has left the roster, and where it
+      // was standing is exactly what the player wants pointed at.
+      if (this.reducedMotion) {
+        og.circle(hit.x * k, hit.y * k, 5).stroke({
+          width: 1.5,
+          color: UI.threat,
+          alpha: 0.85,
+        });
+      } else {
+        og.circle(hit.x * k, hit.y * k, 2 + t * 6).stroke({
+          width: 1.5,
+          color: UI.threat,
+          alpha: (1 - t) * 0.9,
+        });
+      }
+    }
+
+    // The idle marker: a dim slow breath on a harvester with nothing to do —
+    // state, not news, so it holds while the stall does. Cyan rather than
+    // threat ink: a chore, and the interface's own colour says so (§5).
+    for (const unit of this.units) {
+      if (unit.idle === undefined) continue;
+      const alpha = this.reducedMotion ? 0.45 : 0.35 + 0.15 * Math.sin(now / 480);
+      og.circle(unit.x * k, unit.y * k, 3.5).stroke({ width: 1, color: UI.accent, alpha });
     }
   }
 

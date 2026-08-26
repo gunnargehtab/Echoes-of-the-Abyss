@@ -233,6 +233,71 @@ export function playBreakSilence(context: AudioContext, destination: AudioNode, 
   osc.stop(at + BREAK_SILENCE_S + 0.05);
 }
 
+/**
+ * A blow landing on your own plating — the audible half of docs/ui-ux.md §5's
+ * under-fire alert, once per engagement (the mixer holds the window).
+ *
+ * Dull and close where the exposure strike is bright and directional: this is
+ * the hull carrying the hit to you, not the water carrying a ping. Unpanned
+ * for the same reason the break-silence transient is — it is *your* hull, and
+ * the scope pulse says which one. Deliberately below the exposure strike's
+ * 0.9 peak: §12 reserves the loudest event in the game for being lit.
+ */
+export function playUnderFire(context: AudioContext, destination: AudioNode, at: number): void {
+  // The knock: a low, hard thud.
+  const knock = context.createOscillator();
+  const knockGain = context.createGain();
+  knock.type = 'sine';
+  knock.frequency.setValueAtTime(190, at);
+  knock.frequency.exponentialRampToValueAtTime(55, at + 0.16);
+  knockGain.gain.setValueAtTime(0, at);
+  knockGain.gain.linearRampToValueAtTime(0.55, at + 0.005);
+  knockGain.gain.exponentialRampToValueAtTime(0.0001, at + 0.28);
+  knock.connect(knockGain).connect(destination);
+  knock.start(at);
+  knock.stop(at + 0.32);
+
+  // The rattle: a short burst of low-passed noise — plating, not water.
+  const noise = createNoiseSource(context);
+  if (noise !== null) {
+    const rattleFilter = context.createBiquadFilter();
+    rattleFilter.type = 'lowpass';
+    rattleFilter.frequency.setValueAtTime(900, at);
+    rattleFilter.frequency.exponentialRampToValueAtTime(200, at + 0.2);
+    const rattleGain = context.createGain();
+    rattleGain.gain.setValueAtTime(0, at);
+    rattleGain.gain.linearRampToValueAtTime(0.3, at + 0.008);
+    rattleGain.gain.exponentialRampToValueAtTime(0.0001, at + 0.24);
+    noise.connect(rattleFilter).connect(rattleGain).connect(destination);
+    noise.start(at);
+    noise.stop(at + 0.28);
+  }
+}
+
+/**
+ * A notice in the interface's own voice — the idle-harvester chore
+ * (docs/ui-ux.md §5). Two soft descending taps, short and quiet: a chore is
+ * spoken once and never dramatised, and it is the first sound the ui bus has
+ * ever carried, so it sets that bus's register — confirmations, never events.
+ */
+export function playNotice(context: AudioContext, destination: AudioNode, at: number): void {
+  for (const [offset, freq] of [
+    [0, 620],
+    [0.11, 430],
+  ] as const) {
+    const osc = context.createOscillator();
+    const gain = context.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, at + offset);
+    gain.gain.setValueAtTime(0, at + offset);
+    gain.gain.linearRampToValueAtTime(0.16, at + offset + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + offset + 0.09);
+    osc.connect(gain).connect(destination);
+    osc.start(at + offset);
+    osc.stop(at + offset + 0.12);
+  }
+}
+
 function createNoiseSource(context: AudioContext): AudioBufferSourceNode | null {
   const buffer = ensureNoiseBuffer(context);
   if (buffer === null) return null;

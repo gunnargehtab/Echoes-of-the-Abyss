@@ -212,6 +212,13 @@ export const Harvester = defineComponent({
   throttle: Types.ui8,
   /** ResourceKind ordinal of whatever is in the hold. */
   cargoKind: Types.ui8,
+  /**
+   * Why the hull went Idle without being told to: 0 none, else
+   * HarvestIdleReason ordinal + 1. Only meaningful while mode is Idle — a
+   * player's move order and a fresh spawn both write 0, because a chosen
+   * quiet is not a stall (docs/ui-ux.md §5).
+   */
+  idleReason: Types.ui8,
 });
 
 export const HarvestMode = {

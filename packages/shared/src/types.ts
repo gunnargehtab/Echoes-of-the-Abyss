@@ -460,6 +460,14 @@ export interface OwnUnit {
   cargoKind?: ResourceKind;
   throttle?: HarvestThrottle;
   /**
+   * Harvesters only: present while the hull has run out of work, and why
+   * (docs/ui-ux.md §5). The `HarvesterIdle` event marks the moment it
+   * happened; this is the state that lets the scope keep a marker on the
+   * hull until it works again. Absent for a harvester the player throttled
+   * to Idle — a chosen quiet is not a stall.
+   */
+  idle?: HarvestIdleReason;
+  /**
    * Torpedoes aboard, for hulls that carry them.
    *
    * Sent because scarcity is the class identity (docs/systems-combat.md §5):
@@ -570,6 +578,24 @@ export enum SelfEventKind {
   BreakSilence = 1,
   /** An enemy active sonar resolved one of your units. */
   Exposed = 2,
+  /**
+   * Violence landed on one of your units — a gun, ordnance, or fauna.
+   *
+   * Never crush attrition or the Directorate's shallow bleed: docs/ui-ux.md
+   * §8 gives permanence its own channel (the hatched health bar), and an
+   * attrition tick is a cost being paid, not an attack being made. Hazards
+   * are likewise excluded — a hazard announces itself with its warning phase.
+   */
+  Damaged = 3,
+  /**
+   * A harvester ran out of work — docs/ui-ux.md §5, the idle notice.
+   *
+   * Only ever the two starvations the simulation can actually reach: every
+   * field mined out, or no yard left to land the load. A harvester the player
+   * *throttled* to Idle raises nothing, because a chosen quiet is not a
+   * stall.
+   */
+  HarvesterIdle = 4,
 }
 
 export interface SelfEvent {
@@ -589,6 +615,26 @@ export interface SelfEvent {
    * would be the server closing a gap the design left open on purpose.
    */
   bearing?: number;
+  /**
+   * `HarvesterIdle` only: why the harvester has nothing to do. The reason is
+   * the server's to give — the client could see the mode but never the cause,
+   * and every inference available to it is sometimes wrong (see above).
+   */
+  idleReason?: HarvestIdleReason;
+}
+
+/**
+ * Why a harvester went idle without being told to (docs/ui-ux.md §5).
+ *
+ * These are the only two starvations `harvestSystem` can reach: there is no
+ * "unreachable" — the simulation has no pathfinding to be defeated by, and
+ * depth is a cost rather than a wall.
+ */
+export enum HarvestIdleReason {
+  /** No live resource node anywhere on the map. */
+  MinedOut = 0,
+  /** No completed own depot accepts deposits — the yards are gone. */
+  NoDepot = 1,
 }
 
 /**

@@ -196,6 +196,66 @@ export function drawUnitSilhouette(
   }
 }
 
+/**
+ * The faction glyph — docs/ui-ux.md §11: faction colour is never the only
+ * identifier, so a mark that earns a faction earns a shape beside the ink.
+ * One glyph per navy, in the same shape language as the hull accents above
+ * (docs/factions.md, "Visual identity"); the geometry never varies with the
+ * colour-vision palette, because shape is what survives one.
+ *
+ * Drawn at Tier 3, where faction is first earned and the mark is otherwise a
+ * dot in a colour. At Tier 4 no glyph is needed: the resolved silhouette is
+ * the glyph.
+ */
+export function drawFactionGlyph(
+  g: Graphics,
+  faction: Faction,
+  x: number,
+  y: number,
+  size: number,
+  color: number,
+  alpha: number,
+  strokeWidth: number
+): void {
+  switch (faction) {
+    case Faction.Bathyarch: {
+      // A plate: rectangles and cylinders, visibly assembled.
+      g.rect(x - size, y - size * 0.6, size * 2, size * 1.2).stroke({
+        width: strokeWidth,
+        color,
+        alpha,
+      });
+      break;
+    }
+    case Faction.Pelagia: {
+      // A leaf: two arcs meeting at their points.
+      g.moveTo(x - size, y)
+        .quadraticCurveTo(x, y - size * 0.9, x + size, y)
+        .quadraticCurveTo(x, y + size * 0.9, x - size, y)
+        .stroke({ width: strokeWidth, color, alpha });
+      break;
+    }
+    case Faction.Directorate: {
+      // Segments: three chevrons, stacked like plates of chitin.
+      for (const row of [-1, 0, 1]) {
+        const cy = y + row * size * 0.55;
+        g.moveTo(x - size * 0.8, cy + size * 0.3)
+          .lineTo(x, cy - size * 0.25)
+          .lineTo(x + size * 0.8, cy + size * 0.3)
+          .stroke({ width: strokeWidth, color, alpha });
+      }
+      break;
+    }
+    case Faction.Hadron: {
+      // A blade, point down: an instrument before it is a weapon.
+      g.poly([x, y - size * 1.1, x + size * 0.45, y, x, y + size * 1.1, x - size * 0.45, y]).stroke(
+        { width: strokeWidth, color, alpha }
+      );
+      break;
+    }
+  }
+}
+
 export function drawStructureSilhouette(
   g: Graphics,
   kind: StructureKind,
