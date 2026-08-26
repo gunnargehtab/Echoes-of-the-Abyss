@@ -174,7 +174,7 @@ export const LAYOUTS: Record<Exclude<LayoutName, 'custom'>, Bindings> = {
  * behaving, with no key to press and notice.
  */
 export const RESERVED_CODES: ReadonlyMap<string, string> = new Map([
-  ['Escape', 'cancels a pending build, and is handled before every other key'],
+  ['Escape', 'cancels a pending build or opens the menu, and is handled before every other key'],
   ['ShiftLeft', 'queues an order behind the current plan (§9)'],
   ['ShiftRight', 'queues an order behind the current plan (§9)'],
   ['ControlLeft', 'subtracts from a selection, and assigns a control group (§9)'],
@@ -193,7 +193,11 @@ export const RESERVED_CODES: ReadonlyMap<string, string> = new Map([
  */
 export const FIXED_CONTROLS: readonly { label: string; keys: string; why: string }[] = [
   { label: 'Control groups', keys: '1 – 9', why: 'Ctrl assigns; recall twice to centre' },
-  { label: 'Cancel', keys: 'Esc', why: 'Drops a pending build; safe to press at any time' },
+  {
+    label: 'Cancel / menu',
+    keys: 'Esc',
+    why: 'Drops a pending build; with nothing to drop, opens the menu',
+  },
   { label: 'Queue an order', keys: 'Shift + right click', why: 'Behind the unit’s current plan' },
   { label: 'Add to selection', keys: 'Shift + click', why: 'Ctrl subtracts' },
   { label: 'Select by class', keys: 'Alt + click', why: 'Or double-click' },

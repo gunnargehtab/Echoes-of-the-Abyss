@@ -21,6 +21,7 @@ import {
 import { EchoRenderer, type ContactLogEntry } from './EchoRenderer.ts';
 import { paletteFor, type PaletteName } from './palette.ts';
 import { ContactLog } from './ContactLog.tsx';
+import { EscMenu } from './EscMenu.tsx';
 import { Lobby } from './Lobby.tsx';
 import { MatchResult } from './MatchResult.tsx';
 import { MissionLog } from './MissionLog.tsx';
@@ -143,6 +144,13 @@ export function GameCanvas({
    * another. The four inks ride down as CSS variables.
    */
   const [palette, setPalette] = useState<PaletteName>('standard');
+  /**
+   * The esc menu (docs/ui-ux.md §9.5). React owns it because it is DOM and
+   * moves on a keypress, not on a frame; the renderer only reports the Escape
+   * that had nothing left to cancel, and is told to stop listening while the
+   * menu is up.
+   */
+  const [menuOpen, setMenuOpen] = useState(false);
   /** Seats this map has. A map's spawn list is its player count. */
   const [maxSlots, setMaxSlots] = useState(4);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -155,6 +163,19 @@ export function GameCanvas({
   const [joinedRoomId, setJoinedRoomId] = useState<string | null>(null);
   const rendererRef = useRef<EchoRenderer | null>(null);
   const clientRef = useRef<GameClient | null>(null);
+  /**
+   * Everything under the esc menu's glass, so it can be made inert while the
+   * menu is up — the dialog is modal (§9.5), and Tab must not walk out of it
+   * onto a live Ready or Rematch button behind the menu.
+   */
+  const underRef = useRef<HTMLDivElement>(null);
+  /**
+   * The connection status, readable from the renderer's callbacks: the
+   * callback object is built once at mount, so it cannot see `status` move.
+   * The menu may only open over a live match — a lost signal is information
+   * the overlay must show, and a menu may not sit under (or over) it.
+   */
+  const statusRef = useRef<ConnectionStatus>('connecting');
   /**
    * The mix. One engine per mount, closed on unmount — the AudioContext is a
    * device handle and browsers limit how many a page may hold *open*, so the
@@ -259,6 +280,9 @@ export function GameCanvas({
             const next = [...previous, entry];
             return next.length > MAX_LOG_ENTRIES ? next.slice(-MAX_LOG_ENTRIES) : next;
           }),
+        onOpenMenu: () => {
+          if (statusRef.current === 'connected') setMenuOpen(true);
+        },
       });
 
       await activeRenderer.init(host);
@@ -302,6 +326,10 @@ export function GameCanvas({
         onMissionOver: (payload) => {
           setMissionOver(payload);
           activeRenderer.setMissionOver(payload);
+          // A result outranks chrome: the menu steps aside so the outcome is
+          // seen the moment it exists (§9.5). Esc reopens it over the result,
+          // in its settled dress.
+          setMenuOpen(false);
         },
         onLobby: (view) => {
           // A rematch reuses the room and the connection, so nothing else
@@ -333,12 +361,21 @@ export function GameCanvas({
             return view;
           });
           setSessionId(client?.sessionId ?? null);
+          // Same rule as the mission's ending: a resolved match must be seen,
+          // so the menu does not stay open over the result card.
+          if (view.phase === MatchPhase.Ended) setMenuOpen(false);
         },
         onStatus: (next, why) => {
           if (cancelled) return;
+          statusRef.current = next;
           setStatus(next);
           setDetail(why ?? '');
           activeRenderer.setStatus(next);
+          // A lost signal closes the menu: the reconnect overlay is
+          // information the player must see, and the menu would otherwise sit
+          // invisible but clickable beneath its wash — one blind click from
+          // arming a leave the grace window would have saved them from.
+          if (next !== 'connected') setMenuOpen(false);
         },
       });
 
@@ -370,8 +407,8 @@ export function GameCanvas({
         setUiScale(settings.uiScale);
       };
       applySettings(loadSettings());
-      // Nothing writes settings while a match is on screen today, but the
-      // esc menu (#187) will; subscribing now is what makes that live-apply.
+      // The esc menu (#187) writes settings while a match is on screen; this
+      // subscription is what makes those writes apply live.
       unsubscribeSettings = subscribeSettings(applySettings);
 
       clientRef.current = client;
@@ -407,6 +444,22 @@ export function GameCanvas({
     rendererRef.current?.focusOn(x, y);
   }, []);
 
+  /**
+   * While the esc menu is up, the water cannot hear the keyboard (§9.5). The
+   * renderer holds the window-level key listeners, so it is the one that has
+   * to stop listening; pointer input dies on the menu's own glass, and the
+   * renderer additionally ends any drag a pointer capture would have carried
+   * through it. The DOM half goes `inert` so Tab cannot walk under the glass
+   * onto a live button — the property rather than the attribute, because
+   * React 18 has no boolean `inert`. At mount both refs are still null and
+   * both halves start with the flag down, which agrees with `menuOpen`'s
+   * initial state.
+   */
+  useEffect(() => {
+    rendererRef.current?.setMenuOpen(menuOpen);
+    if (underRef.current !== null) underRef.current.inert = menuOpen;
+  }, [menuOpen]);
+
   const chooseFaction = useCallback((faction: Faction) => {
     clientRef.current?.chooseFaction(faction);
   }, []);
@@ -434,52 +487,68 @@ export function GameCanvas({
 
   return (
     <div className="game-root" style={cssVariables(uiScale, palette)}>
-      <div ref={hostRef} className="game-host" />
-      {live && phase !== MatchPhase.Lobby && <ContactLog entries={log} onFocus={focusOn} />}
-      {live && phase !== MatchPhase.Lobby && mission !== null && (
-        <MissionPanel view={mission} onFocus={focusOn} />
-      )}
-      {live && phase !== MatchPhase.Lobby && missionLines.length > 0 && (
-        <MissionLog lines={missionLines} />
-      )}
-      {/* A mission has no faction to pick and no readiness to declare — the
+      {/* Everything the esc menu floats over, gathered so one `inert` can
+          silence the lot of it while the menu is up (§9.5). The wrapper is
+          unpositioned, so the absolute panels inside keep .game-root as
+          their containing block. */}
+      <div ref={underRef} className="game-under">
+        <div ref={hostRef} className="game-host" />
+        {live && phase !== MatchPhase.Lobby && <ContactLog entries={log} onFocus={focusOn} />}
+        {live && phase !== MatchPhase.Lobby && mission !== null && (
+          <MissionPanel view={mission} onFocus={focusOn} />
+        )}
+        {live && phase !== MatchPhase.Lobby && missionLines.length > 0 && (
+          <MissionLog lines={missionLines} />
+        )}
+        {/* A mission has no faction to pick and no readiness to declare — the
           room pins both — so the ready room is not shown at all rather than
           shown empty. */}
-      {live && phase === MatchPhase.Lobby && lobby !== null && missionId === undefined && (
-        <Lobby
-          mapName={mapName}
-          players={lobby.players}
-          sessionId={sessionId}
-          roomId={joinedRoomId}
-          // The server knows the real cap — a map's spawn list is its player
-          // count — and refuses a seat past it. This only greys the button.
-          canAddAi={lobby.players.length < maxSlots}
-          onChooseFaction={chooseFaction}
-          onReady={setReady}
-          onAddAi={addAi}
-          onRemoveAi={removeAi}
-          onAiDifficulty={setAiDifficulty}
-        />
-      )}
-      {/* A mission concluded and a match resolved are different endings, and
+        {live && phase === MatchPhase.Lobby && lobby !== null && missionId === undefined && (
+          <Lobby
+            mapName={mapName}
+            players={lobby.players}
+            sessionId={sessionId}
+            roomId={joinedRoomId}
+            // The server knows the real cap — a map's spawn list is its player
+            // count — and refuses a seat past it. This only greys the button.
+            canAddAi={lobby.players.length < maxSlots}
+            onChooseFaction={chooseFaction}
+            onReady={setReady}
+            onAddAi={addAi}
+            onRemoveAi={removeAi}
+            onAiDifficulty={setAiDifficulty}
+          />
+        )}
+        {/* A mission concluded and a match resolved are different endings, and
           only one of them is on screen: `MatchResult` reads `winnerSlot`,
           which a mission never sets, so it would report an evacuation as a
           defeat. */}
-      {live && phase === MatchPhase.Ended && missionOver !== null && (
-        <MissionResult
-          result={missionOver}
-          ready={selfReady}
-          onAgain={setReady}
-          onExitToMenu={onExit}
-        />
-      )}
-      {live && phase === MatchPhase.Ended && missionOver === null && lobby !== null && (
-        <MatchResult
-          winnerSlot={lobby.winnerSlot}
-          players={lobby.players}
-          sessionId={sessionId}
-          onRematch={setReady}
-          onExitToMenu={onExit}
+        {live && phase === MatchPhase.Ended && missionOver !== null && (
+          <MissionResult
+            result={missionOver}
+            ready={selfReady}
+            onAgain={setReady}
+            onExitToMenu={onExit}
+          />
+        )}
+        {live && phase === MatchPhase.Ended && missionOver === null && lobby !== null && (
+          <MatchResult
+            winnerSlot={lobby.winnerSlot}
+            players={lobby.players}
+            sessionId={sessionId}
+            onRematch={setReady}
+            onExitToMenu={onExit}
+          />
+        )}
+      </div>
+      {/* Above everything it made inert. It never coexists with the !live
+          overlay below: a signal that is not 'connected' closes the menu and
+          refuses to open it, so the overlay is always read unobstructed. */}
+      {menuOpen && (
+        <EscMenu
+          ended={phase === MatchPhase.Ended}
+          onResume={() => setMenuOpen(false)}
+          onExit={onExit}
         />
       )}
       {!live && (

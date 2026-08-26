@@ -18,6 +18,14 @@
   height: 100%;
 }
 
+/* Everything the esc menu floats over, so one `inert` covers the lot (§9.5).
+   Unpositioned on purpose: the absolute panels inside keep .game-root as
+   their containing block, so nothing moves for being wrapped. */
+.game-under {
+  width: 100%;
+  height: 100%;
+}
+
 .game-host {
   width: 100%;
   height: 100%;
@@ -963,6 +971,69 @@
 .game-overlay-back {
   pointer-events: auto;
   margin-top: 0.6rem;
+}
+
+/*
+ * The esc menu — docs/ui-ux.md §9.5.
+ *
+ * Glass, never blackout: there is no pause, and a menu that hid the water
+ * would imply one. The port's own screens open inside this wrapper, so the
+ * one override below swaps their void gradient for glass — same screens,
+ * same plate anatomy, the match still visible behind them.
+ */
+.esc-menu {
+  position: absolute;
+  inset: 0;
+}
+
+.esc-menu .menu-screen {
+  background: linear-gradient(rgba(7, 14, 26, 0.78), rgba(3, 8, 14, 0.9));
+}
+
+/* §11's UI scale, the in-match half of it: the esc menu is match chrome, so
+   it scales with the HUD and the three DOM panels. `zoom` rather than their
+   transform because these are the port's own screens with their own
+   scrolling — zoom keeps layout and overflow honest where a transform would
+   clip the rebinder's table at 200%. The shell's copies stay unscaled: the
+   variable only exists under .game-root. */
+.esc-menu .menu-panel {
+  zoom: var(--ui-scale, 1);
+}
+
+/* Leaving is armed (§1.5). Red warns you: the block names the cost before
+   the button that pays it exists to press. Opaque glass under the warning —
+   the one line that matters may not be washed out by a bright event in the
+   water behind it. */
+.esc-menu-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  border: 1px solid rgba(255, 59, 48, 0.55);
+  border-radius: 4px;
+  background: var(--abyss-glass);
+}
+
+.esc-menu-warning {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  letter-spacing: 0.08em;
+  color: var(--neon-red);
+}
+
+.esc-menu-abandon {
+  border-color: rgba(255, 59, 48, 0.6);
+}
+
+.esc-menu-abandon:hover:not(:disabled) {
+  border-color: var(--neon-red);
+  background: rgba(255, 59, 48, 0.1);
+  box-shadow: 0 0 12px rgba(255, 59, 48, 0.2);
+}
+
+.esc-menu-abandon .menu-entry-label {
+  color: var(--neon-red);
 }
 
 /*

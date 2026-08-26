@@ -99,6 +99,29 @@ while a Tier-4 track is a tight point. They were previously uniform dots, which 
 Tier-1 haze as crisply as a Tier-4 track: the scope asserting precision the server never
 sent. The Echo Marks layer waits on the marks themselves.
 
+### Attention on the scope
+
+The interface epic (#187) asks the scope to *call for the player's attention*, and the
+scope may — under the same law as everything else it draws: attention is a return, and a
+return is something the server actually sent.
+
+- **The exposure strike lands on the scope too.** §11's screen-edge flash gets a
+  scope-space twin: a wedge on the scope's rim at the same bearing, decaying over the same
+  two seconds. On the rim and never at a position, because the server sent a bearing and
+  nothing else.
+- **A hull losing hull is a fact about your own force**, which the snapshot carries in
+  full — so the scope pulses at that hull's position when it takes damage, and the contact
+  log records the first blow of an engagement rather than every round of it. What neither
+  may ever do is point back at the shooter: the hit is yours to know; the firer is still
+  only whatever tier your listeners earned.
+- **No player-to-player markers, yet.** There are no allies in the water to signal — and
+  when team play exists, a marker is a message, and messages will be server state for §9's
+  reason exactly: two clients watching one slot cannot disagree about what was marked.
+
+None of this is implemented yet (§13). The two cues are design waiting on renderer work —
+and on their audio half first, because §1.3 says the ear leads: a visible blow with no
+audible one would be the one mark in the game that arrives eye-first.
+
 ---
 
 ## 6. Active Sonar
@@ -187,7 +210,7 @@ conflict this document settled:
 | `1`–`9` | Control groups have no alternative route; production has the UNITS tab |
 | `Shift` | Queues an order, and adds to a selection |
 | `Ctrl` | Subtracts from a selection, and assigns a control group |
-| `Esc` | Drops a pending build, and is handled before every other key |
+| `Esc` | Drops a pending build, and is handled before every other key; with nothing left to drop, it opens the esc menu (§9.5) |
 
 The point is not tidiness. Each of those loses to a *mouse* interaction, so a player who
 rebound one would not find a key that stopped working — they would find that clicking had
@@ -229,6 +252,70 @@ reconnecting player gets their plan back, and two clients watching one slot cann
 about what a fleet is doing. Each queued order is drawn at the position it was *issued* at.
 For a queued attack that matters: the player is entitled to where they saw the contact when
 they gave the order, not to a live feed of where it is now.
+
+---
+
+## 9.5 The Esc Menu
+
+In-match chrome, and the one piece of it that is about the player rather than the water
+(#187). It is numbered 9.5 for §10.5's reason exactly: §10 and §11 are cited by number
+from other documents, and renumbering them would break those citations to no purpose.
+
+**`Esc` opens it only when `Esc` has nothing left to cancel.** §9 fixes the key as the way
+out of a pending thing, handled before every other key, and the menu does not change that:
+the first press drops a pending build, the next abandons a live box select, and only a
+press with nothing to cancel opens the menu. One key, one meaning — the way out — applied
+to the nearest thing that can be gotten out of. Inside the menu the same key steps back the
+way it came: controls to settings, settings to the menu, the menu to the water. A player
+mashing `Esc` ends up in the water with nothing pending, never somewhere surprising.
+
+**The key is a door, not the door.** A touchscreen has no `Esc`, and this client plays on
+one ([SETUP-ANDROID.md](../SETUP-ANDROID.md)) — so the command bar carries a `MENU` button
+at its far end, because the bar is how a finger reaches anything at all. Same menu, two
+doors, and neither is the menu's name for itself.
+
+**There is no pause.** The simulation is one shared clock on the server
+([tech-stack.md](tech-stack.md)), and a menu that stopped it for one commander would have
+to stop it for every commander — so the menu does not pretend otherwise. It floats on glass
+over a live match, the world still visible and the mix still audible, and it says so on its
+face: *the water does not wait*. That is §1.5 read in the other direction — a player who
+opens a menu believing the game is paused is paying a cost they were never shown.
+
+**While it is open, the water cannot hear the keyboard.** Every game binding is suspended —
+a slider adjusted mid-match must not also ping — and pointer input dies on the menu's own
+glass. The fleet is not suspended with it: order queues are server state (§9), so the plan
+the player already bought keeps executing while they are in the menu.
+
+The entries:
+
+| Entry | What it does |
+| --- | --- |
+| **Return to the water** | Closes the menu. Autofocused — the cheapest exit is the default one |
+| **Settings** | §14's screen, the same one, opened over the match. Every control applies live: the settings subscription does not care which door a write came through |
+| **Controls** | The rebinder (§11), likewise live — a binding you cannot try is a binding you cannot judge |
+| **Return to port** | Leaves the match. Armed, never instant — see below |
+
+**Return to port is armed, never instant.** A seat left on purpose is not held (§14,
+"Resume"): the token is cleared, and there is no banner to come back to. That is a real
+cost, and §1.5 forbids paying it by accident — so the first press arms the entry and names
+the cost, the second press leaves, and arming moves focus to **Stay**, so the `Enter` that
+armed it cannot also be the `Enter` that leaves. The result screen's own "Return to port"
+stays un-armed, because a resolved match has already spent everything the button could
+cost.
+
+The menu is DOM, for §10's reasons — a modal dialog, focus moved into it, every entry
+reachable by keyboard, and everything under its glass made inert so focus cannot wander
+back out onto a live control. And it is available in every phase of the match screen, the
+ready room included: until it existed, the ready room had no exit at all except closing
+the tab, which is not an exit so much as an evacuation.
+
+Two things outrank it, and both close it. **A lost signal**: the reconnect overlay is
+information the player must see, so the menu steps aside and will not open until the
+signal returns. **A result**: a match resolving while the menu is up closes it, because an
+outcome must be seen the moment it exists. Opened again over the result, the menu drops
+the arming from Return to port and stops claiming the water is running — a resolved match
+has already spent everything the button could cost, and §1.5 cuts both ways: a confirmation
+for a cost that no longer exists is the same lie as no warning for one that does.
 
 ---
 
@@ -359,6 +446,43 @@ The exposure strike is the harder of the two, and [audio-direction.md](audio-dir
 
 ---
 
+## 12.5 Faction Dress
+
+The interface epic (#187) asks for individual design for each faction, and most of the
+answer is already law scattered through this document; this section gathers it so nobody
+re-answers it faction by faction.
+
+**The instrument does not change. The hand holding it does.** Layout, meter geometry, tier
+encoding, binding defaults and the chrome grammar — cyan tells you, magenta asks you, red
+warns you ([style-neon-noir.md](style-neon-noir.md)) — are identical across the four
+navies. §7 already says it for one case: no faction reads a different UI. It generalises
+because it must. The tier scale survives colour vision deficiency by shape and alpha
+before hue (§11), and it survives faction choice the same way — a player who has learned
+to read the water on one navy has learned it for all four. Asymmetry belongs in the
+simulation, where every faction trait argues sound or depth
+([game-identity.md](game-identity.md)); an amber-riveted SIG meter argues neither.
+
+Where faction identity *does* reach the interface, it already has its places:
+
+- **Ink** — each navy's primary, accent and glow ([factions.md](factions.md), transcribed
+  into `palette.ts` and re-derived per colour-vision palette), carried by hulls,
+  structures and Tier-3+ contacts. §11 owes every faction colour its glyph so ink is
+  never the only identifier — a debt the renderer has not yet paid (§13).
+- **Silhouette** — rectangles and cylinders, leaves and seed-pods, chitin, blades: the
+  hull is the faction sprite ([factions.md](factions.md), "Visual identity").
+- **Timbre** — the Tier-3 drive signature and the faction voicing of the mix
+  ([audio-direction.md](audio-direction.md)).
+- **Register** — authored text is spoken in the speaker's own voice, verbatim (§10.5):
+  the court says *the flight stays under twenty*, and no template flattens four navies
+  into one sentence.
+
+What remains open, and stays open until somebody makes the argument in sound or depth: a
+faction accent on the selection card or the command bar's rule line. That is licensed
+dress — ink on chrome, never a moved panel or a re-shaped meter — and it is not owed. If
+it ships, it ships under this section's law.
+
+---
+
 ## 13. Scaffold Status
 
 What the current client implements against this spec, so nobody re-implements what exists or assumes what does not:
@@ -391,6 +515,9 @@ What the current client implements against this spec, so nobody re-implements wh
 | Settings persistence and per-bus volume | Implemented (§14) — `localStorage`, applied at match mount |
 | Match browser, private rooms, join by code | Implemented (#193) — a listing names the water and the seat count and nothing else; solo and missions are private |
 | Menu music | Implemented (#194) — the port's own bed on the `music` bus, a different piece from the score |
+| The esc menu | Implemented (§9.5, #187) — settings and the rebinder open over a live match; leaving is armed |
+| Attention on the scope | Pending (§5) — the exposure wedge and the under-fire pulse wait on their audio half |
+| Faction glyphs at Tier 3+ | Pending (§11) — colour carries the faction alone until the glyph ships |
 
 ---
 
@@ -414,6 +541,10 @@ title ──▶ setup (solo) ────────────────▶
   │  └── briefing ──────────────────────▶ mission (playing ▶ result)
   └── resume banner ────────────────────▶ match (seat resumed)
 ```
+
+One more door exists mid-match and is deliberately absent from the chart: the esc menu
+(§9.5) opens Settings and Controls over a live match — the same screens, on the water's
+glass rather than the port's void, and without leaving the room.
 
 The screen state is a plain discriminated union in `App.tsx` — no router, no history
 integration. Browser back mid-match would mean "leave the match" as an accident, and §1.5
