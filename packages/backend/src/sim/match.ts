@@ -40,6 +40,8 @@ import {
   mineCapFor,
   ResolutionTier,
   SelfEventKind,
+  type MissionAbility,
+  type MissionView,
   type EchoSnapshot,
   type SelfEvent,
   type GameOverPayload,
@@ -94,6 +96,9 @@ import { ReplayRecorder, type Replay, type ReplayCommand } from './replay.ts';
 import { hashWorld } from './stateHash.ts';
 import { Terrain } from './terrain.ts';
 import { VENTFRONT_DIVIDE, terrainFor, type MapDefinition } from './maps/index.ts';
+import { MissionRuntime } from './missions/runtime.ts';
+import type { MissionDefinition } from './missions/types.ts';
+import type { MissionLine, MissionResolution } from './missions/runtime.ts';
 import { countFauna, DRIFT_SLOT, faunaSystem } from './systems/fauna.ts';
 import {
   dormantSecondsFor,
@@ -139,6 +144,16 @@ export interface MatchOptions {
    * and resource fields from the map.
    */
   terrain?: Terrain;
+  /**
+   * Run this match as an authored mission (docs/campaign.md).
+   *
+   * Installed here rather than by the room, and that placement is the whole
+   * trick: `playReplay` rebuilds a match from its seed and its commands by
+   * constructing a `Match`, so a mission installed in the constructor is
+   * reproduced on playback for free, while one deployed room-side would
+   * replay as an empty map.
+   */
+  mission?: MissionDefinition;
 }
 
 const FIXED_DT = 1 / SIM.TICK_HZ;
@@ -203,6 +218,17 @@ export class Match {
   private worstStepMs = 0;
   private worstPhysicsMs = 0;
   private matchResult: GameOverPayload | null = null;
+  /**
+   * The mission, running, or null for a skirmish.
+   *
+   * Its result is kept apart from `matchResult` on purpose. A mission has no
+   * winner — it reaches an authored outcome, and one of those outcomes is
+   * "nine of the fourteen" — so folding it into a payload whose only field is
+   * `winnerSlot` would make both client consumers, which derive win and loss
+   * from slot equality, say something untrue about an evacuation.
+   */
+  private readonly missionRuntime: MissionRuntime | null;
+  private missionResult: MissionResolution | null = null;
 
   /** Non-null while this match is being recorded. */
   private readonly recorder: ReplayRecorder | null;
@@ -224,11 +250,25 @@ export class Match {
     this.world = createSimWorld(options.terrain ?? terrainFor(map), FIXED_DT, this.seed);
     this.recorder =
       options.record === true
-        ? new ReplayRecorder(this.seed, map.id, options.fauna !== false)
+        ? new ReplayRecorder(
+            this.seed,
+            map.id,
+            options.fauna !== false,
+            options.mission?.id ?? null
+          )
         : null;
     this.seedResourceNodes();
     this.seedHazards();
     if (options.fauna !== false) this.seedFauna();
+    // Last, so the authored forces are placed into a world whose nodes,
+    // hazards and Drift already exist — and after the seeded systems have
+    // drawn from `world.rng`, so installing a mission cannot shift anybody
+    // else's stream. The runtime never touches the RNG at all.
+    this.missionRuntime =
+      options.mission === undefined ? null : new MissionRuntime(options.mission);
+    this.missionRuntime?.install(this.world, (slot) => {
+      if (!this.slots.includes(slot)) this.slots.push(slot);
+    });
   }
 
   /**
@@ -296,6 +336,65 @@ export class Match {
   /** Non-null once a winner exists. Checked by the room after each update. */
   get result(): GameOverPayload | null {
     return this.matchResult;
+  }
+
+  /**
+   * Non-null once the mission has reached its authored outcome.
+   *
+   * Separate from `result` because a mission has no winner to name. A
+   * skirmish never sets this and a mission never sets `result`: the mission
+   * seats one slot, and `resolveVictory` needs two, so the two-roster rule
+   * stays exactly as written and simply stops being the only way a match can
+   * end.
+   */
+  get missionOver(): MissionResolution | null {
+    return this.missionResult;
+  }
+
+  /** The mission view for the player, or null when nothing changed. */
+  takeMissionView(): MissionView | null {
+    return this.missionRuntime?.takeView() ?? null;
+  }
+
+  /** The mission view as it stands, for a client that has just (re)joined. */
+  get missionView(): MissionView | null {
+    return this.missionRuntime?.currentView ?? null;
+  }
+
+  /** Authored lines a `say` beat produced since the last drain. */
+  takeMissionLines(): MissionLine[] {
+    return this.missionRuntime?.takeLines() ?? [];
+  }
+
+  /** Rolling worst-case cost of the mission pass, reported beside the others. */
+  get worstMissionMsCost(): number {
+    return this.missionRuntime?.worstMsCost ?? 0;
+  }
+
+  /**
+   * Drive the mission one Echo tick.
+   *
+   * The runtime is given the *unrecorded* halves of the command methods, so a
+   * beat cannot reach the replay recorder: beats re-fire on playback because
+   * this runs inside `step`, and recording them too would apply each one
+   * twice.
+   */
+  private tickMission(): void {
+    const runtime = this.missionRuntime;
+    if (runtime === null || this.missionResult !== null) return;
+    const own = this.pendingSnapshots?.get(runtime.definition.playerSlot);
+    if (own === undefined) return;
+    const resolution = runtime.tick(
+      this.world,
+      {
+        applyMove: (slot, eid, x, y, queued) => this.applyMove(slot, eid, x, y, queued),
+        applyDepth: (slot, eid, depthM) => this.applyDepth(slot, eid, depthM),
+        applySilent: (slot, eid, active) => this.applySilent(slot, eid, active),
+        applyPing: (slot, eid) => this.applyPing(slot, eid),
+      },
+      own
+    );
+    if (resolution !== null) this.missionResult = resolution;
   }
 
   /** Public map data: where the nodule fields are. Sent once on join. */
@@ -507,6 +606,18 @@ export class Match {
     return hasComponent(this.world, Owner, eid) && Owner.slot[eid] === slot;
   }
 
+  /**
+   * True when the running mission withholds `ability` from this slot.
+   *
+   * Always false in a skirmish, so the gates on the order methods cost one
+   * null check there. The client is told which abilities are locked, and why,
+   * before it can reach for them — a refusal here is the server keeping its
+   * word rather than the player's first news of the rule.
+   */
+  private missionDenies(slot: number, ability: MissionAbility): boolean {
+    return this.missionRuntime?.denies(slot, ability) === true;
+  }
+
   orderMove(slot: number, eid: number, x: number, y: number, queued = false): void {
     this.recordCommand({
       tick: this.world.tick,
@@ -517,6 +628,24 @@ export class Match {
       y,
       queued,
     });
+    // A mission may be holding this hull still — the court's tenders do not
+    // move before they are loaded, and do not move at all without an escort
+    // close enough to hear for them. Refused after the recording, like every
+    // other refusal on this path.
+    if (this.missionRuntime?.holdsMovement(slot, eid) === true) return;
+    this.applyMove(slot, eid, x, y, queued);
+  }
+
+  /**
+   * The unrecorded half of `orderMove`, for the mission runtime.
+   *
+   * A mission's beats are re-issued on playback, because the runtime lives
+   * inside `step()` rather than beside it — so recording them as commands too
+   * would apply every one of them twice, and none of these is idempotent.
+   * Splitting the method is what makes that mistake unavailable: the runtime is
+   * handed a sink of `apply*` and has no path to the recorder at all.
+   */
+  private applyMove(slot: number, eid: number, x: number, y: number, queued: boolean): void {
     if (!this.owns(slot, eid) || !hasComponent(this.world, MoveOrder, eid)) return;
     if (!Number.isFinite(x) || !Number.isFinite(y)) return;
 
@@ -555,6 +684,7 @@ export class Match {
       contact: contactHandle,
       queued,
     });
+    if (this.missionDenies(slot, 'weapons')) return;
     if (!this.owns(slot, eid) || !hasComponent(this.world, Weapon, eid)) return;
     const target = this.echo.entityForHandle(slot, contactHandle);
     if (target === undefined) return;
@@ -605,6 +735,7 @@ export class Match {
       unit: this.localId(eid),
       contact: contactHandle,
     });
+    if (this.missionDenies(slot, 'torpedoes')) return 0;
     if (!this.owns(slot, eid) || !hasComponent(this.world, Magazine, eid)) return 0;
     const target = this.echo.entityForHandle(slot, contactHandle);
     if (target === undefined) return 0;
@@ -643,6 +774,7 @@ export class Match {
       slot,
       unit: this.localId(eid),
     });
+    if (this.missionDenies(slot, 'noisemakers')) return 0;
     if (!this.owns(slot, eid)) return 0;
     return deployNoisemaker(this.world, eid);
   }
@@ -665,6 +797,7 @@ export class Match {
       slot,
       unit: this.localId(eid),
     });
+    if (this.missionDenies(slot, 'mines')) return 0;
     if (!this.owns(slot, eid)) return 0;
     return layMine(this.world, eid, mineCapFor(this.factionOf(slot)));
   }
@@ -690,6 +823,7 @@ export class Match {
       unit: this.localId(eid),
       depth: depthM,
     });
+    if (this.missionDenies(slot, 'depthCharges')) return 0;
     if (!this.owns(slot, eid)) return 0;
     if (!Number.isFinite(depthM)) return 0;
     if (depthM < DEPTH.MIN_M || depthM > DEPTH.MAX_M) return 0;
@@ -754,6 +888,11 @@ export class Match {
       unit: this.localId(eid),
       active,
     });
+    this.applySilent(slot, eid, active);
+  }
+
+  /** The unrecorded half of `setSilentRunning` — see `applyMove`. */
+  private applySilent(slot: number, eid: number, active: boolean): void {
     if (!this.owns(slot, eid) || !hasComponent(this.world, SilentRunning, eid)) return;
     SilentRunning.active[eid] = active ? 1 : 0;
   }
@@ -776,6 +915,15 @@ export class Match {
       unit: this.localId(eid),
       depth: depthM,
     });
+    // The same hold as `orderMove`. Without it the vertical half of the route
+    // is flyable while the tender is still being loaded and with no escort in
+    // range — and the run north is a climb, so that is most of the journey.
+    if (this.missionRuntime?.holdsMovement(slot, eid) === true) return false;
+    return this.applyDepth(slot, eid, depthM);
+  }
+
+  /** The unrecorded half of `orderDepth` — see `applyMove`. */
+  private applyDepth(slot: number, eid: number, depthM: number): boolean {
     if (!this.owns(slot, eid) || !hasComponent(this.world, DepthOrder, eid)) return false;
     if (!Number.isFinite(depthM)) return false;
     // Rejected rather than clamped: a client asking for the impossible is told
@@ -793,6 +941,16 @@ export class Match {
   /** The big red button. docs/systems-echo.md §5. */
   activeSonar(slot: number, eid: number): void {
     this.recordCommand({ tick: this.world.tick, type: 'ping', slot, unit: this.localId(eid) });
+    // A mission may withhold the array entirely (docs/campaign.md §10 withholds
+    // active sonar until mission 3). Refused after the recording, like every
+    // other refusal on this path, so a build that later stops refusing shows up
+    // as a replay divergence rather than as silence.
+    if (this.missionDenies(slot, 'activeSonar')) return;
+    this.applyPing(slot, eid);
+  }
+
+  /** The unrecorded half of `activeSonar` — see `applyMove`. */
+  private applyPing(slot: number, eid: number): void {
     if (!this.owns(slot, eid) || !hasComponent(this.world, Unit, eid)) return;
     if (!hasComponent(this.world, ActivePing, eid)) {
       addComponent(this.world, ActivePing, eid);
@@ -810,6 +968,12 @@ export class Match {
    */
   build(slot: number, kind: StructureKind, x: number, y: number): boolean {
     this.recordCommand({ tick: this.world.tick, type: 'build', slot, kind, x, y });
+    // A mission with no economy refuses this outright rather than leaving the
+    // cost check to do it by accident. The difference matters: refused-on-cost
+    // is a number that could change, and a mission that handed the player a
+    // stockpile for some other reason would quietly let them build a refinery
+    // in the middle of somebody else's court.
+    if (this.missionDenies(slot, 'construction')) return false;
     const stats = structureStatsFor(kind);
     if (!stats.constructible) return false;
     // Faction signature structures are exactly that — another navy's order
@@ -885,6 +1049,11 @@ export class Match {
       structure: this.localId(structureEid),
       kind,
     });
+    // The same lock as `build`: a mission that has taken construction away has
+    // taken hull production with it. The Prologue owns no yard to produce from,
+    // so this is belt to that brace — and it is the brace that would matter the
+    // day a mission lends the player a Foundry it does not want used.
+    if (this.missionDenies(slot, 'construction')) return false;
     if (!this.owns(slot, structureEid)) return false;
     if (!hasComponent(this.world, Structure, structureEid)) return false;
     if (hasComponent(this.world, UnderConstruction, structureEid)) return false;
@@ -1013,6 +1182,14 @@ export class Match {
     this.world.tick++;
     if (this.world.tick % ECHO_TICK_INTERVAL === 0) {
       this.pendingSnapshots = this.resolveEcho();
+      // The mission runs here, inside the fixed step and on the Echo tick,
+      // rather than in the room. `stepOnce` drives this path, so playback
+      // reproduces every beat with no new command types and no new hash
+      // inputs — which is the same lesson the comment on ECHO_TICK_INTERVAL
+      // records for the Echo pass itself. It is handed the player's own
+      // snapshot and nothing else, so an objective can only ever count what
+      // that player already resolved.
+      this.tickMission();
     }
     const stepCost = performance.now() - stepStarted;
     if (stepCost > this.worstStepMs) this.worstStepMs = stepCost;

@@ -28,8 +28,11 @@ import {
 } from '@echoes/shared';
 import { AiSeat, briefingFor } from '../ai/seat.ts';
 import { Match } from '../sim/match.ts';
-import { DEFAULT_MAP_ID, mapById } from '../sim/maps/index.ts';
+import { DEFAULT_MAP_ID, mapById, missionMapById } from '../sim/maps/index.ts';
 import type { MapDefinition } from '../sim/maps/types.ts';
+import { missionById } from '../sim/missions/index.ts';
+import type { MissionDefinition } from '../sim/missions/types.ts';
+import type { MissionResolution } from '../sim/missions/runtime.ts';
 import { isSimulated } from '../sim/systems/hazards.ts';
 import { MatchState, PlayerState } from '../schema/MatchState.ts';
 import {
@@ -140,6 +143,14 @@ const aiSessionId = (slot: number): string => `ai:${slot}`;
 /** Options a room may be created with. `mapId` selects the authored map. */
 export interface MatchRoomOptions {
   mapId?: string;
+  /**
+   * Run an authored mission instead of a skirmish (docs/campaign.md).
+   *
+   * Also a `filterBy` key on the room definition, so `joinOrCreate` can never
+   * hand a mission player somebody else's running match, or drop a skirmish
+   * player into a single-seat scenario.
+   */
+  missionId?: string;
 }
 
 export class MatchRoom extends Room<MatchState> {
@@ -147,18 +158,36 @@ export class MatchRoom extends Room<MatchState> {
 
   private match!: Match;
   private map!: MapDefinition;
+  /** The authored mission this room is running, or null for a skirmish. */
+  private mission: MissionDefinition | null = null;
   private readonly slotBySession = new Map<string, number>();
   /** Live AI commanders, by slot. Rebuilt from the roster on every start. */
   private readonly aiSeats = new Map<number, AiSeat>();
 
   override onCreate(options?: MatchRoomOptions): void {
+    const requested = options?.missionId ?? '';
+    this.mission = requested === '' ? null : (missionById(requested) ?? null);
+    // A mission that does not resolve fails the room, and deliberately does not
+    // take the map's fallback below. An unknown *map* can be swapped for the
+    // default because the client asked for a skirmish and a skirmish is what it
+    // gets — the map it actually got is sent on join. An unknown *mission* has
+    // no such substitute: falling through would seat the player in a skirmish
+    // on a mission-only map, with a briefing screen behind them, waiting on
+    // orders that are never coming. Better a named error the shell can show.
+    if (requested !== '' && this.mission === null) {
+      throw new Error(`unknown mission: ${requested}`);
+    }
     // An unknown id falls back to the default rather than failing the room:
     // a client asking for a map this build does not have should get a game,
     // and the map it actually got is sent on join either way.
-    this.map = mapById(options?.mapId ?? DEFAULT_MAP_ID) ?? mapById(DEFAULT_MAP_ID)!;
-    this.match = new Match(this.map);
-    // A map's spawn list is its player count.
-    this.maxClients = Math.min(this.maxClients, this.map.spawns.length);
+    this.map =
+      this.mission !== null
+        ? missionMapById(this.mission.mapId)!
+        : (mapById(options?.mapId ?? DEFAULT_MAP_ID) ?? mapById(DEFAULT_MAP_ID)!);
+    this.match = this.newMatch();
+    // A map's spawn list is its player count — except a mission's, which has
+    // one spawn and authors its other parties itself. A mission is not a lobby.
+    this.maxClients = this.mission === null ? Math.min(this.maxClients, this.map.spawns.length) : 1;
 
     this.setState(new MatchState());
     this.state.mapId = this.map.id;
@@ -285,6 +314,10 @@ export class MatchRoom extends Room<MatchState> {
 
     this.onMessage('faction', (client, message: FactionMessage) => {
       if (this.state.phase !== MatchPhase.Lobby) return;
+      // A mission pins the navy and seats no commanders: there is nothing here
+      // to choose. Refused rather than quietly ignored, because the screen that
+      // would send it never renders in a mission room.
+      if (this.mission !== null) return;
       const player = this.state.players.get(client.sessionId);
       if (player === undefined || !Number.isFinite(message?.faction)) return;
       const faction = Math.trunc(message.faction);
@@ -310,12 +343,14 @@ export class MatchRoom extends Room<MatchState> {
 
     this.onMessage('addAi', (client, message: AddAiMessage) => {
       if (this.state.phase !== MatchPhase.Lobby) return;
+      if (this.mission !== null) return;
       if (!this.state.players.has(client.sessionId)) return;
       this.addAiSeat(message?.difficulty);
     });
 
     this.onMessage('removeAi', (client, message: AiSeatMessage) => {
       if (this.state.phase !== MatchPhase.Lobby) return;
+      if (this.mission !== null) return;
       if (!this.state.players.has(client.sessionId)) return;
       const seat = this.state.players.get(message?.sessionId ?? '');
       // Only an AI row: this must never become a kick button for a person.
@@ -326,6 +361,7 @@ export class MatchRoom extends Room<MatchState> {
 
     this.onMessage('aiDifficulty', (client, message: AiSeatMessage) => {
       if (this.state.phase !== MatchPhase.Lobby) return;
+      if (this.mission !== null) return;
       if (!this.state.players.has(client.sessionId)) return;
       const seat = this.state.players.get(message?.sessionId ?? '');
       if (seat === undefined || !seat.isAi) return;
@@ -410,8 +446,30 @@ export class MatchRoom extends Room<MatchState> {
     this.state.players.set(client.sessionId, player);
     this.slotBySession.set(client.sessionId, slot);
 
+    if (this.mission !== null) {
+      // A mission pins the navy and seats no commanders, so there is nothing
+      // to negotiate and no readiness question worth asking. The faction cards
+      // never appear; this room goes straight from joined to playing.
+      player.faction = this.mission.playerFaction;
+      player.ready = true;
+    }
+
     this.sendMapData(client);
     client.send('assigned', { slot, faction: player.faction });
+    if (this.mission !== null) this.startIfEveryoneIsReady();
+  }
+
+  /**
+   * A fresh match on this room's ground.
+   *
+   * A mission is installed by the `Match` constructor rather than here, so
+   * that replay playback — which rebuilds a match the same way — gets the
+   * authored forces and beats without the room being involved at all.
+   */
+  private newMatch(): Match {
+    return this.mission === null
+      ? new Match(this.map)
+      : new Match(this.map, { mission: this.mission, fauna: this.mission.fauna });
   }
 
   /**
@@ -456,6 +514,36 @@ export class MatchRoom extends Room<MatchState> {
     // charts. Depletion is never broadcast; see docs/economy.md.
     client.send('nodes', this.match.resourceNodes);
     client.send('assigned', { slot: player.slot, faction: player.faction });
+    // The mission's standing orders, if there are any.
+    //
+    // `takeMissionView` is an *edge* — it fires when something moves — and a
+    // client that was not connected for that edge cannot ask for it again. A
+    // player who reloads mid-mission would otherwise be looking at an empty
+    // orders panel until the next objective happened to change, which in the
+    // Prologue's quiet first ten minutes is most of the mission. Gated on the
+    // slot for the same reason the live send is: a mission view is resolved
+    // for one observer and is not broadcast material.
+    if (this.mission !== null && player.slot === this.mission.playerSlot) {
+      const view = this.match.missionView;
+      if (view !== null) client.send('mission', view);
+      // And the court's reading, if it has already been given.
+      //
+      // `endMission` announces once, to whoever is connected at the tick the
+      // court adjourns. A player inside the reconnection grace window at that
+      // moment is not one of them — they dropped at 19:50, the mission closed
+      // at 20:00 without them, and they come back to a phase of Ended with
+      // nothing to show for twenty minutes of escorting. The result is held on
+      // the match rather than only broadcast, so it can simply be re-sent.
+      const resolution = this.match.missionOver;
+      if (resolution !== null) {
+        client.send('missionOver', {
+          missionId: this.mission.id,
+          outcome: resolution.outcome,
+          epilogue: resolution.epilogue,
+          objectives: resolution.objectives,
+        });
+      }
+    }
   }
 
   /**
@@ -471,7 +559,7 @@ export class MatchRoom extends Room<MatchState> {
       // A rematch is a new world on the same ground with the same roster —
       // rebuilt rather than reset, because a Match owns an ECS world and
       // unwinding one in place is how stale entities survive into game two.
-      this.match = new Match(this.map);
+      this.match = this.newMatch();
     }
     this.startMatch();
   }
@@ -483,7 +571,10 @@ export class MatchRoom extends Room<MatchState> {
     this.aiSeats.clear();
     for (const player of players) {
       this.slotBySession.set(player.sessionId, player.slot);
-      this.match.addPlayer(player.slot, player.faction as Faction);
+      // A mission seated itself in the Match constructor, with its authored
+      // force: `addPlayer` would hand the flight a Bastion, a Foundry and a
+      // harvester it has no economy for.
+      if (this.mission === null) this.match.addPlayer(player.slot, player.faction as Faction);
       player.ready = false;
       if (player.isAi) {
         this.aiSeats.set(
@@ -553,6 +644,12 @@ export class MatchRoom extends Room<MatchState> {
       const returning = this.state.players.get(client.sessionId);
       if (returning !== undefined) {
         returning.connected = true;
+        // The ground first. A reconnection is a *fresh* client on an old seat —
+        // the page reloaded, so the renderer has no terrain, no map bounds and
+        // therefore no minimap. Only `onJoin` used to send these, and a
+        // reconnection does not go through `onJoin`, so a resumed player was
+        // looking at their fleet floating over blank water.
+        this.sendMapData(client);
         this.sendMatchData(client);
         client.send('phase', { phase: this.state.phase });
       }
@@ -575,13 +672,20 @@ export class MatchRoom extends Room<MatchState> {
   }
 
   override onDispose(): void {
+    // A room whose `onCreate` refused an unknown mission never built a match,
+    // and reading one here would throw a TypeError on top of the real error —
+    // burying the one line that says what the client actually asked for.
+    if (this.match === undefined) return;
     console.log(
       `[MatchRoom ${this.roomId}] disposed at tick ${this.match.tick}; ` +
         `worst Echo pass ${this.match.worstEchoPassMs.toFixed(3)} ms ` +
         `(budget ${SIM.ECHO_BUDGET_MS} ms); ` +
         `worst sim step ${this.match.worstStepMsCost.toFixed(3)} ms, ` +
         `of which physics ${this.match.worstPhysicsMsCost.toFixed(3)} ms ` +
-        `(budget ${(1000 / SIM.TICK_HZ).toFixed(1)} ms)`
+        `(budget ${(1000 / SIM.TICK_HZ).toFixed(1)} ms)` +
+        (this.mission === null
+          ? ''
+          : `; worst mission pass ${this.match.worstMissionMsCost.toFixed(3)} ms`)
     );
   }
 
@@ -603,6 +707,13 @@ export class MatchRoom extends Room<MatchState> {
       this.endMatch(this.match.result.winnerSlot);
     }
 
+    // A mission concludes on its own authored terms rather than resolving a
+    // winner, so it is a separate question with a separate answer.
+    if (!this.gameOverSent && this.match.missionOver !== null) {
+      this.gameOverSent = true;
+      this.endMission(this.match.missionOver);
+    }
+
     if (snapshots === null) return;
 
     this.state.tick = this.match.tick;
@@ -614,13 +725,52 @@ export class MatchRoom extends Room<MatchState> {
       if (snapshot !== undefined) seat.observe(snapshot);
     }
 
+    // Drained once per tick, not once per client: a mission room seats one
+    // player, but draining inside the loop would swallow the view for
+    // everyone after the first if that ever stopped being true.
+    const missionView = this.match.takeMissionView();
+    const missionLines = this.match.takeMissionLines();
+
     for (const client of this.clients) {
       const slot = this.slotBySession.get(client.sessionId);
       if (slot === undefined) continue;
       const snapshot: EchoSnapshot | undefined = snapshots.get(slot);
-      if (snapshot === undefined) continue;
-      client.send('echo', snapshot);
+      if (snapshot !== undefined) client.send('echo', snapshot);
+      // Per-client rather than broadcast, even though a mission room seats one
+      // player: "it is safe because of a config line" is not a guarantee, and
+      // this is the channel carrying the only numbers the mission computes.
+      if (missionView !== null && slot === this.mission?.playerSlot) {
+        client.send('mission', missionView);
+      }
+      for (const line of missionLines) client.send('missionLine', line);
     }
+  }
+
+  /**
+   * A mission ends without a winner, and says so.
+   *
+   * `winnerSlot` stays -1, because nobody was beaten: the count is whatever the
+   * player earned. Both existing consumers of that field derive victory from
+   * slot equality, so overloading it here would have the renderer announce an
+   * evacuation as a conquest.
+   */
+  private endMission(resolution: MissionResolution): void {
+    this.aiSeats.clear();
+    this.state.phase = MatchPhase.Ended;
+    this.state.winnerSlot = -1;
+    for (const player of this.state.players.values()) player.ready = false;
+    for (const client of this.clients) {
+      client.send('missionOver', {
+        missionId: this.mission!.id,
+        outcome: resolution.outcome,
+        epilogue: resolution.epilogue,
+        objectives: resolution.objectives,
+      });
+    }
+
+    this.postMatchTimeout = this.clock.setTimeout(() => {
+      if (this.state.phase === MatchPhase.Ended) this.disconnect();
+    }, LIFECYCLE.POST_MATCH_S * 1000);
   }
 
   private endMatch(winnerSlot: number): void {

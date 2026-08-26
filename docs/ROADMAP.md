@@ -24,10 +24,15 @@ vertical slice — it is a game you can sit down and play alone:
 - **a lobby, a skirmish AI, reconnection and a rematch**, so a solo player can reach a win
   or a loss;
 - **a balance harness** that runs ten matches headless and reports every guard-rail in
-  [economy.md](economy.md) §9 and [bestiary.md](bestiary.md) §8 against a number.
+  [economy.md](economy.md) §9 and [bestiary.md](bestiary.md) §8 against a number;
+- **a mission runtime and its first mission** — authored parties, a beat schedule and
+  objectives the server resolves, so the Prologue *reaches an outcome*: a count the court
+  reads into the record, where a skirmish would have a win or a loss
+  ([mission-sorrowgate.md](mission-sorrowgate.md)).
 
-What is *not* done is the long tail the harness has started to surface, and the campaign,
-and everything in [world.md](world.md) that is still only prose.
+What is *not* done is the long tail the harness has started to surface, the other
+twenty-eight missions of the campaign, and everything in [world.md](world.md) that is
+still only prose.
 
 ---
 
@@ -200,6 +205,29 @@ freely, which may well be right, but nobody has decided it in writing.
 
 ---
 
+## Phase 8 — Missions
+
+[campaign.md](campaign.md) describes twenty-nine missions and the scaffold could run none of
+them. A skirmish ends when one side has no Bastion left; a mission ends when the thing it is
+about has happened, and nothing in the match loop knew how to ask that question. This phase
+built the machinery that asks it — authored parties seated outside the lobby, a schedule of
+beats that fire at the times the design doc says they fire, and objective predicates the
+server evaluates — and proved it against one mission specified down to the briefing text.
+
+| Work | Issue |
+| --- | --- |
+| Mission runtime — seated parties, beat schedule, objective predicates — proven by the Prologue, *Sorrowgate* ([mission-sorrowgate.md](mission-sorrowgate.md)) | [#190](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/190) |
+
+**Two things are deliberately outside it.** The other twenty-eight missions are authoring
+rather than runtime, and one mission taken all the way to its text is what tells you whether
+the runtime can carry them; twenty-eight written against machinery nobody has played would be
+twenty-eight rewrites. And there is no progression persistence — the Prologue is replayable
+and remembers nothing, so nothing records that it was played, and the briefing variation
+[campaign.md](campaign.md) intends for a scene you have already witnessed from the other side
+has no history to read.
+
+---
+
 ## Sequencing notes
 
 Three dependencies survive any reordering of the phases:
@@ -222,6 +250,10 @@ Three dependencies survive any reordering of the phases:
   the comment. See `CLAUDE.md`, "Constants live in exactly one place".
 - **Server-authoritative is a hard rule.** Nothing unresolved crosses the wire — not
   temporarily, not behind a debug flag that ships.
+- **A mission's script is hidden information too.** Objective predicates, beat schedules and
+  scripted force composition never enter the Colyseus schema and never leave the server
+  unresolved. A player who can read the schedule knows what arrives, and when, before it is
+  audible — which is the same kind of knowing as reading an enemy's position off the wire.
 - **Two clocks.** New per-tick work is on the 60 Hz budget; anything touching detection is
   on the 2 ms one. A PR that touches either should report the cost it measured.
 - **Neither pillar, no feature.** A mechanic that is an argument about neither sound nor

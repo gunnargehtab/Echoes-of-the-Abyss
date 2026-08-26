@@ -4,6 +4,8 @@ Twelve named figures — three per faction — plus neutrals. Each is written to
 
 Design rule: every commander has a **conviction**, a **cost they've already paid**, and a **line they haven't crossed yet**. The campaign is about which ones cross.
 
+Two figures named in the prologue are not here. Underwriter Sela Drenn fires the ping and the observer Sende does not move; neither commands anything, and the entry price of this list is a conviction. They are specified where they act ([mission-sorrowgate.md](mission-sorrowgate.md) §5).
+
 ---
 
 ## Bathyarch Consortium
@@ -97,6 +99,8 @@ The Commune's reluctant general — a farm-warden who became a soldier because t
 **Conviction:** You can refuse to fight. You cannot refuse to be fought.
 **Already paid:** Led the evacuation at Kell Plateau. Got 4,000 out. Left 200 because the boats were full and she had to choose.
 **Hasn't crossed:** She has never struck first.
+
+**Also appears:** Prologue — Sorrowgate, 214 PC. Teel is at the exchange, in a second chamber where the boats are not big enough.
 
 ---
 
@@ -192,6 +196,8 @@ The Order's best field officer and its most ordinary person — a soldier, not a
 **Already paid:** Lost her chapter's entire junior cadre — nineteen Knights — in the 211 PC crystal raids. The Order cannot replace them. It never will.
 **Hasn't crossed:** She has not refused an order from Sull. Yet.
 
+**Also appears:** Prologue — Sorrowgate, 214 PC. She is the Knight nobody invited, she behaves impeccably throughout, and her hull's directional signature is why the exchange ends the way it does. She never fires anything.
+
 ---
 
 ## Neutrals
@@ -203,6 +209,8 @@ The Order's best field officer and its most ordinary person — a soldier, not a
 Runs the Rift's only functioning neutral court out of a collapsed transit dome. All four powers use it, all four deny using it. Halloran's authority rests on nothing but the fact that everybody needs somewhere to swap prisoners.
 
 **Campaign role:** hub character, quest-giver, and the only person who can get all four commanders in one room.
+
+**Voice:** the fifth register — [culture.md](culture.md) §3, *the language of the record*. He is heard at length exactly once, in the prologue ([mission-sorrowgate.md](mission-sorrowgate.md) §12).
 
 ### The Three
 

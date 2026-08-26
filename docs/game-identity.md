@@ -33,6 +33,15 @@ the same four beats, each one filtered through the Echo Layer:
 4. **Destroy** — the win condition is the oldest one in the genre: kill the enemy
    **Bastion**. Losing yours is elimination. There is exactly one per player and it cannot
    be rebuilt, so the whole match is a conversation about where it is and who has heard it.
+   That is the rule for a *match*: a campaign mission ([campaign.md](campaign.md)) concludes
+   on its own authored terms — a count read into the record, water reached — and does not go
+   through the Bastion rule at all.
+
+*Beats* above means these four phases of the loop. The word does two other jobs in this
+bible — [campaign.md](campaign.md)'s mission tables head a column *Beat* for what a mission
+is dramatically about, and a mission's schedule ([mission-sorrowgate.md](mission-sorrowgate.md)
+§9) calls its tick-keyed events beats — and none of the three is being renamed, so this line
+is the record that the collision was seen rather than inherited.
 
 ## Pillars
 

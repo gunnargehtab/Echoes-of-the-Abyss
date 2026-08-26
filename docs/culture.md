@@ -32,7 +32,9 @@ Two centuries in the same water produced a common culture before it produced fou
 
 ---
 
-## 3. The Four Voices
+## 3. The Five Voices
+
+There are four factions and five registers. A court is not a culture — Sorrowgate has no plateaus, no cohorts and no Board — and it has a voice anyway, because the other four cannot share a room without somebody in it who is not arguing.
 
 ### Bathyarch Consortium — the language of instruments
 
@@ -97,6 +99,24 @@ Precise, courteous, and slightly archaic — a small order that has been talking
 > "We were answered once. Nothing good has ever been said twice."
 >
 > "Nineteen. We can replace the hulls in a season and the Knights in never."
+
+### The Sorrowgate court — the language of the record
+
+The court's is the one voice in the Rift that describes a room without joining it. Arbiter Halloran does not persuade, does not command in the ordinary sense, and never uses the collective first person. He speaks in the **third person and the perfect tense** — things that have been done, by named parties, at a stated time — because the only authority the court has is that everybody afterwards agrees what was said. Instructions arrive as statements of fact about the room, which function as conditions of admission and are obeyed for that reason alone. His characteristic move is **reading the count**: saying a number aloud and letting it sit there.
+
+The register is defined by four refusals, one per faction. The court states a cost without pricing it, which the Consortium cannot do. It closes a question, which the Commune cannot do. It claims no humility before anything, which the Directorate cannot do. It is entirely without courtesy, which the Knights cannot be. The register test at §6 returns all four, which is how the voice was built rather than something it happens to pass.
+
+- **Self-description:** *the court*, *the record*, *this water*
+- **Vocabulary:** admitted, struck, entered, closed, standing, the count, the record, adjourn
+- **Taboo:** agreeing with anyone. The court never says a party is right. It says what the party did
+- **A compliment:** "You were quiet." It is the only one the court gives
+- **An insult:** "You will not be admitted again."
+
+> "Nobody has to take anybody's word for anything today. That is the whole of what this court is."
+>
+> "The count is closed. It was closed two tides ago and it does not reopen because somebody has since thought of a better argument."
+>
+> "The gate is closed. Fourteen are behind it. The record will be read, and then the court will adjourn."
 
 ---
 

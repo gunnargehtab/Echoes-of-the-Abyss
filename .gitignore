@@ -36,3 +36,10 @@ coverage/
 
 # Misc
 .turbo/
+
+# Scratch probes. A throwaway file under test/ is picked up by the
+# non-recursive test glob and by tsc, so one left behind fails CI — and it
+# runs in everybody's suite until somebody notices. Name a throwaway with
+# one of these and it cannot be committed by accident.
+*.tmp.ts
+zprobe*.test.ts

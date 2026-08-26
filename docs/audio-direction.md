@@ -83,6 +83,10 @@ The ping is the game's signature decision ([systems-echo.md](systems-echo.md) §
 
 Every unit that pings also triples its fauna aggro contribution ([bestiary.md](bestiary.md) §2). The Sounder's answering call is a distinct, extremely low, non-directional sound that plays before any fauna contact resolves — the only sound in the game that means *you have made a mistake that is now coming.*
 
+**That sentence is now load-bearing.** [campaign.md](campaign.md) §10 forbids a mission failing on a timer alone: every failure state must be something the player can hear coming for at least sixty seconds, and this is the sound that pays that debt. It is built to be useless as intelligence and complete as a warning. Non-directional, so it cannot be plotted; below any tier, so it cannot be tracked; arriving before the thing it announces has resolved into a contact, so the screen confirms nothing. The player is told exactly one fact and handed the time to act on it, which is the difference between dread and confusion.
+
+It therefore has to survive §4. A player at full plant noise is having trouble hearing contacts by design, and this is the one voice that must not be a casualty of that: it rides the **world** bus at a level the −8 dB duck cannot bury, because a warning masked by the player's own loudness is a mission lost to the mix. §11 binds it the same way — the call needs its visual equivalent or the sixty seconds are only granted to players who can hear. [mission-sorrowgate.md](mission-sorrowgate.md) §8 is the first failure state built on this, and the lead it gives is longer than the rule asks for.
+
 ---
 
 ## 6. Echo Marks — The Sound of the Past

@@ -49,9 +49,11 @@ import {
   requiredPressureRating,
   FaunaSpecies,
   faunaStatsFor,
+  MissionOutcome,
   statsFor,
   structureStatsFor,
   FACTION_STRUCTURE,
+  type AbilityLock,
   type Contact,
   HazardPhase,
   type DrawReport,
@@ -60,6 +62,8 @@ import {
   type EchoSnapshot,
   type ExposureReport,
   type GameOverPayload,
+  type MissionAbility,
+  type MissionResultPayload,
   type OwnStructure,
   type OwnUnit,
   type ResourceNodeInfo,
@@ -307,6 +311,23 @@ function drawFaunaSilhouette(
 const SELECT_RADIUS_M = 140;
 /** How close a right-click must land to a contact or node to mean it. */
 const TARGET_RADIUS_M = 160;
+
+/** How long the hint bar holds the reason a locked key did nothing. */
+const MISSION_REFUSAL_MS = 4000;
+
+/**
+ * The banner a mission ends under — docs/mission-sorrowgate.md §8.
+ *
+ * Not a victory and not a defeat: nobody was beaten, so nothing here reads
+ * `winnerSlot`, which a mission never sets. Partial is drawn in the ink that
+ * tells rather than the ink that warns, because the doc is explicit that it
+ * is a result and not a soft failure.
+ */
+const MISSION_BANNER: Record<MissionOutcome, { text: string; fill: number }> = {
+  [MissionOutcome.Complete]: { text: 'MISSION COMPLETE', fill: UI.friendly },
+  [MissionOutcome.Partial]: { text: 'THE MISSION ENDS', fill: UI.accent },
+  [MissionOutcome.Lost]: { text: 'MISSION LOST', fill: UI.threat },
+};
 
 /** Production hotkeys 1-5, in docs/units.md roster order. */
 /** Digit codes to control-group numbers. docs/ui-ux.md §9. */
@@ -616,6 +637,24 @@ export class EchoRenderer {
   private slot = 0;
   private faction: Faction = Faction.Bathyarch;
   private gameOver: GameOverPayload | null = null;
+
+  /**
+   * Abilities this mission has taken off the hull, each with the reason to
+   * say so — docs/ui-ux.md §7: a disabled action greys out *with a reason
+   * attached*, never silently. Standing state rather than a reply to a
+   * refused order, so the reason exists before the player reaches for the key.
+   *
+   * Empty in a skirmish, which is every match that is not a mission.
+   */
+  private missionLocks: AbilityLock[] = [];
+  /**
+   * The last locked key that was pressed anyway, and when. The panel carries
+   * the standing list; this is what the hint bar says at the moment of the
+   * press, so a key that does nothing still answers for itself.
+   */
+  private missionRefusal: { reason: string; atMs: number } | null = null;
+  /** Non-null once a mission has concluded. A mission has no winner. */
+  private missionOver: MissionResultPayload | null = null;
 
   /**
    * The Precedence Law timing in effect. The visual-first preset (§11) swaps
@@ -1050,6 +1089,11 @@ export class EchoRenderer {
       }
       const buildKind = BUILD_KEYS[e.code];
       if (buildKind !== undefined) {
+        // Refused with the reason attached, rather than arming a placement
+        // ghost for a click the server will drop. §7 forbids the silent drop,
+        // and a ghost that follows the cursor to nothing is worse than silent:
+        // it looks like it worked right up until it did not.
+        if (this.refusedByMission('construction')) return;
         this.pendingBuild = buildKind;
         return;
       }
@@ -1058,6 +1102,7 @@ export class EchoRenderer {
       if (e.code === 'KeyB') {
         const signature = FACTION_STRUCTURE[this.faction];
         if (signature !== undefined) {
+          if (this.refusedByMission('construction')) return;
           this.pendingBuild = signature;
           return;
         }
@@ -1391,6 +1436,16 @@ export class EchoRenderer {
     return foundry ?? this.structures.find(eligible);
   }
 
+  /**
+   * The page actually shown, which is `activeTab` unless the mission has taken
+   * construction away — then there is only one page there is anything to put
+   * on. Read everywhere rather than coercing `activeTab` itself, so the
+   * player's own last choice survives a mission that merely hid it.
+   */
+  private get shownTab(): CommandTab {
+    return this.missionLock('construction') === null ? this.activeTab : 'squad';
+  }
+
   /** Auto-open the page that matches what was just selected. */
   private onSelectionChanged(): void {
     const structure = this.structures.find((s) => this.selected.has(s.id));
@@ -1424,7 +1479,7 @@ export class EchoRenderer {
       return buttons;
     }
 
-    if (this.activeTab === 'units') {
+    if (this.shownTab === 'units') {
       // One row of the whole roster; each button routes to a structure that
       // can actually build it, selected or not.
       const roster = PRODUCIBLE[StructureKind.Foundry] ?? [];
@@ -1438,7 +1493,7 @@ export class EchoRenderer {
           action: () => this.commandProduce(kind),
         });
       }
-    } else if (this.activeTab === 'squad') {
+    } else if (this.shownTab === 'squad') {
       const units = this.selectedUnits();
       const first = units[0];
       buttons.push({
@@ -1447,9 +1502,15 @@ export class EchoRenderer {
         active: first?.silentRunning ?? false,
         action: () => this.commandToggleSilent(),
       });
+      // A locked ability is dead on the bar, not merely refused on the press.
+      // §7 wants the affordance to be visibly gone *before* the player reaches
+      // for it; the reason is already standing in the orders panel, so a
+      // greyed button here is the second half of one statement rather than a
+      // silent drop. Applies to the whole ordnance row below for the same
+      // reason — every one of them is an ability a mission can withhold.
       buttons.push({
         label: 'PING',
-        enabled: units.length > 0,
+        enabled: units.length > 0 && this.missionLock('activeSonar') === null,
         active: false,
         action: () => this.commandPing(),
       });
@@ -1486,19 +1547,20 @@ export class EchoRenderer {
         const cooling = first?.decoyCooldownS;
         buttons.push({
           label: cooling === undefined ? 'DECOY' : `DECOY ${Math.ceil(cooling)}`,
-          enabled: cooling === undefined,
+          enabled: cooling === undefined && this.missionLock('noisemakers') === null,
           active: false,
           action: () => this.commandNoisemaker(),
         });
         buttons.push({
           label: 'MINE',
-          enabled: true,
+          enabled: this.missionLock('mines') === null,
           active: false,
           action: () => this.commandLayMine(),
         });
         buttons.push({
           label: 'CHARGE',
-          enabled: this.stepDepthTarget(units, 1) !== null,
+          enabled:
+            this.stepDepthTarget(units, 1) !== null && this.missionLock('depthCharges') === null,
           active: false,
           action: () => this.commandDepthCharge(),
         });
@@ -1572,9 +1634,18 @@ export class EchoRenderer {
     g.rect(0, barY, screenWidth, BAR_HEIGHT).fill({ color: UI.glass, alpha: 0.92 });
     g.rect(0, barY, screenWidth, 1).fill({ color: UI.glassStroke });
 
-    // Tab strip. 'squad' only exists while units are selected.
-    const tabs: CommandTab[] =
-      this.selectedUnits().length > 0 ? ['build', 'units', 'squad'] : ['build', 'units'];
+    // Tab strip. 'squad' only exists while units are selected, and 'build' and
+    // 'units' only exist where there is an economy to use them: a mission that
+    // has locked construction has no yard, no stockpile and nothing to place,
+    // so offering five structures nobody can afford is a menu of refusals. The
+    // reason is not lost — it stands in the orders panel's lock list with the
+    // other six, which is where docs/ui-ux.md §7 wants it.
+    const canBuild = this.missionLock('construction') === null;
+    const tabs: CommandTab[] = canBuild
+      ? this.selectedUnits().length > 0
+        ? ['build', 'units', 'squad']
+        : ['build', 'units']
+      : ['squad'];
     const tabButtons: BarButton[] = [];
     let tabX = 10;
     for (const tab of tabs) {
@@ -1586,7 +1657,7 @@ export class EchoRenderer {
         h: TAB_HEIGHT,
         label: TAB_LABEL[tab],
         enabled: true,
-        active: this.activeTab === tab,
+        active: this.shownTab === tab,
         action: () => {
           this.activeTab = tab;
         },
@@ -1650,6 +1721,10 @@ export class EchoRenderer {
    * sidebar's default factory (see produceTargetFor).
    */
   private commandProduce(kind: UnitKind): void {
+    // Unreachable from the bar while construction is locked — the tab it lives
+    // on is not offered — but the check belongs on the command rather than on
+    // the button, which is where every other mission refusal sits.
+    if (this.refusedByMission('construction')) return;
     const selectedTargets = this.structures.filter(
       (s) => this.selected.has(s.id) && (PRODUCIBLE[s.kind]?.includes(kind) ?? false)
     );
@@ -1672,6 +1747,12 @@ export class EchoRenderer {
   }
 
   private commandPing(): void {
+    // A struck array is not a cooldown: the hull has no transmitter, and the
+    // mission says so on the hint bar rather than letting P do nothing.
+    if (this.refusedByMission('activeSonar')) {
+      this.previewPing = false;
+      return;
+    }
     const units = this.selectedUnits();
     if (units.length > 0) this.callbacks.onPing(units[0]!.id);
     this.previewPing = false;
@@ -1718,6 +1799,7 @@ export class EchoRenderer {
    * would refuse.
    */
   private commandLaunchTorpedo(x: number, y: number): void {
+    if (this.refusedByMission('torpedoes')) return;
     const units = this.selectedUnits().filter((u) => u.torpedoes !== undefined);
     if (units.length === 0) return;
     const contact = this.nearestContact(x, y);
@@ -1729,12 +1811,17 @@ export class EchoRenderer {
   }
 
   private commandNoisemaker(): void {
+    // A decoy is a countermeasure and a shout at once, which is why a silence
+    // order strikes it with the tubes rather than leaving it as the one loud
+    // thing a stripped hull can still do (docs/mission-sorrowgate.md §3).
+    if (this.refusedByMission('noisemakers')) return;
     const units = this.selectedUnits().filter((u) => u.decoyCooldownS === undefined);
     if (units.length === 0) return;
     this.callbacks.onDeployNoisemaker(units.map((u) => u.id));
   }
 
   private commandLayMine(): void {
+    if (this.refusedByMission('mines')) return;
     const units = this.selectedUnits();
     if (units.length === 0) return;
     this.callbacks.onLayMine(units.map((u) => u.id));
@@ -1749,6 +1836,7 @@ export class EchoRenderer {
    * same band stepping the dive order uses, so "one band down" means one thing.
    */
   private commandDepthCharge(): void {
+    if (this.refusedByMission('depthCharges')) return;
     const units = this.selectedUnits();
     if (units.length === 0) return;
     const target = this.stepDepthTarget(units, 1);
@@ -1821,8 +1909,13 @@ export class EchoRenderer {
 
     const contact = this.nearestContact(x, y);
     if (contact !== null && unitIds.length > 0) {
-      this.callbacks.onAttackOrder(unitIds, contact.id, queued);
-      return;
+      // Weapons struck: the order that would have been an attack falls
+      // through to the move it can still be, rather than being swallowed.
+      // The hint bar says which of the two the player got, and why.
+      if (!this.refusedByMission('weapons')) {
+        this.callbacks.onAttackOrder(unitIds, contact.id, queued);
+        return;
+      }
     }
 
     if (unitIds.length > 0) this.callbacks.onMoveOrder(unitIds, x, y, queued);
@@ -1918,6 +2011,38 @@ export class EchoRenderer {
   }
 
   /**
+   * What this mission has taken away, straight off the mission view.
+   *
+   * The server refuses a locked order regardless — this is not a permission
+   * check, and the client is not where the rule lives. It is what lets the
+   * HUD say *why* instead of a key press vanishing into the socket.
+   */
+  setMissionLocks(locks: AbilityLock[]): void {
+    this.missionLocks = locks;
+  }
+
+  setMissionOver(payload: MissionResultPayload): void {
+    this.missionOver = payload;
+  }
+
+  /** The reason this ability is refused, or null while it is available. */
+  private missionLock(ability: MissionAbility): string | null {
+    return this.missionLocks.find((lock) => lock.ability === ability)?.reason ?? null;
+  }
+
+  /**
+   * True when the mission has taken this ability away — and, on the way,
+   * hands the reason to the hint bar. docs/ui-ux.md §7 forbids the silent
+   * drop: an action that will not happen has to say what it is waiting on.
+   */
+  private refusedByMission(ability: MissionAbility): boolean {
+    const reason = this.missionLock(ability);
+    if (reason === null) return false;
+    this.missionRefusal = { reason, atMs: performance.now() };
+    return true;
+  }
+
+  /**
    * Forget the match that just ended, keeping the ground it was played on.
    *
    * A rematch builds a *new* ECS world, so every entity id the renderer is
@@ -1928,6 +2053,12 @@ export class EchoRenderer {
    */
   resetForNewMatch(): void {
     this.gameOver = null;
+    // Both of these, and this is not optional: a mission followed by another
+    // run would otherwise keep a greyed-out ping key and a concluded mission's
+    // banner over live water for the rest of the session.
+    this.missionLocks = [];
+    this.missionRefusal = null;
+    this.missionOver = null;
     this.units = [];
     this.structures = [];
     this.tracked.clear();
@@ -3337,7 +3468,17 @@ export class EchoRenderer {
       this.app.screen.height - BAR_HEIGHT - 20
     );
 
-    if (this.gameOver !== null) {
+    if (this.missionOver !== null) {
+      // Checked first, and never falling through to the match banner below:
+      // an evacuation announced as "THE RIFT FALLS SILENT — VICTORY" would be
+      // the HUD contradicting the only thing the mission was about, and a
+      // mission leaves `winnerSlot` at -1 so that banner would read every
+      // outcome as a defeat.
+      const banner = MISSION_BANNER[this.missionOver.outcome];
+      this.bannerLabel.text = banner.text;
+      this.bannerLabel.style.fill = banner.fill;
+      this.bannerLabel.position.set(screenWidth / 2, this.app.screen.height / 2);
+    } else if (this.gameOver !== null) {
       const won = this.gameOver.winnerSlot === this.slot;
       this.bannerLabel.text = won ? 'THE RIFT FALLS SILENT — VICTORY' : 'BASTION LOST — DEFEAT';
       this.bannerLabel.style.fill = won ? UI.friendly : UI.threat;
@@ -3906,6 +4047,15 @@ export class EchoRenderer {
   }
 
   private hintLine(): string {
+    // A key that did nothing answers for itself first, ahead of every other
+    // hint: the player just pressed something and is owed the reason
+    // (docs/ui-ux.md §7). It is the mission's own words, shown verbatim.
+    if (
+      this.missionRefusal !== null &&
+      performance.now() - this.missionRefusal.atMs < MISSION_REFUSAL_MS
+    ) {
+      return this.missionRefusal.reason;
+    }
     // Touch players get gesture words; everything else is on the bar.
     if (this.pendingBuild !== null) {
       const stats = structureStatsFor(this.pendingBuild);
@@ -3913,18 +4063,22 @@ export class EchoRenderer {
         ? `placing ${stats.name} (${stats.cost})  ·  tap to place`
         : `placing ${stats.name} (${stats.cost})  ·  LMB place  ·  ESC cancel`;
     }
+    // The build keys are not advertised where they will not work. A hint bar
+    // naming a binding the mission refuses is the same silent lie as a dead
+    // button (§7) — worse, because a hint reads as instruction.
+    const canBuild = this.missionLock('construction') === null;
     if (this.selected.size === 0) {
-      return this.isTouch
-        ? 'tap select  ·  drag pan  ·  pinch zoom'
-        : 'LMB drag select  ·  MMB pan  ·  R/F/T/B build  ·  1-9 groups  ·  wheel zoom';
+      if (this.isTouch) return 'tap select  ·  drag pan  ·  pinch zoom';
+      return canBuild
+        ? 'LMB drag select  ·  MMB pan  ·  R/F/T/B build  ·  1-9 groups  ·  wheel zoom'
+        : 'LMB drag select  ·  MMB pan  ·  1-9 groups  ·  wheel zoom';
     }
     const structure = this.structures.find((s) => this.selected.has(s.id));
     if (structure !== undefined) {
       const queue = structure.queue.length > 0 ? `  ·  queue ${structure.queue.length}` : '';
       const name = structureStatsFor(structure.kind).name;
-      return this.isTouch
-        ? `${name}${queue}`
-        : `${name}${queue}  ·  UNITS tab to produce  ·  R/F/T/B build`;
+      if (this.isTouch || !canBuild) return `${name}${queue}`;
+      return `${name}${queue}  ·  UNITS tab to produce  ·  R/F/T/B build`;
     }
     const harvester = this.units.find((u) => this.selected.has(u.id) && u.throttle !== undefined);
     if (harvester !== undefined) {

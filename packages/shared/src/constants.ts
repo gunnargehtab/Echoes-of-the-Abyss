@@ -640,10 +640,11 @@ export const LIFECYCLE = {
   /**
    * Players a lobby needs before it will start.
    *
-   * One, not two, and deliberately: there is no AI opponent yet, so a solo
-   * lobby is the only way to exercise the game at all. Raising this to 2 the
-   * day an opponent exists is a one-line change; shipping a lobby nobody can
-   * leave until a second human arrives would not be.
+   * One, not two, and deliberately. It was written when there was no AI
+   * opponent and a solo lobby was the only way to exercise the game at all;
+   * a skirmish commander exists now, and one seat is still right, because a
+   * mission seats exactly one player and concludes on its own authored terms
+   * (docs/campaign.md). Raising this to 2 would refuse the campaign.
    */
   MIN_PLAYERS: 1,
   /**
@@ -653,6 +654,26 @@ export const LIFECYCLE = {
    * abandoned room does not hold a slot on the server forever.
    */
   POST_MATCH_S: 180,
+} as const;
+
+/**
+ * Mission conventions — docs/campaign.md §10.
+ *
+ * The conventions the doc states for *every* mission, so a mission literal is
+ * held to them at build time rather than remembered by whoever writes the next
+ * one. `missions.test.ts` reads these; nothing at runtime does.
+ */
+export const MISSION = {
+  /**
+   * SPEC — §10: "no mission fails on a timer alone; every failure state is
+   * something the player can hear coming for at least sixty seconds". The test
+   * asserts the gap between a mission's resolving beat and the loud beat before
+   * it, which is the only way a prose rule of this shape can be enforced.
+   */
+  FAILURE_TELEGRAPH_S: 60,
+  /** SPEC — §10: 12–25 minutes, the two authored sieges excepted. */
+  LENGTH_MIN_S: 720,
+  LENGTH_MAX_S: 1500,
 } as const;
 
 /**
