@@ -279,6 +279,14 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       slot: COMMUNE,
       faction: Faction.Pelagia,
       note: 'Warden Juno Teel, holding the west. Sorrowgate is the second chamber in her life where the boats are not big enough',
+      // Refitted to PR 2, for the same reason the flight is and stated here
+      // because it is easy to miss: the Light Scout is the only hull in this
+      // chamber that is PR 1 by roster, and the court sits at 1,500 m. Without
+      // the refit these three take unhealable crush from tick zero and are
+      // dead inside a minute — with every Commune beat after that silently
+      // no-opping on a missing tag, and Teel delivering her line at 10:40 from
+      // a delegation that is not there. `missions.test.ts` asserts every
+      // authored hull's rating admits the depth it is authored at.
       units: [
         {
           tag: 'commune-1',
@@ -286,6 +294,7 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
           x: 1700,
           y: 2600,
           depthM: 1450,
+          pressureRating: 2,
           note: '',
         },
         {
@@ -294,6 +303,7 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
           x: 1700,
           y: 2820,
           depthM: 1450,
+          pressureRating: 2,
           note: '',
         },
         {
@@ -302,6 +312,7 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
           x: 1700,
           y: 2400,
           depthM: 1450,
+          pressureRating: 2,
           note: '',
         },
       ],
@@ -388,7 +399,7 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       initial: ObjectiveStatus.Pending,
       // The station ends when the arch does. Nothing else about the first ten
       // minutes is a task, on purpose: §10 gives them to SIG, to the array, and
-      // to a Tier-1 that will not resolve.
+      // to a contact that will not resolve.
       predicate: { kind: 'endure', ticks: T(10, 40) },
     },
     {
@@ -504,17 +515,18 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       kind: 'say',
       speaker: 'Voice Ren Kalliso',
       text: 'I have not been invited and I have not been refused. I will hold the interval at the arch and take no part. If the court would rather I were elsewhere, the court has only to say so, and I am elsewhere within the tide.',
-      // §13: no channel exists for in-mission character speech yet. The four
-      // voices are authored anyway, because the mission is not finished without
-      // them and the day a channel exists should not also be the day somebody
-      // has to go and write them.
-      note: 'Authored ahead of the channel that will carry it',
+      // §13: the `say` channel carries these to the mission log beside the
+      // orders panel. What does not exist is any *sound* — nobody is heard, so
+      // a player with their eyes on the water misses all four.
+      note: 'Read, not heard',
     },
 
-    // 06:20–09:00 — she flickers: Tier 1, nothing, Tier 2 for a second as she
-    // turns, Tier 1. This is where the player learns what a tier is, by failing
-    // to raise one (§10). The document gives the window and the behaviour; the
-    // instants are the only part of these beats it does not state.
+    // 06:20–09:00 — she flickers: nothing, then Tier 2 for a few seconds as
+    // she turns, then nothing again. This is where the player learns what a
+    // tier is, by failing to raise one (§10). The document gives the window and
+    // the behaviour; the instants are the only part of these beats it does not
+    // state. Measured, she never climbs past Tier 2 and is therefore never
+    // factioned — `missionRuntime.test.ts` is what holds her there.
     // A turn in place, and it has to stay one. These targets were briefly a
     // pair of positions at the arch, which is not a flicker but an approach:
     // she crossed the interval, parked 330 m off the flight and read a solid

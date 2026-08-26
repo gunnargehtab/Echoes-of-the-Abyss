@@ -26,7 +26,14 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { Biome, MISSION, SIM, missionHeaderById } from '@echoes/shared';
+import {
+  Biome,
+  MISSION,
+  SIM,
+  missionHeaderById,
+  requiredPressureRating,
+  statsFor,
+} from '@echoes/shared';
 import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import { MISSIONS, PROLOGUE_SORROWGATE } from '../src/sim/missions/index.ts';
 import { DRIFT_SLOT } from '../src/sim/systems/fauna.ts';
@@ -93,6 +100,35 @@ describe('the parties a mission seats', () => {
       }
       const slots = mission.parties.map((party) => party.slot);
       assert.equal(new Set(slots).size, slots.length, `${mission.id}: two parties on one slot`);
+    }
+  });
+
+  it('rates every authored hull for the depth it is authored at', () => {
+    // A whole class of bug, and the quietest one this format can produce.
+    //
+    // The Commune's three hulls shipped as Light Scouts — PR 1, Shelf only —
+    // standing at 1,450 m in the court's chamber. They took unhealable crush
+    // from tick zero and were dead sixty seconds into a twenty-minute mission.
+    // Nothing failed: their six `move` beats resolved to a missing tag and
+    // no-opped, so §9's "the delegations take station" and "the delegations
+    // scatter" simply did not happen, and Warden Teel delivered her line at
+    // 10:40 from a delegation that had not been in the room for nine minutes.
+    // Half the exchange the mission is about, absent, with a green suite.
+    //
+    // Checked against the authored rating rather than the roster's, because
+    // the refit is exactly the thing that is easy to forget on one party.
+    for (const mission of MISSIONS) {
+      for (const party of mission.parties) {
+        for (const unit of party.units) {
+          const rating = unit.pressureRating ?? statsFor(unit.kind).pressureRating;
+          const required = requiredPressureRating(unit.depthM);
+          assert.ok(
+            rating >= required,
+            `${mission.id}: "${unit.tag}" is authored at ${unit.depthM} m, which needs ` +
+              `PR ${required}, and is rated PR ${rating} — it dies of crush where it stands`
+          );
+        }
+      }
     }
   });
 

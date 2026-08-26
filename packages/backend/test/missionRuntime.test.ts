@@ -48,7 +48,7 @@ import {
   type MissionView,
 } from '@echoes/shared';
 import { defineQuery, hasComponent } from 'bitecs';
-import { Fauna, MoveOrder } from '../src/sim/components.ts';
+import { Acoustic, Fauna, MoveOrder } from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
 import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import { REPLAY_FORMAT_VERSION, playReplay } from '../src/sim/replay.ts';
@@ -294,6 +294,77 @@ describe('a tender does not move until it is loaded', () => {
       assert.ok(tender.y > 2500, 'and it is still south of the service lock');
     }
   });
+
+  it('stops the climb too when the flight leaves, not only the run', () => {
+    // §8's rule is that a tender moves only while an escort is in range, and
+    // §9 gives 16:00–19:00 to "the run north *and the climb*". The climb is
+    // 1,150 m of the way out, so a hold enforced on the horizontal alone is the
+    // rule enforced on a minority of the journey.
+    //
+    // `Match.orderDepth` refuses the order while a tender is held; this is the
+    // other half — an order that was legal when it was given, on a tender the
+    // flight has since flown away from. Before the fix the tender rose the full
+    // distance with no ears while frozen horizontally: stopped dead, and
+    // ascending.
+    const match = missionMatch();
+    let own: EchoSnapshot | null = null;
+    // Past the second release at 13:40, so both tenders are free to move.
+    const CLOSE_AT = SIM.TICK_HZ * (13 * 60 + 45);
+    // Time for the flight to actually reach the tender. `orderDepth` refuses
+    // the climb outright while nothing is in range — which is the *other* half
+    // of this rule, already covered — so the order has to be legal when given
+    // or this test would pass for the wrong reason.
+    const ORDER_AT = CLOSE_AT + SIM.TICK_HZ * 40;
+    const ABANDON_AT = ORDER_AT + SIM.TICK_HZ * 15;
+    let depthWhenAbandoned = 0;
+    let tenderId = 0;
+    let ordered = false;
+
+    for (let tick = 0; tick < SIM.TICK_HZ * 16 * 60; tick++) {
+      const next = match.update(STEP_MS)?.get(PLAYER);
+      if (next !== undefined) own = next;
+      if (own === null) continue;
+
+      if (tick === CLOSE_AT) {
+        const tender = tendersIn(own)[0];
+        assert.ok(tender !== undefined, 'a tender survived to be escorted');
+        tenderId = tender.id;
+      }
+      // Hold the flight on station until the moment it is sent away.
+      if (tick >= CLOSE_AT && tick < ABANDON_AT && tick % REISSUE_TICKS === 0) {
+        const tender = own.units.find((unit) => unit.id === tenderId);
+        if (tender !== undefined) {
+          for (const [offset, station] of STATION.entries()) {
+            const escort = escortsIn(own)[offset];
+            if (escort === undefined) continue;
+            match.orderMove(PLAYER, escort.id, tender.x + station.x, tender.y + station.y);
+          }
+        }
+      }
+      if (tick === ORDER_AT) ordered = match.orderDepth(PLAYER, tenderId, CLIMB_TO_M);
+      if (tick === ABANDON_AT) {
+        const rising = own.units.find((unit) => unit.id === tenderId);
+        assert.ok(rising !== undefined, 'the tender is still there');
+        depthWhenAbandoned = rising.depth;
+        for (const escort of escortsIn(own)) match.orderMove(PLAYER, escort.id, 4500, 3500);
+      }
+    }
+    assert.ok(ordered, 'the climb was refused outright, so the continuous half is untested');
+
+    const abandoned = own?.units.find((unit) => unit.id === tenderId);
+    assert.ok(abandoned !== undefined, 'the tender is still in the water at the end');
+    assert.ok(
+      depthWhenAbandoned < 1470,
+      `the tender never started climbing (${depthWhenAbandoned} m), so the hold is untested`
+    );
+    // It may still drift a little on the tick the escorts cross the radius;
+    // what it must not do is complete the ascent unescorted.
+    assert.ok(
+      abandoned.depth > depthWhenAbandoned - 120,
+      `the tender climbed from ${Math.round(depthWhenAbandoned)} m to ` +
+        `${Math.round(abandoned.depth)} m with no escort in range`
+    );
+  });
 });
 
 describe('the run north is a climb', () => {
@@ -407,18 +478,145 @@ describe('the silence ledger binds the flight and not the tenders', () => {
     //
     // The predicate now names the role it measures and shares `peakSigOf` with
     // the ledger, so the number the court enforces and the number it reads out
-    // are one number. This test is what stops them separating again — and note
-    // it has to be taken from the *first* view, because the statuses are
-    // monotone: a reading that latches at 10:40 and one that was true from the
-    // first tick are indistinguishable by the end.
+    // are one number. This test is what stops them separating again.
+    //
+    // The silence order is a *standing* predicate, so unlike every other
+    // objective it is re-derived rather than latched (`isStanding`) — which is
+    // what lets this assert the whole run rather than only the first view. A
+    // passive flight never leaves the arch and never exceeds SIG 12, so the
+    // court should say "met" on every view it sends and never once take it
+    // back.
     const run = passiveRun();
-    const first = run.views[0]!;
-    const silence = first.objectives.find((objective) => objective.id === 'silence');
-    assert.ok(silence !== undefined, 'the silence order is stated from the first view');
-    assert.equal(
-      silence.status,
-      ObjectiveStatus.Met,
-      'a flight idling at SIG 6 under a ceiling of 20 is compliant, and the court says so'
+    assert.ok(run.views.length > 1, 'the run sent more than one view');
+    for (const view of run.views) {
+      const silence = view.objectives.find((objective) => objective.id === 'silence');
+      assert.ok(silence !== undefined, `tick ${view.tick}: the silence order stopped being stated`);
+      assert.equal(
+        silence.status,
+        ObjectiveStatus.Met,
+        `tick ${view.tick}: a flight idling at SIG 6 under a ceiling of 20 is compliant`
+      );
+    }
+  });
+
+  it('takes the reading back while the flight is in breach', () => {
+    // The other side of `isStanding`, and the defect it was written for.
+    //
+    // Statuses are monotone everywhere else, on purpose: reaching the Concourse
+    // is a thing that happened. A silence order is not — it is in force or it
+    // is not. Latched, it went Met on the first tick (a flight idling at SIG 6
+    // is trivially under 20) and stayed Met through every breach, so the panel
+    // read the word "met" beside the court's own sentence "The flight owes the
+    // court a silence", while the array was being withdrawn over that breach.
+    // Keyed on the breach itself — the flight actually over the ceiling — and
+    // not on `debtS`, which stays positive through the repayment that follows.
+    // A flight that has come back under the ceiling and is working the debt off
+    // is complying, and "met" is the honest reading of it; the defect is the
+    // reading while the hulls are loud.
+    const match = missionMatch();
+    const ceiling = PROLOGUE_SORROWGATE.silenceCeilingSig;
+    let own: EchoSnapshot | null = null;
+    let status = ObjectiveStatus.Pending;
+    let metWhileQuiet = false;
+    let openWhileLoud = false;
+    let metWhileLoud = false;
+    for (let tick = 0; tick < SIM.TICK_HZ * 25; tick++) {
+      const next = match.update(STEP_MS)?.get(PLAYER);
+      if (next !== undefined) own = next;
+      if (tick === SIM.TICK_HZ * 10 && own !== null) {
+        for (const unit of escortsIn(own)) match.orderDepth(PLAYER, unit.id, 1700);
+      }
+      const view = match.takeMissionView();
+      const silence = view?.objectives.find((objective) => objective.id === 'silence');
+      if (silence !== undefined) status = silence.status;
+      if (own === null || own.tick !== match.world.tick) continue;
+      const peak = Math.max(0, ...escortsIn(own).map((unit) => unit.sig));
+      const met = status === ObjectiveStatus.Met;
+      if (peak > ceiling) {
+        if (met) metWhileLoud = true;
+        else openWhileLoud = true;
+      } else if (met) metWhileQuiet = true;
+    }
+    assert.ok(metWhileQuiet, 'the court never read the order as met, so this proves nothing');
+    assert.ok(openWhileLoud, 'the flight was never loud, or the court never noticed');
+    assert.ok(!metWhileLoud, 'the court read "met" while the flight was over the ceiling it set');
+  });
+
+  it('withdraws the array without the array changing hands', () => {
+    // §4's withdrawal, and the shape of the write that performs it.
+    //
+    // It used to be `Owner.slot`, which is three things at once: the aura grant
+    // key, the Echo Layer's friend/foe test, and the filter that sorts a hull
+    // into your own force or into your contact list. So the moment the flight
+    // went over the ceiling, the Cantor the player was standing on dropped out
+    // of `own.structures` and reappeared in the same payload as a Tier-4
+    // *foreign* structure at chamber centre, carrying hp and a faction, while
+    // the SIG meter jumped 35 → 72 → 18 for a reason the player had not caused.
+    // Both of the mission's teaching instruments lying, at the moment it is
+    // teaching, in response to a breach the mission is designed to provoke.
+    //
+    // Both halves are asserted, because fixing the visible half by simply not
+    // withdrawing anything would pass a weaker test: the grant must still go.
+    const match = new Match(missionMapById(PROLOGUE_SORROWGATE.mapId)!, {
+      mission: PROLOGUE_SORROWGATE,
+      fauna: false,
+      seed: SEED,
+    });
+    let own: EchoSnapshot | null = null;
+    const hydWhileQuiet: number[] = [];
+    const hydWhileOwing: number[] = [];
+    let debtS = 0;
+    // How many mission ticks the debt has been owed for without a break. The
+    // aura is rewritten by `aurasSystem`, which runs earlier in the same step
+    // than the mission pass that records the debt, so the withdrawal lands one
+    // Echo tick after the breach. That lag is 0.2 s and inherent to the order
+    // of the step; sampling from the second tick onward asserts the withdrawal
+    // without asserting a tick ordering the ledger does not control.
+    let owedFor = 0;
+    let sawDebt = false;
+    for (let tick = 0; tick < SIM.TICK_HZ * 25; tick++) {
+      const next = match.update(STEP_MS)?.get(PLAYER);
+      if (next !== undefined) own = next;
+      // Ten seconds in, dive the flight: SIG 72 against a ceiling of 20.
+      if (tick === SIM.TICK_HZ * 10 && own !== null) {
+        for (const unit of own.units) {
+          if (unit.kind === UnitKind.LightScout) match.orderDepth(PLAYER, unit.id, 1700);
+        }
+      }
+      const view = match.takeMissionView();
+      if (view !== null) debtS = view.debtS;
+      if (own === null || own.tick !== match.world.tick) continue;
+      owedFor = debtS > 0 ? owedFor + 1 : 0;
+      sawDebt ||= debtS > 0;
+
+      assert.equal(
+        own.structures.length,
+        1,
+        `tick ${own.tick}: the court's array left the player's own force`
+      );
+      for (const contact of own.contacts) {
+        assert.equal(
+          contact.structure,
+          undefined,
+          `tick ${own.tick}: the player's own array came back as a contact`
+        );
+      }
+      const escorts = own.units.filter((unit) => unit.kind === UnitKind.LightScout);
+      const hyd = Math.max(...escorts.map((unit) => Acoustic.hyd[unit.id]!));
+      if (owedFor > 1) hydWhileOwing.push(hyd);
+      else if (debtS === 0 && own.tick < SIM.TICK_HZ * 9) hydWhileQuiet.push(hyd);
+    }
+
+    assert.ok(sawDebt, 'the flight never ran up a debt, so the withdrawal was never exercised');
+    assert.ok(hydWhileOwing.length > 0, 'the debt never lasted long enough to observe');
+    assert.ok(
+      hydWhileQuiet.every((hyd) => hyd > 70),
+      `the grant was never in force: HYD ${[...new Set(hydWhileQuiet)].join(', ')}`
+    );
+    assert.ok(
+      hydWhileOwing.every((hyd) => hyd <= 70),
+      `the array was still listening for a flight that owes a silence: ` +
+        `HYD ${[...new Set(hydWhileOwing)].join(', ')}`
     );
   });
 });

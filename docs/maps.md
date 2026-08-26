@@ -232,7 +232,7 @@ Three archetypes are implemented, in `packages/backend/src/sim/maps/`. They were
 
 That count is a count of **archetypes**, which is the only thing this catalogue holds. A mission map is authored per mission and answers to that mission's document instead: it is not an archetype, it is not required to be multi-seat or balanced, and it is **not in the public catalogue** — it is resolved by mission id and cannot be selected in a skirmish. The ones that exist are listed under Mission maps below.
 
-**Floors and ceilings are specified here and not yet built.** The three maps above are flat: every region sits over the same 3,000 m of water, because that is all the terrain grid can currently say. Authoring them is issue #150, and [systems-depth.md](systems-depth.md) §6 tracks what the simulation actually enforces. Until then, read the verticality in the archetype descriptions below as the design the maps are being written toward rather than as ground you can currently sail into.
+**Floors and ceilings are built, and the archetypes author both.** Every region carries a floor and may carry a ceiling — the Ventfront's tunnels run under a 520 m roof, the Kelp Labyrinth's under 700 m — and the terrain grid stores each per cell, so `Terrain.admits()` answers whether a hull at a given depth can be in a given place at all. Ground whose ceiling sits below its floor admits nothing at any depth, which is how solid rock is written. [systems-depth.md](systems-depth.md) §6 tracks what the simulation enforces, row by row. Read the verticality in the archetype descriptions below as ground you can sail into, and be stopped by.
 
 ### How a map is written
 

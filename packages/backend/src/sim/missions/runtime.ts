@@ -38,7 +38,16 @@ import {
   type MissionView,
   type ObjectiveView,
 } from '@echoes/shared';
-import { Fauna, Health, MoveOrder, Owner, Position, Pressure } from '../components.ts';
+import {
+  DepthOrder,
+  Fauna,
+  Health,
+  MoveOrder,
+  Owner,
+  Position,
+  Pressure,
+  Structure,
+} from '../components.ts';
 import {
   economyFor,
   eidOfLocalId,
@@ -49,7 +58,7 @@ import {
   type SimWorld,
 } from '../world.ts';
 import { projectMissionView, type MissionState } from './view.ts';
-import { isMet, peakSigOf } from './predicates.ts';
+import { isMet, isStanding, peakSigOf } from './predicates.ts';
 import type { MissionDefinition, MissionRole, MissionTag } from './types.ts';
 
 /** Simulation ticks between Echo passes — the cadence this runtime runs at. */
@@ -500,6 +509,15 @@ export class MissionRuntime {
    * entirely of listening and position — nothing is shot at. Enforced here,
    * server-side, because a client that decided for itself when a tender may
    * move would be deciding the mission.
+   *
+   * **Both axes, and the vertical one is not an afterthought.** §9 gives
+   * 16:00–19:00 to "the run north *and the climb*", and the climb is 1,150 m
+   * of the journey out. Clamping `MoveOrder` alone left a tender that had been
+   * given a depth order rising the whole way with no ears, frozen horizontally
+   * the entire time — a hull stopped dead and ascending, which reads as a bug
+   * whatever the rule says. `Match.orderDepth` refuses the *order*; this is the
+   * continuous half, for an order that was legal when it was given and stopped
+   * being so when the flight flew off.
    */
   private applyEscortHold(world: SimWorld, own: EchoSnapshot): void {
     const escorts = this.idsFor('escort');
@@ -513,7 +531,10 @@ export class MissionRuntime {
         const escortedNow = this.escorted(own, escorts, eid);
         if (escortedNow) this.lastEscorted.add(unit.tag);
         else this.lastEscorted.delete(unit.tag);
-        if (held || !escortedNow) MoveOrder.active[eid] = 0;
+        if (held || !escortedNow) {
+          MoveOrder.active[eid] = 0;
+          if (hasComponent(world, DepthOrder, eid)) DepthOrder.active[eid] = 0;
+        }
       }
     }
   }
@@ -554,11 +575,22 @@ export class MissionRuntime {
    *
    * Over the ceiling and the flight owes the court a silence; under it, the
    * debt is repaid at the rate it was run up. While anything is owed, the
-   * court's array is withdrawn — done by moving the array's `Owner.slot` away
-   * from the player, because `aurasSystem` grants an aura only to hulls of the
-   * owner's own slot, so the +25 HYD stops on the very next tick and comes
-   * back when the ledger clears. The debt caps, so one catastrophic breach
-   * cannot black out the rest of the mission: dread, not confusion.
+   * court's array is withdrawn — done by pointing the array's `grantSlot` at
+   * the court, because `aurasSystem` grants an aura only to hulls of the slot
+   * it is granted to, so the +25 HYD stops on the very next tick and comes back
+   * when the ledger clears. The debt caps, so one catastrophic breach cannot
+   * black out the rest of the mission: dread, not confusion.
+   *
+   * **`grantSlot` and not `Owner.slot`, and this is the whole reason that field
+   * exists.** Ownership is read by three unrelated things — the aura grant, the
+   * Echo Layer's friend/foe test, and the filter that sorts a hull into your own
+   * force or into your contact list. Withdrawing the array by moving ownership
+   * moved all three: measured, the moment the flight went over the ceiling the
+   * player's own Cantor dropped out of `own.structures` and appeared in the same
+   * payload as a Tier-4 foreign structure at chamber centre with hp and faction,
+   * while their SIG readout jumped 35 → 72 → 18 for a reason they had not
+   * caused. The mission's two teaching instruments, both lying, at the exact
+   * moment it is teaching. A grant is not a change of hands.
    *
    * It can never fail the mission. That is the point of it being a debt.
    */
@@ -570,22 +602,37 @@ export class MissionRuntime {
         : Math.max(0, this.debtS - TICK_DT_S);
 
     const arrayEid = this.eidOf(world, this.definition.arrayTag);
-    if (arrayEid === 0 || !hasComponent(world, Owner, arrayEid)) return;
-    Owner.slot[arrayEid] = this.debtS > 0 ? this.definition.courtSlot : this.definition.playerSlot;
+    if (arrayEid === 0 || !hasComponent(world, Structure, arrayEid)) return;
+    Structure.grantSlot[arrayEid] =
+      this.debtS > 0 ? this.definition.courtSlot : this.definition.playerSlot;
   }
 
   /**
    * Re-derive every objective from the player's own snapshot.
    *
-   * Monotone by construction: an objective a beat marked failed stays failed,
-   * and one that has been met stays met. Everything else is recomputed from
-   * world state every tick, which is why nothing here has to be replayed —
-   * there is no remembered progress to get out of step.
+   * Monotone by construction, with one deliberate exception: an objective a
+   * beat marked failed stays failed, and one that has been met stays met,
+   * because reaching the Concourse or running out a clock is a thing that
+   * happened and un-happening it would rewrite the player's history.
+   *
+   * A *standing* predicate (`isStanding`) is exempt, because it does not
+   * describe something that happened — it describes something that is true
+   * now. The silence order latched Met on the first tick, when a flight idling
+   * at SIG 6 is trivially under a ceiling of 20, and then stayed Met through
+   * every breach: the panel read "met" beside the court's own words "The
+   * flight owes the court a silence", while the array was being withdrawn over
+   * that very breach.
+   *
+   * Everything else is recomputed from world state every tick, which is why
+   * nothing here has to be replayed — there is no remembered progress to get
+   * out of step.
    */
   private deriveObjectives(world: SimWorld, own: EchoSnapshot): void {
     for (const objective of this.definition.objectives) {
       const status = this.statuses.get(objective.id) ?? objective.initial;
-      if (status === ObjectiveStatus.Failed || status === ObjectiveStatus.Met) continue;
+      const standing = isStanding(objective.predicate);
+      if (status === ObjectiveStatus.Failed) continue;
+      if (status === ObjectiveStatus.Met && !standing) continue;
       if (!this.startedAt.has(objective.id)) this.startedAt.set(objective.id, world.tick);
       const met = isMet(
         objective.predicate,
@@ -595,6 +642,7 @@ export class MissionRuntime {
         this.startedAt.get(objective.id) ?? 0
       );
       if (met) this.statuses.set(objective.id, ObjectiveStatus.Met);
+      else if (standing) this.statuses.set(objective.id, ObjectiveStatus.Pending);
     }
 
     // A terminal objective ends the mission the moment it is met: the court

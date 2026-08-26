@@ -87,7 +87,10 @@ export function aurasSystem(world: SimWorld): void {
               ? veils
               : null;
     if (list === null) continue;
-    list.push({ eid, x: Position.x[eid]!, y: Position.y[eid]!, slot: Owner.slot[eid]! });
+    // `grantSlot`, not `Owner.slot`: who the aura is for, which is who owns it
+    // unless a mission has lent it away. See the field's comment for why the
+    // two had to stop being one number.
+    list.push({ eid, x: Position.x[eid]!, y: Position.y[eid]!, slot: Structure.grantSlot[eid]! });
   }
 
   // Baseline: everything emits through unmodified terrain PF at full SIG,

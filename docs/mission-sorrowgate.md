@@ -105,10 +105,19 @@ armed parties parked around one exchange would open fire on the first tick. Admi
 tubes is *why it is a court*, and it makes "nothing here is solved by shooting" a property of
 the data rather than a rule someone has to remember.
 
-The flight cannot be destroyed in this mission. Nothing shoots at it, it is rated for every
-depth it can reach, and the one thing on the map that could kill it does not notice it. This is
-deliberate and should not be "improved" later: the player is safe and useless, and the stake is
-fourteen other people.
+Nothing in this mission is trying to destroy the flight. Nothing shoots at it, it is rated for
+every depth the mission sends it to, and the one thing on the map that could kill it does not
+notice it. This is deliberate and should not be "improved" later: the player is safe and
+useless, and the stake is fourteen other people.
+
+The flight is not, however, *invulnerable*, and the doc used to say it was. The Commit's floor
+is 2,400 m and the refit rates these hulls to 1,800; the depth control will happily order the
+band below that, and a player who does it watches four PR-2 scouts take crush until they are
+gone. That is [systems-depth.md](systems-depth.md) §2 working exactly as written, and the
+mission does not special-case it — depth is the one system the prologue deliberately does not
+teach (§10), so the water it does not send you into is not fenced off, only unvisited. The
+consequence is real: a flight lost in the basin cannot escort anything, and both tenders stay
+where they are until the court adjourns.
 
 ---
 
@@ -331,7 +340,7 @@ their hearing and never the mission.
 | 00:00 | The flight is admitted at the arch, 1,450 m. Hardpoints struck. Array live. Ceiling 20 |
 | 00:00–04:00 | The approach. Nothing happens, on purpose. The meter and the array are the only instruments and there is nothing else to attend to |
 | 04:00 | The delegations take station — Consortium east, Commune west. The Directorate observer was already here and does not move |
-| 06:20 | Kalliso arrives from the north-west, states her position, and holds. Tier 1. She does not climb |
+| 06:20 | Kalliso arrives from the north-west, states her position, and holds — quiet, at an interval, and inaudible from the arch. She does not climb |
 | 06:20–09:00 | The exchange runs. The flight's job is to hold and listen. Kalliso flickers — nothing, then Tier 2 for a few seconds as she turns, then nothing again. She never climbs past Tier 2, so the flight never learns whose she is |
 | **09:00** | **Drenn pings.** SIG 95. Three seconds in which everything is exact, and the player is lit for the first time in the game |
 | 09:20 | **The calling voice** |
@@ -360,7 +369,7 @@ mission is decided on.
 | 1 | **SIG** | 00:00–04:00. A ceiling, a meter, and a flight that has to move under a number | Every minute after 10:40 |
 | 2 | **Listening (HYD)** | 04:00–06:20. The court's array. While you are quiet you hear the whole basin; the moment you are not, you hear yourself | The tender runs, where being deaf is being lost |
 | 3 | **Resolution tiers** | 06:20–09:00. Kalliso holds the interval quiet and is simply not there; twice she turns, and for a few seconds she is a Tier 2 that names nobody. The player learns what a tier is by watching a contact refuse to become one | 09:00, when someone else raises it for everyone at once |
-| 4 | **Ghost markers** | 10:40–20:00. Nothing holds Tier 3 on a thing that large moving that fast. What the player has is a fading trail twenty seconds stale ([systems-echo.md](systems-echo.md) §4), and the route out is chosen against it | The last five minutes, entirely |
+| 4 | **The layer** | 16:00–19:00, the climb. A SIG-100 colossus in the same basin is a Tier-4 track and stays one; what takes it away is the player's own ascent. Sound crosses the thermocline at a third ([systems-echo.md](systems-echo.md) §3), so somewhere above 1,200 m the loudest thing on the map thins to a ghost marker and then to nothing, and the player leaves without being told how it finished | The last three minutes, entirely |
 
 The prologue does **not** teach Silent Running, and this closes an open question between
 [audio-direction.md](audio-direction.md) and [campaign.md](campaign.md) §5. On a hull with no
@@ -391,7 +400,7 @@ multi-layered ruins, collapsed domes, a tunnel beneath the main lane.
 | The West Approach | 200, 1400, 1200, 900 | Thermal Vein | 1,600 | — | PF 0.45. The one road where the flight can be loud and get away with it. Nothing tells the player this |
 | The Service Lock | 1900, 1900, 300, 450 | Coral Ruins | 1,500 | **1,300** | Roofed water joining the chamber to the districts. After the arch goes, the only way out. A route nobody can be watched taking |
 | The Gate | 2100, 2300, 900, 900 | Coral Ruins | 1,500 | — | The dome and the chamber. The court |
-| The Commit | 1700, 3200, 1700, 800 | Abyssal Trench | **2,400** | — | The basin the city committed its dead into. PF 1.6 — which is how the ping got down there. Needs PR-3; nothing the player owns can enter it |
+| The Commit | 1700, 3200, 1700, 800 | Abyssal Trench | **2,400** | — | The basin the city committed its dead into. PF 1.6 — which is how the ping got down there. Needs PR-3, and nothing the player owns is rated to follow it down (§3) |
 
 One spawn, at the arch: 2550, 2150. No resources. No hazard sites. There is no economy in this
 mission and nothing to build.

@@ -96,7 +96,14 @@ export function hashWorld(world: SimWorld): number {
       h = mixU32(h, Owner.faction[eid]!);
     }
     if (hasComponent(world, Unit, eid)) h = mixU32(h, Unit.kind[eid]!);
-    if (hasComponent(world, Structure, eid)) h = mixU32(h, Structure.kind[eid]!);
+    if (hasComponent(world, Structure, eid)) {
+      h = mixU32(h, Structure.kind[eid]!);
+      // Hashed because a mission moves it: the Prologue's silence ledger
+      // withdraws the court's array by writing this, and a replay that
+      // re-derived the debt differently would otherwise diverge in what the
+      // player can hear while every hashed field still agreed.
+      h = mixU32(h, Structure.grantSlot[eid]!);
+    }
     if (hasComponent(world, SilentRunning, eid)) h = mixU32(h, SilentRunning.active[eid]!);
     if (hasComponent(world, Pressure, eid)) {
       h = mixU32(h, Pressure.rating[eid]!);

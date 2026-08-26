@@ -89,6 +89,23 @@ export function isMet(
 }
 
 /**
+ * Whether this predicate states a *standing condition* rather than an
+ * achievement — something that is true or false right now, and can stop being
+ * true.
+ *
+ * Objective statuses are monotone by design: reaching the Concourse or running
+ * out a clock is a thing that happened, and un-happening it would rewrite the
+ * player's history. A silence order is not that. It is in force or it is not,
+ * and latching it at the first tick had the court reading "met" beside its own
+ * words "The flight owes the court a silence", while it was actively
+ * withdrawing the array over the breach — a status pill contradicting the row
+ * it labels.
+ */
+export function isStanding(predicate: MissionPredicate): boolean {
+  return predicate.kind === 'quiet';
+}
+
+/**
  * The loudest of a named set of the player's own hulls.
  *
  * Shared by the `quiet` predicate and the runtime's silence ledger so the

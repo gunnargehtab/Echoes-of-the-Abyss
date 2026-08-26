@@ -626,6 +626,10 @@ export function spawnStructure(world: SimWorld, opts: SpawnStructureOptions): nu
 
   addComponent(world, Structure, eid);
   Structure.kind[eid] = opts.kind;
+  // Your own aura, until something deliberately lends it elsewhere. bitecs
+  // arrays are recycled, so this must be written rather than left to default:
+  // a zeroed grant would hand a recycled structure's aura to slot 0.
+  Structure.grantSlot[eid] = opts.slot;
 
   if (!opts.prebuilt) {
     addComponent(world, UnderConstruction, eid);

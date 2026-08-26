@@ -158,6 +158,26 @@ export const ActivePing = defineComponent({
 /** Index into the StructureKind enum. Mutually exclusive with Unit. */
 export const Structure = defineComponent({
   kind: Types.ui8,
+  /**
+   * Who this structure's aura is *for*, which is usually — but not always —
+   * who owns it.
+   *
+   * Set to `Owner.slot` at spawn and left alone by everything except a mission,
+   * so for a skirmish the two are the same number and `aurasSystem` behaves
+   * exactly as it always has.
+   *
+   * It exists because `Owner.slot` is three things at once: the aura grant key
+   * here, the Echo Layer's friend/foe test, and the filter that decides whether
+   * a hull is in your own force or in your contact list. The Prologue's court
+   * withdraws the array it lends the flight whenever the flight is loud
+   * (docs/mission-sorrowgate.md §4) — and doing that by moving ownership also
+   * moved the other two: the player's own Cantor vanished from their force and
+   * reappeared, at the same instant, as a fully-resolved Tier-4 foreign
+   * structure in the middle of the chamber they were standing in. Withdrawing
+   * a grant is not the same act as changing hands, and now it is not the same
+   * write either.
+   */
+  grantSlot: Types.ui8,
 });
 
 /** A structure still being commissioned. Removed when construction completes. */
