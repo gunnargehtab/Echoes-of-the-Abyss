@@ -98,6 +98,15 @@ Three prohibitions, and code should read them as three:
    shown here, fired by somebody else, and the player has no button to fire back with. That is
    the design working.
 
+**A fourth lock, which is not a prohibition.** The court struck the hardpoints; it said nothing
+about masonry. But there is no economy in this mission and nothing to build (§11), so the
+command bar's build and unit pages are not offered at all and the build keys refuse with a
+reason — *the court's water is not yours to build in* — rather than arming a placement ghost
+for a click the server drops on cost. [ui-ux.md](ui-ux.md) §7 rules out the silent refusal, and
+a ghost that follows the cursor to nothing is worse than silent: it looks like it worked right
+up until it did not. It is carried as a seventh entry in the same lock list as the six above,
+because a dead affordance with its reason attached is the pattern this mission already uses.
+
 **Every hull admitted to the chamber is admitted weapons-cold, not only the flight.** This is
 the court's whole procedure applied evenly, and it is also the only honest way to stage the
 scene: hostility in this simulation is ownership, and there is no neutrality in it, so five

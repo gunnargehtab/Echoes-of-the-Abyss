@@ -85,7 +85,20 @@ export enum MissionOutcome {
 }
 
 export type MissionAbility =
-  'weapons' | 'torpedoes' | 'mines' | 'depthCharges' | 'noisemakers' | 'activeSonar';
+  | 'weapons'
+  | 'torpedoes'
+  | 'mines'
+  | 'depthCharges'
+  | 'noisemakers'
+  | 'activeSonar'
+  /**
+   * Building and producing, which most missions have no economy for. Not a
+   * weapon, and here for the same reason the six above are: an affordance that
+   * cannot work has to say so. Without it the build keys still arm a placement
+   * ghost that follows the cursor to a click the server drops on cost — a
+   * silent refusal, which docs/ui-ux.md §7 forbids by name.
+   */
+  | 'construction';
 
 /**
  * docs/ui-ux.md — a disabled action greys out *with a reason attached*, never

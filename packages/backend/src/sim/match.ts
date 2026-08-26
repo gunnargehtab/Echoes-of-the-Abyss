@@ -959,6 +959,12 @@ export class Match {
    */
   build(slot: number, kind: StructureKind, x: number, y: number): boolean {
     this.recordCommand({ tick: this.world.tick, type: 'build', slot, kind, x, y });
+    // A mission with no economy refuses this outright rather than leaving the
+    // cost check to do it by accident. The difference matters: refused-on-cost
+    // is a number that could change, and a mission that handed the player a
+    // stockpile for some other reason would quietly let them build a refinery
+    // in the middle of somebody else's court.
+    if (this.missionDenies(slot, 'construction')) return false;
     const stats = structureStatsFor(kind);
     if (!stats.constructible) return false;
     // Faction signature structures are exactly that — another navy's order
@@ -1034,6 +1040,11 @@ export class Match {
       structure: this.localId(structureEid),
       kind,
     });
+    // The same lock as `build`: a mission that has taken construction away has
+    // taken hull production with it. The Prologue owns no yard to produce from,
+    // so this is belt to that brace — and it is the brace that would matter the
+    // day a mission lends the player a Foundry it does not want used.
+    if (this.missionDenies(slot, 'construction')) return false;
     if (!this.owns(slot, structureEid)) return false;
     if (!hasComponent(this.world, Structure, structureEid)) return false;
     if (hasComponent(this.world, UnderConstruction, structureEid)) return false;

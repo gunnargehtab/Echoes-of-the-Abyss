@@ -383,6 +383,16 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     },
     { ability: 'noisemakers', reason: 'disabled — silence order' },
     { ability: 'activeSonar', reason: 'disabled — the array was pulled with the hardpoints' },
+    // Not one of §3's three prohibitions — the court struck the hardpoints, it
+    // did not forbid masonry. This is the map speaking: there is no economy in
+    // this mission and nothing to build (§11), so the build bar offered five
+    // structures the player could never afford and the build keys armed a
+    // placement ghost for a click the server dropped on cost. A refusal the
+    // player cannot see is the one thing docs/ui-ux.md §7 rules out.
+    {
+      ability: 'construction',
+      reason: "the court's water is not yours to build in",
+    },
   ],
 
   /**

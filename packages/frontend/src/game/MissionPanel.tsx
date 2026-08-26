@@ -50,6 +50,7 @@ const ABILITY_LABEL: Record<MissionAbility, string> = {
   depthCharges: 'depth charges',
   noisemakers: 'noisemakers',
   activeSonar: 'active sonar',
+  construction: 'construction',
 };
 
 export interface MissionPanelProps {

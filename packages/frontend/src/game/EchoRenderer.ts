@@ -1013,6 +1013,11 @@ export class EchoRenderer {
       }
       const buildKind = BUILD_KEYS[e.code];
       if (buildKind !== undefined) {
+        // Refused with the reason attached, rather than arming a placement
+        // ghost for a click the server will drop. §7 forbids the silent drop,
+        // and a ghost that follows the cursor to nothing is worse than silent:
+        // it looks like it worked right up until it did not.
+        if (this.refusedByMission('construction')) return;
         this.pendingBuild = buildKind;
         return;
       }
@@ -1021,6 +1026,7 @@ export class EchoRenderer {
       if (e.code === 'KeyB') {
         const signature = FACTION_STRUCTURE[this.faction];
         if (signature !== undefined) {
+          if (this.refusedByMission('construction')) return;
           this.pendingBuild = signature;
           return;
         }
@@ -1354,6 +1360,16 @@ export class EchoRenderer {
     return foundry ?? this.structures.find(eligible);
   }
 
+  /**
+   * The page actually shown, which is `activeTab` unless the mission has taken
+   * construction away — then there is only one page there is anything to put
+   * on. Read everywhere rather than coercing `activeTab` itself, so the
+   * player's own last choice survives a mission that merely hid it.
+   */
+  private get shownTab(): CommandTab {
+    return this.missionLock('construction') === null ? this.activeTab : 'squad';
+  }
+
   /** Auto-open the page that matches what was just selected. */
   private onSelectionChanged(): void {
     const structure = this.structures.find((s) => this.selected.has(s.id));
@@ -1387,7 +1403,7 @@ export class EchoRenderer {
       return buttons;
     }
 
-    if (this.activeTab === 'units') {
+    if (this.shownTab === 'units') {
       // One row of the whole roster; each button routes to a structure that
       // can actually build it, selected or not.
       const roster = PRODUCIBLE[StructureKind.Foundry] ?? [];
@@ -1401,7 +1417,7 @@ export class EchoRenderer {
           action: () => this.commandProduce(kind),
         });
       }
-    } else if (this.activeTab === 'squad') {
+    } else if (this.shownTab === 'squad') {
       const units = this.selectedUnits();
       const first = units[0];
       buttons.push({
@@ -1410,9 +1426,15 @@ export class EchoRenderer {
         active: first?.silentRunning ?? false,
         action: () => this.commandToggleSilent(),
       });
+      // A locked ability is dead on the bar, not merely refused on the press.
+      // §7 wants the affordance to be visibly gone *before* the player reaches
+      // for it; the reason is already standing in the orders panel, so a
+      // greyed button here is the second half of one statement rather than a
+      // silent drop. Applies to the whole ordnance row below for the same
+      // reason — every one of them is an ability a mission can withhold.
       buttons.push({
         label: 'PING',
-        enabled: units.length > 0,
+        enabled: units.length > 0 && this.missionLock('activeSonar') === null,
         active: false,
         action: () => this.commandPing(),
       });
@@ -1449,19 +1471,20 @@ export class EchoRenderer {
         const cooling = first?.decoyCooldownS;
         buttons.push({
           label: cooling === undefined ? 'DECOY' : `DECOY ${Math.ceil(cooling)}`,
-          enabled: cooling === undefined,
+          enabled: cooling === undefined && this.missionLock('noisemakers') === null,
           active: false,
           action: () => this.commandNoisemaker(),
         });
         buttons.push({
           label: 'MINE',
-          enabled: true,
+          enabled: this.missionLock('mines') === null,
           active: false,
           action: () => this.commandLayMine(),
         });
         buttons.push({
           label: 'CHARGE',
-          enabled: this.stepDepthTarget(units, 1) !== null,
+          enabled:
+            this.stepDepthTarget(units, 1) !== null && this.missionLock('depthCharges') === null,
           active: false,
           action: () => this.commandDepthCharge(),
         });
@@ -1535,9 +1558,18 @@ export class EchoRenderer {
     g.rect(0, barY, screenWidth, BAR_HEIGHT).fill({ color: UI.glass, alpha: 0.92 });
     g.rect(0, barY, screenWidth, 1).fill({ color: UI.glassStroke });
 
-    // Tab strip. 'squad' only exists while units are selected.
-    const tabs: CommandTab[] =
-      this.selectedUnits().length > 0 ? ['build', 'units', 'squad'] : ['build', 'units'];
+    // Tab strip. 'squad' only exists while units are selected, and 'build' and
+    // 'units' only exist where there is an economy to use them: a mission that
+    // has locked construction has no yard, no stockpile and nothing to place,
+    // so offering five structures nobody can afford is a menu of refusals. The
+    // reason is not lost — it stands in the orders panel's lock list with the
+    // other six, which is where docs/ui-ux.md §7 wants it.
+    const canBuild = this.missionLock('construction') === null;
+    const tabs: CommandTab[] = canBuild
+      ? this.selectedUnits().length > 0
+        ? ['build', 'units', 'squad']
+        : ['build', 'units']
+      : ['squad'];
     const tabButtons: BarButton[] = [];
     let tabX = 10;
     for (const tab of tabs) {
@@ -1549,7 +1581,7 @@ export class EchoRenderer {
         h: TAB_HEIGHT,
         label: TAB_LABEL[tab],
         enabled: true,
-        active: this.activeTab === tab,
+        active: this.shownTab === tab,
         action: () => {
           this.activeTab = tab;
         },
@@ -1613,6 +1645,10 @@ export class EchoRenderer {
    * sidebar's default factory (see produceTargetFor).
    */
   private commandProduce(kind: UnitKind): void {
+    // Unreachable from the bar while construction is locked — the tab it lives
+    // on is not offered — but the check belongs on the command rather than on
+    // the button, which is where every other mission refusal sits.
+    if (this.refusedByMission('construction')) return;
     const selectedTargets = this.structures.filter(
       (s) => this.selected.has(s.id) && (PRODUCIBLE[s.kind]?.includes(kind) ?? false)
     );
@@ -3877,18 +3913,22 @@ export class EchoRenderer {
         ? `placing ${stats.name} (${stats.cost})  ·  tap to place`
         : `placing ${stats.name} (${stats.cost})  ·  LMB place  ·  ESC cancel`;
     }
+    // The build keys are not advertised where they will not work. A hint bar
+    // naming a binding the mission refuses is the same silent lie as a dead
+    // button (§7) — worse, because a hint reads as instruction.
+    const canBuild = this.missionLock('construction') === null;
     if (this.selected.size === 0) {
-      return this.isTouch
-        ? 'tap select  ·  drag pan  ·  pinch zoom'
-        : 'LMB drag select  ·  MMB pan  ·  R/F/T/B build  ·  1-9 groups  ·  wheel zoom';
+      if (this.isTouch) return 'tap select  ·  drag pan  ·  pinch zoom';
+      return canBuild
+        ? 'LMB drag select  ·  MMB pan  ·  R/F/T/B build  ·  1-9 groups  ·  wheel zoom'
+        : 'LMB drag select  ·  MMB pan  ·  1-9 groups  ·  wheel zoom';
     }
     const structure = this.structures.find((s) => this.selected.has(s.id));
     if (structure !== undefined) {
       const queue = structure.queue.length > 0 ? `  ·  queue ${structure.queue.length}` : '';
       const name = structureStatsFor(structure.kind).name;
-      return this.isTouch
-        ? `${name}${queue}`
-        : `${name}${queue}  ·  UNITS tab to produce  ·  R/F/T/B build`;
+      if (this.isTouch || !canBuild) return `${name}${queue}`;
+      return `${name}${queue}  ·  UNITS tab to produce  ·  R/F/T/B build`;
     }
     const harvester = this.units.find((u) => this.selected.has(u.id) && u.throttle !== undefined);
     if (harvester !== undefined) {

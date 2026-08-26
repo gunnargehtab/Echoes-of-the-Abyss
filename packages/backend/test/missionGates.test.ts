@@ -35,7 +35,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { Faction, SIM, UnitKind, statsFor } from '@echoes/shared';
+import { Faction, SIM, StructureKind, UnitKind, statsFor } from '@echoes/shared';
 import { hasComponent } from 'bitecs';
 import {
   ActivePing,
@@ -48,7 +48,7 @@ import {
 import { Match } from '../src/sim/match.ts';
 import { missionMapById } from '../src/sim/maps/index.ts';
 import { PROLOGUE_SORROWGATE } from '../src/sim/missions/index.ts';
-import { spawnUnit, type SimWorld } from '../src/sim/world.ts';
+import { economyFor, spawnUnit, type SimWorld } from '../src/sim/world.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 const PLAYER = PROLOGUE_SORROWGATE.playerSlot;
@@ -293,6 +293,39 @@ describe('the order layer refuses what the mission locked', () => {
           match.orderAttackContact(PLAYER, eid, 1);
           assert.equal(Weapon.orderedTargetEid[eid], 0, lock.ability);
           break;
+        case 'construction': {
+          // Not a weapon, and refused for a different reason: §11 gives this
+          // mission no economy and nothing to build.
+          //
+          // **The stockpile has to be funded first**, and that is the whole
+          // trap in this one. A mission opens on zero nodules, so `build`
+          // returns false whatever the lock does — the first draft of this
+          // assertion passed against a runtime that denied nothing at all,
+          // which is the same trap `armedHull` exists to avoid for the six
+          // above. Paid for and then refused is the only version that means
+          // anything.
+          const economy = economyFor(match.world, PLAYER);
+          const before = economy.nodules;
+          economy.nodules = 10_000;
+          const spawn = missionMapById(PROLOGUE_SORROWGATE.mapId)!.spawns[0]!;
+          const built = match.build(PLAYER, StructureKind.Refinery, spawn.x, spawn.y + 200);
+          assert.equal(built, false, lock.ability);
+          assert.equal(
+            economy.nodules,
+            10_000,
+            'the refusal still charged for the structure it refused'
+          );
+          economy.nodules = before;
+          break;
+        }
+        default: {
+          // Exhaustive on purpose. The published lock list is a promise to the
+          // player, so an ability added to the literal without a gate behind it
+          // has to fail here rather than pass by falling off the end of a
+          // switch — which is exactly what a seventh lock did.
+          const unreached: never = lock.ability;
+          assert.fail(`no gate is asserted for the "${String(unreached)}" lock`);
+        }
       }
     }
   });
