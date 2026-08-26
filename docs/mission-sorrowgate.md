@@ -325,7 +325,7 @@ their hearing and never the mission.
 | 00:00–04:00 | The approach. Nothing happens, on purpose. The meter and the array are the only instruments and there is nothing else to attend to |
 | 04:00 | The delegations take station — Consortium east, Commune west. The Directorate observer was already here and does not move |
 | 06:20 | Kalliso arrives from the north-west, states her position, and holds. Tier 1. She does not climb |
-| 06:20–09:00 | The exchange runs. The flight's job is to hold and listen. Kalliso flickers — Tier 1, nothing, Tier 2 for a second as she turns, Tier 1 |
+| 06:20–09:00 | The exchange runs. The flight's job is to hold and listen. Kalliso flickers — nothing, then Tier 2 for a few seconds as she turns, then nothing again. She never climbs past Tier 2, so the flight never learns whose she is |
 | **09:00** | **Drenn pings.** SIG 95. Three seconds in which everything is exact, and the player is lit for the first time in the game |
 | 09:20 | **The calling voice** |
 | **10:40** | **The transit.** The arch goes, and the court's array goes with it. The dome holds. The delegations scatter; not one of them engages, because nothing can. The service lock is now the only way out, and the flight is on its own ears from here |
@@ -352,7 +352,7 @@ mission is decided on.
 | --- | --- | --- | --- |
 | 1 | **SIG** | 00:00–04:00. A ceiling, a meter, and a flight that has to move under a number | Every minute after 10:40 |
 | 2 | **Listening (HYD)** | 04:00–06:20. The court's array. While you are quiet you hear the whole basin; the moment you are not, you hear yourself | The tender runs, where being deaf is being lost |
-| 3 | **Resolution tiers** | 06:20–09:00. Kalliso is a Tier-1 that will not resolve, because her cone is off-axis. The player learns what a tier is by failing to raise one | 09:00, when someone else raises it for everyone at once |
+| 3 | **Resolution tiers** | 06:20–09:00. Kalliso holds the interval quiet and is simply not there; twice she turns, and for a few seconds she is a Tier 2 that names nobody. The player learns what a tier is by watching a contact refuse to become one | 09:00, when someone else raises it for everyone at once |
 | 4 | **Ghost markers** | 10:40–20:00. Nothing holds Tier 3 on a thing that large moving that fast. What the player has is a fading trail twenty seconds stale ([systems-echo.md](systems-echo.md) §4), and the route out is chosen against it | The last five minutes, entirely |
 
 The prologue does **not** teach Silent Running, and this closes an open question between

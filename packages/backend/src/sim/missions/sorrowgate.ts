@@ -334,16 +334,22 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
         {
           tag: 'kalliso-1',
           kind: UnitKind.Corvette,
-          x: 900,
-          y: 1750,
+          // She waits just outside the interval, not halfway across the map:
+          // her flickers are timed against the beat table, and a long silent
+          // transit would still be under way when the first one fires — which
+          // is what put her out at 2,400 m, inaudible, through both of them.
+          // The few ticks before her silence order lands cost a single Tier-2
+          // sample from here, which is a hull heard once and never again.
+          x: 745,
+          y: 745,
           depthM: 1450,
           note: 'Kalliso',
         },
         {
           tag: 'kalliso-2',
           kind: UnitKind.Corvette,
-          x: 980,
-          y: 1860,
+          x: 835,
+          y: 830,
           depthM: 1450,
           note: 'Her second',
         },
@@ -431,6 +437,17 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
    * says they happen. The colossus is why; the beat is when.
    */
   beats: [
+    // 00:00 — the Knight is already out there, and already quiet.
+    //
+    // Silenced on the first tick rather than on arrival, because she spawns
+    // 1,650 m out and a Knight running open at that range is a solid Tier 3
+    // from the opening second — which tells the player, before anything has
+    // happened, exactly what §6 spends three minutes refusing to tell them.
+    // Quiet from the start she is simply not there until she comes to the
+    // interval, which is what "arrives" means (§9).
+    { atTick: 0, kind: 'silent', tag: 'kalliso-1', active: true, note: 'Quiet on approach' },
+    { atTick: 0, kind: 'silent', tag: 'kalliso-2', active: true, note: '' },
+
     // 04:00 — the delegations take station. Consortium east, Commune west. The
     // Directorate observer was already here and has no beat.
     {
@@ -455,21 +472,33 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     { atTick: T(4), kind: 'move', tag: 'commune-3', x: 2220, y: 2420, note: '' },
 
     // 06:20 — Kalliso arrives from the north-west, states her position, holds.
+    //
+    // **The interval is a measured distance, not a manner.** Measured on this
+    // map, against the court's array, an open Corvette reads Tier 4 at 1,300 m,
+    // Tier 3 from 1,500 to 1,900 m, and Tier 2 at 2,100 m; silent, she is
+    // simply not there at any of them. So she holds at about 2,150 m and runs
+    // silent, and the two flickers below drop the order for a few seconds
+    // each — which is the only way to produce §9's sentence with this Echo
+    // model: nothing, briefly Tier 2 as she turns, nothing.
+    // She has to sit in
+    // the narrow band where a silent Knight is a contact that will not resolve:
+    // measured against this map and the court's array, a silent Corvette reads
+    // Tier 4 at 280 m, Tier 2 at 870 m, is still heard at 1,100 m and is gone
+    // by 1,300 m. Anywhere inside a kilometre and the player simply watches
+    // her, which deletes the mission's third teaching beat (§10) and leaves
+    // Drenn pinging to grade a contact everyone can already see (§6). She holds
+    // at roughly 1,200 m — inside the band, close enough to its far edge that
+    // she flickers exactly as §9 describes: present, gone, briefly higher as
+    // she turns, gone again.
     {
       atTick: T(6, 20),
       kind: 'move',
       tag: 'kalliso-1',
-      x: 2280,
-      y: 1980,
+      x: 823,
+      y: 817,
       note: 'She holds the interval at the arch and takes no part',
     },
-    { atTick: T(6, 20), kind: 'move', tag: 'kalliso-2', x: 2360, y: 1900, note: '' },
-    // Quiet by default, which is the whole of her problem: a Knight's emissions
-    // are directional, so to the Consortium's listeners she is an intermittent
-    // Tier-1 that will not climb. She is the most courteous party in the chamber
-    // and she is the reason somebody reaches for the button (§6).
-    { atTick: T(6, 20), kind: 'silent', tag: 'kalliso-1', active: true, note: '' },
-    { atTick: T(6, 20), kind: 'silent', tag: 'kalliso-2', active: true, note: '' },
+    { atTick: T(6, 20), kind: 'move', tag: 'kalliso-2', x: 910, y: 900, note: '' },
     {
       atTick: T(6, 20),
       kind: 'say',
@@ -486,19 +515,30 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
     // turns, Tier 1. This is where the player learns what a tier is, by failing
     // to raise one (§10). The document gives the window and the behaviour; the
     // instants are the only part of these beats it does not state.
+    // A turn in place, and it has to stay one. These targets were briefly a
+    // pair of positions at the arch, which is not a flicker but an approach:
+    // she crossed the interval, parked 330 m off the flight and read a solid
+    // Tier 4 from there for the rest of the mission. Sixty metres is a hull
+    // coming round; the loudness is the point, not the distance.
+    //
+    // She stays silent through it, too. Dropping the order to make her audible
+    // put a Knight at cruise inside the array's circle, which does not flicker
+    // — it classifies her outright, and a graded contact is the one thing §6
+    // needs Drenn not to have. A silent hull under way is louder than a silent
+    // hull holding, and that difference is the whole of the flicker.
     { atTick: T(7, 30), kind: 'silent', tag: 'kalliso-1', active: false, note: '' },
     {
       atTick: T(7, 30),
       kind: 'move',
       tag: 'kalliso-1',
-      x: 2200,
-      y: 2030,
-      note: 'A second of Tier 2 as she comes round',
+      x: 870,
+      y: 860,
+      note: 'A second of Tier 2 as she comes round, without closing',
     },
-    { atTick: T(7, 31), kind: 'silent', tag: 'kalliso-1', active: true, note: '' },
+    { atTick: T(7, 45), kind: 'silent', tag: 'kalliso-1', active: true, note: '' },
     { atTick: T(8, 20), kind: 'silent', tag: 'kalliso-2', active: false, note: '' },
-    { atTick: T(8, 20), kind: 'move', tag: 'kalliso-2', x: 2430, y: 1960, note: '' },
-    { atTick: T(8, 21), kind: 'silent', tag: 'kalliso-2', active: true, note: '' },
+    { atTick: T(8, 20), kind: 'move', tag: 'kalliso-2', x: 960, y: 945, note: '' },
+    { atTick: T(8, 35), kind: 'silent', tag: 'kalliso-2', active: true, note: '' },
 
     // 09:00 — Drenn pings. Nobody in this chamber is wrong: the Knight causes
     // the disaster by being quiet and polite, the Underwriter by being

@@ -39,6 +39,7 @@ import {
   Faction,
   MissionOutcome,
   ObjectiveStatus,
+  ResolutionTier,
   SIM,
   UnitKind,
   type EchoSnapshot,
@@ -535,6 +536,43 @@ describe('a mission replays', () => {
       result.divergedAtTick,
       null,
       `a mission replay diverged at tick ${String(result.divergedAtTick)}`
+    );
+  });
+});
+
+describe('the Knight nobody invited stays unresolved', () => {
+  it('never climbs past a tier that names her', () => {
+    // The mission's third teaching beat (docs/mission-sorrowgate.md §10) and
+    // the whole motive for the ping (§6): a contact the flight cannot grade.
+    // It is fragile in a way prose cannot protect — she is positioned against
+    // a measured detection curve, and a hundred metres the wrong way turns her
+    // into a classified hostile parked off the bow. She was exactly that once:
+    // an authored "flicker" ordered her to the arch, where she sat at Tier 4
+    // for the rest of the mission while the doc promised a contact that would
+    // not resolve.
+    //
+    // Faction is earned at Tier 3, so "never named" is the assertion: any
+    // sample carrying a faction is a sample where the flight graded her.
+    const match = new Match(missionMapById(PROLOGUE_SORROWGATE.mapId)!, {
+      mission: PROLOGUE_SORROWGATE,
+      fauna: false,
+      seed: SEED,
+    });
+    const nw: number[] = [];
+    // To just before the ping at 09:00, which resolves the whole chamber and
+    // is a different event entirely.
+    for (let tick = 0; tick < SIM.TICK_HZ * 535; tick++) {
+      const own = match.update(STEP_MS)?.get(PLAYER);
+      if (own === undefined) continue;
+      // She is the only party north-west of the arch.
+      for (const contact of own.contacts) {
+        if (contact.x < 1600 && contact.y < 1700) nw.push(contact.tier);
+      }
+    }
+    assert.ok(nw.length > 0, 'she is heard at least once, or there is no lesson');
+    assert.ok(
+      nw.every((tier) => tier <= ResolutionTier.Bearing),
+      `the Knight was graded: tiers ${[...new Set(nw)].join(', ')}`
     );
   });
 });
