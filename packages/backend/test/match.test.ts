@@ -194,13 +194,67 @@ describe('Echo Layer', () => {
     assert.ok(heardBack.length > 0, 'pinging must expose the pinger');
   });
 
-  it('stays inside its performance budget for a small match', () => {
+  it('stays inside its work budget for a small match in contact', () => {
+    // Counted work, not wall clock.
+    //
+    // This assertion used to read `worstEchoPassMs < SIM.ECHO_BUDGET_MS`, and
+    // it measured almost nothing it claimed to. Two things were wrong with it.
+    //
+    // The scenario did no detection: two navies at opposite spawns are pruned
+    // before any pair reaches a path walk, so the pass being timed was an idle
+    // one and the figure was dominated by first-pass JIT warmup. Measured on
+    // one idle machine, the same match cost 0.849 ms cold and 0.184 ms warm —
+    // and the "worst" pass was always the first.
+    //
+    // And a maximum of a wall-clock sample is the noisiest statistic available
+    // on a shared runner. The scenario below, run three times in one process,
+    // measured 2.035 ms, 1.204 ms and 0.247 ms for identical work — an eight-
+    // fold spread straddling the budget. It failed once in CI on exactly that.
+    //
+    // `contactPathWalksLastPass` counts the path integrals the pass actually
+    // performed, which is the expensive half of it and the thing a widening
+    // would move. It reported 107 on every one of those three runs. The residue
+    // read is guarded the same way (echoMarks.test.ts) and for the same reason:
+    // a counter is identical on every machine, so it fails only when the work
+    // really changed.
     const match = twoPlayerMatch();
-    advance(match, 3);
+    // Two fleets inside each other's earshot — the state where the Echo pass
+    // costs anything at all, and so the only state worth budgeting.
+    for (let i = 0; i < 12; i++) {
+      spawnUnit(match.world, {
+        kind: (i % 5) as UnitKind,
+        slot: 0,
+        faction: Faction.Bathyarch,
+        x: 5000 + (i % 4) * 120,
+        y: 5000 + Math.floor(i / 4) * 120,
+      });
+      spawnUnit(match.world, {
+        kind: (i % 5) as UnitKind,
+        slot: 1,
+        faction: Faction.Pelagia,
+        x: 5600 + (i % 4) * 120,
+        y: 5000 + Math.floor(i / 4) * 120,
+      });
+    }
+
+    let worstWalks = 0;
+    for (let i = 0; i < SIM.TICK_HZ * 3; i++) {
+      if (match.update(STEP_MS) === null) continue;
+      worstWalks = Math.max(worstWalks, match.contactPathWalksLastPass);
+    }
+
+    // Headroom over the observed 107 for ordinary tuning, and nowhere near
+    // enough to hide the pruning skip of #90 going away — without it every
+    // candidate pair walks, which for these fleets is several hundred.
+    const WALK_BUDGET = 160;
     assert.ok(
-      match.worstEchoPassMs < SIM.ECHO_BUDGET_MS,
-      `Echo pass worst case ${match.worstEchoPassMs.toFixed(3)}ms exceeded ` +
-        `${SIM.ECHO_BUDGET_MS}ms budget`
+      worstWalks <= WALK_BUDGET,
+      `Echo pass did ${worstWalks} path integrals, budget ${WALK_BUDGET}`
+    );
+    // The clock is still worth seeing, and still not worth failing on.
+    console.log(
+      `echo pass, small match in contact: ${worstWalks} path integrals worst pass, ` +
+        `${match.worstEchoPassMs.toFixed(3)} ms (budget ${SIM.ECHO_BUDGET_MS} ms)`
     );
   });
 });
