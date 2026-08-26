@@ -256,6 +256,31 @@ describe('the court adjourns, and reads the count it was left with', () => {
       'both readings are met when both tenders are on the Concourse'
     );
   });
+
+  it('holds the reading rather than handing it out once', () => {
+    // What `MatchRoom` re-sends to a player who was not there to hear it.
+    //
+    // `endMission` announces the court's reading to whoever is connected on the
+    // tick it adjourns. A player inside the reconnection grace window at that
+    // moment is not one of them — they dropped at 19:50, the mission closed at
+    // 20:00 without them, and they come back to a phase of Ended with nothing
+    // to show for twenty minutes of escorting. The room can only re-send it
+    // because `Match` *keeps* it, and this is the assertion that it does.
+    //
+    // Worth its own test because the sibling channel is the opposite: the
+    // mission view is drained on read (`takeMissionView`), and that drain is
+    // exactly what left the orders panel empty on a reload until the room
+    // learned to re-send it. A result that acquired the same behaviour would
+    // break the same way, silently, in a window nobody plays through twice.
+    const run = passiveRun();
+    const first = run.match.missionOver;
+    assert.ok(first !== null, 'the mission never resolved');
+    const second = run.match.missionOver;
+    assert.ok(second !== null, 'the reading was drained by being read');
+    assert.equal(second.outcome, first.outcome);
+    assert.equal(second.epilogue, first.epilogue);
+    assert.deepEqual(second.objectives, first.objectives);
+  });
 });
 
 describe('a tender does not move until it is loaded', () => {

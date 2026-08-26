@@ -526,6 +526,23 @@ export class MatchRoom extends Room<MatchState> {
     if (this.mission !== null && player.slot === this.mission.playerSlot) {
       const view = this.match.missionView;
       if (view !== null) client.send('mission', view);
+      // And the court's reading, if it has already been given.
+      //
+      // `endMission` announces once, to whoever is connected at the tick the
+      // court adjourns. A player inside the reconnection grace window at that
+      // moment is not one of them — they dropped at 19:50, the mission closed
+      // at 20:00 without them, and they come back to a phase of Ended with
+      // nothing to show for twenty minutes of escorting. The result is held on
+      // the match rather than only broadcast, so it can simply be re-sent.
+      const resolution = this.match.missionOver;
+      if (resolution !== null) {
+        client.send('missionOver', {
+          missionId: this.mission.id,
+          outcome: resolution.outcome,
+          epilogue: resolution.epilogue,
+          objectives: resolution.objectives,
+        });
+      }
     }
   }
 
