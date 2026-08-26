@@ -22,6 +22,7 @@ import {
   DEPTH,
   Faction,
   HarvestThrottle,
+  type HarvestIdleReason,
   PRODUCIBLE,
   ResourceKind,
   SIM,
@@ -597,6 +598,7 @@ export class Match {
     });
     // Income from second zero: the harvester self-assigns the nearest field.
     Harvester.mode[harvester] = HarvestMode.ToNode;
+    Harvester.idleReason[harvester] = 0;
   }
 
   // --- Commands ------------------------------------------------------------
@@ -671,7 +673,11 @@ export class Match {
     MoveOrder.active[eid] = 1;
     // A manual move overrides standing behaviour: stop chasing, stop the loop.
     if (hasComponent(this.world, Weapon, eid)) Weapon.orderedTargetEid[eid] = 0;
-    if (hasComponent(this.world, Harvester, eid)) Harvester.mode[eid] = HarvestMode.Idle;
+    if (hasComponent(this.world, Harvester, eid)) {
+      Harvester.mode[eid] = HarvestMode.Idle;
+      // Chosen, not stalled: a move order is the player parking the hull.
+      Harvester.idleReason[eid] = 0;
+    }
   }
 
   /** Attack a contact the player has actually heard, by its opaque handle. */
@@ -864,6 +870,7 @@ export class Match {
     clearQueue(this.world, eid);
     Harvester.nodeEid[eid] = nodeEid;
     Harvester.mode[eid] = HarvestMode.ToNode;
+    Harvester.idleReason[eid] = 0;
   }
 
   /** docs/economy.md §3 — how loud am I willing to be paid. */
@@ -1376,12 +1383,23 @@ export class Match {
     // 60 Hz — so a tick's worth of them accumulates and ships together.
     const eventsBySlot = new Map<number, SelfEvent[]>();
     for (const slot of this.slots) eventsBySlot.set(slot, []);
+    // One event per (kind, entity) per pass. A sustained fauna bite raises
+    // Damaged on every one of the twelve sim ticks between snapshots, and all
+    // twelve mean one fact: this hull is being hit. The 60 Hz channel is for
+    // raising events cheaply; collapsing them is this drain's job.
+    const seen = new Set<number>();
     for (const pending of this.world.selfEvents) {
-      if (!hasComponent(this.world, Owner, pending.eid)) continue;
-      const bucket = eventsBySlot.get(Owner.slot[pending.eid]!);
+      // `pending.slot`, never a fresh Owner lookup: the entity may have been
+      // reaped since the event was raised, and the blow that killed a hull is
+      // the one its owner most needs told about.
+      const bucket = eventsBySlot.get(pending.slot);
       if (bucket === undefined) continue;
+      const key = pending.eid * 8 + pending.kind;
+      if (seen.has(key)) continue;
+      seen.add(key);
       const event: SelfEvent = { kind: pending.kind, unitId: pending.eid };
       if (pending.bearing !== undefined) event.bearing = pending.bearing;
+      if (pending.idleReason !== undefined) event.idleReason = pending.idleReason;
       bucket.push(event);
     }
     this.world.selfEvents.length = 0;
@@ -1484,6 +1502,11 @@ export class Match {
         unit.cargo = Harvester.cargo[eid]!;
         unit.cargoKind = Harvester.cargoKind[eid] as ResourceKind;
         unit.throttle = Harvester.throttle[eid] as HarvestThrottle;
+        // Stalled-with-reason only: a parked or fresh hull carries no reason,
+        // so `idle` stays absent for every quiet the player chose (§5).
+        if (Harvester.mode[eid] === HarvestMode.Idle && Harvester.idleReason[eid]! > 0) {
+          unit.idle = (Harvester.idleReason[eid]! - 1) as HarvestIdleReason;
+        }
       }
       out.push(unit);
     }

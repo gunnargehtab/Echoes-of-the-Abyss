@@ -1077,6 +1077,14 @@ export const HAZARDS = {
 export const PERSISTENCE = {
   /** Tier 1-2 contacts linger as ghost markers, then fade. */
   GHOST_MARKER_DECAY_S: 20,
+  /**
+   * TUNABLE — what one "engagement" is, for the under-fire alert
+   * (docs/ui-ux.md §5, §11): a hull hit again within this many seconds is the
+   * same fight, and raises nothing new. The log records the first blow of an
+   * engagement rather than every round of it, and the cue and the log share
+   * this number so the ear and the record cannot disagree.
+   */
+  UNDER_FIRE_REARM_S: 10,
   /** Echo Marks: acoustic residue left on the terrain layer. */
   BATTLE_SITE_S: 90,
   DESTROYED_STRUCTURE_S: 180,

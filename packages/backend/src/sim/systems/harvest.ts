@@ -18,8 +18,10 @@ import {
   Faction,
   HADRON,
   HARVEST_THROTTLE,
+  HarvestIdleReason,
   RESOURCE,
   ResourceKind,
+  SelfEventKind,
   structureStatsFor,
   type StructureKind,
 } from '@echoes/shared';
@@ -36,9 +38,20 @@ import {
   Structure,
   UnderConstruction,
 } from '../components.ts';
-import { economyFor, type SimWorld } from '../world.ts';
+import { economyFor, raiseSelfEvent, type SimWorld } from '../world.ts';
 
 const harvesters = defineQuery([Harvester, Position, MoveOrder, Owner]);
+
+/**
+ * A harvester runs out of work (docs/ui-ux.md §5). The reason is recorded on
+ * the component so the snapshot can keep saying it, and the event marks the
+ * moment so the notice fires once — the state persists, the news does not.
+ */
+function goIdle(world: SimWorld, eid: number, reason: HarvestIdleReason): void {
+  Harvester.mode[eid] = HarvestMode.Idle;
+  Harvester.idleReason[eid] = reason + 1;
+  raiseSelfEvent(world, { kind: SelfEventKind.HarvesterIdle, eid, idleReason: reason });
+}
 const nodes = defineQuery([ResourceNode, Position]);
 const structures = defineQuery([Structure, Owner, Position, Health]);
 
@@ -160,7 +173,11 @@ export function harvestSystem(world: SimWorld): void {
         Harvester.nodeEid[eid] = node;
         if (node === 0) {
           // The map is mined out; whatever is aboard is still worth banking.
-          Harvester.mode[eid] = Harvester.cargo[eid]! > 0 ? HarvestMode.ToDepot : HarvestMode.Idle;
+          if (Harvester.cargo[eid]! > 0) {
+            Harvester.mode[eid] = HarvestMode.ToDepot;
+          } else {
+            goIdle(world, eid, HarvestIdleReason.MinedOut);
+          }
           continue;
         }
       }
@@ -236,8 +253,9 @@ export function harvestSystem(world: SimWorld): void {
       depot = nearestDepot(world, slot, x, y);
       Harvester.depotEid[eid] = depot;
       if (depot === 0) {
-        // Nowhere to unload — no Bastion means we are being eliminated anyway.
-        Harvester.mode[eid] = HarvestMode.Idle;
+        // Nowhere to unload. Still told (docs/ui-ux.md §5): losing the last
+        // yard mid-haul is exactly the off-screen fact the notice exists for.
+        goIdle(world, eid, HarvestIdleReason.NoDepot);
         continue;
       }
     }
@@ -290,13 +308,14 @@ export function harvestSystem(world: SimWorld): void {
 
       Harvester.cargo[eid] = 0;
       MoveOrder.active[eid] = 0;
-      Harvester.mode[eid] = nodeAlive(world, Harvester.nodeEid[eid]!)
-        ? HarvestMode.ToNode
-        : HarvestMode.Idle;
-      if (Harvester.mode[eid] === HarvestMode.Idle && nearestLiveNode(world, x, y) !== 0) {
+      if (nodeAlive(world, Harvester.nodeEid[eid]!)) {
+        Harvester.mode[eid] = HarvestMode.ToNode;
+      } else if (nearestLiveNode(world, x, y) !== 0) {
         // The assigned field died mid-haul but others remain: keep working.
         Harvester.nodeEid[eid] = 0;
         Harvester.mode[eid] = HarvestMode.ToNode;
+      } else {
+        goIdle(world, eid, HarvestIdleReason.MinedOut);
       }
     } else {
       MoveOrder.x[eid] = Position.x[depot]!;

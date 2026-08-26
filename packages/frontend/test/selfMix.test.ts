@@ -12,7 +12,7 @@
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { SelfEventKind, type SelfEvent } from '@echoes/shared';
+import { PERSISTENCE, SIM, SelfEventKind, type SelfEvent } from '@echoes/shared';
 import { SELF_BANDS, SILENT_MIX, bandFor, selfMixFor } from '../src/audio/selfNoise.ts';
 import {
   BUS_PRIORITY,
@@ -35,6 +35,8 @@ function recorder() {
     ret: (at, pan) => returns.push({ at, pan }),
     exposure: () => calls.push('exposure'),
     breakSilence: () => calls.push('breakSilence'),
+    underFire: () => calls.push('underFire'),
+    notice: () => calls.push('notice'),
   };
   return { sink, calls, worldGains, returns };
 }
@@ -226,5 +228,80 @@ describe('self mixer', () => {
     const { sink, returns } = recorder();
     new SelfMixer(sink).update(frame(), 0);
     assert.equal(returns.length, 0);
+  });
+});
+
+describe('under fire and the idle notice', () => {
+  it('plays one blow per engagement, not one per round', () => {
+    // docs/ui-ux.md §5: the log records the first blow of an engagement
+    // rather than every round of it, and the cue follows the same window.
+    const { sink, calls } = recorder();
+    const mixer = new SelfMixer(sink);
+
+    mixer.update(frame({ tick: 60, events: [event(SelfEventKind.Damaged, 7)] }), 0);
+    mixer.update(frame({ tick: 120, events: [event(SelfEventKind.Damaged, 7)] }), 1);
+    mixer.update(frame({ tick: 300, events: [event(SelfEventKind.Damaged, 7)] }), 5);
+    assert.equal(calls.filter((c) => c === 'underFire').length, 1, 'one fight, one blow heard');
+
+    // Ten *quiet* seconds re-arm it, counted from the last blow rather than
+    // the first: a battle that keeps landing rounds is one engagement however
+    // long it runs, and the cue only speaks again once it has actually let up.
+    const rearm = 300 + PERSISTENCE.UNDER_FIRE_REARM_S * SIM.TICK_HZ;
+    mixer.update(frame({ tick: rearm, events: [event(SelfEventKind.Damaged, 7)] }), 16);
+    assert.equal(calls.filter((c) => c === 'underFire').length, 2);
+  });
+
+  it('measures the engagement in ticks, so a hidden tab cannot desync it', () => {
+    // The renderer applies the same window to its log rows off the same tick.
+    // Were this the audio clock, it would freeze while the tab is hidden and
+    // the ear would disagree with the record by however long the player
+    // looked away.
+    const { sink, calls } = recorder();
+    const mixer = new SelfMixer(sink);
+
+    mixer.update(frame({ tick: 60, events: [event(SelfEventKind.Damaged, 7)] }), 0);
+    // A minute of ticks arrives while the audio clock has barely moved.
+    mixer.update(
+      frame({ tick: 60 + 60 * SIM.TICK_HZ, events: [event(SelfEventKind.Damaged, 7)] }),
+      0.05
+    );
+    assert.equal(calls.filter((c) => c === 'underFire').length, 2, 'the ticks decide, not the mix');
+  });
+
+  it('keeps engagements per hull, not per force', () => {
+    // Two hulls hit in the same window are two fights: the player must hear
+    // that the second one started.
+    const { sink, calls } = recorder();
+    const mixer = new SelfMixer(sink);
+
+    mixer.update(frame({ tick: 60, events: [event(SelfEventKind.Damaged, 7)] }), 0);
+    mixer.update(frame({ tick: 120, events: [event(SelfEventKind.Damaged, 8)] }), 1);
+    assert.equal(calls.filter((c) => c === 'underFire').length, 2);
+  });
+
+  it('counts only the blows that sounded', () => {
+    // The harness reads firedCounts to ask "did it sound" — a Damaged event
+    // folded into a running engagement was delivered, not played.
+    const { sink } = recorder();
+    const mixer = new SelfMixer(sink);
+    mixer.update(frame({ tick: 60, events: [event(SelfEventKind.Damaged, 7)] }), 0);
+    mixer.update(frame({ tick: 120, events: [event(SelfEventKind.Damaged, 7)] }), 1);
+    assert.equal(mixer.firedCounts['Damaged'], 1);
+  });
+
+  it('speaks the idle notice without ducking the water', () => {
+    // A chore may not claim a precedence rung: the ui bus sits outside the
+    // chain, and the water sounds exactly as it did before the notice.
+    const { sink, calls, worldGains } = recorder();
+    const mixer = new SelfMixer(sink);
+
+    mixer.update(frame(), 0);
+    const before = worldGains[worldGains.length - 1]!;
+    mixer.update(frame({ tick: 60, events: [event(SelfEventKind.HarvesterIdle, 9)] }), 1);
+    const after = worldGains[worldGains.length - 1]!;
+
+    assert.equal(calls.filter((c) => c === 'notice').length, 1);
+    assert.equal(after, before, 'the notice claims no rung');
+    assert.equal(mixer.activeRung, null);
   });
 });

@@ -3,7 +3,7 @@
  * back it.
  */
 
-import { createWorld, addEntity, addComponent, type IWorld } from 'bitecs';
+import { createWorld, addEntity, addComponent, hasComponent, type IWorld } from 'bitecs';
 import {
   CONSTRUCTION,
   CRYSTAL,
@@ -13,6 +13,7 @@ import {
   HarvestThrottle,
   ResourceKind,
   SelfEventKind,
+  type HarvestIdleReason,
   FaunaStage,
   faunaStatsFor,
   ordnanceStatsFor,
@@ -205,12 +206,29 @@ export interface SimWorld extends IWorld {
 export interface PendingSelfEvent {
   kind: SelfEventKind;
   eid: number;
+  /**
+   * Who is told, resolved here rather than at the drain.
+   *
+   * The drain runs at 5 Hz and `reap` runs at 60, so an entity raising an
+   * event can be gone — components and all — before anybody reads it. Asking
+   * `Owner.slot` at drain time therefore silently dropped exactly the events
+   * that matter most: the blow that killed the hull. Ownership is a fact at
+   * the moment of the event, so it is captured at the moment of the event.
+   */
+  slot: number;
   bearing?: number;
+  /** `HarvesterIdle` only — why the hull ran out of work. */
+  idleReason?: HarvestIdleReason;
 }
 
-/** Raise a self-event. No-op for an entity the world has already destroyed. */
-export function raiseSelfEvent(world: SimWorld, event: PendingSelfEvent): void {
-  world.selfEvents.push(event);
+/**
+ * Raise a self-event, addressed to whoever owns the entity right now.
+ *
+ * No-op for an entity with no owner: nothing to tell, and nobody to tell.
+ */
+export function raiseSelfEvent(world: SimWorld, event: Omit<PendingSelfEvent, 'slot'>): void {
+  if (!hasComponent(world, Owner, event.eid)) return;
+  world.selfEvents.push({ ...event, slot: Owner.slot[event.eid]! });
 }
 
 /**
@@ -587,6 +605,8 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   if (opts.kind === UnitKind.Harvester) {
     addComponent(world, Harvester, eid);
     Harvester.mode[eid] = HarvestMode.Idle;
+    // Fresh, not stalled: a hull awaiting its first order raises no notice.
+    Harvester.idleReason[eid] = 0;
     Harvester.cargo[eid] = 0;
     Harvester.nodeEid[eid] = 0;
     Harvester.depotEid[eid] = 0;

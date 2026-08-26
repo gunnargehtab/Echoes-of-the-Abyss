@@ -192,6 +192,8 @@ function detonate(world: SimWorld, eid: number, target: number, destroyed: numbe
 
   world.marks.add(EchoMarkKind.Battle, tx, ty, 1);
   Health.hp[target] = Health.hp[target]! - damage;
+  // The blow is reported to its owner (docs/ui-ux.md §5), same as a gun's.
+  raiseSelfEvent(world, { kind: SelfEventKind.Damaged, eid: target });
   if (Health.hp[target]! <= 0 && !destroyed.includes(target)) destroyed.push(target);
 
   Health.hp[eid] = 0;
@@ -476,6 +478,10 @@ function blast(
     // minefield kills in numbers or not at all: one mine is a warning.
     const share = 1 - distance / options.radiusM;
     Health.hp[other] = Health.hp[other]! - options.damage * share;
+    // Every hull the blast reached is told (docs/ui-ux.md §5) — structures
+    // included, since a base under mine attrition is exactly the off-screen
+    // fight the alert exists for.
+    raiseSelfEvent(world, { kind: SelfEventKind.Damaged, eid: other });
     if (Health.hp[other]! <= 0 && !destroyed.includes(other)) destroyed.push(other);
   }
 }
