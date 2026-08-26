@@ -31,6 +31,7 @@ import {
   type LobbyView,
   type MissionLine,
 } from '../net/GameClient.ts';
+import { resolveBindings } from '../input/bindings.ts';
 import { loadSettings, subscribeSettings, type Settings } from '../settings/store.ts';
 
 /** Longest log a player will ever scroll back through. */
@@ -290,6 +291,10 @@ export function GameCanvas({ playerName, mapId, missionId, resume, onExit }: Gam
         );
         audio.setSpatialisation(settings.mono ? 'mono' : 'stereo');
         activeRenderer.setPrecedenceMode(settings.visualFirst ? 'visual-first' : 'ear-first');
+        // §11's full rebinding. Applied through the same subscription as the
+        // rest, so rebinding from the esc menu takes effect without leaving
+        // the water — a binding you cannot try is a binding you cannot judge.
+        activeRenderer.setBindings(resolveBindings(settings.bindingLayout, settings.bindings));
       };
       applySettings(loadSettings());
       // Nothing writes settings while a match is on screen today, but the

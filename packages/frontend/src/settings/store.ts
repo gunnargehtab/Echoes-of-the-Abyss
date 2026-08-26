@@ -12,6 +12,7 @@
  * cannot boot because JSON.parse threw is a bug.
  */
 
+import { ACTIONS, DEFAULT_BINDINGS, type Bindings, type LayoutName } from '../input/bindings.ts';
 import type { TrimBus } from '../audio/engine.ts';
 
 export interface Settings {
@@ -28,6 +29,15 @@ export interface Settings {
   mono: boolean;
   /** Visual-first preset — marks arrive at ≤ 30 ms, audio follows (§11). */
   visualFirst: boolean;
+  /**
+   * Which of §11's layouts the player started from. `custom` means they have
+   * moved something; the layouts themselves are kept as names rather than as
+   * a snapshot so a build that retunes the default layout retunes it for
+   * everyone who never edited it.
+   */
+  bindingLayout: LayoutName;
+  /** Bindings that differ from the layout. Merged over it, never replacing it. */
+  bindings: Bindings;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -38,6 +48,8 @@ export const DEFAULT_SETTINGS: Settings = {
   contactBoostDb: 0,
   mono: false,
   visualFirst: false,
+  bindingLayout: 'default',
+  bindings: { ...DEFAULT_BINDINGS },
 };
 
 const STORAGE_KEY = 'echoes.settings';
@@ -78,7 +90,32 @@ function sanitise(raw: unknown): Settings {
         : 0,
     mono: record.mono === true,
     visualFirst: record.visualFirst === true,
+    bindingLayout:
+      record.bindingLayout === 'oneHanded' || record.bindingLayout === 'custom'
+        ? record.bindingLayout
+        : 'default',
+    bindings: sanitiseBindings(record.bindings),
   };
+}
+
+/**
+ * Coerce a stored binding table.
+ *
+ * Every action falls back to its default independently, so a record written
+ * before an action existed gains that action's default rather than leaving it
+ * unbound — an unbound action is a control the player cannot reach and cannot
+ * see is missing. Non-string values are simply ignored: storage is a place
+ * other code writes to, and a number where a code belongs should cost the
+ * player one binding, not the whole settings record.
+ */
+function sanitiseBindings(raw: unknown): Bindings {
+  const stored = (typeof raw === 'object' && raw !== null ? raw : {}) as Record<string, unknown>;
+  const merged = { ...DEFAULT_BINDINGS };
+  for (const { action } of ACTIONS) {
+    const code = stored[action];
+    if (typeof code === 'string' && code.length > 0) merged[action] = code;
+  }
+  return merged;
 }
 
 export function loadSettings(): Settings {

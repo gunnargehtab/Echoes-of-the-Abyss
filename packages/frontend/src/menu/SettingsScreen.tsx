@@ -3,9 +3,9 @@
  *
  * Every control here wires to behaviour that already exists: the per-bus
  * trims and mono mode in the audio engine, the visual-first timing table in
- * the renderer. Key rebinding, colour-vision palettes, UI scale and reduced
- * motion are deliberately absent — each is its own issue, and a settings
- * screen that lists controls which do nothing would be the shell lying.
+ * the renderer, the binding table the rebinder edits. Nothing is listed until
+ * it works — a settings screen offering a control that does nothing is the
+ * shell lying, which is the one thing a settings screen must not do.
  *
  * Writes go through the settings store on every change; the match applies
  * them at mount (and live, once the esc menu of #187 exists to open this
@@ -19,6 +19,8 @@ import type { TrimBus } from '../audio/engine.ts';
 
 export interface SettingsScreenProps {
   onBack(): void;
+  /** Open the rebinder (#191). Its own screen: §9's table does not fit here. */
+  onControls(): void;
 }
 
 /** Display order and label per bus — the mix's own vocabulary. */
@@ -30,7 +32,7 @@ const BUS_ROWS: Array<{ bus: TrimBus; label: string; note: string }> = [
   { bus: 'ui', label: 'Interface', note: 'Confirmations and alerts' },
 ];
 
-export function SettingsScreen({ onBack }: SettingsScreenProps) {
+export function SettingsScreen({ onBack, onControls }: SettingsScreenProps) {
   const [settings, setSettings] = useState<Settings>(() => loadSettings());
 
   const patch = (change: Partial<Omit<Settings, 'version'>>) => {
@@ -118,10 +120,12 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
           </label>
         </div>
 
-        <p className="menu-note">
-          Key rebinding, colour-vision palettes, interface scale and reduced motion are on their
-          way; they are not listed until they work.
-        </p>
+        <button type="button" className="menu-subscreen" onClick={onControls}>
+          Controls
+          <span className="menu-subscreen-note">
+            Rebind every key, or switch to the one-handed layout
+          </span>
+        </button>
 
         <footer className="menu-foot">
           <button type="button" className="menu-back" onClick={onBack} autoFocus>

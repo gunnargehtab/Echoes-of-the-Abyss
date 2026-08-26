@@ -1397,3 +1397,169 @@ button.objectives-row:hover {
   letter-spacing: 0.08em;
   opacity: 0.6;
 }
+
+/* ---------------------------------------------------------------------------
+   The rebinder — docs/ui-ux.md §9, §11 (#191).
+
+   Tokens only, per graphics-standards.md gate 4: magenta is interactive, cyan
+   passive, and a clash is the one place the palette's warning colour earns its
+   place. A capturing button is magenta because it is the only thing on screen
+   waiting for the player.
+   ------------------------------------------------------------------------- */
+.menu-panel-wide {
+  width: min(760px, 100%);
+}
+
+.menu-subscreen {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--neon-magenta) 45%, transparent);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--neon-magenta) 7%, transparent);
+  color: var(--text-bright);
+  font: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu-subscreen:hover,
+.menu-subscreen:focus-visible {
+  background: color-mix(in srgb, var(--neon-magenta) 14%, transparent);
+  outline: none;
+}
+
+.menu-subscreen-note {
+  color: var(--text-dim);
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+}
+
+.menu-layouts {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.menu-layout {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--glass-stroke);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-bright);
+  font: inherit;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu-layout.active {
+  border-color: color-mix(in srgb, var(--neon-cyan) 60%, transparent);
+  background: color-mix(in srgb, var(--neon-cyan) 10%, transparent);
+}
+
+.menu-layout-note {
+  color: var(--text-dim);
+  font-size: 0.58rem;
+  letter-spacing: 0.03em;
+}
+
+/* A refusal and a clash warning share a treatment: both are the screen
+   telling the player something did not happen, which §7 requires it to do. */
+.menu-refusal {
+  margin: 0;
+  padding: 0.4rem 0.6rem;
+  border-left: 2px solid var(--neon-magenta);
+  background: color-mix(in srgb, var(--neon-magenta) 8%, transparent);
+  color: var(--text-bright);
+  font-size: 0.64rem;
+  line-height: 1.5;
+}
+
+.menu-bindings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  max-height: 52vh;
+  overflow-y: auto;
+  padding-right: 0.3rem;
+}
+
+.menu-binding-group h3 {
+  margin: 0 0 0.35rem;
+  color: var(--text-cyan);
+  font-size: 0.58rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.menu-binding-row {
+  display: grid;
+  grid-template-columns: 11rem 1fr 7.5rem;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--glass-stroke) 45%, transparent);
+  font-size: 0.66rem;
+}
+
+.menu-binding-row.clash .menu-binding-key {
+  border-color: var(--neon-magenta);
+  color: var(--neon-magenta);
+}
+
+.menu-binding-label {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  color: var(--text-bright);
+}
+
+.menu-binding-hold {
+  color: var(--text-dim);
+  font-size: 0.52rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.menu-binding-hint {
+  color: var(--text-dim);
+  font-size: 0.6rem;
+}
+
+.menu-binding-key {
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--glass-stroke);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-bright);
+  font: inherit;
+  font-size: 0.64rem;
+  letter-spacing: 0.05em;
+  text-align: center;
+  cursor: pointer;
+}
+
+.menu-binding-key.capturing {
+  border-color: var(--neon-magenta);
+  background: color-mix(in srgb, var(--neon-magenta) 14%, transparent);
+  color: var(--neon-magenta);
+}
+
+/* Not a button, and it should not look like one: these cannot be moved. */
+.menu-binding-key.static,
+.menu-binding-row.fixed .menu-binding-key {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--glass-stroke) 60%, transparent);
+  color: var(--text-dim);
+  cursor: default;
+}

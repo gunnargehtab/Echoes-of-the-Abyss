@@ -18,6 +18,7 @@ import { GameCanvas } from './game/GameCanvas.tsx';
 import { BriefingScreen } from './menu/BriefingScreen.tsx';
 import { CreditsScreen } from './menu/CreditsScreen.tsx';
 import { SetupScreen } from './menu/SetupScreen.tsx';
+import { ControlsScreen } from './menu/ControlsScreen.tsx';
 import { SettingsScreen } from './menu/SettingsScreen.tsx';
 import { TitleScreen } from './menu/TitleScreen.tsx';
 import { storedMissionId } from './net/GameClient.ts';
@@ -28,6 +29,7 @@ type Screen =
   | { kind: 'setup'; mode: 'solo' | 'multiplayer' }
   | { kind: 'briefing'; missionId: string }
   | { kind: 'settings' }
+  | { kind: 'controls' }
   | { kind: 'credits' }
   | { kind: 'match'; name: string; mapId: string; resume: boolean; missionId?: string };
 
@@ -132,7 +134,12 @@ function App() {
           onBack={toTitle}
         />
       )}
-      {screen.kind === 'settings' && <SettingsScreen onBack={toTitle} />}
+      {screen.kind === 'settings' && (
+        <SettingsScreen onBack={toTitle} onControls={() => setScreen({ kind: 'controls' })} />
+      )}
+      {screen.kind === 'controls' && (
+        <ControlsScreen onBack={() => setScreen({ kind: 'settings' })} />
+      )}
       {screen.kind === 'credits' && <CreditsScreen onBack={toTitle} />}
       {screen.kind === 'match' && (
         <GameCanvas

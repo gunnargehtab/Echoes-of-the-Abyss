@@ -176,6 +176,43 @@ Implemented in the client scaffold today (`packages/frontend/src/game/EchoRender
 Still planned: a repeat-last-order binding, and ping-at-cursor — which needs a key that is
 not `F`, since that arms the Foundry.
 
+**Every key in that table is a default, not a fact.** §11 owes full rebinding, and the
+bindings are data (`packages/frontend/src/input/bindings.ts`) that the Controls screen
+edits — so the table above is what a player starts with rather than what they are stuck
+with. Four things are deliberately *not* rebindable, and each is the resolved half of a
+conflict this document settled:
+
+| Fixed | Why it cannot move |
+| --- | --- |
+| `1`–`9` | Control groups have no alternative route; production has the UNITS tab |
+| `Shift` | Queues an order, and adds to a selection |
+| `Ctrl` | Subtracts from a selection, and assigns a control group |
+| `Esc` | Drops a pending build, and is handled before every other key |
+
+The point is not tidiness. Each of those loses to a *mouse* interaction, so a player who
+rebound one would not find a key that stopped working — they would find that clicking had
+quietly changed meaning, with nothing to press and notice.
+
+### The one-handed layout
+
+§11 owes a one-handed layout, and the default is not one: `P`, `N`, `M` and `B` sit under a
+right hand that is on the mouse. The alternative layout moves exactly those four and leaves
+the nine that were already within reach alone, because a layout that also shuffles the keys
+a player knows is a worse layout.
+
+| Action | Standard | One-handed |
+| --- | --- | --- |
+| Active sonar | `P` | `Q` |
+| Harvest throttle | `V` | `E` |
+| Noisemaker | `N` | `Z` |
+| Mine | `M` | `X` |
+| Faction structure | `B` | `V` |
+
+Everything else — `Space`, `A`, `D`, `C`, `R`, `F`, `T`, `G` and `Alt` — is unchanged.
+Control groups are the one thing this cannot fix: the digits are fixed for the reason above,
+and `6`–`9` are out of reach. That is a real limitation of playing one-handed rather than
+something the layout is hiding.
+
 **Two bindings this table settles, because the document previously specified both sides of
 a conflict.** Order queueing and the ping-cost preview were both assigned to `Shift`;
 queueing keeps it, as the RTS convention and by far the more frequent action, and the
@@ -345,7 +382,8 @@ What the current client implements against this spec, so nobody re-implements wh
 | Precedence Law — mark fade-in, ducking chain | Implemented — the visual-first preset is a settings toggle (§14) |
 | Echo Mark residue, drawn and voiced | Implemented — server-resolved against HYD, so a client only holds what it could hear |
 | Tier-4 acquisition brackets | Implemented — the visual half of the lock tone |
-| Accessibility presets and palettes | Partial — mono and visual-first are settings toggles (§14); colour-vision palettes, UI scale and reduced motion not started |
+| Accessibility presets and palettes | Partial — mono, visual-first and full rebinding are settings (§14); colour-vision palettes, UI scale and reduced motion not started |
+| Full rebinding, and the one-handed layout | Implemented (#191) — bindings are data, the Controls screen edits them, reserved codes refuse capture |
 | Box select, control groups, order queue | Implemented |
 | The shell — title, setup, briefing, settings, credits | Implemented (§14) |
 | Mission runtime and the prologue | Implemented (#190) — one mission; the campaign entry is still a disabled placeholder |

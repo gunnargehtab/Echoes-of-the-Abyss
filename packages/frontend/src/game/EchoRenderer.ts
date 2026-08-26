@@ -77,6 +77,13 @@ import {
   UI,
   sigColor,
 } from './palette.ts';
+import {
+  actionFor,
+  BUILD_ACTION_KIND,
+  DEFAULT_BINDINGS,
+  keyLabel,
+  type Bindings,
+} from '../input/bindings.ts';
 import { FACTION_NAME } from './factions.ts';
 import type { ContactAudioEntry, ContactAudioFrame } from '../audio/contactMixer.ts';
 import type { PingReturn, SelfAudioFrame } from '../audio/selfMixer.ts';
@@ -343,14 +350,10 @@ const DIGIT_KEYS: Record<string, number> = {
   Digit9: 9,
 };
 
-/** Build hotkeys: R refinery, F foundry, T turret, G vent tap. */
-const BUILD_KEYS: Record<string, StructureKind> = {
-  KeyR: StructureKind.Refinery,
-  KeyF: StructureKind.Foundry,
-  KeyT: StructureKind.SentinelTurret,
-  // G for generator. V, P and D are already spoken for, and T is the turret.
-  KeyG: StructureKind.VentTap,
-};
+// Build hotkeys used to live here as an `e.code` table. They are bindings now
+// (`input/bindings.ts`), because §11 commits to full rebinding and a literal
+// in a key handler is a binding no screen can edit. `BUILD_ACTION_KIND` maps
+// the four build actions onto the structures they arm.
 
 const THROTTLE_LABEL: Record<HarvestThrottle, string> = {
   [HarvestThrottle.Idle]: 'idle',
@@ -672,6 +675,15 @@ export class EchoRenderer {
    * which is a conflict in the doc rather than a choice. Alt was free.
    */
   private previewPing = false;
+  /**
+   * The live binding table — §11's full rebinding, as the renderer sees it.
+   *
+   * Defaults rather than undefined so a renderer constructed without the shell
+   * ever calling `setBindings` still plays: the headless harness drives this
+   * class directly, and a keyboard that does nothing would look like a
+   * renderer bug rather than a missing call.
+   */
+  private bindings: Bindings = { ...DEFAULT_BINDINGS };
 
   /** Drag-select rectangle in screen space, null when not dragging. */
   private marquee: { x0: number; y0: number; x1: number; y1: number } | null = null;
@@ -1083,11 +1095,31 @@ export class EchoRenderer {
     };
 
     const onKeyDown = (e: KeyboardEvent) => {
+      // Escape first and unconditionally — it is not a binding (§9), it is the
+      // way out of a pending build, and a way out you have to aim for is not
+      // one. `RESERVED_CODES` is what stops a rebinder taking it.
       if (e.code === 'Escape') {
         this.pendingBuild = null;
         return;
       }
-      const buildKind = BUILD_KEYS[e.code];
+      // Digits are control groups (docs/ui-ux.md §9), Ctrl to assign. They
+      // used to produce units; production keeps its command-bar buttons, and
+      // the doc's binding wins because control groups have no alternative
+      // route while production does. Also unbindable, for that reason.
+      const digit = DIGIT_KEYS[e.code];
+      if (digit !== undefined) {
+        this.controlGroup(digit, e.ctrlKey || e.metaKey);
+        return;
+      }
+
+      const action = actionFor(this.bindings, e.code);
+      if (action === null) return;
+
+      // Construction arms before the selection check: §9 gives the build keys
+      // no selection requirement, and a player with nothing selected still
+      // means to place a refinery.
+      const buildKind =
+        action === 'buildSignature' ? FACTION_STRUCTURE[this.faction] : BUILD_ACTION_KIND[action];
       if (buildKind !== undefined) {
         // Refused with the reason attached, rather than arming a placement
         // ghost for a click the server will drop. §7 forbids the silent drop,
@@ -1097,58 +1129,54 @@ export class EchoRenderer {
         this.pendingBuild = buildKind;
         return;
       }
-      // B arms the faction's signature structure, when its navy has one —
-      // the kind depends on who is playing, so it cannot live in BUILD_KEYS.
-      if (e.code === 'KeyB') {
-        const signature = FACTION_STRUCTURE[this.faction];
-        if (signature !== undefined) {
-          if (this.refusedByMission('construction')) return;
-          this.pendingBuild = signature;
-          return;
-        }
-      }
-      // Digits are control groups (docs/ui-ux.md §9), Ctrl to assign. They
-      // used to produce units; production keeps its command-bar buttons, and
-      // the doc's binding wins because control groups have no alternative
-      // route while production does.
-      const digit = DIGIT_KEYS[e.code];
-      if (digit !== undefined) {
-        this.controlGroup(digit, e.ctrlKey || e.metaKey);
+      // A faction with no signature structure has nothing to arm, and the key
+      // is simply inert rather than arming somebody else's building.
+      if (action === 'buildSignature') return;
+
+      // The preview is a hold, and it is the one action that works with an
+      // empty selection — it costs nothing to look.
+      if (action === 'pingPreview') {
+        e.preventDefault();
+        this.previewPing = true;
         return;
       }
 
       if (this.selected.size === 0) return;
 
-      if (e.code === 'Space') {
-        e.preventDefault();
-        this.commandToggleSilent();
-      } else if (e.code === 'KeyP') {
-        this.commandPing();
-      } else if (e.code === 'KeyV') {
-        this.commandCycleThrottle();
-      } else if (e.code === 'KeyN') {
-        this.commandNoisemaker();
-      } else if (e.code === 'KeyM') {
-        this.commandLayMine();
-      } else if (e.code === 'KeyC') {
-        this.commandDepthCharge();
-      } else if (e.code === 'KeyD') {
-        // D dives, A ascends. Mnemonic beats convention here: the camera is on
-        // the middle mouse button and the wheel, so WASD is not spoken for.
-        this.commandDepthStep(1);
-      } else if (e.code === 'KeyA') {
-        this.commandDepthStep(-1);
-      } else if (e.code === 'AltLeft' || e.code === 'AltRight') {
-        // Hold Alt to preview what a ping would cost you. This lived on Shift
-        // until Shift was needed for order queueing, which is the more
-        // frequent action and the one the RTS convention expects there.
-        e.preventDefault();
-        this.previewPing = true;
+      switch (action) {
+        case 'silentRunning':
+          e.preventDefault();
+          this.commandToggleSilent();
+          return;
+        case 'ping':
+          this.commandPing();
+          return;
+        case 'throttle':
+          this.commandCycleThrottle();
+          return;
+        case 'noisemaker':
+          this.commandNoisemaker();
+          return;
+        case 'mine':
+          this.commandLayMine();
+          return;
+        case 'depthCharge':
+          this.commandDepthCharge();
+          return;
+        case 'dive':
+          // Dive is down and rise is up. Mnemonic beats convention here: the
+          // camera is on the middle mouse button and the wheel, so WASD is not
+          // spoken for.
+          this.commandDepthStep(1);
+          return;
+        case 'rise':
+          this.commandDepthStep(-1);
+          return;
       }
     };
 
     const onKeyUp = (e: KeyboardEvent) => {
-      if (e.code === 'AltLeft' || e.code === 'AltRight') this.previewPing = false;
+      if (actionFor(this.bindings, e.code) === 'pingPreview') this.previewPing = false;
     };
 
     canvas.addEventListener('contextmenu', onContextMenu);
@@ -1611,6 +1639,25 @@ export class EchoRenderer {
     return buttons;
   }
 
+  /**
+   * The build keys as currently bound, for the hint bar.
+   *
+   * Read from the table rather than written as `R/F/T/B`, because a hint that
+   * names a key the player has moved is worse than no hint: §7 rules out the
+   * silent refusal, and a *confidently wrong* instruction is the same failure
+   * wearing a better coat.
+   */
+  private buildKeyHint(): string {
+    const codes = [
+      this.bindings.buildRefinery,
+      this.bindings.buildFoundry,
+      this.bindings.buildTurret,
+      this.bindings.buildVentTap,
+    ];
+    if (FACTION_STRUCTURE[this.faction] !== undefined) codes.push(this.bindings.buildSignature);
+    return codes.map(keyLabel).join('/');
+  }
+
   private barText(index: number): Text {
     let text = this.barTexts[index];
     if (text === undefined) {
@@ -2017,6 +2064,18 @@ export class EchoRenderer {
    * check, and the client is not where the rule lives. It is what lets the
    * HUD say *why* instead of a key press vanishing into the socket.
    */
+  /**
+   * Install a binding table (docs/ui-ux.md §11). Live: the settings store's
+   * `subscribe` calls this mid-match, so a player who rebinds in the esc menu
+   * does not have to leave the water to find out whether it suits them.
+   */
+  setBindings(bindings: Bindings): void {
+    this.bindings = { ...bindings };
+    // A preview held down when its key moved would stick on forever, because
+    // the keyup that would have cleared it names a code nothing matches now.
+    this.previewPing = false;
+  }
+
   setMissionLocks(locks: AbilityLock[]): void {
     this.missionLocks = locks;
   }
@@ -4070,7 +4129,7 @@ export class EchoRenderer {
     if (this.selected.size === 0) {
       if (this.isTouch) return 'tap select  ·  drag pan  ·  pinch zoom';
       return canBuild
-        ? 'LMB drag select  ·  MMB pan  ·  R/F/T/B build  ·  1-9 groups  ·  wheel zoom'
+        ? `LMB drag select  ·  MMB pan  ·  ${this.buildKeyHint()} build  ·  1-9 groups  ·  wheel zoom`
         : 'LMB drag select  ·  MMB pan  ·  1-9 groups  ·  wheel zoom';
     }
     const structure = this.structures.find((s) => this.selected.has(s.id));
@@ -4078,7 +4137,7 @@ export class EchoRenderer {
       const queue = structure.queue.length > 0 ? `  ·  queue ${structure.queue.length}` : '';
       const name = structureStatsFor(structure.kind).name;
       if (this.isTouch || !canBuild) return `${name}${queue}`;
-      return `${name}${queue}  ·  UNITS tab to produce  ·  R/F/T/B build`;
+      return `${name}${queue}  ·  UNITS tab to produce  ·  ${this.buildKeyHint()} build`;
     }
     const harvester = this.units.find((u) => this.selected.has(u.id) && u.throttle !== undefined);
     if (harvester !== undefined) {
