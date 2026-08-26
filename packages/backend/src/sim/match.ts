@@ -351,6 +351,11 @@ export class Match {
     return this.missionRuntime?.takeView() ?? null;
   }
 
+  /** The mission view as it stands, for a client that has just (re)joined. */
+  get missionView(): MissionView | null {
+    return this.missionRuntime?.currentView ?? null;
+  }
+
   /** Authored lines a `say` beat produced since the last drain. */
   takeMissionLines(): MissionLine[] {
     return this.missionRuntime?.takeLines() ?? [];

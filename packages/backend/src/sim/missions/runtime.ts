@@ -165,6 +165,8 @@ export class MissionRuntime {
   private cursor = 0;
   private debtS = 0;
   private view: MissionView | null = null;
+  /** The last view built, kept for a client that needs it re-sent. */
+  private latest: MissionView | null = null;
   private viewKey = '';
   private resolution: MissionResolution | null = null;
   /** A resolve beat has fired; the mission closes once this tick is derived. */
@@ -322,6 +324,14 @@ export class MissionRuntime {
     const view = this.view;
     this.view = null;
     return view;
+  }
+
+  /**
+   * The current view, without draining it — for a client that has just
+   * (re)joined and missed every edge so far.
+   */
+  get currentView(): MissionView | null {
+    return this.latest;
   }
 
   /** Authored lines a `say` beat produced since the last drain. */
@@ -699,6 +709,13 @@ export class MissionRuntime {
     // here would defeat the whole mechanism and send six thousand messages to
     // say nothing changed. Debt is rounded for the same reason: it decays
     // continuously and the panel shows whole seconds.
+    // Kept whether or not it changed, and never drained. `view` is the *edge*
+    // — what to send because something moved — and a client that was not
+    // connected for that edge has no way to ask for it again. A player who
+    // reloads mid-mission has exactly that problem, and would otherwise sit in
+    // front of an orders panel that stays empty until the next objective
+    // happens to move, which can be minutes.
+    this.latest = next;
     const key = JSON.stringify({ ...next, tick: 0, debtS: Math.round(next.debtS) });
     if (key === this.viewKey) return;
     this.viewKey = key;

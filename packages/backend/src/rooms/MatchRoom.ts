@@ -514,6 +514,19 @@ export class MatchRoom extends Room<MatchState> {
     // charts. Depletion is never broadcast; see docs/economy.md.
     client.send('nodes', this.match.resourceNodes);
     client.send('assigned', { slot: player.slot, faction: player.faction });
+    // The mission's standing orders, if there are any.
+    //
+    // `takeMissionView` is an *edge* — it fires when something moves — and a
+    // client that was not connected for that edge cannot ask for it again. A
+    // player who reloads mid-mission would otherwise be looking at an empty
+    // orders panel until the next objective happened to change, which in the
+    // Prologue's quiet first ten minutes is most of the mission. Gated on the
+    // slot for the same reason the live send is: a mission view is resolved
+    // for one observer and is not broadcast material.
+    if (this.mission !== null && player.slot === this.mission.playerSlot) {
+      const view = this.match.missionView;
+      if (view !== null) client.send('mission', view);
+    }
   }
 
   /**
@@ -614,6 +627,12 @@ export class MatchRoom extends Room<MatchState> {
       const returning = this.state.players.get(client.sessionId);
       if (returning !== undefined) {
         returning.connected = true;
+        // The ground first. A reconnection is a *fresh* client on an old seat —
+        // the page reloaded, so the renderer has no terrain, no map bounds and
+        // therefore no minimap. Only `onJoin` used to send these, and a
+        // reconnection does not go through `onJoin`, so a resumed player was
+        // looking at their fleet floating over blank water.
+        this.sendMapData(client);
         this.sendMatchData(client);
         client.send('phase', { phase: this.state.phase });
       }

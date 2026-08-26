@@ -240,17 +240,28 @@ export function GameCanvas({ playerName, mapId, missionId, resume, onExit }: Gam
           // A rematch reuses the room and the connection, so nothing else
           // would tell the renderer its entity ids just became meaningless.
           setLobby((previous) => {
-            if (previous !== null && previous.phase !== view.phase) {
-              if (view.phase === MatchPhase.Playing) {
-                activeRenderer.resetForNewMatch();
-                setLog([]);
-                // The mission starts again from nothing too: a stale result
-                // would sit over the new run, and stale lines would read as
-                // having been spoken in it.
-                setMission(null);
-                setMissionLines([]);
-                setMissionOver(null);
-              }
+            // **Ended → Playing, and nothing else.** That transition is a
+            // rematch and only a rematch, which is the one case this clears
+            // for. It used to be "any phase change into Playing", and that
+            // caught a reconnection: a resumed client receives its `mission`
+            // payload immediately, then the schema catches up from its own
+            // default and reports a Lobby → Playing move that never happened —
+            // wiping the orders panel a few milliseconds after it arrived, on
+            // a match already ten minutes old. Lobby → Playing is a first
+            // start, where there is nothing stale to clear by construction.
+            if (
+              previous !== null &&
+              previous.phase === MatchPhase.Ended &&
+              view.phase === MatchPhase.Playing
+            ) {
+              activeRenderer.resetForNewMatch();
+              setLog([]);
+              // The mission starts again from nothing too: a stale result
+              // would sit over the new run, and stale lines would read as
+              // having been spoken in it.
+              setMission(null);
+              setMissionLines([]);
+              setMissionOver(null);
             }
             return view;
           });
