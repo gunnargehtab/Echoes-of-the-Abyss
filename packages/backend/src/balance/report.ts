@@ -33,6 +33,15 @@ export interface FactionSummary {
   faction: Faction;
   matches: number;
   wins: number;
+  /**
+   * Matches this faction played that ended with a winner — the win rate's
+   * denominator, and the only thing that makes the win rate readable.
+   *
+   * Carried per faction rather than per batch because a report is read one row
+   * at a time: #199 was opened off a 100% and a 0% that shared a denominator of
+   * one, printed in a table that showed neither.
+   */
+  decided: number;
   /** Wins as a fraction of decided matches — draws are excluded, not counted as losses. */
   winRate: number;
   /** Nodules banked plus spent, per simulated minute. */
@@ -86,12 +95,22 @@ export interface GuardRailVerdict {
 }
 
 /**
- * A rail nobody in this matchup could have breached.
+ * Decided matches a win-rate rail needs before it may say anything at all.
  *
- * Reported rather than omitted, so the table always shows every guard-rail the
- * docs name. A missing row reads as "fine"; an explicit "no data" reads as
- * "you did not ask this question", which is what actually happened.
+ * `docs/playtest-checklist.md` asks for N >= 10 runs per scenario, and that is
+ * the number here — but counted over *decided* matches rather than over
+ * matches, which is the distinction the rails were quietly getting wrong. A
+ * 30-match batch in which 29 timed out is one decided match, and the faction
+ * that won it reads 100% while the other three read 0%.
+ *
+ * Ten is also roughly where a shutout stops being an ordinary run of luck. In
+ * a four-seat batch a faction with an even chance loses every one of ten
+ * decided matches about 6% of the time (0.75^10); at six it is 18%, which is
+ * not a finding. #148 makes the same point from the other end — win rates at
+ * six to eight decided matches cannot separate factions.
  */
+const WIN_RATE_MIN_DECIDED = 10;
+
 /**
  * The verdict a rail measured on **win rates** is entitled to.
  *
@@ -103,16 +122,42 @@ export interface GuardRailVerdict {
  * was printed, correctly, in the same cell as a verdict that could not follow
  * from it.
  *
+ * Guarding only the empty case was not enough, and #199 is what that cost: the
+ * committed four-faction baseline announced three verdicts off **one** decided
+ * match, and an issue was opened against the faction those verdicts named. A
+ * rail that needs a win rate needs a minimum sample, not merely a non-zero one.
+ *
  * The other rails each guard their own emptiness (biomass income, long-match
  * count, first-blood sample). This exists so the two that read win rates guard
  * theirs the same way, and so a third one added later has an obvious thing to
  * call.
  */
 function fromWinRates(decided: number, breached: boolean): GuardRailVerdict['verdict'] {
-  if (decided === 0) return 'no data';
+  if (decided < WIN_RATE_MIN_DECIDED) return 'no data';
   return breached ? 'breached' : 'held';
 }
 
+/**
+ * The sample a win-rate rail is standing on, and whether it is enough.
+ *
+ * Printed inside the reading rather than left to the verdict, because "no
+ * data" from a batch of thirty matches is otherwise baffling — the thing that
+ * ran out was decided matches, not matches, and that is the sentence a reader
+ * needs.
+ */
+function decidedSample(decided: number): string {
+  return decided < WIN_RATE_MIN_DECIDED
+    ? `n=${decided} decided, needs ${WIN_RATE_MIN_DECIDED}`
+    : `n=${decided} decided`;
+}
+
+/**
+ * A rail nobody in this matchup could have breached.
+ *
+ * Reported rather than omitted, so the table always shows every guard-rail the
+ * docs name. A missing row reads as "fine"; an explicit "no data" reads as
+ * "you did not ask this question", which is what actually happened.
+ */
 function noSeat(risk: string, source: string, faction: string): GuardRailVerdict {
   return {
     risk,
@@ -166,6 +211,7 @@ export function summarise(results: MatchTelemetryResult[]): BatchSummary {
       faction,
       matches: rows.length,
       wins,
+      decided: decided.length,
       winRate: decided.length === 0 ? 0 : wins / decided.length,
       incomePerMinute: mean(rows.map((r) => r.player.nodulesEarned / lifetimeMinutes(r))),
       biomassPerMinute: mean(rows.map((r) => r.player.biomassEarned / lifetimeMinutes(r))),
@@ -250,7 +296,8 @@ function judge(results: MatchTelemetryResult[], factions: FactionSummary[]): Gua
       metric: 'Commune win rate, and nodules per minute per point of mean SIG',
       reading:
         `win ${pct(commune.winRate)} vs best rival ${pct(bestWinRate)}, ` +
-        `premium ${quietPremium(commune).toFixed(1)} vs ${bestPremium.toFixed(1)} (n=${decided})`,
+        `premium ${quietPremium(commune).toFixed(1)} vs ${bestPremium.toFixed(1)} ` +
+        `(${decidedSample(decided)})`,
       verdict: fromWinRates(decided, breached),
     });
   }
@@ -270,7 +317,7 @@ function judge(results: MatchTelemetryResult[], factions: FactionSummary[]): Gua
       metric: 'Consortium seconds tracked, against Consortium win rate',
       reading:
         `${consortium.secondsTracked.toFixed(0)} s tracked per match, ` +
-        `win ${pct(consortium.winRate)} (n=${decided})`,
+        `win ${pct(consortium.winRate)} (${decidedSample(decided)})`,
       verdict: fromWinRates(decided, loudest && worst),
     });
   }
@@ -292,7 +339,7 @@ function judge(results: MatchTelemetryResult[], factions: FactionSummary[]): Gua
       metric: 'Biomass per minute against final Drift Health',
       reading:
         `${directorate.biomassPerMinute.toFixed(1)}/min, ` +
-        `Drift Health median ${drift.median.toFixed(0)} (n=${decided})`,
+        `Drift Health median ${drift.median.toFixed(0)} (n=${drift.n})`,
       verdict: directorate.biomassPerMinute === 0 ? 'no data' : breached ? 'breached' : 'held',
     });
   }
@@ -390,6 +437,10 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
   const pct = (v: number): string => `${Math.round(v * 100)}%`;
   const dist = (d: Distribution): string =>
     `${d.median.toFixed(0)} (${d.p10.toFixed(0)}–${d.p90.toFixed(0)})`;
+  // A win rate over no decided matches is 0/0, and printing it as "0%" is the
+  // whole of #199: it reads as "lost every game" and it means "played none".
+  // The dash is not decoration — it is the only honest glyph for the cell.
+  const winRate = (f: FactionSummary): string => (f.decided === 0 ? '—' : pct(f.winRate));
 
   const lines: string[] = [];
   lines.push(`# ${title}`);
@@ -431,13 +482,13 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
   lines.push('## Per faction');
   lines.push('');
   lines.push(
-    '| Faction | Matches | Win rate | Nodules/min | Biomass/min | Mean SIG | Tracked, s | ' +
-      'Losses | Below the Shelf | Under the layer |'
+    '| Faction | Matches | Decided | Win rate | Nodules/min | Biomass/min | Mean SIG | ' +
+      'Tracked, s | Losses | Below the Shelf | Under the layer |'
   );
-  lines.push('| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |');
+  lines.push('| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |');
   for (const f of summary.factions) {
     lines.push(
-      `| ${FACTION_NAME[f.faction]} | ${f.matches} | ${pct(f.winRate)} | ` +
+      `| ${FACTION_NAME[f.faction]} | ${f.matches} | ${f.decided} | ${winRate(f)} | ` +
         `${f.incomePerMinute.toFixed(0)} | ${f.biomassPerMinute.toFixed(1)} | ` +
         `${f.meanPeakSig.toFixed(0)} | ${f.secondsTracked.toFixed(0)} | ` +
         `${f.lossesPerMatch.toFixed(1)} | ${pct(f.deepTimeShare)} | ${pct(f.belowLayerShare)} |`

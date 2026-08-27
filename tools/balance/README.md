@@ -28,7 +28,7 @@ node tools/balance/run.mjs --matchup consortium,commune --matches 10 \
 Both files are Markdown tables, so the pull request that changes the constant can carry the
 diff that justifies it.
 
-## Two things to know before trusting a number
+## Three things to know before trusting a number
 
 **The seed places the Drift and nothing else.** Terrain is authored, hazard timings come
 from site positions, combat rolls nothing, and the AI draws no dice. `--no-fauna` therefore
@@ -37,6 +37,13 @@ report when that happens.
 
 **"Held" is evidence, not proof.** It means the failure that guard-rail describes did not
 appear in these runs. The sample size is printed beside every verdict.
+
+**A win rate counts decided matches, and most batches are short of them.** Two rails read
+win rates, and a win rate is a ratio over matches that ended with a winner — not over matches
+run. A thirty-match batch in which twenty-nine timed out carries one decided match, and the
+faction that won it reads 100%. Both rails refuse to rule below ten decided matches and say
+so in their reading; the per-faction table prints the denominator in its own column, and a
+win rate over no decided matches prints as `—` rather than as `0%`.
 
 ## `baselines/`
 
