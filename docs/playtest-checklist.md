@@ -27,6 +27,7 @@ node tools/balance/run.mjs --help
 | Scenario name and seed; map, biome, PF | Report header — map id and every seed used |
 | Participants: faction, difficulty | `--matchup`, echoed per faction in the report |
 | N ≥ 10 runs per scenario | `--matches`, defaulting to 10 |
+| N ≥ 10 *decided* matches before a win rate is read | Enforced — the two win-rate guard-rails report "no data" below it, and the per-faction table prints the decided count |
 | Detection events aggregated | First contact, first classified enemy, seconds tracked |
 | Losses | Per-faction hull losses, and a per-kind ledger in the JSON |
 | Resource delta | Nodules, crystal and Biomass per minute, measured as gross income |
@@ -39,7 +40,7 @@ node tools/balance/run.mjs --help
 Output is Markdown so a constant change can be justified in a pull request with a diff
 rather than an assertion, and a JSON sibling carries the raw series for plotting.
 
-**Two properties to know before trusting a batch.**
+**Three properties to know before trusting a batch.**
 
 The seed reaches exactly one thing in the simulation: where the Drift is placed. Terrain is
 authored, hazard timings come from site positions, combat rolls nothing, and the AI draws no
@@ -48,6 +49,14 @@ warns and marks the report when that happens.
 
 A verdict of "held" means the failure that guard-rail names did not appear in these runs. It
 is evidence, not proof, and the sample size is printed beside it.
+
+A win rate counts *decided* matches, and most batches are short of them. Two of the
+guard-rails read win rates, and a win rate is a ratio over matches that ended with a winner
+rather than over matches run — so a thirty-match batch in which twenty-nine hit the time cap
+carries **one** decided match, and the faction that won it reads 100% while the other three
+read 0%. Both rails therefore refuse to rule below ten decided matches and say so in their
+reading (`n=1 decided, needs 10`), the per-faction table prints the denominator in a column
+of its own, and a win rate over no decided matches at all prints as `—` rather than as `0%`.
 
 ## A worked example — is Overburden a trap option?
 
@@ -79,14 +88,20 @@ harness exists to prevent. The suggestive part is that a 35% income *cut* did no
 may have helped — but suggestive is the correct word, and settling it needs a larger batch,
 more matchups, and ideally a Consortium mirror where the throttle is the only variable.
 
-**Read the guard-rail column, not just the verdict.** "Loud economies are unplayable" reads
-**breached** at cargo 1.4 and **held** at 1.0. The rule fires when the Consortium is *both*
-tracked the most and winning the least, and at 1.4 it leads the tracked column by eighteen
-seconds — 659 s against the Commune's 641 s — while winning 40% against 60%. Eighteen
-seconds out of six hundred is a tie, and four wins against six is a coin. So the verdict is
-resting on both halves of an AND that this sample cannot separate. The numbers are the
-reading; the word beside them is a tripwire, and this one is set finer than the measurement
-that feeds it.
+**Read the guard-rail column, not just the verdict.** "Loud economies are unplayable" read
+**breached** at cargo 1.4 and **held** at 1.0 when these two reports were taken. The rule
+fires when the Consortium is *both* tracked the most and winning the least, and at 1.4 it
+leads the tracked column by eighteen seconds — 659 s against the Commune's 641 s — while
+winning 40% against 60%. Eighteen seconds out of six hundred is a tie, and four wins against
+six is a coin. So the verdict was resting on both halves of an AND that this sample cannot
+separate. The numbers are the reading; the word beside them is a tripwire, and that one was
+set finer than the measurement that feeds it.
+
+The harness now enforces that itself. A rail that reads a win rate refuses to rule below ten
+decided matches, so the cargo-1.0 run — five wins across eight decided matches — would read
+**no data** rather than **held** if it were taken today. Both reports here predate the floor
+and are left as they were run; regenerate either with the command in its header to see the
+current verdict column.
 
 **A property this experiment found, and the bug it turned into.** The multiplier used to
 scale the *fill rate*, and against the fill rate it barely reached the economy at all: a hold

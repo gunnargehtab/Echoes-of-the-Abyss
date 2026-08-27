@@ -341,3 +341,121 @@ describe('a verdict never outruns its sample (#200)', () => {
     assert.doesNotMatch(markdown, /\*\*held\*\*/, 'and "held" is the same claim in the mirror');
   });
 });
+
+/**
+ * One real match, simulated once and shared by every fixture below.
+ *
+ * The batches those fixtures build vary exactly one field — who won — so every
+ * other number in them has to come from a match that actually happened; and
+ * simulating a fresh one per assertion would pay a quarter of a minute of
+ * wall clock each time to produce the same match again. Fauna is on and the
+ * cap is long enough for something to die, because a rail that reads first
+ * blood needs a first blood to read.
+ */
+let sample: ReturnType<typeof runMatch> | undefined;
+function sampleMatch(): ReturnType<typeof runMatch> {
+  sample ??= runMatch({ seats: DUEL, seed: 4244, maxMinutes: 1.5, fauna: true });
+  return sample;
+}
+
+describe('a win-rate verdict needs a sample, not merely a non-zero one (#199)', () => {
+  /**
+   * A batch of `matches` matches, `decided` of them won by the Commune.
+   *
+   * Constructed rather than simulated, because what is under test is the
+   * report's arithmetic and not the simulation's outcome — and because the
+   * failure being guarded against is precisely a verdict drawn from a handful
+   * of decided matches, which is expensive to reach honestly and trivial to
+   * build.
+   */
+  function batch(matches: number, decided: number): ReturnType<typeof summarise> {
+    const one = sampleMatch();
+    return summarise(
+      Array.from({ length: matches }, (_, i) => ({
+        ...one,
+        seed: 4244 + i,
+        winnerSlot: i < decided ? 1 : null,
+      }))
+    );
+  }
+
+  const winRateRails = ['Quiet economies simply win', 'Loud economies are unplayable'];
+
+  it('says no data below the floor, however many matches were run', () => {
+    // The shape of #199: a 30-match batch of which 29 timed out, reported as a
+    // 100% and three 0% win rates. Thirty matches is a respectable sample of
+    // something; it is one decided match of the thing a win rate measures.
+    const summary = batch(30, 1);
+    for (const risk of winRateRails) {
+      const rail = summary.guardRails.find((r) => r.risk === risk)!;
+      assert.equal(rail.verdict, 'no data', `"${risk}" ruled on one decided match`);
+    }
+  });
+
+  it('says why, in the units that ran out', () => {
+    // "No data" from a batch of thirty matches is baffling unless the reading
+    // names what was actually short, which was decided matches and not matches.
+    const rail = batch(30, 1).guardRails.find((r) => r.risk === 'Loud economies are unplayable')!;
+    assert.match(rail.reading, /n=1 decided, needs 10/);
+  });
+
+  it('lets a rail speak once the sample is there', () => {
+    // The floor has to be a floor and not a gag. One more decided match than
+    // the case below, and the same rail is entitled to an answer.
+    const short = batch(30, 9).guardRails.find((r) => r.risk === 'Quiet economies simply win')!;
+    const enough = batch(30, 10).guardRails.find((r) => r.risk === 'Quiet economies simply win')!;
+    assert.equal(short.verdict, 'no data');
+    assert.notEqual(enough.verdict, 'no data');
+    assert.match(enough.reading, /n=10 decided\)/, 'and it stops asking for more');
+  });
+
+  it('leaves the rails that never read a win rate alone', () => {
+    // The floor is about one kind of number. A rail keyed on first blood has
+    // its own sample and its own emptiness guard, and a batch that decided
+    // nothing is still a perfectly good sample of when things start dying.
+    const fauna = batch(30, 1).guardRails.find((r) => r.risk === 'Fauna decide matches')!;
+    assert.equal(fauna.verdict, 'held', 'first blood does not care who won');
+  });
+});
+
+describe('the per-faction table carries its own denominator (#199)', () => {
+  it('counts decided matches per faction', () => {
+    const one = sampleMatch();
+    const summary = summarise([
+      { ...one, winnerSlot: 1 },
+      { ...one, seed: 4246, winnerSlot: null },
+      { ...one, seed: 4247, winnerSlot: null },
+    ]);
+    const commune = summary.factions.find((f) => f.faction === Faction.Pelagia)!;
+    assert.equal(commune.matches, 3);
+    assert.equal(commune.decided, 1);
+    assert.equal(commune.winRate, 1, 'one win out of one decided match');
+  });
+
+  it('prints it beside the win rate, so a 100% cannot be read alone', () => {
+    const one = sampleMatch();
+    const markdown = toMarkdown(
+      summarise([
+        { ...one, winnerSlot: 1 },
+        { ...one, seed: 4249, winnerSlot: null },
+      ]),
+      'Denominator',
+      'test'
+    );
+    assert.match(markdown, /\| Faction \| Matches \| Decided \| Win rate \|/);
+    // Two matches, one of them decided, and the Commune won it: 100% of one.
+    assert.match(markdown, /\| Commune \| 2 \| 1 \| 100% \|/);
+  });
+
+  it('refuses to print a win rate over nothing at all', () => {
+    // 0/0 rendered as "0%" reads as "lost every game" and means "played none".
+    // That cell is what #199 was opened against.
+    const markdown = toMarkdown(
+      summarise([{ ...sampleMatch(), winnerSlot: null }]),
+      'Undecided',
+      'test'
+    );
+    assert.match(markdown, /\| Consortium \| 1 \| 0 \| — \|/);
+    assert.doesNotMatch(markdown, /\| 0 \| 0% \|/, 'a rate over no decided matches is not 0%');
+  });
+});

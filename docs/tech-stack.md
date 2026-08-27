@@ -596,13 +596,19 @@ Each risk the docs name is paired with a number that would detect it failing:
 | Quiet economies simply win | Commune win rate, and nodules per minute per point of mean SIG |
 | Loud economies are unplayable | Consortium seconds tracked, against Consortium win rate |
 | Directorate Biomass snowballs | Biomass per minute against final Drift Health |
-| Knights starve out of every long game | Hadron win rate, bucketed either side of the median match length |
+| Knights starve out of every long game | Hadron income against the field, in longer-than-median matches |
 | Fauna decide matches | First blood against first *classified enemy* |
 
 A rail the matchup cannot test reports "no data" rather than being omitted — a missing row
 reads as "fine", and that is not what happened. A verdict of "held" means the failure did
 not appear in these runs; it is evidence, not proof, and the sample size is printed beside
 it.
+
+The two rails that read a **win rate** also report "no data" below ten *decided* matches.
+A win rate is a ratio over matches that ended with a winner, not over matches run, and a
+batch that mostly times out has almost none of them: thirty matches with twenty-nine draws
+is one decided match, and the faction that won it reads 100%. Ten is the checklist's N ≥ 10,
+counted in the unit the rail actually divides by.
 
 ### `--set`, and why it is allowlisted
 
