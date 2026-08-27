@@ -100,6 +100,68 @@ first trip and a short match measures it. The harness found that, which is what 
 Both reports are committed under `tools/balance/baselines/`, each with the command that
 produced it in its header.
 
+## A second worked example — what is the AI's quiet actually buying?
+
+The change above made the throttle a real lever, and immediately made a second question
+answerable. `AiCommander` dropped its harvesters to Trickle whenever anything held a bearing
+on it, and held them there for as long as that stayed true. While the multiplier scaled the
+cut rate that reflex cost a few per cent. Once it scaled the load it cost 54% of an economy,
+and nothing in the loop asked whether that was worth it ([tech-stack.md](tech-stack.md), "it
+decides for itself whether being heard is worth paying to stop").
+
+The commander now waits for a bearing to be *held* for its doctrine's own number of seconds,
+treats a lapse shorter than one ping's reveal as a blink rather than a break, and ends a
+spell of quiet after ninety seconds on the grounds that a bearing which survived two harvest
+round trips is not being held by the harvesters. Thirty matches each side, same seeds, same
+map, same harness — the two trees differ in `ai/commander.ts` and `ai/doctrine.ts` and in
+nothing else:
+
+```bash
+# Before: run against main with those two files reverted to the reflex.
+node tools/balance/run.mjs --matchup consortium,commune,directorate,knights --matches 30   --seed 4000 --max-minutes 25 --out tools/balance/baselines/exposure-hold-before.md
+node tools/balance/run.mjs --matchup consortium,commune,directorate,knights --matches 30   --seed 4000 --max-minutes 25 --out tools/balance/baselines/four-faction-baseline.md
+```
+
+The Commune and the Directorate are the two navies whose doctrine drops. The Consortium and
+the Knights never do, and are the control:
+
+| Faction | Throttled down | Nodules/min | Tracked, s |
+| --- | --- | --- | --- |
+| Commune | 91% → **68%** | 55 → **67** | 739 → 722 |
+| Directorate | 78% → **58%** | 114 → **125** | 1104 → 1108 |
+| Consortium | 0% → 0% | 130 → 131 | 1110 → 1039 |
+| Knights | 0% → 0% | 182 → 177 | 1065 → 1053 |
+
+**What this supports.** The income the reflex was spending comes back — 22% for the Commune,
+10% for the Directorate — and the two navies that never throttle down do not move, which is
+the causal chain landing where it should. The interesting column is the third one. Tracked
+seconds were expected to *rise*: the whole trade is income for exposure, and buying less
+quiet should cost more of it. They did not move at all (739 → 722, 1,104 → 1,108). Read
+together with the first column, that says the fifth of an economy those commanders were
+handing over bought them nothing measurable — which is exactly the claim the ninety-second
+cap is built on. Exposure is a fact about the whole force, and a bearing held on a Bastion or
+a rallied army is not something a harvest throttle can quiet.
+
+**What this does not support.** Anything about win rates, and the sample size is not why.
+Twenty-nine of the thirty after-matches and twenty-seven of the thirty before-matches ended
+without a winner inside the cap, so the column rests on one and three decided matches
+respectively. **N ≥ 30 is necessary and not sufficient here**: on this matchup and this cap,
+running more matches buys more draws. Deciding a win rate for these four wants a shorter cap,
+a smaller matchup, or both — and it is worth saying plainly that the four-faction baseline
+has never been a win-rate instrument. It is an income and exposure instrument.
+
+It also says nothing about whether Trickle is the right *depth* of drop. The exposed throttle
+was deliberately left alone: moving the trigger and the price in one batch would leave
+neither of them measured. That is the next question, and it now has a column to be argued in.
+
+**A column that had to be added first.** None of the above was visible before this batch.
+Income and tracked seconds are consequences, and two very different policies — never
+dropping, and dropping for most of a match at 46% of the income — can land on similar income
+if the second also fields fewer haulers. The harness now integrates harvester-time spent
+below Standard and reports it as **Throttled down**, which is the lever itself rather than
+its effects. The precedent is `hullSecondsByZone`: a baseline that cannot see a mechanic will
+report confidently on matches that never exercised it.
+
 ## Human-only — nothing here can be automated, and none of it should be faked
 
 These are the questions the whole design rests on, and a metric that appeared to answer one
