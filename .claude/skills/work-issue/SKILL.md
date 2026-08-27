@@ -1,6 +1,6 @@
 ---
 name: work-issue
-description: Pick one open issue off the backlog, work it end to end, and open a pull request — the unattended loop. Use this when asked to work the backlog, pick up an issue, make progress on open issues, or when a scheduled Routine fires with no human watching. Prefer this over improvising a selection rule; the claim check and the open-PR cap are what keep two firings from colliding and what keep CI spend bounded.
+description: Pick one open issue off the backlog, work it end to end, and open a pull request — the unattended loop. When nothing is eligible, file one sub-issue off an epic instead, so the next run has work. Use this when asked to work the backlog, pick up an issue, make progress on open issues, or when a scheduled Routine fires with no human watching. Prefer this over improvising a selection rule; the claim check and the open-PR cap are what keep two firings from colliding and what keep CI spend bounded.
 ---
 
 # Working one issue, unattended
@@ -14,7 +14,7 @@ open PRs each burning a twenty-minute CI run.
 **The one thing this loop must not do is guess.** `docs/` is canonical and code
 transcribes it; when they disagree, that is a bug in one of them, and which one
 is a design call. An unattended session that picks a side and ships it has
-written a plausible wrong answer into the design bible. Step 6 is how you stop
+written a plausible wrong answer into the design bible. Step 7 is how you stop
 instead — and stopping with a good comment on the issue is a *successful* run,
 not a failed one.
 
@@ -34,7 +34,8 @@ ref, so either source alone will let you collide with work already in flight.
 ## 2. Stop early if the backlog is already saturated
 
 Count the open pull requests whose head ref starts with `claude/`. **If there
-are two or more, do nothing and end the run.** Say so plainly and exit.
+are two or more, do nothing and end the run.** Say so plainly and exit — do not
+fall through to step 4 and file an issue instead. A saturated backlog means stop.
 
 This cap, not the schedule, is what bounds cost. A full CI run is 15–22 minutes
 and this account has run out of Actions minutes before — the incident is
@@ -50,14 +51,54 @@ the oldest. Two exclusions, for different reasons:
 
 - `epic` issues are trackers for work spanning many PRs (#212 is twenty-eight
   campaign missions). There is no single PR that closes one, so an agent that
-  takes it produces a PR that cannot honestly say `Fixes`.
+  takes it produces a PR that cannot honestly say `Fixes`. Step 4 is what to do
+  with them instead.
 - Anything already claimed is someone else's — including an earlier you.
 
 Prefer `bug` over `enhancement` when the ages are close: a bug is a statement
 about behaviour that is already wrong, and its acceptance criteria are usually
 in the issue rather than in your judgement.
 
-## 4. Work it like any other change
+**Found one? Skip to step 5.** Only when step 3 comes up empty do you do step 4.
+
+## 4. When nothing is eligible, file one sub-issue off an epic
+
+An epic is not a reason to idle. `#212` carries eleven items under a
+`## Sub-issues` heading, and every one of them is a markdown checkbox rather
+than a real issue — `has_children` is false and the sub-issue list is empty. The
+author's intent is plain from the heading; nobody has done the filing. So do
+exactly one piece of it, and stop.
+
+1. Take the oldest open `epic`. Read its **existing sub-issues** — that list, not
+   the checkbox ticks, is the record of what has already been filed. A ticked box
+   means *done*; an unticked box with a sub-issue already linked means *filed*.
+   Never tick a box yourself.
+2. Walk its unchecked, unfiled boxes in order and take the first one that is
+   **concrete enough**: you can state its acceptance criteria, name the files or
+   docs it touches, and believe it is one PR's worth of work.
+3. Open a normal issue for it. Title and body in the register of the epic, the
+   epic's constraints restated where they bind, and a line saying which epic
+   box it came from. Label it by its nature — `enhancement`, `docs`, `infra`,
+   `bug` — and **never `epic`**, or the next run will skip it too.
+4. Link it to the epic with the sub-issue API. This is what stops the next
+   firing re-filing the same box, so it is not optional bookkeeping.
+5. **Stop.** Do not then work the issue you just filed. The gap until the next
+   firing is the window in which a human can look at the scope you chose, and
+   it only exists if you end the run here.
+
+Those boxes are wildly uneven, and telling them apart is the whole skill in this
+step. "Coral Ruins mid-match biome change" is a scoped system with a named write
+path and a doc that marks it unbuilt. "The twenty-eight mission definitions" is
+not an issue. "Faction campaign specifications — the documents first" says in its
+own title that prose comes before code, so the issue it deserves is a doc issue
+for *one* specification, not a code one.
+
+When no box is concrete enough, **comment on the epic** naming the box you would
+have taken and the scoping decision it needs from a human, and end the run. That
+comment is a good outcome. Filing a vague issue is not — it converts a design
+question into a work item that some later run will treat as settled.
+
+## 5. Work it like any other change
 
 Branch **`claude/issue-<n>-<slug>`**. The issue number in the branch name is not
 cosmetic — step 1 is how the next firing sees your claim, and it only works if
@@ -71,7 +112,7 @@ per-package import extensions, and the rule that tuning numbers live only in
 `packages/shared/src/constants.ts` are all things that look like style until
 they break the build.
 
-## 5. Run every gate locally before you push
+## 6. Run every gate locally before you push
 
 ```bash
 npm run build:shared
@@ -95,7 +136,7 @@ Then open the PR against `main`, filling `.github/PULL_REQUEST_TEMPLATE.md` and
 referencing `Fixes #<n>`. Not a draft. Anything visual needs the screenshot that
 `docs/graphics-standards.md` requires — the **run-game** skill produces it.
 
-## 6. When to stop instead, and how
+## 7. When to stop instead, and how
 
 Open no PR, comment on the issue, and end the run when:
 
@@ -107,7 +148,7 @@ Open no PR, comment on the issue, and end the run when:
   every mechanic to be an argument about sound or depth; if answering the issue
   means deciding what the mechanic *should* argue, that is not an unattended
   call.
-- **The fix does not converge.** If the gates in step 5 keep failing in new
+- **The fix does not converge.** If the gates in step 6 keep failing in new
   places, stop and report what you learned. A half-landed change on a green
   `main` is worse than an issue that stayed open another day.
 

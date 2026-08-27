@@ -146,9 +146,10 @@ process lives in the repo instead of in one person's head:
 - **hull-intake** — validates a 3D model export (GLB) and bakes the review maps; the
   intake gate in [docs/graphics-standards.md](docs/graphics-standards.md).
 - **work-issue** — picks one unclaimed, non-epic issue off the backlog and takes it to a
-  PR, or comments and stops when the call is a design one. This is the skill a scheduled
-  Routine runs unattended several times a day; its open-PR cap, not its schedule, is what
-  keeps CI spend bounded.
+  PR, or comments and stops when the call is a design one. When nothing is eligible it
+  files a single sub-issue off an epic instead, so the backlog refills itself one scoped
+  item at a time. This is the skill a scheduled Routine runs unattended several times a
+  day; its open-PR cap, not its schedule, is what keeps CI spend bounded.
 
 When you find yourself re-explaining a workflow a second time — a bake step, a test
 harness, a review checklist — turn it into a skill next to these three rather than a wiki
