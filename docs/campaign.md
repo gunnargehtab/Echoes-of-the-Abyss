@@ -63,7 +63,7 @@ Specified in full — map, forces, beats, numbers, register and text — in [mis
 
 | # | Mission | Teaches | Beat |
 | --- | --- | --- | --- |
-| 1 | **Tend** | Quiet economy, bloom-share, Silent Running | A working day. Nothing attacks you. You learn what quiet is worth by having it |
+| 1 | **[Tend](mission-tend.md)** | Quiet economy, bloom-share, Silent Running | A working day. Nothing attacks you. You learn what quiet is worth by having it. Specified in full in [mission-tend.md](mission-tend.md) |
 | 2 | **Thin Water** | Losing a fight you did not choose | Consortium heavies catch a harvest column in the open. Objective: get 60% out |
 | 3 | **Convocation** | Marr's once-per-match ability, mass mobility | A plateau votes while it is being attacked, which takes exactly as long as it takes |
 | 4 | **Deep Furrow** | Seeding, terraforming, +1 PR zones | You make a piece of the Abyssal habitable. It is genuinely beautiful and it is genuinely a provocation |
@@ -151,7 +151,7 @@ What is built of the campaign, so nobody re-implements what exists or assumes wh
 | Part | Status |
 | --- | --- |
 | **Prologue — Sorrowgate** | Implemented (#190). [mission-sorrowgate.md](mission-sorrowgate.md) §13 is the row-by-row account of what inside it is built |
-| **Four faction campaigns** — 28 missions | One specified, none built. [mission-asset-recovery.md](mission-asset-recovery.md) is The Ledger 1's document of record, with its own scaffold-status list of what the format still needs; the other 27 rows of §4–§7 remain titles, teaching targets and beats, and each needs a document of its own before it needs code |
+| **Four faction campaigns** — 28 missions | Two specified, none built. [mission-asset-recovery.md](mission-asset-recovery.md) (The Ledger 1) and [mission-tend.md](mission-tend.md) (The Second Seeding 1) are documents of record, each with a scaffold-status list of what the format still needs; the other 26 rows of §4–§7 remain titles, teaching targets and beats, and each needs a document of its own before it needs code |
 | **Convergence — The Rim** | Not started |
 | **The four endings** | Not started |
 | Progression — recording what you have played, and the briefing variants that depend on it (§1) | Not started. The prologue is replayable and remembers nothing, so the Tutorial and campaign doors are currently the same door |
