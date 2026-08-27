@@ -93,6 +93,43 @@ export interface MissionStructure {
   note: string;
 }
 
+/**
+ * A placed, unowned periodic sound source — the taps of
+ * docs/mission-asset-recovery.md §6: audible, locatable, not a unit.
+ *
+ * Authored on a party for its slot, which is what routes it through the Echo
+ * Layer's per-observer resolution like everything else — and *never* on the
+ * player's party, whose own slot could then not hear it (`missions.test.ts`
+ * holds the literal to that). Its classification names nothing: a Tier-3
+ * contact on the taps carries position and depth, no kind and no faction,
+ * because the entity behind it is none of the things classification can name.
+ *
+ * The pattern is ticks, like every beat time: `sig` for `onTicks` at the top
+ * of every `periodTicks`, forever — until silenced, or until the authored hp
+ * runs out, because the chamber can be lost and §8 prices exactly that.
+ */
+export interface MissionEmitter {
+  tag: MissionTag;
+  x: number;
+  y: number;
+  depthM: number;
+  /** Loudness through each strike window. */
+  sig: number;
+  /** Ticks from one strike window's start to the next. */
+  periodTicks: number;
+  /** Ticks of each period the emitter is loud. */
+  onTicks: number;
+  /** Authored durability. */
+  hp: number;
+  /**
+   * The lift whose rigging stops this emitter, by lift id — §6's own coupling:
+   * "When Lift Three rigs the chamber, the taps stop." Absent means nothing
+   * diegetic ever silences it.
+   */
+  silencedByLift?: string;
+  note: string;
+}
+
 export interface MissionParty {
   /**
    * `Owner.slot`. The player's is `MissionDefinition.playerSlot`; the rest are
@@ -105,6 +142,8 @@ export interface MissionParty {
   faction: Faction;
   units: readonly MissionUnit[];
   structures?: readonly MissionStructure[];
+  /** Placed periodic sound sources — see `MissionEmitter`. Omitted is none. */
+  emitters?: readonly MissionEmitter[];
   note: string;
 }
 

@@ -31,6 +31,7 @@ import {
   HarvestMode,
   Laying,
   SilentRunning,
+  StaticEmitter,
   Structure,
   UnderConstruction,
   Unit,
@@ -41,6 +42,7 @@ import type { SimWorld } from '../world.ts';
 
 const emitters = defineQuery([Acoustic, Unit, Velocity, SilentRunning]);
 const structureEmitters = defineQuery([Acoustic, Structure]);
+const staticEmitters = defineQuery([Acoustic, StaticEmitter]);
 
 /** Below this speed the unit counts as stationary rather than cruising. */
 const MOVING_EPSILON = 0.01;
@@ -169,6 +171,23 @@ export function acousticsSystem(world: SimWorld): void {
       sig = producing || projecting ? stats.sigActive : stats.sigIdle;
     }
     sig = applySpikeDecay(world, eid, sig);
+    sig *= Acoustic.sigFactor[eid]! || 1;
+    Acoustic.sig[eid] = Math.min(100, Math.max(0, sig));
+  }
+
+  // Authored static emitters — the taps (docs/mission-asset-recovery.md §6).
+  // SIG stays a function of what the thing is doing, and what the taps do is
+  // strike on the interval: the authored figure through each on-window, zero
+  // between strikes and once silenced. The veil still takes its cut — a cloud
+  // muffles struck iron like anything else. Empty in every skirmish; the query
+  // costs nothing where no mission placed one.
+  const placed = staticEmitters(world);
+  for (let i = 0; i < placed.length; i++) {
+    const eid = placed[i]!;
+    const striking =
+      StaticEmitter.active[eid] === 1 &&
+      world.tick % StaticEmitter.periodTicks[eid]! < StaticEmitter.onTicks[eid]!;
+    let sig = striking ? StaticEmitter.sig[eid]! : 0;
     sig *= Acoustic.sigFactor[eid]! || 1;
     Acoustic.sig[eid] = Math.min(100, Math.max(0, sig));
   }
