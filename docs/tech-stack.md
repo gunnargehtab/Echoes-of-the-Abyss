@@ -468,11 +468,18 @@ again. And the watch is deliberately **asymmetric**: entering costs the whole ho
 costs nothing beyond a blink, because being briefly loud costs SIG and being needlessly
 quiet costs half an economy.
 
-Measured on `ventfront-divide`, seed 4000, the reflex hid each navy for *exactly* as long as
-it was heard — the Commune 94% of the match against 94% exposed, the Directorate 64% against
-64%. The watch breaks that identity: 69% and 47%, with the Directorate's income up 18%. The
-Commune's barely moved, and that is a finding rather than a failure — at roughly one live
-harvester it is short of haulers, not short of throttle.
+Measured over thirty matches each side on `ventfront-divide` — `exposure-hold-before.md`
+against `four-faction-baseline.md` under `tools/balance/baselines/`, the same seeds and the
+same map, differing only in these two files — the reflex held the Commune below Standard for
+91% of its hauling time and the Directorate for 78%. The watch cuts those to 68% and 58%, and
+the income comes back with them: 55 to 67 nodules a minute for the Commune, 114 to 125 for
+the Directorate. The navies that never drop do not move, which is the control.
+
+The column that does *not* move is the one worth reading. Buying less quiet was supposed to
+cost more exposure — that is the trade — and the tracked seconds did not shift at all
+(739 → 722 and 1,104 → 1,108). The fifth of an economy those commanders were handing over was
+buying them nothing measurable, which is the claim the ninety-second cap is built on rather
+than merely an argument for it.
 
 It **manoeuvres in depth**, and for most of this file's life it did not. That was a deliberate
 omission before the thermocline — depth had no acoustic consequence, so an AI diving for
