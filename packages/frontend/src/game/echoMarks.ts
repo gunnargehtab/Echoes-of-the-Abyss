@@ -17,8 +17,9 @@
  *   drawn. So the scope stain has a floor, and the ink the shrink cost it
  *   comes back as opacity.
  * - **Precedence.** §1.3 puts residue under live contacts. The scope draws
- *   this layer between the terrain wash and the returns, and caps its opacity
- *   below the faintest return so no stain ever out-inks a contact.
+ *   this layer over the terrain and under everything the player earned — the
+ *   own force as well as the returns — and caps its opacity below the faintest
+ *   return so no stain ever out-inks a contact.
  * - **Torpedo wakes are a line, not a blob.** Sized by the same rule as the
  *   other kinds they would fatten into a bar and smear the track back into a
  *   vague area, so they get their own rule below.
@@ -166,9 +167,9 @@ export function scopeMarkAlpha(kind: EchoMarkKind, intensity: number): number {
  * Acoustic residue on the sonar scope — docs/ui-ux.md §5.
  *
  * "A separate dimmer layer, drawn beneath returns, in a colder hue." Called
- * between the scope's terrain wash and its returns, in scope-local coordinates
- * (`k` is map metres per scope pixel, and the caller has already positioned
- * the graphics at the scope's rect).
+ * after the scope's terrain and before its own force, in scope-local
+ * coordinates (`k` is map metres per scope pixel, and the caller has already
+ * positioned the graphics at the scope's rect).
  *
  * No outline, no glyph and no crisp edge, exactly as in the world: nothing
  * here may read as a *thing*, only as ground that remembers. And nothing here

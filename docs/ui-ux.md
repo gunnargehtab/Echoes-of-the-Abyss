@@ -97,9 +97,12 @@ camera viewport. Returns are sized *inversely* to tier — a Tier-1 return is th
 softest mark on the scope, because its size is the uncertainty rather than the contact,
 while a Tier-4 track is a tight point. They were previously uniform dots, which drew a
 Tier-1 haze as crisply as a Tier-4 track: the scope asserting precision the server never
-sent. The Echo Marks layer is drawn too (#213), between the terrain wash and the returns:
-the same ink the world view uses, so residue cannot change colour between the two views a
-player reads the same water in. Three things the scope settles differently. A stain has a
+sent. The Echo Marks layer is drawn too (#213), over the terrain and under everything the
+player earned — the own force as well as the returns — in the same ink the world view uses,
+so residue cannot change colour between the two views a player reads the same water in. It
+goes under the own force and not merely under the returns because residue is ground and own
+force is fact: this instrument's promise is own force at full clarity, and a stain drawn
+over a hull dot dulls the one thing on the scope the player has fully earned. Three things the scope settles differently. A stain has a
 **floor of 3 px**, because a mark legible in the world and invisible on the scope has not
 been drawn, and the opacity it lost to the shrink comes back capped at **0.15 a disc** —
 solved from the Tier-1 haze's 0.22 so no residue ever out-inks the faintest return.

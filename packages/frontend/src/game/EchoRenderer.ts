@@ -4391,6 +4391,15 @@ export class EchoRenderer {
       }
     }
 
+    // Echo Marks (§5): "a separate dimmer layer, drawn beneath returns, in a
+    // colder hue". Beneath is the whole of it, and beneath the own force as
+    // well as the returns — residue is ground, own force is fact, and this
+    // instrument's promise is own force at full clarity. Drawn over the layer
+    // it *is* ground with, and a stain over a hull dot dulls the one thing on
+    // the scope the player has fully earned. Past and present must never share
+    // an ink, on this instrument as in the world.
+    drawScopeEchoMarks(og, this.marks, k);
+
     const palette = FACTION_PALETTE[this.faction];
     for (const structure of this.structures) {
       og.rect(structure.x * k - 2, structure.y * k - 2, 4, 4).fill({ color: palette.primary });
@@ -4420,14 +4429,6 @@ export class EchoRenderer {
         });
       }
     }
-
-    // Echo Marks (§5): "a separate dimmer layer, drawn beneath returns, in a
-    // colder hue". Beneath is the whole of it — the residue goes down after
-    // the terrain wash and the drift stripping that is also ground, and before
-    // the first return, so a contact always sits on top of the residue near
-    // it. Past and present must never share an ink, on this instrument as in
-    // the world.
-    drawScopeEchoMarks(og, this.marks, k);
 
     const scopeNow = performance.now();
     for (const { contact, firstSeenMs } of this.tracked.values()) {
