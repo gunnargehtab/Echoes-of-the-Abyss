@@ -26,6 +26,7 @@ import {
   PALETTES,
   paletteFor,
   setActivePalette,
+  reliefShade,
   TIER_STYLE,
   UI,
   sigColor,
@@ -357,5 +358,63 @@ describe('the active palette', () => {
     } finally {
       setActivePalette('standard');
     }
+  });
+});
+
+/**
+ * The seabed's relief pass. These are the invariants that let it run over every
+ * cell of every map without anyone having to look at the result each time —
+ * the shading is a lighting model, so it is checked against the light rather
+ * than against a screenshot.
+ */
+describe('reliefShade', () => {
+  const FILL = 0x0e2a22; // kelp forest, the brightest biome fill
+
+  it('leaves flat ground exactly as depth shaded it', () => {
+    // Most cells of most maps are flat, so an identity that is merely close
+    // would tint the whole seabed off its authored fill.
+    assert.equal(reliefShade(FILL, 0, 0), FILL);
+  });
+
+  it('never returns anything brighter than it was given', () => {
+    // The authored biome fills are the ceiling of terrain's brightness — the
+    // same rule depthShade darkens-only for. A slope facing the light is not a
+    // licence to exceed it.
+    for (let dropX = -2000; dropX <= 2000; dropX += 125) {
+      for (let dropY = -2000; dropY <= 2000; dropY += 125) {
+        const shaded = reliefShade(FILL, dropX, dropY);
+        for (const shift of [16, 8, 0]) {
+          assert.ok(
+            ((shaded >> shift) & 0xff) <= ((FILL >> shift) & 0xff),
+            `channel ${shift} lifted at drop ${dropX},${dropY}`
+          );
+        }
+      }
+    }
+  });
+
+  it('shadows the face that turns away from the key light', () => {
+    // Light is upper-left (bake.ts). Ground deepening toward +x and +y is a
+    // surface descending right and down, whose normal turns away from it.
+    const away = reliefShade(FILL, 900, 900);
+    const toward = reliefShade(FILL, -900, -900);
+    assert.ok((away & 0xff) < (toward & 0xff), 'the far face is not darker');
+    assert.equal(toward, FILL, 'the lit face is clamped to the authored fill');
+  });
+
+  it('scales with the size of the step, rather than saturating at the first one', () => {
+    // Without a reference scale a 300 m shelf edge throws the same shadow as a
+    // 1,900 m trench wall, and the map loses the difference between them.
+    const shelf = reliefShade(FILL, 300, 0) & 0xff;
+    const wall = reliefShade(FILL, 1900, 0) & 0xff;
+    const flat = FILL & 0xff;
+    assert.ok(wall < shelf && shelf < flat, `expected wall ${wall} < shelf ${shelf} < ${flat}`);
+  });
+
+  it('keeps the biome hue, moving only luminance', () => {
+    // Hue belongs to the biome because the biome is what sound is priced by.
+    const shaded = reliefShade(FILL, 800, 400);
+    const ratio = (c: number, shift: number) => ((c >> shift) & 0xff) / ((FILL >> shift) & 0xff);
+    assert.ok(Math.abs(ratio(shaded, 8) - ratio(shaded, 0)) < 0.05, 'channels drifted apart');
   });
 });
