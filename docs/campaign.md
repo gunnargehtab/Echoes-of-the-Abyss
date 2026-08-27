@@ -47,7 +47,7 @@ Specified in full — map, forces, beats, numbers, register and text — in [mis
 
 | # | Mission | Teaches | Beat |
 | --- | --- | --- | --- |
-| 1 | **Asset Recovery** | Klaxon Doctrine: fight loud, survive it | Ninefold salvage under fauna pressure. You are the loudest thing on the map and it is fine |
+| 1 | **[Asset Recovery](mission-asset-recovery.md)** | Klaxon Doctrine: fight loud, survive it | Ninefold salvage under fauna pressure. You are the loudest thing on the map and it is fine. Specified in full in [mission-asset-recovery.md](mission-asset-recovery.md) |
 | 2 | **Shift Change** | Economy, throttle, industrial hum | Osk quietly moves crews off a dying face before the announcement he is not authorised to make |
 | 3 | **Baffle** | Masking, Baffle Barge, escorting a slow thing | The first push that works. It costs more than it should |
 | 4 | **Exposure** | Echo Marks and scouting the past | Tull's model needs field data. You read three days of someone else's economy off the seabed |
@@ -151,7 +151,7 @@ What is built of the campaign, so nobody re-implements what exists or assumes wh
 | Part | Status |
 | --- | --- |
 | **Prologue — Sorrowgate** | Implemented (#190). [mission-sorrowgate.md](mission-sorrowgate.md) §13 is the row-by-row account of what inside it is built |
-| **Four faction campaigns** — 28 missions | Not started. §4–§7 are titles, teaching targets and beats, not specifications; each needs a document of its own before it needs code |
+| **Four faction campaigns** — 28 missions | One specified, none built. [mission-asset-recovery.md](mission-asset-recovery.md) is The Ledger 1's document of record, with its own scaffold-status list of what the format still needs; the other 27 rows of §4–§7 remain titles, teaching targets and beats, and each needs a document of its own before it needs code |
 | **Convergence — The Rim** | Not started |
 | **The four endings** | Not started |
 | Progression — recording what you have played, and the briefing variants that depend on it (§1) | Not started. The prologue is replayable and remembers nothing, so the Tutorial and campaign doors are currently the same door |
