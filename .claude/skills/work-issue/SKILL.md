@@ -18,6 +18,39 @@ written a plausible wrong answer into the design bible. Step 7 is how you stop
 instead — and stopping with a good comment on the issue is a *successful* run,
 not a failed one.
 
+## 0. Establish what GitHub access you have, before anything else
+
+A scheduled firing does not necessarily get the same tools an interactive
+session has. The `mcp__github__*` tools here come from the environment rather
+than from a connector, and a Routine created outside a session holding them may
+fire without them — the create call warns about this explicitly. So find out
+first, rather than discovering it half way through step 4 with an issue
+half-filed.
+
+- **If the `mcp__github__*` tools are present, use them.** They are the
+  supported path and the rest of this skill assumes them.
+- **If they are not,** fall back to the REST API with the `GITHUB_TOKEN` (or
+  `GH_TOKEN`) in the environment:
+
+  ```bash
+  curl -sS -H "Authorization: Bearer $GITHUB_TOKEN" \
+    -H "Accept: application/vnd.github+json" \
+    https://api.github.com/repos/gunnargehtab/Echoes-of-the-Abyss/issues?state=open
+  ```
+
+- **If a write comes back 401, 403 or 404** — creating an issue, linking a
+  sub-issue, opening a pull request — **stop and say so plainly.** Do not retry
+  against a different credential and do not carry on with the half of the job
+  that works. An issue filed but never linked to its epic is worse than no issue
+  at all: step 4's dedup reads the epic's children, so an unlinked issue gets
+  filed again on the next firing, and again after that.
+
+Git itself is authenticated separately and independently: `git fetch` and
+`git push` over HTTPS work regardless of API access. That leaves one useful
+degraded mode — you can still branch, commit, and push. If the work is done and
+only the PR creation fails, push the branch anyway and report its name, so the
+run is recoverable by hand rather than lost.
+
 ## 1. Take stock before you take an issue
 
 ```bash
