@@ -470,6 +470,62 @@ describe('the objectives', () => {
     }
   });
 
+  it('rigs every lift to a player-party hull, in a region that exists', () => {
+    // The loaded set feeds a predicate the player is shown, so a lift's
+    // carrier is held to the roles' rule: player-party hulls only, or another
+    // party ends up inside a counter (types.ts, `MissionLift`). The region
+    // check is `progressOf`'s reason restated — a cut pointed at a misspelt
+    // region never runs, which reads as a mission being failed rather than as
+    // a mission that is broken. And the meter is 0-100, so a cut outside it
+    // is authored loudness the acoustics clamp would silently rewrite.
+    for (const mission of MISSIONS) {
+      const regions = new Set(mission.regions.map((region) => region.id));
+      const playerTags = new Set(
+        mission.parties
+          .filter((party) => party.slot === mission.playerSlot)
+          .flatMap((party) => party.units.map((unit) => unit.tag))
+      );
+      const lifts = mission.lifts ?? [];
+      const ids = lifts.map((lift) => lift.id);
+      assert.equal(new Set(ids).size, ids.length, `${mission.id}: duplicate lift id`);
+      for (const lift of lifts) {
+        assert.ok(
+          playerTags.has(lift.tag),
+          `${mission.id}: lift "${lift.id}" rides "${lift.tag}", which is not a player hull`
+        );
+        assert.ok(
+          regions.has(lift.region),
+          `${mission.id}: lift "${lift.id}" cuts in region "${lift.region}", which is not authored`
+        );
+        assert.ok(
+          Number.isInteger(lift.cutTicks) && lift.cutTicks >= 0,
+          `${mission.id}: lift "${lift.id}" cuts for ${lift.cutTicks} ticks`
+        );
+        assert.ok(
+          lift.cutSig >= 0 && lift.cutSig <= 100,
+          `${mission.id}: lift "${lift.id}" cuts at ${lift.cutSig}, outside the meter`
+        );
+      }
+    }
+  });
+
+  it('gates an extract on loads only where the mission authors some', () => {
+    // `loaded: true` against a mission with no lifts is a counter that can
+    // never fill — the quiet unreachability the count-versus-roster test
+    // above exists to catch, in its newest form.
+    for (const mission of MISSIONS) {
+      for (const objective of mission.objectives) {
+        const predicate = objective.predicate;
+        if (predicate.kind !== 'extract' || predicate.loaded !== true) continue;
+        assert.ok(
+          (mission.lifts ?? []).length >= predicate.count,
+          `${mission.id}: "${objective.id}" counts ${predicate.count} loads and the mission ` +
+            `authors ${(mission.lifts ?? []).length} lifts`
+        );
+      }
+    }
+  });
+
   it('has something terminal to close on, and an epilogue for every outcome', () => {
     for (const mission of MISSIONS) {
       assert.ok(

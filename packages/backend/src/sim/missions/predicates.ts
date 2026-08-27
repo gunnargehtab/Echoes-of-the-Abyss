@@ -7,9 +7,9 @@
  * own, because nothing here is given anything the observer does not own.** The
  * parameter list is the enforcement. `own` is the resolved `EchoSnapshot` this
  * slot is being sent on this very tick, so every number returned is one the
- * client could have computed for itself; `roleIds` names hulls of the player's
- * own party; `regionById` and `predicate` are authored map data that shipped
- * with the mission. There is no world, no ECS, no second snapshot and no slot
+ * client could have computed for itself; `roleIds` and `loadedIds` name hulls
+ * of the player's own party; `regionById` and `predicate` are authored map data
+ * that shipped with the mission. There is no world, no ECS, no second snapshot and no slot
  * argument, so "three of five hostiles remaining" is not refused here — it
  * cannot be asked for.
  *
@@ -36,19 +36,33 @@ export type RoleIds = (role: MissionRole) => ReadonlySet<number>;
 
 export type RegionById = (id: string) => MissionRegion | undefined;
 
+/**
+ * The player's own hulls currently carrying a completed lift, by id exactly as
+ * `own.units` reports it. Own-force information and nothing else: a lift is
+ * assigned to a player-party hull by the literal (`missions.test.ts` holds it
+ * to that), so this set can never name a hull the observer does not own.
+ */
+export type LoadedIds = ReadonlySet<number>;
+
 export function progressOf(
   predicate: MissionPredicate,
   own: EchoSnapshot,
   roleIds: RoleIds,
   regionById: RegionById,
-  startedTick: number
+  startedTick: number,
+  loadedIds: LoadedIds
 ): Progress {
   switch (predicate.kind) {
     case 'extract': {
       const region = regionById(predicate.region);
       if (region === undefined) return { done: 0, of: predicate.count };
       const ids = roleIds(predicate.role);
-      const inside = own.units.filter((u) => ids.has(u.id) && inRegion(region, u.x, u.y));
+      const inside = own.units.filter(
+        (u) =>
+          ids.has(u.id) &&
+          (predicate.loaded !== true || loadedIds.has(u.id)) &&
+          inRegion(region, u.x, u.y)
+      );
       // Capped, so a third hull arriving cannot render "2 of 1". The count
       // is what the court reads out, and a court does not over-count.
       return { done: Math.min(inside.length, predicate.count), of: predicate.count };
@@ -82,9 +96,10 @@ export function isMet(
   own: EchoSnapshot,
   roleIds: RoleIds,
   regionById: RegionById,
-  startedTick: number
+  startedTick: number,
+  loadedIds: LoadedIds
 ): boolean {
-  const { done, of } = progressOf(predicate, own, roleIds, regionById, startedTick);
+  const { done, of } = progressOf(predicate, own, roleIds, regionById, startedTick, loadedIds);
   return done >= of;
 }
 
