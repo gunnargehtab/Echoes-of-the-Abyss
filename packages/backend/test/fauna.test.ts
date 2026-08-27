@@ -465,16 +465,62 @@ describe('the Drift in a normal match', () => {
 
   it('keeps the Echo pass inside its budget with a full population', () => {
     // The gate the issue set: "Do not merge a fauna population that pushes a
-    // normal match over budget." Reported here and in the PR.
+    // normal match over budget."
+    //
+    // Counted work, not the clock, for the reason #211 records at length: this
+    // scenario measured 2.946, 1.909 and 2.103 ms across three runs of
+    // identical work, straddling the 2 ms budget, while the walk count read
+    // 126 on every one of them.
+    //
+    // 126 is also what makes this test worth keeping. It was 597 before #215
+    // — the extra 471 being path integrals spent resolving contacts *for* the
+    // Drift, none of which could be pruned or aborted, none of which anyone
+    // was ever sent.
     const match = new Match(VENTFRONT_DIVIDE, { seed: 85 });
     for (let slot = 0; slot < 4; slot++) match.addPlayer(slot, slot as Faction);
-    advance(match, 12);
+
+    let worstWalks = 0;
+    for (let i = 0; i < 12 * SIM.TICK_HZ; i++) {
+      if (match.update(STEP_MS) === null) continue;
+      worstWalks = Math.max(worstWalks, match.contactPathWalksLastPass);
+    }
 
     console.log(
       `echo pass with ${countFauna(match.world)} fauna and 4 players: ` +
-        `${match.worstEchoPassMs.toFixed(3)} ms worst case, budget ${SIM.ECHO_BUDGET_MS} ms`
+        `${worstWalks} path integrals, ${match.worstEchoPassMs.toFixed(3)} ms worst case`
     );
-    assert.ok(countFauna(match.world) > 0);
+    assert.ok(countFauna(match.world) > 0, 'a normal match has animals in it');
+    // Headroom over the observed 126 for ordinary tuning and for the herds
+    // moving, and far below the 597 a Drift that listens costs.
+    const WALK_BUDGET = 200;
+    assert.ok(
+      worstWalks <= WALK_BUDGET,
+      `Echo pass did ${worstWalks} path integrals, budget ${WALK_BUDGET}`
+    );
+  });
+
+  it('do not listen on the contact pass', () => {
+    // The other half of "owned by a non-player slot": the Echo pass resolves
+    // fauna *as emitters* for everybody, and resolves nothing *for* them.
+    //
+    // It used to. Fauna carry real HYD, so they entered the pair loop as
+    // listeners — and the per-slot tier prune is a flat array sized for player
+    // slots, so reading it at DRIFT_SLOT gave `undefined` and every guard it
+    // fed became a NaN comparison. Nothing was pruned and no path integral
+    // could abort, which is the expensive way to compute a contact list nobody
+    // is ever sent (#215).
+    //
+    // Counted work, not the clock, for the reason #211 records.
+    const match = emptyMatch(87);
+    spawnFauna(match.world, { species: FaunaSpecies.Draymaw, x: 6500, y: 6500 });
+    spawnFauna(match.world, { species: FaunaSpecies.Draymaw, x: 6700, y: 6500 });
+    advance(match, 2);
+
+    assert.equal(
+      match.contactPathWalksLastPass,
+      0,
+      'two creatures alone in the water cost the contact pass a path integral'
+    );
   });
 
   it('owns its creatures under a slot no player can be', () => {

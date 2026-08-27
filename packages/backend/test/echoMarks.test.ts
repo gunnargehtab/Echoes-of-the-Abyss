@@ -15,9 +15,11 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  DEPTH,
   ECHO_MARKS,
   EchoMarkKind,
   Faction,
+  ORDNANCE,
   PERSISTENCE,
   SIM,
   StructureKind,
@@ -28,6 +30,7 @@ import { Match } from '../src/sim/match.ts';
 import { EchoMarkLayer } from '../src/sim/echoMarks.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { spawnStructure, spawnUnit } from '../src/sim/world.ts';
+import { dropDepthCharge, launchTorpedo } from '../src/sim/systems/ordnance.ts';
 import { Harvester, Health, Owner, Position, Structure } from '../src/sim/components.ts';
 import { VENTFRONT_DIVIDE } from '../src/sim/maps/index.ts';
 
@@ -156,6 +159,124 @@ describe('the residue layer', () => {
 
     assert.equal(place(open), 1, 'audible in open water');
     assert.equal(place(masked), 0, 'and masked by a thermal vein');
+  });
+});
+
+describe('residue from ordnance sits where the ordnance was', () => {
+  // `EchoMarkLayer.add` takes (kind, x, y, depthM, intensity = 1), and every
+  // call in ordnance.ts passed four arguments with the last meant as the
+  // intensity — so every mark ordnance laid was written at a depth of about a
+  // metre, at full intensity, whatever had actually happened and wherever
+  // (#216). Both arguments are load-bearing: intensity scales the mark's
+  // radiated SIG, and depth decides which side of the thermocline the residue
+  // is on.
+
+  it('lays a torpedo wake at the depth the torpedo is running at, and keeps it faint', () => {
+    const match = flatMatch(28);
+    match.addPlayer(0, Faction.Bathyarch);
+    const shooter = spawnUnit(match.world, {
+      kind: UnitKind.Cruiser,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 3000,
+      y: 4000,
+    });
+    Position.depth[shooter] = D;
+    // Aimed at open water, so the run is a run and nothing detonates.
+    launchTorpedo(match.world, shooter, 7000, 4000);
+    advance(match, 1.5);
+
+    const wakes = match.world.marks.all.filter((m) => m.kind === EchoMarkKind.TorpedoWake);
+    assert.ok(wakes.length > 0, 'a running torpedo leaves a wake');
+    for (const wake of wakes) {
+      assert.ok(
+        Math.abs(wake.depth - D) < 1,
+        `wake at ${wake.depth.toFixed(1)} m, torpedo running at ${D} m`
+      );
+      // One drop per WAKE_MARK_INTERVAL_S, and consecutive drops along a
+      // straight run are close enough to merge — so the bar is "still faint",
+      // not "exactly one drop". It read 1.0 before the fix: a single wake as
+      // loud as a saturated battle site, which is what §12's inference cannot
+      // survive.
+      assert.ok(
+        wake.intensity <= 4 * ORDNANCE.TORPEDO.WAKE_MARK_INTENSITY,
+        `wake intensity ${wake.intensity.toFixed(3)}, drop ${ORDNANCE.TORPEDO.WAKE_MARK_INTENSITY}`
+      );
+    }
+  });
+
+  it('lays a detonation at the depth of the thing it hit', () => {
+    const match = flatMatch(29);
+    match.addPlayer(0, Faction.Bathyarch);
+    match.addPlayer(1, Faction.Pelagia);
+    const shooter = spawnUnit(match.world, {
+      kind: UnitKind.Cruiser,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 3000,
+      y: 4000,
+    });
+    // A Harvester, and beyond either hull's gun at 1,500 m — so nothing on
+    // this ground fires, and the only Battle mark is the detonation's.
+    //
+    // A Cruiser here would not do: point defence engages an inbound torpedo
+    // inside its terminal range (docs/systems-combat.md §5), and a torpedo shot
+    // out of the water leaves combat.ts's mark — which was always correct, and
+    // would make this test pass against the bug it exists for.
+    const victim = spawnUnit(match.world, {
+      kind: UnitKind.Harvester,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: 4500,
+      y: 4000,
+    });
+    Position.depth[shooter] = D;
+    Position.depth[victim] = D;
+    launchTorpedo(match.world, shooter, Position.x[victim]!, Position.y[victim]!);
+    // 1,500 m at 160 m/s, with room for the seeker to correct.
+    advance(match, 12);
+
+    const sites = match.world.marks.all.filter((m) => m.kind === EchoMarkKind.Battle);
+    assert.equal(sites.length, 1, 'one detonation, one battle site');
+    const site = sites[0]!;
+    assert.ok(
+      Math.abs(site.depth - D) < 1,
+      `battle site at ${site.depth.toFixed(1)} m, fight at ${D} m`
+    );
+    // One hit is not a battle. It used to land at 1.0 — a full site, from the
+    // `add` default — where combat.ts takes about a dozen discharges to get
+    // there.
+    assert.ok(
+      site.intensity < 0.5,
+      `one torpedo saturated the site to ${site.intensity.toFixed(3)}`
+    );
+  });
+
+  it('lays a blast at the depth it went off, not the depth it was dropped from', () => {
+    const match = flatMatch(30);
+    match.addPlayer(0, Faction.Bathyarch);
+    const hull = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 4000,
+      y: 4000,
+    });
+    Position.depth[hull] = D;
+    // A charge is set for water the hull is not in — which is the whole of §8,
+    // and the case a mark written at the launcher's depth would still pass.
+    const CHARGE_DEPTH = 900;
+    assert.ok(dropDepthCharge(match.world, hull, CHARGE_DEPTH) > 0, 'the rack was cold');
+    advance(match, 12);
+
+    const sites = match.world.marks.all.filter((m) => m.kind === EchoMarkKind.Battle);
+    assert.equal(sites.length, 1, 'one detonation, one battle site');
+    // Within the arrival epsilon the charge detonates inside, and nowhere
+    // near the metre it was writing before.
+    assert.ok(
+      Math.abs(sites[0]!.depth - CHARGE_DEPTH) <= DEPTH.ARRIVAL_EPSILON_M,
+      `blast site at ${sites[0]!.depth.toFixed(1)} m, charge set for ${CHARGE_DEPTH} m`
+    );
   });
 });
 

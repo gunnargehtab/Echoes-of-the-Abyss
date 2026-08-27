@@ -171,6 +171,20 @@ export class EchoLayer {
   private readonly nextHandle = new Map<number, number>();
   private readonly results = new Map<number, Contact[]>();
   private readonly exposure = new Map<number, ExposureReport>();
+  /**
+   * Victim slot -> its own entities already counted into `trackedCount`.
+   *
+   * The exposure walk is observer-major — it reads each observer's
+   * resolutions and turns them round — so a hull two opponents both hold a
+   * bearing on is visited twice. `tier` survives that because `max` is
+   * idempotent; a counter does not, and `TRACKED x2` for one tracked hull is
+   * not the fact `ExposureReport.trackedCount` is documented to carry (#217).
+   *
+   * A Set rather than a flat marker array because this walk is over *resolved
+   * contacts* — dozens — and not over candidate pairs. The hot loop above is
+   * the one that cannot afford a hash lookup.
+   */
+  private readonly countedTracked = new Map<number, Set<number>>();
   private readonly markResults = new Map<number, EchoMarkInfo[]>();
   /** Listeners that clear the HYD wall this pass. */
   private readonly markListeners: number[] = [];
@@ -538,6 +552,9 @@ export class EchoLayer {
       else litBucket.length = 0;
 
       this.exposure.set(slot, { tier: ResolutionTier.Silent, trackedCount: 0 });
+      const counted = this.countedTracked.get(slot);
+      if (counted === undefined) this.countedTracked.set(slot, new Set());
+      else counted.clear();
 
       const markBucket = this.markResults.get(slot);
       if (markBucket === undefined) this.markResults.set(slot, []);
@@ -602,6 +619,28 @@ export class EchoLayer {
           const listener = candidates[j]!;
           const listenerSlot = Owner.slot[listener]!;
           if (listenerSlot === emitterSlot) continue;
+
+          // The Drift is not a commander.
+          //
+          // Fauna carry Owner and real HYD — DRIFT_SLOT and 35-90 — so they
+          // arrive here as candidate listeners exactly like a hull, and nothing
+          // downstream can serve them: every per-slot structure below is sized
+          // or keyed for player slots, and `record` would file the result under
+          // a slot `run` never clears. The residue read has always had this
+          // test; the pair loop did not.
+          //
+          // Leaving it out was worse than doing pointless work.
+          // `bestTierThisEmitter` is sized MAX_SLOTS, so reading it at slot 200
+          // gave `undefined`, and `cutoff2` and `pfNeeded` below both became
+          // NaN — every comparison against which is false. So the tier prune
+          // rejected nothing, and `pathPropagation` could never abort: each of
+          // these pairs paid a *full-length* path integral. Measured at 229 per
+          // pass in a default match against 42 with this line, on a 2 ms
+          // budget (#215).
+          //
+          // Fauna hearing is fauna.ts's own walk, over its own thresholds.
+          // Nothing here was feeding it.
+          if (listenerSlot >= MAX_SLOTS) continue;
 
           // Deaf things do not listen.
           //
@@ -768,7 +807,16 @@ export class EchoLayer {
           : this.exposure.get(Owner.slot[eid]!);
         if (victim !== undefined) {
           if (resolved.tier > victim.tier) victim.tier = resolved.tier;
-          if (resolved.tier >= ResolutionTier.Bearing) victim.trackedCount++;
+          if (resolved.tier >= ResolutionTier.Bearing) {
+            // Once per hull, however many opponents are holding it. The set is
+            // non-null exactly when `victim` is: both are keyed on a slot that
+            // `exposure` answered for, which is a slot in the roster.
+            const counted = this.countedTracked.get(Owner.slot[eid]!)!;
+            if (!counted.has(eid)) {
+              counted.add(eid);
+              victim.trackedCount++;
+            }
+          }
         }
 
         const trueX = Position.x[eid]!;
