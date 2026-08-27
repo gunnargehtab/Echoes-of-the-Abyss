@@ -145,10 +145,18 @@ process lives in the repo instead of in one person's head:
   screenshot an art PR needs.
 - **hull-intake** — validates a 3D model export (GLB) and bakes the review maps; the
   intake gate in [docs/graphics-standards.md](docs/graphics-standards.md).
+- **work-issue** — picks one unclaimed, non-epic issue off the backlog and takes it to a
+  PR, or comments and stops when the call is a design one. This is the skill a scheduled
+  Routine runs unattended several times a day; its open-PR cap, not its schedule, is what
+  keeps CI spend bounded.
 
 When you find yourself re-explaining a workflow a second time — a bake step, a test
-harness, a review checklist — turn it into a skill next to these two rather than a wiki
+harness, a review checklist — turn it into a skill next to these three rather than a wiki
 page nobody runs.
+
+`.claude/hooks/session-start.sh` runs `npm install` and `npm run build:shared` when a
+remote session starts, so an agent container arrives with the gates above already
+runnable. It is a no-op in a local checkout, which manages its own `node_modules`.
 
 ## Verifying on Android
 
