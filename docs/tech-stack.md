@@ -393,7 +393,7 @@ table:
 | Knob | Recruit | Veteran |
 | --- | --- | --- |
 | Echo ticks between decisions | 15 (three seconds) | 3 |
-| Manages its throttle when exposed | no | yes |
+| Manages its throttle when it believes it is being tracked | no | yes |
 | Uses Silent Running | no | yes |
 | Pings to classify | no | yes |
 | Patience before committing | 0.7× doctrine | 1× |
@@ -409,9 +409,13 @@ minutes** and a Recruit in **15.5** — the same information, twice the time.
 `ai/doctrine.ts` turns each faction's line from [factions.md](factions.md) into numbers. The
 Consortium's is "stealth is a rounding error", so its commander harvests on Overburden,
 never runs silent, pings freely and pushes at four hulls. The Commune's is "lowest SIG in
-the game", so its commander trickles when exposed, approaches silently, and waits for six.
-The Directorate pings least of anyone, because it already hears a tier further and a
-transmission buys it the least for the same self-reveal.
+the game", so its commander trickles once a bearing sticks for six seconds, approaches
+silently, and waits for six hulls. The Directorate pings least of anyone, because it already
+hears a tier further and a transmission buys it the least for the same self-reveal — and for
+the same reason it waits **twenty-five** seconds before it believes a bearing is worth
+paying to break, four times the Commune's hold. That number is the doctrine: the Listening
+is the one navy that can wait to find out whether a line on it is being converted into an
+approach, because whatever is doing the converting, it will hear coming.
 
 Every field in that table has to be justifiable by a sentence about being heard or hearing.
 One that is not is a knob, not a doctrine.
@@ -419,9 +423,10 @@ One that is not is a knob, not a doctrine.
 ### What it does, and what it deliberately does not
 
 It harvests and assigns fields once (the harvest loop cycles by itself, and a commander
-cannot see a harvester's mode — a player cannot either), manages throttle against its own
-exposure, builds a Refinery then a Vent Tap when Thermal Draw tightens then a Turret once
-something has actually been heard near home, produces to a doctrine composition, scouts the
+cannot see a harvester's mode — a player cannot either), prices its own loudness against
+what it believes is being held on it, builds a Refinery then a Vent Tap when Thermal Draw
+tightens then a Turret once something has actually been heard near home, produces to a
+doctrine composition, scouts the
 enemy start with a Light Scout, rallies between home and the enemy, and pushes when it has
 the hulls. It prioritises a Bastion over any other structure and any structure over any
 hull — an ordering only available at Tier 3, so it is information it earned.
@@ -443,6 +448,31 @@ already on the doorstep skips the deliberation entirely, because being wrong abo
 costs a wasted trip and being wrong about a raid costs the match. Measured against its
 farthest position rather than its first, so a hull that runs silent, drifts out and returns
 is approaching on the way back.
+
+**It decides for itself whether being heard is worth paying to stop**, which is the same
+kind of question and became a real one only when the price changed. The drop to Trickle used
+to fire on `exposure.tier >= Bearing` and hold for as long as that stayed true, and while
+the throttle scaled the cut rate that was nearly free. Once it scaled the *load*
+([economy.md](economy.md) §3) the same reflex cost 54% of an economy, and the two navies
+that use it were paying it for a fact that means only "somebody knows roughly where you
+are" — not that they are close, coming, or capable.
+
+So the commander waits for the *holding* of a bearing rather than the bearing, for the
+doctrine's own number of seconds, which is the part a sweep passing over does not do. Three
+rules finish it. A lapse shorter than one ping's reveal is a blink between sweeps and does
+not count as the line breaking. A spell of quiet ends after ninety seconds — two harvest
+round trips — because exposure is a fact about the *whole force*, and a bearing that
+survives that long is being held on a Bastion or a rallied army that no harvest throttle in
+the game can quiet; the bet lost, and the commander goes back to work and makes them find it
+again. And the watch is deliberately **asymmetric**: entering costs the whole hold, leaving
+costs nothing beyond a blink, because being briefly loud costs SIG and being needlessly
+quiet costs half an economy.
+
+Measured on `ventfront-divide`, seed 4000, the reflex hid each navy for *exactly* as long as
+it was heard — the Commune 94% of the match against 94% exposed, the Directorate 64% against
+64%. The watch breaks that identity: 69% and 47%, with the Directorate's income up 18%. The
+Commune's barely moved, and that is a finding rather than a failure — at roughly one live
+harvester it is short of haulers, not short of throttle.
 
 It **manoeuvres in depth**, and for most of this file's life it did not. That was a deliberate
 omission before the thermocline — depth had no acoustic consequence, so an AI diving for
