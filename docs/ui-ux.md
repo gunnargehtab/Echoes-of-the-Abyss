@@ -97,7 +97,18 @@ camera viewport. Returns are sized *inversely* to tier — a Tier-1 return is th
 softest mark on the scope, because its size is the uncertainty rather than the contact,
 while a Tier-4 track is a tight point. They were previously uniform dots, which drew a
 Tier-1 haze as crisply as a Tier-4 track: the scope asserting precision the server never
-sent. The Echo Marks layer waits on the marks themselves.
+sent. The Echo Marks layer is drawn too (#213), between the terrain wash and the returns:
+the same ink the world view uses, so residue cannot change colour between the two views a
+player reads the same water in. Three things the scope settles differently. A stain has a
+**floor of 3 px**, because a mark legible in the world and invisible on the scope has not
+been drawn, and the opacity it lost to the shrink comes back capped at **0.15 a disc** —
+solved from the Tier-1 haze's 0.22 so no residue ever out-inks the faintest return.
+**Torpedo wakes keep their line.** A wake dot is sized at a quarter of
+`ECHO_MARKS.MERGE_RADIUS_M`, the span inside which two marks of one kind reinforce instead
+of accumulating and therefore the closest two distinct wake marks can ever be: half the gap
+between them stays open at every zoom, so a run reads as the dotted track it is rather than
+the bar a floored stain would smear it into. Where even that dot cannot hold its gap, wakes
+are dropped rather than drawn — a scope that smears is worse than one that stays quiet.
 
 ### Attention on the scope
 
@@ -520,7 +531,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | Silent-running dimming | Implemented |
 | Depth ribbon, PR badge, unrecoverable-hull hatching | Implemented (`D` dive, `A` rise; hold `Alt` to preview the dive cost) |
 | Thermocline on the ribbon, duct as a depth rung | Implemented — cyan line at 1,200 m, duct shaded, `DUCT` / `UNDER` in the readout |
-| Sonar-scope minimap | Implemented — terrain, tier-fidelity returns, sweep, range rings; Echo Marks layer pending |
+| Sonar-scope minimap | Implemented — terrain, tier-fidelity returns, Echo Marks under them, sweep, range rings |
 | Contact log | Implemented — DOM, live region, click-to-focus; the `MARK` row is still pending |
 | Contact voices, per-tier | Implemented — pan authority by tier, biome voicing, faction timbre at Tier 3+ |
 | Self-noise bed, SIG band label, masking readout | Implemented — server-sent, never inferred |

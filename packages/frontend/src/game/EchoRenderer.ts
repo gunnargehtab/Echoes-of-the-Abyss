@@ -91,6 +91,7 @@ import {
   type Bindings,
 } from '../input/bindings.ts';
 import { FACTION_NAME } from './factions.ts';
+import { drawScopeEchoMarks, markRadiusM, MARK_STYLE } from './echoMarks.ts';
 import type { ContactAudioEntry, ContactAudioFrame } from '../audio/contactMixer.ts';
 import type { PingReturn, SelfAudioFrame } from '../audio/selfMixer.ts';
 import {
@@ -213,14 +214,6 @@ function compassDeg(bearing: number): number {
 const LOCK_FLASH_MS = 700;
 
 /**
- * How each kind of residue is drawn.
- *
- * Deliberately dim and desaturated against the contact palette: a mark must
- * never be mistaken for a contact (docs/audio-direction.md §6 states the rule
- * for the mix; it holds for the screen too), and it must never be mistaken for
- * nothing either, "or the scouting economy dies".
- */
-/**
  * How each hazard phase is drawn.
  *
  * Dormant is faint but never invisible: a hazard the player forgets is a
@@ -232,20 +225,6 @@ const HAZARD_STYLE: Record<HazardPhase, { width: number; alpha: number }> = {
   [HazardPhase.Warning]: { width: 3, alpha: 0.7 },
   [HazardPhase.Active]: { width: 4, alpha: 0.95 },
   [HazardPhase.Decay]: { width: 3, alpha: 0.5 },
-};
-
-const MARK_STYLE: Record<EchoMarkKind, { color: number; alpha: number; radiusM: number }> = {
-  [EchoMarkKind.Battle]: { color: 0xb4553c, alpha: 0.3, radiusM: 320 },
-  [EchoMarkKind.DestroyedStructure]: { color: 0x8c6a44, alpha: 0.34, radiusM: 420 },
-  // The hum reads cooler and wider: it is a state, not an event, and a player
-  // should be able to tell at a glance that they have found an economy rather
-  // than a fight.
-  [EchoMarkKind.IndustrialHum]: { color: 0x3f7f86, alpha: 0.28, radiusM: 520 },
-  // Tight and pale, because a wake is the one piece of residue whose *shape*
-  // carries information: laid down once a second along a torpedo's run, a
-  // string of small marks draws the track it took, and a wide blob would smear
-  // the line back into a single vague area (docs/systems-combat.md §12).
-  [EchoMarkKind.TorpedoWake]: { color: 0x9fb6c4, alpha: 0.24, radiusM: 160 },
 };
 
 /**
@@ -3401,7 +3380,7 @@ export class EchoRenderer {
     for (const mark of this.marks) {
       const style = MARK_STYLE[mark.kind];
       if (style === undefined) continue;
-      const radius = style.radiusM * (0.55 + mark.intensity * 0.45);
+      const radius = markRadiusM(mark.kind, mark.intensity);
 
       // Three soft rings rather than a disc: residue has no edge, and a disc
       // at any alpha reads as an object sitting on the seabed.
@@ -4441,6 +4420,14 @@ export class EchoRenderer {
         });
       }
     }
+
+    // Echo Marks (§5): "a separate dimmer layer, drawn beneath returns, in a
+    // colder hue". Beneath is the whole of it — the residue goes down after
+    // the terrain wash and the drift stripping that is also ground, and before
+    // the first return, so a contact always sits on top of the residue near
+    // it. Past and present must never share an ink, on this instrument as in
+    // the world.
+    drawScopeEchoMarks(og, this.marks, k);
 
     const scopeNow = performance.now();
     for (const { contact, firstSeenMs } of this.tracked.values()) {
