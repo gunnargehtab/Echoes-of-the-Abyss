@@ -18,6 +18,8 @@ Two centuries in the same water produced a common culture before it produced fou
 
 **The body goes deeper.** All four cultures dispose of their dead downward, into water below their own habitation. The reasoning differs completely and the practice is identical, which is roughly the Rift in one sentence.
 
+**The surface is past tense.** Nobody says *up there*; they say *before*. The Surface Age is a time, not a place — after the Sounding of 141 the Rift stopped treating the surface as geography ([world.md](world.md)), and eight generations later the grammar has caught up. Grief for it is archaic, curiosity about it is eccentric, and wanting it back is a category error no adult makes. Each register has its own way of closing the subject; see the quote blocks in §3.
+
 ---
 
 ## 2. Time, Measure, Money
@@ -51,6 +53,8 @@ Consortium speech is **procedural, exact, and quietly euphemistic**. They talk a
 > "We recovered Halvard. Everyone remembers that we charged for it. Nobody remembers that we went."
 >
 > "Log it as an exception and stop calling it a tragedy."
+>
+> "There is no line item for the sky. There has not been since the ledgers restarted, and the books balance."
 
 ### Pelagia Commune — the language of gardens
 
@@ -67,6 +71,8 @@ Warm, plural, exhausting. Commune speech assumes consensus is achievable and tre
 > "You want to know who speaks for the plateaus. Nobody does. That's not obstruction, that's the arrangement."
 >
 > "Scarcity is a design flaw. We keep saying it. You keep hearing a threat."
+>
+> "We don't mourn the surface. Everything that could be tended came down with us."
 
 ### Abyssal Directorate — the language of liturgy
 
@@ -83,6 +89,8 @@ Formal, patient, and structurally humble. The Directorate speaks in the **passiv
 > "I was assigned. You were sold. I am not certain yours is the better arrangement."
 >
 > "The transcripts are eight generations long. We publish nothing. We have never been wrong about the cycle."
+>
+> "What is above the Lid is not attended. It stopped speaking, and attendance is owed to what speaks."
 
 ### Hadron Knights — the language of instruments, differently
 
@@ -99,6 +107,8 @@ Precise, courteous, and slightly archaic — a small order that has been talking
 > "We were answered once. Nothing good has ever been said twice."
 >
 > "Nineteen. We can replace the hulls in a season and the Knights in never."
+>
+> "The Sounding brought back four hours of silence, and the Order keeps the recording. Not as an interval — an interval implies the instrument survives."
 
 ### The Sorrowgate court — the language of the record
 
@@ -153,6 +163,7 @@ Address is by title in all four cultures, and getting a title wrong is a real er
 | Let each faction be right in its own register | Give a faction a line that concedes another faction's frame. They do not share frames |
 | Keep the Mouth undescribed. Characters may speculate, contradict each other, and be wrong | Let any character be authoritatively correct about the Mouth, including in narration ([timeline.md](timeline.md)) |
 | Use *tides* for short intervals and *PC* years for dates | Use hours, days, or weeks. The Rift does not |
+| Keep the Surface Age in the past tense — the surface is *before*, not *above* ([world.md](world.md)) | Let any character want the surface back, plan for it, or treat it as a destination. The door up is not locked; there is nothing behind it |
 | Let the Commune be genuinely slow and the Directorate genuinely content | Write the Commune as naive or the Directorate as miserable. Both readings collapse the argument the game is making |
 
 **The register test:** take any line and ask which faction could not have said it. If the answer is *none*, the line is not yet written.

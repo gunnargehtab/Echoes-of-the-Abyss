@@ -19,11 +19,13 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | --- | --- |
 | **[world.md](world.md)** | The Pelagion Rift, the Salinity Collapse, the Mouth, culture and language |
 | **[timeline.md](timeline.md)** | Two centuries, from the Collapse to 214 PC, and the Mouth's anomaly log |
+| **[world-map.md](world-map.md)** | The Rift's geography: regions, the vertical order, every named place, and where the campaign happens |
 | **[factions.md](factions.md)** | The four powers — doctrine, politics, weakness |
 | **[characters.md](characters.md)** | Twelve commanders and the neutrals |
 | **[culture.md](culture.md)** | How the Rift speaks — five registers, names, rituals, writing guide |
 | **[campaign.md](campaign.md)** | 29 missions designed, four campaigns, four irreconcilable endings — one of the 29 is built |
 | **[mission-sorrowgate.md](mission-sorrowgate.md)** | The prologue, specified: the court, the flight, the silence order, the ping, and what answers it |
+| **[mission-asset-recovery.md](mission-asset-recovery.md)** | The Ledger 1, specified: Face Six, the manifest, the taps, and the Klaxon posture |
 
 ## Gameplay
 
@@ -48,7 +50,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | **[style-neon-noir.md](style-neon-noir.md)** | Neon-noir presentation register: palette tokens, glow rules, UI chrome |
 | **[asset-prompts-3d.md](asset-prompts-3d.md)** | Copy-paste prompt kit for style-consistent 3D roster models (Claude Design) |
 | **[naming.md](naming.md)** | Title, taglines, logo direction |
-| **[concept-art/](concept-art/)** | Four survey plates in the Pressure Cartography language, plus two neon-noir presentation plates |
+| **[concept-art/](concept-art/)** | Five survey plates in the Pressure Cartography language, plus two neon-noir presentation plates |
 
 ## Technical
 
@@ -74,9 +76,11 @@ The prologue is built and the campaign around it is not. What follows is designe
 stated in a doc that ships, and unbuilt — named in plain text because none of it has a document
 to point at yet:
 
-- **The remaining 28 missions.** campaign.md §4–§7 gives them titles, teaching targets and
+- **The remaining 27 missions.** campaign.md §4–§7 gives them titles, teaching targets and
   beats, which is not a specification. Each needs a document of its own — one doc per mission,
-  the pattern mission-sorrowgate.md sets — before it needs code.
+  the pattern mission-sorrowgate.md sets and mission-asset-recovery.md continues — before it
+  needs code. The Ledger 1 is specified and not built; its scaffold-status section lists what
+  the mission format still needs (the Klaxon band, an authored static emitter, the lift).
 - **Campaign progression and unlock state.** Nothing records that a mission was played, so the
   prologue is replayable, remembers nothing, and the Tutorial and campaign doors are the same
   door.
