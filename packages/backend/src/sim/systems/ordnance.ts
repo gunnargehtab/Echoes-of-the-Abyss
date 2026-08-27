@@ -72,6 +72,25 @@ const audible = defineQuery([Position, Acoustic, Owner, Health]);
 const magazines = defineQuery([Magazine, Position, Owner]);
 const depots = defineQuery([Structure, Position, Owner]);
 const suites = defineQuery([Countermeasure]);
+/**
+ * Battle-site intensity one detonation adds.
+ *
+ * TUNABLE, and the sibling of combat.ts's `BATTLE_MARK_PER_SHOT` (0.09, sized
+ * so about a dozen discharges saturate a site). A detonation is one event the
+ * way a discharge is — intensity has never scaled with damage, and a Scout's
+ * plink already adds what a Cruiser's shell does — but it is a far bigger one,
+ * so three or four on the same ground read as a full battle site.
+ *
+ * One number for all three detonating kinds rather than three: what the layer
+ * records is how much violence happened here, and a mine, a charge and a
+ * torpedo are all "something went off".
+ *
+ * It was 1.0 until #216, which is not a number anybody chose — it is the
+ * default `add` takes when no intensity is passed, and no intensity was
+ * passed by any ordnance mark in the game.
+ */
+const BATTLE_MARK_PER_DETONATION = 0.35;
+
 const laying = defineQuery([Laying]);
 
 /**
@@ -190,7 +209,7 @@ function detonate(world: SimWorld, eid: number, target: number, destroyed: numbe
   const tx = Position.x[target]!;
   const ty = Position.y[target]!;
 
-  world.marks.add(EchoMarkKind.Battle, tx, ty, 1);
+  world.marks.add(EchoMarkKind.Battle, tx, ty, Position.depth[target]!, BATTLE_MARK_PER_DETONATION);
   Health.hp[target] = Health.hp[target]! - damage;
   // The blow is reported to its owner (docs/ui-ux.md §5), same as a gun's.
   raiseSelfEvent(world, { kind: SelfEventKind.Damaged, eid: target });
@@ -456,7 +475,7 @@ function blast(
   const slot = Owner.slot[eid]!;
 
   Ordnance.detonatingS[eid] = options.echoS;
-  world.marks.add(EchoMarkKind.Battle, x, y, 1);
+  world.marks.add(EchoMarkKind.Battle, x, y, depth, BATTLE_MARK_PER_DETONATION);
   // "Explosions clear kelp temporarily" — docs/hazards.md §4. This is the only
   // place in the simulation that knows a detonation happened somewhere, so it
   // is the only place that can tear a canopy open.
@@ -716,6 +735,7 @@ export function ordnanceSystem(world: SimWorld, destroyed: number[]): void {
         EchoMarkKind.TorpedoWake,
         Position.x[eid]!,
         Position.y[eid]!,
+        Position.depth[eid]!,
         ORDNANCE.TORPEDO.WAKE_MARK_INTENSITY
       );
     }
