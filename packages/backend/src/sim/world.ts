@@ -106,6 +106,14 @@ export interface SimWorld extends IWorld {
    */
   spireActive: Set<number>;
   /**
+   * Bloom-share nodes, copied from the map at construction — docs/economy.md
+   * §6. Plain positions rather than entities: a bloom is ground, not a thing
+   * in the water — never mined, never depleted, never a contact — so seating
+   * it in the ECS would hand it to queries (targeting, the Echo pass) that
+   * have no business seeing it. Read every tick by `bloomShareSystem`.
+   */
+  blooms: { x: number; y: number }[];
+  /**
    * The simulation's only source of randomness. Seeded per match and part of
    * simulation state — see sim/rng.ts. Nothing in sim/ may call Math.random().
    */
@@ -264,6 +272,7 @@ export function createSimWorld(terrain: Terrain, dt: number, seed: number): SimW
   world.economies = new Map();
   world.production = new Map();
   world.spireActive = new Set();
+  world.blooms = [];
   world.rng = new Rng(seed);
   world.localOfEid = new Map();
   world.eidOfLocal = new Map();
