@@ -64,6 +64,11 @@ top-down 3/4 camera, as seen in an RTS. No text, no logos, no water
 surface — this vessel is deep underwater.
 ```
 
+The 3/4 camera is a *generation pose* — it makes concept renders and review shots read
+the way the game feels. The shipped projection is pure top-down plan view, with the
+three-quarter effect painted by per-pixel relief lighting: see "Camera & Projection" in
+[art-direction.md](art-direction.md).
+
 ## Block 2 — FACTION (pick one)
 
 Palettes and silhouette law are quoted from [factions.md](factions.md).

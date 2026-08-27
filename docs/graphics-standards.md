@@ -131,6 +131,19 @@ garnish, not game information — fine to keep in the bake, never a reason to ra
 density. The glance test for any new visual: can a player who has read nothing tell *whose*
 it is, *how loud* it is, and *whether it is theirs* in under a second?
 
+### 8. Projection discipline — gameplay geometry is plan view
+
+The camera spec in [art-direction.md](art-direction.md) ("Camera & Projection") is a gate,
+not a mood note. Everything that carries gameplay information — terrain, the cell grid,
+movement, detection rings, the ping preview — renders in pure top-down orthographic plan
+view: a range ring is a perfect circle on screen, and a metre is the same length in every
+direction. No camera rotation ships, and no atmosphere pass (vignette, sway, parallax fog,
+chromatic split) may tilt, shear or rotate that projection — sway is translation only.
+Hulls get their three-quarter read from per-pixel relief lighting in the shared bake, never
+from an oblique render: a sprite's footprint stays exactly its `HULL_OUTLINE`. The gate-6
+density contract (pixel size ÷ px/m = metre extent) is plan-view arithmetic and is one of
+the reasons this rule cannot be bent locally.
+
 ## Review checklist for any PR that touches visuals
 
 - [ ] New or changed hull/structure art goes through the pipeline of record (gate 1) —
@@ -145,6 +158,8 @@ it is, *how loud* it is, and *whether it is theirs* in under a second?
   own-force-only (gate 5)
 - [ ] Map density contracts (`4` / `1.5` px/m) untouched, or changed on both sides at once
   (gate 6)
+- [ ] Gameplay geometry still renders in plan view — rings are circles, no rotation, no
+  oblique or tilted rendering path, atmosphere effects stay screen-space (gate 8)
 - [ ] Screenshot in the PR, taken via the **run-game** skill — a visual change is reviewed
   by looking at it, not by reading its diff
 - [ ] If the change alters what things *should* look like (not just how they are built),
