@@ -20,6 +20,15 @@ import type { MapDefinition } from './types.ts';
 const W = ABYSSAL_RIFT_CORRIDOR_HEADER.widthM;
 const H = ABYSSAL_RIFT_CORRIDOR_HEADER.heightM;
 
+/**
+ * Every rectangle below lands on the 250 m cell grid, so each paints exactly
+ * the metres it reads (issue #157, docs/maps.md "How a map is written"). They
+ * were re-stated that way when the centre rule landed: the cells this map
+ * paints are the cells it has always played on, apart from the south vent band
+ * and the north coral one, which had each grown a column their mirror image
+ * had not — a rectangle ending exactly on a cell boundary used to claim the
+ * cell on the far side of it.
+ */
 export const ABYSSAL_RIFT_CORRIDOR: MapDefinition = {
   ...ABYSSAL_RIFT_CORRIDOR_HEADER,
   doc: 'docs/maps.md — Map Type 3',
@@ -37,10 +46,10 @@ export const ABYSSAL_RIFT_CORRIDOR: MapDefinition = {
     // committing to the rift is now a thing a player does rather than a thing
     // they wake up in.
     {
-      x: 1800,
-      y: 2200,
-      widthM: W - 3600,
-      heightM: 1600,
+      x: 1750,
+      y: 2000,
+      widthM: W - 3500,
+      heightM: 2000,
       biome: Biome.AbyssalTrench,
       // "Long, narrow, deep", and deep enough for the crystal field seated at
       // 2,400 m in the middle of it. Dropping into the rift is a descent, which
@@ -52,9 +61,9 @@ export const ABYSSAL_RIFT_CORRIDOR: MapDefinition = {
     // without being silent.
     {
       x: 0,
-      y: 1800,
-      widthM: 1800,
-      heightM: 2400,
+      y: 1750,
+      widthM: 2000,
+      heightM: 2500,
       biome: Biome.CoralRuins,
       // "Side plateaus for expansions": 700 m clears the 600 m structures and
       // nodule fields sit at, and leaves no room to lurk deep over a base.
@@ -62,45 +71,45 @@ export const ABYSSAL_RIFT_CORRIDOR: MapDefinition = {
       note: 'West apron',
     },
     {
-      x: W - 1800,
-      y: 1800,
-      widthM: 1800,
-      heightM: 2400,
+      x: W - 2000,
+      y: 1750,
+      widthM: 2000,
+      heightM: 2500,
       biome: Biome.CoralRuins,
       floorM: 700,
       note: 'East apron',
     },
     // "Side: Thermal Veins + Coral Ruins" — the only cover on the map.
-    { x: 1500, y: 600, widthM: 2600, heightM: 1200, biome: Biome.ThermalVein, note: 'North vents' },
+    { x: 1500, y: 500, widthM: 2750, heightM: 1500, biome: Biome.ThermalVein, note: 'North vents' },
     {
-      x: W - 4100,
-      y: H - 1800,
-      widthM: 2600,
-      heightM: 1200,
+      x: W - 4250,
+      y: H - 2000,
+      widthM: 2750,
+      heightM: 1500,
       biome: Biome.ThermalVein,
       note: 'South vents',
     },
-    { x: 1500, y: H - 1800, widthM: 2600, heightM: 1200, biome: Biome.CoralRuins },
-    { x: W - 4100, y: 600, widthM: 2600, heightM: 1200, biome: Biome.CoralRuins },
+    { x: 1500, y: H - 2000, widthM: 2750, heightM: 1500, biome: Biome.CoralRuins },
+    { x: W - 4250, y: 500, widthM: 2750, heightM: 1500, biome: Biome.CoralRuins },
     // "Corners: Resonance Fields" — bearings lie there, which is the reward
     // for holding a corner and the risk of walking into one.
-    { x: 0, y: 0, widthM: 1200, heightM: 1200, biome: Biome.ResonanceField },
-    { x: W - 1200, y: 0, widthM: 1200, heightM: 1200, biome: Biome.ResonanceField },
-    { x: 0, y: H - 1200, widthM: 1200, heightM: 1200, biome: Biome.ResonanceField },
-    { x: W - 1200, y: H - 1200, widthM: 1200, heightM: 1200, biome: Biome.ResonanceField },
+    { x: 0, y: 0, widthM: 1250, heightM: 1250, biome: Biome.ResonanceField },
+    { x: W - 1250, y: 0, widthM: 1250, heightM: 1250, biome: Biome.ResonanceField },
+    { x: 0, y: H - 1250, widthM: 1250, heightM: 1250, biome: Biome.ResonanceField },
+    { x: W - 1250, y: H - 1250, widthM: 1250, heightM: 1250, biome: Biome.ResonanceField },
     // "Brutal choke points": two coral shelves pinching the corridor.
     {
-      x: 3300,
-      y: 2200,
-      widthM: 400,
-      heightM: 1600,
+      x: 3250,
+      y: 2000,
+      widthM: 500,
+      heightM: 2000,
       biome: Biome.CoralRuins,
       // Shelf ground, like the Ventfront dividers: a choke you rise over
       // rather than one you route around.
       floorM: 380,
       note: 'West choke',
     },
-    { x: W - 3700, y: 2200, widthM: 400, heightM: 1600, biome: Biome.CoralRuins, floorM: 380 },
+    { x: W - 3750, y: 2000, widthM: 500, heightM: 2000, biome: Biome.CoralRuins, floorM: 380 },
   ],
   spawns: [
     { x: 900, y: H / 2, foundryOffsetX: 0, foundryOffsetY: -450 },

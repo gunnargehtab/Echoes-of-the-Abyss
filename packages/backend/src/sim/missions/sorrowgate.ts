@@ -131,32 +131,35 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
      * The arch, as a rectangle — §9's "the arch goes", and the two regions the
      * 10:40 beats write.
      *
-     * One cell row, 2,000-2,200 m, and that is the whole trick: on a 250 m grid
+     * One cell row, 2,000-2,250 m, and that is the whole trick: on a 250 m grid
      * it lands inside row 8 and nowhere else. Rows are what separate the
-     * chamber (from 2,300 m) from the Descent and the Concourse above it
-     * (to 1,600 m), so collapsing this row and re-cutting the lock through it
+     * chamber (from 2,250 m) from the Descent and the Concourse above it
+     * (to 1,750 m), so collapsing this row and re-cutting the lock through it
      * makes the lock the only way north — which is what §9 has been claiming
      * since before anything backed it.
      *
-     * The height is 200 rather than 250 on purpose: `fillGround` takes an
-     * inclusive rect, so a 250 m band starting on a cell boundary would reach
-     * into the next row and take the top of the chamber with it. The mission
-     * test reads the ground afterwards rather than trusting this comment.
+     * A full cell row is safe to say now: `fillGround` claims a cell when its
+     * *centre* is inside the rectangle (#157), so a band one cell tall laid on
+     * a row boundary is that row and nothing else. Under the rule this mission
+     * was written against it would have reached into the next row and taken the
+     * top of the chamber with it, sealing the court inside its own dome — which
+     * is why the height read 200. The mission test reads the ground afterwards
+     * rather than trusting this comment either way.
      */
     {
       id: 'arch-span',
       x: 0,
       y: 2000,
       widthM: 5000,
-      heightM: 200,
+      heightM: 250,
       note: 'The arch — the span the city carried over the chamber district, and everything level with it',
     },
     {
       id: 'service-lock',
-      x: 1900,
-      y: 1900,
-      widthM: 300,
-      heightM: 450,
+      x: 1750,
+      y: 1750,
+      widthM: 500,
+      heightM: 750,
       note: 'The Service Lock, restated from the map so the collapse can be cut back through it',
     },
   ],

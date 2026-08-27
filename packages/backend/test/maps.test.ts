@@ -31,12 +31,14 @@ import {
   DEFAULT_MAP_ID,
   KELP_LABYRINTH,
   MAPS,
+  MISSION_MAPS,
   VENTFRONT_DIVIDE,
   mapById,
   terrainFor,
 } from '../src/sim/maps/index.ts';
 import { Match } from '../src/sim/match.ts';
-import type { MapDefinition } from '../src/sim/maps/index.ts';
+import { Terrain } from '../src/sim/terrain.ts';
+import type { MapDefinition, MapRegion } from '../src/sim/maps/index.ts';
 
 /** Step a match until it produces an Echo snapshot. */
 function advanceToSnapshot(match: Match) {
@@ -59,6 +61,57 @@ function meanPf(map: MapDefinition, x: number, y: number, w: number, h: number):
     }
   }
   return total / n;
+}
+
+/**
+ * How many cells a region claims, painted alone onto an otherwise uniform
+ * grid.
+ *
+ * Painted over a sentinel biome rather than onto bare open water, because the
+ * Kelp Labyrinth authors an open-water region — the ring it cuts out of the
+ * coral — and counting it against an open-water grid would count nothing.
+ */
+function cellsClaimed(map: MapDefinition, region: MapRegion): number {
+  const sentinel = region.biome === Biome.OpenWater ? Biome.AbyssalTrench : Biome.OpenWater;
+  const terrain = new Terrain(map.widthM, map.heightM, map.cellM);
+  terrain.fillRect(0, 0, map.widthM, map.heightM, sentinel);
+  terrain.fillRect(region.x, region.y, region.widthM, region.heightM, region.biome);
+  let claimed = 0;
+  for (let y = map.cellM / 2; y < map.heightM; y += map.cellM) {
+    for (let x = map.cellM / 2; x < map.widthM; x += map.cellM) {
+      if (terrain.biomeAt(x, y) === region.biome) claimed++;
+    }
+  }
+  return claimed;
+}
+
+/**
+ * Is this map the same map from every seat? `mirror` maps a cell to the one it
+ * must match. Compared on biome *and* the water column, because a map that is
+ * symmetric in PF and not in floors is still handing one player a shallower
+ * approach than the other.
+ */
+function asymmetricCells(
+  map: MapDefinition,
+  mirror: (col: number, row: number, cols: number, rows: number) => [number, number]
+): number {
+  const grid = terrainFor(map).serialize();
+  let bad = 0;
+  for (let row = 0; row < grid.rows; row++) {
+    for (let col = 0; col < grid.cols; col++) {
+      const [mc, mr] = mirror(col, row, grid.cols, grid.rows);
+      const here = row * grid.cols + col;
+      const there = mr * grid.cols + mc;
+      if (
+        grid.biomes[here] !== grid.biomes[there] ||
+        grid.floor[here] !== grid.floor[there] ||
+        grid.ceiling[here] !== grid.ceiling[there]
+      ) {
+        bad++;
+      }
+    }
+  }
+  return bad;
 }
 
 /** Share of the whole map painted with a given biome. */
@@ -171,7 +224,78 @@ describe('the map catalogue', () => {
   });
 });
 
+describe('every map is authored on its own cell grid', () => {
+  // A cell belongs to the region whose rectangle contains its **centre**
+  // (#157, docs/maps.md "How a map is written"). Two things follow, and both
+  // are worth holding the maps to rather than trusting an author to remember.
+  //
+  // Mission maps are in scope here: this is a rule about authoring, not about
+  // balance, and Sorrowgate's service lock is the narrowest rectangle anybody
+  // has written.
+  for (const map of [...MAPS, ...MISSION_MAPS]) {
+    it(`${map.name} states every region in whole cells`, () => {
+      // A rectangle on cell boundaries paints exactly the metres it reads, so
+      // the map file and the map agree by construction. One that is not is
+      // asking for water the grid cannot hold: it gets the whole cells whose
+      // centres fall inside it, which is a quieter map than the one the file
+      // describes and a difference nobody sees until PF is measured.
+      for (const region of map.regions) {
+        const what = region.note ?? `${region.x},${region.y}`;
+        for (const [field, value] of [
+          ['x', region.x],
+          ['y', region.y],
+          ['widthM', region.widthM],
+          ['heightM', region.heightM],
+        ] as const) {
+          assert.equal(
+            value % map.cellM,
+            0,
+            `${map.name}: region "${what}" has ${field}=${value}, which is not a whole ` +
+              `${map.cellM} m cell — it will not paint the metres it reads`
+          );
+        }
+      }
+    });
+
+    it(`${map.name} paints every region it authors`, () => {
+      // The hazard the centre rule introduces, and the reason it is checked
+      // rather than commented: a rectangle thinner than a cell can fall
+      // between two centres and paint *nothing at all*, silently. A region
+      // that was authored and then vanished is worse than a mis-sized one,
+      // because the map still reads as though the ground is there.
+      for (const region of map.regions) {
+        assert.ok(
+          cellsClaimed(map, region) > 0,
+          `${map.name}: the region at ${region.x},${region.y} (${region.widthM}x` +
+            `${region.heightM} m) claims no cell — it falls between cell centres`
+        );
+      }
+    });
+  }
+});
+
 describe('Ventfront Divide', () => {
+  it('is the same map from all four corners', () => {
+    // Four spawns, symmetric across both axes (the map's own comment), so any
+    // cell that disagrees with its mirror is an advantage handed to one seat.
+    //
+    // It was not true until #157. The west plateaus reached a column east that
+    // the east plateaus could not reach west, because the map edge clipped the
+    // very column the touch rule was adding — 250 m of extra kelp cover, on
+    // two of the four bases, invisible in a map file that says 2000 either
+    // side.
+    assert.equal(
+      asymmetricCells(VENTFRONT_DIVIDE, (col, row, cols) => [cols - 1 - col, row]),
+      0,
+      'the east and west halves differ'
+    );
+    assert.equal(
+      asymmetricCells(VENTFRONT_DIVIDE, (col, row, _cols, rows) => [col, rows - 1 - row]),
+      0,
+      'the north and south halves differ'
+    );
+  });
+
   it('masks its middle and carries sound on its flanks', () => {
     // "Center: Thermal Veins" (PF 0.45) with "North/South: Abyssal Trenches"
     // (PF 1.6). The map's whole proposition is that the contested ground is
@@ -248,6 +372,23 @@ describe('Ventfront Divide — the crystal field sits inside both vents', () => 
 });
 
 describe('Abyssal Rift Corridor', () => {
+  it('is the same map from either end', () => {
+    // Not a mirror: this map's vents sit north-west and south-east, so the
+    // symmetry that makes it a fair 1v1 is a half turn — each player sees the
+    // same layout from their own end. The south vent band and the north coral
+    // one each carried a column their opposite number did not until #157,
+    // because a rectangle ending exactly on a cell boundary used to claim the
+    // cell on the far side of it.
+    assert.equal(
+      asymmetricCells(ABYSSAL_RIFT_CORRIDOR, (col, row, cols, rows) => [
+        cols - 1 - col,
+        rows - 1 - row,
+      ]),
+      0,
+      'the two halves of the corridor differ under a half turn'
+    );
+  });
+
   it('is long and narrow rather than square', () => {
     // "central trench corridor (long, narrow, deep)" — a square map cannot
     // express that, which is why map dimensions are authored per map.
