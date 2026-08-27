@@ -75,6 +75,60 @@ describe('exposure report', () => {
     }
   });
 
+  it('counts the hulls being watched, not the opponents watching them', () => {
+    // Two commanders hid this: `trackedCount` was incremented once per
+    // (observer, entity) pair, and with one opponent those are the same
+    // number. With three commanders in the water they are not — the field is
+    // documented as "how many of your entities are resolved at Bearing or
+    // better", and the HUD prints it as `TRACKED xN`, so a single Cruiser two
+    // opponents were holding read as two tracked hulls (#217).
+    const match = new Match(undefined, { fauna: false, seed: 12 });
+    match.addPlayer(0, Faction.Bathyarch);
+    match.addPlayer(1, Faction.Pelagia);
+    match.addPlayer(2, Faction.Directorate);
+
+    // Mid-map, far from every spawn, so the only thing of slot 0's that
+    // anybody can hear is this one hull.
+    spawnUnit(match.world, {
+      kind: UnitKind.Cruiser,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 4000,
+      y: 4000,
+    });
+    spawnUnit(match.world, {
+      kind: UnitKind.LightScout,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: 4200,
+      y: 4000,
+    });
+    spawnUnit(match.world, {
+      kind: UnitKind.LightScout,
+      slot: 2,
+      faction: Faction.Directorate,
+      x: 3800,
+      y: 4000,
+    });
+
+    const snapshots = nextSnapshot(match);
+    const mine = snapshots.get(0)!;
+
+    // Both of them really are holding that hull, or this asserts nothing.
+    for (const other of [1, 2]) {
+      const onTheCruiser = snapshots
+        .get(other)!
+        .contacts.filter((c) => c.kind === UnitKind.Cruiser && c.tier >= ResolutionTier.Bearing);
+      assert.equal(onTheCruiser.length, 1, `slot ${other} holds the Cruiser`);
+    }
+
+    assert.equal(mine.exposure.trackedCount, 1, 'one hull, two opponents holding it');
+    assert.ok(
+      mine.exposure.trackedCount <= mine.units.length + mine.structures.length,
+      `tracked ${mine.exposure.trackedCount} of ${mine.units.length + mine.structures.length} own entities`
+    );
+  });
+
   it('reports silence when the two sides are out of earshot', () => {
     // Corner to corner on an 8 km map: far past anything a corvette radiates.
     const { match } = twoSides(7000);
