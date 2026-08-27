@@ -21,6 +21,7 @@ No firm dates survive, and the Rift has stopped pretending otherwise.
 - Deep-ocean chemistry destabilised over roughly two generations: stratification failed, oxygen minimum zones expanded upward, and the surface ocean's food web went with it.
 - Deep habitation existed before the Collapse as research stations, vent-field industry, and a handful of permanent colonies. **None of it was built to be lived in permanently.** Everything the Rift owns is a retrofit of something meant to be temporary, and it shows.
 - The Pelagion Rift was already known and already worked — the **Ninefold Vein** was producing decades before the Collapse, which is why the Consortium's seal bears a field older than the Consortium.
+- The one exception under construction: a civic deep colony in the Rift itself — a transit line, a passenger terminus, a hydrophone array larger than anything any faction has built since. It was half-finished at year 0, it took the descent's whole weight, and its name did not survive it. The Rift calls the ruin Sorrowgate, after the gate its dead went through ([world-map.md](world-map.md)).
 
 ---
 
@@ -33,6 +34,8 @@ The Rift's shared founding fact is not heroism. It is that everyone here is desc
 ---
 
 ## The Descent — 0 to 50 PC
+
+Somewhere in these decades the old city fell in — the dome, the arch, the line, in some year nobody kept ([mission-sorrowgate.md](mission-sorrowgate.md)). That the Rift lost the date tells you what the decades were.
 
 | Year | Event |
 | --- | --- |
@@ -70,6 +73,7 @@ Seventy-five years without a general war, for one reason: **acoustic parity**. E
 | --- | --- |
 | 121 PC | First Baffle installed at a Consortium refinery: the beginning of masking as an industry, and the first crack in parity |
 | ~140 PC | Chapter-houses are built into Resonance Fields, each a physical instrument. The Knights become the only faction working resonant crystal |
+| **141 PC** | **The Sounding of 141.** The only joint expedition in the Rift's history goes up through the Lid in sealed hulls and spends three tides on the surface. It finds white water, breathable air on a good wind, and nothing to eat, nothing to burn, nothing to hear. The hydrophone record — four hours of a dead ocean — is the real report; the Directorate keeps a copy, and nobody plays it twice. *When do we go back* leaves the Rift's politics and does not return ([world.md](world.md)) |
 | 165 PC | The **Sorrowgate Arbitration Court** opens in a collapsed transit dome. All four powers use it. All four deny using it |
 | **178 PC** | **The First Chord** is completed and transmits into the Mouth. A reply arrives **forty-one seconds early**. Three technicians never regain speech. They begin to write, and have not stopped |
 | **186 PC** | Vehl Ossary seals his own teacher's research on the Choir. The teacher dies in confinement, still writing |
@@ -127,6 +131,7 @@ The timeline does not answer these, and the campaign does not either ([campaign.
 ## Related
 
 - **[world.md](world.md)** — the setting these events happened to
+- **[world-map.md](world-map.md)** — where they happened: the geography and every named place
 - **[factions.md](factions.md)** — the four crises, in institutional detail
 - **[characters.md](characters.md)** — the people who were in the room
 - **[culture.md](culture.md)** — tides, the PC calendar, and how the Rift talks about its own history

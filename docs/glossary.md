@@ -61,6 +61,11 @@ Depth Bands
 - Depth interacts with PR and ascent/descent mechanics; see systems-depth.md for the commitment and attrition rules.
 - The bands are the ruleset and are identical on every map. How much water stands over a given patch of ground is map data — see Floor and Ceiling.
 
+The Lid
+
+- The Rift's name for the sour surface layer: roughly the top 150 m of the ocean, poisoned since the Salinity Collapse and stable ever since (world.md). *Sour* is the old industry word for sulfide-laden water, and it is the word that survived.
+- Lore, not a mechanic: no map authors playable water inside it and no rule needs to forbid it. Distinct from the Directorate's shallow-water penalty, which is their own physiology above 400 m and theirs alone (factions.md).
+
 Floor (seabed)
 
 - How deep the water goes at a point on the map, in metres. Map data, authored per region — not a global constant, and unrelated to the Depth Band boundaries.
