@@ -374,11 +374,13 @@ rectangle, because that is what happened — the city fell in and the maintenanc
 not — and because a single rect would have to know where the lock is and would stop agreeing
 with §11 the first time either moved.
 
-The span is one 250 m cell row, 2,000–2,200 m. That row is what separates the chamber (from
-2,300 m) from the Descent and the Concourse above it, so collapsing it leaves the lock's two
-columns as the only way north. It is deliberately *not* a full cell tall: the paint takes an
-inclusive rectangle, and a 250 m band starting on the row boundary would reach into the next
-row and seal the court inside its own dome.
+The span is one 250 m cell row, 2,000–2,250 m. That row is what separates the chamber (from
+2,250 m) from the Descent and the Concourse above it, so collapsing it leaves the lock's two
+columns as the only way north. A cell belongs to the rectangle that contains its centre
+([maps.md](maps.md), "How a map is written"), so a band one cell tall laid on the row boundary
+is that row and nothing else. Under the touch rule this mission was first written against it
+would have reached into the next row and sealed the court inside its own dome, which is why
+the span used to be authored 200 m tall against a 250 m grid.
 
 **The Commune's withdrawal moved with it.** All three of their 10:40 orders used to point into
 that row or the one above it, which is how a delegation ends up stranded in rock instead of
@@ -430,15 +432,23 @@ multi-layered ruins, collapsed domes, a tunnel beneath the main lane.
 | Region | Rect (x, y, w, h) | Biome | Floor | Ceiling | What it is |
 | --- | --- | --- | --- | --- | --- |
 | The Districts | 0, 0, 5000, 4000 | Coral Ruins | 1,600 | — | The drowned city. Painted first; everything else is cut into it |
-| The Upper Concourse | 1600, 0, 1800, 700 | Coral Ruins | **340** | — | The passenger terminus, above the layer. **The extraction point** |
-| The Descent | 2000, 700, 1000, 900 | Coral Ruins | 900 | — | The step between the Concourse and the city. Where 1,200 m is crossed |
-| The West Approach | 200, 1400, 1200, 900 | Thermal Vein | 1,600 | — | PF 0.45. The one road where the flight can be loud and get away with it. Nothing tells the player this |
-| The Service Lock | 1900, 1900, 300, 450 | Coral Ruins | 1,500 | **1,300** | Roofed water joining the chamber to the districts. After the arch goes, the only way out. A route nobody can be watched taking |
-| The Gate | 2100, 2300, 900, 900 | Coral Ruins | 1,500 | — | The dome and the chamber. The court |
-| The Commit | 1700, 3200, 1700, 800 | Abyssal Trench | **2,400** | — | The basin the city committed its dead into. PF 1.6 — which is how the ping got down there. Needs PR-3, and nothing the player owns is rated to follow it down (§3) |
+| The Upper Concourse | 1500, 0, 2000, 750 | Coral Ruins | **340** | — | The passenger terminus, above the layer. **The extraction point** |
+| The Descent | 2000, 500, 1250, 1250 | Coral Ruins | 900 | — | The step between the Concourse and the city. Where 1,200 m is crossed |
+| The West Approach | 0, 1250, 1500, 1250 | Thermal Vein | 1,600 | — | PF 0.45. The one road where the flight can be loud and get away with it. Nothing tells the player this |
+| The Service Lock | 1750, 1750, 500, 750 | Coral Ruins | 1,500 | **1,300** | Roofed water joining the chamber to the districts. After the arch goes, the only way out. A route nobody can be watched taking |
+| The Gate | 2000, 2250, 1250, 1000 | Coral Ruins | 1,500 | — | The dome and the chamber. The court |
+| The Commit | 1500, 3000, 2000, 1000 | Abyssal Trench | **2,400** | — | The basin the city committed its dead into. PF 1.6 — which is how the ping got down there. Needs PR-3, and nothing the player owns is rated to follow it down (§3) |
 
 One spawn, at the arch: 2550, 2150. No resources. No hazard sites. There is no economy in this
 mission and nothing to build.
+
+Every rectangle above lands on the 250 m cell grid, so each paints exactly the metres it reads
+([maps.md](maps.md), "How a map is written"). They were restated that way when issue #157
+replaced the touch rule with the centre rule: the water is the water this mission has always
+been played in, and it is the table that changed, to stop describing a chamber a cell narrower
+than the one the flight is actually in. The Service Lock reads 500 m rather than the 300 m it
+used to, for the same reason — two 250 m columns is what this grid can hold, and two columns is
+what it has always painted.
 
 **Sorrowgate is a mission map and is not in the public catalogue.** It has one seat, no
 resources and no second spawn, so it is not an archetype, is not balanced, and is not
