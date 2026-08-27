@@ -66,9 +66,17 @@ ref, so either source alone will let you collide with work already in flight.
 
 ## 2. Stop early if the backlog is already saturated
 
-Count the open pull requests whose head ref starts with `claude/`. **If there
-are two or more, do nothing and end the run.** Say so plainly and exit — do not
-fall through to step 4 and file an issue instead. A saturated backlog means stop.
+Count the open pull requests whose head ref starts with **`claude/issue-`**.
+**If there are two or more, do nothing and end the run.** Say so plainly and exit
+— do not fall through to step 4 and file an issue instead. A saturated backlog
+means stop.
+
+The prefix is `claude/issue-`, not the broader `claude/`, and the difference
+matters: every interactive session in this account also pushes `claude/…`
+branches, so counting all of them lets a human working in parallel throttle the
+loop for reasons that have nothing to do with it. The loop budgets its own work
+only. This is also why step 5 insists on the issue number in the branch name —
+the same prefix does the counting here and the claim check in step 1.
 
 This cap, not the schedule, is what bounds cost. A full CI run is 15–22 minutes
 and this account has run out of Actions minutes before — the incident is
@@ -166,8 +174,48 @@ single test files run over a minute — which is the argument for running it her
 rather than learning the same thing from a red PR twenty minutes later.
 
 Then open the PR against `main`, filling `.github/PULL_REQUEST_TEMPLATE.md` and
-referencing `Fixes #<n>`. Not a draft. Anything visual needs the screenshot that
-`docs/graphics-standards.md` requires — the **run-game** skill produces it.
+referencing `Fixes #<n>`. Not a draft.
+
+### The screenshot, when the change is visual
+
+`docs/graphics-standards.md`'s review checklist asks for a "Screenshot in the PR,
+taken via the **run-game** skill — a visual change is reviewed by looking at it,
+not by reading its diff." That gate is not satisfied by describing the frame, and
+it is not satisfied by a capture that stayed in `/tmp`.
+
+**You cannot put an image *inline* in a pull request from here, and two things
+that look like they should work do not.** GitHub's attachment upload is a browser
+endpoint no cloud session reaches. And the API write path sanitises image sources
+both ways — this was tested on #231, not assumed:
+
+- markdown `![alt](url)` comes back with the URL wrapped in backticks, so it
+  renders as literal text;
+- an HTML `<img src=…>` comes back with `src` stripped, so it renders as nothing.
+
+Ordinary markdown **links survive intact**. So the strongest form available is a
+committed file plus a link to it:
+
+1. Capture with the run-game skill, as the gate requires. Look at the frames —
+   that is the point of them, and #231's own draw-order bug was found in a
+   screenshot rather than in the diff.
+2. **Commit the frames in the same push as the code**, under
+   `docs/screenshots/issue-<n>/`, named for what they show
+   (`scope-accumulation.png`, not `shot1.png`). Same push, not a follow-up: a
+   screenshot commit pushed after review has started can miss the merge entirely,
+   which is exactly what happened on #231 — the frames landed on the branch a few
+   minutes after it merged, so they never reached `main` at all.
+3. Link them from the PR body by full commit SHA, not by branch name — a branch
+   is deleted after merge and takes the link with it:
+   `[the scope](https://github.com/gunnargehtab/Echoes-of-the-Abyss/blob/<sha>/docs/screenshots/issue-<n>/<file>.png)`
+4. **Say in the PR that the link is a link.** A reviewer clicking through is
+   weaker than a rendered frame, and the gate's author should be able to see that
+   trade rather than discover it.
+
+Prefer one composed image over several loose ones — a strip of the same instrument
+at three times, say — since each link is a click the reviewer has to spend. Keep
+them small and cropped to the instrument under review. `docs/concept-art/` is the
+precedent that images belong in this repository; the cost is honest, those PNGs
+merge into `main` and stay there.
 
 ## 7. When to stop instead, and how
 
