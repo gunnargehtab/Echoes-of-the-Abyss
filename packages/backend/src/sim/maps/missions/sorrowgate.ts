@@ -39,6 +39,11 @@ export const SORROWGATE: MapDefinition = {
   // read side by side. Later regions overwrite earlier ones where they overlap,
   // which is what lets the districts be painted whole and everything else cut
   // into them.
+  //
+  // Every rectangle lands on the 250 m cell grid, so each paints exactly the
+  // metres it reads (issue #157). The cells are the ones this mission has
+  // always been played on; it is the literal that changed, to stop describing
+  // a chamber a cell narrower than the one the flight is actually in.
   regions: [
     {
       x: 0,
@@ -50,10 +55,10 @@ export const SORROWGATE: MapDefinition = {
       note: 'The Districts — the drowned city. Painted first; everything else is cut into it',
     },
     {
-      x: 1600,
+      x: 1500,
       y: 0,
-      widthM: 1800,
-      heightM: 700,
+      widthM: 2000,
+      heightM: 750,
       biome: Biome.CoralRuins,
       // Above the 1,200 m layer, which is the whole reason this is where the
       // tenders are going: the layer is a wall, and nothing follows you up.
@@ -62,9 +67,9 @@ export const SORROWGATE: MapDefinition = {
     },
     {
       x: 2000,
-      y: 700,
-      widthM: 1000,
-      heightM: 900,
+      y: 500,
+      widthM: 1250,
+      heightM: 1250,
       biome: Biome.CoralRuins,
       // A 900 m floor is what makes "where 1,200 m is crossed" a fact about the
       // ground rather than an instruction: a hull cannot be in the Descent at
@@ -73,10 +78,10 @@ export const SORROWGATE: MapDefinition = {
       note: 'The Descent — the step between the Concourse and the city',
     },
     {
-      x: 200,
-      y: 1400,
-      widthM: 1200,
-      heightM: 900,
+      x: 0,
+      y: 1250,
+      widthM: 1500,
+      heightM: 1250,
       biome: Biome.ThermalVein,
       // Stated rather than inherited, so this file reads row for row against
       // §11's table: the approach is city floor, and only its water is quiet.
@@ -84,34 +89,34 @@ export const SORROWGATE: MapDefinition = {
       note: 'The West Approach. PF 0.45 — the one road where the flight can be loud and get away with it. Nothing tells the player this',
     },
     {
-      x: 1900,
-      y: 1900,
-      widthM: 300,
-      heightM: 450,
+      x: 1750,
+      y: 1750,
+      widthM: 500,
+      heightM: 750,
       biome: Biome.CoralRuins,
       floorM: 1500,
       // The only roofed water on the map, and after the arch goes it is the
-      // only way out of the chamber. §11's 300 m against a 250 m cell rounds
-      // out to two columns, so the lock is narrower in the fiction than on the
-      // grid; what has to survive the rounding is that it is covered, and a
-      // route nobody can be watched taking.
+      // only way out of the chamber. Two 250 m columns, which is as narrow as
+      // this grid can hold a passage and still leave one: what has to survive
+      // the grid is that it is covered, and a route nobody can be watched
+      // taking.
       ceilingM: 1300,
       note: 'The Service Lock — roofed water joining the chamber to the districts',
     },
     {
-      x: 2100,
-      y: 2300,
-      widthM: 900,
-      heightM: 900,
+      x: 2000,
+      y: 2250,
+      widthM: 1250,
+      heightM: 1000,
       biome: Biome.CoralRuins,
       floorM: 1500,
       note: 'The Gate — the dome and the chamber. The court',
     },
     {
-      x: 1700,
-      y: 3200,
-      widthM: 1700,
-      heightM: 800,
+      x: 1500,
+      y: 3000,
+      widthM: 2000,
+      heightM: 1000,
       biome: Biome.AbyssalTrench,
       // PF 1.6 and 2,400 m: sound runs a long way along this basin's axis, and
       // nothing the player owns is rated to follow it down. The mission's floor

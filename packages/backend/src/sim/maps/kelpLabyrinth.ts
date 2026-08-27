@@ -21,20 +21,32 @@ import type { MapDefinition } from './types.ts';
 const W = KELP_LABYRINTH_HEADER.widthM;
 const H = KELP_LABYRINTH_HEADER.heightM;
 
-/** Kelp blocks of the central maze. The corridors are what is left over. */
+/**
+ * Kelp blocks of the central maze. The corridors are what is left over — which
+ * is why these are stated on the 250 m cell grid: a block that paints wider
+ * than it reads narrows a corridor somewhere, and the corridors are the map.
+ */
 const MAZE: Array<[number, number, number, number]> = [
-  [2000, 2000, 1400, 900],
-  [3800, 2000, 900, 1900],
-  [5100, 2000, 900, 900],
-  [2000, 3300, 900, 1400],
-  [3300, 4300, 1400, 900],
-  [5100, 3300, 900, 1900],
-  [2000, 5100, 1900, 900],
-  [4300, 5100, 1400, 900],
-  [3300, 2900, 400, 900],
-  [4300, 3300, 700, 400],
+  [2000, 2000, 1500, 1000],
+  [3750, 2000, 1000, 2000],
+  [5000, 2000, 1250, 1000],
+  [2000, 3250, 1000, 1500],
+  [3250, 4250, 1500, 1000],
+  [5000, 3250, 1250, 2000],
+  [2000, 5000, 2000, 1250],
+  [4250, 5000, 1500, 1250],
+  [3250, 2750, 500, 1250],
+  [4250, 3250, 1000, 500],
 ];
 
+/**
+ * Every rectangle in this file lands on the 250 m cell grid, so each paints
+ * exactly the metres it reads (issue #157, docs/maps.md "How a map is
+ * written"). They were re-stated that way when the centre rule landed, and the
+ * cells this map paints are the cells it has always played on: on a maze map
+ * the paint *is* the design, and a block quietly a column wider than its
+ * literal is a corridor quietly a column narrower.
+ */
 export const KELP_LABYRINTH: MapDefinition = {
   ...KELP_LABYRINTH_HEADER,
   doc: 'docs/maps.md — Map Type 2',
@@ -48,12 +60,12 @@ export const KELP_LABYRINTH: MapDefinition = {
     { x: 0, y: 0, widthM: W, heightM: H, biome: Biome.CoralRuins, note: 'Outer ring' },
     // The open expansion ring, cut out of the coral.
     {
-      x: 1200,
-      y: 1200,
-      widthM: W - 2400,
-      heightM: H - 2400,
+      x: 1000,
+      y: 1000,
+      widthM: W - 2000,
+      heightM: H - 2000,
       biome: Biome.OpenWater,
-      note: '"Open outer ring for expansions"',
+      note: '"Open outer ring for expansions" — the coral ring is the 1,000 m left outside it',
     },
     // "Center: Kelp Forest Plateaus" — the maze itself.
     ...MAZE.map(([x, y, widthM, heightM]) => ({
@@ -66,10 +78,10 @@ export const KELP_LABYRINTH: MapDefinition = {
     // "Deep pockets: Abyssal pressure zones" — the shortcut through the maze
     // is also the one that costs hull.
     {
-      x: 3600,
-      y: 3600,
-      widthM: 800,
-      heightM: 800,
+      x: 3500,
+      y: 3500,
+      widthM: 1000,
+      heightM: 1000,
       biome: Biome.AbyssalTrench,
       // Deep enough for the crystal field seated at 2,400 m. "Behind the maze"
       // is now also "below it".
@@ -81,17 +93,17 @@ export const KELP_LABYRINTH: MapDefinition = {
     // would put its players permanently on the Bastion's own plant with no way
     // to scale. Sited on the open ring rather than in the maze, so taking one
     // is exposed — which is the trade the resource is supposed to create.
-    { x: 3200, y: 900, widthM: 1600, heightM: 500, biome: Biome.ThermalVein },
-    { x: 3200, y: H - 1400, widthM: 1600, heightM: 500, biome: Biome.ThermalVein },
+    { x: 3000, y: 750, widthM: 2000, heightM: 750, biome: Biome.ThermalVein },
+    { x: 3000, y: H - 1500, widthM: 2000, heightM: 750, biome: Biome.ThermalVein },
     // "Hidden tunnels connecting corners" — on the diagonals, and clear of
     // the spawns. They sat *on* the corner spawns in the first draft, which
     // would have started two players in the deepest, loudest biome on the map.
-    { x: 1800, y: 1800, widthM: 600, heightM: 600, biome: Biome.AbyssalTrench, floorM: 2600 },
+    { x: 1750, y: 1750, widthM: 750, heightM: 750, biome: Biome.AbyssalTrench, floorM: 2600 },
     {
-      x: W - 2400,
-      y: H - 2400,
-      widthM: 600,
-      heightM: 600,
+      x: W - 2500,
+      y: H - 2500,
+      widthM: 750,
+      heightM: 750,
       biome: Biome.AbyssalTrench,
       floorM: 2600,
     },
@@ -105,20 +117,20 @@ export const KELP_LABYRINTH: MapDefinition = {
     // ground. Entering costs a dive, and a maze whose walls you can pass under
     // is a different maze to a scout who thought of it.
     {
-      x: 400,
+      x: 250,
       y: 2000,
-      widthM: 500,
-      heightM: 4000,
+      widthM: 750,
+      heightM: 4250,
       biome: Biome.CoralRuins,
       ceilingM: 700,
       floorM: 1800,
       note: 'West wall tunnel — joins the two western corners, out of sight',
     },
     {
-      x: W - 900,
+      x: W - 1000,
       y: 2000,
-      widthM: 500,
-      heightM: 4000,
+      widthM: 750,
+      heightM: 4250,
       biome: Biome.CoralRuins,
       ceilingM: 700,
       floorM: 1800,

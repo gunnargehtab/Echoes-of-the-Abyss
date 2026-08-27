@@ -29,10 +29,11 @@ describe('Terrain.pathPropagation', () => {
 
   it('weights each biome by the length of path crossing it', () => {
     const t = new Terrain(4000, 1000, 250);
-    // Kelp painted to x=2000; fillRect's inclusive end cell makes the actual
-    // covered span [0, 2250) — the expectation prices the cells, not the ask.
+    // Kelp painted to x=2000, on a cell boundary, so the covered span is
+    // exactly [0, 2000): a cell is claimed when its centre is inside the
+    // rectangle (#157), and a rectangle on the grid paints what it asks for.
     t.fillRect(0, 0, 2000, 1000, Biome.KelpForest);
-    const kelpM = 2250;
+    const kelpM = 2000;
     const expected =
       (PROPAGATION_FACTOR[Biome.KelpForest] * kelpM +
         PROPAGATION_FACTOR[Biome.OpenWater] * (4000 - kelpM)) /
@@ -43,8 +44,9 @@ describe('Terrain.pathPropagation', () => {
 
   it('a trench carries sound down its axis far more than across it', () => {
     const t = new Terrain(8000, 8000, 250);
-    // North-south trench, like the demo map's acoustic highway (grid rounds
-    // the painted 500 m up to 750 m of cells).
+    // North-south trench, like the demo map's acoustic highway. 3,800 m is
+    // mid-cell, so the 500 m of trench lands on the two cells whose centres it
+    // covers: [3750, 4250).
     t.fillRect(3800, 0, 500, 8000, Biome.AbyssalTrench);
     const along = t.pathPropagation(4050, 500, 4050, 7500); // down the axis
     const across = t.pathPropagation(2500, 4000, 5600, 4000); // straight over it
@@ -57,6 +59,98 @@ describe('Terrain.pathPropagation', () => {
       `a crossing picks up only the trench's width (got ${across.toFixed(3)})`
     );
     assert.ok(along > across + 0.4, 'the axis must out-carry the crossing decisively');
+  });
+});
+
+describe('painting a rectangle onto the grid', () => {
+  /**
+   * The rule, written down (#157): a cell belongs to the rectangle that
+   * contains its **centre**.
+   *
+   * It replaced one that claimed every cell a rectangle so much as grazed,
+   * which was not a rounding detail — biome is PropagationFactor, so an
+   * over-painted cell is a cell carrying sound at a rate no map file
+   * describes, and `pathPropagation` prices every one of them.
+   */
+  const CELL_M = 250;
+
+  /** Metres of a biome along a row, counted a cell at a time. */
+  const spanOf = (t: Terrain, biome: Biome, y: number, from = 0, to = 4000): number => {
+    let metres = 0;
+    for (let x = from + CELL_M / 2; x < to; x += CELL_M) {
+      if (t.biomeAt(x, y) === biome) metres += CELL_M;
+    }
+    return metres;
+  };
+
+  it('paints exactly the metres a rectangle on the grid asks for', () => {
+    const t = new Terrain(4000, 4000, CELL_M);
+    t.fillRect(1000, 0, 1500, 4000, Biome.KelpForest);
+    assert.equal(spanOf(t, Biome.KelpForest, 2000), 1500);
+    assert.equal(t.biomeAt(999, 2000), Biome.OpenWater, 'the cell west of it is not kelp');
+    assert.equal(t.biomeAt(2500, 2000), Biome.OpenWater, 'nor the cell east of it');
+  });
+
+  it('refuses a cell the rectangle only grazes', () => {
+    // The issue's own example: a band 1,600 m tall on a 250 m grid. Six whole
+    // cells have their centres inside it and the two it merely reaches into do
+    // not, so it paints 1,500 m — not the 2,000 m the touch rule painted.
+    const t = new Terrain(4000, 4000, CELL_M);
+    t.fillRect(0, 1200, 4000, 1600, Biome.ThermalVein);
+    let metres = 0;
+    for (let y = CELL_M / 2; y < 4000; y += CELL_M) {
+      if (t.biomeAt(2000, y) === Biome.ThermalVein) metres += CELL_M;
+    }
+    assert.equal(metres, 1500);
+    assert.equal(t.biomeAt(2000, 1210), Biome.OpenWater, 'the grazed cell above went to it');
+    assert.equal(t.biomeAt(2000, 2790), Biome.OpenWater, 'the grazed cell below went to it');
+  });
+
+  it('lets neighbouring regions tile, whichever order they are painted in', () => {
+    // The property that makes the rule worth having. Two bands meeting at
+    // 2,000 m divide the grid between them exactly once, so the boundary is a
+    // fact about the geometry rather than about which line of the map literal
+    // came last.
+    const westFirst = new Terrain(4000, 4000, CELL_M);
+    westFirst.fillRect(0, 0, 2000, 4000, Biome.KelpForest);
+    westFirst.fillRect(2000, 0, 2000, 4000, Biome.CoralRuins);
+
+    const eastFirst = new Terrain(4000, 4000, CELL_M);
+    eastFirst.fillRect(2000, 0, 2000, 4000, Biome.CoralRuins);
+    eastFirst.fillRect(0, 0, 2000, 4000, Biome.KelpForest);
+
+    for (const t of [westFirst, eastFirst]) {
+      assert.equal(spanOf(t, Biome.KelpForest, 2000), 2000);
+      assert.equal(spanOf(t, Biome.CoralRuins, 2000), 2000);
+      assert.equal(t.biomeAt(1875, 2000), Biome.KelpForest, 'the last cell west of the seam');
+      assert.equal(t.biomeAt(2125, 2000), Biome.CoralRuins, 'the first cell east of it');
+    }
+  });
+
+  it('paints nothing for a sliver that falls between two centres', () => {
+    // The hazard the rule introduces, and the reason `maps.test.ts` refuses a
+    // region that claims no cells: a rectangle narrower than a cell can miss
+    // every centre and paint nothing at all, silently.
+    const t = new Terrain(4000, 4000, CELL_M);
+    t.fillRect(1900, 1900, 200, 200, Biome.AbyssalTrench);
+    assert.equal(t.biomeAt(2000, 2000), Biome.OpenWater);
+    // Slide the same sliver onto a centre and it claims that one cell.
+    t.fillRect(2100, 2100, 200, 200, Biome.AbyssalTrench);
+    assert.equal(t.biomeAt(2125, 2125), Biome.AbyssalTrench);
+  });
+
+  it('claims the same cells for ground as it does for biome', () => {
+    // A floor that reached a row the biome did not would be a shelf with no
+    // biome to explain it — and the map literal paints both from one rect.
+    const t = new Terrain(4000, 4000, CELL_M, { floorM: 2000 });
+    t.fillRect(1000, 1000, 1500, 1500, Biome.CoralRuins);
+    t.fillGround(1000, 1000, 1500, 1500, { floorM: 380 });
+    for (let y = CELL_M / 2; y < 4000; y += CELL_M) {
+      for (let x = CELL_M / 2; x < 4000; x += CELL_M) {
+        const coral = t.biomeAt(x, y) === Biome.CoralRuins;
+        assert.equal(t.floorAt(x, y) === 380, coral, `ground and biome disagree at ${x},${y}`);
+      }
+    }
   });
 });
 

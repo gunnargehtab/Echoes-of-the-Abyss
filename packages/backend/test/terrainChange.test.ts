@@ -10,10 +10,11 @@
  * Three claims, and they fail in three different ways if the geometry drifts:
  *
  * - **The collapse lands where it was aimed.** The span is authored as one
- *   250 m cell row and `fillGround` takes an inclusive rect, so a band sized
- *   to the cell would reach into the next row and take the top of the chamber
- *   with it — sealing the court inside its own dome. Cell arithmetic is not a
- *   thing to leave to a comment.
+ *   250 m cell row, and it has to stay one: a band that reached into the next
+ *   row would take the top of the chamber with it and seal the court inside
+ *   its own dome. `fillGround` claims a cell by its centre (#157), so a band
+ *   laid on the row boundary is exactly that row — but cell arithmetic is not
+ *   a thing to leave to a comment either way.
  * - **The lock survives the collapse that crosses it.** The span is painted
  *   whole and the lock is cut back through it, in beat order, the way the map
  *   literal paints later regions over earlier ones.
@@ -94,10 +95,9 @@ describe('the arch, going', () => {
   });
 
   it('does not take the top of the chamber with it', () => {
-    // The failure the authored 200 m height exists to prevent. The chamber
-    // starts at 2,300 m — cell row 9 — and an inclusive rect one full cell
-    // tall, starting on the row-8 boundary, reaches into row 9 and seals the
-    // court inside its own dome.
+    // The failure the span's height is sized to prevent. The chamber starts at
+    // 2,250 m — cell row 9 — and any band that claimed row 9 as well as row 8
+    // would seal the court inside its own dome.
     const terrain = transited().world.terrain;
     for (let col = 8; col <= 12; col++) {
       const cell = centreOf(col, 9);

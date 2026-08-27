@@ -147,6 +147,34 @@ describe('telemetry measures what it says it measures', () => {
     assert.ok(total > result.lengthS, `hull-seconds ${total} over ${result.lengthS} s`);
   });
 
+  it('measures how much of its hauling a navy spent deliberately poor', () => {
+    // The lever the income column cannot see. Two policies — never dropping,
+    // and dropping for half a match at 46% of the income — can land on similar
+    // income if one of them also has fewer haulers, and until this column a
+    // committed baseline could not tell them apart (issue #148).
+    const result = runMatch({ seats: DUEL, seed: 59, maxMinutes: 2, fauna: false });
+    for (const player of result.players) {
+      assert.ok(
+        player.harvesterSeconds > 0,
+        `slot ${player.slot} fielded harvesters, so it should have hauling time`
+      );
+      assert.ok(
+        player.harvesterSecondsQuiet <= player.harvesterSeconds,
+        'the quiet part cannot exceed the whole'
+      );
+    }
+
+    const summary = summarise([result]);
+    // The Consortium harvests on Overburden and has no exposure response at
+    // all, so its share is the one number here that is knowable in advance.
+    const consortium = summary.factions.find((f) => f.faction === Faction.Bathyarch)!;
+    assert.equal(
+      consortium.throttledDownShare,
+      0,
+      'a navy whose doctrine never throttles down should never be recorded doing it'
+    );
+  });
+
   it('reports first contact and first classified enemy as different things', () => {
     // With the Drift populated, first contact is tick 0 — a creature is in
     // earshot of a spawn from the first frame. Keying anything on that number

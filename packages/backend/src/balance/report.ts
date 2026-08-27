@@ -51,6 +51,15 @@ export interface FactionSummary {
   meanPeakSig: number;
   /** Seconds per match with somebody holding Bearing or better. */
   secondsTracked: number;
+  /**
+   * Share of hauling time spent below Standard — Trickle or Idle.
+   *
+   * What a navy actually paid for its quiet, rather than what its doctrine
+   * says it would pay. The income column alone cannot separate a commander
+   * that never throttled down from one that spent half the match at 46% of
+   * its income and made it back on hull count.
+   */
+  throttledDownShare: number;
   /** Hulls lost per match. */
   lossesPerMatch: number;
   /** Share of hull-time spent below the Shelf. */
@@ -217,6 +226,13 @@ export function summarise(results: MatchTelemetryResult[]): BatchSummary {
       biomassPerMinute: mean(rows.map((r) => r.player.biomassEarned / lifetimeMinutes(r))),
       meanPeakSig: mean(rows.map((r) => mean(r.player.peakSig))),
       secondsTracked: mean(rows.map((r) => r.player.secondsTracked)),
+      throttledDownShare: mean(
+        rows.map((r) =>
+          r.player.harvesterSeconds === 0
+            ? 0
+            : r.player.harvesterSecondsQuiet / r.player.harvesterSeconds
+        )
+      ),
       lossesPerMatch: mean(
         rows.map((r) => Object.values(r.player.lossesByKind).reduce((a, b) => a + b, 0))
       ),
@@ -483,15 +499,15 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
   lines.push('');
   lines.push(
     '| Faction | Matches | Decided | Win rate | Nodules/min | Biomass/min | Mean SIG | ' +
-      'Tracked, s | Losses | Below the Shelf | Under the layer |'
+      'Tracked, s | Throttled down | Losses | Below the Shelf | Under the layer |'
   );
-  lines.push('| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |');
+  lines.push('| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |');
   for (const f of summary.factions) {
     lines.push(
       `| ${FACTION_NAME[f.faction]} | ${f.matches} | ${f.decided} | ${winRate(f)} | ` +
         `${f.incomePerMinute.toFixed(0)} | ${f.biomassPerMinute.toFixed(1)} | ` +
         `${f.meanPeakSig.toFixed(0)} | ${f.secondsTracked.toFixed(0)} | ` +
-        `${f.lossesPerMatch.toFixed(1)} | ${pct(f.deepTimeShare)} | ${pct(f.belowLayerShare)} |`
+        `${pct(f.throttledDownShare)} | ${f.lossesPerMatch.toFixed(1)} | ${pct(f.deepTimeShare)} | ${pct(f.belowLayerShare)} |`
     );
   }
   lines.push('');

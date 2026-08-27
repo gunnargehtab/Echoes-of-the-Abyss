@@ -33,9 +33,11 @@
 
 import {
   DepthBand,
+  HarvestThrottle,
   ThermoclineZone,
   ResolutionTier,
   SIM,
+  UnitKind,
   depthBandFor,
   thermoclineZone,
   type EchoSnapshot,
@@ -60,6 +62,24 @@ export interface PlayerTelemetry {
   structures: number[];
   /** Seconds spent with someone holding Bearing or better on anything of theirs. */
   secondsTracked: number;
+  /**
+   * Hauling time, and how much of it was spent deliberately poor.
+   *
+   * Summed over the harvesters, so two hulls for a minute is two
+   * harvester-minutes. `harvesterSecondsQuiet` is the part of it below
+   * Standard — Trickle or Idle, the settings a commander only ever chooses in
+   * order to be quieter (docs/economy.md §3).
+   *
+   * Here because a baseline could not previously see the lever this measures.
+   * The AI's throttle response is a per-faction doctrine number, and the
+   * income and tracked columns show only its consequences: two very different
+   * policies — never dropping, and dropping for half the match at half the
+   * income — can land on similar income if one of them also has fewer
+   * harvesters. Issue #148 turned that from a theoretical ambiguity into a
+   * measurement nobody could make, so it is measured now.
+   */
+  harvesterSeconds: number;
+  harvesterSecondsQuiet: number;
   /** Seconds spent with someone holding a full Track. */
   secondsHardTracked: number;
   /** Seconds of hull-time spent in each depth band, summed over the force. */
@@ -159,6 +179,8 @@ export class MatchTelemetry {
         structures: [],
         secondsTracked: 0,
         secondsHardTracked: 0,
+        harvesterSeconds: 0,
+        harvesterSecondsQuiet: 0,
         hullSecondsByBand: {
           [DepthBand.Shelf]: 0,
           [DepthBand.MidWater]: 0,
@@ -220,6 +242,15 @@ export class MatchTelemetry {
       for (const unit of snapshot.units) {
         player.hullSecondsByBand[depthBandFor(unit.depth)] += dt;
         player.hullSecondsByZone[thermoclineZone(unit.depth)] += dt;
+        if (unit.kind !== UnitKind.Harvester) continue;
+        player.harvesterSeconds += dt;
+        // Integrated like exposure and for the same reason: a throttle a
+        // commander held for eight seconds between two ten-second samples
+        // happened, and a sampled series would say it did not.
+        const throttle = unit.throttle ?? HarvestThrottle.Standard;
+        if (throttle === HarvestThrottle.Trickle || throttle === HarvestThrottle.Idle) {
+          player.harvesterSecondsQuiet += dt;
+        }
       }
 
       this.accrueIncome(player, snapshot);

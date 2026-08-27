@@ -240,6 +240,13 @@ Authored data, never generated. `Terrain.demo()`'s own comment makes the case an
 
 Regions are rectangles, painted in order so a later one overwrites an earlier one. Every layout above is corridors, plateaus, bands and quadrants, all of which are rectangles or unions of them; a richer shape vocabulary would be more expressive than anything this document asks for.
 
+**A cell belongs to the region whose rectangle contains its centre.** The grid is 250 m, the rectangles are in metres, and that rule is what converts between them. It has two consequences an author should hold on to:
+
+- Adjacent regions tile. Two bands meeting at 3,000 m divide the grid between them exactly once, so which biome a boundary cell ends up with is a fact about the geometry rather than about paint order.
+- A rectangle laid on cell boundaries paints exactly the metres it reads, and every rectangle in `sim/maps/` is written that way. A rectangle that is not — one 1,600 m tall on a 250 m grid — is asking for something the grid cannot hold, and gets the whole cells whose centres are inside it: 1,500 m, not 1,600.
+
+The rule the grid used until issue #157 was the other one: a cell was painted if the rectangle touched it *at all*. That is not a rounding detail, because biome is PropagationFactor. A band authored 1,600 m wide painted 2,000 m of cells — a 25% over-paint — and every over-painted cell carried sound at a rate no document described, priced into `pathPropagation` and therefore into detection. It also let the map edge clip a column on one flank that the opposite flank kept, which is how two maps that describe themselves as symmetric were not.
+
 Regions may also set a **floor** and a **ceiling**. Both are optional: a region with neither is open water over the map's base seabed, which is what most of a map is. A floor is how deep the water goes there; a ceiling is rock above the water, 0 on open water and non-zero only for a roofed passage.
 
 Because regions paint in order, terrain is authored the way it reads — the ground, then what was cut into it. The same property that lets a trench cut *through* a vent line in two lines of data lets a tunnel run *under* a ridge in two: paint the plateau, then paint a narrower region across it with a ceiling and a deeper floor. Read in order, that is a shelf with a hole bored through it.

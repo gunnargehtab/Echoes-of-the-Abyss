@@ -286,12 +286,49 @@ export class Terrain {
     return sum / samples;
   }
 
+  /**
+   * A cell belongs to a rectangle when its **centre** is inside it — the rule
+   * every paint on this grid obeys (issue #157, docs/maps.md "How a map is
+   * written").
+   *
+   * The alternative, painting every cell the rectangle so much as grazes, was
+   * what this grid did until #157 and it was not a rounding detail: a band
+   * authored 1,600 m wide on a 250 m grid painted 2,000 m of cells, a 25%
+   * over-paint. Biome *is* PropagationFactor, so those cells carried sound at
+   * a rate the map file did not describe, and every one of them was priced
+   * into `pathPropagation` — the walk detection is built on.
+   *
+   * Centres also make adjacent regions tile. Two bands meeting at 3,000 m each
+   * claim the cell they share under the touch rule, so which biome wins
+   * depends on paint order rather than on the geometry; under this rule the
+   * boundary is a boundary, and a region authored on cell boundaries paints
+   * exactly the metres it asks for.
+   *
+   * The half-open end is what makes that true: a centre exactly on the low
+   * edge is inside, a centre exactly on the high edge belongs to the next
+   * region along. A rectangle thinner than a cell that falls between two
+   * centres therefore paints *nothing* — which is a real authoring hazard and
+   * why `maps.test.ts` refuses a region that paints no cells at all.
+   */
+  private firstCentreFrom(m: number): number {
+    // Derived from the containing cell and corrected by one, rather than by
+    // `ceil(m / cellM - 0.5)`: the correction is a comparison in metres, so a
+    // float-dusted division cannot round a boundary the wrong way.
+    const cell = Math.floor(m / this.cellM);
+    return (cell + 0.5) * this.cellM >= m ? cell : cell + 1;
+  }
+
+  private lastCentreBefore(m: number): number {
+    const cell = Math.floor(m / this.cellM);
+    return (cell + 0.5) * this.cellM < m ? cell : cell - 1;
+  }
+
   /** Paint an axis-aligned rectangle of biome, in world metres. */
   fillRect(x: number, y: number, w: number, h: number, biome: Biome): void {
-    const x0 = Math.max(0, Math.floor(x / this.cellM));
-    const y0 = Math.max(0, Math.floor(y / this.cellM));
-    const x1 = Math.min(this.cols - 1, Math.floor((x + w) / this.cellM));
-    const y1 = Math.min(this.rows - 1, Math.floor((y + h) / this.cellM));
+    const x0 = Math.max(0, this.firstCentreFrom(x));
+    const y0 = Math.max(0, this.firstCentreFrom(y));
+    const x1 = Math.min(this.cols - 1, this.lastCentreBefore(x + w));
+    const y1 = Math.min(this.rows - 1, this.lastCentreBefore(y + h));
     for (let cy = y0; cy <= y1; cy++) {
       for (let cx = x0; cx <= x1; cx++) {
         this.biomes[cy * this.cols + cx] = biome;
@@ -310,7 +347,10 @@ export class Terrain {
    *
    * Painted in call order, later over earlier, exactly like `fillRect` — which
    * is what lets a tunnel be authored as a narrow strip laid across a plateau
-   * rather than as four rectangles around it.
+   * rather than as four rectangles around it. It claims cells by the same
+   * centre rule, so a region's biome and its ground always cover the same
+   * cells: a floor that reached a row the biome did not would be a shelf with
+   * no biome to explain it.
    */
   fillGround(
     x: number,
@@ -320,10 +360,10 @@ export class Terrain {
     ground: { floorM?: number; ceilingM?: number }
   ): void {
     if (ground.floorM === undefined && ground.ceilingM === undefined) return;
-    const x0 = Math.max(0, Math.floor(x / this.cellM));
-    const y0 = Math.max(0, Math.floor(y / this.cellM));
-    const x1 = Math.min(this.cols - 1, Math.floor((x + w) / this.cellM));
-    const y1 = Math.min(this.rows - 1, Math.floor((y + h) / this.cellM));
+    const x0 = Math.max(0, this.firstCentreFrom(x));
+    const y0 = Math.max(0, this.firstCentreFrom(y));
+    const x1 = Math.min(this.cols - 1, this.lastCentreBefore(x + w));
+    const y1 = Math.min(this.rows - 1, this.lastCentreBefore(y + h));
     for (let cy = y0; cy <= y1; cy++) {
       for (let cx = x0; cx <= x1; cx++) {
         const index = cy * this.cols + cx;
@@ -461,19 +501,25 @@ export class Terrain {
    *
    * Deliberately hand-placed rather than generated — an RTS simulation must be
    * reproducible, and a seeded generator is one refactor away from not being.
+   *
+   * Every rectangle here lands on the 250 m grid, so each paints exactly the
+   * metres it reads. They were re-stated that way when the centre rule landed
+   * (#157) — the cells are unchanged, and deliberately so, because the tests
+   * written against this fixture know its geometry rather than its literal.
    */
   static demo(): Terrain {
     const t = new Terrain(8000, 8000, 250);
     // Thermal vents across the middle: ambush terrain, PF 0.45.
-    t.fillRect(0, 3600, 8000, 800, Biome.ThermalVein);
-    // Kelp on the west flank: the quiet approach, PF 0.55.
-    t.fillRect(0, 0, 2200, 3600, Biome.KelpForest);
+    t.fillRect(0, 3500, 8000, 1000, Biome.ThermalVein);
+    // Kelp on the west flank: the quiet approach, PF 0.55. Painted over the
+    // vent band's western end, which is the fixture's one overlap.
+    t.fillRect(0, 0, 2250, 3750, Biome.KelpForest);
     // A trench running north-south: PF 1.6, no secrets down here.
-    t.fillRect(3800, 0, 500, 8000, Biome.AbyssalTrench);
+    t.fillRect(3750, 0, 750, 8000, Biome.AbyssalTrench);
     // Resonance field east: bearings lie, PF 0.7 scattered.
-    t.fillRect(5800, 4600, 2200, 2400, Biome.ResonanceField);
+    t.fillRect(5750, 4500, 2250, 2750, Biome.ResonanceField);
     // Coral ruins south-west: hard acoustic shadows, PF 0.8.
-    t.fillRect(800, 5200, 1800, 1600, Biome.CoralRuins);
+    t.fillRect(750, 5000, 2000, 2000, Biome.CoralRuins);
     return t;
   }
 }

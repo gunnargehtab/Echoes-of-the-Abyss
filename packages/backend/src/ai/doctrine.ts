@@ -6,7 +6,8 @@
  * a rounding error", so its commander harvests on Overburden, never runs
  * silent and pings without hesitating — and pays for it by being heard from
  * four minutes out. The Commune's line is "lowest SIG in the game", so its
- * commander trickles, runs silent by default, expands wider and commits later.
+ * commander trickles the moment a bearing sticks, runs silent by default,
+ * expands wider and commits later.
  *
  * Every field here is an argument about **sound**. If a doctrine number could
  * not be justified by a sentence in docs/factions.md about being heard or
@@ -20,11 +21,50 @@
 import { Faction, HarvestThrottle, UnitKind } from '@echoes/shared';
 import { AiDifficulty } from './types.ts';
 
+/**
+ * What a navy does to its economy when it hears that it is being heard.
+ *
+ * Two fields, because dropping the throttle is two decisions and only one of
+ * them used to be written down. *How quiet* is the doctrine's trade — the
+ * Commune is built to be poor and unheard. *When to believe it* is the harder
+ * half, and it is per-faction for the same reason: a bearing is worth more to
+ * some navies than to others.
+ *
+ * The price is what makes the second field necessary. Since the throttle began
+ * scaling the load (docs/economy.md §3), Trickle is 46% of Standard's income —
+ * so a commander that drops the instant anything holds a bearing is spending
+ * half its economy on a fact that, on its own, means only that somebody knows
+ * roughly where it is.
+ */
+export interface ExposureResponse {
+  /** Throttle its harvesters drop to once it believes the bearing. */
+  throttle: HarvestThrottle;
+  /**
+   * Seconds a bearing must be *held* on this navy before its commander
+   * believes it is danger rather than a sweep.
+   *
+   * An argument about hearing, like every other number here, and the field
+   * where the two navies that hide differ most. The Commune loses any fight it
+   * did not choose, so a line held on it for a few seconds is already worth
+   * paying to break. The Directorate hears a tier further than anyone else and
+   * is therefore the one navy that can afford to wait and find out whether the
+   * bearing is being converted into an approach: if something is coming, it
+   * will hear it coming, and if nothing is, it kept its income.
+   *
+   * Not zero for anyone. Zero is the reflex this replaced.
+   */
+  holdS: number;
+}
+
 export interface Doctrine {
   /** Throttle a harvester runs at when nobody is holding a bearing on it. */
   restingThrottle: HarvestThrottle;
-  /** Throttle it drops to once exposed. Equal to the above means "never drop". */
-  exposedThrottle: HarvestThrottle;
+  /**
+   * How it answers being heard, or `null` for a navy that answers by not
+   * caring — the Consortium is heard regardless and the Knights are meant to
+   * be heard in front. A navy with no response never touches its throttle.
+   */
+  exposureResponse: ExposureResponse | null;
   /** Whether the army runs silent while approaching. */
   approachesSilently: boolean;
   /**
@@ -66,7 +106,9 @@ export const DOCTRINE: Record<Faction, Doctrine> = {
   // with heavy hulls because out-repairing the exchange is its whole plan.
   [Faction.Bathyarch]: {
     restingThrottle: HarvestThrottle.Overburden,
-    exposedThrottle: HarvestThrottle.Overburden,
+    // Heard from four minutes out whatever it does, so a bearing on it is not
+    // news and quiet it cannot keep is not worth half its income.
+    exposureResponse: null,
     approachesSilently: false,
     // Heard regardless, and it knows it. Quiet bought at the cost of a 47 s
     // climb is quiet it cannot spend, and PR-2 refits it pays for by the metre.
@@ -81,7 +123,11 @@ export const DOCTRINE: Record<Faction, Doctrine> = {
   // for a bigger force than anyone else needs.
   [Faction.Pelagia]: {
     restingThrottle: HarvestThrottle.Standard,
-    exposedThrottle: HarvestThrottle.Trickle,
+    // Six seconds: the shortest hold in the game, because the Veil loses any
+    // fight it did not choose and a line held that long is already the start
+    // of one. Short, not absent — a sweep that passes over it and keeps going
+    // is not worth 54% of its income.
+    exposureResponse: { throttle: HarvestThrottle.Trickle, holdS: 6 },
     approachesSilently: true,
     // "They don't survive the deep; they terraform it." PR-1 baseline and the
     // worst refits in the game — the Commune's answer to deep water is to
@@ -97,7 +143,11 @@ export const DOCTRINE: Record<Faction, Doctrine> = {
   // scouts most, and it arrives in numbers rather than in quality.
   [Faction.Directorate]: {
     restingThrottle: HarvestThrottle.Standard,
-    exposedThrottle: HarvestThrottle.Trickle,
+    // Twenty-five seconds, four times the Commune's, and the difference *is*
+    // the doctrine: the Listening is the one navy that can tell a bearing from
+    // an approach without paying to find out, because whatever is converting
+    // one into the other it will hear first. Waiting is what its ears buy it.
+    exposureResponse: { throttle: HarvestThrottle.Trickle, holdS: 25 },
     approachesSilently: true,
     // PR-3 baseline, no refit needed. The layer costs them nothing to cross
     // and hides them from ears that already hear less than theirs — and since
@@ -113,7 +163,10 @@ export const DOCTRINE: Record<Faction, Doctrine> = {
   // flank. It masses the longest and fields the least.
   [Faction.Hadron]: {
     restingThrottle: HarvestThrottle.Standard,
-    exposedThrottle: HarvestThrottle.Standard,
+    // The Score's quiet is a property of where it attacks from, not of how
+    // hard its haulers are working — and it fields too few hulls as it is to
+    // fund them on 46% of an economy.
+    exposureResponse: null,
     approachesSilently: false,
     // "Deafening in front and quiet on the flank." Instant refits paid in
     // Resonance make depth a thing they project rather than buy, so the one
