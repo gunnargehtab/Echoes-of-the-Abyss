@@ -183,26 +183,39 @@ taken via the **run-game** skill — a visual change is reviewed by looking at i
 not by reading its diff." That gate is not satisfied by describing the frame, and
 it is not satisfied by a capture that stayed in `/tmp`.
 
-**You cannot attach an image to a pull request from here.** GitHub's attachment
-upload is a browser endpoint; nothing in the tooling this session has reaches it.
-Do not discover that at the end and ship the PR with an apology in its
-description. Instead:
+**You cannot put an image *inline* in a pull request from here, and two things
+that look like they should work do not.** GitHub's attachment upload is a browser
+endpoint no cloud session reaches. And the API write path sanitises image sources
+both ways — this was tested on #231, not assumed:
 
-1. Capture with the run-game skill, as the gate requires.
-2. **Commit the frames into the branch** under `docs/screenshots/issue-<n>/`, with
-   names that say what they show (`scope-echo-marks.png`, not `shot1.png`).
-3. Reference them from the PR body as markdown images pointing at the blob on your
-   own branch:
-   `![the scope](https://github.com/gunnargehtab/Echoes-of-the-Abyss/blob/<branch>/docs/screenshots/issue-<n>/<file>.png?raw=true)`.
-   A reviewer with repository access sees them rendered in the PR, which is what
-   the gate is actually asking for.
+- markdown `![alt](url)` comes back with the URL wrapped in backticks, so it
+  renders as literal text;
+- an HTML `<img src=…>` comes back with `src` stripped, so it renders as nothing.
 
-The cost is honest and worth naming: those PNGs merge into `main` and stay there.
-Keep them few and small — the frames that show the change, not the whole session —
-and crop to the instrument under review where a full client frame would not read.
-`docs/concept-art/` is the precedent that images belong in this repository; review
-captures earn their place the same way, by being the record of what a change
-actually looked like when it landed.
+Ordinary markdown **links survive intact**. So the strongest form available is a
+committed file plus a link to it:
+
+1. Capture with the run-game skill, as the gate requires. Look at the frames —
+   that is the point of them, and #231's own draw-order bug was found in a
+   screenshot rather than in the diff.
+2. **Commit the frames in the same push as the code**, under
+   `docs/screenshots/issue-<n>/`, named for what they show
+   (`scope-accumulation.png`, not `shot1.png`). Same push, not a follow-up: a
+   screenshot commit pushed after review has started can miss the merge entirely,
+   which is exactly what happened on #231 — the frames landed on the branch a few
+   minutes after it merged, so they never reached `main` at all.
+3. Link them from the PR body by full commit SHA, not by branch name — a branch
+   is deleted after merge and takes the link with it:
+   `[the scope](https://github.com/gunnargehtab/Echoes-of-the-Abyss/blob/<sha>/docs/screenshots/issue-<n>/<file>.png)`
+4. **Say in the PR that the link is a link.** A reviewer clicking through is
+   weaker than a rendered frame, and the gate's author should be able to see that
+   trade rather than discover it.
+
+Prefer one composed image over several loose ones — a strip of the same instrument
+at three times, say — since each link is a click the reviewer has to spend. Keep
+them small and cropped to the instrument under review. `docs/concept-art/` is the
+precedent that images belong in this repository; the cost is honest, those PNGs
+merge into `main` and stay there.
 
 ## 7. When to stop instead, and how
 
