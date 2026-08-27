@@ -66,9 +66,17 @@ ref, so either source alone will let you collide with work already in flight.
 
 ## 2. Stop early if the backlog is already saturated
 
-Count the open pull requests whose head ref starts with `claude/`. **If there
-are two or more, do nothing and end the run.** Say so plainly and exit — do not
-fall through to step 4 and file an issue instead. A saturated backlog means stop.
+Count the open pull requests whose head ref starts with **`claude/issue-`**.
+**If there are two or more, do nothing and end the run.** Say so plainly and exit
+— do not fall through to step 4 and file an issue instead. A saturated backlog
+means stop.
+
+The prefix is `claude/issue-`, not the broader `claude/`, and the difference
+matters: every interactive session in this account also pushes `claude/…`
+branches, so counting all of them lets a human working in parallel throttle the
+loop for reasons that have nothing to do with it. The loop budgets its own work
+only. This is also why step 5 insists on the issue number in the branch name —
+the same prefix does the counting here and the claim check in step 1.
 
 This cap, not the schedule, is what bounds cost. A full CI run is 15–22 minutes
 and this account has run out of Actions minutes before — the incident is
@@ -166,8 +174,35 @@ single test files run over a minute — which is the argument for running it her
 rather than learning the same thing from a red PR twenty minutes later.
 
 Then open the PR against `main`, filling `.github/PULL_REQUEST_TEMPLATE.md` and
-referencing `Fixes #<n>`. Not a draft. Anything visual needs the screenshot that
-`docs/graphics-standards.md` requires — the **run-game** skill produces it.
+referencing `Fixes #<n>`. Not a draft.
+
+### The screenshot, when the change is visual
+
+`docs/graphics-standards.md`'s review checklist asks for a "Screenshot in the PR,
+taken via the **run-game** skill — a visual change is reviewed by looking at it,
+not by reading its diff." That gate is not satisfied by describing the frame, and
+it is not satisfied by a capture that stayed in `/tmp`.
+
+**You cannot attach an image to a pull request from here.** GitHub's attachment
+upload is a browser endpoint; nothing in the tooling this session has reaches it.
+Do not discover that at the end and ship the PR with an apology in its
+description. Instead:
+
+1. Capture with the run-game skill, as the gate requires.
+2. **Commit the frames into the branch** under `docs/screenshots/issue-<n>/`, with
+   names that say what they show (`scope-echo-marks.png`, not `shot1.png`).
+3. Reference them from the PR body as markdown images pointing at the blob on your
+   own branch:
+   `![the scope](https://github.com/gunnargehtab/Echoes-of-the-Abyss/blob/<branch>/docs/screenshots/issue-<n>/<file>.png?raw=true)`.
+   A reviewer with repository access sees them rendered in the PR, which is what
+   the gate is actually asking for.
+
+The cost is honest and worth naming: those PNGs merge into `main` and stay there.
+Keep them few and small — the frames that show the change, not the whole session —
+and crop to the instrument under review where a full client frame would not read.
+`docs/concept-art/` is the precedent that images belong in this repository; review
+captures earn their place the same way, by being the record of what a change
+actually looked like when it landed.
 
 ## 7. When to stop instead, and how
 
