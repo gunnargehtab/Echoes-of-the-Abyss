@@ -16,6 +16,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  ACTIVE_SONAR,
   AiDifficulty,
   DEPTH,
   Faction,
@@ -29,7 +30,7 @@ import {
   type EchoSnapshot,
 } from '@echoes/shared';
 import { AiCommander } from '../src/ai/commander.ts';
-import { TUNING } from '../src/ai/doctrine.ts';
+import { DOCTRINE, TUNING } from '../src/ai/doctrine.ts';
 import { AiSeat, briefingFor } from '../src/ai/seat.ts';
 import type { AiBriefing, AiCommand } from '../src/ai/types.ts';
 import { Match } from '../src/sim/match.ts';
@@ -291,37 +292,154 @@ describe('difficulty is decision quality, not information', () => {
   });
 
   it('reacts to its own exposure only when it is good enough to', () => {
-    const recruit = new AiCommander(briefing(AiDifficulty.Recruit));
-    const veteran = new AiCommander(briefing(AiDifficulty.Veteran));
-    const exposed = exposedSnapshot();
+    const veteran = watched();
+    const recruit = watched(Faction.Pelagia, AiDifficulty.Recruit);
 
-    // Warm both up so the first observation is not the one being measured,
-    // then feed the identical snapshot to each.
-    const settle = (c: AiCommander): void => {
-      for (let i = 0; i < 30; i++) c.observe(exposed);
-    };
-    settle(recruit);
-    settle(veteran);
-
-    const throttleOf = (c: AiCommander): HarvestThrottle | null => {
-      for (let i = 0; i < 30; i++) {
-        for (const command of c.observe(exposed)) {
-          if (command.kind === 'throttle') return command.throttle;
-        }
-      }
-      return null;
-    };
-
+    // Long enough to clear the Commune's six-second hold several times over,
+    // so what separates these two is the tuning knob and nothing else.
     assert.equal(
-      throttleOf(veteran),
+      veteran.feed(30, ResolutionTier.Bearing),
       HarvestThrottle.Trickle,
-      'a Veteran Commune quiets down when something has a bearing on it'
+      'a Veteran Commune quiets down when something keeps a bearing on it'
     );
     assert.equal(
-      throttleOf(recruit),
-      null,
-      'a Recruit already set Standard and never reconsiders it'
+      recruit.feed(30, ResolutionTier.Bearing),
+      HarvestThrottle.Standard,
+      'a Recruit sets its resting throttle and never reconsiders it'
     );
+  });
+});
+
+/**
+ * The exposure watch (issue #148).
+ *
+ * The drop used to fire on `exposure.tier >= Bearing` and hold for as long as
+ * that stayed true, which was a fair model of a lever that cost nothing. It
+ * costs 54% of an economy now, so these tests are about the commander being
+ * able to be *wrong* — the trigger it acts on has to be one that a passing
+ * sweep does not satisfy, and the spell it buys has to end.
+ */
+describe('quiet costs half an economy, so it is a judgement', () => {
+  it('does not pay for a bearing that does not stick', () => {
+    // Four seconds inside the Commune's six-second hold: somebody swept past.
+    assert.equal(
+      watched().feed(4, ResolutionTier.Bearing),
+      HarvestThrottle.Standard,
+      'a sweep is not an approach, and half the income is a lot to bet on one'
+    );
+  });
+
+  it('pays once the bearing is held long enough to mean something', () => {
+    assert.equal(watched().feed(10, ResolutionTier.Bearing), HarvestThrottle.Trickle);
+  });
+
+  it('lets the navy with the best ears wait the longest', () => {
+    // The doctrine difference, as the only difference: same water, same
+    // difficulty, same tier, and the Listening keeps working through it
+    // because whatever is converting that bearing into an approach, it will
+    // hear coming. Ten seconds clears the Commune's hold and not its own.
+    const commune = watched(Faction.Pelagia);
+    const directorate = watched(Faction.Directorate);
+    assert.equal(commune.feed(10, ResolutionTier.Bearing), HarvestThrottle.Trickle);
+    assert.equal(
+      directorate.feed(10, ResolutionTier.Bearing),
+      HarvestThrottle.Standard,
+      'the Directorate is the one navy that can afford to find out'
+    );
+    // And it is a wait, not a refusal.
+    assert.equal(directorate.feed(20, ResolutionTier.Bearing), HarvestThrottle.Trickle);
+  });
+
+  it('skips the wait when somebody has full resolution', () => {
+    // Track is exact unit, health and facing. Nobody holds that by accident,
+    // so it is the one reading that is not worth deliberating over.
+    assert.equal(watched().feed(1, ResolutionTier.Track), HarvestThrottle.Trickle);
+  });
+
+  it('goes back to earning as soon as the bearing is actually gone', () => {
+    // The cheap direction, and it is deliberately the fast one. Being loud for
+    // a few seconds costs SIG; being quiet for a few seconds costs half an
+    // economy. A draft with a symmetric fifteen-second release was measured
+    // giving most of the win back — a Directorate quiet for 66% of a match
+    // against this rule's 47%, on the same seed.
+    const rig = watched();
+    assert.equal(rig.feed(10, ResolutionTier.Bearing), HarvestThrottle.Trickle);
+    assert.equal(rig.feed(5, ResolutionTier.Silent), HarvestThrottle.Standard);
+  });
+
+  it('does not let a blink between sweeps count as the bearing breaking', () => {
+    // Detection resolves at ECHO_HZ, so a hull between two sweeps drops out of
+    // the report for a moment and comes back. A watch that took that as proof
+    // the quiet had worked would spend the match toggling; one ping's reveal
+    // is the shortest gap the acoustic model can manufacture, so anything
+    // under it is bridged.
+    const rig = watched();
+    assert.equal(rig.feed(10, ResolutionTier.Bearing), HarvestThrottle.Trickle);
+    assert.equal(
+      rig.feed(ACTIVE_SONAR.REVEAL_DURATION_S - 1, ResolutionTier.Silent),
+      HarvestThrottle.Trickle
+    );
+    assert.equal(rig.feed(1, ResolutionTier.Bearing), HarvestThrottle.Trickle);
+  });
+
+  it('never spends longer hiding than it spent being heard', () => {
+    // The property the reflex had for free and the first draft of this watch
+    // lost: hiding is a subset of exposure. Twelve-second gaps are the median
+    // the balance harness measures on `ventfront-divide`, so this is the shape
+    // of a real match rather than a contrived one.
+    const rig = watched();
+    let heardS = 0;
+    let quietS = 0;
+    for (let cycle = 0; cycle < 6; cycle++) {
+      for (let second = 0; second < 40; second++) {
+        heardS += 1;
+        if (rig.feed(1, ResolutionTier.Bearing) === HarvestThrottle.Trickle) quietS += 1;
+      }
+      for (let second = 0; second < 12; second++) {
+        if (rig.feed(1, ResolutionTier.Silent) === HarvestThrottle.Trickle) quietS += 1;
+      }
+    }
+    assert.ok(
+      quietS <= heardS,
+      `it hid for ${quietS} s of a match it was heard in for ${heardS} s`
+    );
+  });
+
+  it('ends a spell of quiet that is not working, and banks a trip before the next', () => {
+    // The floor. Exposure is a fact about the whole force — a Bastion, a
+    // rallied army and a scout on its leg are all resolved by the same
+    // hydrophones — so a bearing that survives ninety seconds of Trickle is
+    // not being held by the harvesters, and no amount of further quiet will
+    // buy it off.
+    const rig = watched();
+    assert.equal(rig.feed(10, ResolutionTier.Bearing), HarvestThrottle.Trickle);
+    assert.equal(
+      rig.feed(95, ResolutionTier.Bearing),
+      HarvestThrottle.Standard,
+      'the bet lost, so stop paying for it'
+    );
+    assert.equal(
+      rig.feed(30, ResolutionTier.Bearing),
+      HarvestThrottle.Standard,
+      'and do not re-open it on the next observation, which is the reflex again'
+    );
+    assert.equal(
+      rig.feed(30, ResolutionTier.Bearing),
+      HarvestThrottle.Trickle,
+      'once a round trip is banked, it may buy quiet again'
+    );
+  });
+
+  it('never touches the throttle of a navy that has no answer to being heard', () => {
+    for (const faction of [Faction.Bathyarch, Faction.Hadron]) {
+      const rig = watched(faction);
+      const resting = DOCTRINE[faction].restingThrottle;
+      assert.equal(rig.feed(600, ResolutionTier.Track), resting);
+      assert.ok(
+        rig.ordered.every((t) => t === resting),
+        `it ordered a throttle its doctrine does not rest at: ${rig.ordered.join(', ')}`
+      );
+    }
   });
 });
 
@@ -461,6 +579,55 @@ function briefing(difficulty: AiDifficulty): AiBriefing {
   const match = new Match(undefined, { fauna: false, seed: SEED });
   match.addPlayer(1, Faction.Pelagia);
   return briefingFor(match, 1, Faction.Pelagia, difficulty);
+}
+
+/**
+ * A commander fed one snapshot per Echo tick, with the clock actually moving.
+ *
+ * The clock is the whole point. Every other helper here can hand the same
+ * snapshot over and over, because the decisions they test are functions of
+ * what is in it — but the exposure watch measures *how long* a bearing has
+ * been held, so a fixed tick is a commander that has been exposed for zero
+ * seconds forever. `feed` advances one observation at a time, exactly as the
+ * seat does, and reports the throttle its harvester is left running at.
+ */
+function watched(
+  faction = Faction.Pelagia,
+  difficulty = AiDifficulty.Veteran
+): {
+  feed: (seconds: number, tier: ResolutionTier) => HarvestThrottle;
+  ordered: HarvestThrottle[];
+} {
+  const commander = new AiCommander({ ...briefing(difficulty), faction });
+  const ordered: HarvestThrottle[] = [];
+  // Whatever the harvester was last told to run at. Reported back in the next
+  // snapshot, so a commander that is already at the throttle it wants issues
+  // nothing — which is what makes `ordered` a record of decisions.
+  let throttle = HarvestThrottle.Standard;
+  let tick = 600;
+
+  const feed = (seconds: number, tier: ResolutionTier): HarvestThrottle => {
+    const until = tick + seconds * SIM.TICK_HZ;
+    while (tick < until) {
+      const base = exposedSnapshot();
+      const snapshot: EchoSnapshot = {
+        ...base,
+        tick,
+        units: [{ ...base.units[0]!, throttle }],
+        exposure: { tier, trackedCount: tier >= ResolutionTier.Bearing ? 1 : 0 },
+      };
+      for (const command of commander.observe(snapshot)) {
+        if (command.kind === 'throttle') {
+          throttle = command.throttle;
+          ordered.push(command.throttle);
+        }
+      }
+      tick += SIM.TICK_HZ / SIM.ECHO_HZ;
+    }
+    return throttle;
+  };
+
+  return { feed, ordered };
 }
 
 /** A snapshot of one harvester on Standard, with someone holding a bearing. */

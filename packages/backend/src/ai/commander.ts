@@ -24,6 +24,7 @@
  */
 
 import {
+  ACTIVE_SONAR,
   DEPTH,
   DEPTH_BANDS,
   DepthBand,
@@ -45,7 +46,13 @@ import {
   type OwnUnit,
   type ResourceNodeInfo,
 } from '@echoes/shared';
-import { doctrineFor, tuningFor, type AiTuning, type Doctrine } from './doctrine.ts';
+import {
+  doctrineFor,
+  tuningFor,
+  type AiTuning,
+  type Doctrine,
+  type ExposureResponse,
+} from './doctrine.ts';
 import type { AiBriefing, AiCommand, AiPlayer } from './types.ts';
 
 /**
@@ -133,6 +140,91 @@ const DEFEND_WATCH = {
   FORGET_S: 60,
 } as const;
 
+/**
+ * Paying to be quiet, and knowing when to stop.
+ *
+ * The throttle drop used to be a reflex: anything holding a bearing on the
+ * force, and every harvester went to Trickle for as long as that stayed true.
+ * That was the right shape while the lever did not bite — the load scaled the
+ * cut rate, so dropping cost a few per cent — and the wrong shape the moment
+ * it did. Trickle is now 46% of Standard's income (docs/economy.md §3), and a
+ * reflex that spends 54% of an economy should be a judgement instead.
+ *
+ * The judgement is the same one `DEFEND_WATCH` makes about a contact near
+ * home, for the same reason: the fact on its own does not separate the case
+ * worth paying for from the case that is not. A bearing means somebody knows
+ * roughly where you are. It does not mean they are close, coming, or capable —
+ * so what the commander waits for is not the bearing but the *holding* of it,
+ * which is the part a passing sweep does not do. Like the defend watch, it can
+ * be wrong in both directions: it will work straight through the scout that
+ * was about to fetch an army, and it will still buy quiet against one that was
+ * leaving.
+ *
+ * **Slow in, immediate out**, and the asymmetry is the point. Entering costs
+ * the doctrine's whole hold; leaving costs nothing beyond a blink of silence.
+ * A draft that guarded both ends alike — a fifteen-second release to match the
+ * hold — was measured giving most of the win back: bridging every gap shorter
+ * than its own window, it left a Directorate quiet for 66% of a match against
+ * this rule's 47%, on the same seed and the same water. Being briefly loud
+ * costs SIG. Being needlessly quiet costs half an economy. Those are not the
+ * same price and the rules should not treat them as one.
+ *
+ * The doctrine sets how long the wait is (`ExposureResponse.holdS`), because
+ * what a bearing is worth is a faction argument. Everything below is the part
+ * that is the same for everyone.
+ */
+const EXPOSURE_WATCH = {
+  /**
+   * The tier that skips the deliberation, exactly as DEFEND_URGENT_M does.
+   *
+   * Track is full resolution — exact unit, health, facing. Nobody holds that
+   * by accident and nobody holds it from a distance: it is the one reading
+   * that is not ambiguous, so it is the one that does not get waited out.
+   */
+  URGENT_TIER: ResolutionTier.Track,
+  /**
+   * How long a bearing may lapse and still count as held, in seconds.
+   *
+   * Not a release timer — a blink tolerance, and it is one ping's reveal
+   * because that is the shortest gap the acoustic model can manufacture.
+   * Detection resolves at ECHO_HZ, so a hull between two sweeps drops out of
+   * the report for a moment and comes back; the defend watch makes the same
+   * allowance for the same reason, and forgetting a contact the instant it
+   * went quiet would hand it a fresh baseline every time it ran silent.
+   * Derived rather than picked, so a change to what a ping buys moves it too.
+   */
+  BLINK_S: ACTIVE_SONAR.REVEAL_DURATION_S,
+  /**
+   * The longest a single spell of quiet may last, in seconds.
+   *
+   * This is the floor the reflex did not have, and the argument for it is that
+   * hiding is a *bet*: the commander gives up half its income to make the
+   * bearing go away. Two harvest round trips (docs/economy.md §3 puts one near
+   * 45 s) is long enough for the drop to have reached every hauler that was in
+   * transit when it was ordered. If the line is still held after that, the bet
+   * lost — and it lost for a reason the commander cannot fix by paying more,
+   * because exposure is a fact about the whole force. A Bastion, an army at
+   * the rally point or a scout on its leg are all resolved by the same
+   * hydrophones, and no harvest throttle in the game quiets any of them.
+   *
+   * So the spell ends, the economy comes back up, and whoever is listening is
+   * made to find it again.
+   */
+  HIDE_MAX_S: 90,
+  /**
+   * Working seconds it must bank before it will pay for quiet again.
+   *
+   * One round trip at the resting throttle, and it is what stops the cap above
+   * from becoming a flap: without it a commander whose exposure never clears
+   * would end a spell and open the next one on the same observation, which is
+   * the reflex again with extra steps. Absolute — even a Track-tier reading
+   * waits it out, because a commander that has just spent 90 s proving quiet
+   * does not break this particular bearing has learned something, and the
+   * strength of the reading is not what it learned.
+   */
+  WORK_MIN_S: 45,
+} as const;
+
 /** Longest a remembered enemy position stays worth walking to, in seconds. */
 const MEMORY_S = 90;
 
@@ -202,6 +294,21 @@ export class AiCommander implements AiPlayer {
   private remembered: Remembered | null = null;
   /** Silent Running state it believes the army is in, to avoid re-sending. */
   private armySilent = false;
+  /**
+   * The exposure watch: four clocks answering one question, which is whether
+   * the economy should currently be paying to be quiet (see `wantsQuiet`).
+   *
+   * Ticks rather than durations, because a snapshot carries a tick and the
+   * commander has no other clock.
+   */
+  /** When the current spell of quiet began, or null while it is working. */
+  private hidingSinceTick: number | null = null;
+  /** Start of the run of exposure it is timing, blinks bridged, or null. */
+  private heardSinceTick: number | null = null;
+  /** Last observation on which anything held a bearing, for the blink rule. */
+  private lastHeardTick = 0;
+  /** Earliest tick it will pay for quiet again, after a spell that did not work. */
+  private hideAgainTick = 0;
   /**
    * What it has seen loitering near the Bastion, by contact handle.
    *
@@ -356,12 +463,82 @@ export class AiCommander implements AiPlayer {
     }
 
     // Loudness is a dial on the economy, and this is the only place the
-    // commander turns it. Exposure is a fact about itself, so acting on it
-    // reveals nothing and costs nothing.
-    const exposed = this.tuning.managesExposure && snapshot.exposure.tier >= ResolutionTier.Bearing;
-    const want = exposed ? this.doctrine.exposedThrottle : this.doctrine.restingThrottle;
+    // commander turns it. Exposure is a fact about *itself*, so reading it
+    // reveals nothing — but acting on it is no longer free, which is why the
+    // decision is in `wantsQuiet` and not on this line.
+    const response = this.doctrine.exposureResponse;
+    const want =
+      response !== null && this.wantsQuiet(snapshot, response)
+        ? response.throttle
+        : this.doctrine.restingThrottle;
     const wrong = harvesters.filter((h) => h.throttle !== want).map((h) => h.id);
     if (wrong.length > 0) out.push({ kind: 'throttle', unitIds: wrong, throttle: want });
+  }
+
+  /**
+   * Whether the economy should be paying for quiet right now.
+   *
+   * Four rules, in the order they are allowed to fire (see EXPOSURE_WATCH for
+   * why each one exists):
+   *
+   * 1. **The quiet worked.** Already hiding, and the bearing is gone — not
+   *    blinking, gone. Back to work immediately; this is the cheap direction.
+   * 2. **The quiet did not work.** Already hiding for HIDE_MAX_S and still
+   *    held. Back to work, and bank WORK_MIN_S before buying any more.
+   * 3. **Urgent.** Somebody has full resolution. That is not a sweep.
+   * 4. **The judgement.** A bearing held for the doctrine's own hold, which is
+   *    the only rule here that can be mistaken, and is meant to be.
+   *
+   * Called once per decision and only from `commandEconomy`, because it
+   * advances the run clocks — calling it twice in a tick would not be wrong,
+   * but calling it on a tick the commander is not deciding on would leave the
+   * runs measuring the cadence rather than the water.
+   */
+  private wantsQuiet(snapshot: EchoSnapshot, response: ExposureResponse): boolean {
+    // A Recruit does not manage its loudness at all (docs/tech-stack.md,
+    // "difficulty is decision quality"), so it never reaches the watch and its
+    // harvesters stay wherever the doctrine rests them.
+    if (!this.tuning.managesExposure) return false;
+
+    const now = snapshot.tick;
+    const seconds = (fromTick: number): number => (now - fromTick) / SIM.TICK_HZ;
+
+    // One run of exposure, with blinks bridged. `heardSinceTick` is when it
+    // started; it survives a lapse shorter than a ping's reveal and dies on
+    // anything longer, which is what makes "held" mean held.
+    if (snapshot.exposure.tier >= ResolutionTier.Bearing) {
+      this.lastHeardTick = now;
+      this.heardSinceTick ??= now;
+    } else if (
+      this.heardSinceTick !== null &&
+      seconds(this.lastHeardTick) > EXPOSURE_WATCH.BLINK_S
+    ) {
+      this.heardSinceTick = null;
+    }
+    const heardSince = this.heardSinceTick;
+
+    if (this.hidingSinceTick !== null) {
+      // The quiet worked. Go and earn something before they find it again.
+      if (heardSince === null) {
+        this.hidingSinceTick = null;
+        return false;
+      }
+      // The quiet did not work, and ninety seconds is long enough to know.
+      if (seconds(this.hidingSinceTick) >= EXPOSURE_WATCH.HIDE_MAX_S) {
+        this.hidingSinceTick = null;
+        this.hideAgainTick = now + EXPOSURE_WATCH.WORK_MIN_S * SIM.TICK_HZ;
+        return false;
+      }
+      return true;
+    }
+
+    if (heardSince === null || now < this.hideAgainTick) return false;
+
+    const urgent = snapshot.exposure.tier >= EXPOSURE_WATCH.URGENT_TIER;
+    if (!urgent && seconds(heardSince) < response.holdS) return false;
+
+    this.hidingSinceTick = now;
+    return true;
   }
 
   /**
