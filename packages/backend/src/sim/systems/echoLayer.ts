@@ -603,6 +603,28 @@ export class EchoLayer {
           const listenerSlot = Owner.slot[listener]!;
           if (listenerSlot === emitterSlot) continue;
 
+          // The Drift is not a commander.
+          //
+          // Fauna carry Owner and real HYD — DRIFT_SLOT and 35-90 — so they
+          // arrive here as candidate listeners exactly like a hull, and nothing
+          // downstream can serve them: every per-slot structure below is sized
+          // or keyed for player slots, and `record` would file the result under
+          // a slot `run` never clears. The residue read has always had this
+          // test; the pair loop did not.
+          //
+          // Leaving it out was worse than doing pointless work.
+          // `bestTierThisEmitter` is sized MAX_SLOTS, so reading it at slot 200
+          // gave `undefined`, and `cutoff2` and `pfNeeded` below both became
+          // NaN — every comparison against which is false. So the tier prune
+          // rejected nothing, and `pathPropagation` could never abort: each of
+          // these pairs paid a *full-length* path integral. Measured at 229 per
+          // pass in a default match against 42 with this line, on a 2 ms
+          // budget (#215).
+          //
+          // Fauna hearing is fauna.ts's own walk, over its own thresholds.
+          // Nothing here was feeding it.
+          if (listenerSlot >= MAX_SLOTS) continue;
+
           // Deaf things do not listen.
           //
           // HYD 0 means "no ears", not "poor ears" — the per-HYD tables above
