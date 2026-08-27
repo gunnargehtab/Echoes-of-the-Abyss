@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Plate VII — The Pelagion Rift, survey chart. Pressure Cartography register:
+     near-black ground, hairline survey chrome, letterspaced caps, faction accents
+     only where the world itself is that faction's. Palettes trace to factions.md /
+     art-direction.md; chrome is alloy white #E6E9F2 at low opacity. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="2750" viewBox="0 0 2000 2750">
+  <defs>
+    <style><![CDATA[
+      text { font-family: 'DejaVu Sans Mono', monospace; fill: #E6E9F2; }
+      .chrome   { fill: #E6E9F2; opacity: 0.38; letter-spacing: 6px; font-size: 22px; }
+      .plateno  { fill: #C9A6FF; opacity: 0.85; letter-spacing: 6px; font-size: 22px; }
+      .lbl      { font-size: 24px; letter-spacing: 3px; opacity: 0.85; }
+      .lbl2     { font-size: 17px; letter-spacing: 2px; opacity: 0.5; }
+      .num      { font-size: 17px; letter-spacing: 1px; opacity: 0.65; }
+      .rail     { font-size: 18px; letter-spacing: 2px; opacity: 0.4; }
+      .title    { font-family: 'DejaVu Sans', sans-serif; font-weight: bold; font-size: 92px; letter-spacing: 2px; opacity: 0.92; }
+      .subtitle { font-size: 26px; letter-spacing: 8px; opacity: 0.55; }
+      .meta     { font-size: 18px; letter-spacing: 4px; opacity: 0.35; }
+      .brand    { font-size: 20px; letter-spacing: 4px; opacity: 0.55; }
+      .hairline { stroke: #E6E9F2; stroke-opacity: 0.18; stroke-width: 1; fill: none; }
+      .contour  { stroke: #E6E9F2; fill: none; stroke-width: 1.2; }
+      .amber  { fill: #F2B233; }  .amberS  { stroke: #F2B233; fill: none; }
+      .teal   { fill: #1FA67A; }  .tealS   { stroke: #1FA67A; fill: none; }
+      .green  { fill: #8FE36B; }
+      .red    { fill: #C2465E; }  .redS    { stroke: #C2465E; fill: none; }
+      .violet { fill: #8B5CF6; }  .violetS { stroke: #8B5CF6; fill: none; }
+      .glowV  { fill: #C9A6FF; }
+    ]]></style>
+  </defs>
+
+  <rect width="2000" height="2750" fill="#08090c"/>
+
+  <!-- plate chrome: frame + registration crosses -->
+  <rect x="100" y="100" width="1800" height="2550" class="hairline"/>
+  <g class="hairline">
+    <path d="M130 70 v60 M100 100 h60"/> <path d="M1870 70 v60 M1840 100 h60"/>
+    <path d="M130 2680 v-60 M100 2650 h60"/> <path d="M1870 2680 v-60 M1840 2650 h60"/>
+  </g>
+  <text x="130" y="188" class="chrome">PELAGION&#160;&#160;RIFT&#160;&#160;SURVEY</text>
+  <text x="1700" y="188" class="plateno">PLATE VII</text>
+
+  <!-- ======================= THE CHART ======================= -->
+  <!-- The Lid: hatched sour band across the top of the chart -->
+  <g>
+    <clipPath id="lidclip"><rect x="240" y="300" width="1520" height="90"/></clipPath>
+    <g clip-path="url(#lidclip)" stroke="#8FE36B" stroke-opacity="0.14" stroke-width="1">
+      <path d="M200 400 l160 -120 M260 400 l160 -120 M320 400 l160 -120 M380 400 l160 -120 M440 400 l160 -120 M500 400 l160 -120 M560 400 l160 -120 M620 400 l160 -120 M680 400 l160 -120 M740 400 l160 -120 M800 400 l160 -120 M860 400 l160 -120 M920 400 l160 -120 M980 400 l160 -120 M1040 400 l160 -120 M1100 400 l160 -120 M1160 400 l160 -120 M1220 400 l160 -120 M1280 400 l160 -120 M1340 400 l160 -120 M1400 400 l160 -120 M1460 400 l160 -120 M1520 400 l160 -120 M1580 400 l160 -120 M1640 400 l160 -120"/>
+    </g>
+    <line x1="240" y1="390" x2="1760" y2="390" stroke="#8FE36B" stroke-opacity="0.3" stroke-width="1"/>
+    <text x="240" y="330" class="lbl" fill="#8FE36B" opacity="0.6">THE LID</text>
+    <text x="240" y="358" class="lbl2" fill="#8FE36B">SOUR WATER &#183; 0&#8211;150 m &#183; HELD 214 YEARS</text>
+    <text x="1760" y="358" class="lbl2" text-anchor="end">NOT ATTENDED</text>
+  </g>
+
+  <!-- valley depth contours: shallow (wide, north) narrowing to the Mouth (south) -->
+  <g class="contour">
+    <path opacity="0.28" d="M300 430 C 520 400, 1480 400, 1700 430 C 1740 700, 1640 1000, 1520 1300 C 1420 1580, 1340 1820, 1250 2020 C 1180 2160, 900 2160, 830 2020 C 740 1820, 640 1560, 570 1300 C 480 1000, 290 700, 300 430 Z"/>
+    <path opacity="0.20" d="M420 520 C 620 480, 1380 480, 1580 520 C 1620 760, 1540 1020, 1440 1280 C 1350 1520, 1280 1760, 1200 1960 C 1140 2100, 940 2100, 880 1960 C 800 1760, 720 1520, 650 1280 C 560 1020, 400 760, 420 520 Z"/>
+    <path opacity="0.14" d="M560 640 C 740 600, 1280 600, 1440 660 C 1480 880, 1420 1100, 1340 1320 C 1260 1540, 1200 1760, 1140 1930 C 1090 2060, 990 2060, 940 1930 C 880 1760, 810 1540, 740 1320 C 660 1100, 540 880, 560 640 Z"/>
+    <path opacity="0.10" d="M700 800 C 860 760, 1200 760, 1320 820 C 1350 1000, 1300 1200, 1240 1380 C 1180 1560, 1130 1760, 1090 1900 C 1060 2000, 1020 2000, 990 1900 C 950 1760, 900 1560, 850 1380 C 790 1200, 690 1000, 700 800 Z"/>
+    <path opacity="0.07" d="M880 1560 C 960 1520, 1120 1520, 1190 1580 C 1210 1720, 1170 1860, 1130 1970 C 1100 2050, 1000 2050, 970 1970 C 930 1860, 890 1720, 880 1560 Z"/>
+  </g>
+
+  <!-- thermocline contour: the 1,200 m line -->
+  <path d="M330 1150 C 620 1210, 1380 1210, 1670 1150" stroke="#E6E9F2" stroke-opacity="0.3" stroke-width="1.2" stroke-dasharray="2 10" fill="none"/>
+  <text x="316" y="1146" class="lbl2" text-anchor="end">1,200 m</text>
+  <text x="316" y="1170" class="lbl2" text-anchor="end">THE LAYER</text>
+
+  <!-- old civic transit line, north-south through the drowned city -->
+  <path d="M1000 470 C 1010 700, 990 900, 1000 1120 C 1010 1340, 1000 1500, 1010 1700" stroke="#E6E9F2" stroke-opacity="0.16" stroke-width="1.5" stroke-dasharray="10 14" fill="none"/>
+  <text x="1030" y="944" class="lbl2">CIVIC TRANSIT LINE &#183; FELL WITH THE CITY</text>
+
+  <!-- ===== NORTH: the plateaus (Commune) ===== -->
+  <g>
+    <g class="tealS" stroke-opacity="0.55" stroke-width="1.4">
+      <ellipse cx="560" cy="560" rx="110" ry="52"/>
+      <ellipse cx="820" cy="500" rx="96" ry="44"/>
+      <ellipse cx="1120" cy="520" rx="104" ry="48"/>
+      <ellipse cx="1400" cy="580" rx="92" ry="44"/>
+      <ellipse cx="700" cy="680" rx="86" ry="40"/>
+    </g>
+    <g class="green" opacity="0.5">
+      <circle cx="530" cy="552" r="2.4"/><circle cx="586" cy="568" r="2.4"/><circle cx="806" cy="494" r="2.4"/><circle cx="842" cy="508" r="2.4"/>
+      <circle cx="1100" cy="514" r="2.4"/><circle cx="1146" cy="528" r="2.4"/><circle cx="1382" cy="574" r="2.4"/><circle cx="1420" cy="588" r="2.4"/>
+    </g>
+    <text x="820" y="452" class="lbl" fill="#1FA67A" text-anchor="middle">ANHOLT &#183; 210 m</text>
+    <text x="560" y="640" class="lbl" fill="#1FA67A" text-anchor="middle">MARR &#183; 320 m</text>
+    <text x="1120" y="596" class="lbl" fill="#1FA67A" text-anchor="middle">TEEL &#183; 380 m</text>
+    <text x="1400" y="656" class="lbl" fill="#1FA67A" text-anchor="middle">KELL</text>
+    <text x="1400" y="682" class="lbl2" fill="#1FA67A" text-anchor="middle">REPLANTED &#183; NOT RENAMED</text>
+    <text x="700" y="756" class="lbl" fill="#1FA67A" text-anchor="middle">THE ENCLOSURE</text>
+    <text x="700" y="782" class="lbl2" fill="#1FA67A" text-anchor="middle">HELD WITHOUT FIRING &#183; 199 PC</text>
+    <text x="300" y="470" class="lbl2" fill="#1FA67A" opacity="0.8">THE PLATEAUS &#183; SHELF 200&#8211;400 m</text>
+    <text x="300" y="494" class="lbl2" fill="#1FA67A">HARVEST AT 18 SIG</text>
+  </g>
+
+  <!-- ===== WEST WALL (Consortium) ===== -->
+  <g>
+    <!-- thermal grid spine -->
+    <path d="M560 900 C 540 1040, 560 1180, 600 1330 C 630 1450, 660 1560, 700 1660" class="amberS" stroke-opacity="0.4" stroke-width="1.5" stroke-dasharray="7 7"/>
+    <text x="470" y="866" class="lbl2" fill="#F2B233">THE THERMAL GRID &#183; 71 PC &#183; WHOEVER RUNS IT RUNS THE AIR</text>
+
+    <!-- Holding One -->
+    <g transform="translate(520,980)">
+      <rect x="0" y="0" width="34" height="150" class="amberS" stroke-opacity="0.7" stroke-width="1.4"/>
+      <line x1="0" y1="30" x2="34" y2="30" class="amberS" stroke-opacity="0.5"/>
+      <line x1="0" y1="70" x2="34" y2="70" class="amberS" stroke-opacity="0.5"/>
+      <line x1="0" y1="110" x2="34" y2="110" class="amberS" stroke-opacity="0.5"/>
+      <rect x="0" y="0" width="34" height="30" class="amber" opacity="0.16"/>
+    </g>
+    <text x="576" y="1000" class="lbl" fill="#F2B233">HOLDING ONE &#183; 350&#8211;1,300 m</text>
+    <text x="576" y="1026" class="lbl2" fill="#F2B233">ASSET 001 &#183; DEPTH IS GRADE</text>
+    <text x="576" y="1052" class="lbl2">SECTOR KELL &#183; SEALED 197 PC &#183; 1,900 STILL ON THE REGISTRY</text>
+
+    <!-- Ninefold Vein -->
+    <g class="amber" opacity="0.75">
+      <circle cx="600" cy="1360" r="3.4"/><circle cx="626" cy="1342" r="3.4"/><circle cx="652" cy="1364" r="3.4"/>
+      <circle cx="612" cy="1392" r="3.4"/><circle cx="640" cy="1390" r="3.4"/><circle cx="666" cy="1338" r="3.4"/>
+      <circle cx="586" cy="1330" r="3.4"/><circle cx="660" cy="1396" r="3.4"/><circle cx="630" cy="1366" r="3.4"/>
+    </g>
+    <text x="566" y="1298" class="lbl" fill="#F2B233" text-anchor="end">NINEFOLD VEIN &#183; 900&#8211;1,400 m</text>
+    <text x="566" y="1324" class="lbl2" fill="#F2B233" text-anchor="end">PRODUCING SINCE BEFORE YEAR 0</text>
+    <text x="566" y="1348" class="lbl2" fill="#F2B233" text-anchor="end">TERMINAL 209 PC</text>
+
+    <!-- Fivewell -->
+    <g class="amber" opacity="0.6">
+      <circle cx="700" cy="1700" r="3"/><circle cx="722" cy="1688" r="3"/><circle cx="742" cy="1706" r="3"/><circle cx="712" cy="1722" r="3"/><circle cx="734" cy="1726" r="3"/>
+    </g>
+    <text x="770" y="1706" class="lbl" fill="#F2B233">FIVEWELL</text>
+    <text x="770" y="1732" class="lbl2" fill="#F2B233">DRILLED BY THE BOOK</text>
+
+    <!-- Halvard -->
+    <g class="amberS" stroke-opacity="0.55" stroke-width="1.4">
+      <circle cx="510" cy="1560" r="12"/>
+      <path d="M501 1551 l18 18 M519 1551 l-18 18"/>
+    </g>
+    <text x="480" y="1610" class="lbl">HALVARD &#183; 1,600 m</text>
+    <text x="480" y="1636" class="lbl2">IMPLODED 14 PC &#183; ENGINES CUT IN PASSING</text>
+  </g>
+
+  <!-- ===== MID: the drowned city (neutral) ===== -->
+  <g>
+    <g class="hairline" stroke-opacity="0.4">
+      <rect x="940" y="1200" width="26" height="18"/><rect x="978" y="1188" width="20" height="30"/>
+      <rect x="1010" y="1206" width="30" height="14"/><rect x="952" y="1236" width="18" height="22"/>
+      <rect x="990" y="1232" width="26" height="20"/><rect x="1026" y="1236" width="16" height="18"/>
+    </g>
+    <text x="920" y="1160" class="lbl" text-anchor="end">THE DROWNED CITY</text>
+    <text x="920" y="1186" class="lbl2" text-anchor="end">NAME NOT IN THE RECORD</text>
+    <text x="920" y="1210" class="lbl2" text-anchor="end">UPPER CONCOURSE 340 m</text>
+    <text x="920" y="1234" class="lbl2" text-anchor="end">CORAL RUIN THROUGHOUT</text>
+    <!-- Sorrowgate -->
+    <circle cx="1000" cy="1330" r="7" class="hairline" stroke-opacity="0.8"/>
+    <circle cx="1000" cy="1330" r="2.2" fill="#E6E9F2" opacity="0.8"/>
+    <text x="1032" y="1416" class="lbl">SORROWGATE &#183; 1,500 m</text>
+    <text x="1032" y="1442" class="lbl2">THE COURT &#183; SINCE 165 PC</text>
+    <text x="1032" y="1466" class="lbl2">ALL FOUR DENY USING IT</text>
+    <line x1="1006" y1="1338" x2="1028" y2="1404" class="hairline" stroke-opacity="0.4"/>
+    <!-- the Commit -->
+    <path d="M1000 1360 C 1000 1440, 1004 1500, 1008 1560" class="hairline" stroke-opacity="0.5" stroke-dasharray="3 8"/>
+    <text x="1032" y="1548" class="lbl2">THE COMMIT &#183; TO 2,400 m &#183; THE DEAD GO DOWN</text>
+  </g>
+
+  <!-- ===== EAST: Resonance Fields (Knights) ===== -->
+  <g>
+    <g class="violetS" stroke-opacity="0.5" stroke-width="1.3">
+      <path d="M1290 1250 l14 -22 14 22 -14 22 Z"/>
+      <path d="M1350 1330 l12 -19 12 19 -12 19 Z"/>
+      <path d="M1420 1260 l12 -19 12 19 -12 19 Z"/>
+      <path d="M1330 1430 l12 -19 12 19 -12 19 Z"/>
+      <path d="M1404 1392 l11 -17 11 17 -11 17 Z"/>
+      <path d="M1470 1330 l11 -17 11 17 -11 17 Z"/>
+      <path d="M1276 1352 l11 -17 11 17 -11 17 Z"/>
+      <path d="M1382 1490 l11 -17 11 17 -11 17 Z"/>
+      <path d="M1300 1660 l14 -22 14 22 -14 22 Z"/>
+    </g>
+    <text x="1760" y="1120" class="lbl" fill="#8B5CF6" text-anchor="end">RESONANCE FIELDS &#183; 1,400&#8211;2,900 m</text>
+    <text x="1760" y="1146" class="lbl2" fill="#8B5CF6" text-anchor="end">NINE CHAPTER-HOUSES &#183; EACH AN INSTRUMENT</text>
+    <text x="1448" y="1236" class="num" fill="#C9A6FF">III &#183; 1,450 m</text>
+    <text x="1510" y="1362" class="num" fill="#C9A6FF">IX &#183; 1,900 m</text>
+    <text x="1340" y="1706" class="num" fill="#C9A6FF">I &#183; 2,900 m &#183; THE FIRST CHORD</text>
+    <text x="1340" y="1730" class="num" fill="#C9A6FF">THE THREE &#183; STILL WRITING</text>
+    <!-- First Chord bearing into the Mouth -->
+    <path d="M1314 1690 C 1240 1880, 1120 2110, 1022 2278" class="violetS" stroke-opacity="0.45" stroke-width="1.2" stroke-dasharray="14 8"/>
+    <text x="1210" y="1960" class="lbl2" fill="#C9A6FF">FIRST CHORD BEARING &#183; 178 PC</text>
+    <text x="1210" y="1984" class="lbl2" fill="#C9A6FF">THE REPLY ARRIVED 41 s EARLY</text>
+  </g>
+
+  <!-- ===== SOUTH: trench country (Directorate) ===== -->
+  <g>
+    <g class="redS" stroke-opacity="0.5" stroke-width="1.4">
+      <path d="M760 1790 C 820 1830, 880 1856, 940 1874"/>
+      <path d="M770 1850 C 836 1890, 900 1914, 966 1932"/>
+      <path d="M786 1912 C 850 1948, 916 1972, 986 1990"/>
+      <path d="M806 1972 C 870 2006, 936 2028, 1004 2044"/>
+      <path d="M830 2032 C 892 2062, 954 2082, 1022 2098"/>
+      <path d="M858 2090 C 918 2118, 976 2136, 1040 2150"/>
+      <path d="M890 2148 C 946 2172, 1000 2188, 1058 2200"/>
+      <path d="M926 2204 C 978 2226, 1028 2238, 1078 2248"/>
+      <path d="M968 2262 C 1010 2280, 1052 2290, 1096 2296"/>
+    </g>
+    <g class="num" fill="#C2465E">
+      <text x="736" y="1796">I</text><text x="744" y="1856">II</text><text x="756" y="1918">III</text>
+      <text x="774" y="1978">IV</text><text x="802" y="2038">V</text><text x="828" y="2096">VI</text>
+      <text x="856" y="2154">VII</text><text x="892" y="2210">VIII</text><text x="934" y="2268">IX</text>
+    </g>
+    <text x="300" y="1900" class="lbl2" fill="#C2465E" opacity="0.85">THE TRENCH COUNTRY</text>
+    <text x="300" y="1924" class="lbl2" fill="#C2465E">NINE TRENCHES &#183; COUNTED DOWNWARD</text>
+    <text x="300" y="1948" class="lbl2" fill="#C2465E">PF 1.60 AXIAL &#183; NO SECRETS &#183; ONLY DISTANCES</text>
+    <text x="300" y="1996" class="lbl2" fill="#C2465E">IV &#183; FREIGHT SHORTCUT &#183; CONTESTED</text>
+    <line x1="640" y1="1990" x2="762" y2="1990" class="redS" stroke-opacity="0.25" stroke-width="1"/>
+    <!-- Sufficiency -->
+    <g class="redS" stroke-opacity="0.8" stroke-width="1.5">
+      <path d="M900 2288 h44 M906 2300 h32 M912 2312 h20"/>
+    </g>
+    <text x="866" y="2308" class="lbl" fill="#C2465E" text-anchor="end">SUFFICIENCY &#183; 2,750&#8211;3,400 m</text>
+    <text x="866" y="2334" class="lbl2" fill="#C2465E" text-anchor="end">THE ATTENDING GALLERIES OPEN ON THE NINTH</text>
+  </g>
+
+  <!-- ===== THE MOUTH ===== -->
+  <g>
+    <g class="violetS" stroke-width="1.1">
+      <circle cx="1000" cy="2400" r="14" stroke-opacity="0.9"/>
+      <circle cx="1000" cy="2400" r="30" stroke-opacity="0.55"/>
+      <circle cx="1000" cy="2400" r="48" stroke-opacity="0.35"/>
+      <circle cx="1000" cy="2400" r="68" stroke-opacity="0.22"/>
+      <circle cx="1000" cy="2400" r="90" stroke-opacity="0.12"/>
+    </g>
+    <circle cx="1000" cy="2400" r="3.4" class="glowV"/>
+    <text x="1130" y="2352" class="lbl" fill="#C9A6FF">THE MOUTH &#183; 4,410 m</text>
+    <text x="1130" y="2378" class="lbl2" fill="#C9A6FF">ELEVEN KILOMETRES &#183; RETURN CYCLE 39 h</text>
+    <text x="1130" y="2402" class="lbl2" fill="#C9A6FF">THE RIM &#183; CRYSTAL &#183; FOUR REASONS CONVERGING</text>
+    <text x="1130" y="2426" class="lbl2">DESCRIBED &#183; MEASURED &#183; NOT EXPLAINED</text>
+  </g>
+
+  <!-- ===== depth rail (right margin) ===== -->
+  <g>
+    <line x1="1810" y1="430" x2="1810" y2="2400" class="hairline"/>
+    <g class="rail" text-anchor="start">
+      <text x="1824" y="438">0 m</text>
+      <text x="1824" y="620">400</text>
+      <text x="1824" y="1160">1,200</text>
+      <text x="1824" y="1560">1,800</text>
+      <text x="1824" y="2404">4,410</text>
+    </g>
+    <g class="hairline">
+      <line x1="1802" y1="430" x2="1818" y2="430"/>
+      <line x1="1802" y1="612" x2="1818" y2="612"/>
+      <line x1="1802" y1="1152" x2="1818" y2="1152"/>
+      <line x1="1802" y1="1552" x2="1818" y2="1552"/>
+      <line x1="1802" y1="2400" x2="1818" y2="2400"/>
+    </g>
+    <text x="1886" y="1210" class="rail" transform="rotate(90 1886 1210)" text-anchor="middle" letter-spacing="6">NORTH-SHALLOW &#8594; SOUTH-DEEP &#183; STATUS RUNS DOWNWARD</text>
+  </g>
+
+  <!-- ===== scale + legend ===== -->
+  <g>
+    <g class="hairline" stroke-opacity="0.5">
+      <line x1="240" y1="2410" x2="440" y2="2410"/>
+      <line x1="240" y1="2404" x2="240" y2="2416"/><line x1="340" y1="2406" x2="340" y2="2414"/><line x1="440" y1="2404" x2="440" y2="2416"/>
+    </g>
+    <text x="240" y="2444" class="num">0</text>
+    <text x="440" y="2444" class="num" text-anchor="end">20 km</text>
+    <text x="240" y="2472" class="lbl2">NINETY KILOMETRES END TO END &#183; ONE VALLEY &#183; ONE CIVILISATION</text>
+
+    <g transform="translate(240,2120)">
+      <circle cx="8" cy="-6" r="4" class="teal"/><text x="26" y="0" class="num">PELAGIA COMMUNE</text>
+      <circle cx="8" cy="26" r="4" class="amber"/><text x="26" y="32" class="num">BATHYARCH CONSORTIUM</text>
+      <circle cx="8" cy="58" r="4" class="violet"/><text x="26" y="64" class="num">HADRON KNIGHTS</text>
+      <circle cx="8" cy="90" r="4" class="red"/><text x="26" y="96" class="num">ABYSSAL DIRECTORATE</text>
+      <circle cx="8" cy="122" r="4" fill="#E6E9F2" opacity="0.5"/><text x="26" y="128" class="num">NEUTRAL &#183; RUINED</text>
+    </g>
+  </g>
+
+  <!-- ======================= FOOTER ======================= -->
+  <line x1="130" y1="2486" x2="1870" y2="2486" class="hairline"/>
+  <text x="130" y="2572" class="title">THE PELAGION RIFT</text>
+  <text x="132" y="2610" class="subtitle">SURVEY CHART &#183; REGIONS &amp; NAMED PLACES</text>
+  <text x="132" y="2638" class="meta">SOUNDING 214 PC &#183; COMPILED FROM FOUR ARCHIVES THAT DO NOT SHARE DATA</text>
+  <text x="1870" y="2610" class="brand" text-anchor="end">ECHOES OF THE ABYSS</text>
+</svg>

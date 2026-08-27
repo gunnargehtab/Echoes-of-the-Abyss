@@ -1,6 +1,6 @@
 # The Pelagion Rift — Geography & Gazetteer
 
-> The canonical map of the setting: the Rift's shape, its vertical order, and every named place in the bible, each with its depth, its allegiance, and its sound. [world.md](world.md) says what broke and why humanity is down here; this document says where *here* is. Skirmish maps are cut from this ground ([maps.md](maps.md)), and the campaign is placed on it (§5).
+> The canonical map of the setting: the Rift's shape, its vertical order, and every named place in the bible, each with its depth, its allegiance, and its sound. Drawn as [Plate VII](concept-art/plate-07-rift-chart.png) in the Pressure Cartography language ([art-direction.md](art-direction.md)); this document owns the facts, the plate transcribes them. [world.md](world.md) says what broke and why humanity is down here; this document says where *here* is. Skirmish maps are cut from this ground ([maps.md](maps.md)), and the campaign is placed on it (§5).
 
 A rule before the geography: in a game where nobody looks and everybody listens, **a place is its sound**. Every entry below carries an acoustic identity, because that — not its skyline — is how a Rift inhabitant knows they have arrived somewhere.
 
