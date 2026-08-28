@@ -292,6 +292,16 @@ lost Bastion takes. The tempting alternative — quietly drop the player from th
 leaves the survivor in a game they have already won, forever, because the victory check
 needs two rosters to declare a winner.
 
+A commander can also leave a match without anyone resigning and without their Bastion
+falling. `Match` reads the **scuttling** rule once per simulated second, inside the fixed
+step so a replay reproduces it: a commander with no harvester alive, nothing on a production
+line, nothing rising, nothing they could afford and nothing landing in any stockpile, held
+for `CONCESSION.WINDOW_S`, is eliminated down the same path
+([game-identity.md](game-identity.md) "Match Structure" states the rule and why each clause
+is there). It is not a message a client can send: the position is read off the simulation,
+which is the only place that knows it, and the same reading applies to a human commander and
+an AI one.
+
 A **mission does not go through that check at all.** It seats one slot and concludes on its
 own authored terms ([mission-sorrowgate.md](mission-sorrowgate.md) §8), so `resolveVictory`
 is not widened, guarded or special-cased for it: the two-roster rule stays exactly as written

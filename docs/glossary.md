@@ -118,6 +118,11 @@ Silence Order
 - A mission-imposed SIG ceiling on the player's force, enforced server-side like every other rule about who hears what. Its penalty is a loss of listening, never a loss of the mission: exceed it and the instrument you were lent is withdrawn until the debt is paid.
 - Introduced by the Sorrowgate court, which is also where its numbers are set (mission-sorrowgate.md §4).
 
+Scuttling
+
+- The second way a commander leaves a match: a position with no harvester alive, nothing on a production line or rising, not the price of a harvester in the bank and nothing landing in any stockpile, held for sixty seconds while another commander is still earning and fields at least as many armed hulls, ends with the crew scuttling and the commander eliminated exactly as a lost Bastion eliminates them (game-identity.md "Match Structure").
+- Automatic and unilateral. It is not an offer of surrender, and it is distinct from a *resignation*, which is a player leaving a live match (tech-stack.md).
+
 Silence-Debt
 
 - The Rift's social ledger for interrupting a listener: you owe the silence back, and you repay it by being quiet the next time that person listens (culture.md §5).
@@ -132,5 +137,6 @@ Related
 - ui-ux.md — how resolution tiers are rendered and read
 - bestiary.md — fauna as listeners, and what SIG attracts
 - economy.md — resources, the noise curve, and per-faction economies
+- game-identity.md — the match loop, the win condition, and scuttling
 - campaign.md — missions, briefings, objectives, and how one ends
 - mission-sorrowgate.md — the prologue, where the silence order is set out with its numbers

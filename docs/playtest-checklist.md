@@ -59,6 +59,12 @@ read 0%. Both rails therefore refuse to rule below ten decided matches and say s
 reading (`n=1 decided, needs 10`), the per-faction table prints the denominator in a column
 of its own, and a win rate over no decided matches at all prints as `—` rather than as `0%`.
 
+**Not every elimination is a Bastion.** A commander who can no longer put a hull in the
+water scuttles ([game-identity.md](game-identity.md) "Match Structure"), and the harness
+counts that as the elimination it is. So a rising elimination count is not by itself evidence
+that anybody is pushing: it is evidence that commanders are being *finished*, one way or the
+other. First blood and the loss ledger are what separate the two.
+
 **A draw is not one thing, so read the eliminations row beside it.** A win is the last
 commander standing, which is one elimination in a duel and *three* in a four-seat
 free-for-all — so the same game resolves at very different rates depending only on how many
