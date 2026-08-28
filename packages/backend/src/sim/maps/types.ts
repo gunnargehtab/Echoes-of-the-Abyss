@@ -84,6 +84,26 @@ export interface MapResource {
 }
 
 /**
+ * A bloom-share node — docs/economy.md §6.
+ *
+ * Ground, not a stockpile: a bloom never depletes and is never mined, so it
+ * carries no `kind` and no `amount`. It pays the Commune continuously while a
+ * live, non-silent Pelagia hull stands inside `BLOOM_SHARE.TEND_RADIUS_M` of
+ * it (`bloomShare.ts`), and pays nothing otherwise.
+ *
+ * Authored on *surface plateau* ground only — Shelf band, per the balance
+ * guard-rail (docs/systems-echo.md §10): the exposure is the mechanic, and
+ * `maps.test.ts` refuses a bloom over deeper water. Public map data like every
+ * region and resource here, which is the spec's own point — the quietest
+ * faction earns its living where everyone can see them.
+ */
+export interface MapBloom {
+  x: number;
+  y: number;
+  note?: string;
+}
+
+/**
  * Hazards in docs/maps.md, as sites.
  *
  * A site is where a hazard *lives*; its phase and timers are match state and
@@ -136,5 +156,7 @@ export interface MapDefinition extends MapHeader {
   regions: MapRegion[];
   spawns: MapSpawn[];
   resources: MapResource[];
+  /** Bloom-share nodes — see `MapBloom`. Omitted is none, and no map is owed any. */
+  blooms?: MapBloom[];
   hazards: MapHazardSite[];
 }

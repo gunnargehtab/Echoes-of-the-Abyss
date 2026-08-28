@@ -18,6 +18,8 @@ import {
   CONSTRUCTION,
   CRYSTAL,
   DEPTH,
+  DEPTH_BANDS,
+  DepthBand,
   Faction,
   MAP_HEADERS,
   PROPAGATION_FACTOR,
@@ -167,9 +169,31 @@ describe('the map catalogue', () => {
       };
       for (const spawn of map.spawns) inside(spawn.x, spawn.y, 'spawn');
       for (const node of map.resources) inside(node.x, node.y, 'resource');
+      for (const bloom of map.blooms ?? []) inside(bloom.x, bloom.y, 'bloom');
       for (const site of map.hazards) inside(site.x, site.y, 'hazard');
       for (const region of map.regions) {
         assert.ok(region.widthM > 0 && region.heightM > 0, `${map.id}: empty region`);
+      }
+    }
+  });
+
+  it('authors every bloom-share node on surface plateau ground', () => {
+    // The balance guard-rail is positional, not numerical: "Bloom-share
+    // economy requires *surface plateau* nodes; their income is on contested
+    // ground by design" (docs/systems-echo.md §10). A bloom over Mid-Water
+    // would hand the quietest faction a defensible economy and delete the
+    // faction's whole counter-play, so the Shelf line is asserted here where
+    // the author is looking. Mission maps are held to it too — Tend's
+    // gardens sit at 250 m for exactly this reason.
+    for (const map of [...MAPS, ...MISSION_MAPS]) {
+      const terrain = terrainFor(map);
+      for (const bloom of map.blooms ?? []) {
+        const floor = terrain.floorAt(bloom.x, bloom.y);
+        assert.ok(
+          floor <= DEPTH_BANDS[DepthBand.Shelf].max,
+          `${map.id}: bloom at ${bloom.x},${bloom.y} sits over ${floor} m ground, ` +
+            `below the ${DEPTH_BANDS[DepthBand.Shelf].max} m Shelf line`
+        );
       }
     }
   });

@@ -110,6 +110,7 @@ import {
 } from './systems/hazards.ts';
 import { drawFor, thermalSystem } from './systems/thermal.ts';
 import { titheSystem } from './systems/tithe.ts';
+import { bloomShareSystem } from './systems/bloomShare.ts';
 import {
   createSimWorld,
   economyFor,
@@ -259,6 +260,11 @@ export class Match {
           )
         : null;
     this.seedResourceNodes();
+    // Bloom-share nodes are ground, not entities — copied off the map so the
+    // system reads match state rather than authoring data (docs/economy.md §6).
+    for (const bloom of this.map.blooms ?? []) {
+      this.world.blooms.push({ x: bloom.x, y: bloom.y });
+    }
     this.seedHazards();
     if (options.fauna !== false) this.seedFauna();
     // Last, so the authored forces are placed into a world whose nodes,
@@ -1180,6 +1186,7 @@ export class Match {
     // it does not care about Draw satisfaction — but a Bastion destroyed this
     // tick should not pay out on the tick it dies.
     titheSystem(this.world);
+    bloomShareSystem(this.world);
     faunaSystem(this.world, this.destroyedScratch);
     this.driftTick();
     this.reap();
