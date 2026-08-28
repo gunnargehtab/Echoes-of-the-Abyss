@@ -56,6 +56,16 @@ The order matters. Terrain must stay quieter than contacts — "RTS readability 
 so none of this may compete with a return for attention. If a player cannot find the enemy
 because the seabed is shouting, the seabed is wrong.
 
+Within a region, the ground is allowed **texture, not information**. The renderer lays a
+deterministic detail relief under the authored floor and lights it with the shared key
+light, so a vent field reads as broken ground, the trench floor as pressure-eroded stone,
+and coral ruins as terraced right angles — "Environmental Shapes" below, become pixels.
+Its amplitude belongs to the biome (SPEC: the per-biome table lives in
+`packages/frontend/src/game/seabed.ts`, values TUNABLE), it only ever darkens the authored
+fill, and it is **render-only**: the simulation never reads it, no gameplay quantity —
+floors, collisions, PF, detection — may ever derive from it, and it must never out-shade an
+authored terrain step. It is what the ground looks like, never what it is.
+
 ### Environmental Shapes
 
 - Jagged rock formations
