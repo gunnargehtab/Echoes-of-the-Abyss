@@ -79,7 +79,7 @@ Specified in full — map, forces, beats, numbers, register and text — in [mis
 
 | # | Mission | Teaches | Beat |
 | --- | --- | --- | --- |
-| 1 | **Attendance** | HYD, passive listening, patience | No combat. You listen to the Mouth for one full cycle and record what the cohorts dream |
+| 1 | **[Attendance](mission-attendance.md)** | HYD, passive listening, patience | No combat. You listen to the Mouth for one full cycle and record what the cohorts dream. Specified in full in [mission-attendance.md](mission-attendance.md) |
 | 2 | **Intake** | Cohort economy, cheap expendable units | The 8% who cannot adapt are reassigned. Korrin does it herself. The mission does not editorialise |
 | 3 | **The Dome** | Cantors, listening domes, Chorus Call | You spoof an army. It works perfectly and teaches you what your own ears are worth |
 | 4 | **Shallow** | Your own weakness | Above 400 m: −20% speed, −15% HP. The most feared army in the Rift, losing to altitude |
@@ -151,7 +151,7 @@ What is built of the campaign, so nobody re-implements what exists or assumes wh
 | Part | Status |
 | --- | --- |
 | **Prologue — Sorrowgate** | Implemented (#190). [mission-sorrowgate.md](mission-sorrowgate.md) §13 is the row-by-row account of what inside it is built |
-| **Four faction campaigns** — 28 missions | Two specified, none built. [mission-asset-recovery.md](mission-asset-recovery.md) (The Ledger 1) and [mission-tend.md](mission-tend.md) (The Second Seeding 1) are documents of record, each with a scaffold-status list of what the format still needs; the other 26 rows of §4–§7 remain titles, teaching targets and beats, and each needs a document of its own before it needs code |
+| **Four faction campaigns** — 28 missions | Three specified, none built. [mission-asset-recovery.md](mission-asset-recovery.md) (The Ledger 1), [mission-tend.md](mission-tend.md) (The Second Seeding 1) and [mission-attendance.md](mission-attendance.md) (The Attending 1) are documents of record, each with a scaffold-status list of what the format still needs; the other 25 rows of §4–§7 remain titles, teaching targets and beats, and each needs a document of its own before it needs code |
 | **Convergence — The Rim** | Not started |
 | **The four endings** | Not started |
 | Progression — recording what you have played, and the briefing variants that depend on it (§1) | Not started. The prologue is replayable and remembers nothing, so the Tutorial and campaign doors are currently the same door |
@@ -161,6 +161,7 @@ What is built of the campaign, so nobody re-implements what exists or assumes wh
 ## Related
 
 - **[mission-sorrowgate.md](mission-sorrowgate.md)** — the prologue, specified: the court, the flight, the silence order and what answers the ping
+- **[mission-attendance.md](mission-attendance.md)** — The Attending 1, specified: one watch of a cycle, the return, and what a transcript is written at
 - **[characters.md](characters.md)** — the twelve commanders and what each has not yet crossed
 - **[factions.md](factions.md)** — the four crises, in institutional detail
 - **[timeline.md](timeline.md)** — how 214 PC was arrived at
