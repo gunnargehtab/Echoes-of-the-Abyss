@@ -306,19 +306,34 @@ describe('what the court says gives nothing away', () => {
         .flatMap((party) => party.units);
 
       for (const text of texts) {
+        // The one argued exception the note above demands: Consortium asset
+        // numbers. Everything the Consortium owns is stencilled with one
+        // (docs/factions.md), and docs/mission-asset-recovery.md §12's
+        // readings name the assets by their registry numbers because that is
+        // the register — "Asset 9-06-114" is a name, not a coordinate, a
+        // count, or a threshold. The pattern is the registry's own shape and
+        // nothing looser: digit, two digits, three digits, hyphenated.
+        const withoutAssetNumbers = text.replace(/\b\d-\d{2}-\d{3}\b/g, '');
         assert.doesNotMatch(
-          text,
+          withoutAssetNumbers,
           /\d/,
           `"${text}" states a numeral, and the register spells them out — see the note above`
         );
+        // Checked on the stripped text for the same reason: an asset number
+        // is a name, and "9-06-200" containing a party's coordinate or count
+        // by digit coincidence is not the registry disclosing either.
         for (const unit of scripted) {
           assert.ok(
-            !text.includes(String(unit.x)) && !text.includes(String(unit.y)),
+            !withoutAssetNumbers.includes(String(unit.x)) &&
+              !withoutAssetNumbers.includes(String(unit.y)),
             `"${text}" names where ${unit.tag} is`
           );
         }
+        // Zero scripted hulls is not a count anybody could leak — a mission
+        // whose only scripted party is a sound would otherwise trip on every
+        // '0' in a registry number.
         assert.ok(
-          !text.includes(String(scripted.length)),
+          scripted.length === 0 || !withoutAssetNumbers.includes(String(scripted.length)),
           `"${text}" counts the hulls the player does not own`
         );
       }

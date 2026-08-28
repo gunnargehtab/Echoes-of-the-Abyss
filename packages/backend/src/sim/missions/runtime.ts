@@ -232,11 +232,13 @@ export class MissionRuntime {
           x: unit.x,
           y: unit.y,
           depth: unit.depthM,
-          // Every hull in the chamber, not only the player's. Hostility is
-          // ownership and the simulation has no neutrality, so armed parties
-          // parked around one exchange would open fire on tick zero
-          // (docs/mission-sorrowgate.md §3).
-          weaponsCold: true,
+          // Weapons-cold unless the literal arms the hull. Cold is the
+          // default for Sorrowgate's reason — hostility is ownership and the
+          // simulation has no neutrality, so armed parties parked around one
+          // exchange would open fire on tick zero (docs/mission-sorrowgate.md
+          // §3) — and a mission arms a hull only where its document does
+          // (docs/mission-asset-recovery.md §3: the writ's escorts are guns).
+          weaponsCold: unit.armed !== true,
         });
         if (eid === 0) continue;
         this.register(world, unit.tag, eid);
@@ -577,6 +579,11 @@ export class MissionRuntime {
    * being so when the flight flew off.
    */
   private applyEscortHold(world: SimWorld, own: EchoSnapshot): void {
+    // Radius zero is the rule switched off (types.ts, `escortRadiusM`): every
+    // tender reads as escorted, which also settles `holdsMovement` through
+    // `lastEscorted`, while a `releaseTick` hold keeps its own force — the
+    // writ's schedule is not the escort's permission.
+    const disabled = this.definition.escortRadiusM <= 0;
     const escorts = this.idsFor('escort');
     for (const party of this.definition.parties) {
       if (party.slot !== this.definition.playerSlot) continue;
@@ -585,7 +592,7 @@ export class MissionRuntime {
         const eid = this.eidOf(world, unit.tag);
         if (eid === 0 || !hasComponent(world, MoveOrder, eid)) continue;
         const held = world.tick < (this.heldUntil.get(unit.tag) ?? 0);
-        const escortedNow = this.escorted(own, escorts, eid);
+        const escortedNow = disabled || this.escorted(own, escorts, eid);
         if (escortedNow) this.lastEscorted.add(unit.tag);
         else this.lastEscorted.delete(unit.tag);
         if (held || !escortedNow) {
@@ -720,6 +727,10 @@ export class MissionRuntime {
    * It can never fail the mission. That is the point of it being a debt.
    */
   private applySilenceLedger(world: SimWorld, own: EchoSnapshot): void {
+    // No array, no ledger (types.ts, `arrayTag`): a mission with no silence
+    // order keeps no debt, and the guard sits above the accrual so `debtS`
+    // stays zero rather than silently accounting for a rule not in force.
+    if (this.definition.arrayTag === undefined) return;
     const ceiling = this.definition.silenceCeilingSig;
     this.debtS =
       this.flightPeakSig(own) > ceiling
@@ -794,8 +805,17 @@ export class MissionRuntime {
     const objectives = this.viewObjectives();
     const counted = this.definition.objectives.filter((o) => o.terminal === true);
     const met = counted.filter((o) => this.statuses.get(o.id) === ObjectiveStatus.Met).length;
-    const outcome =
-      met === counted.length && counted.length > 0
+    // An unmet keystone reads the whole count as Lost, whatever else came
+    // home (types.ts, `keystone`): docs/mission-asset-recovery.md §8's Results
+    // hang on one asset, and a run that recovered the machinery while the
+    // chamber stayed behind is "The number stays" — an epilogue that read it
+    // as a write-down would state a recovery that did not happen.
+    const keystoneLost = counted.some(
+      (o) => o.keystone === true && this.statuses.get(o.id) !== ObjectiveStatus.Met
+    );
+    const outcome = keystoneLost
+      ? MissionOutcome.Lost
+      : met === counted.length && counted.length > 0
         ? MissionOutcome.Complete
         : met > 0
           ? MissionOutcome.Partial

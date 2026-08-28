@@ -181,7 +181,10 @@ describe('the parties a mission seats', () => {
   });
 
   it('lends the array from the player, since that is the only slot an aura grants to', () => {
+    // Only where a mission authors one: an absent arrayTag is the silence
+    // ledger switched off (types.ts), not an array that failed to be placed.
     for (const mission of MISSIONS) {
+      if (mission.arrayTag === undefined) continue;
       const owner = mission.parties.find((party) =>
         (party.structures ?? []).some((structure) => structure.tag === mission.arrayTag)
       );

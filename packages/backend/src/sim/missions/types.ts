@@ -41,8 +41,15 @@ export type MissionTag = string;
  * address a role, and a role is only ever assigned to a unit of the player's
  * own party. That is the whole information-safety story, and it is a property
  * of the type rather than of anybody's discipline.
+ *
+ * `charge` is the asset in the column's charge — the one hull whose return the
+ * outcome ladder is keyed on. docs/mission-asset-recovery.md §8 reads its three
+ * results off Asset 9-06-200 specifically ("The number stays" whenever the
+ * chamber does not come out, machinery notwithstanding), and a role is the only
+ * identity a predicate may address, so the chamber's barge carries its own.
+ * No system binds it: the escort hold binds `tender` and nothing else.
  */
-export type MissionRole = 'escort' | 'tender';
+export type MissionRole = 'escort' | 'tender' | 'charge';
 
 /**
  * A named rectangle. Rectangles only, for `sim/maps/types.ts`'s reason: every
@@ -69,6 +76,16 @@ export interface MissionUnit {
    * the player is shown.
    */
   role?: MissionRole;
+  /**
+   * Spawned with live fire control. Absent is Sorrowgate's default — every
+   * hull weapons-cold — because hostility is `Owner.slot` and a mission that
+   * parks parties around one exchange cannot have them opening fire on tick
+   * zero. A mission arms a hull only where its document arms it: the writ of
+   * docs/mission-asset-recovery.md §3 fields "enough gun to finish what
+   * commits", and that is the first sentence in the campaign that needs this
+   * flag to be true.
+   */
+  armed?: true;
   /**
    * Pressure Rating after refit, overriding the roster's.
    *
@@ -234,6 +251,19 @@ export interface MissionObjective {
   markerId?: string;
   /** Met means the mission is complete outright, not merely progressed. */
   terminal?: boolean;
+  /**
+   * The terminal objective the outcome ladder is keyed on: unmet, the count
+   * reads Lost whatever else came home.
+   *
+   * docs/mission-asset-recovery.md §8 authors exactly this shape — the Board's
+   * three readings hang on Asset 9-06-200, and a run that returned every piece
+   * of machinery while the chamber stayed behind is "The number stays", not a
+   * partial. Without the flag the runtime's count would read that run as a
+   * write-down and the epilogue would state a recovery that did not happen.
+   * Sorrowgate authors none: either tender may be the one that gets through,
+   * and its count ladder deliberately names no identity.
+   */
+  keystone?: true;
 }
 
 /**
@@ -347,13 +377,27 @@ export interface MissionDefinition extends MissionHeader {
    * rule, and §10 is explicit that the budget never fails a mission.
    */
   sigBudget: number;
-  /** The structure whose grant `courtSlot` withdraws. */
-  arrayTag: MissionTag;
+  /**
+   * The structure whose grant `courtSlot` withdraws — the silence ledger's
+   * instrument. Absent, the ledger never runs: a mission with no silence
+   * order has no array to lend and no debt to keep, which is Asset Recovery's
+   * whole posture (docs/mission-asset-recovery.md §3 — Silent Running is
+   * present, unfenced, and wrong).
+   */
+  arrayTag?: MissionTag;
   /** SIG ceiling per hull. Breach costs the player their hearing, never the mission. */
   silenceCeilingSig: number;
   /** Debt cap in seconds, so one catastrophic breach cannot black out the rest. */
   debtCapS: number;
-  /** A hull with a `tender` role moves only while an `escort` is this close. */
+  /**
+   * A hull with a `tender` role moves only while an `escort` is this close.
+   *
+   * Zero disables the rule outright. Sorrowgate's hold is for deaf freight in
+   * a drowned district — a hull that does not move without ears — and
+   * docs/mission-asset-recovery.md §3 prices the same deafness differently
+   * ("at the Scar it does not matter"): a column under writ moves on its own
+   * orders, and its escort is made of guns rather than of permission.
+   */
   escortRadiusM: number;
   regions: readonly MissionRegion[];
   /** The loads this mission carries. Omitted is none. */
