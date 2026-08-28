@@ -35,6 +35,8 @@ export interface MissionState {
   statuses: Map<string, ObjectiveStatus>;
   startedAt: Map<string, number>;
   roleIds: Map<MissionRole, Set<number>>;
+  /** The player's own hulls carrying a completed lift — see `LoadedIds`. */
+  loadedIds: Set<number>;
   debtS: number;
 }
 
@@ -98,7 +100,8 @@ function objectiveView(
       own,
       (role) => state.roleIds.get(role) ?? NO_IDS,
       (id) => regionById(definition, id),
-      state.startedAt.get(objective.id) ?? 0
+      state.startedAt.get(objective.id) ?? 0,
+      state.loadedIds
     );
   }
   return view;

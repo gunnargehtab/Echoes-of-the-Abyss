@@ -58,7 +58,7 @@ import {
   type SimWorld,
 } from '../world.ts';
 import { projectMissionView, type MissionState } from './view.ts';
-import { isMet, isStanding, peakSigOf } from './predicates.ts';
+import { inRegion, isMet, isStanding, peakSigOf } from './predicates.ts';
 import type { MissionDefinition, MissionRole, MissionTag } from './types.ts';
 
 /** Simulation ticks between Echo passes — the cadence this runtime runs at. */
@@ -156,6 +156,18 @@ export class MissionRuntime {
    * the last pass, which is at most one Echo tick stale.
    */
   private lastWorld: SimWorld | null = null;
+  /**
+   * Held-presence ticks accrued against each lift's cut, by lift id.
+   *
+   * Remembered rather than derived, in exactly `debtS`'s shape and under its
+   * argument: accrued at `ECHO_TICK_INTERVAL` granularity from world state
+   * alone (tick and position), so a replay accrues the identical ledger.
+   */
+  private readonly liftProgress = new Map<string, number>();
+  /** Lifts whose cut has finished. Monotone: a rigged load stays rigged. */
+  private readonly loadedLifts = new Set<string>();
+  /** Live carrier eids of the loaded lifts, rebuilt each tick — see `LoadedIds`. */
+  private readonly loadedIds = new Set<number>();
   private readonly statuses = new Map<string, ObjectiveStatus>();
   private readonly startedAt = new Map<string, number>();
   private readonly commitments: Commitment[] = [];
@@ -308,6 +320,7 @@ export class MissionRuntime {
     this.fireDueBeats(world, sink);
     this.holdCommitments(world);
     this.resolveRoleIds(world);
+    this.applyLifts(world);
     this.applyEscortHold(world, own);
     this.applySilenceLedger(world, own);
     this.deriveObjectives(world, own);
@@ -594,6 +607,53 @@ export class MissionRuntime {
   }
 
   /**
+   * The lifts — the hold-and-cut of docs/mission-asset-recovery.md §8, and the
+   * gift run of docs/mission-tend.md §13 as its cut-time-zero case.
+   *
+   * Presence, counted: a carrier inside its lift's region accrues one Echo
+   * interval of cut per pass, and the load rigs the pass its ledger reaches
+   * the authored figure. Progress pauses while the hull is elsewhere rather
+   * than resetting — the cut is work done to rock, and leaving does not undo
+   * it — which also keeps the rule legible: the meter tells the player the cut
+   * is running, and coming back resumes it where it stood.
+   *
+   * `world.liftCutSig` is cleared and rebuilt whole every pass, the
+   * `spireActive` arrangement, so a floor can never outlive its cut: a barge
+   * that leaves mid-cut goes quiet on the next mission tick, a rigged load
+   * never hums, and a recycled entity id cannot inherit a stranger's loudness.
+   * A cut of zero ticks rigs on arrival and never touches the meter at all —
+   * the gift is the strongest social gesture the setting has, not a work site.
+   *
+   * `loadedIds` is rebuilt from tags each pass for `deriveObjectives`' reason:
+   * the snapshot reports raw entity ids, and a held id would silently disagree
+   * with it. A carrier that dies simply stops resolving, so the load drops out
+   * of every counter — which is what makes "machinery lost" a result the
+   * epilogue can read rather than a retry.
+   */
+  private applyLifts(world: SimWorld): void {
+    world.liftCutSig.clear();
+    this.loadedIds.clear();
+    for (const lift of this.definition.lifts ?? []) {
+      const eid = this.eidOf(world, lift.tag);
+      if (this.loadedLifts.has(lift.id)) {
+        if (eid !== 0) this.loadedIds.add(eid);
+        continue;
+      }
+      if (eid === 0) continue;
+      const region = this.definition.regions.find((candidate) => candidate.id === lift.region);
+      if (region === undefined) continue;
+      if (!inRegion(region, Position.x[eid]!, Position.y[eid]!)) continue;
+      if ((this.liftProgress.get(lift.id) ?? 0) >= lift.cutTicks) {
+        this.loadedLifts.add(lift.id);
+        this.loadedIds.add(eid);
+        continue;
+      }
+      this.liftProgress.set(lift.id, (this.liftProgress.get(lift.id) ?? 0) + ECHO_TICK_INTERVAL);
+      world.liftCutSig.set(eid, lift.cutSig);
+    }
+  }
+
+  /**
    * The silence ledger — docs/mission-sorrowgate.md §4.
    *
    * Over the ceiling and the flight owes the court a silence; under it, the
@@ -662,7 +722,8 @@ export class MissionRuntime {
         own,
         (role) => this.idsFor(role as MissionRole),
         (id) => this.definition.regions.find((region) => region.id === id),
-        this.startedAt.get(objective.id) ?? 0
+        this.startedAt.get(objective.id) ?? 0,
+        this.loadedIds
       );
       if (met) this.statuses.set(objective.id, ObjectiveStatus.Met);
       else if (standing) this.statuses.set(objective.id, ObjectiveStatus.Pending);
@@ -740,6 +801,7 @@ export class MissionRuntime {
       statuses: this.statuses,
       startedAt: this.startedAt,
       roleIds: this.roleIds,
+      loadedIds: this.loadedIds,
       debtS: this.debtS,
     };
   }

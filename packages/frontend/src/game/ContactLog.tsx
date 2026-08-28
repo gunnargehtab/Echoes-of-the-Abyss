@@ -27,6 +27,18 @@ const TIER_LABEL: Record<ResolutionTier, string> = {
   [ResolutionTier.Track]: 'TIER 4',
 };
 
+/**
+ * The tier column.
+ *
+ * `MARK` is not a tier and does not sit on the ramp: it is the past rather
+ * than the present (docs/ui-ux.md §10, §5's "past and present must never share
+ * an ink"). It borrows the `---` row's slot only because both are events that
+ * are not detections.
+ */
+function tierLabel(entry: ContactLogEntry): string {
+  return entry.mark === true ? 'MARK' : TIER_LABEL[entry.tier];
+}
+
 function detail(entry: ContactLogEntry): string {
   if (entry.bearingDeg === undefined) {
     // Tier 1 carries the listener's own position, not the emitter's. There is
@@ -34,6 +46,12 @@ function detail(entry: ContactLogEntry): string {
     return 'bearing unknown';
   }
   const bearing = String(entry.bearingDeg).padStart(3, '0');
+  // A mark spends the range column on `decaying` instead (§10's sample row).
+  // Not a withholding — the stain's position is drawn on both the world layer
+  // and the scope — but a judgement about which number is worth the column:
+  // how far away residue is says little, while watching it fade is the whole
+  // reading, and for the industrial hum that fade is an economy slowing down.
+  if (entry.mark === true) return `bearing ${bearing}°   decaying`;
   // A bearing without a range is the "you were pinged" row (docs/ui-ux.md
   // §10): the server sent a direction and nothing else, and the log shows
   // exactly that much.
@@ -81,7 +99,9 @@ export function ContactLog({ entries, onFocus }: ContactLogProps) {
           <button
             key={entry.id}
             type="button"
-            className={`contact-log-row tier-${entry.tier}${entry.fresh ? ' fresh' : ''}`}
+            className={`contact-log-row tier-${entry.tier}${entry.mark === true ? ' mark' : ''}${
+              entry.fresh ? ' fresh' : ''
+            }`}
             // Focus only where a position was actually reported. A Tier-1 row
             // has nowhere honest to send the camera.
             disabled={entry.focusX === undefined}
@@ -92,7 +112,7 @@ export function ContactLog({ entries, onFocus }: ContactLogProps) {
             }}
           >
             <span className="contact-log-time">{stamp(entry.tick)}</span>
-            <span className="contact-log-tier">{TIER_LABEL[entry.tier]}</span>
+            <span className="contact-log-tier">{tierLabel(entry)}</span>
             <span className="contact-log-label">{entry.label}</span>
             <span className="contact-log-detail">{detail(entry)}</span>
           </button>

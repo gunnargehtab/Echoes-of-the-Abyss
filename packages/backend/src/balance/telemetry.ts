@@ -120,7 +120,7 @@ export interface PlayerTelemetry {
   nodulesEarned: number;
   crystalEarned: number;
   biomassEarned: number;
-  /** Tick this slot stopped receiving snapshots, or null if it survived. */
+  /** Tick this slot's force went to nothing, or null if it survived. */
   eliminatedTick: number | null;
 }
 
@@ -206,9 +206,24 @@ export class MatchTelemetry {
   /**
    * One Echo tick's worth of every player's view.
    *
-   * Called with whatever `Match.update` returned, so a slot missing from the
-   * map is a slot with nothing left — which is how elimination is detected
-   * without asking the simulation.
+   * **An eliminated slot keeps receiving snapshots.** `Match.resolveEcho`
+   * walks `this.slots`, and elimination does not remove a slot from it — it
+   * scuttles everything the slot owned and leaves the seat in place, because
+   * the room still has a client on the other end of it who has to be told
+   * they lost. So the dead go on being sent a snapshot at 5 Hz for the rest of
+   * the match; it is simply empty.
+   *
+   * That is why elimination is read off the *force* rather than off the map
+   * key. An empty own force is elimination exactly: losing the Bastion is
+   * elimination (`match.ts`, "the C&C short game") and elimination scuttles
+   * the rest, so a commander still in the match always has at least their
+   * Bastion in `structures`, and one with neither a hull nor a structure is
+   * never merely poor.
+   *
+   * The missing-key branch is kept underneath it. It costs nothing, it is the
+   * honest reading of a slot the sim declines to describe at all, and if the
+   * simulation ever does start pruning the roster this keeps measuring the
+   * same thing.
    */
   observe(tick: number, snapshots: Map<number, EchoSnapshot>): void {
     const dt = (tick - this.lastObservedTick) / SIM.TICK_HZ;
@@ -222,6 +237,15 @@ export class MatchTelemetry {
         if (player.eliminatedTick === null && tick > 0) player.eliminatedTick = tick;
         if (sampling) this.sampleEmpty(player);
         continue;
+      }
+
+      if (
+        player.eliminatedTick === null &&
+        tick > 0 &&
+        snapshot.units.length === 0 &&
+        snapshot.structures.length === 0
+      ) {
+        player.eliminatedTick = tick;
       }
 
       if (this.firstContact === null && snapshot.contacts.length > 0) this.firstContact = tick;
