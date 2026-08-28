@@ -25,14 +25,29 @@ since 88 PC, are collected in these galleries, and are published nowhere
 The mission's whole job is to make a player sit inside that.
 
 **Nothing attacks the player in this mission**, and unlike Tend the campaign row does not have to
-promise it, because the water says it first. Three facts, none of them a fence:
+promise it, because the water says it first. Three facts about this water make it true, none of
+them a fence — with one rider on the first:
 
-**The Drift cannot descend here.** The galleries stand at 2,750–3,400 m and the axis below them
-falls past 4,000 m. The deepest thing in the bestiary is a Sounder, working 2,000 m and pursuing
-to 2,700 ([bestiary.md](bestiary.md) §4). Nothing catalogued reaches this water. The one
-uncatalogued entry — the Attendants — is found only within 400 m of the Mouth's rim, eleven
-kilometres south of the map's edge, and is not here. Tend's safety was a pursuit band; this one
-is the same rule read from the other end, and it is why the Directorate settled where it did.
+**The Drift cannot descend here, and the one entry that might is not placed.** The galleries
+stand at 2,750–3,400 m and the axis below them falls past 4,000 m. Of the three species
+[bestiary.md](bestiary.md) §4 prices in its band table, the deepest is a Sounder, working 2,000 m
+and pursuing to 2,700. Nothing in that table reaches this water.
+
+**The Hollow is the exception, and it is an exception in the document rather than in the water.**
+It is named for trench walls and abyssal overhangs, which is exactly this map's country, and it
+carries no working depth because the band table prices three species and the Hollow is not one of
+them ([bestiary.md](bestiary.md) §4, Implementation Status: not started). **This mission does not
+place one, and it does not decide whether the Hollow should reach 3,400 m** — that is the
+bestiary's call when the species is built, and a mission document is the wrong place to settle
+it. What this document says instead is the half that is already true: a Hollow at rest is
+functionally Tier 0, listens better than most units, and does not move until something loud
+passes within 500 m. **A shift that stayed silent all watch would have no way of finding out
+whether there was one.** Nothing has to be added to this water for that to be the case.
+
+The other uncatalogued entry — the Attendants — is found only within 400 m of the Mouth's rim,
+eleven kilometres south of the map's edge, and is not here. Tend's safety was a pursuit band;
+this one is the same rule read from the other end, and it is why the Directorate settled where it
+did.
 
 **The trench carries and the trench is a corridor.** PF 1.60 down the axis, no secrets down its
 length, only distances ([systems-echo.md](systems-echo.md) §3; [world-map.md](world-map.md)).
@@ -72,8 +87,8 @@ Two consequences worth stating so nobody corrects them into bugs:
   ([mission-tend.md](mission-tend.md) §9); the beat table is the mission's clock and the fiction's
   clock is the fiction's.
 - **The Mouth's cycle is the one interval in the Rift counted in hours.** Everything else is
-  tides ([culture.md](culture.md) §2). That is not an inconsistency to fix — it is the tell. Tides
-  are what you live by; hours are what you measure a thing by when you have measured it for a
+  tides ([culture.md](culture.md) §2). That is not an inconsistency to fix — it is the tell.
+  Tides are what you live by; hours are what you measure a thing by when you have measured it for a
   hundred and twenty-six years and are still not saying what it is.
 
 ---
@@ -573,6 +588,7 @@ what it was missing.
 | **A listening role** | **Not in the format.** `MissionRole` is `'escort'` and `'tender'` — Sorrowgate's two words — and the silence ceiling is measured over the escort set. A shift is neither. The roles want to be authored per mission rather than enumerated once, which is the same finding the other two mission documents arrive at from their own directions |
 | **The transcript as a variable close** | **Not built.** `epilogue` is one authored string per `MissionOutcome`, which covers §8's three readings exactly. A close that reads back *which* arrivals were attended, line by line, needs an epilogue that assembles rather than one that is chosen |
 | The sixty-second telegraph as the rite's own structure | Ambient authoring and `say` beats; no new mechanism. The existing telegraph test measures the gap between the last loud beat and the resolve, and this mission satisfies it nine times over |
+| **The Hollow's working depth** | **Not specified**, and not this document's to specify — §1. The species is unbuilt and the band table prices three others; if it is ever given a band that reaches 3,400 m, this map is the country it was described for and the mission's opening claim has to be re-read against it |
 | The Drift, absent | **Built** — `fauna: false`, which the format already carries for a mission whose only creatures are authored. This is the first that authors none |
 | In-mission character speech, heard | Text only, the standing status ([mission-sorrowgate.md](mission-sorrowgate.md) §13) |
 | The dreams as audio — the stalls, breathing, and a city that announces itself by subtraction | Not started ([audio-direction.md](audio-direction.md)). The mission reads correctly as text and is the one in the bible that reads *right* only with the mix |
