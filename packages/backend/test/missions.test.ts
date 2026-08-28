@@ -363,6 +363,12 @@ describe('docs/campaign.md §10, over every mission there will ever be', () => {
     for (const mission of MISSIONS) {
       const resolve = mission.beats.find((beat) => beat.kind === 'resolve');
       assert.ok(resolve !== undefined, `${mission.id}: nothing ever closes the mission`);
+      // A close marked as a conclusion is exempt — §10's rule is about
+      // *failure* being audible, and docs/mission-tend.md §8 states the
+      // carve-out in full: "a mission whose only threat is a ledger has no
+      // failure to make audible — it has outcomes". The tide's end is a
+      // conclusion, not a timer (docs/glossary.md, Mission Outcome).
+      if (resolve.kind === 'resolve' && resolve.conclusion === true) continue;
       const loud = mission.beats.filter((beat) => beat.kind === 'creature' && beat.loud);
       assert.ok(loud.length > 0, `${mission.id}: the close is a timer and nothing else`);
       const last = loud[loud.length - 1]!;
@@ -565,14 +571,67 @@ describe('the objectives', () => {
     }
   });
 
+  it('seats the sweep on a scripted party, listening in windows that exist', () => {
+    // The sweep's tags are the roles' rule from the other side: its hearing is
+    // computed over the player's force, so a *player* hull among the listeners
+    // would have the mission grading the player with the player's own ears.
+    // The windows are authored passes — empty or backwards ones never fire,
+    // which reads as a mission that cannot be filed rather than one that is
+    // broken; and a filed day with no reading appends nothing to Marr's
+    // sentence, silently.
+    for (const mission of MISSIONS) {
+      const sweep = mission.sweep;
+      if (sweep === undefined) continue;
+      const playerTags = new Set(
+        mission.parties
+          .filter((party) => party.slot === mission.playerSlot)
+          .flatMap((party) => party.units.map((unit) => unit.tag))
+      );
+      const scriptedTags = new Set(
+        mission.parties
+          .filter((party) => party.slot !== mission.playerSlot)
+          .flatMap((party) => party.units.map((unit) => unit.tag))
+      );
+      assert.ok(sweep.tags.length > 0, `${mission.id}: a sweep with nobody listening`);
+      for (const tag of sweep.tags) {
+        assert.ok(!playerTags.has(tag), `${mission.id}: sweep listener "${tag}" is the player's`);
+        assert.ok(scriptedTags.has(tag), `${mission.id}: sweep listener "${tag}" is not placed`);
+      }
+      assert.ok(sweep.windows.length > 0, `${mission.id}: a sweep with no pass to listen in`);
+      for (const pass of sweep.windows) {
+        assert.ok(
+          pass.fromTick >= 0 && pass.untilTick > pass.fromTick,
+          `${mission.id}: a sweep window from ${pass.fromTick} to ${pass.untilTick}`
+        );
+      }
+      assert.ok(sweep.filedReading.trim().length > 0, `${mission.id}: filed, and read as nothing`);
+    }
+  });
+
   it('gates an extract on loads only where the mission authors some', () => {
     // `loaded: true` against a mission with no lifts is a counter that can
     // never fill — the quiet unreachability the count-versus-roster test
     // above exists to catch, in its newest form.
     for (const mission of MISSIONS) {
+      const liftIds = new Set((mission.lifts ?? []).map((lift) => lift.id));
       for (const objective of mission.objectives) {
         const predicate = objective.predicate;
-        if (predicate.kind !== 'extract' || predicate.loaded !== true) continue;
+        if (predicate.kind !== 'extract' || predicate.loaded === undefined) continue;
+        if (typeof predicate.loaded === 'string') {
+          // A named load points at exactly one authored lift, and one hull
+          // carries it — a count above one could never fill.
+          assert.ok(
+            liftIds.has(predicate.loaded),
+            `${mission.id}: "${objective.id}" counts the load "${predicate.loaded}", ` +
+              'which is not authored'
+          );
+          assert.equal(
+            predicate.count,
+            1,
+            `${mission.id}: "${objective.id}" wants ${predicate.count} of one named load`
+          );
+          continue;
+        }
         assert.ok(
           (mission.lifts ?? []).length >= predicate.count,
           `${mission.id}: "${objective.id}" counts ${predicate.count} loads and the mission ` +

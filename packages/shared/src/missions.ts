@@ -98,9 +98,35 @@ export const LEDGER_ASSET_RECOVERY_HEADER: MissionHeader = {
   ],
 };
 
+export const SEEDING_TEND_HEADER: MissionHeader = {
+  id: 'seeding-tend',
+  campaign: 'seeding',
+  ordinal: 1,
+  name: 'The Second Seeding — Tend',
+  premise: 'One tide of Marr Plateau’s ordinary work. Nothing attacks you. The sweep is listening.',
+  mapId: 'marr-plateau',
+  // The tide ends at 16:00 (docs/mission-tend.md §9), inside §10's 12-25.
+  lengthBandS: [900, 1020],
+  /**
+   * Spoken by Tidespeaker Ysolde Marr at dawn tide — docs/mission-tend.md §12,
+   * verbatim. Public, and pointedly so: a briefing that orders nobody to do
+   * anything has nothing to give away, and the Commune's refusal of the
+   * imperative mood makes it genuinely harder to parse than an order —
+   * campaign.md §10 says that is the point, and the document agrees in
+   * writing.
+   */
+  briefing: [
+    "We're not going to tell you what to do today. That isn't the arrangement, and today of all days the arrangement is the point.",
+    "The bloom is ready on the north gardens and the share wants bringing in — we think three loads is a day. The west lane's jellies have walked in the current again, the way they do, and the lane is louder than we like it. And Teel's landing took the storm badly last tide. We have bread that remembers being grain. Somebody could carry it over, if they were going that way.",
+    'The concern is running the drop today, charting. They call it a survey, and it is one. What their instruments hear, their ledgers keep, and a garden in a ledger is halfway to being an asset. When the sweep comes up the lane, the plateaus go still. Nobody orders that. Watch how everybody does it anyway.',
+    "Nothing out there means you harm. We'd like the day back the way we're lending it to you: quiet, fed, and unfiled.",
+  ],
+};
+
 export const MISSION_HEADERS: readonly MissionHeader[] = [
   PROLOGUE_SORROWGATE_HEADER,
   LEDGER_ASSET_RECOVERY_HEADER,
+  SEEDING_TEND_HEADER,
 ];
 
 export function missionHeaderById(id: string): MissionHeader | undefined {
