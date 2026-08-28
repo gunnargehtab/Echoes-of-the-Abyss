@@ -118,10 +118,52 @@ export interface MissionParty {
  * review habit somebody has to keep.
  */
 export type MissionPredicate =
-  | { kind: 'extract'; role: MissionRole; region: string; count: number }
+  /**
+   * `loaded` counts only hulls carrying a completed lift (see `MissionLift`),
+   * so "three lifts reach the Rail Head" cannot be met by three empty barges
+   * driven through the gate. Own-force information, like everything else here:
+   * a load is a fact about the observer's own carrier.
+   */
+  | { kind: 'extract'; role: MissionRole; region: string; count: number; loaded?: true }
   | { kind: 'survive'; role: MissionRole; count: number }
   | { kind: 'quiet'; role: MissionRole; ceilingSig: number }
   | { kind: 'endure'; ticks: number };
+
+/**
+ * A load — the hold-and-cut lift of docs/mission-asset-recovery.md §8, and, with
+ * the cut time at zero, the gift run of docs/mission-tend.md §13. One mechanism,
+ * two missions, which is why it is a table row rather than anything richer.
+ *
+ * The assigned hull rigs the load by holding inside `region` while the cut runs:
+ * `cutTicks` of presence, at `cutSig` — the barge's SIG floored at the authored
+ * figure the whole time, because a cut is Overburden's work at Overburden's
+ * loudness (docs/economy.md §3) and there is no quiet way to do a salvage.
+ * Progress pauses while the hull is elsewhere and resumes when it returns; a
+ * cut is work done to rock, and leaving does not undo it. Once rigged, the load
+ * rides its hull — delivery is the `extract` predicate's `loaded` flag — and a
+ * carrier that dies takes its load down with it, which is what makes "machinery
+ * lost" a result rather than a retry.
+ *
+ * Deliberately not the harvest loop: that knows the loudness but is welded to
+ * resource fields these maps do not carry (docs/mission-asset-recovery.md §13).
+ */
+export interface MissionLift {
+  id: string;
+  /**
+   * The hull that rigs and carries it. Player-party hulls only, for the roles'
+   * reason: the loaded set feeds a predicate the player is shown, so a lift on
+   * a scripted hull would put another party inside a counter. `missions.test.ts`
+   * holds the literal to it.
+   */
+  tag: MissionTag;
+  /** Where the cut runs — and, at cut time zero, simply where the load waits. */
+  region: string;
+  /** Ticks of held presence before the load is rigged. 0 loads on arrival. */
+  cutTicks: number;
+  /** The stated loudness while the cut runs. A floor, never a replacement. */
+  cutSig: number;
+  note: string;
+}
 
 export interface MissionObjective {
   id: string;
@@ -275,6 +317,8 @@ export interface MissionDefinition extends MissionHeader {
   /** A hull with a `tender` role moves only while an `escort` is this close. */
   escortRadiusM: number;
   regions: readonly MissionRegion[];
+  /** The loads this mission carries. Omitted is none. */
+  lifts?: readonly MissionLift[];
   markers: readonly MissionMarker[];
   parties: readonly MissionParty[];
   locks: readonly AbilityLock[];

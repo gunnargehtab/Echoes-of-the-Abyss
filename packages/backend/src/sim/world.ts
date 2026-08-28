@@ -106,6 +106,15 @@ export interface SimWorld extends IWorld {
    */
   spireActive: Set<number>;
   /**
+   * Hulls whose SIG is floored at an authored figure while a mission's
+   * hold-and-cut lift runs — eid to the stated loudness. Written by the
+   * mission runtime on the Echo tick, read by acoustics at 60 Hz, in the
+   * `spireActive` arrangement: cleared and rebuilt whole on every mission
+   * pass, so a finished or abandoned cut cannot leave a stale floor on a
+   * recycled entity id. Empty in every skirmish.
+   */
+  liftCutSig: Map<number, number>;
+  /**
    * The simulation's only source of randomness. Seeded per match and part of
    * simulation state — see sim/rng.ts. Nothing in sim/ may call Math.random().
    */
@@ -264,6 +273,7 @@ export function createSimWorld(terrain: Terrain, dt: number, seed: number): SimW
   world.economies = new Map();
   world.production = new Map();
   world.spireActive = new Set();
+  world.liftCutSig = new Map();
   world.rng = new Rng(seed);
   world.localOfEid = new Map();
   world.eidOfLocal = new Map();

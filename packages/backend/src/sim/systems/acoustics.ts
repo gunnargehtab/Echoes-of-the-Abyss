@@ -116,6 +116,19 @@ export function acousticsSystem(world: SimWorld): void {
       sig = Math.max(sig, ORDNANCE.MINE.SIG_LAYING);
     }
 
+    // A mission's hold-and-cut lift is Overburden's work at Overburden's
+    // loudness (docs/economy.md §3, docs/mission-asset-recovery.md §8), on maps
+    // that carry no resource fields for the harvest branch above to read. A
+    // floor for the same reasons descent and laying are floors: it must never
+    // make an already-louder hull quieter, and it holds through a barge that
+    // tries to go silent mid-cut — there is no quiet way to do a salvage. The
+    // mission runtime rebuilds the map on every Echo tick; the size gate keeps
+    // every skirmish emitter to one integer compare.
+    if (world.liftCutSig.size !== 0) {
+      const cutSig = world.liftCutSig.get(eid);
+      if (cutSig !== undefined) sig = Math.max(sig, cutSig);
+    }
+
     sig = applySpikeDecay(world, eid, sig);
     // A Resonance Storm destabilises organic tech (docs/hazards.md §5), which
     // is added before the veil takes its cut: the cloud muffles whatever the
