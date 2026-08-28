@@ -46,12 +46,14 @@ import {
   Owner,
   Position,
   Pressure,
+  StaticEmitter,
   Structure,
 } from '../components.ts';
 import {
   economyFor,
   eidOfLocalId,
   localIdOf,
+  spawnEmitter,
   spawnFauna,
   spawnStructure,
   spawnUnit,
@@ -266,6 +268,24 @@ export class MissionRuntime {
         });
         if (eid !== 0) this.register(world, structure.tag, eid);
       }
+
+      for (const emitter of party.emitters ?? []) {
+        // Seated on the party's slot so the Echo Layer resolves it per
+        // observer like everything audible; classification names nothing
+        // because there is nothing there to name (see `MissionEmitter`).
+        const eid = spawnEmitter(world, {
+          slot: party.slot,
+          faction: party.faction,
+          x: emitter.x,
+          y: emitter.y,
+          depth: emitter.depthM,
+          sig: emitter.sig,
+          periodTicks: emitter.periodTicks,
+          onTicks: emitter.onTicks,
+          hp: emitter.hp,
+        });
+        if (eid !== 0) this.register(world, emitter.tag, eid);
+      }
     }
   }
 
@@ -321,6 +341,7 @@ export class MissionRuntime {
     this.holdCommitments(world);
     this.resolveRoleIds(world);
     this.applyLifts(world);
+    this.silenceRiggedEmitters(world);
     this.applyEscortHold(world, own);
     this.applySilenceLedger(world, own);
     this.deriveObjectives(world, own);
@@ -650,6 +671,27 @@ export class MissionRuntime {
       }
       this.liftProgress.set(lift.id, (this.liftProgress.get(lift.id) ?? 0) + ECHO_TICK_INTERVAL);
       world.liftCutSig.set(eid, lift.cutSig);
+    }
+  }
+
+  /**
+   * docs/mission-asset-recovery.md §6: "When Lift Three rigs the chamber, the
+   * taps stop." The coupling is the spec's own, so it is a field on the
+   * emitter rather than a beat — the rig moment is earned, not scheduled, and
+   * a tick-keyed beat could not know when it comes.
+   *
+   * Re-asserted every pass rather than fired once, the `holdCommitments`
+   * habit: it is one flag write per silenced emitter, and idempotence is what
+   * makes it replay-proof for free.
+   */
+  private silenceRiggedEmitters(world: SimWorld): void {
+    for (const party of this.definition.parties) {
+      for (const emitter of party.emitters ?? []) {
+        if (emitter.silencedByLift === undefined) continue;
+        if (!this.loadedLifts.has(emitter.silencedByLift)) continue;
+        const eid = this.eidOf(world, emitter.tag);
+        if (eid !== 0) StaticEmitter.active[eid] = 0;
+      }
     }
   }
 

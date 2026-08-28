@@ -57,10 +57,18 @@ function authoredTags(mission: MissionDefinition): Set<string> {
   return tags;
 }
 
-/** Every authored hull and structure, with the party that owns it. */
+/**
+ * Every authored hull, structure and emitter, with the party that owns it.
+ * Emitters are in here on purpose: they carry a tag, a position and a depth,
+ * so the uniqueness, placement and ground-admission tests below hold them to
+ * the same water as everything else the mission seats.
+ */
 function seated(mission: MissionDefinition) {
   return mission.parties.flatMap((party) =>
-    [...party.units, ...(party.structures ?? [])].map((thing) => ({ party, thing }))
+    [...party.units, ...(party.structures ?? []), ...(party.emitters ?? [])].map((thing) => ({
+      party,
+      thing,
+    }))
   );
 }
 
@@ -505,6 +513,51 @@ describe('the objectives', () => {
           lift.cutSig >= 0 && lift.cutSig <= 100,
           `${mission.id}: lift "${lift.id}" cuts at ${lift.cutSig}, outside the meter`
         );
+      }
+    }
+  });
+
+  it('authors every emitter off the player party, on a workable pattern', () => {
+    // The Echo Layer's pair loop skips listener and emitter on one slot, so an
+    // emitter on the player's own party is a beacon its audience can never
+    // hear — authored, and then silent for exactly the player it exists for.
+    // The pattern bounds are the acoustics contract: a zero period is a NaN
+    // modulo, a zero on-window never strikes, an on-window past the period is
+    // just "always on" wearing a pattern's clothes, and the meter is 0-100.
+    for (const mission of MISSIONS) {
+      const lifts = new Set((mission.lifts ?? []).map((lift) => lift.id));
+      for (const party of mission.parties) {
+        for (const emitter of party.emitters ?? []) {
+          assert.notEqual(
+            party.slot,
+            mission.playerSlot,
+            `${mission.id}: emitter "${emitter.tag}" is on the player's party, ` +
+              'which is the one slot that can never hear it'
+          );
+          assert.ok(
+            Number.isInteger(emitter.periodTicks) && emitter.periodTicks >= 1,
+            `${mission.id}: emitter "${emitter.tag}" strikes on a ${emitter.periodTicks}-tick period`
+          );
+          assert.ok(
+            Number.isInteger(emitter.onTicks) &&
+              emitter.onTicks >= 1 &&
+              emitter.onTicks <= emitter.periodTicks,
+            `${mission.id}: emitter "${emitter.tag}" is loud ${emitter.onTicks} of ` +
+              `${emitter.periodTicks} ticks`
+          );
+          assert.ok(
+            emitter.sig > 0 && emitter.sig <= 100,
+            `${mission.id}: emitter "${emitter.tag}" strikes at ${emitter.sig}, outside the meter`
+          );
+          assert.ok(emitter.hp >= 1, `${mission.id}: emitter "${emitter.tag}" has no hull to lose`);
+          if (emitter.silencedByLift !== undefined) {
+            assert.ok(
+              lifts.has(emitter.silencedByLift),
+              `${mission.id}: emitter "${emitter.tag}" is silenced by lift ` +
+                `"${emitter.silencedByLift}", which is not authored`
+            );
+          }
+        }
       }
     }
   });

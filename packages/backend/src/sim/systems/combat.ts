@@ -38,6 +38,7 @@ import {
   Owner,
   Position,
   SilentRunning,
+  StaticEmitter,
   Structure,
   UnderConstruction,
   Unit,
@@ -258,6 +259,14 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
           // (docs/systems-combat.md §5), so it gets its own path rather than
           // falling out of the auto-acquire loop.
           if (hasComponent(world, Ordnance, other)) continue;
+          // Nor is an authored static emitter — the mine's argument again:
+          // between strikes the taps sit at SIG 0 and are inaudible at any
+          // range, so a gun that swung onto one would be shooting something it
+          // could not possibly have detected. An *ordered* shot at its resolved
+          // contact still lands — the emitter carries authored hp and a player
+          // may spend shells on struck iron — and refusing the order instead
+          // would unmask it, the Noisemaker lesson above.
+          if (hasComponent(world, StaticEmitter, other)) continue;
           const d = engagementRangeM(eid, other);
           if (d <= bestDistance) {
             bestDistance = d;
