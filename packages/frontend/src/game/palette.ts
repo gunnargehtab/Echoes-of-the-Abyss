@@ -423,8 +423,8 @@ export function depthShade(color: number, floorM: number, shallowest: number, de
   return scaleRgb(color, gain);
 }
 
-/** Multiply a packed RGB by a gain. Shared by the two terrain shading passes. */
-function scaleRgb(color: number, gain: number): number {
+/** Multiply a packed RGB by a gain. Shared by the terrain shading passes. */
+export function scaleRgb(color: number, gain: number): number {
   const r = Math.min(255, Math.round(((color >> 16) & 0xff) * gain));
   const g = Math.min(255, Math.round(((color >> 8) & 0xff) * gain));
   const b = Math.min(255, Math.round((color & 0xff) * gain));
@@ -447,6 +447,14 @@ const LIGHT_Z = 0.66;
  * throws the same shadow as a 1,900 m trench wall.
  */
 export const RELIEF_REFERENCE_M = 550;
+
+/**
+ * Vent ember orange, docs/art-direction.md "Reading the Sea Floor" (SPEC):
+ * the sole terrain-owned emissive colour — deliberately redder than
+ * Bathyarch's #F2B233 hazard amber so a vent field never reads as somebody's
+ * base lights. No other biome gets a light (docs/style-neon-noir.md, Don'ts).
+ */
+export const VENT_EMBER = 0xe06a2b;
 
 /** TUNABLE. How much of a cell's colour the deepest shadow may take. */
 const RELIEF_DEPTH = 0.42;

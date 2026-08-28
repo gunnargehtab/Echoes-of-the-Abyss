@@ -324,7 +324,11 @@ is: **if the motion is the message, it stays.**
 
 - No neon on terrain or biomes — the seafloor stays desaturated
   (`BIOME_COLOR` in `packages/frontend/src/game/palette.ts`); light belongs to
-  *agents and instruments*.
+  *agents and instruments*. One carved-out exception, spec'd in
+  [art-direction.md](art-direction.md) "Reading the Sea Floor": thermal vent
+  **ember light**, `#E06A2B`, dim and sparse, flicker quantised to the 5 Hz
+  sonar grid. It is world-light, not neon — no UI hue ever touches it, and no
+  other biome gets one.
 - No violet outside the Mouth/resonance/Hadron contexts.
 - No full-saturation fills — neon is edges, strokes, glyphs, and points, never
   a filled rectangle.

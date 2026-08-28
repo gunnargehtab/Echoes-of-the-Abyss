@@ -66,6 +66,24 @@ fill, and it is **render-only**: the simulation never reads it, no gameplay quan
 floors, collisions, PF, detection — may ever derive from it, and it must never out-shade an
 authored terrain step. It is what the ground looks like, never what it is.
 
+Two further layers of the same texture-not-information rule:
+
+- **Albedo mottling.** Beside the relief, each biome's fill carries a faint
+  luminance-only variegation — sediment, growth, scatter — from an independent noise
+  channel in the same bake. It is hue-preserving by construction (all three channels
+  scale together, because hue belongs to the biome and the biome is what sound is
+  priced by), darken-only under the same ceiling as everything else, and its per-biome
+  strength lives in the `seabed.ts` table with the relief numbers.
+- **Vent ember light.** Thermal vent fields are the one piece of terrain that emits
+  its own light: sparse ember points in `#E06A2B` ember orange (SPEC — the sole
+  terrain-owned emissive colour, deliberately redder than Bathyarch's hazard amber),
+  dim, small, and flickering on the sonar cadence — intensity steps on the 5 Hz grid,
+  never smooth video glow. Embers are decoration for ground the map already declares
+  hot: deterministic per map, render-only, and carrying no state — never brightening
+  with activity, occupancy, or anything else a player could read as a signal. The
+  seafloor otherwise stays unlit; the carve-out is this one biome, at this one
+  temperature ([style-neon-noir.md](style-neon-noir.md) keeps the enforcement).
+
 ### Environmental Shapes
 
 - Jagged rock formations

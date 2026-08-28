@@ -31,7 +31,7 @@
 
 import { Biome } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
-import { BIOME_COLOR, depthShade, reliefShade, UI } from './palette.ts';
+import { BIOME_COLOR, depthShade, reliefShade, scaleRgb, UI } from './palette.ts';
 
 /**
  * Bake density. 32 px across a 250 m cell is 7.8 m/px — enough for a ridge to
@@ -57,15 +57,22 @@ interface BiomeRelief {
   roughness: number;
   /** 0..1: sample the field on a snapped grid — "how geometric". */
   blockiness: number;
+  /**
+   * 0..1: peak fractional darkening of the albedo mottle — sediment, growth,
+   * scatter. Luminance only, from an independent noise channel, under the
+   * same darken-only ceiling as everything else (docs/art-direction.md,
+   * "Reading the Sea Floor").
+   */
+  mottle: number;
 }
 
 export const BIOME_RELIEF: Record<Biome, BiomeRelief> = {
-  [Biome.OpenWater]: { amplitudeM: 40, roughness: 0.25, blockiness: 0 },
-  [Biome.ThermalVein]: { amplitudeM: 95, roughness: 0.5, blockiness: 0 },
-  [Biome.KelpForest]: { amplitudeM: 65, roughness: 0.3, blockiness: 0 },
-  [Biome.AbyssalTrench]: { amplitudeM: 40, roughness: 0.15, blockiness: 0 },
-  [Biome.ResonanceField]: { amplitudeM: 60, roughness: 0.4, blockiness: 0 },
-  [Biome.CoralRuins]: { amplitudeM: 60, roughness: 0.25, blockiness: 1 },
+  [Biome.OpenWater]: { amplitudeM: 40, roughness: 0.25, blockiness: 0, mottle: 0.05 },
+  [Biome.ThermalVein]: { amplitudeM: 95, roughness: 0.5, blockiness: 0, mottle: 0.1 },
+  [Biome.KelpForest]: { amplitudeM: 65, roughness: 0.3, blockiness: 0, mottle: 0.08 },
+  [Biome.AbyssalTrench]: { amplitudeM: 40, roughness: 0.15, blockiness: 0, mottle: 0.04 },
+  [Biome.ResonanceField]: { amplitudeM: 60, roughness: 0.4, blockiness: 0, mottle: 0.06 },
+  [Biome.CoralRuins]: { amplitudeM: 60, roughness: 0.25, blockiness: 1, mottle: 0.07 },
 };
 
 /** Detail wavelengths, metres. Fixed globally so the *field* is continuous and
@@ -75,6 +82,10 @@ const WAVELENGTH_M = 420;
 const FAST_WAVELENGTH_M = 140;
 /** Coral's sampling grid: ruin-block sized, well above one bake pixel. */
 const BLOCK_M = 90;
+/** Mottle wavelengths, metres — finer than the relief so the variegation
+ * reads as surface, not as more shape. Both sit above one bake pixel. */
+const MOTTLE_WAVELENGTH_M = 170;
+const MOTTLE_FAST_WAVELENGTH_M = 55;
 
 /**
  * FNV-1a over the payload's dimensions and floor. The seed is the ground
@@ -162,6 +173,105 @@ export function detailM(
 }
 
 /**
+ * The albedo mottle at a world position: a luminance gain in [1 - mottle, 1].
+ *
+ * A separate channel from the heightfield on purpose — this is what the
+ * surface is *made of*, not what shape it has, so it must not correlate with
+ * the relief shadows or the two read as one over-strong pass. Hue-preserving
+ * because the caller scales all three channels by this one gain, and
+ * darken-only for the same reason every terrain pass darkens only: the
+ * authored biome fill is the ceiling.
+ */
+export function mottleFactor(xM: number, yM: number, seed: number, mottle: number): number {
+  const salt = seed ^ 0x5f356495;
+  const n =
+    0.65 * valueNoise(xM, yM, MOTTLE_WAVELENGTH_M, salt) +
+    0.35 * valueNoise(xM, yM, MOTTLE_FAST_WAVELENGTH_M, salt ^ 0x2545f491);
+  // n is in [-1, 1]; map to [0, 1] then down from the ceiling.
+  return 1 - mottle * (0.5 + 0.5 * Math.max(-1, Math.min(1, n)));
+}
+
+/** One vent ember: a lit point in a thermal field. World metres; phase 0..1. */
+export interface VentEmber {
+  xM: number;
+  yM: number;
+  radiusM: number;
+  phase: number;
+}
+
+/** TUNABLE. Hard cap on embers per map, so a hypothetical all-vent map cannot
+ * turn the decoration into a particle system. */
+export const VENT_EMBER_CAP = 400;
+
+/**
+ * Deterministic ember sites for every ThermalVein cell (docs/art-direction.md
+ * "Vent ember light"). Placement is the cell's hash and nothing else: embers
+ * carry no state, respond to nothing, and exist identically on every client —
+ * decoration for ground the map already declares hot, never a signal.
+ */
+export function ventEmbers(
+  terrain: {
+    cols: number;
+    rows: number;
+    cellM: number;
+    biomes: readonly number[];
+    floor: readonly number[];
+    ceiling: readonly number[];
+  },
+  seed: number
+): VentEmber[] {
+  const embers: VentEmber[] = [];
+  for (let row = 0; row < terrain.rows; row++) {
+    for (let col = 0; col < terrain.cols; col++) {
+      const index = row * terrain.cols + col;
+      if (terrain.biomes[index] !== Biome.ThermalVein) continue;
+      // Rock is not a vent field, whatever biome label a collapse left on it.
+      if (terrain.ceiling[index]! > terrain.floor[index]!) continue;
+
+      // Sparse on purpose: roughly a third of vent cells carry one ember and
+      // a rare few two — the first cut lit most cells and the band read as a
+      // starfield loud enough to compete with contacts, which is the one
+      // thing the seabed must never do.
+      const h = latticeNoise(col, row, seed ^ 0x1b873593);
+      const count = h > 0.9 ? 2 : h > 0.35 ? 1 : 0;
+      for (let k = 0; k < count; k++) {
+        if (embers.length >= VENT_EMBER_CAP) return embers;
+        const jx = 0.5 + 0.5 * latticeNoise(col * 2 + k, row, seed ^ 0x85ebca6b);
+        const jy = 0.5 + 0.5 * latticeNoise(col, row * 2 + k, seed ^ 0xc2b2ae35);
+        const jr = 0.5 + 0.5 * latticeNoise(col + k, row + k, seed ^ 0x27d4eb2d);
+        const radiusM = 25 + 35 * jr;
+        // Keep the whole glow inside its own cell, so an ember never leaks
+        // light onto a neighbouring biome's ground.
+        const margin = radiusM / terrain.cellM;
+        const fx = margin + (1 - 2 * margin) * jx;
+        const fy = margin + (1 - 2 * margin) * jy;
+        embers.push({
+          xM: (col + fx) * terrain.cellM,
+          yM: (row + fy) * terrain.cellM,
+          radiusM,
+          phase: 0.5 + 0.5 * latticeNoise(row * 31 + col, k, seed ^ 0x9e3779b9),
+        });
+      }
+    }
+  }
+  return embers;
+}
+
+/**
+ * Ember brightness for one 5 Hz bucket, in [0, 1].
+ *
+ * Stepped on the sonar grid rather than eased (docs/style-neon-noir.md:
+ * "sonar cadence is the heartbeat" — and the seabed's one light keeps that
+ * register instead of glowing like video). Squared so embers rest dim and
+ * only occasionally breathe up; the phase keeps a field from blinking in
+ * unison.
+ */
+export function emberFlicker(index: number, bucket: number, phase: number): number {
+  const v = 0.5 + 0.5 * latticeNoise(index, bucket + Math.floor(phase * 7919), 0x6a09e667);
+  return v * v;
+}
+
+/**
  * Bake the seabed into a canvas covering the whole map, `SEABED_PX_PER_CELL`
  * pixels per terrain cell.
  *
@@ -226,7 +336,7 @@ export function bakeSeabed(terrain: TerrainPayload): HTMLCanvasElement {
       // itself is one continuous function of world position.
       const reliefOf = (r: number, c: number): BiomeRelief => {
         const i = clampRow(r) * cols + clampCol(c);
-        if (isRock(i)) return { amplitudeM: 0, roughness: 0, blockiness: 0 };
+        if (isRock(i)) return { amplitudeM: 0, roughness: 0, blockiness: 0, mottle: 0 };
         return BIOME_RELIEF[terrain.biomes[i] as Biome] ?? BIOME_RELIEF[Biome.OpenWater];
       };
       const b00 = reliefOf(r0, c0);
@@ -279,11 +389,18 @@ export function bakeSeabed(terrain: TerrainPayload): HTMLCanvasElement {
         const hR = height[i + (px < w - 1 ? 1 : 0)]!;
         const hU = height[i - (py > 0 ? w : 0)]!;
         const hD = height[i + (py < h - 1 ? w : 0)]!;
-        const base = BIOME_COLOR[terrain.biomes[index] as Biome] ?? BIOME_COLOR[Biome.OpenWater];
-        color = reliefShade(
-          depthShade(base, height[i]!, shallowest, deepest),
-          (hR - hL) * dropScale,
-          (hD - hU) * dropScale
+        const biome = terrain.biomes[index] as Biome;
+        const base = BIOME_COLOR[biome] ?? BIOME_COLOR[Biome.OpenWater];
+        const relief = BIOME_RELIEF[biome] ?? BIOME_RELIEF[Biome.OpenWater];
+        color = scaleRgb(
+          reliefShade(
+            depthShade(base, height[i]!, shallowest, deepest),
+            (hR - hL) * dropScale,
+            (hD - hU) * dropScale
+          ),
+          // What the surface is made of, after what shape it has — the mottle
+          // gain scales all three channels alike, so hue stays the biome's.
+          mottleFactor(px * mPerPx, py * mPerPx, seed, relief.mottle)
         );
       }
 

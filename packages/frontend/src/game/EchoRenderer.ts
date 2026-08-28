@@ -77,12 +77,13 @@ import {
   FAUNA_COLOR,
   RESOURCE_COLOR,
   setActivePalette,
+  VENT_EMBER,
   TIER_STYLE,
   UI,
   sigColor,
   type PaletteName,
 } from './palette.ts';
-import { bakeSeabed, SEABED_PX_PER_CELL } from './seabed.ts';
+import { bakeSeabed, emberFlicker, SEABED_PX_PER_CELL, seabedSeed, ventEmbers } from './seabed.ts';
 import {
   actionFor,
   BUILD_ACTION_KIND,
@@ -575,6 +576,15 @@ export class EchoRenderer {
   /** The baked seabed texture, under the vector terrain marks. */
   private readonly seabedLayer = new Container();
   private seabedTexture: Texture | null = null;
+  /**
+   * Vent ember light (docs/art-direction.md, "Vent ember light"): the one
+   * piece of terrain that emits. Sprites are built once per terrain and only
+   * their alpha moves, stepped on the 5 Hz sonar grid — the per-frame cost is
+   * a bucket comparison.
+   */
+  private readonly ventLayer = new Container();
+  private ventPhases: number[] = [];
+  private ventBucket = -1;
   private readonly terrainLayer = new Graphics();
   /** Ground the current selection cannot enter. Dynamic: it depends on who is selected. */
   private readonly groundLayer = new Graphics();
@@ -943,6 +953,7 @@ export class EchoRenderer {
     // hide behind your own Bastion.
     this.world.addChild(
       this.seabedLayer,
+      this.ventLayer,
       this.terrainLayer,
       this.groundLayer,
       this.nodeLayer,
@@ -2908,6 +2919,23 @@ export class EchoRenderer {
     seabed.scale.set(terrain.cellM / SEABED_PX_PER_CELL);
     this.seabedLayer.addChild(seabed);
 
+    // Ember sites are the terrain's hash, so they rebuild exactly when the
+    // bake does; the flicker never touches geometry, only alpha.
+    this.ventLayer.removeChildren().forEach((child) => child.destroy());
+    this.ventPhases = [];
+    this.ventBucket = -1;
+    for (const ember of ventEmbers(terrain, seabedSeed(terrain))) {
+      const g = new Graphics();
+      // A soft two-stop point: halo then core, both the SPEC ember orange —
+      // world-light, not a UI hue, and dim enough to sit under any contact.
+      g.circle(0, 0, ember.radiusM).fill({ color: VENT_EMBER, alpha: 0.09 });
+      g.circle(0, 0, ember.radiusM * 0.35).fill({ color: VENT_EMBER, alpha: 0.32 });
+      g.position.set(ember.xM, ember.yM);
+      g.alpha = 0;
+      this.ventLayer.addChild(g);
+      this.ventPhases.push(ember.phase);
+    }
+
     // Roofed passages, marked as routes rather than as openings.
     //
     // A tunnel is the one piece of terrain invisible from above by
@@ -2978,6 +3006,7 @@ export class EchoRenderer {
   }
 
   private draw(): void {
+    this.drawVentEmbers();
     this.drawBlockedGround();
     this.drawRings();
     this.drawContacts();
@@ -2992,6 +3021,28 @@ export class EchoRenderer {
     this.drawCommandBar();
     this.drawMinimap();
     this.drawInfoPanel();
+  }
+
+  /**
+   * Step the vent embers' brightness on the 5 Hz sonar grid.
+   *
+   * Deliberately not eased: contact fades and HUD pulses quantise to this
+   * grid (docs/style-neon-noir.md, "sonar cadence is the heartbeat"), and the
+   * seabed's one light keeps the same register instead of glowing like video.
+   * Between buckets this is a single integer comparison, so the 60 Hz path
+   * pays nothing for it.
+   */
+  private drawVentEmbers(): void {
+    const children = this.ventLayer.children;
+    if (children.length === 0) return;
+    const bucket = Math.floor(performance.now() * (SIM.ECHO_HZ / 1000));
+    if (bucket === this.ventBucket) return;
+    this.ventBucket = bucket;
+    for (let i = 0; i < children.length; i++) {
+      // Rest dim, occasionally breathe up; never bright enough to compete
+      // with a return (the halo tops out well under any contact mark).
+      children[i]!.alpha = 0.18 + 0.62 * emberFlicker(i, bucket, this.ventPhases[i] ?? 0);
+    }
   }
 
   /**
