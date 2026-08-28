@@ -38,11 +38,19 @@ export type RegionById = (id: string) => MissionRegion | undefined;
 
 /**
  * The player's own hulls currently carrying a completed lift, by id exactly as
- * `own.units` reports it. Own-force information and nothing else: a lift is
- * assigned to a player-party hull by the literal (`missions.test.ts` holds it
- * to that), so this set can never name a hull the observer does not own.
+ * `own.units` reports it — all of them for no argument, one named load's
+ * carrier for a lift id. A function like `RoleIds`, for its reason: the caller
+ * cannot hand this file a table it has not filtered by owner. Own-force
+ * information and nothing else: a lift is assigned to a player-party hull by
+ * the literal (`missions.test.ts` holds it to that), so no set this returns
+ * can name a hull the observer does not own.
+ *
+ * The named form exists because one hull may carry several loads — Tend's
+ * third tender brings a share load home and then carries the gift — and "the
+ * gift reached the landing" is a fact about *that* load, not about the hull
+ * being loaded at all (docs/mission-tend.md §5).
  */
-export type LoadedIds = ReadonlySet<number>;
+export type LoadedIds = (lift?: string) => ReadonlySet<number>;
 
 export function progressOf(
   predicate: MissionPredicate,
@@ -57,11 +65,13 @@ export function progressOf(
       const region = regionById(predicate.region);
       if (region === undefined) return { done: 0, of: predicate.count };
       const ids = roleIds(predicate.role);
+      const loaded =
+        predicate.loaded === undefined
+          ? undefined
+          : loadedIds(typeof predicate.loaded === 'string' ? predicate.loaded : undefined);
       const inside = own.units.filter(
         (u) =>
-          ids.has(u.id) &&
-          (predicate.loaded !== true || loadedIds.has(u.id)) &&
-          inRegion(region, u.x, u.y)
+          ids.has(u.id) && (loaded === undefined || loaded.has(u.id)) && inRegion(region, u.x, u.y)
       );
       // Capped, so a third hull arriving cannot render "2 of 1". The count
       // is what the court reads out, and a court does not over-count.
