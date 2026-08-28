@@ -24,6 +24,9 @@ import {
 } from '@echoes/shared';
 import { runBatch, runMatch, seedHasAnyEffect, type Seat } from '../src/balance/runner.ts';
 import { summarise, toMarkdown } from '../src/balance/report.ts';
+import { MatchTelemetry, type MatchTelemetryResult } from '../src/balance/telemetry.ts';
+import { Match } from '../src/sim/match.ts';
+import { DEFAULT_MAP_ID, mapById } from '../src/sim/maps/index.ts';
 
 const DUEL: Seat[] = [
   { slot: 0, faction: Faction.Bathyarch, difficulty: AiDifficulty.Veteran },
@@ -191,6 +194,110 @@ describe('telemetry measures what it says it measures', () => {
         'finding another commander takes longer than finding a fish'
       );
     }
+  });
+});
+
+describe('a draw says how close it came (#223)', () => {
+  /**
+   * Three seats, one of them scuttled a few seconds in. Three rather than two
+   * because resigning in a duel ends the match, and the thing under test is
+   * what telemetry sees *while the match runs on around a dead seat*.
+   */
+  function matchWithOneDeadSeat(): {
+    result: MatchTelemetryResult;
+    resignedTick: number;
+  } {
+    const map = mapById(DEFAULT_MAP_ID)!;
+    const match = new Match(map, { seed: 4242, fauna: false });
+    const roster = [
+      { slot: 0, faction: Faction.Bathyarch },
+      { slot: 1, faction: Faction.Pelagia },
+      { slot: 2, faction: Faction.Directorate },
+    ];
+    for (const { slot, faction } of roster) match.addPlayer(slot, faction);
+
+    const telemetry = new MatchTelemetry(4242, map.id, roster);
+    const stepMs = 1000 / SIM.TICK_HZ;
+    const resignAt = SIM.TICK_HZ * 5;
+    let resignedTick = 0;
+
+    for (let tick = 0; tick < SIM.TICK_HZ * 20; tick++) {
+      if (tick === resignAt) {
+        match.resign(1);
+        resignedTick = match.tick;
+      }
+      const snapshots = match.update(stepMs);
+      if (snapshots === null) continue;
+      if (resignedTick > 0) {
+        // The premise. If this ever stops holding, the missing-key branch in
+        // `observe` starts carrying the detection and this test is measuring
+        // the wrong one of the two.
+        assert.ok(
+          snapshots.has(1),
+          'the simulation keeps sending an eliminated slot an empty snapshot'
+        );
+      }
+      telemetry.observe(match.tick, snapshots);
+    }
+
+    return { result: telemetry.finish(match.tick, null, true), resignedTick };
+  }
+
+  it('records the tick a force went to nothing', () => {
+    // The bug this pins: elimination was read off a slot disappearing from
+    // the snapshot map, and a slot never disappears — `Match.resolveEcho`
+    // walks a roster elimination does not shorten. So `eliminatedTick` was
+    // null in every match ever run, including the ones that were won.
+    const { result, resignedTick } = matchWithOneDeadSeat();
+    const dead = result.players.find((p) => p.slot === 1)!;
+
+    assert.ok(dead.eliminatedTick !== null, 'the scuttled seat is recorded as eliminated');
+    assert.ok(dead.eliminatedTick >= resignedTick, 'and not before it actually happened');
+    // Detected on the first Echo tick after the scuttle, not eventually.
+    assert.ok(
+      dead.eliminatedTick - resignedTick <= SIM.TICK_HZ / SIM.ECHO_HZ,
+      `within one Echo tick, got ${dead.eliminatedTick - resignedTick} ticks`
+    );
+    for (const slot of [0, 2]) {
+      assert.equal(
+        result.players.find((p) => p.slot === slot)!.eliminatedTick,
+        null,
+        `slot ${slot} was still standing at the cap`
+      );
+    }
+  });
+
+  it('reports eliminations against the number a win needs', () => {
+    // A draw rate cannot tell "nobody ever got hurt" from "everyone but one
+    // went down and the clock beat the last kill". This row is what does.
+    const { result } = matchWithOneDeadSeat();
+    const summary = summarise([result]);
+
+    assert.equal(summary.draws, 1);
+    assert.equal(summary.eliminations.median, 1);
+    assert.equal(summary.eliminationsToWin, 2, 'three seats, so a win needs two kills');
+    assert.match(toMarkdown(summary, 'eliminations'), /Commanders eliminated, of 2 needed \| 1/);
+  });
+
+  it('averages a dead commander over the match it was alive for', () => {
+    // The consequence, and the reason this is a measurement bug rather than a
+    // cosmetic one: `lifetimeMinutes` was written to divide by the time a
+    // player was in the match, and has been dividing by the whole match
+    // instead because its input never fired.
+    const { result } = matchWithOneDeadSeat();
+    const dead = result.players.find((p) => p.slot === 1)!;
+    const lived = dead.eliminatedTick! / SIM.TICK_HZ / 60;
+    const summary = summarise([result]);
+    const pelagia = summary.factions.find((f) => f.faction === Faction.Pelagia)!;
+
+    assert.ok(
+      Math.abs(pelagia.incomePerMinute - dead.nodulesEarned / lived) < 1,
+      'the report divides by the minutes the commander was alive'
+    );
+    assert.ok(
+      lived < result.lengthS / 60,
+      'which is less than the match, or this test proves nothing'
+    );
   });
 });
 
