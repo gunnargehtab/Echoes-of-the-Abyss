@@ -608,6 +608,83 @@ describe('the objectives', () => {
     }
   });
 
+  it('names only roles it actually assigns', () => {
+    // The check that replaces the role union (types.ts, `MissionRole`). Roles
+    // are authored per mission now, so a typo cannot fail the build — it has
+    // to fail here instead, and this catches more than the union ever did: a
+    // mission counting hulls in a role it never handed out reads as an
+    // objective the player can never meet, which is indistinguishable from one
+    // they simply have not met yet.
+    for (const mission of MISSIONS) {
+      const assigned = new Set(
+        mission.parties
+          .filter((party) => party.slot === mission.playerSlot)
+          .flatMap((party) => party.units.map((unit) => unit.role))
+          .filter((role): role is string => role !== undefined)
+      );
+      const named = new Set<string>();
+      for (const objective of mission.objectives) {
+        const predicate = objective.predicate;
+        if ('role' in predicate) named.add(predicate.role);
+      }
+      if (mission.silenceRole !== undefined) named.add(mission.silenceRole);
+      for (const role of named) {
+        assert.ok(
+          assigned.has(role),
+          `${mission.id}: names the role "${role}" and assigns it to no hull`
+        );
+      }
+    }
+  });
+
+  it('sounds every windowed emitter in a window that can happen', () => {
+    // An arrival is an emitter with a window (types.ts). A window that closes
+    // before it opens never sounds, which reads as an arrival nobody could
+    // have attended rather than as a mission that is broken — the same quiet
+    // failure the lift and marker rules exist to catch.
+    for (const mission of MISSIONS) {
+      for (const party of mission.parties) {
+        for (const emitter of party.emitters ?? []) {
+          const from = emitter.fromTick;
+          const until = emitter.untilTick;
+          if (from !== undefined) {
+            assert.ok(from >= 0, `${mission.id}: emitter "${emitter.tag}" opens at ${from}`);
+          }
+          if (from !== undefined && until !== undefined) {
+            assert.ok(
+              until > from,
+              `${mission.id}: emitter "${emitter.tag}" sounds from ${from} until ${until}`
+            );
+          }
+          if (emitter.reading !== undefined) {
+            assert.ok(
+              emitter.reading.entered.trim().length > 0 && emitter.reading.gap.trim().length > 0,
+              `${mission.id}: emitter "${emitter.tag}" is attendable and reads as nothing`
+            );
+          }
+        }
+      }
+    }
+  });
+
+  it('asks for no more attended arrivals than it authors', () => {
+    // `attend` counts emitters carrying a reading — the ones the close can
+    // enter a line for. A count above that is a counter that never fills.
+    for (const mission of MISSIONS) {
+      const attendable = mission.parties
+        .flatMap((party) => party.emitters ?? [])
+        .filter((emitter) => emitter.reading !== undefined).length;
+      for (const objective of mission.objectives) {
+        if (objective.predicate.kind !== 'attend') continue;
+        assert.ok(
+          objective.predicate.count <= attendable,
+          `${mission.id}: "${objective.id}" attends ${objective.predicate.count} of ` +
+            `${attendable} authored arrivals`
+        );
+      }
+    }
+  });
+
   it('gates an extract on loads only where the mission authors some', () => {
     // `loaded: true` against a mission with no lifts is a counter that can
     // never fill — the quiet unreachability the count-versus-roster test

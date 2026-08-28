@@ -11,6 +11,7 @@
  * mission, never through `mapById`.
  */
 
+import { ATTENDING_ATTENDANCE } from './attendance.ts';
 import { LEDGER_ASSET_RECOVERY } from './assetRecovery.ts';
 import { PROLOGUE_SORROWGATE } from './sorrowgate.ts';
 import { SEEDING_TEND } from './tend.ts';
@@ -20,12 +21,13 @@ export * from './types.ts';
 export * from './predicates.ts';
 export * from './view.ts';
 export * from './runtime.ts';
-export { LEDGER_ASSET_RECOVERY, PROLOGUE_SORROWGATE, SEEDING_TEND };
+export { ATTENDING_ATTENDANCE, LEDGER_ASSET_RECOVERY, PROLOGUE_SORROWGATE, SEEDING_TEND };
 
 export const MISSIONS: readonly MissionDefinition[] = [
   PROLOGUE_SORROWGATE,
   LEDGER_ASSET_RECOVERY,
   SEEDING_TEND,
+  ATTENDING_ATTENDANCE,
 ];
 
 export function missionById(id: string): MissionDefinition | undefined {

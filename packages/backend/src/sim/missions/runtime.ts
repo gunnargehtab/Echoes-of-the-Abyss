@@ -33,6 +33,7 @@ import {
   MAX_PROPAGATION_FACTOR,
   MissionOutcome,
   ObjectiveStatus,
+  ResolutionTier,
   SIM,
   detectionRatio,
   thermoclineFactor,
@@ -66,7 +67,17 @@ import {
 } from '../world.ts';
 import { projectMissionView, type MissionState } from './view.ts';
 import { inRegion, isMet, isStanding, peakSigOf } from './predicates.ts';
-import type { MissionDefinition, MissionRole, MissionTag } from './types.ts';
+import type { MissionDefinition, MissionEmitter, MissionRole, MissionTag } from './types.ts';
+
+/**
+ * What tier the *player's own slot* currently resolves an entity at.
+ *
+ * Pre-bound to that slot by `Match`, which is the whole of its safety: the
+ * runtime cannot ask this about anybody else's hearing because there is no
+ * slot argument to ask with — the same shape of guarantee `predicates.ts`
+ * makes with its parameter list.
+ */
+export type HeardTier = (eid: number) => ResolutionTier;
 
 /** Simulation ticks between Echo passes — the cadence this runtime runs at. */
 const ECHO_TICK_INTERVAL = Math.round(SIM.TICK_HZ / SIM.ECHO_HZ);
@@ -185,6 +196,14 @@ export class MissionRuntime {
   private filed = false;
   /** Windows whose course has already bent toward something heard. */
   private readonly bentWindows = new Set<number>();
+  /**
+   * Emitters this observer has resolved at Tier 2 or better while they were
+   * sounding — the transcript's entered lines (docs/mission-attendance.md §6).
+   *
+   * Monotone, because a line entered against a dream is entered: the arrival
+   * stops sounding twenty seconds later and the record does not un-hear it.
+   */
+  private readonly attendedTags = new Set<MissionTag>();
   /** Live carrier eids of the loaded lifts, rebuilt each tick — see `LoadedIds`. */
   private readonly loadedIds = new Set<number>();
   /** The same, keyed by lift id, for predicates that name their load. */
@@ -353,7 +372,12 @@ export class MissionRuntime {
    * escort hold and the silence ledger, re-derive every objective from the
    * player's own snapshot, and rebuild the view.
    */
-  tick(world: SimWorld, sink: MissionCommandSink, own: EchoSnapshot): MissionResolution | null {
+  tick(
+    world: SimWorld,
+    sink: MissionCommandSink,
+    own: EchoSnapshot,
+    heardTier: HeardTier = () => ResolutionTier.Silent
+  ): MissionResolution | null {
     if (this.resolution !== null) return null;
     const started = performance.now();
     this.lastWorld = world;
@@ -362,7 +386,8 @@ export class MissionRuntime {
     this.holdCommitments(world);
     this.resolveRoleIds(world);
     this.applyLifts(world);
-    this.silenceRiggedEmitters(world);
+    this.applyEmitters(world);
+    this.applyAttendance(world, heardTier);
     this.applySweep(world, sink);
     this.applyEscortHold(world, own);
     this.applySilenceLedger(world, own);
@@ -639,7 +664,10 @@ export class MissionRuntime {
    * same one, and they were not until a test caught them disagreeing.
    */
   private flightPeakSig(own: EchoSnapshot): number {
-    return peakSigOf(own, this.idsFor('escort'));
+    // The set the order actually binds, authored per mission (`silenceRole`):
+    // Sorrowgate's flight, Attendance's shift. Defaulted rather than required,
+    // because the prologue's word is the one every mission before this had.
+    return peakSigOf(own, this.idsFor(this.definition.silenceRole ?? 'escort'));
   }
 
   /** True when any escort hull is inside the authored radius of this tender. */
@@ -810,15 +838,77 @@ export class MissionRuntime {
    * habit: it is one flag write per silenced emitter, and idempotence is what
    * makes it replay-proof for free.
    */
-  private silenceRiggedEmitters(world: SimWorld): void {
+  private applyEmitters(world: SimWorld): void {
     for (const party of this.definition.parties) {
       for (const emitter of party.emitters ?? []) {
-        if (emitter.silencedByLift === undefined) continue;
-        if (!this.loadedLifts.has(emitter.silencedByLift)) continue;
         const eid = this.eidOf(world, emitter.tag);
-        if (eid !== 0) StaticEmitter.active[eid] = 0;
+        if (eid === 0) continue;
+        StaticEmitter.active[eid] = this.sounding(world, emitter) ? 1 : 0;
       }
     }
+  }
+
+  /**
+   * Whether an authored emitter is sounding at all this tick — its window is
+   * open and nothing diegetic has silenced it. The *pattern* inside that is
+   * acoustics' (`StaticEmitter`); this is the switch.
+   */
+  private sounding(world: SimWorld, emitter: MissionEmitter): boolean {
+    if (emitter.silencedByLift !== undefined && this.loadedLifts.has(emitter.silencedByLift)) {
+      return false;
+    }
+    if (emitter.fromTick !== undefined && world.tick < emitter.fromTick) return false;
+    if (emitter.untilTick !== undefined && world.tick > emitter.untilTick) return false;
+    return true;
+  }
+
+  /**
+   * The attended count — docs/mission-attendance.md §6: "Resolve one at Tier 2
+   * or better from any watch hull and the arrival is attended."
+   *
+   * `heardTier` is the Echo Layer's own answer for the player's own slot,
+   * pre-bound by `Match` — the tier this observer holds, which is a fact about
+   * their hearing rather than about the water. That is why this can be counted
+   * at all: everything the tally reads, the player was already sent.
+   *
+   * Only while the arrival is sounding, and only once. Tier 3 and Tier 4 are
+   * reachable and buy nothing, which is §4's point rather than an omission
+   * here: the emitter carries a position and a depth and no kind, so there is
+   * nothing for classification to name.
+   */
+  private applyAttendance(world: SimWorld, heardTier: HeardTier): void {
+    for (const party of this.definition.parties) {
+      for (const emitter of party.emitters ?? []) {
+        if (emitter.reading === undefined) continue;
+        if (this.attendedTags.has(emitter.tag)) continue;
+        if (!this.sounding(world, emitter)) continue;
+        const eid = this.eidOf(world, emitter.tag);
+        if (eid === 0) continue;
+        if (heardTier(eid) >= ResolutionTier.Bearing) this.attendedTags.add(emitter.tag);
+      }
+    }
+  }
+
+  /**
+   * The transcript, assembled — docs/mission-attendance.md §13's last ask.
+   *
+   * One authored line per attendable emitter, in the order the mission
+   * authors them, each of them the emitter's own `entered` or `gap`. Nothing
+   * is templated and nothing is counted into a sentence: the close reads back
+   * which arrivals were entered because the mission wrote both readings for
+   * each of them, and the run picks.
+   */
+  private transcript(): string[] {
+    const lines: string[] = [];
+    for (const party of this.definition.parties) {
+      for (const emitter of party.emitters ?? []) {
+        if (emitter.reading === undefined) continue;
+        lines.push(
+          this.attendedTags.has(emitter.tag) ? emitter.reading.entered : emitter.reading.gap
+        );
+      }
+    }
+    return lines;
   }
 
   /**
@@ -895,7 +985,8 @@ export class MissionRuntime {
         (role) => this.idsFor(role as MissionRole),
         (id) => this.definition.regions.find((region) => region.id === id),
         this.startedAt.get(objective.id) ?? 0,
-        (lift) => this.loadedFor(lift)
+        (lift) => this.loadedFor(lift),
+        this.attendedTags.size
       );
       if (met) this.statuses.set(objective.id, ObjectiveStatus.Met);
       else if (standing) this.statuses.set(objective.id, ObjectiveStatus.Pending);
@@ -946,9 +1037,15 @@ export class MissionRuntime {
       this.filed && this.definition.sweep !== undefined
         ? ` ${this.definition.sweep.filedReading}`
         : '';
+    // The transcript, if the mission authored one, on its own lines under the
+    // reading: nine entries are a document rather than a sentence, and the
+    // close reads them back the way the stalls read a record
+    // (docs/mission-attendance.md §12).
+    const lines = this.transcript();
+    const transcript = lines.length === 0 ? '' : `\n\n${lines.join('\n')}`;
     this.resolution = {
       outcome,
-      epilogue: this.definition.epilogue[outcome] + filedReading,
+      epilogue: this.definition.epilogue[outcome] + filedReading + transcript,
       objectives,
     };
   }
@@ -998,6 +1095,7 @@ export class MissionRuntime {
       roleIds: this.roleIds,
       loadedIds: this.loadedIds,
       loadedByLift: this.loadedByLift,
+      attended: this.attendedTags.size,
       debtS: this.debtS,
     };
   }

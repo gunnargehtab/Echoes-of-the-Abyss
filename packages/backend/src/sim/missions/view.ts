@@ -39,6 +39,8 @@ export interface MissionState {
   loadedIds: Set<number>;
   /** The same, keyed by lift id, for predicates that name their load. */
   loadedByLift: Map<string, number>;
+  /** How many authored arrivals this observer resolved — see `attend`. */
+  attended: number;
   debtS: number;
 }
 
@@ -107,7 +109,8 @@ function objectiveView(
         if (lift === undefined) return state.loadedIds;
         const carrier = state.loadedByLift.get(lift);
         return carrier === undefined ? NO_IDS : new Set([carrier]);
-      }
+      },
+      state.attended
     );
   }
   return view;
@@ -129,7 +132,15 @@ function textFor(objective: MissionObjective, state: MissionState): string {
  * tick count beside either would be a progress bar over a fact.
  */
 function counts(objective: MissionObjective): boolean {
-  return objective.predicate.kind === 'extract' || objective.predicate.kind === 'survive';
+  return (
+    objective.predicate.kind === 'extract' ||
+    objective.predicate.kind === 'survive' ||
+    // The attended count is the one number the Directorate's whole rite is
+    // about, and the instrument carries it from the first arrival — which is
+    // how docs/mission-attendance.md §8's failure is audible for the whole
+    // mission rather than announced at the close.
+    objective.predicate.kind === 'attend'
+  );
 }
 
 function regionById(definition: MissionDefinition, id: string): MissionRegion | undefined {

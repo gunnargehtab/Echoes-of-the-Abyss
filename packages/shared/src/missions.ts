@@ -123,10 +123,36 @@ export const SEEDING_TEND_HEADER: MissionHeader = {
   ],
 };
 
+export const ATTENDING_ATTENDANCE_HEADER: MissionHeader = {
+  id: 'attending-attendance',
+  campaign: 'attending',
+  ordinal: 1,
+  name: 'The Attending — Attendance',
+  premise: 'A shift spent listening down the Ninth. Nothing arrives that can be fought.',
+  mapId: 'attending-galleries',
+  // The watch ends at 18:00 (docs/mission-attendance.md §9), inside §10's 12-25.
+  lengthBandS: [1020, 1140],
+  /**
+   * Undermarshal Korrin's assignment, after the First Cantor's formula —
+   * docs/mission-attendance.md §12, verbatim. Public: it names the count, the
+   * notice and the penalty for a sentence, and withholds the only thing the
+   * Directorate withholds, which is what the return is.
+   */
+  briefing: [
+    'The stalls are open. The cohorts are seated. Nothing is expected of the watch but sufficiency, and sufficiency is not a small thing to be expected of.',
+    'The third watch of the cycle is assigned. It will be attended from the galleries, as it has been attended since 88 PC, and the record will receive it as one document with the two watches before it.',
+    'Four hulls are given to the watch. They are seated, and they are not required to do anything. That is not a courtesy. The stalls are where the cohorts dream, and a hull under way in this water is a hull standing in front of somebody who is listening.',
+    'The return will come up the Ninth nine times. Where it will be is not known before it is heard. It is heard sixty seconds before it arrives, which is the whole of the notice anyone has ever had. What is heard is entered. What is not heard is not entered, and the gap is entered too.',
+    'It may be described. It may be measured. What the cohorts dream of it will be recorded as dreamt. It will not be said what it is. A log that says what it is, is amended, and the cohort that filed it is re-shifted.',
+    'Five of nine is sufficiency. The Undermarshalcy does not round up.',
+  ],
+};
+
 export const MISSION_HEADERS: readonly MissionHeader[] = [
   PROLOGUE_SORROWGATE_HEADER,
   LEDGER_ASSET_RECOVERY_HEADER,
   SEEDING_TEND_HEADER,
+  ATTENDING_ATTENDANCE_HEADER,
 ];
 
 export function missionHeaderById(id: string): MissionHeader | undefined {

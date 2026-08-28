@@ -424,7 +424,10 @@ export class Match {
         applySilent: (slot, eid, active) => this.applySilent(slot, eid, active),
         applyPing: (slot, eid) => this.applyPing(slot, eid),
       },
-      own
+      own,
+      // Pre-bound to the player's own slot: the runtime may ask what *this*
+      // observer resolved and has no way to ask about anybody else.
+      (eid) => this.echo.tierFor(runtime.definition.playerSlot, eid)
     );
     if (resolution !== null) this.missionResult = resolution;
   }

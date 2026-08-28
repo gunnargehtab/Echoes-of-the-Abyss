@@ -8,7 +8,8 @@
  * parameter list is the enforcement. `own` is the resolved `EchoSnapshot` this
  * slot is being sent on this very tick, so every number returned is one the
  * client could have computed for itself; `roleIds` and `loadedIds` name hulls
- * of the player's own party; `regionById` and `predicate` are authored map data
+ * of the player's own party; `attended` counts what this observer's own ears
+ * resolved; `regionById` and `predicate` are authored map data
  * that shipped with the mission. There is no world, no ECS, no second snapshot and no slot
  * argument, so "three of five hostiles remaining" is not refused here — it
  * cannot be asked for.
@@ -58,7 +59,8 @@ export function progressOf(
   roleIds: RoleIds,
   regionById: RegionById,
   startedTick: number,
-  loadedIds: LoadedIds
+  loadedIds: LoadedIds,
+  attended: number
 ): Progress {
   switch (predicate.kind) {
     case 'extract': {
@@ -96,6 +98,12 @@ export function progressOf(
       const peak = peakSigOf(own, ids);
       return { done: peak <= predicate.ceilingSig ? 1 : 0, of: 1 };
     }
+    case 'attend':
+      // A count of the observer's own resolutions, handed in as a number for
+      // the reason every other parameter here is what it is: this file is
+      // given nothing it could turn into somebody else's position. Capped so
+      // a tenth arrival could not render "10 of 9".
+      return { done: Math.min(attended, predicate.count), of: predicate.count };
     case 'endure':
       return { done: Math.max(0, own.tick - startedTick), of: predicate.ticks };
   }
@@ -107,9 +115,18 @@ export function isMet(
   roleIds: RoleIds,
   regionById: RegionById,
   startedTick: number,
-  loadedIds: LoadedIds
+  loadedIds: LoadedIds,
+  attended: number
 ): boolean {
-  const { done, of } = progressOf(predicate, own, roleIds, regionById, startedTick, loadedIds);
+  const { done, of } = progressOf(
+    predicate,
+    own,
+    roleIds,
+    regionById,
+    startedTick,
+    loadedIds,
+    attended
+  );
   return done >= of;
 }
 
