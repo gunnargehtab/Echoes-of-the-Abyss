@@ -696,6 +696,28 @@ export const BLOOM_SHARE = {
 } as const;
 
 /**
+ * Scuttling — docs/game-identity.md "Match Structure".
+ *
+ * The second way a commander leaves a match. Killing a Bastion is the first
+ * and the one the game is about; this is the rule that stops a commander who
+ * has already lost — no harvester, no queue, no bank, no income — from
+ * standing in the water for the rest of the clock because nobody has got
+ * around to finishing them.
+ *
+ * The doc states the window and states why it is a window rather than an
+ * instant: the position has to be a state, not a frame. Everything else the
+ * rule reads is the simulation's own (a harvester is alive or it is not), so
+ * this is the only number the rule needs.
+ */
+export const CONCESSION = {
+  /**
+   * SPEC — docs/game-identity.md: the position must hold continuously for
+   * sixty seconds of match time before the crew scuttles.
+   */
+  WINDOW_S: 60,
+} as const;
+
+/**
  * Match lifecycle — docs/tech-stack.md.
  *
  * TUNABLE. The one number with an argument behind it is the reconnection

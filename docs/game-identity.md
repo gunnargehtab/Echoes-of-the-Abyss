@@ -35,7 +35,54 @@ the same four beats, each one filtered through the Echo Layer:
    be rebuilt, so the whole match is a conversation about where it is and who has heard it.
    That is the rule for a *match*: a campaign mission ([campaign.md](campaign.md)) concludes
    on its own authored terms — a count read into the record, water reached — and does not go
-   through the Bastion rule at all.
+   through the Bastion rule at all. A commander can also leave a match without their Bastion
+   falling, by scuttling — see below.
+
+### Scuttling — the other way a commander leaves
+
+A Bastion is the stake, and killing one is how a match is *meant* to end. But a commander
+can be finished long before the last Bastion falls: the harvesters are gone, the bank is
+empty, nothing is on the slipway, and somewhere else on the map a rival's mining is still
+audible. Attrition from there is one-way. Every hull they still hold is the last one they
+will ever have, and a Bastion is 5,000 HP behind a fleet that replaces its losses.
+
+The Abyss does not do last stands. A crew in that position **scuttles**: the commander is
+eliminated exactly as a lost Bastion eliminates them, and the match goes on without them.
+
+The test is acoustic, because economy in this game *is* noise ([economy.md](economy.md) §3).
+A commander scuttles when, continuously for 60 seconds of match time, all of the following
+hold:
+
+- **Nothing in the water** — not one harvester left alive. The mining loop is gone, not
+  merely quiet: a commander running on Trickle or Idle is making a choice, and a choice is
+  never a concession.
+- **Nothing on the slipway** — no hull in any production queue, and no construction site
+  rising.
+- **No way back into one** — not the price of a harvester in the bank. The bar is a
+  harvester and not the cheapest hull on the list, because the question is whether they can
+  mine again, not whether they can afford one more scout. A commander who can still buy a
+  harvester has a move, and the rule leaves them to make it.
+- **Nothing coming in** — no stockpile of theirs rose at all during the window. This is what
+  keeps the rule honest for the Knights, whose tithe ([economy.md](economy.md) §6) pays them
+  for existing: the Order's floor is income, so a Knight with a Bastion still standing does
+  not scuttle. It is the one economy that cannot be taken off the map.
+- **Somebody else has the guns and the money** — at least one other commander still standing
+  banked something during the window *and* fields at least as many armed hulls. This is the
+  clause that makes the position unwinnable rather than merely poor: attrition against a
+  commander who replaces their losses is one-way when you cannot replace yours. A table where
+  nobody can pay for anything is a stalemate, not a defeat, and a broke commander who is
+  still the strongest fleet on the map is not beaten — the rule refuses to call either one a
+  loss.
+
+Sixty seconds because the position has to be a state rather than an instant: a commander who
+has just spent their last nodules is not beaten, and one who has not banked a thing in a
+minute with nothing in the water is.
+
+The rule is automatic and cannot be invoked. There is no *offer* of surrender to accept or
+refuse — a concession an opponent could decline would be a negotiation, and nobody down here
+is talking. Walking out of a live match is still a resignation
+([tech-stack.md](tech-stack.md)), which is a different thing: that is a player leaving, this
+is a position ending.
 
 *Beats* above means these four phases of the loop. The word does two other jobs in this
 bible — [campaign.md](campaign.md)'s mission tables head a column *Beat* for what a mission

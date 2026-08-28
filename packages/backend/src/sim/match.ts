@@ -17,6 +17,7 @@
 import { addComponent, defineQuery, hasComponent, removeEntity } from 'bitecs';
 import {
   ACTIVE_SONAR,
+  CONCESSION,
   CONSTRUCTION,
   CRYSTAL,
   DEPTH,
@@ -202,6 +203,30 @@ export class Match {
    */
   private readonly healthQuery = defineQuery([Health, Owner]);
   private readonly nodes: ResourceNodeInfo[] = [];
+  /**
+   * What the scuttling rule remembers between checks, per slot.
+   *
+   * `lastRiseTick` is the last time any stockpile of theirs went up — income,
+   * from whatever source: mining, the Hadron tithe, a bloom share, rendered
+   * remains. Spending is not a fall the rule cares about, so each field is
+   * compared against the previous sample rather than accumulated.
+   *
+   * `stalledSince` is when the position first became one nothing can come out
+   * of, or -1 while it is not. It is the streak that has to survive
+   * CONCESSION.WINDOW_S, and any single check that fails resets it.
+   */
+  private readonly concession = new Map<
+    number,
+    {
+      nodules: number;
+      crystal: number;
+      biomass: number;
+      lastRiseTick: number;
+      stalledSince: number;
+    }
+  >();
+  private readonly unitOwners = defineQuery([Unit, Owner]);
+  private readonly structureOwners = defineQuery([Structure, Owner]);
   private accumulator = 0;
   /** Snapshots produced by an Echo pass inside `step`, collected by `update`. */
   private pendingSnapshots: Map<number, EchoSnapshot> | null = null;
@@ -1190,6 +1215,9 @@ export class Match {
     faunaSystem(this.world, this.destroyedScratch);
     this.driftTick();
     this.reap();
+    // Once a second, after reap, so a commander finished on this tick is
+    // already out rather than briefly counting as somebody's live rival.
+    if (this.world.tick % SIM.TICK_HZ === 0) this.checkConcessions();
     // After reap, so a structure destroyed this tick has already left its
     // mark and does not lose a tick of the three minutes it is owed.
     this.world.marks.tick(FIXED_DT);
@@ -1305,6 +1333,145 @@ export class Match {
     for (const slot of lostBastions) this.eliminate(slot);
 
     this.resolveVictory();
+  }
+
+  /**
+   * Scuttling — the other way a commander leaves (docs/game-identity.md).
+   *
+   * A Bastion is the stake and killing one is how a match is meant to end,
+   * but a commander can be finished long before their Bastion falls: no
+   * harvester left, nothing queued, not the price of a harvester in the bank,
+   * and nothing landing in any stockpile. From there attrition is one-way —
+   * every hull they hold is the last one they will ever have — and the match
+   * has already been decided by everything except the clock. The crew
+   * scuttles.
+   *
+   * Every clause is there to keep the rule from firing on a position that is
+   * merely *bad*:
+   *
+   * - **A live harvester means the loop is only quiet, not gone.** Trickle and
+   *   Idle are choices a commander makes to be hard to hear (docs/economy.md
+   *   §3), and a rule that read a chosen silence as a defeat would price the
+   *   game's central decision at "you lose".
+   * - **A queue or a rising site is a hull already paid for.** Without this,
+   *   spending your last nodules on the harvester that saves you would start
+   *   the clock that kills you.
+   * - **The bank is read against a harvester, not against the cheapest hull.**
+   *   The question is whether they can mine again. A commander sitting on the
+   *   price of one more scout with no way to earn the next one is beaten; one
+   *   who can still buy a harvester has a move, and gets to make it.
+   * - **Income is income from any source.** The Hadron tithe pays a Knight for
+   *   existing (docs/economy.md §6), so a Knight with a Bastion standing never
+   *   satisfies this — which is exactly what "the only economy that does not
+   *   scale with map control" is supposed to mean.
+   * - **Somebody else has to have both the money and the guns.** Four broke
+   *   commanders are a stalemate, not four defeats, and mass-scuttling them
+   *   would leave nobody standing to be declared the winner. And a commander
+   *   who is broke but still fields the strongest fleet on the map has not
+   *   lost — they have one attack left in them, and the rule does not get to
+   *   decide it would have failed.
+   *
+   * Read once per simulated second, inside the fixed step, so a replay
+   * reproduces it: everything it touches is simulation state, and nothing it
+   * touches is wall-clock.
+   */
+  private checkConcessions(): void {
+    const standing = this.slots.filter((slot) => !this.eliminated.has(slot));
+    if (standing.length < 2) return;
+
+    const harvesters = new Set<number>();
+    const armed = new Map<number, number>();
+    const units = this.unitOwners(this.world);
+    for (let i = 0; i < units.length; i++) {
+      const eid = units[i]!;
+      const slot = Owner.slot[eid]!;
+      const kind = Unit.kind[eid] as UnitKind;
+      if (kind === UnitKind.Harvester) harvesters.add(slot);
+      if (statsFor(kind).attackDamage > 0) armed.set(slot, (armed.get(slot) ?? 0) + 1);
+    }
+
+    // A structure of theirs that is rising, or that has anything on its line,
+    // is a hull already paid for; a finished one that can produce a harvester
+    // is a way back into an economy, if they can afford the harvester.
+    const pending = new Set<number>();
+    const canRebuild = new Set<number>();
+    const harvesterCost = statsFor(UnitKind.Harvester).cost;
+    const structures = this.structureOwners(this.world);
+    for (let i = 0; i < structures.length; i++) {
+      const eid = structures[i]!;
+      const slot = Owner.slot[eid]!;
+      if (hasComponent(this.world, UnderConstruction, eid)) {
+        pending.add(slot);
+        continue;
+      }
+      if ((this.world.production.get(eid)?.queue.length ?? 0) > 0) pending.add(slot);
+      if (canRebuild.has(slot)) continue;
+      const allowed = PRODUCIBLE[Structure.kind[eid] as StructureKind] ?? [];
+      if (
+        allowed.includes(UnitKind.Harvester) &&
+        economyFor(this.world, slot).nodules >= harvesterCost
+      ) {
+        canRebuild.add(slot);
+      }
+    }
+
+    const tick = this.world.tick;
+    const window = CONCESSION.WINDOW_S * SIM.TICK_HZ;
+    const earning = new Set<number>();
+    const beaten: number[] = [];
+
+    for (const slot of standing) {
+      const economy = economyFor(this.world, slot);
+      let watch = this.concession.get(slot);
+      if (watch === undefined) {
+        watch = {
+          nodules: economy.nodules,
+          crystal: economy.crystal,
+          biomass: economy.biomass,
+          lastRiseTick: tick,
+          stalledSince: -1,
+        };
+        this.concession.set(slot, watch);
+      }
+      if (
+        economy.nodules > watch.nodules ||
+        economy.crystal > watch.crystal ||
+        economy.biomass > watch.biomass
+      ) {
+        watch.lastRiseTick = tick;
+      }
+      watch.nodules = economy.nodules;
+      watch.crystal = economy.crystal;
+      watch.biomass = economy.biomass;
+
+      if (tick - watch.lastRiseTick < window) earning.add(slot);
+
+      const stalled = !harvesters.has(slot) && !pending.has(slot) && !canRebuild.has(slot);
+      if (!stalled) {
+        watch.stalledSince = -1;
+        continue;
+      }
+      if (watch.stalledSince === -1) watch.stalledSince = tick;
+      // One window, not two: the streak is the sixty seconds, and "nothing
+      // came in" is asked of that same stretch rather than of its own.
+      if (tick - watch.stalledSince >= window && watch.lastRiseTick <= watch.stalledSince) {
+        beaten.push(slot);
+      }
+    }
+
+    let conceded = false;
+    for (const slot of beaten) {
+      // The other half of "cannot win": somebody who replaces their losses
+      // fields at least as many guns. Attrition against them is one-way.
+      const overmatched = standing.some(
+        (other) =>
+          other !== slot && earning.has(other) && (armed.get(other) ?? 0) >= (armed.get(slot) ?? 0)
+      );
+      if (!overmatched) continue;
+      this.eliminate(slot);
+      conceded = true;
+    }
+    if (conceded) this.resolveVictory();
   }
 
   /**
