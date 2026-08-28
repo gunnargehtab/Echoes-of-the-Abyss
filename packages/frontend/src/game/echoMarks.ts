@@ -207,3 +207,58 @@ export function drawScopeEchoMarks(g: Graphics, marks: readonly EchoMarkInfo[], 
     g.circle(cx, cy, radius * 0.6).fill({ color: style.color, alpha });
   }
 }
+
+/**
+ * What the contact log calls each kind of residue (docs/ui-ux.md §10).
+ *
+ * The names are the ones docs/systems-echo.md §7 uses in prose, so a player
+ * reading the log and a player reading the bible are told the same word. And
+ * every one of them names an *event*, never an owner or a casualty: §7's first
+ * rule is that a mark reports that something happened and never what or to
+ * whom, and the log is the one place in the client where breaking it would be
+ * a single string away.
+ */
+export const MARK_LABEL: Record<EchoMarkKind, string> = {
+  [EchoMarkKind.Battle]: 'battle site',
+  [EchoMarkKind.DestroyedStructure]: 'destroyed structure',
+  [EchoMarkKind.IndustrialHum]: 'industrial hum',
+  [EchoMarkKind.TorpedoWake]: 'torpedo wake',
+};
+
+/**
+ * The marks in this snapshot the log has not written a row for yet — and the
+ * whole of what makes a MARK row hard (docs/ui-ux.md §10).
+ *
+ * Every other row in that log is an event with a moment, and `T+` is when it
+ * happened. A mark has no moment on the wire: it is simply present, then
+ * fainter, then gone. So the event has to be *derived*, by diffing the mark
+ * set by id, and two things follow that are worth being deliberate about:
+ *
+ * - **`T+` on a MARK row means "when you first heard it", not "when it
+ *   happened".** Residue you swim into is minutes old and logs as new. That is
+ *   the honest reading rather than a compromise — the log is a record of what
+ *   *you* heard, which is the only thing that makes post-match "when did they
+ *   hear me" analysis mean anything — but it should be true on purpose.
+ * - **Marks re-enter audibility.** A scout leaves and comes back, or the
+ *   server's five-tick sweep drops a faint reading and picks it up again, and
+ *   the same id reappears. Logged twice, the row would stop being news and
+ *   become a proximity meter pointed at the player's own movement.
+ *
+ * Which is why `logged` is recorded here rather than by the caller: the
+ * once-per-id-per-match rule is the entire correctness of this function, and a
+ * caller that forgot the second half would reintroduce exactly the meter.
+ * `logged` lives as long as the match and is cleared with the rest of the
+ * renderer's per-match state.
+ */
+export function newlyAudibleMarks(
+  marks: readonly EchoMarkInfo[],
+  logged: Set<number>
+): EchoMarkInfo[] {
+  const fresh: EchoMarkInfo[] = [];
+  for (const mark of marks) {
+    if (logged.has(mark.id)) continue;
+    logged.add(mark.id);
+    fresh.push(mark);
+  }
+  return fresh;
+}

@@ -234,6 +234,25 @@
   color: var(--text-bright);
 }
 
+/*
+ * A MARK row is residue, and §5's "past and present must never share an ink"
+ * holds in the log exactly as it does on the scope: a stain must never be
+ * mistaken for a contact. So it takes the dim grey-teal the residue layer is
+ * drawn in rather than any rung of the tier ramp, and it sits after the
+ * `.fresh` rule on purpose — every mark row is a first hearing, so `.fresh`
+ * would otherwise make the past the brightest thing in the log.
+ *
+ * A literal rather than a palette variable because residue ink already is one:
+ * `echoMarks.ts` styles marks from a static table, so a mark's colour does not
+ * move when the player picks a colour-vision palette, and the log should not
+ * be the one place where it does.
+ */
+.contact-log-row.mark .contact-log-tier,
+.contact-log-row.mark .contact-log-label {
+  color: #7f9498;
+  font-weight: 400;
+}
+
 .contact-log-detail {
   opacity: 0.7;
   overflow-wrap: anywhere;

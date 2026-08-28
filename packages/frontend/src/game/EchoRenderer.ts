@@ -91,7 +91,13 @@ import {
   type Bindings,
 } from '../input/bindings.ts';
 import { FACTION_NAME } from './factions.ts';
-import { drawScopeEchoMarks, markRadiusM, MARK_STYLE } from './echoMarks.ts';
+import {
+  drawScopeEchoMarks,
+  markRadiusM,
+  MARK_LABEL,
+  MARK_STYLE,
+  newlyAudibleMarks,
+} from './echoMarks.ts';
 import type { ContactAudioEntry, ContactAudioFrame } from '../audio/contactMixer.ts';
 import type { PingReturn, SelfAudioFrame } from '../audio/selfMixer.ts';
 import {
@@ -195,6 +201,17 @@ export interface ContactLogEntry {
   /** Where to send the camera, when the entry carries a real position. */
   focusX?: number;
   focusY?: number;
+  /**
+   * Residue heard rather than a contact detected — the `MARK` row of
+   * docs/ui-ux.md §10.
+   *
+   * A separate flag rather than a fifth resolution tier because a mark is not
+   * a *worse* detection than Tier 1, it is a different kind of thing: the past
+   * rather than the present. The tier ramp is an ordered scale of how much a
+   * player earned about a live emitter, and putting residue on it would invite
+   * every consumer to compare the two.
+   */
+  mark?: boolean;
 }
 
 /** A world-frame bearing in radians, as the log's compass-north degrees. */
@@ -812,6 +829,15 @@ export class EchoRenderer {
    * serial instead of hoping.
    */
   private ownRowSeq = 0;
+
+  /**
+   * Mark ids the contact log has already written a row for, this match.
+   *
+   * See `newlyAudibleMarks`: a mark that goes quiet and comes back keeps its
+   * id, so without this the log would report the player's own movement back
+   * to them as if it were news.
+   */
+  private loggedMarks = new Set<number>();
   /**
    * Last known heading per own unit, derived client-side from position deltas
    * between snapshots — the server does not send headings for own units, and
@@ -2392,6 +2418,7 @@ export class EchoRenderer {
     this.selected.clear();
     this.controlGroups.clear();
     this.marks = [];
+    this.loggedMarks.clear();
     this.hazards = [];
     this.peakSig = 0;
     this.fleetSig = 0;
@@ -2487,6 +2514,13 @@ export class EchoRenderer {
         lastSeenMs: now,
         firstSeenMs: previous?.firstSeenMs ?? now,
       });
+    }
+
+    // Residue the player has just come within earshot of. After the contact
+    // loop so that a fight and the mark it left read in that order in the log,
+    // which is the order they happened in.
+    for (const mark of newlyAudibleMarks(snapshot.marks, this.loggedMarks)) {
+      this.emitMarkEvent(mark, snapshot.tick);
     }
 
     this.callbacks.onContactAudio(this.contactAudioFrame(snapshot.tick, now));
@@ -2744,6 +2778,51 @@ export class EchoRenderer {
       const dy = subject.y - from.y;
       entry.bearingDeg = (((Math.atan2(dy, dx) * 180) / Math.PI + 450) % 360) | 0;
       entry.rangeM = Math.hypot(dx, dy);
+    }
+    this.callbacks.onContactEvent(entry);
+  }
+
+  /**
+   * A MARK row: residue that has just become audible (docs/ui-ux.md §10).
+   *
+   * Bearing comes off the scope anchor like every other row, and the row
+   * focuses, because a mark carries a real position that the renderer is
+   * already drawing at map scale — there is nothing to withhold that the
+   * player is not looking at.
+   *
+   * What it does *not* carry is a range. §10's sample row spends that column
+   * on `decaying` instead, and it is the better use of it: the distance to a
+   * stain is the least interesting thing about it, while its intensity falling
+   * is the reading — for the industrial hum, `shared/src/types.ts` notes that
+   * intensity tracks throughput, so a hum the player watches fade is an
+   * economy winding down.
+   */
+  private emitMarkEvent(mark: EchoMarkInfo, tick: number): void {
+    // Guarded like the draw path in `echoMarks.ts`: a kind the client has no
+    // word for is one the server added and this build has not learned, and a
+    // row reading `undefined` is worse than a row the player never sees.
+    const label = MARK_LABEL[mark.kind];
+    if (label === undefined) return;
+    const entry: ContactLogEntry = {
+      // Once per mark id per match, so the id needs no tick in it — and must
+      // not have one, or a re-heard mark would land as a second row.
+      id: `mark:${mark.id}`,
+      tick,
+      // The `---` slot the log reserves for events that are not detections;
+      // `mark` is what makes the column read MARK rather than dashes.
+      tier: ResolutionTier.Silent,
+      // A mark row is only ever written once, so it is always a first hearing.
+      fresh: true,
+      mark: true,
+      label,
+      focusX: mark.x,
+      focusY: mark.y,
+    };
+    const from = this.scopeAnchor();
+    if (from !== null) {
+      const dx = mark.x - from.x;
+      const dy = mark.y - from.y;
+      entry.bearingDeg = compassDeg(Math.atan2(dy, dx));
     }
     this.callbacks.onContactEvent(entry);
   }
