@@ -11,7 +11,16 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { Biome } from '@echoes/shared';
-import { BIOME_RELIEF, detailM, seabedSeed, SEABED_PX_PER_CELL } from '../src/game/seabed.ts';
+import {
+  BIOME_RELIEF,
+  detailM,
+  emberFlicker,
+  mottleFactor,
+  seabedSeed,
+  SEABED_PX_PER_CELL,
+  VENT_EMBER_CAP,
+  ventEmbers,
+} from '../src/game/seabed.ts';
 import { RELIEF_REFERENCE_M } from '../src/game/palette.ts';
 
 const SEED = seabedSeed({ cols: 32, rows: 32, floor: new Array(32 * 32).fill(2600) });
@@ -90,5 +99,96 @@ describe('seabed detail field', () => {
       'vent ground should be rougher than the pressure-eroded trench'
     );
     assert.equal(BIOME_RELIEF[Biome.CoralRuins].blockiness, 1, 'ruins lost their right angles');
+  });
+});
+
+describe('albedo mottle', () => {
+  it('is a darken-only gain bounded by its biome strength, and deterministic', () => {
+    for (const { mottle } of Object.values(BIOME_RELIEF)) {
+      for (let i = 0; i < 2000; i++) {
+        const x = (i * 173.31) % 8000;
+        const y = (i * 89.17) % 8000;
+        const f = mottleFactor(x, y, SEED, mottle);
+        assert.ok(f <= 1 && f >= 1 - mottle, `${f} outside [${1 - mottle}, 1]`);
+        assert.equal(f, mottleFactor(x, y, SEED, mottle));
+      }
+    }
+    // Zero strength is exactly the identity — most of a map must pass through
+    // untouched rather than uniformly dimmed.
+    assert.equal(mottleFactor(4321, 1234, SEED, 0), 1);
+  });
+
+  it('is a different field from the relief, not the same noise twice', () => {
+    // If the mottle correlated with the heightfield, dark mottle would pile
+    // onto relief shadow and the two quiet passes would sum into a loud one.
+    let sameSign = 0;
+    const n = 2000;
+    for (let i = 0; i < n; i++) {
+      const x = (i * 137.51) % 8000;
+      const y = (i * 291.73) % 8000;
+      const d = detailM(x, y, SEED, 60, 0.3, 0);
+      const m = mottleFactor(x, y, SEED, 0.1) - 0.95; // recentre around 0
+      if (d > 0 === m > 0) sameSign++;
+    }
+    const agreement = sameSign / n;
+    assert.ok(Math.abs(agreement - 0.5) < 0.08, `fields agree ${agreement} — correlated`);
+  });
+});
+
+describe('vent embers', () => {
+  const terrain = {
+    cols: 8,
+    rows: 8,
+    cellM: 250,
+    // A thermal band across the middle, everything else open water.
+    biomes: Array.from({ length: 64 }, (_, i) =>
+      Math.floor(i / 8) >= 3 && Math.floor(i / 8) <= 4 ? Biome.ThermalVein : Biome.OpenWater
+    ),
+    floor: new Array(64).fill(1400),
+    ceiling: new Array(64).fill(0),
+  };
+
+  it('is deterministic and stays inside thermal cells', () => {
+    const a = ventEmbers(terrain, SEED);
+    const b = ventEmbers(terrain, SEED);
+    assert.deepEqual(a, b);
+    assert.ok(a.length > 0, 'a thermal band produced no embers at all');
+    assert.ok(a.length <= VENT_EMBER_CAP);
+    for (const ember of a) {
+      const col = Math.floor(ember.xM / 250);
+      const row = Math.floor(ember.yM / 250);
+      assert.equal(terrain.biomes[row * 8 + col], Biome.ThermalVein, 'ember off the vent field');
+      // The whole glow stays inside its cell, so no light leaks onto a
+      // neighbouring biome's ground.
+      assert.ok(
+        ember.xM - ember.radiusM >= col * 250 && ember.xM + ember.radiusM <= (col + 1) * 250
+      );
+      assert.ok(
+        ember.yM - ember.radiusM >= row * 250 && ember.yM + ember.radiusM <= (row + 1) * 250
+      );
+      assert.ok(ember.radiusM >= 25 && ember.radiusM <= 60);
+    }
+  });
+
+  it('leaves rock dark, whatever biome label a collapse left on it', () => {
+    const sealed = {
+      ...terrain,
+      // ceiling below floor is how rock is spelled (see isRock in the renderer).
+      ceiling: terrain.biomes.map((b) => (b === Biome.ThermalVein ? 2000 : 0)),
+    };
+    assert.equal(ventEmbers(sealed, SEED).length, 0);
+  });
+
+  it('flickers inside [0, 1], holds within a bucket, and moves across them', () => {
+    let moved = 0;
+    for (let i = 0; i < 50; i++) {
+      for (let bucket = 0; bucket < 40; bucket++) {
+        const v = emberFlicker(i, bucket, 0.37);
+        assert.ok(v >= 0 && v <= 1);
+        assert.equal(v, emberFlicker(i, bucket, 0.37));
+        if (bucket > 0 && v !== emberFlicker(i, bucket - 1, 0.37)) moved++;
+      }
+    }
+    assert.ok(moved > 0, 'the flicker never changes — a lamp, not an ember');
   });
 });
