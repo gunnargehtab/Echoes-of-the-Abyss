@@ -34,6 +34,7 @@ node tools/balance/run.mjs --help
 | Echo mark usage | Drift Health at the end; residue reads via the JSON series |
 | Depth-time distribution | Hull-seconds per depth band, as a share below the Shelf |
 | Match length | Median and p10–p90, plus how many hit the time cap |
+| How close a draw came | Commanders eliminated per match, against the number a win needs |
 | The four economy guard-rails (§9) | A verdict row each, with the number that produced it |
 | The fauna guard-rails (bestiary §8) | First blood against first classified enemy |
 
@@ -57,6 +58,14 @@ carries **one** decided match, and the faction that won it reads 100% while the 
 read 0%. Both rails therefore refuse to rule below ten decided matches and say so in their
 reading (`n=1 decided, needs 10`), the per-faction table prints the denominator in a column
 of its own, and a win rate over no decided matches at all prints as `—` rather than as `0%`.
+
+**A draw is not one thing, so read the eliminations row beside it.** A win is the last
+commander standing, which is one elimination in a duel and *three* in a four-seat
+free-for-all — so the same game resolves at very different rates depending only on how many
+seats are at the table. That makes a draw rate on its own unreadable: a batch where nobody
+was ever seriously hurt and a batch where all but one commander went down and the clock beat
+the last kill both print 100% draws. `Commanders eliminated, of N needed` is the column that
+separates them, and it is the first thing to look at when a batch reports no winners.
 
 ## A worked example — is Overburden a trap option?
 

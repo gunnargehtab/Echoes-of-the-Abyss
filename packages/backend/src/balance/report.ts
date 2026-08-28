@@ -77,6 +77,17 @@ export interface BatchSummary {
   seeds: number[];
   mapId: string;
   draws: number;
+  /**
+   * Commanders eliminated per match, against the number a win needs.
+   *
+   * A draw rate on its own cannot tell "nobody ever got hurt" from "three of
+   * the four went down and the clock beat the fourth", and those two batches
+   * want opposite work done to them. Both read 100% draws; this row is the
+   * only thing in the report that separates them. See #223.
+   */
+  eliminations: Distribution;
+  /** Eliminations a decisive match needs: everyone but the winner. */
+  eliminationsToWin: number;
   lengthS: Distribution;
   firstContactS: Distribution;
   firstEnemyContactS: Distribution;
@@ -259,6 +270,14 @@ export function summarise(results: MatchTelemetryResult[]): BatchSummary {
     seeds: results.map((r) => r.seed),
     mapId: results[0]?.mapId ?? 'unknown',
     draws: results.filter((r) => r.winnerSlot === null).length,
+    eliminations: distribution(
+      results.map((r) => r.players.filter((p) => p.eliminatedTick !== null).length)
+    ),
+    // Seats minus the one left standing. Read off the roster rather than
+    // assumed to be one, because a four-seat free-for-all asks for three
+    // eliminations and a duel asks for one — which is most of why the two
+    // resolve at such different rates.
+    eliminationsToWin: Math.max(0, (results[0]?.players.length ?? 0) - 1),
     lengthS: distribution(results.map((r) => r.lengthS)),
     // Not filtered to non-zero. With the Drift populated the honest answer
     // is usually "tick 0" — a creature is in earshot of a spawn from the
@@ -472,7 +491,10 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
   lines.push(
     `${summary.matches} matches on \`${summary.mapId}\`, seeds ` +
       `${summary.seeds[0]}–${summary.seeds[summary.seeds.length - 1]}. ` +
-      `${summary.draws} ended without a winner inside the time budget.`
+      `${summary.draws} ended without a winner inside the time budget, ` +
+      `on a median ${summary.eliminations.median} of the ` +
+      `${summary.eliminationsToWin} ` +
+      `${summary.eliminationsToWin === 1 ? 'elimination' : 'eliminations'} a win needs.`
   );
   lines.push('');
   lines.push('## Guard-rails');
@@ -490,6 +512,10 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
   lines.push('| Measure | Median (p10–p90) |');
   lines.push('| --- | --- |');
   lines.push(`| Length, seconds | ${dist(summary.lengthS)} |`);
+  lines.push(
+    `| Commanders eliminated, of ${summary.eliminationsToWin} needed | ` +
+      `${dist(summary.eliminations)} |`
+  );
   lines.push(`| First contact, seconds | ${dist(summary.firstContactS)} |`);
   lines.push(`| First classified enemy, seconds | ${dist(summary.firstEnemyContactS)} |`);
   lines.push(`| First blood, seconds | ${dist(summary.firstBloodS)} |`);
