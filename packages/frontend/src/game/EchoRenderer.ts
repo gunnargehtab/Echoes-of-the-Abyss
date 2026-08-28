@@ -19,7 +19,7 @@
  *   +- hud          (screen space, never transformed)
  */
 
-import { Application, Container, Graphics, Sprite, Text } from 'pixi.js';
+import { Application, Container, Graphics, Sprite, Text, Texture } from 'pixi.js';
 import {
   ACTIVE_SONAR,
   Biome,
@@ -73,10 +73,8 @@ import {
 } from '@echoes/shared';
 import {
   BIOME_COLOR,
-  depthShade,
   FACTION_PALETTE,
   FAUNA_COLOR,
-  reliefShade,
   RESOURCE_COLOR,
   setActivePalette,
   TIER_STYLE,
@@ -84,6 +82,7 @@ import {
   sigColor,
   type PaletteName,
 } from './palette.ts';
+import { bakeSeabed, SEABED_PX_PER_CELL } from './seabed.ts';
 import {
   actionFor,
   BUILD_ACTION_KIND,
@@ -573,6 +572,9 @@ const TAB_LABEL: Record<CommandTab, string> = {
 export class EchoRenderer {
   private readonly app = new Application();
   private readonly world = new Container();
+  /** The baked seabed texture, under the vector terrain marks. */
+  private readonly seabedLayer = new Container();
+  private seabedTexture: Texture | null = null;
   private readonly terrainLayer = new Graphics();
   /** Ground the current selection cannot enter. Dynamic: it depends on who is selected. */
   private readonly groundLayer = new Graphics();
@@ -940,6 +942,7 @@ export class EchoRenderer {
     // base perimeter is the most urgent pixel on the screen, and must never
     // hide behind your own Bastion.
     this.world.addChild(
+      this.seabedLayer,
       this.terrainLayer,
       this.groundLayer,
       this.nodeLayer,
@@ -2883,33 +2886,6 @@ export class EchoRenderer {
 
   // --- Draw ----------------------------------------------------------------
 
-  /**
-   * Central difference of floor depth across one cell, in metres — the slope
-   * `reliefShade` lights.
-   *
-   * Rock is read as level with the cell being shaded rather than as its own
-   * depth, the same exclusion the depth range makes above and for the same
-   * reason: a sealed cell carries a floor that is not a water depth, and
-   * letting one into the gradient would ring a collapsed span with a cliff
-   * that is not there. Off-map neighbours clamp to the centre cell, so the map
-   * edge is flat rather than a lit rim.
-   */
-  private floorDrop(
-    terrain: TerrainPayload,
-    row: number,
-    col: number,
-    index: number,
-    stepCol: number,
-    stepRow: number
-  ): number {
-    const floorAt = (r: number, c: number): number => {
-      if (r < 0 || r >= terrain.rows || c < 0 || c >= terrain.cols) return terrain.floor[index]!;
-      const i = r * terrain.cols + c;
-      return isRock(terrain, i) ? terrain.floor[index]! : terrain.floor[i]!;
-    };
-    return (floorAt(row + stepRow, col + stepCol) - floorAt(row - stepRow, col - stepCol)) / 2;
-  }
-
   private drawTerrain(): void {
     const terrain = this.terrain;
     if (terrain === null) return;
@@ -2917,48 +2893,20 @@ export class EchoRenderer {
     const g = this.terrainLayer;
     g.clear();
 
-    // The map's own depth range, not the ruleset's: a shallow map should still
-    // read as terrain rather than as one flat wash of near-black.
-    //
-    // Rock is excluded from the range, and that exclusion is load-bearing now
-    // that ground can be written mid-match (#197). A sealed cell carries a
-    // floor of zero, so one collapsed span left in the scan would drag
-    // `shallowest` to the surface and re-shade every other cell on the map —
-    // the whole seabed washing pale on the tick the arch fell.
-    let shallowest = Number.POSITIVE_INFINITY;
-    let deepest = 0;
-    for (let i = 0; i < terrain.floor.length; i++) {
-      if (isRock(terrain, i)) continue;
-      const f = terrain.floor[i]!;
-      if (f < shallowest) shallowest = f;
-      if (f > deepest) deepest = f;
-    }
-
-    for (let row = 0; row < terrain.rows; row++) {
-      for (let col = 0; col < terrain.cols; col++) {
-        const index = row * terrain.cols + col;
-        const biome = terrain.biomes[index] as Biome;
-        const base = BIOME_COLOR[biome] ?? BIOME_COLOR[Biome.OpenWater];
-        g.rect(col * terrain.cellM, row * terrain.cellM, terrain.cellM, terrain.cellM).fill({
-          // Rock is not water and is not drawn as any depth of it. Ground that
-          // admits nothing gets the app background — the one colour on the map
-          // that is not somewhere you can be — because a collapsed span shaded
-          // like a shallow plateau would read as the easiest route out.
-          color: isRock(terrain, index)
-            ? UI.background
-            : // Depth is luminance (docs/art-direction.md, "Reading the Sea
-              // Floor"). The hue stays the biome's, because hue is what sound
-              // is priced by. Relief then lights that fill against the shape of
-              // the floor, so a shelf edge reads as ground dropping away rather
-              // than as the seam between two authored rectangles.
-              reliefShade(
-                depthShade(base, terrain.floor[index]!, shallowest, deepest),
-                this.floorDrop(terrain, row, col, index, 1, 0),
-                this.floorDrop(terrain, row, col, index, 0, 1)
-              ),
-        });
-      }
-    }
+    // The ground itself is a baked texture now (seabed.ts): the authored
+    // floor upsampled and given per-biome shape, lit by the same
+    // depthShade -> reliefShade pair the cell pass used. One sprite where a
+    // thousand rects were, and the light finally has something to find
+    // *inside* a region. Rebuilt here — terrain load and ground deltas —
+    // never per frame.
+    const canvas = bakeSeabed(terrain);
+    this.seabedTexture?.destroy(true);
+    this.seabedTexture = Texture.from(canvas);
+    this.seabedLayer.removeChildren();
+    const seabed = new Sprite(this.seabedTexture);
+    // The bake's pixel density is its own; scale it back to world metres.
+    seabed.scale.set(terrain.cellM / SEABED_PX_PER_CELL);
+    this.seabedLayer.addChild(seabed);
 
     // Roofed passages, marked as routes rather than as openings.
     //

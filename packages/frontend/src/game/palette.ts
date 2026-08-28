@@ -446,7 +446,7 @@ const LIGHT_Z = 0.66;
  * face. Without it every authored step saturates alike and a 300 m shelf edge
  * throws the same shadow as a 1,900 m trench wall.
  */
-const RELIEF_REFERENCE_M = 550;
+export const RELIEF_REFERENCE_M = 550;
 
 /** TUNABLE. How much of a cell's colour the deepest shadow may take. */
 const RELIEF_DEPTH = 0.42;
