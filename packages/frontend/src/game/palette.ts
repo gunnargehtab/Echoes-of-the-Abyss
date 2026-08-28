@@ -420,10 +420,65 @@ export function depthShade(color: number, floorM: number, shallowest: number, de
   // on screen. Deep ground is pushed down toward black without reaching it,
   // because pure black reads as a hole in the map rather than as deep water.
   const gain = 1 - t * 0.45;
+  return scaleRgb(color, gain);
+}
+
+/** Multiply a packed RGB by a gain. Shared by the two terrain shading passes. */
+function scaleRgb(color: number, gain: number): number {
   const r = Math.min(255, Math.round(((color >> 16) & 0xff) * gain));
   const g = Math.min(255, Math.round(((color >> 8) & 0xff) * gain));
   const b = Math.min(255, Math.round((color & 0xff) * gain));
   return (r << 16) | (g << 8) | b;
+}
+
+/**
+ * The key light, shared with the hull and structure bake (`bake.ts`): upper
+ * left, viewer straight above. There is one lighting model in this game and
+ * the seabed is not exempt from it — a floor lit from a different quarter than
+ * the hulls standing on it reads as two pictures pasted together.
+ */
+const LIGHT_X = -0.45;
+const LIGHT_Y = -0.6;
+const LIGHT_Z = 0.66;
+
+/**
+ * TUNABLE. Metres of floor change across one cell that count as a full-strength
+ * face. Without it every authored step saturates alike and a 300 m shelf edge
+ * throws the same shadow as a 1,900 m trench wall.
+ */
+const RELIEF_REFERENCE_M = 550;
+
+/** TUNABLE. How much of a cell's colour the deepest shadow may take. */
+const RELIEF_DEPTH = 0.42;
+
+/**
+ * Shade a cell by the *shape* of the ground, after `depthShade` has said how
+ * deep it is.
+ *
+ * Depth alone renders a map as flat colour blocks with visible right-angle
+ * seams where the authored regions meet: the trench wall and the shelf edge
+ * read as a change of fill rather than as ground that drops away. This is the
+ * standard hillshade — the surface normal of the floor heightfield against the
+ * key light above.
+ *
+ * `dropX`/`dropY` are the central-difference change in floor depth per cell, in
+ * metres. Depth counts downward, so a floor that deepens toward +x is a surface
+ * descending to the right, whose normal tilts right: n = (dfloor/dx, dfloor/dy, 1).
+ *
+ * Darkens only, for the reason `depthShade` darkens only — the authored biome
+ * fills are the ceiling of terrain's brightness, and a slope that happens to
+ * face the light is not a licence to exceed it. A ridge reads by the shadow it
+ * throws, which is enough, and it keeps the seabed quieter than any contact.
+ */
+export function reliefShade(color: number, dropX: number, dropY: number): number {
+  const nx = dropX / RELIEF_REFERENCE_M;
+  const ny = dropY / RELIEF_REFERENCE_M;
+  const length = Math.hypot(nx, ny, 1);
+  const diffuse = (nx * LIGHT_X + ny * LIGHT_Y + LIGHT_Z) / length;
+  // Flat ground is the reference, not full brightness: normalising by LIGHT_Z
+  // is what makes an unsloped cell come back untouched.
+  const shade = Math.min(1, Math.max(0, diffuse / LIGHT_Z));
+  return scaleRgb(color, 1 - RELIEF_DEPTH * (1 - shade));
 }
 
 /** Interpolate the SIG meter colour. docs/art-direction.md UI requirements. */

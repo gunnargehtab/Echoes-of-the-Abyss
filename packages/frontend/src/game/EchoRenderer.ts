@@ -76,6 +76,7 @@ import {
   depthShade,
   FACTION_PALETTE,
   FAUNA_COLOR,
+  reliefShade,
   RESOURCE_COLOR,
   setActivePalette,
   TIER_STYLE,
@@ -2803,6 +2804,33 @@ export class EchoRenderer {
 
   // --- Draw ----------------------------------------------------------------
 
+  /**
+   * Central difference of floor depth across one cell, in metres — the slope
+   * `reliefShade` lights.
+   *
+   * Rock is read as level with the cell being shaded rather than as its own
+   * depth, the same exclusion the depth range makes above and for the same
+   * reason: a sealed cell carries a floor that is not a water depth, and
+   * letting one into the gradient would ring a collapsed span with a cliff
+   * that is not there. Off-map neighbours clamp to the centre cell, so the map
+   * edge is flat rather than a lit rim.
+   */
+  private floorDrop(
+    terrain: TerrainPayload,
+    row: number,
+    col: number,
+    index: number,
+    stepCol: number,
+    stepRow: number
+  ): number {
+    const floorAt = (r: number, c: number): number => {
+      if (r < 0 || r >= terrain.rows || c < 0 || c >= terrain.cols) return terrain.floor[index]!;
+      const i = r * terrain.cols + c;
+      return isRock(terrain, i) ? terrain.floor[index]! : terrain.floor[i]!;
+    };
+    return (floorAt(row + stepRow, col + stepCol) - floorAt(row - stepRow, col - stepCol)) / 2;
+  }
+
   private drawTerrain(): void {
     const terrain = this.terrain;
     if (terrain === null) return;
@@ -2841,8 +2869,14 @@ export class EchoRenderer {
             ? UI.background
             : // Depth is luminance (docs/art-direction.md, "Reading the Sea
               // Floor"). The hue stays the biome's, because hue is what sound
-              // is priced by.
-              depthShade(base, terrain.floor[index]!, shallowest, deepest),
+              // is priced by. Relief then lights that fill against the shape of
+              // the floor, so a shelf edge reads as ground dropping away rather
+              // than as the seam between two authored rectangles.
+              reliefShade(
+                depthShade(base, terrain.floor[index]!, shallowest, deepest),
+                this.floorDrop(terrain, row, col, index, 1, 0),
+                this.floorDrop(terrain, row, col, index, 0, 1)
+              ),
         });
       }
     }
