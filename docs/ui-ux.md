@@ -376,10 +376,31 @@ The `you were pinged` row is implemented (#206, alongside the own-force rows it 
 shape with): it writes from the server-sent exposure flag at the fidelity sent — a bearing, never a position — under the `---` tier the log
 reserves for events that are not detections. The log also carries the own-force rows §5
 licenses, in the same form: `Corvette under fire`, `Harvester idle — mined out`, each
-focusable because the hull is the player's own. One row remains pending rather than
-skipped: `MARK` waits on the log learning to read the Echo Marks the renderer already
-draws. Tier-3 rows currently name the hull and faction rather than estimating a count,
-because the Echo Layer does not model counts.
+focusable because the hull is the player's own. Tier-3 rows currently name the hull and
+faction rather than estimating a count, because the Echo Layer does not model counts.
+
+The `MARK` row is implemented (#214), and the one thing it had to settle is that a mark is
+not an event. Every other line here has a moment, and `T+` is when it happened; residue is
+simply present on the wire, then fainter, then gone. So the log derives the event by
+diffing the mark set by id, which fixes two readings on purpose rather than by accident:
+
+- **`T+` on a `MARK` row means "when you first heard it", not "when it happened".** Residue
+  a scout swims into is minutes old and logs as new. That is the honest reading — the log
+  is a record of what *you* heard, which is the only thing that makes *"when did they hear
+  me"* analysis mean anything.
+- **A mark is logged once per id per match.** Residue re-enters audibility whenever a hull
+  leaves and returns, and a row on every re-entry would turn the log into a proximity meter
+  pointed at the player's own movement.
+
+The row names the residue in [systems-echo.md](systems-echo.md) §7's own words — `battle
+site`, `destroyed structure`, `industrial hum`, `torpedo wake` — and never who left it,
+because §7's first rule is that a mark reports that something happened and never what or to
+whom. It focuses like any other row, since the stain's position is already drawn in the
+world view and on the scope. It spends the range column on `decaying` rather than a
+distance: how far away a stain is says little, while its intensity falling is the reading —
+for the hum, that fade is an economy winding down. And it takes the residue layer's dim
+ink rather than a rung of the tier ramp, because §5's *past and present must never share an
+ink* holds in the log exactly as it does on the scope.
 
 ---
 
@@ -535,7 +556,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | Depth ribbon, PR badge, unrecoverable-hull hatching | Implemented (`D` dive, `A` rise; hold `Alt` to preview the dive cost) |
 | Thermocline on the ribbon, duct as a depth rung | Implemented — cyan line at 1,200 m, duct shaded, `DUCT` / `UNDER` in the readout |
 | Sonar-scope minimap | Implemented — terrain, tier-fidelity returns, Echo Marks under them, sweep, range rings |
-| Contact log | Implemented — DOM, live region, click-to-focus; the `MARK` row is still pending |
+| Contact log | Implemented — DOM, live region, click-to-focus, every row including `MARK` (#214) |
 | Contact voices, per-tier | Implemented — pan authority by tier, biome voicing, faction timbre at Tier 3+ |
 | Self-noise bed, SIG band label, masking readout | Implemented — server-sent, never inferred |
 | Exposure strike and screen-edge flash | Implemented — fires from `EchoSnapshot.selfEvents`, bearing only |
@@ -557,7 +578,8 @@ What the current client implements against this spec, so nobody re-implements wh
 | Attention on the scope | Implemented (§5, #206, #209) — exposure wedge, under-fire pulse, idle marker, each with its audio half and its reduced-motion equivalent |
 | Faction glyphs | Implemented (§12.5, #207) — one glyph per navy beside the mark's ink at Tier 3 and Tier 4, in the world view; the scope names no faction, so it owes none |
 | The match clock | Implemented (#208) — the log's T+ axis live in the top strip, from the server tick both share |
-| Own-force log rows | Implemented (§10, #206, #209) — `you were pinged`, `under fire`, `idle — mined out`; the `MARK` row is still pending |
+| Own-force log rows | Implemented (§10, #206, #209) — `you were pinged`, `under fire`, `idle — mined out` |
+| The log's `MARK` row | Implemented (§10, #214) — residue derived by diffing the mark set by id, once per mark per match |
 
 ---
 
