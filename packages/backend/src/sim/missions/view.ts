@@ -37,6 +37,8 @@ export interface MissionState {
   roleIds: Map<MissionRole, Set<number>>;
   /** The player's own hulls carrying a completed lift — see `LoadedIds`. */
   loadedIds: Set<number>;
+  /** The same, keyed by lift id, for predicates that name their load. */
+  loadedByLift: Map<string, number>;
   debtS: number;
 }
 
@@ -101,7 +103,11 @@ function objectiveView(
       (role) => state.roleIds.get(role) ?? NO_IDS,
       (id) => regionById(definition, id),
       state.startedAt.get(objective.id) ?? 0,
-      state.loadedIds
+      (lift) => {
+        if (lift === undefined) return state.loadedIds;
+        const carrier = state.loadedByLift.get(lift);
+        return carrier === undefined ? NO_IDS : new Set([carrier]);
+      }
     );
   }
   return view;

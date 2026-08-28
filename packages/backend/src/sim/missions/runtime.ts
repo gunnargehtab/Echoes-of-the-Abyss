@@ -30,15 +30,19 @@ import { hasComponent } from 'bitecs';
 import {
   DRIFT,
   FaunaStage,
+  MAX_PROPAGATION_FACTOR,
   MissionOutcome,
   ObjectiveStatus,
   SIM,
+  detectionRatio,
+  thermoclineFactor,
   type EchoSnapshot,
   type MissionAbility,
   type MissionView,
   type ObjectiveView,
 } from '@echoes/shared';
 import {
+  Acoustic,
   DepthOrder,
   Fauna,
   Health,
@@ -46,6 +50,7 @@ import {
   Owner,
   Position,
   Pressure,
+  SilentRunning,
   StaticEmitter,
   Structure,
 } from '../components.ts';
@@ -65,6 +70,9 @@ import type { MissionDefinition, MissionRole, MissionTag } from './types.ts';
 
 /** Simulation ticks between Echo passes — the cadence this runtime runs at. */
 const ECHO_TICK_INTERVAL = Math.round(SIM.TICK_HZ / SIM.ECHO_HZ);
+
+/** A named load nobody is carrying — shared so `loadedFor` allocates nothing for it. */
+const NO_CARRIER: ReadonlySet<number> = new Set();
 
 /** Seconds of simulation time one mission tick covers. */
 const TICK_DT_S = ECHO_TICK_INTERVAL / SIM.TICK_HZ;
@@ -168,8 +176,19 @@ export class MissionRuntime {
   private readonly liftProgress = new Map<string, number>();
   /** Lifts whose cut has finished. Monotone: a rigged load stays rigged. */
   private readonly loadedLifts = new Set<string>();
+  /**
+   * The sweep's one latched fact — docs/mission-tend.md §8: the day is filed
+   * if a pass resolved a working hull or a fresh mark, on either pass, and a
+   * ledger does not un-hear things. Never on the wire: the reading arrives
+   * with the tide, and the course bend below is the only feedback in play.
+   */
+  private filed = false;
+  /** Windows whose course has already bent toward something heard. */
+  private readonly bentWindows = new Set<number>();
   /** Live carrier eids of the loaded lifts, rebuilt each tick — see `LoadedIds`. */
   private readonly loadedIds = new Set<number>();
+  /** The same, keyed by lift id, for predicates that name their load. */
+  private readonly loadedByLift = new Map<string, number>();
   private readonly statuses = new Map<string, ObjectiveStatus>();
   private readonly startedAt = new Map<string, number>();
   private readonly commitments: Commitment[] = [];
@@ -232,11 +251,13 @@ export class MissionRuntime {
           x: unit.x,
           y: unit.y,
           depth: unit.depthM,
-          // Every hull in the chamber, not only the player's. Hostility is
-          // ownership and the simulation has no neutrality, so armed parties
-          // parked around one exchange would open fire on tick zero
-          // (docs/mission-sorrowgate.md §3).
-          weaponsCold: true,
+          // Weapons-cold unless the literal arms the hull. Cold is the
+          // default for Sorrowgate's reason — hostility is ownership and the
+          // simulation has no neutrality, so armed parties parked around one
+          // exchange would open fire on tick zero (docs/mission-sorrowgate.md
+          // §3) — and a mission arms a hull only where its document does
+          // (docs/mission-asset-recovery.md §3: the writ's escorts are guns).
+          weaponsCold: unit.armed !== true,
         });
         if (eid === 0) continue;
         this.register(world, unit.tag, eid);
@@ -342,6 +363,7 @@ export class MissionRuntime {
     this.resolveRoleIds(world);
     this.applyLifts(world);
     this.silenceRiggedEmitters(world);
+    this.applySweep(world, sink);
     this.applyEscortHold(world, own);
     this.applySilenceLedger(world, own);
     this.deriveObjectives(world, own);
@@ -577,6 +599,11 @@ export class MissionRuntime {
    * being so when the flight flew off.
    */
   private applyEscortHold(world: SimWorld, own: EchoSnapshot): void {
+    // Radius zero is the rule switched off (types.ts, `escortRadiusM`): every
+    // tender reads as escorted, which also settles `holdsMovement` through
+    // `lastEscorted`, while a `releaseTick` hold keeps its own force — the
+    // writ's schedule is not the escort's permission.
+    const disabled = this.definition.escortRadiusM <= 0;
     const escorts = this.idsFor('escort');
     for (const party of this.definition.parties) {
       if (party.slot !== this.definition.playerSlot) continue;
@@ -585,7 +612,7 @@ export class MissionRuntime {
         const eid = this.eidOf(world, unit.tag);
         if (eid === 0 || !hasComponent(world, MoveOrder, eid)) continue;
         const held = world.tick < (this.heldUntil.get(unit.tag) ?? 0);
-        const escortedNow = this.escorted(own, escorts, eid);
+        const escortedNow = disabled || this.escorted(own, escorts, eid);
         if (escortedNow) this.lastEscorted.add(unit.tag);
         else this.lastEscorted.delete(unit.tag);
         if (held || !escortedNow) {
@@ -654,10 +681,14 @@ export class MissionRuntime {
   private applyLifts(world: SimWorld): void {
     world.liftCutSig.clear();
     this.loadedIds.clear();
+    this.loadedByLift.clear();
     for (const lift of this.definition.lifts ?? []) {
       const eid = this.eidOf(world, lift.tag);
       if (this.loadedLifts.has(lift.id)) {
-        if (eid !== 0) this.loadedIds.add(eid);
+        if (eid !== 0) {
+          this.loadedIds.add(eid);
+          this.loadedByLift.set(lift.id, eid);
+        }
         continue;
       }
       if (eid === 0) continue;
@@ -667,10 +698,105 @@ export class MissionRuntime {
       if ((this.liftProgress.get(lift.id) ?? 0) >= lift.cutTicks) {
         this.loadedLifts.add(lift.id);
         this.loadedIds.add(eid);
+        this.loadedByLift.set(lift.id, eid);
+        continue;
+      }
+      // Silence stops the work — docs/systems-echo.md §6's cannot-work price,
+      // as docs/mission-tend.md §3 states it: "SIG falls to single digits,
+      // the share stops accruing". A silent carrier neither accrues cut nor
+      // holds the authored floor, or the stillness could not stop the work
+      // and going quiet would cost nothing — the trade the button *is*.
+      if (hasComponent(world, SilentRunning, eid) && SilentRunning.active[eid] === 1) {
         continue;
       }
       this.liftProgress.set(lift.id, (this.liftProgress.get(lift.id) ?? 0) + ECHO_TICK_INTERVAL);
       world.liftCutSig.set(eid, lift.cutSig);
+    }
+  }
+
+  /**
+   * The sweep — docs/mission-tend.md §6 and §8: a scripted listener whose
+   * hearing is a fact the mission counts, quietly, without interrupting
+   * anything.
+   *
+   * Resolved here rather than by the Echo Layer because the Echo pass builds
+   * snapshots for seated slots only, and the sweep is authored: its hearing
+   * uses the same propagation model — perceived loudness through the terrain's
+   * path integral against the listener's threshold — applied at the Echo
+   * cadence, inside the authored windows, over the player's own hulls and the
+   * residue layer. Nothing here reaches the wire: *filed* latches, the pair's
+   * course bends once per window toward what it heard (the only feedback the
+   * fiction permits), and the reading arrives with the tide.
+   *
+   * On the mission tick's budget, and bounded by authorship: tags × hulls
+   * path integrals, only inside a window, with the cheap best-water rejection
+   * ahead of every walk — the same shape as the fauna listen.
+   */
+  private applySweep(world: SimWorld, sink: MissionCommandSink): void {
+    const sweep = this.definition.sweep;
+    if (sweep === undefined) return;
+    const windowIndex = sweep.windows.findIndex(
+      (pass) => world.tick >= pass.fromTick && world.tick <= pass.untilTick
+    );
+    if (windowIndex === -1) return;
+    // Filed is monotone and each window bends at most once, so a pass that
+    // has already heard and turned has nothing left to compute.
+    if (this.filed && this.bentWindows.has(windowIndex)) return;
+
+    for (const tag of sweep.tags) {
+      const listener = this.eidOf(world, tag);
+      if (listener === 0) continue;
+      const hyd = Acoustic.hyd[listener]!;
+      if (hyd <= 0) continue;
+      const lx = Position.x[listener]!;
+      const ly = Position.y[listener]!;
+      const ld = Position.depth[listener]!;
+
+      for (const party of this.definition.parties) {
+        if (party.slot !== this.definition.playerSlot) continue;
+        for (const unit of party.units) {
+          const hull = this.eidOf(world, unit.tag);
+          if (hull === 0) continue;
+          const sig = Acoustic.sig[hull]!;
+          if (sig <= 0) continue;
+          const distance = Math.hypot(Position.x[hull]! - lx, Position.y[hull]! - ly);
+          const tf = thermoclineFactor(Position.depth[hull]!, ld);
+          if (detectionRatio(sig, MAX_PROPAGATION_FACTOR * tf, distance, hyd) < 1) continue;
+          const pf = world.terrain.pathPropagation(Position.x[hull]!, Position.y[hull]!, lx, ly);
+          if (detectionRatio(sig, pf * tf, distance, hyd) < 1) continue;
+          this.file(world, sink, windowIndex, Position.x[hull]!, Position.y[hull]!);
+          return;
+        }
+      }
+
+      // "…and enough to read yesterday's hum off the seabed if the stillness
+      // starts late" (§6): fresh residue is heard exactly as the Echo Layer
+      // hears it, through the layer's own audibility test.
+      for (const mark of world.marks.all) {
+        if (!world.marks.audible(world.terrain, mark, lx, ly, ld, hyd)) continue;
+        this.file(world, sink, windowIndex, mark.x, mark.y);
+        return;
+      }
+    }
+  }
+
+  /** Latch the day filed, and bend this window's course toward what was heard. */
+  private file(
+    world: SimWorld,
+    sink: MissionCommandSink,
+    windowIndex: number,
+    x: number,
+    y: number
+  ): void {
+    this.filed = true;
+    if (this.bentWindows.has(windowIndex)) return;
+    this.bentWindows.add(windowIndex);
+    // The bend: the pair re-aims at the sound. Their next authored move beat
+    // restores the chart, which is what "bends a few degrees" costs a transit
+    // whose schedule is not the player's business (§6).
+    for (const tag of this.definition.sweep?.tags ?? []) {
+      const eid = this.eidOf(world, tag);
+      if (eid !== 0) sink.applyMove(Owner.slot[eid]!, eid, x, y, false);
     }
   }
 
@@ -720,6 +846,10 @@ export class MissionRuntime {
    * It can never fail the mission. That is the point of it being a debt.
    */
   private applySilenceLedger(world: SimWorld, own: EchoSnapshot): void {
+    // No array, no ledger (types.ts, `arrayTag`): a mission with no silence
+    // order keeps no debt, and the guard sits above the accrual so `debtS`
+    // stays zero rather than silently accounting for a rule not in force.
+    if (this.definition.arrayTag === undefined) return;
     const ceiling = this.definition.silenceCeilingSig;
     this.debtS =
       this.flightPeakSig(own) > ceiling
@@ -765,7 +895,7 @@ export class MissionRuntime {
         (role) => this.idsFor(role as MissionRole),
         (id) => this.definition.regions.find((region) => region.id === id),
         this.startedAt.get(objective.id) ?? 0,
-        this.loadedIds
+        (lift) => this.loadedFor(lift)
       );
       if (met) this.statuses.set(objective.id, ObjectiveStatus.Met);
       else if (standing) this.statuses.set(objective.id, ObjectiveStatus.Pending);
@@ -794,15 +924,31 @@ export class MissionRuntime {
     const objectives = this.viewObjectives();
     const counted = this.definition.objectives.filter((o) => o.terminal === true);
     const met = counted.filter((o) => this.statuses.get(o.id) === ObjectiveStatus.Met).length;
-    const outcome =
-      met === counted.length && counted.length > 0
+    // An unmet keystone reads the whole count as Lost, whatever else came
+    // home (types.ts, `keystone`): docs/mission-asset-recovery.md §8's Results
+    // hang on one asset, and a run that recovered the machinery while the
+    // chamber stayed behind is "The number stays" — an epilogue that read it
+    // as a write-down would state a recovery that did not happen.
+    const keystoneLost = counted.some(
+      (o) => o.keystone === true && this.statuses.get(o.id) !== ObjectiveStatus.Met
+    );
+    const outcome = keystoneLost
+      ? MissionOutcome.Lost
+      : met === counted.length && counted.length > 0
         ? MissionOutcome.Complete
         : met > 0
           ? MissionOutcome.Partial
           : MissionOutcome.Lost;
+    // §8: "a filed day with the share in is read with both sentences" — the
+    // filed reading is appended to whatever the count earned, never a
+    // replacement for it. The Commune closes nothing.
+    const filedReading =
+      this.filed && this.definition.sweep !== undefined
+        ? ` ${this.definition.sweep.filedReading}`
+        : '';
     this.resolution = {
       outcome,
-      epilogue: this.definition.epilogue[outcome],
+      epilogue: this.definition.epilogue[outcome] + filedReading,
       objectives,
     };
   }
@@ -838,12 +984,20 @@ export class MissionRuntime {
     this.view = next;
   }
 
+  /** All loaded carriers, or the one carrying a named lift — see `LoadedIds`. */
+  private loadedFor(lift?: string): ReadonlySet<number> {
+    if (lift === undefined) return this.loadedIds;
+    const carrier = this.loadedByLift.get(lift);
+    return carrier === undefined ? NO_CARRIER : new Set([carrier]);
+  }
+
   private state(): MissionState {
     return {
       statuses: this.statuses,
       startedAt: this.startedAt,
       roleIds: this.roleIds,
       loadedIds: this.loadedIds,
+      loadedByLift: this.loadedByLift,
       debtS: this.debtS,
     };
   }

@@ -13,7 +13,17 @@
  * a decision somebody argued for rather than one that drifted in.
  */
 
-export type CampaignId = 'prologue' | 'consortium' | 'commune' | 'directorate' | 'knights';
+/**
+ * Campaign keys, from the campaign titles rather than the faction names —
+ * docs/campaign.md §4–§7 title the four campaigns *The Ledger*, *The Second
+ * Seeding*, *The Attending* and *The Second Chord*, and the mission documents
+ * of record state title-namespaced ids (`ledger-asset-recovery`,
+ * `seeding-tend`). An earlier draft of this union keyed on factions; the docs
+ * are canonical and the code is the side that moved. The last two keys follow
+ * the `seeding` precedent — the title's load-bearing word — and their own
+ * documents of record may still move them, since neither campaign has one.
+ */
+export type CampaignId = 'prologue' | 'ledger' | 'seeding' | 'attending' | 'chord';
 
 export interface MissionHeader {
   /**
@@ -61,7 +71,63 @@ export const PROLOGUE_SORROWGATE_HEADER: MissionHeader = {
   ],
 };
 
-export const MISSION_HEADERS: readonly MissionHeader[] = [PROLOGUE_SORROWGATE_HEADER];
+export const LEDGER_ASSET_RECOVERY_HEADER: MissionHeader = {
+  id: 'ledger-asset-recovery',
+  campaign: 'ledger',
+  ordinal: 1,
+  name: 'The Ledger — Asset Recovery',
+  premise:
+    'Face Six stopped transmitting. A salvage column, a recovery writ, and everything that listens.',
+  mapId: 'ninefold-face-six',
+  // Closes at 18:00 exactly (docs/mission-asset-recovery.md §9), inside
+  // campaign.md §10's 12-25.
+  lengthBandS: [1020, 1140],
+  /**
+   * The recovery writ, read to the column at 00:00 — docs/mission-asset-recovery.md
+   * §12, verbatim. Public for Sorrowgate's reason: it names no hidden fact.
+   * The taps, the chamber, the count and the schedule are all stated to the
+   * column before the first order is given, because a writ that withheld its
+   * own manifest would not be a Consortium document.
+   */
+  briefing: [
+    'Face Six stopped transmitting at the turn of the second tide. The seismic record is attached and is not ambiguous. The face is closed. This is a recovery, not a reopening.',
+    'Three assets are listed. Asset 9-06-114, the cutter head. Asset 9-06-181, the walking frame. Asset 9-06-200, the refuge chamber — contents seventeen, condition transmitting. The chamber is rated for four tides and the third began with this writ. That is stated so the schedule is understood.',
+    'The work will be loud. That is not a defect in the plan; it is the plan. The column carries the Klaxon fit, and the column that can be heard is the column that is still transmitting. You are not asked to be quiet. You are asked to be finished.',
+    'The Drift will attend the work. Price it as weather, not as opposition. Fauna commit to the loudest hull in reach, and the manifest was drawn so that the loudest hull in reach is the one built for it.',
+    'Exposure is authorised. Sentiment is not. Signed for the Board.',
+  ],
+};
+
+export const SEEDING_TEND_HEADER: MissionHeader = {
+  id: 'seeding-tend',
+  campaign: 'seeding',
+  ordinal: 1,
+  name: 'The Second Seeding — Tend',
+  premise: 'One tide of Marr Plateau’s ordinary work. Nothing attacks you. The sweep is listening.',
+  mapId: 'marr-plateau',
+  // The tide ends at 16:00 (docs/mission-tend.md §9), inside §10's 12-25.
+  lengthBandS: [900, 1020],
+  /**
+   * Spoken by Tidespeaker Ysolde Marr at dawn tide — docs/mission-tend.md §12,
+   * verbatim. Public, and pointedly so: a briefing that orders nobody to do
+   * anything has nothing to give away, and the Commune's refusal of the
+   * imperative mood makes it genuinely harder to parse than an order —
+   * campaign.md §10 says that is the point, and the document agrees in
+   * writing.
+   */
+  briefing: [
+    "We're not going to tell you what to do today. That isn't the arrangement, and today of all days the arrangement is the point.",
+    "The bloom is ready on the north gardens and the share wants bringing in — we think three loads is a day. The west lane's jellies have walked in the current again, the way they do, and the lane is louder than we like it. And Teel's landing took the storm badly last tide. We have bread that remembers being grain. Somebody could carry it over, if they were going that way.",
+    'The concern is running the drop today, charting. They call it a survey, and it is one. What their instruments hear, their ledgers keep, and a garden in a ledger is halfway to being an asset. When the sweep comes up the lane, the plateaus go still. Nobody orders that. Watch how everybody does it anyway.',
+    "Nothing out there means you harm. We'd like the day back the way we're lending it to you: quiet, fed, and unfiled.",
+  ],
+};
+
+export const MISSION_HEADERS: readonly MissionHeader[] = [
+  PROLOGUE_SORROWGATE_HEADER,
+  LEDGER_ASSET_RECOVERY_HEADER,
+  SEEDING_TEND_HEADER,
+];
 
 export function missionHeaderById(id: string): MissionHeader | undefined {
   return MISSION_HEADERS.find((header) => header.id === id);

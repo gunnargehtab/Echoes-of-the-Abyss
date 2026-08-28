@@ -41,8 +41,15 @@ export type MissionTag = string;
  * address a role, and a role is only ever assigned to a unit of the player's
  * own party. That is the whole information-safety story, and it is a property
  * of the type rather than of anybody's discipline.
+ *
+ * `charge` is the asset in the column's charge — the one hull whose return the
+ * outcome ladder is keyed on. docs/mission-asset-recovery.md §8 reads its three
+ * results off Asset 9-06-200 specifically ("The number stays" whenever the
+ * chamber does not come out, machinery notwithstanding), and a role is the only
+ * identity a predicate may address, so the chamber's barge carries its own.
+ * No system binds it: the escort hold binds `tender` and nothing else.
  */
-export type MissionRole = 'escort' | 'tender';
+export type MissionRole = 'escort' | 'tender' | 'charge';
 
 /**
  * A named rectangle. Rectangles only, for `sim/maps/types.ts`'s reason: every
@@ -69,6 +76,16 @@ export interface MissionUnit {
    * the player is shown.
    */
   role?: MissionRole;
+  /**
+   * Spawned with live fire control. Absent is Sorrowgate's default — every
+   * hull weapons-cold — because hostility is `Owner.slot` and a mission that
+   * parks parties around one exchange cannot have them opening fire on tick
+   * zero. A mission arms a hull only where its document arms it: the writ of
+   * docs/mission-asset-recovery.md §3 fields "enough gun to finish what
+   * commits", and that is the first sentence in the campaign that needs this
+   * flag to be true.
+   */
+  armed?: true;
   /**
    * Pressure Rating after refit, overriding the roster's.
    *
@@ -160,10 +177,14 @@ export type MissionPredicate =
   /**
    * `loaded` counts only hulls carrying a completed lift (see `MissionLift`),
    * so "three lifts reach the Rail Head" cannot be met by three empty barges
-   * driven through the gate. Own-force information, like everything else here:
-   * a load is a fact about the observer's own carrier.
+   * driven through the gate. A lift id instead of `true` counts only the hull
+   * carrying *that* load — Tend's third tender brings a share load home and
+   * then carries the gift, and "the gift reached the landing" is a fact about
+   * the load, not about the hull being loaded at all. Own-force information
+   * either way: a lift id is authored mission data naming an authored load on
+   * a player-party hull, never an identity the wall protects.
    */
-  | { kind: 'extract'; role: MissionRole; region: string; count: number; loaded?: true }
+  | { kind: 'extract'; role: MissionRole; region: string; count: number; loaded?: true | string }
   | { kind: 'survive'; role: MissionRole; count: number }
   | { kind: 'quiet'; role: MissionRole; ceilingSig: number }
   | { kind: 'endure'; ticks: number };
@@ -234,6 +255,19 @@ export interface MissionObjective {
   markerId?: string;
   /** Met means the mission is complete outright, not merely progressed. */
   terminal?: boolean;
+  /**
+   * The terminal objective the outcome ladder is keyed on: unmet, the count
+   * reads Lost whatever else came home.
+   *
+   * docs/mission-asset-recovery.md §8 authors exactly this shape — the Board's
+   * three readings hang on Asset 9-06-200, and a run that returned every piece
+   * of machinery while the chamber stayed behind is "The number stays", not a
+   * partial. Without the flag the runtime's count would read that run as a
+   * write-down and the epilogue would state a recovery that did not happen.
+   * Sorrowgate authors none: either tender may be the one that gets through,
+   * and its count ladder deliberately names no identity.
+   */
+  keystone?: true;
 }
 
 /**
@@ -303,7 +337,42 @@ export type MissionBeat =
     }
   | { atTick: number; kind: 'objective'; id: string; status: ObjectiveStatus; note: string }
   | { atTick: number; kind: 'say'; speaker: string; text: string; note: string }
-  | { atTick: number; kind: 'resolve'; note: string };
+  /**
+   * `conclusion` marks a close that is not a failure state: the tide ending,
+   * not a timer running out (docs/glossary.md, *Mission Outcome*;
+   * docs/mission-tend.md §8 — "Tend cannot be failed"). campaign.md §10's
+   * sixty-second telegraph is a rule about failure being audible, and a
+   * mission whose only threat is a ledger has no failure to make audible —
+   * so `missions.test.ts` exempts a conclusion from the telegraph, and from
+   * nothing else.
+   */
+  | { atTick: number; kind: 'resolve'; conclusion?: true; note: string };
+
+/**
+ * A scripted listener whose hearing is an outcome — the sweep of
+ * docs/mission-tend.md §6 and §8, and the row its §13 added to the format.
+ *
+ * A table, not a query the player could be sent: the tags name authored hulls
+ * of a scripted party, the windows are the authored passes, and the runtime
+ * resolves their hearing server-side at the Echo cadence over the same
+ * propagation model as everything else. What it produces is one latched fact —
+ * *filed* — plus the only feedback the fiction permits: the pair's course
+ * bends toward what it heard. The player is never told; the ledger is patient,
+ * and the reading arrives with the tide.
+ *
+ * §8: "Filed and unfiled cross with the work freely — a filed day with the
+ * share in is read with both sentences." So `filedReading` is *appended* to
+ * whatever reading the count earned, never a replacement for it.
+ */
+export interface MissionSweep {
+  /** The listening hulls, by tag. Scripted-party hulls only, never the player's. */
+  tags: readonly MissionTag[];
+  /** When their hearing counts — the authored passes, in ticks. */
+  windows: readonly { fromTick: number; untilTick: number }[];
+  /** Appended to the count's reading when the day is filed. Authored, in-register. */
+  filedReading: string;
+  note: string;
+}
 
 /**
  * One mission, whole.
@@ -347,17 +416,33 @@ export interface MissionDefinition extends MissionHeader {
    * rule, and §10 is explicit that the budget never fails a mission.
    */
   sigBudget: number;
-  /** The structure whose grant `courtSlot` withdraws. */
-  arrayTag: MissionTag;
+  /**
+   * The structure whose grant `courtSlot` withdraws — the silence ledger's
+   * instrument. Absent, the ledger never runs: a mission with no silence
+   * order has no array to lend and no debt to keep, which is Asset Recovery's
+   * whole posture (docs/mission-asset-recovery.md §3 — Silent Running is
+   * present, unfenced, and wrong).
+   */
+  arrayTag?: MissionTag;
   /** SIG ceiling per hull. Breach costs the player their hearing, never the mission. */
   silenceCeilingSig: number;
   /** Debt cap in seconds, so one catastrophic breach cannot black out the rest. */
   debtCapS: number;
-  /** A hull with a `tender` role moves only while an `escort` is this close. */
+  /**
+   * A hull with a `tender` role moves only while an `escort` is this close.
+   *
+   * Zero disables the rule outright. Sorrowgate's hold is for deaf freight in
+   * a drowned district — a hull that does not move without ears — and
+   * docs/mission-asset-recovery.md §3 prices the same deafness differently
+   * ("at the Scar it does not matter"): a column under writ moves on its own
+   * orders, and its escort is made of guns rather than of permission.
+   */
   escortRadiusM: number;
   regions: readonly MissionRegion[];
   /** The loads this mission carries. Omitted is none. */
   lifts?: readonly MissionLift[];
+  /** The scripted listener whose hearing is an outcome — see `MissionSweep`. */
+  sweep?: MissionSweep;
   markers: readonly MissionMarker[];
   parties: readonly MissionParty[];
   locks: readonly AbilityLock[];
