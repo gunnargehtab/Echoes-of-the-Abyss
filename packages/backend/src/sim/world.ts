@@ -43,6 +43,7 @@ import {
   Pressure,
   ResourceNode,
   SilentRunning,
+  StaticEmitter,
   Structure,
   UnderConstruction,
   Unit,
@@ -367,6 +368,81 @@ export function spawnFauna(
   Fauna.senseS[eid] = ((localIdOf(world, eid) ?? 0) % 30) / 60;
   Fauna.homeX[eid] = options.x;
   Fauna.homeY[eid] = options.y;
+
+  return eid;
+}
+
+export interface SpawnEmitterOptions {
+  /** A scripted party's slot — never the player's, who could then not hear it. */
+  slot: number;
+  faction: Faction;
+  x: number;
+  y: number;
+  depth: number;
+  /** Loudness through each strike window. */
+  sig: number;
+  /** Ticks from one strike window's start to the next. */
+  periodTicks: number;
+  /** Ticks of each period the emitter is loud. */
+  onTicks: number;
+  /** Authored durability — the chamber can be lost, and §8 prices that. */
+  hp: number;
+}
+
+/**
+ * Place an authored static emitter — the taps (docs/mission-asset-recovery.md
+ * §6): a periodic, patterned sound source that is audible and locatable but
+ * not a unit.
+ *
+ * The ordnance shape, for the ordnance reason: Position, Acoustic, Owner and
+ * Health and nothing else a hull would have, so movement, combat stats,
+ * production and separation never see it — and the Echo Layer's contact
+ * assembly, unchanged, classifies it as *nothing*. A Tier-3 resolution carries
+ * position and depth and no kind, structure, species or faction: the water
+ * says only that something in it is striking iron.
+ *
+ * `Acoustic.hyd` stays zero for `spawnOrdnance`'s reason — an emitter never
+ * adds a contact to anybody's picture. `Acoustic.sig` starts at zero and is
+ * derived every tick by acoustics from the authored pattern; the Owner slot is
+ * a scripted party's, so every seated player resolves it through the same pair
+ * loop, tier maths and opaque handles as any hull. Fauna hear it through their
+ * own walk — "the Drift hears exactly what the column hears" — with no new
+ * code on either path.
+ */
+export function spawnEmitter(world: SimWorld, opts: SpawnEmitterOptions): number {
+  const eid = addEntity(world);
+  registerEntity(world, eid);
+
+  addComponent(world, Position, eid);
+  Position.x[eid] = opts.x;
+  Position.y[eid] = opts.y;
+  Position.depth[eid] = opts.depth;
+
+  addComponent(world, Acoustic, eid);
+  Acoustic.sig[eid] = 0;
+  Acoustic.hyd[eid] = 0;
+  Acoustic.pfFactor[eid] = 1;
+  Acoustic.sigFactor[eid] = 1;
+  Acoustic.spikeRemainingS[eid] = 0;
+  Acoustic.spikeAmount[eid] = 0;
+
+  addComponent(world, Health, eid);
+  Health.max[eid] = Math.max(1, opts.hp);
+  Health.hp[eid] = Health.max[eid]!;
+
+  addComponent(world, Owner, eid);
+  Owner.slot[eid] = opts.slot;
+  // Never sent: the contact assembly reads faction only for Units and
+  // Structures, which is what keeps the taps belonging to nobody.
+  Owner.faction[eid] = opts.faction;
+
+  addComponent(world, StaticEmitter, eid);
+  StaticEmitter.sig[eid] = opts.sig;
+  // Clamped so an authored zero cannot turn the pattern modulo into NaN;
+  // missions.test.ts rejects the literal before it gets here.
+  StaticEmitter.periodTicks[eid] = Math.max(1, opts.periodTicks);
+  StaticEmitter.onTicks[eid] = opts.onTicks;
+  StaticEmitter.active[eid] = 1;
 
   return eid;
 }

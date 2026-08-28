@@ -350,3 +350,30 @@ export const Countermeasure = defineComponent({
 export const Laying = defineComponent({
   remainingS: Types.f32,
 });
+
+/**
+ * An authored, placed sound source — the taps of docs/mission-asset-recovery.md
+ * §6: struck iron, in a worked pattern, on the interval.
+ *
+ * The carrier entity is the ordnance shape — Position, Acoustic, Owner, Health
+ * and nothing else a hull would have — so the Echo Layer resolves it per
+ * observer exactly like anything audible, and its Tier-3 classification names
+ * *nothing*: no kind, no structure, no species, no faction. Audible, locatable,
+ * and not a unit, as a property of the component signature rather than of any
+ * new payload rule.
+ *
+ * Acoustics derives its SIG from this pattern the way it derives every SIG
+ * from what the thing is doing: `sig` through each on-window, zero between
+ * strikes and once silenced. A SIG-0 emitter is undetectable like anything
+ * else at SIG 0 — the mix's absences are information (docs/audio-direction.md).
+ */
+export const StaticEmitter = defineComponent({
+  /** The authored loudness of each strike window. */
+  sig: Types.f32,
+  /** Ticks from the start of one strike window to the start of the next. */
+  periodTicks: Types.ui32,
+  /** Ticks of each period the emitter is loud. */
+  onTicks: Types.ui32,
+  /** 1 while transmitting on its pattern; 0 once silenced. */
+  active: Types.ui8,
+});
