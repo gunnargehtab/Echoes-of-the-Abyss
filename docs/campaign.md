@@ -95,7 +95,7 @@ Specified in full — map, forces, beats, numbers, register and text — in [mis
 
 | # | Mission | Teaches | Beat |
 | --- | --- | --- | --- |
-| 1 | **Aptitude** | Directional SIG — loud in the cone, quiet on the flank | Six units, no reinforcements, and the first lesson in facing |
+| 1 | **[Aptitude](mission-aptitude.md)** | Directional SIG — loud in the cone, quiet on the flank | Six units, no reinforcements, and the first lesson in facing. Specified in full in [mission-aptitude.md](mission-aptitude.md) |
 | 2 | **Standing Wave** | Paired nodes, corridors, PF 2.0 | You turn a canyon into a megaphone that hurts you too |
 | 3 | **Nineteen** | Permanent loss | The 211 PC cadre. Every unit lost in this mission is gone for the rest of the campaign |
 | 4 | **Conclave** | Nothing new — a defensive mission you are meant to almost lose | Chapter-Master Vrey has the standing to call a vote. He does not. He wants Sull to hear him not do it |
@@ -151,7 +151,7 @@ What is built of the campaign, so nobody re-implements what exists or assumes wh
 | Part | Status |
 | --- | --- |
 | **Prologue — Sorrowgate** | Implemented (#190). [mission-sorrowgate.md](mission-sorrowgate.md) §13 is the row-by-row account of what inside it is built |
-| **Four faction campaigns** — 28 missions | Three specified, none built. [mission-asset-recovery.md](mission-asset-recovery.md) (The Ledger 1), [mission-tend.md](mission-tend.md) (The Second Seeding 1) and [mission-attendance.md](mission-attendance.md) (The Attending 1) are documents of record, each with a scaffold-status list of what the format still needs; the other 25 rows of §4–§7 remain titles, teaching targets and beats, and each needs a document of its own before it needs code |
+| **Four faction campaigns** — 28 missions | **Four specified, none built — every campaign's first mission is now a document of record.** [mission-asset-recovery.md](mission-asset-recovery.md) (The Ledger 1), [mission-tend.md](mission-tend.md) (The Second Seeding 1), [mission-attendance.md](mission-attendance.md) (The Attending 1) and [mission-aptitude.md](mission-aptitude.md) (The Second Chord 1), each with a scaffold-status list of what the format still needs; the other 24 rows of §4–§7 remain titles, teaching targets and beats, and each needs a document of its own before it needs code. The fourth is the first whose headline gap is a *system* rather than a mission mechanism: directional SIG had no numbers anywhere in the bible until it was written, and [systems-echo.md](systems-echo.md) §8 now carries them |
 | **Convergence — The Rim** | Not started |
 | **The four endings** | Not started |
 | Progression — recording what you have played, and the briefing variants that depend on it (§1) | Not started. The prologue is replayable and remembers nothing, so the Tutorial and campaign doors are currently the same door |
@@ -162,6 +162,7 @@ What is built of the campaign, so nobody re-implements what exists or assumes wh
 
 - **[mission-sorrowgate.md](mission-sorrowgate.md)** — the prologue, specified: the court, the flight, the silence order and what answers the ping
 - **[mission-attendance.md](mission-attendance.md)** — The Attending 1, specified: one watch of a cycle, the return, and what a transcript is written at
+- **[mission-aptitude.md](mission-aptitude.md)** — The Second Chord 1, specified: six hulls, six formations, and the quarter of the compass a Knight is loud in
 - **[characters.md](characters.md)** — the twelve commanders and what each has not yet crossed
 - **[factions.md](factions.md)** — the four crises, in institutional detail
 - **[timeline.md](timeline.md)** — how 214 PC was arrived at

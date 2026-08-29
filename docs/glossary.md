@@ -40,6 +40,13 @@ Active Sonar
 - An active emission that grants high-resolution data to the emitter within a defined radius (default 900 m) for a short duration and places a large omnidirectional SIG on the emitter (default SIG ≈ 95) that reveals the emitter to others within a larger radius (default 2,400 m).
 - Active Sonar is powerful and strategic: it trades local knowledge for global disclosure.
 
+Directional Signature
+
+- The Hadron Knights' doctrine, as a term in the detection formula: a Knight hull's SIG is multiplied by where the listener stands relative to that hull's **bow** — ×1.00 inside the 90° cone, ×0.35 on either flank, ×0.10 in the wake (systems-echo.md §8).
+- Emitter-side only. It changes what a Knight is heard at and never what a Knight hears; HYD stays a flat hull property, and the listening side of the formula stays at distance and HYD.
+- **A hull's listed SIG is its cone figure.** Averaged over the compass the term is 0.45, so the doctrine moves loudness rather than removing it.
+- Does not apply to active sonar (omnidirectional by definition, systems-echo.md §5), to Echo Marks, or to structures, which have no bow.
+
 Silent Running
 
 - A tactical mode that heavily reduces SIG (typically to single digits) at the cost of disabling weapons, shields/regeneration, and reducing movement speed.
@@ -140,3 +147,4 @@ Related
 - game-identity.md — the match loop, the win condition, and scuttling
 - campaign.md — missions, briefings, objectives, and how one ends
 - mission-sorrowgate.md — the prologue, where the silence order is set out with its numbers
+- mission-aptitude.md — the Knights' first mission, where directional signature is worked in full

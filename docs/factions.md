@@ -172,6 +172,8 @@ She has not told the other chapter-houses what she thinks happens then.
 
 Sound is their weapon, not their liability. Knight SIG is high but **directional** — emissions focus into cones, so they are deafening in front and quiet on the flank. Positioning determines who hears them.
 
+The shape is a quartered circle, measured from the hull's own bow: **×1.00 inside the 90° cone, ×0.35 on either flank, ×0.10 in the wake** ([systems-echo.md](systems-echo.md) §8, which owns the numbers and the reasoning). Averaged over the compass that is 0.45, so a Knight is an ordinary hull with its loudness *moved* rather than a quiet one — and the ping, which is omnidirectional, is the one thing they own that ignores the doctrine entirely.
+
 **Standing Wave** nodes create lines of sonic damage between paired emitters and raise local PropagationFactor to 2.0 — turning corridors into megaphones that harm everyone equally, including them.
 
 - **Playstyle:** elite, expensive, few units, extremely high skill ceiling, dominant mid-game, fragile if outnumbered
