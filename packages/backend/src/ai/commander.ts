@@ -83,6 +83,24 @@ const RANGE = {
    * way an RTS AI loses a game it was winning.
    */
   PURSUIT_M: 2800,
+  /**
+   * The leash while the army is committed to a push.
+   *
+   * The pursuit leash is the right rule for a force with nothing better to do
+   * and the wrong one for a force that has decided where it is going: with the
+   * Drift in the water there is nearly always *something* within 2,800 m, and
+   * an unclassified smudge is a target by construction (see `bestThreat`), so
+   * the branch that attacks whatever it can hear pre-empts the branch that
+   * walks at a base. Measured over four four-seat matches at the default cap,
+   * every commander reached the push branch between **zero and eight** times
+   * in twenty-five minutes; the rest was chasing.
+   *
+   * On the way in, the army shoots what is in its way rather than what it can
+   * hear. This is a gun's reach — the longest weapon in the roster is the
+   * Cruiser's at 900 m — so anything inside it is a fight already happening
+   * and anything outside it is a detour (#262).
+   */
+  PUSH_ENGAGE_M: 900,
   /** Where the army waits: this far from home, toward the enemy. */
   RALLY_M: 1200,
   /** A vent this far from home is close enough to tap. */
@@ -934,9 +952,9 @@ export class AiCommander implements AiPlayer {
     // An attack order chases and then holds to shoot, so this covers both
     // closing and firing. The leash is what stops one heard scout from towing
     // the whole army off the map.
-    const engaging = this.bestThreat(
-      snapshot.contacts.filter((c) => nearest(army, c) < RANGE.PURSUIT_M)
-    );
+    // A committed push keeps its own, much shorter leash: see PUSH_ENGAGE_M.
+    const leash = snapshot.tick < this.commitUntilTick ? RANGE.PUSH_ENGAGE_M : RANGE.PURSUIT_M;
+    const engaging = this.bestThreat(snapshot.contacts.filter((c) => nearest(army, c) < leash));
     if (engaging !== null) {
       // Silent Running trades weapons for quiet, so it comes off the moment
       // there is something to shoot. The crossing is given back for the same

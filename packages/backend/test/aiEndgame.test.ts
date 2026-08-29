@@ -218,3 +218,53 @@ describe('a push started without the numbers stays a push', () => {
     assert.equal(rallies.length, 0, 'it turned around after committing');
   });
 });
+
+describe('on the way in, the army shoots what is in its way', () => {
+  /**
+   * The fault that made the other two nearly pointless. `bestThreat` treats an
+   * unclassified smudge as a target — correctly, that is the game — and with
+   * the Drift in the water something is nearly always inside the 2,800 m
+   * pursuit leash, so the branch that attacks whatever it can hear pre-empted
+   * the branch that walks at a base. Measured over four four-seat matches at
+   * the cap, every commander reached the push branch between zero and eight
+   * times in twenty-five minutes.
+   */
+  it('walks past a smudge it can hear but is not in contact with', () => {
+    const { home, enemyStarts } = rig();
+    // Two kilometres out, and deliberately *away* from the enemy: inside the
+    // pursuit leash, far outside a gun's reach, and nowhere near the rally
+    // point — so a move order that goes there is the army travelling rather
+    // than massing. Under the old leash the commander only ever issued an
+    // attack order for this and never moved at all.
+    const away = enemyStarts[0]!;
+    const length = Math.hypot(away.x - home.x, away.y - home.y) || 1;
+    const behind = {
+      x: home.x - ((away.x - home.x) / length) * 2000,
+      y: home.y - ((away.y - home.y) / length) * 2000,
+    };
+    const asked = moves({
+      seconds: 300,
+      at: home,
+      size: 4,
+      contacts: (tick) => [smudge(21, behind.x, behind.y, tick)],
+    });
+    assert.ok(
+      asked.some((move) => distance(move, behind) < 700),
+      'the army sat still for something it could hear but never closed on'
+    );
+  });
+
+  it('still stops for what is actually in front of it', () => {
+    // Inside a gun's reach the fight is already happening, and walking past it
+    // would be a different bug. No move order should be issued at all here:
+    // the commander is attacking, not travelling.
+    const { home } = rig();
+    const asked = moves({
+      seconds: 300,
+      at: home,
+      size: 4,
+      contacts: (tick) => [smudge(22, home.x + 400, home.y, tick)],
+    });
+    assert.equal(asked.length, 0, 'it walked away from a contact in weapons range');
+  });
+});
