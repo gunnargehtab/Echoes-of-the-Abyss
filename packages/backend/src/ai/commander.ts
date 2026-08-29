@@ -83,6 +83,24 @@ const RANGE = {
    * way an RTS AI loses a game it was winning.
    */
   PURSUIT_M: 2800,
+  /**
+   * The leash while the army is committed to a push.
+   *
+   * The pursuit leash is the right rule for a force with nothing better to do
+   * and the wrong one for a force that has decided where it is going: with the
+   * Drift in the water there is nearly always *something* within 2,800 m, and
+   * an unclassified smudge is a target by construction (see `bestThreat`), so
+   * the branch that attacks whatever it can hear pre-empts the branch that
+   * walks at a base. Measured over four four-seat matches at the default cap,
+   * every commander reached the push branch between **zero and eight** times
+   * in twenty-five minutes; the rest was chasing.
+   *
+   * On the way in, the army shoots what is in its way rather than what it can
+   * hear. This is a gun's reach — the longest weapon in the roster is the
+   * Cruiser's at 900 m — so anything inside it is a fight already happening
+   * and anything outside it is a detour (#262).
+   */
+  PUSH_ENGAGE_M: 900,
   /** Where the army waits: this far from home, toward the enemy. */
   RALLY_M: 1200,
   /** A vent this far from home is close enough to tap. */
@@ -138,6 +156,79 @@ const DEFEND_WATCH = {
   CLOSED_M: 350,
   /** Forget a contact not seen for this long, so the watch list stays bounded. */
   FORGET_S: 60,
+} as const;
+
+/**
+ * When massing stops being massing.
+ *
+ * `doctrine.attackAtArmySize` is a rule about the opening: do not walk at a
+ * base with three hulls. It was also, until now, the *only* gate on the push,
+ * which made it a rule about the whole match — and after the first few fights
+ * the arithmetic changes underneath it. Production and attrition cancel, the
+ * force sits a hull or two under the threshold, and the commander waits at its
+ * own rally point for the rest of the clock while its economy runs perfectly
+ * well. Measured on seed 4002: from minute twelve to the cap, the Consortium's
+ * every move order was to its own rally point, against a Directorate it was
+ * trading with evenly (#262).
+ *
+ * Waiting is a position, not a pause — and a position that has stopped
+ * improving is not one. So the gate opens on time as well as on size: if the
+ * force has not got *bigger than it has ever been since the last push* for
+ * STALL_S, then waiting is not massing, it is feeding, and the army it has is
+ * the army it is going to get.
+ *
+ * The high-water mark is what is watched, not the current count. A force
+ * oscillating 3-4-3-5 under a threshold of 7 "grows" constantly and is getting
+ * nowhere; only a new peak is progress toward the gate.
+ *
+ * MIN_FRACTION keeps the impatient push from being a suicide: below half the
+ * doctrine's number this is not an army going in, it is a hull being posted,
+ * and the commander would rather rebuild. Both numbers are TUNABLE — the
+ * balance harness is the argument about them.
+ */
+const MASSING = {
+  /** Seconds the high-water mark may stand still before the army goes anyway. */
+  STALL_S: 90,
+  /** Fraction of the doctrine's massing size below which it waits regardless. */
+  MIN_FRACTION: 0.5,
+  /**
+   * Seconds a push started without the numbers stays a push.
+   *
+   * Going has to outlast the reason for going, or it is not a decision. The
+   * moment the army leaves, it is a force below its own threshold again — and
+   * without this it would be sent back to the rally point on the very next
+   * observation, walk home, stall, leave, and spend the match oscillating a
+   * hundred metres either side of its rally point. Two minutes is a crossing
+   * of the map at cruise speed, so the commitment lasts about as long as the
+   * thing it is committing to.
+   */
+  COMMIT_S: 120,
+} as const;
+
+/**
+ * Crossing a base off the list.
+ *
+ * With nothing remembered, the push target used to be `enemyStarts[0]` — one
+ * fixed spawn, chosen in the constructor and never reconsidered. In a
+ * four-seat match the commander holding a dead player's corner as its index 0
+ * spends the rest of the match walking to empty water and back; seed 4000 has
+ * the Directorate pushing at the Consortium's base eleven minutes after the
+ * Consortium left the match (#262).
+ *
+ * The commander is not told who is dead — that is the game. What it is allowed
+ * to notice is silence in a place that should not be silent: a base it has
+ * stood on, with nothing resolved anywhere near it, is not where the enemy is.
+ * So it crosses that start off and tries the next one, exactly as a player
+ * does after walking into an empty corner.
+ *
+ * Forgettable, in both directions. Hearing anything near a crossed-off start
+ * puts it straight back on the list, and when every start has been crossed off
+ * the list is rebuilt whole — the commander has run out of places to look,
+ * which is a reason to look again rather than to stand still.
+ */
+const SEARCH = {
+  /** A contact this near a crossed-off start puts it back on the list. */
+  REOPEN_M: 2200,
 } as const;
 
 /**
@@ -294,6 +385,16 @@ export class AiCommander implements AiPlayer {
   private remembered: Remembered | null = null;
   /** Silent Running state it believes the army is in, to avoid re-sending. */
   private armySilent = false;
+  /** Largest the army has been while massing, and when that last rose. */
+  private massingPeak = 0;
+  private massingPeakTick = -1;
+  /** While set, the army is committed to a push it started without the numbers. */
+  private commitUntilTick = -1;
+  /**
+   * Enemy starts this commander has stood on and heard nothing at, by index
+   * into `enemyStarts`. Crossed off until something is heard near one again.
+   */
+  private readonly clearedStarts = new Set<number>();
   /**
    * The exposure watch: four clocks answering one question, which is whether
    * the economy should currently be paying to be quiet (see `wantsQuiet`).
@@ -833,7 +934,7 @@ export class AiCommander implements AiPlayer {
     }
 
     const threshold = Math.ceil(this.doctrine.attackAtArmySize * this.tuning.patience);
-    if (army.length < threshold) {
+    if (army.length < threshold && this.stillMassing(snapshot.tick, army.length, threshold)) {
       // Waiting is a position, not a pause: sit between home and the enemy so
       // the push does not start from the back of the map.
       const rally = this.rallyPoint();
@@ -851,9 +952,9 @@ export class AiCommander implements AiPlayer {
     // An attack order chases and then holds to shoot, so this covers both
     // closing and firing. The leash is what stops one heard scout from towing
     // the whole army off the map.
-    const engaging = this.bestThreat(
-      snapshot.contacts.filter((c) => nearest(army, c) < RANGE.PURSUIT_M)
-    );
+    // A committed push keeps its own, much shorter leash: see PUSH_ENGAGE_M.
+    const leash = snapshot.tick < this.commitUntilTick ? RANGE.PUSH_ENGAGE_M : RANGE.PURSUIT_M;
+    const engaging = this.bestThreat(snapshot.contacts.filter((c) => nearest(army, c) < leash));
     if (engaging !== null) {
       // Silent Running trades weapons for quiet, so it comes off the moment
       // there is something to shoot. The crossing is given back for the same
@@ -873,12 +974,106 @@ export class AiCommander implements AiPlayer {
     // triggered by being heard: a commander that dove whenever exposure rose
     // would go deaf on the way down, lose the contact that justified the dive,
     // surface, hear it again, and oscillate.
-    const target = this.remembered ?? this.enemyStarts[0] ?? this.home;
+    const target = this.remembered ?? this.searchTarget(snapshot, army) ?? this.home;
     this.setSilent(ids, this.doctrine.approachesSilently && this.tuning.usesSilentRunning, out);
     this.setCrossed(army, this.doctrine.crossesTheLayer, out);
     if (nearest(army, target) > RANGE.ARRIVE_M) {
       out.push({ kind: 'move', unitIds: ids, x: target.x, y: target.y });
     }
+  }
+
+  /**
+   * Whether waiting is still getting the force closer to the gate.
+   *
+   * True while the army is still growing toward `attackAtArmySize` — a new
+   * high-water mark restarts the clock. False once the mark has stood still
+   * for MASSING.STALL_S, which is the state a match settles into once losses
+   * and production cancel: the commander is not massing an army, it is
+   * replacing one, and no amount of further waiting changes the number it will
+   * have (#262).
+   *
+   * Below half the doctrine's number it keeps waiting whatever the clock says.
+   * A stalled push is "go with what you have"; with two hulls that is not an
+   * army going in, it is a hull being posted.
+   */
+  private stillMassing(tick: number, size: number, threshold: number): boolean {
+    // Already gone. A push is a decision, and a decision that is reconsidered
+    // every 200 ms is a walk to the rally point with extra steps.
+    if (this.commitUntilTick >= 0) {
+      if (tick < this.commitUntilTick) return false;
+      // It came back, or what is left of it did. Mass again, from here.
+      this.commitUntilTick = -1;
+      this.massingPeak = size;
+      this.massingPeakTick = tick;
+      return true;
+    }
+
+    if (this.massingPeakTick < 0) this.massingPeakTick = tick;
+
+    // Not an army yet. Rebuilding from nothing gets the clock in full rather
+    // than inheriting whatever was left running when the last force died.
+    if (size < Math.ceil(threshold * MASSING.MIN_FRACTION)) {
+      this.massingPeak = size;
+      this.massingPeakTick = tick;
+      return true;
+    }
+
+    if (size > this.massingPeak) {
+      this.massingPeak = size;
+      this.massingPeakTick = tick;
+      return true;
+    }
+
+    if ((tick - this.massingPeakTick) / SIM.TICK_HZ < MASSING.STALL_S) return true;
+
+    this.commitUntilTick = tick + MASSING.COMMIT_S * SIM.TICK_HZ;
+    return false;
+  }
+
+  /**
+   * Which enemy start to walk at when there is nothing to walk at.
+   *
+   * The fallback for a commander that has lost the thread: with nothing
+   * remembered it goes and looks, and where it looks is the one thing it knows
+   * about every opponent — the ground they started on.
+   *
+   * Standing on one of those with nothing resolved near it crosses it off. It
+   * is the honest inference and the only one available: the commander is never
+   * told a seat is empty, it notices that a place which should be making noise
+   * is not. Anything heard near a crossed-off start puts it back on the list,
+   * and running out of places to look rebuilds the list rather than stopping.
+   */
+  private searchTarget(
+    snapshot: EchoSnapshot,
+    army: readonly OwnUnit[]
+  ): { x: number; y: number } | null {
+    // Anything unclassified counts as somebody. A grazer does not: it wanders
+    // past a dead base as readily as a live one, and letting one reopen a
+    // start would put the walk to the empty corner straight back on.
+    const heardNear = (place: { x: number; y: number }): boolean =>
+      snapshot.contacts.some((c) => c.fauna === undefined && distance(c, place) < SEARCH.REOPEN_M);
+
+    for (let index = 0; index < this.enemyStarts.length; index++) {
+      if (!this.clearedStarts.has(index)) continue;
+      if (heardNear(this.enemyStarts[index]!)) this.clearedStarts.delete(index);
+    }
+
+    for (let index = 0; index < this.enemyStarts.length; index++) {
+      const start = this.enemyStarts[index]!;
+      if (this.clearedStarts.has(index)) continue;
+      // Arrived, and nothing is here. A base is a Bastion that hums, a
+      // refinery that hums louder and hulls coming and going; standing on all
+      // of that and resolving none of it says this is not the one.
+      if (nearest(army, start) <= RANGE.ARRIVE_M && !heardNear(start)) {
+        this.clearedStarts.add(index);
+        continue;
+      }
+      return start;
+    }
+
+    // Out of places to look. Start the search over rather than stand still.
+    this.clearedStarts.clear();
+    return this.enemyStarts[0] ?? null;
   }
 
   /**

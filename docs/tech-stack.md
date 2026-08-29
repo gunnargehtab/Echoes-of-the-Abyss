@@ -459,6 +459,33 @@ costs a wasted trip and being wrong about a raid costs the match. Measured again
 farthest position rather than its first, so a hull that runs silent, drifts out and returns
 is approaching on the way back.
 
+**It decides for itself when waiting has stopped paying.** The doctrine's massing size is a
+rule about the opening — do not walk at a base with three hulls — and it used to be the only
+gate on the push, which quietly made it a rule about the whole match. After the first few
+fights the arithmetic changes underneath it: production and attrition cancel, the force sits
+a hull or two under the number, and the commander waits at its own rally point until the cap.
+Measured on seed 4002, from minute twelve to the end of a twenty-five minute match, every
+move order a Consortium commander issued was to its own rally point, against a Directorate it
+was trading with evenly. So the gate now opens on time as well as on size: waiting is a
+position, and a position that has stopped improving is not one. What is watched is the
+*high-water mark* rather than the current count — a force oscillating three-four-three-five
+under a threshold of seven "grows" constantly and is getting nowhere — and once that mark has
+stood still for ninety seconds the army it has is the army it is going to get, so it goes.
+Below half the doctrine's number it keeps waiting regardless, because that is not an army
+going in, it is a hull being posted.
+
+**And it crosses a base off the list.** With nothing remembered, the fallback push target
+used to be one fixed enemy spawn, chosen when the commander was built and never reconsidered
+— so in a four-seat match whoever held a dead player's corner as their fallback spent the
+rest of the clock walking to empty water and back. It is not told that a seat is empty; that
+is the game. What it is allowed to notice is **silence where a base should be**: a start it
+has stood on, with nothing unclassified resolved anywhere near it, is not where the enemy is.
+A base is a Bastion that hums, a refinery that hums louder, and hulls coming and going;
+standing on all of that and hearing none of it is a fact the commander earned. So it crosses
+that start off and tries the next one. Hearing anything there again puts it straight back on
+the list, a classified grazer wandering past does not, and running out of places to look
+rebuilds the list whole — because that is a reason to look again, not to stand still.
+
 **It decides for itself whether being heard is worth paying to stop**, which is the same
 kind of question and became a real one only when the price changed. The drop to Trickle used
 to fire on `exposure.tier >= Bearing` and hold for as long as that stayed true, and while
