@@ -187,6 +187,14 @@ Asset Recovery aims loudness and Tend tends quiet; Attendance does neither. It *
 mission not acting**, and the one act available is a dive that is the loudest thing this water has
 heard in a century. Same detection maths, third life ([campaign.md](campaign.md) §2, rule 2).
 
+> **On the fourth movement, against the engine as built.** The ranges above are exact and were
+> measured against it. The *axis* they are spent on is not: detection resolves on horizontal
+> distance, and every depth on this map is below the thermocline duct, so depth is acoustically
+> free and a dive buys no hearing. The built mission spends the same ranges down the channel —
+> the arrivals keep these depths and stand at the distances those depths stood for — which keeps
+> everything this section argues except the direction the expense runs in. §13 carries the full
+> finding and what restoring the climb would cost.
+
 ### The SIG budget
 
 **SIG budget: 8** — the lowest in the campaign by a wide margin, and not a ceiling like the
@@ -286,6 +294,11 @@ in the record.
 
 That is the decision the mission is made of, and it is made once, at about eight minutes, in the
 quiet before arrival 6 is called.
+
+> **As built**, the first two of those three sentences hold exactly — a seated watch attends
+> seven, and the whole cycle costs a debt inside §5's cap. The third does not: chasing cost four
+> because the climb is slow, and horizontal travel is not, so a watch that chases can have all
+> nine. See §13.
 
 ---
 
@@ -582,12 +595,13 @@ what it was missing.
 | The Cantor's dome — +25 HYD, 1,200 m, cap 95 | **Built** — `STRUCTURE_AURAS.CANTOR`. The seven-per-cent finding in §5 is a consequence of the shipped cap and this document's hull, not a change to either |
 | Silent Running, and a dive breaking it | **Built** ([systems-depth.md](systems-depth.md) §2) — the SIG floor of 72 on descent, the 45 m/s down and 15 m/s up, and the fact that re-asserting silence mid-dive buys nothing. The mission's whole decision is made of these three and none of them is new |
 | PR-3 across the Abyssal, with no floor under it | **Built** — `requiredPressureRating` is band-derived, so nothing on this map crushes a Directorate hull at any depth the map authors. Stated because a reader will ask what 4,100 m costs, and the answer is nothing but time and noise |
-| The map, its eight regions, the benches that lift | Not started. Nothing here needs terrain the format cannot author |
-| **The arrivals — an emitter that starts and stops at authored ticks** | **Not in the format.** `MissionEmitter` is periodic from tick zero forever, which is right for the taps and wrong for nine one-shot arrivals: all nine would sound at 00:00. The ask is small — a `fromTick`/`untilTick` pair on the emitter, or an emitter-shaped beat — and it is this mission's minimum |
-| **The attended count — a tally over the player's own resolution of an authored emitter** | **Not in the format**, and it is the *easy* half of Tend's ask. Tend's filed/unfiled is a fact about what a scripted party heard; this is a fact about what the observer's own force heard, so it stays inside the information-safety wall the predicate union already enforces. A `{ kind: 'attend'; count: number }` predicate, plus a per-arrival tally at Tier 2, is the whole thing |
-| **A listening role** | **Not in the format.** `MissionRole` is `'escort'` and `'tender'` — Sorrowgate's two words — and the silence ceiling is measured over the escort set. A shift is neither. The roles want to be authored per mission rather than enumerated once, which is the same finding the other two mission documents arrive at from their own directions |
-| **The transcript as a variable close** | **Not built.** `epilogue` is one authored string per `MissionOutcome`, which covers §8's three readings exactly. A close that reads back *which* arrivals were attended, line by line, needs an epilogue that assembles rather than one that is chosen |
+| The map, its eight regions, the benches that lift | **Built** — `attending-galleries`, one row of the literal per row of §11's table, with one change recorded in that section: the channel is cut north to the galleries' own edge, because §6 row 1 has the first arrival reach the stalls' own water and a channel head a kilometre south of the stalls could not deliver that. The mission definition is `attending-attendance` |
+| **The arrivals — an emitter that starts and stops at authored ticks** | **Built**, as the smaller of the two shapes this row offered: a `fromTick`/`untilTick` pair on the emitter. The window and the pattern compose — the pattern says what the sound does while it is sounding, the window says when that is — and an arrival is the case where they are the same length, so it is simply on for its twenty seconds |
+| **The attended count — a tally over the player's own resolution of an authored emitter** | **Built**, and exactly as this row scoped it: an `attend` predicate over a per-arrival tally at Tier 2, monotone, counted only while the arrival is sounding. The tier comes from the Echo Layer's own answer for the player's own slot, pre-bound so the runtime has no way to ask what anybody else resolved — the wall holds because there is no argument with which to breach it |
+| **A listening role** | **Built**, and the roles are authored per mission as this row asks: `MissionRole` is a mission's own word rather than a union in shared, and `silenceRole` names the set the ceiling measures — the watch here, the flight at Sorrowgate. What the union used to buy is bought instead by a test that holds every role a mission *names* to being one it *assigns*, which the union never checked |
+| **The transcript as a variable close** | **Built** — the epilogue assembles: each arrival authors both of its readings (`Entered:` / `Not entered:`), and the close prints the nine the run earned under whichever of §8's three readings the count chose. Nothing is templated, which is why the lines are authored in pairs rather than built from a number and a noun |
 | The sixty-second telegraph as the rite's own structure | Ambient authoring and `say` beats; no new mechanism. The existing telegraph test measures the gap between the last loud beat and the resolve, and this mission satisfies it nine times over |
+| **Depth as acoustic range** — §4's fourth movement and §6's table | **Not built, and not buildable here.** The Echo Layer resolves detection on *horizontal* distance, with the thermocline as its only depth term; every depth on this map is below the duct, so the layer is uniform and depth is acoustically free. The ranges §4 states are exact against the engine — 1,230 m to contact, 955 to bearing, about 800 across the galleries' occluded ground — but §6 spends them on vertical separation ("850 m of depth against a 955 m band"), which the model does not price. The built mission carries them down the axis instead: the arrivals keep their authored depths and are placed at the distances those depths stood for, so §6's spine holds where it is about reach — a seated watch attends seven of the nine, the approach and the sill are out of it, and the whole cycle costs a debt inside §5's cap. What does **not** survive is the third of that spine's three sentences: chasing every arrival costs four *because ascent is 15 m/s and descent is 45*, and horizontal travel has no such asymmetry, so a watch that chases can have all nine. Restoring it means one of two things nobody should do quietly — making detection three-dimensional, which reprices every range in the bible, or giving the mission a cost that bites the way the climb did |
 | **The Hollow's working depth** | **Not specified**, and not this document's to specify — §1. The species is unbuilt and the band table prices three others; if it is ever given a band that reaches 3,400 m, this map is the country it was described for and the mission's opening claim has to be re-read against it |
 | The Drift, absent | **Built** — `fauna: false`, which the format already carries for a mission whose only creatures are authored. This is the first that authors none |
 | In-mission character speech, heard | Text only, the standing status ([mission-sorrowgate.md](mission-sorrowgate.md) §13) |

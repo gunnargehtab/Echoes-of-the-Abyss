@@ -333,6 +333,25 @@ export class EchoLayer {
   }
 
   /**
+   * The tier one slot currently holds on one emitter — what that observer was
+   * last told, and nothing else.
+   *
+   * The same `best` map `firingSolution` reads, asked the plainest question
+   * there is. It exists for the mission runtime's attended tally
+   * (docs/mission-attendance.md §6: resolve an arrival at Tier 2 and the
+   * arrival is entered), and it is safe there for the reason the whole
+   * information-safety wall is safe: the caller must already name the slot,
+   * and the runtime is handed this pre-bound to the player's own. It reports
+   * the observer's own hearing, never the world's contents.
+   *
+   * Reflects the last completed pass, like `firingSolution`, and for the same
+   * reason: a player acts on what they were last told.
+   */
+  tierFor(slot: number, eid: number): ResolutionTier {
+    return this.best.get(slot)?.get(eid)?.tier ?? ResolutionTier.Silent;
+  }
+
+  /**
    * Forget everything this pass knows about an entity that has died.
    *
    * Handles were never pruned, and that was a real hole rather than a leak of

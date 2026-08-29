@@ -15,6 +15,7 @@ import { Terrain } from '../terrain.ts';
 import { ABYSSAL_RIFT_CORRIDOR } from './abyssalRiftCorridor.ts';
 import { KELP_LABYRINTH } from './kelpLabyrinth.ts';
 import { VENTFRONT_DIVIDE } from './ventfrontDivide.ts';
+import { ATTENDING_GALLERIES } from './missions/attendingGalleries.ts';
 import { MARR_PLATEAU } from './missions/marrPlateau.ts';
 import { NINEFOLD_FACE_SIX } from './missions/ninefoldFaceSix.ts';
 import { SORROWGATE } from './missions/sorrowgate.ts';
@@ -23,6 +24,7 @@ import type { MapDefinition } from './types.ts';
 export * from './types.ts';
 export {
   ABYSSAL_RIFT_CORRIDOR,
+  ATTENDING_GALLERIES,
   KELP_LABYRINTH,
   MARR_PLATEAU,
   NINEFOLD_FACE_SIX,
@@ -56,7 +58,12 @@ export function mapById(id: string): MapDefinition | undefined {
  * So these resolve by mission id and by nothing else. `mapById` does not
  * find them, and `MAP_HEADERS` does not list them.
  */
-export const MISSION_MAPS: readonly MapDefinition[] = [SORROWGATE, NINEFOLD_FACE_SIX, MARR_PLATEAU];
+export const MISSION_MAPS: readonly MapDefinition[] = [
+  SORROWGATE,
+  NINEFOLD_FACE_SIX,
+  MARR_PLATEAU,
+  ATTENDING_GALLERIES,
+];
 
 export function missionMapById(id: string): MapDefinition | undefined {
   return MISSION_MAPS.find((map) => map.id === id);

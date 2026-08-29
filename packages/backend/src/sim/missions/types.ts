@@ -42,14 +42,24 @@ export type MissionTag = string;
  * own party. That is the whole information-safety story, and it is a property
  * of the type rather than of anybody's discipline.
  *
- * `charge` is the asset in the column's charge — the one hull whose return the
- * outcome ladder is keyed on. docs/mission-asset-recovery.md §8 reads its three
- * results off Asset 9-06-200 specifically ("The number stays" whenever the
- * chamber does not come out, machinery notwithstanding), and a role is the only
- * identity a predicate may address, so the chamber's barge carries its own.
- * No system binds it: the escort hold binds `tender` and nothing else.
+ * **Authored per mission, not enumerated here** — the finding all three
+ * campaign documents reach from their own directions, and the one
+ * docs/mission-attendance.md §13 states outright: `MissionRole` was
+ * Sorrowgate's two words, the Ledger's column needed a third for the hull its
+ * outcome ladder is keyed on, and a *shift* of listeners is none of them. A
+ * fixed union would have every future mission widening a type in shared to say
+ * what its own people are called.
+ *
+ * What the union used to buy — a typo failing the build — is bought instead by
+ * `missions.test.ts`, which holds every role a mission *names* to being a role
+ * that mission *assigns*. That is the stronger check: the union never noticed a
+ * mission counting tenders it had not placed, and this does.
+ *
+ * Two roles are load-bearing beyond counting, and both are authored rather than
+ * assumed: `tender` is what the escort hold binds (see `escortRadiusM`), and
+ * `silenceRole` names the set the silence ledger measures.
  */
-export type MissionRole = 'escort' | 'tender' | 'charge';
+export type MissionRole = string;
 
 /**
  * A named rectangle. Rectangles only, for `sim/maps/types.ts`'s reason: every
@@ -144,6 +154,31 @@ export interface MissionEmitter {
    * diegetic ever silences it.
    */
   silencedByLift?: string;
+  /**
+   * The window this emitter sounds in, in ticks. Absent at either end is
+   * unbounded, which is the taps: periodic from tick zero forever.
+   *
+   * docs/mission-attendance.md §13 names the gap this closes — an emitter that
+   * is periodic from tick zero is right for struck iron and wrong for nine
+   * one-shot arrivals, which would otherwise all sound at 00:00. A window and
+   * a pattern compose: the pattern says what the sound does while it is
+   * sounding, the window says when that is. An arrival is the degenerate case
+   * where they are the same length, so it is simply on for its twenty seconds.
+   */
+  fromTick?: number;
+  untilTick?: number;
+  /**
+   * The two readings the close may enter for this emitter, when it is one the
+   * mission asks the player to attend (`attend`).
+   *
+   * Authored per emitter rather than templated, because docs/campaign.md §10's
+   * rule about objective text holds for a transcript too: a line assembled
+   * from a number and a noun is a sentence no faction speaks. §13 asks for
+   * "an epilogue that assembles rather than one that is chosen", and this is
+   * what it assembles from — nine authored pairs, of which the close picks
+   * one each, in authored order.
+   */
+  reading?: { entered: string; gap: string };
   note: string;
 }
 
@@ -186,6 +221,19 @@ export type MissionPredicate =
    */
   | { kind: 'extract'; role: MissionRole; region: string; count: number; loaded?: true | string }
   | { kind: 'survive'; role: MissionRole; count: number }
+  /**
+   * How many authored emitters this observer has resolved at Tier 2 or
+   * better while they were sounding — the attended count of
+   * docs/mission-attendance.md §6.
+   *
+   * The easy half of Tend's ask, and it is easy for a stated reason: Tend's
+   * *filed* is a fact about what a scripted party heard, and this is a fact
+   * about what the observer's own force heard. It reports the player's own
+   * hearing back to them, so it stays inside the wall the union already
+   * enforces — there is still no way here to name a party, and none to ask
+   * what anybody else resolved.
+   */
+  | { kind: 'attend'; count: number }
   | { kind: 'quiet'; role: MissionRole; ceilingSig: number }
   | { kind: 'endure'; ticks: number };
 
@@ -426,6 +474,15 @@ export interface MissionDefinition extends MissionHeader {
   arrayTag?: MissionTag;
   /** SIG ceiling per hull. Breach costs the player their hearing, never the mission. */
   silenceCeilingSig: number;
+  /**
+   * The role the silence ledger measures, defaulting to `escort`.
+   *
+   * Sorrowgate's order binds the flight and not the court's own freight
+   * (§4), which is why the ledger has always measured one named set rather
+   * than the whole force. Which set is a mission's own word: Attendance holds
+   * a `shift` of listeners to twenty-five (docs/mission-attendance.md §5).
+   */
+  silenceRole?: MissionRole;
   /** Debt cap in seconds, so one catastrophic breach cannot black out the rest. */
   debtCapS: number;
   /**
