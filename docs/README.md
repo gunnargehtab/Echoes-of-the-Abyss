@@ -47,6 +47,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | Doc | What it covers |
 | --- | --- |
 | **[art-direction.md](art-direction.md)** | Palettes, shape language, silhouette law, Echo Layer UI requirements |
+| **[three-layer-ocean.md](three-layer-ocean.md)** | The presentation revision: WC3-lineage perspective camera, the visible seabed, band navigation, and the Lid proposal |
 | **[graphics-standards.md](graphics-standards.md)** | The acceptance bar: pipeline of record, seven shipping gates, art PR checklist |
 | **[audio-direction.md](audio-direction.md)** | The mix as the primary information channel; tier sonification |
 | **[ui-ux.md](ui-ux.md)** | The Echo Layer HUD, sonar scope, ping preview, esc menu, accessibility |
