@@ -11,6 +11,9 @@
  */
 
 import {
+  DIRECTIONAL_CONE_COS,
+  DIRECTIONAL_SIGNATURE,
+  DIRECTIONAL_WAKE_COS,
   PROPAGATION_MODEL,
   TIER_THRESHOLD_MULTIPLIER,
   BEARING_BLUR_FRACTION,
@@ -137,6 +140,72 @@ export function blurBearing(
     x: x + stableJitter(seed, 1) * error,
     y: y + stableJitter(seed, 2) * error,
   };
+}
+
+/**
+ * Relative slack on the sector compares, in units of the cosine.
+ *
+ * Twelve orders of magnitude below the boundary values, so it can only ever
+ * decide a case that is already exactly on a boundary — about a nanoradian's
+ * worth of angle, which no hull position can meaningfully occupy on purpose.
+ */
+const SECTOR_EDGE_EPSILON = 1e-12;
+
+/**
+ * The directional term for a pair whose emitter has a bow — docs/systems-echo.md §8.
+ *
+ * Takes the dot product of the emitter's unit bow vector with the vector *from*
+ * the emitter *to* the listener, and that vector's length. Phrased this way
+ * rather than as an angle because the Echo pass has both numbers already and an
+ * `acos` per pair is exactly the cost §8 promises this does not have: the
+ * comparison `dot ≥ cos(45°) · distance` decides the sector with one multiply
+ * and one compare, no divide and no trigonometry.
+ *
+ * A listener at the emitter's own position reads `dot = 0` against a boundary
+ * of `0`, so it lands in the cone. That is the right answer for the degenerate
+ * case — point blank is point blank — and it falls out rather than needing a
+ * branch.
+ *
+ * **This is the emitter's term.** See `DIRECTIONAL_SIGNATURE` for why it must
+ * never be applied symmetrically the way `thermoclineFactor` is.
+ */
+export function directionalSectorFactor(bowDotToListener: number, distanceM: number): number {
+  // The slack is not a fudge — it is what makes §8's boundaries mean what §8
+  // says they mean. "Within 45° either side" is inclusive, and a listener at
+  // exactly 45° gives `dot = 100` against `cos(45°) x distance =
+  // 100.00000000000001`: the sector the document puts in the cone lands one
+  // unit in the last place outside it. Scaled by distance so it stays the same
+  // *angle* at every range rather than a widening wedge near the emitter.
+  const slack = SECTOR_EDGE_EPSILON * distanceM;
+  if (bowDotToListener >= DIRECTIONAL_CONE_COS * distanceM - slack) {
+    return DIRECTIONAL_SIGNATURE.CONE;
+  }
+  if (bowDotToListener <= DIRECTIONAL_WAKE_COS * distanceM + slack) {
+    return DIRECTIONAL_SIGNATURE.WAKE;
+  }
+  return DIRECTIONAL_SIGNATURE.FLANK;
+}
+
+/**
+ * The same term, for callers that hold two positions and a heading rather than
+ * a precomputed bow — the detection sites outside the Echo pass's hot loop.
+ *
+ * `headingRad` is the emitter's bow, measured the way every other bearing in
+ * this simulation is: `atan2(y, x)`, +x is 0.
+ */
+export function directionalFactor(
+  headingRad: number,
+  emitterX: number,
+  emitterY: number,
+  listenerX: number,
+  listenerY: number
+): number {
+  const vx = listenerX - emitterX;
+  const vy = listenerY - emitterY;
+  return directionalSectorFactor(
+    Math.cos(headingRad) * vx + Math.sin(headingRad) * vy,
+    Math.hypot(vx, vy)
+  );
 }
 
 /** Which vertical band a depth falls in. docs/systems-depth.md §1. */

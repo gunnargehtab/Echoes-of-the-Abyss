@@ -25,13 +25,14 @@ import {
   SIM,
   THERMOCLINE,
   detectionRatio,
+  directionalFactor,
   thermoclineFactor,
   thermoclineZone,
   tierFromRatio,
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { spawnUnit } from '../src/sim/world.ts';
-import { Acoustic, ActivePing, Owner, Position } from '../src/sim/components.ts';
+import { Acoustic, ActivePing, Heading, Owner, Position } from '../src/sim/components.ts';
 import type { SimWorld } from '../src/sim/world.ts';
 
 /** Best tier each slot should resolve for each emitter, computed all-pairs. */
@@ -71,10 +72,24 @@ function bruteForce(world: SimWorld, slots: number[]): Map<string, ResolutionTie
           world.terrain.pathPropagation(ex, ey, lx, ly) *
           pfFactor *
           thermoclineFactor(Position.depth[emitter]!, Position.depth[listener]!);
+        // Directional signature is part of the rules too (docs/systems-echo.md
+        // §8), so it is stated here the obvious way as well — and the three
+        // conditions are written out rather than taken from `hasBow`, which is
+        // the thing under test. If the pass's predicate ever drifts from §8's
+        // sentence, this is what notices.
+        //
+        // Emitter-side, unlike the thermocline directly above: the factor
+        // multiplies the SIG, never the listener's threshold.
+        const bow =
+          Owner.faction[emitter] === Faction.Hadron &&
+          hasComponent(world, Heading, emitter) &&
+          !(hasComponent(world, ActivePing, emitter) && ActivePing.remainingS[emitter]! > 0)
+            ? directionalFactor(Heading.rad[emitter]!, ex, ey, lx, ly)
+            : 1;
         note(
           slot,
           emitter,
-          tierFromRatio(detectionRatio(sig, pf, distance, Acoustic.hyd[listener]!))
+          tierFromRatio(detectionRatio(sig * bow, pf, distance, Acoustic.hyd[listener]!))
         );
       }
     }
