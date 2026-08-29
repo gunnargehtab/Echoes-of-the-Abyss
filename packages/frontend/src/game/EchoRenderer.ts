@@ -2310,21 +2310,29 @@ export class EchoRenderer {
   }
 
   /**
-   * Ground that changed mid-match — docs/mission-sorrowgate.md §9 (#197).
+   * Ground that changed mid-match — docs/mission-sorrowgate.md §9 (#197), and
+   * the biome with it (#259).
    *
    * Cells rather than a rectangle, so there is no metres-to-cells arithmetic
    * here to agree with the server about. The camera is deliberately *not*
    * refitted: the map did not get bigger, a span of it fell in, and yanking
    * the view at the moment the player is watching a colossus go through would
    * take the event away from them.
+   *
+   * The biome write matters twice over: the terrain layer paints from it, and
+   * `biomeAt` answers from it — so a scope that did not take it would keep
+   * naming the water by what used to be there.
    */
-  applyGround(cells: readonly { index: number; floorM: number; ceilingM: number }[]): void {
+  applyGround(
+    cells: readonly { index: number; floorM: number; ceilingM: number; biome: number }[]
+  ): void {
     const terrain = this.terrain;
     if (terrain === null || cells.length === 0) return;
     for (const cell of cells) {
       if (cell.index < 0 || cell.index >= terrain.floor.length) continue;
       terrain.floor[cell.index] = cell.floorM;
       terrain.ceiling[cell.index] = cell.ceilingM;
+      terrain.biomes[cell.index] = cell.biome;
     }
     this.drawTerrain();
     // The scope caches its own terrain layer, and the ground it cached is the

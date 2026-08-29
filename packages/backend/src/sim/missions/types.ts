@@ -15,6 +15,7 @@
 
 import type {
   AbilityLock,
+  Biome,
   Faction,
   FaunaSpecies,
   MissionHeader,
@@ -317,13 +318,21 @@ export type MissionBeat =
   | { atTick: number; kind: 'lose'; tag: MissionTag; note: string }
   | { atTick: number; kind: 'release'; tag: MissionTag; note: string }
   /**
-   * Write the ground under a named region (#197).
+   * Write the ground under a named region (#197), and what the water over it
+   * sounds like (#259).
    *
    * The one beat that changes the map rather than what is on it. Authored as a
    * region so it reads like the map literal it is editing, and applied in beat
    * order at the same tick — which is what lets a span be collapsed whole and
    * a passage through it re-cut immediately after, exactly the way
    * `sim/maps/types.ts` lets a tunnel be laid across a plateau.
+   *
+   * `biome` is the acoustic half of the same beat: a Coral Ruins dome coming
+   * down is a change to the water as much as to the geometry
+   * (docs/environments.md, *Coral Ruins*), and one beat writes both at one tick
+   * rather than two beats racing to the same cells. Every field is optional, so
+   * a beat may still collapse a span and say nothing about the water, or turn
+   * the water and leave the ground standing.
    *
    * `SOLID` from `sim/terrain.ts` is how rock is spelled.
    */
@@ -333,6 +342,7 @@ export type MissionBeat =
       region: string;
       floorM?: number;
       ceilingM?: number;
+      biome?: Biome;
       note: string;
     }
   | { atTick: number; kind: 'objective'; id: string; status: ObjectiveStatus; note: string }

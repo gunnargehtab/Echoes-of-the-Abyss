@@ -22,17 +22,28 @@
 import { Biome, DEPTH, MAX_PROPAGATION_FACTOR, PROPAGATION_FACTOR } from '@echoes/shared';
 
 /**
- * One cell whose water column changed after the match began.
+ * One cell that changed after the match began.
  *
  * Cells rather than rectangles, deliberately. A rect delta would make the
  * client redo the metres-to-cells arithmetic and agree with the server about
  * every `Math.floor`; cells are what actually changed, and there is nothing
  * left to disagree about.
+ *
+ * The cell's whole state, not the fields that moved. A record that carried
+ * only the changed fields would make the client's apply order load-bearing and
+ * would need a way to spell "unchanged" that is not a valid depth; a full cell
+ * is idempotent, and replaying the log from any cursor lands on the same grid.
  */
 export interface TerrainCellChange {
   index: number;
   floorM: number;
   ceilingM: number;
+  /**
+   * What the water here sounds like, as of this write (#259). Carried on every
+   * change rather than only on the writes that move it, because the record is
+   * the cell rather than the diff.
+   */
+  biome: Biome;
 }
 
 /**
@@ -90,6 +101,18 @@ export class Terrain {
    * cursor is an index into exactly this list.
    */
   private changes: TerrainCellChange[] = [];
+  /**
+   * The PF modifiers currently in force — the last set `applyPropagationModifiers`
+   * was handed.
+   *
+   * Kept because a mid-match biome write has to compose with them. PF is
+   * recomputed from the biome and never inverted, so a write that set a cell to
+   * its new biome's bare baseline would silently cancel a storm standing over
+   * it, and the storm would only come back at its next phase boundary — which
+   * is a few times a minute, not a tick. Holding the set makes the biome write
+   * exact at the tick it happens.
+   */
+  private mods: readonly { x: number; y: number; radiusM: number; scale: number }[] = [];
 
   /**
    * `floorM` is the seabed the whole map starts at, before any region carves
@@ -351,15 +374,24 @@ export class Terrain {
    * centre rule, so a region's biome and its ground always cover the same
    * cells: a floor that reached a row the biome did not would be a shelf with
    * no biome to explain it.
+   *
+   * **`biome` is the mid-match twin of `fillRect`** (#259). Every field here is
+   * optional and they stay independent — the argument above holds, and a caller
+   * that only lowers a floor still says nothing about the water. What this is
+   * not is a second call: a dome coming down and the water behind it turning to
+   * ruins are one event at one tick, and writing them together costs one change
+   * record per cell rather than two. `fillRect` remains the *authoring* call,
+   * because at build time there is no client to tell and no log worth keeping.
    */
   fillGround(
     x: number,
     y: number,
     w: number,
     h: number,
-    ground: { floorM?: number; ceilingM?: number }
+    ground: { floorM?: number; ceilingM?: number; biome?: Biome }
   ): void {
-    if (ground.floorM === undefined && ground.ceilingM === undefined) return;
+    if (ground.floorM === undefined && ground.ceilingM === undefined && ground.biome === undefined)
+      return;
     const x0 = Math.max(0, this.firstCentreFrom(x));
     const y0 = Math.max(0, this.firstCentreFrom(y));
     const x1 = Math.min(this.cols - 1, this.lastCentreBefore(x + w));
@@ -369,17 +401,32 @@ export class Terrain {
         const index = cy * this.cols + cx;
         const beforeFloor = this.floor[index]!;
         const beforeCeiling = this.ceiling[index]!;
+        const beforeBiome = this.biomes[index]!;
         if (ground.floorM !== undefined) this.floor[index] = ground.floorM;
         if (ground.ceilingM !== undefined) this.ceiling[index] = ground.ceilingM;
+        if (ground.biome !== undefined) {
+          this.biomes[index] = ground.biome;
+          // Written here rather than left to the hazard pass. `pathPropagation`
+          // reads `pf`, and the only other writer of it runs on storm phase
+          // boundaries — so a ruin coming down on a map with no weather would
+          // keep its old PF indefinitely, and `propagationAt` would disagree
+          // with the biome the client is already drawing.
+          this.pf[index] = this.propagationAtCell(cx, cy, ground.biome);
+        }
         // Recorded only when the cell actually moved. A mission that repaints
         // ground it has already painted — Sorrowgate re-cuts the service lock
         // straight after collapsing the span across it — should cost the wire
         // nothing for the cells that did not change.
-        if (this.floor[index] !== beforeFloor || this.ceiling[index] !== beforeCeiling) {
+        if (
+          this.floor[index] !== beforeFloor ||
+          this.ceiling[index] !== beforeCeiling ||
+          this.biomes[index] !== beforeBiome
+        ) {
           this.changes.push({
             index,
             floorM: this.floor[index]!,
             ceilingM: this.ceiling[index]!,
+            biome: this.biomes[index] as Biome,
           });
         }
       }
@@ -418,23 +465,49 @@ export class Terrain {
   applyPropagationModifiers(
     mods: readonly { x: number; y: number; radiusM: number; scale: number }[]
   ): void {
+    // Copied, not aliased. The caller builds this list fresh each phase
+    // boundary today, but a caller that reused and mutated its array would
+    // change what a later biome write composes with, at a distance and without
+    // touching this file. The list is a handful of storms a few times a minute.
+    this.mods = mods.slice();
     for (let cy = 0; cy < this.rows; cy++) {
-      const wy = (cy + 0.5) * this.cellM;
       for (let cx = 0; cx < this.cols; cx++) {
         const index = cy * this.cols + cx;
-        let value = PROPAGATION_FACTOR[this.biomes[index] as Biome];
-        if (mods.length > 0) {
-          const wx = (cx + 0.5) * this.cellM;
-          for (let m = 0; m < mods.length; m++) {
-            const mod = mods[m]!;
-            const dx = wx - mod.x;
-            const dy = wy - mod.y;
-            if (dx * dx + dy * dy <= mod.radiusM * mod.radiusM) value *= mod.scale;
-          }
-        }
-        this.pf[index] = Math.min(value, MAX_PROPAGATION_FACTOR);
+        this.pf[index] = this.propagationAtCell(cx, cy, this.biomes[index] as Biome);
       }
     }
+  }
+
+  /**
+   * What a cell's PF should be, given the biome it now holds.
+   *
+   * The one place the composition lives, so the hazard pass and a mid-match
+   * biome write cannot drift apart: a storm standing over a cell whose biome
+   * changed prices the **new** biome's baseline by the storm's multiplier,
+   * which is the same answer the next `applyPropagationModifiers` will reach
+   * for that cell. Recomputed from the biome and never inverted, for the
+   * reasons that method's comment gives.
+   */
+  private propagationAtCell(cx: number, cy: number, biome: Biome): number {
+    let value = PROPAGATION_FACTOR[biome];
+    if (this.mods.length > 0) {
+      const wx = (cx + 0.5) * this.cellM;
+      const wy = (cy + 0.5) * this.cellM;
+      for (let m = 0; m < this.mods.length; m++) {
+        const mod = this.mods[m]!;
+        const dx = wx - mod.x;
+        const dy = wy - mod.y;
+        if (dx * dx + dy * dy <= mod.radiusM * mod.radiusM) value *= mod.scale;
+      }
+    }
+    // Clamped on the argument `applyPropagationModifiers` makes: the Echo
+    // broadphase sizes itself from this ceiling, so a cell above it is audible
+    // beyond the radius the pass will search — which reads as detection failing
+    // rather than as loud water. No biome's baseline can breach it today, since
+    // MAX_PROPAGATION_FACTOR is derived from that same table; the clamp is here
+    // so the day a hazard multiplier meets a louder biome is not the day it is
+    // discovered.
+    return Math.min(value, MAX_PROPAGATION_FACTOR);
   }
 
   /**

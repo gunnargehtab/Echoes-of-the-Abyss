@@ -161,6 +161,9 @@ export function hashWorld(world: SimWorld): number {
     h = mixU32(h, change.index);
     h = mixU32(h, change.floorM);
     h = mixU32(h, change.ceilingM);
+    // A beat that changed what the water sounds like and nothing else is a
+    // divergence the floor and ceiling cannot see (#259).
+    h = mixU32(h, change.biome);
   }
 
   // Economies live outside the ECS, and a match where one side is quietly
