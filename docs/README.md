@@ -84,9 +84,12 @@ to point at yet:
   the pattern mission-sorrowgate.md sets and mission-asset-recovery.md, mission-tend.md,
   mission-attendance.md and mission-aptitude.md continue — before it needs code. Every
   campaign's *first* mission is now specified and none is built; their scaffold-status sections
-  list what the mission format still needs (the Klaxon band, an authored static emitter, the
-  lift/cargo mechanism, bloom-share, the filed/unfiled predicate over a scripted listener, an
-  emitter with a start tick, and a tally over the observer's own resolution of one).
+  list what the mission format still needs. That list is shorter than it was: the Klaxon band,
+  the authored static emitter, the lift/cargo hold-and-cut, bloom-share, the windowed emitter and
+  the tally over the observer's own resolution of one have all shipped, and the sweep's
+  filed/unfiled fact landed as a latched flag on the runtime rather than as a predicate. What the
+  four documents still ask for is a beat that fires on a **condition** rather than a tick, a
+  predicate over the player's own **exposure**, and a hold that **aims** the hull taking it.
 - **Directional signature, in the simulation.** systems-echo.md §8 now spec's the Knights'
   doctrine as numbers — ×1.00 in the cone, ×0.35 on the flank, ×0.10 in the wake — and nothing
   reads them. SIG is a scalar in the detection pass, and a stopped hull has no heading at all,
@@ -100,8 +103,6 @@ to point at yet:
   the next mission played on it. There is no forward while there is one mission.
 - **Permanent roster attrition.** Knights mission 3, *Nineteen*, spends units for the rest of a
   campaign. Today nothing outlives the match it was built in.
-- **Mid-match Coral Ruins state change.** Stated in environments.md and campaign.md §10 as the
-  one biome that changes during a match. The prologue neither relies on it nor implements it.
 - **"Already seen" briefing variants.** campaign.md §1 intends a scene you witnessed from the
   other side to change its briefing text and never its mission. Nothing tracks what you have
   seen.
