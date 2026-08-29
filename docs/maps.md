@@ -265,11 +265,18 @@ A mission map is the one carve-out, and it is not a counter-example. It carries 
 
 A mission map is authored the same way — a literal, regions painted in order — and is held to a different set of obligations, because a mission owns its own water. It is written against the mission's document, it carries whatever seats, spawns and empty resource lists that document asks for, and it is never offered to a player choosing a map. Balance does not apply to a chamber the player is scripted into.
 
-| Mission map | Implemented | What it is |
-| --- | --- | --- |
-| Sorrowgate | Implemented (#190) | One seat, no economy, not selectable in skirmish |
+| Mission map | Id | Landed | What it is |
+| --- | --- | --- | --- |
+| Sorrowgate | `sorrowgate` | #190 | 5,000 × 4,000 m. A court, a gate, and the water underneath it — [mission-sorrowgate.md](mission-sorrowgate.md) §11 |
+| Face Six | `ninefold-face-six` | #251 | 4,000 × 3,000 m. A dying field, a fallen face, and a recovery writ — [mission-asset-recovery.md](mission-asset-recovery.md) §11 |
+| Marr Plateau | `marr-plateau` | #251 | 4,000 × 2,500 m. A garden terrace, a working day, and a survey — [mission-tend.md](mission-tend.md) §11 |
+| The Attending Galleries | `attending-galleries` | #258 | 5,000 × 4,000 m. A gallery of sleepers, and the Ninth aimed at the Mouth — [mission-attendance.md](mission-attendance.md) §11 |
 
-Sorrowgate is specified in full in [mission-sorrowgate.md](mission-sorrowgate.md) — its regions, its floors, its single spawn and the parties the mission seats around it — and that document, not this one, owns those numbers. It is cut from Map Type 5's shape, which is what that archetype's *Ideal Use* line asks of it; it is not a Sunken Metropolis, and Map Type 5 stays *Not yet* in the archetype table, because ticking it would promise a four-seat competitive layout that nobody has written.
+**Each is specified in full in its own mission document** — regions, floors, the single spawn and the parties the mission seats around it — and that document, not this one, owns those numbers. The literals say so themselves: every one carries a `doc` field pointing back at its §11 *and* at this table, so a map and its row are meant to be read together.
+
+One more is specified and not built: `outer-formations`, [mission-aptitude.md](mission-aptitude.md) §11. It is deliberately absent from the table above, which lists what exists.
+
+Sorrowgate is cut from Map Type 5's shape, which is what that archetype's *Ideal Use* line asks of it; it is not a Sunken Metropolis, and Map Type 5 stays *Not yet* in the archetype table, because ticking it would promise a four-seat competitive layout that nobody has written. The three that followed it are cut from no archetype at all — a mission map answers to its mission, and none of these four could be offered to a player choosing a map.
 
 ### Two authoring faults the tests caught
 
