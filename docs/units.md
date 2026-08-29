@@ -195,6 +195,12 @@ Design notes
   what it *hears* — throttling engines does not unplug the hydrophones. Anything that
   modifies listening does so as an explicit HYD modifier (the Cantor's dome), so the
   detection formula keeps exactly two listening-side inputs: distance and HYD.
+- **The Knights have no hull in this roster yet, and their doctrine is a multiplier waiting
+  for one.** Directional signature is spec'd in systems-echo.md §8: a Knight hull's listed SIG
+  is its **cone** figure, and the compass average of the term is 0.45, so a Knight entry should
+  run roughly 2.2× a comparable hull's SIG for the two to balance. Until such an entry exists,
+  anything flying Knight colours is a generic hull with the term applied, and its cone figure is
+  therefore *low* for the faction. mission-aptitude.md fields exactly that and says so.
 - **The Directorate's listening doctrine is carried by numbers, not a special case.** Their
   native hull owns the highest mobile HYD (85) and their Cantor raises allied HYD in an
   area. The "passively detect one tier higher" phrasing in systems-echo.md §8 is realised

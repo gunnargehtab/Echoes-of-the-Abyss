@@ -236,6 +236,92 @@ Their doctrine is not to hide or to endure but to **know first and arrive in num
 Sound is their weapon, not their liability. Their SIG is high but *directional* — Knight emissions are focused into beams, so they are loud in a cone and quiet elsewhere. Positioning determines who hears them.
 *Unique:* **Standing Wave** — a placed resonance node that, when a second node is placed within 1,500 m, creates a line of sonic damage between them. Also permanently raises PropagationFactor in the corridor to 2.0, turning the space into an acoustic megaphone that harms everyone equally, including them.
 
+#### Directional signature — the numbers
+
+The sentence above is two hundred words older than its arithmetic. Four documents said *loud in
+front, quiet on the flank* and none of them said how loud, how quiet, or how wide the front is,
+which left the one faction whose doctrine is a *shape* as the only one whose doctrine was not a
+number. Here is the shape.
+
+**A Knight hull's signature is measured from its own bow, and the circle divides into quarters.**
+One quarter ahead, one either beam, one astern — which is why the cone is 90° and not some other
+width.
+
+**And 90° is the one directional figure the Knights already had.** [bestiary.md](bestiary.md)
+gives their fauna-repel as *a 90° cone* — the same order, aiming the same kind of emission, in a
+document written without this section in view. So the quartering is not a new claim about how a
+Knight radiates; it is the claim the bible was already making, given a table. What is **not**
+borrowed is the torpedo's 60°: that is a *listening* aperture on a weapon
+([systems-combat.md](systems-combat.md) §5), it belongs to every faction's ordnance, and reading
+it as a Knight emission angle would be the wrong number arrived at by coincidence.
+
+| Where the listener stands, from the emitter's bow | Factor | In the mix |
+| --- | --- | --- |
+| **The cone** — within 45° either side | **1.00** | 0 dB. The SIG the hull lists |
+| **The flank** — 45° to 135°, either beam | **0.35** | −9 dB |
+| **The wake** — beyond 135° | **0.10** | −20 dB |
+
+Five things about that table are load-bearing, and each of them is why it is not some other table.
+
+**It multiplies, into the same product as everything else.** A path's loudness is SIG × biome PF ×
+thermocline pair factor × this. It is not a fifth kind of arithmetic; it is a fourth term in the
+one the game already has, which is what keeps a Knight in a Thermal Vein quieter than a Knight in
+open water without anybody writing that rule down.
+
+**The two factors are the mix, made honest.** [audio-direction.md](audio-direction.md) already
+places Knight emissions off-axis at **up to −20 dB**, and that document's second law is that the
+mix may never sound more certain than the server is. 0.10 is −20 dB and 0.35 is −9 dB, so the
+instruction the audio doc was already carrying becomes a *rendering* of the model instead of a
+decoration on top of one. **0.10 is the derived one** — *up to −20 dB* was already written down,
+and solving for it fixes the wake the way the spec'd 2,400 m self-reveal fixes `BASE_THRESHOLD`.
+The flank is then the level the mix owed a name to and never had. A model that disagreed with the
+mix at either end would make the loudest channel in the game a liar.
+
+**Sectors, not a curve.** A cosine would be more physical and unreadable: a player cannot infer a
+falloff from a contact, and §4's whole argument is that partial information has to be *reasoned
+about*. The thermocline is a wall rather than a gradient for exactly this reason (§3), the depth
+bands are, and this is the third. Three sectors is also two float compares on an absolute angle
+difference, which is what lets the term exist at all inside the Echo pass's 2 ms.
+
+**It changes what a Knight emits and never what a Knight hears.** HYD is a flat hull property
+([units.md](units.md)) and stays one — a Knight showing its wake to a listener is quiet to that
+listener and hears it exactly as well as before. The blind spot is the other player's, which is
+what makes this a positioning tool rather than a drawback, and it keeps the detection formula's
+listening side at the two inputs it has always had: distance and HYD.
+
+**Averaged over the compass it is 0.45, and that is the balance clause.** One quarter at 1.00, two
+at 0.35, one at 0.10 is 0.45 of the listed figure. **A Knight hull is an ordinary hull with its
+loudness moved**, not a quiet one — which is why the roster's Knight entries are expected to run
+roughly 2.2× the listed SIG of a comparable hull, so that the compass average lands at parity and
+the *cone* is genuinely the loudest thing in the game. No Knight hull is written yet
+([units.md](units.md)), so nothing carries that multiplier today.
+
+**What it does not apply to.** Three exclusions, and the first is the interesting one:
+
+- **Active sonar.** §5 fixes the ping at SIG 95 *omnidirectional*, and it stays that way. **The
+  ping is the one emission that has no bow** — for the faction whose entire doctrine is that
+  loudness has a direction, the button does not merely cost more, it is incoherent, and the
+  Order's word for it would be *discourteous*.
+- **Echo Marks.** Residue is a thing that happened, not a thing facing (§7). A mark has no bow
+  either, and merging two marks could not preserve one.
+- **Structures.** A Bastion has no bow. The Sounding Spire's "directional" in
+  [units.md](units.md) is a different claim — it is aimed at its *pair*, and the Standing Wave
+  corridor between two nodes is where that aim goes.
+
+**Where the bow points is not a new order.** A hull's bow is its heading, a moving hull's heading
+is its course, and a stopped hull holds the last course it had. Facing is therefore a consequence
+of the orders a player already gives, which is what makes it teachable: *never travel at a
+listener* is a rule about routes, not about a button. Whether the Knights also get an explicit
+turn-in-place order is a question [ui-ux.md](ui-ux.md) owns and this section does not need
+answered.
+
+**The consequence a player meets first**, and the reason this is a doctrine rather than a
+modifier: against the roster's best ears at Resonance Field PF 0.70, a Knight corvette cruising
+**bow-on** is classified from 1,414 m, **beam-on** from 734 m, and **stern-on** from 335 m. A
+factor of four in distance, decided by nothing but where the hull is pointed. Worked in full,
+against a mission that is made of it, in
+[mission-aptitude.md](mission-aptitude.md) §4.
+
 ---
 
 ## 9. UI Requirements
@@ -271,6 +357,7 @@ Systems this asymmetric fail in predictable ways. Known risks and mitigations:
 | Information starvation feels bad | Tier-1 contacts are generous. You always know *something* is happening |
 | Ping never worth pressing | Ping grants **Tier-4 firing solutions** for its 3 s window and sweeps minefields — an offensive tool, not just an info tool (see [systems-combat.md](systems-combat.md) §7; an earlier draft said "+20% accuracy buff", superseded by physical solution quality — there are no to-hit rolls) |
 | Directorate always knows everything | Their HYD advantage is passive-only; they are the worst faction at *acting* on late information (slowest units) |
+| Knights are simply never heard | The cone is where their weapons are, so **fighting is announcing**; averaged over the compass they are an ordinary hull (§8); and their two signature emissions — the ping and the Standing Wave corridor — are omnidirectional and permanent respectively |
 | Snowballing via Echo Marks | Marks show *past*, never *present*. They reward inference, not omniscience |
 
 ---

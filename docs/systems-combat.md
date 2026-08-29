@@ -404,7 +404,9 @@ argument about sound or depth, per the editing rules.
   with them.
 - **Hadron Knights — the geometry.** The energy-weapon faction (+10 burst — the quiet
   discharge class), fighting in the cones their directional SIG defines: deafening ahead,
-  ambushable from the flank. Standing Wave corridors ([systems-echo.md](systems-echo.md)
+  ambushable from the flank — ×1.00, ×0.35, ×0.10 by quarter, from the hull's bow
+  ([systems-echo.md](systems-echo.md) §8). Their guns and their loudness share an arc, so a
+  Knight that is shooting at you is a Knight you can hear, and the reverse is the whole kit. Standing Wave corridors ([systems-echo.md](systems-echo.md)
   §8) are their fixed kill-lines, harming everyone equally, including them. Fights the
   Knights arranged are massacres; fights they didn't are losses they cannot replace.
 
