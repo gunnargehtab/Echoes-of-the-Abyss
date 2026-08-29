@@ -233,8 +233,108 @@ Their doctrine is not to hide or to endure but to **know first and arrive in num
 
 ### Hadron Knights — **The Loud On Purpose**
 
-Sound is their weapon, not their liability. Their SIG is high but *directional* — Knight emissions are focused into beams, so they are loud in a cone and quiet elsewhere. Positioning determines who hears them.
+Sound is their weapon, not their liability. Their SIG is high but *directional* — Knight emissions are focused into beams, so they are loud in a cone and quiet elsewhere. Positioning determines who hears them. The term that does this is specified below, at the end of this section, because it is a term of the SIG model rather than a faction perk.
 *Unique:* **Standing Wave** — a placed resonance node that, when a second node is placed within 1,500 m, creates a line of sonic damage between them. Also permanently raises PropagationFactor in the corridor to 2.0, turning the space into an acoustic megaphone that harms everyone equally, including them.
+
+### The directional term — how a Knight's SIG is aimed
+
+The Knights' entry above, [factions.md](factions.md)'s *Score* doctrine,
+[audio-direction.md](audio-direction.md) §8 and [systems-combat.md](systems-combat.md) §11 have
+all said the same sentence for as long as the bible has existed — deafening ahead, quiet on the
+flank — and none of them gave a number. This is the number, and it lives here rather than in a
+mission or a faction sheet because it is a **term of the detection formula**: §3 resolves
+`SIG × PF ≥ Threshold(distance, HYD)`, and for a Knight emitter the SIG that enters that
+inequality depends on where the listener is standing.
+
+**A hull's stated SIG is its on-axis figure.** Everything in [units.md](units.md) is read
+unchanged; the directional term only ever *reduces* it. There is no bearing at which a Knight
+hull is louder than its sheet.
+
+#### The law
+
+For a Knight emitter facing along a heading, and a listener at an angle **θ** off that heading:
+
+```text
+SIG(θ) = SIG × [ FLANK + (1 − FLANK) × ((1 + cos θ) / 2) ^ K ]
+```
+
+- **FLANK = 0.15** — the floor, reached at dead astern. Chosen against
+  [audio-direction.md](audio-direction.md) §8's already-spec'd −20 dB off-axis placement, which
+  read as an amplitude ratio is ×0.1: the mix figure and a usable SIG multiplier describe the
+  same subjective place, so the floor is anchored to a figure the bible already carries rather
+  than invented. It sits slightly above it because 0.15 is where the *range* consequence below
+  stops being a cliff.
+- **±45°** — the **face**: the arc inside which a hull is at least half its on-axis figure. This
+  is not a new number either. [bestiary.md](bestiary.md) §7 already prices a Knight directional
+  emission — the repel pulse — at a 90° cone, and there was only ever one cone. A repel pulse is
+  the doctrine's emission used on an animal.
+- **K ≈ 5.60** — **derived, not chosen**, exactly as `BASE_THRESHOLD` is solved from the spec'd
+  2,400 m self-reveal (§5) rather than picked. Two things above are authored — the floor and the
+  face — and the exponent is whatever makes them both true: `K = ln(0.4118) / ln(cos² 22.5°)`.
+  Move either authored figure and the curve recalibrates itself. Do not replace it with a
+  rounded literal.
+
+**It is a curve, not a sector.** A hard cone edge would make the mechanic binary, and it would
+contradict [audio-direction.md](audio-direction.md) §8, which already specifies the behaviour: *a
+player who walks into the beam hears the volume change and that* is *the tell.* A cliff has no
+walk-in.
+
+| θ, off the heading | SIG multiplier | Detection range, as % of on-axis |
+| --- | --- | --- |
+| 0° — dead ahead | ×1.000 | 100% |
+| 15° | ×0.922 | 95% |
+| 30° | ×0.726 | 82% |
+| **45° — the edge of the face** | **×0.500** | **65%** |
+| 60° | ×0.320 | 49% |
+| 90° — abeam | ×0.167 | 33% |
+| 120° and beyond | ×0.150 | 31% |
+
+The right-hand column is the one that matters in play, and it is not the middle column: range
+scales as the multiplier to the power `1 / ATTENUATION_EXPONENT`, so a hull that is a *sixth* as
+loud abeam is still heard a *third* as far. **Directional SIG buys less than it sounds like it
+buys**, and that is the honest version of the doctrine — the flank is a discount, not a cloak.
+
+Worked, against a fixed array at HYD 60 in the Resonance Fields' own PF 0.70
+([environments.md](environments.md)), which is the water the Knights live in:
+
+| Emitter | Tier 3 dead ahead | Tier 3 abeam | Tier 3 astern |
+| --- | --- | --- | --- |
+| A Corvette at cruise, SIG 28 | 1,345 m | 440 m | 411 m |
+| A hull sounding crystal, SIG 80 | 2,593 m | 849 m | 792 m |
+
+A Knight hull holding station 1,000 m from an enemy array is either fully classified or entirely
+silent, and the only thing that decides which is where its bow is pointed. That is the doctrine,
+and it is a positional statement rather than a stealth statement: the hull is not hiding. It is
+*aimed elsewhere*.
+
+#### What a hull is facing — the prerequisite, and it is unbuilt
+
+The term above needs a heading, and **nothing in the simulation currently owns one**. The wire
+type carries `heading` and the server writes a literal zero into it; the client re-derives its
+own hulls' facing from position deltas; the one place the server computes a bearing is inside a
+Tier-4 contact's payload, *after* detection has resolved. There is no facing upstream of the
+Echo pass to read.
+
+**The spec'd answer is an explicit facing order** — a hull is aimed as a first-class command,
+independent of where it is going. The two cheaper readings were considered and are wrong for
+this mechanic:
+
+- **Velocity heading** is free and already computed, but `atan2(0, 0)` is `0`, so a stopped hull
+  reads as facing due +x. A Knight holding a firing position is stationary, and that is precisely
+  when facing matters most.
+- **Velocity with a last-bearing latch** fixes the stopped hull and still leaves facing a
+  *consequence of pathing*. The doctrine says positioning determines who hears them; a lever the
+  player cannot move independently of movement is not positioning, it is routing.
+
+Cost, stated so nobody discovers it in the 2 ms budget: a bearing-dependent factor is a property
+of the **pair**, so it cannot hoist out of the candidate loop the way `sig × pf` does — it joins
+the thermocline pair factor inside it. And the broadphase gets no discount at all:
+`maxAudibleRangeM` sizes the spatial-hash query and must stay conservative, so it bounds on the
+**loudest lobe** and rejects the flank afterwards. Directional SIG is a strict cost to the Echo
+budget and never a saving.
+
+The first mission that consumes this is [mission-aptitude.md](mission-aptitude.md), whose whole
+teaching target is facing, and whose §13 records the model as unbuilt.
 
 ---
 
@@ -271,6 +371,7 @@ Systems this asymmetric fail in predictable ways. Known risks and mitigations:
 | Information starvation feels bad | Tier-1 contacts are generous. You always know *something* is happening |
 | Ping never worth pressing | Ping grants **Tier-4 firing solutions** for its 3 s window and sweeps minefields — an offensive tool, not just an info tool (see [systems-combat.md](systems-combat.md) §7; an earlier draft said "+20% accuracy buff", superseded by physical solution quality — there are no to-hit rolls) |
 | Directorate always knows everything | Their HYD advantage is passive-only; they are the worst faction at *acting* on late information (slowest units) |
+| The flank is always the answer — a Knight player who simply never presents a bow | Two costs, both in §8. The floor is a **discount, not a cloak**: at ×0.15 the flank still carries 31% of the on-axis range, so turning away buys a smaller map rather than a silent one. And a bow pointed away from an enemy is pointed at something — the doctrine's own work, from a repel pulse ([bestiary.md](bestiary.md) §7) to sounding crystal, is aimed, so the arc a Knight spends on safety is an arc they are not using |
 | Snowballing via Echo Marks | Marks show *past*, never *present*. They reward inference, not omniscience |
 
 ---
@@ -282,3 +383,4 @@ Systems this asymmetric fail in predictable ways. Known risks and mitigations:
 - **[bestiary.md](bestiary.md)** — what your noise attracts
 - **[audio-direction.md](audio-direction.md)** — making the mix carry the mechanic
 - **[units.md](units.md)** — per-unit SIG and HYD values
+- **[mission-aptitude.md](mission-aptitude.md)** — §8's directional term, spent as a mission

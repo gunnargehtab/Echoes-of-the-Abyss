@@ -14,6 +14,12 @@ Propagation Factor (PF)
 - Example base values: Thermal Veins (0.45), Kelp Forest (0.55), Coral Ruins (0.80), Resonance Fields (0.70), Trenches (1.60).
 - PF is not the only multiplier on a detection. The Thermocline applies a second one, and it is not per-location: it depends on the depths of *both* ends of the path, so no single point on the map has a thermocline factor the way it has a PF.
 
+Directional SIG (the Face)
+
+- The Hadron Knights' emissions are aimed rather than radiated, so the SIG that enters the detection formula depends on the bearing from the emitter's heading to the listener. A hull's stated SIG is its **on-axis** figure; the directional term only ever reduces it.
+- The **face** is the arc within which a hull holds at least half its on-axis figure: ±45°. The multiplier falls smoothly to a floor of ×0.15 astern — a curve, not a sector.
+- Range does not fall as fast as loudness: it scales as the multiplier to the power 1/1.6, so the quietest bearing a Knight has is still heard about a third as far as the loudest. The flank is a discount, not a cloak. Full model in systems-echo.md §8.
+
 Hydrophone Rating (HYD)
 
 - A unit/structure's passive listening sensitivity. HYD adjusts detection thresholds: higher HYD lets a listener resolve contacts at lower SIG or greater range.
@@ -140,3 +146,4 @@ Related
 - game-identity.md — the match loop, the win condition, and scuttling
 - campaign.md — missions, briefings, objectives, and how one ends
 - mission-sorrowgate.md — the prologue, where the silence order is set out with its numbers
+- mission-aptitude.md — the first mission to spend directional SIG, and what the term still needs before it can be built

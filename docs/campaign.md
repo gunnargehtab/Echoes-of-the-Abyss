@@ -95,7 +95,7 @@ Specified in full — map, forces, beats, numbers, register and text — in [mis
 
 | # | Mission | Teaches | Beat |
 | --- | --- | --- | --- |
-| 1 | **Aptitude** | Directional SIG — loud in the cone, quiet on the flank | Six units, no reinforcements, and the first lesson in facing |
+| 1 | **[Aptitude](mission-aptitude.md)** | Directional SIG — loud in the cone, quiet on the flank | Six units, no reinforcements, and the first lesson in facing. Three seams, three pairs, and a third seam with no heading that measures it quietly. Specified in full in [mission-aptitude.md](mission-aptitude.md) |
 | 2 | **Standing Wave** | Paired nodes, corridors, PF 2.0 | You turn a canyon into a megaphone that hurts you too |
 | 3 | **Nineteen** | Permanent loss | The 211 PC cadre. Every unit lost in this mission is gone for the rest of the campaign |
 | 4 | **Conclave** | Nothing new — a defensive mission you are meant to almost lose | Chapter-Master Vrey has the standing to call a vote. He does not. He wants Sull to hear him not do it |
@@ -151,7 +151,7 @@ What is built of the campaign, so nobody re-implements what exists or assumes wh
 | Part | Status |
 | --- | --- |
 | **Prologue — Sorrowgate** | Implemented (#190). [mission-sorrowgate.md](mission-sorrowgate.md) §13 is the row-by-row account of what inside it is built |
-| **Four faction campaigns** — 28 missions | Three specified, none built. [mission-asset-recovery.md](mission-asset-recovery.md) (The Ledger 1), [mission-tend.md](mission-tend.md) (The Second Seeding 1) and [mission-attendance.md](mission-attendance.md) (The Attending 1) are documents of record, each with a scaffold-status list of what the format still needs; the other 25 rows of §4–§7 remain titles, teaching targets and beats, and each needs a document of its own before it needs code |
+| **Four faction campaigns** — 28 missions | **Four specified**, none built — every campaign's first mission is now a document of record. [mission-asset-recovery.md](mission-asset-recovery.md) (The Ledger 1), [mission-tend.md](mission-tend.md) (The Second Seeding 1), [mission-attendance.md](mission-attendance.md) (The Attending 1) and [mission-aptitude.md](mission-aptitude.md) (The Second Chord 1) each carry a scaffold-status list of what the format still needs; the other 24 rows of §4–§7 remain titles, teaching targets and beats, and each needs a document of its own before it needs code. Aptitude is the first whose central mechanic — directional SIG, and the hull facing it requires — is unbuilt as well as unwritten, and specifying it is why that mission's PR reaches [systems-echo.md](systems-echo.md) §8 |
 | **Convergence — The Rim** | Not started |
 | **The four endings** | Not started |
 | Progression — recording what you have played, and the briefing variants that depend on it (§1) | Not started. The prologue is replayable and remembers nothing, so the Tutorial and campaign doors are currently the same door |

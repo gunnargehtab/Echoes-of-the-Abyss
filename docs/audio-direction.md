@@ -128,6 +128,8 @@ A player must identify a faction at Tier 3 by ear alone, with no visual. Each fa
 
 The Knights' entry is the one that must not be softened. Their emissions are a cone ([factions.md](factions.md)), so the mix places them off-axis at up to −20 dB. A player who walks into the beam hears the volume change and that *is* the tell.
 
+**That sentence is now load-bearing on the maths as well as the mix.** [systems-echo.md](systems-echo.md) §8 specifies the directional term the four prose descriptions had been describing without numbers, and it was anchored here: −20 dB read as an amplitude ratio is ×0.1, and the spec'd flank floor is ×0.15 — the same subjective place. Two consequences bind the mix. The falloff is a **curve, not a sector**, because a hard cone edge has no walk-in and this paragraph promises one. And the off-axis attenuation is a **floor, not a mute**: the flank is a third of the on-axis detection range, not silence, so a Knight abeam must remain audible in the mix or the mechanic and the mixdown disagree about what the player is allowed to hear.
+
 ---
 
 ## 9. Biome Acoustics — PF as Signal Processing

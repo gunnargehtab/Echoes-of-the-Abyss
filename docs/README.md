@@ -28,6 +28,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | **[mission-asset-recovery.md](mission-asset-recovery.md)** | The Ledger 1, specified: Face Six, the manifest, the taps, and the Klaxon posture |
 | **[mission-tend.md](mission-tend.md)** | The Second Seeding 1, specified: a working day, the sweep, the stillness, and what *unfiled* is worth |
 | **[mission-attendance.md](mission-attendance.md)** | The Attending 1, specified: one watch of the Mouth's cycle, the nine arrivals, and the silence a rite is owed |
+| **[mission-aptitude.md](mission-aptitude.md)** | The Second Chord 1, specified: three seams, six hulls, and the heading that decides who hears you |
 
 ## Gameplay
 
@@ -78,14 +79,21 @@ The prologue is built and the campaign around it is not. What follows is designe
 stated in a doc that ships, and unbuilt — named in plain text because none of it has a document
 to point at yet:
 
-- **The remaining 25 missions.** campaign.md §4–§7 gives them titles, teaching targets and
+- **The remaining 24 missions.** campaign.md §4–§7 gives them titles, teaching targets and
   beats, which is not a specification. Each needs a document of its own — one doc per mission,
-  the pattern mission-sorrowgate.md sets and mission-asset-recovery.md, mission-tend.md and
-  mission-attendance.md continue — before it needs code. The Ledger 1, The Second Seeding 1 and
-  The Attending 1 are specified and not built; their scaffold-status sections list what the
+  the pattern mission-sorrowgate.md sets and mission-asset-recovery.md, mission-tend.md,
+  mission-attendance.md and mission-aptitude.md continue — before it needs code. Every campaign's
+  first mission is now specified and none is built; their scaffold-status sections list what the
   mission format still needs (the Klaxon band, an authored static emitter, the lift/cargo
   mechanism, bloom-share, the filed/unfiled predicate over a scripted listener, an emitter with
-  a start tick, and a tally over the observer's own resolution of one).
+  a start tick, a tally over the observer's own resolution of one, and — new with The Second
+  Chord 1 — the directional SIG term, an explicit facing order, and a dwell predicate over what
+  a non-player array resolved).
+- **Directional SIG, and what a hull is facing.** systems-echo.md §8 now specifies the term four
+  documents had described in prose without a number: a curve, floor ×0.15, half at ±45°. Nothing
+  in the simulation reads it, and nothing upstream of the Echo pass owns a heading to read — the
+  server writes a literal zero. The spec'd answer is an explicit facing order, which is a 60 Hz-path
+  decision rather than a mission's, and mission-aptitude.md is unimplementable until it exists.
 - **Campaign progression and unlock state.** Nothing records that a mission was played, so the
   prologue is replayable, remembers nothing, and the Tutorial and campaign doors are the same
   door.

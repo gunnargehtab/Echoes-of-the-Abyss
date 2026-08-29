@@ -172,6 +172,8 @@ She has not told the other chapter-houses what she thinks happens then.
 
 Sound is their weapon, not their liability. Knight SIG is high but **directional** — emissions focus into cones, so they are deafening in front and quiet on the flank. Positioning determines who hears them.
 
+**The numbers are in [systems-echo.md](systems-echo.md) §8**, and belong there rather than here: the directional term is a term of the detection formula, not a faction perk. The short form is that a hull's sheet SIG is its **on-axis** figure, that it holds at half out to **±45°** — the *face* — and falls to a floor of **×0.15** astern. What that is worth in play is less than it sounds: range scales as the multiplier to the power `1/1.6`, so the quietest bearing a Knight has is still heard a third as far as the loudest. The flank is a discount, not a cloak.
+
 **Standing Wave** nodes create lines of sonic damage between paired emitters and raise local PropagationFactor to 2.0 — turning corridors into megaphones that harm everyone equally, including them.
 
 - **Playstyle:** elite, expensive, few units, extremely high skill ceiling, dominant mid-game, fragile if outnumbered

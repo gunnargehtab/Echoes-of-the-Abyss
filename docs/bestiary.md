@@ -198,7 +198,7 @@ In campaign play, Drift Health persists between missions on the same map ([campa
 | **Bathyarch Consortium** | Harvest remains for rare compounds. Stabilised vents displace Ashgrazer herds. Loudest faction in the game and therefore the most-attacked — the Klaxon Doctrine tacitly includes *being bitten* |
 | **Pelagia Commune** | Pacify rather than kill: bloom-scent lowers Interest thresholds by 30% in a radius. Farm Tetherjelly. Take a reputational and mechanical hit from any Drift Health they cause to fall |
 | **Abyssal Directorate** | Harvest for Biomass, and can hold one megafauna at Interested state without commitment for 45 s. Fauna aggro against Directorate units is ×0.4 |
-| **Hadron Knights** | Repel with directional pulses — a 90° cone that pushes Committed fauna back to Interested. Precise, expensive, and useless against a Sounder already in transit |
+| **Hadron Knights** | Repel with directional pulses — a 90° cone that pushes Committed fauna back to Interested. Precise, expensive, and useless against a Sounder already in transit. The 90° is **the doctrine's own cone**, not a figure local to fauna: [systems-echo.md](systems-echo.md) §8 takes it as the face of every Knight emission, because a repel pulse is that emission used on an animal |
 
 ---
 
