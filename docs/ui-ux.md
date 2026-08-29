@@ -570,6 +570,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | Box select, control groups, order queue | Implemented |
 | The shell — title, browse, setup, briefing, settings, credits | Implemented (§14) |
 | Mission runtime and the prologue | Implemented (#190) — one mission; the campaign entry is still a disabled placeholder |
+| The campaign board | Not built — specified in §14. Twenty-eight of its twenty-nine slots would render `unbuilt` today, and the `played` state has no record to read until campaign progression exists ([campaign.md](campaign.md) §11) |
 | Objectives panel | Implemented (§10.5) — DOM, `role="status"`, focusable rows, own-force counters only |
 | Settings persistence and per-bus volume | Implemented (§14) — `localStorage`, applied at match mount |
 | Match browser, private rooms, join by code | Implemented (#193) — a listing names the water and the seat count and nothing else; solo and missions are private |
@@ -600,13 +601,20 @@ title ──▶ setup (solo) ────────────────▶
   │  ├── browse ──▶ setup (host) ────────────┤   └── "Return to port" ▶ title
   │  │       └──── join a listing, or a code ┤
   │  ├── settings · credits · controls ── back
-  │  └── briefing ──────────────────────▶ mission (playing ▶ result)
+  │  ├── campaign ──▶ briefing ─────────▶ mission (playing ▶ result)
+  │  ├── tutorial ──▶ briefing ─────────▶ mission (playing ▶ result)
   └── resume banner ────────────────────▶ match (seat resumed)
 ```
 
 One more door exists mid-match and is deliberately absent from the chart: the esc menu
 (§9.5) opens Settings and Controls over a live match — the same screens, on the water's
 glass rather than the port's void, and without leaving the room.
+
+`briefing` sits on two lines for the reason `setup` does: one screen, two doors into it.
+Tutorial opens it on the prologue directly, and the campaign board opens it on whichever
+slot was activated. On the prologue's own slot those are the same content behind two doors,
+because a separate tutorial would be a second first mission ([campaign.md](campaign.md) §3,
+§10).
 
 The screen state is a plain discriminated union in `App.tsx` — no router, no history
 integration. Browser back mid-match would mean "leave the match" as an accident, and §1.5
@@ -619,6 +627,12 @@ title screen, and reads the briefing on the way in.
 - **Title** — the game's name, one tagline from [naming.md](naming.md), and the entries:
   Resume (only while a seat is held, see below), Campaign, Solo Game, Multiplayer,
   Tutorial, Settings, Credits. There is no Quit; this is a browser.
+- **Campaign** — the board of four campaigns and their slots. A board rather than a list
+  because the order is free after the prologue ([campaign.md](campaign.md) §1): a list
+  would assert a sequence the campaign refuses to have, and mission ids are namespaced by
+  campaign precisely so that nothing implies a mission 2. It is the one screen in the port
+  that renders progression, and progression is not built — which is most of what the
+  section below has to be careful about. Specified in full there.
 - **Setup** — shared by Solo and hosting: a commander-name field and one card per map
   archetype (name, doctrine line, seats), from the shared catalogue. Faction choice and AI
   opponents stay in the in-room ready room, because faction uniqueness is enforced by the
@@ -655,6 +669,115 @@ has phosphor in it — and its one line now reads `Awaits the faction campaigns`
 runtime it used to wait on exists and the twenty-eight missions after the prologue do not.
 The shape of the finished game is on screen; a menu that hides its missing rooms would
 misrepresent the build.
+
+### The campaign board
+
+**The shape is [campaign.md](campaign.md) §1's table, rendered rather than restated.** One
+prologue lane across the top, and four columns of seven beneath it — *The Ledger*, *The
+Second Seeding*, *The Attending*, *The Second Chord*. Twenty-nine slots, which is the count
+that document gives. Slots inside a column carry the numbers §4–§7 give them, 1 to 7; the
+columns carry no number against each other, because nothing orders them.
+
+The prologue is one slot spanning the four rather than a first slot repeated in each,
+because that is what it is: §1 lists it as a part of the campaign in its own right, and §3
+has the title screen's Tutorial entry and the campaign's first slot launching the same
+content. Drawing it four times would draw a mission that does not exist three times.
+
+A column head names its campaign, carries its commander line from §4–§7, and takes its
+navy's ink and glyph. That is the licensed dress of §12.5 — ink on chrome, on a screen that
+is not the instrument — and it is the only place a faction colour appears here. The slots
+themselves stay cyan and magenta, or the board becomes four boards.
+
+**What a slot shows** is its number, its mission title, and one line. The line is quoted
+from material that already exists — the teaching target from §4–§7 for a slot that cannot
+be opened, the mission's own premise for one that can — and is never written for the board.
+Missions introduce themselves in the voice of whoever is speaking ([campaign.md](campaign.md)
+§10, "Briefings are in-register"), so a board that summarised twenty-nine of them in one
+template voice would flatten the thing the briefing exists to protect.
+
+#### The three states a slot can be in
+
+| State | When a slot is in it | Treatment |
+| --- | --- | --- |
+| **Available** | the mission exists and the runtime can launch it | Full ink, magenta bevel, magenta halo on hover and focus — it is asking |
+| **Played** | available, and the record says this mission has been finished | Available's treatment, plus one cyan registration tick in the corner. Cyan tells you; a played mission stays playable, so it keeps the ask as well |
+| **Unbuilt** | there is no mission behind the door | Desaturated and dimmed to 40% per the disabled rule in [style-neon-noir.md](style-neon-noir.md) — a dead console still has phosphor in it — with the reason attached |
+
+**Three states, not four.** A slot with a document of record and no mission definition, and
+a slot that is still a title, a teaching target and a beat, are the same object to a player:
+a door that does not open. (Which of the twenty-eight are which is
+[campaign.md](campaign.md) §11's count to keep, not this section's to copy.) The difference
+between them is a fact about this repository, and §13 is where facts about this repository
+go. Putting
+the build's filing system on a player's screen would be the confusion this game's
+[CLAUDE.md](../CLAUDE.md) target emotion rules out — dread is partial information you can
+reason about, and *specified but unbuilt* is not something a player can do anything with.
+
+**The reason line has to be true**, which is the same rule the title screen's Campaign entry
+already obeys with `Awaits the faction campaigns`. On a board where twenty-eight of
+twenty-nine slots are unbuilt, the reason lines are most of the text on screen, so each is
+the mission's own teaching target rather than one sentence repeated twenty-eight times. A
+board that said `Not yet built` twenty-eight times would read as a loading screen for a game
+that is not loading.
+
+**Dimmed is not unreachable, and this is where the board differs from the title screen.**
+The title screen carries its one disabled entry on a DOM `disabled` button, which is
+survivable there because five live entries surround it. A board cannot: `disabled` takes an
+element out of the tab order and out of most of what a screen reader will let a user do with
+it, so twenty-eight of twenty-nine slots would vanish for exactly the players §10 and §11
+put this whole shell in the DOM for. **On the board a slot is `aria-disabled="true"` and
+never `disabled`** — focusable, announced with its reason, inert on activation. "Visible with
+the reason attached" has to mean audible too, or the rule only serves the people who can see
+the phosphor.
+
+**No new motion.** The board inherits the port's chrome and adds nothing to it. Twenty-nine
+cards each carrying a halo is precisely the bloom-everything failure mode
+[style-neon-noir.md](style-neon-noir.md) names, so the halo belongs to hover and focus, one
+slot at a time. Nothing on this screen needs a reduced-motion equivalent, because nothing on
+it moves.
+
+#### What commits, and what comes back
+
+Activating an available slot commits to the **briefing**, never to a match. §14 above is
+explicit that a player reaches a mission through the briefing and that `?mission=` skipping
+it is a machine's door; the board is one more door of the player's kind, so it opens onto the
+same screen. *Descend* is the briefing's word and stays there.
+
+The briefing returns to whatever opened it — the title screen when Tutorial did, the board
+when the board did. That is one field on the `briefing` arm of the union in `App.tsx`, not
+history: the no-router rule holds, and browser back is still not a door.
+
+#### What the board reads, and what it must not decide
+
+Two of the three states are static. `available` and `unbuilt` are properties of what has
+shipped, and the board can settle both from the mission catalogue the shell already holds.
+`played` is not: it is the only thing on this screen that is a fact about the player, and
+nothing records it — [campaign.md](campaign.md) §11's last row and the Planned section of
+[README.md](README.md) both say so.
+
+So the board **consumes** a progression record it does not define. Where such a record lives
+is not this screen's ruling: settings and the commander name persist in `localStorage` as
+device preferences and the reconnection token stays per-tab on purpose, and whether a
+campaign record is a third thing of that kind or something else belongs to the progression
+work rather than to the screen that would read it. The state is specified here so that the
+record, when it is designed, arrives to a consumer with a shape — rather than to a screen
+that has to be redesigned around it.
+
+Until it exists, no slot can be in the `played` state, and the board renders the way it will
+render on the day it ships: the prologue available, twenty-eight slots dimmed to 40% with
+their teaching targets attached, and the shape of the finished game on screen.
+
+#### Keyboard
+
+The board is two-dimensional, so its traversal is: **one tab stop for the whole board**, with
+a roving `tabindex` inside it. Left and Right move between columns, Up and Down between slots
+in a column, Home and End to the ends of one. A column head is not a stop — it names a
+campaign, it does not open one. Tab leaves the board for the back control rather than walking
+twenty-nine slots to reach it, which is the reason the board is one stop and not twenty-nine.
+
+Entering the board lands on the first available slot — the prologue, today — because the
+first thing a keyboard reaches should be a door that opens. Every other slot is still
+reachable with an arrow key and still announces why it will not.
 
 ### Rooms, and who may see them
 
@@ -741,4 +864,5 @@ renderer work rather than mixer work, so each names what it moves:
 - **[audio-direction.md](audio-direction.md)** — the other half of the information channel
 - **[art-direction.md](art-direction.md)** — glass panels, palette, and the visual language
 - **[systems-depth.md](systems-depth.md)** — depth bands and pressure, as surfaced in §8
+- **[campaign.md](campaign.md)** — the twenty-nine missions §14's board is a rendering of
 - **[tech-stack.md](tech-stack.md)** — why the client is allowed so little
