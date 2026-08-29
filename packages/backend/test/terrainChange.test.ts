@@ -27,11 +27,12 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { SIM } from '@echoes/shared';
+import { Biome, HAZARDS, MAX_PROPAGATION_FACTOR, PROPAGATION_FACTOR, SIM } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import { SOLID, Terrain } from '../src/sim/terrain.ts';
 import { PROLOGUE_SORROWGATE } from '../src/sim/missions/index.ts';
+import type { MissionDefinition } from '../src/sim/missions/index.ts';
 import { hashWorld } from '../src/sim/stateHash.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
@@ -293,5 +294,267 @@ describe('ground that closes over a hull', () => {
     terrain.resolveStep(1300, 1100, 1240, 1100, 1450, out);
     assert.equal(out.x, 1300, 'a hull in open water stepped into ground that admits nothing');
     assert.equal(out.y, 1100);
+  });
+});
+
+/**
+ * The acoustic half of the same beat (#259) — docs/environments.md, *Coral
+ * Ruins*.
+ *
+ * #197 made the geometry writable; this is the water. The distinction that
+ * makes these tests worth having is that PF has two writers now — a biome
+ * write and the hazard pass — and the failure mode is not "the number is
+ * wrong" but "the two writers disagree about a cell and nobody notices until a
+ * storm passes over it".
+ */
+describe('the water a beat rewrites', () => {
+  it('changes propagation at the tick it happens, with no storm to wait for', () => {
+    // The bug this forbids: `applyPropagationModifiers` recomputes `pf` from
+    // `biomes`, so a biome write *would* eventually be picked up — but it runs
+    // only on a storm phase boundary. On a map with no weather that is never,
+    // and the ruins would sound like open water for the rest of the match.
+    const terrain = new Terrain(4000, 4000, 250, { floorM: 1600 });
+    assert.equal(terrain.propagationAt(1100, 1100), PROPAGATION_FACTOR[Biome.OpenWater]);
+
+    terrain.fillGround(1000, 1000, 500, 500, { biome: Biome.CoralRuins });
+
+    assert.equal(terrain.biomeAt(1100, 1100), Biome.CoralRuins);
+    // `Math.fround`, not a tolerance: `pf` is a Float32Array, so what comes back
+    // is the single-precision round of the constant rather than the constant.
+    // The exact equality is still worth having — it says the cell holds the
+    // biome's own factor and not something composed with it.
+    assert.equal(
+      terrain.propagationAt(1100, 1100),
+      Math.fround(PROPAGATION_FACTOR[Biome.CoralRuins])
+    );
+  });
+
+  it('is integrated by the walk detection actually uses', () => {
+    // `propagationAt` and `pathPropagation` read the same array, and the
+    // comment on `propagationAt` records what it cost the last time they
+    // diverged: a Resonance Storm invisible to every caller of one while fully
+    // visible to the other. A biome write must not reopen that.
+    const terrain = new Terrain(4000, 4000, 250, { floorM: 1600 });
+    const before = terrain.pathPropagation(1050, 1100, 1450, 1100);
+    terrain.fillGround(1000, 1000, 500, 500, { biome: Biome.CoralRuins });
+    const after = terrain.pathPropagation(1050, 1100, 1450, 1100);
+
+    assert.ok(after < before, `the walk did not quieten: ${before} then ${after}`);
+    // The whole segment lies inside the painted rectangle, so the integral is
+    // the biome's own factor rather than something between the two.
+    assert.ok(
+      Math.abs(after - PROPAGATION_FACTOR[Biome.CoralRuins]) < 1e-6,
+      `the walk read ${after}, not the ruins' ${PROPAGATION_FACTOR[Biome.CoralRuins]}`
+    );
+  });
+
+  it('composes with a storm already standing over it, rather than cancelling it', () => {
+    // The sharp one. PF is recomputed from the biome and never inverted, so a
+    // write that set the cell to its new biome's bare baseline would erase a
+    // live storm's multiplier — and the storm would only come back at its next
+    // phase boundary, seconds later, with detection wrong in between.
+    const terrain = new Terrain(4000, 4000, 250, { floorM: 1600 });
+    const storm = [{ x: 1100, y: 1100, radiusM: 400, scale: HAZARDS.STORM.PF_MULTIPLIER }];
+    terrain.applyPropagationModifiers(storm);
+    assert.ok(
+      Math.abs(
+        terrain.propagationAt(1100, 1100) -
+          PROPAGATION_FACTOR[Biome.OpenWater] * HAZARDS.STORM.PF_MULTIPLIER
+      ) < 1e-6,
+      'the storm was not applied'
+    );
+
+    terrain.fillGround(1000, 1000, 500, 500, { biome: Biome.AbyssalTrench });
+
+    const expected = PROPAGATION_FACTOR[Biome.AbyssalTrench] * HAZARDS.STORM.PF_MULTIPLIER;
+    assert.ok(
+      Math.abs(terrain.propagationAt(1100, 1100) - expected) < 1e-6,
+      `the storm was cancelled: ${terrain.propagationAt(1100, 1100)}, expected ${expected}`
+    );
+
+    // …and the next hazard rebuild must land on the same number, or the two
+    // writers have simply disagreed later instead of sooner.
+    terrain.applyPropagationModifiers(storm);
+    assert.ok(Math.abs(terrain.propagationAt(1100, 1100) - expected) < 1e-6);
+  });
+
+  it('never writes a cell louder than the broadphase will search', () => {
+    // The Echo pass sizes its broadphase from MAX_PROPAGATION_FACTOR. A cell
+    // above it is audible past the radius the pass is willing to look, which
+    // reads as detection failing rather than as loud water. No biome baseline
+    // can breach it today — the ceiling is derived from that same table — so
+    // this is the invariant, asserted where a future louder biome would meet it.
+    const terrain = new Terrain(4000, 4000, 250, { floorM: 1600 });
+    terrain.applyPropagationModifiers([{ x: 1100, y: 1100, radiusM: 400, scale: 4 }]);
+    terrain.fillGround(1000, 1000, 500, 500, { biome: Biome.AbyssalTrench });
+    // Against the float32 round of the ceiling, because that is the widest
+    // value the array can actually hold at the ceiling — the clamp itself runs
+    // in double precision, and storing 1.6 rounds it up by 2.4e-8.
+    assert.ok(
+      terrain.propagationAt(1100, 1100) <= Math.fround(MAX_PROPAGATION_FACTOR),
+      `a cell was written at ${terrain.propagationAt(1100, 1100)}`
+    );
+  });
+
+  it('leaves the ground alone when the beat only names water, and the reverse', () => {
+    // Biome and ground stay independent — the argument `fillGround`'s comment
+    // makes about kelp on a plateau. A beat that turns the water must not
+    // quietly flatten the seabed under it.
+    const terrain = new Terrain(4000, 4000, 250, { floorM: 1600 });
+    terrain.fillGround(1000, 1000, 500, 500, { floorM: 900 });
+    terrain.fillGround(1000, 1000, 500, 500, { biome: Biome.KelpForest });
+
+    assert.equal(terrain.floorAt(1100, 1100), 900, 'the biome write moved the floor');
+    assert.equal(terrain.biomeAt(1100, 1100), Biome.KelpForest);
+
+    terrain.fillGround(1000, 1000, 500, 500, { floorM: 800 });
+    assert.equal(terrain.biomeAt(1100, 1100), Biome.KelpForest, 'the ground write moved the biome');
+  });
+
+  it('reports a cell whose biome moved and nothing else', () => {
+    // The dedupe in `fillGround` compares the fields it wrote. Before the biome
+    // joined them, a biome-only write moved neither floor nor ceiling and would
+    // have been dropped as "nothing changed" — the client would keep drawing
+    // and hearing the old water forever.
+    const terrain = new Terrain(4000, 4000, 250, { floorM: 1600 });
+    terrain.markBaseline();
+    terrain.fillGround(1000, 1000, 500, 500, { biome: Biome.CoralRuins });
+    const changes = terrain.changesSince(0);
+    assert.ok(changes.length > 0, 'a biome-only write was reported as no change');
+    assert.ok(changes.every((change) => change.biome === Biome.CoralRuins));
+
+    // And repainting the same biome costs the wire nothing.
+    const revision = terrain.revision;
+    terrain.fillGround(1000, 1000, 500, 500, { biome: Biome.CoralRuins });
+    assert.equal(terrain.revision, revision, 'an idempotent repaint was sent');
+  });
+
+  it('lands a replaying client on the grid a joining client is served', () => {
+    // The two paths into a client's biome array: `serialize` on join, and
+    // `changesSince` for a client holding an older cursor. A field carried by
+    // one and not the other is a map that differs by when you connected.
+    const terrain = new Terrain(4000, 4000, 250, { floorM: 1600 });
+    terrain.fillRect(0, 0, 4000, 4000, Biome.OpenWater);
+    terrain.markBaseline();
+    const joinedEarly = terrain.serialize().biomes.slice();
+
+    terrain.fillGround(1000, 1000, 500, 500, { biome: Biome.CoralRuins, floorM: 900 });
+    terrain.fillGround(1200, 1200, 300, 300, { biome: Biome.ThermalVein });
+
+    // The late joiner is served the live arrays.
+    const joinedLate = terrain.serialize().biomes;
+    // The early joiner replays the log from its cursor, exactly as
+    // `EchoRenderer.applyGround` does.
+    for (const change of terrain.changesSince(0)) joinedEarly[change.index] = change.biome;
+
+    assert.deepEqual(joinedEarly, joinedLate, 'the two clients hold different water');
+  });
+});
+
+describe('the state hash, on water', () => {
+  it('notices a biome change that moved no ground', () => {
+    // The ground fields alone cannot see this: a replay in which the ruins came
+    // down on a different tick would agree at every checkpoint while the two
+    // runs heard different maps.
+    const terrain = Terrain.demo();
+    const world = new Match(undefined, { seed: 3, terrain, fauna: false }).world;
+    const before = hashWorld(world);
+    world.terrain.fillGround(1000, 1000, 500, 500, { biome: Biome.CoralRuins });
+    assert.notEqual(hashWorld(world), before, 'the hash ignored water that changed');
+  });
+
+  it('agrees between two identical runs', () => {
+    const run = () => {
+      const terrain = Terrain.demo();
+      const world = new Match(undefined, { seed: 3, terrain, fauna: false }).world;
+      world.terrain.fillGround(1000, 1000, 500, 500, { biome: Biome.CoralRuins });
+      return hashWorld(world);
+    };
+    assert.equal(run(), run());
+  });
+});
+
+/**
+ * Synthetic, for `missionEmitters.test.ts`'s reason: no catalogue mission
+ * authors a biome change yet — the fiction of what brings a gallery down
+ * belongs to whichever mission spec calls for it — and this is the mechanism's
+ * proof.
+ *
+ * The region is laid inside Sorrowgate's Thermal Vein — cells x 250–1,250,
+ * y 1,500–2,250, all six columns of which the map paints Vein — and the beat
+ * turns it to ruins. Vein and ruins were chosen because they are far apart
+ * acoustically: PF 0.45 becomes 0.80, so water that masked now carries, and a
+ * write that silently did nothing could not pass as rounding.
+ */
+const RUINS_REGION = { x: 250, y: 1500, widthM: 1000, heightM: 750 };
+/** Inside the region, on a cell centre the beat is certain to claim. */
+const IN_THE_RUINS = { x: 625, y: 1875 };
+const COLLAPSE_TICK = 3 * SIM.TICK_HZ;
+
+const RUINS_MISSION: MissionDefinition = {
+  ...PROLOGUE_SORROWGATE,
+  id: 'test-ruins-mission',
+  doc: 'docs/environments.md, Coral Ruins — the test authoring',
+  fauna: false,
+  regions: [{ id: 'dome', ...RUINS_REGION, note: 'The gallery, and the water under it' }],
+  lifts: [],
+  markers: [],
+  parties: [],
+  locks: [],
+  objectives: [],
+  beats: [
+    {
+      atTick: COLLAPSE_TICK,
+      kind: 'ground',
+      region: 'dome',
+      biome: Biome.CoralRuins,
+      note: 'The gallery over the vents comes down, and the water stops masking',
+    },
+  ],
+};
+
+describe('a mission beat that changes the water', () => {
+  it('changes propagation at the authored tick, and not before', () => {
+    // The beat is what a mission actually has to reach for, so the plumbing is
+    // only proven end to end here: types.ts through runtime.ts into the grid.
+    // "Not before" is half the claim — a change that landed at match start
+    // would be a map edit wearing a beat's clothes, and the mission's own
+    // timing would stop meaning anything.
+    const match = new Match(missionMapById(RUINS_MISSION.mapId), {
+      seed: 11,
+      mission: RUINS_MISSION,
+      fauna: false,
+    });
+    const terrain = match.world.terrain;
+    const before = terrain.propagationAt(IN_THE_RUINS.x, IN_THE_RUINS.y);
+    assert.notEqual(
+      terrain.biomeAt(IN_THE_RUINS.x, IN_THE_RUINS.y),
+      Biome.CoralRuins,
+      'the map already authored the ruins, so this proves nothing'
+    );
+
+    // Asserted *before* each step, because the beat fires on the update that
+    // lands on its tick rather than on the one after it.
+    while (match.tick < COLLAPSE_TICK) {
+      assert.equal(
+        terrain.propagationAt(IN_THE_RUINS.x, IN_THE_RUINS.y),
+        before,
+        `the water changed at tick ${match.tick}, before the beat`
+      );
+      match.update(STEP_MS);
+    }
+    assert.equal(match.tick, COLLAPSE_TICK);
+
+    assert.equal(terrain.biomeAt(IN_THE_RUINS.x, IN_THE_RUINS.y), Biome.CoralRuins);
+    assert.equal(
+      terrain.propagationAt(IN_THE_RUINS.x, IN_THE_RUINS.y),
+      Math.fround(PROPAGATION_FACTOR[Biome.CoralRuins])
+    );
+    // And it is on the wire, under the revision the room broadcasts.
+    const changes = terrain.changesSince(0);
+    assert.ok(
+      changes.some((change) => change.biome === Biome.CoralRuins),
+      'the beat wrote the grid but told no client'
+    );
   });
 });

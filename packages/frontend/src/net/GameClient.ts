@@ -66,16 +66,20 @@ export interface TerrainPayload {
 }
 
 /**
- * Cells whose water column changed mid-match, and the ground's revision after
- * applying them.
+ * Cells that changed mid-match, and the ground's revision after applying them.
  *
  * Cells rather than the rectangle a mission authored: a rect would make both
  * sides redo the metres-to-cells arithmetic and agree about every `Math.floor`,
  * and cells are what actually changed.
+ *
+ * `biome` rides along on every cell (#259), because the record is the cell
+ * rather than the fields that moved — see `TerrainCellChange` on the server.
+ * It carries no hidden information: terrain is public on join by design, and
+ * this makes a published fact mutable rather than publishing a new one.
  */
 export interface GroundDeltaPayload {
   revision: number;
-  cells: { index: number; floorM: number; ceilingM: number }[];
+  cells: { index: number; floorM: number; ceilingM: number; biome: number }[];
 }
 
 export interface AssignedPayload {

@@ -303,8 +303,8 @@ describe('the beat schedule', () => {
             `${mission.id}: a ground beat names region "${beat.region}", which is not authored`
           );
           assert.ok(
-            beat.floorM !== undefined || beat.ceilingM !== undefined,
-            `${mission.id}: a ground beat on "${beat.region}" writes neither floor nor ceiling`
+            beat.floorM !== undefined || beat.ceilingM !== undefined || beat.biome !== undefined,
+            `${mission.id}: a ground beat on "${beat.region}" writes neither ground nor biome`
           );
           continue;
         }

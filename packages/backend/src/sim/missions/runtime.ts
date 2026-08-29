@@ -511,6 +511,7 @@ export class MissionRuntime {
         world.terrain.fillGround(region.x, region.y, region.widthM, region.heightM, {
           floorM: beat.floorM,
           ceilingM: beat.ceilingM,
+          biome: beat.biome,
         });
         return;
       }

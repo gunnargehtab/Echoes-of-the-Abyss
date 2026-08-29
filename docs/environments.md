@@ -128,17 +128,29 @@ Sacred territory of the Hadron Knights.
 - Remnants of pre-collapse cities
 - Overgrown with coral and algae
 - Broken domes, collapsed tunnels
-- **Specified** as the only biome that changes state during a match — not yet built
+- **The only biome that changes state during a match** — specified here, and built
 - Perfect for campaign missions
 
 The state change is specified here and belongs here rather than in any other biome: a dome
 that comes down or a tunnel that silts up moves the acoustic shadows a player was already
 fighting from, and a ruin is the only terrain in the game where that reads as a building
-failing rather than as the seabed misbehaving. What is missing is the plumbing, not the
-intent — terrain is painted once when a match is built and the whole grid reaches the
-client on join as static public data, so a mid-match repaint needs a replication path that
-does not exist yet. [campaign.md](campaign.md) §10 states the same gap from the mission
-side; the two lines move together.
+failing rather than as the seabed misbehaving.
+
+A mission beat writes it. The beat names a region and the biome the water over it becomes,
+and it may collapse the geometry in the same breath — a dome coming down and the water
+behind it turning to ruins are one event at one tick, not two. The PropagationFactor moves
+with the biome, so the change is audible at the tick it happens rather than at the next
+storm, and it composes with any hazard standing over the same cells: a Resonance Storm over
+ground that just became ruins prices the new biome, never the old one.
+
+Nothing about it is hidden. Terrain is public on join by design — both commanders are
+standing on it — and a mid-match repaint is that same published fact changing, sent to
+every client as the cells that moved. It resolves nothing per observer and adds no channel
+the Echo Layer does not already own. A client that joins after the collapse is served the
+ground as it *is*; one that was already here is sent the difference.
+
+[campaign.md](campaign.md) §10 states the same fact from the mission side; the two lines
+move together.
 
 ### Toxic Brine Zones
 
