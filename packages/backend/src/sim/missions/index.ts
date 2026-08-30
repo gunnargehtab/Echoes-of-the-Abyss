@@ -13,6 +13,7 @@
 
 import { ATTENDING_ATTENDANCE } from './attendance.ts';
 import { LEDGER_ASSET_RECOVERY } from './assetRecovery.ts';
+import { LEDGER_SHIFT_CHANGE } from './shiftChange.ts';
 import { PROLOGUE_SORROWGATE } from './sorrowgate.ts';
 import { SEEDING_TEND } from './tend.ts';
 import type { MissionDefinition } from './types.ts';
@@ -22,11 +23,18 @@ export * from './predicates.ts';
 export * from './sounding.ts';
 export * from './view.ts';
 export * from './runtime.ts';
-export { ATTENDING_ATTENDANCE, LEDGER_ASSET_RECOVERY, PROLOGUE_SORROWGATE, SEEDING_TEND };
+export {
+  ATTENDING_ATTENDANCE,
+  LEDGER_ASSET_RECOVERY,
+  LEDGER_SHIFT_CHANGE,
+  PROLOGUE_SORROWGATE,
+  SEEDING_TEND,
+};
 
 export const MISSIONS: readonly MissionDefinition[] = [
   PROLOGUE_SORROWGATE,
   LEDGER_ASSET_RECOVERY,
+  LEDGER_SHIFT_CHANGE,
   SEEDING_TEND,
   ATTENDING_ATTENDANCE,
 ];

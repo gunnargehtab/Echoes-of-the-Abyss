@@ -98,6 +98,31 @@ export const LEDGER_ASSET_RECOVERY_HEADER: MissionHeader = {
   ],
 };
 
+export const LEDGER_SHIFT_CHANGE_HEADER: MissionHeader = {
+  id: 'ledger-shift-change',
+  campaign: 'ledger',
+  ordinal: 2,
+  name: 'The Ledger — Shift Change',
+  premise:
+    'Face Two runs its last shift like any other. The audit is on the road, and the crews do not know yet.',
+  mapId: 'ninefold-workings',
+  // The whistle at 16:00 (docs/mission-shift-change.md §9), inside §10's 12-25.
+  lengthBandS: [900, 1020],
+  /**
+   * Osk, to the shift command, at muster — docs/mission-shift-change.md §12,
+   * verbatim. Public for Sorrowgate's reason: it names no hidden fact the
+   * mission withholds. The audit's transit plan is filed in advance because
+   * that is what an audit is, and the one thing Osk does not say out loud is
+   * the one thing he does not say out loud in the water either.
+   */
+  briefing: [
+    'Works order for the tide: Face Two runs its shift, reports its number, and stands down its watches on the bell. Quota is three thousand six hundred. The seam will cover it if the seam is worked, and Five will cover what Two cannot. That is the shift. It is the same shift as yesterday, and it will read like it.',
+    'Risk and Actuarial are on the field today. Their transit plan is filed and it is on the board: two passes on the High Road, docked at the rail between. An audit that files its plan is telling you it has nothing to hide, and expecting the same. Give them a working face. That is not a trick; a working face is what this is. Run your throttles like it is any tide, because it is.',
+    "Watches stand down in order. Berthing is rigged on the barges and Vail has the lists. The transfer paperwork is standing works orders, hull movements between sites, current and correct. If anyone asks a barge's business, its business is on its manifest, and its manifest is right.",
+    'One more thing, and then the bell. The climb to the rail is long and the layer is where it has always been. Nobody crosses it under way while the road is listening unless I say so, or unless you have worked out for yourselves why I would not. You have all been on this face long enough to have worked it out. The shift is open.',
+  ],
+};
+
 export const SEEDING_TEND_HEADER: MissionHeader = {
   id: 'seeding-tend',
   campaign: 'seeding',
@@ -151,6 +176,7 @@ export const ATTENDING_ATTENDANCE_HEADER: MissionHeader = {
 export const MISSION_HEADERS: readonly MissionHeader[] = [
   PROLOGUE_SORROWGATE_HEADER,
   LEDGER_ASSET_RECOVERY_HEADER,
+  LEDGER_SHIFT_CHANGE_HEADER,
   SEEDING_TEND_HEADER,
   ATTENDING_ATTENDANCE_HEADER,
 ];

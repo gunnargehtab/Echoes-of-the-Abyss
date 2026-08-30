@@ -18,6 +18,7 @@ import { VENTFRONT_DIVIDE } from './ventfrontDivide.ts';
 import { ATTENDING_GALLERIES } from './missions/attendingGalleries.ts';
 import { MARR_PLATEAU } from './missions/marrPlateau.ts';
 import { NINEFOLD_FACE_SIX } from './missions/ninefoldFaceSix.ts';
+import { NINEFOLD_WORKINGS } from './missions/ninefoldWorkings.ts';
 import { SORROWGATE } from './missions/sorrowgate.ts';
 import type { MapDefinition } from './types.ts';
 
@@ -28,6 +29,7 @@ export {
   KELP_LABYRINTH,
   MARR_PLATEAU,
   NINEFOLD_FACE_SIX,
+  NINEFOLD_WORKINGS,
   SORROWGATE,
   VENTFRONT_DIVIDE,
 };
@@ -61,6 +63,7 @@ export function mapById(id: string): MapDefinition | undefined {
 export const MISSION_MAPS: readonly MapDefinition[] = [
   SORROWGATE,
   NINEFOLD_FACE_SIX,
+  NINEFOLD_WORKINGS,
   MARR_PLATEAU,
   ATTENDING_GALLERIES,
 ];
