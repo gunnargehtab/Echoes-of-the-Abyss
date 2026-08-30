@@ -7,8 +7,8 @@ For a browser-based RTS (PC-first), the stack needs to give high performance for
 ### Frontend
 
 - TypeScript
-- PixiJS (rendering — the chart and HUD)
-- three.js (rendering — the perspective conn view, [three-layer-ocean.md](three-layer-ocean.md) Phase 1)
+- three.js (rendering — the conn view: the world, since [three-layer-ocean.md](three-layer-ocean.md) Phase 5)
+- PixiJS (rendering — the HUD and chart marks, on a transparent canvas over the conn view)
 - bitecs (ECS)
 - Howler.js (audio)
 - Optional: React for menus/lobby
@@ -105,7 +105,7 @@ at a distance cut.
 
 ### Art & Asset Pipeline
 
-- **Rendering style:** 2D isometric (like C&C, Warcraft II), 2.5D with WebGL shaders, or full 3D if using Unity/Godot. Decided since: pure top-down plan view with per-pixel-lit sprites — steeper than the C&C/WC3 oblique, because range rings must render as true circles. The projection spec lives in [art-direction.md](art-direction.md) ("Camera & Projection"). Under revision: the August 2026 playtest redirected presentation toward a WC3-lineage perspective renderer over the approved GLB roster — the plan is [three-layer-ocean.md](three-layer-ocean.md)
+- **Rendering style:** 2D isometric (like C&C, Warcraft II), 2.5D with WebGL shaders, or full 3D if using Unity/Godot. Decided since: a WC3-lineage perspective renderer (three.js, pitch locked at 55°, yaw locked) over the approved GLB roster and a sculpted seabed, with the Pixi HUD and every chart mark composited above it through the same camera — the August 2026 revision, landed phase by phase per [three-layer-ocean.md](three-layer-ocean.md). Range rings stay honest by conforming to the terrain instead of flattening the camera; the projection spec lives in [art-direction.md](art-direction.md) ("Camera & Projection")
 - **Tools:** Blender (submarine models, terrain), TexturePacker (spritesheets), Spine or DragonBones (unit animations)
 
 This stack gives high performance, easy development, and long-term stability.

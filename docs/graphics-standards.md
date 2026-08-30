@@ -112,15 +112,21 @@ server only sends resolved contacts (see the server-authoritative rule in
 draw it *from* — keep it that way. No debug path that renders the full enemy sprite ships,
 ever.
 
-### 6. Performance: the client ships PNGs, not geometry
+### 6. Performance: one world scene, on measured budgets
 
-The 3D work stays offline. The frontend is PixiJS and loads flat maps rendered by
-`tools/hull-maps/build.mjs` at **4 px/m** for units and **1.5 px/m** for structures —
-those densities are contracts with `hullTextures.ts` and `structureMaps.ts` (the maps
-carry no metadata; pixel size ÷ density *is* the metre extent), so a change must land in
-both places at once. Sprites bake once at load time, not per frame. Runtime 3D, per-frame
-relighting of whole rosters, or map densities that push a structure out of its current
-memory class are all regressions, and anything drawn per tick is on the 60 Hz budget
+The conn view renders the world at runtime — the terrain heightfield and the player's
+*own* roster models — inside the budgets the Phase-1 measurement pinned
+([three-layer-ocean.md](three-layer-ocean.md)): **≤ 150 draw calls** and **≤ 250 k
+triangles** on screen (`mergeByMaterial` collapses each model to one mesh per material),
+pixel ratio capped at 1.5, and the `__perspectiveProbe` frame-cost telemetry is how the
+number is checked rather than argued about. Only the own force is ever geometry — five
+hulls and a dozen structures, never an army of contacts — which is what keeps the budget
+flat. The offline bake (`tools/hull-maps/build.mjs`, **4 px/m** units, **1.5 px/m**
+structures) remains a contract with `hullTextures.ts` and `structureMaps.ts` (the maps
+carry no metadata; pixel size ÷ density *is* the metre extent): it is the loading
+fallback and the scope's language, and a change must land in both places at once.
+Per-frame relighting of whole rosters and densities that push a structure out of its
+memory class are still regressions, and anything drawn per tick is on the 60 Hz budget
 ([tech-stack.md](tech-stack.md)).
 
 ### 7. Readability outranks richness
@@ -131,18 +137,20 @@ garnish, not game information — fine to keep in the bake, never a reason to ra
 density. The glance test for any new visual: can a player who has read nothing tell *whose*
 it is, *how loud* it is, and *whether it is theirs* in under a second?
 
-### 8. Projection discipline — gameplay geometry is plan view
+### 8. Projection discipline — one camera, honest geometry
 
 The camera spec in [art-direction.md](art-direction.md) ("Camera & Projection") is a gate,
-not a mood note. Everything that carries gameplay information — terrain, the cell grid,
-movement, detection rings, the ping preview — renders in pure top-down orthographic plan
-view: a range ring is a perfect circle on screen, and a metre is the same length in every
-direction. No camera rotation ships, and no atmosphere pass (vignette, sway, parallax fog,
-chromatic split) may tilt, shear or rotate that projection — sway is translation only.
-Hulls get their three-quarter read from per-pixel relief lighting in the shared bake, never
-from an oblique render: a sprite's footprint stays exactly its `HULL_OUTLINE`. The gate-6
-density contract (pixel size ÷ px/m = metre extent) is plan-view arithmetic and is one of
-the reasons this rule cannot be bent locally.
+not a mood note. The world renders through one perspective camera — pitch locked at 55°,
+yaw locked to north — and everything that carries gameplay information projects through
+that same camera: the Pixi mark layer asks it (`projectPoint` / `resolveGround`) and never
+keeps a projection of its own. Measurements conform, symbols billboard — a range ring is
+sampled onto the terrain so equal metres read as the same water, while contact marks,
+bars and glyphs face the screen at local scale — and no drawing path may approximate a
+ring as a screen ellipse or flatten a measurement it should project. No camera rotation
+ships, and no atmosphere pass (vignette, sway, parallax fog, chromatic split) may tilt,
+shear or rotate the projection — sway is translation only. The sonar scope stays the flat
+chart, and its camera box is the view's true ground footprint: a trapezoid, because that
+is what a tilted camera honestly sees.
 
 ## Review checklist for any PR that touches visuals
 
@@ -156,10 +164,12 @@ the reasons this rule cannot be bent locally.
   style docs (gate 4)
 - [ ] Enemy-facing rendering still caps at tier fidelity; own-force-only detail stayed
   own-force-only (gate 5)
-- [ ] Map density contracts (`4` / `1.5` px/m) untouched, or changed on both sides at once
-  (gate 6)
-- [ ] Gameplay geometry still renders in plan view — rings are circles, no rotation, no
-  oblique or tilted rendering path, atmosphere effects stay screen-space (gate 8)
+- [ ] Draw calls and triangles stay inside the gate-6 budgets (`__perspectiveProbe`
+  reports them), and the map density contracts (`4` / `1.5` px/m) are untouched or
+  changed on both sides at once
+- [ ] World marks still project through the conn camera — measurements conform, symbols
+  billboard, no second projection, no rotation, atmosphere effects stay screen-space
+  (gate 8)
 - [ ] Screenshot in the PR, taken via the **run-game** skill — a visual change is reviewed
   by looking at it, not by reading its diff
 - [ ] If the change alters what things *should* look like (not just how they are built),

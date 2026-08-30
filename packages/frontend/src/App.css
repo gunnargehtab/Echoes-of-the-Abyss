@@ -26,21 +26,10 @@
   height: 100%;
 }
 
-.game-host {
-  width: 100%;
-  height: 100%;
-}
-
-.game-host canvas {
-  display: block;
-  /* Right-click is a move order, not a browser menu. */
-  touch-action: none;
-}
-
-/* The perspective viewport (docs/three-layer-ocean.md Phase 1): a second
-   renderer over the chart, shown or hidden whole. It covers the Pixi canvas
-   deliberately — orders and the HUD stay on the chart until Phase 3, so
-   while this is the view, the toggle is the way back. */
+/* Two canvases, one picture (docs/three-layer-ocean.md Phase 5): the conn
+   view's GL canvas is the world, and the Pixi canvas over it is transparent
+   glass carrying the HUD and every chart mark. Both fill the root; DOM order
+   stacks them, and every pointer lands on the glass. */
 .perspective-host {
   position: absolute;
   inset: 0;
@@ -52,34 +41,15 @@
   touch-action: none;
 }
 
-/* The chart/conn switch, in the overlay-button dress. Top-left under the
-   resource strip and clear of the depth ribbon's column: the top-right
-   corner belongs to the contact log. Scales with the UI like the DOM panels. */
-.view-toggle {
+.game-host {
   position: absolute;
-  top: calc(44px * var(--ui-scale, 1));
-  left: calc(78px * var(--ui-scale, 1));
-  z-index: 5;
-  padding: 0.45rem 1.1rem;
-  border: 1px solid rgba(255, 61, 166, 0.5);
-  border-radius: 3px;
-  background: var(--abyss-glass);
-  color: var(--text-cyan);
-  font: inherit;
-  font-family: ui-monospace, Consolas, monospace;
-  font-size: 0.68rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  cursor: pointer;
+  inset: 0;
 }
 
-.view-toggle:hover {
-  background: rgba(255, 61, 166, 0.12);
-}
-
-.view-toggle:focus-visible {
-  outline: 1px solid var(--text-cyan);
-  outline-offset: 2px;
+.game-host canvas {
+  display: block;
+  /* Right-click is a move order, not a browser menu. */
+  touch-action: none;
 }
 
 .game-overlay {

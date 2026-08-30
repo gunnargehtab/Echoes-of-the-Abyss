@@ -95,7 +95,7 @@ Four survey plates in the **Pressure Cartography** visual language — the disci
 
 ## 🧱 Tech Stack
 
-**Frontend:** TypeScript · PixiJS (WebGL) · bitecs (ECS) · Howler.js + raw Web Audio · React (menus only)
+**Frontend:** TypeScript · three.js (the conn-view world) · PixiJS (HUD over it) · bitecs (ECS) · Howler.js + raw Web Audio · React (menus only)
 **Backend:** Node.js · Colyseus · Redis · PostgreSQL
 **Build:** Vite · ESBuild · Vercel (frontend) · Hetzner Cloud (game servers)
 

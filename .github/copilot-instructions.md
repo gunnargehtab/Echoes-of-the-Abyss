@@ -3,7 +3,7 @@
 This repository holds two things for Echoes of the Abyss, a browser-native underwater RTS, and they must stay in agreement:
 
 1. **The design bible** (`docs/`) — worldbuilding, mechanics, art and audio direction. It came first and remains canonical: it is the source of the numbers.
-2. **A playable scaffold** (`packages/`) — a TypeScript monorepo implementing the Echo Layer simulation, a Colyseus match server, and a PixiJS client.
+2. **A playable scaffold** (`packages/`) — a TypeScript monorepo implementing the Echo Layer simulation, a Colyseus match server, and a two-canvas client: a three.js world under a transparent PixiJS HUD.
 
 Code transcribes the docs. When the two disagree, that is a bug in one of them — say which one you are changing and why.
 
@@ -45,7 +45,7 @@ No faction is written as the villain. Read: **[factions.md](../docs/factions.md)
 
 ## Tech Stack & Implementation
 
-- **Frontend:** TypeScript · PixiJS (WebGL rendering) · bitecs (ECS) · Howler.js + raw Web Audio · React (menus only)
+- **Frontend:** TypeScript · three.js (the conn-view world) · PixiJS (HUD and chart marks over it) · bitecs (ECS) · Howler.js + raw Web Audio · React (menus only)
 - **Backend:** Node.js · Colyseus (multiplayer state sync) · Redis (real-time caching) · PostgreSQL (accounts/saves)
 - **Build:** Vite · ESBuild · npm workspaces
 - **Deployment:** Vercel (frontend) · Hetzner Cloud (game servers, low latency in EU)
@@ -64,7 +64,8 @@ packages/backend   Colyseus server. Owns the simulation.
                    sim/match.ts — 60 Hz fixed step, 5 Hz Echo Layer pass
                    sim/systems/echoLayer.ts — per-player detection resolution
                    rooms/MatchRoom.ts — the network boundary; rules live in sim/
-packages/frontend  React shell + PixiJS renderer. A terminal, not a simulation.
+packages/frontend  React shell + two-canvas renderer (three.js world, PixiJS
+                   HUD over it, one shared camera). A terminal, not a simulation.
 tools/echo-sim     Standalone deterministic Echo scenario harness.
 ```
 

@@ -1,5 +1,15 @@
 /**
- * PixiJS v8 renderer for the Echo Layer.
+ * PixiJS v8 renderer for the Echo Layer — since Phase 5 of
+ * docs/three-layer-ocean.md, the HUD-and-marks half of the shipped picture.
+ *
+ * The world itself — terrain, water light, the player's own hulls — is the
+ * three.js conn view (PerspectiveView.ts) on the canvas *under* this one.
+ * This canvas is transparent and draws everything the chart language still
+ * owes the player on top of it: contacts at earned fidelity, detection rings,
+ * hazards, residue, routes, bars, and the whole screen-space HUD. Every
+ * world-anchored mark is projected through the conn's one camera
+ * (`projectPoint` / `resolveGround`), so the two painters can never disagree
+ * about where the water is.
  *
  * Rendering principle, from docs/art-direction.md: the visual fidelity of a
  * contact must match the informational fidelity the player earned. A Tier-1
@@ -11,15 +21,24 @@
  * than emergent from insertion order:
  *
  *   stage
- *   +- world        (camera transform: pan + zoom)
- *   |  +- terrain   (static, redrawn only when the map changes)
- *   |  +- rings     (own units' detection radii)
- *   |  +- contacts  (resolved enemy returns, incl. decaying ghosts)
- *   |  +- units     (own units)
+ *   +- overlay      (screen space, redrawn per frame through the conn camera)
+ *   |  +- ground    (cells the selection cannot enter)
+ *   |  +- nodes     (survey-chart nodule fields)
+ *   |  +- rings     (own units' detection radii, queued routes)
+ *   |  +- symbols   (pooled per-entity marks: structures, contacts, units)
  *   +- hud          (screen space, never transformed)
+ *
+ * Two idioms inside the overlay, and the split is deliberate. *Measurements*
+ * — range rings, hazard sites, residue, blocked ground — are facts about the
+ * water, so they are projected vertex by vertex and lie on the terrain like
+ * paint. *Symbols* — contact marks, bars, glyphs, selection rings — are facts
+ * about the interface, so each lives in a pooled Graphics billboarded at its
+ * entity's projected position and scaled by the local pixels-per-metre: the
+ * old chart draw bodies port with the entity at the local origin and
+ * `inverseScale = 1 / pxPerM`.
  */
 
-import { Application, Container, Graphics, Sprite, Text, Texture } from 'pixi.js';
+import { Application, Container, Graphics, Text } from 'pixi.js';
 import {
   ACTIVE_SONAR,
   Biome,
@@ -79,13 +98,11 @@ import {
   FAUNA_COLOR,
   RESOURCE_COLOR,
   setActivePalette,
-  VENT_EMBER,
   TIER_STYLE,
   UI,
   sigColor,
   type PaletteName,
 } from './palette.ts';
-import { bakeSeabed, emberFlicker, SEABED_PX_PER_CELL, seabedSeed, ventEmbers } from './seabed.ts';
 import {
   actionFor,
   BUILD_ACTION_KIND,
@@ -118,14 +135,14 @@ import {
   drawUnitSilhouette,
   HULL_LENGTH_M,
 } from './silhouettes.ts';
-import { destroyHullTextures, hullSpriteSizeM, hullTexture, loadHullArt } from './hullTextures.ts';
-import {
-  destroyStructureTextures,
-  loadStructureArt,
-  structureSpriteSizeM,
-  structureTexture,
-} from './structureTextures.ts';
+import { destroyHullTextures, loadHullArt } from './hullTextures.ts';
+import { destroyStructureTextures, loadStructureArt } from './structureTextures.ts';
 import type { MapPayload, TerrainPayload } from '../net/GameClient.ts';
+import {
+  UNRESOLVED_CONTACT_DEPTH_M,
+  type PerspectiveView,
+  type ProjectedPoint,
+} from './PerspectiveView.ts';
 
 /** A contact plus when we last actually heard it, for ghost decay. */
 interface TrackedContact {
@@ -280,6 +297,60 @@ const UNDER_FIRE_PULSE_MS = 2000;
 const GLYPH_MIN_PX = 7;
 
 /**
+ * Vertices per projected circle. Rings are facts about the water, so they lie
+ * on the terrain — sampled and projected point by point rather than drawn as
+ * screen ellipses. 48 keeps a 2,400 m detection ring visibly smooth at survey
+ * zoom while staying far under the budget the old per-cell terrain pass spent.
+ */
+const CIRCLE_SEGMENTS = 48;
+
+/**
+ * A pool of per-entity symbol Graphics.
+ *
+ * Symbols — contact marks, bars, glyphs, selection rings — billboard at their
+ * entity's projected position with `scale = pxPerM`, so their draw bodies stay
+ * in world metres with the entity at the local origin, exactly as the flat
+ * chart wrote them. Pooled by entity id so a mark keeps its Graphics across
+ * frames instead of churning display objects at 60 Hz.
+ */
+class SymbolPool {
+  readonly layer = new Container();
+  private readonly held = new Map<number, Graphics>();
+  private readonly used = new Set<number>();
+
+  /** A cleared Graphics for this entity, positioned by the caller. */
+  acquire(key: number): Graphics {
+    let g = this.held.get(key);
+    if (g === undefined) {
+      g = new Graphics();
+      this.held.set(key, g);
+      this.layer.addChild(g);
+    }
+    g.clear();
+    g.visible = true;
+    this.used.add(key);
+    return g;
+  }
+
+  /** Drop every symbol not acquired since the last sweep. */
+  sweep(): void {
+    for (const [key, g] of this.held) {
+      if (!this.used.has(key)) {
+        g.destroy();
+        this.held.delete(key);
+      }
+    }
+    this.used.clear();
+  }
+
+  destroy(): void {
+    this.held.clear();
+    this.used.clear();
+    this.layer.destroy({ children: true });
+  }
+}
+
+/**
  * How long one engagement lasts, in simulation ticks (docs/ui-ux.md §5).
  * The mixer derives the same number from the same constant, which is what
  * lets the log and the cue agree about what one fight is.
@@ -370,6 +441,12 @@ function isRock(terrain: TerrainPayload, index: number): boolean {
 const SELECT_RADIUS_M = 140;
 /** How close a right-click must land to a contact or node to mean it. */
 const TARGET_RADIUS_M = 160;
+/**
+ * Aim floor in screen pixels. The two radii above are world metres and shrink
+ * with the camera's pull-back; below this floor the screen distance wins, so
+ * a survey-zoom click never has to be pixel-perfect.
+ */
+const AIM_FLOOR_PX = 18;
 
 /** How long the hint bar holds the reason a locked key did nothing. */
 const MISSION_REFUSAL_MS = 4000;
@@ -576,32 +653,26 @@ const TAB_LABEL: Record<CommandTab, string> = {
 
 export class EchoRenderer {
   private readonly app = new Application();
-  private readonly world = new Container();
-  /** The baked seabed texture, under the vector terrain marks. */
-  private readonly seabedLayer = new Container();
-  private seabedTexture: Texture | null = null;
   /**
-   * Vent ember light (docs/art-direction.md, "Vent ember light"): the one
-   * piece of terrain that emits. Sprites are built once per terrain and only
-   * their alpha moves, stepped on the 5 Hz sonar grid — the per-frame cost is
-   * a bucket comparison.
+   * The conn camera — the three.js world under this canvas. Every world
+   * coordinate this renderer draws or interprets goes through it; there is
+   * one projection and it lives there (PerspectiveView.ts).
    */
-  private readonly ventLayer = new Container();
-  private ventPhases: number[] = [];
-  private ventBucket = -1;
-  private readonly terrainLayer = new Graphics();
+  private conn: PerspectiveView | null = null;
+  /**
+   * World-anchored marks, drawn per frame in screen space through the conn
+   * camera, under the HUD. The world itself is the GL canvas below.
+   */
+  private readonly overlay = new Container();
   /** Ground the current selection cannot enter. Dynamic: it depends on who is selected. */
   private readonly groundLayer = new Graphics();
   private readonly nodeLayer = new Graphics();
   private readonly ringLayer = new Graphics();
   private readonly contactLayer = new Graphics();
-  private readonly structureLayer = new Graphics();
-  /** Baked hull sprites for own units; the Graphics layer above draws overlays. */
-  private readonly unitSpriteLayer = new Container();
-  private readonly unitSprites = new Map<number, Sprite>();
-  private readonly structureSpriteLayer = new Container();
-  private readonly structureSprites = new Map<number, Sprite>();
-  private readonly unitLayer = new Graphics();
+  /** Pooled per-entity symbol marks — see SymbolPool. */
+  private readonly structureSymbols = new SymbolPool();
+  private readonly contactSymbols = new SymbolPool();
+  private readonly unitSymbols = new SymbolPool();
   private readonly hud = new Container();
   private readonly hudGraphics = new Graphics();
   private readonly barGraphics = new Graphics();
@@ -856,13 +927,6 @@ export class EchoRenderer {
    */
   private loggedMarks = new Set<number>();
   /**
-   * Last known heading per own unit, derived client-side from position deltas
-   * between snapshots — the server does not send headings for own units, and
-   * a hull that snapped back to 0° whenever it stopped would read as broken.
-   */
-  private readonly headings = new Map<number, number>();
-  private readonly lastPositions = new Map<number, { x: number; y: number }>();
-  /**
    * The force as it stood at the previous snapshot.
    *
    * Self-events describe the interval that *ended* with the snapshot carrying
@@ -936,7 +1000,9 @@ export class EchoRenderer {
 
   async init(host: HTMLElement): Promise<void> {
     await this.app.init({
-      background: UI.background,
+      // Transparent: the conn view's canvas below this one is the world, and
+      // this canvas is the glass the marks are drawn on.
+      backgroundAlpha: 0,
       resizeTo: host,
       antialias: true,
       autoDensity: true,
@@ -954,19 +1020,16 @@ export class EchoRenderer {
 
     // Contacts render above own structures: a tracked intruder inside your
     // base perimeter is the most urgent pixel on the screen, and must never
-    // hide behind your own Bastion.
-    this.world.addChild(
-      this.seabedLayer,
-      this.ventLayer,
-      this.terrainLayer,
+    // hide behind your own Bastion's marks. (The Bastion itself is the GL
+    // canvas below everything here.)
+    this.overlay.addChild(
       this.groundLayer,
       this.nodeLayer,
       this.ringLayer,
-      this.structureSpriteLayer,
-      this.structureLayer,
+      this.structureSymbols.layer,
       this.contactLayer,
-      this.unitSpriteLayer,
-      this.unitLayer
+      this.contactSymbols.layer,
+      this.unitSymbols.layer
     );
     this.hud.addChild(
       this.hudGraphics,
@@ -976,7 +1039,7 @@ export class EchoRenderer {
       this.infoGraphics,
       this.barGraphics
     );
-    this.app.stage.addChild(this.world, this.hud);
+    this.app.stage.addChild(this.overlay, this.hud);
 
     this.buildHudText();
     this.attachInput();
@@ -1098,15 +1161,132 @@ export class EchoRenderer {
     );
   }
 
-  // --- Input ---------------------------------------------------------------
+  // --- The conn camera -------------------------------------------------------
 
-  private screenToWorld(clientX: number, clientY: number): { x: number; y: number } {
-    const rect = this.app.canvas.getBoundingClientRect();
-    return {
-      x: (clientX - rect.left - this.world.x) / this.world.scale.x,
-      y: (clientY - rect.top - this.world.y) / this.world.scale.y,
-    };
+  /**
+   * Adopt the conn view whose camera this renderer draws and aims through.
+   * Called once by the shell, before the first snapshot arrives; until then
+   * the world-anchored overlays simply have nowhere to project and stay off.
+   */
+  setConn(conn: PerspectiveView): void {
+    this.conn = conn;
   }
+
+  /** The water under a pointer, or null before the conn view exists. */
+  private screenToWorld(clientX: number, clientY: number): { x: number; y: number } | null {
+    return this.conn?.resolveGround(clientX, clientY) ?? null;
+  }
+
+  /** A world point as screen pixels, or null before the conn view exists. */
+  private project(xM: number, yM: number, depthM: number | null): ProjectedPoint | null {
+    return this.conn?.projectPoint(xM, yM, depthM) ?? null;
+  }
+
+  /** The depth a contact is drawn at: earned, or the stable reference. */
+  private contactDepth(contact: Contact): number {
+    return contact.depth ?? UNRESOLVED_CONTACT_DEPTH_M;
+  }
+
+  /**
+   * Trace a ground-lying circle into `g` as visible moveTo/lineTo runs; the
+   * caller strokes it. Sampled rather than drawn as an ellipse because the
+   * ring conforms to the terrain — a 2,400 m detection ring climbing a ridge
+   * is the honest picture of a distance measured through the water.
+   * Returns false when nothing was visible.
+   */
+  private traceCircle(
+    g: Graphics,
+    cx: number,
+    cy: number,
+    radiusM: number,
+    depthM: number | null
+  ): boolean {
+    let open = false;
+    let any = false;
+    for (let i = 0; i <= CIRCLE_SEGMENTS; i++) {
+      const angle = (i / CIRCLE_SEGMENTS) * Math.PI * 2;
+      const p = this.project(
+        cx + Math.cos(angle) * radiusM,
+        cy + Math.sin(angle) * radiusM,
+        depthM
+      );
+      if (p === null) return false;
+      if (!p.visible) {
+        open = false;
+        continue;
+      }
+      if (open) g.lineTo(p.x, p.y);
+      else g.moveTo(p.x, p.y);
+      open = true;
+      any = true;
+    }
+    return any;
+  }
+
+  /** Fill a ground-lying circle as a projected polygon. Skipped when any
+   * vertex leaves the frustum — a partial fill would invent an edge. */
+  private fillCircle(
+    g: Graphics,
+    cx: number,
+    cy: number,
+    radiusM: number,
+    depthM: number | null,
+    fill: { color: number; alpha: number }
+  ): void {
+    const points: number[] = [];
+    for (let i = 0; i < CIRCLE_SEGMENTS; i++) {
+      const angle = (i / CIRCLE_SEGMENTS) * Math.PI * 2;
+      const p = this.project(
+        cx + Math.cos(angle) * radiusM,
+        cy + Math.sin(angle) * radiusM,
+        depthM
+      );
+      if (p === null || !p.visible) return;
+      points.push(p.x, p.y);
+    }
+    g.poly(points).fill(fill);
+  }
+
+  /** A straight world segment on the ground — straight on screen too, so the
+   * endpoints suffice. Dropped when either end leaves the frustum. */
+  private traceLine(
+    g: Graphics,
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+    depthM: number | null
+  ): boolean {
+    const a = this.project(x0, y0, depthM);
+    const b = this.project(x1, y1, depthM);
+    if (a === null || b === null || !a.visible || !b.visible) return false;
+    g.moveTo(a.x, a.y).lineTo(b.x, b.y);
+    return true;
+  }
+
+  /**
+   * The view's footprint on the map in world metres, padded, for culling the
+   * per-cell blocked-ground pass. Null before the conn view exists.
+   */
+  private viewBoundsM(
+    padM: number
+  ): { minX: number; minY: number; maxX: number; maxY: number } | null {
+    const quad = this.conn?.groundQuad() ?? [];
+    if (quad.length < 4) return null;
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const corner of quad) {
+      minX = Math.min(minX, corner.x);
+      minY = Math.min(minY, corner.y);
+      maxX = Math.max(maxX, corner.x);
+      maxY = Math.max(maxY, corner.y);
+    }
+    return { minX: minX - padM, minY: minY - padM, maxX: maxX + padM, maxY: maxY + padM };
+  }
+
+  // --- Input ---------------------------------------------------------------
 
   private attachInput(): void {
     const canvas = this.app.canvas;
@@ -1139,16 +1319,6 @@ export class EchoRenderer {
       } catch {
         /* no active pointer — nothing to capture */
       }
-    };
-
-    const zoomAbout = (clientX: number, clientY: number, factor: number) => {
-      const next = Math.min(4, Math.max(0.05, this.world.scale.x * factor));
-      // Zoom about the cursor/pinch centre rather than the origin.
-      const before = this.screenToWorld(clientX, clientY);
-      this.world.scale.set(next);
-      const after = this.screenToWorld(clientX, clientY);
-      this.world.x += (after.x - before.x) * next;
-      this.world.y += (after.y - before.y) * next;
     };
 
     /** True while a press is scrubbing the sonar scope. */
@@ -1203,8 +1373,6 @@ export class EchoRenderer {
         return;
       }
 
-      const world = this.screenToWorld(e.clientX, e.clientY);
-
       if (e.button === 1) {
         panning = true;
         lastX = e.clientX;
@@ -1215,15 +1383,18 @@ export class EchoRenderer {
 
       if (e.button === 2) {
         // Shift queues the order behind whatever the unit is already doing.
-        this.handleContextOrder(world.x, world.y, e.shiftKey, e.ctrlKey || e.metaKey);
+        this.handleContextOrder(e.clientX, e.clientY, e.shiftKey, e.ctrlKey || e.metaKey);
         return;
       }
 
       // Left click while a build is pending: place it. The server rejects
       // illegal sites; the client does not pre-simulate placement rules.
       if (this.pendingBuild !== null) {
-        this.callbacks.onBuild(this.pendingBuild, world.x, world.y);
-        this.pendingBuild = null;
+        const water = this.screenToWorld(e.clientX, e.clientY);
+        if (water !== null) {
+          this.callbacks.onBuild(this.pendingBuild, water.x, water.y);
+          this.pendingBuild = null;
+        }
         return;
       }
 
@@ -1263,8 +1434,7 @@ export class EchoRenderer {
           }
           // One finger down and moving: pan. Harmless during a would-be tap —
           // sub-slop movement pans invisibly little.
-          this.world.x += e.clientX - prev.x;
-          this.world.y += e.clientY - prev.y;
+          this.conn?.panBy(e.clientX - prev.x, e.clientY - prev.y);
         }
 
         prev.x = e.clientX;
@@ -1274,7 +1444,7 @@ export class EchoRenderer {
           const [a, b] = [...touches.values()];
           const distance = Math.hypot(a!.x - b!.x, a!.y - b!.y);
           if (pinchDistance > 0 && distance > 0) {
-            zoomAbout((a!.x + b!.x) / 2, (a!.y + b!.y) / 2, distance / pinchDistance);
+            this.conn?.zoomAt((a!.x + b!.x) / 2, (a!.y + b!.y) / 2, distance / pinchDistance);
           }
           pinchDistance = distance;
         }
@@ -1282,8 +1452,7 @@ export class EchoRenderer {
       }
 
       if (!panning) return;
-      this.world.x += e.clientX - lastX;
-      this.world.y += e.clientY - lastY;
+      this.conn?.panBy(e.clientX - lastX, e.clientY - lastY);
       lastX = e.clientX;
       lastY = e.clientY;
     };
@@ -1305,10 +1474,7 @@ export class EchoRenderer {
         touches.delete(e.pointerId);
         tapPointerId = null;
         pinchDistance = 0;
-        if (wasTap) {
-          const world = this.screenToWorld(e.clientX, e.clientY);
-          this.handleTap(world.x, world.y);
-        }
+        if (wasTap) this.handleTap(e.clientX, e.clientY);
         return;
       }
 
@@ -1328,7 +1494,7 @@ export class EchoRenderer {
 
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-      zoomAbout(e.clientX, e.clientY, e.deltaY < 0 ? 1.1 : 1 / 1.1);
+      this.conn?.zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.1 : 1 / 1.1);
     };
 
     const onKeyDown = (e: KeyboardEvent) => {
@@ -1494,8 +1660,7 @@ export class EchoRenderer {
         Math.hypot(box.x0 - this.lastClick.x, box.y0 - this.lastClick.y) < DRAG_SLOP_PX * 2;
       this.lastClick = { at: now, x: box.x0, y: box.y0 };
 
-      const world = this.screenToWorld(box.x0, box.y0);
-      const hit = this.nearestOwnEntity(world.x, world.y);
+      const hit = this.nearestOwnEntityAt(box.x0, box.y0);
 
       if (hit === null) {
         if (!add && !subtract) this.selected.clear();
@@ -1528,16 +1693,17 @@ export class EchoRenderer {
 
     // A real marquee. Structures are excluded: dragging across your own base
     // to grab an escort should not also grab the Bastion, and a mixed
-    // selection makes the command panel meaningless.
+    // selection makes the command panel meaningless. Inclusion is judged on
+    // each hull's *drawn* position — projected at its depth — because the box
+    // the player dragged was around what they saw, not around seabed plumbs.
+    const canvasRect = this.app.canvas.getBoundingClientRect();
     const inside: number[] = [];
     for (const unit of this.units) {
-      const screen = this.worldToScreen(unit.x, unit.y);
-      if (
-        screen.x >= rect.left &&
-        screen.x <= rect.right &&
-        screen.y >= rect.top &&
-        screen.y <= rect.bottom
-      ) {
+      const p = this.project(unit.x, unit.y, unit.depth);
+      if (p === null || !p.visible) continue;
+      const sx = p.x + canvasRect.left;
+      const sy = p.y + canvasRect.top;
+      if (sx >= rect.left && sx <= rect.right && sy >= rect.top && sy <= rect.bottom) {
         inside.push(unit.id);
       }
     }
@@ -1551,19 +1717,12 @@ export class EchoRenderer {
     this.onSelectionChanged();
   }
 
-  private worldToScreen(x: number, y: number): { x: number; y: number } {
-    return {
-      x: x * this.world.scale.x + this.world.x,
-      y: y * this.world.scale.y + this.world.y,
-    };
-  }
-
   private unitsOnScreen(): OwnUnit[] {
     const width = this.app.screen.width;
     const height = this.app.screen.height;
     return this.units.filter((unit) => {
-      const s = this.worldToScreen(unit.x, unit.y);
-      return s.x >= 0 && s.x <= width && s.y >= 0 && s.y <= height;
+      const p = this.project(unit.x, unit.y, unit.depth);
+      return p !== null && p.visible && p.x >= 0 && p.x <= width && p.y >= 0 && p.y <= height;
     });
   }
 
@@ -1621,9 +1780,7 @@ export class EchoRenderer {
       n++;
     }
     if (n === 0) return;
-    const scale = this.world.scale.x;
-    this.world.x = this.app.screen.width / 2 - (sx / n) * scale;
-    this.world.y = this.app.screen.height / 2 - (sy / n) * scale;
+    this.conn?.focusWorld(sx / n, sy / n);
   }
 
   // --- Command bar ----------------------------------------------------------
@@ -1695,11 +1852,7 @@ export class EchoRenderer {
     if (px < x || px > x + size || py < y || py > y + size) return false;
     const k = this.minimapScale(size);
     if (k <= 0) return true;
-    const worldX = (px - x) / k;
-    const worldY = (py - y) / k;
-    const scale = this.world.scale.x;
-    this.world.x = this.app.screen.width / 2 - worldX * scale;
-    this.world.y = this.app.screen.height / 2 - worldY * scale;
+    this.conn?.focusWorld((px - x) / k, (py - y) / k);
     return true;
   }
 
@@ -2140,11 +2293,11 @@ export class EchoRenderer {
    * from the same fact, so the button is never offered for a shot the server
    * would refuse.
    */
-  private commandLaunchTorpedo(x: number, y: number): void {
+  private commandLaunchTorpedo(clientX: number, clientY: number): void {
     if (this.refusedByMission('torpedoes')) return;
     const units = this.selectedUnits().filter((u) => u.torpedoes !== undefined);
     if (units.length === 0) return;
-    const contact = this.nearestContact(x, y);
+    const contact = this.nearestContactAt(clientX, clientY);
     if (contact === null) return;
     this.callbacks.onLaunchTorpedo(
       units.filter((u) => (u.torpedoes ?? 0) > 0).map((u) => u.id),
@@ -2205,20 +2358,23 @@ export class EchoRenderer {
    * context order a right-click would. Deselection lives on the command bar,
    * because "tap empty water" already means "move there".
    */
-  private handleTap(x: number, y: number): void {
+  private handleTap(clientX: number, clientY: number): void {
     if (this.pendingBuild !== null) {
-      this.callbacks.onBuild(this.pendingBuild, x, y);
-      this.pendingBuild = null;
+      const water = this.screenToWorld(clientX, clientY);
+      if (water !== null) {
+        this.callbacks.onBuild(this.pendingBuild, water.x, water.y);
+        this.pendingBuild = null;
+      }
       return;
     }
-    const hit = this.nearestOwnEntity(x, y);
+    const hit = this.nearestOwnEntityAt(clientX, clientY);
     if (hit !== null) {
       this.selected.clear();
       this.selected.add(hit);
       this.onSelectionChanged();
       return;
     }
-    if (this.selected.size > 0) this.handleContextOrder(x, y, false);
+    if (this.selected.size > 0) this.handleContextOrder(clientX, clientY, false);
   }
 
   /**
@@ -2226,30 +2382,37 @@ export class EchoRenderer {
    * harvesters to work, a heard contact is an attack order, open water is a
    * move. The server re-validates everything; this is only intent.
    */
-  private handleContextOrder(x: number, y: number, queued = false, torpedo = false): void {
+  private handleContextOrder(
+    clientX: number,
+    clientY: number,
+    queued = false,
+    torpedo = false
+  ): void {
     if (this.selected.size === 0) return;
 
     // Ctrl+right-click is the launch. A modifier on the order that already
     // means "engage that contact", rather than a key, because a torpedo needs
     // the one thing a key press does not carry: which contact you meant.
     if (torpedo) {
-      this.commandLaunchTorpedo(x, y);
+      this.commandLaunchTorpedo(clientX, clientY);
       return;
     }
     const selectedUnits = this.units.filter((u) => this.selected.has(u.id));
     const unitIds = selectedUnits.map((u) => u.id);
+    const water = this.screenToWorld(clientX, clientY);
 
-    const node = this.nearestNode(x, y);
+    const node = this.nearestNodeAt(clientX, clientY);
     const harvesterIds = selectedUnits.filter((u) => u.throttle !== undefined).map((u) => u.id);
     if (node !== null && harvesterIds.length > 0) {
       this.callbacks.onHarvestOrder(harvesterIds, node.id, queued);
       // Everything else in the selection escorts the harvesters.
       const rest = unitIds.filter((id) => !harvesterIds.includes(id));
-      if (rest.length > 0) this.callbacks.onMoveOrder(rest, x, y, queued);
+      if (rest.length > 0 && water !== null)
+        this.callbacks.onMoveOrder(rest, water.x, water.y, queued);
       return;
     }
 
-    const contact = this.nearestContact(x, y);
+    const contact = this.nearestContactAt(clientX, clientY);
     if (contact !== null && unitIds.length > 0) {
       // Weapons struck: the order that would have been an attack falls
       // through to the move it can still be, rather than being swallowed.
@@ -2260,15 +2423,37 @@ export class EchoRenderer {
       }
     }
 
-    if (unitIds.length > 0) this.callbacks.onMoveOrder(unitIds, x, y, queued);
+    if (unitIds.length > 0 && water !== null) {
+      this.callbacks.onMoveOrder(unitIds, water.x, water.y, queued);
+    }
   }
 
-  private nearestNode(x: number, y: number): ResourceNodeInfo | null {
+  /**
+   * The pointer, expressed in this canvas's own pixels — the space
+   * `projectPoint` answers in.
+   */
+  private pointerPx(clientX: number, clientY: number): { x: number; y: number } {
+    const rect = this.app.canvas.getBoundingClientRect();
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  }
+
+  /**
+   * Aim tests are screen-space now: the player clicks what is *drawn*, and a
+   * hull 600 m above its seabed plumb is drawn well away from the water the
+   * ground ray lands on. The old world-metre radii still set the reach —
+   * scaled to the local pixels-per-metre — with a pixel floor so a pulled-back
+   * camera never demands pixel-perfect aim.
+   */
+  private nearestNodeAt(clientX: number, clientY: number): ResourceNodeInfo | null {
+    const at = this.pointerPx(clientX, clientY);
     let best: ResourceNodeInfo | null = null;
-    let bestDistance = TARGET_RADIUS_M;
+    let bestDistance = Infinity;
     for (const node of this.nodes) {
-      const distance = Math.hypot(node.x - x, node.y - y);
-      if (distance < bestDistance) {
+      const p = this.project(node.x, node.y, null);
+      if (p === null || !p.visible) continue;
+      const reach = Math.max(TARGET_RADIUS_M * p.pxPerM, AIM_FLOOR_PX);
+      const distance = Math.hypot(p.x - at.x, p.y - at.y);
+      if (distance < reach && distance < bestDistance) {
         bestDistance = distance;
         best = node;
       }
@@ -2276,14 +2461,18 @@ export class EchoRenderer {
     return best;
   }
 
-  private nearestContact(x: number, y: number): Contact | null {
+  private nearestContactAt(clientX: number, clientY: number): Contact | null {
+    const at = this.pointerPx(clientX, clientY);
     let best: Contact | null = null;
-    let bestDistance = TARGET_RADIUS_M;
+    let bestDistance = Infinity;
     for (const { contact } of this.tracked.values()) {
       // A Tier-1 smudge has no usable position to click on.
       if (contact.tier < ResolutionTier.Bearing) continue;
-      const distance = Math.hypot(contact.x - x, contact.y - y);
-      if (distance < bestDistance) {
+      const p = this.project(contact.x, contact.y, this.contactDepth(contact));
+      if (p === null || !p.visible) continue;
+      const reach = Math.max(TARGET_RADIUS_M * p.pxPerM, AIM_FLOOR_PX);
+      const distance = Math.hypot(p.x - at.x, p.y - at.y);
+      if (distance < reach && distance < bestDistance) {
         bestDistance = distance;
         best = contact;
       }
@@ -2291,21 +2480,28 @@ export class EchoRenderer {
     return best;
   }
 
-  /** Nearest own unit or structure id, for selection. */
-  private nearestOwnEntity(x: number, y: number): number | null {
+  /** Nearest own unit or structure id under the pointer, for selection. */
+  private nearestOwnEntityAt(clientX: number, clientY: number): number | null {
+    const at = this.pointerPx(clientX, clientY);
     let best: number | null = null;
-    let bestDistance = SELECT_RADIUS_M;
+    let bestDistance = Infinity;
     for (const unit of this.units) {
-      const distance = Math.hypot(unit.x - x, unit.y - y);
-      if (distance < bestDistance) {
+      const p = this.project(unit.x, unit.y, unit.depth);
+      if (p === null || !p.visible) continue;
+      const reach = Math.max(SELECT_RADIUS_M * p.pxPerM, AIM_FLOOR_PX);
+      const distance = Math.hypot(p.x - at.x, p.y - at.y);
+      if (distance < reach && distance < bestDistance) {
         bestDistance = distance;
         best = unit.id;
       }
     }
     for (const structure of this.structures) {
-      const reach = structureStatsFor(structure.kind).radiusM + 40;
-      const distance = Math.hypot(structure.x - x, structure.y - y);
-      if (distance < Math.max(bestDistance, reach) && distance < reach) {
+      const p = this.project(structure.x, structure.y, null);
+      if (p === null || !p.visible) continue;
+      const reachM = structureStatsFor(structure.kind).radiusM + 40;
+      const reach = Math.max(reachM * p.pxPerM, AIM_FLOOR_PX);
+      const distance = Math.hypot(p.x - at.x, p.y - at.y);
+      if (distance < reach && distance < bestDistance) {
         bestDistance = distance;
         best = structure.id;
       }
@@ -2328,16 +2524,16 @@ export class EchoRenderer {
     this.map = map;
     this.mapLabel.text = map.name.toUpperCase();
     this.mapNamed = true;
-    // Hazard sites are baked into the terrain layer alongside the biomes,
-    // because that is what they are: ground you can read before you enter it.
-    this.drawTerrain();
+    // Inert hazard sites draw per frame now (drawStaticHazardSites) — ground
+    // you can read before you enter it, projected like the rest of the ground.
     this.minimapCachedSize = 0;
   }
 
   setTerrain(terrain: TerrainPayload): void {
+    // The ground itself — seabed, routes, rim — is the conn view's. This
+    // renderer keeps the payload for what the *instruments* read off it:
+    // biome lookups, the scope's chart, blocked-ground cells.
     this.terrain = terrain;
-    this.drawTerrain();
-    this.fitCamera();
     this.minimapCachedSize = 0;
   }
 
@@ -2366,7 +2562,6 @@ export class EchoRenderer {
       terrain.ceiling[cell.index] = cell.ceilingM;
       terrain.biomes[cell.index] = cell.biome;
     }
-    this.drawTerrain();
     // The scope caches its own terrain layer, and the ground it cached is the
     // ground that just stopped existing.
     this.minimapCachedSize = 0;
@@ -2374,7 +2569,6 @@ export class EchoRenderer {
 
   setNodes(nodes: ResourceNodeInfo[]): void {
     this.nodes = nodes;
-    this.drawNodes();
     // Nodes are baked into the scope's cached terrain layer.
     this.minimapCachedSize = 0;
   }
@@ -2503,25 +2697,11 @@ export class EchoRenderer {
     this.nodules = snapshot.nodules;
     this.crystal = snapshot.crystal;
 
-    // Track headings from motion; a stationary hull keeps its last bearing.
-    for (const unit of snapshot.units) {
-      const prev = this.lastPositions.get(unit.id);
-      if (prev !== undefined) {
-        const dx = unit.x - prev.x;
-        const dy = unit.y - prev.y;
-        if (Math.hypot(dx, dy) > 1) this.headings.set(unit.id, Math.atan2(dy, dx));
-        prev.x = unit.x;
-        prev.y = unit.y;
-      } else {
-        this.lastPositions.set(unit.id, { x: unit.x, y: unit.y });
-      }
-    }
-
     // First sight of our own force: open the camera on the base rather than
-    // the whole map. fitCamera's map-fit letterboxes a portrait phone into an
-    // unreadable band; a commander starts at home in any case.
+    // the whole map — a commander starts at home. The dolly distance shows
+    // the base and its home field with water enough to read approach vectors;
+    // left at map-fit until the conn view exists to take the order.
     if (!this.cameraCentered && (this.units.length > 0 || this.structures.length > 0)) {
-      this.cameraCentered = true;
       let cx = 0;
       let cy = 0;
       let count = 0;
@@ -2535,15 +2715,10 @@ export class EchoRenderer {
         cy += s.y;
         count++;
       }
-      // Show roughly 3.5 km across the smaller screen axis — the base and its
-      // home field, with water enough to read approach vectors.
-      const scale = Math.min(
-        4,
-        Math.max(0.05, Math.min(this.app.screen.width, this.app.screen.height) / 3500)
-      );
-      this.world.scale.set(scale);
-      this.world.x = this.app.screen.width / 2 - (cx / count) * scale;
-      this.world.y = this.app.screen.height / 2 - (cy / count) * scale;
+      if (this.conn !== null) {
+        this.cameraCentered = true;
+        this.conn.focusWorld(cx / count, cy / count, 2600);
+      }
     }
 
     const now = performance.now();
@@ -2588,12 +2763,6 @@ export class EchoRenderer {
     for (const structure of this.structures) alive.add(structure.id);
     for (const id of this.selected) {
       if (!alive.has(id)) this.selected.delete(id);
-    }
-    for (const id of this.lastPositions.keys()) {
-      if (!alive.has(id)) {
-        this.lastPositions.delete(id);
-        this.headings.delete(id);
-      }
     }
     // Pruned by age, never by aliveness: the blow that killed a hull outlives
     // it by design, and an entry is moot once its engagement window has run.
@@ -2748,9 +2917,13 @@ export class EchoRenderer {
    */
   private contactAudioFrame(tick: number, now: number): ContactAudioFrame {
     const decayMs = PERSISTENCE.GHOST_MARKER_DECAY_S * 1000;
-    const ear = {
-      x: (this.app.screen.width / 2 - this.world.x) / this.world.scale.x,
-      y: (this.app.screen.height / 2 - this.world.y) / this.world.scale.y,
+    // The ear is where the player is looking: the water under the screen
+    // centre, asked of the conn camera. Before the conn exists there is no
+    // rendered position to match, and the map origin is as honest as any.
+    const rect = this.app.canvas.getBoundingClientRect();
+    const ear = this.screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2) ?? {
+      x: 0,
+      y: 0,
     };
 
     const entries: ContactAudioEntry[] = [];
@@ -2930,124 +3103,17 @@ export class EchoRenderer {
 
   /** Move the camera to a logged position. */
   focusOn(x: number, y: number): void {
-    const scale = this.world.scale.x;
-    this.world.x = this.app.screen.width / 2 - x * scale;
-    this.world.y = this.app.screen.height / 2 - y * scale;
+    this.conn?.focusWorld(x, y);
   }
 
   // --- Draw ----------------------------------------------------------------
 
-  private drawTerrain(): void {
-    const terrain = this.terrain;
-    if (terrain === null) return;
-
-    const g = this.terrainLayer;
-    g.clear();
-
-    // The ground itself is a baked texture now (seabed.ts): the authored
-    // floor upsampled and given per-biome shape, lit by the same
-    // depthShade -> reliefShade pair the cell pass used. One sprite where a
-    // thousand rects were, and the light finally has something to find
-    // *inside* a region. Rebuilt here — terrain load and ground deltas —
-    // never per frame.
-    const canvas = bakeSeabed(terrain);
-    this.seabedTexture?.destroy(true);
-    this.seabedTexture = Texture.from(canvas);
-    this.seabedLayer.removeChildren();
-    const seabed = new Sprite(this.seabedTexture);
-    // The bake's pixel density is its own; scale it back to world metres.
-    seabed.scale.set(terrain.cellM / SEABED_PX_PER_CELL);
-    this.seabedLayer.addChild(seabed);
-
-    // Ember sites are the terrain's hash, so they rebuild exactly when the
-    // bake does; the flicker never touches geometry, only alpha.
-    this.ventLayer.removeChildren().forEach((child) => child.destroy());
-    this.ventPhases = [];
-    this.ventBucket = -1;
-    for (const ember of ventEmbers(terrain, seabedSeed(terrain))) {
-      const g = new Graphics();
-      // A soft two-stop point: halo then core, both the SPEC ember orange —
-      // world-light, not a UI hue, and dim enough to sit under any contact.
-      g.circle(0, 0, ember.radiusM).fill({ color: VENT_EMBER, alpha: 0.09 });
-      g.circle(0, 0, ember.radiusM * 0.35).fill({ color: VENT_EMBER, alpha: 0.32 });
-      g.position.set(ember.xM, ember.yM);
-      g.alpha = 0;
-      this.ventLayer.addChild(g);
-      this.ventPhases.push(ember.phase);
-    }
-
-    // Roofed passages, marked as routes rather than as openings.
-    //
-    // A tunnel is the one piece of terrain invisible from above by
-    // construction, so drawing its mouth would say nothing — the line is what
-    // a player needs. Public map data like the rest of the ground: everyone
-    // can see the passage is there, nobody can see who is inside it.
-    for (let row = 0; row < terrain.rows; row++) {
-      for (let col = 0; col < terrain.cols; col++) {
-        const index = row * terrain.cols + col;
-        // Rock has a ceiling too — that is how rock is spelled — and drawing a
-        // route line through a collapsed span would tell the player the one
-        // thing that is now least true about it.
-        if (terrain.ceiling[index]! === 0 || isRock(terrain, index)) continue;
-        const x = col * terrain.cellM;
-        const y = row * terrain.cellM;
-        g.moveTo(x, y + terrain.cellM / 2)
-          .lineTo(x + terrain.cellM, y + terrain.cellM / 2)
-          .stroke({ width: 2, color: UI.accent, alpha: 0.22 });
-      }
-    }
-
-    // Hazard sites, telegraphed. docs/maps.md's core principles list "hazard
-    // telegraphing — players must see danger before entering", and drawing
-    // them into the static terrain layer is how that promise is kept: a
-    // hazard is part of the ground, visible from the moment the map loads,
-    // not something that announces itself once you are inside it.
-    //
-    // Drawn as a hatched ring rather than a filled disc: they carry no
-    // behaviour yet (the hazard framework is separate work), and a solid
-    // marker would imply an effect that does not exist.
-    for (const site of this.map?.hazards ?? []) {
-      // Simulated hazards are drawn live, with a phase and a countdown. Only
-      // the inert ones belong in the static layer, as ground that is merely
-      // marked dangerous.
-      if (site.simulated) continue;
-      g.circle(site.x, site.y, site.radiusM).stroke({
-        width: 3,
-        color: UI.threat,
-        alpha: 0.28,
-      });
-      const step = Math.max(60, site.radiusM / 4);
-      for (let offset = -site.radiusM; offset <= site.radiusM; offset += step) {
-        // Chord length at this offset, so the hatching stays inside the ring.
-        const half = Math.sqrt(Math.max(0, site.radiusM * site.radiusM - offset * offset));
-        g.moveTo(site.x + offset - half, site.y + offset + half)
-          .lineTo(site.x + offset + half, site.y + offset - half)
-          .stroke({ width: 1.5, color: UI.threat, alpha: 0.12 });
-      }
-    }
-
-    // Map border, so the playable area has an edge you can see.
-    g.rect(0, 0, terrain.cols * terrain.cellM, terrain.rows * terrain.cellM).stroke({
-      width: 4,
-      color: UI.glassStroke,
-      alpha: 0.6,
-    });
-  }
-
-  private fitCamera(): void {
-    const terrain = this.terrain;
-    if (terrain === null) return;
-    const widthM = terrain.cols * terrain.cellM;
-    const heightM = terrain.rows * terrain.cellM;
-    const scale = Math.min(this.app.screen.width / widthM, this.app.screen.height / heightM) * 0.9;
-    this.world.scale.set(scale);
-    this.world.x = (this.app.screen.width - widthM * scale) / 2;
-    this.world.y = (this.app.screen.height - heightM * scale) / 2;
-  }
-
   private draw(): void {
-    this.drawVentEmbers();
+    // The world under these marks — seabed, routes, rim, embers, own hulls —
+    // is the conn view's. This pass draws only what the chart language owes
+    // on top, everything projected through the one shared camera.
     this.drawBlockedGround();
+    this.drawNodes();
     this.drawRings();
     this.drawContacts();
     this.drawStructures();
@@ -3061,28 +3127,6 @@ export class EchoRenderer {
     this.drawCommandBar();
     this.drawMinimap();
     this.drawInfoPanel();
-  }
-
-  /**
-   * Step the vent embers' brightness on the 5 Hz sonar grid.
-   *
-   * Deliberately not eased: contact fades and HUD pulses quantise to this
-   * grid (docs/style-neon-noir.md, "sonar cadence is the heartbeat"), and the
-   * seabed's one light keeps the same register instead of glowing like video.
-   * Between buckets this is a single integer comparison, so the 60 Hz path
-   * pays nothing for it.
-   */
-  private drawVentEmbers(): void {
-    const children = this.ventLayer.children;
-    if (children.length === 0) return;
-    const bucket = Math.floor(performance.now() * (SIM.ECHO_HZ / 1000));
-    if (bucket === this.ventBucket) return;
-    this.ventBucket = bucket;
-    for (let i = 0; i < children.length; i++) {
-      // Rest dim, occasionally breathe up; never bright enough to compete
-      // with a return (the halo tops out well under any contact mark).
-      children[i]!.alpha = 0.18 + 0.62 * emberFlicker(i, bucket, this.ventPhases[i] ?? 0);
-    }
   }
 
   /**
@@ -3114,26 +3158,45 @@ export class EchoRenderer {
     }
     if (depth < 0) return;
 
-    for (let row = 0; row < terrain.rows; row++) {
-      for (let col = 0; col < terrain.cols; col++) {
+    // Only the cells the camera can see: this is the one per-cell pass left
+    // in the frame, and projecting a whole map of quads for the slice on
+    // screen would spend the budget the conn view's 2 ms pass protects.
+    const bounds = this.viewBoundsM(terrain.cellM);
+    if (bounds === null) return;
+    const colFrom = Math.max(0, Math.floor(bounds.minX / terrain.cellM));
+    const colTo = Math.min(terrain.cols - 1, Math.ceil(bounds.maxX / terrain.cellM));
+    const rowFrom = Math.max(0, Math.floor(bounds.minY / terrain.cellM));
+    const rowTo = Math.min(terrain.rows - 1, Math.ceil(bounds.maxY / terrain.cellM));
+
+    for (let row = rowFrom; row <= rowTo; row++) {
+      for (let col = colFrom; col <= colTo; col++) {
         const index = row * terrain.cols + col;
         if (depth >= terrain.ceiling[index]! && depth <= terrain.floor[index]!) continue;
         const x = col * terrain.cellM;
         const y = row * terrain.cellM;
-        // Hatched rather than filled: a solid block would bury the biome
-        // underneath it, and the biome is what the player reads sound by.
+        const p00 = this.project(x, y, null);
+        const p10 = this.project(x + terrain.cellM, y, null);
+        const p11 = this.project(x + terrain.cellM, y + terrain.cellM, null);
+        const p01 = this.project(x, y + terrain.cellM, null);
+        if (p00 === null || p10 === null || p11 === null || p01 === null) return;
+        if (!p00.visible || !p10.visible || !p11.visible || !p01.visible) continue;
+        // Hatched rather than filled: a solid block would bury the ground
+        // underneath it, and the ground is what the player reads sound by.
         // Terrain must stay quieter than contacts.
-        g.rect(x, y, terrain.cellM, terrain.cellM).fill({ color: UI.accent, alpha: 0.07 });
-        g.moveTo(x, y + terrain.cellM)
-          .lineTo(x + terrain.cellM, y)
+        g.poly([p00.x, p00.y, p10.x, p10.y, p11.x, p11.y, p01.x, p01.y]).fill({
+          color: UI.accent,
+          alpha: 0.07,
+        });
+        g.moveTo(p01.x, p01.y)
+          .lineTo(p10.x, p10.y)
           .stroke({ width: 1, color: UI.accent, alpha: 0.16 });
       }
     }
   }
 
   /**
-   * Nodule fields — public survey-chart data, drawn once. Deliberately dim:
-   * they are geography, not intel.
+   * Nodule fields — public survey-chart data, laid on the seabed. Deliberately
+   * dim: they are geography, not intel.
    */
   private drawNodes(): void {
     const g = this.nodeLayer;
@@ -3142,16 +3205,19 @@ export class EchoRenderer {
       const crystal = node.kind === ResourceKind.ResonanceCrystal;
       const color = RESOURCE_COLOR[node.kind];
       const radius = 60 + (node.initialAmount / 3000) * 40;
-      g.circle(node.x, node.y, radius).fill({ color, alpha: 0.1 });
-      g.circle(node.x, node.y, radius).stroke({ width: 2, color, alpha: 0.3 });
-      // A scatter of ore, deterministic per node so the map is stable.
+      this.fillCircle(g, node.x, node.y, radius, null, { color, alpha: 0.1 });
+      if (this.traceCircle(g, node.x, node.y, radius, null)) {
+        g.stroke({ width: 2, color, alpha: 0.3 });
+      }
+      // A scatter of ore, deterministic per node so the map is stable. Each
+      // grain is metres across — a screen dot at its projected point says the
+      // same thing without sampling a circle nobody can see the shape of.
       for (let i = 0; i < 7; i++) {
         const angle = (i / 7) * Math.PI * 2 + node.id;
         const r = radius * 0.55 * (0.4 + ((i * 37 + node.id * 13) % 10) / 16);
-        g.circle(node.x + Math.cos(angle) * r, node.y + Math.sin(angle) * r, 6).fill({
-          color,
-          alpha: 0.45,
-        });
+        const p = this.project(node.x + Math.cos(angle) * r, node.y + Math.sin(angle) * r, null);
+        if (p === null || !p.visible) continue;
+        g.circle(p.x, p.y, 6 * p.pxPerM).fill({ color, alpha: 0.45 });
       }
       // A field you cannot reach without diving reads as a depth, not just a
       // colour: the dashed ring says "this is somewhere else vertically".
@@ -3160,130 +3226,108 @@ export class EchoRenderer {
         for (let i = 0; i < dashes; i += 2) {
           const a0 = (i / dashes) * Math.PI * 2;
           const a1 = ((i + 1) / dashes) * Math.PI * 2;
-          g.moveTo(node.x + Math.cos(a0) * (radius + 14), node.y + Math.sin(a0) * (radius + 14))
-            .arc(node.x, node.y, radius + 14, a0, a1)
-            .stroke({ width: 2, color, alpha: 0.55 });
+          if (
+            this.traceLine(
+              g,
+              node.x + Math.cos(a0) * (radius + 14),
+              node.y + Math.sin(a0) * (radius + 14),
+              node.x + Math.cos(a1) * (radius + 14),
+              node.y + Math.sin(a1) * (radius + 14),
+              null
+            )
+          ) {
+            g.stroke({ width: 2, color, alpha: 0.55 });
+          }
         }
       }
     }
   }
 
-  /**
-   * Keep one baked sprite per own COMPLETED structure in sync. Construction
-   * sites never get a sprite — a half-built structure is schematic, and the
-   * scaffold rendering says so. Returns true when the sprite is showing.
-   */
-  private syncStructureSprite(structure: OwnStructure): boolean {
-    const texture = structureTexture(structure.kind, this.faction);
-    if (texture === null) return false;
-
-    let sprite = this.structureSprites.get(structure.id);
-    if (sprite === undefined) {
-      sprite = new Sprite();
-      sprite.anchor.set(0.5);
-      this.structureSprites.set(structure.id, sprite);
-      this.structureSpriteLayer.addChild(sprite);
-    }
-    if (sprite.texture !== texture) {
-      sprite.texture = texture;
-      const size = structureSpriteSizeM(structure.kind, this.faction);
-      sprite.width = size.widthM;
-      sprite.height = size.heightM;
-    }
-    sprite.position.set(structure.x, structure.y);
-    return true;
-  }
-
   private drawStructures(): void {
-    const g = this.structureLayer;
-    g.clear();
-    const inverseScale = 1 / this.world.scale.x;
     const palette = FACTION_PALETTE[this.faction];
 
-    // Drop sprites for structures that are gone (or regressed to sites).
-    for (const [id, sprite] of this.structureSprites) {
-      const live = this.structures.find((s) => s.id === id);
-      if (live === undefined || live.buildProgress < 1) {
-        sprite.destroy();
-        this.structureSprites.delete(id);
-      }
-    }
-
     for (const structure of this.structures) {
+      const p = this.project(structure.x, structure.y, null);
+      if (p === null) break;
+      const g = this.structureSymbols.acquire(structure.id);
+      if (!p.visible) {
+        g.visible = false;
+        continue;
+      }
+      g.position.set(p.x, p.y);
+      g.scale.set(p.pxPerM);
+      const inverseScale = 1 / p.pxPerM;
+
       const radius = structureStatsFor(structure.kind).radiusM;
       const isSelected = this.selected.has(structure.id);
       const building = structure.buildProgress < 1;
-      // A construction site renders as scaffolding: dim fill, dashed feel.
       const alpha = building ? 0.35 : 0.9;
 
       if (isSelected) {
-        g.circle(structure.x, structure.y, radius + 14).stroke({
+        g.circle(0, 0, radius + 14).stroke({
           width: 2 * inverseScale,
           color: UI.text,
           alpha: 0.8,
         });
       }
 
-      // Completed structures wear the baked, lit architecture; sites and the
-      // pre-decode window stay on the vector scaffold.
-      if (building || !this.syncStructureSprite(structure)) {
+      // The conn view owns the architecture: the commissioned model, and the
+      // dim schematic for a site. What stays here is the scaffold register a
+      // construction site reads by — a half-built structure is a drawing of
+      // intent, and the chart's dashed vectors say so over the GL ghost.
+      if (building) {
         drawStructureSilhouette(
           g,
           structure.kind,
-          structure.x,
-          structure.y,
+          0,
+          0,
           radius,
-          { color: palette.primary, accent: palette.accent, alpha, detail: !building },
+          { color: palette.primary, accent: palette.accent, alpha, detail: false },
           2 * inverseScale
         );
       }
 
       // The structure's own loudness ring, same language as units.
-      g.circle(structure.x, structure.y, radius + 10 + structure.sig * 0.35).stroke({
+      g.circle(0, 0, radius + 10 + structure.sig * 0.35).stroke({
         width: 1 * inverseScale,
         color: sigColor(structure.sig),
         alpha: 0.25,
       });
 
       const barWidth = radius * 2;
-      const barY = structure.y - radius - 14 * inverseScale;
+      const barY = -radius - 14 * inverseScale;
       if (building) {
-        g.rect(structure.x - radius, barY, barWidth, 6 * inverseScale).fill({
+        g.rect(-radius, barY, barWidth, 6 * inverseScale).fill({
           color: 0x000000,
           alpha: 0.6,
         });
-        g.rect(
-          structure.x - radius,
-          barY,
-          barWidth * structure.buildProgress,
-          6 * inverseScale
-        ).fill({ color: UI.sigMid });
+        g.rect(-radius, barY, barWidth * structure.buildProgress, 6 * inverseScale).fill({
+          color: UI.sigMid,
+        });
       } else if (structure.queue.length > 0) {
         // Production progress plus how deep the queue runs.
-        g.rect(structure.x - radius, barY, barWidth, 6 * inverseScale).fill({
+        g.rect(-radius, barY, barWidth, 6 * inverseScale).fill({
           color: 0x000000,
           alpha: 0.6,
         });
-        g.rect(
-          structure.x - radius,
-          barY,
-          barWidth * structure.queueProgress,
-          6 * inverseScale
-        ).fill({ color: UI.friendly });
+        g.rect(-radius, barY, barWidth * structure.queueProgress, 6 * inverseScale).fill({
+          color: UI.friendly,
+        });
       }
 
       if (structure.hp < structure.maxHp) {
-        const hpY = structure.y + radius + 8 * inverseScale;
+        const hpY = radius + 8 * inverseScale;
         const fraction = Math.max(0, structure.hp / structure.maxHp);
-        g.rect(structure.x - radius, hpY, barWidth, 4 * inverseScale).fill({
+        g.rect(-radius, hpY, barWidth, 4 * inverseScale).fill({
           color: 0x000000,
           alpha: 0.6,
         });
-        g.rect(structure.x - radius, hpY, barWidth * fraction, 4 * inverseScale).fill({
+        g.rect(-radius, hpY, barWidth * fraction, 4 * inverseScale).fill({
           color: UI.friendly,
         });
       }
     }
+    this.structureSymbols.sweep();
   }
 
   /**
@@ -3328,33 +3372,29 @@ export class EchoRenderer {
         PROPAGATION_MODEL.BASELINE_HYD
       );
 
-      // These rings are world-space and their *radii* must stay world-space —
-      // 2,400 m is a fact about the water, not about the interface. Their
-      // stroke is the opposite: it is a line on an instrument, so it carries
-      // the UI scale (§11 names the ping preview as one of the two things to
-      // scale first). `/ world.scale.x` is what keeps a stroke a fixed number
-      // of screen pixels through the camera's zoom; `* uiScale` is what makes
-      // that number the player's chosen one.
-      const stroke = this.uiScale / this.world.scale.x;
+      // These rings' *radii* must stay world-space — 2,400 m is a fact about
+      // the water, not about the interface — which is why they are projected
+      // vertex by vertex onto the ground: a ring climbing a ridge is the
+      // honest shape of a distance measured through the water. Their stroke
+      // is the opposite: a line on an instrument, drawn in screen pixels and
+      // carrying the UI scale (§11 names the ping preview as one of the two
+      // things to scale first).
+      if (this.traceCircle(g, unit.x, unit.y, range, null)) {
+        g.stroke({
+          width: 2 * this.uiScale,
+          color: sigColor(unit.sig),
+          alpha: 0.35,
+        });
+      }
 
-      g.circle(unit.x, unit.y, range).stroke({
-        width: 2 * stroke,
-        color: sigColor(unit.sig),
-        alpha: 0.35,
-      });
-
-      // Hold shift to see exactly how badly a ping would expose you.
+      // Hold the preview key to see exactly how badly a ping would expose you.
       if (this.previewPing) {
-        g.circle(unit.x, unit.y, ACTIVE_SONAR.REVEAL_RADIUS_M).stroke({
-          width: 2 * stroke,
-          color: UI.friendly,
-          alpha: 0.5,
-        });
-        g.circle(unit.x, unit.y, ACTIVE_SONAR.SELF_REVEAL_RADIUS_M).stroke({
-          width: 3 * stroke,
-          color: UI.threat,
-          alpha: 0.8,
-        });
+        if (this.traceCircle(g, unit.x, unit.y, ACTIVE_SONAR.REVEAL_RADIUS_M, null)) {
+          g.stroke({ width: 2 * this.uiScale, color: UI.friendly, alpha: 0.5 });
+        }
+        if (this.traceCircle(g, unit.x, unit.y, ACTIVE_SONAR.SELF_REVEAL_RADIUS_M, null)) {
+          g.stroke({ width: 3 * this.uiScale, color: UI.threat, alpha: 0.8 });
+        }
       }
     }
   }
@@ -3370,7 +3410,42 @@ export class EchoRenderer {
    * Dormant sites stay drawn — faintly — because a hazard you can forget about
    * is a hazard that will surprise you, and surprise is the failure mode.
    */
-  private drawHazards(g: Graphics, inverseScale: number): void {
+  /**
+   * Inert hazard sites off the map payload, telegraphed. docs/maps.md's core
+   * principles list "hazard telegraphing — players must see danger before
+   * entering": this ground is dangerous from the moment the map loads, so it
+   * draws every frame like the rest of the ground language, hatched rather
+   * than filled — the sites carry no behaviour yet, and a solid marker would
+   * imply an effect that does not exist.
+   */
+  private drawStaticHazardSites(g: Graphics): void {
+    for (const site of this.map?.hazards ?? []) {
+      // Simulated hazards are drawn live, with a phase and a countdown.
+      if (site.simulated) continue;
+      if (this.traceCircle(g, site.x, site.y, site.radiusM, null)) {
+        g.stroke({ width: 3, color: UI.threat, alpha: 0.28 });
+      }
+      const step = Math.max(60, site.radiusM / 4);
+      for (let offset = -site.radiusM; offset <= site.radiusM; offset += step) {
+        // Chord length at this offset, so the hatching stays inside the ring.
+        const half = Math.sqrt(Math.max(0, site.radiusM * site.radiusM - offset * offset));
+        if (
+          this.traceLine(
+            g,
+            site.x + offset - half,
+            site.y + offset + half,
+            site.x + offset + half,
+            site.y + offset - half,
+            null
+          )
+        ) {
+          g.stroke({ width: 1.5, color: UI.threat, alpha: 0.12 });
+        }
+      }
+    }
+  }
+
+  private drawHazards(g: Graphics): void {
     for (const hazard of this.hazards) {
       const style = HAZARD_STYLE[hazard.phase];
       // Red warns you, cyan tells you (docs/style-neon-noir.md). An eruption
@@ -3389,39 +3464,40 @@ export class EchoRenderer {
       // which is the only state change it has.
       if (hazard.kind === 'kelp-entanglement') {
         const gripping = hazard.phase === HazardPhase.Active;
-        g.circle(hazard.x, hazard.y, hazard.radiusM).fill({
+        this.fillCircle(g, hazard.x, hazard.y, hazard.radiusM, null, {
           color,
           alpha: gripping ? 0.05 : 0.02,
         });
-        g.circle(hazard.x, hazard.y, hazard.radiusM).stroke({
-          width: (gripping ? 2 : 1) * inverseScale,
-          color,
-          alpha: gripping ? 0.3 : 0.14,
-        });
+        if (this.traceCircle(g, hazard.x, hazard.y, hazard.radiusM, null)) {
+          g.stroke({
+            width: gripping ? 2 : 1,
+            color,
+            alpha: gripping ? 0.3 : 0.14,
+          });
+        }
         continue;
       }
 
-      g.circle(hazard.x, hazard.y, hazard.radiusM).stroke({
-        width: style.width * inverseScale,
-        color,
-        alpha: style.alpha,
-      });
+      if (this.traceCircle(g, hazard.x, hazard.y, hazard.radiusM, null)) {
+        g.stroke({ width: style.width, color, alpha: style.alpha });
+      }
 
       if (hazard.phase === HazardPhase.Warning) {
         // The countdown: a second ring closing on the first. When they meet,
         // it fires. Nothing else on screen behaves like this, so it does not
         // have to be learned twice.
         const closing = hazard.radiusM * (1.9 - 0.9 * hazard.progress);
-        g.circle(hazard.x, hazard.y, closing).stroke({
-          width: 2 * inverseScale,
-          color,
-          alpha: 0.35 + hazard.progress * 0.5,
-        });
+        if (this.traceCircle(g, hazard.x, hazard.y, closing, null)) {
+          g.stroke({ width: 2, color, alpha: 0.35 + hazard.progress * 0.5 });
+        }
       }
 
       if (hazard.phase === HazardPhase.Active || hazard.phase === HazardPhase.Decay) {
         const heat = hazard.phase === HazardPhase.Active ? 1 : 1 - hazard.progress;
-        g.circle(hazard.x, hazard.y, hazard.radiusM).fill({ color, alpha: 0.18 * heat });
+        this.fillCircle(g, hazard.x, hazard.y, hazard.radiusM, null, {
+          color,
+          alpha: 0.18 * heat,
+        });
         if (isCurrent) {
           // A current is the only hazard with a direction, and direction is the
           // whole decision it offers — ride it, cross it, or pay to fight it
@@ -3429,14 +3505,12 @@ export class EchoRenderer {
           // opposite: that the danger comes from a point. Streaks along the
           // flow are what §8's Visual Cues ask for, and they are unmistakable
           // against every other hazard at a glance, which is gate 7's bar.
-          this.drawFlowStreaks(g, hazard, heat, inverseScale);
+          this.drawFlowStreaks(g, hazard, heat);
         } else {
           for (let ring = 1; ring <= 3; ring++) {
-            g.circle(hazard.x, hazard.y, hazard.radiusM * (ring / 3)).stroke({
-              width: 1.5 * inverseScale,
-              color,
-              alpha: 0.3 * heat,
-            });
+            if (this.traceCircle(g, hazard.x, hazard.y, hazard.radiusM * (ring / 3), null)) {
+              g.stroke({ width: 1.5, color, alpha: 0.3 * heat });
+            }
           }
         }
       }
@@ -3452,12 +3526,7 @@ export class EchoRenderer {
    * simulation state, and a current's state is its direction, not a phase the
    * client invents.
    */
-  private drawFlowStreaks(
-    g: Graphics,
-    hazard: HazardState,
-    heat: number,
-    inverseScale: number
-  ): void {
+  private drawFlowStreaks(g: Graphics, hazard: HazardState, heat: number): void {
     const flow = hazard.flowRad ?? 0;
     const fx = Math.cos(flow);
     const fy = Math.sin(flow);
@@ -3483,17 +3552,27 @@ export class EchoRenderer {
       const tipX = cx + fx * length * 0.5;
       const tipY = cy + fy * length * 0.5;
 
-      g.moveTo(tailX, tailY).lineTo(tipX, tipY);
+      let drew = this.traceLine(g, tailX, tailY, tipX, tipY, null);
       // An arrowhead, so the streak reads as a direction rather than a hatch.
-      g.moveTo(tipX, tipY).lineTo(
-        tipX - fx * head + ax * head * 0.6,
-        tipY - fy * head + ay * head * 0.6
-      );
-      g.moveTo(tipX, tipY).lineTo(
-        tipX - fx * head - ax * head * 0.6,
-        tipY - fy * head - ay * head * 0.6
-      );
-      g.stroke({ width: 2 * inverseScale, color: UI.accent, alpha: 0.55 * heat });
+      drew =
+        this.traceLine(
+          g,
+          tipX,
+          tipY,
+          tipX - fx * head + ax * head * 0.6,
+          tipY - fy * head + ay * head * 0.6,
+          null
+        ) || drew;
+      drew =
+        this.traceLine(
+          g,
+          tipX,
+          tipY,
+          tipX - fx * head - ax * head * 0.6,
+          tipY - fy * head - ay * head * 0.6,
+          null
+        ) || drew;
+      if (drew) g.stroke({ width: 2, color: UI.accent, alpha: 0.55 * heat });
     }
   }
 
@@ -3528,7 +3607,7 @@ export class EchoRenderer {
    * docs/economy.md §5 wants a player to read income off. So the drawing
    * scales with it rather than merely fading.
    */
-  private drawEchoMarks(g: Graphics, inverseScale: number): void {
+  private drawEchoMarks(g: Graphics): void {
     for (const mark of this.marks) {
       const style = MARK_STYLE[mark.kind];
       if (style === undefined) continue;
@@ -3538,7 +3617,7 @@ export class EchoRenderer {
       // at any alpha reads as an object sitting on the seabed.
       for (let ring = 0; ring < 3; ring++) {
         const t = (ring + 1) / 3;
-        g.circle(mark.x, mark.y, radius * t).fill({
+        this.fillCircle(g, mark.x, mark.y, radius * t, null, {
           color: style.color,
           alpha: mark.intensity * style.alpha * (1 - t * 0.6),
         });
@@ -3549,13 +3628,18 @@ export class EchoRenderer {
       for (let i = 0; i < dashes; i++) {
         const a0 = (i / dashes) * Math.PI * 2;
         const a1 = a0 + Math.PI / dashes;
-        g.moveTo(mark.x + Math.cos(a0) * radius, mark.y + Math.sin(a0) * radius)
-          .lineTo(mark.x + Math.cos(a1) * radius, mark.y + Math.sin(a1) * radius)
-          .stroke({
-            width: 1 * inverseScale,
-            color: style.color,
-            alpha: mark.intensity * 0.5,
-          });
+        if (
+          this.traceLine(
+            g,
+            mark.x + Math.cos(a0) * radius,
+            mark.y + Math.sin(a0) * radius,
+            mark.x + Math.cos(a1) * radius,
+            mark.y + Math.sin(a1) * radius,
+            null
+          )
+        ) {
+          g.stroke({ width: 1, color: style.color, alpha: mark.intensity * 0.5 });
+        }
       }
     }
   }
@@ -3617,30 +3701,6 @@ export class EchoRenderer {
    * force: it cannot say *which* hull gave the ambush away. The audio cue is
    * per-event, so its visual equivalent has to be per-hull too.
    */
-  private drawBreakSilence(g: Graphics, inverseScale: number): void {
-    const now = performance.now();
-    for (const [id, at] of this.brokeSilence) {
-      const t = (now - at) / BREAK_SILENCE_FLASH_MS;
-      if (t >= 1) {
-        this.brokeSilence.delete(id);
-        continue;
-      }
-      const unit = this.units.find((u) => u.id === id);
-      if (unit === undefined) {
-        this.brokeSilence.delete(id);
-        continue;
-      }
-      // Expanding outward, unlike the lock brackets which close in: this is
-      // noise leaving the hull, and it should read that way.
-      const radius = HULL_LENGTH_M[unit.kind] * (1 + t * 3);
-      g.circle(unit.x, unit.y, radius).stroke({
-        width: 2 * inverseScale,
-        color: UI.threat,
-        alpha: (1 - t) * 0.8,
-      });
-    }
-  }
-
   /**
    * The visual half of the Tier-4 lock tone (docs/audio-direction.md §11).
    *
@@ -3667,14 +3727,15 @@ export class EchoRenderer {
 
     // Sized off the thing itself, so the brackets frame a corvette and a
     // foundry equally rather than swallowing one and rattling round the other.
+    // Drawn in the contact symbol's own space: the mark is the origin.
     const hull = contact.kind !== undefined ? HULL_LENGTH_M[contact.kind] : 140;
     const spread = hull * (2.2 - 1.2 * t);
     const arm = hull * 0.5;
     const alpha = 1 - t;
     for (const sx of [-1, 1]) {
       for (const sy of [-1, 1]) {
-        const cx = contact.x + sx * spread;
-        const cy = contact.y + sy * spread;
+        const cx = sx * spread;
+        const cy = sy * spread;
         g.moveTo(cx - sx * arm, cy)
           .lineTo(cx, cy)
           .lineTo(cx, cy - sy * arm)
@@ -3701,10 +3762,10 @@ export class EchoRenderer {
 
     const now = performance.now();
     const decayMs = PERSISTENCE.GHOST_MARKER_DECAY_S * 1000;
-    const inverseScale = 1 / this.world.scale.x;
-    this.drawHazards(g, inverseScale);
-    this.drawEchoMarks(g, inverseScale);
-    this.drawBreakSilence(g, inverseScale);
+    // Ground language first, into the polyline layer under the marks.
+    this.drawStaticHazardSites(g);
+    this.drawHazards(g);
+    this.drawEchoMarks(g);
 
     for (const [id, entry] of this.tracked) {
       const age = now - entry.lastSeenMs;
@@ -3721,6 +3782,19 @@ export class EchoRenderer {
       const style = TIER_STYLE[contact.tier as Exclude<ResolutionTier, ResolutionTier.Silent>];
       if (style === undefined) continue;
 
+      // Each mark billboards at its drawn depth — earned, or the stable
+      // unresolved reference — with the contact at the local origin.
+      const p = this.project(contact.x, contact.y, this.contactDepth(contact));
+      if (p === null) break;
+      const sg = this.contactSymbols.acquire(id);
+      if (!p.visible) {
+        sg.visible = false;
+        continue;
+      }
+      sg.position.set(p.x, p.y);
+      sg.scale.set(p.pxPerM);
+      const inverseScale = 1 / p.pxPerM;
+
       // Ghosts fade rather than vanish; a stale contact is still information,
       // just less of it.
       const freshness = 1 - age / decayMs;
@@ -3733,17 +3807,17 @@ export class EchoRenderer {
       const arrival = markOpacity(now - entry.firstSeenMs, worldFade.start, worldFade.full);
       const alpha = style.alpha * freshness * arrival;
 
-      this.drawLockFlash(g, id, contact, now, inverseScale);
+      this.drawLockFlash(sg, id, contact, now, inverseScale);
 
       switch (contact.tier) {
         case ResolutionTier.Contact: {
           // Directionless: a soft haze around the listener that heard it.
           // No position information is available, and none is implied.
-          g.circle(contact.x, contact.y, style.radius).fill({
+          sg.circle(0, 0, style.radius).fill({
             color: style.color,
             alpha: alpha * 0.5,
           });
-          g.circle(contact.x, contact.y, style.radius).stroke({
+          sg.circle(0, 0, style.radius).stroke({
             width: 1 * inverseScale,
             color: style.color,
             alpha,
@@ -3752,22 +3826,22 @@ export class EchoRenderer {
         }
         case ResolutionTier.Bearing: {
           // Blurred blob at a position already wrong by ~15% server-side.
-          g.circle(contact.x, contact.y, style.radius).fill({ color: style.color, alpha });
+          sg.circle(0, 0, style.radius).fill({ color: style.color, alpha });
           break;
         }
         case ResolutionTier.Classification: {
           const color = this.contactColor(contact, style.color);
           if (contact.fauna !== undefined) {
-            drawFaunaSilhouette(g, contact.fauna, contact.x, contact.y, alpha, inverseScale);
+            drawFaunaSilhouette(sg, contact.fauna, 0, 0, alpha, inverseScale);
             break;
           }
-          g.circle(contact.x, contact.y, style.radius).fill({ color, alpha });
-          g.circle(contact.x, contact.y, style.radius * 1.6).stroke({
+          sg.circle(0, 0, style.radius).fill({ color, alpha });
+          sg.circle(0, 0, style.radius * 1.6).stroke({
             width: 1 * inverseScale,
             color,
             alpha: alpha * 0.6,
           });
-          this.drawGlyph(g, contact, color, alpha, style.radius, inverseScale);
+          this.drawGlyph(sg, contact, color, alpha, style.radius, inverseScale);
           break;
         }
         case ResolutionTier.Track: {
@@ -3779,42 +3853,42 @@ export class EchoRenderer {
           // so a track reads against any biome its faction happens to match.
           if (contact.kind !== undefined && contact.faction !== undefined) {
             drawUnitSilhouette(
-              g,
+              sg,
               contact.kind,
               contact.faction,
-              contact.x,
-              contact.y,
+              0,
+              0,
               contact.heading ?? 0,
               { color, accent: UI.threat, alpha, detail: false },
               2 * inverseScale
             );
           } else if (contact.structure !== undefined) {
             drawStructureSilhouette(
-              g,
+              sg,
               contact.structure,
-              contact.x,
-              contact.y,
+              0,
+              0,
               structureStatsFor(contact.structure).radiusM,
               { color, accent: UI.threat, alpha, detail: false },
               2 * inverseScale
             );
           } else if (contact.fauna !== undefined) {
-            drawFaunaSilhouette(g, contact.fauna, contact.x, contact.y, alpha, inverseScale);
+            drawFaunaSilhouette(sg, contact.fauna, 0, 0, alpha, inverseScale);
           } else {
-            g.circle(contact.x, contact.y, style.radius).fill({ color, alpha });
+            sg.circle(0, 0, style.radius).fill({ color, alpha });
           }
 
-          this.drawGlyph(g, contact, color, alpha, style.radius, inverseScale);
+          this.drawGlyph(sg, contact, color, alpha, style.radius, inverseScale);
 
           if (contact.hp !== undefined && contact.maxHp !== undefined && contact.maxHp > 0) {
             const width = style.radius * 3;
             const fraction = Math.max(0, Math.min(1, contact.hp / contact.maxHp));
-            const barY = contact.y - style.radius * 2.4;
-            g.rect(contact.x - width / 2, barY, width, 3 * inverseScale).fill({
+            const barY = -style.radius * 2.4;
+            sg.rect(-width / 2, barY, width, 3 * inverseScale).fill({
               color: 0x000000,
               alpha: alpha * 0.6,
             });
-            g.rect(contact.x - width / 2, barY, width * fraction, 3 * inverseScale).fill({
+            sg.rect(-width / 2, barY, width * fraction, 3 * inverseScale).fill({
               color,
               alpha,
             });
@@ -3823,6 +3897,7 @@ export class EchoRenderer {
         }
       }
     }
+    this.contactSymbols.sweep();
   }
 
   /** Faction colour, but only once the tier is high enough to know it. */
@@ -3853,11 +3928,12 @@ export class EchoRenderer {
     // Above everything the mark already draws upward: the Tier-3 count ring
     // sits at 1.6 radii and the Tier-4 health bar at 2.4, so the glyph clears
     // the taller of the two rather than crowding whichever tier it lands on.
+    // Local space: the contact is the symbol's origin.
     drawFactionGlyph(
       g,
       contact.faction,
-      contact.x,
-      contact.y - radiusM * 2.4 - size * 1.3,
+      0,
+      -radiusM * 2.4 - size * 1.3,
       size,
       color,
       alpha,
@@ -3870,87 +3946,45 @@ export class EchoRenderer {
     return FACTION_PALETTE[contact.faction]?.primary ?? fallback;
   }
 
-  private headingFor(unit: OwnUnit): number {
-    return this.headings.get(unit.id) ?? 0;
-  }
-
-  /**
-   * Keep one hull sprite per own unit in sync with the snapshot. Returns true
-   * when the sprite exists and is showing, so the caller can skip the vector
-   * fallback for that unit.
-   */
-  private syncUnitSprite(unit: OwnUnit, alpha: number): boolean {
-    const texture = hullTexture(unit.kind, this.faction);
-    if (texture === null) return false;
-
-    let sprite = this.unitSprites.get(unit.id);
-    if (sprite === undefined) {
-      sprite = new Sprite();
-      sprite.anchor.set(0.5);
-      this.unitSprites.set(unit.id, sprite);
-      this.unitSpriteLayer.addChild(sprite);
-    }
-    if (sprite.texture !== texture) {
-      sprite.texture = texture;
-      // World units are metres; the bake reports its canvas size in metres.
-      const size = hullSpriteSizeM(unit.kind, this.faction);
-      sprite.width = size.widthM;
-      sprite.height = size.heightM;
-    }
-    sprite.position.set(unit.x, unit.y);
-    sprite.rotation = this.headingFor(unit);
-    sprite.alpha = alpha;
-    return true;
-  }
-
   private drawUnits(): void {
-    const g = this.unitLayer;
-    g.clear();
-    const inverseScale = 1 / this.world.scale.x;
-    const palette = FACTION_PALETTE[this.faction];
+    const now = performance.now();
 
-    // Drop sprites for units that no longer exist.
-    for (const [id, sprite] of this.unitSprites) {
-      if (!this.units.some((u) => u.id === id)) {
-        sprite.destroy();
-        this.unitSprites.delete(id);
+    // Expired break-silence transients die here whether or not their hull
+    // still draws; the ring itself is painted with the hull below.
+    for (const [id, at] of this.brokeSilence) {
+      if (now - at >= BREAK_SILENCE_FLASH_MS || !this.units.some((u) => u.id === id)) {
+        this.brokeSilence.delete(id);
       }
     }
 
     for (const unit of this.units) {
+      // The hull itself — model, heading, silent-running dimming — is the
+      // conn view's. What this pass owns is the instrument ink *about* the
+      // hull, billboarded at its drawn depth.
+      const p = this.project(unit.x, unit.y, unit.depth);
+      if (p === null) break;
+      const g = this.unitSymbols.acquire(unit.id);
+      if (!p.visible) {
+        g.visible = false;
+        continue;
+      }
+      g.position.set(p.x, p.y);
+      g.scale.set(p.pxPerM);
+      const inverseScale = 1 / p.pxPerM;
+
       const radius = HULL_LENGTH_M[unit.kind] / 2;
       const isSelected = this.selected.has(unit.id);
 
-      // Silent-running units render dimmed: quiet is a visible state, because
-      // the player needs to know at a glance which of their units are blind
-      // and toothless.
-      const alpha = unit.silentRunning ? 0.45 : 1;
-
       if (isSelected) {
-        g.circle(unit.x, unit.y, radius + 8).stroke({
+        g.circle(0, 0, radius + 8).stroke({
           width: 2 * inverseScale,
           color: UI.text,
           alpha: 0.8,
         });
       }
 
-      // Own force renders at full fidelity: the baked, lit, concept-art hull
-      // (docs/art-direction.md "Rendering Target"); vectors until it decodes.
-      if (!this.syncUnitSprite(unit, alpha)) {
-        drawUnitSilhouette(
-          g,
-          unit.kind,
-          this.faction,
-          unit.x,
-          unit.y,
-          this.headingFor(unit),
-          { color: palette.primary, accent: palette.accent, alpha, detail: true },
-          1.5 * inverseScale
-        );
-      }
-
       // A small tick of the unit's own loudness, drawn on the unit itself.
-      g.circle(unit.x, unit.y, radius + 6 + unit.sig * 0.35).stroke({
+      g.circle(0, 0, radius + 6 + unit.sig * 0.35).stroke({
         width: 1 * inverseScale,
         color: sigColor(unit.sig),
         alpha: 0.25,
@@ -3960,18 +3994,30 @@ export class EchoRenderer {
       // selection card: a squad crushing at the bottom of a dive is something
       // the player must see without having clicked anything (docs/ui-ux.md §8).
       if (this.isCrushing(unit)) {
-        g.circle(unit.x, unit.y, radius + 4).stroke({
+        g.circle(0, 0, radius + 4).stroke({
           width: 2 * inverseScale,
           color: UI.threat,
           alpha: 0.9,
         });
       }
 
+      // The hull that just broke silence wears the noise leaving it —
+      // expanding outward, unlike the lock brackets which close in.
+      const broke = this.brokeSilence.get(unit.id);
+      if (broke !== undefined) {
+        const t = (now - broke) / BREAK_SILENCE_FLASH_MS;
+        g.circle(0, 0, HULL_LENGTH_M[unit.kind] * (1 + t * 3)).stroke({
+          width: 2 * inverseScale,
+          color: UI.threat,
+          alpha: (1 - t) * 0.8,
+        });
+      }
+
       if (unit.maxHp > 0 && unit.hp < unit.maxHp) {
         const width = radius * 2.4;
         const fraction = Math.max(0, unit.hp / unit.maxHp);
-        const barY = unit.y - radius - 12 * inverseScale;
-        const barX = unit.x - width / 2;
+        const barY = -radius - 12 * inverseScale;
+        const barX = -width / 2;
         g.rect(barX, barY, width, 3 * inverseScale).fill({
           color: 0x000000,
           alpha: 0.6,
@@ -3992,6 +4038,7 @@ export class EchoRenderer {
         }
       }
     }
+    this.unitSymbols.sweep();
   }
 
   /**
@@ -4237,25 +4284,29 @@ export class EchoRenderer {
    */
   private drawOrderPlans(): void {
     const g = this.ringLayer;
-    const inverseScale = 1 / this.world.scale.x;
 
     for (const unit of this.units) {
       if (!this.selected.has(unit.id)) continue;
       const plan = unit.queuedOrders;
       if (plan === undefined || plan.length === 0) continue;
 
+      // The route is plotted on the ground — a course on the chart floor —
+      // and its markers are instrument glyphs, held at screen size.
       let fromX = unit.x;
       let fromY = unit.y;
       for (const order of plan) {
-        g.moveTo(fromX, fromY)
-          .lineTo(order.x, order.y)
-          .stroke({ width: 1.5 * inverseScale, color: UI.accent, alpha: 0.45 });
-        const marker = order.kind === 'move' ? 7 : 11;
-        g.circle(order.x, order.y, marker * inverseScale).stroke({
-          width: 1.5 * inverseScale,
-          color: order.kind === 'attack' ? UI.threat : UI.accent,
-          alpha: 0.8,
-        });
+        if (this.traceLine(g, fromX, fromY, order.x, order.y, null)) {
+          g.stroke({ width: 1.5, color: UI.accent, alpha: 0.45 });
+        }
+        const p = this.project(order.x, order.y, null);
+        if (p !== null && p.visible) {
+          const marker = order.kind === 'move' ? 7 : 11;
+          g.circle(p.x, p.y, marker).stroke({
+            width: 1.5,
+            color: order.kind === 'attack' ? UI.threat : UI.accent,
+            alpha: 0.8,
+          });
+        }
         fromX = order.x;
         fromY = order.y;
       }
@@ -4654,19 +4705,21 @@ export class EchoRenderer {
       }
     }
 
-    // Camera viewport, so the scope doubles as a navigator. Clamped to the
-    // scope's square — a zoomed-in camera would otherwise draw past its frame.
-    const scale = this.world.scale.x;
-    const viewX = Math.max(0, (-this.world.x / scale) * k);
-    const viewY = Math.max(0, (-this.world.y / scale) * k);
-    const viewR = Math.min(size, ((-this.world.x + this.app.screen.width) / scale) * k);
-    const viewB = Math.min(size, ((-this.world.y + this.app.screen.height) / scale) * k);
-    if (viewR > viewX && viewB > viewY) {
-      og.rect(viewX, viewY, viewR - viewX, viewB - viewY).stroke({
-        width: 1,
-        color: UI.text,
-        alpha: 0.6,
-      });
+    // Camera viewport, so the scope doubles as a navigator. A trapezoid, not
+    // a rectangle: the conn camera is tilted, and its honest footprint on the
+    // ground has a near edge wider than its far one. Vertices clamp to the
+    // scope's square — a zoomed-out camera sees past the map's edge, and the
+    // box must not draw past its frame.
+    const quad = this.conn?.groundQuad() ?? [];
+    if (quad.length === 4) {
+      const points: number[] = [];
+      for (const corner of quad) {
+        points.push(
+          Math.max(0, Math.min(size, corner.x * k)),
+          Math.max(0, Math.min(size, corner.y * k))
+        );
+      }
+      og.poly(points).stroke({ width: 1, color: UI.text, alpha: 0.6 });
     }
   }
 
@@ -4932,8 +4985,7 @@ export class EchoRenderer {
     this.detachInput?.();
     this.detachInput = null;
     this.tracked.clear();
-    this.unitSprites.clear();
-    this.structureSprites.clear();
+    this.conn = null;
     // The bake caches are module-level; drop them so a remount re-bakes
     // rather than serving textures the GPU no longer holds.
     destroyHullTextures();

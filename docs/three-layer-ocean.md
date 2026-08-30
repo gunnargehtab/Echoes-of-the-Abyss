@@ -17,9 +17,11 @@ mechanic at the top of the water column.
 
 Status of each part:
 
-- **The perspective presentation (§4–§5) and band navigation UX (§6) are the accepted
-  direction.** They replace the pure plan-view camera spec in
-  [art-direction.md](art-direction.md) once the migration phases in §9 land.
+- **The perspective presentation (§4–§5) and band navigation UX (§6) are landed.** With
+  Phase 5 the conn view *is* the game view, and [art-direction.md](art-direction.md)
+  "Camera & Projection" now carries the perspective spec — pitch 55°, SPEC — that §4
+  argued for. The plan-view world renderer is retired; the chart lives on in the sonar
+  scope.
 - **The Lid exposure mechanic (§7) is adopted** — the owner's yes came with Phase 3/4
   ("do them together", 2026-08-30). [world.md](world.md), [glossary.md](glossary.md) and
   [systems-depth.md](systems-depth.md) §2 now carry it as a rule of the water.
@@ -357,6 +359,56 @@ the Lid's own presence and the depth verbs are not yet in the conn view — the 
 remains the command surface until Phase 5; and sour exposure has no audio cue yet, which
 [audio-direction.md](audio-direction.md) should decide a channel for rather than inherit.
 
+### Phase 5 — landed
+
+The switch is thrown: the conn view is the game view, and the chart's world renderer is
+retired. The Pixi canvas is now transparent glass composited over the GL world, and it
+kept everything that was ever *instrument* rather than *world*: the whole HUD, the sonar
+scope (which keeps the chart, per §4), the depth ribbon, the command bar — and every
+world-anchored mark, redrawn per frame **through the conn camera**. `EchoRenderer.setConn`
+is the whole coupling: `resolveGround` turns a pointer into water, `projectPoint` turns
+water into pixels, and the pan / zoom / focus verbs move the one camera both canvases
+share. One projection, two painters, no second opinion about where anything is.
+
+What the phase settled:
+
+- **Measurements conform; symbols billboard.** The split §4 promised, made code. Range
+  rings, ping previews, hazard sites, residue stains, blocked ground and queued routes
+  are sampled vertex by vertex onto the terrain — a 2,400 m ring climbs a ridge because
+  the distance it measures does. Contact marks, silhouettes, glyphs, bars and selection
+  rings live in pooled per-entity Graphics billboarded at the entity's projected position
+  and scaled by the local pixels-per-metre, so the chart's draw bodies ported with the
+  entity at the local origin and their fidelity rules untouched.
+- **Aim is screen-space now.** Selection, marquees, and right-click targets resolve
+  against *drawn* positions through the same projection — a hull 600 m above its plumb is
+  clicked where it is seen — with the old world-metre reach radii scaled to local
+  pixels-per-metre under an 18 px floor, so survey zoom never demands pixel-perfect aim.
+- **The scope's camera box became honest.** The viewport's ground footprint is a
+  trapezoid (`groundQuad`), because that is what a tilted camera sees; scope scrubbing,
+  group-recall centring and log-row focus all drive `focusWorld` on the one camera.
+- **The toggle, `?view=` and `?pitch=` retired.** Pitch 55° is pinned as SPEC in
+  [art-direction.md](art-direction.md); gates 6 and 8 in
+  [graphics-standards.md](graphics-standards.md) are rewritten to the budgets and the
+  one-camera rule; [tech-stack.md](tech-stack.md) and the root `CLAUDE.md` describe the
+  two-canvas architecture.
+- **WebGL is now a requirement, said out loud.** The flat world renderer was the de facto
+  no-GL path, and it no longer exists; a browser that refuses a context gets a hard stop
+  with the reason, not a black screen wearing a working HUD. The low-spec fallback is the
+  conn view's own sprite path — baked billboards inside the 3D scene until models decode,
+  and the pixel-ratio cap — which is what [SETUP-ANDROID](../SETUP-ANDROID.md)'s floor
+  runs on.
+
+Review screenshots live in `docs/screenshots/three-layer-phase5/`: the default view with
+the HUD over the world, a squad's detection rings conforming over a ridge, the ping
+preview, and the survey zoom with the scope's trapezoid box. The composited scene held
+**47 draw calls / ~50 k triangles** through the whole drive — inside Phase 1's caps —
+with zero console errors.
+
+Debts carried forward, unchanged from Phase 4 where not listed: the sub-Tier-3 column
+glyph, the far-zoom readability scale, the sour-exposure audio cue — and one new one: the
+real-GPU / Termux wall-clock validation owed since Phase 1 now covers the composited
+two-canvas frame, not just the GL pass.
+
 ## 10. Open questions
 
 Parked here as plain text until decided; none blocks Phase 1.
@@ -364,9 +416,11 @@ Parked here as plain text until decided; none blocks Phase 1.
 1. ~~Adopt the Lid mechanic (§7)?~~ — **adopted**, with Phase 3/4 ("do them together").
    The rules landed in [systems-depth.md](systems-depth.md) §2 and the water now bills for
    the top 150 m.
-2. **Does a full-screen chart view survive as a toggle,** or does the plan view live only in
-   the sonar scope? Phase 1 ships the toggle by construction; the question is what Phase 5
-   retires. Recommendation stands: scope-only first, toggle back if playtests miss it.
+2. ~~Does a full-screen chart view survive as a toggle?~~ — **settled with Phase 5:
+   scope-only.** The toggle retired with the chart's world renderer; the plan view lives
+   in the sonar scope, per the standing recommendation. The fallback position survives as
+   itself: if playtests miss the full-screen chart, it can return as a view over the same
+   resolved data — nothing about the retirement forecloses it.
 3. ~~Camera pitch~~ — **settled at 55°** by the Phase-1 screenshots (§9); SPEC-pinned in
    [art-direction.md](art-direction.md) at Phase 5.
 4. ~~Engine confirmation~~ — **three.js**, per §9's Phase-1 record.

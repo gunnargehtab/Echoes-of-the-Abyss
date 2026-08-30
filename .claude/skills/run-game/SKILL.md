@@ -72,17 +72,26 @@ step until every connected commander has readied**. A `--steps` module runs
 match — but if you drive the page yourself, a script that skips the lobby
 drives an ocean that is not moving.
 
-**Then actually open the screenshots.** What a healthy first frame looks like:
+**Then actually open the screenshots.** The world is the perspective **conn
+view** (docs/three-layer-ocean.md Phase 5): a three.js scene on one canvas with
+the transparent Pixi HUD composited over it. What a healthy first frame looks
+like:
 
 - A top bar with `NODULES`, a `SIG` bar, and a contact count.
-- An amber hub with outbuildings and a handful of unit glyphs.
+- A textured seabed with relief, receding into fog, seen from a 55° tilt — not
+  a flat map. The base opens centred: a hub structure with outbuildings and a
+  handful of hulls, each hanging over a ground shadow on a thin plumb line.
 - The minimap bottom-left, and `BUILD` / `UNITS` tabs over a build bar along
   the bottom. (A third `SQUAD` tab appears only once something is selected, so
   its absence on the first frame is correct.)
 
-Judge it on whether a match rendered, not on a checklist of rings. Signature
-radius rings are sized to each unit's current SIG, so a quiet unit legitimately
-has no visible ring, and non-unit things like resource nodules are ringed too.
+The GLB models decode in the background: the first seconds show flat baked
+sprites lying at depth, which then swap for dimensional hulls — wait ~5 s
+before a screenshot that is meant to show models. Judge the frame on whether a
+match rendered, not on a checklist of rings. Signature radius rings are sized
+to each unit's current SIG, so a quiet unit legitimately has no visible ring,
+and rings lie on the terrain now — an ellipse-ish ring hugging a slope is the
+projection working, not a bug.
 
 The clearest single indicator that input reached the server and came back is
 the **SIG bar changing colour** — amber around 40 at rest, full red at 95 the
@@ -105,21 +114,28 @@ export default async ({ page, shot }) => {
 };
 ```
 
-The controls, all handled on the canvas by `EchoRenderer`:
+The controls, all handled by `EchoRenderer` on the **top (Pixi) canvas** — the
+three.js world canvas below it never listens; pointer coordinates are resolved
+into water through the shared conn camera:
 
 | Input | Effect | Needs a selection? |
 | --- | --- | --- |
 | Left click | Select nearest owned unit or structure (shift adds) — **unless a build is armed, which swallows the click to place it** | no |
 | Right click | Context order — move, or attack/harvest a contact under the cursor | yes |
 | Middle drag | Pan | no |
-| Wheel | Zoom about the cursor | no |
+| Wheel | Zoom (dolly) about the cursor | no |
 | `R` / `F` / `T` | Arm a refinery / foundry / turret, then left click to place | no |
-| `1`–`5` | Produce scout / corvette / cruiser / submersible / harvester | yes |
+| `D` / `A` | Dive / rise one band station | yes |
+| `S` | Toggle floor-following | yes |
 | `P` | Active sonar ping | yes |
 | `Space` | Toggle silent running | yes |
 | `V` | Cycle harvest throttle | yes |
-| Hold `Shift` | Preview what a ping would cost you | yes |
+| Hold `Alt` | Preview what a ping would cost you | yes |
 | `Escape` | Cancel a pending build — handled before every other key, so it is safe to press unconditionally | no |
+
+Unit production has no keys — the digits are control groups — so producing a
+unit means pressing its button on the `UNITS` tab, which is the one case where
+clicking the bar is unavoidable.
 
 The "needs a selection" column is the thing that catches people: `EchoRenderer`
 returns early on most keys when nothing is selected, so a bare `page.keyboard
@@ -129,11 +145,11 @@ work with nothing selected, while `1`–`5` route through a structure that can
 build the unit and so need one.
 
 **There is nothing to select against, so commands go through the keyboard.**
-The page is one canvas and about 17 DOM elements; `document.body.innerText` is
-empty, and the HUD you can see (the `BUILD` / `UNITS` / `SQUAD` tabs, `SILENT`,
-`PING`, the build buttons) is drawn by Pixi, not rendered as DOM. So
-`page.click('text=PING')` matches nothing, and every Playwright selector
-strategy is unavailable by construction.
+The page is two stacked canvases and about 17 DOM elements;
+`document.body.innerText` is empty, and the HUD you can see (the `BUILD` /
+`UNITS` / `SQUAD` tabs, `SILENT`, `PING`, the build buttons) is drawn by Pixi,
+not rendered as DOM. So `page.click('text=PING')` matches nothing, and every
+Playwright selector strategy is unavailable by construction.
 
 Clicks are still how you *select* and *place* — there is no keyboard equivalent
 for either — so the pattern is click to choose a target, then press a key to
@@ -141,13 +157,15 @@ act on it. What to avoid is clicking HUD **buttons**: they shift with the active
 tab and with how many buttons the current selection produces, so a pixel that
 hits `PING` in one frame hits `SILENT` in the next. Their shortcuts don't move.
 
-Coordinates are load-bearing. `(655, 484)` assumes `drive.mjs`'s **1440×900**
-viewport, in which the playfield spans roughly x 390–1355 with the HUD drawn
-over the dark bands either side; change the viewport and those coordinates
-click empty water. Two things make this less fragile than it sounds: unit
-selection picks the *nearest* owned entity rather than hit-testing a sprite, so
-landing anywhere near the friendly cluster works, and the minimap is a fixed
-bottom-left rectangle you can click or drag to jump the view.
+Coordinates are load-bearing, but the camera helps. The view opens centred on
+the player's own base, so on `drive.mjs`'s **1440×900** viewport the friendly
+cluster sits near screen centre (~720, 450). Three things make aiming less
+fragile than it sounds: selection picks the *nearest* owned entity on screen
+within a reach that never drops below 18 px, the minimap is a fixed
+bottom-left rectangle you can click or drag to jump the view, and
+`window.__perspectiveCamera(x, z, distance?)` points the camera at a world
+position directly — pair it with `window.__perspectiveProbe().ownCentre` to
+frame the fleet before a screenshot.
 
 Identifying *which* glyph is which is the genuine gap — the silhouettes are
 faction shapes, not labels. Select one and read the inspector panel that
