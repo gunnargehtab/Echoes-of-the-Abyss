@@ -1,37 +1,32 @@
 /**
- * The perspective viewport — Phases 1–2 of docs/three-layer-ocean.md.
+ * The conn view — the world half of the shipped renderer, Phases 1–5 of
+ * docs/three-layer-ocean.md.
  *
- * A three.js scene beside the Pixi chart, behind a toggle: the authored ground
- * as a real heightfield (perspectiveTerrain.ts) wearing the seabed bake as its
- * skin, and the player's own force as the *approved roster models*
- * (rosterModels.ts) at their true depth — the flat baked sprites remain the
- * fallback while a model loads and for kinds without one. Contacts stay
- * tier-capped smudges. A WC3-lineage camera looks down and along at a fixed
- * pitch; yaw is locked, per the no-rotation rule the revision kept.
+ * Since Phase 5 this is not a toggle beside the chart; it IS the world. The
+ * authored ground renders as a real heightfield (perspectiveTerrain.ts)
+ * wearing the seabed bake as its skin, roofed passages as route lines, the map
+ * edge as a rim and a dark skirt; the player's own force sails as the approved
+ * roster models (rosterModels.ts) at true depth, with the flat baked sprites
+ * as the loading fallback. A WC3-lineage camera looks down and along at a
+ * fixed 55° pitch; yaw is locked, per the no-rotation rule the revision kept.
  *
- * Phase 3 opens the first verb: clicking a hull highlights it — resolved
- * through its outline volume, never its fins — and a right-click moves the
- * highlighted unit, through the same channel the chart's RMB uses. The rest
- * of the verbs and the HUD stay on the chart until Phase 5 makes this view
- * the default.
+ * Everything else on screen — contacts, rings, hazards, marks, bars, the whole
+ * HUD — is drawn by EchoRenderer on the transparent Pixi canvas composited
+ * above this one, *through* this class's camera: `resolveGround` turns a
+ * pointer into water, `projectPoint` turns water into pixels, and the pan /
+ * zoom / focus verbs move the one camera both canvases share. One projection,
+ * two painters, no second opinion about where anything is.
  *
- * Rules carried over intact from the chart, because a renderer change must
- * never be a rules change:
- *
- * - **Server-authoritative fidelity.** This view draws the same resolved
- *   payloads the chart draws. A contact renders as a smudge scaled to its
- *   tier and never as a hull; there is nothing else here to draw it from.
- * - **Texture, not information.** The heightfield's detail relief is the
- *   render-only field from seabed.ts; nothing here reads it back as gameplay.
- * - **Glow is loudness.** Model lamps carry their intake-approved resting
- *   strength and swing with live SIG on the gate-3 curve (rosterModels.ts);
- *   the fallback sprites baked the same curve in.
+ * Rules carried over intact, because a renderer change must never be a rules
+ * change: server-authoritative fidelity (this class draws only own-force
+ * payloads; it holds nothing about the enemy to leak), texture-not-information
+ * (the detail relief is render-only), and glow-is-loudness (model lamps swing
+ * with live SIG on the gate-3 curve).
  */
 
 import {
   AdditiveBlending,
   AmbientLight,
-  BoxGeometry,
   BufferAttribute,
   BufferGeometry,
   CanvasTexture,
@@ -44,6 +39,7 @@ import {
   Line,
   LineBasicMaterial,
   LineLoop,
+  LineSegments,
   Mesh,
   MeshBasicMaterial,
   PerspectiveCamera,
@@ -52,26 +48,22 @@ import {
   PointsMaterial,
   Raycaster,
   Scene,
-  Sprite,
-  SpriteMaterial,
   SRGBColorSpace,
   Vector2,
   Vector3,
   WebGLRenderer,
 } from 'three';
 import {
+  DEPTH,
   Faction,
-  ResolutionTier,
   statsFor,
   structureStatsFor,
-  type Contact,
   type EchoSnapshot,
   type OwnStructure,
   type OwnUnit,
-  type ResourceNodeInfo,
 } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
-import { ACTIVE_PALETTE, RESOURCE_COLOR, UI, VENT_EMBER } from './palette.ts';
+import { UI, VENT_EMBER } from './palette.ts';
 import { bakeSeabed, emberFlicker, seabedSeed, ventEmbers } from './seabed.ts';
 import {
   buildHeightGrid,
@@ -81,7 +73,7 @@ import {
 } from './perspectiveTerrain.ts';
 import { hullSpriteCanvas, hullSpriteSizeM } from './hullTextures.ts';
 import { structureSpriteCanvas, structureSpriteSizeM } from './structureTextures.ts';
-import { HULL_LENGTH_M, HULL_OUTLINE } from './silhouettes.ts';
+import { ACTIVE_PALETTE } from './palette.ts';
 import {
   applyLiveGlow,
   rosterModelInstance,
@@ -89,35 +81,47 @@ import {
   type RosterModelKey,
 } from './rosterModels.ts';
 
-/** TUNABLE — camera pitch below horizontal, degrees. The WC3-lineage band the
- * revision names is 50–60°; Phase-1 screenshots settle the number. */
-export const DEFAULT_PITCH_DEG = 55;
+/**
+ * SPEC — docs/art-direction.md "Camera & Projection", settled by the Phase-1
+ * screenshot comparison and pinned at Phase 5: 55° below horizontal.
+ */
+export const PITCH_DEG = 55;
 
 /** TUNABLE — vertical camera field of view, degrees. Narrow keeps the range-
  * ring foreshortening gentle; wide reads fisheye at RTS distance. */
 const FOV_DEG = 40;
 
-/** Pixel-ratio cap. The chart renders at native DPR; the 3D view trades a
- * little sharpness for headroom on the low-spec floor (gate 6's concern). */
+/** Pixel-ratio cap: a little sharpness traded for headroom on the low-spec
+ * floor (graphics-standards.md gate 6). */
 const MAX_PIXEL_RATIO = 1.5;
 
 /**
- * Where a contact with no earned depth hovers, in metres. Below Tier 3 the
- * server sends no depth, and a 3D scene cannot draw "somewhere in this
- * column" without picking a height — the chart never had to. This reference
- * depth is a stable, deliberately arbitrary choice; the honest treatment (a
- * column glyph, or nothing) is Phase 2/3's presentation question.
+ * Where a contact with no earned depth is drawn, in metres. Below Tier 3 the
+ * server sends no depth, and a 3D projection cannot draw "somewhere in this
+ * column" without picking a height — the flat chart never had to. A stable,
+ * deliberately arbitrary reference; the honest column glyph is still owed.
+ * Exported because the overlay painter (EchoRenderer) projects through the
+ * same convention.
  */
-const UNRESOLVED_CONTACT_DEPTH_M = 600;
+export const UNRESOLVED_CONTACT_DEPTH_M = 600;
 
-/** World-metre diameter of a contact smudge per tier — diffuse when little is
- * known, tighter as resolution rises. Never a hull at any tier. */
-const CONTACT_SIZE_M: Record<number, number> = {
-  [ResolutionTier.Contact]: 320,
-  [ResolutionTier.Bearing]: 220,
-  [ResolutionTier.Classification]: 150,
-  [ResolutionTier.Track]: 110,
-};
+/** What `projectPoint` hands the overlay painter: a screen position, the
+ * local scale (for symbol sizing and stroke parity), and visibility. */
+export interface ProjectedPoint {
+  x: number;
+  y: number;
+  /** Screen pixels per world metre at this point's distance. */
+  pxPerM: number;
+  /** False when the point is behind the camera; skip drawing. */
+  visible: boolean;
+}
+
+/**
+ * Scratch for `projectPoint`. The overlay painter projects every vertex of
+ * every ring through here each frame; a fresh Vector3 per call would make the
+ * GC part of the frame budget.
+ */
+const PROJECT_TMP = new Vector3();
 
 interface EntityHandle {
   mesh: Mesh;
@@ -128,17 +132,9 @@ interface EntityHandle {
   spriteKey: string;
   widthM: number;
   heightM: number;
-  /** The approved model, once loaded — Phase 2. Sprite hides while it shows. */
+  /** The approved model, once loaded. Sprite hides while it shows. */
   model: RosterModelInstance | null;
   modelKey: string;
-  /**
-   * The pick volume: HULL_OUTLINE's extents extruded, invisible, and the only
-   * thing a click may resolve through — never fins, frills or glow (the
-   * footprint law, docs/three-layer-ocean.md §4).
-   */
-  pick: Mesh;
-  /** Chart-parity selection ring radius. */
-  ringRadiusM: number;
 }
 
 /** Everything one entity's sync needs, sprite path and model path alike. */
@@ -156,23 +152,6 @@ interface EntitySpec {
   modelCacheKey: string;
   liveSig: number;
   restSig: number;
-  pickLengthM: number;
-  pickBeamM: number;
-}
-
-/** Half-beam of a hull outline, as a fraction of hull length. */
-function outlineHalfBeam(outline: readonly (readonly number[])[]): number {
-  let max = 0;
-  for (const [, py] of outline) max = Math.max(max, Math.abs(py!));
-  return max;
-}
-
-export interface PerspectiveCallbacks {
-  /**
-   * A move order from the conn view — the same channel the chart's RMB uses,
-   * so the server cannot tell which view a player prefers.
-   */
-  onMoveOrder(unitIds: number[], x: number, y: number, queued: boolean): void;
 }
 
 export class PerspectiveView {
@@ -185,40 +164,31 @@ export class PerspectiveView {
   /** Camera rig: a ground target, a dolly distance, a fixed pitch, no yaw. */
   private readonly target = new Vector3();
   private distance = 4000;
-  private pitchDeg = DEFAULT_PITCH_DEG;
 
   private terrain: TerrainPayload | null = null;
   private terrainMesh: Mesh | null = null;
+  private readonly terrainDressing = new Group();
   private embers: Points | null = null;
   private emberPhases: number[] = [];
   private emberBucket = -1;
 
-  private readonly nodeGroup = new Group();
   private readonly unitGroup = new Group();
   private readonly structureGroup = new Group();
-  private readonly contactGroup = new Group();
 
   private faction: Faction = Faction.Bathyarch;
   private units: OwnUnit[] = [];
   private structures: OwnStructure[] = [];
-  private contacts: Contact[] = [];
-  private nodes: ResourceNodeInfo[] = [];
   private readonly headings = new Map<number, number>();
   private readonly lastPositions = new Map<number, { x: number; y: number }>();
 
   private readonly unitHandles = new Map<number, EntityHandle>();
   private readonly structureHandles = new Map<number, EntityHandle>();
-  private readonly contactSprites = new Map<number, Sprite>();
   private readonly spriteTextures = new Map<string, CanvasTexture>();
-  private readonly smudgeTextures = new Map<number, CanvasTexture>();
 
-  /**
-   * View-local selection — a highlight, not an order channel. Clicking a hull
-   * here answers "which one is that"; commanding it stays on the chart until
-   * Phase 3 wires the verbs into this view.
-   */
-  private selected: { kind: 'unit' | 'structure'; id: number } | null = null;
-  private readonly selectionRing: LineLoop;
+  /** Canvas CSS size, cached in resize(): projectPoint runs too hot to ask
+   * the DOM for a rect on every vertex. */
+  private viewWidth = 1;
+  private viewHeight = 1;
 
   private active = false;
   private frameHandle = 0;
@@ -227,16 +197,16 @@ export class PerspectiveView {
   private frameCostMs: number[] = [];
   private worstFrameMs = 0;
 
-  constructor(private readonly callbacks: PerspectiveCallbacks) {
-    this.scene.add(this.nodeGroup, this.unitGroup, this.structureGroup, this.contactGroup);
+  constructor() {
+    this.scene.add(this.terrainDressing, this.unitGroup, this.structureGroup);
     this.scene.background = new Color(UI.background);
 
-    // Lights exist for the roster models alone: the terrain, sprites and
-    // smudges are unlit materials with their shading baked in, so these
-    // touch nothing else. The rig transcribes the sprite bake's (bake.ts):
-    // a cold ambient so black water never crushes to nothing, an oblique key
-    // from high north-west, and a hard cyan rim from the north — the same
-    // rim the prompt kit poses every model against.
+    // Lights exist for the roster models alone: the terrain and fallback
+    // sprites are unlit materials with their shading baked in, so these touch
+    // nothing else. The rig transcribes the sprite bake's (bake.ts): a cold
+    // ambient so black water never crushes to nothing, an oblique key from
+    // high north-west, and a hard cyan rim from the north — the same rim the
+    // prompt kit poses every model against.
     this.scene.add(new AmbientLight(0x5a6b80, 0.65));
     const key = new DirectionalLight(0xdfe8f0, 1.35);
     key.position.set(-1400, 2600, -900);
@@ -244,19 +214,6 @@ export class PerspectiveView {
     const rim = new DirectionalLight(0x9fd8ff, 1.0);
     rim.position.set(0, 900, -3000);
     this.scene.add(rim, rim.target);
-
-    // The selection ring, chart-parity: UI.text, a circle around the hull.
-    const ringPoints: Vector3[] = [];
-    for (let i = 0; i < 48; i++) {
-      const a = (i / 48) * Math.PI * 2;
-      ringPoints.push(new Vector3(Math.cos(a), 0, Math.sin(a)));
-    }
-    this.selectionRing = new LineLoop(
-      new BufferGeometry().setFromPoints(ringPoints),
-      new LineBasicMaterial({ color: UI.text, transparent: true, opacity: 0.8 })
-    );
-    this.selectionRing.visible = false;
-    this.scene.add(this.selectionRing);
   }
 
   /** Create the GL surface. Returns false when WebGL is unavailable. */
@@ -274,7 +231,6 @@ export class PerspectiveView {
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(host);
     this.resize();
-    this.attachInput(this.renderer.domElement);
     this.rebuildTerrain();
     this.exposeProbe();
     return true;
@@ -296,29 +252,21 @@ export class PerspectiveView {
     }
   }
 
-  /** Pitch below horizontal, clamped to something that still reads as RTS. */
-  setPitchDeg(deg: number): void {
-    this.pitchDeg = Math.min(85, Math.max(35, deg));
-  }
-
   setIdentity(_slot: number, faction: Faction): void {
     this.faction = faction;
   }
 
   setTerrain(terrain: TerrainPayload): void {
-    // A defensive copy: the chart mutates its payload in place on ground
-    // deltas, and two views double-applying deltas to one shared object is
-    // the bug this copy exists to make impossible.
+    // A defensive copy: the chart-side handlers mutate their payload in place
+    // on ground deltas, and two consumers double-applying deltas to one
+    // shared object is the bug this copy exists to make impossible.
     this.terrain = {
       ...terrain,
       biomes: [...terrain.biomes],
       floor: [...terrain.floor],
       ceiling: [...terrain.ceiling],
     };
-    const widthM = terrain.cols * terrain.cellM;
-    const heightM = terrain.rows * terrain.cellM;
-    this.target.set(widthM / 2, 0, heightM / 2);
-    this.distance = Math.max(widthM, heightM) * 1.05;
+    this.fitToMap();
     this.rebuildTerrain();
   }
 
@@ -336,16 +284,10 @@ export class PerspectiveView {
     this.rebuildTerrain();
   }
 
-  setNodes(nodes: ResourceNodeInfo[]): void {
-    this.nodes = nodes;
-    this.rebuildNodes();
-  }
-
   applySnapshot(snapshot: EchoSnapshot): void {
     this.units = snapshot.units;
     this.structures = snapshot.structures;
-    this.contacts = snapshot.contacts;
-    // Headings from motion, exactly as the chart derives them: the server
+    // Headings from motion, exactly as the chart derived them: the server
     // sends none for own units, and a hull snapping to 0° when it stops
     // would read as broken here too.
     for (const unit of snapshot.units) {
@@ -366,10 +308,8 @@ export class PerspectiveView {
   resetForNewMatch(): void {
     this.units = [];
     this.structures = [];
-    this.contacts = [];
     this.headings.clear();
     this.lastPositions.clear();
-    this.selected = null;
     if (this.renderer !== null) this.syncEntities();
   }
 
@@ -377,7 +317,6 @@ export class PerspectiveView {
     this.setActive(false);
     this.resizeObserver?.disconnect();
     for (const texture of this.spriteTextures.values()) texture.dispose();
-    for (const texture of this.smudgeTextures.values()) texture.dispose();
     this.renderer?.dispose();
     this.renderer?.domElement.remove();
     this.renderer = null;
@@ -385,7 +324,158 @@ export class PerspectiveView {
     delete (window as unknown as { __perspectiveCamera?: unknown }).__perspectiveCamera;
   }
 
-  // ------------------------------------------------------------------ scene
+  // ---------------------------------------------------------------- camera
+  //
+  // The one camera both canvases share. The overlay painter above asks these
+  // five questions and nothing else, which is what keeps the two renderers
+  // from ever disagreeing about where the water is.
+
+  /**
+   * The water under a pointer. Raycast against the real terrain mesh, so a
+   * click on a ridge face lands on the ridge; a ray that misses the mesh
+   * (over the void past the map edge) falls back to the target's ground
+   * plane. Always answers, clamped onto the map — a click is an intent, and
+   * "nowhere" is not an answer an order can use.
+   */
+  resolveGround(clientX: number, clientY: number): { x: number; y: number } {
+    const terrain = this.terrain;
+    const canvas = this.renderer?.domElement;
+    if (terrain === null || canvas === undefined || canvas === null) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+    const ndc = new Vector2(
+      ((clientX - rect.left) / rect.width) * 2 - 1,
+      -((clientY - rect.top) / rect.height) * 2 + 1
+    );
+    const raycaster = new Raycaster();
+    raycaster.setFromCamera(ndc, this.camera);
+    if (this.terrainMesh !== null) {
+      const hit = raycaster.intersectObject(this.terrainMesh, false)[0];
+      if (hit !== undefined) {
+        return {
+          x: Math.min(terrain.cols * terrain.cellM, Math.max(0, hit.point.x)),
+          y: Math.min(terrain.rows * terrain.cellM, Math.max(0, hit.point.z)),
+        };
+      }
+    }
+    const groundY = this.groundYAt(this.target.x, this.target.z);
+    const direction = raycaster.ray.direction;
+    const t = Math.abs(direction.y) < 1e-6 ? 1e6 : (groundY - raycaster.ray.origin.y) / direction.y;
+    const point = raycaster.ray.origin.clone().addScaledVector(direction, Math.max(1, t));
+    return {
+      x: Math.min(terrain.cols * terrain.cellM, Math.max(0, point.x)),
+      y: Math.min(terrain.rows * terrain.cellM, Math.max(0, point.z)),
+    };
+  }
+
+  /**
+   * Water to pixels. `depthM` places the point in the column; null means "on
+   * the seabed here", which is what chart-flat geometry (blocked cells, node
+   * fields, hazard sites) projects through. `pxPerM` is the local scale, so
+   * a symbol drawn at this point can size itself the way the old chart's
+   * zoom did.
+   */
+  projectPoint(xM: number, yM: number, depthM: number | null): ProjectedPoint {
+    if (this.renderer === null) return { x: 0, y: 0, pxPerM: 1, visible: false };
+    const y = depthM === null ? this.groundYAt(xM, yM) : depthToWorldY(depthM);
+    const point = PROJECT_TMP.set(xM, y, yM);
+    const viewDistance = point.distanceTo(this.camera.position);
+    point.project(this.camera);
+    const pxPerM =
+      this.viewHeight / 2 / (Math.tan(((FOV_DEG / 2) * Math.PI) / 180) * Math.max(1, viewDistance));
+    return {
+      x: ((point.x + 1) / 2) * this.viewWidth,
+      y: ((1 - point.y) / 2) * this.viewHeight,
+      pxPerM,
+      visible: point.z < 1 && point.z > -1,
+    };
+  }
+
+  /** Pan by a screen delta, WC3-hand: the ground follows the pointer. */
+  panBy(dxPx: number, dyPx: number): void {
+    const canvas = this.renderer?.domElement;
+    const height = canvas?.clientHeight ?? 900;
+    const pitch = (PITCH_DEG * Math.PI) / 180;
+    const worldPerPx = (2 * this.distance * Math.tan(((FOV_DEG / 2) * Math.PI) / 180)) / height;
+    this.target.x -= dxPx * worldPerPx;
+    // Screen-vertical motion maps onto the ground plane through the pitch.
+    this.target.z -= (dyPx * worldPerPx) / Math.max(0.2, Math.sin(pitch));
+    this.clampTarget();
+    // Applied now, not at the next frame: the overlay painter projects
+    // through this camera on its own ticker, and a camera that moved between
+    // the two draws would smear the HUD marks off the hulls they annotate.
+    this.applyCamera();
+  }
+
+  /** Dolly about the cursor: the water under the pointer stays under it. */
+  zoomAt(clientX: number, clientY: number, factor: number): void {
+    const diagonal = this.mapDiagonal();
+    const next = Math.min(diagonal * 2.2, Math.max(250, this.distance / factor));
+    const cursor = this.resolveGround(clientX, clientY);
+    const k = 1 - next / this.distance;
+    this.target.x += (cursor.x - this.target.x) * k;
+    this.target.z += (cursor.y - this.target.z) * k;
+    this.clampTarget();
+    this.distance = next;
+    this.applyCamera();
+  }
+
+  /** Centre the camera on a world point; optionally set the dolly too. */
+  focusWorld(xM: number, yM: number, distanceM?: number): void {
+    this.target.x = xM;
+    this.target.z = yM;
+    this.clampTarget();
+    if (distanceM !== undefined) {
+      this.distance = Math.min(this.mapDiagonal() * 2.2, Math.max(250, distanceM));
+    }
+    this.applyCamera();
+  }
+
+  /** Frame the whole map — the opening shot, and the scope's double-tap out. */
+  fitToMap(): void {
+    const terrain = this.terrain;
+    if (terrain === null) return;
+    const widthM = terrain.cols * terrain.cellM;
+    const heightM = terrain.rows * terrain.cellM;
+    this.target.set(widthM / 2, 0, heightM / 2);
+    this.distance = Math.max(widthM, heightM) * 1.05;
+    this.applyCamera();
+  }
+
+  /**
+   * The view's footprint on the ground, for the sonar scope's camera box and
+   * the overlay painter's culling bounds: the four screen corners dropped
+   * onto the target's ground plane. A trapezoid, not a rect — that is what a
+   * tilted camera honestly sees. Analytic on purpose: this runs every frame,
+   * and four terrain-mesh raycasts per frame would spend real budget buying
+   * ridge-accurate corners a 170 px scope box cannot show. Pointer intents
+   * keep the precise `resolveGround`.
+   */
+  groundQuad(): Array<{ x: number; y: number }> {
+    const terrain = this.terrain;
+    if (terrain === null || this.renderer === null) return [];
+    const groundY = this.groundYAt(this.target.x, this.target.z);
+    const corners: Array<[number, number]> = [
+      [-1, 1],
+      [1, 1],
+      [1, -1],
+      [-1, -1],
+    ];
+    const out: Array<{ x: number; y: number }> = [];
+    for (const [nx, ny] of corners) {
+      const ray = new Raycaster();
+      ray.setFromCamera(new Vector2(nx, ny), this.camera);
+      const direction = ray.ray.direction;
+      const t = Math.abs(direction.y) < 1e-6 ? 1e6 : (groundY - ray.ray.origin.y) / direction.y;
+      const point = ray.ray.origin.clone().addScaledVector(direction, Math.max(1, t));
+      out.push({
+        x: Math.min(terrain.cols * terrain.cellM, Math.max(0, point.x)),
+        y: Math.min(terrain.rows * terrain.cellM, Math.max(0, point.z)),
+      });
+    }
+    return out;
+  }
+
+  // ----------------------------------------------------------------- scene
 
   private rebuildTerrain(): void {
     if (this.renderer === null || this.terrain === null) return;
@@ -402,6 +492,7 @@ export class PerspectiveView {
       this.embers.geometry.dispose();
       (this.embers.material as PointsMaterial).dispose();
     }
+    this.terrainDressing.clear();
 
     // The grid gives the ground its shape; the seabed bake gives it its skin.
     // One texture, one geometry, one draw call — the lighting is already in
@@ -451,77 +542,135 @@ export class PerspectiveView {
 
     // Depth haze: the fog is the water. Scaled to the map so a small arena
     // and a large one both fade at their own horizon, in the same abyss hue
-    // as the background — distance and depth read as one darkness. The near
-    // plane sits past the fitted camera's own distance, so the whole-map view
-    // is hazed rather than swallowed; only the far half of a map fades hard.
+    // as the background — distance and depth read as one darkness.
     const diagonal = Math.hypot(grid.widthM, grid.heightM);
     this.scene.fog = new Fog(UI.background, diagonal * 0.55, diagonal * 2.1);
 
-    // Vent embers as one Points cloud: per-ember flicker rides the colour
-    // attribute under additive blending, so 400 embers stay one draw call.
-    // The 5 Hz step and the SPEC ember hue are seabed.ts's, unchanged.
-    const embers = ventEmbers(terrain, seabedSeed(terrain));
-    this.emberPhases = embers.map((e) => e.phase);
-    if (embers.length > 0) {
-      const emberPositions = new Float32Array(embers.length * 3);
-      const emberColors = new Float32Array(embers.length * 3);
-      const seed = seabedSeed(terrain);
-      const rockTop = rockTopDepthM(terrain);
-      embers.forEach((ember, i) => {
-        emberPositions[i * 3] = ember.xM;
-        emberPositions[i * 3 + 1] =
-          depthToWorldY(seabedDepthAtM(terrain, seed, rockTop, ember.xM, ember.yM)) + 6;
-        emberPositions[i * 3 + 2] = ember.yM;
-      });
-      const emberGeometry = new BufferGeometry();
-      emberGeometry.setAttribute('position', new BufferAttribute(emberPositions, 3));
-      emberGeometry.setAttribute('color', new BufferAttribute(emberColors, 3));
-      this.embers = new Points(
-        emberGeometry,
-        new PointsMaterial({
-          size: 55,
-          sizeAttenuation: true,
-          vertexColors: true,
-          transparent: true,
-          blending: AdditiveBlending,
-          depthWrite: false,
-          // A point without a map rasterises as a square; an ember is a glow.
-          map: this.emberSpriteTexture(),
-        })
-      );
-      this.embers.renderOrder = 1;
-      this.scene.add(this.embers);
-      this.emberBucket = -1;
-    } else {
-      this.embers = null;
-    }
-
-    this.rebuildNodes();
+    this.buildTerrainDressing(terrain);
+    this.buildEmbers(terrain);
     this.syncEntities();
   }
 
-  private rebuildNodes(): void {
-    if (this.renderer === null || this.terrain === null) return;
-    this.nodeGroup.clear();
-    for (const node of this.nodes) {
-      const radius = 60 + (node.initialAmount / 3000) * 40;
-      const disc = new Mesh(
-        new CircleGeometry(radius, 24),
-        // Quiet on purpose: chart data may never outshine a contact, and the
-        // first cut of this disc did.
-        new MeshBasicMaterial({
-          color: RESOURCE_COLOR[node.kind],
-          transparent: true,
-          opacity: 0.14,
-          depthWrite: false,
-        })
-      );
-      disc.rotation.x = -Math.PI / 2;
-      // The field sits at its own authored depth, not on the local seabed:
-      // a Crystal field's depth is the commitment it prices (economy.md §7).
-      disc.position.set(node.x, depthToWorldY(node.depth) + 3, node.y);
-      this.nodeGroup.add(disc);
+  /**
+   * The chart register the ground itself carries: roofed passages drawn as
+   * routes (public map data — everyone sees the passage, nobody sees who is
+   * in it), the map border as a rim line, and a dark skirt falling away from
+   * the edge so the world ends in deep water rather than in a void the fog
+   * never explains.
+   */
+  private buildTerrainDressing(terrain: TerrainPayload): void {
+    const seed = seabedSeed(terrain);
+    const rockTop = rockTopDepthM(terrain);
+    const groundY = (xM: number, yM: number) =>
+      depthToWorldY(seabedDepthAtM(terrain, seed, rockTop, xM, yM));
+    const isRock = (i: number) => terrain.ceiling[i]! > terrain.floor[i]!;
+
+    // Tunnel routes: a line across each roofed cell, lifted just off the
+    // ground. The mouth is invisible from above by construction; the line is
+    // what a player needs (docs/art-direction.md, "Reading the Sea Floor").
+    const routePoints: number[] = [];
+    for (let row = 0; row < terrain.rows; row++) {
+      for (let col = 0; col < terrain.cols; col++) {
+        const index = row * terrain.cols + col;
+        if (terrain.ceiling[index]! === 0 || isRock(index)) continue;
+        const y = (row + 0.5) * terrain.cellM;
+        const x0 = col * terrain.cellM;
+        const x1 = (col + 1) * terrain.cellM;
+        routePoints.push(x0, groundY(x0, y) + 10, y, x1, groundY(x1, y) + 10, y);
+      }
     }
+    if (routePoints.length > 0) {
+      const routeGeometry = new BufferGeometry();
+      routeGeometry.setAttribute('position', new BufferAttribute(new Float32Array(routePoints), 3));
+      this.terrainDressing.add(
+        new LineSegments(
+          routeGeometry,
+          new LineBasicMaterial({ color: UI.accent, transparent: true, opacity: 0.3 })
+        )
+      );
+    }
+
+    // The rim and the skirt share one perimeter walk.
+    const widthM = terrain.cols * terrain.cellM;
+    const heightM = terrain.rows * terrain.cellM;
+    const step = terrain.cellM;
+    const perimeter: Array<{ x: number; y: number }> = [];
+    for (let x = 0; x <= widthM; x += step) perimeter.push({ x, y: 0 });
+    for (let y = step; y <= heightM; y += step) perimeter.push({ x: widthM, y });
+    for (let x = widthM - step; x >= 0; x -= step) perimeter.push({ x, y: heightM });
+    for (let y = heightM - step; y >= step; y -= step) perimeter.push({ x: 0, y });
+
+    const rim = perimeter.map((p) => new Vector3(p.x, groundY(p.x, p.y) + 4, p.y));
+    this.terrainDressing.add(
+      new LineLoop(
+        new BufferGeometry().setFromPoints(rim),
+        new LineBasicMaterial({ color: UI.glassStroke, transparent: true, opacity: 0.5 })
+      )
+    );
+
+    const skirtBottom = depthToWorldY(DEPTH.MAX_M) - 250;
+    const skirtPositions: number[] = [];
+    const skirtIndices: number[] = [];
+    for (let i = 0; i < perimeter.length; i++) {
+      const p = perimeter[i]!;
+      const top = groundY(p.x, p.y);
+      skirtPositions.push(p.x, top, p.y, p.x, skirtBottom, p.y);
+      const j = (i + 1) % perimeter.length;
+      skirtIndices.push(i * 2, j * 2, i * 2 + 1, j * 2, j * 2 + 1, i * 2 + 1);
+    }
+    const skirtGeometry = new BufferGeometry();
+    skirtGeometry.setAttribute(
+      'position',
+      new BufferAttribute(new Float32Array(skirtPositions), 3)
+    );
+    skirtGeometry.setIndex(skirtIndices);
+    this.terrainDressing.add(
+      new Mesh(
+        skirtGeometry,
+        new MeshBasicMaterial({ color: 0x040a12, side: DoubleSide, fog: false })
+      )
+    );
+  }
+
+  /** Vent embers as one Points cloud: per-ember flicker rides the colour
+   * attribute under additive blending, so 400 embers stay one draw call.
+   * The 5 Hz step and the SPEC ember hue are seabed.ts's, unchanged. */
+  private buildEmbers(terrain: TerrainPayload): void {
+    const embers = ventEmbers(terrain, seabedSeed(terrain));
+    this.emberPhases = embers.map((e) => e.phase);
+    if (embers.length === 0) {
+      this.embers = null;
+      return;
+    }
+    const emberPositions = new Float32Array(embers.length * 3);
+    const emberColors = new Float32Array(embers.length * 3);
+    const seed = seabedSeed(terrain);
+    const rockTop = rockTopDepthM(terrain);
+    embers.forEach((ember, i) => {
+      emberPositions[i * 3] = ember.xM;
+      emberPositions[i * 3 + 1] =
+        depthToWorldY(seabedDepthAtM(terrain, seed, rockTop, ember.xM, ember.yM)) + 6;
+      emberPositions[i * 3 + 2] = ember.yM;
+    });
+    const emberGeometry = new BufferGeometry();
+    emberGeometry.setAttribute('position', new BufferAttribute(emberPositions, 3));
+    emberGeometry.setAttribute('color', new BufferAttribute(emberColors, 3));
+    this.embers = new Points(
+      emberGeometry,
+      new PointsMaterial({
+        size: 55,
+        sizeAttenuation: true,
+        vertexColors: true,
+        transparent: true,
+        blending: AdditiveBlending,
+        depthWrite: false,
+        // A point without a map rasterises as a square; an ember is a glow.
+        map: this.emberSpriteTexture(),
+      })
+    );
+    this.embers.renderOrder = 1;
+    this.scene.add(this.embers);
+    this.emberBucket = -1;
   }
 
   private groundYAt(xM: number, zM: number): number {
@@ -539,38 +688,6 @@ export class PerspectiveView {
       texture.colorSpace = SRGBColorSpace;
       this.spriteTextures.set(key, texture);
     }
-    return texture;
-  }
-
-  /**
-   * One tier's smudge: a soft radial blot in the tier's ink. Tier is the only
-   * thing it can say, which is the Asymmetric Fidelity Law doing its job.
-   */
-  private smudgeTexture(tier: ResolutionTier): CanvasTexture {
-    let texture = this.smudgeTextures.get(tier);
-    if (texture !== undefined) return texture;
-    const size = 64;
-    const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext('2d')!;
-    // A Silent contact is not a contact — the server never sends one — so the
-    // palette's tier table rightly has no row for it; UI.text is the null ink.
-    const color =
-      tier === ResolutionTier.Silent
-        ? UI.text
-        : ACTIVE_PALETTE.tier[tier as Exclude<ResolutionTier, ResolutionTier.Silent>].color;
-    const css = `#${color.toString(16).padStart(6, '0')}`;
-    const sharp = tier >= ResolutionTier.Classification;
-    const gradient = ctx.createRadialGradient(size / 2, size / 2, 2, size / 2, size / 2, size / 2);
-    gradient.addColorStop(0, css);
-    gradient.addColorStop(sharp ? 0.45 : 0.2, css);
-    gradient.addColorStop(1, `${css}00`);
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, size, size);
-    texture = new CanvasTexture(canvas);
-    texture.colorSpace = SRGBColorSpace;
-    this.smudgeTextures.set(tier, texture);
     return texture;
   }
 
@@ -596,14 +713,14 @@ export class PerspectiveView {
 
   /** Remove everything one entity put in the scene. */
   private dropHandle(group: Group, handle: EntityHandle): void {
-    group.remove(handle.mesh, handle.plumb, handle.shadow, handle.pick);
+    group.remove(handle.mesh, handle.plumb, handle.shadow);
     if (handle.model !== null) group.remove(handle.model.root);
   }
 
   /**
    * Build or update one own entity: the approved model once it is loaded, the
-   * Phase-1 flat sprite until then (and for kinds that have none), plus the
-   * plumb, shadow and pick volume either way.
+   * flat baked sprite until then (and for kinds that have none), plus the
+   * plumb line and ground shadow either way.
    */
   private syncEntity(
     handles: Map<number, EntityHandle>,
@@ -638,30 +755,16 @@ export class PerspectiveView {
         })
       );
       shadow.rotation.x = -Math.PI / 2;
-      // The pick volume renders nothing (colorWrite off) but stays visible to
-      // the raycaster. Its extents are the outline's, not the model's: what
-      // you click is what the simulation collides.
-      const pick = new Mesh(
-        new BoxGeometry(1, 1, 1),
-        new MeshBasicMaterial({ colorWrite: false, depthWrite: false })
-      );
-      pick.scale.set(
-        spec.pickLengthM,
-        Math.max(8, spec.pickBeamM * 0.7),
-        Math.max(spec.pickBeamM, 4)
-      );
-      group.add(mesh, plumb, shadow, pick);
+      group.add(mesh, plumb, shadow);
       handle = {
         mesh,
         plumb,
         shadow,
-        pick,
         spriteKey: '',
         widthM: 0,
         heightM: 0,
         model: null,
         modelKey: '',
-        ringRadiusM: spec.pickLengthM / 2 + 8,
       };
       handles.set(id, handle);
     }
@@ -710,9 +813,6 @@ export class PerspectiveView {
       handle.mesh.rotation.y = -spec.yaw;
       (handle.mesh.material as MeshBasicMaterial).opacity = spec.dimmed ? 0.45 : 1;
     }
-    handle.pick.position.set(spec.x, hullY, spec.z);
-    handle.pick.rotation.y = -spec.yaw;
-    handle.pick.userData.id = id;
 
     // The plumb line and ground shadow are what make the water column
     // readable: a hull's height above its own shadow *is* its depth. The
@@ -739,7 +839,6 @@ export class PerspectiveView {
       }
     }
     for (const unit of this.units) {
-      const lengthM = HULL_LENGTH_M[unit.kind];
       this.syncEntity(this.unitHandles, this.unitGroup, unit.id, {
         spriteKey: `unit:${unit.kind}:${this.faction}:${ACTIVE_PALETTE.name}`,
         canvas: hullSpriteCanvas(unit.kind, this.faction),
@@ -753,8 +852,6 @@ export class PerspectiveView {
         modelCacheKey: `unit:${unit.kind}:${this.faction}:${ACTIVE_PALETTE.name}`,
         liveSig: unit.sig,
         restSig: statsFor(unit.kind).sigIdle,
-        pickLengthM: lengthM,
-        pickBeamM: 2 * outlineHalfBeam(HULL_OUTLINE[unit.kind]) * lengthM,
       });
     }
 
@@ -767,9 +864,8 @@ export class PerspectiveView {
     for (const structure of this.structures) {
       // A construction site keeps the schematic sprite until commissioned —
       // gate 1's scaffold register — and takes its approved model only at
-      // buildProgress 1, exactly when the chart swaps in its baked sprite.
+      // buildProgress 1, exactly when the chart swapped in its baked sprite.
       const commissioned = structure.buildProgress >= 1;
-      const footprintM = structureStatsFor(structure.kind).radiusM * 2;
       this.syncEntity(this.structureHandles, this.structureGroup, structure.id, {
         spriteKey: `structure:${structure.kind}:${this.faction}:${ACTIVE_PALETTE.name}`,
         canvas: structureSpriteCanvas(structure.kind, this.faction),
@@ -785,183 +881,8 @@ export class PerspectiveView {
           : '',
         liveSig: structure.sig,
         restSig: structureStatsFor(structure.kind).sigIdle,
-        pickLengthM: footprintM,
-        pickBeamM: footprintM,
       });
     }
-
-    this.updateSelectionRing();
-
-    const liveContacts = new Set(this.contacts.map((c) => c.id));
-    for (const [id, sprite] of this.contactSprites) {
-      if (!liveContacts.has(id)) {
-        this.contactGroup.remove(sprite);
-        sprite.material.dispose();
-        this.contactSprites.delete(id);
-      }
-    }
-    for (const contact of this.contacts) {
-      let sprite = this.contactSprites.get(contact.id);
-      if (sprite === undefined) {
-        sprite = new Sprite(
-          new SpriteMaterial({ transparent: true, depthWrite: false, opacity: 0.85 })
-        );
-        this.contactGroup.add(sprite);
-        this.contactSprites.set(contact.id, sprite);
-      }
-      sprite.material.map = this.smudgeTexture(contact.tier);
-      sprite.material.needsUpdate = true;
-      const sizeM = CONTACT_SIZE_M[contact.tier] ?? CONTACT_SIZE_M[ResolutionTier.Contact]!;
-      sprite.scale.set(sizeM, sizeM, 1);
-      sprite.position.set(
-        contact.x,
-        depthToWorldY(contact.depth ?? UNRESOLVED_CONTACT_DEPTH_M),
-        contact.y
-      );
-    }
-  }
-
-  // ----------------------------------------------------------------- camera
-
-  private applyCamera(): void {
-    const pitch = (this.pitchDeg * Math.PI) / 180;
-    const groundY = this.groundYAt(this.target.x, this.target.z);
-    const look = new Vector3(this.target.x, groundY, this.target.z);
-    this.camera.position.set(
-      look.x,
-      look.y + Math.sin(pitch) * this.distance,
-      // South of the target, looking north: the viewport and the sonar scope
-      // must agree on north, which is the yaw lock's whole argument.
-      look.z + Math.cos(pitch) * this.distance
-    );
-    this.camera.lookAt(look);
-  }
-
-  private attachInput(canvas: HTMLCanvasElement): void {
-    let panning = false;
-    /** True once the pointer has travelled past tap slop — then it is a pan,
-     * and releasing it must not also pick. */
-    let dragged = false;
-    let lastX = 0;
-    let lastY = 0;
-    const TAP_SLOP_PX = 5;
-
-    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
-    canvas.addEventListener('pointerdown', (e) => {
-      panning = true;
-      dragged = false;
-      lastX = e.clientX;
-      lastY = e.clientY;
-      try {
-        canvas.setPointerCapture(e.pointerId);
-      } catch {
-        /* pointer already gone — the drag just will not survive the edge */
-      }
-    });
-    canvas.addEventListener('pointermove', (e) => {
-      if (!panning) return;
-      if (!dragged && Math.hypot(e.clientX - lastX, e.clientY - lastY) < TAP_SLOP_PX) return;
-      dragged = true;
-      const pitch = (this.pitchDeg * Math.PI) / 180;
-      const height = canvas.clientHeight || 1;
-      const worldPerPx = (2 * this.distance * Math.tan(((FOV_DEG / 2) * Math.PI) / 180)) / height;
-      this.target.x -= (e.clientX - lastX) * worldPerPx;
-      // Screen-vertical motion maps onto the ground plane through the pitch:
-      // at 90° they are equal; shallower pitches cover more ground per pixel.
-      this.target.z -= ((e.clientY - lastY) * worldPerPx) / Math.max(0.2, Math.sin(pitch));
-      lastX = e.clientX;
-      lastY = e.clientY;
-      this.clampTarget();
-    });
-    canvas.addEventListener('pointerup', (e) => {
-      if (panning && !dragged) {
-        // Chart grammar, conn camera: LMB picks, RMB orders.
-        if (e.button === 2) this.orderAt(e.clientX, e.clientY, canvas);
-        else this.pickAt(e.clientX, e.clientY, canvas);
-      }
-      panning = false;
-    });
-    canvas.addEventListener('pointercancel', () => {
-      panning = false;
-    });
-    canvas.addEventListener(
-      'wheel',
-      (e) => {
-        e.preventDefault();
-        const factor = Math.pow(1.15, e.deltaY / 100);
-        const diagonal = this.mapDiagonal();
-        const next = Math.min(diagonal * 2.2, Math.max(250, this.distance * factor));
-        // Zoom about the cursor, as the chart does: the ground point under
-        // the pointer stays under it while the dolly moves.
-        const cursor = this.groundPointAt(e.clientX, e.clientY, canvas);
-        if (cursor !== null) {
-          this.target.lerp(cursor, 1 - next / this.distance);
-          this.clampTarget();
-        }
-        this.distance = next;
-      },
-      { passive: false }
-    );
-  }
-
-  /**
-   * Resolve a click through the pick volumes — outline extents only, so a fin
-   * or a glow halo never catches a click its hull would not (the footprint
-   * law). A miss clears the highlight, as it does on the chart.
-   */
-  private pickAt(clientX: number, clientY: number, canvas: HTMLCanvasElement): void {
-    const rect = canvas.getBoundingClientRect();
-    const ndc = new Vector2(
-      ((clientX - rect.left) / rect.width) * 2 - 1,
-      -((clientY - rect.top) / rect.height) * 2 + 1
-    );
-    const raycaster = new Raycaster();
-    raycaster.setFromCamera(ndc, this.camera);
-    const unitPicks = [...this.unitHandles.values()].map((h) => h.pick);
-    const structurePicks = [...this.structureHandles.values()].map((h) => h.pick);
-    const hits = raycaster.intersectObjects([...unitPicks, ...structurePicks], false);
-    const first = hits[0]?.object;
-    if (first === undefined) {
-      this.selected = null;
-    } else {
-      this.selected = {
-        kind: unitPicks.includes(first as Mesh) ? 'unit' : 'structure',
-        id: first.userData.id as number,
-      };
-    }
-    this.updateSelectionRing();
-  }
-
-  /**
-   * Phase 3's one verb: move the highlighted unit to the clicked ground.
-   * Units only — a structure cannot be sent anywhere — and only through the
-   * chart's own callback, so this view never grows a second order channel.
-   */
-  private orderAt(clientX: number, clientY: number, canvas: HTMLCanvasElement): void {
-    const selected = this.selected;
-    if (selected === null || selected.kind !== 'unit') return;
-    const point = this.groundPointAt(clientX, clientY, canvas);
-    if (point === null) return;
-    this.callbacks.onMoveOrder([selected.id], point.x, point.z, false);
-  }
-
-  /** Keep the highlight on its hull, and drop it the moment the hull is gone. */
-  private updateSelectionRing(): void {
-    const selected = this.selected;
-    if (selected === null) {
-      this.selectionRing.visible = false;
-      return;
-    }
-    const handles = selected.kind === 'unit' ? this.unitHandles : this.structureHandles;
-    const handle = handles.get(selected.id);
-    if (handle === undefined) {
-      this.selected = null;
-      this.selectionRing.visible = false;
-      return;
-    }
-    this.selectionRing.position.copy(handle.pick.position);
-    this.selectionRing.scale.setScalar(handle.ringRadiusM);
-    this.selectionRing.visible = true;
   }
 
   private mapDiagonal(): number {
@@ -977,38 +898,35 @@ export class PerspectiveView {
     this.target.z = Math.min(terrain.rows * terrain.cellM, Math.max(0, this.target.z));
   }
 
-  /** The point on the camera-target ground plane under a client position. */
-  private groundPointAt(
-    clientX: number,
-    clientY: number,
-    canvas: HTMLCanvasElement
-  ): Vector3 | null {
-    const rect = canvas.getBoundingClientRect();
-    const ndc = new Vector2(
-      ((clientX - rect.left) / rect.width) * 2 - 1,
-      -((clientY - rect.top) / rect.height) * 2 + 1
-    );
-    const raycaster = new Raycaster();
-    raycaster.setFromCamera(ndc, this.camera);
-    const groundY = this.groundYAt(this.target.x, this.target.z);
-    const direction = raycaster.ray.direction;
-    if (Math.abs(direction.y) < 1e-6) return null;
-    const t = (groundY - raycaster.ray.origin.y) / direction.y;
-    if (t <= 0) return null;
-    return raycaster.ray.origin.clone().addScaledVector(direction, t);
-  }
+  // ----------------------------------------------------------------- frame
 
-  // ------------------------------------------------------------------ frame
+  private applyCamera(): void {
+    const pitch = (PITCH_DEG * Math.PI) / 180;
+    const groundY = this.groundYAt(this.target.x, this.target.z);
+    const look = new Vector3(this.target.x, groundY, this.target.z);
+    this.camera.position.set(
+      look.x,
+      look.y + Math.sin(pitch) * this.distance,
+      // South of the target, looking north: the viewport and the sonar scope
+      // must agree on north, which is the yaw lock's whole argument.
+      look.z + Math.cos(pitch) * this.distance
+    );
+    this.camera.lookAt(look);
+    this.camera.updateMatrixWorld();
+  }
 
   private resize(): void {
     if (this.renderer === null || this.host === null) return;
     const width = this.host.clientWidth || 1;
     const height = this.host.clientHeight || 1;
+    this.viewWidth = width;
+    this.viewHeight = height;
     this.renderer.setSize(width, height, false);
     this.renderer.domElement.style.width = '100%';
     this.renderer.domElement.style.height = '100%';
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
+    this.applyCamera();
   }
 
   private renderFrame(): void {
@@ -1052,7 +970,7 @@ export class PerspectiveView {
       const average = frames.length === 0 ? 0 : frames.reduce((a, b) => a + b, 0) / frames.length;
       return {
         active: this.active,
-        pitchDeg: this.pitchDeg,
+        pitchDeg: PITCH_DEG,
         distance: Math.round(this.distance),
         drawCalls: info?.render.calls ?? 0,
         triangles: info?.render.triangles ?? 0,
@@ -1060,11 +978,9 @@ export class PerspectiveView {
         worstFrameMs: Number(this.worstFrameMs.toFixed(2)),
         units: this.unitHandles.size,
         structures: this.structureHandles.size,
-        contacts: this.contactSprites.size,
         modelBacked:
           [...this.unitHandles.values()].filter((h) => h.model !== null).length +
           [...this.structureHandles.values()].filter((h) => h.model !== null).length,
-        selected: this.selected,
         ownCentre: this.ownCentre(),
       };
     };
@@ -1076,12 +992,7 @@ export class PerspectiveView {
         __perspectiveCamera?: (x: number, z: number, distance?: number) => void;
       }
     ).__perspectiveCamera = (x: number, z: number, distance?: number) => {
-      this.target.x = x;
-      this.target.z = z;
-      this.clampTarget();
-      if (distance !== undefined) {
-        this.distance = Math.min(this.mapDiagonal() * 2.2, Math.max(250, distance));
-      }
+      this.focusWorld(x, z, distance);
     };
   }
 

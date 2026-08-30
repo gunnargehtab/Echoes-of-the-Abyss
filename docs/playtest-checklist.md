@@ -215,6 +215,11 @@ would be worse than no metric at all.
    for? ([factions.md](factions.md))
 8. **Does the map argue?** Does the vent line read as the quiet road and the trench as the
    fast loud one, without being told? ([maps.md](maps.md))
+9. **Does the water read as a place?** The conn view exists because dread needs one
+   ([three-layer-ocean.md](three-layer-ocean.md)). Does a hull's height over its shadow
+   read as depth without the ribbon? Does a range ring lying on a ridge read as the same
+   water as the flat around it — and does anything on screen ever read as *two* worlds,
+   one drawn over the other? The compositing is working exactly when nobody notices it.
 
 Record these as prose against a specific build and seed. A seed makes a felt observation
 reproducible, which is the most a human report can offer.

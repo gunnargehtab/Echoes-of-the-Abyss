@@ -18,7 +18,7 @@ Root is an npm workspace with three packages, plus standalone tooling:
 
 - `packages/shared` — `@echoes/shared`: types, tuning constants, Echo Layer math
 - `packages/backend` — Colyseus game server; owns the authoritative simulation
-- `packages/frontend` — React shell and PixiJS renderer
+- `packages/frontend` — React shell and the two-canvas renderer (three.js conn view under the PixiJS HUD)
 - `tools/echo-sim` — deterministic Echo scenario harness (not a workspace)
 - `docs/` — the design bible
 

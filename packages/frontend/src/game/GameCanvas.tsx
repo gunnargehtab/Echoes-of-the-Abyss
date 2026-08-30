@@ -1,10 +1,13 @@
 /**
- * React mount point for the Pixi renderer.
+ * React mount point for the two-canvas renderer (docs/three-layer-ocean.md
+ * Phase 5): the three.js conn view is the world, and the transparent Pixi
+ * canvas over it is the HUD and every chart mark, both painting through the
+ * conn's one camera (EchoRenderer.setConn).
  *
- * React owns the DOM node; Pixi owns everything inside it. The component
- * deliberately keeps no game state — re-rendering React 60 times a second to
- * animate a canvas would be the wrong architecture, so game state lives in the
- * renderer and only connection status crosses back into React.
+ * React owns the DOM nodes; the renderers own everything inside them. The
+ * component deliberately keeps no game state — re-rendering React 60 times a
+ * second to animate a canvas would be the wrong architecture, so game state
+ * lives in the renderer and only connection status crosses back into React.
  */
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
@@ -165,19 +168,19 @@ export function GameCanvas({
   const rendererRef = useRef<EchoRenderer | null>(null);
   const clientRef = useRef<GameClient | null>(null);
   /**
-   * The perspective viewport (docs/three-layer-ocean.md Phase 1): a second
-   * renderer over the same resolved data, behind a toggle. It is a *view* —
-   * pan and zoom only; orders and the HUD stay on the chart until Phase 3 —
-   * so React owns only which of the two is showing.
+   * The conn view (docs/three-layer-ocean.md): since Phase 5 it is not a
+   * toggle beside the chart, it IS the world — mounted for the whole match
+   * under the transparent Pixi canvas, which draws the HUD and every chart
+   * mark through the conn's camera.
    */
   const perspectiveRef = useRef<PerspectiveView | null>(null);
   const perspectiveHostRef = useRef<HTMLDivElement>(null);
-  const [viewMode, setViewMode] = useState<'chart' | 'perspective'>(() => {
-    // `?view=perspective` lets the headless harness (and a bookmark) open
-    // straight into the 3D view; `?pitch=NN` is read by the mount effect.
-    const params = new URLSearchParams(window.location.search);
-    return params.get('view') === 'perspective' ? 'perspective' : 'chart';
-  });
+  /**
+   * True when the GL surface could not be created. The conn view is the only
+   * world renderer there is, so this is a hard stop with its reason shown —
+   * an overlay, not a silent black screen.
+   */
+  const [glFailed, setGlFailed] = useState(false);
   /**
    * Everything under the esc menu's glass, so it can be made inert while the
    * menu is up — the dialog is modal (§9.5), and Tab must not walk out of it
@@ -247,14 +250,19 @@ export function GameCanvas({
     window.addEventListener('keydown', unlock, { once: true });
 
     const start = async () => {
-      const perspective = new PerspectiveView({
-        // The conn view's verbs ride the chart's own channels: one order
-        // path, whichever view the player prefers to stand in.
-        onMoveOrder: (unitIds, x, y, queued) => client?.moveTo(unitIds, x, y, queued),
-      });
-      const pitch = Number(new URLSearchParams(window.location.search).get('pitch'));
-      if (Number.isFinite(pitch) && pitch > 0) perspective.setPitchDeg(pitch);
+      // The world first: the conn view mounts for the whole match, and the
+      // Pixi glass above it cannot draw a single world mark without it.
+      const perspective = new PerspectiveView();
       perspectiveRef.current = perspective;
+      const perspectiveHost = perspectiveHostRef.current;
+      if (perspectiveHost === null || !perspective.mount(perspectiveHost)) {
+        // No WebGL, no world. Say so rather than leaving a black screen
+        // wearing a working HUD — and take no seat in a match this device
+        // cannot render.
+        setGlFailed(true);
+        return;
+      }
+      perspective.setActive(true);
 
       const activeRenderer = new EchoRenderer({
         onMoveOrder: (unitIds, x, y, queued) => client?.moveTo(unitIds, x, y, queued),
@@ -317,6 +325,9 @@ export function GameCanvas({
       }
       renderer = activeRenderer;
       rendererRef.current = activeRenderer;
+      // One camera, two painters: every world mark and every aimed pointer in
+      // the Pixi layer goes through the conn view from here on.
+      activeRenderer.setConn(perspective);
 
       client = new GameClient({
         // The perspective view rides the same resolved payloads the chart
@@ -335,10 +346,7 @@ export function GameCanvas({
           setMapName(map.name);
           setMaxSlots(map.seats);
         },
-        onNodes: (nodes) => {
-          activeRenderer.setNodes(nodes);
-          perspective.setNodes(nodes);
-        },
+        onNodes: (nodes) => activeRenderer.setNodes(nodes),
         onAssigned: ({ slot, faction }) => {
           activeRenderer.setIdentity(slot, faction);
           perspective.setIdentity(slot, faction);
@@ -489,27 +497,6 @@ export function GameCanvas({
   }, []);
 
   /**
-   * Mount the 3D surface lazily, on first switch: a player who never toggles
-   * pays nothing for it. The GL context and scene persist across toggles —
-   * only the frame loop starts and stops — and a mount that fails (no WebGL)
-   * simply drops back to the chart rather than showing a black viewport.
-   */
-  useEffect(() => {
-    const perspective = perspectiveRef.current;
-    const perspectiveHost = perspectiveHostRef.current;
-    if (perspective === null) return;
-    if (viewMode === 'perspective' && perspectiveHost !== null) {
-      if (!perspective.mount(perspectiveHost)) {
-        setViewMode('chart');
-        return;
-      }
-      perspective.setActive(true);
-    } else {
-      perspective.setActive(false);
-    }
-  }, [viewMode]);
-
-  /**
    * While the esc menu is up, the water cannot hear the keyboard (§9.5). The
    * renderer holds the window-level key listeners, so it is the one that has
    * to stop listening; pointer input dies on the menu's own glass, and the
@@ -557,29 +544,12 @@ export function GameCanvas({
           unpositioned, so the absolute panels inside keep .game-root as
           their containing block. */}
       <div ref={underRef} className="game-under">
+        {/* The world, then the glass: the conn view renders the water and the
+            player's own force; the Pixi canvas over it is transparent and
+            draws the HUD and every chart mark through the conn's camera. All
+            pointer input lands on the top canvas and is interpreted there. */}
+        <div ref={perspectiveHostRef} className="perspective-host" />
         <div ref={hostRef} className="game-host" />
-        {/* The perspective viewport sits over the chart while it is the view;
-            the chart (and its HUD) stays live underneath and takes back the
-            screen the moment the toggle flips. Both renderers coexist until
-            docs/three-layer-ocean.md Phase 5. */}
-        <div
-          ref={perspectiveHostRef}
-          className="perspective-host"
-          hidden={viewMode !== 'perspective'}
-        />
-        {live && phase !== MatchPhase.Lobby && (
-          <button
-            type="button"
-            className="view-toggle"
-            onClick={() => setViewMode(viewMode === 'chart' ? 'perspective' : 'chart')}
-          >
-            {/* "Conn", not "dive": the command bar already sells DIVE as a
-                depth order, and a view is not an order. The conn is where a
-                boat is steered from, which is exactly what this view becomes
-                in Phase 3. */}
-            {viewMode === 'chart' ? 'Conn view' : 'Chart view'}
-          </button>
-        )}
         {live && phase !== MatchPhase.Lobby && <ContactLog entries={log} onFocus={focusOn} />}
         {live && phase !== MatchPhase.Lobby && mission !== null && (
           <MissionPanel view={mission} onFocus={focusOn} />
@@ -638,7 +608,19 @@ export function GameCanvas({
           onExit={onExit}
         />
       )}
-      {!live && (
+      {glFailed && (
+        <div className="game-overlay">
+          <h2>No light in the water</h2>
+          <p>
+            The conn view needs WebGL, and this browser or device refused a context. Enable hardware
+            acceleration or try another browser.
+          </p>
+          <button type="button" className="game-overlay-back" onClick={onExit}>
+            Return to port
+          </button>
+        </div>
+      )}
+      {!live && !glFailed && (
         <div className="game-overlay">
           <h2>
             {status === 'connecting' && 'Listening…'}

@@ -246,60 +246,61 @@ The Echo Layer (see [systems-echo.md](systems-echo.md)) only works if it's reada
 
 ## Camera & Projection
 
-This section is SPEC: `packages/frontend/src/game/EchoRenderer.ts` transcribes it, and the
-offline bake in `tools/hull-maps/` depends on it. The lineage is the classic-RTS oblique
-camera — Command & Conquer's ~45° dimetric sprites, Warcraft III's ~55° locked 3D pitch —
-but *Echoes* runs that idea all the way to vertical, and the reasons are mechanical, not
-taste.
+This section is SPEC: `packages/frontend/src/game/PerspectiveView.ts` transcribes it. The
+lineage is the classic-RTS oblique camera — Command & Conquer's ~45° dimetric sprites,
+Warcraft III's ~55° locked 3D pitch — and since the August 2026 presentation revision
+([three-layer-ocean.md](three-layer-ocean.md)) *Echoes* ships that camera itself: the
+world is a perspective view over a sculpted, visible seabed, and the chart survives as
+the instrument layer drawn over it.
 
-> **Direction revision in progress.** The August 2026 playtest set a new presentation
-> direction: a WC3-lineage perspective camera over a visible, sculpted seabed. The plan —
-> including which of this section's protections move where — is
-> [three-layer-ocean.md](three-layer-ocean.md). Until its phases land, this section remains
-> the spec the shipped renderer transcribes.
+### The conn view: a locked perspective camera — SPEC
 
-### The world is a chart: pure top-down plan view — SPEC
+The world renders in perspective at a pitch of **55° below horizontal** — settled by the
+Phase-1 screenshot comparison against 45° and 62°, and the same commitment WC3 made —
+with a 40° vertical field of view and yaw locked to north. The camera rig is a target on
+the ground and a dolly distance, nothing else: pan slides the target, zoom dollies about
+the cursor, and no verb tilts or turns it. One camera serves both canvases — the GL world
+and the Pixi mark layer project through it (`EchoRenderer.setConn`) — so the two painters
+cannot disagree about where the water is.
 
-All gameplay geometry renders in orthographic plan projection, camera pitch 90°: terrain,
-the 250 m cell grid, movement, selection, and every acoustic overlay. This game is played
-in range rings — the 2,400 m ping reveal, detection radii, the ~500 m mine audibility
-band — and the docs quote those as concrete metre figures the player is expected to reason
-with. In plan view a 2,400 m circle *is* a circle and equal distances read equally in every
-direction; at C&C's ~45° the same ring is an ellipse whose north–south extent lies to the
-player by roughly a third. A distorted ring is confusion, and the target emotion is dread
-the player can reason about — so the projection that keeps rings honest wins.
+The projection change moved the old plan-view protections; it did not drop them:
 
-Two more things already committed us here:
+- **Range rings stay honest by conforming, not by flattening.** This game is played in
+  range rings — the 2,400 m ping reveal, detection radii — quoted as concrete metre
+  figures the player reasons with. Rings are projected vertex by vertex onto the terrain
+  and lie on it like paint, drawn through the same camera that draws the ground: equal
+  metres read as the same water, even where the seabed climbs. A screen-space ellipse
+  approximating the ring would be the lie the old plan view existed to prevent.
+- **Symbols billboard; measurements conform.** Contact marks, bars, glyphs and selection
+  rings face the screen and scale with the local pixels-per-metre — they are statements
+  about the interface. Rings, hazard sites, residue stains and blocked ground lie on the
+  terrain — they are statements about the water. The split is deliberate and load-bearing.
+- **Depth is drawn, not implied.** Own hulls render at true depth with a plumb line and
+  ground shadow; a hull's height above its own shadow *is* its depth. Verticality keeps
+  its luminance-and-fog language ("Reading the Sea Floor" above); the tilt supports it
+  rather than competing with it.
+- **What you click is what the simulation collides.** Selection and orders are resolved
+  in screen space against drawn positions, through the same projection, with the old
+  world-metre reach radii scaled to the local pixels-per-metre.
 
-- **Depth is spoken for.** In C&C and WC3 the oblique pitch exists to give buildings
-  vertical silhouette. Here verticality is a gameplay axis rendered through luminance, fog
-  and the chart register ("Reading the Sea Floor" above) — a tilted camera would compete
-  with that language, not support it.
-- **The bake contract is plan-view arithmetic.** The hull and structure maps carry no
-  metadata: pixel size ÷ density (4 px/m units, 1.5 px/m structures — gate 6 in
-  [graphics-standards.md](graphics-standards.md)) *is* the metre extent. That identity only
-  holds at 90°.
+### Dimensionality is the roster models, lit by the law
 
-### Dimensionality is lighting, not pitch
-
-Hulls still read as dimensional the way C&C sprites did — but the three-quarter effect is
-painted by light rather than by tilting the camera. Sprites bake from plan-view heightfield
-and albedo maps and are lit per pixel with a low oblique key and hard rim light
-(`packages/frontend/src/game/bake.ts`), so relief, ridges and frills carry the silhouette
-law while the sprite's footprint stays exactly `HULL_OUTLINE`: what you click is what the
-simulation collides, with no overhang and no occlusion between hulls. The "slight top-down
-3/4 camera" in [asset-prompts-3d.md](asset-prompts-3d.md) is a *generation pose* for
-concept renders and review shots; the shipped projection is this one.
+Own hulls and structures render as the approved roster models
+([asset-prompts-3d.md](asset-prompts-3d.md), hull-intake canonicalisation), lit by the
+same rig the sprite bake transcribed: cold ambient, low oblique key, hard cyan rim. The
+plan-view sprite bake (`packages/frontend/src/game/bake.ts`) survives as the loading
+fallback and the sonar scope's language. Glow is loudness (gate 3): the model lamps swing
+with live SIG, so a hull running silent goes dark instead of translucent. The enemy never
+renders as a model at any tier — the Asymmetric Fidelity Law is untouched by the camera.
 
 ### Rotation and zoom — SPEC
 
-- **No camera rotation, ever.** Rotation breaks the chart metaphor, the minimap
-  correspondence (the sonar scope and the viewport must agree on north), and the plan-view
-  sprite bake. There is no "temporarily" here any more than in the server-authoritative
-  rule.
-- **Zoom only, about the cursor** (wheel / pinch), taken from WC3 rather than C&C. The zoom
-  band is TUNABLE and lives in `EchoRenderer.ts`; whatever the band, every gate in
-  [graphics-standards.md](graphics-standards.md) is judged "at every zoom the camera
+- **No camera rotation, ever.** Rotation breaks the minimap correspondence (the sonar
+  scope and the viewport must agree on north) and the one-glance legibility of a fixed
+  frame. There is no "temporarily" here any more than in the server-authoritative rule.
+- **Zoom only, about the cursor** (wheel / pinch), taken from WC3 rather than C&C. The
+  dolly band is TUNABLE and lives in `PerspectiveView.ts`; whatever the band, every gate
+  in [graphics-standards.md](graphics-standards.md) is judged "at every zoom the camera
   allows". UI scale is a separate control and never touches the world camera
   ([ui-ux.md](ui-ux.md) §11).
 
@@ -307,7 +308,7 @@ concept renders and review shots; the shipped projection is this one.
 
 The submarine feel — slight vignette, slow camera sway, fog layers for parallax, the ≤1 px
 chromatic split at frame edges ([style-neon-noir.md](style-neon-noir.md)) — is post-work
-composited over the plan view. Sway is translation only. None of these effects may tilt,
+composited over the world. Sway is translation only. None of these effects may tilt,
 shear or rotate the projection: the moment an atmosphere pass bends a range ring, it has
 crossed from mood into misinformation.
 
@@ -344,7 +345,7 @@ Within it:
 
 ## Related
 
-- [three-layer-ocean.md](three-layer-ocean.md) — the presentation revision that supersedes the camera spec above once its phases land
+- [three-layer-ocean.md](three-layer-ocean.md) — the presentation revision the camera spec above transcribes, phase by phase
 - [graphics-standards.md](graphics-standards.md) — the acceptance bar that enforces this direction
 - [factions.md](factions.md) — full faction visual identity sheets
 - [style-neon-noir.md](style-neon-noir.md) — presentation-layer palette tokens and glow rules

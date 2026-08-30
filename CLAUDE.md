@@ -68,7 +68,9 @@ packages/shared    @echoes/shared — types, tuning constants, Echo Layer math.
 packages/backend   Colyseus server. Owns the simulation. Node + esbuild bundle.
                    sim/maps/ holds the authored map archetypes — data literals,
                    never generated. Terrain.demo() is a test fixture, not a map.
-packages/frontend  React shell + PixiJS renderer. A terminal, not a simulation.
+packages/frontend  React shell + two-canvas renderer: three.js conn view (the
+                   world) under a transparent PixiJS HUD, one shared camera
+                   (EchoRenderer.setConn). A terminal, not a simulation.
 tools/echo-sim     Standalone CommonJS harness for deterministic Echo scenarios.
                    Not an npm workspace; run it directly:
                    node tools/echo-sim/sim.js [tools/echo-sim/scenarios/<name>.json]
