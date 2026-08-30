@@ -16,6 +16,7 @@ import { ABYSSAL_RIFT_CORRIDOR } from './abyssalRiftCorridor.ts';
 import { KELP_LABYRINTH } from './kelpLabyrinth.ts';
 import { VENTFRONT_DIVIDE } from './ventfrontDivide.ts';
 import { ATTENDING_GALLERIES } from './missions/attendingGalleries.ts';
+import { FOURTH_TRENCH } from './missions/fourthTrench.ts';
 import { MARR_PLATEAU } from './missions/marrPlateau.ts';
 import { NINEFOLD_FACE_SIX } from './missions/ninefoldFaceSix.ts';
 import { NINEFOLD_WORKINGS } from './missions/ninefoldWorkings.ts';
@@ -26,6 +27,7 @@ export * from './types.ts';
 export {
   ABYSSAL_RIFT_CORRIDOR,
   ATTENDING_GALLERIES,
+  FOURTH_TRENCH,
   KELP_LABYRINTH,
   MARR_PLATEAU,
   NINEFOLD_FACE_SIX,
@@ -64,6 +66,7 @@ export const MISSION_MAPS: readonly MapDefinition[] = [
   SORROWGATE,
   NINEFOLD_FACE_SIX,
   NINEFOLD_WORKINGS,
+  FOURTH_TRENCH,
   MARR_PLATEAU,
   ATTENDING_GALLERIES,
 ];

@@ -123,6 +123,32 @@ export const LEDGER_SHIFT_CHANGE_HEADER: MissionHeader = {
   ],
 };
 
+export const LEDGER_BAFFLE_HEADER: MissionHeader = {
+  id: 'ledger-baffle',
+  campaign: 'ledger',
+  ordinal: 3,
+  name: 'The Ledger — Baffle',
+  premise:
+    'A closed trench, a failing plant at the far end of it, and two chambers of quiet water on the only road.',
+  mapId: 'fourth-trench',
+  // The yard's plant fails at 20:00 (docs/mission-baffle.md §9), inside §10's 12-25.
+  lengthBandS: [1140, 1260],
+  /**
+   * The relief writ, read to the convoy at muster — docs/mission-baffle.md
+   * §12, verbatim. Public for Sorrowgate's reason: it names no hidden fact.
+   * The stations are on every chart including theirs, the picket announces
+   * its own law, and the one thing the writ withholds — a transit request —
+   * it withholds from the inquiry, not from the player.
+   */
+  briefing: [
+    'The Deep Yard’s plant fails in twenty minutes of transit time. The replacement is crated and the escort is funded. The long route misses the arithmetic by two tides. This writ takes the short one.',
+    'The Fourth Trench is closed to chartered freight while the exchange inquiry runs. The concern has reviewed the closure and finds it is not the concern’s. No transit request has been filed: a request enters the yard’s condition into the inquiry’s record, and that exposure is priced above yours. You are advised of the pricing so that nobody mistakes it for an oversight.',
+    'Two baffle stations are moored at the chartered lay-bys. Advance station to station. Fight at the mouths, where the bubble bends the water your way; do not fight in the open corridor, which is theirs from end to end and carries everything. The escort carries the survey array. Transmit once, late, and commit on what it returns. The trench will hear the transmission. The trench hears everything; that is what a trench is.',
+    'The picket will announce the closure. It will be correct. Proceed.',
+    'Forty-one berths are on the yard’s complement. The plant you are hauling is the line item above them. Exposure is authorised. Sentiment is not. Signed for the Board.',
+  ],
+};
+
 export const SEEDING_TEND_HEADER: MissionHeader = {
   id: 'seeding-tend',
   campaign: 'seeding',
@@ -177,6 +203,7 @@ export const MISSION_HEADERS: readonly MissionHeader[] = [
   PROLOGUE_SORROWGATE_HEADER,
   LEDGER_ASSET_RECOVERY_HEADER,
   LEDGER_SHIFT_CHANGE_HEADER,
+  LEDGER_BAFFLE_HEADER,
   SEEDING_TEND_HEADER,
   ATTENDING_ATTENDANCE_HEADER,
 ];
