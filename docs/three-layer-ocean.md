@@ -277,13 +277,46 @@ Decisions the phase settled:
   scene — so wall-clock validation on real GPUs and on the Termux floor is Phase 2's first
   errand, before the model roster raises the load.
 
-Phase-2/3 presentation debts, recorded so they are chosen rather than inherited: a contact
-below Tier 3 carries no depth, and the viewport currently hovers it at a fixed 600 m
-reference — an honest column glyph is owed; hull sprites render at true metre scale, which
-reads small against kilometres of ground, so the model pass needs a readability scale at far
-zoom (RTS readability > realism); the map edge ends in blackness where a WC3 map would have a
-skirt; and hazard sites and echo marks are not yet drawn in the conn view — the chart remains
-the tactical authority until Phase 3.
+### Phase 2 — landed
+
+The approved roster sails: own units and commissioned structures render in the conn view as
+the GLBs from `docs/concept-art/models/`, loaded at runtime through
+`packages/frontend/src/game/rosterModels.ts` and served by the bundler straight from the docs
+tree — one set of files, no copy to drift. The Phase-1 sprites remain exactly what the plan
+said they would be: the loading fallback, and the whole of any kind without an approved model
+(the VentTap). Construction sites keep the dimmed schematic until commissioned, per gate 1's
+scaffold register. Review screenshots live in `docs/screenshots/three-layer-phase2/`.
+
+What the phase settled:
+
+- **Canonicalisation is the intake harness's, verbatim.** The exports are not metre-true and
+  not axis-uniform (the roster is Z-long; the Bastion arrives fifty times under scale), and
+  the offline map bake has always corrected this through hull-intake's rule — yaw a Z-long
+  export onto X, scale the length to the design figure, centre. `rosterModels.ts` replicates
+  that rule exactly, which is why the conn view and the chart's sprites agree about every
+  hull without a single model being re-exported.
+- **Gate 4 moved to material level.** Each material keeps its luminance and wears the owning
+  faction's primary; lamps are recoloured to the faction glow. Templates cache per palette,
+  so the colour-vision palettes (ui-ux.md §11) recolour the meshes the way they re-bake the
+  sprites.
+- **Gate 3 went live.** Lamps carry their intake-approved resting strength and swing with the
+  hull's *live* SIG along the spec curve's exponent (`glow.ts`, node-tested): silent running
+  visibly darkens a hull, a ping flares it. Loudness is the lights, never the paint.
+- **Draw calls hold budget with the models on.** Design exports arrive as dozens of parts per
+  hull; merging by material collapses the starting base — six model-backed entities, terrain,
+  embers — to **~50–58 draw calls / ~50 k triangles**, inside Phase 1's 150 / 250 k caps.
+  Same software-GL caveat as Phase 1 (~180–195 ms/frame measures SwiftShader, not the
+  scene); **real-GPU and Termux wall-clock validation is still owed** and remains the next
+  hardware errand.
+- **Volume picking is in, orders are not.** Clicking resolves through an outline-extruded
+  invisible proxy — never fins or glow — and draws a chart-parity highlight ring. It is
+  deliberately view-local: the verbs stay on the chart until Phase 3.
+
+Phase-3 presentation debts, carried or new: a contact below Tier 3 still hovers at the 600 m
+reference — the honest column glyph is owed; hulls at true metre scale still read small
+against kilometres of ground at far zoom (a readability scale is owed; RTS readability >
+realism); the map edge still ends in blackness; hazard sites, echo marks and **own ordnance**
+are not yet drawn in the conn view — the chart remains the tactical authority until Phase 3.
 
 ## 10. Open questions
 

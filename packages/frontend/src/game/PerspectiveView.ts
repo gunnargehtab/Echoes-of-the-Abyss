@@ -1,19 +1,18 @@
 /**
- * The perspective viewport — Phase 1 of docs/three-layer-ocean.md.
+ * The perspective viewport — Phases 1–2 of docs/three-layer-ocean.md.
  *
  * A three.js scene beside the Pixi chart, behind a toggle: the authored ground
  * as a real heightfield (perspectiveTerrain.ts) wearing the seabed bake as its
- * skin, the player's own force as the *same* baked sprites the chart draws —
- * laid flat at their true depth, which is the honest use of a plan-view bake —
- * and contacts as tier-capped smudges. A WC3-lineage camera looks down and
- * along at a fixed pitch; yaw is locked, per the no-rotation rule the revision
- * kept.
+ * skin, and the player's own force as the *approved roster models*
+ * (rosterModels.ts) at their true depth — the flat baked sprites remain the
+ * fallback while a model loads and for kinds without one. Contacts stay
+ * tier-capped smudges. A WC3-lineage camera looks down and along at a fixed
+ * pitch; yaw is locked, per the no-rotation rule the revision kept.
  *
- * What this deliberately is NOT yet: an input surface. Orders, selection and
- * the HUD stay on the chart until Phase 3; this view pans, zooms, and shows
- * the water as a place. It is also not the model renderer — Phase 2 swaps the
- * flat hull sprites for the approved GLBs; the ground underneath them is this
- * phase's deliverable.
+ * What this deliberately is NOT yet: an order surface. Clicking a hull
+ * highlights it — resolved through its outline volume, never its fins — but
+ * the verbs and the HUD stay on the chart until Phase 3; this view pans,
+ * zooms, and shows the water as a place.
  *
  * Rules carried over intact from the chart, because a renderer change must
  * never be a rules change:
@@ -23,22 +22,27 @@
  *   tier and never as a hull; there is nothing else here to draw it from.
  * - **Texture, not information.** The heightfield's detail relief is the
  *   render-only field from seabed.ts; nothing here reads it back as gameplay.
- * - **Glow is loudness.** The billboards are the baked sprites, so their
- *   emissive marks are already on the gate-3 curve.
+ * - **Glow is loudness.** Model lamps carry their intake-approved resting
+ *   strength and swing with live SIG on the gate-3 curve (rosterModels.ts);
+ *   the fallback sprites baked the same curve in.
  */
 
 import {
   AdditiveBlending,
+  AmbientLight,
+  BoxGeometry,
   BufferAttribute,
   BufferGeometry,
   CanvasTexture,
   CircleGeometry,
   Color,
+  DirectionalLight,
   DoubleSide,
   Fog,
   Group,
   Line,
   LineBasicMaterial,
+  LineLoop,
   Mesh,
   MeshBasicMaterial,
   PerspectiveCamera,
@@ -57,6 +61,8 @@ import {
 import {
   Faction,
   ResolutionTier,
+  statsFor,
+  structureStatsFor,
   type Contact,
   type EchoSnapshot,
   type OwnStructure,
@@ -74,6 +80,13 @@ import {
 } from './perspectiveTerrain.ts';
 import { hullSpriteCanvas, hullSpriteSizeM } from './hullTextures.ts';
 import { structureSpriteCanvas, structureSpriteSizeM } from './structureTextures.ts';
+import { HULL_LENGTH_M, HULL_OUTLINE } from './silhouettes.ts';
+import {
+  applyLiveGlow,
+  rosterModelInstance,
+  type RosterModelInstance,
+  type RosterModelKey,
+} from './rosterModels.ts';
 
 /** TUNABLE — camera pitch below horizontal, degrees. The WC3-lineage band the
  * revision names is 50–60°; Phase-1 screenshots settle the number. */
@@ -114,6 +127,43 @@ interface EntityHandle {
   spriteKey: string;
   widthM: number;
   heightM: number;
+  /** The approved model, once loaded — Phase 2. Sprite hides while it shows. */
+  model: RosterModelInstance | null;
+  modelKey: string;
+  /**
+   * The pick volume: HULL_OUTLINE's extents extruded, invisible, and the only
+   * thing a click may resolve through — never fins, frills or glow (the
+   * footprint law, docs/three-layer-ocean.md §4).
+   */
+  pick: Mesh;
+  /** Chart-parity selection ring radius. */
+  ringRadiusM: number;
+}
+
+/** Everything one entity's sync needs, sprite path and model path alike. */
+interface EntitySpec {
+  spriteKey: string;
+  canvas: HTMLCanvasElement | null;
+  sizeM: { widthM: number; heightM: number };
+  x: number;
+  z: number;
+  depthM: number;
+  yaw: number;
+  dimmed: boolean;
+  /** null keeps the entity on the sprite path (construction sites, VentTap). */
+  modelDesc: RosterModelKey | null;
+  modelCacheKey: string;
+  liveSig: number;
+  restSig: number;
+  pickLengthM: number;
+  pickBeamM: number;
+}
+
+/** Half-beam of a hull outline, as a fraction of hull length. */
+function outlineHalfBeam(outline: readonly (readonly number[])[]): number {
+  let max = 0;
+  for (const [, py] of outline) max = Math.max(max, Math.abs(py!));
+  return max;
 }
 
 export class PerspectiveView {
@@ -153,6 +203,14 @@ export class PerspectiveView {
   private readonly spriteTextures = new Map<string, CanvasTexture>();
   private readonly smudgeTextures = new Map<number, CanvasTexture>();
 
+  /**
+   * View-local selection — a highlight, not an order channel. Clicking a hull
+   * here answers "which one is that"; commanding it stays on the chart until
+   * Phase 3 wires the verbs into this view.
+   */
+  private selected: { kind: 'unit' | 'structure'; id: number } | null = null;
+  private readonly selectionRing: LineLoop;
+
   private active = false;
   private frameHandle = 0;
   private lastFrameAt = 0;
@@ -163,6 +221,33 @@ export class PerspectiveView {
   constructor() {
     this.scene.add(this.nodeGroup, this.unitGroup, this.structureGroup, this.contactGroup);
     this.scene.background = new Color(UI.background);
+
+    // Lights exist for the roster models alone: the terrain, sprites and
+    // smudges are unlit materials with their shading baked in, so these
+    // touch nothing else. The rig transcribes the sprite bake's (bake.ts):
+    // a cold ambient so black water never crushes to nothing, an oblique key
+    // from high north-west, and a hard cyan rim from the north — the same
+    // rim the prompt kit poses every model against.
+    this.scene.add(new AmbientLight(0x5a6b80, 0.65));
+    const key = new DirectionalLight(0xdfe8f0, 1.35);
+    key.position.set(-1400, 2600, -900);
+    this.scene.add(key, key.target);
+    const rim = new DirectionalLight(0x9fd8ff, 1.0);
+    rim.position.set(0, 900, -3000);
+    this.scene.add(rim, rim.target);
+
+    // The selection ring, chart-parity: UI.text, a circle around the hull.
+    const ringPoints: Vector3[] = [];
+    for (let i = 0; i < 48; i++) {
+      const a = (i / 48) * Math.PI * 2;
+      ringPoints.push(new Vector3(Math.cos(a), 0, Math.sin(a)));
+    }
+    this.selectionRing = new LineLoop(
+      new BufferGeometry().setFromPoints(ringPoints),
+      new LineBasicMaterial({ color: UI.text, transparent: true, opacity: 0.8 })
+    );
+    this.selectionRing.visible = false;
+    this.scene.add(this.selectionRing);
   }
 
   /** Create the GL surface. Returns false when WebGL is unavailable. */
@@ -275,6 +360,7 @@ export class PerspectiveView {
     this.contacts = [];
     this.headings.clear();
     this.lastPositions.clear();
+    this.selected = null;
     if (this.renderer !== null) this.syncEntities();
   }
 
@@ -287,6 +373,7 @@ export class PerspectiveView {
     this.renderer?.domElement.remove();
     this.renderer = null;
     delete (window as unknown as { __perspectiveProbe?: unknown }).__perspectiveProbe;
+    delete (window as unknown as { __perspectiveCamera?: unknown }).__perspectiveCamera;
   }
 
   // ------------------------------------------------------------------ scene
@@ -411,10 +498,12 @@ export class PerspectiveView {
       const radius = 60 + (node.initialAmount / 3000) * 40;
       const disc = new Mesh(
         new CircleGeometry(radius, 24),
+        // Quiet on purpose: chart data may never outshine a contact, and the
+        // first cut of this disc did.
         new MeshBasicMaterial({
           color: RESOURCE_COLOR[node.kind],
           transparent: true,
-          opacity: 0.28,
+          opacity: 0.14,
           depthWrite: false,
         })
       );
@@ -496,21 +585,24 @@ export class PerspectiveView {
     return this.emberSprite;
   }
 
-  /** Build or update the flat sprite + plumb + shadow for one own entity. */
+  /** Remove everything one entity put in the scene. */
+  private dropHandle(group: Group, handle: EntityHandle): void {
+    group.remove(handle.mesh, handle.plumb, handle.shadow, handle.pick);
+    if (handle.model !== null) group.remove(handle.model.root);
+  }
+
+  /**
+   * Build or update one own entity: the approved model once it is loaded, the
+   * Phase-1 flat sprite until then (and for kinds that have none), plus the
+   * plumb, shadow and pick volume either way.
+   */
   private syncEntity(
     handles: Map<number, EntityHandle>,
     group: Group,
     id: number,
-    spriteKey: string,
-    canvas: HTMLCanvasElement | null,
-    sizeM: { widthM: number; heightM: number },
-    x: number,
-    z: number,
-    depthM: number,
-    yaw: number,
-    dimmed: boolean
+    spec: EntitySpec
   ): void {
-    if (canvas === null) return;
+    if (spec.canvas === null && spec.modelDesc === null) return;
     let handle = handles.get(id);
     if (handle === undefined) {
       const mesh = new Mesh(
@@ -537,34 +629,95 @@ export class PerspectiveView {
         })
       );
       shadow.rotation.x = -Math.PI / 2;
-      group.add(mesh, plumb, shadow);
-      handle = { mesh, plumb, shadow, spriteKey: '', widthM: 0, heightM: 0 };
+      // The pick volume renders nothing (colorWrite off) but stays visible to
+      // the raycaster. Its extents are the outline's, not the model's: what
+      // you click is what the simulation collides.
+      const pick = new Mesh(
+        new BoxGeometry(1, 1, 1),
+        new MeshBasicMaterial({ colorWrite: false, depthWrite: false })
+      );
+      pick.scale.set(
+        spec.pickLengthM,
+        Math.max(8, spec.pickBeamM * 0.7),
+        Math.max(spec.pickBeamM, 4)
+      );
+      group.add(mesh, plumb, shadow, pick);
+      handle = {
+        mesh,
+        plumb,
+        shadow,
+        pick,
+        spriteKey: '',
+        widthM: 0,
+        heightM: 0,
+        model: null,
+        modelKey: '',
+        ringRadiusM: spec.pickLengthM / 2 + 8,
+      };
       handles.set(id, handle);
     }
-    if (handle.spriteKey !== spriteKey) {
-      const material = handle.mesh.material as MeshBasicMaterial;
-      material.map = this.spriteTexture(spriteKey, canvas);
-      material.needsUpdate = true;
-      handle.mesh.scale.set(sizeM.widthM, sizeM.heightM, 1);
-      handle.spriteKey = spriteKey;
-      handle.widthM = sizeM.widthM;
-      handle.heightM = sizeM.heightM;
+
+    // The model path: swap in the approved mesh the moment its template is
+    // ready. A construction site passes modelDesc null and stays schematic
+    // (gate 1's scaffold register) until commissioned.
+    if (spec.modelDesc !== null && handle.modelKey !== spec.modelCacheKey) {
+      const instance = rosterModelInstance(spec.modelDesc);
+      if (instance !== null) {
+        if (handle.model !== null) group.remove(handle.model.root);
+        handle.model = instance;
+        handle.modelKey = spec.modelCacheKey;
+        group.add(instance.root);
+      }
+    } else if (spec.modelDesc === null && handle.model !== null) {
+      group.remove(handle.model.root);
+      handle.model = null;
+      handle.modelKey = '';
     }
-    const y = depthToWorldY(depthM);
-    const groundY = this.groundYAt(x, z);
-    handle.mesh.position.set(x, Math.max(y, groundY + 4), z);
-    handle.mesh.rotation.y = -yaw;
-    (handle.mesh.material as MeshBasicMaterial).opacity = dimmed ? 0.45 : 1;
+    const model = spec.modelDesc === null ? null : handle.model;
+    handle.mesh.visible = model === null;
+
+    if (handle.spriteKey !== spec.spriteKey && spec.canvas !== null) {
+      const material = handle.mesh.material as MeshBasicMaterial;
+      material.map = this.spriteTexture(spec.spriteKey, spec.canvas);
+      material.needsUpdate = true;
+      handle.mesh.scale.set(spec.sizeM.widthM, spec.sizeM.heightM, 1);
+      handle.spriteKey = spec.spriteKey;
+      handle.widthM = spec.sizeM.widthM;
+      handle.heightM = spec.sizeM.heightM;
+    }
+
+    const y = depthToWorldY(spec.depthM);
+    const groundY = this.groundYAt(spec.x, spec.z);
+    const hullY = Math.max(y, groundY + 4);
+    if (model !== null) {
+      model.root.position.set(spec.x, hullY, spec.z);
+      model.root.rotation.y = -spec.yaw;
+      // Loudness is the lights, not the paint: live SIG swings the lamps
+      // around the intake-approved resting strength (gate 3), so a hull
+      // running silent goes dark instead of translucent.
+      applyLiveGlow(model, spec.liveSig, spec.restSig);
+    } else {
+      handle.mesh.position.set(spec.x, hullY, spec.z);
+      handle.mesh.rotation.y = -spec.yaw;
+      (handle.mesh.material as MeshBasicMaterial).opacity = spec.dimmed ? 0.45 : 1;
+    }
+    handle.pick.position.set(spec.x, hullY, spec.z);
+    handle.pick.rotation.y = -spec.yaw;
+    handle.pick.userData.id = id;
+
     // The plumb line and ground shadow are what make the water column
     // readable: a hull's height above its own shadow *is* its depth. The
     // interface voice (cyan), because depth here is information, not threat.
     const positions = handle.plumb.geometry.getAttribute('position') as BufferAttribute;
-    positions.setXYZ(0, x, y, z);
-    positions.setXYZ(1, x, groundY + 1, z);
+    positions.setXYZ(0, spec.x, y, spec.z);
+    positions.setXYZ(1, spec.x, groundY + 1, spec.z);
     positions.needsUpdate = true;
-    const shadowRadius = Math.max(handle.widthM, handle.heightM) * 0.35;
+    const shadowRadius =
+      model !== null
+        ? Math.max(model.lengthM, model.beamM) * 0.4
+        : Math.max(handle.widthM, handle.heightM) * 0.35;
     handle.shadow.scale.set(shadowRadius, shadowRadius, 1);
-    handle.shadow.position.set(x, groundY + 2, z);
+    handle.shadow.position.set(spec.x, groundY + 2, spec.z);
   }
 
   private syncEntities(): void {
@@ -572,49 +725,63 @@ export class PerspectiveView {
 
     for (const [id, handle] of this.unitHandles) {
       if (!this.units.some((u) => u.id === id)) {
-        this.unitGroup.remove(handle.mesh, handle.plumb, handle.shadow);
+        this.dropHandle(this.unitGroup, handle);
         this.unitHandles.delete(id);
       }
     }
     for (const unit of this.units) {
-      this.syncEntity(
-        this.unitHandles,
-        this.unitGroup,
-        unit.id,
-        `unit:${unit.kind}:${this.faction}:${ACTIVE_PALETTE.name}`,
-        hullSpriteCanvas(unit.kind, this.faction),
-        hullSpriteSizeM(unit.kind, this.faction),
-        unit.x,
-        unit.y,
-        unit.depth,
-        this.headings.get(unit.id) ?? 0,
-        unit.silentRunning
-      );
+      const lengthM = HULL_LENGTH_M[unit.kind];
+      this.syncEntity(this.unitHandles, this.unitGroup, unit.id, {
+        spriteKey: `unit:${unit.kind}:${this.faction}:${ACTIVE_PALETTE.name}`,
+        canvas: hullSpriteCanvas(unit.kind, this.faction),
+        sizeM: hullSpriteSizeM(unit.kind, this.faction),
+        x: unit.x,
+        z: unit.y,
+        depthM: unit.depth,
+        yaw: this.headings.get(unit.id) ?? 0,
+        dimmed: unit.silentRunning,
+        modelDesc: { unit: unit.kind, faction: this.faction },
+        modelCacheKey: `unit:${unit.kind}:${this.faction}:${ACTIVE_PALETTE.name}`,
+        liveSig: unit.sig,
+        restSig: statsFor(unit.kind).sigIdle,
+        pickLengthM: lengthM,
+        pickBeamM: 2 * outlineHalfBeam(HULL_OUTLINE[unit.kind]) * lengthM,
+      });
     }
 
     for (const [id, handle] of this.structureHandles) {
       if (!this.structures.some((s) => s.id === id)) {
-        this.structureGroup.remove(handle.mesh, handle.plumb, handle.shadow);
+        this.dropHandle(this.structureGroup, handle);
         this.structureHandles.delete(id);
       }
     }
     for (const structure of this.structures) {
-      // Construction sites are schematic on the chart; here they simply dim
-      // until commissioned. The scaffold register migrates in Phase 2.
-      this.syncEntity(
-        this.structureHandles,
-        this.structureGroup,
-        structure.id,
-        `structure:${structure.kind}:${this.faction}:${ACTIVE_PALETTE.name}`,
-        structureSpriteCanvas(structure.kind, this.faction),
-        structureSpriteSizeM(structure.kind, this.faction),
-        structure.x,
-        structure.y,
-        structure.depth,
-        0,
-        structure.buildProgress < 1
-      );
+      // A construction site keeps the schematic sprite until commissioned —
+      // gate 1's scaffold register — and takes its approved model only at
+      // buildProgress 1, exactly when the chart swaps in its baked sprite.
+      const commissioned = structure.buildProgress >= 1;
+      const footprintM = structureStatsFor(structure.kind).radiusM * 2;
+      this.syncEntity(this.structureHandles, this.structureGroup, structure.id, {
+        spriteKey: `structure:${structure.kind}:${this.faction}:${ACTIVE_PALETTE.name}`,
+        canvas: structureSpriteCanvas(structure.kind, this.faction),
+        sizeM: structureSpriteSizeM(structure.kind, this.faction),
+        x: structure.x,
+        z: structure.y,
+        depthM: structure.depth,
+        yaw: 0,
+        dimmed: !commissioned,
+        modelDesc: commissioned ? { structure: structure.kind, faction: this.faction } : null,
+        modelCacheKey: commissioned
+          ? `structure:${structure.kind}:${this.faction}:${ACTIVE_PALETTE.name}`
+          : '',
+        liveSig: structure.sig,
+        restSig: structureStatsFor(structure.kind).sigIdle,
+        pickLengthM: footprintM,
+        pickBeamM: footprintM,
+      });
     }
+
+    this.updateSelectionRing();
 
     const liveContacts = new Set(this.contacts.map((c) => c.id));
     for (const [id, sprite] of this.contactSprites) {
@@ -663,12 +830,17 @@ export class PerspectiveView {
 
   private attachInput(canvas: HTMLCanvasElement): void {
     let panning = false;
+    /** True once the pointer has travelled past tap slop — then it is a pan,
+     * and releasing it must not also pick. */
+    let dragged = false;
     let lastX = 0;
     let lastY = 0;
+    const TAP_SLOP_PX = 5;
 
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     canvas.addEventListener('pointerdown', (e) => {
       panning = true;
+      dragged = false;
       lastX = e.clientX;
       lastY = e.clientY;
       try {
@@ -679,6 +851,8 @@ export class PerspectiveView {
     });
     canvas.addEventListener('pointermove', (e) => {
       if (!panning) return;
+      if (!dragged && Math.hypot(e.clientX - lastX, e.clientY - lastY) < TAP_SLOP_PX) return;
+      dragged = true;
       const pitch = (this.pitchDeg * Math.PI) / 180;
       const height = canvas.clientHeight || 1;
       const worldPerPx = (2 * this.distance * Math.tan(((FOV_DEG / 2) * Math.PI) / 180)) / height;
@@ -690,11 +864,13 @@ export class PerspectiveView {
       lastY = e.clientY;
       this.clampTarget();
     });
-    const endPan = () => {
+    canvas.addEventListener('pointerup', (e) => {
+      if (panning && !dragged) this.pickAt(e.clientX, e.clientY, canvas);
       panning = false;
-    };
-    canvas.addEventListener('pointerup', endPan);
-    canvas.addEventListener('pointercancel', endPan);
+    });
+    canvas.addEventListener('pointercancel', () => {
+      panning = false;
+    });
     canvas.addEventListener(
       'wheel',
       (e) => {
@@ -713,6 +889,53 @@ export class PerspectiveView {
       },
       { passive: false }
     );
+  }
+
+  /**
+   * Resolve a click through the pick volumes — outline extents only, so a fin
+   * or a glow halo never catches a click its hull would not (the footprint
+   * law). A miss clears the highlight, as it does on the chart.
+   */
+  private pickAt(clientX: number, clientY: number, canvas: HTMLCanvasElement): void {
+    const rect = canvas.getBoundingClientRect();
+    const ndc = new Vector2(
+      ((clientX - rect.left) / rect.width) * 2 - 1,
+      -((clientY - rect.top) / rect.height) * 2 + 1
+    );
+    const raycaster = new Raycaster();
+    raycaster.setFromCamera(ndc, this.camera);
+    const unitPicks = [...this.unitHandles.values()].map((h) => h.pick);
+    const structurePicks = [...this.structureHandles.values()].map((h) => h.pick);
+    const hits = raycaster.intersectObjects([...unitPicks, ...structurePicks], false);
+    const first = hits[0]?.object;
+    if (first === undefined) {
+      this.selected = null;
+    } else {
+      this.selected = {
+        kind: unitPicks.includes(first as Mesh) ? 'unit' : 'structure',
+        id: first.userData.id as number,
+      };
+    }
+    this.updateSelectionRing();
+  }
+
+  /** Keep the highlight on its hull, and drop it the moment the hull is gone. */
+  private updateSelectionRing(): void {
+    const selected = this.selected;
+    if (selected === null) {
+      this.selectionRing.visible = false;
+      return;
+    }
+    const handles = selected.kind === 'unit' ? this.unitHandles : this.structureHandles;
+    const handle = handles.get(selected.id);
+    if (handle === undefined) {
+      this.selected = null;
+      this.selectionRing.visible = false;
+      return;
+    }
+    this.selectionRing.position.copy(handle.pick.position);
+    this.selectionRing.scale.setScalar(handle.ringRadiusM);
+    this.selectionRing.visible = true;
   }
 
   private mapDiagonal(): number {
@@ -812,7 +1035,47 @@ export class PerspectiveView {
         units: this.unitHandles.size,
         structures: this.structureHandles.size,
         contacts: this.contactSprites.size,
+        modelBacked:
+          [...this.unitHandles.values()].filter((h) => h.model !== null).length +
+          [...this.structureHandles.values()].filter((h) => h.model !== null).length,
+        selected: this.selected,
+        ownCentre: this.ownCentre(),
       };
     };
+    // The harness's tripod: point the camera, nothing else. It moves only
+    // the view over the player's own resolved data — the same pan and zoom
+    // the pointer already commands — and can neither read nor order anything.
+    (
+      window as unknown as {
+        __perspectiveCamera?: (x: number, z: number, distance?: number) => void;
+      }
+    ).__perspectiveCamera = (x: number, z: number, distance?: number) => {
+      this.target.x = x;
+      this.target.z = z;
+      this.clampTarget();
+      if (distance !== undefined) {
+        this.distance = Math.min(this.mapDiagonal() * 2.2, Math.max(250, distance));
+      }
+    };
+  }
+
+  /** Centroid of the player's own force — their own information, screenshot
+   * framing only. */
+  private ownCentre(): { x: number; z: number } | null {
+    let x = 0;
+    let z = 0;
+    let count = 0;
+    for (const unit of this.units) {
+      x += unit.x;
+      z += unit.y;
+      count += 1;
+    }
+    for (const structure of this.structures) {
+      x += structure.x;
+      z += structure.y;
+      count += 1;
+    }
+    if (count === 0) return null;
+    return { x: x / count, z: z / count };
   }
 }
