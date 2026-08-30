@@ -69,8 +69,11 @@ import {
 import { accrueSounding, soundingHolds } from './sounding.ts';
 import { projectMissionView, type MissionState } from './view.ts';
 import { directionalFactorFor } from '../directional.ts';
+import { dueConditionalBeats } from './conditional.ts';
 import { exposedAtLeast, inRegion, isMet, isStanding, peakSigOf } from './predicates.ts';
 import type {
+  MissionBeatEffect,
+  MissionConditionalBeat,
   MissionDefinition,
   MissionEmitter,
   MissionRole,
@@ -255,6 +258,26 @@ export class MissionRuntime {
 
   /** Next unfired beat. Beats are authored sorted; `missions.test.ts` asserts it. */
   private cursor = 0;
+  /**
+   * Conditional beats already fired, by index into `conditionalBeats`.
+   *
+   * A set rather than a cursor, and that is the whole difference between the
+   * two lists: the schedule is walked in order because it *is* an order, and
+   * this one is not — the recall's condition can come true before the coring
+   * stops if a party manages thirty seconds of Classification without ever
+   * standing at twenty, and a cursor would swallow the beat it skipped.
+   *
+   * Monotone. A beat is a thing that happened.
+   */
+  private readonly firedConditions = new Set<number>();
+  /**
+   * The tick each conditional beat was first evaluated on — `startedAt`'s
+   * shape, for `startedAt`'s reason: `endure` is measured from when the rule
+   * started running, and a conditional beat's rule starts running on the first
+   * mission tick rather than at tick zero, which is a couple of Echo intervals
+   * earlier and would quietly shorten every authored clock by them.
+   */
+  private readonly conditionStartedAt = new Map<number, number>();
   private debtS = 0;
   private view: MissionView | null = null;
   /** The last view built, kept for a client that needs it re-sent. */
@@ -433,6 +456,7 @@ export class MissionRuntime {
     this.applySweep(world, sink);
     this.applyEscortHold(world, own);
     this.applySilenceLedger(world, own);
+    this.fireConditionalBeats(world, sink, own);
     this.deriveObjectives(world, own);
     if (this.resolveRequested) this.resolve();
     this.rebuildView(own);
@@ -477,11 +501,65 @@ export class MissionRuntime {
     }
   }
 
-  private fire(
-    world: SimWorld,
-    sink: MissionCommandSink,
-    beat: MissionDefinition['beats'][number]
-  ): void {
+  /**
+   * The other list — docs/mission-aptitude.md §13's row.
+   *
+   * Evaluated **after** every tally this tick has been updated and immediately
+   * before the objectives are derived from the same snapshot, which is the one
+   * placement that keeps the panel and the water telling the same story. §5's
+   * warning is the survey reacting to a number the player is already looking
+   * at, so the tick the reading says twenty has to be the tick the barge stops
+   * coring; firing these at the top of the tick beside the schedule would
+   * evaluate them against last pass's tolerance and put the coring an Echo
+   * interval behind its own cause.
+   *
+   * On the mission tick's budget, and bounded by authorship the way the
+   * emitters and the soundings are: one `isMet` per unfired conditional beat
+   * per pass, over a list a mission writes by hand, and each beat leaves the
+   * list for good the moment it fires.
+   */
+  private fireConditionalBeats(world: SimWorld, sink: MissionCommandSink, own: EchoSnapshot): void {
+    const beats = this.definition.conditionalBeats;
+    if (beats === undefined) return;
+    const due = dueConditionalBeats(beats, this.firedConditions, (beat, index) => {
+      if (!this.conditionStartedAt.has(index)) this.conditionStartedAt.set(index, world.tick);
+      return this.meets(beat.when, own, this.conditionStartedAt.get(index) ?? world.tick);
+    });
+    for (const index of due) {
+      this.firedConditions.add(index);
+      this.fire(world, sink, beats[index]!);
+    }
+  }
+
+  /**
+   * One predicate, against the snapshot this slot is being sent on this tick.
+   *
+   * Shared by the objectives and the conditional beats so the number a beat
+   * fires on and the number the panel reads out are the same one, computed
+   * under the same rule — `peakSigOf`'s argument, applied to the whole
+   * predicate vocabulary rather than to one of its cases. It is also the only
+   * place the tallies are handed out, which keeps `predicates.ts`' parameter
+   * list the single audit point it is documented as being.
+   */
+  private meets(
+    predicate: MissionConditionalBeat['when'],
+    own: EchoSnapshot,
+    startedTick: number
+  ): boolean {
+    return isMet(
+      predicate,
+      own,
+      (role) => this.idsFor(role as MissionRole),
+      (id) => this.definition.regions.find((region) => region.id === id),
+      startedTick,
+      (lift) => this.loadedFor(lift),
+      this.attendedTags.size,
+      (tier) => exposedAtLeast(this.exposedByTier, tier),
+      this.soundedIds.size
+    );
+  }
+
+  private fire(world: SimWorld, sink: MissionCommandSink, beat: MissionBeatEffect): void {
     switch (beat.kind) {
       case 'move': {
         const eid = this.eidOf(world, beat.tag);
@@ -1123,17 +1201,7 @@ export class MissionRuntime {
       if (status === ObjectiveStatus.Failed) continue;
       if (status === ObjectiveStatus.Met && !standing) continue;
       if (!this.startedAt.has(objective.id)) this.startedAt.set(objective.id, world.tick);
-      const met = isMet(
-        objective.predicate,
-        own,
-        (role) => this.idsFor(role as MissionRole),
-        (id) => this.definition.regions.find((region) => region.id === id),
-        this.startedAt.get(objective.id) ?? 0,
-        (lift) => this.loadedFor(lift),
-        this.attendedTags.size,
-        (tier) => exposedAtLeast(this.exposedByTier, tier),
-        this.soundedIds.size
-      );
+      const met = this.meets(objective.predicate, own, this.startedAt.get(objective.id) ?? 0);
       if (met) this.statuses.set(objective.id, ObjectiveStatus.Met);
       else if (standing) this.statuses.set(objective.id, ObjectiveStatus.Pending);
     }
