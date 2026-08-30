@@ -104,7 +104,7 @@ at a distance cut.
 
 ### Art & Asset Pipeline
 
-- **Rendering style:** 2D isometric (like C&C, Warcraft II), 2.5D with WebGL shaders, or full 3D if using Unity/Godot. Decided since: pure top-down plan view with per-pixel-lit sprites — steeper than the C&C/WC3 oblique, because range rings must render as true circles. The projection spec lives in [art-direction.md](art-direction.md) ("Camera & Projection")
+- **Rendering style:** 2D isometric (like C&C, Warcraft II), 2.5D with WebGL shaders, or full 3D if using Unity/Godot. Decided since: pure top-down plan view with per-pixel-lit sprites — steeper than the C&C/WC3 oblique, because range rings must render as true circles. The projection spec lives in [art-direction.md](art-direction.md) ("Camera & Projection"). Under revision: the August 2026 playtest redirected presentation toward a WC3-lineage perspective renderer over the approved GLB roster — the plan is [three-layer-ocean.md](three-layer-ocean.md)
 - **Tools:** Blender (submarine models, terrain), TexturePacker (spritesheets), Spine or DragonBones (unit animations)
 
 This stack gives high performance, easy development, and long-term stability.

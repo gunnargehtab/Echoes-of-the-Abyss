@@ -25,6 +25,7 @@ import {
   TIER_THRESHOLD_MULTIPLIER,
   blurBearing,
   detectionThreshold,
+  directionalSectorFactor,
   maxAudibleRangeM,
   tierFromRatio,
   type Contact,
@@ -32,7 +33,7 @@ import {
   type FaunaSpecies,
   type ExposureReport,
   type OrdnanceKind,
-  type Faction,
+  Faction,
   type StructureKind,
   type UnitKind,
 } from '@echoes/shared';
@@ -40,6 +41,7 @@ import {
   Acoustic,
   ActivePing,
   Fauna,
+  Heading,
   Health,
   Ordnance,
   Owner,
@@ -48,6 +50,7 @@ import {
   Unit,
   Velocity,
 } from '../components.ts';
+import { hasBow } from '../directional.ts';
 import { SpatialHash } from '../spatialHash.ts';
 import { localIdOf, type SimWorld } from '../world.ts';
 
@@ -606,6 +609,32 @@ export class EchoLayer {
       const eZone = thermoclineZone(Position.depth[emitter]!);
       const eRow = eZone * 3;
 
+      // Directional signature — docs/systems-echo.md §8. Hoisted per emitter
+      // because a bow cannot change inside the candidate loop, leaving the pair
+      // loop a dot product and two compares.
+      //
+      // Three tests, and each is one of §8's three exclusions rather than a
+      // performance guard that happens to look like one:
+      //
+      //   - the faction, because this is one navy's doctrine and not physics;
+      //   - the component, because a Bastion has no bow — hulls carry `Heading`
+      //     and structures, marks and ordnance do not, so asking for it *is*
+      //     asking "does this thing have a front";
+      //   - the ping, because §5 fixes active sonar at SIG 95 *omnidirectional*
+      //     and `acoustics.ts` writes that 95 straight into `Acoustic.sig`.
+      //     Without this line a pinging Knight would broadcast 9.5 astern and
+      //     the spec'd 2,400 m self-reveal — the figure `BASE_THRESHOLD` is
+      //     solved from — would quietly stop being true from three quarters of
+      //     the compass.
+      let bowX = 0;
+      let bowY = 0;
+      const directional = hasBow(world, emitter);
+      if (directional) {
+        const rad = Heading.rad[emitter]!;
+        bowX = Math.cos(rad);
+        bowY = Math.sin(rad);
+      }
+
       // Only listeners inside this radius can possibly hear the emitter, even
       // with the sharpest ears in the game. This bound is what keeps the pass
       // off an all-pairs comparison. PF is a path integral (issue #37) and no
@@ -622,6 +651,12 @@ export class EchoLayer {
         MAX_PROPAGATION_FACTOR * pfFactor * THERMOCLINE_ZONE_MAX[eZone]!,
         PROPAGATION_MODEL.MAX_EXPECTED_HYD
       );
+      // Deliberately *not* narrowed by the directional term. Its largest value
+      // is 1.00 (the cone), so a bound computed without it stays an upper bound
+      // on every pair — conservative in the only direction that is safe here.
+      // Folding a per-pair factor into a per-emitter radius would need the
+      // *maximum* over the candidate set anyway, which is 1.00 whenever any
+      // listener is anywhere near the bow.
       if (range <= 0) continue;
 
       const candidates = this.hash.queryRadius(ex, ey, range, this.queryBuffer);
@@ -718,8 +753,21 @@ export class EchoLayer {
           // returns an upper bound, not a mean, and the tier would be computed
           // from it — a contact the server invents and then believes.
           const k = THERMOCLINE_PAIR_FACTOR[eRow + thermoclineZone(Position.depth[listener]!)]!;
+          // ...and the emitter's own bow, folded in beside it and for the same
+          // reason: both are properties of the pair, so neither can hoist out
+          // of the candidate loop, and both have to reach `pfNeeded` below so
+          // the walk is given its bar in the units it returns.
+          //
+          // The vector runs emitter → listener, which is `(lx - ex, ly - ey)` —
+          // the negation of the `dx, dy` computed above for the distance test.
+          // Unlike the thermocline this term is *not* symmetric: it is what the
+          // Knight emits, never what the Knight hears.
+          const dirFactor = directional
+            ? directionalSectorFactor(bowX * -dx + bowY * -dy, distance)
+            : 1;
           const perceivedPerPf =
             k *
+            dirFactor *
             sigMasked *
             Math.pow(
               REFERENCE_DISTANCE_M / Math.max(distance, REFERENCE_DISTANCE_M),
@@ -919,7 +967,14 @@ export class EchoLayer {
         if (resolved.tier >= ResolutionTier.Track) {
           contact.hp = Health.hp[eid]!;
           contact.maxHp = Health.max[eid]!;
-          if (hasComponent(world, Velocity, eid)) {
+          // The bow if the entity keeps one, the course of travel otherwise.
+          //
+          // Not a new disclosure: §4 already puts facing at Track and this is
+          // the same field. It is a *correct* one now for a hull that has
+          // stopped, which `atan2(0, 0)` — zero, due east — was not.
+          if (hasComponent(world, Heading, eid)) {
+            contact.heading = Heading.rad[eid]!;
+          } else if (hasComponent(world, Velocity, eid)) {
             contact.heading = Math.atan2(Velocity.y[eid]!, Velocity.x[eid]!);
           }
         }

@@ -105,6 +105,64 @@ export const MAX_PATH_PROPAGATION_FACTOR =
   MAX_PROPAGATION_FACTOR * Math.max(...THERMOCLINE_ZONE_MAX);
 
 /**
+ * SPEC — docs/systems-echo.md §8. The Hadron Knights' doctrine, as a term in
+ * the detection formula.
+ *
+ * A Knight hull's SIG is multiplied by where the listener stands relative to
+ * that hull's own **bow**, and the circle divides into quarters: one ahead, one
+ * either beam, one astern. It multiplies into the same product as biome PF and
+ * the thermocline pair factor — a fourth term in the arithmetic the game
+ * already has, not a second kind of it.
+ *
+ * **WAKE is derived, not chosen.** docs/audio-direction.md already placed
+ * Knight emissions off-axis at *up to −20 dB*, and that document's second law
+ * is that the mix may never sound more certain than the server is. 0.10 is
+ * −20 dB, so the instruction the audio doc was already carrying becomes a
+ * rendering of this model rather than a decoration on top of one. Rounding it
+ * to 0.1-something friendlier would make the loudest channel in the game a
+ * liar. FLANK is then the level the mix owed a name to and never had: −9.1 dB.
+ *
+ * **The compass average is 0.45** — one quarter at 1.00, two at 0.35, one at
+ * 0.10 — which is §8's balance clause. A Knight is an ordinary hull with its
+ * loudness *moved*, not a quiet one, and a Knight roster (which does not exist
+ * yet) is expected to carry roughly 2.2× a comparable hull's SIG so the two
+ * land at parity.
+ *
+ * **Emitter-side only.** Unlike the thermocline, which is symmetric because a
+ * path is a property of the pair, this belongs to the emitter alone: a Knight
+ * showing its wake to a listener is quiet to that listener and hears it exactly
+ * as well as before. Applying it to the listener's side by symmetry with
+ * `thermoclineFactor` is the natural mistake and would be wrong.
+ */
+export const DIRECTIONAL_SIGNATURE = {
+  /** Within 45° either side of the bow. The SIG the hull lists. 0 dB. */
+  CONE: 1.0,
+  /** 45° to 135°, either beam. −9.1 dB. */
+  FLANK: 0.35,
+  /** Beyond 135°. −20 dB exactly, and the figure the whole table is solved from. */
+  WAKE: 0.1,
+  /** Half-angle of the cone, degrees — a quarter of the circle ahead. */
+  CONE_HALF_ANGLE_DEG: 45,
+  /** Where the flank ends and the wake begins, degrees off the bow. */
+  WAKE_HALF_ANGLE_DEG: 135,
+} as const;
+
+/**
+ * Derived — the sector boundaries as cosines, so the hot loop compares a dot
+ * product instead of calling `Math.acos` per pair.
+ *
+ * Derived from the degrees above rather than written as 0.7071 so the two
+ * cannot drift apart, which is the same reason `THERMOCLINE_DUCT_TOP_M` is
+ * derived from the layer depth.
+ */
+export const DIRECTIONAL_CONE_COS = Math.cos(
+  (DIRECTIONAL_SIGNATURE.CONE_HALF_ANGLE_DEG * Math.PI) / 180
+);
+export const DIRECTIONAL_WAKE_COS = Math.cos(
+  (DIRECTIONAL_SIGNATURE.WAKE_HALF_ANGLE_DEG * Math.PI) / 180
+);
+
+/**
  * SPEC — docs/systems-echo.md §4. A contact resolves to a tier when the
  * perceived loudness reaches this multiple of the listener's threshold.
  */

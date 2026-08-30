@@ -47,6 +47,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | Doc | What it covers |
 | --- | --- |
 | **[art-direction.md](art-direction.md)** | Palettes, shape language, silhouette law, Echo Layer UI requirements |
+| **[three-layer-ocean.md](three-layer-ocean.md)** | The presentation revision: WC3-lineage perspective camera, the visible seabed, band navigation, and the Lid proposal |
 | **[graphics-standards.md](graphics-standards.md)** | The acceptance bar: pipeline of record, seven shipping gates, art PR checklist |
 | **[audio-direction.md](audio-direction.md)** | The mix as the primary information channel; tier sonification |
 | **[ui-ux.md](ui-ux.md)** | The Echo Layer HUD, sonar scope, ping preview, esc menu, accessibility |
@@ -90,12 +91,6 @@ to point at yet:
   filed/unfiled fact landed as a latched flag on the runtime rather than as a predicate. What the
   four documents still ask for is a beat that fires on a **condition** rather than a tick, a
   predicate over the player's own **exposure**, and a hold that **aims** the hull taking it.
-- **Directional signature, in the simulation.** systems-echo.md §8 now spec's the Knights'
-  doctrine as numbers — ×1.00 in the cone, ×0.35 on the flank, ×0.10 in the wake — and nothing
-  reads them. SIG is a scalar in the detection pass, and a stopped hull has no heading at all,
-  because heading exists only as a derivative of velocity. mission-aptitude.md §13 is the
-  row-by-row account. It is a system gap rather than a mission one, which is why it is listed
-  here separately.
 - **Campaign progression and unlock state.** Nothing records that a mission was played, so the
   prologue is replayable, remembers nothing, and the Tutorial and campaign doors are the same
   door.

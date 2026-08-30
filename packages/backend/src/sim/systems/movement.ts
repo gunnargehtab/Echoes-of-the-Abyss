@@ -22,7 +22,15 @@ import {
   statsFor,
   type UnitKind,
 } from '@echoes/shared';
-import { MoveOrder, Owner, Position, SilentRunning, Unit, Velocity } from '../components.ts';
+import {
+  Heading,
+  MoveOrder,
+  Owner,
+  Position,
+  SilentRunning,
+  Unit,
+  Velocity,
+} from '../components.ts';
 import { currentModifiers, kelpModifiers, stormModifiers } from './hazards.ts';
 import type { SimWorld } from '../world.ts';
 
@@ -122,5 +130,16 @@ export function movementSystem(world: SimWorld): void {
     Position.y[eid] = step.y;
     Velocity.x[eid] = nx * speed;
     Velocity.y[eid] = ny * speed;
+    // The bow, written here and deliberately never cleared — the two branches
+    // above zero `Velocity` when a hull stops and leave this alone, which is
+    // the whole point of the component (docs/systems-echo.md §8: a stopped hull
+    // holds the last course it had).
+    //
+    // The *ordered* course rather than the travelled one, matching `Velocity`
+    // directly above: `resolveStep` may slide a hull along ground it cannot
+    // enter, and a hull scraping down a ridge is still pointed where it was
+    // told to go. Taking the realised step instead would swing a Knight's cone
+    // by whatever the terrain did to it, which is a bow nobody ordered.
+    Heading.rad[eid] = Math.atan2(ny, nx);
   }
 }

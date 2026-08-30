@@ -54,6 +54,7 @@ import {
   Structure,
   Unit,
 } from '../components.ts';
+import { directionalFactorFor } from '../directional.ts';
 import { activeCurrentAt } from './hazards.ts';
 import { raiseSelfEvent, type SimWorld } from '../world.ts';
 
@@ -154,7 +155,16 @@ function listen(
     const d2 = dx * dx + dy * dy;
     if (d2 > reach2) continue;
 
-    const sig = Acoustic.sig[other]!;
+    // The Knights' bow counts here too (docs/systems-echo.md §8). §8's
+    // exclusion list is closed at three and fauna are not on it, so the honest
+    // reading of "a path's loudness is SIG x biome PF x thermocline x this" is
+    // that it holds wherever a Knight hull is the emitter — a wake is quieter
+    // to a Draymaw for the same reason it is quieter to a hydrophone, and the
+    // alternative is two detection paths disagreeing about one hull.
+    //
+    // Exact rather than bounded, like `tf` below: both ends are in hand, so
+    // the cheap prune can carry the true factor instead of an upper bound.
+    const sig = Acoustic.sig[other]! * directionalFactorFor(world, other, fx, fy);
     if (sig <= 0) continue;
     const distance = Math.sqrt(d2);
 
