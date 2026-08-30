@@ -87,14 +87,21 @@ cron frequency is not.
 
 ## 3. Choose one issue
 
-From the open issues that are **not** claimed and **not** labelled `epic`, take
-the oldest. Two exclusions, for different reasons:
+From the open issues that are **not** claimed, **not** assigned, and **not**
+labelled `epic`, take the oldest. Three exclusions, for different reasons:
 
 - `epic` issues are trackers for work spanning many PRs (#212 is twenty-eight
   campaign missions). There is no single PR that closes one, so an agent that
   takes it produces a PR that cannot honestly say `Fixes`. Step 4 is what to do
   with them instead.
 - Anything already claimed is someone else's — including an earlier you.
+- **An issue with an assignee is a person's, and you are not it.** This is the
+  cheapest exclusion to honour and the most valuable, because it is the only
+  signal that exists *before* a branch or a pull request does. Step 1's claim
+  check can only see work that has already been pushed; an assignee is there
+  from the moment somebody decides to start. Never assign an issue to yourself
+  to reserve it — the branch is your claim, and an assignee the loop wrote would
+  make the one human-owned signal untrustworthy.
 
 Prefer `bug` over `enhancement` when the ages are close: a bug is a statement
 about behaviour that is already wrong, and its acceptance criteria are usually
@@ -172,6 +179,39 @@ All of these are blocking in CI, both doc gates included, so a dead link in
 `docs/` fails the build exactly as a failing test does. The suite is slow —
 single test files run over a minute — which is the argument for running it here
 rather than learning the same thing from a red PR twenty minutes later.
+
+### Run the claim check again before you open the PR
+
+Step 1 told you the issue was free **when you started**. That was potentially an
+hour ago, and it does not stay true. So before opening, repeat it: list the open
+pull requests and look for another one that closes your issue — its `Fixes #<n>`
+line, or a title that describes the work you just did.
+
+This is not hypothetical. On #275 the loop selected at 12:13, a person's session
+opened its own PR for the same issue at 12:20, and the loop opened a duplicate at
+12:55 and merged it at 14:04 — the person's 558-line branch was closed unmerged.
+Seven minutes decided it, and nothing looked again in the forty that followed.
+
+Their branch was `claude/continue-212-8hrtxn`, with no issue number in it, so
+step 1's `claude/issue-*` scan was blind to it even at the second look. That is
+why this re-check reads **open pull requests** rather than branch names: a PR
+declares its issue in a way a branch name need not.
+
+**If another pull request now covers your issue, you yield. Always.** Not a
+judgement call, and not a comparison of whose diff is better:
+
+1. Do not open your PR.
+2. **Delete the branch you pushed in step 5.** This matters more than it looks —
+   step 1 reads pushed `claude/issue-*` branches as claims, so a stood-down
+   branch left behind marks the issue claimed forever and every later firing
+   skips it.
+3. Say plainly what you found, which PR you yielded to, and that your work was
+   discarded. A run that discovers a collision and stands down is a *successful*
+   run; it spent an hour and saved a person's afternoon.
+
+Yield even when you were first to select and even when your work looks more
+complete. A person's in-flight branch is worth more than yours because they are
+not going to get another firing in four hours, and you are.
 
 Then open the PR against `main`, filling `.github/PULL_REQUEST_TEMPLATE.md` and
 referencing `Fixes #<n>`. Not a draft.
