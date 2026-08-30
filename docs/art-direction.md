@@ -252,6 +252,12 @@ camera — Command & Conquer's ~45° dimetric sprites, Warcraft III's ~55° lock
 but *Echoes* runs that idea all the way to vertical, and the reasons are mechanical, not
 taste.
 
+> **Direction revision in progress.** The August 2026 playtest set a new presentation
+> direction: a WC3-lineage perspective camera over a visible, sculpted seabed. The plan —
+> including which of this section's protections move where — is
+> [three-layer-ocean.md](three-layer-ocean.md). Until its phases land, this section remains
+> the spec the shipped renderer transcribes.
+
 ### The world is a chart: pure top-down plan view — SPEC
 
 All gameplay geometry renders in orthographic plan projection, camera pitch 90°: terrain,
@@ -338,6 +344,7 @@ Within it:
 
 ## Related
 
+- [three-layer-ocean.md](three-layer-ocean.md) — the presentation revision that supersedes the camera spec above once its phases land
 - [graphics-standards.md](graphics-standards.md) — the acceptance bar that enforces this direction
 - [factions.md](factions.md) — full faction visual identity sheets
 - [style-neon-noir.md](style-neon-noir.md) — presentation-layer palette tokens and glow rules

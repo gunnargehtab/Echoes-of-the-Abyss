@@ -160,6 +160,7 @@ numbers. The asymmetry itself is not tunable: it is what §5 above is about.
 ## Related
 
 - **[systems-echo.md](systems-echo.md)** — the acoustic axis
+- **[three-layer-ocean.md](three-layer-ocean.md)** — the presentation revision that puts the bands on screen
 - **[factions.md](factions.md)** — per-faction doctrine and depth economics
 - **[characters.md](characters.md)** — commanders whose abilities manipulate depth directly
 - **[environments.md](environments.md)** — biome-level PropagationFactor and terrain
