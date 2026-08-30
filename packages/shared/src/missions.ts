@@ -200,6 +200,31 @@ export const LEDGER_TOLERANCE_HEADER: MissionHeader = {
   ],
 };
 
+export const LEDGER_PROSPECT_HEADER: MissionHeader = {
+  id: 'ledger-prospect',
+  campaign: 'ledger',
+  ordinal: 6,
+  name: 'The Ledger — Prospect',
+  premise:
+    'The only candidate field is the rim. Four navies are on it this week, and the survey goes down anyway.',
+  mapId: 'mouth-rim',
+  // The writ turns north at 22:00 (docs/mission-prospect.md §9), inside §10's 12-25.
+  lengthBandS: [1260, 1380],
+  /**
+   * The survey writ, read at the staging — docs/mission-prospect.md §12,
+   * verbatim. Public for Sorrowgate's reason: the writ's whole posture is
+   * that the descent will be heard by everything, so there is nothing left
+   * for a briefing to give away.
+   */
+  briefing: [
+    'The concern requires a producing field inside eleven years or the concern requires an orderly dissolution plan, and the Board has reviewed the second document and declines to circulate it. The only candidate field is the rim. This writ proves it or does not.',
+    'Six faces are charted on the terraces. Four, read by hand to survey standard, prove the field. The readers are calibrated to their banks; the procedure names hulls, and the procedure is right to.',
+    'The expedition is refit to the third rating, certificated, and unarmed. Three navies are on the rim this week for three stated reasons, none of which is ours and none of which is false. The writ prices an incident above a field, and the Board asks the expedition to read that sentence twice.',
+    'The descent will be heard by everything. That is the physics of arriving and the writ does not apologise for physics. The ascent begins no later than the turn, whatever the count stands at, because a survey that stays is a different asset class and the registry has a word for it.',
+    "Two returns on the lip are on file as equipment fault. The file is standing practice. The writ directs the expedition's instruments at the faces, and its attention wherever the shift requires, and it does not define the difference. Exposure is authorised. Sentiment is not. Signed for the Board.",
+  ],
+};
+
 export const SEEDING_TEND_HEADER: MissionHeader = {
   id: 'seeding-tend',
   campaign: 'seeding',
@@ -257,6 +282,7 @@ export const MISSION_HEADERS: readonly MissionHeader[] = [
   LEDGER_BAFFLE_HEADER,
   LEDGER_EXPOSURE_HEADER,
   LEDGER_TOLERANCE_HEADER,
+  LEDGER_PROSPECT_HEADER,
   SEEDING_TEND_HEADER,
   ATTENDING_ATTENDANCE_HEADER,
 ];

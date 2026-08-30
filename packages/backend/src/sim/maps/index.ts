@@ -20,6 +20,7 @@ import { FIRST_TRENCH_MARGIN } from './missions/firstTrenchMargin.ts';
 import { FOURTH_TRENCH } from './missions/fourthTrench.ts';
 import { HOLDING_UNDERWORKS } from './missions/holdingUnderworks.ts';
 import { MARR_PLATEAU } from './missions/marrPlateau.ts';
+import { MOUTH_RIM } from './missions/mouthRim.ts';
 import { NINEFOLD_FACE_SIX } from './missions/ninefoldFaceSix.ts';
 import { NINEFOLD_WORKINGS } from './missions/ninefoldWorkings.ts';
 import { SORROWGATE } from './missions/sorrowgate.ts';
@@ -34,6 +35,7 @@ export {
   HOLDING_UNDERWORKS,
   KELP_LABYRINTH,
   MARR_PLATEAU,
+  MOUTH_RIM,
   NINEFOLD_FACE_SIX,
   NINEFOLD_WORKINGS,
   SORROWGATE,
@@ -73,6 +75,7 @@ export const MISSION_MAPS: readonly MapDefinition[] = [
   FOURTH_TRENCH,
   FIRST_TRENCH_MARGIN,
   HOLDING_UNDERWORKS,
+  MOUTH_RIM,
   MARR_PLATEAU,
   ATTENDING_GALLERIES,
 ];
