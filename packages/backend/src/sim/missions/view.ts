@@ -11,6 +11,7 @@
  * Widening it is how this stops being true, so it is the line to defend.
  */
 
+import { SIM } from '@echoes/shared';
 import type {
   AbilityLock,
   EchoSnapshot,
@@ -20,7 +21,7 @@ import type {
   ObjectiveView,
 } from '@echoes/shared';
 
-import { progressOf } from './predicates.ts';
+import { exposedAtLeast, progressOf } from './predicates.ts';
 import type { MissionDefinition, MissionObjective, MissionRegion, MissionRole } from './types.ts';
 
 /**
@@ -41,6 +42,15 @@ export interface MissionState {
   loadedByLift: Map<string, number>;
   /** How many authored arrivals this observer resolved — see `attend`. */
   attended: number;
+  /**
+   * Sim ticks this observer's own force stood at each resolution tier in
+   * somebody else's ears, indexed by `ResolutionTier` — see `tolerance`.
+   *
+   * A tally over the player's own `ExposureReport` and nothing else, so it is
+   * as safe to hold here as `attended` is: it says how loudly the party has
+   * been heard and cannot say by whom.
+   */
+  exposedByTier: readonly number[];
   debtS: number;
 }
 
@@ -99,7 +109,7 @@ function objectiveView(
   };
   if (objective.markerId !== undefined) view.markerId = objective.markerId;
   if (counts(objective)) {
-    view.progress = progressOf(
+    const progress = progressOf(
       objective.predicate,
       own,
       (role) => state.roleIds.get(role) ?? NO_IDS,
@@ -110,10 +120,36 @@ function objectiveView(
         const carrier = state.loadedByLift.get(lift);
         return carrier === undefined ? NO_IDS : new Set([carrier]);
       },
-      state.attended
+      state.attended,
+      (tier) => exposedAtLeast(state.exposedByTier, tier)
     );
+    view.progress = objective.predicate.kind === 'tolerance' ? inSeconds(progress) : progress;
   }
   return view;
+}
+
+/**
+ * A tick counter, as the chapter speaks it.
+ *
+ * docs/mission-aptitude.md §12 reads the tolerance out as "Eleven seconds of
+ * thirty are entered", and §5 states it in seconds throughout; the union stores
+ * ticks because that is what the simulation counts in. The conversion lives
+ * here rather than in `progressOf` so that no rounding step sits between the
+ * tally and the threshold `isMet` compares it against, and here rather than in
+ * an authored `text` because docs/campaign.md §10's rule is that a mission
+ * literal states sentences, not arithmetic.
+ *
+ * Floored on both halves, so the reading only ever claims a second the party
+ * has actually spent and the target never grows a second the threshold does not
+ * hold. Exact for any tolerance authored in whole seconds, which is every
+ * duration this format produces — `T(m, s)` and `30 * SIM.TICK_HZ` both land on
+ * a tick boundary.
+ */
+function inSeconds(progress: { done: number; of: number }): { done: number; of: number } {
+  return {
+    done: Math.floor(progress.done / SIM.TICK_HZ),
+    of: Math.floor(progress.of / SIM.TICK_HZ),
+  };
 }
 
 /**
@@ -139,7 +175,13 @@ function counts(objective: MissionObjective): boolean {
     // about, and the instrument carries it from the first arrival — which is
     // how docs/mission-attendance.md §8's failure is audible for the whole
     // mission rather than announced at the close.
-    objective.predicate.kind === 'attend'
+    objective.predicate.kind === 'attend' ||
+    // The tolerance is a budget the player spends rather than an objective they
+    // complete, and §5 is explicit that nothing about it is hidden: "the
+    // exposure readout carries the tier from the first tick". A counter that
+    // appeared only once it mattered would be the warning arriving with the
+    // consequence.
+    objective.predicate.kind === 'tolerance'
   );
 }
 

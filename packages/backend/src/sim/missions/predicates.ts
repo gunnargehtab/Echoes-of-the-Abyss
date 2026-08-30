@@ -19,7 +19,7 @@
  * mission asks the player to do.
  */
 
-import type { EchoSnapshot } from '@echoes/shared';
+import type { EchoSnapshot, ResolutionTier } from '@echoes/shared';
 import type { MissionPredicate, MissionRegion, MissionRole } from './types.ts';
 
 export interface Progress {
@@ -53,6 +53,22 @@ export type RegionById = (id: string) => MissionRegion | undefined;
  */
 export type LoadedIds = (lift?: string) => ReadonlySet<number>;
 
+/**
+ * Sim ticks the observer's own force has spent resolved at a given tier *or
+ * better* by anybody else — the tolerance's tally (docs/mission-aptitude.md §5).
+ *
+ * A function of the tier for `RoleIds`' reason turned around: the predicate
+ * carries the tier it enforces, and asking for it here means the number this
+ * file compares is the number the runtime accrued under the same rule, rather
+ * than a total accrued under some other one and trusted to match.
+ *
+ * Own-force information, like everything else in this list. It comes off
+ * `EchoSnapshot.exposure`, which reports the best tier anybody holds on this
+ * player and deliberately nothing about who holds it — so a tally over it can
+ * say how loudly the party has been heard and can never say by whom.
+ */
+export type ExposedTicks = (tier: ResolutionTier) => number;
+
 export function progressOf(
   predicate: MissionPredicate,
   own: EchoSnapshot,
@@ -60,7 +76,8 @@ export function progressOf(
   regionById: RegionById,
   startedTick: number,
   loadedIds: LoadedIds,
-  attended: number
+  attended: number,
+  exposed: ExposedTicks
 ): Progress {
   switch (predicate.kind) {
     case 'extract': {
@@ -106,6 +123,16 @@ export function progressOf(
       return { done: Math.min(attended, predicate.count), of: predicate.count };
     case 'endure':
       return { done: Math.max(0, own.tick - startedTick), of: predicate.ticks };
+    case 'tolerance':
+      // In ticks, which is what the union stores and what `isMet` has to
+      // compare: the seconds of §12's reading are `view.ts`' arithmetic, and
+      // doing them here would put a rounding step between the tally and the
+      // threshold it is measured against.
+      //
+      // Capped for `attend` and `extract`'s reason — the reading is what the
+      // chapter reads out, and a chapter does not over-count. §5 gives the
+      // party thirty seconds and no interest in the thirty-first.
+      return { done: Math.min(exposed(predicate.tier), predicate.ticks), of: predicate.ticks };
   }
 }
 
@@ -116,7 +143,8 @@ export function isMet(
   regionById: RegionById,
   startedTick: number,
   loadedIds: LoadedIds,
-  attended: number
+  attended: number,
+  exposed: ExposedTicks
 ): boolean {
   const { done, of } = progressOf(
     predicate,
@@ -125,7 +153,8 @@ export function isMet(
     regionById,
     startedTick,
     loadedIds,
-    attended
+    attended,
+    exposed
   );
   return done >= of;
 }
@@ -161,6 +190,22 @@ export function peakSigOf(own: EchoSnapshot, ids: ReadonlySet<number>): number {
     if (ids.has(unit.id) && unit.sig > peak) peak = unit.sig;
   }
   return peak;
+}
+
+/**
+ * Ticks spent at `tier` **or better**, out of a tally kept per observed tier.
+ *
+ * Shared by the runtime's accumulator and this file's `tolerance` case for
+ * `peakSigOf`'s reason: the number the mission enforces and the number it reads
+ * out must be the same one, computed once. "Or better" is the whole of §5's
+ * rule — Tier 1 and Tier 2 are free all mission, Tier 3 is an entry, and Tier 4
+ * is an entry for the same reason Tier 3 is — so it is summed upward rather
+ * than read off a single bucket.
+ */
+export function exposedAtLeast(byTier: readonly number[], tier: ResolutionTier): number {
+  let total = 0;
+  for (let t = Math.max(0, tier); t < byTier.length; t++) total += byTier[t] ?? 0;
+  return total;
 }
 
 /** Inclusive of the edges: a hull on the concourse line is on the concourse. */
