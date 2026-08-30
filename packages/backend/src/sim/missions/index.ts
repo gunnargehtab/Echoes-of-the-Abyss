@@ -19,6 +19,7 @@ import type { MissionDefinition } from './types.ts';
 
 export * from './types.ts';
 export * from './predicates.ts';
+export * from './sounding.ts';
 export * from './view.ts';
 export * from './runtime.ts';
 export { ATTENDING_ATTENDANCE, LEDGER_ASSET_RECOVERY, PROLOGUE_SORROWGATE, SEEDING_TEND };

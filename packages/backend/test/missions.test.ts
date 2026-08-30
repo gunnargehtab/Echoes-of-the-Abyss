@@ -28,6 +28,7 @@ import assert from 'node:assert/strict';
 
 import {
   Biome,
+  DIRECTIONAL_SIGNATURE,
   MISSION,
   SIM,
   missionHeaderById,
@@ -36,8 +37,9 @@ import {
 } from '@echoes/shared';
 import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import { MISSIONS, PROLOGUE_SORROWGATE } from '../src/sim/missions/index.ts';
+import { accrueSounding, soundingHolds } from '../src/sim/missions/sounding.ts';
 import { DRIFT_SLOT } from '../src/sim/systems/fauna.ts';
-import type { MissionDefinition } from '../src/sim/missions/index.ts';
+import type { MissionDefinition, MissionSounding } from '../src/sim/missions/index.ts';
 
 /**
  * The Echo Layer's per-slot scratch arrays are this long (`echoLayer.ts`), and
@@ -526,6 +528,56 @@ describe('the objectives', () => {
     }
   });
 
+  it('aims every sounding from a player-party hull, at a point on the map', () => {
+    // The lift test above, with a bearing added — and the same three failures
+    // it catches, because a sounding feeds a counter the player is shown
+    // exactly as a load does. Where the lift names a region, a sounding names
+    // a point, so the check that a region exists becomes a check that the
+    // point is on the map: a sounding authored outside the terrain is a hold
+    // no hull can take, which reads as a mission being failed rather than as
+    // a mission that is broken.
+    for (const mission of MISSIONS) {
+      const map = missionMapById(mission.mapId);
+      assert.ok(map !== undefined, `${mission.id}: no map "${mission.mapId}"`);
+      const playerTags = new Set(
+        mission.parties
+          .filter((party) => party.slot === mission.playerSlot)
+          .flatMap((party) => party.units.map((unit) => unit.tag))
+      );
+      const soundings = mission.soundings ?? [];
+      const ids = soundings.map((sounding) => sounding.id);
+      assert.equal(new Set(ids).size, ids.length, `${mission.id}: duplicate sounding id`);
+      for (const sounding of soundings) {
+        assert.ok(
+          playerTags.has(sounding.tag),
+          `${mission.id}: sounding "${sounding.id}" is taken by "${sounding.tag}", ` +
+            'which is not a player hull'
+        );
+        assert.ok(
+          sounding.x >= 0 &&
+            sounding.x <= map.widthM &&
+            sounding.y >= 0 &&
+            sounding.y <= map.heightM,
+          `${mission.id}: sounding "${sounding.id}" sits at ${sounding.x},${sounding.y}, ` +
+            'which is off the map'
+        );
+        assert.ok(
+          sounding.radiusM > 0,
+          `${mission.id}: sounding "${sounding.id}" has a ${sounding.radiusM} m radius, ` +
+            'which no hull can be inside'
+        );
+        assert.ok(
+          Number.isInteger(sounding.holdTicks) && sounding.holdTicks >= 0,
+          `${mission.id}: sounding "${sounding.id}" holds for ${sounding.holdTicks} ticks`
+        );
+        assert.ok(
+          sounding.sig >= 0 && sounding.sig <= 100,
+          `${mission.id}: sounding "${sounding.id}" holds at ${sounding.sig}, outside the meter`
+        );
+      }
+    }
+  });
+
   it('authors every emitter off the player party, on a workable pattern', () => {
     // The Echo Layer's pair loop skips listener and emitter on one slot, so an
     // emitter on the player's own party is a beacon its audience can never
@@ -718,6 +770,30 @@ describe('the objectives', () => {
     }
   });
 
+  it('counts no more soundings than the mission authors', () => {
+    // The `loaded` test above in its other form: "four of six sounded" against
+    // a mission authoring three formations is a counter that can never fill,
+    // and the player would read a mission they had completed as one they had
+    // failed. `sound` names no sounding, so this is the whole of what can be
+    // checked by reading the table — and it is the check that matters, because
+    // the count is the objective.
+    for (const mission of MISSIONS) {
+      const authored = (mission.soundings ?? []).length;
+      for (const objective of mission.objectives) {
+        if (objective.predicate.kind !== 'sound') continue;
+        assert.ok(
+          objective.predicate.count > 0,
+          `${mission.id}: "${objective.id}" counts ${objective.predicate.count} soundings`
+        );
+        assert.ok(
+          authored >= objective.predicate.count,
+          `${mission.id}: "${objective.id}" counts ${objective.predicate.count} soundings and ` +
+            `the mission authors ${authored}`
+        );
+      }
+    }
+  });
+
   it('has something terminal to close on, and an epilogue for every outcome', () => {
     for (const mission of MISSIONS) {
       assert.ok(
@@ -826,5 +902,156 @@ describe('Sorrowgate, as docs/mission-sorrowgate.md states it', () => {
     // through, so the court reads what it took rather than a count it did not.
     assert.match(PROLOGUE_SORROWGATE.epilogue[1], /^One tender is through\./);
     assert.match(PROLOGUE_SORROWGATE.epilogue[2], /^The gate is closed\. Fourteen are behind it\./);
+  });
+});
+
+describe('the sounding, as docs/mission-aptitude.md §4 states it', () => {
+  /**
+   * §4's clause, restated from the prose rather than from the implementation:
+   * "taken from within 400 m of a formation, bow on it". Distance by
+   * Pythagoras, facing by the angle between the bow and the bearing to the
+   * formation against the 45° half-angle docs/systems-echo.md §8 puts in the
+   * cone — `Math.acos`, which the runtime deliberately does not call, so the
+   * two arrive at the same answer by different arithmetic or one of them is
+   * wrong. `echo-parity.test.ts` does this for §8 itself and for its reasons:
+   * a reference implementation of the *rule*, which stays meaningful when the
+   * rule legitimately changes because it changes with it.
+   */
+  function holdsBySpec(
+    sounding: MissionSounding,
+    headingRad: number,
+    hullX: number,
+    hullY: number
+  ): boolean {
+    const dx = sounding.x - hullX;
+    const dy = sounding.y - hullY;
+    if (Math.sqrt(dx * dx + dy * dy) > sounding.radiusM) return false;
+    const bearing = Math.atan2(dy, dx);
+    // Wrapped into (-π, π], because a bow at 3.1 rad and a bearing at −3.1 are
+    // a tenth of a radian apart and not six.
+    const off = Math.abs(
+      Math.atan2(Math.sin(bearing - headingRad), Math.cos(bearing - headingRad))
+    );
+    // A nanoradian of slack, for `SECTOR_EDGE_EPSILON`'s reason arriving in the
+    // other arithmetic: §8's "within 45° either side" is inclusive, and a bow
+    // at exactly 45° off the bearing comes back as 45.000000000000007° once it
+    // has been through a sine and a cosine. Without it this reference would put
+    // a standing §8 puts in the cone outside it, and would be checking
+    // `soundingHolds` against a rounding error rather than against the prose.
+    return off <= (DIRECTIONAL_SIGNATURE.CONE_HALF_ANGLE_DEG * Math.PI) / 180 + 1e-9;
+  }
+
+  const FORMATION: MissionSounding = {
+    id: 'reference',
+    tag: 'sounder',
+    x: 4000,
+    y: 4000,
+    // §4's own numbers, so the case this suite reasons about is the case the
+    // mission will author: 400 m, twenty seconds at 5 Hz, and the Sounding
+    // Spire's active figure.
+    radiusM: 400,
+    holdTicks: 20 * SIM.TICK_HZ,
+    sig: 80,
+    note: 'the reference formation',
+  };
+
+  it('agrees with the prose over a sweep of bows and standings', () => {
+    // Deliberately dense around both boundaries — the radius and the 45° edge —
+    // because those are the two places a fast test and a slow one can disagree
+    // without either looking wrong.
+    let inCone = 0;
+    for (let bearingDeg = 0; bearingDeg < 360; bearingDeg += 7) {
+      // Two ranges are deliberately absent, and both because the prose has no
+      // rule for `holdsBySpec` to restate there. At zero there is no bearing to
+      // the formation, so "bow on it" states nothing. At exactly the radius the
+      // standing is not placeable: a hull put here by `cos`/`sin` at nominally
+      // 400 m comes back from `hypot` a unit in the last place either side of
+      // it, depending on the bearing, so the sweep would be adjudicating
+      // `Math.sin` rather than §4. Both are pinned on their own below, at
+      // coordinates whose arithmetic is exact.
+      for (const range of [50, 200, 399, 401, 560]) {
+        const bearing = (bearingDeg * Math.PI) / 180;
+        const hullX = FORMATION.x - Math.cos(bearing) * range;
+        const hullY = FORMATION.y - Math.sin(bearing) * range;
+        for (let headingDeg = 0; headingDeg < 360; headingDeg += 5) {
+          const heading = (headingDeg * Math.PI) / 180;
+          const held = soundingHolds(FORMATION, heading, hullX, hullY);
+          assert.equal(
+            held,
+            holdsBySpec(FORMATION, heading, hullX, hullY),
+            `bearing ${bearingDeg}° at ${range} m, bow ${headingDeg}°`
+          );
+          if (held) inCone++;
+        }
+      }
+    }
+    // The sweep is only worth anything if it visited both answers, and a
+    // quarter of the circle ahead is a quarter of the bows at every standing
+    // inside the radius. Asserted rather than assumed, so a `soundingHolds`
+    // that returned false for everything could not pass this test by agreeing
+    // with a `holdsBySpec` that had been broken the same way.
+    assert.ok(inCone > 0, 'no standing in the sweep was ever bow-on');
+  });
+
+  it('holds nothing from inside the radius with the bow pointed away', () => {
+    // The mechanism, in one assertion. A sounding aimed at the survey is heard
+    // from most of the map and the same sounding aimed away is heard from six
+    // hundred metres (§4), which is only a decision the player makes if
+    // pointing it the short way fails to take it. Two hundred metres due west
+    // of the formation: bow east is on it, bow west is away from it, and the
+    // hull has not moved.
+    const hullX = FORMATION.x - 200;
+    const hullY = FORMATION.y;
+    assert.equal(soundingHolds(FORMATION, 0, hullX, hullY), true, 'bow on the formation');
+    assert.equal(soundingHolds(FORMATION, Math.PI, hullX, hullY), false, 'bow away from it');
+    // And the beams, which are the sectors §4 prices at 0.35 rather than
+    // excludes: they are not the cone, so they do not take the sounding.
+    assert.equal(soundingHolds(FORMATION, Math.PI / 2, hullX, hullY), false, 'beam on');
+    assert.equal(soundingHolds(FORMATION, -Math.PI / 2, hullX, hullY), false, 'other beam');
+  });
+
+  it('holds nothing from outside the radius, however well aimed', () => {
+    // Due west of the formation, so `dx` is the range exactly and `dy` is zero:
+    // the one bearing on which "within 400 m" can be asserted at 400 m without
+    // a float standing in for it. §4's radius is inclusive, so the metre itself
+    // is inside.
+    assert.equal(soundingHolds(FORMATION, 0, FORMATION.x - 401, FORMATION.y), false);
+    assert.equal(soundingHolds(FORMATION, 0, FORMATION.x - 400, FORMATION.y), true);
+    assert.equal(soundingHolds(FORMATION, 0, FORMATION.x - 399, FORMATION.y), true);
+  });
+
+  it('sounds a formation the hull is sitting on, whatever its bow', () => {
+    // The degenerate question, answered rather than left to fall out: at zero
+    // range every bearing to the formation is every bearing, and a hull that
+    // has parked on the thing it is reading is plainly reading it. Pinned
+    // because it is the one case where the sector arithmetic and the prose
+    // cannot be checked against each other — no authored 400 m radius asks it,
+    // and a future `soundingHolds` that rejected it would be a hold no player
+    // could take by driving *closer*.
+    for (const headingDeg of [0, 90, 180, 270]) {
+      assert.equal(
+        soundingHolds(FORMATION, (headingDeg * Math.PI) / 180, FORMATION.x, FORMATION.y),
+        true,
+        `bow ${headingDeg}° on the point itself`
+      );
+    }
+  });
+
+  it('resets a broken hold rather than pausing it', () => {
+    // The one decision this mechanism makes that `MissionLift`'s does not, and
+    // the reason it is a decision: §4 says a sounding is *held* for twenty
+    // seconds, and a held tone assembled out of broken fragments would teach
+    // the opposite of the lesson. A cut is work done to rock and resumes where
+    // it stood; a sounding starts again.
+    const interval = Math.round(SIM.TICK_HZ / SIM.ECHO_HZ);
+    let held = 0;
+    for (let pass = 0; pass < 30; pass++) held = accrueSounding(held, true, interval);
+    assert.equal(held, 30 * interval, 'an unbroken hold accrues every interval');
+    assert.equal(accrueSounding(held, false, interval), 0, 'a broken hold is spent');
+    assert.equal(
+      accrueSounding(accrueSounding(held, false, interval), true, interval),
+      interval,
+      'and resuming starts from nothing'
+    );
   });
 });

@@ -125,6 +125,17 @@ export interface SimWorld extends IWorld {
    */
   liftCutSig: Map<number, number>;
   /**
+   * The same, for a mission's sounding — eid to the SIG §4 states a sounding is
+   * taken at, held while the twenty seconds run.
+   *
+   * A second map rather than a second writer into `liftCutSig`, because each is
+   * cleared and rebuilt whole by its own mission pass: sharing one map would
+   * make the order of `applyLifts` and `applySoundings` load-bearing, and the
+   * second one to run would wipe the first one's floors. Two integer compares
+   * per emitter in a skirmish, both gated on an empty map.
+   */
+  soundingSig: Map<number, number>;
+  /**
    * The simulation's only source of randomness. Seeded per match and part of
    * simulation state — see sim/rng.ts. Nothing in sim/ may call Math.random().
    */
@@ -285,6 +296,7 @@ export function createSimWorld(terrain: Terrain, dt: number, seed: number): SimW
   world.spireActive = new Set();
   world.blooms = [];
   world.liftCutSig = new Map();
+  world.soundingSig = new Map();
   world.rng = new Rng(seed);
   world.localOfEid = new Map();
   world.eidOfLocal = new Map();
