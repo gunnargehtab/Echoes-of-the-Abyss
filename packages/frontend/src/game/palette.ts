@@ -358,6 +358,16 @@ export let FAUNA_COLOR: number = STANDARD.fauna;
 export let UI: UiInk = STANDARD.ui;
 
 /**
+ * The two type voices — docs/style-neon-noir.md "Typography". Pixi text
+ * cannot read CSS custom properties, so these transcribe the same stacks
+ * index.css declares as `--font-data` / `--font-display`; if either moves,
+ * both places move.
+ */
+export const FONT_DATA = 'ui-monospace, Consolas, monospace';
+export const FONT_DISPLAY =
+  "'Big Shoulders Display', 'Arial Narrow', 'Helvetica Neue', Impact, sans-serif";
+
+/**
  * Swap every ink at once. Returns the palette now in force.
  *
  * Applied from the settings store at match mount and again whenever the store

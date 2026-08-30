@@ -353,7 +353,11 @@ is: **if the motion is the message, it stays.**
 - `packages/frontend/src/game/palette.ts` — already transcribes
   [art-direction.md](art-direction.md); chrome constants there should match
   this doc's tokens (`UI.background` = `abyss-void`, `UI.glass` =
-  `abyss-glass`, `UI.threat` = `neon-red`, …).
+  `abyss-glass`, `UI.threat` = `neon-red`, …). It also carries the two type
+  voices for canvas text (`FONT_DISPLAY`, `FONT_DATA`), because Pixi cannot
+  read CSS custom properties: the display voice belongs to title-weight
+  elements only — the verdict banner, the inspector's name line, panel title
+  strips — and every readout stays in the data voice.
 
 When this doc and the code disagree, one of them is wrong — say which one you
 are changing and why.
