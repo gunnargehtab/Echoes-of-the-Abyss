@@ -6,11 +6,14 @@
  * a beat that names a hull nobody placed fails at `npm run type-check` rather
  * than half way through a match.
  *
- * A table, not a language. Eight predicates, nine beat kinds, no expressions, no
- * variables, no conditions. `sim/maps/types.ts` makes this argument about region
- * shapes and it holds harder here: a mission scripting language would be more
- * expressive than anything in `docs/` actually asks for, and the second mission
- * is the right time to find out what the first one was missing.
+ * A table, not a language. Eight predicates, nine beat kinds, no expressions
+ * and no variables — and one condition shape: a beat may fire on a predicate
+ * instead of a tick (`MissionConditionalBeat`), in the same vocabulary the
+ * objectives already speak, walked as a second short list that is not a
+ * schedule. `sim/maps/types.ts` makes this argument about region shapes and it
+ * holds harder here: a mission scripting language would be more expressive than
+ * anything in `docs/` actually asks for, and the second mission is the right
+ * time to find out what the first one was missing.
  */
 
 import type {
@@ -523,6 +526,43 @@ export type MissionBeat =
    */
   | { atTick: number; kind: 'resolve'; conclusion?: true; note: string };
 
+/** One member of `MissionBeat` with its `atTick` removed — what a conditional beat fires. */
+export type MissionActionBeat = MissionBeat extends infer B
+  ? B extends { atTick: number }
+    ? Omit<B, 'atTick'>
+    : never
+  : never;
+
+/**
+ * A beat fired by a condition rather than a tick — the row
+ * docs/mission-aptitude.md §13 fixed the shape of, built for
+ * docs/mission-exposure.md §4's warning-at-twenty and recall-at-thirty.
+ *
+ * A table, not a language: the condition is a `MissionPredicate` — the same
+ * vocabulary the objectives already speak, evaluated for a beat instead of for
+ * an objective row — and what fires is a short list of ordinary beats, once,
+ * on the first Echo tick the predicate holds. No expressions, no variables,
+ * no operators.
+ *
+ * **A second, short list that is not a schedule.** The beat table stays the
+ * world's clock, authored in ascending `atTick` order and walked with a
+ * cursor, and these are walked beside it each tick — because the tick at
+ * which a cumulative tally crosses twenty seconds is a fact about how the
+ * player played, and has no place in an ordering.
+ *
+ * An `endure` predicate here is measured from the mission's start — a
+ * conditional has no reveal moment to start a clock from, so the mission's is
+ * the only honest one.
+ */
+export interface MissionConditionalBeat {
+  id: string;
+  /** Fires the first tick this holds. Never un-fires: a spent tally stays spent. */
+  when: MissionPredicate;
+  /** Fired in list order, exactly as scheduled beats fire in beat order. */
+  beats: readonly MissionActionBeat[];
+  note: string;
+}
+
 /**
  * A scripted listener whose hearing is an outcome — the sweep of
  * docs/mission-tend.md §6 and §8, and the row its §13 added to the format.
@@ -634,6 +674,8 @@ export interface MissionDefinition extends MissionHeader {
   locks: readonly AbilityLock[];
   objectives: readonly MissionObjective[];
   beats: readonly MissionBeat[];
+  /** Beats that key on a condition rather than a tick. Omitted is none. */
+  conditionalBeats?: readonly MissionConditionalBeat[];
   /** The mission's reading of each result. Authored, in-register, not a score. */
   epilogue: Record<MissionOutcome, string>;
 }

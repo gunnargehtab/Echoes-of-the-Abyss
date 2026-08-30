@@ -149,6 +149,32 @@ export const LEDGER_BAFFLE_HEADER: MissionHeader = {
   ],
 };
 
+export const LEDGER_EXPOSURE_HEADER: MissionHeader = {
+  id: 'ledger-exposure',
+  campaign: 'ledger',
+  ordinal: 4,
+  name: 'The Ledger — Exposure',
+  premise:
+    "Three unarmed hulls under the layer, six sounds in somebody else's country, and thirty seconds of deniability.",
+  mapId: 'first-trench-margin',
+  // The watch change at 18:00 (docs/mission-exposure.md §9), inside §10's 12-25.
+  lengthBandS: [1020, 1140],
+  /**
+   * The survey charter, read at muster — docs/mission-exposure.md §12,
+   * verbatim. The first Ledger briefing not signed for the Board, and public
+   * for Sorrowgate's reason: the charter names its own budget, its own
+   * recall rule, and the terms of its own deniability, because a charter
+   * that withheld them would have nothing to recall against.
+   */
+  briefing: [
+    'The Division requires field readings of the trench margin’s working economy. Six points are charted. Four close the interval. The model this bounds is the one the Board’s arithmetic stands on, and the Division observes, without further comment, that at present it stands on an assumption.',
+    'The survey is chartered, unarmed, and deniable. Deniability is a consumable. It is spent by Classification: thirty seconds of it, cumulative, across the charter, at which point the charter is recalled and the survey’s business becomes coming home. The first twenty seconds are yours to allocate. The last ten are the Division’s, and the Division’s guidance at thirty is unambiguous.',
+    'Under the layer you are deaf to the concern and the concern is deaf to you. That is not a defect in the charter. It is the charter: what cannot hear you cannot be asked about you.',
+    'The record returns in duplicate or it is not a record. Two hulls home is the interval; one is an anecdote; none is a file the Division has opened twice before and not yet closed.',
+    'Exposure is budgeted. Nothing further is authorised. For the Division.',
+  ],
+};
+
 export const SEEDING_TEND_HEADER: MissionHeader = {
   id: 'seeding-tend',
   campaign: 'seeding',
@@ -204,6 +230,7 @@ export const MISSION_HEADERS: readonly MissionHeader[] = [
   LEDGER_ASSET_RECOVERY_HEADER,
   LEDGER_SHIFT_CHANGE_HEADER,
   LEDGER_BAFFLE_HEADER,
+  LEDGER_EXPOSURE_HEADER,
   SEEDING_TEND_HEADER,
   ATTENDING_ATTENDANCE_HEADER,
 ];

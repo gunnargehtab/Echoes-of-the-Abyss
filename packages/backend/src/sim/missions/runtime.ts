@@ -255,6 +255,8 @@ export class MissionRuntime {
 
   /** Next unfired beat. Beats are authored sorted; `missions.test.ts` asserts it. */
   private cursor = 0;
+  /** Conditional beats already fired, by id. A spent tally stays spent. */
+  private readonly firedConditionals = new Set<string>();
   private debtS = 0;
   private view: MissionView | null = null;
   /** The last view built, kept for a client that needs it re-sent. */
@@ -433,6 +435,7 @@ export class MissionRuntime {
     this.applySweep(world, sink);
     this.applyEscortHold(world, own);
     this.applySilenceLedger(world, own);
+    this.fireConditionalBeats(world, sink, own);
     this.deriveObjectives(world, own);
     if (this.resolveRequested) this.resolve();
     this.rebuildView(own);
@@ -571,6 +574,47 @@ export class MissionRuntime {
         // the count it has, not the one it had.
         this.resolveRequested = true;
         return;
+    }
+  }
+
+  /**
+   * The conditional beats — types.ts, `MissionConditionalBeat`: a second,
+   * short list that is not a schedule, walked beside the cursor each tick.
+   *
+   * Each entry fires once, on the first Echo tick its predicate holds, and
+   * fires ordinary beats through the ordinary `fire` — so a conditional
+   * `resolve` defers exactly as a scheduled one does, and a conditional `say`
+   * reaches the log by the same door. Evaluated after the tallies (tolerance,
+   * attendance, lifts) have accrued this tick and before objectives are
+   * re-derived, so a beat fired at "twenty seconds entered" fires on the tick
+   * the twentieth second is entered rather than one late.
+   *
+   * The predicate is evaluated with the mission's own start as its clock —
+   * a conditional has no reveal moment, so an `endure` here measures the
+   * whole mission, and the doc comment on the type says so.
+   */
+  private fireConditionalBeats(world: SimWorld, sink: MissionCommandSink, own: EchoSnapshot): void {
+    for (const conditional of this.definition.conditionalBeats ?? []) {
+      if (this.firedConditionals.has(conditional.id)) continue;
+      const met = isMet(
+        conditional.when,
+        own,
+        (role) => this.idsFor(role),
+        (id) => this.definition.regions.find((region) => region.id === id),
+        0,
+        (lift) => this.loadedFor(lift),
+        this.attendedTags.size,
+        (tier) => exposedAtLeast(this.exposedByTier, tier),
+        this.soundedIds.size
+      );
+      if (!met) continue;
+      this.firedConditionals.add(conditional.id);
+      for (const beat of conditional.beats) {
+        this.fire(world, sink, {
+          ...beat,
+          atTick: world.tick,
+        } as MissionDefinition['beats'][number]);
+      }
     }
   }
 

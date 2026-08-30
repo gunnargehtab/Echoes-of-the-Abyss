@@ -14,6 +14,7 @@
 import { ATTENDING_ATTENDANCE } from './attendance.ts';
 import { LEDGER_ASSET_RECOVERY } from './assetRecovery.ts';
 import { LEDGER_BAFFLE } from './baffle.ts';
+import { LEDGER_EXPOSURE } from './exposure.ts';
 import { LEDGER_SHIFT_CHANGE } from './shiftChange.ts';
 import { PROLOGUE_SORROWGATE } from './sorrowgate.ts';
 import { SEEDING_TEND } from './tend.ts';
@@ -28,6 +29,7 @@ export {
   ATTENDING_ATTENDANCE,
   LEDGER_ASSET_RECOVERY,
   LEDGER_BAFFLE,
+  LEDGER_EXPOSURE,
   LEDGER_SHIFT_CHANGE,
   PROLOGUE_SORROWGATE,
   SEEDING_TEND,
@@ -38,6 +40,7 @@ export const MISSIONS: readonly MissionDefinition[] = [
   LEDGER_ASSET_RECOVERY,
   LEDGER_SHIFT_CHANGE,
   LEDGER_BAFFLE,
+  LEDGER_EXPOSURE,
   SEEDING_TEND,
   ATTENDING_ATTENDANCE,
 ];

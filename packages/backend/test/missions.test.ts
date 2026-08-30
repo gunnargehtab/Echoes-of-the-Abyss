@@ -319,6 +319,64 @@ describe('the beat schedule', () => {
     }
   });
 
+  it('holds conditional beats to the schedule’s own naming rules', () => {
+    // A conditional beat fires ordinary beats through the ordinary path
+    // (types.ts, `MissionConditionalBeat`), so a tag nobody placed or a region
+    // nobody authored fails in exactly the schedule's quiet way — the recall
+    // simply would not happen. Same rules, second list. Creature tags may also
+    // have been spawned by the schedule, which fired first by construction.
+    for (const mission of MISSIONS) {
+      const placed = authoredTags(mission);
+      const spawnedByBeat = new Set(
+        mission.beats
+          .filter((beat) => beat.kind === 'creature' && beat.spawnAt !== undefined)
+          .map((beat) => (beat as { tag: string }).tag)
+      );
+      const conditionals = mission.conditionalBeats ?? [];
+      const ids = conditionals.map((conditional) => conditional.id);
+      assert.equal(new Set(ids).size, ids.length, `${mission.id}: duplicate conditional id`);
+      for (const conditional of conditionals) {
+        assert.ok(
+          conditional.beats.length > 0,
+          `${mission.id}: conditional "${conditional.id}" fires nothing`
+        );
+        for (const beat of conditional.beats) {
+          if (beat.kind === 'creature') {
+            assert.ok(
+              placed.has(beat.tag) ||
+                spawnedByBeat.has(beat.tag) ||
+                (beat.spawnAt !== undefined && beat.species !== undefined),
+              `${mission.id}: conditional "${conditional.id}" neither places nor spawns "${beat.tag}"`
+            );
+            continue;
+          }
+          if (beat.kind === 'objective') {
+            assert.ok(
+              mission.objectives.some((objective) => objective.id === beat.id),
+              `${mission.id}: conditional "${conditional.id}" sets objective "${beat.id}", ` +
+                'which is not authored'
+            );
+            continue;
+          }
+          if (beat.kind === 'ground') {
+            assert.ok(
+              mission.regions.some((region) => region.id === beat.region),
+              `${mission.id}: conditional "${conditional.id}" names region "${beat.region}", ` +
+                'which is not authored'
+            );
+            continue;
+          }
+          if (beat.kind === 'resolve' || beat.kind === 'say') continue;
+          assert.ok(
+            placed.has(beat.tag) || spawnedByBeat.has(beat.tag),
+            `${mission.id}: conditional "${conditional.id}" names "${beat.tag}", ` +
+              'which nothing places'
+          );
+        }
+      }
+    }
+  });
+
   it('releases only hulls that are actually held', () => {
     // A release beat for a tag with no `releaseTick` is a no-op that reads like
     // a rule; a held hull with no release beat never moves at all.

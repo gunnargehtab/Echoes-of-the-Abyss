@@ -271,6 +271,7 @@ A mission map is authored the same way — a literal, regions painted in order �
 | Face Six | `ninefold-face-six` | #251 | 4,000 × 3,000 m. A dying field, a fallen face, and a recovery writ — [mission-asset-recovery.md](mission-asset-recovery.md) §11 |
 | The Upper Workings | `ninefold-workings` | #212 | 4,000 × 3,000 m. The producing Vein astride the layer, a filed audit, and one shift to thread them — [mission-shift-change.md](mission-shift-change.md) §11 |
 | The Fourth Trench | `fourth-trench` | #212 | 3,000 × 5,000 m. A closed shortcut, rock walls, and two chambers of quiet water on the only road — [mission-baffle.md](mission-baffle.md) §11 |
+| The Western Margin | `first-trench-margin` | #212 | 5,000 × 3,000 m. The trench country's top step, six sounds of somebody else's economy, and the layer as a door — [mission-exposure.md](mission-exposure.md) §11 |
 | Marr Plateau | `marr-plateau` | #251 | 4,000 × 2,500 m. A garden terrace, a working day, and a survey — [mission-tend.md](mission-tend.md) §11 |
 | The Attending Galleries | `attending-galleries` | #258 | 5,000 × 4,000 m. A gallery of sleepers, and the Ninth aimed at the Mouth — [mission-attendance.md](mission-attendance.md) §11 |
 
