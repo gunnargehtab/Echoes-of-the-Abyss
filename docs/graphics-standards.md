@@ -137,6 +137,14 @@ garnish, not game information — fine to keep in the bake, never a reason to ra
 density. The glance test for any new visual: can a player who has read nothing tell *whose*
 it is, *how loud* it is, and *whether it is theirs* in under a second?
 
+"At every zoom" is load-bearing, and true metre scale cannot satisfy it on its own: a 60 m
+hull against kilometres of ground is a speck at survey distance. The conn view answers with
+the far-zoom readability scale specified in [art-direction.md](art-direction.md) ("Camera &
+Projection") — one view-wide factor that draws the fleet larger than the ground as the
+dolly pulls back, clamped to exactly 1 at close zoom and render-only by rule. A new hull or
+structure passes this gate at survey zoom *with* that scale applied; it does not get to
+fail the glance test and call the scale someone else's problem.
+
 ### 8. Projection discipline — one camera, honest geometry
 
 The camera spec in [art-direction.md](art-direction.md) ("Camera & Projection") is a gate,

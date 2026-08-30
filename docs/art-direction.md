@@ -293,6 +293,50 @@ fallback and the sonar scope's language. Glow is loudness (gate 3): the model la
 with live SIG, so a hull running silent goes dark instead of translucent. The enemy never
 renders as a model at any tier — the Asymmetric Fidelity Law is untouched by the camera.
 
+### Far-zoom readability scale — SPEC
+
+Hulls are 60–130 m long and the ground is kilometres wide, so a fleet drawn at true metre
+scale is a scatter of specks the moment the dolly pulls back to survey distance. Gate 7 in
+[graphics-standards.md](graphics-standards.md) judges readability *at every zoom the camera
+allows*, and true scale fails it there. The answer is WC3's: **as the camera pulls back,
+the fleet is drawn larger than the ground it stands on.**
+
+One factor for the whole view, taken from the dolly distance alone:
+
+```text
+pxPerM = viewHeightPx / 2 / (tan(FOV / 2) · dollyDistanceM)
+scale  = clamp(FLOOR_PX / (REFERENCE_HULL_M · pxPerM), 1, MAX_SCALE)
+```
+
+`REFERENCE_HULL_M` is the roster's shortest hull, derived from the unit table rather than
+written down a second time — today the Light Scout's 60 m. `FLOOR_PX` (**TUNABLE**, 26)
+is the drawn length below which that hull stops reading as a silhouette; `MAX_SCALE`
+(**TUNABLE**, 4) is where exaggeration stops, because a fleet drawn past it stops being a
+fleet on a map and becomes a row of icons overlapping each other. On a 900 px-tall
+viewport the factor leaves 1 at roughly a 2,850 m dolly and reaches the cap at 11,400 m.
+
+What the rule is careful about:
+
+- **At close zoom the factor is exactly 1.** Hulls, structures and terrain agree metre for
+  metre, which is what the Phase-2 canonicalisation
+  ([three-layer-ocean.md](three-layer-ocean.md)) exists to guarantee. The curve is clamped,
+  not blended, so "1 means true scale" stays a fact rather than an approximation.
+- **One factor, so proportion survives.** Hulls and structures take the same number. A
+  per-hull pixel floor would grow a scout more than a cruiser and converge the roster on
+  one apparent size at survey zoom — losing class-at-a-glance, which is the readability
+  this rule exists to buy.
+- **It is texture, not information.** The simulation, collision, range rings and aim reach
+  never read it: a 2,400 m ring is still 2,400 m of water, and selection keeps its own
+  140 m reach under an 18 px floor. The numbers are chosen together — wherever the scale is
+  active the reference hull is pinned at 26 px, which is 13 px of half-hull, inside that
+  floor — so a hull is never drawn larger than it can be clicked, and aim never has to know
+  the scale exists.
+- **Depth stays honest.** The plumb line is never scaled: its length *is* the hull's depth,
+  and the hull's centre does not move. The ground shadow scales with the hull, because a
+  shadow that stayed true-scale under an exaggerated hull would read as the wrong depth.
+  Instrument ink drawn *about* a hull — selection ring, loudness ring, bars — scales with
+  it, for the same reason a caption tracks its figure.
+
 ### Rotation and zoom — SPEC
 
 - **No camera rotation, ever.** Rotation breaks the minimap correspondence (the sonar
