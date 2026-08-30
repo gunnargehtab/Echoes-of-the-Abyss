@@ -71,6 +71,7 @@ import {
   rockTopDepthM,
   seabedDepthAtM,
 } from './perspectiveTerrain.ts';
+import { groundPxPerM, hullReadabilityScale } from './readability.ts';
 import { hullSpriteCanvas, hullSpriteSizeM } from './hullTextures.ts';
 import { structureSpriteCanvas, structureSpriteSizeM } from './structureTextures.ts';
 import { ACTIVE_PALETTE } from './palette.ts';
@@ -154,6 +155,12 @@ export class PerspectiveView {
   /** Camera rig: a ground target, a dolly distance, a fixed pitch, no yaw. */
   private readonly target = new Vector3();
   private distance = 4000;
+  /**
+   * How much larger than true metre scale the fleet is currently drawn
+   * (readability.ts). 1 at close zoom, and re-applied only when it actually
+   * moves — a wheel tick is cheap, a per-frame walk of every handle is not.
+   */
+  private drawScale = 1;
 
   private terrain: TerrainPayload | null = null;
   /**
@@ -391,6 +398,19 @@ export class PerspectiveView {
       pxPerM,
       visible: point.z < 1 && point.z > -1,
     };
+  }
+
+  /**
+   * How much larger than true metre scale own hulls and structures are being
+   * drawn right now (docs/art-direction.md "Far-zoom readability scale").
+   *
+   * For the overlay painter only, and only for ink drawn *about* a hull —
+   * selection ring, loudness ring, bars — which has to track the figure it
+   * captions. Nothing that measures water may read this: range rings, aim
+   * reach, the simulation and collision all stay on true metres.
+   */
+  hullDrawScale(): number {
+    return this.drawScale;
   }
 
   /** Pan by a screen delta, WC3-hand: the ground follows the pointer. */
@@ -813,18 +833,27 @@ export class PerspectiveView {
       const material = handle.mesh.material as MeshBasicMaterial;
       material.map = this.spriteTexture(spec.spriteKey, spec.canvas);
       material.needsUpdate = true;
-      handle.mesh.scale.set(spec.sizeM.widthM, spec.sizeM.heightM, 1);
       handle.spriteKey = spec.spriteKey;
       handle.widthM = spec.sizeM.widthM;
       handle.heightM = spec.sizeM.heightM;
     }
 
+    // The far-zoom readability scale (readability.ts, docs/art-direction.md).
+    // Render-only: it multiplies what draws the hull and nothing that measures
+    // it. Applied here rather than at texture-swap time because it moves with
+    // the dolly, not with the entity.
+    const draw = this.drawScale;
+    handle.mesh.scale.set(handle.widthM * draw, handle.heightM * draw, 1);
+
     const y = depthToWorldY(spec.depthM);
     const groundY = this.groundYAt(spec.x, spec.z);
-    const hullY = Math.max(y, groundY + 4);
+    // The clearance rides the scale: a bottomed hull drawn four times over
+    // would otherwise bury half its own height in the seabed at survey zoom.
+    const hullY = Math.max(y, groundY + 4 * draw);
     if (model !== null) {
       model.root.position.set(spec.x, hullY, spec.z);
       model.root.rotation.y = -spec.yaw;
+      model.root.scale.setScalar(model.baseScale * draw);
       // Loudness is the lights, not the paint: live SIG swings the lamps
       // around the intake-approved resting strength (gate 3), so a hull
       // running silent goes dark instead of translucent.
@@ -838,14 +867,18 @@ export class PerspectiveView {
     // The plumb line and ground shadow are what make the water column
     // readable: a hull's height above its own shadow *is* its depth. The
     // interface voice (cyan), because depth here is information, not threat.
+    // The plumb is never scaled — its length is the depth, and a scaled plumb
+    // would be the one place this factor told a lie. The shadow is, because a
+    // true-scale shadow under an exaggerated hull reads as the wrong depth.
     const positions = handle.plumb.geometry.getAttribute('position') as BufferAttribute;
     positions.setXYZ(0, spec.x, y, spec.z);
     positions.setXYZ(1, spec.x, groundY + 1, spec.z);
     positions.needsUpdate = true;
     const shadowRadius =
-      model !== null
+      draw *
+      (model !== null
         ? Math.max(model.lengthM, model.beamM) * 0.4
-        : Math.max(handle.widthM, handle.heightM) * 0.35;
+        : Math.max(handle.widthM, handle.heightM) * 0.35);
     handle.shadow.scale.set(shadowRadius, shadowRadius, 1);
     handle.shadow.position.set(spec.x, groundY + 2, spec.z);
   }
@@ -980,6 +1013,15 @@ export class PerspectiveView {
     }
 
     this.applyCamera();
+    // The readability factor follows the dolly, so it is recomputed on the
+    // frame rather than on the 5 Hz snapshot: a wheel zoom must not wait up to
+    // 200 ms for the fleet to reach its drawn size. Re-syncing only on an
+    // actual change keeps a still camera free.
+    const scale = hullReadabilityScale(groundPxPerM(this.viewHeight, FOV_DEG, this.distance));
+    if (Math.abs(scale - this.drawScale) > 1e-3) {
+      this.drawScale = scale;
+      this.syncEntities();
+    }
     renderer.render(this.scene, this.camera);
   }
 
@@ -993,6 +1035,7 @@ export class PerspectiveView {
         active: this.active,
         pitchDeg: PITCH_DEG,
         distance: Math.round(this.distance),
+        hullScale: Number(this.drawScale.toFixed(2)),
         drawCalls: info?.render.calls ?? 0,
         triangles: info?.render.triangles ?? 0,
         avgFrameMs: Number(average.toFixed(2)),
