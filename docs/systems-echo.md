@@ -308,6 +308,24 @@ the *cone* is genuinely the loudest thing in the game. No Knight hull is written
   [units.md](units.md) is a different claim — it is aimed at its *pair*, and the Standing Wave
   corridor between two nodes is where that aim goes.
 
+**Where it applies is "wherever something is resolving a hull".** The Echo pass is not the only
+place in the simulation that asks how loud a hull is: the Drift runs its own detection walk over
+its own thresholds ([bestiary.md](bestiary.md) §2), and a mission's scripted listener runs a third
+([mission-tend.md](mission-tend.md) §6). All three ask the same question and all three carry this
+term, because a wake is quieter to a Draymaw for the same reason it is quieter to a hydrophone, and
+two detection paths disagreeing about one hull would be a bug nobody could see.
+
+**Two weapons ask a different question, and are left alone pending a decision.** A torpedo seeker
+picks the loudest emitter in its cone, and a mine waits to be walked into
+([systems-combat.md](systems-combat.md) §5, §6). Neither is on the exclusion list above, and the
+consistent reading would fold the term into both — but the mine's trigger bar is **derived** from
+two behaviours the combat doc fixes: never trigger on a hull running silent, and always trigger on
+a cruising Corvette inside 150 m. A Knight corvette showing its wake emits 2.8 against a bar of
+14.7, so applying the term there would let the Knights walk through minefields, which is a balance
+change no document authorises and the second of those two rules quietly failing. **The term is
+therefore not applied at either weapon**, and whether the Knights should be able to slip a
+minefield by pointing away is a design question this section is recording rather than answering.
+
 **Where the bow points is not a new order.** A hull's bow is its heading, a moving hull's heading
 is its course, and a stopped hull holds the last course it had. Facing is therefore a consequence
 of the orders a player already gives, which is what makes it teachable: *never travel at a

@@ -66,6 +66,7 @@ import {
   type SimWorld,
 } from '../world.ts';
 import { projectMissionView, type MissionState } from './view.ts';
+import { directionalFactorFor } from '../directional.ts';
 import { inRegion, isMet, isStanding, peakSigOf } from './predicates.ts';
 import type { MissionDefinition, MissionEmitter, MissionRole, MissionTag } from './types.ts';
 
@@ -786,7 +787,10 @@ export class MissionRuntime {
         for (const unit of party.units) {
           const hull = this.eidOf(world, unit.tag);
           if (hull === 0) continue;
-          const sig = Acoustic.sig[hull]!;
+          // The bow, on the same argument as the Drift's hearing
+          // (docs/systems-echo.md §8): the sweep is a listener resolving a
+          // player hull, which is the one question this term answers.
+          const sig = Acoustic.sig[hull]! * directionalFactorFor(world, hull, lx, ly);
           if (sig <= 0) continue;
           const distance = Math.hypot(Position.x[hull]! - lx, Position.y[hull]! - ly);
           const tf = thermoclineFactor(Position.depth[hull]!, ld);

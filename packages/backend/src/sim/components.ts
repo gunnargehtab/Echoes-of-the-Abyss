@@ -21,6 +21,31 @@ export const Velocity = defineComponent({
   y: Types.f32,
 });
 
+/**
+ * The hull's bow, in radians — docs/systems-echo.md §8.
+ *
+ * **Separate from `Velocity` because it has to survive a stop.** Heading was
+ * derivable before this component existed: a Tier-4 contact reported
+ * `atan2(Velocity.y, Velocity.x)`, which is correct while a hull is under way
+ * and meaningless the instant it is not — a stopped hull has zero velocity and
+ * therefore no bearing at all. §8 says a stopped hull holds the last course it
+ * had, and directional signature makes that load-bearing rather than cosmetic:
+ * docs/mission-aptitude.md §4's sounding is twenty seconds of a *stationary*
+ * hull whose bow decides who hears it.
+ *
+ * So this is written by movement and never cleared by it. `Ordnance.heading` is
+ * the same idea for a thing that points and goes; this is the same idea for a
+ * thing that points, goes, and then stops still pointing.
+ *
+ * Carried by hulls only. A structure has no bow, which is why `spawnStructure`
+ * does not add this and why the Echo pass can test for the component instead of
+ * asking what kind of entity it is holding.
+ */
+export const Heading = defineComponent({
+  /** Radians, `atan2(y, x)`, +x is 0 — the same convention as every other bearing. */
+  rad: Types.f32,
+});
+
 /** Where the unit is trying to get to. Zeroed when it arrives. */
 export const MoveOrder = defineComponent({
   x: Types.f32,

@@ -35,6 +35,7 @@ import {
   HarvestMode,
   Fauna,
   Health,
+  Heading,
   Magazine,
   MoveOrder,
   Ordnance,
@@ -606,6 +607,16 @@ export interface SpawnOptions {
    * (docs/mission-sorrowgate.md §3).
    */
   weaponsCold?: boolean;
+  /**
+   * The hull's initial bow, radians — docs/systems-echo.md §8.
+   *
+   * Defaults to 0 (due east), which is arbitrary and deterministic, and matters
+   * only for a Knight hull that emits before it has ever been given a course:
+   * §8's rule is that a stopped hull holds its *last* course, and a hull that
+   * has never moved has not got one. Callers that care — a mission seating a
+   * force that is meant to be facing somewhere on the first tick — say so here.
+   */
+  heading?: number;
 }
 
 /**
@@ -637,6 +648,12 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   addComponent(world, Velocity, eid);
   Velocity.x[eid] = 0;
   Velocity.y[eid] = 0;
+
+  // A bow that outlives a stop (docs/systems-echo.md §8). Hulls only: a
+  // structure has no bow, so `spawnStructure` does not add this and the Echo
+  // pass can ask for the component rather than for the entity's kind.
+  addComponent(world, Heading, eid);
+  Heading.rad[eid] = opts.heading ?? 0;
 
   addComponent(world, MoveOrder, eid);
   MoveOrder.active[eid] = 0;
