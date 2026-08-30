@@ -250,6 +250,41 @@ toggle until Phase 5. Every phase lands through the standard CI gates.
 | **4 — The Lid** | Sour exposure per §7, if adopted: `LID` constants, pressure-system extension, tests, band-table doc updates | shared, backend, docs |
 | **5 — The switch** | Perspective becomes the default; the plan-view *world* renderer retires (the sonar scope keeps the chart); gates and playtest checklist updated; screenshots refreshed | frontend, docs |
 
+### Phase 1 — landed
+
+The viewport exists: `packages/frontend/src/game/PerspectiveView.ts` (three.js scene),
+`perspectiveTerrain.ts` (the pure heightfield, node-tested), and a **Chart / Conn** toggle in
+the match UI — *conn*, because the command bar already sells DIVE as a depth order and a view
+is not an order. `?view=perspective&pitch=NN` opens straight into it for the harness. Own
+force renders as the chart's own baked sprites laid flat at true depth with a plumb line and
+ground shadow (depth made visible); contacts are tier-capped smudges; nodes, vent embers,
+depth fog and the rock walls are in. Review screenshots live in
+`docs/screenshots/three-layer-phase1/`.
+
+Decisions the phase settled:
+
+- **Engine: three.js**, confirmed — the spike hit no wall worth Babylon.
+- **Pitch: 55°** ships as the default (TUNABLE band unchanged). The 50/55/60 comparison is in
+  the screenshots directory: 50° buys hull profile at the cost of ground legibility, 60°
+  flattens back toward the chart; 55° holds both. Pinned as SPEC in
+  [art-direction.md](art-direction.md) at Phase 5, when this view becomes the default.
+- **Vertical scale: 0.22 world-metres per metre of depth** (`DEPTH_VISUAL_M_PER_M`,
+  render-only by rule), and a 150 m rock rise above the shallowest open floor.
+- **Gate-6 starting budgets**, from measurement: the whole Ventfront scene is **35 draw calls
+  / ~33k triangles**, so the world pass gets budget caps of **150 draw calls / 250 k
+  triangles** (TUNABLE) with pixel ratio capped at 1.5. The container only has software GL,
+  where the scene renders at ~270 ms/frame — that number measures SwiftShader, not the
+  scene — so wall-clock validation on real GPUs and on the Termux floor is Phase 2's first
+  errand, before the model roster raises the load.
+
+Phase-2/3 presentation debts, recorded so they are chosen rather than inherited: a contact
+below Tier 3 carries no depth, and the viewport currently hovers it at a fixed 600 m
+reference — an honest column glyph is owed; hull sprites render at true metre scale, which
+reads small against kilometres of ground, so the model pass needs a readability scale at far
+zoom (RTS readability > realism); the map edge ends in blackness where a WC3 map would have a
+skirt; and hazard sites and echo marks are not yet drawn in the conn view — the chart remains
+the tactical authority until Phase 3.
+
 ## 10. Open questions
 
 Parked here as plain text until decided; none blocks Phase 1.
@@ -257,13 +292,14 @@ Parked here as plain text until decided; none blocks Phase 1.
 1. **Adopt the Lid mechanic (§7)?** Recommended yes — it is the only part of the feedback
    with no existing rule behind it, and its lore anchor is already canon.
 2. **Does a full-screen chart view survive as a toggle,** or does the plan view live only in
-   the sonar scope? Recommendation: scope-only first; add the toggle if playtests miss it.
-3. **Camera pitch** — settled inside the 50–60° band by Phase-1 screenshots, then pinned as
-   SPEC in [art-direction.md](art-direction.md).
-4. **Engine confirmation** — three.js recommended in §8; Babylon is the fallback candidate if
-   Phase 1 hits a wall. Decided by the Phase-1 spike, recorded in
-   [tech-stack.md](tech-stack.md).
+   the sonar scope? Phase 1 ships the toggle by construction; the question is what Phase 5
+   retires. Recommendation stands: scope-only first, toggle back if playtests miss it.
+3. ~~Camera pitch~~ — **settled at 55°** by the Phase-1 screenshots (§9); SPEC-pinned in
+   [art-direction.md](art-direction.md) at Phase 5.
+4. ~~Engine confirmation~~ — **three.js**, per §9's Phase-1 record.
 5. **Player-facing band naming** — band names (recommended, per §3) versus numbered levels.
+   The Phase-1 toggle already speaks the register (*Chart / Conn*); the band question lands
+   with Phase 3's Dive/Rise controls.
 
 ---
 

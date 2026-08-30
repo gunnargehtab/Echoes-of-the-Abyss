@@ -19,6 +19,7 @@ import {
   type MissionView,
 } from '@echoes/shared';
 import { EchoRenderer, type ContactLogEntry } from './EchoRenderer.ts';
+import { PerspectiveView } from './PerspectiveView.ts';
 import { paletteFor, type PaletteName } from './palette.ts';
 import { ContactLog } from './ContactLog.tsx';
 import { EscMenu } from './EscMenu.tsx';
@@ -164,6 +165,20 @@ export function GameCanvas({
   const rendererRef = useRef<EchoRenderer | null>(null);
   const clientRef = useRef<GameClient | null>(null);
   /**
+   * The perspective viewport (docs/three-layer-ocean.md Phase 1): a second
+   * renderer over the same resolved data, behind a toggle. It is a *view* —
+   * pan and zoom only; orders and the HUD stay on the chart until Phase 3 —
+   * so React owns only which of the two is showing.
+   */
+  const perspectiveRef = useRef<PerspectiveView | null>(null);
+  const perspectiveHostRef = useRef<HTMLDivElement>(null);
+  const [viewMode, setViewMode] = useState<'chart' | 'perspective'>(() => {
+    // `?view=perspective` lets the headless harness (and a bookmark) open
+    // straight into the 3D view; `?pitch=NN` is read by the mount effect.
+    const params = new URLSearchParams(window.location.search);
+    return params.get('view') === 'perspective' ? 'perspective' : 'chart';
+  });
+  /**
    * Everything under the esc menu's glass, so it can be made inert while the
    * menu is up — the dialog is modal (§9.5), and Tab must not walk out of it
    * onto a live Ready or Rematch button behind the menu.
@@ -232,6 +247,11 @@ export function GameCanvas({
     window.addEventListener('keydown', unlock, { once: true });
 
     const start = async () => {
+      const perspective = new PerspectiveView();
+      const pitch = Number(new URLSearchParams(window.location.search).get('pitch'));
+      if (Number.isFinite(pitch) && pitch > 0) perspective.setPitchDeg(pitch);
+      perspectiveRef.current = perspective;
+
       const activeRenderer = new EchoRenderer({
         onMoveOrder: (unitIds, x, y, queued) => client?.moveTo(unitIds, x, y, queued),
         onToggleSilent: (unitIds, active) => client?.setSilentRunning(unitIds, active),
@@ -294,17 +314,33 @@ export function GameCanvas({
       rendererRef.current = activeRenderer;
 
       client = new GameClient({
-        onTerrain: (terrain) => activeRenderer.setTerrain(terrain),
-        onGround: (cells) => activeRenderer.applyGround(cells),
+        // The perspective view rides the same resolved payloads the chart
+        // does — a renderer must never be a second source of truth, and there
+        // is nothing else for it to draw from (the server-authoritative rule).
+        onTerrain: (terrain) => {
+          activeRenderer.setTerrain(terrain);
+          perspective.setTerrain(terrain);
+        },
+        onGround: (cells) => {
+          activeRenderer.applyGround(cells);
+          perspective.applyGround(cells);
+        },
         onMap: (map) => {
           activeRenderer.setMap(map);
           setMapName(map.name);
           setMaxSlots(map.seats);
         },
-        onNodes: (nodes) => activeRenderer.setNodes(nodes),
-        onAssigned: ({ slot, faction }) => activeRenderer.setIdentity(slot, faction),
+        onNodes: (nodes) => {
+          activeRenderer.setNodes(nodes);
+          perspective.setNodes(nodes);
+        },
+        onAssigned: ({ slot, faction }) => {
+          activeRenderer.setIdentity(slot, faction);
+          perspective.setIdentity(slot, faction);
+        },
         onEcho: (snapshot: EchoSnapshot) => {
           activeRenderer.applySnapshot(snapshot);
+          perspective.applySnapshot(snapshot);
           // Audio work happens on the tick contacts arrive on, never per
           // frame: anything smoother would imply knowledge the server did
           // not send.
@@ -350,6 +386,7 @@ export function GameCanvas({
               view.phase === MatchPhase.Playing
             ) {
               activeRenderer.resetForNewMatch();
+              perspective.resetForNewMatch();
               setLog([]);
               // The mission starts again from nothing too: a stale result
               // would sit over the new run, and stale lines would read as
@@ -427,6 +464,8 @@ export function GameCanvas({
       clientRef.current = null;
       renderer?.destroy();
       rendererRef.current = null;
+      perspectiveRef.current?.destroy();
+      perspectiveRef.current = null;
       window.removeEventListener('pointerdown', unlock);
       window.removeEventListener('keydown', unlock);
       void audio.destroy();
@@ -443,6 +482,27 @@ export function GameCanvas({
   const focusOn = useCallback((x: number, y: number) => {
     rendererRef.current?.focusOn(x, y);
   }, []);
+
+  /**
+   * Mount the 3D surface lazily, on first switch: a player who never toggles
+   * pays nothing for it. The GL context and scene persist across toggles —
+   * only the frame loop starts and stops — and a mount that fails (no WebGL)
+   * simply drops back to the chart rather than showing a black viewport.
+   */
+  useEffect(() => {
+    const perspective = perspectiveRef.current;
+    const perspectiveHost = perspectiveHostRef.current;
+    if (perspective === null) return;
+    if (viewMode === 'perspective' && perspectiveHost !== null) {
+      if (!perspective.mount(perspectiveHost)) {
+        setViewMode('chart');
+        return;
+      }
+      perspective.setActive(true);
+    } else {
+      perspective.setActive(false);
+    }
+  }, [viewMode]);
 
   /**
    * While the esc menu is up, the water cannot hear the keyboard (§9.5). The
@@ -493,6 +553,28 @@ export function GameCanvas({
           their containing block. */}
       <div ref={underRef} className="game-under">
         <div ref={hostRef} className="game-host" />
+        {/* The perspective viewport sits over the chart while it is the view;
+            the chart (and its HUD) stays live underneath and takes back the
+            screen the moment the toggle flips. Both renderers coexist until
+            docs/three-layer-ocean.md Phase 5. */}
+        <div
+          ref={perspectiveHostRef}
+          className="perspective-host"
+          hidden={viewMode !== 'perspective'}
+        />
+        {live && phase !== MatchPhase.Lobby && (
+          <button
+            type="button"
+            className="view-toggle"
+            onClick={() => setViewMode(viewMode === 'chart' ? 'perspective' : 'chart')}
+          >
+            {/* "Conn", not "dive": the command bar already sells DIVE as a
+                depth order, and a view is not an order. The conn is where a
+                boat is steered from, which is exactly what this view becomes
+                in Phase 3. */}
+            {viewMode === 'chart' ? 'Conn view' : 'Chart view'}
+          </button>
+        )}
         {live && phase !== MatchPhase.Lobby && <ContactLog entries={log} onFocus={focusOn} />}
         {live && phase !== MatchPhase.Lobby && mission !== null && (
           <MissionPanel view={mission} onFocus={focusOn} />
