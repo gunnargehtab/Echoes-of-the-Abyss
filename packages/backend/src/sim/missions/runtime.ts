@@ -67,7 +67,7 @@ import {
 } from '../world.ts';
 import { projectMissionView, type MissionState } from './view.ts';
 import { directionalFactorFor } from '../directional.ts';
-import { inRegion, isMet, isStanding, peakSigOf } from './predicates.ts';
+import { exposedAtLeast, inRegion, isMet, isStanding, peakSigOf } from './predicates.ts';
 import type { MissionDefinition, MissionEmitter, MissionRole, MissionTag } from './types.ts';
 
 /**
@@ -205,6 +205,22 @@ export class MissionRuntime {
    * stops sounding twenty seconds later and the record does not un-hear it.
    */
   private readonly attendedTags = new Set<MissionTag>();
+  /**
+   * Sim ticks this observer's own force has stood at each resolution tier in
+   * somebody else's ears, indexed by `ResolutionTier` — the tolerance's tally
+   * (docs/mission-aptitude.md §5), and the mirror of `attendedTags` above.
+   *
+   * Kept per observed tier rather than as one running total because the
+   * predicate authors the tier it enforces, and a single total accrued under
+   * one rule could not answer a second objective asking a different one.
+   * `exposedAtLeast` sums upward, which is where §5's "or better" lives.
+   *
+   * Monotone, like the transcript and for the same reason: a second the survey
+   * spent listening to you is a second it spent listening to you, and
+   * un-spending it would rewrite the player's history. That is also why
+   * `isStanding` deliberately does not grow this predicate.
+   */
+  private readonly exposedByTier: number[] = [];
   /** Live carrier eids of the loaded lifts, rebuilt each tick — see `LoadedIds`. */
   private readonly loadedIds = new Set<number>();
   /** The same, keyed by lift id, for predicates that name their load. */
@@ -389,6 +405,7 @@ export class MissionRuntime {
     this.applyLifts(world);
     this.applyEmitters(world);
     this.applyAttendance(world, heardTier);
+    this.applyTolerance(own);
     this.applySweep(world, sink);
     this.applyEscortHold(world, own);
     this.applySilenceLedger(world, own);
@@ -895,6 +912,39 @@ export class MissionRuntime {
   }
 
   /**
+   * The tolerance's tally — docs/mission-aptitude.md §5: "thirty seconds,
+   * cumulative, at Classification or better, across the whole party".
+   *
+   * Read off the player's own `ExposureReport`, which is the *only* reason this
+   * can be counted at all: docs/systems-echo.md §9 puts `exposure` on the
+   * snapshot precisely because it is resolved information about the player's
+   * own hulls, so everything the tally reads, the player was already sent.
+   * `applyAttendance` above has the same shape with the argument pointed the
+   * other way.
+   *
+   * **Accrued in sim ticks, on the Echo cadence, and the arithmetic between
+   * those two is deliberate.** `exposure` is recomputed at `SIM.ECHO_HZ`, so
+   * the tier read here is the tier that stands until the next reading —
+   * `ECHO_TICK_INTERVAL` sim ticks away, because that is the interval
+   * `match.ts` calls this on. A stale-but-correct tier held across twelve ticks
+   * is twelve ticks of exposure: the tolerance is thirty seconds of wall clock,
+   * not a count of the times somebody happened to look. Adding one per call
+   * would measure §5's thirty seconds as two and a half minutes, and adding one
+   * per 60 Hz tick is not available here because this is not called on them.
+   * Both halves derive from the same `SIM` constants the cadence does, so
+   * `ECHO_HZ` can move without the threshold drifting.
+   */
+  private applyTolerance(own: EchoSnapshot): void {
+    const tier = own.exposure.tier;
+    // Silent is not a tier anybody is holding, and bucketing it would make
+    // `exposedAtLeast(Silent)` read "the whole mission" rather than "every tick
+    // somebody could hear you" — a number no predicate should be able to ask
+    // for by accident.
+    if (tier <= ResolutionTier.Silent) return;
+    this.exposedByTier[tier] = (this.exposedByTier[tier] ?? 0) + ECHO_TICK_INTERVAL;
+  }
+
+  /**
    * The transcript, assembled — docs/mission-attendance.md §13's last ask.
    *
    * One authored line per attendable emitter, in the order the mission
@@ -991,7 +1041,8 @@ export class MissionRuntime {
         (id) => this.definition.regions.find((region) => region.id === id),
         this.startedAt.get(objective.id) ?? 0,
         (lift) => this.loadedFor(lift),
-        this.attendedTags.size
+        this.attendedTags.size,
+        (tier) => exposedAtLeast(this.exposedByTier, tier)
       );
       if (met) this.statuses.set(objective.id, ObjectiveStatus.Met);
       else if (standing) this.statuses.set(objective.id, ObjectiveStatus.Pending);
@@ -1101,6 +1152,7 @@ export class MissionRuntime {
       loadedIds: this.loadedIds,
       loadedByLift: this.loadedByLift,
       attended: this.attendedTags.size,
+      exposedByTier: this.exposedByTier,
       debtS: this.debtS,
     };
   }

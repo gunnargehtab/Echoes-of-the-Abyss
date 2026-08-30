@@ -6,7 +6,7 @@
  * a beat that names a hull nobody placed fails at `npm run type-check` rather
  * than half way through a match.
  *
- * A table, not a language. Four predicates, nine beat kinds, no expressions, no
+ * A table, not a language. Six predicates, nine beat kinds, no expressions, no
  * variables, no conditions. `sim/maps/types.ts` makes this argument about region
  * shapes and it holds harder here: a mission scripting language would be more
  * expressive than anything in `docs/` actually asks for, and the second mission
@@ -22,6 +22,7 @@ import type {
   MissionMarker,
   MissionOutcome,
   ObjectiveStatus,
+  ResolutionTier,
   StructureKind,
   UnitKind,
 } from '@echoes/shared';
@@ -236,7 +237,37 @@ export type MissionPredicate =
    */
   | { kind: 'attend'; count: number }
   | { kind: 'quiet'; role: MissionRole; ceilingSig: number }
-  | { kind: 'endure'; ticks: number };
+  | { kind: 'endure'; ticks: number }
+  /**
+   * Ticks the observer's own force has stood at `tier` or better in somebody
+   * else's ears — the tolerance of docs/mission-aptitude.md §5, and the exact
+   * mirror of `attend`: that one tallies what the player resolved, this one
+   * tallies what was resolved *of* the player.
+   *
+   * Read off `EchoSnapshot.exposure`, which docs/systems-echo.md §9 argues at
+   * length is safe to send because it is resolved information about the
+   * player's own hulls and says nothing about who holds the resolution or
+   * where they are. So this stays inside the wall the union already enforces —
+   * there is still no way here to name the listener, and none to ask what it
+   * can see.
+   *
+   * **Cumulative, not continuous.** Six seconds heard five times is the same
+   * thirty as thirty seconds heard once, "because the Consortium's procedure
+   * is cumulative: the log is added up at the end of a shift, not watched".
+   *
+   * **`isMet` here means the party has been heard**, which is the one place in
+   * this union where meeting a predicate is not good news. §5 is emphatic that
+   * exhausting the tolerance is *not* a mission failure — a partial outcome is
+   * an outcome — so what an author hangs off it is a reading, and the beat that
+   * fires on it is its own row of §13.
+   *
+   * The tier is authored rather than fixed at Classification so the union
+   * states §5's rule instead of assuming it, the same way `quiet` carries its
+   * own `ceilingSig`. Stored in ticks, spoken in seconds: §12's chapter says
+   * "Eleven seconds of thirty are entered", and `view.ts` does that arithmetic
+   * so no mission literal has to do it in its `text`.
+   */
+  | { kind: 'tolerance'; ticks: number; tier: ResolutionTier };
 
 /**
  * A load — the hold-and-cut lift of docs/mission-asset-recovery.md §8, and, with
