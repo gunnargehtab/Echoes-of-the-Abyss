@@ -65,7 +65,7 @@
   color: var(--text-bright);
   /* Glass over the scene, gradient downward into black: depth is always below. */
   background: linear-gradient(rgba(7, 14, 26, 0.82), rgba(3, 8, 14, 0.92));
-  font-family: ui-monospace, Consolas, monospace;
+  font-family: var(--font-data);
   pointer-events: none;
 }
 
@@ -135,7 +135,7 @@
   border: 1px solid rgba(255, 61, 166, 0.45);
   border-radius: 4px;
   background: var(--abyss-glass);
-  font-family: ui-monospace, Consolas, monospace;
+  font-family: var(--font-data);
   pointer-events: auto;
 }
 
@@ -291,7 +291,7 @@
   padding: 1.5rem;
   overflow-y: auto;
   background: linear-gradient(rgba(7, 14, 26, 0.88), rgba(3, 8, 14, 0.95));
-  font-family: ui-monospace, Consolas, monospace;
+  font-family: var(--font-data);
   color: var(--text-dim);
 }
 
@@ -302,11 +302,13 @@
   gap: 1rem;
 }
 
+/* The ready room is port chrome, so its header takes the display voice too. */
 .lobby-head h2 {
   margin: 0;
-  font-size: 1.1rem;
-  font-weight: 500;
-  letter-spacing: 0.16em;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--neon-cyan);
   text-shadow: 0 0 8px rgba(53, 224, 255, 0.35);
@@ -487,7 +489,7 @@
   justify-content: center;
   padding-bottom: 16vh;
   pointer-events: none;
-  font-family: ui-monospace, Consolas, monospace;
+  font-family: var(--font-data);
   color: var(--text-dim);
 }
 
@@ -614,7 +616,7 @@
   padding: 1.5rem;
   overflow-y: auto;
   background: linear-gradient(var(--abyss-floor), var(--abyss-void) 55%, #000);
-  font-family: ui-monospace, Consolas, monospace;
+  font-family: var(--font-data);
   color: var(--text-dim);
 }
 
@@ -625,39 +627,87 @@
   gap: 1.1rem;
 }
 
+/*
+ * The masthead is the vertical lockup from docs/naming.md "The logo": mark,
+ * ECHOES, the OF THE ABYSS sub-line between its hairline rules, tagline in
+ * the data voice. The lockup's anatomy lives in the doc; this transcribes it.
+ */
 .menu-masthead {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
   text-align: center;
   margin-bottom: 0.4rem;
 }
 
 .menu-wordmark {
   margin: 0;
-  font-size: clamp(1.4rem, 4vw, 2.1rem);
-  font-weight: 500;
-  letter-spacing: 0.22em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--font-display);
   text-transform: uppercase;
-  color: var(--neon-cyan);
+}
+
+.menu-wordmark-name {
+  font-size: clamp(2.6rem, 9vw, 4.2rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  color: var(--text-bright);
   /* Core, halo, and the menu-only reflection: the colour repeated below,
      faint and vertically smeared. */
   text-shadow:
-    0 0 1px var(--neon-cyan),
-    0 0 10px rgba(53, 224, 255, 0.35),
-    0 22px 26px rgba(53, 224, 255, 0.14);
+    0 0 1px rgba(53, 224, 255, 0.4),
+    0 0 22px rgba(53, 224, 255, 0.3),
+    0 26px 30px rgba(53, 224, 255, 0.14);
+}
+
+.menu-wordmark-sub {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: clamp(0.8rem, 2.6vw, 1.2rem);
+  font-weight: 600;
+  line-height: 1;
+  /* The trailing tracking space would un-centre the line; the indent puts
+     the same space back on the left. */
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 12px rgba(53, 224, 255, 0.35);
+}
+
+.menu-wordmark-rule {
+  width: clamp(2.4rem, 8vw, 4rem);
+  height: 1px;
+  background: rgba(53, 224, 255, 0.45);
+}
+
+/* The left rule carries the sub-line's indent debt: text-indent pushes the
+   text right, so the leading rule gives the same length back. */
+.menu-wordmark-rule:first-child {
+  margin-right: -0.5em;
 }
 
 .menu-tagline {
-  margin: 0.5rem 0 0;
+  margin: 0;
   font-size: 0.7rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   opacity: 0.6;
 }
 
+/* Screen headers speak in the logo's display voice; everything under them
+   stays in the data voice. */
 .menu-head h2 {
   margin: 0;
-  font-size: 1.1rem;
-  font-weight: 500;
-  letter-spacing: 0.16em;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--neon-cyan);
   text-shadow: 0 0 8px rgba(53, 224, 255, 0.35);
@@ -1149,7 +1199,7 @@
   border: 1px solid color-mix(in srgb, var(--neon-magenta) 45%, transparent);
   border-radius: 4px;
   background: var(--abyss-glass);
-  font-family: ui-monospace, Consolas, monospace;
+  font-family: var(--font-data);
   pointer-events: auto;
 }
 
@@ -1318,7 +1368,7 @@ button.objectives-row:hover {
   border: 1px solid color-mix(in srgb, var(--neon-cyan) 35%, transparent);
   border-radius: 4px;
   background: var(--abyss-glass);
-  font-family: ui-monospace, Consolas, monospace;
+  font-family: var(--font-data);
   pointer-events: auto;
 }
 
@@ -1384,7 +1434,7 @@ button.objectives-row:hover {
   justify-content: center;
   padding-bottom: 10vh;
   pointer-events: none;
-  font-family: ui-monospace, Consolas, monospace;
+  font-family: var(--font-data);
   color: var(--text-dim);
 }
 
@@ -1901,7 +1951,7 @@ button.objectives-row:hover {
   padding: 0.15rem 0.4rem;
   border: 1px solid color-mix(in srgb, var(--neon-cyan) 40%, transparent);
   border-radius: 3px;
-  font-family: ui-monospace, Consolas, monospace;
+  font-family: var(--font-data);
   font-size: 0.7rem;
   letter-spacing: 0.1em;
   color: var(--text-cyan);

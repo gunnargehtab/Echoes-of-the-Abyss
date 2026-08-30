@@ -105,7 +105,10 @@ brightening the subject.
 
 - **Display** (faction names, plate titles, "SUBMARINE UNITS"): condensed
   industrial grotesque, uppercase, tracking normal. Weight carries hierarchy,
-  not colour.
+  not colour. The shipped face is **Big Shoulders Display** (SPEC — chosen with
+  the logo, [naming.md](naming.md)), vendored into the frontend so the shell
+  works offline; the fallback stack stays condensed so an unloaded font reads
+  narrow rather than wide.
 - **Data** (labels, costs, coordinates, everything else on the HUD): monospace,
   uppercase, letter-spaced `0.12–0.16em`, small sizes (11–13 px at 1080p). This
   is the survey-plate voice and the current `game-overlay` voice; keep them the
@@ -339,7 +342,11 @@ is: **if the motion is the message, it stays.**
 ## Transcription targets
 
 - `packages/frontend/src/index.css` / `App.css` — CSS custom properties for
-  the tokens above; the DOM shell (overlays, future menus) uses only tokens.
+  the tokens above plus the two type voices (`--font-display`, `--font-data`);
+  the DOM shell (overlays, menus) uses only tokens.
+- `packages/frontend/src/menu/SonarMark.tsx` — the logo mark
+  ([naming.md](naming.md) "The logo"), inked from the tokens: rings in
+  `neon-cyan`, the contact in `neon-red`, glow per the recipe above.
 - `packages/frontend/src/game/palette.ts` — already transcribes
   [art-direction.md](art-direction.md); chrome constants there should match
   this doc's tokens (`UI.background` = `abyss-void`, `UI.glass` =
