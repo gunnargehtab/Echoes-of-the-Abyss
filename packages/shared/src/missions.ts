@@ -175,6 +175,31 @@ export const LEDGER_EXPOSURE_HEADER: MissionHeader = {
   ],
 };
 
+export const LEDGER_TOLERANCE_HEADER: MissionHeader = {
+  id: 'ledger-tolerance',
+  campaign: 'ledger',
+  ordinal: 5,
+  name: 'The Ledger — Tolerance',
+  premise:
+    'A casting poured before year zero has failed. The yard’s tungsten pours once, and the gauge fits both apertures.',
+  mapId: 'holding-underworks',
+  // The water stops at 17:00 (docs/mission-tolerance.md §9), inside §10's 12-25.
+  lengthBandS: [960, 1080],
+  /**
+   * The breach writ, read to the column at the yard — docs/mission-tolerance.md
+   * §12, verbatim. Public for Sorrowgate's reason and one more: the mission's
+   * whole design is that the arithmetic is not hidden from the player, so a
+   * briefing that withheld any of it would be the design arguing with itself.
+   */
+  briefing: [
+    'A casting poured before year zero failed at the turn of the tide. The Underworks are flooding in stages. The cascade reaches Sector Vayle’s frame above and the root aperture below, and the yard’s tungsten pours once. The gauge fits both apertures. That is not a provision of the writ; it is a fact about the concern’s standards, and the writ declines to apologise for either.',
+    'Below the line at eighteen hundred metres, a hull spends four points a second of what does not heal. The root run is roughly thirty seconds below the line, driven clean. The barge is three hundred points. The arithmetic is stated so that nobody performs it for the first time under the overhang.',
+    'Two hundred and forty berths were occupied in Vayle at the alarm. The evacuation proceeds and will not finish. The root carries the Holding, which carries the count you already know, because everyone does.',
+    'The writ funds the pour, the escort, and one delivery. It does not state a preference. The Board has considered whether that is a mercy or an abdication and has minuted the question without resolving it.',
+    'The Chair is on the channel. Exposure is authorised. Sentiment is not. Signed for the Board.',
+  ],
+};
+
 export const SEEDING_TEND_HEADER: MissionHeader = {
   id: 'seeding-tend',
   campaign: 'seeding',
@@ -231,6 +256,7 @@ export const MISSION_HEADERS: readonly MissionHeader[] = [
   LEDGER_SHIFT_CHANGE_HEADER,
   LEDGER_BAFFLE_HEADER,
   LEDGER_EXPOSURE_HEADER,
+  LEDGER_TOLERANCE_HEADER,
   SEEDING_TEND_HEADER,
   ATTENDING_ATTENDANCE_HEADER,
 ];

@@ -560,6 +560,18 @@ export interface MissionConditionalBeat {
   when: MissionPredicate;
   /** Fired in list order, exactly as scheduled beats fire in beat order. */
   beats: readonly MissionActionBeat[];
+  /**
+   * Conditionals retired when this one fires, by id — never to fire, whatever
+   * their predicates later hold.
+   *
+   * docs/mission-tolerance.md §6 is the row that needed it: one casting, two
+   * apertures, and each delivery retires the other's announcement. Without
+   * it, a player who set the casting and then drove the spent barge through
+   * the second aperture's water would hear the Chair enter an order nobody
+   * gave. Exclusivity is a fact about the choice, so it is authored on the
+   * choice rather than guessed at by the runtime.
+   */
+  cancels?: readonly string[];
   note: string;
 }
 

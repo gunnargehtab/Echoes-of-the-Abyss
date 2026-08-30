@@ -561,6 +561,20 @@ export class MissionRuntime {
         return;
       }
       case 'objective':
+        // A beat never fails an objective the player has met —
+        // `deriveObjectives`' own invariant, held against beats too: reaching
+        // the aperture is a thing that happened, and un-happening it would
+        // rewrite the player's history. The case is real, not defensive:
+        // docs/mission-tolerance.md §6 fires "the other aperture fails" off
+        // each delivery, and a player who sets the casting and then drives
+        // the empty barge through the second aperture's water would
+        // otherwise trip the mirror conditional and lose the seal they set.
+        if (
+          beat.status === ObjectiveStatus.Failed &&
+          this.statuses.get(beat.id) === ObjectiveStatus.Met
+        ) {
+          return;
+        }
         this.statuses.set(beat.id, beat.status);
         return;
       case 'say':
@@ -609,6 +623,12 @@ export class MissionRuntime {
       );
       if (!met) continue;
       this.firedConditionals.add(conditional.id);
+      // Retire what this one cancels before firing anything, so a beat this
+      // conditional fires cannot race the mirror it is retiring (types.ts,
+      // `cancels`).
+      for (const cancelled of conditional.cancels ?? []) {
+        this.firedConditionals.add(cancelled);
+      }
       for (const beat of conditional.beats) {
         this.fire(world, sink, {
           ...beat,

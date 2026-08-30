@@ -18,6 +18,7 @@ import { VENTFRONT_DIVIDE } from './ventfrontDivide.ts';
 import { ATTENDING_GALLERIES } from './missions/attendingGalleries.ts';
 import { FIRST_TRENCH_MARGIN } from './missions/firstTrenchMargin.ts';
 import { FOURTH_TRENCH } from './missions/fourthTrench.ts';
+import { HOLDING_UNDERWORKS } from './missions/holdingUnderworks.ts';
 import { MARR_PLATEAU } from './missions/marrPlateau.ts';
 import { NINEFOLD_FACE_SIX } from './missions/ninefoldFaceSix.ts';
 import { NINEFOLD_WORKINGS } from './missions/ninefoldWorkings.ts';
@@ -30,6 +31,7 @@ export {
   ATTENDING_GALLERIES,
   FIRST_TRENCH_MARGIN,
   FOURTH_TRENCH,
+  HOLDING_UNDERWORKS,
   KELP_LABYRINTH,
   MARR_PLATEAU,
   NINEFOLD_FACE_SIX,
@@ -70,6 +72,7 @@ export const MISSION_MAPS: readonly MapDefinition[] = [
   NINEFOLD_WORKINGS,
   FOURTH_TRENCH,
   FIRST_TRENCH_MARGIN,
+  HOLDING_UNDERWORKS,
   MARR_PLATEAU,
   ATTENDING_GALLERIES,
 ];

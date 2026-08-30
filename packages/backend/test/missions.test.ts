@@ -335,11 +335,27 @@ describe('the beat schedule', () => {
       const conditionals = mission.conditionalBeats ?? [];
       const ids = conditionals.map((conditional) => conditional.id);
       assert.equal(new Set(ids).size, ids.length, `${mission.id}: duplicate conditional id`);
+      const conditionalIds = new Set(ids);
       for (const conditional of conditionals) {
         assert.ok(
           conditional.beats.length > 0,
           `${mission.id}: conditional "${conditional.id}" fires nothing`
         );
+        for (const cancelled of conditional.cancels ?? []) {
+          // A cancel of an unauthored id is a retirement that never happens —
+          // the mirror fires anyway, and the Chair enters an order nobody
+          // gave (types.ts, `cancels`).
+          assert.ok(
+            conditionalIds.has(cancelled),
+            `${mission.id}: conditional "${conditional.id}" cancels "${cancelled}", ` +
+              'which is not authored'
+          );
+          assert.notEqual(
+            cancelled,
+            conditional.id,
+            `${mission.id}: conditional "${conditional.id}" cancels itself`
+          );
+        }
         for (const beat of conditional.beats) {
           if (beat.kind === 'creature') {
             assert.ok(
