@@ -409,7 +409,58 @@ glyph, the far-zoom readability scale, the sour-exposure audio cue — and one n
 real-GPU / Termux wall-clock validation owed since Phase 1 now covers the composited
 two-canvas frame, not just the GL pass.
 
-**Settled since:** the far-zoom readability scale. The rule of record is
+### After the switch — debts settled
+
+**The honest column glyph.** The Phase-4 and Phase-5 records both carried "the honest
+column glyph is owed". It is paid: a contact the player has earned no depth for is no
+longer parked at the 600 m reference, and `UNRESOLVED_CONTACT_DEPTH_M` is gone with it.
+
+The mark is now a statement about the **water column** rather than a point in it. At the
+contact's plan position — still tier-capped, still blurred at Tier 2, still the
+*listener's* own position at Tier 1 — the glyph is a soft vertical presence spanning the
+water a hull could actually hold in: the Lid at the top ([systems-depth.md](systems-depth.md)
+§2), the seabed under that position at the bottom, both projected through the one camera
+like any other measurement, so a column over a trench is drawn tall and a column over a
+plateau is drawn short. That difference is information the player earned — how much water
+the contact could be hiding in — rather than the fixed height the reference used to draw
+everywhere.
+
+Three things the shape had to avoid, and how ([art-direction.md](art-direction.md), the
+fidelity principle; [graphics-standards.md](graphics-standards.md) gates 5 and 8):
+
+- **No hairline.** The obvious drawing — a thin vertical line with the tier smudge riding
+  it — reports the plan position to the pixel, which is a precision neither tier carried
+  and which at Tier 1 would be pointing at the player's own listener. The column is drawn
+  as nested soft ribbons instead, the widest exactly the tier's own uncertainty radius, so
+  the mark is never narrower than the position is uncertain.
+- **No taper, no bulge.** A column bright in the middle says "probably mid-water" — the
+  600 m lie told softly. The ribbons hold one width and one alpha end to end, the only
+  shaping being a short taper *at* the Lid and the seabed, which is a claim about those
+  two boundaries rather than about the water between them.
+- **Quieter than an earned track.** The ribbons' composite alpha lands under the tier's
+  own flat-blob alpha, which is already far under a Tier-4 track's; the fidelity encoding
+  in `TIER_SHAPE` is untouched, and only the height claim was dropped.
+
+The symbol still billboards, at the column's middle sample rather than at a chosen depth,
+so the anchor is a consequence of the span instead of a claim about a place. The column is
+drawn in true metres and takes no part in the readability scale below: that factor is ink
+*about an own hull*, and this measures water, exactly like a range ring. Aim follows the
+drawing, per Phase 5's screen-space rule: the whole column is the click target, so a
+Tier-2 contact is attacked where it is *drawn* rather than at a height nothing was ever
+drawn at. The layout is pure arithmetic in `contactColumn.ts` and node-tested; the pixels
+are reviewed by screenshot, as the graphics checklist requires.
+
+One incidental fix rode along, because the column made it load-bearing: `projectPoint`
+reaches the ground on every null-depth vertex, and `groundYAt` was recomputing the terrain
+seed and the rock-top scan — both O(cells) — per call. They are cached per terrain now and
+refreshed where the ground changes.
+
+Review screenshots live in `docs/screenshots/issue-283/`: the midfield fight with several
+columns standing in the water, one column at detail, and — for the comparison the record is
+owed — the same fight under the old reference, where the unresolved marks are grey discs
+hanging at one height over ground that is nowhere near them.
+
+**The far-zoom readability scale.** The rule of record is
 [art-direction.md](art-direction.md) "Far-zoom readability scale — SPEC": one view-wide
 factor, taken from the dolly distance, that draws the fleet larger than the ground as the
 camera pulls back — exactly 1 at close zoom, capped at 4×, and render-only, so the
@@ -419,6 +470,9 @@ the factor measured 1 at a 1,200 m and a 2,800 m dolly, 2.1 at 6,000 m and the 4
 no console errors — the scale is a transform on geometry already in the scene, not more
 of it. Before-and-after pairs at both survey distances, plus the close-zoom frame where
 the factor is 1, live in `docs/screenshots/issue-284/`.
+
+Debts still carried: the sour-exposure audio cue, and the real-GPU / Termux wall-clock
+validation.
 
 ## 10. Open questions
 

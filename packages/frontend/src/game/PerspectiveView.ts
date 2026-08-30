@@ -96,16 +96,6 @@ const FOV_DEG = 40;
  * floor (graphics-standards.md gate 6). */
 const MAX_PIXEL_RATIO = 1.5;
 
-/**
- * Where a contact with no earned depth is drawn, in metres. Below Tier 3 the
- * server sends no depth, and a 3D projection cannot draw "somewhere in this
- * column" without picking a height — the flat chart never had to. A stable,
- * deliberately arbitrary reference; the honest column glyph is still owed.
- * Exported because the overlay painter (EchoRenderer) projects through the
- * same convention.
- */
-export const UNRESOLVED_CONTACT_DEPTH_M = 600;
-
 /** What `projectPoint` hands the overlay painter: a screen position, the
  * local scale (for symbol sizing and stroke parity), and visibility. */
 export interface ProjectedPoint {
@@ -173,6 +163,17 @@ export class PerspectiveView {
   private drawScale = 1;
 
   private terrain: TerrainPayload | null = null;
+  /**
+   * The two whole-map scans `seabedDepthAtM` needs, cached per terrain.
+   *
+   * Both are O(cells), and `projectPoint` reaches the ground on every
+   * null-depth vertex — every range-ring segment, every hazard site, and now
+   * every unresolved contact's column. Recomputing them per vertex put a
+   * full terrain scan inside the 60 Hz path; they only change when the ground
+   * does, which is `setTerrain` and `applyGround` and nowhere else.
+   */
+  private groundSeed = 0;
+  private groundRockTopM = 0;
   private terrainMesh: Mesh | null = null;
   private readonly terrainDressing = new Group();
   private embers: Points | null = null;
@@ -273,6 +274,7 @@ export class PerspectiveView {
       floor: [...terrain.floor],
       ceiling: [...terrain.ceiling],
     };
+    this.refreshGroundCache();
     this.fitToMap();
     this.rebuildTerrain();
   }
@@ -288,6 +290,7 @@ export class PerspectiveView {
       terrain.ceiling[cell.index] = cell.ceilingM;
       terrain.biomes[cell.index] = cell.biome;
     }
+    this.refreshGroundCache();
     this.rebuildTerrain();
   }
 
@@ -693,12 +696,30 @@ export class PerspectiveView {
     this.emberBucket = -1;
   }
 
-  private groundYAt(xM: number, zM: number): number {
+  private refreshGroundCache(): void {
+    const terrain = this.terrain;
+    if (terrain === null) return;
+    this.groundSeed = seabedSeed(terrain);
+    this.groundRockTopM = rockTopDepthM(terrain);
+  }
+
+  /**
+   * How much water stands over this patch of ground, in metres.
+   *
+   * The conn view owns the ground, so the overlay painter asks it rather than
+   * running the heightfield a second time — the same rule `projectPoint` and
+   * `resolveGround` follow. 0 before a terrain arrives, which reads as "no
+   * column here" to the one caller that needs it.
+   */
+  seabedDepthAt(xM: number, yM: number): number {
     const terrain = this.terrain;
     if (terrain === null) return 0;
-    return depthToWorldY(
-      seabedDepthAtM(terrain, seabedSeed(terrain), rockTopDepthM(terrain), xM, zM)
-    );
+    return seabedDepthAtM(terrain, this.groundSeed, this.groundRockTopM, xM, yM);
+  }
+
+  private groundYAt(xM: number, zM: number): number {
+    if (this.terrain === null) return 0;
+    return depthToWorldY(this.seabedDepthAt(xM, zM));
   }
 
   private spriteTexture(key: string, canvas: HTMLCanvasElement): CanvasTexture {
