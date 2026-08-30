@@ -111,6 +111,13 @@ export interface RosterModelInstance {
   lengthM: number;
   beamM: number;
   heightM: number;
+  /**
+   * The canonicalisation's own scale, already applied to `root`. A caller that
+   * wants to draw the hull off true scale — the far-zoom readability factor
+   * (readability.ts) is the only one — must multiply *this*, not read
+   * `root.scale`, which it is itself about to overwrite.
+   */
+  baseScale: number;
 }
 
 interface Template {
@@ -118,6 +125,7 @@ interface Template {
   lengthM: number;
   beamM: number;
   heightM: number;
+  baseScale: number;
 }
 
 const loader = new GLTFLoader();
@@ -230,6 +238,7 @@ function normalise(scene: Group, key: RosterModelKey): Template {
     lengthM: yawedSize.x * scale,
     beamM: yawedSize.z * scale,
     heightM: yawedSize.y * scale,
+    baseScale: scale,
   };
 }
 
@@ -326,6 +335,7 @@ export function rosterModelInstance(key: RosterModelKey): RosterModelInstance | 
     lengthM: template.lengthM,
     beamM: template.beamM,
     heightM: template.heightM,
+    baseScale: template.baseScale,
   };
 }
 

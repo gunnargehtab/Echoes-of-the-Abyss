@@ -1182,6 +1182,17 @@ export class EchoRenderer {
     return this.conn?.projectPoint(xM, yM, depthM) ?? null;
   }
 
+  /**
+   * How much larger than true scale the conn view is drawing own hulls and
+   * structures (docs/art-direction.md "Far-zoom readability scale"). Only ink
+   * *about* an own entity may read it; anything that measures water — range
+   * rings, ping previews, aim reach — stays on true metres, which is why this
+   * is a separate call and not folded into `project`.
+   */
+  private hullDrawScale(): number {
+    return this.conn?.hullDrawScale() ?? 1;
+  }
+
   /** The depth a contact is drawn at: earned, or the stable reference. */
   private contactDepth(contact: Contact): number {
     return contact.depth ?? UNRESOLVED_CONTACT_DEPTH_M;
@@ -3258,7 +3269,9 @@ export class EchoRenderer {
       g.scale.set(p.pxPerM);
       const inverseScale = 1 / p.pxPerM;
 
-      const radius = structureStatsFor(structure.kind).radiusM;
+      // Same readability factor the conn view draws the architecture at, for
+      // the same reason it applies to a hull's ink.
+      const radius = structureStatsFor(structure.kind).radiusM * this.hullDrawScale();
       const isSelected = this.selected.has(structure.id);
       const building = structure.buildProgress < 1;
       const alpha = building ? 0.35 : 0.9;
@@ -3972,7 +3985,12 @@ export class EchoRenderer {
       g.scale.set(p.pxPerM);
       const inverseScale = 1 / p.pxPerM;
 
-      const radius = HULL_LENGTH_M[unit.kind] / 2;
+      // The conn view may be drawing the hull larger than true scale at survey
+      // zoom (docs/art-direction.md "Far-zoom readability scale"), and ink that
+      // captions a hull has to track the figure it captions — a selection ring
+      // inside its own hull is worse than no ring. Aim never reads this; the
+      // reach floors below are deliberately still in true metres.
+      const radius = (HULL_LENGTH_M[unit.kind] / 2) * this.hullDrawScale();
       const isSelected = this.selected.has(unit.id);
 
       if (isSelected) {
@@ -4006,7 +4024,7 @@ export class EchoRenderer {
       const broke = this.brokeSilence.get(unit.id);
       if (broke !== undefined) {
         const t = (now - broke) / BREAK_SILENCE_FLASH_MS;
-        g.circle(0, 0, HULL_LENGTH_M[unit.kind] * (1 + t * 3)).stroke({
+        g.circle(0, 0, radius * 2 * (1 + t * 3)).stroke({
           width: 2 * inverseScale,
           color: UI.threat,
           alpha: (1 - t) * 0.8,

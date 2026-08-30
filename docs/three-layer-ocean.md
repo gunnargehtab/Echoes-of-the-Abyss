@@ -409,6 +409,17 @@ glyph, the far-zoom readability scale, the sour-exposure audio cue — and one n
 real-GPU / Termux wall-clock validation owed since Phase 1 now covers the composited
 two-canvas frame, not just the GL pass.
 
+**Settled since:** the far-zoom readability scale. The rule of record is
+[art-direction.md](art-direction.md) "Far-zoom readability scale — SPEC": one view-wide
+factor, taken from the dolly distance, that draws the fleet larger than the ground as the
+camera pulls back — exactly 1 at close zoom, capped at 4×, and render-only, so the
+simulation, collision, range rings and aim reach never read it. On the 1440×900 harness
+the factor measured 1 at a 1,200 m and a 2,800 m dolly, 2.1 at 6,000 m and the 4× cap at
+12,000 m, with the composited frame unchanged at **47 draw calls / ~50 k triangles** and
+no console errors — the scale is a transform on geometry already in the scene, not more
+of it. Before-and-after pairs at both survey distances, plus the close-zoom frame where
+the factor is 1, live in `docs/screenshots/issue-284/`.
+
 ## 10. Open questions
 
 Parked here as plain text until decided; none blocks Phase 1.

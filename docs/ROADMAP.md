@@ -244,14 +244,14 @@ system doing its job.
 | Work | Issue |
 | --- | --- |
 | The honest column glyph — contacts below Tier 3 hover at a 600 m reference nobody earned | [#283](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/283) |
-| A far-zoom readability scale — hulls at true metre scale vanish at survey zoom (gate 7) | [#284](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/284) |
+| ~~A far-zoom readability scale — hulls at true metre scale vanish at survey zoom (gate 7)~~ — **settled**, [art-direction.md](art-direction.md) "Far-zoom readability scale" | [#284](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/284) |
 | An audio cue for sour exposure — [audio-direction.md](audio-direction.md) decides the channel first | [#285](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/285) |
 | Wall-clock validation of the composited frame on a real GPU and the Termux floor | [#286](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/286) |
 
 **Three kinds of debt, worth keeping distinct.** The first two are honesty of
 presentation: a mark that implies a depth the tier never carried, and a readability rule
-([graphics-standards.md](graphics-standards.md) gate 7) the true-scale models currently
-fail at survey zoom. The third is the parity rule — the Lid bleeds unrecoverable hull in
+([graphics-standards.md](graphics-standards.md) gate 7) the true-scale models failed at
+survey zoom until the far-zoom scale answered it. The third is the parity rule — the Lid bleeds unrecoverable hull in
 silence, and [audio-direction.md](audio-direction.md) §11 makes a visible fact with no
 audible equivalent a bug in a game whose primary channel is the mix. The fourth is
 measurement: every frame-time number in the phase records prices SwiftShader in a
