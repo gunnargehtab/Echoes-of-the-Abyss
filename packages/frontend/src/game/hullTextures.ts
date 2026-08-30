@@ -66,6 +66,13 @@ const MARGIN_PX = 10;
 const artImages = new Map<UnitKind, HTMLImageElement>();
 let artLoaded = false;
 
+/**
+ * Two caches over one bake: the canvas is the artwork, the Texture is Pixi's
+ * handle on it. The perspective viewport (PerspectiveView.ts) consumes the
+ * canvas directly — same bake, same pixels, different renderer — which is what
+ * keeps the chart and the 3D view from drifting into different-looking navies.
+ */
+const bakedCanvas = new Map<string, HTMLCanvasElement>();
 const baked = new Map<string, Texture>();
 
 /** Decode every hull patch. Failure is non-fatal: units fall back to vectors. */
@@ -124,27 +131,44 @@ export function hullSpriteSizeM(
  * Bakes lazily and caches: a match only ever touches one faction's five hulls.
  */
 export function hullTexture(kind: UnitKind, faction: Faction): Texture | null {
-  if (!artLoaded) return null;
-  // The palette is part of the key: a colour-vision palette recolours the
-  // faction's primary (docs/ui-ux.md §11), and a cache that ignored it would
-  // keep serving the sprite baked in the ink the player just switched away
-  // from. Four palettes x one faction x five hulls is still a handful.
+  const canvas = hullSpriteCanvas(kind, faction);
+  if (canvas === null) return null;
   const key = `${kind}:${faction}:${ACTIVE_PALETTE.name}`;
   let texture = baked.get(key);
   if (texture === undefined) {
-    texture = bake(kind, faction);
+    texture = Texture.from(canvas);
     baked.set(key, texture);
   }
   return texture;
+}
+
+/**
+ * The baked artwork itself, for renderers that are not Pixi. Same cache
+ * discipline as the texture: lazy, and keyed by palette because a
+ * colour-vision palette recolours the faction's primary (docs/ui-ux.md §11) —
+ * a cache that ignored it would keep serving the sprite baked in the ink the
+ * player just switched away from. Four palettes x one faction x five hulls is
+ * still a handful.
+ */
+export function hullSpriteCanvas(kind: UnitKind, faction: Faction): HTMLCanvasElement | null {
+  if (!artLoaded) return null;
+  const key = `${kind}:${faction}:${ACTIVE_PALETTE.name}`;
+  let canvas = bakedCanvas.get(key);
+  if (canvas === undefined) {
+    canvas = bake(kind, faction);
+    bakedCanvas.set(key, canvas);
+  }
+  return canvas;
 }
 
 /** Free the baked textures; safe to call once at renderer teardown. */
 export function destroyHullTextures(): void {
   for (const texture of baked.values()) texture.destroy(true);
   baked.clear();
+  bakedCanvas.clear();
 }
 
-function bake(kind: UnitKind, faction: Faction): Texture {
+function bake(kind: UnitKind, faction: Faction): HTMLCanvasElement {
   const map = hullMap(kind, faction);
   if (map !== null) return bakeFromModel(faction, map);
   return bakeProcedural(kind, faction);
@@ -155,11 +179,11 @@ function bake(kind: UnitKind, faction: Faction): Texture {
  * the work; the one hull-specific mark is the red bow light, which structures
  * do not carry — a building has no heading.
  */
-function bakeFromModel(faction: Faction, map: HullMap): Texture {
+function bakeFromModel(faction: Faction, map: HullMap): HTMLCanvasElement {
   const canvas = bakeModelSprite(faction, map, MARGIN_PX);
   const ctx = canvas.getContext('2d')!;
   drawBowLight(ctx, canvas.width / 2 + 0.44 * map.widthPx, canvas.height / 2);
-  return Texture.from(canvas);
+  return canvas;
 }
 
 /** The bow running light every navy carries: heading, readable at a glance. */
@@ -169,7 +193,7 @@ function drawBowLight(ctx: CanvasRenderingContext2D, x: number, y: number): void
   ctx.globalCompositeOperation = 'source-over';
 }
 
-function bakeProcedural(kind: UnitKind, faction: Faction): Texture {
+function bakeProcedural(kind: UnitKind, faction: Faction): HTMLCanvasElement {
   const lengthPx = HULL_LENGTH_M[kind] * PX_PER_M;
   const halfBeamPx = halfBeamFraction(kind) * lengthPx;
   const w = Math.ceil(lengthPx + 2 * MARGIN_PX);
@@ -229,7 +253,7 @@ function bakeProcedural(kind: UnitKind, faction: Faction): Texture {
 
   drawAccents(ctx, kind, faction, cx, cy, lengthPx);
 
-  return Texture.from(canvas);
+  return canvas;
 }
 
 /**

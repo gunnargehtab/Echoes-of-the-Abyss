@@ -66,6 +66,8 @@ const MARGIN_PX = 10;
 const artImages = new Map<StructureKind, HTMLImageElement>();
 let artLoaded = false;
 
+/** Canvas beside Texture, exactly as hullTextures.ts keeps them, and why. */
+const bakedCanvas = new Map<string, HTMLCanvasElement>();
 const baked = new Map<string, Texture>();
 
 /** Decode the plating patches. Failure is non-fatal: scaffolding stays up. */
@@ -134,21 +136,42 @@ export function structureSpriteSizeM(
  * Bakes lazily and caches: a match only ever touches one faction's four.
  */
 export function structureTexture(kind: StructureKind, faction: Faction): Texture | null {
-  if (!artLoaded) return null;
-  // Keyed by palette as well, for the reason hullTextures.ts gives.
+  const canvas = structureSpriteCanvas(kind, faction);
+  if (canvas === null) return null;
   const key = `${kind}:${faction}:${ACTIVE_PALETTE.name}`;
   let texture = baked.get(key);
   if (texture === undefined) {
-    texture = bake(kind, faction);
+    texture = Texture.from(canvas);
     baked.set(key, texture);
   }
   return texture;
+}
+
+/**
+ * The baked artwork itself, for renderers that are not Pixi — the same
+ * canvas-level door hullTextures.ts opens, for the same consumer
+ * (PerspectiveView.ts). Keyed by palette as well, for the reason
+ * hullTextures.ts gives.
+ */
+export function structureSpriteCanvas(
+  kind: StructureKind,
+  faction: Faction
+): HTMLCanvasElement | null {
+  if (!artLoaded) return null;
+  const key = `${kind}:${faction}:${ACTIVE_PALETTE.name}`;
+  let canvas = bakedCanvas.get(key);
+  if (canvas === undefined) {
+    canvas = bake(kind, faction);
+    bakedCanvas.set(key, canvas);
+  }
+  return canvas;
 }
 
 /** Free the baked textures; safe to call once at renderer teardown. */
 export function destroyStructureTextures(): void {
   for (const texture of baked.values()) texture.destroy(true);
   baked.clear();
+  bakedCanvas.clear();
 }
 
 /** A spherical-cap dome profile added onto the base height, clamped to 0..1. */
@@ -176,15 +199,15 @@ function addDome(
   }
 }
 
-function bake(kind: StructureKind, faction: Faction): Texture {
+function bake(kind: StructureKind, faction: Faction): HTMLCanvasElement {
   // Model-backed when a model exists; buildings carry no bow light, so the
   // shared bake's output is the finished sprite.
   const map = structureMap(kind, faction);
-  if (map !== null) return Texture.from(bakeModelSprite(faction, map, MARGIN_PX));
+  if (map !== null) return bakeModelSprite(faction, map, MARGIN_PX);
   return bakeProcedural(kind, faction);
 }
 
-function bakeProcedural(kind: StructureKind, faction: Faction): Texture {
+function bakeProcedural(kind: StructureKind, faction: Faction): HTMLCanvasElement {
   const r = structureStatsFor(kind).radiusM * PX_PER_M;
   const { hx, hy } = halfExtentsM(kind);
   const w = Math.ceil(2 * hx * PX_PER_M + 2 * MARGIN_PX);
@@ -346,7 +369,7 @@ function bakeProcedural(kind: StructureKind, faction: Faction): Texture {
 
   drawGlow(ctx, kind, faction, cx, cy, r);
 
-  return Texture.from(canvas);
+  return canvas;
 }
 
 /**

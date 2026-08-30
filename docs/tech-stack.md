@@ -7,7 +7,8 @@ For a browser-based RTS (PC-first), the stack needs to give high performance for
 ### Frontend
 
 - TypeScript
-- PixiJS (rendering)
+- PixiJS (rendering — the chart and HUD)
+- three.js (rendering — the perspective conn view, [three-layer-ocean.md](three-layer-ocean.md) Phase 1)
 - bitecs (ECS)
 - Howler.js (audio)
 - Optional: React for menus/lobby
