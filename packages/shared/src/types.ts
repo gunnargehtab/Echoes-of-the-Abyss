@@ -434,6 +434,20 @@ export interface OwnUnit {
    */
   depthOrder?: number;
   /**
+   * True while the hull is under the floor-following standing order
+   * (docs/systems-depth.md §2). The player's own mode coming back to them:
+   * the ribbon marker reports where the hull is, this explains why that
+   * keeps changing.
+   */
+  followFloor?: boolean;
+  /**
+   * Seconds of sour exposure accrued in the Lid, present while any is
+   * (docs/systems-depth.md §2). Up to LID.GRACE_S the card counts the grace
+   * down; at the cap the hull is bleeding. Own information only — it says
+   * nothing about anyone else's water.
+   */
+  sourS?: number;
+  /**
    * Pressure Rating currently granted by an aura, on top of the hull's own
    * (docs/systems-depth.md §3, the Sounding Spire). Sent so the HUD can show
    * a rented rating as rented — it vanishes the moment the unit leaves.

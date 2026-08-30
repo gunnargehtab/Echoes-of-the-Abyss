@@ -71,7 +71,8 @@ Depth Bands
 The Lid
 
 - The Rift's name for the sour surface layer: roughly the top 150 m of the ocean, poisoned since the Salinity Collapse and stable ever since (world.md). *Sour* is the old industry word for sulfide-laden water, and it is the word that survived.
-- Lore, not a mechanic: no map authors playable water inside it and no rule needs to forbid it. Distinct from the Directorate's shallow-water penalty, which is their own physiology above 400 m and theirs alone (factions.md).
+- A mechanic since the three-layer-ocean revision (three-layer-ocean.md §7): a hull above 150 m runs a sour timer — 20 s of grace, then unhealable bleed on the crush ledger at 1% of max hull per second, until it descends below the Lid and recovers. Universal and faction-blind; the column is hostile at both ends, crush below and sour above (systems-depth.md §2).
+- Distinct from the Directorate's shallow-water penalty, which is their own physiology above 400 m and theirs alone (factions.md); the two stack for a Directorate hull in the Lid.
 
 Floor (seabed)
 

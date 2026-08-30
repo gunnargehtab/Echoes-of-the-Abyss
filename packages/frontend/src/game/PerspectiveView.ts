@@ -9,10 +9,11 @@
  * tier-capped smudges. A WC3-lineage camera looks down and along at a fixed
  * pitch; yaw is locked, per the no-rotation rule the revision kept.
  *
- * What this deliberately is NOT yet: an order surface. Clicking a hull
- * highlights it — resolved through its outline volume, never its fins — but
- * the verbs and the HUD stay on the chart until Phase 3; this view pans,
- * zooms, and shows the water as a place.
+ * Phase 3 opens the first verb: clicking a hull highlights it — resolved
+ * through its outline volume, never its fins — and a right-click moves the
+ * highlighted unit, through the same channel the chart's RMB uses. The rest
+ * of the verbs and the HUD stay on the chart until Phase 5 makes this view
+ * the default.
  *
  * Rules carried over intact from the chart, because a renderer change must
  * never be a rules change:
@@ -166,6 +167,14 @@ function outlineHalfBeam(outline: readonly (readonly number[])[]): number {
   return max;
 }
 
+export interface PerspectiveCallbacks {
+  /**
+   * A move order from the conn view — the same channel the chart's RMB uses,
+   * so the server cannot tell which view a player prefers.
+   */
+  onMoveOrder(unitIds: number[], x: number, y: number, queued: boolean): void;
+}
+
 export class PerspectiveView {
   private renderer: WebGLRenderer | null = null;
   private readonly scene = new Scene();
@@ -218,7 +227,7 @@ export class PerspectiveView {
   private frameCostMs: number[] = [];
   private worstFrameMs = 0;
 
-  constructor() {
+  constructor(private readonly callbacks: PerspectiveCallbacks) {
     this.scene.add(this.nodeGroup, this.unitGroup, this.structureGroup, this.contactGroup);
     this.scene.background = new Color(UI.background);
 
@@ -865,7 +874,11 @@ export class PerspectiveView {
       this.clampTarget();
     });
     canvas.addEventListener('pointerup', (e) => {
-      if (panning && !dragged) this.pickAt(e.clientX, e.clientY, canvas);
+      if (panning && !dragged) {
+        // Chart grammar, conn camera: LMB picks, RMB orders.
+        if (e.button === 2) this.orderAt(e.clientX, e.clientY, canvas);
+        else this.pickAt(e.clientX, e.clientY, canvas);
+      }
       panning = false;
     });
     canvas.addEventListener('pointercancel', () => {
@@ -917,6 +930,19 @@ export class PerspectiveView {
       };
     }
     this.updateSelectionRing();
+  }
+
+  /**
+   * Phase 3's one verb: move the highlighted unit to the clicked ground.
+   * Units only — a structure cannot be sent anywhere — and only through the
+   * chart's own callback, so this view never grows a second order channel.
+   */
+  private orderAt(clientX: number, clientY: number, canvas: HTMLCanvasElement): void {
+    const selected = this.selected;
+    if (selected === null || selected.kind !== 'unit') return;
+    const point = this.groundPointAt(clientX, clientY, canvas);
+    if (point === null) return;
+    this.callbacks.onMoveOrder([selected.id], point.x, point.z, false);
   }
 
   /** Keep the highlight on its hull, and drop it the moment the hull is gone. */

@@ -541,6 +541,16 @@ export class GameClient {
     this.room?.send('depth', { unitIds, depth });
   }
 
+  /**
+   * Arm or disarm floor-following — the standing order of
+   * docs/systems-depth.md §2. The server owns the retargeting, the PR
+   * disengage, and the dive loudness; this only speaks the mode.
+   */
+  setFollowFloor(unitIds: number[], active: boolean): void {
+    if (unitIds.length === 0) return;
+    this.room?.send('followFloor', { unitIds, active });
+  }
+
   /** The big red button. Cost is previewed in the HUD before this is called. */
   activeSonar(unitId: number): void {
     this.room?.send('ping', { unitId });

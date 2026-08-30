@@ -23,9 +23,9 @@
  * mechanic, not a mistake to be prevented.
  */
 
-import { defineQuery } from 'bitecs';
-import { DEPTH } from '@echoes/shared';
-import { DepthOrder, Position } from '../components.ts';
+import { defineQuery, hasComponent } from 'bitecs';
+import { crushAttritionPerSecond, DEPTH, FOLLOW_FLOOR } from '@echoes/shared';
+import { DepthOrder, Position, Pressure, SilentRunning } from '../components.ts';
 import type { SimWorld } from '../world.ts';
 
 const diving = defineQuery([Position, DepthOrder]);
@@ -36,6 +36,10 @@ export function depthSystem(world: SimWorld): void {
 
   for (let i = 0; i < entities.length; i++) {
     const eid = entities[i]!;
+
+    // The standing order retargets before the travel below reads the order,
+    // so a follow leg moves on the same tick the ground changed under it.
+    if (DepthOrder.follow[eid] === 1) followTheFloor(world, eid);
 
     const wasAtM = Position.depth[eid]!;
 
@@ -66,6 +70,55 @@ export function depthSystem(world: SimWorld): void {
     Position.depth[eid] = current + (descending ? step : -step);
     DepthOrder.descending[eid] = descending ? 1 : 0;
     holdAgainstGround(world, eid, dt, wasAtM);
+  }
+}
+
+/**
+ * The standing half of docs/systems-depth.md §2, "Steering along the ground":
+ * hold the hull a fixed clearance above whatever ground is under it, by
+ * rewriting its depth order from the local floor each tick and letting the
+ * ordinary travel below do the moving — same rates, same `descending` flag,
+ * and therefore exactly a dive's loudness when the ground falls away.
+ *
+ * Two rules from the doc, enforced here because this is the only writer:
+ *
+ * - **Ground below the hull's rating disengages the mode.** A standing order
+ *   that rode into crush attrition would be the seabed spending the player's
+ *   hull on their behalf — the exact thing this file's other half exists to
+ *   prevent. The hull holds its depth and the mode switches off; the payload
+ *   flag disappearing is how the card says why it stopped.
+ * - **A follow descent is a dive.** It breaks Silent Running the way a manual
+ *   dive order does (`Match.applyDepth`), because entering the mode was the
+ *   player's commitment and its dives are exactly as loud as dives are.
+ *
+ * In a roofed passage the clearance may not fit; the hull holds at the
+ * ceiling rather than above it, because above it is rock.
+ */
+function followTheFloor(world: SimWorld, eid: number): void {
+  const x = Position.x[eid]!;
+  const y = Position.y[eid]!;
+  const floor = world.terrain.floorAt(x, y);
+  const ceiling = world.terrain.ceilingAt(x, y);
+  const target = Math.max(ceiling, floor - FOLLOW_FLOOR.CLEARANCE_M);
+
+  if (hasComponent(world, Pressure, eid)) {
+    const rating = Pressure.rating[eid]! + Pressure.bonus[eid]!;
+    if (crushAttritionPerSecond(rating, target) > 0) {
+      DepthOrder.follow[eid] = 0;
+      DepthOrder.active[eid] = 0;
+      return;
+    }
+  }
+
+  // Retarget only past the arrival epsilon: the travel below snaps and clears
+  // `active` on arrival, and re-arming it every tick for a station the hull
+  // already keeps would flicker the order in the player's own payload.
+  if (Math.abs(target - Position.depth[eid]!) <= DEPTH.ARRIVAL_EPSILON_M) return;
+
+  DepthOrder.targetM[eid] = target;
+  DepthOrder.active[eid] = 1;
+  if (target > Position.depth[eid]! && hasComponent(world, SilentRunning, eid)) {
+    SilentRunning.active[eid] = 0;
   }
 }
 

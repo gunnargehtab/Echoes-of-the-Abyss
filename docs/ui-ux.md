@@ -187,6 +187,8 @@ The vertical axis needs permanent, glanceable representation ([systems-depth.md]
 - **PR badge** — each unit carries its Pressure Rating; when it is under-rated for its current depth the badge inverts and pulses.
 - **Hull the deep keeps must not look like damage.** Crush attrition below a unit's Pressure Rating, and the shallow-water poisoning that costs the Directorate 15% above 400 m, both ignore repair, so they render differently: the lost portion of the health bar is hatched and does not refill, making the permanence visible rather than discovered later. One hatch for both, because the player asks one question of it — how much of this bar is gone for good.
 - **Descent and ascent** — descending shows the SIG cost as a live spike on the meter; ascending shows a time-to-surface estimate, because the ascent is the part players underestimate.
+- **The Lid is drawn as what it is** — the ribbon's top 150 m carries a threat-red hatch ([systems-depth.md](systems-depth.md) §2, [world.md](world.md)): sour water, priced for everyone. A selected hull inside it shows its sour state on the card — `SOUR 12s` counting down the grace in amber, then `SOUR — BLEEDING` in threat red once the water starts keeping the hull. The countdown is the player's own timer on their own hull; it reveals nothing about anyone else.
+- **Floor-following reads as a mode, not a depth** — a hull under the standing order shows `FOLLOWING FLOOR` on its card and keeps its ribbon marker, because the marker reports where the hull *is* while the mode explains why that keeps changing. Disengaging at the PR edge (§2's rule) flips the card to the PR badge's warning register, so a hull that stopped following says why it stopped.
 
 Implemented in the client scaffold: the ribbon runs down the left edge with a marker per
 selected hull and a ghost marker at its ordered depth; the PR badge sits in the selection
@@ -220,6 +222,7 @@ Implemented in the client scaffold today (`packages/frontend/src/game/EchoRender
 | `Space` | Toggle Silent Running for the selection |
 | `P` | Active sonar ping from the first selected unit |
 | `D` / `A` | Dive / rise one depth band |
+| `S` | Toggle floor-following — hug the seabed at station keeping ([systems-depth.md](systems-depth.md) §2) |
 | `R` / `F` / `T` / `B` | Arm a Refinery / Foundry / Turret / faction structure |
 | Hold `Alt` | Ping-cost preview rings |
 
@@ -258,7 +261,7 @@ a player knows is a worse layout.
 | Mine | `M` | `X` |
 | Faction structure | `B` | `V` |
 
-Everything else — `Space`, `A`, `D`, `C`, `R`, `F`, `T`, `G` and `Alt` — is unchanged.
+Everything else — `Space`, `A`, `D`, `S`, `C`, `R`, `F`, `T`, `G` and `Alt` — is unchanged.
 Control groups are the one thing this cannot fix: the digits are fixed for the reason above,
 and `6`–`9` are out of reach. That is a real limitation of playing one-handed rather than
 something the layout is hiding.

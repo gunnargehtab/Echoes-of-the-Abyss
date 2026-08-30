@@ -145,6 +145,7 @@ export type ReplayCommand =
       queued: boolean;
     }
   | { tick: number; type: 'depth'; slot: number; unit: number; depth: number }
+  | { tick: number; type: 'followFloor'; slot: number; unit: number; active: boolean }
   | { tick: number; type: 'attack'; slot: number; unit: number; contact: number; queued: boolean }
   | { tick: number; type: 'torpedo'; slot: number; unit: number; contact: number }
   | { tick: number; type: 'noisemaker'; slot: number; unit: number }
@@ -340,6 +341,9 @@ function applyCommand(match: Match, command: ReplayCommand): void {
       break;
     case 'depth':
       match.orderDepth(command.slot, eid(command.unit), command.depth);
+      break;
+    case 'followFloor':
+      match.orderFollowFloor(command.slot, eid(command.unit), command.active);
       break;
     case 'attack':
       match.orderAttackContact(command.slot, eid(command.unit), command.contact, command.queued);
