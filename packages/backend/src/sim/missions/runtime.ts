@@ -46,6 +46,7 @@ import {
   Acoustic,
   DepthOrder,
   Fauna,
+  Heading,
   Health,
   MoveOrder,
   Owner,
@@ -65,10 +66,17 @@ import {
   spawnUnit,
   type SimWorld,
 } from '../world.ts';
+import { accrueSounding, soundingHolds } from './sounding.ts';
 import { projectMissionView, type MissionState } from './view.ts';
 import { directionalFactorFor } from '../directional.ts';
 import { exposedAtLeast, inRegion, isMet, isStanding, peakSigOf } from './predicates.ts';
-import type { MissionDefinition, MissionEmitter, MissionRole, MissionTag } from './types.ts';
+import type {
+  MissionDefinition,
+  MissionEmitter,
+  MissionRole,
+  MissionSounding,
+  MissionTag,
+} from './types.ts';
 
 /**
  * What tier the *player's own slot* currently resolves an entity at.
@@ -188,6 +196,21 @@ export class MissionRuntime {
   private readonly liftProgress = new Map<string, number>();
   /** Lifts whose cut has finished. Monotone: a rigged load stays rigged. */
   private readonly loadedLifts = new Set<string>();
+  /**
+   * Held, bow-on ticks accrued against each sounding, by sounding id.
+   *
+   * `liftProgress`' shape and, deliberately, not its rule: this ledger is reset
+   * by `accrueSounding` the moment the hold breaks, because §4's twenty seconds
+   * are twenty seconds of *holding* rather than twenty seconds of work done.
+   * Accrued from world state alone at `ECHO_TICK_INTERVAL` granularity, so a
+   * replay accrues the identical ledger.
+   */
+  private readonly soundingProgress = new Map<string, number>();
+  /**
+   * Soundings whose hold has finished. Monotone, unlike the ledger above: a
+   * formation that has been read has been read, and the hull may leave.
+   */
+  private readonly soundedIds = new Set<string>();
   /**
    * The sweep's one latched fact — docs/mission-tend.md §8: the day is filed
    * if a pass resolved a working hull or a fresh mark, on either pass, and a
@@ -403,6 +426,7 @@ export class MissionRuntime {
     this.holdCommitments(world);
     this.resolveRoleIds(world);
     this.applyLifts(world);
+    this.applySoundings(world);
     this.applyEmitters(world);
     this.applyAttendance(world, heardTier);
     this.applyTolerance(own);
@@ -762,6 +786,71 @@ export class MissionRuntime {
   }
 
   /**
+   * The soundings — docs/mission-aptitude.md §4, and the mechanism the mission
+   * is named for: a formation read by hand, from within an authored radius,
+   * **bow on it**, held for an authored span at an authored SIG.
+   *
+   * `applyLifts` above with a bearing added (§13), and the three differences
+   * are the three things a bearing changes. The hold is against a point and a
+   * radius rather than a region, because a facing has to be taken *to*
+   * somewhere. The hold *aims* the hull, so a player who points it the short
+   * way has spent the SIG budget without meaning to — that is the lesson, and
+   * `soundingHolds` is where it is enforced. And a broken hold resets rather
+   * than pausing (`accrueSounding` states why), which is the one decision this
+   * row makes that the lift's does not.
+   *
+   * `world.soundingSig` is cleared and rebuilt whole every pass, the
+   * `liftCutSig` arrangement and for its reasons: a floor can never outlive its
+   * hold, a hull that turns away goes quiet on the next mission tick, and a
+   * recycled entity id cannot inherit a stranger's loudness.
+   *
+   * On the mission tick's budget, and bounded by authorship: one hypot and one
+   * dot product per authored sounding, which is a handful per pass at 5 Hz.
+   */
+  private applySoundings(world: SimWorld): void {
+    world.soundingSig.clear();
+    for (const sounding of this.definition.soundings ?? []) {
+      if (this.soundedIds.has(sounding.id)) continue;
+      const eid = this.eidOf(world, sounding.tag);
+      const holding = eid !== 0 && this.holdingSounding(world, eid, sounding);
+      // Every way of not holding lands here, a hull the mission has lost
+      // included: that is the ultimate broken hold, and freezing its ledger
+      // instead would leave a half-read formation waiting for a hull that is
+      // never coming back.
+      const held = accrueSounding(
+        this.soundingProgress.get(sounding.id) ?? 0,
+        holding,
+        ECHO_TICK_INTERVAL
+      );
+      this.soundingProgress.set(sounding.id, held);
+      if (!holding) continue;
+      world.soundingSig.set(eid, sounding.sig);
+      if (held >= sounding.holdTicks) this.soundedIds.add(sounding.id);
+    }
+  }
+
+  /**
+   * Whether this hull is taking this sounding this instant — the geometry of
+   * `soundingHolds`, plus the two things it cannot see.
+   *
+   * **No bow, no sounding.** `Heading` is added by `spawnUnit` and by nothing
+   * else (docs/systems-echo.md §8), so asking for the component is the same
+   * question as "is this a hull": a structure cannot be pointed at a formation
+   * any more than it can be driven to one.
+   *
+   * **Silence stops the work**, as it stops a cut and for the same words —
+   * docs/systems-echo.md §6's cannot-work price. Here it costs the hold
+   * outright rather than pausing it, and that is docs/mission-aptitude.md §4's
+   * arithmetic arriving as a rule: a hull that runs silent to take a sounding
+   * quietly loses the sounding, and turning around was always the better trade.
+   */
+  private holdingSounding(world: SimWorld, eid: number, sounding: MissionSounding): boolean {
+    if (hasComponent(world, SilentRunning, eid) && SilentRunning.active[eid] === 1) return false;
+    if (!hasComponent(world, Heading, eid)) return false;
+    return soundingHolds(sounding, Heading.rad[eid]!, Position.x[eid]!, Position.y[eid]!);
+  }
+
+  /**
    * The sweep — docs/mission-tend.md §6 and §8: a scripted listener whose
    * hearing is a fact the mission counts, quietly, without interrupting
    * anything.
@@ -1042,7 +1131,8 @@ export class MissionRuntime {
         this.startedAt.get(objective.id) ?? 0,
         (lift) => this.loadedFor(lift),
         this.attendedTags.size,
-        (tier) => exposedAtLeast(this.exposedByTier, tier)
+        (tier) => exposedAtLeast(this.exposedByTier, tier),
+        this.soundedIds.size
       );
       if (met) this.statuses.set(objective.id, ObjectiveStatus.Met);
       else if (standing) this.statuses.set(objective.id, ObjectiveStatus.Pending);
@@ -1153,6 +1243,7 @@ export class MissionRuntime {
       loadedByLift: this.loadedByLift,
       attended: this.attendedTags.size,
       exposedByTier: this.exposedByTier,
+      sounded: this.soundedIds.size,
       debtS: this.debtS,
     };
   }

@@ -9,7 +9,8 @@
  * slot is being sent on this very tick, so every number returned is one the
  * client could have computed for itself; `roleIds` and `loadedIds` name hulls
  * of the player's own party; `attended` counts what this observer's own ears
- * resolved; `regionById` and `predicate` are authored map data
+ * resolved and `sounded` what its own hulls finished; `regionById` and
+ * `predicate` are authored map data
  * that shipped with the mission. There is no world, no ECS, no second snapshot and no slot
  * argument, so "three of five hostiles remaining" is not refused here — it
  * cannot be asked for.
@@ -77,7 +78,8 @@ export function progressOf(
   startedTick: number,
   loadedIds: LoadedIds,
   attended: number,
-  exposed: ExposedTicks
+  exposed: ExposedTicks,
+  sounded: number
 ): Progress {
   switch (predicate.kind) {
     case 'extract': {
@@ -121,6 +123,12 @@ export function progressOf(
       // given nothing it could turn into somebody else's position. Capped so
       // a tenth arrival could not render "10 of 9".
       return { done: Math.min(attended, predicate.count), of: predicate.count };
+    case 'sound':
+      // A count of what the observer's own hulls finished, handed in as a
+      // number for `attend`'s reason: this file is given nothing it could turn
+      // into somebody else's position, and a completed sounding is a fact about
+      // a player hull standing at an authored point. Capped, like the rest.
+      return { done: Math.min(sounded, predicate.count), of: predicate.count };
     case 'endure':
       return { done: Math.max(0, own.tick - startedTick), of: predicate.ticks };
     case 'tolerance':
@@ -144,7 +152,8 @@ export function isMet(
   startedTick: number,
   loadedIds: LoadedIds,
   attended: number,
-  exposed: ExposedTicks
+  exposed: ExposedTicks,
+  sounded: number
 ): boolean {
   const { done, of } = progressOf(
     predicate,
@@ -154,7 +163,8 @@ export function isMet(
     startedTick,
     loadedIds,
     attended,
-    exposed
+    exposed,
+    sounded
   );
   return done >= of;
 }

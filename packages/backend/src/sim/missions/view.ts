@@ -42,6 +42,8 @@ export interface MissionState {
   loadedByLift: Map<string, number>;
   /** How many authored arrivals this observer resolved — see `attend`. */
   attended: number;
+  /** How many authored soundings this observer's hulls finished — see `sound`. */
+  sounded: number;
   /**
    * Sim ticks this observer's own force stood at each resolution tier in
    * somebody else's ears, indexed by `ResolutionTier` — see `tolerance`.
@@ -121,7 +123,8 @@ function objectiveView(
         return carrier === undefined ? NO_IDS : new Set([carrier]);
       },
       state.attended,
-      (tier) => exposedAtLeast(state.exposedByTier, tier)
+      (tier) => exposedAtLeast(state.exposedByTier, tier),
+      state.sounded
     );
     view.progress = objective.predicate.kind === 'tolerance' ? inSeconds(progress) : progress;
   }
@@ -176,6 +179,12 @@ function counts(objective: MissionObjective): boolean {
     // how docs/mission-attendance.md §8's failure is audible for the whole
     // mission rather than announced at the close.
     objective.predicate.kind === 'attend' ||
+    // "Four of six sounded" is the reading docs/mission-aptitude.md §8's
+    // results table is counted out of, and a sounding is the most countable
+    // thing the mission has: the player chose each formation, aimed at it and
+    // waited out its twenty seconds. A counter over it states the objective
+    // rather than decorating it.
+    objective.predicate.kind === 'sound' ||
     // The tolerance is a budget the player spends rather than an objective they
     // complete, and §5 is explicit that nothing about it is hidden: "the
     // exposure readout carries the tier from the first tick". A counter that

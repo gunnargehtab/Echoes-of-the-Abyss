@@ -236,6 +236,17 @@ export type MissionPredicate =
    * what anybody else resolved.
    */
   | { kind: 'attend'; count: number }
+  /**
+   * How many authored soundings this observer's own hulls have completed — the
+   * held, aimed twenty seconds of docs/mission-aptitude.md §4.
+   *
+   * Counted rather than named, so an objective reads "four of six sounded"
+   * without saying which six: the formations are authored map data and the
+   * hulls are the player's own, so the number is theirs twice over and names
+   * nobody else's position. `attend`'s shape, with the argument turned from
+   * what the player *heard* to what the player *did*.
+   */
+  | { kind: 'sound'; count: number }
   | { kind: 'quiet'; role: MissionRole; ceilingSig: number }
   | { kind: 'endure'; ticks: number }
   /**
@@ -302,6 +313,50 @@ export interface MissionLift {
   cutTicks: number;
   /** The stated loudness while the cut runs. A floor, never a replacement. */
   cutSig: number;
+  note: string;
+}
+
+/**
+ * A sounding — docs/mission-aptitude.md §4: a formation read by hand, "taken
+ * from within 400 m of a formation, bow on it, held for twenty seconds at SIG
+ * 80", because a hull taking a sounding is doing the Sounding Spire's job
+ * itself.
+ *
+ * `MissionLift`'s hold-and-cut **with a bearing added** (§13), which is why it
+ * is a second table row rather than a flag on the first: a point and a radius
+ * instead of a region, a facing requirement instead of none, and a hold that
+ * resets instead of pausing (`accrueSounding`). Everything the two do share —
+ * held presence, an authored SIG floor, silence stopping the work — they share
+ * by doing the same thing, not by being the same row.
+ *
+ * The numbers live here, in the mission literal, exactly as `cutTicks` and
+ * `cutSig` do. 400 m, twenty seconds and SIG 80 are what the Aptitude literal
+ * will carry when it is written; they are not `constants.ts` entries, because
+ * they are one mission's authored figures rather than a rule of the world.
+ */
+export interface MissionSounding {
+  id: string;
+  /**
+   * The hull that takes it. Player-party hulls only, for `MissionLift`'s
+   * reason: the completed count feeds a predicate the player is shown, so a
+   * sounding on a scripted hull would put another party inside a counter.
+   * `missions.test.ts` holds the literal to it.
+   */
+  tag: MissionTag;
+  /**
+   * The formation, as a point on the cell grid rather than a region.
+   *
+   * A region would be the wrong shape twice over: the radius is measured from
+   * the thing being sounded, and the bearing has to be taken *to* somewhere.
+   */
+  x: number;
+  y: number;
+  /** How close the hull must be to read it. §4 authors 400 m. */
+  radiusM: number;
+  /** Ticks of held, bow-on presence. §4 authors twenty seconds. */
+  holdTicks: number;
+  /** The stated loudness while the hold runs. A floor, never a replacement. */
+  sig: number;
   note: string;
 }
 
@@ -539,6 +594,8 @@ export interface MissionDefinition extends MissionHeader {
   regions: readonly MissionRegion[];
   /** The loads this mission carries. Omitted is none. */
   lifts?: readonly MissionLift[];
+  /** The formations this mission asks read by hand. Omitted is none. */
+  soundings?: readonly MissionSounding[];
   /** The scripted listener whose hearing is an outcome — see `MissionSweep`. */
   sweep?: MissionSweep;
   markers: readonly MissionMarker[];

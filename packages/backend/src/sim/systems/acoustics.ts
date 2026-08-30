@@ -131,6 +131,18 @@ export function acousticsSystem(world: SimWorld): void {
       if (cutSig !== undefined) sig = Math.max(sig, cutSig);
     }
 
+    // A sounding is the Sounding Spire's active figure produced by hand
+    // (docs/mission-aptitude.md §4), and a floor for the cut's reasons: it
+    // never quietens an already-louder hull, and a hull that tries to go silent
+    // mid-sounding keeps the floor for the interval it was still holding —
+    // `applySoundings` stops the hold on the next pass, so going quiet ends the
+    // sounding rather than muffling it. Which is the mission's whole argument
+    // in one branch: the Order does not run silent, it turns.
+    if (world.soundingSig.size !== 0) {
+      const holdSig = world.soundingSig.get(eid);
+      if (holdSig !== undefined) sig = Math.max(sig, holdSig);
+    }
+
     sig = applySpikeDecay(world, eid, sig);
     // A Resonance Storm destabilises organic tech (docs/hazards.md §5), which
     // is added before the veil takes its cut: the cloud muffles whatever the

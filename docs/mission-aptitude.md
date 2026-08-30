@@ -606,8 +606,9 @@ What exists against this document and what does not, continuing the list
 [mission-tend.md](mission-tend.md) §13 and [mission-attendance.md](mission-attendance.md) §13
 extended. **This is the first of the five whose headline row is a system rather than a mission
 mechanism**, and the honest summary is that this mission is further from buildable than the three
-before it — though less so than when this section was written: the two directional rows are built
-and so is the tolerance, and what is left is three instruments and a map.
+before it — though less so than when this section was written: the two directional rows are built,
+so is the tolerance, and so is the sounding this mission's verb is named for; what is left is
+two instruments and a map.
 
 | Requirement | Status |
 | --- | --- |
