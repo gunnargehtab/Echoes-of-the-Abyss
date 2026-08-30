@@ -18,6 +18,7 @@ import { VENTFRONT_DIVIDE } from './ventfrontDivide.ts';
 import { ATTENDING_GALLERIES } from './missions/attendingGalleries.ts';
 import { FIRST_TRENCH_MARGIN } from './missions/firstTrenchMargin.ts';
 import { FOURTH_TRENCH } from './missions/fourthTrench.ts';
+import { HOLDING_BOARD } from './missions/holdingBoard.ts';
 import { HOLDING_UNDERWORKS } from './missions/holdingUnderworks.ts';
 import { MARR_PLATEAU } from './missions/marrPlateau.ts';
 import { MOUTH_RIM } from './missions/mouthRim.ts';
@@ -32,6 +33,7 @@ export {
   ATTENDING_GALLERIES,
   FIRST_TRENCH_MARGIN,
   FOURTH_TRENCH,
+  HOLDING_BOARD,
   HOLDING_UNDERWORKS,
   KELP_LABYRINTH,
   MARR_PLATEAU,
@@ -76,6 +78,7 @@ export const MISSION_MAPS: readonly MapDefinition[] = [
   FIRST_TRENCH_MARGIN,
   HOLDING_UNDERWORKS,
   MOUTH_RIM,
+  HOLDING_BOARD,
   MARR_PLATEAU,
   ATTENDING_GALLERIES,
 ];

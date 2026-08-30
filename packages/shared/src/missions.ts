@@ -225,6 +225,32 @@ export const LEDGER_PROSPECT_HEADER: MissionHeader = {
   ],
 };
 
+export const LEDGER_ITEM_NINE_HEADER: MissionHeader = {
+  id: 'ledger-item-nine',
+  campaign: 'ledger',
+  ordinal: 7,
+  name: 'The Ledger — Item Nine',
+  premise:
+    'Nine items stand. The chamber hears everyone at once. What the chair does with the ninth is the chair’s.',
+  mapId: 'holding-board',
+  // The chamber empties at 12:00 (docs/mission-item-nine.md §9), at §10's floor.
+  lengthBandS: [660, 780],
+  /**
+   * The session notice, as the registry circulates it — docs/mission-item-nine.md
+   * §12, verbatim: the shortest briefing in the campaign, because the campaign
+   * has already said everything it is about. Public for the oldest reason —
+   * it names no hidden fact, and the one fact that matters tonight has been
+   * noted for completeness at every session for one hundred and twenty-six
+   * years.
+   */
+  briefing: [
+    'The Ninth Board sits at the turn of the tide. Nine items stand. The chair’s flight holds at the rail for the sitting, per custom: the chamber is listened to, not watched, and a hull under way during a sitting is shoving.',
+    'The rim field is item six. The Division’s model is item five, under seal. Item nine is item nine.',
+    'The chair’s barge carries the survey array, returned with the expedition and not yet struck. The registry notes this for completeness. What is transmitted in the Underway cannot be untransmitted; the registry notes that for completeness also, as it has noted it at every session for one hundred and twenty-six years.',
+    'The session runs its length. It always has. Signed for the registry.',
+  ],
+};
+
 export const SEEDING_TEND_HEADER: MissionHeader = {
   id: 'seeding-tend',
   campaign: 'seeding',
@@ -283,6 +309,7 @@ export const MISSION_HEADERS: readonly MissionHeader[] = [
   LEDGER_EXPOSURE_HEADER,
   LEDGER_TOLERANCE_HEADER,
   LEDGER_PROSPECT_HEADER,
+  LEDGER_ITEM_NINE_HEADER,
   SEEDING_TEND_HEADER,
   ATTENDING_ATTENDANCE_HEADER,
 ];

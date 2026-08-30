@@ -274,6 +274,7 @@ A mission map is authored the same way — a literal, regions painted in order �
 | The Western Margin | `first-trench-margin` | #212 | 5,000 × 3,000 m. The trench country's top step, six sounds of somebody else's economy, and the layer as a door — [mission-exposure.md](mission-exposure.md) §11 |
 | The Underworks | `holding-underworks` | #212 | 4,000 × 3,000 m. The Holding's wall, the roofed works beneath it, and a choice authored as terrain — [mission-tolerance.md](mission-tolerance.md) §11 |
 | The Rim | `mouth-rim` | #212 | 6,000 × 4,000 m. The Mouth's edge: staging, slopes, terraces and the lip, entirely below the layer — [mission-prospect.md](mission-prospect.md) §11 |
+| Board Country | `holding-board` | #212 | 3,000 × 2,500 m. The bottom of the Holding, the registry's arrays, and the Underway — [mission-item-nine.md](mission-item-nine.md) §11 |
 | Marr Plateau | `marr-plateau` | #251 | 4,000 × 2,500 m. A garden terrace, a working day, and a survey — [mission-tend.md](mission-tend.md) §11 |
 | The Attending Galleries | `attending-galleries` | #258 | 5,000 × 4,000 m. A gallery of sleepers, and the Ninth aimed at the Mouth — [mission-attendance.md](mission-attendance.md) §11 |
 
