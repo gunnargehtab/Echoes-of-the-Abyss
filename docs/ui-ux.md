@@ -627,7 +627,8 @@ past the briefing. That is what keeps the headless harness and dev muscle memory
 and it is a machine's door rather than a player's — a player reaches a mission through the
 title screen, and reads the briefing on the way in.
 
-- **Title** — the game's name, one tagline from [naming.md](naming.md), and the entries:
+- **Title** — the vertical logo lockup from [naming.md](naming.md) (mark, wordmark, one
+  tagline), and the entries:
   Resume (only while a seat is held, see below), Campaign, Solo Game, Multiplayer,
   Tutorial, Settings, Credits. There is no Quit; this is a browser.
 - **Campaign** — the board of four campaigns and their slots. A board rather than a list
