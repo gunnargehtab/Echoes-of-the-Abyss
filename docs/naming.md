@@ -25,28 +25,29 @@ The shell uses the third: it is the one that states the game's core rule
 
 ## The logo
 
-Decided, 2026-08. The mark is a **sonar return swallowed by depth**: the game's
-whole argument — emitting anything is how you are found — drawn as one picture.
-The alternates considered and set aside are recorded at the end of this section.
+Decided, 2026-08. The mark is **the Mouth** — the concentric banding of the
+Rift's one unexplained place ([world-map.md](world-map.md), plate IV),
+narrowing to a single point of light that is not yours. The game's brand is
+the thing everyone in the setting is afraid to listen to. The alternates
+considered and set aside are recorded at the end of this section.
+
+Violet is the reserved ink of the *unresolved*
+([style-neon-noir.md](style-neon-noir.md)), and the logo is the one piece of
+chrome licensed to spend it: the reservation is why the mark reads as the
+Mouth and not as decoration. Nothing else in the shell or HUD inherits that
+license.
 
 ### The mark
 
-Concentric rings on a 200 × 200 construction grid, centre 100,100:
+Concentric bands on a 240 × 184 construction grid, throat at 120,162:
 
-- **Four rings**, radii 28 / 52 / 76 / 96, in `neon-cyan`, each return dimmer
-  than the last (opacity 0.95 → 0.35): a decaying echo.
-- **The fade.** Every ring fades downward (full strength at the top, ~12 % at
-  the bottom edge) — the abyss swallowing the echo. Depth is always below
-  ([style-neon-noir.md](style-neon-noir.md)); the fade is the identity's one
-  non-negotiable move and survives every reduction.
-- **The emitter**: a filled cyan dot at centre — you, at the centre of what you
-  can hear.
-- **The contact**: one small return in `neon-red` at bearing 135°, low in the
-  fade, with a faint bearing line back to the emitter. Red is the ink that
-  warns, and the tagline is the caption: in the abyss, every echo is a warning.
-- **Registration ticks** at north, west and east only — survey marks from the
-  Pressure Cartography plates. No south tick: the bottom edge belongs to the
-  fade.
+- **Five downward arcs**, each narrower and deeper than the last, in
+  `neon-violet` — spans 200 → 48 units, stroke 1.6 → 2.4, opacity 0.45 → 1.
+  Brightness *increases* with depth: the inversion that makes it the Mouth
+  and not a sonar return. Depth is below, and the deep end is the lit end.
+- **The throat**: one small point in `mouth-glow` (`#C9A6FF`, the crystal
+  glow of the resonance contexts in [art-direction.md](art-direction.md)),
+  centred under the bands — the one point of light, and it is not yours.
 - **Glow** follows the recipe in [style-neon-noir.md](style-neon-noir.md)
   exactly: core stroke plus one blurred halo, two layers, never more.
 
@@ -54,10 +55,10 @@ Concentric rings on a 200 × 200 construction grid, centre 100,100:
 
 - **ECHOES** — condensed industrial grotesque (the display voice of
   [style-neon-noir.md](style-neon-noir.md); the shell ships **Big Shoulders
-  Display**, vendored), weight 700, uppercase, tracking 0.06em, in
-  `text-bright` with a cyan halo.
+  Display**, vendored), weight 700, uppercase, tracking 0.07em, in
+  `text-bright` with a violet halo.
 - **OF THE ABYSS** — same face at weight 600, uppercase, tracking 0.5em, in
-  `neon-cyan`, flanked by two hairline rules.
+  `mouth-glow`.
 - **Tagline** (optional third line) — the data voice: monospace, uppercase,
   tracking 0.16em, `text-dim`.
 
@@ -67,36 +68,39 @@ Concentric rings on a 200 × 200 construction grid, centre 100,100:
 | --- | --- |
 | Vertical (mark over wordmark) | Title screen, key art, splash |
 | Horizontal (mark left of wordmark) | Banners, store headers, docs |
-| Mark alone | Favicon, app icon, avatars — at 48 px and below drop to two rings + contact, and below that the contact alone may carry the corner |
+| Mark alone | Favicon, app icon, avatars — at 48 px and below drop to three bands + throat; below that the throat alone may carry the corner |
 | Silent running (monochrome `text-bright`, no glow) | Contexts that forbid colour; the logo running quiet is on-doctrine |
 | One-colour print (`#0E1418` on pale paper) | Print, one-colour partners |
 
 ### Rules
 
-- The contact is always `neon-red` and there is always exactly one. Two
-  contacts is a different story; none is a screensaver.
-- The rings are always cyan on the dark lockups — the mark speaks in the
-  interface voice, never in a faction's colour.
-- The fade is never removed, flipped, or rotated: depth is below.
+- The bands brighten downward, always. Flipping or evening them out turns the
+  Mouth back into a generic echo.
+- There is exactly one throat light. The mark never gains a second point, a
+  contact, or an emitter — nothing in this picture is you.
+- The mark's violets are `neon-violet` and `mouth-glow` and nothing else —
+  never a faction's colour, and never cyan or magenta, which belong to the
+  interface. Outside the logo, violet keeps its reservation untouched.
 - Backgrounds come from the blacks of
   [style-neon-noir.md](style-neon-noir.md) (`abyss-void` gradient downward);
   the mark never sits on blue.
 
 The shell transcribes this section: the mark is
-`packages/frontend/src/menu/SonarMark.tsx`, the lockup is the title screen's
-masthead, and the favicon is the mark-alone reduction. When this section and
-that code disagree, one of them is wrong — say which one you are changing
-and why.
+`packages/frontend/src/menu/MouthMark.tsx`, the lockup is the title screen's
+masthead, and the favicon is the mark-alone reduction. The title screen's
+void — and only the title screen's — carries a faint violet rise from the
+bottom edge: the Mouth is below. When this section and that code disagree,
+one of them is wrong — say which one you are changing and why.
 
 ### Considered and set aside
 
+- **Sonar return** — four decaying cyan rings fading downward, one threat-red
+  contact answering back. The strongest statement of the *mechanics*; set
+  aside because the Mouth says what the game is *about*. Its language lives
+  on in the sonar scope itself.
 - **Pressure gauge** — a survey-instrument gauge with the needle in the crush
   band. Kept as a motif for loading and settings chrome; too quiet to be the
   brand.
-- **The Mouth** — concentric violet banding narrowing to a throat. Set aside
-  because violet is reserved for the *unresolved*
-  ([style-neon-noir.md](style-neon-noir.md)), and a logo would spend that
-  reservation everywhere.
 
 ## Related
 

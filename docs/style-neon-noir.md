@@ -332,7 +332,10 @@ is: **if the motion is the message, it stays.**
   **ember light**, `#E06A2B`, dim and sparse, flicker quantised to the 5 Hz
   sonar grid. It is world-light, not neon — no UI hue ever touches it, and no
   other biome gets one.
-- No violet outside the Mouth/resonance/Hadron contexts.
+- No violet outside the Mouth/resonance/Hadron contexts. The logo **is** a
+  Mouth context — [naming.md](naming.md) "The logo" — so the title masthead
+  and its throat-light token (`mouth-glow`, `#C9A6FF`) are licensed; the rest
+  of the shell and the HUD keep the reservation untouched.
 - No full-saturation fills — neon is edges, strokes, glyphs, and points, never
   a filled rectangle.
 - No white UI. The brightest steady element is `text-bright`; pure white is
@@ -344,9 +347,9 @@ is: **if the motion is the message, it stays.**
 - `packages/frontend/src/index.css` / `App.css` — CSS custom properties for
   the tokens above plus the two type voices (`--font-display`, `--font-data`);
   the DOM shell (overlays, menus) uses only tokens.
-- `packages/frontend/src/menu/SonarMark.tsx` — the logo mark
-  ([naming.md](naming.md) "The logo"), inked from the tokens: rings in
-  `neon-cyan`, the contact in `neon-red`, glow per the recipe above.
+- `packages/frontend/src/menu/MouthMark.tsx` — the logo mark
+  ([naming.md](naming.md) "The logo"), inked from the tokens: banding in
+  `neon-violet`, the throat in `mouth-glow`, glow per the recipe above.
 - `packages/frontend/src/game/palette.ts` — already transcribes
   [art-direction.md](art-direction.md); chrome constants there should match
   this doc's tokens (`UI.background` = `abyss-void`, `UI.glass` =

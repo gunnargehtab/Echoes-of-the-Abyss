@@ -27,6 +27,10 @@
   --neon-amber: #f2b233;
   --neon-red: #ff3b30;
   --neon-teal: #5fd0c0;
+  /* The logo's throat light (docs/naming.md "The logo") — the crystal glow of
+     the resonance contexts in art-direction.md. Violet is reserved for the
+     unresolved, and the logo is the one chrome context licensed to spend it. */
+  --mouth-glow: #c9a6ff;
 
   /* Text */
   --text-bright: #d6e6f0;

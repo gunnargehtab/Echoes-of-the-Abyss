@@ -9,7 +9,7 @@
  */
 
 import { hasStoredSession } from '../net/GameClient.ts';
-import { SonarMark } from './SonarMark.tsx';
+import { MouthMark } from './MouthMark.tsx';
 
 export interface TitleScreenProps {
   onResume(): void;
@@ -43,21 +43,17 @@ export function TitleScreen({
   const held = hasStoredSession();
 
   return (
-    <div className="menu-screen" role="dialog" aria-label="Main menu">
+    <div className="menu-screen menu-screen-title" role="dialog" aria-label="Main menu">
       <div className="menu-panel menu-title-panel">
         {/* The vertical lockup from docs/naming.md: mark, wordmark split into
             its two lines, tagline in the data voice. The h1 keeps the full
             name in one element for the accessibility tree; the split is
             presentation. */}
         <header className="menu-masthead">
-          <SonarMark size={132} />
+          <MouthMark width={200} />
           <h1 className="menu-wordmark">
             <span className="menu-wordmark-name">Echoes</span>
-            <span className="menu-wordmark-sub">
-              <span className="menu-wordmark-rule" aria-hidden="true" />
-              of the Abyss
-              <span className="menu-wordmark-rule" aria-hidden="true" />
-            </span>
+            <span className="menu-wordmark-sub">of the Abyss</span>
           </h1>
           <p className="menu-tagline">In the abyss, every echo is a warning.</p>
         </header>
