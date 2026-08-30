@@ -9,9 +9,9 @@
  * - **A beat never fails an objective the player has met** — the runtime's
  *   monotonicity invariant, held against `objective` beats, which is what
  *   keeps a sealed aperture sealed when the spent barge wanders.
- * - **A fired conditional retires what it cancels** (types.ts, `cancels`):
- *   two conditionals eligible on the same tick fire as one choice, in list
- *   order, and the mirror stays silent forever.
+ * - **A fired choice retires its group** (types.ts, `choiceGroup`): rows
+ *   sharing one condition fire together, and the mirror's rows are retired on
+ *   the same pass, never to fire.
  * - **An idle writ signs nothing** — the seventeen-minute run closes Lost,
  *   with both apertures written down beneath the register's longest entry
  *   since Kell.
@@ -86,12 +86,11 @@ describe('the ledger is terrain — docs/mission-tolerance.md §4, §11', () => 
   });
 });
 
-describe('the choice, as rules — types.ts `cancels`, and the Met guard', () => {
-  /** Two conditionals eligible on one tick; the first fires and retires the second. */
-  it('fires eligible conditionals as one choice, in list order', () => {
+describe('the choice, as rules — types.ts `choiceGroup`, and the Met guard', () => {
+  it('fires co-conditioned rows together, then retires the rest of the group for good', () => {
     const fixture: MissionDefinition = {
       ...PROLOGUE_SORROWGATE,
-      id: 'test-cancels',
+      id: 'test-choice-group',
       arrayTag: undefined,
       sweep: undefined,
       lifts: undefined,
@@ -108,31 +107,49 @@ describe('the choice, as rules — types.ts `cancels`, and the Met guard', () =>
         },
       ],
       conditionalBeats: [
+        // Two rows on one condition, sharing the group: both fire, together,
+        // before the group closes behind them.
         {
-          id: 'first',
-          when: { kind: 'deliver', nodules: 50 },
-          cancels: ['second'],
-          beats: [{ kind: 'say', speaker: 'The record', text: 'The first entered.', note: '' }],
+          kind: 'say',
+          speaker: 'The record',
+          text: 'The first entered.',
           note: '',
+          when: { kind: 'deliver', nodules: 50 },
+          choiceGroup: 'the-choice',
         },
         {
-          id: 'second',
-          when: { kind: 'deliver', nodules: 50 },
-          beats: [{ kind: 'say', speaker: 'The record', text: 'The second entered.', note: '' }],
+          kind: 'say',
+          speaker: 'The record',
+          text: 'The second entered.',
           note: '',
+          when: { kind: 'deliver', nodules: 50 },
+          choiceGroup: 'the-choice',
+        },
+        // The mirror: a different condition that will come true two seconds
+        // in, retired before it can — never to fire.
+        {
+          kind: 'say',
+          speaker: 'The record',
+          text: 'The mirror entered.',
+          note: '',
+          when: { kind: 'endure', ticks: 2 * SIM.TICK_HZ },
+          choiceGroup: 'the-choice',
         },
       ],
     };
     const runtime = new MissionRuntime(fixture);
     const world = createSimWorld(Terrain.demo(), 1 / SIM.TICK_HZ, 3);
     const lines: MissionLine[] = [];
-    for (let pass = 1; pass <= 10; pass++) {
+    for (let pass = 1; pass <= 4 * SIM.ECHO_HZ; pass++) {
       world.tick = pass * ECHO_TICK_INTERVAL;
       runtime.tick(world, SINK, withNodules(world.tick, 100));
       lines.push(...runtime.takeLines());
     }
-    assert.equal(lines.length, 1, 'the retired mirror fired anyway');
-    assert.equal(lines[0]!.text, 'The first entered.');
+    assert.deepEqual(
+      lines.map((line) => line.text),
+      ['The first entered.', 'The second entered.'],
+      'the co-conditioned rows fire together and the retired mirror stays silent'
+    );
   });
 
   it('never fails an objective the player has met', () => {
@@ -162,11 +179,12 @@ describe('the choice, as rules — types.ts `cancels`, and the Met guard', () =>
       ],
       conditionalBeats: [
         {
-          id: 'late-mirror',
           // Holds two seconds after 'sealed' has already latched Met.
-          when: { kind: 'endure', ticks: 2 * SIM.TICK_HZ },
-          beats: [{ kind: 'objective', id: 'sealed', status: ObjectiveStatus.Failed, note: '' }],
+          kind: 'objective',
+          id: 'sealed',
+          status: ObjectiveStatus.Failed,
           note: '',
+          when: { kind: 'endure', ticks: 2 * SIM.TICK_HZ },
         },
       ],
     };

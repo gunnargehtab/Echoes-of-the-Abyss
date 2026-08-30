@@ -379,12 +379,17 @@ export const LEDGER_TOLERANCE: MissionDefinition = {
 
   /**
    * §6 — the choice, authored as exclusivity: each delivery fails the other
-   * objective, speaks the Chair's entry, and retires its mirror. Fired by the
-   * delivery, not the clock.
+   * objective, speaks the Chair's entry, and — through the choice group —
+   * retires the mirror's rows for good. Fired by the delivery, not the clock,
+   * and the two rows per aperture share their condition, so they fire
+   * together before the group closes behind them (types.ts, `choiceGroup`).
    */
   conditionalBeats: [
     {
-      id: 'the-choice-root',
+      kind: 'objective',
+      id: 'the-section',
+      status: ObjectiveStatus.Failed,
+      note: 'The section is written down',
       when: {
         kind: 'extract',
         role: 'seal',
@@ -392,25 +397,27 @@ export const LEDGER_TOLERANCE: MissionDefinition = {
         count: 1,
         loaded: 'the-casting',
       },
-      cancels: ['the-choice-section'],
-      beats: [
-        {
-          kind: 'objective',
-          id: 'the-section',
-          status: ObjectiveStatus.Failed,
-          note: 'The section is written down',
-        },
-        {
-          kind: 'say',
-          speaker: 'Executor Odile Varr-Kest',
-          text: 'Entered. The section is written down. The count will be taken when the water stops, and I will read it on the first tide, with the others.',
-          note: '',
-        },
-      ],
-      note: 'The root sealed — the other order, unsigned, fails on the beat',
+      choiceGroup: 'the-choice',
     },
     {
-      id: 'the-choice-section',
+      kind: 'say',
+      speaker: 'Executor Odile Varr-Kest',
+      text: 'Entered. The section is written down. The count will be taken when the water stops, and I will read it on the first tide, with the others.',
+      note: 'The root sealed — the other order, unsigned, fails on the beat',
+      when: {
+        kind: 'extract',
+        role: 'seal',
+        region: 'root-aperture',
+        count: 1,
+        loaded: 'the-casting',
+      },
+      choiceGroup: 'the-choice',
+    },
+    {
+      kind: 'objective',
+      id: 'the-root',
+      status: ObjectiveStatus.Failed,
+      note: 'The root is written down',
       when: {
         kind: 'extract',
         role: 'seal',
@@ -418,22 +425,21 @@ export const LEDGER_TOLERANCE: MissionDefinition = {
         count: 1,
         loaded: 'the-casting',
       },
-      cancels: ['the-choice-root'],
-      beats: [
-        {
-          kind: 'objective',
-          id: 'the-root',
-          status: ObjectiveStatus.Failed,
-          note: 'The root is written down',
-        },
-        {
-          kind: 'say',
-          speaker: 'Executor Odile Varr-Kest',
-          text: 'Entered. The root is written down. I signed the other version of this order seventeen years ago; the register will note the difference and draw no conclusion. Neither will I, in your hearing.',
-          note: '',
-        },
-      ],
+      choiceGroup: 'the-choice',
+    },
+    {
+      kind: 'say',
+      speaker: 'Executor Odile Varr-Kest',
+      text: 'Entered. The root is written down. I signed the other version of this order seventeen years ago; the register will note the difference and draw no conclusion. Neither will I, in your hearing.',
       note: 'The section sealed — the mirror entry',
+      when: {
+        kind: 'extract',
+        role: 'seal',
+        region: 'section-frame',
+        count: 1,
+        loaded: 'the-casting',
+      },
+      choiceGroup: 'the-choice',
     },
   ],
 

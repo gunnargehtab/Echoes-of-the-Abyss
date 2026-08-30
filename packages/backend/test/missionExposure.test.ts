@@ -100,14 +100,15 @@ const WARNING_ONLY: MissionDefinition = {
   ],
   conditionalBeats: [
     {
-      id: 'the-warning',
+      kind: 'say',
+      speaker: 'The Division',
+      text: 'Twenty are entered.',
+      note: 'the fixture rule',
       when: {
         kind: 'tolerance',
         ticks: WARNING_S * SIM.TICK_HZ,
         tier: ResolutionTier.Classification,
       },
-      beats: [{ kind: 'say', speaker: 'The Division', text: 'Twenty are entered.', note: '' }],
-      note: 'the fixture rule',
     },
   ],
 };
@@ -178,15 +179,16 @@ describe('the charter, run out — docs/mission-exposure.md §3, §8', () => {
 
   it('authors the warning and the recall as conditionals on one tally, ten seconds apart', () => {
     const conditionals = LEDGER_EXPOSURE.conditionalBeats ?? [];
-    assert.equal(conditionals.length, 2);
-    const [warning, recall] = conditionals;
-    assert.equal(warning!.when.kind, 'tolerance');
-    assert.equal(recall!.when.kind, 'tolerance');
-    if (warning!.when.kind === 'tolerance' && recall!.when.kind === 'tolerance') {
-      assert.equal(warning!.when.ticks, 20 * SIM.TICK_HZ, '§4: the warning at twenty');
-      assert.equal(recall!.when.ticks, 30 * SIM.TICK_HZ, '§4: the recall at thirty');
-      assert.equal(warning!.when.tier, recall!.when.tier, 'one ledger, two thresholds');
-    }
+    const ticksOf = (beat: (typeof conditionals)[number]): number =>
+      beat.when.kind === 'tolerance' ? beat.when.ticks : NaN;
+    assert.ok(
+      conditionals.every((beat) => beat.when.kind === 'tolerance'),
+      'one ledger fires everything here'
+    );
+    // One warning row at twenty; the recall is a say and the watch's turn,
+    // three rows on one condition at thirty.
+    assert.equal(conditionals.filter((b) => ticksOf(b) === 20 * SIM.TICK_HZ).length, 1);
+    assert.equal(conditionals.filter((b) => ticksOf(b) === 30 * SIM.TICK_HZ).length, 3);
   });
 
   it('reads an idle survey as a gap in the model, with every gap assembled beneath it', () => {

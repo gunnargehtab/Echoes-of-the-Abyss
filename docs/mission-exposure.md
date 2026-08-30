@@ -268,11 +268,10 @@ in the next watch's water with a spent story, and the file has a reading for tha
 | 18:00 | **The change.** Whatever is over the layer is the survey; whatever is not is in the next watch's water. The Division reads the file it received (§8) |
 
 The two condition-fired rows are printed in the table where their *typical* run lands, and
-the format now says what the document means: a beat may key on a predicate instead of a tick,
-in the same vocabulary the objectives already speak — a table, not a language
+the format says what the document means: a beat may key on a predicate instead of a tick, in
+the same vocabulary the objectives already speak — a table, not a language
 ([mission-sorrowgate.md](mission-sorrowgate.md) §9; the row
-[mission-aptitude.md](mission-aptitude.md) §13 asked for, built here first because the Ledger
-reached it first).
+[mission-aptitude.md](mission-aptitude.md) §13 asked for, built as #282 and first spent here).
 
 ---
 
@@ -401,7 +400,7 @@ What exists against this document and what does not, continuing the Ledger's lis
 | --- | --- |
 | The mission format — beats, predicates, registry, private rooms | **Built** (#190) |
 | The tolerance — the tally over the player's own exposure | **Built** (#272), with its tier and threshold authored per objective. This mission is its first authored spender; [mission-aptitude.md](mission-aptitude.md) §5 specified it first and is served by the same rows |
-| **A beat fired by a condition rather than a tick** | **Built for this mission** (#282's row): `MissionConditionalBeat` — a predicate from the union the objectives already speak, and a short list of ordinary beats fired once, the first tick it holds. A second, short list that is not a schedule: the beat table stays the world's clock and reads down the page, and the conditional beats are walked beside it. The warning at twenty and the recall at thirty are its first authored uses, exactly the shape [mission-aptitude.md](mission-aptitude.md) §13 fixed |
+| **A beat fired by a condition rather than a tick** | **Built** (#282): `MissionConditionalBeat` — an ordinary beat effect with a predicate where its tick would be, drawn from the union the objectives already speak and fired once, the first tick it holds. A second, short list that is not a schedule: the beat table stays the world's clock and reads down the page, and the conditional beats sit beside it as standing rules. This mission is the Ledger's first authored spend of them — the warning at twenty as one row, the recall at thirty as three rows on one condition, which is how the format spells a multi-effect consequence |
 | The readings — attendable points with entered/gap lines, assembled at the close | **Built** (#240, #257's arrangement — `attend`, emitter readings, the transcript). Aimed outward for the first time: the same instrument that recorded the Choir's returns records the cohorts' economy, which both organisations would find a highly instructive fact if either published |
 | The exposure readout as the player's instrument | **On the snapshot** ([systems-echo.md](systems-echo.md) §9) and **not yet on the HUD** — the row [mission-aptitude.md](mission-aptitude.md) §13 flags as its hard ui-ux dependency. This mission shares it: the tolerance counter in the objectives panel carries the number, which is playable and not yet the instrument the doc asks for |
 | The six points as *authored emitters*, standing in for three days of hum and residue | **Built as emitters** (#240), and the stand-in is the honest note: the real residue layer ([systems-echo.md](systems-echo.md) §7) is written by live events and cannot be authored into a mission's past. A mission that wanted the survey to read *actual* Echo Marks would need a way to author marks at install, which nothing needs yet and nobody should build until a second mission asks |

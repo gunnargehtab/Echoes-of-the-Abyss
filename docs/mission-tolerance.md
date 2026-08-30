@@ -139,9 +139,10 @@ and orders nothing.
 **One casting. Two apertures. The mission does not soften it, average it, or take it back.**
 
 The exclusivity is authored, not emergent: the moment the casting is set in either aperture,
-the other objective fails — fired by the delivery itself rather than by any clock, the
-condition-fired arrangement [mission-exposure.md](mission-exposure.md) §4 introduced, spent
-here on the campaign's heaviest table. There is no build order, no second pour, and no
+the other objective fails and its every announcement is retired — fired by the delivery
+itself rather than by any clock, the condition-fired arrangement
+[mission-exposure.md](mission-exposure.md) §4 spends, extended here with the choice group it
+needed for the campaign's heaviest table. There is no build order, no second pour, and no
 reading of the rules under which both columns fill. Three facts, stated flatly, the way the
 writ states them:
 
@@ -366,7 +367,7 @@ What exists against this document and what does not, continuing the Ledger's lis
 | Crush attrition, per second, unhealable, on its own ledger | **Built** ([systems-depth.md](systems-depth.md) §6). The mission adds nothing to it; the mission is merely the first to charge admission |
 | The roofed Underworks — water only between roof and floor | **Built** ([systems-depth.md](systems-depth.md) §6, map ceilings; the Ventfront's tunnels proved the format). The roof is what makes the 2D delivery region depth-honest: nothing stands over the aperture that has not crossed the line |
 | The pour — a hold-and-cut at an authored SIG | **Built** (#238, the lift). Its first use at its original trade since Face Six |
-| **The exclusive choice — one load, two apertures, authored exclusivity** | **Built on #282's conditional beats** ([mission-exposure.md](mission-exposure.md) §13): each delivery fires the other objective's failure and the Chair's line, keyed on the `extract` predicate with a named load. No new mechanism — the union already spoke every word this needed, which is the argument for having built it as a table |
+| **The exclusive choice — one load, two apertures, authored exclusivity** | **Built on #282's conditional beats, plus the two smallest rules they needed** ([mission-exposure.md](mission-exposure.md) §13). Each delivery fires the other objective's failure and the Chair's entry, keyed on the `extract` predicate with a named load. The choice group retires the mirror's rows the pass the choice fires, so a spent barge driven through the second aperture's water cannot make the Chair enter an order nobody gave; and an `objective` beat never fails an objective the player has met — the runtime's own monotonicity invariant, held against beats, so the seal the player set stays set |
 | Readings per objective, assembling the close | **Built** ([mission-shift-change.md](mission-shift-change.md) §13) |
 | The alarm and the complaint — placed periodic sounds | **Built** (#240, the emitters) |
 | In-mission character speech, heard | Text only, the standing status — and this is the mission that will hurt most for it: Varr-Kest's two conditional lines are the campaign's centre, and they arrive as text in a log ([mission-sorrowgate.md](mission-sorrowgate.md) §13) |

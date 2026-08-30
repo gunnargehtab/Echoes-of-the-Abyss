@@ -30,6 +30,7 @@ import {
   Biome,
   DIRECTIONAL_SIGNATURE,
   MISSION,
+  ResolutionTier,
   SIM,
   missionHeaderById,
   requiredPressureRating,
@@ -37,9 +38,14 @@ import {
 } from '@echoes/shared';
 import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import { MISSIONS, PROLOGUE_SORROWGATE } from '../src/sim/missions/index.ts';
+import { dueConditionalBeats } from '../src/sim/missions/conditional.ts';
 import { accrueSounding, soundingHolds } from '../src/sim/missions/sounding.ts';
 import { DRIFT_SLOT } from '../src/sim/systems/fauna.ts';
-import type { MissionDefinition, MissionSounding } from '../src/sim/missions/index.ts';
+import type {
+  MissionConditionalBeat,
+  MissionDefinition,
+  MissionSounding,
+} from '../src/sim/missions/index.ts';
 
 /**
  * The Echo Layer's per-slot scratch arrays are this long (`echoLayer.ts`), and
@@ -315,80 +321,6 @@ describe('the beat schedule', () => {
           placed.has(beat.tag) || spawnedByBeat.has(beat.tag),
           `${mission.id}: a ${beat.kind} beat names "${beat.tag}", which nothing places`
         );
-      }
-    }
-  });
-
-  it('holds conditional beats to the schedule’s own naming rules', () => {
-    // A conditional beat fires ordinary beats through the ordinary path
-    // (types.ts, `MissionConditionalBeat`), so a tag nobody placed or a region
-    // nobody authored fails in exactly the schedule's quiet way — the recall
-    // simply would not happen. Same rules, second list. Creature tags may also
-    // have been spawned by the schedule, which fired first by construction.
-    for (const mission of MISSIONS) {
-      const placed = authoredTags(mission);
-      const spawnedByBeat = new Set(
-        mission.beats
-          .filter((beat) => beat.kind === 'creature' && beat.spawnAt !== undefined)
-          .map((beat) => (beat as { tag: string }).tag)
-      );
-      const conditionals = mission.conditionalBeats ?? [];
-      const ids = conditionals.map((conditional) => conditional.id);
-      assert.equal(new Set(ids).size, ids.length, `${mission.id}: duplicate conditional id`);
-      const conditionalIds = new Set(ids);
-      for (const conditional of conditionals) {
-        assert.ok(
-          conditional.beats.length > 0,
-          `${mission.id}: conditional "${conditional.id}" fires nothing`
-        );
-        for (const cancelled of conditional.cancels ?? []) {
-          // A cancel of an unauthored id is a retirement that never happens —
-          // the mirror fires anyway, and the Chair enters an order nobody
-          // gave (types.ts, `cancels`).
-          assert.ok(
-            conditionalIds.has(cancelled),
-            `${mission.id}: conditional "${conditional.id}" cancels "${cancelled}", ` +
-              'which is not authored'
-          );
-          assert.notEqual(
-            cancelled,
-            conditional.id,
-            `${mission.id}: conditional "${conditional.id}" cancels itself`
-          );
-        }
-        for (const beat of conditional.beats) {
-          if (beat.kind === 'creature') {
-            assert.ok(
-              placed.has(beat.tag) ||
-                spawnedByBeat.has(beat.tag) ||
-                (beat.spawnAt !== undefined && beat.species !== undefined),
-              `${mission.id}: conditional "${conditional.id}" neither places nor spawns "${beat.tag}"`
-            );
-            continue;
-          }
-          if (beat.kind === 'objective') {
-            assert.ok(
-              mission.objectives.some((objective) => objective.id === beat.id),
-              `${mission.id}: conditional "${conditional.id}" sets objective "${beat.id}", ` +
-                'which is not authored'
-            );
-            continue;
-          }
-          if (beat.kind === 'ground') {
-            assert.ok(
-              mission.regions.some((region) => region.id === beat.region),
-              `${mission.id}: conditional "${conditional.id}" names region "${beat.region}", ` +
-                'which is not authored'
-            );
-            continue;
-          }
-          if (beat.kind === 'resolve' || beat.kind === 'say') continue;
-          assert.ok(
-            placed.has(beat.tag) || spawnedByBeat.has(beat.tag),
-            `${mission.id}: conditional "${conditional.id}" names "${beat.tag}", ` +
-              'which nothing places'
-          );
-        }
       }
     }
   });
@@ -1127,5 +1059,213 @@ describe('the sounding, as docs/mission-aptitude.md §4 states it', () => {
       interval,
       'and resuming starts from nothing'
     );
+  });
+});
+
+describe('a beat fired by a condition, as docs/mission-aptitude.md §13 asks for it', () => {
+  /**
+   * §13's clause, restated from the prose rather than from the implementation:
+   * "a beat with a predicate instead of an `atTick`". A beat fires on the first
+   * mission tick its condition is met, and once. So over a sequence of readings
+   * the answer is the index of the first `true` and nothing else — computed
+   * here by `indexOf`, which `dueConditionalBeats` deliberately does not call,
+   * so the two arrive at the same answer by different arithmetic or one of them
+   * is wrong. The sounding suite above does this for §4 and `echo-parity.test.ts`
+   * for §8, and for the same reason: a reference implementation of the *rule*,
+   * which stays meaningful when the rule legitimately changes because it
+   * changes with it.
+   */
+  function firesBySpec(readings: readonly boolean[]): number[] {
+    const first = readings.indexOf(true);
+    return first === -1 ? [] : [first];
+  }
+
+  /** A beat whose effect is beside the point; only `when` is under test here. */
+  const REFERENCE: MissionConditionalBeat = {
+    when: { kind: 'endure', ticks: 0 },
+    kind: 'say',
+    speaker: 'reference',
+    text: 'the condition came true',
+    note: 'the reference conditional beat',
+  };
+
+  /** Drive one beat over a sequence of readings, returning the passes it fired on. */
+  function firedOn(readings: readonly boolean[]): number[] {
+    const fired = new Set<number>();
+    const passes: number[] = [];
+    readings.forEach((reading, pass) => {
+      const due = dueConditionalBeats([REFERENCE], fired, () => reading);
+      for (const index of due) fired.add(index);
+      if (due.length > 0) passes.push(pass);
+    });
+    return passes;
+  }
+
+  it('fires on the first pass its condition is met, over every shape of reading', () => {
+    // The fourth and fifth are the ones worth having: a condition that stops
+    // being true must not un-fire the beat, and one that comes true a second
+    // time must not fire it again. `tolerance` is monotone so neither can
+    // happen to §5, but the mechanism deliberately does not care which
+    // predicate it is given, and `quiet` is standing (`isStanding`).
+    for (const readings of [
+      [false, false, false],
+      [true, true, true],
+      [false, false, true, true],
+      [false, true, true, false, false],
+      [false, true, false, true, false, true],
+      [],
+    ]) {
+      assert.deepEqual(
+        firedOn(readings),
+        firesBySpec(readings),
+        `readings ${JSON.stringify(readings)}`
+      );
+    }
+  });
+
+  it('fires two beats whose conditions come true together, in authored order', () => {
+    // A schedule may author two beats at one tick and both happen; this list
+    // has no order of its own, so the only order available is the order they
+    // are written in, and it is worth pinning that it is that one.
+    const beats = [REFERENCE, { ...REFERENCE, speaker: 'second' }];
+    assert.deepEqual(
+      dueConditionalBeats(beats, new Set(), () => true),
+      [0, 1]
+    );
+    assert.deepEqual(
+      dueConditionalBeats(beats, new Set([0]), () => true),
+      [1]
+    );
+    assert.deepEqual(
+      dueConditionalBeats(beats, new Set([0, 1]), () => true),
+      []
+    );
+  });
+
+  it("stops the coring at twenty seconds and recalls at thirty, as §5's tolerance runs", () => {
+    // §5, in the two sentences this row exists to author: "at twenty seconds —
+    // ten short of the tolerance — the barge stops coring", and at thirty
+    // "Bramm files a contact rather than a fault [...] and the Third recalls
+    // the party". Both hang off one cumulative tally, which is why they are two
+    // beats over one predicate kind rather than a mechanism of their own.
+    //
+    // The tally is reasoned from the prose here rather than read off the
+    // runtime: a party standing at Classification accrues one Echo interval of
+    // sim ticks per mission tick (`applyTolerance`'s arithmetic, which §5's
+    // "thirty seconds" is wall clock rather than a count of readings), so the
+    // pass a threshold falls on is its tick count divided by that interval. No
+    // `isMet` anywhere in this test — the comparison is the one §5 states.
+    const interval = Math.round(SIM.TICK_HZ / SIM.ECHO_HZ);
+    const coring: MissionConditionalBeat = {
+      when: { kind: 'tolerance', ticks: 20 * SIM.TICK_HZ, tier: ResolutionTier.Classification },
+      kind: 'silent',
+      tag: 'survey-barge',
+      active: true,
+      note: '§5: SIG 55 goes to idle, and a thing going quiet is the loudest event available',
+    };
+    const recall: MissionConditionalBeat = {
+      when: { kind: 'tolerance', ticks: 30 * SIM.TICK_HZ, tier: ResolutionTier.Classification },
+      kind: 'say',
+      speaker: 'Surveyor Ade Bramm',
+      text: 'Filing a contact.',
+      note: '§5: not a mission failure — from here the mission is an extraction',
+    };
+
+    const fired = new Set<number>();
+    const firedOnPass = new Map<number, number>();
+    // Forty seconds of unbroken Classification, which is ten more than §5 has
+    // any interest in: the tolerance is capped and the beats are spent.
+    for (let pass = 0; pass * interval <= 40 * SIM.TICK_HZ; pass++) {
+      const exposedTicks = pass * interval;
+      const due = dueConditionalBeats(
+        [coring, recall],
+        fired,
+        (beat) => beat.when.kind === 'tolerance' && exposedTicks >= beat.when.ticks
+      );
+      for (const index of due) {
+        fired.add(index);
+        firedOnPass.set(index, pass);
+      }
+    }
+
+    const coringPass = firedOnPass.get(0);
+    const recallPass = firedOnPass.get(1);
+    assert.equal(coringPass, Math.ceil((20 * SIM.TICK_HZ) / interval), '§5: twenty seconds');
+    assert.equal(recallPass, Math.ceil((30 * SIM.TICK_HZ) / interval), '§5: thirty seconds');
+    assert.equal(
+      ((recallPass ?? 0) - (coringPass ?? 0)) * interval,
+      10 * SIM.TICK_HZ,
+      "§5: the warning is ten seconds, and campaign.md §10's sixty are the column behind it"
+    );
+  });
+
+  it('names only things the mission actually placed', () => {
+    // The schedule's own version of this test walks in order and lets a
+    // creature beat spawn the tag a later beat names. This list has no order,
+    // so it cannot: a conditional beat either names something the mission
+    // placed or carries its own spawn, and there is no earlier beat for it to
+    // lean on.
+    for (const mission of MISSIONS) {
+      const placed = authoredTags(mission);
+      const regions = new Set(mission.regions.map((region) => region.id));
+      for (const beat of mission.conditionalBeats ?? []) {
+        if (beat.kind === 'say') continue;
+        if (beat.kind === 'objective') {
+          assert.ok(
+            mission.objectives.some((objective) => objective.id === beat.id),
+            `${mission.id}: a conditional beat sets objective "${beat.id}", which is not authored`
+          );
+          continue;
+        }
+        if (beat.kind === 'ground') {
+          assert.ok(
+            regions.has(beat.region),
+            `${mission.id}: a conditional ground beat names region "${beat.region}"`
+          );
+          continue;
+        }
+        if (beat.kind === 'creature' && !placed.has(beat.tag)) {
+          assert.ok(
+            beat.spawnAt !== undefined && beat.species !== undefined,
+            `${mission.id}: conditional beat for "${beat.tag}" neither places it nor spawns it`
+          );
+          continue;
+        }
+        assert.ok(
+          placed.has(beat.tag),
+          `${mission.id}: a conditional ${beat.kind} beat names "${beat.tag}", ` +
+            `which nothing places`
+        );
+      }
+    }
+  });
+
+  it('keys every condition on a role and a region the mission authors', () => {
+    // `progressOf`'s reason, arriving at a beat instead of at an objective and
+    // costing more: an objective pointed at a misspelt region reads as a
+    // mission being failed, and a *beat* pointed at one simply never fires —
+    // the recall that does not happen, with nothing on screen to say so.
+    for (const mission of MISSIONS) {
+      const regions = new Set(mission.regions.map((region) => region.id));
+      const roles = new Set(
+        mission.parties
+          .filter((party) => party.slot === mission.playerSlot)
+          .flatMap((party) => party.units)
+          .map((unit) => unit.role)
+          .filter((role): role is string => role !== undefined)
+      );
+      for (const beat of mission.conditionalBeats ?? []) {
+        const when = beat.when;
+        if (when.kind === 'extract') {
+          assert.ok(
+            regions.has(when.region),
+            `${mission.id}: a condition on region "${when.region}"`
+          );
+        }
+        if (when.kind === 'extract' || when.kind === 'survive' || when.kind === 'quiet') {
+          assert.ok(roles.has(when.role), `${mission.id}: a condition on role "${when.role}"`);
+        }
+      }
+    }
   });
 });

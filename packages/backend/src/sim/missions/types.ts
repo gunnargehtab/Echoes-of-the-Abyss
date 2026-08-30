@@ -6,14 +6,18 @@
  * a beat that names a hull nobody placed fails at `npm run type-check` rather
  * than half way through a match.
  *
- * A table, not a language. Eight predicates, nine beat kinds, no expressions
- * and no variables — and one condition shape: a beat may fire on a predicate
- * instead of a tick (`MissionConditionalBeat`), in the same vocabulary the
- * objectives already speak, walked as a second short list that is not a
- * schedule. `sim/maps/types.ts` makes this argument about region shapes and it
- * holds harder here: a mission scripting language would be more expressive than
- * anything in `docs/` actually asks for, and the second mission is the right
- * time to find out what the first one was missing.
+ * A table, not a language. Eight predicates, nine beat kinds, no expressions and
+ * no variables. `sim/maps/types.ts` makes this argument about region shapes and
+ * it holds harder here: a mission scripting language would be more expressive
+ * than anything in `docs/` actually asks for, and the second mission is the
+ * right time to find out what the first one was missing.
+ *
+ * **One beat may be fired by a condition rather than by a tick** — the row
+ * docs/mission-aptitude.md §13 asks for, and the sentence that used to read
+ * "no conditions" here. It is emphatically still not a language: a conditional
+ * beat carries a `MissionPredicate` chosen from the same eight rows an
+ * objective draws on, and there is nowhere to write an expression over them.
+ * See `MissionConditionalBeat`.
  */
 
 import type {
@@ -446,9 +450,22 @@ export interface MissionObjective {
  * with a cursor, so the schedule reads down the page as docs/campaign.md's
  * `| Time | Beat |` table reads down its own.
  */
-export type MissionBeat =
+export type MissionBeat = MissionBeatEffect & { atTick: number };
+
+/**
+ * What a beat *does*, with no statement of when.
+ *
+ * Split from the time so that a beat fired by a condition and a beat fired by a
+ * tick do the same things — docs/mission-aptitude.md §13 asks for "a beat with
+ * a predicate instead of an `atTick`", and this is that sentence written as a
+ * type: `MissionBeat` is an effect plus a tick, `MissionConditionalBeat` is an
+ * effect plus a predicate, and a kind added here is available to both. The one
+ * asymmetry is deliberate and stated where it is spent — a condition cannot
+ * fire `resolve`, because campaign.md §10's telegraph is measured between two
+ * authored ticks and a condition has none.
+ */
+export type MissionBeatEffect =
   | {
-      atTick: number;
       kind: 'move';
       tag: MissionTag;
       x: number;
@@ -456,10 +473,9 @@ export type MissionBeat =
       depthM?: number;
       note: string;
     }
-  | { atTick: number; kind: 'ping'; tag: MissionTag; note: string }
-  | { atTick: number; kind: 'silent'; tag: MissionTag; active: boolean; note: string }
+  | { kind: 'ping'; tag: MissionTag; note: string }
+  | { kind: 'silent'; tag: MissionTag; active: boolean; note: string }
   | {
-      atTick: number;
       kind: 'creature';
       tag: MissionTag;
       species?: FaunaSpecies;
@@ -483,8 +499,8 @@ export type MissionBeat =
       loud: boolean;
       note: string;
     }
-  | { atTick: number; kind: 'lose'; tag: MissionTag; note: string }
-  | { atTick: number; kind: 'release'; tag: MissionTag; note: string }
+  | { kind: 'lose'; tag: MissionTag; note: string }
+  | { kind: 'release'; tag: MissionTag; note: string }
   /**
    * Write the ground under a named region (#197), and what the water over it
    * sounds like (#259).
@@ -505,7 +521,6 @@ export type MissionBeat =
    * `SOLID` from `sim/terrain.ts` is how rock is spelled.
    */
   | {
-      atTick: number;
       kind: 'ground';
       region: string;
       floorM?: number;
@@ -513,8 +528,8 @@ export type MissionBeat =
       biome?: Biome;
       note: string;
     }
-  | { atTick: number; kind: 'objective'; id: string; status: ObjectiveStatus; note: string }
-  | { atTick: number; kind: 'say'; speaker: string; text: string; note: string }
+  | { kind: 'objective'; id: string; status: ObjectiveStatus; note: string }
+  | { kind: 'say'; speaker: string; text: string; note: string }
   /**
    * `conclusion` marks a close that is not a failure state: the tide ending,
    * not a timer running out (docs/glossary.md, *Mission Outcome*;
@@ -524,56 +539,74 @@ export type MissionBeat =
    * so `missions.test.ts` exempts a conclusion from the telegraph, and from
    * nothing else.
    */
-  | { atTick: number; kind: 'resolve'; conclusion?: true; note: string };
-
-/** One member of `MissionBeat` with its `atTick` removed — what a conditional beat fires. */
-export type MissionActionBeat = MissionBeat extends infer B
-  ? B extends { atTick: number }
-    ? Omit<B, 'atTick'>
-    : never
-  : never;
+  | { kind: 'resolve'; conclusion?: true; note: string };
 
 /**
- * A beat fired by a condition rather than a tick — the row
- * docs/mission-aptitude.md §13 fixed the shape of, built for
- * docs/mission-exposure.md §4's warning-at-twenty and recall-at-thirty.
+ * A beat fired by a condition rather than by a tick — docs/mission-aptitude.md
+ * §13's row, and §5's three consequences: the barge stopping its coring at
+ * twenty seconds of tolerance, the recall at thirty, and the column out of the
+ * Holding behind it.
  *
- * A table, not a language: the condition is a `MissionPredicate` — the same
- * vocabulary the objectives already speak, evaluated for a beat instead of for
- * an objective row — and what fires is a short list of ordinary beats, once,
- * on the first Echo tick the predicate holds. No expressions, no variables,
- * no operators.
+ * **A table, not a language** (docs/mission-sorrowgate.md §9). `when` is one
+ * `MissionPredicate`, drawn from the same eight rows a `MissionObjective`
+ * draws on and evaluated by the same `isMet` — there is no `and`, no `not`, no
+ * threshold arithmetic and nowhere to put any. A mission that wants two
+ * conditions authors two beats. `tolerance` is the one §5 spends and the
+ * mechanism deliberately does not care: anything an objective can be keyed on,
+ * a beat can be keyed on.
  *
- * **A second, short list that is not a schedule.** The beat table stays the
- * world's clock, authored in ascending `atTick` order and walked with a
- * cursor, and these are walked beside it each tick — because the tick at
- * which a cumulative tally crosses twenty seconds is a fact about how the
- * player played, and has no place in an ordering.
+ * **Fires once, on the first mission tick its predicate is met**, and never
+ * again — a beat is an event, and `tolerance` is monotone anyway. A predicate
+ * that can stop being true (`isStanding`) does not un-fire the beat it fired,
+ * for `deriveObjectives`' reason turned around: an objective's status is a
+ * sentence about now, and a beat is a thing that happened.
  *
- * An `endure` predicate here is measured from the mission's start — a
- * conditional has no reveal moment to start a clock from, so the mission's is
- * the only honest one.
+ * **Authored as a second, short list rather than folded into `beats`.** The
+ * beat table is the world's clock: `fireDueBeats` walks it with a cursor under
+ * the invariant that it is in ascending `atTick` order, `missions.test.ts`
+ * holds every literal to that, and a beat with no tick has no place in that
+ * ordering. So the schedule stays a schedule and reads down the page as §9's
+ * table does, and the conditional beats sit beside it as what they are — a
+ * short list of standing rules, in no order at all, checked every mission tick.
+ *
+ * **It cannot close a mission**, which is why the effect union is
+ * `MissionBeatEffect` minus `resolve` rather than all of it. docs/campaign.md
+ * §10 — no mission fails on a timer alone, and every failure is audible for
+ * sixty seconds — is enforced in `missions.test.ts` by measuring the gap
+ * between the last `loud` beat and the `resolve`, and that measurement needs
+ * two authored ticks. A condition-fired close has none: the tick it lands on
+ * is a fact about how the player played, so no test could state the lead time
+ * and §10 would go back to being remembered rather than enforced. §5 does not
+ * ask for one either — exhausting the tolerance turns the mission into an
+ * extraction and is emphatically *not* a failure, so the recall is a `say`, an
+ * `objective` and a `move`, and the close stays on the clock where §9 puts it.
+ *
+ * For the same reason there is no `loud` flag here as the `creature` beat
+ * carries: `loud` exists solely to be the left-hand side of that measurement,
+ * and a beat with no tick cannot be one. The barge falling silent at twenty is
+ * still the audible precursor §5 designs — it is simply a precursor to the
+ * recall, which is not a close, rather than to a close that this list cannot
+ * author.
  */
-export interface MissionConditionalBeat {
-  id: string;
-  /** Fires the first tick this holds. Never un-fires: a spent tally stays spent. */
+export type MissionConditionalBeat = Exclude<MissionBeatEffect, { kind: 'resolve' }> & {
   when: MissionPredicate;
-  /** Fired in list order, exactly as scheduled beats fire in beat order. */
-  beats: readonly MissionActionBeat[];
   /**
-   * Conditionals retired when this one fires, by id — never to fire, whatever
-   * their predicates later hold.
+   * The one authored interaction between conditional beats, and the exception
+   * to "in no order at all, no interaction between them" above: when any beat
+   * in a choice group fires, every *unfired* beat sharing the group is retired
+   * on the same pass — never to fire, whatever its predicate later holds.
+   * Beats due on the same pass all fire first, so two effects hung on one
+   * condition share a group without retiring each other.
    *
    * docs/mission-tolerance.md §6 is the row that needed it: one casting, two
-   * apertures, and each delivery retires the other's announcement. Without
-   * it, a player who set the casting and then drove the spent barge through
-   * the second aperture's water would hear the Chair enter an order nobody
-   * gave. Exclusivity is a fact about the choice, so it is authored on the
-   * choice rather than guessed at by the runtime.
+   * apertures, and each delivery retires the other's announcement. Without it,
+   * a player who set the casting and then drove the spent barge through the
+   * second aperture's water would hear the Chair enter an order nobody gave.
+   * Exclusivity is a fact about the choice, so it is authored on the choice
+   * rather than guessed at by the runtime.
    */
-  cancels?: readonly string[];
-  note: string;
-}
+  choiceGroup?: string;
+};
 
 /**
  * A scripted listener whose hearing is an outcome — the sweep of
@@ -686,7 +719,11 @@ export interface MissionDefinition extends MissionHeader {
   locks: readonly AbilityLock[];
   objectives: readonly MissionObjective[];
   beats: readonly MissionBeat[];
-  /** Beats that key on a condition rather than a tick. Omitted is none. */
+  /**
+   * Beats fired by a condition rather than by a tick, in no order — see
+   * `MissionConditionalBeat`. Omitted is none, which is every mission written
+   * before docs/mission-aptitude.md asked for one.
+   */
   conditionalBeats?: readonly MissionConditionalBeat[];
   /** The mission's reading of each result. Authored, in-register, not a score. */
   epilogue: Record<MissionOutcome, string>;

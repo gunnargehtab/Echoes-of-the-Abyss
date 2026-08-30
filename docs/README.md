@@ -94,7 +94,7 @@ of it has a document to point at yet:
   format itself has stopped asking: the condition-fired beat, the exposure tally and the aimed
   hold — the three things the first four documents still wanted — have all shipped, along with
   the Ledger's own three additions (the `deliver` predicate, readings per objective, and the
-  conditional's `cancels`), and no specified mission now names a missing mechanism.
+  conditional beat's choice group), and no specified mission now names a missing mechanism.
 - **Campaign progression and unlock state.** Nothing records that a mission was played, so the
   prologue is replayable, remembers nothing, and the Tutorial and campaign doors are the same
   door.

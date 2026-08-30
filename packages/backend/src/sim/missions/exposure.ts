@@ -13,9 +13,9 @@
  * - **The budget is the tolerance** (§4): thirty seconds of Classification,
  *   cumulative, across the charter, with its own reading at the close.
  * - **The consequences key on the tally, not the clock** — the warning at
- *   twenty and the recall at thirty are the format's first conditional beats
- *   (types.ts, `MissionConditionalBeat`; docs/mission-aptitude.md §13's row,
- *   built here first because the Ledger reached it first).
+ *   twenty and the recall at thirty are conditional beats (types.ts,
+ *   `MissionConditionalBeat` — docs/mission-aptitude.md §13's row, built for
+ *   #282), the Ledger's first authored spend of them.
  * - **The readings assemble the close** (§6, §8): six authored points, each
  *   with an entered and a gap line, the transcript arrangement aimed outward
  *   for the first time. The sixth is the campaign turning, and it turns in a
@@ -387,41 +387,45 @@ export const LEDGER_EXPOSURE: MissionDefinition = {
   ],
 
   /**
-   * §4 — what spends at twenty, and what at thirty. The format's first
-   * conditional beats: fired by the tally, once, through the ordinary beat
-   * path (types.ts, `MissionConditionalBeat`).
+   * §4 — what spends at twenty, and what at thirty: the Ledger's first
+   * condition-fired rows (types.ts, `MissionConditionalBeat`) — one effect
+   * per row, fired by the tally, once. The recall is three rows on one
+   * condition, which is how the format spells "two conditions, author two
+   * beats" when a mission wants three effects.
    */
   conditionalBeats: [
     {
-      id: 'the-warning',
+      kind: 'say',
+      speaker: "The Division's guidance",
+      text: 'Twenty seconds of Classification are entered against the charter. Ten remain. The Division reminds the survey that the remainder is not a reserve; it is a margin, and margins are for arithmetic, not for spending.',
+      note: 'The warning at twenty — fired by the tally, not the clock (§4)',
       when: { kind: 'tolerance', ticks: WARNING_TICKS, tier: ResolutionTier.Classification },
-      beats: [
-        {
-          kind: 'say',
-          speaker: "The Division's guidance",
-          text: 'Twenty seconds of Classification are entered against the charter. Ten remain. The Division reminds the survey that the remainder is not a reserve; it is a margin, and margins are for arithmetic, not for spending.',
-          note: 'Fired by the tally, not the clock (§4)',
-        },
-      ],
-      note: 'The warning at twenty — the first ten seconds the Division ever gave anyone back',
     },
     {
-      id: 'the-recall',
+      kind: 'say',
+      speaker: 'Underwriter Baen Tull',
+      text: 'Thirty. The charter is spent and I am recalling it, which the record will show I did by the book and without editorial. Survey: home, in duplicate, at your best speed. The book has nothing further to say down here and neither do I.',
+      note: 'The recall at thirty — not a failure; a partial outcome is an outcome (§4)',
       when: { kind: 'tolerance', ticks: TOLERANCE_TICKS, tier: ResolutionTier.Classification },
-      beats: [
-        {
-          kind: 'say',
-          speaker: 'Underwriter Baen Tull',
-          text: 'Thirty. The charter is spent and I am recalling it, which the record will show I did by the book and without editorial. Survey: home, in duplicate, at your best speed. The book has nothing further to say down here and neither do I.',
-          note: '',
-        },
-        // The watch turns onto the survey's last classified water — the
-        // listening ground, which is the only water the survey can have been
-        // classified in (§7). Not a pursuit: an arrival.
-        { kind: 'move', tag: 'watch-a', x: 2500, y: 1800, note: 'The watch turns' },
-        { kind: 'move', tag: 'watch-b', x: 2200, y: 1850, note: '' },
-      ],
-      note: 'The recall at thirty — not a failure; a partial outcome is an outcome',
+    },
+    // The watch turns onto the survey's last classified water — the
+    // listening ground, which is the only water the survey can have been
+    // classified in (§7). Not a pursuit: an arrival.
+    {
+      kind: 'move',
+      tag: 'watch-a',
+      x: 2500,
+      y: 1800,
+      note: 'The watch turns',
+      when: { kind: 'tolerance', ticks: TOLERANCE_TICKS, tier: ResolutionTier.Classification },
+    },
+    {
+      kind: 'move',
+      tag: 'watch-b',
+      x: 2200,
+      y: 1850,
+      note: '',
+      when: { kind: 'tolerance', ticks: TOLERANCE_TICKS, tier: ResolutionTier.Classification },
     },
   ],
 

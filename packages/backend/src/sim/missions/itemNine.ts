@@ -361,27 +361,22 @@ export const LEDGER_ITEM_NINE: MissionDefinition = {
   /**
    * §9 — if the chair transmits, at any point in the sitting: the chair's
    * words, and the registry's answer, fired by the record rather than the
-   * clock.
+   * clock. Two rows on one condition, in authored order.
    */
   conditionalBeats: [
     {
-      id: 'the-word',
+      kind: 'say',
+      speaker: 'Executor Odile Varr-Kest',
+      text: 'This is the chair. The motion before the Board is the continuance of Item Nine. The motion is not moved. The item is read into the open record, in full, beginning now — and the chair notes, for the minutes, that what is transmitted in this chamber cannot be untransmitted, which has been the entire question for one hundred and twenty-six years.',
+      note: 'The only version of the item the campaign will ever quote (§12)',
       when: { kind: 'tolerance', ticks: RECORD_TICKS, tier: ResolutionTier.Classification },
-      beats: [
-        {
-          kind: 'say',
-          speaker: 'Executor Odile Varr-Kest',
-          text: 'This is the chair. The motion before the Board is the continuance of Item Nine. The motion is not moved. The item is read into the open record, in full, beginning now — and the chair notes, for the minutes, that what is transmitted in this chamber cannot be untransmitted, which has been the entire question for one hundred and twenty-six years.',
-          note: 'The only version of the item the campaign will ever quote (§12)',
-        },
-        {
-          kind: 'say',
-          speaker: 'The Registry',
-          text: 'Entered.',
-          note: '',
-        },
-      ],
-      note: 'Fired by the record, not the clock',
+    },
+    {
+      kind: 'say',
+      speaker: 'The Registry',
+      text: 'Entered.',
+      note: '',
+      when: { kind: 'tolerance', ticks: RECORD_TICKS, tier: ResolutionTier.Classification },
     },
   ],
 
