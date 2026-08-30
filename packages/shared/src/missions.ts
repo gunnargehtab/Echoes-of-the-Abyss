@@ -233,8 +233,8 @@ export const LEDGER_ITEM_NINE_HEADER: MissionHeader = {
   premise:
     'Nine items stand. The chamber hears everyone at once. What the chair does with the ninth is the chair’s.',
   mapId: 'holding-board',
-  // The chamber empties at 12:00 (docs/mission-item-nine.md §9), at §10's floor.
-  lengthBandS: [660, 780],
+  // The chamber empties at 12:30 (docs/mission-item-nine.md §9), just over §10's floor.
+  lengthBandS: [720, 840],
   /**
    * The session notice, as the registry circulates it — docs/mission-item-nine.md
    * §12, verbatim: the shortest briefing in the campaign, because the campaign

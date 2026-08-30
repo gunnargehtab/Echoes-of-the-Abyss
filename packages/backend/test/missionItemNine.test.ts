@@ -76,7 +76,7 @@ describe('the sitting, sat — docs/mission-item-nine.md §3, §8', () => {
   it('closes on the continuance when the chair does nothing, minutes entered', () => {
     const map = missionMapById(LEDGER_ITEM_NINE.mapId)!;
     const match = new Match(map, { mission: LEDGER_ITEM_NINE, fauna: false, seed: 73 });
-    for (let tick = 0; tick <= T(12, 30); tick++) {
+    for (let tick = 0; tick <= T(13, 30); tick++) {
       match.update(STEP_MS);
       if (match.missionOver !== null) break;
     }

@@ -48,12 +48,12 @@ Specified in full — map, forces, beats, numbers, register and text — in [mis
 | # | Mission | Teaches | Beat |
 | --- | --- | --- | --- |
 | 1 | **[Asset Recovery](mission-asset-recovery.md)** | Klaxon Doctrine: fight loud, survive it | Ninefold salvage under fauna pressure. You are the loudest thing on the map and it is fine. Specified in full in [mission-asset-recovery.md](mission-asset-recovery.md) |
-| 2 | **Shift Change** | Economy, throttle, industrial hum | Osk quietly moves crews off a dying face before the announcement he is not authorised to make |
-| 3 | **Baffle** | Masking, Baffle Barge, escorting a slow thing | The first push that works. It costs more than it should |
-| 4 | **Exposure** | Echo Marks and scouting the past | Tull's model needs field data. You read three days of someone else's economy off the seabed |
-| 5 | **Tolerance** | Depth, pressure, unhealable attrition | A containment failure. You can save the habitat or the section. The arithmetic is not hidden from you |
-| 6 | **Prospect** | Abyssal descent, PR, the round trip | The new field has to exist. The only candidate is the Mouth's rim |
-| 7 | **Item Nine** | Nothing new — a command mission with one decision | Varr-Kest can declassify or she can lie to the Board for the first time in her life |
+| 2 | **[Shift Change](mission-shift-change.md)** | Economy, throttle, industrial hum | Osk quietly moves crews off a dying face before the announcement he is not authorised to make. Specified in full in [mission-shift-change.md](mission-shift-change.md) |
+| 3 | **[Baffle](mission-baffle.md)** | Masking, Baffle Barge, escorting a slow thing | The first push that works. It costs more than it should. Specified in full in [mission-baffle.md](mission-baffle.md) |
+| 4 | **[Exposure](mission-exposure.md)** | Echo Marks and scouting the past | Tull's model needs field data. You read three days of someone else's economy off the seabed. Specified in full in [mission-exposure.md](mission-exposure.md) |
+| 5 | **[Tolerance](mission-tolerance.md)** | Depth, pressure, unhealable attrition | A containment failure. You can save the habitat or the section. The arithmetic is not hidden from you. Specified in full in [mission-tolerance.md](mission-tolerance.md) |
+| 6 | **[Prospect](mission-prospect.md)** | Abyssal descent, PR, the round trip | The new field has to exist. The only candidate is the Mouth's rim — the Ledger's convergence slot (§8). Specified in full in [mission-prospect.md](mission-prospect.md) |
+| 7 | **[Item Nine](mission-item-nine.md)** | Nothing new — a command mission with one decision | Varr-Kest can declassify or she can lie to the Board for the first time in her life — the Ledger's ending (§9). Specified in full in [mission-item-nine.md](mission-item-nine.md) |
 
 ---
 
@@ -146,14 +146,15 @@ Whichever campaign you are playing, the other three arrive. The convergence miss
 
 ## 11. Scaffold Status
 
-What is built of the campaign, so nobody re-implements what exists or assumes what does not. Everything above this line is design; only the first row of this table is code.
+What is built of the campaign, so nobody re-implements what exists or assumes what does not. Everything above this line is design; the table below says which of it is also code, mission by mission, and each mission document's §13 carries the row-by-row account.
 
 | Part | Status |
 | --- | --- |
 | **Prologue — Sorrowgate** | Implemented (#190). [mission-sorrowgate.md](mission-sorrowgate.md) §13 is the row-by-row account of what inside it is built |
-| **Four faction campaigns** — 28 missions | **Four specified, none built — every campaign's first mission is now a document of record.** [mission-asset-recovery.md](mission-asset-recovery.md) (The Ledger 1), [mission-tend.md](mission-tend.md) (The Second Seeding 1), [mission-attendance.md](mission-attendance.md) (The Attending 1) and [mission-aptitude.md](mission-aptitude.md) (The Second Chord 1), each with a scaffold-status list of what the format still needs; the other 24 rows of §4–§7 remain titles, teaching targets and beats, and each needs a document of its own before it needs code. The fourth is the first whose headline gap is a *system* rather than a mission mechanism: directional SIG had no numbers anywhere in the bible until it was written, and [systems-echo.md](systems-echo.md) §8 now carries them |
-| **Convergence — The Rim** | Not started |
-| **The four endings** | Not started |
+| **The Ledger** — all seven missions | **Specified and built, end to end** (#212): [mission-asset-recovery.md](mission-asset-recovery.md), [mission-shift-change.md](mission-shift-change.md), [mission-baffle.md](mission-baffle.md), [mission-exposure.md](mission-exposure.md), [mission-tolerance.md](mission-tolerance.md), [mission-prospect.md](mission-prospect.md), [mission-item-nine.md](mission-item-nine.md) — each a document of record with its literal, map and tests in the registry. The format moved the way its own comment predicted — once, early: the `deliver` predicate, readings per objective, and the condition-fired beat (with its `cancels`) all landed against Ledger documents, and each §13 says which |
+| **The other three campaigns** — 21 missions | **First missions specified; Tend and Attendance built** ([mission-tend.md](mission-tend.md), [mission-attendance.md](mission-attendance.md), [mission-aptitude.md](mission-aptitude.md)). Aptitude's remaining gaps are one instrument and a map ([mission-aptitude.md](mission-aptitude.md) §13); the other 18 rows of §5–§7 remain titles, teaching targets and beats, and each needs a document of its own before it needs code |
+| **Convergence — The Rim** | **One of four built** — the Ledger's, as [mission-prospect.md](mission-prospect.md): the same eleven kilometres the other three campaigns will reach from their own directions, per §8's rule that it is never the same mission |
+| **The four endings** | **One of four built** — the Ledger's, as [mission-item-nine.md](mission-item-nine.md): one conclusion outcome, two unranked records, which is §9 kept mechanically |
 | Progression — recording what you have played, and the briefing variants that depend on it (§1) | Not started. The prologue is replayable and remembers nothing, so the Tutorial and campaign doors are currently the same door |
 
 ---
@@ -161,6 +162,7 @@ What is built of the campaign, so nobody re-implements what exists or assumes wh
 ## Related
 
 - **[mission-sorrowgate.md](mission-sorrowgate.md)** — the prologue, specified: the court, the flight, the silence order and what answers the ping
+- **[mission-asset-recovery.md](mission-asset-recovery.md)** — The Ledger 1, and the six documents behind it: [mission-shift-change.md](mission-shift-change.md), [mission-baffle.md](mission-baffle.md), [mission-exposure.md](mission-exposure.md), [mission-tolerance.md](mission-tolerance.md), [mission-prospect.md](mission-prospect.md), [mission-item-nine.md](mission-item-nine.md) — the one campaign specified and built whole
 - **[mission-attendance.md](mission-attendance.md)** — The Attending 1, specified: one watch of a cycle, the return, and what a transcript is written at
 - **[mission-aptitude.md](mission-aptitude.md)** — The Second Chord 1, specified: six hulls, six formations, and the quarter of the compass a Knight is loud in
 - **[characters.md](characters.md)** — the twelve commanders and what each has not yet crossed

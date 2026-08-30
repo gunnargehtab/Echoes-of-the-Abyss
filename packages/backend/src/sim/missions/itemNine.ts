@@ -285,7 +285,7 @@ export const LEDGER_ITEM_NINE: MissionDefinition = {
       initial: ObjectiveStatus.Pending,
       markerId: 'the-rail',
       terminal: true,
-      predicate: { kind: 'endure', ticks: T(11, 30) },
+      predicate: { kind: 'endure', ticks: T(12, 30) },
     },
     {
       id: 'the-minutes',
@@ -346,10 +346,12 @@ export const LEDGER_ITEM_NINE: MissionDefinition = {
       note: '',
     },
 
-    // 12:00 — the chamber empties. A conclusion: this mission cannot be
-    // lost, only decided (§7, §8; the Tend carve-out).
+    // 13:00 — the backstop behind the sitting's own clock: the endure closes
+    // the chamber at 12:30, and a conclusion stands here so the schedule
+    // reads down the page whole. This mission cannot be lost, only decided
+    // (§7, §8; the Tend carve-out).
     {
-      atTick: T(12),
+      atTick: T(13),
       kind: 'resolve',
       conclusion: true,
       note: 'The session closed at its own length, whatever the chair had done',

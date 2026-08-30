@@ -209,8 +209,8 @@ cost, in a quiet room, having been taught for six missions exactly what it means
 
 ## 9. Length, SIG Budget, and the Beats
 
-**Length: twelve minutes** — the campaign's shortest, at the floor of
-[campaign.md](campaign.md) §10's 12–25, because a decision does not improve with padding.
+**Length: twelve minutes and a half** — the campaign's shortest, holding just over the floor
+of [campaign.md](campaign.md) §10's 12–25, because a decision does not improve with padding.
 
 **SIG budget: 30** — §4.
 
@@ -222,8 +222,8 @@ cost, in a quiet room, having been taught for six missions exactly what it means
 | 06:00 | Tull's model is read into record, under seal, with its one open column noted (§12) |
 | 10:20 | **The Clerk calls the ninth item** (§12) |
 | *(fired by the record, not the clock)* | **If the chair transmits** — at any point in the sitting: the registry answers, and the chair says the only version of the item the campaign will ever quote (§12) |
-| 11:30 | The session closes. The minutes are what the flight attended; the record is what the chair did |
-| 12:00 | The chamber empties. The close reads the ending (§8) |
+| 11:30 | The items end. The minutes are what the flight attended; the record is what the chair did |
+| 12:30 | The chamber empties. The close reads the ending (§8) |
 
 ---
 
