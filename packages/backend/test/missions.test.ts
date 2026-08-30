@@ -526,6 +526,47 @@ describe('the objectives', () => {
     }
   });
 
+  it('takes every sounding from a player-party hull, at a reachable figure', () => {
+    // The lift rule above, restated for the shape a bearing was added to
+    // (docs/mission-aptitude.md §4). The sounded count feeds a predicate the
+    // player is shown, so the hull is held to the roles' rule; the rest are
+    // the bounds the runtime cannot state for itself. A zero radius is a
+    // sounding no hull can ever stand inside, a zero hold is a sounding taken
+    // by looking at the formation, and a figure outside the meter is authored
+    // loudness the acoustics clamp would silently rewrite.
+    for (const mission of MISSIONS) {
+      const playerTags = new Set(
+        mission.parties
+          .filter((party) => party.slot === mission.playerSlot)
+          .flatMap((party) => party.units.map((unit) => unit.tag))
+      );
+      const soundings = mission.soundings ?? [];
+      const ids = soundings.map((sounding) => sounding.id);
+      assert.equal(new Set(ids).size, ids.length, `${mission.id}: duplicate sounding id`);
+      for (const sounding of soundings) {
+        assert.ok(
+          playerTags.has(sounding.tag),
+          `${mission.id}: sounding "${sounding.id}" is taken by "${sounding.tag}", ` +
+            'which is not a player hull'
+        );
+        assert.ok(
+          sounding.radiusM > 0,
+          `${mission.id}: sounding "${sounding.id}" has a radius of ${sounding.radiusM} m, ` +
+            'which no hull can stand inside'
+        );
+        assert.ok(
+          Number.isInteger(sounding.holdTicks) && sounding.holdTicks > 0,
+          `${mission.id}: sounding "${sounding.id}" is held for ${sounding.holdTicks} ticks, ` +
+            'and a sounding that is not held is not a sounding'
+        );
+        assert.ok(
+          sounding.sig >= 0 && sounding.sig <= 100,
+          `${mission.id}: sounding "${sounding.id}" sounds at ${sounding.sig}, outside the meter`
+        );
+      }
+    }
+  });
+
   it('authors every emitter off the player party, on a workable pattern', () => {
     // The Echo Layer's pair loop skips listener and emitter on one slot, so an
     // emitter on the player's own party is a beacon its audience can never
@@ -713,6 +754,23 @@ describe('the objectives', () => {
           (mission.lifts ?? []).length >= predicate.count,
           `${mission.id}: "${objective.id}" counts ${predicate.count} loads and the mission ` +
             `authors ${(mission.lifts ?? []).length} lifts`
+        );
+      }
+    }
+  });
+
+  it('asks for no more soundings than it authors', () => {
+    // The `attend` rule for the mirror of it: a count above the table is a
+    // counter that can never fill, and it fails by reading as a player who
+    // has not sounded rather than as a mission that is broken.
+    for (const mission of MISSIONS) {
+      const authored = (mission.soundings ?? []).length;
+      for (const objective of mission.objectives) {
+        if (objective.predicate.kind !== 'sound') continue;
+        assert.ok(
+          objective.predicate.count <= authored,
+          `${mission.id}: "${objective.id}" sounds ${objective.predicate.count} of ` +
+            `${authored} authored formations`
         );
       }
     }

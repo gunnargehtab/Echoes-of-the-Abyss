@@ -123,11 +123,13 @@ export function acousticsSystem(world: SimWorld): void {
     // that carry no resource fields for the harvest branch above to read. A
     // floor for the same reasons descent and laying are floors: it must never
     // make an already-louder hull quieter, and it holds through a barge that
-    // tries to go silent mid-cut — there is no quiet way to do a salvage. The
+    // tries to go silent mid-cut — there is no quiet way to do a salvage, and
+    // no quiet way to take a sounding (docs/mission-aptitude.md §4), which
+    // writes its own authored figure into the same map. The
     // mission runtime rebuilds the map on every Echo tick; the size gate keeps
     // every skirmish emitter to one integer compare.
-    if (world.liftCutSig.size !== 0) {
-      const cutSig = world.liftCutSig.get(eid);
+    if (world.missionSigFloor.size !== 0) {
+      const cutSig = world.missionSigFloor.get(eid);
       if (cutSig !== undefined) sig = Math.max(sig, cutSig);
     }
 

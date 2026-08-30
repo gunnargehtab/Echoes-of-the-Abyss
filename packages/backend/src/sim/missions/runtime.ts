@@ -34,8 +34,10 @@ import {
   MissionOutcome,
   ObjectiveStatus,
   ResolutionTier,
+  DIRECTIONAL_SIGNATURE,
   SIM,
   detectionRatio,
+  directionalFactor,
   thermoclineFactor,
   type EchoSnapshot,
   type MissionAbility,
@@ -46,6 +48,7 @@ import {
   Acoustic,
   DepthOrder,
   Fauna,
+  Heading,
   Health,
   MoveOrder,
   Owner,
@@ -68,7 +71,13 @@ import {
 import { projectMissionView, type MissionState } from './view.ts';
 import { directionalFactorFor } from '../directional.ts';
 import { exposedAtLeast, inRegion, isMet, isStanding, peakSigOf } from './predicates.ts';
-import type { MissionDefinition, MissionEmitter, MissionRole, MissionTag } from './types.ts';
+import type {
+  MissionDefinition,
+  MissionEmitter,
+  MissionRole,
+  MissionSounding,
+  MissionTag,
+} from './types.ts';
 
 /**
  * What tier the *player's own slot* currently resolves an entity at.
@@ -188,6 +197,21 @@ export class MissionRuntime {
   private readonly liftProgress = new Map<string, number>();
   /** Lifts whose cut has finished. Monotone: a rigged load stays rigged. */
   private readonly loadedLifts = new Set<string>();
+  /**
+   * Held, aimed ticks accrued against each sounding, by sounding id.
+   *
+   * **Reset on a broken hold, unlike `liftProgress` above**, and the difference
+   * is the mechanism rather than an inconsistency. A cut is work done to rock,
+   * so leaving does not undo it; a sounding is a tone *held* for twenty seconds
+   * (docs/mission-aptitude.md §4), and one that could be assembled out of four
+   * broken five-second fragments would teach the opposite of the lesson — that
+   * the cone is something to dip in and out of rather than something to commit
+   * a bearing to. Breaking range, turning off the formation and going silent
+   * are all the same break.
+   */
+  private readonly soundingProgress = new Map<string, number>();
+  /** Soundings that have been taken. Monotone: a sounding taken is a fact. */
+  private readonly takenSoundings = new Set<string>();
   /**
    * The sweep's one latched fact — docs/mission-tend.md §8: the day is filed
    * if a pass resolved a working hull or a fresh mark, on either pass, and a
@@ -403,6 +427,7 @@ export class MissionRuntime {
     this.holdCommitments(world);
     this.resolveRoleIds(world);
     this.applyLifts(world);
+    this.applySoundings(world);
     this.applyEmitters(world);
     this.applyAttendance(world, heardTier);
     this.applyTolerance(own);
@@ -712,7 +737,7 @@ export class MissionRuntime {
    * it — which also keeps the rule legible: the meter tells the player the cut
    * is running, and coming back resumes it where it stood.
    *
-   * `world.liftCutSig` is cleared and rebuilt whole every pass, the
+   * `world.missionSigFloor` is cleared and rebuilt whole every pass, the
    * `spireActive` arrangement, so a floor can never outlive its cut: a barge
    * that leaves mid-cut goes quiet on the next mission tick, a rigged load
    * never hums, and a recycled entity id cannot inherit a stranger's loudness.
@@ -726,7 +751,7 @@ export class MissionRuntime {
    * epilogue can read rather than a retry.
    */
   private applyLifts(world: SimWorld): void {
-    world.liftCutSig.clear();
+    world.missionSigFloor.clear();
     this.loadedIds.clear();
     this.loadedByLift.clear();
     for (const lift of this.definition.lifts ?? []) {
@@ -757,8 +782,75 @@ export class MissionRuntime {
         continue;
       }
       this.liftProgress.set(lift.id, (this.liftProgress.get(lift.id) ?? 0) + ECHO_TICK_INTERVAL);
-      world.liftCutSig.set(eid, lift.cutSig);
+      world.missionSigFloor.set(eid, lift.cutSig);
     }
+  }
+
+  /**
+   * The soundings — docs/mission-aptitude.md §4: within 400 m of a formation,
+   * bow on it, held for twenty seconds at the Spire's active figure.
+   *
+   * `applyLifts` above with a bearing added, which is §13's reading of it, and
+   * the bearing is the whole mission. Three conditions, all of them the
+   * player's own doing and none of them a die roll:
+   *
+   * - **In range.** A distance to a point, not a rectangle: a sounding is taken
+   *   *at* a formation.
+   * - **Bow on it.** The formation inside the hull's cone sector, decided by
+   *   the same dot-product test the Echo pass uses on the emitter side
+   *   (docs/systems-echo.md §8), read off the `Heading` the movement system
+   *   writes. Shared arithmetic rather than a second implementation, because
+   *   two ideas of where a hull's cone points would be a bug nobody could see:
+   *   the player aims by the cone the Echo Layer charges them for.
+   *
+   *   Deliberately not `hasBow` — that is the *eligibility* question for the
+   *   directional SIG term, and it is one navy's doctrine. Taking a sounding is
+   *   any hull doing a Spire's job by hand, so the test here is only "does this
+   *   thing have a front", which is exactly what asking for `Heading` asks.
+   * - **Not silent.** Silence stops the work exactly as it stops a cut — and
+   *   this is the mission where that price is barely a price, because §4's
+   *   whole argument is that a Knight who wants to be quiet turns rather than
+   *   goes silent.
+   *
+   * A broken hold resets (see `soundingProgress`). The floor is written into
+   * the same per-pass map the cut uses, taking the larger of the two if some
+   * later mission ever puts one hull under both — a floor never makes a louder
+   * hull quieter, so the pair compose the way every other floor in
+   * `acoustics.ts` does.
+   */
+  private applySoundings(world: SimWorld): void {
+    for (const sounding of this.definition.soundings ?? []) {
+      if (this.takenSoundings.has(sounding.id)) continue;
+      const eid = this.eidOf(world, sounding.tag);
+      if (eid === 0 || !this.isSounding(world, eid, sounding)) {
+        this.soundingProgress.delete(sounding.id);
+        continue;
+      }
+      const held = (this.soundingProgress.get(sounding.id) ?? 0) + ECHO_TICK_INTERVAL;
+      if (held >= sounding.holdTicks) {
+        this.takenSoundings.add(sounding.id);
+        this.soundingProgress.delete(sounding.id);
+        // No floor on the pass that finishes it: the hold is over, and a
+        // sounding still humming afterwards would be the lift's stale-floor
+        // bug wearing a bearing.
+        continue;
+      }
+      this.soundingProgress.set(sounding.id, held);
+      world.missionSigFloor.set(eid, Math.max(world.missionSigFloor.get(eid) ?? 0, sounding.sig));
+    }
+  }
+
+  /** In range, bow on the formation, and not silent — the three conditions. */
+  private isSounding(world: SimWorld, eid: number, sounding: MissionSounding): boolean {
+    const x = Position.x[eid]!;
+    const y = Position.y[eid]!;
+    if (Math.hypot(sounding.x - x, sounding.y - y) > sounding.radiusM) return false;
+    if (hasComponent(world, SilentRunning, eid) && SilentRunning.active[eid] === 1) return false;
+    if (!hasComponent(world, Heading, eid)) return false;
+    return (
+      directionalFactor(Heading.rad[eid]!, x, y, sounding.x, sounding.y) ===
+      DIRECTIONAL_SIGNATURE.CONE
+    );
   }
 
   /**
@@ -1042,7 +1134,8 @@ export class MissionRuntime {
         this.startedAt.get(objective.id) ?? 0,
         (lift) => this.loadedFor(lift),
         this.attendedTags.size,
-        (tier) => exposedAtLeast(this.exposedByTier, tier)
+        (tier) => exposedAtLeast(this.exposedByTier, tier),
+        this.takenSoundings.size
       );
       if (met) this.statuses.set(objective.id, ObjectiveStatus.Met);
       else if (standing) this.statuses.set(objective.id, ObjectiveStatus.Pending);
@@ -1152,6 +1245,7 @@ export class MissionRuntime {
       loadedIds: this.loadedIds,
       loadedByLift: this.loadedByLift,
       attended: this.attendedTags.size,
+      sounded: this.takenSoundings.size,
       exposedByTier: this.exposedByTier,
       debtS: this.debtS,
     };

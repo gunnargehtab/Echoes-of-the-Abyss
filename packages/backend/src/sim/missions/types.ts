@@ -236,6 +236,17 @@ export type MissionPredicate =
    * what anybody else resolved.
    */
   | { kind: 'attend'; count: number }
+  /**
+   * How many of the mission's authored soundings this observer has completed —
+   * the taken soundings of docs/mission-aptitude.md §4.
+   *
+   * A count, never a list: "four of six sounded" is what a Knight reads, and
+   * *which* six is authored mission data rather than anything the world was
+   * asked. Own-force information for `attend`'s reason turned outward — a
+   * sounding is work one of the player's own hulls did, and the formation it
+   * was taken against is a place on the cell grid, not a contact.
+   */
+  | { kind: 'sound'; count: number }
   | { kind: 'quiet'; role: MissionRole; ceilingSig: number }
   | { kind: 'endure'; ticks: number }
   /**
@@ -302,6 +313,47 @@ export interface MissionLift {
   cutTicks: number;
   /** The stated loudness while the cut runs. A floor, never a replacement. */
   cutSig: number;
+  note: string;
+}
+
+/**
+ * A sounding — docs/mission-aptitude.md §4: taken from within 400 m of a
+ * formation, bow on it, held at the Sounding Spire's active figure, because a
+ * hull taking a sounding is doing the Spire's job by hand.
+ *
+ * `MissionLift` with a bearing added, and a point instead of a region, which is
+ * §13's own reading of it. The hold-and-cut already says "stand here for N
+ * ticks at SIG X"; what a sounding adds is that **the hold aims the hull**, and
+ * that is the whole mission: pointing it the short way is how a player spends
+ * the SIG budget without meaning to, because whatever is behind the formation
+ * is in the cone for the length of the hold.
+ *
+ * The figures are authored here rather than in `constants.ts` for the format's
+ * standing reason — a mission is a table of data literals, and 400 m / 20 s /
+ * SIG 80 are Aptitude's numbers rather than the simulation's.
+ */
+export interface MissionSounding {
+  id: string;
+  /**
+   * The hull that takes it. Player-party hulls only, for `MissionLift`'s
+   * reason: the sounded count feeds a predicate the player is shown, and a
+   * sounding on a scripted hull would put another party inside a counter.
+   * `missions.test.ts` holds the literal to it.
+   */
+  tag: MissionTag;
+  /**
+   * The formation, as a point on the cell grid rather than a rectangle. A
+   * sounding is taken *at* something — the radius is a range to it and the
+   * bearing is a bearing to it, and neither question a region can answer.
+   */
+  x: number;
+  y: number;
+  /** How close the hull must stand. §4's four hundred metres. */
+  radiusM: number;
+  /** Ticks of held, aimed presence. §4's twenty seconds. */
+  holdTicks: number;
+  /** The stated loudness while the hold runs. A floor, never a replacement. */
+  sig: number;
   note: string;
 }
 
@@ -539,6 +591,8 @@ export interface MissionDefinition extends MissionHeader {
   regions: readonly MissionRegion[];
   /** The loads this mission carries. Omitted is none. */
   lifts?: readonly MissionLift[];
+  /** The soundings this mission asks for. Omitted is none. */
+  soundings?: readonly MissionSounding[];
   /** The scripted listener whose hearing is an outcome — see `MissionSweep`. */
   sweep?: MissionSweep;
   markers: readonly MissionMarker[];
