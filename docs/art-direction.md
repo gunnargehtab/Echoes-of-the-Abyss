@@ -279,6 +279,15 @@ The projection change moved the old plan-view protections; it did not drop them:
   ground shadow; a hull's height above its own shadow *is* its depth. Verticality keeps
   its luminance-and-fog language ("Reading the Sea Floor" above); the tilt supports it
   rather than competing with it.
+- **An unearned depth is drawn as a column, not as a height.** Below Tier 3 the server
+  sends no depth at all, and a projection that picks one — even a stable, deliberately
+  arbitrary one — draws a precision the tier never carried. So a contact with no earned
+  depth is a soft vertical presence spanning the water it could be standing in at that
+  plan position, Lid to seabed: nested ribbons, no taper, no hairline, the widest of them
+  exactly the tier's own uncertainty radius. The screen says "somewhere in this water",
+  which is what the Echo Layer said. Deep water therefore draws a *taller* claim than
+  shallow, because it is one. The whole column is the click target, per the aim rule
+  below.
 - **What you click is what the simulation collides.** Selection and orders are resolved
   in screen space against drawn positions, through the same projection, with the old
   world-metre reach radii scaled to the local pixels-per-metre.

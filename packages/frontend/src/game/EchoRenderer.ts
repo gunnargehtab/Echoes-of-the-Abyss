@@ -138,11 +138,16 @@ import {
 import { destroyHullTextures, loadHullArt } from './hullTextures.ts';
 import { destroyStructureTextures, loadStructureArt } from './structureTextures.ts';
 import type { MapPayload, TerrainPayload } from '../net/GameClient.ts';
+import type { PerspectiveView, ProjectedPoint } from './PerspectiveView.ts';
 import {
-  UNRESOLVED_CONTACT_DEPTH_M,
-  type PerspectiveView,
-  type ProjectedPoint,
-} from './PerspectiveView.ts';
+  COLUMN_RIBBONS,
+  columnDepthsM,
+  columnLayout,
+  columnRibbon,
+  distanceToColumn,
+  type ColumnLayout,
+  type ColumnPoint,
+} from './contactColumn.ts';
 
 /** A contact plus when we last actually heard it, for ghost decay. */
 interface TrackedContact {
@@ -1182,9 +1187,21 @@ export class EchoRenderer {
     return this.conn?.projectPoint(xM, yM, depthM) ?? null;
   }
 
-  /** The depth a contact is drawn at: earned, or the stable reference. */
-  private contactDepth(contact: Contact): number {
-    return contact.depth ?? UNRESOLVED_CONTACT_DEPTH_M;
+  /**
+   * The water column a contact with no earned depth could be standing in,
+   * projected top to bottom. Null when there is no conn view yet, or no
+   * column worth drawing at that plan position.
+   *
+   * Below Tier 3 the server sends no depth, so the mark is a statement about
+   * this column rather than a point at a height — see contactColumn.ts for
+   * why the old 600 m reference had to go.
+   */
+  private contactColumn(contact: Contact): ColumnPoint[] | null {
+    const conn = this.conn;
+    if (conn === null) return null;
+    const depths = columnDepthsM(conn.seabedDepthAt(contact.x, contact.y));
+    if (depths === null) return null;
+    return depths.map((depthM) => conn.projectPoint(contact.x, contact.y, depthM));
   }
 
   /**
@@ -2468,10 +2485,24 @@ export class EchoRenderer {
     for (const { contact } of this.tracked.values()) {
       // A Tier-1 smudge has no usable position to click on.
       if (contact.tier < ResolutionTier.Bearing) continue;
-      const p = this.project(contact.x, contact.y, this.contactDepth(contact));
-      if (p === null || !p.visible) continue;
-      const reach = Math.max(TARGET_RADIUS_M * p.pxPerM, AIM_FLOOR_PX);
-      const distance = Math.hypot(p.x - at.x, p.y - at.y);
+      let distance: number;
+      let reach: number;
+      if (contact.depth === undefined) {
+        // No earned depth, so the mark *is* the column and the whole column
+        // is the target. Aiming at one height down it would be aiming at a
+        // place the screen never claimed the contact was.
+        const points = this.contactColumn(contact);
+        if (points === null) continue;
+        const mid = points[(points.length - 1) >> 1]!;
+        if (!mid.visible) continue;
+        distance = distanceToColumn(at.x, at.y, points);
+        reach = Math.max(TARGET_RADIUS_M * mid.pxPerM, AIM_FLOOR_PX);
+      } else {
+        const p = this.project(contact.x, contact.y, contact.depth);
+        if (p === null || !p.visible) continue;
+        distance = Math.hypot(p.x - at.x, p.y - at.y);
+        reach = Math.max(TARGET_RADIUS_M * p.pxPerM, AIM_FLOOR_PX);
+      }
       if (distance < reach && distance < bestDistance) {
         bestDistance = distance;
         best = contact;
@@ -3782,18 +3813,37 @@ export class EchoRenderer {
       const style = TIER_STYLE[contact.tier as Exclude<ResolutionTier, ResolutionTier.Silent>];
       if (style === undefined) continue;
 
-      // Each mark billboards at its drawn depth — earned, or the stable
-      // unresolved reference — with the contact at the local origin.
-      const p = this.project(contact.x, contact.y, this.contactDepth(contact));
-      if (p === null) break;
-      const sg = this.contactSymbols.acquire(id);
-      if (!p.visible) {
-        sg.visible = false;
-        continue;
+      // Where the mark billboards. A contact that earned a depth billboards
+      // at it, with the contact at the local origin. One that did not earns
+      // no height at all: it billboards at the *middle of its water column*
+      // and is drawn as the column (contactColumn.ts), so the anchor is a
+      // consequence of the span rather than a claim about a depth.
+      let anchor: { x: number; y: number; pxPerM: number };
+      let column: ColumnLayout | null = null;
+      if (contact.depth === undefined) {
+        if (this.conn === null) break;
+        const points = this.contactColumn(contact);
+        column = points === null ? null : columnLayout(points);
+        if (column === null) {
+          // No column to speak of, or it left the frustum: a half-projected
+          // column would invent an end for itself.
+          this.contactSymbols.acquire(id).visible = false;
+          continue;
+        }
+        anchor = column.anchor;
+      } else {
+        const p = this.project(contact.x, contact.y, contact.depth);
+        if (p === null) break;
+        if (!p.visible) {
+          this.contactSymbols.acquire(id).visible = false;
+          continue;
+        }
+        anchor = p;
       }
-      sg.position.set(p.x, p.y);
-      sg.scale.set(p.pxPerM);
-      const inverseScale = 1 / p.pxPerM;
+      const sg = this.contactSymbols.acquire(id);
+      sg.position.set(anchor.x, anchor.y);
+      sg.scale.set(anchor.pxPerM);
+      const inverseScale = 1 / anchor.pxPerM;
 
       // Ghosts fade rather than vanish; a stale contact is still information,
       // just less of it.
@@ -3809,24 +3859,31 @@ export class EchoRenderer {
 
       this.drawLockFlash(sg, id, contact, now, inverseScale);
 
-      switch (contact.tier) {
-        case ResolutionTier.Contact: {
-          // Directionless: a soft haze around the listener that heard it.
-          // No position information is available, and none is implied.
-          sg.circle(0, 0, style.radius).fill({
+      // The tiers that earned no depth are drawn about the column instead of
+      // at a point — a Tier-1 haze and a Tier-2 blob alike, each keeping its
+      // own radius and alpha, so the fidelity encoding is unchanged and only
+      // the *height* claim is dropped.
+      if (column !== null) {
+        for (const ribbon of COLUMN_RIBBONS) {
+          sg.poly(columnRibbon(column.path, style.radius * ribbon.width)).fill({
             color: style.color,
-            alpha: alpha * 0.5,
+            alpha: alpha * ribbon.ink,
           });
-          sg.circle(0, 0, style.radius).stroke({
-            width: 1 * inverseScale,
-            color: style.color,
-            alpha,
-          });
-          break;
         }
+      }
+
+      switch (contact.tier) {
+        case ResolutionTier.Contact:
         case ResolutionTier.Bearing: {
-          // Blurred blob at a position already wrong by ~15% server-side.
-          sg.circle(0, 0, style.radius).fill({ color: style.color, alpha });
+          // Tier 1 is directionless — a soft presence in the water around the
+          // listener that heard it — and Tier 2 a position already wrong by
+          // ~15% server-side. Neither knows a depth, so both are the column
+          // drawn above and nothing else. The fallback is unreachable while
+          // the server gates depth at Tier 3, and is a blob rather than a
+          // guessed height if that ever changes.
+          if (column === null) {
+            sg.circle(0, 0, style.radius).fill({ color: style.color, alpha });
+          }
           break;
         }
         case ResolutionTier.Classification: {
