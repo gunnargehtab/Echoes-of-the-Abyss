@@ -20,9 +20,9 @@ Status of each part:
 - **The perspective presentation (§4–§5) and band navigation UX (§6) are the accepted
   direction.** They replace the pure plan-view camera spec in
   [art-direction.md](art-direction.md) once the migration phases in §9 land.
-- **The Lid exposure mechanic (§7) is a proposal.** It changes a worldbuilding rule
-  ([world.md](world.md) says the Lid is lore, not a mechanic), so it ships only after an
-  explicit yes — it is listed with the other open questions in §10.
+- **The Lid exposure mechanic (§7) is adopted** — the owner's yes came with Phase 3/4
+  ("do them together", 2026-08-30). [world.md](world.md), [glossary.md](glossary.md) and
+  [systems-depth.md](systems-depth.md) §2 now carry it as a rule of the water.
 
 ---
 
@@ -177,7 +177,9 @@ Steering itself already works and is not touched.
 
 ## 7. The top of the column — the Lid becomes a cost
 
-*Proposal — requires sign-off, because it changes a worldbuilding rule.*
+*Adopted with Phase 4 — the sign-off this section asked for arrived with "do them
+together". The rule of record now lives in [systems-depth.md](systems-depth.md) §2; this
+section stays as the argument that won it.*
 
 The feedback wants the near-surface level to run a timer and then hurt until you sink. Canon
 already holds the answer it is reaching for: **the Lid**, the sour top ~150 m, poisoned since
@@ -312,27 +314,66 @@ What the phase settled:
   invisible proxy — never fins or glow — and draws a chart-parity highlight ring. It is
   deliberately view-local: the verbs stay on the chart until Phase 3.
 
-Phase-3 presentation debts, carried or new: a contact below Tier 3 still hovers at the 600 m
+### Phase 3 — landed
+
+An honest ledger first: most of this phase was already in the water when it began. The
+backlog had shipped the band verbs while the plan was still being written — DIVE and RISE
+on the command bar step the three band stations plus the thermocline duct, `D`/`A` are
+bound, and the readout speaks band names ([ui-ux.md](ui-ux.md) §8) — which also settled
+§10's naming question the way §3 recommended. What Phase 3 itself added:
+
+- **Floor-following, end to end.** The standing order of
+  [systems-depth.md](systems-depth.md) §2: `S` (and the squad bar's FOLLOW button) holds
+  the selection 30 m over whatever ground is under it — up for free, down as a real dive,
+  disengaging at the hull's PR edge, replaced by any manual depth order. The one server
+  change the presentation track needed: an order mode beside `orderDepth`, in the replay
+  record like every order, node-tested from grace to disengage.
+- **The conn view's first verb.** Right-click moves the picked hull, through the chart's
+  own callback — one order channel, whichever view the player stands in. The rest of the
+  verbs wait for Phase 5, when this view earns the HUD.
+
+Review screenshots live in `docs/screenshots/three-layer-phase34/`, shared with Phase 4:
+the squad bar's FOLLOW lit with the card reading station keeping at floor-minus-30, and
+the ribbon's Lid hatch.
+
+### Phase 4 — landed
+
+The Lid is a mechanic. [world.md](world.md) and [glossary.md](glossary.md) flipped their
+"lore, not a mechanic" lines, [systems-depth.md](systems-depth.md) §2 carries the rule of
+record, and the simulation carries the rule: a third pass in the pressure system, on the
+crush ledger, behind `LID` in shared constants — 20 s of grace above 150 m, then 1% of max
+hull per second, universal, unhealable, lethal, recovering over 30 s of clean water so the
+boundary cannot be straddled for free. The ribbon hatches the top 150 m in the threat
+register; a hull in sour water counts its grace down on the card and says `SOUR — BLEEDING`
+when it runs out. Backend tests pin the shape: the grace is whole, the bleed is a fraction
+on the unhealable ledger, every navy pays the same, recovery is slower than spending, and
+it kills.
+
+Presentation debts, carried or new: a contact below Tier 3 still hovers at the 600 m
 reference — the honest column glyph is owed; hulls at true metre scale still read small
 against kilometres of ground at far zoom (a readability scale is owed; RTS readability >
-realism); the map edge still ends in blackness; hazard sites, echo marks and **own ordnance**
-are not yet drawn in the conn view — the chart remains the tactical authority until Phase 3.
+realism); the map edge still ends in blackness; hazard sites, echo marks, own ordnance,
+the Lid's own presence and the depth verbs are not yet in the conn view — the chart
+remains the command surface until Phase 5; and sour exposure has no audio cue yet, which
+[audio-direction.md](audio-direction.md) should decide a channel for rather than inherit.
 
 ## 10. Open questions
 
 Parked here as plain text until decided; none blocks Phase 1.
 
-1. **Adopt the Lid mechanic (§7)?** Recommended yes — it is the only part of the feedback
-   with no existing rule behind it, and its lore anchor is already canon.
+1. ~~Adopt the Lid mechanic (§7)?~~ — **adopted**, with Phase 3/4 ("do them together").
+   The rules landed in [systems-depth.md](systems-depth.md) §2 and the water now bills for
+   the top 150 m.
 2. **Does a full-screen chart view survive as a toggle,** or does the plan view live only in
    the sonar scope? Phase 1 ships the toggle by construction; the question is what Phase 5
    retires. Recommendation stands: scope-only first, toggle back if playtests miss it.
 3. ~~Camera pitch~~ — **settled at 55°** by the Phase-1 screenshots (§9); SPEC-pinned in
    [art-direction.md](art-direction.md) at Phase 5.
 4. ~~Engine confirmation~~ — **three.js**, per §9's Phase-1 record.
-5. **Player-facing band naming** — band names (recommended, per §3) versus numbered levels.
-   The Phase-1 toggle already speaks the register (*Chart / Conn*); the band question lands
-   with Phase 3's Dive/Rise controls.
+5. ~~Player-facing band naming~~ — **settled: band names**, and in the event the backlog
+   settled it before Phase 3 arrived: the shipped depth controls already step the band
+   stations under `SHELF` / `MID` / `ABYSS` readouts ([ui-ux.md](ui-ux.md) §8), which is
+   §3's recommendation in the water.
 
 ---
 

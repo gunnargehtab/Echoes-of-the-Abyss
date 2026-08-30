@@ -30,6 +30,7 @@ export type BindableAction =
   | 'pingPreview'
   | 'dive'
   | 'rise'
+  | 'followFloor'
   | 'throttle'
   | 'noisemaker'
   | 'mine'
@@ -84,6 +85,12 @@ export const ACTIONS: readonly ActionSpec[] = [
   { action: 'throttle', label: 'Harvest throttle', hint: 'Cycle the dredge rate', group: 'fleet' },
   { action: 'dive', label: 'Dive', hint: 'Down one depth band', group: 'depth' },
   { action: 'rise', label: 'Rise', hint: 'Up one depth band', group: 'depth' },
+  {
+    action: 'followFloor',
+    label: 'Follow floor',
+    hint: 'Hug the seabed at station keeping',
+    group: 'depth',
+  },
   { action: 'noisemaker', label: 'Noisemaker', hint: 'Deploy a decoy', group: 'ordnance' },
   { action: 'mine', label: 'Mine', hint: 'Lay at the hull position', group: 'ordnance' },
   {
@@ -121,6 +128,7 @@ export const DEFAULT_BINDINGS: Bindings = {
   throttle: 'KeyV',
   dive: 'KeyD',
   rise: 'KeyA',
+  followFloor: 'KeyS',
   noisemaker: 'KeyN',
   mine: 'KeyM',
   depthCharge: 'KeyC',

@@ -23,6 +23,7 @@ import {
   THERMOCLINE_PAIR_FACTOR,
   DIRECTORATE_SHALLOW,
   DIRECTORATE_SHALLOW_BLEED_PER_S,
+  LID,
 } from './constants.js';
 import { ResolutionTier, DepthBand, Faction, ThermoclineZone } from './types.js';
 
@@ -298,4 +299,28 @@ export function directorateShallowAttritionPerSecond(
  */
 export function directorateShallowHullFloor(maxHp: number): number {
   return maxHp * DIRECTORATE_SHALLOW.HULL_FLOOR;
+}
+
+/**
+ * True while a hull is inside the Lid — the sour top of the ocean
+ * (docs/systems-depth.md §2, docs/world.md). A depth compare rather than a
+ * band test, unlike the Directorate's shallows, because the Lid is not a band:
+ * it is a world fact with its own boundary, and the Shelf line moving would
+ * not move the poison.
+ */
+export function inLid(depthM: number): boolean {
+  return depthM < LID.DEPTH_M;
+}
+
+/**
+ * Unhealable sour bleed per second once a hull's grace is spent, in HP.
+ *
+ * Scaled by max hull for the reason the Directorate's bleed is: the doc prices
+ * the Lid as a fraction, and a flat DPS would be a rounding error for a
+ * Cruiser and a death sentence for a scout. Unlike that bleed it has no floor
+ * — the caller lets it run to zero, because sour water is allowed to kill
+ * (docs/systems-depth.md §2).
+ */
+export function lidBleedPerSecond(maxHp: number): number {
+  return maxHp * LID.BLEED_FRACTION_PER_S;
 }

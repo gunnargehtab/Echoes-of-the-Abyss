@@ -63,6 +63,12 @@ interface DepthMessage {
   depth: number;
 }
 
+interface FollowFloorMessage {
+  unitIds: number[];
+  /** Arm or disarm the standing order (docs/systems-depth.md §2). */
+  active: boolean;
+}
+
 interface PingMessage {
   unitId: number;
 }
@@ -244,6 +250,14 @@ export class MatchRoom extends Room<MatchState> {
         // Range and ownership are both re-checked inside the sim; an
         // out-of-range depth is refused there rather than clamped here.
         this.match.orderDepth(slot, unitId, message.depth);
+      }
+    });
+
+    this.onMessage('followFloor', (client, message: FollowFloorMessage) => {
+      const slot = this.commandSlot(client);
+      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      for (const unitId of message.unitIds) {
+        this.match.orderFollowFloor(slot, unitId, Boolean(message.active));
       }
     });
 

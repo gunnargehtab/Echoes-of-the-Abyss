@@ -97,6 +97,14 @@ export const DepthOrder = defineComponent({
    * tick rather than something two systems each re-derive and disagree on.
    */
   descending: Types.ui8,
+  /**
+   * 1 while the hull is under the floor-following standing order
+   * (docs/systems-depth.md §2, "Steering along the ground"). While set, the
+   * depth system retargets `targetM` from the local floor each tick; a manual
+   * depth order clears it, because the newer instruction is the player's
+   * current mind.
+   */
+  follow: Types.ui8,
 });
 
 /** Depth resilience. Below this rating's band, the unit takes crush attrition. */
@@ -120,6 +128,14 @@ export const Pressure = defineComponent({
    * must not depend on which way the hull overreached.
    */
   unhealable: Types.f32,
+  /**
+   * Sour exposure accrued in the Lid, in seconds (docs/systems-depth.md §2).
+   * Counts up while the hull is above LID.DEPTH_M, capped at LID.GRACE_S —
+   * bleeding is a state, not a deepening debt — and recovers below the Lid at
+   * LID_GRACE_RECOVERY_PER_S, so bobbing on the boundary loses grace faster
+   * than it wins it back.
+   */
+  sourS: Types.f32,
 });
 
 export const Health = defineComponent({

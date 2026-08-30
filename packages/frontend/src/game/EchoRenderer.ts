@@ -25,6 +25,8 @@ import {
   Biome,
   DEPTH,
   DEPTH_BANDS,
+  inLid,
+  LID,
   DepthBand,
   Faction,
   HarvestIdleReason,
@@ -158,6 +160,8 @@ export interface RendererCallbacks {
   onBuild(kind: StructureKind, x: number, y: number): void;
   onProduce(structureId: number, kind: UnitKind): void;
   onDepthOrder(unitIds: number[], depth: number): void;
+  /** Arm or disarm floor-following for the selection (docs/systems-depth.md §2). */
+  onFollowFloor(unitIds: number[], active: boolean): void;
   /** A new detection event, for the contact log. */
   onContactEvent(entry: ContactLogEntry): void;
   /**
@@ -1417,6 +1421,9 @@ export class EchoRenderer {
         case 'rise':
           this.commandDepthStep(-1);
           return;
+        case 'followFloor':
+          this.commandFollowFloor();
+          return;
       }
     };
 
@@ -1802,6 +1809,15 @@ export class EchoRenderer {
         active: units.some((u) => u.depthOrder !== undefined && u.depthOrder < u.depth),
         action: () => this.commandDepthStep(-1),
       });
+      buttons.push({
+        // The standing order (docs/systems-depth.md §2): hug the seabed at
+        // station keeping. Lit while any of the selection is following, so a
+        // squad that half-disengaged at a PR edge is visible as exactly that.
+        label: 'FOLLOW',
+        enabled: units.length > 0,
+        active: units.some((u) => u.followFloor === true),
+        action: () => this.commandFollowFloor(),
+      });
       // Ordnance, docs/systems-combat.md §5, §6, §8. Each button reports its
       // own scarcity rather than merely greying out: a torpedo count and a
       // decoy cooldown are decisions the player is supposed to be making, and
@@ -2096,6 +2112,22 @@ export class EchoRenderer {
     this.callbacks.onDepthOrder(
       units.map((u) => u.id),
       target
+    );
+  }
+
+  /**
+   * The standing order (docs/systems-depth.md §2). Engage when any of the
+   * selection is not yet following, disarm only when all are — the same
+   * converge-then-toggle shape a mixed silent squad gets, so one press means
+   * one thing for the whole selection.
+   */
+  private commandFollowFloor(): void {
+    const units = this.selectedUnits();
+    if (units.length === 0) return;
+    const engage = !units.every((u) => u.followFloor === true);
+    this.callbacks.onFollowFloor(
+      units.map((u) => u.id),
+      engage
     );
   }
 
@@ -4330,6 +4362,14 @@ export class EchoRenderer {
       g.rect(RIBBON_X, y, RIBBON_WIDTH, 1).fill({ color: UI.glassStroke, alpha: 0.7 });
     }
 
+    // The Lid — the sour top 150 m (docs/systems-depth.md §2, docs/world.md).
+    // Threat-hatched rather than filled: it is danger, not a fourth band, and
+    // the hatch is the same register the card's hatched health bar uses for
+    // hull the water keeps. Drawn quietly enough not to compete with markers.
+    const lidBottom = this.ribbonY(LID.DEPTH_M, top, height);
+    this.hatch(g, RIBBON_X, top, RIBBON_WIDTH, lidBottom - top, UI.threat);
+    g.rect(RIBBON_X, lidBottom, RIBBON_WIDTH, 1).fill({ color: UI.threat, alpha: 0.5 });
+
     // The thermocline (docs/systems-echo.md §3). Not a band and not terrain —
     // it modifies a listening pair rather than a place — which is why it is
     // drawn here, on the one widget that is about the water column, and
@@ -4820,6 +4860,14 @@ export class EchoRenderer {
         : `rising to ${unit.depthOrder.toFixed(0)}m · ${seconds.toFixed(0)}s`;
     } else if (unit !== undefined && this.isCrushing(unit)) {
       this.infoLine2.text = `CRUSHING at ${unit.depth.toFixed(0)}m · rise or lose the hull`;
+    } else if (unit !== undefined && (unit.sourS ?? 0) >= LID.GRACE_S) {
+      // The other end of the column (docs/systems-depth.md §2): the grace is
+      // spent and the water is keeping the hull.
+      this.infoLine2.text = `SOUR — BLEEDING at ${unit.depth.toFixed(0)}m · dive below ${LID.DEPTH_M}m`;
+    } else if (unit !== undefined && (unit.sourS ?? 0) > 0 && inLid(unit.depth)) {
+      this.infoLine2.text = `SOUR · ${Math.max(0, LID.GRACE_S - (unit.sourS ?? 0)).toFixed(0)}s of grace`;
+    } else if (unit !== undefined && unit.followFloor === true && unit.throttle === undefined) {
+      this.infoLine2.text = `FOLLOWING FLOOR · ${unit.depth.toFixed(0)}m`;
     } else if (unit !== undefined && unit.throttle !== undefined) {
       const held =
         unit.cargoKind === ResourceKind.ResonanceCrystal && (unit.cargo ?? 0) > 0 ? ' crystal' : '';

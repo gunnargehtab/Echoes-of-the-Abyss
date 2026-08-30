@@ -16,6 +16,11 @@ Maps are stacks, not planes. Every map is built from three vertical bands:
 | **Mid-Water** | 400–1,800 m | The contested middle — where most factions live |
 | **Abyssal** | 1,800 m+ | Highest value, highest cost |
 
+Above the Shelf's first clear metres sits one more stripe that is not a band: **the Lid**,
+the sour top ~150 m ([world.md](world.md)). It prices itself — §2's sour exposure — rather
+than through PR, because it is not about what a hull is rated for; it is about what the
+water up there is made of.
+
 **Value increases with depth. So does the cost of being there.** The richest resource on the map — Resonance Crystal, the tech gate for every faction — is almost entirely Abyssal. Everyone must eventually descend, and each faction has a different, expensive answer to how.
 
 Maps are stacks, not planes — and the stack is not the same height everywhere.
@@ -65,7 +70,42 @@ The asymmetry is the one stated just above, applied to terrain. Ascent is slow a
 
 The consequence is that a roofed passage is enterable only by a deliberate dive. A tunnel is not a shortcut you fall into; it is a route you have to read the map to find, and pay the loud descent to use. That is the right price for a path nobody can watch you take.
 
-## 3. Faction Relationships to Depth
+### Steering along the ground
+
+Beside the depth order sits one standing order: **floor-following**. A hull ordered to
+follow the floor holds a fixed clearance — 30 m (TUNABLE) — above whatever ground is under
+it, and keeps holding it as the ground changes: up for free, because terrain already raises
+hulls, and down at the ordinary loud descent rate, because a dive is a dive whoever asked
+for it. Entering the mode *is* the order — the rule that nothing may spend a descent the
+player never made survives because the player made this one, standing, when they engaged it.
+
+Two things end it. A manual depth order replaces it, because the newer instruction is the
+player's current mind. And ground that falls away below the hull's Pressure Rating
+**disengages it**: the mode will ride a hull down to the edge of what it is rated for and
+not one metre past, because a standing order that could feed a hull into crush attrition
+would be the seabed spending the player's hull on their behalf — the exact thing this
+document forbids terrain to do. A disengaged hull holds its depth and says so.
+
+### The other end of the column: sour exposure
+
+The bottom of the column crushes what goes below its rating. The top poisons what floats
+too high. A hull above **150 m** — inside the Lid ([world.md](world.md)) — runs a **sour
+timer**: **20 seconds** of grace (TUNABLE), and then unhealable bleed at **1% of max hull
+per second** (TUNABLE) on the same ledger as crush, until the hull descends below the Lid.
+The timer does not reset the moment a hull dips under; it recovers over **30 seconds**
+(TUNABLE) of clean water, so bobbing along the boundary is not free.
+
+The mirror with crush is the design, not a coincidence:
+
+- **Crush** is a bet — depth you are not rated for, priced per rating, and it can kill.
+- **Sour** is a fact — water nothing is rated for, priced the same for every navy because
+  the Lid predates all of them, and it can kill, because the Salinity Collapse was not a
+  tax.
+
+The grace window is what keeps the Lid a *desperate* transit rather than a wall: a route
+over a fight, open to anyone, holdable by no one. It stacks with the Directorate's own
+shallow penalty (§3) in the only way it can — a Directorate hull in the Lid is paying for
+its physiology and for the water at once, and chose both.
 
 Depth access is one of the two axes (with sound) that every faction's mechanics are built from. See [factions.md](factions.md) for full doctrine.
 
@@ -151,6 +191,8 @@ what exists or assumes what does not. Constants live in `DEPTH` in
 | Ground you do not fit through (§2) | **Implemented** | `movementSystem` resolves each step against the water column and slides along ground it cannot enter, rather than refusing the order |
 | Thermocline (§1) | **Implemented** | Depth-dependent multiplier on detection, applied to contacts, Echo Marks and fauna hearing alike. `THERMOCLINE` in shared constants; the layer sits at 1,200 m and is not terrain, because it depends on both ends of a listening pair rather than on any cell |
 | Terrain raises, never lowers (§2) | **Implemented** | `depthSystem` holds a hull no deeper than the ground allows, at the ascent rate, without touching its depth order. Fauna get the horizontal refusal only — they carry no depth order, so nothing would lift them again |
+| Floor-following (§2) | **Implemented** | `Match.orderFollowFloor()`; the depth system retargets the hull each tick to the local floor minus `FOLLOW_FLOOR.CLEARANCE_M`, through the ordinary descent/ascent rates and the descent's SIG. Disengages at the hull's effective PR edge; cancelled by any manual depth order |
+| Sour exposure under the Lid (§2) | **Implemented** | `LID` in shared constants; a third pass in `pressureSystem` on the crush ledger. Universal, faction-blind, and lethal; grace and recovery per this document. Hulls only — fauna are of the Drift, ordnance is in the water for seconds, and no map floor reaches the Lid for a structure to stand in |
 
 The descent and ascent *rates* are TUNABLE — this document pins the asymmetry, not the
 numbers. The asymmetry itself is not tunable: it is what §5 above is about.

@@ -1,8 +1,8 @@
 /**
  * Pressure system — depth as a rented resource, on a clock.
  *
- * Two ways depth takes hull, both unhealable, both here because they share a
- * ledger and a rule:
+ * Three ways the water takes hull, all unhealable, all here because they share
+ * a ledger and a rule:
  *
  *   - **Crush.** A unit operating below its Pressure Rating takes attrition
  *     that ignores repair and regeneration (docs/systems-depth.md §2). It runs
@@ -10,18 +10,22 @@
  *   - **Shallow water.** A Directorate unit above the Shelf line is being
  *     poisoned by water it was engineered out of (§3, docs/factions.md). It
  *     runs to a floor: 15% of the hull and not one percent more.
+ *   - **Sour water.** Any hull above the Lid's 150 m line is in the sea the
+ *     Salinity Collapse left behind (§2, docs/world.md). A grace, then a
+ *     bleed, and it runs to zero, for every navy at the same rate — the Lid
+ *     predates all of them.
  *
- * The asymmetry is the point. Crush is what you pay for taking depth you have
- * not earned, and it is allowed to kill you, because renting depth is the bet
- * the whole system is about. The Directorate's shallows are a *terrain* cost —
- * they are not overreaching, they are simply in the wrong sea — so it prices a
- * region rather than a gamble, and pricing it in lives would make the Shelf a
- * wall instead of a tax.
+ * The asymmetries are the point. Crush is what you pay for taking depth you
+ * have not earned, and it may kill you, because renting depth is the bet the
+ * whole system is about. The Directorate's shallows price a *region* — being
+ * there is not overreaching, so it cannot kill. The Lid prices the one water
+ * nothing is rated for, and it kills, because the Collapse was not a tax; the
+ * grace window is what keeps it a desperate transit instead of a wall.
  *
- * Nothing here respects healing because both are defined as unhealable: when a
- * repair system arrives it must not undo either, so the attrition is applied
- * directly to hp rather than routed through a damage pipeline that a healer
- * could reverse.
+ * Nothing here respects healing because all three are defined as unhealable:
+ * when a repair system arrives it must not undo any of them, so the attrition
+ * is applied directly to hp rather than routed through a damage pipeline that
+ * a healer could reverse.
  */
 
 import { defineQuery } from 'bitecs';
@@ -29,6 +33,10 @@ import {
   crushAttritionPerSecond,
   directorateShallowAttritionPerSecond,
   directorateShallowHullFloor,
+  inLid,
+  LID,
+  LID_GRACE_RECOVERY_PER_S,
+  lidBleedPerSecond,
   type Faction,
 } from '@echoes/shared';
 import { Health, Owner, Position, Pressure, Unit } from '../components.ts';
@@ -80,6 +88,47 @@ export function pressureSystem(world: SimWorld, destroyed: number[]): void {
   }
 
   shallowWaterPass(world, dt);
+  lidPass(world, dt, destroyed);
+}
+
+/**
+ * Sour exposure under the Lid — docs/systems-depth.md §2, "The other end of
+ * the column". Hulls only, like the Directorate pass and for the same shape of
+ * reason: fauna are of the Drift, ordnance is in the water for seconds, and no
+ * map floor reaches the Lid for a structure to stand in.
+ *
+ * Takes `destroyed` because, unlike the shallows, this bleed has no floor:
+ * sour water is allowed to kill, and the reaper needs to see it happen in the
+ * same place every other death is seen.
+ */
+function lidPass(world: SimWorld, dt: number, destroyed: number[]): void {
+  const entities = poisonable(world);
+
+  for (let i = 0; i < entities.length; i++) {
+    const eid = entities[i]!;
+
+    if (!inLid(Position.depth[eid]!)) {
+      // Clean water below the boundary wins the grace back — slower than the
+      // Lid spends it, so straddling the line is a losing trade (§2).
+      if (Pressure.sourS[eid]! > 0) {
+        Pressure.sourS[eid] = Math.max(0, Pressure.sourS[eid]! - LID_GRACE_RECOVERY_PER_S * dt);
+      }
+      continue;
+    }
+
+    // Capped at the grace: bleeding is a state, not a deepening debt, and the
+    // cap is what makes recovery take exactly RECOVERY_S from the worst case.
+    const sour = Math.min(LID.GRACE_S, Pressure.sourS[eid]! + dt);
+    Pressure.sourS[eid] = sour;
+    if (sour < LID.GRACE_S) continue;
+
+    const bite = lidBleedPerSecond(Health.max[eid]!) * dt;
+    Health.hp[eid] = Health.hp[eid]! - bite;
+    Pressure.unhealable[eid] = Math.min(Health.max[eid]!, Pressure.unhealable[eid]! + bite);
+    if (Health.hp[eid]! <= 0 && !destroyed.includes(eid)) {
+      destroyed.push(eid);
+    }
+  }
 }
 
 /**

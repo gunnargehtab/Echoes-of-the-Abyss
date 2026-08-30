@@ -288,6 +288,43 @@ export const DIRECTORATE_SHALLOW = {
 export const DIRECTORATE_SHALLOW_BLEED_PER_S =
   (1 - DIRECTORATE_SHALLOW.HULL_FLOOR) / DIRECTORATE_SHALLOW.BLEED_S;
 
+/**
+ * SPEC — docs/systems-depth.md §2 "The other end of the column", docs/world.md
+ * "The Lid". The sour top of the ocean: universal, faction-blind, and — unlike
+ * the Directorate's shallows — allowed to kill, because the Salinity Collapse
+ * was not a tax. The boundary depth is the world's (~150 m, stable for two
+ * centuries); grace, rate and recovery are TUNABLE, and the doc pins the
+ * mirror-with-crush design rather than the numbers.
+ */
+export const LID = {
+  /** Depth of the sour boundary, metres. Shallower than this is the Lid. */
+  DEPTH_M: 150,
+  /** TUNABLE — seconds a hull may hold in the Lid before the water bites. */
+  GRACE_S: 20,
+  /** TUNABLE — unhealable bleed past the grace: fraction of max hull per second. */
+  BLEED_FRACTION_PER_S: 0.01,
+  /** TUNABLE — seconds of clean water below the Lid to win the full grace back. */
+  RECOVERY_S: 30,
+} as const;
+
+/**
+ * Derived — grace seconds recovered per second below the Lid, so bobbing along
+ * the boundary spends more grace than it buys. Retuning RECOVERY_S retunes
+ * this and nothing else.
+ */
+export const LID_GRACE_RECOVERY_PER_S = LID.GRACE_S / LID.RECOVERY_S;
+
+/**
+ * SPEC — docs/systems-depth.md §2 "Steering along the ground". The standing
+ * order's held clearance above the local floor. Comfortably above
+ * DEPTH.ARRIVAL_EPSILON_M so station keeping cannot chatter against the
+ * arrival snap.
+ */
+export const FOLLOW_FLOOR = {
+  /** TUNABLE — metres held above the seabed while following. */
+  CLEARANCE_M: 30,
+} as const;
+
 /** SPEC — docs/systems-echo.md §6. */
 export const SILENT_RUNNING = {
   /** Movement speed multiplier while silent (-45%). */

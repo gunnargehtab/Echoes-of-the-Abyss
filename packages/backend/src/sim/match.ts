@@ -973,9 +973,39 @@ export class Match {
 
     DepthOrder.targetM[eid] = depthM;
     DepthOrder.active[eid] = 1;
+    // A manual depth order replaces the floor-following standing order: the
+    // newer instruction is the player's current mind (docs/systems-depth.md §2).
+    DepthOrder.follow[eid] = 0;
     // Diving is not something you do quietly, for the same reason pinging is
     // not: the descent itself is the noise. Ascending keeps its silence.
     if (depthM > Position.depth[eid]!) SilentRunning.active[eid] = 0;
+    return true;
+  }
+
+  /**
+   * The standing order — docs/systems-depth.md §2, "Steering along the
+   * ground". This only arms or disarms the mode; the depth system owns the
+   * per-tick retargeting, the PR disengage, and the dive loudness. Validated
+   * like `orderDepth`, recorded like every order, and refused under a mission
+   * movement hold for the same reason a dive is: a hold that let a hull
+   * *drift* down a slope would not be a hold.
+   */
+  orderFollowFloor(slot: number, eid: number, active: boolean): boolean {
+    this.recordCommand({
+      tick: this.world.tick,
+      type: 'followFloor',
+      slot,
+      unit: this.localId(eid),
+      active,
+    });
+    if (this.missionRuntime?.holdsMovement(slot, eid) === true) return false;
+    if (!this.owns(slot, eid) || !hasComponent(this.world, DepthOrder, eid)) return false;
+
+    const was = DepthOrder.follow[eid] === 1;
+    DepthOrder.follow[eid] = active ? 1 : 0;
+    // Disengaging holds the hull where it is — but only cancels a leg the
+    // mode itself ordered, never a manual order already in flight.
+    if (!active && was) DepthOrder.active[eid] = 0;
     return true;
   }
 
@@ -1662,6 +1692,15 @@ export class Match {
       }
       if (hasComponent(this.world, DepthOrder, eid) && DepthOrder.active[eid] === 1) {
         unit.depthOrder = DepthOrder.targetM[eid]!;
+      }
+      if (hasComponent(this.world, DepthOrder, eid) && DepthOrder.follow[eid] === 1) {
+        unit.followFloor = true;
+      }
+      // Own information only: the player's own sour clock on their own hull
+      // (docs/systems-depth.md §2). Absent while clean, so the common case
+      // costs the payload nothing.
+      if (Pressure.sourS[eid]! > 0) {
+        unit.sourS = Pressure.sourS[eid]!;
       }
       if (
         hasComponent(this.world, Countermeasure, eid) &&

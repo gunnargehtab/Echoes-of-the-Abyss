@@ -247,7 +247,11 @@ export function GameCanvas({
     window.addEventListener('keydown', unlock, { once: true });
 
     const start = async () => {
-      const perspective = new PerspectiveView();
+      const perspective = new PerspectiveView({
+        // The conn view's verbs ride the chart's own channels: one order
+        // path, whichever view the player prefers to stand in.
+        onMoveOrder: (unitIds, x, y, queued) => client?.moveTo(unitIds, x, y, queued),
+      });
       const pitch = Number(new URLSearchParams(window.location.search).get('pitch'));
       if (Number.isFinite(pitch) && pitch > 0) perspective.setPitchDeg(pitch);
       perspectiveRef.current = perspective;
@@ -267,6 +271,7 @@ export function GameCanvas({
         onBuild: (kind, x, y) => client?.build(kind, x, y),
         onProduce: (structureId, kind) => client?.produce(structureId, kind),
         onDepthOrder: (unitIds, depth) => client?.setDepth(unitIds, depth),
+        onFollowFloor: (unitIds, active) => client?.setFollowFloor(unitIds, active),
         // Contacts, reduced to what the mix is allowed to know. Buffered by
         // the engine and applied on the tick, so the cost is measured and the
         // mix never moves between ticks (docs/audio-direction.md §12).
