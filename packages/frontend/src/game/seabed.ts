@@ -31,7 +31,7 @@
 
 import { Biome } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
-import { BIOME_COLOR, depthShade, reliefShade, scaleRgb, UI } from './palette.ts';
+import { BIOME_COLOR, depthShade, reliefShade, ROCK_FACE, scaleRgb } from './palette.ts';
 
 /**
  * Bake density. 32 px across a 250 m cell is 7.8 m/px — enough for a ridge to
@@ -74,6 +74,54 @@ export const BIOME_RELIEF: Record<Biome, BiomeRelief> = {
   [Biome.ResonanceField]: { amplitudeM: 60, roughness: 0.4, blockiness: 0, mottle: 0.06 },
   [Biome.CoralRuins]: { amplitudeM: 60, roughness: 0.25, blockiness: 1, mottle: 0.07 },
 };
+
+/**
+ * TUNABLE. Rock's own relief — "jagged rock formations", the one
+ * Environmental Shape that is not a biome (docs/art-direction.md, "Rock
+ * speaks in stone"). Rougher than any biome floor because a mesa face is
+ * broken stone, and modest in amplitude because rock tops out only
+ * `ROCK_RISE_ABOVE_SHALLOWEST_M` above the water and must never dip back
+ * under it. Mottle stays low: bare stone, not sediment.
+ */
+export const ROCK_RELIEF: BiomeRelief = {
+  amplitudeM: 45,
+  roughness: 0.55,
+  blockiness: 0,
+  mottle: 0.06,
+};
+
+/** Salt for the rock field, so a mesa's shape never correlates with the
+ * water detail lapping its base — two different materials, two fields. */
+const ROCK_SEED_SALT = 0x7f4a7c15;
+
+/**
+ * The rock detail field at a world position, in metres — the mesa-top and
+ * cliff-lip crag. Same contract as `detailM`: deterministic, render-only,
+ * bounded by its amplitude. Shared by the bake (shading) and the perspective
+ * heightfield (shape), so the crag the light draws is the crag the mesh has.
+ */
+export function rockDetailM(xM: number, yM: number, seed: number): number {
+  return detailM(
+    xM,
+    yM,
+    seed ^ ROCK_SEED_SALT,
+    ROCK_RELIEF.amplitudeM,
+    ROCK_RELIEF.roughness,
+    ROCK_RELIEF.blockiness
+  );
+}
+
+/**
+ * TUNABLE — the cliff treatment, both sides of a rock/open boundary, in
+ * metres and darken-only gains. The mesa's rim darkens toward `ROCK_SHADOW`
+ * (0.55 × `ROCK_FACE` lands on it) so a flat top reads as *raised* ground
+ * ringed by its own edge; the open floor darkens in the wall's lee so the
+ * mesa reads as standing on the seabed rather than pasted over it.
+ */
+export const ROCK_EDGE_M = 60;
+export const ROCK_EDGE_GAIN = 0.55;
+export const CLIFF_SHADOW_M = 90;
+export const CLIFF_SHADOW_GAIN = 0.7;
 
 /** Detail wavelengths, metres. Fixed globally so the *field* is continuous and
  * only its per-biome amplitude changes across a region boundary — varying the
@@ -280,9 +328,13 @@ export function emberFlicker(index: number, bucket: number, phase: number): numb
  * boundary that deserves a crisp line. Only the heightfield is smooth: the
  * authored floor bilinearly upsampled (rock and off-map neighbours clamped,
  * the same exclusion `floorDrop` makes and for the same reason), plus the
- * biome-weighted detail field. Rock cells are painted flat `UI.background`
- * and contribute no height of their own, so a collapsed span neither rings
- * itself with a cliff nor reads as ground you could cross.
+ * biome-weighted detail field. Rock cells contribute no height to the *water*
+ * field — a collapsed span must not ring the floor around it with a false
+ * cliff — and are shaded on their own terms instead: the stone ramp
+ * (`ROCK_FACE`, docs/style-neon-noir.md "The stone") under the rock detail
+ * field's hillshade, rims darkened at the open-water boundary so a mesa reads
+ * as raised stone rather than as a hole in the map, with a matching shadow
+ * lapping the open floor at its base.
  */
 export function bakeSeabed(terrain: TerrainPayload): HTMLCanvasElement {
   const { cols, rows, cellM } = terrain;
@@ -372,17 +424,57 @@ export function bakeSeabed(terrain: TerrainPayload): HTMLCanvasElement {
   const img = ctx.createImageData(w, h);
   const dropScale = SEABED_PX_PER_CELL / 2;
 
+  /**
+   * Distance from a world position to the nearest cell of the *other* ground
+   * kind among the home cell's neighbours, in metres. Both cliff treatments
+   * reach at most `CLIFF_SHADOW_M` < one cell, so a 3×3 neighbourhood is the
+   * whole search; off-map neighbours count as neither kind — a map-edge mesa
+   * is cut by the survey, not standing over open water.
+   */
+  const oppositeDistM = (xM: number, yM: number, row: number, col: number, wantRock: boolean) => {
+    let best = Number.POSITIVE_INFINITY;
+    for (let r = row - 1; r <= row + 1; r++) {
+      for (let c = col - 1; c <= col + 1; c++) {
+        if (r < 0 || r >= rows || c < 0 || c >= cols) continue;
+        if (isRock(r * cols + c) !== wantRock) continue;
+        const dx = Math.max(c * cellM - xM, 0, xM - (c + 1) * cellM);
+        const dy = Math.max(r * cellM - yM, 0, yM - (r + 1) * cellM);
+        const d = Math.hypot(dx, dy);
+        if (d < best) best = d;
+      }
+    }
+    return best;
+  };
+  /** Darken-only gain ramping from `gain` at the boundary to 1 at `reachM`. */
+  const edgeGain = (distM: number, reachM: number, gain: number) =>
+    distM >= reachM ? 1 : gain + (1 - gain) * smooth(distM / reachM);
+
   for (let py = 0; py < h; py++) {
     const row = clampRow(Math.floor(py / SEABED_PX_PER_CELL));
     for (let px = 0; px < w; px++) {
       const col = clampCol(Math.floor(px / SEABED_PX_PER_CELL));
       const index = row * cols + col;
       const j = (py * w + px) * 4;
+      const xM = px * mPerPx;
+      const yM = py * mPerPx;
 
       let color: number;
       if (isRock(index)) {
-        // Rock is not water and is not drawn as any depth of it.
-        color = UI.background;
+        // Rock is not water and is not drawn as any depth of it: no
+        // depthShade, no biome hue — the stone ramp under its own hillshade.
+        // Gradients come off the rock detail field at bake-pixel step, scaled
+        // to metres-per-cell exactly as the water pass scales its own.
+        const hL = rockDetailM(xM - mPerPx, yM, seed);
+        const hR = rockDetailM(xM + mPerPx, yM, seed);
+        const hU = rockDetailM(xM, yM - mPerPx, seed);
+        const hD = rockDetailM(xM, yM + mPerPx, seed);
+        color = scaleRgb(
+          reliefShade(ROCK_FACE, (hR - hL) * dropScale, (hD - hU) * dropScale),
+          mottleFactor(xM, yM, seed, ROCK_RELIEF.mottle) *
+            // The rim: darkened toward ROCK_SHADOW where the mesa meets open
+            // water, so a flat top reads as raised ground with an edge.
+            edgeGain(oppositeDistM(xM, yM, row, col, false), ROCK_EDGE_M, ROCK_EDGE_GAIN)
+        );
       } else {
         const i = py * w + px;
         const hL = height[i - (px > 0 ? 1 : 0)]!;
@@ -400,7 +492,10 @@ export function bakeSeabed(terrain: TerrainPayload): HTMLCanvasElement {
           ),
           // What the surface is made of, after what shape it has — the mottle
           // gain scales all three channels alike, so hue stays the biome's.
-          mottleFactor(px * mPerPx, py * mPerPx, seed, relief.mottle)
+          mottleFactor(xM, yM, seed, relief.mottle) *
+            // The wall's lee: open floor darkens where it meets a mesa, so
+            // the rock reads as standing on the seabed, not pasted over it.
+            edgeGain(oppositeDistM(xM, yM, row, col, true), CLIFF_SHADOW_M, CLIFF_SHADOW_GAIN)
         );
       }
 

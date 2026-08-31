@@ -16,12 +16,14 @@ import {
   detailM,
   emberFlicker,
   mottleFactor,
+  rockDetailM,
+  ROCK_RELIEF,
   seabedSeed,
   SEABED_PX_PER_CELL,
   VENT_EMBER_CAP,
   ventEmbers,
 } from '../src/game/seabed.ts';
-import { RELIEF_REFERENCE_M } from '../src/game/palette.ts';
+import { BIOME_COLOR, RELIEF_REFERENCE_M, ROCK_FACE, ROCK_SHADOW } from '../src/game/palette.ts';
 
 const SEED = seabedSeed({ cols: 32, rows: 32, floor: new Array(32 * 32).fill(2600) });
 
@@ -99,6 +101,65 @@ describe('seabed detail field', () => {
       'vent ground should be rougher than the pressure-eroded trench'
     );
     assert.equal(BIOME_RELIEF[Biome.CoralRuins].blockiness, 1, 'ruins lost their right angles');
+  });
+});
+
+describe('rock face', () => {
+  it('is deterministic, bounded by its amplitude, and a different field from the water', () => {
+    let apart = 0;
+    for (let i = 0; i < 2000; i++) {
+      const x = (i * 137.51) % 8000;
+      const y = (i * 291.73) % 8000;
+      const d = rockDetailM(x, y, SEED);
+      assert.equal(d, rockDetailM(x, y, SEED));
+      assert.ok(Math.abs(d) <= ROCK_RELIEF.amplitudeM, `|${d}| > ${ROCK_RELIEF.amplitudeM}`);
+      // Salted seed: a mesa's crag must not be the water detail re-worn —
+      // the two fields sharing shape would read as one material.
+      if (d !== detailM(x, y, SEED, ROCK_RELIEF.amplitudeM, ROCK_RELIEF.roughness, 0)) apart++;
+    }
+    assert.ok(apart > 1900, 'rock field tracks the water field — the salt is gone');
+  });
+
+  it('stays quieter than an authored step, like every biome floor', () => {
+    // The same contrast guard the biome fields pass: the crag must never
+    // out-shade real terrain.
+    const stepM = 250 / SEABED_PX_PER_CELL;
+    const perCell: number[] = [];
+    for (let i = 0; i < 4000; i++) {
+      const x = (i * 53.17) % 8000;
+      const y = (i * 197.41) % 8000;
+      const here = rockDetailM(x, y, SEED);
+      const right = rockDetailM(x + stepM, y, SEED);
+      const down = rockDetailM(x, y + stepM, SEED);
+      perCell.push((Math.hypot(right - here, down - here) / stepM) * 250);
+    }
+    perCell.sort((a, b) => a - b);
+    const median = perCell[Math.floor(perCell.length / 2)]!;
+    const p95 = perCell[Math.floor(perCell.length * 0.95)]!;
+    assert.ok(median < RELIEF_REFERENCE_M * 0.35, `rock median slope ${median.toFixed(0)} m/cell`);
+    assert.ok(
+      p95 < RELIEF_REFERENCE_M,
+      `rock p95 slope ${p95.toFixed(0)} m/cell out-shades a step`
+    );
+  });
+
+  it('keeps the stone ramp below the palest biome fill, hue-neutral, ordered', () => {
+    // docs/style-neon-noir.md "The stone": ground you can enter always speaks
+    // louder than ground you cannot, and rock carries no biome hue.
+    const lum = (c: number) =>
+      0.2126 * ((c >> 16) & 0xff) + 0.7152 * ((c >> 8) & 0xff) + 0.0722 * (c & 0xff);
+    // "Below the palest biome fill" — the trench floor is allowed to be darker
+    // than stone (pitch-black voids are its identity); what the rule forbids is
+    // rock outshining the brightest ground a player can actually enter.
+    const palest = Math.max(...Object.values(BIOME_COLOR).map(lum));
+    assert.ok(lum(ROCK_FACE) < palest, 'rock-face outshines the palest biome fill');
+    assert.ok(lum(ROCK_SHADOW) < lum(ROCK_FACE), 'the ramp lost its order');
+    // Hue-neutral: near-grey with the canvas's blue memory — the red and
+    // green channels stay close, and nothing exceeds the blue.
+    const r = (ROCK_FACE >> 16) & 0xff;
+    const g = (ROCK_FACE >> 8) & 0xff;
+    const b = ROCK_FACE & 0xff;
+    assert.ok(Math.abs(r - g) <= 8 && r <= b && g <= b, 'rock-face has grown a cast');
   });
 });
 

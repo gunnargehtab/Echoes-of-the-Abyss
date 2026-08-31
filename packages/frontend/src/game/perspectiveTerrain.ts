@@ -24,7 +24,7 @@
 
 import type { TerrainPayload } from '../net/GameClient.ts';
 import { Biome } from '@echoes/shared';
-import { BIOME_RELIEF, detailM, seabedSeed } from './seabed.ts';
+import { BIOME_RELIEF, detailM, rockDetailM, seabedSeed } from './seabed.ts';
 
 /**
  * TUNABLE — metres of world height per metre of depth. 0.22 keeps a full
@@ -83,8 +83,11 @@ const smooth = (t: number) => t * t * (3 - 2 * t);
  * Seabed depth at a world position, in metres: the authored floor bilinearly
  * upsampled (rock and off-map neighbours reading as the home cell's floor,
  * exactly as the bake's `floorAt` does) plus the biome-weighted detail field.
- * Positions whose nearest cell is rock return the rock top instead — a wall
- * face, not a floor.
+ * Positions whose nearest cell is rock return the rock top plus the rock
+ * detail field — a craggy wall face, not a floor. The crag is bounded by
+ * `ROCK_RELIEF.amplitudeM` < `ROCK_RISE_ABOVE_SHALLOWEST_M`, so a mesa's
+ * lowest notch still stands above every open floor, and clamped at the
+ * surface so no spire ever pierces depth 0.
  */
 export function seabedDepthAtM(
   terrain: TerrainPayload,
@@ -105,7 +108,7 @@ export function seabedDepthAtM(
   const fy = smooth(cy - r0);
 
   const homeIndex = clampRow(Math.round(cy)) * cols + clampCol(Math.round(cx));
-  if (isRock(terrain, homeIndex)) return rockTopM;
+  if (isRock(terrain, homeIndex)) return Math.max(0, rockTopM + rockDetailM(xM, yM, seed));
 
   const floorAt = (r: number, c: number): number => {
     const i = clampRow(r) * cols + clampCol(c);
