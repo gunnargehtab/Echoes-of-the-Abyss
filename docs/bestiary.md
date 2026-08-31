@@ -137,13 +137,34 @@ Both are now wrong in the same way and fixed together. **A creature has a workin
 
 | Species | Working depth | Pursues within | Reaches |
 | --- | --- | --- | --- |
+| **Lampfry** | 250 m | ±100 m | 150–350 m — the Shelf, floored by the Lid and going no deeper |
 | **Ashgrazer** | 600 m | ±250 m | 350–850 m — the vent field it feeds on, and little else |
+| **Rasp** | 800 m | ±500 m | 300–1,300 m — no habitat, only the working ocean where things die |
 | **Draymaw** | 900 m | ±400 m | 500–1,300 m — nodule fields, the shipping lanes, the thermocline duct |
+| **Tetherjelly** | 1,200 m | ±100 m | 1,100–1,300 m — the duct itself, the boundary it is named for |
+| **Hollow** | 1,700 m | ±450 m | 1,250–2,150 m — trench walls, and the descent that arrives at them |
 | **Sounder** | 2,000 m | ±700 m | 1,300–2,700 m — the deep basins, and the Resonance Crystal at 2,400 m |
 
 Read the third column as the mechanic. **Depth is cover from some of the Drift and exposure to the rest.** A harvester working a nodule field at 600 m is in Draymaw country; take the same harvester down to the crystal and the packs cannot follow — but something far larger is already there. Nothing in the Drift covers the whole water column, and that is deliberate: a creature that could reach anything would make depth meaningless against the one part of the map that does not negotiate.
 
 The band is not a leash on where a creature *is* — it is a limit on how far it will chase. A herd is tied to its feeding ground; a migratory colossus is not, and its band is nearly three times the grazer's.
+
+**Two stretches of water hold nothing at all, and both are load-bearing.** Above 150 m is the Lid, and the Drift declines it for the same reason hulls do — a scatter tell in water nothing can loiter in is a tell nobody is there to read. Below 2,700 m the column is empty of animals entirely: the deepest water in the Rift is the one place the bestiary has no entry for, which is the Mouth's business and not the Drift's.
+
+**The duct is the busiest water in the game.** Four species reach 1,100–1,300 m — Rasp and Draymaw from above, Hollow and Sounder from below, with the Tetherjelly living in it — and it is also where sound carries at 1.2× and where the Commune's masking fields grow. That crowding is deliberate. The thermocline is already the map's most contested surface for acoustic reasons; the Drift should agree with the Echo Layer about where the interesting water is, rather than nominate somewhere else.
+
+Three consequences worth stating plainly, because each is a design decision and not a rounding of the habitat lines in §4:
+
+- **The Lampfry tell is a Shelf mechanic.** At 150–350 m the shoals sit in the shallowest water a hull can hold and no deeper, so the one tell a silent unit cannot suppress exists only in the top band. That is not a hole in Commune stealth, it is where the answer belongs: the Kelp Forest is the stealth biome and the Commune's home, so the counter-tell is co-located with the doctrine it answers. Deep stealth is already answered by crush attrition and by the Hollow.
+- **The Hollow guards the doorway, not the basement.** Its band straddles the 1,800 m line between Mid-Water and Abyssal rather than sitting in the trench floor, so what it threatens is the *descent* — the moment a raid commits past the duct. An ambush whose strike is one of the loudest events on the map belongs exactly where the map most wants to know that somebody just committed.
+- **The Rasp has no habitat, and its row says so.** Wrecks are wherever fighting was, so its ±500 m is the widest non-megafauna band in the table: it is the only creature whose reach is drawn from a verb rather than a place.
+
+Two open questions this table does not settle, flagged rather than quietly decided:
+
+- §4 gives the Tetherjelly two homes, "Kelp Forest, thermocline boundaries", and a species carries one working depth. The row above chooses the thermocline, because it is the boundary the species is named for and the one this section already noted it "could never reach". A Kelp Forest population needs either a second seeding depth per map or a second entry, and is not in this table.
+- For Lampfry and Tetherjelly, which never commit, "pursues within" describes nothing they do. Read their band as the vertical spread of a seeded population instead — how thick the shoal or the field is, not how far it chases.
+
+*The four bands above are authored ahead of their species.* Lampfry, Rasp, Tetherjelly and Hollow are not yet simulated; see Implementation Status.
 
 *Creatures do not yet migrate vertically on their own.* They hold their working depth until something worth chasing pulls them off it. Seeded migration along the corridors [hazards.md](hazards.md) §6 describes is still unwritten.
 
