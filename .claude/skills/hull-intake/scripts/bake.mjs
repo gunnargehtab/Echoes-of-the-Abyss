@@ -1,27 +1,40 @@
 /**
- * hull-intake driver: validate a GLB unit model and bake its top-down maps.
+ * hull-intake driver: validate a GLB model export and bake its review maps.
  *
  * Takes one exported GLB (from Claude Design or anywhere else) and produces
- * the four orthographic maps the sprite bake in
- * packages/frontend/src/game/hullTextures.ts is built from — albedo, normal,
- * emissive, height — plus a meta.json describing what was found. Rendering
- * happens in headless Chromium via three.js because that is the only real
- * glTF renderer available in this container (no Blender), and it is the same
- * Playwright setup the run-game skill already relies on.
+ * the four orthographic maps — albedo, normal, emissive, height — plus a
+ * meta.json describing what the export actually contains. For units and
+ * structures the maps are also the shipped sprite inputs
+ * (tools/hull-maps/build.mjs); for environment props they are review
+ * artifacts only, because props ship as instanced meshes
+ * (packages/frontend/src/game/environmentModels.ts). Rendering happens in
+ * headless Chromium via three.js because that is the only real glTF renderer
+ * available in this container (no Blender), and it is the same Playwright
+ * setup the run-game skill already relies on.
  *
  * Usage:
  *   node bake.mjs <model.glb> --length-m <metres> [--out <dir>] [--ppm <px>]
  *                 [--allow-no-emissive] [--glow-e <target>]
+ *   node bake.mjs <model.glb> --category env --footprint-m <metres>
+ *                 [--out <dir>] [--ppm <px>] [--world-light <vent|flora|crystal>]
+ *                 [--max-tris <n>] [--max-materials <n>]
  *
+ * --length-m is the design hull length: HULL_LENGTH_M in
+ * packages/frontend/src/game/silhouettes.ts (e.g. Light Scout = 60).
  * --glow-e calibrates the emissive map onto a target glow energy (the gate-3
  * metric in docs/graphics-standards.md); without it the raw energy is still
  * measured and reported for intake review.
  *
- * --length-m is the design hull length: HULL_LENGTH_M in
- * packages/frontend/src/game/silhouettes.ts (e.g. Light Scout = 60).
- * Exits non-zero if the model fails to load or — because glow-encodes-
- * loudness makes the emissive channel the style — if no material carries any
- * emissive and --allow-no-emissive was not given.
+ * `--category env` is the environment branch of the pipeline
+ * (docs/graphics-standards.md gate 2): scale is held to `--footprint-m` (the
+ * registry's footprintM — props have no bow, so no length-on-X yaw), triangle
+ * and material counts are checked against the registry budgets, and the
+ * emissive rule is INVERTED — on the ground it is the glowing rock that is
+ * the style bug, so any emissive fails unless `--world-light` names the
+ * licensed family (docs/style-neon-noir.md "World light"). `--glow-e` is a
+ * SIG instrument and is rejected in env mode: props have no SIG.
+ *
+ * Exits non-zero when the model fails to load or fails its category's rules.
  */
 
 import { createRequire } from 'node:module';
@@ -42,16 +55,43 @@ const flag = (name) => {
   const i = args.indexOf(name);
   return i >= 0 ? args[i + 1] : undefined;
 };
-const lengthM = Number(flag('--length-m'));
+const category = flag('--category') || 'hull';
+const isEnv = category === 'env';
+const lengthM = Number(flag(isEnv ? '--footprint-m' : '--length-m'));
 const outDir = resolve(flag('--out') || 'hull-intake-out');
 const ppm = Number(flag('--ppm') || 2);
 const allowNoEmissive = args.includes('--allow-no-emissive');
+// Env mode: the licensed world-light family, and the registry budgets the
+// export is held to (PropSpec.triBudget caps at 800 in the registry fence;
+// two materials is the draw-call contract).
+const WORLD_LIGHT_FAMILIES = ['vent', 'flora', 'crystal'];
+const worldLight = flag('--world-light');
+const maxTris = Number(flag('--max-tris') || 800);
+const maxMaterials = Number(flag('--max-materials') || 2);
 // Target glow energy (graphics-standards.md gate 3). When set, the emissive
 // map is scaled onto it — placement stays the model's, intensity is spec'd.
 const glowE = Number(flag('--glow-e') || 0);
 
+if (!['hull', 'env'].includes(category)) {
+  console.error(`unknown --category: ${category} (hull | env)`);
+  process.exit(1);
+}
 if (!modelPath || !existsSync(modelPath) || !(lengthM > 0)) {
-  console.error('usage: node bake.mjs <model.glb> --length-m <metres> [--out dir] [--ppm px]');
+  console.error(
+    isEnv
+      ? 'usage: node bake.mjs <model.glb> --category env --footprint-m <metres> [--out dir]'
+      : 'usage: node bake.mjs <model.glb> --length-m <metres> [--out dir] [--ppm px]'
+  );
+  process.exit(1);
+}
+if (isEnv && worldLight !== undefined && !WORLD_LIGHT_FAMILIES.includes(worldLight)) {
+  console.error(`unknown --world-light: ${worldLight} (${WORLD_LIGHT_FAMILIES.join(' | ')})`);
+  process.exit(1);
+}
+if (isEnv && glowE > 0) {
+  // Gate 3 is scoped to things that have a SIG; calibrating a prop onto the
+  // curve would be exactly the regime-blur the docs forbid.
+  console.error('--glow-e is a SIG instrument and does not apply to --category env.');
   process.exit(1);
 }
 
@@ -138,7 +178,9 @@ let failed = false;
 try {
   const page = await browser.newPage();
   page.on('pageerror', (e) => console.error(`page error: ${e.message}`));
-  await page.goto(`http://127.0.0.1:${port}/page.html?lengthM=${lengthM}&ppm=${ppm}`);
+  await page.goto(
+    `http://127.0.0.1:${port}/page.html?lengthM=${lengthM}&ppm=${ppm}&category=${category}`
+  );
   await page.waitForFunction(() => window.__ready || window.__error, null, { timeout: 60000 });
 
   const error = await page.evaluate(() => window.__error);
@@ -166,11 +208,16 @@ try {
 
   // --- validation verdicts -------------------------------------------------
   const warnings = [];
-  if (stats.emissiveMaterialCount === 0)
+  if (!isEnv && stats.emissiveMaterialCount === 0)
     warnings.push(
       'no emissive material found — the glow layer is empty. Glow encodes loudness ' +
         '(docs/style-neon-noir.md), so re-export with emissive intact unless this ' +
         'hull is intentionally dark.'
+    );
+  if (isEnv && worldLight && stats.emissiveMaterialCount === 0)
+    warnings.push(
+      `--world-light ${worldLight} was licensed but the export carries no emissive — ` +
+        'either the channel was dropped or the licence is unused.'
     );
   if (stats.rotatedZtoX)
     warnings.push('length ran along Z in the export; auto-rotated onto X. Verify bow direction.');
@@ -196,19 +243,54 @@ try {
   }
 
   const { url: _url, ...glowMeta } = glow;
-  const meta = { source: resolve(modelPath), lengthM, ppm, ...stats, glow: glowMeta, warnings };
+  const meta = {
+    source: resolve(modelPath),
+    category,
+    ...(isEnv ? { footprintM: lengthM, worldLight: worldLight ?? 'none' } : { lengthM }),
+    ppm,
+    ...stats,
+    glow: glowMeta,
+    warnings,
+  };
   writeFileSync(join(outDir, 'meta.json'), JSON.stringify(meta, null, 2) + '\n');
   console.log(`meta: ${join(outDir, 'meta.json')}`);
 
   console.log(
     `\n${stats.meshCount} mesh(es), ${stats.materials.length} material(s), ` +
-      `${stats.emissiveMaterialCount} emissive · ` +
+      `${stats.emissiveMaterialCount} emissive, ${stats.triangleCount} triangles · ` +
       `${stats.sizeM.length.toFixed(1)}×${stats.sizeM.beam.toFixed(1)} m → ` +
       `${stats.imagePx.width}×${stats.imagePx.height} px`
   );
   for (const w of warnings) console.warn(`WARNING: ${w}`);
 
-  if (stats.emissiveMaterialCount === 0 && !allowNoEmissive) {
+  if (isEnv) {
+    // The environment rules (graphics-standards.md gate 2, env variant).
+    // Distinct materials, not per-mesh uses: shared materials merge to one
+    // draw call per instance batch, which is the budget the cap protects.
+    const distinctMaterials = new Set(stats.materials.map((m) => m.name)).size;
+    if (stats.emissiveMaterialCount > 0 && !worldLight) {
+      console.error(
+        '\nFAIL: this prop carries emissive but no world-light family was licensed. On the ' +
+          'ground the glowing rock is the style bug (docs/style-neon-noir.md "World light") — ' +
+          'pass --world-light <vent|flora|crystal> only if Block 4 licenses this prop.'
+      );
+      failed = true;
+    }
+    if (stats.triangleCount > maxTris) {
+      console.error(
+        `\nFAIL: ${stats.triangleCount} triangles exceed the prop budget of ${maxTris} ` +
+          '(the registry triBudget — docs/asset-prompts-3d.md Block 4). Decimate the export.'
+      );
+      failed = true;
+    }
+    if (distinctMaterials > maxMaterials) {
+      console.error(
+        `\nFAIL: ${distinctMaterials} materials exceed the prop cap of ${maxMaterials} — ` +
+          'each material is a draw call per instance batch (gate 6). Merge materials.'
+      );
+      failed = true;
+    }
+  } else if (stats.emissiveMaterialCount === 0 && !allowNoEmissive) {
     console.error('\nFAIL: emissive channel missing (pass --allow-no-emissive to override).');
     failed = true;
   }
