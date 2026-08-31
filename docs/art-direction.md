@@ -66,7 +66,7 @@ fill, and it is **render-only**: the simulation never reads it, no gameplay quan
 floors, collisions, PF, detection — may ever derive from it, and it must never out-shade an
 authored terrain step. It is what the ground looks like, never what it is.
 
-Two further layers of the same texture-not-information rule:
+Three further layers of the same texture-not-information rule:
 
 - **Albedo mottling.** Beside the relief, each biome's fill carries a faint
   luminance-only variegation — sediment, growth, scatter — from an independent noise
@@ -74,15 +74,25 @@ Two further layers of the same texture-not-information rule:
   scale together, because hue belongs to the biome and the biome is what sound is
   priced by), darken-only under the same ceiling as everything else, and its per-biome
   strength lives in the `seabed.ts` table with the relief numbers.
-- **Vent ember light.** Thermal vent fields are the one piece of terrain that emits
-  its own light: sparse ember points in `#E06A2B` ember orange (SPEC — the sole
-  terrain-owned emissive colour, deliberately redder than Bathyarch's hazard amber),
-  dim, small, and flickering on the sonar cadence — intensity steps on the 5 Hz grid,
-  never smooth video glow. Embers are decoration for ground the map already declares
-  hot: deterministic per map, render-only, and carrying no state — never brightening
-  with activity, occupancy, or anything else a player could read as a signal. The
-  seafloor otherwise stays unlit; the carve-out is this one biome, at this one
-  temperature ([style-neon-noir.md](style-neon-noir.md) keeps the enforcement).
+- **Rock speaks in stone.** Ground that admits no water — mesas, trench walls, the
+  rock over a roofed passage — is the one ground with no propagation factor to
+  encode, so it takes no biome fill: it renders in the hue-neutral stone ramp
+  (`rock-face` / `rock-shadow`, [style-neon-noir.md](style-neon-noir.md) "The
+  stone"), with its own darken-only relief — jagged, cliff-lipped, shadowed at the
+  base where a mesa meets open ground. The ramp's ceiling sits below the palest
+  biome fill on purpose: ground you can enter always speaks louder than ground you
+  cannot, and the cyan blocked-ground overlay stays the only voice that says
+  "not for *this* hull".
+- **World light.** Terrain-owned light exists in exactly three families, spec'd and
+  capped in [style-neon-noir.md](style-neon-noir.md) "World light": **vent ember**
+  points in `#E06A2B` (SPEC — deliberately redder than Bathyarch's hazard amber),
+  flickering on the 5 Hz sonar grid; **flora biolight** tips on kelp and living
+  coral; and the **crystal seam** in resonance crystal. All three are points and
+  seams, never area glow, with the vent ember as the brightness ceiling: decoration
+  for ground the map already declares hot, alive, or charged — deterministic per
+  map, render-only, and carrying no state, never brightening with activity,
+  occupancy, or anything else a player could read as a signal. The seafloor
+  otherwise stays unlit.
 
 ### Environmental Shapes
 
@@ -90,6 +100,19 @@ Two further layers of the same texture-not-information rule:
 - Smooth pressure-eroded stone
 - Coral ruins with geometric patterns
 - Massive industrial structures anchored to the seabed
+
+These shapes ship two ways, both under the texture-not-information law above. The
+ground itself carries them as baked relief — a vent field reads as broken ground
+because the detail field says so. Standing *on* the ground, they are **instanced
+environment props**: real low-poly meshes (kelp clusters, vent chimneys, ruin
+blocks, crags) from the environment branch of the pipeline of record
+([graphics-standards.md](graphics-standards.md)), scattered deterministically from
+the terrain grid the server already published. Props are dressing for what a cell
+already declares — a kelp cluster stands only in kelp, a crag only against rock —
+so they never *add* information, and they obey the same silence: desaturated,
+darker than any contact, lit only within the world-light families. Where kelp
+slows and hides a hull ([environments.md](environments.md)), the props are what
+the player sees; the cell grid stays what the simulation reads.
 
 ## Faction Art Styles
 

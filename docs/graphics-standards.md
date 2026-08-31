@@ -37,6 +37,30 @@ architecture. That is an intended state for unfinished art, not a third art styl
 procedural and model-backed paths share one lighting model (`bake.ts`) precisely so the
 two cannot drift into different-looking navies.
 
+**The environment branch.** Environment props — kelp clusters, vent chimneys, ruin
+blocks, crags — enter through the same front door and ship by a shorter road, because a
+prop is a mesh, not a sprite:
+
+```text
+Claude Design prompt kit          docs/asset-prompts-3d.md   (Block 4 — ENVIRONMENT)
+        │
+        ▼
+GLB export → hull-intake bake     .claude/skills/hull-intake --category env
+        │                         (validates scale, tris, materials, licensed light)
+        ▼
+Approved model committed          docs/concept-art/models/env-*.glb
+        │
+        ▼
+Runtime instancing                packages/frontend/src/game/environment registry
+                                  (deterministic scatter from the terrain grid;
+                                  no offline map render — props have no chart presence)
+```
+
+Props never appear on the sonar scope or in the sprite bake: they are world dressing,
+render-only by the same law as the seabed's detail relief, and the scope stays the flat
+chart. Their procedural fallback is the seabed bake itself — a biome with no approved
+props yet reads through relief and mottle alone, which is the shipped state today.
+
 ## The gates
 
 ### 1. Model-backed or deliberately procedural — no third path
@@ -47,6 +71,13 @@ per-unit special-case rendering code, no "temporary" art that bypasses the share
 Vector primitives are legal in exactly three places, all deliberate: the loading fallback,
 enemy contacts (capped by the Asymmetric Fidelity Law), and construction sites, which read
 as scaffolding on purpose until commissioned.
+
+The same law covers the ground. An environment visual is either an approved `env-*` model
+instanced by the environment registry, or the documented procedural seabed bake (relief,
+mottle, embers) — no hand-placed one-off decor, no per-map special-case dressing code.
+Prop *placement* is itself part of the rule: deterministic from the published terrain
+grid, identical on every client, and render-only — the simulation never reads where a
+prop stands.
 
 ### 2. Intake is the gate, not a formality
 
@@ -59,6 +90,14 @@ background with a single hard cyan rim light, and a shape that still reads black
 when running silent. The bake **fails a model with no emissive channel** — a glow-less
 hull is a style bug, and only a deliberately dark hull earns the
 `--allow-no-emissive` override.
+
+Environment models pass the same gate in its env mode (`--category env`): scale against
+the prop's registry `footprintM` instead of `HULL_LENGTH_M` (props have no bow, so no
+length-on-X requirement — they stand at a random yaw), triangle and material counts
+reported against the registry's budgets (≤ 2 materials; the per-prop triangle cap), and
+the emissive rule **inverted** — a prop with any emissive channel fails unless its
+world-light family ([style-neon-noir.md](style-neon-noir.md) "World light") licenses it,
+because on the ground it is the *glowing* rock that is the style bug.
 
 ### 3. Glow encodes loudness — always
 
@@ -88,6 +127,13 @@ light *placement* stays the model's own, per the pipeline of record. A model who
 features are too small or dim to reach its target even at maximum gain (×64) fails
 review: lit features must read as strips, bars or patches — sub-pixel dots vanish at
 sprite scale, and no gain can bring them back.
+
+This gate is scoped to units and structures — the things that have a SIG. Environment
+props have none, so the curve has no meaning for them; their light is governed instead by
+the world-light families and caps in [style-neon-noir.md](style-neon-noir.md), enforced
+at intake by gate 2's inverted emissive rule. The two regimes must never blur: if a piece
+of terrain glow starts encoding a number, it has become an instrument and belongs to the
+HUD, not the ground.
 
 ### 4. Palette discipline — hue belongs to the faction constant
 
@@ -129,6 +175,15 @@ Per-frame relighting of whole rosters and densities that push a structure out of
 memory class are still regressions, and anything drawn per tick is on the 60 Hz budget
 ([tech-stack.md](tech-stack.md)).
 
+Environment props spend from the same two budgets, on a stated reservation: roughly
+**30 draw calls and 80 k triangles** for the whole prop layer, achieved by instancing
+(one `InstancedMesh` per prop type per material — instance count never adds draw calls)
+under a registry-level instance cap, the `VENT_EMBER_CAP` pattern applied to geometry.
+The probe reports the layer separately (`props` / `propTris`) so a prop regression is a
+number, not an impression, and a test sums the registry's worst case over the shipped
+maps so the reservation cannot be exceeded by accretion. Terrain never rebuilds
+per frame: props rebuild only when the ground does.
+
 ### 7. Readability outranks richness
 
 RTS readability beats realism, at every zoom the camera allows: faction from silhouette,
@@ -165,7 +220,10 @@ is what a tilted camera honestly sees.
 - [ ] New or changed hull/structure art goes through the pipeline of record (gate 1) —
   no bypasses, no one-offs
 - [ ] Any new GLB passed hull-intake, and its four review maps were actually looked at
-  (gate 2)
+  (gate 2); environment models went through `--category env` and their light is inside a
+  licensed world-light family
+- [ ] Environment dressing is registry-instanced or seabed-baked — no hand-placed decor —
+  and its placement is deterministic and render-only (gate 1)
 - [ ] Emissive matches the unit's SIG band in [units.md](units.md), and the shipped maps
   sit on the gate-3 energy curve (`node tools/hull-maps/build.mjs` reports it)
 - [ ] Every colour traces to a documented palette or token; no new hex values outside the

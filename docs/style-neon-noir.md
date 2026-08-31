@@ -58,6 +58,25 @@ Tokens, not suggestions. Anything drawing chrome uses these names.
 Backgrounds gradient *downward into black*, never upward into blue:
 `abyss-floor → abyss-void → #000`. Depth is always below.
 
+### The stone (rock faces)
+
+Ground that admits no water — mesas, trench walls, the roofs over tunnels — speaks
+in a hue-neutral stone ramp, not in a biome fill, because rock has no propagation
+factor to encode:
+
+| Token | Hex | Use |
+| --- | --- | --- |
+| `rock-face` | `#11161C` | Rock ceiling value — mesa tops, cliff lips; the brightness ceiling for every rock pixel |
+| `rock-shadow` | `#080C12` | Cliff bases, the shadowed ring where a mesa meets open ground |
+
+Two rules ride with the ramp. It is **hue-neutral by construction** — near-grey with
+the canvas's blue memory, never a warm or green cast, because a tinted rock would
+read as a biome and biomes are what sound is priced by. And it never outshines open
+ground: `rock-face` sits below the palest biome fill, so ground you can enter always
+speaks louder than ground you cannot. Relief and mottle on rock follow the same
+darken-only law as everywhere else ([art-direction.md](art-direction.md) "Reading
+the Sea Floor"); `packages/frontend/src/game/seabed.ts` transcribes the ramp.
+
 ### The neons (the signal)
 
 | Token | Hex | Carries |
@@ -323,15 +342,58 @@ is: **if the motion is the message, it stays.**
 - **Camera**: keep the existing slow sway and vignette; add a barely-visible
   magenta/cyan chromatic split (≤ 1 px) at the frame edges only.
 
+## World light — the terrain carve-outs
+
+Light belongs to *agents and instruments*; the seafloor stays dark. But three
+biomes are *defined* by things that emit — magma in the cracks, life in the kelp,
+charge in the crystals ([environments.md](environments.md) asks for all three) —
+and a vent field with no embers is not a vent field. So terrain-owned light exists,
+in exactly three families, and nothing else on the ground ever emits:
+
+| Token | Hex | Where | What it is |
+| --- | --- | --- | --- |
+| `vent-ember` | `#E06A2B` | Thermal Veins | Sparse ember points in the cracked ground — the original carve-out, unchanged |
+| `flora-biolight` | `#2E8C74` | Kelp Forest, Coral Ruins | Dim tips on kelp stalks and living coral — points and short lines, never a glowing canopy |
+| `crystal-seam` | `#5B4A8C` | Resonance Fields | A dull internal seam in the crystal props — violet is already licensed here ("resonance" is one of its three contexts) |
+
+Every family obeys the same five rules, and they are gates, not suggestions:
+
+1. **World light is points and seams, never area glow.** No lit ground, no
+   glowing fills, no halo recipe — the glow recipe above belongs to the
+   interface. A world light is a small emitter in a dark world, full stop.
+2. **The vent ember is the brightness ceiling.** No family renders brighter than
+   `vent-ember` does today — dim, small, swallowed by fog at any distance. The
+   85–90 % darkness budget and the 5–10 % seafloor luminance floor stand
+   untouched; world light is what makes the darkness read as *inhabited*, not a
+   way around it.
+3. **Static or 5 Hz-quantised.** Embers flicker on the sonar grid; flora and
+   crystal light hold steady or step on the same 200 ms bucket. Smooth video
+   glow on terrain reads as an agent, which is a lie.
+4. **Deterministic and stateless.** Placed by the map, identical for every
+   client and every screenshot, and never brightening with activity, occupancy,
+   proximity or anything else a player could read as a signal — a world light
+   that responds to the game is an instrument, and instruments live on the HUD.
+5. **No UI hue ever touches it.** The families have their own tokens,
+   deliberately away from the neons — `vent-ember` redder than Bathyarch's
+   amber, `flora-biolight` dimmer and greyer than Pelagia's biolight,
+   `crystal-seam` duller than Hadron's crystal glow — so nothing in the world
+   can be mistaken for the interface, or for a faction.
+
+Per-map count caps live in code beside the emitters (the `VENT_EMBER_CAP`
+pattern in `PerspectiveView.ts`); [art-direction.md](art-direction.md) "Reading
+the Sea Floor" and [graphics-standards.md](graphics-standards.md) carry the
+enforcement. Fauna light — a Lampfry shoal's glow — is **not** world light and
+needs no carve-out: an animal is an agent, and its colour comes from the palette
+tables above.
+
 ## Don'ts
 
 - No neon on terrain or biomes — the seafloor stays desaturated
   (`BIOME_COLOR` in `packages/frontend/src/game/palette.ts`); light belongs to
-  *agents and instruments*. One carved-out exception, spec'd in
-  [art-direction.md](art-direction.md) "Reading the Sea Floor": thermal vent
-  **ember light**, `#E06A2B`, dim and sparse, flicker quantised to the 5 Hz
-  sonar grid. It is world-light, not neon — no UI hue ever touches it, and no
-  other biome gets one.
+  *agents and instruments*. Terrain-owned light exists only as the three
+  **world-light families** above — vent ember, flora biolight, crystal seam —
+  under their five rules. It is world-light, not neon: no UI hue ever touches
+  it, and no fourth family gets added without amending this doc first.
 - No violet outside the Mouth/resonance/Hadron contexts. The logo **is** a
   Mouth context — [naming.md](naming.md) "The logo" — so the title masthead
   and its throat-light token (`mouth-glow`, `#C9A6FF`) are licensed; the rest
