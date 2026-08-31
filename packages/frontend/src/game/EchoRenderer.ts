@@ -96,6 +96,8 @@ import {
   BIOME_COLOR,
   FACTION_PALETTE,
   FAUNA_COLOR,
+  FONT_DATA,
+  FONT_DISPLAY,
   RESOURCE_COLOR,
   setActivePalette,
   TIER_STYLE,
@@ -1046,6 +1048,21 @@ export class EchoRenderer {
     );
     this.app.stage.addChild(this.overlay, this.hud);
 
+    // The display face is vendored and declared in index.css, but a `?map=`
+    // boot reaches this canvas without any DOM text having demanded it, and a
+    // Pixi label rasterized against the fallback keeps the fallback until its
+    // text next changes. Ask for it before building the labels; on failure the
+    // condensed fallback stack simply stands.
+    try {
+      await document.fonts.load('700 32px "Big Shoulders Display"');
+    } catch {
+      /* the fallback stack in FONT_DISPLAY carries it */
+    }
+    if (this.destroyed) {
+      this.app.destroy(true, { children: true });
+      return;
+    }
+
     this.buildHudText();
     this.attachInput();
 
@@ -1058,7 +1075,11 @@ export class EchoRenderer {
   }
 
   private buildHudText(): void {
-    const mono = { fontFamily: 'ui-monospace, Consolas, monospace', fill: UI.text };
+    const mono = { fontFamily: FONT_DATA, fill: UI.text };
+    // The display voice, for the two title-weight elements this HUD owns: the
+    // verdict banner and the inspector's name line. Everything else stays in
+    // the data voice — docs/style-neon-noir.md "Typography".
+    const display = { fontFamily: FONT_DISPLAY, fontWeight: '600' as const, fill: UI.text };
 
     // Top strip, left to right: nodules, SIG meter + value, contacts/status.
     this.resourceLabel = new Text({ text: '', style: { ...mono, fontSize: 13 } });
@@ -1111,12 +1132,15 @@ export class EchoRenderer {
 
     this.bannerLabel = new Text({
       text: '',
-      style: { ...mono, fontSize: 28 },
+      style: { ...display, fontWeight: '700', fontSize: 32, letterSpacing: 2 },
     });
     this.bannerLabel.anchor.set(0.5);
 
     // The card's header takes the cyan "interface voice" (docs/style-neon-noir.md).
-    this.infoName = new Text({ text: '', style: { ...mono, fontSize: 13, fill: UI.accent } });
+    this.infoName = new Text({
+      text: '',
+      style: { ...display, fontSize: 15, letterSpacing: 1, fill: UI.accent },
+    });
     this.infoLine1 = new Text({ text: '', style: { ...mono, fontSize: 12, fill: UI.textDim } });
     this.infoLine2 = new Text({ text: '', style: { ...mono, fontSize: 12, fill: UI.textDim } });
     this.infoBadge = new Text({ text: '', style: { ...mono, fontSize: 10, fill: UI.textDim } });
@@ -2111,7 +2135,7 @@ export class EchoRenderer {
     if (text === undefined) {
       text = new Text({
         text: '',
-        style: { fontFamily: 'ui-monospace, Consolas, monospace', fontSize: 12, fill: UI.text },
+        style: { fontFamily: FONT_DATA, fontSize: 12, fill: UI.text },
       });
       text.anchor.set(0.5);
       this.barTexts.push(text);
@@ -4897,7 +4921,10 @@ export class EchoRenderer {
     const name =
       structure !== undefined ? structureStatsFor(structure.kind).name : statsFor(unit!.kind).name;
     this.infoName.visible = true;
-    this.infoName.text = this.selected.size > 1 ? `${name} +${this.selected.size - 1}` : name;
+    // The display voice is uppercase (docs/style-neon-noir.md "Typography");
+    // canvas text has no text-transform, so the transform happens here.
+    const shownName = this.selected.size > 1 ? `${name} +${this.selected.size - 1}` : name;
+    this.infoName.text = shownName.toUpperCase();
     this.infoName.position.set(x + 12, y + 10);
 
     const barX = x + 12;

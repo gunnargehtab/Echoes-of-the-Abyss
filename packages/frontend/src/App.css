@@ -71,8 +71,9 @@
 
 .game-overlay h2 {
   margin: 0;
-  font-size: 1.1rem;
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   /* Cyan is the interface voice; the halo is the glow recipe's second layer. */
@@ -146,10 +147,17 @@
   }
 }
 
+/* Panel title strips speak in the logo's display voice — the same header
+   register the shell uses — while everything beneath them stays in the data
+   voice. Sized up a step from the old mono caption: the condensed face needs
+   the height to stay legible at strip scale. */
 .contact-log-title {
   padding: 4px 8px;
-  font-size: 0.62rem;
-  letter-spacing: 0.18em;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   color: var(--text-cyan);
   border-bottom: 1px solid rgba(255, 61, 166, 0.3);
 }
@@ -506,10 +514,13 @@
   text-align: center;
 }
 
+/* The verdict is a title, so it takes the display voice — the same register
+   as the canvas banner behind it. */
 .result-panel h2 {
   margin: 0;
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
@@ -1203,16 +1214,24 @@
 .objectives-title {
   display: flex;
   justify-content: space-between;
+  align-items: baseline;
   gap: 0.6rem;
   padding: 4px 8px;
-  font-size: 0.62rem;
-  letter-spacing: 0.18em;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   color: var(--text-cyan);
   border-bottom: 1px solid color-mix(in srgb, var(--neon-magenta) 30%, transparent);
 }
 
+/* The ceiling is a readout, not a title — it stays in the data voice. */
 .objectives-ceiling {
+  font-family: var(--font-data);
+  font-size: 0.62rem;
   letter-spacing: 0.1em;
+  text-transform: none;
   opacity: 0.7;
 }
 
@@ -1371,8 +1390,11 @@ button.objectives-row:hover {
 
 .mission-log-title {
   padding: 4px 8px;
-  font-size: 0.62rem;
-  letter-spacing: 0.18em;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   color: var(--text-cyan);
   border-bottom: 1px solid color-mix(in srgb, var(--neon-cyan) 25%, transparent);
 }
@@ -1456,8 +1478,9 @@ button.objectives-row:hover {
 
 .mission-result-panel h2 {
   margin: 0;
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
