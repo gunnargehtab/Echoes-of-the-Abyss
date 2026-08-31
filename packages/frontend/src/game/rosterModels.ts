@@ -54,6 +54,9 @@ const LUMINANCE_LIFT = 1.5;
 /**
  * Every approved model, keyed by its docs filename. Lazy URLs: the build
  * carries all of them, a match fetches only the hulls it actually shows.
+ * The pattern also matches the `env-*.glb` environment props, harmlessly —
+ * lookup is by roster slug, so those files are simply never asked for here;
+ * environmentModels.ts holds its own prefix-filtered glob.
  */
 const MODEL_URLS = import.meta.glob<string>('../../../../docs/concept-art/models/*.glb', {
   query: '?url',
@@ -169,9 +172,10 @@ function recolor(root: Group, faction: Faction): void {
  * frame budget would go. Bucketing by material keeps the recoloured look
  * identical while a hull costs as many draws as it has materials. A bucket
  * whose geometries refuse to merge (mismatched attributes) keeps its parts —
- * correctness over the draw count.
+ * correctness over the draw count. Exported for environmentModels.ts, whose
+ * props obey the same law before they are instanced.
  */
-function mergeByMaterial(root: Group): Group {
+export function mergeByMaterial(root: Group): Group {
   root.updateMatrixWorld(true);
   const buckets = new Map<Material, BufferGeometry[]>();
   const unmergeable: Mesh[] = [];
