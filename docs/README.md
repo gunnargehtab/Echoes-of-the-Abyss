@@ -89,8 +89,8 @@ of it has a document to point at yet:
 - **The remaining 18 missions.** campaign.md §5–§7 gives them titles, teaching targets and
   beats, which is not a specification. Each needs a document of its own — one doc per mission,
   the pattern mission-sorrowgate.md sets and eleven documents now follow — before it needs
-  code. The Ledger's seven are specified and built end to end; Tend and Attendance are built;
-  Aptitude's remaining gaps are one HUD instrument and a map (its §13 keeps the list). The
+  code. The Ledger's seven are specified and built end to end, and so are Tend, Attendance and
+  Aptitude — every mission the bible specifies now has a literal behind it. The
   format itself has stopped asking: the condition-fired beat, the exposure tally and the aimed
   hold — the three things the first four documents still wanted — have all shipped, along with
   the Ledger's own three additions (the `deliver` predicate, readings per objective, and the
