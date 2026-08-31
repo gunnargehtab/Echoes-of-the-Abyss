@@ -47,11 +47,13 @@ import { duckFor } from './precedence.ts';
 import { SelfMixer, type SelfAudioFrame } from './selfMixer.ts';
 import {
   SelfBed,
+  SourBed,
   playBreakSilence,
   playExposure,
   playNotice,
   playPingReturn,
   playPingTransmit,
+  playSourBite,
   playUnderFire,
 } from './selfVoice.ts';
 import { MAX_CONTACT_VOICES, VoiceAllocator } from './voiceAllocator.ts';
@@ -116,6 +118,7 @@ export class AudioEngine {
   private mixer: ContactMixer | null = null;
   private selfMixer: SelfMixer | null = null;
   private selfBed: SelfBed | null = null;
+  private sourBed: SourBed | null = null;
   private markBed: MarkBed | null = null;
   private pendingMarks: Map<EchoMarkKind, number> | null = null;
   private pendingSelf: SelfAudioFrame | null = null;
@@ -273,8 +276,15 @@ export class AudioEngine {
 
     const bed = new SelfBed(context, self);
     this.selfBed = bed;
+    // A second bed on the same bus rather than a mode of the first: a hull can
+    // be silent and souring at once, and folding them together would make
+    // whichever fact was quieter inaudible.
+    const sour = new SourBed(context, self);
+    this.sourBed = sour;
     this.selfMixer = new SelfMixer({
       bed: (mix, now) => bed.update(mix, now),
+      sour: (mix, now) => sour.update(mix, now),
+      sourBite: (at) => playSourBite(context, self, at),
       world: (gain, now) => world.gain.setTargetAtTime(gain, now, 0.2),
       transmit: (at) => playPingTransmit(context, self, at),
       ret: (at, pan) => playPingReturn(context, self, at, pan),
@@ -506,6 +516,8 @@ export class AudioEngine {
     this.pendingMarks = null;
     this.selfBed?.stop(this.context?.currentTime ?? 0);
     this.selfBed = null;
+    this.sourBed?.stop(this.context?.currentTime ?? 0);
+    this.sourBed = null;
     this.selfMixer?.reset();
     this.selfMixer = null;
     this.pendingSelf = null;

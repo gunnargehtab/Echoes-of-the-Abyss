@@ -71,6 +71,32 @@ The SIG meter ([ui-ux.md](ui-ux.md) §3) is the readout. The **self-noise bed** 
 
 Silent Running inverts it: the self bus drops **−18 dB** over 600 ms and the world bus opens **+6 dB**. The world gets louder because you got quieter, and the first time a player toggles it the map audibly fills with things that were always there. That moment is the sales pitch for the entire system.
 
+### The Lid — sour exposure
+
+The self bus carries one more fact about your own force, and it is not loudness at all. A hull above 150 m is in the sour water the Salinity Collapse left behind: twenty seconds of grace, then unhealable bleed until it dives back under ([systems-depth.md](systems-depth.md) §2). It is here because the self bus is where facts about *your own* force live — the Lid is not the interface talking, and it is not a detection.
+
+It is three sounds because the mechanic is three states, and the split matters more than the timbres do.
+
+| State | What the mix does | Why |
+| --- | --- | --- |
+| **Souring** — the grace running | A thin, dry, upper-mid texture ramped in over ~1 s, level rising with the grace **spent** | State, not news. Drifting up into the Lid is heard as the mix changing, not as an alert, and the rise *is* the countdown |
+| **The bite** — the grace expiring | One short descending figure on the self rung, 1.5 s | News, and the only transient the Lid gets. It is the moment the ledger opens |
+| **Bleeding** — the grace gone | The same texture at full level, pulsing at 0.6 Hz | State again. A pulse rather than a tone, because a bleed is being *paid* — but a soft attack, so it never reads as a fresh event |
+
+**The souring texture claims no precedence rung.** It is bed, and a bed that ducked the contact bus would make the Lid deafen you — the bands above already own "being loud makes you deaf", and sour exposure is not loudness. The player in the Lid is bleeding, not deaf. Only the bite ducks, and it ducks on the ordinary `self` rung, below the exposure strike: being lit is still the loudest thing that can happen to you.
+
+**§11 is already half paid, and the bite pays the rest.** The screen has carried the Lid since Phase 4 — the ribbon's threat hatch, the card's grace countdown, the `SOUR — BLEEDING` line — so the *states* have their visual equivalents. What had none was the moment, and a player looking at a different hull's card would never have learned it happened. The bite therefore writes an own-force row into the contact log ([ui-ux.md](ui-ux.md) §10) naming the hull, exactly as a blow on the plating does. The ear gets one sound for a simultaneous crossing and the log gets a row per hull, which is the one place the two are allowed to differ — see the paragraph below for why.
+
+**It keys to the worst hull in the fleet, like the bed keys to fleet SIG.** Twelve stacked textures would be mud, and the question the bed answers is "is my force in the sour", not "how is hull seven". The bite is per hull, because losing a *particular* hull's grace is news about that hull — but several hulls crossing on the same Echo tick sound once. Six copies of one sound at one instant is not six pieces of news; it is one piece of news at six times the amplitude, which would spend the headroom §12 reserves for exposure.
+
+### How it relates to the crush cue
+
+**There is no crush cue.** `Damaged` fires for violence only and excludes attrition explicitly (§12), so the bottom of the column is currently silent — and sour exposure is therefore the first attrition the mix has ever voiced. That makes this section a reservation as much as a decision.
+
+If crush is ever given a voice, it **may not be this one**, and not a variant of it. The two share a ledger and nothing else: they are opposite instructions. Crush says *rise*; sour says *dive*. A cue the player cannot resolve into a direction is worse than silence, because it spends their attention and then declines to say what for — and a hull that answers a crush cue by rising into the Lid has been actively misled by the mix.
+
+So the register is claimed here: **sour descends** — the bite falls, the texture is thin and high and asks to be got away from downward. A crush cue must **rise**, and must live in the low band the hull already occupies, where the sour texture deliberately does not go. Neither may be built from the other's material.
+
 ---
 
 ## 5. Active Sonar
@@ -254,6 +280,17 @@ and a rattle of plating, deliberately below the exposure strike, and the mixer c
 sustained battering into one blow per ten quiet seconds per hull: the log records the
 first blow of an engagement (docs/ui-ux.md §5), and the ear and the record share the
 window so they cannot disagree about what one engagement is.
+
+**The Lid has a voice.** "The Lid" above is implemented on the self bus: a second continuous
+bed alongside §4's plant bed rather than a mode of it, because a silent hull can be souring
+and a screaming one can be in clean water — folding them together would have made whichever
+fact was quieter inaudible. The texture is driven from the server's own `OwnUnit.sourS`, so
+the sound and the card count the same grace down and the `SOUR — BLEEDING` line and the
+pulse change state on the same comparison. The bite is a `SourBleed` self-event raised on
+the crossing edge in the pressure system, which is the one place in the simulation that
+knows the exact tick a grace ran out — and it is the single exception to `Damaged`'s
+exclusion of attrition, granted because sour exposure is the only attrition in the game with
+a moment in it.
 
 **The ui bus finally carries something.** The idle-harvester notice — two soft descending
 taps — is its first producer, and it sets the bus's register: the interface speaking, not

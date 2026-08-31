@@ -13,7 +13,14 @@
  */
 
 import { ensureNoiseBuffer } from './contactVoice.ts';
-import { BREAK_SILENCE_S, SILENT_MIX, type SelfMix } from './selfNoise.ts';
+import {
+  BREAK_SILENCE_S,
+  SILENT_MIX,
+  SOUR_BITE_S,
+  SOUR_MIX,
+  type SelfMix,
+  type SourMix,
+} from './selfNoise.ts';
 
 /** SPEC — §5. The outgoing sweep is 1.5 s and the returns arrive over 3 s. */
 export const PING_TRANSMIT_S = 1.5;
@@ -95,6 +102,118 @@ export class SelfBed {
       // Already stopped.
     }
   }
+}
+
+/**
+ * The Lid, as a continuous texture — docs/audio-direction.md §4, "The Lid".
+ *
+ * A second bed on the self bus rather than a change to the first, because the
+ * two are independent facts: a silent hull can be souring and a screaming one
+ * can be in clean water. Folding sour into `SelfBed` would have made one of
+ * those inaudible whenever the other was loud.
+ *
+ * Band-passed noise, high and thin, so it sits clear of the plant bed's low
+ * band — which is also the band the doc reserves for a crush cue that does not
+ * exist yet. Nothing here descends into it.
+ */
+export class SourBed {
+  private readonly out: GainNode;
+  private readonly filter: BiquadFilterNode;
+  private readonly noise: AudioBufferSourceNode | null;
+  private readonly pulse: GainNode;
+  private nextPulseAt = 0;
+  private stopped = false;
+
+  constructor(context: AudioContext, destination: AudioNode) {
+    this.out = context.createGain();
+    this.out.gain.value = 0;
+
+    this.filter = context.createBiquadFilter();
+    this.filter.type = 'bandpass';
+    this.filter.Q.value = 2.4;
+    this.filter.frequency.value = SOUR_MIX.CENTRE_HZ;
+
+    this.pulse = context.createGain();
+    this.pulse.gain.value = 1;
+
+    this.noise = createNoiseSource(context);
+    this.noise?.connect(this.filter).connect(this.pulse).connect(this.out).connect(destination);
+    this.noise?.start();
+  }
+
+  update(mix: SourMix, now: number): void {
+    if (this.stopped) return;
+    // Ramped, never set: §4 makes the souring texture *state*, and a level
+    // that stepped on the 5 Hz Echo tick would have an onset — which is the
+    // one thing the doc says this sound must not have.
+    this.out.gain.setTargetAtTime(mix.gain, now, SOUR_MIX.RAMP_S / 3);
+
+    if (mix.rateHz <= 0) {
+      // Leaving the bleed leaves the pulse open rather than mid-dip, so the
+      // texture fades out at full width instead of stuttering as it goes.
+      this.pulse.gain.setTargetAtTime(1, now, 0.2);
+      this.nextPulseAt = 0;
+      return;
+    }
+    if (now >= this.nextPulseAt) {
+      this.nextPulseAt = now + 1 / mix.rateHz;
+      // A soft attack, deliberately: the bleed is being paid, not landing.
+      // 40 ms in is far too slow to read as a transient and still slow enough
+      // to feel like a pulse rather than a tremolo.
+      this.pulse.gain.cancelScheduledValues(now);
+      this.pulse.gain.setValueAtTime(this.pulse.gain.value, now);
+      this.pulse.gain.linearRampToValueAtTime(1, now + 0.04);
+      this.pulse.gain.setTargetAtTime(0.45, now + 0.04, 0.18);
+    }
+  }
+
+  stop(now: number): void {
+    if (this.stopped) return;
+    this.stopped = true;
+    this.out.gain.cancelScheduledValues(now);
+    this.out.gain.setTargetAtTime(0, now, 0.15);
+    try {
+      this.noise?.stop(now + 0.5);
+    } catch {
+      // Already stopped.
+    }
+  }
+}
+
+/**
+ * The bite — the moment sour grace runs out (§4, "The Lid").
+ *
+ * The only transient the Lid gets, and it **descends**, because the answer to
+ * it is to dive. The doc reserves the opposite gesture for a crush cue: if the
+ * bottom of the column is ever voiced it must rise, and a player who cannot
+ * resolve a cue into a direction has been spent rather than told.
+ *
+ * Thin and high where the under-fire knock is low and dull, and peaking below
+ * the exposure strike's 0.9 — §12 keeps the loudest event in the game for
+ * being lit, and losing grace on a clock you started is not that.
+ */
+export function playSourBite(context: AudioContext, destination: AudioNode, at: number): void {
+  const osc = context.createOscillator();
+  const gain = context.createGain();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(SOUR_MIX.CENTRE_HZ, at);
+  osc.frequency.exponentialRampToValueAtTime(420, at + SOUR_BITE_S);
+
+  // Band-passed with the bed, so the bite audibly comes out of the texture
+  // that has been tightening for twenty seconds rather than arriving over it.
+  const filter = context.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.Q.value = 1.6;
+  filter.frequency.setValueAtTime(SOUR_MIX.CENTRE_HZ, at);
+  filter.frequency.exponentialRampToValueAtTime(500, at + SOUR_BITE_S);
+
+  gain.gain.setValueAtTime(0, at);
+  gain.gain.linearRampToValueAtTime(0.42, at + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + SOUR_BITE_S);
+
+  osc.connect(filter).connect(gain).connect(destination);
+  osc.start(at);
+  osc.stop(at + SOUR_BITE_S + 0.05);
 }
 
 /**

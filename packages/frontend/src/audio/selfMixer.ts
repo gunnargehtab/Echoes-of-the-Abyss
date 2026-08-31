@@ -15,7 +15,7 @@
 
 import { PERSISTENCE, SIM, SelfEventKind, type SelfEvent } from '@echoes/shared';
 import { PING_RETURN_WINDOW_S } from './selfVoice.ts';
-import { selfMixFor, type SelfMix } from './selfNoise.ts';
+import { SOUR_BITE_S, selfMixFor, sourMixFor, type SelfMix, type SourMix } from './selfNoise.ts';
 import { duckFor, type BusRung } from './precedence.ts';
 
 /**
@@ -52,6 +52,15 @@ export interface SelfAudioFrame {
    * when one scout of twelve happens to be quiet.
    */
   silentRunning: boolean;
+  /**
+   * Worst sour exposure in the fleet, in seconds accrued — §4, "The Lid".
+   *
+   * Worst and not a sum, for the same reason `fleetSig` is a peak: the
+   * question the texture answers is "is my force in the sour", and twelve
+   * stacked textures would be mud. Straight off the server's `OwnUnit.sourS`,
+   * so the sound and the card count the same grace down.
+   */
+  sourS: number;
   /** Server-sent events about the player's own force, this tick. */
   events: SelfEvent[];
   /** Echoes from the player's own ping, if one is resolving. */
@@ -71,6 +80,10 @@ export interface SelfSink {
   underFire(at: number): void;
   /** A chore in the interface's voice, on the ui bus — the idle notice. */
   notice(at: number): void;
+  /** The Lid's continuous texture — §4, "The Lid". State, never news. */
+  sour(mix: SourMix, now: number): void;
+  /** The bite: sour grace running out. The Lid's one transient. */
+  sourBite(at: number): void;
 }
 
 export class SelfMixer {
@@ -89,6 +102,8 @@ export class SelfMixer {
    * spent looking elsewhere. The tick is the one clock both halves are handed.
    */
   private readonly underFireTick = new Map<number, number>();
+  /** The tick the Lid last bit on, so a simultaneous crossing sounds once. */
+  private sourBiteTick = -1;
 
   constructor(private readonly sink: SelfSink) {}
 
@@ -123,6 +138,7 @@ export class SelfMixer {
   update(frame: SelfAudioFrame, now: number): void {
     const mix = selfMixFor(frame.fleetSig, frame.silentRunning);
     this.sink.bed(mix, now);
+    this.sink.sour(sourMixFor(frame.sourS), now);
 
     if (this.loudest !== null && now >= this.loudestUntil) this.loudest = null;
 
@@ -204,6 +220,20 @@ export class SelfMixer {
         // the precedence chain, and this cue is one reason that stays true.
         this.sink.notice(now);
         return true;
+      case SelfEventKind.SourBleed: {
+        // One bite per Echo tick however many hulls crossed on it. Not a
+        // collapse of separate news the way the under-fire window is: a group
+        // ordered shallow crosses together, and six copies of one sound at one
+        // instant is one piece of news at six times the amplitude — which
+        // would spend the headroom §12 reserves for the exposure strike. The
+        // log still carries a row per hull, because it can hold six rows on
+        // one timestamp and the ear cannot hold six copies of one sound.
+        if (this.sourBiteTick === tick) return false;
+        this.sourBiteTick = tick;
+        this.sink.sourBite(now);
+        this.raise('self', now, SOUR_BITE_S);
+        return true;
+      }
     }
   }
 
@@ -219,6 +249,7 @@ export class SelfMixer {
     this.played.clear();
     this.fired.clear();
     this.underFireTick.clear();
+    this.sourBiteTick = -1;
     this.loudest = null;
     this.loudestUntil = 0;
   }

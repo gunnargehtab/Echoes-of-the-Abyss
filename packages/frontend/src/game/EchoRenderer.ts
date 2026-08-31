@@ -2881,6 +2881,13 @@ export class EchoRenderer {
             event.idleReason === HarvestIdleReason.NoDepot ? 'idle — no yard' : 'idle — mined out'
           );
           break;
+        case SelfEventKind.SourBleed:
+          // §11's half of the bite. The card and the ribbon already carry the
+          // *states*, but only for the hull the player happens to be looking
+          // at; the moment the ledger opens is news about a named hull, and a
+          // player watching a different card would otherwise never learn it.
+          this.emitOwnForceEvent(snapshot.tick, event.unitId, 'sour — bleeding');
+          break;
       }
     }
 
@@ -2889,9 +2896,16 @@ export class EchoRenderer {
     // match. See SelfAudioFrame.fleetSig.
     let fleetSig = 0;
     let allSilent = this.units.length > 0;
+    // Worst sour in the fleet, for the same reason SIG is a peak — see
+    // SelfAudioFrame.sourS. Server-sent seconds, never a client-side clock: a
+    // hull that leaves the Lid starts recovering immediately, and reading the
+    // number back each tick is what lets the texture fall with it.
+    let worstSour = 0;
     for (const unit of this.units) {
       if (unit.sig > fleetSig) fleetSig = unit.sig;
       if (!unit.silentRunning) allSilent = false;
+      const sour = unit.sourS ?? 0;
+      if (sour > worstSour) worstSour = sour;
     }
 
     // Kept for the HUD too: the band label reads the same numbers the bed
@@ -2903,6 +2917,7 @@ export class EchoRenderer {
       tick: snapshot.tick,
       fleetSig,
       silentRunning: allSilent,
+      sourS: worstSour,
       events: snapshot.selfEvents,
       returns: this.pingReturns(now),
     };
@@ -3027,8 +3042,8 @@ export class EchoRenderer {
   }
 
   /**
-   * A log row about the player's own force — an under-fire first blow, or a
-   * harvester's stall (docs/ui-ux.md §5, §10). Bearing and range are measured
+   * A log row about the player's own force — an under-fire first blow, a
+   * harvester's stall, or the Lid taking a hull (docs/ui-ux.md §5, §10). Bearing and range are measured
    * from the scope anchor like every contact row, and focus goes to the hull
    * itself: it is the player's own, fully known, so the camera may.
    */

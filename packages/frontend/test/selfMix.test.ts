@@ -12,8 +12,15 @@
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { PERSISTENCE, SIM, SelfEventKind, type SelfEvent } from '@echoes/shared';
-import { SELF_BANDS, SILENT_MIX, bandFor, selfMixFor } from '../src/audio/selfNoise.ts';
+import { LID, PERSISTENCE, SIM, SelfEventKind, type SelfEvent } from '@echoes/shared';
+import {
+  SELF_BANDS,
+  SILENT_MIX,
+  SOUR_MIX,
+  bandFor,
+  selfMixFor,
+  sourMixFor,
+} from '../src/audio/selfNoise.ts';
 import {
   BUS_PRIORITY,
   PRECEDENCE_MS,
@@ -22,12 +29,14 @@ import {
   precedenceTiming,
 } from '../src/audio/precedence.ts';
 import { SelfMixer, type SelfAudioFrame, type SelfSink } from '../src/audio/selfMixer.ts';
+import type { SourMix } from '../src/audio/selfNoise.ts';
 import { PING_RETURN_WINDOW_S } from '../src/audio/selfVoice.ts';
 
 function recorder() {
   const calls: string[] = [];
   const worldGains: number[] = [];
   const returns: { at: number; pan: number }[] = [];
+  const sourMixes: SourMix[] = [];
   const sink: SelfSink = {
     bed: () => calls.push('bed'),
     world: (gain) => worldGains.push(gain),
@@ -37,12 +46,22 @@ function recorder() {
     breakSilence: () => calls.push('breakSilence'),
     underFire: () => calls.push('underFire'),
     notice: () => calls.push('notice'),
+    sour: (mix) => sourMixes.push(mix),
+    sourBite: () => calls.push('sourBite'),
   };
-  return { sink, calls, worldGains, returns };
+  return { sink, calls, worldGains, returns, sourMixes };
 }
 
 function frame(over: Partial<SelfAudioFrame> = {}): SelfAudioFrame {
-  return { tick: 0, fleetSig: 30, silentRunning: false, events: [], returns: [], ...over };
+  return {
+    tick: 0,
+    fleetSig: 30,
+    silentRunning: false,
+    sourS: 0,
+    events: [],
+    returns: [],
+    ...over,
+  };
 }
 
 const event = (kind: SelfEventKind, unitId = 1, bearing?: number): SelfEvent =>
@@ -303,5 +322,140 @@ describe('under fire and the idle notice', () => {
     assert.equal(calls.filter((c) => c === 'notice').length, 1);
     assert.equal(after, before, 'the notice claims no rung');
     assert.equal(mixer.activeRung, null);
+  });
+});
+
+/**
+ * The Lid — docs/audio-direction.md §4, "The Lid" (#285).
+ *
+ * The decision the doc records is a *split*: souring is state, the bite is
+ * news, bleeding is state again. Everything below asserts one half of that
+ * split, because a refactor that collapses the three into one sound would
+ * still pass every test above.
+ */
+describe('sour exposure', () => {
+  it('says nothing at all in clean water', () => {
+    const mix = sourMixFor(0);
+    assert.equal(mix.gain, 0);
+    assert.equal(mix.rateHz, 0);
+    assert.equal(mix.bleeding, false);
+  });
+
+  it('tightens as the grace is spent', () => {
+    // The rise *is* the countdown: a hull twelve seconds into its twenty is
+    // audibly worse off than one three seconds in.
+    let previous = 0;
+    for (const seconds of [1, 5, 12, 19]) {
+      const gain = sourMixFor(seconds).gain;
+      assert.ok(gain > previous, `${seconds}s should be louder than the step below`);
+      assert.ok(!sourMixFor(seconds).bleeding, `${seconds}s is still inside the grace`);
+      previous = gain;
+    }
+  });
+
+  it('does not pulse while the grace is still running', () => {
+    // A pulse is the bleed being paid. Paying nothing sounds like nothing.
+    for (const seconds of [1, 10, 19.9]) assert.equal(sourMixFor(seconds).rateHz, 0);
+  });
+
+  it('changes state, not merely level, once the grace is gone', () => {
+    const nearly = sourMixFor(LID.GRACE_S - 0.1);
+    const bleeding = sourMixFor(LID.GRACE_S);
+    assert.equal(bleeding.bleeding, true);
+    assert.ok(bleeding.gain > nearly.gain, 'the bleed is louder than the last of the grace');
+    assert.equal(bleeding.rateHz, SOUR_MIX.BLEED_RATE_HZ, 'and it acquires a pulse');
+    assert.equal(nearly.rateHz, 0);
+  });
+
+  it('reads bleeding off the same threshold the HUD does', () => {
+    // The HUD prints SOUR — BLEEDING at `sourS >= LID.GRACE_S`. The ear and
+    // the words may not disagree about which state a hull is in.
+    assert.equal(sourMixFor(LID.GRACE_S - 0.001).bleeding, false);
+    assert.equal(sourMixFor(LID.GRACE_S).bleeding, true);
+    assert.equal(sourMixFor(LID.GRACE_S + 5).bleeding, true);
+  });
+
+  it('stays clear of the low band the plant bed occupies', () => {
+    // §4 reserves the low band for a crush cue that does not exist yet, and
+    // the two are opposite instructions — they may not share material.
+    const loudest = SELF_BANDS[SELF_BANDS.length - 1]!;
+    assert.ok(SOUR_MIX.CENTRE_HZ > loudest.cutoffHz);
+  });
+
+  it('stays a bed rather than a competitor for the mix', () => {
+    // §12 keeps the loudest event in the game for being lit, and this is a
+    // texture that runs for as long as a hull is up there — it may not sit at
+    // the level of the plant bed it plays over.
+    assert.ok(SOUR_MIX.BLEED_GAIN > SOUR_MIX.GRACE_GAIN, 'bleeding is worse than souring');
+    assert.ok(
+      SOUR_MIX.BLEED_GAIN < SELF_BANDS[SELF_BANDS.length - 1]!.selfGain,
+      'and still sits under the plant bed at full noise'
+    );
+  });
+});
+
+describe('the sour bite', () => {
+  it('sounds once for a whole fleet crossing together', () => {
+    // Six hulls ordered shallow cross on one tick. That is one piece of news
+    // at six times the amplitude, not six pieces of news.
+    const { sink, calls } = recorder();
+    const mixer = new SelfMixer(sink);
+    const crossing = [1, 2, 3, 4, 5, 6].map((id) => event(SelfEventKind.SourBleed, id));
+
+    mixer.update(frame({ tick: 7, events: crossing }), 0);
+
+    assert.equal(calls.filter((c) => c === 'sourBite').length, 1);
+  });
+
+  it('sounds again for a hull that spent its grace twice', () => {
+    // Dived, recovered, climbed back. Two crossings, two pieces of news.
+    const { sink, calls } = recorder();
+    const mixer = new SelfMixer(sink);
+
+    mixer.update(frame({ tick: 7, events: [event(SelfEventKind.SourBleed)] }), 0);
+    mixer.update(frame({ tick: 900, events: [event(SelfEventKind.SourBleed)] }), 180);
+
+    assert.equal(calls.filter((c) => c === 'sourBite').length, 2);
+  });
+
+  it('ducks below the exposure strike rather than over it', () => {
+    // Being lit outranks the water souring, and the door does not stop
+    // slamming because the Lid bit.
+    const { sink } = recorder();
+    const mixer = new SelfMixer(sink);
+
+    mixer.update(frame({ tick: 1, events: [event(SelfEventKind.Exposed, 1, 0)] }), 0);
+    mixer.update(frame({ tick: 2, events: [event(SelfEventKind.SourBleed, 2)] }), 0.2);
+
+    assert.equal(mixer.activeRung, 'self-exposure');
+  });
+
+  it('leaves the contact bus alone while merely souring', () => {
+    // The texture claims no rung. A player in the Lid is bleeding, not deaf —
+    // §4 already owns "being loud makes you deaf", and sour is not loudness.
+    const { sink, worldGains } = recorder();
+    const mixer = new SelfMixer(sink);
+
+    mixer.update(frame({ tick: 1, fleetSig: 10, sourS: 0 }), 0);
+    const clean = worldGains[worldGains.length - 1]!;
+    mixer.update(frame({ tick: 2, fleetSig: 10, sourS: 19 }), 1);
+    const souring = worldGains[worldGains.length - 1]!;
+
+    assert.equal(souring, clean);
+    assert.equal(mixer.activeRung, null);
+  });
+
+  it('drives the texture from the frame every tick', () => {
+    const { sink, sourMixes } = recorder();
+    const mixer = new SelfMixer(sink);
+
+    mixer.update(frame({ tick: 1, sourS: 0 }), 0);
+    mixer.update(frame({ tick: 2, sourS: 10 }), 1);
+    mixer.update(frame({ tick: 3, sourS: LID.GRACE_S }), 2);
+
+    assert.equal(sourMixes.length, 3);
+    assert.equal(sourMixes[0]!.gain, 0);
+    assert.ok(sourMixes[1]!.gain > 0 && !sourMixes[1]!.bleeding);
+    assert.equal(sourMixes[2]!.bleeding, true);
   });
 });

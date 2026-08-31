@@ -37,10 +37,11 @@ import {
   LID,
   LID_GRACE_RECOVERY_PER_S,
   lidBleedPerSecond,
+  SelfEventKind,
   type Faction,
 } from '@echoes/shared';
 import { Health, Owner, Position, Pressure, Unit } from '../components.ts';
-import type { SimWorld } from '../world.ts';
+import { raiseSelfEvent, type SimWorld } from '../world.ts';
 
 const crushable = defineQuery([Position, Pressure, Health]);
 
@@ -100,6 +101,11 @@ export function pressureSystem(world: SimWorld, destroyed: number[]): void {
  * Takes `destroyed` because, unlike the shallows, this bleed has no floor:
  * sour water is allowed to kill, and the reaper needs to see it happen in the
  * same place every other death is seen.
+ *
+ * The one pass of the three that raises a self-event. The other two attrition
+ * kinds are continuous costs with no moment in them; this one has a clock, and
+ * the instant it runs out is the only thing about the Lid the mix is allowed
+ * to announce (docs/audio-direction.md §4, "The Lid").
  */
 function lidPass(world: SimWorld, dt: number, destroyed: number[]): void {
   const entities = poisonable(world);
@@ -118,9 +124,20 @@ function lidPass(world: SimWorld, dt: number, destroyed: number[]): void {
 
     // Capped at the grace: bleeding is a state, not a deepening debt, and the
     // cap is what makes recovery take exactly RECOVERY_S from the worst case.
-    const sour = Math.min(LID.GRACE_S, Pressure.sourS[eid]! + dt);
+    const before = Pressure.sourS[eid]!;
+    const sour = Math.min(LID.GRACE_S, before + dt);
     Pressure.sourS[eid] = sour;
     if (sour < LID.GRACE_S) continue;
+
+    // The crossing edge, and only it — docs/audio-direction.md §4 "The Lid".
+    // The cap above is what makes this an edge rather than a repeat: once
+    // `sourS` sits at the grace it stops moving, so the comparison is false on
+    // every tick after the first. Recovery below the grace re-arms it, which
+    // is correct — a hull that dived, recovered and climbed back has spent its
+    // grace twice and is entitled to be told twice.
+    if (before < LID.GRACE_S) {
+      raiseSelfEvent(world, { kind: SelfEventKind.SourBleed, eid });
+    }
 
     const bite = lidBleedPerSecond(Health.max[eid]!) * dt;
     Health.hp[eid] = Health.hp[eid]! - bite;
