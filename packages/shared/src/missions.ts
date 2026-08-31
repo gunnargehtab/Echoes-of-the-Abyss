@@ -301,6 +301,32 @@ export const ATTENDING_ATTENDANCE_HEADER: MissionHeader = {
   ],
 };
 
+export const CHORD_APTITUDE_HEADER: MissionHeader = {
+  id: 'chord-aptitude',
+  campaign: 'chord',
+  ordinal: 1,
+  name: 'The Second Chord \u2014 Aptitude',
+  premise:
+    "The Third's annual tuning. Six voices stand off the house, and a concern is coring in the middle of them.",
+  mapId: 'outer-formations',
+  // The tuning closes at 16:00 (docs/mission-aptitude.md \u00a79), inside \u00a710's 12-25.
+  lengthBandS: [900, 1020],
+  /**
+   * Chapter-Master Vrey, setting the exercise \u2014 docs/mission-aptitude.md
+   * \u00a712, verbatim. Public for Sorrowgate's reason: it names no hidden fact.
+   * It states the survey, the two numbers the whole mission is played on, and
+   * the manoeuvre they imply, because a Knight briefing that withheld the
+   * arithmetic would be teaching by ambush, and this faction examines.
+   */
+  briefing: [
+    'Good. You have all done this before, at nine, with your ears, and the only thing that has changed is the size of the instrument.',
+    'Six voices stand off the house. You will put a tone into each and read what comes back. Twenty seconds, bow to the formation, and hold it \u2014 a tone you interrupt is a tone you have not played. The chapter has one measurement a year and this is the year.',
+    'A concern is coring in the middle of it. They are within their own procedure and I will not be asking them to leave, because we have never written down that this water is ours and they have written down that it is not. You will therefore be courteous, which today means unheard.',
+    'You are loud in front. You are not loud on the beam and you are very nearly nothing behind. Two numbers: fourteen hundred metres on the bow, seven-fifty on the beam. You may go west. You may not point west \u2014 go in a cadence, one bearing and then the other, and let them have your flank both times.',
+    'Six of you. Six voices. I would like both of those numbers to be the same at the end as they are now, and if I have to choose between them, I have chosen.',
+  ],
+};
+
 export const MISSION_HEADERS: readonly MissionHeader[] = [
   PROLOGUE_SORROWGATE_HEADER,
   LEDGER_ASSET_RECOVERY_HEADER,
@@ -312,6 +338,7 @@ export const MISSION_HEADERS: readonly MissionHeader[] = [
   LEDGER_ITEM_NINE_HEADER,
   SEEDING_TEND_HEADER,
   ATTENDING_ATTENDANCE_HEADER,
+  CHORD_APTITUDE_HEADER,
 ];
 
 export function missionHeaderById(id: string): MissionHeader | undefined {

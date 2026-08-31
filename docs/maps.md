@@ -277,10 +277,11 @@ A mission map is authored the same way — a literal, regions painted in order �
 | Board Country | `holding-board` | #212 | 3,000 × 2,500 m. The bottom of the Holding, the registry's arrays, and the Underway — [mission-item-nine.md](mission-item-nine.md) §11 |
 | Marr Plateau | `marr-plateau` | #251 | 4,000 × 2,500 m. A garden terrace, a working day, and a survey — [mission-tend.md](mission-tend.md) §11 |
 | The Attending Galleries | `attending-galleries` | #258 | 5,000 × 4,000 m. A gallery of sleepers, and the Ninth aimed at the Mouth — [mission-attendance.md](mission-attendance.md) §11 |
+| The Third's Outer Formations | `outer-formations` | #298 | 5,000 × 4,000 m. Crystal country with no cover in it, and one strip that carries — [mission-aptitude.md](mission-aptitude.md) §11 |
 
 **Each is specified in full in its own mission document** — regions, floors, the single spawn and the parties the mission seats around it — and that document, not this one, owns those numbers. The literals say so themselves: every one carries a `doc` field pointing back at its §11 *and* at this table, so a map and its row are meant to be read together.
 
-One more is specified and not built: `outer-formations`, [mission-aptitude.md](mission-aptitude.md) §11. It is deliberately absent from the table above, which lists what exists.
+Every mission map the bible specifies now exists. The table above lists what exists, and nothing is specified and missing from it.
 
 Sorrowgate is cut from Map Type 5's shape, which is what that archetype's *Ideal Use* line asks of it; it is not a Sunken Metropolis, and Map Type 5 stays *Not yet* in the archetype table, because ticking it would promise a four-seat competitive layout that nobody has written. The three that followed it are cut from no archetype at all — a mission map answers to its mission, and none of these four could be offered to a player choosing a map.
 
