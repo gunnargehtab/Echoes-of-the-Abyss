@@ -460,11 +460,26 @@ export const RELIEF_REFERENCE_M = 550;
 
 /**
  * Vent ember orange, docs/art-direction.md "Reading the Sea Floor" (SPEC):
- * the sole terrain-owned emissive colour — deliberately redder than
+ * one of the three world-light families in docs/style-neon-noir.md "World
+ * light", and the only one transcribed so far — deliberately redder than
  * Bathyarch's #F2B233 hazard amber so a vent field never reads as somebody's
- * base lights. No other biome gets a light (docs/style-neon-noir.md, Don'ts).
+ * base lights. The other families (flora-biolight, crystal-seam) arrive with
+ * the environment props that carry them; nothing else on terrain emits.
  */
 export const VENT_EMBER = 0xe06a2b;
+
+/**
+ * The stone ramp, docs/style-neon-noir.md "The stone" (SPEC): ground that
+ * admits no water renders hue-neutral, because rock has no propagation factor
+ * for a hue to encode. `ROCK_FACE` is the brightness ceiling of every rock
+ * pixel — deliberately below the palest biome fill, so ground you can enter
+ * always speaks louder than ground you cannot — and `ROCK_SHADOW` is where the
+ * darken-only passes land at cliff lips and shadowed bases. Terrain colours,
+ * like `BIOME_COLOR`, are identical across all four accessibility palettes:
+ * the seafloor carries no hue-only meaning to move.
+ */
+export const ROCK_FACE = 0x11161c;
+export const ROCK_SHADOW = 0x080c12;
 
 /** TUNABLE. How much of a cell's colour the deepest shadow may take. */
 const RELIEF_DEPTH = 0.42;

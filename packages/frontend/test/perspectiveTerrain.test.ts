@@ -13,7 +13,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { Biome } from '@echoes/shared';
-import { BIOME_RELIEF, seabedSeed } from '../src/game/seabed.ts';
+import { BIOME_RELIEF, ROCK_RELIEF, seabedSeed } from '../src/game/seabed.ts';
 import {
   buildHeightGrid,
   DEPTH_VISUAL_M_PER_M,
@@ -60,16 +60,20 @@ describe('perspective heightfield', () => {
     assert.ok(Math.abs(depth - 2000) <= amplitude + 1e-9);
   });
 
-  it('raises rock above every open floor around it', () => {
+  it('raises rock above every open floor around it, crag included', () => {
     const terrain = demoTerrain();
     const seed = seabedSeed(terrain);
     const rockTop = rockTopDepthM(terrain);
-    // Rock cell 10 is at col 2, row 2 — its centre must sit at the rock top,
-    // which is shallower (smaller depth) than the shallowest open water.
+    // Rock cell 10 is at col 2, row 2 — its centre sits at the rock top plus
+    // the rock detail crag, which is bounded by the rock amplitude. Because
+    // that amplitude is smaller than the rise, even the crag's lowest notch
+    // stays shallower (smaller depth) than the shallowest open water.
     const depth = seabedDepthAtM(terrain, seed, rockTop, 2.5 * 250, 2.5 * 250);
-    assert.equal(depth, rockTop);
+    assert.ok(Math.abs(depth - rockTop) <= ROCK_RELIEF.amplitudeM + 1e-9);
     assert.equal(rockTop, Math.max(0, 400 - ROCK_RISE_ABOVE_SHALLOWEST_M));
-    assert.ok(rockTop < 400);
+    assert.ok(ROCK_RELIEF.amplitudeM < ROCK_RISE_ABOVE_SHALLOWEST_M, 'crag taller than the rise');
+    assert.ok(depth < 400, 'rock dipped back under the shallowest open floor');
+    assert.ok(depth >= 0, 'a spire pierced the surface');
   });
 
   it('maps depth to world Y through one presentation scale, downward', () => {
