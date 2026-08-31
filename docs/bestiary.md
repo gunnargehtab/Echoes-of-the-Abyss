@@ -261,7 +261,7 @@ In campaign play, Drift Health persists between missions on the same map ([campa
 
 ## Implementation Status
 
-Three species are simulated, one per behaviour class. The framework is the deliverable; the rest of the roster is additions to it.
+All seven species are simulated (#306). The framework was the deliverable; the roster is now the proof it held — four behaviour shapes (dwell ladder, scavenger, ambient, trigger model) on one substrate, with §6's Failing row finally observable end to end.
 
 | Species | Class | Status |
 | --- | --- | --- |
