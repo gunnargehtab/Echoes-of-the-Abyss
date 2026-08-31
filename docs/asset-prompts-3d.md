@@ -1,23 +1,27 @@
-# 3D Asset Prompt Kit — Unit & Structure Roster
+# 3D Asset Prompt Kit — Units, Structures & Environment
 
 *(Copy-paste prompts for generating style-consistent 3D models of the prototype roster
-in Claude Design — claude.ai/design, "3D object" mode. This doc transcribes the visual
-law already set in [art-direction.md](art-direction.md), [factions.md](factions.md) and
-[style-neon-noir.md](style-neon-noir.md); if a prompt here disagrees with those docs,
-the prompt is the bug.)*
+and the environment prop set in Claude Design — claude.ai/design, "3D object" mode. This
+doc transcribes the visual law already set in [art-direction.md](art-direction.md),
+[factions.md](factions.md) and [style-neon-noir.md](style-neon-noir.md); if a prompt
+here disagrees with those docs, the prompt is the bug.)*
 
 ## What these models are for
 
-The in-game rendering target is **baked sprite art** (see the Rendering Target in
-[art-direction.md](art-direction.md)), currently derived from Plate V. Models generated
-from this kit are therefore:
+Approved models in `docs/concept-art/models/` are shipped game assets now: the conn view
+loads roster GLBs at runtime for the player's *own* force, and the offline bake renders
+their sprite maps for the loading fallback and the sonar scope (the pipeline of record in
+[graphics-standards.md](graphics-standards.md)). Environment models from Block 4 ship as
+instanced world meshes through the same pipeline's environment branch. So a model
+generated from this kit is:
 
-1. **Canonical concept references** — the first faction-correct look at each hull, and
-2. **Future bake sources** — a turntable render of a faction-correct 3D model is a
-   strictly better sprite-bake input than a single painted plate.
+1. **A canonical concept reference** — the first style-correct look at the thing, and
+2. **The shipped geometry**, once it clears hull-intake and review.
 
-They are **not** shipped game assets, and nothing here weakens the Asymmetric Fidelity
-Law: full-detail models describe *own-force* rendering only.
+Nothing here weakens the Asymmetric Fidelity Law: full-detail unit and structure models
+describe *own-force* rendering only, and no prompt in this kit generates fauna — animals
+are contacts, drawn at earned fidelity, never world meshes
+([bestiary.md](bestiary.md) §3).
 
 ## Workflow rules
 
@@ -202,12 +206,87 @@ crystal core (SIG 80 when active, directional). Burning bright along the
 crystal when active; heat-shimmer distortion.
 ```
 
+## Block 4 — ENVIRONMENT (props: no faction, no SIG)
+
+Environment props dress the biomes the terrain grid already declares — they are world
+geometry, not agents, so the STYLE block changes: no faction palette, no running lights,
+no glow-by-loudness. A prop's light, where it has any at all, comes from the three
+world-light families in [style-neon-noir.md](style-neon-noir.md) "World light", and
+intake fails a prop with any other emissive (gate 2's inverted rule).
+
+Every environment prompt is **ENV STYLE + one row of the prop table**, the row expanded
+into a sentence or two. Same workflow rules as the roster: one Claude Design conversation
+per batch, approve a reference prop first, then generate its biome-mates in the same
+session.
+
+```text
+ENV STYLE (use for every model in this series — "Echoes of the Abyss"
+environment set): Deep-sea terrain prop, a single 3D model on a near-black
+abyssal background (#03080E). Natural or ruined form — stone, coral, kelp,
+crystal — pressure-scarred and ancient; nothing manufactured, no machinery,
+no faction markings. Desaturated, dark, low-luminance materials: this object
+is scenery in a lightless ocean and must read darker and quieter than any
+vessel. Lighting: one hard cyan rim light (#35E0FF) for the review render
+only — the model itself carries no lights and no emissive unless the prompt
+says so. Strong readable silhouette from a high 55-degree RTS camera;
+low-poly with crisp facets, at most two materials. No text, no water
+surface — this stands on the seabed, deep underwater.
+```
+
+The prop table — one row per asset, with the numbers intake and the registry check.
+`Footprint` is the canonical scale hull-intake sizes against (`--footprint-m`);
+`Height` is the vertical silhouette the 55° camera actually reads; `Tris` is the
+per-instance budget; `Light` names the licensed world-light family, `none` meaning any
+emissive fails intake:
+
+| Biome | Slug | Footprint | Height | Tris | Light |
+| --- | --- | --- | --- | --- | --- |
+| Thermal Veins | `env-vent-chimney` | 12 m | 25–40 m | ≤ 800 | `vent-ember`, tip only |
+| Thermal Veins | `env-vent-basalt` | 15 m | 8 m | ≤ 400 | none |
+| Kelp Forest | `env-kelp-cluster` | 18 m | 60–80 m | ≤ 400 | `flora-biolight`, tip points |
+| Kelp Forest | `env-coral-tower` | 15 m | 25–35 m | ≤ 600 | none |
+| Abyssal Trench | `env-trench-spire` | 20 m | 40–60 m | ≤ 600 | none |
+| Abyssal Trench | `env-trench-slab` | 25 m | 10 m | ≤ 300 | none |
+| Resonance Field | `env-resonance-crystal` | 12 m | 18–30 m | ≤ 600 | `crystal-seam` |
+| Resonance Field | `env-resonance-pylon` | 10 m | 25 m | ≤ 500 | none |
+| Coral Ruins | `env-ruin-block` | 25 m | 15–25 m | ≤ 400 | none |
+| Coral Ruins | `env-ruin-dome-shard` | 40 m | 20 m | ≤ 600 | none |
+| Coral Ruins | `env-coral-growth` | 12 m | 8 m | ≤ 400 | none |
+| Rock (any biome) | `env-rock-crag-a` / `-b` | 30 m | 30–50 m | ≤ 500 | none |
+| Open Water | `env-open-boulder` | 12 m | 6 m | ≤ 300 | none |
+
+Shape cues, so the prompts land in each biome's materials brief
+([environments.md](environments.md)): vent props are basalt and magma glass, cracked
+and heat-scorched; kelp props are the forty-metre columns of
+[world-map.md](world-map.md)'s terraces, with `env-coral-tower` as living coral stone;
+trench props are blackened, pressure-eroded, knife-edged; resonance props are faceted
+crystal and the toppled remains of older instruments; ruin props carry the geometric
+patterns of [art-direction.md](art-direction.md)'s "Environmental Shapes" — right
+angles, terraces, a civilisation's worth of coral growth over them. Crags are the
+jagged-rock vocabulary for mesa edges anywhere on the map.
+
+Naming is `env-<biome-word>-<thing>.glb`, flat in `docs/concept-art/models/` beside the
+roster. Props ship as meshes, not baked maps, so the sprite-density contract
+(4 / 1.5 px/m) does not apply to them — the triangle column above is their density
+contract.
+
 ## Consistency checklist (before accepting a model)
+
+For units and structures:
 
 - Faction readable from silhouette alone, at RTS camera distance?
 - Glow intensity matches the unit's SIG band, in the faction accent colour?
 - Background near-black, single hard cyan rim light, no water surface?
 - Would it still read as a black shape against black water when running silent?
+
+For environment props (Block 4):
+
+- Silhouette readable at RTS camera distance, from the 55° pitch — does the height
+  column actually show?
+- Darker and quieter than any vessel — desaturated, no manufactured surfaces, nothing
+  that could be mistaken for a structure or a contact?
+- Emissive only where the table licenses a world-light family, and dim within it?
+- At most two materials, inside the row's triangle budget?
 
 ## Related
 
