@@ -81,6 +81,7 @@ import {
   type RosterModelInstance,
   type RosterModelKey,
 } from './rosterModels.ts';
+import { EnvironmentLayer } from './environmentLayer.ts';
 
 /**
  * SPEC — docs/art-direction.md "Camera & Projection", settled by the Phase-1
@@ -176,6 +177,8 @@ export class PerspectiveView {
   private groundRockTopM = 0;
   private terrainMesh: Mesh | null = null;
   private readonly terrainDressing = new Group();
+  /** Environment props (environmentLayer.ts) — rebuilt on the terrain cadence. */
+  private readonly environment = new EnvironmentLayer();
   private embers: Points | null = null;
   private emberPhases: number[] = [];
   private emberBucket = -1;
@@ -206,7 +209,12 @@ export class PerspectiveView {
   private worstFrameMs = 0;
 
   constructor() {
-    this.scene.add(this.terrainDressing, this.unitGroup, this.structureGroup);
+    this.scene.add(
+      this.terrainDressing,
+      this.environment.group,
+      this.unitGroup,
+      this.structureGroup
+    );
     this.scene.background = new Color(UI.background);
 
     // Lights exist for the roster models alone: the terrain and fallback
@@ -326,6 +334,7 @@ export class PerspectiveView {
   destroy(): void {
     this.setActive(false);
     this.resizeObserver?.disconnect();
+    this.environment.destroy();
     for (const texture of this.spriteTextures.values()) texture.dispose();
     this.renderer?.dispose();
     this.renderer?.domElement.remove();
@@ -571,6 +580,13 @@ export class PerspectiveView {
 
     this.buildTerrainDressing(terrain);
     this.buildEmbers(terrain);
+    // Props stand on the drawn ground — the same heights the mesh has, crag
+    // included — and rebuild only here, never per frame (gate 6).
+    const seed = seabedSeed(terrain);
+    const rockTop = rockTopDepthM(terrain);
+    this.environment.rebuild(terrain, (xM, yM) =>
+      depthToWorldY(seabedDepthAtM(terrain, seed, rockTop, xM, yM))
+    );
     this.syncEntities();
   }
 
@@ -1042,6 +1058,9 @@ export class PerspectiveView {
         worstFrameMs: Number(this.worstFrameMs.toFixed(2)),
         units: this.unitHandles.size,
         structures: this.structureHandles.size,
+        // The prop layer's own ledger (gate 6): a prop regression is a
+        // number, not an impression.
+        ...this.environment.stats(),
         modelBacked:
           [...this.unitHandles.values()].filter((h) => h.model !== null).length +
           [...this.structureHandles.values()].filter((h) => h.model !== null).length,
