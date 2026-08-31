@@ -84,6 +84,7 @@ import {
   type DrawReport,
   type EchoMarkInfo,
   type HazardState,
+  type JellyCluster,
   type ShoalTell,
   type EchoSnapshot,
   type ExposureReport,
@@ -439,6 +440,16 @@ function drawFaunaSilhouette(
       g.circle(x - r * 0.5, y, r * 0.3).fill(body);
       g.circle(x + r * 0.4, y - r * 0.35, r * 0.3).fill(body);
       g.circle(x + r * 0.2, y + r * 0.45, r * 0.3).fill(body);
+      break;
+    }
+    case FaunaSpecies.Tetherjelly: {
+      // A soft bell over trailing tethers — closed body up top, strands below.
+      g.ellipse(x, y - r * 0.3, r * 0.7, r * 0.45).fill(body);
+      g.ellipse(x, y - r * 0.3, r * 0.7, r * 0.45).stroke(edge);
+      g.moveTo(x - r * 0.4, y).lineTo(x - r * 0.5, y + r * 0.8);
+      g.moveTo(x, y).lineTo(x, y + r * 0.9);
+      g.moveTo(x + r * 0.4, y).lineTo(x + r * 0.5, y + r * 0.8);
+      g.stroke({ width: 1 * inverseScale, color: FAUNA_COLOR, alpha: alpha * 0.6 });
       break;
     }
     case FaunaSpecies.Rasp: {
@@ -822,6 +833,8 @@ export class EchoRenderer {
    * the one tell a silent hull cannot suppress.
    */
   private shoals: ShoalTell[] = [];
+  /** Tetherjelly clusters — living terrain, public chart data (§4). */
+  private jellies: JellyCluster[] = [];
   /**
    * Thermal Draw. A rate, so it is drawn as one — see `drawHud`.
    */
@@ -2769,6 +2782,7 @@ export class EchoRenderer {
     this.loggedMarks.clear();
     this.hazards = [];
     this.shoals = [];
+    this.jellies = [];
     this.peakSig = 0;
     this.fleetSig = 0;
     this.fleetSilent = false;
@@ -2791,6 +2805,7 @@ export class EchoRenderer {
     this.marks = snapshot.marks;
     this.hazards = snapshot.hazards;
     this.shoals = snapshot.shoals;
+    this.jellies = snapshot.jellies;
     this.drawReport = snapshot.draw;
     this.biomass = snapshot.biomass;
     this.driftHealth = snapshot.driftHealth;
@@ -3769,6 +3784,26 @@ export class EchoRenderer {
     }
   }
 
+  /**
+   * Tetherjelly fields — living terrain (docs/bestiary.md §4).
+   *
+   * Chart data, so much quieter than a contact or a hazard: a filled disc at
+   * the cluster's true 250 m masking radius and a faint rim. A player reads
+   * the overlap density as how quiet the water is, and a burned lane reads as
+   * the discs that are no longer there.
+   */
+  private drawJellies(g: Graphics): void {
+    for (const jelly of this.jellies) {
+      this.fillCircle(g, jelly.x, jelly.y, DRIFT.JELLY_RADIUS_M, null, {
+        color: FAUNA_COLOR,
+        alpha: 0.07,
+      });
+      if (this.traceCircle(g, jelly.x, jelly.y, DRIFT.JELLY_RADIUS_M, null)) {
+        g.stroke({ width: 1, color: FAUNA_COLOR, alpha: 0.18 });
+      }
+    }
+  }
+
   private drawEchoMarks(g: Graphics): void {
     for (const mark of this.marks) {
       const style = MARK_STYLE[mark.kind];
@@ -3927,6 +3962,7 @@ export class EchoRenderer {
     // Ground language first, into the polyline layer under the marks.
     this.drawStaticHazardSites(g);
     this.drawHazards(g);
+    this.drawJellies(g);
     this.drawShoals(g);
     this.drawEchoMarks(g);
 

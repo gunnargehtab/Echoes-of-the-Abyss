@@ -38,6 +38,15 @@ export const PROPAGATION_FACTOR: Record<Biome, number> = {
 export const MAX_PROPAGATION_FACTOR = Math.max(...Object.values(PROPAGATION_FACTOR));
 
 /**
+ * Floor for a modified cell's PF — docs/bestiary.md §4 (Tetherjelly):
+ * "floored at 0.05 — sound never stops entirely." Only additive modifiers can
+ * reach it; no biome baseline is anywhere near, and a floor of zero would let
+ * stacked jelly fields cut holes in the propagation model that the detection
+ * maths (a division by perceived loudness) was never asked to survive.
+ */
+export const MIN_PROPAGATION_FACTOR = 0.05;
+
+/**
  * SPEC (the factors) / TUNABLE (the depth) — docs/systems-echo.md §3.
  *
  * The one row in §3's PropagationFactor table that is not a biome. A biome is a
@@ -989,6 +998,17 @@ export const DRIFT = {
   LAMPFRY_SCATTER_RADIUS_M: 300,
   /** SPEC — §4. "Scattered shoals reform 25 s after the last intruder leaves." */
   LAMPFRY_REFORM_S: 25,
+
+  /** SPEC — §4. "A Tetherjelly cluster lowers local PF by 0.10 in a 250 m radius." */
+  JELLY_PF_DELTA: 0.1,
+  JELLY_RADIUS_M: 250,
+  /**
+   * Hull points a cluster loses per second in Failing water — §6's
+   * "Tetherjelly fields thinning: local PF rises toward baseline", as a rate.
+   * TUNABLE: at 40 hp a cluster survives ~40 s of failing water, so a field
+   * thins over a minute or two rather than vanishing on a threshold tick.
+   */
+  JELLY_WITHER_HP_PER_S: 1,
 
   /**
    * Drift Health — §6. "The map can be killed."

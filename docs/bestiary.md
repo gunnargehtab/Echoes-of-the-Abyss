@@ -79,6 +79,10 @@ The tell is **public**, the way hazards and Drift Health are public: a shoal's g
 
 Living terrain. A Tetherjelly cluster lowers local PF by **0.10** in a 250 m radius. The Commune farms them; everyone else finds them useful and takes them for granted. They are killed by any AoE and they do not come back within a match: burning a lane through a jelly field permanently raises the PF of that lane, which is the cleanest small example of the map being consumable.
 
+The 0.10 is **additive and absolute**, not a percentage — resolved that way deliberately (#306). PF is the lever that decides which factions thrive where, and a proportional discount would make the same jellies mask a sixth of a kelp bed but a sixteenth of a trench, quietly turning one species into seven different ones by address. A cell's PF composes as *biome baseline, times any hazard multipliers, minus any jelly deltas*, floored at 0.05 — sound never stops entirely — and still capped at the trench ceiling. Overlapping clusters stack: a dense field is a better mask than a thin one, which is exactly what farming them should buy.
+
+Clusters are **chart data**, public like biomes and hazards: a mask you cannot see is confusion, not dread, and "takes them for granted" requires being able to see what you are taking for granted. In Failing water (§6) clusters wither and die one by one — an environmental death that pays nobody — so a dying region's jelly fields thin and its PF climbs back toward the biome baseline, which is the Commune losing their concealment exactly as §6 promises.
+
 ### Grazers
 
 **Ashgrazer** — armoured vent-field grazer, moves in herds of 6–12. Thermal Veins.
@@ -263,7 +267,7 @@ Three species are simulated, one per behaviour class. The framework is the deliv
 | Draymaw | Predator | **Implemented** — the staple pack, and the animal most likely to answer a careless economy |
 | Sounder | Megafauna | **Implemented** — answers pings, destroys structures by transit, ignores small units. Migration along fixed corridors is still unwritten ([hazards.md](hazards.md) §6) |
 | Lampfry | Ambient | **Implemented** — shoals seed across the Shelf band, scatter on proximity regardless of SIG, and reform 25 s after the last intruder leaves. The glow and the scatter are public (light, not sound); a Failing region's shoals die off, which is §6's "scatter tells stop working" |
-| Tetherjelly | Ambient | Not started — living terrain that lowers local PF; the hazard framework's PF hook is the seam it will use |
+| Tetherjelly | Ambient | **Implemented** — clusters seed across the duct band and subtract 0.10 from local PF in 250 m (the hazard hook grew an additive mode; see §4). Killed clusters never return, and Failing water withers them, so PF genuinely rises toward baseline |
 | Rasp | Scavenger | **Implemented** — drifts to the strongest battle residue in smelling range ([systems-echo.md](systems-echo.md) §7), feeds loudly, and eats the mark roughly four times faster than it would fade alone. The aggro ladder outranks scavenging, so a swarm is still a creature you can pull off a wreck by being loud |
 | Hollow | Predator | Not started |
 

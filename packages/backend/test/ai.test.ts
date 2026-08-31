@@ -664,6 +664,7 @@ function exposedSnapshot(): EchoSnapshot {
     draw: { capacity: 6, demand: 0, satisfaction: 1 },
     driftHealth: [],
     shoals: [],
+    jellies: [],
     hazards: [],
     marks: [],
   };

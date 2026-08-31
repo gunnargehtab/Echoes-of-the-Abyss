@@ -738,6 +738,11 @@ export interface EchoSnapshot {
    * — never what, whose, or exactly where.
    */
   shoals: ShoalTell[];
+  /**
+   * Every living Tetherjelly cluster. Public for the chart-data reason the
+   * type gives; a lane burned through a field is visibly burned for everyone.
+   */
+  jellies: JellyCluster[];
 }
 
 /**
@@ -755,6 +760,19 @@ export interface ShoalTell {
   depth: number;
   /** True while dispersed — the tell itself. */
   scattered: boolean;
+}
+
+/**
+ * One Tetherjelly cluster — living terrain, public chart data like biomes and
+ * hazards (docs/bestiary.md §4): a mask you cannot see is confusion, not
+ * dread. Position only; the −0.10 PF and 250 m radius are constants the
+ * client already holds.
+ */
+export interface JellyCluster {
+  id: number;
+  x: number;
+  y: number;
+  depth: number;
 }
 
 /** Broadcast once when the match resolves. Elimination is public. */

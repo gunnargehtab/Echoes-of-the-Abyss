@@ -109,6 +109,10 @@ export function faunaSystem(world: SimWorld, destroyed: number[]): void {
       lampfryTick(world, eid, dt, others);
       continue;
     }
+    if (Fauna.species[eid] === FaunaSpecies.Tetherjelly) {
+      jellyTick(world, eid, dt);
+      continue;
+    }
 
     Fauna.senseS[eid] = Fauna.senseS[eid]! - dt;
     if (Fauna.senseS[eid]! <= 0) {
@@ -384,6 +388,24 @@ function lampfryTick(world: SimWorld, eid: number, dt: number, others: number[])
       return;
     }
   }
+}
+
+/**
+ * A Tetherjelly cluster — docs/bestiary.md §4, living terrain.
+ *
+ * The creature itself does nothing at all: its −0.10 PF is a modifier the
+ * propagation rebuild gathers from every living cluster
+ * (sim/systems/hazards.ts, `rebuildPropagation`), so this tick exists only to
+ * enforce §6's Failing row — "Tetherjelly fields thinning: local PF rises
+ * toward baseline". A cluster in failing water withers at a rate, so a field
+ * thins cluster by cluster over a minute or two rather than vanishing on a
+ * threshold tick; each death is the map's own (nobody is paid), and the reap
+ * rebuilds the PF grid, which is the "rises toward baseline" made literal.
+ */
+function jellyTick(world: SimWorld, eid: number, dt: number): void {
+  if (world.drift.at(Position.x[eid]!, Position.y[eid]!) >= DRIFT.HEALTH_FAILING) return;
+  Health.hp[eid] = Health.hp[eid]! - DRIFT.JELLY_WITHER_HP_PER_S * dt;
+  if (Health.hp[eid]! <= 0) world.environmentalDeaths.add(eid);
 }
 
 /**

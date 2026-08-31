@@ -26,7 +26,9 @@
  */
 
 import {
+  DRIFT,
   Faction,
+  FaunaSpecies,
   HAZARDS,
   HazardPhase,
   SILENT_RUNNING,
@@ -46,6 +48,7 @@ import {
   Unit,
   Velocity,
 } from '../components.ts';
+import type { PropagationModifier } from '../terrain.ts';
 import type { SimWorld } from '../world.ts';
 
 /**
@@ -302,14 +305,21 @@ function affectsPropagation(kind: HazardKind): boolean {
 }
 
 /**
- * Rewrite the terrain's PF array from the hazards currently modifying it.
+ * Rewrite the terrain's PF array from everything currently modifying it —
+ * storms *and* Tetherjelly fields, gathered together because
+ * `applyPropagationModifiers` replaces the whole set, and two writers each
+ * replacing it with only their own half would silently erase each other.
  *
- * Called only when a phase boundary changes the modifier set — a few times a
- * minute, not every tick. `applyPropagationModifiers` recomputes from the
- * biome rather than inverting, so this is exact however many storms overlap.
+ * Two sources on two cadences, one rebuild: storm modifiers change on phase
+ * boundaries (a few times a minute), jelly modifiers only when a cluster dies
+ * (docs/bestiary.md §4 — they never return, so the set only ever shrinks).
+ * Exported for the death path: `Match.reap` calls this when a jelly dies, so
+ * a burned lane's PF rises on the tick the cluster comes apart rather than at
+ * the next storm boundary. Recomputing from the biome rather than inverting
+ * keeps every combination exact, however storms and fields overlap.
  */
-function rebuildPropagation(world: SimWorld): void {
-  const mods: { x: number; y: number; radiusM: number; scale: number }[] = [];
+export function rebuildPropagation(world: SimWorld): void {
+  const mods: PropagationModifier[] = [];
   for (const hazard of world.hazards) {
     if (!affectsPropagation(hazard.kind)) continue;
     if (hazard.phase !== HazardPhase.Active && hazard.phase !== HazardPhase.Decay) continue;
@@ -320,6 +330,19 @@ function rebuildPropagation(world: SimWorld): void {
       // Decay tapers rather than stopping dead, so resolution recovers over a
       // few seconds instead of snapping back mid-engagement.
       scale: hazard.phase === HazardPhase.Active ? HAZARDS.STORM.PF_MULTIPLIER : stormTaper(),
+    });
+  }
+  // Living terrain: each surviving cluster subtracts its delta (§4's additive
+  // −0.10 — see PropagationModifier for why it is not a scale factor).
+  for (let eid = 0; eid <= world.maxEid; eid++) {
+    if (!hasComponent(world, Fauna, eid)) continue;
+    if (Fauna.species[eid] !== FaunaSpecies.Tetherjelly) continue;
+    if (Health.hp[eid]! <= 0) continue;
+    mods.push({
+      x: Position.x[eid]!,
+      y: Position.y[eid]!,
+      radiusM: DRIFT.JELLY_RADIUS_M,
+      delta: -DRIFT.JELLY_PF_DELTA,
     });
   }
   world.terrain.applyPropagationModifiers(mods);

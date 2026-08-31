@@ -28,6 +28,8 @@ export enum FaunaSpecies {
   Rasp = 3,
   /** Ambient — the schooling fry whose scatter is the tell silence cannot buy off. */
   Lampfry = 4,
+  /** Ambient — the drifting absorber. Living terrain: a cluster lowers local PF. */
+  Tetherjelly = 5,
 }
 
 /**
@@ -230,6 +232,36 @@ export const FAUNA_STATS: Record<FaunaSpecies, FaunaStats> = {
     groupSize: 1,
     // The glow the renderer draws — the shoal cloud, not a fry.
     lengthM: 14,
+  },
+  [FaunaSpecies.Tetherjelly]: {
+    species: FaunaSpecies.Tetherjelly,
+    // "1,100-1,300 m — the duct itself, the boundary it is named for" (§4).
+    // §4's open question — the doc names Kelp Forest too — is resolved for
+    // now as the thermocline; a Kelp population would need a second seeding
+    // depth per map, and is flagged in the doc rather than invented here.
+    workingDepthM: 1200,
+    depthBandM: 0,
+    seedSpreadM: 100,
+    name: 'Tetherjelly',
+    // SIG 1 — quieter than anything a player can field. The species' output
+    // is subtraction, not sound.
+    sigIdle: 1,
+    sigActive: 1,
+    hyd: 20,
+    // "Never commits", the Lampfry's argument: Infinity so no modifier can
+    // ever add up to living terrain attacking somebody.
+    interest: Number.POSITIVE_INFINITY,
+    commit: Number.POSITIVE_INFINITY,
+    biomass: 2,
+    maxHp: 40,
+    // A cluster is moored water. It does not travel, chase, or flee.
+    speed: 0,
+    damagePerS: 0,
+    attackRangeM: 0,
+    // One entity is one cluster; a field is several clusters, and how many
+    // is exactly how much masking the field is worth.
+    groupSize: 1,
+    lengthM: 16,
   },
 };
 

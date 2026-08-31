@@ -19,7 +19,13 @@
  * in the mark layer, where both depths are in hand.
  */
 
-import { Biome, DEPTH, MAX_PROPAGATION_FACTOR, PROPAGATION_FACTOR } from '@echoes/shared';
+import {
+  Biome,
+  DEPTH,
+  MAX_PROPAGATION_FACTOR,
+  MIN_PROPAGATION_FACTOR,
+  PROPAGATION_FACTOR,
+} from '@echoes/shared';
 
 /**
  * One cell that changed after the match began.
@@ -54,6 +60,21 @@ export interface TerrainCellChange {
  * the call site because `{ floorM: 0, ceilingM: 1 }` reads like a mistake.
  */
 export const SOLID = { floorM: 0, ceilingM: 1 } as const;
+
+/**
+ * One area effect on the PF grid. Two kinds, composed in a fixed order
+ * however the list is arranged: every `scale` multiplies the biome baseline
+ * (Resonance Storms), then every `delta` is added (Tetherjelly fields, whose
+ * −0.10 is absolute by design — docs/bestiary.md §4 says why a percentage
+ * would be the wrong species). A modifier may carry either or both.
+ */
+export interface PropagationModifier {
+  x: number;
+  y: number;
+  radiusM: number;
+  scale?: number;
+  delta?: number;
+}
 
 export class Terrain {
   readonly widthM: number;
@@ -112,7 +133,7 @@ export class Terrain {
    * is a few times a minute, not a tick. Holding the set makes the biome write
    * exact at the tick it happens.
    */
-  private mods: readonly { x: number; y: number; radiusM: number; scale: number }[] = [];
+  private mods: readonly PropagationModifier[] = [];
 
   /**
    * `floorM` is the seabed the whole map starts at, before any region carves
@@ -462,9 +483,7 @@ export class Terrain {
    * exist. (It is also why a doc'd Standing Wave at PF 2.0 would be truncated
    * here rather than carried: that would be a change to this ceiling.)
    */
-  applyPropagationModifiers(
-    mods: readonly { x: number; y: number; radiusM: number; scale: number }[]
-  ): void {
+  applyPropagationModifiers(mods: readonly PropagationModifier[]): void {
     // Copied, not aliased. The caller builds this list fresh each phase
     // boundary today, but a caller that reused and mutated its array would
     // change what a later biome write composes with, at a distance and without
@@ -493,12 +512,22 @@ export class Terrain {
     if (this.mods.length > 0) {
       const wx = (cx + 0.5) * this.cellM;
       const wy = (cy + 0.5) * this.cellM;
+      // Multiplicative scales fold into the baseline, additive deltas are
+      // summed and applied after — docs/bestiary.md §4 (Tetherjelly): a
+      // cell's PF is "biome baseline, times any hazard multipliers, minus any
+      // jelly deltas". Accumulating the delta separately keeps the answer
+      // order-independent within one list, which is the property the method
+      // comment above promises about overlap.
+      let delta = 0;
       for (let m = 0; m < this.mods.length; m++) {
         const mod = this.mods[m]!;
         const dx = wx - mod.x;
         const dy = wy - mod.y;
-        if (dx * dx + dy * dy <= mod.radiusM * mod.radiusM) value *= mod.scale;
+        if (dx * dx + dy * dy > mod.radiusM * mod.radiusM) continue;
+        if (mod.scale !== undefined) value *= mod.scale;
+        if (mod.delta !== undefined) delta += mod.delta;
       }
+      value += delta;
     }
     // Clamped on the argument `applyPropagationModifiers` makes: the Echo
     // broadphase sizes itself from this ceiling, so a cell above it is audible
@@ -507,7 +536,13 @@ export class Terrain {
     // MAX_PROPAGATION_FACTOR is derived from that same table; the clamp is here
     // so the day a hazard multiplier meets a louder biome is not the day it is
     // discovered.
-    return Math.min(value, MAX_PROPAGATION_FACTOR);
+    //
+    // Floored as well as capped, now that deltas exist: stacked negative
+    // deltas must never cut a hole in the propagation model (§4's "sound
+    // never stops entirely"), and a zero or negative PF would put a division
+    // the detection maths never guarded against into every path that crosses
+    // the cell.
+    return Math.min(Math.max(value, MIN_PROPAGATION_FACTOR), MAX_PROPAGATION_FACTOR);
   }
 
   /**

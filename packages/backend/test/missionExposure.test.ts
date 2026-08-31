@@ -65,6 +65,7 @@ function heardAs(tick: number, tier: ResolutionTier): EchoSnapshot {
     draw: { capacity: 0, demand: 0, satisfaction: 1 },
     driftHealth: [],
     shoals: [],
+    jellies: [],
     hazards: [],
     marks: [],
   };
