@@ -98,6 +98,159 @@ export const LEDGER_ASSET_RECOVERY_HEADER: MissionHeader = {
   ],
 };
 
+export const LEDGER_SHIFT_CHANGE_HEADER: MissionHeader = {
+  id: 'ledger-shift-change',
+  campaign: 'ledger',
+  ordinal: 2,
+  name: 'The Ledger — Shift Change',
+  premise:
+    'Face Two runs its last shift like any other. The audit is on the road, and the crews do not know yet.',
+  mapId: 'ninefold-workings',
+  // The whistle at 16:00 (docs/mission-shift-change.md §9), inside §10's 12-25.
+  lengthBandS: [900, 1020],
+  /**
+   * Osk, to the shift command, at muster — docs/mission-shift-change.md §12,
+   * verbatim. Public for Sorrowgate's reason: it names no hidden fact the
+   * mission withholds. The audit's transit plan is filed in advance because
+   * that is what an audit is, and the one thing Osk does not say out loud is
+   * the one thing he does not say out loud in the water either.
+   */
+  briefing: [
+    'Works order for the tide: Face Two runs its shift, reports its number, and stands down its watches on the bell. Quota is three thousand six hundred. The seam will cover it if the seam is worked, and Five will cover what Two cannot. That is the shift. It is the same shift as yesterday, and it will read like it.',
+    'Risk and Actuarial are on the field today. Their transit plan is filed and it is on the board: two passes on the High Road, docked at the rail between. An audit that files its plan is telling you it has nothing to hide, and expecting the same. Give them a working face. That is not a trick; a working face is what this is. Run your throttles like it is any tide, because it is.',
+    "Watches stand down in order. Berthing is rigged on the barges and Vail has the lists. The transfer paperwork is standing works orders, hull movements between sites, current and correct. If anyone asks a barge's business, its business is on its manifest, and its manifest is right.",
+    'One more thing, and then the bell. The climb to the rail is long and the layer is where it has always been. Nobody crosses it under way while the road is listening unless I say so, or unless you have worked out for yourselves why I would not. You have all been on this face long enough to have worked it out. The shift is open.',
+  ],
+};
+
+export const LEDGER_BAFFLE_HEADER: MissionHeader = {
+  id: 'ledger-baffle',
+  campaign: 'ledger',
+  ordinal: 3,
+  name: 'The Ledger — Baffle',
+  premise:
+    'A closed trench, a failing plant at the far end of it, and two chambers of quiet water on the only road.',
+  mapId: 'fourth-trench',
+  // The yard's plant fails at 20:00 (docs/mission-baffle.md §9), inside §10's 12-25.
+  lengthBandS: [1140, 1260],
+  /**
+   * The relief writ, read to the convoy at muster — docs/mission-baffle.md
+   * §12, verbatim. Public for Sorrowgate's reason: it names no hidden fact.
+   * The stations are on every chart including theirs, the picket announces
+   * its own law, and the one thing the writ withholds — a transit request —
+   * it withholds from the inquiry, not from the player.
+   */
+  briefing: [
+    'The Deep Yard’s plant fails in twenty minutes of transit time. The replacement is crated and the escort is funded. The long route misses the arithmetic by two tides. This writ takes the short one.',
+    'The Fourth Trench is closed to chartered freight while the exchange inquiry runs. The concern has reviewed the closure and finds it is not the concern’s. No transit request has been filed: a request enters the yard’s condition into the inquiry’s record, and that exposure is priced above yours. You are advised of the pricing so that nobody mistakes it for an oversight.',
+    'Two baffle stations are moored at the chartered lay-bys. Advance station to station. Fight at the mouths, where the bubble bends the water your way; do not fight in the open corridor, which is theirs from end to end and carries everything. The escort carries the survey array. Transmit once, late, and commit on what it returns. The trench will hear the transmission. The trench hears everything; that is what a trench is.',
+    'The picket will announce the closure. It will be correct. Proceed.',
+    'Forty-one berths are on the yard’s complement. The plant you are hauling is the line item above them. Exposure is authorised. Sentiment is not. Signed for the Board.',
+  ],
+};
+
+export const LEDGER_EXPOSURE_HEADER: MissionHeader = {
+  id: 'ledger-exposure',
+  campaign: 'ledger',
+  ordinal: 4,
+  name: 'The Ledger — Exposure',
+  premise:
+    "Three unarmed hulls under the layer, six sounds in somebody else's country, and thirty seconds of deniability.",
+  mapId: 'first-trench-margin',
+  // The watch change at 18:00 (docs/mission-exposure.md §9), inside §10's 12-25.
+  lengthBandS: [1020, 1140],
+  /**
+   * The survey charter, read at muster — docs/mission-exposure.md §12,
+   * verbatim. The first Ledger briefing not signed for the Board, and public
+   * for Sorrowgate's reason: the charter names its own budget, its own
+   * recall rule, and the terms of its own deniability, because a charter
+   * that withheld them would have nothing to recall against.
+   */
+  briefing: [
+    'The Division requires field readings of the trench margin’s working economy. Six points are charted. Four close the interval. The model this bounds is the one the Board’s arithmetic stands on, and the Division observes, without further comment, that at present it stands on an assumption.',
+    'The survey is chartered, unarmed, and deniable. Deniability is a consumable. It is spent by Classification: thirty seconds of it, cumulative, across the charter, at which point the charter is recalled and the survey’s business becomes coming home. The first twenty seconds are yours to allocate. The last ten are the Division’s, and the Division’s guidance at thirty is unambiguous.',
+    'Under the layer you are deaf to the concern and the concern is deaf to you. That is not a defect in the charter. It is the charter: what cannot hear you cannot be asked about you.',
+    'The record returns in duplicate or it is not a record. Two hulls home is the interval; one is an anecdote; none is a file the Division has opened twice before and not yet closed.',
+    'Exposure is budgeted. Nothing further is authorised. For the Division.',
+  ],
+};
+
+export const LEDGER_TOLERANCE_HEADER: MissionHeader = {
+  id: 'ledger-tolerance',
+  campaign: 'ledger',
+  ordinal: 5,
+  name: 'The Ledger — Tolerance',
+  premise:
+    'A casting poured before year zero has failed. The yard’s tungsten pours once, and the gauge fits both apertures.',
+  mapId: 'holding-underworks',
+  // The water stops at 17:00 (docs/mission-tolerance.md §9), inside §10's 12-25.
+  lengthBandS: [960, 1080],
+  /**
+   * The breach writ, read to the column at the yard — docs/mission-tolerance.md
+   * §12, verbatim. Public for Sorrowgate's reason and one more: the mission's
+   * whole design is that the arithmetic is not hidden from the player, so a
+   * briefing that withheld any of it would be the design arguing with itself.
+   */
+  briefing: [
+    'A casting poured before year zero failed at the turn of the tide. The Underworks are flooding in stages. The cascade reaches Sector Vayle’s frame above and the root aperture below, and the yard’s tungsten pours once. The gauge fits both apertures. That is not a provision of the writ; it is a fact about the concern’s standards, and the writ declines to apologise for either.',
+    'Below the line at eighteen hundred metres, a hull spends four points a second of what does not heal. The root run is roughly thirty seconds below the line, driven clean. The barge is three hundred points. The arithmetic is stated so that nobody performs it for the first time under the overhang.',
+    'Two hundred and forty berths were occupied in Vayle at the alarm. The evacuation proceeds and will not finish. The root carries the Holding, which carries the count you already know, because everyone does.',
+    'The writ funds the pour, the escort, and one delivery. It does not state a preference. The Board has considered whether that is a mercy or an abdication and has minuted the question without resolving it.',
+    'The Chair is on the channel. Exposure is authorised. Sentiment is not. Signed for the Board.',
+  ],
+};
+
+export const LEDGER_PROSPECT_HEADER: MissionHeader = {
+  id: 'ledger-prospect',
+  campaign: 'ledger',
+  ordinal: 6,
+  name: 'The Ledger — Prospect',
+  premise:
+    'The only candidate field is the rim. Four navies are on it this week, and the survey goes down anyway.',
+  mapId: 'mouth-rim',
+  // The writ turns north at 22:00 (docs/mission-prospect.md §9), inside §10's 12-25.
+  lengthBandS: [1260, 1380],
+  /**
+   * The survey writ, read at the staging — docs/mission-prospect.md §12,
+   * verbatim. Public for Sorrowgate's reason: the writ's whole posture is
+   * that the descent will be heard by everything, so there is nothing left
+   * for a briefing to give away.
+   */
+  briefing: [
+    'The concern requires a producing field inside eleven years or the concern requires an orderly dissolution plan, and the Board has reviewed the second document and declines to circulate it. The only candidate field is the rim. This writ proves it or does not.',
+    'Six faces are charted on the terraces. Four, read by hand to survey standard, prove the field. The readers are calibrated to their banks; the procedure names hulls, and the procedure is right to.',
+    'The expedition is refit to the third rating, certificated, and unarmed. Three navies are on the rim this week for three stated reasons, none of which is ours and none of which is false. The writ prices an incident above a field, and the Board asks the expedition to read that sentence twice.',
+    'The descent will be heard by everything. That is the physics of arriving and the writ does not apologise for physics. The ascent begins no later than the turn, whatever the count stands at, because a survey that stays is a different asset class and the registry has a word for it.',
+    "Two returns on the lip are on file as equipment fault. The file is standing practice. The writ directs the expedition's instruments at the faces, and its attention wherever the shift requires, and it does not define the difference. Exposure is authorised. Sentiment is not. Signed for the Board.",
+  ],
+};
+
+export const LEDGER_ITEM_NINE_HEADER: MissionHeader = {
+  id: 'ledger-item-nine',
+  campaign: 'ledger',
+  ordinal: 7,
+  name: 'The Ledger — Item Nine',
+  premise:
+    'Nine items stand. The chamber hears everyone at once. What the chair does with the ninth is the chair’s.',
+  mapId: 'holding-board',
+  // The chamber empties at 12:30 (docs/mission-item-nine.md §9), just over §10's floor.
+  lengthBandS: [720, 840],
+  /**
+   * The session notice, as the registry circulates it — docs/mission-item-nine.md
+   * §12, verbatim: the shortest briefing in the campaign, because the campaign
+   * has already said everything it is about. Public for the oldest reason —
+   * it names no hidden fact, and the one fact that matters tonight has been
+   * noted for completeness at every session for one hundred and twenty-six
+   * years.
+   */
+  briefing: [
+    'The Ninth Board sits at the turn of the tide. Nine items stand. The chair’s flight holds at the rail for the sitting, per custom: the chamber is listened to, not watched, and a hull under way during a sitting is shoving.',
+    'The rim field is item six. The Division’s model is item five, under seal. Item nine is item nine.',
+    'The chair’s barge carries the survey array, returned with the expedition and not yet struck. The registry notes this for completeness. What is transmitted in the Underway cannot be untransmitted; the registry notes that for completeness also, as it has noted it at every session for one hundred and twenty-six years.',
+    'The session runs its length. It always has. Signed for the registry.',
+  ],
+};
+
 export const SEEDING_TEND_HEADER: MissionHeader = {
   id: 'seeding-tend',
   campaign: 'seeding',
@@ -151,6 +304,12 @@ export const ATTENDING_ATTENDANCE_HEADER: MissionHeader = {
 export const MISSION_HEADERS: readonly MissionHeader[] = [
   PROLOGUE_SORROWGATE_HEADER,
   LEDGER_ASSET_RECOVERY_HEADER,
+  LEDGER_SHIFT_CHANGE_HEADER,
+  LEDGER_BAFFLE_HEADER,
+  LEDGER_EXPOSURE_HEADER,
+  LEDGER_TOLERANCE_HEADER,
+  LEDGER_PROSPECT_HEADER,
+  LEDGER_ITEM_NINE_HEADER,
   SEEDING_TEND_HEADER,
   ATTENDING_ATTENDANCE_HEADER,
 ];

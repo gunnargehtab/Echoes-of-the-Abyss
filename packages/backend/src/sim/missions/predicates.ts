@@ -141,6 +141,13 @@ export function progressOf(
       // chapter reads out, and a chapter does not over-count. §5 gives the
       // party thirty seconds and no interest in the thirty-first.
       return { done: Math.min(exposed(predicate.tier), predicate.ticks), of: predicate.ticks };
+    case 'deliver':
+      // The observer's own stockpile, read off the snapshot the player is
+      // being sent this very tick: `own.nodules` is the figure their own HUD
+      // carries, so the counter and the readout cannot disagree by a
+      // delivery. Capped, like every counter — the register does not
+      // over-count.
+      return { done: Math.min(own.nodules, predicate.nodules), of: predicate.nodules };
   }
 }
 

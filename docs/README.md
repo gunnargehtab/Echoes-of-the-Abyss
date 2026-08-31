@@ -23,9 +23,15 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | **[factions.md](factions.md)** | The four powers — doctrine, politics, weakness |
 | **[characters.md](characters.md)** | Twelve commanders and the neutrals |
 | **[culture.md](culture.md)** | How the Rift speaks — five registers, names, rituals, writing guide |
-| **[campaign.md](campaign.md)** | 29 missions designed, four campaigns, four irreconcilable endings — one of the 29 is built |
+| **[campaign.md](campaign.md)** | 29 missions designed, four campaigns, four irreconcilable endings — the Consortium's seven, convergence and ending included, are specified and built |
 | **[mission-sorrowgate.md](mission-sorrowgate.md)** | The prologue, specified: the court, the flight, the silence order, the ping, and what answers it |
 | **[mission-asset-recovery.md](mission-asset-recovery.md)** | The Ledger 1, specified: Face Six, the manifest, the taps, and the Klaxon posture |
+| **[mission-shift-change.md](mission-shift-change.md)** | The Ledger 2, specified: the throttle handed over, a filed audit, and the layer as cover |
+| **[mission-baffle.md](mission-baffle.md)** | The Ledger 3, specified: a closed trench, two moored chambers of quiet water, and the ping at last |
+| **[mission-exposure.md](mission-exposure.md)** | The Ledger 4, specified: three unarmed hulls under the layer, six readings, and thirty seconds of deniability |
+| **[mission-tolerance.md](mission-tolerance.md)** | The Ledger 5, specified: one casting, two apertures, and the crush ledger read out loud |
+| **[mission-prospect.md](mission-prospect.md)** | The Ledger 6, specified: the rim survey — the convergence, from the Consortium's side |
+| **[mission-item-nine.md](mission-item-nine.md)** | The Ledger 7, specified: the Board's session, one decision, and the ending §9 refuses to rank |
 | **[mission-tend.md](mission-tend.md)** | The Second Seeding 1, specified: a working day, the sweep, the stillness, and what *unfiled* is worth |
 | **[mission-attendance.md](mission-attendance.md)** | The Attending 1, specified: one watch of the Mouth's cycle, the nine arrivals, and the silence a rite is owed |
 | **[mission-aptitude.md](mission-aptitude.md)** | The Second Chord 1, specified: six hulls, six formations, and the quarter of the compass a Knight is loud in |
@@ -76,21 +82,19 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 
 One forward reference remains: `concept-art/DESIGN-PHILOSOPHY.md`, linked from the root README, which would set out the Pressure Cartography visual language behind the four survey plates.
 
-The prologue is built and the campaign around it is not. What follows is designed, or already
-stated in a doc that ships, and unbuilt — named in plain text because none of it has a document
-to point at yet:
+The prologue and one full campaign are built; the rest of the campaign is not. What follows is
+designed, or already stated in a doc that ships, and unbuilt — named in plain text because none
+of it has a document to point at yet:
 
-- **The remaining 24 missions.** campaign.md §4–§7 gives them titles, teaching targets and
+- **The remaining 18 missions.** campaign.md §5–§7 gives them titles, teaching targets and
   beats, which is not a specification. Each needs a document of its own — one doc per mission,
-  the pattern mission-sorrowgate.md sets and mission-asset-recovery.md, mission-tend.md,
-  mission-attendance.md and mission-aptitude.md continue — before it needs code. Every
-  campaign's *first* mission is now specified and none is built; their scaffold-status sections
-  list what the mission format still needs. That list is shorter than it was: the Klaxon band,
-  the authored static emitter, the lift/cargo hold-and-cut, bloom-share, the windowed emitter and
-  the tally over the observer's own resolution of one have all shipped, and the sweep's
-  filed/unfiled fact landed as a latched flag on the runtime rather than as a predicate. What the
-  four documents still ask for is a beat that fires on a **condition** rather than a tick, a
-  predicate over the player's own **exposure**, and a hold that **aims** the hull taking it.
+  the pattern mission-sorrowgate.md sets and eleven documents now follow — before it needs
+  code. The Ledger's seven are specified and built end to end; Tend and Attendance are built;
+  Aptitude's remaining gaps are one HUD instrument and a map (its §13 keeps the list). The
+  format itself has stopped asking: the condition-fired beat, the exposure tally and the aimed
+  hold — the three things the first four documents still wanted — have all shipped, along with
+  the Ledger's own three additions (the `deliver` predicate, readings per objective, and the
+  conditional beat's choice group), and no specified mission now names a missing mechanism.
 - **Campaign progression and unlock state.** Nothing records that a mission was played, so the
   prologue is replayable, remembers nothing, and the Tutorial and campaign doors are the same
   door.

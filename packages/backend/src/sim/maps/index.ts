@@ -16,8 +16,14 @@ import { ABYSSAL_RIFT_CORRIDOR } from './abyssalRiftCorridor.ts';
 import { KELP_LABYRINTH } from './kelpLabyrinth.ts';
 import { VENTFRONT_DIVIDE } from './ventfrontDivide.ts';
 import { ATTENDING_GALLERIES } from './missions/attendingGalleries.ts';
+import { FIRST_TRENCH_MARGIN } from './missions/firstTrenchMargin.ts';
+import { FOURTH_TRENCH } from './missions/fourthTrench.ts';
+import { HOLDING_BOARD } from './missions/holdingBoard.ts';
+import { HOLDING_UNDERWORKS } from './missions/holdingUnderworks.ts';
 import { MARR_PLATEAU } from './missions/marrPlateau.ts';
+import { MOUTH_RIM } from './missions/mouthRim.ts';
 import { NINEFOLD_FACE_SIX } from './missions/ninefoldFaceSix.ts';
+import { NINEFOLD_WORKINGS } from './missions/ninefoldWorkings.ts';
 import { SORROWGATE } from './missions/sorrowgate.ts';
 import type { MapDefinition } from './types.ts';
 
@@ -25,9 +31,15 @@ export * from './types.ts';
 export {
   ABYSSAL_RIFT_CORRIDOR,
   ATTENDING_GALLERIES,
+  FIRST_TRENCH_MARGIN,
+  FOURTH_TRENCH,
+  HOLDING_BOARD,
+  HOLDING_UNDERWORKS,
   KELP_LABYRINTH,
   MARR_PLATEAU,
+  MOUTH_RIM,
   NINEFOLD_FACE_SIX,
+  NINEFOLD_WORKINGS,
   SORROWGATE,
   VENTFRONT_DIVIDE,
 };
@@ -61,6 +73,12 @@ export function mapById(id: string): MapDefinition | undefined {
 export const MISSION_MAPS: readonly MapDefinition[] = [
   SORROWGATE,
   NINEFOLD_FACE_SIX,
+  NINEFOLD_WORKINGS,
+  FOURTH_TRENCH,
+  FIRST_TRENCH_MARGIN,
+  HOLDING_UNDERWORKS,
+  MOUTH_RIM,
+  HOLDING_BOARD,
   MARR_PLATEAU,
   ATTENDING_GALLERIES,
 ];

@@ -285,7 +285,24 @@ export type MissionPredicate =
    * "Eleven seconds of thirty are entered", and `view.ts` does that arithmetic
    * so no mission literal has to do it in its `text`.
    */
-  | { kind: 'tolerance'; ticks: number; tier: ResolutionTier };
+  | { kind: 'tolerance'; ticks: number; tier: ResolutionTier }
+  /**
+   * Nodules the observer's own economy has banked — the shift's number of
+   * docs/mission-shift-change.md §8, and the union's first economic row.
+   *
+   * A query over the observer's own stockpile: the figure the server already
+   * answers affordability from, and the one the player's own HUD carries. It
+   * reports the player's economy back to them, so it stays inside the wall the
+   * union already enforces — there is still no way here to name a party, and
+   * none to ask what anybody else has banked.
+   *
+   * Monotone in practice on the missions that author it — nothing is buildable
+   * on a field under works order, so banked is delivered — but stated as a
+   * floor either way: the count is met from the tick the stockpile reaches the
+   * figure, and a mission that let the player spend below it afterwards would
+   * be a mission whose document said so.
+   */
+  | { kind: 'deliver'; nodules: number };
 
 /**
  * A load — the hold-and-cut lift of docs/mission-asset-recovery.md §8, and, with
@@ -397,6 +414,20 @@ export interface MissionObjective {
   markerId?: string;
   /** Met means the mission is complete outright, not merely progressed. */
   terminal?: boolean;
+  /**
+   * The two readings the close may enter for this objective — met or unmet at
+   * the moment the mission resolves.
+   *
+   * `MissionEmitter.reading`'s arrangement, extended from emitters to
+   * objectives, and for its reason: docs/campaign.md §10's rule about
+   * objective text holds for a close too, and a line assembled from a status
+   * and a template is a sentence no faction speaks. The runtime appends the
+   * picked lines in authored order beneath the outcome's own reading —
+   * docs/mission-shift-change.md §8 is the row that needed it: "half the
+   * business" is one outcome with two possible columns filled, and a close
+   * that could not say which would read a run it did not see.
+   */
+  reading?: { met: string; unmet: string };
   /**
    * The terminal objective the outcome ladder is keyed on: unmet, the count
    * reads Lost whatever else came home.
@@ -559,6 +590,22 @@ export type MissionBeatEffect =
  */
 export type MissionConditionalBeat = Exclude<MissionBeatEffect, { kind: 'resolve' }> & {
   when: MissionPredicate;
+  /**
+   * The one authored interaction between conditional beats, and the exception
+   * to "in no order at all, no interaction between them" above: when any beat
+   * in a choice group fires, every *unfired* beat sharing the group is retired
+   * on the same pass — never to fire, whatever its predicate later holds.
+   * Beats due on the same pass all fire first, so two effects hung on one
+   * condition share a group without retiring each other.
+   *
+   * docs/mission-tolerance.md §6 is the row that needed it: one casting, two
+   * apertures, and each delivery retires the other's announcement. Without it,
+   * a player who set the casting and then drove the spent barge through the
+   * second aperture's water would hear the Chair enter an order nobody gave.
+   * Exclusivity is a fact about the choice, so it is authored on the choice
+   * rather than guessed at by the runtime.
+   */
+  choiceGroup?: string;
 };
 
 /**

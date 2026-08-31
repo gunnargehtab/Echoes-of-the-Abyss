@@ -190,7 +190,11 @@ function counts(objective: MissionObjective): boolean {
     // exposure readout carries the tier from the first tick". A counter that
     // appeared only once it mattered would be the warning arriving with the
     // consequence.
-    objective.predicate.kind === 'tolerance'
+    objective.predicate.kind === 'tolerance' ||
+    // The number is the objective — docs/mission-shift-change.md §8: a quota
+    // is the most countable thing a shift has, and the counter beside it is
+    // the same figure the player's own stockpile readout carries.
+    objective.predicate.kind === 'deliver'
   );
 }
 

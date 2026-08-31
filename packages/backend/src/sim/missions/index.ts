@@ -13,6 +13,12 @@
 
 import { ATTENDING_ATTENDANCE } from './attendance.ts';
 import { LEDGER_ASSET_RECOVERY } from './assetRecovery.ts';
+import { LEDGER_BAFFLE } from './baffle.ts';
+import { LEDGER_EXPOSURE } from './exposure.ts';
+import { LEDGER_ITEM_NINE } from './itemNine.ts';
+import { LEDGER_PROSPECT } from './prospect.ts';
+import { LEDGER_SHIFT_CHANGE } from './shiftChange.ts';
+import { LEDGER_TOLERANCE } from './tolerance.ts';
 import { PROLOGUE_SORROWGATE } from './sorrowgate.ts';
 import { SEEDING_TEND } from './tend.ts';
 import type { MissionDefinition } from './types.ts';
@@ -23,11 +29,28 @@ export * from './conditional.ts';
 export * from './sounding.ts';
 export * from './view.ts';
 export * from './runtime.ts';
-export { ATTENDING_ATTENDANCE, LEDGER_ASSET_RECOVERY, PROLOGUE_SORROWGATE, SEEDING_TEND };
+export {
+  ATTENDING_ATTENDANCE,
+  LEDGER_ASSET_RECOVERY,
+  LEDGER_BAFFLE,
+  LEDGER_EXPOSURE,
+  LEDGER_ITEM_NINE,
+  LEDGER_PROSPECT,
+  LEDGER_SHIFT_CHANGE,
+  LEDGER_TOLERANCE,
+  PROLOGUE_SORROWGATE,
+  SEEDING_TEND,
+};
 
 export const MISSIONS: readonly MissionDefinition[] = [
   PROLOGUE_SORROWGATE,
   LEDGER_ASSET_RECOVERY,
+  LEDGER_SHIFT_CHANGE,
+  LEDGER_BAFFLE,
+  LEDGER_EXPOSURE,
+  LEDGER_TOLERANCE,
+  LEDGER_PROSPECT,
+  LEDGER_ITEM_NINE,
   SEEDING_TEND,
   ATTENDING_ATTENDANCE,
 ];

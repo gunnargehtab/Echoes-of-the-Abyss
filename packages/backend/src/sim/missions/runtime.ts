@@ -529,6 +529,23 @@ export class MissionRuntime {
       this.firedConditions.add(index);
       this.fire(world, sink, beats[index]!);
     }
+    // The choice groups (types.ts, `choiceGroup`): after everything due this
+    // pass has fired, retire every unfired beat sharing a fired beat's group.
+    // After, not during, so two effects hung on one condition fire together
+    // before their group closes behind them.
+    if (due.length > 0) {
+      const closed = new Set<string>();
+      for (const index of due) {
+        const group = beats[index]!.choiceGroup;
+        if (group !== undefined) closed.add(group);
+      }
+      if (closed.size > 0) {
+        for (let i = 0; i < beats.length; i++) {
+          const group = beats[i]!.choiceGroup;
+          if (group !== undefined && closed.has(group)) this.firedConditions.add(i);
+        }
+      }
+    }
   }
 
   /**
@@ -636,6 +653,20 @@ export class MissionRuntime {
         return;
       }
       case 'objective':
+        // A beat never fails an objective the player has met —
+        // `deriveObjectives`' own invariant, held against beats too: reaching
+        // the aperture is a thing that happened, and un-happening it would
+        // rewrite the player's history. The case is real, not defensive:
+        // docs/mission-tolerance.md §6 fires "the other aperture fails" off
+        // each delivery, and a player who sets the casting and then drives
+        // the empty barge through the second aperture's water would
+        // otherwise trip the mirror conditional and lose the seal they set.
+        if (
+          beat.status === ObjectiveStatus.Failed &&
+          this.statuses.get(beat.id) === ObjectiveStatus.Met
+        ) {
+          return;
+        }
         this.statuses.set(beat.id, beat.status);
         return;
       case 'say':
@@ -1120,6 +1151,22 @@ export class MissionRuntime {
    * which arrivals were entered because the mission wrote both readings for
    * each of them, and the run picks.
    */
+  /**
+   * The readings the objectives themselves earned — types.ts, `reading`: an
+   * objective may author a met and an unmet line, and the close appends the
+   * one its frozen status picked, in authored order. `transcript`'s shape,
+   * with the argument moved from what was heard to what was done.
+   */
+  private objectiveReadings(): string[] {
+    const lines: string[] = [];
+    for (const objective of this.definition.objectives) {
+      if (objective.reading === undefined) continue;
+      const met = this.statuses.get(objective.id) === ObjectiveStatus.Met;
+      lines.push(met ? objective.reading.met : objective.reading.unmet);
+    }
+    return lines;
+  }
+
   private transcript(): string[] {
     const lines: string[] = [];
     for (const party of this.definition.parties) {
@@ -1254,8 +1301,10 @@ export class MissionRuntime {
     // The transcript, if the mission authored one, on its own lines under the
     // reading: nine entries are a document rather than a sentence, and the
     // close reads them back the way the stalls read a record
-    // (docs/mission-attendance.md §12).
-    const lines = this.transcript();
+    // (docs/mission-attendance.md §12). Objective readings come first, in
+    // authored order — the columns of the shift's report before the record of
+    // what was heard (docs/mission-shift-change.md §8; types.ts, `reading`).
+    const lines = [...this.objectiveReadings(), ...this.transcript()];
     const transcript = lines.length === 0 ? '' : `\n\n${lines.join('\n')}`;
     this.resolution = {
       outcome,
