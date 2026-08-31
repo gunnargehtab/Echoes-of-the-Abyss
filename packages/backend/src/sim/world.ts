@@ -156,6 +156,23 @@ export interface SimWorld extends IWorld {
   eidOfLocal: Map<number, number>;
   nextLocalId: number;
   /**
+   * Highest entity id ever handed out by this world.
+   *
+   * bitecs sizes every component store to the world's capacity (100,000) at
+   * creation, so `Owner.slot.length` is that capacity forever, not the number
+   * of entities in the match. Several passes walk entity ids ascending rather
+   * than through a query — correctly, for small per-slot filtered reads — and
+   * bounding those walks by the store length made each one scan 100,000 slots
+   * to find the ~200 that exist. `driftTick` does it at 60 Hz.
+   *
+   * This is the bound they actually want: ids are dense from 0, so every live
+   * entity is <= this. Maintained by `registerEntity`, which every spawn path
+   * calls; `entityHighWaterCoversAllEntities` in test/world.test.ts fails if a
+   * future spawn path forgets, because the alternative failure is silent —
+   * an entity the Echo pass and the Drift simply never look at.
+   */
+  maxEid: number;
+  /**
    * Broadphase for hull separation, rebuilt every tick. Separate from the
    * Echo Layer's: that one is sized for kilometre-scale audibility, this one
    * for hull-scale overlap, and sharing a grid would make both worse.
@@ -269,6 +286,8 @@ export function registerEntity(world: SimWorld, eid: number): number {
   const local = world.nextLocalId++;
   world.localOfEid.set(eid, local);
   world.eidOfLocal.set(local, eid);
+  // Never decreases, so a recycled id after removeEntity stays covered.
+  if (eid > world.maxEid) world.maxEid = eid;
   return local;
 }
 
@@ -301,6 +320,7 @@ export function createSimWorld(terrain: Terrain, dt: number, seed: number): SimW
   world.localOfEid = new Map();
   world.eidOfLocal = new Map();
   world.nextLocalId = 0;
+  world.maxEid = 0;
   world.unitGrid = new SpatialHash(SEPARATION.CELL_M);
   world.separationBuffer = [];
   world.fuseGrid = new SpatialHash(SEPARATION.CELL_M);
