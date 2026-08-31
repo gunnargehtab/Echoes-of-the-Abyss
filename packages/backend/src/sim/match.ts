@@ -549,6 +549,10 @@ export class Match {
     // Clusters, each one entity, in the duct band. Their masking is a PF
     // modifier rather than behaviour, so the grid is rebuilt once they exist.
     place(FaunaSpecies.Tetherjelly, 5, false);
+    // Ambushers, solitary, on ground deep enough to be trench country. Last,
+    // because the roster now fills the cap exactly and the predator that
+    // holds still is the one a thin map misses least.
+    place(FaunaSpecies.Hollow, 2, false);
     rebuildPropagation(this.world);
   }
 

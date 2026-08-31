@@ -457,6 +457,65 @@ function wreckBonus(world: SimWorld, x: number, y: number): number {
   return bonus;
 }
 
+/**
+ * The Hollow's ladder — a trigger model, not a dwell model (docs/bestiary.md
+ * §4, "the one creature the aggro ladder does not describe").
+ *
+ * Interest coils it: it tracks and does nothing else — no approach, no dwell
+ * timer, no SIG change, because an ambush that announced itself would be a
+ * different animal. The strike fires the instant something it hears at Commit
+ * is inside the trigger range in three dimensions. It is the deliberate
+ * exception to §8's "every commit is preceded by 4 s of Interested behaviour
+ * with an audible tell"; the doc prices that with ground instead of time.
+ */
+function hollowStage(eid: number, stats: ReturnType<typeof faunaStatsFor>, dt: number): void {
+  const heard = Fauna.heard[eid]!;
+  const target = Fauna.targetEid[eid]!;
+  const stage = Fauna.stage[eid] as FaunaStage;
+
+  // Commit-loud AND passing the ambush, measured like a bite: in 3D, so a
+  // convoy overhead by more than the range is not passing it.
+  const triggered =
+    heard >= stats.commit &&
+    target !== 0 &&
+    Math.hypot(
+      Position.x[target]! - Position.x[eid]!,
+      Position.y[target]! - Position.y[eid]!,
+      Position.depth[target]! - Position.depth[eid]!
+    ) <= DRIFT.HOLLOW_TRIGGER_RANGE_M;
+
+  switch (stage) {
+    case FaunaStage.Ambient:
+      if (triggered) Fauna.stage[eid] = FaunaStage.Committed;
+      // Coiling is instant — there is no 4 s dwell, because nothing visible
+      // or audible changes when it happens.
+      else if (heard >= stats.interest) Fauna.stage[eid] = FaunaStage.Interested;
+      break;
+
+    case FaunaStage.Interested:
+      if (triggered) Fauna.stage[eid] = FaunaStage.Committed;
+      // It never moved, so there is no journey to cool from: quiet water
+      // simply uncoils it.
+      else if (Fauna.quietS[eid]! >= DRIFT.COOL_AFTER_S) Fauna.stage[eid] = FaunaStage.Ambient;
+      break;
+
+    case FaunaStage.Committed:
+      if (Fauna.quietS[eid]! >= DRIFT.COOL_AFTER_S || Fauna.targetEid[eid] === 0) {
+        Fauna.stage[eid] = FaunaStage.Cooling;
+        Fauna.coolingS[eid] = DRIFT.COOLING_S;
+      }
+      break;
+
+    case FaunaStage.Cooling:
+      Fauna.coolingS[eid] = Fauna.coolingS[eid]! - dt;
+      // Re-striking keeps the gate: an ambusher slinking home does not chase
+      // a noise half the map away, however loud.
+      if (triggered) Fauna.stage[eid] = FaunaStage.Committed;
+      else if (Fauna.coolingS[eid]! <= 0) Fauna.stage[eid] = FaunaStage.Ambient;
+      break;
+  }
+}
+
 /** §2's ladder: Ambient -> Interested -> Committed -> Cooling. */
 function advanceStage(eid: number, stats: ReturnType<typeof faunaStatsFor>, dt: number): void {
   const heard = Fauna.heard[eid]!;
@@ -468,6 +527,11 @@ function advanceStage(eid: number, stats: ReturnType<typeof faunaStatsFor>, dt: 
   } else {
     Fauna.quietS[eid] = Fauna.quietS[eid]! + dt;
     Fauna.interestS[eid] = 0;
+  }
+
+  if (stats.species === FaunaSpecies.Hollow) {
+    hollowStage(eid, stats, dt);
+    return;
   }
 
   switch (stage) {
@@ -526,7 +590,16 @@ function act(
   // loud. This is what makes a creature's *reaction* visible to the player who
   // caused it — the map answering back through the same channel as everything
   // else.
-  Acoustic.sig[eid] = stage === FaunaStage.Ambient ? stats.sigIdle : stats.sigActive;
+  //
+  // The Hollow is the dual-SIG exception (docs/bestiary.md §4): striking is
+  // its only loud state. Coiled and even disengaging it stays at rest volume,
+  // because an ambush that got louder while watching would be a tell the doc
+  // explicitly does not grant it.
+  const roused =
+    Fauna.species[eid] === FaunaSpecies.Hollow
+      ? stage === FaunaStage.Committed
+      : stage !== FaunaStage.Ambient;
+  Acoustic.sig[eid] = roused ? stats.sigActive : stats.sigIdle;
 
   let toX = Fauna.homeX[eid]!;
   let toY = Fauna.homeY[eid]!;
@@ -568,7 +641,13 @@ function act(
     }
   }
 
-  if (stage === FaunaStage.Interested && target !== 0) {
+  if (
+    stage === FaunaStage.Interested &&
+    target !== 0 &&
+    // A coiled Hollow holds its station — the ambush *is* the not-moving
+    // (docs/bestiary.md §4's trigger model). Everything else comes to look.
+    Fauna.species[eid] !== FaunaSpecies.Hollow
+  ) {
     toX = Position.x[target]!;
     toY = Position.y[target]!;
     // "Closes to ~1,200 m" — interested is not committed. It comes to look.
@@ -696,5 +775,20 @@ function act(
   // Being eaten is being attacked (docs/ui-ux.md §5). The mixer collapses a
   // sustained bite to one cue per engagement, so raising per sim tick is safe.
   raiseSelfEvent(world, { kind: SelfEventKind.Damaged, eid: target });
-  if (Health.hp[target]! <= 0) destroyed.push(target);
+  if (Health.hp[target]! <= 0) {
+    destroyed.push(target);
+    // "Every Hollow kill tells the whole region where it happened" (§4): the
+    // strike lays full-intensity battle residue, so the announcement outlives
+    // the seconds the strike took. Only the Hollow — its loudness is an
+    // *event*, where a pack's is a state the region already heard.
+    if (Fauna.species[eid] === FaunaSpecies.Hollow) {
+      world.marks.add(
+        EchoMarkKind.Battle,
+        Position.x[target]!,
+        Position.y[target]!,
+        Position.depth[target]!,
+        1
+      );
+    }
+  }
 }

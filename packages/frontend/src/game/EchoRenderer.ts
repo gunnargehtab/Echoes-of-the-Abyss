@@ -442,6 +442,18 @@ function drawFaunaSilhouette(
       g.circle(x + r * 0.2, y + r * 0.45, r * 0.3).fill(body);
       break;
     }
+    case FaunaSpecies.Hollow: {
+      // A gape: an open crescent rather than a closed body, because what was
+      // classified is mostly mouth. Finding one at Tier 3 is the problem case.
+      g.moveTo(x + r * 0.8, y - r * 0.7)
+        .quadraticCurveTo(x - r, y, x + r * 0.8, y + r * 0.7)
+        .quadraticCurveTo(x - r * 0.2, y, x + r * 0.8, y - r * 0.7)
+        .fill(body);
+      g.moveTo(x + r * 0.8, y - r * 0.7)
+        .quadraticCurveTo(x - r, y, x + r * 0.8, y + r * 0.7)
+        .stroke(edge);
+      break;
+    }
     case FaunaSpecies.Tetherjelly: {
       // A soft bell over trailing tethers — closed body up top, strands below.
       g.ellipse(x, y - r * 0.3, r * 0.7, r * 0.45).fill(body);

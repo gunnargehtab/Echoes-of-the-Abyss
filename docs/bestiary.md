@@ -115,6 +115,8 @@ Stripping salvage is an **acoustic act, not an economic one**: a feeding swarm c
 
 The Drift's own Silent Running. A Hollow at rest is functionally Tier 0, listens better than most units, and does not move until something loud passes within 500 m. Its strike is one of the largest single SIG events on the map, which means **every Hollow kill tells the whole region where it happened.** Trench routes are fast, they carry sound 1.6×, and they are full of these.
 
+The Hollow is a **trigger model, not a dwell model** — the one creature the aggro ladder does not describe. Interest (45) makes it coil: it tracks the source and does not move, does not close, and does not get louder, because an ambush that announced itself would be a different animal. The strike fires when something it hears at Commit (70) is within 500 m in three dimensions — no 4 s dwell, no 20 s of watching, no approach. It is therefore the deliberate exception to §8's "every commit is preceded by 4 s of Interested behaviour with an audible tell": the Hollow's tell is *positional* rather than temporal — the doc names its ground, trench walls and abyssal overhangs, and a route that carries sound at 1.6× is priced by what lives in it. Striking is the only loud state; a Hollow disengaging drops straight back to SIG 3, and each kill lays full-intensity battle residue, so the strike's announcement outlives the seconds it took.
+
 **Draymaw** — pack predator, 4–6 individuals. Mid-water, follows industry.
 
 | SIG | HYD | Interest | Commit | Biomass | HP |
@@ -242,7 +244,7 @@ In campaign play, Drift Health persists between missions on the same map ([campa
 | Directorate free income snowballs | Biomass requires the kill *and* a harvest cycle at SIG 45–60, at a corpse whose location the whole region just heard |
 | Drift Health becomes a mandatory chore | It is never a resource the player spends deliberately; it degrades from things players already want to do, and only one faction profits from ruining it |
 | Tier-1 ambiguity reads as noise, not dread | Fauna density is regionally bounded and species-typed, so an experienced player learns *which* ambiguity a region produces |
-| Fauna aggro feels random | Every threshold is deterministic against perceived loudness, and every commit is preceded by 4 s of Interested behaviour with an audible tell |
+| Fauna aggro feels random | Every threshold is deterministic against perceived loudness, and every commit is preceded by 4 s of Interested behaviour with an audible tell — except the Hollow, deliberately (§4): its tell is positional, not temporal |
 
 ---
 
@@ -269,7 +271,7 @@ Three species are simulated, one per behaviour class. The framework is the deliv
 | Lampfry | Ambient | **Implemented** — shoals seed across the Shelf band, scatter on proximity regardless of SIG, and reform 25 s after the last intruder leaves. The glow and the scatter are public (light, not sound); a Failing region's shoals die off, which is §6's "scatter tells stop working" |
 | Tetherjelly | Ambient | **Implemented** — clusters seed across the duct band and subtract 0.10 from local PF in 250 m (the hazard hook grew an additive mode; see §4). Killed clusters never return, and Failing water withers them, so PF genuinely rises toward baseline |
 | Rasp | Scavenger | **Implemented** — drifts to the strongest battle residue in smelling range ([systems-echo.md](systems-echo.md) §7), feeds loudly, and eats the mark roughly four times faster than it would fade alone. The aggro ladder outranks scavenging, so a swarm is still a creature you can pull off a wreck by being loud |
-| Hollow | Predator | Not started |
+| Hollow | Predator | **Implemented** — the trigger model: coils at Interest without moving or getting louder, strikes on Commit within 500 m in three dimensions, is loud only while striking, and lays full-intensity battle residue on every kill |
 
 ### How fauna are contacts
 

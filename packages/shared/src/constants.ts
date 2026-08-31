@@ -1011,6 +1011,13 @@ export const DRIFT = {
   JELLY_WITHER_HP_PER_S: 1,
 
   /**
+   * SPEC — §4. A Hollow "does not move until something loud passes within
+   * 500 m." Measured in three dimensions, like a bite: a convoy 500 m
+   * horizontally *and* 400 m vertically from the ambush is not passing it.
+   */
+  HOLLOW_TRIGGER_RANGE_M: 500,
+
+  /**
    * Drift Health — §6. "The map can be killed."
    *
    * A coarse region grid rather than per-biome, because health is a thing that

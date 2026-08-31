@@ -30,6 +30,8 @@ export enum FaunaSpecies {
   Lampfry = 4,
   /** Ambient — the drifting absorber. Living terrain: a cluster lowers local PF. */
   Tetherjelly = 5,
+  /** Predator — the ambusher. A trigger model, not a dwell model. */
+  Hollow = 6,
 }
 
 /**
@@ -262,6 +264,38 @@ export const FAUNA_STATS: Record<FaunaSpecies, FaunaStats> = {
     // is exactly how much masking the field is worth.
     groupSize: 1,
     lengthM: 16,
+  },
+  [FaunaSpecies.Hollow]: {
+    species: FaunaSpecies.Hollow,
+    // "1,250-2,150 m — trench walls, and the descent that arrives at them"
+    // (§4). The band straddles the Mid-Water/Abyssal line on purpose: what a
+    // Hollow threatens is the descent, not the basement.
+    workingDepthM: 1700,
+    depthBandM: 450,
+    seedSpreadM: 0,
+    name: 'Hollow',
+    // "3 idle / 60 striking" — the dual-SIG state that makes it the Drift's
+    // own Silent Running. Striking is the only loud state; even disengaging
+    // is done at rest volume (§4's trigger-model note).
+    sigIdle: 3,
+    sigActive: 60,
+    hyd: 80,
+    // Interest coils it; Commit inside DRIFT.HOLLOW_TRIGGER_RANGE_M fires
+    // the strike. Both read against the same detection ratio as every other
+    // creature — the Hollow differs in what the thresholds *do*, not in how
+    // they are measured.
+    interest: 45,
+    commit: 70,
+    biomass: 35,
+    maxHp: 640,
+    // TUNABLE — a lunge, not a cruise: the fastest thing in the roster over
+    // the few hundred metres a strike covers.
+    speed: 75,
+    damagePerS: 55,
+    attackRangeM: 110,
+    // Solitary, like everything about it.
+    groupSize: 1,
+    lengthM: 18,
   },
 };
 
