@@ -356,8 +356,10 @@ reference — the honest column glyph is owed; hulls at true metre scale still r
 against kilometres of ground at far zoom (a readability scale is owed; RTS readability >
 realism); the map edge still ends in blackness; hazard sites, echo marks, own ordnance,
 the Lid's own presence and the depth verbs are not yet in the conn view — the chart
-remains the command surface until Phase 5; and sour exposure has no audio cue yet, which
-[audio-direction.md](audio-direction.md) should decide a channel for rather than inherit.
+remains the command surface until Phase 5. Sour exposure had no audio cue, which
+[audio-direction.md](audio-direction.md) was to decide a channel for rather than inherit; it
+now has one — §4's "The Lid" gives it the self bus and three sounds for its three states,
+and reserves the opposite gesture for a crush cue the mix still does not have.
 
 ### Phase 5 — landed
 

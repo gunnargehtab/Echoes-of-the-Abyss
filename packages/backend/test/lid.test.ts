@@ -11,7 +11,15 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { hasComponent } from 'bitecs';
-import { Faction, LID, SIM, StructureKind, UnitKind } from '@echoes/shared';
+import {
+  Faction,
+  LID,
+  SIM,
+  SelfEventKind,
+  StructureKind,
+  UnitKind,
+  type EchoSnapshot,
+} from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { spawnStructure, spawnUnit } from '../src/sim/world.ts';
@@ -119,5 +127,91 @@ describe('the Lid bleeds what loiters in it', () => {
     });
     advance(m, LID.GRACE_S + 30);
     assert.equal(Health.hp[base]!, Health.max[base]!, 'the Lid does not eat buildings');
+  });
+});
+
+/**
+ * The bite — the moment the grace runs out (#285).
+ *
+ * docs/audio-direction.md §4, "The Lid" makes this the one thing about sour
+ * exposure the mix may announce: the states either side of it are carried by
+ * the ribbon and the card, and only the crossing is news. So what matters here
+ * is that it is an *edge* — raised once where a sustained bleed would raise it
+ * on all twelve hundred ticks, and re-armed only by a hull that actually
+ * recovered and spent its grace again.
+ */
+describe('the sour bleed event', () => {
+  function bites(snapshots: Map<number, EchoSnapshot>[]): number {
+    let count = 0;
+    for (const byPlayer of snapshots) {
+      for (const snapshot of byPlayer.values()) {
+        count += snapshot.selfEvents.filter((e) => e.kind === SelfEventKind.SourBleed).length;
+      }
+    }
+    return count;
+  }
+
+  function snapshotsOver(m: Match, seconds: number): Map<number, EchoSnapshot>[] {
+    const out: Map<number, EchoSnapshot>[] = [];
+    for (let i = 0; i < Math.round(seconds * SIM.TICK_HZ); i++) {
+      const snapshots = m.update(STEP_MS);
+      if (snapshots !== null) out.push(snapshots);
+    }
+    return out;
+  }
+
+  it('says nothing while the grace is still running', () => {
+    const m = match();
+    m.addPlayer(0, Faction.Bathyarch);
+    seat(m, SOUR_M);
+    assert.equal(bites(snapshotsOver(m, LID.GRACE_S - 2)), 0);
+  });
+
+  it('fires once when the grace runs out, and not again while it bleeds', () => {
+    const m = match();
+    m.addPlayer(0, Faction.Bathyarch);
+    seat(m, SOUR_M);
+    // Well past the crossing: a per-tick event would raise this hundreds of
+    // times, and a per-snapshot one dozens.
+    assert.equal(bites(snapshotsOver(m, LID.GRACE_S + 20)), 1);
+  });
+
+  it('says nothing at all below the boundary', () => {
+    const m = match();
+    m.addPlayer(0, Faction.Bathyarch);
+    seat(m, CLEAN_M);
+    assert.equal(bites(snapshotsOver(m, LID.GRACE_S + 30)), 0);
+  });
+
+  it('fires again for a hull that dived, recovered and climbed back', () => {
+    // Two crossings is two pieces of news: the player spent the grace twice.
+    const m = match();
+    m.addPlayer(0, Faction.Bathyarch);
+    const eid = seat(m, SOUR_M);
+    assert.equal(bites(snapshotsOver(m, LID.GRACE_S + 2)), 1);
+    // Placed rather than ordered, like the recovery test above: this measures
+    // the sour clock, not the ascent rate.
+    Position.depth[eid] = CLEAN_M;
+    snapshotsOver(m, LID.RECOVERY_S + 2); // full grace bought back
+    Position.depth[eid] = SOUR_M;
+    assert.equal(bites(snapshotsOver(m, LID.GRACE_S + 2)), 1, 'the second crossing is told too');
+  });
+
+  it('tells the hull owner and nobody else', () => {
+    const m = match();
+    m.addPlayer(0, Faction.Bathyarch);
+    m.addPlayer(1, Faction.Pelagia);
+    seat(m, SOUR_M);
+    let mine = 0;
+    let theirs = 0;
+    for (const byPlayer of snapshotsOver(m, LID.GRACE_S + 2)) {
+      for (const [slot, snapshot] of byPlayer) {
+        const count = snapshot.selfEvents.filter((e) => e.kind === SelfEventKind.SourBleed).length;
+        if (slot === 0) mine += count;
+        else theirs += count;
+      }
+    }
+    assert.equal(mine, 1);
+    assert.equal(theirs, 0, 'where the other navy is bleeding is not your information');
   });
 });

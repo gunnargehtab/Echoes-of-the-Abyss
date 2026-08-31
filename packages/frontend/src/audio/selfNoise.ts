@@ -13,7 +13,7 @@
  * flavour: remove it and the economy of noise stops being felt at all.
  */
 
-import { SILENT_RUNNING } from '@echoes/shared';
+import { LID, SILENT_RUNNING } from '@echoes/shared';
 
 /**
  * SPEC — §4's table. Each band gives the self bed's level and what it does to
@@ -135,6 +135,63 @@ export function selfMixFor(sig: number, silentRunning: boolean): SelfMix {
     label: band.label,
   };
 }
+
+/**
+ * The Lid, as a mix — docs/audio-direction.md §4, "The Lid".
+ *
+ * SPEC for the shape, TUNABLE for the levels. The shape is the decision: a
+ * texture whose level rises with the grace *spent*, so the rise is the
+ * countdown, and a pulse that only starts once the bleed does.
+ *
+ * Deliberately thin and high. The self bed already owns the low band, and the
+ * doc reserves the low band for a crush cue that does not exist yet — the two
+ * are opposite instructions and may not be built from the same material.
+ */
+export const SOUR_MIX = {
+  /** TUNABLE — peak texture level while merely souring, linear. */
+  GRACE_GAIN: 0.16,
+  /** TUNABLE — level once the hull is bleeding. Audibly a different state. */
+  BLEED_GAIN: 0.3,
+  /** TUNABLE — band-pass centre, Hz. Above the bed's top cutoff (1,100 Hz). */
+  CENTRE_HZ: 1900,
+  /** SPEC — §4's table: the bleed pulses at 0.6 Hz, the grace does not pulse. */
+  BLEED_RATE_HZ: 0.6,
+  /** TUNABLE — seconds to ramp the texture, so drifting in is not an onset. */
+  RAMP_S: 1,
+} as const;
+
+/**
+ * What the Lid sounds like, given the worst sour exposure in the fleet.
+ *
+ * Worst and not per-hull: twelve stacked textures would be mud, and the
+ * question this answers is "is my force in the sour", not "how is hull seven".
+ *
+ * `sourS` is seconds accrued, straight off `OwnUnit.sourS` — the server's
+ * number, not a client-side clock, so the sound and the card count the same
+ * grace down. Bleeding is `>= LID.GRACE_S`, the same comparison the HUD's
+ * `SOUR — BLEEDING` line makes, so the ear and the words cannot disagree.
+ */
+export interface SourMix {
+  /** Texture level, linear. Zero when no hull has any sour on it. */
+  gain: number;
+  /** Pulse rate, Hz. Zero while the grace is still running. */
+  rateHz: number;
+  /** True once the worst hull is past its grace. Drives the HUD label too. */
+  bleeding: boolean;
+}
+
+export function sourMixFor(sourS: number): SourMix {
+  if (sourS <= 0) return { gain: 0, rateHz: 0, bleeding: false };
+  if (sourS >= LID.GRACE_S) {
+    return { gain: SOUR_MIX.BLEED_GAIN, rateHz: SOUR_MIX.BLEED_RATE_HZ, bleeding: true };
+  }
+  // Linear in the grace *spent*. A hull twelve seconds into its twenty is
+  // louder than one three seconds in, which is the countdown made audible.
+  return { gain: SOUR_MIX.GRACE_GAIN * (sourS / LID.GRACE_S), rateHz: 0, bleeding: false };
+}
+
+/** SPEC — §4's table: the bite is 1.5 s, and it descends. */
+export const SOUR_BITE_S = 1.5;
 
 /**
  * How long the break-silence transient lasts, seconds.

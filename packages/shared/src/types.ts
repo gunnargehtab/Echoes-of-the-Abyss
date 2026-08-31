@@ -595,10 +595,13 @@ export enum SelfEventKind {
   /**
    * Violence landed on one of your units — a gun, ordnance, or fauna.
    *
-   * Never crush attrition or the Directorate's shallow bleed: docs/ui-ux.md
-   * §8 gives permanence its own channel (the hatched health bar), and an
-   * attrition tick is a cost being paid, not an attack being made. Hazards
-   * are likewise excluded — a hazard announces itself with its warning phase.
+   * Never crush attrition, the Directorate's shallow bleed, or the Lid's:
+   * docs/ui-ux.md §8 gives permanence its own channel (the hatched health
+   * bar), and an attrition tick is a cost being paid, not an attack being
+   * made. Hazards are likewise excluded — a hazard announces itself with its
+   * warning phase. Sour exposure gets `SourBleed` below rather than a share
+   * of this one, and for the reason stated there: what it announces is the
+   * moment the ledger opens, not the hull coming off it.
    */
   Damaged = 3,
   /**
@@ -610,6 +613,24 @@ export enum SelfEventKind {
    * stall.
    */
   HarvesterIdle = 4,
+  /**
+   * A hull's sour grace ran out and the Lid began to bleed it —
+   * docs/systems-depth.md §2, docs/audio-direction.md §4 "The Lid".
+   *
+   * The one exception to `Damaged`'s exclusion of attrition, and it is an
+   * exception about *timing* rather than about violence. The exclusion holds
+   * because attrition is a cost being paid rather than an attack being made,
+   * and a per-tick cost has no moment to announce. Sour exposure has exactly
+   * one: the instant the grace is spent, the hull crosses from paying nothing
+   * to paying unhealable hull, and it does so on a clock the player started.
+   * That edge is news; the bleeding either side of it is state, which the
+   * card and the ribbon already carry.
+   *
+   * Raised on the crossing edge only, so a hull bleeding for a minute raises
+   * this once. Recovering below the grace re-arms it, because a hull that
+   * dived, recovered and climbed back has spent its grace twice.
+   */
+  SourBleed = 5,
 }
 
 export interface SelfEvent {
