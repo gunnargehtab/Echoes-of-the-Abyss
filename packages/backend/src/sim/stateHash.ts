@@ -72,7 +72,7 @@ export function hashWorld(world: SimWorld): number {
   // The world's own entities, ascending. Index in this list is the identity
   // the hash uses; see the note above.
   const live: number[] = [];
-  for (let eid = 0; eid < Position.x.length; eid++) {
+  for (let eid = 0; eid <= world.maxEid; eid++) {
     if (hasComponent(world, Position, eid)) live.push(eid);
   }
   const ordinalOf = new Map<number, number>();

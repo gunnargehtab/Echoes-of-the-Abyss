@@ -1085,7 +1085,7 @@ export class Match {
     if (economy.crystal < (stats.crystalCost ?? 0)) return false;
 
     let anchored = false;
-    for (let eid = 0; eid < Structure.kind.length; eid++) {
+    for (let eid = 0; eid <= this.world.maxEid; eid++) {
       if (!hasComponent(this.world, Structure, eid)) continue;
       const d = Math.hypot(Position.x[eid]! - x, Position.y[eid]! - y);
       const otherRadius = structureStatsFor(Structure.kind[eid] as StructureKind).radiusM;
@@ -1152,7 +1152,7 @@ export class Match {
   private factionOf(slot: number): Faction {
     // Any surviving entity of the slot knows its faction; the Bastion always
     // exists while the player does.
-    for (let eid = 0; eid < Owner.slot.length; eid++) {
+    for (let eid = 0; eid <= this.world.maxEid; eid++) {
       if (hasComponent(this.world, Owner, eid) && Owner.slot[eid] === slot) {
         return Owner.faction[eid] as Faction;
       }
@@ -1280,7 +1280,7 @@ export class Match {
    */
   private driftTick(): void {
     this.world.driftNoise.fill(0);
-    for (let eid = 0; eid < Acoustic.sig.length; eid++) {
+    for (let eid = 0; eid <= this.world.maxEid; eid++) {
       if (!hasComponent(this.world, Acoustic, eid)) continue;
       if (!hasComponent(this.world, Owner, eid)) continue;
       if (Owner.slot[eid] === DRIFT_SLOT) continue;
@@ -1525,7 +1525,7 @@ export class Match {
   private eliminate(slot: number): void {
     if (this.eliminated.has(slot)) return;
     this.eliminated.add(slot);
-    for (let eid = 0; eid < Owner.slot.length; eid++) {
+    for (let eid = 0; eid <= this.world.maxEid; eid++) {
       if (!hasComponent(this.world, Owner, eid) || Owner.slot[eid] !== slot) continue;
       this.world.production.delete(eid);
       this.echo.forget(eid);
@@ -1563,7 +1563,7 @@ export class Match {
     let bestSlot = -1;
     let bestD2 = Infinity;
     let bestFaction = Faction.Bathyarch;
-    for (let other = 0; other < Owner.slot.length; other++) {
+    for (let other = 0; other <= this.world.maxEid; other++) {
       if (!hasComponent(this.world, Owner, other)) continue;
       if (Owner.slot[other] === DRIFT_SLOT) continue;
       if (!hasComponent(this.world, Position, other)) continue;
@@ -1666,8 +1666,10 @@ export class Match {
   private collectOwnUnits(slot: number): OwnUnit[] {
     const out: OwnUnit[] = [];
     // bitecs entity ids are dense from 0; iterating the Owner store directly is
-    // cheaper than a query for this small, per-slot filtered read.
-    for (let eid = 0; eid < Owner.slot.length; eid++) {
+    // cheaper than a query for this small, per-slot filtered read — but only
+    // when bounded by `maxEid`. The store's own length is the world capacity,
+    // which would make this walk 100,000 slots to read a dozen hulls.
+    for (let eid = 0; eid <= this.world.maxEid; eid++) {
       if (!hasComponent(this.world, Owner, eid)) continue;
       if (Owner.slot[eid] !== slot) continue;
       if (!hasComponent(this.world, Unit, eid)) continue;
@@ -1739,7 +1741,7 @@ export class Match {
    */
   private collectOwnOrdnance(slot: number): OwnOrdnance[] {
     const out: OwnOrdnance[] = [];
-    for (let eid = 0; eid < Owner.slot.length; eid++) {
+    for (let eid = 0; eid <= this.world.maxEid; eid++) {
       if (!hasComponent(this.world, Owner, eid)) continue;
       if (Owner.slot[eid] !== slot) continue;
       if (!hasComponent(this.world, Ordnance, eid)) continue;
@@ -1760,7 +1762,7 @@ export class Match {
 
   private collectOwnStructures(slot: number): OwnStructure[] {
     const out: OwnStructure[] = [];
-    for (let eid = 0; eid < Owner.slot.length; eid++) {
+    for (let eid = 0; eid <= this.world.maxEid; eid++) {
       if (!hasComponent(this.world, Owner, eid)) continue;
       if (Owner.slot[eid] !== slot) continue;
       if (!hasComponent(this.world, Structure, eid)) continue;

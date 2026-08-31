@@ -122,7 +122,7 @@ the game playable on a phone.
 
 ```bash
 npm run build       # shared -> frontend -> backend
-npm test            # 42 tests across shared + backend
+npm test            # 981 tests across shared, frontend and backend (~35s)
 npm run type-check
 npm run lint
 ```
