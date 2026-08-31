@@ -12,6 +12,7 @@
  */
 
 import { ATTENDING_ATTENDANCE } from './attendance.ts';
+import { CHORD_APTITUDE } from './aptitude.ts';
 import { LEDGER_ASSET_RECOVERY } from './assetRecovery.ts';
 import { LEDGER_BAFFLE } from './baffle.ts';
 import { LEDGER_EXPOSURE } from './exposure.ts';
@@ -31,6 +32,7 @@ export * from './view.ts';
 export * from './runtime.ts';
 export {
   ATTENDING_ATTENDANCE,
+  CHORD_APTITUDE,
   LEDGER_ASSET_RECOVERY,
   LEDGER_BAFFLE,
   LEDGER_EXPOSURE,
@@ -53,6 +55,7 @@ export const MISSIONS: readonly MissionDefinition[] = [
   LEDGER_ITEM_NINE,
   SEEDING_TEND,
   ATTENDING_ATTENDANCE,
+  CHORD_APTITUDE,
 ];
 
 export function missionById(id: string): MissionDefinition | undefined {

@@ -24,6 +24,7 @@ import { MARR_PLATEAU } from './missions/marrPlateau.ts';
 import { MOUTH_RIM } from './missions/mouthRim.ts';
 import { NINEFOLD_FACE_SIX } from './missions/ninefoldFaceSix.ts';
 import { NINEFOLD_WORKINGS } from './missions/ninefoldWorkings.ts';
+import { OUTER_FORMATIONS } from './missions/outerFormations.ts';
 import { SORROWGATE } from './missions/sorrowgate.ts';
 import type { MapDefinition } from './types.ts';
 
@@ -40,6 +41,7 @@ export {
   MOUTH_RIM,
   NINEFOLD_FACE_SIX,
   NINEFOLD_WORKINGS,
+  OUTER_FORMATIONS,
   SORROWGATE,
   VENTFRONT_DIVIDE,
 };
@@ -81,6 +83,7 @@ export const MISSION_MAPS: readonly MapDefinition[] = [
   HOLDING_BOARD,
   MARR_PLATEAU,
   ATTENDING_GALLERIES,
+  OUTER_FORMATIONS,
 ];
 
 export function missionMapById(id: string): MapDefinition | undefined {
