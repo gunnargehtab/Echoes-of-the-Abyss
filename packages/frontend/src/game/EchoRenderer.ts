@@ -43,6 +43,7 @@ import {
   ACTIVE_SONAR,
   Biome,
   DEPTH,
+  DRIFT,
   DEPTH_BANDS,
   inLid,
   LID,
@@ -83,6 +84,7 @@ import {
   type DrawReport,
   type EchoMarkInfo,
   type HazardState,
+  type ShoalTell,
   type EchoSnapshot,
   type ExposureReport,
   type GameOverPayload,
@@ -428,6 +430,15 @@ function drawFaunaSilhouette(
         color: FAUNA_COLOR,
         alpha: alpha * 0.4,
       });
+      break;
+    }
+    case FaunaSpecies.Lampfry: {
+      // Rarely earned — a SIG-4 shoal is nearly inaudible — but a contact
+      // that classifies as Lampfry should echo the public glow's language:
+      // small motes, no closed body.
+      g.circle(x - r * 0.5, y, r * 0.3).fill(body);
+      g.circle(x + r * 0.4, y - r * 0.35, r * 0.3).fill(body);
+      g.circle(x + r * 0.2, y + r * 0.45, r * 0.3).fill(body);
       break;
     }
     case FaunaSpecies.Rasp: {
@@ -805,6 +816,12 @@ export class EchoRenderer {
    * read is not a telegraph.
    */
   private hazards: HazardState[] = [];
+  /**
+   * Lampfry shoals, once per Echo tick. Public to every player by design —
+   * the glow is light, not sound (docs/bestiary.md §4), and the scatter is
+   * the one tell a silent hull cannot suppress.
+   */
+  private shoals: ShoalTell[] = [];
   /**
    * Thermal Draw. A rate, so it is drawn as one — see `drawHud`.
    */
@@ -2751,6 +2768,7 @@ export class EchoRenderer {
     this.marks = [];
     this.loggedMarks.clear();
     this.hazards = [];
+    this.shoals = [];
     this.peakSig = 0;
     this.fleetSig = 0;
     this.fleetSilent = false;
@@ -2772,6 +2790,7 @@ export class EchoRenderer {
     this.exposure = snapshot.exposure;
     this.marks = snapshot.marks;
     this.hazards = snapshot.hazards;
+    this.shoals = snapshot.shoals;
     this.drawReport = snapshot.draw;
     this.biomass = snapshot.biomass;
     this.driftHealth = snapshot.driftHealth;
@@ -3706,6 +3725,50 @@ export class EchoRenderer {
    * docs/economy.md §5 wants a player to read income off. So the drawing
    * scales with it rather than merely fading.
    */
+  /**
+   * Lampfry shoals — docs/bestiary.md §4, the scatter tell.
+   *
+   * Drawn for every player from the public shoal layer. A formed shoal is a
+   * tight cluster of glowing motes — a landmark to learn, quiet like chart
+   * data. A scattered one is the same motes flung wide and dimmed, plus the
+   * 300 m trigger ring: the tell says *something is inside this circle*, and
+   * the ring is that sentence drawn rather than implied. Fauna light is not
+   * world light (docs/style-neon-noir.md), so this lives in the HUD layer
+   * with the other overlays.
+   */
+  private drawShoals(g: Graphics): void {
+    const motes = 5;
+    for (const shoal of this.shoals) {
+      // Deterministic per-shoal phase so the clusters differ without a frame
+      // of animation state to carry.
+      const phase = (shoal.id % 7) * 0.9;
+      const spread = shoal.scattered ? 90 : 26;
+      const alpha = shoal.scattered ? 0.35 : 0.8;
+      for (let i = 0; i < motes; i++) {
+        const angle = phase + (i / motes) * Math.PI * 2;
+        const reach = spread * (0.5 + ((i * 53 + shoal.id * 29) % 10) / 18);
+        this.fillCircle(
+          g,
+          shoal.x + Math.cos(angle) * reach,
+          shoal.y + Math.sin(angle) * reach,
+          shoal.scattered ? 5 : 7,
+          null,
+          { color: FAUNA_COLOR, alpha }
+        );
+      }
+      if (shoal.scattered) {
+        // The disclosure, drawn at its true size: something is within 300 m
+        // of the glow — never what, whose, or exactly where.
+        if (this.traceCircle(g, shoal.x, shoal.y, DRIFT.LAMPFRY_SCATTER_RADIUS_M, null)) {
+          g.stroke({ width: 1.5, color: FAUNA_COLOR, alpha: 0.4 });
+        }
+      } else {
+        // A soft halo, so a formed shoal reads as one glow at survey zoom.
+        this.fillCircle(g, shoal.x, shoal.y, 40, null, { color: FAUNA_COLOR, alpha: 0.12 });
+      }
+    }
+  }
+
   private drawEchoMarks(g: Graphics): void {
     for (const mark of this.marks) {
       const style = MARK_STYLE[mark.kind];
@@ -3864,6 +3927,7 @@ export class EchoRenderer {
     // Ground language first, into the polyline layer under the marks.
     this.drawStaticHazardSites(g);
     this.drawHazards(g);
+    this.drawShoals(g);
     this.drawEchoMarks(g);
 
     for (const [id, entry] of this.tracked) {

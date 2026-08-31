@@ -13,8 +13,8 @@
  * nearest.** A Consortium column can pull a swarm off a Commune harvester
  * simply by existing nearby, and both players know it.
  *
- * Three species are implemented, one per behaviour class. The rest of the
- * roster is listed in the doc with a status marker.
+ * Which of the roster is simulated is tracked in the doc's Implementation
+ * Status table, not here.
  */
 
 export enum FaunaSpecies {
@@ -26,6 +26,8 @@ export enum FaunaSpecies {
   Sounder = 2,
   /** Scavenger — the swarm drawn to Echo Marks, not live units. */
   Rasp = 3,
+  /** Ambient — the schooling fry whose scatter is the tell silence cannot buy off. */
+  Lampfry = 4,
 }
 
 /**
@@ -81,6 +83,18 @@ export interface FaunaStats {
    * exposure to the rest (§4, "Where the Drift lives").
    */
   depthBandM: number;
+  /**
+   * How far either side of the working depth a *population* is seeded, in
+   * metres — §4's "Seeded across" column, and the other of that table's two
+   * independent answers about depth.
+   *
+   * Zero for every hunter: a pack chases immediately, so where it starts
+   * barely matters, and "at depth" is the honest word for it. Non-zero only
+   * for the ambient species, whose whole mechanic is being somewhere — their
+   * vertical extent is entirely a property of how they are seeded, because
+   * they never pursue anything.
+   */
+  seedSpreadM: number;
 }
 
 /** SPEC — docs/bestiary.md §4 stat blocks, transcribed. */
@@ -91,6 +105,7 @@ export const FAUNA_STATS: Record<FaunaSpecies, FaunaStats> = {
     // leaves it, so the band is the tightest in the roster.
     workingDepthM: 600,
     depthBandM: 250,
+    seedSpreadM: 0,
     name: 'Ashgrazer',
     sigIdle: 14,
     // A committed herd is a stampede, and a stampede is loud.
@@ -114,6 +129,7 @@ export const FAUNA_STATS: Record<FaunaSpecies, FaunaStats> = {
     // at 2,400 m well outside it.
     workingDepthM: 900,
     depthBandM: 400,
+    seedSpreadM: 0,
     name: 'Draymaw',
     sigIdle: 26,
     sigActive: 40,
@@ -137,6 +153,7 @@ export const FAUNA_STATS: Record<FaunaSpecies, FaunaStats> = {
     // predator, and it is this one.
     workingDepthM: 2000,
     depthBandM: 700,
+    seedSpreadM: 0,
     name: 'Sounder',
     sigIdle: 45,
     // "100 calling" — one of the largest sustained emissions on the map.
@@ -160,6 +177,7 @@ export const FAUNA_STATS: Record<FaunaSpecies, FaunaStats> = {
     // the table.
     workingDepthM: 800,
     depthBandM: 500,
+    seedSpreadM: 0,
     name: 'Rasp',
     // "20 swarm" — the whole swarm is one entity, and this is its resting hum.
     sigIdle: 20,
@@ -182,6 +200,36 @@ export const FAUNA_STATS: Record<FaunaSpecies, FaunaStats> = {
     groupSize: 1,
     // The cloud the renderer draws, not any one fry.
     lengthM: 9,
+  },
+  [FaunaSpecies.Lampfry]: {
+    species: FaunaSpecies.Lampfry,
+    // "150-350 m — the Shelf, floored by the Lid and going no deeper" (§4).
+    // No pursuit band at all: the species never commits, so its vertical
+    // extent is entirely a property of how it is seeded.
+    workingDepthM: 250,
+    depthBandM: 0,
+    seedSpreadM: 100,
+    name: 'Lampfry',
+    // SIG 4 at rest and 4 scattered — the scatter is a purely visual tell
+    // with no acoustic component, which is the entire species (§4).
+    sigIdle: 4,
+    sigActive: 4,
+    hyd: 60,
+    // "Never commits." Infinity rather than a large number, so no modifier
+    // table, spike or multiplier can ever add up to a shoal attacking.
+    interest: Number.POSITIVE_INFINITY,
+    commit: Number.POSITIVE_INFINITY,
+    biomass: 0,
+    maxHp: 5,
+    // A shoal holds its water; it does not travel. Scatter is a state, not a
+    // move order.
+    speed: 0,
+    damagePerS: 0,
+    attackRangeM: 0,
+    // One entity is one shoal, like the Rasp's swarm.
+    groupSize: 1,
+    // The glow the renderer draws — the shoal cloud, not a fry.
+    lengthM: 14,
   },
 };
 

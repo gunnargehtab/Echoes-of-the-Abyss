@@ -67,7 +67,9 @@ Stat blocks are prototype intent, in the manner of [units.md](units.md). Interes
 | --- | --- | --- | --- | --- | --- |
 | 4 | 60 | — | never | 0 | 5 |
 
-Harmless, and the most tactically important animal in the game. Lampfry **scatter** from any entity within 300 m regardless of SIG, including a silent-running scout. A scattering shoal is a purely *visual* tell — the one piece of information in the Rift that a silent unit cannot suppress, and the reason the Commune's stealth has an answer at all. Scattered shoals reform after 25 s.
+Harmless, and the most tactically important animal in the game. Lampfry **scatter** from any entity within 300 m regardless of SIG, including a silent-running scout. A scattering shoal is a purely *visual* tell — the one piece of information in the Rift that a silent unit cannot suppress, and the reason the Commune's stealth has an answer at all. Scattered shoals reform 25 s after the last intruder leaves.
+
+The tell is **public**, the way hazards and Drift Health are public: a shoal's glow is light in the darkest water on Earth, not sound, so every commander sees every shoal and sees the moment one scatters. That is a deliberate disclosure with a hard edge — a scatter says *something is within 300 m of this glow* and never what, whose, how many, or exactly where. Routing it through the Echo Layer would be wrong twice over: a SIG-4 shoal would be inaudible (a tell nobody can read), and the trigger is proximity precisely so that silence cannot suppress it. Guns never auto-engage the ambient species for the same inaudibility reason mines are never auto-engaged — killing a shoal is always a deliberate order, and §6 prices what burning a region's tells costs.
 
 **Tetherjelly** — colonial drifting absorber. Kelp Forest, thermocline boundaries.
 
@@ -149,7 +151,7 @@ Both are now wrong in the same way and fixed together. **A creature has a workin
 
 **Two columns, because a creature's depth has two independent answers.** *Seeded across* is where the population sits when the map is built; *pursues within* is how far one will leave that to chase something. They are not the same question, and for two species only one of them has an answer at all: Lampfry and Tetherjelly never commit, so they have no pursuit band, and their vertical extent is entirely a property of how they are seeded. Collapsing both into one number would make that column mean two things depending on the row, which is how a table starts lying.
 
-*Seeded across* reads **at depth** for the five hunters because that is what the code does today — `spawnFauna` places every individual at exactly its working depth, so a herd is a horizontal scatter and a vertical line. That is fine for a pack that will immediately chase, and wrong for a shoal whose whole mechanic is being somewhere. **Seeding a population across a band is therefore a prerequisite for Lampfry and Tetherjelly and for nobody else** — their "reaches" column is describing that spread, not a chase, and until it exists a Lampfry shoal would sit at a single depth and the Shelf-wide tell below would not be true.
+*Seeded across* reads **at depth** for the five hunters because a pack chases immediately, so where it starts barely matters — every hunter is placed at exactly its working depth, a horizontal scatter and a vertical line. The two ambient species are seeded **across their band**: each shoal or cluster takes a deterministic offset within ±100 m of the working depth, evenly spread rather than randomly bunched, because their "reaches" column describes that spread and not a chase. Without it a Lampfry shoal would sit at a single depth and the Shelf-wide tell below would not be true.
 
 Read the last column as the mechanic. **Depth is cover from some of the Drift and exposure to the rest.** A harvester working a nodule field at 600 m is in Draymaw country; take the same harvester down to the crystal and the packs cannot follow — but something far larger is already there. Nothing in the Drift covers the whole water column, and that is deliberate: a creature that could reach anything would make depth meaningless against the one part of the map that does not negotiate.
 
@@ -169,7 +171,7 @@ One open question this table does not settle, flagged rather than quietly decide
 
 - §4 gives the Tetherjelly two homes, "Kelp Forest, thermocline boundaries", and a species carries one working depth. The row above chooses the thermocline, because it is the boundary the species is named for and the one this section already noted it "could never reach". A Kelp Forest population needs either a second seeding depth per map or a second entry, and is not in this table.
 
-*The four bands above are authored ahead of their species.* Lampfry, Rasp, Tetherjelly and Hollow are not yet simulated; see Implementation Status.
+*The four newest bands above were authored ahead of their species*; see Implementation Status for which are now simulated.
 
 *Creatures do not yet migrate vertically on their own.* They hold their working depth until something worth chasing pulls them off it. Seeded migration along the corridors [hazards.md](hazards.md) §6 describes is still unwritten.
 
@@ -260,7 +262,7 @@ Three species are simulated, one per behaviour class. The framework is the deliv
 | Ashgrazer | Grazer | **Implemented** — herd, full aggro ladder, stampede SIG, Biomass |
 | Draymaw | Predator | **Implemented** — the staple pack, and the animal most likely to answer a careless economy |
 | Sounder | Megafauna | **Implemented** — answers pings, destroys structures by transit, ignores small units. Migration along fixed corridors is still unwritten ([hazards.md](hazards.md) §6) |
-| Lampfry | Ambient | Not started — the scatter tell is a *visual* channel with no acoustic component, so it needs renderer work rather than simulation |
+| Lampfry | Ambient | **Implemented** — shoals seed across the Shelf band, scatter on proximity regardless of SIG, and reform 25 s after the last intruder leaves. The glow and the scatter are public (light, not sound); a Failing region's shoals die off, which is §6's "scatter tells stop working" |
 | Tetherjelly | Ambient | Not started — living terrain that lowers local PF; the hazard framework's PF hook is the seam it will use |
 | Rasp | Scavenger | **Implemented** — drifts to the strongest battle residue in smelling range ([systems-echo.md](systems-echo.md) §7), feeds loudly, and eats the mark roughly four times faster than it would fade alone. The aggro ladder outranks scavenging, so a swarm is still a creature you can pull off a wreck by being loud |
 | Hollow | Predator | Not started |

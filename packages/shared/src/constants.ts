@@ -978,6 +978,19 @@ export const DRIFT = {
   SCAVENGE_STRIP_FACTOR: 4,
 
   /**
+   * SPEC — §4. "Lampfry scatter from any entity within 300 m regardless of
+   * SIG, including a silent-running scout."
+   *
+   * A proximity test in three dimensions, and deliberately **not** routed
+   * through the Echo Layer: the trigger exists precisely so that silence
+   * cannot suppress it, and a SIG gate anywhere in this path would quietly
+   * reintroduce the thing it answers.
+   */
+  LAMPFRY_SCATTER_RADIUS_M: 300,
+  /** SPEC — §4. "Scattered shoals reform 25 s after the last intruder leaves." */
+  LAMPFRY_REFORM_S: 25,
+
+  /**
    * Drift Health — §6. "The map can be killed."
    *
    * A coarse region grid rather than per-biome, because health is a thing that

@@ -373,8 +373,21 @@ export function spawnFauna(
   // it — a creature cannot sit below the sea floor any more than a hull can.
   // Every creature used to be seeded at a flat 300 m, which made the roster's
   // habitats decoration and put the Sounder on the Shelf.
+  //
+  // Ambient species are seeded *across* their band rather than at depth
+  // (§4's "Seeded across" column): they never pursue, so their vertical
+  // extent is entirely a property of this line. The offset walks the band on
+  // the golden-ratio sequence keyed by match-local id — evenly spread, no
+  // draw from the match RNG (a mission spawning one shoal must not shift
+  // every later roll), and deterministic across processes for the reason the
+  // sense stagger below gives.
+  let restingDepth = stats.workingDepthM;
+  if (stats.seedSpreadM > 0) {
+    const fraction = (((localIdOf(world, eid) ?? 0) * 0.6180339887498949) % 1) * 2 - 1;
+    restingDepth += fraction * stats.seedSpreadM;
+  }
   Position.depth[eid] =
-    options.depth ?? Math.min(stats.workingDepthM, world.terrain.floorAt(options.x, options.y));
+    options.depth ?? Math.min(restingDepth, world.terrain.floorAt(options.x, options.y));
 
   addComponent(world, Acoustic, eid);
   Acoustic.sig[eid] = stats.sigIdle;
@@ -410,9 +423,11 @@ export function spawnFauna(
   Fauna.senseS[eid] = ((localIdOf(world, eid) ?? 0) % 30) / 60;
   Fauna.homeX[eid] = options.x;
   Fauna.homeY[eid] = options.y;
-  // Written even for species that never scavenge — bitecs recycles entity
-  // ids, and a creature born on a dead swarm's id must not inherit its wreck.
+  // Written even for species that never scavenge or scatter — bitecs recycles
+  // entity ids, and a creature born on a dead swarm's id must not inherit its
+  // wreck, nor a shoal a dead shoal's fright.
   Fauna.scavengeMarkId[eid] = 0;
+  Fauna.scatterS[eid] = 0;
 
   return eid;
 }

@@ -101,6 +101,15 @@ export function faunaSystem(world: SimWorld, destroyed: number[]): void {
 
     const stats = faunaStatsFor(Fauna.species[eid] as FaunaSpecies);
 
+    // The ambient species never commit, never chase and never listen — a
+    // shoal is a place, not a predator — so the whole ladder is skipped, and
+    // with it the per-candidate path integrals that make `listen` the
+    // expensive half of the Drift.
+    if (Fauna.species[eid] === FaunaSpecies.Lampfry) {
+      lampfryTick(world, eid, dt, others);
+      continue;
+    }
+
     Fauna.senseS[eid] = Fauna.senseS[eid]! - dt;
     if (Fauna.senseS[eid]! <= 0) {
       Fauna.senseS[eid] = DRIFT.SENSE_INTERVAL_S;
@@ -317,6 +326,62 @@ function transit(
       destroyed.push(other);
       // Nobody rendered this either — the same case hazards.ts makes.
       world.environmentalDeaths.add(other);
+    }
+  }
+}
+
+/**
+ * A Lampfry shoal — docs/bestiary.md §4, and the reason the Commune's stealth
+ * has an answer at all.
+ *
+ * The shoal holds its water and does exactly one thing: scatter from any
+ * entity within 300 m **regardless of SIG**, reforming 25 s after the last
+ * intruder leaves. The trigger is a three-dimensional proximity test and
+ * deliberately never touches the Echo Layer — the tell exists precisely so
+ * that silence cannot suppress it, and any SIG term in this function would
+ * quietly reintroduce the thing it answers. Resist routing it through
+ * detection (#306 flags exactly that temptation).
+ *
+ * §6's Failing row is also enforced here: "Lampfry gone (scatter tells stop
+ * working)". A shoal in failing water dies off — an environmental death the
+ * map caused, so nobody is paid for it — and with the shoal goes the tell,
+ * which is the concealment consequence the Drift Health table promises.
+ */
+function lampfryTick(world: SimWorld, eid: number, dt: number, others: number[]): void {
+  if (Fauna.scatterS[eid]! > 0) {
+    Fauna.scatterS[eid] = Math.max(0, Fauna.scatterS[eid]! - dt);
+  }
+
+  Fauna.senseS[eid] = Fauna.senseS[eid]! - dt;
+  if (Fauna.senseS[eid]! > 0) return;
+  Fauna.senseS[eid] = DRIFT.SENSE_INTERVAL_S;
+
+  const fx = Position.x[eid]!;
+  const fy = Position.y[eid]!;
+  const fd = Position.depth[eid]!;
+
+  if (world.drift.at(fx, fy) < DRIFT.HEALTH_FAILING) {
+    Health.hp[eid] = 0;
+    // The map killed it; reap still records the loss against the region.
+    world.environmentalDeaths.add(eid);
+    return;
+  }
+
+  const radius2 = DRIFT.LAMPFRY_SCATTER_RADIUS_M * DRIFT.LAMPFRY_SCATTER_RADIUS_M;
+  for (let i = 0; i < others.length; i++) {
+    const other = others[i]!;
+    if (other === eid) continue;
+    // The Drift does not startle itself: a Draymaw and a shoal share water.
+    if (Owner.slot[other] === DRIFT_SLOT) continue;
+    if (Health.hp[other]! <= 0) continue;
+    const dx = Position.x[other]! - fx;
+    const dy = Position.y[other]! - fy;
+    const dz = Position.depth[other]! - fd;
+    // "Any entity" is the doc's word and the query's: hulls, structures and
+    // ordnance alike — a torpedo tearing through a shoal scatters it.
+    if (dx * dx + dy * dy + dz * dz <= radius2) {
+      Fauna.scatterS[eid] = DRIFT.LAMPFRY_REFORM_S;
+      return;
     }
   }
 }

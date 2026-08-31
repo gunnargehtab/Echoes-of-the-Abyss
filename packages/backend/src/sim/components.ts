@@ -191,6 +191,12 @@ export const Fauna = defineComponent({
    * spot it first smelled it at.
    */
   scavengeMarkId: Types.ui32,
+  /**
+   * Lampfry only — seconds until a scattered shoal reforms. Zero means the
+   * shoal is formed; any presence inside the scatter radius pins it at the
+   * full reform window (docs/bestiary.md §4).
+   */
+  scatterS: Types.f32,
 });
 
 /** Tag-ish component: silent running trades speed and weapons for quiet. */

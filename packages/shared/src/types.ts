@@ -730,6 +730,31 @@ export interface EchoSnapshot {
    * past is a stat you buy, and it is the only thing HYD is a hard wall for.
    */
   marks: EchoMarkInfo[];
+  /**
+   * Every Lampfry shoal on the map, and whether it is scattered. Public, like
+   * hazards and Drift Health: a shoal's glow is light, not sound, and the
+   * scatter tell is the one disclosure the design *wants* every commander to
+   * read (docs/bestiary.md §4). It says something is within 300 m of the glow
+   * — never what, whose, or exactly where.
+   */
+  shoals: ShoalTell[];
+}
+
+/**
+ * One Lampfry shoal, as every player sees it.
+ *
+ * Deliberately not a `Contact`: a contact is the resolved product of
+ * listening, per player, and a shoal is a public landmark. The id is the
+ * creature's match-local id — stable for the shoal's life, and it names
+ * nothing the Echo Layer would withhold.
+ */
+export interface ShoalTell {
+  id: number;
+  x: number;
+  y: number;
+  depth: number;
+  /** True while dispersed — the tell itself. */
+  scattered: boolean;
 }
 
 /** Broadcast once when the match resolves. Elimination is public. */

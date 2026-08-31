@@ -51,6 +51,7 @@ import {
   type OwnStructure,
   type OwnUnit,
   type ResourceNodeInfo,
+  type ShoalTell,
 } from '@echoes/shared';
 import {
   Acoustic,
@@ -540,6 +541,9 @@ export class Match {
     // treated as one entity"). Scattered anywhere: the Rasp's habitat is a
     // verb, and where things will die is not knowable at seed time.
     place(FaunaSpecies.Rasp, 3, false);
+    // Shoals, each one entity, spread across the Shelf band by spawnFauna's
+    // seeding — §6's Healthy row wants "Lampfry tells everywhere".
+    place(FaunaSpecies.Lampfry, 6, false);
   }
 
   private addNode(x: number, y: number, amount?: number, kind = ResourceKind.Nodule): void {
@@ -1629,6 +1633,11 @@ export class Match {
       }
     }
 
+    // Built once and shared across every snapshot: the shoal layer is public
+    // by design (docs/bestiary.md §4 — the glow is light, not sound), so
+    // every player gets the identical list.
+    const shoals = this.collectShoals();
+
     const snapshots = new Map<number, EchoSnapshot>();
     for (const slot of this.slots) {
       const units = this.collectOwnUnits(slot);
@@ -1661,9 +1670,35 @@ export class Match {
         draw: { ...drawFor(this.world, slot) },
         biomass: economyFor(this.world, slot).biomass,
         driftHealth: this.world.drift.snapshot(),
+        shoals,
       });
     }
     return snapshots;
+  }
+
+  /**
+   * Every living Lampfry shoal, for the public tell layer.
+   *
+   * The one place fauna state crosses the wire outside the contact path, and
+   * it carries exactly what docs/bestiary.md §4 discloses: where the glow is,
+   * and whether it is scattered. Match-local ids, like everything the wire
+   * speaks.
+   */
+  private collectShoals(): ShoalTell[] {
+    const out: ShoalTell[] = [];
+    for (let eid = 0; eid <= this.world.maxEid; eid++) {
+      if (!hasComponent(this.world, Fauna, eid)) continue;
+      if (Fauna.species[eid] !== FaunaSpecies.Lampfry) continue;
+      if (Health.hp[eid]! <= 0) continue;
+      out.push({
+        id: localIdOf(this.world, eid) ?? 0,
+        x: Position.x[eid]!,
+        y: Position.y[eid]!,
+        depth: Position.depth[eid]!,
+        scattered: Fauna.scatterS[eid]! > 0,
+      });
+    }
+    return out;
   }
 
   /** A player always sees their own units in full. */
