@@ -135,19 +135,23 @@ Every entry above names a habitat, and until now none of them meant anything: cr
 
 Both are now wrong in the same way and fixed together. **A creature has a working depth and a band it will pursue within, and it bites in three dimensions.**
 
-| Species | Working depth | Pursues within | Reaches |
-| --- | --- | --- | --- |
-| **Lampfry** | 250 m | ±100 m | 150–350 m — the Shelf, floored by the Lid and going no deeper |
-| **Ashgrazer** | 600 m | ±250 m | 350–850 m — the vent field it feeds on, and little else |
-| **Rasp** | 800 m | ±500 m | 300–1,300 m — no habitat, only the working ocean where things die |
-| **Draymaw** | 900 m | ±400 m | 500–1,300 m — nodule fields, the shipping lanes, the thermocline duct |
-| **Tetherjelly** | 1,200 m | ±100 m | 1,100–1,300 m — the duct itself, the boundary it is named for |
-| **Hollow** | 1,700 m | ±450 m | 1,250–2,150 m — trench walls, and the descent that arrives at them |
-| **Sounder** | 2,000 m | ±700 m | 1,300–2,700 m — the deep basins, and the Resonance Crystal at 2,400 m |
+| Species | Working depth | Seeded across | Pursues within | Reaches |
+| --- | --- | --- | --- | --- |
+| **Lampfry** | 250 m | ±100 m | never — does not commit | 150–350 m — the Shelf, floored by the Lid and going no deeper |
+| **Ashgrazer** | 600 m | at depth | ±250 m | 350–850 m — the vent field it feeds on, and little else |
+| **Rasp** | 800 m | at depth | ±500 m | 300–1,300 m — no habitat, only the working ocean where things die |
+| **Draymaw** | 900 m | at depth | ±400 m | 500–1,300 m — nodule fields, the shipping lanes, the thermocline duct |
+| **Tetherjelly** | 1,200 m | ±100 m | never — does not commit | 1,100–1,300 m — the duct itself, the boundary it is named for |
+| **Hollow** | 1,700 m | at depth | ±450 m | 1,250–2,150 m — trench walls, and the descent that arrives at them |
+| **Sounder** | 2,000 m | at depth | ±700 m | 1,300–2,700 m — the deep basins, and the Resonance Crystal at 2,400 m |
 
-Read the third column as the mechanic. **Depth is cover from some of the Drift and exposure to the rest.** A harvester working a nodule field at 600 m is in Draymaw country; take the same harvester down to the crystal and the packs cannot follow — but something far larger is already there. Nothing in the Drift covers the whole water column, and that is deliberate: a creature that could reach anything would make depth meaningless against the one part of the map that does not negotiate.
+**Two columns, because a creature's depth has two independent answers.** *Seeded across* is where the population sits when the map is built; *pursues within* is how far one will leave that to chase something. They are not the same question, and for two species only one of them has an answer at all: Lampfry and Tetherjelly never commit, so they have no pursuit band, and their vertical extent is entirely a property of how they are seeded. Collapsing both into one number would make that column mean two things depending on the row, which is how a table starts lying.
 
-The band is not a leash on where a creature *is* — it is a limit on how far it will chase. A herd is tied to its feeding ground; a migratory colossus is not, and its band is nearly three times the grazer's.
+*Seeded across* reads **at depth** for the five hunters because that is what the code does today — `spawnFauna` places every individual at exactly its working depth, so a herd is a horizontal scatter and a vertical line. That is fine for a pack that will immediately chase, and wrong for a shoal whose whole mechanic is being somewhere. **Seeding a population across a band is therefore a prerequisite for Lampfry and Tetherjelly and for nobody else** — their "reaches" column is describing that spread, not a chase, and until it exists a Lampfry shoal would sit at a single depth and the Shelf-wide tell below would not be true.
+
+Read the last column as the mechanic. **Depth is cover from some of the Drift and exposure to the rest.** A harvester working a nodule field at 600 m is in Draymaw country; take the same harvester down to the crystal and the packs cannot follow — but something far larger is already there. Nothing in the Drift covers the whole water column, and that is deliberate: a creature that could reach anything would make depth meaningless against the one part of the map that does not negotiate.
+
+The pursuit band is not a leash on where a creature *is* — it is a limit on how far it will chase. A herd is tied to its feeding ground; a migratory colossus is not, and its band is nearly three times the grazer's.
 
 **Two stretches of water hold nothing at all, and both are load-bearing.** Above 150 m is the Lid, and the Drift declines it for the same reason hulls do — a scatter tell in water nothing can loiter in is a tell nobody is there to read. Below 2,700 m the column is empty of animals entirely: the deepest water in the Rift is the one place the bestiary has no entry for, which is the Mouth's business and not the Drift's.
 
@@ -159,10 +163,9 @@ Three consequences worth stating plainly, because each is a design decision and 
 - **The Hollow guards the doorway, not the basement.** Its band straddles the 1,800 m line between Mid-Water and Abyssal rather than sitting in the trench floor, so what it threatens is the *descent* — the moment a raid commits past the duct. An ambush whose strike is one of the loudest events on the map belongs exactly where the map most wants to know that somebody just committed.
 - **The Rasp has no habitat, and its row says so.** Wrecks are wherever fighting was, so its ±500 m is the widest non-megafauna band in the table: it is the only creature whose reach is drawn from a verb rather than a place.
 
-Two open questions this table does not settle, flagged rather than quietly decided:
+One open question this table does not settle, flagged rather than quietly decided:
 
 - §4 gives the Tetherjelly two homes, "Kelp Forest, thermocline boundaries", and a species carries one working depth. The row above chooses the thermocline, because it is the boundary the species is named for and the one this section already noted it "could never reach". A Kelp Forest population needs either a second seeding depth per map or a second entry, and is not in this table.
-- For Lampfry and Tetherjelly, which never commit, "pursues within" describes nothing they do. Read their band as the vertical spread of a seeded population instead — how thick the shoal or the field is, not how far it chases.
 
 *The four bands above are authored ahead of their species.* Lampfry, Rasp, Tetherjelly and Hollow are not yet simulated; see Implementation Status.
 
