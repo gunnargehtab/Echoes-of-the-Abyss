@@ -410,6 +410,9 @@ export function spawnFauna(
   Fauna.senseS[eid] = ((localIdOf(world, eid) ?? 0) % 30) / 60;
   Fauna.homeX[eid] = options.x;
   Fauna.homeY[eid] = options.y;
+  // Written even for species that never scavenge — bitecs recycles entity
+  // ids, and a creature born on a dead swarm's id must not inherit its wreck.
+  Fauna.scavengeMarkId[eid] = 0;
 
   return eid;
 }

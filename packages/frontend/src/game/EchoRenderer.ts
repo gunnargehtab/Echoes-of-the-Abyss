@@ -430,6 +430,19 @@ function drawFaunaSilhouette(
       });
       break;
     }
+    case FaunaSpecies.Rasp: {
+      // A swarm is a cloud, not a body: three offset motes reading as "many
+      // small things", against the roster's single closed outlines.
+      g.circle(x - r * 0.6, y - r * 0.3, r * 0.45).fill(body);
+      g.circle(x + r * 0.5, y - r * 0.4, r * 0.35).fill(body);
+      g.circle(x, y + r * 0.5, r * 0.4).fill(body);
+      g.circle(x, y, r * 1.1).stroke({
+        width: 1 * inverseScale,
+        color: FAUNA_COLOR,
+        alpha: alpha * 0.5,
+      });
+      break;
+    }
   }
 }
 

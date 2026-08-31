@@ -957,6 +957,27 @@ export const DRIFT = {
   RENDERING_CONTRACT_RATE: 0.3,
 
   /**
+   * How far a Rasp swarm smells residue, in metres — docs/bestiary.md §4.
+   *
+   * A proximity test like WRECK_RADIUS_M above, and for the same reason: being
+   * drawn to a wreck is scent, not hearing, so the thermocline and terrain do
+   * not gate it. TUNABLE, but sized against the swarm's speed so §4's "arrive
+   * at battle sites roughly 40 s after the battle" is distance over speed
+   * (2,000 m at 48 m/s) rather than a timer pretending to be behaviour.
+   */
+  SCAVENGE_RANGE_M: 2000,
+  /** Close enough to feed. Inside this the swarm stops travelling and strips. */
+  SCAVENGE_FEED_RADIUS_M: 150,
+  /**
+   * How many times faster a fed-on mark decays than one left alone.
+   *
+   * SPEC in shape — docs/bestiary.md §4 resolves the swarm's salvage-stripping
+   * as an acoustic act: the residue is eaten "roughly four times faster" while
+   * the feeding SIG stands in its place. The figure itself is TUNABLE.
+   */
+  SCAVENGE_STRIP_FACTOR: 4,
+
+  /**
    * Drift Health — §6. "The map can be killed."
    *
    * A coarse region grid rather than per-biome, because health is a thing that

@@ -244,6 +244,31 @@ export class EchoMarkLayer {
     }
   }
 
+  /** A mark by its stable id, or undefined once it has decayed away. */
+  byId(id: number): Mark | undefined {
+    for (const mark of this.marks) if (mark.id === id) return mark;
+    return undefined;
+  }
+
+  /**
+   * A scavenger feeding on this mark — docs/bestiary.md §4.
+   *
+   * Applies the decay the mark would take under `DRIFT.SCAVENGE_STRIP_FACTOR`
+   * times normal time, *minus* the tick it already pays in `tick()`: the
+   * residue is being eaten as well as fading, and the two must not double-count
+   * the ordinary second. The lifetime countdown is accelerated by the same
+   * factor, because a stripped wreck is gone sooner in both senses — quieter
+   * now, and absent earlier.
+   */
+  strip(id: number, factor: number, dt: number): void {
+    const mark = this.byId(id);
+    if (mark === undefined) return;
+    mark.intensity *= Math.exp((-dt * (factor - 1)) / tauFor(mark.kind));
+    mark.remainingS -= dt * (factor - 1);
+    // Expiry itself is tick()'s job — it already owns compaction and the
+    // MIN_AUDIBLE_INTENSITY floor, and runs on the same fixed step.
+  }
+
   /** Index the marks. Cheap, and skipped entirely when nothing moved. */
   private reindex(): void {
     if (!this.hashDirty) return;

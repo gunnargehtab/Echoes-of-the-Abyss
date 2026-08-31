@@ -24,6 +24,8 @@ export enum FaunaSpecies {
   Draymaw = 1,
   /** Megafauna — the colossus that answers pings. */
   Sounder = 2,
+  /** Scavenger — the swarm drawn to Echo Marks, not live units. */
+  Rasp = 3,
 }
 
 /**
@@ -150,6 +152,36 @@ export const FAUNA_STATS: Record<FaunaSpecies, FaunaStats> = {
     attackRangeM: 260,
     groupSize: 1,
     lengthM: 75,
+  },
+  [FaunaSpecies.Rasp]: {
+    species: FaunaSpecies.Rasp,
+    // "No habitat, only the working ocean where things die" (§4). Wrecks are
+    // wherever fighting was, so the band is the widest non-megafauna one in
+    // the table.
+    workingDepthM: 800,
+    depthBandM: 500,
+    name: 'Rasp',
+    // "20 swarm" — the whole swarm is one entity, and this is its resting hum.
+    sigIdle: 20,
+    // TUNABLE — feeding is "a loud, unmissable Tier-3 announcement", so the
+    // active figure sits in harvest-cycle territory (§5's SIG 45-60).
+    sigActive: 55,
+    hyd: 55,
+    interest: 25,
+    commit: 40,
+    biomass: 18,
+    maxHp: 300,
+    // TUNABLE — sized with DRIFT.SCAVENGE_RANGE_M so §4's "roughly 40 s after
+    // the battle" falls out of distance over speed rather than a timer: a
+    // swarm at the edge of its smell covers ~2,000 m at 48 m/s in ~42 s.
+    speed: 48,
+    damagePerS: 28,
+    attackRangeM: 90,
+    // "20-40 individuals treated as one entity" — a swarm is one entity, so a
+    // group of them is not a thing that exists.
+    groupSize: 1,
+    // The cloud the renderer draws, not any one fry.
+    lengthM: 9,
   },
 };
 

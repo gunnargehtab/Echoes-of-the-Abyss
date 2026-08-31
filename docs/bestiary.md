@@ -97,6 +97,8 @@ Slow, tough, and reluctant. A committed herd is a stampede that does structure d
 
 Rasps are drawn to **Echo Marks**, not to live units — they arrive at battle sites roughly 40 s after the battle. A swarm feeding on a wreck is a loud, unmissable Tier-3 announcement that something died here, and they strip salvage while they do it. They are how the Rift admits that scavengers are also witnesses.
 
+Stripping salvage is an **acoustic act, not an economic one**: a feeding swarm consumes the residue it stands on, so the battle-site or wreck mark it feeds at decays roughly four times faster than it would alone — the quiet evidence is eaten, and the swarm's own feeding SIG stands in its place. Nothing changes hands; there is no wreck-salvage yield for it to remove ([systems-echo.md](systems-echo.md) §7 prices marks, not cargo). The trade a scout cares about: arrive inside 40 s and the residue tells you what happened, arrive later and all that is left is the announcement that scavengers got there first.
+
 ### Predators
 
 **Hollow** — solitary ambush predator, trench walls and abyssal overhangs.
@@ -260,7 +262,7 @@ Three species are simulated, one per behaviour class. The framework is the deliv
 | Sounder | Megafauna | **Implemented** — answers pings, destroys structures by transit, ignores small units. Migration along fixed corridors is still unwritten ([hazards.md](hazards.md) §6) |
 | Lampfry | Ambient | Not started — the scatter tell is a *visual* channel with no acoustic component, so it needs renderer work rather than simulation |
 | Tetherjelly | Ambient | Not started — living terrain that lowers local PF; the hazard framework's PF hook is the seam it will use |
-| Rasp | Scavenger | Not started — drawn to Echo Marks rather than to live units, which now exist ([systems-echo.md](systems-echo.md) §7), so this is the cheapest of the remaining four |
+| Rasp | Scavenger | **Implemented** — drifts to the strongest battle residue in smelling range ([systems-echo.md](systems-echo.md) §7), feeds loudly, and eats the mark roughly four times faster than it would fade alone. The aggro ladder outranks scavenging, so a swarm is still a creature you can pull off a wreck by being loud |
 | Hollow | Predator | Not started |
 
 ### How fauna are contacts

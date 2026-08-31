@@ -105,6 +105,7 @@ export function faunaSystem(world: SimWorld, destroyed: number[]): void {
     if (Fauna.senseS[eid]! <= 0) {
       Fauna.senseS[eid] = DRIFT.SENSE_INTERVAL_S;
       listen(world, eid, stats, others);
+      if (Fauna.species[eid] === FaunaSpecies.Rasp) scavengeSense(world, eid);
     }
 
     advanceStage(eid, stats, dt);
@@ -320,6 +321,38 @@ function transit(
   }
 }
 
+/**
+ * What a Rasp swarm wants — the strongest battle residue in smelling range.
+ *
+ * "Drawn to Echo Marks, not to live units" (docs/bestiary.md §4). A proximity
+ * test rather than an audibility one, exactly as `wreckBonus` below argues for
+ * itself: being drawn to a wreck is scent, and the thermocline gates what a
+ * creature hears, not what is in the water beside it. Strongest rather than
+ * nearest, matching the Drift's one rule about how it chooses.
+ *
+ * Stored as the mark's stable id so the swarm follows the residue itself — a
+ * reinforced mark moves, and `act` re-reads the position every tick.
+ */
+function scavengeSense(world: SimWorld, eid: number): void {
+  const x = Position.x[eid]!;
+  const y = Position.y[eid]!;
+  let bestId = 0;
+  let bestIntensity = 0;
+  for (const mark of world.marks.all) {
+    if (mark.kind !== EchoMarkKind.Battle && mark.kind !== EchoMarkKind.DestroyedStructure) {
+      continue;
+    }
+    const dx = mark.x - x;
+    const dy = mark.y - y;
+    if (dx * dx + dy * dy > DRIFT.SCAVENGE_RANGE_M * DRIFT.SCAVENGE_RANGE_M) continue;
+    if (mark.intensity > bestIntensity) {
+      bestIntensity = mark.intensity;
+      bestId = mark.id;
+    }
+  }
+  Fauna.scavengeMarkId[eid] = bestId;
+}
+
 /** Aggro added by nearby battle residue, per §2's modifier table. */
 function wreckBonus(world: SimWorld, x: number, y: number): number {
   let bonus = 0;
@@ -411,6 +444,42 @@ function act(
   let toX = Fauna.homeX[eid]!;
   let toY = Fauna.homeY[eid]!;
   let stopAtM = 40;
+  /** Depth of the residue a scavenger is drifting toward, if it is. */
+  let scavengeDepth: number | undefined;
+
+  // A scavenger with nothing better to do answers residue rather than its
+  // home water — "drawn to Echo Marks, not to live units" (docs/bestiary.md
+  // §4). The aggro ladder outranks this by construction: a swarm chasing
+  // something loud takes the Interested/Committed branches below, and this
+  // one never runs.
+  if (
+    Fauna.species[eid] === FaunaSpecies.Rasp &&
+    (stage === FaunaStage.Ambient || stage === FaunaStage.Cooling) &&
+    Fauna.scavengeMarkId[eid] !== 0
+  ) {
+    const mark = world.marks.byId(Fauna.scavengeMarkId[eid]!);
+    if (mark === undefined) {
+      // Eaten or faded. Nothing left to want; the next sense pass may find
+      // another.
+      Fauna.scavengeMarkId[eid] = 0;
+    } else {
+      toX = mark.x;
+      toY = mark.y;
+      // Park inside the feed radius rather than at its rim, so band-limited
+      // depth never leaves the swarm hovering at the 3D boundary.
+      stopAtM = DRIFT.SCAVENGE_FEED_RADIUS_M * 0.5;
+      scavengeDepth = mark.depth;
+      // Feeding is a three-dimensional fact, like a bite: a swarm circling
+      // 1,000 m above a wreck its band cannot reach is not stripping it.
+      const apart = Math.hypot(mark.x - x, mark.y - y, mark.depth - Position.depth[eid]!);
+      if (apart <= DRIFT.SCAVENGE_FEED_RADIUS_M) {
+        // The trade §4 names: the quiet evidence is eaten roughly four times
+        // faster, and the swarm's own feeding SIG stands in its place.
+        world.marks.strip(mark.id, DRIFT.SCAVENGE_STRIP_FACTOR, dt);
+        Acoustic.sig[eid] = stats.sigActive;
+      }
+    }
+  }
 
   if (stage === FaunaStage.Interested && target !== 0) {
     toX = Position.x[target]!;
@@ -445,6 +514,11 @@ function act(
   if (chasing) {
     const theirs = Position.depth[target]!;
     wantDepth = Math.min(home + stats.depthBandM, Math.max(home - stats.depthBandM, theirs));
+  } else if (scavengeDepth !== undefined) {
+    // Residue pulls a scavenger vertically exactly as prey would, and the
+    // band still has the last word: a wreck below the swarm's reach draws it
+    // to the band's edge and no further, where it circles without feeding.
+    wantDepth = Math.min(home + stats.depthBandM, Math.max(home - stats.depthBandM, scavengeDepth));
   }
   // Ground still has the last word: a creature cannot sit under the sea floor
   // any more than a hull can.

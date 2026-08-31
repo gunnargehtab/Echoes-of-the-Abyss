@@ -536,6 +536,10 @@ export class Match {
     place(FaunaSpecies.Ashgrazer, 16, true);
     place(FaunaSpecies.Draymaw, 15, false);
     place(FaunaSpecies.Sounder, 1, false);
+    // Swarms, each one entity (docs/bestiary.md §4 — "20-40 individuals
+    // treated as one entity"). Scattered anywhere: the Rasp's habitat is a
+    // verb, and where things will die is not knowable at seed time.
+    place(FaunaSpecies.Rasp, 3, false);
   }
 
   private addNode(x: number, y: number, amount?: number, kind = ResourceKind.Nodule): void {
