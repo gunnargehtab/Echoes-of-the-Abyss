@@ -48,6 +48,22 @@ Requires Node.js 22+ (24 recommended) and npm 10+.
 npm install
 ```
 
+**Run it again after every pull.** Dependencies move — `three` arrived with the
+conn view, and anyone who pulled that branch without reinstalling got a Vite
+`Failed to resolve import "three"` overlay instead of a game. `npm run dev`,
+`npm run build` and `npm test` now check first and say so:
+
+```text
+Preflight failed — the workspace is not ready to run.
+
+  1 declared dependency is not installed:
+    - three  (@echoes/frontend)
+
+  → Run `npm install` from the repository root, then try again.
+```
+
+The same check catches too old a Node. Run it on its own with `npm run preflight`.
+
 ## Development
 
 ```bash

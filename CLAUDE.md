@@ -22,6 +22,7 @@ Run everything from the repository root.
 | Task | Command |
 | --- | --- |
 | Install | `npm ci` |
+| Check the install is current | `npm run preflight` |
 | Dev (server + client) | `npm run dev` |
 | Build all | `npm run build` |
 | Test all | `npm test` |
