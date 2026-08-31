@@ -345,7 +345,10 @@ describe('fauna hear you', () => {
   });
 });
 
-describe('biomass and Drift Health', () => {
+// The Drift Health cases that used to sit in this block moved to
+// `drift.test.ts` in #304 — a file named after the system, so somebody
+// editing `drift.ts` can find its tests by grepping for them.
+describe('biomass', () => {
   it('pays the Directorate more than anyone else for the same kill', () => {
     // §5: only the Directorate processes Biomass at scale; everyone else sells
     // remains through Consortium rendering contracts at a fraction.
@@ -379,70 +382,6 @@ describe('biomass and Drift Health', () => {
     assert.ok(directorate > 0, 'a kill should pay Biomass');
     assert.ok(other > 0, 'rendering contracts pay something');
     assert.ok(directorate > other * 2, `${directorate} vs ${other} — the gap is the faction`);
-  });
-
-  it('starts every region healthy and reports it to the client', () => {
-    const drift = advance(emptyMatch(80), 1)!.get(0)!.driftHealth;
-    assert.equal(drift.length, DRIFT.HEALTH_REGIONS * DRIFT.HEALTH_REGIONS);
-    assert.ok(
-      drift.every((h) => h > DRIFT.HEALTH_STRAINED),
-      'a fresh map is healthy'
-    );
-  });
-
-  it('degrades a region under sustained noise and recovers when it stops', () => {
-    // §6: "It falls with sustained high SIG... and recovers slowly."
-    //
-    // Sited well away from the player's own base, which is itself loud enough
-    // to hold its region down — a nice consequence of the rule, and a poor
-    // place to measure recovery.
-    const match = emptyMatch(81);
-    const loud: number[] = [];
-    for (let i = 0; i < 6; i++) {
-      loud.push(
-        spawnUnit(match.world, {
-          kind: UnitKind.Harvester,
-          slot: 0,
-          faction: Faction.Bathyarch,
-          x: 5000 + i * 60,
-          y: 5000,
-        })
-      );
-    }
-
-    const region = match.world.drift.regionIndex(5000, 5000);
-    const before = match.world.drift.at(5000, 5000);
-    advance(match, 25);
-    const after = match.world.drift.at(5000, 5000);
-    assert.ok(after < before, `region ${region}: ${before} -> ${after} under sustained noise`);
-
-    // Move the noise out of the region rather than zeroing SIG: `acousticsSystem`
-    // recomputes SIG from stats every tick, so writing the component directly
-    // is a no-op the next frame. (This test asserted on exactly that no-op
-    // first time round, and failed for the right reason.)
-    for (const eid of loud) {
-      Position.x[eid] = 7400;
-      Position.y[eid] = 7400;
-    }
-    advance(match, 25);
-    assert.ok(match.world.drift.at(5000, 5000) > after, 'and recovers once the noise moves on');
-  });
-
-  it('pays less for a kill in a damaged region', () => {
-    // The guard-rail against a Directorate snowball (docs/economy.md §9):
-    // over-harvesting kills the region that pays them.
-    const match = emptyMatch(82);
-    const healthy = match.world.drift.yieldMultiplier(4000, 4000);
-    for (let i = 0; i < 30; i++) match.world.drift.recordKill(4000, 4000);
-    const stripped = match.world.drift.yieldMultiplier(4000, 4000);
-    assert.ok(stripped < healthy, `yield ${healthy} -> ${stripped} as the region is stripped`);
-  });
-
-  it('stops admitting spawns in a failing region', () => {
-    const match = emptyMatch(83);
-    assert.ok(match.world.drift.spawnsAllowed(4000, 4000));
-    for (let i = 0; i < 12; i++) match.world.drift.recordKill(4000, 4000);
-    assert.equal(match.world.drift.spawnsAllowed(4000, 4000), false, '§6: no new spawns');
   });
 });
 
