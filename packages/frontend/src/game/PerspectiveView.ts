@@ -268,6 +268,11 @@ export class PerspectiveView {
     }
   }
 
+  /** ui-ux.md §11: the world's one animation is the kelp current; hold it. */
+  setReducedMotion(reduced: boolean): void {
+    this.environment.setReducedMotion(reduced);
+  }
+
   setIdentity(_slot: number, faction: Faction): void {
     this.faction = faction;
   }
@@ -1027,6 +1032,9 @@ export class PerspectiveView {
         colors.needsUpdate = true;
       }
     }
+
+    // The kelp current: one uniform per bending template, nothing per prop.
+    this.environment.tick(now);
 
     this.applyCamera();
     // The readability factor follows the dolly, so it is recomputed on the

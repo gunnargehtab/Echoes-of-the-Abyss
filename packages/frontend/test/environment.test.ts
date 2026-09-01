@@ -17,6 +17,7 @@ import {
   placeProps,
   PROP_INSTANCE_CAP,
   PROP_TRI_RESERVATION,
+  swayWeight,
   type PropSpec,
 } from '../src/game/environment.ts';
 
@@ -55,6 +56,7 @@ const KELP: PropSpec = {
   excludeRoofed: true,
   scaleJitter: [0.7, 1.3],
   worldLight: 'flora',
+  swayM: 4,
 };
 
 const CRAG: PropSpec = {
@@ -68,6 +70,7 @@ const CRAG: PropSpec = {
   excludeRoofed: false,
   scaleJitter: [0.8, 1.2],
   worldLight: 'none',
+  swayM: 0,
 };
 
 const BOULDER: PropSpec = {
@@ -81,19 +84,22 @@ const BOULDER: PropSpec = {
   excludeRoofed: true,
   scaleJitter: [0.7, 1.3],
   worldLight: 'none',
+  swayM: 0,
 };
 
 const SPECS = [KELP, CRAG, BOULDER];
 
 describe('prop placement', () => {
-  it('is deterministic: same grid, same props, and the registry ships empty', () => {
+  it('is deterministic: same grid, same props, with the shipped registry too', () => {
     const terrain = demoTerrain();
     assert.deepEqual(placeProps(terrain, SPECS), placeProps(terrain, SPECS));
     assert.ok(placeProps(terrain, SPECS).length > 0, 'the demo scatter placed nothing');
-    // The registry itself is empty until the env-assets PRs land, so the
-    // shipped layer is a no-op by data, not by a disabled code path.
-    assert.deepEqual(ENVIRONMENT_PROPS, []);
-    assert.deepEqual(placeProps(terrain), []);
+    // The shipped registry dresses the demo grid — kelp in the kelp block,
+    // crags on the rock, a boulder or two on the open ring — identically
+    // every time.
+    assert.deepEqual(placeProps(terrain), placeProps(terrain));
+    const slugs = new Set(placeProps(terrain).map((p) => p.slug));
+    assert.ok(slugs.has('env-kelp-cluster'), 'the kelp block grew no kelp');
   });
 
   it('moves only the props beside a ground delta — the locality guard', () => {
@@ -198,15 +204,49 @@ describe('prop placement', () => {
 
   it('holds every registry row to the documented contracts', () => {
     // Block 4's table is the source: env- slugs, ≤ 800 triangles, sane
-    // density and jitter. Empty today; this is the fence the asset PRs land
-    // inside.
+    // density and jitter, and one row per slug. The GLBs themselves are
+    // checked by hull-intake; the backend's environmentBudget test sums
+    // these rows over the shipped maps.
+    assert.ok(ENVIRONMENT_PROPS.length >= 14, 'the Block 4 table has fourteen rows');
+    const seen = new Set<string>();
     for (const spec of ENVIRONMENT_PROPS) {
       assert.match(spec.slug, /^env-[a-z0-9-]+$/, `${spec.slug} breaks the naming convention`);
+      assert.ok(!seen.has(spec.slug), `${spec.slug} is registered twice`);
+      seen.add(spec.slug);
       assert.ok(spec.triBudget > 0 && spec.triBudget <= 800, `${spec.slug} triangle budget`);
       assert.ok(spec.density > 0 && spec.density <= 3, `${spec.slug} density`);
       assert.ok(spec.footprintM > 0 && spec.footprintM <= 60, `${spec.slug} footprint`);
       const [lo, hi] = spec.scaleJitter;
       assert.ok(lo > 0 && hi >= lo && hi <= 2, `${spec.slug} scale jitter`);
+      assert.ok(spec.swayM >= 0 && spec.swayM <= 10, `${spec.slug} sway`);
+      // Only flora bends: a swaying rock would read as an agent.
+      if (spec.swayM > 0) assert.equal(spec.worldLight, 'flora', `${spec.slug} sways but is stone`);
     }
+  });
+
+  it('licenses light only where Block 4 does', () => {
+    // The table's Light column, transcribed: three lit rows, each in its own
+    // family, and everything else 'none' so intake fails a glowing rock.
+    const lit = Object.fromEntries(
+      ENVIRONMENT_PROPS.filter((s) => s.worldLight !== 'none').map((s) => [s.slug, s.worldLight])
+    );
+    assert.deepEqual(lit, {
+      'env-vent-chimney': 'vent',
+      'env-kelp-cluster': 'flora',
+      'env-resonance-crystal': 'crystal',
+    });
+  });
+});
+
+describe('sway weight', () => {
+  it('roots the base and bends the tip', () => {
+    // Quadratic in height: the holdfast never moves, the column bends rather
+    // than leans, and nothing above the model's own height is asked for.
+    assert.equal(swayWeight(0, 70), 0);
+    assert.equal(swayWeight(70, 70), 1);
+    assert.equal(swayWeight(35, 70), 0.25);
+    assert.equal(swayWeight(140, 70), 1, 'weight saturates above the height');
+    assert.equal(swayWeight(-5, 70), 0, 'a vertex below the base takes nothing');
+    assert.equal(swayWeight(10, 0), 0, 'a flat prop has no sway at all');
   });
 });
