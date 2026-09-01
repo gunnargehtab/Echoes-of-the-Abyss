@@ -35,6 +35,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | **[mission-tend.md](mission-tend.md)** | The Second Seeding 1, specified: a working day, the sweep, the stillness, and what *unfiled* is worth |
 | **[mission-thin-water.md](mission-thin-water.md)** | The Second Seeding 2, specified: a column in water that hides nothing, an unwinnable fight nobody chose, and six of ten read out in people |
 | **[mission-attendance.md](mission-attendance.md)** | The Attending 1, specified: one watch of the Mouth's cycle, the nine arrivals, and the silence a rite is owed |
+| **[mission-intake.md](mission-intake.md)** | The Attending 2, specified: an intake at the top of its own water, an economy that will not come when called, and one finding the mission refuses to score |
 | **[mission-aptitude.md](mission-aptitude.md)** | The Second Chord 1, specified: six hulls, six formations, and the quarter of the compass a Knight is loud in |
 
 ## Gameplay
@@ -89,15 +90,19 @@ a document already points at it:
 
 - **The remaining 17 missions.** campaign.md §5–§7 gives them titles, teaching targets and
   beats, which is not a specification. Each needs a document of its own — one doc per mission,
-  the pattern mission-sorrowgate.md sets and twelve documents now follow — before it needs
+  the pattern mission-sorrowgate.md sets and thirteen documents now follow — before it needs
   code. The Ledger's seven are specified and built end to end, and so are Tend, Attendance and
   Aptitude. [mission-thin-water.md](mission-thin-water.md) is the first document specified
   *ahead* of its literal: the mission definition `seeding-thin-water` and the `kell-shoulder`
-  map are unbuilt, and its §13 reports that everything they would need already ships. The
-  format itself has stopped asking: the condition-fired beat, the exposure tally and the aimed
-  hold — the three things the first four documents still wanted — have all shipped, along with
-  the Ledger's own three additions (the `deliver` predicate, readings per objective, and the
-  conditional beat's choice group), and no specified mission now names a missing mechanism.
+  map are unbuilt, and its §13 reports that everything they would need already ships.
+  [mission-intake.md](mission-intake.md) is the second, with `attending-intake` and the
+  `banding-ground` map unbuilt — and it is the document that starts the format asking again.
+  The condition-fired beat, the exposure tally and the aimed hold — the three things the first
+  four documents still wanted — have all shipped, along with the Ledger's own three additions
+  (the `deliver` predicate, readings per objective, and the conditional beat's choice group).
+  What Intake names is the next one: `deliver` counts Nodules, the Directorate's income is
+  Biomass, and no predicate can ask what a cohort economy earned. The income itself is built;
+  only the query and a way to spend it are not.
 - **Campaign progression and unlock state.** Nothing records that a mission was played, so the
   prologue is replayable, remembers nothing, and the Tutorial and campaign doors are the same
   door.
