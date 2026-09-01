@@ -24,14 +24,17 @@ import {
   OrdnanceKind,
   SelfEventKind,
   damageMultiplierFor,
+  faunaStatsFor,
   firingSigFor,
   statsFor,
   structureStatsFor,
+  type FaunaSpecies,
   type StructureKind,
   type UnitKind,
 } from '@echoes/shared';
 import {
   Acoustic,
+  Fauna,
   Health,
   MoveOrder,
   Ordnance,
@@ -267,6 +270,20 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
           // may spend shells on struck iron — and refusing the order instead
           // would unmask it, the Noisemaker lesson above.
           if (hasComponent(world, StaticEmitter, other)) continue;
+          // Nor is a harmless ambient creature — the mine's argument a third
+          // time. A Lampfry shoal glows at SIG 4 and is inaudible to any gun
+          // at any range it could shoot from, so a turret swinging onto one
+          // is firing on something it never heard. It is also the tell layer:
+          // guns sweeping shoals by default would quietly delete §4's scatter
+          // mechanic and bill Drift Health for it. An *ordered* shot at a
+          // resolved shoal still lands — burning a region's tells is a choice
+          // the design prices (docs/bestiary.md §6), not one it makes for you.
+          if (
+            hasComponent(world, Fauna, other) &&
+            !Number.isFinite(faunaStatsFor(Fauna.species[other] as FaunaSpecies).commit)
+          ) {
+            continue;
+          }
           const d = engagementRangeM(eid, other);
           if (d <= bestDistance) {
             bestDistance = d;

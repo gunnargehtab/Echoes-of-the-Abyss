@@ -29,19 +29,18 @@ promise it, because the water says it first. Three facts about this water make i
 them a fence — with one rider on the first:
 
 **The Drift cannot descend here, and the one entry that might is not placed.** The galleries
-stand at 2,750–3,400 m and the axis below them falls past 4,000 m. Of the three species
-[bestiary.md](bestiary.md) §4 prices in its band table, the deepest is a Sounder, working 2,000 m
-and pursuing to 2,700. Nothing in that table reaches this water.
+stand at 2,750–3,400 m and the axis below them falls past 4,000 m. Of the seven species
+[bestiary.md](bestiary.md) §4 prices in its band table, the deepest reach is a Sounder's, working
+2,000 m and pursuing to 2,700. Nothing in that table reaches this water.
 
-**The Hollow is the exception, and it is an exception in the document rather than in the water.**
-It is named for trench walls and abyssal overhangs, which is exactly this map's country, and it
-carries no working depth because the band table prices three species and the Hollow is not one of
-them ([bestiary.md](bestiary.md) §4, Implementation Status: not started). **This mission does not
-place one, and it does not decide whether the Hollow should reach 3,400 m** — that is the
-bestiary's call when the species is built, and a mission document is the wrong place to settle
-it. What this document says instead is the half that is already true: a Hollow at rest is
-functionally Tier 0, listens better than most units, and does not move until something loud
-passes within 500 m. **A shift that stayed silent all watch would have no way of finding out
+**The Hollow was the open case, and the bestiary has since closed it.** It is named for trench
+walls and abyssal overhangs, which is exactly this map's country, and the question this document
+once deferred — whether the Hollow should reach 3,400 m — was settled where it belonged when the
+species' band was authored ([bestiary.md](bestiary.md) §4): it works 1,700 m and pursues to
+2,150, six hundred metres short of the shallowest gallery. The answer is no, and the galleries
+stay water the Drift declines. **This mission still places none.** What this document said while
+the case was open remains true and load-bearing: a Hollow at rest is functionally Tier 0,
+listens better than most units, and does not move until something loud passes within 500 m. **A shift that stayed silent all watch would have no way of finding out
 whether there was one.** Nothing has to be added to this water for that to be the case.
 
 The other uncatalogued entry — the Attendants — is found only within 400 m of the Mouth's rim,

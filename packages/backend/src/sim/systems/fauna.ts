@@ -101,10 +101,24 @@ export function faunaSystem(world: SimWorld, destroyed: number[]): void {
 
     const stats = faunaStatsFor(Fauna.species[eid] as FaunaSpecies);
 
+    // The ambient species never commit, never chase and never listen — a
+    // shoal is a place, not a predator — so the whole ladder is skipped, and
+    // with it the per-candidate path integrals that make `listen` the
+    // expensive half of the Drift.
+    if (Fauna.species[eid] === FaunaSpecies.Lampfry) {
+      lampfryTick(world, eid, dt, others);
+      continue;
+    }
+    if (Fauna.species[eid] === FaunaSpecies.Tetherjelly) {
+      jellyTick(world, eid, dt);
+      continue;
+    }
+
     Fauna.senseS[eid] = Fauna.senseS[eid]! - dt;
     if (Fauna.senseS[eid]! <= 0) {
       Fauna.senseS[eid] = DRIFT.SENSE_INTERVAL_S;
       listen(world, eid, stats, others);
+      if (Fauna.species[eid] === FaunaSpecies.Rasp) scavengeSense(world, eid);
     }
 
     advanceStage(eid, stats, dt);
@@ -320,6 +334,112 @@ function transit(
   }
 }
 
+/**
+ * A Lampfry shoal — docs/bestiary.md §4, and the reason the Commune's stealth
+ * has an answer at all.
+ *
+ * The shoal holds its water and does exactly one thing: scatter from any
+ * entity within 300 m **regardless of SIG**, reforming 25 s after the last
+ * intruder leaves. The trigger is a three-dimensional proximity test and
+ * deliberately never touches the Echo Layer — the tell exists precisely so
+ * that silence cannot suppress it, and any SIG term in this function would
+ * quietly reintroduce the thing it answers. Resist routing it through
+ * detection (#306 flags exactly that temptation).
+ *
+ * §6's Failing row is also enforced here: "Lampfry gone (scatter tells stop
+ * working)". A shoal in failing water dies off — an environmental death the
+ * map caused, so nobody is paid for it — and with the shoal goes the tell,
+ * which is the concealment consequence the Drift Health table promises.
+ */
+function lampfryTick(world: SimWorld, eid: number, dt: number, others: number[]): void {
+  if (Fauna.scatterS[eid]! > 0) {
+    Fauna.scatterS[eid] = Math.max(0, Fauna.scatterS[eid]! - dt);
+  }
+
+  Fauna.senseS[eid] = Fauna.senseS[eid]! - dt;
+  if (Fauna.senseS[eid]! > 0) return;
+  Fauna.senseS[eid] = DRIFT.SENSE_INTERVAL_S;
+
+  const fx = Position.x[eid]!;
+  const fy = Position.y[eid]!;
+  const fd = Position.depth[eid]!;
+
+  if (world.drift.at(fx, fy) < DRIFT.HEALTH_FAILING) {
+    Health.hp[eid] = 0;
+    // The map killed it; reap still records the loss against the region.
+    world.environmentalDeaths.add(eid);
+    return;
+  }
+
+  const radius2 = DRIFT.LAMPFRY_SCATTER_RADIUS_M * DRIFT.LAMPFRY_SCATTER_RADIUS_M;
+  for (let i = 0; i < others.length; i++) {
+    const other = others[i]!;
+    if (other === eid) continue;
+    // The Drift does not startle itself: a Draymaw and a shoal share water.
+    if (Owner.slot[other] === DRIFT_SLOT) continue;
+    if (Health.hp[other]! <= 0) continue;
+    const dx = Position.x[other]! - fx;
+    const dy = Position.y[other]! - fy;
+    const dz = Position.depth[other]! - fd;
+    // "Any entity" is the doc's word and the query's: hulls, structures and
+    // ordnance alike — a torpedo tearing through a shoal scatters it.
+    if (dx * dx + dy * dy + dz * dz <= radius2) {
+      Fauna.scatterS[eid] = DRIFT.LAMPFRY_REFORM_S;
+      return;
+    }
+  }
+}
+
+/**
+ * A Tetherjelly cluster — docs/bestiary.md §4, living terrain.
+ *
+ * The creature itself does nothing at all: its −0.10 PF is a modifier the
+ * propagation rebuild gathers from every living cluster
+ * (sim/systems/hazards.ts, `rebuildPropagation`), so this tick exists only to
+ * enforce §6's Failing row — "Tetherjelly fields thinning: local PF rises
+ * toward baseline". A cluster in failing water withers at a rate, so a field
+ * thins cluster by cluster over a minute or two rather than vanishing on a
+ * threshold tick; each death is the map's own (nobody is paid), and the reap
+ * rebuilds the PF grid, which is the "rises toward baseline" made literal.
+ */
+function jellyTick(world: SimWorld, eid: number, dt: number): void {
+  if (world.drift.at(Position.x[eid]!, Position.y[eid]!) >= DRIFT.HEALTH_FAILING) return;
+  Health.hp[eid] = Health.hp[eid]! - DRIFT.JELLY_WITHER_HP_PER_S * dt;
+  if (Health.hp[eid]! <= 0) world.environmentalDeaths.add(eid);
+}
+
+/**
+ * What a Rasp swarm wants — the strongest battle residue in smelling range.
+ *
+ * "Drawn to Echo Marks, not to live units" (docs/bestiary.md §4). A proximity
+ * test rather than an audibility one, exactly as `wreckBonus` below argues for
+ * itself: being drawn to a wreck is scent, and the thermocline gates what a
+ * creature hears, not what is in the water beside it. Strongest rather than
+ * nearest, matching the Drift's one rule about how it chooses.
+ *
+ * Stored as the mark's stable id so the swarm follows the residue itself — a
+ * reinforced mark moves, and `act` re-reads the position every tick.
+ */
+function scavengeSense(world: SimWorld, eid: number): void {
+  const x = Position.x[eid]!;
+  const y = Position.y[eid]!;
+  let bestId = 0;
+  let bestIntensity = 0;
+  for (const mark of world.marks.all) {
+    if (mark.kind !== EchoMarkKind.Battle && mark.kind !== EchoMarkKind.DestroyedStructure) {
+      continue;
+    }
+    const dx = mark.x - x;
+    const dy = mark.y - y;
+    if (dx * dx + dy * dy > DRIFT.SCAVENGE_RANGE_M * DRIFT.SCAVENGE_RANGE_M) continue;
+    if (mark.intensity > bestIntensity) {
+      bestIntensity = mark.intensity;
+      bestId = mark.id;
+    }
+  }
+  Fauna.scavengeMarkId[eid] = bestId;
+}
+
 /** Aggro added by nearby battle residue, per §2's modifier table. */
 function wreckBonus(world: SimWorld, x: number, y: number): number {
   let bonus = 0;
@@ -337,6 +457,65 @@ function wreckBonus(world: SimWorld, x: number, y: number): number {
   return bonus;
 }
 
+/**
+ * The Hollow's ladder — a trigger model, not a dwell model (docs/bestiary.md
+ * §4, "the one creature the aggro ladder does not describe").
+ *
+ * Interest coils it: it tracks and does nothing else — no approach, no dwell
+ * timer, no SIG change, because an ambush that announced itself would be a
+ * different animal. The strike fires the instant something it hears at Commit
+ * is inside the trigger range in three dimensions. It is the deliberate
+ * exception to §8's "every commit is preceded by 4 s of Interested behaviour
+ * with an audible tell"; the doc prices that with ground instead of time.
+ */
+function hollowStage(eid: number, stats: ReturnType<typeof faunaStatsFor>, dt: number): void {
+  const heard = Fauna.heard[eid]!;
+  const target = Fauna.targetEid[eid]!;
+  const stage = Fauna.stage[eid] as FaunaStage;
+
+  // Commit-loud AND passing the ambush, measured like a bite: in 3D, so a
+  // convoy overhead by more than the range is not passing it.
+  const triggered =
+    heard >= stats.commit &&
+    target !== 0 &&
+    Math.hypot(
+      Position.x[target]! - Position.x[eid]!,
+      Position.y[target]! - Position.y[eid]!,
+      Position.depth[target]! - Position.depth[eid]!
+    ) <= DRIFT.HOLLOW_TRIGGER_RANGE_M;
+
+  switch (stage) {
+    case FaunaStage.Ambient:
+      if (triggered) Fauna.stage[eid] = FaunaStage.Committed;
+      // Coiling is instant — there is no 4 s dwell, because nothing visible
+      // or audible changes when it happens.
+      else if (heard >= stats.interest) Fauna.stage[eid] = FaunaStage.Interested;
+      break;
+
+    case FaunaStage.Interested:
+      if (triggered) Fauna.stage[eid] = FaunaStage.Committed;
+      // It never moved, so there is no journey to cool from: quiet water
+      // simply uncoils it.
+      else if (Fauna.quietS[eid]! >= DRIFT.COOL_AFTER_S) Fauna.stage[eid] = FaunaStage.Ambient;
+      break;
+
+    case FaunaStage.Committed:
+      if (Fauna.quietS[eid]! >= DRIFT.COOL_AFTER_S || Fauna.targetEid[eid] === 0) {
+        Fauna.stage[eid] = FaunaStage.Cooling;
+        Fauna.coolingS[eid] = DRIFT.COOLING_S;
+      }
+      break;
+
+    case FaunaStage.Cooling:
+      Fauna.coolingS[eid] = Fauna.coolingS[eid]! - dt;
+      // Re-striking keeps the gate: an ambusher slinking home does not chase
+      // a noise half the map away, however loud.
+      if (triggered) Fauna.stage[eid] = FaunaStage.Committed;
+      else if (Fauna.coolingS[eid]! <= 0) Fauna.stage[eid] = FaunaStage.Ambient;
+      break;
+  }
+}
+
 /** §2's ladder: Ambient -> Interested -> Committed -> Cooling. */
 function advanceStage(eid: number, stats: ReturnType<typeof faunaStatsFor>, dt: number): void {
   const heard = Fauna.heard[eid]!;
@@ -348,6 +527,11 @@ function advanceStage(eid: number, stats: ReturnType<typeof faunaStatsFor>, dt: 
   } else {
     Fauna.quietS[eid] = Fauna.quietS[eid]! + dt;
     Fauna.interestS[eid] = 0;
+  }
+
+  if (stats.species === FaunaSpecies.Hollow) {
+    hollowStage(eid, stats, dt);
+    return;
   }
 
   switch (stage) {
@@ -406,13 +590,64 @@ function act(
   // loud. This is what makes a creature's *reaction* visible to the player who
   // caused it — the map answering back through the same channel as everything
   // else.
-  Acoustic.sig[eid] = stage === FaunaStage.Ambient ? stats.sigIdle : stats.sigActive;
+  //
+  // The Hollow is the dual-SIG exception (docs/bestiary.md §4): striking is
+  // its only loud state. Coiled and even disengaging it stays at rest volume,
+  // because an ambush that got louder while watching would be a tell the doc
+  // explicitly does not grant it.
+  const roused =
+    Fauna.species[eid] === FaunaSpecies.Hollow
+      ? stage === FaunaStage.Committed
+      : stage !== FaunaStage.Ambient;
+  Acoustic.sig[eid] = roused ? stats.sigActive : stats.sigIdle;
 
   let toX = Fauna.homeX[eid]!;
   let toY = Fauna.homeY[eid]!;
   let stopAtM = 40;
+  /** Depth of the residue a scavenger is drifting toward, if it is. */
+  let scavengeDepth: number | undefined;
 
-  if (stage === FaunaStage.Interested && target !== 0) {
+  // A scavenger with nothing better to do answers residue rather than its
+  // home water — "drawn to Echo Marks, not to live units" (docs/bestiary.md
+  // §4). The aggro ladder outranks this by construction: a swarm chasing
+  // something loud takes the Interested/Committed branches below, and this
+  // one never runs.
+  if (
+    Fauna.species[eid] === FaunaSpecies.Rasp &&
+    (stage === FaunaStage.Ambient || stage === FaunaStage.Cooling) &&
+    Fauna.scavengeMarkId[eid] !== 0
+  ) {
+    const mark = world.marks.byId(Fauna.scavengeMarkId[eid]!);
+    if (mark === undefined) {
+      // Eaten or faded. Nothing left to want; the next sense pass may find
+      // another.
+      Fauna.scavengeMarkId[eid] = 0;
+    } else {
+      toX = mark.x;
+      toY = mark.y;
+      // Park inside the feed radius rather than at its rim, so band-limited
+      // depth never leaves the swarm hovering at the 3D boundary.
+      stopAtM = DRIFT.SCAVENGE_FEED_RADIUS_M * 0.5;
+      scavengeDepth = mark.depth;
+      // Feeding is a three-dimensional fact, like a bite: a swarm circling
+      // 1,000 m above a wreck its band cannot reach is not stripping it.
+      const apart = Math.hypot(mark.x - x, mark.y - y, mark.depth - Position.depth[eid]!);
+      if (apart <= DRIFT.SCAVENGE_FEED_RADIUS_M) {
+        // The trade §4 names: the quiet evidence is eaten roughly four times
+        // faster, and the swarm's own feeding SIG stands in its place.
+        world.marks.strip(mark.id, DRIFT.SCAVENGE_STRIP_FACTOR, dt);
+        Acoustic.sig[eid] = stats.sigActive;
+      }
+    }
+  }
+
+  if (
+    stage === FaunaStage.Interested &&
+    target !== 0 &&
+    // A coiled Hollow holds its station — the ambush *is* the not-moving
+    // (docs/bestiary.md §4's trigger model). Everything else comes to look.
+    Fauna.species[eid] !== FaunaSpecies.Hollow
+  ) {
     toX = Position.x[target]!;
     toY = Position.y[target]!;
     // "Closes to ~1,200 m" — interested is not committed. It comes to look.
@@ -445,6 +680,11 @@ function act(
   if (chasing) {
     const theirs = Position.depth[target]!;
     wantDepth = Math.min(home + stats.depthBandM, Math.max(home - stats.depthBandM, theirs));
+  } else if (scavengeDepth !== undefined) {
+    // Residue pulls a scavenger vertically exactly as prey would, and the
+    // band still has the last word: a wreck below the swarm's reach draws it
+    // to the band's edge and no further, where it circles without feeding.
+    wantDepth = Math.min(home + stats.depthBandM, Math.max(home - stats.depthBandM, scavengeDepth));
   }
   // Ground still has the last word: a creature cannot sit under the sea floor
   // any more than a hull can.
@@ -535,5 +775,20 @@ function act(
   // Being eaten is being attacked (docs/ui-ux.md §5). The mixer collapses a
   // sustained bite to one cue per engagement, so raising per sim tick is safe.
   raiseSelfEvent(world, { kind: SelfEventKind.Damaged, eid: target });
-  if (Health.hp[target]! <= 0) destroyed.push(target);
+  if (Health.hp[target]! <= 0) {
+    destroyed.push(target);
+    // "Every Hollow kill tells the whole region where it happened" (§4): the
+    // strike lays full-intensity battle residue, so the announcement outlives
+    // the seconds the strike took. Only the Hollow — its loudness is an
+    // *event*, where a pack's is a state the region already heard.
+    if (Fauna.species[eid] === FaunaSpecies.Hollow) {
+      world.marks.add(
+        EchoMarkKind.Battle,
+        Position.x[target]!,
+        Position.y[target]!,
+        Position.depth[target]!,
+        1
+      );
+    }
+  }
 }

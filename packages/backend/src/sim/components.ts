@@ -184,6 +184,19 @@ export const Fauna = defineComponent({
   /** Where it drifts back to when it cools off. */
   homeX: Types.f32,
   homeY: Types.f32,
+  /**
+   * Scavengers only — the Echo Mark the swarm is currently drawn to, by the
+   * mark's own stable id (0 = none). An id rather than a position because a
+   * reinforced mark moves, and the swarm should follow the residue, not the
+   * spot it first smelled it at.
+   */
+  scavengeMarkId: Types.ui32,
+  /**
+   * Lampfry only — seconds until a scattered shoal reforms. Zero means the
+   * shoal is formed; any presence inside the scatter radius pins it at the
+   * full reform window (docs/bestiary.md §4).
+   */
+  scatterS: Types.f32,
 });
 
 /** Tag-ish component: silent running trades speed and weapons for quiet. */

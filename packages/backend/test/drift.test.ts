@@ -32,6 +32,7 @@ import { Match } from '../src/sim/match.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { spawnFauna, spawnUnit } from '../src/sim/world.ts';
 import { Acoustic, Position } from '../src/sim/components.ts';
+import { rebuildPropagation } from '../src/sim/systems/hazards.ts';
 import { VENTFRONT_DIVIDE, type MapDefinition } from '../src/sim/maps/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
@@ -285,5 +286,40 @@ describe('Drift Health', () => {
     assert.ok(match.world.drift.spawnsAllowed(4000, 4000));
     for (let i = 0; i < 12; i++) match.world.drift.recordKill(4000, 4000);
     assert.equal(match.world.drift.spawnsAllowed(4000, 4000), false, '§6: no new spawns');
+  });
+
+  it('makes the Failing row observable end to end', () => {
+    // #306's definition of done, verbatim: "scatter tells stop, jelly-field
+    // PF rises". The row was half-wired until the ambient species existed —
+    // killing a region produced the spawn and Biomass penalties but none of
+    // the information or concealment consequences. This is the whole
+    // consequence chain in one place: a region with a shoal and a jelly
+    // field fails, and what a commander actually loses is the tell layer and
+    // the masking, visibly, in the same snapshots every player receives.
+    const match = emptyMatch(84);
+    const baselinePf = match.world.terrain.propagationAt(MIDDLE_X, MIDDLE_Y);
+    spawnFauna(match.world, { species: FaunaSpecies.Lampfry, x: MIDDLE_X, y: MIDDLE_Y });
+    spawnFauna(match.world, { species: FaunaSpecies.Tetherjelly, x: MIDDLE_X, y: MIDDLE_Y });
+    rebuildPropagation(match.world);
+
+    const healthy = advance(match, 2)!.get(0)!;
+    assert.equal(healthy.shoals.length, 1, 'healthy water: the tell is on every chart');
+    assert.equal(healthy.jellies.length, 1, 'and the field is masking');
+    assert.ok(match.world.terrain.propagationAt(MIDDLE_X, MIDDLE_Y) < baselinePf);
+
+    // Kill the region the way players do, well past Failing so recovery
+    // cannot lift it back over the line mid-test.
+    while (match.world.drift.at(MIDDLE_X, MIDDLE_Y) >= DRIFT.HEALTH_FAILING - 10) {
+      match.world.drift.recordKill(MIDDLE_X, MIDDLE_Y);
+    }
+    advance(match, 55);
+
+    const failing = advance(match, 2)!.get(0)!;
+    assert.equal(failing.shoals.length, 0, 'Lampfry gone: scatter tells stop working');
+    assert.equal(failing.jellies.length, 0, 'Tetherjelly fields thinned away');
+    assert.ok(
+      Math.abs(match.world.terrain.propagationAt(MIDDLE_X, MIDDLE_Y) - baselinePf) < 1e-6,
+      'local PF rose back to baseline'
+    );
   });
 });

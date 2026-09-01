@@ -49,8 +49,10 @@ import {
   type GameOverPayload,
   type OwnOrdnance,
   type OwnStructure,
+  type JellyCluster,
   type OwnUnit,
   type ResourceNodeInfo,
+  type ShoalTell,
 } from '@echoes/shared';
 import {
   Acoustic,
@@ -108,6 +110,7 @@ import {
   hazardsSystem,
   isPermanent,
   isSimulated,
+  rebuildPropagation,
 } from './systems/hazards.ts';
 import { drawFor, thermalSystem } from './systems/thermal.ts';
 import { titheSystem } from './systems/tithe.ts';
@@ -536,6 +539,21 @@ export class Match {
     place(FaunaSpecies.Ashgrazer, 16, true);
     place(FaunaSpecies.Draymaw, 15, false);
     place(FaunaSpecies.Sounder, 1, false);
+    // Swarms, each one entity (docs/bestiary.md §4 — "20-40 individuals
+    // treated as one entity"). Scattered anywhere: the Rasp's habitat is a
+    // verb, and where things will die is not knowable at seed time.
+    place(FaunaSpecies.Rasp, 3, false);
+    // Shoals, each one entity, spread across the Shelf band by spawnFauna's
+    // seeding — §6's Healthy row wants "Lampfry tells everywhere".
+    place(FaunaSpecies.Lampfry, 6, false);
+    // Clusters, each one entity, in the duct band. Their masking is a PF
+    // modifier rather than behaviour, so the grid is rebuilt once they exist.
+    place(FaunaSpecies.Tetherjelly, 5, false);
+    // Ambushers, solitary, on ground deep enough to be trench country. Last,
+    // because the roster now fills the cap exactly and the predator that
+    // holds still is the one a thin map misses least.
+    place(FaunaSpecies.Hollow, 2, false);
+    rebuildPropagation(this.world);
   }
 
   private addNode(x: number, y: number, amount?: number, kind = ResourceKind.Nodule): void {
@@ -1318,6 +1336,7 @@ export class Match {
     if (this.destroyedScratch.length === 0) return;
 
     const lostBastions: number[] = [];
+    let jellyDied = false;
     for (const eid of this.destroyedScratch) {
       if (!hasComponent(this.world, Owner, eid)) continue;
 
@@ -1330,6 +1349,10 @@ export class Match {
         // The Drift still loses the creature, so recordKill stays.
         if (!this.world.environmentalDeaths.has(eid)) this.payBiomass(eid);
         this.world.drift.recordKill(Position.x[eid]!, Position.y[eid]!);
+        // Living terrain stops living: the cluster's −0.10 comes off the PF
+        // grid on the tick it dies, and never comes back (docs/bestiary.md
+        // §4 — burning a lane through a jelly field is permanent).
+        if (Fauna.species[eid] === FaunaSpecies.Tetherjelly) jellyDied = true;
         this.echo.forget(eid);
         removeEntity(this.world, eid);
         continue;
@@ -1360,6 +1383,10 @@ export class Match {
       clearQueue(this.world, eid);
       removeEntity(this.world, eid);
     }
+
+    // One rebuild however many clusters died this tick — the rebuild gathers
+    // every survivor, so batching cannot get a stale answer.
+    if (jellyDied) rebuildPropagation(this.world);
 
     // Losing the Bastion is elimination — the C&C short game. The rest of the
     // force scuttles rather than lingering as an unwinnable nuisance.
@@ -1625,6 +1652,13 @@ export class Match {
       }
     }
 
+    // Built once and shared across every snapshot: the shoal and jelly layers
+    // are public by design (docs/bestiary.md §4 — the glow is light, not
+    // sound, and living terrain is chart data), so every player gets the
+    // identical lists.
+    const shoals = this.collectShoals();
+    const jellies = this.collectJellies();
+
     const snapshots = new Map<number, EchoSnapshot>();
     for (const slot of this.slots) {
       const units = this.collectOwnUnits(slot);
@@ -1657,9 +1691,53 @@ export class Match {
         draw: { ...drawFor(this.world, slot) },
         biomass: economyFor(this.world, slot).biomass,
         driftHealth: this.world.drift.snapshot(),
+        shoals,
+        jellies,
       });
     }
     return snapshots;
+  }
+
+  /**
+   * Every living Lampfry shoal, for the public tell layer.
+   *
+   * The one place fauna state crosses the wire outside the contact path, and
+   * it carries exactly what docs/bestiary.md §4 discloses: where the glow is,
+   * and whether it is scattered. Match-local ids, like everything the wire
+   * speaks.
+   */
+  private collectShoals(): ShoalTell[] {
+    const out: ShoalTell[] = [];
+    for (let eid = 0; eid <= this.world.maxEid; eid++) {
+      if (!hasComponent(this.world, Fauna, eid)) continue;
+      if (Fauna.species[eid] !== FaunaSpecies.Lampfry) continue;
+      if (Health.hp[eid]! <= 0) continue;
+      out.push({
+        id: localIdOf(this.world, eid) ?? 0,
+        x: Position.x[eid]!,
+        y: Position.y[eid]!,
+        depth: Position.depth[eid]!,
+        scattered: Fauna.scatterS[eid]! > 0,
+      });
+    }
+    return out;
+  }
+
+  /** Every living Tetherjelly cluster — chart data, same argument as shoals. */
+  private collectJellies(): JellyCluster[] {
+    const out: JellyCluster[] = [];
+    for (let eid = 0; eid <= this.world.maxEid; eid++) {
+      if (!hasComponent(this.world, Fauna, eid)) continue;
+      if (Fauna.species[eid] !== FaunaSpecies.Tetherjelly) continue;
+      if (Health.hp[eid]! <= 0) continue;
+      out.push({
+        id: localIdOf(this.world, eid) ?? 0,
+        x: Position.x[eid]!,
+        y: Position.y[eid]!,
+        depth: Position.depth[eid]!,
+      });
+    }
+    return out;
   }
 
   /** A player always sees their own units in full. */

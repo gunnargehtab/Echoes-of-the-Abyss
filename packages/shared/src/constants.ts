@@ -38,6 +38,15 @@ export const PROPAGATION_FACTOR: Record<Biome, number> = {
 export const MAX_PROPAGATION_FACTOR = Math.max(...Object.values(PROPAGATION_FACTOR));
 
 /**
+ * Floor for a modified cell's PF — docs/bestiary.md §4 (Tetherjelly):
+ * "floored at 0.05 — sound never stops entirely." Only additive modifiers can
+ * reach it; no biome baseline is anywhere near, and a floor of zero would let
+ * stacked jelly fields cut holes in the propagation model that the detection
+ * maths (a division by perceived loudness) was never asked to survive.
+ */
+export const MIN_PROPAGATION_FACTOR = 0.05;
+
+/**
  * SPEC (the factors) / TUNABLE (the depth) — docs/systems-echo.md §3.
  *
  * The one row in §3's PropagationFactor table that is not a biome. A biome is a
@@ -955,6 +964,58 @@ export const DRIFT = {
 
   /** SPEC — §5. Non-Directorate players sell remains through rendering contracts. */
   RENDERING_CONTRACT_RATE: 0.3,
+
+  /**
+   * How far a Rasp swarm smells residue, in metres — docs/bestiary.md §4.
+   *
+   * A proximity test like WRECK_RADIUS_M above, and for the same reason: being
+   * drawn to a wreck is scent, not hearing, so the thermocline and terrain do
+   * not gate it. TUNABLE, but sized against the swarm's speed so §4's "arrive
+   * at battle sites roughly 40 s after the battle" is distance over speed
+   * (2,000 m at 48 m/s) rather than a timer pretending to be behaviour.
+   */
+  SCAVENGE_RANGE_M: 2000,
+  /** Close enough to feed. Inside this the swarm stops travelling and strips. */
+  SCAVENGE_FEED_RADIUS_M: 150,
+  /**
+   * How many times faster a fed-on mark decays than one left alone.
+   *
+   * SPEC in shape — docs/bestiary.md §4 resolves the swarm's salvage-stripping
+   * as an acoustic act: the residue is eaten "roughly four times faster" while
+   * the feeding SIG stands in its place. The figure itself is TUNABLE.
+   */
+  SCAVENGE_STRIP_FACTOR: 4,
+
+  /**
+   * SPEC — §4. "Lampfry scatter from any entity within 300 m regardless of
+   * SIG, including a silent-running scout."
+   *
+   * A proximity test in three dimensions, and deliberately **not** routed
+   * through the Echo Layer: the trigger exists precisely so that silence
+   * cannot suppress it, and a SIG gate anywhere in this path would quietly
+   * reintroduce the thing it answers.
+   */
+  LAMPFRY_SCATTER_RADIUS_M: 300,
+  /** SPEC — §4. "Scattered shoals reform 25 s after the last intruder leaves." */
+  LAMPFRY_REFORM_S: 25,
+
+  /** SPEC — §4. "A Tetherjelly cluster lowers local PF by 0.10 in a 250 m radius." */
+  JELLY_PF_DELTA: 0.1,
+  JELLY_RADIUS_M: 250,
+  /**
+   * Hull points a cluster loses per second in Failing water — §6's
+   * "Tetherjelly fields thinning: local PF rises toward baseline", as a rate.
+   * TUNABLE: at 40 hp a cluster survives ~40 s of failing water, so a field
+   * thins over a minute or two rather than vanishing on a threshold tick.
+   */
+  JELLY_WITHER_HP_PER_S: 1,
+
+  /**
+   * SPEC — §4. A Hollow "does not move until something loud passes within
+   * 500 m." Measured in three dimensions, like a bite: a convoy 500 m
+   * horizontally *and* 400 m vertically from the ambush is not passing it.
+   */
+  HOLLOW_TRIGGER_RANGE_M: 500,
 
   /**
    * Drift Health — §6. "The map can be killed."

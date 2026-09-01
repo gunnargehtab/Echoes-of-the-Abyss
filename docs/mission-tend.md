@@ -453,7 +453,7 @@ one mission at a time, what it was missing.
 | **The gift as cargo** — a load carried point to point | **Built** (#239), exactly as this row predicted: the hold-and-cut lift with the cut time at zero, and the `extract` predicate naming its load so the gift reaching the landing is a fact about the bread rather than about the hull being loaded at all |
 | The stillness as culture — Teel's day going quiet ahead of the sweep | Ambient authoring, `say` and mix work; no new mechanism |
 | Filed → *Thin Water* briefing variant | **Not built** — the progression and briefing-variant rows of [campaign.md](campaign.md) §11, which this pair of missions turns from an intention into a requirement with a concrete first case |
-| Lampfry scatter and Tetherjelly PF, on the map they were designed for | Not started ([bestiary.md](bestiary.md), Implementation Status) — the mission reads correctly without them and reads *right* with them |
+| Lampfry scatter and Tetherjelly PF, on the map they were designed for | **Species built** (#306) — the scatter tell, the reform, the jelly masking and both Failing-water consequences are simulated and tested ([bestiary.md](bestiary.md), Implementation Status). What remains is this mission's own authoring: seeding shoals through the Gardens and clusters along the duct in `seeding-tend`, which currently places neither |
 | In-mission character speech, heard | Text only, the standing status ([mission-sorrowgate.md](mission-sorrowgate.md) §13) |
 
 ---

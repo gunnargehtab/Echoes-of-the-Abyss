@@ -67,7 +67,9 @@ Stat blocks are prototype intent, in the manner of [units.md](units.md). Interes
 | --- | --- | --- | --- | --- | --- |
 | 4 | 60 | — | never | 0 | 5 |
 
-Harmless, and the most tactically important animal in the game. Lampfry **scatter** from any entity within 300 m regardless of SIG, including a silent-running scout. A scattering shoal is a purely *visual* tell — the one piece of information in the Rift that a silent unit cannot suppress, and the reason the Commune's stealth has an answer at all. Scattered shoals reform after 25 s.
+Harmless, and the most tactically important animal in the game. Lampfry **scatter** from any entity within 300 m regardless of SIG, including a silent-running scout. A scattering shoal is a purely *visual* tell — the one piece of information in the Rift that a silent unit cannot suppress, and the reason the Commune's stealth has an answer at all. Scattered shoals reform 25 s after the last intruder leaves.
+
+The tell is **public**, the way hazards and Drift Health are public: a shoal's glow is light in the darkest water on Earth, not sound, so every commander sees every shoal and sees the moment one scatters. That is a deliberate disclosure with a hard edge — a scatter says *something is within 300 m of this glow* and never what, whose, how many, or exactly where. Routing it through the Echo Layer would be wrong twice over: a SIG-4 shoal would be inaudible (a tell nobody can read), and the trigger is proximity precisely so that silence cannot suppress it. Guns never auto-engage the ambient species for the same inaudibility reason mines are never auto-engaged — killing a shoal is always a deliberate order, and §6 prices what burning a region's tells costs.
 
 **Tetherjelly** — colonial drifting absorber. Kelp Forest, thermocline boundaries.
 
@@ -76,6 +78,10 @@ Harmless, and the most tactically important animal in the game. Lampfry **scatte
 | 1 | 20 | — | never | 2 | 40 |
 
 Living terrain. A Tetherjelly cluster lowers local PF by **0.10** in a 250 m radius. The Commune farms them; everyone else finds them useful and takes them for granted. They are killed by any AoE and they do not come back within a match: burning a lane through a jelly field permanently raises the PF of that lane, which is the cleanest small example of the map being consumable.
+
+The 0.10 is **additive and absolute**, not a percentage — resolved that way deliberately (#306). PF is the lever that decides which factions thrive where, and a proportional discount would make the same jellies mask a sixth of a kelp bed but a sixteenth of a trench, quietly turning one species into seven different ones by address. A cell's PF composes as *biome baseline, times any hazard multipliers, minus any jelly deltas*, floored at 0.05 — sound never stops entirely — and still capped at the trench ceiling. Overlapping clusters stack: a dense field is a better mask than a thin one, which is exactly what farming them should buy.
+
+Clusters are **chart data**, public like biomes and hazards: a mask you cannot see is confusion, not dread, and "takes them for granted" requires being able to see what you are taking for granted. In Failing water (§6) clusters wither and die one by one — an environmental death that pays nobody — so a dying region's jelly fields thin and its PF climbs back toward the biome baseline, which is the Commune losing their concealment exactly as §6 promises.
 
 ### Grazers
 
@@ -97,6 +103,8 @@ Slow, tough, and reluctant. A committed herd is a stampede that does structure d
 
 Rasps are drawn to **Echo Marks**, not to live units — they arrive at battle sites roughly 40 s after the battle. A swarm feeding on a wreck is a loud, unmissable Tier-3 announcement that something died here, and they strip salvage while they do it. They are how the Rift admits that scavengers are also witnesses.
 
+Stripping salvage is an **acoustic act, not an economic one**: a feeding swarm consumes the residue it stands on, so the battle-site or wreck mark it feeds at decays roughly four times faster than it would alone — the quiet evidence is eaten, and the swarm's own feeding SIG stands in its place. Nothing changes hands; there is no wreck-salvage yield for it to remove ([systems-echo.md](systems-echo.md) §7 prices marks, not cargo). The trade a scout cares about: arrive inside 40 s and the residue tells you what happened, arrive later and all that is left is the announcement that scavengers got there first.
+
 ### Predators
 
 **Hollow** — solitary ambush predator, trench walls and abyssal overhangs.
@@ -106,6 +114,8 @@ Rasps are drawn to **Echo Marks**, not to live units — they arrive at battle s
 | 3 idle / 60 striking | 80 | 45 | 70 | 35 | 640 |
 
 The Drift's own Silent Running. A Hollow at rest is functionally Tier 0, listens better than most units, and does not move until something loud passes within 500 m. Its strike is one of the largest single SIG events on the map, which means **every Hollow kill tells the whole region where it happened.** Trench routes are fast, they carry sound 1.6×, and they are full of these.
+
+The Hollow is a **trigger model, not a dwell model** — the one creature the aggro ladder does not describe. Interest (45) makes it coil: it tracks the source and does not move, does not close, and does not get louder, because an ambush that announced itself would be a different animal. The strike fires when something it hears at Commit (70) is within 500 m in three dimensions — no 4 s dwell, no 20 s of watching, no approach. It is therefore the deliberate exception to §8's "every commit is preceded by 4 s of Interested behaviour with an audible tell": the Hollow's tell is *positional* rather than temporal — the doc names its ground, trench walls and abyssal overhangs, and a route that carries sound at 1.6× is priced by what lives in it. Striking is the only loud state; a Hollow disengaging drops straight back to SIG 3, and each kill lays full-intensity battle residue, so the strike's announcement outlives the seconds it took.
 
 **Draymaw** — pack predator, 4–6 individuals. Mid-water, follows industry.
 
@@ -147,7 +157,7 @@ Both are now wrong in the same way and fixed together. **A creature has a workin
 
 **Two columns, because a creature's depth has two independent answers.** *Seeded across* is where the population sits when the map is built; *pursues within* is how far one will leave that to chase something. They are not the same question, and for two species only one of them has an answer at all: Lampfry and Tetherjelly never commit, so they have no pursuit band, and their vertical extent is entirely a property of how they are seeded. Collapsing both into one number would make that column mean two things depending on the row, which is how a table starts lying.
 
-*Seeded across* reads **at depth** for the five hunters because that is what the code does today — `spawnFauna` places every individual at exactly its working depth, so a herd is a horizontal scatter and a vertical line. That is fine for a pack that will immediately chase, and wrong for a shoal whose whole mechanic is being somewhere. **Seeding a population across a band is therefore a prerequisite for Lampfry and Tetherjelly and for nobody else** — their "reaches" column is describing that spread, not a chase, and until it exists a Lampfry shoal would sit at a single depth and the Shelf-wide tell below would not be true.
+*Seeded across* reads **at depth** for the five hunters because a pack chases immediately, so where it starts barely matters — every hunter is placed at exactly its working depth, a horizontal scatter and a vertical line. The two ambient species are seeded **across their band**: each shoal or cluster takes a deterministic offset within ±100 m of the working depth, evenly spread rather than randomly bunched, because their "reaches" column describes that spread and not a chase. Without it a Lampfry shoal would sit at a single depth and the Shelf-wide tell below would not be true.
 
 Read the last column as the mechanic. **Depth is cover from some of the Drift and exposure to the rest.** A harvester working a nodule field at 600 m is in Draymaw country; take the same harvester down to the crystal and the packs cannot follow — but something far larger is already there. Nothing in the Drift covers the whole water column, and that is deliberate: a creature that could reach anything would make depth meaningless against the one part of the map that does not negotiate.
 
@@ -167,7 +177,7 @@ One open question this table does not settle, flagged rather than quietly decide
 
 - §4 gives the Tetherjelly two homes, "Kelp Forest, thermocline boundaries", and a species carries one working depth. The row above chooses the thermocline, because it is the boundary the species is named for and the one this section already noted it "could never reach". A Kelp Forest population needs either a second seeding depth per map or a second entry, and is not in this table.
 
-*The four bands above are authored ahead of their species.* Lampfry, Rasp, Tetherjelly and Hollow are not yet simulated; see Implementation Status.
+*The four newest bands above were authored ahead of their species*; see Implementation Status for which are now simulated.
 
 *Creatures do not yet migrate vertically on their own.* They hold their working depth until something worth chasing pulls them off it. Seeded migration along the corridors [hazards.md](hazards.md) §6 describes is still unwritten.
 
@@ -234,7 +244,7 @@ In campaign play, Drift Health persists between missions on the same map ([campa
 | Directorate free income snowballs | Biomass requires the kill *and* a harvest cycle at SIG 45–60, at a corpse whose location the whole region just heard |
 | Drift Health becomes a mandatory chore | It is never a resource the player spends deliberately; it degrades from things players already want to do, and only one faction profits from ruining it |
 | Tier-1 ambiguity reads as noise, not dread | Fauna density is regionally bounded and species-typed, so an experienced player learns *which* ambiguity a region produces |
-| Fauna aggro feels random | Every threshold is deterministic against perceived loudness, and every commit is preceded by 4 s of Interested behaviour with an audible tell |
+| Fauna aggro feels random | Every threshold is deterministic against perceived loudness, and every commit is preceded by 4 s of Interested behaviour with an audible tell — except the Hollow, deliberately (§4): its tell is positional, not temporal |
 
 ---
 
@@ -251,17 +261,17 @@ In campaign play, Drift Health persists between missions on the same map ([campa
 
 ## Implementation Status
 
-Three species are simulated, one per behaviour class. The framework is the deliverable; the rest of the roster is additions to it.
+All seven species are simulated (#306). The framework was the deliverable; the roster is now the proof it held — four behaviour shapes (dwell ladder, scavenger, ambient, trigger model) on one substrate, with §6's Failing row finally observable end to end.
 
 | Species | Class | Status |
 | --- | --- | --- |
 | Ashgrazer | Grazer | **Implemented** — herd, full aggro ladder, stampede SIG, Biomass |
 | Draymaw | Predator | **Implemented** — the staple pack, and the animal most likely to answer a careless economy |
 | Sounder | Megafauna | **Implemented** — answers pings, destroys structures by transit, ignores small units. Migration along fixed corridors is still unwritten ([hazards.md](hazards.md) §6) |
-| Lampfry | Ambient | Not started — the scatter tell is a *visual* channel with no acoustic component, so it needs renderer work rather than simulation |
-| Tetherjelly | Ambient | Not started — living terrain that lowers local PF; the hazard framework's PF hook is the seam it will use |
-| Rasp | Scavenger | Not started — drawn to Echo Marks rather than to live units, which now exist ([systems-echo.md](systems-echo.md) §7), so this is the cheapest of the remaining four |
-| Hollow | Predator | Not started |
+| Lampfry | Ambient | **Implemented** — shoals seed across the Shelf band, scatter on proximity regardless of SIG, and reform 25 s after the last intruder leaves. The glow and the scatter are public (light, not sound); a Failing region's shoals die off, which is §6's "scatter tells stop working" |
+| Tetherjelly | Ambient | **Implemented** — clusters seed across the duct band and subtract 0.10 from local PF in 250 m (the hazard hook grew an additive mode; see §4). Killed clusters never return, and Failing water withers them, so PF genuinely rises toward baseline |
+| Rasp | Scavenger | **Implemented** — drifts to the strongest battle residue in smelling range ([systems-echo.md](systems-echo.md) §7), feeds loudly, and eats the mark roughly four times faster than it would fade alone. The aggro ladder outranks scavenging, so a swarm is still a creature you can pull off a wreck by being loud |
+| Hollow | Predator | **Implemented** — the trigger model: coils at Interest without moving or getting louder, strikes on Commit within 500 m in three dimensions, is loud only while striking, and lays full-intensity battle residue on every kill |
 
 ### How fauna are contacts
 
