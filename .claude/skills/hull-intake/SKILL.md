@@ -1,18 +1,20 @@
 ---
 name: hull-intake
-description: Validate a 3D unit model export (GLB) and bake the top-down maps the sprite pipeline needs — albedo, normal, emissive, height — plus a report of what the export actually contains. Use this whenever a GLB or glTF model of a unit, hull, or structure arrives (from Claude Design or anywhere else), when asked to check, inspect, convert, import, or "bring in" a 3D model, or when working on replacing the guessed heightfield in hullTextures.ts with real model-derived maps. Prefer this over improvising a three.js/Blender setup by hand — there is no Blender in this container, and this harness is already verified against the repo's Playwright/Chromium setup.
+description: Validate a 3D model export (GLB) — unit, structure, or environment prop — and bake the top-down review maps (albedo, normal, emissive, height) plus a report of what the export actually contains. Use this whenever a GLB or glTF model arrives (from Claude Design or anywhere else), when asked to check, inspect, convert, import, or "bring in" a 3D model, and for environment props via --category env. Prefer this over improvising a three.js/Blender setup by hand — there is no Blender in this container, and this harness is already verified against the repo's Playwright/Chromium setup.
 ---
 
 # Hull intake — from GLB export to repo assets
 
-Claude Design (and most 3D tools) export GLB. The game never loads 3D at
-runtime — the frontend is PixiJS and bakes **sprites** — so intake means
-turning the model into the flat maps that
-`packages/frontend/src/game/hullTextures.ts` composes: today it *guesses* a
-heightfield from the 2D outline (see its header comment); a real model
-replaces that guess. GLB is the format of record here rather than OBJ+MTL
-because glTF carries a first-class emissive channel and MTL drops it — and
-emissive is the style: glow encodes loudness (`docs/style-neon-noir.md`).
+Claude Design (and most 3D tools) export GLB, and GLB is the format of record
+here rather than OBJ+MTL because glTF carries a first-class emissive channel
+and MTL drops it — emissive is the style: glow encodes loudness
+(`docs/style-neon-noir.md`). Since the three-layer-ocean revision the game
+**does** load approved GLBs at runtime — the conn view renders own-force
+hulls and structures as meshes (`rosterModels.ts`) and environment props as
+instanced meshes (`environmentModels.ts`) — while the baked maps remain the
+loading fallback and the sonar scope's sprite language
+(`packages/frontend/src/game/hullTextures.ts`). Intake is the one gate both
+paths pass through (`docs/graphics-standards.md` gate 2).
 
 ## 1. Bake
 
@@ -73,6 +75,41 @@ so commit the GLB, not the PNGs, unless a doc embeds one.
 Wiring the maps into `hullTextures.ts` is a separate, deliberate code change
 — don't do it as a side effect of intake. Once that wiring exists, verify in
 the real client with the `run-game` skill.
+
+## Environment props — `--category env`
+
+Environment models (the Block 4 kit in `docs/asset-prompts-3d.md`: kelp
+clusters, vent chimneys, ruin blocks, crags) pass the same gate in its env
+mode:
+
+```bash
+node .claude/skills/hull-intake/scripts/bake.mjs <env-model.glb> \
+  --category env --footprint-m <metres> --out /tmp/hull-intake/<slug> \
+  [--world-light <vent|flora|crystal>]
+```
+
+What changes against the hull run, per `docs/graphics-standards.md` gate 2:
+
+- **`--footprint-m` replaces `--length-m`** — the registry `footprintM` from
+  `packages/frontend/src/game/environment.ts` (and the Block 4 table). Scale
+  is held on the larger horizontal axis; there is no length-on-X yaw, because
+  a prop has no bow and stands at a random yaw per instance.
+- **The emissive rule is inverted.** Any emissive **fails** unless
+  `--world-light` names the family Block 4 licenses for this prop — on the
+  ground, the glowing rock is the style bug. `--glow-e` is rejected outright:
+  props have no SIG, and gate 3 does not apply to them.
+- **Budgets are checked**: triangles against `--max-tris` (default 800, the
+  registry fence) and distinct materials against `--max-materials` (default
+  2 — each material is a draw call per instance batch, gate 6).
+
+Review reads the same four maps (the height and albedo passes are the
+silhouette check from the 55° camera's point of view), but they are **review
+artifacts only** — props ship as the GLB itself, instanced at runtime, and
+never appear in the sprite bake or on the sonar scope. File approved props as
+`docs/concept-art/models/env-<biome-word>-<thing>.glb`, then add the
+registry row in `environment.ts` (slug, footprint, triBudget from the meta,
+density, eligibility) as its own deliberate change, and verify with
+`run-game` plus the probe's `props` / `propTris` numbers.
 
 ## Self-test (no model yet?)
 

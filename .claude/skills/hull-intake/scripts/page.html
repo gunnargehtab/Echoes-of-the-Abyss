@@ -3,11 +3,15 @@
   Bake page for hull-intake. Loaded by bake.mjs in headless Chromium; not a
   standalone tool. Renders one GLB from a fixed top-down orthographic camera
   in four passes (albedo / normal / emissive / height) so the driver can save
-  each as a PNG. The passes exist because packages/frontend/src/game/
-  hullTextures.ts composes exactly these channels when it bakes a sprite —
-  today from a guessed heightfield, eventually from these maps.
+  each as a PNG. For units and structures the passes are the sprite bake's
+  shipped inputs (packages/frontend/src/game/hullTextures.ts composes exactly
+  these channels; the approved GLB itself also ships, loaded at runtime by
+  rosterModels.ts). For environment props (category=env) the passes are
+  review artifacts only — props ship as instanced meshes — and
+  canonicalisation differs: no length-on-X yaw (a prop stands at a random
+  yaw), scale held to the registry footprint on the larger horizontal axis.
 
-  Query params (all set by bake.mjs): model, lengthM, ppm.
+  Query params (all set by bake.mjs): model, lengthM, ppm, category.
 -->
 <html>
   <head>
@@ -30,6 +34,7 @@
       const lengthM = Number(params.get('lengthM'));
       const ppm = Number(params.get('ppm')) || 2;
       const modelUrl = params.get('model') || '/model.glb';
+      const isEnv = params.get('category') === 'env';
 
       const renderer = new THREE.WebGLRenderer({
         antialias: true,
@@ -53,18 +58,23 @@
 
         // Convention: length runs along X. Exporters disagree about which
         // horizontal axis is "forward", so if the Z footprint is longer,
-        // treat Z as the length axis and yaw the model onto X.
+        // treat Z as the length axis and yaw the model onto X. Environment
+        // props skip the yaw — they have no bow, and the registry gives each
+        // instance a random yaw anyway.
         let rotated = false;
-        if (rawSize.z > rawSize.x) {
+        if (!isEnv && rawSize.z > rawSize.x) {
           model.rotation.y = Math.PI / 2;
           rotated = true;
         }
 
-        // Rescale so hull length matches the design length in metres
-        // (HULL_LENGTH_M in packages/frontend/src/game/silhouettes.ts).
+        // Rescale to the design size in metres: hulls hold their length
+        // (HULL_LENGTH_M in packages/frontend/src/game/silhouettes.ts) on X;
+        // env props hold the registry footprint on the larger horizontal
+        // axis, mirroring environmentModels.ts's canonicalisation.
         const preBox = new THREE.Box3().setFromObject(model);
         const preSize = preBox.getSize(new THREE.Vector3());
-        const scale = lengthM > 0 ? lengthM / preSize.x : 1;
+        const designAxis = isEnv ? Math.max(preSize.x, preSize.z) : preSize.x;
+        const scale = lengthM > 0 && designAxis > 0 ? lengthM / designAxis : 1;
         model.scale.setScalar(scale);
 
         // Centre on the origin so the camera frame is symmetric.
@@ -89,13 +99,16 @@
         camera.up.set(0, 0, -1);
         camera.lookAt(0, 0, 0);
 
-        // --- Inventory materials once; the passes swap them in and out.
+        // --- Inventory materials and geometry once; the passes swap them.
         const meshes = [];
         let emissiveCount = 0;
+        let triangleCount = 0;
         const materials = [];
         model.traverse((o) => {
           if (!o.isMesh) return;
           meshes.push(o);
+          const position = o.geometry.getAttribute('position');
+          triangleCount += Math.floor((o.geometry.index?.count ?? position.count) / 3);
           for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
             const hasEmissive =
               (m.emissive && (m.emissive.r || m.emissive.g || m.emissive.b)) || m.emissiveMap;
@@ -231,6 +244,7 @@
           meshCount: meshes.length,
           materials,
           emissiveMaterialCount: emissiveCount,
+          triangleCount,
         };
         window.__ready = true;
       } catch (err) {
