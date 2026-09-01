@@ -33,6 +33,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | **[mission-prospect.md](mission-prospect.md)** | The Ledger 6, specified: the rim survey — the convergence, from the Consortium's side |
 | **[mission-item-nine.md](mission-item-nine.md)** | The Ledger 7, specified: the Board's session, one decision, and the ending §9 refuses to rank |
 | **[mission-tend.md](mission-tend.md)** | The Second Seeding 1, specified: a working day, the sweep, the stillness, and what *unfiled* is worth |
+| **[mission-thin-water.md](mission-thin-water.md)** | The Second Seeding 2, specified: a column in water that hides nothing, an unwinnable fight nobody chose, and six of ten read out in people |
 | **[mission-attendance.md](mission-attendance.md)** | The Attending 1, specified: one watch of the Mouth's cycle, the nine arrivals, and the silence a rite is owed |
 | **[mission-aptitude.md](mission-aptitude.md)** | The Second Chord 1, specified: six hulls, six formations, and the quarter of the compass a Knight is loud in |
 
@@ -83,14 +84,16 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 One forward reference remains: `concept-art/DESIGN-PHILOSOPHY.md`, linked from the root README, which would set out the Pressure Cartography visual language behind the four survey plates.
 
 The prologue and one full campaign are built; the rest of the campaign is not. What follows is
-designed, or already stated in a doc that ships, and unbuilt — named in plain text because none
-of it has a document to point at yet:
+designed, or already stated in a doc that ships, and unbuilt — named in plain text except where
+a document already points at it:
 
-- **The remaining 18 missions.** campaign.md §5–§7 gives them titles, teaching targets and
+- **The remaining 17 missions.** campaign.md §5–§7 gives them titles, teaching targets and
   beats, which is not a specification. Each needs a document of its own — one doc per mission,
-  the pattern mission-sorrowgate.md sets and eleven documents now follow — before it needs
+  the pattern mission-sorrowgate.md sets and twelve documents now follow — before it needs
   code. The Ledger's seven are specified and built end to end, and so are Tend, Attendance and
-  Aptitude — every mission the bible specifies now has a literal behind it. The
+  Aptitude. [mission-thin-water.md](mission-thin-water.md) is the first document specified
+  *ahead* of its literal: the mission definition `seeding-thin-water` and the `kell-shoulder`
+  map are unbuilt, and its §13 reports that everything they would need already ships. The
   format itself has stopped asking: the condition-fired beat, the exposure tally and the aimed
   hold — the three things the first four documents still wanted — have all shipped, along with
   the Ledger's own three additions (the `deliver` predicate, readings per objective, and the
