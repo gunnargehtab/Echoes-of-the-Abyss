@@ -270,6 +270,14 @@ roster. Props ship as meshes, not baked maps, so the sprite-density contract
 (4 / 1.5 px/m) does not apply to them — the triangle column above is their density
 contract.
 
+Every row of this table is on disk today as the output of `tools/env-props/build.mjs`,
+the generator that stands in for the Claude Design batch
+([graphics-standards.md](graphics-standards.md), "The environment branch"). A model
+generated from the prompts above replaces its row's file directly: run intake with the
+row's footprint, cap and light, commit the GLB over the generated one, and update the
+registry row's triangle count from the intake report. The environment registry, the
+placement rules and the kelp sway read the file, not its author.
+
 ## Consistency checklist (before accepting a model)
 
 For units and structures:
