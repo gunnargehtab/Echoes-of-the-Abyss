@@ -379,6 +379,17 @@ Every family obeys the same five rules, and they are gates, not suggestions:
    `crystal-seam` duller than Hadron's crystal glow — so nothing in the world
    can be mistaken for the interface, or for a faction.
 
+The three families as exported, effective emissive luminance being the material's
+emissive luminance times its `KHR_materials_emissive_strength`: `vent-ember` 0.18,
+`flora-biolight` 0.11, `crystal-seam` 0.11. The seam shipped at 0.05 and was lifted to
+biolight parity once the prop-luminance normalisation (a 0.06 diffuse ceiling, see
+Block 4 in [asset-prompts-3d.md](asset-prompts-3d.md)) made the crystal's stone read: at 0.05 the
+seam's brightest pixel matched the stone's lit facets at the closest zoom (250 m), so
+nothing on the prop read as *light*. At 0.11 the seam is the brightest thing on the prop
+at 250 m, gone into fog by 700 m, and still under Hadron's crystal glow on a structure at
+the same distance (0.37 against 0.43 rendered sRGB luminance). Rule 2 holds: the ember
+stays the ceiling by a factor of 1.6.
+
 Per-map count caps live in code beside the emitters (the `VENT_EMBER_CAP`
 pattern in `PerspectiveView.ts`); [art-direction.md](art-direction.md) "Reading
 the Sea Floor" and [graphics-standards.md](graphics-standards.md) carry the
