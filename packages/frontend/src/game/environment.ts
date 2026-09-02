@@ -190,7 +190,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
   {
     slug: 'env-resonance-pylon',
     footprintM: 10,
-    triBudget: 112,
+    triBudget: 484,
     density: 0.1,
     stands: [Biome.ResonanceField],
     nearRock: 'any',
