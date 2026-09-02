@@ -273,7 +273,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
   {
     slug: 'env-open-boulder',
     footprintM: 12,
-    triBudget: 86,
+    triBudget: 160,
     density: 0.1,
     stands: [Biome.OpenWater],
     nearRock: 'any',
