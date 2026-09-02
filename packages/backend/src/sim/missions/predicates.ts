@@ -191,7 +191,15 @@ export function isMet(
  * it labels.
  */
 export function isStanding(predicate: MissionPredicate): boolean {
-  return predicate.kind === 'quiet';
+  // `survive` is the same shape as the silence order: "nine are mustered" is
+  // a sentence about now, and a count that latched Met on the first pass —
+  // when twelve hulls are trivially at least nine — stayed Met through every
+  // loss after it. docs/mission-intake.md §8 is the row that found it: the
+  // muster is a terminal count read at the close, and a colossus that took
+  // four hulls at 18:00 left the panel reading "met" beside a muster of eight.
+  // Aptitude's six voices and Thin Water's two escorts carry the same row and
+  // now read the same way.
+  return predicate.kind === 'quiet' || predicate.kind === 'survive';
 }
 
 /**

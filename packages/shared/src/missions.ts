@@ -335,6 +335,30 @@ export const ATTENDING_ATTENDANCE_HEADER: MissionHeader = {
   ],
 };
 
+export const ATTENDING_INTAKE_HEADER: MissionHeader = {
+  id: 'attending-intake',
+  campaign: 'attending',
+  ordinal: 2,
+  name: 'The Attending \u2014 Intake',
+  premise:
+    'The banding ground above Sufficiency, twelve hulls of one year, and a living that will not come to them.',
+  mapId: 'banding-ground',
+  // The shift ends at 20:00 (docs/mission-intake.md \u00a79), inside \u00a710's 12\u201325.
+  lengthBandS: [1140, 1260],
+  /**
+   * Undermarshal Korrin, assigning the band at the muster \u2014
+   * docs/mission-intake.md \u00a712, verbatim. Public for Attendance's reason: it
+   * names the band, the muster and the finding, and withholds the only thing
+   * the Directorate withholds, which is what the ground will see.
+   */
+  briefing: [
+    'Intake 11 is mustered. The year is at the top of the water it was made for, which is the customary place to find out whether that is true.',
+    'Twelve hulls are given to the ground. The band is two hundred and forty-five, and it is rendered from what lives on the walls. What lives on the walls is quieter than the year is and hears better than the year does, and it will not come to you. The Directorate is not brought its living. The Directorate goes and gets it.',
+    'Nine of twelve is a muster. The Undermarshalcy does not round up.',
+    'At the close the ground files what it saw. It is not asked for a number. It is asked what it saw.',
+  ],
+};
+
 export const CHORD_APTITUDE_HEADER: MissionHeader = {
   id: 'chord-aptitude',
   campaign: 'chord',
@@ -373,6 +397,7 @@ export const MISSION_HEADERS: readonly MissionHeader[] = [
   SEEDING_TEND_HEADER,
   SEEDING_THIN_WATER_HEADER,
   ATTENDING_ATTENDANCE_HEADER,
+  ATTENDING_INTAKE_HEADER,
   CHORD_APTITUDE_HEADER,
 ];
 

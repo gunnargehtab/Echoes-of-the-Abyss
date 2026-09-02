@@ -16,6 +16,7 @@ import { ABYSSAL_RIFT_CORRIDOR } from './abyssalRiftCorridor.ts';
 import { KELP_LABYRINTH } from './kelpLabyrinth.ts';
 import { VENTFRONT_DIVIDE } from './ventfrontDivide.ts';
 import { ATTENDING_GALLERIES } from './missions/attendingGalleries.ts';
+import { BANDING_GROUND } from './missions/bandingGround.ts';
 import { FIRST_TRENCH_MARGIN } from './missions/firstTrenchMargin.ts';
 import { FOURTH_TRENCH } from './missions/fourthTrench.ts';
 import { HOLDING_BOARD } from './missions/holdingBoard.ts';
@@ -33,6 +34,7 @@ export * from './types.ts';
 export {
   ABYSSAL_RIFT_CORRIDOR,
   ATTENDING_GALLERIES,
+  BANDING_GROUND,
   FIRST_TRENCH_MARGIN,
   FOURTH_TRENCH,
   HOLDING_BOARD,
@@ -87,6 +89,7 @@ export const MISSION_MAPS: readonly MapDefinition[] = [
   ATTENDING_GALLERIES,
   OUTER_FORMATIONS,
   KELL_SHOULDER,
+  BANDING_GROUND,
 ];
 
 export function missionMapById(id: string): MapDefinition | undefined {

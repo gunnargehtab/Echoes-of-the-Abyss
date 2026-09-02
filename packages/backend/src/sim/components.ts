@@ -185,6 +185,15 @@ export const Fauna = defineComponent({
   homeX: Types.f32,
   homeY: Types.f32,
   /**
+   * The depth it holds when nothing pulls it off — the species' working depth
+   * (docs/bestiary.md §4), unless an authored transit says otherwise. A
+   * mission's colossus crosses the water its document puts it in: a Sounder
+   * at its own 2,000 m can neither enter a muster floored at 1,900 nor grind
+   * a hull holding station a hundred metres above it (docs/mission-intake.md
+   * §6, §13), so the drive that steers it says how deep it runs.
+   */
+  homeDepth: Types.f32,
+  /**
    * Scavengers only — the Echo Mark the swarm is currently drawn to, by the
    * mark's own stable id (0 = none). An id rather than a position because a
    * reinforced mark moves, and the swarm should follow the residue, not the
