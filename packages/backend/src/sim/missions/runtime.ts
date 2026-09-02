@@ -29,6 +29,7 @@
 import { hasComponent } from 'bitecs';
 import {
   DRIFT,
+  FaunaSpecies,
   FaunaStage,
   MAX_PROPAGATION_FACTOR,
   MissionOutcome,
@@ -36,6 +37,7 @@ import {
   ResolutionTier,
   SIM,
   detectionRatio,
+  faunaStatsFor,
   thermoclineFactor,
   type EchoSnapshot,
   type MissionAbility,
@@ -145,6 +147,8 @@ interface Commitment {
   tag: MissionTag;
   x: number;
   y: number;
+  /** The depth the transit runs at. Absent is the species' own. */
+  depthM?: number;
   untilTick: number;
 }
 
@@ -623,6 +627,7 @@ export class MissionRuntime {
           tag: beat.tag,
           x: beat.driveTo.x,
           y: beat.driveTo.y,
+          depthM: beat.driveTo.depthM,
           untilTick: beat.untilTick,
         });
         return;
@@ -720,6 +725,11 @@ export class MissionRuntime {
         const released = this.eidOf(world, commitment.tag);
         if (released !== 0 && hasComponent(world, Fauna, released)) {
           Fauna.senseS[released] = DRIFT.SENSE_INTERVAL_S;
+          // And its own water back: a transit's depth is the transit's, and a
+          // released creature holds the species' band again.
+          Fauna.homeDepth[released] = faunaStatsFor(
+            Fauna.species[released] as FaunaSpecies
+          ).workingDepthM;
         }
         continue;
       }
@@ -736,6 +746,11 @@ export class MissionRuntime {
       // the flight at all.
       Fauna.homeX[eid] = commitment.x;
       Fauna.homeY[eid] = commitment.y;
+      // The depth the document put the line at, or the species' own. Held
+      // every pass for `homeX`'s reason: `act` climbs or sinks toward it at
+      // the Drift's vertical speed, and nothing else may pull it off.
+      Fauna.homeDepth[eid] =
+        commitment.depthM ?? faunaStatsFor(Fauna.species[eid] as FaunaSpecies).workingDepthM;
       Fauna.targetEid[eid] = 0;
       Fauna.stage[eid] = FaunaStage.Committed;
       // Deaf for the length of the commitment. `faunaSystem` counts this down
@@ -1247,14 +1262,29 @@ export class MissionRuntime {
       const standing = isStanding(objective.predicate);
       if (status === ObjectiveStatus.Failed) continue;
       if (status === ObjectiveStatus.Met && !standing) continue;
+      // The clock an `endure` counts from is the mission's start whether or
+      // not the objective is showing yet — Tend's turning is revealed at
+      // 15:00 and met at 15:50 "whatever the day did" — so the start is
+      // stamped before the reveal is consulted.
       if (!this.startedAt.has(objective.id)) this.startedAt.set(objective.id, world.tick);
+      // An objective the player has not been given yet is an absence rather
+      // than a status (types.ts, `revealAtTick`), and an absence is not
+      // scored: the court has said nothing about Tender Two before Tender Two
+      // is loaded, and a hull standing at the foot of the ascent at 05:00
+      // has not filed a finding the ground does not ask for until 19:00
+      // (docs/mission-intake.md §9). Deriving it early would latch a Met the
+      // player could never have read, on a rule they had never been shown.
+      if (objective.revealAtTick !== undefined && world.tick < objective.revealAtTick) continue;
       const met = this.meets(objective.predicate, own, this.startedAt.get(objective.id) ?? 0);
       if (met) this.statuses.set(objective.id, ObjectiveStatus.Met);
       else if (standing) this.statuses.set(objective.id, ObjectiveStatus.Pending);
     }
 
     // A terminal objective ends the mission the moment it is met: the court
-    // does not keep sitting once everybody is out.
+    // does not keep sitting once everybody is out. Unless the document says
+    // the shift runs its length (types.ts, `runsItsLength`), in which case
+    // only the `resolve` beat closes it.
+    if (this.definition.runsItsLength === true) return;
     const terminal = this.definition.objectives.filter((o) => o.terminal === true);
     if (
       terminal.length > 0 &&

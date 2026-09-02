@@ -675,7 +675,9 @@ function act(
   // bestiary bothered to name a habitat for every entry.
   const chasing =
     target !== 0 && (stage === FaunaStage.Interested || stage === FaunaStage.Committed);
-  const home = stats.workingDepthM;
+  // The species' working depth, unless a mission has driven it elsewhere
+  // (`Fauna.homeDepth`); the band is measured from wherever it holds.
+  const home = Fauna.homeDepth[eid]!;
   let wantDepth = home;
   if (chasing) {
     const theirs = Position.depth[target]!;

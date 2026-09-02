@@ -96,15 +96,16 @@ a document already points at it:
   Aptitude. [mission-thin-water.md](mission-thin-water.md) was the first document specified
   *ahead* of its literal, and is now built as well — `kell-shoulder` and `seeding-thin-water`,
   with tests — its §13's prediction holding that everything they needed already shipped.
-  [mission-intake.md](mission-intake.md) is the second, with `attending-intake` and the
-  `banding-ground` map unbuilt — and it is the document that starts the format asking again.
-  The condition-fired beat, the exposure tally and the aimed hold — the three things the first
-  four documents still wanted — have all shipped, along with the Ledger's own three additions
-  (the `deliver` predicate, readings per objective, and the conditional beat's choice group).
-  What Intake named was the next one: `deliver` counted Nodules, the Directorate's income is
-  Biomass, and no predicate could ask what a cohort economy earned. That query has since been
-  built (#330) — `deliver` reads any of the economy record's three accounts — and what remains
-  unbuilt is the literal, and a way to spend Biomass.
+  [mission-intake.md](mission-intake.md) was the second, and is now built as well —
+  `attending-intake` and the `banding-ground` map, with tests — and it is the document that
+  started the format asking again. The condition-fired beat, the exposure tally and the aimed
+  hold — the three things the first four documents still wanted — have all shipped, along with
+  the Ledger's own three additions (the `deliver` predicate, readings per objective, and the
+  conditional beat's choice group). What Intake named first was the next one: `deliver` counted
+  Nodules, the Directorate's income is Biomass, and no predicate could ask what a cohort economy
+  earned — built (#330), `deliver` reading any of the economy record's three accounts. What its
+  literal then found were four rules right for a court and wrong for a shift, each now a row of
+  its §13; what remains unbuilt is a way to spend Biomass.
   [mission-standing-wave.md](mission-standing-wave.md) is the third, and it asks loudest:
   `chord-standing-wave` and the `the-fifth` map are unbuilt, and its §13 names a predicate the
   objective union does not carry (what the player has *built*), two shipped constants that

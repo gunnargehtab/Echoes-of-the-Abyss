@@ -500,8 +500,18 @@ export type MissionBeatEffect =
        * Drive the creature here until `untilTick`, re-asserted every Echo tick
        * so the Drift's own escalate/cool bookkeeping cannot quietly undo an
        * authored approach.
+       *
+       * `depthM` is the depth the transit runs at, held the same way. Absent
+       * is the species' working depth, which is what every transit before
+       * docs/mission-intake.md wanted: Sorrowgate's colossus crosses a
+       * chamber at its own 2,000 m. Intake's crosses a muster floored at
+       * 1,900 m through a year holding station at 1,900 m, and a Sounder at
+       * its own depth can neither enter that water nor grind a hull a
+       * hundred metres above it — the transit's vertical reach is a body,
+       * not a column (`fauna.ts`, `transit`). So the document's line has a
+       * depth, and the beat says it (§6, §13).
        */
-      driveTo: { x: number; y: number };
+      driveTo: { x: number; y: number; depthM?: number };
       untilTick: number;
       /**
        * True when this beat is the audible precursor a `resolve` beat needs.
@@ -676,6 +686,21 @@ export interface MissionDefinition extends MissionHeader {
   courtSlot: number;
   /** Populate the Drift. False when a mission's only creature is authored. */
   fauna: boolean;
+  /**
+   * The shift runs its length: meeting every terminal objective does not
+   * close the mission, and only the `resolve` beat does.
+   *
+   * The runtime's default is the court's — "the court does not keep sitting
+   * once everybody is out" — and it is right for an extraction, where the last
+   * hull through the gate is the end of the story. docs/mission-intake.md §8
+   * and §9 are the first document it is wrong for: the band may be answered
+   * at 13:40 and the shift still ends at 20:00, because the Sounder crosses
+   * the bench at 16:00 whatever the register says and the roll is filed in
+   * the last minute or not at all. "A player who finds them faster banks
+   * earlier and gets a longer last five minutes" is a sentence about a close
+   * that stays where the document put it. Omitted is the court's rule.
+   */
+  runsItsLength?: true;
   /**
    * Nodules the player opens with. Omitted is none.
    *

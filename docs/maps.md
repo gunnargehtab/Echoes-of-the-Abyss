@@ -278,10 +278,12 @@ A mission map is authored the same way — a literal, regions painted in order �
 | Marr Plateau | `marr-plateau` | #251 | 4,000 × 2,500 m. A garden terrace, a working day, and a survey — [mission-tend.md](mission-tend.md) §11 |
 | The Attending Galleries | `attending-galleries` | #258 | 5,000 × 4,000 m. A gallery of sleepers, and the Ninth aimed at the Mouth — [mission-attendance.md](mission-attendance.md) §11 |
 | The Third's Outer Formations | `outer-formations` | #298 | 5,000 × 4,000 m. Crystal country with no cover in it, and one strip that carries — [mission-aptitude.md](mission-aptitude.md) §11 |
+| The Kell Shoulder | `kell-shoulder` | #212 | 5,000 × 3,000 m. Four kilometres of bare rock between two gardens, and a corridor across it — [mission-thin-water.md](mission-thin-water.md) §11 |
+| The Banding Ground | `banding-ground` | #212 | 5,000 × 4,000 m. The upper Ninth above Sufficiency, eight animals on its walls, and one line across the bench — [mission-intake.md](mission-intake.md) §11 |
 
 **Each is specified in full in its own mission document** — regions, floors, the single spawn and the parties the mission seats around it — and that document, not this one, owns those numbers. The literals say so themselves: every one carries a `doc` field pointing back at its §11 *and* at this table, so a map and its row are meant to be read together.
 
-Every mission map the bible specifies now exists. The table above lists what exists, and nothing is specified and missing from it.
+Every mission map the bible specifies now exists but one: Standing Wave's `the-fifth`, which [mission-standing-wave.md](mission-standing-wave.md) §11 specifies and whose §13 is a design agenda before it is a build list. The table above lists what exists.
 
 Sorrowgate is cut from Map Type 5's shape, which is what that archetype's *Ideal Use* line asks of it; it is not a Sunken Metropolis, and Map Type 5 stays *Not yet* in the archetype table, because ticking it would promise a four-seat competitive layout that nobody has written. The three that followed it are cut from no archetype at all — a mission map answers to its mission, and none of these four could be offered to a player choosing a map.
 

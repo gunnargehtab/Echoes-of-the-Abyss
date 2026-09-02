@@ -1,7 +1,7 @@
 /**
  * The mission catalogue — the private half of `@echoes/shared`'s headers.
  *
- * One mission, and it is the Prologue. Shaped exactly like `sim/maps/index.ts`
+ * Shaped exactly like `sim/maps/index.ts`
  * because it holds the same kind of thing for the same reason: a public header
  * the shell may read before a room exists, and an authored definition — the
  * parties, their positions, the predicates, the beat times — that no client is
@@ -12,6 +12,7 @@
  */
 
 import { ATTENDING_ATTENDANCE } from './attendance.ts';
+import { ATTENDING_INTAKE } from './intake.ts';
 import { CHORD_APTITUDE } from './aptitude.ts';
 import { LEDGER_ASSET_RECOVERY } from './assetRecovery.ts';
 import { LEDGER_BAFFLE } from './baffle.ts';
@@ -33,6 +34,7 @@ export * from './view.ts';
 export * from './runtime.ts';
 export {
   ATTENDING_ATTENDANCE,
+  ATTENDING_INTAKE,
   CHORD_APTITUDE,
   LEDGER_ASSET_RECOVERY,
   LEDGER_BAFFLE,
@@ -58,6 +60,7 @@ export const MISSIONS: readonly MissionDefinition[] = [
   SEEDING_TEND,
   SEEDING_THIN_WATER,
   ATTENDING_ATTENDANCE,
+  ATTENDING_INTAKE,
   CHORD_APTITUDE,
 ];
 
