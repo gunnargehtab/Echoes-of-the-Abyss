@@ -109,8 +109,8 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
   {
     slug: 'env-vent-basalt',
     footprintM: 15,
-    triBudget: 144,
-    density: 0.3,
+    triBudget: 270,
+    density: 0.2,
     stands: [Biome.ThermalVein],
     nearRock: 'any',
     maxSlopeM: Number.POSITIVE_INFINITY,
