@@ -101,6 +101,26 @@ What changes against the hull run, per `docs/graphics-standards.md` gate 2:
 - **Budgets are checked**: triangles against `--max-tris` (default 800, the
   registry fence) and distinct materials against `--max-materials` (default
   2 — each material is a draw call per instance batch, gate 6).
+- **Every mesh under one material must carry the same vertex attributes.**
+  The runtime merges a material's meshes into one geometry before
+  instancing, and three's `mergeGeometries` refuses a bucket whose members
+  disagree (a holdfast exported with UVs beside stalks without them). The
+  fallback keeps the parts, so the prop still renders — at a draw call per
+  part per batch, which is exactly what the material cap bounds. Intake
+  fails an env prop on this and warns on a hull.
+
+Claude Design exports (three's `GLTFExporter`) tend to arrive with one
+material per part and UVs on some parts only. `prep-env-glb.mjs` fixes both
+without touching geometry — it reassigns one material's primitives to
+another and strips `TEXCOORD_0` when no material samples a texture:
+
+```bash
+node .claude/skills/hull-intake/scripts/prep-env-glb.mjs <export.glb> <out.glb> \
+  [--merge <from-material>:<into-material>] [--strip-uv]
+```
+
+Run intake on the result; the raw export is what the prompt produced, the
+prepared file is what ships.
 
 Review reads the same four maps (the height and albedo passes are the
 silhouette check from the 55° camera's point of view), but they are **review

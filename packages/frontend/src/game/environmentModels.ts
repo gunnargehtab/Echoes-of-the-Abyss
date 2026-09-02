@@ -18,11 +18,27 @@
  *   geometry under simple TRS instance matrices, so canonicalisation (scale
  *   to `footprintM`, centre XZ, base at Y=0 — props *stand*, hulls float)
  *   is applied to the vertices once at template build.
+ * - **Sway is a vertex shader, never a matrix.** A prop with `swayM > 0`
+ *   (kelp) bends in the current through a per-vertex weight and a time
+ *   uniform patched into its materials; the instance matrices, the
+ *   placements, the probe numbers and the budget are exactly those of a
+ *   still prop. Under reduced motion the time is held, so the same shader
+ *   draws a fixed lean — the rigid fallback the epic asked for, for free.
  */
 
-import { Box3, BufferGeometry, Group, Material, Mesh, MeshStandardMaterial, Vector3 } from 'three';
+import {
+  Box3,
+  BufferGeometry,
+  Float32BufferAttribute,
+  Group,
+  Material,
+  Mesh,
+  MeshStandardMaterial,
+  Vector3,
+} from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeByMaterial } from './rosterModels.ts';
+import { swayWeight } from './environment.ts';
 
 /**
  * TUNABLE — the diffuse luminance ceiling for prop materials, under the
@@ -44,11 +60,19 @@ const ENV_MODEL_BY_FILE = new Map<string, () => Promise<string>>(
   ])
 );
 
+/** The sway uniforms one template's materials share; the layer drives time. */
+export interface SwayUniforms {
+  uSwayTime: { value: number };
+  uSwayAmpM: { value: number };
+}
+
 /** A template ready to instance: metre-true parts, one per material. */
 export interface EnvTemplate {
   parts: { geometry: BufferGeometry; material: Material }[];
   /** Triangles one instance costs, for the probe and the budget check. */
   trianglesPerInstance: number;
+  /** Present only on props that bend — the handle the layer ticks. */
+  sway: SwayUniforms | null;
 }
 
 const loader = new GLTFLoader();
@@ -64,7 +88,51 @@ function clampLuminance(material: Material): void {
   }
 }
 
-function buildTemplate(scene: Group, footprintM: number): EnvTemplate {
+/**
+ * The sway patch. The displacement is object-space, before the instance
+ * matrix, so each instance's random yaw turns one current into as many
+ * directions as there are clusters — a forest moving, not a chorus line.
+ * The phase comes from the instance's own translation, read straight from
+ * `instanceMatrix`, so no extra attribute crosses to the GPU; two sines at
+ * incommensurate rates keep the motion from reading as a metronome.
+ */
+function patchSway(material: Material, uniforms: SwayUniforms): void {
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.uSwayTime = uniforms.uSwayTime;
+    shader.uniforms.uSwayAmpM = uniforms.uSwayAmpM;
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        '#include <common>',
+        [
+          '#include <common>',
+          'attribute float swayWeight;',
+          'uniform float uSwayTime;',
+          'uniform float uSwayAmpM;',
+        ].join('\n')
+      )
+      .replace(
+        '#include <begin_vertex>',
+        [
+          '#include <begin_vertex>',
+          '#ifdef USE_INSTANCING',
+          '{',
+          '  float phase = dot(vec2(instanceMatrix[3][0], instanceMatrix[3][2]), vec2(0.031, 0.047));',
+          '  float along = sin(uSwayTime * 0.9 + phase) + 0.35 * sin(uSwayTime * 2.3 + phase * 1.7);',
+          '  float across = 0.4 * cos(uSwayTime * 0.7 + phase);',
+          '  transformed.x += uSwayAmpM * swayWeight * along;',
+          '  transformed.z += uSwayAmpM * swayWeight * across;',
+          '}',
+          '#endif',
+        ].join('\n')
+      );
+  };
+  // A patched material must not share a compiled program with the unpatched
+  // MeshStandardMaterials on the same scene — three keys programs by type.
+  material.customProgramCacheKey = () => 'env-sway';
+  material.needsUpdate = true;
+}
+
+function buildTemplate(scene: Group, footprintM: number, swayM: number): EnvTemplate {
   // Clone materials through an identity map (rosterModels' argument: shared
   // materials must keep sharing their clone or the merge silently fails).
   const materialClones = new Map<Material, Material>();
@@ -97,6 +165,10 @@ function buildTemplate(scene: Group, footprintM: number): EnvTemplate {
   const scale = footprint > 0 ? footprintM / footprint : 1;
   const centre = box.getCenter(new Vector3());
   merged.updateMatrixWorld(true);
+  const heightM = size.y * scale;
+
+  const sway: SwayUniforms | null =
+    swayM > 0 ? { uSwayTime: { value: 0 }, uSwayAmpM: { value: swayM } } : null;
 
   const parts: EnvTemplate['parts'] = [];
   let triangles = 0;
@@ -109,9 +181,16 @@ function buildTemplate(scene: Group, footprintM: number): EnvTemplate {
     geometry.computeBoundingSphere();
     const position = geometry.getAttribute('position');
     triangles += Math.floor((geometry.index?.count ?? position.count) / 3);
-    parts.push({ geometry, material: child.material as Material });
+    const material = child.material as Material;
+    if (sway !== null) {
+      const weights = new Float32Array(position.count);
+      for (let i = 0; i < position.count; i++) weights[i] = swayWeight(position.getY(i), heightM);
+      geometry.setAttribute('swayWeight', new Float32BufferAttribute(weights, 1));
+      patchSway(material, sway);
+    }
+    parts.push({ geometry, material });
   });
-  return { parts, trianglesPerInstance: triangles };
+  return { parts, trianglesPerInstance: triangles, sway };
 }
 
 /**
@@ -124,6 +203,7 @@ function buildTemplate(scene: Group, footprintM: number): EnvTemplate {
 export function envTemplate(
   slug: string,
   footprintM: number,
+  swayM: number,
   onReady: () => void
 ): EnvTemplate | null {
   const cached = templates.get(slug);
@@ -137,7 +217,7 @@ export function envTemplate(
   load()
     .then((url) => loader.loadAsync(url))
     .then((gltf) => {
-      templates.set(slug, buildTemplate(gltf.scene, footprintM));
+      templates.set(slug, buildTemplate(gltf.scene, footprintM, swayM));
       onReady();
     })
     .catch(() => {

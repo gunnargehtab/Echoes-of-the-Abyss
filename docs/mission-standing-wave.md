@@ -732,7 +732,7 @@ deliberately not making alone.
 - **[campaign.md](campaign.md)** — §7, whose second row this specifies; §2 and §10, whose rules it is written under
 - **[mission-aptitude.md](mission-aptitude.md)** — The Second Chord 1, whose §3 and §10 hand this mission its scope and its deferrals
 - **[mission-sorrowgate.md](mission-sorrowgate.md)** — the pattern, and the standing argument that a mission is a table and not a language
-- **[mission-thin-water.md](mission-thin-water.md)** — the other second mission specified ahead of its literal, and the PF-versus-SIG distinction §7 reaches from the other side
+- **[mission-thin-water.md](mission-thin-water.md)** — the other second mission specified ahead of its literal, since built, and the PF-versus-SIG distinction §7 reaches from the other side
 - **[mission-shift-change.md](mission-shift-change.md)** — the second mission that needed nothing, and §8's arrangement of readings beneath a result
 - **[factions.md](factions.md)** — the Order that cannot grow, and the one sentence the whole of §4 is an expansion of
 - **[systems-echo.md](systems-echo.md)** — the Standing Wave's pairing range; §8, the quartered circle §7 divides by and the structure exclusion §4 leans on

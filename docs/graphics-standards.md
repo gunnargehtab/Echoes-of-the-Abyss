@@ -59,7 +59,16 @@ Runtime instancing                packages/frontend/src/game/environment registr
 Props never appear on the sonar scope or in the sprite bake: they are world dressing,
 render-only by the same law as the seabed's detail relief, and the scope stays the flat
 chart. Their procedural fallback is the seabed bake itself — a biome with no approved
-props yet reads through relief and mottle alone, which is the shipped state today.
+props reads through relief and mottle alone.
+
+The front door admits more than one author. Until a Claude Design batch exists for a
+row, `tools/env-props/build.mjs` is its author of record: a deterministic generator
+that writes every Block 4 row as low-poly geometry in the row's own footprint, height,
+material cap and licensed light, seeded from the slug so a rerun is byte-identical. Its
+output is not a third path — it is a GLB, it passes intake `--category env` like any
+export, and a Claude Design model replaces it slug for slug with no code change beyond
+the registry's triangle count. The fourteen `env-*.glb` files shipped today are that
+generator's, and the run-game screenshot in the PR that landed them is their review.
 
 ## The gates
 

@@ -27,7 +27,20 @@
  */
 
 import { Biome } from '@echoes/shared';
-import type { TerrainPayload } from '../net/GameClient.ts';
+
+/**
+ * The published grid, as placement reads it — the shape of the client's
+ * `TerrainPayload` restated here so this module depends on nothing but
+ * shared: the backend's environmentBudget test imports it beside the maps.
+ */
+export interface TerrainGrid {
+  cols: number;
+  rows: number;
+  cellM: number;
+  biomes: readonly number[];
+  floor: readonly number[];
+  ceiling: readonly number[];
+}
 
 export interface PropSpec {
   /** `env-<biome-word>-<thing>` — resolves `<slug>.glb` in the models dir. */
@@ -35,8 +48,10 @@ export interface PropSpec {
   /** Canonical scale: the model's larger footprint axis is held to this,
    * exactly as hulls are held to HULL_LENGTH_M (`--footprint-m` at intake). */
   footprintM: number;
-  /** Per-instance triangle cap, checked against the intake report and spent
-   * against the gate-6 reservation below. */
+  /** Triangles one instance costs — the count hull-intake reported for the
+   * committed model, spent against the gate-6 reservation below. A heavier
+   * replacement export must raise this row, and the backend's budget test
+   * says whether the maps can afford it. */
   triBudget: number;
   /** Expected instances per eligible cell. Fractions are resolved by hash, so
    * 0.4 means roughly two cells in five carry one. */
@@ -57,14 +72,218 @@ export interface PropSpec {
   /** The licensed world-light family (docs/style-neon-noir.md "World light").
    * 'none' means intake fails the model if it carries any emissive. */
   worldLight: 'none' | 'vent' | 'flora' | 'crystal';
+  /** Current sway, metres of lateral displacement at the prop's top (0 for
+   * everything that is stone). Vertex-only: the instance matrix never moves,
+   * so placement, the probe and the budget are untouched by it. */
+  swayM: number;
 }
 
 /**
- * The registry. Empty on purpose: this module ships ahead of its assets, and
- * each env-assets PR (epic #308, PR-2c…) adds rows beside the `env-*.glb` it
- * commits. The contract rows live in docs/asset-prompts-3d.md Block 4.
+ * The registry — one row per `env-*.glb` in docs/concept-art/models/, the
+ * contract rows of docs/asset-prompts-3d.md Block 4 with the triangle count
+ * intake reported for each committed model (all well inside the table's
+ * per-row caps; a replacement export is held to the same cap by intake).
+ *
+ * Densities are the one number the docs do not pin. They are set against the
+ * gate-6 reservation summed over the shipped maps (the backend's
+ * environmentBudget test): a density that would make `placeProps` cut is a
+ * density that dresses the north of a map and not the south, because the
+ * spend order is row-major. Tall props keep off cliffs and out of roofed
+ * passages; low ones stand anywhere their biome does.
  */
-export const ENVIRONMENT_PROPS: readonly PropSpec[] = [];
+export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
+  // Thermal Veins — basalt and magma glass, the chimney ember-lit at the mouth.
+  {
+    slug: 'env-vent-chimney',
+    footprintM: 12,
+    triBudget: 354,
+    density: 0.22,
+    stands: [Biome.ThermalVein],
+    nearRock: 'any',
+    maxSlopeM: 250,
+    excludeRoofed: true,
+    scaleJitter: [0.8, 1.25],
+    worldLight: 'vent',
+    swayM: 0,
+  },
+  {
+    slug: 'env-vent-basalt',
+    footprintM: 15,
+    triBudget: 144,
+    density: 0.3,
+    stands: [Biome.ThermalVein],
+    nearRock: 'any',
+    maxSlopeM: Number.POSITIVE_INFINITY,
+    excludeRoofed: false,
+    scaleJitter: [0.7, 1.3],
+    worldLight: 'none',
+    swayM: 0,
+  },
+  // Kelp Forest — the forty-metre columns, and living coral stone between them.
+  {
+    slug: 'env-kelp-cluster',
+    footprintM: 18,
+    triBudget: 388,
+    density: 0.55,
+    stands: [Biome.KelpForest],
+    nearRock: 'exclude',
+    maxSlopeM: 300,
+    excludeRoofed: true,
+    scaleJitter: [0.75, 1.25],
+    worldLight: 'flora',
+    swayM: 4,
+  },
+  {
+    slug: 'env-coral-tower',
+    footprintM: 15,
+    triBudget: 588,
+    density: 0.06,
+    stands: [Biome.KelpForest],
+    nearRock: 'any',
+    maxSlopeM: 250,
+    excludeRoofed: true,
+    scaleJitter: [0.8, 1.2],
+    worldLight: 'none',
+    swayM: 0,
+  },
+  // Abyssal Trench — blackened, pressure-eroded, knife-edged.
+  {
+    slug: 'env-trench-spire',
+    footprintM: 20,
+    triBudget: 90,
+    density: 0.18,
+    stands: [Biome.AbyssalTrench],
+    nearRock: 'any',
+    maxSlopeM: 400,
+    excludeRoofed: true,
+    scaleJitter: [0.7, 1.3],
+    worldLight: 'none',
+    swayM: 0,
+  },
+  {
+    slug: 'env-trench-slab',
+    footprintM: 25,
+    triBudget: 52,
+    density: 0.25,
+    stands: [Biome.AbyssalTrench],
+    nearRock: 'any',
+    maxSlopeM: Number.POSITIVE_INFINITY,
+    excludeRoofed: false,
+    scaleJitter: [0.7, 1.3],
+    worldLight: 'none',
+    swayM: 0,
+  },
+  // Resonance Field — faceted crystal, and the toppled remains of instruments.
+  {
+    slug: 'env-resonance-crystal',
+    footprintM: 12,
+    triBudget: 130,
+    density: 0.3,
+    stands: [Biome.ResonanceField],
+    nearRock: 'any',
+    maxSlopeM: 300,
+    excludeRoofed: true,
+    scaleJitter: [0.7, 1.35],
+    worldLight: 'crystal',
+    swayM: 0,
+  },
+  {
+    slug: 'env-resonance-pylon',
+    footprintM: 10,
+    triBudget: 112,
+    density: 0.1,
+    stands: [Biome.ResonanceField],
+    nearRock: 'any',
+    maxSlopeM: 250,
+    excludeRoofed: true,
+    scaleJitter: [0.85, 1.15],
+    worldLight: 'none',
+    swayM: 0,
+  },
+  // Coral Ruins — right angles and terraces under a civilisation's worth of
+  // coral. The ruins ring is the largest biome on two of the three skirmish
+  // maps, so these densities are the low ones.
+  {
+    slug: 'env-ruin-block',
+    footprintM: 25,
+    triBudget: 102,
+    density: 0.08,
+    stands: [Biome.CoralRuins],
+    nearRock: 'any',
+    maxSlopeM: 300,
+    excludeRoofed: true,
+    scaleJitter: [0.8, 1.2],
+    worldLight: 'none',
+    swayM: 0,
+  },
+  {
+    slug: 'env-ruin-dome-shard',
+    footprintM: 40,
+    triBudget: 142,
+    density: 0.03,
+    stands: [Biome.CoralRuins],
+    nearRock: 'any',
+    maxSlopeM: 200,
+    excludeRoofed: true,
+    scaleJitter: [0.85, 1.15],
+    worldLight: 'none',
+    swayM: 0,
+  },
+  {
+    slug: 'env-coral-growth',
+    footprintM: 12,
+    triBudget: 198,
+    density: 0.12,
+    stands: [Biome.CoralRuins, Biome.KelpForest],
+    nearRock: 'any',
+    maxSlopeM: Number.POSITIVE_INFINITY,
+    excludeRoofed: false,
+    scaleJitter: [0.7, 1.3],
+    worldLight: 'none',
+    swayM: 0,
+  },
+  // Rock, any biome — the jagged-rock vocabulary for mesa edges.
+  {
+    slug: 'env-rock-crag-a',
+    footprintM: 30,
+    triBudget: 231,
+    density: 0.25,
+    stands: 'rock',
+    nearRock: 'any',
+    maxSlopeM: Number.POSITIVE_INFINITY,
+    excludeRoofed: false,
+    scaleJitter: [0.8, 1.2],
+    worldLight: 'none',
+    swayM: 0,
+  },
+  {
+    slug: 'env-rock-crag-b',
+    footprintM: 30,
+    triBudget: 148,
+    density: 0.25,
+    stands: 'rock',
+    nearRock: 'any',
+    maxSlopeM: Number.POSITIVE_INFINITY,
+    excludeRoofed: false,
+    scaleJitter: [0.8, 1.2],
+    worldLight: 'none',
+    swayM: 0,
+  },
+  // Open Water — a boulder now and then, so the plain is not a void.
+  {
+    slug: 'env-open-boulder',
+    footprintM: 12,
+    triBudget: 86,
+    density: 0.1,
+    stands: [Biome.OpenWater],
+    nearRock: 'any',
+    maxSlopeM: 300,
+    excludeRoofed: false,
+    scaleJitter: [0.7, 1.3],
+    worldLight: 'none',
+    swayM: 0,
+  },
+];
 
 /** Gate-6 reservation, both halves (docs/graphics-standards.md): instancing
  * keeps draw calls flat per slug×material, so the caps that need enforcing
@@ -119,7 +338,7 @@ function hash01(values: readonly number[]): number {
  * renderer always passes the registry.
  */
 export function placeProps(
-  terrain: Pick<TerrainPayload, 'cols' | 'rows' | 'cellM' | 'biomes' | 'floor' | 'ceiling'>,
+  terrain: TerrainGrid,
   specs: readonly PropSpec[] = ENVIRONMENT_PROPS
 ): PropPlacement[] {
   const { cols, rows, cellM } = terrain;
@@ -206,4 +425,16 @@ export function placeProps(
     }
   }
   return placements;
+}
+
+/**
+ * How much of a prop's sway a vertex at `yM` takes, for a prop `heightM`
+ * tall: zero at the holdfast, all of it at the tip, quadratic between so the
+ * base stays rooted and the column bends rather than leans (kelp sway,
+ * epic #308 PR-3). Pure, so the shader's weight attribute is testable here.
+ */
+export function swayWeight(yM: number, heightM: number): number {
+  if (heightM <= 0) return 0;
+  const t = Math.min(1, Math.max(0, yM / heightM));
+  return t * t;
 }

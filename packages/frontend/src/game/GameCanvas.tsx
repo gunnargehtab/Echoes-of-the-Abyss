@@ -453,6 +453,7 @@ export function GameCanvas({
         activeRenderer.setPalette(settings.palette);
         setPalette(settings.palette);
         activeRenderer.setReducedMotion(settings.reducedMotion);
+        perspective.setReducedMotion(settings.reducedMotion);
         activeRenderer.setUiScale(settings.uiScale);
         setUiScale(settings.uiScale);
       };

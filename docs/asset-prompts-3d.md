@@ -270,6 +270,22 @@ roster. Props ship as meshes, not baked maps, so the sprite-density contract
 (4 / 1.5 px/m) does not apply to them — the triangle column above is their density
 contract.
 
+Every row of this table was first filled by `tools/env-props/build.mjs`, the generator
+that stands in for the Claude Design batch
+([graphics-standards.md](graphics-standards.md), "The environment branch"); the batch
+replaces those files row by row, `env-kelp-cluster` first. A model generated from the
+prompts above replaces its row's file directly: run intake with the row's footprint, cap
+and light, commit the GLB over the generated one, and update the registry row's triangle
+count from the intake report. The environment registry, the placement rules and the kelp
+sway read the file, not its author.
+
+Two things the first batch taught about Claude Design's export, both mechanical and
+both fixed by intake's `prep-env-glb.mjs` rather than by re-prompting: it hands back one
+material per named part (a holdfast and its stalks arrive as two, which is the whole
+cap), and it puts UVs on some parts and not others, which stops the runtime merging a
+material's parts into one draw. Ask for untextured flat colours and a single material
+for everything that is not the licensed light, and expect to merge anyway.
+
 ## Consistency checklist (before accepting a model)
 
 For units and structures:
