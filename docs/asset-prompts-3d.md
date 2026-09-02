@@ -286,6 +286,14 @@ cap), and it puts UVs on some parts and not others, which stops the runtime merg
 material's parts into one draw. Ask for untextured flat colours and a single material
 for everything that is not the licensed light, and expect to merge anyway.
 
+A third, from the luminance retune that followed the batch: the runtime owns a prop's
+*value*. `environmentModels.ts` normalises every prop so its brightest material sits at
+`ENV_LUMINANCE_CEILING` and its other materials keep their ratio to it, so the "dark,
+low-luminance" line in ENV STYLE is a hue-and-saturation brief, not a brightness
+target — an export at any brightness lands in the same register. What survives from the
+export is the ratio between its materials (stone under coral growth, basalt under an
+ember mouth) and the emissive, which is licensed at intake and passes through untouched.
+
 ## Consistency checklist (before accepting a model)
 
 For units and structures:
