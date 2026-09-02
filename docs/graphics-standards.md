@@ -185,7 +185,7 @@ memory class are still regressions, and anything drawn per tick is on the 60 Hz 
 ([tech-stack.md](tech-stack.md)).
 
 Environment props spend from the same two budgets, on a stated reservation: roughly
-**30 draw calls and 80 k triangles** for the whole prop layer, achieved by instancing
+**30 draw calls and 105 k triangles** for the whole prop layer, achieved by instancing
 (one `InstancedMesh` per prop type per material — instance count never adds draw calls)
 under a registry-level instance cap, the `VENT_EMBER_CAP` pattern applied to geometry.
 The probe reports the layer separately (`props` / `propTris`) so a prop regression is a
