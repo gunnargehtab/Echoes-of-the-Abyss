@@ -163,8 +163,8 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
   {
     slug: 'env-trench-slab',
     footprintM: 25,
-    triBudget: 52,
-    density: 0.25,
+    triBudget: 72,
+    density: 0.18,
     stands: [Biome.AbyssalTrench],
     nearRock: 'any',
     maxSlopeM: Number.POSITIVE_INFINITY,
