@@ -29,7 +29,7 @@ The water column, from the poison down. Band boundaries are the ruleset and iden
 
 | Depth | What it is |
 | --- | --- |
-| 0–150 m | **The Lid** — the sour surface layer, dead since the Collapse ([world.md](world.md)). Lore, not a mechanic: no map authors playable water in it |
+| 0–150 m | **The Lid** — the sour surface layer, dead since the Collapse ([world.md](world.md)). A mechanic since the three-layer revision — a hull up there runs the sour timer ([systems-depth.md](systems-depth.md) §2) — and no map invites anyone into it |
 | 0–400 m | **Shelf band.** The first clear metres under the Lid down to 400 m. Kelp plateaus, Commune gardens, the cheapest berths |
 | 400–1,800 m | **Mid-Water band.** The contested middle: the Holding, the vent fields, the drowned city, the shallower chapter-houses |
 | 1,200 m | **The thermocline** — not a place but a divide: sound crossing it is cut to a whisper, and the column above and below are, acoustically, different worlds ([systems-echo.md](systems-echo.md) §3) |
@@ -144,6 +144,7 @@ The sync point with [campaign.md](campaign.md): every mission block, placed. Mis
 
 - **[world.md](world.md)** — the setting: the Collapse, the Lid, and why nobody goes back
 - **[timeline.md](timeline.md)** — when everything here was built, flooded, chartered, or abandoned
+- **[habitats.md](habitats.md)** — inside the places named here: berths, light, air, and the hush
 - **[systems-depth.md](systems-depth.md)** — the depth bands and the thermocline as rules
 - **[environments.md](environments.md)** — the five biomes these regions are made of
 - **[maps.md](maps.md)** — the archetypes cut from this ground, and how a map is authored

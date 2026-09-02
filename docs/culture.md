@@ -174,6 +174,7 @@ Address is by title in all four cultures, and getting a title wrong is a real er
 
 - **[world.md](world.md)** — the setting, and the three cultural facts this expands
 - **[factions.md](factions.md)** — what each culture is defending
+- **[habitats.md](habitats.md)** — dry as luxury and silence as debt, walked through city by city
 - **[characters.md](characters.md)** — twelve people who speak these four registers
 - **[timeline.md](timeline.md)** — the calendar, and the history everyone argues about
 - **[campaign.md](campaign.md)** — where the dialogue actually lands
