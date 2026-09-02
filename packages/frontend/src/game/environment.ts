@@ -177,7 +177,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
   {
     slug: 'env-resonance-crystal',
     footprintM: 12,
-    triBudget: 130,
+    triBudget: 330,
     density: 0.3,
     stands: [Biome.ResonanceField],
     nearRock: 'any',
