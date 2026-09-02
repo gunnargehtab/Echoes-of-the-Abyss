@@ -143,11 +143,12 @@ export function progressOf(
       return { done: Math.min(exposed(predicate.tier), predicate.ticks), of: predicate.ticks };
     case 'deliver':
       // The observer's own stockpile, read off the snapshot the player is
-      // being sent this very tick: `own.nodules` is the figure their own HUD
-      // carries, so the counter and the readout cannot disagree by a
-      // delivery. Capped, like every counter — the register does not
-      // over-count.
-      return { done: Math.min(own.nodules, predicate.nodules), of: predicate.nodules };
+      // being sent this very tick: the named account is the figure their own
+      // HUD carries, so the counter and the readout cannot disagree by a
+      // delivery. The snapshot carries all three accounts already, which is
+      // why Biomass needed a query and not a wire change. Capped, like every
+      // counter — the register does not over-count.
+      return { done: Math.min(own[predicate.account], predicate.amount), of: predicate.amount };
   }
 }
 

@@ -251,7 +251,7 @@ export const LEDGER_SHIFT_CHANGE: MissionDefinition = {
       text: 'Make the number. The face reports what it always reports.',
       initial: ObjectiveStatus.Pending,
       terminal: true,
-      predicate: { kind: 'deliver', nodules: QUOTA },
+      predicate: { kind: 'deliver', account: 'nodules', amount: QUOTA },
       reading: {
         met: 'The number is entered. Three thousand six hundred, of quota. Nothing in the column invites a second reading.',
         unmet:

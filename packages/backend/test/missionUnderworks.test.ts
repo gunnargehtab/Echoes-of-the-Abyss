@@ -116,7 +116,7 @@ describe('the choice, as rules — types.ts `choiceGroup`, and the Met guard', (
           speaker: 'The record',
           text: 'The first entered.',
           note: '',
-          when: { kind: 'deliver', nodules: 50 },
+          when: { kind: 'deliver', account: 'nodules', amount: 50 },
           choiceGroup: 'the-choice',
         },
         {
@@ -124,7 +124,7 @@ describe('the choice, as rules — types.ts `choiceGroup`, and the Met guard', (
           speaker: 'The record',
           text: 'The second entered.',
           note: '',
-          when: { kind: 'deliver', nodules: 50 },
+          when: { kind: 'deliver', account: 'nodules', amount: 50 },
           choiceGroup: 'the-choice',
         },
         // The mirror: a different condition that will come true two seconds
@@ -170,7 +170,7 @@ describe('the choice, as rules — types.ts `choiceGroup`, and the Met guard', (
           id: 'sealed',
           text: 'Set the casting.',
           initial: ObjectiveStatus.Pending,
-          predicate: { kind: 'deliver', nodules: 50 },
+          predicate: { kind: 'deliver', account: 'nodules', amount: 50 },
         },
         {
           id: 'stand',
