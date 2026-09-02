@@ -37,6 +37,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | **[mission-attendance.md](mission-attendance.md)** | The Attending 1, specified: one watch of the Mouth's cycle, the nine arrivals, and the silence a rite is owed |
 | **[mission-intake.md](mission-intake.md)** | The Attending 2, specified: an intake at the top of its own water, an economy that will not come when called, and one finding the mission refuses to score |
 | **[mission-aptitude.md](mission-aptitude.md)** | The Second Chord 1, specified: six hulls, six formations, and the quarter of the compass a Knight is loud in |
+| **[mission-standing-wave.md](mission-standing-wave.md)** | The Second Chord 2, specified: two nodes, the interval between them, and a weapon the Order builds against itself on purpose |
 
 ## Gameplay
 
@@ -88,13 +89,13 @@ The prologue and one full campaign are built; the rest of the campaign is not. W
 designed, or already stated in a doc that ships, and unbuilt — named in plain text except where
 a document already points at it:
 
-- **The remaining 17 missions.** campaign.md §5–§7 gives them titles, teaching targets and
+- **The remaining 15 missions.** campaign.md §5–§7 gives them titles, teaching targets and
   beats, which is not a specification. Each needs a document of its own — one doc per mission,
-  the pattern mission-sorrowgate.md sets and thirteen documents now follow — before it needs
+  the pattern mission-sorrowgate.md sets and fourteen documents now follow — before it needs
   code. The Ledger's seven are specified and built end to end, and so are Tend, Attendance and
-  Aptitude. [mission-thin-water.md](mission-thin-water.md) is the first document specified
-  *ahead* of its literal: the mission definition `seeding-thin-water` and the `kell-shoulder`
-  map are unbuilt, and its §13 reports that everything they would need already ships.
+  Aptitude. [mission-thin-water.md](mission-thin-water.md) was the first document specified
+  *ahead* of its literal, and is now built as well — `kell-shoulder` and `seeding-thin-water`,
+  with tests — its §13's prediction holding that everything they needed already shipped.
   [mission-intake.md](mission-intake.md) is the second, with `attending-intake` and the
   `banding-ground` map unbuilt — and it is the document that starts the format asking again.
   The condition-fired beat, the exposure tally and the aimed hold — the three things the first
@@ -103,6 +104,12 @@ a document already points at it:
   What Intake names is the next one: `deliver` counts Nodules, the Directorate's income is
   Biomass, and no predicate can ask what a cohort economy earned. The income itself is built;
   only the query and a way to spend it are not.
+  [mission-standing-wave.md](mission-standing-wave.md) is the third, and it asks loudest:
+  `chord-standing-wave` and the `the-fifth` map are unbuilt, and its §13 names a predicate the
+  objective union does not carry (what the player has *built*), two shipped constants that
+  disagree with each other, and one design call it explicitly refuses to make alone — the
+  corridor's PF 2.0 against a `MAX_PROPAGATION_FACTOR` of 1.60 that is derived rather than
+  chosen.
 - **Campaign progression and unlock state.** Nothing records that a mission was played, so the
   prologue is replayable, remembers nothing, and the Tutorial and campaign doors are the same
   door.
