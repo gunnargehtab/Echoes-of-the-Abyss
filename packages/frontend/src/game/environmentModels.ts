@@ -7,10 +7,10 @@
  * applied at material level, because a prop is terrain, not an agent:
  *
  * - **No faction recolour.** Props belong to nobody. Instead the diffuse
- *   luminance is *clamped* to the seafloor register — scenery in a lightless
- *   ocean must read darker and quieter than any vessel
- *   (docs/asset-prompts-3d.md, ENV STYLE) — while hue stays the model's own
- *   desaturated stone/coral/crystal.
+ *   luminance is *normalised* to the seafloor register — scenery in a
+ *   lightless ocean must read darker and quieter than any vessel
+ *   (docs/asset-prompts-3d.md, ENV STYLE), and must still read — while hue
+ *   stays the model's own desaturated stone/coral/crystal.
  * - **Emissive passes through untouched.** A prop's light was licensed (or
  *   refused) at intake against the world-light families; the runtime is not a
  *   second review. Gate 3's SIG modulation never applies — a prop has no SIG.
@@ -41,12 +41,19 @@ import { mergeByMaterial } from './rosterModels.ts';
 import { swayWeight } from './environment.ts';
 
 /**
- * TUNABLE — the diffuse luminance ceiling for prop materials, under the
- * shared light rig. Approximates the "darker and quieter than any vessel"
- * register the style docs pin for the seafloor; expected to be retuned by
- * screenshot when the first env-assets batch lands.
+ * TUNABLE — the diffuse luminance a prop's brightest material is set to,
+ * under the shared light rig; the model's other materials keep their ratio
+ * to it. Retuned by screenshot when the Block 4 batch landed (#342): the
+ * design exports honour the ENV STYLE brief's "dark, low-luminance" so
+ * literally (base luminance 0.002–0.03 linear) that a clamp never engaged and
+ * every prop rendered at or below the seabed's own value. Normalising instead
+ * makes the register the runtime's, as hue is for hulls — an export's
+ * absolute darkness is irrelevant, only the ratio between its materials.
+ * The value sits above the seafloor fill and below the darkest faction's
+ * lifted cladding (rosterModels.ts LUMINANCE_LIFT), so a prop reads as a
+ * shape at survey zoom and never as a contact.
  */
-const ENV_LUMINANCE_CEILING = 0.16;
+const ENV_LUMINANCE_CEILING = 0.06;
 
 const ENV_MODEL_URLS = import.meta.glob<string>('../../../../docs/concept-art/models/env-*.glb', {
   query: '?url',
@@ -79,13 +86,25 @@ const loader = new GLTFLoader();
 /** Templates per slug; null marks "still loading" (or failed — see below). */
 const templates = new Map<string, EnvTemplate | null>();
 
-function clampLuminance(material: Material): void {
-  if (!(material instanceof MeshStandardMaterial)) return;
-  const luminance =
-    0.2126 * material.color.r + 0.7152 * material.color.g + 0.0722 * material.color.b;
-  if (luminance > ENV_LUMINANCE_CEILING) {
-    material.color.multiplyScalar(ENV_LUMINANCE_CEILING / luminance);
-  }
+function luminance(material: MeshStandardMaterial): number {
+  return 0.2126 * material.color.r + 0.7152 * material.color.g + 0.0722 * material.color.b;
+}
+
+/**
+ * Set one template's diffuse register: scale every material's colour by the
+ * one gain that puts the brightest of them at the ceiling. Hue and the
+ * ratio between a model's materials (stone under coral growth) are the
+ * export's; the absolute value is ours. Emissive is left alone — a prop's
+ * light was licensed at intake and is not a diffuse property.
+ */
+function normaliseLuminance(materials: Iterable<Material>): void {
+  const standard = [...materials].filter(
+    (material): material is MeshStandardMaterial => material instanceof MeshStandardMaterial
+  );
+  const brightest = Math.max(0, ...standard.map(luminance));
+  if (brightest <= 0) return;
+  const gain = ENV_LUMINANCE_CEILING / brightest;
+  for (const material of standard) material.color.multiplyScalar(gain);
 }
 
 /**
@@ -140,7 +159,6 @@ function buildTemplate(scene: Group, footprintM: number, swayM: number): EnvTemp
     let clone = materialClones.get(material);
     if (clone === undefined) {
       clone = material.clone();
-      clampLuminance(clone);
       materialClones.set(material, clone);
     }
     return clone;
@@ -153,6 +171,7 @@ function buildTemplate(scene: Group, footprintM: number, swayM: number): EnvTemp
         : cloneOf(child.material);
     }
   });
+  normaliseLuminance(materialClones.values());
 
   const merged = mergeByMaterial(copy);
 
