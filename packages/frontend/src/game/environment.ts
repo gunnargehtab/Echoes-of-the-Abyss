@@ -232,7 +232,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
   {
     slug: 'env-coral-growth',
     footprintM: 12,
-    triBudget: 198,
+    triBudget: 184,
     density: 0.1,
     stands: [Biome.CoralRuins, Biome.KelpForest],
     nearRock: 'any',
