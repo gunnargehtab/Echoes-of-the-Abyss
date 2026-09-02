@@ -65,10 +65,20 @@ describe('the writ, run out — docs/mission-prospect.md §2, §5, §6, §8', ()
     assert.ok(result !== null, 'the writ never turned north');
     // §8 — an idle expedition never left the staging: the ascent reads met,
     // the field does not, and the close is the middle reading with the
-    // ledger's unheard line and both attendant gaps beneath it.
+    // ledger's line and both attendant gaps beneath it.
+    //
+    // The ledger's line is the *heard* one, and it is the model's arithmetic
+    // rather than a choice: the flagship is a Cruiser, which idles at SIG 55
+    // (§5 — "the survey is loud by trade"), the charting pair's HYD 70 scouts
+    // classify that from 2,823 m through PF 1.0 and stand 2,607 m off the
+    // staging at 00:00, and from 04:00 the watch's HYD 85 submersibles sit
+    // 2,940 m off it on the terraces against a 3,188 m classification range.
+    // Sixty seconds of that is the whole writ. Before #323 this read
+    // "classified by nobody", because nothing on the rim was being resolved
+    // for — the expedition was never quieter, only unheard.
     assert.equal(result.outcome, MissionOutcome.Partial);
     assert.match(result.epilogue, /returns short of standard/);
-    assert.match(result.epilogue, /classified by nobody for long/);
+    assert.match(result.epilogue, /classified, at length, by ears that keep records/);
     assert.match(result.epilogue, /western return was not resolved/);
     assert.match(result.epilogue, /file does not believe/);
   });

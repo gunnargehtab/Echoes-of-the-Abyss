@@ -574,29 +574,81 @@ describe('the challenge, and who is actually listening — §6, §9, §13', () =
     // volume (§9), so a column that never moves is never challenged — and the
     // literal opens with nothing on the map holding it at Bearing, which is
     // what keeps the beat a fact about how the mission was played.
+    //
+    // Bearing, not Silent, and the bar is a measurement now rather than a
+    // consequence of nobody listening: since #323 the Echo pass resolves for
+    // the three scripted parties, and the corridor's Cruiser at (2100, 450)
+    // holds an idle Corvette at the muster at Tier 1 from 2,600 m — a smudge,
+    // which §6 says is free. It was this test that found the second element
+    // parked 1,945 m from the muster, inside its own Bearing range.
     const match = thinWaterMatch();
     for (let tick = 0; tick <= T(5); tick++) {
       const own = match.update(STEP_MS)?.get(PLAYER);
       if (own === undefined) continue;
-      assert.equal(own.exposure.tier, ResolutionTier.Silent, `heard at rest, on tick ${tick}`);
+      assert.ok(
+        own.exposure.tier < ResolutionTier.Bearing,
+        `held at ${ResolutionTier[own.exposure.tier]} at rest, on tick ${tick}`
+      );
       match.takeMissionView();
       const spoke = match.takeMissionLines().map((line) => line.speaker);
       assert.ok(!spoke.includes(CHALLENGER), 'Rell challenged a column nobody had heard');
     }
   });
 
+  it('fires in a live match, off the exposure the corridor’s own ears resolve (#323)', () => {
+    // The half the runtime-driven test below cannot assert: that a scripted
+    // party's hearing reaches `EchoSnapshot.exposure` at all. It did not
+    // before #323 — `MissionRuntime.install` seated only the player, the Echo
+    // Layer materialised exposure for seated slots alone, and this beat was
+    // authored against a number that could never leave zero.
+    //
+    // The escorts are sent to stand a kilometre south of the frame's eastern
+    // turret: inside its HYD 55 ears — a Corvette at 28 is Bearing to 2,191 m
+    // — and outside its 700 m guns, so the column is heard and nothing is
+    // shot. Four minutes of that is the challenge, at the corridor's cadence
+    // and nobody else's.
+    const match = thinWaterMatch();
+    const post = { x: 2150, y: 2500 };
+    let sent = false;
+    let heardAt = -1;
+    let challengedAt = -1;
+    for (let tick = 0; tick <= T(6); tick++) {
+      const own = match.update(STEP_MS)?.get(PLAYER);
+      if (own === undefined) continue;
+      if (!sent) {
+        sent = true;
+        for (const unit of own.units) {
+          if (unit.kind === UnitKind.Corvette) match.orderMove(PLAYER, unit.id, post.x, post.y);
+        }
+      }
+      if (heardAt < 0 && own.exposure.tier >= ResolutionTier.Bearing) heardAt = tick;
+      match.takeMissionView();
+      if (match.takeMissionLines().some((line) => line.speaker === CHALLENGER)) {
+        challengedAt = tick;
+        break;
+      }
+    }
+    assert.ok(heardAt >= 0, 'the frame never resolved the escorts standing under it');
+    assert.ok(heardAt < T(1), `the escorts were first heard at Bearing on tick ${heardAt}`);
+    assert.ok(challengedAt > 0, 'four minutes at Bearing and Rell said nothing');
+    // The tally counts the pass that first hears them, so the 1,200th pass at
+    // Bearing — four minutes at 5 Hz — falls one Echo interval short of
+    // `heardAt + T(4)`, and any pass the corridor loses them pushes it later.
+    const interval = SIM.TICK_HZ / SIM.ECHO_HZ;
+    assert.ok(
+      challengedAt >= heardAt + T(4) - interval,
+      `challenged early, on tick ${challengedAt} after first being heard on ${heardAt}`
+    );
+    assert.ok(challengedAt <= heardAt + T(4, 5), `challenged late, on tick ${challengedAt}`);
+  });
+
   it('fires on the pass that enters the two hundred and fortieth second', () => {
     // Driven at the runtime, the way `missionExposure.test.ts` drives the same
-    // mechanism, and for a reason this mission found the hard way: a live
-    // `Match` seats only the player's slot (`MissionRuntime.install` calls
-    // `seat` once), so the Echo Layer never resolves *for* a scripted party
-    // and `ExposureReport` stays Silent however close the corridor gets. That
-    // is a runtime gap and not this literal's — it holds Aptitude's and
-    // Tolerance's conditionals shut in exactly the same way, and it is filed
-    // as #323 — so what is asserted here is what this mission owns: that
-    // Rell's challenge is keyed to
-    // four minutes of Bearing and arrives on the pass that spends the last of
-    // them, not one pass late.
+    // mechanism, because this is the tick-precise half: that Rell's challenge
+    // is keyed to four minutes of Bearing and arrives on the pass that spends
+    // the last of them, not one pass late. The live-match half — that the
+    // corridor's hearing reaches the tally at all — is the test above, and it
+    // is a separate test because it was a separate bug (#323).
     const runtime = new MissionRuntime(SEEDING_THIN_WATER);
     const world = createSimWorld(Terrain.demo(), 1 / SIM.TICK_HZ, 3);
     const interval = SIM.TICK_HZ / SIM.ECHO_HZ;

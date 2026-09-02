@@ -40,7 +40,7 @@ import {
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { missionMapById } from '../src/sim/maps/index.ts';
-import { CHORD_APTITUDE } from '../src/sim/missions/index.ts';
+import { CHORD_APTITUDE, type MissionLine } from '../src/sim/missions/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 const PLAYER = CHORD_APTITUDE.playerSlot;
@@ -85,6 +85,8 @@ interface Run {
   /** Soundings completed, read off the objective panel's own counter. */
   sounded: number;
   survivors: number;
+  /** Every line spoken during the run, in order — the say channel, drained. */
+  spoken: MissionLine[];
 }
 
 /**
@@ -105,6 +107,7 @@ function play(drive: (match: Match, tick: number, byTag: Map<string, number>) =>
   // count comes off the panel the player was actually looking at. Drained
   // every tick and kept, because the view is an edge rather than a state.
   let lastView: MissionView | null = null;
+  const spoken: MissionLine[] = [];
 
   for (let tick = 0; tick <= T(16, 30); tick++) {
     const own = match.update(STEP_MS)?.get(PLAYER) as EchoSnapshot | undefined;
@@ -121,6 +124,7 @@ function play(drive: (match: Match, tick: number, byTag: Map<string, number>) =>
     }
     if (byTag.size === party.units.length) drive(match, tick, byTag);
     lastView = match.takeMissionView() ?? lastView;
+    spoken.push(...match.takeMissionLines());
     if (match.missionOver !== null) break;
   }
 
@@ -135,6 +139,7 @@ function play(drive: (match: Match, tick: number, byTag: Map<string, number>) =>
     resolvedAtTick: match.world.tick,
     sounded: chord?.progress?.done ?? 0,
     survivors,
+    spoken,
   };
 }
 
@@ -446,11 +451,44 @@ describe("§8's four readings, over a party that took the six", () => {
     // The close assembles rather than chooses (§13's standing ask): the
     // lattice's own line for the chord it certified, and the survey's for what
     // it entered or did not.
+    //
+    // And what it entered is a contact. This drive sends every hull straight
+    // at its voice, which is going west *pointing* west — the one manoeuvre §4
+    // spends its two numbers forbidding — and Tenor stands 733 m off the north
+    // picket's outer leg, so a corvette bow-on to it is classified from the
+    // approach and tracked through the sounding. Thirty seconds of that is
+    // §5's tolerance spent, and the log says so. Until #323 this line read
+    // "heard weather" for the same drive, because the survey's ears never
+    // reached `EchoSnapshot.exposure` in a live match; the party was as loud
+    // then as now, and nobody was resolving for the survey.
     const run = tuned();
     assert.equal(run.lines.length, 3, 'the close read fewer lines than it authors');
     assert.match(run.lines[0]!, /The chord is whole/, '§8 row 1, in the chord\u2019s own words');
     assert.match(run.lines[1]!, /certified against what was entered/, '§8: the lattice');
-    assert.match(run.lines[2]!, /array for replacement/, '§5: the survey heard weather');
+    assert.match(run.lines[2]!, /filed a contact/, '§5: a party pointed west is entered');
+  });
+
+  it('spends the tolerance in the water, not only on paper — §5 in a live match (#323)', () => {
+    // The three beats §5 hangs on the tally, fired by the survey's own ears
+    // resolving the party through the shipped Echo pass rather than by a
+    // synthetic snapshot: Bramm stops the string at twenty, files at thirty,
+    // and Vrey recalls the party on the same pass. Ten seconds apart, in
+    // this order, once each.
+    const run = tuned();
+    const bramm = run.spoken.filter((line) => /Surveyor Ade Bramm/.test(line.speaker));
+    const warning = bramm.find((line) => /Stop the string/.test(line.text));
+    const filing = bramm.find((line) => /Amend the log/.test(line.text));
+    const recall = run.spoken.find((line) => /They have entered us/.test(line.text));
+    assert.ok(warning !== undefined, '§5: the survey never noticed twenty seconds of Knights');
+    assert.ok(filing !== undefined, '§5: thirty seconds and no contact was filed');
+    assert.ok(recall !== undefined, '§5: the Third never recalled an entered party');
+    assert.equal(filing.tick - warning.tick, 10 * SIM.TICK_HZ, '§5: ten seconds apart');
+    assert.equal(recall.tick, filing.tick, '§5: the recall rides the filing');
+    assert.equal(bramm.filter((line) => /Stop the string/.test(line.text)).length, 1, 'once');
+    // Spent early: this drive is inside the picket's ears from the approach,
+    // so the tally is out before the second minute — and long before the
+    // scheduled fault at 06:00 that a quieter party would have heard instead.
+    assert.ok(filing.tick < T(2), `filed at tick ${filing.tick}, later than the approach`);
   });
 
   it('withholds the last sentence from the taboo, and prices nothing against it', () => {

@@ -198,6 +198,20 @@ export class Match {
   /** Public for bench/echo-pass.mjs, which times the pass in isolation. */
   readonly echo = new EchoLayer();
   private readonly slots: number[] = [];
+  /**
+   * Slots the Echo pass resolves for beyond the seated commanders — a
+   * mission's scripted parties (#323).
+   *
+   * Kept apart from `slots` deliberately, because that list is not only the
+   * Echo Layer's observer roster: `resolveVictory` ends a two-plus-slot match,
+   * `checkConcessions` scuttles stalled ones, and `resolveEcho` builds a
+   * snapshot per entry. A scripted party must be *heard for* — otherwise the
+   * player's `ExposureReport` can never rise and every `tolerance` predicate
+   * is inert — without becoming a roster entry any of those rules can see.
+   */
+  private readonly scriptedObservers: number[] = [];
+  /** Scratch for the seated-plus-scripted union handed to `EchoLayer.run`. */
+  private readonly observerScratch: number[] = [];
   private readonly eliminated = new Set<number>();
   private readonly destroyedScratch: number[] = [];
   /**
@@ -301,9 +315,15 @@ export class Match {
     // else's stream. The runtime never touches the RNG at all.
     this.missionRuntime =
       options.mission === undefined ? null : new MissionRuntime(options.mission);
-    this.missionRuntime?.install(this.world, (slot) => {
-      if (!this.slots.includes(slot)) this.slots.push(slot);
-    });
+    this.missionRuntime?.install(
+      this.world,
+      (slot) => {
+        if (!this.slots.includes(slot)) this.slots.push(slot);
+      },
+      (slot) => {
+        if (!this.scriptedObservers.includes(slot)) this.scriptedObservers.push(slot);
+      }
+    );
   }
 
   /**
@@ -1607,8 +1627,26 @@ export class Match {
     economyFor(this.world, bestSlot).biomass += stats.biomass * rate * yieldScale;
   }
 
+  /**
+   * Everybody the Echo pass resolves for: the seated roster plus the mission's
+   * scripted parties (#323). Skirmishes take the roster itself — no copy, no
+   * cost — and the union is rebuilt into a held scratch array on the mission
+   * path because both inputs can change (a seat leaves, and a party's slot may
+   * coincide with the player's).
+   */
+  private echoObservers(): readonly number[] {
+    if (this.scriptedObservers.length === 0) return this.slots;
+    const out = this.observerScratch;
+    out.length = 0;
+    for (const slot of this.slots) out.push(slot);
+    for (const slot of this.scriptedObservers) {
+      if (!out.includes(slot)) out.push(slot);
+    }
+    return out;
+  }
+
   private resolveEcho(): Map<number, EchoSnapshot> {
-    const result = this.echo.run(this.world, this.slots);
+    const result = this.echo.run(this.world, this.slots, this.echoObservers());
     if (result.elapsedMs > this.worstEchoMs) this.worstEchoMs = result.elapsedMs;
 
     // Self-events, bucketed by whoever they happened to. Drained here rather
