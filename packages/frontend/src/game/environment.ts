@@ -110,7 +110,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
     slug: 'env-vent-basalt',
     footprintM: 15,
     triBudget: 270,
-    density: 0.2,
+    density: 0.3,
     stands: [Biome.ThermalVein],
     nearRock: 'any',
     maxSlopeM: Number.POSITIVE_INFINITY,
@@ -124,7 +124,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
     slug: 'env-kelp-cluster',
     footprintM: 18,
     triBudget: 388,
-    density: 0.45,
+    density: 0.55,
     stands: [Biome.KelpForest],
     nearRock: 'exclude',
     maxSlopeM: 300,
@@ -137,7 +137,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
     slug: 'env-coral-tower',
     footprintM: 15,
     triBudget: 588,
-    density: 0.06,
+    density: 0.12,
     stands: [Biome.KelpForest],
     nearRock: 'any',
     maxSlopeM: 250,
@@ -151,7 +151,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
     slug: 'env-trench-spire',
     footprintM: 20,
     triBudget: 146,
-    density: 0.14,
+    density: 0.18,
     stands: [Biome.AbyssalTrench],
     nearRock: 'any',
     maxSlopeM: 400,
@@ -164,7 +164,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
     slug: 'env-trench-slab',
     footprintM: 25,
     triBudget: 72,
-    density: 0.18,
+    density: 0.25,
     stands: [Biome.AbyssalTrench],
     nearRock: 'any',
     maxSlopeM: Number.POSITIVE_INFINITY,
@@ -207,7 +207,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
     slug: 'env-ruin-block',
     footprintM: 25,
     triBudget: 376,
-    density: 0.06,
+    density: 0.08,
     stands: [Biome.CoralRuins],
     nearRock: 'any',
     maxSlopeM: 300,
@@ -220,7 +220,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
     slug: 'env-ruin-dome-shard',
     footprintM: 40,
     triBudget: 544,
-    density: 0.02,
+    density: 0.03,
     stands: [Biome.CoralRuins],
     nearRock: 'any',
     maxSlopeM: 200,
@@ -233,7 +233,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
     slug: 'env-coral-growth',
     footprintM: 12,
     triBudget: 184,
-    density: 0.1,
+    density: 0.12,
     stands: [Biome.CoralRuins, Biome.KelpForest],
     nearRock: 'any',
     maxSlopeM: Number.POSITIVE_INFINITY,
@@ -287,9 +287,17 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
 
 /** Gate-6 reservation, both halves (docs/graphics-standards.md): instancing
  * keeps draw calls flat per slug×material, so the caps that need enforcing
- * are bodies and triangles. `placeProps` spends against both and stops. */
+ * are bodies and triangles. `placeProps` spends against both and stops.
+ *
+ * SPEC — graphics-standards.md gate 6, re-baselined at 105 k once the Block 4
+ * Claude Design batch (#321) replaced the generated props: the densities above
+ * were tuned to the generator's triangle counts, the design models run heavier
+ * per instance, and the batch cut eight densities to stay under the original
+ * 80 k. This figure restores those densities; the tightest shipped map (Kelp
+ * Labyrinth) dresses at ~102 k, and the whole layer still sits well inside the
+ * conn view's 250 k on-screen budget. */
 export const PROP_INSTANCE_CAP = 600;
-export const PROP_TRI_RESERVATION = 80_000;
+export const PROP_TRI_RESERVATION = 105_000;
 
 export interface PropPlacement {
   slug: string;
