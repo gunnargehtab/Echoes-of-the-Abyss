@@ -101,9 +101,10 @@ a document already points at it:
   The condition-fired beat, the exposure tally and the aimed hold — the three things the first
   four documents still wanted — have all shipped, along with the Ledger's own three additions
   (the `deliver` predicate, readings per objective, and the conditional beat's choice group).
-  What Intake names is the next one: `deliver` counts Nodules, the Directorate's income is
-  Biomass, and no predicate can ask what a cohort economy earned. The income itself is built;
-  only the query and a way to spend it are not.
+  What Intake named was the next one: `deliver` counted Nodules, the Directorate's income is
+  Biomass, and no predicate could ask what a cohort economy earned. That query has since been
+  built (#330) — `deliver` reads any of the economy record's three accounts — and what remains
+  unbuilt is the literal, and a way to spend Biomass.
   [mission-standing-wave.md](mission-standing-wave.md) is the third, and it asks loudest:
   `chord-standing-wave` and the `the-fifth` map are unbuilt, and its §13 names a predicate the
   objective union does not carry (what the player has *built*), two shipped constants that

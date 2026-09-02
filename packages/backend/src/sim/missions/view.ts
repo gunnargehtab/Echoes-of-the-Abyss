@@ -193,7 +193,9 @@ function counts(objective: MissionObjective): boolean {
     objective.predicate.kind === 'tolerance' ||
     // The number is the objective — docs/mission-shift-change.md §8: a quota
     // is the most countable thing a shift has, and the counter beside it is
-    // the same figure the player's own stockpile readout carries.
+    // the same figure the player's own stockpile readout carries. Whatever
+    // the account: a band of Biomass (docs/mission-intake.md §8) is counted
+    // for the same reason a quota of Nodules is.
     objective.predicate.kind === 'deliver'
   );
 }

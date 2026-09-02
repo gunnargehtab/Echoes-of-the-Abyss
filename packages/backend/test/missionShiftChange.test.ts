@@ -41,7 +41,11 @@ import { LEDGER_SHIFT_CHANGE, PROLOGUE_SORROWGATE } from '../src/sim/missions/in
 import { MissionRuntime, type MissionCommandSink } from '../src/sim/missions/runtime.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { createSimWorld } from '../src/sim/world.ts';
-import type { MissionDefinition } from '../src/sim/missions/index.ts';
+import type {
+  EconomyAccount,
+  MissionDefinition,
+  MissionPredicate,
+} from '../src/sim/missions/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 const ECHO_TICK_INTERVAL = Math.round(SIM.TICK_HZ / SIM.ECHO_HZ);
@@ -50,8 +54,17 @@ const T = (minutes: number, seconds = 0): number => (minutes * 60 + seconds) * S
 /** §8's quota, as the literal authors it. */
 const QUOTA = 3600;
 
-/** A resolved snapshot carrying one fact: what the player's economy holds. */
-function banked(tick: number, nodules: number): EchoSnapshot {
+/**
+ * A resolved snapshot carrying one fact: what the player's economy holds.
+ * The other two accounts are held at a decoy figure rather than zero, so a
+ * predicate that read the wrong account would be caught reading it.
+ */
+function banked(
+  tick: number,
+  amount: number,
+  account: EconomyAccount = 'nodules',
+  decoy = 0
+): EchoSnapshot {
   return {
     tick,
     units: [],
@@ -59,9 +72,10 @@ function banked(tick: number, nodules: number): EchoSnapshot {
     ordnance: [],
     contacts: [],
     peakSig: 0,
-    nodules,
-    crystal: 0,
-    biomass: 0,
+    nodules: decoy,
+    crystal: decoy,
+    biomass: decoy,
+    [account]: amount,
     exposure: { tier: ResolutionTier.Silent, trackedCount: 0 },
     selfEvents: [],
     draw: { capacity: 0, demand: 0, satisfaction: 1 },
@@ -101,22 +115,38 @@ const DELIVER_ONLY: MissionDefinition = {
       id: 'the-number',
       text: 'Make the number.',
       initial: ObjectiveStatus.Pending,
-      predicate: { kind: 'deliver', nodules: QUOTA },
+      predicate: { kind: 'deliver', account: 'nodules', amount: QUOTA },
     },
   ],
 };
 
-function driveDeliver(stockpiles: readonly number[]): {
+function driveDeliver(
+  stockpiles: readonly number[],
+  account: EconomyAccount = 'nodules',
+  decoy = 0
+): {
   status: ObjectiveStatus;
   progress: { done: number; of: number };
 } {
-  const runtime = new MissionRuntime(DELIVER_ONLY);
+  const definition: MissionDefinition =
+    account === 'nodules'
+      ? DELIVER_ONLY
+      : {
+          ...DELIVER_ONLY,
+          objectives: [
+            {
+              ...DELIVER_ONLY.objectives[0],
+              predicate: { kind: 'deliver', account, amount: QUOTA },
+            },
+          ],
+        };
+  const runtime = new MissionRuntime(definition);
   const world = createSimWorld(Terrain.demo(), 1 / SIM.TICK_HZ, 3);
   let tick = 0;
-  for (const nodules of stockpiles) {
+  for (const amount of stockpiles) {
     tick += ECHO_TICK_INTERVAL;
     world.tick = tick;
-    runtime.tick(world, SINK, banked(tick, nodules));
+    runtime.tick(world, SINK, banked(tick, amount, account, decoy));
   }
   const objective = runtime.currentView?.objectives.find((o) => o.id === 'the-number');
   assert.ok(objective !== undefined, 'the quota objective is not in the view');
@@ -138,6 +168,38 @@ describe('the number — the deliver predicate, §8', () => {
   it('is met from the tick the stockpile reaches the figure', () => {
     assert.equal(driveDeliver([QUOTA]).status, ObjectiveStatus.Met);
   });
+
+  // docs/mission-intake.md §13: the row is generalised over the economy
+  // record's three accounts, not grown a `biomass` sibling, so the third
+  // account is not a special case either. The decoy holds the other two
+  // accounts past the quota the whole time — a counter that advanced would
+  // be reading the wrong stockpile.
+  it('reads the biomass account when the band is authored in Biomass', () => {
+    const short = driveDeliver([0, 120, 244], 'biomass', QUOTA * 2);
+    assert.equal(short.status, ObjectiveStatus.Pending, 'the decoy accounts must not count');
+    assert.deepEqual(short.progress, { done: 244, of: QUOTA });
+
+    const rendered = driveDeliver([0, QUOTA], 'biomass', 0);
+    assert.equal(rendered.status, ObjectiveStatus.Met);
+    assert.deepEqual(rendered.progress, { done: QUOTA, of: QUOTA });
+  });
+
+  it('reads the crystal stockpile when the figure is authored in Crystal', () => {
+    const short = driveDeliver([QUOTA - 1], 'crystal', QUOTA * 2);
+    assert.equal(short.status, ObjectiveStatus.Pending, 'the decoy accounts must not count');
+    assert.deepEqual(short.progress, { done: QUOTA - 1, of: QUOTA });
+
+    const over = driveDeliver([QUOTA + 500], 'crystal', 0);
+    assert.equal(over.status, ObjectiveStatus.Met);
+    assert.deepEqual(over.progress, { done: QUOTA, of: QUOTA }, 'the register does not over-count');
+  });
+
+  it('rejects an account the economy record does not carry at type-check', () => {
+    // @ts-expect-error — the format's standing rule: a mistyped literal fails
+    // `npm run type-check`, not half way through a match.
+    const mistyped: MissionPredicate = { kind: 'deliver', account: 'biomas', amount: 245 };
+    assert.equal(mistyped.kind, 'deliver');
+  });
 });
 
 describe('the close assembles — objective readings, §8', () => {
@@ -151,7 +213,7 @@ describe('the close assembles — objective readings, §8', () => {
           text: 'Make the number.',
           initial: ObjectiveStatus.Pending,
           terminal: true,
-          predicate: { kind: 'deliver', nodules: 100 },
+          predicate: { kind: 'deliver', account: 'nodules', amount: 100 },
           reading: { met: 'The number is entered.', unmet: 'The shortfall is entered.' },
         },
         {

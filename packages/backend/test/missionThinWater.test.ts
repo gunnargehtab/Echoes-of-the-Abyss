@@ -382,7 +382,7 @@ describe('the objective, as docs/mission-thin-water.md §8 chooses it', () => {
     assert.equal(SEEDING_THIN_WATER.lifts, undefined, '§8: the harvest is not counted at all');
     for (const objective of SEEDING_THIN_WATER.objectives) {
       const predicate = objective.predicate;
-      assert.notEqual(predicate.kind, 'deliver', '§8: the nodule predicate is not used');
+      assert.notEqual(predicate.kind, 'deliver', '§8: the stockpile predicate is not used');
       if (predicate.kind === 'extract') {
         assert.equal(
           predicate.loaded,

@@ -287,8 +287,9 @@ export type MissionPredicate =
    */
   | { kind: 'tolerance'; ticks: number; tier: ResolutionTier }
   /**
-   * Nodules the observer's own economy has banked — the shift's number of
-   * docs/mission-shift-change.md §8, and the union's first economic row.
+   * What the observer's own economy has banked in one named account — the
+   * shift's number of docs/mission-shift-change.md §8 (Nodules), and the band
+   * of docs/mission-intake.md §8 (Biomass). The union's one economic row.
    *
    * A query over the observer's own stockpile: the figure the server already
    * answers affordability from, and the one the player's own HUD carries. It
@@ -296,13 +297,28 @@ export type MissionPredicate =
    * union already enforces — there is still no way here to name a party, and
    * none to ask what anybody else has banked.
    *
+   * Generalised over the economy record's three accounts rather than grown a
+   * `biomass` sibling (docs/mission-intake.md §13): a sibling would be the
+   * second of three near-identical rows, and the third is already visible in
+   * the Knights' campaign. It keys on the economy record, not `ResourceKind`,
+   * because that enum names field nodes and Biomass has no node — it is paid
+   * on a kill.
+   *
    * Monotone in practice on the missions that author it — nothing is buildable
    * on a field under works order, so banked is delivered — but stated as a
    * floor either way: the count is met from the tick the stockpile reaches the
    * figure, and a mission that let the player spend below it afterwards would
    * be a mission whose document said so.
    */
-  | { kind: 'deliver'; nodules: number };
+  | { kind: 'deliver'; account: EconomyAccount; amount: number };
+
+/**
+ * The three accounts of the per-player economy record — `world.ts`'
+ * `PlayerEconomy` and, on the wire, the same three fields of `EchoSnapshot`.
+ * Named here so a mission literal that misspells one fails `type-check`
+ * rather than half way through a match, per the format's standing rule.
+ */
+export type EconomyAccount = 'nodules' | 'crystal' | 'biomass';
 
 /**
  * A load — the hold-and-cut lift of docs/mission-asset-recovery.md §8, and, with
