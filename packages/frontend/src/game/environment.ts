@@ -123,7 +123,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
   {
     slug: 'env-kelp-cluster',
     footprintM: 18,
-    triBudget: 293,
+    triBudget: 388,
     density: 0.55,
     stands: [Biome.KelpForest],
     nearRock: 'exclude',

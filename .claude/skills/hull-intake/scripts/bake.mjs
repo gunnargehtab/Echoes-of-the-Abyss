@@ -219,6 +219,20 @@ try {
       `--world-light ${worldLight} was licensed but the export carries no emissive — ` +
         'either the channel was dropped or the licence is unused.'
     );
+  // A material whose meshes disagree on vertex attributes cannot be merged
+  // into one geometry at load (rosterModels' mergeByMaterial keeps the parts,
+  // correctness over draw count). For a hull that is a few extra draws; for
+  // an instanced prop it is a draw call per part per batch, which is what the
+  // material cap exists to bound — so it is a warning here and a FAIL below.
+  const splitMaterials = (stats.unmergeableMaterials ?? []).map(
+    (m) => `${m.name} [${m.attributeSets.join(' | ')}]`
+  );
+  if (!isEnv && splitMaterials.length > 0)
+    warnings.push(
+      `meshes under one material carry different vertex attributes, so they cannot merge ` +
+        `into one draw: ${splitMaterials.join('; ')}. Strip unused attributes (UVs on an ` +
+        'untextured mesh) or export every part alike.'
+    );
   if (stats.rotatedZtoX)
     warnings.push('length ran along Z in the export; auto-rotated onto X. Verify bow direction.');
   if (Math.abs(stats.scaleApplied - 1) > 0.01)
@@ -287,6 +301,14 @@ try {
       console.error(
         `\nFAIL: ${distinctMaterials} materials exceed the prop cap of ${maxMaterials} — ` +
           'each material is a draw call per instance batch (gate 6). Merge materials.'
+      );
+      failed = true;
+    }
+    if (splitMaterials.length > 0) {
+      console.error(
+        `\nFAIL: meshes under one material carry different vertex attributes and will not ` +
+          `merge into one draw per instance batch (gate 6): ${splitMaterials.join('; ')}. ` +
+          'Strip unused attributes (UVs on an untextured mesh) or export every part alike.'
       );
       failed = true;
     }

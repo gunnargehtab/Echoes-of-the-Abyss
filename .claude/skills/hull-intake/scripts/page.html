@@ -104,18 +104,31 @@
         let emissiveCount = 0;
         let triangleCount = 0;
         const materials = [];
+        // Vertex-attribute signatures per material. The runtime merges every
+        // mesh sharing a material into one draw (mergeByMaterial), and
+        // three's mergeGeometries refuses a bucket whose members disagree on
+        // attributes — one holdfast exported with UVs beside stalks without
+        // them silently costs a draw call per part per instance batch.
+        const attributeSets = new Map();
         model.traverse((o) => {
           if (!o.isMesh) return;
           meshes.push(o);
           const position = o.geometry.getAttribute('position');
           triangleCount += Math.floor((o.geometry.index?.count ?? position.count) / 3);
+          const signature = Object.keys(o.geometry.attributes).sort().join(',');
           for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
             const hasEmissive =
               (m.emissive && (m.emissive.r || m.emissive.g || m.emissive.b)) || m.emissiveMap;
             if (hasEmissive) emissiveCount++;
             materials.push({ name: m.name || '(unnamed)', emissive: !!hasEmissive });
+            const name = m.name || '(unnamed)';
+            if (!attributeSets.has(name)) attributeSets.set(name, new Set());
+            attributeSets.get(name).add(signature);
           }
         });
+        const unmergeableMaterials = [...attributeSets]
+          .filter(([, signatures]) => signatures.size > 1)
+          .map(([name, signatures]) => ({ name, attributeSets: [...signatures] }));
         const original = new Map(meshes.map((m) => [m, m.material]));
         const restore = () => meshes.forEach((m) => (m.material = original.get(m)));
         const swap = (fn) =>
@@ -245,6 +258,7 @@
           materials,
           emissiveMaterialCount: emissiveCount,
           triangleCount,
+          unmergeableMaterials,
         };
         window.__ready = true;
       } catch (err) {

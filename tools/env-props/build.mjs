@@ -28,7 +28,7 @@
  * in the dark desaturated register the ENV STYLE block pins.
  */
 
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -838,6 +838,19 @@ function normalise(parts, footprintM) {
 }
 
 // --- GLB ------------------------------------------------------------------------
+/** Whether a GLB on disk is this generator's own output (asset.generator),
+ * as opposed to a Claude Design model that replaced it. */
+function isGenerated(path) {
+  try {
+    const glb = readFileSync(path);
+    const jsonLength = glb.readUInt32LE(12);
+    const json = JSON.parse(glb.toString('utf8', 20, 20 + jsonLength));
+    return json.asset?.generator === 'echoes env-props';
+  } catch {
+    return false;
+  }
+}
+
 function writeGlb(path, name, primitives, materials) {
   // Flat shading: three unique vertices per triangle, face normal on each.
   const bins = [];
@@ -920,6 +933,14 @@ if (selected.length === 0) {
   process.exit(1);
 }
 for (const prop of selected) {
+  // A row the Claude Design batch has replaced is no longer this generator's
+  // to write: a bare run must not put the stand-in back over an approved
+  // model. Naming the slug on the command line is the explicit override.
+  const file = join(outDir, `${prop.slug}.glb`);
+  if (only.length === 0 && existsSync(file) && !isGenerated(file)) {
+    console.log(`${prop.slug.padEnd(24)} kept — authored elsewhere, not regenerated`);
+    continue;
+  }
   const rng = mulberry32(seedOf(prop.slug));
   const { stone, light } = prop.build(rng);
   const parts = light ? [stone, light] : [stone];
@@ -950,7 +971,6 @@ for (const prop of selected) {
     primitives.push({ part: light, material: 1 });
   }
   const triangles = parts.reduce((n, p) => n + p.tris.length, 0);
-  const file = join(outDir, `${prop.slug}.glb`);
   writeGlb(file, prop.slug, primitives, materials);
   console.log(
     `${prop.slug.padEnd(24)} ${String(triangles).padStart(4)} tris  ` +
