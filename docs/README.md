@@ -20,6 +20,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | **[world.md](world.md)** | The Pelagion Rift, the Salinity Collapse, the Mouth, culture and language |
 | **[timeline.md](timeline.md)** | Two centuries, from the Collapse to 214 PC, and the Mouth's anomaly log |
 | **[world-map.md](world-map.md)** | The Rift's geography: regions, the vertical order, every named place, and where the campaign happens |
+| **[habitats.md](habitats.md)** | Inside the cities: berths, light, air, the hush, and what each culture calls beautiful — the plateaus, the Holding, Sorrowgate, the chapter-houses, Sufficiency |
 | **[factions.md](factions.md)** | The four powers — doctrine, politics, weakness |
 | **[characters.md](characters.md)** | Twelve commanders and the neutrals |
 | **[culture.md](culture.md)** | How the Rift speaks — five registers, names, rituals, writing guide |

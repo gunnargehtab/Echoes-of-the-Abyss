@@ -92,6 +92,7 @@ Thermal Veins, Kelp Forest Plateaus, Abyssal Trenches, Resonance Fields, and Cor
 ## Related
 
 - **[world-map.md](world-map.md)** — the geography: regions, the vertical order, named places, and where the campaign happens
+- **[habitats.md](habitats.md)** — inside the cities: what it is like to live in the places the geography names
 - **[timeline.md](timeline.md)** — two centuries from the Collapse to 214 PC, including the Sounding of 141
 - **[culture.md](culture.md)** — how the Rift speaks, expanded from the three cultural facts above
 - **[factions.md](factions.md)** — the four powers this world produced
