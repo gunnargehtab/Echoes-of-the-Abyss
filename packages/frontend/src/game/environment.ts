@@ -136,8 +136,8 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
   {
     slug: 'env-coral-tower',
     footprintM: 15,
-    triBudget: 182,
-    density: 0.12,
+    triBudget: 588,
+    density: 0.06,
     stands: [Biome.KelpForest],
     nearRock: 'any',
     maxSlopeM: 250,

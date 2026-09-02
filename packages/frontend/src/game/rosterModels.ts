@@ -194,6 +194,16 @@ export function mergeByMaterial(root: Group): Group {
   });
   const merged = new Group();
   for (const [material, geometries] of buckets) {
+    // Claude Design's exporter indexes the primitives it built from three's
+    // parametric geometries and leaves the hand-built ones flat, and
+    // mergeGeometries refuses a bucket that mixes the two. Flattening the
+    // indexed minority costs a little vertex memory once per template;
+    // keeping the parts would cost a draw call per part per instance batch.
+    if (geometries.some((g) => g.index !== null) && geometries.some((g) => g.index === null)) {
+      for (let i = 0; i < geometries.length; i++) {
+        if (geometries[i]!.index !== null) geometries[i] = geometries[i]!.toNonIndexed();
+      }
+    }
     const geometry = geometries.length === 1 ? geometries[0]! : mergeGeometries(geometries);
     if (geometry === null) {
       for (const g of geometries) merged.add(new Mesh(g, material));
