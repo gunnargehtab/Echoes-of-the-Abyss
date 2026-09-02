@@ -558,12 +558,29 @@ export class EchoLayer {
     if (cost > this.worstMarkMs) this.worstMarkMs = cost;
   }
 
-  run(world: SimWorld, slots: readonly number[]): EchoResult {
+  /**
+   * One full Echo pass.
+   *
+   * `slots` is the seated roster — the commanders snapshots are built for.
+   * `observers` is every slot the pass resolves *for*, and it may be wider: a
+   * mission's scripted parties listen without being seated (#323). The split
+   * matters because exposure is materialised observer-major — each observer's
+   * resolutions are turned around onto the owners of what they resolved — so a
+   * party missing from this list cannot raise anybody's `ExposureReport`,
+   * however close it stands. The pair loop below already records for every
+   * listener under MAX_SLOTS; what `observers` governs is whose records are
+   * cleared, materialised and turned into exposure each pass.
+   *
+   * The residue read stays on `slots`: marks feed snapshots and the sweep does
+   * its own listening, so resolving them for a scripted party would spend path
+   * integrals on data nobody reads.
+   */
+  run(world: SimWorld, slots: readonly number[], observers: readonly number[] = slots): EchoResult {
     const started = performance.now();
     const terrain = world.terrain;
     const entities = acousticEntities(world);
 
-    for (const slot of slots) {
+    for (const slot of observers) {
       this.best.get(slot)?.clear();
       const bucket = this.results.get(slot);
       if (bucket === undefined) this.results.set(slot, []);
@@ -852,7 +869,13 @@ export class EchoLayer {
     // --- Materialise per-player payloads -----------------------------------
     // Fields are attached strictly by tier. A client cannot leak what it was
     // never sent, so lower tiers omit data rather than sending it flagged.
-    for (const slot of slots) {
+    //
+    // Over `observers`, not `slots`: a scripted party's payload is assembled
+    // for nobody, but walking its resolutions is what raises `exposure` on the
+    // player it resolved (#323). Building the contacts too, rather than a
+    // second exposure-only walk, keeps this the one place the union's
+    // information-safety argument has to be read.
+    for (const slot of observers) {
       const slotBest = this.best.get(slot);
       const out = this.results.get(slot)!;
       if (slotBest === undefined) continue;
@@ -877,7 +900,7 @@ export class EchoLayer {
           if (resolved.tier >= ResolutionTier.Bearing) {
             // Once per hull, however many opponents are holding it. The set is
             // non-null exactly when `victim` is: both are keyed on a slot that
-            // `exposure` answered for, which is a slot in the roster.
+            // `exposure` answered for, which is a slot in the observer list.
             const counted = this.countedTracked.get(Owner.slot[eid]!)!;
             if (!counted.has(eid)) {
               counted.add(eid);

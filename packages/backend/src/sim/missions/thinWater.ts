@@ -591,11 +591,24 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
       slot: ELEMENT,
       faction: Faction.Bathyarch,
       note: 'The second element — never engaged, and the reason the mission ends (§5). It is heard only as the housings it passes going quiet',
+      /**
+       * Standing north of the spur, mid-map, and the position is measured
+       * rather than placed: the element used to wait at the north-east corner,
+       * 1,945 m from the muster's western Corvette, and an idle Corvette at 28
+       * stands at Bearing to another Corvette's HYD 50 out to 2,065 m through
+       * PF 1.0 — so once the Echo pass resolved *for* this party (#323) it held
+       * the column at Tier 2 from the first pass, and §9's "a column that
+       * never moves is never challenged" was false at rest. From here every
+       * hull of the column is 2,250 m or further off, the muster reads Contact
+       * to the corridor and nothing better to anybody, and the 07:30 drop onto
+       * the spur's east end is a 2,350 m transit — twenty-eight seconds for a
+       * Corvette, against the ninety before the first housing goes quiet.
+       */
       units: [
         {
           tag: 'element-one',
           kind: UnitKind.Corvette,
-          x: 4900,
+          x: 2800,
           y: 250,
           depthM: 300,
           armed: true,
@@ -604,7 +617,7 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
         {
           tag: 'element-two',
           kind: UnitKind.Corvette,
-          x: 4750,
+          x: 2650,
           y: 200,
           depthM: 300,
           armed: true,

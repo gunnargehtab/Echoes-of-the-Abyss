@@ -303,18 +303,25 @@ export class MissionRuntime {
    * Seat the player and place every authored force. Called once, from the
    * `Match` constructor — not from the room, so replay playback gets it too.
    *
-   * **Only the player's slot is seated.** The scripted parties are given an
-   * `Owner.slot` and nothing else, because the Echo Layer resolves listeners
-   * and pingers by `Owner.slot` rather than by the seated roster: an unseated
-   * party still hears, still emits, and — the beat this whole mission turns on
-   * — still lights the player when it pings. Leaving them unseated keeps
-   * `resolveVictory`'s two-roster rule untouched (a mission is not a fight
-   * somebody wins), keeps the Echo pass building one snapshot instead of six,
-   * and keeps five scripted navies out of the lobby's faction-uniqueness
-   * check.
+   * **Only the player's slot is seated; the scripted parties are observed.**
+   * Seating stays the player's alone so `resolveVictory`'s two-roster rule is
+   * untouched (a mission is not a fight somebody wins), the Echo pass builds
+   * one snapshot instead of six, and five scripted navies stay out of the
+   * lobby's faction-uniqueness check. But an `Owner.slot` alone is not enough
+   * either, and believing it was is filed as #323: the Echo Layer's pair loop
+   * hears *by* `Owner.slot`, so an unobserved party still emits and still
+   * lights the player when it pings — yet exposure is materialised only for
+   * observers, so a party the pass never resolves *for* can stand at
+   * point-blank Classification without the player's `ExposureReport` ever
+   * leaving Silent, and every `tolerance` predicate authored against
+   * docs/mission-aptitude.md §5 stays shut for the whole mission. `observe`
+   * hands each party to the Echo pass as a listener without a seat.
    */
-  install(world: SimWorld, seat: (slot: number) => void): void {
+  install(world: SimWorld, seat: (slot: number) => void, observe: (slot: number) => void): void {
     seat(this.definition.playerSlot);
+    for (const party of this.definition.parties) {
+      if (party.slot !== this.definition.playerSlot) observe(party.slot);
+    }
 
     // A mission grants no stockpile unless it authors one.
     //
