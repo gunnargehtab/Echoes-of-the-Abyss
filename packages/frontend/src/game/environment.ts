@@ -96,7 +96,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
   {
     slug: 'env-vent-chimney',
     footprintM: 12,
-    triBudget: 354,
+    triBudget: 434,
     density: 0.22,
     stands: [Biome.ThermalVein],
     nearRock: 'any',
