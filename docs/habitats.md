@@ -449,6 +449,8 @@ whose it is, the room is not yet written.
 
 - **[world-map.md](world-map.md)** — where each of these places is, to the metre; this document
   is what it is like to be there
+- **[habitats-art-brief.md](habitats-art-brief.md)** — the same places as art briefs: the key
+  image, the light and the palette each one is drawn with
 - **[world.md](world.md)** — the setting: the Collapse, the Lid overhead, and why nobody goes back
 - **[culture.md](culture.md)** — dry as luxury, silence as debt, and the five registers the
   habitats are described in

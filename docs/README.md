@@ -63,6 +63,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | **[ui-ux.md](ui-ux.md)** | The Echo Layer HUD, sonar scope, ping preview, esc menu, accessibility |
 | **[style-neon-noir.md](style-neon-noir.md)** | Neon-noir presentation register: palette tokens, glow rules, UI chrome |
 | **[asset-prompts-3d.md](asset-prompts-3d.md)** | Copy-paste prompt kit for style-consistent 3D roster models (Claude Design) |
+| **[habitats-art-brief.md](habitats-art-brief.md)** | The Rift's beauty as an art brief per habitat: thesis, key image, light, palette, ground, and a prompt seed for each city, inside the gates |
 | **[naming.md](naming.md)** | Title, taglines, logo direction |
 | **[concept-art/](concept-art/)** | Five survey plates in the Pressure Cartography language, plus two neon-noir presentation plates |
 
