@@ -20,6 +20,7 @@ import { FIRST_TRENCH_MARGIN } from './missions/firstTrenchMargin.ts';
 import { FOURTH_TRENCH } from './missions/fourthTrench.ts';
 import { HOLDING_BOARD } from './missions/holdingBoard.ts';
 import { HOLDING_UNDERWORKS } from './missions/holdingUnderworks.ts';
+import { KELL_SHOULDER } from './missions/kellShoulder.ts';
 import { MARR_PLATEAU } from './missions/marrPlateau.ts';
 import { MOUTH_RIM } from './missions/mouthRim.ts';
 import { NINEFOLD_FACE_SIX } from './missions/ninefoldFaceSix.ts';
@@ -36,6 +37,7 @@ export {
   FOURTH_TRENCH,
   HOLDING_BOARD,
   HOLDING_UNDERWORKS,
+  KELL_SHOULDER,
   KELP_LABYRINTH,
   MARR_PLATEAU,
   MOUTH_RIM,
@@ -84,6 +86,7 @@ export const MISSION_MAPS: readonly MapDefinition[] = [
   MARR_PLATEAU,
   ATTENDING_GALLERIES,
   OUTER_FORMATIONS,
+  KELL_SHOULDER,
 ];
 
 export function missionMapById(id: string): MapDefinition | undefined {
