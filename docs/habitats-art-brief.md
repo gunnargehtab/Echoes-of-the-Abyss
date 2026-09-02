@@ -100,8 +100,8 @@ where "bright at the top" is true.
 plateau sits in the 16–35 band, *dim accent running lights*, never floodlit. Second,
 `flora-biolight` `#2E8C74` on kelp tips and living coral: points and short lines, steady or
 5 Hz-stepped, dimmer and greyer than the faction's green so the forest never reads as a fleet.
-Third, the Lid's ceiling glow — **key art only**, see §9. In-engine the column above 150 m is
-not yet drawn in the conn view, and the plateau's beauty has to be made from the first two.
+Third, the Lid's ceiling glow — **key art only**, decided in §9. In-engine the plateau's
+beauty is made from the first two, and that is the brief rather than a gap in it.
 
 **Palette.** `#1FA67A` · `#8FE36B` · `#E8F0A3` · `#0B241E` (the Commune's four); the kelp
 biome fill and its relief; `flora-biolight`. Spore pale `#E8F0A3` is the plateau's one
@@ -474,32 +474,43 @@ distance from.
 
 ---
 
-## 9. The Lid — the one light from above
+## 9. The Lid — the one light from above, and why it stays in key art
 
-The plateaus' ceiling glow is the setting's single overhead light and its most distinctive
-image, and it is currently **key art only**. Three facts bound any proposal to bring it into
-the engine:
+**Decided: the Lid's ceiling glow does not ship in the conn view.** The plateaus' pale ceiling
+is the setting's single overhead light and its most distinctive image, and it is key art
+only — by decision, not by omission. The proposal was tried before it was refused, and the
+reasons are recorded here so nobody reopens it as a renderer task when it is a style one.
 
-- **The Lid is a mechanic, not a rendered stripe.** The sour timer above 150 m is built
-  ([systems-depth.md](systems-depth.md) §2), the three-layer revision's chart shows a Lid
-  hatch, and the conn view does not yet draw the top of the column
-  ([three-layer-ocean.md](three-layer-ocean.md) Phase 4). A ceiling glow would be the conn
-  view's first presence for it.
-- **It would be a fourth family, and a fourth family is a doc amendment first.**
-  [style-neon-noir.md](style-neon-noir.md) *World light* licenses three, all points and
-  seams, and rule 1 forbids area glow on terrain. A pale ceiling haze over Shelf-band water
-  is area light by definition, so it cannot ship under the current text — the honest route is
-  an amendment that adds a *ceiling* class with its own token and caps (fog colour at the top
-  of the column, key-art-borrowed spore pale desaturated to the biome ceiling, never brighter
-  than `vent-ember`, only over cells whose water reaches 150 m), reviewed as such.
-- **It is the poison.** Whatever it looks like, it must not read as *sky*, *hope* or
-  *destination* ([world.md](world.md), *Writing rule*). The glow is pale, sourceless and
-  slightly wrong — milky, not blue — and in the mix the Lid already has its three sounds for
-  its three states ([audio-direction.md](audio-direction.md) §4). A player who ascends into
-  it should feel the frame go pale and the hull start to die in the same second.
+**What was tried.** A prototype film in the conn view: one translucent plane at the 150 m
+boundary, spore pale desaturated toward grey, clamped to the map's water with feathered edges,
+shot on Marr Plateau (working water 250–320 m) at the same camera as the shipped view, at
+survey and combat zoom, at three opacities.
 
-This document proposes the amendment and does not make it. Until it is made, the Lid is
-drawn in plates and briefing panels and nowhere else.
+- At 0.18 it washed the void beyond the map rim as well as the water, and flattened the
+  fleet: the "area glow on terrain" failure the world-light rules exist to prevent, exactly.
+- At 0.06–0.10, clamped, it did the one thing it was for — the plateau read as water under a
+  ceiling — and it did it by lifting every Shelf frame to a pale grey-green, spending the
+  darkness budget and the hulls' contrast on every frame, all the time, in the one biome whose
+  whole beauty is that its light is at the tips and nowhere else.
+
+**Why it stays out.** Three facts, each sufficient:
+
+- **It is area light on terrain.** [style-neon-noir.md](style-neon-noir.md) *World light*
+  licenses three families, all points and seams, with `vent-ember` as the ceiling. A haze over
+  Shelf-band water is a fourth family and a fill, and the rule that darkness is the default
+  state is the style, not a constraint on it (§1).
+- **The Lid is already in the game as what it is: a cost.** The sour timer above 150 m is
+  built ([systems-depth.md](systems-depth.md) §2) and the mix gives it three sounds for its
+  three states ([audio-direction.md](audio-direction.md) §4). A player who climbs into it
+  hears the water change and feels the hull start to die; the frame does not need to go pale
+  for the Lid to exist.
+- **It is the poison.** Whatever a ceiling glow looked like, it would be the one light from
+  above in a setting whose writing rule is that the surface is never a goal, a hope or a
+  destination ([world.md](world.md)). Not drawing it is the safer reading of that rule.
+
+**Where it lives instead.** In plates and briefing panels — §3's key image and the Plateaus
+plate in §10 — where the glow can be drawn for what it is: pale, sourceless, milky rather than
+blue, and slightly wrong. In-engine the plateaus are lit from the tips, and that is the brief.
 
 ---
 
