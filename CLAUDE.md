@@ -76,10 +76,6 @@ tools/echo-sim     Standalone CommonJS harness for deterministic Echo scenarios.
                    Not an npm workspace; run it directly:
                    node tools/echo-sim/sim.js [tools/echo-sim/scenarios/<name>.json]
                    Tests can also require('./lib') for detect/runScenario.
-tools/env-props    Deterministic generator for the Block 4 environment props
-                   (docs/concept-art/models/env-*.glb). Stand-in author until a
-                   Claude Design batch replaces a file; every output still goes
-                   through hull-intake --category env. node tools/env-props/build.mjs
 docs/              The design bible. Prose, and the source of every SPEC number.
 ```
 
