@@ -246,7 +246,7 @@ export const ENVIRONMENT_PROPS: readonly PropSpec[] = [
   {
     slug: 'env-rock-crag-a',
     footprintM: 30,
-    triBudget: 231,
+    triBudget: 228,
     density: 0.25,
     stands: 'rock',
     nearRock: 'any',
