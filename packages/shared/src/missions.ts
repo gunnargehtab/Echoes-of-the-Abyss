@@ -276,6 +276,40 @@ export const SEEDING_TEND_HEADER: MissionHeader = {
   ],
 };
 
+export const SEEDING_THIN_WATER_HEADER: MissionHeader = {
+  id: 'seeding-thin-water',
+  campaign: 'seeding',
+  ordinal: 2,
+  name: 'The Second Seeding \u2014 Thin Water',
+  premise:
+    'Ten loaded tenders, four kilometres of bare rock between two gardens, and a line the concern has closed across it.',
+  mapId: 'kell-shoulder',
+  // The count is read at 14:00 (docs/mission-thin-water.md \u00a79), at the short
+  // end of campaign.md \u00a710's 12\u201325 and deliberately so: the mission is one
+  // continuous withdrawal, and a longer one would be the same decision taken
+  // four more times.
+  lengthBandS: [780, 900],
+  /**
+   * Spoken by Tidespeaker Ysolde Marr at the load-out, from Marr, on the
+   * plateau channel \u2014 docs/mission-thin-water.md \u00a712, verbatim.
+   *
+   * Public, and the evacuation carve-out above was considered and declined.
+   * The briefing names no fact the mission withholds: the closure above Kell
+   * is posted, the concern posts everything, and \u00a712's own account of what
+   * this text is for \u2014 "the briefing's job is to pay that cost in advance
+   * instead of under fire" \u2014 requires that it be read in advance. What it
+   * withholds is what Marr does not know: that the corridor will commit, and
+   * that a second element closes it at 13:00.
+   */
+  briefing: [
+    'We\u2019re not going to tell you what to do out there. That hasn\u2019t changed and we\u2019re not going to change it today of all days, because today is the day somebody will wish we had.',
+    'The bloom at Kell came early and the turning wants seed. Ten went. We think ten was more than the shoulder is owed and the count didn\u2019t finish before the tide did, so ten is what\u2019s out there, and that\u2019s ours, not yours.',
+    'Here\u2019s the thing we\u2019re saying now while it\u2019s daylight and nobody\u2019s frightened. We\u2019d like six of you home at the least. We\u2019re saying the number here so that nobody has to say it out there \u2014 so that when it\u2019s loud, it\u2019s already been agreed, and no one aboard has to be the person who decides that six is enough. Six isn\u2019t enough. It\u2019s what we agreed.',
+    'The concern has a line closed above Kell. They\u2019ll have posted it. They post everything. If they ask you what you are, you won\u2019t have the answer they\u2019re asking for, and we\u2019d rather you spent that second moving.',
+    'There\u2019s no kelp between Kell and here. You know that. We\u2019re saying it anyway, because the number on your hull was measured somewhere with kelp in it.',
+  ],
+};
+
 export const ATTENDING_ATTENDANCE_HEADER: MissionHeader = {
   id: 'attending-attendance',
   campaign: 'attending',
@@ -337,6 +371,7 @@ export const MISSION_HEADERS: readonly MissionHeader[] = [
   LEDGER_PROSPECT_HEADER,
   LEDGER_ITEM_NINE_HEADER,
   SEEDING_TEND_HEADER,
+  SEEDING_THIN_WATER_HEADER,
   ATTENDING_ATTENDANCE_HEADER,
   CHORD_APTITUDE_HEADER,
 ];
