@@ -443,3 +443,6 @@ are changing and why.
 - [factions.md](factions.md) — full faction visual identity sheets
 - [naming.md](naming.md) — logo and title treatment
 - [systems-echo.md](systems-echo.md) — the mechanics the glow rules encode
+- [habitats-art-brief.md](habitats-art-brief.md) — the inhabited places drawn under
+  these tokens and the world-light rules, including the Lid ceiling haze that was tried
+  against them and refused, so the three families stand

@@ -427,3 +427,4 @@ Within it:
 - [style-neon-noir.md](style-neon-noir.md) — presentation-layer palette tokens and glow rules
 - [asset-prompts-3d.md](asset-prompts-3d.md) — prompt kit that transcribes this doc for 3D model generation
 - [ui-ux.md](ui-ux.md) — the Echo Layer HUD this direction serves
+- [habitats-art-brief.md](habitats-art-brief.md) — the inhabited places as art briefs: what is beautiful about each, and how it appears inside these rules

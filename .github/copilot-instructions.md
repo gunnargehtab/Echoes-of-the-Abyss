@@ -107,6 +107,7 @@ Read: **[tech-stack.md](../docs/tech-stack.md)** · **[CLAUDE.md](../CLAUDE.md)*
 
 ### Presentation
 - **[art-direction.md](../docs/art-direction.md)** — Palettes, shape language, silhouette law, UI requirements
+- **[habitats-art-brief.md](../docs/habitats-art-brief.md)** — The Rift's beauty as an art brief per habitat, inside the gates
 - **[audio-direction.md](../docs/audio-direction.md)** — The mix as primary information channel; tier sonification
 - **[ui-ux.md](../docs/ui-ux.md)** — Echo Layer HUD, sonar scope, ping preview, accessibility
 - **[naming.md](../docs/naming.md)** — Title direction and taglines
