@@ -6,7 +6,7 @@
  * that a player is never sent information they did not earn.
  */
 
-import { describe, it } from 'node:test';
+import { after, before, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
@@ -20,8 +20,11 @@ import {
   SIM,
   SILENT_RUNNING,
   STRUCTURE_AURAS,
+  STRUCTURE_STATS,
   StructureKind,
+  UNIT_STATS,
   UnitKind,
+  priceOf,
   statsFor,
   structureStatsFor,
 } from '@echoes/shared';
@@ -675,6 +678,123 @@ describe('construction and production', () => {
       .structures.find((s) => s.kind === StructureKind.Bastion)!;
     assert.equal(match.produce(0, bastion.id, UnitKind.Cruiser), false);
     assert.ok(match.produce(0, bastion.id, UnitKind.Harvester));
+  });
+});
+
+describe('the third account — Biomass as a price', () => {
+  // docs/economy.md §6 and §8: a cohort hull carries a Biomass price beside
+  // its Nodules and Crystal, refused and debited on the path the other two
+  // already take. The roster's own Biomass column is empty until issue #352
+  // prices a cohort hull, so this block prices a Corvette in Biomass for its
+  // own duration — the one variable in the block is the account, the way
+  // missionShiftChange.test.ts holds the other two accounts at a decoy. Each
+  // test file runs in its own process, and `after` restores the roster for
+  // the rest of this one.
+  const RENDERING = 35; // one Hollow, docs/bestiary.md §4 — the cohort's figure
+  const corvette = UNIT_STATS[UnitKind.Corvette];
+  before(() => {
+    corvette.biomassCost = RENDERING;
+  });
+  after(() => {
+    delete corvette.biomassCost;
+  });
+
+  function foundryOf(match: Match): { id: number } {
+    return advance(match, 0.5)!
+      .get(0)!
+      .structures.find((s) => s.kind === StructureKind.Foundry)!;
+  }
+
+  it('refuses production on Biomass alone, however full the other two accounts are', () => {
+    // §6: the Directorate's living is a different resource, not a discount
+    // on the same one. Five thousand of each of the others buy no cohort.
+    const match = twoPlayerMatch();
+    const foundry = foundryOf(match);
+    const economy = match.world.economies.get(0)!;
+    economy.nodules = 5000;
+    economy.crystal = 5000;
+    economy.biomass = RENDERING - 1;
+
+    assert.equal(match.produce(0, foundry.id, UnitKind.Corvette), false, 'a rendering short');
+    assert.equal(economy.nodules, 5000, 'a refusal charges nothing');
+    assert.equal(
+      match.produce(0, foundry.id, UnitKind.LightScout),
+      true,
+      'the rest of the roster is not priced in it'
+    );
+
+    economy.biomass = RENDERING;
+    assert.equal(
+      match.produce(0, foundry.id, UnitKind.Corvette),
+      true,
+      'with the rendering banked, it builds'
+    );
+  });
+
+  it('debits the Biomass price on enqueue, beside the Nodules, and touches nothing else', () => {
+    const match = twoPlayerMatch();
+    const foundry = foundryOf(match);
+    const economy = match.world.economies.get(0)!;
+    economy.crystal = 200;
+    economy.biomass = 100;
+    const before = { ...economy };
+
+    assert.ok(match.produce(0, foundry.id, UnitKind.Corvette));
+    const queued = advance(match, 0.5)!.get(0)!;
+    assert.equal(queued.nodules, before.nodules - corvette.cost);
+    assert.equal(queued.biomass, before.biomass - RENDERING);
+    assert.equal(queued.crystal, before.crystal, 'crystal is not in the price');
+    assert.equal(queued.structures.find((s) => s.id === foundry.id)!.queue.length, 1);
+  });
+
+  it('charges exactly the price the shell would show — one sum, both sides', () => {
+    // The parity the whole feature rests on: what a client prints for the
+    // hull is `priceOf(statsFor(kind))`, and what the economy lost is the
+    // same three numbers. Neither side reads the roster's columns itself.
+    const match = twoPlayerMatch();
+    const foundry = foundryOf(match);
+    const economy = match.world.economies.get(0)!;
+    economy.crystal = 50;
+    economy.biomass = 100;
+    const before = { ...economy };
+
+    assert.ok(match.produce(0, foundry.id, UnitKind.Corvette));
+    assert.deepEqual(
+      {
+        nodules: before.nodules - economy.nodules,
+        crystal: before.crystal - economy.crystal,
+        biomass: before.biomass - economy.biomass,
+      },
+      priceOf(statsFor(UnitKind.Corvette))
+    );
+  });
+
+  it('refuses and debits a structure priced in Biomass on the same path', () => {
+    // No structure carries a Biomass price either (structures.ts); the
+    // Refinery carries one for this test, so that `build` is held to the same
+    // rule as `produce` rather than assumed to be.
+    const refinery = STRUCTURE_STATS[StructureKind.Refinery];
+    refinery.biomassCost = 20;
+    try {
+      const match = twoPlayerMatch();
+      advance(match, 0.5);
+      const bastion = advance(match, 0.2)!
+        .get(0)!
+        .structures.find((s) => s.kind === StructureKind.Bastion)!;
+      const economy = match.world.economies.get(0)!;
+      economy.nodules = 5000;
+      economy.biomass = 19;
+
+      assert.equal(match.build(0, StructureKind.Refinery, bastion.x, bastion.y + 700), false);
+      assert.equal(economy.nodules, 5000, 'a refusal charges nothing');
+
+      economy.biomass = 20;
+      assert.equal(match.build(0, StructureKind.Refinery, bastion.x, bastion.y + 700), true);
+      assert.equal(economy.biomass, 0);
+      assert.equal(economy.nodules, 5000 - refinery.cost);
+    } finally {
+      delete refinery.biomassCost;
+    }
   });
 });
 

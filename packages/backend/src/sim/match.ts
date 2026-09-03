@@ -31,6 +31,9 @@ import {
   UnitKind,
   statsFor,
   structureStatsFor,
+  affords,
+  charge,
+  priceOf,
   Biome,
   DRIFT,
   EchoMarkKind,
@@ -1117,10 +1120,12 @@ export class Match {
     }
 
     const economy = economyFor(this.world, slot);
-    if (economy.nodules < stats.cost) return false;
-    // Crystal-locked structures are the faction signatures: the upper tech
-    // tier the deep pays for (docs/economy.md §2).
-    if (economy.crystal < (stats.crystalCost ?? 0)) return false;
+    // Three accounts, one answer (economy.ts). Crystal-locked structures are
+    // the faction signatures — the upper tech tier the deep pays for
+    // (docs/economy.md §2) — and one priced in Biomass is refused on that
+    // account the same way, by the function the bar greys its button with.
+    const price = priceOf(stats);
+    if (!affords(economy, price)) return false;
 
     let anchored = false;
     for (let eid = 0; eid <= this.world.maxEid; eid++) {
@@ -1137,8 +1142,7 @@ export class Match {
       if (Math.hypot(node.x - x, node.y - y) < stats.radiusM + PLACEMENT_CLEARANCE_M) return false;
     }
 
-    economy.nodules -= stats.cost;
-    economy.crystal -= stats.crystalCost ?? 0;
+    charge(economy, price);
     spawnStructure(this.world, {
       kind,
       slot,
@@ -1177,11 +1181,13 @@ export class Match {
       this.world.production.set(structureEid, line);
     }
     if (line.queue.length >= MAX_QUEUE_LENGTH) return false;
-    if (economy.nodules < stats.cost) return false;
-    if (economy.crystal < (stats.crystalCost ?? 0)) return false;
+    // All three accounts on the one path the shell prices from (economy.ts):
+    // a hull short in Biomass alone is refused here exactly as one short in
+    // Nodules is, and the button that showed it greyed showed the same sum.
+    const price = priceOf(stats);
+    if (!affords(economy, price)) return false;
 
-    economy.nodules -= stats.cost;
-    economy.crystal -= stats.crystalCost ?? 0;
+    charge(economy, price);
     line.queue.push(kind);
     if (line.queue.length === 1) line.remainingS = stats.buildTimeS;
     return true;
@@ -1475,7 +1481,7 @@ export class Match {
     // is a way back into an economy, if they can afford the harvester.
     const pending = new Set<number>();
     const canRebuild = new Set<number>();
-    const harvesterCost = statsFor(UnitKind.Harvester).cost;
+    const harvesterPrice = priceOf(statsFor(UnitKind.Harvester));
     const structures = this.structureOwners(this.world);
     for (let i = 0; i < structures.length; i++) {
       const eid = structures[i]!;
@@ -1489,7 +1495,7 @@ export class Match {
       const allowed = PRODUCIBLE[Structure.kind[eid] as StructureKind] ?? [];
       if (
         allowed.includes(UnitKind.Harvester) &&
-        economyFor(this.world, slot).nodules >= harvesterCost
+        affords(economyFor(this.world, slot), harvesterPrice)
       ) {
         canRebuild.add(slot);
       }

@@ -24,7 +24,7 @@ Three consequences shape every rule below:
 | --- | --- | --- | --- | --- |
 | **Nodule** | Polymetallic seabed nodules — hulls, plate, structures. The bulk resource | All bands; densest Mid-Water | Everyone | 40–50 sustained |
 | **Thermal Draw** | Heat and pressure differential tapped from vents — the power resource, consumed continuously rather than stockpiled | Thermal Veins, Shelf and Mid-Water | Everyone | 55–75 sustained at the tap |
-| **Biomass** | Rendered fauna. Cheap, fast, morally simple to nobody | Wherever the Drift is healthy | Directorate at full rate; others at ~30% via rendering contracts | 45–60 during harvest |
+| **Biomass** | Rendered fauna — what the cohort programme grows its hulls from. Cheap, fast, morally simple to nobody | Wherever the Drift is healthy | Directorate at full rate; others at ~30% via rendering contracts | 45–60 during harvest |
 | **Resonance Crystal** | The tech gate. Every faction's upper tech tier is crystal-locked | **Almost entirely Abyssal** | Everyone, insufficiently | 60–70 sustained |
 
 Nodules and Thermal Draw are the working economy. Biomass is a faction-shaped bonus channel ([bestiary.md](bestiary.md) §5). **Resonance Crystal is the reason anybody goes deep at all** ([systems-depth.md](systems-depth.md)), and its scarcity is the clock every match runs on.
@@ -118,6 +118,8 @@ The catch is deliberate and is the Commune's whole balance: **bloom-share requir
 
 Cheapest per unit, scaling with the map's health. Directorate cohorts are inexpensive and their Biomass channel converts other players' noise into their income ([bestiary.md](bestiary.md) §5). They mine Nodules poorly and tap Thermal Draw worse — shallow infrastructure poisons them, exactly like their units do above 400 m.
 
+**Biomass is what a cohort costs, not a discount on what a hull costs.** A cohort hull carries a Biomass price beside the Nodules every hull is written in, and the accounts are checked together and never exchanged: a commander rich in Nodules and short one rendering is refused exactly as a commander short of crystal is refused the tech tier. That is what "scaling with the map's health" means — the price is a roster fact and does not move, and the income that pays it rises and falls with Drift Health (§9). The rendering contracts the other three navies sell through credit the same account at a fraction, and the price is as faction-blind as every other price in the roster: the doctrine is carried by the rate, the way the Directorate's listening is carried by HYD rather than by a special case ([units.md](units.md), design notes). The roster's cohort entry — the cheap hull this paragraph promises and [units.md](units.md) does not yet carry, and whether it is theirs alone the way the signature structures are — is a design call filed as issue #352. §8 records the mechanism it will be priced with.
+
 Their real economy is the Abyssal band: free PR-3 access means they harvest Resonance Crystal with no refit cost while everyone else is still paying to arrive. The counterweight is that **Biomass yield collapses as Drift Health falls**, so the Directorate is the only faction with a direct incentive to keep the map alive, and the only faction whose income another player can destroy without ever attacking it.
 
 ### Hadron Knights — tithed
@@ -159,7 +161,7 @@ drive to a field, mine, haul home, deposit at a Bastion or Refinery. Constants l
 | Throttle states | **Implemented** — all four states of §3, per harvester | Mining SIG follows the throttle (12/25/45/68); the load scales 0/0.4/1.0/1.4, so a trip brings home 0/20/50/70 |
 | Refining SIG | **Implemented** — the Refinery holds 65 SIG sustained (§4) | Forward refineries are real: any deposit structure works, the loud one is optional |
 | Thermal Draw | **Implemented** — a rate, recomputed every tick and never banked | Vent taps on Thermal Vein terrain supply it; Foundries and Refineries consume it; a deficit slows production and nothing else |
-| Biomass | **Implemented** — paid on a fauna kill, Directorate at full rate and everyone else at 30% | Yield scales with the region's Drift Health, which is the guard-rail against a Directorate snowball (§9): over-harvesting kills the region that pays them |
+| Biomass | **Implemented** — paid on a fauna kill, Directorate at full rate and everyone else at 30%; spent as the third column of a price, refused and debited on the same server path as Nodules and Crystal | Yield scales with the region's Drift Health, which is the guard-rail against a Directorate snowball (§9): over-harvesting kills the region that pays them. Nothing in the roster is priced in it yet — see below, and issue #352 |
 | Resonance Crystal | **Implemented** — Abyssal field, second stockpile, tech gate | See below |
 | Depth economics (§7) | **Implemented** — the round trip has a clock on it | Harvesters issue their own depth orders: loud descent to the field, slow climb home |
 | Industrial hum (§5) | **Implemented** — a decaying Echo Mark at the depot, intensity per delivered cargo | Keyed to throughput, not to the building: a refinery nobody hauls to is silent, and throttling down drops the hum because the loads shrink with it |
@@ -207,6 +209,32 @@ replaced it because a positional economy — where the *route* between field and
 the thing you defend — is the half of the design the abstraction could not exercise, and
 because 5/minute could never fund the roster's 50-750 nodule price range in a playable
 match. [units.md](units.md) carries the current harvester figures.
+
+### Biomass in the scaffold
+
+The third account, and since issue #351 the third column of a price. A hull or structure in
+`packages/shared/src/units.ts` and `structures.ts` is priced in Nodules (`cost`) and, where
+it is locked to them, in Resonance Crystal (`crystalCost`) and Biomass (`biomassCost`).
+`priceOf` in `packages/shared/src/economy.ts` turns those columns into one sum, and
+`affords` and `charge` are the only way anything is refused or paid. The server
+(`Match.build`, `Match.produce`), the commander AI's running purse and the client's command
+bar all call the same three functions on the same roster entry, so the price a button shows
+and the price the server charges cannot drift — they are one figure, written twice.
+
+| Property | Value | Why |
+| --- | --- | --- |
+| Accounts | Nodules, Crystal, Biomass — checked together, never exchanged | §6: the Directorate's living is a different resource, not a discount on the same one. A commander short one rendering is refused however rich in Nodules |
+| Rendering contracts | The same account, at `DRIFT.RENDERING_CONTRACT_RATE` (0.3) | §2's "others at ~30%". The price is as faction-blind as every other price in the roster; the doctrine is the rate |
+| Where a refusal shows | The button, greyed, and on a press the account it fell short in — *Abyssal Submersible: 80 crystal short* | [ui-ux.md](ui-ux.md) §7 forbids the silent grey-out, and naming the account names the readout to watch. The same wording serves a Biomass price the day one exists |
+| The roster's Biomass column | **Empty.** The Abyssal Submersible stays the crystal-locked deep hull, at 260 Nodules and 80 Crystal | The cheap cohort hull §6 promises and [units.md](units.md) lacks is a design call — which hull, at what price, whether Directorate-only — filed as issue #352. This is the mechanism it lands on |
+
+**Why the mechanism shipped ahead of the entry.** [mission-intake.md](mission-intake.md)
+§13 found that *"cheap expendable units"* — [campaign.md](campaign.md) §6 row 2's teaching
+target — cannot be taught by any mission until spending exists, and that the mission which
+will ask is the Directorate's fifth. The account, the query over it (#330) and now the price
+all exist; what remains is a hull to write a price on, and that is a roster decision rather
+than a missing path. A test in `packages/shared/test/economy.test.ts` trips the day a
+Biomass price lands, and names the notes that have to move with it.
 
 ---
 

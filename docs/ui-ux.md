@@ -584,6 +584,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | The match clock | Implemented (#208) — the log's T+ axis live in the top strip, from the server tick both share |
 | Own-force log rows | Implemented (§10, #206, #209) — `you were pinged`, `under fire`, `idle — mined out` |
 | The log's `MARK` row | Implemented (§10, #214) — residue derived by diffing the mark set by id, once per mark per match |
+| Priced buttons, and the reason a greyed one gives | Implemented (#351) — a button carries its whole price from the sum the server charges (`SUB 260+80c`), greys when any account falls short, and a press on it says which — *Abyssal Submersible: 80 crystal short* — on the hint bar, the way a locked key does (§7). Biomass is the third column ([economy.md](economy.md) §8); nothing is priced in it yet |
 
 ---
 

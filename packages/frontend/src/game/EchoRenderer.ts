@@ -78,6 +78,8 @@ import {
   statsFor,
   structureStatsFor,
   FACTION_STRUCTURE,
+  affords,
+  priceOf,
   type AbilityLock,
   type Contact,
   HazardPhase,
@@ -93,7 +95,9 @@ import {
   type MissionResultPayload,
   type OwnStructure,
   type OwnUnit,
+  type Price,
   type ResourceNodeInfo,
+  type Stockpile,
 } from '@echoes/shared';
 import {
   BIOME_COLOR,
@@ -116,6 +120,7 @@ import {
   type Bindings,
 } from '../input/bindings.ts';
 import { FACTION_NAME } from './factions.ts';
+import { priceTag, priceWords, shortfallLine } from './price.ts';
 import {
   drawScopeEchoMarks,
   markRadiusM,
@@ -502,8 +507,11 @@ const TARGET_RADIUS_M = 160;
  */
 const AIM_FLOOR_PX = 18;
 
-/** How long the hint bar holds the reason a locked key did nothing. */
-const MISSION_REFUSAL_MS = 4000;
+/**
+ * How long the hint bar holds the reason a press did nothing — a locked key,
+ * or a price the player could not cover.
+ */
+const REFUSAL_MS = 4000;
 
 /**
  * The banner a mission ends under — docs/mission-sorrowgate.md §8.
@@ -587,6 +595,13 @@ interface BarButton {
   /** Rendered highlighted (e.g. Silent Running currently on). */
   active: boolean;
   action: () => void;
+  /**
+   * What the hint bar says when the button is pressed while disabled — the
+   * reason attached to the grey-out that docs/ui-ux.md §7 asks for. A priced
+   * button names the account it fell short in. Absent, the press is
+   * swallowed, which is what it was before anything carried a reason.
+   */
+  refusal?: string;
 }
 
 /** Command panel geometry, CSS px. docs/art-direction.md "HUD Layout". */
@@ -871,11 +886,13 @@ export class EchoRenderer {
    */
   private missionLocks: AbilityLock[] = [];
   /**
-   * The last locked key that was pressed anyway, and when. The panel carries
-   * the standing list; this is what the hint bar says at the moment of the
-   * press, so a key that does nothing still answers for itself.
+   * The last refused press, and when: a locked key pressed anyway, or a
+   * priced button the player could not cover. The orders panel carries the
+   * standing lock list and the top strip the balances; this is what the hint
+   * bar says at the moment of the press, so a key that does nothing still
+   * answers for itself (docs/ui-ux.md §7).
    */
-  private missionRefusal: { reason: string; atMs: number } | null = null;
+  private refusal: { reason: string; atMs: number } | null = null;
   /** Non-null once a mission has concluded. A mission has no winner. */
   private missionOver: MissionResultPayload | null = null;
 
@@ -1497,14 +1514,9 @@ export class EchoRenderer {
         return;
       }
 
-      // Left click while a build is pending: place it. The server rejects
-      // illegal sites; the client does not pre-simulate placement rules.
+      // Left click while a build is pending: place it.
       if (this.pendingBuild !== null) {
-        const water = this.screenToWorld(e.clientX, e.clientY);
-        if (water !== null) {
-          this.callbacks.onBuild(this.pendingBuild, water.x, water.y);
-          this.pendingBuild = null;
-        }
+        this.commandPlace(e.clientX, e.clientY);
         return;
       }
 
@@ -1649,8 +1661,12 @@ export class EchoRenderer {
         // Refused with the reason attached, rather than arming a placement
         // ghost for a click the server will drop. §7 forbids the silent drop,
         // and a ghost that follows the cursor to nothing is worse than silent:
-        // it looks like it worked right up until it did not.
+        // it looks like it worked right up until it did not. A price the
+        // player cannot cover is the same refusal: the bar greys that button,
+        // and the key is that button.
         if (this.refusedByMission('construction')) return;
+        const stats = structureStatsFor(buildKind);
+        if (this.refusedByPrice(stats.name, priceOf(stats))) return;
         this.pendingBuild = buildKind;
         return;
       }
@@ -1909,6 +1925,7 @@ export class EchoRenderer {
     for (const button of this.barButtons) {
       if (x >= button.x && x <= button.x + button.w && y >= button.y && y <= button.y + button.h) {
         if (button.enabled) button.action();
+        else if (button.refusal !== undefined) this.refuse(button.refusal);
         return true;
       }
     }
@@ -2015,7 +2032,7 @@ export class EchoRenderer {
     if (this.pendingBuild !== null) {
       const stats = structureStatsFor(this.pendingBuild);
       buttons.push({
-        label: `CANCEL ${STRUCTURE_SHORT[this.pendingBuild]} ${stats.cost}`,
+        label: `CANCEL ${STRUCTURE_SHORT[this.pendingBuild]} ${priceTag(priceOf(stats))}`,
         enabled: true,
         active: true,
         action: () => {
@@ -2029,14 +2046,25 @@ export class EchoRenderer {
       // One row of the whole roster; each button routes to a structure that
       // can actually build it, selected or not.
       const roster = PRODUCIBLE[StructureKind.Foundry] ?? [];
+      const stockpile = this.stockpile();
       for (const kind of roster) {
-        const cost = statsFor(kind).cost;
+        const stats = statsFor(kind);
+        // The whole price, from the sum the server charges: a crystal-locked
+        // hull says so on its button, and so will a cohort's Biomass.
+        const price = priceOf(stats);
         const target = this.produceTargetFor(kind);
         buttons.push({
-          label: `${UNIT_SHORT[kind]} ${cost}`,
-          enabled: target !== undefined && this.nodules >= cost,
+          label: `${UNIT_SHORT[kind]} ${priceTag(price)}`,
+          enabled: target !== undefined && affords(stockpile, price),
           active: false,
           action: () => this.commandProduce(kind),
+          // Greyed for a reason (§7): the account it fell short in, or the
+          // yard it has not got. The Bastion always stands and builds the
+          // Harvester, so the second only ever names a combat hull.
+          refusal:
+            target === undefined
+              ? `${stats.name}: no Foundry standing`
+              : (shortfallLine(stats.name, stockpile, price) ?? undefined),
         });
       }
     } else if (this.shownTab === 'squad') {
@@ -2139,15 +2167,18 @@ export class EchoRenderer {
       ];
       const signature = FACTION_STRUCTURE[this.faction];
       if (signature !== undefined) roster.push(signature);
+      const stockpile = this.stockpile();
       for (const kind of roster) {
         const stats = structureStatsFor(kind);
+        const price = priceOf(stats);
         buttons.push({
-          label: `${STRUCTURE_SHORT[kind]} ${stats.cost}`,
-          enabled: this.nodules >= stats.cost,
+          label: `${STRUCTURE_SHORT[kind]} ${priceTag(price)}`,
+          enabled: affords(stockpile, price),
           active: false,
           action: () => {
             this.pendingBuild = kind;
           },
+          refusal: shortfallLine(stats.name, stockpile, price) ?? undefined,
         });
       }
     }
@@ -2306,14 +2337,39 @@ export class EchoRenderer {
   }
 
   /**
+   * Place the armed structure at a screen point.
+   *
+   * The server rejects illegal sites; the client does not pre-simulate
+   * placement rules. It does re-check the price, because that it already
+   * knows: the balance can only have fallen since the key was pressed by
+   * something the player did meanwhile, and a ghost that vanished on click
+   * with nothing said would be §7's silent drop. Refused, the ghost stays
+   * armed for when the account catches up.
+   */
+  private commandPlace(clientX: number, clientY: number): void {
+    if (this.pendingBuild === null) return;
+    const water = this.screenToWorld(clientX, clientY);
+    if (water === null) return;
+    const stats = structureStatsFor(this.pendingBuild);
+    if (this.refusedByPrice(stats.name, priceOf(stats))) return;
+    this.callbacks.onBuild(this.pendingBuild, water.x, water.y);
+    this.pendingBuild = null;
+  }
+
+  /**
    * Queue a unit: at every selected structure that can build it, else at the
    * sidebar's default factory (see produceTargetFor).
    */
   private commandProduce(kind: UnitKind): void {
     // Unreachable from the bar while construction is locked — the tab it lives
     // on is not offered — but the check belongs on the command rather than on
-    // the button, which is where every other mission refusal sits.
+    // the button, which is where every other mission refusal sits. The price
+    // is checked here for the same reason: the button greys on the last
+    // snapshot, and an order the server would refuse between two of them
+    // answers for itself rather than vanishing into the socket.
     if (this.refusedByMission('construction')) return;
+    const stats = statsFor(kind);
+    if (this.refusedByPrice(stats.name, priceOf(stats))) return;
     const selectedTargets = this.structures.filter(
       (s) => this.selected.has(s.id) && (PRODUCIBLE[s.kind]?.includes(kind) ?? false)
     );
@@ -2470,11 +2526,7 @@ export class EchoRenderer {
    */
   private handleTap(clientX: number, clientY: number): void {
     if (this.pendingBuild !== null) {
-      const water = this.screenToWorld(clientX, clientY);
-      if (water !== null) {
-        this.callbacks.onBuild(this.pendingBuild, water.x, water.y);
-        this.pendingBuild = null;
-      }
+      this.commandPlace(clientX, clientY);
       return;
     }
     const hit = this.nearestOwnEntityAt(clientX, clientY);
@@ -2756,8 +2808,36 @@ export class EchoRenderer {
   private refusedByMission(ability: MissionAbility): boolean {
     const reason = this.missionLock(ability);
     if (reason === null) return false;
-    this.missionRefusal = { reason, atMs: performance.now() };
+    this.refuse(reason);
     return true;
+  }
+
+  /**
+   * True when the player cannot cover this price — and, on the way, hands
+   * the shortfall to the hint bar as the reason, by account: "80 crystal
+   * short" names the readout to watch where a greyed button only says no.
+   * The same `affords` the server refuses with, on the same `priceOf` sum
+   * (economy.ts), so the shell never refuses what the server would take nor
+   * arms what it would drop.
+   */
+  private refusedByPrice(name: string, price: Price): boolean {
+    const reason = shortfallLine(name, this.stockpile(), price);
+    if (reason === null) return false;
+    this.refuse(reason);
+    return true;
+  }
+
+  /** Put a reason on the hint bar for the next few seconds. */
+  private refuse(reason: string): void {
+    this.refusal = { reason, atMs: performance.now() };
+  }
+
+  /**
+   * The three banked accounts as the shell last heard them — the shape
+   * `affords` and `shortfall` read, and the figures the top strip shows.
+   */
+  private stockpile(): Stockpile {
+    return { nodules: this.nodules, crystal: this.crystal, biomass: this.biomass };
   }
 
   /**
@@ -2775,7 +2855,7 @@ export class EchoRenderer {
     // run would otherwise keep a greyed-out ping key and a concluded mission's
     // banner over live water for the rest of the session.
     this.missionLocks = [];
-    this.missionRefusal = null;
+    this.refusal = null;
     this.missionOver = null;
     this.units = [];
     this.structures = [];
@@ -4437,8 +4517,8 @@ export class EchoRenderer {
     // 200% UI scale on a 1440 px window the full one is wider than the strip it
     // sits in — a hint running off the screen edge reads as a broken HUD rather
     // than as a long hint, and the clause that would be cut is always the least
-    // load-bearing one. A mission refusal carries no separators, so it is never
-    // what gets shortened.
+    // load-bearing one. A refusal carries no separators, so it is never what
+    // gets shortened.
     const scope = this.minimapRect();
     const hintX = scope.x + scope.size + 12;
     const hintRoom = this.hudWidth() - hintX - 12;
@@ -5181,19 +5261,18 @@ export class EchoRenderer {
   private hintLine(): string {
     // A key that did nothing answers for itself first, ahead of every other
     // hint: the player just pressed something and is owed the reason
-    // (docs/ui-ux.md §7). It is the mission's own words, shown verbatim.
-    if (
-      this.missionRefusal !== null &&
-      performance.now() - this.missionRefusal.atMs < MISSION_REFUSAL_MS
-    ) {
-      return this.missionRefusal.reason;
+    // (docs/ui-ux.md §7). The mission's own words, shown verbatim, or the
+    // account a price fell short in.
+    if (this.refusal !== null && performance.now() - this.refusal.atMs < REFUSAL_MS) {
+      return this.refusal.reason;
     }
     // Touch players get gesture words; everything else is on the bar.
     if (this.pendingBuild !== null) {
       const stats = structureStatsFor(this.pendingBuild);
+      const price = priceWords(priceOf(stats));
       return this.isTouch
-        ? `placing ${stats.name} (${stats.cost})  ·  tap to place`
-        : `placing ${stats.name} (${stats.cost})  ·  LMB place  ·  ESC cancel`;
+        ? `placing ${stats.name} (${price})  ·  tap to place`
+        : `placing ${stats.name} (${price})  ·  LMB place  ·  ESC cancel`;
     }
     // The build keys are not advertised where they will not work. A hint bar
     // naming a binding the mission refuses is the same silent lie as a dead
