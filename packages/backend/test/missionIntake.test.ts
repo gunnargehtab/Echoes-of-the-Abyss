@@ -745,8 +745,9 @@ describe('the shift, run out — docs/mission-intake.md §4, §6, §8, §9', () 
 
   it('renders what it finds, is paid the roster’s figure, and the shift still runs to 20:00', () => {
     // §3, §4, §9: three hulls through the eight stand-offs, standing off,
-    // which §4 prices at nothing. The ground says its line on the first
-    // rendering. §8, §9: the band is answered inside five minutes and the
+    // which §4 prices at nothing — since #353 a shot Hollow lunges, and a
+    // column of three at 400 m is the one formation whose lunge lands on a
+    // corpse. The ground says its line on the first rendering. §8, §9: the band is answered inside five minutes and the
     // shift still ends at 20:00, because it runs its length. And §9's
     // finding row: a hull that stands at the foot of the ascent at 05:00 and
     // leaves has filed nothing, because the ground does not ask until 19:00.

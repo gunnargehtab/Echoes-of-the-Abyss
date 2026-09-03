@@ -186,12 +186,14 @@ and it is the one number in this movement the mission does not say: the ground r
 and does not explain why (§10). §13 carries the decision to leave it unsaid, and what the
 alternatives cost.
 
-> **Against the engine as built, stated here rather than discovered.** These ranges are exact and
-> were measured against the shipped propagation model, but they do not add up to a *fight*. An
-> Abyssal Submersible's gun reaches 650 m; a Hollow coils at Interest rather than closing and
-> strikes only inside 190 m of a cruising Directorate hull. A hull that keeps its distance can
-> therefore render every Hollow on this map without ever being touched. §13 carries the finding
-> in full, and §6 is where this document puts the mission's teeth instead.
+> **Against the engine as built, stated here rather than discovered — and since answered.** These
+> ranges are exact and were measured against the shipped propagation model, and until #353 they
+> did not add up to a *fight*. An Abyssal Submersible's gun reaches 650 m; a Hollow coils at
+> Interest rather than closing and struck only inside 190 m of a cruising Directorate hull, so a
+> hull that kept its distance rendered every Hollow on this map without ever being touched. Now
+> damage is a sound ([bestiary.md](bestiary.md) §4): the first shell springs the strike from any
+> range, and §4 below prices what a stand-off costs, by count. §13 carries the finding and its
+> settlement, and §6 is still where this document puts the mission's teeth.
 
 ### The SIG budget
 
@@ -214,24 +216,40 @@ A rendering is one exchange and it is over in seconds. The numbers are the roste
 - A Hollow has **640 HP**, deals **55/s** inside 110 m, and lunges at 75 m/s — faster than the
   intake's 60.
 - An Abyssal Submersible has **520 HP** and deals **80 every 1.8 s** — 44.4/s — out to 650 m.
+- **Damage is a sound** ([bestiary.md](bestiary.md) §4, #353). The first shell springs the strike
+  from any range: the Hollow commits at strike loudness toward the loudest thing it hears, which
+  here is the gun, and has the whole stand-off to cover at 75 m/s before it bites.
 
-Two readings, and the mission is the distance between them:
+Measured against the engine, with the hulls holding station and firing on their own — a hull that
+is travelling holds its fire, so backing away from a lunge is the other way of not shooting:
 
 | How it is done | What it costs |
 | --- | --- |
-| **Two hulls at 650 m** | Nothing. 640 HP at 88.9/s is 7.2 seconds and the Hollow never reaches anybody |
+| **Three hulls at 400 m** | Nothing. 640 HP at 133/s is three volleys and 3.6 seconds; the lunge needs 4.3 and lands on a corpse |
+| **Two hulls at 650 m** | Nothing. Four volleys and 5.4 seconds against a 7.6-second lunge — the pair renders for free, and it is the last formation that does |
+| **Two hulls at 400 m** | One hull at **433 of 520**. The animal arrives with a volley still to come and bites for it |
+| **One hull at 650 m** | **216 of 520**. Eight shells over 12.6 seconds, and the Hollow is on the hull for the last five and a half |
+| **One hull at 400 m** | **32 of 520**. The same eight shells, and nine seconds of being bitten for them |
 | **One hull inside 190 m, two more shooting** | The bitten hull is at **124 of 520** when the animal dies, and a hull at 124 cannot survive a second strike — 2.3 seconds of one |
 | **One hull alone, inside** | It loses. 640 HP at 44.4/s is 14.4 seconds and 520 HP at 55/s is 9.5 |
 
-**A Submersible in a cohort's hands is good for exactly one strike.** That sentence is the mission's whole account of
-"expendable", and it is arithmetic rather than a claim. It is also, as the note in §3 says, a
-sentence the player never has to hear: standing off is free, and the mission does not fence it.
+**A Submersible in a cohort's hands is good for exactly one strike**, and it is now a sentence
+the player is made to hear: a hull that renders alone, from any range, comes back with a strike's
+worth of hull gone, and cannot render twice. That is the mission's whole account of "expendable",
+and it is arithmetic rather than a claim. Standing off is still not fenced. It is priced, and priced
+**by count**, which is the cohort economy in one table — an array of three renders anything for
+nothing; a pair renders for nothing only at the gun's full reach; a lone hull pays in hull for every
+animal it takes.
 
 The document takes that trade knowingly rather than papering over it. What the close-range reading
 buys is **speed** — a Hollow held at 190 m dies in the same seconds whether or not it bit anybody,
 and a Hollow shot at from 650 m has to be reached first — and speed against a twenty-minute clock
-with eight animals to find is the only currency the mission has left to price. A player who never
-closes will bank the band and will bank it late, which is the shape §6 is built to punish.
+with eight animals to find is the currency the mission prices. What the lunge adds is that every
+rendering is **announced**: a Hollow is loud only while striking, and a shot one strikes, so the
+region hears each animal the intake takes from the moment the first shell lands
+([bestiary.md](bestiary.md) §4). A player who never closes will bank the band and will bank it
+late, which is the shape §6 is built to punish; a player who spreads to one hull a wall to bank it
+early is bitten for it, which is the shape §3's ledger rewards and this table charges for.
 
 ---
 
@@ -633,7 +651,8 @@ court and wrong for a shift, and a transit that had no depth. Each is a row belo
 in the literal's own header so a reviewer can overrule it, and none is a new tuning constant. The
 table also carries two findings the literal made against the engine as built, in the manner of
 §3's note, and both are since settled — the colossus in the engine (#349), the region ledger in
-this document rather than in the engine (#350).
+this document rather than in the engine (#350) — as is §3's note itself, the stand-off, in the
+engine (#353).
 
 | Requirement | Status |
 | --- | --- |
@@ -644,7 +663,7 @@ this document rather than in the engine (#350).
 | **Biomass as an objective — the predicate this mission needs** | **Built** (#330), as the shape this row asked for: `deliver` is generalised over the economy record's own three accounts — `{ kind: 'deliver'; account: 'nodules' \| 'crystal' \| 'biomass'; amount: number }` — rather than grown a `biomass` sibling, because a sibling would be the second of three near-identical rows and the third is already visible in the Knights' campaign. It keys on the **economy record**, not on `ResourceKind`: that enum names field nodes (Nodule, ResonanceCrystal) and Biomass has no node — it is paid on a kill. **The income itself already shipped**, which is the correction this document made to its own issue: `world.ts` carries `economy = { nodules, crystal, biomass }`, `payBiomass` credits a fauna kill to the nearest owner at full rate for the Directorate and `DRIFT.RENDERING_CONTRACT_RATE` (0.3) for everyone else, and the snapshot already carried all three accounts to the observer — so only the *query* was missing, and the wire did not move. [mission-shift-change.md](mission-shift-change.md)'s quota migrated to `account: 'nodules'` with the same figure and no behaviour change; a mistyped account fails `type-check`, per the format's standing rule; and the counter beside a `deliver` objective is shown whatever the account, because the number is still the objective. §8's *The band is answered* — 245 rendered — is now one row of the literal |
 | **Biomass as something to spend** | **Built** (issue #351), as the other half of §6 row 2: `UnitStats` and `StructureStats` carry `biomassCost` beside `cost` and `crystalCost`, and `Match.build`, `Match.produce`, the commander AI and the command bar all answer affordability from one shared sum over the three accounts (`economy.ts`), so a hull short in Biomass alone is refused server-side exactly as one short in Nodules is, and the button that showed it greyed names the account it fell short in ([economy.md](economy.md) §8). The row below is what there is to spend it on. This mission still needs neither — the intake is twelve hulls and there is nothing to build (§2), and its `construction` lock stays — and mission 5 is the one that will ask |
 | **A cheap cohort hull** | **Decided, and in the roster (#352): the Chorister**, at 30 Nodules and 20 Biomass — SIG 16 / 24 / +15, HYD 75, PR-2 on the hull and PR-3 in the Directorate's hands, 200 HP, 50 m, the slowest combat hull in the game ([units.md](units.md)). This row used to record a docs-to-docs disagreement: [economy.md](economy.md) §6 said "cheapest per unit" while the faction's only hull was the second most expensive in the game. The roster took the first of the two fixes, because the second — reading §6 as *cheapest per point of value* — would have left [factions.md](factions.md)'s "very many, cheap, slow" and [campaign.md](campaign.md) §6 row 2's "cheap expendable units" describing a navy with nothing cheap in it. The three calls inside that one — no faction lock, PR-2 rather than 3, one Draymaw rather than one Hollow — are recorded in [units.md](units.md)'s design notes so they can be overruled in one place. **This mission does not field it**, for two reasons §2 now states: twelve is the year, and a 50 m hull is beneath the Sounder's notice. §4's arithmetic stands as written; a Chorister against a Hollow loses alone and trades two for one in threes, which is the roster saying the cheap hull is not how a Hollow is rendered |
-| **The Drift cannot threaten a hull that outranges it** | **Not built, and possibly not buildable without a decision.** §3's note states it and this row prices it. A Hollow *coils* at Interest rather than closing — the trigger model of [bestiary.md](bestiary.md) §4, and the deliberate exception to the aggro ladder — and strikes only inside `DRIFT.HOLLOW_TRIGGER_RANGE_M` (500 m) at Commit. Against a Directorate hull the ×0.4 taste modifier puts Commit at **190 m cruising**, and an Abyssal Submersible's gun reaches **650 m**. Fauna carry no retaliation path: aggro is purely acoustic, so being shot from outside hearing changes nothing. The consequence is that every Hollow on this map can be rendered for free, and "expendable" is a word the mission cannot make the player feel. Three things would change it and all three are somebody's decision rather than a bug: give the Hollow a wounded-lunge so damage is a sound; drop the ×0.4 for the mission (which would spend the faction's own doctrine to fix one mission); or accept it, which is what this document does — §6 puts the mission's teeth in the one creature that ignores range entirely |
+| **The Drift cannot threaten a hull that outranges it** | **Settled in the engine (#353) — damage is a sound.** This row was a finding: a Hollow *coils* at Interest rather than closing — the trigger model of [bestiary.md](bestiary.md) §4, and the deliberate exception to the aggro ladder — and struck only inside `DRIFT.HOLLOW_TRIGGER_RANGE_M` (500 m) at Commit. Against a Directorate hull the ×0.4 taste modifier puts Commit at **190 m cruising**, an Abyssal Submersible's gun reaches **650 m**, and fauna carried no retaliation path, so every Hollow on this map could be rendered for free and "expendable" was a word the mission could not make the player feel. Of the three things that would change it, the first was taken: **a weapon hit is a wound, and a wound springs the strike.** The guns, torpedoes and blasts report what they landed on (`wound`), the Hollow's ladder answers the report as it answers a loud hull passing the ambush — Committed, now, at SIG 60, toward the loudest thing it hears, from any range — and the trigger model is otherwise untouched: quiet past the ambush is still quiet, loud far away is still only watched. What the lunge does not do is fence standing off: it has the stand-off to cover at 75 m/s, so an array of three, or a pair at the gun's full reach, still renders before it lands, and §4's table prices that by count rather than pretending otherwise — a lone hull is bitten from 650 m, a pair is bitten inside the trigger, three are not. Not taken: dropping the ×0.4 for the mission, a `MissionDefinition` field that would spend the faction's doctrine on one mission; and accepting it, which would have left the teaching target of [campaign.md](campaign.md) §6 row 2 a word the mission could not earn. A driven creature (#349) gives no hull to a shell and is not woken by one, and the rule is a report the weapons make rather than a species the weapons know about, so the day another animal is given an answer to being shot, the guns will not change. `hollow.test.ts` states the rule — the first shell springs the strike at strike loudness toward the gun, toward the louder thing when there is one, and not while a beat drives it — and `missionIntake.test.ts`'s column of three at 400 m still renders its seven, as §4's first row says it does |
 | **The Sounder as the mission's threat** | **Built, and aimed at exactly this faction by accident — in length.** `DRIFT.TRANSIT_MIN_HULL_M` is 95 and the Abyssal Submersible's `hullLengthM` is 95, so the strict `<` test means the Directorate's only hull is the shortest one a colossus grinds — a Corvette at 80 and a Light Scout at 60 are ignored. The bite path returns early for every non-structure, so a Sounder that *stops* is harmless; it is the swept transit that kills, which is why §6 authors a line across the map rather than an engagement. **In depth it was not built, and the row below is what built it**: the transit's vertical reach is a body, not a column — 85 m against a 95 m hull — and a driven creature held its species' working depth, which for a Sounder is 2,000 m. Run against this map that colossus could neither enter the muster, whose floor is 1,900 m, nor grind a hull holding station at 1,900 m over the bench a hundred metres above it. It stopped at the muster's edge and ground nothing |
 | **A transit with a depth** | **Built for this mission.** The `creature` beat's `driveTo` may carry `depthM`, held every pass the way its `x` and `y` are, and `Fauna.homeDepth` is what the fauna system climbs or sinks toward when nothing pulls a creature off — the species' working depth unless a mission says otherwise, and restored to it when the commitment ends. The literal runs the transit at 1,900 m, the year's own depth, from the throat to the muster's north edge and back down the same line, and a year that stays on the line at that depth is ground exactly as §6 and §9 describe: six of the twelve seats stand within a hull's width of x = 2,500, and a run that goes quiet and does not move ends with six mustered, no band, and Korrin's third reading. Sorrowgate's colossus asks for nothing and gets its own 2,000 m, as before |
 | **The colossus, killed** | **Settled (#349) — a beat the guns cannot end.** This row was a finding: [bestiary.md](bestiary.md) §4 rates a Sounder at 9,000 HP and 260 Biomass and says it "cannot be reliably killed by any single player before the twenty-minute mark", §6 says "it cannot be killed", and twelve of the intake's 44.4/s are 533 a second. Guns auto-acquire anything with a finite commit inside 650 m, the transit is inside 650 m of the muster for some forty seconds, and an intake that never moved and never went quiet brought the colossus down before it reached the line — seventeen seconds of fire — and was paid the roster's 260 for it, which is the band. Of the three things that would change it, the middle one was taken: **a driven creature takes no weapon damage** for the length of its commitment (`Fauna.driven`, raised and lowered by the runtime with the commitment itself). The transit is a beat, and a mission's beats happen when the document says they happen, which is the rule [mission-sorrowgate.md](mission-sorrowgate.md) §9 already lost its array under. Not taken: hit points that hold against a formation, because any figure only sets a different formation's stopwatch — the Sounder carries no retaliation and hulls move, so plating buys time and never safety; and accepting it, which would have made §6's teeth a choice. What the guns still do: fire, spike, and lay residue on the line — the intake that shoots at a colossus is loud for nothing, which is the mission's lesson in one gesture. The skirmish Sounder, never driven, keeps its 9,000 and its 260, and what protects it there is depth. `missionIntake.test.ts` now states the settlement: the idle intake's peak SIG rises over the transit, the colossus crosses at every point it arrived with, and the six seats on the line are ground exactly as they are for a year that went quiet |

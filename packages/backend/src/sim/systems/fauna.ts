@@ -78,6 +78,28 @@ export function isDriven(world: SimWorld, eid: number): boolean {
   return hasComponent(world, Fauna, eid) && Fauna.driven[eid] === 1;
 }
 
+/**
+ * A weapon landed on a creature — damage is a sound (docs/bestiary.md §4).
+ *
+ * Weapons call this after they take hull off something, and only weapons: the
+ * map is not a shooter, so crush, storms and eruptions do not, and a driven
+ * creature that gave no hull was not wounded. The report is one flag and the
+ * hull that fired, consumed by the ladder on its next step; what it means is
+ * the species' business. The Hollow is the one animal it changes. A trigger
+ * model can be shot at from outside its trigger, and until this a hull that
+ * outranged it — most guns reach past 500 m, and against the Directorate's
+ * ×0.4 the strike is not heard until 190 m, which every gun outranges —
+ * rendered every Hollow on a map for nothing (docs/mission-intake.md §13,
+ * #353). `by` is 0
+ * when nothing with a hull fired it: a mine going off, a torpedo at the end of
+ * its run.
+ */
+export function wound(world: SimWorld, target: number, by: number): void {
+  if (!hasComponent(world, Fauna, target)) return;
+  Fauna.struck[target] = 1;
+  Fauna.struckBy[target] = by;
+}
+
 const creatures = defineQuery([Fauna, Position, Acoustic, Health]);
 
 /** Reused scratch for terrain step resolution — see movement.ts. */
@@ -485,10 +507,42 @@ function wreckBonus(world: SimWorld, x: number, y: number): number {
  * exception to §8's "every commit is preceded by 4 s of Interested behaviour
  * with an audible tell"; the doc prices that with ground instead of time.
  */
-function hollowStage(eid: number, stats: ReturnType<typeof faunaStatsFor>, dt: number): void {
+function hollowStage(
+  eid: number,
+  stats: ReturnType<typeof faunaStatsFor>,
+  dt: number,
+  wounded: boolean,
+  woundedBy: number
+): void {
   const heard = Fauna.heard[eid]!;
-  const target = Fauna.targetEid[eid]!;
   const stage = Fauna.stage[eid] as FaunaStage;
+
+  // Damage is a sound. A Hollow shot from outside its trigger — most guns
+  // reach past 500 m, and against the Directorate's ×0.4 the strike is not
+  // heard until 190 m, which every gun outranges — answers the wound the way it answers a loud hull passing the ambush: it
+  // strikes, now, at strike loudness. The first contact keeps the trigger
+  // model whole (quiet past the ambush is still quiet, loud far away is still
+  // watched), and standing off becomes a choice with a cost rather than a
+  // free rendering (docs/bestiary.md §4; docs/mission-intake.md §4, #353).
+  //
+  // What it lunges at is the ladder's business, not the gun's: the loudest
+  // thing it can hear, which is this file's one rule and is almost always the
+  // gun that just fired and spiked. Only when it hears nothing at all does the
+  // wound point it, at the hull that fired if one did, so a shot from beyond
+  // hearing still buys a lunge in the right direction — for as long as the
+  // next listen keeps a target. A creature that cannot hear its shooter
+  // cannot hunt it, and half a second of lunge is what that is worth.
+  if (wounded) {
+    if (Fauna.targetEid[eid] === 0 && woundedBy !== 0 && Health.hp[woundedBy]! > 0) {
+      Fauna.targetEid[eid] = woundedBy;
+    }
+    // A wound is loud enough to reset the quiet clock: a Hollow that had
+    // been hearing its shooter below Interest for a minute would otherwise
+    // commit and cool on the very next step, having been "quiet" the whole
+    // time. It gets the same 30 s to close that a struck one gets.
+    Fauna.quietS[eid] = 0;
+  }
+  const target = Fauna.targetEid[eid]!;
 
   // Commit-loud AND passing the ambush, measured like a bite: in 3D, so a
   // convoy overhead by more than the range is not passing it.
@@ -500,17 +554,19 @@ function hollowStage(eid: number, stats: ReturnType<typeof faunaStatsFor>, dt: n
       Position.y[target]! - Position.y[eid]!,
       Position.depth[target]! - Position.depth[eid]!
     ) <= DRIFT.HOLLOW_TRIGGER_RANGE_M;
+  // Either passing the ambush, or having shot it.
+  const sprung = triggered || wounded;
 
   switch (stage) {
     case FaunaStage.Ambient:
-      if (triggered) Fauna.stage[eid] = FaunaStage.Committed;
+      if (sprung) Fauna.stage[eid] = FaunaStage.Committed;
       // Coiling is instant — there is no 4 s dwell, because nothing visible
       // or audible changes when it happens.
       else if (heard >= stats.interest) Fauna.stage[eid] = FaunaStage.Interested;
       break;
 
     case FaunaStage.Interested:
-      if (triggered) Fauna.stage[eid] = FaunaStage.Committed;
+      if (sprung) Fauna.stage[eid] = FaunaStage.Committed;
       // It never moved, so there is no journey to cool from: quiet water
       // simply uncoils it.
       else if (Fauna.quietS[eid]! >= DRIFT.COOL_AFTER_S) Fauna.stage[eid] = FaunaStage.Ambient;
@@ -526,8 +582,9 @@ function hollowStage(eid: number, stats: ReturnType<typeof faunaStatsFor>, dt: n
     case FaunaStage.Cooling:
       Fauna.coolingS[eid] = Fauna.coolingS[eid]! - dt;
       // Re-striking keeps the gate: an ambusher slinking home does not chase
-      // a noise half the map away, however loud.
-      if (triggered) Fauna.stage[eid] = FaunaStage.Committed;
+      // a noise half the map away, however loud. A shell is not a noise half
+      // the map away — a hull that keeps shooting keeps it coming.
+      if (sprung) Fauna.stage[eid] = FaunaStage.Committed;
       else if (Fauna.coolingS[eid]! <= 0) Fauna.stage[eid] = FaunaStage.Ambient;
       break;
   }
@@ -546,8 +603,16 @@ function advanceStage(eid: number, stats: ReturnType<typeof faunaStatsFor>, dt: 
     Fauna.interestS[eid] = 0;
   }
 
+  // The wound report, read and cleared here for every species rather than
+  // in the one branch that answers it, so a Draymaw does not carry a stale
+  // shell onto the day the doc gives it a use.
+  const wounded = Fauna.struck[eid] === 1;
+  const woundedBy = Fauna.struckBy[eid]!;
+  Fauna.struck[eid] = 0;
+  Fauna.struckBy[eid] = 0;
+
   if (stats.species === FaunaSpecies.Hollow) {
-    hollowStage(eid, stats, dt);
+    hollowStage(eid, stats, dt, wounded, woundedBy);
     return;
   }
 

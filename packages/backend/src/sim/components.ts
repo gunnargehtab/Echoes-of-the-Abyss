@@ -211,6 +211,21 @@ export const Fauna = defineComponent({
    */
   driven: Types.ui8,
   /**
+   * A weapon landed on this creature since the ladder last looked (1 or 0),
+   * and the hull it was fired from — 0 when nothing with a hull fired it,
+   * which is a mine going off or a torpedo at the end of its run.
+   *
+   * Damage is a sound (docs/bestiary.md §4, the wounded lunge). Written by
+   * the weapons and consumed by the ladder, so the guns stay ignorant of
+   * species: a shell reports that it landed and the animal decides what that
+   * means. The Hollow is the one creature it changes — a trigger model can be
+   * shot at from outside its trigger, and until this a hull that outranged
+   * 500 m rendered every Hollow on a map for nothing (docs/mission-intake.md
+   * §13, #353).
+   */
+  struck: Types.ui8,
+  struckBy: Types.eid,
+  /**
    * Scavengers only — the Echo Mark the swarm is currently drawn to, by the
    * mark's own stable id (0 = none). An id rather than a position because a
    * reinforced mark moves, and the swarm should follow the residue, not the
