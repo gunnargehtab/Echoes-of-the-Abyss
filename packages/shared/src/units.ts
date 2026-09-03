@@ -57,10 +57,8 @@ export interface UnitStats {
    * `crystalCost`, refused and debited on the same path as the other two and
    * never traded for them — see economy.ts, and docs/economy.md §8.
    *
-   * No hull in this roster carries one yet. The Abyssal Submersible is the
-   * crystal-locked deep hull and stays priced as one; the cheap cohort entry
-   * that docs/economy.md §6 promises and docs/units.md lacks is issue #352's
-   * decision, and this is the field its price goes in once it is made.
+   * The Chorister is the one hull that carries it (issue #352). The Abyssal
+   * Submersible is the crystal-locked deep hull and stays priced as one.
    */
   biomassCost?: number;
   buildTimeS: number;
@@ -174,6 +172,55 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     attackRangeM: 650,
     attackCooldownS: 1.8,
     carriesTorpedoes: true,
+  },
+  [UnitKind.Chorister]: {
+    kind: UnitKind.Chorister,
+    name: 'Chorister',
+    // The floor of the 16-35 band every Directorate hull sits in
+    // (docs/habitats-art-brief.md): grown chitin has no engine to speak of.
+    // Quiet alone and loud in company — four idling in one Drift cell sum
+    // past the ledger's HEALTH_SIG_THRESHOLD (60), so a cohort massed on the
+    // ground that pays for it wears that ground. That is docs/economy.md §9's
+    // guard-rail written into the hull rather than bolted on beside it.
+    sigIdle: 16,
+    sigCruise: 24,
+    sigFiringBurst: 15,
+    // A cohort is a listener first: above the Scout, below the Submersible,
+    // and the Cantor's +25 takes it to the 95 cap.
+    hyd: 75,
+    /**
+     * SPEC — docs/units.md: PR-2 on the hull, and the Directorate's PR-3
+     * baseline lifts it to 3 for nothing (`effectivePressureRating`).
+     *
+     * Not 3 on the hull, deliberately. A PR-3 hull at 30 Nodules would sell
+     * the Abyssal band to any navy with a rendering contract, and
+     * docs/economy.md §7 makes going deep a decision somebody pays for. The
+     * baseline is what "born to it" buys the Directorate and nobody else.
+     */
+    pressureRating: 2,
+    maxHp: 200,
+    // The slowest combat hull in the roster: "very many, cheap, slow".
+    speed: 40,
+    // The shortest hull in the roster, and 45 m under DRIFT.TRANSIT_MIN_HULL_M:
+    // a Sounder grinds Submersibles and ignores these.
+    hullLengthM: 50,
+    // The cheapest hull in the game in Nodules — docs/economy.md §6's
+    // "cheapest per unit" — and the only one priced in Biomass. Twenty is one
+    // Draymaw's rendering at full rate, a third of one through a contract;
+    // the faction-blind price and the faction-specific rate are the whole of
+    // how the hull is the Directorate's without a lock (docs/units.md,
+    // design notes).
+    cost: 30,
+    biomassCost: 20,
+    buildTimeS: 10,
+    // Roster arithmetic rather than a §9 band, and ttkBands.test.ts holds it:
+    // a Corvette kills one inside the Scout's ≤ 4 s, a Chorister duel lasts
+    // as long as a Corvette duel, one alone needs twenty seconds against a
+    // Corvette. "Expendable" is a sum.
+    attackDamage: 20,
+    attackRangeM: 450,
+    attackCooldownS: 1,
+    carriesTorpedoes: false,
   },
   [UnitKind.Harvester]: {
     kind: UnitKind.Harvester,

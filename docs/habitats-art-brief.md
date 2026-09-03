@@ -399,7 +399,7 @@ Down the axis toward the south, the water is simply black, and the frame is comp
 eye follows the rows down and then keeps going.
 
 **Light.** The quietest faction, and the darkest city: cohort hulls sit in the 16–35 band
-(the Abyssal Submersible at 22 idle) and the city's structures with them — *dim accent
+(the Chorister at 16 idle, the Abyssal Submersible at 22) and the city's structures with them — *dim accent
 running lights*, in `#C2465E` biolight crimson on `#0A0710` trench black. The rule that glow
 encodes loudness is the Directorate's aesthetic stated as physics: a Directorate city is dim
 because it is silent, and a bright one would be lying. The trench floor carries **no world

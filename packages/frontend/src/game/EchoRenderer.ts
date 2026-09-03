@@ -568,6 +568,7 @@ const UNIT_SHORT: Record<UnitKind, string> = {
   [UnitKind.Corvette]: 'CRV',
   [UnitKind.Cruiser]: 'CRZ',
   [UnitKind.AbyssalSubmersible]: 'SUB',
+  [UnitKind.Chorister]: 'CHR',
   [UnitKind.Harvester]: 'HRV',
 };
 
