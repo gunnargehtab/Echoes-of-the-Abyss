@@ -32,6 +32,14 @@ export interface StructureStats {
    * and each is the structure that expresses that navy's doctrine.
    */
   crystalCost?: number;
+  /**
+   * Biomass cost, for a structure the cohort programme grows rather than
+   * builds — docs/habitats.md has Sufficiency heated and lit from Biomass the
+   * way its hulls are grown. Nothing in this roster is priced in it yet; the
+   * column is here so the price of a structure and the price of a hull are
+   * the same three accounts, read by the same functions (economy.ts).
+   */
+  biomassCost?: number;
   buildTimeS: number;
   /** Footprint radius in metres, for placement checks and rendering. */
   radiusM: number;

@@ -47,6 +47,22 @@ export interface UnitStats {
    * is the one the crystal pays for (docs/economy.md §2, §7).
    */
   crystalCost?: number;
+  /**
+   * Biomass cost, when the hull is a cohort's — grown rather than built.
+   *
+   * The Directorate's account (docs/economy.md §2, §6): its cohorts are
+   * "cheapest per unit, scaling with the map's health", which is a sentence
+   * about a hull priced in the one resource whose yield rises and falls with
+   * Drift Health. The third column of a price beside `cost` and
+   * `crystalCost`, refused and debited on the same path as the other two and
+   * never traded for them — see economy.ts, and docs/economy.md §8.
+   *
+   * No hull in this roster carries one yet. The Abyssal Submersible is the
+   * crystal-locked deep hull and stays priced as one; the cheap cohort entry
+   * that docs/economy.md §6 promises and docs/units.md lacks is issue #352's
+   * decision, and this is the field its price goes in once it is made.
+   */
+  biomassCost?: number;
   buildTimeS: number;
   /**
    * Weapon stats.

@@ -39,12 +39,16 @@ import {
   requiredPressureRating,
   statsFor,
   structureStatsFor,
+  affords,
+  charge,
+  priceOf,
   type Contact,
   type EchoMarkInfo,
   type EchoSnapshot,
   type OwnStructure,
   type OwnUnit,
   type ResourceNodeInfo,
+  type Stockpile,
 } from '@echoes/shared';
 import {
   doctrineFor,
@@ -456,7 +460,13 @@ export class AiCommander implements AiPlayer {
     // A running budget, so two decisions in one tick cannot both spend the
     // same nodule. The server would refuse the second anyway; spending it
     // twice here would just make the commander look like it was thinking.
-    const purse = { nodules: snapshot.nodules, crystal: snapshot.crystal };
+    // All three accounts, because a price can be written in any of them and
+    // the commander budgets with the server's own `affords` (economy.ts).
+    const purse: Stockpile = {
+      nodules: snapshot.nodules,
+      crystal: snapshot.crystal,
+      biomass: snapshot.biomass,
+    };
 
     this.commandEconomy(snapshot, harvesters, commands);
     this.commandConstruction(snapshot, purse, commands);
@@ -674,11 +684,7 @@ export class AiCommander implements AiPlayer {
 
   // --- Construction ---------------------------------------------------------
 
-  private commandConstruction(
-    snapshot: EchoSnapshot,
-    purse: { nodules: number; crystal: number },
-    out: AiCommand[]
-  ): void {
+  private commandConstruction(snapshot: EchoSnapshot, purse: Stockpile, out: AiCommand[]): void {
     const has = (kind: StructureKind): boolean => snapshot.structures.some((s) => s.kind === kind);
 
     // A Refinery first: it shortens every haul, and the hauls are where the
@@ -722,12 +728,10 @@ export class AiCommander implements AiPlayer {
     }
   }
 
-  private afford(kind: StructureKind, purse: { nodules: number; crystal: number }): boolean {
-    const stats = structureStatsFor(kind);
-    const crystal = stats.crystalCost ?? 0;
-    if (purse.nodules < stats.cost || purse.crystal < crystal) return false;
-    purse.nodules -= stats.cost;
-    purse.crystal -= crystal;
+  private afford(kind: StructureKind, purse: Stockpile): boolean {
+    const price = priceOf(structureStatsFor(kind));
+    if (!affords(purse, price)) return false;
+    charge(purse, price);
     return true;
   }
 
@@ -791,7 +795,7 @@ export class AiCommander implements AiPlayer {
     snapshot: EchoSnapshot,
     harvesters: readonly OwnUnit[],
     army: readonly OwnUnit[],
-    purse: { nodules: number; crystal: number },
+    purse: Stockpile,
     out: AiCommand[]
   ): void {
     const queuedOf = (kind: UnitKind): number =>
@@ -833,7 +837,7 @@ export class AiCommander implements AiPlayer {
     // A commander that cannot buy its first choice buys its second, which is
     // what a player does.
     const cycled = this.doctrine.composition[army.length % this.doctrine.composition.length]!;
-    for (const wanted of [cycled, ...affordableFirst(this.doctrine.composition, purse.nodules)]) {
+    for (const wanted of [cycled, ...affordableFirst(this.doctrine.composition, purse)]) {
       const yard = this.freeYard(snapshot.structures, wanted);
       if (yard === null) continue;
       if (!this.affordUnit(wanted, purse)) continue;
@@ -842,12 +846,10 @@ export class AiCommander implements AiPlayer {
     }
   }
 
-  private affordUnit(kind: UnitKind, purse: { nodules: number; crystal: number }): boolean {
-    const stats = statsFor(kind);
-    const crystal = stats.crystalCost ?? 0;
-    if (purse.nodules < stats.cost || purse.crystal < crystal) return false;
-    purse.nodules -= stats.cost;
-    purse.crystal -= crystal;
+  private affordUnit(kind: UnitKind, purse: Stockpile): boolean {
+    const price = priceOf(statsFor(kind));
+    if (!affords(purse, price)) return false;
+    charge(purse, price);
     return true;
   }
 
@@ -1271,9 +1273,12 @@ function distance(a: { x: number; y: number }, b: { x: number; y: number }): num
  * economy, and the answer to a bad economy is *something in the water now*,
  * not the grandest thing that happens to fit.
  */
-function affordableFirst(composition: readonly UnitKind[], nodules: number): UnitKind[] {
+function affordableFirst(composition: readonly UnitKind[], purse: Stockpile): UnitKind[] {
+  // Affordable in every account, ordered by the Nodule price — the bulk
+  // account every hull is written in, so "cheapest" means the same thing for
+  // a crystal-locked hull and a cohort's.
   return [...new Set(composition)]
-    .filter((kind) => statsFor(kind).cost <= nodules)
+    .filter((kind) => affords(purse, priceOf(statsFor(kind))))
     .sort((a, b) => statsFor(a).cost - statsFor(b).cost);
 }
 
