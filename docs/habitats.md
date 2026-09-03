@@ -145,9 +145,11 @@ left them: the walk is a route along the holdfast lines, the bell is a loud even
 tick, and the reading at the edge is the mission's own SIG spike. The Commune's hush is courtesy
 rather than an order (§8), so a mission prices it as courtesy — the convocation breaks it and the
 player pays for it in what hears them. The circuit's length is the mission's clock, and it takes
-exactly as long as it takes; a plateau under attack cannot vote faster. Which terrace holds it is
+exactly as long as it takes; a plateau under attack cannot vote faster. Which terrace holds it was
 the mission document's to choose ([world-map.md](world-map.md) names four): the room needs a full
 row-set to walk, a watch-edge that carries, and a bell.
+[mission-convocation.md](mission-convocation.md) §11 chose Marr Plateau and reuses *Tend*'s map
+literal unchanged, so [campaign.md](campaign.md) §2 rule 5 finally has two missions on one map.
 
 ---
 
@@ -582,7 +584,7 @@ room. Missions not listed are fought in open water or on ground the gazetteer ow
 | Ledger 5 — [Tolerance](mission-tolerance.md) | The Underworks, and Sector Vayle's bulkhead frame at 1,050 m (§3) |
 | Ledger 7 — [Item Nine](mission-item-nine.md) | The Underway, Asset 002, at the bottom of Board country (§3) |
 | Seeding 1 — [Tend](mission-tend.md) | Marr Plateau: the rows, the drop, the watch at the edge (§2) |
-| Seeding 3 — *Convocation* | A plateau voting while it is attacked: the rows as the room, the bell rung off-tide, and the count read at the watch's edge — the first time the Commune's one hush is broken on purpose (§2, *The Turning*) |
+| Seeding 3 — [Convocation](mission-convocation.md) | A plateau voting while it is attacked: the rows as the room, the bell rung off-tide, and the count read at the watch's edge — the first time the Commune's one hush is broken on purpose (§2, *The Turning*). The terrace is Marr Plateau, the same ground as *Tend*, chosen in [mission-convocation.md](mission-convocation.md) §11 |
 | Attending 1 — [Attendance](mission-attendance.md) | The attending galleries and the Cantorate's dome (§6) |
 | Attending 2 — [Intake](mission-intake.md) | The cohort halls on the banding ground, above the city (§6) |
 | Attending 6 — *Conclave* | Sufficiency's upper terraces: the Undermarshalcy and the Cantorate facing across the head of the Ninth, where a calling is answered by who crosses and the Cantorate does not (§6, *The Upper Terraces*) |
@@ -633,6 +635,7 @@ whose it is, the room is not yet written.
 - **[maps.md](maps.md)** — floors, ceilings and roofed passages: how an interior is authored
 - **[campaign.md](campaign.md)** — the missions that go inside, placed in §9 above
 - **[mission-sorrowgate.md](mission-sorrowgate.md)** · **[mission-tend.md](mission-tend.md)** ·
+  **[mission-convocation.md](mission-convocation.md)** ·
   **[mission-attendance.md](mission-attendance.md)** · **[mission-aptitude.md](mission-aptitude.md)**
   · **[mission-item-nine.md](mission-item-nine.md)** — the interiors already walked through, and
   described here as those documents left them
