@@ -424,6 +424,8 @@ export function spawnFauna(
   Fauna.homeX[eid] = options.x;
   Fauna.homeY[eid] = options.y;
   Fauna.homeDepth[eid] = stats.workingDepthM;
+  // Nothing is born under a beat; the runtime raises this when one takes hold.
+  Fauna.driven[eid] = 0;
   // Written even for species that never scavenge or scatter — bitecs recycles
   // entity ids, and a creature born on a dead swarm's id must not inherit its
   // wreck, nor a shoal a dead shoal's fright.

@@ -61,6 +61,23 @@ import { raiseSelfEvent, type SimWorld } from '../world.ts';
 /** Slot fauna are owned by. Never a player, so every player can hear them. */
 export const DRIFT_SLOT = 200;
 
+/**
+ * Whether a target is a creature a mission beat is currently driving.
+ *
+ * Weapons ask this before they take hull off something, and only weapons.
+ * An authored transit happens when its document says it does
+ * (docs/mission-sorrowgate.md §9), so guns, torpedoes and blasts land on it
+ * and do nothing — the shot is still fired, still loud, still lays residue,
+ * because the player did shoot; it is the hull that does not give. What the
+ * document itself does to the creature (a `lose` beat, its own transit into
+ * ground) is not a weapon and is not asked here. Nor is the map: a transit
+ * routed through an eruption is an authoring error for the mission test to
+ * catch, not a rule for the engine to carry (docs/bestiary.md §4, #349).
+ */
+export function isDriven(world: SimWorld, eid: number): boolean {
+  return hasComponent(world, Fauna, eid) && Fauna.driven[eid] === 1;
+}
+
 const creatures = defineQuery([Fauna, Position, Acoustic, Health]);
 
 /** Reused scratch for terrain step resolution — see movement.ts. */
