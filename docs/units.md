@@ -160,8 +160,9 @@ Sentinel Turret (Structure — all factions)
 - Damage: 24 at 700 m, 1.5s cycle (prototype values)
 - Notes: An ambush predator — near-silent until it fires, then it tells the region.
 
-Construction rules (prototype): sites must rise within 1,200 m of an existing own
-structure, broadcast at SIG 70 for the whole build time, and start at 10% hull. See
+Construction rules (prototype): sites must rise within 1,500 m of an existing own
+structure — the same 1,500 m a Standing Wave pairs across, so a Spire chained off its partner
+always pairs (#372) — broadcast at SIG 70 for the whole build time, and start at 10% hull. See
 economy.md and systems-echo.md §2 — construction is loud.
 
 ---

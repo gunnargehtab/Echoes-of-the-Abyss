@@ -22,7 +22,7 @@
 import {
   Biome,
   DEPTH,
-  MAX_PROPAGATION_FACTOR,
+  MAX_MODIFIED_PROPAGATION_FACTOR,
   MIN_PROPAGATION_FACTOR,
   PROPAGATION_FACTOR,
 } from '@echoes/shared';
@@ -90,6 +90,19 @@ export class Terrain {
    */
   private readonly pf: Float32Array;
   /**
+   * The loudest cell on the grid right now — the live ceiling every broadphase
+   * sizes from, and what `pathPropagation`'s early-out assumes no cell exceeds.
+   *
+   * A field rather than the static `MAX_PROPAGATION_FACTOR` because of the
+   * Standing Wave (#372): a corridor writes PF 2.0, above every biome, and a
+   * static ceiling raised to carry it would widen every search in every match
+   * for one faction's structure. Tracked here instead, it is the biome ceiling
+   * until a corridor stands and the corridor's figure only while one does.
+   * Maintained by every writer of `pf`, never read back from the array on the
+   * hot path — the walk hoists it once per call.
+   */
+  private peak: number;
+  /**
    * The water column, per cell: how deep the water goes and what is above it
    * (docs/systems-depth.md §1). Integer metres, so a comparison against a band
    * boundary is exact rather than nearly so.
@@ -148,6 +161,10 @@ export class Terrain {
     this.rows = Math.ceil(heightM / cellM);
     this.biomes = new Uint8Array(this.cols * this.rows).fill(Biome.OpenWater);
     this.pf = new Float32Array(this.cols * this.rows).fill(PROPAGATION_FACTOR[Biome.OpenWater]);
+    // `Math.fround` wherever the peak is set from a double: the grid is a
+    // Float32Array, and the rounded value it stores can sit a few ulps above
+    // the double it was given. The peak has to bound what is *stored*.
+    this.peak = Math.fround(PROPAGATION_FACTOR[Biome.OpenWater]);
     // Defaults to the ruleset's deepest orderable depth, which is exactly the
     // flat 3,000 m every map had before floors existed. A map that authors
     // nothing therefore behaves as it always did.
@@ -197,6 +214,18 @@ export class Terrain {
    */
   propagationAt(x: number, y: number): number {
     return this.pf[this.index(x, y)]!;
+  }
+
+  /**
+   * The loudest PF of any cell on the grid, modifiers included. Every bound
+   * of the form "could this be audible through the loudest water on the map"
+   * reads this rather than `MAX_PROPAGATION_FACTOR`, so the bound is exact for
+   * the map as it stands and a corridor above the biome ceiling is searched
+   * for rather than silently missed. Never below the biome table's loudest
+   * cell actually painted, never above `MAX_MODIFIED_PROPAGATION_FACTOR`.
+   */
+  get peakPf(): number {
+    return this.peak;
   }
 
   /** How deep the water goes here, in metres. */
@@ -311,7 +340,11 @@ export class Terrain {
     let px = x0 + sx * 0.5;
     let py = y0 + sy * 0.5;
     const abortSum = abortBelow * samples;
-    let headroom = MAX_PROPAGATION_FACTOR * samples;
+    // The live ceiling, not the static one: a corridor cell at 2.0 would
+    // otherwise sit above the headroom this early-out assumes, and a walk
+    // through it could give up on a pair the exact test accepts.
+    const peak = this.peak;
+    let headroom = peak * samples;
     let sum = 0;
     for (let i = 0; i < samples; i++) {
       let cx = (px / cellM) | 0;
@@ -321,7 +354,7 @@ export class Terrain {
       if (cy < 0) cy = 0;
       else if (cy > maxCy) cy = maxCy;
       sum += pf[cy * cols + cx]!;
-      headroom -= MAX_PROPAGATION_FACTOR;
+      headroom -= peak;
       // Even all-trench water for the rest cannot reach the caller's bar.
       if (sum + headroom < abortSum) return (sum + headroom) / samples;
       px += sx;
@@ -379,6 +412,11 @@ export class Terrain {
         this.pf[cy * this.cols + cx] = PROPAGATION_FACTOR[biome];
       }
     }
+    // Monotone rather than rescanned: this is authoring, a repaint that lowers
+    // the loudest cell only leaves the bound conservative, and no biome can
+    // reach the corridor figure that makes the exact value worth paying for.
+    const stored = Math.fround(PROPAGATION_FACTOR[biome]);
+    if (stored > this.peak) this.peak = stored;
   }
 
   /**
@@ -452,6 +490,11 @@ export class Terrain {
         }
       }
     }
+    // A repaint can lower the cell that *was* the peak — a trench cut into
+    // ruins — and a stale-high peak would only be conservative, but a
+    // stale-high peak on a map with a corridor down is exactly the tax #372
+    // exists to avoid. Rare enough that a scan is the honest answer.
+    if (ground.biome !== undefined) this.rescanPeak();
   }
 
   /**
@@ -470,18 +513,21 @@ export class Terrain {
    * outright when two hazards overlapped the same cell. Recomputing is exact,
    * order-independent, and cannot drift.
    *
-   * Clamped to MAX_PROPAGATION_FACTOR because the Echo pass sizes its
-   * broadphase from that ceiling: a hazard that pushed PF past it would make
-   * units audible beyond the radius the pass is willing to search for them,
-   * which reads as detection silently failing.
+   * Clamped to MAX_MODIFIED_PROPAGATION_FACTOR — the loudest anything is
+   * specified to make a cell — and the grid's live peak is re-read on the way
+   * through, because the Echo pass sizes its broadphase from that peak: a cell
+   * louder than the peak claims would make units audible beyond the radius the
+   * pass is willing to search for them, which reads as detection silently
+   * failing. The two together are what let a Standing Wave corridor at PF 2.0
+   * be carried rather than truncated (#372) without the static biome ceiling
+   * moving: the corridor raises `peakPf` while it stands and nothing else.
    *
    * The clamp bounds a **cell**, which is not the same number as the bound on
-   * a **pair**: the thermocline multiplies this walk's result afterwards, so
-   * the broadphase's ceiling is MAX_PATH_PROPAGATION_FACTOR, not this one.
+   * a **pair**: the thermocline multiplies this walk's result afterwards, so a
+   * pair's ceiling is the peak times the layer's factor, never the peak alone.
    * Keep them distinct — collapsing them would either shrink the duct's reach
    * or let a hazard write cells the walk's headroom early-out assumes cannot
-   * exist. (It is also why a doc'd Standing Wave at PF 2.0 would be truncated
-   * here rather than carried: that would be a change to this ceiling.)
+   * exist.
    */
   applyPropagationModifiers(mods: readonly PropagationModifier[]): void {
     // Copied, not aliased. The caller builds this list fresh each phase
@@ -489,12 +535,32 @@ export class Terrain {
     // change what a later biome write composes with, at a distance and without
     // touching this file. The list is a handful of storms a few times a minute.
     this.mods = mods.slice();
+    // The peak is exact after a full recompute: this loop visits every cell,
+    // so folding the maximum in costs nothing and a storm passing or a
+    // corridor coming down lowers the bound the same tick.
+    let peak = MIN_PROPAGATION_FACTOR;
     for (let cy = 0; cy < this.rows; cy++) {
       for (let cx = 0; cx < this.cols; cx++) {
         const index = cy * this.cols + cx;
-        this.pf[index] = this.propagationAtCell(cx, cy, this.biomes[index] as Biome);
+        const value = Math.fround(this.propagationAtCell(cx, cy, this.biomes[index] as Biome));
+        this.pf[index] = value;
+        if (value > peak) peak = value;
       }
     }
+    this.peak = peak;
+  }
+
+  /**
+   * Recompute the peak from the grid. For the rare writers that touch a
+   * handful of cells — a mission repainting ground — where a cell that *was*
+   * the peak may just have been lowered and a scan is cheaper than reasoning
+   * about it. A few thousand reads, a few times a match.
+   */
+  private rescanPeak(): void {
+    let peak = MIN_PROPAGATION_FACTOR;
+    const { pf } = this;
+    for (let i = 0; i < pf.length; i++) if (pf[i]! > peak) peak = pf[i]!;
+    this.peak = peak;
   }
 
   /**
@@ -529,20 +595,20 @@ export class Terrain {
       }
       value += delta;
     }
-    // Clamped on the argument `applyPropagationModifiers` makes: the Echo
-    // broadphase sizes itself from this ceiling, so a cell above it is audible
-    // beyond the radius the pass will search — which reads as detection failing
-    // rather than as loud water. No biome's baseline can breach it today, since
-    // MAX_PROPAGATION_FACTOR is derived from that same table; the clamp is here
-    // so the day a hazard multiplier meets a louder biome is not the day it is
-    // discovered.
+    // Clamped on the argument `applyPropagationModifiers` makes: the ceiling
+    // is the loudest anything is *specified* to make water — the corridor's
+    // 2.0, above every biome — and the broadphase reads the grid's live peak,
+    // so a cell past this bound would be one no search radius accounts for.
+    // No biome's baseline can breach it, since the ceiling is derived from the
+    // same table the corridor figure sits beside; the clamp is here so the day
+    // a hazard multiplier meets a louder biome is not the day it is discovered.
     //
     // Floored as well as capped, now that deltas exist: stacked negative
     // deltas must never cut a hole in the propagation model (§4's "sound
     // never stops entirely"), and a zero or negative PF would put a division
     // the detection maths never guarded against into every path that crosses
     // the cell.
-    return Math.min(Math.max(value, MIN_PROPAGATION_FACTOR), MAX_PROPAGATION_FACTOR);
+    return Math.min(Math.max(value, MIN_PROPAGATION_FACTOR), MAX_MODIFIED_PROPAGATION_FACTOR);
   }
 
   /**

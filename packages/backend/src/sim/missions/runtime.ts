@@ -31,7 +31,6 @@ import {
   DRIFT,
   FaunaSpecies,
   FaunaStage,
-  MAX_PROPAGATION_FACTOR,
   MissionOutcome,
   ObjectiveStatus,
   ResolutionTier,
@@ -1042,7 +1041,9 @@ export class MissionRuntime {
           if (sig <= 0) continue;
           const distance = Math.hypot(Position.x[hull]! - lx, Position.y[hull]! - ly);
           const tf = thermoclineFactor(Position.depth[hull]!, ld);
-          if (detectionRatio(sig, MAX_PROPAGATION_FACTOR * tf, distance, hyd) < 1) continue;
+          // The cheap rejection bounds from the grid's live peak, the same
+          // ceiling the Echo pass sizes its broadphase from (#372).
+          if (detectionRatio(sig, world.terrain.peakPf * tf, distance, hyd) < 1) continue;
           const pf = world.terrain.pathPropagation(Position.x[hull]!, Position.y[hull]!, lx, ly);
           if (detectionRatio(sig, pf * tf, distance, hyd) < 1) continue;
           this.file(world, sink, windowIndex, Position.x[hull]!, Position.y[hull]!);

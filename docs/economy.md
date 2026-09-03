@@ -176,7 +176,7 @@ The only resource in the game that is a **rate**, and it is implemented as one: 
 
 **The opening kit is self-sufficient.** The Bastion carries its own plant, sized to cover the pre-built Foundry and a first Refinery exactly. §2 places Thermal Draw in "Thermal Veins, Shelf and Mid-Water" — the vein is the concentrated source, not the only one — so a bastion on working ground has a trickle of its own. Without that the pre-built Foundry would start every match in deficit, making a tap a compulsory opening rather than a choice, and would be unplayable on a map with no vein terrain at all.
 
-**Reaching a tap is a commitment.** New structures must rise within 1,200 m of one you already own, so on the Ventfront Divide a tap is two build-hops out from the base and sits in the contested middle. Capacity is tied to a place you have to reach and then hold, which is what makes a rate feel different from a stockpile at the table.
+**Reaching a tap is a commitment.** New structures must rise within 1,500 m of one you already own, so on the Ventfront Divide a tap is two build-hops out from the base and sits in the contested middle. Capacity is tied to a place you have to reach and then hold, which is what makes a rate feel different from a stockpile at the table.
 
 The [hazards](hazards.md) §1 interaction lands here too: a Consortium hull stabilising a vent earns **draw capacity**, since "energy boosts" is what the doc says and draw is now the power resource. And the best tap sites are in the vein band, which is exactly where vents erupt — a tap is a raid target and a weather casualty both.
 

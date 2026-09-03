@@ -310,7 +310,7 @@ describe('the thermocline, in the residue layer', () => {
     for (const markDepthM of [ABOVE, IN_DUCT, BELOW]) {
       const layer = new EchoMarkLayer();
       layer.add(EchoMarkKind.DestroyedStructure, 500, 4000, markDepthM);
-      const radius = layer.audibleRadiusM(layer.all[0]!, 70);
+      const radius = layer.audibleRadiusM(layer.all[0]!, 70, trench.peakPf);
       for (const listenerDepthM of [ABOVE, IN_DUCT, BELOW]) {
         assert.ok(
           radius >= reachIn(trench, markDepthM, listenerDepthM),

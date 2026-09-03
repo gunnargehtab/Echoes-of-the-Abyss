@@ -14,7 +14,6 @@
 import { defineQuery, hasComponent } from 'bitecs';
 import {
   ACTIVE_SONAR,
-  MAX_PROPAGATION_FACTOR,
   THERMOCLINE_PAIR_FACTOR,
   THERMOCLINE_ZONE_MAX,
   thermoclineZone,
@@ -490,7 +489,7 @@ export class EchoLayer {
         for (let n = 0; n < slice; n++) {
           const mark = marks[(this.markCursor + n) % marks.length];
           if (mark === undefined) continue;
-          const radius = layer.audibleRadiusM(mark, bestHyd);
+          const radius = layer.audibleRadiusM(mark, bestHyd, world.terrain.peakPf);
 
           this.markHeard.fill(0);
           let remaining = slots.length;
@@ -609,6 +608,9 @@ export class EchoLayer {
     }
 
     // --- Passive listening -------------------------------------------------
+    // Hoisted once per pass: the loudest cell on the map cannot change inside
+    // it, and the emitter loop is on the 2 ms budget.
+    const peakPf = terrain.peakPf;
     for (let i = 0; i < entities.length; i++) {
       const emitter = entities[i]!;
       const sig = Acoustic.sig[emitter]!;
@@ -655,7 +657,10 @@ export class EchoLayer {
       // Only listeners inside this radius can possibly hear the emitter, even
       // with the sharpest ears in the game. This bound is what keeps the pass
       // off an all-pairs comparison. PF is a path integral (issue #37) and no
-      // path has been walked yet, so bound with the loudest water on the map.
+      // path has been walked yet, so bound with the loudest water on the map —
+      // the grid's live peak rather than the biome table's ceiling, so a
+      // Standing Wave corridor at 2.0 is searched for while it stands and
+      // costs nothing when none does (#372).
       const range = maxAudibleRangeM(
         sig,
         // ...and the loudest the *layer* can make a path from this emitter's
@@ -665,7 +670,7 @@ export class EchoLayer {
         // exact test below and never walked, and the loss is a clean annulus
         // several hundred metres wide — precisely where the faint long-range
         // contacts this game is built on live.
-        MAX_PROPAGATION_FACTOR * pfFactor * THERMOCLINE_ZONE_MAX[eZone]!,
+        peakPf * pfFactor * THERMOCLINE_ZONE_MAX[eZone]!,
         PROPAGATION_MODEL.MAX_EXPECTED_HYD
       );
       // Deliberately *not* narrowed by the directional term. Its largest value

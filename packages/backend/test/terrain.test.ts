@@ -10,12 +10,17 @@ import {
   Biome,
   DEPTH,
   Faction,
+  MAX_MODIFIED_PROPAGATION_FACTOR,
+  MAX_PROPAGATION_FACTOR,
   PROPAGATION_FACTOR,
   ResolutionTier,
+  STANDING_WAVE,
   UnitKind,
+  maxAudibleRangeM,
 } from '@echoes/shared';
 import { Terrain } from '../src/sim/terrain.ts';
 import { EchoLayer } from '../src/sim/systems/echoLayer.ts';
+import { Acoustic, Position } from '../src/sim/components.ts';
 import { createSimWorld, spawnUnit } from '../src/sim/world.ts';
 
 const close = (a: number, b: number, eps = 1e-9) => Math.abs(a - b) < eps;
@@ -59,6 +64,98 @@ describe('Terrain.pathPropagation', () => {
       `a crossing picks up only the trench's width (got ${across.toFixed(3)})`
     );
     assert.ok(along > across + 0.4, 'the axis must out-carry the crossing decisively');
+  });
+});
+
+describe('Terrain.peakPf — the live ceiling (#372)', () => {
+  // The Standing Wave corridor is specified at PF 2.0, above every biome. The
+  // biome ceiling `MAX_PROPAGATION_FACTOR` stays derived at 1.6; what carries
+  // the corridor is a ceiling the grid reports about itself, so every bound
+  // sized from "the loudest water on the map" widens only while a corridor
+  // stands and a match without one pays nothing.
+  it('is the loudest painted biome until something modifies the grid', () => {
+    const t = new Terrain(2000, 2000, 250);
+    assert.equal(t.peakPf, PROPAGATION_FACTOR[Biome.OpenWater]);
+    t.fillRect(0, 0, 1000, 2000, Biome.KelpForest);
+    assert.equal(
+      t.peakPf,
+      PROPAGATION_FACTOR[Biome.OpenWater],
+      'kelp is quieter than the open water beside it'
+    );
+    t.fillRect(1000, 0, 1000, 2000, Biome.AbyssalTrench);
+    // Compared with a tolerance here and below: the grid is a Float32Array and
+    // the peak bounds what is stored, so it carries float32's rounding.
+    assert.ok(
+      close(t.peakPf, MAX_PROPAGATION_FACTOR, 1e-6),
+      'a trench is the loudest biome there is'
+    );
+  });
+
+  it('carries a corridor at PF 2.0 rather than truncating it, and only while it stands', () => {
+    const t = new Terrain(2000, 2000, 250);
+    t.fillRect(0, 0, 2000, 2000, Biome.AbyssalTrench);
+    const lift = STANDING_WAVE.CORRIDOR_PF / PROPAGATION_FACTOR[Biome.AbyssalTrench];
+    t.applyPropagationModifiers([{ x: 1000, y: 1000, radiusM: 400, scale: lift }]);
+    assert.ok(
+      close(t.propagationAt(1000, 1000), STANDING_WAVE.CORRIDOR_PF, 1e-6),
+      `the corridor cell holds the doc figure, not the biome ceiling (${t.propagationAt(1000, 1000)})`
+    );
+    assert.ok(
+      close(t.peakPf, STANDING_WAVE.CORRIDOR_PF, 1e-6),
+      'and the live ceiling rises to meet it'
+    );
+    assert.ok(
+      t.propagationAt(100, 100) <= MAX_PROPAGATION_FACTOR + 1e-6,
+      'the water outside is untouched'
+    );
+
+    t.applyPropagationModifiers([]);
+    assert.ok(
+      close(t.peakPf, MAX_PROPAGATION_FACTOR, 1e-6),
+      'and falls back the moment the corridor comes down'
+    );
+  });
+
+  it('never exceeds the loudest anything is specified to make a cell', () => {
+    const t = new Terrain(2000, 2000, 250);
+    t.fillRect(0, 0, 2000, 2000, Biome.AbyssalTrench);
+    t.applyPropagationModifiers([{ x: 1000, y: 1000, radiusM: 900, scale: 10 }]);
+    assert.ok(t.propagationAt(1000, 1000) <= MAX_MODIFIED_PROPAGATION_FACTOR + 1e-6);
+    assert.ok(t.peakPf <= MAX_MODIFIED_PROPAGATION_FACTOR + 1e-6);
+  });
+
+  it('is rescanned when a mission repaints the ground that was the peak', () => {
+    const t = new Terrain(2000, 2000, 250);
+    t.fillRect(0, 0, 2000, 2000, Biome.AbyssalTrench);
+    t.fillGround(0, 0, 2000, 2000, { biome: Biome.KelpForest });
+    assert.ok(
+      close(t.peakPf, PROPAGATION_FACTOR[Biome.KelpForest], 1e-6),
+      'a trench repainted as kelp is no longer the loudest cell'
+    );
+  });
+
+  it("keeps the walk's early-out honest through a corridor cell", () => {
+    // `pathPropagation` gives up once even all-ceiling water for the rest of
+    // the walk could not reach the caller's bar. With the ceiling static at
+    // 1.6, a corridor cell at 2.0 sits above what the early-out assumes, and
+    // a walk through one would abandon a pair the exact test accepts. Open
+    // water with a 2,000 m corridor across the middle: 16 samples, eight at
+    // 2.0 and eight at 1.0, a true mean of 1.5 — and a bar of 1.49 that a 1.6
+    // headroom abandons after the fourth sample (4 + 1.6 × 12 = 23.2 < 23.84).
+    const t = new Terrain(4000, 1000, 250);
+    t.applyPropagationModifiers([
+      { x: 2000, y: 500, radiusM: 1000, scale: STANDING_WAVE.CORRIDOR_PF },
+    ]);
+    const exact = t.pathPropagation(100, 500, 3900, 500);
+    assert.ok(
+      exact > MAX_PROPAGATION_FACTOR * 0.9 && exact < STANDING_WAVE.CORRIDOR_PF,
+      `mean ${exact}`
+    );
+    const bar = exact - 0.01;
+    assert.ok(
+      t.pathPropagation(100, 500, 3900, 500, bar) >= bar,
+      'a bar only the corridor can reach is reached, not abandoned'
+    );
   });
 });
 
@@ -325,6 +422,52 @@ describe('Echo Layer path integration', () => {
     const contacts = echo.run(world, [0, 1]).contactsBySlot.get(1) ?? [];
     return contacts[0]?.tier ?? ResolutionTier.Silent;
   }
+
+  it('searches for a contact only a corridor brings into range (#372)', () => {
+    // The broadphase sizes each emitter's search from the loudest water on the
+    // map, before any path is walked. Sized from the static biome ceiling, a
+    // listener that only a corridor's 2.0 brings into range is never walked
+    // and the contact is silently missed — the exact test would accept it.
+    // Sized from the live peak it is found, and a map with no corridor
+    // searches no wider than it did.
+    const terrain = new Terrain(8000, 1000, 250);
+    const world = createSimWorld(terrain, 1 / 60, 7);
+    const emitter = spawnUnit(world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 500,
+      y: 500,
+    });
+    const listener = spawnUnit(world, {
+      kind: UnitKind.Corvette,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: 500,
+      y: 500,
+    });
+    const sig = Acoustic.sig[emitter]!;
+    const hyd = Acoustic.hyd[listener]!;
+    // Just past the reach the biome ceiling allows, well inside the corridor's.
+    const atCeiling = maxAudibleRangeM(sig, MAX_PROPAGATION_FACTOR, hyd);
+    const inCorridor = maxAudibleRangeM(sig, STANDING_WAVE.CORRIDOR_PF, hyd);
+    const distance = atCeiling * 1.03;
+    assert.ok(
+      distance < inCorridor && 500 + distance < 7500,
+      `fixture: ${atCeiling} / ${inCorridor}`
+    );
+    Position.x[listener] = 500 + distance;
+
+    const heard = () => (new EchoLayer().run(world, [0, 1]).contactsBySlot.get(1) ?? []).length > 0;
+    const everywhere = (scale: number) =>
+      terrain.applyPropagationModifiers([{ x: 4000, y: 500, radiusM: 8000, scale }]);
+
+    assert.equal(heard(), false, 'open water: out of reach');
+    everywhere(MAX_PROPAGATION_FACTOR);
+    assert.equal(heard(), false, 'trench-loud water: still out of reach, by construction');
+    everywhere(STANDING_WAVE.CORRIDOR_PF);
+    assert.equal(heard(), true, 'a corridor: in reach, and searched for');
+  });
 
   it('a kelp bank between emitter and listener is cover you can hide behind', () => {
     const open = new Terrain(2500, 1000, 250);

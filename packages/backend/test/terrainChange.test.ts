@@ -27,7 +27,13 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { Biome, HAZARDS, MAX_PROPAGATION_FACTOR, PROPAGATION_FACTOR, SIM } from '@echoes/shared';
+import {
+  Biome,
+  HAZARDS,
+  MAX_MODIFIED_PROPAGATION_FACTOR,
+  PROPAGATION_FACTOR,
+  SIM,
+} from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import { SOLID, Terrain } from '../src/sim/terrain.ts';
@@ -379,20 +385,24 @@ describe('the water a beat rewrites', () => {
   });
 
   it('never writes a cell louder than the broadphase will search', () => {
-    // The Echo pass sizes its broadphase from MAX_PROPAGATION_FACTOR. A cell
-    // above it is audible past the radius the pass is willing to look, which
-    // reads as detection failing rather than as loud water. No biome baseline
-    // can breach it today — the ceiling is derived from that same table — so
-    // this is the invariant, asserted where a future louder biome would meet it.
+    // The Echo pass sizes its broadphase from the grid's live peak (#372). A
+    // cell above it is audible past the radius the pass is willing to look,
+    // which reads as detection failing rather than as loud water. So the
+    // invariant is two halves, asserted where a mid-match biome write meets a
+    // modifier: the write leaves no cell above the peak the grid reports, and
+    // the peak itself never exceeds the loudest anything is specified to make a
+    // cell — the corridor's 2.0, which a storm ×4 over a trench reaches.
     const terrain = new Terrain(4000, 4000, 250, { floorM: 1600 });
     terrain.applyPropagationModifiers([{ x: 1100, y: 1100, radiusM: 400, scale: 4 }]);
     terrain.fillGround(1000, 1000, 500, 500, { biome: Biome.AbyssalTrench });
     // Against the float32 round of the ceiling, because that is the widest
     // value the array can actually hold at the ceiling — the clamp itself runs
-    // in double precision, and storing 1.6 rounds it up by 2.4e-8.
+    // in double precision, and storing rounds it up by a few ulps.
+    const written = terrain.propagationAt(1100, 1100);
+    assert.ok(written <= terrain.peakPf, `a cell was written at ${written}, above the peak`);
     assert.ok(
-      terrain.propagationAt(1100, 1100) <= Math.fround(MAX_PROPAGATION_FACTOR),
-      `a cell was written at ${terrain.propagationAt(1100, 1100)}`
+      terrain.peakPf <= Math.fround(MAX_MODIFIED_PROPAGATION_FACTOR),
+      `the peak is ${terrain.peakPf}`
     );
   });
 
