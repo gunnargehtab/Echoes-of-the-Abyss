@@ -32,6 +32,7 @@ import { MissionLog } from './MissionLog.tsx';
 import { MissionPanel } from './MissionPanel.tsx';
 import { MissionResult } from './MissionResult.tsx';
 import { AudioEngine, dbToGain } from '../audio/engine.ts';
+import { recordMissionResult } from '../progression/store.ts';
 import {
   GameClient,
   type ConnectionStatus,
@@ -375,6 +376,15 @@ export function GameCanvas({
         onMissionOver: (payload) => {
           setMissionOver(payload);
           activeRenderer.setMissionOver(payload);
+          // The one write of the progression record (docs/campaign.md §11).
+          // Here rather than inside `MissionResult`, because this is the
+          // moment the result *arrives* and a render is not a moment — a
+          // component that wrote on every paint would write on every paint.
+          // The room re-sends `missionOver` to a client that reconnects into
+          // an ended room, so this fires twice for one conclusion after a
+          // reload on the result screen; `recordMissionResult` is idempotent
+          // for exactly that reason.
+          recordMissionResult(payload);
           // A result outranks chrome: the menu steps aside so the outcome is
           // seen the moment it exists (§9.5). Esc reopens it over the result,
           // in its settled dress.

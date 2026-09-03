@@ -125,15 +125,22 @@ a document already points at it:
   mechanic in this game that takes progress back. It is the first mission written on ground
   another mission already uses, deliberately, and it leaves one question open rather than
   settling it: whether the count read at the watch's edge and the active ping are the same act.
-- **Campaign progression and unlock state.** Nothing records that a mission was played, so the
-  prologue is replayable, remembers nothing, and the Tutorial and campaign doors are the same
-  door.
+- **The briefing variants that stand on the progression record.** The record itself is no
+  longer planned — it is built (#371): a per-mission history under `echoes.progression`,
+  written once at the result screen from the payload the server sent, keeping the best
+  reading each mission has ever returned and enforcing campaign.md §1's one-rung unlock rule.
+  What is still unwritten is the thing §1 wants it for — a scene witnessed from the other
+  side changing its briefing text and never its mission — and the campaign board that renders
+  the `played` tick (ui-ux.md §14).
 - **Cross-mission Drift Health.** campaign.md §2 rule 5 has a map carry its damage forward to
   the next mission played on it. Until [mission-convocation.md](mission-convocation.md) there
   was no forward, because no two missions shared a map; that document reuses *Tend*'s
   `marr-plateau` unchanged, so the rule now has a concrete first pair and still no mechanism.
+  It has somewhere to live, though: the progression record is a container of collections, and
+  per-map Drift Health is a sibling key beside `missions` rather than a new store.
 - **Permanent roster attrition.** Knights mission 3, *Nineteen*, spends units for the rest of a
-  campaign. Today nothing outlives the match it was built in.
+  campaign. Today nothing outlives the match it was built in — except the progression record,
+  which is where a spent roster would go, beside `missions` and Drift Health.
 - **"Already seen" briefing variants.** campaign.md §1 intends a scene you witnessed from the
   other side to change its briefing text and never its mission. Nothing tracks what you have
   seen.

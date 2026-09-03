@@ -573,7 +573,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | Box select, control groups, order queue | Implemented |
 | The shell — title, browse, setup, briefing, settings, credits | Implemented (§14) |
 | Mission runtime and the prologue | Implemented (#190) — one mission; the campaign entry is still a disabled placeholder |
-| The campaign board | Not built — specified in §14. Twenty-eight of its twenty-nine slots would render `unbuilt` today, and the `played` state has no record to read until campaign progression exists ([campaign.md](campaign.md) §11) |
+| The campaign board | Not built — specified in §14. Twenty-eight of its twenty-nine slots would render `unbuilt` today. The `played` state now has a record to read: campaign progression is built (#371, [campaign.md](campaign.md) §11), so the board is the only half of that pair still outstanding |
 | Objectives panel | Implemented (§10.5) — DOM, `role="status"`, focusable rows, own-force counters only |
 | Settings persistence and per-bus volume | Implemented (§14) — `localStorage`, applied at match mount |
 | Match browser, private rooms, join by code | Implemented (#193) — a listing names the water and the seat count and nothing else; solo and missions are private |
@@ -636,8 +636,8 @@ title screen, and reads the briefing on the way in.
   because the order is free after the prologue ([campaign.md](campaign.md) §1): a list
   would assert a sequence the campaign refuses to have, and mission ids are namespaced by
   campaign precisely so that nothing implies a mission 2. It is the one screen in the port
-  that renders progression, and progression is not built — which is most of what the
-  section below has to be careful about. Specified in full there.
+  that renders progression; the record behind it is built ([campaign.md](campaign.md) §11)
+  and this screen is not. Specified in full there.
 - **Setup** — shared by Solo and hosting: a commander-name field and one card per map
   archetype (name, doctrine line, seats), from the shared catalogue. Faction choice and AI
   opponents stay in the in-room ready room, because faction uniqueness is enforced by the
@@ -757,20 +757,25 @@ history: the no-router rule holds, and browser back is still not a door.
 Two of the three states are static. `available` and `unbuilt` are properties of what has
 shipped, and the board can settle both from the mission catalogue the shell already holds.
 `played` is not: it is the only thing on this screen that is a fact about the player, and
-nothing records it — [campaign.md](campaign.md) §11's last row and the Planned section of
-[README.md](README.md) both say so.
+**the record it reads now exists** ([campaign.md](campaign.md) §11).
 
-So the board **consumes** a progression record it does not define. Where such a record lives
-is not this screen's ruling: settings and the commander name persist in `localStorage` as
-device preferences and the reconnection token stays per-tab on purpose, and whether a
-campaign record is a third thing of that kind or something else belongs to the progression
-work rather than to the screen that would read it. The state is specified here so that the
-record, when it is designed, arrives to a consumer with a shape — rather than to a screen
-that has to be redesigned around it.
+So the board **consumes** a progression record it does not define, and that record was
+designed to the shape specified here rather than the other way round. Where it lives was not
+this screen's ruling and was settled by the progression work: a third `localStorage` key,
+`echoes.progression`, beside the settings the commander name persists in and apart from the
+reconnection token, which stays per-tab because a seat is neither a preference nor a memory.
+The board asks it one question — has this mission ever been finished — and any of the three
+readings answers yes, because all three of them happened.
 
-Until it exists, no slot can be in the `played` state, and the board renders the way it will
-render on the day it ships: the prologue available, twenty-eight slots dimmed to 40% with
-their teaching targets attached, and the shape of the finished game on screen.
+The record also answers the second question the board has, which is which slots may be
+opened at all: §1's unlock rule is one rung, the prologue, and after it nothing is locked. A
+slot that is `unbuilt` is refused by not having a mission behind it, never by being locked,
+so the two are independent and the board never has to render a fourth state.
+
+Until the twenty-eight missions exist, the board still renders the way it will render on the
+day it ships: the prologue available — and ticked, once it has been played — twenty-eight
+slots dimmed to 40% with their teaching targets attached, and the shape of the finished game
+on screen.
 
 #### Keyboard
 
