@@ -194,6 +194,23 @@ export const Fauna = defineComponent({
    */
   homeDepth: Types.f32,
   /**
+   * 1 while a mission beat is driving this creature (`MissionRuntime`'s
+   * commitments), 0 otherwise.
+   *
+   * An authored transit is a beat, and a mission's beats happen when the
+   * document says they happen (docs/mission-sorrowgate.md §9). A driven
+   * creature therefore takes no weapon damage: docs/mission-intake.md §6 puts
+   * the mission's teeth in a colossus that "cannot be killed", and twelve
+   * Abyssal Submersibles at 44.4/s each brought the roster's 9,000 HP down in
+   * seventeen seconds of auto-fire from the muster, before it reached the
+   * line (§13, "The colossus, killed"; #349). Held here rather than inferred
+   * from the pinned `senseS`, so the guns read a fact and not a side effect.
+   * Cleared when the commitment expires, so a placed Hollow is rendered as
+   * any other and a skirmish Sounder — which is never driven — is hunted for
+   * its 260 exactly as before.
+   */
+  driven: Types.ui8,
+  /**
    * Scavengers only — the Echo Mark the swarm is currently drawn to, by the
    * mark's own stable id (0 = none). An id rather than a position because a
    * reinforced mark moves, and the swarm should follow the residue, not the

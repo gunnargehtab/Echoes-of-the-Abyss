@@ -18,9 +18,9 @@
  * - **A muster is a standing count, and a finding is not filed before it is
  *   asked for** (§5, §8, §9) — the other two format rows this mission spent.
  * - **The Sounder, as built** (§6, §13): what the transit does to a year that
- *   goes quiet and stays on the line, what it does to a year that moved, and —
- *   the finding this literal makes and does not hide — what twelve live guns
- *   at the muster do to it.
+ *   goes quiet and stays on the line, what it does to a year that moved, and
+ *   what twelve live guns at the muster do to it — which, since #349 settled
+ *   §13's finding, is nothing: a driven creature takes no weapon damage.
  */
 
 import { describe, it } from 'node:test';
@@ -31,6 +31,7 @@ import {
   DEPTH_BANDS,
   DRIFT,
   DepthBand,
+  Faction,
   FaunaSpecies,
   MISSION,
   MissionOutcome,
@@ -45,7 +46,7 @@ import {
   statsFor,
   type EchoSnapshot,
 } from '@echoes/shared';
-import { hasComponent } from 'bitecs';
+import { defineQuery, hasComponent } from 'bitecs';
 import { Fauna, Health } from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
 import { BANDING_GROUND, mapById, missionMapById } from '../src/sim/maps/index.ts';
@@ -57,7 +58,8 @@ import {
   type MissionDefinition,
 } from '../src/sim/missions/index.ts';
 import { Terrain } from '../src/sim/terrain.ts';
-import { createSimWorld } from '../src/sim/world.ts';
+import { createSimWorld, spawnFauna, spawnUnit } from '../src/sim/world.ts';
+import { dropDepthCharge } from '../src/sim/systems/ordnance.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 const ECHO_TICK_INTERVAL = Math.round(SIM.TICK_HZ / SIM.ECHO_HZ);
@@ -161,8 +163,8 @@ function sendAll(own: EchoSnapshot, match: Match, to: { x: number; y: number }):
 /**
  * Silent Running on every hull. "Silent hulls hold fire" (combat.ts), and the
  * Directorate has spent a whole mission learning the posture — so a year that
- * goes quiet at the call is the one that meets the colossus as §6 describes
- * it, rather than as §13's finding describes it.
+ * goes quiet at the call meets the colossus without twelve guns announcing
+ * it. Since #349 the guns would change nothing but the noise.
  */
 function goQuiet(own: EchoSnapshot, match: Match): void {
   for (const unit of own.units) match.setSilentRunning(PLAYER, unit.id, true);
@@ -527,6 +529,156 @@ describe('the three rows the format learned for this mission', () => {
   });
 });
 
+describe('a beat the guns cannot end — docs/mission-intake.md §13, settled (#349)', () => {
+  const faunaQuery = defineQuery([Fauna]);
+  /** A creature the runtime spawned, by species — there is exactly one in these fixtures. */
+  function creatureIn(world: ReturnType<typeof createSimWorld>, species: FaunaSpecies): number {
+    return faunaQuery(world).find((eid) => Fauna.species[eid] === species) ?? 0;
+  }
+
+  it('marks a creature driven for exactly the length of its commitment', () => {
+    // The flag the guns read is raised on the first pass a commitment holds
+    // and lowered on the pass it expires — which for a placed Hollow,
+    // committed to its own spawn until tick zero, is the first. That is what
+    // keeps eight ambushers renderable for the band while the colossus driven
+    // across the muster is not.
+    const untilTick = ECHO_TICK_INTERVAL * 3;
+    const definition: MissionDefinition = {
+      ...PROLOGUE_SORROWGATE,
+      id: 'test-intake-driven',
+      arrayTag: undefined,
+      sweep: undefined,
+      lifts: undefined,
+      regions: [],
+      markers: [],
+      parties: [],
+      objectives: [],
+      conditionalBeats: undefined,
+      beats: [
+        {
+          atTick: 0,
+          kind: 'creature',
+          tag: 'colossus',
+          species: FaunaSpecies.Sounder,
+          spawnAt: { x: 4000, y: 4000, depthM: 600 },
+          driveTo: { x: 4000, y: 1000, depthM: 600 },
+          untilTick,
+          loud: false,
+          note: '',
+        },
+        {
+          atTick: 0,
+          kind: 'creature',
+          tag: 'ambusher',
+          species: FaunaSpecies.Hollow,
+          spawnAt: { x: 1000, y: 1000, depthM: 600 },
+          driveTo: { x: 1000, y: 1000, depthM: 600 },
+          untilTick: 0,
+          loud: false,
+          note: '',
+        },
+        { atTick: ECHO_TICK_INTERVAL * 8, kind: 'resolve', conclusion: true, note: '' },
+      ],
+    };
+    const runtime = new MissionRuntime(definition);
+    const world = createSimWorld(Terrain.demo(), 1 / SIM.TICK_HZ, 3);
+    const driven: { pass: number; colossus: number; ambusher: number }[] = [];
+    for (let pass = 1; pass <= 6; pass++) {
+      world.tick = pass * ECHO_TICK_INTERVAL;
+      runtime.tick(world, SINK, {
+        ...banked(world.tick),
+      });
+      driven.push({
+        pass,
+        colossus: Fauna.driven[creatureIn(world, FaunaSpecies.Sounder)]!,
+        ambusher: Fauna.driven[creatureIn(world, FaunaSpecies.Hollow)]!,
+      });
+    }
+    // Pass 1 fires both beats. The Hollow's commitment, until tick zero, is
+    // already past on a first pass at tick 12, so it is released before it
+    // was ever held; the colossus is held through pass 3 and released on
+    // pass 4, the first past its `untilTick`.
+    assert.deepEqual(
+      driven.map((row) => [row.pass, row.colossus, row.ambusher]),
+      [
+        [1, 1, 0],
+        [2, 1, 0],
+        [3, 1, 0],
+        [4, 0, 0],
+        [5, 0, 0],
+        [6, 0, 0],
+      ]
+    );
+  });
+
+  /** An intake snapshot with nothing in it — the runtime only reads `tick` here. */
+  function banked(tick: number): EchoSnapshot {
+    return {
+      tick,
+      units: [],
+      structures: [],
+      ordnance: [],
+      contacts: [],
+      peakSig: 0,
+      nodules: 0,
+      crystal: 0,
+      biomass: 0,
+      exposure: { tier: ResolutionTier.Silent, trackedCount: 0 },
+      selfEvents: [],
+      draw: { capacity: 0, demand: 0, satisfaction: 1 },
+      driftHealth: [],
+      shoals: [],
+      jellies: [],
+      hazards: [],
+      marks: [],
+    };
+  }
+
+  it('lands a gun and a depth charge on a driven colossus and takes nothing off it', () => {
+    // The rule itself, against the live systems and no mission: a Sounder
+    // with the flag raised is shot at by an Abyssal Submersible two hundred
+    // metres off and shelled by its depth charge, and keeps every point.
+    // Lowered, the same gun takes hull off it at the roster's rate — a
+    // skirmish colossus, which is never driven, is hunted for its 260 exactly
+    // as before.
+    // The banding ground with no mission on it: trench water deep enough for
+    // a Sounder at its own 2,000 m, and a Directorate hull beside it.
+    const match = new Match(missionMapById(ATTENDING_INTAKE.mapId)!, { fauna: false, seed: 3 });
+    match.addPlayer(PLAYER, Faction.Directorate);
+    const colossus = spawnFauna(match.world, {
+      species: FaunaSpecies.Sounder,
+      x: 2500,
+      y: 2000,
+      depth: SOUNDER.workingDepthM,
+    });
+    const gun = spawnUnit(match.world, {
+      kind: UnitKind.AbyssalSubmersible,
+      slot: PLAYER,
+      faction: Faction.Directorate,
+      x: 2650,
+      y: 2000,
+      depth: SOUNDER.workingDepthM,
+    });
+    const seconds = (n: number) => {
+      for (let i = 0; i < n * SIM.TICK_HZ; i++) match.update(STEP_MS);
+    };
+    // As the runtime holds it: driven, and deaf for as long as it is.
+    Fauna.driven[colossus] = 1;
+    Fauna.senseS[colossus] = 3600;
+    assert.notEqual(dropDepthCharge(match.world, gun, SOUNDER.workingDepthM), 0, 'the charge');
+    seconds(8);
+    assert.equal(Health.hp[colossus], SOUNDER.maxHp, 'eight seconds of fire, and every point');
+    assert.ok(match.world.marks.count > 0, 'and the shooting still left residue');
+
+    Fauna.driven[colossus] = 0;
+    seconds(3);
+    assert.ok(
+      Health.hp[colossus]! <= SOUNDER.maxHp - SUBMERSIBLE.attackDamage,
+      `released, the same gun lands: ${Health.hp[colossus]} of ${SOUNDER.maxHp}`
+    );
+  });
+});
+
 describe('the shift, run out — docs/mission-intake.md §4, §6, §8, §9', () => {
   /**
    * The year's search, as a route: a stand-off point four hundred metres off
@@ -703,38 +855,34 @@ describe('the shift, run out — docs/mission-intake.md §4, §6, §8, §9', () 
     ]);
   });
 
-  it('is paid the band by twelve live guns at the muster — the finding §13 records', () => {
-    // Stated here rather than discovered, in the manner of §3's note. The
-    // bestiary rates a Sounder at 9,000 HP and says it "cannot be reliably
-    // killed by any single player before the twenty-minute mark"
-    // (docs/bestiary.md §4); §6 says "it cannot be killed — 9,000 HP against
-    // an intake's 44.4/s each". Twelve of those are 533 a second, the transit
-    // is inside 650 m of the muster for forty seconds, and the roster pays
-    // 260 Biomass for the colossus — which is the band, answered by an intake
-    // that never moved. That is a roster-versus-bestiary disagreement and not
-    // this literal's to retune; docs/mission-intake.md §13 carries it as a
-    // design call. This test is the thing that notices the day it is settled.
-    //
-    // What it pays is the ledger's second finding: twelve hulls idling at 22
-    // are 264 of SIG in one cell against a threshold of 60, so an intake that
-    // never moved has stripped the ground under the muster to nothing inside
-    // the first minute, and a colossus that dies over dead ground pays
-    // nothing. The kill is the finding either way; the pay depends on where
-    // it falls, and neither number is this mission's to read out.
-    const run = runOut(intakeMatch());
-    assert.equal(run.last.units.length, 12, 'nothing reached the line');
-    let colossus = 0;
-    for (let eid = 0; eid <= run.match.world.maxEid; eid++) {
-      if (!hasComponent(run.match.world, Fauna, eid)) continue;
-      if (Fauna.species[eid] !== FaunaSpecies.Sounder) continue;
-      if (Health.hp[eid]! > 0) colossus++;
-    }
-    assert.equal(colossus, 0, '§6: "it cannot be killed" — and twelve guns killed it');
-    assert.ok(run.last.biomass <= SOUNDER.biomass, 'paid the roster’s figure at most');
-    assert.equal(
-      run.last.biomass,
-      SOUNDER.biomass * run.match.world.drift.yieldMultiplier(LINE_X, MUSTER.y),
-      'paid for the colossus at the rate of the ground it died over'
-    );
+  it('shrugs off twelve live guns at the muster, and grinds the line — §13, settled', () => {
+    // The finding this test used to state (#349): the bestiary rates a
+    // Sounder at 9,000 HP and says it "cannot be reliably killed by any
+    // single player before the twenty-minute mark", §6 says "it cannot be
+    // killed" — and twelve idle guns at 44.4/s each brought it down in
+    // seventeen seconds, before it reached the line, and were paid the band
+    // for an intake that did nothing. Settled as §13 now records it: the
+    // transit is a beat, a beat happens when the document says, and a driven
+    // creature takes no weapon damage. The guns still fire — the intake never
+    // went quiet, so the auto-acquire is real and loud — and the colossus
+    // crosses the muster at every point it arrived with, grinding the six
+    // seats on the line exactly as it does for a year that went quiet.
+    let lowest = Number.POSITIVE_INFINITY;
+    let loudest = 0;
+    const run = runOut(intakeMatch(), (own, match) => {
+      if (own.tick < T(16) || own.tick > T(18)) return;
+      for (let eid = 0; eid <= match.world.maxEid; eid++) {
+        if (!hasComponent(match.world, Fauna, eid)) continue;
+        if (Fauna.species[eid] !== FaunaSpecies.Sounder) continue;
+        lowest = Math.min(lowest, Health.hp[eid]!);
+      }
+      loudest = Math.max(loudest, own.peakSig);
+    });
+    assert.ok(loudest > SUBMERSIBLE.sigIdle, `the guns fired: peak SIG ${loudest} over the idle`);
+    assert.equal(lowest, SOUNDER.maxHp, '§6: "it cannot be killed" — and it was not touched');
+    assert.equal(run.last.biomass, 0, 'nothing rendered, nothing paid');
+    const alive = run.last.units.length;
+    assert.equal(alive, 6, `§9: everything on the line is ground through — ${alive} left`);
+    assert.equal(run.outcome, MissionOutcome.Lost, '§8: no band and no muster');
   });
 });
