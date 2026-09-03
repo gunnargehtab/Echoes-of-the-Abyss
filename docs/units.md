@@ -9,7 +9,9 @@ Unit stat format
 - SIG: reported as (idle / cruise / firing-burst)
 - HYD: Hydrophone Rating, 0–100 — passive listening sensitivity (see systems-echo.md §3)
 - PR: Pressure Rating (integer)
-- Cost: abstract resource units for prototyping
+- Cost: Nodules, the account every hull is written in. A hull locked to Resonance Crystal or
+  Biomass lists that too (economy.md §2, §8); the accounts are checked together and never
+  exchanged
 - Build time: seconds (prototype simulation)
 - Role: short
 - Notes: design intent, biome synergies
@@ -57,7 +59,8 @@ Abyssal Submersible (Directorate)
 - HYD: 85 (the best mobile ears in the game — the Directorate's "best HYD by a wide margin",
   systems-echo.md §8, is carried by their native hull)
 - PR: 3
-- Cost: 260
+- Cost: 260, plus 80 Resonance Crystal — the crystal-locked hull, built to live where the
+  crystal is (economy.md §8)
 - Build time: 45s
 - Speed: Medium
 - Notes: Born to depth; no refit required for abyssal pressure. Strong HYD synergy; benefits from Directorate listening mechanics.
@@ -218,6 +221,15 @@ Design notes
   firing-burst SIG, which is the design-relevant one. Damage figures are TUNABLE within
   the time-to-kill bands of [systems-combat.md](systems-combat.md) §9, which is the combat
   spec of record; the current numbers predate it and are due a retune.
+- **A price is three accounts, and the roster says which a hull uses.** `cost` is Nodules;
+  `crystalCost` and `biomassCost` are the other two, present only where a hull is locked to
+  them, and `packages/shared/src/economy.ts` is the one place they become a sum and the one
+  rule for spending it — the server, the commander AI and the command bar all read that sum
+  and never the columns (economy.md §8). Biomass is the cohort programme's account
+  (economy.md §6), and **no hull in this roster carries a Biomass price yet**: the cheap
+  cohort entry economy.md §6 promises is issue #352's decision, and `biomassCost` is where
+  its price goes once it is made. The Abyssal Submersible is not it — it is the
+  crystal-locked deep hull and stays priced as one.
 
 ---
 
