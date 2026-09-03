@@ -37,7 +37,6 @@ import {
   detectionRatio,
   faunaStatsFor,
   maxAudibleRangeM,
-  MAX_PROPAGATION_FACTOR,
   SelfEventKind,
   THERMOCLINE_ZONE_MAX,
   thermoclineFactor,
@@ -189,8 +188,11 @@ function listen(
   // never reject something the exact test would have accepted. The bound has
   // to cover the thermocline too: a creature in the duct hears along it at
   // 1.2x, so a reach computed at the biome ceiling alone would prune away
-  // sources the exact test accepts (docs/systems-echo.md §3).
-  const reach = maxAudibleRangeM(100, MAX_PROPAGATION_FACTOR * THERMOCLINE_ZONE_MAX[fZone]!, hyd);
+  // sources the exact test accepts (docs/systems-echo.md §3). The loudest
+  // water is the grid's live peak, which a Standing Wave corridor raises above
+  // the biome ceiling while it stands (#372).
+  const peakPf = world.terrain.peakPf;
+  const reach = maxAudibleRangeM(100, peakPf * THERMOCLINE_ZONE_MAX[fZone]!, hyd);
   const reach2 = reach * reach;
 
   let bestEid = 0;
@@ -226,7 +228,7 @@ function listen(
     const tf = thermoclineFactor(Position.depth[other]!, fd);
     // Cheap rejection before the path walk, the same shape as the contact
     // pass's (#90) and the residue read's.
-    if (detectionRatio(sig, MAX_PROPAGATION_FACTOR * tf, distance, hyd) < 1) continue;
+    if (detectionRatio(sig, peakPf * tf, distance, hyd) < 1) continue;
 
     // Multiplying the walk's result is safe here because no `abortBelow` is
     // passed: the walk returns the true path factor rather than bailing early

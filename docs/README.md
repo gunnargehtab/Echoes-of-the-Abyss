@@ -113,10 +113,10 @@ a document already points at it:
   write a price on followed (#352): the Chorister, in [units.md](units.md).
   [mission-standing-wave.md](mission-standing-wave.md) is the third, and it asks loudest:
   `chord-standing-wave` and the `the-fifth` map are unbuilt, and its §13 names a predicate the
-  objective union does not carry (what the player has *built*), two shipped constants that
-  disagree with each other, and one design call it explicitly refuses to make alone — the
-  corridor's PF 2.0 against a `MAX_PROPAGATION_FACTOR` of 1.60 that is derived rather than
-  chosen.
+  objective union does not carry (what the player has *built*). The two design calls it
+  explicitly refused to make alone are made (#372): the corridor keeps PF 2.0, carried by a
+  ceiling the terrain reports about itself so that only a standing corridor pays for it, and
+  the build radius is 1,500 m — the pairing range — for every structure.
   [mission-convocation.md](mission-convocation.md) is the fourth, and it asks for something no
   document has asked for before: **a commander ability at all.** `MissionAbility` is a lock list
   and nothing in the format grants one, so Marr's Convocation — the only reason that mission

@@ -196,7 +196,8 @@ describe('the vent tap', () => {
     // Hop two: the tap itself, on the vein band and in range of the refinery.
     assert.ok(
       // y = 3550: inside the 3500-4500 vein band, and 1,150 m from the
-      // refinery — one hop under the 1,200 m build radius.
+      // refinery — one hop under the 1,500 m build radius, and 2,350 m from
+      // the base, which is why it is still two hops and not one.
       match.build(0, StructureKind.VentTap, spawn.x, spawn.y + 2350),
       'a tap on the vein band, anchored to the refinery, should be legal'
     );

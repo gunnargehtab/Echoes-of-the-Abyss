@@ -236,6 +236,8 @@ Their doctrine is not to hide or to endure but to **know first and arrive in num
 Sound is their weapon, not their liability. Their SIG is high but *directional* — Knight emissions are focused into beams, so they are loud in a cone and quiet elsewhere. Positioning determines who hears them.
 *Unique:* **Standing Wave** — a placed resonance node that, when a second node is placed within 1,500 m, creates a line of sonic damage between them. Also permanently raises PropagationFactor in the corridor to 2.0, turning the space into an acoustic megaphone that harms everyone equally, including them.
 
+Two things about those numbers are decided rather than incidental (#372). **2.0 is above every row of the §3 table on purpose** — louder than a trench axis — and the model carries it without the biome ceiling moving: the Echo Layer bounds every search from the loudest cell actually on the map, so a corridor widens the search only while it stands and a match with no corridor pays nothing for the corridor existing. **1,500 m is also the build radius** ([economy.md](economy.md), [units.md](units.md)): a node a commander can site off its partner is a node that pairs, so the longest corridor this paragraph describes is also the longest one that can be built.
+
 #### Directional signature — the numbers
 
 The sentence above is two hundred words older than its arithmetic. Four documents said *loud in
