@@ -73,7 +73,11 @@
  *   skirmish roster.
  * - **The band is seven of eight** (§3). 245 against 280 available, the eighth
  *   authored as slack, and the number belongs to this literal and not to
- *   `constants.ts`.
+ *   `constants.ts`. Seven of eight is the roster's arithmetic: the region
+ *   ledger discounts a rendering over ground the year has worn, so a column
+ *   that works a wall together needs the eighth and an array does not. §13
+ *   settled that as the document's to state and not this literal's to move
+ *   (#350), which is why the band is still 245 and still the roster's.
  * - **The intake is twelve identical hulls with one role**, `cohort`, and the
  *   mission never marks one (§5). The survival count and the roll address
  *   the same role, and `MissionUnit.role` being singular is why the roll
@@ -121,7 +125,9 @@ const COURT = 1;
 /**
  * §3, §8 — the band: seven of the eight renderings the map carries, and the
  * eighth authored as slack so that a band met exactly would not make the
- * mission a checklist. An authored number belonging to this literal.
+ * mission a checklist. An authored number belonging to this literal, and the
+ * roster's figure: the region ledger may take the eighth from a column that
+ * worked the walls together, and §13 leaves it there (#350).
  */
 const BAND = 245;
 /** §8, §12 — "Nine of twelve is a muster. The Undermarshalcy does not round up." */
