@@ -54,15 +54,24 @@ export class DriftHealth {
   }
 
   /**
-   * Sustained noise wears a region down, and everywhere recovers slowly.
+   * Sustained noise wears a region down, and everywhere else recovers slowly.
    *
    * The threshold matters: quiet play costs the map nothing at all, so a
    * player who chooses to be poor and safe is also choosing not to strip the
    * ground they are standing on. Everything that makes you strong makes you
    * loud, and loud is what kills the Drift.
+   *
+   * **Dead does not recover.** §6's table ends "0 | Dead | ... permanent for
+   * the match", and permanence cannot be expressed as a rate however slow —
+   * any positive recovery lifts a Dead cell off zero on the next tick and the
+   * row becomes a threshold the map crosses twice. So it is a branch rather
+   * than a number, and it is the only floor in the ledger that is not
+   * `Math.max(0, ...)`: everything above zero is a rate, and zero is a state
+   * (#365).
    */
   tick(dt: number, noiseByRegion: Float32Array): void {
     for (let i = 0; i < this.health.length; i++) {
+      if (this.health[i]! <= 0) continue;
       const excess = Math.max(0, (noiseByRegion[i] ?? 0) - DRIFT.HEALTH_SIG_THRESHOLD);
       const drain = excess * DRIFT.HEALTH_SIG_DRAIN_PER_S * dt;
       const recovery = DRIFT.HEALTH_RECOVERY_PER_S * dt;

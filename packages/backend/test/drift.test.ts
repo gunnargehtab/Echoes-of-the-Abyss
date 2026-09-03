@@ -27,7 +27,8 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { DRIFT, Faction, FaunaSpecies, SIM, UnitKind } from '@echoes/shared';
+import { DRIFT, Faction, FaunaSpecies, MISSION, SIM, UnitKind } from '@echoes/shared';
+import { DriftHealth } from '../src/sim/drift.ts';
 import { Match } from '../src/sim/match.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { spawnFauna, spawnUnit } from '../src/sim/world.ts';
@@ -269,6 +270,88 @@ describe('Drift Health', () => {
       match.world.drift.at(MIDDLE_X, MIDDLE_Y) > after,
       'and recovers once the noise moves on'
     );
+  });
+
+  /**
+   * §6's rate, read as the sentence it comes from.
+   *
+   * These are stated against `MISSION.LENGTH_MAX_S` rather than as a bare
+   * number, because "far more slowly than a match lasts" is a comparison and
+   * only a comparison can fail for the right reason: the prototype's 0.06
+   * satisfied every directional test in this file and still healed a stripped
+   * cell to Healthy inside a long mission, which made campaign.md §2 rule 5's
+   * "Drift Health carries between missions on the same map" carry nothing
+   * (#365).
+   *
+   * Ticked directly rather than through `Match`: twenty-five minutes of 60 Hz
+   * simulation to observe one accumulator is a slow way to assert arithmetic,
+   * and the region grid is the thing under test.
+   */
+  const QUIET = new Float32Array(DRIFT.HEALTH_REGIONS * DRIFT.HEALTH_REGIONS);
+
+  it('leaves damage standing at the end of the longest mission', () => {
+    const drift = new DriftHealth(8000, 8000);
+    // Strip the region the way players do, stopping at the last kill that
+    // leaves it alive — Dead itself is tested below and never recovers.
+    while (drift.at(4000, 4000) > DRIFT.HEALTH_PER_KILL) drift.recordKill(4000, 4000);
+    const stripped = drift.at(4000, 4000);
+
+    drift.tick(MISSION.LENGTH_MAX_S, QUIET);
+
+    const healed = drift.at(4000, 4000);
+    assert.equal(
+      healed,
+      // Rounded as the grid stores it: the health array is a Float32Array, so
+      // an exact comparison against the float64 product misses by an ulp.
+      Math.fround(stripped + DRIFT.HEALTH_RECOVERY_PER_S * MISSION.LENGTH_MAX_S),
+      'recovery is the flat rate over the whole silence'
+    );
+    assert.ok(
+      healed < DRIFT.HEALTH_FAILING,
+      `§6: a stripped region is still Failing when the longest mission ends — ${healed}`
+    );
+    // And the small end of the same rule: a single kill is not shrugged off
+    // between one contact and the next.
+    assert.equal(DRIFT.HEALTH_PER_KILL / DRIFT.HEALTH_RECOVERY_PER_S, 200, 'a kill costs 200 s');
+  });
+
+  it('never lifts a Dead region off zero — §6: "permanent for the match"', () => {
+    const drift = new DriftHealth(8000, 8000);
+    while (drift.at(4000, 4000) > 0) drift.recordKill(4000, 4000);
+    assert.equal(drift.at(4000, 4000), 0);
+
+    // The whole of the longest mission, in silence, which is the most
+    // forgiving thing that can happen to a region.
+    drift.tick(MISSION.LENGTH_MAX_S, QUIET);
+
+    assert.equal(drift.at(4000, 4000), 0, 'Dead is a state, not the lowest rate');
+    assert.equal(drift.spawnsAllowed(4000, 4000), false, '§6: no fauna');
+    assert.equal(drift.yieldMultiplier(4000, 4000), 0, '§6: no Biomass');
+  });
+
+  it('wears a cell only once its sum stands more than a point over the threshold', () => {
+    // Drain and recovery are applied in the same pass, so recovery buys back
+    // `HEALTH_RECOVERY_PER_S / HEALTH_SIG_DRAIN_PER_S` points of excess SIG
+    // before a cell moves at all. That offset is a consequence of the rate
+    // rather than a decision, and it is stated here so a retune of either
+    // number moves it visibly (#365).
+    const at = (excess: number) => {
+      const drift = new DriftHealth(8000, 8000);
+      const noise = new Float32Array(DRIFT.HEALTH_REGIONS * DRIFT.HEALTH_REGIONS);
+      noise.fill(DRIFT.HEALTH_SIG_THRESHOLD + excess);
+      const before = drift.at(4000, 4000);
+      drift.tick(60, noise);
+      return drift.at(4000, 4000) - before;
+    };
+
+    assert.equal(
+      DRIFT.HEALTH_RECOVERY_PER_S / DRIFT.HEALTH_SIG_DRAIN_PER_S,
+      1,
+      'the effective threshold is 61, not 60'
+    );
+    assert.ok(at(0.5) > 0, 'under the effective threshold a cell heals');
+    assert.equal(at(1), 0, 'exactly on it, a cell holds');
+    assert.ok(at(2) < 0, 'over it, a cell wears');
   });
 
   it('pays less for a kill in a damaged region', () => {

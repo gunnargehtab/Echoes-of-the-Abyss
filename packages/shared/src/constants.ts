@@ -1031,8 +1031,26 @@ export const DRIFT = {
   /** Health lost per second per unit of SIG above the threshold, in a region. */
   HEALTH_SIG_THRESHOLD: 60,
   HEALTH_SIG_DRAIN_PER_S: 0.02,
-  /** Recovery. §6: "far more slowly than a match lasts." */
-  HEALTH_RECOVERY_PER_S: 0.06,
+  /**
+   * Recovery. §6: "far more slowly than a match lasts."
+   *
+   * TUNABLE, but bounded from below by that sentence and by `MISSION`'s
+   * 12-25 minute missions: a rate has to leave damage standing at the end of
+   * the *longest* one, or §6's promise and campaign.md §2 rule 5 ("Drift
+   * Health carries between missions on the same map") are both false. At 0.02
+   * a second a stripped cell is still Failing 42 minutes later and still short
+   * of the cap past the hour, and a kill's 4 costs three and a half minutes to
+   * heal. The prototype's 0.06 healed a Dead cell to Healthy in 21 minutes,
+   * inside a long mission, which made "carries between missions" carry
+   * nothing (#365).
+   *
+   * Note the interaction with `HEALTH_SIG_DRAIN_PER_S`: `tick` applies drain
+   * and recovery in the same pass, so a cell only wears once its SIG sum
+   * stands more than 0.02 / 0.02 = 1 over `HEALTH_SIG_THRESHOLD`. The
+   * effective threshold is therefore 61, not 60 — one point, against the 3 the
+   * prototype's rate hid.
+   */
+  HEALTH_RECOVERY_PER_S: 0.02,
   /** §6's table, as thresholds. */
   HEALTH_STRAINED: 75,
   HEALTH_FAILING: 50,
