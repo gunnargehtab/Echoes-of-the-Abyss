@@ -593,6 +593,7 @@ campaigns" row carries where the queue stands now.
 
 - **[campaign.md](campaign.md)** — §5, whose second row this specifies; §2 rule 4, whose first document it is; §10, whose objective-text and telegraph rules it is written under
 - **[mission-tend.md](mission-tend.md)** — The Second Seeding 1: the day this column is the price of, the quiet whose absence is this map, and the button that is wrong here
+- **[mission-convocation.md](mission-convocation.md)** — The Second Seeding 3: the tide Teel walks into out of this one, still armed and still right
 - **[mission-sorrowgate.md](mission-sorrowgate.md)** — the pattern, and the escort hold in its original form
 - **[mission-asset-recovery.md](mission-asset-recovery.md)** — the Klaxon posture from inside, and the party on the other side of this corridor written as it sees itself
 - **[mission-baffle.md](mission-baffle.md)** — the other mission about getting a slow thing across water somebody else has closed

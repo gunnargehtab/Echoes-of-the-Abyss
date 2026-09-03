@@ -35,6 +35,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | **[mission-item-nine.md](mission-item-nine.md)** | The Ledger 7, specified: the Board's session, one decision, and the ending §9 refuses to rank |
 | **[mission-tend.md](mission-tend.md)** | The Second Seeding 1, specified: a working day, the sweep, the stillness, and what *unfiled* is worth |
 | **[mission-thin-water.md](mission-thin-water.md)** | The Second Seeding 2, specified: a column in water that hides nothing, an unwinnable fight nobody chose, and six of ten read out in people |
+| **[mission-convocation.md](mission-convocation.md)** | The Second Seeding 3, specified: a vote that has to be walked, a row too loud to hear itself, and the bell Marr has never rung |
 | **[mission-attendance.md](mission-attendance.md)** | The Attending 1, specified: one watch of the Mouth's cycle, the nine arrivals, and the silence a rite is owed |
 | **[mission-intake.md](mission-intake.md)** | The Attending 2, specified: an intake at the top of its own water, an economy that will not come when called, and one finding the mission refuses to score |
 | **[mission-aptitude.md](mission-aptitude.md)** | The Second Chord 1, specified: six hulls, six formations, and the quarter of the compass a Knight is loud in |
@@ -116,11 +117,21 @@ a document already points at it:
   disagree with each other, and one design call it explicitly refuses to make alone — the
   corridor's PF 2.0 against a `MAX_PROPAGATION_FACTOR` of 1.60 that is derived rather than
   chosen.
+  [mission-convocation.md](mission-convocation.md) is the fourth, and it asks for something no
+  document has asked for before: **a commander ability at all.** `MissionAbility` is a lock list
+  and nothing in the format grants one, so Marr's Convocation — the only reason that mission
+  exists — has no mechanism behind it. It also wants a walk (an ordered set of held positions
+  with a ceiling on the water rather than a floor on the hull) and a restart, which is the first
+  mechanic in this game that takes progress back. It is the first mission written on ground
+  another mission already uses, deliberately, and it leaves one question open rather than
+  settling it: whether the count read at the watch's edge and the active ping are the same act.
 - **Campaign progression and unlock state.** Nothing records that a mission was played, so the
   prologue is replayable, remembers nothing, and the Tutorial and campaign doors are the same
   door.
 - **Cross-mission Drift Health.** campaign.md §2 rule 5 has a map carry its damage forward to
-  the next mission played on it. There is no forward while there is one mission.
+  the next mission played on it. Until [mission-convocation.md](mission-convocation.md) there
+  was no forward, because no two missions shared a map; that document reuses *Tend*'s
+  `marr-plateau` unchanged, so the rule now has a concrete first pair and still no mechanism.
 - **Permanent roster attrition.** Knights mission 3, *Nineteen*, spends units for the rest of a
   campaign. Today nothing outlives the match it was built in.
 - **"Already seen" briefing variants.** campaign.md §1 intends a scene you witnessed from the

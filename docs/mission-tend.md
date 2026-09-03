@@ -323,7 +323,9 @@ What this mission deliberately does not teach:
   of Consortium heavies in open water. Tend is the *why* of that mission, played first: the
   campaign wants the player to have had one whole ordinary day before it prices one.
 - **Convocation and mass mobility** — mission 3, Marr's own ability, in the one situation her
-  office exists for.
+  office exists for. Specified in [mission-convocation.md](mission-convocation.md), on this same
+  plateau and this same map literal: the rows the player spends today working are the rows the
+  vote is walked along.
 - **The Spore Veil, seeding, and the bloom as an instrument** — missions 4 and 5. This
   mission shows the bloom only as a livelihood; the campaign's argument is that the player
   should love the garden before anyone asks them to plant one as a provocation.
@@ -462,6 +464,7 @@ one mission at a time, what it was missing.
 
 - **[campaign.md](campaign.md)** — §5, whose first row this specifies; §2 and §10, whose rules it is written under
 - **[mission-sorrowgate.md](mission-sorrowgate.md)** — the pattern, the silence order this mission's stillness is the living form of, and the place the button was saved
+- **[mission-convocation.md](mission-convocation.md)** — mission 3, on this plateau and this map literal: the same rows, the work stopped, and a vote walked along them
 - **[mission-asset-recovery.md](mission-asset-recovery.md)** — the mirror mission: loudness aimed, where this is quiet tended
 - **[factions.md](factions.md)** — the Veil, and the faction whose weakness is its virtue
 - **[economy.md](economy.md)** — bloom-share, the 18-SIG harvest, and the hum the stillness outwaits
