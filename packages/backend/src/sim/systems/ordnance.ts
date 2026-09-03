@@ -63,7 +63,7 @@ import {
   Velocity,
 } from '../components.ts';
 import { applyFiringSpike } from './acoustics.ts';
-import { isDriven } from './fauna.ts';
+import { isDriven, wound } from './fauna.ts';
 import { raiseSelfEvent, spawnOrdnance, type SimWorld } from '../world.ts';
 import { suppressKelpAt } from './hazards.ts';
 
@@ -215,6 +215,10 @@ function detonate(world: SimWorld, eid: number, target: number, destroyed: numbe
   // (combat.ts, `isDriven`), and the torpedo is spent either way.
   if (!isDriven(world, target)) {
     Health.hp[target] = Health.hp[target]! - damage;
+    // Damage is a sound (`wound`, #353). The launcher is not tracked and is
+    // spent from wherever it fired, so the wound carries no direction: a
+    // Hollow answers with a lunge at whatever it can hear.
+    wound(world, target, 0);
     // The blow is reported to its owner (docs/ui-ux.md §5), same as a gun's.
     raiseSelfEvent(world, { kind: SelfEventKind.Damaged, eid: target });
     if (Health.hp[target]! <= 0 && !destroyed.includes(target)) destroyed.push(target);
@@ -504,6 +508,8 @@ function blast(
     // minefield kills in numbers or not at all: one mine is a warning.
     const share = 1 - distance / options.radiusM;
     Health.hp[other] = Health.hp[other]! - options.damage * share;
+    // Damage is a sound (`wound`, #353), and a blast has no hull behind it.
+    wound(world, other, 0);
     // Every hull the blast reached is told (docs/ui-ux.md §5) — structures
     // included, since a base under mine attrition is exactly the off-screen
     // fight the alert exists for.
