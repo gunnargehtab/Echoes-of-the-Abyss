@@ -27,7 +27,6 @@
 import {
   ECHO_MARKS,
   EchoMarkKind,
-  MAX_PROPAGATION_FACTOR,
   PERSISTENCE,
   THERMOCLINE_ZONE_MAX,
   detectionRatio,
@@ -304,14 +303,14 @@ export class EchoMarkLayer {
     const distance = Math.hypot(mark.x - x, mark.y - y);
 
     // Prune before the path walk, exactly as the contact pass does (#90). The
-    // best any terrain could do is MAX_PROPAGATION_FACTOR, so a mark inaudible
-    // even at that is inaudible full stop — and the walk is by far the most
-    // expensive thing in here.
+    // best any path on this map could do is the grid's live peak, so a mark
+    // inaudible even at that is inaudible full stop — and the walk is by far
+    // the most expensive thing in here.
     // Both depths are in hand here, so this uses the exact thermocline factor
     // rather than a ceiling — strictly tighter than before for a pair across
     // the layer, and identical for one that does not cross it.
     const k = thermoclineFactor(mark.depth, listenerDepthM);
-    if (detectionRatio(sig, MAX_PROPAGATION_FACTOR * k, distance, hyd) < 1) return false;
+    if (detectionRatio(sig, terrain.peakPf * k, distance, hyd) < 1) return false;
 
     // The same propagation model as a live emitter, path integral included.
     // Residue behind a kelp bed is as hard to find as a hull behind one.
@@ -330,7 +329,7 @@ export class EchoMarkLayer {
    * The loudest a mark of this kind could possibly be heard from, given the
    * best ears in the match. Used to size the broadphase around a mark.
    */
-  audibleRadiusM(mark: Mark, bestHyd: number): number {
+  audibleRadiusM(mark: Mark, bestHyd: number, peakPf: number): number {
     const sig = SIG_BY_KIND[mark.kind] * mark.intensity;
     if (sig <= 0) return 0;
     // Only the mark's own depth is known here, so this bounds over every
@@ -338,9 +337,13 @@ export class EchoMarkLayer {
     // pruned from the outer tenth of the range its own exact test accepts —
     // see "sizes its own broadphase to cover the duct" in the thermocline
     // tests, which needs a trench to make the gap appear at all.
+    //
+    // `peakPf` is the terrain's live ceiling (`Terrain.peakPf`), passed in
+    // rather than read from a constant so a Standing Wave corridor standing on
+    // the map widens this radius while it stands and not otherwise (#372).
     return maxAudibleRangeM(
       sig,
-      MAX_PROPAGATION_FACTOR * THERMOCLINE_ZONE_MAX[thermoclineZone(mark.depth)]!,
+      peakPf * THERMOCLINE_ZONE_MAX[thermoclineZone(mark.depth)]!,
       bestHyd
     );
   }

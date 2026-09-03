@@ -654,8 +654,8 @@ satisfied by that and only that, which is why it is what the mission is specifie
 But fusing them would be a claim about what this mission *argues*, not a scoping detail, and it
 would change §7's last figure, §8's ladder and the shape of the ability in the row above. It is
 a decision for whoever owns the Commune campaign's argument, and it is recorded here rather than
-made here — the same way [mission-standing-wave.md](mission-standing-wave.md) §13 records the
-corridor's PF against `MAX_PROPAGATION_FACTOR` and deliberately does not settle it.
+made here — the same way [mission-standing-wave.md](mission-standing-wave.md) §13 recorded the
+corridor's PF against `MAX_PROPAGATION_FACTOR` for a person to settle, which #372 then did.
 
 ---
 

@@ -19,6 +19,7 @@ import {
   Faction,
   HAZARDS,
   HazardPhase,
+  MAX_MODIFIED_PROPAGATION_FACTOR,
   MAX_PROPAGATION_FACTOR,
   PROPAGATION_FACTOR,
   ResolutionTier,
@@ -509,9 +510,13 @@ describe('resonance storms', () => {
   });
 
   it('never pushes PF past the ceiling the broadphase is sized from', () => {
-    // A hazard that raised PF beyond MAX_PROPAGATION_FACTOR would make units
-    // audible past the radius the Echo pass is willing to search, which reads
-    // as detection silently failing rather than as weather.
+    // A hazard that raised PF beyond what the broadphase accounts for would
+    // make units audible past the radius the Echo pass is willing to search,
+    // which reads as detection silently failing rather than as weather. Since
+    // #372 the pass sizes from the grid's live peak, so the invariant is two
+    // halves: no cell above the peak, and the peak no higher than the loudest
+    // anything is specified to make a cell — the corridor's 2.0, not the
+    // trench's 1.6, because a storm ×10 is a modifier like any other.
     const terrain = new Terrain(2000, 2000, 250);
     terrain.fillRect(0, 0, 2000, 2000, Biome.AbyssalTrench);
     terrain.applyPropagationModifiers([{ x: 1000, y: 1000, radiusM: 900, scale: 10 }]);
@@ -519,7 +524,12 @@ describe('resonance storms', () => {
     // double 1.6 stored and read back is 1.60000002..., which is fractionally
     // *above* the ceiling it was clamped to. Real, harmless, and not the thing
     // this test is about.
-    assert.ok(terrain.propagationAt(1000, 1000) <= MAX_PROPAGATION_FACTOR + 1e-6);
+    assert.ok(terrain.propagationAt(1000, 1000) <= terrain.peakPf + 1e-6);
+    assert.ok(terrain.peakPf <= MAX_MODIFIED_PROPAGATION_FACTOR + 1e-6);
+    assert.ok(
+      terrain.propagationAt(100, 100) <= MAX_PROPAGATION_FACTOR + 1e-6,
+      'outside the storm'
+    );
   });
 
   it('buffs Hadron ears and destabilises Pelagia hulls, per doc §5', () => {

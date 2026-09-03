@@ -38,6 +38,45 @@ export const PROPAGATION_FACTOR: Record<Biome, number> = {
 export const MAX_PROPAGATION_FACTOR = Math.max(...Object.values(PROPAGATION_FACTOR));
 
 /**
+ * SPEC — Standing Wave (docs/systems-echo.md §7, Hadron Knights; docs/factions.md).
+ * The Order's unique: two Sounding Spires that pair into a corridor.
+ */
+export const STANDING_WAVE = {
+  /**
+   * A second node placed within this range of the first pairs with it.
+   * Deliberately the same number as `CONSTRUCTION.BUILD_RADIUS_M` (#372): a
+   * node a commander can site off its partner is a node that pairs, so the
+   * longest corridor the doctrine describes is also the longest one that can
+   * be built. Two constants rather than one alias because the docs state them
+   * separately and each can be cited on its own.
+   */
+  PAIR_RANGE_M: 1500,
+  /**
+   * PF inside a standing corridor — above every biome's baseline on purpose,
+   * the trench axis included. The corridor is a megaphone, not a place, and
+   * the whole lesson of Knights mission 2 (docs/mission-standing-wave.md §7)
+   * is that it out-carries the loudest water on the map.
+   */
+  CORRIDOR_PF: 2.0,
+} as const;
+
+/**
+ * Derived — the loudest any *cell* can be made, corridor included: the
+ * loudest biome or the corridor, whichever is louder. This is the clamp on a
+ * modified cell; `MAX_PROPAGATION_FACTOR` stays the biome table's own ceiling
+ * and is not raised to meet it.
+ *
+ * Nothing sizes a search from this number (#372). The Echo pass and every
+ * other broadphase bound from `Terrain.peakPf` — the loudest cell actually on
+ * the grid right now — so a match with no corridor standing pays nothing for
+ * the corridor existing, and one with a corridor pays only while it stands.
+ */
+export const MAX_MODIFIED_PROPAGATION_FACTOR = Math.max(
+  MAX_PROPAGATION_FACTOR,
+  STANDING_WAVE.CORRIDOR_PF
+);
+
+/**
  * Floor for a modified cell's PF — docs/bestiary.md §4 (Tetherjelly):
  * "floored at 0.05 — sound never stops entirely." Only additive modifiers can
  * reach it; no biome baseline is anywhere near, and a floor of zero would let
@@ -109,6 +148,10 @@ export const THERMOCLINE_ZONE_MAX = Float64Array.from(
  * every walk in the match to fix a bound that matters for one depth band. This
  * one bounds a *path*, and is what a broadphase reaching for "the loudest this
  * could possibly be" wants. Conflating them is how contacts go quietly missing.
+ *
+ * Static, and a bound on unmodified water. The passes themselves read
+ * `Terrain.peakPf` in place of the cell ceiling — the live counterpart that
+ * rises above it only while a Standing Wave corridor stands (#372).
  */
 export const MAX_PATH_PROPAGATION_FACTOR =
   MAX_PROPAGATION_FACTOR * Math.max(...THERMOCLINE_ZONE_MAX);
@@ -1544,8 +1587,15 @@ export const CONSTRUCTION = {
   WORKING_DEPTH_M: 600,
   /** Sustained SIG at the site while a structure is being commissioned. */
   SITE_SIG: 70,
-  /** New structures must rise within this range of an existing own structure. */
-  BUILD_RADIUS_M: 1200,
+  /**
+   * New structures must rise within this range of an existing own structure.
+   *
+   * SPEC — docs/economy.md ("Reaching a tap is a commitment") and docs/units.md
+   * (construction rules). 1,500 m rather than the 1,200 m it started at, and
+   * the same number as `STANDING_WAVE.PAIR_RANGE_M` by decision rather than
+   * coincidence (#372): a Spire chained off its partner always pairs.
+   */
+  BUILD_RADIUS_M: 1500,
   /** Fraction of max HP a structure has the moment the site is placed. */
   INITIAL_HP_FRACTION: 0.1,
 } as const;
