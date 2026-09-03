@@ -63,6 +63,7 @@ import {
   Velocity,
 } from '../components.ts';
 import { applyFiringSpike } from './acoustics.ts';
+import { isDriven } from './fauna.ts';
 import { raiseSelfEvent, spawnOrdnance, type SimWorld } from '../world.ts';
 import { suppressKelpAt } from './hazards.ts';
 
@@ -210,10 +211,14 @@ function detonate(world: SimWorld, eid: number, target: number, destroyed: numbe
   const ty = Position.y[target]!;
 
   world.marks.add(EchoMarkKind.Battle, tx, ty, Position.depth[target]!, BATTLE_MARK_PER_DETONATION);
-  Health.hp[target] = Health.hp[target]! - damage;
-  // The blow is reported to its owner (docs/ui-ux.md §5), same as a gun's.
-  raiseSelfEvent(world, { kind: SelfEventKind.Damaged, eid: target });
-  if (Health.hp[target]! <= 0 && !destroyed.includes(target)) destroyed.push(target);
+  // A driven creature takes the hit and none of the damage — the gun's rule
+  // (combat.ts, `isDriven`), and the torpedo is spent either way.
+  if (!isDriven(world, target)) {
+    Health.hp[target] = Health.hp[target]! - damage;
+    // The blow is reported to its owner (docs/ui-ux.md §5), same as a gun's.
+    raiseSelfEvent(world, { kind: SelfEventKind.Damaged, eid: target });
+    if (Health.hp[target]! <= 0 && !destroyed.includes(target)) destroyed.push(target);
+  }
 
   Health.hp[eid] = 0;
   if (!destroyed.includes(eid)) destroyed.push(eid);
@@ -488,6 +493,8 @@ function blast(
     if (Owner.slot[other] === slot) continue;
     if (Health.hp[other]! <= 0) continue;
     if (hasComponent(world, Ordnance, other)) continue;
+    // Nor a creature under a mission beat — the gun's rule (combat.ts).
+    if (isDriven(world, other)) continue;
 
     const dz = options.volumetric ? Position.depth[other]! - depth : 0;
     const distance = Math.hypot(Position.x[other]! - x, Position.y[other]! - y, dz);

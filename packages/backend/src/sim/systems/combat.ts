@@ -48,6 +48,7 @@ import {
   Weapon,
 } from '../components.ts';
 import { applyFiringSpike } from './acoustics.ts';
+import { isDriven } from './fauna.ts';
 import { isInterceptable } from './ordnance.ts';
 import { raiseSelfEvent } from '../world.ts';
 import type { SimWorld } from '../world.ts';
@@ -330,6 +331,11 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
       Position.depth[target]!,
       BATTLE_MARK_PER_SHOT
     );
+    // A creature under a mission beat gives no hull to a shell. The shot is
+    // real — fired, loud, residue laid — and the colossus does not care: an
+    // authored transit happens when its document says it does, and twelve
+    // idle guns at a muster are not the document (`isDriven`, #349).
+    if (isDriven(world, target)) continue;
     Health.hp[target] = Health.hp[target]! - profile.damage;
     // The victim's owner is told a blow landed (docs/ui-ux.md §5). An event,
     // not an inference: a client watching its own hp could not tell a shell

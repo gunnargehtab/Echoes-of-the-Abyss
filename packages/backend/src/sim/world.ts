@@ -21,6 +21,7 @@ import {
   OrdnanceKind,
   type DrawReport,
   type FaunaSpecies,
+  type Stockpile,
   StructureKind,
   UnitKind,
   statsFor,
@@ -68,8 +69,17 @@ import { Terrain } from './terrain.ts';
  */
 const SEEKER_STAGGER_STEPS = 12;
 
-/** Per-player mutable economy state. Lives outside the ECS: it is per-slot, not per-entity. */
-export interface PlayerEconomy {
+/**
+ * Per-player mutable economy state. Lives outside the ECS: it is per-slot,
+ * not per-entity.
+ *
+ * A `Stockpile` in shared's terms — the same three accounts the snapshot
+ * carries to the shell — so the server refuses and debits with the same
+ * `affords` and `charge` the command bar greys its buttons with, on the same
+ * `priceOf` sum (economy.ts). There is no fourth account: Thermal Draw is a
+ * rate and lives in `draw`, below.
+ */
+export interface PlayerEconomy extends Stockpile {
   nodules: number;
   /** Resonance Crystal — the tech gate, mined only in the Abyssal band. */
   crystal: number;
@@ -424,6 +434,8 @@ export function spawnFauna(
   Fauna.homeX[eid] = options.x;
   Fauna.homeY[eid] = options.y;
   Fauna.homeDepth[eid] = stats.workingDepthM;
+  // Nothing is born under a beat; the runtime raises this when one takes hold.
+  Fauna.driven[eid] = 0;
   // Written even for species that never scavenge or scatter — bitecs recycles
   // entity ids, and a creature born on a dead swarm's id must not inherit its
   // wreck, nor a shoal a dead shoal's fright.

@@ -737,6 +737,10 @@ export class MissionRuntime {
           Fauna.homeDepth[released] = faunaStatsFor(
             Fauna.species[released] as FaunaSpecies
           ).workingDepthM;
+          // And its hull: a released creature is the Drift's again, and the
+          // Drift can be shot. This is what keeps a placed Hollow — committed
+          // to its own spawn for no ticks at all — renderable for the band.
+          Fauna.driven[released] = 0;
         }
         continue;
       }
@@ -765,6 +769,13 @@ export class MissionRuntime {
       // past any Echo interval means it never reaches zero while the mission
       // is holding this creature. The expiry branch above puts it back.
       Fauna.senseS[eid] = SCRIPTED_SENSE_S;
+      // And unkillable by weapons for the same length. The beat is the
+      // document's, and a gun that could end it early would be the roster
+      // overruling the mission — which is exactly what twelve idle guns at
+      // Intake's muster did to its colossus before this was written (#349).
+      // The `lose` beat still zeroes a hull directly; the document may kill
+      // what it drives, the player may not.
+      Fauna.driven[eid] = 1;
       // A targetless Committed creature is moved to Cooling by the ladder on
       // the very next tick. That is fine and deliberate: Cooling still drives
       // toward home and still emits at `sigActive`, so the approach stays the

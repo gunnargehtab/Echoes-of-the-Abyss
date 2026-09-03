@@ -23,6 +23,7 @@
 import type {
   AbilityLock,
   Biome,
+  EconomyAccount,
   Faction,
   FaunaSpecies,
   MissionHeader,
@@ -315,10 +316,14 @@ export type MissionPredicate =
 /**
  * The three accounts of the per-player economy record — `world.ts`'
  * `PlayerEconomy` and, on the wire, the same three fields of `EchoSnapshot`.
- * Named here so a mission literal that misspells one fails `type-check`
- * rather than half way through a match, per the format's standing rule.
+ * Named so a mission literal that misspells one fails `type-check` rather
+ * than half way through a match, per the format's standing rule.
+ *
+ * Shared's definition, re-exported: a price is written in the same three
+ * accounts (economy.ts), and a second list of them here would eventually
+ * disagree with the first.
  */
-export type EconomyAccount = 'nodules' | 'crystal' | 'biomass';
+export type { EconomyAccount };
 
 /**
  * A load — the hold-and-cut lift of docs/mission-asset-recovery.md §8, and, with

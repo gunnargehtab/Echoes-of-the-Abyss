@@ -37,6 +37,12 @@
  *    85-metre reach therefore never touched. §6's line crosses the muster
  *    through the intake, so the beat now says how deep it runs, and the
  *    colossus runs it at the year's own depth.
+ * 5. **A beat the guns cannot end** (`Fauna.driven`, #349). Twelve idle
+ *    Abyssal Submersibles at the muster auto-acquired the colossus inside
+ *    650 m and had its 9,000 HP down in seventeen seconds, before it reached
+ *    the line, and were paid the band for it. A driven creature now takes no
+ *    weapon damage for the length of its commitment: the transit is a beat,
+ *    and a beat happens when the document says it does.
  *
  * And two authoring decisions the document leaves open or gets wrong:
  *
