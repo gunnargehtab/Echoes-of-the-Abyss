@@ -883,8 +883,9 @@ describe('the shift, run out — docs/mission-intake.md §4, §6, §8, §9', () 
     // region ledger's row in §13 (#350): the twelve seats stand six either
     // side of x = 2,500, so twelve hulls idling at 22 are 132 of SIG in each
     // of the muster's two cells against a threshold of 60 — 72 over, 1.44 a
-    // second — and an intake that never moved has stripped both to nothing
-    // inside the first minute. While the colossus could still be killed,
+    // second — and an intake that never moved has stripped both to nothing by
+    // 1:02 (#365 took recovery out from under the drain, so the 1.44 is now
+    // exact). While the colossus could still be killed,
     // that dead ground was what kept the kill from paying the band; now it
     // is stated for its own sake, so a retune of the ledger is noticed.
     let lowest = Number.POSITIVE_INFINITY;
