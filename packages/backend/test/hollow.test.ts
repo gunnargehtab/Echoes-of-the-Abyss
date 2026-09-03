@@ -226,7 +226,11 @@ describe('the hollow', () => {
       depth,
     });
     advance(match, 2);
-    assert.equal(Fauna.stage[hollow], FaunaStage.Interested, 'coiled on the cruiser, not struck');
+    // Read into a local before asserting: `assert.equal` narrows its first
+    // argument, and narrowing the array reference itself would make the
+    // Committed comparison in the loop below a type error.
+    const coiled = Fauna.stage[hollow] as FaunaStage;
+    assert.equal(coiled, FaunaStage.Interested, 'coiled on the cruiser, not struck');
     assert.equal(Fauna.targetEid[hollow], cruiser);
 
     spawnUnit(match.world, {
