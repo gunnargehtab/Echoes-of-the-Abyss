@@ -103,6 +103,52 @@ every midday of her life and has never asked what is above it, because the quest
 person's ([culture.md](culture.md) §1). She can name every hull on the drop lane by its screw. Her
 mother was a Kell.
 
+### The Turning — where a plateau votes
+
+*The room [campaign.md](campaign.md) §5 puts Seeding 3 in: a plateau voting while it is attacked.*
+
+A bloom-collective has no chamber, and the reason is acoustic before it is political. Kelp eats
+the top of the spectrum at PF 0.55 and a voice does not cross two rows
+([audio-direction.md](audio-direction.md) §9), so the plateaus never built the room a vote would
+need — there is nowhere on a terrace where a thousand people can hear one person. What they built
+instead is a decision that moves.
+
+**Where people are.** A convocation is *walked*. It opens at one row and passes along the
+holdfast lines, every row turning it and carrying it to the next, until the walk comes back to
+the row it started at with nothing new in it. That closing circuit is the count: not a tally of
+hands but a question that has stopped changing. A plateau that is **still turning** is one where
+the walk returned altered, and it goes round again ([culture.md](culture.md) §3). The rows are
+the room, and a person turns it on the ground they are named for.
+
+**Convening.** The turn-of-tide bell, rung off-tide. It is the loudest deliberate act on a
+plateau and very nearly the only one, and every neighbour hears it: a plateau that convenes has
+announced to the water that it has stopped working. The Tidespeaker may ring it — Marr can
+convene, persuade and refuse, and cannot order ([characters.md](characters.md)) — and so may any
+row that can find a second row willing to ring with it. **Emergency convocation** is the same
+walk with every row's bell rung at once, so that the circuit runs in one tide instead of several.
+It exists, and it has never been rung.
+
+**The hush, broken on purpose.** The count is read at the southern edge, in the watch's own
+water, because the bare slope is the only ground on a plateau that carries and a result has to
+reach everybody at once. Nobody speaks to the watch while the watch is at the edge (above); a
+convocation is the single exception the Commune has agreed to, and it is the one time the
+plateaus break their own courtesy knowing they are doing it. It is also, exactly, the moment the
+vote becomes audible to anything listening up the drop.
+
+**What is dry.** Nothing, and nothing is written. A convocation leaves no record but the people
+who walked it, which is why a Commune decision cannot be produced afterwards, cannot be entered
+at Sorrowgate, and cannot be checked against what anyone now says it was. *Unfiled* means safe;
+it also means the second Seeding will never be shown to have been authorised by anybody.
+
+**As a map.** Kelp Forest rows and a bare southern slope, as [mission-tend.md](mission-tend.md)
+left them: the walk is a route along the holdfast lines, the bell is a loud event at a fixed
+tick, and the reading at the edge is the mission's own SIG spike. The Commune's hush is courtesy
+rather than an order (§8), so a mission prices it as courtesy — the convocation breaks it and the
+player pays for it in what hears them. The circuit's length is the mission's clock, and it takes
+exactly as long as it takes; a plateau under attack cannot vote faster. Which terrace holds it is
+the mission document's to choose ([world-map.md](world-map.md) names four): the room needs a full
+row-set to walk, a watch-edge that carries, and a bell.
+
 ---
 
 ## 3. Holding One — a city that is a ledger
@@ -280,7 +326,7 @@ so that the crystal can be heard settling.
   First Chord was raised in 178 PC and aimed down the trench axis into the Mouth. The Chord
   still stands; so do its three surviving technicians, who have not spoken since the reply and
   have not stopped writing. The First is half shrine and half hospice, and the Order does not
-  discuss it ([world-map.md](world-map.md)).
+  discuss it ([world-map.md](world-map.md)). Its three rooms are described below.
 
 **What it costs.** The Order cannot grow. Every berth in a chapter-house was cut for a family
 that is still in it, and nineteen berths at Kalliso's house have been empty since 211 PC and
@@ -295,6 +341,86 @@ whose drift, after a year, is nothing.
 and no relation he can trace to the Chapter-Master closer than four generations. He has tuned the
 Third's fourth outer formation for thirty years and has never left the Fields. He sat the
 children's testing panel for twelve years and can still name every child who did not pass.
+
+### The Conclave — nine chords, and the count is the order they answer in
+
+*The room [campaign.md](campaign.md) §7 puts Chord 4 in: the vote Vrey has the standing to call.*
+
+**It is not a gathering.** Nine houses cannot convene. The Order cannot replace a hull or a
+Knight ([factions.md](factions.md)), the houses are instruments and do not travel, and a chapter
+that crossed the Fields to sit in a room would be spending the one thing it has none of. A
+conclave is *sounded*. Each chapter-master strikes their own house's chord where they stand and
+the lattice carries it: the outer formations a house tunes and corrects once a year are the
+carriage, which makes the annual sounding ([mission-aptitude.md](mission-aptitude.md)) the thing
+that keeps the Fields able to hold a conclave at all, and not only a piece of housekeeping.
+
+**The room is the chord, in nine places at once.** The chord is the house's hush — the one hall
+where nothing is struck and nothing is spoken (above) — and a conclave is the single exception to
+that rule. To call one, a chapter-master breaks their own house's silence deliberately. It is
+done perhaps twice in a generation, and it is understood as a cost paid before an argument is
+made rather than as a procedure.
+
+**The count.** A call is a struck chord at an appointed interval. The houses answer in turn, and
+the count is the sequence: which of the nine answered, and how far into the interval each waited.
+A house that lets its interval pass has abstained, and everybody hears the abstention, because
+the Fields were listening at that moment for exactly that. A Knight's silence is a formal thing
+and not an absence ([culture.md](culture.md) §3); a conclave is where that distinction has
+consequences.
+
+**What standing is, architecturally.** Maintenance. A chapter-master may call a conclave if their
+house's lattice is in tune this year — if the outer formations will carry a struck chord to the
+other eight as a call rather than as drift. Standing is therefore something a house can lose by
+neglect and cannot buy, and it is held by the wrights: the Third has it because Anselm Vrey and
+his like have kept the formations corrected for thirty years (above). Chapter-Master Vrey has the
+standing and does not use it ([characters.md](characters.md)) — and not calling is not nothing
+here. He is heard not calling, at every interval where the Third could have been.
+
+**As a map.** Cut structure inside a Resonance Field, per §8: the chord authored as Coral Ruins
+for its shadows, roofed water above it, the outer formations standing off across scattered PF
+0.70 water where bearings lie. A defensive mission in a chapter-house is holding a room whose
+loss is not a building — a house whose formations are broken has no voice in the next count, and
+that is what an attacker on this ground is actually taking.
+
+### The First — the shrine, the hospice and the sealed room
+
+*The room [campaign.md](campaign.md) §7 puts Chord 5 in: twelve minutes at 2,900 m, and no combat.*
+
+Three rooms in one house, at the Fields' southern edge where crystal country breaks toward the
+trenches ([world-map.md](world-map.md)). The Order does not discuss the First, so what follows is
+the building's account of itself and not a Knight's.
+
+**The Chord.** Still standing, still aimed down the trench axis, and — the fact the Order does
+not say out loud — still *tuned*. The house's wrights keep it playable, as they have every season
+since 178 PC, which means the First Chord is not a monument and not a ruin but an instrument in
+working order that nobody is permitted to sound. Chapter-Master Vrey built its lattice with his
+own hands and now wants it shut down ([characters.md](characters.md)); it was corrected this
+season regardless. A shrine in the Order's terms is a thing kept in tune, and that is the whole
+of the First's discomfort.
+
+**The hospice.** Not a place to die. In the Order's terms a hospice is where somebody is kept in
+tune who can no longer sound, so the three live in cells opening off the chord, attended by
+apprentices who share their work, keep their hours and transcribe. The care is craft: the same
+courtesy a house pays an instrument that has stopped holding its pitch, paid to three people who
+have not spoken since 178 PC and have not stopped writing ([timeline.md](timeline.md)).
+
+**What is dry, and what that is for.** Crystal work requires dry, so the First is dry, and paper
+survives in it. That makes the deepest house in the Order the one building in the Rift where a
+hospice is also an archive, and it is the reason the writing exists at all rather than the reason
+it is kept.
+
+**The sealed room.** Thirty-six years of writing in three hands: more paper than is held anywhere
+else in the Rift, sealed a case at a season by the house's own wrights, dated, and stacked in a
+cut dry room off the hospice. The Choirmaster reads there alone ([factions.md](factions.md)), and
+Ivane Sull was one of the apprentices in the room in 178 PC, so she has been going back to a
+place she was already in ([characters.md](characters.md)). What the three write is described here
+by its volume, its cases and its room, and it is not read out — not in this document, not in a
+mission, and not in narration ([culture.md](culture.md) §6).
+
+**As a map.** A quiet mission on this ground is authored with no hostile party in it: cut
+structure as Coral Ruins for the cells and the sealed room, roofed water over the approach, and
+the Chord as the one standing structure. The tension is that everything here is in working order
+— an aimed instrument, a dry archive, three attended people — and the mission's whole job is to
+let the player stand in a house where nothing is broken and nothing is safe.
 
 ---
 
@@ -364,6 +490,49 @@ month of her adult life and describes it as the best part. She has met a Consort
 in the Fourth, and told him she was assigned and he was sold, and has not decided which of them
 had the better arrangement ([culture.md](culture.md) §3).
 
+### The Upper Terraces — where not moving is the act
+
+*The room [campaign.md](campaign.md) §6 puts Attending 6 in: fighting with half an army.*
+
+**Where people are.** Two terraces at the top of the city, facing each other across the head of
+the Ninth: the Undermarshalcy cut into the north wall, the Cantorate into the south, standing
+directly over the attending galleries so that the Cantorate always sits above the hush it keeps.
+The top of Sufficiency is its shallowest water, and shallow is the insult
+([culture.md](culture.md) §3) — command sits nearest the way out, which every citizen reads as
+obviously correct and no visitor does. Ossary was born at 3,100 m and now sits three hundred
+metres above the water he came from ([characters.md](characters.md)); he could ask to be seated
+lower and has not, because the Cantorate is seated where the Undermarshalcy can be answered.
+
+**What a conclave is.** Attendance. The Directorate does not debate and does not count hands: a
+question is put by the Undermarshalcy at a cycle, and it is answered by who crosses the open
+water between the terraces to attend it. An assignment is sufficient when a cantor has attended
+the calling of it — so the Cantorate's authority is not a veto, it is a body in a place, and the
+whole of it can be exercised by remaining where it already is.
+
+That is why the First Cantor does not move against the Undermarshal. He does not have to. Nothing
+is refused, nothing is said that anyone could quote, no cantor crosses, and the cohorts whose
+calling went unattended stay in their cells — not disobedient, not withheld, simply not assigned.
+It is a civil war conducted in liturgical language by two people who are both right, and its
+whole physical vocabulary is a distance and who is standing on which side of it.
+
+**The hush.** The attending galleries beneath them, and the crossing itself. During a conclave
+the terraces are quieter than the trench, so a cohort under way between them is the only sound
+there is, and every arrival and every non-arrival is heard by the whole upper city. That is what
+makes not moving legible as an act rather than as a delay.
+
+**What is dry.** Nothing, equally, and not very — the Undermarshal's cell on the upper terrace
+runs exactly as much as a cohort's on the lower rows (above). There is no state room in
+Sufficiency and no bench grander than another bench. Rank is a depth of birth and a band, and the
+wall says neither.
+
+**As a map.** Two cut-structure regions authored as Coral Ruins (§8) on the north and south
+walls, with open Abyssal Trench water between them and PF 1.60 down the axis, so a crossing is
+heard the length of the trench. The galleries' written silence order — SIG 25, the debt recorded
+([mission-attendance.md](mission-attendance.md) §3) — reaches the terraces above them. A mission
+that fights with half an army authors the missing half as **never assigned** rather than as
+casualties or as a reinforcement timer: the units the player does not have are a theological
+outcome, and the room is where that is visible.
+
 ---
 
 ## 7. Halvard — the place that is not a habitat
@@ -413,13 +582,13 @@ room. Missions not listed are fought in open water or on ground the gazetteer ow
 | Ledger 5 — [Tolerance](mission-tolerance.md) | The Underworks, and Sector Vayle's bulkhead frame at 1,050 m (§3) |
 | Ledger 7 — [Item Nine](mission-item-nine.md) | The Underway, Asset 002, at the bottom of Board country (§3) |
 | Seeding 1 — [Tend](mission-tend.md) | Marr Plateau: the rows, the drop, the watch at the edge (§2) |
-| Seeding 3 — *Convocation* | A plateau voting while it is attacked: the rows as the room, and the first time the Commune's one hush is broken on purpose (§2) |
+| Seeding 3 — *Convocation* | A plateau voting while it is attacked: the rows as the room, the bell rung off-tide, and the count read at the watch's edge — the first time the Commune's one hush is broken on purpose (§2, *The Turning*) |
 | Attending 1 — [Attendance](mission-attendance.md) | The attending galleries and the Cantorate's dome (§6) |
 | Attending 2 — [Intake](mission-intake.md) | The cohort halls on the banding ground, above the city (§6) |
-| Attending 6 — *Conclave* | Sufficiency's upper terraces, where the Cantorate does not move (§6) |
+| Attending 6 — *Conclave* | Sufficiency's upper terraces: the Undermarshalcy and the Cantorate facing across the head of the Ninth, where a calling is answered by who crosses and the Cantorate does not (§6, *The Upper Terraces*) |
 | Chord 1 — [Aptitude](mission-aptitude.md) | The Third and its six outer formations (§5) |
-| Chord 4 — *Conclave* | A chapter-house's chord, where Vrey has the standing to call a vote and does not (§5) |
-| Chord 5 — *The Three* | The First, half shrine and half hospice, at 2,900 m (§5) |
+| Chord 4 — *Conclave* | No room, and nine at once: a conclave is struck in each house's chord and carried by the lattice, and Vrey — who has the standing, because the Third is in tune — is heard not calling one (§5, *The Conclave*) |
+| Chord 5 — *The Three* | The First at 2,900 m: the Chord still aimed and still tuned, the hospice off it, and the sealed room the Choirmaster reads alone (§5, *The First*) |
 
 Every campaign passes through its own habitat's hush at least once, and three of the four are
 asked to break it — the Commune by voting, the Knights by transmitting, the Consortium by
