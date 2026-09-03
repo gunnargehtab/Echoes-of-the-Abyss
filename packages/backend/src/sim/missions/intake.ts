@@ -86,20 +86,25 @@
  *   the transit at 16:00, the close at 20:00: sixty seconds against a
  *   sixty-second rule, sixty times over (§6).
  *
- * And one finding this literal makes against the engine as built, stated
- * here rather than discovered, in the manner of §3's own note: **twelve live
- * guns at the muster bring the colossus down before it reaches them.** The
- * bestiary rates a Sounder at 9,000 HP and 260 Biomass and says it "cannot be
- * reliably killed by any single player before the twenty-minute mark"; §6
- * says "it cannot be killed — 9,000 HP against an intake's 44.4/s each".
- * Twelve of those are 533 a second, the transit is inside 650 m of the
- * muster for forty seconds, and the roster pays the full 260 for it — which
- * is the band, answered by an intake that never moved. A year that goes
- * quiet at the call meets the transit exactly as §6 describes it, and a year
- * that keeps its guns live is paid for the thing that was not about them.
- * That is the roster disagreeing with the bestiary, not this literal's to
- * retune, and §13 carries it as the design call it is; the test states it so
- * the day it is settled is noticed.
+ * And two findings this literal made against the engine as built, stated
+ * here rather than discovered, in the manner of §3's own note, and both
+ * since settled — one on each side:
+ *
+ * - **Twelve live guns at the muster brought the colossus down before it
+ *   reached them.** The bestiary rates a Sounder at 9,000 HP and 260 Biomass
+ *   and says it "cannot be reliably killed by any single player before the
+ *   twenty-minute mark"; twelve of the intake's 44.4/s are 533 a second, the
+ *   transit is inside 650 m of the muster for forty seconds, and the roster
+ *   paid the full 260 for it — the band, answered by an intake that never
+ *   moved. Settled in the engine (#349), as item 5 above: a driven creature
+ *   takes no weapon damage, so the guns still fire and still announce the
+ *   year, and the colossus crosses at every point it arrived with.
+ * - **The region ledger prices a rendering.** A column that works a wall
+ *   together wears the cell and is paid three quarters there, so seven of
+ *   eight is slack only spread. Settled in the document (#350), as the
+ *   `BAND` comment below records: the band stays 245 and the roster's.
+ *
+ * The test states both so the day either is reopened is noticed.
  */
 
 import {
