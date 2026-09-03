@@ -109,8 +109,8 @@ a document already points at it:
   earned — built (#330), `deliver` reading any of the economy record's three accounts. What its
   literal then found were four rules right for a court and wrong for a shift, each now a row of
   its §13. The way to spend Biomass followed (#351) — a third price column beside Nodules and
-  Crystal, refused and debited on the one path the other two take — and what remains is the
-  cohort hull to write a price on (#352).
+  Crystal, refused and debited on the one path the other two take — and the cohort hull to
+  write a price on followed (#352): the Chorister, in [units.md](units.md).
   [mission-standing-wave.md](mission-standing-wave.md) is the third, and it asks loudest:
   `chord-standing-wave` and the `the-fifth` map are unbuilt, and its §13 names a predicate the
   objective union does not carry (what the player has *built*), two shipped constants that

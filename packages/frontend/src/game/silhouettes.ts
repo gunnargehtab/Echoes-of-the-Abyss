@@ -38,6 +38,7 @@ export const HULL_LENGTH_M: Record<UnitKind, number> = {
   [UnitKind.Corvette]: statsFor(UnitKind.Corvette).hullLengthM,
   [UnitKind.Cruiser]: statsFor(UnitKind.Cruiser).hullLengthM,
   [UnitKind.AbyssalSubmersible]: statsFor(UnitKind.AbyssalSubmersible).hullLengthM,
+  [UnitKind.Chorister]: statsFor(UnitKind.Chorister).hullLengthM,
   [UnitKind.Harvester]: statsFor(UnitKind.Harvester).hullLengthM,
 };
 
@@ -84,6 +85,24 @@ export const HULL_OUTLINE: Record<UnitKind, number[][]> = {
     [-0.42, -0.14],
     [-0.1, -0.22],
     [0.28, -0.19],
+  ],
+  // A grown hull: segmented flanks, a crustacean's plates rather than a
+  // pressure hull's curve. Reads apart from the Submersible's teardrop at a
+  // glance, which is the whole job of an outline (art-direction.md).
+  [UnitKind.Chorister]: [
+    [0.5, 0],
+    [0.3, 0.17],
+    [0.18, 0.11],
+    [0.0, 0.19],
+    [-0.14, 0.12],
+    [-0.32, 0.17],
+    [-0.5, 0.05],
+    [-0.5, -0.05],
+    [-0.32, -0.17],
+    [-0.14, -0.12],
+    [0.0, -0.19],
+    [0.18, -0.11],
+    [0.3, -0.17],
   ],
   // A barge with a mouth: wide scoop bow, box body. Built to carry, not fight.
   [UnitKind.Harvester]: [

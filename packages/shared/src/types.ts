@@ -85,6 +85,13 @@ export enum UnitKind {
   Cruiser = 2,
   AbyssalSubmersible = 3,
   Harvester = 4,
+  /**
+   * The cohort hull — the roster's one Biomass-priced entry (issue #352).
+   * Appended rather than slotted beside the Submersible because the value
+   * crosses the wire and sits in replays; renumbering would relabel every
+   * recorded hull.
+   */
+  Chorister = 5,
 }
 
 /** Prototype structure roster. Stats live in structures.ts. See docs/units.md. */

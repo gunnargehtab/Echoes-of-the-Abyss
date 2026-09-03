@@ -65,6 +65,38 @@ Abyssal Submersible (Directorate)
 - Speed: Medium
 - Notes: Born to depth; no refit required for abyssal pressure. Strong HYD synergy; benefits from Directorate listening mechanics.
 
+Chorister (Directorate)
+
+- Role: Cohort hull — the array. Picket, screen, and numbers
+- SIG: 16 / 24 / +15 (the floor of the 16–35 band every Directorate hull sits in,
+  habitats-art-brief.md; grown chitin over a pressure bladder has no engine to speak of)
+- HYD: 75 (a cohort is a listener before it is anything else — above the Light Scout's 70,
+  below the Submersible's 85, and the Cantor's +25 takes it to the 95 cap)
+- PR: 2 on the hull. The Directorate's PR-3 baseline lifts it to 3 for nothing
+  (systems-depth.md §3), so for them it is a deep hull that costs no crystal; anyone else
+  buying one through a rendering contract gets a Mid-Water hull, and the Abyssal band stays
+  crystal-gated (economy.md §7)
+- Cost: 30, plus 20 Biomass — the cheapest hull in the game in Nodules, and the only one
+  priced in the account that rises and falls with the map's health (economy.md §6, §8).
+  A Draymaw's rendering (22) pays for one, a Hollow's (35) for one and change, a Sounder's
+  (260) for a shift of thirteen. Through a rendering contract at 30%, the same Draymaw pays
+  for a third of one — which is the whole of why the hull is the Directorate's without a
+  faction lock (design notes)
+- Build time: 10s
+- Speed: Slow (the slowest combat hull in the roster — factions.md, "Very many, cheap, slow")
+- HP: 200
+- Hull: 50 m — the shortest in the roster, and beneath a Sounder's notice (bestiary.md §4:
+  the colossus grinds hulls of 95 m and up, which is the Submersible exactly)
+- Weapon: 20 damage at 450 m, 1.0 s cycle (prototype). Not a §9 band; the roster's own
+  arithmetic, and `ttkBands.test.ts` holds it: a Corvette kills one inside the Light Scout's
+  ≤ 4 s, a Chorister duel lasts as long as a Corvette duel, and one alone needs twenty
+  seconds against a Corvette. "Expendable" is a sum, not a claim
+- Notes: Grown, not built — the cohort programme's own hull (economy.md §2). Quiet alone and
+  loud in company: four idling in one Drift cell cross the ledger's 60 (bestiary.md §6), so
+  a cohort massed on the ground that pays for it wears that ground — economy.md §9's
+  guard-rail written into the hull. No torpedo tubes. Above 400 m the shallow penalty
+  applies to it as to every hull the Directorate crews.
+
 Harvester
 
 - Role: Resource production (economy)
@@ -226,10 +258,29 @@ Design notes
   them, and `packages/shared/src/economy.ts` is the one place they become a sum and the one
   rule for spending it — the server, the commander AI and the command bar all read that sum
   and never the columns (economy.md §8). Biomass is the cohort programme's account
-  (economy.md §6), and **no hull in this roster carries a Biomass price yet**: the cheap
-  cohort entry economy.md §6 promises is issue #352's decision, and `biomassCost` is where
-  its price goes once it is made. The Abyssal Submersible is not it — it is the
-  crystal-locked deep hull and stays priced as one.
+  (economy.md §6), and the Chorister is the one hull priced in it. The Abyssal Submersible
+  is not — it is the crystal-locked deep hull and stays priced as one.
+- **The cohort hull is the Chorister, and the decision is recorded here so it can be
+  overruled in one place (issue #352).** economy.md §6 called the Directorate "cheapest per
+  unit" while the Submersible, at 260 and 80 Crystal, was the faction's only hull and the
+  second most expensive in the game. Both sentences were true about different hulls, and the
+  roster lacked one of them; the alternative — reading §6 as *cheapest per point of value* —
+  would have left factions.md's "very many, cheap, slow" and campaign.md §6's "cheap
+  expendable units" describing a navy with nothing cheap in it. Three calls inside that one:
+  - **Nobody's by lock.** The four signature structures carry a faction lock; hulls never
+    have, and this one does not either. The rendering-contract rate (30%) already makes it
+    the Directorate's — a Draymaw pays them a Chorister and pays anyone else a third of one —
+    so a lock would be a second lever for an effect the rate carries, exactly as a tier bonus
+    would be for HYD (above).
+  - **PR-2 on the hull, not 3.** A PR-3 hull at 30 Nodules would sell the Abyssal band to any
+    navy with a rendering contract, and economy.md §7 makes going deep a decision somebody
+    pays for. The Directorate's baseline lifts it to 3 for free, which is what "born to it"
+    is supposed to buy them and nobody else.
+  - **Priced at one Draymaw, not one Hollow.** Twenty Biomass is the mid-water grazer the
+    skirmish Drift seeds fifteen of; at thirty-five, a healthy map would carry perhaps a
+    dozen renderings' worth of hull at a time, which is not "very many". Under a strained
+    region a Draymaw pays 16.5 and falls short, so the guard-rail bites at the first hull
+    rather than the tenth.
 
 ---
 

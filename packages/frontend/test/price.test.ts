@@ -101,4 +101,14 @@ describe('parity with the roster', () => {
     assert.equal(priceTag(priceOf(STRUCTURE_STATS[StructureKind.Cantor])), '300+120c');
     assert.equal(priceTag(priceOf(UNIT_STATS[UnitKind.Corvette])), '120');
   });
+
+  it('shows the Chorister’s Biomass, the roster’s one cohort price', () => {
+    // docs/units.md (#352). The button was worded for this the day the
+    // column shipped; this is the day it has something to say.
+    assert.equal(priceTag(priceOf(UNIT_STATS[UnitKind.Chorister])), '30+20b');
+    assert.equal(
+      shortfallLine('Chorister', banked(1000, 0, 16.5), priceOf(UNIT_STATS[UnitKind.Chorister])),
+      'Chorister: 4 biomass short'
+    );
+  });
 });

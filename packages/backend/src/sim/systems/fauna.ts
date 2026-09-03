@@ -87,8 +87,10 @@ export function isDriven(world: SimWorld, eid: number): boolean {
  * hull that fired, consumed by the ladder on its next step; what it means is
  * the species' business. The Hollow is the one animal it changes. A trigger
  * model can be shot at from outside its trigger, and until this a hull that
- * outranged 500 m — every gun, against the Directorate's ×0.4 — rendered every
- * Hollow on a map for nothing (docs/mission-intake.md §13, #353). `by` is 0
+ * outranged it — most guns reach past 500 m, and against the Directorate's
+ * ×0.4 the strike is not heard until 190 m, which every gun outranges —
+ * rendered every Hollow on a map for nothing (docs/mission-intake.md §13,
+ * #353). `by` is 0
  * when nothing with a hull fired it: a mine going off, a torpedo at the end of
  * its run.
  */
@@ -515,9 +517,9 @@ function hollowStage(
   const heard = Fauna.heard[eid]!;
   const stage = Fauna.stage[eid] as FaunaStage;
 
-  // Damage is a sound. A Hollow shot from outside its trigger — any gun that
-  // reaches past 500 m, which against the Directorate's ×0.4 is all of them —
-  // answers the wound the way it answers a loud hull passing the ambush: it
+  // Damage is a sound. A Hollow shot from outside its trigger — most guns
+  // reach past 500 m, and against the Directorate's ×0.4 the strike is not
+  // heard until 190 m, which every gun outranges — answers the wound the way it answers a loud hull passing the ambush: it
   // strikes, now, at strike loudness. The first contact keeps the trigger
   // model whole (quiet past the ambush is still quiet, loud far away is still
   // watched), and standing off becomes a choice with a cost rather than a

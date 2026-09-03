@@ -252,7 +252,7 @@ describe('the intake, as docs/mission-intake.md §2 musters it', () => {
     assert.equal(ATTENDING_INTAKE.parties.length, 1, '§2, §7: no second party in the water');
     assert.equal(player.units.length, 12, '§2: twelve is the year');
     for (const unit of player.units) {
-      assert.equal(unit.kind, UnitKind.AbyssalSubmersible, "§2: the faction's only hull");
+      assert.equal(unit.kind, UnitKind.AbyssalSubmersible, "§2: the faction's deep hull");
       assert.equal(unit.role, 'cohort', '§5: one role, and nothing marks a hull');
       assert.equal(unit.armed, true, '§9: weapons live — the campaign’s first combat');
       assert.equal(unit.pressureRating, undefined, '§2: PR-3 is the roster’s, no refit');
