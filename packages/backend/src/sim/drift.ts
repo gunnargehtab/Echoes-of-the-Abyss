@@ -54,19 +54,33 @@ export class DriftHealth {
   }
 
   /**
-   * Sustained noise wears a region down, and everywhere recovers slowly.
+   * Sustained noise wears a region down, and quiet ground recovers slowly.
    *
    * The threshold matters: quiet play costs the map nothing at all, so a
    * player who chooses to be poor and safe is also choosing not to strip the
    * ground they are standing on. Everything that makes you strong makes you
    * loud, and loud is what kills the Drift.
+   *
+   * A cell is either wearing or healing, never both. Applying recovery under
+   * the drain (as this did until #365) meant the first three points over the
+   * threshold were cancelled, so the effective threshold was 63 while every
+   * document said 60 — and a base sitting over the line was being healed by
+   * the same tick that wore it.
+   *
+   * Dead is permanent for the match, as §6's table says: a cell at 0 has no
+   * fauna left to recover *from*, and the campaign carries it to the next
+   * mission on this map that way.
    */
   tick(dt: number, noiseByRegion: Float32Array): void {
     for (let i = 0; i < this.health.length; i++) {
-      const excess = Math.max(0, (noiseByRegion[i] ?? 0) - DRIFT.HEALTH_SIG_THRESHOLD);
-      const drain = excess * DRIFT.HEALTH_SIG_DRAIN_PER_S * dt;
-      const recovery = DRIFT.HEALTH_RECOVERY_PER_S * dt;
-      this.health[i] = Math.min(100, Math.max(0, this.health[i]! - drain + recovery));
+      const health = this.health[i]!;
+      if (health <= 0) continue;
+      const excess = (noiseByRegion[i] ?? 0) - DRIFT.HEALTH_SIG_THRESHOLD;
+      if (excess > 0) {
+        this.health[i] = Math.max(0, health - excess * DRIFT.HEALTH_SIG_DRAIN_PER_S * dt);
+      } else {
+        this.health[i] = Math.min(100, health + DRIFT.HEALTH_RECOVERY_PER_S * dt);
+      }
     }
   }
 

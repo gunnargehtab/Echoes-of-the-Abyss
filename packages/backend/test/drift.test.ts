@@ -27,8 +27,9 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { DRIFT, Faction, FaunaSpecies, SIM, UnitKind } from '@echoes/shared';
+import { DRIFT, Faction, FaunaSpecies, MISSION, SIM, UnitKind } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
+import { DriftHealth } from '../src/sim/drift.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { spawnFauna, spawnUnit } from '../src/sim/world.ts';
 import { Acoustic, Position } from '../src/sim/components.ts';
@@ -321,5 +322,92 @@ describe('Drift Health', () => {
       Math.abs(match.world.terrain.propagationAt(MIDDLE_X, MIDDLE_Y) - baselinePf) < 1e-6,
       'local PF rose back to baseline'
     );
+  });
+});
+
+/**
+ * The ledger's own arithmetic, against `DriftHealth` directly so every figure
+ * is exact. The match-level cases above establish direction; these pin the
+ * rate, because the rate is the mechanic (#365): at 0.06 a second, applied
+ * under the drain, a cell stripped to nothing at the start of a long mission
+ * was Healthy before it ended, Dead was not "permanent for the match", and
+ * the threshold was 63 while every document said 60.
+ */
+describe('Drift Health recovery', () => {
+  const DT = 1 / SIM.TICK_HZ;
+  const CELLS = DRIFT.HEALTH_REGIONS * DRIFT.HEALTH_REGIONS;
+  const QUIET = new Float32Array(CELLS);
+
+  /** Float32 arithmetic in the exact order `tick` performs it. */
+  function f32(value: number): number {
+    return Math.fround(value);
+  }
+
+  it('is far slower than a match lasts — §6, as a number', () => {
+    // The sentence the constant contradicted. Dead is permanent (below), so
+    // the bound is measured from the last living point: a cell one point from
+    // Dead at the start of the longest mission campaign.md §10 allows is still
+    // Failing when it ends, and campaign.md §2 rule 5 has something to carry.
+    const atTheEnd = 1 + DRIFT.HEALTH_RECOVERY_PER_S * MISSION.LENGTH_MAX_S;
+    assert.ok(
+      atTheEnd < DRIFT.HEALTH_FAILING,
+      `a cell one point from Dead is ${atTheEnd} after ${MISSION.LENGTH_MAX_S} s, ` +
+        `which must still be Failing (< ${DRIFT.HEALTH_FAILING})`
+    );
+  });
+
+  it('heals a quiet cell at exactly the authored rate, and not past the cap', () => {
+    const drift = new DriftHealth(8000, 8000);
+    drift.recordKill(0, 0);
+    const expected = new Float32Array([DRIFT.HEALTH_START - DRIFT.HEALTH_PER_KILL]);
+    for (let i = 0; i < 5 * SIM.TICK_HZ; i++) {
+      drift.tick(DT, QUIET);
+      expected[0] = expected[0]! + DRIFT.HEALTH_RECOVERY_PER_S * DT;
+      assert.equal(drift.at(0, 0), expected[0], `tick ${i}: the rate, no more and no less`);
+    }
+    // The kill's 4 comes back in HEALTH_PER_KILL / HEALTH_RECOVERY_PER_S
+    // seconds — about three and a half minutes — and then the cell keeps
+    // climbing to 100, where it stops.
+    for (let i = 0; i < 20 * 60 * SIM.TICK_HZ; i++) drift.tick(DT, QUIET);
+    assert.equal(drift.at(0, 0), 100, 'the cap');
+  });
+
+  it('wears a loud cell at exactly the drain, with no recovery under it', () => {
+    // The offset #365 measured: recovery in the same pass as the drain meant a
+    // sum had to stand 0.06 / 0.02 = 3 over the threshold before the cell wore
+    // at all — an effective threshold of 63 that nothing documented. One point
+    // over now wears, by exactly one point's worth.
+    const drift = new DriftHealth(8000, 8000);
+    const noise = new Float32Array(CELLS);
+    noise[0] = DRIFT.HEALTH_SIG_THRESHOLD + 1;
+    drift.tick(DT, noise);
+    assert.equal(
+      drift.at(0, 0),
+      f32(DRIFT.HEALTH_START - 1 * DRIFT.HEALTH_SIG_DRAIN_PER_S * DT),
+      'one point over the threshold wears the cell by one point of drain'
+    );
+    assert.ok(drift.at(0, 0) < DRIFT.HEALTH_START, 'and it is a loss, not a wash');
+
+    // Exactly at the threshold is quiet: §6's "over 60" means over.
+    noise[0] = DRIFT.HEALTH_SIG_THRESHOLD;
+    const before = drift.at(0, 0);
+    drift.tick(DT, noise);
+    assert.equal(drift.at(0, 0), f32(before + DRIFT.HEALTH_RECOVERY_PER_S * DT));
+  });
+
+  it('never raises the Dead — §6: "permanent for the match"', () => {
+    const drift = new DriftHealth(8000, 8000);
+    while (drift.at(0, 0) > 0) drift.recordKill(0, 0);
+    assert.equal(drift.at(0, 0), 0);
+
+    // The longest mission the campaign allows, in silence.
+    for (let i = 0; i < MISSION.LENGTH_MAX_S * SIM.TICK_HZ; i++) drift.tick(DT, QUIET);
+
+    assert.equal(drift.at(0, 0), 0, 'a Dead cell stays Dead');
+    assert.equal(drift.yieldMultiplier(0, 0), 0, 'and pays nothing');
+    assert.equal(drift.spawnsAllowed(0, 0), false, 'and admits nothing');
+    // Only that cell: death is a thing that happens to a place, and the
+    // neighbour it did not happen to has been healing the whole time.
+    assert.equal(drift.at(7999, 7999), 100, 'an untouched neighbour reached the cap');
   });
 });

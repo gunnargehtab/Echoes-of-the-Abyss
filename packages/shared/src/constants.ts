@@ -1031,8 +1031,22 @@ export const DRIFT = {
   /** Health lost per second per unit of SIG above the threshold, in a region. */
   HEALTH_SIG_THRESHOLD: 60,
   HEALTH_SIG_DRAIN_PER_S: 0.02,
-  /** Recovery. §6: "far more slowly than a match lasts." */
-  HEALTH_RECOVERY_PER_S: 0.06,
+  /**
+   * Recovery, per second, for a cell whose SIG sum is under the threshold.
+   *
+   * TUNABLE, but bounded by the design: §6 says the map "recovers slowly — far
+   * more slowly than a match lasts", and campaign.md §2 rule 5 carries Drift
+   * Health between missions on the same map, so what a match does to the
+   * ground has to outlast the match. 0.02 puts Dead-to-Failing at about 42
+   * minutes and Dead-to-Healthy past an hour against `MISSION.LENGTH_MAX_S`'s
+   * 25, and heals a kill's 4 in about three and a half. The previous 0.06 had
+   * a stripped cell Healthy before a long mission ended (#365).
+   *
+   * Recovery and drain never apply in the same tick — a cell over the
+   * threshold wears and one under it heals — so the threshold is exactly the
+   * 60 the documents state, not 60 plus whatever recovery would cancel.
+   */
+  HEALTH_RECOVERY_PER_S: 0.02,
   /** §6's table, as thresholds. */
   HEALTH_STRAINED: 75,
   HEALTH_FAILING: 50,
