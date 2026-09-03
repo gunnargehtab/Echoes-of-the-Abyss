@@ -287,6 +287,10 @@ Two other readings were tried and measured first. Scaling the ratio by a constan
 
 No creature is seeded within 2,600 m of a starting position. A creature that begins the match on top of a base was not *drawn* to anything; §5's proposition is that fauna answer your noise, which needs them to start somewhere else and come to you.
 
+### How the ledger reads noise
+
+§6's "sustained high SIG" is read as a **total**: every tick, `Match.driftTick` sums the raw SIG of everything a player owns in each cell of a 4 × 4 grid over the map, and the cell drains at 0.02 a second for every point the sum stands over 60, recovers at 0.06 a second, and loses 4 flat for each kill in it. Fauna are left out, or the Drift would eat itself. Because it is a sum, a formation wears a cell that no one of its hulls would — three Abyssal Submersibles cruising are 84 — and a base holds its own region down for as long as it runs, which is the consequence `drift.test.ts` pins exactly rather than directionally. The first mission that consequence priced was [mission-intake.md](mission-intake.md), whose §13 records the decision to leave the ledger as it is and say so in the document (#350).
+
 ### Population and cost
 
 Capped at 48 live creatures. Fauna are entities in the Echo pass, which owns a 2 ms budget, so the cap turns "should be fine" into a guarantee. Measured with a full population on the Ventfront Divide and four players: **0.7–1.0 ms worst case**, against 2 ms.

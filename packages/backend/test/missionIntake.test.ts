@@ -619,9 +619,13 @@ describe('the shift, run out — docs/mission-intake.md §4, §6, §8, §9', () 
     });
     assert.ok(payments.length >= 7, `§3: seven renderings, got ${payments.length}`);
     // Every rendering is the roster's thirty-five, or the region ledger's
-    // discount of it — §13's row: three hulls cruising together already wear
-    // the cell they cross, and a rendering in a worn cell pays three quarters.
-    // This mission does not read the ledger out and is priced by it anyway.
+    // discount of it — §3 and §13 (#350): three hulls cruising together are 84
+    // of SIG against a threshold of 60, so a column wears the cell it works
+    // and a rendering in a worn cell pays three quarters. The mission does not
+    // read the ledger out and is priced by it anyway, and the document says
+    // so rather than moving the band: seven of eight is slack only spread,
+    // and this column is the measurement it quotes. Each figure is stated
+    // here so a retune of the ledger is noticed rather than discovered.
     for (const payment of payments) {
       assert.ok(
         payment === HOLLOW.biomass || payment === HOLLOW.biomass * 0.75,
@@ -629,6 +633,12 @@ describe('the shift, run out — docs/mission-intake.md §4, §6, §8, §9', () 
       );
     }
     assert.ok(payments.includes(HOLLOW.biomass), '§3: thirty-five, the roster’s figure');
+    assert.ok(
+      payments.includes(HOLLOW.biomass * 0.75),
+      '§13 (#350): a column that works a wall together is paid the ledger’s discount'
+    );
+    const seven = payments.slice(0, 7).reduce((sum, payment) => sum + payment, 0);
+    assert.ok(seven < 245, `§3: seven of eight is slack only spread — a column banked ${seven}`);
     assert.ok(
       paid >= 245,
       `§3: the band, from the walls — ${paid} banked, as ${payments.join(', ')}`
@@ -703,7 +713,7 @@ describe('the shift, run out — docs/mission-intake.md §4, §6, §8, §9', () 
     ]);
   });
 
-  it('is paid the band by twelve live guns at the muster — the finding §13 records', () => {
+  it('kills the colossus with twelve live guns at the muster and is paid nothing over the ground they stood on — the finding §13 records', () => {
     // Stated here rather than discovered, in the manner of §3's note. The
     // bestiary rates a Sounder at 9,000 HP and says it "cannot be reliably
     // killed by any single player before the twenty-minute mark"
@@ -715,13 +725,25 @@ describe('the shift, run out — docs/mission-intake.md §4, §6, §8, §9', () 
     // this literal's to retune; docs/mission-intake.md §13 carries it as a
     // design call. This test is the thing that notices the day it is settled.
     //
-    // What it pays is the ledger's second finding: twelve hulls idling at 22
-    // are 264 of SIG in one cell against a threshold of 60, so an intake that
-    // never moved has stripped the ground under the muster to nothing inside
-    // the first minute, and a colossus that dies over dead ground pays
-    // nothing. The kill is the finding either way; the pay depends on where
-    // it falls, and neither number is this mission's to read out.
-    const run = runOut(intakeMatch());
+    // What it pays is the region ledger's, settled in §13 (#350): the twelve
+    // seats stand six either side of x = 2,500, so twelve hulls idling at 22
+    // are 132 of SIG in each of the muster's two cells against a threshold of
+    // 60 — 72 over, 1.44 a second — and an intake that never moved has
+    // stripped both to nothing inside the first minute. A colossus that dies
+    // over dead ground pays nothing. The kill is the finding either way; the
+    // pay depends on where it falls, and neither number is this mission's to
+    // read out. The ledger is what keeps this exploit from paying the band,
+    // which is why #350 left it alone; retune it and this test says so.
+    const run = runOut(intakeMatch(), (own, match) => {
+      if (own.tick !== T(1, 10)) return;
+      for (const x of [LINE_X - 100, LINE_X + 100]) {
+        assert.equal(
+          match.world.drift.at(x, MUSTER.y),
+          0,
+          `#350: the muster's cell at x=${x} is stripped inside the first minute`
+        );
+      }
+    });
     assert.equal(run.last.units.length, 12, 'nothing reached the line');
     let colossus = 0;
     for (let eid = 0; eid <= run.match.world.maxEid; eid++) {
@@ -736,5 +758,6 @@ describe('the shift, run out — docs/mission-intake.md §4, §6, §8, §9', () 
       SOUNDER.biomass * run.match.world.drift.yieldMultiplier(LINE_X, MUSTER.y),
       'paid for the colossus at the rate of the ground it died over'
     );
+    assert.equal(run.last.biomass, 0, '#350: and the ground it died over was dead');
   });
 });
