@@ -41,6 +41,7 @@ function ttkS(hp: number, damage: number, cooldownS: number): number {
 const scout = statsFor(UnitKind.LightScout);
 const corvette = statsFor(UnitKind.Corvette);
 const cruiser = statsFor(UnitKind.Cruiser);
+const chorister = statsFor(UnitKind.Chorister);
 const turret = structureStatsFor(StructureKind.SentinelTurret);
 
 describe('§9 time-to-kill bands', () => {
@@ -116,6 +117,38 @@ describe('§9 time-to-kill bands', () => {
     assert.ok(
       (cyclesNeeded - 1) * corvette.attackCooldownS <= windowS,
       'and it should fit inside the terminal window rather than being theoretical'
+    );
+  });
+
+  it('prices "expendable" as arithmetic: the cohort hull dies inside the Scout’s band', () => {
+    // Not a §9 band — the Chorister postdates the table — but the claims
+    // docs/units.md makes for it (#352), held here so a retune is noticed. A
+    // Corvette kills one as fast as it kills a scout; a Chorister duel lasts
+    // as long as a Corvette duel, so a cohort against a cohort is the same
+    // fight at a sixth of the price; and one alone takes twenty seconds
+    // against a Corvette, which is the arithmetic of "very many".
+    const dies = ttkS(chorister.maxHp, corvette.attackDamage, corvette.attackCooldownS);
+    assert.ok(dies <= 4, `a Corvette should kill a Chorister in ≤ 4 s, got ${dies.toFixed(2)} s`);
+
+    const duel = ttkS(chorister.maxHp, chorister.attackDamage, chorister.attackCooldownS);
+    assert.ok(duel >= 8 && duel <= 10, `a Chorister duel should sit in 8-10 s, got ${duel} s`);
+
+    const alone = ttkS(corvette.maxHp, chorister.attackDamage, chorister.attackCooldownS);
+    assert.ok(alone >= 18, `one Chorister should need ~20 s on a Corvette, got ${alone} s`);
+
+    // Numbers are the answer, and they are a worse answer to an anchor than
+    // two Corvettes are: three cohort hulls cost less than one Corvette in
+    // Nodules and still do not breach the ≥ 25 s floor's spirit faster than a
+    // second Corvette would.
+    const threeOnCruiser = ttkS(
+      cruiser.maxHp,
+      chorister.attackDamage * 3,
+      chorister.attackCooldownS
+    );
+    const twoCorvettes = ttkS(cruiser.maxHp, corvette.attackDamage * 2, corvette.attackCooldownS);
+    assert.ok(
+      threeOnCruiser > twoCorvettes,
+      'three cohort hulls are slower on a Cruiser than two Corvettes'
     );
   });
 

@@ -131,6 +131,12 @@ Scuttling
 - The second way a commander leaves a match: a position with no harvester alive, nothing on a production line or rising, not the price of a harvester in the bank and nothing landing in any stockpile, held for sixty seconds while another commander is still earning and fields at least as many armed hulls, ends with the crew scuttling and the commander eliminated exactly as a lost Bastion eliminates them (game-identity.md "Match Structure").
 - Automatic and unilateral. It is not an offer of surrender, and it is distinct from a *resignation*, which is a player leaving a live match (tech-stack.md).
 
+Cohort Hull
+
+- Any hull the Directorate crews is a cohort's — a cohort is assigned at birth to a depth band and belongs to it (factions.md) — and mission documents use "cohort hull" in that sense for whatever the year is seated in.
+- The roster's **cohort hull** is the **Chorister**: the one entry priced in Biomass (30 Nodules and 20 Biomass), the cheapest hull in the game in Nodules, PR-2 on the hull and PR-3 in the Directorate's hands. The Abyssal Submersible is not it — it is the crystal-locked deep hull (units.md, economy.md §6, §8; issue #352).
+- Not faction-locked. The rendering-contract rate (30%) is what makes it the Directorate's: the price is the same for everyone and the income that pays it is not.
+
 Silence-Debt
 
 - The Rift's social ledger for interrupting a listener: you owe the silence back, and you repay it by being quiet the next time that person listens (culture.md §5).

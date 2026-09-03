@@ -55,6 +55,9 @@ const HULL_ART_URL: Record<UnitKind, string> = {
   [UnitKind.Corvette]: corvetteUrl,
   [UnitKind.Cruiser]: cruiserUrl,
   [UnitKind.AbyssalSubmersible]: shadowUrl,
+  // The Directorate's plate class, same as the Submersible; the outline is
+  // what tells the two apart.
+  [UnitKind.Chorister]: shadowUrl,
   [UnitKind.Harvester]: siegeUrl,
 };
 

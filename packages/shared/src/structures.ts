@@ -288,6 +288,7 @@ export const PRODUCIBLE: Partial<Record<StructureKind, readonly UnitKind[]>> = {
     UnitKind.Corvette,
     UnitKind.Cruiser,
     UnitKind.AbyssalSubmersible,
+    UnitKind.Chorister,
     UnitKind.Harvester,
   ],
 };

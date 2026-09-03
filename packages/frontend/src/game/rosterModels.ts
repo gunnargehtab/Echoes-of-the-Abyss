@@ -74,6 +74,10 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   [UnitKind.Corvette]: 'corvette',
   [UnitKind.Cruiser]: 'cruiser',
   [UnitKind.AbyssalSubmersible]: 'abyssal-submersible',
+  // No approved model yet: the slug resolves to no file, so the Chorister
+  // stays on the procedural sprite (graphics-standards.md, gate 1) until one
+  // passes intake.
+  [UnitKind.Chorister]: 'chorister',
   [UnitKind.Harvester]: 'harvester',
 };
 

@@ -15,10 +15,10 @@
  *   between the price the shell shows and the price the server charges" rests
  *   on: both sides read this one sum.
  *
- * The roster's own Biomass column is empty until issue #352 prices a cohort
- * hull, so the Biomass prices here are synthetic. That is the point: the rule
- * has to hold before the entry that will use it exists, and the last test
- * below is what notices the day it does.
+ * The Biomass prices in the rule tests are synthetic on purpose: the rule
+ * held before the roster carried an entry that used it, and it must not
+ * depend on one. The last block is where the roster's own entry — the
+ * Chorister, issue #352 — is held to what docs/units.md says of it.
  */
 
 import { describe, it } from 'node:test';
@@ -28,6 +28,7 @@ import {
   ECONOMY_ACCOUNTS,
   STRUCTURE_STATS,
   UNIT_STATS,
+  UnitKind,
   affords,
   charge,
   priceOf,
@@ -161,21 +162,50 @@ describe('the roster’s prices', () => {
     }
   });
 
-  it('do not price anything in Biomass yet — issue #352 is where that is decided', () => {
-    // A tripwire, not a rule. The Biomass column shipped ahead of the entry
-    // that will use it: economy.md §6 promises a cheap cohort hull and
-    // units.md does not carry one, and which hull, at what price, is a design
-    // call and not an unattended one (docs/mission-intake.md §13). The day a
-    // price lands here, delete this test along with the "no hull carries one
-    // yet" notes in units.ts, docs/units.md and docs/economy.md §8, and check
-    // that the HUD's BIOMASS readout appears for a player who has nothing to
-    // read it against yet.
-    for (const stats of roster) {
-      assert.equal(
-        priceOf(stats).biomass,
-        0,
-        `${stats.name} is priced in Biomass: the roster's first cohort entry needs its docs`
+  it('price exactly one hull in Biomass, and it is the cohort hull', () => {
+    // docs/economy.md §6: Biomass is what a cohort costs, not a discount on
+    // what a hull costs. The Chorister is the roster's cohort entry (#352);
+    // the Abyssal Submersible is the crystal-locked deep hull and stays
+    // priced as one, so a second Biomass price here is a roster edit that
+    // needs its docs, and a Submersible with one is the two hulls' roles
+    // drifting together.
+    const inBiomass = roster.filter((stats) => priceOf(stats).biomass > 0);
+    assert.deepEqual(
+      inBiomass.map((stats) => stats.name),
+      ['Chorister'],
+      'the Biomass column names the cohort hull and nothing else'
+    );
+    const submersible = priceOf(UNIT_STATS[UnitKind.AbyssalSubmersible]);
+    assert.ok(submersible.crystal > 0 && submersible.biomass === 0);
+  });
+
+  it('make the cohort hull the cheapest hull in Nodules — §6’s "cheapest per unit"', () => {
+    // The sentence issue #352 was filed over. It is a claim about Nodules,
+    // the account every hull is written in, and it has to hold against the
+    // Light Scout: a cohort hull dearer than a scout is not what "very many,
+    // cheap, slow" (docs/factions.md) describes.
+    const chorister = UNIT_STATS[UnitKind.Chorister];
+    for (const stats of Object.values(UNIT_STATS)) {
+      if (stats.kind === UnitKind.Chorister) continue;
+      assert.ok(
+        priceOf(stats).nodules > priceOf(chorister).nodules,
+        `${stats.name} (${stats.cost}) undercuts the cohort hull (${chorister.cost})`
       );
     }
+  });
+
+  it('price the cohort hull at one mid-water rendering, refused under a strained region', () => {
+    // docs/units.md, design notes: one Draymaw at full rate pays for one,
+    // and the same Draymaw under a strained region (three quarters,
+    // docs/bestiary.md §6) falls short — so the guard-rail bites at the
+    // first hull, not the tenth. Through a rendering contract (30%) it pays
+    // for a third of one, which is how the hull is the Directorate's without
+    // a faction lock.
+    const price = priceOf(UNIT_STATS[UnitKind.Chorister]);
+    const draymaw = 22;
+    assert.ok(affords(banked(1000, 0, draymaw), price), 'a Draymaw pays for a Chorister');
+    assert.ok(!affords(banked(1000, 0, draymaw * 0.75), price), '...but not on worn ground');
+    assert.ok(!affords(banked(1000, 0, draymaw * 0.3), price), '...nor through a contract');
+    assert.ok(affords(banked(1000, 0, draymaw * 0.3 * 3.1), price), 'three and a bit do');
   });
 });

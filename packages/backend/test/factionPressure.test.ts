@@ -32,6 +32,7 @@ const ROSTER = [
   UnitKind.Corvette,
   UnitKind.Cruiser,
   UnitKind.AbyssalSubmersible,
+  UnitKind.Chorister,
   UnitKind.Harvester,
 ] as const;
 
@@ -61,6 +62,21 @@ describe('the doc’s baseline table is the one that shipped', () => {
         );
       }
       assert.equal(effectivePressureRating(UnitKind.AbyssalSubmersible, faction), 3);
+    }
+  });
+
+  it('lifts the cohort hull to PR-3 for the Directorate and nobody else', () => {
+    // docs/units.md (#352): PR-2 on the hull, so a Chorister bought through a
+    // rendering contract is a Mid-Water hull and the Abyssal band stays
+    // crystal-gated (docs/economy.md §7); the Directorate's baseline is what
+    // "born to it" buys them.
+    assert.equal(statsFor(UnitKind.Chorister).pressureRating, 2);
+    assert.equal(effectivePressureRating(UnitKind.Chorister, Faction.Directorate), 3);
+    for (const faction of [Faction.Bathyarch, Faction.Pelagia, Faction.Hadron]) {
+      assert.ok(
+        effectivePressureRating(UnitKind.Chorister, faction) < 3,
+        `${Faction[faction]} bought the deep for 30 nodules`
+      );
     }
   });
 });
