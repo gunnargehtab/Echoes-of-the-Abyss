@@ -620,7 +620,7 @@ cutting anything today — no hazard sites, and `fauna: false`.
 | The party, working | the bench, y 1,750 and y 2,250 | 1,750 m | 2,150 under both rows, 2,400 over the Deep End | PR-2 ✓ — `requiredPressureRating(1750)` is 2, the band's last fifty metres, on purpose |
 | The seven coils | 750/1,375/2,000/3,250 at y 1,400; 1,500/2,750/4,000 at y 2,600 | 1,700 m | 2,050 / 0 | Drift; the species' working depth, band 1,250–2,150 ✓ |
 | The watch | (4,800, 2,000) and (4,850, 2,080), and every leg | 2,100 m | 2,400 on station, 2,150 on the axis | PR-3 ✓ |
-| The basin | (4,700, 2,000), then driven along y 2,000 | 2,000 m, then 1,800 m | 2,400, then 2,150 | Drift; the species' working depth, band 1,300–2,700 ✓ |
+| The basin | **(4,700, 2,700)** — see below — then driven along its own y | 2,000 m, then 1,800 m | 2,400, then 2,150 | Drift; the species' working depth, band 1,300–2,700 ✓ |
 
 **Why this ground argues the mission.** Three reasons and they are the three facts of §1.
 
@@ -654,6 +654,27 @@ cut, no ground beat. The only place in the mission is the one the party cannot r
 marker rather than a rectangle.
 
 ---
+
+**The basin is the one seat this document had wrong, and the literal moved it.** This table first
+put it at (4,700, 2,000): a hundred metres in plan and a hundred in depth from the watch's station,
+and directly on the line the watch walks west at 01:00. A placed Sounder is released to its own
+trigger model on the first mission pass (§9), and the species carries HYD 90 against an interest of
+55 and a commit of 75, with 260 m of reach and 220 damage a second — so a Submersible idle at 22
+interests it from 362 m and commits it from 298. Seated where this table first put it, the basin
+hears the watch on the first pass and has eaten both hulls by 00:12 of *every* run. The six legs
+then address a dead tag, the Watch-Speaker's 04:00 line is read by a hull three and a half minutes
+out of the water, §8's "the sweep files on every run" becomes never, and `the-count` can never be
+met, because the watch is the only observer on this map that could classify anybody.
+
+So the basin sits at the southern end of the same rectangle: still the Deep End, still 2,000 m,
+still x 4,700, so the transit still stands under the Head at 18:00. It is 714 m from the station in
+three dimensions and never nearer than about 620 m to any authored leg, which is half as loud again
+as a Submersible under way can reach. The cost is that the 16:30 transit converges on the axis
+rather than running down it, so §8's "only if the Voice is on the axis" reads, here, "only if the
+Voice is south of the southern row" — and the swept line clears every one of the nineteen points
+for the whole ninety seconds either way. The alternative was moving the watch, which would have
+cost §6's row 19, §9's six leg coordinates and this table's own row; moving one animal cost a
+coordinate.
 
 ## 12. The Briefing
 
@@ -824,6 +845,7 @@ today, and what it cannot do is be remembered.**
 | Campaign progression | **The record is built** (#371, #374) **and has since grown its first sibling key** (#395): a per-mission history in `packages/frontend/src/progression/store.ts`, written from the `missionOver` payload and read by the campaign board, with `Progression.scenes` beside `missions` as a second collection written and read the same way. That is the pattern the first row above proposed, running — `Progression` is a container of collections precisely so that a spent roster arrives as a sibling key, which is what its own comment and [campaign.md](campaign.md) §11 both say, and an absent key reads as empty rather than as a migration. What is missing is the other half and it is the whole of the first row: nothing writes survivors into that record and nothing reads it back into a roster or a briefing, so Sull's authorisation in mission 6 still stands on this tide having happened and is still carried by prose |
 | In-mission character speech, heard | Text only, the standing status ([mission-sorrowgate.md](mission-sorrowgate.md) §13). Five `say` beats on the clock and three on standing rules, all of them read |
 | The mix — a trench that carries, seven silences on the walls, and one interval nineteen times | Not started ([audio-direction.md](audio-direction.md)). The Fields' pitched bed is [mission-aptitude.md](mission-aptitude.md) §13's problem restated at 1.60, with the hardest single cue in the campaign under it: a held tone at 80 that has to read as a rite rather than as a klaxon, nineteen times, without the nineteenth sounding like the first |
+| **The basin's seat, and the mission it was quietly costing** | **A finding this literal made and acted on, stated in both places.** §11 first seated the basin at (4,700, 2,000) — a hundred metres in plan and a hundred in depth from the watch's station, on the line the watch walks at 01:00. A placed Sounder is released to its own trigger model on the first pass, and at HYD 90 against an interest of 55 it commits from 298 m and kills at 220 a second: both watch hulls were gone by 00:12 of every run, which took the six legs, the Watch-Speaker's 04:00 line, the sweep's filing and `the-count` with them. `nineteen.ts` seats it at (4,700, 2,700) instead — same rectangle, same depth, same x — and is the one coordinate in the literal that does not transcribe §11. §11 now carries the reasoning and the cost: the 16:30 transit converges on the axis rather than running down it. Moving the watch instead would have cost §6's row 19, §9's six legs and §11's own row |
 
 ---
 

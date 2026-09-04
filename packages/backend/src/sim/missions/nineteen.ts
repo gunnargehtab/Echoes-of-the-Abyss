@@ -57,8 +57,10 @@
  *   fewer" and cannot say which nineteen, which §13 states is exactly the
  *   sentence the Order would say.
  *
- * And two corrections this literal makes against its own document, so that a
- * reviewer sees them here rather than deriving them under a wall:
+ * And four corrections this literal makes against its own document, so that a
+ * reviewer sees them here rather than deriving them under a wall. The first
+ * three are §13's own row and cost the mission nothing; the fourth is a
+ * coordinate, and it is the only place this literal does not transcribe §11:
  *
  * - §6's row 2 says the coil beyond Ilar Orme's point reaches "eighty-three
  *   metres" past it. Eighty-three is 433 − 350: the reach the document carried
@@ -71,6 +73,18 @@
  *   §11 lists that wall's four at 750, 1,375, 2,000 and 3,250, so it is the
  *   second. The rest of the row is right — it is the one coil on the map no
  *   second interval shares.
+ * - §6's closing paragraph measures the drift off a free point to the edge of
+ *   its own disc — "610 m off its coil, which is two hundred and ten metres of
+ *   drift" — rather than to the reach. The number that decides anything is
+ *   610.3 − 497.5, which is **113 m**, so the quiet cruelty is nearly twice
+ *   what the sentence claims. The test re-derives it.
+ * - **§11 seats the basin at (4,700, 2,000) and this literal does not**, for
+ *   the reason written on `BASIN` below: that point is 141 m in three
+ *   dimensions from the watch's station and sits on the line the watch walks
+ *   at 01:00, and a released Sounder eats both watch hulls inside twelve
+ *   seconds of every run — which takes the legs, the Watch-Speaker, the sweep
+ *   and `the-count` with them. It is seated at (4,700, 2,700) instead: same
+ *   rectangle, same depth, same x, and out of a Submersible's reach.
  */
 
 import {
@@ -146,6 +160,38 @@ const BASIN_TRANSIT_DEPTH_M = 1800;
 
 /** §5, §11 — the watch's station at the eastern end, and the leg it returns to. */
 const STATION = { one: { x: 4800, y: AXIS_Y }, two: { x: 4850, y: 2080 } };
+
+/**
+ * The basin's own water — **the one coordinate in this literal that is not
+ * §11's, and the reason is that §11's cannot be run.**
+ *
+ * §11 seats the basin at (4,700, 2,000): a hundred metres in plan and a
+ * hundred in depth from the watch's station, and directly on the line the
+ * watch walks west at 01:00. A placed Sounder is released to its own trigger
+ * model on the first mission pass (§9, §13), and `fauna.ts` gives it HYD 90
+ * against `interest` 55 and `commit` 75, with an `attackRangeM` of 260 and 220
+ * damage a second — so a Submersible idle at 22 interests it from 362 m and
+ * commits it from 298 m. Seated where §11 puts it, the basin hears the watch
+ * on the first pass and has eaten both hulls by 00:12 of every run: the six
+ * `move` legs then address a dead tag, the Watch-Speaker's 04:00 line is read
+ * by a hull that has not been in the water for three and a half minutes, the
+ * sweep can never file — §8's "the sweep files on every run" becomes never —
+ * and `the-count` can never be met, because the watch is the only observer on
+ * the map that could classify anybody.
+ *
+ * So the basin is seated at the southern end of the same rectangle instead:
+ * still the Deep End, still 2,000 m, still x 4,700 so the transit still stands
+ * under the Head at 18:00 (x ≈ 2,032). It is 714 m from the station in three
+ * dimensions and never nearer than ~620 m to any authored leg, which is half
+ * as loud again as a Submersible under way can reach (421 m at Interest). The
+ * cost is that the 16:30 transit converges on the axis rather than running
+ * down it, so §8's "only if the Voice is on the axis" is, in this literal,
+ * "only if the Voice is south of the southern row"; the swept line clears
+ * every one of the nineteen points for the whole ninety seconds either way.
+ * The other correction — moving the watch — would cost §6's row 19, §9's six
+ * leg coordinates and §11's own table row, and the document should choose.
+ */
+const BASIN = { x: 4700, y: 2700 };
 
 /**
  * One of the nineteen — §6's table, as a point with a radius and a carrier.
@@ -649,11 +695,11 @@ export const CHORD_NINETEEN: MissionDefinition = {
       kind: 'creature',
       tag: 'the-basin',
       species: FaunaSpecies.Sounder,
-      spawnAt: { x: 4700, y: AXIS_Y, depthM: BASIN_DEPTH_M },
-      driveTo: { x: 4700, y: AXIS_Y },
+      spawnAt: { x: BASIN.x, y: BASIN.y, depthM: BASIN_DEPTH_M },
+      driveTo: { x: BASIN.x, y: BASIN.y },
       untilTick: 0,
       loud: false,
-      note: 'Cruising at 45 in the Deep End — a Contact to the Voice from 5,655 m, which is the whole eastern half of the map, and nothing anybody has to answer',
+      note: "Cruising at 45 in the Deep End — a Contact to the Voice from 5,655 m, which is the whole eastern half of the map, and nothing anybody has to answer. Seated at the southern end of the Deep End rather than on the axis, for the reason written on BASIN: released to its own trigger model, it eats the watch inside twelve seconds from §11's own coordinate",
     },
 
     // 01:00 — the watch walks west, 1,300 m in twenty-two seconds at 60 m/s,
