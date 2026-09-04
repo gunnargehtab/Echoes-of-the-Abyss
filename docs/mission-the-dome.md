@@ -16,6 +16,10 @@ Ledger's *Baffle*, from the picket's side ([world-map.md](world-map.md);
 **Mission id:** `attending-the-dome` — namespaced by campaign after `attending-intake`, per
 [campaign.md](campaign.md) §1.
 
+**Premise, for the entry that offers it:** *The Fourth is closed while the inquiry runs, and
+what enters it is counted. At the trench's foot the stalls put a sound into the water instead
+of taking one out.*
+
 **This is the first mission in which the Directorate puts a sound into the water, and it puts
 two.** The Cantorate sounds a Chorus Call at the trench's foot — six voices, a cohort that is
 not there — and the same tide hands the picket the ping, per [campaign.md](campaign.md) §10's
@@ -102,7 +106,7 @@ by the picket's own guns.
 
 | Hull | Count | Stats | Why |
 | --- | --- | --- | --- |
-| Abyssal Submersible — the picket, role `watch` | 4 | **SIG 22 idle / 28 cruise / +20 firing · HYD 85 · PR-3 · 520 HP · 80 dmg at 650 m every 1.8 s · 60 m/s (33 silent) · 95 m** ([units.md](units.md)) | *Baffle*'s four, in *Baffle*'s seats. Armed, and the campaign's first hulls that anything shoots back at. Ninety-five metres is the shortest hull a colossus grinds ([mission-intake.md](mission-intake.md) §6), which matters at the foot and not in the pipe |
+| Abyssal Submersible — the picket, role `watch` | 4 | **SIG 22 idle / 28 cruise / +20 firing · HYD 85 · PR-3 · 520 HP · 80 dmg at 650 m every 1.8 s · 60 m/s (33 silent) · 95 m** ([units.md](units.md)) | *Baffle*'s four, in *Baffle*'s seats. Armed, and the first Directorate hulls another navy shoots at. Ninety-five metres is the shortest hull a colossus grinds ([mission-intake.md](mission-intake.md) §6), which matters at the foot and not in the pipe |
 | Chorister — the array, role `array` | 6 | **SIG 16 / 24 / +15 · HYD 75, 95 under the dome · 200 HP · 20 dmg at 450 m · 40 m/s (22 silent) · 50 m · PR-2 on the hull, `pressureRating: 3` authored** ([units.md](units.md)) | The cohort hull, fielded at last. It is not here to fight: 20 a second at 450 m against a Klaxon escort is arithmetic nobody runs twice. It is here because the dome is worth more to it than to anything else in the Rift (§4) |
 | Cantor — the dome, `arrayTag: 'dome'` | 1 | SIG 35 idle · HYD 80 · 1,200 HP · **+25 HYD capped at 95 within 1,200 m** ([units.md](units.md)) | The Cantorate's instrument, standing on the last bench at 2,300 m. Structure, not hull; placed, never moved. Called by its own name for the second time in the campaign |
 
@@ -125,16 +129,16 @@ convoy's Cruiser cannot resolve from 856 m and is under the silence ceiling by t
    the ping until mission 3, and this is mission 3. Attendance stated the doctrine —
    "pinging it is not scouting, it is asking, and the Directorate does not ask"
    ([mission-attendance.md](mission-attendance.md) §3) — and the doctrine is about the Mouth.
-   The Fourth is not the Mouth. The lock is simply absent, with no reason string, because the
-   panel has nothing to explain: *the Directorate does not ask; the picket may, and will be
-   heard asking.*
+   The Fourth is not the Mouth. The lock is simply absent: *the Directorate does not ask; the
+   picket may, and will be heard asking.*
 2. **No construction.** Reason string: *the inquiry's water is not re-rigged, by anyone.* The
    picket removes a mooring at 13:00 for exactly that sentence and does not get to lay one.
 3. **No mines and no depth charges.** Reason string: *nothing is left in closed water.* A
    closure that leaves ordnance behind it is a seizure, and the whole Directorate case is that
    it is not one.
-4. **Noisemakers, weapons and torpedoes are live.** The Directorate's seekers listen at HYD 70
-   ([systems-combat.md](systems-combat.md) §5, the seeker's own HYD), and this is the first Directorate mission in which the guns are not decoration.
+4. **Noisemakers, weapons and torpedoes are live** — the Directorate's seekers listen at HYD 70
+   ([systems-combat.md](systems-combat.md) §5) — and this is the first Directorate mission in
+   which the guns are not decoration.
 
 `escortRadiusM` is 0 — nothing here is freight. There are no starting nodules, nothing to build
 and nothing to render; `fauna: false`, and every animal on the map is a beat.
@@ -149,8 +153,8 @@ instruments** — the dome, the Call, and the ping handed over beside them — a
 movements.
 
 **1. The dome is worth most to the hull that costs least.** The Cantor grants +25 HYD capped at
-95 within 1,200 m ([units.md](units.md)). Range scales as the sixteen-tenths root of hearing,
-so the grant is worth **×1.16 of range to a Chorister** (75 → 95), **×1.07 to an Abyssal
+95 within 1,200 m ([units.md](units.md)). Range scales as hearing raised to one over the
+attenuation exponent of 1.6, so the grant is worth **×1.16 of range to a Chorister** (75 → 95), **×1.07 to an Abyssal
 Submersible** (85 → 95, and Attendance already said so at seven per cent), and **×1.29 to a
 Corvette** (50 → 75). The Cantorate's standing rests on an instrument that is nearly wasted on
 the Directorate's own deep hull and transforms its cheapest one. Under the dome a Chorister
@@ -160,24 +164,23 @@ mission remarks on it. Korrin has read the number
 
 **2. The instrument is withdrawn from the Cantorate's array by the picket's own guns.** The
 silence ledger runs on `silenceRole: 'watch'` at `silenceCeilingSig: 30`, `debtCapS: 30`. A
-submersible idles at 22 and cruises at 28 — under. A submersible that fires is at 42 idle and
-48 cruising; a submersible that drops Silent Running spikes +40 for two seconds
+submersible idles at 22 and cruises at 28 — under. One that fires is at 42 idle and 48
+cruising; one that drops Silent Running spikes +40 for two seconds
 ([systems-echo.md](systems-echo.md) §6). Either is over, debt accrues a second for a second up
-to thirty, and while the shift is in debt the dome's grant is handed to the court's slot and
-every Chorister at the foot drops from 95 to 75 — sixteen per cent of range, gone, four
-kilometres from the hull that spent it. **Engaging costs hearing.** It is the Directorate's
-price, it is written down rather than felt, and the joke — the Cantorate's instrument
-withdrawn from the Cantorate's own array by a picket doing its job — is one nobody in the
-water makes.
+to thirty, and while the shift is in debt the dome's grant goes to the court's slot and every
+Chorister at the foot drops from 95 to 75 — sixteen per cent of range, gone, four kilometres
+from the hull that spent it. **Engaging costs hearing**: the Directorate's price, written down
+rather than felt. The joke — the Cantorate's instrument withdrawn from the Cantorate's own
+array by a picket doing its job — is one nobody in the water makes.
 
 **3. The Call is a lie, and it is entered as one.** At 13:00 the stalls sound a Chorus Call at
 the foot: six emitters at SIG 16, the loudness of a Chorister at rest, on periods of 7, 9, 11,
 13, 15 and 17 seconds, five seconds on, for two minutes. To the concern it reads as six
 positioned contacts with a bearing and a depth and **no kind and no faction**, because that is
-what a mission emitter is at Tier 3 ([mission-attendance.md](mission-attendance.md) §4) — and
-"a cohort at rest" is exactly what the concern's registry has a column for. What the Call costs
-the stalls is not the sounding. It is that **`call-a` carries a reading**, so the six thousand
-pages acquire their first line since 88 PC that was written before it was heard.
+what a mission emitter is at Tier 3 ([mission-attendance.md](mission-attendance.md) §4) — and a
+cohort at rest is exactly what the registry has a column for. What the Call costs the stalls is
+not the sounding but that **`call-a` carries a reading**: the six thousand pages acquire their
+first line since 88 PC that was written before it was heard.
 
 **4. The ping is a question, and the deep answers it.** Active sonar is SIG 95 for three
 seconds, Tier-4 inside 900 m, self-revealing at 2,400 m in open water at HYD 50
@@ -192,8 +195,9 @@ asks at the mouth, 2,133 m out, is not.** Nobody tells the player which.
 ### The SIG budget
 
 **SIG budget: 28** — an Abyssal Submersible's cruise, and a working level rather than a ceiling
-([campaign.md](campaign.md) §10). It is the fourth figure the campaign has given the same rule
-and the first that sits *under* a sanction rather than beside one: the silence ledger's ceiling
+([campaign.md](campaign.md) §10). It is the third figure this campaign has given the same rule
+— Attendance's 8 and Intake's 50 were both descriptions — and the first that sits *under* a
+sanction rather than beside one: the silence ledger's ceiling
 is 30, so the budget is two below the loudness that costs the array its dome. A picket that
 walks its water all tide is inside both. A picket that fires is outside both, and the panel
 says so in the Cantorate's own words.
@@ -225,7 +229,7 @@ side: **a Cruiser at 150 every 2.5 s to 900 m (60 a second, 67 inside the Klaxon
 Corvettes at 50 every 1.2 s to 550 m (41.7 each)**, auto-acquiring the nearest live enemy in
 range and stopping for nothing while under way.
 
-**The Deep Yard is Baffle's plant, literally** — an emitter at (1500, 4500) at 1,640 m, SIG 35,
+**The Deep Yard is *Baffle*'s plant, literally** — an emitter at (1500, 4500) at 1,640 m, SIG 35,
 eight-second period, two seconds on, 900 hp, until 20:00 — and it is made *attendable* here,
 which it was not there. Its entry is trivial: the second watch holds it at Track from 757 m
 from the first tick, and §6 says so rather than pretending the count is difficult.
@@ -266,18 +270,16 @@ player never stood on this side of it, is the arithmetic. Here it is, and it is 
   reads 2.4 and 2.8 to the Cruiser in Lay-by Two at 750 and 678 m: Bearing and Classification,
   not Track. Four hundred metres further north it is nothing.
 
-The picket's law is therefore genuinely a law and not a lever. Standing is legal, correct in
-its own register, and expensive. Yielding is legal, correct in the same register, and free —
-and the mission counts the mouth at the whistle rather than during the gate, so a picket that
-withdraws at 14:00 and re-forms across the mouth after 17:00 has obeyed the law twice and lost
-nothing.
+The law is therefore a law and not a lever. Standing is legal, correct in its own register, and
+expensive; yielding is legal, correct in the same register, and free. The mission counts the
+mouth at the whistle rather than during the gate, so a picket that withdraws at 14:00 and
+re-forms across it after 17:00 has obeyed the law twice and lost nothing.
 
-**The attend instrument, spent on two sounds that cost nothing to hear.** Two emitters on this
-map carry a `reading` and are therefore countable (`types.ts`, `MissionEmitter.reading`): the yard's plant and `call-a`. Both are trivial from the seats the
-mission authors — Track at 757 m and Track at 400 m — and this document authors them knowing
-it. Attendance made attending hard by putting the sound 4,100 m down an axis
-([mission-attendance.md](mission-attendance.md) §6). This mission makes it free, on purpose,
-because the difficulty was never the hearing:
+**The attend instrument, spent on two sounds that cost nothing to hear.** Two emitters carry a
+`reading` and are therefore countable (`types.ts`, `MissionEmitter.reading`): the yard's plant
+and `call-a`, at Track from 757 m and 400 m respectively. Attendance made attending hard by
+putting the sound 4,100 m down an axis ([mission-attendance.md](mission-attendance.md) §6);
+this mission makes it free, on purpose, because the difficulty was never the hearing:
 
 - The plant is the concern's, the yard is not the inquiry's, and nobody asked the stalls to
   listen for it. Entering it is a decision to write down a thing that is none of the
@@ -287,10 +289,20 @@ because the difficulty was never the hearing:
   of collection has never happened, and the entry says in the Cantorate's own hand that there
   was no cohort at the foot.
 
+The two `reading` pairs, authored, appended to the close in this order:
+
+| Emitter | Entered | Gap |
+| --- | --- | --- |
+| `yard-plant` | "Entered: the yard's plant, missing its beat. Forty-one are on its complement and none of them is counted; the yard is not the inquiry's." | "Not entered: the plant. The yard is not the inquiry's and was not listened for." |
+| `call-a` | "Entered: a cohort at the foot, six, bearing and depth. There was no cohort at the foot. The Call is entered as what it was, in the Cantorate's hand." | "Not entered: the Call. The stalls heard their own voice as nothing, which is correct and is also entered." |
+
+The other five Call emitters carry no reading, so the count cannot be padded by hearing the
+same lie six times.
+
 **Nobody is wrong.** Ossary sounds a lie and makes it a liturgical fact in the same breath,
-because the Cantorate's whole doctrine is that a society which thinks it has the answer starts
+because the Cantorate's doctrine is that a society which thinks it has the answer starts
 killing people and one that keeps a scrupulous record does not
-([characters.md](characters.md)). Korrin would have preferred a question. She is right, and she
+([characters.md](characters.md)). Korrin would have preferred a question. She is right, and
 says so to nobody.
 
 ---
@@ -302,23 +314,22 @@ says so to nobody.
 - **The muster, through the layer.** The convoy idles at (1500, 300) at 1,000 m — above the
   duct's 1,100 m top — while the picket sits at 1,600 m, below its 1,300 m bottom, so the pair
   factor is 0.3 ([systems-echo.md](systems-echo.md) §3) and the staging is Thermal Vein at
-  0.45. The path mean from the flagship to `watch-one` is **0.307** over 856 m, and the first
-  watch still holds an idling Cruiser at **Track** (ratio 6.3). Through the same layer the
-  second watch reads 0.95 and the array 0.56 — **nothing at all.** The picket knows the convoy
-  is coming and the Cantorate does not.
-- **The dive, at 02:30.** The convoy drops into the trench at 1,600 m and the layer stops
-  applying. `watch-one` reads it from 112 m. The array, 4,350 m south through a path that
-  crosses the yard's open water and averages 1.53, reads it at **3.08 — Classification** — and
-  has held it from the moment it entered. The dome is what makes that sentence true: at the
-  Chorister's own 75 the same path is 2.4, which is Bearing.
+  0.45. The path mean from the flagship to `watch-one` is **0.307** over 856 m and the first
+  watch still holds an idling Cruiser at **Track** (ratio 6.3); through the same layer the
+  second watch reads 0.95 and the array 0.56, which is **nothing at all**. The picket knows the
+  convoy is coming and the Cantorate does not.
+- **The dive, at 02:30.** The convoy drops to 1,600 m and the layer stops applying. `watch-one`
+  reads it from 112 m. The array, 4,350 m south through a path averaging 1.53, reads it at
+  **3.08 — Classification** — from the moment it enters. The dome is what makes that sentence
+  true: at the Chorister's own 75 the same path is 2.4, which is Bearing.
 - **The trench, clean, at PF 1.6.** An Abyssal Submersible at 85 hears a Cruiser cruising at 65
   from 8,416 m (Classification 4,747, Track 3,538), a Cruiser idling at 55 from 7,581, a
   Corvette at 28 from 4,972 (Classification 2,804) and the barge under way at 40 from 6,213.
   A Chorister at 95 hears the Cruiser from 9,022 and the plant at 35 from 6,127.
 - **The concern's ears, pointed back.** A Cruiser at 65 hears a cruising submersible from
   4,204 m (Bearing 3,263, Classification 2,371, Track 1,768), an idle one from 3,616, a
-  **silent one from only 1,402 m** (Bearing 1,088, Track 590) and a firing one from 5,888
-  (Track 2,476). Silence is worth two and a half kilometres of the pipe.
+  **silent one from only 1,402 m** and a firing one from 5,888 (Track 2,476). Silence is worth
+  two and a half kilometres of the pipe.
 - **The Call, from the concern's side.** From Lay-by Two at 13:30 the six read **1.33 to 1.66**
   at about two kilometres — three at Contact, three barely at Bearing, a smudge with a rhythm.
   From the mouth at 14:00, 1,301 to 1,504 m out, all six read **2.64 to 3.27: Classification**
@@ -329,8 +340,8 @@ says so to nobody.
   other side: the second watch has it at Track from 757 m, the array at Track from 950 m, and
   it stops at 20:00 because that is what failing means.
 - **The concern's one transmission, at 14:30.** SIG 95 for three seconds. The array reads it at
-  18 from 1,750 m; the second watch, if it is in its seat, reads it at four figures and is
-  itself inside the 900 m Tier-4 reveal.
+  18 from 1,750 m; the second watch, if it is still in its seat, reads it at a ratio in four
+  figures and is itself inside the 900 m Tier-4 reveal.
 - **The pack, at 18:30.** Three Draymaws up the axis from the mouth, loud, ninety seconds in
   front of the whistle — *Baffle*'s three beats, inherited whole.
 - **The basin, all tide, saying nothing.** The Sounder holds station at (2000, 5875) at 2,300 m
@@ -348,13 +359,12 @@ foot's weather is a decision the player has not made yet.
 **Attend the trench: stand across its mouth at the whistle, keep the picket, and enter what was
 heard.**
 
-Four objective rows, two of them terminal, stated as the format carries them
-(`types.ts`):
+Four objective rows, two of them terminal, stated as the format carries them (`types.ts`):
 
 | Objective | Text | Predicate | Terminal |
 | --- | --- | --- | --- |
 | `the-mouth` | *The trench is closed while the inquiry is open. The mouth is attended at the whistle.* | `{ kind: 'extract', role: 'watch', region: 'the-mouth', count: 2 }` | **Yes.** Not a keystone. `revealAtTick` T(19), `markerId: 'mouth'` |
-| `the-picket` | *Three of four attend. The Undermarshalcy does not round up.* | `{ kind: 'survive', role: 'watch', count: 3 }` | **Yes.** Standing, re-derived every tick |
+| `the-picket` | *Three of four attend. The Undermarshalcy does not round up.* — `debtText` *The picket owes the stalls a silence.* | `{ kind: 'survive', role: 'watch', count: 3 }` | **Yes.** Standing, re-derived every tick |
 | `the-count` | *What enters is counted. What is heard is entered.* | `{ kind: 'attend', count: 2 }` | No. Read out, never ranked |
 | `the-record` | *What is heard of the picket is entered elsewhere.* | `{ kind: 'tolerance', ticks: 180, tier: ResolutionTier.Track }` | No. Read out, never ranked |
 
@@ -459,10 +469,9 @@ resolved rather than concluded.
 
 That line fires at whichever of three things the picket stood into first: the first gate at
 05:00, the second at 14:00, or the concern's transmission at 14:30. It cannot be fired by the
-*picket's own* ping, because no predicate reads the player's own transmissions (§13), so it is
-authored to be true of a gate fight and of a transmission and of nothing else.
-
-The convoy's transits are authored, not AI, for the standing reason
+*picket's own* ping — no predicate reads the player's own transmissions (§13) — so it is
+authored to be true of a gate fight and of a transmission and of nothing else. The convoy's
+transits are authored, not AI, for the standing reason
 ([mission-sorrowgate.md](mission-sorrowgate.md) §9): a mission's beats happen at the time the
 document says they happen. The Call is why; the beats are when.
 
@@ -487,8 +496,9 @@ and this mission on a lie.
 
 What this mission deliberately does not teach:
 
-- **The shallow-water penalty** — mission 4, *Shallow*. The shallowest metre this map authors
-  is the staging's 1,000 m, and the picket never leaves 1,600.
+- **The shallow-water penalty** — mission 4, *Shallow*. The shallowest floor this map authors
+  is the staging's 1,100 m, seven hundred metres under the Shelf line, and no hull the player
+  owns leaves 1,600.
 - **Fauna aggro and Biomass as an economy** — mission 5, *Trench Awakening*. One Sounder holds
   station here and one pack crosses; nothing is rendered, no cell is read out, and the Call's
   older cousin — a sound that summons rather than spoofs — is that mission's.
@@ -506,12 +516,13 @@ What this mission deliberately does not teach:
 `fourth-foot` · **The Fourth's Foot** · one seat · 3,000 × 6,000 m · cell 250 m · base floor
 1,450 m.
 
-**A new map, and it is *Baffle*'s chart a thousand metres longer.** Rows 1–8 of the table below
-are `fourth-trench`'s eight regions verbatim ([mission-baffle.md](mission-baffle.md) §11;
-`fourthTrench.ts`) — the same rectangles, the same biomes, the same floors — and the last three
-rows paint the ground *Baffle* never had a reason to draw. The margin's last 250 m becomes the
-head of the Fan. North is shallow and south is deep, as everywhere in the Rift
-([world-map.md](world-map.md)).
+**A new map, and it is *Baffle*'s chart a thousand metres longer.** Rows 2–8 of the table below
+are `fourth-trench`'s regions to the metre ([mission-baffle.md](mission-baffle.md) §11;
+`fourthTrench.ts`) — the same rectangles, biomes and floors — and row 1, the Margin, is the
+same rectangle run a thousand metres further south. The last three rows paint the ground
+*Baffle* never had a reason to draw: its margin's last 250 m becomes the head of the Fan, where
+that chart ran out of paper rather than water. North is shallow and south is deep, as
+everywhere in the Rift ([world-map.md](world-map.md)).
 
 | Region | Rect (x, y, w, h) | Biome | Floor | What it is |
 | --- | --- | --- | --- | --- |
@@ -527,19 +538,18 @@ head of the Fan. North is shallow and south is deep, as everywhere in the Rift
 | The Foot | 750, 5250, 1500, 750 | Abyssal Trench | 2,400 | The last bench — the dome, the array, and what deep basins hold |
 | The Freight Galleries | 2250, 5000, 750, 1000 | Coral Ruins | 2,900 | The 4th Trench Cohort's berths, cut into the fan's east wall. Tessen's water ([habitats.md](habitats.md) §6) |
 
-One spawn, at the mouth: 1500, 4000. It is irrelevant — every party is seated directly — and it
-is authored because a map needs one seat. **No resources, no hazard sites, and `fauna: false`**:
-a closure mines nothing, and every animal here is a `creature` beat.
-
-Every rectangle lands on the 250 m cell grid and paints exactly the metres it reads
-([maps.md](maps.md), "How a map is written").
+One spawn, at the mouth: 1500, 4000 — irrelevant, since every party is seated directly, and
+authored because a map needs one seat. **No resources, no hazard sites, and `fauna: false`**: a
+closure mines nothing, and every animal here is a `creature` beat. Every rectangle lands on the
+250 m cell grid and paints exactly the metres it reads ([maps.md](maps.md), "How a map is
+written").
 
 **Mission regions and markers.** One mission region, `the-mouth` — 1250, 3500, 500, 500, the
 trench's last half-kilometre above the yard — and one marker, `mouth` at (1500, 3625) with a
-375 m radius, shipped only while `the-mouth` is revealed. The region's geometry is the whole
-objective: a hull at (1500, 3550) is **950 m** from the berth and outside a Cruiser's gun; a
-hull on the region's southern edge is **500 m** from it and inside. The count is taken in the
-north half or it is taken under fire, and the mission never says which half.
+375 m radius, shipped only while `the-mouth` is revealed. Its geometry is the whole objective:
+a hull at (1500, 3550) is **950 m** from the berth and outside a Cruiser's gun, and one on the
+region's southern edge is **500 m** from it and inside. The count is taken in the north half or
+it is taken under fire, and the mission never says which half.
 
 **Every seated hull's depth, checked against the floor it stands over and its own rating**
 (Shelf 0–400 m is PR-1, Mid-Water 400–1,800 m PR-2, Abyssal 1,800 m and below PR-3):
@@ -559,11 +569,10 @@ north half or it is taken under fire, and the mission never says which half.
 
 **Why this ground argues the mission.** The trench is a pipe that carries at 1.6, so nothing in
 it is ever out of a Cruiser's reach while the convoy passes, and each gate is a decision. The
-two pockets at 0.45 are the only quiet water on the map and both are the concern's. The yard is
-five hundred metres of open water the convoy is going to. And the foot is the one place a dome
-can stand outside the Ledger's chart *and* outside the convoy's guns — a thousand metres south
-of the berth, where a ping brings up the deep's own answer and a lie can be sounded without
-anybody being able to shoot it.
+two pockets at 0.45 are the only quiet water and both are the concern's. The yard is five
+hundred metres of open water the convoy is going to. And the foot is the one place a dome can
+stand outside the Ledger's chart *and* outside the convoy's guns, where a ping brings up the
+deep's own answer and a lie can be sounded without anybody being able to shoot it.
 
 **The ledger under the foot, stated because a reader will do the arithmetic.** Drift Health
 cells are 750 × 1,500 m on a map this size, and the array straddles the boundary at x = 1,500:
@@ -620,7 +629,7 @@ passive or the impersonal:
 
 - *The trench is closed while the inquiry is open. The mouth is attended at the whistle.*
 - *Three of four attend. The Undermarshalcy does not round up.*
-- *The called owe the stalls a silence.*
+- *The picket owes the stalls a silence.* (the `debtText` on `the-picket`, while debt stands)
 - *What enters is counted. What is heard is entered.*
 - *Entered: the yard's plant, missing its beat.*
 - *Not entered: the Call. The stalls heard their own voice as nothing.*
@@ -683,6 +692,18 @@ passive or the impersonal:
 > *Nothing.* He is present the whole time, he opened the dome, he sounded the Call, and he does
 > not speak at the count.
 
+### The reading at the whistle
+
+The close reads one of three, verbatim from §8, in Korrin's voice from Sufficiency, with the
+sweep's filed line beneath it if the concern's flagship classified the picket at a gate, then
+`the-count`'s reading and `the-record`'s, then the plant's entered-or-gap and the Call's.
+
+| Outcome | Korrin's reading |
+| --- | --- |
+| **Complete** | "The mouth was attended at the whistle and the picket is mustered. The trench remains closed. What the concern's plant did in closed water is entered, and what the stalls sounded is entered beside it, and the second entry is the first line since 88 PC that was written before it was heard." |
+| **Partial** | "Sufficient. The mouth was attended or the picket is mustered, and the other is entered as short. A closure is not a count of hulls, and the trench is closed either way." |
+| **Lost** | "The mouth was not attended and the picket is not mustered. The trench is open until the next watch stands, and the inquiry enters the gap. It is not a failure of yours; it is a convoy against a law, and the convoy was louder." |
+
 Each line fails [culture.md](culture.md) §3 for the other three factions, which is that
 document's own test (§6). Ossary states that a thing is not what it will be heard as and makes
 the correction a liturgical fact in the same breath, with no apology and no defence, which the
@@ -691,10 +712,9 @@ tells the picket it may fight and may decline and declines to prefer either, whi
 would phrase as an offer and the Consortium would call unfunded. The Picket-Speaker enforces a
 closure in two sentences without once claiming agency. Tessen answers a Consortium reassurance
 with a Directorate one that concedes nothing — the concern says *we can hear you and that is
-the plan working*, and she says *we can hear you and that is what a band is*, which is the same
-sentence in a register that has never had to be reassured about noise. Vail and Holt are the
-concern pricing its own loudness as the plan working, in freight terms, with nineteen years and
-forty-one berths in the same breath and no sentiment in either.
+the plan working*, and she says *we can hear you and that is what a band is*. Vail and Holt are
+the concern pricing its own noise as the plan working, with nineteen years and forty-one berths
+in the same breath and no sentiment in either.
 
 **And Korrin's last is the third of them.** Attendance ended with "six thousand pages, and not
 one of them a question"; Intake ended with "I have signed three of these; I know where all of
@@ -724,12 +744,12 @@ below states, and the row is written so a reviewer can tell the approximation fr
 | **A `say` fired by the player's own transmission** | **Not expressible, and not asked for.** No predicate reads what the player's own force has emitted: the union asks about position, hulls alive, emitters attended, soundings completed, the loudest hull, elapsed ticks, exposure, and the stockpile. §9's conditional line is therefore keyed on `tolerance` at Track — which fires on the first Track whoever caused it — and Korrin's text is authored to be true of a gate fight and of the concern's transmission alike. A genuine need would want a `transmit` predicate over the player's own pings, which is one row and is not this mission's to request |
 | The convoy's one transmission, at 14:30 | **Built as a mechanism, authored here as a placement.** The `ping` beat sends a scripted hull through the same validated path a player's ping takes (SIG 95, 900 m reveal, 2,400 m self-reveal in open water). **`baffle.ts` authors no ping at all** — that document's writ hands the ping to the *Ledger's player* ("transmit once, late, and commit on what it returns", [mission-baffle.md](mission-baffle.md) §12) — so 14:30 is this document placing the writ's own advice on the world's clock, and it is stated rather than presented as *Baffle*'s time |
 | The armed scripted convoy that shoots the picket | **Built and load-bearing.** Hostility is `Owner.slot`, both sides are authored `armed`, and auto-acquire takes the nearest live enemy in range as soon as a hull stops moving — a silent hull holds its fire and is shot at anyway. §6's whole argument is that arithmetic. What §6 also needs is that a *stationary* hull acquires and a travelling one does not, which is why the gate fights begin when the convoy berths at 05:00 and 14:00 rather than as it passes |
-| Guns and emitters | **Built, with a correction to the plan this document was written from.** Auto-acquire skips a `StaticEmitter` for the mine's reason — between strikes it sits at SIG 0 and a gun swinging onto it would be shooting something it never heard — but an *ordered* shot at a resolved emitter still lands. So the Call is not unshootable; it is 5,000 hp of it, which at a Cruiser's 60 a second is eighty-three seconds against a two-minute window, in water the convoy never enters. The plant's 900 hp is *Baffle*'s and is likewise only safe from auto-acquire |
+| Guns and emitters | **Built, and worth stating exactly.** Auto-acquire skips a `StaticEmitter` for the mine's reason — between strikes it sits at SIG 0 and a gun swinging onto it would be shooting something it never heard — but an *ordered* shot at a resolved emitter still lands. So the Call is not unshootable; it is 5,000 hp of it, which at a Cruiser's 60 a second is eighty-three seconds against a two-minute window, in water the convoy never enters. The plant's 900 hp is *Baffle*'s and is likewise only safe from auto-acquire |
 | The dome's aura, and the silence ledger that withdraws it | **Built.** `STRUCTURE_AURAS.CANTOR` is +25 HYD capped at 95 within 1,200 m; `arrayTag` names a Cantor on the player's party and the ledger points its `grantSlot` at `courtSlot` while `debtS > 0`. `silenceRole: 'watch'` at ceiling 30 with a 30 s cap is Attendance's mechanism with a different number and, for the first time, a role that is not the one being helped: the guns that owe the debt are not the hulls that lose the ears |
 | Ten hulls seated under Silent Running | **Built** — `silent` beats at `atTick: 0`, which is Sorrowgate's idiom for Kalliso's approach used on the player's own force. It is also what makes §3's "armed and quiet" honest: the auto-acquire path refuses a silent hull, so a picket that never drops silence never fires |
 | Choristers below 1,800 m carrying `pressureRating: 3` | **Built, and a finding to record.** `missions.test.ts` reads `unit.pressureRating ?? statsFor(kind).pressureRating` against `requiredPressureRating(depthM)` — the *hull's* rating, not `effectivePressureRating` — so the Directorate's PR-3 faction baseline does not rescue a PR-2 Chorister authored at 2,300 m and the refit must be written on every one of the six. Correct as a test (a literal should not lean on a baseline it never states) and worth naming, because every Directorate document that fields Choristers below the Abyssal line will write the same six words |
 | A friendly scripted Directorate party with hulls | **Not built, and correctly so.** Hostility is `Owner.slot` and auto-acquire fires on any other slot in range, so a second Directorate party with hulls in it would be shot by the picket. The Call's slot therefore holds sounds and nothing else, which is also the truer reading: a Chorus Call is not a cohort |
-| The thermocline between the muster and the trench | **Built** — `THERMOCLINE_PAIR_FACTOR` is 0.3 across the layer, applied per emitter–listener pair from the two depths. The staging's 1,000 m floor puts the convoy above the duct's 1,100 m top and the trench's 1,700 m floor puts the picket below its 1,300 m bottom, so §7's 0.307 path mean and the first watch's Track at 856 m are the shipped model and not a special case |
+| The thermocline between the muster and the trench | **Built** — `THERMOCLINE_PAIR_FACTOR` is 0.3 across the layer, applied per emitter–listener pair from the two depths. The convoy is seated at 1,000 m over the staging's 1,100 m floor — above the duct's top — and the picket at 1,600 m in the trench, below its bottom, so §7's 0.307 path mean and the first watch's Track at 856 m are the shipped model and not a special case |
 | Silent Running's actual loudness | **Built, and a figure this document corrects.** `silentRunningSig` places a hull in the 3–8 band by its idle SIG: an Abyssal Submersible at idle 22 is **4.83**, a Chorister at idle 16 is **4.33**. Eight is `SILENT_RUNNING.SIG_MAX` and the curve reaches it only at an idle of 60, so §6 and §7 price a silent picket at 4.8 rather than 8, which costs it about five hundred metres of the Cruiser's contact range and is the difference between Classification and Track at Lay-by Two ([mission-radicals.md](mission-radicals.md) §13 records the same finding for the Commune's hulls) |
 | *Baffle*'s seats, plant, pack and clock, inherited literally | **A decision, not a build.** Every position, period, hp and tick in §5 and §9 that *Baffle* authors is `baffle.ts`'s, unchanged, so a reader can hold the two documents side by side and find no seam. The one place that inheritance carries a wart is the pack: `driveTo` with no `depthM` leaves a driven creature climbing toward its species' 900 m at the Drift's vertical speed, so *Baffle*'s Draymaws spawned at 1,600 m rise as they run the axis. That is *Baffle*'s literal as it stands. It is inherited and not corrected, because a document that quietly fixed another mission's water would break the seam it exists to keep |
 | The sweep over the concern's flagship | **Built** — `MissionSweep` resolves scripted-party hearing over the player's hulls inside authored windows, with the directional term, the layer and the path integral, and appends one latched `filedReading` to whatever epilogue the count earned. Two windows, 05:00–08:00 and 14:00–17:00, which are the two gates |
@@ -737,7 +757,7 @@ below states, and the row is written so a reviewer can tell the approximation fr
 | The placed-and-not-driven Sounder | **Built, by Intake's idiom** — `driveTo` at the creature's own spawn with `untilTick: 0`, so the first pass finds the commitment expired and hands the animal to its own trigger model. It has never been used on a Sounder before; the ladder answers ratios rather than raw loudness, so the ambient reading of 14.6 against an Interest of 55 in §7 is the shipped model and not an authored quiet |
 | `move` beats carrying a depth | **Built** — the `move` effect's optional `depthM` issues a depth order alongside the move, which is what lets the scripted convoy dive into the trench at 02:30 rather than skating over it at 1,000 m |
 | `attend` over exactly two attendable emitters | **Built** — `attend` counts emitters carrying a `reading` that this observer resolved at Bearing or better *while they were sounding*, and the test bounds `count` by the number of emitters that carry one. Two carry one here and the count is two, which means the row is met by a picket that hears both and by nobody else |
-| The map, eleven regions, eight of them another mission's | **Not built.** `fourth-foot` is one row of the literal per row of §11's table, in the document's paint order, and its first eight rows are `fourthTrench.ts`'s verbatim at a greater height. No new region shape, no new biome, no hazard site and no resource node |
+| The map, eleven regions, seven of them another mission's to the metre | **Not built.** `fourth-foot` is one row of the literal per row of §11's table, in the document's paint order; rows 2–8 are `fourthTrench.ts`'s unchanged and row 1 is its Margin run a thousand metres south. No new region shape, no new biome, no hazard site and no resource node |
 | The mission definition `attending-the-dome` | **Not built.** Five parties and a court slot; ten player hulls in two roles plus one structure; `sigBudget: 28`, `arrayTag: 'dome'`, `silenceRole: 'watch'`, `silenceCeilingSig: 30`, `debtCapS: 30`, `escortRadiusM: 0`, `fauna: false`, no `startingNodules` and no `runsItsLength`; §9's beats in its order, closing at 20:00 with the loud pack ninety seconds ahead of it; §8's three readings verbatim |
 | Cross-mission Drift Health | **Not built** — nothing carries a map's damage to the next mission on it, which is [campaign.md](campaign.md) §2 rule 5 unspent everywhere. §11 states what this mission would leave behind and reads no cell |
 | Campaign progression | **Not built** — the standing row every campaign document leans on and none owns ([mission-item-nine.md](mission-item-nine.md) §13). Nothing records that the picket has been handed the ping, so *First Arrival*'s lock at the rim is a sentence rather than a memory |
@@ -763,7 +783,7 @@ is why §4 prices the Call as a thing that happens rather than as a thing that i
 - **[mission-baffle.md](mission-baffle.md)** — the same tide from the convoy's side: every seat, both stations, the plant, the pack, the two gates, and the writ whose one transmission this document places
 - **[mission-attendance.md](mission-attendance.md)** — the dome by its own name, the written silence-debt, the return at SIG 3 the phantom's 16 is shaped from, and Ossary's formula
 - **[mission-intake.md](mission-intake.md)** — the Chorister in the roster and not fielded, the ×0.4 the Drift hears this faction at, and the roll's late reveal this mission's count borrows
-- **[mission-sorrowgate.md](mission-sorrowgate.md)** — the pattern, the silence order this one is the trench's form of, and the one emission that went wrong in front of the observer who closed this trench
+- **[mission-sorrowgate.md](mission-sorrowgate.md)** — the pattern, and the one emission that went wrong in front of the observer who closed this trench
 - **[mission-shallow.md](mission-shallow.md)** — The Attending 4, where the Chorister is fielded above the line and the ping is useless
 - **[mission-trench-awakening.md](mission-trench-awakening.md)** — The Attending 5, where a sound summons instead of spoofing, and the Sounder at the foot is its older cousin
 - **[mission-conclave-attending.md](mission-conclave-attending.md)** — The Attending 6, where Ossary speaks once and says nothing at the close, and a dome can be lost
@@ -772,7 +792,7 @@ is why §4 prices the Call as a thing that happens rather than as a thing that i
 - **[systems-depth.md](systems-depth.md)** — §2, the fast loud descent the convoy makes at 02:30 and the slow silent climb the pack makes at 18:30
 - **[bestiary.md](bestiary.md)** — §2, the aggro ladder, the ×0.4 and the ping's ×3; §4, the Sounder's band and the Draymaw's; §6, the ledger under the foot
 - **[units.md](units.md)** — the Abyssal Submersible, the Chorister, the Cantor, and the Baffle Barge on the other side of the water
-- **[factions.md](factions.md)** — the Listeners, the Klaxon, and the superweapon this mission is named for
+- **[factions.md](factions.md)** — the Listeners, the Klaxon, and the doctrine the Chorus Call belongs to
 - **[habitats.md](habitats.md)** — §6, Sufficiency, the shallow band, and Mara Tessen's freight galleries where the Fourth meets the deep
 - **[world-map.md](world-map.md)** — the Fourth Trench, claimed twice and patrolled once, and the deep it runs into
 - **[culture.md](culture.md)** — §1, transmitting as lying and asking as a thing this faction does not do; §3, the register that may not explain; §5, the written silence-debt
