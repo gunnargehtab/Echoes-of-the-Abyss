@@ -45,14 +45,15 @@ Three facts about this water decide the whole mission.
 faction's whole doctrine is *let other people be loud near our animals*
 ([factions.md](factions.md)) — the argument [mission-intake.md](mission-intake.md) §3 makes at the
 scale of a search, made here at the scale of a yard. Alone in its own water the loudest things the
-Drift can hear are the Directorate's own: a grower at 55, a plant at 35, a dome at 35, a cohort
-massed.
+Drift can hear are the Directorate's own: a grower at 55, a plant at 35, a dome at 35, a Chorister
+firing at 39.
 
 **The trench carries at 1.60 and there is nothing down its length but distance**
 ([habitats.md](habitats.md) §6). Every rendering announces itself across the whole map; a
 colossus calling at the sill is at Contact to a Chorister from 10,187 m and to an Abyssal
-Submersible from 11,016 m, which is twice the map. The only shadow on the chart is the yard's own
-cut structure at 0.80, and it is 750 m wide.
+Submersible from 11,016 m, which is twice the map. The only shadow on the chart is the worked
+ground at 0.80 — the rim, and the yards and the stalls cut under it — which is the map's northern
+1,250 m and nothing below it.
 
 **The band is the doorway, and the Hollow guards doorways.** 1,800 m is the first metre of the
 Abyssal band ([systems-depth.md](systems-depth.md) §3), the overhangs either side of the axis stand
@@ -70,8 +71,8 @@ listening dome and a grower.**
 
 | Hull | Count | Stats | Why |
 | --- | --- | --- | --- |
-| Abyssal Submersible — the row | 2 | **SIG 22 idle / 28 cruise · HYD 85 · PR-3 · 520 HP · 80 dmg at 650 m / 1.8 s** ([units.md](units.md)) | The band's own two heavy hulls, and the only two things on the map a colossus can grind at 95 m of hull ([bestiary.md](bestiary.md) §4) |
-| Chorister — the row | 6 | **SIG 16 idle / 24 cruise / +15 firing · HYD 75 (95 under the dome) · PR-2 on the hull, refit to 3 · 200 HP · 20 dmg at 450 m / 1.0 s · 40 m/s · 50 m** ([units.md](units.md)) | The cohort hull, fielded at last. At 50 m it is under `DRIFT.TRANSIT_MIN_HULL_M`'s 95 and a colossus cannot touch it, which is why it is the only hull in the game that renders one |
+| Abyssal Submersible — the row, role `yard` | 2 | **SIG 22 idle / 28 cruise · HYD 85 · PR-3 · 520 HP · 80 dmg at 650 m / 1.8 s** ([units.md](units.md)) | The band's own two heavy hulls, and the only two things on the map a colossus can grind at 95 m of hull ([bestiary.md](bestiary.md) §4) |
+| Chorister — the row, role `yard` | 6 | **SIG 16 idle / 24 cruise / +15 firing · HYD 75 (95 under the dome) · PR-2 on the hull, refit to 3 · 200 HP · 20 dmg at 450 m / 1.0 s · 40 m/s · 50 m** ([units.md](units.md)) | The cohort hull, in Directorate hands for the third mission running ([mission-the-dome.md](mission-the-dome.md) §3). At 50 m it is under `DRIFT.TRANSIT_MIN_HULL_M`'s 95 and a colossus cannot touch it, which is why it is the only hull in the game that renders one |
 
 The Choristers carry `pressureRating: 3` as an authored refit: the Directorate's baseline lifts the
 hull's PR-2 to 3 for free, but the literal test reads the hull's own rating, so it must be written
@@ -102,16 +103,18 @@ eight animals are authored by `creature` beats and `fauna` is off.
    walks onto its own ground is the one navy that cannot afford that.
 4. **Weapons, torpedoes and noisemakers are live.** The noisemaker is worth naming once: SIG 70
    for eight seconds ([systems-combat.md](systems-combat.md) §5) reads 28 to the Drift — louder
-   than any hull the row owns — and pulls a released colossus from 421 m of Interest and 347 m of
-   Commit. It is the only lever here that moves an animal without a ping.
+   than anything the row owns short of a hull under way downward — and pulls a released colossus
+   from 421 m of Interest and 347 m of Commit. It is the only lever here that moves an animal without a ping.
 5. **No silence order.** No `arrayTag`, `silenceCeilingSig: 100`, `debtCapS: 0` — the ledger does
    not run, as it did not in [mission-intake.md](mission-intake.md) §2. Everything that makes you
    strong makes you loud ([economy.md](economy.md) §1), and here the Directorate is strong and is
    charged for it by the ground rather than by the Cantorate.
 
 Silent Running is present, and on a row whose whole income is a gun it is a trade: a silent
-Chorister sits at 4.3 in the 3–8 band and a Hollow commits to it only inside 59 m, but a silent hull
-does not shoot.
+Chorister sits at 4.3 in the 3–8 band, and `perceivedLoudness` stops attenuating at the model's
+100 m reference distance, so the loudest a silent Chorister ever reads to a Hollow is a ratio of 30
+against an Interest of 45 — it is not merely hard to hear, it is inaudible at any range. A silent
+hull also does not shoot.
 
 ---
 
@@ -132,7 +135,7 @@ only consequence is that a starved line runs slower, and the floor is
 mission-placed structure sums its capacity like any other; without it a Chorister takes forty
 seconds and this is a different mission.
 
-**The dome covers five of the eight.** At (1500, 1000) with a 1,200 m radius it reaches `row-one` at
+**The dome covers six of the eight.** At (1500, 1000) with a 1,200 m radius it reaches `row-one` at
 510 m and the Choristers seated at x 2,200 through 2,680; the easternmost Chorister at 1,301 m and
 `row-two` at 1,703 m are outside it. HYD 75 to 95 is sixteen per cent more range on a Chorister and
 nothing at all on a hull east of the grower. It is not a fence — the row can walk into it — which is
@@ -193,9 +196,16 @@ To a Sounder's HYD 90 and its 55 / 75, in trench water:
 | The grower, producing (55) | 22 | 362 m | 298 m |
 | The plant or the dome (35) | 14 | 273 m | 225 m |
 | A Chorister, firing (39) | 15.6 | 292 m | 241 m |
-| Three Choristers firing in one cell | 46.8 | 580 m | 478 m |
+| The same, with a fresh rendering inside 800 m | 15.6 + 15 | 356 m | 277 m |
 | A hull diving at 72 | 28.8 | 428 m | 353 m |
 | A Directorate ping | 114 | 1,012 m | **834 m** |
+
+A creature hears the **loudest single thing** in the water, never the sum of a cell: `listen` keeps
+the best of what it can hear and nothing else, so six Choristers massed on one animal are six
+readings of 15.6 and not one of 93.6. The one term that adds is the wreck bonus — a fresh kill
+within 800 m is +15 flat on whatever a creature is already hearing, decaying over ninety seconds
+([bestiary.md](bestiary.md) §2) — which is the row's own renderings pulling the next animal in,
+and the only way this yard makes itself louder by being paid.
 
 **3. The Call.** At 10:00 the yard sounds the trench, and what comes up the axis goes for the
 loudest thing it hears — which, alone in the Directorate's own water, is the grower. It cannot see
@@ -290,11 +300,20 @@ toward the map's centre — (2696.6, 1213.4) here — and deliberately omits a d
 1,200 m above the row and 600 m above the thermocline. Every hull the yard grows must dive that
 1,200 m at 45 m/s — 26.7 s at a SIG floor of 72 ([systems-depth.md](systems-depth.md) §2).
 
-The dive is the loudest thing the row does short of a ping, and the layer pays for most of it:
-across the thermocline the pair factor is 0.3, which is 0.47 on range, so above 1,300 m a Hollow's
-Commit shrinks from 342 m to 161 and a Sounder's from 353 to 166. The nearest Hollow to the spawn
-point is 2,122 m off and hears nothing at all. **The last five hundred metres of the dive are the
-loud part**, and by then the hull is over the row.
+The dive is the loudest thing the row does short of a ping, and the layer pays for the top of it:
+across the thermocline the pair factor is 0.3, which is 0.47 on range, so above the duct's top at
+1,100 m a Hollow's Commit shrinks from 342 m to 161 and a Sounder's from 353 to 166. Duct to
+outside is 1.0, not 0.3, so the discount stops two hundred metres above the layer rather than at
+it. The nearest Hollow to the spawn point is 2,122 m off and hears nothing at all. **The last seven
+hundred metres of the dive are the loud part**, and by then the hull is over the row.
+
+**Where a colossus dies decides what it is worth.** `payBiomass` reads the ledger at the animal's
+own position, and the two are released in different cells. `the-first` stops at (2741.8, 839.2) —
+north of the row, in the ledger's cell x 2,500–3,750 by y 0–1,000, which nothing of the row's
+stands in at 00:00 and which pays 260. `the-second` is released at (2500, 1750), inside the
+grower's own cell, the one §3's table has Strained at 00:10 and Dead at 01:08 — so the same animal
+is 260, 195, 65 or nothing depending entirely on what the row was doing beside its yard for the
+first two minutes of a tide that had not started yet. Nobody says so. The pay slip does.
 
 Two more properties of a grown hull, both engine facts rather than authorings. It is **armed** —
 `spawnUnit` adds a Weapon to anything with `attackDamage > 0` unless `weaponsCold` is set, and
