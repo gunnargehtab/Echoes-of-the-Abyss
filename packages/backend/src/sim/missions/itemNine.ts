@@ -316,7 +316,7 @@ export const LEDGER_ITEM_NINE: MissionDefinition = {
       kind: 'say',
       speaker: 'The Clerk of the Ninth Board',
       text: 'The Board is in session. Nine items stand. The chamber is listening; the courtesy is old, and it is not a courtesy.',
-      note: 'Read, not heard — the standing status of the say channel',
+      note: 'Hailed and read — the say channel since #381',
     },
 
     // 01:00 — the chair (§12). The items begin.

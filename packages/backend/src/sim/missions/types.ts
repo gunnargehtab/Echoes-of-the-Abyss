@@ -29,6 +29,7 @@ import type {
   MissionHeader,
   MissionMarker,
   MissionOutcome,
+  MissionVoice,
   ObjectiveStatus,
   ResolutionTier,
   StructureKind,
@@ -746,7 +747,7 @@ export interface MissionCommanderAbility {
    * it" is a query over the commander. So the line rides the act, which is the
    * thing that happened.
    */
-  line?: { speaker: string; text: string };
+  line?: { speaker: string; text: string; voice?: MissionVoice };
   note: string;
 }
 
@@ -1019,7 +1020,17 @@ export type MissionBeatEffect =
    */
   | { kind: 'bell'; note: string }
   | { kind: 'objective'; id: string; status: ObjectiveStatus; note: string }
-  | { kind: 'say'; speaker: string; text: string; note: string }
+  /**
+   * `voice` is the register the line is spoken in (docs/culture.md §3); absent
+   * is the player's own faction's, which is most lines in every mission.
+   * Authored on the minority spoken by somebody else — the Consortium
+   * surveyor on the Order's works channel, the plateaus' charting pair heard
+   * from a Directorate lip — so the mix can hail each in its own material
+   * (docs/audio-direction.md §13) rather than in the player's. A speaker that
+   * is the mission's own water talking ("The ground", "The turning", "The
+   * lattice") carries none and speaks as the player does.
+   */
+  | { kind: 'say'; speaker: string; text: string; voice?: MissionVoice; note: string }
   /**
    * `conclusion` marks a close that is not a failure state: the tide ending,
    * not a timer running out (docs/glossary.md, *Mission Outcome*;

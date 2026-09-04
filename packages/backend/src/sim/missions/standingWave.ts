@@ -506,6 +506,7 @@ export const CHORD_STANDING_WAVE: MissionDefinition = {
       atTick: T(3),
       kind: 'say',
       speaker: 'Cohort-Prime Adze, 9th Trench Cohort',
+      voice: 'cohorts',
       text: 'Route is filed. Works are audible at bearing three-five-two, seventy, sustained, which is a commissioning and not a hull. The route does not change on account of a building. It changes on account of what the building is for, and we will know that in four minutes.',
       note: "§9, 03:00 — the column states what it has heard and what it intends, on the cohort's open channel. Nobody is talking to the Knights and the Knights are listening",
     },
@@ -548,6 +549,7 @@ export const CHORD_STANDING_WAVE: MissionDefinition = {
     {
       kind: 'say',
       speaker: 'Cohort-Prime Adze, reading the corridor',
+      voice: 'cohorts',
       text: 'Corridor stands at two. Transit cost through it exceeds the route’s value by a factor I am not going to argue with. We turn at the Mouth and file the ground as closed. Log it as closed by them, not against us — the distinction will matter to somebody who was not here.',
       note: '§12 — the decision. A road that costs more than it saves is not a road; nobody in the column is stupid and nobody in it is cruel',
       when: CORRIDOR_STANDS,

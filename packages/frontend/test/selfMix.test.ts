@@ -25,6 +25,7 @@ import {
   BUS_PRIORITY,
   PRECEDENCE_MS,
   duckFor,
+  louderRung,
   markOpacity,
   precedenceTiming,
 } from '../src/audio/precedence.ts';
@@ -166,6 +167,60 @@ describe('precedence law, in level', () => {
 
   it('does nothing when nothing is sounding', () => {
     for (const rung of BUS_PRIORITY) assert.equal(duckFor(rung, null), 1);
+  });
+
+  it("seats speech under contacts and over the player's own noise (§13)", () => {
+    // Information outranks a voice, and a voice outranks atmosphere: a
+    // contact arriving mid-sentence dips the speaker, a ping under a line
+    // does not.
+    assert.deepEqual(BUS_PRIORITY, [
+      'self-exposure',
+      'contact',
+      'speech',
+      'self',
+      'world',
+      'music',
+    ]);
+    assert.ok(duckFor('speech', 'contact') < 1, 'a contact dips a line');
+    assert.ok(duckFor('speech', 'self-exposure') < duckFor('speech', 'contact'), 'exposure more');
+    assert.equal(duckFor('speech', 'self'), 1, 'your own ping does not dip a line');
+    assert.equal(duckFor('contact', 'speech'), 1, 'a line never dips a contact');
+    assert.ok(duckFor('music', 'speech') < 1, 'a line dips the score');
+  });
+
+  it('lets a line press down the score and nothing the water needs', () => {
+    // The two deliberate 1s in the table. The world bus carries §5's Sounder
+    // call, the warning the mix promises never to bury; the self bus carries
+    // the exposure strike and the ping, the top of the chain. A voice sits
+    // over both rather than under either.
+    assert.equal(duckFor('world', 'speech'), 1);
+    assert.equal(duckFor('self', 'speech'), 1);
+    assert.equal(duckFor('music', 'speech'), 0.5);
+  });
+
+  it('kept every dip that predates the speech rung', () => {
+    // The table replaced step arithmetic, and the one thing the replacement
+    // was not allowed to do was move a value nobody argued for moving: with
+    // speech in between, self would have gone from one step under a contact
+    // to two, and from a recoverable dip to a decisive one.
+    assert.equal(duckFor('contact', 'self-exposure'), 0.55);
+    assert.equal(duckFor('music', 'self-exposure'), 0.3);
+    assert.equal(duckFor('self', 'contact'), 0.55);
+    assert.equal(duckFor('world', 'contact'), 0.3);
+    assert.equal(duckFor('world', 'self'), 0.55);
+    assert.equal(duckFor('music', 'self'), 0.3);
+    assert.equal(duckFor('music', 'world'), 0.55);
+  });
+
+  it('resolves two claims on the chain to the louder one', () => {
+    // The engine holds the self mixer's cue and a line still being read at
+    // once, and writes the chain for whichever ranks higher.
+    assert.equal(louderRung(null, null), null);
+    assert.equal(louderRung('speech', null), 'speech');
+    assert.equal(louderRung(null, 'self'), 'self');
+    assert.equal(louderRung('self', 'speech'), 'speech');
+    assert.equal(louderRung('speech', 'contact'), 'contact');
+    assert.equal(louderRung('self-exposure', 'speech'), 'self-exposure');
   });
 });
 

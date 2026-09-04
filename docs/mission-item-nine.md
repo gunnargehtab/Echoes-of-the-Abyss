@@ -358,7 +358,7 @@ have kept since Face Six.
 | The two endings, unranked — one outcome, two records | **Built** on readings-per-objective ([mission-shift-change.md](mission-shift-change.md) §13): the session's close is a single conclusion outcome, and the ending is the record's own line beneath it — neither branch graded, exactly as [campaign.md](campaign.md) §9 requires |
 | A conclusion close with no failure state | **Built** (#252's arrangement — Tend's carve-out, stated in `missions.test.ts`) |
 | Campaign progression — this ending recorded anywhere after the room empties | **Not built.** The close reads the ending and nothing keeps it: the progression and unlock rows of #212, which every ending document will lean on and none of them owns |
-| In-mission character speech, heard | Text only, the standing status — and the campaign closes owing this debt its largest single item: the chair's transmission line, in a voice, is the row [mission-sorrowgate.md](mission-sorrowgate.md) §13 opened and nothing has yet paid |
+| In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line. The chair's transmission line is hailed in the concern's beat and read; in a *voice* it remains the row's largest unpaid item, and a hail is not that |
 
 ---
 

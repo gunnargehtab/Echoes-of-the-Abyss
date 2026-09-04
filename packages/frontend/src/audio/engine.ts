@@ -10,7 +10,8 @@
  *   AudioContext
  *   ├── musicBus ──► duck ──► trim ──┐
  *   ├── worldBus  ──────────► trim ──┤
- *   ├── contactBus ─────────► trim ──┼──► master ──► destination
+ *   ├── contactBus ─────────► trim ──┤
+ *   ├── speechBus ──────────► trim ──┼──► master ──► destination
  *   ├── selfBus   ──────────► trim ──┤
  *   └── uiBus     ──────────► trim ──┘
  *
@@ -39,12 +40,13 @@
  *    applies to those banks and not to the prototype.
  */
 
-import { SIM, type EchoMarkKind } from '@echoes/shared';
+import { SIM, type EchoMarkKind, type MissionVoice } from '@echoes/shared';
 import { ContactMixer, type ContactAudioFrame, type Spatialisation } from './contactMixer.ts';
 import { ContactVoice, ensureNoiseBuffer } from './contactVoice.ts';
 import { MarkBed } from './markBed.ts';
-import { duckFor } from './precedence.ts';
+import { duckFor, louderRung, type BusRung } from './precedence.ts';
 import { SelfMixer, type SelfAudioFrame } from './selfMixer.ts';
+import { playHail, readingSeconds } from './speechVoice.ts';
 import {
   SelfBed,
   SourBed,
@@ -86,7 +88,17 @@ export function dbToGain(db: number): number {
 export const CONTACT_BOOST_MAX_DB = 12;
 
 /** The buses a user volume trim exists for. Master is separate. */
-export type TrimBus = 'music' | 'world' | 'contact' | 'self' | 'ui';
+export type TrimBus = 'music' | 'world' | 'contact' | 'speech' | 'self' | 'ui';
+
+/**
+ * One authored line, reduced to what the mix needs — docs/audio-direction.md
+ * §13. The register picks the hail; the text's length is the bed's duration
+ * and nothing else about the text is read. The words are the log's.
+ */
+export interface SpeechLine {
+  voice: MissionVoice;
+  text: string;
+}
 
 /** How the ramp of a user volume change is smoothed, in seconds. */
 const TRIM_RAMP_S = 0.03;
@@ -95,6 +107,7 @@ export interface AudioBuses {
   music: GainNode;
   world: GainNode;
   contact: GainNode;
+  speech: GainNode;
   self: GainNode;
   ui: GainNode;
   master: GainNode;
@@ -123,6 +136,18 @@ export class AudioEngine {
   private pendingMarks: Map<EchoMarkKind, number> | null = null;
   private pendingSelf: SelfAudioFrame | null = null;
   /**
+   * Lines spoken since the last tick, each with the whisper rule as it stood
+   * when the line arrived. Buffered like everything else so the hail is built
+   * inside the measured tick — and so a line can never be heard *before* its
+   * beat: a `say` arrives on the room's Echo cadence and sounds on the next
+   * one, which is the same alignment a contact gets (§12).
+   */
+  private pendingSpeech: Array<SpeechLine & { whisper: boolean }> = [];
+  /** Audio-clock time the current line stops occupying the speech rung. */
+  private speechUntil = 0;
+  /** Lines actually hailed this session — the harness's "did it sound". */
+  private speechFired = 0;
+  /**
    * The most recent contact picture, held until the tick consumes it.
    *
    * Buffered rather than applied on arrival so the mixing cost lands inside
@@ -143,7 +168,14 @@ export class AudioEngine {
    * attenuation). A user slider on those nodes would silently fight the law.
    */
   private masterVolume = 1;
-  private busTrims: Record<TrimBus, number> = { music: 1, world: 1, contact: 1, self: 1, ui: 1 };
+  private busTrims: Record<TrimBus, number> = {
+    music: 1,
+    world: 1,
+    contact: 1,
+    speech: 1,
+    self: 1,
+    ui: 1,
+  };
   private trimNodes: Record<TrimBus, GainNode> | null = null;
 
   /** Rolling worst-case cost of a tick's audio work, against AUDIO_BUDGET_MS. */
@@ -220,6 +252,7 @@ export class AudioEngine {
     const music = make();
     const world = make();
     const contact = make();
+    const speech = make();
     const self = make();
     const ui = make();
 
@@ -241,6 +274,7 @@ export class AudioEngine {
       music: trim('music'),
       world: trim('world'),
       contact: trim('contact'),
+      speech: trim('speech'),
       self: trim('self'),
       ui: trim('ui'),
     };
@@ -248,6 +282,10 @@ export class AudioEngine {
     music.connect(duck).connect(this.trimNodes.music);
     world.connect(this.trimNodes.world);
     contact.connect(this.trimNodes.contact);
+    // Speech has a trim like the rest and can be taken to zero with nothing
+    // lost: the log is the caption (§13). Its bus gain belongs to the
+    // Precedence Law, written on the tick below, exactly as contact's does.
+    speech.connect(this.trimNodes.speech);
     self.connect(this.trimNodes.self);
     ui.connect(this.trimNodes.ui);
 
@@ -258,7 +296,7 @@ export class AudioEngine {
     contact.connect(analyser);
     this.analyserBuffer = new Float32Array(new ArrayBuffer(analyser.fftSize * 4));
 
-    this.buses = { music, world, contact, self, ui, master };
+    this.buses = { music, world, contact, speech, self, ui, master };
     // Built here, at the unlock gesture, so the first contact of a match does
     // not pay 44,100 samples of noise inside a 1 ms tick.
     ensureNoiseBuffer(context);
@@ -370,16 +408,44 @@ export class AudioEngine {
     this.pendingSelf = null;
     if (selfMixer !== null && selfFrame !== null && this.context !== null) {
       selfMixer.update(selfFrame, this.context.currentTime);
-      // The rest of the chain. `world` is set inside the self mixer, because
-      // it also carries §4's own-noise attenuation; the others are pure
-      // precedence and belong here.
-      const rung = selfMixer.activeRung;
-      const buses = this.buses;
-      if (buses !== null) {
-        const now = this.context.currentTime;
-        buses.contact.gain.setTargetAtTime(duckFor('contact', rung), now, 0.15);
-        buses.music.gain.setTargetAtTime(duckFor('music', rung), now, 0.25);
+    }
+
+    // Lines, hailed on the tick they were drained on rather than at the
+    // *next* tick time: the buffering above already put them on the Echo
+    // cadence, and a further 200 ms would open a gap between the log row and
+    // the sound that §13 says are one event.
+    const buses = this.buses;
+    if (buses !== null && this.context !== null && this.pendingSpeech.length > 0) {
+      const now = this.context.currentTime;
+      for (const line of this.pendingSpeech) {
+        const readingS = readingSeconds(line.text, line.whisper);
+        const occupied = playHail(this.context, buses.speech, line.voice, now, {
+          whisper: line.whisper,
+          readingS,
+        });
+        // Two lines on one tick overlap rather than queue — the log shows
+        // both rows at once too — and the rung is held for whichever runs
+        // longer.
+        this.speechUntil = Math.max(this.speechUntil, now + occupied);
+        this.speechFired++;
       }
+      this.pendingSpeech = [];
+    }
+
+    // The rest of the chain. `world` is set inside the self mixer, because it
+    // also carries §4's own-noise attenuation; the others are pure precedence
+    // and belong here. Speech is a second claim on the chain beside the self
+    // mixer's cue — a line still being read while nothing else sounds ducks
+    // the score on its own — so the rung written is the louder of the two.
+    // Written every tick rather than only when a self frame arrived, because
+    // a line's start and end are events of this bus and not of that one.
+    if (buses !== null && this.context !== null) {
+      const now = this.context.currentTime;
+      const speaking: BusRung | null = now < this.speechUntil ? 'speech' : null;
+      const rung = louderRung(selfMixer?.activeRung ?? null, speaking);
+      buses.contact.gain.setTargetAtTime(duckFor('contact', rung), now, 0.15);
+      buses.speech.gain.setTargetAtTime(duckFor('speech', rung), now, 0.15);
+      buses.music.gain.setTargetAtTime(duckFor('music', rung), now, 0.25);
     }
 
     const analyser = this.contactAnalyser;
@@ -420,6 +486,25 @@ export class AudioEngine {
   /** Hand the mix what is true of the player's own force on this tick. */
   applySelf(frame: SelfAudioFrame): void {
     this.pendingSelf = frame;
+  }
+
+  /**
+   * Hail a line on the next tick — docs/audio-direction.md §13.
+   *
+   * `whisper` is the caller's reading of the silence order and Silent
+   * Running *as the line arrived*, and it rides the line rather than the
+   * engine so a line spoken under the order and one spoken after it lifts
+   * are each hailed as they were. Nothing here is inferred: the line is
+   * authored mission data the room already sent, and the mix adds no fact
+   * to it.
+   */
+  say(line: SpeechLine, whisper: boolean): void {
+    this.pendingSpeech.push({ voice: line.voice, text: line.text, whisper });
+  }
+
+  /** How many lines this session has hailed. */
+  get speechCuesFired(): number {
+    return this.speechFired;
   }
 
   /** How many of each self-event this session has played. */
@@ -521,6 +606,8 @@ export class AudioEngine {
     this.selfMixer?.reset();
     this.selfMixer = null;
     this.pendingSelf = null;
+    this.pendingSpeech = [];
+    this.speechUntil = 0;
     this.pendingFrame = null;
     this.voices.clear();
     const context = this.context;

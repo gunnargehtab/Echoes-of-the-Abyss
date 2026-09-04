@@ -39,10 +39,12 @@ import {
   detectionRatio,
   faunaStatsFor,
   thermoclineFactor,
+  voiceOf,
   type CommanderAbilityView,
   type EchoSnapshot,
   type MissionAbility,
   type MissionView,
+  type MissionVoice,
   type ObjectiveView,
 } from '@echoes/shared';
 import {
@@ -162,6 +164,13 @@ export interface MissionLine {
   tick: number;
   speaker: string;
   text: string;
+  /**
+   * The register it is spoken in — resolved here, never on the client, so a
+   * beat that names no voice arrives already in the player's own and the
+   * client has nothing to infer. The mix keys its hail on this
+   * (docs/audio-direction.md §13); the log ignores it.
+   */
+  voice: MissionVoice;
 }
 
 /**
@@ -942,7 +951,12 @@ export class MissionRuntime {
         this.ring(world, () => true, this.definition.walk?.bell.ticks ?? 0);
         return;
       case 'say':
-        this.lines.push({ tick: world.tick, speaker: beat.speaker, text: beat.text });
+        this.lines.push({
+          tick: world.tick,
+          speaker: beat.speaker,
+          text: beat.text,
+          voice: beat.voice ?? voiceOf(this.definition.playerFaction),
+        });
         return;
       case 'resolve':
         // Deferred, not applied here. Beats fire before objectives are
@@ -1555,6 +1569,7 @@ export class MissionRuntime {
         tick: this.lastWorld.tick,
         speaker: ability.line.speaker,
         text: ability.line.text,
+        voice: ability.line.voice ?? voiceOf(this.definition.playerFaction),
       });
     }
     return true;

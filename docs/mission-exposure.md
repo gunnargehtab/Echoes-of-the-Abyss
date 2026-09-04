@@ -405,7 +405,7 @@ What exists against this document and what does not, continuing the Ledger's lis
 | The exposure readout as the player's instrument | **On the snapshot** ([systems-echo.md](systems-echo.md) §9) **and on the HUD, short of one thing** — checked in full when [mission-aptitude.md](mission-aptitude.md) §13 was corrected against `main`: `TRACKED ×n` on the top strip, the screen-edge flash and its scope-rim twin, plus this mission's own tolerance counter in the objectives panel. What is still owed is that the readout names a *count* and not a *tier*, so a free Tier 2 and a Tier 3 that is spending the charter read identically. Playable, and one label short of the instrument the doc asks for |
 | The six points as *authored emitters*, standing in for three days of hum and residue | **Built as emitters** (#240), and the stand-in is the honest note: the real residue layer ([systems-echo.md](systems-echo.md) §7) is written by live events and cannot be authored into a mission's past. A mission that wanted the survey to read *actual* Echo Marks would need a way to author marks at install, which nothing needs yet and nobody should build until a second mission asks |
 | The watch — authored transits, armed, on their own clock | **Built** (#190's `move` beats; hostility is `Owner.slot`) |
-| In-mission character speech, heard | Text only, the standing status ([mission-sorrowgate.md](mission-sorrowgate.md) §13) |
+| In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line |
 
 ---
 

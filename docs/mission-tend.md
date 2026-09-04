@@ -456,7 +456,7 @@ one mission at a time, what it was missing.
 | The stillness as culture — Teel's day going quiet ahead of the sweep | Ambient authoring, `say` and mix work; no new mechanism |
 | Filed → *Thin Water* briefing variant | **Built** (#378), and it turned out to be two variants rather than one: [mission-thin-water.md](mission-thin-water.md) §12 and [mission-convocation.md](mission-convocation.md) §12 both read this day's filing. What this mission contributes is the **scene** — `marr-plateau-filed`, latched by the sweep on the same condition as §8's filed reading, so the id a client stores is exactly the sentence it was just shown. A day that came home unfiled writes nothing, which is why the record is keyed by scene and not by mission: *Tend* completed in silence witnessed nothing, and both later briefings stay as authored |
 | Lampfry scatter and Tetherjelly PF, on the map they were designed for | **Species built** (#306) — the scatter tell, the reform, the jelly masking and both Failing-water consequences are simulated and tested ([bestiary.md](bestiary.md), Implementation Status). What remains is this mission's own authoring: seeding shoals through the Gardens and clusters along the duct in `seeding-tend`, which currently places neither |
-| In-mission character speech, heard | Text only, the standing status ([mission-sorrowgate.md](mission-sorrowgate.md) §13) |
+| In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line |
 
 ---
 

@@ -629,7 +629,7 @@ named below with what they actually cost.
 | Resonance Field 0.70 as **scattered** — bearings that lie, pings that return phantoms | **Not built**, and this mission does not rely on it. PF is a scalar and 0.70 is applied as one; the "scattered" half of [environments.md](environments.md)'s entry — false contacts, wrong bearings — has never been modelled. It would make this map harder in a way the mission would have to be re-tuned against, so it is named here so nobody adds it and assumes the tuning survived |
 | PR and depth, deliberately silent | **Built and unused** — the map is entirely Mid-Water and the party is PR-2, so `requiredPressureRating` returns 2 everywhere and the thermocline factor is 1 on every pair. Stated because a reader will check, and because the *campaign* gap is real: the Sounding Spire's PR+1 is the Knights' whole depth doctrine and no mission in [campaign.md](campaign.md) §7 teaches it |
 | Permanent roster attrition | **Not built**, and not needed here — mission 3's row, and §10 argues why the two must stay apart |
-| In-mission character speech, heard | Text only, the standing status ([mission-sorrowgate.md](mission-sorrowgate.md) §13) |
+| In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line |
 | The Fields' chime as a pitched ambient bed, and a chapter-house that sounds like a chord | Not started ([audio-direction.md](audio-direction.md)). The first authored water in the bible whose ambient bed is *tuned*, which is a new problem for the mix rather than a bigger version of an old one |
 
 ---

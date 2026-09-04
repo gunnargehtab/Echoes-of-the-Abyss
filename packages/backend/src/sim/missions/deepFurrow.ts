@@ -562,6 +562,7 @@ export const SEEDING_DEEP_FURROW: MissionDefinition = {
       atTick: T(5),
       kind: 'say',
       speaker: 'The observer, for those below',
+      voice: 'cohorts',
       text: "Three and two, at the band's depth, at the plateaus' figure. It is heard. It has been heard since 205, and it is entered as it has been entered.",
       note: 'A sentence kept for nine years without being acted on, which no other register in the setting can do',
     },
@@ -693,6 +694,7 @@ export const SEEDING_DEEP_FURROW: MissionDefinition = {
     {
       kind: 'say',
       speaker: 'The observer, for those below',
+      voice: 'cohorts',
       text: "It is entered. The band is the Second's. What was stated in 205 was stated in writing because the plateaus keep none, and it is stated again now, in the band, so that it is kept somewhere.",
       note: 'The same event, in the only register that can hear a garden as a claim. Nobody is wrong (campaign.md §2, rule 1)',
       when: { kind: 'sound', count: 1 },

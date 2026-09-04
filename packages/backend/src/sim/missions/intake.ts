@@ -377,7 +377,7 @@ export const ATTENDING_INTAKE: MissionDefinition = {
       kind: 'say',
       speaker: 'Undermarshal Setha Korrin',
       text: 'Intake 11 is mustered. Twelve hulls are given to the ground. The band is two hundred and forty-five, and it is rendered from what lives on the walls.',
-      note: 'Read, not heard — the standing status of the say channel',
+      note: 'Hailed and read — the say channel since #381',
     },
     // 00:00 — the eight Hollows, at working depth 1,700 m, on the two
     // overhangs (§11). The nearest to the muster is 1,601 m out against 1,231

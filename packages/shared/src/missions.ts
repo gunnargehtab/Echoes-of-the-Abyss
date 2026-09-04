@@ -13,6 +13,8 @@
  * a decision somebody argued for rather than one that drifted in.
  */
 
+import { Faction } from './types.js';
+
 /**
  * Campaign keys, from the campaign titles rather than the faction names —
  * docs/campaign.md §4–§7 title the four campaigns *The Ledger*, *The Second
@@ -24,6 +26,38 @@
  * documents of record may still move them, since neither campaign has one.
  */
 export type CampaignId = 'prologue' | 'ledger' | 'seeding' | 'attending' | 'chord';
+
+/**
+ * The register a line is spoken in — docs/culture.md §3's five voices, each
+ * named by its own self-description: the Consortium is *the concern*, the
+ * Commune *the plateaus*, the Directorate *the cohorts*, the Knights *the
+ * Order*, and the Sorrowgate court is the fifth.
+ *
+ * Not `Faction`, for two reasons that are really one. A court is not a faction
+ * — §3 opens on exactly that: "There are four factions and five registers" —
+ * so a union keyed on navies would have nowhere to put the one voice in the
+ * Rift that describes a room without joining it. And a register is a way of
+ * speaking rather than a navy: the mix keys a *hail* on it
+ * (docs/audio-direction.md §13), and what the ear should tell apart is who is
+ * talking, which is a fact about the line and not about whose hull it came
+ * from. Most lines in a mission are in the player's own register, and
+ * `voiceOf` is how a `say` beat with no `voice` of its own resolves.
+ */
+export type MissionVoice = 'concern' | 'plateaus' | 'cohorts' | 'order' | 'court';
+
+/** The register a faction speaks in. A court has no faction, so none maps to it. */
+export function voiceOf(faction: Faction): MissionVoice {
+  switch (faction) {
+    case Faction.Bathyarch:
+      return 'concern';
+    case Faction.Pelagia:
+      return 'plateaus';
+    case Faction.Directorate:
+      return 'cohorts';
+    case Faction.Hadron:
+      return 'order';
+  }
+}
 
 /**
  * One alternate briefing, and the scene whose having-been-witnessed selects it

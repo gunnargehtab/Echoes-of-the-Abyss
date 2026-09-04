@@ -286,7 +286,7 @@ export const LEDGER_BAFFLE: MissionDefinition = {
       kind: 'say',
       speaker: 'Lift Foreman Dessa Vail',
       text: "Hear that beat missing? That's forty-one people's plant asking where we are. I've rigged lifts for this concern for nineteen years and that is the first cargo that ever wrote back.",
-      note: 'Read, not heard — the standing status of the say channel',
+      note: 'Hailed and read — the say channel since #381',
     },
 
     // 04:00 — the first challenge: the law, once, in the passive voice (§6).
@@ -294,6 +294,7 @@ export const LEDGER_BAFFLE: MissionDefinition = {
       atTick: T(4),
       kind: 'say',
       speaker: 'Picket-Speaker, Fourth Trench Cohort',
+      voice: 'cohorts',
       text: 'The trench is closed while the inquiry is open. What enters it is not being threatened. It is being counted.',
       note: '',
     },
@@ -332,6 +333,7 @@ export const LEDGER_BAFFLE: MissionDefinition = {
       atTick: T(13),
       kind: 'say',
       speaker: 'Picket-Speaker, Fourth Trench Cohort',
+      voice: 'cohorts',
       text: 'A mooring was found in closed water. It was not in any charter. It has been corrected.',
       note: '',
     },

@@ -329,7 +329,7 @@ export const LEDGER_EXPOSURE: MissionDefinition = {
       kind: 'say',
       speaker: 'Underwriter Baen Tull',
       text: 'The Board prices three navies and a hole. I am not down here because I like the water. I am down here because a model with a hole in it is a comfort, and the concern can no longer afford comfort at Board rates.',
-      note: 'Read, not heard — the standing status of the say channel',
+      note: 'Hailed and read — the say channel since #381',
     },
 
     // The watch walks the worked ground's length, pausing where cohort

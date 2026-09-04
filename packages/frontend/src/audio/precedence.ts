@@ -81,13 +81,53 @@ export function markOpacity(ageMs: number, startMs: number, fullMs: number): num
  * The level half of the law. Every rung below the loudest one is attenuated
  * while something above it is sounding, which is what makes the order audible
  * rather than merely documented.
+ *
+ * Speech sits under contacts and over the player's own noise (§13):
+ * information outranks a voice, and a voice outranks atmosphere. A line is
+ * never news about the water — it is authored, and the log already has it —
+ * so a contact arriving mid-sentence dips the speaker rather than the reverse.
  */
-export const BUS_PRIORITY = ['self-exposure', 'contact', 'self', 'world', 'music'] as const;
+export const BUS_PRIORITY = [
+  'self-exposure',
+  'contact',
+  'speech',
+  'self',
+  'world',
+  'music',
+] as const;
 
 export type BusRung = (typeof BUS_PRIORITY)[number];
 
 /**
- * How far each rung ducks while `active` is sounding, as a linear gain.
+ * How far each rung ducks while another is sounding, as a linear gain —
+ * §13's table, transcribed.
+ *
+ * A table rather than step arithmetic, and the change was forced: when the
+ * speech rung went in between contact and self, "one step down is 0.55,
+ * further is 0.3" would have moved every dip below it — self under a contact
+ * from one step to two, and so from a recoverable dip to a decisive one — for
+ * no reason anybody argued for. So each pair is written down, the pairs that
+ * predate speech keep the values they had, and speech gets its own rows.
+ *
+ * Two cells under `speech` are deliberately 1. The world bus carries §5's
+ * Sounder call "at a level the −8 dB duck cannot bury", and a voice that
+ * talked for eight seconds over a −10 dB world would bury the one warning the
+ * mix promises never to; the self bus carries the exposure strike and the
+ * ping, which are the top of this chain, and a bus-level duck to make room
+ * for a voice would cut the loudest event in the game. A line sits *over*
+ * the player's own noise and the water rather than pressing them down.
+ */
+const DUCK_TABLE: Readonly<Record<BusRung, Partial<Record<BusRung, number>>>> = {
+  'self-exposure': { contact: 0.55, speech: 0.3, self: 0.3, world: 0.3, music: 0.3 },
+  contact: { speech: 0.55, self: 0.55, world: 0.3, music: 0.3 },
+  speech: { music: 0.5 },
+  self: { world: 0.55, music: 0.3 },
+  world: { music: 0.55 },
+  music: {},
+};
+
+/**
+ * How far `rung` ducks while `active` is sounding, as a linear gain.
  *
  * 1 means untouched. A rung never ducks itself or anything above it: the
  * exposure cue arriving must not quieten the contact that arrives with it,
@@ -95,13 +135,15 @@ export type BusRung = (typeof BUS_PRIORITY)[number];
  */
 export function duckFor(rung: BusRung, active: BusRung | null): number {
   if (active === null) return 1;
-  const activeRank = BUS_PRIORITY.indexOf(active);
-  const rank = BUS_PRIORITY.indexOf(rung);
-  if (rank <= activeRank) return 1;
+  return DUCK_TABLE[active][rung] ?? 1;
+}
 
-  // One step down is a clear but recoverable dip; further down is decisive.
-  // Chosen so the exposure cue leaves music barely present without muting it
-  // — silence would read as a bug, and §11 needs the mix to stay legible.
-  const steps = rank - activeRank;
-  return steps === 1 ? 0.55 : 0.3;
+/**
+ * The louder of two rungs, for a caller holding more than one claim on the
+ * chain at once — the self mixer's cue and a line still being spoken.
+ */
+export function louderRung(a: BusRung | null, b: BusRung | null): BusRung | null {
+  if (a === null) return b;
+  if (b === null) return a;
+  return BUS_PRIORITY.indexOf(a) <= BUS_PRIORITY.indexOf(b) ? a : b;
 }

@@ -540,7 +540,7 @@ export const CHORD_APTITUDE: MissionDefinition = {
       kind: 'say',
       speaker: 'Chapter-Master Halden Vrey',
       text: 'Good. You have all done this before, at nine, with your ears, and the only thing that has changed is the size of the instrument. Six voices stand off the house. You will put a tone into each and read what comes back.',
-      note: 'Read, not heard — the standing status of the say channel. §12, at the top of the exercise',
+      note: 'Hailed and read — the say channel since #381. §12, at the top of the exercise',
     },
 
     ...breath(1, false, 'The gate closes for the first time — 400 m at the centre'),
@@ -558,6 +558,7 @@ export const CHORD_APTITUDE: MissionDefinition = {
       atTick: T(6),
       kind: 'say',
       speaker: 'Surveyor Ade Bramm, on the open channel',
+      voice: 'concern',
       text: 'Log it as the second fault this year and grade the array for replacement at the next refit. It is not a hull. There is nothing out here to be a hull, and if there were, we would have costed the escort differently.',
       note: '§12 — the tolerance, explained by the people who keep it',
     },
@@ -627,6 +628,7 @@ export const CHORD_APTITUDE: MissionDefinition = {
     {
       kind: 'say',
       speaker: 'Surveyor Ade Bramm, on the open channel',
+      voice: 'concern',
       text: 'Stop the string. I want the water quiet and I want the last four returns read back to me with the coring off them. If the array is faulty it will still be faulty in a minute; if it is not, I would rather find that out now than at the refit.',
       note: 'Twenty of thirty — the barge stops coring, and a thing going quiet is the loudest event this game has (§5)',
       when: { kind: 'tolerance', ticks: WARNING_TICKS, tier: ResolutionTier.Classification },
@@ -634,6 +636,7 @@ export const CHORD_APTITUDE: MissionDefinition = {
     {
       kind: 'say',
       speaker: 'Surveyor Ade Bramm, on the open channel',
+      voice: 'concern',
       text: 'Amend the log. It is not a fault and it is not weather; it is a contact, type and count, and the writ says I file it. Bring the column up out of the Holding — they will be four minutes and I would rather everybody heard them coming.',
       note: 'Thirty — a contact filed rather than a fault. The column is audible for four minutes and arrives after the tuning has closed (§5, §7)',
       when: { kind: 'tolerance', ticks: TOLERANCE_TICKS, tier: ResolutionTier.Classification },

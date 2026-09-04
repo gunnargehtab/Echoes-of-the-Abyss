@@ -1073,7 +1073,7 @@ is unchanged.
 | **Cross-mission Drift Health with the prologue** | **Not built**, named here and not asked for — [campaign.md](campaign.md) §2 rule 5's third concrete pair, after Marr Plateau and the Furrow, and the first with the prologue on one side of it. A basin the prologue's colossus crossed twice is the basin this column crosses, and nobody tells the player why it sounds the way it does |
 | **The momentum as a format row** | **Not built, and deliberately not asked for.** Eighty-eight `move` beats is the honest shape of a schedule the format already carries, and a `MissionUnit.schedule` or a standing re-asserting order would be a second way of saying one thing. If a fourth mission wants a column on somebody else's clock, the row is worth writing then; see the open question below. The eighty-eight beats now exist and are twenty-two ticks of four (#394); the row stays refused |
 | **The mix** — the calling voice at 100, a colossus crossing at 30 m/s, a shoal going out | **Not started** ([audio-direction.md](audio-direction.md)). The calling voice — *the only sound in the game that means you have made a mistake that is now coming* — is the row the mix owes this mission first, because on this map the player makes that mistake on purpose |
-| In-mission character speech, heard | Text only, the standing status ([mission-sorrowgate.md](mission-sorrowgate.md) §13) |
+| In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line |
 
 ### One question this document does not settle
 

@@ -233,6 +233,7 @@ export function GameCanvas({
       spatialisation: audio.spatialisationMode,
       selfRung: audio.activeRung,
       selfCues: audio.selfCuesFired,
+      speechCues: audio.speechCuesFired,
       worstTickMs: Number(audio.worstTickCostMs.toFixed(4)),
       lastTickMs: Number(audio.lastTickCostMs.toFixed(4)),
       lastTickBuilt: audio.lastTickVoicesBuilt,
@@ -250,6 +251,16 @@ export function GameCanvas({
     };
     window.addEventListener('pointerdown', unlock, { once: true });
     window.addEventListener('keydown', unlock, { once: true });
+
+    /**
+     * The whisper rule's two inputs (docs/audio-direction.md §13), held as
+     * the latest the client was told: a silence order in force is the debt
+     * the mission view carries, and Silent Running is any own hull in the
+     * latest snapshot with it on. Both are the player's own state, already
+     * on screen, so reading them here adds nothing to what the mix knows.
+     */
+    let underSilenceOrder = false;
+    let anyHullSilent = false;
 
     const start = async () => {
       // The world first: the conn view mounts for the whole match, and the
@@ -354,6 +365,7 @@ export function GameCanvas({
           perspective.setIdentity(slot, faction);
         },
         onEcho: (snapshot: EchoSnapshot) => {
+          anyHullSilent = snapshot.units.some((unit) => unit.silentRunning);
           activeRenderer.applySnapshot(snapshot);
           perspective.applySnapshot(snapshot);
           // Audio work happens on the tick contacts arrive on, never per
@@ -363,17 +375,23 @@ export function GameCanvas({
         },
         onGameOver: (payload) => activeRenderer.setGameOver(payload),
         onMission: (view) => {
+          underSilenceOrder = view.debtS > 0;
           setMission(view);
           // The renderer needs the locks, not the objectives: they decide
           // which keys still do anything and what the hint bar says when one
           // does not (docs/ui-ux.md §7).
           activeRenderer.setMissionLocks(view.locks);
         },
-        onMissionLine: (line) =>
+        onMissionLine: (line) => {
+          // Heard when its beat fires and never earlier: the hail is queued
+          // from the same message that writes the log row, so the two are one
+          // event. The whisper rule is read as the line lands (§13).
+          audio.say(line, underSilenceOrder || anyHullSilent);
           setMissionLines((previous) => {
             const next = [...previous, line];
             return next.length > MAX_LOG_ENTRIES ? next.slice(-MAX_LOG_ENTRIES) : next;
-          }),
+          });
+        },
         onMissionOver: (payload) => {
           setMissionOver(payload);
           activeRenderer.setMissionOver(payload);
@@ -447,6 +465,7 @@ export function GameCanvas({
         audio.setMasterVolume(settings.masterVolume);
         audio.setBusTrim('music', settings.busVolumes.music);
         audio.setBusTrim('world', settings.busVolumes.world);
+        audio.setBusTrim('speech', settings.busVolumes.speech);
         audio.setBusTrim('self', settings.busVolumes.self);
         audio.setBusTrim('ui', settings.busVolumes.ui);
         audio.setBusTrim(
