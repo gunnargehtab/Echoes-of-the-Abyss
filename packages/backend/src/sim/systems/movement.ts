@@ -69,9 +69,29 @@ function speedMultiplier(world: SimWorld, eid: number): number {
       ? DIRECTORATE_SHALLOW.SPEED_MULTIPLIER
       : 1);
 
-  if (!SilentRunning.active[eid]) return water;
+  // A mission commander's one authored act, while it runs
+  // (`MissionCommanderAbility`; docs/characters.md). Stacks multiplicatively
+  // with everything above it for the reason the three weather terms stack with
+  // each other: a plateau that convened while a storm was rattling its hulls
+  // has two separate facts true about it, and neither cancels the other. Empty
+  // in every skirmish, and the read is gated on that.
+  const act = water * (world.commanderHaste.size === 0 ? 1 : (world.commanderHaste.get(eid) ?? 1));
+
+  if (!SilentRunning.active[eid]) return act;
+  // Immunity is to the **speed** penalty and to nothing else — the SIG floor
+  // stays, per docs/mission-convocation.md §4: "A convocation makes the plateau
+  // fast; it does not make it inaudible, and an ability that did both would be
+  // the one mechanic in this game that is not an argument about sound." The
+  // floor lives in acoustics and this function cannot reach it, which is the
+  // structural version of the same promise.
+  //
+  // For the Commune this is the whole of the ability: their multiplier is 0.8
+  // against everybody else's 0.55, so removing it and adding the bonus reads
+  // 0.8 → 1.0 → 1.25 — fifteen seconds of a hull that moves half again as fast
+  // as it was moving and is still silent.
+  if (world.commanderSilentImmune.has(eid)) return act;
   return (
-    water *
+    act *
     (Owner.faction[eid] === Faction.Pelagia
       ? SILENT_RUNNING.PELAGIA_SPEED_MULTIPLIER
       : SILENT_RUNNING.SPEED_MULTIPLIER)

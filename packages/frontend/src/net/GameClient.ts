@@ -557,6 +557,19 @@ export class GameClient {
   }
 
   /**
+   * The commander's one authored act — docs/characters.md, and only in a
+   * mission that grants one.
+   *
+   * No payload: the act carries no unit, and once-per-match is the server's
+   * fact rather than this object's. The panel greys the button out when the
+   * view says it is spent; a client that sent it anyway would simply be
+   * refused, which is where that decision belongs.
+   */
+  commanderAbility(): void {
+    this.room?.send('ability', {});
+  }
+
+  /**
    * Launch a torpedo at a heard contact — docs/systems-combat.md §5, §7.
    *
    * The same opaque handle an attack order uses, and for the same reason: it is

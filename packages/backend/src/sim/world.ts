@@ -146,6 +146,32 @@ export interface SimWorld extends IWorld {
    */
   soundingSig: Map<number, number>;
   /**
+   * Hulls carrying a mission commander's one authored act this tick — eid to
+   * the speed multiplier it grants (docs/characters.md; `MissionCommanderAbility`).
+   *
+   * `liftCutSig`'s arrangement in every respect: written by the mission runtime
+   * on the Echo tick, read by movement at 60 Hz, cleared and rebuilt whole on
+   * every mission pass so an expired act cannot leave a stale bonus on a
+   * recycled entity id. Empty in every skirmish, and the read is gated on that.
+   *
+   * A speed multiplier and not a component, because the effect is authored,
+   * bounded and re-derived from the runtime's own clock every pass — the same
+   * argument the cut floor makes. A component would be a second place the
+   * fifteen seconds are counted.
+   */
+  commanderHaste: Map<number, number>;
+  /**
+   * Hulls the same act lifts Silent Running's **speed** penalty from — the
+   * immunity half of docs/characters.md's Convocation. The SIG floor is
+   * untouched and stays untouched: docs/mission-convocation.md §4 is explicit
+   * that a convocation makes the plateau fast and does not make it inaudible.
+   *
+   * A separate set rather than a flag inside `commanderHaste`, because an
+   * ability may author either half without the other and a sentinel value in a
+   * multiplier map would be a second meaning for a number.
+   */
+  commanderSilentImmune: Set<number>;
+  /**
    * The simulation's only source of randomness. Seeded per match and part of
    * simulation state — see sim/rng.ts. Nothing in sim/ may call Math.random().
    */
@@ -326,6 +352,8 @@ export function createSimWorld(terrain: Terrain, dt: number, seed: number): SimW
   world.blooms = [];
   world.liftCutSig = new Map();
   world.soundingSig = new Map();
+  world.commanderHaste = new Map();
+  world.commanderSilentImmune = new Set();
   world.rng = new Rng(seed);
   world.localOfEid = new Map();
   world.eidOfLocal = new Map();

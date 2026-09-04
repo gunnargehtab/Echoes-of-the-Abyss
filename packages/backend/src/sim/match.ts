@@ -1061,6 +1061,26 @@ export class Match {
     this.applyPing(slot, eid);
   }
 
+  /**
+   * The commander's one authored act — docs/characters.md's *Commander
+   * ability*, and the first thing in this file a mission *grants* rather than
+   * withholds.
+   *
+   * Recorded like every other order and before every refusal, on this path's
+   * standing rule: a build that later stops refusing shows up as a replay
+   * divergence rather than as silence. The refusals themselves are the
+   * runtime's — there is one of these per match, and whether it has been spent
+   * is mission state, not the room's.
+   *
+   * Takes no unit, unlike every order above it. An act is the commander's and
+   * not a hull's: `MissionCommanderAbility` measures its radius from an
+   * authored point, so there is nothing here for a selection to name.
+   */
+  commanderAbility(slot: number): boolean {
+    this.recordCommand({ tick: this.world.tick, type: 'ability', slot });
+    return this.missionRuntime?.fireAbility(slot) === true;
+  }
+
   /** The unrecorded half of `activeSonar` — see `applyMove`. */
   private applyPing(slot: number, eid: number): void {
     if (!this.owns(slot, eid) || !hasComponent(this.world, Unit, eid)) return;

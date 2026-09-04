@@ -155,6 +155,11 @@ export type ReplayCommand =
   | { tick: number; type: 'throttle'; slot: number; unit: number; throttle: HarvestThrottle }
   | { tick: number; type: 'silent'; slot: number; unit: number; active: boolean }
   | { tick: number; type: 'ping'; slot: number; unit: number }
+  /**
+   * The commander's one act — no unit, because an act is the commander's and
+   * not a hull's (`MissionCommanderAbility` measures from an authored point).
+   */
+  | { tick: number; type: 'ability'; slot: number }
   | { tick: number; type: 'build'; slot: number; kind: StructureKind; x: number; y: number }
   | { tick: number; type: 'produce'; slot: number; structure: number; kind: UnitKind };
 
@@ -371,6 +376,9 @@ function applyCommand(match: Match, command: ReplayCommand): void {
       break;
     case 'ping':
       match.activeSonar(command.slot, eid(command.unit));
+      break;
+    case 'ability':
+      match.commanderAbility(command.slot);
       break;
     case 'build':
       match.build(command.slot, command.kind, command.x, command.y);

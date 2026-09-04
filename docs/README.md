@@ -117,14 +117,19 @@ a document already points at it:
   explicitly refused to make alone are made (#372): the corridor keeps PF 2.0, carried by a
   ceiling the terrain reports about itself so that only a standing corridor pays for it, and
   the build radius is 1,500 m — the pairing range — for every structure.
-  [mission-convocation.md](mission-convocation.md) is the fourth, and it asks for something no
-  document has asked for before: **a commander ability at all.** `MissionAbility` is a lock list
-  and nothing in the format grants one, so Marr's Convocation — the only reason that mission
-  exists — has no mechanism behind it. It also wants a walk (an ordered set of held positions
-  with a ceiling on the water rather than a floor on the hull) and a restart, which is the first
-  mechanic in this game that takes progress back. It is the first mission written on ground
-  another mission already uses, deliberately, and it leaves one question open rather than
-  settling it: whether the count read at the watch's edge and the active ping are the same act.
+  [mission-convocation.md](mission-convocation.md) was the fourth and is no longer planned — it
+  is built (#373), `seeding-convocation`, with tests. It asked for something no document had
+  asked for before: **a commander ability at all**, since `MissionAbility` is a lock list and
+  nothing in the format granted one. That is now `MissionCommanderAbility`, a grant beside the
+  lock list rather than an eighth entry in it, with Marr's radius, bonus and duration in
+  `constants.ts` against [characters.md](characters.md). The walk landed with it — an ordered
+  set of held positions with a ceiling on the row's own water rather than a floor on the hull's
+  SIG — and so did the restart, which is the first mechanic in this game that takes progress
+  back: the `walk` predicate is the first counter in the objective union that can go down. It
+  is still the first mission written on ground another mission already uses, and the registry
+  needed nothing for that. The one question it left open it still leaves open, and the build did
+  not need it settled: whether the count read at the watch's edge and the active ping are the
+  same act.
 - **The briefing variants that stand on the progression record.** The record itself is no
   longer planned — it is built (#371): a per-mission history under `echoes.progression`,
   written once at the result screen from the payload the server sent, keeping the best

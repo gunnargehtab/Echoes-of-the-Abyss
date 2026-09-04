@@ -1346,6 +1346,55 @@ button.objectives-row:hover {
   color: var(--text-dim);
 }
 
+/*
+ * The commander's one act — docs/characters.md. Teal rather than red: it is
+ * something the player may do, not something being done to them. Once it is
+ * spent the button dims to the same 40% the locks use and the reason takes the
+ * description's place, because "there is one of these and it has been rung" is
+ * the more useful sentence at that point.
+ */
+.objectives-act {
+  margin: 4px 0 0;
+  padding: 6px 8px 2px;
+  border-top: 1px solid color-mix(in srgb, var(--neon-teal) 25%, transparent);
+}
+
+.objectives-act-button {
+  width: 100%;
+  padding: 4px 6px;
+  font: inherit;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--neon-teal);
+  background: color-mix(in srgb, var(--neon-teal) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--neon-teal) 45%, transparent);
+  cursor: pointer;
+}
+
+.objectives-act-button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--neon-teal) 20%, transparent);
+}
+
+.objectives-act-button.spent {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.objectives-act-reason {
+  margin: 4px 0 0;
+  font-size: 0.6rem;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+
+.objectives-act-running {
+  margin: 2px 0 4px;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  color: var(--neon-teal);
+}
+
 /* Debt is a warning about your own noise, so it warns. */
 .objectives-debt {
   margin: 4px 0 0;

@@ -255,6 +255,29 @@ export type MissionPredicate =
    * what the player *heard* to what the player *did*.
    */
   | { kind: 'sound'; count: number }
+  /**
+   * How many rows of the walk have turned — docs/mission-convocation.md §4.
+   *
+   * `sound`'s shape with the set turned into a sequence, and it is inside the
+   * wall for `sound`'s reasons doubled: the rows are authored map data, the
+   * hulls that hold them are the player's own, and the number is a count of
+   * how far the plateau's own question has got. It names no party and no
+   * position.
+   *
+   * **The one thing this predicate carries that no predicate before it did:
+   * it can go down.** A walk that stalls for its authored patience returns
+   * altered and the circuit restarts (`MissionWalk.stallTicks`), so "four of
+   * seven" becomes "none of seven" and the player is told by five bells rather
+   * than by a number. Every other counter in this union is monotone or
+   * explicitly a floor; this is the first mechanic in the game that takes
+   * progress back, and it changes what a predicate *means* — which is why
+   * docs/mission-convocation.md §13 lists the restart as its own row.
+   *
+   * The status it feeds is not thereby un-monotone: `deriveObjectives` latches
+   * Met and the walk is only ever met at the full count, so a restart moves
+   * the counter and never a status.
+   */
+  | { kind: 'walk'; count: number }
   | { kind: 'quiet'; role: MissionRole; ceilingSig: number }
   | { kind: 'endure'; ticks: number }
   /**
@@ -405,6 +428,242 @@ export interface MissionSounding {
   note: string;
 }
 
+/**
+ * A row of the walk — docs/mission-convocation.md §4, and the mechanism the
+ * mission is named for: "A row **turns** when a live Commune hull has held
+ * inside its 400 m for sixty seconds *and* the row's water has stayed under
+ * the ceiling for all of it."
+ *
+ * `MissionSounding`'s shape with the bearing taken away and three things put
+ * in its place, which is why it is a fourth table row rather than a flag on the
+ * third:
+ *
+ * - **An order.** Soundings are a set and the player picks the order; a walk is
+ *   a sequence and the plateau does. Only `MissionWalk.rows[current]` is live.
+ * - **A ceiling on the row's own water rather than a floor on the hull's SIG.**
+ *   A lift and a sounding *make* noise at an authored figure; a row *admits*
+ *   noise up to one. §4's whole argument is in that inversion — 26 sits two
+ *   above a moving tender's 18 and two below a Corvette's 28, so the guns
+ *   cannot stand where the question is.
+ * - **A stall.** A hull that is not the plateau's, inside the radius, and the
+ *   row does not turn while it is there.
+ */
+export interface MissionWalkRow {
+  id: string;
+  /** The row, as a point on the cell grid — `MissionSounding`'s reason. */
+  x: number;
+  y: number;
+  /** How close a hull must be to hold it. §11 authors 400 m for every row. */
+  radiusM: number;
+  /**
+   * The marker the panel sends the camera to while this row is the live one.
+   *
+   * Named per row rather than per objective, because the walk *moves* and an
+   * objective's single `markerId` cannot. `projectMissionView` ships only the
+   * live row's marker, which is the same withholding `revealAtTick` performs
+   * on the rest: the plateau knows where its own question is, and shipping all
+   * seven would put the whole circuit on the wire at 01:00.
+   */
+  markerId?: string;
+  note: string;
+}
+
+/**
+ * The walk — docs/mission-convocation.md §4, in four movements, of which this
+ * type is the first two.
+ *
+ * **The stall reads another party's position, and that is the one thing in
+ * this format that does.** Every predicate in `MissionPredicate` is a query
+ * over the observer's own force and cannot be otherwise; this is not a
+ * predicate. It is authored map data resolved server-side, and the union's
+ * standing rule survives it because of what the player is *shown*: the
+ * objective's counter does not advance and its reading changes to
+ * `stallText` — *this row is not turning* — never *a Corvette is at 780,
+ * 1,410*. No position, no party, no count of anybody else's hulls, and no way
+ * for an author to ask for one, because the shape that could ask is a rectangle
+ * and a radius the mission wrote down before the match started.
+ *
+ * docs/mission-convocation.md §13 asks the row that adds this to say so in its
+ * comment, because the union has held that line on every previous addition.
+ * This is that sentence.
+ *
+ * **The restart is the first mechanic in this game that takes progress back.**
+ * Ninety seconds of continuous stall and the walk returns altered: every row
+ * already turned rings once, the circuit restarts at the first row, and
+ * everything walked so far is walked again (§4.2). Nothing is lost but the
+ * tide, and the tide is the only thing there is.
+ */
+export interface MissionWalk {
+  /** The circuit, in the order it is walked. §11 authors seven. */
+  rows: readonly MissionWalkRow[];
+  /** Ticks a live row must be held, quiet, before it turns. §4 authors sixty seconds. */
+  holdTicks: number;
+  /**
+   * The loudest the row's own water may be while it turns — measured over the
+   * player's own hulls standing inside the radius, and over nothing else.
+   *
+   * Not `own.peakSig`, for `flightPeakSig`'s reason turned around: the figure
+   * §4 argues about is what is *standing on the row*, and a Corvette holding
+   * the row next door is exactly the arrangement the mission wants. And not
+   * the bells either — a bell ringing on a row is the walk restarting or the
+   * plateau convening, neither of which is a hull failing to be quiet.
+   */
+  ceilingSig: number;
+  /** Ticks of continuous stall before the circuit returns altered. §4 authors ninety seconds. */
+  stallTicks: number;
+  /**
+   * The bell at each row — habitats.md §2's "a loud event at a fixed tick",
+   * and the only sound this mechanism makes.
+   *
+   * One authored figure for every ring, because there is only one kind of
+   * bell: §4 prices *every bell at once* at SIG 70, which is a statement about
+   * how many of them ring rather than about how loud one is. A restart rings
+   * the rows already turned; an emergency convocation rings all of them
+   * (`MissionCommanderAbility.collapsesWalk`). Same bell, different arithmetic,
+   * and the player learns what the sound means the first time it costs them
+   * six minutes.
+   */
+  bell: {
+    sig: number;
+    /** Ticks one ring sounds for. */
+    ticks: number;
+    /** The water the bells hang in. One figure for the terrace. */
+    depthM: number;
+  };
+  note: string;
+}
+
+/**
+ * A region held by somebody who is not the player, for long enough that the
+ * mission says so — docs/mission-convocation.md §8's one failure state.
+ *
+ * "If a hull of the assertion stands inside the Holdfast for sixty continuous
+ * seconds, the plateau is **held**, and the mission is lost." §13 predicts
+ * exactly this: "probably nothing new: a hull of a named party standing in a
+ * region for a duration is the stall condition of the walk row with the sign
+ * flipped, and it should be the same mechanism or the mission has two ways of
+ * asking one question." It is the same mechanism — `foreignPresence` answers
+ * both — and this row is the sign flip.
+ *
+ * **How campaign.md §10's telegraph is paid, since a hold has no authored
+ * tick.** `missions.test.ts` measures the gap between a mission's last loud
+ * beat and its `resolve`, which needs two authored ticks and a hold has one.
+ * So the rule is paid by the hold's own duration instead, and the test holds
+ * a closing hold to at least `MISSION.FAILURE_TELEGRAPH_S`: a Cruiser at 65
+ * SIG standing in the player's home water for sixty seconds is the loudest
+ * sixty-second warning this game can produce, and §8 says so in as many words.
+ */
+export interface MissionHold {
+  id: string;
+  /** The region. Authored, and named by `regions`. */
+  region: string;
+  /** Ticks of *continuous* presence. Leaving resets it — a hull that left is not holding. */
+  ticks: number;
+  /**
+   * The objective this fails when it completes. Failed by the same path a
+   * beat fails one, so the panel and the close agree.
+   */
+  objectiveId: string;
+  /**
+   * Close the mission on the count as it stands — docs/mission-convocation.md
+   * §9: "14:00 The Holdfast is held, or it is not. If it is, the mission
+   * resolves here." Omitted, the hold fails its objective and the tide still
+   * runs its length.
+   */
+  closes?: true;
+  note: string;
+}
+
+/**
+ * The commander's one authored act — docs/characters.md's *Commander ability*
+ * entries, and the row docs/mission-convocation.md §13 says "this is the first
+ * document to need one" of.
+ *
+ * **Not a `MissionAbility`.** That union is the lock list: seven affordances a
+ * mission may withhold. This is the opposite — one thing a mission *grants*
+ * that no skirmish has — so it is its own row, and `CommanderAbilityView` is
+ * its own wire type for the same reason.
+ *
+ * **The smallest version, exactly as §13 specifies it**: one authored,
+ * once-per-match, player-fired effect with a duration, a radius, a SIG cost and
+ * a mission-specific consequence. Nothing here is a language: four numbers, a
+ * point, two authored sentences and one flag.
+ *
+ * The numbers Marr's carries are `COMMANDER_ABILITY`'s rather than this
+ * literal's, because docs/characters.md states them as facts about the woman
+ * rather than about the tide.
+ */
+export interface MissionCommanderAbility {
+  id: string;
+  /** The button's name, in register, shown verbatim. */
+  label: string;
+  /** One authored line under it — what it does, and what it costs. */
+  description: string;
+  /**
+   * Where the act happens: the radius is measured from here, and this is where
+   * the mission hears it.
+   *
+   * A point rather than a tag, for `MissionSounding`'s reason and one more —
+   * the origin is the Holdfast, which is a structure that cannot move, and a
+   * tag would make the radius depend on a hull staying alive. §4 measures
+   * "within 2,000 m of the Holdfast", and the Holdfast is a place.
+   */
+  x: number;
+  y: number;
+  depthM: number;
+  radiusM: number;
+  /** Ticks the effect runs for. */
+  durationTicks: number;
+  /**
+   * The speed multiplier the player's own hulls inside the radius carry while
+   * it runs. 1 is an ability that does not touch speed.
+   */
+  speedMultiplier: number;
+  /**
+   * Silent Running's **speed** penalty is lifted while it runs. The SIG floor
+   * stays, and §4 states why in a sentence this format should not need to
+   * repeat: "A convocation makes the plateau fast; it does not make it
+   * inaudible, and an ability that did both would be the one mechanic in this
+   * game that is not an argument about sound."
+   *
+   * For the Commune this is the whole ability. Their silent multiplier is 0.8
+   * against everybody else's 0.55, so immunity plus the bonus reads
+   * 0.8 → 1.0 → 1.25: fifteen seconds of a hull that moves half again as fast
+   * as it was moving *and is still silent*.
+   */
+  silentRunningImmunity?: true;
+  /**
+   * What the act broadcasts, from the point above, for its duration. The
+   * invoice, and the reason a once-per-match button is a decision rather than
+   * a free win.
+   */
+  sig: number;
+  /**
+   * The bell's second half — §4: the same act rings every row's bell and turns
+   * the remaining rows together, so the circuit runs in one tide instead of
+   * several (habitats.md §2).
+   *
+   * "Build both halves or neither — a Convocation that made hulls fast and did
+   * nothing to the vote is a speed buff in a mission about a vote" (§13). The
+   * flag is how a mission with no walk declines the second half honestly
+   * rather than by accident.
+   */
+  collapsesWalk?: true;
+  /**
+   * What is said when it is rung — docs/mission-convocation.md §12's
+   * "Tidespeaker Ysolde Marr, if the bell is rung — ~15:30".
+   *
+   * On the ability rather than in `beats` because the line is conditional on
+   * the player and the beat table is the world's clock. It could not be a
+   * `MissionConditionalBeat` either: those key on a `MissionPredicate`, every
+   * one of which is a query over the player's *force*, and "the commander rang
+   * it" is a query over the commander. So the line rides the act, which is the
+   * thing that happened.
+   */
+  line?: { speaker: string; text: string };
+  note: string;
+}
+
 export interface MissionObjective {
   id: string;
   /**
@@ -421,6 +680,23 @@ export interface MissionObjective {
    * marked *while in debt*. Absent means the reading does not change.
    */
   debtText?: string;
+  /**
+   * The same rule as the plateau states it while the walk is stalled —
+   * docs/mission-convocation.md §12 lists both readings under "Objective
+   * readings, in play": *The walk's on the second row. It wants somebody
+   * standing there and it wants it quiet* and, stalled, *That's still turning.
+   * It'll come round again — we've lost the walk, not the question.*
+   *
+   * `debtText`'s arrangement exactly, with the condition moved from the
+   * silence ledger to the walk. Two readings of one rule, and the reason it is
+   * not a second objective is `debtText`'s: the ask has not changed.
+   *
+   * **It says the walk is not turning and never why.** The stall's cause may
+   * be a hull of another party standing on the row, and naming that would put
+   * somebody else's position inside a sentence the player is shown — which is
+   * exactly the line `MissionWalk` is careful not to cross.
+   */
+  stallText?: string;
   initial: ObjectiveStatus;
   predicate: MissionPredicate;
   /**
@@ -559,6 +835,24 @@ export type MissionBeatEffect =
       biome?: Biome;
       note: string;
     }
+  /**
+   * Every row of the walk rings — docs/mission-convocation.md §9's 00:00 beat,
+   * "the bell, once, rung by Marr", and habitats.md §2's *Convening*: "the
+   * loudest deliberate act on a plateau and very nearly the only one… a plateau
+   * that convenes has announced to the water that it has stopped working."
+   *
+   * The one beat kind that makes a sound of its own rather than moving
+   * something that makes one, and it exists because the alternative was worse:
+   * the convening bell is the same bell the restart and the commander's act
+   * ring (`MissionWalk.bell`), and rendering it as a spoken line instead would
+   * have the mission's opening event be the only bell on the terrace nobody
+   * outside the plateau can hear.
+   *
+   * No tag and no figure: a bell belongs to a row, and the walk states how
+   * loud one is and how long it sounds. A mission with no walk has no bells,
+   * and this beat does nothing there.
+   */
+  | { kind: 'bell'; note: string }
   | { kind: 'objective'; id: string; status: ObjectiveStatus; note: string }
   | { kind: 'say'; speaker: string; text: string; note: string }
   /**
@@ -758,6 +1052,12 @@ export interface MissionDefinition extends MissionHeader {
   lifts?: readonly MissionLift[];
   /** The formations this mission asks read by hand. Omitted is none. */
   soundings?: readonly MissionSounding[];
+  /** The circuit this mission asks walked — see `MissionWalk`. Omitted is none. */
+  walk?: MissionWalk;
+  /** Ground another party may take by standing on it — see `MissionHold`. */
+  holds?: readonly MissionHold[];
+  /** The commander's one act, when the mission grants one — `MissionCommanderAbility`. */
+  commanderAbility?: MissionCommanderAbility;
   /** The scripted listener whose hearing is an outcome — see `MissionSweep`. */
   sweep?: MissionSweep;
   markers: readonly MissionMarker[];

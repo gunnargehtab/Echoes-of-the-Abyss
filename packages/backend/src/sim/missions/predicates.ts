@@ -9,8 +9,8 @@
  * slot is being sent on this very tick, so every number returned is one the
  * client could have computed for itself; `roleIds` and `loadedIds` name hulls
  * of the player's own party; `attended` counts what this observer's own ears
- * resolved and `sounded` what its own hulls finished; `regionById` and
- * `predicate` are authored map data
+ * resolved, `sounded` what its own hulls finished and `turned` how far the
+ * plateau's own question has got; `regionById` and `predicate` are authored map data
  * that shipped with the mission. There is no world, no ECS, no second snapshot and no slot
  * argument, so "three of five hostiles remaining" is not refused here — it
  * cannot be asked for.
@@ -79,7 +79,8 @@ export function progressOf(
   loadedIds: LoadedIds,
   attended: number,
   exposed: ExposedTicks,
-  sounded: number
+  sounded: number,
+  turned: number
 ): Progress {
   switch (predicate.kind) {
     case 'extract': {
@@ -129,6 +130,17 @@ export function progressOf(
       // into somebody else's position, and a completed sounding is a fact about
       // a player hull standing at an authored point. Capped, like the rest.
       return { done: Math.min(sounded, predicate.count), of: predicate.count };
+    case 'walk':
+      // How far the plateau's own question has got, handed in as a number for
+      // `sound`'s reason: this file is given nothing it could turn into
+      // somebody else's position. Capped like every other counter — a circuit
+      // that has closed does not read eight of seven.
+      //
+      // The one counter in this union that can go *down*. A walk that stalls
+      // for its authored patience returns altered and this reads none of seven
+      // again (types.ts, `walk`); the status it feeds stays monotone because
+      // the walk is only ever met at the full count.
+      return { done: Math.min(turned, predicate.count), of: predicate.count };
     case 'endure':
       return { done: Math.max(0, own.tick - startedTick), of: predicate.ticks };
     case 'tolerance':
@@ -161,7 +173,8 @@ export function isMet(
   loadedIds: LoadedIds,
   attended: number,
   exposed: ExposedTicks,
-  sounded: number
+  sounded: number,
+  turned: number
 ): boolean {
   const { done, of } = progressOf(
     predicate,
@@ -172,7 +185,8 @@ export function isMet(
     loadedIds,
     attended,
     exposed,
-    sounded
+    sounded,
+    turned
   );
   return done >= of;
 }

@@ -267,6 +267,15 @@ export class MatchRoom extends Room<MatchState> {
       this.match.activeSonar(slot, message.unitId);
     });
 
+    // The commander's one act (docs/characters.md). No payload at all — the
+    // act carries no unit, and a message that named one would be a client
+    // choosing where the plateau's bell hangs.
+    this.onMessage('ability', (client) => {
+      const slot = this.commandSlot(client);
+      if (slot === undefined) return;
+      this.match.commanderAbility(slot);
+    });
+
     this.onMessage('attack', (client, message: AttackMessage) => {
       const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;

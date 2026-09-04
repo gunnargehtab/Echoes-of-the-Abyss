@@ -563,7 +563,11 @@ export function GameCanvas({
         <div ref={hostRef} className="game-host" />
         {live && phase !== MatchPhase.Lobby && <ContactLog entries={log} onFocus={focusOn} />}
         {live && phase !== MatchPhase.Lobby && mission !== null && (
-          <MissionPanel view={mission} onFocus={focusOn} />
+          <MissionPanel
+            view={mission}
+            onFocus={focusOn}
+            onCommanderAbility={() => clientRef.current?.commanderAbility()}
+          />
         )}
         {live && phase !== MatchPhase.Lobby && missionLines.length > 0 && (
           <MissionLog lines={missionLines} />
