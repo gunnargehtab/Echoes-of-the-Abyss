@@ -301,8 +301,9 @@ a Knight hull four points a second is the six hundred metres around the Chord.
 
 **And the bow is geometry rather than an order.** `Heading` survives a stop and is written by
 movement (`components.ts`), so a hull that has come 3.4 km south from the Staging and stopped over
-the Chord is already pointed at the sounding point, which is 350 m further south. The Order does
-not have to turn to face the Mouth. It arrives facing it.
+the Chord is already pointed at the sounding point, which is 350 m further south and 32° off the
+bearing she arrived on — inside the cone's forty-five, and the only margin in the mission nobody
+had to author. The Order does not have to turn to face the Mouth. It arrives facing it.
 
 **The interval is the lip's and not the Order's.** Sull times her window at the sixteenth minute
 and forty seconds and is right about it, which is the most the document will say. The return sounds
@@ -595,8 +596,10 @@ What this mission deliberately does not teach:
 
 **Reused unchanged** — the literal is `packages/backend/src/sim/maps/missions/mouthRim.ts`, authored
 for [mission-prospect.md](mission-prospect.md) §11 and untouched by
+[mission-second-seeding.md](mission-second-seeding.md),
 [mission-first-arrival.md](mission-first-arrival.md) and
-[mission-rim-deposits.md](mission-rim-deposits.md). This is the map's fourth mission and
+[mission-rim-deposits.md](mission-rim-deposits.md). This is the map's fifth mission — four
+convergences and the one ending that stays on the same ground — and
 [campaign.md](campaign.md) §8's "the same terrain four times and never the same mission" applied
 literally: same rectangles, same floors, same biomes, same spawn.
 
@@ -657,8 +660,8 @@ courteous, slightly archaic, musical and mathematical metaphor used literally ra
 poetically, and unfailingly polite in a way that reads to everyone else as condescension. The Order
 states intervals and conditions, never tasks.
 
-> This is the third tide of the week and the last works order the Order will issue on this rim, and
-> I would rather say that at the top than have any of you work it out at the bottom.
+> This is the third tide the Order has spent on this rim and the last works order it will issue
+> here, and I would rather say that at the top than have any of you work it out at the bottom.
 >
 > There is a node on the lip. It went up in the tide between under the grant of the one you raised
 > yesterday, it was entered by the watch while it was still rising, and it was not corrected,
@@ -812,7 +815,7 @@ absence — a reply — it does not want filled.
 | **The basin's spawn depth against the bestiary's floor** | **A docs-versus-literal disagreement, recorded and not resolved by moving a number.** [bestiary.md](bestiary.md) §4 puts a Sounder's band at 2,000 ± 700 m, so 2,700 m is its floor; `prospect.ts` spawns the riser at 3,050 m on the lip. All four rim documents keep Prospect's literal to the metre, because four missions disagreeing with the bestiary identically is one fix and four missions disagreeing with each other is not |
 | **1,800 m is the Abyssal band's first metre** | **A finding carried from [mission-rim-deposits.md](mission-rim-deposits.md) §13.** `DEPTH_BANDS[MidWater].max` is exclusive, so `requiredPressureRating(1800)` is 3 and the free depth is 1,799. Every figure in §6 and §11 is authored at 1,750 m and the climbs are quoted to that line: 56.7 s from the terraces, 83.3 s from the lip |
 | `pressureRating` on scripted hulls | **A test finding, carried.** `missions.test.ts` reads `statsFor(kind).pressureRating`, not `effectivePressureRating`, so the Directorate's baseline does not rescue a PR-2 Chorister authored at 3,000 m; all twelve carry `pressureRating: 3`, as do the plateaus' two Light Scouts at 2,100 m. Sixth mission to field the hull, sixth document to say so |
-| **Cross-mission Drift Health** | **Not started** ([campaign.md](campaign.md) §11). This is the fourth mission on `mouth-rim` inside one authored week and the third loud one, and [campaign.md](campaign.md) §2 rule 5's promise is exactly that this tide should arrive quieter, deader and more legible than the last. It does not, and the document does not depend on it: what a carried ledger would have found is a rim whose 4 × 4 cells around the terraces have spent two tides of eighty-SIG instrument and a raid, and a basin that might not have risen at all |
+| **Cross-mission Drift Health** | **Not started** ([campaign.md](campaign.md) §11). This is the fifth mission on `mouth-rim` inside one authored week — *Prospect* and *The Second Seeding* on D, *First Arrival* on D+1, *The Rim Deposits* on D+2 — and the third loud one, and [campaign.md](campaign.md) §2 rule 5's promise is exactly that this tide should arrive quieter, deader and more legible than the last. It does not, and the document does not depend on it: what a carried ledger would have found is a rim whose 4 × 4 cells around the terraces have spent two tides of eighty-SIG instrument and a raid, and a basin that might not have risen at all |
 | **Permanent roster attrition, and a roster carried between missions** | **Not started** ([campaign.md](campaign.md) §11; [mission-nineteen.md](mission-nineteen.md) §13's row). The record exists and nothing writes survivors into it, and `MissionDefinition` has no `rosterFrom`. This mission seats six hulls whatever the last four tides cost, and its three `survive` rows are the only place a loss is real. Fifth Chord document to seat six and say so |
 | **Progression, and an ending nothing keeps** | **The record is built** (#371, `echoes.progression`, a per-mission history keeping the best reading a mission has returned) **and nothing writes an ending into it.** [mission-item-nine.md](mission-item-nine.md) §13 said every ending document would lean on this row and none would own it, and this one leans hardest: the campaign's last close reads two records aloud and the shell keeps only an outcome. What is missing is not storage but authorship — a field beside `outcome` for the unranked record a conclusion carries |
 | The seven locks | **Built.** One is authored — `construction`, *three nodes stand; the ledger is empty* — and the six that are not are the point: `activeSonar` has been the Order's since mission 3 and is priced rather than fenced, `weapons` and `torpedoes` are live because the lip has to be held, and Silent Running cannot be locked at all |

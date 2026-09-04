@@ -6,7 +6,7 @@
  * a beat that names a hull nobody placed fails at `npm run type-check` rather
  * than half way through a match.
  *
- * A table, not a language. Eight predicates, nine beat kinds, no expressions and
+ * A table, not a language. Nine predicates, eleven beat kinds, no expressions and
  * no variables. `sim/maps/types.ts` makes this argument about region shapes and
  * it holds harder here: a mission scripting language would be more expressive
  * than anything in `docs/` actually asks for, and the second mission is the
@@ -81,6 +81,27 @@ export interface MissionRegion {
   y: number;
   widthM: number;
   heightM: number;
+  /**
+   * Pressure Rating every hull standing in this rectangle operates at, over
+   * its own — the manufactured habitable zone of docs/mission-deep-furrow.md
+   * §4, and the one thing the Commune's answer to depth is
+   * (docs/systems-depth.md §3: "they don't survive the deep, they change it").
+   *
+   * A property of the **water**, so it grants to anything with a hull in it
+   * rather than to a party: a furrow the Commune sowed is habitable for
+   * whoever sails into it, which is the provocation the mission is about.
+   * Omitted is no grant, which is every rectangle in every other mission.
+   *
+   * Resolved against the Sounding Spire's grant as a **max, never a sum**
+   * (`aurasSystem`): a hull standing in a sown furrow under a Spire has
+   * rented one band, not two, and the arithmetic that decides whether water
+   * is lethal is not somewhere two authored features can quietly add up.
+   *
+   * Authored here for ground that is sown before the mission opens. Ground
+   * sown *during* one is the `ground` beat's own field, so a mission can turn
+   * a grant on at a tick without repainting the water it stands in.
+   */
+  pressureBonus?: number;
   note: string;
 }
 
@@ -833,6 +854,21 @@ export type MissionBeatEffect =
       floorM?: number;
       ceilingM?: number;
       biome?: Biome;
+      /**
+       * Turn a region's pressure grant on, off, or up, at this tick — see
+       * `MissionRegion.pressureBonus`, whose rules this shares entirely.
+       *
+       * The third thing this beat may write, and the one that changes neither
+       * the ground nor the water over it: docs/mission-deep-furrow.md §4 sows
+       * a furrow that is *rated* without being repainted, and
+       * docs/mission-second-seeding.md needs the same grant on a lip whose
+       * biome and floor must not move. So every field here stays optional and
+       * a beat carrying only this one is a valid beat.
+       *
+       * Zero is a real value and removes the grant, which is what a furrow
+       * that fails does.
+       */
+      pressureBonus?: number;
       note: string;
     }
   /**

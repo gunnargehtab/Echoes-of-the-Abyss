@@ -356,6 +356,15 @@ export class MissionRuntime {
   private resolveRequested = false;
   private worstMs = 0;
 
+  /**
+   * Pressure grants a `ground` beat has switched on, by region id, overriding
+   * whatever `MissionRegion.pressureBonus` authored. Beat state rather than
+   * world state: it is the mission's memory of its own schedule, re-derived
+   * into `world.regionPressureBonus` on every pass by `applyGrants`, and a
+   * replay reaches it by re-firing the same beats at the same ticks.
+   */
+  private readonly grantedRegions = new Map<string, number>();
+
   constructor(definition: MissionDefinition) {
     this.definition = definition;
     for (const objective of definition.objectives) {
@@ -386,6 +395,15 @@ export class MissionRuntime {
     for (const party of this.definition.parties) {
       if (party.slot !== this.definition.playerSlot) observe(party.slot);
     }
+
+    // Water a mission authored as habitable is habitable from the first tick,
+    // not from the first mission pass. Crush is charged at 60 Hz and this
+    // runtime ticks at 5, so a hull seated inside an authored furrow would
+    // otherwise pay four points a second for the twelve ticks before
+    // `applyGrants` first ran — a mission billing a player for the two hundred
+    // milliseconds before it started. Beat-sown grants have no such problem:
+    // a beat fires on a mission pass and `applyGrants` runs on the same one.
+    this.applyGrants(world);
 
     // A mission grants no stockpile unless it authors one.
     //
@@ -545,11 +563,35 @@ export class MissionRuntime {
    */
   holdsMovement(slot: number, eid: number): boolean {
     if (slot !== this.definition.playerSlot) return false;
+    if (this.lastWorld === null) return false;
+
+    // `releaseTick` first, and by tag rather than by role. types.ts states the
+    // field's contract with no role in it — "held by the runtime until this
+    // tick, whatever the player orders" — and the runtime kept it only for
+    // hulls that were also tenders, because the only mission that had authored
+    // one was Sorrowgate, where every held hull was. Eight shipped literals
+    // name no `tender` at all, so a `releaseTick` on any of them was recorded
+    // and never enforced.
+    //
+    // A leading branch and not a wider `tagOfTender`: the escort half below
+    // reads `lastEscorted`, which `applyEscortHold` writes for tenders alone,
+    // so resolving every player hull through that lookup would hold every hull
+    // in those eight missions forever.
+    const held = this.tagOfHeld(eid);
+    if (held !== null && this.lastWorld.tick < (this.heldUntil.get(held) ?? 0)) return true;
+
     const tag = this.tagOfTender(eid);
     if (tag === null) return false;
-    if (this.lastWorld === null) return false;
     if (this.lastWorld.tick < (this.heldUntil.get(tag) ?? 0)) return true;
     return this.lastEscorted.has(tag) === false;
+  }
+
+  /** The held tag behind this entity, or null when nothing holds it. */
+  private tagOfHeld(eid: number): MissionTag | null {
+    for (const tag of this.heldUntil.keys()) {
+      if (this.lastWorld !== null && this.eidOf(this.lastWorld, tag) === eid) return tag;
+    }
+    return null;
   }
 
   /** The tender tag behind this entity, or null when it is not a tender. */
@@ -592,6 +634,7 @@ export class MissionRuntime {
     this.applyLifts(world);
     this.applySoundings(world);
     this.applyAbility(world);
+    this.applyGrants(world);
     this.applyWalk(world, own);
     this.applyHolds(world);
     this.applyEmitters(world);
@@ -791,11 +834,25 @@ export class MissionRuntime {
         // here is right at runtime: a mission mid-flight is not the place to
         // throw, and the ground simply stays as the map authored it.
         if (region === undefined) return;
-        world.terrain.fillGround(region.x, region.y, region.widthM, region.heightM, {
-          floorM: beat.floorM,
-          ceilingM: beat.ceilingM,
-          biome: beat.biome,
-        });
+        // Every field is optional and the beat may carry only a grant, so the
+        // repaint is skipped when it says nothing about ground or water —
+        // `fillGround` with three undefineds would otherwise walk the
+        // rectangle to write nothing.
+        if (beat.floorM !== undefined || beat.ceilingM !== undefined || beat.biome !== undefined) {
+          world.terrain.fillGround(region.x, region.y, region.widthM, region.heightM, {
+            floorM: beat.floorM,
+            ceilingM: beat.ceilingM,
+            biome: beat.biome,
+          });
+        }
+        // The grant is remembered against the region id rather than written
+        // into the map, because it is not a property of the ground: it is the
+        // mission's, it is rebuilt into `world` on every pass, and it has to
+        // survive a reload of the terrain it stands over. Zero is a real value
+        // and removes an authored grant, which is what a furrow that fails
+        // does — so the test is `undefined`, never falsy.
+        if (beat.pressureBonus !== undefined)
+          this.grantedRegions.set(region.id, beat.pressureBonus);
         return;
       }
       case 'objective':
@@ -1431,6 +1488,40 @@ export class MissionRuntime {
         if (ability.speedMultiplier !== 1) world.commanderHaste.set(eid, ability.speedMultiplier);
         if (ability.silentRunningImmunity === true) world.commanderSilentImmune.add(eid);
       }
+    }
+  }
+
+  /**
+   * The water a mission has made habitable, republished whole each pass —
+   * `MissionRegion.pressureBonus` and the `ground` beat that switches one on
+   * (docs/mission-deep-furrow.md §4).
+   *
+   * `applyAbility`'s arrangement with the key changed: rectangles rather than
+   * entity ids, so `aurasSystem` tests containment itself at 60 Hz and a hull
+   * that leaves a furrow stops being rated for it on the tick it leaves rather
+   * than at the next mission pass. Crush is charged per tick and the whole
+   * point of the grant is that it decides whether water is lethal, so a
+   * 200 ms tail on the wrong side of that line is not a rounding error.
+   *
+   * Rebuilt from scratch every pass, in `liftCutSig`'s idiom, so a grant
+   * cannot outlive the beat that wrote it and a recycled entity id cannot
+   * inherit one. The beat's figure wins over the authored one for the same
+   * reason the beat exists: a mission that sows a furrow at 09:00 is saying
+   * the water was not habitable at 08:59.
+   */
+  private applyGrants(world: SimWorld): void {
+    world.regionPressureBonus.length = 0;
+    for (const region of this.definition.regions) {
+      const granted = this.grantedRegions.get(region.id);
+      const bonus = granted ?? region.pressureBonus;
+      if (bonus === undefined || bonus <= 0) continue;
+      world.regionPressureBonus.push({
+        x: region.x,
+        y: region.y,
+        widthM: region.widthM,
+        heightM: region.heightM,
+        bonus,
+      });
     }
   }
 

@@ -145,6 +145,22 @@ export function aurasSystem(world: SimWorld): void {
           }
         }
       }
+      // A mission's own habitable water — `MissionRegion.pressureBonus`, and
+      // the `ground` beat that sows one. Resolved against the Spire's grant as
+      // a **max and never a sum**: a hull standing in a sown furrow under a
+      // node has rented one band, not two, and the arithmetic deciding whether
+      // water crushes is not somewhere two authored features may quietly add
+      // up. Empty in every skirmish, and the loop is gated on that.
+      if (world.regionPressureBonus.length > 0) {
+        const ux = Position.x[eid]!;
+        const uy = Position.y[eid]!;
+        for (let g = 0; g < world.regionPressureBonus.length; g++) {
+          const grant = world.regionPressureBonus[g]!;
+          if (ux < grant.x || ux > grant.x + grant.widthM) continue;
+          if (uy < grant.y || uy > grant.y + grant.heightM) continue;
+          if (grant.bonus > bonus) bonus = grant.bonus;
+        }
+      }
       Pressure.bonus[eid] = bonus;
     }
   }
