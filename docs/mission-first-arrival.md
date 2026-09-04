@@ -51,10 +51,11 @@ column has to cross is also the ground that reports itself.
 
 **The terraces are Resonance Field, and bearings there lie a little.** PF 0.70 across the whole
 crystal bench ([environments.md](environments.md)). A cohort standing on the faces is quiet to
-everything above it — a silent Chorister at SIG 8 is contact to a Corvette's 50 only inside
-973 m and bearing inside 755 — and is 400 m higher than the lip it walked in on, because the
-terrace floor is 2,600 m against the lip's 3,100. The rim is held from the quietest water on
-the map, and getting there is the loudest thing the cohort does.
+everything above it — a silent Chorister, at the 4.3 its own idle SIG places it at in the 3–8
+band, is contact to a Corvette's 50 only inside 663 m and bearing inside 515 — and is 400 m
+higher than the lip it walked in on, because the terrace floor is 2,600 m against the lip's
+3,100. The rim is held from the quietest water on the map, and getting there is the loudest
+thing the cohort does.
 
 **The tide is the whole advantage, and it was bought with a record.** The watch heard the
 concern descend at 72 for three minutes and sound six charted faces at 80, and entered both;
@@ -86,7 +87,7 @@ is not a party, and what lifts off the lip at 18:30 lifts out of it.
 
 **Every navy on this rim is weapons-cold, again.** Prospect's whole convergence was played in
 contacts and registers rather than fire ([mission-prospect.md](mission-prospect.md) §5), and
-D+1 keeps it: the Order's five hulls carry no `armed` flag, the pair carries none, the bed is
+D+1 keeps it: the Order's four hulls carry no `armed` flag, the pair carries none, the bed is
 unarmed, and the column's guns are locked. The only thing on this map that kills anything is
 the riser, and only what stands on its line.
 
@@ -127,6 +128,10 @@ under the one instrument it has, which is the mission in one distance.
 
 **Silent Running is present, and the column opens under it.** Eighteen `silent` beats at tick
 zero; the cohort walks the lip at 22 m/s instead of 40 and hears exactly as well either way.
+**Every silent figure in this document is the hull's own, not the band's ceiling**
+([mission-shallow.md](mission-shallow.md) §13): `silentRunningSig` places a hull in the 3–8 band
+by its idle SIG, so a Chorister runs silent at **4.3** and an Abyssal Submersible at **4.8**, and
+only a hull idling at 60 or more ever reaches the eight.
 
 ---
 
@@ -144,7 +149,7 @@ movements.
 2. **The returns are entered from the seat, before the first order.** Both attendants are
    already at Bearing or better from where the column stands: attendant-b at 1,301 m reads a
    ratio of 6.46 — Track — and attendant-a at 2,600 m reads 2.13, which the dome lifts to 2.70.
-   The mission's second objective is met on the first pass and is not terminal, by design (§8).
+   The attending row is met on the first pass and is not terminal, by design (§8).
    The attending is a condition of the water, not a task, and this is the only mission in the
    bible that says so by making the row unloseable.
 3. **The first order is the walk, and the walk is the whole tempo.** From the eastern seat to
@@ -154,12 +159,14 @@ movements.
    ([systems-depth.md](systems-depth.md) §2), so a hull crossing onto the bench is raised at
    the ascent rate — 26.7 seconds, silent, free. The slowest hulls in the Rift cross the whole
    rim inside four minutes of the twenty-one they have, because they left a tide early.
-4. **And the way back down is the only shove in the mission.** A hull lifted by ground keeps
-   its 3,000 m depth order; the ground caps it and does not cancel it. Walk back off the
-   terraces onto the lip and the order resumes — 400 m at 45 m/s, **8.9 seconds at a SIG floor
-   of 72**, which is the one thing on this map that breaches a ceiling of 25. A cohort that
-   climbs once and stays is silent all tide. A cohort that changes its mind pays nine seconds
-   of transmission and forty-five of debt for each change (§6).
+4. **And the way back down is the only shove in the mission.** The ground caps a depth order;
+   it does not cancel one. Install seats the column with no order standing, so a hull that
+   climbs and then walks back off the bench simply stays at 2,600 m and says nothing about it —
+   but a player who has asked for three thousand at any point owns that order still, and walking
+   back onto the lip resumes it: 400 m at 45 m/s, **8.9 seconds at a SIG floor of 72**, which is
+   the one thing on this map that breaches a ceiling of 25. A cohort that climbs once and stays
+   is silent all tide. A cohort that dives back to the lip's own depth pays nine seconds of
+   transmission, nine of debt, and nine more standing dark while the debt decays (§6).
 
 Same detection maths, seventh life: Attendance spent it on a god, Intake on a pay slip, The
 Dome on a lie, Shallow on a vote it could not hear, Trench Awakening on a colossus, Conclave on
@@ -232,16 +239,17 @@ being on it when the tide turns.
 **The order the cohort walks under is Attendance's, carried to the rim.** A ceiling of SIG 25
 per hull over the twelve, debt at 0.2 s per mission tick, capped at 45 s, and the dome withdrawn
 from the whole cohort while any debt stands ([mission-attendance.md](mission-attendance.md) §5).
-Read against the hull: a Chorister idles at 16, cruises at 24, and is 8 under Silent Running, so
-**the cohort can do everything this mission asks of it and never breach.** Breaking silence
-spikes +40 for two seconds — 56, and 0.4 s of debt. A descent is 72 and costs a second a second.
-The ceiling is not a fence around the mission; it is a fence around exactly one manoeuvre, and
-the manoeuvre is changing your mind about a terrace.
+Read against the hull: a Chorister idles at 16, cruises at 24, and is 4.3 under Silent Running,
+so **the cohort can do everything this mission asks of it and never breach.** The +40
+break-silence spike is a *firing* spike and every weapon on the hull is locked, so nothing in
+this mission can produce one. A descent is 72 and costs a second a second, and a second a second
+to clear afterwards. The ceiling is not a fence around the mission; it is a fence around exactly
+one manoeuvre, and the manoeuvre is changing your mind about a terrace.
 
 **The spread is the hold, and the ground says so without being told to.** Drift Health runs on
 1,500 × 1,000 m cells here ([bestiary.md](bestiary.md) §6). The seat's cell holds twelve
-Choristers, six submersibles and the dome: **179 of summed SIG while every one of them is
-silent, against a threshold of 60 — 2.38 a second, and the cell is dead in thirty-seven
+Choristers, six submersibles and the dome: **116 of summed SIG while every one of them is
+silent, against a threshold of 60 — 1.12 a second, and the cell is dead in seventy-nine
 seconds.** Idle rather than silent it is 359 and dies in fifteen. Two Choristers on a face sum
 32 and wear nothing; faces four and five share a cell at 64 and wear it at eight hundredths of a
 point a second; six Choristers on one face are 96 and 0.72. Nothing in this mission is paid in
@@ -290,10 +298,10 @@ which the record enters as the bed's doing and not as a fault.
   and Track to the cohort's seat under the dome from 1,100 m at 15.94. Nothing about this
   arrival is quiet and nothing about it is hidden.
 - **The Order sounding the sixth face**, 18:00, SIG 80 for twenty seconds from 5150, 2450: a
-  ratio of 26.8 to the dome at 962 m, 24.2 to the rim's western watch hull at 1,012 m, and 27.6
-  to the nearest cohort seat at 791 m. In open water it is contact to a submersible from
-  7,143 m. **It is the first hull of the week to stand into the watch**, and the watch is not
-  asked to answer it this tide.
+  ratio of 26.8 to the dome at 962 m, 24.2 to the rim's western watch hull at 1,012 m, and 35.0
+  to the nearest cohort seat at 791 m, which is under the dome. In open water it is contact to a
+  submersible from 7,143 m. **It is the first hull of the week to stand into the watch**, and
+  the watch is not asked to answer it this tide.
 - **The riser**, 18:30, off the lip's floor at 3000, 3600 and driven north to 3000, 2400 —
   Prospect's own line, risen again on the tide after ([mission-prospect.md](mission-prospect.md)
   §7). Calling at 100 through the lip's 1.6 it is contact to a submersible from 11,016 m and a
@@ -307,12 +315,13 @@ The rim on D+1 is four navies behaving well and one animal on a line, which is t
 whole horror kept exactly as Prospect left it.
 
 **What is heard of the column, by everybody else.** A silent Chorister at the seat is nothing to
-the reconnaissance at its station — 1,612 m, a ratio of 0.58. A silent Chorister on the first
-face is a **track** to the charting pair at 461 m and a bearing on the second face at 781 m. On
-the sixth face a silent Chorister is a bearing to the Order's party at 671 m and an idle one is
-a track; once the party is standing over the face at 255 m, silence reads 11.08 and everything
-reads Track. **The column is heard arriving. Everything is.** What it is *doing* on the terraces
-is in three registers and none of them is this one, which is what the fourth objective enters.
+the reconnaissance at its station — 1,612 m, a ratio of 0.32. A silent Chorister on the first
+face is a **classification** to the charting pair at 461 m and no more than a contact on the
+second face at 781 m. On the sixth face a silent Chorister is a contact to the Order's party at
+671 m and an idle one is a **track**; once the party is standing over the face at 255 m, silence
+reads 6.00 and everything reads Track. **The column is heard arriving. Everything is.** What it
+is *doing* on the terraces is in three registers and none of them is this one, which is what the
+fourth objective enters.
 
 ---
 
@@ -324,7 +333,7 @@ Four rows. Two decide the count and two are read out beneath it.
 
 | Objective | Text, as the panel carries it | Predicate | Standing |
 | --- | --- | --- | --- |
-| `the-rim` | *The rim is held at the tide's turn. Eight of twelve on the terraces is a hold, and the Undermarshalcy does not round up.* | `{ kind: 'extract'; role: 'cohort'; region: 'the-terraces'; count: 8 }` | **Terminal.** `revealAtTick` T(19), marker `terraces` |
+| `the-rim` | *The rim is held at the tide's turn. Eight of twelve on the terraces is a hold, and the Undermarshalcy does not round up.* | `{ kind: 'extract'; role: 'cohort'; region: 'the-terraces'; count: 8 }` | **Terminal.** `revealAtTick` T(19), marker `terraces` (3000, 2500, r 2,500 — Prospect's own, over the same six faces), region `the-terraces` = 0, 2000, 6000, 1000 |
 | `the-watch` | *Six attend the lip. Four is a watch.* | `{ kind: 'survive'; role: 'watch'; count: 4 }` | **Terminal**, and standing — re-derived every tick (`isStanding`) |
 | `the-attending` | *The rim is attended. What is heard is entered, and the gap is entered too.* | `{ kind: 'attend'; count: 2 }` | Non-terminal, monotone. Read out, never ranked |
 | `the-record` | *What is heard of the column is entered in accounts that are not ours.* | `{ kind: 'tolerance'; ticks: 3600; tier: Classification }` | Non-terminal. Sixty seconds, cumulative |
@@ -374,10 +383,11 @@ ending document leans on and none owns.
 | **Sufficient** | One of the two | "You were sufficient. The rim is held or the ears are whole, and the other is short, and a short column is entered as a short column. The attending continues, which was never in the count." |
 | **The rim is the tide's** | Neither | "The rim is not held and the watch is short. The cohorts arrived before the armies and the terraces are the tide's, and the lip took what stood on its line. It is not a failure of the cohorts; it is a rim that was attended for two centuries and held for none of them, and it is entered as one, and the attending continues from the lip." |
 
-Beneath whichever reading the run earns: `the-attending` and `the-record`, and then the
-attendants' own entered-and-gap lines, in authored order. Beneath all three, and unchanged by
-any of them, First Cantor Ossary: *"**Nothing.** The record notes that the First Cantor was
-present."*
+Beneath whichever reading the run earns, in the order the runtime assembles them:
+`the-attending` and `the-record`, and then the attendants' own entered-and-gap lines, in
+authored order. First Cantor Ossary's line is not part of that assembly and does not need to be
+— it is the `say` beat at 20:30 (§9), thirty seconds ahead of every close and unchanged by all
+three of them: *"**Nothing.** The record notes that the First Cantor was present."*
 
 **No keystone, deliberately.** A rim held with a short watch and a whole watch with the rim
 unheld are the same partial sentence, because the Directorate does not rank ground against
@@ -418,6 +428,14 @@ half of the force the second objective counts — which is the campaign's own ar
 
 **Length: twenty-one minutes.** Inside [campaign.md](campaign.md) §10's 12–25; the header's band
 is 1,200–1,320 s and the `resolve` lands at 1,260.
+
+**The tide runs its length.** `runsItsLength` is authored, and this ending needs it as much as
+[Conclave](mission-conclave-attending.md) §9 did. `the-watch` is met at tick zero, six being at
+least four, so the pass that reveals `the-rim` over a cohort already standing on the terraces
+meets both terminal rows at once, and the court's default rule — every terminal objective met,
+resolve on that pass — would close the mission at 19:00. That would cost the withdrawal at
+19:30, Korrin's count at 20:30 and the silence the whole campaign has been walking toward.
+Omitted is the default, and most literals omit it ([mission-intake.md](mission-intake.md) §13).
 
 **SIG budget: 24**, a description rather than a ceiling — §4. **Silence ceiling: 25 per hull**
 over the cohort, debt capped at 45 s — §6.
@@ -701,16 +719,18 @@ What exists against this document and what does not, continuing the list
 [mission-asset-recovery.md](mission-asset-recovery.md) §13 started and the documents after it
 extended. **This mission is specified and not built.** It is an ending document, and the first
 whose headline row is a thing that does *not* need building: the ending is a lock and a silence,
-and both ship. What it needs and does not have is one row — the same row
-[mission-item-nine.md](mission-item-nine.md) §13 left open — and it is the row every ending
-document leans on and none of them owns.
+and both ship. What it needs and does not have is the still-open half of the row
+[mission-item-nine.md](mission-item-nine.md) §13 opened — the record of a campaign is now kept,
+and nothing yet reads it back — and that is the row every ending document leans on and none of
+them owns.
 
 | Requirement | Status |
 | --- | --- |
 | The mission format — beats, predicates, registry, private rooms | **Built** (#190). `extract`, `survive`, `attend`, `tolerance`, `say`, `move`, `silent`, `creature` and `resolve` cover §9's whole schedule |
 | The map, reused unchanged | **Decided, and not a build.** `mouth-rim` is `packages/backend/src/sim/maps/missions/mouthRim.ts`, authored for [mission-prospect.md](mission-prospect.md) §11; §11's table is that literal's table, row for row, and the literal for this mission adds no region and moves no metre. Cross-mission Drift Health on a shared map — [campaign.md](campaign.md) §2 rule 5 — is **absent everywhere**, so this mission inherits a chart and cannot inherit what the tide before it did to the ground |
 | **The ending, as one outcome with three readings and no fork** | **Built on the outcome ladder.** The Ledger's ending forks because a chair transmits or does not, and it needed readings-per-objective to keep the branches unranked ([mission-item-nine.md](mission-item-nine.md) §13). This one does not fork at all: [campaign.md](campaign.md) §9's Directorate row is one sentence, all three of its clauses appear under all three readings, and the ladder grades only the hold. No new mechanism, and the row is here so a reviewer can check that the refusal to fork was a decision rather than an omission |
-| **Campaign progression — this ending recorded anywhere after the tide turns** | **Not built**, and this is the second time an ending document has had to say so. The close reads the ending and nothing keeps it: the progression and unlock rows of #212. The Directorate's ending is the one that most wants it, because its content is that nothing changed and the record continues — and a record that is not kept between missions cannot make that point twice |
+| **Campaign progression — this ending recorded, and read back** | **The record is built and nothing reads it back** (#371, #374). `packages/frontend/src/progression/store.ts` keeps a per-mission history and the campaign board reads it, so it is no longer true that nothing remembers a mission was played ([campaign.md](campaign.md) §11; [mission-the-dome.md](mission-the-dome.md) §13 and [mission-shallow.md](mission-shallow.md) §13 say the same from earlier in the campaign). What is still absent is everything queued behind that record: a briefing variant that could turn *the ping was handed over in mission 3 and is locked here* into a line, and the cross-mission carry. The Directorate's ending is the one that most wants them, because its content is that nothing changed and the record continues — and a record nothing reads back cannot make that point twice ([mission-item-nine.md](mission-item-nine.md) §13, written before the record existed) |
+| **A tide that runs its length** | **Built** — `MissionDefinition.runsItsLength` ([mission-intake.md](mission-intake.md) §13), and this ending needs it exactly as [Conclave](mission-conclave-attending.md) §13 does. `the-watch` is met from tick zero and `the-rim` is revealed at 19:00, so both terminal rows land on one pass and the court's default rule would resolve the mission there — before the Order withdraws, before Korrin reads the count, and before the one silence the campaign is for. Omitted is the default, and most literals omit it |
 | A carried dome | **Not built, and the mission is authored around not having it.** Structures do not move; a Cantor cannot be walked to a rim. So the dome is a `MissionStructure` seated prebuilt at 5000, 3400 where the column stopped, and §3 says so out loud rather than implying the column dragged it four kilometres. The roster gap is the same one [mission-baffle.md](mission-baffle.md) §13 records for a mobile Baffle Barge, and neither document asks for it |
 | **An `extract` row read at the close** | **Built, with the idiom the runtime forces.** `predicates.ts` makes only `quiet` and `survive` standing, and the runtime never re-derives a Met non-standing row, so an `extract` latches the first pass it is satisfied and stays Met. A hold read *at the tide's turn* therefore has to be revealed late: `the-rim` carries `revealAtTick` T(19), the stalls' beat shares that tick because a reveal needs one, and an unrevealed objective is not scored ([mission-intake.md](mission-intake.md) §13's roll, at its second spender) |
 | The two attendants, with readings | **Built** (#240, #246) — `MissionEmitter` with `reading`, on a scripted party, at Prospect's coordinates, periods and loudness exactly. `attend` counts a Tier-2 resolution while the emitter is sounding, monotone |
@@ -721,14 +741,15 @@ document leans on and none of them owns.
 | The riser — a second rising on the same line | **Built** (`creature` beat, `loud: true`), and it is Prospect's literal verbatim: spawn 3000, 3600 at 3,050 m, driven to 3000, 2400, sixty seconds of commitment. With no `depthM` on the `driveTo` the runtime holds the species' own working depth as home, so it climbs at the Drift's vertical rate as it travels — which is what "rising toward the terraces" is, mechanically, and is inherited rather than corrected |
 | **A Sounder below 2,700 m** | **A finding, not a request, and this document follows the literal.** [bestiary.md](bestiary.md) §4 says the column below 2,700 m is empty of animals entirely; `prospect.ts` spawns its colossus at 3,050 m on the lip. Both are shipped, and the rim is the one address where the bestiary's own sentence — "which is the Mouth's business and not the Drift's" — makes the anomaly the point rather than the bug. This mission does not move either number, does not explain it, and gives nobody in the water a line about where it came from |
 | Hulls ordered below 3,000 m | **Refused, and the mission is authored to it.** `DEPTH.MAX_M` is 3,000 and `Match` refuses a deeper order, so the lip's 3,100 m floor is water nothing stands on. Stated because a reader will ask what the hundred metres under the column is for, and the answer is that it is the edge of something the chart does not draw |
-| Terrain lifting a hull onto the terraces, and the descent back off | **Built** (`holdAgainstGround`). Ground caps a hull's depth at the shallower of the floor and one ascent step above where it was — 15 m/s, silent — and **does not rewrite the depth order**. So the climb onto the bench is free and the walk back onto the lip resumes a 3,000 m order as a dive: 400 m at 45 m/s, 8.9 seconds at SIG 72. §4's fourth movement and §6's silence ledger are both that one behaviour, and neither is new |
-| The silence order, at the rim | **Built** — `arrayTag`, `silenceRole: 'cohort'`, `silenceCeilingSig: 25`, `debtCapS: 45`, and the court's withdrawal of the dome, unchanged from [mission-attendance.md](mission-attendance.md) §5. **The finding worth recording** is that against a Chorister the ceiling is unbreachable by any ordinary act — idle 16, cruise 24, silent 8 — so this mission's ledger runs on exactly one manoeuvre. That is authoring, not a defect; a ceiling that priced the walk would have made the hold a stealth problem, which is Thin Water's mission and not this one |
+| Terrain lifting a hull onto the terraces, and the descent back off | **Built** (`holdAgainstGround`). Ground caps a hull's depth at the shallower of the floor and one ascent step above where it was — 15 m/s, silent — and **does not rewrite the depth order**. So the climb onto the bench is free, and the walk back onto the lip resumes a 3,000 m order as a dive: 400 m at 45 m/s, 8.9 seconds at SIG 72. **For a hull that carries such an order**, which none does at install — the runtime seats every hull with `DepthOrder.active` at zero — so a cohort that never asks for a depth simply stays where the ground put it, and the shove is a thing the player buys. §4's fourth movement and §6's silence ledger are both that one behaviour, and neither is new |
+| The silence order, at the rim | **Built** — `arrayTag`, `silenceRole: 'cohort'`, `silenceCeilingSig: 25`, `debtCapS: 45`, and the court's withdrawal of the dome, unchanged from [mission-attendance.md](mission-attendance.md) §5. **The finding worth recording** is that against a Chorister the ceiling is unbreachable by any ordinary act — idle 16, cruise 24, silent 4.3, and no firing spike to be had on a hull whose guns are locked — so this mission's ledger runs on exactly one manoeuvre. That is authoring, not a defect; a ceiling that priced the walk would have made the hold a stealth problem, which is Thin Water's mission and not this one |
 | The lock on active sonar, as the ending's rule | **Built** — `AbilityLock`, enforced server-side, with the reason shown in the panel ([ui-ux.md](ui-ux.md) §7). The reason the Directorate's campaign never asks is therefore *enforced* rather than remembered, which is what makes it an ending rather than a habit |
 | The lock on noisemakers | **Built, and this document's own addition.** Six locks are obvious on a rim nobody fires on; the seventh is not, and it is the one worth arguing about. A decoy is a transmission that lies, and the ending's whole claim is that this faction does neither of the two things a transmission can be — so `noisemakers` is locked with the reason *a countermeasure is a sentence, and the rim is not lied to*. Recorded as a row rather than folded into §3, so it can be overruled in one place |
 | A Knight hull in the roster | **Absent** ([units.md](units.md)), as it has been since [mission-aptitude.md](mission-aptitude.md). The reconnaissance and the party fly Order colours on generic hulls and carry the directional term — cone 1.00, flank 0.35, wake 0.10 — which is the term working and not a substitute for a hull |
-| The Order at PR-2 with no refit | **A calendar decision, stated.** The Order has no refit crystal after *The Three* and projects depth with Sounding Spires, of which none stands on D+1, so its five hulls sit at or above 1,750 m — Mid-Water, which PR-2 covers — and nothing of the Order's is ever admitted into Abyssal water in this mission. [mission-rim-deposits.md](mission-rim-deposits.md) is where that changes |
+| The Order at PR-2 with no refit | **A calendar decision, stated.** The Order has no refit crystal after *The Three* and projects depth with Sounding Spires, of which none stands on D+1, so its four hulls sit at or above 1,750 m — Mid-Water, which PR-2 covers — and nothing of the Order's is ever admitted into Abyssal water in this mission. [mission-rim-deposits.md](mission-rim-deposits.md) is where that changes |
 | Choristers below 1,800 m, refit explicitly | **A test finding, carried.** `missions.test.ts` reads `statsFor(kind).pressureRating` rather than `effectivePressureRating`, so the Directorate's PR-3 baseline does not rescue a PR-2 Chorister authored at 3,000 m: every one of the twelve carries `pressureRating: 3` in the literal. First recorded by [mission-the-dome.md](mission-the-dome.md) §13; repeated here because this is the fourth mission in the campaign to field the hull and the fourth to have to author the refit |
-| The seat's Drift cell, dead inside a minute | **Arithmetic over the shipped ledger, stated and not fenced.** Twelve Choristers, six submersibles and a dome in one 1,500 × 1,000 m cell sum 179 silent against a threshold of 60 and take the cell to zero in thirty-seven seconds. **Nothing in this mission is paid in Biomass**, so it costs the player nothing — but it is public on the snapshot, a reader will compute it, and [mission-intake.md](mission-intake.md) §13's decision holds: say so, and move nothing |
+| **Silent Running's SIG is the hull's, not the band's** | **A finding carried, and the one place a reader is most likely to mis-derive this document.** `silentRunningSig` places a hull inside `SILENT_RUNNING`'s 3–8 band by its idle figure — `3 + 5 x min(1, sigIdle / 60)` (`acoustics.ts`) — so a Chorister runs silent at **4.3** and an Abyssal Submersible at 4.8, and only a hull idling at 60 or more ever reads the eight. Every silent figure in §1, §6 and §7 is computed at the hull's own value: the eight would inflate a Chorister's silent ranges by a factor of 1.85, would make the seat's cell die in half the time, and would put the pair at Track on the first face where the model says Classification. First recorded by [mission-shallow.md](mission-shallow.md) §13 |
+| The seat's Drift cell, dead inside eighty seconds | **Arithmetic over the shipped ledger, stated and not fenced.** Twelve Choristers, six submersibles and a dome in one 1,500 × 1,000 m cell sum 116 silent against a threshold of 60 and take the cell to zero in seventy-nine seconds; idle they sum 359 and take fifteen. **Nothing in this mission is paid in Biomass**, so it costs the player nothing — but it is public on the snapshot, a reader will compute it, and [mission-intake.md](mission-intake.md) §13's decision holds: say so, and move nothing |
 | A predicate over a hull's depth | **Not built, and named rather than asked for.** §8's hold wants "on the terraces *and* under 2,600 m"; `extract` reads a rectangle. A hull hovering at 3,000 m inside the terraces rectangle counts as one standing on the bench. The shape a genuine need would take is a `depthM` ceiling on `extract`, and this mission does not need it: the ground lifts every hull that crosses, so the two populations differ only for a player who ordered depth on purpose ([mission-shallow.md](mission-shallow.md) §13 records the same row from the other end) |
 | A predicate over what the player declined to do | **Not built, and deliberately not asked for.** The mission's most load-bearing non-event — the watch not answering a hull that stood into it — is a fact about restraint, and the union has no way to read one. It is authored as a `say` beat and an epilogue clause, which is where a refusal belongs anyway |
 | In-mission character speech, heard | Text only, the standing status ([mission-sorrowgate.md](mission-sorrowgate.md) §13) — and the campaign closes owing this debt its own largest item: **Korrin's silence is a thing an actor does not say**, and there is no channel on which not-saying-it can currently be performed |

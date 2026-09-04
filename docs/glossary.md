@@ -68,6 +68,13 @@ Depth Bands
 - Depth interacts with PR and ascent/descent mechanics; see systems-depth.md for the commitment and attrition rules.
 - The bands are the ruleset and are identical on every map. How much water stands over a given patch of ground is map data — see Floor and Ceiling.
 
+The Shallow Band
+
+- **A place, not a depth band.** The First Trench at 1,800 m — the Directorate's shallowest holding, and the posting the roughly eight per cent of each intake who cannot hold their band are reassigned to (habitats.md §6; factions.md, "shallow-band labour"). It is the setting of mission-trench-awakening.md and the name of that mission's map.
+- It is *shallow* only relative to the Directorate, whose cities stand at 2,750–4,000 m. In the ruleset's own terms 1,800 m is the first metre of the **Abyssal** band, not the Shelf.
+- Deliberately distinct from two neighbours it is easy to hear as the same word. **Shelf** is the 0–400 m depth band (see Depth Bands). The **Directorate's shallow-water penalty** is their physiology above 400 m and theirs alone — −20% speed and −15% HP — which is the subject of mission-shallow.md, one mission earlier in the same campaign and four hundred metres from the surface rather than eighteen hundred below it.
+- So: a Directorate hull is never penalised for being in the shallow band, and is always penalised for being in shallow water. The two are unrelated, and the campaign uses both within two missions of each other.
+
 The Lid
 
 - The Rift's name for the sour surface layer: roughly the top 150 m of the ocean, poisoned since the Salinity Collapse and stable ever since (world.md). *Sour* is the old industry word for sulfide-laden water, and it is the word that survived.

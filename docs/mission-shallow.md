@@ -52,14 +52,17 @@ Commune tender's 18 SIG means 9.9 at home in kelp and 18 on this rock, because t
 Open Water at PF 1.00 and nothing is taken back ([environments.md](environments.md)). That
 argument is now turned on a navy that idles at 16 and cruises at 24. A Chorister under way is
 classified by a Corvette at 1,363 m and by a Cruiser at 1,605; a Chorister under Silent Running
-is a contact at 1,216 and nothing at all past it. The column does not get quieter by being
+is a contact at 829 and nothing at all past it. **Every silent figure here is the hull's own, not
+the band's ceiling**: `silentRunningSig` places a hull in the 3–8 band by its idle SIG, so a
+Chorister runs silent at **4.3**, a submersible at 4.8, a Cruiser at 7.6 and a Corvette at 5.3,
+and only a hull idling at 60 reaches the eight. The column does not get quieter by being
 Directorate. It gets quieter by being still.
 
 **The thing the column came for sits in kelp north of the corridor, and the only water on this
 map below the four-hundred-metre line is the slope.** The Marr Approach's floor is 280 m and the
 Holdfast Gate's 260; the corridor's is 420 and the slope's 900. Every metre a Directorate hull
-can stand on without bleeding is either inside a posted closure or three hundred metres below the
-last place a garden can be heard from. That is the mission, stated as terrain, and §7 does the
+can stand on below the line is either inside a posted closure or six hundred metres south of the
+last water a garden can be heard from. That is the mission, stated as terrain, and §7 does the
 arithmetic.
 
 Nobody on the shoulder says any of this. It is the ground the mission stands on.
@@ -82,7 +85,7 @@ Ossary is absent and unmentioned — the Cantorate does not attend a shoulder, a
 formula at 00:00 for the second time in the campaign ([mission-intake.md](mission-intake.md) §2).
 Adze is at the floor, where the campaign keeps them.
 
-**Engine bound, stated so nobody corrects it into a bug.** Seven parties and a court slot: the
+**Engine bound, stated so nobody corrects it into a bug.** Six parties and a court slot: the
 column on slot 0 (`Faction.Directorate`); the court on slot 1, reserved and empty; the spur's
 frame, the corridor escort, the second element and the Holding's column on slots 2 to 5, all
 `Faction.Bathyarch` and all separately owned so the escort's guns and the closure's guns answer
@@ -98,7 +101,7 @@ mission that enforced it here would be pricing somebody else's manners as the Di
 | Hull | Count | Stats | Why |
 | --- | --- | --- | --- |
 | Cruiser hull, in Directorate colours — role `ears` | 1 | **SIG 55 idle / 65 under way / +30 firing · HYD 65 · PR-2 · 1,200 HP · 150 at 900 m every 2.5 s · 45 m/s · 130 m** ([units.md](units.md)) | The column's command ears and the only hull it has that reaches past 650 m. Directorate Cruisers are Adze's precedent, not a new roster row ([mission-standing-wave.md](mission-standing-wave.md) §5). It is also the loudest thing the column owns: 55 while merely sitting, against a SIG budget of 24 |
-| Abyssal Submersible — role `ears` | 2 | **SIG 22 / 28 / +20 · HYD 85 · PR-3 · 520 HP · 80 at 650 m every 1.8 s · 60 m/s · 95 m** | The best mobile ears in the game, and the only hulls on the map that can hold a garden row at Bearing from the strip. Every row this mission counts is counted by one of these two or by a Chorister standing closer than a Chorister should |
+| Abyssal Submersible — role `ears` | 2 | **SIG 22 / 28 / +20 · HYD 85 · PR-3 · 520 HP · 80 at 650 m every 1.8 s · 60 m/s · 95 m** | The best mobile ears in the game, and the only hulls on the map that can hold **five** of Marr's six rows at Bearing from one place on the strip — a Chorister standing in the same water holds three (§7). Every row this mission counts is counted by one of these two or by a Chorister standing closer than a Chorister should |
 | Chorister — role `cohort` | 8 | **SIG 16 / 24 / +15 · HYD 75 · PR-2 · 200 HP · 20 at 450 m every 1.0 s · 40 m/s · 50 m** | The cohort hull, fielded for the first time in the campaign ([mission-intake.md](mission-intake.md) §13 put it in the roster and did not field it). Slowest combat hull in the game before the shallows take a fifth of it |
 
 All eleven are armed and seated **already above the line**, on the shoulder at 340 m between the
@@ -107,11 +110,14 @@ submersibles at (3400, 2350) and (3650, 2350), the Cruiser at (3525, 2325). Elev
 at tick 0 put every hull under Silent Running, so the mission's first decision is *whether to
 stop being quiet* rather than *whether to start*.
 
-**The seat is 1,070 m from the escort's nearest Corvette.** A silent Chorister there reads 1.23
-against that Corvette's threshold and 1.36 against the escort Cruiser's — Contact, a smudge with
-no bearing. The same hull merely idle, at 16, reads 2.45 and 2.73 — Bearing and Classification.
-The column that wakes up loud has opened the corridor warden's book on itself before it has
-moved a metre, and §6 is what the book says.
+**The seat is 1,070 m from the escort's nearest Corvette, and while the column holds still the
+corridor does not have it at all.** A silent Chorister there reads 0.66 against that Corvette's
+threshold and 0.74 against the escort Cruiser's; the silent Cruiser hull, loudest of the eleven
+at 7.6, reads 0.87 and 0.99 — nothing, in every ear on the map, which is what *lying quiet* means
+in the model rather than in the prose. The same Chorister merely idle, at 16, reads 2.45 and 2.73
+— Bearing and Classification; the Cruiser hull idle at 55 reads 6.29 and 7.17, which is Track,
+exact hull and facing. The column that wakes up loud has opened the corridor warden's book on
+itself before it has moved a metre, and §9 and §12 are what the book says.
 
 No structures, no production, no reinforcement, no repair. Whatever comes down the slope at the
 close is what came up it, minus fifteen per cent.
@@ -149,8 +155,12 @@ it lands in four movements.
 penalty tests `depthBandFor() === Shelf` rather than a hard 400, so moving the band moves the
 penalty with it (`constants.ts`, `DIRECTORATE_SHALLOW`; `echo.ts`, `inDirectorateShallows`). The
 Shoulder's floor is 340 m, the Marr Approach's 280, the Holdfast Gate's 260. Only the corridor
-at 420 m and the slope at 900 are under it. **A Directorate hull inside the posted closure stops
-bleeding**, which is the mission's most uncomfortable single fact and belongs to the concern.
+at 420 m and the slope at 900 are under it. **A Directorate hull that drops to the posted
+closure's floor is not shallow any more: a Chorister in it walks at forty again, against
+thirty-two on the rock above** — the mission's most uncomfortable single fact, and it belongs to
+the concern. What the corridor gives back is the speed and only the speed, the bleed being
+finished by 00:20 and not refunded on leaving: eight metres a second, bought with a descent at
+SIG 72 ([systems-depth.md](systems-depth.md) §2) and with the second asking.
 
 **2. Speed × 0.8, and it follows the hull rather than the map** (`movement.ts`). It stacks
 multiplicatively with Silent Running, so the roster reads:
@@ -195,9 +205,10 @@ Attendance's 8. It says something exact about the column: **the Cruiser hull idl
 than twice the budget, so the budget is the mission saying that the ears travel silent and the
 loudest the column may be is one cohort hull moving. A column that crosses at cruise is not
 breaking a rule; it is standing at Classification in front of a corridor warden with a book, and
-§6 is the book. The mission is playtested against the player who exceeds it, which here means one
-who walks west at 32 instead of 17.6 because the clock is short — and hears the second asking
-inside five minutes.
+§9 tables the book. The mission is playtested against the player who exceeds it, which here means
+one who walks west at 32 instead of 17.6 because the clock is short. From the seat that hull is
+already Classification to the escort Cruiser, so the second asking is thirty seconds behind the
+first order rather than five minutes behind it.
 
 ---
 
@@ -217,15 +228,16 @@ inside five minutes.
 **The frame is Thin Water's frame, seated where `thinWater.ts` seats it**: `frame-turret-west` at
 (1850, 1500) and `frame-turret-east` at (2150, 1500), both at 380 m over the spur's 420 — SIG 12
 idle and +30 firing, HYD 55, 1,000 HP, 50 damage at 700 m every 1.5 s. A Sentinel Turret
-*listens*: it holds a cruising Chorister at Bearing out to 1,990 m and a silent one out to 1,002,
+*listens*: it holds a cruising Chorister at Bearing out to 1,990 m and a silent one out to 683,
 and guns fire at Tier 2 or better ([systems-combat.md](systems-combat.md) §7), so **seven hundred
 metres either side of the frame is a turret's water.** Nobody has taken them down, because nobody
 takes a closure down.
 
-**The escort is Rell's escort**, standing off the frame's east where Thin Water's Cruiser ended
-its tide: `corridor-cruiser` (2400, 1500), `corridor-corvette-one` (2300, 1450),
-`corridor-corvette-two` (2500, 1550), all at 400 m, with authored legs west to x 1,200 at 05:00,
-back at 09:00, east to x 2,800 at 13:00 and back at 16:00. **It never goes below y 1,750** — Rell
+**The escort is Rell's escort**, standing off the frame's east, two hundred metres short of
+where Thin Water's Cruiser ended its tide at (2600, 1500): `corridor-cruiser` (2400, 1500),
+`corridor-corvette-one` (2300, 1450), `corridor-corvette-two` (2500, 1550), all at 400 m, with
+authored legs west to x 1,200 at 05:00, back at 09:00, east to x 2,800 at 13:00 and back at
+16:00. **It never goes below y 1,750** — Rell
 discharges a closure at the closure's edge and does not hunt anybody down a slope, which is the
 restraint [mission-thin-water.md](mission-thin-water.md) §5 gave him and the reason §8's
 withdrawal is survivable. **The second element idles at the corridor's western gate** —
@@ -237,8 +249,8 @@ over, and it is why the column's clock ends when it does.
 **The Holding's column stands at the wall's gate**, in the shoulder's north-west strip between
 Marr's outer rows and the spur: `holding-cruiser-a` (125, 1050), `holding-cruiser-b` (125, 1200),
 `holding-corvette-a` (250, 1100), `holding-corvette-b` (375, 1050), `holding-corvette-c`
-(375, 1200), all at 340 m and all seated under Silent Running at 00:00. A Cruiser at 8 is Contact
-to a submersible on the strip from 1,690 m and a smudge all tide. **It is moved by exactly one
+(375, 1200), all at 340 m and all seated under Silent Running at 00:00. A Cruiser silent at 7.6
+is Contact to a submersible on the strip from 1,638 m and a smudge all tide. **It is moved by exactly one
 thing, and that thing is the third asking** (§9).
 
 **Naming follows [culture.md](culture.md) §4.** Setha Korrin and Mara Tessen carry
@@ -289,10 +301,12 @@ than this mission choosing an outcome for somebody else's campaign.
 `reading` cannot be counted by `attend` (`types.ts`, `MissionEmitter.reading`;
 `missions.test.ts`, the attend bound), so the two loudest things on the map are worth exactly
 nothing to the count. At SIG 70 through the real paths, Kell's bell is Bearing to a Chorister on
-the strip (3,503 m, ratio 1.84) and Track to a submersible anywhere on the slope; Teel's is
-Classification on the strip (2,622 m, 3.68) and Classification on the slope (3.33). **They are
-heard everywhere and entered nowhere, by design**: a bell is punctuation the count does not need,
-and a transcript that could be filled by standing still under a bell would not be a transcript.
+the strip (3,503 m, ratio 1.84) and Track to a submersible over the slope's middle (2,043 m,
+6.81), falling to Classification at the slope's western end (3,482 m, 2.87); Teel's is
+Classification on the strip (2,622 m, 3.68) and Classification over the slope's middle (2,652 m,
+3.86). **They are heard everywhere and entered nowhere, by design**: a bell is punctuation the
+count does not need, and a transcript that could be filled by standing still under a bell would
+not be a transcript.
 
 Kell's bell is rung by a plateau that lost two hundred people to somebody else's containment
 order in 197 PC ([world-map.md](world-map.md); [timeline.md](timeline.md)). The stalls enter it
@@ -321,40 +335,47 @@ is not a lever here.
 - **The frame and the gate.** The turrets idle at 12 and are Bearing to a submersible at the seat
   (1,512 m, 1.66); the closure's two Corvettes read 1.03 and 1.05 from 3,200 m. The column hears
   every gun it must not walk into.
-- **The rows.** From the seat, nothing. **The transcript has to be walked to**, Intake's lesson on
-  a different axis ([mission-intake.md](mission-intake.md) §3).
+- **The rows.** From the seat, nothing: the nearest of Marr's six reads 0.82 to a submersible
+  2,398 m away, under the 1.00 that is Contact. **The transcript has to be walked to**, Intake's
+  lesson on a different axis ([mission-intake.md](mission-intake.md) §3).
 
 **What the concern hears, and where the listening ground therefore is.** A row is at Bearing to a
-Chorister from y ≤ 1,900 and to a submersible from y ≤ 2,000 — a hundred and fifty metres of
-usable water south of a corridor whose southern edge is y 1,750. That sliver is `the-strip`, and
-it is overlooked from both ends:
+Chorister from y ≤ 1,900 and to a submersible from y ≤ 2,050 — a hundred and fifty metres of
+usable water south of a corridor whose southern edge is y 1,750, and three hundred for the ears.
+That sliver is `the-strip`, and it is overlooked from both ends:
 
-| A silent Chorister at, on y 1,850 | The closure's gate | The western turret | The escort at the frame |
+| A silent Chorister at 4.3, on y 1,850 | The closure's gate | The western turret | The escort at the frame |
 | --- | --- | --- | --- |
-| x 375 | **Track** (4.80) | nothing (0.77) | nothing (0.56) |
-| x 650 | Classification (3.36) | Contact (1.05) | nothing (0.70) |
-| x 1,000 | Bearing (1.83) | Bearing (1.72), 919 m | nothing (0.99) |
-| x 1,225 | Contact (1.31) | **Classification** (2.56), **716 m** | Contact (1.28) |
-| x 1,550 | nothing (0.87) | **Track** (5.19), 461 m — inside the gun | Bearing (2.03) |
+| x 375 | **Classification** (2.60), 456 m | nothing (0.42) | nothing (0.30) |
+| x 650 | Bearing (1.82), 570 m | nothing (0.57) | nothing (0.38) |
+| x 900 | Contact (1.17), 750 m | nothing (0.80), 1,012 m | nothing (0.48) |
+| x 1,225 | nothing (0.71) | Contact (1.39), **716 m** | nothing (0.69) |
+| x 1,550 | nothing (0.47) | **Classification** (2.81), 461 m — inside the gun | Contact (1.10) |
 
-**The band that is quiet in both directions is two hundred and fifty metres wide.** West of
-x 1,000 the closure's gate holds a silent hull at Classification or better, and at x 375 it holds
-it at Track. East of x 1,244 the western turret has it inside seven hundred metres, which is a
-firing solution rather than a hearing. Between those two lines a silent hull is Bearing to a
-turret that cannot reach it and Contact to an escort that cannot read it — and from (1225, 1850)
-**a submersible holds five of Marr's six rows at Bearing at once**: 1.55, 1.75, 1.83, 1.75 and
-1.55 on rows two through six. Row one, at (250, 500), needs a hull west of x 650, which is the
-closure's water and costs thirty seconds of Classification to stand in.
+**The band that is quiet in both directions runs from x 426 to x 1,244, and it is eight hundred
+metres wide.** West of x 426 the closure's gate holds a silent hull at Classification, and thirty
+cumulative seconds of that is the second asking. East of x 1,244 the western turret has it inside
+seven hundred metres, which is a firing solution rather than a hearing. Between those two lines a
+silent hull is Bearing to the gate out to x 760, Contact out to x 996 and heard by nothing at all
+from there to the turret's own x 1,043 — and nothing to the escort at the frame anywhere in it, and
+outside every gun.
+
+**And two stations inside that band each hold five rows at once.** From (900, 1850) a submersible
+holds rows one to five at Bearing — 1.55, 1.75, 1.83, 1.75, 1.55, the outer two at 1,498 m each —
+and from (1225, 1850) it holds rows two to six at the same five figures, the geometry being
+symmetric about whichever row it stands under. Either station is `the-transcript`'s five on its
+own; both, 325 m and eighteen silent seconds apart, are six. A Chorister in the same water holds
+three, which is the argument for bringing the ears up the slope.
 
 **And the sixth row is the one that costs.** A Chorister directly beneath `marr-row-six`, at
-(1875, 1850), holds it at 1.62 — and stands 351 m from the western turret, at Track, inside a
-700 m gun. The mission never says not to. It prints the distance.
+(1875, 1850), holds it at 1.62 — and stands 351 m from the western turret, at Classification,
+inside a 700 m gun that fires at Tier 2. The mission never says not to. It prints the distance.
 
 **The under-run is a route, not a hide.** Thermal Vein at PF 0.45 and 620 m of floor, lying
-*below* the corridor's middle: a silent Chorister at (2250, 2400) reads **0.97** to the Corvette
+*below* the corridor's middle: a silent Chorister at (2250, 2400) reads **0.53** to the Corvette
 886 m away at the frame's east — nothing, through a path mean of 0.59. It is Thin Water's *the
 quiet way is the deep way* inherited by the navy that sentence was written against, and it is
-1,266 m and seventy-two silent seconds off the seat.
+1,277 m and seventy-three silent seconds off the Cruiser's seat.
 
 **And the slope carries at 1.6**, so the column is heard arriving and heard leaving. No hazard
 event, no second Drift species, no Sounder: the discipline is Attendance's, kept on noisier
@@ -377,7 +398,7 @@ Five objective rows, three of them terminal, stated as the format carries them (
 | `the-record` | *What is heard of the column is entered by the concern, and read later, elsewhere.* | `{ kind: 'tolerance', ticks: 3600, tier: ResolutionTier.Classification }` | No. Read out, never ranked |
 | `the-whole` | *Eight of ten, and the Holdfast among them.* | `{ kind: 'attend', count: 8 }` | No. Read out, never ranked |
 
-**`the-transcript` is five of ten and §7's submersible at (1225, 1850) holds all five at once.**
+**`the-transcript` is five of ten and §7's submersible holds all five from one standing.**
 `attend` is monotone — an emitter resolved at Tier 2 while sounding is banked for the rest of the
 match (`runtime.ts`) — so the transcript is a *walk*, not a vigil: 2,302 m from the seat, a
 hundred and thirty-one seconds silent, a few seconds standing, and back. The mission is tuned
@@ -389,10 +410,11 @@ not one. That is a finding in Intake's manner rather than a request (§13).
 
 **Both are revealed at T(18), and the late reveal is load-bearing.** An `extract` latches Met the
 first pass it is true and never un-latches (`predicates.ts`, `isStanding`; `runtime.ts`,
-`deriveObjectives`), so revealed at 00:00 it would be met by any six Choristers that touched the
-slope on their way up and "under the line at the tide's turn" would be a sentence about the past.
-The stalls' beat at 18:00 shares the tick — Intake's roll idiom
-([mission-intake.md](mission-intake.md) §8).
+`deriveObjectives`), so revealed at 00:00 it would latch the first pass six Choristers stood on
+the slope — a column that dipped three hundred metres south at 05:00 to be out of the escort's
+water and walked back would have satisfied *under the line at the tide's turn* at five minutes
+past the hour, and the row would be a sentence about the past. The stalls' beat at 18:00 shares
+the tick — Intake's roll idiom ([mission-intake.md](mission-intake.md) §8).
 
 **The slope is a rectangle and not a depth, and the document says so rather than fencing it.** No
 predicate reads a hull's depth (§13). `kell-slope` is ground, not water, so a hull that reaches
@@ -459,15 +481,17 @@ audible sixty seconds out. Three failures, all audible for minutes:
 
 - **The closure walks east from 14:00.** Two Corvettes at 85 m/s to x 2,500 by 14:26 and x 4,500
   by 16:54, at Track from the strip long before they are near it (5.20 at 1,322 m). The crossing
-  to the slope is 688 m — twenty-one seconds cruising, thirty-nine silent — against eight for the
+  to the slope is 650 m — twenty seconds cruising, thirty-seven silent — against eight for the
   thing chasing.
-- **The Holding's column, if it comes, is four minutes of Cruisers.** Un-silenced at 65 it is
-  Track to a submersible on the strip from 1,100 m and Bearing at the seat from 3,631, and it
-  arrives at 45 m/s at a column that walks at 32.
+- **The Holding's column, if it comes, is four minutes of Cruisers.** Silent at the gate it is a
+  smudge; un-silenced at 65 a Cruiser is Track to a submersible out to 2,638 m and Bearing out to
+  4,869, so it is Track to anything on the strip from the moment it moves and Bearing at the
+  column's own seat, 3,631 m away, at 2.15 through the real path. It arrives at 45 m/s at a
+  column that walks at 32.
 - **The pack comes up the slope's west end at 17:30**, loud, ninety seconds before the turn, onto
   exactly the ground a column coming off the western strip comes down onto. A Draymaw hears a
   Directorate hull at ×0.4 ([bestiary.md](bestiary.md) §2) and commits to a cruising Chorister
-  inside 199 m, a silent one inside 100, a cruising submersible inside 220, a firing Chorister
+  inside 199 m, a silent one inside 68, a cruising submersible inside 220, a firing Chorister
   inside 270 — and to a **descending** hull, at the dive's SIG floor of 72, inside **396 m**. The
   order that gets a hull under the line fastest is the order that calls the animals.
 
@@ -479,7 +503,7 @@ mission can be lost, and a mission that can be lost is resolved rather than conc
 ## 9. Length, SIG Budget, and the Beats
 
 **Length: nineteen minutes.** Inside [campaign.md](campaign.md) §10's 12–25, on the length band
-[1080, 1200] s. Nineteen is Convocation's own length one tide later, and it is chosen against
+[1080, 1200] s. Nineteen is Convocation's own length, one tide earlier, and it is chosen against
 §7's walk: the strip is 2,302 m from the seat, 131 s silent each way, and the Holdfast's window
 is three minutes in the middle of the tide — the only span in which a column that wants eight of
 ten has to be inside the corridor.
@@ -493,13 +517,13 @@ ten has to be inside the corridor.
 | **00:20** | **The stalls**: *"Fifteen in a hundred. It has stopped, and it does not come back."* Every bar in the panel now has a segment that will not heal, and no order has been given |
 | 01:00 | **Mara Tessen, from the shoulder** (§12). **Marr's six outer rows begin** (`fromTick`), at twelve, until 16:00 |
 | 03:00 | The stalls: *"The line is at four hundred. What is above it is not attended and is not asked; it is listened to. The rows are at twelve and north of the corridor, and none of them is heard from the slope."* |
-| **05:00** | **The escort walks its corridor west** — Cruiser to (1200, 1500), Corvettes to (1100, 1450) and (1300, 1550), twenty-seven seconds of transit. The strip is Track from end to end while it stands there |
+| **05:00** | **The escort walks its corridor west** — Cruiser to (1200, 1500), Corvettes to (1100, 1450) and (1300, 1550), twenty-seven seconds of transit. It stands over the strip's middle: a silent hull between x 1,000 and x 1,400 is Track under its keel, Classification from x 800, Bearing at x 650 and Contact at either end. Both of §7's five-row stations are inside that, so the escort's western leg is four minutes in which the transcript costs what it is worth |
 | 06:00 | **`bell-kell` opens**, until 06:20. The stalls: *"Kell's bell, off-tide. Two hundred of that plateau did not get out in 197 PC and the bell is theirs too. It is not entered; a bell does not need entering."* |
 | 06:30 | **The watch at Kell's edge, for the plateaus** (§12) |
-| **09:00** | The escort returns east to x 2,400. The strip's quiet band is open again, x 1,000 to x 1,244 |
-| **10:00** | **The Holdfast's four rows begin**, until 13:00. The stalls: *"The Holdfast is turning it. It is heard from inside the corridor and from nowhere else."* |
+| **09:00** | The escort returns east to x 2,400. The strip's quiet band is open again, x 426 to x 1,244 |
+| **10:00** | **The Holdfast's four rows begin**, until 13:00. The stalls: *"The Holdfast is turning it. It is heard from inside the corridor and from nowhere south of it."* |
 | 11:00 | **`bell-teel` opens**, until 11:20. The stalls: *"Teel's bell, off-tide. Two."* |
-| **13:00** | The escort walks east to x 2,800 — 890 m from the seat, and Track to anything still sitting in it. **The Holdfast's rows stop** (`untilTick`) |
+| **13:00** | The escort walks east to x 2,800 — 890 m from the nearest Chorister's seat, Contact to a silent hull still sitting in it and Track to a loud one. **The Holdfast's rows stop** (`untilTick`) |
 | **14:00** | **The closure walks.** `element-one` and `element-two` east along the spur to x 2,500, arriving 14:26 |
 | 16:00 | The escort returns to x 2,400. **Marr's rows stop** (`untilTick`). The transcript is closed whatever it holds |
 | 16:30 | The closure continues east to x 4,500, over the seat the column started in |
@@ -514,15 +538,28 @@ ten has to be inside the corridor.
 | --- | --- | --- |
 | `first` | `{ kind: 'extract', role: 'cohort', region: 'grid-spur', count: 1 }` | **Rell, the first asking** (§12) |
 | `first` | `{ kind: 'extract', role: 'ears', region: 'grid-spur', count: 1 }` | **Rell, the first asking** |
-| `first` | `{ kind: 'tolerance', ticks: 7200, tier: ResolutionTier.Bearing }` — 120 s cumulative | **Rell, the first asking** |
+| `first` | `{ kind: 'tolerance', ticks: 1200, tier: ResolutionTier.Bearing }` — 20 s cumulative | **Rell, the first asking** |
 | — | `{ kind: 'tolerance', ticks: 1800, tier: ResolutionTier.Classification }` — 30 s | **Rell, the second asking** |
 | `third` | `{ kind: 'tolerance', ticks: 5400, tier: ResolutionTier.Classification }` — 90 s | **Rell, the third asking**; `move` the escort Cruiser to (1200, 1450); `silent` *inactive* on all five of the Holding's column; `move` all five east along y 1,100 to (2500, 1100) |
 
 The three first-asking beats share a group so whichever fires retires the other two
 (`runtime.ts`, the choice-group sweep): a column that stands into the closure and one merely
-heard for two minutes are asked the same question once. The third asking's five effects share one
-condition and one group, which is legal because the group is swept after everything due on the
-pass has fired. **The corridor's transits are authored, not patrol AI**, for the standing reason
+heard for twenty seconds are asked the same question once. The third asking's five effects share
+one condition and one group, which is legal because the group is swept after everything due on
+the pass has fired.
+
+**The twenty seconds is arithmetic, not taste.** `tolerance` counts ticks at its tier *or better*
+(`types.ts`), so a force's Bearing clock always reads at least as high as its Classification
+clock: thirty seconds of Classification is thirty seconds of Bearing as well. Author the first
+asking at two minutes of Bearing against the second's thirty at Classification and a column that
+wakes up beside the escort hears *"it is the second time of asking, and there is a third"* with
+no first time of asking behind it. Twenty sits under thirty by ten, so the first is due strictly
+before the second on every route into the corridor and the third at ninety after both. The
+tolerance form is also the loose one — the column's own exposure tally, not a trigger volume
+([mission-thin-water.md](mission-thin-water.md) §13) — so the two `extract` forms are the ones
+literally inside the closure, and every ear that can hold the column at Bearing belongs to it.
+
+**The corridor's transits are authored, not patrol AI**, for the standing reason
 ([mission-sorrowgate.md](mission-sorrowgate.md) §9): a mission's beats happen at the time the
 document says they happen. The closure is why; the beats are when.
 
@@ -539,8 +576,8 @@ One system, per [campaign.md](campaign.md) §10: **the shallow-water penalty** �
 own weakness, taught by making the player spend a mission inside it. It lands in order across the
 beat table: the bleed at 00:00 before an order is given, the speed as a number on the first order
 (32 against 40), the line as an acoustic fact at 03:00, and the last five minutes in which a
-column that walks at thirty-two has to be seven hundred metres south of where it was listening
-before two Corvettes at eighty-five arrive over it.
+column that walks at thirty-two has to be six hundred and fifty metres south of where it was
+listening before two Corvettes at eighty-five arrive over it.
 
 Underneath it, the campaign's subject continued. **Attendance taught that doing nothing is
 sufficient; Intake that the living is loud and has to be walked to; The Dome what a transmission
@@ -573,7 +610,7 @@ What this mission deliberately does not teach:
 | Region | Rect (x, y, w, h) | Biome | Floor | What it is |
 | --- | --- | --- | --- | --- |
 | The Shoulder | 0, 0, 5000, 3000 | Open Water | 340 | The bare rise. Painted first; everything else is cut into it. PF 1.00 — the thin water, and now the column's own |
-| The Grid Spur | 0, 1250, 5000, 500 | Open Water | 420 | The posted closure, east to west. **The one Mid-Water ribbon on the map**: a Directorate hull inside it stops bleeding, and standing in it is the offence |
+| The Grid Spur | 0, 1250, 5000, 500 | Open Water | 420 | The posted closure, east to west. **The one Mid-Water ribbon on the map**: a Directorate hull that dives to its floor runs at forty again, and standing in it is the offence |
 | The Kell Slope | 0, 2500, 5000, 500 | Abyssal Trench | 900 | The southern edge falling away. PF 1.60 — the column is heard arriving and heard leaving. **The withdrawal region** |
 | The Vent Under-run | 1750, 1750, 1000, 750 | Thermal Vein | 620 | PF 0.45, the map's one mask, lying below the corridor's middle. The quiet way is the deep way |
 | Kell Face | 3750, 1750, 1250, 750 | Kelp Forest | 300 | The replanted terrace's working face. Kell's bell is rung here |
@@ -673,9 +710,9 @@ or the impersonal:
 > seconds and has stopped at fifteen, and the water is lit from the wrong side.
 
 **Corridor Warden Anse Rell, three askings** — *(fired by the tally or the closure, not the
-clock: the first on a hull standing in the closure or on two minutes at Bearing, the second on thirty
-cumulative seconds at Classification, the third on ninety — and the Holding's column comes out of
-the gate on the third line)*
+clock: the first on a hull standing in the closure or on twenty cumulative seconds at Bearing,
+the second on thirty at Classification, the third on ninety — and the Holding's column comes out
+of the gate on the third line)*
 
 > Bearing inside a posted closure is asked for an asset number and a charter reference. This is
 > the first time of asking.
@@ -723,8 +760,9 @@ What exists against this document and what does not, continuing the list
 [mission-asset-recovery.md](mission-asset-recovery.md) §13 started. **This mission is specified
 and not built**, and its headline row is unusual for the queue: the system it teaches is
 **already built and never yet fired**, so the work is authoring rather than engineering. The rows
-below are mostly *Built*, with two findings and one open question the document names and declines
-to settle.
+below are mostly *Built*, with four findings — two of them about how a document derives a shipped
+number rather than about a missing mechanism — and one open question the document names and
+declines to settle.
 
 | Requirement | Status |
 | --- | --- |
@@ -738,12 +776,14 @@ to settle.
 | A pursuit that stops at the closure's edge | **Built** — authored legs, nothing new. The escort never goes below y 1,750 because the document says so, not because the runtime stops it |
 | Guns that fire at Tier 2, and turrets that listen | **Built** (`combat.ts`; `thinWater.ts` is the precedent for Sentinel Turrets on a scripted party). §7's seven-hundred-metre figure is the turret's gun, not its ears, and §5 states both |
 | **None of the ten rows at Tier 2 from the slope** | **Arithmetic over the shipped model, not a proposal.** Measured through `pathPropagation`: the best any hull on the Kell Slope can do against the nearest Marr row is **1.02** with a submersible at the slope's north edge and 0.90 with a Chorister, against 1.50 for Bearing; the Holdfast's rows read 0.72. The mission's central claim is therefore a property of the terrain grid and the propagation model rather than of a rule, and `missionShallow.test.ts` should assert it by re-deriving it rather than by copying these numbers |
+| **Silent Running's SIG is the hull's, not the band's** | **Built, and the one place a reader is most likely to mis-derive this document.** `silentRunningSig` places a hull inside `SILENT_RUNNING`'s 3–8 band by its idle figure — `3 + 5 x min(1, sigIdle / 60)` (`acoustics.ts`) — so a Chorister runs silent at **4.3**, a submersible at 4.8, a Cruiser at 7.6 and a Corvette at 5.3, and only a hull idling at 60 or more ever reads the eight. Every silent figure in §1, §3, §5, §7 and §8 is computed at the hull's own value; the eight would inflate a Chorister's silent ranges by a factor of 1.85 and would put the seat at Contact when the model says nothing. [mission-radicals.md](mission-radicals.md) §13 records the same trap from the Commune's side |
+| **The three askings' thresholds are ordered by arithmetic** | **A finding about `tolerance`, and the reason for §9's twenty seconds.** The predicate counts ticks at its tier *or better* (`types.ts`), so a force's Bearing tally is always at least its Classification tally, and a first asking authored above the second's threshold can fire after it — Rell saying *"it is the second time of asking"* with no first behind it. Nothing in the format orders conditional beats by anything but their own predicates, and `choiceGroup` retires siblings rather than sequencing them (#282), so the ordering has to be bought in the numbers: 20 s at Bearing, 30 s at Classification, 90 s at Classification. Named here rather than asked for, because a sequenced conditional — *fire only after beat X has fired* — is a second kind of state in a table that deliberately has none |
 | **Two roles for one withdrawal count** | **A finding, not a request.** `MissionUnit.role` is one string (`types.ts`), so a mission cannot both tally eight Choristers under `cohort` and three ears under `ears` and then ask one question about all eleven. This document wants the two counts separately anyway — six of eight and two of three read better than eight of eleven, and the Undermarshalcy does not round up — so the constraint improves the design and the row is recorded rather than filed. A mission that genuinely needed the union would want a `tags` argument on `extract`, as [mission-intake.md](mission-intake.md) §13 named it |
 | **A withdrawal region that is a rectangle and not a depth** | **A finding, and the one place this document is uncomfortable.** No predicate in the union reads a hull's depth: `extract` names a region, and a region is a rectangle on the floor plan. So "under the line" is authored as *standing over the slope*, and a hull that reaches `kell-slope` at 340 m has satisfied a mission about the four-hundred-metre line without going below it. §8 prints the disagreement rather than hiding it. The shape a genuine need would take is a `depthM` ceiling on `extract` — `{ kind: 'extract'; role; region; count; belowDepthM?: number }` — which is the same query over the observer's own force that the union already permits and would cost one comparison. **This document names it and does not ask for it**, because the mission is honest without it and one mission's convenience is a poor reason to widen a union |
 | Unwinnable as a fight | **Not nominated.** [campaign.md](campaign.md) §2 rule 4's three missions are *Sorrowgate*'s evacuation, *Thin Water*'s retreat and the Knights' *Conclave*'s refusal. The fight here is priced in §8 at 560 a second against 3,264 of hull, is a consequence of ninety cumulative seconds of Classification inside a posted closure, and is avoidable by arithmetic the mission has already shown the player |
 | `runsItsLength` | **Built for [mission-intake.md](mission-intake.md) and needed here for a different reason.** All three terminal rows can be true on the reveal's own pass at 18:00, which would close the tide ninety seconds early and delete the pack's whole purpose. With the flag only `resolve` closes it |
 | `fauna: false` with two authored creatures | **Built** — the flag is Attendance's, the beats are Thin Water's own points, and the reason is Intake's: the default seeder is a skirmish roster and cannot put animals in named places |
-| Progression — the fifteen per cent carried forward | **Not built**, and deliberately not asked for. §10 says the column carries the bleed into *Trench Awakening* and it carries it **in prose only**: nothing outlives the match it was fought in ([mission-item-nine.md](mission-item-nine.md) §13, the row every campaign leans on and none owns) |
+| Progression — the fifteen per cent carried forward | **The record is built; the carry is not** (#371, #374). `packages/frontend/src/progression/store.ts` keeps a per-mission history and the campaign board reads it, so it is no longer true that nothing remembers a mission was played — its `MissionRecord` comment names cross-mission Drift Health and permanent attrition as the systems queued behind it. What is still absent is a hull that arrives at mission 5 carrying what mission 4 took out of it, so §10's sentence about the column reaching *Trench Awakening* at eighty-five per cent is **prose only**, and deliberately not asked for here ([mission-item-nine.md](mission-item-nine.md) §13, the row every campaign leans on and none owns) |
 | A silence order | **Not authored, and the absence is a claim.** [habitats.md](habitats.md) §8: the Directorate's hush is written, the court's is enforced, and everybody else's is courtesy — "a mission on a plateau or in the Holding should price them as such". The plateaus' hush at the watch-edge is the loudest example of that in the bible and this mission declines to enforce it, which is the difference between attending somebody's ground and policing it |
 | In-mission character speech, heard | Text only, the standing status ([mission-sorrowgate.md](mission-sorrowgate.md) §13) |
 | The mix — a garden heard from a bare rock, and two bells nobody counts | Not started ([audio-direction.md](audio-direction.md)). §6's whole argument — that the loudest things on the map are worth nothing and the quietest are worth everything — exists in prose and in a detection table and in no sound yet |

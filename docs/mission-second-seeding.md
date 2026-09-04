@@ -107,8 +107,9 @@ for the proof, and four seed hulls — the barge and three tenders — refit for
 [mission-deep-furrow.md](mission-deep-furrow.md) fielded the two;
 [mission-radicals.md](mission-radicals.md) fielded the four; this mission fields all six, and
 the sentence is repeated on purpose, because the count is the argument. Teel's element is not
-rated for this water and cannot be: a Corvette is PR-2, the lip is PR-3 ground, and the
-staging at 1,500 m is as far down as a Commune gun can go without the ground's help (§4). The
+rated for this water and cannot be: a Corvette is PR-2, the lip is PR-3 ground, and 1,800 m is
+as far down as a Commune gun goes without the ground's help — the staging, whose floor is
+1,500, and the upper slopes, and nothing on the terraces or the lip at all (§4). The
 guns are struck, as they were under the bed in the furrow
 ([mission-in-writing.md](mission-in-writing.md) §3): *nobody strikes first, and not on this
 water*. Teel has never struck first ([characters.md](characters.md)) and this mission keeps
@@ -241,7 +242,7 @@ on a PR-3 hull that pays no crush for the rock, so the only price is ears. And t
 
 The watch walks the lip to 1,160 m from the bed between 09:20 and 14:00 and has a veiled
 sowing at Track (ratio 6.60) the whole time. The concern's western reader works face-one from a
-station 828 m from the bed from about 05:10 and face-two from one 673 m from it from about
+station 828 m from the bed from about 05:21 and face-two from one 673 m from it from about
 08:40 — the faces are the sounds, the reader is the ear, and the ear stands a hundred metres off
 the face it is reading — and it has the sowing at Classification from the first station (3.85)
 and at Track from the second (7.54). From 14:00 the nearest ears are the reader at face-three,
@@ -304,11 +305,12 @@ leaving by: 72 through open water is a Contact to a Cruiser's 65 from 5,655 m an
 submersible's 85 from 6,688; from the middle of the slopes — about 800, 1,480, fifteen seconds
 after the release — the concern's climbing flagship has it at Classification (3.01), the reader
 on the third face at Classification (3.80), the watch at home at Bearing (1.98), the Order's
-reconnaissance at Bearing (2.01), and the pair in home water at Track from 696 m. Over the lip, at
-1.6, the watch has it at Track (4.72) for the nine seconds of the last dive. That is *the
-arrangement that kept the Directorate from having to fight* ending ([campaign.md](campaign.md)
-§9), as a sound — a Commune gun descending, struck, into ground that will hold it — and the close
-counts, by household, the people it is over for first.
+reconnaissance at Contact (1.15) from the seat it withdrew to at 17:00 — 4,402 m off, and a
+Bearing at 2.01 from the inner station it had left — and the pair in home water at Track from
+696 m. Over the lip, at 1.6, the watch has it at Track (4.72) for the nine seconds of the last
+dive. That is *the arrangement that kept the Directorate from having to fight* ending
+([campaign.md](campaign.md) §9), as a sound — a Commune gun descending, struck, into ground
+that will hold it — and the close counts, by household, the people it is over for first.
 
 ### The SIG budget
 
@@ -331,7 +333,7 @@ line in three accounts, and then it is the week.
 | **The plateaus** — the player | The barge and three tenders under the bed; the charting pair; Teel's three corvettes struck at the staging; the bed | Under a bed on the western lip since the tide before last; the pair on the terraces since before anybody |
 | **The concern's expedition** — the Board's writ | 1 Cruiser, 2 reader corvettes, the bunkerage — PR-3 by refit, unarmed ([mission-prospect.md](mission-prospect.md) §3) — and six faces charted on the terraces, read on a schedule | Prospect's four hulls, from the other side: down loud at 02:00, six faces at eighty, up slow at 20:30, north at 22:00. Foreman Corwin Osk is aboard and unheard — his three lines are the concern's channel, and the Commune cannot hear it |
 | **The watch** — those below | 2 Abyssal Submersibles, weapons-cold | Attending, as they have never not done. Prospect's stations and legs: west along the lip in the morning, home in the afternoon. From the western station the watch has the bed at a name, and enters it (§6) |
-| **The reconnaissance** — the Order | 1 hull flying Order colours, loud in one quarter of the compass ([systems-echo.md](systems-echo.md) §8) | Measuring the crystal, courteously, from the slopes; Prospect's legs. It never has anything of the plateaus on D above a ratio of 0.54, and says so by not saying so |
+| **The reconnaissance** — the Order | 1 hull flying Order colours, loud in one quarter of the compass ([systems-echo.md](systems-echo.md) §8) | Measuring the crystal, courteously, from the slopes; Prospect's legs. It never has the bed or the column above a ratio of 0.54 on D, and the one Commune sound it does hear is Teel's element coming down at 20:30, a Contact at 1.15 from the seat it has already withdrawn to. It says so by not saying so |
 | **The attendants** | Two returns on the lip, periodic, structured, unclassifiable | Filed three times as equipment fault by a navy that files. Filed by the Commune as *breathing on a count*, and nothing else (§8) |
 | **The Drift** | Nothing at 00:00; the riser from 20:30 | Below 2,700 m the column is empty of animals ([bestiary.md](bestiary.md) §4). What lifts off at 20:30 is Prospect's own beat, verbatim, and it ignores everything the plateaus own |
 
@@ -353,9 +355,10 @@ for the second time ([habitats.md](habitats.md) §2; [mission-deep-furrow.md](mi
 **One seat this document authors rather than inherits.** Prospect's expedition stands on the
 terraces wherever its player put it, and this mission has to put it somewhere. The plan seated
 the flagship at 3000, 2500, the centre of Prospect's terrace marker; this document seats it at
-**3000, 2750** and the bunkerage at 3000, 2850, 250 m further south, and says why. Prospect's
-own 07:00 leg brings `chart-b` to 2850, 2150 — 381 m from a hull at 3000, 2500, which is a
-Track at idle to a Cruiser's 65 for six minutes, and would have latched the ledger of §8 in
+**3000, 2750** and the bunkerage at 3000, 2850 — 250 and 300 m further south than the plan
+seated them — and says why. Prospect's own 07:00 leg brings `chart-b` to 2850, 2150 — 381 m
+from a hull at 3000, 2500, which is a Track at idle to a Cruiser's 65 for six minutes, and
+would have latched the ledger of §8 in
 every run the player let the table's order stand. At 618 m the same leg is a Bearing (2.01) at
 idle, and a Track only at cruise inside 621 m, which the leg reaches for less than a second.
 The readers' terrace seats stay where the plan put them, at 2700, 2450 and 3300, 2450, because
@@ -386,8 +389,8 @@ this document's, authored where Prospect's player could have read them.
 
 | Time | The concern | What it is to the plateaus |
 | --- | --- | --- |
-| 02:00 | The four move from the staging to the terraces with a depth order of 2,500 m — the descent, at 72, stepped down the floors: held at 1,500 over the staging, to 2,200 over the slopes, to 2,500 over the terraces. The flagship is seated at 3000, 2750 by about 02:52, the readers at 2700, 2450 and 3300, 2450 by about 02:30 | Everything on the rim hears the concern arrive: 72 through open water is a Contact to the pair's 70 from 5,924 m, a Track from the slopes (4.61). The column under the bed, at HYD 5, hears none of it (0.25) |
-| 05:00 → 06:00–06:20 | Reader-west to face-one, 900, 2500; the face sounds at 80 for twenty seconds | The first read, 300 m from the pair's seat: a Track at ratio 92, the loudest thing the pair has heard since the basin. The reader's own station is 828 m from the bed, path mean 0.925: the bed at Bearing (1.71) in its ears; a sowing now would be a Classification (3.85) |
+| 02:00 | The four move from the staging to the terraces with a depth order of 2,500 m — the descent, at 72, stepped down the floors: held at 1,500 over the staging, to 2,200 over the slopes, to 2,500 over the terraces. The flagship is seated at 3000, 2750 by about 02:52, the readers at 2700, 2450 and 3300, 2450 by about 02:30 | Everything on the rim hears the concern arrive: 72 through open water is a Contact to the pair's 70 from 5,924 m, a Track from the slopes (4.61). The column under the bed, at HYD 5, hears none of it — 0.54 at its closest, when the flagship is over its terrace station |
+| 05:00 → 06:00–06:20 | Reader-west to face-one, 900, 2500; the face sounds at 80 for twenty seconds | The first read, 300 m from the seat the pair left at 03:00 and 934 m from the leg it is standing on: a Track at ratio 14.9, the loudest thing the pair has heard since the basin. The reader's own station is 828 m from the bed, path mean 0.925: the bed at Bearing (1.71) in its ears; a sowing now would be a Classification (3.85) |
 | 06:30 → 07:00–07:20 | Reader-east to face-four, 3500, 2700 | Far side of the terraces. Nothing of the plateaus reaches it above a smudge |
 | 08:30 → 09:00–09:20 | Reader-west to face-two, 1700, 2750 | **The reader's station is 673 m from the bed, path mean 1.300 — the closest a Consortium ear comes to the plateaus all week.** The bed at Classification (3.35) from about 08:40 to 11:30; a sowing in that span a Track (7.54). The column, deaf under the bed, hears the read itself at Bearing — the face is 750 m off, and 80 through 1.0 at 750 m is 2.17 even to HYD 5 |
 | 10:00 → 10:30–10:50 | Reader-east to face-five, 4300, 2450 | Nothing |
@@ -433,16 +436,18 @@ tier by tier, to the nearest ear of each navy, by the hour the ears keep:
 | --- | --- | --- | --- | --- |
 | 00:00–02:00 | home, 3,350 m: Contact 1.21 | at the staging, 3,327 m: nothing | at the staging: nothing (0.55) | at its seat: nothing |
 | 02:50–04:20 | home: Contact | on the terrace seat, 1,656 m: Contact 1.31 | 1,820 m: **Bearing 1.76** | nothing |
-| 04:20–09:20 | 04:00 station, 2,351 m: **Bearing 2.13** | face-one station from 05:10, 828 m: **Classification 3.85**; face-two station from 08:40, 673 m: **Track 7.54** | Bearing 1.76 | nothing |
+| 04:20–09:20 | 04:00 station, 2,351 m: **Bearing 2.13** | face-one station from 05:21, 828 m: **Classification 3.85**; face-two station from 08:40, 673 m: **Track 7.54** | Bearing 1.76 | nothing |
 | **09:20–14:00** | **western station, 1,160 m: Track 6.60** | face-two station to 11:30: **Track 7.54**; face-three station from 11:40: Bearing 1.52 | Bearing 1.76 | inner station, 2,818 m: nothing (0.54) |
 | 14:00–20:30 | home: Contact 1.21 | face-three station, 1,512 m: Bearing 1.52 | Bearing 1.76 | nothing |
 | 20:30–23:00 | home: Contact | climbing, then at the staging: nothing | climbing: Bearing, falling to nothing | nothing |
 
 The Order's reconnaissance never has the bed or the column above 0.54 on D and hears nothing of
-the plateaus, which is what [mission-rim-deposits.md](mission-rim-deposits.md) inherits: on D+2
-it hears the bed at Bearing and declines to discuss it. Osk's three lines — the works order at
-01:00, the equipment fault at about 15:00, *Basin's awake* at 20:45 — are the concern's channel
-and are not heard here; the Commune hears the concern as a descent, six reads and a climb.
+the plateaus until Teel's element comes down at seventy-two, which is a Contact (1.15) from the
+seat it withdrew to at 17:00 and the only Commune sound in its day. That is what
+[mission-rim-deposits.md](mission-rim-deposits.md) inherits: on D+2 it hears the bed at Bearing
+and declines to discuss it. Osk's three lines — the works order at 01:00, the equipment fault
+at about 15:00, *Basin's awake* at 20:45 — are the concern's channel and are not heard here;
+the Commune hears the concern as a descent, six reads and a climb.
 
 **Nobody is wrong** ([campaign.md](campaign.md) §2 rule 1). The concern reads a field it
 needs; the watch attends what it has always attended and enters what it hears; the Order
@@ -467,8 +472,8 @@ pair factor is 1.0 everywhere and no figure here carries the layer
 | Source | SIG × PF | From the seat, 900, 2100 | From the 07:00 leg, 2700, 2100 | From home water, 1200, 2050 |
 | --- | --- | --- | --- | --- |
 | The concern's descent, 02:00 | 72 through the slopes | Track from mid-slopes (4.61); Contact from 5,924 m | — | — |
-| The first read, face-one, 06:00 | 80 × 0.7 | 300 m: Track, ratio 92 | — | — |
-| The third read, face-three, 12:00 | 80 × 0.7 | — | — | 1,324 m: Track 8.55 |
+| The first read, face-one, 06:00 | 80 × 0.7 | 300 m: Track 92 | 1,825 m: Track 5.1 | 461 m: Track 46 |
+| The third read, face-three, 12:00 | 80 × 0.7 | 1,612 m: Track 6.2 | 283 m: Track 101 | 1,324 m: Track 8.55 |
 | The flagship on the terraces, idle | 55 × 0.7 | 2,198 m: Classification 2.61 | 716 m: Track 15.7 | 1,931 m: Classification 3.21 |
 | `watch-a` at its western station, idle | 22 through 0.925–1.0 | 1,985 m: Bearing 1.63 | 1,334 m: Classification 3.32 | Bearing 1.89 |
 | `watch-a` at home, idle | 22 | nothing (0.55) | 2,247 m: Contact 1.30 | nothing |
@@ -478,15 +483,25 @@ pair factor is 1.0 everywhere and no figure here carries the layer
 | **The riser, 20:30**, lifting off at 3000, 3600 | 100 × 1.6 | — | — | 2,375 m: Track 6.35; Contact from 9,757 m |
 | The sowing, from the bed | 18 × 0.88 | 1,202 m: Classification 2.82 | — | Classification 2.83 |
 
+**Three columns, four stations, and the table's own orders decide where a sound arrives.**
+Prospect's legs put the pair at its seat to 03:00, on the first leg — 1800, 2150 — to 07:00,
+on the second to 13:00, and in home water after it. The first leg is the one station this
+table does not carry a column for, and the read that lands on it is face-one's, at 934 m:
+Track 14.9. Four of the remaining five land on the second leg — face-four, face-two,
+face-five and face-three, the last of them 283 m off and a Track at 101, the nearest the
+concern's industry comes to the plateaus' own ears all day — and face-six lands in home
+water, 3,954 m off: a Contact, and the only read of the six the pair does not hold exactly.
+
 The pair is the column's ears and the rim's chart: a Directorate hull idling on the lip is
 Tier 1 to a scout outside the bed from 3,787 m and Classification from 2,136 — the walk west
 is audible to any scout not under a cloud — and the reads at eighty are Track to it from
 2,129 m through the terraces' 0.7. The returns are Bearing or better only from Prospect's
 07:00 leg and from home water, which is where the attend row is met (§8).
 
-**The column, HYD 5, under the bed:** the concern's descent nothing (0.25), the watch at its
-western station nothing (0.47), the flagship nothing (0.41), `attendant-a` nothing (0.32). Two
-things reach it all day. The reader's read at face-two, 750 m off through a path mean of 1.0,
+**The column, HYD 5, under the bed:** the concern's descent nothing — 0.54 at its closest,
+when the flagship is over its terrace station — the watch at its western station nothing
+(0.47), the flagship nothing (0.41), `attendant-a` nothing (0.32). Two things reach it all
+day. The reader's read at face-two, 750 m off through a path mean of 1.0,
 is a Bearing (2.17) even to a hull hearing at 5 — the column hears the concern working the
 face beside it. And the riser at 100 through 1.6 is a Contact (1.08–1.12) from the moment it
 lifts off until it is north of y ≈ 2,900, so the column hears the basin wake and loses it as it
@@ -602,9 +617,10 @@ decided by whether a gun came down.
 `deliver` row, no `survive` row: a plateau at 3,000 m under a bed on the concern's day is not
 counted in what it lost, because on D nothing on this rim fires and the one thing that kills is
 the water, and the water is what the sowing is for. The Kell seed rides the sower as a lift at
-cut time zero in `the-rim-furrow`, rigged on the first pass the sower is not silent — the
-gift run's shape ([mission-tend.md](mission-tend.md) §13) — and is in no predicate; it is how
-the document says the seed is aboard.
+cut time zero and cut SIG zero in `the-rim-furrow`, rigged on the first pass the sower is not
+silent — the gift run's shape and the gift run's two zeroes
+([mission-tend.md](mission-tend.md) §13) — and is in no predicate; it is how the document says
+the seed is aboard.
 
 **One row the union cannot carry, said here rather than left to §13.** The ending's other half
 — *the watch heard the bed and entered it* — is a fact about somebody else's account, and every
@@ -696,7 +712,7 @@ held by `releaseTick` instead, which applies whatever the radius says.
 | 04:30 | `move` `recon` → 4600, 2100 — the reconnaissance takes its measure |
 | 05:00 | `move` `reader-west` → 900, 2500 — twenty-one seconds from the terrace seat to the first face |
 | 05:30 | `say` — the charting pair, for the plateaus: Prospect's line, verbatim, spoken now by the player's own watch (§12) |
-| **06:00–06:20** | `face-one` sounds at 80 — twenty seconds, 300 m from the pair's seat |
+| **06:00–06:20** | `face-one` sounds at 80 — twenty seconds, 934 m from Prospect's first leg, where the table put the pair at 03:00: a Track at 14.9 |
 | 06:30 | `move` `reader-east` → 3500, 2700 |
 | 07:00 | `move` `chart-a` → 2700, 2100; `move` `chart-b` → 2850, 2150 — Prospect's second leg: 618 m from the heavy, and inside Classification of `attendant-a` |
 | **07:00–07:20** | `face-four` sounds |
@@ -708,7 +724,7 @@ held by `releaseTick` instead, which applies whatever the radius says.
 | **10:30–10:50** | `face-five` sounds |
 | 11:00 | `say` — Voice of the reconnaissance, for the Order: verbatim (§12) |
 | 11:30 | `move` `reader-west` → 2500, 2400 — the nearest Consortium ear for the rest of the day, 1,512 m from the bed |
-| **12:00–12:20** | `face-three` sounds — a Track to the pair from home water |
+| **12:00–12:20** | `face-three` sounds — 283 m from the pair on Prospect's second leg, a Track at 101, the nearest the concern's industry comes to the plateaus' own ears all day |
 | 13:00 | `move` `chart-a` → 1200, 2050; `move` `chart-b` → 1350, 2100 — Prospect's third leg: the pair turns for home water, 1,201 m from the bed |
 | 13:30 | `move` `reader-east` → 5100, 2800 |
 | **14:00** | `move` `watch-a` → 4600, 3300; `move` `watch-b` → 4750, 3350 — **the watch resumes its station**, thirty-seven seconds east; the quiet window opens. `say` — the watch: they've walked back east (§12) |
@@ -751,7 +767,7 @@ heavy at nothing and the returns at a smudge.
 One system, per [campaign.md](campaign.md) §10: **everything at once** — the campaign row's own
 words. Each of the six systems the Commune campaign taught alone is spent here where §4 puts
 it: the quiet economy at 00:00, by a column doing nothing audible on the loudest water in the
-Rift; the walk's lesson from 05:10 to 14:00, a question that has to be carried by hand past
+Rift; the walk's lesson from 05:21 to 14:00, a question that has to be carried by hand past
 ears that move; the zone at the sowing, the sown lip holding a hull the deep never rated; the
 bed all day, everything under it at 0.4 and deaf; the momentum, arrived; withdrawal's
 arithmetic at 20:30, done by the concern and answered by Juno's element coming down inside it;
@@ -1075,7 +1091,7 @@ this mission — each stated so a reviewer can overrule it in one place.
 | **The region pressure grant** — the sown lip holds a PR-2 hull at 3,000 m | **Not built, and it is the row the ending's last five minutes depend on.** `MissionRegion` carries `id`, a rectangle and a note and no `pressureBonus` (`types.ts`); the shape is [mission-deep-furrow.md](mission-deep-furrow.md) §13's — `pressureBonus?: number` on the region and on the `ground` beat, applied as `Pressure.bonus` exactly as the Sounding Spire's aura is (`auras.ts`; `pressure.ts`) and evaporating when a hull leaves the rectangle — with one thing this document adds: **a `ground` beat must be able to carry `pressureBonus` with no `biome`, `floorM` or `ceilingM`**, because the lip is not repainted and the beat's current test requires one of the three (`missions.test.ts`, "writes neither ground nor biome"). Until it lands Teel's element crosses 1,800 m about fifteen seconds after release and is dead at about 22:30, before the tide (§4). **Playable to the sowing without it, and honest past it only with it.** No approximation is offered: a Spire-kind structure cannot be placed at the sowing, because no beat spawns a structure, and one placed at 00:00 would grant the zone before the lip was sown, which is the mission's argument the wrong way round |
 | The biome `ground` beat — the lip repainted | **Built** (#259), **and deliberately not spent.** The judge caps the repaint at *Deep Furrow* (the teaching spend) and *The Attending* 6 (the dome); the rim sowing's consequence is the zone row, the lip stays Abyssal Trench at 1.6, and every figure in §7 is priced at 1.6 after the sowing as before it. *Holds a hull the deep never rated* is the zone's prose, not a PF write |
 | **`mouth-rim`, unchanged** | **Built** — Prospect's literal, resolved by a second mission id, and by two more once the week is built. This mission adds one mission region, one marker, one structure and four parties, and no geometry. The plan authored a second region for the staging; nothing addresses it, so it is not restated (§11) |
-| **The readers' schedule as windowed emitters** | **Built** (#240; [mission-attendance.md](mission-attendance.md) §13). Six emitters on the concern's party at Prospect's face positions, SIG 80, `periodTicks === onTicks` of twenty seconds — a sustained sound — each with a `fromTick`/`untilTick` window of the same length. The sounding itself is Prospect's player-paced instrument; from outside it is a schedule and an emitter, and the Commune reads it as six charted, never as six proven |
+| **The readers' schedule as windowed emitters** | **Built** (#240; [mission-attendance.md](mission-attendance.md) §13). Six emitters on the concern's party at Prospect's face positions, SIG 80, hp 5,000 (the attendants' own durability; nothing on this water is armed to spend it), `periodTicks === onTicks` of twenty seconds — a sustained sound — and a `fromTick`/`untilTick` window of the same length. The sounding itself is Prospect's player-paced instrument; from outside it is a schedule and an emitter, and the Commune reads it as six charted, never as six proven |
 | **The attendants as attendable emitters, with Commune readings** | **Built** (#240, #246). Prospect's two, verbatim in position, period, SIG, depth and hull, re-authored with `entered`/`gap` readings in the Commune's grammar; the attend count is one, bounded by two |
 | **The Sounder beat** | **Built** — Prospect's own, verbatim: `spawnAt` 3000, 3600 at 3,050 m, `driveTo` 3000, 2400, sixty seconds, `loud`. A driven creature climbs at 12 m/s toward its species' working depth from wherever it was placed and is deaf and unwoundable for the drive (#349); this one clears everything the plateaus own by 1,750 m and ignores it anyway — `transit` grinds structures and hulls of 95 m and up within a body plus a radius (`fauna.ts`; `DRIFT.TRANSIT_MIN_HULL_M`), and the bite path returns before damage for every non-structure, so a Sounder bites no hull at all. The barge at 130 m is the one Commune hull it could grind, 1,750 m from its line; the bed's 85 m radius is 1,750 m from it too. *It holds them* is arithmetic. The bestiary's 2,700 m floor for the Drift is a §13 row and not a number to move: Prospect spawned this animal at 3,050 and this document does the same |
 | **A Spore Veil at its true depth on the player's party** | **Built** (`STRUCTURE_AURAS.SPORE_VEIL`; `auras.ts`), and fielded before by [mission-in-writing.md](mission-in-writing.md): a `MissionStructure`, `prebuilt`, at 3,000 m over the lip's 3,100. A *player-built* Veil would sit at `CONSTRUCTION.WORKING_DEPTH_M`, 600 m, wherever the floor is — [mission-standing-wave.md](mission-standing-wave.md) §13's finding — which is why the bed is grown the tide before and not during. The cloud is horizontal and symmetric, and the veil multiplies the *derived* SIG last (`acousticsSystem`), so a sounding floored at 45 reads 18 under it |
@@ -1088,18 +1104,18 @@ this mission — each stated so a reviewer can overrule it in one place.
 | **The path mean** — every cross-biome figure | **Built, and a finding against the plan's arithmetic.** `Terrain.pathPropagation` returns the mean PF over the 250 m cells between emitter and listener, so a lip-to-terraces pair is priced between 1.6 and 0.7 and never at the lip's figure. The plan priced the concern's ears at 1.6; this document prices them at the mean, and reads each navy's ear where the ear actually stands rather than at the sound it is reading — the reader working face-two has the bed at a Classification (3.35) from its own station rather than the plan's 3.47 from the face; the heavy on the terraces has a veiled sowing at a Bearing (1.76), not 2.28; the reconnaissance has nothing (0.54), not a Contact — and `missionSecondSeeding.test.ts` should re-derive every figure in §6 and §7 from `pathPropagation` over the literal's own grid rather than from `PROPAGATION_FACTOR` alone, so a repaint of the terraces would move the document's ranges instead of falsifying them |
 | **Silent Running by hull** | **Built, and a finding.** `silentRunningSig` sits a hull in the 3–8 band by its idle: a Light Scout at 3.5, a Harvester at 4.5, a Corvette at 5.3, a Cruiser at 7.6. The plan priced every silent hull at 3; the barge silent and veiled is 3.0, not 1.2, and the watch at its western station has it at a Contact (1.11) — a smudge under the bed for five minutes, which §6 enters and the plan did not. `PELAGIA_SPEED_MULTIPLIER` 0.8 is the whole cost, and there is nowhere to go |
 | **Breaking silence, unarmed** | **Built, and a finding.** `BREAK_SILENCE_SIG_SPIKE` is applied by `applyFiringSpike` alone; a hull that stops running silent to do anything but fire has no spike. The plan priced the sower's start at 48 × 0.4 for two seconds; the sower goes 1.8 → 7.2 → 18 and nothing louder (§3) |
-| **The concern's terrace seat** | **A design call, made here and stated so it can be reversed** (§5): the flagship at 3000, 2750 and the bunkerage at 3000, 2850, 250 m south of the plan's, so that Prospect's fixed 07:00 leg idles the pair at a Bearing to the heavy rather than a Track, and the ledger reads the sowing rather than the chart. Nothing Prospect fixes moves |
+| **The concern's terrace seat** | **A design call, made here and stated so it can be reversed** (§5): the flagship at 3000, 2750 and the bunkerage at 3000, 2850, 250 and 300 m south of the plan's, so that Prospect's fixed 07:00 leg idles the pair at a Bearing to the heavy rather than a Track, and the ledger reads the sowing rather than the chart. Nothing Prospect fixes moves |
 | **The first five minutes, unfenced** | **A design call, stated** — see the question below |
 | **The Kell seed as a lift at cut time zero** | **Built** (#239), rigged on the first pass the sower is not silent, because a lift accrues nothing under Silent Running (`runtime.ts`); in no predicate, and the document says so |
 | **The sowing as a `MissionSounding`** — 250 m, sixty seconds, SIG 45, bow on, a broken hold resetting | **Built** (#275). The figures are Deep Furrow's, one mission further down; `holdingSounding` refuses a silent hull, which is why the sower must stop being quiet, and `accrueSounding` resets |
 | **Six locks with a reason in register; active sonar available** | **Built** — `AbilityLock` is continuous state the HUD greys out with the reason attached ([ui-ux.md](ui-ux.md) §7); `weapons`, `torpedoes`, `mines`, `depthCharges`, `noisemakers`, `construction`. `activeSonar` is not in the list, and §3 prices it, including the one thing it does not do: interest the riser (19 against 55) |
-| **Scripted parties' ears, resolved** | **Built** (#323) — the concern, the watch, the reconnaissance and the attendants' party all observe, which is what makes the ledger a reading of three navies and not of one |
+| **Scripted parties' ears, resolved** | **Built** (#323) — the concern, the watch, the reconnaissance and the attendants' party are all installed as observers, and the first three of them hear: an emitter is spawned at HYD 0 and is deaf (`world.ts`), so the attendants' slot resolves nothing back, which is what makes the ledger a reading of three navies and not of four |
 | **A predicate over another party's state** — *the watch entered the bed* | **Not expressible, and not needed.** The union asks nothing about what another party heard (`types.ts`); the entry is authorship — the watch stands 1,160 m from a bed at 8 through 1.6 for four minutes and forty seconds in every run — and §6 states it as a fact D+1 and D+2 inherit |
 | **The rim calendar** | **A §1 and §6 statement, not a mechanism.** D here; D+1 First Arrival; D+2 The Rim Deposits; D+3 The Second Chord. Four documents state it and none shows another's army on a tide that campaign does not put it there |
-| **Progression** — the column's count from Radicals, the Deep Furrow and In Writing results, and this ending recorded anywhere after the tide | **Not built** ([campaign.md](campaign.md) §11) — the row every ending document leans on and none owns ([mission-item-nine.md](mission-item-nine.md) §13). The column is authored whole as thirty-three, the sower's crew as In Writing's evacuated, and §3 says which runs it assumes |
+| **Progression** — the column's count from Radicals, the Deep Furrow and In Writing results, and this ending recorded anywhere after the tide | **The record is built; this is not**, and [mission-deep-furrow.md](mission-deep-furrow.md) §13 states the split first. A per-mission history shipped with the campaign board (#371, `packages/frontend/src/progression/store.ts`), written once from the `missionOver` payload and keeping the best reading a mission has ever returned — so *this ending is recorded*, and [campaign.md](campaign.md) §11 says so. What it keeps is an **outcome**, and what the rest of this row wants is mission-scoped — whether the lip was sown, who was in the furrow when the basin woke, how many of the thirty-three came south — which is a sibling key beside `missions` in the same record and is not started. It is still the row every ending document leans on and none owns ([mission-item-nine.md](mission-item-nine.md) §13), and until it lands the column is authored whole as thirty-three, the sower's crew as In Writing's evacuated, and §3 says which runs it assumes |
 | **Cross-mission Drift Health** — rule 5's fourfold pair | **Not built**, named here and not asked for: `mouth-rim` is played four times in one week, and a rim the concern surveyed loudly on D is a rim with a ledger on D+1, which nobody tells the Directorate |
 | **Bloom Surge** — the Commune's superweapon | **Absent, and deliberately not asked for** ([mission-in-writing.md](mission-in-writing.md) §13; [mission-convocation.md](mission-convocation.md) §13). Nothing in `packages/` carries it and no ability layer exists; the mission is *everything at once* and a detonation would be one more thing, in the letter's grammar |
-| **The Seeding ability** — 400 m, +1 PR for sixty seconds | **Not built, and deliberately not asked for.** A commander ability with no mechanism ([mission-convocation.md](mission-convocation.md) §13); the zone is [systems-depth.md](systems-depth.md) §3's conversion, built by the row above, and the plan's own words are *the row, not a repaint* |
+| **The Seeding ability** — 400 m, +1 PR for sixty seconds | **Deliberately not asked for**, and no longer for want of a mechanism: `MissionCommanderAbility` shipped with [mission-convocation.md](mission-convocation.md) (#373), so a once-per-match button with an origin, a radius, a duration and a SIG it broadcasts is now a format row. What it carries is a speed multiplier and Silent Running immunity, not a pressure grant, so this ability would still be a new field — and the document does not want one. The zone is [systems-depth.md](systems-depth.md) §3's conversion, built by the row above, and the plan's own words are *the row, not a repaint* |
 | `souls` | **Documentation** — nothing in the runtime reads it ([mission-thin-water.md](mission-thin-water.md) §13); the epilogue carries thirty-three by hand, and the Complete reading says *by household* because that is how the plateaus count |
 | In-mission character speech, heard | Text only, the standing status ([mission-sorrowgate.md](mission-sorrowgate.md) §13) — and the ending's largest single debt to the mix is the pair's 05:30 line, spoken by the player's own hulls to the concern on an open channel, which a player reading a log will take for the concern's |
 | The mix — a lip that carries everything, a bed that hears nothing, six reads at eighty, and one thing lifting off at a hundred | **Not started** ([audio-direction.md](audio-direction.md)). §7's column — a day heard through HYD 5, in which the only sound that arrives is the basin waking — is the half of this mission that exists only in prose |
