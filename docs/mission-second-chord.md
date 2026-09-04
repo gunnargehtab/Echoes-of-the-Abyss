@@ -323,7 +323,7 @@ people who would have predicted this one to the hour. Nobody in this mission con
 | --- | --- | --- | --- | --- | --- |
 | The dome, or anything under it | 95 | 1.60 | **11,809 m** | 6,127 m | 2,800 m |
 | An Abyssal Submersible | 85 | 1.60 | 11,016 m | 5,716 m | 2,612 m |
-| A Chorister, undomed | 75 | 1.60 | 10,187 m | 5,285 m | 2,415 m |
+| A Chorister, undomed | 75 | 1.60 | 10,187 m | 5,286 m | 2,416 m |
 | The Voice | 65 | 1.60 | 9,316 m | 4,833 m | 2,209 m |
 | A Corvette | 50 | 1.60 | 7,907 m | 4,102 m | 1,875 m |
 | The dome, across the terraces | 95 | 0.70 | 7,044 m | 3,655 m | 1,670 m |
@@ -345,7 +345,7 @@ And what the Voice (HYD 65) hears all tide, none of it the player's business to 
 | The basin, calling | 100 | 1.60 | 9,316 m | 5,254 m |
 
 **The bed is heard by nobody who stays east.** A Voice holds it at Bearing only inside 1,491 m, and
-it is 3,554 m from the Chord. The Order's whole policy toward a garden is one sentence at 06:00
+it is 3,551 m from the Chord. The Order's whole policy toward a garden is one sentence at 06:00
 about a thing most players will never resolve.
 
 **And the week's ledger comes due for the third time.** At 16:30 a Sounder lifts off the lip at
@@ -504,7 +504,7 @@ pair, the lattice and the lip. Bracketed rows are where a competent party tends 
 **`runsItsLength: true`, and this is the one place the court's rule would have been wrong.** With it
 omitted, the runtime closes a mission the moment every terminal row is met — and all four of these
 can be met by about 03:00, with the crystal delivered and six hulls alive, which would have closed
-the campaign fourteen minutes before its own ending
+the campaign fifteen minutes before its own ending
 ([mission-intake.md](mission-intake.md) §13's flag, spent here for the opposite reason). Eighteen
 minutes is the mission, and **the last forty seconds are the reply not being shown**.
 
@@ -656,7 +656,7 @@ states intervals and conditions, never tasks.
 > The interval is at seventeen. Thirty seconds, bow to the south, held — a tone you interrupt is a
 > tone you have not played, and this is the one the Order has been in tune for since a hundred and
 > eighteen. I am aware of what was said the first time. I have read every page of it, in a dry room,
-> alone, for eleven years, and I am still of the view that something is speaking and it is
+> alone, for eleven years, and I remain of the same mind: something is speaking, and it is
 > discourteous not to reply.
 >
 > Count at the close. Go and be dry.
