@@ -36,7 +36,7 @@
  *   00:00 by the second watch sitting in its own seat, and the mouth would be
  *   "attended" by two hulls the flagship destroyed at 14:00 (§8).
  *
- * And two authoring findings against the document, stated here rather than
+ * And three authoring findings against the document, stated here rather than
  * discovered, in the manner `intake.ts` states its own:
  *
  * 1. **The tide runs its length, and §13's row says it does not.** §13 lists
@@ -61,6 +61,21 @@
  *    because a live commitment would deafen the one animal §4's fourth
  *    movement needs awake, and the drift is recorded rather than corrected
  *    here.
+ * 3. **The ten `silent` beats make §7's and §11's Drift-side arithmetic
+ *    unreachable, and the literal keeps the beats.** Both `listen` and
+ *    `driftTick` read `Acoustic.sig`, which is 4.33 for a silent Chorister
+ *    rather than the roster's 16. So §7's "six idling Choristers read 4.3 to
+ *    9.0" is 1.2 to 2.4 here, and §11's ledger under the foot does not add up
+ *    as written: three silent Choristers west of x = 1,500 sum 13 and not 48,
+ *    and the three east of it plus the dome's own 35 sum 48 and not 83 —
+ *    twelve *under* the threshold of 60, so the Cantorate's instrument wears
+ *    nothing. What takes that cell over is the yard's failing plant, which
+ *    stands in the same cell and strikes at 35 for two seconds of every eight:
+ *    13 + 35 + 35 is §11's own 83 and 0.46 a second, reached from the
+ *    concern's side rather than the Cantorate's. §3 and §10 are emphatic that
+ *    the tide opens with the button pressed, and §11 reads no cell and tells
+ *    nobody, so the beats stand and the discrepancy is recorded — and
+ *    asserted, both ways, in `missionTheDome.test.ts`.
  */
 
 import {

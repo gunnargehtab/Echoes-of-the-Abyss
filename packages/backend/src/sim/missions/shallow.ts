@@ -80,7 +80,9 @@
  * above Contact out to x 1,073 rather than x 426. The band is 171 m wide, not
  * eight hundred. Both of §7's five-row stations still work, which is why this
  * is a note and not a move: (1225, 1850) is inside the corrected band, and
- * (900, 1850) is at Contact to the closure and 121 m outside its gun.
+ * (900, 1850) is at Contact to the closure and 123 m outside its gun —
+ * measured, like every other gun in this file, through the water column, which
+ * is what `engagementRangeM` measures (674 m against a Corvette's 550).
  */
 
 import {
@@ -174,9 +176,19 @@ const chorister = (ordinal: string, x: number, note: string): MissionUnit => ({
  * The reading is worded to be true under all three of Convocation's outcomes,
  * which is the register doing the work the continuity needs rather than this
  * mission choosing an outcome for somebody else's campaign (§6).
+ *
+ * **The tag counts and the reading numbers, and the two words are different
+ * words.** §6's table names the emitters `marr-row-one` … `marr-row-six`, and
+ * §6's and §12's readings are ordinal — "Entered: Marr's [first…sixth] outer
+ * row" and "Not entered: the [ordinal] row", of which §12 prints *Entered:
+ * Marr's third outer row* and *Not entered: the fifth row* verbatim. Deriving
+ * the reading from the tag's own word is the obvious economy and it produces
+ * "Marr's three outer row", which is a sentence no register speaks — so both
+ * words are authored and the close is held to §12's two lines by
+ * `missionShallow.test.ts`.
  */
-const marrRow = (ordinal: string, x: number, note: string): MissionEmitter => ({
-  tag: `marr-row-${ordinal}`,
+const marrRow = (cardinal: string, ordinal: string, x: number, note: string): MissionEmitter => ({
+  tag: `marr-row-${cardinal}`,
   x,
   y: 500,
   depthM: 260,
@@ -631,23 +643,32 @@ export const ATTENDING_SHALLOW: MissionDefinition = {
       emitters: [
         marrRow(
           'one',
+          'first',
           250,
           "Marr's westmost outer row. The two outer rows of either five-row station are 1,498 m out and read 1.55 — Bearing, and only just"
         ),
-        marrRow('two', 575, ''),
+        marrRow('two', 'second', 575, ''),
         marrRow(
           'three',
+          'third',
           900,
-          'The row a submersible stands under at (900, 1850) and holds five from'
+          'The row a submersible stands under at (900, 1850) and holds five from — and the row §12 prints the entered line of'
         ),
         marrRow(
           'four',
+          'fourth',
           1225,
           'The row a submersible stands under at (1225, 1850) and holds the other five from — 325 m and eighteen silent seconds away (§7)'
         ),
-        marrRow('five', 1550, ''),
+        marrRow(
+          'five',
+          'fifth',
+          1550,
+          'The row §12 prints the gap line of: *Not entered: the fifth row.*'
+        ),
         marrRow(
           'six',
+          'sixth',
           1875,
           'The sixth, and the one that costs: a Chorister directly beneath it holds it at 1.62 and stands 351 m from the western turret, at Classification, inside a 700 m gun (§7)'
         ),
@@ -852,7 +873,7 @@ export const ATTENDING_SHALLOW: MissionDefinition = {
     stalls(
       T(3),
       'The line is at four hundred. What is above it is not attended and is not asked; it is listened to. The rows are at twelve and north of the corridor, and none of them is heard from the slope.',
-      '§4, §7: from the slope the nearest row reads 1.02 to a submersible and 0.90 to a Chorister, against 1.50 for Bearing. The column cannot go down and listen'
+      '§4, §7: swept over the whole slope the nearest row reads 1.03 to a submersible and 0.91 to a Chorister — §4 prints them rounded to 1.02 and 0.90 — against 1.50 for Bearing. The column cannot go down and listen'
     ),
 
     // 05:00 — the escort walks its corridor west and stands over the strip's
@@ -892,7 +913,7 @@ export const ATTENDING_SHALLOW: MissionDefinition = {
     stalls(
       T(10),
       'The Holdfast is turning it. It is heard from inside the corridor and from nowhere south of it.',
-      "§7: the gate's four read 0.72 from the slope's north edge and nothing at all from the strip"
+      "§7: the gate's four read 0.72 from the slope's north edge, and from the strip they are Contact at best — a submersible standing on y 1,850 reads 0.95 to 1.09, under the 1.50 that would enter one. Bearing on the Holdfast starts at about y 1,475, which is inside the corridor"
     ),
 
     // 11:00 — Teel's bell opens. Two, and the stalls spend one word on it.

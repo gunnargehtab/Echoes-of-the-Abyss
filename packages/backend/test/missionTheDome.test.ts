@@ -11,20 +11,24 @@
  *   seam appears, so the picket, the convoy, both stations, the plant and the
  *   pack are asserted *against `baffle.ts` itself* rather than against numbers
  *   copied out of it — and the map's rows 2–8 against `fourthTrench.ts`.
- * - **The arithmetic** (§4, §6, §7). Every range and every ratio the document
- *   states, against the shipped propagation model: the picket at 4.8 and the
- *   array at 4.3, the Cruiser's 1,402 m against 4,204, the dome's ×1.16 and
- *   ×1.07, the basin's 14.6 against an Interest of 55, and the ping's 1,012
- *   and 834. The document's numbers are exact and this file is what keeps them
- *   exact.
+ * - **The arithmetic** (§4, §6, §7, §11). Every range and every ratio the
+ *   document states, against the shipped propagation model: the picket at 4.8
+ *   and the array at 4.3, the Cruiser's 1,402 m against 4,204, the dome's ×1.16
+ *   and ×1.07, §6's whole withdrawal ladder — 2.4, 2.8, 1.1, 0.82, 0.73 — the
+ *   basin's 14.6 against an Interest of 55, the ping's 1,012 and 834 and its
+ *   3,219 and 4,486 down the pipe. The document's numbers are exact and this
+ *   file is what keeps them exact. **Every path mean is walked off
+ *   `terrainFor(FOURTH_FOOT)`** rather than quoted from §7 (`pathMean`): a test
+ *   that fed 0.307 and 1.53 back into `detectionRatio` would assert the
+ *   document against itself and pass over a repainted map.
  * - **The close** (§8, §9). The mission is run twice, with and without
  *   `runsItsLength`, because the flag is a correction to §13 and a correction
  *   nobody can see is a correction nobody keeps: without it both terminal rows
  *   are Met on the pass `the-mouth` is revealed and the runtime closes at
  *   19:00 exactly.
  *
- * Two findings against the document are asserted rather than described, so the
- * day either is corrected this file is what notices:
+ * Three findings against the document are asserted rather than described, so
+ * the day any of them is corrected this file is what notices:
  *
  * 1. **The gates do not begin where §6, §9 and §13 say they begin.** §13: "the
  *    gate fights begin when the convoy berths at 05:00 and 14:00 rather than as
@@ -32,12 +36,29 @@
  *    and leaves it there until 05:00, and its 10:00 leg parks it 856 m from
  *    `watch-three` — inside a Cruiser's 900 m gun — until 13:30. Played
  *    passively, the first watch dies at 02:49 and the second at 10:29, and
- *    neither of the two named gates is where anything happens.
+ *    neither of the two named gates is where anything happens. §9's conditional
+ *    line goes the same way: it is authored to fire "at whichever of three
+ *    things the picket stood into first — 05:00, 14:00 or 14:30", and it fires
+ *    at 02:35.
  * 2. **The basin does not hold the depth §7 gives it.** Placed at 2,300 m by
  *    Intake's idiom, it is released on the first pass and homes to its
  *    species' 2,000 m. Nothing acoustic moves — the Echo Layer resolves on
  *    horizontal distance — so §4's and §7's readings all still hold, which is
  *    why the finding is an assertion here and not a change to the literal.
+ * 3. **§7's and §11's Drift-side figures are read off an array that is not
+ *    under Silent Running, and §3 puts all six under it at tick zero.** Both
+ *    `listen` and `driftTick` read `Acoustic.sig`, which is 4.33 for a silent
+ *    Chorister and not the roster's 16. So §7's "six idling Choristers read 4.3
+ *    to 9.0" is 1.2 to 2.4 as the mission is authored, and §11's ledger under
+ *    the foot does not add up: the west cell carries 13 rather than 48, the
+ *    array and the dome together carry 48 rather than 83 — twelve *under* the
+ *    threshold — and "the one thing at the foot that damages the ground is the
+ *    Cantorate's instrument" is not true of this tide. What does take that cell
+ *    over is the yard's failing plant, standing in the same cell and striking
+ *    at 35 for two seconds of every eight: 13 + 35 + 35 is §11's own 83,
+ *    arrived at from the concern's side. Nothing here changes the literal —
+ *    the ten `silent` beats are §3's and §10's, and the ledger is read by
+ *    nobody (§11) — so both readings are asserted side by side.
  */
 
 import { describe, it } from 'node:test';
@@ -67,8 +88,16 @@ import {
   faunaStatsFor,
   requiredPressureRating,
   statsFor,
+  structureStatsFor,
+  thermoclineFactor,
 } from '@echoes/shared';
-import { FOURTH_FOOT, FOURTH_TRENCH, mapById, missionMapById } from '../src/sim/maps/index.ts';
+import {
+  FOURTH_FOOT,
+  FOURTH_TRENCH,
+  mapById,
+  missionMapById,
+  terrainFor,
+} from '../src/sim/maps/index.ts';
 import {
   ATTENDING_THE_DOME,
   LEDGER_BAFFLE,
@@ -109,6 +138,33 @@ const dist = (a: { x: number; y: number }, b: { x: number; y: number }) =>
   Math.hypot(a.x - b.x, a.y - b.y);
 
 /**
+ * The water between two seats, off the shipped map rather than out of the
+ * document.
+ *
+ * §7 states its path means as figures — 0.307 through the layer, 1.53 down the
+ * pipe, 1.40 across Lay-by Two's vent — and a test that fed those numbers back
+ * into `detectionRatio` would assert the document against itself: repaint a
+ * region in `fourthFoot.ts` and every ratio below would still pass. So the
+ * mean is walked out of `terrainFor(FOURTH_FOOT)` and the pair's thermocline
+ * term is applied on top of it, exactly as `echoLayer.ts` folds the two.
+ */
+const FOOT = terrainFor(FOURTH_FOOT);
+const pathMean = (
+  a: { x: number; y: number; depthM?: number },
+  b: { x: number; y: number; depthM?: number }
+): number =>
+  FOOT.pathPropagation(a.x, a.y, b.x, b.y) *
+  (a.depthM === undefined || b.depthM === undefined ? 1 : thermoclineFactor(a.depthM, b.depthM));
+
+/** What one seat reads of another, through the water the map actually paints. */
+const readsAt = (
+  sig: number,
+  hyd: number,
+  a: { x: number; y: number; depthM?: number },
+  b: { x: number; y: number; depthM?: number }
+): number => detectionRatio(sig, pathMean(a, b), dist(a, b), hyd);
+
+/**
  * A shallow copy with the named keys dropped.
  *
  * The seam tests compare whole authored rows against `baffle.ts`'s and
@@ -122,13 +178,18 @@ function without<T extends object>(value: T, ...keys: string[]): Record<string, 
   return copy;
 }
 
-/** The range at which SIG through trench water reaches HYD at a tier's multiple. */
-function rangeAt(sig: number, hyd: number, multiple: number): number {
+/**
+ * The range at which SIG reaches HYD at a tier's multiple.
+ *
+ * Trench water by default, because §7's whole range table is down the pipe —
+ * and open water on demand, for the one figure §4 quotes from outside it.
+ */
+function rangeAt(sig: number, hyd: number, multiple: number, pf = TRENCH_PF): number {
   let low = 1;
   let high = 40000;
   for (let i = 0; i < 80; i++) {
     const mid = (low + high) / 2;
-    if (detectionRatio(sig, TRENCH_PF, mid, hyd) >= multiple) low = mid;
+    if (detectionRatio(sig, pf, mid, hyd) >= multiple) low = mid;
     else high = mid;
   }
   return Math.round(low);
@@ -166,6 +227,8 @@ interface Run {
   objectives: { id: string; status: ObjectiveStatus }[];
   /** Every tick at which the count of live watch hulls changed. */
   losses: { tick: number; alive: number }[];
+  /** Every authored line the run actually spoke, in the order it spoke them. */
+  lines: { tick: number; speaker: string; text: string }[];
 }
 
 /**
@@ -178,9 +241,11 @@ interface Run {
 function runOut(mission: MissionDefinition): Run {
   const match = new Match(missionMapById(mission.mapId)!, { mission, fauna: false, seed: 3 });
   const losses: Run['losses'] = [];
+  const lines: Run['lines'] = [];
   let alive = -1;
   for (let tick = 0; tick <= T(21); tick++) {
     const snapshots = match.update(STEP_MS);
+    lines.push(...match.takeMissionLines());
     const own = snapshots?.get(PLAYER);
     if (own !== undefined) {
       const watch = own.units.filter((u) => u.kind === UnitKind.AbyssalSubmersible).length;
@@ -199,6 +264,7 @@ function runOut(mission: MissionDefinition): Run {
     closedAtTick: match.world.tick,
     objectives: over.objectives,
     losses,
+    lines,
   };
 }
 
@@ -315,6 +381,54 @@ describe("the Fourth's Foot, as docs/mission-the-dome.md §11 paints it", () => 
       Math.min(...player.map((u) => u.depthM)),
       1600,
       '§10: nothing of the player’s leaves 1,600'
+    );
+  });
+
+  it('wears the cell under the foot, and not for the reason §11 gives', () => {
+    // A finding, asserted so a correction is noticed. §11: "three Choristers
+    // idling west of it sum 48 and wear nothing, while three east of it plus
+    // the Cantor's own 35 sum 83 against a threshold of 60 and wear that cell
+    // at 0.46 a second. The one thing at the foot that damages the ground is
+    // the Cantorate's instrument."
+    //
+    // The geometry is right and the arithmetic is read off the Chorister's
+    // *idle* 16 — but §3 seats all six under Silent Running at tick zero, and
+    // `driftTick` sums `Acoustic.sig`, which is 4.33 for a silent hull. So the
+    // west cell carries 13 and the array and dome together carry 48, which is
+    // twelve *under* the bar. What actually takes that cell over is the yard's
+    // failing plant, which stands in the same cell and strikes at 35 for two
+    // seconds of every eight — 13 + 35 + 35 = 83, §11's own figure, arrived at
+    // from the concern's side rather than the Cantorate's.
+    const cells = DRIFT.HEALTH_REGIONS;
+    assert.equal(FOURTH_FOOT.widthM / cells, 750, '§11: 750 m cells');
+    assert.equal(FOURTH_FOOT.heightM / cells, 1500, '§11: by 1,500');
+    const cellOf = (x: number, y: number) =>
+      Math.floor((y / FOURTH_FOOT.heightM) * cells) * cells +
+      Math.floor((x / FOURTH_FOOT.widthM) * cells);
+    const array = unitsOf(ATTENDING_THE_DOME, PLAYER).filter((u) => u.role === 'array');
+    const dome = structureByTag(ATTENDING_THE_DOME, 'dome');
+    const plant = emitterByTag(ATTENDING_THE_DOME, 'yard-plant');
+    const west = cellOf(1300, ARRAY_Y);
+    const east = cellOf(dome.x, dome.y);
+    assert.notEqual(west, east, '§11: the array straddles the boundary at x = 1,500');
+    assert.equal(array.filter((h) => cellOf(h.x, h.y) === west).length, 3, '§11: three west');
+    assert.equal(array.filter((h) => cellOf(h.x, h.y) === east).length, 3, '§11: three east');
+    assert.equal(cellOf(plant.x, plant.y), east, "and the concern's plant with them");
+
+    const silent = silentSigOf(CHORISTER.sigIdle);
+    const cantor = structureStatsFor(StructureKind.Cantor).sigIdle;
+    assert.equal(cantor, 35, "§11: the Cantor's own 35");
+    assert.equal(3 * silent, 13, '§3, §11: three silent Choristers sum 13, not 48');
+    assert.equal(3 * CHORISTER.sigIdle, 48, "§11's figure, at the idle SIG the mission never uses");
+    assert.ok(
+      3 * silent + cantor < DRIFT.HEALTH_SIG_THRESHOLD,
+      '§11: the instrument wears nothing'
+    );
+    assert.equal(3 * silent + cantor + plant.sig, 83, "§11's 83, with the plant in the count");
+    assert.equal(
+      Number(((83 - DRIFT.HEALTH_SIG_THRESHOLD) * DRIFT.HEALTH_SIG_DRAIN_PER_S).toFixed(2)),
+      0.46,
+      '§11: 0.46 a second — for the two seconds in eight the plant is loud'
     );
   });
 });
@@ -542,7 +656,12 @@ describe('the Call, as docs/mission-the-dome.md §4 sounds it', () => {
     const array = unitsOf(ATTENDING_THE_DOME, PLAYER).filter((u) => u.role === 'array');
     const southward = voices.map((v) => ARRAY_Y - v.y);
     assert.equal(Math.min(...southward), 300, '§6: three hundred metres at the nearest');
-    assert.equal(Math.max(...southward), 450, '§6: and four hundred and fifty at the furthest');
+    // §6 rounds this to "three to four hundred"; the furthest voice is 450 m
+    // north of the array line and the spread's mean is 367. The metres are the
+    // spread §4.3 authors, so the prose is the loose end and it is recorded
+    // here rather than corrected into either file.
+    assert.equal(Math.max(...southward), 450, '§4.3: and four hundred and fifty at the furthest');
+    assert.equal(Math.round(southward.reduce((a, b) => a + b, 0) / southward.length), 367);
     for (const v of voices) {
       assert.ok(v.y < ARRAY_Y, `${v.tag}: the real six are south of the phantom`);
       assert.equal(2300 - v.depthM, 350, '§6: and three hundred and fifty deeper');
@@ -610,12 +729,34 @@ describe('what is heard, as docs/mission-the-dome.md §7 measures it', () => {
     const flagship = byTag(ATTENDING_THE_DOME, 'flagship');
     const watchOne = byTag(ATTENDING_THE_DOME, 'watch-one');
     assert.equal(Math.round(dist(flagship, watchOne)), 856, '§7: 856 m');
-    const ratio = detectionRatio(CRUISER.sigIdle, 0.307, dist(flagship, watchOne), SUB.hyd);
+    // The path mean is walked off the map, not quoted: the staging's 0.45 for
+    // as far as the muster sits in it, the trench's 1.6 for the rest, times the
+    // 0.3 the layer charges a pair with one end above the duct and one below.
+    const mean = pathMean(flagship, watchOne);
+    assert.equal(thermoclineFactor(flagship.depthM, watchOne.depthM), 0.3, '§13: across the layer');
+    assert.ok(
+      Math.abs(mean - 0.307) < 0.001,
+      `§7: the path mean 0.307, measured ${mean.toFixed(4)} — §7 states it to three places`
+    );
+    const ratio = readsAt(CRUISER.sigIdle, SUB.hyd, flagship, watchOne);
     assert.ok(Math.abs(ratio - 6.3) < 0.05, `§7: ratio 6.3, got ${ratio.toFixed(2)}`);
     assert.ok(
       ratio >= TIER_THRESHOLD_MULTIPLIER.TRACK,
       '§7: Track — the picket knows it is coming'
     );
+    // §7: "through the same layer the second watch reads 0.95 and the array
+    // 0.56, which is nothing at all. The picket knows the convoy is coming and
+    // the Cantorate does not."
+    const watchThree = byTag(ATTENDING_THE_DOME, 'watch-three');
+    assert.equal(
+      readsAt(CRUISER.sigIdle, SUB.hyd, flagship, watchThree).toFixed(2),
+      '0.95',
+      '§7: the second watch, through the same layer'
+    );
+    const arrayWest = byTag(ATTENDING_THE_DOME, 'array-one');
+    const arrayHeard = readsAt(CRUISER.sigIdle, DOME_HYD, flagship, arrayWest);
+    assert.equal(arrayHeard.toFixed(2), '0.56', '§7: and the array at 0.56');
+    assert.ok(arrayHeard < TIER_THRESHOLD_MULTIPLIER.CONTACT, '§7: which is nothing at all');
     // And the dive at 02:30, which the array reads only because of the dome.
     const dive = beatsAt(T(2, 30)).find((b) => b.kind === 'move' && b.tag === 'flagship')!;
     assert.equal(
@@ -624,16 +765,62 @@ describe('what is heard, as docs/mission-the-dome.md §7 measures it', () => {
       '§13: the move beat carries a depth'
     );
     const array = byTag(ATTENDING_THE_DOME, 'array-four');
-    const reach = dist({ x: 1500, y: 1100 }, array);
+    // Both ends at 1,600 m and 2,300 m — under the duct's 1,300 m bottom — so
+    // the layer stops applying and what is left is the pipe's own water.
+    const dived = { x: 1500, y: 1100, depthM: 1600 };
+    const reach = dist(dived, array);
     assert.equal(Math.round(reach), 4350, '§7: 4,350 m south');
-    const withDome = detectionRatio(CRUISER.sigCruise, 1.53, reach, DOME_HYD);
-    const without = detectionRatio(CRUISER.sigCruise, 1.53, reach, CHORISTER.hyd);
+    assert.equal(thermoclineFactor(dived.depthM, array.depthM), 1, '§7: the layer stops applying');
+    assert.equal(pathMean(dived, array).toFixed(2), '1.53', '§7: a path averaging 1.53, measured');
+    const withDome = readsAt(CRUISER.sigCruise, DOME_HYD, dived, array);
+    const bare = readsAt(CRUISER.sigCruise, CHORISTER.hyd, dived, array);
+    assert.equal(withDome.toFixed(2), '3.08', '§7: 3.08 — Classification');
     assert.ok(
       withDome >= TIER_THRESHOLD_MULTIPLIER.CLASSIFICATION,
       `§7: Classification (${withDome.toFixed(2)})`
     );
-    assert.ok(without < TIER_THRESHOLD_MULTIPLIER.CLASSIFICATION, '§7: Bearing without it');
-    assert.ok(without >= TIER_THRESHOLD_MULTIPLIER.BEARING, `§7: 2.4 (${without.toFixed(2)})`);
+    assert.equal(bare.toFixed(1), '2.4', '§7: 2.4 at the Chorister’s own 75');
+    assert.ok(bare < TIER_THRESHOLD_MULTIPLIER.CLASSIFICATION, '§7: Bearing without it');
+    assert.ok(bare >= TIER_THRESHOLD_MULTIPLIER.BEARING, `§7: 2.4 (${bare.toFixed(2)})`);
+  });
+
+  it('prices the withdrawal §6 offers, in the water the two pockets actually paint', () => {
+    // §6's own ladder, and the argument the mission is: "A watch that yields is
+    // barely heard, and then not at all." Every figure here is a ratio over a
+    // path that crosses Lay-by Two's vent at 0.45, so quoting 1.6 flat would
+    // read them all too loud — which is why the mean is walked rather than
+    // assumed.
+    const silent = silentSigOf(SUB.sigIdle);
+    const laybyTwo = { x: 1850, y: 3150, depthM: 1650 };
+    const mouth = { x: 1500, y: 3700, depthM: 1600 };
+    const watchThree = byTag(ATTENDING_THE_DOME, 'watch-three');
+    const watchFour = byTag(ATTENDING_THE_DOME, 'watch-four');
+    assert.equal(Math.round(dist(laybyTwo, watchThree)), 750, '§6: 750 m');
+    assert.equal(Math.round(dist(laybyTwo, watchFour)), 678, '§6: and 678 m');
+    const seatedThree = readsAt(silent, CRUISER.hyd, laybyTwo, watchThree);
+    const seatedFour = readsAt(silent, CRUISER.hyd, laybyTwo, watchFour);
+    assert.equal(seatedThree.toFixed(1), '2.4', '§6: 2.4 in its own seat');
+    assert.equal(seatedFour.toFixed(1), '2.8', '§6: and 2.8');
+    assert.ok(
+      seatedThree < TIER_THRESHOLD_MULTIPLIER.CLASSIFICATION &&
+        seatedThree >= TIER_THRESHOLD_MULTIPLIER.BEARING,
+      '§6: Bearing'
+    );
+    assert.ok(
+      seatedFour < TIER_THRESHOLD_MULTIPLIER.TRACK &&
+        seatedFour >= TIER_THRESHOLD_MULTIPLIER.CLASSIFICATION,
+      '§6: and Classification, not Track'
+    );
+    // "Withdrawn a kilometre and a half up the axis to y 2,000 it reads 1.1; at
+    // y 1,800 it reads 0.82 and is nothing."
+    const up = (y: number) => ({ x: 1500, y, depthM: 1600 });
+    assert.equal(readsAt(silent, CRUISER.hyd, laybyTwo, up(2000)).toFixed(1), '1.1', '§6: 1.1');
+    const gone = readsAt(silent, CRUISER.hyd, laybyTwo, up(1800));
+    assert.equal(gone.toFixed(2), '0.82', '§6: 0.82');
+    assert.ok(gone < TIER_THRESHOLD_MULTIPLIER.CONTACT, '§6: and is nothing');
+    // "…and at 14:00 a hull holding y 2,000 is 0.73 to the flagship standing in
+    // the mouth."
+    assert.equal(readsAt(silent, CRUISER.hyd, mouth, up(2000)).toFixed(2), '0.73', '§6: 0.73');
   });
 
   it('leaves the basin ambient, and says exactly what a ping would cost', () => {
@@ -654,6 +841,20 @@ describe('what is heard, as docs/mission-the-dome.md §7 measures it', () => {
     );
     assert.equal(heardBySounder(CHORISTER.sigIdle, 818.9).toFixed(1), '4.3', '§7: 4.3');
     assert.equal(heardBySounder(CHORISTER.sigIdle, 520.2).toFixed(1), '9.0', '§7: to 9.0');
+    // A third finding, recorded rather than corrected. §7 reads those two off
+    // the Chorister's *idle* 16, and §3 seats all six under Silent Running at
+    // tick zero — `listen` reads `Acoustic.sig`, which is 4.33 for a silent
+    // hull — so the array the mission actually places reads 1.2 to 2.4. §7's
+    // conclusion survives it and is in fact stronger: the basin is quiet
+    // because nobody has asked it anything, and the six that could ask are
+    // four times quieter than the sentence says.
+    const silentChorister = silentSigOf(CHORISTER.sigIdle);
+    assert.equal(heardBySounder(silentChorister, 818.9).toFixed(1), '1.2', 'seated silent: 1.2');
+    assert.equal(heardBySounder(silentChorister, 520.2).toFixed(1), '2.4', 'seated silent: to 2.4');
+    assert.ok(
+      heardBySounder(silentChorister, 520.2) < SOUNDER.interest,
+      '§7: and either way it is only silence'
+    );
     // §4.4: the ping's ×3 against the Directorate's ×0.4 leaves a net ×1.2.
     const net = ACTIVE_SONAR.FAUNA_AGGRO_MULTIPLIER * DRIFT.DIRECTORATE_AGGRO_MULTIPLIER;
     assert.ok(Math.abs(net - 1.2) < 1e-9, '§4: a net ×1.2 on the aggro ladder');
@@ -671,9 +872,38 @@ describe('what is heard, as docs/mission-the-dome.md §7 measures it', () => {
       '§4: commits inside 834 m'
     );
     // §4: "A picket that asks at the foot is answered; a picket that asks at
-    // the mouth, 2,133 m out, is not."
+    // the mouth, 2,133 m out, is not." Measured over the hulls that are
+    // actually at the mouth, because 2,133 is a fact about `watch-four`'s seat
+    // rather than a number to be compared with another number.
     assert.ok(reaches[0]! < 834, '§4: the array stands inside the commit');
-    assert.ok(2133 > 1012, '§4: and the mouth stands outside the interest');
+    const region = ATTENDING_THE_DOME.regions.find((r) => r.id === 'the-mouth')!;
+    const atTheMouth = unitsOf(ATTENDING_THE_DOME, PLAYER).filter(
+      (u) =>
+        u.role === 'watch' &&
+        u.x >= region.x &&
+        u.x <= region.x + region.widthM &&
+        u.y >= region.y &&
+        u.y <= region.y + region.heightM
+    );
+    const fromTheMouth = Math.min(...atTheMouth.map((u) => dist(u, basin)));
+    assert.equal(Math.round(fromTheMouth), 2133, '§4: 2,133 m out');
+    assert.ok(
+      fromTheMouth > sounderRange(sig, SOUNDER.interest, ACTIVE_SONAR.FAUNA_AGGRO_MULTIPLIER),
+      '§4: and the nearest of them is still outside the interest'
+    );
+    // §4: the ping's own price, down the pipe rather than in open water —
+    // "self-revealing at 2,400 m in open water at HYD 50. In trench water that
+    // self-reveal is 3,219 m at HYD 50 and 4,486 m to another submersible's
+    // 85." The 2,400 m is a Tier-4 figure (`constants.ts`, `BASE_THRESHOLD`,
+    // which is solved from it), so all three are ranges at Track.
+    const M = TIER_THRESHOLD_MULTIPLIER;
+    assert.equal(
+      rangeAt(sig, 50, M.TRACK, PROPAGATION_FACTOR[Biome.OpenWater]),
+      ACTIVE_SONAR.SELF_REVEAL_RADIUS_M,
+      '§4: 2,400 m in open water at HYD 50, which is what the threshold is solved from'
+    );
+    assert.equal(rangeAt(sig, 50, M.TRACK), 3219, '§4: 3,219 m of trench at HYD 50');
+    assert.equal(rangeAt(sig, SUB.hyd, M.TRACK), 4486, "§4: 4,486 to a submersible's 85");
   });
 });
 
@@ -810,6 +1040,25 @@ describe('the count, as docs/mission-the-dome.md §6 takes it', () => {
     );
     assert.equal(run.outcome, MissionOutcome.Lost, '§8: and the reading is the convoy was louder');
     assert.match(run.epilogue, /^The mouth was not attended/, '§8, verbatim');
+    // The same finding, in the one place the mission speaks about it. §9: the
+    // conditional line "fires at whichever of three things the picket stood
+    // into first: the first gate at 05:00, the second at 14:00, or the
+    // concern's transmission at 14:30." It fires at 02:35, inside the leg §9
+    // does not count as a gate — a silent submersible is at Track to a Cruiser
+    // from 590 m of trench, and the 02:30 leg berths the flagship at 112 m.
+    const korrin = run.lines.find((l) =>
+      l.text.startsWith('The picket is in the concern’s record at Track')
+    );
+    assert.ok(korrin !== undefined, '§9: the tally line is spoken');
+    assert.ok(
+      korrin.tick > T(2, 30) && korrin.tick < T(5),
+      `§9: spoken at ${(korrin.tick / SIM.TICK_HZ).toFixed(0)}s, and none of §9's three is before 05:00`
+    );
+    assert.ok(
+      rangeAt(silentSigOf(SUB.sigIdle), CRUISER.hyd, TIER_THRESHOLD_MULTIPLIER.TRACK) >
+        dist({ x: 1500, y: 1100 }, watchOne),
+      '§7 measures the 02:30 berth at 112 m and never prices it as one'
+    );
   });
 });
 
@@ -1032,8 +1281,24 @@ describe('the beats, as docs/mission-the-dome.md §9 clocks them', () => {
     // §9: the array reads it from 1,750 m, and anything of the picket inside
     // the Tier-4 window is in the concern's registry.
     const array = byTag(ATTENDING_THE_DOME, 'array-four');
-    assert.equal(Math.round(dist({ x: 1500, y: 3700 }, array)), 1750, '§7: 1,750 m');
+    const mouth = { x: 1500, y: 3700, depthM: 1600 };
+    assert.equal(Math.round(dist(mouth, array)), 1750, '§7: 1,750 m');
+    // "§7: The array reads it at 18 from 1,750 m" — over the water the map
+    // paints between the mouth and the foot, not over a quoted mean.
+    assert.equal(
+      readsAt(ACTIVE_SONAR.EMITTER_SIG, DOME_HYD, mouth, array).toFixed(0),
+      '18',
+      '§7: at 18, and is not asked to do anything about it'
+    );
     assert.equal(ACTIVE_SONAR.REVEAL_RADIUS_M, 900, '§9: Tier-4 inside 900 m');
+    // §9: "anything of the picket inside 900 m is at Track" — which at 14:00 is
+    // both hulls of the second watch, in the seats §11 gives them.
+    for (const tag of ['watch-three', 'watch-four']) {
+      assert.ok(
+        dist(mouth, byTag(ATTENDING_THE_DOME, tag)) < ACTIVE_SONAR.REVEAL_RADIUS_M,
+        `§9: ${tag} is inside the Tier-4 window when the flagship transmits`
+      );
+    }
     assert.equal(
       ACTIVE_SONAR.SELF_REVEAL_RADIUS_M,
       2400,
