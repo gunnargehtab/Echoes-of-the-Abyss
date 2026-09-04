@@ -195,7 +195,7 @@ describe('the economy, as docs/mission-standing-wave.md §4 states it', () => {
     assert.equal(Math.floor(own.nodules), 1530, '§4: 1,530 nodules');
     assert.equal(
       own.crystal,
-      3 * SPIRE.crystalCost,
+      3 * (SPIRE.crystalCost ?? 0),
       '§3, §13: three Spires of crystal, since nothing here cuts any'
     );
     assert.equal(2 * SPIRE.cost, 1500, '§4: two nodes are paid for at 00:00');
