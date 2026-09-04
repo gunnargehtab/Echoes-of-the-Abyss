@@ -52,14 +52,17 @@ Commune tender's 18 SIG means 9.9 at home in kelp and 18 on this rock, because t
 Open Water at PF 1.00 and nothing is taken back ([environments.md](environments.md)). That
 argument is now turned on a navy that idles at 16 and cruises at 24. A Chorister under way is
 classified by a Corvette at 1,363 m and by a Cruiser at 1,605; a Chorister under Silent Running
-is a contact at 1,216 and nothing at all past it. The column does not get quieter by being
-Directorate. It gets quieter by being still.
+is a contact at 829 and nothing at all past it. **Every silent figure in this document is the
+hull's own**, not the band's ceiling: `silentRunningSig` places a hull in the 3–8 band by its
+idle SIG, so a Chorister runs silent at **4.3**, a submersible at 4.8, a Cruiser at 7.6 and a
+Corvette at 5.3, and only a hull idling at 60 or more ever reaches the eight. The column does not
+get quieter by being Directorate. It gets quieter by being still.
 
 **The thing the column came for sits in kelp north of the corridor, and the only water on this
 map below the four-hundred-metre line is the slope.** The Marr Approach's floor is 280 m and the
 Holdfast Gate's 260; the corridor's is 420 and the slope's 900. Every metre a Directorate hull
-can stand on without bleeding is either inside a posted closure or three hundred metres below the
-last place a garden can be heard from. That is the mission, stated as terrain, and §7 does the
+can stand on below the line is either inside a posted closure or six hundred metres south of the
+last water a garden can be heard from. That is the mission, stated as terrain, and §7 does the
 arithmetic.
 
 Nobody on the shoulder says any of this. It is the ground the mission stands on.
@@ -82,7 +85,7 @@ Ossary is absent and unmentioned — the Cantorate does not attend a shoulder, a
 formula at 00:00 for the second time in the campaign ([mission-intake.md](mission-intake.md) §2).
 Adze is at the floor, where the campaign keeps them.
 
-**Engine bound, stated so nobody corrects it into a bug.** Seven parties and a court slot: the
+**Engine bound, stated so nobody corrects it into a bug.** Six parties and a court slot: the
 column on slot 0 (`Faction.Directorate`); the court on slot 1, reserved and empty; the spur's
 frame, the corridor escort, the second element and the Holding's column on slots 2 to 5, all
 `Faction.Bathyarch` and all separately owned so the escort's guns and the closure's guns answer
@@ -98,7 +101,7 @@ mission that enforced it here would be pricing somebody else's manners as the Di
 | Hull | Count | Stats | Why |
 | --- | --- | --- | --- |
 | Cruiser hull, in Directorate colours — role `ears` | 1 | **SIG 55 idle / 65 under way / +30 firing · HYD 65 · PR-2 · 1,200 HP · 150 at 900 m every 2.5 s · 45 m/s · 130 m** ([units.md](units.md)) | The column's command ears and the only hull it has that reaches past 650 m. Directorate Cruisers are Adze's precedent, not a new roster row ([mission-standing-wave.md](mission-standing-wave.md) §5). It is also the loudest thing the column owns: 55 while merely sitting, against a SIG budget of 24 |
-| Abyssal Submersible — role `ears` | 2 | **SIG 22 / 28 / +20 · HYD 85 · PR-3 · 520 HP · 80 at 650 m every 1.8 s · 60 m/s · 95 m** | The best mobile ears in the game, and the only hulls on the map that can hold a garden row at Bearing from the strip. Every row this mission counts is counted by one of these two or by a Chorister standing closer than a Chorister should |
+| Abyssal Submersible — role `ears` | 2 | **SIG 22 / 28 / +20 · HYD 85 · PR-3 · 520 HP · 80 at 650 m every 1.8 s · 60 m/s · 95 m** | The best mobile ears in the game, and the only hulls on the map that can hold **five** of Marr's six rows at Bearing from one place on the strip — a Chorister standing in the same water holds three (§7). Every row this mission counts is counted by one of these two or by a Chorister standing closer than a Chorister should |
 | Chorister — role `cohort` | 8 | **SIG 16 / 24 / +15 · HYD 75 · PR-2 · 200 HP · 20 at 450 m every 1.0 s · 40 m/s · 50 m** | The cohort hull, fielded for the first time in the campaign ([mission-intake.md](mission-intake.md) §13 put it in the roster and did not field it). Slowest combat hull in the game before the shallows take a fifth of it |
 
 All eleven are armed and seated **already above the line**, on the shoulder at 340 m between the
@@ -107,11 +110,15 @@ submersibles at (3400, 2350) and (3650, 2350), the Cruiser at (3525, 2325). Elev
 at tick 0 put every hull under Silent Running, so the mission's first decision is *whether to
 stop being quiet* rather than *whether to start*.
 
-**The seat is 1,070 m from the escort's nearest Corvette.** A silent Chorister there reads 1.23
-against that Corvette's threshold and 1.36 against the escort Cruiser's — Contact, a smudge with
-no bearing. The same hull merely idle, at 16, reads 2.45 and 2.73 — Bearing and Classification.
-The column that wakes up loud has opened the corridor warden's book on itself before it has
-moved a metre, and §6 is what the book says.
+**The seat is 1,070 m from the escort's nearest Corvette, and while the column holds still the
+corridor does not have it at all.** A silent Chorister there reads 0.66 against that Corvette's
+threshold and 0.74 against the escort Cruiser's; the silent Cruiser hull, the loudest of the
+eleven at 7.6, reads 0.87 and 0.99. Nothing, in every ear on the map — which is what "it came up
+in the tide's dark and is lying quiet" means in the model rather than in the prose. The same
+Chorister merely idle, at 16, reads 2.45 and 2.73 — Bearing and Classification; the Cruiser hull
+idle at 55 reads 6.29 and 7.17, which is Track, exact hull and facing, from the first pass after
+the order. The column that wakes up loud has opened the corridor warden's book on itself before
+it has moved a metre, and §9 and §12 are what the book says.
 
 No structures, no production, no reinforcement, no repair. Whatever comes down the slope at the
 close is what came up it, minus fifteen per cent.
@@ -149,8 +156,12 @@ it lands in four movements.
 penalty tests `depthBandFor() === Shelf` rather than a hard 400, so moving the band moves the
 penalty with it (`constants.ts`, `DIRECTORATE_SHALLOW`; `echo.ts`, `inDirectorateShallows`). The
 Shoulder's floor is 340 m, the Marr Approach's 280, the Holdfast Gate's 260. Only the corridor
-at 420 m and the slope at 900 are under it. **A Directorate hull inside the posted closure stops
-bleeding**, which is the mission's most uncomfortable single fact and belongs to the concern.
+at 420 m and the slope at 900 are under it. **A Directorate hull that drops to the posted
+closure's floor is not shallow any more, and runs at forty again** — which is the mission's most
+uncomfortable single fact and belongs to the concern. What the corridor gives back is the speed
+and only the speed: the bleed is finished by 00:20 and is not refunded on leaving, so a hull that
+dives into somebody else's closure at 420 m is buying eight metres a second and paying for them
+in a descent at SIG 72 (`systems-depth.md` §2) and in the second asking.
 
 **2. Speed × 0.8, and it follows the hull rather than the map** (`movement.ts`). It stacks
 multiplicatively with Silent Running, so the roster reads:
@@ -195,7 +206,7 @@ Attendance's 8. It says something exact about the column: **the Cruiser hull idl
 than twice the budget, so the budget is the mission saying that the ears travel silent and the
 loudest the column may be is one cohort hull moving. A column that crosses at cruise is not
 breaking a rule; it is standing at Classification in front of a corridor warden with a book, and
-§6 is the book. The mission is playtested against the player who exceeds it, which here means one
+§9 tables the book. The mission is playtested against the player who exceeds it, which here means one
 who walks west at 32 instead of 17.6 because the clock is short — and hears the second asking
 inside five minutes.
 
@@ -217,13 +228,13 @@ inside five minutes.
 **The frame is Thin Water's frame, seated where `thinWater.ts` seats it**: `frame-turret-west` at
 (1850, 1500) and `frame-turret-east` at (2150, 1500), both at 380 m over the spur's 420 — SIG 12
 idle and +30 firing, HYD 55, 1,000 HP, 50 damage at 700 m every 1.5 s. A Sentinel Turret
-*listens*: it holds a cruising Chorister at Bearing out to 1,990 m and a silent one out to 1,002,
+*listens*: it holds a cruising Chorister at Bearing out to 1,990 m and a silent one out to 683,
 and guns fire at Tier 2 or better ([systems-combat.md](systems-combat.md) §7), so **seven hundred
 metres either side of the frame is a turret's water.** Nobody has taken them down, because nobody
 takes a closure down.
 
-**The escort is Rell's escort**, standing off the frame's east where Thin Water's Cruiser ended
-its tide: `corridor-cruiser` (2400, 1500), `corridor-corvette-one` (2300, 1450),
+**The escort is Rell's escort**, standing off the frame's east, two hundred metres short of
+where Thin Water's Cruiser ended its tide at (2600, 1500): `corridor-cruiser` (2400, 1500), `corridor-corvette-one` (2300, 1450),
 `corridor-corvette-two` (2500, 1550), all at 400 m, with authored legs west to x 1,200 at 05:00,
 back at 09:00, east to x 2,800 at 13:00 and back at 16:00. **It never goes below y 1,750** — Rell
 discharges a closure at the closure's edge and does not hunt anybody down a slope, which is the
@@ -237,8 +248,8 @@ over, and it is why the column's clock ends when it does.
 **The Holding's column stands at the wall's gate**, in the shoulder's north-west strip between
 Marr's outer rows and the spur: `holding-cruiser-a` (125, 1050), `holding-cruiser-b` (125, 1200),
 `holding-corvette-a` (250, 1100), `holding-corvette-b` (375, 1050), `holding-corvette-c`
-(375, 1200), all at 340 m and all seated under Silent Running at 00:00. A Cruiser at 8 is Contact
-to a submersible on the strip from 1,690 m and a smudge all tide. **It is moved by exactly one
+(375, 1200), all at 340 m and all seated under Silent Running at 00:00. A Cruiser silent at 7.6
+is Contact to a submersible on the strip from 1,638 m and a smudge all tide. **It is moved by exactly one
 thing, and that thing is the third asking** (§9).
 
 **Naming follows [culture.md](culture.md) §4.** Setha Korrin and Mara Tessen carry
@@ -289,9 +300,10 @@ than this mission choosing an outcome for somebody else's campaign.
 `reading` cannot be counted by `attend` (`types.ts`, `MissionEmitter.reading`;
 `missions.test.ts`, the attend bound), so the two loudest things on the map are worth exactly
 nothing to the count. At SIG 70 through the real paths, Kell's bell is Bearing to a Chorister on
-the strip (3,503 m, ratio 1.84) and Track to a submersible anywhere on the slope; Teel's is
-Classification on the strip (2,622 m, 3.68) and Classification on the slope (3.33). **They are
-heard everywhere and entered nowhere, by design**: a bell is punctuation the count does not need,
+the strip (3,503 m, ratio 1.84) and Track to a submersible over the slope's middle (2,043 m,
+6.81), falling to Classification at the slope's western end (3,482 m, 2.87); Teel's is
+Classification on the strip (2,622 m, 3.68) and Classification over the slope's middle (2,652 m,
+3.86). **They are heard everywhere and entered nowhere, by design**: a bell is punctuation the count does not need,
 and a transcript that could be filled by standing still under a bell would not be a transcript.
 
 Kell's bell is rung by a plateau that lost two hundred people to somebody else's containment
