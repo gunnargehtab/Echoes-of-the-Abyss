@@ -28,10 +28,12 @@ the column does.
 
 ## 1. What the Rim Is, From Below
 
-The rim is the depression's edge at 4,410 m, carrying the richest resonant-crystal deposits
-ever surveyed, and — since this year — two returns that a Consortium survey has filed three
-times as equipment fault ([world-map.md](world-map.md);
-[mission-prospect.md](mission-prospect.md) §1; [mission-item-nine.md](mission-item-nine.md)
+The rim is the edge of an eleven-kilometre depression that returns pings before they should
+arrive, on a cycle that shortened from 43 hours to 39 in 213 PC and is still shortening
+([world-map.md](world-map.md); [timeline.md](timeline.md)). That edge stands at 4,410 m,
+carries the richest resonant-crystal deposits ever surveyed, and has carried — since this year
+— two returns that a Consortium survey has filed three times as equipment fault
+([mission-prospect.md](mission-prospect.md) §1; [mission-item-nine.md](mission-item-nine.md)
 §1). Every other campaign arrives at it from above or across. The Directorate arrives along
 it, out of trench country, on the only side of the rim anybody was ever born on.
 
@@ -59,10 +61,12 @@ thing the cohort does.
 
 **The tide is the whole advantage, and it was bought with a record.** The watch heard the
 concern descend at 72 for three minutes and sound six charted faces at 80, and entered both;
-it entered the plateaus' bed on the western lip on the same day. The Ninth heard the same
-transmissions down its own axis, which is what put a calling at the head of it
-([mission-conclave-attending.md](mission-conclave-attending.md) §1). Knowing a tide early is
-worth exactly what the slowest hulls in the game can convert it into, which is ground.
+it entered the plateaus' bed on the western lip on the same day. The account went up the
+Ninth, which is what put a calling at the head of it
+([mission-conclave-attending.md](mission-conclave-attending.md) §1) — and the calling was put
+because something is happening to the thing the cohorts attend
+([campaign.md](campaign.md) §8), which is the cycle above and not the record. Knowing a tide
+early is worth exactly what the slowest hulls in the game can convert it into, which is ground.
 
 Nobody in this mission says any of that. It is what the column is standing on.
 
@@ -74,7 +78,12 @@ Nobody in this mission says any of that. It is what the column is standing on.
 eastern lip, with the Cantorate's dome stood over them and their weapons locked.**
 
 Cohort-Prime Adze commands in the water; Undermarshal Setha Korrin assigns from Sufficiency and
-reads the count. The 9th Trench Cohort joins at the sill, exactly as Adze said it would
+reads the count. The twelve are the cohort grown at the shallow band and called at the head of
+the Ninth ([mission-trench-awakening.md](mission-trench-awakening.md) §6;
+[mission-conclave-attending.md](mission-conclave-attending.md) §8) — authored fresh here,
+because nothing carries a roster between missions
+([mission-conclave-attending.md](mission-conclave-attending.md) §13), and named so the walk is
+the same hulls arriving. The 9th Trench Cohort joins at the sill, exactly as Adze said it would
 ([mission-conclave-attending.md](mission-conclave-attending.md) §12), and the rim's own two
 submersibles are the pair that have been on the lip since before anyone had ears here
 ([mission-prospect.md](mission-prospect.md) §5). First Cantor Vehl Ossary is not on the channel
@@ -109,9 +118,9 @@ under the one instrument it has, which is the mission in one distance.
 
 ### What the column does not carry
 
-1. **No weapons, and no torpedoes.** Locked, with the week's own reason attached: *the week's
-   law — nothing has stood into the watch*. It is a statement of fact at 00:00 and it stops
-   being one at 18:00, and §6 is where the mission decides not to update it.
+1. **No weapons, and no torpedoes.** Locked, with the tide's own reason attached: *the law of
+   these tides — nothing has stood into the watch*. It is a statement of fact at 00:00 and it
+   stops being one at 18:00, and §6 is where the mission decides not to update it.
 2. **No mines and no depth charges.** *Nothing is left in water that is attended.*
 3. **No noisemakers.** *A countermeasure is a sentence, and the rim is not lied to.* The
    Cantorate put one sound in the water in mission 3
@@ -202,8 +211,9 @@ Naming follows [culture.md](culture.md) §4: Korrin, Ossary and Adze carry given
 or, at the programme's limit, one name; the Voice of the reconnaissance and the charting pair are
 offices, because the Order names ranks before people and the Commune does not name a hull at all.
 
-**Nobody is wrong** ([campaign.md](campaign.md) §2 rule 1). The plateaus are below their own bed
-on ground they read before anyone; the Order is measuring what its Chord needs and declining to
+**Nobody is wrong** ([campaign.md](campaign.md) §2 rule 1). The plateaus are in home water on
+ground they read before anyone, and there is a bed of theirs on the western lip; the Order is
+measuring what its Chord needs and declining to
 say when it will take it; the column is standing on a rim it has attended for two centuries
 without ever having stood on it. Three true sentences on one tide, none of them fitting inside
 another.
@@ -245,6 +255,16 @@ break-silence spike is a *firing* spike and every weapon on the hull is locked, 
 this mission can produce one. A descent is 72 and costs a second a second, and a second a second
 to clear afterwards. The ceiling is not a fence around the mission; it is a fence around exactly
 one manoeuvre, and the manoeuvre is changing your mind about a terrace.
+
+**The other order the cohort stands under is the one at 18:00, and it is Adze's to hold.** The
+lock in §3 carries a statement of fact — *nothing has stood into the watch* — and at 18:00 the
+Order stands into it, which is the tick the fact stops being one and the lock becomes a
+refusal. [characters.md](characters.md) names this and no mission has spent it: Adze has never
+disobeyed, and the campaign puts one order in front of them that they might. This is that
+order, and they attend it, on the channel, at the tick it arrives (§12). The ending pays the
+line off by having the order held rather than crossed — which is the only way a faction whose
+whole argument is that it never asks could pay it off at all. Nothing in the union can read a
+refusal (§8), so it is authored as a voice and an epilogue clause and is not counted.
 
 **The spread is the hold, and the ground says so without being told to.** Drift Health runs on
 1,500 × 1,000 m cells here ([bestiary.md](bestiary.md) §6). The seat's cell holds twelve

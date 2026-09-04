@@ -29,23 +29,27 @@
  * dome is seated a hundred metres deeper than the line that grinds it.
  *
  * **Nothing here is near the layer, and most of it is water nobody stands in.**
- * The shallowest floor authored is 2,750 m, fourteen hundred under the duct's
- * own floor, so every pair is Below-to-Below and each path is priced by the
- * biome alone. And `DEPTH.MAX_M` refuses a hull below 3,000 m rather than
- * clamping it, so the head's 3,400 m is scenery with a number on it — while the
- * arrivals' 2,800 m is a hundred metres under the seat the called hold, and is
- * the one depth on this chart where the column and the thing in the trench are
- * in the same water.
+ * The shallowest floor authored is 2,750 m and the shallowest water any hull
+ * holds is 2,700 — fourteen hundred metres under the duct's own floor, which
+ * `THERMOCLINE` puts at 1,300 — so every pair is Below-to-Below and each path
+ * is priced by the biome alone. And `DEPTH.MAX_M` refuses a hull below 3,000 m
+ * rather than clamping it, so the head's 3,400 m is scenery with a number on it
+ * — while the arrivals' 2,800 m is a hundred metres under the seat the called
+ * hold, and is the one depth on this chart where the column and the thing in
+ * the trench are in the same water.
  *
  * **The galleries are one region and two benches, and the axis is what makes
- * the difference.** §11 authors the stalls whole and cuts the channel's head
- * through the middle of them: the same choice `attendingGalleries.ts` made from
- * the face, read from above, where "open on the axis" means the axis goes
- * between them. The two documents' charts of this trench disagree about those
- * five hundred metres and §11 says so rather than quietly agreeing. Painted in
- * the document's order the one row becomes two 750 m benches either side of a
- * 1,000 m strip, which is exactly what the mission addresses as
- * `galleries-west` and `galleries-east`.
+ * the difference.** §11 authors the stalls whole and carries the channel's head
+ * the last five hundred metres *between* them: Attendance's stalls are "open on
+ * the axis" (docs/mission-attendance.md §11), and read from above, open on the
+ * axis means the axis goes between them. That is a stated deviation from the
+ * chart `attendingGalleries.ts` built — that literal cuts the channel north
+ * only as far as the galleries' southern edge and does not run through them —
+ * and §11 states it rather than quietly agreeing, calling it the row a reviewer
+ * should overrule first if either chart has to move. Painted in the document's
+ * order the one row becomes two 750 m benches either side of a 1,000 m strip,
+ * which is exactly what the mission addresses as `galleries-west` and
+ * `galleries-east`.
  *
  * **This is the ground before the dome came down.** At 11:00 the mission takes
  * both benches to floor 2,900 and Abyssal Trench, one `ground` beat each at one

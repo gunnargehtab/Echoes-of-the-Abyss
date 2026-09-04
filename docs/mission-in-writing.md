@@ -37,12 +37,13 @@ Three tides ago the programme sowed a second furrow at 2,200 m under a Directora
 that had attended the cleft since the letter, heard the sowing at Track from 884 m, and went
 below to say so ([mission-deep-furrow.md](mission-deep-furrow.md) §6). The tide after, a
 listening dome was raised at the first furrow's north edge. Nobody on the plateau heard it
-commissioned — the furrow is under the layer and eighty kilometres from Marr, and *Deep
-Furrow*'s thesis holds in both documents ([systems-echo.md](systems-echo.md) §3). What heard
-it was the watch at the cleft's mouth, above the layer, 1,500 m off: a site broadcasts at 70
-([units.md](units.md)), and 70 through the cleft's 1.6 and the layer's 0.3 is Classification
-to a scout's 70 out to 2,075 m. The plateau knew what a building is for before the cohort it
-was for arrived.
+commissioned — the furrow is under the layer, and *Deep Furrow*'s thesis holds in both
+documents ([systems-echo.md](systems-echo.md) §3). What heard it was the watch at the cleft's
+mouth, above the layer, 1,500 m off: a site broadcasts at 70 ([units.md](units.md)), and 70
+through that line's own path mean — five cells of cleft and one of the Foot the mouth opens
+into, 1.5, not the
+cleft's 1.6 (§7) — and the layer's 0.3 is Classification to a scout's 70 out to 1,993 m. The
+plateau knew what a building is for before the cohort it was for arrived.
 
 Three facts about that water decide the mission, and none of them is a fence.
 
@@ -152,12 +153,14 @@ against the best listeners in the game**, and it lands in four movements.
 from every metre of the furrow a hull is not veiled in — 35 through kelp is Tier 1 to a
 scout's 70 from 2,597 m and to a tender's 30 from 1,529, and to ears blinded to 5 inside a
 cloud only from 499 — and the player's hulls are inside three clouds the dome's ears do not
-reach. A bed's own hum is 20, veiled by its own cloud to 8; 8 through 0.55 is Bearing
-to a dome-lent 95 only inside 970 m, the Submersibles are 1,125 m from the nearest bed's
-centre, and the dome, 450 m from the middle bed and 625 m from the other two, has the middle
-bed at Track (ratio 4.32) and the outer pair at Classification (2.55) and nothing silent
-under any of them. The cloud covers a column of water 350 m across from the surface to the floor,
-which is why nothing under a bed can be found by looking down.
+reach. A bed's own hum is 20, veiled by its own cloud to 8, and every ear in the cohort has
+it: the dome, 450 m from the middle bed and 625 m from the other two through the garden's own
+0.55, has the middle bed at Track (ratio 4.32) and the outer pair at Classification (2.55);
+the doorway, 1,125 m from the outer beds through a path mean of 1.18 and 1,300 m from the
+middle through 1.25, has the outer pair at Classification (2.54) and the middle at Bearing
+(2.13) (§7). What none of them has is anything silent under any of them. The cloud covers a
+column of water 350 m across from the surface to the floor, which is why nothing under a bed
+can be found by looking down.
 
 **2. Inside the cloud everyone is deaf and quiet, and it is the same everyone.** The veil is
 the one symmetric aura the game has ([systems-echo.md](systems-echo.md) §8). At 03:00 the
@@ -169,10 +172,11 @@ doctrine is that it already works silent and blind ([units.md](units.md)); this 
 mission where the other side has to.
 
 **3. The veil is a multiplier, so silence is still the posture.** 7.2 against 1.8 (§3). A
-corvette that forgets to be silent under a bed is 28 × 0.4 = 11.2 through 0.55 — Bearing to
-the throat's 95 out to 1,197 m with the throat 1,125 m off, and Classification to the dome's
-own 80 from where the eastern bed stands (ratio 3.57 at 625 m). The bed hides a hull that is
-already hiding. It does not hide one that is not.
+corvette that forgets to be silent under a bed is 28 × 0.4 = 11.2 — Classification to the
+throat's 95 at 1,125 m through the bed-to-duct path mean of 1.18 (ratio 3.55), and
+Classification to the dome's own 80 through the garden's 0.55 from where the eastern bed
+stands (ratio 3.57 at 625 m). The bed hides a hull that is already hiding. It does not hide
+one that is not.
 
 **4. Hiding is a schedule.** The dome has the beds — the middle one at Track, the outer two
 at Classification — the line finds each one by walking into it, and the beds are corrected
@@ -302,30 +306,43 @@ editorialise, and neither does this document.
 west.**
 
 Every figure is arithmetic over the shipped model (`PROPAGATION_MODEL`, `BASE_THRESHOLD`
-0.147) and the roster ([units.md](units.md)), through the water it is priced in.
+0.147) and the roster ([units.md](units.md)), with each pair's PF taken as
+`pathPropagation`'s mean over the 250 m cells between the two ends rather than as the biome
+either end stands in — *The Second Seeding*'s rule, on the same engine
+([mission-second-seeding.md](mission-second-seeding.md) §7). Inside the garden every pair is
+kelp and the mean is 0.55, so there the distinction costs nothing. Every pair that crosses the
+garden's edge is priced at its own mean, and the cross-region rows carry it.
 
-- **The dome** — 35 through kelp: Tier 1 to the watch from 2,597 m, to a tender from 1,529,
-  from every hull not inside a cloud. Inside one, where the ears are 5, nothing past 499 m —
-  which is why the watch has to leave a bed to hear the building it is hiding from.
-- **The Submersibles in the duct** — 22 idle through trench water, duct-to-below at 1.0:
-  Tier 1 to a scout outside a cloud from 3,787 m and to a tender from 2,230.
-- **The line** — rising silent at 02:00, 4.3 through the sill's 1.6, Tier 1 to a scout outside
-  a cloud from 1,372 m; sweeping at 03:00, 24 through kelp, Tier 1 from 2,052 m outside a cloud
-  and 222 inside one.
+**Inside the garden, at 0.55:**
+
+- **The dome** — 35: Tier 1 to the watch from 2,597 m, to a tender from 1,529, from every hull
+  not inside a cloud. Inside one, where the ears are 5, nothing past 499 m — which is why the
+  watch has to leave a bed to hear the building it is hiding from.
+- **The line sweeping** — 03:00, 24 at cruise: Tier 1 from 2,052 m outside a cloud and 222
+  inside one.
 - **The west bed going dark** — 09:00. A structure lost lays a mark at 18 for three minutes
   ([systems-echo.md](systems-echo.md) §7), and the cloud on the chart is simply gone. Then the
   middle at 12:00 and the east at 15:00 — *Thin Water*'s housings going quiet from the east,
   turned round ([mission-thin-water.md](mission-thin-water.md) §7).
-- **The throat emptying** — 12:00. Two hulls diving at 72 through 1.6: Tier 1 to a scout from
-  7,946 m and to a tender from 4,679, and across the layer to the Foot from 2,205. The loudest
-  thing the doorway does all mission is leave it.
-- **The riser** — 14:30, SIG 100 through 1.6: Tier 1 to a scout from 9,757 m, to a tender from
-  5,746, and across the layer to a tender at the Foot from 2,707. The whole map, both sides of
-  the layer, for ninety seconds.
-- **The pack in the lanes** — 26 through open water, Tier 1 to a scout from 3,134 m all
-  mission: the sound of home water, which cannot climb and will not come.
 
-**What the cohort hears of the player**, priced against the dome-lent 95 through kelp:
+**Across the garden's edge, each pair at the mean of the cells between its two ends:**
+
+| Sound | SIG | The line it is heard along | PF | Tier 1 from |
+| --- | --- | --- | --- | --- |
+| The Submersibles in the duct, idle, duct-to-below at 1.0 | 22 | the throat to the watch's posts, every cell cleft | **1.60** | a scout outside a cloud, 3,787 m; the posts stand 838 and 825 m off |
+| The same, to the garden | 22 | the throat to the beds' row, three cells of cleft and two of kelp | **1.18** | a tender outside a cloud, 1,844 m; the beds' row is 1,125 m off |
+| The line rising silent, 02:00 | 4.3 | `cohort-1`'s seat in the sill to the western post, two cells of sill and two of kelp | **0.813** | a scout outside a cloud, 894 m, against a seat 906 m away — and 700 m at the garden's own 0.55, against the 658 m the line has closed to by 02:30. The watch hears the rise as it arrives, not as it starts |
+| The throat emptying, 12:00 | 72 | the throat to the watch's posts | **1.60** | a scout, 7,946 m |
+| The same, to the garden | 72 | the throat to the beds' row | **1.18** | a tender, 3,868 m |
+| The same, over the layer | 72 | the throat to the Foot, three cells of cleft and one of open water, ×0.3 across the layer | **1.45** | a tender in the Foot, 2,073 m |
+| The riser, 14:30 | 100 | the cleft's centre to the garden's corners — sill cells while it is still low, kelp once it is level with the beds | **0.55–0.90** | a scout, 5,006 m at the quieter of the two, against a map whose own diagonal is 5,000; a tender, 2,948 m |
+| The same, over the layer | 100 | the cleft's centre to the Foot, ×0.3, the mean rising as the animal climbs | **1.26–1.50** | a tender in the Foot, 2,331 m at the spawn and 2,600 m by the time it is level with the garden's north edge |
+| The pack in the lanes, all mission | 26 | the lanes to the garden's western post, every cell open water | **1.00** | a scout, 3,134 m: the sound of home water, which cannot climb and will not come |
+
+The loudest thing the doorway does all mission is leave it, and the riser is the whole map to
+the watch, both sides of the layer, for ninety seconds.
+
+**What the cohort hears of the player**, priced against the dome-lent 95 through the garden's own 0.55 — every pair in this table has both ends inside the garden:
 
 | The player's hull | Emits | Contact | Bearing | Classification | Track |
 | --- | --- | --- | --- | --- | --- |
@@ -347,8 +364,9 @@ Contact inside 186 m and Bearing inside 144; a corvette that is not silent Beari
 Submersible in the duct at 95, a silent tender at 4.5 × 1.6 is Contact from 1,700 m, Bearing
 from 1,320, Classification from 959 and Track from 715 — the throat's middle is Track at ratio
 7.1, its walls at 21.5. A tender idling at 18 in the Foot is Track to the same ears from
-1,267 m across the duct's 1.0: the first water the plateau can hear again is, from the duct,
-the first water the cohort can hear the plateau from.
+1,599 m, the Foot-to-throat mean being 1.45 and the duct hearing the water above it at 1.0:
+the first water the plateau can hear again is, from the duct, the first water the cohort can
+hear the plateau from.
 
 No hazard event, no second navy, no new species. What arrives instead of an attack is a
 building's ears, eight hulls walking, and a schedule.
@@ -442,8 +460,9 @@ no tender in the Foot at 16:00 — is preceded by a garden going dark on a sched
 can hear: the west bed at 09:00, the throat emptying at 72 and the middle bed at 12:00, the
 riser at 14:30 for ninety seconds before the tide against [campaign.md](campaign.md) §10's
 sixty, and the last bed at 15:00. What kills a hull is a gun inside 650 m or a Hollow inside
-107, and both are audible before they are anywhere: the Submersibles at 22 from 2,230 m to
-the deafest hull the player owns, and a Hollow's strike at 60 from 7,090. Nothing in this
+107, and both are audible before they are anywhere: the Submersibles at 22 from 1,844 m to
+the deafest hull the player owns, through the throat-to-garden mean of 1.18 (§7), and a
+Hollow's strike at 60 from 7,090. Nothing in this
 mission is lost to a thing that was quiet.
 
 ---
@@ -559,10 +578,13 @@ third biome spend: the judge caps the repaint at *Deep Furrow* and *Attending* 6
 water was turned once, three tides ago, whatever tick the literal turns it on.
 
 **Mission regions**, restated for predicates and beats: `the-foot` (1500, 0, 1000, 500 —
-home, over the layer); `the-furrows` (1250, 1750, 1500, 750 — both furrows); `the-throat`
-(1250, 750, 1500, 500 — the doorway the guns hold); `second-furrow` (2250, 1750, 500, 750 —
-the restating beat's region). One marker, `the-foot`, at 2000, 250, r 500, named by both
-terminal rows.
+home, over the layer) and `second-furrow` (2250, 1750, 500, 750 — the restating beat's
+region). A mission restates only the places a predicate, a lift or a beat addresses
+([mission-intake.md](mission-intake.md) §11), so the garden and the throat are prose here and
+not regions: the plan's `the-furrows` and `the-throat` are named by no row, no marker and no
+beat, and *Radicals* §11 and *The Second Seeding* §11 drop their own unaddressed rectangles
+for the same reason. One marker, `the-foot`, at 2000, 250, r 500, named by both terminal
+rows.
 
 **Seats, checked against the floor and the band.** The households, the watch and the escorts
 at 1,790 m over the furrows' 2,200 — `tender-1` 1400, 2100 under the west bed; `tender-2`
@@ -737,7 +759,7 @@ each stated so a reviewer can overrule it in one place.
 | Requirement | Status |
 | --- | --- |
 | The mission format — beats, predicates, registry, private rooms | **Built** (#190). `extract`, `survive`, `tolerance`, `ground`, `silent`, `move`, `lose`, `creature`, `say` and `resolve` cover §8 and §9; a conditional `say` on `tolerance` and on `extract` is Aptitude's and Thin Water's row (#282) |
-| **The map** — `anholt-furrow`, eight regions, reused unchanged | **Not built, and not this document's to build.** [mission-deep-furrow.md](mission-deep-furrow.md) §11 owns the literal; §11 here transcribes it so this mission's own test can hold the two to the metre, and adds four mission regions and one marker. The first time a map literal will be resolved by two ids before either is registered |
+| **The map** — `anholt-furrow`, eight regions, reused unchanged | **Not built, and not this document's to build.** [mission-deep-furrow.md](mission-deep-furrow.md) §11 owns the literal; §11 here transcribes it so this mission's own test can hold the two to the metre, and adds two mission regions and one marker. The first time a map literal will be resolved by two ids before either is registered |
 | **The Spore Veil, fielded** | **Built** (`STRUCTURE_AURAS.SPORE_VEIL`; `auras.ts`), symmetric, applied after the Cantor so a lent 95 is 5 inside a cloud; and never before placed on any party. Placed here as a `MissionStructure` at its true depth, 1,790 m, `prebuilt`. A *player-built* Veil would sit at `CONSTRUCTION.WORKING_DEPTH_M`, 600 m, wherever the floor is — the finding [mission-standing-wave.md](mission-standing-wave.md) §13 carries — which is one more reason the beds are grown before the tide and not during it. **The cloud is horizontal** (`Math.hypot` on x and y), which this document leans on twice: the seat at 1,790 m is veiled exactly as the floor would be, and a scout cannot leave a cloud by climbing |
 | **The Cantor on a scripted party, granting its own slot** | **Built** — auras grant by `Structure.grantSlot`, the owner unless a mission lends it away. The dome lifts the line's 75 and the Submersibles' 85 to the 95 cap within 1,200 m; its own ears stay at 80, because the roster loop grants units and structures keep their spawned rating |
 | **The guns are tier-blind, and it moved the plan** | **Built, and a finding this document spends.** `combat.ts` auto-acquires the nearest live enemy inside weapon range in three dimensions, heard or not, on the licence that weapon ranges sit inside audibility; structures are targetables; a silent hull and a hull with a live move order hold fire. Three consequences, all in §6: the Choristers walk cold, because an armed line standing inside a cloud would have the bed itself inside 270 m and every bed down on the first stationary pass; a bed is no cover from a gun in range, so the dead-water spheres of 12:00 are priced by distance and not by the veil; and the doorway is priced by what two 650 m spheres cover, which is the duct band and not the water column. The plan armed the line and priced the doorway by Bearing at 1,024 m; the engine prices it by reach, and the bible's sentence is [systems-combat.md](systems-combat.md) §7's *in range implies heard*, read in the direction the roster reads it |
@@ -750,6 +772,7 @@ each stated so a reviewer can overrule it in one place.
 | **The region pressure grant** — *Deep Furrow*'s headline row | **Not needed here, and not leaned on.** Every player hull is seated at 1,790 m, where `requiredPressureRating` returns 2 and a PR-2 hull owns the water; the seat test (`missions.test.ts`, reading the hull's rating) passes as written, and a PR-2 hull leaving the furrow region at 1,790 m pays no crush anywhere on this map. Both Spire-kind approximations *Deep Furrow* carries are dropped: a Sounding Spire is active at SIG 80 whenever a hull under it is below its rating, and a garden that hums at 80 is a different mission. See the open question below for what the seat costs the fiction |
 | **The Chorister's rating, authored** | **A finding, not a request.** The Chorister is PR-2 on the hull and PR-3 in Directorate hands by `effectivePressureRating` ([units.md](units.md)), and the seat test reads `unit.pressureRating ?? statsFor(kind).pressureRating` — the hull, not the faction. Eight Choristers seated at 2,400 m therefore carry `pressureRating: 3` in the literal so the test does not report them dead of crush where they stand. The test is the side that should move: a seat check that read `effectivePressureRating` would let a Directorate literal author its cohort hull without restating the faction's baseline on every row |
 | **The tender's figures** | **A roster gap, already recorded.** Tend §3, Thin Water §3 and Convocation §3 author the Commune tender at 8 idle and 18 under way; the roster's Harvester idles at 18 and cruises at 40, and `tend.ts` names the gap in its header rather than reaching into hull stats. This document prices the tender at the roster's figures — 18 idle, 40 at cruise, 4.5 running silent by `silentRunningSig` — so §7's table is what the engine will resolve. The plan's "idle at 8" is the roster's silent ceiling and its "under way at 18" the roster's idle, and every figure the plan gave is here one state over. Which side moves is [units.md](units.md)'s call, and the mission is playable under either |
+| **The path mean** — every cross-region figure | **Built, and a finding against this document's own first arithmetic.** `Terrain.pathPropagation` returns the mean PF over the 250 m cells between the two ends, so a pair with one end in the garden and one in the cleft is priced between 0.55 and 1.6 and never at either. Inside the garden every pair is kelp and nothing moves; every pair that crosses the garden's edge does. The dome's own commissioning, heard from the Foot, is a mean of 1.50 and not the cleft's 1.6, so §1's Classification circle is 1,993 m rather than 2,075. The doorway hears a bed's hum through 1.18 rather than the garden's 0.55, so the outer beds are a Classification (2.54) to it and not nothing, and an un-silent corvette under a bed is a Classification (3.55) to it and not a Bearing. The throat emptying reaches the beds' row at 1.18 and the Foot at 1.45. §7 carries the mean on every cross-region row, and `missionInWriting.test.ts` should re-derive every one of them from `pathPropagation` over the literal's own grid rather than from `PROPAGATION_FACTOR` alone, so a repaint of the second furrow would move this document's ranges instead of falsifying them — *The Second Seeding*'s row, on the same engine ([mission-second-seeding.md](mission-second-seeding.md) §13) |
 | **Detection horizontal, guns three-dimensional** | **Built, both, and stated together because the pair decides §6.** The Echo pass prices a pair by horizontal distance and the thermocline factor; `engagementRangeM` includes depth. So a gun at 2,100 m reaches 571 m across the beds' row against hulls at 1,790, and a gun at 1,200 reaches 273 m across the throat against a hull at 1,790 and 577 against one at 900, while its ears reach 715 m at Track whichever depth the hull is at. Every distance in §6 is that arithmetic |
 | **The middle rung as a second terminal row** | **Built** — Thin Water's `crossing` at one beneath `column` at six. `the-crossing` at one beneath `the-people` at three |
 | **The tolerance as a reading, and as a condition** | **Built** (#272 for the reading; #282 for the beat). Read at Classification over thirty cumulative seconds off the force's own exposure, which since #323 is resolved for scripted parties and their structures — the dome's 80 counts, and Thin Water's turrets are the precedent |

@@ -58,8 +58,8 @@ whose entire safety was hearing.
 **Seeded ground is quiet ground and rated ground.** The ten-year furrow is a trench floor
 painted Kelp Forest — biome is acoustics, not band, the freedom
 [mission-asset-recovery.md](mission-asset-recovery.md) §11 took for a scar and this document
-points at a garden — so a hull idling on it at 8 carries 4.4 where the bare cleft beside it
-would carry 12.8. And it holds a PR-2 hull in PR-3 water. That is the Deepbloom conversion
+points at a garden — so a hull idling on it at 18 carries 9.9 where the bare cleft beside it
+would carry 28.8. And it holds a PR-2 hull in PR-3 water. That is the Deepbloom conversion
 [systems-depth.md](systems-depth.md) §3 has described since the document existed — "Deepbloom
 structures slowly convert Abyssal tiles to habitable ground; they don't survive the deep, they
 change it" — and §4 is where it is written down as a rule.
@@ -110,7 +110,7 @@ Two factions, one mission, no lobby — a mission seats its own parties
 
 | Hull | Count | Stats | Why |
 | --- | --- | --- | --- |
-| Tender | 3 | Harvester hull, Commune-grown · **SIG 18 working** / 8 idle · HYD 30 · 300 HP · speed 40 · **PR-2 on the hull** ([units.md](units.md); `units.ts`) | The bloom's freight, and the whole test: a PR-2 hull in PR-3 water pays four points a second everywhere on the garden's floor except where the garden holds it. One of the three is **the sower**, and carries the Kell seed |
+| Tender | 3 | Harvester hull, Commune-grown · **SIG 18 idle / 40 cruise** · 4.5 silent · HYD 30 · 300 HP · speed 40 · **PR-2 on the hull** ([units.md](units.md); `units.ts`) | The bloom's freight, and the whole test: a PR-2 hull in PR-3 water pays four points a second everywhere on the garden's floor except where the garden holds it. One of the three is **the sower**, and carries the Kell seed |
 | Light Scout — the watch | 2 | SIG 6 idle / 12 cruise · **HYD 70** · 180 HP · speed 120 · **PR-3 by refit** (the roster's 1) | The programme's two proof hulls, refit in 204 PC for this water and nothing else — the same pair [mission-prospect.md](mission-prospect.md) §5 seats on the rim as the charting pair that arrived first. Their ears are the only ears the day has under the layer, and they are the only hulls that can be anywhere in the cleft without the ground's help |
 | The bloom-bed — placed structure | 1 | Sounding Spire kind, on the player's party · SIG 30 idle / **80 active** · HYD 45 · 1,800 HP · 600 m aura, +1 PR | **An approximation, and §13 says so twice.** It stands for the 204 PC furrow's zone because it is the only thing in the format today that grants a rating; it hums at 80 whenever a tender under it is below its own rating, which is always, and it is a circle where the zone is a region |
 
@@ -125,6 +125,14 @@ time at zero in the Foot's region — rigged on the first pass, before the day h
 gift run's shape from [mission-tend.md](mission-tend.md) §13. The lift's id is also how the
 format addresses the sower without a second role: `role` is singular (§13), so the beat that
 fires when the seed goes out onto the bare rock is an `extract` naming the load, not the hull.
+
+**The tender's figures are the roster's.** *Tend*, *Thin Water* and *Convocation* author the
+Commune tender at 8 idle and 18 under way; `units.ts` and [units.md](units.md) both give the
+Harvester 18 idle, with 40 at cruise and 4.5 running silent by `silentRunningSig`. Every figure
+in §4, §6 and §7 is priced at the roster's, as [mission-in-writing.md](mission-in-writing.md)
+§3, [mission-radicals.md](mission-radicals.md) §3 and
+[mission-second-seeding.md](mission-second-seeding.md) §3 price them — the four documents this
+campaign is finishing with agree, and the three older ones are the side that moves (§13).
 
 **A finding, stated here because §4's arithmetic depends on it.** [mission-tend.md](mission-tend.md)
 §3 and [mission-thin-water.md](mission-thin-water.md) §3 both print the tender as PR-1.
@@ -197,12 +205,13 @@ minute would be a stunt; a furrow is somewhere people sleep.
 ### 2. The water absorbs
 
 The furrow is Kelp Forest paint at PF 0.55 on a trench floor whose bare rock carries at 1.6.
-Against the observer's HYD 85 (§6), the same idle tender at 8:
+Against the observer's HYD 85 (§6), the same idle tender at the roster's 18, as ranges through
+each ground — which is a property of the ground, and not of any pair on this map (§7):
 
 | Ground | SIG × PF | Contact | Bearing | Classification | Track |
 | --- | --- | --- | --- | --- | --- |
-| The furrow, kelp | 8 × 0.55 | 1,166 m | 905 m | 658 m | 490 m |
-| The bare cleft beside it | 8 × 1.6 | 2,272 m | 1,764 m | 1,282 m | 955 m |
+| The furrow, kelp | 18 × 0.55 | 1,935 m | 1,502 m | 1,091 m | 814 m |
+| The bare cleft beside it | 18 × 1.6 | 3,772 m | 2,928 m | 2,127 m | 1,586 m |
 
 The garden is half as audible as the rock it grows on, in every tier. *Tend* taught that the
 plateau's hush is partly grown ([mission-tend.md](mission-tend.md) §4); this is the same fact at
@@ -233,19 +242,22 @@ The arithmetic, said here so nobody does it for the first time on the rock:
 When the hold completes, **the ground beat fires**: the second furrow's water turns from Abyssal
 Trench to Kelp Forest on one tick, and — once the row lands — the region gains its grant. The
 water over the sown ground goes from carrying to absorbing in the same instant the observer's
-Track on the sowing falls to a Bearing on a garden. That is the campaign's one biome spend, and
+Track on the sowing falls from twenty-five to seven — 25.5 while the seed goes in, 6.85 on a
+tender idling where it went in, because the ground stops carrying and the sill's own trench,
+which is half the line between them, does not (§6). That is the campaign's one biome spend, and
 the teaching one: every other repaint the bible has proposed is a dome coming down, and this is
 the only one that makes ground *better*.
 
 ### 4. The layer is the other wall
 
 Home cannot hear the furrow. The Foot's ears have the observer's idle at Tier 1 only inside
-1,785 m across the layer, and the sill is 2,500 m off; the day learns what is at the sill only by
+1,510 m across the layer, and the sill is 2,500 m off; the day learns what is at the sill only by
 going under the layer to it, and learns in the same second that the sill has had the day since
-the dive began — Classification from its first second (72 through 1.6 and 0.3 is ratio 2.74 at
-the mouth's 2,250 m) and Track from its fifth, once the hull is in the duct and the pair factor
-is 1.0 (ratio 9.14). The layer does not hide the day from the deep. It hides the deep from home,
-and the plateau has never once been on that side of the arrangement.
+the dive began — a Bearing from its first second (72 through the mouth-to-sill path mean of 1.25
+and the layer's 0.3 is ratio 2.14 at the mouth's 2,250 m) and Track from its fifth, once the hull
+is in the duct and the pair factor is 1.0 (ratio 7.14). The layer does not hide the day from the
+deep. It hides the deep from home, and the plateau has never once been on that side of the
+arrangement.
 
 ### Where you dive is the whole lesson
 
@@ -338,18 +350,20 @@ none, and that it is entered. Nobody is wrong ([campaign.md](campaign.md) §2, r
 Commune is gardening; the Directorate is attending; each sentence is true in its own register
 and unsayable in the other's, and the war the letter named is what happens when both are kept.
 
-What it hears, through the layer and under it, against its HYD 85:
+What it hears, through the layer and under it, against its HYD 85 — each pair's PF the mean
+`pathPropagation` walks over the 250 m cells between the two ends, and not the biome either end
+stands in (§7):
 
 | What | SIG × PF | Distance | Ratio | Entered as |
 | --- | --- | --- | --- | --- |
-| The day at the Foot, idle | 8 × 1.0 × 0.3 | 2,500 m | 0.2 | Nothing. The Foot is a layer up and 2,500 m off, and a Contact at that figure reaches 798 m |
-| **The dive at the mouth**, from its first second | 72 × 1.6 × 0.3 | 2,250 m | **2.74** | Classification. The plateau has never been heard by the sill before, and the first thing it is heard doing is blowing ballast |
-| The dive, from its fifth second, in the duct | 72 × 1.6 | 2,250 m | 9.14 | Track. Three hulls, then two, at the plateaus' figure |
-| The garden, idling, under kelp | 8 × 0.55 | 673 m | **2.41** | Bearing. The furrow's centre is fifteen metres short of a name — Classification begins at 658 |
+| The day at the Foot, idle | 18 × 1.23 × 0.3 | 2,500 m | 0.44 | Nothing. The Foot is a layer up and 2,500 m off, and a Contact at that figure reaches 1,504 m |
+| **The dive at the mouth**, from its first second | 72 × 1.25 × 0.3 | 2,250 m | **2.14** | A Bearing. The plateau has never been heard by the sill before, and the first thing it is heard doing is blowing ballast |
+| The dive, from its fifth second, in the duct | 72 × 1.25 | 2,250 m | 7.14 | Track. Three hulls, then two, at the plateaus' figure |
+| The garden, idling, under kelp | 18 × 0.90 | 673 m | **8.87** | Track. The ground under the hull is 0.55 and the line to the sill walks 0.90: a third of it is the sill's own trench, and that third is the part of the garden's quiet the garden does not own |
 | **The sowing**, on bare rock | 45 × 1.6 | 884 m | **25.5** | Track, every second of the sixty. It hears the seed go in |
-| The sown furrow, idling, after the repaint | 8 × 0.55 | 884 m | 1.6 | Bearing. Sixty seconds ago this ground carried a Track |
-| A ping from the furrow | 95 × 0.55 | 625 m | 32.2 | Track, and a question the Directorate does not ask |
-| A Hollow striking in the throat, 15:00 | 60 × 1.6 | 1,853 m | 10.4 | Track. The cleft waking, from the sill |
+| The sown furrow, idling, after the repaint | 18 × 1.08 | 884 m | 6.85 | Track, at seven where the sowing was twenty-five. Sixty seconds ago this ground carried; it does not now, and the water between it and the sill still does |
+| A ping from the furrow | 95 × 0.90 | 625 m | 52.7 | Track, and a question the Directorate does not ask |
+| A Hollow striking in the throat, 15:00 | 60 × 1.21 | 1,853 m | 7.84 | Track. The cleft waking, from the sill |
 
 Two lines, both in the passive. At 05:00, when the day has been in the garden long enough to
 be counted: *Three and two, at the band's depth, at the plateaus' figure. It is heard. It has
@@ -366,10 +380,10 @@ the ears to find it leaves.
 
 **One dishonesty this document owns rather than hides.** The bloom-bed approximation of §3 is a
 Sounding Spire, and a Spire whose grant is load-bearing sings at 80 (`auras.ts`; `units.ts`):
-through kelp at 673 m that is ratio 24.1 to the observer, a Track on a structure the garden is
-supposed to have made quiet. The row that replaces it (§13) has no hum, because a furrow is not
-a machine; until it lands, the table above is what the sill hears of the *garden*, and the bed's
-hum beside it is what the sill hears of the *format*.
+at 693 m through a path mean of 0.90 that is ratio 37.6 to the observer, a Track on a structure
+the garden is supposed to have made quiet. The row that replaces it (§13) has no hum, because a
+furrow is not a machine; until it lands, the table above is what the sill hears of the *garden*,
+and the bed's hum beside it is what the sill hears of the *format*.
 
 ---
 
@@ -380,28 +394,42 @@ hum beside it is what the sill hears of the *format*.
 Above the layer the Foot hears the lanes and nothing of the sill; under it the watch hears the
 sill and nothing of home. Every figure below is arithmetic over the shipped model — `echo.ts`,
 `BASE_THRESHOLD` 0.147, HYD scaling 50/hyd — with the thermocline's pair factor applied where
-the two ends are on opposite sides of the duct (`THERMOCLINE.ACROSS` 0.3), and the tests should
-re-derive them from the pair factor rather than from the biome PF alone (§13).
+the two ends are on opposite sides of the duct (`THERMOCLINE.ACROSS` 0.3), and each pair's PF
+taken as `pathPropagation`'s mean over the 250 m cells between the two ends.
+
+**These figures are path means, not the water either end stands in.** The shipped model
+integrates PF along the line between emitter and listener (`pathPropagation`, one sample per
+250 m cell), so a pair with both ends in the cleft is priced at the trench's own 1.6 and a pair
+that crosses regions is priced at whatever fraction of the line is which. Four means do this
+map's work, and the SIG × PF column carries them: the sowing to home water walks **1.53**, seven
+samples of trench and one of the Foot; the mouth to the sill **1.25**; the throat to the sill
+**1.15**; and the garden to the sill **0.90** — the last three all because **the furrow lies on
+the line between the cleft and the sill** and takes a third of it down to 0.55. The garden is
+acoustic cover for the water above it as well as for the hulls standing on it, which is a fact
+about seeded ground this document did not author and the path walk hands it. A figure quoted as
+a range rather than as a pair is a range through the one water it names. The tests should
+re-derive both halves — the pair factor and the path mean — rather than either from a biome
+constant (§13).
 
 **From the Foot, above the layer**, to the watch's HYD 70:
 
 | Source | SIG × PF | Distance | Ratio | Heard as |
 | --- | --- | --- | --- | --- |
-| The observer at the sill, idle | 22 × 1.6 × 0.3 | 2,500 m | 0.58 | **Nothing.** Tier 1 reaches 1,785 m. The Foot cannot hear the sill, and the day does not learn what is down there until it is |
+| The observer at the sill, idle | 22 × 1.23 × 0.3 | 2,500 m | 0.45 | **Nothing.** Tier 1 reaches 1,510 m. The Foot cannot hear the sill, and the day does not learn what is down there until it is |
 | The pack in the lanes, idle | 26 × 1.0 | 1,500 m | 3.25 | Classification. Five, working the lane traffic's leavings at 900 m, the way they did under the drop in *Tend* — the sound of home, all day |
-| The sowing, from home water | 45 × 1.6 × 0.3 | 1,976 m | 1.74 | A Bearing. The plateau hears that the seed is going in and cannot hear whether it takes |
-| A Hollow striking at the throat's centre, 15:00 | 60 × 1.6 × 0.3 | 650 m | **13.7** | Track. The cleft waking is heard from home water — a watch that went home hears the doorway close behind the ones that stayed |
+| The sowing, from home water | 45 × 1.53 × 0.3 | 1,976 m | 1.66 | A Bearing. The plateau hears that the seed is going in and cannot hear whether it takes |
+| A Hollow striking at the throat's centre, 15:00 | 60 × 1.40 × 0.3 | 650 m | **12.0** | Track. The cleft waking is heard from home water — a watch that went home hears the doorway close behind the ones that stayed |
 
 **Under the layer**, from the throat and the furrow:
 
 | Source | SIG × PF | To the watch, HYD 70 | To a tender, HYD 30 |
 | --- | --- | --- | --- |
-| The observer, idle | 22 × 1.6 | Tier 1 3,787 m · Classification 2,136 · Track 1,592. **Classification from the throat** (ratio 3.44 at 1,750 m), the first thing the plateau has ever heard of the sill, arriving in the same second the sill has the dive at Track; **Track from the furrow** (17.9 at 625) | Tier 1 2,230 · Track 938 — even a tender has it named from the garden |
-| The observer, under way at 13:00 | 28 × 1.6 | Classification to 2,484 m: the watch hears it go below | |
-| A Hollow, coiled on its wall | 3 × 1.6 | Tier 1 1,090 m · Bearing 846 · Classification 615. **From the throat's middle both walls are a bearing** (ratio 2.29 at 650 m) — the Drift's own Silent Running, priced at three, and exactly enough to know where not to dive | Tier 1 642 m — a tender in the middle hears nothing of either |
-| A Hollow striking | 60 × 1.6 | Tier 1 7,090 m — everywhere on the map, and the loudest thing the cleft carries all day | Tier 1 4,175 m — everywhere |
-| The sowing | 45 × 1.6 | Track to 2,491 m — the whole cleft hears the seed go in | Track to 1,467 m |
-| The pack, across the layer | 26 × 1.0 × 0.3 | Tier 1 1,477 m — gone, once the day is under; home's sound stops at the duct | |
+| The observer, idle | 22 × 1.15 from the throat · 0.90 from the furrow | **A Bearing from the throat** (ratio 2.47 at 1,750 m), the first thing the plateau has ever heard of the sill, arriving in the same second the sill has the dive at Track; **Track from the furrow** (10.0 at 625). All-trench the tiers would stand at 3,787 · 2,136 · 1,592, and the garden lying on the line is why they do not | Track from the furrow (4.31 at 625) — even a tender has it named from the garden |
+| The observer, under way at 13:00 | 28 × 1.08 | **Track from the garden** (9.80 at 825 m): the watch hears it go below | |
+| A Hollow, coiled on its wall | 3 × 1.6 — both ends in the cleft | Tier 1 1,090 m · Bearing 846 · Classification 615. **From the throat's middle both walls are a bearing** (ratio 2.29 at 650 m) — the Drift's own Silent Running, priced at three, and exactly enough to know where not to dive | Tier 1 642 m — a tender in the middle hears nothing of either |
+| A Hollow striking | 60 × 1.6, in the cleft | Tier 1 7,090 m — everywhere on the map, and the loudest thing the cleft carries all day | Tier 1 4,175 m — everywhere |
+| The sowing | 45 × 1.6, on the rock and north of it | Track to 2,491 m — the whole cleft hears the seed go in | Track to 1,467 m |
+| The pack, across the layer | 26 × 1.26 × 0.3 | Tier 1 1,705 m up the cleft — a bare Contact at the throat (1.03 at 1,677 m) and nothing at the garden (0.50 at 2,401 m); home's sound stops in the duct | |
 
 **What the Drift hears of the day**, priced against the Hollow's HYD 80 in the cleft's 1.6 and
 the pack's HYD 65 in the lanes' 1.0 — Interest is where a Hollow coils and a pack turns, Commit
@@ -410,24 +438,29 @@ is where a Hollow strikes inside its sphere and a pack closes:
 | The day is | A Hollow coils from | A Hollow is Commit-loud from | The pack is interested from | The pack commits from |
 | --- | --- | --- | --- | --- |
 | Diving, 72 | 800 m | **607 m** | 819 m | 524 m |
-| A tender under way, 18 (the roster's cruise 40, for the record) | 336 m (554) | 255 m (420) | 344 m (567) | 220 m (363) |
-| A tender idling, 8 | 203 m | 154 m | 208 m | 133 m |
+| A tender under way, 40 | 554 m | 420 m | 567 m | 363 m |
+| A tender idling, 18 | 336 m | 255 m | 344 m | 220 m |
 | Silent, 4.5 | 141 m | 107 m | | |
 | Sowing at 45, 1,125 m from the eastern wall | ratio **16.3** — below Interest | | | |
 | Pinging, 95 × 3 | 1,891 m | **1,434 m** | 1,936 m | 1,238 m |
 
 The pack is 1,500 m west of the Foot's seat and 1,521 m from the mouth, on the Foot's side of
-the layer: it is interested in a dive from 819 m and never in this one. Under kelp a Hollow
-cannot be sprung by an idle tender at any range — 8 through 0.55 reads 47.9 at point blank,
-under Commit — and by a tender under way only inside 131 m; the garden is a place where the
-doorway's animals have nothing to hear, which is the other half of what seeded ground is.
+the layer: it is interested in a dive from 819 m and never in this one. The throat's middle is
+650 m from either wall Hollow, and a tender crossing it at 40 reads 34.9 there —
+under Interest, so the quiet road down stays the quiet road at the louder figure. Under kelp a
+Hollow cannot be sprung by a silent tender at any range — 4.5 through 0.55 reads 26.9 at point
+blank, under Interest — and by an idle one only inside 131 m and by one under way inside 216 m;
+and the garden is fifty metres under the floor of the band that hunts, so there is no Hollow in
+it to spring. The doorway's animals have nothing to hear down there, which is the other half of
+what seeded ground is.
 
 The rest of the day's sound, in order, all of it true and none of it the player's business:
 
 - **The dive**, twice — 72 at the mouth for nineteen seconds, 72 over the garden for ten. Under
-  kelp the second one carries 39.6, and the observer has it at Track anyway (ratio 24.4 at
-  625 m). There is no quiet way down, and the plateaus have never had to know that.
-- **The garden**, arrived in: tenders idling at 8, absorbed to 4.4, under water that takes the
+  kelp the second one carries 39.6 where the rock would carry 115, and the observer has it at
+  Track anyway (ratio 39.9 at 625 m, through a mean of 0.90). There is no quiet way down, and
+  the plateaus have never had to know that.
+- **The garden**, arrived in: tenders idling at 18, absorbed to 9.9, under water that takes the
   top of the spectrum the way the rows at home do — "everything sounds close and dead"
   ([audio-direction.md](audio-direction.md) §9), at 2,200 m, where nothing ever has.
 - **The water going quiet** over the sown furrow, on one tick. The biome spend, audible as a
@@ -547,7 +580,7 @@ carries `silenceCeilingSig: 100` and `debtCapS: 0`, Asset Recovery's posture, an
 | 00:00 | The day seated at the Foot, 900 m, above the layer. The two Hollows placed on the cleft's walls, the three jelly clusters placed in the duct, the pack placed in the lanes — creature beats, driven nowhere, `untilTick 0`, `loud: false`. The observer placed at the sill, motionless and inaudible. The pack audible west at Classification |
 | 00:00 | **The watch:** the furrow is under the layer; home cannot hear it and it cannot hear home, and neither can hear whatever is at the sill — until it is under (§12) |
 | 00:30 | **Marr's coda**, the last sentence before the layer (§12) |
-| *[01:00 — player-paced; the document's clock]* | **The dive at the mouth.** 900 → 1,750 m, 18.9 s at 72. The sill has the day at Classification from the first second and at Track from the fifth; the watch has the sill at Classification from the throat in the same second. Then the quiet run down the middle at 1,750 m, a bearing on each wall |
+| *[01:00 — player-paced; the document's clock]* | **The dive at the mouth.** 900 → 1,750 m, 18.9 s at 72. The sill has the day at a Bearing from the first second and at Track from the fifth; the watch has the sill at a Bearing from the throat in the same second. Then the quiet run down the middle at 1,750 m, a bearing on each wall |
 | *[~02:00]* | **The garden.** 1,750 → 2,200 m over the furrow, 10 s at 72, and the tenders do not crush. The system, introduced by the ground holding. The watch has the observer at Track from 625 m |
 | 03:00 | **Anholt:** ten years, one furrow (§12) |
 | 05:00 | **The observer:** *Three and two, at the band's depth, at the plateaus' figure* (§12) |
@@ -866,14 +899,14 @@ with the row; the table says which is which.
 | **The Kell seed as a lift at cut time zero** | **Built** (#239), the gift run's shape; rigged on the first pass in `the-foot` before the day moves. Its id, `kell-seed`, is how the conditional `say` addresses the sower — `extract … loaded: 'kell-seed'`, count 1 — because `MissionUnit.role` is singular ([mission-intake.md](mission-intake.md) §13) and the plan's `role: 'sower'` would take the sower out of the count of three. A finding against the plan, not a request against the format |
 | ***tended*, revealed at 15:30** | **Built** — `revealAtTick` with a beat on the tick (the watch's 15:30 line), not scored before reveal (Intake's row). The latch after reveal is stated in §8 as a residual with its window measured — twenty-four seconds — rather than hidden. Two alternatives priced: `survive` cannot ask where a hull is; a standing `extract` would be the union's second standing row and would read "it's a garden" over a day that left at 17:59, which is worse |
 | **A day that runs its length** | **Built** for Intake (`runsItsLength`) and spent here: both terminal rows can be met on the 15:30 pass, and the court's rule would close the tide three minutes early with the Hollows still loud |
-| The thermocline across the cleft's upper water | **Built** — `THERMOCLINE`, pair factor 0.3 across, 1.0 duct-to-outside, symmetric. Every cross-layer figure in §6 and §7 carries the pair factor, and `missionDeepFurrow.test.ts` should re-derive them from `thermoclineFactor` rather than from the biome PF alone, so a moved layer moves the document's ranges rather than falsifying them |
+| The thermocline across the cleft's upper water, **and the path mean under it** | **Both built, and the second is a finding against the plan's arithmetic.** `THERMOCLINE` is built — pair factor 0.3 across, 1.0 duct-to-outside, symmetric — and every cross-layer figure in §6 and §7 carries it. `Terrain.pathPropagation` is built too, and returns the mean PF over the 250 m cells between emitter and listener, so no cross-region pair on this map is priced at the water either end stands in: the sowing to home water walks 1.53, the mouth to the sill 1.25, the throat to the sill 1.15 and the garden to the sill 0.90, because the furrow lies on the line and takes a third of it. The plan priced all four at the cleft's 1.6, which read the dive at the mouth as a Classification where the walk gives a Bearing, and the sill from the throat as a Classification where it gives a Bearing (§7). `missionDeepFurrow.test.ts` should re-derive every figure in §6 and §7 from `pathPropagation` **and** `thermoclineFactor` rather than either from a biome constant, so a moved layer or a repainted region moves the document's ranges instead of falsifying them |
 | The Hollows, placed and not driven, then driven with a depth | **Built** — the placed-and-not-driven idiom (`driveTo` at the spawn, `untilTick 0`), with [mission-intake.md](mission-intake.md) §13's one seam; the 15:00 drive carries `depthM: 1700` (#349), holds Committed at 60 for thirty seconds deaf and unwoundable, and expires at 15:30 with no beat, leaving both at SIG 3 in the throat's middle. The strike's 500 m test is three-dimensional (`hollowStage`), which is §4's sphere |
 | The Tetherjelly clusters in the duct, the Draymaw pack in the lanes, `fauna: false` | **Built** (#306) — three clusters at 1,200 m, −0.10 PF each within 250 m, chart data, the programme's crop ([mission-tend.md](mission-tend.md) §4), priced by the path walk and not by this document; the pack at 900 m, 1,500 m west, Classification to the watch all day and interested in nothing the day does at the mouth (§7); every creature authored, for [mission-intake.md](mission-intake.md) §13's reason |
 | Silent Running stopping the sowing, broken by a dive, kept on a climb | **Built** — `holdingSounding` refuses a silent hull; `applyDepth` clears silence only for an order deeper than the hull; ascent adds no SIG; `PELAGIA_SPEED_MULTIPLIER` 0.8 |
 | Active sonar available; the five ordnance locks and the construction lock, with reasons | **Built** — `MissionAbility` is a lock list and this mission does not lock `activeSonar`; `FAUNA_AGGRO_MULTIPLIER` 3 is the price §3 states; the six locks are `AbilityLock` rows the HUD greys out with the reason attached ([ui-ux.md](ui-ux.md) §7) |
 | The map, eight regions, two of them rock, kelp on a trench floor | **Not built, and it asks for nothing new.** `anholt-furrow` is one row of the literal per row of §11's table, painted in the document's order; rock is `SOLID` from `terrain.ts`; Kelp Forest at 2,200 m is biome as acoustics, the freedom [mission-asset-recovery.md](mission-asset-recovery.md) §11 took. No resources, no blooms — `maps.test.ts` holds every bloom to Shelf ground and there is none — and no hazard sites |
 | **The Harvester's rating in two built documents** | **A finding, not a request.** [mission-tend.md](mission-tend.md) §3 and [mission-thin-water.md](mission-thin-water.md) §3 print the tender as PR-1; `units.ts` gives the Harvester `pressureRating: 2`, with the comment that PR-1 killed every worker on Mid-Water ground in seventy-five seconds, and `effectivePressureRating` takes the greater of the hull and the Commune's baseline of 1. The constant is right and this document is written against it; the two documents are the side that moves (`CLAUDE.md`, "Constants live in exactly one place") |
-| **The Commune tender's figures against the roster's** | **A standing finding, carried forward.** The built Commune documents author the tender at 8 idle / 18 under way and the roster's Harvester is 18 idle / 40 at cruise; `seeding-tend`'s header records the gap and leaves hull stats to [units.md](units.md). §7 prices the document's figures and prints the roster's beside them where the answer changes, and it changes nowhere that matters: at the roster's 40 a tender down the throat's middle is heard by a wall Hollow at 34.9, still under Interest |
+| **The Commune tender's figures** | **A roster gap already recorded, and this document is on the roster's side of it** ([mission-in-writing.md](mission-in-writing.md) §13). *Tend*, *Thin Water* and *Convocation* author the tender at 8 idle / 18 under way; `units.ts` and [units.md](units.md) give the Harvester 18 idle, 40 at cruise and 4.5 running silent by `silentRunningSig`, and `seeding-tend`'s header records the gap rather than reaching into hull stats. All four of the campaign's new documents — this one, *In Writing*, *Radicals* and *The Second Seeding* — price the same hull at the roster's figures, so §4, §6 and §7 are what the engine will resolve; the three older documents are the side that moves |
 | **The Furrow as new geography** | **A §1 row, not a code row.** The cleft is authored as a branch of the scar under Anholt's terrace, cited to [world-map.md](world-map.md) §1 and [timeline.md](timeline.md)'s 204 PC entry; [world-map.md](world-map.md) §3's gazetteer should gain the entry when this document merges, under the Plateaus |
 | `souls` | **Documentation** — nothing in the runtime reads it ([mission-thin-water.md](mission-thin-water.md) §13); the epilogue carries sixteen by hand, and *the-day*'s met reading says the number |
 | Cross-mission Drift Health — rule 5's second pair | **Not built**, named here and not asked for: [mission-in-writing.md](mission-in-writing.md) reuses this literal unchanged, exactly as [mission-convocation.md](mission-convocation.md) §11 reused *Tend*'s, and the carrying is its own row of #212 |

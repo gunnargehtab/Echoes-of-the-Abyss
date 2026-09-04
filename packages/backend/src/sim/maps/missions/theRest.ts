@@ -1,8 +1,9 @@
 /**
  * The Rest — docs/mission-nineteen.md §11; docs/maps.md, "Mission maps".
  *
- * A trench head cut across crystal country on the Fields' southern margin, and
- * the ground the Order renamed for an interval in 211 PC. The Head at 1,600 m
+ * A trench head cut across crystal country on the Fields' southern margin,
+ * named for the interval it rang at until 211 PC and for a rest ever since
+ * (§1) — a renaming nobody in the Order discusses. The Head at 1,600 m
  * is the shallowest metre on the map and the floor falls away from it in every
  * direction: a trench head is a cut rather than a slope, so both shoulders are
  * the same crystal at the same depth and the Rift's north-shallow gradient runs
@@ -101,7 +102,7 @@ export const THE_REST: MapDefinition = {
       heightM: 500,
       biome: Biome.AbyssalTrench,
       floorM: 2050,
-      note: 'The North Wall — Hollow ground. Four coil here at 1,700 m, 250 m in plan from the northern row and fifty metres above it',
+      note: 'The North Wall — Hollow ground. Four coil here at 1,700 m: the northern row runs 250 m clear of this wall in plan and fifty metres under the coils on it',
     },
     {
       x: 0,
