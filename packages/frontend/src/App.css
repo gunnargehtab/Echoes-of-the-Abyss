@@ -1977,3 +1977,195 @@ button.objectives-row:hover {
   color: var(--text-cyan);
   user-select: all;
 }
+
+/* ---------------------------------------------------------------------------
+   The campaign board — docs/ui-ux.md §14, "The campaign board".
+
+   Tokens only. The slots stay cyan and magenta; the column heads are the one
+   place a navy's ink appears here, which is §12.5's licensed dress — ink on
+   chrome, on a screen that is not the instrument. If the slots took the ink
+   too, the board would become four boards.
+
+   No new motion. Twenty-nine cards each carrying a halo is precisely the
+   bloom-everything failure mode style-neon-noir.md names, so the halo belongs
+   to hover and focus, one slot at a time, and nothing on this screen moves —
+   which is why nothing on it needs a reduced-motion equivalent.
+   ------------------------------------------------------------------------- */
+.menu-panel-board {
+  width: min(1100px, 100%);
+}
+
+.campaign-board {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+/* The lane, the heads and the seven rows share one four-column track so the
+   prologue spans exactly the four beneath it rather than approximately. */
+.campaign-heads,
+.campaign-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.campaign-lane {
+  display: block;
+}
+
+.campaign-cell {
+  display: flex;
+}
+
+.campaign-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.5rem 0.6rem 0.35rem;
+  /* The navy's ink, and only on the head: a rule under the column rather than
+     a box around it, so the head names the column without competing with the
+     slots for the eye. */
+  border-bottom: 1px solid color-mix(in srgb, var(--faction) 55%, transparent);
+  color: var(--faction);
+}
+
+.campaign-head-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.campaign-glyph {
+  flex: none;
+}
+
+.campaign-head-commander {
+  font-size: 0.58rem;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  font-style: italic;
+  color: var(--text-dim);
+}
+
+.campaign-slot {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--neon-magenta) 45%, transparent);
+  border-radius: 4px;
+  background: var(--abyss-glass);
+  color: var(--text-bright);
+  font: inherit;
+  font-size: 0.72rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Magenta asks, and only a door that opens is asking. */
+.campaign-slot:hover:not([aria-disabled='true']),
+.campaign-slot:focus-visible:not([aria-disabled='true']) {
+  border-color: var(--neon-magenta);
+  background: color-mix(in srgb, var(--neon-magenta) 8%, var(--abyss-glass));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--neon-magenta) 20%, transparent);
+}
+
+.campaign-slot:focus-visible {
+  outline: 1px solid var(--text-cyan);
+  outline-offset: 2px;
+}
+
+/* Desaturated and dimmed to 40% per the disabled rule in style-neon-noir.md —
+   a dead console still has phosphor in it. Never `disabled`: the slot keeps
+   its place in the tab order and keeps announcing its reason, which is the
+   whole argument of §14's "dimmed is not unreachable".
+   
+   The dimming is on the contents rather than on the button, because opacity
+   and filter apply to an element's focus outline too — dimming the slot as a
+   whole would dim the one mark that says a keyboard has reached it, and a
+   focus ring at 40% on a desaturated card is the thing that makes "reachable"
+   true only on paper. */
+.campaign-slot-unbuilt {
+  border-color: color-mix(in srgb, var(--text-dim) 45%, transparent);
+  cursor: default;
+}
+
+.campaign-slot-unbuilt > * {
+  opacity: 0.4;
+  filter: saturate(0.3);
+}
+
+.campaign-slot-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.campaign-slot-ordinal {
+  flex: none;
+  min-width: 1ch;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
+.campaign-slot-title {
+  flex: 1;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Cyan tells you. One registration tick in the corner, added to available's
+   treatment rather than replacing it, because a played mission stays playable
+   and keeps the ask. */
+.campaign-slot-tick {
+  flex: none;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 6px color-mix(in srgb, var(--neon-cyan) 45%, transparent);
+}
+
+.campaign-slot-line {
+  font-size: 0.62rem;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+
+/* Announced, never drawn: §14 warns that a board saying `Not yet built`
+   twenty-eight times would read as a loading screen. The dimming is the
+   visual half; this is the audible one. */
+.campaign-slot-state {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* The four columns stay four columns at every width: the shape *is* the
+   information — campaign.md §1's table rendered rather than restated — and a
+   board that reflowed into one column would assert the sequence §1 refuses to
+   have. Below the width four readable columns need, the board scrolls
+   sideways as one piece instead. The traversal model is untouched by this,
+   because it was never a fact about the layout. */
+.campaign-board {
+  overflow-x: auto;
+}
+
+.campaign-lane,
+.campaign-heads,
+.campaign-row {
+  min-width: 44rem;
+}
