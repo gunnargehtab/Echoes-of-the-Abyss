@@ -105,17 +105,17 @@ The prologue and one full campaign are built; the rest of the campaign is not. W
 designed, or already stated in a doc that ships, and unbuilt — named in plain text except where
 a document already points at it:
 
-- **The remaining 15 missions — fourteen documents without literals, and one row still
-  unwritten.** campaign.md §5–§7 used to give them titles, teaching targets and beats, which is
-  not a specification. Each needs a document of its own — one doc per mission, the pattern
-  mission-sorrowgate.md sets — before it needs code, and thirteen more rows now have one beside
-  *Standing Wave*'s: the Commune's *Deep Furrow*, *In Writing*, *Radicals* and *The Second
-  Seeding*, the Directorate's *The Dome*, *Shallow*, *Trench Awakening*, *Conclave* and *First
-  Arrival*, and the Order's *Nineteen*, *Conclave*, *The Three* and *The Rim Deposits* — each
-  linked from the World & narrative table above and from its row in campaign.md §5–§7. The one
-  row still without a document is *The Second Chord*; `mission-second-chord.md` is a stub the
-  other thirteen link forward to. **So what is planned here is the literals and not the prose**
-  — none of the fourteen has a mission literal, a map or a test, and each §13 is a build list
+- **The remaining 15 missions — fifteen documents without literals, and none unwritten.**
+  campaign.md §5–§7 used to give them titles, teaching targets and beats, which is not a
+  specification. Each needs a document of its own — one doc per mission, the pattern
+  mission-sorrowgate.md sets — before it needs code, and every row now has one beside *Standing
+  Wave*'s: the Commune's *Deep Furrow*, *In Writing*, *Radicals* and *The Second Seeding*, the
+  Directorate's *The Dome*, *Shallow*, *Trench Awakening*, *Conclave* and *First Arrival*, and
+  the Order's *Nineteen*, *Conclave*, *The Three*, *The Rim Deposits* and *The Second Chord* —
+  each linked from the World & narrative table above and from its row in campaign.md §5–§7.
+  **Every one of the campaign's twenty-nine missions now has a document of record, and what is
+  planned here is the literals and not the prose**
+  — none of the fifteen has a mission literal, a map or a test, and each §13 is a build list
   written against a format that has moved four times since Intake, which is the argument for
   re-reading a §13 at the moment its literal is started rather than trusting it at rest. The
   Ledger's seven are specified and built end to end, and so are Tend, Attendance and
