@@ -118,10 +118,32 @@ whole — the signature and the grant from [units.md](units.md), the ears and th
 the structure roster beside it: **SIG 30 idle · HYD 45 · 1,800 HP · PR +1 within 600 m**. The Spire is the
 node — [Standing Wave](mission-standing-wave.md) §3's argument applied to a house's outer formations
 rather than to a defile, because a formation *is* an instrument and the instrument the bible already
-stats is the one the Order builds. Two consequences, stated rather than discovered. The PR grant is
-**live and inert**: every metre here is Mid-Water and every hull PR-2, so no grant is load-bearing,
-the Spires never go to 80, and they hum at 30 all tide, which is the Fields ringing. And 1,800 hit
-points is nine and a half seconds of a works column, which §6 turns into the whole defence.
+stats is the one the Order builds.
+
+**What a formation takes from the Spire is the stat line, and only the stat line.** It is not a node
+offered to a pair. [Standing Wave](mission-standing-wave.md) §4 pairs a node with the nearest
+completed, unpaired node of the same commander within 1,500 m **at the moment it completes**, and
+nothing here ever completes: these six were cut and corrected, not raised, and a prebuilt structure
+skips the whole construction path it would have to finish to be offered one. **Pairing is a works
+act, performed at the Fifth and not at a house.** That is worth stating rather than assuming,
+because three of these voices are inside the range — Tenor to Descant is 1,421 m, Treble to Alto
+1,315 and Alto to the Drone 1,237 — and a lattice that paired would lay corridors of sonic damage
+and PF 2.00 across the exact cells §6 asks six hulls to stand in at 14:00, and stand its Spires at
+80 rather than at the 30 this section and §7 both quote. It does not. **And a formation carries the
+Spire's figures and not its price**: six at 120 crystal apiece would be 720 against the 600 the
+Ninth holds in total ([mission-the-three.md](mission-the-three.md) §3), which would make the
+campaign's *three Spires and not a fourth* rhetoric. These were cut into the ground long before that
+ledger was counted — thirty years of wrights correcting them is the standing (§1) — and nothing the
+Order raises this century is paid for the way they were.
+
+Two consequences of the figures, stated rather than discovered. The PR grant is **live and inert**:
+every metre here is Mid-Water and every hull PR-2, so no grant is load-bearing, the Spires never go
+to 80, and they hum at 30 all tide, which is the Fields ringing. A formation has always hummed;
+[mission-aptitude.md](mission-aptitude.md) §7 hears it as part of the Fields' own ring because a
+tuning party stands inside its own lattice and never resolves it as a contact, which is also why
+that document could author the six as points rather than as structures (§11 there). A concern
+standing a kilometre off does resolve them, and §7 below is what that costs. And 1,800 hit points is
+nine and a half seconds of a works column, which §6 turns into the whole defence.
 
 **The house's tone.** Six `MissionSounding` rows on the Voice's hull, one at each voice: **400 m,
 bow on, twenty seconds at SIG 80** — [Aptitude](mission-aptitude.md) §4's figures, unchanged. On an
@@ -145,7 +167,8 @@ name.
    [campaign.md](campaign.md) §10's mission-3 rule and not taken back. It is priced rather than
    fenced: a ping is SIG 95 omnidirectional, and at 14:00 that is heard by the whole east slope and
    read by the ceiling. It is a stroke in the Order's register and **not** in the format's — it does
-   not feed the `sound` tally — so it costs the quiet and not the rest, and §8 says so plainly.
+   not feed the `sound` tally — so it costs `the-quiet`, which is a reading, and not `the-rest`,
+   which is a keystone. §8 says so under both rows, and §13 prices what that leaves unpriced.
 4. **Silent Running is present and, for the first time in this campaign, right.**
    [Aptitude](mission-aptitude.md) §4 priced it out — a cruising Knight pointed away is quieter than
    a silent Knight pointed at you — and that arithmetic has not changed. What has changed is that
@@ -450,13 +473,23 @@ Authored at `T(14, 30) - 12` it comes due on the close's own pass, which is wher
 needs it. The offset is arithmetic and not taste, and §13 files it as the thing the per-mission test
 has to hold. **The tally is monotone from tick zero and has no window**, which the document prices
 rather than patches: a formation sounded at 05:00 is a call at 05:00, and a stroke nobody appointed
-is worse than one somebody did.
+is worse than one somebody did. **And the tally counts soundings and nothing else.** `sound` is a
+count of the authored `soundings` this party has completed and of no other emission the party makes,
+so a ping — SIG 95 omnidirectional, the loudest thing six Knight hulls can do — is not a sounding,
+cannot complete one, and cannot fail the rest. That is right in the register as well as in the code:
+the rest is *nothing is struck in the Third's name*, and a ping calls nothing and is entered against
+nobody. It is loud, and loud is the other row.
 
 **The ceiling is a party figure, and the Spires do not breach it.** `quiet` reads the peak over the
 hulls carrying the role and never the player's whole slot — [mission-sorrowgate.md](mission-sorrowgate.md)
 §4's argument about the court's own array, reached from the other side. Six formations humming at 30
 would otherwise fail a ceiling of 28 from tick zero, in the one mission where that is fatal to the
-subject.
+subject. **A ping does breach it**, and is the only thing in the party's hands that breaches it on
+purpose: an active ping puts the hull at 95 for three seconds ([systems-echo.md](systems-echo.md)
+§5), which is the ceiling three and a half times over at the one moment eight houses are listening
+for exactly this house. `the-quiet` is where that lands and the only row it lands on — and
+`the-quiet` is a reading rather than a rung, which is a decision §13 makes and defends, and §13 is
+also where the document says plainly what that decision leaves unpriced.
 
 ### Results
 
@@ -768,15 +801,16 @@ filed.
 
 What exists against this document and what does not, continuing the list
 [mission-asset-recovery.md](mission-asset-recovery.md) §13 started. **This mission is specified and
-not built.** Most of it is shipped and named below; two rows are things the union does not carry —
+not built.** Most of it is shipped and named below; three rows are things the union does not carry —
 one of them the predicate [mission-standing-wave.md](mission-standing-wave.md) §13 asked for first
-and this document is the second and simpler customer for; four are findings made against the engine
-rather than requests; and four are absences it declines to ask for.
+and this document is the second and simpler customer for, and one of them the transmission
+[mission-the-dome.md](mission-the-dome.md) §13 found and left unasked-for; four are findings made
+against the engine rather than requests; and four are absences it declines to ask for.
 
 | Requirement | Status |
 | --- | --- |
 | The mission format — beats, predicates, registry, private rooms | **Built** (#190). `extract`, `endure`, `quiet`, `tolerance` and `sound`, with `move`, `say`, `objective` and `resolve`, cover §9's whole schedule. Nothing in the beat table needs a beat kind the union does not already carry — and it has carried one more since [Convocation](mission-convocation.md) was built (`bell`, #373) |
-| **A predicate over what the player has built, or holds standing** | **Not built, and this document is its second customer.** [mission-standing-wave.md](mission-standing-wave.md) §13 asks for `{ kind: 'build'; structure: StructureKind; count: number }` for a corridor; this mission wants the simpler half — six prebuilt structures on the player's own party, no pairing — plus the thing [mission-aptitude.md](mission-aptitude.md) §13 could not get either: **a way to name one of them.** The intended terminal row is *four voices and the Drone stand at 14:30*, and the shape it needs is that predicate with an optional `tag?` beside the count, exactly as `extract` carries `loaded?: true \| string`. **Cheapest honest approximation now, and what §8 ships:** six `extract` rows over the party plus the keystone rest, which read the *hulls* and not the *lattice*. The gap is stated in the document rather than hidden in it — a formation the column cored at 05:00, with a Knight hull standing in its cell at 14:00, reads as stood. The mission is playable and its argument survives, because §6's real defence is at the column's legs; what is lost is that the panel cannot tell the player which of the two things they achieved |
+| **A predicate over what the player has built, or holds standing** | **Not built, and this document is its second customer.** [mission-standing-wave.md](mission-standing-wave.md) §13 asks for `{ kind: 'build'; structure: StructureKind; count: number }` for a corridor; this mission wants the simpler half — six prebuilt structures on the player's own party, no pairing, which is a sentence about the predicate this row asks for and not the reason the lattice does not pair (§3 carries that, off [mission-standing-wave.md](mission-standing-wave.md) §4) — plus the thing [mission-aptitude.md](mission-aptitude.md) §13 could not get either: **a way to name one of them.** The intended terminal row is *four voices and the Drone stand at 14:30*, and the shape it needs is that predicate with an optional `tag?` beside the count, exactly as `extract` carries `loaded?: true \| string`. **Cheapest honest approximation now, and what §8 ships:** six `extract` rows over the party plus the keystone rest, which read the *hulls* and not the *lattice*. The gap is stated in the document rather than hidden in it — a formation the column cored at 05:00, with a Knight hull standing in its cell at 14:00, reads as stood. The mission is playable and its argument survives, because §6's real defence is at the column's legs; what is lost is that the panel cannot tell the player which of the two things they achieved |
 | **Authored structure hull points** | **Not built.** `MissionStructure` carries `tag`, `kind`, `x`, `y`, `depthM` and `note` and nothing else, where `MissionEmitter` beside it carries an authored `hp`. So a formation is the roster's 1,800 and dies to the column in 9.4 s (§4). A coring that took minutes — which is what a works order actually looks like — wants either an `hp?` on `MissionStructure` or a second `StructureKind` for a formation that is not a Spire. **Specified, not built, and playable without it**: the defence this mission asks for is at the legs and not at the cut, and a longer cut would make the mission *easier* rather than truer |
 | **A latched `Failed` status, set by a condition** | **Built** ([mission-tolerance.md](mission-tolerance.md) §6). The keystone rest depends on a tick order the document states rather than assumes: conditional beats fire after every tally is updated and immediately before objectives are derived; the `objective` beat refuses to fail a row that is already `Met`; derivation skips a `Failed` row for good; and the `resolve` is deferred until after derivation on its own tick. So a sounding completed on the 14:30 pass fails `the-rest` before the endure could read Met, and an endure due on that same pass reads Met beneath a conclusion. **The row is authored at `T(14, 30) - 12` and the twelve is not a rounding.** An `endure`'s clock is stamped the first time the runtime derives the objective rather than at tick zero — one mission tick, twelve sim ticks, and there is a test that says so (`missionIntake.test.ts`, *keeps an endure counting from the start under a reveal*) — so a keystone written at the round `T(14, 30)` would come due one pass *after* the close and read unmet in every tide the mission can have, which is a Lost reading on a perfect defence. **The per-mission test should assert both orders and the offset**, because all three are load-bearing and none is obvious |
 | **Reveal-at-tick, not scored before** | **Built** ([mission-intake.md](mission-intake.md) §9). It is the right latch for the six voice rows and the only reason an `extract` read at the close is honest at all: without it every voice the party crossed during the tide would already be Met |
@@ -788,7 +822,8 @@ rather than requests; and four are absences it declines to ask for.
 | **`quiet` reads a role, not a slot** | **Built, and load-bearing here.** The predicate takes the peak over the hulls carrying the named role and never the player's whole force — the argument [mission-sorrowgate.md](mission-sorrowgate.md) §4 makes about the court's array. Six formations humming at 30 therefore do not breach a ceiling of 28, which they otherwise would from tick zero, in the one mission where that would be fatal to the subject |
 | **A ceiling measured per voice** | **Not built, and correctly inexpressible.** `quiet` reads one role's peak and `MissionUnit.role` is singular ([mission-intake.md](mission-intake.md) §13), so six per-voice ceilings would need six roles, and six roles would pin which hull stands which voice — which §6 is emphatic the mission must not do. The party-wide `the-quiet` is the right shape and the objective text says *under the ceiling* meaning the party's, not the cell's |
 | **A condition on another party's losses** | **Not built, and this document does not ask.** Every predicate is a query over the observer's own force, so *the column has lost a cutter* is inexpressible by construction. Kalliso's 09:30 line is therefore on the clock and is written to be true either way (§9) |
-| **`the-quiet` is a reading and not a rung** | **A decision, stated so it can be argued with.** `quiet` is standing and re-derived every tick, so as a terminal row it would flip the whole outcome on one tick's SIG — a Corvette firing at 38 in the last second would demote a Complete tide to Partial. It is authored non-terminal with a `reading`, which the neutrality guard ([mission-intake.md](mission-intake.md) §5) keeps out of the ladder entirely. The Order reads a courtesy out; it does not rank one against a voice |
+| **`the-quiet` is a reading and not a rung** | **A decision, stated so it can be argued with.** `quiet` is standing and re-derived every tick, so as a terminal row it would flip the whole outcome on one tick's SIG — a Corvette firing at 38 in the last second would demote a Complete tide to Partial. It is authored non-terminal with a `reading`, which the neutrality guard ([mission-intake.md](mission-intake.md) §5) keeps out of the ladder entirely. The Order reads a courtesy out; it does not rank one against a voice. **The decision costs the deliberate case as well as the incidental one, and the row below is where that is stated**: the same guard that spares a Corvette's accidental 38 spares a ping fired on purpose at 14:00, which is neither a courtesy nor incidental. The document keeps the decision and declines to hide what it costs |
+| **No predicate reads the player's own transmissions** | **A finding, and the one thing this mission's ladder cannot price.** The union asks about position, hulls alive, emitters attended, soundings completed, rows walked, the loudest hull, elapsed ticks and exposure, and about nothing the player's own force *emits* ([mission-the-dome.md](mission-the-dome.md) §9, with §13 there declining to ask for the fix). So the ping [Nineteen](mission-nineteen.md) handed over cannot be latched against `the-rest` the way a sounding is — `sound` counts the authored `soundings` and no other emission (§8) — and the only row it touches is `the-quiet`, which the row above keeps out of the ladder. **So a player who presses SIG 95 omnidirectional at 14:00 — the loudest available breach of an interval, in the mission whose whole subject is being heard at one — still scores Complete**, and the document says so rather than letting a reader assume the ceiling caught it. **And it is thinner than merely unranked**: `quiet` is standing, and the ping's 95 lasts three seconds, so the row goes Pending and comes back Met before the close, and only a ping inside the last three seconds of the tide is still showing at 14:30. Nor does a conditional beat reach it — a beat fires on a predicate being **met**, never on one being breached (`conditional.ts`), so *the party was loud at fourteen* is not a condition the format has, and a beat cannot fail `the-quiet` in any case: it refuses to fail a row that is already `Met`, which `the-quiet` is at every tick the party has not just pinged. **What would close it** is the Dome's own shape — `{ kind: 'transmit'; count: number }` over the player's own pings — spent as a condition rather than as a row, against a second objective built like `the-rest`: an `endure` run to the close, Pending until it comes due, set **Failed** by the first transmission. That is this mission's existing machinery pointed at its other refusal, one predicate away, and a latched `Failed` does not flip back — so it could be a rung without the objection the row above makes to `quiet`. **Accepted, not built, and not fatal**: what the ping costs is carried in the Order's register instead — the ceiling is said out loud in the briefing, again in the readings and a third time at 13:30, and Sull is listening at fourteen whatever the panel scores |
 | **Two ways to lose, one Lost epilogue** | **Built, and a constraint rather than a want.** `epilogue` is `Record<MissionOutcome, string>` — three strings — so §8's four-row Results table is three rungs, and the difference between *Drift* and *Called* is carried by the two keystones' own unmet readings printing beneath a Lost line true of both. [mission-aptitude.md](mission-aptitude.md) §8 has the same shape for the same reason and this document copies it deliberately |
 | **Torpedoes locked** | **Built** — `AbilityLock`, ability `'torpedoes'`, denied for the player's slot and enforced server-side, with the reason attached for the HUD ([ui-ux.md](ui-ux.md) §7). The reason is §3's arithmetic and not a mood: twelve shots at 700 damage against 4,500 hull points would make [campaign.md](campaign.md) §2 rule 4's label false |
 | **A commander ability** | **Not needed, and not asked for.** The one act this mission is about — calling a conclave — is a `MissionSounding`, which ships. The campaign's ability rows belong to [The Second Chord](mission-second-chord.md), and this document does not open a second grant mechanism beside the one [mission-convocation.md](mission-convocation.md) §13 asked for and has since been given — `MissionCommanderAbility` shipped with that mission (#373), and this one declines to spend it |
@@ -807,7 +842,7 @@ rather than requests; and four are absences it declines to ask for.
 
 - **[campaign.md](campaign.md)** — §7, whose fourth row this specifies; §2 rule 4, whose third and last mission it is; §2 and §10, whose rules it is written under
 - **[mission-aptitude.md](mission-aptitude.md)** — the same six voices on the same map literal, the survey that has since filed, the tolerance, the sounding, and "Six of you. Six voices."
-- **[mission-standing-wave.md](mission-standing-wave.md)** — the Spire as the node, and the `build` predicate this document is the second customer for
+- **[mission-standing-wave.md](mission-standing-wave.md)** — the Spire as the node, §4's pairing rule that a formation nobody raised is never offered, and the `build` predicate this document is the second customer for
 - **[mission-nineteen.md](mission-nineteen.md)** — the ping in the party's hands, the hulls with names, and the count of six charged to a house
 - **[mission-the-three.md](mission-the-three.md)** — the tide this one sends the Choirmaster to, and where the Order's crystal is counted
 - **[mission-rim-deposits.md](mission-rim-deposits.md)** — the raid Sull's shortened window authorises, and the depth doctrine this map cannot teach
@@ -816,9 +851,10 @@ rather than requests; and four are absences it declines to ask for.
 - **[mission-convocation.md](mission-convocation.md)** — the same concern asserting the same claim on a plateau in the same year, and the argument for reusing a map literal whole
 - **[mission-intake.md](mission-intake.md)** — reveal-at-tick, the neutrality guard, and the singular-role finding this document spends
 - **[mission-tolerance.md](mission-tolerance.md)** — the conditional beat that latches a `Failed` status, which the keystone rest depends on
+- **[mission-the-dome.md](mission-the-dome.md)** — §9, the finding that no predicate reads the player's own transmissions, which is why the ping at this interval costs a reading and not a rung
 - **[habitats.md](habitats.md)** — §5, the Conclave, the count, and what standing is architecturally; the room this map deliberately does not hold
 - **[factions.md](factions.md)** — the Order that cannot grow, and the concern that cannot make or buy crystal
-- **[systems-echo.md](systems-echo.md)** — §4, the tiers §4's table is read off; §6, Silent Running; §7, the mark a cored formation leaves; §8, the quartered circle
+- **[systems-echo.md](systems-echo.md)** — §4, the tiers §4's table is read off; §5, the ping the party still carries and what it costs at an interval; §6, Silent Running; §7, the mark a cored formation leaves; §8, the quartered circle
 - **[systems-combat.md](systems-combat.md)** — §4, "in range implies heard" and the three dimensions a gun measures in, which is why facing does not save a hull here and why 250 m of water does; §5, the ordnance figures the torpedo lock is priced against
 - **[units.md](units.md)** — the Sounding Spire's 30 idle and its 600 m grant, and the roster with no Knight hull in it
 - **[world-map.md](world-map.md)** — the Resonance Fields, the nine houses, and the Third at 1,450 m

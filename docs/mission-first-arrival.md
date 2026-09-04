@@ -30,9 +30,9 @@ the column does.
 
 The rim is the edge of an eleven-kilometre depression that returns pings before they should
 arrive, on a cycle that shortened from 43 hours to 39 in 213 PC and is still shortening
-([world-map.md](world-map.md); [timeline.md](timeline.md)). That edge stands at 4,410 m,
-carries the richest resonant-crystal deposits ever surveyed, and has carried — since this year
-— two returns that a Consortium survey has filed three times as equipment fault
+([world-map.md](world-map.md); [timeline.md](timeline.md)). That edge stands at 4,410 m and
+carries the richest resonant-crystal deposits ever surveyed, and — since this year — two
+returns that a Consortium survey has filed three times as equipment fault
 ([mission-prospect.md](mission-prospect.md) §1; [mission-item-nine.md](mission-item-nine.md)
 §1). Every other campaign arrives at it from above or across. The Directorate arrives along
 it, out of trench country, on the only side of the rim anybody was ever born on.
@@ -63,10 +63,11 @@ thing the cohort does.
 concern descend at 72 for three minutes and sound six charted faces at 80, and entered both;
 it entered the plateaus' bed on the western lip on the same day. The account went up the
 Ninth, which is what put a calling at the head of it
-([mission-conclave-attending.md](mission-conclave-attending.md) §1) — and the calling was put
-because something is happening to the thing the cohorts attend
-([campaign.md](campaign.md) §8), which is the cycle above and not the record. Knowing a tide
-early is worth exactly what the slowest hulls in the game can convert it into, which is ground.
+([mission-conclave-attending.md](mission-conclave-attending.md) §1). The calling was not put
+about a record, though: it was put because something is happening to the thing the cohorts
+attend ([campaign.md](campaign.md) §8), and the cycle at the head of this section is what that
+sentence means. The record only bought the tide. Knowing a tide early is worth exactly what the
+slowest hulls in the game can convert it into, which is ground.
 
 Nobody in this mission says any of that. It is what the column is standing on.
 
@@ -78,9 +79,9 @@ Nobody in this mission says any of that. It is what the column is standing on.
 eastern lip, with the Cantorate's dome stood over them and their weapons locked.**
 
 Cohort-Prime Adze commands in the water; Undermarshal Setha Korrin assigns from Sufficiency and
-reads the count. The twelve are the cohort grown at the shallow band and called at the head of
-the Ninth ([mission-trench-awakening.md](mission-trench-awakening.md) §6;
-[mission-conclave-attending.md](mission-conclave-attending.md) §8) — authored fresh here,
+reads the count. The twelve are the cohort grown at the shallow band
+([mission-trench-awakening.md](mission-trench-awakening.md) §6) and called at the head of the
+Ninth ([mission-conclave-attending.md](mission-conclave-attending.md) §8) — authored fresh here,
 because nothing carries a roster between missions
 ([mission-conclave-attending.md](mission-conclave-attending.md) §13), and named so the walk is
 the same hulls arriving. The 9th Trench Cohort joins at the sill, exactly as Adze said it would
@@ -213,10 +214,9 @@ offices, because the Order names ranks before people and the Commune does not na
 
 **Nobody is wrong** ([campaign.md](campaign.md) §2 rule 1). The plateaus are in home water on
 ground they read before anyone, and there is a bed of theirs on the western lip; the Order is
-measuring what its Chord needs and declining to
-say when it will take it; the column is standing on a rim it has attended for two centuries
-without ever having stood on it. Three true sentences on one tide, none of them fitting inside
-another.
+measuring what its Chord needs and declining to say when it will take it; the column is
+standing on a rim it has attended for two centuries without ever having stood on it. Three true
+sentences on one tide, none of them fitting inside another.
 
 ### The Order, on D+1, and what it does not do
 
@@ -686,8 +686,8 @@ or the impersonal:
 
 **The stalls, on the Order's sounding — 18:00**
 
-> The Order sounds the sixth face, from above the line. Eighty, twenty seconds. It has stood
-> into the watch.
+> The Order sounds the sixth face, from above the line. Eighty, twenty seconds. It is the first
+> hull of these tides to stand into the watch.
 
 **Cohort-Prime Adze, on the Order's sounding — 18:00**
 
@@ -813,7 +813,7 @@ them owns.
 - **[factions.md](factions.md)** — the Listeners, and the navy whose ending is that it never asked
 - **[world-map.md](world-map.md)** · **[habitats.md](habitats.md)** — the Rim, the trench country the column walks out of, the cycle at thirty-nine hours, and the terraces this assignment is issued from
 - **[culture.md](culture.md)** — §3, the register that may not explain; §5, the written silence-debt; §6, the Mouth, kept
-- **[characters.md](characters.md)** — Korrin's one sentence, unspent; Ossary's nothing; Adze at the floor of everything
+- **[characters.md](characters.md)** — Korrin's one sentence, unspent; Ossary's nothing; Adze at the floor of everything, and the one order the campaign puts in front of them that they might not obey, held at 18:00
 - **[timeline.md](timeline.md)** — 88 PC, 205 PC, 214 PC, and a cycle that is still shortening
 - **[maps.md](maps.md)** — how a mission map is written, and why this one is not in the catalogue
 - **[glossary.md](glossary.md)** — mission outcome, silence order, and the partial that is a result

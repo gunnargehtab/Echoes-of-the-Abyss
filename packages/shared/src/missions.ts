@@ -339,6 +339,113 @@ export const SEEDING_CONVOCATION_HEADER: MissionHeader = {
   ],
 };
 
+export const SEEDING_DEEP_FURROW_HEADER: MissionHeader = {
+  id: 'seeding-deep-furrow',
+  campaign: 'seeding',
+  ordinal: 4,
+  name: 'The Second Seeding — Deep Furrow',
+  premise:
+    'The bloom that proved the deep can be gardened is ten years old and one furrow wide. Today the plateaus carry the Kell seed down to it and plant the next one.',
+  mapId: 'anholt-furrow',
+  // The tide turns at 18:00 (docs/mission-deep-furrow.md §9), inside
+  // campaign.md §10's 12–25. The first Commune mission played under the
+  // layer, and the second to resolve to `anholt-furrow` when mission 5 lands.
+  lengthBandS: [1020, 1140],
+  /**
+   * Spoken by Tidespeaker Ysolde Marr on the lane at the cleft's mouth, at
+   * 900 m — docs/mission-deep-furrow.md §12, verbatim. Public for Tend's
+   * reason and one of its own: a briefing that orders nobody to do anything
+   * has nothing to give away, and this one states the sowing's sixty seconds,
+   * the tender's seventy-five points of hull and the thing at the sill in
+   * advance because §12's whole argument is that the arithmetic should be
+   * agreed in daylight rather than done on the rock.
+   */
+  briefing: [
+    "We're not going to tell you what to do down there. We couldn't if we wanted to, and past the layer we won't be able to hear whether you did.",
+    "The furrow's ten years old and one row wide. Sefa's people have tended it since the proof, whatever the plateaus were turning at the time, and it holds. We're saying *holds* the way we'd say it of a row: a hull of ours that isn't rated for that water sits on that ground and pays nothing for it, and the water over it takes sound the way the rows at home take it. Everything else at that depth is bare rock and carries like a trench. That's the whole of what a garden is, down there. It's the only kind of ground the plateaus have ever made.",
+    "The second furrow wants sowing, and the seed is Kell seed, and it's aboard. Sixty seconds on the rock at the working figure, bow on, and not quiet — a sowing needs a hull that isn't still. Bare rock at that depth takes four points of hull a second off a tender, and a tender has seventy-five of them. We're saying both numbers here, in daylight, so nobody has to do the sum on the rock. Sixty and seventy-five. A hold that breaks starts again at nothing, and the hull doesn't.",
+    "The cleft's the only way down and the walls have a schedule. Nothing on them moves for a quiet hull. They move for a loud one, and there's no quiet way down — a dive is the loudest thing we own short of the button. We'd rather the diving happened at the mouth, where there's room, and the rest was done slowly, down the middle. We're saying rather.",
+    "There's something at the sill. It's been there since the letter, and we've never heard it, because from here nobody can. You will. It will have heard you first, and it won't do anything about it, and we'd like you to notice that it doesn't have to.",
+    "The button's on the panel. We've never asked the deep anything. It's on the panel anyway.",
+    "That's the last of what we can say from here. Past the layer the plateau can't hear the furrow and the furrow can't hear us, and that's the first time that has been true of anywhere we've sent people.",
+  ],
+};
+
+// Append to packages/shared/src/missions.ts, after SEEDING_CONVOCATION_HEADER,
+// and add SEEDING_IN_WRITING_HEADER to MISSION_HEADERS in the same order.
+// (The Second Seeding 4, `seeding-deep-furrow`, sits ahead of it in the
+// campaign and owns the map literal; this header is ordinal 5.)
+
+export const SEEDING_IN_WRITING_HEADER: MissionHeader = {
+  id: 'seeding-in-writing',
+  campaign: 'seeding',
+  ordinal: 5,
+  name: 'The Second Seeding — In Writing',
+  premise:
+    'Three beds grown over the households, a dome that hears the whole garden, and a doorway held at the layer.',
+  mapId: 'anholt-furrow',
+  // The tide turns at 16:00 (docs/mission-in-writing.md §9), inside §10's
+  // 12–25. The second mission to resolve to `anholt-furrow`, after
+  // docs/mission-deep-furrow.md — §11's reuse, region for region.
+  lengthBandS: [900, 1020],
+  /**
+   * Spoken by Tidespeaker Ysolde Marr on the lane at the cleft's mouth, at
+   * 900 m, to the watch going down to carry it — docs/mission-in-writing.md
+   * §12, verbatim. Public for Tend's and Convocation's reason: a briefing that
+   * orders nobody to do anything has nothing to give away, and this one names
+   * the dome, the beds, the schedule they will go on and the number the
+   * plateau agreed, because §12's whole argument is that the player should
+   * meet none of them for the first time under a cohort.
+   *
+   * The one Commune briefing that quotes another register inside itself and
+   * declines to answer it in kind: the Undermarshalcy's sentence of 205 is
+   * carried here in the Undermarshalcy's own words, italics and all, and Marr
+   * hands it back without conceding its frame — *it's theirs*.
+   */
+  briefing: [
+    "We're not going to tell you what to do down there. We couldn't be heard if we tried, and we'd rather that stayed the arrangement even now.",
+    "Nine years ago the Undermarshalcy wrote to us. We've had it read out once, so everyone's heard it, and we'll say it again here the way they said it, because it's theirs. *\"What was proved at twenty-two hundred metres in the year 204 has been heard, and it is entered. A second seeding of the band will be attended as what it is, and answered as what it is. This is stated in writing because the plateaus keep none, so that it is kept somewhere.\"* It's in Sefa's seed-store, on the dry shelf, next to the seed. That's the only answer we ever gave it, and we're not giving another today.",
+    "There's a dome in the garden. The watch heard it built. It listens at the furrow the way the galleries listen at the Mouth, and the furrow is us. Three beds are grown over the households, and under a bed nobody hears anything and nobody is heard — theirs or ours, it's the same cloud. The beds won't last. We'd guess they'll go from the west, one at a time, on somebody's clock and not ours, and what's under a bed that's gone is at its own figure again.",
+    "The cleft's the only road and the doorway's held. There's a stretch in the tide when it isn't. We'd like sixteen over the layer, and we're saying sixteen here, at the top, so that nobody at the bottom has to be the one who says a smaller number first.",
+    "Juno went down with the families when the dome was heard. She brought three guns and they're struck, and that's hers, not a vote. Nothing is struck under a bed. We'd like that heard once, down there, so it's been said.",
+  ],
+};
+
+// Append to packages/shared/src/missions.ts, beside the other Second Seeding
+// headers, and add SEEDING_RADICALS_HEADER to MISSION_HEADERS in campaign order.
+
+export const SEEDING_RADICALS_HEADER: MissionHeader = {
+  id: 'seeding-radicals',
+  campaign: 'seeding',
+  ordinal: 6,
+  name: 'The Second Seeding — Radicals',
+  premise:
+    "The plateaus turned a second seeding. Nobody turned the rim, and nobody turned this week. Anholt's people are going anyway, through the drowned city, and Marr Plateau's guns are asked to go with them.",
+  mapId: 'sorrowgate',
+  // The count is read at 15:00 (docs/mission-radicals.md §9), inside §10's
+  // 12-25 — and the band is the document's own 840-960 s.
+  lengthBandS: [840, 960],
+  /**
+   * Spoken by Tidespeaker Ysolde Marr from home, on the plateau channel, to the
+   * escort at the Upper Concourse — docs/mission-radicals.md §12, verbatim.
+   *
+   * Public for Tend's and Convocation's reason, and one of its own: this is the
+   * only Commune briefing that names the thing it is not doing, and §4's whole
+   * system — the column ordered by somebody else, countermandable for half a
+   * minute at a time — is stated here in advance rather than met under
+   * pressure. It withholds nothing the mission holds: the pack, the doorway,
+   * the basin and the ping's three seconds are all in it.
+   */
+  briefing: [
+    "We're not going to tell you what to do down there. We've said that at the top of every water we've sent people into, and this is the first time it's the reason you're going.",
+    "Here's what the plateaus turned, so it's been said once by somebody who counted. A second seeding. Sefa's plateau turned it, and the terraces past hers turned it, and this one walked it and came back still turning, and the count's the plateaus' and not ours. Nobody turned the rim. Nobody turned this week.",
+    "Sefa's people are going to the rim this week, through the drowned city and out over the basin, with the barge and the three tenders and thirty-three of ours aboard by household, and we're not stopping it. We'd like that heard the way it's meant: we're not saying we can't. We're saying we're not, and that's the thing we're not doing.",
+    "The column will be told where to go by Sefa, on her clock, a leg a minute and again at the half, and it'll dive wherever the ground drops. You can tell it otherwise. It'll listen to you for half a minute and then it'll listen to her. That's not a fault in the arrangement. That's the arrangement, from the other side, and we thought you should hear it from us before you hear it from the barge.",
+    "The city's as the spring left it — the arch is down, the lock's the way in, and the basin's awake. There's a pack off the Descent, there's something on either side of the door, and there's the one that answered in the spring, lying beside the water Sefa's drawn her lane through. The lane's drawn so the column at its own figures is under all of them, by a little. Everything Juno's brought is over them. That's what it's for.",
+    "Juno's three are yours to spend, and so, this time, is the noise. The button's on the panel. It's three seconds, and three isn't four, and we'd like you to know that before the basin teaches it. We'd like four in the far water. We agreed four, and we agreed two, at the Concourse, in daylight, so that nobody has to be the person who says a smaller number in the basin.",
+  ],
+};
+
 export const ATTENDING_ATTENDANCE_HEADER: MissionHeader = {
   id: 'attending-attendance',
   campaign: 'attending',
@@ -426,6 +533,9 @@ export const MISSION_HEADERS: readonly MissionHeader[] = [
   SEEDING_TEND_HEADER,
   SEEDING_THIN_WATER_HEADER,
   SEEDING_CONVOCATION_HEADER,
+  SEEDING_DEEP_FURROW_HEADER,
+  SEEDING_IN_WRITING_HEADER,
+  SEEDING_RADICALS_HEADER,
   ATTENDING_ATTENDANCE_HEADER,
   ATTENDING_INTAKE_HEADER,
   CHORD_APTITUDE_HEADER,

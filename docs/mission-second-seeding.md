@@ -41,8 +41,9 @@ down.**
 At the southern terminus of everything, an eleven-kilometre depression that returns pings
 before they should arrive, on a cycle that shortened from 43 hours to 39 in 213 PC and is still
 shortening; its edge carries the richest resonant-crystal deposits ever surveyed, and since
-this year, two returns that a Consortium survey has filed three times as equipment fault
-([world-map.md](world-map.md); [timeline.md](timeline.md); [bestiary.md](bestiary.md) §4;
+this year, two returns that a Consortium survey has filed twice as equipment fault, and will
+file a third time at the close of this day ([world-map.md](world-map.md);
+[timeline.md](timeline.md); [bestiary.md](bestiary.md) §4;
 [mission-prospect.md](mission-prospect.md) §1). The Commune calls the Mouth a wound
 ([world.md](world.md)). The lip is as far as the chart goes, and as far as this document
 goes: nothing below is described, approached or explained ([culture.md](culture.md) §6).
@@ -87,10 +88,11 @@ on the lip that the bestiary has a row for ([bestiary.md](bestiary.md) §4): no 
 wall, no pack, no shoal. What is here is two returns breathing on a count, which the Commune
 does not file because it files nothing, and — at 20:30, when the week's noise comes due —
 something large lifting off the lip's floor and rising toward the terraces
-([mission-prospect.md](mission-prospect.md) §7). It ignores every hull the plateaus brought,
-because they are all under 95 m, and it passes 1,750 m east of the bed. The one thing on this
-map that can hurt a hull is the water, and it hurts exactly the hulls the plateaus are about
-to make ground for (§4).
+([mission-prospect.md](mission-prospect.md) §7). It ignores everything the plateaus own,
+because its line passes 1,750 m east of the bed — the barge is the one hull of theirs a
+Sounder would grind, and it is never within a body and a radius of the line. The one thing on
+this map that can hurt a hull is the water, and it hurts exactly the hulls the plateaus are
+about to make ground for (§4).
 
 Nobody under the bed says any of this. It is the ground the mission stands on.
 
@@ -334,7 +336,7 @@ line in three accounts, and then it is the week.
 | **The concern's expedition** — the Board's writ | 1 Cruiser, 2 reader corvettes, the bunkerage — PR-3 by refit, unarmed ([mission-prospect.md](mission-prospect.md) §3) — and six faces charted on the terraces, read on a schedule | Prospect's four hulls, from the other side: down loud at 02:00, six faces at eighty, up slow at 20:30, north at 22:00. Foreman Corwin Osk is aboard and unheard — his three lines are the concern's channel, and the Commune cannot hear it |
 | **The watch** — those below | 2 Abyssal Submersibles, weapons-cold | Attending, as they have never not done. Prospect's stations and legs: west along the lip in the morning, home in the afternoon. From the western station the watch has the bed at a name, and enters it (§6) |
 | **The reconnaissance** — the Order | 1 hull flying Order colours, loud in one quarter of the compass ([systems-echo.md](systems-echo.md) §8) | Measuring the crystal, courteously, from the slopes; Prospect's legs. It never has the bed or the column above a ratio of 0.54 on D, and the one Commune sound it does hear is Teel's element coming down at 20:30, a Contact at 1.15 from the seat it has already withdrawn to. It says so by not saying so |
-| **The attendants** | Two returns on the lip, periodic, structured, unclassifiable | Filed three times as equipment fault by a navy that files. Filed by the Commune as *breathing on a count*, and nothing else (§8) |
+| **The attendants** | Two returns on the lip, periodic, structured, unclassifiable | Filed twice as equipment fault by a navy that files, and a third time before this tide is out. Filed by the Commune as *breathing on a count*, and nothing else (§8) |
 | **The Drift** | Nothing at 00:00; the riser from 20:30 | Below 2,700 m the column is empty of animals ([bestiary.md](bestiary.md) §4). What lifts off at 20:30 is Prospect's own beat, verbatim, and it ignores everything the plateaus own |
 
 All four navies are weapons-cold on D, and this document keeps
@@ -348,7 +350,7 @@ the people who tend them; Anholt is *she*, as [characters.md](characters.md) wri
 given-plus-family with no hyphen, because he is not Board. The Watch-Speaker and the Voice of
 the reconnaissance are the offices [mission-prospect.md](mission-prospect.md) §12 fixed, and
 their lines are that document's, verbatim. The charting pair speaks *for the plateaus*, and its
-line is Prospect's too — spoken now by the player's own watch. Ottilie Marr crews the sower
+line is Prospect's too — spoken now by the player's own pair. Ottilie Marr crews the sower
 for the second time ([habitats.md](habitats.md) §2; [mission-deep-furrow.md](mission-deep-furrow.md)
 §5): the seed is Kell seed and her mother was a Kell.
 
@@ -633,7 +635,7 @@ sound — what was heard *of* them — and that is *the-ledger*. §13 carries th
 
 **The mission runs its length.** A column that sowed at 15:00 and is under the bed at 20:30
 meets both terminal rows on the riser's tick, and the court's rule would close the tide there
-— before Teel's element has left the staging, before the watch has said the basin is up, and
+— before Teel's element has left the staging, before the pair has said the basin is up, and
 two and a half minutes before the tide. `runsItsLength` is authored, for
 [mission-intake.md](mission-intake.md) §13's reason and [mission-deep-furrow.md](mission-deep-furrow.md)
 §8's: only the `resolve` at 23:00 closes the day, and the day is read where the column is.
@@ -703,15 +705,15 @@ held by `releaseTick` instead, which applies whatever the radius says.
 | Time | Beat |
 | --- | --- |
 | **00:00** | `silent`, active, on `the-barge`, `the-sower`, `seed-two`, `seed-three` — the column under the bed, silent. `silent`, active, on `escort-one` … `escort-three` — Teel's element at the staging, silent, held. The concern seated at the staging at 1,400 m; the watch at its home station; the reconnaissance at its seat; the two returns audible and periodic on the lip, as they have been since before anyone had ears here. The pair at its seat has `attendant-a` at Contact, 2,302 m |
-| 00:00 | `say` — the watch: the seat, the bed, and what breathes on the lip (§12) |
+| 00:00 | `say` — the pair: the seat, the bed, and what breathes on the lip (§12) |
 | 00:30 | `say` — Anholt, the briefing's coda: whose day it is (§12) |
 | **02:00** | `move` × 4 — the concern to the terraces, `depthM` 2,500: `flagship` → 3000, 2750; `reader-west` → 2700, 2450; `reader-east` → 3300, 2450; `bunkerage` → 3000, 2850. **The descent**, at 72, stepped down the floors; the readers are seated by about 02:30 and the flagship by about 02:52 |
-| 02:30 | `say` — the watch: that's the concern coming down (§12) |
+| 02:30 | `say` — the pair: that's the concern coming down (§12) |
 | 03:00 | `move` `chart-a` → 1800, 2150; `move` `chart-b` → 1950, 2200 — Prospect's first leg, ordered to the player's own hulls (§13) |
 | 04:00 | `move` `watch-a` → 3600, 3300; `move` `watch-b` → 3750, 3350 — the watch walks the lip, seventeen seconds |
 | 04:30 | `move` `recon` → 4600, 2100 — the reconnaissance takes its measure |
 | 05:00 | `move` `reader-west` → 900, 2500 — twenty-one seconds from the terrace seat to the first face |
-| 05:30 | `say` — the charting pair, for the plateaus: Prospect's line, verbatim, spoken now by the player's own watch (§12) |
+| 05:30 | `say` — the charting pair, for the plateaus: Prospect's line, verbatim, spoken now by the player's own pair (§12) |
 | **06:00–06:20** | `face-one` sounds at 80 — twenty seconds, 934 m from Prospect's first leg, where the table put the pair at 03:00: a Track at 14.9 |
 | 06:30 | `move` `reader-east` → 3500, 2700 |
 | 07:00 | `move` `chart-a` → 2700, 2100; `move` `chart-b` → 2850, 2150 — Prospect's second leg: 618 m from the heavy, and inside Classification of `attendant-a` |
@@ -727,7 +729,7 @@ held by `releaseTick` instead, which applies whatever the radius says.
 | **12:00–12:20** | `face-three` sounds — 283 m from the pair on Prospect's second leg, a Track at 101, the nearest the concern's industry comes to the plateaus' own ears all day |
 | 13:00 | `move` `chart-a` → 1200, 2050; `move` `chart-b` → 1350, 2100 — Prospect's third leg: the pair turns for home water, 1,201 m from the bed |
 | 13:30 | `move` `reader-east` → 5100, 2800 |
-| **14:00** | `move` `watch-a` → 4600, 3300; `move` `watch-b` → 4750, 3350 — **the watch resumes its station**, thirty-seven seconds east; the quiet window opens. `say` — the watch: they've walked back east (§12) |
+| **14:00** | `move` `watch-a` → 4600, 3300; `move` `watch-b` → 4750, 3350 — **the watch resumes its station**, thirty-seven seconds east; the quiet window opens. `say` — the pair: they've walked back east (§12) |
 | **14:00–14:20** | `face-six` sounds — the last read, nearest the lip and furthest from the bed |
 | *[~15:00 — player-paced; the document's clock]* | **The sowing.** The sower drops silence — 1.8 to 7.2 under the bed, no spike — and holds within 250 m of 1250, 3250, bow on, sixty seconds at 45, veiled to 18: a Bearing to the heavy on the terraces (1.76) and to the reader on the third face (1.52), a Contact to the watch at home (1.21), a Classification to the pair in home water (2.83), and nothing to the Order. A broken hold resets to zero. A PR-3 hull on the rock pays nothing for it but ears |
 | *(fired by the sowing, not the clock)* | **The lip is a furrow.** `the-rim-furrow` gains its grant — `pressureBonus: 1`, once the row exists (§13) — and the water over it stays Abyssal Trench. `say` — Anholt: there; that's the second one (§12) |
@@ -735,7 +737,7 @@ held by `releaseTick` instead, which applies whatever the radius says.
 | **20:30** | `creature` `the-riser` — Sounder, `spawnAt` 3000, 3600 at 3,050 m, `driveTo` 3000, 2400, `untilTick` 21:30, **loud**: Prospect's beat, verbatim — a hundred through 1.6, lifting off the lip's floor 1,785 m east of the bed and climbing toward the terraces at 12 m/s, a Contact to the deaf column and a Track to everything else. `move` × 4 — the concern to its staging seats, `depthM` 1,400: **the ascent**, silent, seventy-three seconds, at cruise north. `release` `escort-one`, `escort-two`, `escort-three` — **Teel's element released into the riser's minute**. `the-furrow` is revealed on this tick and scored from it |
 | 20:35 | `say` — Warden Juno Teel: coming down now, into their noise, struck (§12) |
 | *[player-paced — from the release]* | **The escorts' descent.** 2,864–3,044 m at 85 m/s, the depth stepped down the floors: 1,800 m crossed at about fifteen seconds, the furrow at about thirty-three, its floor at about forty-two — in the furrow by about **21:05**. Seventy points of hull between the band line and the furrow's edge; inside it, once the row is built, none. A Contact to every hull on the rim from 5,655 m, a Classification to the concern, a Bearing to the watch, a Track to it for the last nine seconds over the lip |
-| 21:00 | `say` — the watch: the basin's up; the concern's going home the slow way; we're not going anywhere (§12) |
+| 21:00 | `say` — the pair: the basin's up; the concern's going home the slow way; we're not going anywhere (§12) |
 | **21:30** | The riser's drive expires at 3000, 2400, about 2,330 m down and still climbing toward its own 2,000; the Drift's again, 1,946 m from the bed, hearing nothing under it above Interest |
 | *(fired by the escorts' arrival, not the clock)* | `say` — Teel: we came down, and we didn't strike anybody (§12) |
 | 22:00 | **The writ turns north.** Nothing in this table marks it: the Commune cannot hear the concern's channel, and the concern's four hulls are seated at the staging already |
@@ -748,7 +750,7 @@ Three beats fire on a condition rather than a tick, and sit beside the table as 
 | --- | --- |
 | `sound`, count 1 — the sowing completes | `say` — Anholt, on the second one |
 | `extract`, role `escort`, region `the-rim-furrow`, count 1 — the first of Juno's hulls is in the furrow | `say` — Teel, on coming down struck |
-| `tolerance`, sixty seconds at Track — the ledger is met | `say` — the watch, on being had exact |
+| `tolerance`, sixty seconds at Track — the ledger is met | `say` — the pair, on being had exact |
 
 None shares a choice group; none retires another. Every scripted transit — the concern's four
 legs and its climb, the readers' faces, the watch's walk, the reconnaissance's measure and the
@@ -952,7 +954,7 @@ moment an order would be kindest, for the second time in this campaign
 
 ### The voices on the water
 
-**The watch, on the terraces — 00:00**
+**The charting pair, on the terraces — 00:00**
 
 > We're on the terraces, where we've been since before anybody. The column's under the bed on
 > the western lip and we can't hear it from here, which is the bed working. There's two things
@@ -965,7 +967,7 @@ moment an order would be kindest, for the second time in this campaign
 > That's the day. It's theirs, and the next one's somebody else's, and we're planting on this
 > one. We'd like you to notice we said *planting*.
 
-**The watch, on the descent — 02:30**
+**The charting pair, on the descent — 02:30**
 
 > That's the concern coming down. Seventy-two, four of them, and everything on this rim has it.
 > We said they'd come loud. They've never once come any other way.
@@ -988,12 +990,12 @@ moment an order would be kindest, for the second time in this campaign
 > assuming it was meant. What the crystal is for, we will not discuss on an open channel. It
 > would be discourteous to the crystal.
 
-**The watch, as the quiet window opens — 14:00**
+**The charting pair, as the quiet window opens — 14:00**
 
 > They've walked back east, both of them, to where they sit. The nearest ears now are the
 > reader on the third face and the heavy on the terraces, and neither of those has a name for
-> us at this range. The watch had one for the bed. It's had the bed since the morning, and it's
-> going to have had it whatever we do next.
+> us at this range. Those below had one for the bed. They've had the bed since the morning,
+> and they're going to have had it whatever we do next.
 
 **Bloomwright Sefa Anholt, as the lip turns — when the sowing completes**
 
@@ -1006,7 +1008,7 @@ moment an order would be kindest, for the second time in this campaign
 > not one, and I'd like both heard — the second one especially, by whoever's on the lip with
 > their ears open.
 
-**The watch, on the riser — 21:00**
+**The charting pair, on the riser — 21:00**
 
 > The basin's up. You'll not need us for where. The concern's going home the slow way, and
 > we're not going anywhere, which is the whole of what we came to say.
@@ -1016,7 +1018,7 @@ moment an order would be kindest, for the second time in this campaign
 > We came down, and we didn't strike anybody. We'd like both of those beside each other when
 > it's read, and we know who'll be reading.
 
-**The watch, on the ledger — when the force has been held exact for a minute**
+**The charting pair, on the ledger — when the force has been held exact for a minute**
 
 > Somebody's had us exact for a minute — hull and heading, not a smudge. We'd like to know
 > whose ears, and we never will.
@@ -1055,12 +1057,12 @@ Each line fails [culture.md](culture.md) §3 for the other three factions, which
 document's own test (§6). Anholt's briefing states a schedule, an arithmetic and a preference
 and gives no instruction on any of them — *we're saying they walk*, *we're saying said* — which
 the Consortium would cost and the Directorate would put in the passive as a condition, and it
-names the day as somebody else's without conceding their frame for it. The watch's four lines
+names the day as somebody else's without conceding their frame for it. The pair's four lines
 hand the player facts and a guess and mark which is which — a smudge it will not name, a
 descent it will not bear, a window it will not order anyone into — where the Knights would call
-the gap an interval and the concern would file it as a fault. The pair's *yet* is an offer
-wearing a warning, which only the plural register produces, and it is now the player's own hull
-saying it; the Watch-Speaker's account-and-debt is agency refused in two sentences; the
+the gap an interval and the concern would file it as a fault. Its *yet* is an offer wearing a
+warning, which only the plural register produces, and it is now the player's own hull saying
+it; the Watch-Speaker's account-and-debt is agency refused in two sentences; the
 reconnaissance pays a compliment to a mineral. Teel's two lines are the imperative mood not
 arriving for the third time in the campaign — she says what she decided, twice, and what she
 did not do, and asks for the order they are read in, which is the most a Commune soldier can

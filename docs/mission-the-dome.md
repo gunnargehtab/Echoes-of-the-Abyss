@@ -143,6 +143,17 @@ convoy's Cruiser cannot resolve from 856 m and is under the silence ceiling by t
    combat in it and its guns were pointed at the Drift
    ([mission-intake.md](mission-intake.md) §3); this is the first with another navy at the
    other end of them.
+5. **Silent Running is the picket's from tick zero, and nothing in this campaign has taught it.**
+   Any unit can toggle it ([systems-echo.md](systems-echo.md) §6), and Attendance still declined
+   to hand the toggle over: *"this is not the button's teaching mission — Tend is
+   ([mission-tend.md](mission-tend.md) §3), and the campaigns are playable in either order, so
+   Attendance may not depend on it having been taught"*
+   ([mission-attendance.md](mission-attendance.md) §3; [campaign.md](campaign.md) §1). Intake
+   never mentions it. This is the mission that stops being able to defer it, so the ten `silent`
+   beats above are the introduction: the tide opens with the button already pressed, at 4.8 and
+   4.3, before anything in the water asks for it. §6 is where it becomes an argument — two and a
+   half kilometres of the pipe between a watch that keeps it and one that does not — and §4's
+   second movement is what dropping it costs the array.
 
 `escortRadiusM` is 0 — nothing here is freight. There are no starting nodules, nothing to build
 and nothing to render; `fauna: false`, and every animal on the map is a beat.
@@ -153,8 +164,17 @@ and nothing to render; `fauna: false`, and every animal on the map is a beat.
 
 The system this mission teaches, per [campaign.md](campaign.md) §2: one system, introduced in
 the first three minutes and load-bearing by the last five. The system is **the Cantorate's
-instruments** — the dome, the Call, and the ping handed over beside them — and it lands in four
-movements.
+instruments** — the dome and the Call, which is [campaign.md](campaign.md) §6 row 3's own column
+— and it lands in three movements.
+
+**A fourth thing stands beside them and is not the system: the ping.**
+[campaign.md](campaign.md) §10 hands the button over in mission 3, and the same section's first
+rule allows one system per mission. Both rules are §10, only one reading satisfies both, and
+[mission-convocation.md](mission-convocation.md) §4 is where it was taken for the other mission 3
+that inherits the collision — *available, and not the mission's system*. What a handed-over
+button is owed instead is a price, because a button handed over without one is a button
+Attendance and Intake withheld for nothing. Movement 4 is that price, paid in the same currency
+as the Call: what the water does about it.
 
 **1. The dome is worth most to the hull that costs least.** The Cantor grants +25 HYD capped at
 95 within 1,200 m ([units.md](units.md)). Range scales as hearing raised to one over the
@@ -507,12 +527,22 @@ document says they happen. The Call is why; the beats are when.
 
 ## 10. What It Teaches
 
-One system, per [campaign.md](campaign.md) §10: **the Cantorate's instruments** — the dome, the
-Call, and the ping — landing in order across the beat table. The dome is audibly worth
-something inside the first three minutes: the array holds the convoy at Classification from
-4,350 m at 02:30 and would hold it at Bearing without it. Its price arrives the first time a
-watch hull fires. The Call is sounded at 13:00 and read by the concern at 13:30 and 14:00. The
-ping is in the panel from tick zero and the mission never once asks for it.
+One system, per [campaign.md](campaign.md) §10: **the Cantorate's instruments** — the dome and
+the Call, which is [campaign.md](campaign.md) §6 row 3's column — landing in order across the
+beat table. The dome is audibly worth something inside the first three minutes: the array holds
+the convoy at Classification from 4,350 m at 02:30 and would hold it at Bearing without it. Its
+price arrives the first time a watch hull fires. The Call is sounded at 13:00 and read by the
+concern at 13:30 and 14:00.
+
+**Two buttons sit beside the system rather than in it, and both are in the player's hands from
+tick zero.** The ping is available and not the mission's system
+([mission-convocation.md](mission-convocation.md) §4), priced in §4's fourth movement, and the
+mission never once asks for it. Silent Running is the toggle the campaign has never taught (§3),
+and the ten `silent` beats at 00:00 are its introduction — inside the first three minutes,
+because the tide begins with it already on. It is load-bearing by the last five: §6's whole count
+is the arithmetic between a picket the Cruiser hears from 1,402 m and one it hears from 4,204,
+and the mouth is stood across at the whistle by hulls that kept the button or by hulls that
+dropped it and paid the array for the privilege.
 
 Underneath it, the campaign's subject continued. Attendance taught that doing nothing is
 sufficient. Intake taught that the living is loud and has to be walked to. **The Dome teaches
@@ -828,6 +858,8 @@ spent — and why a literal that later hands the button over changes §4, §6 an
 - **[mission-trench-awakening.md](mission-trench-awakening.md)** — The Attending 5, where a sound summons instead of spoofing, and the Sounder at the foot is its older cousin
 - **[mission-conclave-attending.md](mission-conclave-attending.md)** — The Attending 6, where Ossary speaks once and says nothing at the close, and a dome can be lost
 - **[mission-first-arrival.md](mission-first-arrival.md)** — The Attending 7, where the ping is locked at the lip and this mission is what the lock costs
+- **[mission-convocation.md](mission-convocation.md)** — the other mission 3 the ping lands in, and the reading §4 and §10 take from it: available, and not the mission's system
+- **[mission-tend.md](mission-tend.md)** — the toggle's teaching mission, one campaign over, which is why §3 shows Silent Running rather than assuming it
 - **[systems-echo.md](systems-echo.md)** — §3, the trench and the layer; §4, the tier a transcript is written at; §5, the button handed over here; §8, the Chorus Call this document approximates
 - **[systems-depth.md](systems-depth.md)** — §2, the fast loud descent the convoy makes at 02:30 and the slow silent climb the pack makes at 18:30
 - **[bestiary.md](bestiary.md)** — §2, the aggro ladder, the ×0.4 and the ping's ×3; §4, the Sounder's band and the Draymaw's; §6, the ledger under the foot
