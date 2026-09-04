@@ -44,7 +44,7 @@ shortening; its edge carries the richest resonant-crystal deposits ever surveyed
 this year, two returns that a Consortium survey has filed three times as equipment fault
 ([world-map.md](world-map.md); [timeline.md](timeline.md); [bestiary.md](bestiary.md) §4;
 [mission-prospect.md](mission-prospect.md) §1). The Commune calls the Mouth a wound
-([factions.md](factions.md)). The lip is as far as the chart goes, and as far as this document
+([world.md](world.md)). The lip is as far as the chart goes, and as far as this document
 goes: nothing below is described, approached or explained ([culture.md](culture.md) §6).
 
 **The week has a calendar, and this is its first day.** Four navies arrive at the rim in one
@@ -210,8 +210,8 @@ and the document maps each to where it is spent, in four movements.
 
 *Tend*'s system ([mission-tend.md](mission-tend.md) §4), inverted by address: the bed and
 silence, at 3,000 m, on PF 1.6. At 00:00 the column is silent and veiled, the pair on the
-terraces has the lip's two returns at Contact from their seat, and the concern has not come
-down. The Commune is already doing everything it knows before anybody arrives, which is the
+terraces has the nearer of the lip's two returns at Contact from its seat and the far one at
+nothing (1.47 and 0.79, §7), and the concern has not come down. The Commune is already doing everything it knows before anybody arrives, which is the
 system introduced in the first three minutes by the plateaus doing nothing audible in them.
 
 What the bed buys, priced against the best ears on the rim — a Directorate submersible at 85,
@@ -299,11 +299,11 @@ at about 22:30, before the tide (§13).
 
 The whole rim hears the plateaus' army come down inside the noise the concern is already
 leaving by: 72 through open water is a Contact to a Cruiser's 65 from 5,655 m and to a
-submersible's 85 from 6,688; from the slopes the concern's climbing flagship has it at
-Classification (3.58), the reader on the third face at Classification (3.69), the watch at
-home at Bearing (1.90), the Order's reconnaissance at Contact (1.11), and the pair in home
-water at Track from 743 m. Over the lip, at 1.6, the watch has it at Track (4.71) for the nine
-seconds of the last dive. That is *the arrangement that kept the Directorate from having to
+submersible's 85 from 6,688; from the middle of the slopes — about 800, 1,480, fifteen seconds
+after the release — the concern's climbing flagship has it at Classification (3.01), the reader
+on the third face at Classification (3.80), the watch at home at Bearing (1.98), the Order's
+reconnaissance at Bearing (2.01), and the pair in home water at Track from 696 m. Over the lip,
+at 1.6, the watch has it at Track (4.72) for the nine seconds of the last dive. That is *the arrangement that kept the Directorate from having to
 fight* ending ([campaign.md](campaign.md) §9), as a sound — a Commune gun descending, struck,
 into ground that will hold it — and the close counts, by household, the people it is over for
 first.
@@ -463,7 +463,7 @@ pair factor is 1.0 everywhere and no figure here carries the layer
 | The concern's descent, 02:00 | 72 through the slopes | Track from mid-slopes (4.61); Contact from 5,924 m | — | — |
 | The first read, face-one, 06:00 | 80 × 0.7 | 300 m: Track, ratio 92 | — | — |
 | The third read, face-three, 12:00 | 80 × 0.7 | — | — | 1,324 m: Track 8.55 |
-| The flagship on the terraces, idle | 55 × 0.7 | 2,198 m: Classification 2.61 | 716 m: Track 15.7 | Classification 3.43 |
+| The flagship on the terraces, idle | 55 × 0.7 | 2,198 m: Classification 2.61 | 716 m: Track 15.7 | 1,931 m: Classification 3.21 |
 | `watch-a` at its western station, idle | 22 through 0.925–1.0 | 1,985 m: Bearing 1.63 | 1,334 m: Classification 3.32 | Bearing 1.89 |
 | `watch-a` at home, idle | 22 | nothing (0.55) | 2,247 m: Contact 1.30 | nothing |
 | The reconnaissance at its inner station, cruising, in its cone | 28 × 0.7 | nothing (0.85) | 1,101 m: Track 4.02 | Contact 1.02 |
@@ -488,8 +488,8 @@ climbs. The third thing is Juno's element arriving inside the cloud, which is a 
 blank.
 
 **The concern, from the terraces**, has what §6 tabulates and one thing more: the escorts'
-descent, 72 through the slopes' open water, at Classification (3.58) from the climbing flagship
-and (3.69) from the reader on the third face — a Commune gun coming down, named, while the
+descent, 72 through the slopes' open water, at Classification (3.01) from the climbing flagship
+and (3.80) from the reader on the third face — a Commune gun coming down, named, while the
 concern leaves.
 
 **What is deliberately absent.** No Hollow, no pack, no shoal: below 2,700 m the bestiary has no
@@ -567,7 +567,7 @@ and what does is what §6 prices: a sowing between 08:40 and 14:00, which is Tra
 reader at face-two or to the watch for all sixty of its seconds; a barge left idling under the
 bed while the watch is west, a Track at 8.06 for as long as it is forgotten; a ping from the bed
 in the same window, three seconds at 13.9 each; the escorts' last nine seconds of dive over
-the lip, a Track to the watch at home (4.71), which is not a minute. So the row reads exactly
+the lip, a Track to the watch at home (4.72), which is not a minute. So the row reads exactly
 whether the seeding — or the Commune's own carelessness — is in the account, and reads it
 unranked.
 
@@ -598,6 +598,15 @@ the water, and the water is what the sowing is for. The Kell seed rides the sowe
 cut time zero in `the-rim-furrow`, rigged on the first pass the sower is not silent — the
 gift run's shape ([mission-tend.md](mission-tend.md) §13) — and is in no predicate; it is how
 the document says the seed is aboard.
+
+**One row the union cannot carry, said here rather than left to §13.** The ending's other half
+— *the watch heard the bed and entered it* — is a fact about somebody else's account, and every
+predicate is a query over the observer's own force (`types.ts`, `MissionPredicate`): there is no
+`party`, no `slot` and no way to ask what another navy resolved. It is therefore authorship and
+not a row. The watch stands 1,160 m from a structure emitting 8 through 1.6 for four minutes and
+forty seconds of every run, which is a Classification it cannot fail to make, and §6 states it as
+the fact D+1 and D+2 inherit. What the player's own ledger can read is the other side of the same
+sound — what was heard *of* them — and that is *the-ledger*. §13 carries the row.
 
 **The mission runs its length.** A column that sowed at 15:00 and is under the bed at 20:30
 meets both terminal rows on the riser's tick, and the court's rule would close the tide there
