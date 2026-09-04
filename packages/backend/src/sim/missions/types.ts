@@ -139,6 +139,24 @@ export interface MissionUnit {
   releaseTick?: number;
   /** Authored, and read out at the close. "Nine are out." */
   souls?: number;
+  /**
+   * The hull's name in the campaign's roster, stable across the missions that
+   * field it — docs/campaign.md §7 row 3, and the row docs/mission-nineteen.md
+   * §13 carries. A spent set is keyed on it and on nothing else.
+   *
+   * Not the tag, because a tag is per-mission: Nineteen seats `the-first`,
+   * Conclave seats `first`, The Three seats `ear-first`, and the document
+   * says all three are the same Corvette. Never an entity id, for `MissionTag`'s
+   * reason and one more — an id is recycled inside one process, and this name
+   * has to survive a browser, a reload and a week.
+   *
+   * Player-party hulls only, and `missions.test.ts` holds the literal to it: a
+   * spent set is the client's own memory of what its own force lost, and a
+   * cadre id on a scripted hull would give another party's roster a name the
+   * record could carry. Absent means this hull is nobody's to spend and
+   * nobody's to have spent — Sull's own hull, every Chorister, the watch.
+   */
+  cadre?: string;
   note: string;
 }
 
@@ -1047,6 +1065,21 @@ export interface MissionDefinition extends MissionHeader {
    * that stays where the document put it. Omitted is the court's rule.
    */
   runsItsLength?: true;
+  /**
+   * Hulls of the player's party lost in this mission are spent for the rest
+   * of the campaign — docs/campaign.md §7 row 3, "Every unit lost in this
+   * mission is gone for the rest of the campaign". The record keeps them by
+   * `cadre`, and a later mission that fields a spent cadre id does not seat
+   * that hull (`roster.ts`, `fieldDefinition`).
+   *
+   * Opt-in, and authored on exactly one mission, because
+   * docs/mission-standing-wave.md §10 argues at length that a mission 2 which
+   * made hulls unreplaceable "would have spent mission 3 to make its own last
+   * five minutes tenser": the loss is Nineteen's lesson, and every other
+   * Knights mission has a lesson of its own. Omitted is the standing rule —
+   * a hull lost here is lost for this tide and no further.
+   */
+  attrition?: true;
   /**
    * Nodules the player opens with. Omitted is none.
    *

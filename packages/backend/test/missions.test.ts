@@ -188,6 +188,62 @@ describe('the parties a mission seats', () => {
     }
   });
 
+  it('names a cadre on the player’s hulls and on nobody else’s', () => {
+    // `MissionUnit.cadre` is what the spent roster is keyed on (#380), and a
+    // spent set is the client's own memory of its own dead. A cadre id on a
+    // scripted hull would give another party's roster a name the record could
+    // carry — the same shape of leak the role test above refuses.
+    for (const mission of MISSIONS) {
+      for (const party of mission.parties) {
+        if (party.slot === mission.playerSlot) continue;
+        for (const unit of party.units) {
+          assert.equal(
+            unit.cadre,
+            undefined,
+            `${mission.id}: ${unit.tag} is scripted and carries the cadre "${unit.cadre}"`
+          );
+        }
+      }
+    }
+  });
+
+  it('gives each cadre id to one hull of a party', () => {
+    // A duplicate would not collide loudly: `fieldDefinition` filters by id,
+    // so two hulls under one name are both unseated by one loss.
+    for (const mission of MISSIONS) {
+      for (const party of mission.parties) {
+        const cadre = party.units.map((u) => u.cadre).filter((c) => c !== undefined);
+        assert.equal(new Set(cadre).size, cadre.length, `${mission.id}: duplicate cadre id`);
+      }
+    }
+  });
+
+  it('draws every cadre id a mission names from a roster its campaign spends', () => {
+    // The campaign's roster is the attriting mission's — for the Order,
+    // Nineteen's six. A later mission naming a hull no spending mission ever
+    // fields has given the record a name it can never write, which is a hull
+    // that can never be lost wearing the field that says it can.
+    for (const mission of MISSIONS) {
+      const named = mission.parties
+        .find((p) => p.slot === mission.playerSlot)!
+        .units.map((u) => u.cadre)
+        .filter((c): c is string => c !== undefined);
+      if (named.length === 0) continue;
+      const roster = new Set(
+        MISSIONS.filter((m) => m.campaign === mission.campaign && m.attrition === true).flatMap(
+          (m) =>
+            m.parties
+              .find((p) => p.slot === m.playerSlot)!
+              .units.map((u) => u.cadre)
+              .filter((c): c is string => c !== undefined)
+        )
+      );
+      for (const id of named) {
+        assert.ok(roster.has(id), `${mission.id}: cadre "${id}" is in no spending mission's party`);
+      }
+    }
+  });
+
   it('lends the array from the player, since that is the only slot an aura grants to', () => {
     // Only where a mission authors one: an absent arrayTag is the silence
     // ledger switched off (types.ts), not an array that failed to be placed.

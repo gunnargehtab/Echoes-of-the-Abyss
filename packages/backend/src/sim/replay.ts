@@ -113,6 +113,14 @@ import { eidOfLocalId } from './world.ts';
  * is about the rules, and a v11 file replayed under them would report a
  * divergence at its first checkpoint that is really its own age.
  *
+ * Still 12 after `spent` (#380): a mission replay may now carry the cadre ids
+ * the campaign had spent when it was played, so playback fields the same
+ * short party. Optional and absent-is-empty, and that default is *correct*
+ * for every v12 file recorded before the field existed — no roster was ever
+ * spent then, so none is the party those files were played with. A layout
+ * that gains a field whose absence reproduces the old match is not a new
+ * format.
+ *
  * 11: replays carry the mission they were played as, if any. A mission's
  * authored forces and its beat schedule are installed by the Match
  * constructor, so playback reproduces them from the id alone — but a v10
@@ -188,6 +196,16 @@ export interface Replay {
    * playback needs to rebuild them.
    */
   missionId: string | null;
+  /**
+   * Cadre ids the campaign had spent when this mission was played, if any
+   * (`MatchOptions.spent`). Part of the setup the way `missionId` is: the
+   * Match constructor fields the party through it, so a replay of *Conclave*
+   * played with the Third entered at the Rest has to seat five hulls, not
+   * six, or it diverges at the first checkpoint. Omitted when empty, so a
+   * replay of the same match stays byte-identical with one recorded before
+   * the field existed.
+   */
+  spent?: string[];
   players: ReplayPlayer[];
   commands: ReplayCommand[];
   /**
@@ -215,6 +233,7 @@ export class ReplayRecorder {
   private readonly mapId: string;
   private readonly fauna: boolean;
   private readonly missionId: string | null;
+  private readonly spent: readonly string[];
   private readonly checkpointInterval: number;
   /**
    * Negative infinity rather than -1 so the *first* call checkpoints tick 0.
@@ -229,12 +248,17 @@ export class ReplayRecorder {
     mapId: string,
     fauna: boolean,
     missionId: string | null = null,
+    spent: readonly string[] = [],
     checkpointIntervalTicks = 300
   ) {
     this.seed = seed;
     this.mapId = mapId;
     this.fauna = fauna;
     this.missionId = missionId;
+    // Sorted for `players`' reason: the set arrived from a client's storage in
+    // whatever order it was written, and a replay of the same match should
+    // not differ by it.
+    this.spent = [...spent].sort();
     this.checkpointInterval = checkpointIntervalTicks;
   }
 
@@ -261,6 +285,7 @@ export class ReplayRecorder {
       mapId: this.mapId,
       fauna: this.fauna,
       missionId: this.missionId,
+      ...(this.spent.length === 0 ? {} : { spent: [...this.spent] }),
       // Sorted so a replay of the same match is byte-identical regardless of
       // the order players happened to connect in.
       players: [...this.players].sort((a, b) => a.slot - b.slot),
@@ -304,8 +329,14 @@ export function playReplay(replay: Replay, terrain?: Terrain): ReplayResult {
   }
 
   // `fauna` matters as much as the map: a match with animals in it and the
-  // same match without are different matches.
-  const options = { seed: replay.seed, fauna: replay.fauna, mission };
+  // same match without are different matches. So does the spent roster — a
+  // mission fielded five hulls is not the mission fielded six.
+  const options = {
+    seed: replay.seed,
+    fauna: replay.fauna,
+    mission,
+    spent: new Set(replay.spent ?? []),
+  };
   const match = new Match(map, terrain === undefined ? options : { ...options, terrain });
   // A mission seated itself and placed its own force in the constructor; the
   // recorder never wrote a roster for one, so this loop is simply empty there.

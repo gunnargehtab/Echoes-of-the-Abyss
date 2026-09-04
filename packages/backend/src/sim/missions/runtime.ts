@@ -141,6 +141,18 @@ export interface MissionResolution {
    * no scene, and a mission that authored one may still witness nothing.
    */
   scenes: readonly string[];
+  /**
+   * Cadre ids of the player's own hulls that were not answering at the close
+   * — docs/campaign.md §7 row 3, and `MissionUnit.cadre` for what an id is.
+   *
+   * Computed for every mission and *sent* only by one: the room attaches it
+   * to `missionOver` when the definition authors `attrition`, so a hull lost
+   * on a tide that does not spend is reported nowhere and returns next time
+   * (docs/mission-standing-wave.md §10). Own-force information in the
+   * strictest sense — which of my own named hulls died — and the player has
+   * already watched each of them go.
+   */
+  spent: readonly string[];
 }
 
 /** One authored line, spoken by a `say` beat. */
@@ -1967,7 +1979,35 @@ export class MissionRuntime {
         this.filed && this.definition.sweep?.scene !== undefined
           ? [this.definition.sweep.scene]
           : [],
+      spent: this.spentCadre(),
     };
+  }
+
+  /**
+   * Which of the player's named hulls are gone, read off the world as it
+   * stands at the close.
+   *
+   * Off `lastWorld` because `resolve` has no world of its own — it is reached
+   * from `tick` and from `deriveObjectives`, both of which run after `tick`
+   * has stored the pass's world, so it is never null by the time anything
+   * resolves; the guard is for the type and not for a case. `eidOf` is the
+   * liveness test the rest of this file already trusts: `reap` removes a dead
+   * hull before the Echo tick the mission runs on, so a hull that died this
+   * step reads 0 here on the same pass. The definition consulted is the
+   * *fielded* one (`roster.ts`), so a hull the record already kept is not in
+   * the party and is not reported again — which is why the record's union
+   * never has to guard against it.
+   */
+  private spentCadre(): string[] {
+    const world = this.lastWorld;
+    if (world === null) return [];
+    const party = this.definition.parties.find((p) => p.slot === this.definition.playerSlot);
+    const lost: string[] = [];
+    for (const unit of party?.units ?? []) {
+      if (unit.cadre === undefined) continue;
+      if (this.eidOf(world, unit.tag) === 0) lost.push(unit.cadre);
+    }
+    return lost;
   }
 
   // --- The wire ------------------------------------------------------------

@@ -249,10 +249,19 @@ const CHORD = { x: 4800, y: 3150 };
  * colours on generic hulls and the directional figures are Aptitude's. Two
  * torpedoes apiece at 700 damage, which is the arithmetic §3 states rather than
  * pretends nobody did — the dome is 1,200 HP and dies to two of them.
+ *
+ * `cadre` is the hull's name in Nineteen's roster (`nineteen.ts`, `hull`), and
+ * only the escort pair carries one: `escort-a` and `escort-b` are the raid's
+ * escort under the raid's own tags (`rimDeposits.ts`), so they are the Fourth
+ * and the Fifth there and here. The two carriers carry none. §3 gives them a
+ * load each and no name, and a hull the document does not identify with one of
+ * the six is not a hull the record can have spent — so they are seated
+ * whatever the Rest kept, the way the Choirmaster's own hull is.
  */
 const corvette = (
   tag: string,
   role: string,
+  cadre: string | undefined,
   x: number,
   y: number,
   note: string,
@@ -264,6 +273,7 @@ const corvette = (
   y,
   depthM: STAGING_DEPTH_M,
   role,
+  ...(cadre === undefined ? {} : { cadre }),
   armed: true,
   ...(releaseTick === undefined ? {} : { releaseTick }),
   souls: 5,
@@ -723,6 +733,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
           y: 450,
           depthM: STAGING_DEPTH_M,
           role: 'escort',
+          cadre: 'voice',
           armed: true,
           souls: 12,
           note: "Voice Ren Kalliso's hull: the ears at HYD 65, the 900 m gun at 60 damage a second, and — the rim being weapons-cold (finding 1) — one of only five guns in this water, all five of them the Order's and none of them aimed at anything. Nothing on this rim answers them, which is the shape §1 describes: the rank corrects by standing there and filing it",
@@ -730,14 +741,23 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
         corvette(
           'carrier-a',
           'carrier',
+          undefined,
           2900,
           600,
           "The first carrier, seated inside `the-cache`: `load-one` rigs on the first pass. 2,802 m from the nearest corner of the Chord's water — `carrier-b` is §13's round 2,700 at 2,693 — which is why the keystone cannot latch at tick zero (§13)"
         ),
-        corvette('carrier-b', 'carrier', 3100, 600, 'The second carrier, carrying `load-two`'),
+        corvette(
+          'carrier-b',
+          'carrier',
+          undefined,
+          3100,
+          600,
+          'The second carrier, carrying `load-two`'
+        ),
         corvette(
           'escort-a',
           'escort',
+          'fourth',
           2700,
           450,
           '335 m from the Choirmaster, and free from the first tick. The hull that holds the lip'
@@ -745,6 +765,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
         corvette(
           'escort-b',
           'escort',
+          'fifth',
           3300,
           450,
           '335 m from the Choirmaster on the other side, and held to 15:30 beside her — a tender with no escort inside 600 m does not move, so this is the hull that brings her down. Held by tag rather than by role, which the runtime now honours (finding 2 in the file header)',

@@ -15,6 +15,7 @@ import {
   LIFECYCLE,
   MatchPhase,
   ResolutionTier,
+  missionHeaderById,
   type AiDifficulty,
   type EchoSnapshot,
   type Faction,
@@ -32,7 +33,7 @@ import { MissionLog } from './MissionLog.tsx';
 import { MissionPanel } from './MissionPanel.tsx';
 import { MissionResult } from './MissionResult.tsx';
 import { AudioEngine, dbToGain } from '../audio/engine.ts';
-import { recordMissionResult } from '../progression/store.ts';
+import { recordMissionResult, spentCadre } from '../progression/store.ts';
 import {
   GameClient,
   type ConnectionStatus,
@@ -473,7 +474,23 @@ export function GameCanvas({
       unsubscribeSettings = subscribeSettings(applySettings);
 
       clientRef.current = client;
-      await client.connect({ name: playerName, mapId, missionId, roomId, create, resume });
+      // The campaign's spent roster rides the join (docs/campaign.md §7 row 3)
+      // — read here, at the one place the shell knows both which mission is
+      // being entered and how to ask the record, so `GameClient` never
+      // imports progression. Resolved by the mission's *campaign* rather than
+      // by the mission, because a hull the Order entered at the Rest is spent
+      // at the First and the rim too; and read fresh at connect rather than
+      // at mount for `seenScenes`' reason, since this is the moment it counts.
+      const campaign = missionId === undefined ? undefined : missionHeaderById(missionId)?.campaign;
+      await client.connect({
+        name: playerName,
+        mapId,
+        missionId,
+        roomId,
+        create,
+        resume,
+        ...(campaign === undefined ? {} : { spent: [...spentCadre(campaign)] }),
+      });
       setSessionId(client.sessionId);
       setJoinedRoomId(client.roomId);
     };

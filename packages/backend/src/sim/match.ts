@@ -104,6 +104,7 @@ import { hashWorld } from './stateHash.ts';
 import { Terrain } from './terrain.ts';
 import { VENTFRONT_DIVIDE, terrainFor, type MapDefinition } from './maps/index.ts';
 import { MissionRuntime } from './missions/runtime.ts';
+import { fieldDefinition } from './missions/roster.ts';
 import type { MissionDefinition } from './missions/types.ts';
 import type { MissionLine, MissionResolution } from './missions/runtime.ts';
 import { countFauna, DRIFT_SLOT, faunaSystem } from './systems/fauna.ts';
@@ -163,6 +164,19 @@ export interface MatchOptions {
    * replay as an empty map.
    */
   mission?: MissionDefinition;
+  /**
+   * Cadre ids of the player's hulls the campaign has already spent
+   * (docs/campaign.md §7 row 3; `missions/roster.ts`). A mission that fields
+   * one of them seats nobody under it, and its counts read over what came.
+   *
+   * Here beside `mission` for `mission`'s reason: the fielding happens in the
+   * constructor, so a replay that records the set (`Replay.spent`) rebuilds
+   * the same short party rather than the literal's full one. Already bounded
+   * by the room (`validateSpent`) by the time it reaches this option; the
+   * constructor trusts it the way it trusts `mission`. Omitted is nothing
+   * spent, which is every skirmish and every mission outside the Knights'.
+   */
+  spent?: ReadonlySet<string>;
 }
 
 const FIXED_DT = 1 / SIM.TICK_HZ;
@@ -301,7 +315,8 @@ export class Match {
             this.seed,
             map.id,
             options.fauna !== false,
-            options.mission?.id ?? null
+            options.mission?.id ?? null,
+            [...(options.spent ?? [])]
           )
         : null;
     this.seedResourceNodes();
@@ -316,8 +331,14 @@ export class Match {
     // hazards and Drift already exist — and after the seeded systems have
     // drawn from `world.rng`, so installing a mission cannot shift anybody
     // else's stream. The runtime never touches the RNG at all.
+    //
+    // Fielded through the record first: a hull the campaign has spent is not
+    // in the party the runtime installs, so nothing downstream — roles,
+    // soundings, the six named rows — ever learns it was authored.
     this.missionRuntime =
-      options.mission === undefined ? null : new MissionRuntime(options.mission);
+      options.mission === undefined
+        ? null
+        : new MissionRuntime(fieldDefinition(options.mission, options.spent ?? new Set()));
     this.missionRuntime?.install(
       this.world,
       (slot) => {

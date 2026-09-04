@@ -389,6 +389,10 @@ export const CHORD_CONCLAVE: MissionDefinition = {
          * quoted off it: a louder roster moves every distance below outward
          * together without changing which side of the trade wins.
          */
+        // §2 — "the same six hulls under Voice Ren Kalliso": each carries the
+        // cadre id Nineteen gave it (`nineteen.ts`, `hull`), so a hull the
+        // Rest kept is not seated here, and the six `extract` rows count what
+        // the Order actually has (`roster.ts`, `fieldDefinition`).
         {
           tag: 'the-voice',
           kind: UnitKind.Cruiser,
@@ -396,6 +400,7 @@ export const CHORD_CONCLAVE: MissionDefinition = {
           y: 500,
           depthM: APPROACH_FLOOR_M,
           role: 'party',
+          cadre: 'voice',
           armed: true,
           souls: 12,
           note: 'The Voice — 55 idle / 65 live, HYD 65, 1,200 hull points, 150 at 900 m. Twelve aboard',
@@ -407,6 +412,7 @@ export const CHORD_CONCLAVE: MissionDefinition = {
           y: 400,
           depthM: APPROACH_FLOOR_M,
           role: 'party',
+          cadre: 'first',
           armed: true,
           souls: 5,
           note: "The working hulls — 28 at cruise, which is exactly the interval's ceiling and the one piece of luck the Third has. Five of them, and six voices, and this tide the two counts are one number",
@@ -418,6 +424,7 @@ export const CHORD_CONCLAVE: MissionDefinition = {
           y: 400,
           depthM: APPROACH_FLOOR_M,
           role: 'party',
+          cadre: 'second',
           armed: true,
           souls: 5,
           note: '',
@@ -429,6 +436,7 @@ export const CHORD_CONCLAVE: MissionDefinition = {
           y: 600,
           depthM: APPROACH_FLOOR_M,
           role: 'party',
+          cadre: 'third',
           armed: true,
           souls: 5,
           note: '',
@@ -440,6 +448,7 @@ export const CHORD_CONCLAVE: MissionDefinition = {
           y: 600,
           depthM: APPROACH_FLOOR_M,
           role: 'party',
+          cadre: 'fourth',
           armed: true,
           souls: 5,
           note: '',
@@ -451,6 +460,7 @@ export const CHORD_CONCLAVE: MissionDefinition = {
           y: 700,
           depthM: APPROACH_FLOOR_M,
           role: 'party',
+          cadre: 'fifth',
           armed: true,
           souls: 5,
           note: '',
