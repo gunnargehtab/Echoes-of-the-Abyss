@@ -1,10 +1,10 @@
 # The Second Seeding 7 — The Second Seeding
 
 > The seventh and last mission of the Commune campaign ([campaign.md](campaign.md) §5),
-> specified — the campaign's convergence slot and its ending: the plateaus' arrival at the
-> eleven kilometres every ending is fought over ([campaign.md](campaign.md) §8), and an ending
-> that is not canon, not ranked, not merged, and not a fight ([campaign.md](campaign.md) §9).
-> One of the fourteen documents that complete the bible's campaign, written to the pattern
+> specified and built — the campaign's convergence slot and its ending: the plateaus' arrival
+> at the eleven kilometres every ending is fought over ([campaign.md](campaign.md) §8), and an
+> ending that is not canon, not ranked, not merged, and not a fight ([campaign.md](campaign.md)
+> §9). One of the fourteen documents that complete the bible's campaign, written to the pattern
 > [mission-sorrowgate.md](mission-sorrowgate.md) sets and the Commune documents continue:
 > everything here is authored — the forces, the water, the beats, the numbers and the text —
 > and code transcribes this document.
@@ -305,14 +305,15 @@ at about 22:30, before the tide (§13).
 The whole rim hears the plateaus' army come down inside the noise the concern is already
 leaving by: 72 through open water is a Contact to a Cruiser's 65 from 5,655 m and to a
 submersible's 85 from 6,688; from the middle of the slopes — about 800, 1,480, fifteen seconds
-after the release — the concern's climbing flagship has it at Classification (3.01), the reader
-on the third face at Classification (3.80), the watch at home at Bearing (1.98), the Order's
-reconnaissance at Contact (1.15) from the seat it withdrew to at 17:00 — 4,402 m off, and a
-Bearing at 2.01 from the inner station it had left — and the pair in home water at Track from
-696 m. Over the lip, at 1.6, the watch has it at Track (4.72) for the nine seconds of the last
-dive. That is *the arrangement that kept the Directorate from having to fight* ending
-([campaign.md](campaign.md) §9), as a sound — a Commune gun descending, struck, into ground
-that will hold it — and the close counts, by household, the people it is over for first.
+after the release — the concern's flagship and its western reader, both climbing north by then
+and neither at the seat it kept all day, have it at Track (4.16 and 4.22; §7), the watch at home
+at Bearing (1.98), the Order's reconnaissance at Contact (1.15) from the seat it withdrew to at
+17:00 — 4,402 m off, and a Bearing at 2.01 from the inner station it had left — and the pair in
+home water at Track from 696 m. Over the lip, at 1.6, the watch has it at Track (4.72) for the
+nine seconds of the last dive. That is *the arrangement that kept the Directorate from having to
+fight* ending ([campaign.md](campaign.md) §9), as a sound — a Commune gun descending, struck,
+into ground that will hold it — and the close counts, by household, the people it is over for
+first.
 
 ### The SIG budget
 
@@ -510,10 +511,18 @@ lifts off until it is north of y ≈ 2,900, so the column hears the basin wake a
 climbs. The third thing is Juno's element arriving inside the cloud, which is a Track at point
 blank.
 
-**The concern, from the terraces**, has what §6 tabulates and one thing more: the escorts'
-descent, 72 through the slopes' open water, at Classification (3.01) from the climbing flagship
-and (3.80) from the reader on the third face — a Commune gun coming down, named, while the
-concern leaves.
+**The concern, from the terraces**, has what §6 tabulates and one thing more, and this one it
+does not hear from the terraces at all. The 20:30 beat that releases Teel's element is the beat
+that sends the concern home, so by fifteen seconds into the descent the flagship stands at 3000,
+2069, fifteen seconds of a Cruiser's 45 north of where the beat found it, and the western reader
+at 2681, 2001, where it has been sliding east along the slopes' 2,200 m floor since the fifth
+second — a hull still at 2,275 m does not enter water whose floor is above it until the climb
+lifts it. From where the two of them actually are, the escorts' descent at 72, taken from the
+middle of the slopes as §4 takes it, is a **Track** to each — 4.16 and 4.22 — and not the
+Classification the terrace station (3.01) and the third face (3.80) would have made of it. The
+climb walks both ears to the ring's northern edge, so the path from the falling gun stops
+crossing the terraces and the means 0.836 and 0.887 become 0.970 and 1.0: a Commune gun coming
+down, named, while the concern leaves — and named louder for the leaving.
 
 **What is deliberately absent.** No Hollow, no pack, no shoal: below 2,700 m the bestiary has no
 row ([bestiary.md](bestiary.md) §4), and the lip is not the Drift's. No hazard site — the hazard
@@ -813,12 +822,14 @@ What this mission deliberately does not teach:
 `mouth-rim` · **The Rim** · one seat · 6,000 × 4,000 m · cell 250 m · base floor 2,600 m.
 
 **The same map literal as [mission-prospect.md](mission-prospect.md) §11, unchanged**, region
-for region — and the fourth mission the literal will resolve for, after Prospect and before
-[mission-first-arrival.md](mission-first-arrival.md) and
-[mission-rim-deposits.md](mission-rim-deposits.md), which is [campaign.md](campaign.md) §8's
-rule as a registry fact. What this mission adds is regions, markers, structures and parties,
-never geometry and never a ground beat. North is the staging and the way home; south is the
-lip, and past it the depression the map declines to author.
+for region — and the second mission written on it, after Prospect. The rest of the rim week is
+written on the same literal and moves no metre of it either:
+[mission-first-arrival.md](mission-first-arrival.md) on D+1,
+[mission-rim-deposits.md](mission-rim-deposits.md) on D+2 and
+[mission-second-chord.md](mission-second-chord.md) on D+3, which is [campaign.md](campaign.md)
+§8's rule as a registry fact. What this mission adds is regions, markers, structures and
+parties, never geometry and never a ground beat. North is the staging and the way home; south is
+the lip, and past it the depression the map declines to author.
 
 | Region | Rect (x, y, w, h) | Biome | Floor | What it is |
 | --- | --- | --- | --- | --- |
@@ -885,8 +896,8 @@ is the only rectangle on the map where a PR-2 hull lives at 3,000 m, which is wh
 depth manufactured means as terrain.
 
 **The Rim is a mission map and is not in the public catalogue.** One seat, no resources, not
-balanced, resolved by mission id and nothing else ([maps.md](maps.md)) — and resolved, once
-the week is built, by four.
+balanced, resolved by mission id and nothing else ([maps.md](maps.md)) — and resolved now by the
+whole rim week, an id apiece, on the one literal.
 
 ---
 
@@ -1091,7 +1102,7 @@ at all: the format survey found this the only one of the fourteen with no honest
 remains is a design agenda and not a queue: the mission-scoped half of the progression record,
 cross-mission Drift Health, the mix, and the things this document prices and declines. Every
 row below is stated so a reviewer can overrule it in one place, and the four the transcription
-found — a column that does not stand where §11 seats it, two ears §7 prices at seats they have
+found — a column that does not stand where §11 seats it, two ears §7 priced at seats they had
 left, a hold that was recorded and never enforced, and a fourth conditional beat the document
 counts as three — are marked as findings rather than as requests.
 
@@ -1100,7 +1111,7 @@ counts as three — are marked as findings rather than as requests.
 | The mission format — beats, predicates, registry, private rooms | **Built** (#190). `sound`, `extract`, `tolerance`, `attend`, `silent`, `move`, `release`, `creature`, `say` and `resolve` cover §8 and §9. §9's second table says three beats fire on a condition and the literal authors **four**: the grant fires on `sound` beside Anholt's line, and §9 lists it in the timed table as *(fired by the sowing, not the clock)* while the format files it in `conditionalBeats` with the other three (#282). The difference is where the document put the row, not what fires — none shares a choice group, none retires another, and the two on the sowing are one event heard twice, in authored order on the same pass |
 | **The region pressure grant** — the sown lip holds a PR-2 hull at 3,000 m | **Built** (#391), **and the one row this document could not have been written without.** It landed in the shape asked for here and in [mission-deep-furrow.md](mission-deep-furrow.md) §13: `pressureBonus?: number` on `MissionRegion` for ground sown before a mission opens, and the same field on the `ground` beat for ground sown during one — and **a beat carrying only `pressureBonus`, with no `biome`, `floorM` or `ceilingM`, is a valid beat**, which was this document's own addition to that shape and is the form the literal spends. Applied in `auras.ts` as `Pressure.bonus`, **max and never sum**, so a hull under both a Sounding Spire and a granted region has rented one band and not two; `world.regionPressureBonus` carries the rectangles rather than a per-eid map, so containment is tested at 60 Hz and the grant is exact on the tick a hull crosses the line and gone on the tick it leaves. Zero is a real value and removes it, which is what a furrow that failed would be. What the transcription added is the control: the same day is played twice in `missionSecondSeeding.test.ts`, and without the grant none of Teel's three is alive at the tide, while with it each stands at `DEPTH.MAX_M` carrying `Pressure.bonus` 1 and under 150 points of unhealable — the seventy §4 prices for the run south between the band line and the furrow's edge, and nothing after it. Seven tests in `missionGrants.test.ts` hold the field itself, the max against a Spire included |
 | The biome `ground` beat — the lip repainted | **Built** (#259), **and deliberately not spent.** The judge caps the repaint at *Deep Furrow* (the teaching spend) and *The Attending* 6 (the dome); the rim sowing's consequence is the zone row, the lip stays Abyssal Trench at 1.6, and every figure in §7 is priced at 1.6 after the sowing as before it. *Holds a hull the deep never rated* is the zone's prose, not a PF write |
-| **`mouth-rim`, unchanged** | **Built**, and now **three mission ids deep**: `ledger-prospect`, this mission (#394) and `attending-first-arrival` (#397) all resolve the one `MOUTH_RIM` literal, and the Rim Deposits makes four once D+2 is written. The test asserts it as *identity* rather than by transcribing §11's table — `missionMapById('mouth-rim')` is the same object `prospect.ts` resolves, and `mapById` returns nothing — because the claim is that there is one literal and not two that agree. This mission adds one region, one marker, one structure and four parties and no geometry: `beatsOf('ground')` is empty, and the single `ground` effect is conditional and writes no biome, no floor and no ceiling. The plan's second region for the staging is addressed by nothing and is not restated (§11). One correction against this document's own prose: §11 calls this the fourth mission the literal will resolve for and means the fourth of the rim week; it is the second written, and the header in `missions.ts` says second |
+| **`mouth-rim`, unchanged** | **Built**, and now the most reused literal in the registry: `ledger-prospect`, this mission (#394), `attending-first-arrival` (#397) and `chord-rim-deposits` all resolve the one `MOUTH_RIM` object, and D+3's `chord-second-chord` is landing on it as this row is written. The test asserts it as *identity* rather than by transcribing §11's table — `missionMapById('mouth-rim')` is the same object `prospect.ts` resolves, and `mapById` returns nothing — because the claim is that there is one literal and not two that agree. This mission adds one region, one marker, one structure and four parties and no geometry: `beatsOf('ground')` is empty, and the single `ground` effect is conditional and writes no biome, no floor and no ceiling. The plan's second region for the staging is addressed by nothing and is not restated (§11). §11 called this the fourth mission the literal would resolve for, meaning the fourth of the rim week; it is the **second written**, after `prospect.ts`, which is what the header in `missions.ts` says and what §11 says now |
 | **The column does not stand where §11 seats it** | **A finding, not a request.** Unit separation runs on the 60 Hz path over hull bodies, and the four seed hulls are authored close: `the-barge` is 130 m of Cruiser seated 50 m from the bed's 85 m body, so it settles from 1250, 3300 to 1250, 3400 on the first tick and pushes `seed-three` from 1250, 3400 to about 1250, 3502 — two metres outside `the-rim-furrow`. §8's *the whole column is seated inside `the-rim-furrow` at tick zero* is true of the authored coordinates and false of the settled ones: **three of the four stand inside, which is exactly the count *the-furrow* asks for and not one hull more.** The margin is two metres and it is real, so a reviewer who wants a fourth hull in the rectangle moves a seat rather than the row. The same physics cost the transcription its first bug, and it is worth the sentence because it will bite the next literal that seats a column this tightly: the sower is authored at x 1150 and stands at 1140.4 by tick one, so a test selecting it by that coordinate matched nothing, silence was never dropped, the sowing never ran, and the Complete path reported Lost against a literal that was right the whole time. Selection is by proximity to the authored seat now (`nearest`), and the rule generalises — **an authored coordinate is where a hull starts, never where it stands on tick one** |
 | **The readers' schedule as windowed emitters** | **Built** (#240; [mission-attendance.md](mission-attendance.md) §13). Six emitters on the concern's party at Prospect's face positions, SIG 80, hp 5,000 (the attendants' own durability; nothing on this water is armed to spend it), `periodTicks === onTicks` of twenty seconds — a sustained sound — and a `fromTick`/`untilTick` window of the same length. The sounding itself is Prospect's player-paced instrument; from outside it is a schedule and an emitter, and the Commune reads it as six charted, never as six proven |
 | **The attendants as attendable emitters, with Commune readings** | **Built** (#240, #246). Prospect's two, verbatim in position, period, SIG, depth and hull, re-authored with `entered`/`gap` readings in the Commune's grammar; the attend count is one, bounded by two |
@@ -1116,17 +1127,17 @@ counts as three — are marked as findings rather than as requests.
 | **Silent Running by hull** | **Built, and a finding.** `silentRunningSig` sits a hull in the 3–8 band by its idle: a Light Scout at 3.5, a Harvester at 4.5, a Corvette at 5.3, a Cruiser at 7.6. The plan priced every silent hull at 3; the barge silent and veiled is 3.0, not 1.2, and the watch at its western station has it at a Contact (1.11) — a smudge under the bed for five minutes, which §6 enters and the plan did not. `PELAGIA_SPEED_MULTIPLIER` 0.8 is the whole cost, and there is nowhere to go |
 | **Breaking silence, unarmed** | **Built, and a finding.** `BREAK_SILENCE_SIG_SPIKE` is applied by `applyFiringSpike` alone; a hull that stops running silent to do anything but fire has no spike. The plan priced the sower's start at 48 × 0.4 for two seconds; the sower goes 1.8 → 7.2 → 18 and nothing louder (§3) |
 | **The concern's terrace seat** | **A design call, made here and stated so it can be reversed** (§5): the flagship at 3000, 2750 and the bunkerage at 3000, 2850, 250 and 300 m south of the plan's, so that Prospect's fixed 07:00 leg idles the pair at a Bearing to the heavy rather than a Track, and the ledger reads the sowing rather than the chart. Nothing Prospect fixes moves |
-| **§7 prices the escorts' descent at two ears that have weighed anchor** | **A finding against this document, recorded rather than authored away.** The 20:30 beat that releases Teel's element is the same beat that sends the concern north, so fifteen seconds into a descent that takes thirty-three the flagship has left 3000, 2750 and the western reader has left the third face. §7 prices both at the seats they keep through the day and dates the reading to a moment at which neither is there; the other three ears it names — the watch at home, the Order withdrawn, the pair in home water — do stand still, and their figures are exact. The literal is not the place to fix it, because its beats are §9's to the tick and §9 is right; the fix is a sentence in §7, or two seats held fifteen seconds longer. `missionSecondSeeding.test.ts` asserts the arithmetic §7 states **and** the two `move` beats that move the ear, so the discrepancy is on the record rather than in a reviewer's head |
+| **The escorts' descent, repriced at two ears that had weighed anchor** | **A finding against this document, now answered in the sections that carried it.** The 20:30 beat that releases Teel's element is the same beat that sends the concern north, so fifteen seconds into a descent that takes thirty-three the flagship has left 3000, 2750 and the western reader has left the third face. §4 and §7 priced both at the seats they keep through the day and dated the reading to a moment at which neither is there; the other three ears they name — the watch at home, the Order withdrawn, the pair in home water — do stand still, and their figures were exact and are unchanged. The literal was not the place to fix it, because its beats are §9's to the tick and §9 is right, so the document moved: both sections now price the descent at 3000, 2069 and 2681, 2001, where a match run to the tick puts the two hulls, and the reading is a **Track** to each — 4.16 and 4.22 — rather than the Classification (3.01, 3.80) the standing seats give. `missionSecondSeeding.test.ts` still pins the standing-seat arithmetic **and** the two `move` beats that move the ear; those assertions now hold the counterfactual §7 names rather than the figure it prints |
 | **The first five minutes, unfenced** | **A design call, stated** — see the question below, which the literal keeps open and the test now plays: the Complete run sows at 02:00, in the first quiet window, and closes with *the-ledger* unmet |
 | **The Kell seed as a lift at cut time zero** | **Built** (#239), rigged on the first pass the sower is not silent, because a lift accrues nothing under Silent Running (`runtime.ts`); in no predicate, and the document says so |
 | **The sowing as a `MissionSounding`** — 250 m, sixty seconds, SIG 45, bow on, a broken hold resetting | **Built** (#275). The figures are Deep Furrow's, one mission further down; `holdingSounding` refuses a silent hull, which is why the sower must stop being quiet, and `accrueSounding` resets |
 | **Six locks with a reason in register; active sonar available** | **Built** — `AbilityLock` is continuous state the HUD greys out with the reason attached ([ui-ux.md](ui-ux.md) §7); `weapons`, `torpedoes`, `mines`, `depthCharges`, `noisemakers`, `construction`. `activeSonar` is not in the list, and §3 prices it, including the one thing it does not do: interest the riser (19 against 55) |
 | **Scripted parties' ears, resolved** | **Built** (#323) — the concern, the watch, the reconnaissance and the attendants' party are all installed as observers, and the first three of them hear: an emitter is spawned at HYD 0 and is deaf (`world.ts`), so the attendants' slot resolves nothing back, which is what makes the ledger a reading of three navies and not of four |
 | **A predicate over another party's state** — *the watch entered the bed* | **Not expressible, and not needed.** The union asks nothing about what another party heard (`types.ts`); the entry is authorship — the watch stands 1,160 m from a bed at 8 through 1.6 for four minutes and forty seconds in every run — and §6 states it as a fact D+1 and D+2 inherit |
-| **The rim calendar** | **A §1 and §6 statement, not a mechanism.** D here; D+1 First Arrival; D+2 The Rim Deposits; D+3 The Second Chord. Four documents state it and none shows another's army on a tide that campaign does not put it there. D and D+1 are now built, and they play the same map literal from opposite ends of the same week |
+| **The rim calendar** | **A §1 and §6 statement, not a mechanism.** D here; D+1 First Arrival; D+2 The Rim Deposits; D+3 The Second Chord. Four documents state it and none shows another's army on a tide that campaign does not put it there. D, D+1 and D+2 are built and D+3 is landing beside them, and they play the same map literal from four ends of one week |
 | **Briefing variants** — an already-seen reading of Anholt's briefing | **The mechanism is built** (#378, shipped in #395): `MissionHeader.briefingVariants` is an ordered list of `{ scene, briefing }`, first match wins, selected **client-side** off the progression record's seen-scene set, so the room is never told which text was read — [campaign.md](campaign.md) §1 exactly, a witnessed scene changing the briefing and never the mission. **This header authors none, and the reason is that its pair is not a scene anybody latches.** One scene exists in the campaign, `marr-plateau-filed`, latched by *Tend*'s sweep and spent by the *Thin Water* and *Convocation* headers; it is a fact about a plateau eighty kilometres north, and nothing Anholt says under the bed turns on whether the concern filed it. The variant this ending would want is this day heard from the other side — a player who surveyed this rim as the concern in [mission-prospect.md](mission-prospect.md) and now plants on it — and Prospect latches no scene, belongs to another campaign, and may never have been played. Naming a scene here would be inventing an id, so none is named |
 | **Progression** — the column's count from Radicals, the Deep Furrow and In Writing results, and this ending recorded anywhere after the tide | **The record is built; this is not**, and [mission-deep-furrow.md](mission-deep-furrow.md) §13 states the split first. A per-mission history shipped with the campaign board (#371, `packages/frontend/src/progression/store.ts`), written once from the `missionOver` payload and keeping the best reading a mission has ever returned — so *this ending is recorded*, and [campaign.md](campaign.md) §11 says so. What it keeps is an **outcome** — `MissionRecord` carries that one field — and the record has since taken the first of its sibling keys: `scenes`, the seen-scene set the briefing variants read (#395), written from the `missionOver` payload beside `missions`, and reading empty in a record that predates it. That is the shape the rest of this row wants and not its substance: what is mission-scoped — whether the lip was sown, who was in the furrow when the basin woke, how many of the thirty-three came south — is a second sibling key beside those two, and it is not started. It is still the row every ending document leans on and none owns ([mission-item-nine.md](mission-item-nine.md) §13), and until it lands the column is authored whole as thirty-three, the sower's crew as In Writing's evacuated, and §3 says which runs it assumes |
-| **Cross-mission Drift Health** — rule 5's fourfold pair | **Not built**, named here and not asked for: `mouth-rim` is played four times in one week, and a rim the concern surveyed loudly on D is a rim with a ledger on D+1, which nobody tells the Directorate. Two of that week's four literals now exist and neither carries a fact out of its own tide; per-map Drift Health is the third sibling key `store.ts` was shaped to receive, and nothing has asked for it |
+| **Cross-mission Drift Health** — rule 5's fourfold pair | **Not built**, named here and not asked for: `mouth-rim` is played four times in one week, and a rim the concern surveyed loudly on D is a rim with a ledger on D+1, which nobody tells the Directorate. That week's literals now all exist and none carries a fact out of its own tide; per-map Drift Health is the third sibling key `store.ts` was shaped to receive, and nothing has asked for it |
 | **Bloom Surge** — the Commune's superweapon | **Absent, and deliberately not asked for** ([mission-in-writing.md](mission-in-writing.md) §13; [mission-convocation.md](mission-convocation.md) §13). Nothing in `packages/` carries it and no ability layer exists; the mission is *everything at once* and a detonation would be one more thing, in the letter's grammar |
 | **The Seeding ability** — 400 m, +1 PR for sixty seconds | **Deliberately not asked for**, and no longer for want of a mechanism: `MissionCommanderAbility` shipped with [mission-convocation.md](mission-convocation.md) (#373), so a once-per-match button with an origin, a radius, a duration and a SIG it broadcasts is now a format row. What it carries is a speed multiplier and Silent Running immunity, not a pressure grant, so this ability would still be a new field — and the document does not want one. The zone is [systems-depth.md](systems-depth.md) §3's conversion, built by the row above, and the plan's own words are *the row, not a repaint* |
 | `souls` | **Documentation** — nothing in the runtime reads it ([mission-thin-water.md](mission-thin-water.md) §13); the epilogue carries thirty-three by hand, and the Complete reading says *by household* because that is how the plateaus count |
