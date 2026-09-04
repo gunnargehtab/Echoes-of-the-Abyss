@@ -316,7 +316,9 @@ describe('the beat schedule', () => {
           );
           continue;
         }
-        if (beat.kind === 'resolve' || beat.kind === 'say') continue;
+        // `bell` names nothing either: a bell belongs to a row, and the walk
+        // states where the rows are (types.ts, `bell`).
+        if (beat.kind === 'resolve' || beat.kind === 'say' || beat.kind === 'bell') continue;
         assert.ok(
           placed.has(beat.tag) || spawnedByBeat.has(beat.tag),
           `${mission.id}: a ${beat.kind} beat names "${beat.tag}", which nothing places`
@@ -465,6 +467,14 @@ describe('the objectives', () => {
           .map((objective) => objective.markerId)
           .filter((id): id is string => id !== undefined)
       );
+      // A walk row names one too, and ships it while that row is the live one
+      // (`projectMissionView`). The rule the test is enforcing is "authored and
+      // then never sent", and a row marker is sent — one at a time, which is
+      // the point: an objective's single `markerId` cannot follow a circuit
+      // that moves.
+      for (const row of mission.walk?.rows ?? []) {
+        if (row.markerId !== undefined) named.add(row.markerId);
+      }
       for (const marker of mission.markers) {
         assert.ok(
           named.has(marker.id),
@@ -809,6 +819,138 @@ describe('the objectives', () => {
       for (const reading of Object.values(mission.epilogue)) {
         assert.ok(reading.trim().length > 0, `${mission.id}: an outcome has no reading`);
       }
+    }
+  });
+});
+
+describe("the walk, the holds and the commander's act", () => {
+  it('walks rows that are on the map, in a circuit with no repeats', () => {
+    // A row off the map is a row nothing can stand on, and the walk waits at
+    // it forever: the counter simply never moves, which is the quietest way a
+    // mission can be broken.
+    for (const mission of MISSIONS) {
+      const walk = mission.walk;
+      if (walk === undefined) continue;
+      const map = missionMapById(mission.mapId)!;
+      const seen = new Set<string>();
+      assert.ok(walk.rows.length > 0, `${mission.id}: a walk with no rows`);
+      for (const row of walk.rows) {
+        assert.ok(
+          row.x >= 0 && row.x <= map.widthM && row.y >= 0 && row.y <= map.heightM,
+          `${mission.id}: row "${row.id}" at ${row.x},${row.y} is off the map`
+        );
+        assert.ok(row.radiusM > 0, `${mission.id}: row "${row.id}" has no water`);
+        assert.ok(!seen.has(row.id), `${mission.id}: two rows are called "${row.id}"`);
+        seen.add(row.id);
+        if (row.markerId === undefined) continue;
+        assert.ok(
+          mission.markers.some((marker) => marker.id === row.markerId),
+          `${mission.id}: row "${row.id}" names marker "${row.markerId}", which is not authored`
+        );
+      }
+    }
+  });
+
+  it('states a hold, a ceiling, a patience and a bell that can all happen', () => {
+    for (const mission of MISSIONS) {
+      const walk = mission.walk;
+      if (walk === undefined) continue;
+      assert.ok(walk.holdTicks > 0, `${mission.id}: a row that turns instantly is not held`);
+      assert.ok(walk.stallTicks > 0, `${mission.id}: a walk that restarts instantly never walks`);
+      assert.ok(
+        walk.ceilingSig > 0 && walk.ceilingSig <= 100,
+        `${mission.id}: a ceiling of ${walk.ceilingSig} is off the meter`
+      );
+      assert.ok(
+        walk.bell.sig > 0 && walk.bell.sig <= 100,
+        `${mission.id}: a bell at ${walk.bell.sig} is off the meter`
+      );
+      assert.ok(walk.bell.ticks > 0, `${mission.id}: a bell nobody can hear is not a bell`);
+    }
+  });
+
+  it('counts no more rows than the circuit has, and counts none where there is no circuit', () => {
+    for (const mission of MISSIONS) {
+      for (const objective of mission.objectives) {
+        if (objective.predicate.kind !== 'walk') continue;
+        assert.ok(
+          mission.walk !== undefined,
+          `${mission.id}: "${objective.id}" counts a walk the mission does not author`
+        );
+        assert.ok(
+          objective.predicate.count <= (mission.walk?.rows.length ?? 0),
+          `${mission.id}: "${objective.id}" wants ${objective.predicate.count} rows turned, ` +
+            `and the circuit has ${mission.walk?.rows.length ?? 0}`
+        );
+      }
+      // The stall reading is the walk's second sentence, so a mission with no
+      // walk that authored one would show a line that can never appear.
+      for (const objective of mission.objectives) {
+        if (objective.stallText === undefined) continue;
+        assert.ok(
+          mission.walk !== undefined,
+          `${mission.id}: "${objective.id}" reads a stall in a mission with nothing to stall`
+        );
+      }
+    }
+  });
+
+  it('pays campaign.md §10 for a hold that closes the mission, out of the hold itself', () => {
+    // The telegraph test above measures the gap between the last loud beat and
+    // the `resolve`, and a hold has no authored tick to measure from — its
+    // moment is a fact about where somebody drove. So the rule is paid by the
+    // hold's own duration: sixty continuous seconds of a hull standing in the
+    // player's own ground, which is exactly what §8 designs and the loudest
+    // sixty-second warning this game can produce.
+    for (const mission of MISSIONS) {
+      for (const hold of mission.holds ?? []) {
+        assert.ok(
+          mission.regions.some((region) => region.id === hold.region),
+          `${mission.id}: hold "${hold.id}" names region "${hold.region}", which is not authored`
+        );
+        assert.ok(
+          mission.objectives.some((objective) => objective.id === hold.objectiveId),
+          `${mission.id}: hold "${hold.id}" fails "${hold.objectiveId}", which is not an objective`
+        );
+        assert.ok(hold.ticks > 0, `${mission.id}: hold "${hold.id}" takes no time at all`);
+        if (hold.closes !== true) continue;
+        assert.ok(
+          hold.ticks >= MISSION.FAILURE_TELEGRAPH_S * SIM.TICK_HZ,
+          `${mission.id}: hold "${hold.id}" ends the mission after ` +
+            `${hold.ticks / SIM.TICK_HZ}s, against §10's ${MISSION.FAILURE_TELEGRAPH_S}s`
+        );
+      }
+    }
+  });
+
+  it("hangs the commander's act at a point on the map, and collapses only a circuit that exists", () => {
+    for (const mission of MISSIONS) {
+      const act = mission.commanderAbility;
+      if (act === undefined) continue;
+      const map = missionMapById(mission.mapId)!;
+      assert.ok(
+        act.x >= 0 && act.x <= map.widthM && act.y >= 0 && act.y <= map.heightM,
+        `${mission.id}: the act happens at ${act.x},${act.y}, off the map`
+      );
+      assert.ok(act.radiusM > 0, `${mission.id}: the act reaches nothing`);
+      assert.ok(act.durationTicks > 0, `${mission.id}: the act lasts no time`);
+      assert.ok(
+        act.sig > 0 && act.sig <= 100,
+        `${mission.id}: the act broadcasts ${act.sig}, off the meter`
+      );
+      // Once per match, at a price. An act with neither an effect on speed nor
+      // a walk to collapse is a button that costs SIG and does nothing.
+      assert.ok(
+        act.speedMultiplier !== 1 ||
+          act.silentRunningImmunity === true ||
+          act.collapsesWalk === true,
+        `${mission.id}: the act is an invoice with nothing on the other side of it`
+      );
+      if (act.collapsesWalk !== true) continue;
+      assert.ok(
+        mission.walk !== undefined,
+        `${mission.id}: the act collapses a circuit the mission does not author`
+      );
     }
   });
 });
@@ -1231,6 +1373,7 @@ describe('a beat fired by a condition, as docs/mission-aptitude.md §13 asks for
           );
           continue;
         }
+        if (beat.kind === 'bell') continue;
         assert.ok(
           placed.has(beat.tag),
           `${mission.id}: a conditional ${beat.kind} beat names "${beat.tag}", ` +

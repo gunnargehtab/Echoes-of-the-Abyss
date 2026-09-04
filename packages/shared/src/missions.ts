@@ -310,6 +310,35 @@ export const SEEDING_THIN_WATER_HEADER: MissionHeader = {
   ],
 };
 
+export const SEEDING_CONVOCATION_HEADER: MissionHeader = {
+  id: 'seeding-convocation',
+  campaign: 'seeding',
+  ordinal: 3,
+  name: 'The Second Seeding \u2014 Convocation',
+  premise:
+    'A plateau votes while it is being stood on. The walk goes row to row, and it takes exactly as long as it takes.',
+  mapId: 'marr-plateau',
+  // The tide turns at 19:00 (docs/mission-convocation.md §9), inside §10's
+  // 12–25. The second mission to resolve to `marr-plateau`, which is §11's
+  // most consequential scoping decision and is deliberate.
+  lengthBandS: [1080, 1200],
+  /**
+   * Spoken by Tidespeaker Ysolde Marr, off-tide, after the bell —
+   * docs/mission-convocation.md §12, verbatim. Public for Tend's reason and
+   * one of its own: a briefing that orders nobody to do anything has nothing
+   * to give away, and this one states the ceiling, the concern's method and
+   * the bell's existence in advance because §4's whole argument is that the
+   * player should meet none of the three for the first time under pressure.
+   */
+  briefing: [
+    "We rang it off-tide. You'll have heard. Everyone will have heard \u2014 Anholt's people, Teel's, and the lane. That's not a slip. A plateau that convenes says so, out loud, and stops working while it does.",
+    "Anholt asks us to turn a second seeding. We're turning it. It opens on the east gardens and it goes row to row, and it comes back when it comes back with nothing new in it. We can't make that faster. We've never been able to, and most tides that's been the best thing about us.",
+    "The concern is coming up the drop this morning to read something at us. We think they mean to stand on the rows while they do it. They won't fire on a garden \u2014 a garden's worth nothing to them burnt, and we'd rather you heard that from us than worked it out.",
+    "A row turns when there's somebody on it and it's quiet enough to hear itself. Juno's brought hulls. We didn't vote on that either. They're loud, so they can't be where the question is \u2014 the question has to be able to hear itself, and a corvette at twenty-eight is two rows of nothing.",
+    "There's a bell for all of this. Every row at once. It exists. Nobody has rung it, and I've had thirty years to. We'd rather come home without ringing it. We're saying *rather*.",
+  ],
+};
+
 export const ATTENDING_ATTENDANCE_HEADER: MissionHeader = {
   id: 'attending-attendance',
   campaign: 'attending',
@@ -396,6 +425,7 @@ export const MISSION_HEADERS: readonly MissionHeader[] = [
   LEDGER_ITEM_NINE_HEADER,
   SEEDING_TEND_HEADER,
   SEEDING_THIN_WATER_HEADER,
+  SEEDING_CONVOCATION_HEADER,
   ATTENDING_ATTENDANCE_HEADER,
   ATTENDING_INTAKE_HEADER,
   CHORD_APTITUDE_HEADER,
@@ -474,6 +504,42 @@ export interface ObjectiveView {
   markerId?: string;
 }
 
+/**
+ * The one act a commander is authored to take — docs/characters.md's
+ * *Commander ability* entries, on the wire.
+ *
+ * Not a `MissionAbility`. That union is a **lock list**: the affordances a
+ * mission withholds from a player who would otherwise have them, which is why
+ * `AbilityLock` carries a reason and nothing else. This is the opposite
+ * arrangement — something a mission *grants*, that no other match has — so it
+ * is a second type rather than an eighth member of the first. Conflating them
+ * would have `locks` mean "off" for seven entries and "on" for one.
+ *
+ * Everything here is the player's own state: whether their own commander has
+ * spent their own once-per-match act, and how long their own hulls are still
+ * carrying it. Nothing in this payload is a fact about anybody else, which is
+ * why it can be sent at all.
+ */
+export interface CommanderAbilityView {
+  id: string;
+  /** The button's name, in register, shown verbatim. Never templated. */
+  label: string;
+  /** One authored line under it — what ringing it does, and what it costs. */
+  description: string;
+  /** False once it has been spent, or before the mission hands it over. */
+  available: boolean;
+  /** True from the tick it is rung. Once per match; there is no second. */
+  spent: boolean;
+  /** Seconds still running, 0 when it is not. Whole seconds, as the panel reads it. */
+  remainingS: number;
+  /**
+   * Why the button is dead right now, or absent when it is live — `AbilityLock`'s
+   * arrangement, for docs/ui-ux.md §7's rule: a disabled action greys out *with
+   * a reason attached*, never silently.
+   */
+  reason?: string;
+}
+
 export interface MissionView {
   missionId: string;
   /** The simulation tick this view was resolved beside. No wall-clock anywhere. */
@@ -485,6 +551,11 @@ export interface MissionView {
   sigBudget: number;
   /** Seconds of silence-debt owed. 0 while compliant (docs/mission-sorrowgate.md §4). */
   debtS: number;
+  /**
+   * The commander's one act, when the mission authors one. Absent is the
+   * twelve missions written before docs/mission-convocation.md asked for one.
+   */
+  ability?: CommanderAbilityView;
 }
 
 export interface MissionResultPayload {

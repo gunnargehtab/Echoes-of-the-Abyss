@@ -57,9 +57,16 @@ export interface MissionPanelProps {
   view: MissionView;
   /** Recentre the camera. The same callback the contact log focuses with. */
   onFocus(x: number, y: number): void;
+  /**
+   * Ring the commander's one act — docs/characters.md. Absent in a mission
+   * that grants none, and the button is not rendered at all rather than
+   * rendered dead: an affordance that could never work is not an affordance
+   * with a reason, it is furniture.
+   */
+  onCommanderAbility?(): void;
 }
 
-export function MissionPanel({ view, onFocus }: MissionPanelProps) {
+export function MissionPanel({ view, onFocus, onCommanderAbility }: MissionPanelProps) {
   const markerFor = (objective: ObjectiveView) =>
     objective.markerId === undefined
       ? undefined
@@ -137,6 +144,33 @@ export function MissionPanel({ view, onFocus }: MissionPanelProps) {
               </li>
             ))}
           </ul>
+        )}
+
+        {view.ability !== undefined && onCommanderAbility !== undefined && (
+          // The commander's one act. A button rather than a key, and one that
+          // states its own price in the line beneath it: docs/campaign.md §10
+          // asks that a mission's system be load-bearing and legible, and an
+          // act that can be taken exactly once should be read before it is
+          // reached for. Dimmed rather than removed once spent, with the reason
+          // attached, per the same rule the locks above follow (docs/ui-ux.md
+          // §7) — what the plateau has already done is part of what the panel
+          // is for.
+          <div className="objectives-act">
+            <button
+              type="button"
+              className={`objectives-act-button${view.ability.available ? '' : ' spent'}`}
+              disabled={!view.ability.available}
+              onClick={onCommanderAbility}
+            >
+              {view.ability.label}
+            </button>
+            <p className="objectives-act-reason">
+              {view.ability.reason ?? view.ability.description}
+            </p>
+            {view.ability.remainingS > 0 && (
+              <p className="objectives-act-running">ringing · {view.ability.remainingS}s</p>
+            )}
+          </div>
         )}
 
         {view.debtS > 0 && (

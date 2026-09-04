@@ -14,6 +14,7 @@
 import { SIM } from '@echoes/shared';
 import type {
   AbilityLock,
+  CommanderAbilityView,
   EchoSnapshot,
   MissionMarker,
   MissionView,
@@ -45,6 +46,19 @@ export interface MissionState {
   /** How many authored soundings this observer's hulls finished — see `sound`. */
   sounded: number;
   /**
+   * The walk, when the mission authors one — see `MissionWalk`.
+   *
+   * Three numbers and a flag, and not one of them is a fact about anybody else.
+   * `turned` is how far the plateau's own question has got, `rowIndex` says
+   * which authored row is live, and `stalled` says *this row is not turning* —
+   * never why, and never who. The cause may be another party's hull inside the
+   * radius, and that is precisely the sentence this field is shaped to be
+   * unable to carry.
+   */
+  walk?: { turned: number; rowIndex: number; stalled: boolean };
+  /** The commander's one act, when the mission grants one — see `CommanderAbilityView`. */
+  ability?: CommanderAbilityView;
+  /**
    * Sim ticks this observer's own force stood at each resolution tier in
    * somebody else's ears, indexed by `ResolutionTier` — see `tolerance`.
    *
@@ -70,6 +84,14 @@ export function projectMissionView(
     objectives.push(objectiveView(definition, objective, state, own));
     if (objective.markerId !== undefined) named.add(objective.markerId);
   }
+  // The live row's marker, and only that one. An objective carries a single
+  // `markerId` and the walk *moves*, so the circuit's seven rows cannot be
+  // named the way every other marker is — but shipping all seven would put the
+  // whole authored circuit on the wire at 01:00, which is the same leak
+  // `revealAtTick` exists to prevent one objective at a time. The plateau
+  // knows where its own question is; it does not know where it will be.
+  const walkRow = state.walk === undefined ? undefined : definition.walk?.rows[state.walk.rowIndex];
+  if (walkRow?.markerId !== undefined) named.add(walkRow.markerId);
   return {
     missionId: definition.id,
     tick: own.tick,
@@ -95,6 +117,7 @@ export function projectMissionView(
     locks: definition.locks.map((lock): AbilityLock => ({ ...lock })),
     sigBudget: definition.sigBudget,
     debtS: state.debtS,
+    ...(state.ability === undefined ? {} : { ability: state.ability }),
   };
 }
 
@@ -124,7 +147,8 @@ function objectiveView(
       },
       state.attended,
       (tier) => exposedAtLeast(state.exposedByTier, tier),
-      state.sounded
+      state.sounded,
+      state.walk?.turned ?? 0
     );
     view.progress = objective.predicate.kind === 'tolerance' ? inSeconds(progress) : progress;
   }
@@ -161,6 +185,11 @@ function inSeconds(progress: { done: number; of: number }): { done: number; of: 
  */
 function textFor(objective: MissionObjective, state: MissionState): string {
   if (objective.debtText !== undefined && state.debtS > 0) return objective.debtText;
+  // The plateau's second reading of the same rule, while the walk is stalled —
+  // docs/mission-convocation.md §12. `debtText`'s arrangement, and checked
+  // after it for the same reason it is checked at all: a mission authors at
+  // most one of the two, and no mission authors both.
+  if (objective.stallText !== undefined && state.walk?.stalled === true) return objective.stallText;
   return objective.text;
 }
 
@@ -185,6 +214,12 @@ function counts(objective: MissionObjective): boolean {
     // waited out its twenty seconds. A counter over it states the objective
     // rather than decorating it.
     objective.predicate.kind === 'sound' ||
+    // "Four of seven turned" is the whole of what the plateau knows about its
+    // own question, and docs/mission-convocation.md §4's restart is only
+    // legible as a *drop* in a number the player was already reading. A
+    // counter that appeared at the close would make the mission's central
+    // reversal invisible at the moment it happens.
+    objective.predicate.kind === 'walk' ||
     // The tolerance is a budget the player spends rather than an objective they
     // complete, and §5 is explicit that nothing about it is hidden: "the
     // exposure readout carries the tier from the first tick". A counter that

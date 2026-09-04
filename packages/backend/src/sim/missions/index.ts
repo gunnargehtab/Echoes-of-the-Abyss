@@ -22,6 +22,7 @@ import { LEDGER_PROSPECT } from './prospect.ts';
 import { LEDGER_SHIFT_CHANGE } from './shiftChange.ts';
 import { LEDGER_TOLERANCE } from './tolerance.ts';
 import { PROLOGUE_SORROWGATE } from './sorrowgate.ts';
+import { SEEDING_CONVOCATION } from './convocation.ts';
 import { SEEDING_TEND } from './tend.ts';
 import { SEEDING_THIN_WATER } from './thinWater.ts';
 import type { MissionDefinition } from './types.ts';
@@ -30,6 +31,7 @@ export * from './types.ts';
 export * from './predicates.ts';
 export * from './conditional.ts';
 export * from './sounding.ts';
+export * from './walk.ts';
 export * from './view.ts';
 export * from './runtime.ts';
 export {
@@ -44,6 +46,7 @@ export {
   LEDGER_SHIFT_CHANGE,
   LEDGER_TOLERANCE,
   PROLOGUE_SORROWGATE,
+  SEEDING_CONVOCATION,
   SEEDING_TEND,
   SEEDING_THIN_WATER,
 };
@@ -59,6 +62,7 @@ export const MISSIONS: readonly MissionDefinition[] = [
   LEDGER_ITEM_NINE,
   SEEDING_TEND,
   SEEDING_THIN_WATER,
+  SEEDING_CONVOCATION,
   ATTENDING_ATTENDANCE,
   ATTENDING_INTAKE,
   CHORD_APTITUDE,

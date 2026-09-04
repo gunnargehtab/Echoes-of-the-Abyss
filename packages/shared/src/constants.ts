@@ -391,6 +391,36 @@ export const SILENT_RUNNING = {
 } as const;
 
 /**
+ * A commander's one authored act — docs/characters.md, the four *Commander
+ * ability* entries, of which Marr's is the first with a mechanism behind it.
+ *
+ * Here rather than in a mission literal for the rule `CLAUDE.md` states about
+ * both: a mission's authored figures (a sounding's 400 m, a row's ceiling) live
+ * in the literal because they are one mission's arithmetic, and these are not —
+ * `characters.md` states Convocation's radius, its bonus and its duration as
+ * facts about *Ysolde Marr*, which every mission she commands would have to
+ * agree with. A second Commune mission that authored 2,100 m would not be a
+ * tuning decision; it would be a different woman.
+ *
+ * What is *not* here is the SIG the act broadcasts. That figure is
+ * docs/mission-convocation.md §4's — "every bell at once is authored at SIG 70",
+ * and the word is the document's — because what a convocation costs is a fact
+ * about the terrace it is rung on, and the same bell on a plateau with three
+ * rows is a different invoice. It stays in the literal, beside the walk it
+ * rings.
+ */
+export const COMMANDER_ABILITY = {
+  /**
+   * SPEC — docs/characters.md, Marr: "All Commune units within 2,000 m gain
+   * +25% speed and immunity to Silent Running penalties for 15 s. Usable once
+   * per match."
+   */
+  CONVOCATION_RADIUS_M: 2000,
+  CONVOCATION_SPEED_MULTIPLIER: 1.25,
+  CONVOCATION_DURATION_S: 15,
+} as const;
+
+/**
  * Ordnance — docs/systems-combat.md.
  *
  * The combat doc's §3 table is the acoustic contract for everything a weapon
