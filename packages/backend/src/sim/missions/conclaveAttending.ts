@@ -4,8 +4,19 @@
  * A data literal in `intake.ts`' idiom, on `attendance.ts`' rite: the document
  * owns the forces, the water, the beats, the numbers and the text. Where this
  * file and that document disagree, one of them is wrong and the fix says which
- * — and on the day this was written the document was wrong nowhere, which is
- * stated below with the arithmetic that establishes it.
+ * — and on the day this was written every number in it reproduced against the
+ * shipped model, which is stated below with the arithmetic that establishes it.
+ *
+ * **One sentence of it does not, and it is prose rather than a number.** §4
+ * says the cells "can be entered only by a hull that has crossed more than
+ * three quarters of that water"; `attend` counts what the observer's *slot*
+ * resolved, and the dome is on that slot. Played out with nobody ordered
+ * anywhere, two of the six rows are entered on the first mission pass, so §8's
+ * count of three asks for one crossing rather than three. §8 owns the count
+ * and this literal transcribes it unchanged; `missionConclaveAttending.test.ts`
+ * pins the measured behaviour with both rows named, so the day the count or
+ * the dome's seat moves it is a failing test rather than a surprise in a
+ * playthrough.
  *
  * Four things make this mission the shape it is, and all four are data:
  *
@@ -44,8 +55,11 @@
  * is not this mission's, because the depth §9 authors is 2,800 m and the
  * Cantorate terrace's floor is 2,800 m, and `Terrain.admits` is inclusive of
  * the floor. Driven from (2025, 3875) to (2025, 2000) at 2,800 m the first
- * arrival reaches its point 61.0 s after the beat — §9's 11:42, to the second
- * the document rounds to — and the second reaches its own 52.6 s after 16:00.
+ * arrival reaches its point 61.2 s after the beat — 11:41.2, which §9 rounds
+ * up to 11:42 — and the second reaches its own 52.8 s after 16:00, which §9
+ * rounds up to 16:54. Both roundings are the document's and neither is load
+ * bearing: §8's dependent sentence, that the second holds before Korrin closes
+ * the calling, is true by 7.2 s rather than by six.
  * The 3,000 m line §13 rejects is the one that stalls, into ground exactly
  * 200 m shallower than itself. Both are therefore authored as one `creature`
  * beat each, as §9 writes them.

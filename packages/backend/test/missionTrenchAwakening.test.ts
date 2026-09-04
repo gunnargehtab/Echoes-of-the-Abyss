@@ -30,10 +30,20 @@
  *   own ping stand in its place, and this file pins the shape of the thing that
  *   is missing so nobody mistakes the stand-in for the real one.
  *
- * Nothing here steps a match, deliberately. Everything this mission claims that
- * is worth catching is either an authoring failure or a piece of arithmetic
- * against the roster, and both are visible by reading the table with the
- * engine's own rules applied to it.
+ * Almost nothing here steps a match: everything this mission claims is either an
+ * authoring failure or a piece of arithmetic against the roster, and both are
+ * visible by reading the table with the engine's own rules applied to it. The
+ * last suite is the exception and earns it — §4's third movement is a claim
+ * about what happens to a row that gives no orders at all, and the only honest
+ * way to check that is to give none and run the tide out.
+ *
+ * **Where a figure in the document and a figure the engine produces disagree,
+ * the assertion holds the engine and the message names the document's number
+ * and why it differs.** §5, §9 and §13 measure the two transits from the point
+ * each beat *names*; `act` parks a targetless driven creature forty metres
+ * short of it, so the line, the perpendicular and the two tilde-marked seconds
+ * all land a little off the prose. Every such row is called out where it is
+ * asserted rather than absorbed silently.
  */
 
 import { describe, it } from 'node:test';
@@ -41,6 +51,7 @@ import assert from 'node:assert/strict';
 
 import {
   ACTIVE_SONAR,
+  ATTENDING_TRENCH_AWAKENING_HEADER,
   Biome,
   CONSTRUCTION,
   DEPTH,
@@ -59,14 +70,19 @@ import {
   STRUCTURE_AURAS,
   StructureKind,
   THERMAL_DRAW,
+  THERMOCLINE,
+  THERMOCLINE_DUCT_TOP_M,
   TIER_THRESHOLD_MULTIPLIER,
   UnitKind,
   detectionRatio,
   faunaStatsFor,
+  missionHeaderById,
   requiredPressureRating,
   statsFor,
   structureStatsFor,
+  type EchoSnapshot,
 } from '@echoes/shared';
+import { Match } from '../src/sim/match.ts';
 import { SHALLOW_BAND, mapById, missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import { ATTENDING_TRENCH_AWAKENING } from '../src/sim/missions/trenchAwakening.ts';
 
@@ -785,7 +801,12 @@ describe('the two calls, as the runtime will run them — §5, §6, §9, §13', 
     assert.equal(reach, 197.5, "§5: `lengthM / 2 + radiusM`, and the document's figure");
     const perpendicular = offTheLine(from, THROUGH_THE_YARD, GROWER);
     assert.ok(perpendicular < reach, "§13: the line passes inside the Foundry's footprint");
-    assert.equal(Math.round(perpendicular), 40, "§13: forty metres off the grower's centre");
+    // §13 says "41 m off the Foundry's centre" and measures from (2500, 2000),
+    // the point the 10:00 beat names. The line the runtime actually draws starts
+    // forty metres short of that, at (2500, 2040), which swings the perpendicular
+    // to 39.5. The document's conclusion is untouched either way — what it turns
+    // on is the swept metres below, and those are 349 from both starts.
+    assert.equal(Number(perpendicular.toFixed(1)), 39.5, '§13: 41 m from the point it names');
     // The metres of the swept line inside the reach, against the metres 2,000
     // HP at 220/s needs. §13 quotes 349 against 273, and the travel stops at
     // 40 m short of the far end — which is what takes the exit off the end of
@@ -802,12 +823,34 @@ describe('the two calls, as the runtime will run them — §5, §6, §9, §13', 
     );
     assert.ok(Math.abs(insideM - 349) < 1, '§13: three hundred and forty-nine metres');
     // §9's two tilde-marked ticks, to the second the engine will produce them.
+    // §9 prints ~13:28 and ~13:37 off its own 27.9 s of walk from (2500, 2000);
+    // from the parked start it is 29.2 s, so both land 1.3 s later — inside the
+    // hedge the tildes are there for, and stated rather than rounded away.
     const entryAtS = T(13) / SIM.TICK_HZ + entryM / SOUNDER.speed;
     const spentAtS = entryAtS + FOUNDRY.maxHp / SOUNDER.damagePerS;
-    assert.equal(Math.round(entryAtS), 809, '§9: ~13:29, inside the reach');
-    assert.equal(Math.round(spentAtS), 818, '§9: ~13:38, and the yard stops');
+    assert.equal(Number((entryM / SOUNDER.speed).toFixed(1)), 29.2, '§5: 27.9 s from (2500, 2000)');
+    assert.equal(Math.round(entryAtS), 809, '§9: ~13:28 authored, 13:29.2 run');
+    assert.equal(Math.round(spentAtS), 818, '§9: ~13:37 authored, 13:38.3 run');
     assert.ok(spentAtS * SIM.TICK_HZ < T(14, 30), '§9: spent before the commitment lapses');
     assert.equal(DRIFT.TRANSIT_SIG, 70, '§7: nine seconds of SIG 70 on a 2,000-HP structure');
+    // The climb the line depends on, and the quietest way this beat could fail.
+    // It crosses out of the Axis (floor 2,400) into the Rendering Row (floor
+    // 1,850) at y = 1,250, and `resolveStep` refuses a creature's step into
+    // ground that does not admit its depth — so the 1,850 m the beat carries has
+    // to be *reached* before the boundary, or the colossus stops on the lip of
+    // the row and the yard is never touched. It is, with twice the margin: the
+    // climb from the axis head's 2,000 m is 150 m at DRIFT.VERTICAL_SPEED_MPS,
+    // against a walk to y = 1,250 that takes 26.9 s.
+    const terrain = terrainFor(SHALLOW_BAND);
+    assert.equal(terrain.floorAt(2600, 1300), 2400, 'the axis, north of the boundary');
+    assert.equal(terrain.floorAt(2600, 1200), 1850, 'the row, south of it');
+    const held = creatures.filter((beat) => beat.tag === 'the-first');
+    const climbS = (held[0]!.driveTo.depthM! - held[1]!.driveTo.depthM!) / DRIFT.VERTICAL_SPEED_MPS;
+    const lineM = Math.hypot(THROUGH_THE_YARD.x - from.x, THROUGH_THE_YARD.y - from.y);
+    const toBoundaryS = ((from.y - 1250) * (lineM / (from.y - THROUGH_THE_YARD.y))) / SOUNDER.speed;
+    assert.equal(Number(climbS.toFixed(1)), 12.5, '150 m at 12 m/s');
+    assert.equal(Number(toBoundaryS.toFixed(1)), 26.9, 'and 26.9 s of walk to reach the lip');
+    assert.ok(climbS < toBoundaryS, 'the colossus is in the row’s water before the row’s ground');
   });
 
   it('leaves every hull of the row off the line, and the plant untouched', () => {
@@ -826,6 +869,12 @@ describe('the two calls, as the runtime will run them — §5, §6, §9, §13', 
         `${unit.tag} stands on the line the colossus draws`
       );
     }
+    // §5's two clearances, off the line the runtime draws rather than the one
+    // §5 measures: 673 and 502 from (2500, 2000), 676 and 500 from the park.
+    // The margin is eight times the reach either way, which is why the shift
+    // changes nothing the document concludes.
+    assert.equal(Math.round(offTheLine(from, THROUGH_THE_YARD, byTag('row-one'))), 676, '§5: 673');
+    assert.equal(Math.round(offTheLine(from, THROUGH_THE_YARD, byTag('row-two'))), 500, '§5: 502');
     for (const structure of player.structures ?? []) {
       if (structure.kind === StructureKind.Foundry) continue;
       const reach = SOUNDER.lengthM / 2 + structureStatsFor(structure.kind).radiusM;
@@ -1074,6 +1123,83 @@ describe('the beats, as docs/mission-trench-awakening.md §9 times them', () => 
   });
 });
 
+describe('the briefing, as docs/mission-trench-awakening.md §12 speaks it', () => {
+  it('extends the public header it is listed under, field for field', () => {
+    // The literal spreads `ATTENDING_TRENCH_AWAKENING_HEADER`, so the shell's
+    // entry and the room's mission cannot be two different missions — but the
+    // spread is one line and a later hand-edit to either side would part them
+    // silently. `missions.test.ts` checks only that *a* header resolves.
+    const header = missionHeaderById('attending-trench-awakening');
+    assert.equal(header, ATTENDING_TRENCH_AWAKENING_HEADER, 'the catalogue lists this header');
+    for (const [key, value] of Object.entries(ATTENDING_TRENCH_AWAKENING_HEADER)) {
+      assert.deepEqual(
+        (ATTENDING_TRENCH_AWAKENING as unknown as Record<string, unknown>)[key],
+        value,
+        `${key}: the definition and the header disagree`
+      );
+    }
+    assert.equal(ATTENDING_TRENCH_AWAKENING.campaign, 'attending');
+    assert.equal(ATTENDING_TRENCH_AWAKENING.ordinal, 5, 'campaign.md §6 row 5');
+    assert.equal(ATTENDING_TRENCH_AWAKENING.mapId, SHALLOW_BAND.id, '§11: the Shallow Band');
+    assert.equal(ATTENDING_TRENCH_AWAKENING.doc, 'docs/mission-trench-awakening.md');
+    // §9 — "the advertised band is 1,140–1,260 s and the `resolve` lands at
+    // 1,200". The band is public and the beat is not, so nothing but this holds
+    // the two together.
+    assert.deepEqual(ATTENDING_TRENCH_AWAKENING.lengthBandS, [1140, 1260], '§9');
+    const resolve = ATTENDING_TRENCH_AWAKENING.beats.find((beat) => beat.kind === 'resolve')!;
+    const [low, high] = ATTENDING_TRENCH_AWAKENING.lengthBandS;
+    const closesAtS = resolve.atTick / SIM.TICK_HZ;
+    assert.ok(closesAtS >= low && closesAtS <= high, `§9: closes at ${closesAtS}s`);
+  });
+
+  it("carries §12's four paragraphs and the one line the entry screen shows", () => {
+    // §12 — "The one line the entry screen carries, which is never the win
+    // condition". The shared suite refuses a premise naming an objective; this
+    // one holds it to the sentence the document actually authors.
+    assert.equal(
+      ATTENDING_TRENCH_AWAKENING.premise,
+      "The shallow band renders what the trench brings. This tide the trench is sounded, and what answers is the Drift's to decide."
+    );
+    // §12, verbatim, in the document's order: the assignment, the arithmetic
+    // that makes the band unanswerable from the walls alone, the muster, and
+    // the one thing the Directorate withholds — what the trench answers with.
+    const briefing = ATTENDING_TRENCH_AWAKENING.briefing;
+    assert.ok(briefing !== null && briefing !== undefined, '§12: public, not withheld');
+    assert.equal(briefing.length, 4, '§12: four paragraphs');
+    assert.match(briefing[0]!, /^The shallow band is at work\. The First is sounded on this tide/);
+    assert.match(briefing[1]!, /^Eight hulls are given to the row, and a plant, and a dome/);
+    assert.match(briefing[1]!, /the walls are two hundred and ten and the Undermarshalcy can add/);
+    assert.equal(briefing[2], 'Six of eight muster. The Undermarshalcy does not round up.');
+    assert.equal(briefing[3], 'What answers a sounding is not chosen. It is entered as what came.');
+    assert.equal(
+      briefing.some((paragraph) => /Ossary|Cantorate|First Cantor/.test(paragraph)),
+      false,
+      '§12: no Cantorate formula — the Cantorate does not attend a rendering row'
+    );
+    // §12's muster paragraph is the objective's own text, so the entry screen
+    // and the counter cannot state two different musters.
+    assert.equal(briefing[2], objective('the-row').text);
+  });
+
+  it('reads the assignment into the water as the part the briefing shortens to', () => {
+    // §9's 00:00 row — "Korrin assigns the band, at the band (§12)" — in
+    // docs/mission-intake.md's idiom: the whole assignment is the header's
+    // briefing and the `say` beat is the part the water is told. Held as an
+    // identity rather than as a second copy of the prose, so a briefing edited
+    // without the beat fails here instead of shipping two Korrins.
+    const briefing = ATTENDING_TRENCH_AWAKENING.briefing!;
+    const opening = ATTENDING_TRENCH_AWAKENING.beats.find((beat) => beat.kind === 'say')!;
+    assert.equal(opening.atTick, 0, '§9: at 00:00, with the row');
+    assert.equal(opening.speaker, 'Undermarshal Setha Korrin');
+    const firstSentence = `${briefing[0]!.split('. ')[0]}.`;
+    assert.equal(
+      opening.text,
+      `${firstSentence} ${briefing[1]}`,
+      '§12: shortened, never rewritten'
+    );
+  });
+});
+
 describe('what is heard — docs/mission-trench-awakening.md §7', () => {
   it('carries the yard the length of the trench, and half of it through worked ground', () => {
     // §7 — the row's own strip of quiet is exactly the shape of the row, which
@@ -1085,7 +1211,9 @@ describe('what is heard — docs/mission-trench-awakening.md §7', () => {
       5286,
       '§7: the plant'
     );
-    assert.equal(rangeAt(BASTION.sigIdle, CHORISTER.hyd, WORKED_PF, contact), 3427);
+    // §7 rounds this one up: the range is 3,427.30 m and the document prints
+    // 3,428. Everything else in §7 and §1 is exact to the metre.
+    assert.equal(rangeAt(BASTION.sigIdle, CHORISTER.hyd, WORKED_PF, contact), 3427, '§7: 3,428');
     assert.equal(
       rangeAt(FOUNDRY.sigActive, CHORISTER.hyd, TRENCH_PF, contact),
       7011,
@@ -1125,6 +1253,53 @@ describe('what is heard — docs/mission-trench-awakening.md §7', () => {
     assert.ok(
       DEPTH.ASCENT_RATE_MPS < DEPTH.DESCENT_RATE_MPS,
       'descent is fast and loud, and nothing on this map climbs'
+    );
+    // §6 — "the layer pays for the top of it". Across the thermocline the pair
+    // factor is 0.3, which is 0.471 on range, so a Hollow's Commit against a
+    // diving hull shrinks from 342 m to 161 and a Sounder's from 353 to 166.
+    const across = PROPAGATION_FACTOR[Biome.AbyssalTrench] * THERMOCLINE.ACROSS;
+    const commitAt = (species: typeof HOLLOW, pf: number) =>
+      rangeAt(
+        DEPTH.DESCENT_SIG,
+        species.hyd,
+        pf,
+        species.commit / DRIFT.DIRECTORATE_AGGRO_MULTIPLIER
+      );
+    assert.deepEqual([commitAt(HOLLOW, TRENCH_PF), commitAt(HOLLOW, across)], [342, 161], '§6');
+    assert.deepEqual([commitAt(SOUNDER, TRENCH_PF), commitAt(SOUNDER, across)], [353, 166], '§6');
+    // §6 — "Duct to outside is 1.0, not 0.3, so the discount stops [...] above
+    // the layer rather than at it", and "the last seven hundred metres of the
+    // dive are the loud part". Both fall out of the duct's top, which is one
+    // hundred metres above the layer and not the two hundred §6 prints; the
+    // seven hundred is what pins it, since 1,800 − 1,100 is the loud part.
+    assert.equal(THERMOCLINE_DUCT_TOP_M, THERMOCLINE.DEPTH_M - 100, '§6: one hundred, not two');
+    assert.equal(1800 - THERMOCLINE_DUCT_TOP_M, 700, '§6: the last seven hundred metres');
+    // §6 — "The nearest Hollow to the spawn point is 2,122 m off and hears
+    // nothing at all", which is why the loud part is over the row and not over
+    // the wall that pays for it. 2,122 m is `hollow-four`; the nearest of the
+    // six is `hollow-five` at 1,867, and §6's conclusion is untouched by the
+    // correction, because a hull diving at 72 is Interest to a Hollow from
+    // 451 m and the apron is four times that off the closest of them.
+    const dx = SHALLOW_BAND.widthM / 2 - GROWER.x;
+    const dy = SHALLOW_BAND.heightM / 2 - GROWER.y;
+    const length = Math.hypot(dx, dy);
+    const apron = {
+      x: GROWER.x + (dx / length) * (FOUNDRY.radiusM + 60),
+      y: GROWER.y + (dy / length) * (FOUNDRY.radiusM + 60),
+    };
+    const toApron = (tag: string) => {
+      const beat = creatures.find((candidate) => candidate.tag === tag)!;
+      return Math.hypot(beat.spawnAt!.x - apron.x, beat.spawnAt!.y - apron.y);
+    };
+    const hollowTags = creatures
+      .filter((beat) => beat.species === FaunaSpecies.Hollow)
+      .map((beat) => beat.tag);
+    assert.equal(Math.round(toApron('hollow-four')), 2122, "§6: 2,122 m is `hollow-four`'s");
+    const nearest = Math.min(...hollowTags.map(toApron));
+    assert.equal(Math.round(nearest), 1867, '§6: and `hollow-five` is nearer than that');
+    assert.ok(
+      nearest > aggroRange(DEPTH.DESCENT_SIG, HOLLOW.hyd, HOLLOW.interest),
+      '§6: the nearest Hollow hears nothing at all'
     );
   });
 });
@@ -1192,6 +1367,151 @@ describe('what §13 says is missing, and what stands in its place', () => {
       for (const unit of party.units) {
         assert.equal(unit.role, undefined, 'a role on a scripted hull is another party in a count');
       }
+    }
+  });
+});
+
+describe('the tide, run out — docs/mission-trench-awakening.md §4, §6, §8, §9', () => {
+  /**
+   * The row, seated and given no orders at all.
+   *
+   * That is not a lazy fixture, it is §4's third movement played straight:
+   * "the colossus takes the yard apart, the cohort renders the colossus for
+   * nothing". The mission delivers the band into the middle of the row and
+   * releases it there, so a row that never leaves its seats still finds out
+   * what the trench answered with — and finds out what it cost, because the
+   * thing that answered went to the loudest thing in the water on the way in.
+   *
+   * Deterministic: no orders, and the same reading on every seed.
+   */
+  function tide(seed: number) {
+    const match = new Match(missionMapById(ATTENDING_TRENCH_AWAKENING.mapId)!, {
+      mission: ATTENDING_TRENCH_AWAKENING,
+      fauna: false,
+      seed,
+    });
+    const lines: { tick: number; speaker: string; text: string }[] = [];
+    let install: EchoSnapshot | undefined;
+    let last: EchoSnapshot | undefined;
+    for (let tick = 0; tick <= T(20, 30); tick++) {
+      const own = match.update(1000 / SIM.TICK_HZ)?.get(PLAYER);
+      if (own !== undefined) {
+        install ??= own;
+        last = own;
+      }
+      for (const line of match.takeMissionLines()) lines.push(line);
+      if (match.missionOver !== null) break;
+    }
+    const over = match.missionOver;
+    assert.ok(over !== null && install !== undefined && last !== undefined, 'the tide never ended');
+    return { over, install, last, lines, resolvedAtTick: match.world.tick };
+  }
+
+  const run = tide(5);
+
+  it('installs the row, the yard and the stock §5 gives it', () => {
+    assert.equal(run.install.units.length, 8, '§5: eight hulls');
+    assert.equal(run.install.structures.length, 3, '§5: a plant, a dome and a grower');
+    assert.equal(run.install.nodules, 600, '§5: six hundred nodules');
+    assert.equal(run.install.biomass, 0, '§6: and no Biomass, because nothing has been rendered');
+    // §3 — six of capacity against a demand of four, so the line runs at full
+    // rate from tick zero and the player never meets Thermal Draw as a
+    // decision, only as the speed the line already runs at (§10).
+    assert.deepEqual(run.install.draw, { capacity: 6, demand: 4, satisfaction: 1 });
+  });
+
+  it('spends the grower on the thing the yard called, and keeps the plant', () => {
+    // §4, §9 — "the colossus takes the yard apart". The 13:00 line crosses the
+    // Foundry and nothing else: the plant and the dome are still standing at
+    // the close, which is what keeps `reap` from ending the row (§3, §13).
+    assert.equal(run.last.structures.length, 2, '§9: the yard stops at about 13:38');
+    assert.deepEqual(
+      run.last.structures.map((structure) => structure.kind).sort(),
+      [StructureKind.Bastion, StructureKind.Cantor].sort(),
+      '§3: the plant and the dome, and no grower'
+    );
+    assert.equal(run.last.units.length, 8, '§6: every Chorister is invisible to it');
+  });
+
+  it('is paid the full two hundred and sixty, in the cell §6 says it dies in', () => {
+    // §6 — "`the-first`, rendered after 14:30: **260**", and "`payBiomass`
+    // reads the ledger at the animal's own position". It stops north of the
+    // row in a cell nothing of the row's stands in, so the ledger has not
+    // touched that cell and the rendering pays the roster's whole figure.
+    assert.equal(run.last.biomass, SOUNDER.biomass, '§6: 260, and not the ledger’s discount of it');
+    const from = park(SILL, AXIS_HEAD);
+    const stop = park(from, THROUGH_THE_YARD);
+    const cellIndex = (x: number, y: number) =>
+      Math.floor((y / SHALLOW_BAND.heightM) * DRIFT.HEALTH_REGIONS) * DRIFT.HEALTH_REGIONS +
+      Math.floor((x / SHALLOW_BAND.widthM) * DRIFT.HEALTH_REGIONS);
+    assert.equal(
+      run.last.driftHealth[cellIndex(stop.x, stop.y)],
+      100,
+      '§6: healthy ground, and a colossus over healthy ground pays 260'
+    );
+    // §3's own two rows, at the close: the dome's cell and the grower's cell
+    // are dead, and the row was never told. "The mission never says so in
+    // text. It says it in the pay slip."
+    for (const structure of player.structures ?? []) {
+      if (structure.kind === StructureKind.Bastion) continue;
+      assert.equal(
+        run.last.driftHealth[cellIndex(structure.x, structure.y)],
+        0,
+        `§3: the cell ${structure.tag} stands in is dead by 01:38 at the latest`
+      );
+    }
+    assert.equal(
+      run.last.driftHealth[cellIndex(1000, 1000)],
+      100,
+      '§3: and the plant’s own cell is under the threshold and recovers all tide'
+    );
+  });
+
+  it('leaves the second standing, because nothing the row owns will move it', () => {
+    // §5 — "It stands until the row makes it move, and the only things that
+    // will are a ping at 834 m, a noisemaker at 347 m, or a hull inside
+    // 196 m." A row that gave no orders offered it none of the three, so the
+    // band is answered and `the-second` is not.
+    assert.ok(run.last.biomass < 400, '§8: four hundred is not against the band');
+    const second = run.over.objectives.find((o) => o.id === 'the-second')!;
+    assert.equal(second.status, ObjectiveStatus.Pending, '§8: read out, and unmet');
+    assert.match(run.over.epilogue, /Four hundred is not against the band\./, '§8, verbatim');
+  });
+
+  it('closes at 20:00 whatever the band did, and reads it as it stands', () => {
+    // §8, §9 — `runsItsLength`. The band is answered at about 15:43 here and
+    // the tide still ends at 20:00, because the second colossus arrives at
+    // 16:30 whatever the register stands at.
+    assert.equal(
+      run.resolvedAtTick,
+      T(20),
+      '§9: the close does not move because the row was quick'
+    );
+    assert.equal(run.over.outcome, MissionOutcome.Complete, '§8: the band and the muster');
+    assert.match(run.over.epilogue, /^The band is answered and the row is mustered\./);
+    // §9's beat table and §12's two tally lines, in the order they land. Both
+    // conditionals fire on the pass the colossus dies, because the stockpile
+    // goes from nothing to 260 in one payment.
+    const scheduled = run.lines.filter((line) => !line.text.startsWith('Rendered.'));
+    assert.equal(scheduled.length, 11, '§9: ten scheduled lines and the ground’s band line');
+    const tally = run.lines.filter(
+      (line) => line.text.startsWith('Rendered.') || line.text.startsWith('The band is answered.')
+    );
+    assert.equal(tally.length, 2, '§9: the Cohort-Prime and the ground, once each');
+    for (const line of tally) {
+      assert.ok(line.tick > T(14, 30), '§9: nothing is rendered before the commitment lapses');
+    }
+  });
+
+  it('reads the same tide on every seed, because nothing here is random', () => {
+    // The Drift is authored and the row gives no orders, so the only thing a
+    // seed could move is the skirmish fauna roster this mission switches off.
+    for (const seed of [1, 11]) {
+      const other = tide(seed);
+      assert.equal(other.over.outcome, run.over.outcome, `seed ${seed}`);
+      assert.equal(other.last.biomass, run.last.biomass);
+      assert.equal(other.resolvedAtTick, run.resolvedAtTick);
+      assert.deepEqual(other.last.driftHealth, run.last.driftHealth);
     }
   });
 });

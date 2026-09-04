@@ -101,58 +101,40 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 
 One forward reference remains: `concept-art/DESIGN-PHILOSOPHY.md`, linked from the root README, which would set out the Pressure Cartography visual language behind the four survey plates.
 
-The prologue and one full campaign are built; the rest of the campaign is not. What follows is
-designed, or already stated in a doc that ships, and unbuilt — named in plain text except where
-a document already points at it:
+The prologue and twenty-eight of the campaign's twenty-nine missions are built; one mission and
+a good deal of what stands behind the campaign are not. What follows is designed, or already
+stated in a doc that ships, and unbuilt — named in plain text except where a document already
+points at it:
 
-- **The remaining 15 missions — fifteen documents without literals, and none unwritten.**
-  campaign.md §5–§7 used to give them titles, teaching targets and beats, which is not a
-  specification. Each needs a document of its own — one doc per mission, the pattern
-  mission-sorrowgate.md sets — before it needs code, and every row now has one beside *Standing
-  Wave*'s: the Commune's *Deep Furrow*, *In Writing*, *Radicals* and *The Second Seeding*, the
-  Directorate's *The Dome*, *Shallow*, *Trench Awakening*, *Conclave* and *First Arrival*, and
-  the Order's *Nineteen*, *Conclave*, *The Three*, *The Rim Deposits* and *The Second Chord* —
-  each linked from the World & narrative table above and from its row in campaign.md §5–§7.
-  **Every one of the campaign's twenty-nine missions now has a document of record, and what is
-  planned here is the literals and not the prose**
-  — none of the fifteen has a mission literal, a map or a test, and each §13 is a build list
-  written against a format that has moved four times since Intake, which is the argument for
-  re-reading a §13 at the moment its literal is started rather than trusting it at rest. The
-  Ledger's seven are specified and built end to end, and so are Tend, Attendance and
-  Aptitude. [mission-thin-water.md](mission-thin-water.md) was the first document specified
-  *ahead* of its literal, and is now built as well — `kell-shoulder` and `seeding-thin-water`,
-  with tests — its §13's prediction holding that everything they needed already shipped.
-  [mission-intake.md](mission-intake.md) was the second, and is now built as well —
-  `attending-intake` and the `banding-ground` map, with tests — and it is the document that
-  started the format asking again. The condition-fired beat, the exposure tally and the aimed
-  hold — the three things the first four documents still wanted — have all shipped, along with
-  the Ledger's own three additions (the `deliver` predicate, readings per objective, and the
-  conditional beat's choice group). What Intake named first was the next one: `deliver` counted
-  Nodules, the Directorate's income is Biomass, and no predicate could ask what a cohort economy
-  earned — built (#330), `deliver` reading any of the economy record's three accounts. What its
-  literal then found were four rules right for a court and wrong for a shift, each now a row of
-  its §13. The way to spend Biomass followed (#351) — a third price column beside Nodules and
-  Crystal, refused and debited on the one path the other two take — and the cohort hull to
-  write a price on followed (#352): the Chorister, in [units.md](units.md).
-  [mission-standing-wave.md](mission-standing-wave.md) is the third, and it asks loudest:
-  `chord-standing-wave` and the `the-fifth` map are unbuilt, and its §13 names a predicate the
-  objective union does not carry (what the player has *built*). The two design calls it
-  explicitly refused to make alone are made (#372): the corridor keeps PF 2.0, carried by a
-  ceiling the terrain reports about itself so that only a standing corridor pays for it, and
-  the build radius is 1,500 m — the pairing range — for every structure.
-  [mission-convocation.md](mission-convocation.md) was the fourth and is no longer planned — it
-  is built (#373), `seeding-convocation`, with tests. It asked for something no document had
-  asked for before: **a commander ability at all**, since `MissionAbility` is a lock list and
-  nothing in the format granted one. That is now `MissionCommanderAbility`, a grant beside the
-  lock list rather than an eighth entry in it, with Marr's radius, bonus and duration in
-  `constants.ts` against [characters.md](characters.md). The walk landed with it — an ordered
-  set of held positions with a ceiling on the row's own water rather than a floor on the hull's
-  SIG — and so did the restart, which is the first mechanic in this game that takes progress
-  back: the `walk` predicate is the first counter in the objective union that can go down. It
-  is still the first mission written on ground another mission already uses, and the registry
-  needed nothing for that. The one question it left open it still leaves open, and the build did
-  not need it settled: whether the count read at the watch's edge and the active ping are the
-  same act.
+- **One mission left without a literal, and it is *Standing Wave*.**
+  campaign.md §5–§7 used to give the campaign's missions titles, teaching targets and beats,
+  which is not a specification. Each needed a document of its own — one doc per mission, the
+  pattern mission-sorrowgate.md sets — before it needed code. **All twenty-nine now have one,
+  and twenty-eight have a literal, a map and a test file that plays the mission rather than
+  reading it.** The Ledger is built end to end, the Commune's seven are, the Directorate's seven
+  are, and the Order has six of its seven: *Aptitude*, *Nineteen*, *Conclave*, *The Three*,
+  *The Rim Deposits* and *The Second Chord*.
+
+  [mission-standing-wave.md](mission-standing-wave.md) is the hole in the middle of that
+  campaign, and it asks loudest: `chord-standing-wave` and the `the-fifth` map are unbuilt, and
+  its §13 names a predicate the objective union does not carry — what the player has *built*.
+  The two design calls it explicitly refused to make alone were made (#372): the corridor keeps
+  PF 2.0, carried by a ceiling the terrain reports about itself so that only a standing corridor
+  pays for it, and the build radius is 1,500 m — the pairing range — for every structure. What
+  is planned here is that one mission, and the systems below it.
+
+  The fourteen documents written ahead of their literals cost the format less than the first
+  four did. They asked for three things, all in #391: `MissionRegion.pressureBonus`, a rectangle
+  of water that rates every hull standing in it over its own PR; the same field on the `ground`
+  beat, so a grant can be turned on at a tick without repainting water; and `holdsMovement`
+  honouring a hull named by a `MissionHold` whether or not it is escorting anything, which was a
+  latent bug — a hold could be authored and silently never enforced. Everything else they needed
+  had already shipped: the condition-fired beat, the exposure tally, the aimed hold, the
+  `deliver` predicate over any of the economy's three accounts (#330), the walk, the restart and
+  the commander ability (#373), the `bell` beat (#385), and the progression record (#371) with
+  its seen-scene set (#378). What the fourteen mostly found was arithmetic in their own prose,
+  and the documents were mostly the side that moved — which is what a §13 written ahead of a
+  literal is for.
 - **Cross-mission Drift Health.** campaign.md §2 rule 5 has a map carry its damage forward to
   the next mission played on it. Until [mission-convocation.md](mission-convocation.md) there
   was no forward, because no two missions shared a map; that document reuses *Tend*'s

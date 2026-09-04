@@ -471,11 +471,6 @@ export const SEEDING_DEEP_FURROW_HEADER: MissionHeader = {
   ],
 };
 
-// Append to packages/shared/src/missions.ts, after SEEDING_CONVOCATION_HEADER,
-// and add SEEDING_IN_WRITING_HEADER to MISSION_HEADERS in the same order.
-// (The Second Seeding 4, `seeding-deep-furrow`, sits ahead of it in the
-// campaign and owns the map literal; this header is ordinal 5.)
-
 export const SEEDING_IN_WRITING_HEADER: MissionHeader = {
   id: 'seeding-in-writing',
   campaign: 'seeding',
@@ -510,9 +505,6 @@ export const SEEDING_IN_WRITING_HEADER: MissionHeader = {
     "Juno went down with the families when the dome was heard. She brought three guns and they're struck, and that's hers, not a vote. Nothing is struck under a bed. We'd like that heard once, down there, so it's been said.",
   ],
 };
-
-// Append to packages/shared/src/missions.ts, beside the other Second Seeding
-// headers, and add SEEDING_RADICALS_HEADER to MISSION_HEADERS in campaign order.
 
 export const SEEDING_RADICALS_HEADER: MissionHeader = {
   id: 'seeding-radicals',
@@ -608,11 +600,6 @@ export const ATTENDING_ATTENDANCE_HEADER: MissionHeader = {
   ],
 };
 
-// Append to packages/shared/src/missions.ts, after ATTENDING_INTAKE_HEADER,
-// and add ATTENDING_THE_DOME_HEADER to MISSION_HEADERS in the same order.
-// (The Attending 3, `attending-the-dome`, on the `fourth-foot` map — the map
-// literal is built and registered already.)
-
 export const ATTENDING_THE_DOME_HEADER: MissionHeader = {
   id: 'attending-the-dome',
   campaign: 'attending',
@@ -673,11 +660,6 @@ export const ATTENDING_INTAKE_HEADER: MissionHeader = {
   ],
 };
 
-// Append to packages/shared/src/missions.ts, after ATTENDING_THE_DOME_HEADER,
-// and add ATTENDING_SHALLOW_HEADER to MISSION_HEADERS in the same order.
-// (The Attending 4, `attending-shallow`, on the `kell-shoulder` map — reused
-// unchanged from `seeding-thin-water`, and built and registered already.)
-
 export const ATTENDING_SHALLOW_HEADER: MissionHeader = {
   id: 'attending-shallow',
   campaign: 'attending',
@@ -716,11 +698,6 @@ export const ATTENDING_SHALLOW_HEADER: MissionHeader = {
   ],
 };
 
-// Append to packages/shared/src/missions.ts, after ATTENDING_SHALLOW_HEADER,
-// and add ATTENDING_TRENCH_AWAKENING_HEADER to MISSION_HEADERS in the same
-// order. (The Attending 5, `attending-trench-awakening`, on the `shallow-band`
-// map — the map literal is built and registered already.)
-
 export const ATTENDING_TRENCH_AWAKENING_HEADER: MissionHeader = {
   id: 'attending-trench-awakening',
   campaign: 'attending',
@@ -754,11 +731,6 @@ export const ATTENDING_TRENCH_AWAKENING_HEADER: MissionHeader = {
     'What answers a sounding is not chosen. It is entered as what came.',
   ],
 };
-
-// Append to packages/shared/src/missions.ts, after ATTENDING_SHALLOW_HEADER,
-// and add ATTENDING_CONCLAVE_HEADER to MISSION_HEADERS in the same order.
-// (The Attending 6, `attending-conclave`, on the `upper-terraces` map — the map
-// literal is built and registered already.)
 
 export const ATTENDING_CONCLAVE_HEADER: MissionHeader = {
   id: 'attending-conclave',
@@ -822,6 +794,246 @@ export const CHORD_APTITUDE_HEADER: MissionHeader = {
   ],
 };
 
+export const ATTENDING_FIRST_ARRIVAL_HEADER: MissionHeader = {
+  id: 'attending-first-arrival',
+  campaign: 'attending',
+  ordinal: 7,
+  name: 'The Attending — First Arrival',
+  premise:
+    'The rim, the tide after the concern’s survey went home. The slowest hulls in the Rift are on it before the armies, and the returns on the lip are still there to be entered.',
+  mapId: 'mouth-rim',
+  // The tide turns at 21:00 (docs/mission-first-arrival.md §9), inside
+  // campaign.md §10's 12–25 — and the band is the document's own 1,200–1,320 s.
+  // Twenty-one minutes, the longest tide the campaign authors, because the
+  // walk west is four minutes of it and the count is taken on ground the
+  // column has stood on for eighteen.
+  lengthBandS: [1200, 1320],
+  /**
+   * Undermarshal Setha Korrin, assigning the rim from Sufficiency —
+   * docs/mission-first-arrival.md §12, verbatim. There is no formula at the
+   * opening for the fourth time in the campaign: the Cantorate does not attend
+   * a rim, and the First Cantor is not on the channel until the close.
+   *
+   * Public for Attendance's, Intake's, The Dome's, Shallow's and Conclave's
+   * reason, and one of its own: this is the briefing that hands the record
+   * over rather than the button. Paragraph two is the whole of what the watch
+   * filed on the concern's tide — the descent, the six soundings and the bed —
+   * given to the column before the first order, "because a column that is not
+   * told what its own record holds is a column being asked to find it twice",
+   * which is the system this mission teaches stated as an act rather than as a
+   * rule. Paragraph four seals the array with the reason written on the lock,
+   * and it is the last thing the campaign does with the instrument it spent
+   * three missions arguing about. It withholds the only thing the Directorate
+   * withholds, which is what the rim is.
+   */
+  briefing: [
+    'The rim is assigned. It has been attended for two centuries from the water it is attended from, and this tide it is attended from the ground it is attended over, which is a difference of posture and not of doctrine.',
+    'What the watch heard on the concern’s tide is given to the column, because a column that is not told what its own record holds is a column being asked to find it twice. A descent at seventy-two for three minutes. Transmissions at eighty against six charted faces, in an account that is not theirs. And a bed on the western lip, entered as a bed. The account went up the Ninth as well, which is why the column left a tide early and walked.',
+    'Eighteen hulls are given to the rim. Twelve are the cohort and six attend the lip, and the dome is stood where the column stopped, because a dome is not carried and there was nothing on the rim to carry it to.',
+    'The rim is held by standing on it. Six faces are charted on the terraces and the cohort is spread two to a face. Nothing is raised and nothing is put into the water: the arrays are aboard, they are live, and they are not used. The rim is attended. It is not asked.',
+    'Nothing has stood into the watch. That is the law of these tides and it is entered as the law of these tides, and it is entered again at the count, whatever the tides have done with it by then.',
+    'What is heard is entered. What is not heard is not entered, and the gap is entered too.',
+    'Eight of twelve is a hold. The Undermarshalcy does not round up.',
+  ],
+};
+
+export const CHORD_NINETEEN_HEADER: MissionHeader = {
+  id: 'chord-nineteen',
+  campaign: 'chord',
+  ordinal: 3,
+  name: 'The Second Chord \u2014 Nineteen',
+  premise:
+    'The Order goes back to the trench where it lost nineteen, to play nineteen intervals over ground it cannot reach.',
+  mapId: 'the-rest',
+  // The committal closes at 18:00 (docs/mission-nineteen.md §9), inside §10's
+  // 12–25 — at the long end, because nineteen twenty-second holds are three
+  // hundred and eighty seconds of standing still before a metre of transit is
+  // paid for.
+  lengthBandS: [1020, 1140],
+  /**
+   * Choirmaster Ivane Sull, the committal order — docs/mission-nineteen.md §12,
+   * verbatim. Public for Aptitude's reason: it names no hidden fact. It states
+   * an arithmetic that cannot be improved and declines to soften it, because a
+   * Knight briefing that withheld the numbers would be teaching by ambush and
+   * this faction examines.
+   *
+   * Paragraph four is docs/mission-tolerance.md §12's rule borrowed for a wall:
+   * the reach, the tier and the stand-off in metres, stated so that nobody
+   * performs that arithmetic for the first time underneath one. Paragraph five
+   * is campaign.md §10's mission-3 handover of the ping — priced and not fenced,
+   * a paragraph spent teaching the party what the button *means* before
+   * allowing them to press it.
+   */
+  briefing: [
+    'The Order has nineteen unentered. It has had nineteen unentered for three years and I have signed the reason twice, in the same words both times: nobody could go down and get them, and a committal is played over the body. The words were true. I am not signing them again.',
+    'The floor is at two thousand one hundred and fifty metres and you are rated to eighteen hundred. That does not improve on the way down and I am not going to let anybody hear me suggest it might. You will play from seventeen fifty, which is the last fifty metres of your own rating, over water you may not enter, four hundred metres above the ground the names are on and more than that at the eastern end. It is the nearest the Order has stood to them since the raids and it is as near as we get.',
+    'Nineteen intervals. Four hundred metres, bow to the ground, twenty seconds at the eightieth, and a tone you interrupt is a tone you have not played. Each one is a name. Where a name repeats, the interval repeats, and you will play it again — the interval belongs to the name and the count belongs to the house, and I would rather be told at the close that you played the same tone four times than that somebody was efficient about it.',
+    'The walls are theirs. Something lives on both of them, at three, and it works at seventeen hundred, which is fifty metres above where you will be standing. You will not hear it until you are inside a classification of it; it strikes at five hundred metres in three dimensions, which from your depth is four hundred and ninety-seven across the ground. It does not come to you and it does not answer a noise made a kilometre away. It answers being stood next to. Stand off your marks and play from behind them. The chapter would rather have eighteen entered than a fifth hull.',
+    'And you are carrying the survey array, and I have not struck it. I would rather you knew what it was before you pressed it. It is the one emission this Order owns that has no bow. It will hand you nine hundred metres of wall, exactly, for three seconds, and for those three seconds you are the loudest thing within fourteen hundred and thirty-four metres. The walls will not walk to you for that. Whatever is already beside you will answer it at once, and whatever is in the deep end and has been listening will start. It is not discourteous to use it. It is discourteous to use it without having decided to.',
+    'Six of you. I will read the count at the close and I will read it hull by hull, because that is the count I actually have.',
+  ],
+};
+
+export const CHORD_CONCLAVE_HEADER: MissionHeader = {
+  id: 'chord-conclave',
+  campaign: 'chord',
+  ordinal: 4,
+  name: 'The Second Chord — Conclave',
+  premise:
+    "A concern comes to core the Third's outer formations on the tide of an appointed interval, and the Chapter-Master with the standing to call the Order together does not.",
+  mapId: 'outer-formations',
+  // The interval is at 14:00, lasts sixty seconds, and the tide is over thirty
+  // seconds after it (docs/mission-conclave-chord.md §9) — 870 s, inside
+  // campaign.md §10's 12–25, and the document's own advertised 840–900 s.
+  lengthBandS: [840, 900],
+  /**
+   * Chapter-Master Halden Vrey, setting the interval —
+   * docs/mission-conclave-chord.md §12, verbatim.
+   *
+   * Public, and the third mission campaign.md §2 rule 4 promises is the one
+   * where that decision has to be argued rather than assumed. Sorrowgate and
+   * Thin Water withhold because naming the shape would give the mission away;
+   * here the shape *is* the briefing. Vrey states the column's hull total, both
+   * damage figures and the three hundred and fifty metres of gun he is short,
+   * says "You will not win it. You are not being asked to." out loud, and then
+   * asks for six hulls at six points under a ceiling with the loudest thing
+   * they own left alone. There is nothing left to withhold: an interval is
+   * appointed in advance by construction, and a Knight briefing that hid the
+   * arithmetic would be teaching by ambush in the one faction that examines.
+   */
+  briefing: [
+    'Good. You have stood this ground before and you stood it quiet, and the only thing that has changed is what is standing on it.',
+    'The interval is at fourteen. It is the Third’s, it is appointed, and the Order will be listening at it, because that is the whole of what an interval is. What the other eight houses will hear from this house at fourteen is nothing. I would like you to understand that the nothing is the instruction.',
+    'A concern has filed the outer Fields as a coring field and is working them under a Board order. They are within their own procedure and I will not be asking them to leave; we have never written down that this water is ours, and they have now written down that it is theirs. Their column is two Cruisers and five Corvettes by the middle of the tide: four thousand five hundred of hull against your three thousand three hundred, three hundred and forty-two a second against your two hundred and sixty-eight, and a gun that reaches three hundred and fifty metres further than yours. I have done that arithmetic in front of you so that nobody performs it for the first time at fourteen. You will not win it. You are not being asked to.',
+    'Six voices stand off the house. At fourteen I want one of you at each of them, under twenty-eight, and I want the tone on the Voice’s hull left exactly where it is. A tone at a voice on the tide of an appointed interval is a stroke on the carriage. The houses will hear it as the Third calling and it will be entered in my name, and I will not be entering a correction, because a correction is a discussion. Torpedoes are struck for the interval — nothing is launched on the tide of one — and nothing is raised, either.',
+    'Six of you. Six voices. I said that to a party on this ground a year ago and the two numbers were a courtesy to each other; today they are one number, because a hull you lose out there is a voice the Third cannot stand at fourteen. I will be in the chord. You will not hear me there, which is the point of a chord. Stand the voices.',
+  ],
+};
+
+export const CHORD_THE_THREE_HEADER: MissionHeader = {
+  id: 'chord-the-three',
+  campaign: 'chord',
+  ordinal: 5,
+  name: 'The Second Chord — The Three',
+  premise:
+    'Twelve minutes at 2,900 m: the Choirmaster is taken to the First, where the Chord still stands and three people who have not spoken since 178 PC are still writing.',
+  mapId: 'the-first',
+  // The tide ends at 12:00 exactly (docs/mission-the-three.md §9), which is
+  // both the floor of campaign.md §10's 12–25 and `MISSION.LENGTH_MIN_S` — the
+  // shortest mission in the bible, deliberately, and the band test admits the
+  // boundary (`closesAtS >= low`). The document advertises [720, 780].
+  lengthBandS: [720, 780],
+  /**
+   * Choirmaster Ivane Sull, aboard her own hull at the foot of the Fields —
+   * docs/mission-the-three.md §12, verbatim, and the first Knight briefing in
+   * the campaign spoken from inside the party rather than from a house.
+   *
+   * Public for Aptitude's and Nineteen's reason: it names no hidden fact. It
+   * states the four roofs, the dive's seventy-two, the mode it wants held for
+   * eight minutes and the six hundred metres of the hold, because a Knight
+   * briefing that withheld the arithmetic would be teaching by ambush and this
+   * faction examines.
+   *
+   * Paragraph two is the Order's crystal ledger, stated **once**, here — four
+   * certificates at sixty of Resonance, two hundred and forty of the Ninth's
+   * six hundred, three hundred and sixty left, and three hundred and sixty is
+   * three Spires and not a fourth (§3). docs/mission-rim-deposits.md and
+   * docs/mission-second-chord.md both cite that paragraph and neither restates
+   * it, so the figures here are load-bearing for two other missions.
+   */
+  briefing: [
+    'This is the Choirmaster. I am in the water with you, which is new, and I would rather it were not remarked upon beyond that.',
+    'We are going to the First. Four hulls: mine, and three ears. The certificates were cut this morning — sixty of Resonance a hull, four hulls, two hundred and forty of the six hundred the Ninth holds. What is left is three hundred and sixty, and three hundred and sixty is three Spires and not a fourth. I am telling you the whole of that arithmetic once, here, in quiet water, because the alternative is that you learn it in pieces later in the season when it is shorter.',
+    'The approach is roofed at twenty-six hundred and the chord at twenty-seven. You dive when I dive and nobody enters the chord above twenty-seven. A dive is seventy-two for eight seconds and the house will hear it; that is not a fault of yours, it is the physics of arriving, and a house is owed the courtesy of knowing who has come.',
+    'In the chord you will run silent. Three to eight. This Order has been told twice that the button is a bad trade and both times it was correct, and today it is not: a hull under way in a chord is a shove, and a shove in this house is entered as the time it happened. I will not be running silent. I am the one thing in this water the house is entitled to hear.',
+    'Nothing aboard is armed. Nothing in the First is armed and nothing in it is aimed but the Chord, and the Chord will not be sounded today by anybody, myself included. There will be no ping.',
+    'I will be in the room for six or seven minutes. Keep one of you inside six hundred metres of my hull, because my hull does not move without ears, and that is the arrangement rather than a compliment. What I read there is mine. You will not be told it, the chapter will not be told it, and I will come out and say one sentence that gives nothing away, and I would ask you to enter that sentence and nothing else from that room.',
+    'Twelve minutes. Nothing in this house is broken, and every person in it is being cared for properly. I would like you to notice, somewhere in the twelve, that neither of those is the same word as safe. Dive at two.',
+  ],
+};
+
+export const CHORD_RIM_DEPOSITS_HEADER: MissionHeader = {
+  id: 'chord-rim-deposits',
+  campaign: 'chord',
+  ordinal: 6,
+  name: 'The Second Chord — The Rim Deposits',
+  premise:
+    'The crystal the Second Chord needs exists in exactly one place, on an attended rim, under two nodes the Order raised to reach it, and the Choirmaster authorises the plan.',
+  mapId: 'mouth-rim',
+  // The count is taken at 16:00 (docs/mission-rim-deposits.md §9), inside §10's
+  // 12–25 — at the short end, because the tide is five cuts of four minutes
+  // laid over a correction that is walking from 03:00 and a basin that lifts at
+  // 14:30, and a longer one would only add water for the nodes to sing over.
+  lengthBandS: [900, 1020],
+  /**
+   * Choirmaster Ivane Sull, the authorisation — docs/mission-rim-deposits.md
+   * §12, verbatim. Public for Aptitude's and Nineteen's reason: it names no
+   * hidden fact. It states the grant, its radius, its price in noise and the
+   * two loads that are the Chord, because a Knight briefing that withheld the
+   * arithmetic would be teaching by ambush and this faction examines.
+   *
+   * Paragraph three is the mission's whole system said once, in the register
+   * that apologises for an instrument's physics and not for the people under
+   * it: the node sings at eighty for exactly as long as its grant is holding
+   * somebody up, and that is a condition rather than a surprise. Paragraph
+   * five names the cohort, the garden and the Board in one breath and then
+   * declines all three as reasons — docs/campaign.md §2 rule 1, spoken by the
+   * only person in the mission who could have graded them.
+   */
+  briefing: [
+    'The plan is authorised. It has been on my desk since the year opened, I have declined it four times, and what changed is that the nineteen are entered and the window is shorter than the one I wrote to the houses. The cycle is at thirty-nine hours and it is shortening. The Order does not spend itself at the rim with nineteen of it unentered, and it does not decline the same window twice. I am not going to spend the chapter’s afternoon explaining any of that further, because what changed is arithmetic and every one of you was tested on arithmetic at nine.',
+    'Two nodes stand on the eastern terraces. They were raised at the turn of this tide and they cost the ledger two hundred and forty of the three hundred and sixty it had left; there is one Spire’s worth in it after them, and it is not for this tide. Under a node you are rated for the ground you are standing on. Six hundred metres, horizontal, measured from the instrument and not from you. The metre after that is eight hundred metres of water no certificate of ours covers, and the Order has no certificates.',
+    'A node carrying a grant sings at eighty. That is not a fault, and it is not a cost we have failed to control; it is what the instrument is. You will be the loudest thing on this rim for as long as you are alive underneath one. Enter that as a condition and not as a surprise.',
+    'Three faces. Five cuts, four minutes a cut, and two loads above the Staging line are the Second Chord. Anything past two is margin. The Order has never had margin, so I will take it if the tide offers it and I will not ask the tide for it.',
+    'The rim is attended. It was attended when the nodes went up and the nodes were entered while they were rising, so there is nothing for anyone to discover and nothing for you to conceal. There is a cohort on the eastern lip that will correct what stood into its watch, and it will be right to, and I would ask you to be courteous to people who are being correct at you. There is a garden on the western lip. There is a Board somewhere this tide reading out the registration of the field you are cutting. None of that is the reason.',
+    'The reason is that something is speaking, and it is discourteous not to reply, and the reply takes crystal, and the crystal is here. Come up before you are asked to. Go and be dry.',
+  ],
+};
+
+export const CHORD_SECOND_CHORD_HEADER: MissionHeader = {
+  id: 'chord-second-chord',
+  campaign: 'chord',
+  ordinal: 7,
+  name: 'The Second Chord — The Second Chord',
+  premise:
+    'The crystal is set into a node on the lip, the lattice is spent to buy thirty seconds, and the Choirmaster comes down to play them.',
+  mapId: 'mouth-rim',
+  // Eighteen minutes, and the `resolve` lands at 1,080 s
+  // (docs/mission-second-chord.md §9). The band is narrow on purpose: this one
+  // is not a tide that can be finished early. `runsItsLength` is set, all four
+  // terminal rows can be met by about 03:00, and the last forty seconds are
+  // the reply not being shown — so the close is a fixed point rather than a
+  // window, and the band is drawn tight around it.
+  lengthBandS: [1020, 1140],
+  /**
+   * Choirmaster Ivane Sull, the Order's last works order —
+   * docs/mission-second-chord.md §12, verbatim, read at the Staging aboard her
+   * own hull and held there.
+   *
+   * Public, for the reason every Knight briefing in this campaign is public:
+   * it names no hidden fact and it withholds no arithmetic. Paragraph five
+   * states the Collapse by the tick it happens on and prices the bleed it buys
+   * — "entered as a condition of the tide rather than discovered as a
+   * surprise" — which is docs/campaign.md §10's telegraph paid in prose an
+   * entire mission ahead of the beat, and the reason §8's failure is never a
+   * timer.
+   *
+   * Paragraph six is the only place in the bible where the Order says what the
+   * First Chord's reply cost and declines to say what it was. The briefing
+   * stops where docs/campaign.md §2 rule 3 stops, and so does everything after
+   * it: no epilogue, no beat and no line goes further.
+   */
+  briefing: [
+    'This is the third tide the Order has spent on this rim and the last works order it will issue here, and I would rather say that at the top than have any of you work it out at the bottom.',
+    'There is a node on the lip. It went up in the tide between under the grant of the one you raised yesterday, it was entered by the watch while it was still rising, and it was not corrected, because a node with nothing under it is a silence and silence is attended too. It cost a hundred and twenty crystal, which is the last hundred and twenty. There is no fourth Spire and there is no certificate, and after this tide the Order projects nothing at all.',
+    'You are carrying what you brought up yesterday. Two loads, and they go into the node on the lip and nowhere else. A tone over an empty node is a tone; the chapter would hear a note and nothing above it, and the Third would be courteous about that for the rest of my life.',
+    'Then you hold the lip. There is a cohort on it that will correct a node with hulls under it, and it will be right to, and it is faster to answer six of them while they are walking than to argue with six of them while they are standing. I am not asking you to be unheard today. Being unheard stopped being available at some point in the last two tides and I have not decided which.',
+    'At sixteen minutes I bring the lattice down. Both terrace nodes, at once, on my order and not on yours. Everything on this rim loses its ears for twelve seconds and everything of ours below the line and outside the Chord’s six hundred begins bleeding four points a second in the same instant, and I would like that entered as a condition of the tide rather than discovered as a surprise. I come down at half past fifteen with one hull for ears and I am over the slopes when it goes.',
+    'The interval is at seventeen. Thirty seconds, bow to the south, held — a tone you interrupt is a tone you have not played, and this is the one the Order has been in tune for since a hundred and eighteen. I am aware of what was said the first time. I have read every page of it, in a dry room, alone, for eleven years, and I remain of the same mind: something is speaking, and it is discourteous not to reply.',
+    'Count at the close. Go and be dry.',
+  ],
+};
+
 export const MISSION_HEADERS: readonly MissionHeader[] = [
   PROLOGUE_SORROWGATE_HEADER,
   LEDGER_ASSET_RECOVERY_HEADER,
@@ -842,9 +1054,15 @@ export const MISSION_HEADERS: readonly MissionHeader[] = [
   ATTENDING_INTAKE_HEADER,
   ATTENDING_THE_DOME_HEADER,
   ATTENDING_SHALLOW_HEADER,
-  ATTENDING_CONCLAVE_HEADER,
   ATTENDING_TRENCH_AWAKENING_HEADER,
+  ATTENDING_CONCLAVE_HEADER,
+  ATTENDING_FIRST_ARRIVAL_HEADER,
   CHORD_APTITUDE_HEADER,
+  CHORD_NINETEEN_HEADER,
+  CHORD_CONCLAVE_HEADER,
+  CHORD_THE_THREE_HEADER,
+  CHORD_RIM_DEPOSITS_HEADER,
+  CHORD_SECOND_CHORD_HEADER,
 ];
 
 export function missionHeaderById(id: string): MissionHeader | undefined {

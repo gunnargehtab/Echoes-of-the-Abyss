@@ -17,6 +17,12 @@ import { ATTENDING_SHALLOW } from './shallow.ts';
 import { ATTENDING_TRENCH_AWAKENING } from './trenchAwakening.ts';
 import { ATTENDING_CONCLAVE } from './conclaveAttending.ts';
 import { ATTENDING_THE_DOME } from './theDome.ts';
+import { ATTENDING_FIRST_ARRIVAL } from './firstArrival.ts';
+import { CHORD_NINETEEN } from './nineteen.ts';
+import { CHORD_CONCLAVE } from './conclaveChord.ts';
+import { CHORD_THE_THREE } from './theThree.ts';
+import { CHORD_RIM_DEPOSITS } from './rimDeposits.ts';
+import { CHORD_SECOND_CHORD } from './secondChord.ts';
 import { CHORD_APTITUDE } from './aptitude.ts';
 import { SEEDING_DEEP_FURROW } from './deepFurrow.ts';
 import { SEEDING_IN_WRITING } from './inWriting.ts';
@@ -49,6 +55,12 @@ export {
   ATTENDING_SHALLOW,
   ATTENDING_THE_DOME,
   ATTENDING_TRENCH_AWAKENING,
+  ATTENDING_FIRST_ARRIVAL,
+  CHORD_NINETEEN,
+  CHORD_CONCLAVE,
+  CHORD_THE_THREE,
+  CHORD_RIM_DEPOSITS,
+  CHORD_SECOND_CHORD,
   CHORD_APTITUDE,
   LEDGER_ASSET_RECOVERY,
   LEDGER_BAFFLE,
@@ -89,6 +101,12 @@ export const MISSIONS: readonly MissionDefinition[] = [
   ATTENDING_SHALLOW,
   ATTENDING_TRENCH_AWAKENING,
   ATTENDING_CONCLAVE,
+  ATTENDING_FIRST_ARRIVAL,
+  CHORD_NINETEEN,
+  CHORD_CONCLAVE,
+  CHORD_THE_THREE,
+  CHORD_RIM_DEPOSITS,
+  CHORD_SECOND_CHORD,
   CHORD_APTITUDE,
 ];
 

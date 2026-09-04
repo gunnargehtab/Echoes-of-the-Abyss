@@ -504,6 +504,78 @@ describe('what is heard — docs/mission-shallow.md §7', () => {
     assert.equal(to2(terrain.pathPropagation(hull.x, hull.y, corvette.x, corvette.y)), 0.59);
     assert.equal(to2(ratio(silentSig(CHORISTER.sigIdle), hull, corvette, CORVETTE.hyd)), 0.53);
   });
+
+  it('measures §7’s strip table to the nearer of the closure’s two Corvettes', () => {
+    // The document's finding, re-derived rather than restated. §7's table and
+    // its "band that is quiet in both directions runs from x 426 to x 1,244,
+    // and it is eight hundred metres wide" are measured to `element-one` at
+    // (300, 1400) alone — every figure in the table reproduces exactly against
+    // that hull — but §5 seats `element-two` 150 m south at (300, 1550), which
+    // is nearer to every metre of y 1,850. The table is therefore optimistic
+    // by a whole tier at the western end, and the band is 171 m rather than
+    // 818. Asserted here so the correction is a measurement and not a comment.
+    const one: Point = { x: 300, y: 1400 };
+    const two: Point = { x: 300, y: 1550 };
+    const gate = (x: number) =>
+      Math.max(
+        ratio(silentSig(CHORISTER.sigIdle), { x, y: 1850 }, one, CORVETTE.hyd),
+        ratio(silentSig(CHORISTER.sigIdle), { x, y: 1850 }, two, CORVETTE.hyd)
+      );
+    for (const x of [375, 650, 900, 1225, 1550]) {
+      assert.ok(
+        rangeM({ x, y: 1850 }, two) < rangeM({ x, y: 1850 }, one),
+        `x ${x}: §7 measures to the further Corvette`
+      );
+    }
+    // §7's own five rows, reproduced against `element-one` — the proof that the
+    // table was measured to that hull and not mis-derived some other way.
+    assert.deepEqual(
+      [375, 650, 900, 1225, 1550].map((x) =>
+        to2(ratio(silentSig(CHORISTER.sigIdle), { x, y: 1850 }, one, CORVETTE.hyd))
+      ),
+      [2.6, 1.82, 1.17, 0.71, 0.47],
+      '§7: the printed table, against (300, 1400)'
+    );
+    // And against the nearer hull, which is what the water actually holds.
+    assert.ok(
+      gate(375) >= TIER_THRESHOLD_MULTIPLIER.TRACK,
+      `§7 reads x 375 as Classification; the nearer Corvette holds it at ${gate(375).toFixed(2)}`
+    );
+    // The corrected band: the gate lets go west of the turret's own reach
+    // rather than eight hundred metres short of it.
+    const gateEndsAt = (() => {
+      for (let x = 300; x <= 2000; x++) if (gate(x) < TIER_THRESHOLD_MULTIPLIER.CONTACT) return x;
+      return -1;
+    })();
+    const turretWest = (concern.structures ?? []).find((s) => s.tag === 'frame-turret-west')!;
+    const gunReachesTo = Math.round(
+      turretWest.x - Math.sqrt(TURRET.attackRangeM! ** 2 - (1850 - turretWest.y) ** 2)
+    );
+    assert.equal(gunReachesTo, 1244, '§7: the western turret’s own boundary is right');
+    assert.ok(
+      gateEndsAt > 1000 && gateEndsAt < gunReachesTo,
+      `§7's band is x ${gateEndsAt}–${gunReachesTo}, not x 426–1,244`
+    );
+    assert.equal(gunReachesTo - gateEndsAt, 171, '§7: 171 m wide, not eight hundred');
+    // The design survives the correction, which is why this is a finding and
+    // not a move: the eastern five-row station is inside the corrected band,
+    // and the western one is at Contact and outside a Corvette's gun — through
+    // the water column, which is what `engagementRangeM` measures.
+    assert.ok(
+      gate(STATION_EAST.x) < TIER_THRESHOLD_MULTIPLIER.CONTACT,
+      '§7: (1225, 1850) is quiet'
+    );
+    assert.ok(
+      gate(STATION_WEST.x) >= TIER_THRESHOLD_MULTIPLIER.CONTACT &&
+        gate(STATION_WEST.x) < TIER_THRESHOLD_MULTIPLIER.BEARING,
+      '§7: (900, 1850) is Contact and nothing more'
+    );
+    const gunRange = Math.hypot(STATION_WEST.x - two.x, STATION_WEST.y - two.y, 340 - 400);
+    assert.ok(
+      gunRange > CORVETTE.attackRangeM,
+      `(900, 1850) is ${gunRange.toFixed(0)} m off, inside a ${CORVETTE.attackRangeM} m gun`
+    );
+  });
 });
 
 describe('none of the ten rows at Tier 2 from the slope — §4, §7, §13', () => {
@@ -597,8 +669,42 @@ describe('the rows and the bells — docs/mission-shallow.md §6', () => {
     for (const row of attendable.filter((e) => e.tag.startsWith('marr-row-'))) {
       assert.match(row.reading!.entered, /at the pace of a turning/);
       assert.match(row.reading!.entered, /because the sound does not say/);
-      assert.match(row.reading!.gap, /^Not entered: the \w+ row\.$/);
     }
+    // §6 numbers the readings and §12 prints two of them verbatim, so the
+    // ordinal is the assertion and not a `\w+`. The tag counts — `marr-row-one`
+    // … `marr-row-six` — and deriving the sentence from the tag's own word is
+    // the economy that produces "Marr's three outer row", which is a sentence
+    // no register speaks and which a loose pattern would pass.
+    assert.deepEqual(
+      attendable.filter((e) => e.tag.startsWith('marr-row-')).map((e) => e.reading!.gap),
+      [
+        'Not entered: the first row.',
+        'Not entered: the second row.',
+        'Not entered: the third row.',
+        'Not entered: the fourth row.',
+        'Not entered: the fifth row.',
+        'Not entered: the sixth row.',
+      ],
+      '§6: "Not entered: the [ordinal] row."'
+    );
+    assert.equal(
+      emitter('marr-row-five').reading!.gap,
+      'Not entered: the fifth row.',
+      '§12, "Objective readings, in play", verbatim'
+    );
+    assert.ok(
+      emitter('marr-row-three').reading!.entered.startsWith(
+        "Entered: Marr's third outer row, at twelve, at the pace of a turning."
+      ),
+      '§12, "Objective readings, in play", verbatim'
+    );
+    assert.deepEqual(
+      attendable
+        .filter((e) => e.tag.startsWith('marr-row-'))
+        .map((e) => e.reading!.entered.slice("Entered: Marr's ".length).split(' ')[0]),
+      ['first', 'second', 'third', 'fourth', 'fifth', 'sixth'],
+      '§6: "Entered: Marr\'s [first…sixth] outer row"'
+    );
     for (const row of attendable.filter((e) => e.tag.startsWith('gate-row-'))) {
       assert.match(row.reading!.entered, /the stalls had to stand in the concern's corridor/);
       assert.match(row.reading!.gap, /The corridor was not stood in, or not long enough/);
@@ -1172,6 +1278,40 @@ describe('the beats, as docs/mission-shallow.md §9 tables them', () => {
       last.kind === 'say' ? last.text : '',
       /It was written by people who had never lost the fifteen/
     );
+  });
+
+  it('opens on §12’s first paragraph, which is the briefing’s own first paragraph', () => {
+    // §9's 00:00 row names the speaker and the section — "Korrin assigns, from
+    // Sufficiency (§12)" — and does not quote a line, so the beat carries
+    // §12's opening paragraph and the public header carries all five. Intake's
+    // idiom, and the assertion is that the two do not drift: a briefing edited
+    // in shared and a beat left behind would have Korrin open a mission with a
+    // sentence the entry screen no longer says.
+    const opening = ATTENDING_SHALLOW.beats.find(
+      (beat) => beat.atTick === 0 && beat.kind === 'say'
+    );
+    assert.ok(opening?.kind === 'say');
+    assert.equal(opening.speaker, 'Undermarshal Setha Korrin', '§12: she assigns and is not there');
+    const briefing = ATTENDING_SHALLOW.briefing;
+    assert.ok(briefing !== null && briefing !== undefined, '§12: the briefing is not withheld');
+    assert.equal(briefing.length, 5, '§12: five paragraphs');
+    assert.equal(opening.text, briefing[0], '§12: the in-water line is the briefing’s own');
+    assert.match(briefing[1]!, /^The shallows take a fifth of the way a hull moves/, '§4, §12');
+    assert.match(
+      briefing[3]!,
+      /Five of ten is sufficiency\. The Undermarshalcy does not round up\.$/
+    );
+    assert.match(
+      briefing[4]!,
+      /^The column is asked to be under the line at the tide's turn\./,
+      '§12: and it is not asked to be anywhere else'
+    );
+    // §2, §12: no formula at the opening, for the second time in the campaign —
+    // the Cantorate does not attend a shoulder, so Ossary is never in the water.
+    for (const beat of ATTENDING_SHALLOW.beats) {
+      if (beat.kind !== 'say') continue;
+      assert.ok(!beat.speaker.includes('Ossary'), '§2: the Cantorate does not attend a shoulder');
+    }
   });
 
   it('walks the corridor and the closure on §9’s clock', () => {

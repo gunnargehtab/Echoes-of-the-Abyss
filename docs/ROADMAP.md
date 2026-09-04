@@ -35,9 +35,11 @@ vertical slice — it is a game you can sit down and play alone:
   chart mark composited over the world through one shared camera, band verbs and
   floor-following on the command surface, and the Lid pricing the top of the column.
 
-What is *not* done is the long tail the harness has started to surface, the other
-twenty-eight missions of the campaign, and everything in [world.md](world.md) that is
-still only prose.
+What is *not* done is the long tail the harness has started to surface, one mission of the
+campaign — *Standing Wave*, the Order's second, which wants a predicate over what the player
+has built — and everything in [world.md](world.md) that is still only prose. The other
+twenty-seven missions written since this line was first drafted are built: a literal, a map
+and a test file each.
 
 ---
 
@@ -223,13 +225,19 @@ server evaluates — and proved it against one mission specified down to the bri
 | --- | --- |
 | Mission runtime — seated parties, beat schedule, objective predicates — proven by the Prologue, *Sorrowgate* ([mission-sorrowgate.md](mission-sorrowgate.md)) | [#190](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/190) |
 
-**Two things are deliberately outside it.** The other twenty-eight missions are authoring
+**Two things were deliberately outside it.** The other twenty-eight missions are authoring
 rather than runtime, and one mission taken all the way to its text is what tells you whether
 the runtime can carry them; twenty-eight written against machinery nobody has played would be
-twenty-eight rewrites. And there is no progression persistence — the Prologue is replayable
-and remembers nothing, so nothing records that it was played, and the briefing variation
+twenty-eight rewrites. And there was no progression persistence — the Prologue was replayable
+and remembered nothing, so nothing recorded that it was played, and the briefing variation
 [campaign.md](campaign.md) intends for a scene you have already witnessed from the other side
-has no history to read.
+had no history to read.
+
+Both have since landed, and the bet this phase made came in. Twenty-seven of those
+twenty-eight missions are built on the machinery *Sorrowgate* proved, and between them they
+asked the format for eleven things rather than a rewrite — the last three in #391. The record
+is built (#371), and the briefing variation it was owed with it (#378). What is left of the
+twenty-eight is *Standing Wave*, and [campaign.md](campaign.md) §11 says what it still wants.
 
 ---
 

@@ -165,6 +165,19 @@ function runOut(drive?: (own: EchoSnapshot, match: Match) => void): Run {
   };
 }
 
+let passive: Run | null = null;
+/**
+ * The calling played the way the Cantorate plays it: nobody is ordered
+ * anywhere and nothing is toggled, so what this run reads is what the mission
+ * does on its own. Memoised because two suites below ask the same twenty
+ * minutes two different questions, and a second identical match would buy
+ * nothing but three seconds.
+ */
+function passiveRun(): Run {
+  passive ??= runOut();
+  return passive;
+}
+
 /**
  * A colossus driven north up the axis at an authored depth, held the way
  * `holdCommitments` holds one, and reported on after `seconds`.
@@ -531,6 +544,13 @@ describe('the cells, as docs/mission-conclave-attending.md §5 authors them', ()
     assert.equal(cells.faction, Faction.Directorate, '§5: called, and not assigned');
     assert.notEqual(cells.slot, PLAYER);
     assert.notEqual(cells.slot, ATTENDING_CONCLAVE.courtSlot, '§2: the court stays empty');
+    // §2, in as many words: "the called on slot 0, the cells on slot 2 … and
+    // nothing on slot 1, which is the court's".
+    assert.deepEqual(
+      [ATTENDING_CONCLAVE.playerSlot, ATTENDING_CONCLAVE.courtSlot, cells.slot],
+      [0, 1, 2]
+    );
+    assert.equal(ATTENDING_CONCLAVE.parties.length, 2, '§2: two parties in the water');
     assert.equal(emitters.length, 6, '§5: six rows');
     assert.deepEqual(
       emitters.map((emitter) => [emitter.x, emitter.y, emitter.depthM]),
@@ -630,6 +650,33 @@ describe('the cells, as docs/mission-conclave-attending.md §5 authors them', ()
       'the second and third rows, from a structure that cannot cross anything'
     );
     assert.equal(CANTOR.hyd, 80, 'the dome hears, and §4 reasons only about hulls');
+
+    // And measured rather than modelled, because the arithmetic above is only
+    // the reason: played out with nobody ordered anywhere, the tally is two of
+    // three from the first mission pass, and §9's condition-fired line — "the
+    // first moment a hull has gone far enough to hear who did not answer" —
+    // lands on that same pass, with no hull having gone anywhere.
+    const run = passiveRun();
+    assert.deepEqual(
+      run.counters.get('the-cells'),
+      { done: 2, of: 3 },
+      '§4: two of the six rows are entered by the lent instrument, not by a crossing'
+    );
+    const entered = run.lines.find((line) =>
+      line.text.startsWith('Entered: the cells, breathing')
+    )!;
+    assert.equal(
+      entered.tick,
+      ECHO_TICK_INTERVAL,
+      '§9: the conditional fires on the first pass, not on the first crossing'
+    );
+    // The count is still not met from the terrace, which is what keeps §8's
+    // three an objective rather than a formality: the third row costs a hull.
+    assert.equal(
+      run.objectives.find((objective) => objective.id === 'the-cells')?.status,
+      ObjectiveStatus.Pending,
+      '§8: three rows are not entered by standing still'
+    );
   });
 });
 
@@ -660,6 +707,29 @@ describe('the arrivals, as docs/mission-conclave-attending.md §9 drives them', 
       assert.equal(beat.driveTo.x, beat.spawnAt?.x, '§9: due north, up the axis');
       assert.ok(beat.driveTo.y < beat.spawnAt!.y);
     }
+    // §9's two lines, to the metre. The first is what puts the dome 75 m off
+    // the transit and therefore what brings it down, and the second is what
+    // stops the column's door being blocked by something standing in it — so
+    // these four coordinates are the mission and not decoration.
+    assert.deepEqual(
+      arrivals.map((beat) =>
+        beat.kind === 'creature'
+          ? [
+              beat.spawnAt!.x,
+              beat.spawnAt!.y,
+              beat.spawnAt!.depthM,
+              beat.driveTo.x,
+              beat.driveTo.y,
+              beat.driveTo.depthM,
+            ]
+          : []
+      ),
+      [
+        [2025, 3875, 2800, 2025, 2000, 2800],
+        [2500, 3875, 2800, 2500, 2250, 2800],
+      ],
+      "§9: the sill's western side to the head of the crossing, and its middle to the southern edge"
+    );
     assert.match(
       call.kind === 'say' ? call.text : '',
       /It is not the return\./,
@@ -715,27 +785,35 @@ describe('the arrivals, as docs/mission-conclave-attending.md §9 drives them', 
     assert.equal(stalled.depthM, 3000, 'and never lifted, because ground does not lift a creature');
   });
 
-  it('reaches the head of the crossing at 11:42 and the southern edge at 16:54', () => {
+  it('reaches the head of the crossing at 11:41.2 and the southern edge at 16:52.8', () => {
     // §9's two no-beat rows, which are facts about arithmetic rather than about
     // the schedule: 30 m/s from the sill, stopping 40 m short of the point the
-    // beat named (`pursue`'s own hold). The document rounds to the second.
+    // beat named (`pursue`'s own hold). **§9 rounds both up by about a second**
+    // — it writes 11:42 and 16:54 — so the assertions below are the arithmetic
+    // and the title is the arithmetic, not the table. Nothing downstream turns
+    // on the difference: §8's dependent sentence, that the second holds before
+    // Korrin closes the calling, is true by 7.2 s rather than by six.
     const first = arrivals[0]!;
     const second = arrivals[1]!;
-    if (first.kind !== 'creature' || second.kind !== 'creature') return;
+    assert.ok(first.kind === 'creature' && second.kind === 'creature', 'both are transits');
     const seconds = (beat: typeof first): number =>
       beat.kind === 'creature'
         ? (Math.abs(beat.spawnAt!.y - beat.driveTo.y) - 40) / SOUNDER.speed
         : NaN;
-    assert.equal(Math.round(first.atTick / SIM.TICK_HZ + seconds(first)), T(11, 41) / SIM.TICK_HZ);
-    assert.equal(
-      Math.round(second.atTick / SIM.TICK_HZ + seconds(second)),
-      T(16, 53) / SIM.TICK_HZ
-    );
+    const arrivesAtS = (beat: typeof first): number =>
+      Number((beat.atTick / SIM.TICK_HZ + seconds(beat)).toFixed(1));
+    assert.equal(arrivesAtS(first), T(11, 41.2) / SIM.TICK_HZ, '11:41.2, which §9 writes 11:42');
+    assert.equal(arrivesAtS(second), T(16, 52.8) / SIM.TICK_HZ, '16:52.8, which §9 writes 16:54');
     // §9, §8: both hold before they are needed — the first for its commitment's
-    // last eighteen seconds, the second six before Korrin closes the calling.
+    // last eighteen seconds, the second six before Korrin closes the calling —
+    // seven, in fact, which is the same rounding read forward.
     assert.equal(first.untilTick, T(12), '§9: the commitment lapses at 12:00');
     assert.equal(second.untilTick, T(18), '§9: and the second’s at 18:00, where it stands');
-    assert.ok(second.atTick + seconds(second) * SIM.TICK_HZ < T(17));
+    assert.equal(
+      Number((T(17) / SIM.TICK_HZ - arrivesAtS(second)).toFixed(1)),
+      7.2,
+      '§8: it is standing in the crossing before Korrin closes the calling'
+    );
   });
 });
 
@@ -781,12 +859,15 @@ describe('the water changes under it — §11 and §13, the repaint’s first sp
     const chord = 2 * Math.sqrt(reach * reach - offset * offset);
     assert.equal(Math.round(chord), 181, '§13: a 181 m chord');
     assert.equal(Number((chord / SOUNDER.speed).toFixed(1)), 6.0, '§13: six seconds at 30 m/s');
-    assert.ok(
-      (chord / SOUNDER.speed) * SOUNDER.damagePerS > CANTOR.maxHp,
-      '§13: 1,327 against 1,200'
+    assert.equal(CANTOR.maxHp, 1200, '§13: what a Cantor has to lose');
+    assert.equal(
+      Math.round((chord / SOUNDER.speed) * SOUNDER.damagePerS),
+      1327,
+      '§13: 1,327 against 1,200 — the margin is 127, and moving the line spends it'
     );
+    assert.ok((chord / SOUNDER.speed) * SOUNDER.damagePerS > CANTOR.maxHp);
 
-    const run = runOut();
+    const run = passiveRun();
     assert.ok(run.domeLostAtTick !== null, 'the dome survived the transit');
     const lostAtS = run.domeLostAtTick! / SIM.TICK_HZ;
     assert.ok(
@@ -829,6 +910,19 @@ describe('the objective, as docs/mission-conclave-attending.md §8 counts it', (
       ['the-calling', 'the-muster', 'the-cells', 'the-crossing'],
       '§8’s table order, which is also the order the close reads the readings in'
     );
+    // §8's own text column. Shown verbatim and never templated
+    // (docs/campaign.md §10), so the sentence the player reads is the
+    // document's and an edit to either has to move both.
+    assert.deepEqual(
+      ATTENDING_CONCLAVE.objectives.map((objective) => objective.text),
+      [
+        'The calling closes at the cycle. What is assigned descends. Eight of sixteen is a column, and the Undermarshalcy does not round up.',
+        'Twelve of sixteen. The Undermarshalcy does not round up.',
+        'The calling is put. Who attends it is entered, and who does not.',
+        'The stalls are under the terraces. A hull under way between them is the only sound there is.',
+      ],
+      '§8, verbatim'
+    );
     const terminal = ATTENDING_CONCLAVE.objectives.filter(
       (objective) => objective.terminal === true
     );
@@ -862,6 +956,17 @@ describe('the objective, as docs/mission-conclave-attending.md §8 counts it', (
       assert.notEqual(byId(id).terminal, true, '§8: read out, never ranked');
       assert.ok(byId(id).reading !== undefined, '§8: and both pairs are authored');
     }
+    // §8's two bullets, verbatim — the four sentences the close appends under
+    // whichever of Korrin's three Results the count earned.
+    assert.deepEqual(byId('the-cells').reading, {
+      met: 'Entered: the second cohort, in its cells, three rows or more, breathing. Not assigned. The First Cantor was present.',
+      unmet:
+        'Not entered: the cells. The calling was put and the north terrace did not go far enough across to hear who did not answer it.',
+    });
+    assert.deepEqual(byId('the-crossing').reading, {
+      met: 'The crossing was made under the order.',
+      unmet: 'The crossing was heard the length of the trench, and the debt is written.',
+    });
     assert.equal(
       byId('the-crossing').debtText,
       'The called owe the stalls a silence.',
@@ -950,7 +1055,31 @@ describe('the objective, as docs/mission-conclave-attending.md §8 counts it', (
     assert.equal(last.tick, T(20));
     assert.equal(last.speaker, 'First Cantor Vehl Ossary');
     assert.match(last.text, /^Nothing\. The record notes that the First Cantor was present\.$/);
-    assert.ok(!run.epilogue.includes('the record notes that the First Cantor was present'));
+    // Searched on the whole line and not on its second sentence, which every
+    // gap reading carries too: a substring the cells already print would pass
+    // this whether Ossary's line were in the count or not.
+    assert.ok(!run.epilogue.includes(last.text), '§8: it is in the log, not in the count');
+    // §8's stated order for the close: Korrin's Result, then `the-cells`'
+    // reading, then `the-crossing`'s, then the six cells' own lines beneath —
+    // `objectiveReadings` walks the authored objective list and `transcript`
+    // the authored emitter list, so the order is the literal's table order.
+    const [result, appended, ...rest] = run.epilogue.split('\n\n');
+    assert.equal(result, ATTENDING_CONCLAVE.epilogue[MissionOutcome.Complete]);
+    assert.deepEqual(rest, [], 'one reading and one block, and nothing after it');
+    const beneath = appended!.split('\n');
+    assert.deepEqual(
+      beneath.slice(0, 2),
+      [byId('the-cells').reading!.met, byId('the-crossing').reading!.met],
+      '§8: the cells’ line before the crossing’s'
+    );
+    assert.equal(beneath.length, 2 + 6, '§8: and the six cells’ own lines under both');
+    for (const [index, emitter] of (cells.emitters ?? []).entries()) {
+      const line = beneath[2 + index]!;
+      assert.ok(
+        line === emitter.reading!.entered || line === emitter.reading!.gap,
+        `${emitter.tag}: the close entered a line that row does not own`
+      );
+    }
   });
 
   it('reads all three of Korrin’s results, in the register, with the readings beneath', () => {
