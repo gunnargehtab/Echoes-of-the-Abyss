@@ -17,8 +17,8 @@ is deliberately the same plateau and deliberately the same map literal, `marr-pl
 missions on the same map… A player who fights loudly through the Kelp Labyrinth returns later
 to a quieter, deader, more legible version of it, and nobody tells them why" — has been a
 design rule with no mission behind it since the epic opened, because until now no two missions
-shared ground. This pair is the first that could carry it, and the carrying is not this
-document's to build (§13).
+shared ground. This pair is the first that could carry it, and it is now the pair that does
+(#379; §13).
 
 ---
 
@@ -489,9 +489,9 @@ This is the document's most consequential scoping decision and it is made delibe
   between missions on the same map, and until this mission no two missions shared a map, so the
   rule has been a design intention with nothing to intend. A player who worked this plateau
   quietly in *Tend* arrives here to the water they left; a player who did not, does not. That
-  carrying is **not built and is not this document's to build** (§13) — the point of choosing
-  this map is that the rule now has a concrete first case to be built against, which is what
-  every other unbuilt rule in this bible got before it shipped.
+  carrying is **built** (#379; §13), and it was built against exactly this pair — the point of
+  choosing this map was that the rule would have a concrete first case to be built against,
+  which is what every other unbuilt rule in this bible got before it shipped.
 - **The alternative costs a map and buys nothing.** A second, unvisited plateau would need its
   own literal, its own gazetteer entry and its own establishing minutes, in exchange for ground
   the player has no memory of — which is the opposite of what "the rows as the room" is worth.
@@ -663,7 +663,7 @@ all three are somebody else's (see below).
 | **A commander ability, at all** | **Built** (#373). `MissionCommanderAbility`, and it is deliberately *not* an eighth member of `MissionAbility`: that union is a lock list, this is a grant, and conflating them would have `locks` mean "off" seven times and "on" once. The smallest version this row specified, and no more: an authored point, a radius, a duration, a speed multiplier, a Silent Running immunity, a SIG the act broadcasts, and one flag for the mission-specific consequence. `COMMANDER_ABILITY` in shared constants carries Marr's three figures, SPEC, cited to [characters.md](characters.md); the SIG is §4's and stays in the literal. The command path is `Match.commanderAbility` — recorded like every order, refused by the runtime, and replayed from a `type: 'ability'` command with no unit on it, because an act is the commander's and not a hull's |
 | **Emergency convocation's second half** — the bell collapsing the remaining circuit | **Built** (#373), and built with the first half rather than after it, as this row required. `collapsesWalk` rings every row's bell and turns every remaining row together over one hold instead of in sequence; the walk stops returning altered from that tick, because a circuit that restarted after an emergency convocation would be the mission taking back the one thing it gave |
 | The Holdfast held as a failure state | **Built** (#373), and it was nothing new, exactly as predicted: `MissionHold` is a region, a duration and an objective, and `foreignPresence` answers it and the walk's stall with the same call. One thing the row did not anticipate — campaign.md §10's telegraph is measured between two authored ticks and a hold has one, so the rule is paid out of the hold's own sixty seconds instead, and `missions.test.ts` holds every closing hold to `MISSION.FAILURE_TELEGRAPH_S` |
-| **Cross-mission Drift Health** — §2 rule 5's first concrete pair | **Not built**, named here and not asked for. This document chooses the map that makes the rule buildable (§11) and stops there; it is its own row of #212 |
+| **Cross-mission Drift Health** — §2 rule 5's first concrete pair | **Built** (#379), against this pair. What carries is the map's whole Drift grid — the 4 × 4 regions of `marr-plateau`, as *Tend* closed on them — and nothing else: no roster, no outcome, no cell the player did not watch, because Drift Health is already on every Echo snapshot ([bestiary.md](bestiary.md) §5–6: the tell is light, not sound). The `missionOver` payload carries the final grid, the progression record keeps it **per map** and *replaces* it on every close — a map that healed is a later reading, not a better one — and the client presents it when it creates the next mission room on that map. The server bounds what it is handed and trusts nothing else: `validateDriftGrid` refuses a grid of the wrong shape, or with one impossible cell in it, whole and never clamped, and `DriftHealth.seed` caps every cell at the fresh start, so no grid a client can present seeds a plateau healthier than a new one. The gap between the two tides heals every living cell by one flat `DRIFT.CARRY_RECOVERY` of 5 — a kill and a bit, TUNABLE, because §6 pins recovery only as slower than a match and the gap is authored in tides that nobody times — which leaves a Failing cell Failing and a Dead cell Dead: §6's "permanent for the match" now reads across the pair. **Nothing tells the player.** No briefing line, HUD mark or panel names the carry; the plateau is quieter where *Tend* was loud, and rule 5's "nobody tells them why" is kept by the record refusing to offer the grid to anything that draws |
 | Progression → this mission's briefing variant | **Built** (#378), and it is the row that found where §1's rule stops. The briefing half is §12's *Already seen* section, transcribed into `SEEDING_CONVOCATION_HEADER.briefingVariants` and selected client-side off the seen-scene set: a plateau *filed* in *Tend* is a plateau whose Tidespeaker already knows the survey year's figures are hers, and says so before the drop. The half this row originally asked for — the assertion at 03:30 reading differently — is **refused by [campaign.md](campaign.md) §1**, not deferred: a line spoken inside the mission is the mission. §12 argues that out at the point where the two readings meet |
 | In-mission character speech, heard | Text only, the standing status ([mission-sorrowgate.md](mission-sorrowgate.md) §13) |
 
