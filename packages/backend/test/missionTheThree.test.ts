@@ -477,6 +477,17 @@ describe('the hush, as docs/mission-the-three.md §4 prices it', () => {
     // mission counts escorts against the room. §6's courtesy is the player's.
     assert.ok(inRegion(room, HALL_MOUTH.x, HALL_MOUTH.y), 'the mouth is on the room’s own edge');
     assert.ok(inRegion(region('the-chord'), HALL_MOUTH.x, HALL_MOUTH.y), 'and on the hall’s');
+    // The ground says it harder than `inRegion` does, and §13's row names only
+    // the region half: x = 2500 is the *room's* column of cells, so the mouth
+    // is roofed at 2,800 rather than at the hall's 2,700. It costs nothing at
+    // 2,900 m, which is where everybody in this house is — but an escort sited
+    // at the mouth on the chord's own roof would be refused by the rock.
+    assert.equal(TERRAIN.ceilingAt(HALL_MOUTH.x, HALL_MOUTH.y), 2800, 'the mouth is the room’s');
+    assert.ok(!TERRAIN.admits(HALL_MOUTH.x, HALL_MOUTH.y, 2750), 'the chord’s roof is rock here');
+    assert.ok(
+      TERRAIN.admits(HALL_MOUTH.x, HALL_MOUTH.y, 2900),
+      'and the floor of the house is not'
+    );
     assert.ok(!inRegion(room, THE_CHORD.x, THE_CHORD.y), 'the middle of the hall is not the room');
     assert.ok(inRegion(room, THE_ROOM.x, THE_ROOM.y), 'and the marker is');
   });
