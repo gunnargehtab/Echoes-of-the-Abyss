@@ -30,10 +30,11 @@
  * `fourthTrench.ts`'s rectangles, biomes and floors to the metre, and the
  * Margin is that map's base water run a thousand metres further south
  * (docs/mission-baffle.md §11). The last three regions are ground *Baffle*
- * never had a reason to draw: its chart ran out of paper a thousand metres
- * below the berths rather than out of water. The seat moves too — the spawn is
- * at the mouth here, not at the staging, because the staging is the convoy's
- * muster and the convoy is somebody else's party in this mission.
+ * never had a reason to draw: that chart's last 250 m are the head of the Fan
+ * here, which is where it ran out of paper rather than out of water (§11). The
+ * seat moves too — the spawn is at the mouth here, not at the staging, because
+ * the staging is the convoy's muster and the convoy is somebody else's party in
+ * this mission.
  *
  * A second literal rather than a longer first one, deliberately: `fourth-trench`
  * is a shipped mission's ground, and growing it southward would move *Baffle*'s

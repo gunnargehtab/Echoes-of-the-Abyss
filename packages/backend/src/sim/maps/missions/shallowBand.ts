@@ -13,9 +13,12 @@
  * Directorate's cities stand at 2,750–4,000 m, which is the only sense in
  * which any of this is shallow; 1,800 m is the *first metre of the Abyssal*
  * (docs/glossary.md, "The Shallow Band"; docs/systems-depth.md §3). Nothing on
- * this chart is Shelf water, no floor is authored toward the surface, and the
- * Directorate's shallow-water penalty — a different word, one mission earlier
- * — cannot be triggered anywhere on it.
+ * this chart is Shelf water and no floor is authored toward the surface, so
+ * the Directorate's shallow-water penalty — a different word, one mission
+ * earlier — never fires: the shallowest metre this mission authors is a grown
+ * hull's 600 m, which is Mid-Water (§10). The ground does not forbid it,
+ * because no ground can; `DEPTH.MIN_M` is the surface and a ceiling of 0
+ * admits every depth above the floor. Nothing is *seated* in that water.
  *
  * Three facts about this water decide the mission and all three are ground
  * rather than script.

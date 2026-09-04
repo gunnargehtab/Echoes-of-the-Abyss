@@ -37,12 +37,12 @@ Three tides ago the programme sowed a second furrow at 2,200 m under a Directora
 that had attended the cleft since the letter, heard the sowing at Track from 884 m, and went
 below to say so ([mission-deep-furrow.md](mission-deep-furrow.md) §6). The tide after, a
 listening dome was raised at the first furrow's north edge. Nobody on the plateau heard it
-commissioned — the furrow is under the layer and eighty kilometres from Marr, and *Deep
-Furrow*'s thesis holds in both documents ([systems-echo.md](systems-echo.md) §3). What heard
-it was the watch at the cleft's mouth, above the layer, 1,500 m off: a site broadcasts at 70
-([units.md](units.md)), and 70 through the cleft's 1.6 and the layer's 0.3 is Classification
-to a scout's 70 out to 2,075 m. The plateau knew what a building is for before the cohort it
-was for arrived.
+commissioned — the furrow is under the layer, and *Deep Furrow*'s thesis holds in both
+documents ([systems-echo.md](systems-echo.md) §3). What heard it was the watch at the cleft's
+mouth, above the layer, 1,500 m off: a site broadcasts at 70 ([units.md](units.md)), and 70
+through that line's own path mean — five cells of cleft and one of the Foot, 1.5, not the
+cleft's 1.6 (§7) — and the layer's 0.3 is Classification to a scout's 70 out to 1,993 m. The
+plateau knew what a building is for before the cohort it was for arrived.
 
 Three facts about that water decide the mission, and none of them is a fence.
 
@@ -152,12 +152,14 @@ against the best listeners in the game**, and it lands in four movements.
 from every metre of the furrow a hull is not veiled in — 35 through kelp is Tier 1 to a
 scout's 70 from 2,597 m and to a tender's 30 from 1,529, and to ears blinded to 5 inside a
 cloud only from 499 — and the player's hulls are inside three clouds the dome's ears do not
-reach. A bed's own hum is 20, veiled by its own cloud to 8; 8 through 0.55 is Bearing
-to a dome-lent 95 only inside 970 m, the Submersibles are 1,125 m from the nearest bed's
-centre, and the dome, 450 m from the middle bed and 625 m from the other two, has the middle
-bed at Track (ratio 4.32) and the outer pair at Classification (2.55) and nothing silent
-under any of them. The cloud covers a column of water 350 m across from the surface to the floor,
-which is why nothing under a bed can be found by looking down.
+reach. A bed's own hum is 20, veiled by its own cloud to 8, and every ear in the cohort has
+it: the dome, 450 m from the middle bed and 625 m from the other two through the garden's own
+0.55, has the middle bed at Track (ratio 4.32) and the outer pair at Classification (2.55);
+the doorway, 1,125 m from the outer beds through a path mean of 1.18 and 1,300 m from the
+middle through 1.25, has the outer pair at Classification (2.54) and the middle at Bearing
+(2.13) (§7). What none of them has is anything silent under any of them. The cloud covers a
+column of water 350 m across from the surface to the floor, which is why nothing under a bed
+can be found by looking down.
 
 **2. Inside the cloud everyone is deaf and quiet, and it is the same everyone.** The veil is
 the one symmetric aura the game has ([systems-echo.md](systems-echo.md) §8). At 03:00 the
@@ -169,10 +171,11 @@ doctrine is that it already works silent and blind ([units.md](units.md)); this 
 mission where the other side has to.
 
 **3. The veil is a multiplier, so silence is still the posture.** 7.2 against 1.8 (§3). A
-corvette that forgets to be silent under a bed is 28 × 0.4 = 11.2 through 0.55 — Bearing to
-the throat's 95 out to 1,197 m with the throat 1,125 m off, and Classification to the dome's
-own 80 from where the eastern bed stands (ratio 3.57 at 625 m). The bed hides a hull that is
-already hiding. It does not hide one that is not.
+corvette that forgets to be silent under a bed is 28 × 0.4 = 11.2 — Classification to the
+throat's 95 at 1,125 m through the bed-to-duct path mean of 1.18 (ratio 3.55), and
+Classification to the dome's own 80 through the garden's 0.55 from where the eastern bed
+stands (ratio 3.57 at 625 m). The bed hides a hull that is already hiding. It does not hide
+one that is not.
 
 **4. Hiding is a schedule.** The dome has the beds — the middle one at Track, the outer two
 at Classification — the line finds each one by walking into it, and the beds are corrected
