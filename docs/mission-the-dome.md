@@ -159,10 +159,11 @@ movements.
 **1. The dome is worth most to the hull that costs least.** The Cantor grants +25 HYD capped at
 95 within 1,200 m ([units.md](units.md)). Range scales as hearing raised to one over the
 attenuation exponent of 1.6, so the grant is worth **×1.16 of range to a Chorister** (75 → 95),
-**×1.07 to an Abyssal Submersible** (85 → 95, and Attendance already said so at seven per cent), and **×1.29 to a
-Corvette** (50 → 75). The Cantorate's standing rests on an instrument that is nearly wasted on
-the Directorate's own deep hull and transforms its cheapest one. Under the dome a Chorister
-holds a Cruiser at contact from 9,022 m and the yard's plant from 6,127 m. Nothing in the
+**×1.07 to an Abyssal Submersible** (85 → 95, and Attendance already said so at seven per
+cent), and **×1.29 to a Corvette** (50 → 75). The Cantorate's standing rests on an instrument
+that is nearly wasted on the Directorate's own deep hull and transforms its cheapest one. Under
+the dome a Chorister holds a Cruiser at contact from 9,022 m in trench water and the yard's
+plant from 6,127 m. Nothing in the
 mission remarks on it. Korrin has read the number
 ([mission-attendance.md](mission-attendance.md) §5).
 
@@ -174,8 +175,9 @@ cruising; one that drops Silent Running spikes +40 for two seconds
 to thirty, and while the picket is in debt the dome's grant goes to the court's slot and every
 Chorister at the foot drops from 95 to 75, losing the sixteen per cent of range the dome was
 buying it, four kilometres from the hull that spent it. **Engaging costs hearing**: the
-Directorate's price, written down rather than felt. The joke — the Cantorate's instrument withdrawn from the Cantorate's own
-array by a picket doing its job — is one nobody in the water makes.
+Directorate's price, written down rather than felt. The joke — the Cantorate's instrument
+withdrawn from the Cantorate's own array by a picket doing its job — is one nobody in the water
+makes.
 
 **3. The Call is a lie, and it is entered as one.** At 13:00 the stalls sound a Chorus Call at
 the foot: six emitters at SIG 16, the loudness of a Chorister at rest, on periods of 7, 9, 11,
