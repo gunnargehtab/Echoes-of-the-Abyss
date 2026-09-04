@@ -118,9 +118,9 @@ under the one instrument it has, which is the mission in one distance.
 
 ### What the column does not carry
 
-1. **No weapons, and no torpedoes.** Locked, with the week's own reason attached: *the week's
-   law — nothing has stood into the watch*. It is a statement of fact at 00:00 and it stops
-   being one at 18:00, and §6 is where the mission decides not to update it.
+1. **No weapons, and no torpedoes.** Locked, with the tide's own reason attached: *the law of
+   these tides — nothing has stood into the watch*. It is a statement of fact at 00:00 and it
+   stops being one at 18:00, and §6 is where the mission decides not to update it.
 2. **No mines and no depth charges.** *Nothing is left in water that is attended.*
 3. **No noisemakers.** *A countermeasure is a sentence, and the rim is not lied to.* The
    Cantorate put one sound in the water in mission 3
@@ -211,8 +211,9 @@ Naming follows [culture.md](culture.md) §4: Korrin, Ossary and Adze carry given
 or, at the programme's limit, one name; the Voice of the reconnaissance and the charting pair are
 offices, because the Order names ranks before people and the Commune does not name a hull at all.
 
-**Nobody is wrong** ([campaign.md](campaign.md) §2 rule 1). The plateaus are below their own bed
-on ground they read before anyone; the Order is measuring what its Chord needs and declining to
+**Nobody is wrong** ([campaign.md](campaign.md) §2 rule 1). The plateaus are in home water on
+ground they read before anyone, and there is a bed of theirs on the western lip; the Order is
+measuring what its Chord needs and declining to
 say when it will take it; the column is standing on a rim it has attended for two centuries
 without ever having stood on it. Three true sentences on one tide, none of them fitting inside
 another.
@@ -254,6 +255,16 @@ break-silence spike is a *firing* spike and every weapon on the hull is locked, 
 this mission can produce one. A descent is 72 and costs a second a second, and a second a second
 to clear afterwards. The ceiling is not a fence around the mission; it is a fence around exactly
 one manoeuvre, and the manoeuvre is changing your mind about a terrace.
+
+**The other order the cohort stands under is the one at 18:00, and it is Adze's to hold.** The
+lock in §3 carries a statement of fact — *nothing has stood into the watch* — and at 18:00 the
+Order stands into it, which is the tick the fact stops being one and the lock becomes a
+refusal. [characters.md](characters.md) names this and no mission has spent it: Adze has never
+disobeyed, and the campaign puts one order in front of them that they might. This is that
+order, and they attend it, on the channel, at the tick it arrives (§12). The ending pays the
+line off by having the order held rather than crossed — which is the only way a faction whose
+whole argument is that it never asks could pay it off at all. Nothing in the union can read a
+refusal (§8), so it is authored as a voice and an epilogue clause and is not counted.
 
 **The spread is the hold, and the ground says so without being told to.** Drift Health runs on
 1,500 × 1,000 m cells here ([bestiary.md](bestiary.md) §6). The seat's cell holds twelve
