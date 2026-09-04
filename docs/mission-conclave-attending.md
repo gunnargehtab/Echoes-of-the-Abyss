@@ -1,7 +1,7 @@
 # The Attending 6 — Conclave
 
-> The sixth mission of the Directorate campaign ([campaign.md](campaign.md) §6), specified. One
-> of the fourteen documents that complete the bible's campaign, written to the pattern
+> The sixth mission of the Directorate campaign ([campaign.md](campaign.md) §6), specified and
+> built. One of the fourteen documents that complete the bible's campaign, written to the pattern
 > [mission-sorrowgate.md](mission-sorrowgate.md) sets and the Directorate documents continue:
 > everything here is authored — the forces, the water, the beats, the numbers and the text —
 > and code transcribes this document.
@@ -196,12 +196,16 @@ one cell at Bearing only from **y ≥ 2,200** (675 m off, ratio 1.54) and three 
 **y ≥ 2,325**; a Submersible holds one from y 2,100 and three from y 2,200. The dome shortens
 neither walk for most of the column and cannot: its disc reaches the crossing only on the line
 x 1,950 and only as far as y 2,200 (§3), and a hull standing there already reads a cell at 1.53
-on its own 75. What the +25 buys, on that one line, is the third row — three cells at y 2,200
-instead of at y 2,325. From the north terrace's own edge, 2,125 m out, the ratio is **0.33** and
-there is nothing there at all. The crossing runs from y 750 to y 2,500. **The half the player does
-not have can be entered only by a hull that has crossed more than three quarters of that water,
-and the three rows the count asks for only by one standing within three hundred metres of the
-terrace that did not move.**
+on its own 75. What the +25 buys, on that one line, is three cells at y 2,200 instead of at
+y 2,325. From the north terrace's own edge, 2,125 m out, the ratio is **0.33** and there is
+nothing there at all. The crossing runs from y 750 to y 2,500. **But the count is not a count of
+hulls.** `attend` reads what the player's *slot* resolved, and the dome is an ear on that slot —
+HYD 80, standing where the galleries stand, 527 and 631 m from the second and third rows through
+cut structure. **Two of the six rows are entered on the first mission pass with nothing having
+moved** (§13), so §8's three buys one crossing rather than three: the row that completes the count
+still costs a hull at y ≥ 2,200 under one the dome does not already hold, which is more than three
+quarters of that water. The Cantorate's own instrument enters two rows of the cohort the Cantorate
+did not cross for, and nobody in the water remarks on it.
 
 **2. The half you do have is decided by a written order and a roster, and by nothing else.** The
 galleries' silence order reaches the terraces ([habitats.md](habitats.md) §6) — SIG 25 per hull,
@@ -352,7 +356,7 @@ of the hulls ([audio-direction.md](audio-direction.md)):
   the quietest of it, because a conclave is running.
 - **The cells, breathing.** Six rows at SIG 3 on the far terrace, sustained for the whole mission,
   and inaudible from anywhere the column starts. They are the only friendly sound on the map and
-  the player will not hear them without going to them.
+  the column will not hear them without going to them.
 - **The stalls, calling the sill.** The rite's sixty seconds, spent at 09:40 on something that is
   not the return, and the call says only that: *it is not the return.* Where it came from is not
   said then or later, by anybody.
@@ -496,7 +500,7 @@ Conditional beats, fired by the tally and not the clock:
 
 | Condition | Beat |
 | --- | --- |
-| `attend`, count 1 | The stalls: *Entered: the cells, breathing. The calling is heard from the south terrace and is not answered.* Fires on the first row entered, which is the first moment a hull has gone far enough to hear who did not answer |
+| `attend`, count 1 | The stalls: *Entered: the cells, breathing. The calling is heard from the south terrace and is not answered.* Fires on the first row entered, which is the first mission pass: the dome holds two rows from where it stands, and nothing has to have crossed (§4) |
 
 The two arrivals are authored transits, not a simulated source, for the standing reason
 ([mission-sorrowgate.md](mission-sorrowgate.md) §9): a mission's beats happen at the time the
@@ -786,13 +790,13 @@ asserts what they resolve to rather than what they were authored to be. The repa
 the first time in that batch, here and in [mission-deep-furrow.md](mission-deep-furrow.md)'s
 second furrow, so the sentence [campaign.md](campaign.md) §10 has carried since #259 is now false
 and is owed an edit. The transcription found **one sentence of this document wrong** — §4's,
-about who can enter the cells — and one figure in §3 read up the chart where an aura is read as a
-range; every other number here reproduced against the shipped model, the dome's fall and both
-arrivals' arithmetic included. What is left is a design agenda rather than a build: one predicate
-this document names and declines, one that is not expressible by construction and correctly so,
-one finding against the bible left open in two files this document does not touch, two absences
-it declines to ask for — a commander's button that now exists, and a briefing variant with no
-scene to key on — one carry between missions that it does ask for, and a mix that is unstarted.
+about who can enter the cells, since corrected — and one figure in §3 read up the chart where an
+aura is read as a range; every other number here reproduced against the shipped model, the dome's
+fall and both arrivals' arithmetic included. What is left is a design agenda rather than a build:
+one predicate this document names and declines, one that is not expressible by construction and
+correctly so, one finding against the bible left open in two files this document does not touch, two
+absences it declines to ask for — a commander's button that now exists, and a briefing variant with
+no scene to key on — one carry between missions that it does ask for, and a mix that is unstarted.
 
 | Requirement | Status |
 | --- | --- |
@@ -810,7 +814,7 @@ scene to key on — one carry between missions that it does ask for, and a mix t
 | `fauna: false` with two authored creatures | **Built** — the flag is [Attendance](mission-attendance.md)'s and the beat is Asset Recovery's, and the reason is [Intake](mission-intake.md) §13's: the default seeder is a skirmish roster that gates on the floor rather than on the species' band and cannot put an animal at a named sill at a named tick |
 | The written silence order at the terraces | **Built** — `arrayTag`, `silenceRole`, `silenceCeilingSig` 25, `debtCapS` 45, and the court slot the aura is parked on. Unchanged from [Attendance](mission-attendance.md) §5, which is the point: this is the same order, read one city higher, and the numbers do not move because the galleries did not amend them |
 | **The missing half as sound** | **Built** (#396, `MissionEmitter` with a `reading` pair), **and a finding.** A friendly scripted party carrying hulls is not authorable while auto-acquire fires on the nearest live enemy on any other slot, and every party is an enemy of every other. So "never assigned" cohorts have to be sounds — which is also the truer reading of [habitats.md](habitats.md) §6, and the row is a finding rather than a request because the design is better for the constraint. Six emitters, each with its own ordinal reading, and the close prints two objective readings with the six rows' own lines beneath them, which is where §5's argument about the count being a count survives contact with the runtime. A mission that genuinely needed a non-hostile second party of its own faction would want an alliance term on `MissionParty`, and this one does not |
-| **§4's sentence about who can enter the cells** | **Wrong, and it is the finding the transcription paid for.** §4 argues the cells "can be entered only by a hull that has crossed more than three quarters of that water". `attend` counts what the observer's *slot* resolved, and the dome is on that slot: an ear at HYD 80 standing 527 and 631 m from the second and third rows through cut structure, so **two of the six rows are entered on the first mission pass with nothing having moved**, and §9's condition-fired line — "the first moment a hull has gone far enough to hear who did not answer" — fires on that same pass. §8's count of three therefore buys one crossing rather than three; the third row still costs a hull, so it is an objective and not a formality. The literal transcribes the three unchanged, because §8 owns the count, and the test names both entered rows so that the day the count or the dome's seat moves it is a failing assertion rather than a surprise in a playthrough. **The prose in §4 is what is wrong here, and this row is the only place it is said** |
+| **§4's sentence about who can enter the cells** | **Was wrong, corrected, and the finding the transcription paid for.** §4 argued the cells "can be entered only by a hull that has crossed more than three quarters of that water". `attend` counts what the observer's *slot* resolved, and the dome is on that slot: an ear at HYD 80 standing 527 and 631 m from the second and third rows through cut structure, so **two of the six rows are entered on the first mission pass with nothing having moved**, and §9's condition-fired line fires on that same pass rather than on the first crossing. §8's count of three therefore buys one crossing rather than three; the third row still costs a hull, so it is an objective and not a formality. The literal transcribes the three unchanged, because §8 owns the count, and the test names both entered rows so that the day the count or the dome's seat moves it is a failing assertion rather than a surprise in a playthrough. **§4 and §9 now carry the correction, and this row is where it was found** |
 | **A calling that runs its length** | **Built** — `MissionDefinition.runsItsLength`, and this mission needs it as much as [Intake](mission-intake.md) did. `the-muster` is met from tick zero, sixteen being at least twelve, so the moment `the-calling` is revealed at 17:00 over a column already standing in the axis, both terminal rows are met on one pass and the court's default rule resolves there — costing 19:00, 20:00, and the line the whole campaign has been walking toward. Played exactly that way the mission still resolves on the `resolve` beat at 20:00, with all four rows Met and Ossary's last line in the log and out of the count. Omitted is the default, and every other literal omits it |
 | The calling as an extract revealed late | **Built** — [Intake](mission-intake.md) §9's roll idiom. `extract` is not standing, `runtime.ts` never re-derives a Met non-standing row, and an objective is not scored before its `revealAtTick`, so `the-calling` is revealed on Korrin's own beat at 17:00 and counts the column that is in the axis when the cycle closes — eight of sixteen on the counter, over a column ordered there at 01:00 |
 | **A predicate over a breach that happened** | **Not built, and named rather than asked for.** `quiet` is standing and reads the water at the tick it is asked; nothing in the union asks whether a ceiling was ever exceeded. Demonstrated now rather than argued: a column taken out of Silent Running at 01:00 and run across at cruise reads `the-crossing` **Met** at the close. §8 says so, and the debt is what carries the history — imperfectly, because it repays a second for a second. The shape a real one would take is a monotone sibling (`{ kind: 'breached'; role; ceilingSig }`), and this document does not want it: a faction whose sanction is the record should be read on the record, and the record here is the debt and Ossary's line |

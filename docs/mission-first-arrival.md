@@ -1,11 +1,11 @@
 # The Attending 7 — First Arrival
 
 > The seventh and last mission of the Directorate campaign ([campaign.md](campaign.md) §6),
-> specified — the campaign's convergence slot ([campaign.md](campaign.md) §8) and its ending
-> ([campaign.md](campaign.md) §9): not canon, not ranked, not merged, and not a fight. One of
+> specified and built — the campaign's convergence slot ([campaign.md](campaign.md) §8) and its
+> ending ([campaign.md](campaign.md) §9): not canon, not ranked, not merged, and not a fight. One of
 > the fourteen documents written together that complete the bible's campaign, to the pattern
-> [mission-sorrowgate.md](mission-sorrowgate.md) sets: everything here is authored — the
-> forces, the water, the beats, the numbers and the text — and code transcribes this document.
+> [mission-sorrowgate.md](mission-sorrowgate.md) sets: everything here is authored — the forces, the
+> water, the beats, the numbers and the text — and code transcribes this document.
 
 **Setting:** The Rim — the Mouth's northern edge, 4,410 m below everything, on the tide after
 the concern's survey went home, in the same week of 214 PC that three other navies arrive for
@@ -55,9 +55,11 @@ column has to cross is also the ground that reports itself.
 crystal bench ([environments.md](environments.md)). A cohort standing on the faces is quiet to
 everything above it — a silent Chorister, at the 4.3 its own idle SIG places it at in the 3–8
 band, is contact to a Corvette's 50 only inside 663 m and bearing inside 515 — and is 400 m
-higher than the lip it walked in on, because the terrace floor is 2,600 m against the lip's
-3,100. The rim is held from the quietest water on the map, and getting there is the loudest
-thing the cohort does.
+higher than the water it walked in on, because the column crosses the lip at 3,000 m, the
+deepest any hull is ever ordered (§11), and the terrace floor is 2,600. The rock differs by
+five hundred, and the hundred metres under the column is water nothing stands on. The rim is
+held from the quietest water on the map, and getting there is the loudest thing the cohort
+does.
 
 **The tide is the whole advantage, and it was bought with a record.** The watch heard the
 concern descend at 72 for three minutes and sound six charted faces at 80, and entered both;
@@ -314,10 +316,10 @@ which the record enters as the bed's doing and not as a fault.
   the wake at 2.8 from 879. It appears and disappears by facing, which is the term working
   ([mission-aptitude.md](mission-aptitude.md) §4).
 - **The Order's party arriving**, 16:00: 350 m of descent at 72, then a Cruiser hull at 65
-  cone-on over slope water. It is contact to a submersible from 6,274 m and Track from 3,538;
-  from its station at 5400, 2100 it is **Track to the 9th from 1,553 m at a ratio of 10.13**,
-  and Track to the cohort's seat under the dome from 1,100 m at 15.94. Nothing about this
-  arrival is quiet and nothing about it is hidden.
+  cone-on over slope water. It is contact to a submersible from 6,274 m, a classification from
+  3,538 and Track only inside 2,638; from its station at 5400, 2100 it is **Track to the 9th
+  from 1,553 m at a ratio of 10.13**, and Track to the cohort's seat under the dome from
+  1,100 m at 15.94. Nothing about this arrival is quiet and nothing about it is hidden.
 - **The Order sounding the sixth face**, 18:00, SIG 80 for twenty seconds from 5150, 2450: a
   ratio of 26.8 to the dome at 962 m, 24.2 to the rim's western watch hull at 1,012 m, and 35.0
   to the nearest cohort seat at 791 m, which is under the dome. In open water it is contact to a
@@ -757,11 +759,11 @@ by the thirty-four tests in `missionFirstArrival.test.ts`. It is an ending docum
 headline row never needed building — the ending is a lock and a silence, and both shipped long
 before the literal did — so what the transcription had to look for was errors of *reading*, and
 it found two: a tier label in §7 and a *because* in §1, each of them sitting on a number that is
-right, neither of them moving a metre or a second of the mission. Both are recorded below. What
-is still owed is the half of the row [mission-item-nine.md](mission-item-nine.md) §13 opened
-that every ending document leans on and none of them owns: the record of a campaign is kept and
-a briefing can now read it back, and this ending carries nothing out of the six missions that
-came before it.
+right, neither of them moving a metre or a second of the mission. Both sections now read as the
+model does, and both findings are recorded below. What is still owed is the half of the row
+[mission-item-nine.md](mission-item-nine.md) §13 opened that every ending document leans on and
+none of them owns: the record of a campaign is kept and a briefing can now read it back, and
+this ending carries nothing out of the six missions that came before it.
 
 | Requirement | Status |
 | --- | --- |
@@ -788,8 +790,8 @@ came before it.
 | The Order at PR-2 with no refit | **A calendar decision, stated.** The Order has no refit crystal after *The Three* and projects depth with Sounding Spires, of which none stands on D+1, so its four hulls sit at or above 1,750 m — Mid-Water, which PR-2 covers — and nothing of the Order's is ever admitted into Abyssal water in this mission. [mission-rim-deposits.md](mission-rim-deposits.md) is where that changes |
 | Choristers below 1,800 m, refit explicitly | **A test finding, carried, and stated more exactly than it was.** `missions.test.ts` reads `unit.pressureRating ?? statsFor(kind).pressureRating` rather than `effectivePressureRating` — the authored refit or the roster's own figure, never the faction baseline — so the Directorate's PR-3 baseline does not rescue a PR-2 Chorister authored at 3,000 m: every one of the twelve carries `pressureRating: 3` in the literal. First recorded by [mission-the-dome.md](mission-the-dome.md) §13; repeated here because this is the fifth mission in the campaign to field the hull and the fourth to have to author the refit — [Shallow](mission-shallow.md)'s eight sit at 340 m and need none. Authored twelve times over in the literal, and `missionFirstArrival.test.ts` asserts the roster's Chorister is still PR-2 (#397), so the refit cannot quietly become a change to the hull everybody else fields |
 | **Silent Running's SIG is the hull's, not the band's** | **A finding carried, and the one place a reader is most likely to mis-derive this document.** `silentRunningSig` places a hull inside `SILENT_RUNNING`'s 3–8 band by its idle figure — `3 + 5 x min(1, sigIdle / 60)` (`acoustics.ts`) — so a Chorister runs silent at **4.3** and an Abyssal Submersible at 4.8, and only a hull idling at 60 or more ever reads the eight. Every silent figure in §1, §6 and §7 is computed at the hull's own value: the eight would inflate a Chorister's silent ranges by a factor of 1.85, would make the seat's cell die in half the time, and would put the pair at Track on the first face where the model says Classification. First recorded by [mission-shallow.md](mission-shallow.md) §13; `missionFirstArrival.test.ts` now pins the 4.3, the 4.8 and the 1.85 (#397) |
-| **§7 calls 3,538 m Track, and the model calls it Classification** | **A finding against this document, and the document is the side that is wrong** (#397). §7 reads the Order's party arriving as "contact to a submersible from 6,274 m and Track from 3,538". A Cruiser at 65 cone-on against a submersible's HYD 85 through the slopes' open water is Contact at 6,274 m — which is right — Bearing at 4,869, Classification at 3,538, and Track, the 4× multiple, at 2,638 (`TIER_THRESHOLD_MULTIPLIER`, recomputed in `missionFirstArrival.test.ts` alongside the reconnaissance's 1,923 and 879, which are right). The distance §7 quotes is the shipped model's and the label on it is not, and the correction changes nothing the literal authors: the seats, the station and §9's beat table are identical at either tier, which is why this is recorded rather than repaired by moving a hull. §7's prose still reads Track |
-| **§1's four hundred metres is right and its *because* is not** | **A finding against this document, and the arithmetic survives it** (#397). §1 says the terraces stand 400 m higher than the lip "because the terrace floor is 2,600 m against the lip's 3,100", and those two floors differ by five hundred. The four hundred is a fact about the hull and not about the rock: `DEPTH.MAX_M` is 3,000, no hull is ever ordered onto the lip's last hundred metres, and 3,000 to 2,600 is the distance one actually climbs. Every second §4 derives from it stands — 26.7 free at 15 m/s on the way up, 8.9 at 45 m/s and SIG 72 on the way back down — and `missionFirstArrival.test.ts` asserts the five hundred and the four hundred side by side so the two cannot be read as one number again |
+| **§7 called 3,538 m Track, and the model calls it Classification** | **A finding against this document, and the document was the side that was wrong** (#397). §7 read the Order's party arriving as "contact to a submersible from 6,274 m and Track from 3,538". A Cruiser at 65 cone-on against a submersible's HYD 85 through the slopes' open water is Contact at 6,274 m — which is right — Bearing at 4,869, Classification at 3,538, and Track, the 4× multiple, at 2,638 (`TIER_THRESHOLD_MULTIPLIER`, recomputed in `missionFirstArrival.test.ts` alongside the reconnaissance's 1,923 and 879, which are right). The distance §7 quoted is the shipped model's and the label on it was not, and the correction changes nothing the literal authors: the seats, the station and §9's beat table are identical at either tier, which is why it was repaired in the prose rather than by moving a hull. **§7 now reads a classification at 3,538 and Track only inside 2,638**, and `missionFirstArrival.test.ts` pins all four ranges so the label cannot drift off the distance again |
+| **§1's four hundred metres is right and its *because* was not** | **A finding against this document, and the arithmetic survives it** (#397). §1 stood the terraces 400 m higher than the lip "because the terrace floor is 2,600 m against the lip's 3,100", and those two floors differ by five hundred. The four hundred is a fact about the hull and not about the rock: `DEPTH.MAX_M` is 3,000, no hull is ever ordered onto the lip's last hundred metres, and 3,000 to 2,600 is the distance one actually climbs. Every second §4 derives from it stands — 26.7 free at 15 m/s on the way up, 8.9 at 45 m/s and SIG 72 on the way back down — and `missionFirstArrival.test.ts` asserts the five hundred and the four hundred side by side so the two cannot be read as one number again. **§1 now derives the four hundred from `DEPTH.MAX_M` and the bench**, and says out loud that the rock differs by five hundred, so the figure a reader recomputes is the one the section claims |
 | The seat's Drift cell, dead inside eighty seconds | **Arithmetic over the shipped ledger, stated and not fenced.** Twelve Choristers, six submersibles and a dome in one 1,500 × 1,000 m cell sum 116 silent against a threshold of 60 and take the cell to zero in seventy-nine seconds; idle they sum 359 and take fifteen. **Nothing in this mission is paid in Biomass**, so it costs the player nothing — but it is public on the snapshot, a reader will compute it, and [mission-intake.md](mission-intake.md) §13's decision holds: say so, and move nothing. Recomputed against the shipped constants and unchanged (#397) — 116 silent, 1.12 a second, seventy-nine — and that all eighteen hulls and the dome share one cell is asserted rather than assumed |
 | A predicate over a hull's depth | **Not built, and named rather than asked for.** §8's hold wants "on the terraces *and* under 2,600 m"; `extract` reads a rectangle. A hull hovering at 3,000 m inside the terraces rectangle counts as one standing on the bench. The shape a genuine need would take is a `depthM` ceiling on `extract`, and this mission does not need it: the ground lifts every hull that crosses, so the two populations differ only for a player who ordered depth on purpose ([mission-shallow.md](mission-shallow.md) §13 records the same row from the other end) |
 | A predicate over what the player declined to do | **Not built, and deliberately not asked for.** The mission's most load-bearing non-event — the watch not answering a hull that stood into it — is a fact about restraint, and the union has no way to read one. It is authored as Adze's `say` beat at 18:00 and an epilogue clause, which is where a refusal belongs anyway — and it is also the order [characters.md](characters.md) says the campaign puts in front of Adze that they might not obey, paid off by being held (§6) |

@@ -1,10 +1,10 @@
 # The Second Seeding 6 — Radicals
 
-> The sixth mission of the Commune campaign ([campaign.md](campaign.md) §5), specified — one of
+> The sixth mission of the Commune campaign ([campaign.md](campaign.md) §5), built — one of
 > the fourteen documents that complete the bible's campaign, written to the pattern
 > [mission-sorrowgate.md](mission-sorrowgate.md) sets and the Commune documents continue:
 > everything here is authored — the forces, the water, the beats, the numbers and the text —
-> and code transcribes this document.
+> and the code that ships transcribes this document (§13).
 
 **Setting:** Sorrowgate, the drowned city, mid-Rift, 214 PC, two tides after *In Writing* — the
 arch down, the lock cut back, the court's chamber fallen since the spring, and the basin below
@@ -476,10 +476,14 @@ and so, this time, is the noise.*
 
 ### The Descent's pack
 
-`the-descent-pack` — five Draymaws at 3375, 1375 at 900 m, in the Districts just east of the
+`the-descent-pack` — one Draymaw at 3375, 1375 at 900 m, in the Districts just east of the
 Descent's edge (the Descent's rectangle ends at x 3,250; the Districts' floor of 1,600 admits
-them): HYD 65, Interest 22, Commit 45, 58 m/s, 34 a second each inside 160 m in three
-dimensions, pursuing within 500–1,300 m. Through the city's 0.8:
+it): HYD 65, Interest 22, Commit 45, 58 m/s, 34 a second inside 160 m in three dimensions,
+pursuing within 500–1,300 m. **A pack is one entity here.** `spawnFauna` places one animal per
+`creature` beat and the roster's `groupSize` of 5 is read by nothing in the runtime (§13), so the
+tag is a pack in the fiction — [bestiary.md](bestiary.md) §4's four to six, working the Descent's
+leavings — and one hunter in the water, and every figure below is that animal's own. Through the
+city's 0.8:
 
 | The column is | Interested from | Commits from | At 783 m, the third waypoint |
 | --- | --- | --- | --- |
@@ -500,8 +504,8 @@ that nobody follows is a pack that heard something and went back to its leavings
 follows it is the price. A pack Interested for four seconds commits twenty seconds later
 whatever the column does next — `interestedS` accrues in the Interested stage regardless of
 what is heard, and cooling needs thirty seconds of quiet — so an escort that pings and then
-does anything at Interest inside the next second has committed five hunters that close at
-58 m/s to 1,300 m, and a column at 850 m on the Descent is in their band. The second dive is
+does anything at Interest inside the next second has committed the hunter, which closes at
+58 m/s to 1,300 m, and a column at 850 m on the Descent is in its band. The second dive is
 the door out of it: at 1,475 m the column is 175 m under the band's floor, fifteen further
 than a Draymaw's bite reaches, which is why the leg is authored at 1,475 and not at the
 plan's 1,400 (§13).
@@ -539,7 +543,7 @@ factor (`THERMOCLINE.ACROSS` 0.3) where the two ends are on opposite sides of th
 | The colossus, calling | 100 × 1.6 | Contact 7,907 m · Track 3,324 | Contact 5,746 to a tender's 30 — every hull the plateaus own, wherever it is |
 | A Hollow, coiled | 3 × 1.6 | Contact 883 m · Bearing 686 · Classification 498 | Contact 1,041 · Bearing 808 · Classification 587. **From the arch's foot the barge has the eastern Hollow at a Bearing (633 m, ratio 2.2) and the western at a Contact (881 m, 1.3)** — enough to know which doorway is which |
 | A Hollow, striking | 60 × 1.6 | Contact 5,746 m | Contact 6,769 — every hull the column owns, and to the watch across the layer (60 × 1.6 × 0.3), Contact from 3,341 |
-| The pack, idling | 26 × 0.8 | Contact 2,209 m · Classification 1,246 | Contact 2,603 · Classification 1,468 — the column at the third waypoint, 783 m off, has five at a name |
+| The pack, idling | 26 × 0.8 | Contact 2,209 m · Classification 1,246 | Contact 2,603 · Classification 1,468 — the column at the third waypoint, 783 m off, has it at a name |
 | A torpedo, running | 60 × 0.8 in the city, × 1.6 in the basin | Contact 4,389 to HYD 65 in the city | Contact 7,090 to HYD 70 in the basin, and across the layer to the watch from 3,341 |
 | A noisemaker | 70 × 0.8 | Contact 4,833 to HYD 65 | |
 | A ping, to whoever is listening | 95 × 0.8 | Track 2,088 to HYD 50 | Self-reveal at Tier 4 to every listener inside the model's 2,400 m — and there is no other party to be lit to |
@@ -551,7 +555,7 @@ nothing at three hundred, and everything south of y 2,000 is the span, which is 
 
 | Source | SIG × PF × 0.3 | From the seat, 2500, 400 | From the span's edge, 1500, 1950 |
 | --- | --- | --- | --- |
-| The pack, on the watch's own side of the layer | 26 × 0.8 | Classification, 1,310 m (ratio 3.2) — five, at a name, from tick zero | Bearing, 1,961 m (1.7) |
+| The pack, on the watch's own side of the layer | 26 × 0.8 | Classification, 1,310 m (ratio 3.2) — at a name, from tick zero | Bearing, 1,961 m (1.7) |
 | The colossus, idling | 45 × 1.6 × 0.3 | Nothing — Contact reaches 2,791 m and the basin is 3,335 off | **Bearing**, 1,718 m (2.2). The basin, at a third |
 | The colossus, calling | 100 × 1.6 × 0.3 | Bearing, 3,335 m (1.7) | **Track**, 1,718 m (4.8). The watch hears the mistake from the arch's row |
 | The barge in the far water, idling | 55 × 1.6 × 0.3 | Nothing — Contact reaches 3,164 m and the far water is 3,475 off | Bearing, 2,169 m (1.8) — the watch can hear that the column arrived, and the column cannot hear the watch at all (a scout at 12 across the layer is nothing to HYD 65 past 1,167 m) |
@@ -673,7 +677,7 @@ at SIG 100, along the lane's own row, for fifty seconds, 180 s ahead of the clos
 the layer from the moment it moves. Everything that can kill a hull before that is audible
 before it is anywhere:
 
-- **The pack**, five at a name from the seat, 783 m off the lane, and the only thing that
+- **The pack**, at a name from the seat, 783 m off the lane, and the only thing that
   wakes it is the fourth second after a ping.
 - **The doorway**, a Bearing and a Contact from the arch's foot; a strike is 60 through 1.6
   and the whole map hears it.
@@ -703,7 +707,7 @@ waits for an escort, and the only hold on the seed hulls is the `releaseTick` at
 
 | Time | Beat |
 | --- | --- |
-| **00:00** | `ground` — region `arch-span`, `...SOLID`: the span goes solid across the map at the chamber's northern row. `ground` — region `service-lock`, floor 1,500 / ceiling 1,300: the lock cut back through it. The prologue's collapse, restated as the spring left it (§11). `creature` × 7 — three Lampfry shoals at 250 m across the Concourse's southern edge; `the-descent-pack` at 3375, 1375 at 900 m; `gate-hollow-west` 1750, 3100 and `gate-hollow-east` 3250, 3100 at 1,700 m; `the-colossus` at 1750, 3650 at 2,000 m — each `driveTo` at its own spawn, `untilTick: 0`, not loud. `say` — the watch: the arch is down, the lock is the way in, five off the Descent's edge at a name (§12) |
+| **00:00** | `ground` — region `arch-span`, `...SOLID`: the span goes solid across the map at the chamber's northern row. `ground` — region `service-lock`, floor 1,500 / ceiling 1,300: the lock cut back through it. The prologue's collapse, restated as the spring left it (§11). `creature` × 7 — three Lampfry shoals at 250 m across the Concourse's southern edge; `the-descent-pack` at 3375, 1375 at 900 m; `gate-hollow-west` 1750, 3100 and `gate-hollow-east` 3250, 3100 at 1,700 m; `the-colossus` at 1750, 3650 at 2,000 m — each `driveTo` at its own spawn, `untilTick: 0`, not loud. `say` — the watch: the arch is down, the lock is the way in, one off the Descent's edge at a name and a pack behind it (§12) |
 | 00:30 | `say` — Anholt: we're going now (§12) |
 | **01:00** | `release` × 4 — `the-barge`, `seed-one`, `seed-two`, `seed-three`. `move` × 4 → 2500, 700 at 330 m: the first leg, and the first metre puts out the middle shoal |
 | 01:30 | `move` × 4 → 2500, 700 at 330 m — stood again |
@@ -711,7 +715,7 @@ waits for an escort, and the only hold on the seed hulls is the `releaseTick` at
 | 02:30 | `move` × 4 — stood again: a column ordered up is dived again here, and one already at 850 is not touched. `say` — Teel (§12) |
 | 03:00, 03:30 | `move` × 4 → 2625, 1600 at 850 m, and again. The closest the lane comes to the pack, 783 m |
 | **04:00** | `move` × 4 → 1875, 1625 at **1,475 m** — **the second dive**: held at the Descent's 900 m floor until the hull is over Districts water, then 12.8 s at 72 at the lock's mouth |
-| 04:30 | `move` × 4 — stood again. `say` — the watch: five off the Descent's edge; they heard the dive and did not turn (§12) |
+| 04:30 | `move` × 4 — stood again. `say` — the watch: one off the Descent's edge and whatever is with it; it heard the dive and did not turn (§12) |
 | 05:00, 05:30 | `move` × 4 → 2000, 1875 at 1,475 m — the lock's mouth, under the roof — and again |
 | 06:00, 06:30 | `move` × 4 → 2000, 2375 at 1,475 m — through the lock the fourteen came out of; the colossus at Track from here — and again |
 | 07:00, 07:30 | `move` × 4 → 2375, 2625 at 1,475 m — the Gate, the chamber's floor — and again |
@@ -929,9 +933,10 @@ the water is going to be heard.
 **The watch, at the Concourse — 00:00**
 
 > The arch is down and the lock's the way in. Fourteen came out through it in the spring, or
-> fewer — the court read the count and we never had it. There's five off the Descent's edge
-> at nine hundred, and we've got them at a name from here. We can't hear the basin from the
-> seat. From the arch's row we could, at a third, and we'd rather that were us than nobody.
+> fewer — the court read the count and we never had it. There's a Draymaw off the Descent's
+> edge at nine hundred and we've got it at a name from here, and one Draymaw off the Descent
+> means a pack and one of them loud enough to hear. We can't hear the basin from the seat.
+> From the arch's row we could, at a third, and we'd rather that were us than nobody.
 
 **Bloomwright Sefa Anholt, aboard the barge — 00:30**
 
@@ -949,11 +954,11 @@ the water is going to be heard.
 
 **The watch, on the pack — 04:30**
 
-> Five off the Descent's edge to the east. They heard the dive and they didn't turn. They'd
-> hear a ping — for three seconds, and three isn't four, and the fourth is whatever you do
-> next. The next dive takes the column under them: fourteen seventy-five is a hundred and
-> seventy-five under the floor of anything they'll chase, and a bite reaches a hundred and
-> sixty.
+> One off the Descent's edge to the east, and whatever's with it. It heard the dive and it
+> didn't turn. It'd hear a ping — for three seconds, and three isn't four, and the fourth is
+> whatever you do next. The next dive takes the column under it: fourteen seventy-five is a
+> hundred and seventy-five under the floor of anything that'll chase, and a bite reaches a
+> hundred and sixty.
 
 **Bloomwright Sefa Anholt, at the arch's foot — 08:30**
 
@@ -991,9 +996,14 @@ the water is going to be heard.
 
 ### The reading at the close
 
-The close reads one of three, verbatim from §8, in Marr's voice; the four objectives'
-readings print beneath it in authored order, met or unmet, and Anholt's line stands last in
-the log if the column is through.
+The close reads one of three, verbatim from §8, in Marr's voice, and each of the three carries
+her last sentence above at the end of it. The sentence rides the reading rather than a beat of
+its own because this mission's close moves — a column that takes every order is read well before
+15:00, and a line timed at 15:00 would reach only the players who failed — and the reading is the
+one thing that prints at whatever tick the close lands on (§13). So the order at the close is
+§12's own: the count, then the sentence she should not say aloud and does, then the four
+objectives' readings beneath it in authored order, met or unmet, and Anholt's line last in the
+log if the column is through.
 
 | Outcome | Marr's reading |
 | --- | --- |
@@ -1027,11 +1037,12 @@ prediction this table made held exactly: like [mission-in-writing.md](mission-in
 before it, the mission needed no row the format does not have — no predicate, no beat kind, no
 field. What it carries instead is the two findings against the engine as built, each large enough
 to have moved the plan for this mission, each stated so a reviewer can overrule it in one place.
-The transcription added two more, both rowed below: one against the format — **a pack is one
-entity** — and one against this document, which never said where Marr's last sentence lives on a
-close that moves. **Nothing in §6 or §7 moved**: both sections were re-derived from the shipped
-model, waypoint by waypoint and range by range on both sides of the layer, and every figure came
-back at the value printed. What is not built is the design agenda at the foot of the table, and it
+The transcription added two more, both rowed below and both since carried into the sections that
+were wrong about them: one against the format — **a pack is one entity** — and one against this
+document, which did not say where Marr's last sentence lives on a close that moves, and now says
+it in §12. **No figure in §6 or §7 moved**: both sections were re-derived from the shipped model,
+waypoint by waypoint and range by range on both sides of the layer, and every figure came back at
+the value printed. What is not built is the design agenda at the foot of the table, and it
 is unchanged.
 
 | Requirement | Status |
@@ -1045,11 +1056,11 @@ is unchanged.
 | **A driven creature crossing the player's lane** | **Built** (#349; [mission-intake.md](mission-intake.md) §13), with `driveTo.depthM` 2,300 held every pass. Two findings the drive leans on: a driven creature climbs from wherever it was at 12 m/s, so a colossus placed at 2,000 m is at 2,300 after twenty-five seconds and 750 m of the drive — at the lane; and `holdCommitments` restores `homeDepth`, `senseS` and `driven` on release and does not restore `homeX`/`homeY`, so a released creature cools toward the *end* of its drive and stays there, which is what §6's *released where it stands* means and the reason it listens 783 m from the far water rather than swimming home. The plan's drive ended at 3250, 3300; this document ends it at 3250, 3650 so the line passes through the tenth waypoint and lands 783 m from the far water's marker — the distance the plan gave for a point it did not compute (945 m). **Authored, and the drive re-derived to the metre** (#394): 1,500 m due east at 30 m/s is fifty seconds, the 300 m climb at 12 m/s is the first twenty-five, the colossus is at 2,300 m before it reaches x 2,500 and crosses there at 12:25, and the release leaves it 783 m from the far water's marker |
 | **The middle rung as a second terminal row** | **Built** — Thin Water's `crossing` beneath `column`. `the-seed` at two beneath `the-column` at four; the plan's text for the rung said *one hull* against a count of two and a ladder that read one as Lost, and this document keeps the count and the ladder and corrects the sentence. Authored as the sentence now reads (#394): both rows terminal, neither a keystone, both revealed at 00:00, and the ladder counting how many of the two were met |
 | **The court's rule, kept** | **Built, and authored by omission.** `runsItsLength` is not set: the pass on which four seed hulls stand in the far water meets both terminal rows and closes the mission there, with Anholt's conditional line on the same pass, because a column that is through is through; a partial column runs to 15:00 through the basin rising. Stated because *Deep Furrow* and *In Writing* both set the flag, and a reviewer will ask. **Played** (#394): the column that takes every order resolves at 11:04 and never reaches the 12:00 drive, and the column held at the Concourse resolves at exactly 15:00 — the close moves, which is the fact the next row turns on |
-| **The close moves, and Marr's last sentence has to move with it** | **A finding, and the one thing the literal authors where this document does not point** (#394). §12 heads the sentence *at the close — from the Concourse at 15:00, or at the far water*, and §12's own reading table prints only §8's three readings without it. Transcription forced the choice: a `say` beat at T(15) would be heard by exactly the players who failed, because a column that took every order was read at 11:04. The sentence therefore rides all three `epilogue` strings, which is the one channel that prints at whatever tick the close lands on, and `resolve` emits the epilogue *before* the objective readings — which is §12's order exactly: the count, then the sentence she should not say aloud and does, then the four rows beneath. Where the document was ambiguous the code chose, and the choice is here rather than only in the literal |
+| **The close moves, and Marr's last sentence has to move with it** | **A finding the literal made where this document did not point, and §12 now carries it** (#394). §12 heads the sentence *at the close — from the Concourse at 15:00, or at the far water*, and its reading table used to print only §8's three readings without it. Transcription forced the choice: a `say` beat at T(15) would be heard by exactly the players who failed, because a column that took every order was read at 11:04. The sentence therefore rides all three `epilogue` strings, which is the one channel that prints at whatever tick the close lands on, and `resolve` emits the epilogue *before* the objective readings — which is §12's order exactly: the count, then the sentence she should not say aloud and does, then the four rows beneath. Where the document was ambiguous the code chose; §12's *reading at the close* now states the choice, so the document and the literal say one thing |
 | **`extract` at reveal, latching Met** | **Built, and right here** (the judge's decision 7): nobody is in the far water at tick zero, a hull that reaches it has crossed, and the residual — a barge that crossed and was then ground on the way back north — is read by *the-households*' unmet line beneath a *the-column* that stays met. No `revealAtTick` is authored, and the trap under the latch is checked rather than asserted (#394): no unit of any party stands inside `the-far-water` at tick zero, and `isStanding` is false for both `extract` rows and true for both `survive` rows — the crossing is a thing that happened, the households are a sentence about now |
 | **`tolerance`, unauthored** | **Not possible, and not needed.** Exposure is read off other parties' listeners and the Drift is not an observer (`Match` hands the Echo pass the seated roster and the mission's scripted parties, #323); with one party in the water the force stands at Tier 0 in everybody's ears all mission. The basin's hearing is priced in §6 as ratios against the Drift's own thresholds, which is the right instrument for a listener that answers rather than enters |
 | **The Draymaw ladder's twenty seconds** | **Built, and stated so the pack's placement reads as arithmetic.** `interestedS` accrues in the Interested stage regardless of what is heard, and cooling needs `COOL_AFTER_S` (30 s) of quiet, so a pack Interested for four seconds commits within twenty whatever the column does next. The lane passes 783 m from the pack, five points under its Interest for the loudest thing on the lane; the plan's depth of 1,400 m for the lock legs left a barge 100 m below the pack's band floor, inside a 160 m bite from a pack directly overhead, and this document authors **1,475 m** — 175 m under the floor, 25 m above the lock's, and still `requiredPressureRating` 2 for the escort — so that the second dive is the door the plan says it is. Authored at 1,475 and re-derived against the roster (#394): the band floor is 1,300, the leg is 175 m under it, a bite reaches 160, the barge from the lane reads 17.1 against an Interest of 22 and a noisemaker 18.4, and the ping is Commit-loud from 1,077 m |
-| **A pack is one entity** | **A finding, not a request** (#394), and the first of the two the transcription made. `spawnFauna` places one creature per `creature` beat, so §9's `creature` × 7 puts *one* Draymaw at 3375, 1375 with the roster's Draymaw figures on it — as `inWriting.ts`' `lanes-pack` already does — and the roster's `groupSize: 5` is read by nothing in the simulation. Every number §6 and §7 print is per-animal and none of them moves: HYD 65, Interest 22, the 17.1 at 783 m, the 34 a second inside 160 m. What moves is what the player meets, which is one hunter where §6's prose says five; §12's *five off the Descent's edge* is the watch counting a school by ear, which is the only place the fiction and the entity count have to agree. A spawner that honoured `groupSize` would settle it in one place for every literal, and it is not asked for here, because this mission is priced on the ladder and never on the bite |
+| **A pack is one entity** | **A finding, not a request** (#394), and the first of the two the transcription made. `spawnFauna` places one creature per `creature` beat, so §9's `creature` × 7 puts *one* Draymaw at 3375, 1375 with the roster's Draymaw figures on it — as `inWriting.ts`' `lanes-pack` already does — and the roster's `groupSize: 5` is read by nothing in the simulation. Every number §6 and §7 print is per-animal and none of them moves: HYD 65, Interest 22, the 17.1 at 783 m, the 34 a second inside 160 m. What moved is the prose that counted the animals, and the document is the side that moved: §6 places one Draymaw and says why, §7 and §8 read it as one contact at a name, and §12's watch calls the one it has and the pack behind it as the guess it is — the tag is a pack in the fiction and one hunter in the water. A spawner that honoured `groupSize` would settle it in one place for every literal, and it is not asked for here, because this mission is priced on the ladder and never on the bite |
 | **The Hollows on the Commit's northern row** | **Built** — the placed-and-not-driven idiom, with the trigger model's three-dimensional 500 m (`hollowStage`) and a wound springing the strike (#353). The dive line ends 791 m from the western Hollow, not the 881 the plan measured from the line's start; both figures are in §6 and the nearer is the one that prices the end of the dive. Re-derived whole (#394): 65.5 at the start of the dive and 45.9 at its end against a coil at 45, a nearest approach of 633 m against a strike that also needs 500, and 485 m from the eastern Hollow for a column that drifts 150 m east of the arch's foot |
 | **The Lampfry shoals, whole at tick zero** | **Built** (#306) — the scatter is a three-dimensional proximity test that never touches the Echo Layer, and it is public. The plan's seats put a scout 75 m from a shoal and the barge on top of one; this document moves the seats so every shoal is whole until the first order, and the column's first metre south is the tell (§6). The seats hold (#394): all nine hulls stand further than the scatter's 300 m from all three shoals in three dimensions — the barge is 335 m from the middle one — and the first leg's waypoint is inside it, so the tell is the first metre south |
 | **The thermocline, for a watch that cannot cross it** | **Built** — `THERMOCLINE`, pair factor 0.3 across; the span solid at every depth is what keeps the watch's whole water above the layer. **The instruction this row used to carry has been carried out** (#394): the test prices §7's second table from `THERMOCLINE.ACROSS` times the trench's PF rather than from the biome PF, and every figure in it holds — the pack at a name from the seat (3.2) and a Bearing from the span's edge (1.7), the basin inaudible from the seat and a Bearing from the edge (2.2), the calling voice a Track from the edge (4.8), and a scout at 12 across the layer inaudible to the barge past 1,167 m |
