@@ -1233,11 +1233,12 @@ describe('the rented rating, played — docs/mission-rim-deposits.md §4', () =>
 
   it('refuses the grant outside the six hundred, and stays quiet for the hull that bleeds', () => {
     // The other half of the same rule, and §6's own worked example: the fifth
-    // face's north-eastern corner, "outside both grants and taking 4 HP/s".
-    // `aurasSystem` measures the grant as a plain hypot over x and y from the
-    // instrument, so this is the assertion that the six hundred is a radius
-    // and not a mood — a hull at the same 2,600 m as the one above, 901 m from
-    // node-one and 721 m from node-two, is rated for none of it.
+    // face's north-eastern quarter, where "a cutter that works the north-east
+    // is outside both grants and taking 4 HP/s". `aurasSystem` measures the
+    // grant as a plain hypot over x and y from the instrument, so the six
+    // hundred is a radius and not a mood — a hull on the same bench, at the
+    // same 2,600 m as the one above, is rated for none of it once it is past
+    // the edge of both.
     const match = rimMatch();
     match.update(STEP_MS);
     const cutter = corvetteAt(match, { x: 3150, y: 350 });

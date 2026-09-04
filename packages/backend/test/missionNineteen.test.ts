@@ -85,6 +85,9 @@ const TRENCH_PF = PROPAGATION_FACTOR[Biome.AbyssalTrench];
  */
 const BENCH_DEPTH_M = 1750;
 
+/** §5, §11 — the watch's water, on station and on every leg. */
+const WATCH_DEPTH_M = 2100;
+
 /**
  * §4 — the strike's five hundred metres are measured like a bite, in three
  * dimensions, so a party fifty metres above a coil has 497 m of ground left.
@@ -120,6 +123,46 @@ const nearestCoilM = (x: number, y: number): number =>
   Math.min(...coilPoints.map((coil) => Math.hypot(coil.x - x, coil.y - y)));
 
 const objective = (id: string) => CHORD_NINETEEN.objectives.find((o) => o.id === id)!;
+
+/** §9's 00:00 `creature` beat for the basin — the placed one, not the transit. */
+const placedBasin = (): { x: number; y: number; depthM: number } => {
+  const beat = CHORD_NINETEEN.beats.find(
+    (b) => b.kind === 'creature' && b.tag === 'the-basin' && b.atTick === 0
+  )!;
+  return beat.kind === 'creature' && beat.spawnAt !== undefined
+    ? beat.spawnAt
+    : { x: NaN, y: NaN, depthM: NaN };
+};
+
+/**
+ * The course one watch hull actually flies — its seat, then every authored
+ * `move` for its tag in beat order. The legs are segments, not points, and a
+ * patrol is dangerous along its whole length.
+ */
+const legsOf = (tag: string): { x: number; y: number }[] => {
+  const seat = CHORD_NINETEEN.parties
+    .flatMap((p) => p.units)
+    .find((unit) => unit.tag === tag)!;
+  const path = [{ x: seat.x, y: seat.y }];
+  for (const beat of CHORD_NINETEEN.beats) {
+    if (beat.kind === 'move' && beat.tag === tag) path.push({ x: beat.x, y: beat.y });
+  }
+  return path;
+};
+
+/** Closest approach of a point to a segment, in plan. */
+const toSegmentM = (
+  px: number,
+  py: number,
+  a: { x: number; y: number },
+  b: { x: number; y: number }
+): number => {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const len2 = dx * dx + dy * dy;
+  const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((px - a.x) * dx + (py - a.y) * dy) / len2));
+  return Math.hypot(px - (a.x + dx * t), py - (a.y + dy * t));
+};
 
 describe('the Rest, as docs/mission-nineteen.md §11 gives it to the mission', () => {
   it('spreads the public header this literal is offered under', () => {
@@ -801,7 +844,24 @@ describe('the beat table, as docs/mission-nineteen.md §9 clocks it', () => {
     assert.deepEqual(drive, { x: 200, y: 2000, depthM: 1800 });
     assert.equal(1800 - BENCH_DEPTH_M, 50, '§8: fifty metres under the bench');
     assert.equal(SOUNDER.speed, 30);
-    assert.equal(4700 - SOUNDER.speed * leadS, 2000, '§9: under the Head at 18:00');
+    // §8, §9: "at 30 m/s the basin is at x ≈ 2,000 when she does, which is
+    // under the Head". Derived along the authored line rather than off §11's
+    // x alone, because the basin is not seated on the axis — see the seating
+    // test below and the note on `BASIN` in the literal — so the ninety
+    // seconds are 2,700 m of a diagonal that converges on the axis rather
+    // than 2,700 m down it. It still stands under the Head at the close.
+    const spawn = placedBasin();
+    const runM = SOUNDER.speed * leadS;
+    const legM = Math.hypot(drive.x - spawn.x, drive.y - spawn.y);
+    const atCloseX = spawn.x + ((drive.x - spawn.x) * runM) / legM;
+    const head = THE_REST.regions.find((region) => region.floorM === 1600)!;
+    assert.equal(Math.round(runM), 2700, '§9: ninety seconds at the roster’s 30 m/s');
+    assert.ok(
+      atCloseX >= head.x && atCloseX <= head.x + head.widthM,
+      `§8: the basin is at x ${atCloseX.toFixed(0)} at 18:00, and the Head spans ` +
+        `${head.x}–${head.x + head.widthM}`
+    );
+    assert.equal(Math.round(atCloseX / 100) * 100, 2000, '§8: x ≈ 2,000');
     // §8: it takes the Voice and no Corvette. The footprint is a body plus a
     // hull radius, and the Corvette is under the threshold entirely.
     assert.ok(CRUISER.hullLengthM >= DRIFT.TRANSIT_MIN_HULL_M, '§8: the Voice at 130 m is ground');
@@ -834,6 +894,44 @@ describe('the beat table, as docs/mission-nineteen.md §9 clocks it', () => {
     // §11: the Sounder's band reaches the Deep End's floor and the bench alike.
     assert.equal(SOUNDER.workingDepthM - SOUNDER.depthBandM, 1300);
     assert.equal(SOUNDER.workingDepthM + SOUNDER.depthBandM, 2700);
+  });
+
+  it('seats the basin out of the watch’s hearing, which §11’s own coordinate is not', () => {
+    // **The one place this literal does not transcribe §11**, and the test
+    // that says why. §11 seats the basin at (4,700, 2,000): a hundred metres
+    // from the watch's station and squarely on the line the watch walks west
+    // at 01:00. A placed Sounder is released to its own trigger model on the
+    // first mission pass (§9, §13), and it hears a Submersible idle at 22
+    // from 362 m, commits from 298, reaches 260 and does 220 a second — so
+    // from §11's coordinate the basin has eaten both watch hulls by 00:12 of
+    // every run, which takes the six legs, the Watch-Speaker's 04:00 line,
+    // the sweep's filing and `the-count` down with them. Nothing in §8, §9 or
+    // §12 survives that, and no reading of the table catches it.
+    //
+    // So the rule this holds is the one §11 needed and did not state: the
+    // basin stands clear of every metre of the watch's authored patrol by
+    // more than a Submersible under way can reach.
+    const basin = placedBasin();
+    assert.equal(basin.depthM, SOUNDER.workingDepthM, '§13: a placed animal keeps this and no other');
+    const terrain = terrainFor(THE_REST);
+    assert.equal(terrain.floorAt(basin.x, basin.y), 2400, '§5, §11: in the Deep End');
+    assert.ok(terrain.admits(basin.x, basin.y, basin.depthM));
+    const interestM = rangeAt(SUBMERSIBLE.sigCruise, SOUNDER.hyd, SOUNDER.interest);
+    assert.equal(Math.round(interestM), 421, 'a Submersible under way, at the basin’s Interest');
+    for (const tag of ['watch-one', 'watch-two']) {
+      const path = legsOf(tag);
+      assert.equal(path.length, 7, '§9: a seat and six legs');
+      for (let i = 1; i < path.length; i++) {
+        const plan = toSegmentM(basin.x, basin.y, path[i - 1]!, path[i]!);
+        const solid = Math.hypot(plan, WATCH_DEPTH_M - basin.depthM);
+        assert.ok(
+          solid > interestM,
+          `${tag} leg ${i} passes ${solid.toFixed(0)} m from the basin, inside its ` +
+            `${interestM.toFixed(0)} m of Interest`
+        );
+        assert.ok(solid > SOUNDER.attackRangeM * 2, `${tag} leg ${i} is inside twice its reach`);
+      }
+    }
   });
 
   it('speaks four times on the clock, and three times on a standing rule', () => {
