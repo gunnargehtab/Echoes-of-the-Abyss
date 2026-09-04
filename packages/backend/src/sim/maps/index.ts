@@ -15,9 +15,11 @@ import { Terrain } from '../terrain.ts';
 import { ABYSSAL_RIFT_CORRIDOR } from './abyssalRiftCorridor.ts';
 import { KELP_LABYRINTH } from './kelpLabyrinth.ts';
 import { VENTFRONT_DIVIDE } from './ventfrontDivide.ts';
+import { ANHOLT_FURROW } from './missions/anholtFurrow.ts';
 import { ATTENDING_GALLERIES } from './missions/attendingGalleries.ts';
 import { BANDING_GROUND } from './missions/bandingGround.ts';
 import { FIRST_TRENCH_MARGIN } from './missions/firstTrenchMargin.ts';
+import { FOURTH_FOOT } from './missions/fourthFoot.ts';
 import { FOURTH_TRENCH } from './missions/fourthTrench.ts';
 import { HOLDING_BOARD } from './missions/holdingBoard.ts';
 import { HOLDING_UNDERWORKS } from './missions/holdingUnderworks.ts';
@@ -27,15 +29,21 @@ import { MOUTH_RIM } from './missions/mouthRim.ts';
 import { NINEFOLD_FACE_SIX } from './missions/ninefoldFaceSix.ts';
 import { NINEFOLD_WORKINGS } from './missions/ninefoldWorkings.ts';
 import { OUTER_FORMATIONS } from './missions/outerFormations.ts';
+import { SHALLOW_BAND } from './missions/shallowBand.ts';
 import { SORROWGATE } from './missions/sorrowgate.ts';
+import { THE_FIRST } from './missions/theFirst.ts';
+import { THE_REST } from './missions/theRest.ts';
+import { UPPER_TERRACES } from './missions/upperTerraces.ts';
 import type { MapDefinition } from './types.ts';
 
 export * from './types.ts';
 export {
   ABYSSAL_RIFT_CORRIDOR,
+  ANHOLT_FURROW,
   ATTENDING_GALLERIES,
   BANDING_GROUND,
   FIRST_TRENCH_MARGIN,
+  FOURTH_FOOT,
   FOURTH_TRENCH,
   HOLDING_BOARD,
   HOLDING_UNDERWORKS,
@@ -46,7 +54,11 @@ export {
   NINEFOLD_FACE_SIX,
   NINEFOLD_WORKINGS,
   OUTER_FORMATIONS,
+  SHALLOW_BAND,
   SORROWGATE,
+  THE_FIRST,
+  THE_REST,
+  UPPER_TERRACES,
   VENTFRONT_DIVIDE,
 };
 
@@ -90,6 +102,15 @@ export const MISSION_MAPS: readonly MapDefinition[] = [
   OUTER_FORMATIONS,
   KELL_SHOULDER,
   BANDING_GROUND,
+  // The six the specified campaign added, in the order their documents were
+  // written: the Commune's furrow (shared by two missions), the Directorate's
+  // three, and the Order's two.
+  ANHOLT_FURROW,
+  FOURTH_FOOT,
+  SHALLOW_BAND,
+  UPPER_TERRACES,
+  THE_REST,
+  THE_FIRST,
 ];
 
 export function missionMapById(id: string): MapDefinition | undefined {
