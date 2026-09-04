@@ -119,10 +119,15 @@ const DEAD_WATER_DEPTH_M = 2100;
  *
  * "186 m spacing" is eight hulls across 1,300 m: 1300 / 7 = 185.71, rounded to
  * the metre. `cohort-1` at 1350, 2700 is the seat §7 measures the rise from —
- * 906 m from the western post, against 899 m of contact through the two cells
- * of sill and two of kelp that make the pair's 0.813. (§7 prints 894, having
- * rounded the Chorister's silent figure to 4.3; the band's own arithmetic
- * gives 4.333, exactly as §7's own corvette row uses 2.133 rather than 2.1.)
+ * 906 m from the western post, against 899 m of contact through the pair's
+ * 0.813. (§7 prints 894, having rounded the Chorister's silent figure to 4.3;
+ * the band's own arithmetic gives 4.333, exactly as §7's own corvette row uses
+ * 2.133 rather than 2.1. §7 also describes the pair as "two cells of sill and
+ * two of kelp", which would be a mean of 1.075: `pathPropagation` samples four
+ * cells on that 906 m line and finds *one* of sill and three of kelp, whose
+ * mean is the 0.813 §7's own PF column prints. The number is right and the
+ * description is not, so this file follows the number and
+ * `missionInWriting.test.ts` re-derives it from the grid.)
  */
 const LINE_SEATS = [1350, 1536, 1721, 1907, 2093, 2279, 2464, 2650].map((x, i) => ({
   tag: `cohort-${i + 1}`,
@@ -176,9 +181,12 @@ const placed = (
  * Authored transits rather than AI, for the standing reason
  * (docs/mission-sorrowgate.md §9): a mission's beats happen at the time the
  * document says they happen. `depthM` is carried only on the 02:00 rise, which
- * is the one leg §9 gives a depth — re-issuing it on every leg would put a
- * depth order on a hull already at that depth, and a depth order is the one
- * thing on this map that can make a silent hull loud.
+ * is the one leg §9 gives a depth: every later leg is a hull already standing
+ * at 2,150 m, and a depth order that names the depth a hull is at is an order
+ * that says nothing. It would also be the one order on this map worth being
+ * careful with — `match.ts`' `applyDepth` clears Silent Running for an order
+ * *deeper* than the hull, so a descent is the one thing here that can make a
+ * silent hull loud, and the rise at 02:00 is deliberately the other direction.
  */
 const leg = (atTick: number, y: number, note: string, depthM?: number): MissionBeat[] =>
   LINE_SEATS.map(({ tag, x }, i) =>
@@ -408,7 +416,7 @@ export const SEEDING_IN_WRITING: MissionDefinition = {
           depthM: SEAT_DEPTH_M,
           role: 'escort',
           souls: 4,
-          note: 'Twelve of the sixteen souls are not aboard these three, and §8 counts them anyway: they are ours to move, not to spend',
+          note: 'Twelve souls ride these three and not one of them is in the sixteen §8 counts, and §8 gives them a row anyway: they are ours to move, not to spend',
         },
       ],
       /**

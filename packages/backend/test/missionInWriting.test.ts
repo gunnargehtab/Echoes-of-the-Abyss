@@ -483,7 +483,11 @@ describe('what is heard, as §7 prices it over the literal’s own grid', () => 
       1.45,
       '§7: three cells of cleft and one of the Foot'
     );
-    assert.equal(pf(1350, 2700, 1250, 1800), 0.813, '§7: two cells of sill and two of kelp');
+    // §7 calls this pair "two cells of sill and two of kelp", which would be a
+    // mean of 1.075. `pathPropagation` samples four cells over its 906 m and
+    // finds one of sill and three of kelp — 0.8125, which is the 0.813 §7's
+    // own PF column prints. The number is right and the description is not.
+    assert.equal(pf(1350, 2700, 1250, 1800), 0.813, '§7: one cell of sill and three of kelp');
     assert.equal(pf(2000, 2900, 2000, 250), 1.259, '§7: the riser at the spawn');
     assert.equal(pf(2000, 1750, 2000, 250), 1.5, '§7: and by the garden’s north edge');
     assert.equal(pf(2000, 2900, 1250, 1800), 0.9, '§7: the riser to the garden’s corner');
@@ -513,10 +517,51 @@ describe('what is heard, as §7 prices it over the literal’s own grid', () => 
     // and the figure is 4.333, so the engine answers 899 and 704 — the row's
     // two claims survive it and the document should carry the exact pair, as
     // its own corvette row already does (5.333 x 0.4 = 2.133, not 2.1).
-    assert.ok(899 < 906, '§7: the watch hears the rise as it arrives, not as it starts');
-    assert.ok(704 > 658, '§7: and still hears it at the garden’s own 0.55 by 02:30');
+    //
+    // Both surviving claims are re-derived from this literal's own seat and
+    // this map's own water rather than compared as constants: `899 < 906` is
+    // a sentence about two numbers and can never fail, and the claims are
+    // about where the mission actually puts the line.
     assert.equal(silentSig(CHORISTER.sigIdle).toFixed(1), '4.3', '§6: the line rises at 4.3');
-    assert.equal(Math.round(between({ x: 1350, y: 2700 }, { x: 1250, y: 1800 })), 906);
+    const seat = unit('cohort-1');
+    const post = { x: 1250, y: 1800 };
+    const riseSig = silentSig(CHORISTER.sigIdle);
+    const seatOff = between(seat, post);
+    assert.equal(Math.round(seatOff), 906, '§7: the seat the rise is priced against');
+    assert.ok(
+      rangeAt(
+        riseSig,
+        terrain.pathPropagation(seat.x, seat.y, post.x, post.y),
+        SCOUT.hyd,
+        M.CONTACT
+      ) < seatOff,
+      '§7: the watch hears the rise as it arrives, not as it starts'
+    );
+    // And by 02:30 the line stands on the 02:00 leg's row, 658 m off the post
+    // through the garden's own kelp — inside the range that reaches a scout.
+    const risen = MISSION_DEF.beats.find(
+      (beat) => beat.kind === 'move' && beat.tag === seat.tag && beat.atTick === T(2)
+    )!;
+    const closed = between(risen.kind === 'move' ? risen : seat, post);
+    assert.equal(Math.round(closed), 658, '§7: the 658 m the line has closed to by 02:30');
+    assert.equal(
+      Number(
+        terrain
+          .pathPropagation(
+            risen.kind === 'move' ? risen.x : 0,
+            risen.kind === 'move' ? risen.y : 0,
+            post.x,
+            post.y
+          )
+          .toFixed(3)
+      ),
+      PROPAGATION_FACTOR[Biome.KelpForest],
+      '§7: by then the pair is the garden’s own 0.55'
+    );
+    assert.ok(
+      rangeAt(riseSig, PROPAGATION_FACTOR[Biome.KelpForest], SCOUT.hyd, M.CONTACT) > closed,
+      '§7: and still hears it at the garden’s own 0.55 by 02:30'
+    );
     assert.equal(DEPTH.DESCENT_SIG, 72, '§6: the throat empties at the descent floor');
     // §8: nothing in this mission is lost to a thing that was quiet.
     assert.equal(rangeAt(HOLLOW.sigActive, 1.6, SCOUT.hyd, M.CONTACT), 7090, '§8: a strike at 60');
@@ -624,10 +669,13 @@ describe('the cohort, as §6 authors it', () => {
     assert.equal(BED.maxHp, 900, '§3: 900 HP a bed');
     assert.equal(CHORISTER.attackDamage / CHORISTER.attackCooldownS, 20, '§6: 20 hull a second');
     assert.equal(slowest, 22.5);
-    assert.equal(
-      (T(4, 30) / SIM.TICK_HZ + slowest) / 60 >= 4.8,
-      true,
-      '§6: every bed down at about 04:55, on the first stationary pass'
+    // §6's "about 04:55": the last bed dies 22.5 s into a leg that begins at
+    // 04:30. Bounded on both sides, so a leg moved to another tick or a bed
+    // re-priced would have to fail here rather than pass a one-sided bound.
+    const lastBedDownS = T(4, 30) / SIM.TICK_HZ + slowest;
+    assert.ok(
+      lastBedDownS >= 4 * 60 + 45 && lastBedDownS <= 5 * 60,
+      `§6: every bed down at about 04:55, and this run says ${lastBedDownS}s`
     );
   });
 
@@ -799,13 +847,26 @@ describe('the Drift and the riser, as §6 places and drives them', () => {
     const gunReach = SOUNDER.lengthM / 2 + SUBMERSIBLE.hullLengthM / 2;
     assert.equal(gunReach, 85, '§6: against a reach of 85');
     // 14:30–15:00 `throat-east` stands on the line at 2000, 2000 and is clear
-    // by depth alone: the riser is at 1,840 m as it passes.
-    assert.equal(2200 - climb(2900, 2000), 1840, '§6: 1,840 m as it passes');
-    assert.equal(2100 - 1840, 260, '§6: 260 m above a gun at 2,100');
-    assert.ok(260 > gunReach);
-    // From 15:00 both stand 500 m off its line.
-    assert.equal(Math.abs(1500 - 2000), 500);
-    assert.equal(Math.abs(2500 - 2000), 500);
+    // by depth alone: the riser is at 1,840 m as it passes. Read off the two
+    // beats rather than restated as constants — the clearance is the whole of
+    // §6's claim that the riser ends nobody's beat, and it is a fact about
+    // where this literal parks the gun, not about two numbers.
+    const spawn = riser.kind === 'creature' ? riser.spawnAt! : { x: 0, y: 0, depthM: 0 };
+    const dead = beatsAt(T(12)).find((beat) => beat.kind === 'move' && beat.tag === 'throat-east')!;
+    const deadSeat = dead.kind === 'move' ? dead : { x: 0, y: 0, depthM: 0 };
+    assert.deepEqual([deadSeat.x, deadSeat.y, deadSeat.depthM], [2000, 2000, 2100]);
+    const atGun = spawn.depthM - climb(spawn.y, deadSeat.y);
+    assert.equal(atGun, 1840, '§6: 1,840 m as it passes');
+    assert.equal(deadSeat.depthM! - atGun, 260, '§6: 260 m above a gun at 2,100');
+    assert.ok(deadSeat.depthM! - atGun > gunReach, '§6: and clear of it by depth alone');
+    // From 15:00 both stand 500 m off its line, which is where the beats put
+    // them: the riser runs up x 2,000 and the duct seats are 1,500 and 2,500.
+    const back = beatsAt(T(15)).filter((beat) => beat.kind === 'move');
+    for (const beat of back) {
+      const off = Math.abs((beat.kind === 'move' ? beat.x : 0) - spawn.x);
+      assert.equal(off, 500, '§6: 500 m off the riser’s line');
+      assert.ok(off > gunReach);
+    }
   });
 });
 
@@ -978,6 +1039,46 @@ describe('the schedule, as §9 lays it out', () => {
       16.666666666666668,
       '§9: seventeen seconds'
     );
+  });
+
+  it('sends every hull to water the ground admits and its hull is rated for', () => {
+    // `missions.test.ts` holds a mission's *seats* to the ground and the band.
+    // Nothing holds its beats to either, and this mission is sixty-eight move
+    // beats: the line walks eight legs at 2,150 m over a garden floored at
+    // 2,200, and the doorway dives 900 m into that same garden and climbs
+    // back. A leg authored ten metres deeper, or a hull sent over the walls,
+    // would spawn fine and then simply stop — `resolveStep` refuses every step
+    // out of ground that does not admit it — and the schedule would go quiet
+    // with a green suite, which is the failure this whole file exists to
+    // catch. Depth is carried forward per tag, because only the 02:00 rise
+    // names one and every later leg inherits it.
+    const terrain = garden();
+    const depth = new Map<string, number>();
+    const rating = new Map<string, number>();
+    for (const party of MISSION_DEF.parties) {
+      for (const hull of party.units) {
+        depth.set(hull.tag, hull.depthM);
+        rating.set(hull.tag, hull.pressureRating ?? statsFor(hull.kind).pressureRating);
+      }
+    }
+    let checked = 0;
+    for (const beat of MISSION_DEF.beats) {
+      if (beat.kind !== 'move') continue;
+      if (beat.depthM !== undefined) depth.set(beat.tag, beat.depthM);
+      const at = depth.get(beat.tag)!;
+      assert.ok(
+        terrain.admits(beat.x, beat.y, at),
+        `${beat.tag} is sent to ${beat.x},${beat.y} at ${at} m, over a floor of ` +
+          `${terrain.floorAt(beat.x, beat.y)} m — it would arrive and stop`
+      );
+      assert.ok(
+        rating.get(beat.tag)! >= requiredPressureRating(at),
+        `${beat.tag} is sent to ${at} m, which needs PR ${requiredPressureRating(at)}, ` +
+          `and is rated PR ${rating.get(beat.tag)}`
+      );
+      checked++;
+    }
+    assert.equal(checked, 8 * 8 + 4, '§9: eight legs of eight, and the doorway’s two pairs');
   });
 
   it('authors every hull silent at 00:00 and drops the line’s silence at 03:00', () => {

@@ -508,6 +508,47 @@ export const ATTENDING_ATTENDANCE_HEADER: MissionHeader = {
   ],
 };
 
+// Append to packages/shared/src/missions.ts, after ATTENDING_INTAKE_HEADER,
+// and add ATTENDING_THE_DOME_HEADER to MISSION_HEADERS in the same order.
+// (The Attending 3, `attending-the-dome`, on the `fourth-foot` map — the map
+// literal is built and registered already.)
+
+export const ATTENDING_THE_DOME_HEADER: MissionHeader = {
+  id: 'attending-the-dome',
+  campaign: 'attending',
+  ordinal: 3,
+  name: 'The Attending — The Dome',
+  premise:
+    "The Fourth is closed while the inquiry runs, and what enters it is counted. At the trench's foot the stalls put a sound into the water instead of taking one out.",
+  mapId: 'fourth-foot',
+  // The whistle at 20:00 (docs/mission-the-dome.md §9), inside campaign.md
+  // §10's 12–25 — and Baffle's twenty minutes to the second, because it is the
+  // same tide from the counting side.
+  lengthBandS: [1140, 1260],
+  /**
+   * Two voices at the opening, in the order the rite fixes — the First
+   * Cantor's formula, then the Undermarshal's assignment
+   * (docs/mission-the-dome.md §12, verbatim). Public for Attendance's and
+   * Intake's reason: it names the count, the law, the lent array and the
+   * button, and withholds the only thing the Directorate withholds, which is
+   * what the water will do about any of them.
+   *
+   * The one Directorate briefing that hands a button over rather than sealing
+   * one: §3's active sonar is aboard and live for the first time in the
+   * campaign, and paragraph five says so in the register that may not
+   * recommend.
+   */
+  briefing: [
+    'The dome is open. The trench is attended. Nothing is expected of the picket but sufficiency, and sufficiency is not a small thing to be expected of.',
+    'The Fourth is closed while the exchange inquiry is open, and has been closed for three tides. A relief convoy is at the north staging under a writ that has not been filed. It will enter the trench. What enters the trench is counted.',
+    'Four hulls stand the two watches. They are seated where the watches have always been seated, and they are not required to move. A watch that is stood into may engage. A watch that yields the water and counts has also attended, and the record does not grade the two.',
+    'Six of the cohort are at the foot, under the dome, and are not the picket. The array is lent — the Cantorate lends its ears, and its ears are worth more to a cohort hull than to the hulls the Undermarshalcy has paid most for — and it is withdrawn while the picket is loud. That is written down. It has always been written down.',
+    'The survey array is aboard and it is live. It is not sealed and it is not recommended. A transmission at the foot is a question put to water that has not been asked one, and what is in that water is not the Undermarshalcy’s to describe.',
+    'What is heard is entered. What is not heard is not entered, and the gap is entered too.',
+    'Three of four attend. The Undermarshalcy does not round up.',
+  ],
+};
+
 export const ATTENDING_INTAKE_HEADER: MissionHeader = {
   id: 'attending-intake',
   campaign: 'attending',
@@ -576,6 +617,7 @@ export const MISSION_HEADERS: readonly MissionHeader[] = [
   SEEDING_SECOND_SEEDING_HEADER,
   ATTENDING_ATTENDANCE_HEADER,
   ATTENDING_INTAKE_HEADER,
+  ATTENDING_THE_DOME_HEADER,
   CHORD_APTITUDE_HEADER,
 ];
 
