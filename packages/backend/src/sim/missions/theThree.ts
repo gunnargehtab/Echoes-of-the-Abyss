@@ -63,8 +63,9 @@
  *   which it shows while a walk is stalled. This mission runs no silence ledger
  *   (`arrayTag` is unset, §9) and no walk, so both fields would be authored
  *   text that could never be shown. They are dropped rather than smuggled into
- *   a mechanism that is not here; §13 does not carry this row, and this comment
- *   is where it is recorded.
+ *   a mechanism that is not here — which is the call §13's own row now records
+ *   ("A finding, not a request"), and it names the document as the side that
+ *   moved: the last two are prose about what a panel would say if it could.
  *
  * §13's own open finding is left open on purpose: **`quiet` is a snapshot, not
  * an integral.** The hush is standing (`predicates.ts`, `isStanding`) and is
@@ -264,7 +265,7 @@ export const CHORD_THE_THREE: MissionDefinition = {
       y: 0,
       widthM: 4000,
       heightM: 750,
-      note: 'The Foot of the Fields — where the party is seated at 2,300 m, 2,089 m from the room and 1,550 m from the Chord',
+      note: "The Foot of the Fields — where the party is seated at 2,300 m, 2,089 m from the room and 1,950 m from the Chord. §4's 1,550 is the dive rather than the seat: the roofed approach opens 1,500 m out, and the house classifies a descent at 72 from 2,028",
     },
   ],
 
@@ -424,13 +425,12 @@ export const CHORD_THE_THREE: MissionDefinition = {
 
   /**
    * §3 — all seven of `MissionAbility`'s names, each with the house's own
-   * reason attached for the HUD (docs/ui-ux.md §7). §3 and §13 say the prologue
-   * is the only literal that has locked all seven before, and the two missions
-   * are the same argument at opposite ends of the campaign: a room where
-   * nothing is aimed. That is true of the bible as §13 was written and no
-   * longer true of the tree — `firstArrival.ts` landed in the same batch and
-   * locks all seven as well — so the pairing is the argument and the count is
-   * not; the document's sentence is the one to correct if anybody minds.
+   * reason attached for the HUD (docs/ui-ux.md §7). Three literals lock all
+   * seven — `sorrowgate.ts`, `firstArrival.ts` and this one — so the count is
+   * not the argument and §3 does not make it one: the pairing is. This mission
+   * and the prologue are the same argument at opposite ends of the campaign, a
+   * room where nothing is aimed, and the rim's seven are a different sentence
+   * because the rim is attended rather than asked.
    *
    * The five weapon locks carry one sentence between them because §3 gives them
    * one reason, and the hulls carry no `armed` flag either — the lock is the

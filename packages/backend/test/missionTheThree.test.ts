@@ -41,7 +41,9 @@ import {
   SIM,
   StructureKind,
   TIER_THRESHOLD_MULTIPLIER,
+  STRUCTURE_AURAS,
   UnitKind,
+  crushAttritionPerSecond,
   detectionRatio,
   requiredPressureRating,
   statsFor,
@@ -111,6 +113,8 @@ interface Run {
   lines: { tick: number; speaker: string; text: string }[];
   objectives: { id: string; status: ObjectiveStatus }[];
   counters: Map<string, { done: number; of: number }>;
+  /** The tick each row first read Met on the panel — §9's bracketed clock. */
+  metAt: Map<string, number>;
   last: EchoSnapshot;
 }
 
@@ -151,6 +155,7 @@ function play(
   const match = new Match(MAP, { mission: CHORD_THE_THREE, fauna: false, seed: 3 });
   const lines: Run['lines'] = [];
   const counters = new Map<string, { done: number; of: number }>();
+  const metAt = new Map<string, number>();
   let last: EchoSnapshot | undefined;
   let crew: Escort | undefined;
   for (let tick = 0; tick <= untilTick; tick++) {
@@ -163,12 +168,15 @@ function play(
     const view = match.takeMissionView();
     for (const row of view?.objectives ?? []) {
       if (row.progress !== undefined) counters.set(row.id, row.progress);
+      if (row.status === ObjectiveStatus.Met && !metAt.has(row.id)) {
+        metAt.set(row.id, match.world.tick);
+      }
     }
     for (const line of match.takeMissionLines()) lines.push(line);
     if (match.missionOver !== null) break;
   }
   assert.ok(last !== undefined, 'the escort never resolved');
-  return { match, lines, counters, last };
+  return { match, lines, counters, metAt, last };
 }
 
 /** Play it to the close, and read what the Choirmaster reads. */
@@ -186,6 +194,7 @@ function runOut(
     lines: played.lines,
     objectives: over.objectives,
     counters: played.counters,
+    metAt: played.metAt,
     last: played.last,
   };
 }
@@ -308,13 +317,52 @@ describe('the escort, as docs/mission-the-three.md §3 fields it', () => {
     assert.notEqual(house.slot, CHORD_THE_THREE.courtSlot, '§5: the court slot stays empty');
   });
 
+  it('stands the Chord on a slot whose grant reaches nobody, which is why the refit exists', () => {
+    // §5, §13 — load-bearing, and the one thing that makes §3's ledger a real
+    // cost rather than a story. `aurasSystem` skips any spire whose `grantSlot`
+    // is not the unit's own slot, and `spawnStructure` writes `grantSlot` from
+    // the party's slot: the First is on its own, so the Chord's 600 m PR+1
+    // reaches nothing at all — the house has no hulls and the player is
+    // elsewhere. Were the grant to land, the four certificates would be paying
+    // for a band the house was already lending.
+    const house = CHORD_THE_THREE.parties.find((party) => party.slot !== PLAYER)!;
+    const chord = house.structures![0]!;
+    assert.equal(house.structures!.length, 1, '§5: one structure — the First Chord');
+    assert.equal(chord.kind, StructureKind.SoundingSpire);
+    assert.notEqual(house.slot, PLAYER, '§5: granted on the First’s own slot, not the player’s');
+    assert.equal(STRUCTURE_AURAS.SOUNDING_SPIRE.PR_BONUS, 1, '§5: PR+1');
+    // The escort spends its eight minutes inside the radius it is not being
+    // granted — every corner of the hall is within 600 m of the Chord — and the
+    // Choirmaster reads 750 m out, past the edge of a band that was never hers
+    // either way. Both halves of §5's sentence, and neither depends on the other.
+    const hall = region('the-chord');
+    const corners = [
+      [hall.x, hall.y],
+      [hall.x + hall.widthM, hall.y],
+      [hall.x, hall.y + hall.heightM],
+      [hall.x + hall.widthM, hall.y + hall.heightM],
+    ];
+    for (const [x, y] of corners) {
+      assert.ok(
+        Math.hypot(x! - chord.x, y! - chord.y) <= STRUCTURE_AURAS.SOUNDING_SPIRE.RADIUS_M,
+        '§5: the hall stands inside a grant that is not the escort’s'
+      );
+    }
+    assert.ok(
+      Math.hypot(THE_ROOM.x - chord.x, THE_ROOM.y - chord.y) >
+        STRUCTURE_AURAS.SOUNDING_SPIRE.RADIUS_M,
+      '§5: and the room is outside it, so the certificate is the only thing holding her'
+    );
+  });
+
   it('locks all seven abilities, each with the house’s own reason attached', () => {
     // §3, and docs/ui-ux.md §7: a disabled action greys out with a reason. §3
     // pairs this room with the prologue's — the same argument at opposite ends
-    // of the campaign — and says the prologue is the only literal to have
-    // locked all seven before it. That is a claim about the bible rather than
-    // about this mission, and `firstArrival.ts` landed in the same batch and
-    // locks all seven too, so nothing here asserts the exclusivity.
+    // of the campaign — and counts three literals locking all seven
+    // (`sorrowgate.ts`, `firstArrival.ts` and this one), so the count is not
+    // the argument and nothing here asserts an exclusivity §3 does not claim.
+    // The reasons are §3's own sentences and are held to the word: a lock the
+    // HUD explains in the house's register is the whole of what §3 asks for.
     assert.deepEqual(
       CHORD_THE_THREE.locks.map((lock) => lock.ability).sort(),
       [
@@ -333,9 +381,21 @@ describe('the escort, as docs/mission-the-three.md §3 fields it', () => {
     }
     const reasonFor = (ability: string) =>
       CHORD_THE_THREE.locks.find((lock) => lock.ability === ability)!.reason;
-    assert.match(reasonFor('activeSonar'), /a ping in the chord is a stroke/, '§3, verbatim');
+    assert.equal(
+      reasonFor('activeSonar'),
+      'a ping in the chord is a stroke, and nothing is struck in the chord',
+      '§3, verbatim'
+    );
     assert.equal(reasonFor('construction'), 'the First is finished', '§3, verbatim');
-    assert.match(reasonFor('weapons'), /nothing in it is aimed but the Chord/, '§3, verbatim');
+    // §3 gives the five weapon locks one reason between them, so all five carry
+    // the same sentence and it is the sentence §3 prints.
+    for (const ability of ['weapons', 'torpedoes', 'mines', 'depthCharges', 'noisemakers']) {
+      assert.equal(
+        reasonFor(ability),
+        'nothing in the First is armed, and nothing in it is aimed but the Chord',
+        `${ability}: §3, verbatim`
+      );
+    }
   });
 
   it('counts the Order’s crystal once, and spends none of it in the engine', () => {
@@ -434,10 +494,18 @@ describe('what is heard, as docs/mission-the-three.md §7 counts it', () => {
     assert.equal(rangeAt(DEPTH.DESCENT_SIG, FIELDS, SPIRE.hyd, M.CONTACT), 3596, '§4');
     assert.equal(rangeAt(DEPTH.DESCENT_SIG, FIELDS, SPIRE.hyd, M.BEARING), 2791, '§4');
     assert.equal(rangeAt(DEPTH.DESCENT_SIG, FIELDS, SPIRE.hyd, M.CLASSIFICATION), 2028, '§4');
+    // §4: "the party's first dive happens 1,550 m from the Chord" — a figure
+    // about the dive rather than about the seat, and the two ends it lies
+    // between are both authored. The seat is 1,950 m out; the roofed approach,
+    // which is the shallowest a dive can be finished and still get in, opens at
+    // 1,500. §4's claim is that the whole span is inside a classification, and
+    // that is the assertion, not the 1,550 itself.
     const seat = byTag('the-choirmaster');
     const toChord = Math.hypot(THE_CHORD.x - seat.x, THE_CHORD.y - seat.y);
-    assert.equal(Math.round(toChord), 1950, 'the party dives about fifteen hundred metres out');
-    assert.ok(toChord < 2028, '§4: classified, not merely heard');
+    assert.equal(Math.round(toChord), 1950, '§11: the seat is 1,950 m from the Chord');
+    const approachMouth = region('the-approach').y;
+    assert.equal(THE_CHORD.y - approachMouth, 1500, '§11: the roofed way in opens 1,500 m out');
+    assert.ok(toChord < 2028, '§4: classified from the seat, let alone from the dive');
     // §11's second way in, named so that it reads as deliberate: a dive at 72
     // on the axis is the loudest thing anybody could do on this map.
     assert.equal(TRENCH, 1.6, '§11: the Axis carries at 1.60');
@@ -638,6 +706,70 @@ describe('the beats, as docs/mission-the-three.md §9 clocks them', () => {
     );
   });
 
+  it('says §12’s six lines in §12’s words, and the tally’s in its own', () => {
+    // The beat table is the world's clock and the words are the document's:
+    // §12 prints all seven, three of them Fenn entering a time and refusing a
+    // meaning. Held verbatim rather than by tick alone, because a schedule that
+    // fired on time and said something else would pass every other check here —
+    // and Sull's 10:30 is load-bearing beyond this mission, since
+    // docs/mission-rim-deposits.md carries "the window is shorter" into its own
+    // briefing rather than reading it off any state (§13's progression row).
+    const said = CHORD_THE_THREE.beats.filter((beat) => beat.kind === 'say');
+    assert.deepEqual(
+      said.map((beat) => (beat.kind === 'say' ? [beat.speaker, beat.text] : [])),
+      [
+        [
+          'Choirmaster Ivane Sull, aboard',
+          'The approach is roofed at twenty-six hundred. I dive at two; dive when I do. Nobody enters the chord above twenty-seven.',
+        ],
+        [
+          'Chapter-wright Aldis Fenn, for the house',
+          'The Choirmaster is heard. The house is in tune and the Chord was corrected this season. Nothing is struck.',
+        ],
+        [
+          'Voice Ren Kalliso, to nobody in particular',
+          'It is in tune. All of it is in tune. I had thought that would be the comfort.',
+        ],
+        [
+          'Chapter-wright Aldis Fenn, for the house',
+          'The Chord is sounding. Nobody struck it. The time is entered.',
+        ],
+        [
+          'Chapter-wright Aldis Fenn, for the house',
+          'The axis is heard. It is entered as the time. It is not entered as anything.',
+        ],
+        [
+          'Choirmaster Ivane Sull, from the room',
+          "I have read the season's case. It is the same hand. — The window is shorter than I wrote to the houses. Enter that I said so here, and enter nothing else from this room.",
+        ],
+      ],
+      '§12: the voices in the water, verbatim'
+    );
+    const tally = CHORD_THE_THREE.conditionalBeats![0]!;
+    assert.deepEqual(
+      tally.kind === 'say' ? [tally.speaker, tally.text] : [],
+      [
+        'Chapter-wright Aldis Fenn, for the house',
+        'The Choirmaster is in the room. The house keeps the hush.',
+      ],
+      '§12: fired by the tally, not the clock'
+    );
+    // §6, §10 — what the Three write is never read out: not in a beat, not in
+    // an objective's text, and not in a reading. The only sentence that comes
+    // out of the room is the one that gives nothing away.
+    const everything = [
+      ...said.map((beat) => (beat.kind === 'say' ? beat.text : '')),
+      tally.kind === 'say' ? tally.text : '',
+      ...CHORD_THE_THREE.objectives.flatMap((row) => [
+        row.text,
+        row.reading!.met,
+        row.reading!.unmet,
+      ]),
+      ...Object.values(CHORD_THE_THREE.epilogue),
+    ].join(' ');
+    assert.ok(!/transcript|dream|Directorate/i.test(everything), '§6: the writing is never read');
+  });
+
   it('closes as a conclusion at twelve minutes exactly, with nothing loud behind it', () => {
     const resolve = CHORD_THE_THREE.beats.find((beat) => beat.kind === 'resolve')!;
     assert.equal(resolve.atTick, T(12), '§9: the resolve lands at 720 s exactly');
@@ -669,6 +801,13 @@ describe('the beats, as docs/mission-the-three.md §9 clocks them', () => {
     assert.equal(CHORD_THE_THREE.soundings, undefined);
     assert.equal(CHORD_THE_THREE.sweep, undefined, '§13: the house’s hearing is not modelled');
     assert.equal(CHORD_THE_THREE.commanderAbility, undefined);
+    // §13 asserts the whole list at once, the bell included: a bell belongs to
+    // a walk, and the only bell in this house is the Chord, which §12 says
+    // nobody will strike today.
+    assert.ok(
+      CHORD_THE_THREE.beats.every((beat) => beat.kind !== 'bell'),
+      '§13: no beat rings anything'
+    );
     // §3, §5 — the refit is per hull and the water is not manufactured: no
     // region grants pressure, and the one Spire on the map is somebody else's.
     for (const row of CHORD_THE_THREE.regions) {
@@ -775,8 +914,16 @@ describe('the tide, run out', () => {
       if (own.tick === T(2, 20)) {
         for (const id of all) match.orderMove(PLAYER, id, IN_THE_APPROACH.x, IN_THE_APPROACH.y);
       }
-      if (own.tick === T(3, 30)) {
+      if (own.tick === T(3)) {
         for (const id of all) match.orderMove(PLAYER, id, THE_CHORD.x, THE_CHORD.y);
+      }
+      // §9's [03:30]: the party in the chord, and the escort goes silent —
+      // 28 and 55 become 5.3 and 7.6, and the hush's row goes Met. The
+      // Choirmaster does not, and is in breach of nothing.
+      if (own.tick === T(3, 30)) {
+        for (const id of [crew.voice, crew.first, crew.second]) {
+          match.setSilentRunning(PLAYER, id, true);
+        }
       }
       if (own.tick === T(4, 30)) {
         match.orderMove(PLAYER, crew.tender, THE_ROOM.x, THE_ROOM.y);
@@ -784,19 +931,36 @@ describe('the tide, run out', () => {
         match.orderMove(PLAYER, crew.first, HALL_MOUTH.x, HALL_MOUTH.y);
         match.orderMove(PLAYER, crew.second, HALL_SOUTH.x, HALL_SOUTH.y);
       }
-      // The escort goes silent, and 28 and 55 become 5.3 and 7.6. The
-      // Choirmaster does not, and is in breach of nothing.
-      if (own.tick === T(5, 30)) {
-        for (const id of [crew.voice, crew.first, crew.second]) {
-          match.setSilentRunning(PLAYER, id, true);
-        }
-      }
     });
     assert.equal(run.outcome, MissionOutcome.Complete, '§8: Read, and kept');
     assert.equal(run.resolvedAtTick, T(12), '§9, §13: the tide runs its length');
     for (const row of run.objectives) {
       assert.equal(row.status, ObjectiveStatus.Met, `${row.id}: met at the close`);
     }
+    // §9's bracketed clock, and §13's claim about this very run: the hush goes
+    // Met on the pass the button is pressed at 03:30, the room latches between
+    // 04:00 and 05:00, and both terminal rows are met inside the first five
+    // minutes — which is precisely the run that would have closed at four and a
+    // half without `runsItsLength`.
+    const hushAt = run.metAt.get('the-hush')!;
+    const roomAt = run.metAt.get('the-room')!;
+    assert.ok(
+      hushAt >= T(3, 30) && hushAt < T(3, 31),
+      '§9: the hush goes Met on the pass the button is pressed, and not one before it'
+    );
+    assert.ok(roomAt > T(4) && roomAt < T(5), '§9: the room latches between 04:00 and 05:00');
+    // §3's four certificates, doing the only work they do: seven minutes at
+    // 2,900 m and not a point of crush on any of the four. `crushAttritionPerSecond`
+    // would take four a second off every hull without them.
+    assert.ok(
+      run.last.units.every((unit) => unit.depth > 2800),
+      '§9: the party is in the house'
+    );
+    for (const unit of run.last.units) {
+      assert.equal(unit.hp, unit.maxHp, '§3: PR-3 by refit, so the house costs them nothing');
+    }
+    assert.equal(crushAttritionPerSecond(CRUISER.pressureRating, 2900), 4, '§3: without it, four');
+    assert.equal(crushAttritionPerSecond(3, 2900), 0, '§3: with it, none');
     assert.deepEqual(run.counters.get('the-house-hears'), { done: 2, of: 2 }, '§8: both entered');
     assert.match(run.epilogue, /^The case is read and the house was quiet for it\./, '§8');
     assert.match(run.epilogue, /The season's case was read/, '§8: the room’s met reading');
