@@ -225,7 +225,13 @@ Every map region carries a **Drift Health** value, 0–100, starting between 70 
 
 A dead region is quieter, more legible, and worth less to everyone — which means **the Commune loses their concealment, the Directorate loses their income, and the Consortium barely notices.** That asymmetry is deliberate: environmental collapse in this game is not a moral event with a lecture attached, it is a strategic act that helps exactly one faction and is available to all four.
 
-In campaign play, Drift Health persists between missions on the same map ([campaign.md](campaign.md)).
+In campaign play, Drift Health persists between missions on the same map ([campaign.md](campaign.md) §2 rule 5). Three rules govern that carry, and all three follow from the table above rather than from convenience:
+
+- **The carry is a debt and never a gift.** A region is seeded at the lower of what the last mission left and what the biome opens at, so a quiet match returns you to ordinary ground and a loud one returns you to worse. A map that could be arrived at *healthier* than a first visit would make wrecking it a strategy for the mission after next.
+- **Dead is permanent past the match as well.** A region at 0 has no fauna left to recover from, so it is the one reading the gap between missions cannot undo.
+- **Nothing recovers in the gap.** The campaign has no calendar — [campaign.md](campaign.md) §1 leaves the order free after the prologue — so there is no elapsed time for a recovery rate to be charged against, and the record that holds the grid is the player's own. Recovery happens inside a match, where there is a clock.
+
+None of this is announced. §2 rule 5 ends "and nobody tells them why", so there is no briefing line and no panel: the map is the message, and a returning commander reads it the way they read any other water.
 
 ---
 

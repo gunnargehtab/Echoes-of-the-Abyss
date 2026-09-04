@@ -120,6 +120,12 @@ import { eidOfLocalId } from './world.ts';
  * tick, and a v10 file cannot say which mission it was. The layout gained a
  * field; the rules gained a second way a match can start.
  *
+ * 13: replays carry the Drift Health the map opened on. docs/campaign.md §2
+ * rule 5 lets a campaign mission start on ground an earlier mission wore down,
+ * and that grid decides which regions admit fauna at all (`spawnsAllowed`), so
+ * a v12 replay of a carried mission would seed a different Drift and diverge
+ * at the first checkpoint. Null is a first visit, and every skirmish.
+ *
  * 3: replays carry whether the Drift was populated.
  *
  * 2: replays carry the map they were played on.
@@ -131,7 +137,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 12;
+export const REPLAY_FORMAT_VERSION = 13;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =
@@ -188,6 +194,12 @@ export interface Replay {
    * playback needs to rebuild them.
    */
   missionId: string | null;
+  /**
+   * Drift Health the map opened on — docs/campaign.md §2 rule 5 — or null for
+   * the biome defaults. Part of the setup like `fauna`: it decides where the
+   * Drift may be seeded, so playback needs it before the first tick.
+   */
+  driftCarry: number[] | null;
   players: ReplayPlayer[];
   commands: ReplayCommand[];
   /**
@@ -215,6 +227,7 @@ export class ReplayRecorder {
   private readonly mapId: string;
   private readonly fauna: boolean;
   private readonly missionId: string | null;
+  private readonly driftCarry: number[] | null;
   private readonly checkpointInterval: number;
   /**
    * Negative infinity rather than -1 so the *first* call checkpoints tick 0.
@@ -229,12 +242,17 @@ export class ReplayRecorder {
     mapId: string,
     fauna: boolean,
     missionId: string | null = null,
+    driftCarry: readonly number[] | null = null,
     checkpointIntervalTicks = 300
   ) {
     this.seed = seed;
     this.mapId = mapId;
     this.fauna = fauna;
     this.missionId = missionId;
+    // Copied rather than held: the caller's array is the room's record of what
+    // the client presented, and a replay must describe the world that was, not
+    // whatever that reference becomes later.
+    this.driftCarry = driftCarry === null ? null : [...driftCarry];
     this.checkpointInterval = checkpointIntervalTicks;
   }
 
@@ -261,6 +279,7 @@ export class ReplayRecorder {
       mapId: this.mapId,
       fauna: this.fauna,
       missionId: this.missionId,
+      driftCarry: this.driftCarry === null ? null : [...this.driftCarry],
       // Sorted so a replay of the same match is byte-identical regardless of
       // the order players happened to connect in.
       players: [...this.players].sort((a, b) => a.slot - b.slot),
@@ -305,7 +324,12 @@ export function playReplay(replay: Replay, terrain?: Terrain): ReplayResult {
 
   // `fauna` matters as much as the map: a match with animals in it and the
   // same match without are different matches.
-  const options = { seed: replay.seed, fauna: replay.fauna, mission };
+  const options = {
+    seed: replay.seed,
+    fauna: replay.fauna,
+    mission,
+    driftCarry: replay.driftCarry,
+  };
   const match = new Match(map, terrain === undefined ? options : { ...options, terrain });
   // A mission seated itself and placed its own force in the constructor; the
   // recorder never wrote a roster for one, so this loop is simply empty there.

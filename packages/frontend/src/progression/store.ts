@@ -29,7 +29,12 @@
  * threw is a bug.
  */
 
-import { MissionOutcome, missionHeaderById, type MissionResultPayload } from '@echoes/shared';
+import {
+  MissionOutcome,
+  missionHeaderById,
+  validDriftCarry,
+  type MissionResultPayload,
+} from '@echoes/shared';
 
 /** The prologue's id. §1: the order is free *after* this one. */
 export const PROLOGUE_MISSION_ID = 'prologue-sorrowgate';
@@ -87,11 +92,27 @@ export interface Progression {
    * `sanitise` fills it with an empty set and nothing else notices.
    */
   scenes: Record<string, true>;
+  /**
+   * Drift Health per map — the second of the three sibling keys, and
+   * docs/campaign.md §2 rule 5: "the map persists".
+   *
+   * Keyed by **map id, not mission id**, because the rule is about ground. Two
+   * missions share `marr-plateau` on purpose (docs/mission-convocation.md
+   * §11), and a mission-keyed record would carry nothing between exactly the
+   * pair the rule was written for.
+   *
+   * A grid the player has already been shown — it is in every snapshot the
+   * scope draws (docs/bestiary.md §5, the tell is light rather than sound) —
+   * so keeping it here holds to this store's own rule: the record remembers
+   * what was resolved and shown, and never learns anything the mission
+   * withheld.
+   */
+  drift: Record<string, number[]>;
 }
 
 /** An empty history — what a first boot, a cleared browser or a bad read gives. */
 export function emptyProgression(): Progression {
-  return { version: 1, missions: {}, scenes: {} };
+  return { version: 1, missions: {}, scenes: {}, drift: {} };
 }
 
 function isOutcome(value: unknown): value is MissionOutcome {
@@ -143,7 +164,22 @@ function sanitise(raw: unknown): Progression {
     if (seen === true) scenes[id] = true;
   }
 
-  return { ...record, version: 1, missions, scenes } as Progression;
+  const storedDrift =
+    typeof record.drift === 'object' && record.drift !== null
+      ? (record.drift as Record<string, unknown>)
+      : {};
+
+  // Map by map, like `missions`, and through the same validator the room will
+  // run on arrival — so a grid this store would not have kept is never one the
+  // room has to refuse. A grid that fails drops that map's carry and nothing
+  // else: the map opens at its biome defaults, which is a first visit.
+  const drift: Record<string, number[]> = {};
+  for (const [mapId, grid] of Object.entries(storedDrift)) {
+    const valid = validDriftCarry(grid);
+    if (valid !== null) drift[mapId] = valid;
+  }
+
+  return { ...record, version: 1, missions, scenes, drift } as Progression;
 }
 
 export function loadProgression(): Progression {
@@ -185,6 +221,18 @@ export function recordMissionResult(result: MissionResultPayload): Progression {
   const scenes = { ...current.scenes };
   for (const scene of result.scenes ?? []) scenes[scene] = true;
 
+  // Last writing wins, which is the one place this record is not a merge —
+  // and has to be. §2 rule 5 says the map persists, so the ground a player
+  // leaves is the ground they return to, better or worse than last time; a
+  // "best of" here would let a replay launder a map they had wrecked. A
+  // re-delivered `missionOver` writes the identical grid, so the reconnect
+  // case stays the no-op the rest of this function is.
+  const drift = { ...current.drift };
+  if (result.driftCarry !== undefined) {
+    const valid = validDriftCarry(result.driftCarry.health);
+    if (valid !== null) drift[result.driftCarry.mapId] = valid;
+  }
+
   const next: Progression = {
     ...current,
     missions: {
@@ -192,6 +240,7 @@ export function recordMissionResult(result: MissionResultPayload): Progression {
       [result.missionId]: { ...previous, outcome },
     },
     scenes,
+    drift,
   };
 
   try {
@@ -236,6 +285,19 @@ export function isMissionUnlocked(missionId: string): boolean {
   // if it ever holds a second mission that one is not gated behind itself.
   if (missionHeaderById(missionId)?.campaign === 'prologue') return true;
   return hasPlayed(PROLOGUE_MISSION_ID);
+}
+
+/**
+ * What this player's play has already done to a given water — docs/campaign.md
+ * §2 rule 5 — or `undefined` for ground they have never finished a mission on.
+ *
+ * Presented to the room at join, where it is validated again before anything
+ * is seeded from it. Nothing reads this to *show* the player anything, and
+ * that is the rule rather than an omission: §2 rule 5 ends "and nobody tells
+ * them why". The map is the message.
+ */
+export function driftCarryForMap(mapId: string): number[] | undefined {
+  return loadProgression().drift[mapId];
 }
 
 /**

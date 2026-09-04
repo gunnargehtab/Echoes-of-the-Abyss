@@ -25,11 +25,36 @@ export class DriftHealth {
   private readonly widthM: number;
   private readonly heightM: number;
 
-  constructor(widthM: number, heightM: number) {
+  /**
+   * A fresh grid, or one seeded from what an earlier mission left on this map.
+   *
+   * `carried` is docs/campaign.md §2 rule 5 — "Drift Health carries between
+   * missions on the same map" — and it arrives from the player's own
+   * progression record, which means it arrives from the client. It must have
+   * been through `validDriftCarry` before it reaches here; a grid of the wrong
+   * length is ignored rather than trusted part-way, so the one caller that
+   * forgets gets biome defaults instead of a half-seeded map.
+   *
+   * Two rules shape the seed, both from docs/bestiary.md §6. A region still
+   * living heals by `DRIFT.HEALTH_CARRY_RECOVERY` across the gap (zero, and
+   * that constant says why at length). A region at 0 does not: §6's table
+   * makes Dead permanent, and the campaign is exactly the thing that carries
+   * it that way.
+   */
+  constructor(widthM: number, heightM: number, carried?: readonly number[] | null) {
     this.cols = DRIFT.HEALTH_REGIONS;
     this.widthM = widthM;
     this.heightM = heightM;
     this.health = new Float32Array(this.cols * this.cols).fill(DRIFT.HEALTH_START);
+    if (carried == null || carried.length !== this.health.length) return;
+    for (let i = 0; i < this.health.length; i++) {
+      const value = carried[i]!;
+      // Dead stays dead; everything else heals by the gap's allowance and is
+      // held under the value the map opens at, so the carry can only ever be
+      // a debt (see `validDriftCarry`).
+      const healed = value <= 0 ? 0 : value + DRIFT.HEALTH_CARRY_RECOVERY;
+      this.health[i] = Math.min(DRIFT.HEALTH_START, healed);
+    }
   }
 
   private index(x: number, y: number): number {

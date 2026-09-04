@@ -1137,6 +1137,28 @@ export const DRIFT = {
    * 60 the documents state, not 60 plus whatever recovery would cancel.
    */
   HEALTH_RECOVERY_PER_S: 0.02,
+  /**
+   * How much a region heals in the gap between two campaign missions on the
+   * same map — TUNABLE, and **zero on purpose**.
+   *
+   * campaign.md §2 rule 5 wants the return to be a *reading*: "a quieter,
+   * deader, more legible version of it, and nobody tells them why". The
+   * cheapest way to break that is to heal the ground behind the player's back,
+   * because they cannot see the heal either.
+   *
+   * Zero rather than a small number, for two reasons that are not about taste.
+   * There is no clock between missions — the board has no calendar and the
+   * campaign has no elapsed time (§1: the prologue first, then the order is
+   * free), so a rate has nothing to integrate against. And the record is held
+   * *client-side*, so any elapsed-time input to a recovery would be a number
+   * the client chooses: "wait a week and the map comes back" is a lever, and a
+   * lever is the one thing the seeding validation exists to refuse.
+   *
+   * So the carry is exact and this constant is the lever if that is ever
+   * wrong. Applied only to a region still living, because §6's table makes
+   * Dead permanent and `DriftHealth.tick` already honours that within a match.
+   */
+  HEALTH_CARRY_RECOVERY: 0,
   /** §6's table, as thresholds. */
   HEALTH_STRAINED: 75,
   HEALTH_FAILING: 50,

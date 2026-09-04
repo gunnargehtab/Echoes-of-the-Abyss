@@ -27,14 +27,23 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { DRIFT, Faction, FaunaSpecies, MISSION, SIM, UnitKind } from '@echoes/shared';
+import {
+  DRIFT,
+  Faction,
+  FaunaSpecies,
+  MISSION,
+  SIM,
+  UnitKind,
+  validDriftCarry,
+} from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { DriftHealth } from '../src/sim/drift.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { spawnFauna, spawnUnit } from '../src/sim/world.ts';
 import { Acoustic, Position } from '../src/sim/components.ts';
 import { rebuildPropagation } from '../src/sim/systems/hazards.ts';
-import { VENTFRONT_DIVIDE, type MapDefinition } from '../src/sim/maps/index.ts';
+import { VENTFRONT_DIVIDE, missionMapById, type MapDefinition } from '../src/sim/maps/index.ts';
+import { missionById } from '../src/sim/missions/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 
@@ -409,5 +418,104 @@ describe('Drift Health recovery', () => {
     // Only that cell: death is a thing that happens to a place, and the
     // neighbour it did not happen to has been healing the whole time.
     assert.equal(drift.at(7999, 7999), 100, 'an untouched neighbour reached the cap');
+  });
+});
+
+/**
+ * Cross-mission Drift Health — docs/campaign.md §2 rule 5, "the map persists".
+ *
+ * The rule's own words are the acceptance: a player who fought loudly through
+ * this water "returns later to a quieter, deader, more legible version of it,
+ * and nobody tells them why". So the assertions are about the *ground the next
+ * mission opens on*, and they are exact for `drift.test.ts`'s own reason — a
+ * carry that arrived approximately would be a balance change nobody could see.
+ *
+ * `seeding-tend` and `seeding-convocation` are the pair the rule was written
+ * for: docs/mission-convocation.md §11 reuses Tend's `marr-plateau` unchanged
+ * precisely so there is a second visit to the same ground.
+ */
+describe('Drift Health carries between missions on the same map', () => {
+  const REGIONS = DRIFT.HEALTH_REGIONS * DRIFT.HEALTH_REGIONS;
+  /** A plateau fought over loudly: one corner dead, one stripped, the rest worn. */
+  const asTendLeftIt = (): number[] => {
+    const grid = new Array<number>(REGIONS).fill(DRIFT.HEALTH_START - 6);
+    grid[0] = 0;
+    grid[1] = 12;
+    return grid;
+  };
+
+  it('opens the next mission on the ground the last one left', () => {
+    const carried = asTendLeftIt();
+    const drift = new DriftHealth(8000, 8000, carried);
+    assert.deepEqual(drift.snapshot(), carried, 'every region, exactly as it was left');
+  });
+
+  it('never raises the Dead across the gap either', () => {
+    const carried = asTendLeftIt();
+    const drift = new DriftHealth(8000, 8000, carried);
+    assert.equal(drift.at(0, 0), 0, '§6: Dead is permanent, and the campaign carries it');
+    assert.equal(drift.spawnsAllowed(0, 0), false);
+    assert.equal(drift.yieldMultiplier(0, 0), 0);
+  });
+
+  it('holds the carry under the value the ground opens at', () => {
+    // Not reachable through `validDriftCarry`, which refuses this grid — the
+    // ceiling is asserted here as well because the seed is the thing that must
+    // not be the place a healthier map gets in.
+    const drift = new DriftHealth(8000, 8000, new Array<number>(REGIONS).fill(100));
+    assert.equal(drift.at(0, 0), DRIFT.HEALTH_START, 'a carry is a debt, never a gift');
+  });
+
+  it('ignores a grid of the wrong shape rather than seeding half a map', () => {
+    for (const bad of [[], new Array<number>(REGIONS - 1).fill(0), null, undefined]) {
+      const drift = new DriftHealth(8000, 8000, bad);
+      assert.deepEqual(
+        drift.snapshot(),
+        new Array<number>(REGIONS).fill(DRIFT.HEALTH_START),
+        'the biome defaults — which is a first visit'
+      );
+    }
+  });
+
+  it('rejects a tampered grid at seeding, so the mission is a first visit', () => {
+    // The room's own composition: whatever the client presented goes through
+    // `validDriftCarry` first, and a refusal is a null carry rather than a
+    // trimmed one. A grid of 100s is well-formed and would otherwise hand the
+    // player full spawns and intact masking on ground they had wrecked.
+    const tampered = new Array<number>(REGIONS).fill(100);
+    const mission = missionById('seeding-convocation')!;
+    const map = missionMapById(mission.mapId)!;
+    const match = new Match(map, {
+      mission,
+      fauna: mission.fauna,
+      driftCarry: validDriftCarry(tampered),
+    });
+    assert.deepEqual(
+      match.world.drift.snapshot(),
+      new Array<number>(REGIONS).fill(DRIFT.HEALTH_START),
+      'the tampered grid bought nothing at all'
+    );
+  });
+
+  it('seeds the authored second visit from the first one', () => {
+    const carried = asTendLeftIt();
+    const mission = missionById('seeding-convocation')!;
+    const map = missionMapById(mission.mapId)!;
+    assert.equal(map.id, missionById('seeding-tend')!.mapId, 'the pair share their water');
+
+    const match = new Match(map, {
+      mission,
+      fauna: mission.fauna,
+      driftCarry: validDriftCarry(carried),
+    });
+    assert.deepEqual(match.world.drift.snapshot(), carried);
+
+    // And the mission that arrives on it is genuinely a different mission: the
+    // dead corner admits no fauna, so the masking Convocation's third row
+    // leans on is thinner than a first visit's. Nothing says so out loud.
+    const deadCorner = match.world.drift.spawnsAllowed(1, 1);
+    const fresh = new Match(map, { mission, fauna: mission.fauna });
+    assert.equal(deadCorner, false);
+    assert.equal(fresh.world.drift.spawnsAllowed(1, 1), true, 'a first visit is not this');
   });
 });

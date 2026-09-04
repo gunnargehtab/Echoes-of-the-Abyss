@@ -163,6 +163,15 @@ export interface MatchOptions {
    * replay as an empty map.
    */
   mission?: MissionDefinition;
+  /**
+   * Drift Health this map is already carrying — docs/campaign.md §2 rule 5.
+   *
+   * A grid the *client* presented, so it is validated (`validDriftCarry`) by
+   * the room before it gets here. Constructor-side for `mission`'s reason: a
+   * replay rebuilds a `Match` from its options, and a carry installed
+   * room-side would replay on a map that opens at the biome defaults.
+   */
+  driftCarry?: readonly number[] | null;
 }
 
 const FIXED_DT = 1 / SIM.TICK_HZ;
@@ -294,14 +303,20 @@ export class Match {
   constructor(map: MapDefinition = VENTFRONT_DIVIDE, options: MatchOptions = {}) {
     this.map = map;
     this.seed = options.seed ?? randomSeed();
-    this.world = createSimWorld(options.terrain ?? terrainFor(map), FIXED_DT, this.seed);
+    this.world = createSimWorld(
+      options.terrain ?? terrainFor(map),
+      FIXED_DT,
+      this.seed,
+      options.driftCarry
+    );
     this.recorder =
       options.record === true
         ? new ReplayRecorder(
             this.seed,
             map.id,
             options.fauna !== false,
-            options.mission?.id ?? null
+            options.mission?.id ?? null,
+            options.driftCarry ?? null
           )
         : null;
     this.seedResourceNodes();

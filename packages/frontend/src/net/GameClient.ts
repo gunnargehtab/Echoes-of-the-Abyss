@@ -271,6 +271,17 @@ export interface ConnectOptions {
    * the shell's "Solo game" must start a new match, not resurrect an old one.
    */
   resume?: boolean;
+  /**
+   * Drift Health this water is already carrying, from the progression record
+   * — docs/campaign.md §2 rule 5.
+   *
+   * Consumed only when this client creates the room, like `mapId`: joining a
+   * mission room somebody else opened takes the ground that room is already
+   * standing on, and a mission room is single-seat and private anyway. The
+   * server validates it and falls back to the biome defaults if it does not
+   * hold, so a cleared browser is a first visit rather than an error.
+   */
+  driftCarry?: readonly number[];
 }
 
 export class GameClient {
@@ -348,6 +359,9 @@ export class GameClient {
         name,
         mapId,
         missionId: wanted,
+        // Omitted rather than sent as undefined, so a skirmish's join request
+        // is byte-identical to what it was before §2 rule 5 existed.
+        ...(options.driftCarry === undefined ? {} : { driftCarry: options.driftCarry }),
         ...(options.create === undefined ? {} : { private: options.create === 'private' }),
       };
       // `create` makes a room of its own rather than looking for one. Quick
