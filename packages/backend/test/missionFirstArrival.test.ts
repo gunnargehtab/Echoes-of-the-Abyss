@@ -17,7 +17,8 @@
  * - **The acoustics are the shipped model** (§1, §6, §7). Every range and
  *   ratio the document states through a single biome is recomputed against
  *   `detectionRatio` — including the four tier ranges of the Order's arrival,
- *   where the document's tier *label* is wrong and its distance is not.
+ *   which is where the transcription found §7's one mislabelled tier and where
+ *   §13 says the corrected reading is held.
  * - **The tide has to run its length** (§9, §13). The trap the flag exists
  *   for, demonstrated against `MissionRuntime` rather than asserted about it:
  *   two terminal rows, one met from the first pass and one revealed late, and
@@ -612,19 +613,19 @@ describe('what is heard — §1, §4, §7', () => {
     assert.equal(ratio(quiet, RESONANCE, 255, CRUISER.hyd), 6, '§7: silence reads 6.00');
   });
 
-  it("pins the four tier ranges of the Order's arrival, where §7 mislabels one", () => {
-    // §7 reads the Cruiser's arrival as "contact to a submersible from 6,274 m
-    // and Track from 3,538". The distance is right and the tier is not: 3,538
+  it("pins the four tier ranges of the Order's arrival, where §7 mislabelled one", () => {
+    // §7 read the Cruiser's arrival as "contact to a submersible from 6,274 m
+    // and Track from 3,538". The distance was right and the tier was not: 3,538
     // is where the *Classification* multiple falls, and Track — the 4× — stands
-    // at 2,638. Nothing in the literal moves either way; this is where the
-    // correction is findable from the code side.
+    // at 2,638. Nothing in the literal moved either way, and §7 now reads both
+    // figures; this is where §13 says the four ranges are checked.
     assert.equal(CRUISER.sigCruise, 65, '§7: a Cruiser hull at 65, cone-on');
     assert.equal(rangeAt(65, OPEN, SUBMERSIBLE.hyd, TIER_THRESHOLD_MULTIPLIER.CONTACT), 6274);
     assert.equal(rangeAt(65, OPEN, SUBMERSIBLE.hyd, TIER_THRESHOLD_MULTIPLIER.BEARING), 4869);
     assert.equal(
       rangeAt(65, OPEN, SUBMERSIBLE.hyd, TIER_THRESHOLD_MULTIPLIER.CLASSIFICATION),
       3538,
-      '§7: this is the 3,538 the document calls Track'
+      '§7: the 3,538 the document once called Track'
     );
     assert.equal(
       rangeAt(65, OPEN, SUBMERSIBLE.hyd, TIER_THRESHOLD_MULTIPLIER.TRACK),
@@ -870,8 +871,8 @@ describe('the beats — §9’s table', () => {
         [930, 'The charting pair, for the plateaus'],
         [990, 'The stalls'],
         [1080, 'The stalls'],
-        [1080, 'Cohort-Prime Adze'],
-        [1125, 'Cohort-Prime Adze'],
+        [1080, "Cohort-Prime Adze, on the Order's sounding"],
+        [1125, 'Cohort-Prime Adze, at the riser'],
         [1140, 'The stalls'],
         [1230, 'Undermarshal Setha Korrin'],
         [1230, 'First Cantor Vehl Ossary'],

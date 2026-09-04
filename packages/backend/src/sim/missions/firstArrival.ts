@@ -67,27 +67,30 @@
  * terraces at. Intake's beat needed a depth because its transit had to enter
  * water its species could not; this one is inherited rather than corrected.
  *
- * **Two places the document misreads itself, neither of them authored here.**
+ * **Two errors of reading, found by the transcription, repaired in the document
+ * since, and never authored here** — §13's own two rows.
  *
- * 1. §7 reads the Order's party arriving as "contact to a submersible from
+ * 1. §7 read the Order's party arriving as "contact to a submersible from
  *    6,274 m and Track from 3,538". 6,274 m is the Contact range for a
- *    Cruiser's 65 cone-on against HYD 85 through open water and is right;
+ *    Cruiser's 65 cone-on against HYD 85 through open water and was right;
  *    3,538 m is the *Classification* range at the same figures
  *    (`TIER_THRESHOLD_MULTIPLIER` 2.5), and Track — the 4× multiple — stands at
- *    2,638 m. The tier label is the error and the distance is not, so nothing
- *    in this literal moves: the beat table, the seats and the station are
- *    unaffected either way.
- * 2. §1 says the terraces are "400 m higher than the lip it walked in on,
- *    because the terrace floor is 2,600 m against the lip's 3,100", and §4
- *    turns the four hundred into 26.7 free seconds of ascent. The four hundred
- *    is right and the *because* is not: those two floors differ by five
- *    hundred, and the climb is four hundred only because §11's own rule holds
- *    — `DEPTH.MAX_M` is 3,000, no hull is ever ordered onto the lip's last
- *    hundred metres, and 3,000 to 2,600 is the distance a hull actually
- *    travels. The operative figure and every second derived from it stand.
+ *    2,638 m. The tier label was the error and the distance was not, so nothing
+ *    in this literal ever moved: the beat table, the seats and the station are
+ *    identical at either tier. §7 now reads a classification at 3,538 and Track
+ *    only inside 2,638.
+ * 2. §1 stood the terraces "400 m higher than the lip it walked in on, because
+ *    the terrace floor is 2,600 m against the lip's 3,100", and §4 turns the
+ *    four hundred into 26.7 free seconds of ascent. The four hundred was right
+ *    and the *because* was not: those two floors differ by five hundred, and
+ *    the climb is four hundred only because §11's own rule holds — `DEPTH.MAX_M`
+ *    is 3,000, no hull is ever ordered onto the lip's last hundred metres, and
+ *    3,000 to 2,600 is the distance a hull actually travels. §1 now derives the
+ *    four hundred from `DEPTH.MAX_M` and the bench, and every second §4 takes
+ *    off it is unchanged.
  *
- * `missionFirstArrival.test.ts` pins all four tier ranges and both depth
- * differences, so either correction is findable from the code side.
+ * `missionFirstArrival.test.ts` pins all four tier ranges, and the five hundred
+ * and the four hundred side by side, so neither reading can drift back.
  */
 
 import {
@@ -864,7 +867,7 @@ export const ATTENDING_FIRST_ARRIVAL: MissionDefinition = {
     {
       atTick: T(18),
       kind: 'say',
-      speaker: 'Cohort-Prime Adze',
+      speaker: "Cohort-Prime Adze, on the Order's sounding",
       text: 'It has stood into the watch. The watch is not asked to answer it this tide. That is the order, and it is entered as the order, and the cohorts are attending it.',
       note: 'A refusal stated as an assignment being carried out — the order characters.md says the campaign puts in front of Adze that they might not obey, paid off by being held. Nothing in the union can read it (§8, §13)',
     },
@@ -890,7 +893,7 @@ export const ATTENDING_FIRST_ARRIVAL: MissionDefinition = {
     {
       atTick: T(18, 45),
       kind: 'say',
-      speaker: 'Cohort-Prime Adze',
+      speaker: 'Cohort-Prime Adze, at the riser',
       text: 'One is coming up off the lip and its line is the middle terraces. The cohorts are not asked to hold the line. The cohorts are asked to hold the rim, which is not the same water.',
       note: 'A submersible within 85 m of x = 3000 at the riser’s depth is ground at 220 a second and is gone in 2.4; a Chorister at 50 m is beneath the colossus’s notice entirely',
     },

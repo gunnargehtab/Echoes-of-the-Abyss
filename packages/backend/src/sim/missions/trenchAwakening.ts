@@ -57,14 +57,25 @@
  *    the geometry of §5 and §9 is measured against that. `act` holds a
  *    targetless creature at `stopAtM` 40, so `the-first` reaches (2500, 2040)
  *    rather than the axis head it is driven to, and the 13:00 line runs from
- *    there. §13's 349 m of swept line inside the Foundry's reach is the same
- *    349 m either way — the forty metres come off the far end, which is the
- *    end that was outside the reach anyway — and the colossus stops at
- *    (2742, 839), the document's own coordinate.
+ *    there. §13's 349 m of swept line inside the Foundry's reach survives the
+ *    shift — the line gains forty metres at the near end and loses forty at the
+ *    far one, so the entry and the stop move together and the two answers are
+ *    half a metre apart — and the colossus stops at (2742, 839), the document's
+ *    own coordinate. It stops *inside* the footprint, 161 m from the Foundry's
+ *    centre against 197.5 of reach, which is the whole of why finding 2 below
+ *    matters: what kills the yard is the eleven and a half seconds of swept
+ *    line, and the parked animal that follows grinds nothing at all.
+ *
+ *    What does not survive the shift is every figure §5, §9 and §13 measure
+ *    from the point the beat *names*: a line of 1,226 m, 41 m off the grower's
+ *    centre and 27.9 s to the reach become 1,265, 39.5 and 29.2, and §9's
+ *    tilde-marked ~13:28 and ~13:37 become 13:29.2 and 13:38.3. Every one of
+ *    them is asserted at the engine's figure and named at the document's in
+ *    `missionTrenchAwakening.test.ts`; none of them moves a conclusion.
  * 2. **A driven creature that has arrived grinds nothing** — `transit` is
  *    called only inside the branch that moves it. So the grower is not camped,
  *    it is *crossed*: the 13:00 beat drives the colossus through the yard to
- *    (2750, 800), 40 m off the Foundry's centre, and 349 m of the line lies
+ *    (2750, 800), 39.5 m off the Foundry's centre, and 349 m of the line lies
  *    inside the 197.5 m of `lengthM / 2 + radiusM`. 11.6 s at 30 m/s against
  *    the 9.09 s that 2,000 HP at 220/s needs.
  * 3. **A grown hull is born at 600 m, armed, and carries no role.**
@@ -285,13 +296,13 @@ export const ATTENDING_TRENCH_AWAKENING: MissionDefinition = {
           'one',
           2000,
           1100,
-          "The western heavy hull, 510 m from the dome and inside its 1,200 m. 673 m off the line the colossus draws at 13:00, and the row's own opening ear: the nearest coiled Hollow is 1,552 m out against 1,231 m of Contact"
+          "The western heavy hull, 510 m from the dome and inside its 1,200 m. 676 m off the line the colossus draws at 13:00, and the row's own opening ear: the nearest coiled Hollow is 1,552 m out against 1,231 m of Contact"
         ),
         row(
           'two',
           3200,
           1100,
-          'The eastern heavy hull, 1,703 m from the dome and outside it. 502 m off the line. It has the stalls at Classification from 1,055 m, which is the only sound on this map that is a person'
+          'The eastern heavy hull, 1,703 m from the dome and outside it. 500 m off the line. It has the stalls at Classification from 1,055 m, which is the only sound on this map that is a person'
         ),
         chorister(
           'three',
@@ -531,7 +542,7 @@ export const ATTENDING_TRENCH_AWAKENING: MissionDefinition = {
       driveTo: THROUGH_THE_YARD,
       untilTick: T(14, 30),
       loud: false,
-      note: 'A line of 1,225 m at 30 m/s, passing 40 m from the grower’s centre: 349 m of it lies inside the Foundry’s 197.5 m of reach — 11.6 s against the 9.09 s that 2,000 HP at 220/s needs — so the grower comes apart about 13:38, spiking to `DRIFT.TRANSIT_SIG`. Nothing else is on the line: `row-two` is 502 m off it, `row-one` 673 m, and every Chorister is 45 m under the length a colossus notices',
+      note: 'A line of 1,265 m walked to within forty of its far end at 30 m/s, passing 39.5 m from the grower’s centre: 349 m of it lies inside the Foundry’s 197.5 m of reach — 11.6 s against the 9.09 s that 2,000 HP at 220/s needs — so the grower comes apart about 13:38, spiking to `DRIFT.TRANSIT_SIG`. Nothing else is on the line: `row-two` is 500 m off it, `row-one` 676 m, and every Chorister is 45 m under the length a colossus notices',
     },
 
     // 14:30 — the commitment lapses. The runtime hands back `senseS`, restores

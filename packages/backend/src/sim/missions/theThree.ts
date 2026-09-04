@@ -424,9 +424,13 @@ export const CHORD_THE_THREE: MissionDefinition = {
 
   /**
    * §3 — all seven of `MissionAbility`'s names, each with the house's own
-   * reason attached for the HUD (docs/ui-ux.md §7). Only the prologue has ever
-   * locked all seven, and the two missions are the same argument at opposite
-   * ends of the campaign: a room where nothing is aimed.
+   * reason attached for the HUD (docs/ui-ux.md §7). §3 and §13 say the prologue
+   * is the only literal that has locked all seven before, and the two missions
+   * are the same argument at opposite ends of the campaign: a room where
+   * nothing is aimed. That is true of the bible as §13 was written and no
+   * longer true of the tree — `firstArrival.ts` landed in the same batch and
+   * locks all seven as well — so the pairing is the argument and the count is
+   * not; the document's sentence is the one to correct if anybody minds.
    *
    * The five weapon locks carry one sentence between them because §3 gives them
    * one reason, and the hulls carry no `armed` flag either — the lock is the
