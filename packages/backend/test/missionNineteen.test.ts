@@ -140,9 +140,7 @@ const placedBasin = (): { x: number; y: number; depthM: number } => {
  * patrol is dangerous along its whole length.
  */
 const legsOf = (tag: string): { x: number; y: number }[] => {
-  const seat = CHORD_NINETEEN.parties
-    .flatMap((p) => p.units)
-    .find((unit) => unit.tag === tag)!;
+  const seat = CHORD_NINETEEN.parties.flatMap((p) => p.units).find((unit) => unit.tag === tag)!;
   const path = [{ x: seat.x, y: seat.y }];
   for (const beat of CHORD_NINETEEN.beats) {
     if (beat.kind === 'move' && beat.tag === tag) path.push({ x: beat.x, y: beat.y });
@@ -497,6 +495,23 @@ describe('the nineteen, as docs/mission-nineteen.md §6 lays them out', () => {
       9,
       'nine names, and every one of them accounted to a coil'
     );
+    // §6's row 3 in its stronger reading, which is the one that distinguishes
+    // it: five contested coils buy one name apiece, so "buys this name and
+    // nothing else" is true of all five. What is true of Wen Brannock's coil
+    // alone is that no *other* interval, contested or free, has it as its
+    // nearest — every other coil on the map is the nearest coil of two names
+    // or more. Asserted over all nineteen rather than over the nine, or the
+    // row's own claim goes unchecked.
+    const nearestTo = coilPoints.map(
+      (coil) =>
+        soundings.filter(
+          (s) => Math.abs(Math.hypot(coil.x - s.x, coil.y - s.y) - nearestCoilM(s.x, s.y)) < 1
+        ).length
+    );
+    const lonely = nearestTo.filter((n) => n === 1);
+    assert.equal(lonely.length, 1, '§6: one coil, and only one, is nearest to a single interval');
+    const wenCoil = coilPoints.findIndex((coil) => coil.x === 1375 && coil.y === 1400);
+    assert.equal(nearestTo[wenCoil], 1, '§6 row 3: and it is the one Wen Brannock stands under');
   });
 });
 
@@ -912,7 +927,11 @@ describe('the beat table, as docs/mission-nineteen.md §9 clocks it', () => {
     // basin stands clear of every metre of the watch's authored patrol by
     // more than a Submersible under way can reach.
     const basin = placedBasin();
-    assert.equal(basin.depthM, SOUNDER.workingDepthM, '§13: a placed animal keeps this and no other');
+    assert.equal(
+      basin.depthM,
+      SOUNDER.workingDepthM,
+      '§13: a placed animal keeps this and no other'
+    );
     const terrain = terrainFor(THE_REST);
     assert.equal(terrain.floorAt(basin.x, basin.y), 2400, '§5, §11: in the Deep End');
     assert.ok(terrain.admits(basin.x, basin.y, basin.depthM));
