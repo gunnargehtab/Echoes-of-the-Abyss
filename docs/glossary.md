@@ -57,6 +57,15 @@ Ghost Markers
 - The decaying last-known position of a contact a listener has already detected. Tier 1 and Tier 2 contacts persist this way and fade over 20 s (systems-echo.md §4). A ghost marker is your own stale reading of a live unit, and it lies to you by exactly as much as that unit has moved since you heard it.
 - **Not Echo Marks**, which are the opposite thing. A ghost is a unit you heard; a mark is a thing that happened. The ghost belongs to one listener and tracks a contact that still exists; the mark is residue the world keeps of a past event, attached to no contact and readable by anyone with the HYD for it.
 
+Scattered Water
+
+- Water that lies about *where* a sound came from. The Resonance Field's PF is "0.70, scattered": the 0.70 prices loudness like any PF, and *scattered* means a contact resolved through those cells is reported up to ±30° off its true bearing and up to 15% long in range — never short — at every tier that carries a bearing, Classification and Track included. It never moves a tier (systems-echo.md §3, "Scattered water"). Deterministic per match and moving over time, so it cannot be averaged or triangulated back to the truth. A Standing Wave corridor un-scatters the cells it writes; a storm does not.
+
+Phantom
+
+- A false contact returned by an active ping transmitted from scattered water: a handle, Tier 4, a plausible enemy hull with health and a heading, and no entity behind it. One to three per transmission (audio-direction.md §5); an attack or torpedo order on one resolves to nothing; it is held for the transmission's three seconds and then fades like a ghost marker. It sounds and reads identical to a true return (systems-echo.md §3).
+- **Not a Ghost Marker**, which is a stale reading of a real unit. A phantom was never anything.
+
 Echo Marks
 
 - Decaying acoustic residues left by high-SIG events (battles, construction, mining, destruction). Echo Marks are visible/usable by units with sufficient HYD.

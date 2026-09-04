@@ -124,10 +124,6 @@ text except where a document already points at it:
   figure is expected to run about 2.2× a comparable hull's so that the compass average lands at
   parity ([systems-echo.md](systems-echo.md) §8). A roster gap rather than a code one, and every
   distance the Order's seven documents quote moves outward together when it is filled.
-- **Resonance Field 0.70 as *scattered*** — bearings that lie, pings that return phantoms
-  ([environments.md](environments.md)). No mission relies on it; a Standing Wave corridor
-  raising PF inside scattered water is the first place the unmodelled half would have a
-  second-order effect, and nobody should add it and assume the Fifth's tables survived.
 - **A voice cast.** The speech channel ships as a hail in the speaker's register and a murmur
   under the words, and the words are the log's ([audio-direction.md](audio-direction.md) §13).
   Recorded lines, or a per-speaker voice, are a call that document has deliberately not made;

@@ -20,12 +20,16 @@ import {
   PERSISTENCE,
   PROPAGATION_MODEL,
   ResolutionTier,
+  SCATTER,
   SIM,
   TIER_THRESHOLD_MULTIPLIER,
+  UNIT_STATS,
   blurBearing,
   detectionThreshold,
   directionalSectorFactor,
   maxAudibleRangeM,
+  scatterContact,
+  stableUnit,
   tierFromRatio,
   type Contact,
   type EchoMarkInfo,
@@ -34,7 +38,7 @@ import {
   type OrdnanceKind,
   Faction,
   type StructureKind,
-  type UnitKind,
+  UnitKind,
 } from '@echoes/shared';
 import {
   Acoustic,
@@ -101,6 +105,47 @@ const RATIO_SCALE_SQ = RATIO_TO_BEAT.map((ratio) =>
  * an army is.
  */
 const acousticEntities = defineQuery([Position, Acoustic, Owner, Health]);
+
+/**
+ * Salts into `stableUnit` for the dice a phantom is thrown with. Distinct
+ * from the two `scatterContact` uses (1 and 2) so a phantom's placement and a
+ * real contact's lie for the same pinger never share a draw.
+ */
+const PHANTOM_SALT_COUNT = 11;
+const PHANTOM_SALT_KIND = 13;
+const PHANTOM_SALT_BEARING = 14;
+const PHANTOM_SALT_RANGE = 15;
+const PHANTOM_SALT_HEADING = 16;
+
+/**
+ * What a phantom can claim to be: any hull a navy builds. The cohort hull is
+ * grown, not built, and only by the Directorate (docs/economy.md §6), so a
+ * Chorister return against any other navy would be the one phantom a player
+ * could dismiss by reading the roster — which is exactly the tell a phantom
+ * exists not to give.
+ */
+const PHANTOM_HULLS: readonly UnitKind[] = [
+  UnitKind.LightScout,
+  UnitKind.Corvette,
+  UnitKind.Cruiser,
+  UnitKind.AbyssalSubmersible,
+  UnitKind.Harvester,
+];
+const PHANTOM_HULLS_DIRECTORATE: readonly UnitKind[] = [...PHANTOM_HULLS, UnitKind.Chorister];
+
+/**
+ * The false returns one transmission conjured — docs/systems-echo.md §3,
+ * docs/audio-direction.md §5.
+ *
+ * Held for the life of the transmission so the client sees one contact under
+ * one handle for three seconds and then nothing, exactly as it would for a
+ * real hull the ping lit and then lost: the ghost-marker decay does the rest.
+ * Keyed by pinger, beside `litAlready`, and dropped on the same tick it is.
+ */
+interface PhantomReturns {
+  slot: number;
+  contacts: Contact[];
+}
 
 interface BestContact {
   tier: ResolutionTier;
@@ -251,6 +296,8 @@ export class EchoLayer {
    * it is still told, which is correct: it was just lit.
    */
   private readonly litAlready = new Map<number, Set<number>>();
+  /** Pinger -> the phantoms its current transmission returned. */
+  private readonly phantoms = new Map<number, PhantomReturns>();
   /**
    * Per-HYD lookup tables, indexed by the integer rating (HYD is 0-100 and
    * every source of it — stats, auras, the blind floor — is integral).
@@ -372,6 +419,7 @@ export class EchoLayer {
     for (const slotHandles of this.handles.values()) slotHandles.delete(eid);
     for (const slotBest of this.best.values()) slotBest.delete(eid);
     this.litAlready.delete(eid);
+    this.phantoms.delete(eid);
   }
 
   private handleFor(slot: number, eid: number): number {
@@ -382,10 +430,24 @@ export class EchoLayer {
     }
     let handle = slotHandles.get(eid);
     if (handle === undefined) {
-      handle = (this.nextHandle.get(slot) ?? 1) + 1;
-      this.nextHandle.set(slot, handle);
+      handle = this.mintHandle(slot);
       slotHandles.set(eid, handle);
     }
+    return handle;
+  }
+
+  /**
+   * The next handle for a slot, from the one counter real contacts draw on.
+   *
+   * A phantom's handle comes from here and from nowhere else, so it is
+   * indistinguishable from a real one — a client that could sort handles
+   * into "issued for an entity" and "issued for nothing" would have the
+   * phantom's whole secret. It is never entered in `handles`, which is what
+   * makes `entityForHandle` refuse it.
+   */
+  private mintHandle(slot: number): number {
+    const handle = (this.nextHandle.get(slot) ?? 1) + 1;
+    this.nextHandle.set(slot, handle);
     return handle;
   }
 
@@ -420,6 +482,113 @@ export class EchoLayer {
       existing.listenerX = listenerX;
       existing.listenerY = listenerY;
     }
+  }
+
+  /**
+   * The false returns a ping from scattered water sends back —
+   * docs/systems-echo.md §3, docs/audio-direction.md §5 ("one to three of
+   * them are false").
+   *
+   * Each phantom is a Tier-4 contact with everything a Tier-4 contact has —
+   * a handle, a position, a depth, a hull kind, a faction, full health and a
+   * heading — and no entity behind it. It has to carry all of that: a ping
+   * resolves everything it touches to Track, so a return with anything less
+   * would be the one marker on the scope that announced itself as false.
+   * §9's rule is that a phantom sounds identical to a true one, and the
+   * cheapest way to sound identical is to be identical on the wire.
+   *
+   * Every die here is `stableUnit` off the seed, the pinger's match-local id
+   * and the tick the transmission began, so a replay conjures the same
+   * phantoms in the same water. Placement is rejection-sampled: plausible
+   * bearings and ranges inside the reveal, clear of the pinger, clear of
+   * anything real the ping lit, and on the map. A phantom that finds no such
+   * place in `PHANTOM_PLACEMENT_TRIES` is not placed — one fewer lie, never
+   * a lie on top of a truth.
+   *
+   * The hull it claims to be is one an *enemy* navy builds. With no enemy
+   * left on the map there is no plausible hull to fake, and no phantom.
+   */
+  private conjurePhantoms(
+    world: SimWorld,
+    pinger: number,
+    slot: number,
+    px: number,
+    py: number,
+    revealed: readonly number[],
+    entities: readonly number[]
+  ): void {
+    // An enemy to impersonate: the faction of any hull or structure that is
+    // not the pinger's own side and not the Drift's. Ordnance carries an
+    // Owner but no honest faction, and a creature belongs to nobody.
+    let faction: Faction | undefined;
+    for (let i = 0; i < entities.length; i++) {
+      const eid = entities[i]!;
+      const owner = Owner.slot[eid]!;
+      if (owner === slot || owner >= MAX_SLOTS) continue;
+      if (!hasComponent(world, Unit, eid) && !hasComponent(world, Structure, eid)) continue;
+      faction = Owner.faction[eid] as Faction;
+      break;
+    }
+    if (faction === undefined) return;
+
+    const seed = world.rng.seed;
+    const key = localIdOf(world, pinger) ?? pinger;
+    const began = world.tick;
+    const span = SCATTER.PHANTOMS_MAX - SCATTER.PHANTOMS_MIN + 1;
+    const count =
+      SCATTER.PHANTOMS_MIN + Math.floor(stableUnit(seed, key, PHANTOM_SALT_COUNT, began) * span);
+    const hulls = faction === Faction.Directorate ? PHANTOM_HULLS_DIRECTORATE : PHANTOM_HULLS;
+    const terrain = world.terrain;
+    const clearance2 = SCATTER.PHANTOM_CLEARANCE_M * SCATTER.PHANTOM_CLEARANCE_M;
+    const depth = Position.depth[pinger]!;
+
+    const contacts: Contact[] = [];
+    for (let n = 0; n < count; n++) {
+      for (let attempt = 0; attempt < SCATTER.PHANTOM_PLACEMENT_TRIES; attempt++) {
+        // One step per (phantom, attempt) so a rejected placement re-rolls
+        // rather than repeats.
+        const step = began + n * SCATTER.PHANTOM_PLACEMENT_TRIES + attempt;
+        const bearing = stableUnit(seed, key, PHANTOM_SALT_BEARING, step) * Math.PI * 2;
+        const range =
+          SCATTER.PHANTOM_MIN_RANGE_M +
+          stableUnit(seed, key, PHANTOM_SALT_RANGE, step) *
+            (ACTIVE_SONAR.REVEAL_RADIUS_M - SCATTER.PHANTOM_MIN_RANGE_M);
+        const x = terrain.clampXM(px + Math.cos(bearing) * range);
+        const y = terrain.clampYM(py + Math.sin(bearing) * range);
+        // Clamping to the map edge can pull a phantom back onto the pinger.
+        if ((x - px) * (x - px) + (y - py) * (y - py) < clearance2) continue;
+
+        let clear = true;
+        for (let j = 0; j < revealed.length; j++) {
+          const other = revealed[j]!;
+          const dx = Position.x[other]! - x;
+          const dy = Position.y[other]! - y;
+          if (dx * dx + dy * dy < clearance2) {
+            clear = false;
+            break;
+          }
+        }
+        if (!clear) continue;
+
+        const kind =
+          hulls[Math.floor(stableUnit(seed, key, PHANTOM_SALT_KIND, step) * hulls.length)]!;
+        contacts.push({
+          id: this.mintHandle(slot),
+          tier: ResolutionTier.Track,
+          x,
+          y,
+          tick: began,
+          kind,
+          faction,
+          depth,
+          hp: UNIT_STATS[kind].maxHp,
+          maxHp: UNIT_STATS[kind].maxHp,
+          heading: stableUnit(seed, key, PHANTOM_SALT_HEADING, step) * Math.PI * 2,
+        });
+        break;
+      }
+    }
+    if (contacts.length > 0) this.phantoms.set(pinger, { slot, contacts });
   }
 
   /**
@@ -827,7 +996,13 @@ export class EchoLayer {
     for (const pinger of this.litAlready.keys()) {
       const stillPinging =
         hasComponent(world, ActivePing, pinger) && ActivePing.remainingS[pinger]! > 0;
-      if (!stillPinging) this.litAlready.delete(pinger);
+      if (!stillPinging) {
+        this.litAlready.delete(pinger);
+        // The phantoms go with the transmission that conjured them. Nothing
+        // re-sends them after this tick, so on the client they fade exactly
+        // as a real hull the ping lit and then lost.
+        this.phantoms.delete(pinger);
+      }
     }
 
     for (let i = 0; i < entities.length; i++) {
@@ -836,6 +1011,7 @@ export class EchoLayer {
       if (ActivePing.remainingS[pinger]! <= 0) continue;
 
       let alreadyLit = this.litAlready.get(pinger);
+      const firstTick = alreadyLit === undefined;
       if (alreadyLit === undefined) {
         alreadyLit = new Set();
         this.litAlready.set(pinger, alreadyLit);
@@ -850,6 +1026,15 @@ export class EchoLayer {
         ACTIVE_SONAR.REVEAL_RADIUS_M,
         this.queryBuffer
       );
+
+      // A ping transmitted from scattered water returns phantoms — the one
+      // terrain that punishes the button directly (docs/systems-echo.md §5).
+      // Decided on the transmission's first tick and held for its life; the
+      // pinger's *own* cell decides, so a corridor cut through the Fields is
+      // a place to ping from with a straight answer (mission-standing-wave §7).
+      if (firstTick && pingerSlot < MAX_SLOTS && terrain.hasScatter && terrain.scatterAt(px, py)) {
+        this.conjurePhantoms(world, pinger, pingerSlot, px, py, revealed, entities);
+      }
 
       for (let j = 0; j < revealed.length; j++) {
         const target = revealed[j]!;
@@ -880,6 +1065,11 @@ export class EchoLayer {
     // player it resolved (#323). Building the contacts too, rather than a
     // second exposure-only walk, keeps this the one place the union's
     // information-safety argument has to be read.
+    // Hoisted once per pass: whether the grid has any scattered water at all
+    // gates every walk below, and the seed is the one input to the lie that
+    // is a property of the match rather than of the pair.
+    const scattered = terrain.hasScatter;
+    const seed = world.rng.seed;
     for (const slot of observers) {
       const slotBest = this.best.get(slot);
       const out = this.results.get(slot)!;
@@ -956,6 +1146,40 @@ export class EchoLayer {
           contact.x = blurred.x;
           contact.y = blurred.y;
         }
+        // Scattered water — docs/systems-echo.md §3. Applied to whatever the
+        // tier above chose to disclose, the ghost included, and at every tier
+        // that carries a bearing: Classification names the hull and the
+        // Fields still misplace it. Rotated about the listener that resolved
+        // it, which for a ping's returns is the pinger, so the ping's own
+        // returns lie exactly as §5 says they do.
+        //
+        // Priced once per resolved contact per observer, not per candidate
+        // pair — dozens of walks against tens of thousands — and only on a
+        // grid with crystal on it. The key is the *match-local* id, for the
+        // same reason the Tier-2 blur's is.
+        if (scattered && resolved.tier >= ResolutionTier.Bearing) {
+          const fraction = terrain.scatteredFraction(
+            resolved.listenerX,
+            resolved.listenerY,
+            trueX,
+            trueY
+          );
+          if (fraction > 0) {
+            const lied = scatterContact(
+              contact.x,
+              contact.y,
+              resolved.listenerX,
+              resolved.listenerY,
+              fraction,
+              seed,
+              slot,
+              localIdOf(world, eid) ?? eid,
+              world.tick
+            );
+            contact.x = lied.x;
+            contact.y = lied.y;
+          }
+        }
         // What this pass disclosed, for `firingSolution` to aim at.
         resolved.reportedX = contact.x;
         resolved.reportedY = contact.y;
@@ -1008,6 +1232,22 @@ export class EchoLayer {
         }
 
         out.push(contact);
+      }
+    }
+
+    // Phantoms, after the real returns and under the same handle space. A
+    // slot's phantoms ride in its own payload only: the AI seat reads that
+    // payload and is deceived exactly as a player is (docs/systems-echo.md
+    // §3 "Symmetric"), and nothing here raises anybody's exposure, because
+    // nobody is being heard.
+    if (this.phantoms.size > 0) {
+      for (const returns of this.phantoms.values()) {
+        const out = this.results.get(returns.slot);
+        if (out === undefined) continue;
+        for (const phantom of returns.contacts) {
+          phantom.tick = world.tick;
+          out.push(phantom);
+        }
       }
     }
 

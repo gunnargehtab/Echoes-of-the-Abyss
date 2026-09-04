@@ -388,6 +388,19 @@ Three readings come out of those two tables, and they are the mission:
    dome. There is no version of this mission in which the column does not know where both nodes
    are going. The secret is never *whether*; it is only ever *how far south*.
 
+**And what the corridor does to scatter.** The Fifth is scattered water
+([systems-echo.md](systems-echo.md) §3, "Scattered water"): every contact the column resolves on
+the party is reported up to 30° off its bearing and up to 15% long, and so is every contact the
+party resolves on the column, at every tier including the dome's Tier 3. None of the figures
+above move — scatter never touches loudness — but the *site* the column can hear from 1,200 m is
+placed on a bearing that lies, which is the one mercy the water shows the works. **A standing
+corridor un-scatters the cells it writes.** Crystal ringing at one interval is the opposite of
+scatter, so inside the line bearings are true and a ping transmitted from it returns no
+phantoms. The corridor is therefore a megaphone in both senses: it carries the party at 2.00,
+and it is the one water on the map where the column's instruments tell the truth about them. A
+party that keeps its bows off the line is carrying as an ordinary hull; a party that keeps its
+*hulls* off the line is also lied about, and reading 2 means choosing which of those to give up.
+
 ---
 
 ## 8. The Objective
@@ -737,7 +750,7 @@ works left standing in it.
 | Adze's turn, fired by the corridor standing | **Built** (#382). Seven conditional transits and one line, all keyed on `build` at two paired, and a second transit for a tag *replaces* the first outright — the `creature` beat's rule — so the walk north is cancelled by being the walk south now. That is the whole reason the walk is a transit and not a schedule of `move` beats: a schedule is a cursor and a condition cannot reach into one, and a corridor that stood at 09:00 would have had its column re-ordered north at 09:30 by a beat the mission could not retire. A corridor that stands at 04:00 turns the column at 04:00; one that stands at 15:00 turns it at the narrows; one that never stands never does, and the walk arrives at 17:30 as filed. `missionStandingWave.test.ts` plays both |
 | The map, four regions, no resources | **Built** — `the-fifth`, one row of the literal per row of §11's table, painted in the document's order, `fauna: false`. One correction to §11's parties table, made in the literal and recorded here: the six are seated *beside* the Bastion rather than on its coordinates, because a Bastion's footprint is 220 m and `separationSystem` shoves a hull clear of it on the first tick — seated at (2,500, 400) four of the six were in the defile before the works order had been read. They stand east of it, at 1,450 m, in the Gallery, which is what the row says |
 | A Knight hull in the roster | **Not written**, and this is a [units.md](units.md) gap rather than a code one — unchanged from [mission-aptitude.md](mission-aptitude.md) §13. §3 fields generic hulls and says so |
-| Resonance Field 0.70 as **scattered** — bearings that lie, pings that return phantoms | **Not built**, and this mission does not rely on it, exactly as mission 1 did not. Named again because a corridor that raises PF inside scattered water is the first place the unmodelled half would have a second-order effect, and nobody should add it and assume §7's table survived |
+| Resonance Field 0.70 as **scattered** — bearings that lie, pings that return phantoms | **Built** (#400), and §7's tables survived intact, for the reason [mission-aptitude.md](mission-aptitude.md) §13 gives: scatter is a rule about *where* and never about *how loud*, so every figure in §7 is unchanged and `missionStandingWave.test.ts` plays the Fifth closed, open and sour exactly as before. The second-order effect this row warned about was decided rather than discovered: **a corridor un-scatters its cells.** An absolute PF write is water that has been *tuned*, and crystal ringing at one interval is the opposite of scatter — §7 now says so, and `scatter.test.ts` holds a corridor cut through the Fields to it, truth inside the line and the lie back the tick it comes down. A Resonance Storm over the same cells scales PF and leaves scatter alone. What it cost this mission: nothing in tuning, and one sentence of doctrine — the line the Knights raise is now the one place in their own water their instruments are honest, which is a reading §10 did not have and a reason to stand in it that the damage figure argues against |
 | Permanent roster attrition | **Built elsewhere, and declined here** (#380). The mechanism is `MissionDefinition.attrition` — the flag [mission-nineteen.md](mission-nineteen.md) alone authors — and `MissionUnit.cadre`, the roster name a spent hull is kept under; a mission that authors neither neither spends nor reads the spent set, and this literal authors neither, which is §10's argument made as an absence rather than a rule. Hulls lost here are lost for this tide and no further |
 | In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line |
 | A canyon that rings at a fifth, and a corridor that changes what it rings *as* | Not started ([audio-direction.md](audio-direction.md)). The Fields' ambient bed is already the first tuned water in the bible ([mission-aptitude.md](mission-aptitude.md) §13); this is that bed with a player-placed interval written over the top of it, which is a new problem for the mix and the most interesting one the campaign has posed it |

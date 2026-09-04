@@ -114,6 +114,62 @@ this makes it an information blackout as well.
 The boundary is a wall rather than a gradient, like the depth bands themselves. Crossing it is
 meant to be a moment.
 
+### Scattered water
+
+The Resonance Field row is the one entry in the table above that is not a scalar, and the second
+half of it — *scattered* — is a rule about **where** rather than **how loud**. PF 0.70 prices the
+path exactly as any other biome's factor does, and scatter never moves a tier: a hull in the
+Fields is heard from precisely as far as 0.70 says. What scatter moves is the position a resolved
+contact is reported at.
+
+**A contact resolved through scattered cells is reported on a bearing that lies and at a range
+that reads long.** Both errors scale with the fraction of the listener-to-emitter path that
+crosses scattered cells — the same walk that prices PF — so a hull one cell into the Fields is
+barely misplaced and one heard across a kilometre of crystal is misplaced by the full figure:
+
+- **Bearing: up to ±30°** on an all-crystal path, rotated about the listener that resolved it.
+- **Range: up to 15% long, never short.** A scattered return is a multipath return — it arrived
+  late and from the wrong side — so the lie is outward only. That is what distinguishes it from
+  Tier 2's symmetric ±15% blur, which it composes with rather than replaces, and it is also what
+  makes the bearing lie a wall: with the range exact, two Echo ticks of a moving listener would
+  intersect two range circles and hand a program the truth.
+- **At every tier that carries a bearing.** Classification names the hull; the Fields still
+  misplace it. A Tier-4 track in crystal is a full stat block in the wrong place, and the ping's
+  own returns lie the same way ([audio-direction.md](audio-direction.md) §5) — §5 below says why
+  that is the terrain's whole point.
+
+**The lie is deterministic, and it moves.** Half of it stands for the whole match, per listener
+and emitter; the other half drifts, easing to a new value every 2 s so a contact slides rather
+than jumps. It is hashed off the match seed, the pair and the tick rather than drawn from the
+simulation's random stream, so a replay and both clients agree and adding a contact shifts
+nobody's dice. Neither half would do alone: a lie that only stood could be solved from two ticks
+of a moving listener, and one that only drifted would average back to the truth over a long
+enough watch. Together, no number of samples recovers the truth — which is what makes it a lie
+rather than a puzzle.
+
+**A ping transmitted from scattered water returns phantoms.** One to three false contacts per
+transmission ([audio-direction.md](audio-direction.md) §5), each with a handle from the same
+counter a real contact's comes from, Tier 4, a plausible enemy hull with full health and a
+heading, and no entity behind it. They land 200–900 m from the pinger, never within 150 m of
+anything real inside the reveal, hold still for the three seconds the transmission lasts, and
+then fade as any ghost marker does. Every order that resolves a handle — an attack, a torpedo —
+resolves a phantom to nothing and does nothing. The true returns from the same ping lie in
+bearing like any other contact. A phantom sounds and reads identical to a true one
+([audio-direction.md](audio-direction.md) §9): the terrain teaches its own rule, and it teaches it
+to the pinger.
+
+**What is not scattered.** A Standing Wave corridor written through the Fields *un-scatters* the
+cells it sets: crystal ringing at one interval is the opposite of scatter, so inside the line
+bearings are true and a ping returns no phantoms, at the price of being heard at 2.0
+([mission-standing-wave.md](mission-standing-wave.md) §7). A Resonance Storm lowers PF and leaves
+scatter alone — a storm over the Fields is still the Fields. And **the Drift is not fooled**:
+fauna resolve no bearing — a creature hears a loudness, files what made it and hunts the truth
+([bestiary.md](bestiary.md) §2) — so scatter is a property of resolving a contact into a
+position, which only hydrophones do.
+
+**It is symmetric.** The skirmish AI observes the same snapshot a player does and is deceived by
+it exactly as a player is: it will walk an army to a scattered bearing and open fire on a phantom.
+
 **Consequence:** the same army is a different army in a different biome. Positioning is not just about chokepoints — it's about *acoustics*.
 
 ---
@@ -163,7 +219,7 @@ This is the game's signature decision. Good players ping *late, briefly, and jus
 
 - **Ping-baiting** — deliberately ping from a decoy position to pull a commitment.
 - **Silent-running** ambush stacks that specifically wait for a ping to reveal targets *for them*.
-- **Resonance Fields scatter pings**, returning false contacts to the pinger — the only terrain that punishes the button directly.
+- **Resonance Fields scatter pings**, returning one to three false contacts to the pinger and its true returns on bearings that lie by up to 30° (§3, "Scattered water") — the only terrain that punishes the button directly.
 
 ---
 

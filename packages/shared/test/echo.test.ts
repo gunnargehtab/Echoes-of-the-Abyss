@@ -25,6 +25,11 @@ import {
   resolveTier,
   requiredPressureRating,
   blurBearing,
+  scatterContact,
+  scatterLie,
+  stableUnit,
+  SCATTER,
+  SIM,
   PROPAGATION_MODEL,
   MAX_PATH_PROPAGATION_FACTOR,
   MAX_PROPAGATION_FACTOR,
@@ -301,5 +306,72 @@ describe('the thermocline', () => {
         assert.ok(thermoclineFactor(a, b) <= rowMax, `${a} m to ${b} m exceeds its row maximum`);
       }
     }
+  });
+});
+
+describe('scattered water — docs/systems-echo.md §3', () => {
+  const listener = { x: 1000, y: 1000 };
+  const truth = { x: 1000 + 600, y: 1000 };
+  const told = (fraction: number, seed = 31, tick = 0, observer = 1, key = 7) =>
+    scatterContact(truth.x, truth.y, listener.x, listener.y, fraction, seed, observer, key, tick);
+  const polar = (p: { x: number; y: number }) => ({
+    bearing: Math.atan2(p.y - listener.y, p.x - listener.x),
+    range: Math.hypot(p.x - listener.x, p.y - listener.y),
+  });
+
+  it('is the identity in open water', () => {
+    assert.deepEqual(told(0), truth);
+    assert.deepEqual(scatterContact(5, 5, 5, 5, 1, 31, 1, 7, 0), { x: 5, y: 5 });
+  });
+
+  it('lies by at most ±30° and reads at most 15% long, never short', () => {
+    for (let tick = 0; tick < 600; tick += 13) {
+      for (let seed = 1; seed < 40; seed++) {
+        const p = polar(told(1, seed, tick));
+        assert.ok(Math.abs(p.bearing) <= SCATTER.MAX_BEARING_ERROR_RAD + 1e-9);
+        assert.ok(p.range >= 600 - 1e-9, `${p.range} is short`);
+        assert.ok(p.range <= 600 * (1 + SCATTER.MAX_RANGE_STRETCH) + 1e-9);
+      }
+    }
+  });
+
+  it('scales both lies with the scattered fraction of the path', () => {
+    const full = polar(told(1));
+    const half = polar(told(0.5));
+    assert.ok(Math.abs(half.bearing) < Math.abs(full.bearing) || full.bearing === 0);
+    assert.ok(half.range - 600 <= full.range - 600 + 1e-9);
+  });
+
+  it('is deterministic on its inputs, and differs by seed, pair and time', () => {
+    assert.deepEqual(told(1), told(1));
+    assert.notDeepEqual(told(1, 31), told(1, 32), 'seed');
+    assert.notDeepEqual(told(1, 31, 0, 1, 7), told(1, 31, 0, 2, 7), 'observer');
+    assert.notDeepEqual(told(1, 31, 0, 1, 7), told(1, 31, 0, 1, 8), 'emitter');
+    const period = SCATTER.DRIFT_PERIOD_S * SIM.TICK_HZ;
+    assert.notDeepEqual(told(1, 31, 0), told(1, 31, period), 'a drift period on');
+  });
+
+  it('keeps the lie inside [-1, 1] and continuous across a lattice point', () => {
+    const period = SCATTER.DRIFT_PERIOD_S * SIM.TICK_HZ;
+    let previous = scatterLie(31, 7, 1, 0, period);
+    for (let tick = 1; tick <= period * 3; tick++) {
+      const now = scatterLie(31, 7, 1, tick, period);
+      assert.ok(now >= -1 && now <= 1);
+      assert.ok(Math.abs(now - previous) < 0.05, `jump of ${now - previous} at ${tick}`);
+      previous = now;
+    }
+  });
+
+  it('hashes onto [0, 1) and is identical for identical inputs', () => {
+    for (let i = 0; i < 1000; i++) {
+      const u = stableUnit(31, i, 3, i * 7);
+      assert.ok(u >= 0 && u < 1);
+      assert.equal(u, stableUnit(31, i, 3, i * 7));
+    }
+    assert.notEqual(
+      stableUnit(31, 1, 3, 0),
+      stableUnit(31, 1, 3, -1),
+      'the standing step is its own'
+    );
   });
 });
