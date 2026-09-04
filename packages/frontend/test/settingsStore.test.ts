@@ -94,6 +94,29 @@ describe('the settings store', () => {
     assert.equal(loaded.busVolumes.contact, 1);
   });
 
+  it('loads a record written before the speech bus with speech at unity', () => {
+    // The trim exists so the channel can be turned down with nothing lost —
+    // the log is the caption (docs/audio-direction.md §13). A record that
+    // predates it must not load the bus muted: a player who never had the
+    // slider never turned it down.
+    backing.set(
+      'echoes.settings',
+      JSON.stringify({
+        version: 1,
+        busVolumes: { music: 0.5, world: 1, contact: 1, self: 1, ui: 1 },
+      })
+    );
+    const loaded = loadSettings();
+    assert.equal(loaded.busVolumes.speech, 1);
+    assert.equal(loaded.busVolumes.music, 0.5);
+    assert.equal(DEFAULT_SETTINGS.busVolumes.speech, 1);
+
+    saveSettings({ busVolumes: { ...loaded.busVolumes, speech: 0 } });
+    assert.equal(loadSettings().busVolumes.speech, 0, 'and it can be taken to zero');
+    backing.set('echoes.settings', JSON.stringify({ version: 1, busVolumes: { speech: 7 } }));
+    assert.equal(loadSettings().busVolumes.speech, 1, 'but never above unity');
+  });
+
   it('clamps the UI scale to the range §11 specifies', () => {
     for (const [stored, expected] of [
       [5, UI_SCALE_MAX],

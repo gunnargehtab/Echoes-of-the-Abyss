@@ -39,10 +39,12 @@ import {
   detectionRatio,
   faunaStatsFor,
   thermoclineFactor,
+  voiceOf,
   type CommanderAbilityView,
   type EchoSnapshot,
   type MissionAbility,
   type MissionView,
+  type MissionVoice,
   type ObjectiveView,
 } from '@echoes/shared';
 import {
@@ -75,11 +77,13 @@ import { projectMissionView, type MissionState } from './view.ts';
 import { directionalFactorFor } from '../directional.ts';
 import { dueConditionalBeats } from './conditional.ts';
 import { exposedAtLeast, inRegion, isMet, isStanding, peakSigOf } from './predicates.ts';
+import { pairedNodesOf } from '../systems/standingWave.ts';
 import type {
   MissionBeatEffect,
   MissionConditionalBeat,
   MissionDefinition,
   MissionEmitter,
+  MissionLeg,
   MissionRole,
   MissionSounding,
   MissionTag,
@@ -141,6 +145,18 @@ export interface MissionResolution {
    * no scene, and a mission that authored one may still witness nothing.
    */
   scenes: readonly string[];
+  /**
+   * Cadre ids of the player's own hulls that were not answering at the close
+   * — docs/campaign.md §7 row 3, and `MissionUnit.cadre` for what an id is.
+   *
+   * Computed for every mission and *sent* only by one: the room attaches it
+   * to `missionOver` when the definition authors `attrition`, so a hull lost
+   * on a tide that does not spend is reported nowhere and returns next time
+   * (docs/mission-standing-wave.md §10). Own-force information in the
+   * strictest sense — which of my own named hulls died — and the player has
+   * already watched each of them go.
+   */
+  spent: readonly string[];
 }
 
 /** One authored line, spoken by a `say` beat. */
@@ -148,6 +164,13 @@ export interface MissionLine {
   tick: number;
   speaker: string;
   text: string;
+  /**
+   * The register it is spoken in — resolved here, never on the client, so a
+   * beat that names no voice arrives already in the player's own and the
+   * client has nothing to infer. The mix keys its hail on this
+   * (docs/audio-direction.md §13); the log ignores it.
+   */
+  voice: MissionVoice;
 }
 
 /**
@@ -175,6 +198,19 @@ interface Commitment {
   /** The depth the transit runs at. Absent is the species' own. */
   depthM?: number;
   untilTick: number;
+}
+
+/**
+ * A hull being walked along a route by a `transit` beat — `Commitment`'s
+ * shape for a scripted hull rather than a creature, with legs instead of one
+ * point. Where the route started is world state read on the tick the beat
+ * fired, so a replay walks the identical route.
+ */
+interface Transit {
+  legs: readonly MissionLeg[];
+  startTick: number;
+  startX: number;
+  startY: number;
 }
 
 export class MissionRuntime {
@@ -331,6 +367,14 @@ export class MissionRuntime {
   private readonly statuses = new Map<string, ObjectiveStatus>();
   private readonly startedAt = new Map<string, number>();
   private readonly commitments: Commitment[] = [];
+  /** Scripted hulls under a `transit` beat, by tag. A second beat replaces the first. */
+  private readonly transits = new Map<MissionTag, Transit>();
+  /**
+   * The player's own Sounding Spires holding an interval, rebuilt each pass
+   * from `pairedNodesOf` — the pairing pass's answer about this slot and no
+   * other, in the id space the snapshot reports structures in.
+   */
+  private pairedIds: ReadonlySet<number> = new Set();
   private readonly lines: MissionLine[] = [];
 
   /** Next unfired beat. Beats are authored sorted; `missions.test.ts` asserts it. */
@@ -423,7 +467,10 @@ export class MissionRuntime {
     // client to hide, because affordability is the server's answer.
     const economy = economyFor(world, this.definition.playerSlot);
     economy.nodules = this.definition.startingNodules ?? 0;
-    economy.crystal = 0;
+    // Crystal for the one mission that raises crystal-locked structures with
+    // no field to cut it from (docs/mission-standing-wave.md §3). Zero, like
+    // the nodules, unless the document says.
+    economy.crystal = this.definition.startingCrystal ?? 0;
     economy.biomass = 0;
 
     for (const party of this.definition.parties) {
@@ -639,7 +686,9 @@ export class MissionRuntime {
 
     this.fireDueBeats(world, sink);
     this.holdCommitments(world);
+    this.applyTransits(world, sink);
     this.resolveRoleIds(world);
+    this.pairedIds = pairedNodesOf(world, this.definition.playerSlot);
     this.applyLifts(world);
     this.applySoundings(world);
     this.applyAbility(world);
@@ -769,7 +818,8 @@ export class MissionRuntime {
       this.attendedTags.size,
       (tier) => exposedAtLeast(this.exposedByTier, tier),
       this.soundedIds.size,
-      this.turnedRows.size
+      this.turnedRows.size,
+      this.pairedIds
     );
   }
 
@@ -836,6 +886,20 @@ export class MissionRuntime {
       case 'release':
         this.heldUntil.delete(beat.tag);
         return;
+      case 'transit': {
+        const eid = this.eidOf(world, beat.tag);
+        if (eid === 0) return;
+        // Replaces, never joins — the `creature` beat's rule, and the whole
+        // point: a conditional transit south is how a scheduled walk north is
+        // cancelled (types.ts, `transit`).
+        this.transits.set(beat.tag, {
+          legs: beat.legs,
+          startTick: world.tick,
+          startX: Position.x[eid]!,
+          startY: Position.y[eid]!,
+        });
+        return;
+      }
       case 'ground': {
         const region = this.definition.regions.find((candidate) => candidate.id === beat.region);
         // A beat naming a region that does not exist is an authoring error, and
@@ -887,7 +951,12 @@ export class MissionRuntime {
         this.ring(world, () => true, this.definition.walk?.bell.ticks ?? 0);
         return;
       case 'say':
-        this.lines.push({ tick: world.tick, speaker: beat.speaker, text: beat.text });
+        this.lines.push({
+          tick: world.tick,
+          speaker: beat.speaker,
+          text: beat.text,
+          voice: beat.voice ?? voiceOf(this.definition.playerFaction),
+        });
         return;
       case 'resolve':
         // Deferred, not applied here. Beats fire before objectives are
@@ -993,6 +1062,55 @@ export class MissionRuntime {
   }
 
   // --- The mission's rules -------------------------------------------------
+
+  /**
+   * Walk every hull under a `transit` beat to where its route says it should
+   * be now, and drop the route once it is walked.
+   *
+   * Re-asserted every pass, the `holdCommitments` habit: one move order per
+   * hull per pass, idempotent, so a replay walks the same route. The order is
+   * to the point the route reaches one Echo interval from now rather than to
+   * this instant's point, so a hull ordered on a slow leg has somewhere to go
+   * rather than a point it is already standing on — it walks in short steps
+   * and idles between them, which is a column keeping station with a schedule
+   * (docs/mission-standing-wave.md §6).
+   */
+  private applyTransits(world: SimWorld, sink: MissionCommandSink): void {
+    if (this.transits.size === 0) return;
+    for (const [tag, transit] of this.transits) {
+      const eid = this.eidOf(world, tag);
+      if (eid === 0) {
+        this.transits.delete(tag);
+        continue;
+      }
+      let legStartTick = transit.startTick;
+      let fromX = transit.startX;
+      let fromY = transit.startY;
+      let target: { x: number; y: number } | null = null;
+      for (const leg of transit.legs) {
+        const legEndTick = legStartTick + leg.ticks;
+        if (world.tick + ECHO_TICK_INTERVAL < legEndTick) {
+          const t = Math.min(
+            1,
+            Math.max(0, (world.tick + ECHO_TICK_INTERVAL - legStartTick) / Math.max(1, leg.ticks))
+          );
+          target = { x: fromX + (leg.x - fromX) * t, y: fromY + (leg.y - fromY) * t };
+          break;
+        }
+        legStartTick = legEndTick;
+        fromX = leg.x;
+        fromY = leg.y;
+      }
+      if (target === null) {
+        // Every leg is walked. The last point is ordered once more so a hull
+        // that was idling short of it finishes, and the route is forgotten.
+        sink.applyMove(Owner.slot[eid]!, eid, fromX, fromY, false);
+        this.transits.delete(tag);
+        continue;
+      }
+      sink.applyMove(Owner.slot[eid]!, eid, target.x, target.y, false);
+    }
+  }
 
   /**
    * A tender moves only while an escort is close enough to hear for it.
@@ -1451,6 +1569,7 @@ export class MissionRuntime {
         tick: this.lastWorld.tick,
         speaker: ability.line.speaker,
         text: ability.line.text,
+        voice: ability.line.voice ?? voiceOf(this.definition.playerFaction),
       });
     }
     return true;
@@ -1879,7 +1998,10 @@ export class MissionRuntime {
   private deriveObjectives(world: SimWorld, own: EchoSnapshot): void {
     for (const objective of this.definition.objectives) {
       const status = this.statuses.get(objective.id) ?? objective.initial;
-      const standing = isStanding(objective.predicate);
+      // The predicate's own nature, or the author's say-so (types.ts,
+      // `MissionObjective.standing`) — either makes the row a sentence about
+      // now rather than a thing that happened.
+      const standing = isStanding(objective.predicate) || objective.standing === true;
       if (status === ObjectiveStatus.Failed) continue;
       if (status === ObjectiveStatus.Met && !standing) continue;
       // The clock an `endure` counts from is the mission's start whether or
@@ -1967,7 +2089,35 @@ export class MissionRuntime {
         this.filed && this.definition.sweep?.scene !== undefined
           ? [this.definition.sweep.scene]
           : [],
+      spent: this.spentCadre(),
     };
+  }
+
+  /**
+   * Which of the player's named hulls are gone, read off the world as it
+   * stands at the close.
+   *
+   * Off `lastWorld` because `resolve` has no world of its own — it is reached
+   * from `tick` and from `deriveObjectives`, both of which run after `tick`
+   * has stored the pass's world, so it is never null by the time anything
+   * resolves; the guard is for the type and not for a case. `eidOf` is the
+   * liveness test the rest of this file already trusts: `reap` removes a dead
+   * hull before the Echo tick the mission runs on, so a hull that died this
+   * step reads 0 here on the same pass. The definition consulted is the
+   * *fielded* one (`roster.ts`), so a hull the record already kept is not in
+   * the party and is not reported again — which is why the record's union
+   * never has to guard against it.
+   */
+  private spentCadre(): string[] {
+    const world = this.lastWorld;
+    if (world === null) return [];
+    const party = this.definition.parties.find((p) => p.slot === this.definition.playerSlot);
+    const lost: string[] = [];
+    for (const unit of party?.units ?? []) {
+      if (unit.cadre === undefined) continue;
+      if (this.eidOf(world, unit.tag) === 0) lost.push(unit.cadre);
+    }
+    return lost;
   }
 
   // --- The wire ------------------------------------------------------------
@@ -2018,6 +2168,7 @@ export class MissionRuntime {
       attended: this.attendedTags.size,
       exposedByTier: this.exposedByTier,
       sounded: this.soundedIds.size,
+      paired: this.pairedIds,
       debtS: this.debtS,
     };
     if (this.definition.walk !== undefined) {

@@ -6,7 +6,7 @@
  * a beat that names a hull nobody placed fails at `npm run type-check` rather
  * than half way through a match.
  *
- * A table, not a language. Nine predicates, eleven beat kinds, no expressions and
+ * A table, not a language. Ten predicates, twelve beat kinds, no expressions and
  * no variables. `sim/maps/types.ts` makes this argument about region shapes and
  * it holds harder here: a mission scripting language would be more expressive
  * than anything in `docs/` actually asks for, and the second mission is the
@@ -29,6 +29,7 @@ import type {
   MissionHeader,
   MissionMarker,
   MissionOutcome,
+  MissionVoice,
   ObjectiveStatus,
   ResolutionTier,
   StructureKind,
@@ -139,6 +140,24 @@ export interface MissionUnit {
   releaseTick?: number;
   /** Authored, and read out at the close. "Nine are out." */
   souls?: number;
+  /**
+   * The hull's name in the campaign's roster, stable across the missions that
+   * field it — docs/campaign.md §7 row 3, and the row docs/mission-nineteen.md
+   * §13 carries. A spent set is keyed on it and on nothing else.
+   *
+   * Not the tag, because a tag is per-mission: Nineteen seats `the-first`,
+   * Conclave seats `first`, The Three seats `ear-first`, and the document
+   * says all three are the same Corvette. Never an entity id, for `MissionTag`'s
+   * reason and one more — an id is recycled inside one process, and this name
+   * has to survive a browser, a reload and a week.
+   *
+   * Player-party hulls only, and `missions.test.ts` holds the literal to it: a
+   * spent set is the client's own memory of what its own force lost, and a
+   * cadre id on a scripted hull would give another party's roster a name the
+   * record could carry. Absent means this hull is nobody's to spend and
+   * nobody's to have spent — Sull's own hull, every Chorister, the watch.
+   */
+  cadre?: string;
   note: string;
 }
 
@@ -355,7 +374,42 @@ export type MissionPredicate =
    * figure, and a mission that let the player spend below it afterwards would
    * be a mission whose document said so.
    */
-  | { kind: 'deliver'; account: EconomyAccount; amount: number };
+  | { kind: 'deliver'; account: EconomyAccount; amount: number }
+  /**
+   * How many of a named structure kind the observer has *raised* and
+   * completed — the union's tenth row, and the one docs/mission-standing-wave.md
+   * §13 shipped ahead of: "a corridor stands at the close" was not writable
+   * until a predicate could ask whether a structure stands.
+   *
+   * It passes the wall test on `deliver`'s argument. A query over the
+   * observer's own force — `own.structures`, which is the same list their own
+   * HUD draws — naming an authored structure kind rather than a party, and
+   * there is still no way here to name a slot or to ask what anybody else has
+   * raised. A construction site does not count: the Order's first 750 is
+   * spent at placement and the node exists at commission.
+   *
+   * `paired` counts only nodes holding an interval — two Sounding Spires that
+   * `standingWaveSystem` paired, which is the pairing pass's output rather
+   * than a structure query, and the reason the flag exists (§13: "the count
+   * the objective wants is *paired* nodes"). A corridor is two paired nodes,
+   * so "a corridor stands" is `count: 2, paired: true`. `detuned` narrows
+   * further to paired nodes under `STANDING_WAVE.DETUNE_HP_FRACTION` of their
+   * hull — §8's second warning, "the interval is sour" — and reads as
+   * own-force information for the reason `survive` does: the hp of the
+   * player's own structures is already on their own snapshot. Both flags are
+   * the player's own nodes and nobody else's line.
+   *
+   * Monotone in neither direction and not made so: a node can fall, and the
+   * status an objective derives from it is latched by `deriveObjectives`
+   * unless the objective is authored `standing`.
+   */
+  | {
+      kind: 'build';
+      structure: StructureKind;
+      count: number;
+      paired?: true;
+      detuned?: true;
+    };
 
 /**
  * The three accounts of the per-player economy record — `world.ts`'
@@ -555,6 +609,18 @@ export interface MissionWalk {
 }
 
 /**
+ * One leg of a `transit` beat's route: where the hull is going next, and how
+ * many ticks it has to get there. Straight lines between authored points on
+ * the cell grid, like every other place a mission names.
+ */
+export interface MissionLeg {
+  x: number;
+  y: number;
+  /** Ticks from the end of the previous leg — or the beat firing — to arrival. */
+  ticks: number;
+}
+
+/**
  * A region held by somebody who is not the player, for long enough that the
  * mission says so — docs/mission-convocation.md §8's one failure state.
  *
@@ -681,7 +747,7 @@ export interface MissionCommanderAbility {
    * it" is a query over the commander. So the line rides the act, which is the
    * thing that happened.
    */
-  line?: { speaker: string; text: string };
+  line?: { speaker: string; text: string; voice?: MissionVoice };
   note: string;
 }
 
@@ -732,6 +798,39 @@ export interface MissionObjective {
   markerId?: string;
   /** Met means the mission is complete outright, not merely progressed. */
   terminal?: boolean;
+  /**
+   * Re-derived on every pass rather than latched — a sentence about now, in
+   * the author's judgement rather than the predicate's.
+   *
+   * `isStanding` makes `quiet` and `survive` standing because those shapes
+   * always are. `extract` is not, and mostly should not be: a tender that
+   * reached the Concourse reached it. docs/mission-standing-wave.md §8 is the
+   * row that needed the author's say: "all six hulls are in the North Gallery
+   * at the close" is measured at the close, and the six are *seated* in the
+   * Gallery at 00:00 — latched, the withdrawal would read met before anybody
+   * had left and the corridor's closing would end the mission with the works
+   * still standing in it. Standing, it is met while they are north and not
+   * otherwise, which is what the sentence says.
+   */
+  standing?: true;
+  /**
+   * The rule's other readings, keyed on the player's own force — the
+   * "Objective readings, in play" a document lists that are neither the
+   * silence ledger's (`debtText`) nor the walk's (`stallText`).
+   *
+   * The first entry whose predicate holds is shown in place of `text`, judged
+   * by the same `isMet` an objective is, so a reading can key on exactly what
+   * an objective can and on nothing more: docs/mission-standing-wave.md §12
+   * reads *One voice. A voice is not an interval* while one node stands
+   * unpaired and *The interval is sour* while a paired node is detuned, and
+   * both are `build` predicates over the player's own structures. Authored
+   * in the order they should win — the sour reading is listed before the
+   * held one, because a held interval that is going flat is going flat.
+   *
+   * Two readings of one rule, never a second objective: the ask has not
+   * changed, which is `debtText`'s argument and holds here unchanged.
+   */
+  states?: readonly { when: MissionPredicate; text: string }[];
   /**
    * The two readings the close may enter for this objective — met or unmet at
    * the moment the mission resolves.
@@ -830,6 +929,37 @@ export type MissionBeatEffect =
   | { kind: 'lose'; tag: MissionTag; note: string }
   | { kind: 'release'; tag: MissionTag; note: string }
   /**
+   * Drive one scripted hull along a route at the route's own pace — the
+   * "legs and windows" docs/mission-standing-wave.md §6 authors the column's
+   * walk as, and the beat the `move` beat could not be for it.
+   *
+   * A `move` orders a hull somewhere at the hull's speed and the runtime
+   * forgets it; a column that has to take sixteen minutes over four kilometres
+   * would be sixteen minutes of `move` beats, and the moment a mission wants
+   * that walk *cancelled* — Adze reading a corridor and turning for the Seam
+   * (§9) — a schedule cannot be cancelled by a condition, because a schedule
+   * is a cursor. So a transit is one beat for the whole route: the runtime
+   * re-asserts, on every pass, an order to where the route says the hull
+   * should be now, and a second transit for the same tag **replaces** the
+   * first outright — the `creature` beat's rule, for its reason. The turn is
+   * therefore a conditional transit south, and it cancels the walk north by
+   * being the walk now.
+   *
+   * Each leg is a point and how long the hull takes to reach it from wherever
+   * the previous leg ended; the first leg is measured from where the hull is
+   * on the tick the beat fires. Durations rather than ticks, so a route reads
+   * the same whether the clock or a condition fired it. A hull ordered to a
+   * point along a slow leg arrives early and idles, and emits what an idle
+   * hull emits — which is the column §6 describes, unhurried and quieter as
+   * it comes.
+   */
+  | {
+      kind: 'transit';
+      tag: MissionTag;
+      legs: readonly MissionLeg[];
+      note: string;
+    }
+  /**
    * Write the ground under a named region (#197), and what the water over it
    * sounds like (#259).
    *
@@ -890,7 +1020,17 @@ export type MissionBeatEffect =
    */
   | { kind: 'bell'; note: string }
   | { kind: 'objective'; id: string; status: ObjectiveStatus; note: string }
-  | { kind: 'say'; speaker: string; text: string; note: string }
+  /**
+   * `voice` is the register the line is spoken in (docs/culture.md §3); absent
+   * is the player's own faction's, which is most lines in every mission.
+   * Authored on the minority spoken by somebody else — the Consortium
+   * surveyor on the Order's works channel, the plateaus' charting pair heard
+   * from a Directorate lip — so the mix can hail each in its own material
+   * (docs/audio-direction.md §13) rather than in the player's. A speaker that
+   * is the mission's own water talking ("The ground", "The turning", "The
+   * lattice") carries none and speaks as the player does.
+   */
+  | { kind: 'say'; speaker: string; text: string; voice?: MissionVoice; note: string }
   /**
    * `conclusion` marks a close that is not a failure state: the tide ending,
    * not a timer running out (docs/glossary.md, *Mission Outcome*;
@@ -1007,6 +1147,46 @@ export interface MissionSweep {
 }
 
 /**
+ * A mission's own rules for what the player builds — docs/mission-standing-wave.md,
+ * the first mission with anything built in it, and the two findings its
+ * transcription made about the build path.
+ *
+ * Both are optional and both are gated on a mission authoring them, so a
+ * skirmish is untouched: `Match.build` reads this through the runtime and a
+ * skirmish has no runtime.
+ */
+export interface MissionWorks {
+  /**
+   * A site may only be placed within this range of one of the player's own
+   * hulls — the works party has to be at the works.
+   *
+   * The engine has no builder hull: a structure is a command with a position,
+   * and anywhere inside the build radius of an own structure is buildable
+   * from anywhere on the map. docs/mission-standing-wave.md §8 names the
+   * breach that makes for a mission about withdrawal — a line laid "somewhere
+   * no Knight hull ever needed to be" — and this is the smallest rule that
+   * closes it: a site needs a hull beside it, so the line is laid from inside
+   * the ground it makes lethal and the six have to come back out.
+   */
+  hullRadiusM?: number;
+  /**
+   * Sited structures sit on the floor where they are placed rather than at
+   * `CONSTRUCTION.WORKING_DEPTH_M`.
+   *
+   * §13's "a player-built structure sits at 600 m, wherever the ground is",
+   * scoped to the mission rather than fixed for the world — and the reason is
+   * the thermocline, not timidity. The skirmish maps seat every structure at
+   * 600 m over floors of 1,400–2,900 m with the layer between the two, so a
+   * global change would move every skirmish structure across the duct and
+   * re-price every pair in every match. On the Fifth the works are the
+   * mission, the whole map is below the layer, and a node at 600 m would be
+   * heard through the duct at 0.3 by the hulls it is meant to close the water
+   * over — which is worse than rendering above the rim.
+   */
+  onFloor?: true;
+}
+
+/**
  * One mission, whole.
  *
  * Extends the public `MissionHeader`, spread into the literal so the shell's
@@ -1048,6 +1228,21 @@ export interface MissionDefinition extends MissionHeader {
    */
   runsItsLength?: true;
   /**
+   * Hulls of the player's party lost in this mission are spent for the rest
+   * of the campaign — docs/campaign.md §7 row 3, "Every unit lost in this
+   * mission is gone for the rest of the campaign". The record keeps them by
+   * `cadre`, and a later mission that fields a spent cadre id does not seat
+   * that hull (`roster.ts`, `fieldDefinition`).
+   *
+   * Opt-in, and authored on exactly one mission, because
+   * docs/mission-standing-wave.md §10 argues at length that a mission 2 which
+   * made hulls unreplaceable "would have spent mission 3 to make its own last
+   * five minutes tenser": the loss is Nineteen's lesson, and every other
+   * Knights mission has a lesson of its own. Omitted is the standing rule —
+   * a hull lost here is lost for this tide and no further.
+   */
+  attrition?: true;
+  /**
    * Nodules the player opens with. Omitted is none.
    *
    * A skirmish opens on `ECONOMY.STARTING_NODULES`, which is the right answer
@@ -1055,6 +1250,23 @@ export interface MissionDefinition extends MissionHeader {
    * what it wants, and most of them want nothing.
    */
   startingNodules?: number;
+  /**
+   * Resonance Crystal the player opens with. Omitted is none.
+   *
+   * `startingNodules`' sibling, and the narrow fix docs/mission-standing-wave.md
+   * §13 asked for: the Sounding Spire is crystal-locked at 120 and the one
+   * mission built around raising them has no crystal field and no reason to
+   * put one there (§3). A record of three accounts would be the alternative,
+   * and that is more change than one mission should ask a definition for.
+   */
+  startingCrystal?: number;
+  /**
+   * How construction behaves in this mission, where it differs from a
+   * skirmish's — see `MissionWorks`. Omitted is a skirmish's rules, which is
+   * every mission that locks construction and every mission that does not
+   * care.
+   */
+  works?: MissionWorks;
   /**
    * docs/campaign.md §10 — the loudness the mission is tuned for.
    *

@@ -280,10 +280,11 @@ A mission map is authored the same way — a literal, regions painted in order �
 | The Third's Outer Formations | `outer-formations` | #298 | 5,000 × 4,000 m. Crystal country with no cover in it, and one strip that carries — [mission-aptitude.md](mission-aptitude.md) §11 |
 | The Kell Shoulder | `kell-shoulder` | #212 | 5,000 × 3,000 m. Four kilometres of bare rock between two gardens, and a corridor across it — [mission-thin-water.md](mission-thin-water.md) §11 |
 | The Banding Ground | `banding-ground` | #212 | 5,000 × 4,000 m. The upper Ninth above Sufficiency, eight animals on its walls, and one line across the bench — [mission-intake.md](mission-intake.md) §11 |
+| The Fifth | `the-fifth` | #382 | 5,000 × 4,000 m. A crystal defile a kilometre wide, a trench at its south mouth, and a works order to close it — [mission-standing-wave.md](mission-standing-wave.md) §11 |
 
 **Each is specified in full in its own mission document** — regions, floors, the single spawn and the parties the mission seats around it — and that document, not this one, owns those numbers. The literals say so themselves: every one carries a `doc` field pointing back at its §11 *and* at this table, so a map and its row are meant to be read together.
 
-Every mission map the bible specifies now exists but one: Standing Wave's `the-fifth`, which [mission-standing-wave.md](mission-standing-wave.md) §11 specifies and whose §13 is a design agenda before it is a build list. The table above lists what exists.
+Every mission map the bible specifies now exists. The last to land was Standing Wave's `the-fifth` (#382), whose §13 was a design agenda before it was a build list; the table above lists all of them, though not every literal has a row of its own — the six that reuse another mission's map region for region are listed under the map they reuse.
 
 Sorrowgate is cut from Map Type 5's shape, which is what that archetype's *Ideal Use* line asks of it; it is not a Sunken Metropolis, and Map Type 5 stays *Not yet* in the archetype table, because ticking it would promise a four-seat competitive layout that nobody has written. The three that followed it are cut from no archetype at all — a mission map answers to its mission, and none of these four could be offered to a player choosing a map.
 

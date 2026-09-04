@@ -31,6 +31,7 @@ import { NINEFOLD_WORKINGS } from './missions/ninefoldWorkings.ts';
 import { OUTER_FORMATIONS } from './missions/outerFormations.ts';
 import { SHALLOW_BAND } from './missions/shallowBand.ts';
 import { SORROWGATE } from './missions/sorrowgate.ts';
+import { THE_FIFTH } from './missions/theFifth.ts';
 import { THE_FIRST } from './missions/theFirst.ts';
 import { THE_REST } from './missions/theRest.ts';
 import { UPPER_TERRACES } from './missions/upperTerraces.ts';
@@ -56,6 +57,7 @@ export {
   OUTER_FORMATIONS,
   SHALLOW_BAND,
   SORROWGATE,
+  THE_FIFTH,
   THE_FIRST,
   THE_REST,
   UPPER_TERRACES,
@@ -111,6 +113,9 @@ export const MISSION_MAPS: readonly MapDefinition[] = [
   UPPER_TERRACES,
   THE_REST,
   THE_FIRST,
+  // The last of the twenty-nine, and the Order's crystal defile — the map
+  // whose mission asked the format for the most (docs/mission-standing-wave.md §13).
+  THE_FIFTH,
 ];
 
 export function missionMapById(id: string): MapDefinition | undefined {

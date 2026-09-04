@@ -189,6 +189,39 @@ export interface SimWorld extends IWorld {
    */
   commanderSilentImmune: Set<number>;
   /**
+   * Standing Wave corridors — docs/systems-echo.md §7, and the mission that
+   * teaches them (docs/mission-standing-wave.md §4).
+   *
+   * Each is two Sounding Spires that paired, by **match-local id** rather than
+   * by entity id, for the reason every other cross-tick handle in this world
+   * is: bitecs recycles ids, and a corridor keyed on one would quietly re-form
+   * between a dead node and whatever inherited its id. Written by
+   * `standingWaveSystem` and by nothing else; read by the PF rebuild, by
+   * acoustics through `spireActive`, and by the mission runtime for its own
+   * player's nodes. Empty in every match that raises no Spire.
+   */
+  corridors: { a: number; b: number }[];
+  /**
+   * Every node that has ever paired, by match-local id — the "decided once"
+   * half of §4's rule. A node stays in here after its partner dies, which is
+   * what stops a third node inheriting the dead one's place and swinging a
+   * kill-line across ground somebody was standing on.
+   */
+  pairedNodes: Set<number>;
+  /**
+   * Every Sounding Spire this world has seen *under construction*, by
+   * match-local id — and therefore the only ones that will ever complete.
+   *
+   * §4's rule is "at the moment it completes", and a prebuilt structure skips
+   * the construction path it would have to finish to be offered a partner.
+   * docs/mission-rim-deposits.md §4 and docs/mission-conclave-chord.md §3
+   * both seat Spires inside pairing range of each other on exactly that
+   * reading — two grants raised at one turn of one tide are not an interval
+   * — so the pass keeps the set rather than inferring it, and a lattice cut
+   * thirty years ago hums at 30 all tide.
+   */
+  nodeSites: Set<number>;
+  /**
    * The simulation's only source of randomness. Seeded per match and part of
    * simulation state — see sim/rng.ts. Nothing in sim/ may call Math.random().
    */
@@ -381,6 +414,9 @@ export function createSimWorld(
   world.regionPressureBonus = [];
   world.commanderHaste = new Map();
   world.commanderSilentImmune = new Set();
+  world.corridors = [];
+  world.pairedNodes = new Set();
+  world.nodeSites = new Set();
   world.rng = new Rng(seed);
   world.localOfEid = new Map();
   world.eidOfLocal = new Map();

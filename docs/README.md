@@ -101,51 +101,38 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 
 One forward reference remains: `concept-art/DESIGN-PHILOSOPHY.md`, linked from the root README, which would set out the Pressure Cartography visual language behind the four survey plates.
 
-The prologue and twenty-eight of the campaign's twenty-nine missions are built; one mission and
-a good deal of what stands behind the campaign are not. What follows is designed, or already
-stated in a doc that ships, and unbuilt — named in plain text except where a document already
-points at it:
+The prologue and all twenty-eight of the campaign's missions are built — a document of record,
+a literal, a map and a test file each — and so are the four systems that stood behind them:
+the progression record, the "already seen" briefing variants that read it, Drift Health carried
+between missions on one map, the roster a mission spends, and a voice under every line
+([campaign.md](campaign.md) §11 is the row-by-row account). The last mission to land was
+[mission-standing-wave.md](mission-standing-wave.md) (#382), whose §13 was a design agenda before
+it was a build list and which asked the format for its last three things: a predicate over what
+the player has built, a beat that walks a route, and a rule that a site needs the works beside
+it. What follows is designed, or already stated in a doc that ships, and unbuilt — named in plain
+text except where a document already points at it:
 
-- **One mission left without a literal, and it is *Standing Wave*.**
-  campaign.md §5–§7 used to give the campaign's missions titles, teaching targets and beats,
-  which is not a specification. Each needed a document of its own — one doc per mission, the
-  pattern mission-sorrowgate.md sets — before it needed code. **All twenty-nine now have one,
-  and twenty-eight have a literal, a map and a test file that plays the mission rather than
-  reading it.** The Ledger is built end to end, the Commune's seven are, the Directorate's seven
-  are, and the Order has six of its seven: *Aptitude*, *Nineteen*, *Conclave*, *The Three*,
-  *The Rim Deposits* and *The Second Chord*.
-
-  [mission-standing-wave.md](mission-standing-wave.md) is the hole in the middle of that
-  campaign, and it asks loudest: `chord-standing-wave` and the `the-fifth` map are unbuilt, and
-  its §13 names a predicate the objective union does not carry — what the player has *built*.
-  The two design calls it explicitly refused to make alone were made (#372): the corridor keeps
-  PF 2.0, carried by a ceiling the terrain reports about itself so that only a standing corridor
-  pays for it, and the build radius is 1,500 m — the pairing range — for every structure. What
-  is planned here is that one mission, and the systems below it.
-
-  The fourteen documents written ahead of their literals cost the format less than the first
-  four did. They asked for three things, all in #391: `MissionRegion.pressureBonus`, a rectangle
-  of water that rates every hull standing in it over its own PR; the same field on the `ground`
-  beat, so a grant can be turned on at a tick without repainting water; and `holdsMovement`
-  honouring a hull named by a `MissionHold` whether or not it is escorting anything, which was a
-  latent bug — a hold could be authored and silently never enforced. Everything else they needed
-  had already shipped: the condition-fired beat, the exposure tally, the aimed hold, the
-  `deliver` predicate over any of the economy's three accounts (#330), the walk, the restart and
-  the commander ability (#373), the `bell` beat (#385), and the progression record (#371) with
-  its seen-scene set (#378). What the fourteen mostly found was arithmetic in their own prose,
-  and the documents were mostly the side that moved — which is what a §13 written ahead of a
-  literal is for.
-- **Permanent roster attrition.** Knights mission 3, *Nineteen*, spends units for the rest of a
-  campaign. Today nothing outlives the match it was built in — except the progression record,
-  which is where a spent roster would go, beside `missions`, the seen-scene set and the per-map
-  Drift grid that cross-mission Drift Health added (#379 — campaign.md §11 and
-  [bestiary.md](bestiary.md) §6 carry that account; it is built, and it is the evidence that the
-  sibling-key shape holds).
-  [mission-nineteen.md](mission-nineteen.md) §13 is the document that asks for it, and the three
-  Order documents after it each seat their hulls whatever the last tide cost and say so in their
-  own §13 rather than implying a carry the format does not have.
-- **In-mission character speech.** No channel carries a character's line while a mission is
-  running, which is why Sorrowgate's four voices in the water are written and not heard.
+- **A canyon that rings at a fifth, and a corridor that changes what it rings *as*.**
+  [mission-standing-wave.md](mission-standing-wave.md) §13's last row, and the audible half of
+  its detune: a paired node under forty per cent of its hull reads *The interval is sour* on the
+  panel, and the mix has the node's hp and the Fields' tuned bed to write a flat interval over,
+  and [audio-direction.md](audio-direction.md) has not yet said what a fifth going flat sounds
+  like. The first place a player-placed interval is written over a biome's bed, and the most
+  interesting problem the campaign has posed the mix.
+- **A Knight hull in the roster.** [units.md](units.md) has no Knight entry, so every Order
+  mission fields generic hulls flying Knight colours and says so; a real Knight hull's cone
+  figure is expected to run about 2.2× a comparable hull's so that the compass average lands at
+  parity ([systems-echo.md](systems-echo.md) §8). A roster gap rather than a code one, and every
+  distance the Order's seven documents quote moves outward together when it is filled.
+- **Resonance Field 0.70 as *scattered*** — bearings that lie, pings that return phantoms
+  ([environments.md](environments.md)). No mission relies on it; a Standing Wave corridor
+  raising PF inside scattered water is the first place the unmodelled half would have a
+  second-order effect, and nobody should add it and assume the Fifth's tables survived.
+- **A voice cast.** The speech channel ships as a hail in the speaker's register and a murmur
+  under the words, and the words are the log's ([audio-direction.md](audio-direction.md) §13).
+  Recorded lines, or a per-speaker voice, are a call that document has deliberately not made;
+  the chair's transmission line, Korrin's silence and Varr-Kest's two conditional lines are the
+  three debts the mission documents name against it.
 
 Deferred design questions, parked here as plain text until decided:
 

@@ -77,7 +77,7 @@ export const DEFAULT_SETTINGS: Settings = {
   version: 1,
   profileName: '',
   masterVolume: 1,
-  busVolumes: { music: 1, world: 1, contact: 1, self: 1, ui: 1 },
+  busVolumes: { music: 1, world: 1, contact: 1, speech: 1, self: 1, ui: 1 },
   contactBoostDb: 0,
   mono: false,
   visualFirst: false,
@@ -117,6 +117,9 @@ function sanitise(raw: unknown): Settings {
       music: clamp01(buses.music, 1),
       world: clamp01(buses.world, 1),
       contact: clamp01(buses.contact, 1),
+      // A record written before the speech bus existed loads it at unity,
+      // like every bus: a player who never touched the slider hears the lines.
+      speech: clamp01(buses.speech, 1),
       self: clamp01(buses.self, 1),
       ui: clamp01(buses.ui, 1),
     },

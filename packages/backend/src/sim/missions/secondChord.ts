@@ -249,10 +249,19 @@ const CHORD = { x: 4800, y: 3150 };
  * colours on generic hulls and the directional figures are Aptitude's. Two
  * torpedoes apiece at 700 damage, which is the arithmetic §3 states rather than
  * pretends nobody did — the dome is 1,200 HP and dies to two of them.
+ *
+ * `cadre` is the hull's name in Nineteen's roster (`nineteen.ts`, `hull`), and
+ * only the escort pair carries one: `escort-a` and `escort-b` are the raid's
+ * escort under the raid's own tags (`rimDeposits.ts`), so they are the Fourth
+ * and the Fifth there and here. The two carriers carry none. §3 gives them a
+ * load each and no name, and a hull the document does not identify with one of
+ * the six is not a hull the record can have spent — so they are seated
+ * whatever the Rest kept, the way the Choirmaster's own hull is.
  */
 const corvette = (
   tag: string,
   role: string,
+  cadre: string | undefined,
   x: number,
   y: number,
   note: string,
@@ -264,6 +273,7 @@ const corvette = (
   y,
   depthM: STAGING_DEPTH_M,
   role,
+  ...(cadre === undefined ? {} : { cadre }),
   armed: true,
   ...(releaseTick === undefined ? {} : { releaseTick }),
   souls: 5,
@@ -723,6 +733,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
           y: 450,
           depthM: STAGING_DEPTH_M,
           role: 'escort',
+          cadre: 'voice',
           armed: true,
           souls: 12,
           note: "Voice Ren Kalliso's hull: the ears at HYD 65, the 900 m gun at 60 damage a second, and — the rim being weapons-cold (finding 1) — one of only five guns in this water, all five of them the Order's and none of them aimed at anything. Nothing on this rim answers them, which is the shape §1 describes: the rank corrects by standing there and filing it",
@@ -730,14 +741,23 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
         corvette(
           'carrier-a',
           'carrier',
+          undefined,
           2900,
           600,
           "The first carrier, seated inside `the-cache`: `load-one` rigs on the first pass. 2,802 m from the nearest corner of the Chord's water — `carrier-b` is §13's round 2,700 at 2,693 — which is why the keystone cannot latch at tick zero (§13)"
         ),
-        corvette('carrier-b', 'carrier', 3100, 600, 'The second carrier, carrying `load-two`'),
+        corvette(
+          'carrier-b',
+          'carrier',
+          undefined,
+          3100,
+          600,
+          'The second carrier, carrying `load-two`'
+        ),
         corvette(
           'escort-a',
           'escort',
+          'fourth',
           2700,
           450,
           '335 m from the Choirmaster, and free from the first tick. The hull that holds the lip'
@@ -745,6 +765,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
         corvette(
           'escort-b',
           'escort',
+          'fifth',
           3300,
           450,
           '335 m from the Choirmaster on the other side, and held to 15:30 beside her — a tender with no escort inside 600 m does not move, so this is the hull that brings her down. Held by tag rather than by role, which the runtime now honours (finding 2 in the file header)',
@@ -1116,7 +1137,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
       kind: 'say',
       speaker: 'Choirmaster Ivane Sull, the order to descend',
       text: 'The interval is at seventeen. The lattice comes down at sixteen; I come down at half past fifteen and I am over the slopes when it goes. Set the crystal and hold the lip. Descend.',
-      note: '1,250 m at 45 m/s is 27.8 seconds at a SIG floor of 72, and each node goes to 80 the tick a hull is under it below its own rating. Read, not heard — the standing status of the say channel',
+      note: '1,250 m at 45 m/s is 27.8 seconds at a SIG floor of 72, and each node goes to 80 the tick a hull is under it below its own rating. Hailed and read — the say channel since #381',
     },
 
     // 02:30 — the northern row musters in step on the lip. Six Choristers
@@ -1164,6 +1185,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
       atTick: T(4, 30),
       kind: 'say',
       speaker: 'Cohort-Prime Adze, 9th Trench Cohort',
+      voice: 'cohorts',
       text: 'Correction is filed against the node on the lip. It was entered when it rose and stood into nothing; it stands into the watch now. What was set into it is counted. What is under it is corrected at what leaves.',
       note: 'Filed in the passive, and it never says who is being corrected. Adze is correct in every word of it, and the debt the transmission is entered against is not stated (§5)',
     },
@@ -1173,6 +1195,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
       atTick: T(6),
       kind: 'say',
       speaker: 'The charting pair, for the plateaus',
+      voice: 'plateaus',
       text: "We're still here, on the terraces. We'd like it in somebody's record that we asked nothing of the rim and it asked nothing of us. We think you're about to ask it something.",
       note: 'Refuses the imperative twice and offers a distinction where anybody else would put a request',
     },
@@ -1182,6 +1205,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
       atTick: T(8),
       kind: 'say',
       speaker: 'Watch-Speaker, for those below',
+      voice: 'cohorts',
       text: 'The rim is attended. Three nodes are entered. The third was entered when it was raised and was not corrected, because a node with nothing under it is a silence, and silence is attended too.',
       note: '',
     },
@@ -1367,6 +1391,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
     {
       kind: 'say',
       speaker: 'Watch-Speaker, for those below',
+      voice: 'cohorts',
       text: 'Entered: the Order on the lip, at length, under a node, with something set into it.',
       note: 'In practice about 00:30, before the party has finished descending: three structures at SIG 30, one of them 320 m from a Cantor, spend thirty cumulative seconds of Classification before anything of the Order’s is in Abyssal water (§8)',
       when: { kind: 'tolerance', ticks: COUNT_TICKS, tier: ResolutionTier.Classification },

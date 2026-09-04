@@ -617,7 +617,7 @@ campaigns" row carries where the queue stands now.
 | **Jettison** — a load a hull can drop to move faster | **Not built, and deliberately not asked for.** `MissionLift` is hold-and-cut and rides its carrier to the end; there is no drop. §8's alternative reading is the mission that would need it, and this document chose the other reading partly so that a design question would not arrive disguised as a missing mechanism |
 | Filed → this mission's briefing variant | **Built** (#378), and it is the first of the two pairs the campaign had written ahead of the mechanism. The variant is §12's, transcribed into `SEEDING_THIN_WATER_HEADER.briefingVariants` and selected client-side off the seen-scene set in the progression record, so the room is never told which briefing was read — and cannot be, because [campaign.md](campaign.md) §1 says a scene changes the text and never the mission. What *Tend* writes is the scene `marr-plateau-filed`, latched with the same condition as the filed reading it is the machine-readable half of, so the id the client stores is a sentence the player has already been shown |
 | Commune escorts as a distinct hull | Not needed — the Corvette in [units.md](units.md) with the Commune's faction values is what §3 fields. Nothing here asks for a new roster entry |
-| In-mission character speech, heard | Text only, the standing status ([mission-sorrowgate.md](mission-sorrowgate.md) §13) |
+| In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line |
 
 ---
 

@@ -778,12 +778,13 @@ opened at all: §1's unlock rule is one rung, the prologue, and after it nothing
 slot that is `unbuilt` is refused by not having a mission behind it, never by being locked,
 so the two are independent and the board never has to render a fourth state.
 
-The board now renders twenty-eight of its twenty-nine slots against a mission that exists, and
-the twenty-ninth — *Standing Wave*, the Order's second — against nothing, which is the state
-the `unbuilt` rendering was written for and had never actually been asked to show mixed in
-among live ones. What that proves is the thing worth having: the dimming is a property of the
-slot rather than of the board's emptiness, so a campaign column with one hole in the middle of
-it reads correctly without a fourth state.
+The board now renders all twenty-nine slots against a mission that exists. For a while it
+rendered twenty-eight, with the twenty-ninth — *Standing Wave*, the Order's second — against
+nothing, which was the state the `unbuilt` rendering was written for and had never actually
+been asked to show mixed in among live ones. What that proved is the thing worth having: the
+dimming is a property of the slot rather than of the board's emptiness, so a campaign column
+with one hole in the middle of it reads correctly without a fourth state — and when the hole
+closed (#382) the slot lit itself off the catalogue, with nothing on this screen touched.
 
 #### Keyboard
 
@@ -837,7 +838,7 @@ the screen, not a technology.
 | Control | Range | Wires to |
 | --- | --- | --- |
 | Master volume | 0–100% | Master gain, composed under the −18 LUFS / −1 dBTP targets in [audio-direction.md](audio-direction.md) §12 |
-| Music · World · Self · UI | 0 dB max | Per-bus trims ([audio-direction.md](audio-direction.md) §11 — independent buses) |
+| Music · World · Self · Speech · UI | 0 dB max | Per-bus trims ([audio-direction.md](audio-direction.md) §11 — independent buses; Speech is the voice in the water, §13) |
 | Contacts | up to **+12 dB** | The one boostable bus, per the same section; the boost trades headroom for audibility and is capped so the true-peak target survives |
 | Mono audio | toggle | The mix's existing mono spatialisation — a rendering choice, never a loss (§11) |
 | Visual-first | toggle | Removes the §1.3 fade-in delay so marks arrive at ≤ 30 ms (§11) |

@@ -216,8 +216,12 @@ Hadron Spire / Sounding Spire (Structure — Knights)
 
 - Role: Projected depth access / resonance node
 - SIG: 30 idle hum (tunable) / 80 when active — "active" means the depth grant is
-  load-bearing: some allied unit under the aura is genuinely below its own PR. Deep
-  play under a spire is never quiet; that is the price of rented depth.
+  load-bearing (some allied unit under the aura is genuinely below its own PR) **or an
+  interval is held**: a Spire paired into a Standing Wave corridor sings at 80 from both
+  ends for as long as the corridor stands, whatever is under it
+  ([mission-standing-wave.md](mission-standing-wave.md) §4 — a hazard nobody can hear is
+  confusion, not dread). Deep play under a spire is never quiet; that is the price of
+  rented depth, and a kill-line announces itself for the same reason.
 - PR: 2
 - Cost: 750
 - Build time: 150s

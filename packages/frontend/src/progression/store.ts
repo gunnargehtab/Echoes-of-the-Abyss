@@ -33,6 +33,7 @@ import {
   MissionOutcome,
   missionHeaderById,
   validDriftCarry,
+  type CampaignId,
   type MissionResultPayload,
 } from '@echoes/shared';
 
@@ -108,11 +109,32 @@ export interface Progression {
    * withheld.
    */
   drift: Record<string, number[]>;
+  /**
+   * The hulls each campaign has spent — docs/campaign.md §7 row 3, and the
+   * second of the three sibling keys this record was shaped to receive.
+   *
+   * Keyed by campaign id and then by cadre id (`MissionUnit.cadre` on the
+   * server, an authored roster name and never an entity id), each inner
+   * value a set spelled as a record of `true` for `scenes`' reason. Two
+   * levels rather than one flat set because a cadre id is a *campaign's*
+   * word: the Order's `first` and whatever a Ledger campaign one day calls
+   * its own first hull must not collide, and a record that mixed them would
+   * spend one navy's loss on another.
+   *
+   * **Written only from a `missionOver` that carries `spent`**, which only a
+   * mission authoring attrition sends, so every id here is one the player
+   * watched die and heard read out at the close — nothing the server withheld.
+   * Unioned and never replaced: a spent hull is never un-spent, by a better
+   * run, a reconnect's replayed conclusion, or anything else. Absent in a
+   * record written by a build that predates this key, and `sanitise` reads
+   * that as nothing spent.
+   */
+  spent: Record<string, Record<string, true>>;
 }
 
 /** An empty history — what a first boot, a cleared browser or a bad read gives. */
 export function emptyProgression(): Progression {
-  return { version: 1, missions: {}, scenes: {}, drift: {} };
+  return { version: 1, missions: {}, scenes: {}, drift: {}, spent: {} };
 }
 
 function isOutcome(value: unknown): value is MissionOutcome {
@@ -179,7 +201,29 @@ function sanitise(raw: unknown): Progression {
     if (valid !== null) drift[mapId] = valid;
   }
 
-  return { ...record, version: 1, missions, scenes, drift } as Progression;
+  const storedSpent =
+    typeof record.spent === 'object' && record.spent !== null
+      ? (record.spent as Record<string, unknown>)
+      : {};
+
+  // Campaign by campaign and then id by id, under `scenes`' rule at both
+  // levels: a campaign whose entry is not an object drops that campaign and
+  // no other, and inside one, anything but `true` drops that one id. A
+  // hostile or half-written record can therefore un-spend a hull, which is
+  // the one direction a corrupt read can be wrong in without costing the
+  // player anything they earned — a fuller roster is a gift, and the room
+  // cannot tell the difference anyway (`roster.ts`, `validateSpent`).
+  const spent: Record<string, Record<string, true>> = {};
+  for (const [campaign, ids] of Object.entries(storedSpent)) {
+    if (typeof ids !== 'object' || ids === null) continue;
+    const kept: Record<string, true> = {};
+    for (const [id, flag] of Object.entries(ids as Record<string, unknown>)) {
+      if (flag === true) kept[id] = true;
+    }
+    spent[campaign] = kept;
+  }
+
+  return { ...record, version: 1, missions, scenes, drift, spent } as Progression;
 }
 
 export function loadProgression(): Progression {
@@ -233,6 +277,21 @@ export function recordMissionResult(result: MissionResultPayload): Progression {
     if (valid !== null) drift[result.driftCarry.mapId] = valid;
   }
 
+  // The same union, one level down, into the campaign the mission belongs to
+  // — resolved from the header rather than carried on the payload, so the
+  // wire says which hulls and the shell says whose. A payload naming a
+  // mission this build cannot place is stored above and spends nothing here:
+  // there is no campaign to charge. A payload with no `spent` at all — every
+  // mission that does not author attrition — leaves the set untouched, which
+  // is the whole of "lose one in a mission with attrition off; it returns".
+  const spent = { ...current.spent };
+  const campaign = missionHeaderById(result.missionId)?.campaign;
+  if (campaign !== undefined && result.spent !== undefined && result.spent.length > 0) {
+    const charged = { ...spent[campaign] };
+    for (const id of result.spent) charged[id] = true;
+    spent[campaign] = charged;
+  }
+
   const next: Progression = {
     ...current,
     missions: {
@@ -241,6 +300,7 @@ export function recordMissionResult(result: MissionResultPayload): Progression {
     },
     scenes,
     drift,
+    spent,
   };
 
   try {
@@ -309,4 +369,16 @@ export function driftCarryForMap(mapId: string): number[] | undefined {
  */
 export function seenScenes(): ReadonlySet<string> {
   return new Set(Object.keys(loadProgression().scenes));
+}
+
+/**
+ * The cadre ids one campaign has spent, as the set the join presents to a
+ * mission room (`GameCanvas`, `ConnectOptions.spent`).
+ *
+ * Built on each call for `seenScenes`' reason — the canvas asks at connect,
+ * and a cached set would seat a hull the player just watched the Rest keep.
+ * Empty for a campaign that has spent nobody, which is four of the five.
+ */
+export function spentCadre(campaign: CampaignId): ReadonlySet<string> {
+  return new Set(Object.keys(loadProgression().spent[campaign] ?? {}));
 }

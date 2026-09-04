@@ -14,6 +14,7 @@
  */
 
 import { DRIFT } from './constants.js';
+import { Faction } from './types.js';
 
 /**
  * Campaign keys, from the campaign titles rather than the faction names —
@@ -26,6 +27,38 @@ import { DRIFT } from './constants.js';
  * documents of record may still move them, since neither campaign has one.
  */
 export type CampaignId = 'prologue' | 'ledger' | 'seeding' | 'attending' | 'chord';
+
+/**
+ * The register a line is spoken in — docs/culture.md §3's five voices, each
+ * named by its own self-description: the Consortium is *the concern*, the
+ * Commune *the plateaus*, the Directorate *the cohorts*, the Knights *the
+ * Order*, and the Sorrowgate court is the fifth.
+ *
+ * Not `Faction`, for two reasons that are really one. A court is not a faction
+ * — §3 opens on exactly that: "There are four factions and five registers" —
+ * so a union keyed on navies would have nowhere to put the one voice in the
+ * Rift that describes a room without joining it. And a register is a way of
+ * speaking rather than a navy: the mix keys a *hail* on it
+ * (docs/audio-direction.md §13), and what the ear should tell apart is who is
+ * talking, which is a fact about the line and not about whose hull it came
+ * from. Most lines in a mission are in the player's own register, and
+ * `voiceOf` is how a `say` beat with no `voice` of its own resolves.
+ */
+export type MissionVoice = 'concern' | 'plateaus' | 'cohorts' | 'order' | 'court';
+
+/** The register a faction speaks in. A court has no faction, so none maps to it. */
+export function voiceOf(faction: Faction): MissionVoice {
+  switch (faction) {
+    case Faction.Bathyarch:
+      return 'concern';
+    case Faction.Pelagia:
+      return 'plateaus';
+    case Faction.Directorate:
+      return 'cohorts';
+    case Faction.Hadron:
+      return 'order';
+  }
+}
 
 /**
  * One alternate briefing, and the scene whose having-been-witnessed selects it
@@ -796,6 +829,36 @@ export const CHORD_APTITUDE_HEADER: MissionHeader = {
   ],
 };
 
+export const CHORD_STANDING_WAVE_HEADER: MissionHeader = {
+  id: 'chord-standing-wave',
+  campaign: 'chord',
+  ordinal: 2,
+  name: 'The Second Chord \u2014 Standing Wave',
+  premise:
+    'A works order from the Ninth: two nodes, either wall of the Fifth, and the interval between them. Then be north of it.',
+  mapId: 'the-fifth',
+  // The close at 18:00 (docs/mission-standing-wave.md §9), inside campaign.md
+  // §10's 12–25 and at the long end deliberately: two 150-second
+  // commissionings and a twelve-and-a-half-minute stipend do not fit in
+  // fourteen, and a mission whose economy is a clock has to be long enough for
+  // the clock to matter.
+  lengthBandS: [1020, 1140],
+  /**
+   * Choirmaster Ivane Sull, setting the works — docs/mission-standing-wave.md
+   * §12, verbatim. Public for Aptitude's reason: it names no hidden fact. It
+   * specifies the weapon's symmetry as a *feature*, prices the third node in
+   * minutes of stipend, and says out loud that the line does not know whose
+   * hulls are in it — because a Knight briefing that withheld the arithmetic
+   * would be teaching by ambush, and this faction examines.
+   */
+  briefing: [
+    'The Fifth has been a road for a hundred and forty years because we never wrote down that it was ours. I am not going to write it down now. I am going to make it a poor road.',
+    'Two nodes, either wall, and the interval between them. You know what that does. It is worth saying the whole of what it does rather than the flattering half: the line does not know whose hulls are in it, and the water inside it will carry you exactly as far as it carries them. That is not a defect I am asking you to tolerate. It is the specification. A door that only shuts one way is not a door, it is a preference, and a preference is the sort of thing an Order talks itself out of at three in the morning eleven years from now.',
+    'So: build it, and then be north of it. Both halves. If you bring me a closed Fifth and four hulls I will thank you and I will mean it and I will also have to explain the arithmetic to the Third, and Halden will be courteous about it, which is worse.',
+    'You have the stipend and the stipend does not hurry. Two voices are paid for. A third is twelve and a half minutes, and I would rather you spent them than spent the Fifth.',
+  ],
+};
+
 export const ATTENDING_FIRST_ARRIVAL_HEADER: MissionHeader = {
   id: 'attending-first-arrival',
   campaign: 'attending',
@@ -1060,6 +1123,7 @@ export const MISSION_HEADERS: readonly MissionHeader[] = [
   ATTENDING_CONCLAVE_HEADER,
   ATTENDING_FIRST_ARRIVAL_HEADER,
   CHORD_APTITUDE_HEADER,
+  CHORD_STANDING_WAVE_HEADER,
   CHORD_NINETEEN_HEADER,
   CHORD_CONCLAVE_HEADER,
   CHORD_THE_THREE_HEADER,
@@ -1249,6 +1313,25 @@ export interface MissionResultPayload {
    * docs/campaign.md §2 rule 5. Omitted is a skirmish, which carries nothing.
    */
   driftCarry?: DriftCarry;
+  /**
+   * The cadre ids of the player's own hulls that were not answering at the
+   * close, for the progression record to keep — docs/campaign.md §7 row 3,
+   * "Every unit lost in this mission is gone for the rest of the campaign".
+   *
+   * Sent **only by a mission that authors attrition**, and omitted by every
+   * other — a hull lost on a tide that does not spend is not reported, so the
+   * record has nothing to keep and the hull returns (docs/mission-standing-wave.md
+   * §10 argues why mission 2 must not spend what mission 3 teaches). Empty
+   * when the attriting mission lost nobody.
+   *
+   * Own-force information, and the narrowest kind: which of *my* named hulls
+   * died, each of which the player watched happen and each of which the
+   * epilogue has just read out by name. It says nothing about who took them
+   * or from where. A cadre id is an authored roster name
+   * (`MissionUnit.cadre`), never an entity id, so nothing here can be joined
+   * back to a contact.
+   */
+  spent?: readonly string[];
 }
 
 /**

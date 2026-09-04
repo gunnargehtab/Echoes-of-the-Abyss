@@ -381,7 +381,7 @@ What exists against this document and what does not, continuing the Ledger's lis
 | Combat between the player and a scripted party | **Built** — hostility is `Owner.slot`, both sides' hulls are authored `armed`, and the gate fights are the ordinary combat pass with nobody seated |
 | A mobile Baffle Barge | **Not built, and not needed here.** [systems-echo.md](systems-echo.md) §8 calls the Barge mobile; `structures.ts` holds every structure static, and this mission moors its two at the lay-bys — which is what the freight charter always did. A Barge that advances with a push remains a roster gap, named so nobody reads this mission as having closed it |
 | A picket that *answers* what it hears | **Not built.** The watches walk authored legs and engage what stands into range; nothing scripted reacts to being resolved or to resolving. The beat-fired-by-condition row of [mission-aptitude.md](mission-aptitude.md) §13 is the shape such a picket would need, and mission 4's recall is where the Ledger first spends it |
-| In-mission character speech, heard | Text only, the standing status ([mission-sorrowgate.md](mission-sorrowgate.md) §13) |
+| In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line |
 
 ---
 

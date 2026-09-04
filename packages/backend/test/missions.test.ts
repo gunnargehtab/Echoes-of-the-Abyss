@@ -35,6 +35,9 @@ import {
   missionHeaderById,
   requiredPressureRating,
   statsFor,
+  structureStatsFor,
+  voiceOf,
+  type MissionVoice,
 } from '@echoes/shared';
 import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import { MISSIONS, PROLOGUE_SORROWGATE } from '../src/sim/missions/index.ts';
@@ -44,6 +47,7 @@ import { DRIFT_SLOT } from '../src/sim/systems/fauna.ts';
 import type {
   MissionConditionalBeat,
   MissionDefinition,
+  MissionPredicate,
   MissionSounding,
 } from '../src/sim/missions/index.ts';
 
@@ -188,6 +192,62 @@ describe('the parties a mission seats', () => {
     }
   });
 
+  it('names a cadre on the player’s hulls and on nobody else’s', () => {
+    // `MissionUnit.cadre` is what the spent roster is keyed on (#380), and a
+    // spent set is the client's own memory of its own dead. A cadre id on a
+    // scripted hull would give another party's roster a name the record could
+    // carry — the same shape of leak the role test above refuses.
+    for (const mission of MISSIONS) {
+      for (const party of mission.parties) {
+        if (party.slot === mission.playerSlot) continue;
+        for (const unit of party.units) {
+          assert.equal(
+            unit.cadre,
+            undefined,
+            `${mission.id}: ${unit.tag} is scripted and carries the cadre "${unit.cadre}"`
+          );
+        }
+      }
+    }
+  });
+
+  it('gives each cadre id to one hull of a party', () => {
+    // A duplicate would not collide loudly: `fieldDefinition` filters by id,
+    // so two hulls under one name are both unseated by one loss.
+    for (const mission of MISSIONS) {
+      for (const party of mission.parties) {
+        const cadre = party.units.map((u) => u.cadre).filter((c) => c !== undefined);
+        assert.equal(new Set(cadre).size, cadre.length, `${mission.id}: duplicate cadre id`);
+      }
+    }
+  });
+
+  it('draws every cadre id a mission names from a roster its campaign spends', () => {
+    // The campaign's roster is the attriting mission's — for the Order,
+    // Nineteen's six. A later mission naming a hull no spending mission ever
+    // fields has given the record a name it can never write, which is a hull
+    // that can never be lost wearing the field that says it can.
+    for (const mission of MISSIONS) {
+      const named = mission.parties
+        .find((p) => p.slot === mission.playerSlot)!
+        .units.map((u) => u.cadre)
+        .filter((c): c is string => c !== undefined);
+      if (named.length === 0) continue;
+      const roster = new Set(
+        MISSIONS.filter((m) => m.campaign === mission.campaign && m.attrition === true).flatMap(
+          (m) =>
+            m.parties
+              .find((p) => p.slot === m.playerSlot)!
+              .units.map((u) => u.cadre)
+              .filter((c): c is string => c !== undefined)
+        )
+      );
+      for (const id of named) {
+        assert.ok(roster.has(id), `${mission.id}: cadre "${id}" is in no spending mission's party`);
+      }
+    }
+  });
+
   it('lends the array from the player, since that is the only slot an aura grants to', () => {
     // Only where a mission authors one: an absent arrayTag is the silence
     // ledger switched off (types.ts), not an array that failed to be placed.
@@ -323,6 +383,42 @@ describe('the beat schedule', () => {
           placed.has(beat.tag) || spawnedByBeat.has(beat.tag),
           `${mission.id}: a ${beat.kind} beat names "${beat.tag}", which nothing places`
         );
+      }
+    }
+  });
+
+  it('walks every transit along legs that are on the map and take time', () => {
+    // A transit is re-asserted every pass to where its route says the hull
+    // should be *now*, so a leg of zero ticks is a division the runtime
+    // guards and a point off the map is a hull ordered into the clamp — and
+    // neither fails loudly. A route is also the only beat whose tag names a
+    // hull that must be *scripted*: the player's own hulls are the player's
+    // to order, and a mission walking one would be the format taking a
+    // command away without a lock to say so.
+    for (const mission of MISSIONS) {
+      const map = missionMapById(mission.mapId)!;
+      const scripted = new Set(
+        mission.parties
+          .filter((party) => party.slot !== mission.playerSlot)
+          .flatMap((party) => party.units.map((unit) => unit.tag))
+      );
+      const transits = [...mission.beats, ...(mission.conditionalBeats ?? [])].filter(
+        (beat) => beat.kind === 'transit'
+      );
+      for (const beat of transits) {
+        if (beat.kind !== 'transit') continue;
+        assert.ok(
+          scripted.has(beat.tag),
+          `${mission.id}: a transit walks "${beat.tag}", a hull the player commands`
+        );
+        assert.ok(beat.legs.length > 0, `${mission.id}: a transit for "${beat.tag}" with no legs`);
+        for (const leg of beat.legs) {
+          assert.ok(leg.ticks > 0, `${mission.id}: a leg of "${beat.tag}" takes no time`);
+          assert.ok(
+            leg.x >= 0 && leg.x <= map.widthM && leg.y >= 0 && leg.y <= map.heightM,
+            `${mission.id}: a leg of "${beat.tag}" leaves the map at (${leg.x}, ${leg.y})`
+          );
+        }
       }
     }
   });
@@ -500,6 +596,87 @@ describe('the objectives', () => {
           predicate.count <= inRole,
           `${mission.id}: "${objective.id}" wants ${predicate.count} of role ` +
             `"${predicate.role}", and the mission places ${inRole}`
+        );
+      }
+    }
+  });
+
+  it('counts only structures the player could raise, and reads only states an objective could', () => {
+    // `build` counts the observer's own completed structures of a kind, so a
+    // kind the player can neither build nor is handed is a counter that never
+    // fills — and a `states` reading keys on the same union an objective
+    // does, so it is held to the same rules: a region and a role the mission
+    // authors, and a structure the mission can have.
+    for (const mission of MISSIONS) {
+      const regions = new Set(mission.regions.map((region) => region.id));
+      const placedKinds = new Set(
+        mission.parties
+          .filter((party) => party.slot === mission.playerSlot)
+          .flatMap((party) => (party.structures ?? []).map((structure) => structure.kind))
+      );
+      const roles = new Set(
+        mission.parties
+          .filter((party) => party.slot === mission.playerSlot)
+          .flatMap((party) => party.units)
+          .map((unit) => unit.role)
+          .filter((role): role is string => role !== undefined)
+      );
+      const constructionLocked = mission.locks.some((lock) => lock.ability === 'construction');
+      const check = (predicate: MissionPredicate, where: string) => {
+        if (predicate.kind === 'build') {
+          const raisable =
+            structureStatsFor(predicate.structure).constructible && !constructionLocked;
+          assert.ok(
+            raisable || placedKinds.has(predicate.structure),
+            `${mission.id}: ${where} counts a structure the player can neither raise nor is handed`
+          );
+          assert.ok(predicate.count >= 1, `${mission.id}: ${where} counts nothing`);
+          if (predicate.detuned === true) {
+            assert.equal(
+              predicate.paired,
+              true,
+              `${mission.id}: ${where} — only a paired node can be sour`
+            );
+          }
+        }
+        if (predicate.kind === 'extract') {
+          assert.ok(
+            regions.has(predicate.region),
+            `${mission.id}: ${where} names region "${predicate.region}"`
+          );
+        }
+        if (
+          predicate.kind === 'extract' ||
+          predicate.kind === 'survive' ||
+          predicate.kind === 'quiet'
+        ) {
+          assert.ok(
+            roles.has(predicate.role),
+            `${mission.id}: ${where} names role "${predicate.role}"`
+          );
+        }
+      };
+      for (const objective of mission.objectives) {
+        check(objective.predicate, `"${objective.id}"`);
+        for (const state of objective.states ?? []) {
+          assert.ok(
+            state.text.trim().length > 0,
+            `${mission.id}: "${objective.id}" has a blank reading`
+          );
+          check(state.when, `a reading of "${objective.id}"`);
+        }
+      }
+      for (const beat of mission.conditionalBeats ?? []) check(beat.when, 'a conditional beat');
+      // The works rules are a mission's own, and both halves are numbers a
+      // skirmish never sees — so a nonsense reach fails here, not in play.
+      if (mission.works?.hullRadiusM !== undefined) {
+        assert.ok(
+          mission.works.hullRadiusM > 0,
+          `${mission.id}: a site needs a hull within nothing`
+        );
+        assert.ok(
+          !constructionLocked,
+          `${mission.id}: works rules on a mission that locks construction`
         );
       }
     }
@@ -1050,6 +1227,59 @@ describe('Sorrowgate, as docs/mission-sorrowgate.md states it', () => {
     // through, so the court reads what it took rather than a count it did not.
     assert.match(PROLOGUE_SORROWGATE.epilogue[1], /^One tender is through\./);
     assert.match(PROLOGUE_SORROWGATE.epilogue[2], /^The gate is closed\. Fourteen are behind it\./);
+  });
+});
+
+describe('the register a line is spoken in', () => {
+  /** docs/culture.md §3's five, spelled out so a sixth cannot drift in unnamed. */
+  const VOICES: ReadonlySet<MissionVoice> = new Set<MissionVoice>([
+    'concern',
+    'plateaus',
+    'cohorts',
+    'order',
+    'court',
+  ]);
+
+  it('is one of the five voices, on every line in every mission', () => {
+    // A typo fails type-check, so what this holds is the other half: the
+    // runtime's default — the player's own faction's register — is itself a
+    // member of the union, and the literal has not smuggled a `voice` onto a
+    // beat kind that does not speak. `missionRuntime.test.ts` plays the four
+    // Sorrowgate lines and asserts they arrive as four different registers.
+    for (const mission of MISSIONS) {
+      assert.ok(VOICES.has(voiceOf(mission.playerFaction)), `${mission.id}: no default voice`);
+      const spoken = [...mission.beats, ...(mission.conditionalBeats ?? [])].filter(
+        (beat) => beat.kind === 'say'
+      );
+      for (const beat of spoken) {
+        if (beat.voice === undefined) continue;
+        assert.ok(VOICES.has(beat.voice), `${mission.id}: "${beat.speaker}" speaks in no register`);
+      }
+      const line = mission.commanderAbility?.line;
+      if (line?.voice !== undefined) {
+        assert.ok(VOICES.has(line.voice), `${mission.id}: the commander's line is in no register`);
+      }
+    }
+  });
+
+  it('is authored only on the minority spoken by somebody else', () => {
+    // The `say` beat's own rule: absent is the player's register, and a
+    // `voice` equal to it is a redundancy that would hide the one case the
+    // field exists for. Sorrowgate is the exception and says so in its
+    // literal — the flight is the court's, not a faction's, so nothing in
+    // that chamber speaks as the player and all four are authored.
+    for (const mission of MISSIONS) {
+      if (mission === PROLOGUE_SORROWGATE) continue;
+      const own = voiceOf(mission.playerFaction);
+      for (const beat of [...mission.beats, ...(mission.conditionalBeats ?? [])]) {
+        if (beat.kind !== 'say') continue;
+        assert.notEqual(
+          beat.voice,
+          own,
+          `${mission.id}: "${beat.speaker}" is authored in the player's own register`
+        );
+      }
+    }
   });
 });
 

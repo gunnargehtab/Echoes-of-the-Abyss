@@ -24,6 +24,7 @@ import { CHORD_THE_THREE } from './theThree.ts';
 import { CHORD_RIM_DEPOSITS } from './rimDeposits.ts';
 import { CHORD_SECOND_CHORD } from './secondChord.ts';
 import { CHORD_APTITUDE } from './aptitude.ts';
+import { CHORD_STANDING_WAVE } from './standingWave.ts';
 import { SEEDING_DEEP_FURROW } from './deepFurrow.ts';
 import { SEEDING_IN_WRITING } from './inWriting.ts';
 import { SEEDING_RADICALS } from './radicals.ts';
@@ -48,6 +49,7 @@ export * from './sounding.ts';
 export * from './walk.ts';
 export * from './view.ts';
 export * from './runtime.ts';
+export * from './roster.ts';
 export {
   ATTENDING_ATTENDANCE,
   ATTENDING_CONCLAVE,
@@ -62,6 +64,7 @@ export {
   CHORD_RIM_DEPOSITS,
   CHORD_SECOND_CHORD,
   CHORD_APTITUDE,
+  CHORD_STANDING_WAVE,
   LEDGER_ASSET_RECOVERY,
   LEDGER_BAFFLE,
   LEDGER_EXPOSURE,
@@ -108,6 +111,9 @@ export const MISSIONS: readonly MissionDefinition[] = [
   CHORD_RIM_DEPOSITS,
   CHORD_SECOND_CHORD,
   CHORD_APTITUDE,
+  // The twenty-ninth, and the last document to get its literal — the hole in
+  // the middle of the Order's campaign, closed (docs/mission-standing-wave.md §13).
+  CHORD_STANDING_WAVE,
 ];
 
 export function missionById(id: string): MissionDefinition | undefined {

@@ -560,11 +560,16 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       atTick: T(6, 20),
       kind: 'say',
       speaker: 'Voice Ren Kalliso',
+      voice: 'order',
       text: 'I have not been invited and I have not been refused. I will hold the interval at the arch and take no part. If the court would rather I were elsewhere, the court has only to say so, and I am elsewhere within the tide.',
       // §13: the `say` channel carries these to the mission log beside the
-      // orders panel. What does not exist is any *sound* — nobody is heard, so
-      // a player with their eyes on the water misses all four.
-      note: 'Read, not heard',
+      // orders panel, and since #381 the mix hails each in its own register
+      // (docs/audio-direction.md §13) — four lines, four materials, so a
+      // player with their eyes on the water still hears that somebody spoke
+      // and which of the four it was. The words stay the log's. Every voice
+      // here is authored rather than defaulted: the flight is the court's,
+      // not a faction's, and nothing in this chamber speaks as the player.
+      note: 'Hailed and read — the say channel since #381',
     },
 
     // 06:20–09:00 — she flickers: nothing, then Tier 2 for a few seconds as
@@ -606,6 +611,7 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       atTick: T(9),
       kind: 'say',
       speaker: 'Underwriter Sela Drenn',
+      voice: 'concern',
       text: 'There is an unquantified contact on my approach and I am being asked to sign for fourteen people. I do not sign for an exposure I cannot grade. One emission. Log it as taken on my authority.',
       note: '',
     },
@@ -638,6 +644,7 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       atTick: T(9, 20),
       kind: 'say',
       speaker: 'Sende',
+      voice: 'cohorts',
       text: 'It has been answered. Nothing further is required of anyone here. It will pass, and then it will pass again.',
       note: '',
     },
@@ -709,6 +716,7 @@ export const PROLOGUE_SORROWGATE: MissionDefinition = {
       atTick: T(10, 40),
       kind: 'say',
       speaker: 'Warden Juno Teel',
+      voice: 'plateaus',
       text: "We're not asking anybody to move. We're saying the water has changed and we'd rather everyone were somewhere else while we finish turning it.",
       note: '',
     },

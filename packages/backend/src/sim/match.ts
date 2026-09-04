@@ -82,6 +82,7 @@ import {
 import { EchoLayer } from './systems/echoLayer.ts';
 import { acousticsSystem } from './systems/acoustics.ts';
 import { aurasSystem } from './systems/auras.ts';
+import { standingWaveSystem } from './systems/standingWave.ts';
 import { combatSystem } from './systems/combat.ts';
 import { constructionSystem } from './systems/construction.ts';
 import { depthSystem } from './systems/depth.ts';
@@ -104,6 +105,7 @@ import { hashWorld } from './stateHash.ts';
 import { Terrain } from './terrain.ts';
 import { VENTFRONT_DIVIDE, terrainFor, type MapDefinition } from './maps/index.ts';
 import { MissionRuntime } from './missions/runtime.ts';
+import { fieldDefinition } from './missions/roster.ts';
 import type { MissionDefinition } from './missions/types.ts';
 import type { MissionLine, MissionResolution } from './missions/runtime.ts';
 import { countFauna, DRIFT_SLOT, faunaSystem } from './systems/fauna.ts';
@@ -172,6 +174,19 @@ export interface MatchOptions {
    * room-side would replay on a map that opens at the biome defaults.
    */
   driftCarry?: readonly number[] | null;
+  /**
+   * Cadre ids of the player's hulls the campaign has already spent
+   * (docs/campaign.md §7 row 3; `missions/roster.ts`). A mission that fields
+   * one of them seats nobody under it, and its counts read over what came.
+   *
+   * Here beside `mission` for `mission`'s reason: the fielding happens in the
+   * constructor, so a replay that records the set (`Replay.spent`) rebuilds
+   * the same short party rather than the literal's full one. Already bounded
+   * by the room (`validateSpent`) by the time it reaches this option; the
+   * constructor trusts it the way it trusts `mission`. Omitted is nothing
+   * spent, which is every skirmish and every mission outside the Knights'.
+   */
+  spent?: ReadonlySet<string>;
 }
 
 const FIXED_DT = 1 / SIM.TICK_HZ;
@@ -316,7 +331,8 @@ export class Match {
             map.id,
             options.fauna !== false,
             options.mission?.id ?? null,
-            options.driftCarry ?? null
+            options.driftCarry ?? null,
+            [...(options.spent ?? [])]
           )
         : null;
     this.seedResourceNodes();
@@ -331,8 +347,14 @@ export class Match {
     // hazards and Drift already exist — and after the seeded systems have
     // drawn from `world.rng`, so installing a mission cannot shift anybody
     // else's stream. The runtime never touches the RNG at all.
+    //
+    // Fielded through the record first: a hull the campaign has spent is not
+    // in the party the runtime installs, so nothing downstream — roles,
+    // soundings, the six named rows — ever learns it was authored.
     this.missionRuntime =
-      options.mission === undefined ? null : new MissionRuntime(options.mission);
+      options.mission === undefined
+        ? null
+        : new MissionRuntime(fieldDefinition(options.mission, options.spent ?? new Set()));
     this.missionRuntime?.install(
       this.world,
       (slot) => {
@@ -1143,6 +1165,29 @@ export class Match {
     // structures a player puts down mid-match.
     if (!this.world.terrain.admits(x, y, CONSTRUCTION.WORKING_DEPTH_M)) return false;
 
+    // A mission's own rules for the works — `MissionDefinition.works`. Absent
+    // in every skirmish, and both halves are gated on that.
+    const works = this.missionRuntime?.definition.works;
+    // The works party has to be at the works: a site may only be placed
+    // within reach of one of the commander's own hulls. docs/mission-standing-wave.md
+    // §8 names the breach this closes — a corridor laid from a Gallery no hull
+    // ever left is "somewhere no Knight hull ever needed to be", and the
+    // withdrawal the mission is about would cost nothing.
+    if (works?.hullRadiusM !== undefined) {
+      let attended = false;
+      const reach2 = works.hullRadiusM * works.hullRadiusM;
+      for (let eid = 0; eid <= this.world.maxEid; eid++) {
+        if (!hasComponent(this.world, Unit, eid) || Owner.slot[eid] !== slot) continue;
+        if (Health.hp[eid]! <= 0) continue;
+        const d2 = (Position.x[eid]! - x) ** 2 + (Position.y[eid]! - y) ** 2;
+        if (d2 <= reach2) {
+          attended = true;
+          break;
+        }
+      }
+      if (!attended) return false;
+    }
+
     // Terrain requirement, enforced server-side like every other placement
     // rule. A vent tap only works on a vent: docs/economy.md §2 puts Thermal
     // Draw in Thermal Veins, and that constraint is the point — the tap drags
@@ -1184,6 +1229,14 @@ export class Match {
       faction: this.factionOf(slot),
       x,
       y,
+      // On the floor where it is placed, when the mission says so, rather
+      // than at the working depth every skirmish structure sits at. Not a
+      // global change, and the reason is the thermocline: the three skirmish
+      // maps seat every structure at 600 m over floors of 1,400–2,900 m with
+      // the layer between, so a structure that sat on its floor there would
+      // cross the duct and re-price every pair in every match. A mission whose
+      // ground is all below the layer says so and gets ground-seated works.
+      ...(works?.onFloor === true ? { depth: this.world.terrain.floorAt(x, y) } : {}),
     });
     return true;
   }
@@ -1311,6 +1364,11 @@ export class Match {
     // Auras before acoustics: the spire's SIG-80 "projecting" state and
     // every effective HYD/PF value must be this tick's, not last tick's.
     aurasSystem(this.world);
+    // Between the two: auras rebuilds `spireActive` from the depth grant and
+    // knows nothing of pairs, and acoustics reads it. A corridor closing or
+    // falling rewrites the PF grid on this tick rather than at the next storm
+    // boundary — the line is heard the tick it closes.
+    if (standingWaveSystem(this.world, this.destroyedScratch)) rebuildPropagation(this.world);
     acousticsSystem(this.world);
     pressureSystem(this.world, this.destroyedScratch);
     // Hazards after pressure and before reap: a hull killed by an eruption

@@ -455,7 +455,7 @@ written from the document side.
 | **The taps — an authored static emitter** | **Built** (#246). A placed, periodic sound source, resolved per observer through the ordinary Echo pass, whose classification names nothing — audible, locatable, not a unit — and silenced by the lift that rigs it, which is §6's own coupling |
 | **The lift — a hold-and-cut at an authored SIG** | **Built** (#239). A table row, not a language: the barge holds inside the authored region at the stated loudness for the stated time, then carries, and the `extract` predicate's `loaded` flag counts only rigged loads — three empty barges through the Rail Head read zero |
 | The flagship's systems-live state as a player-facing toggle | Resolved as a consequence, which the open question permitted: [units.md](units.md)'s 55/65 split is live in the roster, and keeping way on is the deliberate act that holds the Cruiser at 65, inside the band. A dedicated toggle remains unbuilt and unneeded — standing still is the quiet choice, and it costs the band, which is §4's trade stated in helm orders |
-| In-mission character speech, heard | Text only, the prologue's own status — the `say` beat carries the §12 lines to the mission log, and no bus yet carries a voice ([mission-sorrowgate.md](mission-sorrowgate.md) §13) |
+| In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line: the `say` beat still carries the §12 lines to the mission log, and the speech bus now carries the concern's beat under each of them |
 
 ---
 

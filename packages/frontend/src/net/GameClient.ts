@@ -20,6 +20,7 @@ import {
   type MatchListingMetadata,
   type MissionResultPayload,
   type MissionView,
+  type MissionVoice,
   type ResourceNodeInfo,
   type StructureKind,
   type UnitKind,
@@ -113,6 +114,12 @@ export interface MissionLine {
   tick: number;
   speaker: string;
   text: string;
+  /**
+   * The register the line is spoken in, resolved server-side — the mix keys
+   * its hail on it (docs/audio-direction.md §13). Authored data about an
+   * authored line, so it discloses nothing the log row did not.
+   */
+  voice: MissionVoice;
 }
 
 export interface GameClientHandlers {
@@ -282,6 +289,14 @@ export interface ConnectOptions {
    * hold, so a cleared browser is a first visit rather than an error.
    */
   driftCarry?: readonly number[];
+  /**
+   * Cadre ids the campaign has already spent, for a mission room to seat
+   * around (docs/campaign.md §7 row 3). Read from the progression record by
+   * the caller and handed in here, so this file stays what it is — a socket
+   * with no opinion about the player's history — and sent only with a
+   * `missionId`, because a skirmish has no roster to have spent.
+   */
+  spent?: readonly string[];
 }
 
 export class GameClient {
@@ -363,6 +378,9 @@ export class GameClient {
         // is byte-identical to what it was before §2 rule 5 existed.
         ...(options.driftCarry === undefined ? {} : { driftCarry: options.driftCarry }),
         ...(options.create === undefined ? {} : { private: options.create === 'private' }),
+        // Only into a mission room: the server reads it nowhere else, and an
+        // array on a skirmish join would be a roster nobody asked about.
+        ...(wanted !== '' && options.spent !== undefined ? { spent: [...options.spent] } : {}),
       };
       // `create` makes a room of its own rather than looking for one. Quick
       // match keeps `joinOrCreate` — picking a map is picking a queue, and that

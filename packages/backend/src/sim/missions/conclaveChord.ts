@@ -389,6 +389,10 @@ export const CHORD_CONCLAVE: MissionDefinition = {
          * quoted off it: a louder roster moves every distance below outward
          * together without changing which side of the trade wins.
          */
+        // §2 — "the same six hulls under Voice Ren Kalliso": each carries the
+        // cadre id Nineteen gave it (`nineteen.ts`, `hull`), so a hull the
+        // Rest kept is not seated here, and the six `extract` rows count what
+        // the Order actually has (`roster.ts`, `fieldDefinition`).
         {
           tag: 'the-voice',
           kind: UnitKind.Cruiser,
@@ -396,6 +400,7 @@ export const CHORD_CONCLAVE: MissionDefinition = {
           y: 500,
           depthM: APPROACH_FLOOR_M,
           role: 'party',
+          cadre: 'voice',
           armed: true,
           souls: 12,
           note: 'The Voice — 55 idle / 65 live, HYD 65, 1,200 hull points, 150 at 900 m. Twelve aboard',
@@ -407,6 +412,7 @@ export const CHORD_CONCLAVE: MissionDefinition = {
           y: 400,
           depthM: APPROACH_FLOOR_M,
           role: 'party',
+          cadre: 'first',
           armed: true,
           souls: 5,
           note: "The working hulls — 28 at cruise, which is exactly the interval's ceiling and the one piece of luck the Third has. Five of them, and six voices, and this tide the two counts are one number",
@@ -418,6 +424,7 @@ export const CHORD_CONCLAVE: MissionDefinition = {
           y: 400,
           depthM: APPROACH_FLOOR_M,
           role: 'party',
+          cadre: 'second',
           armed: true,
           souls: 5,
           note: '',
@@ -429,6 +436,7 @@ export const CHORD_CONCLAVE: MissionDefinition = {
           y: 600,
           depthM: APPROACH_FLOOR_M,
           role: 'party',
+          cadre: 'third',
           armed: true,
           souls: 5,
           note: '',
@@ -440,6 +448,7 @@ export const CHORD_CONCLAVE: MissionDefinition = {
           y: 600,
           depthM: APPROACH_FLOOR_M,
           role: 'party',
+          cadre: 'fourth',
           armed: true,
           souls: 5,
           note: '',
@@ -451,6 +460,7 @@ export const CHORD_CONCLAVE: MissionDefinition = {
           y: 700,
           depthM: APPROACH_FLOOR_M,
           role: 'party',
+          cadre: 'fifth',
           armed: true,
           souls: 5,
           note: '',
@@ -688,12 +698,13 @@ export const CHORD_CONCLAVE: MissionDefinition = {
       kind: 'say',
       speaker: 'Chapter-Master Halden Vrey',
       text: 'Good. You have stood this ground before and you stood it quiet, and the only thing that has changed is what is standing on it. The interval is at fourteen. It is the Third’s, it is appointed, and the Order will be listening at it, because that is the whole of what an interval is. What the other eight houses will hear from this house at fourteen is nothing. I would like you to understand that the nothing is the instruction.',
-      note: '§9, §12 — Vrey sets the interval. Read, not heard: the standing status of the say channel',
+      note: '§9, §12 — Vrey sets the interval. Hailed and read: the say channel since #381',
     },
     {
       atTick: T(0, 30),
       kind: 'say',
       speaker: 'Surveyor Ade Bramm, on the works channel',
+      voice: 'concern',
       text: 'Works order for the shift: three formations, cored to the registry’s grade. The ground is filed. Nothing that does not obstruct will be fired upon, and the escort defines obstruction.',
       note: '§9 — the writ, filed and read out by the party that will execute it. A document rather than an alarm, and the mission’s telegraph eleven and a half minutes early',
     },
@@ -878,6 +889,7 @@ export const CHORD_CONCLAVE: MissionDefinition = {
     {
       kind: 'say',
       speaker: 'Surveyor Ade Bramm, on the works channel',
+      voice: 'concern',
       text: 'Contact filed. Knight hulls at bearing — . The escort defines obstruction from here.',
       note: '§9 — the concern’s documented reflex at thirty seconds of Classification, and nothing else: the column’s legs are the clock, and the relief is scheduled rather than conditional because the works order was written before anybody heard the Order',
       when: { kind: 'tolerance', ticks: TOLERANCE_TICKS, tier: ResolutionTier.Classification },

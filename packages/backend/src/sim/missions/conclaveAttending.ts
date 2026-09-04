@@ -491,7 +491,7 @@ export const ATTENDING_CONCLAVE: MissionDefinition = {
       kind: 'say',
       speaker: 'First Cantor Vehl Ossary',
       text: 'The stalls are open. The cohorts are seated. Nothing is expected of the watch but sufficiency, and sufficiency is not a small thing to be expected of.',
-      note: 'Read, not heard — the standing status of the say channel',
+      note: 'Hailed and read — the say channel since #381',
     },
 
     // 00:30 — the calling is put, and the sixteen go silent with it. The

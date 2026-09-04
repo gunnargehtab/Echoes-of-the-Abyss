@@ -35,6 +35,7 @@ export interface SettingsScreenProps {
 /** Display order and label per bus — the mix's own vocabulary. */
 const BUS_ROWS: Array<{ bus: TrimBus; label: string; note: string }> = [
   { bus: 'contact', label: 'Contacts', note: 'What you hear of them' },
+  { bus: 'speech', label: 'Speech', note: 'Lines in the water — the log is the caption' },
   { bus: 'self', label: 'Own fleet', note: 'What they hear of you, played back to you' },
   { bus: 'world', label: 'World', note: 'Biomes, residue, the past' },
   { bus: 'music', label: 'Music', note: 'Always ducks under contacts' },

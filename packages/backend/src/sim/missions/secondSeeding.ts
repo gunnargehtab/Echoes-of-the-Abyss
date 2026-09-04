@@ -755,7 +755,7 @@ export const SEEDING_SECOND_SEEDING: MissionDefinition = {
       kind: 'say',
       speaker: 'The charting pair, on the terraces',
       text: "We're on the terraces, where we've been since before anybody. The column's under the bed on the western lip and we can't hear it from here, which is the bed working. There's two things on the lip breathing on a count — we've got the nearer one, just, and we're not saying what it is. The concern's at the staging and hasn't come down. When it does, nobody on this rim will need telling.",
-      note: 'Read, not heard — the standing status of the say channel',
+      note: 'Hailed and read — the say channel since #381',
     },
 
     // 00:30 — Anholt's coda. The briefing's last sentence, from the barge.
@@ -882,6 +882,7 @@ export const SEEDING_SECOND_SEEDING: MissionDefinition = {
       atTick: T(8),
       kind: 'say',
       speaker: 'Watch-Speaker, for those below',
+      voice: 'cohorts',
       text: 'The rim is attended. It was attended before the concern had a registry and it will be attended after. What is done on it this week is entered — in an account that is not yours, against a debt that is not stated.',
       note: '',
     },
@@ -925,6 +926,7 @@ export const SEEDING_SECOND_SEEDING: MissionDefinition = {
       atTick: T(11),
       kind: 'say',
       speaker: 'Voice of the reconnaissance, for the Order',
+      voice: 'order',
       text: "The Order notes the concern's instruments are in tune, and returns the compliment of assuming it was meant. What the crystal is for, we will not discuss on an open channel. It would be discourteous to the crystal.",
       note: '',
     },

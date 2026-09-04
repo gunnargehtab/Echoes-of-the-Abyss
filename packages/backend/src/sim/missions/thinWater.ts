@@ -722,7 +722,7 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
       kind: 'say',
       speaker: 'Bloomwright Idris Kell',
       text: "Ten hulls. Sixty-eight aboard, and I've got them by household, not by berth, so if anybody asks you later how many that is you say sixty-eight and you don't round it.",
-      note: 'Read, not heard — the standing status of the say channel',
+      note: 'Hailed and read — the say channel since #381',
     },
 
     // 02:30 — the column clears the last kelp, and the exposure readout says

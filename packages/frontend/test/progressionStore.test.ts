@@ -29,9 +29,13 @@ import {
   PROLOGUE_MISSION_ID,
   recordMissionResult,
   seenScenes,
+  spentCadre,
 } from '../src/progression/store.ts';
 
 const STORAGE_KEY = 'echoes.progression';
+/** The only mission that spends (docs/mission-nineteen.md §13), and one that fields what it spent. */
+const NINETEEN = 'chord-nineteen';
+const CONCLAVE = 'chord-conclave';
 
 /** A minimal in-memory localStorage, installed per test. */
 function installStorage(): Map<string, string> {
@@ -66,6 +70,15 @@ function grid(dead = 1): number[] {
   const health = new Array<number>(DRIFT_REGION_COUNT).fill(DRIFT.HEALTH_START - 9);
   for (let i = 0; i < dead; i++) health[i] = 0;
   return health;
+}
+
+/** A spending conclusion — `result` with the cadre ids a mission with attrition reports. */
+function spending(
+  missionId: string,
+  outcome: MissionOutcome,
+  spent: readonly string[]
+): MissionResultPayload {
+  return { ...result(missionId, outcome), spent };
 }
 
 describe('the progression record', () => {
@@ -385,5 +398,106 @@ describe('the ground a mission left behind', () => {
     installStorage().set(STORAGE_KEY, JSON.stringify({ version: 1, missions: {}, scenes: {} }));
     assert.deepEqual(loadProgression().drift, {});
     assert.equal(driftCarryForMap('marr-plateau'), undefined);
+  });
+});
+
+describe('the spent roster (#380)', () => {
+  beforeEach(() => {
+    installStorage();
+  });
+
+  afterEach(() => {
+    delete (globalThis as { localStorage?: unknown }).localStorage;
+  });
+
+  it('remembers nothing on a first boot', () => {
+    assert.deepEqual(emptyProgression().spent, {});
+    assert.equal(spentCadre('chord').size, 0);
+  });
+
+  it('keeps the hulls a spending conclusion names, under the mission’s campaign', () => {
+    recordMissionResult(spending(NINETEEN, MissionOutcome.Partial, ['third']));
+    assert.deepEqual([...spentCadre('chord')], ['third']);
+    // Keyed by campaign: the Order's Third is nobody else's.
+    assert.equal(spentCadre('ledger').size, 0);
+    assert.equal(spentCadre('prologue').size, 0);
+  });
+
+  it('unions rather than replaces — a spent hull is never un-spent', () => {
+    recordMissionResult(spending(NINETEEN, MissionOutcome.Partial, ['third']));
+    // A second, worse run of the same tide spends another and gives none back.
+    recordMissionResult(spending(NINETEEN, MissionOutcome.Lost, ['fifth']));
+    assert.deepEqual([...spentCadre('chord')].sort(), ['fifth', 'third']);
+    // And a perfect run afterwards returns nothing either.
+    recordMissionResult(spending(NINETEEN, MissionOutcome.Complete, []));
+    assert.deepEqual([...spentCadre('chord')].sort(), ['fifth', 'third']);
+  });
+
+  it('takes a replayed conclusion as a no-op', () => {
+    // The reconnect case: `MatchRoom` re-sends `missionOver` into an ended
+    // room, and the same loss arriving twice is one loss.
+    const payload = spending(NINETEEN, MissionOutcome.Partial, ['third']);
+    recordMissionResult(payload);
+    const after = recordMissionResult(payload);
+    assert.deepEqual(after.spent, { chord: { third: true } });
+  });
+
+  it('changes nothing on a payload that carries no spent field', () => {
+    // Every mission that does not author attrition sends none — Conclave
+    // fields the Third and loses it and says nothing, and the Third returns.
+    recordMissionResult(spending(NINETEEN, MissionOutcome.Partial, ['third']));
+    const after = recordMissionResult(result(CONCLAVE, MissionOutcome.Lost));
+    assert.deepEqual(after.spent, { chord: { third: true } });
+    assert.deepEqual(after.missions[CONCLAVE], { outcome: MissionOutcome.Lost });
+  });
+
+  it('spends nothing for a mission this build cannot place in a campaign', () => {
+    // The outcome is still stored — the id is the player's history — but
+    // there is no campaign to charge the hulls to.
+    const after = recordMissionResult(spending('gone-mission', MissionOutcome.Lost, ['x']));
+    assert.equal(hasPlayed('gone-mission'), true);
+    assert.deepEqual(after.spent, {});
+  });
+
+  it('reads a record written before this key existed as nothing spent', () => {
+    installStorage().set(
+      STORAGE_KEY,
+      JSON.stringify({
+        version: 1,
+        missions: { [NINETEEN]: { outcome: MissionOutcome.Partial } },
+        scenes: {},
+      })
+    );
+    assert.deepEqual(loadProgression().spent, {});
+    assert.equal(spentCadre('chord').size, 0);
+    assert.equal(hasPlayed(NINETEEN), true);
+  });
+
+  it('drops one corrupt entry rather than the set, at either level', () => {
+    installStorage().set(
+      STORAGE_KEY,
+      JSON.stringify({
+        version: 1,
+        missions: {},
+        spent: {
+          chord: { third: true, 'half-written': 'yes', broken: null, fifth: true },
+          ledger: 7,
+          seeding: null,
+        },
+      })
+    );
+    assert.deepEqual(loadProgression().spent, { chord: { third: true, fifth: true } });
+    assert.deepEqual([...spentCadre('chord')].sort(), ['fifth', 'third']);
+    assert.equal(spentCadre('ledger').size, 0);
+  });
+
+  it('carries the set through a write from a build that learned about it', () => {
+    // The sibling-key promise, the other way round: writing a mission record
+    // must not lose the roster beside it.
+    const backing = installStorage();
+    recordMissionResult(spending(NINETEEN, MissionOutcome.Partial, ['third']));
+    recordMissionResult(result(PROLOGUE_MISSION_ID, MissionOutcome.Complete));
+    const raw = JSON.parse(backing.get(STORAGE_KEY) ?? '{}') as { spent: unknown };
+    assert.deepEqual(raw.spent, { chord: { third: true } });
   });
 });

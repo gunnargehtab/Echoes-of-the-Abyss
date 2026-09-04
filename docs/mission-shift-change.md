@@ -426,7 +426,7 @@ is two rows, both built for it.
 | **The number — a predicate over the player's own banked stockpile** | **Built for this mission**: the `deliver` predicate, the union's first economic row. A query over the observer's own economy — the stockpile the server already answers affordability from — so it reports a number the player's own HUD carries and can name nobody else's anything. The counter is the objective, exactly as `sound`'s is. Since generalised over the economy record's three accounts for [mission-intake.md](mission-intake.md) §13 (#330): this mission's quota is authored as `account: 'nodules'` with the same figure, and nothing about the shift changed |
 | **Readings per objective — an epilogue that assembles** | **Built for this mission**: an objective may author a met and an unmet reading, and the close appends the lines in authored order beneath the outcome's reading, the transcript arrangement of [mission-attendance.md](mission-attendance.md) §13 extended from emitters to objectives. §8's results table needs it: "half the business" is one outcome with two possible columns filled, and a close that could not say which would read a run it did not see |
 | A working economy inside a mission — fields, deposits, the loop | **Built** — the map authors two nodule fields and the mission seats the refinery; the harvest loop neither knows nor cares that the match is a mission |
-| In-mission character speech, heard | Text only, the standing status ([mission-sorrowgate.md](mission-sorrowgate.md) §13) |
+| In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line |
 
 ---
 

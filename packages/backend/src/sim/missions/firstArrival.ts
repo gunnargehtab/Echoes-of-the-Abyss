@@ -671,7 +671,7 @@ export const ATTENDING_FIRST_ARRIVAL: MissionDefinition = {
       kind: 'say',
       speaker: 'Undermarshal Setha Korrin',
       text: 'The rim is assigned. It has been attended for two centuries from the water it is attended from, and this tide it is attended from the ground it is attended over, which is a difference of posture and not of doctrine. Eighteen hulls are given to the rim. The rim is held by standing on it. Nothing is raised and nothing is put into the water: the arrays are aboard, they are live, and they are not used. The rim is attended. It is not asked. Eight of twelve is a hold. The Undermarshalcy does not round up.',
-      note: 'Read, not heard — the standing status of the say channel',
+      note: 'Hailed and read — the say channel since #381',
     },
 
     // 00:00 — the eighteen go silent. The column arrives quiet and is not
@@ -731,6 +731,7 @@ export const ATTENDING_FIRST_ARRIVAL: MissionDefinition = {
       atTick: T(5),
       kind: 'say',
       speaker: 'The charting pair, for the plateaus',
+      voice: 'plateaus',
       text: 'We’re here too — we were here before the concern, and we’d like that not to matter. We’re reading the rim for what could live on it, still. You’re standing on it. We’d ask you to notice that those aren’t the same thing yet.',
       note: '',
     },
@@ -753,6 +754,7 @@ export const ATTENDING_FIRST_ARRIVAL: MissionDefinition = {
       atTick: T(10),
       kind: 'say',
       speaker: 'Voice of the reconnaissance, for the Order',
+      voice: 'order',
       text: 'The Order notes the cohorts have arrived and that the arrival was courteous, which is to say slow. The Order is measuring, from above the line, with nothing raised. What it raises, and when, is not for an open channel. It would be discourteous to the faces.',
       note: '',
     },
@@ -795,6 +797,7 @@ export const ATTENDING_FIRST_ARRIVAL: MissionDefinition = {
       atTick: T(15, 30),
       kind: 'say',
       speaker: 'The charting pair, for the plateaus',
+      voice: 'plateaus',
       text: 'We’re still here. That’s the whole of the message, and we’d rather you had it from us than worked it out from the water. We’re on the western terraces, where we’ve been reading since before either of us had a reason to say so.',
       note: '',
     },
