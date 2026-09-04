@@ -47,6 +47,15 @@ attended the calling of it.
 So the Cantorate's authority is not a veto. It is a body in a place, and the whole of it can be
 exercised by remaining where it already is.
 
+**What is being put is the rim.** The cycle before this one, a Consortium survey descended on
+the Mouth's northern edge at 72 for three minutes and sounded six charted faces at 80
+([mission-prospect.md](mission-prospect.md) §5, §9). Both are transmissions and the Ninth is a
+corridor that aims at that water, so the whole of it was heard from four kilometres of trench
+away and entered in the watch's own account. Something is happening to the thing the cohorts
+attend ([campaign.md](campaign.md) §8), and the Undermarshalcy is calling cohorts to the place
+it is happening at. That is the assignment. Whether it is sufficient is the Cantorate's to
+answer by crossing, or not.
+
 Three facts about that water decide the mission, and none of them is a fence.
 
 **The crossing carries at 1.60, which is why not moving is legible.** The terraces are cut
@@ -79,9 +88,9 @@ Nobody in this mission says any of it. It is the ground the mission stands on.
 the cheapest bodies the Directorate owns, and the galleries' dome lent down from the Cantorate
 for the length of the calling.**
 
-The player does not command a cantor, and no order in this mission is given to a person. The
-calling is put by Korrin and attended, or not, by the Cantorate; the hulls are what the
-Undermarshalcy has to send when the cycle closes.
+The player does not command a cantor and no order here is given to a person: the calling is
+Korrin's to put and the Cantorate's to attend, and the hulls are what the Undermarshalcy has to
+send when the cycle closes.
 
 **Engine bound, stated so nobody corrects it into a bug.** Three parties and a court slot: the
 called on slot 0, the cells on slot 2 — sounds only, no hulls — and nothing on slot 1, which is
@@ -204,14 +213,12 @@ their voices. Same detection maths, sixth life ([campaign.md](campaign.md) §2, 
 
 **SIG budget: 25** — a ceiling, and the same number as the silence order, which has happened once
 before in the bible and for the same reason ([mission-sorrowgate.md](mission-sorrowgate.md) §4).
-The budget is not a description here because the mission has an opinion about it: 25 is exactly
-the figure the galleries wrote down, and a mission whose subject is who is heard crossing cannot
-advertise a loudness the rite would call a shove.
-
-It is playtested against a player who exceeds it, per [campaign.md](campaign.md) §10, because
-most will — by ordering the Submersibles across, by opening fire on the thing in the head of the
-trench, by running the whole column at cruise the moment the calling closes. Exceeding it costs
-no hull and fails nothing. It is written down.
+It is not a description, because the mission has an opinion about it: 25 is the figure the
+galleries wrote down, and a mission whose subject is who is heard crossing cannot advertise a
+loudness the rite would call a shove. It is playtested against a player who exceeds it, per
+[campaign.md](campaign.md) §10, because most will — by sending the Submersibles, by opening fire
+on the thing in the head of the trench, by running the whole column at cruise the moment the
+calling closes. Exceeding it costs no hull and fails nothing. It is written down.
 
 ---
 
@@ -459,6 +466,14 @@ The two arrivals are authored transits, not a simulated source, for the standing
 ([mission-sorrowgate.md](mission-sorrowgate.md) §9): a mission's beats happen at the time the
 document says they happen. The calling is why; the beats are when.
 
+**The mission runs its length whatever the count stands at.** `runsItsLength` is authored,
+because the court's default rule would end this mission on the tick it becomes true: a column
+already standing in the axis when `the-calling` is revealed at 17:00 meets both terminal rows on
+that pass, and the runtime would resolve there and take the last three minutes with it —
+including 19:00, and including Ossary at 20:00, which is the ending. The flag makes only the
+`resolve` beat close the calling. It is [Intake](mission-intake.md) §13's row, spent for the
+second time and for the same reason: a shift ends when the shift ends.
+
 **The telegraph is 240 seconds** — the second `loud: true` creature beat at 16:00 against a close
 at 20:00, four times [campaign.md](campaign.md) §10's sixty. The `resolve` carries
 `conclusion: true` as Attendance's and Intake's do, because the close is a cycle ending rather
@@ -486,18 +501,15 @@ First Cantor was present.
 
 What this mission deliberately does not teach:
 
-- **Chorus Call** — mission 3, [The Dome](mission-the-dome.md), where the Cantorate puts a sound
-  into the water. The dome here is an instrument and a casualty and never a transmitter.
+- **Chorus Call** — mission 3, [The Dome](mission-the-dome.md). The dome here is an instrument
+  and a casualty and never a transmitter.
 - **The shallow penalty** — mission 4, [Shallow](mission-shallow.md). The shallowest metre this
-  map authors is the Undermarshalcy's 2,750 m floor, 2,350 below the Shelf line, and
-  `inDirectorateShallows` never fires.
+  map authors is 2,750 m, 2,350 below the Shelf line, and `inDirectorateShallows` never fires.
 - **Biomass and the aggro ladder as an economy** — mission 5,
-  [Trench Awakening](mission-trench-awakening.md). Both colossi here are uncalled, nothing is
-  rendered for a purpose, and the account the second one credits if the Choristers take it apart
-  is not read out by anybody.
-- **The rim** — mission 7, [First Arrival](mission-first-arrival.md), which is where the column at
-  the axis is going and which authors its own force rather than inheriting this one's survivors
-  (§13).
+  [Trench Awakening](mission-trench-awakening.md). Both colossi here are uncalled, and the
+  account the second one credits if the Choristers take it apart is read out by nobody.
+- **The rim** — mission 7, [First Arrival](mission-first-arrival.md), where the column at the
+  axis is going, and which authors its own force rather than inheriting this one's (§13).
 - **Active sonar** — §2, and the campaign's oldest argument, spent once in mission 3 and refused
   everywhere after it.
 
@@ -722,8 +734,12 @@ than requests, and two are absences it declines to ask for.
 | **The dome ground by a driven transit's geometry** | **Built** (#349), and placed by arithmetic rather than by a beat. `transit` sweeps the tick's own segment, reach is the body's 37.5 m plus the target's radius — 80 m for a Cantor — and damage is the species' 220 a second for as long as the overlap lasts. The line is authored 75 m off the dome, which gives a 181 m chord, six seconds at 30 m/s and 1,327 damage against 1,200 hit points, so the dome comes apart at about 10:58 on the line rather than on a `lose` beat at 11:00. Stated in §9 as geometry so that a reviewer can check it, and so that moving either coordinate is understood to move the fall |
 | Emitters are not in a transit's target set | **Built**, and stated so nothing is discovered later. `transit` takes structures and hulls of 95 m and over and skips everything else, so the cells cannot be ground when the first arrival passes over their terrace at about 2,850 m — lifted there by the same floor clamp above. Guns cannot acquire an emitter either (`combat.ts`), so the cells cannot be shot by anybody |
 | **The silence ledger measuring a dome that is down** | **A finding, and the document asks for nothing.** `applySilenceLedger` accrues and repays the debt *before* it looks for the array, and returns early when the tagged structure is gone. So after 10:58 the debt is still written, `debtText` still replaces the objective's line, and the withdrawal withdraws nothing. That is exactly the Directorate: the record keeps running when the instrument does not. If it is ever changed, the honest shape is to stop accruing when there is nothing to withdraw — and this document would rather it were not, and says so here so the choice is a choice |
+| **A released colossus goes home** | **Built, and the departure is planned against it.** When a commitment lapses the runtime restores `Fauna.homeDepth` to the species' working depth, gives back `senseS` and clears `driven`, and leaves `homeX`/`homeY` at the beat's own point. So each arrival parks where the beat left it and rises to 2,000 m, seven hundred metres above the called, and comes back down only for a target and only to its band's edge, which is 2,700 m — the depth the called are seated at, to the metre. §6 prices it; nothing is asked for |
+| The map, its six regions and three mission regions | **Built** — `upper-terraces`, one row of the literal per row of §11's table, in the document's order, and the axis painted last so the galleries become two benches. No new region shape, no roofed water, no hazard sites and no resource nodes; the only thing on it a shipped map has not carried is the pair of `ground` beats above |
+| `fauna: false` with two authored creatures | **Built** — the flag is [Attendance](mission-attendance.md)'s and the beat is Asset Recovery's, and the reason is [Intake](mission-intake.md) §13's: the default seeder is a skirmish roster that gates on the floor rather than on the species' band and cannot put an animal at a named sill at a named tick |
 | The written silence order at the terraces | **Built** — `arrayTag`, `silenceRole`, `silenceCeilingSig` 25, `debtCapS` 45, and the court slot the aura is parked on. Unchanged from [Attendance](mission-attendance.md) §5, which is the point: this is the same order, read one city higher, and the numbers do not move because the galleries did not amend them |
 | **The missing half as sound** | **Built** (`MissionEmitter` with a `reading` pair), **and a finding.** A friendly scripted party carrying hulls is not authorable while auto-acquire fires on the nearest live enemy on any other slot, and every party is an enemy of every other. So "never assigned" cohorts have to be sounds — which is also the truer reading of [habitats.md](habitats.md) §6, and the row is a finding rather than a request because the design is better for the constraint. A mission that genuinely needed a non-hostile second party of its own faction would want an alliance term on `MissionParty`, and this one does not |
+| **A calling that runs its length** | **Built** — `MissionDefinition.runsItsLength`, and this mission needs it as much as [Intake](mission-intake.md) did. `the-muster` is met from tick zero, sixteen being at least twelve, so the moment `the-calling` is revealed at 17:00 over a column already standing in the axis, both terminal rows are met on one pass and the court's default rule resolves there — costing 19:00, 20:00, and the line the whole campaign has been walking toward. Omitted is the default, and every other literal omits it |
 | The calling as an extract revealed late | **Built** — [Intake](mission-intake.md) §9's roll idiom. `extract` is not standing, `runtime.ts` never re-derives a Met non-standing row, and an objective is not scored before its `revealAtTick`, so `the-calling` is revealed on Korrin's own beat at 17:00 and counts the column that is in the axis when the cycle closes |
 | **A predicate over a breach that happened** | **Not built, and named rather than asked for.** `quiet` is standing and reads the water at the tick it is asked; nothing in the union asks whether a ceiling was ever exceeded. §8 says so, and the debt is what carries the history — imperfectly, because it repays a second for a second. The shape a real one would take is a monotone sibling (`{ kind: 'breached'; role; ceilingSig }`), and this document does not want it: a faction whose sanction is the record should be read on the record, and the record here is the debt and Ossary's line |
 | A predicate over another party's stillness | **Not expressible, by construction, and correctly so.** `MissionPredicate` carries no `party`, `slot` or `group` field and `predicates.ts` is handed nothing it could turn into somebody else's position. The Cantorate's refusal is therefore authored as the absence of any beat that would move a cantor, and read out rather than counted. Stated because a mission about somebody else not moving is the case that makes a reader reach for the field |
