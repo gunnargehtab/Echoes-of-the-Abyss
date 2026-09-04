@@ -55,7 +55,7 @@ Choirmaster stops signing it.
 
 **Three facts about this water decide the mission, and none of them is a fence.**
 
-**The floor is four hundred metres under the rating.** The trench floor is 2,150 m; the Order's
+**The floor is four hundred metres under the bench.** The trench floor is 2,150 m; the Order's
 hulls are PR-2 and the Mid-Water band ends at 1,800 m ([systems-depth.md](systems-depth.md) §1),
 so the party works from **1,750 m** — the last fifty metres of its own rating — over water it may
 not enter. The nineteen are uniformly, everywhere out of reach, and §11 is arranged so that a
@@ -63,10 +63,12 @@ player who goes looking for a corner where the arithmetic improves finds the flo
 away rather than nearer.
 
 **The walls between are Hollow ground.** A Hollow works 1,700 m and reaches 1,250–2,150 m, on
-trench walls and abyssal overhangs ([bestiary.md](bestiary.md) §4). Seven coil at 2,000 m on the
-two walls of this trench, at SIG 3, which is the Drift's own Silent Running: they do not move, do
-not close and do not get louder until they strike. The party will not see most of them and will
-play nine of the nineteen intervals inside their reach.
+trench walls and abyssal overhangs ([bestiary.md](bestiary.md) §4). Seven coil on the two walls of
+this trench at **1,700 m** — the species' own working depth, which is the depth a placed animal
+holds and the only one it can be authored at (§13) — at SIG 3, which is the Drift's own Silent
+Running: they do not move and do not get louder until they strike. It is also fifty metres above
+the water the party has to work in, so the animal that guards the descent is standing in it. The
+party will not see most of them and will play nine of the nineteen intervals inside their reach.
 
 **The trench carries.** Abyssal Trench is PF 1.60 axial — "no secrets, only distances"
 ([environments.md](environments.md)). A held tone at 80 over this ground is a Contact to an
@@ -90,7 +92,9 @@ her own chapter's junior cadre; nineteen berths at her house have been empty sin
 ([habitats.md](habitats.md) §5); and in both built Chord missions she speaks exactly once, to
 nobody, and does not mention them. **This is the mission that lets her mention them, once, at the
 ninth minute, to nobody** — and the line is [culture.md](culture.md) §3's own Knight line, given a
-mouth at last.
+mouth at last. She speaks twice here and only twice: the first interval, whenever the party plays
+it, and the ninth minute. The first is about an interval and the second is about nineteen people,
+and the mission spends its whole middle putting the one distance between them.
 
 **Choirmaster Ivane Sull orders the committal from the Ninth and reads the count at the close.**
 Her reason is not sentiment and the briefing does not pretend it is: she has a raid plan on her
@@ -177,12 +181,16 @@ it costs one panel.
 **2. The walls are a decision the player cannot see.** A coiled Hollow at SIG 3 in PF 1.60 water
 is, to the Voice at HYD 65, a Contact at 1,041 m, a Bearing at 808 m, a **Classification at 587 m**
 and a Track at 438 m. Its strike fires within 500 m in three dimensions
-(`DRIFT.HOLLOW_TRIGGER_RANGE_M`), which from the bench at 1,750 m to a coil at 2,000 m is **433 m
-horizontal**. So:
+(`DRIFT.HOLLOW_TRIGGER_RANGE_M`), which from the bench at 1,750 m to a coil at 1,700 m is **497 m
+horizontal**: the party has fifty metres of depth to put between itself and an animal that works at
+the depth it works at, and the strike spends the other four hundred and ninety-seven on the ground.
+So:
 
-- **The Voice gets a Track on a coil five metres before the coil can reach her** — 438 against 433
-  — and **a Corvette gets one sixty-two metres too late**: at HYD 50 the Track lands at 371 m and
-  its Classification at 498 m is the only warning it will get.
+- **A Corvette classifies a coil with less than a metre to spare** — Classification at 498.3 m
+  against a reach of 497.5 — and its Track at 371 m is a hundred and twenty-six metres too late.
+  **The Voice hears one ninety metres earlier than that**, at 587 m, and gets her Track at 438 m,
+  sixty metres inside the reach. Ninety metres is two seconds at the Voice's own 45 m/s, and the
+  Voice is the hull carrying the party's ears.
 - **Clearing one is 640 HP.** Under all six guns that is 2.4 seconds (60/s from the Voice, 41.7/s
   from each Corvette, 268/s together); under one Corvette, 15.4. **A wound springs the strike** —
   a Hollow shot from anywhere lunges at strike loudness (#353; [bestiary.md](bestiary.md) §4) —
@@ -190,25 +198,30 @@ horizontal**. So:
   seconds and the Voice in 21.8.
 - **Or it is answered by facing.** A sounding at 80 in the cone commits a Hollow from 648 m and
   interests it from 855 m; a Corvette at cruise commits one from 336 m; the wake at 2.8 never
-  commits one at all. A Committed Hollow beyond 500 m coils and stays coiled — it does not close,
-  ever — so **commitment is not the danger; proximity is.**
+  commits one at all. And **loudness alone never springs one**: `hollowStage` reads Commit *and*
+  the 500 m in three dimensions together, so a hull that is Commit-loud from a kilometre away is a
+  hull the wall watches and does not answer. Proximity is the trigger; facing only decides whether
+  proximity counts. What does move a coil is a wound, and a wounded one closes.
 
-Nine of the nineteen intervals have a coil inside 433 m of their own metre (§6 says which), and
+Nine of the nineteen intervals have a coil inside 497 m of their own metre (§6 says which), and
 **the player does not know which nine.** Every interval is playable from the far edge of its own
 400 m disc, bow at the wall, and every one of the nine is fatal from the point itself. The mission
 never says which is which, and that is what makes movement 3 a decision instead of a button.
 
 **3. The discourteous instrument, priced rather than fenced.** One ping is Tier 4 on everything
 within 900 m for three seconds — every coil on a wall, exactly, at once, with its health and its
-facing. The cost is three numbers. Fauna aggro is **tripled**
-(`ACTIVE_SONAR.FAUNA_AGGRO_MULTIPLIER`), so a ping reads to a Hollow as 285 and commits **every
-Hollow within 1,434 m** while interesting every one within 1,891 m; the basin reads it at Commit
-from **1,479 m**; and the watch resolves the pinger at **Track from 4,486 m** down 1.6 water,
-which is the whole trench. It kills nobody by itself — a Committed Hollow outside 500 m still only
-coils. What it buys is a map, and what it costs is that every coil within a kilometre and a half
-is now sitting at Commit waiting for the party to come inside 433 m of it, which is what the party
-is about to do nineteen times. **The button is not a mistake and it is not free, and the briefing
-says so rather than the mission punishing it in the dark.**
+facing. The cost is three numbers and one rule. Fauna aggro is **tripled** for the three seconds
+the ping lasts (`ACTIVE_SONAR.FAUNA_AGGRO_MULTIPLIER`), so the hull that pressed it reads to a
+Hollow as 285: Commit-loud out to **1,434 m** and Interest-loud out to 1,891 m. The basin reads it
+at Commit from **1,479 m**. The watch resolves the pinger at **Track from 4,486 m** down 1.6 water,
+which is the whole trench. The rule is the one the movement above ends on: Commit-loud is not a
+state a wall stays in, so a ping does not arm the trench. What it does is make one hull the loudest
+thing in the water for three seconds — which springs, at once, any coil already inside 497 m of it,
+and which takes a basin that has been listening straight from Interested to Committed at a
+kilometre and a half. So the button is cheap from ground the party has cleared, expensive from
+ground it has not, and the only instrument on the map that says which of the two it is standing on.
+**It is not a mistake and it is not free, and the briefing says so rather than the mission
+punishing it in the dark.**
 
 **4. An interval is played by the hull it was given to.** Nineteen `MissionSounding` rows, each
 naming a carrier — the Voice one, the Corvettes four, four, four, three and three — fixed at
@@ -227,9 +240,10 @@ as the thing it is for**: a sounding held at 80 for twenty seconds, nineteen tim
 quieter version of the mission available, because a quieter committal is a committal that was not
 played.
 
-It is playtested against two players, per [campaign.md](campaign.md) §10. The first pings the
-walls to save time and finds that the map it bought is a map of seven animals that are all now
-Committed. The second plays every interval bow-on from the point itself, because that is where the
+It is playtested against two players, per [campaign.md](campaign.md) §10. The first pings the walls
+to save time and learns what the map costs: it is exact, it lasts three seconds, and it is paid for
+by whichever coil was already inside four hundred and ninety-seven metres of the hull that pressed
+the button. The second plays every interval bow-on from the point itself, because that is where the
 marker is, and loses the Third's hull and the Third's four names in the same eight seconds.
 
 ---
@@ -240,8 +254,8 @@ marker is, and loses the Third's hull and the Third's four names in the same eig
 | --- | --- | --- |
 | **The committal party** — the player | 1 Cruiser hull Knight-rigged, 5 Corvette hulls Knight-rigged; all PR-2, all armed; 37 souls | Hadron. Playing nineteen intervals over ground it may not enter. Seated at the Head at 1,600 m |
 | The watch | 2 Abyssal Submersibles, SIG 22 idle / 28 under way, HYD 85, PR-3, **weapons-cold**, at 2,100 m on the axis | Directorate — the trench cohort's western watch. Walking the axis on filed legs and counting what is played over it |
-| The walls | 7 Hollows at 2,000 m — SIG 3 coiled / 60 striking, HYD 80, Interest 45 / Commit 70, 640 HP | The Drift, which is not a party. Authored, placed, and handed straight to their own trigger model |
-| The basin | 1 Sounder in the Deep End at 2,100 m — SIG 45 cruise / 100 calling, HYD 90, 9,000 HP | The Drift. Left alone until 16:30, when it is the close's own telegraph |
+| The walls | 7 Hollows at 1,700 m — SIG 3 coiled / 60 striking, HYD 80, Interest 45 / Commit 70, 640 HP | The Drift, which is not a party. Authored, placed at the species' own working depth, and handed straight to their own trigger model |
+| The basin | 1 Sounder in the Deep End at 2,000 m — SIG 45 cruise / 100 calling, HYD 90, 9,000 HP | The Drift. Left alone until 16:30, when it is the close's own telegraph |
 
 **The watch is right, and the mission never lets it become an attack.** Two hulls on a filed
 patrol of a trench that is theirs, weapons cold, announcing the law once in the passive and
@@ -277,8 +291,9 @@ SIG 80** — Aptitude's figures, unchanged, because the committal uses the same 
 tuning does ([mission-aptitude.md](mission-aptitude.md) §4) — and a broken hold resets to zero.
 The points lie in two rows over the trench floor: ten at y 1,750 from x 250 in steps of 500, and
 nine at y 2,250 from x 500 in steps of 500. Neighbours are 500 m apart along a row and 559 m
-across the rows; both rows are 250 m clear of a wall in plan and 400 m above the floor the names
-are on.
+across the rows; both rows are 250 m clear of a wall in plan, fifty metres under the coils on it,
+and 400 m above the floor the names are on — 650 m at the eastern end, where the trench falls into
+the Deep End under the last three.
 
 **The Order plays the interval a name resolves to, and where a name repeats the interval repeats.**
 Four Tessalys, four Ormes, four Brannocks, four Vales and three Kallisos: the Order does not play
@@ -289,15 +304,15 @@ count belongs to the house. Nobody in the mission explains this and nobody has t
 | --- | --- | --- | --- | --- | --- |
 | 1 | Sera Tessaly | 250, 1,750 | the First | 610 m | Free at the point. The western end, and the longest transit on the map |
 | 2 | Ilar Orme | 750, 1,750 | the First | **350 m** | Inside. Held from the southern third of its disc, bow north, with a coil eighty-three metres beyond the point |
-| 3 | Wen Brannock | 1,250, 1,750 | the Second | **372 m** | Inside — and the coil is under the Overhang, which is the one animal on this map a hull cannot close on without diving under rock |
-| 4 | Marek Vale | 1,750, 1,750 | the Second | **430 m** | Inside by three metres. The tightest stand in the mission and the one that reads as free |
+| 3 | Wen Brannock | 1,250, 1,750 | the Second | **372 m** | Inside. The fourth coil of the north wall, the one no other interval shares, so clearing it buys this name and nothing else |
+| 4 | Marek Vale | 1,750, 1,750 | the Second | **430 m** | Inside by sixty-seven metres. The widest of the nine, and the one that reads as free |
 | 5 | Fen Tessaly | 2,250, 1,750 | the Third | **430 m** | Inside. The same coil as row 4, which means clearing it buys two names |
 | 6 | Ando Kalliso | 2,750, 1,750 | **the Voice** | 610 m | Free at the point, and the point nearest the Head. The first interval a competent party plays |
 | 7 | Ottiline Orme | 3,250, 1,750 | the Third | **350 m** | Inside |
 | 8 | Hale Brannock | 3,750, 1,750 | the Fourth | 610 m | Free at the point |
-| 9 | Ise Vale | 4,250, 1,750 | the Fifth | 1,060 m | Free. Over the Deep End's shoulder, where the floor is 2,400 |
-| 10 | Perrin Tessaly | 4,750, 1,750 | the Fifth | 1,540 m | Free, and the furthest metre from any coil on the map |
-| 11 | Corin Orme | 500, 2,250 | the First | 1,060 m | Free |
+| 9 | Ise Vale | 4,250, 1,750 | the Fifth | 886 m | Free — and the nearest coil is the south wall's, across the trench. Over the Deep End's shoulder, where the floor is 2,400 |
+| 10 | Perrin Tessaly | 4,750, 1,750 | the Fifth | 1,134 m | Free, and the furthest metre from any coil on the map |
+| 11 | Corin Orme | 500, 2,250 | the First | 886 m | Free, and the nearest coil is the north wall's |
 | 12 | Neve Brannock | 1,000, 2,250 | the First | 610 m | Free at the point |
 | 13 | Talin Vale | 1,500, 2,250 | the Second | **350 m** | Inside |
 | 14 | Emris Kalliso | 2,000, 2,250 | the Second | 610 m | Free at the point, between two coils that each reach part of its disc |
@@ -314,8 +329,9 @@ hardest stands on the map at once, which is the mission's argument stated as a r
 as a sentence — and a player who works the Third's four first is doing the hard thing while six
 guns are still behind it, which is a real strategy the mission is playtested against.
 
-**"Free at the point" is not "safe".** Every disc is 400 m across and every coil reaches 433 m, so
-a hull that drifts north while holding a northern row walks into a reach it could not hear. The
+**"Free at the point" is not "safe".** Every disc is 400 m in radius and every coil reaches 497 m,
+so a hull that drifts north while holding a northern row walks into a reach it could not hear —
+and the nearest free point is 610 m off its coil, which is two hundred and ten metres of drift. The
 last column is about the point and not about the disc, and the difference between the two is the
 mission's whole quiet cruelty.
 
@@ -336,12 +352,13 @@ mission's whole quiet cruelty.
   classified from the first minute.
 - **The walls: nothing.** Seven animals at SIG 3, which is under the Voice's Contact threshold at
   anything beyond 1,041 m and under a Corvette's at 883 m. **The player will cross this map
-  hearing six of the seven only when they are already inside a Classification.** This is the
+  hearing any of the seven only when they are already inside a Classification of it.** This is the
   inverse of [mission-intake.md](mission-intake.md) §7's opening: that mission's silence was a
   search, and this one's is a room the party has to work in.
 - **A strike, when one comes.** SIG 60. To the Voice, through 1.6 water, that is a Contact from
-  **6,769 m** — the whole map, twice. Every Hollow kill and every Hollow strike tells the entire
-  trench where it happened, including the watch, which enters it.
+  **6,769 m**, against a map whose longest diagonal is 6,403 m: a strike anywhere is heard
+  everywhere. Every Hollow kill and every Hollow strike tells the entire trench where it happened,
+  including the watch, which enters it.
 - **The basin, from 16:30.** A Sounder cruising at 45 is a Contact to the Voice from 5,655 m; the
   same animal calling at 100 is one from **9,316 m**, and to the watch from 11,016 m. It is the
   loudest thing in the game and it is under the Head at the close.
@@ -451,11 +468,14 @@ audible for sixty seconds. This one has two failures and neither is a clock.
   here without apology.
 - **The count, short.** The panel carries `n of 19` from the first tick, and the last five minutes
   are the arithmetic arriving: the basin lifts off the Deep End at **16:30**, calling at 100 and
-  audible from 9,316 m, and walks the axis west at the bench's own depth. Ninety seconds against
-  §10's sixty — and it is the only animal on the map that can take a hull the walls cannot,
-  because the Voice at 130 m is ground by a transit and no Corvette is
-  (`DRIFT.TRANSIT_MIN_HULL_M` is 95). The last ninety seconds are a decision about the one hull
-  carrying the party's ears, taken while the count may still be short.
+  audible from 9,316 m, and walks the axis west at 1,800 m, fifty metres under the bench. Ninety
+  seconds against §10's sixty — and it is the only animal on the map that can take a hull the walls
+  cannot, because the Voice at 130 m is ground by a transit and no Corvette is
+  (`DRIFT.TRANSIT_MIN_HULL_M` is 95). The footprint is a body plus a hull radius — 102 m either
+  side of the line it sweeps and 102 m of depth — so it takes the Voice only if the Voice is on the
+  axis when it comes through, which is exactly where both rows' 400 m discs reach. The last ninety
+  seconds are a decision about the one hull carrying the party's ears, taken while the count may
+  still be short.
 
 **Nothing else here can take a hull.** Nothing crushes at 1,750 m, the watch is weapons-cold, and
 there is no hazard site and no second navy: the only two ways to lose something are an animal the
@@ -481,12 +501,12 @@ so the mission can be tuned against something.
 | Time | Beat |
 | --- | --- |
 | 00:00 | **Sull sets the committal** (§12). Six hulls at the Head, 1,600 m, weapons live, thirty-seven aboard |
-| 00:00 | **The Drift is placed and not driven** — eight `creature` beats, each driving its animal to its own spawn point until tick 0, which hands it straight to its own trigger model ([mission-intake.md](mission-intake.md) §13). Seven Hollows on the walls at 2,000 m; the basin in the Deep End at 2,100 m. None is loud |
+| 00:00 | **The Drift is placed and not driven** — eight `creature` beats, each driving its animal to its own spawn point until tick 0, which hands it straight to its own trigger model ([mission-intake.md](mission-intake.md) §13). Seven Hollows on the walls at 1,700 m; the basin in the Deep End at 2,000 m — each at its own species' working depth, which is the only depth a placed animal keeps (§13). None is loud |
 | 00:00 | **All eight rows are on the panel**, revealed from the first tick. The six named rows read Met, and they are standing rows, and the panel says which kind they are. That is the whole introduction the system gets |
 | 01:00 | The watch walks west to (3,500, 2,000) and (3,550, 2,080) — 1,300 m in twenty-two seconds, then two and a half minutes of standing. Its first window opens |
 | *[01:30]* | *[the first interval — the Voice's, at 2,750, 1,750: Ando Kalliso, the point nearest the Head, and one of the ten with nothing coiled inside its metre. Kalliso speaks, on the tally rather than the clock]* |
 | 04:00 | **Watch-Speaker, for those below** (§12) |
-| 04:00 | The watch to (2,000, 2,000) / (2,050, 2,080) — the axis under the middle of the bench, 250 m from the north row and 400 m below it |
+| 04:00 | The watch to (2,000, 2,000) / (2,050, 2,080) — the axis under the middle of the bench, 250 m from the north row in plan and 350 m below it |
 | 07:00 | The watch to (1,000, 2,000) / (1,050, 2,080). Its first window closes here |
 | 09:00 | **Voice Ren Kalliso, once, to nobody** (§12). The nineteen are said aloud, in the campaign, for the first time and the last |
 | 10:00 | The watch turns back east to (2,000, 2,000) / (2,050, 2,080). Its second window opens |
@@ -581,9 +601,8 @@ layer's factor is 1 on every pair and says nothing, arranged as
 | The Shoulders | 0, 0, 5000, 4000 | Resonance Field | 1,700 | Crystal country, PF 0.70. Painted first; the far shoulder south of the trench survives as this and nobody has a reason to be on it |
 | The Head | 2000, 0, 1000, 750 | Resonance Field | 1,600 | **The spawn**, and the bench the party climbs back to. Where the Order's 211 PC chart begins |
 | The Rest | 0, 1000, 5000, 2000 | Abyssal Trench | 2,150 | The trench. PF 1.60 axial — "no secrets, only distances". The nineteen are on this floor and the two sounding rows run above it at y 1,750 and y 2,250 |
-| The North Wall | 0, 1000, 5000, 500 | Abyssal Trench | 2,050 | Hollow ground. Three coil here at 2,000 m, and a fourth under the Overhang |
-| The South Wall | 0, 2500, 5000, 500 | Abyssal Trench | 2,050 | Hollow ground. Three coil here at 2,000 m |
-| The Overhang | 1000, 1000, 750, 500 | Abyssal Trench | 2,050 / **roof 1,850** | The one roofed shelf — "abyssal overhangs" ([bestiary.md](bestiary.md) §4). Water only from 1,850 to 2,050 m, so a hull enters it by a deliberate dive into the Abyssal band and nothing else |
+| The North Wall | 0, 1000, 5000, 500 | Abyssal Trench | 2,050 | Hollow ground. Four coil here at 1,700 m |
+| The South Wall | 0, 2500, 5000, 500 | Abyssal Trench | 2,050 | Hollow ground. Three coil here at 1,700 m |
 | The Deep End | 4250, 1250, 750, 1500 | Abyssal Trench | 2,400 | Where the trench falls east toward Directorate country. The basin's water and the watch's station |
 
 One spawn, at the Head: **2,500, 375**, foundry offsets 0, 0. No resources — the Order is not
@@ -594,32 +613,34 @@ cutting anything today — no hazard sites, and `fauna: false`.
 | What | Where | Depth | Floor / ceiling under it | PR |
 | --- | --- | --- | --- | --- |
 | The party, at 00:00 | the Head, 2,200–2,800 × 300–550 | 1,600 m | 1,600 / 0 | PR-2 ✓ Mid-Water |
-| The party, working | the bench, y 1,750 and y 2,250 | 1,750 m | 2,050–2,400 / 0 | PR-2 ✓ — `requiredPressureRating(1750)` is 2, the band's last fifty metres, on purpose |
-| Hollows 1, 2, 3 and 5, 6, 7 | 750/2,000/3,250 at y 1,400; 1,500/2,750/4,000 at y 2,600 | 2,000 m | 2,050 / 0 | Drift; band 1,250–2,150 ✓ |
-| Hollow 4 | 1,375, 1,400 | 2,000 m | 2,050 / **1,850** | ✓ — 1,850 ≤ 2,000 ≤ 2,050, and the roof is why nothing else is in there |
+| The party, working | the bench, y 1,750 and y 2,250 | 1,750 m | 2,150 under both rows, 2,400 over the Deep End | PR-2 ✓ — `requiredPressureRating(1750)` is 2, the band's last fifty metres, on purpose |
+| The seven coils | 750/1,375/2,000/3,250 at y 1,400; 1,500/2,750/4,000 at y 2,600 | 1,700 m | 2,050 / 0 | Drift; the species' working depth, band 1,250–2,150 ✓ |
 | The watch | (4,800, 2,000) and (4,850, 2,080), and every leg | 2,100 m | 2,400 on station, 2,150 on the axis | PR-3 ✓ |
-| The basin | (4,700, 2,000), then driven along y 2,000 | 2,100 m, then 1,800 m | 2,400, then 2,150 | Drift; band 1,300–2,700 ✓ |
+| The basin | (4,700, 2,000), then driven along y 2,000 | 2,000 m, then 1,800 m | 2,400, then 2,150 | Drift; the species' working depth, band 1,300–2,700 ✓ |
 
 **Why this ground argues the mission.** Three reasons and they are the three facts of §1.
 
-- **The party can stand over every metre of the trench and enter none of it.** The floor is
-  350–650 m under the rating everywhere, so no route, bearing or corner gets the party closer to
-  the nineteen than four hundred metres. A map that had one would be arguing with its own
-  mission.
-- **The walls are between the bench and everything.** Both sounding rows sit 250 m in plan from a
-  wall and 250 m above the coils on it, which is what makes 433 m the number the whole mission
-  turns on. Move either row 100 m toward the axis and the mission has no walls; move it 100 m the
-  other way and every interval is fatal.
-- **The Overhang is the one place the map says no with a roof rather than with a number.** Its
-  water starts at 1,850 m — the Abyssal band, and 4 HP/s for a PR-2 hull, which is 105 seconds for
-  a Corvette and 300 for the Voice. The animal under it can be shot from outside (a Corvette's gun
-  reaches 550 m in three dimensions and the coil is 448 m from row 3's point) and lunges out when
-  it is. Nothing in the mission asks a hull to go in; everything about the Overhang is there so
-  that one player will.
+- **The party can stand over every metre of the trench and enter none of it.** The floor the names
+  are on is 2,150 m under both rows and 2,400 m where the trench falls into the Deep End — 350 and
+  600 m under the rating, 400 and 650 m under the bench — so no route, bearing or corner gets the
+  party nearer than four hundred metres, and the three easternmost names are six hundred and fifty
+  away. A map with a corner where the arithmetic improved would be arguing with its own mission.
+- **The walls are between the bench and everything.** Both sounding rows sit 250 m in plan from
+  the wall beside them and fifty metres under the coils on it, which is what makes 497 m the number
+  the whole mission turns on: the strike's five hundred metres are spent almost entirely on the
+  ground, because a party rated to 1,800 m has almost no depth to put between itself and an animal
+  that works at 1,700. Move either row 150 m toward the axis and every coil is out of reach and the
+  walls are scenery; leave it where the names are and nine of the nineteen are stood over from
+  inside a reach the party cannot hear.
+- **Nothing on this map crushes anybody, and that is the third argument.** The bench is fifty
+  metres inside the rating and the floor is 350 m outside it, so the only thing a descent order
+  buys is 4 HP/s no repair touches (`crushAttritionPerSecond`, 4 × deficit²) — 105 seconds for a
+  Corvette, 300 for the Voice. The map neither asks for that order nor blocks it. It is simply
+  there for eighteen minutes, being the reason the Order is playing tones instead of going down.
 
 **Every rectangle lands on the 250 m cell grid and paints exactly the metres it reads**
 ([maps.md](maps.md), "How a map is written"), painted in the table's order so the walls and the
-Overhang cut into the trench and the trench cuts into the shoulders. The map id is checked against
+Deep End cut into the trench and the trench cuts into the shoulders. The map id is checked against
 `missionMapById`: no collision. **The Rest is a mission map and is not in the public catalogue** —
 one seat, no resources, not balanced, resolved by mission id and nothing else.
 
@@ -646,8 +667,9 @@ in a way that reads to everyone else as condescension.
 > The floor is at two thousand one hundred and fifty metres and you are rated to eighteen hundred.
 > That does not improve on the way down and I am not going to let anybody hear me suggest it
 > might. You will play from seventeen fifty, which is the last fifty metres of your own rating,
-> over water you may not enter, four hundred metres above the ground each name is on. It is the
-> nearest the Order has stood to them since the raids and it is as near as we get.
+> over water you may not enter, four hundred metres above the ground the names are on and more
+> than that at the eastern end. It is the nearest the Order has stood to them since the raids and
+> it is as near as we get.
 >
 > Nineteen intervals. Four hundred metres, bow to the ground, twenty seconds at the eightieth, and
 > a tone you interrupt is a tone you have not played. Each one is a name. Where a name repeats,
@@ -655,16 +677,21 @@ in a way that reads to everyone else as condescension.
 > count belongs to the house, and I would rather be told at the close that you played the same
 > tone four times than that somebody was efficient about it.
 >
-> The walls are theirs. Something lives on both of them, at three, and you will not hear it until
-> you are inside a classification of it; it strikes at five hundred metres in three dimensions,
-> which from your depth is four hundred and thirty-three across the ground. Stand off your marks
-> and play from behind them. The chapter would rather have eighteen entered than a fifth hull.
+> The walls are theirs. Something lives on both of them, at three, and it works at seventeen
+> hundred, which is fifty metres above where you will be standing. You will not hear it until you
+> are inside a classification of it; it strikes at five hundred metres in three dimensions, which
+> from your depth is four hundred and ninety-seven across the ground. It does not come to you and
+> it does not answer a noise made a kilometre away. It answers being stood next to. Stand off your
+> marks and play from behind them. The chapter would rather have eighteen entered than a fifth
+> hull.
 >
 > And you are carrying the survey array, and I have not struck it. I would rather you knew what it
 > was before you pressed it. It is the one emission this Order owns that has no bow. It will hand
-> you nine hundred metres of wall, exactly, for three seconds, and everything within fourteen
-> hundred and thirty-four metres of you will hear it as a thing worth coming to. It is not
-> discourteous to use it. It is discourteous to use it without having decided to.
+> you nine hundred metres of wall, exactly, for three seconds, and for those three seconds you are
+> the loudest thing within fourteen hundred and thirty-four metres. The walls will not walk to you
+> for that. Whatever is already beside you will answer it at once, and whatever is in the deep end
+> and has been listening will start. It is not discourteous to use it. It is discourteous to use it
+> without having decided to.
 >
 > Six of you. I will read the count at the close and I will read it hull by hull, because that is
 > the count I actually have.
@@ -686,7 +713,7 @@ formality:
 
 > The trench is attended. What is played over it is counted. It is not being threatened.
 
-**Voice Ren Kalliso, once, to nobody in particular — on the first interval**
+**Voice Ren Kalliso, to nobody in particular — on the first interval**
 
 > That is one of them. The interval comes first and the name arrives after it, and nobody explains
 > that to you at nine.
@@ -748,30 +775,32 @@ buildable today, and what it cannot do is be remembered.**
 | Requirement | Status |
 | --- | --- |
 | The mission format — beats, predicates, registry, private rooms | **Built** (#190). `sound`, standing `survive`, `tolerance`, `MissionSounding`, `MissionSweep`, the `creature` beat, `say`, `move` and `resolve` cover every row of §8 and §9 |
-| **Permanent roster attrition — a hull lost here is lost for the campaign** | **Not built, and it is this mission's teaching target** ([campaign.md](campaign.md) §7 row 3: "Every unit lost in this mission is gone for the rest of the campaign"). Nothing outlives a match ([docs/README.md](README.md), "Permanent roster attrition"), and campaign progression is not started either, so there is nowhere to put the fact. **The smallest shape, in the union's own idiom**: the close already writes a `MissionResultPayload` with the frozen objectives, so it gains `survivors: readonly MissionTag[]`; and `MissionDefinition` gains `rosterFrom?: MissionId`, which filters `parties[playerSlot].units` to the tags that survived the named mission's last recorded close. `chord-conclave`, `chord-the-three`, `chord-rim-deposits` and `chord-second-chord` would each carry `rosterFrom: 'chord-nineteen'`. It needs a progression store to hold the record, which is #212's row and which no ending document owns ([mission-item-nine.md](mission-item-nine.md) §13). **The cheapest honest approximation now** is what this document ships: the mission is playable, and its subject is made physically true *inside* the eighteen minutes by the six named standing rows and by nineteen soundings whose carriers die with their hulls. Missions 4–7 seat six hulls regardless and each says so in its own §13 |
+| **Permanent roster attrition — a hull lost here is lost for the campaign** | **Not built, and it is this mission's teaching target** ([campaign.md](campaign.md) §7 row 3: "Every unit lost in this mission is gone for the rest of the campaign"). Nothing outlives a match ([docs/README.md](README.md), "Permanent roster attrition"). The record that would hold it now exists — see the progression row below — and nothing writes to it or reads from it, so there is still nowhere the fact is put. **The smallest shape, in the union's own idiom**: the close already writes a `MissionResultPayload` with the frozen objectives, so it gains `survivors: readonly MissionTag[]`; and `MissionDefinition` gains `rosterFrom?: MissionId`, which filters `parties[playerSlot].units` to the tags that survived the named mission's last recorded close. `chord-conclave`, `chord-the-three`, `chord-rim-deposits` and `chord-second-chord` would each carry `rosterFrom: 'chord-nineteen'`. It needs a progression store to hold the record, which is #212's row and which no ending document owns ([mission-item-nine.md](mission-item-nine.md) §13). **The cheapest honest approximation now** is what this document ships: the mission is playable, and its subject is made physically true *inside* the eighteen minutes by the six named standing rows and by nineteen soundings whose carriers die with their hulls. Missions 4–7 seat six hulls regardless and each says so in its own §13 |
 | **A hull named and counted at once** | **Built, and this is the first document to want it.** [mission-intake.md](mission-intake.md) §13 recorded that `MissionUnit.role` is singular and resolved it by not wanting the second half; this mission wants the *first* half six times over, which the format allows exactly as it stands — six roles, one hull each, six `survive` rows at count 1. Nothing new is asked for. Stated as a finding rather than a request so a reviewer can see that the singular-role rule is being spent deliberately and not worked around: the price is that no predicate here can address a *set* of the six, and the mission does not need one |
 | **The six rows are `survive` and not `extract`** | **Built, and the reasoning is the format's own.** `predicates.ts`'s `isStanding` makes `quiet` and `survive` standing and nothing else; `runtime.ts` skips a Met non-standing row on every later pass. The party is seated at the Head at 00:00, so an `extract` row naming that region would latch Met on the first tick and read *home* beside a wreck at the close — and, with the court's rule in force, six latched rows plus the nineteenth sounding would have closed the committal early whatever was left in the water. The judge's ruling, adopted whole |
 | **A sounding whose carrier the mission has lost** | **Built, and the runtime already says what happens.** `MissionRuntime.applySoundings` treats a missing carrier as the ultimate broken hold and resets the ledger rather than freezing it, with the comment "freezing its ledger instead would leave a half-read formation waiting for a hull that is never coming back". §4 movement 4 is that comment turned into a mission |
 | **The Sounder answering a ping as a challenge call** | **Not built, and this document does not claim it.** [bestiary.md](bestiary.md) §4 says a Sounder reads a ping inside its corridor as a challenge and alters course toward the emitter for two minutes; what ships is the ×3 aggro multiplier (`ACTIVE_SONAR.FAUNA_AGGRO_MULTIPLIER`) and nothing else. §4 prices the ping by the multiplier's own numbers — Commit-loud to a Sounder at 1,479 m and to a Hollow at 1,434 m — and never promises a turn. The mission is unchanged either way: the basin's one movement is an authored beat |
 | `MissionSounding` ×19, at 400 m / 20 s / SIG 80 | **Built** (#275). Aptitude's figures, unchanged, and nineteen rows is well inside what the pass costs — one hypot and one dot product per authored sounding at 5 Hz |
+| **A sounding with a depth** | **Not built, and named rather than asked for.** `MissionSounding` is a point, a radius and a cone: it tests `hypot(x, y)` and the bow, and says nothing about how deep the hull holding the tone is. So the bench at 1,750 m is where the briefing puts the party and not where the literal keeps it, and a player who plays every interval from the Head's own 1,600 m is inside the rules. §4's arithmetic survives that — 1,600 m against a coil at 1,700 is a 490 m reach against 497, and the nine stay nine — and stops surviving somewhere near 1,340 m, four hundred metres off the bench, where every coil falls outside 500 m in three dimensions and the walls become scenery. The shape, if anybody wants it, is a `depthMinM?` on the sounding row; this document does not ask for it, because the depth that would need enforcing is one no Knight has a reason to leave, and because a mission that fences a player out of a legal depth is teaching the fence |
 | **The `sound` count names no sounding** | **Built as designed, and named again rather than asked for again.** [mission-aptitude.md](mission-aptitude.md) §13 left an optional id on `sound` as an open call; this mission would be the second customer and declines to be, because "nineteen or fewer" is exactly the sentence the Order would say and *which* nineteen is a distinction the count deliberately does not draw |
 | Standing `survive`, and an unrevealed objective not scored | **Built** (both corrected in the runtime for [mission-intake.md](mission-intake.md)). This mission spends the first six-fold and does not need the second: every row is revealed at 00:00, because a committal that hid its own count would be a different rite |
 | `MissionSweep` over two hulls that also take `move` beats | **Built, and the interaction is documented.** The sweep bends its hulls' course once per window toward what it heard, and `MissionRuntime.file`'s own comment says "their next authored move beat restores the chart" — which is exactly this mission's arrangement: two windows, six legs, and a bend inside each window that the next leg corrects |
 | The `creature` beat with a depth, and the placed-and-not-driven idiom | **Built** (#349; [mission-intake.md](mission-intake.md) §13). Eight beats at 00:00 place seven Hollows and the basin with `driveTo` at their own spawn points and `untilTick: 0`; one beat at 16:30 replaces the basin's commitment with a driven transit at `driveTo.depthM` 1,800. A driven creature takes no weapon damage, which is why §8's telegraph is a fact rather than a fight |
 | The Hollow's trigger model, and a wound that springs the strike | **Built** (#353). §4's stand-off arithmetic is the settlement read from the other side: a hull that shoots a coil from the bench brings a lunge at 75 m/s, and the six guns' 2.4 seconds against 640 HP is why an array clears one and a single Corvette does not |
-| Roofed ground, and crush under it | **Built.** A map region carries `ceilingM`, `terrain.admits` rejects a hull inside the roof, and `crushAttritionPerSecond` is 4 × deficit² — 4 HP/s for a PR-2 hull below 1,800 m. The Overhang needs nothing new |
+| **A placed creature holds its species' working depth, and no other** | **Built, and it is the seam this document was re-cut on.** `MissionBeatEffect`'s `creature` row requires a `driveTo`, so the placed-and-not-driven idiom commits an animal to its own spawn until tick zero — and `MissionRuntime.holdCommitments`' release branch then gives the creature its ears back *and* sets `Fauna.homeDepth` to `faunaStatsFor(species).workingDepthM`, which `act` climbs or sinks toward at 12 m/s from that tick on. [mission-intake.md](mission-intake.md) §13 states the rule from the other side — "the species' working depth unless a mission says otherwise, and restored to it when the commitment ends" — and `intake.ts` seats its eight Hollows at `faunaStatsFor(Hollow).workingDepthM` for exactly this reason. **So a placed animal has one authorable depth and this document uses it**: the seven coils at 1,700 m and the basin at 2,000 m. A document that seated the coils at 2,000 m to buy a 250 m vertical offset and a 433 m strike reach would be describing a mission the engine does not run: the animals rise 300 m in twenty-five seconds at `DRIFT.VERTICAL_SPEED_MPS`, and the reach it had priced at 433 m is 497. The only thing that would hold an authored depth is a driven creature, which is deaf, unkillable by weapons and Committed at `sigActive` — an animal this mission cannot use. Named rather than asked for: an optional `holdDepth` on the placed idiom is one field, and no mission yet needs it badly enough to be its first customer |
+| Crush, under a bench fifty metres inside the rating | **Built and deliberately never fired.** `crushAttritionPerSecond` is 4 × deficit² — 4 HP/s one band under, 105 s for a Corvette and 300 for the Voice — and `requiredPressureRating(1750)` is 2, so nothing on this map crushes anybody at any depth the mission authors. The rule is the mission's premise rather than one of its events: the floor is 350 m outside the rating for eighteen minutes and the map neither asks for the order nor blocks it. Roofed ground (`ceilingM`, and `terrain.admits` rejecting a hull inside a roof) is built too and this map does not use it, for a reason the row above fixes rather than a preference: a roofed shelf whose water begins below 1,800 m cannot hold a Hollow, because a placed Hollow sits at 1,700 m and `act` clamps a creature to the floor and not to a ceiling — so it would climb into the rock. A roofed region with nothing under it is a row in a table rather than a place, and this map does not author one |
 | The seven locks | **Built.** One is authored — `construction`, *a committal builds nothing* — and the six that are not are the point: `activeSonar` is unlocked here per [campaign.md](campaign.md) §10's mission-3 rule, and `weapons`, `torpedoes`, `mines`, `depthCharges` and `noisemakers` are simply not struck, as [mission-aptitude.md](mission-aptitude.md) left them |
 | `sigBudget` as metadata | **Built** — `MissionDefinition.sigBudget`, shipped to the HUD as a ceiling and never a live threshold, which is why 80 can be the figure the mission *asks for* without becoming a rule |
 | **Souls, read out** | **Not built, and it is documentation.** Nothing in `packages/backend/src` reads `MissionUnit.souls`; the field is authored and the test suite checks it. The thirty-seven is carried by hand — in §3, in §9's opening beat, and nowhere in the epilogue, because Sull reads hulls and refuses to read people (§8), which is the one place this mission's register and the format's gap agree |
 | **Nineteen authored names** | **New canon, owned here.** Sera, Fen, Perrin and Yorrick Tessaly; Ilar, Ottiline, Corin and Aled Orme; Wen, Hale, Neve and Sunniva Brannock; Marek, Ise, Talin and Roelle Vale; Ando, Emris and Deri Kalliso. Five surnames across nineteen people because a chapter-house is a handful of surnames ([habitats.md](habitats.md) §5), and three Kallisos because the cadre was her house's ([characters.md](characters.md)). Nothing else in the bible names a rank-and-file Knight; if a later document wants more, it takes them from these five families or says why not |
 | **The trench's number, deliberately unauthored** | **Settled here, and it is a refusal rather than a gap.** [world-map.md](world-map.md) §4 carries all the geography this mission needs — the First and the trench country meet — and the only trench-cohort the bible numbers by name belongs to the Commune campaign's *In Writing*, which keeps it. Numbering this trench inside a Knight document would author a Directorate fact from the wrong side of the water. The watch's cohort is unnumbered for the same reason |
-| **What took a hull** | **Not built, and deliberately not asked for.** There is no damage-source predicate, so §8's named rows read the same sentence for a hull a Hollow struck, a hull the colossus ground and a hull that bled out under the Overhang's roof. [mission-standing-wave.md](mission-standing-wave.md) §13 named this first and declined to propose a `struck` predicate on the grounds that it would be the union's first row about an event rather than a state; this document agrees, and observes that the Order would not enter the difference either |
-| The map, seven regions, one roof, no resources | **Not built, and it asks for nothing new.** `the-rest` is one row of the literal per row of §11's table, painted in the document's order so the walls and the Overhang cut into the trench and the trench cuts into the shoulders. `fauna: false`; no blooms, no hazards, no second spawn. The id is checked against `MISSION_MAPS`: no collision |
+| **What took a hull** | **Not built, and deliberately not asked for.** There is no damage-source predicate, so §8's named rows read the same sentence for a hull a Hollow struck, a hull the colossus ground and a hull that took four points a second below its rating. [mission-standing-wave.md](mission-standing-wave.md) §13 named this first and declined to propose a `struck` predicate on the grounds that it would be the union's first row about an event rather than a state; this document agrees, and observes that the Order would not enter the difference either |
+| The map, six regions, no resources | **Not built, and it asks for nothing new.** `the-rest` is one row of the literal per row of §11's table, painted in the document's order so the walls and the Deep End cut into the trench and the trench cuts into the shoulders. Every rectangle is a whole 250 m cell; the shallowest floor is 1,600 m and the deepest 2,400, both inside `0 < floorM <= DEPTH.MAX_M`. `fauna: false`; no blooms, no hazards, no ceilings, no second spawn, and `regions: []` on the mission itself, because no predicate, lift, ground beat or reader addresses a rectangle. The id is checked against `MISSION_MAPS`: no collision |
 | The Corvette's firing burst, +10 and not +25 | **Built, and one shipped document should move.** `FACTION_COMBAT.ENERGY` gives the Knights `FIRING_SIG: 10`, replacing the hull's own burst rather than scaling it; [mission-aptitude.md](mission-aptitude.md) §3's hull table prints the roster's kinetic "+25 firing burst" beside a Knight-rigged Corvette. Nothing in Aptitude's geometry depends on it — no distance in its §4 or §6 is quoted from a firing figure — so the correction is one cell in one table, and it is named here rather than made here |
 | A Knight hull in the roster | **Not written**, and a [units.md](units.md) gap rather than a code one, unchanged from [mission-aptitude.md](mission-aptitude.md) §13 and [mission-standing-wave.md](mission-standing-wave.md) §13. §3 fields generic hulls and says so |
 | Resonance Field 0.70 as **scattered** | **Not built**, and this mission relies on it less than either of its predecessors: the Head and the shoulders are 0.70 and nothing is heard across them that matters, and every number in §4, §6 and §7 is quoted in the trench at 1.60. Named again so nobody adds false bearings and assumes the stand-off arithmetic survived |
 | Cross-mission Drift Health | **Absent**, and this map is used once, so [campaign.md](campaign.md) §2 rule 5 has nothing to carry here. Worth stating because the mission *does* wear the ledger inside its own eighteen minutes: nineteen tones at 80 and up to seven renderings drain the cells they happen in, and a party that clears every wall is paid a colder trench than the one it arrived in — which nobody tells it, per [mission-intake.md](mission-intake.md) §13's decision to say so in the document and move nothing |
-| Campaign progression | **The record is built** (#371, #374): a per-mission history in `packages/frontend/src/progression/store.ts`, and a board that reads it. The row above is the one that wanted it, and it is now a field on `MissionRecord` rather than a store to design — that type was shaped to take mission-scoped fields without a migration and names permanent roster attrition among the three systems queued behind it. What is still missing is the other half: nothing writes survivors into the record, and nothing reads it back into a briefing, so Sull's authorisation in mission 6 still depends on this tide having happened and is still carried by prose |
+| Campaign progression | **The record is built** (#371, #374): a per-mission history in `packages/frontend/src/progression/store.ts`, written from the `missionOver` payload and read by the campaign board. So the first row above is no longer asking for a store to be designed — `Progression` is a container of collections precisely so that a spent roster arrives as a **sibling key beside `missions`**, which is what its own comment and [campaign.md](campaign.md) §11 both say, and `MissionRecord` takes mission-scoped fields without a migration. What is missing is the other half and it is the whole of the row: nothing writes survivors into that record and nothing reads it back into a roster or a briefing, so Sull's authorisation in mission 6 still stands on this tide having happened and is still carried by prose |
 | In-mission character speech, heard | Text only, the standing status ([mission-sorrowgate.md](mission-sorrowgate.md) §13) |
 | The mix — a trench that carries, seven silences on the walls, and one interval nineteen times | Not started ([audio-direction.md](audio-direction.md)). The Fields' pitched bed is [mission-aptitude.md](mission-aptitude.md) §13's problem restated at 1.60, with the hardest single cue in the campaign under it: a held tone at 80 that has to read as a rite rather than as a klaxon, nineteen times, without the nineteenth sounding like the first |
 
