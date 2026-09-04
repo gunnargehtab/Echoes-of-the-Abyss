@@ -337,36 +337,40 @@ is not a lever here.
   a different axis ([mission-intake.md](mission-intake.md) §3).
 
 **What the concern hears, and where the listening ground therefore is.** A row is at Bearing to a
-Chorister from y ≤ 1,900 and to a submersible from y ≤ 2,000 — a hundred and fifty metres of
-usable water south of a corridor whose southern edge is y 1,750. That sliver is `the-strip`, and
-it is overlooked from both ends:
+Chorister from y ≤ 1,900 and to a submersible from y ≤ 2,050 — a hundred and fifty metres of
+usable water south of a corridor whose southern edge is y 1,750, and three hundred for the ears.
+That sliver is `the-strip`, and it is overlooked from both ends:
 
-| A silent Chorister at, on y 1,850 | The closure's gate | The western turret | The escort at the frame |
+| A silent Chorister at 4.3, on y 1,850 | The closure's gate | The western turret | The escort at the frame |
 | --- | --- | --- | --- |
-| x 375 | **Track** (4.80) | nothing (0.77) | nothing (0.56) |
-| x 650 | Classification (3.36) | Contact (1.05) | nothing (0.70) |
-| x 1,000 | Bearing (1.83) | Bearing (1.72), 919 m | nothing (0.99) |
-| x 1,225 | Contact (1.31) | **Classification** (2.56), **716 m** | Contact (1.28) |
-| x 1,550 | nothing (0.87) | **Track** (5.19), 461 m — inside the gun | Bearing (2.03) |
+| x 375 | **Classification** (2.60), 456 m | nothing (0.42) | nothing (0.30) |
+| x 650 | Bearing (1.82), 570 m | nothing (0.57) | nothing (0.38) |
+| x 900 | Contact (1.17), 750 m | nothing (0.80), 1,012 m | nothing (0.48) |
+| x 1,225 | nothing (0.71) | Contact (1.39), **716 m** | nothing (0.69) |
+| x 1,550 | nothing (0.47) | **Classification** (2.81), 461 m — inside the gun | Contact (1.10) |
 
-**The band that is quiet in both directions is two hundred and fifty metres wide.** West of
-x 1,000 the closure's gate holds a silent hull at Classification or better, and at x 375 it holds
-it at Track. East of x 1,244 the western turret has it inside seven hundred metres, which is a
-firing solution rather than a hearing. Between those two lines a silent hull is Bearing to a
-turret that cannot reach it and Contact to an escort that cannot read it — and from (1225, 1850)
-**a submersible holds five of Marr's six rows at Bearing at once**: 1.55, 1.75, 1.83, 1.75 and
-1.55 on rows two through six. Row one, at (250, 500), needs a hull west of x 650, which is the
-closure's water and costs thirty seconds of Classification to stand in.
+**The band that is quiet in both directions runs from x 426 to x 1,244, and it is eight hundred
+metres wide.** West of x 426 the closure's gate holds a silent hull at Classification, and thirty
+cumulative seconds of that is the second asking. East of x 1,244 the western turret has it inside
+seven hundred metres, which is a firing solution rather than a hearing. Between those two lines a
+silent hull is Contact to the gate at worst, nothing to the escort, and outside every gun.
+
+**And two stations inside that band each hold five rows at once.** From (900, 1850) a submersible
+holds rows one to five at Bearing — 1.55, 1.75, 1.83, 1.75, 1.55, the outer two at 1,498 m each
+— and from (1225, 1850) it holds rows two to six at the same five figures, the geometry being
+symmetric about whichever row it stands under. Either station is `the-transcript`'s five on its
+own; both of them, 325 m and eighteen silent seconds apart, are six. A Chorister standing in the
+same water holds three, which is the whole argument for bringing the ears up the slope.
 
 **And the sixth row is the one that costs.** A Chorister directly beneath `marr-row-six`, at
-(1875, 1850), holds it at 1.62 — and stands 351 m from the western turret, at Track, inside a
-700 m gun. The mission never says not to. It prints the distance.
+(1875, 1850), holds it at 1.62 — and stands 351 m from the western turret, at Classification,
+inside a 700 m gun that fires at Tier 2. The mission never says not to. It prints the distance.
 
 **The under-run is a route, not a hide.** Thermal Vein at PF 0.45 and 620 m of floor, lying
-*below* the corridor's middle: a silent Chorister at (2250, 2400) reads **0.97** to the Corvette
+*below* the corridor's middle: a silent Chorister at (2250, 2400) reads **0.53** to the Corvette
 886 m away at the frame's east — nothing, through a path mean of 0.59. It is Thin Water's *the
 quiet way is the deep way* inherited by the navy that sentence was written against, and it is
-1,266 m and seventy-two silent seconds off the seat.
+1,277 m and seventy-three silent seconds off the Cruiser's seat.
 
 **And the slope carries at 1.6**, so the column is heard arriving and heard leaving. No hazard
 event, no second Drift species, no Sounder: the discipline is Attendance's, kept on noisier
@@ -389,7 +393,7 @@ Five objective rows, three of them terminal, stated as the format carries them (
 | `the-record` | *What is heard of the column is entered by the concern, and read later, elsewhere.* | `{ kind: 'tolerance', ticks: 3600, tier: ResolutionTier.Classification }` | No. Read out, never ranked |
 | `the-whole` | *Eight of ten, and the Holdfast among them.* | `{ kind: 'attend', count: 8 }` | No. Read out, never ranked |
 
-**`the-transcript` is five of ten and §7's submersible at (1225, 1850) holds all five at once.**
+**`the-transcript` is five of ten and §7's submersible holds all five from one standing.**
 `attend` is monotone — an emitter resolved at Tier 2 while sounding is banked for the rest of the
 match (`runtime.ts`) — so the transcript is a *walk*, not a vigil: 2,302 m from the seat, a
 hundred and thirty-one seconds silent, a few seconds standing, and back. The mission is tuned
@@ -471,15 +475,17 @@ audible sixty seconds out. Three failures, all audible for minutes:
 
 - **The closure walks east from 14:00.** Two Corvettes at 85 m/s to x 2,500 by 14:26 and x 4,500
   by 16:54, at Track from the strip long before they are near it (5.20 at 1,322 m). The crossing
-  to the slope is 688 m — twenty-one seconds cruising, thirty-nine silent — against eight for the
+  to the slope is 650 m — twenty seconds cruising, thirty-seven silent — against eight for the
   thing chasing.
-- **The Holding's column, if it comes, is four minutes of Cruisers.** Un-silenced at 65 it is
-  Track to a submersible on the strip from 1,100 m and Bearing at the seat from 3,631, and it
-  arrives at 45 m/s at a column that walks at 32.
+- **The Holding's column, if it comes, is four minutes of Cruisers.** Silent at the gate it is a
+  smudge; un-silenced at 65 a Cruiser is Track to a submersible out to 2,638 m and Bearing out to
+  4,869, so it is Track to anything on the strip from the moment it moves and Bearing at the
+  column's own seat, 3,631 m away, at 2.15 through the real path. It arrives at 45 m/s at a
+  column that walks at 32.
 - **The pack comes up the slope's west end at 17:30**, loud, ninety seconds before the turn, onto
   exactly the ground a column coming off the western strip comes down onto. A Draymaw hears a
   Directorate hull at ×0.4 ([bestiary.md](bestiary.md) §2) and commits to a cruising Chorister
-  inside 199 m, a silent one inside 100, a cruising submersible inside 220, a firing Chorister
+  inside 199 m, a silent one inside 68, a cruising submersible inside 220, a firing Chorister
   inside 270 — and to a **descending** hull, at the dive's SIG floor of 72, inside **396 m**. The
   order that gets a hull under the line fastest is the order that calls the animals.
 
