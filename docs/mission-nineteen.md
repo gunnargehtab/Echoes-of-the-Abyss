@@ -311,7 +311,7 @@ count belongs to the house. Nobody in the mission explains this and nobody has t
 | 3 | Wen Brannock | 1,250, 1,750 | the Second | **372 m** | Inside. The second coil of the north wall, the one no other interval shares, so clearing it buys this name and nothing else |
 | 4 | Marek Vale | 1,750, 1,750 | the Second | **430 m** | Inside by sixty-seven metres. The widest of the nine, and the one that reads as free |
 | 5 | Fen Tessaly | 2,250, 1,750 | the Third | **430 m** | Inside. The same coil as row 4, which means clearing it buys two names |
-| 6 | Ando Kalliso | 2,750, 1,750 | **the Voice** | 610 m | Free at the point, and the point nearest the Head. The first interval a competent party plays |
+| 6 | Ando Kalliso | 2,750, 1,750 | **the Voice** | 610 m | Free at the point, and the nearest *free* point to the Head — Fen Tessaly’s is the same 1,397.5 m out and is one of the nine. The first interval a competent party plays |
 | 7 | Ottiline Orme | 3,250, 1,750 | the Third | **350 m** | Inside |
 | 8 | Hale Brannock | 3,750, 1,750 | the Fourth | 610 m | Free at the point |
 | 9 | Ise Vale | 4,250, 1,750 | the Fifth | 886 m | Free — and the nearest coil is the south wall's, across the trench. Over the Deep End's shoulder, where the floor is 2,400 |
@@ -472,12 +472,16 @@ audible for sixty seconds. This one has two failures and neither is a clock.
   here without apology.
 - **The count, short.** The panel carries `n of 19` from the first tick, and the last five minutes
   are the arithmetic arriving: the basin lifts off the Deep End at **16:30**, calling at 100 and
-  audible from 9,316 m, and walks the axis west at 1,800 m, fifty metres under the bench. Ninety
+  audible from 9,316 m, and *converges* on the axis west at 1,800 m, fifty metres under the bench —
+  converges rather than runs down it, because §11 seats the animal at the southern end of the Deep
+  End rather than on the axis, for the reason that section gives. Ninety
   seconds against §10's sixty — and it is the only animal on the map that can take a hull the walls
   cannot, because the Voice at 130 m is ground by a transit and no Corvette is
-  (`DRIFT.TRANSIT_MIN_HULL_M` is 95). The footprint is a body plus a hull radius — 102 m either
-  side of the line it sweeps and 102 m of depth — so it takes the Voice only if the Voice is on the
-  axis when it comes through, which is exactly where both rows' 400 m discs reach. The last ninety
+  (`DRIFT.TRANSIT_MIN_HULL_M` is 95). The footprint is a body plus a hull radius — 102.5 m either
+  side of the line it sweeps and 102.5 m of depth — so it takes the Voice only if the Voice is south
+  of the southern row when it comes through. The line runs 100 to 420 m south of the y-2,250 row
+  for the whole ninety seconds and finishes 47 m off Emris Kalliso's point; the northern row is out
+  of it entirely, which the discs of both rows used to reach and now do not. The last ninety
   seconds are a decision about the one hull carrying the party's ears, taken while the count may
   still be short.
 
@@ -508,7 +512,7 @@ so the mission can be tuned against something.
 | 00:00 | **The Drift is placed and not driven** — eight `creature` beats, each driving its animal to its own spawn point until tick 0, which hands it straight to its own trigger model ([mission-intake.md](mission-intake.md) §13). Seven Hollows on the walls at 1,700 m; the basin in the Deep End at 2,000 m — each at its own species' working depth, which is the only depth a placed animal keeps (§13). None is loud |
 | 00:00 | **All eight rows are on the panel**, revealed from the first tick. The six named rows read Met, and they are standing rows, and the panel says which kind they are. That is the whole introduction the system gets |
 | 01:00 | The watch walks west to (3,500, 2,000) and (3,550, 2,080) — 1,300 m in twenty-two seconds, then two and a half minutes of standing. Its first window opens |
-| *[01:30]* | *[the first interval — the Voice's, at 2,750, 1,750: Ando Kalliso, the point nearest the Head, and one of the ten with nothing coiled inside its metre. Kalliso speaks, on the tally rather than the clock]* |
+| *[01:30]* | *[the first interval — the Voice's, at 2,750, 1,750: Ando Kalliso, the nearest free point to the Head, and one of the ten with nothing coiled inside its metre. Kalliso speaks, on the tally rather than the clock]* |
 | 04:00 | **Watch-Speaker, for those below** (§12) |
 | 04:00 | The watch to (2,000, 2,000) / (2,050, 2,080) — the axis under the middle of the bench, 250 m from the north row in plan and 350 m below it |
 | 07:00 | The watch to (1,000, 2,000) / (1,050, 2,080). Its first window closes here |
