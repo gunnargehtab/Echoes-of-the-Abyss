@@ -15,6 +15,8 @@ export interface TitleScreenProps {
   onResume(): void;
   onSolo(): void;
   onMultiplayer(): void;
+  /** The campaign board. Live now that there is a board to open. */
+  onCampaign(): void;
   /** The prologue. Live now that a mission runtime exists to run it. */
   onTutorial(): void;
   onSettings(): void;
@@ -22,20 +24,24 @@ export interface TitleScreenProps {
 }
 
 /**
- * The one entry that still exists before its runtime does.
+ * No entry on this screen is disabled any more.
  *
- * Tutorial used to be the other, and is not any more: the prologue is built,
- * so it is a live button rather than a promise. What Campaign waits on is no
- * longer the runtime — the runtime runs one mission today — but the
- * twenty-eight faction missions that have not been written, and the reason
- * line has to say the true thing or the rule in §14 is doing nothing.
+ * Campaign was the last one, and dimming it was always a statement about the
+ * build rather than about the game: it waited first on a mission runtime and
+ * then on the missions themselves. Neither is what a board waits on. The board
+ * exists, it renders twenty-nine slots, and the twenty-eight that do not open
+ * say so on their own faces (docs/ui-ux.md §14) — which is the same rule
+ * "visible, with the reason attached" was always making, moved one screen in to
+ * where the reasons are specific. The line below is docs/campaign.md's own
+ * subtitle rather than a promise about what is finished.
  */
-const CAMPAIGN_ENTRY = { label: 'Campaign', reason: 'Awaits the faction campaigns' };
+const CAMPAIGN_ENTRY = { label: 'Campaign', note: 'Four wars, one question' };
 
 export function TitleScreen({
   onResume,
   onSolo,
   onMultiplayer,
+  onCampaign,
   onTutorial,
   onSettings,
   onCredits,
@@ -67,9 +73,9 @@ export function TitleScreen({
               <span className="menu-entry-note">Your fleet is still in the water</span>
             </button>
           )}
-          <button type="button" className="menu-entry" disabled aria-disabled="true">
+          <button type="button" className="menu-entry" onClick={onCampaign}>
             <span className="menu-entry-label">{CAMPAIGN_ENTRY.label}</span>
-            <span className="menu-entry-note">{CAMPAIGN_ENTRY.reason}</span>
+            <span className="menu-entry-note">{CAMPAIGN_ENTRY.note}</span>
           </button>
           <button type="button" className="menu-entry" onClick={onSolo} autoFocus={!held}>
             <span className="menu-entry-label">Solo game</span>

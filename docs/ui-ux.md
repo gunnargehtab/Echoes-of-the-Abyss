@@ -572,8 +572,8 @@ What the current client implements against this spec, so nobody re-implements wh
 | Full rebinding, and the one-handed layout | Implemented (#191) — bindings are data, the Controls screen edits them, reserved codes refuse capture |
 | Box select, control groups, order queue | Implemented |
 | The shell — title, browse, setup, briefing, settings, credits | Implemented (§14) |
-| Mission runtime and the prologue | Implemented (#190) — one mission; the campaign entry is still a disabled placeholder |
-| The campaign board | Not built — specified in §14. Twenty-eight of its twenty-nine slots would render `unbuilt` today. The `played` state now has a record to read: campaign progression is built (#371, [campaign.md](campaign.md) §11), so the board is the only half of that pair still outstanding |
+| Mission runtime and the prologue | Implemented (#190) — one mission when it shipped, thirteen now; the campaign entry is a live door onto the board (#374) rather than the disabled placeholder it was |
+| The campaign board | Implemented (#374) — twenty-nine slots in three states, the prologue lane spanning four columns of seven, one tab stop with a roving `tabindex`, and every unbuilt slot `aria-disabled` and announced with its teaching target. The slot titles and teaching lines are transcribed from [campaign.md](campaign.md) §1 and §4–§7; which slots open is read off the shipped mission catalogue rather than written down, so a mission lights its own slot. `played` reads the progression record (#371, [campaign.md](campaign.md) §11) through a lookup the board is handed |
 | Objectives panel | Implemented (§10.5) — DOM, `role="status"`, focusable rows, own-force counters only |
 | Settings persistence and per-bus volume | Implemented (§14) — `localStorage`, applied at match mount |
 | Match browser, private rooms, join by code | Implemented (#193) — a listing names the water and the seat count and nothing else; solo and missions are private |
@@ -636,8 +636,9 @@ title screen, and reads the briefing on the way in.
   because the order is free after the prologue ([campaign.md](campaign.md) §1): a list
   would assert a sequence the campaign refuses to have, and mission ids are namespaced by
   campaign precisely so that nothing implies a mission 2. It is the one screen in the port
-  that renders progression; the record behind it is built ([campaign.md](campaign.md) §11)
-  and this screen is not. Specified in full there.
+  that renders progression, and both halves of that now exist: the record
+  ([campaign.md](campaign.md) §11) and the screen that reads it (#374). Specified in full
+  there.
 - **Setup** — shared by Solo and hosting: a commander-name field and one card per map
   archetype (name, doctrine line, seats), from the shared catalogue. Faction choice and AI
   opponents stay in the in-room ready room, because faction uniqueness is enforced by the
@@ -669,11 +670,16 @@ them: it launches the prologue, *Sorrowgate*
 ([mission-sorrowgate.md](mission-sorrowgate.md)), which is the same content the campaign's
 first slot will launch — one mission behind two doors, because a separate tutorial would be
 a second first mission teaching the same four systems ([campaign.md](campaign.md) §10).
-Campaign is still dimmed to 40% per style-neon-noir's disabled rule — a dead console still
-has phosphor in it — and its one line now reads `Awaits the faction campaigns`, because the
-runtime it used to wait on exists and the twenty-eight missions after the prologue do not.
-The shape of the finished game is on screen; a menu that hides its missing rooms would
-misrepresent the build.
+Campaign is no longer one of them either, and this screen now has none. Dimming it was
+always a statement about the build rather than about the game — it waited first on a
+mission runtime and then on the missions themselves — and neither is what a *board* waits
+on. The board exists, so Campaign is a live entry onto it, and the twenty-eight doors that
+do not open say so on their own faces below. That is the same rule doing the same work one
+screen further in, where the reasons are specific instead of one line covering
+twenty-eight. Its note line is [campaign.md](campaign.md)'s own subtitle, `Four wars, one
+question`, because a note that counted what was finished would be a number to maintain in
+two places. The shape of the finished game is still on screen; a menu that hid its missing
+rooms would still misrepresent the build.
 
 ### The campaign board
 

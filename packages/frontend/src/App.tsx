@@ -19,6 +19,7 @@ import { useMenuAudio } from './audio/useMenuAudio.ts';
 import { DEFAULT_MAP_ID, missionHeaderById, PROLOGUE_SORROWGATE_HEADER } from '@echoes/shared';
 import { GameCanvas } from './game/GameCanvas.tsx';
 import { BriefingScreen } from './menu/BriefingScreen.tsx';
+import { CampaignScreen } from './menu/CampaignScreen.tsx';
 import { CreditsScreen } from './menu/CreditsScreen.tsx';
 import { BrowseScreen } from './menu/BrowseScreen.tsx';
 import { SetupScreen } from './menu/SetupScreen.tsx';
@@ -27,13 +28,25 @@ import { ControlsScreen } from './menu/ControlsScreen.tsx';
 import { SettingsScreen } from './menu/SettingsScreen.tsx';
 import { TitleScreen } from './menu/TitleScreen.tsx';
 import { storedMissionId } from './net/GameClient.ts';
+import { hasPlayed } from './progression/store.ts';
 import { loadSettings } from './settings/store.ts';
 
 type Screen =
   | { kind: 'title' }
   | { kind: 'setup'; mode: SetupMode }
   | { kind: 'browse' }
-  | { kind: 'briefing'; missionId: string }
+  | { kind: 'campaign' }
+  | {
+      kind: 'briefing';
+      missionId: string;
+      /**
+       * Which door opened this briefing, so Back returns through it
+       * (docs/ui-ux.md §14, "What commits, and what comes back"). One field
+       * rather than history: the no-router rule holds, and browser back is
+       * still not a door.
+       */
+      from: 'title' | 'campaign';
+    }
   | { kind: 'settings' }
   | { kind: 'controls' }
   | { kind: 'credits' }
@@ -124,11 +137,17 @@ function App() {
           }}
           onSolo={() => setScreen({ kind: 'setup', mode: 'solo' })}
           onMultiplayer={() => setScreen({ kind: 'browse' })}
-          // One mission exists, and the Tutorial entry is the door to it
-          // (docs/campaign.md §3: the prologue is one mission behind two
-          // doors). The campaign entry will be the other, when there is one.
+          onCampaign={() => setScreen({ kind: 'campaign' })}
+          // The prologue is one mission behind two doors (docs/campaign.md §3):
+          // this one, and the board's first slot. Both land on the same
+          // briefing; only the door it came through differs, because that is
+          // where Back has to go.
           onTutorial={() =>
-            setScreen({ kind: 'briefing', missionId: PROLOGUE_SORROWGATE_HEADER.id })
+            setScreen({
+              kind: 'briefing',
+              missionId: PROLOGUE_SORROWGATE_HEADER.id,
+              from: 'title',
+            })
           }
           onSettings={() => setScreen({ kind: 'settings' })}
           onCredits={() => setScreen({ kind: 'credits' })}
@@ -171,6 +190,16 @@ function App() {
           onBack={toTitle}
         />
       )}
+      {screen.kind === 'campaign' && (
+        <CampaignScreen
+          // The record answers one question and the board asks no other
+          // (docs/ui-ux.md §14). Passed in rather than imported inside the
+          // screen so what it reads is visible from the shell.
+          hasPlayed={hasPlayed}
+          onSelect={(missionId) => setScreen({ kind: 'briefing', missionId, from: 'campaign' })}
+          onBack={toTitle}
+        />
+      )}
       {screen.kind === 'briefing' && (
         <BriefingScreen
           missionId={screen.missionId}
@@ -183,7 +212,7 @@ function App() {
               missionId: screen.missionId,
             })
           }
-          onBack={toTitle}
+          onBack={screen.from === 'campaign' ? () => setScreen({ kind: 'campaign' }) : toTitle}
         />
       )}
       {screen.kind === 'settings' && (
