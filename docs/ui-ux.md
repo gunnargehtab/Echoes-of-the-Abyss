@@ -838,7 +838,7 @@ the screen, not a technology.
 | Control | Range | Wires to |
 | --- | --- | --- |
 | Master volume | 0–100% | Master gain, composed under the −18 LUFS / −1 dBTP targets in [audio-direction.md](audio-direction.md) §12 |
-| Music · World · Self · UI | 0 dB max | Per-bus trims ([audio-direction.md](audio-direction.md) §11 — independent buses) |
+| Music · World · Self · Speech · UI | 0 dB max | Per-bus trims ([audio-direction.md](audio-direction.md) §11 — independent buses; Speech is the voice in the water, §13) |
 | Contacts | up to **+12 dB** | The one boostable bus, per the same section; the boost trades headroom for audibility and is capped so the true-peak target survives |
 | Mono audio | toggle | The mix's existing mono spatialisation — a rendering choice, never a loss (§11) |
 | Visual-first | toggle | Removes the §1.3 fade-in delay so marks arrive at ≤ 30 ms (§11) |
