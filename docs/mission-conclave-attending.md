@@ -20,15 +20,16 @@ Knights' *Conclave* four rows away.
 **Premise, for the entry that offers it:** *A calling is put at the head of the Ninth, and it
 is answered by who crosses the water between the terraces. The Cantorate does not cross.*
 
-**This is the first mission in the bible to change the water under it.** The mid-match repaint
-has been specified since [environments.md](environments.md) and built since #197 and #259, and
-[campaign.md](campaign.md) §10 has been carrying the sentence "no shipped mission changes a
-biome yet — what brings a dome down, and in which mission, is authoring rather than plumbing"
-ever since. This is the authoring. At 11:00 the galleries' two benches stop being cut structure
-and become trench: floor 2,900, biome Abyssal Trench, one beat per bench at one tick, with a
-hundred metres of rubble where the shadows were. Nobody orders it and nobody in the water is
-responsible for it, which is §11's argument for spending the campaign's one repaint here rather
-than on anything a player does.
+**This is one of the two missions in the bible that change the water under them.** The mid-match
+repaint has been specified since [environments.md](environments.md) and built since #197 and #259,
+and [campaign.md](campaign.md) §10 has carried the sentence "no shipped mission changes a biome
+yet — what brings a dome down, and in which mission, is authoring rather than plumbing"
+ever since. This is that authoring, and the other is the Commune's second furrow turning Kelp
+Forest ([mission-deep-furrow.md](mission-deep-furrow.md)); the two are opposites, a garden
+arriving and a building leaving. At 11:00 the galleries' two benches stop being cut structure and
+become trench — floor 2,900, biome Abyssal Trench, one beat per bench at one tick, and a hundred
+metres of rubble where the shadows were. Nobody orders it and nobody in the water is responsible
+for it, which is §11's argument for spending it here rather than on anything a player does.
 
 ---
 
@@ -107,13 +108,14 @@ thing.
    ([mission-the-dome.md](mission-the-dome.md)) and the campaign has been paying for it since;
    here it is withheld again and by doctrine rather than by
    [campaign.md](campaign.md) §10's schedule. The Ninth's axis aims at the Mouth and pinging it
-   is asking ([mission-attendance.md](mission-attendance.md) §3). A ping would also read at 114
-   to the thing in the trench, which is Interest inside a kilometre — but nobody in the water
-   says that, and the lock's reason is the older one.
+   is asking ([mission-attendance.md](mission-attendance.md) §3). A ping would also reach the
+   thing in the trench at ninety-five times three for the emission and four tenths for the
+   faction — an effective 114, Interest inside **1,013 m** and Commit inside **834** — but
+   nobody in the water says that, and the lock's reason is the older one.
 2. **No construction.** *Nothing is built during a calling.* There is no economy on this map,
    no nodules and nothing to raise.
 3. **No mines and no depth charges.** *Nothing is left in the water the cohorts sleep over.* The
-   galleries are five hundred metres below the Cantorate's terrace and the cells are on it.
+   galleries stand two hundred metres below the Cantorate's terrace and the cells are on it.
 4. **Weapons and torpedoes are live**, and noisemakers with them. A noisemaker is SIG 70 for
    eight seconds ([systems-combat.md](systems-combat.md) §3) and costs eight seconds of debt;
    the mission does not lock it and does not mention it again.
@@ -215,8 +217,8 @@ no hull and fails nothing. It is written down.
 
 ## 5. The Parties
 
-| Party | Force | Standing |
-| --- | --- | --- |
+| Party | Force | Faction | Standing |
+| --- | --- | --- | --- |
 | **The called** — the player | 12 Choristers, 4 Abyssal Submersibles, 1 Cantor; role `called`; armed, seated silent | Abyssal Directorate | Assigned, at the Undermarshalcy's order, pending a cantor's attendance |
 | The court | Nothing. Slot 1, no faction, no party | — | Where the dome goes when the debt stands |
 | The cells | Six emitters at SIG 3, on the Cantorate's terrace. No hulls | Abyssal Directorate | Called; not assigned; breathing |
@@ -278,6 +280,21 @@ are sitting on, and therefore, until somebody has crossed, from nothing.
 there is no longer an aura to move to the court's slot. This document reads that as the price
 stated twice rather than as a bug, and §13 carries it as a finding.
 
+**And what a released colossus does is arithmetic the departure has to be planned around.** A
+driven creature is deaf, unkillable and held at the depth the beat gave it; when the commitment
+lapses the runtime gives back its ears, its hull, and **the species' own working depth**, which
+for a Sounder is 2,000 m. So each arrival stops where it was left, rises a thousand metres out of
+the cohorts' band at 12 m/s, and sits there hearing. It comes back down only for something it has
+committed to, and then only as far as its band's edge — 2,000 ± 700, which is **2,700 m exactly,
+the depth the called are seated at**. Against the ×0.4 the faction is heard through, in trench
+water, it grows interested in a cruising Submersible inside **237 m** and commits inside **195**;
+an idle one, 204 and 168; a firing Chorister, 292 and 241. **A Chorister firing at its own full
+450 m reach reads 27.5 against an Interest of 55 and does not register at all** — so twelve of
+them, at 20 a second each, take a 9,000-point colossus apart in **37.5 seconds** without it ever
+turning, and eight do it in fifty-six. The half that can cross is also the half that can render
+the thing in the crossing, and it cannot do both at once, and that is the whole of the last five
+minutes.
+
 ---
 
 ## 7. What Is Heard
@@ -301,7 +318,8 @@ of the hulls ([audio-direction.md](audio-direction.md)):
   from **10,187 m** and a Submersible from **11,016**, against a map five kilometres wide. There
   is no station on this chart where either arrival is faint.
 - **The dome coming apart.** SIG 70 on a ground structure ([bestiary.md](bestiary.md) §4), at
-  about 10:58, sixteen seconds before the First Cantor names it.
+  about 10:58 — a second and a half before the First Cantor names it, which is as close as
+  authored geometry and an authored beat can be made to stand to each other.
 - **Nothing crossing.** The stalls say so at 02:00, at 05:00 and at 14:00, in three sentences that
   get shorter. That is the sound this mission is actually made of.
 
@@ -316,15 +334,17 @@ is not, and nobody explains the difference.**
 **Attend the calling: enter who did not answer it, and take down the Ninth whatever the order let
 cross.**
 
-| Objective | Predicate | Terminal |
-| --- | --- | --- |
-| *The calling closes at the cycle* — eight of the called stand in the axis | `extract`, role `called`, region `the-axis`, count 8 | Yes |
-| *Twelve of sixteen* — the muster at the close | `survive`, role `called`, count 12 | Yes |
-| *The calling is put* — three rows of cells entered | `attend`, count 3 | **No.** Read out, never ranked |
-| *The stalls are under the terraces* — the loudest of the called at or under 25 | `quiet`, role `called`, ceilingSig 25 | **No.** Read out, never ranked |
+| Id | Text, as the player reads it | Predicate | Terminal |
+| --- | --- | --- | --- |
+| `the-calling` | *The calling closes at the cycle. What is assigned descends. Eight of sixteen is a column, and the Undermarshalcy does not round up.* | `extract`, role `called`, region `the-axis`, count 8 | Yes |
+| `the-muster` | *Twelve of sixteen. The Undermarshalcy does not round up.* | `survive`, role `called`, count 12 | Yes, and standing |
+| `the-cells` | *The calling is put. Who attends it is entered, and who does not.* | `attend`, count 3 | **No.** Read out, never ranked |
+| `the-crossing` | *The stalls are under the terraces. A hull under way between them is the only sound there is.* | `quiet`, role `called`, ceilingSig 25 | **No**, and standing. Read out, never ranked |
 
-`the-calling` is revealed at **T(17)**, on Korrin's own beat, and carries the marker `axis` at
-2500, 3625, radius 500. It is revealed late for the reason
+**No keystone**, and one marker. `the-calling` is revealed at **T(17)**, on Korrin's own beat, and
+carries the marker `axis` at 2500, 3625, radius 500; the other three carry no `revealAtTick` and
+no marker and stand on the panel from the first tick, because a calling that had to be discovered
+would not be a calling. It is revealed late for the reason
 [mission-intake.md](mission-intake.md) §9 settled: an `extract` is not a standing predicate, so
 it latches Met the first pass it is true and never re-derives, and a column that stood in the axis
 at 05:00 and left would otherwise have met a calling that had not yet closed. Revealing it with
@@ -334,6 +354,15 @@ asked.
 
 `the-crossing` carries `debtText`: *The called owe the stalls a silence.* It replaces the
 objective's own line for as long as the debt stands.
+
+The two non-terminal rows carry the readings the close appends, and both pairs are authored to be
+true beneath any of the three outcomes below:
+
+- `the-cells`, **met** — *Entered: the second cohort, in its cells, three rows or more, breathing.
+  Not assigned. The First Cantor was present.* **Unmet** — *Not entered: the cells. The calling was
+  put and the north terrace did not go far enough across to hear who did not answer it.*
+- `the-crossing`, **met** — *The crossing was made under the order.* **Unmet** — *The crossing was
+  heard the length of the trench, and the debt is written.*
 
 **Two rows the union cannot state, named here and carried into §13.** The first is *a breach that
 happened*: `quiet` is standing and reads the water at the tick it is asked, so a column that
@@ -354,8 +383,9 @@ Ossary's line and in the cells' gap reading rather than counted.
 | **The calling stands open** | Neither | "No column and no muster. What came up the Ninth is in the head of it, and the calling stands open with nobody crossing in either direction. It is not a failure of the called; it is a calling put at the wrong cycle, and the next one will be put anyway." |
 
 Beneath whichever of the three the count earned, in authored order: `the-cells`' reading, then
-`the-crossing`'s, then the six cells' own entered-and-gap lines. And beneath all of them, in every
-case, Ossary:
+`the-crossing`'s, then the six cells' own entered-and-gap lines. Ossary's last line is **not** part
+of that string — it is the `say` beat at 20:00, in the log, one beat before the `resolve` on the
+same tick — and it is authored to be read after every one of the three:
 
 > *Nothing.* The record notes that the First Cantor was present.
 
@@ -480,8 +510,9 @@ What this mission deliberately does not teach:
 
 The head of the Ninth with two terraces cut into its walls, seen from above rather than from the
 face. North is shallow and south is deep, as everywhere in the Rift
-([world-map.md](world-map.md)), and the whole map is 1,500 m below the thermocline, so the layer
-never enters into it.
+([world-map.md](world-map.md)), and the shallowest water any hull holds on it is 2,700 m —
+fourteen hundred metres under the duct's floor — so the layer never enters into it and every path
+is priced by the biome alone.
 
 | Region | Rect (x, y, w, h) | Biome | Floor | What it is |
 | --- | --- | --- | --- | --- |
@@ -525,10 +556,17 @@ metres of rubble stands where the benches were. Twelve cells repaint, six either
 strip between them keeps its 3,400 floor**, and that is load-bearing rather than tidy: a creature's
 wanted depth is clamped to the floor under it (`fauna.ts:775`), so burying the strip would have
 closed the Ninth to the second colossus four minutes before it was due. A hull standing in a bench
-at 3,000 m when the beat lands is lifted a hundred metres at the ascent rate — 6.7 seconds, silent,
-terrain raising a hull and never lowering one ([systems-depth.md](systems-depth.md) §2). The dome
-is not lifted, because the dome is not there: it came down two minutes earlier, and the beat finds
-the bench with nothing on it but rubble to raise.
+at 3,000 m when the beat lands is lifted a hundred metres at the ascent rate — 6.7 seconds,
+silent, terrain raising a hull and never lowering one
+([systems-depth.md](systems-depth.md) §2). The dome is not lifted, because the dome is not
+there: it came down a second and a half earlier, and the beat finds the bench with nothing on it
+but rubble to raise.
+
+The same clamp works on the arrival on its way north. Its line crosses the Cantorate's terrace,
+whose floor is 2,800 m, so the fauna system lifts it out of its authored 3,000 and it passes over
+the cells at about **2,850 m**, fifty metres above them, before sinking back to 3,000 in the
+crossing. Nothing comes of it and the document says so rather than leaving it to be found: a
+transit's targets are structures and hulls of 95 m and over, and an emitter is neither.
 
 **Depth checks, stated because a reader will do them.**
 
@@ -645,12 +683,12 @@ or the impersonal:
 
 > *Nothing.* The record notes that the First Cantor was present.
 
-Korrin's 09:40 line is the campaign's one permitted lapse, spent here for the first time on the
-sentence it has been saving since [Attendance](mission-attendance.md) §12 — and it stops one
-clause short. She asks a question about a question. She says that nobody is asked what the thing
-is, and does not say that somebody should be, and does not say what she thinks it is, and the
-next mission is the silence where the rest of it would have gone
-([mission-first-arrival.md](mission-first-arrival.md)).
+Korrin's 09:40 line is this mission's one permitted lapse. She has said one a mission since
+[Attendance](mission-attendance.md) §12 — "somebody ought to have asked something by now" — and
+this is the one the campaign has been walking toward, and it **stops one clause short.** She asks
+a question about a question: nobody is asked what the thing is. She does not say that somebody
+should be, and she does not say what she thinks it is, and mission 7 is the silence where the
+rest of it would have gone ([mission-first-arrival.md](mission-first-arrival.md)).
 
 Each line fails [culture.md](culture.md) §3 for the other three factions, which is that
 document's own test (§6): Ossary answers a building coming down on his own congregation with the
@@ -677,7 +715,7 @@ than requests, and two are absences it declines to ask for.
 | Requirement | Status |
 | --- | --- |
 | The mission format — beats, predicates, registry, private rooms | **Built** (#190). `extract`, `survive`, `attend`, `quiet`, `creature`, `ground`, `silent`, `say` and `resolve` cover §8 and §9 entire, and `conditionalBeats` carries the one condition-fired line |
-| **The ground beat, with a biome** | **Built** (#197, #259) **and spent here for the first time in any shipped mission.** `MissionBeatEffect`'s `ground` row carries `floorM`, `ceilingM` and `biome`, `Terrain.fillGround` writes the biome and recomputes `pf` in the same pass so `pathPropagation` moves at the tick rather than at the next storm, and the cell changes go on the wire because terrain is public. Two beats at one tick, one per bench, because a mission region is a rectangle and the axis strip between them must not move (§11). [campaign.md](campaign.md) §10's standing sentence — "what brings a dome down, and in which mission, is authoring rather than plumbing" — is answered by this row and should be edited when the literal lands |
+| **The ground beat, with a biome** | **Built** (#197, #259) **and spent by no shipped mission yet — this is one of the two documents that spend it**, the other being [mission-deep-furrow.md](mission-deep-furrow.md)'s second furrow. `MissionBeatEffect`'s `ground` row carries `floorM`, `ceilingM` and `biome`, `Terrain.fillGround` writes the biome and recomputes `pf` in the same pass so `pathPropagation` moves at the tick rather than at the next storm, and the cell changes go on the wire because terrain is public. Two beats at one tick, one per bench, because a mission region is a rectangle and the axis strip between them must not move (§11). [campaign.md](campaign.md) §10's standing sentence — "what brings a dome down, and in which mission, is authoring rather than plumbing" — is answered by this row and should be edited when the literal lands |
 | The axis strip's floor, left at 3,400 | **Built, and a consequence worth naming.** `fauna.ts:775` clamps a creature's wanted depth to the floor under it, so a ground beat that buried the axis would have closed the Ninth to the second colossus at 16:00. The mission regions are drawn either side of the strip for that reason and not for a tidy rectangle |
 | A creature driven at an authored depth | **Built** — `driveTo.depthM`, built for [Intake](mission-intake.md) §13's transit and held every pass. Both arrivals run at 3,000 m rather than at the species' 2,000 |
 | **A Sounder below the bestiary's 2,700 m** | **A finding, and authored on purpose.** [bestiary.md](bestiary.md) §4 says "below 2,700 m the column is empty of animals" and [mission-attendance.md](mission-attendance.md) §1 calls the Ninth's head water no animal in the bible reaches; `prospect.ts` already spawns a colossus at 3,050 m on the rim's lip and no test objects, because the band is a species stat and not a placement rule. **This document follows the literal rather than the prose**, and pays for it by never explaining it: every line about either arrival is *it is not the return* or *it is not attending anything*, no voice says where it came from, and the second gets no line at all. If the bible would rather the band were enforced, the fix belongs in the seeder and in `prospect.ts` before it belongs here, and this row is where the two documents were noticed disagreeing |
@@ -714,6 +752,7 @@ than requests, and two are absences it declines to ask for.
 - **[mission-conclave-chord.md](mission-conclave-chord.md)** — the other *Conclave*, and the rule-4 slot this mission does not take
 - **[habitats.md](habitats.md)** — §6, the Upper Terraces and what a conclave is; §8, cut structure as Coral Ruins and a dome that comes down as one event at one tick
 - **[environments.md](environments.md)** — Coral Ruins as the one biome specified to change during a match, and the beat that changes it
+- **[mission-deep-furrow.md](mission-deep-furrow.md)** — the other document that spends the repaint, in the other direction: a garden arriving where this one has a building leave
 - **[systems-echo.md](systems-echo.md)** — §3, the trench that carries and the shadows the benches lose; §4, the tier a cohort is entered at
 - **[systems-depth.md](systems-depth.md)** — §2, terrain that lifts a hull and never lowers one, and the slow silent climb the repaint spends
 - **[bestiary.md](bestiary.md)** — §2, the ×0.4 and the aggro ladder both colossi answer to; §4, the transit that grinds a 95 m hull and ignores a 50 m one
