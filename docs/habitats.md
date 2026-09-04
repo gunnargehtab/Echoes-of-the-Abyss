@@ -587,10 +587,11 @@ room. Missions not listed are fought in open water or on ground the gazetteer ow
 | Seeding 3 — [Convocation](mission-convocation.md) | A plateau voting while it is attacked: the rows as the room, the bell rung off-tide, and the count read at the watch's edge — the first time the Commune's one hush is broken on purpose (§2, *The Turning*). The terrace is Marr Plateau, the same ground as *Tend*, chosen in [mission-convocation.md](mission-convocation.md) §11 |
 | Attending 1 — [Attendance](mission-attendance.md) | The attending galleries and the Cantorate's dome (§6) |
 | Attending 2 — [Intake](mission-intake.md) | The cohort halls on the banding ground, above the city (§6) |
-| Attending 6 — *Conclave* | Sufficiency's upper terraces: the Undermarshalcy and the Cantorate facing across the head of the Ninth, where a calling is answered by who crosses and the Cantorate does not (§6, *The Upper Terraces*) |
+| Attending 3 — [The Dome](mission-the-dome.md) | The 4th Trench Cohort's freight galleries at the Fourth's foot, cut into the fan's east wall at 2,900 m — Mara Tessen's water, and the only interior on a map that is otherwise trench and open ground (§6) |
+| Attending 6 — [Conclave](mission-conclave-attending.md) | Sufficiency's upper terraces: the Undermarshalcy and the Cantorate facing across the head of the Ninth, where a calling is answered by who crosses and the Cantorate does not (§6, *The Upper Terraces*) |
 | Chord 1 — [Aptitude](mission-aptitude.md) | The Third and its six outer formations (§5) |
-| Chord 4 — *Conclave* | No room, and nine at once: a conclave is struck in each house's chord and carried by the lattice, and Vrey — who has the standing, because the Third is in tune — is heard not calling one (§5, *The Conclave*) |
-| Chord 5 — *The Three* | The First at 2,900 m: the Chord still aimed and still tuned, the hospice off it, and the sealed room the Choirmaster reads alone (§5, *The First*) |
+| Chord 4 — [Conclave](mission-conclave-chord.md) | No room, and nine at once: a conclave is struck in each house's chord and carried by the lattice, and Vrey — who has the standing, because the Third is in tune — is heard not calling one (§5, *The Conclave*) |
+| Chord 5 — [The Three](mission-the-three.md) | The First at 2,900 m: the Chord still aimed and still tuned, the hospice off it, and the sealed room the Choirmaster reads alone (§5, *The First*) |
 
 Every campaign passes through its own habitat's hush at least once, and three of the four are
 asked to break it — the Commune by voting, the Knights by transmitting, the Consortium by
