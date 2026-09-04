@@ -316,6 +316,20 @@ const CEILING_MISSION: MissionDefinition = {
   ),
 };
 
+/** The same walk with a marker on each row, for the one that moves. */
+const MARKED_MISSION: MissionDefinition = {
+  ...WALK_MISSION,
+  id: 'test-marked-mission',
+  walk: {
+    ...WALK_MISSION.walk!,
+    rows: WALK_MISSION.walk!.rows.map((row) => ({ ...row, markerId: row.id })),
+  },
+  markers: [
+    { id: 'a', label: 'The first row.', x: ROW_A.x, y: ROW_A.y, radiusM: ROW_RADIUS_M },
+    { id: 'b', label: 'The second.', x: ROW_B.x, y: ROW_B.y, radiusM: ROW_RADIUS_M },
+  ],
+};
+
 /** The concern's hull standing on the second row from the first tick. */
 const STALL_MISSION: MissionDefinition = {
   ...WALK_MISSION,
@@ -430,6 +444,29 @@ describe('the walk, as docs/mission-convocation.md §4 states it', () => {
       MissionOutcome.Complete,
       'the remaining row did not turn'
     );
+  });
+
+  it('sends the camera to the row the walk is standing on, and only that one', () => {
+    const h = harness(MARKED_MISSION);
+    h.settle(1);
+    assert.deepEqual(
+      h.view()?.markers.map((marker) => marker.id),
+      ['a'],
+      'the whole circuit went on the wire before the walk reached it'
+    );
+    assert.equal(
+      h.view()?.objectives.find((o) => o.id === 'walk')?.markerId,
+      'a',
+      'the walk names no marker, so the panel has nowhere honest to send the camera'
+    );
+
+    // The question moves, and the marker moves with it.
+    h.settle(HOLD_S + 2);
+    assert.deepEqual(
+      h.view()?.markers.map((marker) => marker.id),
+      ['b']
+    );
+    assert.equal(h.view()?.objectives.find((o) => o.id === 'walk')?.markerId, 'b');
   });
 
   it('grants no act in a mission that authors none', () => {

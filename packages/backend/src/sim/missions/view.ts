@@ -23,7 +23,13 @@ import type {
 } from '@echoes/shared';
 
 import { exposedAtLeast, progressOf } from './predicates.ts';
-import type { MissionDefinition, MissionObjective, MissionRegion, MissionRole } from './types.ts';
+import type {
+  MissionDefinition,
+  MissionObjective,
+  MissionRegion,
+  MissionRole,
+  MissionWalkRow,
+} from './types.ts';
 
 /**
  * What the runtime remembers between Echo ticks.
@@ -90,7 +96,7 @@ export function projectMissionView(
   // whole authored circuit on the wire at 01:00, which is the same leak
   // `revealAtTick` exists to prevent one objective at a time. The plateau
   // knows where its own question is; it does not know where it will be.
-  const walkRow = state.walk === undefined ? undefined : definition.walk?.rows[state.walk.rowIndex];
+  const walkRow = liveRow(definition, state);
   if (walkRow?.markerId !== undefined) named.add(walkRow.markerId);
   return {
     missionId: definition.id,
@@ -133,6 +139,16 @@ function objectiveView(
     status: state.statuses.get(objective.id) ?? objective.initial,
   };
   if (objective.markerId !== undefined) view.markerId = objective.markerId;
+  // The walk sends the camera to wherever the question currently is, which is
+  // the one marker in this format that is not a constant. An objective carries
+  // a single `markerId` and a circuit moves, so the walk's objective takes the
+  // live row's — the same substitution `textFor` performs on the reading, one
+  // field over. A mission that authors both keeps its own for the rows it
+  // named and gains the row's while the walk is running.
+  if (objective.predicate.kind === 'walk') {
+    const row = liveRow(definition, state);
+    if (row?.markerId !== undefined) view.markerId = row.markerId;
+  }
   if (counts(objective)) {
     const progress = progressOf(
       objective.predicate,
@@ -233,6 +249,12 @@ function counts(objective: MissionObjective): boolean {
     // for the same reason a quota of Nodules is.
     objective.predicate.kind === 'deliver'
   );
+}
+
+/** The row the walk is standing on, or undefined in a mission without one. */
+function liveRow(definition: MissionDefinition, state: MissionState): MissionWalkRow | undefined {
+  if (state.walk === undefined) return undefined;
+  return definition.walk?.rows[state.walk.rowIndex];
 }
 
 function regionById(definition: MissionDefinition, id: string): MissionRegion | undefined {
