@@ -129,8 +129,8 @@ fires when the seed goes out onto the bare rock is an `extract` naming the load,
 **The tender's figures are the roster's.** *Tend*, *Thin Water* and *Convocation* author the
 Commune tender at 8 idle and 18 under way; `units.ts` and [units.md](units.md) both give the
 Harvester 18 idle, with 40 at cruise and 4.5 running silent by `silentRunningSig`. Every figure
-in §4, §6 and §7 is priced at the roster's, as [mission-in-writing.md](mission-in-writing.md) §3,
-[mission-radicals.md](mission-radicals.md) §3 and
+in §4, §6 and §7 is priced at the roster's, as [mission-in-writing.md](mission-in-writing.md)
+§3, [mission-radicals.md](mission-radicals.md) §3 and
 [mission-second-seeding.md](mission-second-seeding.md) §3 price them — the four documents this
 campaign is finishing with agree, and the three older ones are the side that moves (§13).
 
@@ -255,8 +255,9 @@ Home cannot hear the furrow. The Foot's ears have the observer's idle at Tier 1 
 going under the layer to it, and learns in the same second that the sill has had the day since
 the dive began — a Bearing from its first second (72 through the mouth-to-sill path mean of 1.25
 and the layer's 0.3 is ratio 2.14 at the mouth's 2,250 m) and Track from its fifth, once the hull
-is in the duct and the pair factor is 1.0 (ratio 7.14). The layer does not hide the day from the deep. It hides the deep from home,
-and the plateau has never once been on that side of the arrangement.
+is in the duct and the pair factor is 1.0 (ratio 7.14). The layer does not hide the day from the
+deep. It hides the deep from home, and the plateau has never once been on that side of the
+arrangement.
 
 ### Where you dive is the whole lesson
 
@@ -380,9 +381,9 @@ the ears to find it leaves.
 **One dishonesty this document owns rather than hides.** The bloom-bed approximation of §3 is a
 Sounding Spire, and a Spire whose grant is load-bearing sings at 80 (`auras.ts`; `units.ts`):
 at 693 m through a path mean of 0.90 that is ratio 37.6 to the observer, a Track on a structure
-the garden is supposed to have made quiet. The row that replaces it (§13) has no hum, because a furrow is not
-a machine; until it lands, the table above is what the sill hears of the *garden*, and the bed's
-hum beside it is what the sill hears of the *format*.
+the garden is supposed to have made quiet. The row that replaces it (§13) has no hum, because a
+furrow is not a machine; until it lands, the table above is what the sill hears of the *garden*,
+and the bed's hum beside it is what the sill hears of the *format*.
 
 ---
 
@@ -445,7 +446,7 @@ is where a Hollow strikes inside its sphere and a pack closes:
 
 The pack is 1,500 m west of the Foot's seat and 1,521 m from the mouth, on the Foot's side of
 the layer: it is interested in a dive from 819 m and never in this one. The throat's middle is
-650 m from either wall Hollow, and a tender crossing it at the roster's 40 reads 34.9 there —
+650 m from either wall Hollow, and a tender crossing it at 40 reads 34.9 there —
 under Interest, so the quiet road down stays the quiet road at the louder figure. Under kelp a
 Hollow cannot be sprung by a silent tender at any range — 4.5 through 0.55 reads 26.9 at point
 blank, under Interest — and by an idle one only inside 131 m and by one under way inside 216 m;
@@ -457,7 +458,8 @@ The rest of the day's sound, in order, all of it true and none of it the player'
 
 - **The dive**, twice — 72 at the mouth for nineteen seconds, 72 over the garden for ten. Under
   kelp the second one carries 39.6 where the rock would carry 115, and the observer has it at
-  Track anyway (ratio 39.9 at 625 m, through a mean of 0.90). There is no quiet way down, and the plateaus have never had to know that.
+  Track anyway (ratio 39.9 at 625 m, through a mean of 0.90). There is no quiet way down, and
+  the plateaus have never had to know that.
 - **The garden**, arrived in: tenders idling at 18, absorbed to 9.9, under water that takes the
   top of the spectrum the way the rows at home do — "everything sounds close and dead"
   ([audio-direction.md](audio-direction.md) §9), at 2,200 m, where nothing ever has.
