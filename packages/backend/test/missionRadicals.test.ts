@@ -22,9 +22,14 @@
  * - **The city as the spring left it** (§11): the prologue's map literal
  *   unchanged, and the prologue's two ground beats fired at 00:00 with the same
  *   values — which is what leaves a PR-1 hull no route south by any route.
- * - **The basin** (§6): six creatures placed and not driven at their species'
- *   own working depths, and one drive at 12:00 that crosses the lane at the
- *   crossing's depth whatever the register stands at.
+ * - **The basin** (§6): seven creatures placed and not driven at their species'
+ *   own working depths — §9's `creature` x 7, the colossus among them — and one
+ *   drive at 12:00 that crosses the lane at the crossing's depth whatever the
+ *   register stands at.
+ * - **The close** (§8, §12): the count read at the far water or from the
+ *   Concourse, with Marr's own last sentence after it and the four objective
+ *   readings beneath — which is what the `epilogue` carries, because this
+ *   mission's close moves and a `say` beat at T(15) would miss it.
  */
 
 import { describe, it } from 'node:test';
@@ -964,6 +969,26 @@ describe('the objectives, as docs/mission-radicals.md §8 chooses them', () => {
     assert.match(SEEDING_RADICALS.epilogue[MissionOutcome.Lost], /^The basin has the column/);
     // §8: none of the three is a rank, and the middle one is a result.
     assert.match(SEEDING_RADICALS.epilogue[MissionOutcome.Partial], /This is a result/);
+    // §12: "the reading of the count, per §8, and then one sentence she should
+    // not say aloud and does" — she says it under all three, and the close
+    // moves (§9: at the far water by about 11:10, or from the Concourse at
+    // 15:00), so it rides the epilogue rather than a `say` beat at T(15) that
+    // a column which got through would never hear.
+    const marr =
+      "Thirty years of not owning any of it, and tonight thirty-three people went where I said they shouldn't, " +
+      "with our guns beside them, and I find I'd like to own that. I'm not going to. I'd like it heard that I'd like to.";
+    for (const outcome of [MissionOutcome.Complete, MissionOutcome.Partial, MissionOutcome.Lost]) {
+      const reading = SEEDING_RADICALS.epilogue[outcome];
+      assert.ok(
+        reading.endsWith(marr),
+        `${MissionOutcome[outcome]}: Marr’s last sentence is not on it`
+      );
+      // §8, §12: the count's reading is still verbatim, and still first.
+      assert.ok(
+        reading.slice(0, reading.length - marr.length).trim().length > 0,
+        `${MissionOutcome[outcome]}: the sentence replaced the reading rather than following it`
+      );
+    }
   });
 });
 
@@ -988,6 +1013,16 @@ describe('the crossing, played', () => {
       );
     }
     assert.match(run.epilogue, /We're going to call it a tide/, '§8: the Complete reading');
+    // §12, in the close the player actually gets: the count, then Marr's own
+    // last sentence, then the four objective readings beneath, in authored
+    // order and all four of them (§8).
+    const [read, ...beneath] = run.epilogue.split('\n\n');
+    assert.match(read!, /I'd like it heard that I'd like to\.$/, '§12: her sentence, last of hers');
+    assert.deepEqual(
+      beneath.join('\n\n').split('\n'),
+      SEEDING_RADICALS.objectives.map((objective) => objective.reading!.met),
+      '§8: all four readings, in authored order, beneath the row the run earned'
+    );
     // §9: Anholt's line fires on the pass the-column is met, and stands last.
     const last = run.lines[run.lines.length - 1]!;
     assert.match(last.text, /We're through/, '§9: the last line in the log');
