@@ -17,12 +17,14 @@
  *    `MissionRuntime.applyLifts` walks the lift table and accrues every lift
  *    whose carrier is standing in its region on that pass, independently. So
  *    `cutter-a` holding `face-four` accrues `load-one` and `load-two` at the
- *    same time and rigs both at four minutes, where §6 and §9 describe eight —
- *    "two of the three stand on their face and cut it twice", second cuts
- *    running 05:30 to 09:30. The five lifts are authored exactly as §6's table
- *    gives them, because the table is the mission; the timing in the prose is
- *    the thing that is wrong, and the fix is either that prose or a per-carrier
- *    serialisation the format does not have and this document does not ask for.
+ *    same time and rigs both at four minutes. §6 and §9 read *eight* minutes on
+ *    a face when this was found — "cut it twice", second cuts running 05:30 to
+ *    09:30 — and the document is the side that moved (§13): §6 now says the two
+ *    are not a sequence and prices the face at one four-minute hold, §9 rigs
+ *    all five loads by about 05:30, and the tide's second half belongs to the
+ *    raid that stayed. The five lifts are authored exactly as §6's table gives
+ *    them, because the table is the mission, and serialising a pair would take
+ *    a per-carrier mechanism the format does not have and §13 does not ask for.
  * 2. **`runsItsLength` is omitted and that is load-bearing** (§9, in as many
  *    words). Every terminal row is an `extract` gated on a load, and no load
  *    exists at tick zero, so the court's rule cannot close the tide on the
@@ -36,13 +38,16 @@
  *    sixth, one stop 150 m off the fourth face's eastern edge and one 100 m off
  *    the sixth's north-western corner. The twelve points below satisfy every
  *    one of those to the metre; see the notes on each.
- * 4. **The muster is a rank and the document's leg range is a point's.**
- *    §9 measures the correction's transit as 1,521–1,724 m, which is exactly
- *    the distance from (5400, 3450) to the nearest and furthest stop of the
- *    first wave — one reference point, and six hulls need six. The rank
- *    authored here stands clear of every seat on the rim and its six legs run
- *    1,521–1,722 m, so the wave is standing between 04:38 and 04:43 exactly as
- *    §9 says.
+ * 4. **The muster is a rank, and the document's leg range used to be a
+ *    point's.** §9 measured the correction's transit as 1,521–1,724 m, which is
+ *    the distance from (5400, 3450) — `cohort-7`'s own seat — to the nearest
+ *    and furthest corner of §11's first-wave box, and six hulls need six
+ *    reference points rather than one. The rank authored here stands clear of
+ *    every seat on the lip, of the 9th's rank at y 3,650 and of the twelve's at
+ *    y 3,200 and 3,450, and its six legs run 1,521–1,722 m, which is what §9
+ *    now prints (§13); the window it was quoted for, 04:38 to 04:43, is
+ *    unchanged. §9 and §11 say nothing about where the muster stands, so the
+ *    six points are this literal's own and are stated here rather than hidden.
  *
  * Four things make this mission the shape it is, and all four are data:
  *
@@ -225,7 +230,7 @@ const submersible = (tag: string, x: number, y: number, note: string): MissionUn
 /**
  * One load — a `MissionLift` on its assigned cutter, cut inside its face's
  * rectangle (§6). Five of them across three hulls: two of the three stand on
- * their face and cut it twice.
+ * their face and take two loads off it.
  */
 const load = (id: string, tag: string, region: string, note: string): MissionLift => ({
   id,
@@ -854,14 +859,16 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
 
   /**
    * §6 — five loads across three cutters: two of the three stand on their face
-   * and cut it twice. Four minutes of held presence at a SIG floor of 65,
+   * and take two loads off it. Four minutes of held presence at a SIG floor of
+   * 65,
    * progress paused while the hull is elsewhere and resumed when it returns,
    * stopped outright by Silent Running — which is why §3 says the button has no
    * use under a node.
    *
    * See item 1 of the file header: `applyLifts` accrues both of a cutter's own
-   * loads on the same pass, so the two on one face rig together rather than in
-   * the sequence §6 and §9 describe.
+   * loads on the same pass, so the fourth and fifth faces are one hold each
+   * rather than two — which is what §6 says in as many words ("the two are not
+   * a sequence") since §13's row moved the prose to meet the runtime.
    */
   lifts: [
     load(

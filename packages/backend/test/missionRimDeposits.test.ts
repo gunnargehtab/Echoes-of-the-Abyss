@@ -22,7 +22,7 @@
  *   150–269 m from node-two, 400 m or more from a cutter on the fourth face,
  *   320–461 m from one on the sixth, one stop 150 m off the fourth face's
  *   eastern edge, one 100 m off the sixth's north-western corner, and two
- *   transits of 1,521–1,724 m and 1,185–1,485 m at the Chorister's 40 m/s.
+ *   transits of 1,521–1,722 m and 1,185–1,485 m at the Chorister's 40 m/s.
  * - **What is heard** (§7). Every range in §7 recomputed against the shipped
  *   propagation model, because the document states them to the metre and a
  *   mission whose whole subject is an instrument singing at eighty is worth
@@ -32,11 +32,13 @@
  *   carries no `runsItsLength` to save it if one ever were. And `the-count`,
  *   which is Met by about 00:30 before the descent has finished, and is
  *   non-terminal for exactly that reason.
- * - **One finding against the runtime**, played out on the mission so the day
- *   it is settled is noticed: `applyLifts` accrues every lift whose carrier is
- *   standing in its region on the same pass, so the two loads §6 puts on one
- *   face rig together at four minutes rather than in the eight §6 and §9
- *   describe, and both of §8's rows for them latch off one hold.
+ * - **The finding that moved the document**, played out on the mission so the
+ *   day a per-carrier rule arrives is noticed: `applyLifts` accrues every lift
+ *   whose carrier is standing in its region on the same pass, so the two loads
+ *   §6 puts on one face rig together off a single four-minute hold, and both of
+ *   §8's rows for them latch on one pass. §6 and §9 read eight minutes on a
+ *   face before this was found and now read one hold each (§13); this case is
+ *   what would notice either side moving back.
  */
 
 import { describe, it } from 'node:test';
@@ -277,6 +279,15 @@ describe('the raid, as docs/mission-rim-deposits.md §2 and §3 muster it', () =
       CHORD_RIM_DEPOSITS.beats.every((beat) => beat.kind !== 'ground'),
       '§4: no corridor, no PF 2.00, and no ground beat that could sow one'
     );
+    // §4, §11 — and nothing manufactures habitable water either. The band this
+    // mission spends is *rented* from an instrument that sings for it, so a
+    // region grant anywhere here would hand the raid the same metres for free
+    // and silently: a checked absence, because `MissionRegion.pressureBonus`
+    // and the `ground` beat's own field would both be invisible in play.
+    assert.ok(
+      CHORD_RIM_DEPOSITS.regions.every((region) => region.pressureBonus === undefined),
+      '§4: the depth is rented from the Spire, and no rectangle grants it'
+    );
   });
 
   it('locks construction with a reason and fences nothing else', () => {
@@ -329,9 +340,23 @@ describe('the raid, as docs/mission-rim-deposits.md §2 and §3 muster it', () =
       nearestSeat < CHORISTER.attackRangeM,
       `§2: a Chorister's 450 m reaches the 9th at ${Math.round(nearestSeat)} m, which is why they share a slot`
     );
+    // §2 and §13 quote the dome at 447 m from a Chorister, which is `cohort-1`
+    // at 5400, 3200; the *nearest* of the twelve is `cohort-7` at 5400, 3450
+    // and 403 m, which is First Arrival's own figure for the same seat. Both
+    // are asserted, because both sentences are in the bible and the argument —
+    // the dome is inside a Chorister's 450 m — needs the nearer one.
+    const domeToSeat = (tag: string) =>
+      Math.round(
+        dist(
+          directorate.structures![0]!,
+          directorate.units.find((u) => u.tag === tag)!
+        )
+      );
+    assert.equal(domeToSeat('cohort-1'), 447, '§2, §13: the dome 447 m from a Chorister');
+    assert.equal(domeToSeat('cohort-7'), 403, 'and 403 m from the nearest of the twelve');
     assert.ok(
-      dist(directorate.structures![0]!, { x: 5400, y: 3450 }) < CHORISTER.attackRangeM,
-      '§2: and the dome at 403 m, well inside it'
+      domeToSeat('cohort-7') < CHORISTER.attackRangeM,
+      '§2: well inside it, which is why the dome shares the cohort’s slot'
     );
     // The attendants are a *second* Directorate-faction party and are safe
     // there, because `combat.ts` refuses to auto-acquire a StaticEmitter (§13).
@@ -483,8 +508,9 @@ describe('the faces, as docs/mission-rim-deposits.md §6 sites them', () => {
   });
 
   it('cuts five loads on three cutters, four minutes at sixty-five', () => {
-    // §6 — "Three cutters and five loads is deliberate arithmetic: two of the
-    // three stand on their face and cut it twice."
+    // §6 — "Three cutters and five loads is deliberate arithmetic — two of the
+    // three stand on their face and take two loads off it — and the two are
+    // not a sequence."
     const lifts = CHORD_RIM_DEPOSITS.lifts ?? [];
     assert.deepEqual(
       lifts.map((lift) => [lift.id, lift.tag, lift.region]),
@@ -571,7 +597,7 @@ describe('the faces, as docs/mission-rim-deposits.md §6 sites them', () => {
   });
 
   it('walks both corrections in the seconds §9 prices them at', () => {
-    // §9: "1,521–1,724 m at 40 m/s: they are standing between 04:38 and 04:43"
+    // §9: "1,521–1,722 m at 40 m/s: they are standing between 04:38 and 04:43"
     // and "1,185–1,485 m: standing between 07:30 and 07:37". The Chorister is
     // the slowest combat hull in the roster and the correction takes forty
     // seconds to arrive and arrives anyway — that is the mission's tempo, and
@@ -597,6 +623,29 @@ describe('the faces, as docs/mission-rim-deposits.md §6 sites them', () => {
       [38, 43],
       '§9: standing between 04:38 and 04:43'
     );
+    // §9, §13 — and the metres those seconds are read off. The rank is the
+    // literal's own (§9 and §11 site no muster), so the figure §9 prints is a
+    // fact about six authored points and is asserted as one: the 1,521–1,724 m
+    // §9 read before #397 was one seat's measurement, and the rank's own legs
+    // are what replaced it.
+    assert.deepEqual(
+      [Math.round(Math.min(...firstLegs)), Math.round(Math.max(...firstLegs))],
+      [1521, 1722],
+      '§9: 1,521–1,722 m'
+    );
+    // The muster stands clear of every seat on the lip — the whole reason the
+    // rank is where it is, and the thing a tidied-up muster would break.
+    const lipSeats = CHORD_RIM_DEPOSITS.parties
+      .flatMap((party) => [...party.units, ...(party.structures ?? [])])
+      .filter((thing) => thing.y >= 3000);
+    for (const [tag, muster] of musters) {
+      for (const seat of lipSeats) {
+        assert.ok(
+          dist(muster, seat) > 0,
+          `${tag} musters on top of ${seat.tag}, which is a seat and not a stop`
+        );
+      }
+    }
     // The second wave has no muster: it leaves straight off the seats First
     // Arrival left it on (§9's table has one `move x6` at 07:00 and no other).
     const seats = new Map(
@@ -737,10 +786,53 @@ describe('what is heard, as docs/mission-rim-deposits.md §7 prices it', () => {
     );
   });
 
-  it('hears the garden once, at Bearing, and never again', () => {
+  it('reads the Voice’s own HYD-65 table back, and hears the garden once at Bearing', () => {
+    // §7's second half — "what the Voice (HYD 65) hears, all tide, none of it
+    // the player's business to act on". Seven rows, two tiers each, stated to
+    // the metre, and every figure is the shipped propagation model's: the
+    // sources are the roster's and the bestiary's, not the literal's, so the
+    // day a hull's idle SIG or a biome's PF moves this is the row that reads
+    // the document back to itself.
+    assert.equal(CRUISER.hyd, 65, '§3: the ears at HYD 65');
+    const pair = (sig: number, pf: number) => [
+      rangeAt(sig, CRUISER.hyd, pf, TIER_THRESHOLD_MULTIPLIER.CONTACT),
+      rangeAt(sig, CRUISER.hyd, pf, TIER_THRESHOLD_MULTIPLIER.CLASSIFICATION),
+    ];
+    const attendantSig = (CHORD_RIM_DEPOSITS.parties.find((p) => (p.emitters ?? []).length > 0)
+      ?.emitters ?? [])[0]!.sig;
+    const veilCloudSig = VEIL.sigIdle * STRUCTURE_AURAS.SPORE_VEIL.SIG_FACTOR;
+    assert.deepEqual(
+      [
+        pair(CANTOR.sigIdle, LIP_PF),
+        pair(CHORISTER.sigCruise, LIP_PF),
+        pair(CHORISTER.sigCruise, TERRACES_PF),
+        pair(statsFor(UnitKind.AbyssalSubmersible).sigIdle, LIP_PF),
+        pair(attendantSig, LIP_PF),
+        pair(veilCloudSig, LIP_PF),
+        pair(SOUNDER.sigActive, LIP_PF),
+      ],
+      [
+        [4833, 2726],
+        [3818, 2153],
+        [2277, 1285],
+        [3616, 2039],
+        [3818, 2153],
+        [1922, 1084],
+        [9316, 5254],
+      ],
+      '§7: the dome, a Chorister on the lip and on the bench, the watch and the 9th, an attendant, the bed and the basin'
+    );
+    assert.deepEqual(
+      [CANTOR.sigIdle, CHORISTER.sigCruise, statsFor(UnitKind.AbyssalSubmersible).sigIdle],
+      [35, 24, 22],
+      '§7: the SIG column is the roster’s, and the table quotes it'
+    );
+    assert.equal(SOUNDER.sigActive, 100, '§7: the basin, calling');
+
     // §7 — "the bed is held at Bearing once, and never above it". The reading
     // is taken on the descent's western limb, at 2,400, 2,500 and 1,750 m, and
-    // then the party goes east and does not hear it again.
+    // then the party goes east and does not hear it again. The same ears, one
+    // row further down the same section, which is why it reads here.
     assert.equal(VEIL.sigIdle, 20);
     assert.equal(
       Math.round(VEIL.sigIdle * STRUCTURE_AURAS.SPORE_VEIL.SIG_FACTOR),
@@ -1344,25 +1436,28 @@ describe('the rented rating, played — docs/mission-rim-deposits.md §4', () =>
   });
 });
 
-describe('one finding against the runtime — docs/mission-rim-deposits.md §6 and §9', () => {
+describe('the hold the document was moved to match — docs/mission-rim-deposits.md §6', () => {
   /**
    * §6 puts two loads on one hull in one region, twice over — `load-one` and
    * `load-two` on `cutter-a`'s fourth face, `load-three` and `load-four` on
-   * `cutter-b`'s fifth — and both §6 and §9 describe the pair as *sequential*:
-   * "Eight minutes on one face, the second four of them under the first
-   * correction", with the second cuts running "from about 05:30 to about
-   * 09:30".
+   * `cutter-b`'s fifth — and says of the pair that **"the two are not a
+   * sequence"**: one four-minute hold a face, "and the fourth and fifth faces
+   * are one hold each rather than two", with all five loads aboard by about
+   * 05:30.
    *
-   * `MissionRuntime.applyLifts` walks the lift table and accrues **every** lift
-   * whose carrier is standing inside its region on that pass, independently,
-   * and nothing in the format serialises two loads on one hull. So one
-   * four-minute hold rigs both, and the eight minutes are the side that is
-   * wrong. Played on the mission itself rather than on a fixture, because the
-   * claim is about these five authored lifts and not about lift tables in
-   * general: `cutter-a` is walked onto the fourth face, held there, and brought
-   * home, and §8's two rows for the two cuts both latch off the one hold.
+   * That sentence is a claim about `MissionRuntime.applyLifts`, which walks the
+   * lift table and accrues **every** lift whose carrier is standing inside its
+   * region on that pass, independently; nothing in the format serialises two
+   * loads on one hull. §6 and §9 read *eight* minutes on a face — second cuts
+   * running 05:30 to 09:30 — until the transcription found otherwise, and §13
+   * records the document as the side that moved. Played on the mission itself
+   * rather than on a fixture, because the claim is about these five authored
+   * lifts and not about lift tables in general: `cutter-a` is walked onto the
+   * fourth face, held there, and brought home, and §8's two rows for the two
+   * cuts both latch off the one hold. The day a per-carrier rule arrives — or
+   * the day the prose goes back to eight — this is what notices.
    */
-  it('rigs both of cutter-a’s loads off one four-minute hold, where §6 and §9 read eight', () => {
+  it('rigs both of cutter-a’s loads off the one four-minute hold §6 prices', () => {
     const match = rimMatch();
     match.update(STEP_MS);
     const cutter = corvetteAt(match, { x: 2850, y: 350 });
@@ -1400,7 +1495,7 @@ describe('one finding against the runtime — docs/mission-rim-deposits.md §6 a
     );
     assert.ok(
       closed - opened < 2 * T(4),
-      '§6 and §9 read eight minutes on one face; the runtime charges four, and the prose is the side that is wrong'
+      '§6: the two are not a sequence — one hold a face, and not the eight minutes §6 and §9 read before §13 moved them'
     );
 
     // And the two loads are real and named: §8's two rows for the fourth
@@ -1424,7 +1519,7 @@ describe('one finding against the runtime — docs/mission-rim-deposits.md §6 a
     );
     assert.ok(
       met.get('load-two-home')! < T(9, 30),
-      '§9 puts the second cut of a face at about 09:30; this one is above the line well before it'
+      '§9 puts every load aboard by about 05:30 and the line by about 06:45, not at the 09:30 the prose read before §13 moved it'
     );
     // §8, §13, played: `extract ... loaded: true` counts carriers and not
     // loads, so one cutter home with two cuts aboard is not the Chord.
