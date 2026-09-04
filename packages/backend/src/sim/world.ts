@@ -159,6 +159,23 @@ export interface SimWorld extends IWorld {
    * argument the cut floor makes. A component would be a second place the
    * fifteen seconds are counted.
    */
+  /**
+   * Rectangles a mission has made habitable, and the Pressure Rating each
+   * grants over a hull's own — `MissionRegion.pressureBonus`, and the
+   * `ground` beat that turns one on.
+   *
+   * `liftCutSig`'s arrangement with one difference, and the difference is the
+   * point: it is keyed on **ground rather than on entities**, so `aurasSystem`
+   * tests containment itself and the grant is exact on the tick a hull crosses
+   * the line rather than stale until the next mission pass. A per-eid map
+   * would have been the closer copy and the wrong one — a hull that leaves a
+   * furrow is out of the furrow, and crush is charged at 60 Hz.
+   *
+   * Cleared and rebuilt whole on every mission pass, so a grant cannot outlive
+   * the beat that wrote it. Empty in every skirmish, and the read is gated on
+   * that.
+   */
+  regionPressureBonus: { x: number; y: number; widthM: number; heightM: number; bonus: number }[];
   commanderHaste: Map<number, number>;
   /**
    * Hulls the same act lifts Silent Running's **speed** penalty from — the
@@ -352,6 +369,7 @@ export function createSimWorld(terrain: Terrain, dt: number, seed: number): SimW
   world.blooms = [];
   world.liftCutSig = new Map();
   world.soundingSig = new Map();
+  world.regionPressureBonus = [];
   world.commanderHaste = new Map();
   world.commanderSilentImmune = new Set();
   world.rng = new Rng(seed);

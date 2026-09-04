@@ -17,16 +17,17 @@ breaks toward the trenches, 214 PC, the tide after the conclave interval
 the First, where the Chord still stands and three people who have not spoken since 178 PC are still
 writing.*
 
-**This is the first mission in the campaign where Silent Running is the right button.**
+**This is the mission where Silent Running stops being cover and becomes a courtesy.**
 [mission-aptitude.md](mission-aptitude.md) §4 priced it out by arithmetic — a cruising Knight
 pointed away is quieter than a silent Knight pointed at you.
 [mission-standing-wave.md](mission-standing-wave.md) §3 said it was worse than wrong, because the
 two loudest things in that mission had no throttle to pull.
-[mission-conclave-chord.md](mission-conclave-chord.md) §4 spent it on thirty seconds at the end of a
-fight. Here the whole mission is the button, held for eight minutes, in a room where the courtesy is
-absolute — and the reason it is finally correct has nothing to do with hiding. Nobody in this water
-is hunting anybody. The hush is a thing the Order owes a house, and this is the first time the
-format has been asked to price a courtesy rather than a cover.
+[mission-conclave-chord.md](mission-conclave-chord.md) §3 is where it first comes right, and it
+comes right as a refusal — thirty seconds of a scalar no bearing fixes, at the end of a fight. Here
+it is the whole mission, held for eight minutes in a room where the courtesy is absolute, and the
+reason it is correct this time has nothing to do with hiding. Nobody in this water is hunting
+anybody. The hush is a thing the Order owes a house, and this is the first time the format has been
+asked to price a courtesy rather than a cover.
 
 ---
 
@@ -41,14 +42,14 @@ trench axis — the one alignment in the Rift where PF 1.60 water carries a tran
 before it should have ([timeline.md](timeline.md)). Three technicians never regained speech. They
 are alive, at 2,900 m, and they have not stopped writing.
 
-The house is three rooms and this mission stands in all three. **The Chord** still stands, still
-aimed, and — the fact the Order does not say out loud — still *tuned*: the house's wrights have kept
-it playable every season since 178, which makes it not a monument and not a ruin but an instrument
-in working order that nobody is permitted to sound. **The hospice** is where somebody is kept in
-tune who can no longer sound: three cells opening off the chord, attended by apprentices who share
-the Three's hours and transcribe. **The sealed room** is thirty-six years of writing in three hands,
-a case a season, dated and stacked in a cut dry room, and the Choirmaster reads there alone
-([habitats.md](habitats.md) §5; [factions.md](factions.md)).
+The house is three rooms; this mission enters two of them and hears the third. **The Chord** still
+stands, still aimed, and — the fact the Order does not say out loud — still *tuned*: the house's
+wrights have kept it playable every season since 178, which makes it not a monument and not a ruin
+but an instrument in working order that nobody is permitted to sound. **The hospice** is where
+somebody is kept in tune who can no longer sound: three cells opening off the chord, attended by
+apprentices who share the Three's hours and transcribe. **The sealed room** is thirty-six years of
+writing in three hands, a case a season, dated and stacked in a cut dry room, and the Choirmaster
+reads there alone ([habitats.md](habitats.md) §5; [factions.md](factions.md)).
 
 Choirmaster Ivane Sull was one of those apprentices. She was in the room in 178 PC, at ten years
 old, a year past her own test at nine; she kept her voice and does not know why
@@ -99,11 +100,12 @@ it is unarmed, and it carries the only person permitted to open the season's cas
 fielded. She has never stood in the First. She speaks once, to nobody, in the chord, which is what
 she does in every Chord mission and the only mission in which the room she says it in is the point.
 
-**Chapter-wright Aldis Fenn speaks for the house, twice.** B. 2,900 m, sixty-eight, one of the
-First's five surnames, forty years on the Chord and he has never left the Fields — the same face
-[habitats.md](habitats.md) §5 gives the Third in Anselm Vrey, given here to the deepest house
-because somebody has to say the times aloud. He is the Order's register at its most archaic: he
-enters times and refuses to enter meanings, and outside his mouth this document does the same.
+**Chapter-wright Aldis Fenn speaks for the house, four times** — three on the clock and once when
+the Choirmaster reaches the room. B. 2,900 m, sixty-eight, one of the First's five surnames, forty
+years on the Chord and he has never left the Fields — the same face [habitats.md](habitats.md) §5
+gives the Third in Anselm Vrey, given here to the deepest house because somebody has to say the
+times aloud. He is the Order's register at its most archaic: he enters times and refuses to enter
+meanings, and outside his mouth this document does the same.
 
 **Chapter-Master Vrey is not in this mission**, and **the Three do not speak and are not shown.**
 Vrey built the First Chord's lattice with his own hands and wants it shut down
@@ -112,14 +114,14 @@ Vrey built the First Chord's lattice with his own hands and wants it shut down
 they write is never read out — not in this document, not in a line, not in a reading
 ([habitats.md](habitats.md) §5; [culture.md](culture.md) §6).
 
-**Engine bound, stated so nobody corrects it into a bug.** Two parties and a court slot. The player's
-party carries the Knight faction value on the player's slot; **the First is a second Knight party on
-a second slot**, seated by the mission, because an emitter on the player's own party is one the
-player can never hear (`missions.test.ts:587-603`) and the house has to be audible. Hostility in this
+**Engine bound, stated so nobody corrects it into a bug.** Two parties and a court slot. The
+player's party carries the Knight faction value on the player's slot; **the First is a second Knight
+party on a second slot**, seated by the mission, because an emitter on the player's own party is one
+the player can never hear (`missions.test.ts`) and the house has to be audible. Hostility in this
 engine is `Owner.slot`, so those two parties are formally enemies; nothing on either side can fire —
 the house has no hulls and the player's four carry no `armed` flag and have weapons locked besides —
-and §13 carries the row rather than leaving a reviewer to find it. The Drift is not a party: no fauna
-are seeded and none is authored.
+and §13 carries the row rather than leaving a reviewer to find it. The Drift is not a party: no
+fauna are seeded and none is authored.
 
 ---
 
@@ -181,9 +183,12 @@ two missions are the same argument at opposite ends of the campaign: a room wher
 3. **Construction** — *the First is finished.* There is nothing to build with in any case: the
    ledger above is prose, `startingNodules` is 0, and the map carries no resource field.
 
-**Silent Running is present, and for the first time in this campaign it is the answer.** §4 is the
-whole of why, and the arithmetic is short: `SILENT_RUNNING.SIG_MAX` is 8, a Knight Corvette idles at
-28 and the Voice at 55, and the hush's ceiling is 8. There is no other way to reach it.
+**Silent Running is present, and here it is the whole mission rather than its last thirty seconds.**
+§4 is the whole of why, and the arithmetic is short: a Knight Corvette idles at 28 and the Voice at
+55, the hush's ceiling is 8, and the button is the only thing on this map that gets under it — a
+Corvette to **5.3** and the Voice to **7.6**, because `silentRunningSig` places a hull inside the
+3–8 band by its own idle figure rather than at the band's ceiling (`acoustics.ts`). Four tenths of a
+point of margin on the loudest hull the row measures, and no other way to buy it.
 
 ---
 
@@ -191,21 +196,23 @@ whole of why, and the arithmetic is short: `SILENT_RUNNING.SIG_MAX` is 8, a Knig
 
 The system this mission teaches, per [campaign.md](campaign.md) §7's own row, is **nothing at all**.
 It is the campaign's one mission with no new mechanism in it, and the document says so plainly
-rather than smuggling one in. What it does instead is turn one built button the right way round for
-the first time, in four movements.
+rather than smuggling one in. What it does instead is hold one built button down for the whole
+twelve minutes, in four movements.
 
 **1. Silent Running is the courtesy, and the ceiling is 8.** `SILENT_RUNNING` puts a hull between 3
-and 8 SIG, costs 45% of its speed and disables its weapons, and cannot be locked
-(`constants.ts:381-390`). A Knight Corvette that simply stops emits 28; the Voice idles at 55. The
-hush's predicate is `quiet` at **ceilingSig 8**, which is a number no hull on this map can reach any
-other way — the first ceiling in the bible that is not a discipline but a mode. The prologue's twenty
-was a ceiling the flight could hold at cruise; the galleries' twenty-five was a written order a
-Submersible clears by idling; twenty-eight at the Third was a Corvette's own cruise figure. Eight is
-the button.
+and 8 SIG, costs 45% of its speed and disables its weapons, and cannot be locked (`constants.ts`,
+`SILENT_RUNNING`). A Knight Corvette that simply stops emits 28; the Voice idles at 55. Under the
+button they emit **5.3** and **7.6**: `silentRunningSig` scales the band by the hull's own idle
+figure — `3 + 5 x min(1, sigIdle / 60)` (`acoustics.ts`) — so only a hull idling at 60 or more ever
+reads the eight. The hush's predicate is `quiet` at **ceilingSig 8**, which is a number no hull on
+this map can reach any other way — the first ceiling in the bible that is not a discipline but a
+mode. The prologue's twenty was a ceiling the flight could hold at cruise; the galleries'
+twenty-five was a written order a Submersible clears by idling; twenty-eight at the Third was a
+Corvette's own cruise figure. Eight is the button, and the Voice keeps it by four tenths of a point.
 
 **2. The hold is the escort, and it puts them where the room is.** `escortRadiusM` is **600 m**: the
 `'tender'` moves only while an `'escort'` is inside that radius, measured horizontally, and its
-orders are cleared every pass it is not (`runtime.ts:811-834`, `858-867`). The sealed room is a
+orders are cleared every pass it is not (`runtime.ts`, `applyEscortHold`). The sealed room is a
 500 × 500 m cut off the hall's east end; an escort standing at the hall's east end, (2500, 2250),
 holds **every metre of the room inside the hold — the farthest corner is 559 m**. So the geometry
 does what no predicate can: the escort waits at the mouth of the room and does not go in, not
@@ -226,7 +233,7 @@ SIG 3 for twenty seconds, sixty seconds after — the return's own figures, inhe
 a refusal to say what it is. Both are attendable emitters and both are entered as times. **Nothing
 in this document connects them.** The Directorate would enter the gap as well; the Order keeps no
 gaps, and that one-line difference between two liturgies is the only thing this mission says about
-the fact that they have been hearing the same thing for two hundred years.
+the fact that two orders which have never shared a page have been writing down the same thing.
 
 ### The SIG budget
 
@@ -265,7 +272,7 @@ than discovered.
   Fenn's lines and the emitters' windows, not a `MissionSweep` (§13) — but the number is the reason
   the lines are true.
 - **Its depth grant reaches nobody, and that is why the refit exists.** `STRUCTURE_AURAS.SOUNDING_SPIRE`
-  grants PR+1 within 600 m **to hulls on the granting structure's own slot** (`auras.ts:130-149`,
+  grants PR+1 within 600 m **to hulls on the granting structure's own slot** (`auras.ts`,
   `spire.slot !== slot`). The First's party has no hulls, and the player's are on a different slot,
   so the Chord grants precisely nothing to anybody. A chapter-house's own hulls live under its
   instrument; this party is not the house's, and the four certificates in §3 are what it costs to
@@ -287,9 +294,9 @@ than discovered.
 The three cells are the writing, and **they carry no `reading`**, which is the format's own way of
 saying a thing is heard and not read: an emitter without a reading is not attendable, contributes to
 no count, and appears in no epilogue. At Tier 3 an emitter's contact carries position and depth and
-**no kind and no faction** (`types.ts:140-142`; `world.ts:511-513`), so the strongest thing the
-player can ever hold on a cell is a scratch at a place. That is the whole of what the format will
-give, and it is exactly what [habitats.md](habitats.md) §5 asks for.
+**no kind and no faction** (`types.ts`, `MissionEmitter`; `world.ts`, `spawnEmitter`), so the
+strongest thing the player can ever hold on a cell is a scratch at a place. That is the whole of
+what the format will give, and it is exactly what [habitats.md](habitats.md) §5 asks for.
 
 **Naming follows [culture.md](culture.md) §4.** Knights carry the family name always and titles
 precede it, because the families are finite: Choirmaster Ivane Sull, Voice Ren Kalliso, Chapter-wright
@@ -312,7 +319,7 @@ correctly, including the house, including the axis, and the discomfort is entire
 | **The Approach** | 1500, 750, 1000, 1250 | 2,600–2,900 m | Nothing | The first dive. Roofed at 2,600, so it is entered on an order and by nothing else |
 | **The Chord** | 1500, 2000, 1000, 500 | 2,700–2,900 m | The First Chord, at (2000, 2250) | The hush. Coral Ruins, PF 0.80, cut structure with hard shadows ([habitats.md](habitats.md) §8) |
 | **The Hospice** | 1000, 2000, 500, 500 | 2,750–2,900 m | Three cells, at 4 SIG apiece | Nothing at all. It is heard and it is not entered |
-| **The Sealed Room** | 2500, 2000, 500, 500 | 2,800–2,900 m | Thirty-six years, a case a season | The deepest ceiling on the map, so it is the last dive |
+| **The Sealed Room** | 2500, 2000, 500, 500 | 2,800–2,900 m | Thirty-six years, a case a season | The deepest ceiling on the map, so it is the last dive. Cut off the chord's east end rather than off the hospice, which is a change to [habitats.md](habitats.md) §5 that §13 states |
 
 **The Choirmaster reads alone, and the format cannot make her.** No predicate says *no other hull
 entered this region* — every predicate is a query over the player's own force and none of them is a
@@ -345,7 +352,7 @@ because the format's own contact rules hold it.
 
 ## 7. What Is Heard
 
-**Five things, and two of them are entered as times.**
+**Six things, and two of them are entered as times.**
 
 - **The house itself.** The First Chord at 30 SIG, continuously, from the middle of the map. The
   Voice holds it at **contact from 2,618 m** through the Fields' 0.70 water and **2,846 m** through
@@ -353,21 +360,26 @@ because the format's own contact rules hold it.
   party crosses the foot and is the only thing on this map that would still be audible if nobody
   moved. A chapter-house's ambient signature is a chord ([habitats.md](habitats.md) §8), and this is
   the deepest one.
-- **The party arriving, at 72.** Eight seconds of descent from 2,300 to 2,650 m, then 2.2 s more into
-  the chord's water and 3.3 s to the floor. Heard by the Chord from 3,596 m, classified from 2,028.
-  Ascent is 15 m/s and silent, and nobody ascends in this mission.
+- **The party arriving, at 72.** Eight seconds of descent from 2,300 to 2,650 m, then 1.1 s more
+  into the chord's water at 2,700 and 4.4 s to the floor at 2,900. Heard by the Chord from 3,596 m,
+  classified from 2,028. Ascent is 15 m/s and silent, and nobody ascends in this mission.
+- **The escort, once it stops.** A silent Voice at 7.6 is a contact to the Chord's HYD 45 inside
+  958 m and a classification inside 540; a silent Corvette at 5.3, 768 and 433. So the house does
+  not stop hearing the escort — a house at 2,900 m hears everything in its own hall. What it stops
+  hearing is a hull *under way*, which is the only thing this register calls a shove and the only
+  thing it enters. That is what §8's met reading means by *heard nothing else of the party*.
 - **The three cells.** SIG 4, two seconds in every six, unbounded, from the hospice. Contact at
   808 m to the Voice, classification at 456; a Corvette at 686 and 387. Never attendable, never
   entered, never read.
 - **The Chord, sounding, unstruck — 07:40, twenty seconds, SIG 12.** Bearing to the Voice from
   **1,246 m** in the chord's own water, which is further than any part of the house, so every hull in
   the building hears it whatever it is doing. Nobody struck it. Fenn enters the time.
-- **The axis — 08:40, twenty seconds, SIG 3, at 3,050 m on the trench floor 400 m south of the
-  Chord.** The path from the hall to the point crosses 250 m of Coral Ruins and 150 m of Abyssal
-  Trench, a mean PF of about 1.10, which puts **bearing at 639 m** — so a hull in the hall's south
-  half has it and a hull at the room's mouth, 640 m out, is on the line. A Corvette standing at the
-  hall's south edge is 150 m from the point and holds it at Track. **The axis is not entered as
-  anything. It is entered as the time.**
+- **The axis — 08:40, twenty seconds, SIG 3, at 3,050 m in the trench 400 m south of the Chord,
+  fifty metres off its floor.** The path from the hall to the point crosses 250 m of Coral Ruins and
+  150 m of Abyssal Trench, a mean PF of about 1.10, which puts **bearing at 639 m** — so a hull in
+  the hall's south half has it and a hull at the room's mouth, 640 m out, is on the line. A Corvette
+  standing at the hall's south edge is 150 m from the point and holds it at Track. **The axis is not
+  entered as anything. It is entered as the time.**
 
 And what is absent: no fauna, no hazard, no third faction, no combat, no mark, no ping and no
 ascent. [mission-aptitude.md](mission-aptitude.md) §7 filled the water with sound and made almost
@@ -385,8 +397,8 @@ Three rows. Two of them decide the count and neither is a keystone; the third is
 read out and never ranked.
 
 **Roles.** `'tender'` — the Choirmaster's hull, one hull, and the literal must use the escort hold's
-own word (`types.ts:68-70`), which is why this document calls it *the Choirmaster's hull* in prose
-and never *the tender*. `'escort'` — the Voice and the two Corvettes, three hulls.
+own word (`types.ts`, `MissionRole`), which is why this document calls it *the Choirmaster's hull*
+in prose and never *the tender*. `'escort'` — the Voice and the two Corvettes, three hulls.
 
 **Regions.** `sealed-room` 2500, 2000, 500, 500 · `the-chord` 1500, 2000, 1000, 500 · `the-approach`
 1500, 750, 1000, 1250 · `the-foot` 0, 0, 4000, 750.
@@ -400,9 +412,10 @@ at a time."*
 - Reading, met: *"The season's case was read. Nothing of it is entered."*
 - Reading, unmet: *"The case was not read this season. It will keep; it has kept thirty-six years. I
   will not."*
-- An `extract` latches Met and is never re-derived (`runtime.ts:1282`), which is why a row read *at
-  the close* needs a late reveal. This one is not that: reaching the room is a thing that happened,
-  and the party is seated 2,089 m away at the foot, so nothing latches at tick zero.
+- An `extract` latches Met and is never re-derived (`runtime.ts` skips a Met non-standing row),
+  which is why a row read *at the close* needs a late reveal. This one is not that: reaching the
+  room is a thing that happened, and the party is seated 2,089 m away at the foot, so nothing
+  latches at tick zero.
 
 **2. `the-hush`** — *"The chord is where the house keeps its silence. The escort is silent in it:
 eight, and nothing struck."*
@@ -413,13 +426,12 @@ eight, and nothing struck."*
   party, which is the whole of what an escort is for in this house."*
 - Reading, unmet: *"The escort was heard in the chord. A hull under way in the chord is a shove, and
   the house has entered the time."*
-- `quiet` reads the peak emitted SIG over the named role and never `own.peakSig`
-  (`predicates.ts:107-119`), which is what lets the Choirmaster's hull sit at 55 beside a ceiling of
-  8 without breaching it. That is not a loophole; it is the objective. **The house is entitled to
-  hear the Choirmaster. It is not entitled to hear anybody else**, and the met reading says exactly
-  that.
-- It is **standing** (`predicates.ts:193`), so it is re-derived every tick and read at the resolve.
-  §13 carries what that costs.
+- `quiet` reads the peak emitted SIG over the named role and never `own.peakSig` (`predicates.ts`),
+  which is what lets the Choirmaster's hull sit at 55 beside a ceiling of 8 without breaching it.
+  That is not a loophole; it is the objective. **The house is entitled to hear the Choirmaster. It
+  is not entitled to hear anybody else**, and the met reading says exactly that.
+- It is **standing** (`predicates.ts`, `isStanding`), so it is re-derived every tick and read at the
+  resolve. §13 carries what that costs.
 
 **3. `the-house-hears`** — *"The house hears what comes to it. What is heard is entered as the
 time."*
@@ -436,7 +448,7 @@ time."*
 ### Results
 
 Two terminal rows, no keystone, so the ladder is the format's own: both met is Complete, one is
-Partial, neither is Lost (`runtime.ts:1322-1341`).
+Partial, neither is Lost (`runtime.ts`).
 
 | Result | Condition | Sull's reading |
 | --- | --- | --- |
@@ -451,7 +463,7 @@ arrangement [mission-aptitude.md](mission-aptitude.md) §8 and
 [mission-conclave-chord.md](mission-conclave-chord.md) §8 both use and this document copies
 deliberately. Beneath every ending, in authored order: the room's reading, the hush's, the attend
 line, and then the two attendable emitters' entered-or-gap lines — the Chord unstruck, then the axis
-(`runtime.ts:1342-1360`).
+(`runtime.ts`).
 
 The emitters' own lines, authored:
 
@@ -480,10 +492,10 @@ the Lid's line at 150 m is 2,150 m shallower than the shallowest hull. Nothing c
 **And the count can still read Lost**, which is the Order's own distinction between a loss and a
 discourtesy, made mechanical. [campaign.md](campaign.md) §10's sixty-second telegraph is not owed
 here because the close is a `resolve` with `conclusion: true` — a tide ending rather than a failure
-state (`types.ts:564-573`; `missions.test.ts:374-379`) — and the document does not lean on the
-exemption to hide anything: the hush is on the panel from 00:00, the ceiling is a mode the player
-either has on or has not, and the room is 2,089 m away with twelve minutes to cross it. **It closes
-as a conclusion, nothing here can be lost, and that is the whole reason it is unbearable.**
+state (`types.ts`; `missions.test.ts`) — and the document does not lean on the exemption to hide
+anything: the hush is on the panel from 00:00, the ceiling is a mode the player either has on or has
+not, and the room is 2,089 m away with twelve minutes to cross it. **It closes as a conclusion,
+nothing here can be lost, and that is the whole reason it is unbearable.**
 
 ---
 
@@ -493,13 +505,13 @@ as a conclusion, nothing here can be lost, and that is the whole reason it is un
 mission in the bible, deliberately: the campaign's row for it says *twelve minutes*, and a document
 that ran to fourteen to feel more substantial would be arguing with its own subject. The header's
 band is **[720, 780] s** and the `resolve` lands at **720 s** exactly, which the band test admits —
-it is `closesAtS >= low && closesAtS <= high` (`missions.test.ts:392-405`) — and `MISSION.LENGTH_MIN_S`
-is 720, so the low end is legal too. Stated because both are boundary values and a reader will check.
+it is `closesAtS >= low && closesAtS <= high` (`missions.test.ts`) — and `MISSION.LENGTH_MIN_S` is
+720, so the low end is legal too. Stated because both are boundary values and a reader will check.
 
 **SIG budget: 8** — §4. **No silence order**: `arrayTag` is unset, so the ledger never runs
-(`runtime.ts:1244`), and the hush is an objective rather than a debt. `runsItsLength: true`, because
-the room can be met at about 04:30 and the court's rule would otherwise close a twelve-minute mission
-at four and a half (the flag [mission-intake.md](mission-intake.md) §13 built).
+(`runtime.ts`), and the hush is an objective rather than a debt. `runsItsLength: true`, because the
+room can be met at about 04:30 and the court's rule would otherwise close a twelve-minute mission at
+four and a half (the flag [mission-intake.md](mission-intake.md) §13 built).
 
 **This beat table is the world's clock, not the player's.** Bracketed rows are where a competent
 party tends to be; nothing in the runtime enforces them. Rows marked *window* are emitter windows
@@ -512,7 +524,7 @@ rather than beats.
 | **02:00** | **Sull, aboard.** *"The approach is roofed at twenty-six hundred. I dive at two; dive when I do. Nobody enters the chord above twenty-seven."* |
 | *[02:10]* | *[**The dive.** 2,300 → 2,650 m in 7.8 s at SIG 72. The house hears it from 3,596 m and classifies it from 2,028]* |
 | **03:00** | **Chapter-wright Aldis Fenn, for the house** (§12). The house acknowledges the arrival it has already heard, which is the courtesy running the correct way round |
-| *[03:30]* | *[The party in the chord, at 2,750–2,900 m. **The escort goes silent** — 28 and 55 become 3 to 8, and the hush's row goes Met]* |
+| *[03:30]* | *[The party in the chord, at 2,750–2,900 m. **The escort goes silent** — 28 and 55 become 5.3 and 7.6, and the hush's row goes Met]* |
 | *[04:00–05:00]* | *[The Choirmaster's hull to the sealed room, one Corvette inside 600 m of her at the hall's east end. The room's row latches Met and stays Met]* |
 | **06:00** | **Kalliso, once, to nobody** (§12). The first time she has stood in the First |
 | **07:40** | *window* — **the Chord sounds, unstruck.** SIG 12 for twenty seconds, bearing from 1,246 m, heard from anywhere in the house |
@@ -622,9 +634,9 @@ no hazard sites, no blooms, and `fauna: false` with no `creature` beat authored,
 **Every seated depth is admitted and every hull is inside its rating.** The party at 2,300 m stands
 400 m over the foot's floor; the Chord and the cells at 2,900 m sit under roofs of 2,700 and 2,750;
 the axis emitter at 3,050 m sits over a 3,100 m floor. **The Axis's floor is deeper than
-`DEPTH.MAX_M`**, which is 3,000 and is the deepest depth a hull can be *ordered* to
-(`match.ts:1013`); that is legal on a mission map — `mouth-rim`'s Lip is 3,100 for the same reason —
-and it means the trench floor is one hundred metres below anywhere the player can go, which is the
+`DEPTH.MAX_M`**, which is 3,000 and is the deepest depth a hull can be *ordered* to (`match.ts`,
+`applyDepth`); that is legal on a mission map — `mouth-rim`'s Lip is 3,100 for the same reason — and
+it means the trench floor is one hundred metres below anywhere the player can go, which is the
 correct relationship between this Order and that water.
 
 **The floor at the foot is 2,700 and not 2,300, and the reason is the roof.** A hull can only step
@@ -792,23 +804,25 @@ almost entirely a build list, and the document would rather say so than manufact
 | Requirement | Status |
 | --- | --- |
 | The mission format — beats, predicates, registry, private rooms | **Built** (#190). `extract`, `quiet`, `attend`, `say`, the conditional beat and `resolve` cover §9's whole schedule, and nothing in §8 reaches past them |
-| **The escort hold** | **Built** — `escortRadiusM` with the `'tender'`/`'escort'` role pair (`types.ts:746-755`, `runtime.ts:811-834`), the prologue's mechanism at 400 m and Thin Water's at 450, authored here at **600 m**. Measured horizontally against the tender's own position, which is why §4's 559 m corner figure is the honest one. Nothing new |
-| **`pressureRating` as an authored refit** | **Built** — `MissionUnit.pressureRating` overrides the roster for one hull (`types.ts:109-116`, `runtime.ts:357-362`), and the literal test reads the hull's own rating rather than the faction baseline (`missions.test.ts:122-149`), so PR-3 must be written on all four or the mission fails its own suite before it fails its people |
+| **The escort hold** | **Built** — `escortRadiusM` with the `'tender'`/`'escort'` role pair (`types.ts`, `runtime.ts`), the prologue's mechanism at 400 m and Thin Water's at 450, authored here at **600 m**. Measured horizontally against the tender's own position, which is why §4's 559 m corner figure is the honest one. Nothing new |
+| **`pressureRating` as an authored refit** | **Built** — `MissionUnit.pressureRating` overrides the roster for one hull (`types.ts`, `runtime.ts`), and the literal test reads the hull's own rating rather than the faction baseline (`missions.test.ts`), so PR-3 must be written on all four or the mission fails its own suite before it fails its people |
 | **`runsItsLength`** | **Built** ([mission-intake.md](mission-intake.md) §13), whose literal is the only one that has wanted it so far. The room is met at about 04:30 and the hush with it; the court's rule would close a twelve-minute mission at four and a half, and twelve minutes is the mission |
-| **`quiet` at a ceiling of 8** | **Built**, and the ceiling is the point: `SILENT_RUNNING.SIG_MAX` is 8 (`constants.ts:387`) and the quietest thing a Knight hull does otherwise is idle at 28. `quiet` reads the peak over the named role and never `own.peakSig` (`predicates.ts:107-119`), which is what lets the Choirmaster's hull sit at 55 beside it — the same rule [mission-sorrowgate.md](mission-sorrowgate.md) §4 needed for the court's array, spent here for the opposite reason |
-| **`quiet` is a snapshot, not an integral** | **Not built, and the smallest fix is named rather than requested.** The row is standing (`predicates.ts:193`) and is re-derived every tick, so what the close reads is the escort's peak SIG *at the resolve*, not over the eight minutes. A party that shoved at 06:00 and pressed the button at 11:59 reads Met. The shape that would fix it is a latch — `quiet` gaining `latchOnBreach?: true`, so a breach sets Failed and the objective beat's own rule (never fail a Met row, `runtime.ts:667-683`) keeps it there — and it is one flag and one branch. **The mission is playable without it**: the unmet reading is written to be true of a shove at any moment, and Silent Running is a mode a hull is in rather than a button pressed at the bell, so a player gaming the tick is doing something the interface does not invite. Named as a finding, not a blocker |
-| **`quiet` as a terminal row** | **A decision, stated so it can be overruled.** [mission-conclave-chord.md](mission-conclave-chord.md) §13 makes `the-quiet` non-terminal on the argument that a standing row would flip a defence's outcome on one tick of gunfire. This mission makes the opposite call and it is the right one here: there is no fight, the escort is stationary for the last eight minutes, and the hush is not a condition of the mission — it *is* the mission. A ladder that could not read it would have one terminal row, and one terminal row can only ever produce Complete or Lost (`runtime.ts:1322-1341`), which would delete the middle rung §8 is built on |
-| **`attend`, with windowed emitters and readings** | **Built** — Attendance's mechanism entire (`types.ts:234-246`, `runtime.ts:1132-1143`), with `fromTick`/`untilTick` windows and `reading { entered, gap }`. Two attendable emitters and `count: 2`, which the bound test admits (`missions.test.ts:728-744`) |
-| **Emitters with no reading** | **Built, and it is the format's own way of saying a thing is heard and not read.** `reading` is optional (`types.ts:180-191`); an emitter without one is not attendable, is in no count and is in no epilogue. The three cells are that, on purpose, and at Tier 3 an emitter's contact carries no kind and no faction (`types.ts:140-142`) — so the strongest thing the format will ever give the player about the Three is a place and a depth |
-| **A second Hadron party, so the house is audible** | **Built, with one consequence stated.** An emitter on the player's own party is one the player can never hear (`missions.test.ts:587-603`), so the house needs a slot of its own. Hostility in this engine is `Owner.slot` and every party is an enemy of every other (`types.ts:195-210`), so the First is formally the player's enemy: two Hadron parties, no hulls on one of them, weapons locked and no `armed` flag on the other, and nothing that could fire even if it wanted to. Recorded because a reviewer reading the slot table will otherwise find it |
-| **A Spire on a non-player party grants nobody depth** | **Built, and load-bearing.** `auras.ts:130-149` skips any spire whose `grantSlot` is not the unit's own slot, so the First Chord's 600 m PR+1 reaches nothing at all — the house has no hulls and the player is on another slot. That is why §3's four certificates exist and why the Order pays to visit its own deepest house. `world.spireActive` is likewise never set, so the Chord hums at 30 for the whole mission and never reaches its 80 |
-| **Roofed regions, and terrain that raises and never lowers** | **Built** — `MapRegion.ceilingM` and `Terrain.admits`, with `resolveStep` sliding a hull along ground it cannot enter (`terrain.ts:254-308`). §11 records the one number this forced: the foot's floor is 2,700 m rather than 2,300, because two cells only connect at a depth both admit and a 2,300 m floor under a 2,600 m roof connects to nothing |
-| **`conclusion: true`** | **Built** (`types.ts:564-573`), Tend's and Item Nine's flag. It exempts the mission from the sixty-second telegraph test and from nothing else, and §8 states what the mission does instead of leaning on it |
-| **All seven locks** | **Built** — `AbilityLock` over the seven `MissionAbility` names (`missions.ts:425-450`), each with the house's reason attached for the HUD ([ui-ux.md](ui-ux.md) §7). Only `sorrowgate.ts` has locked all seven before, which makes this the second room in the bible where nothing is aimed |
-| **A predicate over where a hull was *not*** | **Not built, and deliberately not asked for.** *The escort did not enter the sealed room* is inexpressible: every predicate is a query over the player's own force and none of them is a negation (`types.ts:221-314`). §6 argues the geometry is the better answer anyway — the room is 500 m wide, the hold is 600 m, and an escort at the hall's east end covers the whole of it at 559 m — and a rule would have made a courtesy into a fence, which is the one thing this mission must not do |
+| **`quiet` at a ceiling of 8** | **Built**, and the ceiling is the point: `SILENT_RUNNING.SIG_MAX` is 8 (`constants.ts`) and the quietest thing a Knight hull does otherwise is idle at 28. `quiet` reads the peak over the named role and never `own.peakSig` (`predicates.ts`), which is what lets the Choirmaster's hull sit at 55 beside it — the same rule [mission-sorrowgate.md](mission-sorrowgate.md) §4 needed for the court's array, spent here for the opposite reason |
+| **`quiet` is a snapshot, not an integral** | **Not built, and the smallest fix is named rather than requested.** The row is standing (`predicates.ts`, `isStanding`) and is re-derived every tick, so what the close reads is the escort's peak SIG *at the resolve*, not over the eight minutes. A party that shoved at 06:00 and pressed the button at 11:59 reads Met. The shape that would fix it is a latch — `quiet` gaining `latchOnBreach?: true`, so a breach sets Failed and the objective beat's own rule (never fail a Met row, `runtime.ts`) keeps it there — and it is one flag and one branch. **The mission is playable without it**: the unmet reading is written to be true of a shove at any moment, and Silent Running is a mode a hull is in rather than a button pressed at the bell, so a player gaming the tick is doing something the interface does not invite. Named as a finding, not a blocker |
+| **Silent Running's SIG is the hull's, not the band's** | **Built, and the row this mission is scored on stands or falls on it.** `silentRunningSig` places a hull inside `SILENT_RUNNING`'s 3–8 band by its own idle figure — `3 + 5 x min(1, sigIdle / 60)` (`acoustics.ts`) — so the Voice runs silent at **7.6** and a Corvette at **5.3**, and only a hull idling at 60 or more ever reads the eight. The hush's ceiling of 8 is therefore cleared by four tenths of a point on the loudest hull the row measures, which is margin enough and is worth stating because a Knight hull in the roster at 2.2× a comparable hull's SIG (§3) would idle past 60 and breach a ceiling nobody had moved. Every silent figure in §3, §4, §7 and §9 is computed at the hull's own value rather than at the band's ceiling. First recorded by [mission-shallow.md](mission-shallow.md) §13 |
+| **`quiet` as a terminal row** | **A decision, stated so it can be overruled.** [mission-conclave-chord.md](mission-conclave-chord.md) §13 makes `the-quiet` non-terminal on the argument that a standing row would flip a defence's outcome on one tick of gunfire. This mission makes the opposite call and it is the right one here: there is no fight, the escort is stationary for the last eight minutes, and the hush is not a condition of the mission — it *is* the mission. A ladder that could not read it would have one terminal row, and one terminal row can only ever produce Complete or Lost (`runtime.ts`), which would delete the middle rung §8 is built on |
+| **`attend`, with windowed emitters and readings** | **Built** — Attendance's mechanism entire (`types.ts`, `runtime.ts`), with `fromTick`/`untilTick` windows and `reading { entered, gap }`. Two attendable emitters at `hp` 5,000 apiece and `count: 2`, which the bound test admits (`missions.test.ts`) |
+| **Emitters with no reading** | **Built, and it is the format's own way of saying a thing is heard and not read.** `reading` is optional (`types.ts`); an emitter without one is not attendable, is in no count and is in no epilogue. The three cells are that, on purpose, and at Tier 3 an emitter's contact carries no kind and no faction (`types.ts`) — so the strongest thing the format will ever give the player about the Three is a place and a depth |
+| **A second Hadron party, so the house is audible** | **Built, with one consequence stated.** An emitter on the player's own party is one the player can never hear (`missions.test.ts`), so the house needs a slot of its own. Hostility in this engine is `Owner.slot` and every party is an enemy of every other (`types.ts`), so the First is formally the player's enemy: two Hadron parties, no hulls on one of them, weapons locked and no `armed` flag on the other, and nothing that could fire even if it wanted to. Recorded because a reviewer reading the slot table will otherwise find it |
+| **A Spire on a non-player party grants nobody depth** | **Built, and load-bearing.** `auras.ts` skips any spire whose `grantSlot` is not the unit's own slot, so the First Chord's 600 m PR+1 reaches nothing at all — the house has no hulls and the player is on another slot. That is why §3's four certificates exist and why the Order pays to visit its own deepest house. `world.spireActive` is likewise never set, so the Chord hums at 30 for the whole mission and never reaches its 80 |
+| **Roofed regions, and terrain that raises and never lowers** | **Built** — `MapRegion.ceilingM` and `Terrain.admits`, with `resolveStep` sliding a hull along ground it cannot enter (`terrain.ts`). §11 records the one number this forced: the foot's floor is 2,700 m rather than 2,300, because two cells only connect at a depth both admit and a 2,300 m floor under a 2,600 m roof connects to nothing |
+| **The sealed room is off the chord, not off the hospice** | **A change to the bible, stated rather than smuggled.** [habitats.md](habitats.md) §5 puts the cases "in a cut dry room off the hospice"; §6 and §11 cut the room off the chord's *east* end, with the hospice off its west, and the two rooms a kilometre apart with the hall between them. The reason is the mission: §6's whole argument is that the hospice is heard and never entered, and a sealed room behind it would make the only route to the case a transit through the cells and would stand the escort's hold in the Three's water. The geometry is also what the 600 m hold is sized against (§4). **The change is named rather than absorbed**, per [CLAUDE.md](../CLAUDE.md)'s rule that a disagreement is a bug in one of the two documents: the room's position is authored here, and if it stands then habitats.md §5's clause is the sentence to correct — four words, and nothing else in that section moves |
+| **`conclusion: true`** | **Built** (`types.ts`), Tend's and Item Nine's flag. It exempts the mission from the sixty-second telegraph test and from nothing else, and §8 states what the mission does instead of leaning on it |
+| **All seven locks** | **Built** — `AbilityLock` over the seven `MissionAbility` names (`missions.ts`), each with the house's reason attached for the HUD ([ui-ux.md](ui-ux.md) §7). Only `sorrowgate.ts` has locked all seven before, which makes this the second room in the bible where nothing is aimed |
+| **A predicate over where a hull was *not*** | **Not built, and deliberately not asked for.** *The escort did not enter the sealed room* is inexpressible: every predicate is a query over the player's own force and none of them is a negation (`types.ts`). §6 argues the geometry is the better answer anyway — the room is 500 m wide, the hold is 600 m, and an escort at the hall's east end covers the whole of it at 559 m — and a rule would have made a courtesy into a fence, which is the one thing this mission must not do |
 | **An emitter a condition can silence** | **Not built** ([mission-aptitude.md](mission-aptitude.md) §13's row), and **not needed here**. The two windows are the world's clock and neither is a consequence of anything the player does; a silence the player could cause would make the axis an outcome, and the axis is a time |
-| **The crystal ledger is prose, not a mechanism** | **Stated so nobody builds it.** There is no `startingCrystal` — `MissionDefinition` carries `startingNodules` and the runtime zeroes crystal and biomass at install (`runtime.ts:326-336`; [mission-standing-wave.md](mission-standing-wave.md) §13) — and this mission needs none: nothing is bought, construction is locked, and `startingNodules` is 0. The four certificates are `pressureRating` on four hulls, and the 240 of 600 is a sentence in §3 that [The Rim Deposits](mission-rim-deposits.md) and [The Second Chord](mission-second-chord.md) cite. The **60 crystal a certificate** is new canon and TUNABLE, priced at half a Spire's `crystalCost`; the 120 and the 750 are the roster's |
-| **The house's own hearing** | **Not modelled, and not asked for.** `MissionSweep` would make what the house heard a latched fact appended to the epilogue (`types.ts:642-666`), and this mission does not author one: the First enters times about itself, not findings about its guests, and a filed reading would be the Directorate's shape in a Knight's mouth. The Chord's HYD 45 is real and the Echo pass resolves for the scripted party; what is done with it is Fenn's two lines |
+| **The crystal ledger is prose, not a mechanism** | **Stated so nobody builds it.** There is no `startingCrystal` — `MissionDefinition` carries `startingNodules` and the runtime zeroes crystal and biomass at install (`runtime.ts`; [mission-standing-wave.md](mission-standing-wave.md) §13) — and this mission needs none: nothing is bought, construction is locked, and `startingNodules` is 0. The four certificates are `pressureRating` on four hulls, and the 240 of 600 is a sentence in §3 that [The Rim Deposits](mission-rim-deposits.md) and [The Second Chord](mission-second-chord.md) cite. The **60 crystal a certificate** is new canon and TUNABLE, priced at half a Spire's `crystalCost`; the 120 and the 750 are the roster's |
+| **The house's own hearing** | **Not modelled, and not asked for.** `MissionSweep` would make what the house heard a latched fact appended to the epilogue (`types.ts`), and this mission does not author one: the First enters times about itself, not findings about its guests, and a filed reading would be the Directorate's shape in a Knight's mouth. The Chord's HYD 45 is real and the Echo pass resolves for the scripted party; what is done with it is Fenn's four lines |
 | **`souls`** | **Documentation only** — nothing in `packages/backend/src` reads `.souls` ([mission-thin-water.md](mission-thin-water.md) §13). Thirty-one is carried by hand in §3 and by nothing else |
 | A Knight hull in the roster | **Not written**, a [units.md](units.md) gap rather than a code one — unchanged from [mission-aptitude.md](mission-aptitude.md) §13, [mission-standing-wave.md](mission-standing-wave.md) §13 and [mission-conclave-chord.md](mission-conclave-chord.md) §13. §3 fields generic hulls and says so |
 | Resonance Field 0.70 as **scattered** | **Not built**, and this mission leans on it less than any before it: the only Fields water anybody works in is the foot and the approach, and the two rooms that matter are Coral Ruins. Named a fourth time so nobody adds phantom bearings and assumes §7's figures survived |
@@ -831,6 +845,7 @@ almost entirely a build list, and the document would rather say so than manufact
 - **[mission-rim-deposits.md](mission-rim-deposits.md)** · **[mission-second-chord.md](mission-second-chord.md)** — the two documents that cite §3's ledger and spend it: two Spires, then the last one
 - **[mission-attendance.md](mission-attendance.md)** — the return this mission's axis is shaped from: SIG 3, twenty seconds, a minute of precursor, and the gap the Directorate keeps and the Order does not
 - **[mission-item-nine.md](mission-item-nine.md)** — the other room where the player is present for a reading and never hears the text
+- **[mission-shallow.md](mission-shallow.md)** — where a silent hull was first priced at its own idle figure inside the 3–8 band rather than at the band's ceiling, which is the arithmetic the hush's ceiling is cleared by
 - **[systems-depth.md](systems-depth.md)** — §2, the fast loud descent and the roofed passage entered only by a dive; §3, the Knights' projected access and the refits paid in Resonance
 - **[systems-echo.md](systems-echo.md)** — §3, the PF and HYD every figure in §7 is arithmetic over; §4, the tier an emitter's contact stops at; §6, Silent Running's 3–8
 - **[economy.md](economy.md)** — §6, the tithe, the crystal cut at 2.2×, and "a budget, spent once"

@@ -113,8 +113,9 @@ wins. Souls: **37**, twelve on the Voice and five on each Corvette
 carry the count by hand.
 
 **The lattice.** Six `StructureKind.SoundingSpire`, prebuilt on the player's party at the six voice
-points, at 1,700 m: `descant`, `tenor`, `treble`, `alto`, `bass`, `the-drone`. Roster figures, whole
-([units.md](units.md)): **SIG 30 idle · HYD 45 · 1,800 HP · PR +1 within 600 m**. The Spire is the
+points, at 1,700 m: `descant`, `tenor`, `treble`, `alto`, `bass`, `the-drone`. Roster figures,
+whole — the signature and the grant from [units.md](units.md), the ears and the hull points from
+the structure roster beside it: **SIG 30 idle · HYD 45 · 1,800 HP · PR +1 within 600 m**. The Spire is the
 node — [Standing Wave](mission-standing-wave.md) §3's argument applied to a house's outer formations
 rather than to a defile, because a formation *is* an instrument and the instrument the bible already
 stats is the one the Order builds. Two consequences, stated rather than discovered. The PR grant is
@@ -132,7 +133,7 @@ name.
 ### What the party does not carry
 
 1. **Torpedoes are struck**, for arithmetic rather than doctrine. Six launchers with a magazine of
-   two apiece is twelve shots at 700 damage ([systems-combat.md](systems-combat.md) §3) — 8,400
+   two apiece is twelve shots at 700 damage ([systems-combat.md](systems-combat.md) §5) — 8,400
    against 4,500 hit points of column, delivered from a 3,200 m run against a 900 m gun. A party
    with torpedoes sinks both Cruisers before either stands, and [campaign.md](campaign.md) §2 rule
    4's label becomes false. The reason attached is the Order's own: *nothing is launched on the
@@ -194,7 +195,9 @@ all six Knight guns lasts 4.5, and that figure is unreachable, because reaching 
 **350 metres of a Cruiser's fire before a Corvette's gun bears at all**. Torpedoes are struck (§3),
 and the column stops to work, which means it also stops to shoot: a scripted hull under a move order
 holds its fire (§13), so the column is a target while it walks and a gun when it stands, and §5's
-legs are authored so that from 03:18 a Cruiser is always standing.
+legs are authored so that the column is never walking whole: the escort's three walks are covered by
+three standing cutters, the cutters' three by a standing Cruiser, and from 09:27 the relief stands
+over the Drone and does not move again.
 
 **Six of you, six voices, and this time they are one number.** A hull lost in that fight is a voice
 the Third cannot stand at 14:00. [Aptitude](mission-aptitude.md) §12's *"if I have to choose between
@@ -262,8 +265,11 @@ the fault has since been filed as ground.
 
 The party's seat is 4,494 m from the escort, and a Cruiser idling at 55 in 0.70 water is a contact to
 the Voice from **3,824 m**, so **the column is not audible at 00:00** — deliberate, and not a hole.
-What the Third has at the top of the tide is a writ on an open channel and Vrey's arithmetic; the
-first thing it *hears* is a Cruiser's gun at 03:18, at 3,905 m, by which time a formation is gone.
+What the Third has at the top of the tide is a writ on an open channel and Vrey's arithmetic. The
+first thing that crosses its ear is the escort's *walk* — a Cruiser under way at 65 is a contact from
+4,245 m, so it is audible from about 03:07 and inaudible again the moment it stands, at 3,905 m
+against an idle Cruiser's 3,824. Eleven seconds, and then the water is empty again. What the Third
+*knows* long before that it knows without hearing anything, because the lattice is its own (§7).
 
 **The legs, and their real arrival times.** The column stops to work and only fires when stopped, so
 the escort walks half a minute behind the cutters and a standing Cruiser covers every walk. Each
@@ -311,7 +317,7 @@ the interval* and not *stood here for sixty seconds*.
 | **Tenor** | 3,200, 600 | 3000, 250, 500, 500 | 1,304 m · 15 s | Nothing. Not on the writ, north of everything |
 | **Treble** | 3,600, 3,100 | 3250, 2750, 500, 500 | 2,751 m · 32 s | Nothing, unless the hull overshoots south into the Seam, where PF 1.60 classifies its cone at 2,371 m |
 | **Bass** | 900, 1,100 | 750, 750, 500, 500 | 3,650 m · 43 s | Free **after 05:00**, when the column leaves it and never returns. Before that it is the first thing cut |
-| **Alto** | 2,300, 3,300 | 2000, 3000, 500, 500 | 3,561 m · 42 s | **The whole column stands on it from 10:45.** Every metre of the cell is inside all three cutters' 550 m and the escort's 900: 192.2 a second, and a Corvette lives 2.2 seconds in it |
+| **Alto** | 2,300, 3,300 | 2000, 3000, 500, 500 | 3,561 m · 42 s | **The whole column stands on it from 10:45.** Every metre of the cell is inside the escort's 900 and inside at least one cutter's 550, and over most of it all three bear: 192.2 a second, and a Corvette lives 2.2 seconds in it. At the west corners a hull holding the Approach's depth drops one cutter and lives 2.8 |
 | **The Drone** | 1,100, 3,000 | 750, 2750, 500, 500 | 4,220 m · 50 s | **The relief stands over it from 09:27 and does not leave.** The cheapest metre of the cell is its north-west corner, 652 m from `relief-lead` — inside a Cruiser's 900 and outside both relief Corvettes' 550 — so the keystone costs 67.2 a second, and a Corvette lives 6.3 seconds there. **KEYSTONE** |
 
 Read the last row against [Aptitude](mission-aptitude.md) §6: *a drone is the sustained bottom note
@@ -321,11 +327,21 @@ Cruiser's fire.
 
 **The lattice is the party's armour, and this is emergent rather than authored.** A gun takes the
 *nearest* live hostile in range, and a Sounding Spire is a hostile: position, owner, hull points, and
-nothing in the auto-acquire loop excludes a structure (§13). While a formation stands it is 180–224 m
-from the cutters and a Knight hull in the same cell is 250–650 m away — **the column shoots the
-formation and not the hull.** The tick a formation comes apart, the hull standing its voice becomes
-the nearest thing in the water. Defending the lattice and standing the voices are the same act, by
-arithmetic, and nothing has to say so.
+nothing in the auto-acquire loop excludes a structure (§13). Across the three authored stops a
+standing formation is 150–250 m from its cutters, and a Knight hull in the same cell is 250–650 m off
+in plan and another 250 m above them — **the column shoots the formation and not the hull.** The tick
+a formation comes apart, the hull standing its voice becomes the nearest thing in the water.
+Defending the lattice and standing the voices are the same act, by arithmetic, and nothing has to
+say so.
+
+**The two hundred and fifty metres between the Approach and the Fields is a term nobody has spent,
+either.** Gun range is measured in three dimensions while detection is horizontal
+([systems-combat.md](systems-combat.md) §4), and the column works at 1,700 m over ground the party
+crosses at the Approach's 1,450: a hull that does not descend keeps **490 m of a cutter's 550 and
+865 m of the escort's 900**, and every cell figure in the table above is a plan distance. It costs
+nothing — nothing crushes here and no predicate reads depth — and it is not free to give up, because
+a dive is 45 m/s at a SIG floor of 72 ([systems-depth.md](systems-depth.md) §2) and the ceiling at
+fourteen is twenty-eight.
 
 **And interposing does not work, which the player finds out early and cheaply.** A Corvette that
 sets out at 00:00 stands at the Bass at 00:43, nearly two minutes before the cutters arrive. It is
@@ -336,7 +352,8 @@ then the nearest hostile: 125 a second, 420 hit points, **3.4 seconds** — 2.2 
 
 ## 7. What Is Heard
 
-**The Fields ring, a works order arrives on a channel, and the first thing in the water is a gun.**
+**The Fields ring, a works order arrives on a channel, and the first thing the Third learns it learns
+about itself.**
 
 The Fields ring for the reason they always ring ([world-map.md](world-map.md)), and this tide six of
 them are the player's own, humming at 30 apiece because their depth grant is inert (§3). To the
@@ -346,19 +363,32 @@ names three formations and not a search.
 
 - **The writ, at 00:30.** Bramm, on the works channel, in the concern's own register. It is the
   telegraph, and it is a document rather than an alarm.
-- **The column's guns, from 03:18.** The escort firing at 85 is a contact to the Voice from
-  **5,020 m** and a classification from 2,831; the cutters firing at 53 are a contact from 3,737 m,
-  and their nearest Bass stop is 3,775 m from the party's seat. **Thirty-eight metres outside it** —
-  so a party that has not moved hears nothing at 02:40 and a party that has moved one hull's length
-  west hears the lattice being cut. **Either way its first unambiguous news is a Cruiser joining in
-  at 03:18.**
-- **A formation coming apart.** A destroyed structure lays an Echo Mark at SIG 18 for 180 seconds
-  ([systems-echo.md](systems-echo.md) §7) — a contact from 1,903 m, a classification from 1,073 —
-  and it sits there three minutes saying *something was here and is not*. Three of them, on the
-  writ's own schedule.
-- **The relief walking in at 09:00.** A Cruiser under way at 65 is a contact from 4,245 m; the two
-  Corvettes at 28 are a contact to a Knight Corvette's HYD 50 from 2,129 m. From here the column is
-  two Cruisers and five Corvettes, and the player can hear that it is.
+- **The escort's walk, from about 03:07.** The one thing that crosses the Voice's ear in the first
+  five minutes, and it is a smudge: a Cruiser under way at 65 is a contact from **4,245 m**, so it is
+  Tier 1 for the eleven seconds it takes to close on the Bass and gone the instant it stands — 3,905 m
+  against an idle Cruiser's 3,824. Its second walk, to the Drone at 05:45, buys twenty-nine seconds
+  of the same smudge and ends outside the ear at 4,326 m.
+- **The column's guns, which are figures rather than events.** The escort firing at 85 is a contact
+  to the Voice from **5,020 m** and a classification from 2,831; the cutters firing at 53 are a
+  contact from 3,737 m, and their nearest Bass stop is 3,775 m from the party's seat. **Thirty-eight
+  metres outside it** — so a party that has not moved hears nothing at 02:40 and a party that has
+  moved one hull's length west hears the lattice being cut. And the loudest of those figures is one
+  the player has to buy: three cutters put a formation down in 14.4 seconds and the escort is ordered
+  half a minute behind them (§5), so **unopposed the escort never fires at all**. It arrives at the
+  Bass twenty-three seconds after the Bass has gone, and it fires when somebody stands in front of
+  it.
+- **A formation coming apart, and the fact that the Third does not have to hear it.** A destroyed
+  structure lays an Echo Mark at SIG 18 for 180 seconds ([systems-echo.md](systems-echo.md) §7) — a
+  contact from 1,903 m, a classification from 1,073 — and it sits there three minutes saying
+  *something was here and is not*. Three of them, on the writ's own schedule, and not one of them
+  inside the Approach's ear. **The lattice is the player's own force**, so a formation's hull points
+  fall on the player's own panel while they fall: the Bass is being cut from 02:40 and is gone at
+  02:55, and no ear had anything to do with it.
+- **The relief walking in at 09:00.** A Cruiser under way at 65 is a contact from 4,245 m and the
+  relief-lead crosses that line in the last seconds of its walk; the two Corvettes at 28 reach a
+  Knight Corvette's HYD 50 from 2,129 m, which is a party that has already gone west and nobody
+  else. From here the column is two Cruisers and five Corvettes, and a party at the Approach has been
+  told so rather than shown.
 - **The Third, behind and above** — the one settlement in the game whose ambient signature is a
   chord, audible all mission and silent in exactly the way that matters, because Vrey is in it, not
   striking.
@@ -384,7 +414,7 @@ Two counts and one refusal, and the refusal is the one that can be lost by actin
 | `descant-stood` | *Descant is stood. A hull at the voice, under the ceiling, for the interval.* | `{ kind: 'extract', role: 'party', region: 'descant', count: 1 }` | Terminal · revealed 13:30 |
 | `tenor-stood`, `treble-stood`, `alto-stood`, `bass-stood` | *Tenor is stood.* · *Treble is stood.* · *Alto is stood.* · *Bass is stood.* | the same predicate, region by region | Terminal · revealed 13:30 |
 | `drone-stood` | *The Drone is stood. The chord does not certify without it.* | `{ kind: 'extract', role: 'party', region: 'the-drone', count: 1 }` | Terminal · **KEYSTONE** · revealed 13:30 |
-| `the-rest` | *The interval is the Third's. Nothing is struck. A rest is written down, it is played, and it is not an absence.* | `{ kind: 'endure', ticks: T(14, 30) }` | Terminal · **KEYSTONE** · shown from 00:00 |
+| `the-rest` | *The interval is the Third's. Nothing is struck. A rest is written down, it is played, and it is not an absence.* | `{ kind: 'endure', ticks: T(14, 30) - 12 }` — one mission tick short of the close, and the twelve is load-bearing | Terminal · **KEYSTONE** · shown from 00:00 |
 | `the-quiet` | *The Third is quiet at its own interval. Twenty-eight, and the Voice under silence.* | `{ kind: 'quiet', role: 'party', ceilingSig: 28 }` | Non-terminal, standing · revealed 13:30 |
 | `the-count` | *A concern is coring under a writ. What is classified of the party is filed, and the escort defines obstruction.* | `{ kind: 'tolerance', ticks: 30 × 60, tier: Classification }` | Non-terminal |
 
@@ -405,16 +435,22 @@ seconds of standing, and a Corvette that clips the Alto's corner at 85 m/s has s
 that would carry the stronger one, and the objective text tells the player what to do rather than
 promising what is measured.
 
-**`the-rest` is failed by a conditional beat, not by a predicate.** No predicate can say *nothing has
-happened*, so the row is an `endure` for the mission's whole length and a conditional beat on
-`{ kind: 'sound', count: 1 }` sets it `Failed` the moment the first sounding completes. The tick
-order holds it in both directions: conditional beats fire after every tally and immediately before
-derivation, derivation skips a `Failed` row, and the `resolve` is deferred until after derivation on
-its own tick. A tone completed on the 14:30 pass therefore fails the rest before the endure could
-read Met, and an endure due on the resolve tick reads Met beneath a conclusion. **The tally is
-monotone from tick zero and has no window**, which the document prices rather than patches: a
-formation sounded at 05:00 is a call at 05:00, and a stroke nobody appointed is worse than one
-somebody did.
+**`the-rest` is failed by a conditional beat, not by a predicate, and its clock is authored a tick
+short of the close.** No predicate can say *nothing has happened*, so the row is an `endure` run out
+over the mission's whole length and a conditional beat on `{ kind: 'sound', count: 1 }` sets it
+`Failed` the moment the first sounding completes. The tick order holds it in both directions:
+conditional beats fire after every tally and immediately before derivation, derivation skips a
+`Failed` row, and the `resolve` is deferred until after derivation on its own tick. A tone completed
+on the 14:30 pass therefore fails the rest before the endure could read Met, and an endure due on the
+resolve pass reads Met beneath a conclusion. **Due on the resolve pass, and not on the resolve tick,
+which is not the same figure**: an `endure`'s clock is stamped the first time the runtime derives the
+objective, which is one mission tick — twelve sim ticks — after zero, so a row authored at the round
+`T(14, 30)` comes due one pass *after* the close and never reads Met in any tide the mission can have.
+Authored at `T(14, 30) - 12` it comes due on the close's own pass, which is where the argument above
+needs it. The offset is arithmetic and not taste, and §13 files it as the thing the per-mission test
+has to hold. **The tally is monotone from tick zero and has no window**, which the document prices
+rather than patches: a formation sounded at 05:00 is a call at 05:00, and a stroke nobody appointed
+is worse than one somebody did.
 
 **The ceiling is a party figure, and the Spires do not breach it.** `quiet` reads the peak over the
 hulls carrying the role and never the player's whole slot — [mission-sorrowgate.md](mission-sorrowgate.md)
@@ -466,11 +502,12 @@ call, and Vrey will not correct that record, because correcting it would mean di
 
 The close carries `conclusion: true` — the interval passes at its appointed time whatever is
 standing — so the sixty-second telegraph test exempts this mission. **It clears the rule anyway, by
-ten and a half minutes**, and not by exemption: the writ is read out at 00:30 by the party that will
-execute it, naming how many formations it intends to core; from 03:18 the player hears a Cruiser
-firing at 85, audible under this model from 5,020 m and therefore from anywhere the party stands; a
-formation coming apart leaves a mark at 18 for three minutes, three times, on the writ's own
-schedule; and the relief walks in at 09:00 and changes §4's arithmetic out loud.
+eleven and a half minutes**, and not by exemption: the writ is read out at 00:30 by the party that
+will execute it, naming how many formations it intends to core; from 02:40 the Bass's own hull points
+are falling on the player's own panel, which is own-force information and needs no ear at all, and
+the Bass is gone at 02:55 with eleven and a half minutes still to run; the escort's walk crosses the
+Voice's 4,245 m at about 03:07; and the relief walks in at 09:00 to make §4's arithmetic two Cruisers
+and five Corvettes.
 
 **Nothing else in this mission can be lost.** Nothing crushes — every metre is Mid-Water and every
 hull PR-2 — and nothing hunts, because no fauna are seeded and none is authored. The column does not
@@ -487,8 +524,9 @@ the mission is over thirty seconds after it.
 **SIG budget: 28** — §4, and a flat scalar this time rather than a bearing.
 
 **This beat table is the world's clock, not the player's.** The column's legs and the chapter channel
-are scheduled; where the party is at any tick is the player's business. Bracketed rows are where the
-mission is tuned to expect a competent party and nothing in the runtime enforces them.
+are scheduled; where the party is at any tick is the player's business. Bracketed rows are
+consequences of the legs above them rather than beats: nothing in the runtime enforces one, and a
+party that intervenes moves every one of them.
 
 | Time | Beat |
 | --- | --- |
@@ -498,12 +536,12 @@ mission is tuned to expect a competent party and nothing in the runtime enforces
 | 02:30 | **Move ×4** — the hold and three cutters to the Bass. Cutters standing ~02:40–02:43, the hold ~02:57 |
 | *[02:43–02:55]* | *[The Bass, cut. Three cutters at 125 a second against 1,800 hit points, thirty-eight metres outside the Third's hearing]* |
 | 03:00 | **Move** — the escort follows to the Bass, standing ~03:18 |
-| *[03:18]* | *[**The first thing the Third hears without ambiguity.** A Cruiser firing at 85, from 3,905 m]* |
+| *[03:07–03:18]* | *[**The only thing that crosses the Voice's ear in the first five minutes.** The escort under way at 65, inside 4,245 m for eleven seconds, and inaudible again the moment it stands: 3,905 m against an idle Cruiser's 3,824. Unopposed it has nothing to fire at — the Bass went twenty-three seconds before it arrived]* |
 | 05:00 | **Move ×4** — the hold and cutters to the Drone. Cutters standing ~05:18–05:21, the hold ~05:42 |
 | *[05:35]* | *[The Drone, cut, if nothing has stood in front of it]* |
 | 05:45 | **Move** — the escort to the Drone, standing ~06:19 |
 | **08:00** | **Vrey, on the chapter channel.** The mission, said out loud, eight minutes before the mission (§12) |
-| **09:00** | **Move ×3 — the relief closes on the Drone's water**, standing by ~09:27 and not moving again. From here the column is two Cruisers and five Corvettes, and §4's arithmetic is audible: a Cruiser under way at 4,245 m, two Corvettes at 2,129 |
+| **09:00** | **Move ×3 — the relief closes on the Drone's water**, standing by ~09:27 and not moving again. From here the column is two Cruisers and five Corvettes. A Cruiser under way is a contact from 4,245 m and the relief-lead crosses that line at the end of its walk; the two Corvettes at 28 reach a Knight Corvette's ears at 2,129 m, which is a party that has gone west |
 | 09:30 | **Kalliso, once, to nobody** (§12) |
 | 10:30 | **Move ×4** — the hold and cutters to the Alto. Cutters standing ~10:45, the hold ~11:01 |
 | *[10:59]* | *[The Alto, cut. The third and last formation on the writ]* |
@@ -519,7 +557,7 @@ has no tick:
 | Condition | Beat |
 | --- | --- |
 | `{ kind: 'sound', count: 1 }` | Three effects on one condition, in authored order: `the-rest` is set **Failed**; the lattice answers — *"The Fifth answers. The Ninth answers. The Seventh —"*; and Vrey says what it costs (§12). No `choiceGroup`: nothing here is exclusive with anything, and every one of the three is due on the same pass |
-| `{ kind: 'tolerance', ticks: 1800, tier: Classification }` | Bramm: *"Contact filed. Two Knight hulls at bearing — . The escort defines obstruction from here."* The concern's documented reflex ([mission-aptitude.md](mission-aptitude.md) §5) and **nothing else**: the column's legs are the clock, and the relief is scheduled rather than conditional because the works order was written before anybody heard the Order |
+| `{ kind: 'tolerance', ticks: 1800, tier: Classification }` | Bramm: *"Contact filed. Knight hulls at bearing — . The escort defines obstruction from here."* The concern's documented reflex ([mission-aptitude.md](mission-aptitude.md) §5) and **nothing else**: the column's legs are the clock, and the relief is scheduled rather than conditional because the works order was written before anybody heard the Order |
 
 The column's transits are authored, not patrol AI, for the standing reason
 ([mission-sorrowgate.md](mission-sorrowgate.md) §9): a mission's beats happen at the time the
@@ -669,7 +707,7 @@ The Order states intervals and conditions, never tasks, and is courteous to the 
 
 - *The interval is at fourteen. Nothing is struck.*
 - *Descant is stood. A hull at the voice, under the ceiling, for the interval.*
-- *Four voices stood, and the Drone is not one of them.*
+- *The Drone is stood. The chord does not certify without it.*
 - *The Third is quiet. Twenty-eight, and the Voice under silence.*
 - *Nineteen of thirty are entered. The escort defines obstruction.*
 
@@ -737,14 +775,14 @@ rather than requests; and four are absences it declines to ask for.
 
 | Requirement | Status |
 | --- | --- |
-| The mission format — beats, predicates, registry, private rooms | **Built** (#190). `extract`, `endure`, `quiet`, `tolerance` and `sound`, with `move`, `say`, `objective` and `resolve`, cover §9's whole schedule. Nothing in the beat table needs a tenth beat kind |
+| The mission format — beats, predicates, registry, private rooms | **Built** (#190). `extract`, `endure`, `quiet`, `tolerance` and `sound`, with `move`, `say`, `objective` and `resolve`, cover §9's whole schedule. Nothing in the beat table needs a beat kind the union does not already carry — and it has carried one more since [Convocation](mission-convocation.md) was built (`bell`, #373) |
 | **A predicate over what the player has built, or holds standing** | **Not built, and this document is its second customer.** [mission-standing-wave.md](mission-standing-wave.md) §13 asks for `{ kind: 'build'; structure: StructureKind; count: number }` for a corridor; this mission wants the simpler half — six prebuilt structures on the player's own party, no pairing — plus the thing [mission-aptitude.md](mission-aptitude.md) §13 could not get either: **a way to name one of them.** The intended terminal row is *four voices and the Drone stand at 14:30*, and the shape it needs is that predicate with an optional `tag?` beside the count, exactly as `extract` carries `loaded?: true \| string`. **Cheapest honest approximation now, and what §8 ships:** six `extract` rows over the party plus the keystone rest, which read the *hulls* and not the *lattice*. The gap is stated in the document rather than hidden in it — a formation the column cored at 05:00, with a Knight hull standing in its cell at 14:00, reads as stood. The mission is playable and its argument survives, because §6's real defence is at the column's legs; what is lost is that the panel cannot tell the player which of the two things they achieved |
 | **Authored structure hull points** | **Not built.** `MissionStructure` carries `tag`, `kind`, `x`, `y`, `depthM` and `note` and nothing else, where `MissionEmitter` beside it carries an authored `hp`. So a formation is the roster's 1,800 and dies to the column in 9.4 s (§4). A coring that took minutes — which is what a works order actually looks like — wants either an `hp?` on `MissionStructure` or a second `StructureKind` for a formation that is not a Spire. **Specified, not built, and playable without it**: the defence this mission asks for is at the legs and not at the cut, and a longer cut would make the mission *easier* rather than truer |
-| **A latched `Failed` status, set by a condition** | **Built** ([mission-tolerance.md](mission-tolerance.md) §6). The keystone rest depends on a tick order the document states rather than assumes: conditional beats fire after every tally is updated and immediately before objectives are derived; the `objective` beat refuses to fail a row that is already `Met`; derivation skips a `Failed` row for good; and the `resolve` is deferred until after derivation on its own tick. So a sounding completed on the 14:30 pass fails `the-rest` before the endure could read Met, and an endure due at T(14, 30) reads Met beneath a conclusion. **The per-mission test should assert both orders**, because both are load-bearing and neither is obvious |
+| **A latched `Failed` status, set by a condition** | **Built** ([mission-tolerance.md](mission-tolerance.md) §6). The keystone rest depends on a tick order the document states rather than assumes: conditional beats fire after every tally is updated and immediately before objectives are derived; the `objective` beat refuses to fail a row that is already `Met`; derivation skips a `Failed` row for good; and the `resolve` is deferred until after derivation on its own tick. So a sounding completed on the 14:30 pass fails `the-rest` before the endure could read Met, and an endure due on that same pass reads Met beneath a conclusion. **The row is authored at `T(14, 30) - 12` and the twelve is not a rounding.** An `endure`'s clock is stamped the first time the runtime derives the objective rather than at tick zero — one mission tick, twelve sim ticks, and there is a test that says so (`missionIntake.test.ts`, *keeps an endure counting from the start under a reveal*) — so a keystone written at the round `T(14, 30)` would come due one pass *after* the close and read unmet in every tide the mission can have, which is a Lost reading on a perfect defence. **The per-mission test should assert both orders and the offset**, because all three are load-bearing and none is obvious |
 | **Reveal-at-tick, not scored before** | **Built** ([mission-intake.md](mission-intake.md) §9). It is the right latch for the six voice rows and the only reason an `extract` read at the close is honest at all: without it every voice the party crossed during the tide would already be Met |
 | **Scripted hulls that shoot structures** | **Built, and emergent rather than authored.** The auto-acquire loop walks everything carrying a position, an owner and hull points; it excludes ordnance, static emitters and harmless fauna, and it does **not** exclude structures. So the column cores a formation by shooting it, the nearest-in-range rule makes a standing formation the shield for the hull beside it, and §6's best sentence is a consequence of the engine rather than a script. **This is the honest reason the formations are structures and not emitters** — an emitter would be inaudible to a gun and unshootable, which is exactly backwards here |
-| **A scripted hull under a move order holds its fire** | **Built, and a finding this document authors around.** The auto-acquire path skips a mobile entity whose move order is active, so a walking column is a target and a standing one is a gun. §5's legs are written to that: the escort is ordered half a minute behind the cutters, the relief stands from ~09:27 and never moves again, and from 03:18 there is a Cruiser standing and firing at every tick. Stated rather than discovered, because a reader checking §4's damage figures against a walking column would find them wrong |
-| **A column that moves at its barge's pace** | **Not built, and deliberately not asked for.** Movement gives every hull its own roster speed, so one order issued to four hulls arrives spread over eleven seconds. §5 states the real arrival time of every leg instead of pretending to a formation speed, and §9's beat table carries them. A formation-speed order would be a new field on `move` for one mission's cosmetics |
+| **A scripted hull under a move order holds its fire** | **Built, and a finding this document authors around.** The auto-acquire path skips a mobile entity whose move order is active, so a walking column is a target and a standing one is a gun. §5's legs are written to that: the escort is ordered half a minute behind the cutters, the relief stands from ~09:27 and never moves again, and the column is never walking whole — the escort's three walks are covered by three standing cutters and the cutters' three by a standing Cruiser. What no leg produces is an escort that fires unprompted: half a minute behind three cutters that need 14.4 seconds, it arrives after every cut, so its 67.2 a second is a figure the player buys by standing in front of it (§7). Stated rather than discovered, because a reader checking §4's damage figures against a walking column would find them wrong |
+| **A column that moves at its barge's pace** | **Not built, and deliberately not asked for.** Movement gives every hull its own roster speed, so one order issued to four hulls arrives spread over seventeen seconds on the first leg and twenty-three on the second. §5 states the real arrival time of every leg instead of pretending to a formation speed, and §9's beat table carries them. A formation-speed order would be a new field on `move` for one mission's cosmetics |
 | **The `sound` tally has no window** | **Built, and priced rather than patched.** Completed soundings are monotone from tick zero and the predicate names no sounding, so a tone at 05:00 and a tone at 14:00 are the same fact to the format. The document takes that as the register's own position — a stroke nobody appointed is worse than a stroke somebody did — and asks for no window. It also means a formation the player sounds *by accident*, out of a mission-1 habit, fails the keystone; the briefing says so twice and the 13:30 line says it a third time |
 | **The stroke in the chord is off the map** | **A scoping decision, recorded so it can be overruled.** A conclave is struck in the house's own chord and carried by the lattice ([habitats.md](habitats.md) §5). This map holds the carriage; the room is a kilometre and a half east of the Approach and unauthored (§11). So the sounding at a formation is this document's stand-in for a stroke on the carriage, and **Vrey's not-striking is unheard by rule and by geometry** — the player never hears the decision, which is the point and is also, conveniently, the only thing the format could do. A document that wanted the room would need the interior [habitats.md](habitats.md) §5 sketches and a second map, and it would be a different mission |
 | **`quiet` reads a role, not a slot** | **Built, and load-bearing here.** The predicate takes the peak over the hulls carrying the named role and never the player's whole force — the argument [mission-sorrowgate.md](mission-sorrowgate.md) §4 makes about the court's array. Six formations humming at 30 therefore do not breach a ceiling of 28, which they otherwise would from tick zero, in the one mission where that would be fatal to the subject |
@@ -753,7 +791,7 @@ rather than requests; and four are absences it declines to ask for.
 | **`the-quiet` is a reading and not a rung** | **A decision, stated so it can be argued with.** `quiet` is standing and re-derived every tick, so as a terminal row it would flip the whole outcome on one tick's SIG — a Corvette firing at 38 in the last second would demote a Complete tide to Partial. It is authored non-terminal with a `reading`, which the neutrality guard ([mission-intake.md](mission-intake.md) §5) keeps out of the ladder entirely. The Order reads a courtesy out; it does not rank one against a voice |
 | **Two ways to lose, one Lost epilogue** | **Built, and a constraint rather than a want.** `epilogue` is `Record<MissionOutcome, string>` — three strings — so §8's four-row Results table is three rungs, and the difference between *Drift* and *Called* is carried by the two keystones' own unmet readings printing beneath a Lost line true of both. [mission-aptitude.md](mission-aptitude.md) §8 has the same shape for the same reason and this document copies it deliberately |
 | **Torpedoes locked** | **Built** — `AbilityLock`, ability `'torpedoes'`, denied for the player's slot and enforced server-side, with the reason attached for the HUD ([ui-ux.md](ui-ux.md) §7). The reason is §3's arithmetic and not a mood: twelve shots at 700 damage against 4,500 hull points would make [campaign.md](campaign.md) §2 rule 4's label false |
-| **A commander ability** | **Not needed, and not asked for.** The one act this mission is about — calling a conclave — is a `MissionSounding`, which ships. The campaign's ability rows belong to [The Second Chord](mission-second-chord.md), and this document does not open a second grant mechanism beside the one [mission-convocation.md](mission-convocation.md) §13 already asked for |
+| **A commander ability** | **Not needed, and not asked for.** The one act this mission is about — calling a conclave — is a `MissionSounding`, which ships. The campaign's ability rows belong to [The Second Chord](mission-second-chord.md), and this document does not open a second grant mechanism beside the one [mission-convocation.md](mission-convocation.md) §13 asked for and has since been given — `MissionCommanderAbility` shipped with that mission (#373), and this one declines to spend it |
 | **Permanent roster attrition** | **Not built** — [Nineteen](mission-nineteen.md)'s row, and nothing carries between missions. This mission seats six hulls whatever the last tide cost, and says so here rather than implying a carry it does not have. What §4 asks the player to feel — that a hull is a voice — has to be produced inside one tide, which is why the two counts are welded in this mission and not merely mentioned |
 | **The map, reused unchanged** | **Built** — `outer-formations`, transcribed row for row from [mission-aptitude.md](mission-aptitude.md) §11 and not touched. What this mission adds is seven mission regions and six markers, which the format carries. The literal's map id resolves for two missions now, which is the second time that is true after `marr-plateau` |
 | **Cross-mission Drift Health** | **Not built**, and this pair cannot demonstrate it: the map seeds no fauna, so what carries between [Aptitude](mission-aptitude.md) and this tide is a ledger of SIG wear with nothing alive on the ground to notice it. Named so nobody records rule 5 as taught by the Chord's pair when [Tend](mission-tend.md)/[Convocation](mission-convocation.md) is the pair that would show it |
@@ -781,8 +819,8 @@ rather than requests; and four are absences it declines to ask for.
 - **[habitats.md](habitats.md)** — §5, the Conclave, the count, and what standing is architecturally; the room this map deliberately does not hold
 - **[factions.md](factions.md)** — the Order that cannot grow, and the concern that cannot make or buy crystal
 - **[systems-echo.md](systems-echo.md)** — §4, the tiers §4's table is read off; §6, Silent Running; §7, the mark a cored formation leaves; §8, the quartered circle
-- **[systems-combat.md](systems-combat.md)** — §3, the ordnance figures the torpedo lock is priced against; "in range implies heard", which is why facing does not save a hull here
-- **[units.md](units.md)** — the Sounding Spire's 1,800 hull points and its 30 idle, and the roster with no Knight hull in it
+- **[systems-combat.md](systems-combat.md)** — §4, "in range implies heard" and the three dimensions a gun measures in, which is why facing does not save a hull here and why 250 m of water does; §5, the ordnance figures the torpedo lock is priced against
+- **[units.md](units.md)** — the Sounding Spire's 30 idle and its 600 m grant, and the roster with no Knight hull in it
 - **[world-map.md](world-map.md)** — the Resonance Fields, the nine houses, and the Third at 1,450 m
 - **[culture.md](culture.md)** — §3, the register and the rest that is not an absence; §4, the names; §5, the interval a name resolves to
 - **[characters.md](characters.md)** — Vrey, who has the standing and has not moved against Sull; Kalliso, who has not refused an order; Sull, whose window is shorter than she wrote
