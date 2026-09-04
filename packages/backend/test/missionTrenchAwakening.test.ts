@@ -66,7 +66,9 @@ import {
   requiredPressureRating,
   statsFor,
   structureStatsFor,
+  type EchoSnapshot,
 } from '@echoes/shared';
+import { Match } from '../src/sim/match.ts';
 import { SHALLOW_BAND, mapById, missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import { ATTENDING_TRENCH_AWAKENING } from '../src/sim/missions/trenchAwakening.ts';
 
@@ -1192,6 +1194,151 @@ describe('what §13 says is missing, and what stands in its place', () => {
       for (const unit of party.units) {
         assert.equal(unit.role, undefined, 'a role on a scripted hull is another party in a count');
       }
+    }
+  });
+});
+
+describe('the tide, run out — docs/mission-trench-awakening.md §4, §6, §8, §9', () => {
+  /**
+   * The row, seated and given no orders at all.
+   *
+   * That is not a lazy fixture, it is §4's third movement played straight:
+   * "the colossus takes the yard apart, the cohort renders the colossus for
+   * nothing". The mission delivers the band into the middle of the row and
+   * releases it there, so a row that never leaves its seats still finds out
+   * what the trench answered with — and finds out what it cost, because the
+   * thing that answered went to the loudest thing in the water on the way in.
+   *
+   * Deterministic: no orders, and the same reading on every seed.
+   */
+  function tide(seed: number) {
+    const match = new Match(missionMapById(ATTENDING_TRENCH_AWAKENING.mapId)!, {
+      mission: ATTENDING_TRENCH_AWAKENING,
+      fauna: false,
+      seed,
+    });
+    const lines: { tick: number; speaker: string; text: string }[] = [];
+    let install: EchoSnapshot | undefined;
+    let last: EchoSnapshot | undefined;
+    for (let tick = 0; tick <= T(20, 30); tick++) {
+      const own = match.update(1000 / SIM.TICK_HZ)?.get(PLAYER);
+      if (own !== undefined) {
+        install ??= own;
+        last = own;
+      }
+      for (const line of match.takeMissionLines()) lines.push(line);
+      if (match.missionOver !== null) break;
+    }
+    const over = match.missionOver;
+    assert.ok(over !== null && install !== undefined && last !== undefined, 'the tide never ended');
+    return { over, install, last, lines, resolvedAtTick: match.world.tick };
+  }
+
+  const run = tide(5);
+
+  it('installs the row, the yard and the stock §5 gives it', () => {
+    assert.equal(run.install.units.length, 8, '§5: eight hulls');
+    assert.equal(run.install.structures.length, 3, '§5: a plant, a dome and a grower');
+    assert.equal(run.install.nodules, 600, '§5: six hundred nodules');
+    assert.equal(run.install.biomass, 0, '§6: and no Biomass, because nothing has been rendered');
+    // §3 — six of capacity against a demand of four, so the line runs at full
+    // rate from tick zero and the player never meets Thermal Draw as a
+    // decision, only as the speed the line already runs at (§10).
+    assert.deepEqual(run.install.draw, { capacity: 6, demand: 4, satisfaction: 1 });
+  });
+
+  it('spends the grower on the thing the yard called, and keeps the plant', () => {
+    // §4, §9 — "the colossus takes the yard apart". The 13:00 line crosses the
+    // Foundry and nothing else: the plant and the dome are still standing at
+    // the close, which is what keeps `reap` from ending the row (§3, §13).
+    assert.equal(run.last.structures.length, 2, '§9: the yard stops at about 13:38');
+    assert.deepEqual(
+      run.last.structures.map((structure) => structure.kind).sort(),
+      [StructureKind.Bastion, StructureKind.Cantor].sort(),
+      '§3: the plant and the dome, and no grower'
+    );
+    assert.equal(run.last.units.length, 8, '§6: every Chorister is invisible to it');
+  });
+
+  it('is paid the full two hundred and sixty, in the cell §6 says it dies in', () => {
+    // §6 — "`the-first`, rendered after 14:30: **260**", and "`payBiomass`
+    // reads the ledger at the animal's own position". It stops north of the
+    // row in a cell nothing of the row's stands in, so the ledger has not
+    // touched that cell and the rendering pays the roster's whole figure.
+    assert.equal(run.last.biomass, SOUNDER.biomass, '§6: 260, and not the ledger’s discount of it');
+    const from = park(SILL, AXIS_HEAD);
+    const stop = park(from, THROUGH_THE_YARD);
+    const cellIndex = (x: number, y: number) =>
+      Math.floor((y / SHALLOW_BAND.heightM) * DRIFT.HEALTH_REGIONS) * DRIFT.HEALTH_REGIONS +
+      Math.floor((x / SHALLOW_BAND.widthM) * DRIFT.HEALTH_REGIONS);
+    assert.equal(
+      run.last.driftHealth[cellIndex(stop.x, stop.y)],
+      100,
+      '§6: healthy ground, and a colossus over healthy ground pays 260'
+    );
+    // §3's own two rows, at the close: the dome's cell and the grower's cell
+    // are dead, and the row was never told. "The mission never says so in
+    // text. It says it in the pay slip."
+    for (const structure of player.structures ?? []) {
+      if (structure.kind === StructureKind.Bastion) continue;
+      assert.equal(
+        run.last.driftHealth[cellIndex(structure.x, structure.y)],
+        0,
+        `§3: the cell ${structure.tag} stands in is dead by 01:38 at the latest`
+      );
+    }
+    assert.equal(
+      run.last.driftHealth[cellIndex(1000, 1000)],
+      100,
+      '§3: and the plant’s own cell is under the threshold and recovers all tide'
+    );
+  });
+
+  it('leaves the second standing, because nothing the row owns will move it', () => {
+    // §5 — "It stands until the row makes it move, and the only things that
+    // will are a ping at 834 m, a noisemaker at 347 m, or a hull inside
+    // 196 m." A row that gave no orders offered it none of the three, so the
+    // band is answered and `the-second` is not.
+    assert.ok(run.last.biomass < 400, '§8: four hundred is not against the band');
+    const second = run.over.objectives.find((o) => o.id === 'the-second')!;
+    assert.equal(second.status, ObjectiveStatus.Pending, '§8: read out, and unmet');
+    assert.match(run.over.epilogue, /Four hundred is not against the band\./, '§8, verbatim');
+  });
+
+  it('closes at 20:00 whatever the band did, and reads it as it stands', () => {
+    // §8, §9 — `runsItsLength`. The band is answered at about 15:43 here and
+    // the tide still ends at 20:00, because the second colossus arrives at
+    // 16:30 whatever the register stands at.
+    assert.equal(
+      run.resolvedAtTick,
+      T(20),
+      '§9: the close does not move because the row was quick'
+    );
+    assert.equal(run.over.outcome, MissionOutcome.Complete, '§8: the band and the muster');
+    assert.match(run.over.epilogue, /^The band is answered and the row is mustered\./);
+    // §9's beat table and §12's two tally lines, in the order they land. Both
+    // conditionals fire on the pass the colossus dies, because the stockpile
+    // goes from nothing to 260 in one payment.
+    const scheduled = run.lines.filter((line) => !line.text.startsWith('Rendered.'));
+    assert.equal(scheduled.length, 11, '§9: ten scheduled lines and the ground’s band line');
+    const tally = run.lines.filter(
+      (line) => line.text.startsWith('Rendered.') || line.text.startsWith('The band is answered.')
+    );
+    assert.equal(tally.length, 2, '§9: the Cohort-Prime and the ground, once each');
+    for (const line of tally) {
+      assert.ok(line.tick > T(14, 30), '§9: nothing is rendered before the commitment lapses');
+    }
+  });
+
+  it('reads the same tide on every seed, because nothing here is random', () => {
+    // The Drift is authored and the row gives no orders, so the only thing a
+    // seed could move is the skirmish fauna roster this mission switches off.
+    for (const seed of [1, 11]) {
+      const other = tide(seed);
+      assert.equal(other.over.outcome, run.over.outcome, `seed ${seed}`);
+      assert.equal(other.last.biomass, run.last.biomass);
+      assert.equal(other.resolvedAtTick, run.resolvedAtTick);
+      assert.deepEqual(other.last.driftHealth, run.last.driftHealth);
     }
   });
 });
