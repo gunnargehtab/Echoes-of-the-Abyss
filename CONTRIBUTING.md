@@ -91,9 +91,8 @@ Until then, `main` is the release, and the way to get a change to people is to m
   npm test
   npm run build
   npx -y markdownlint-cli "docs/**/*.md" "docs/*.md" --ignore node_modules
-  git ls-files ':(glob)docs/**/*.md' | while read -r f; do
-    npx -y markdown-link-check --config .markdown-link-check.json "$f" || exit 1
-  done
+  git ls-files -z ':(glob)docs/**/*.md' \
+    | xargs -0 npx -y markdown-link-check --config .markdown-link-check.json
   ```
 
   All of these are blocking in CI (`.github/workflows/ci.yml`) — including both doc

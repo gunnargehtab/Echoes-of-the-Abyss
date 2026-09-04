@@ -78,9 +78,10 @@ loop for reasons that have nothing to do with it. The loop budgets its own work
 only. This is also why step 5 insists on the issue number in the branch name —
 the same prefix does the counting here and the claim check in step 1.
 
-This cap, not the schedule, is what bounds cost. A full CI run is 15–22 minutes
-and this account has run out of Actions minutes before — the incident is
-recorded in the header comment of `.github/workflows/ci.yml`. The loop is
+This cap, not the schedule, is what bounds cost. A full CI run bills around six
+Actions minutes across its four jobs, and this account has run out of Actions
+minutes before — the incident is recorded in the header comment of
+`.github/workflows/ci.yml`. The loop is
 allowed to fire often precisely *because* it usually finds the cap reached and
 returns immediately. Raising the cap is a real spending decision; raising the
 cron frequency is not.
@@ -170,15 +171,14 @@ npm run format:check
 npm test
 npm run build
 npx -y markdownlint-cli "docs/**/*.md" "docs/*.md" --ignore node_modules
-git ls-files ':(glob)docs/**/*.md' | while read -r f; do
-  npx -y markdown-link-check --config .markdown-link-check.json "$f" || exit 1
-done
+git ls-files -z ':(glob)docs/**/*.md' \
+  | xargs -0 npx -y markdown-link-check --config .markdown-link-check.json
 ```
 
 All of these are blocking in CI, both doc gates included, so a dead link in
 `docs/` fails the build exactly as a failing test does. The suite is slow —
 single test files run over a minute — which is the argument for running it here
-rather than learning the same thing from a red PR twenty minutes later.
+rather than learning the same thing from a red PR a few minutes later.
 
 ### Run the claim check again before you open the PR
 

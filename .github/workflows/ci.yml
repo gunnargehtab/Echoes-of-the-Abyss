@@ -4,11 +4,11 @@ name: CI
 #
 # This was `on: [push, pull_request]`, which fires two full runs for every push
 # to a branch with an open PR — a `push` run and a `pull_request` run, on the
-# same commit, doing identical work. A full run is 15-22 minutes, so each push
-# was billing ~40 minutes of Actions time and throwing half of it away. That is
-# what exhausted the account's minutes on 2026-08-25, which shows up not as a
-# test failure but as jobs completing in three seconds with `runner_id: 0` and
-# no logs at all.
+# same commit, doing identical work. A full run was 15-22 minutes at the time,
+# so each push was billing ~40 minutes of Actions time and throwing half of it
+# away. That is what exhausted the account's minutes on 2026-08-25, which shows
+# up not as a test failure but as jobs completing in three seconds with
+# `runner_id: 0` and no logs at all.
 #
 # `push` is therefore limited to main, which keeps every merge verified, and
 # branches are covered by their pull request. The trade is real and worth
@@ -29,22 +29,31 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
+# Four jobs where there was one, so the slow parts overlap instead of queueing.
+#
+# The single job was ~5 minutes, and it was three unrelated things in a line:
+# a minute of `npm ci`, two and a quarter minutes of tests, and a minute of
+# docs checks that need no install at all. The campaign missions are what
+# grew the middle — each mission test plays its mission out at the full 60 Hz,
+# so `missionSecondChord.test.ts` alone simulates eighteen minutes of match —
+# and that cost is the tests' value, not overhead to remove.
+#
+# Instead: the checks, the tests (in two shards) and the docs each run in
+# their own job, the install is restored from cache rather than repeated, and
+# the wall clock is bounded by the slowest shard rather than by the sum. Billed
+# minutes stay about level — GitHub rounds each job up to a whole minute, so
+# more jobs cost a little more per run than the seconds they save — which is
+# the number to watch given the incident above. The shard count is the one
+# knob: `strategy.job-total` feeds `--test-shard`, so changing the matrix is
+# the whole change.
 jobs:
+  # Static checks and the production build. Named `build` because that is the
+  # check name the repository has always reported.
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          # 22+ required: the backend dev/test scripts use `node --import tsx`
-          # and the stable node:test runner.
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
+      - uses: ./.github/actions/setup
 
       # packages/shared is compiled ahead of the others because both the
       # frontend and backend import its build output, not its source.
@@ -62,18 +71,68 @@ jobs:
       - name: Check formatting
         run: npm run format:check
 
-      - name: Run tests
-        run: npm test
-
       - name: Build all packages
         run: npm run build
 
-      # --- Documentation checks -------------------------------------------
-      # Both doc gates are blocking. #38 fixed the ~270 markdownlint issues
-      # and #39 wrote the seven documents that were linked but never
-      # authored, so a dead link in docs/ is now a real regression rather
-      # than pre-existing content debt.
-      #
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      # Both shards report; a failure in one should not hide the other's.
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    name: test (shard ${{ matrix.shard }})
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - name: Build shared package
+        run: npm run build:shared
+
+      # The shared and frontend suites are a few seconds between them, so they
+      # ride along with the first shard rather than earning a job of their own.
+      - name: Run shared and frontend tests
+        if: matrix.shard == 1
+        run: |
+          npm -w packages/shared run test
+          npm -w packages/frontend run test
+
+      # `--test-shard` is node:test's own file-level partition — deterministic,
+      # so the same file always lands in the same shard and a failure is
+      # reproducible from the shard number alone. Invoked directly rather than
+      # through `npm test` because npm's `--` passthrough lands after the file
+      # pattern, where node reads it as a second pattern rather than a flag.
+      - name: Run backend tests
+        working-directory: packages/backend
+        run: >
+          node --import tsx --test
+          --test-shard=${{ matrix.shard }}/${{ strategy.job-total }}
+          "test/*.test.ts"
+
+  # --- Documentation checks -------------------------------------------
+  # Both doc gates are blocking. #38 fixed the ~270 markdownlint issues
+  # and #39 wrote the seven documents that were linked but never
+  # authored, so a dead link in docs/ is now a real regression rather
+  # than pre-existing content debt.
+  #
+  # Neither gate needs node_modules — both tools come from `npx -y` — so this
+  # job skips the install and overlaps the whole of the code jobs.
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run markdownlint on docs
+        # The previous glob "**/docs/**/*.md" also matched node_modules, so this
+        # was linting dependency documentation.
+        run: |
+          npx -y markdownlint-cli "docs/**/*.md" "docs/*.md" --ignore node_modules
+
       # Config for the link checker lives in .markdown-link-check.json:
       #
       #   * retryOn429 — docs/ROADMAP.md links ~20 GitHub issues, and an
@@ -86,16 +145,14 @@ jobs:
       # FNM_PATHNAME by default, so a bare 'docs/**/*.md' requires a second
       # literal slash and therefore matched NOTHING under docs/ — the link
       # check was silently running over zero files.
-
-      - name: Run markdownlint on docs
-        # The previous glob "**/docs/**/*.md" also matched node_modules, so this
-        # was linting dependency documentation.
-        run: |
-          npx -y markdownlint-cli "docs/**/*.md" "docs/*.md" --ignore node_modules
-
+      #
+      # One invocation for every file, not one per file. This used to loop
+      # `npx -y markdown-link-check` over each document, and with sixty-odd
+      # documents the sixty-odd npx start-ups were most of the step's minute;
+      # the links themselves are a few seconds. The tool takes many files at
+      # once, checks every one before exiting (the loop stopped at the first
+      # bad file), and exits non-zero if any link in any of them is dead.
       - name: Check markdown links in docs
         run: |
-          git ls-files ':(glob)docs/**/*.md' | while read -r file; do
-            echo "Checking links in $file"
-            npx -y markdown-link-check --config .markdown-link-check.json "$file" || exit 1
-          done
+          git ls-files -z ':(glob)docs/**/*.md' \
+            | xargs -0 npx -y markdown-link-check --config .markdown-link-check.json

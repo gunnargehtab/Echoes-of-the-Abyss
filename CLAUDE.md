@@ -39,9 +39,8 @@ Doc gates, exactly as CI runs them:
 
 ```bash
 npx -y markdownlint-cli "docs/**/*.md" "docs/*.md" --ignore node_modules
-git ls-files ':(glob)docs/**/*.md' | while read -r f; do
-  npx -y markdown-link-check --config .markdown-link-check.json "$f" || exit 1
-done
+git ls-files -z ':(glob)docs/**/*.md' \
+  | xargs -0 npx -y markdown-link-check --config .markdown-link-check.json
 ```
 
 **Node 22+ is required.** The backend dev and test scripts use `node --import tsx` and the
@@ -179,9 +178,16 @@ from those two.
 
 ## CI
 
-`.github/workflows/ci.yml` runs on every push and PR: build shared → type-check → ESLint →
-Prettier check → tests → full build → markdownlint on `docs/` → markdown link check on
-`docs/`. **Both doc gates are blocking**, so a dead link in `docs/` fails the build.
+`.github/workflows/ci.yml` runs on every push to `main` and on every PR, as four parallel
+jobs that share one cached install (`.github/actions/setup`):
+
+- `build` — build shared → type-check → ESLint → Prettier check → full build.
+- `test (shard 1)` and `test (shard 2)` — the shared and frontend suites, then the backend
+  suite split file-by-file with node's `--test-shard`. The mission tests play whole missions
+  out at 60 Hz and are most of the suite's time; the shard count in the matrix is the one
+  knob for wall clock, at the cost of one more billed minute per shard.
+- `docs` — markdownlint on `docs/`, then one `markdown-link-check` invocation over every
+  doc. **Both doc gates are blocking**, so a dead link in `docs/` fails the build.
 
 The link checker config (`.markdown-link-check.json`) ignores this repo's own github.com
 URLs — the repository is private, so unauthenticated requests to its issues and clone URL
