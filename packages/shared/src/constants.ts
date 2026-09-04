@@ -38,6 +38,27 @@ export const PROPAGATION_FACTOR: Record<Biome, number> = {
 export const MAX_PROPAGATION_FACTOR = Math.max(...Object.values(PROPAGATION_FACTOR));
 
 /**
+ * SPEC — docs/systems-echo.md §3 "Scattered water". The one row of the PF
+ * table that is not a scalar: Resonance Fields are "0.7, scattered". The 0.7
+ * prices *how loud* a path is exactly as any other biome's factor does; this
+ * marks the water that also lies about *where* the sound came from.
+ *
+ * A flag beside the factor rather than a second factor, because scatter is
+ * not a loudness. It never moves a tier — a hull in the Fields is heard from
+ * precisely as far as PF 0.7 says — it moves the bearing a resolved contact is
+ * reported on, and a ping transmitted from inside it returns phantoms. Both
+ * are priced in `SCATTER`.
+ */
+export const SCATTERED_BIOME: Record<Biome, boolean> = {
+  [Biome.OpenWater]: false,
+  [Biome.ThermalVein]: false,
+  [Biome.KelpForest]: false,
+  [Biome.AbyssalTrench]: false,
+  [Biome.ResonanceField]: true,
+  [Biome.CoralRuins]: false,
+};
+
+/**
  * SPEC — Standing Wave (docs/systems-echo.md §7, Hadron Knights; docs/factions.md).
  * The Order's unique: two Sounding Spires that pair into a corridor.
  */
@@ -1590,6 +1611,72 @@ export const SEPARATION = {
 
 /** TUNABLE — Tier 2 reports position blurred by this fraction. SPEC says 15%. */
 export const BEARING_BLUR_FRACTION = 0.15;
+
+/**
+ * Scattered water — docs/systems-echo.md §3 "Scattered water".
+ *
+ * A contact resolved through Resonance Field cells is reported on a bearing
+ * that lies and at a range that reads long, at every tier that carries a
+ * bearing — Classification names the hull, the Fields still misplace it. Both
+ * errors scale with the fraction of the listener-to-emitter path that crosses
+ * scattered cells, so a hull one cell into the Fields is barely misplaced and
+ * one heard across a kilometre of crystal is misplaced by the full figure.
+ *
+ * The lie is hashed off the match seed, the pair and the tick — never drawn
+ * from `world.rng` — so a replay and both clients agree and adding a contact
+ * shifts nobody else's dice. See `scatterContact` for the shape of it.
+ */
+export const SCATTER = {
+  /** SPEC — §3: up to ±30° on a path that is all crystal. */
+  MAX_BEARING_ERROR_RAD: (30 * Math.PI) / 180,
+  /**
+   * SPEC — §3: range reads up to 15% long, and never short. A scattered
+   * return is a multipath return — it arrived late and from the wrong side —
+   * so the lie is outward only. It is also what makes the bearing lie a wall
+   * rather than a puzzle: with the range exact, a program that knew which of
+   * its hulls listened could intersect two range circles from a moving
+   * listener and recover a stationary target in two Echo ticks.
+   *
+   * Deliberately its own constant beside `BEARING_BLUR_FRACTION`'s 15%: that
+   * one is symmetric and this one is not, and a shared number would invite a
+   * shared sign.
+   */
+  MAX_RANGE_STRETCH: 0.15,
+  /**
+   * TUNABLE — the share of the lie that stands for the whole match, per
+   * observer-and-emitter pair. The rest drifts. Neither half is enough on its
+   * own: a lie that only stood could be solved from two Echo ticks of a
+   * moving listener, and one that only drifted would average back to the
+   * truth over a long enough watch. Together, no number of samples recovers
+   * the truth.
+   */
+  STANDING_FRACTION: 0.5,
+  /**
+   * TUNABLE — seconds between the drift's re-rolls. The reported bearing
+   * eases from one hashed value to the next over this interval
+   * (docs/audio-direction.md §9: "slow phase drift"), so a contact in the
+   * Fields slides rather than jumps. A jump every Echo tick would read as
+   * noise; the target emotion is dread, not confusion.
+   */
+  DRIFT_PERIOD_S: 2,
+  /**
+   * SPEC — docs/audio-direction.md §5: on a ping in a Resonance Field "one to
+   * three of them are false". Per transmission, from a pinger standing in a
+   * scattered cell.
+   */
+  PHANTOMS_MIN: 1,
+  PHANTOMS_MAX: 3,
+  /** TUNABLE — a phantom is never nearer the pinger than this, metres. */
+  PHANTOM_MIN_RANGE_M: 200,
+  /**
+   * TUNABLE — nor this near anything real inside the reveal, metres. A
+   * phantom on top of a true return would be a true return with a second
+   * marker, which is a rendering bug and not a lie.
+   */
+  PHANTOM_CLEARANCE_M: 150,
+  /** TUNABLE — placements tried before a phantom is given up on. */
+  PHANTOM_PLACEMENT_TRIES: 8,
+} as const;
 
 /**
  * The classic RTS economic loop: node -> mine (loudly) -> haul home -> deposit.

@@ -818,13 +818,22 @@ export class Match {
     // finds the target is not one it can engage.
 
     if (queued) {
-      // The anchor is where the contact is *now*, which is what the player
-      // just resolved and acted on. It is never refreshed afterwards, so the
-      // drawn plan cannot become a live feed of an enemy position.
+      // The anchor is where the contact was *reported*, which is what the
+      // player just resolved and acted on — the ghost at Tier 2, the scattered
+      // bearing in the Fields — and never the truth: `queuedOrders` draws this
+      // point back to the client, so anchoring at `Position` would hand a
+      // player who queued an attack on a lie the one thing the lie withheld.
+      // It is never refreshed afterwards, so the drawn plan cannot become a
+      // live feed of an enemy position either. A handle can outlive the
+      // resolution that issued it (a ghost marker the player attacks after
+      // the contact went silent); with nothing reported this pass the anchor
+      // falls back to the truth, which is the pre-existing behaviour and a
+      // smaller disclosure than it looks — the hull is being ordered there.
+      const shown = this.echo.firingSolution(slot, target);
       enqueue(this.world, eid, {
         kind: 'attack',
-        x: Position.x[target]!,
-        y: Position.y[target]!,
+        x: shown?.x ?? Position.x[target]!,
+        y: shown?.y ?? Position.y[target]!,
         target,
       });
       return;

@@ -24,6 +24,8 @@ import {
   DIRECTORATE_SHALLOW,
   DIRECTORATE_SHALLOW_BLEED_PER_S,
   LID,
+  SCATTER,
+  SIM,
 } from './constants.js';
 import { ResolutionTier, DepthBand, Faction, ThermoclineZone } from './types.js';
 
@@ -140,6 +142,135 @@ export function blurBearing(
   return {
     x: x + stableJitter(seed, 1) * error,
     y: y + stableJitter(seed, 2) * error,
+  };
+}
+
+/**
+ * One round of a 32-bit integer mix.
+ *
+ * The same multiply-xorshift shape as `stableJitter` above, written as a
+ * chain so that any number of small integers can be folded into one hash.
+ * Explicit `Math.imul` / `>>> 0` throughout, for the reason sim/rng.ts gives:
+ * this has to be *identical everywhere*, and the engine's number tower is not
+ * a party to that promise.
+ */
+function mix(h: number, v: number): number {
+  h = Math.imul((h ^ v) >>> 0, 0x85ebca6b);
+  h = (h ^ (h >>> 13)) >>> 0;
+  h = Math.imul(h, 0xc2b2ae35);
+  return (h ^ (h >>> 16)) >>> 0;
+}
+
+/**
+ * Deterministic hash of a seed and three integers onto [0, 1).
+ *
+ * The Echo Layer's source of "randomness" for everything scattered water
+ * does, in place of `world.rng`. Two reasons it is a hash and not a draw:
+ * a replay must agree with the match it records, and the number of contacts
+ * resolved in a pass varies with the match — a stream advanced once per
+ * contact would move every later die roll in the simulation by however many
+ * hulls happened to be audible. Hashing the inputs costs nothing anyone
+ * else can notice.
+ */
+export function stableUnit(seed: number, key: number, salt: number, step: number): number {
+  let h = mix((seed >>> 0) ^ 0x9e3779b9, key | 0);
+  h = mix(h, salt | 0);
+  h = mix(h, step | 0);
+  return h / 4294967296;
+}
+
+/** The two channels a scattered contact lies on. Salts into `stableUnit`. */
+const SCATTER_SALT_BEARING = 1;
+const SCATTER_SALT_RANGE = 2;
+/** The `step` reserved for the half of the lie that never moves. */
+const SCATTER_STANDING_STEP = -1;
+
+/**
+ * The lie one observer is told about one emitter at one tick, in [-1, 1].
+ *
+ * Half of it stands for the whole match, per pair, and half of it drifts —
+ * value noise on a lattice `periodTicks` apart, eased between lattice points
+ * so the reported bearing slides rather than jumps. Neither half alone is a
+ * wall: a standing offset can be solved from two Echo ticks of a moving
+ * listener, and pure drift averages back to the truth given a long enough
+ * watch. Summed, the long-run mean is the standing half, which is itself a
+ * lie, and no run of samples recovers the truth (docs/systems-echo.md §3).
+ *
+ * `key` is the pair — the observer folded with the emitter's *match-local*
+ * id, never its entity id, for the reason the Tier-2 blur learned the hard
+ * way (echoLayer.ts): entity ids are process-global and a replay would lie
+ * somewhere else.
+ */
+export function scatterLie(
+  seed: number,
+  key: number,
+  salt: number,
+  tick: number,
+  periodTicks: number
+): number {
+  const standing = stableUnit(seed, key, salt, SCATTER_STANDING_STEP) * 2 - 1;
+  const lattice = Math.floor(tick / periodTicks);
+  const u = (tick - lattice * periodTicks) / periodTicks;
+  const a = stableUnit(seed, key, salt, lattice) * 2 - 1;
+  const b = stableUnit(seed, key, salt, lattice + 1) * 2 - 1;
+  // Smoothstep: continuous in value and in slope across a lattice point, so
+  // there is no tick on which the contact visibly changes its mind.
+  const eased = u * u * (3 - 2 * u);
+  const drift = a + (b - a) * eased;
+  return SCATTER.STANDING_FRACTION * standing + (1 - SCATTER.STANDING_FRACTION) * drift;
+}
+
+/**
+ * Where a listener in scattered water is told a contact is —
+ * docs/systems-echo.md §3 "Scattered water".
+ *
+ * Takes the position the pass would otherwise have reported (the truth at
+ * Tier 3+, the blurred ghost at Tier 2) and the listener that resolved it,
+ * and returns that point rotated about the listener by up to
+ * `SCATTER.MAX_BEARING_ERROR_RAD` and pushed outward by up to
+ * `SCATTER.MAX_RANGE_STRETCH` — never inward. Both scale with `fraction`, the
+ * share of the listener-to-emitter path that crossed scattered cells, so
+ * open water (fraction 0) returns the input untouched and a path that is all
+ * crystal lies by the full figure.
+ *
+ * Pure, so the client can run it for a preview it is entitled to — how far
+ * its *own* contact picture can be trusted in the water it is standing in —
+ * without ever being handed an enemy position to run it on.
+ */
+export function scatterContact(
+  x: number,
+  y: number,
+  listenerX: number,
+  listenerY: number,
+  fraction: number,
+  seed: number,
+  observer: number,
+  emitterKey: number,
+  tick: number
+): { x: number; y: number } {
+  if (fraction <= 0) return { x, y };
+  const dx = x - listenerX;
+  const dy = y - listenerY;
+  const range = Math.hypot(dx, dy);
+  if (range === 0) return { x, y };
+
+  const f = fraction > 1 ? 1 : fraction;
+  const key = mix(observer | 0, emitterKey | 0);
+  const periodTicks = SCATTER.DRIFT_PERIOD_S * SIM.TICK_HZ;
+  const bearing =
+    Math.atan2(dy, dx) +
+    SCATTER.MAX_BEARING_ERROR_RAD *
+      f *
+      scatterLie(seed, key, SCATTER_SALT_BEARING, tick, periodTicks);
+  // [-1, 1] folded onto [0, 1]: the stretch is outward only.
+  const stretch =
+    SCATTER.MAX_RANGE_STRETCH *
+    f *
+    (0.5 + 0.5 * scatterLie(seed, key, SCATTER_SALT_RANGE, tick, periodTicks));
+  const reported = range * (1 + stretch);
+  return {
+    x: listenerX + Math.cos(bearing) * reported,
+    y: listenerY + Math.sin(bearing) * reported,
   };
 }
 

@@ -25,6 +25,7 @@ import {
   MAX_MODIFIED_PROPAGATION_FACTOR,
   MIN_PROPAGATION_FACTOR,
   PROPAGATION_FACTOR,
+  SCATTERED_BIOME,
 } from '@echoes/shared';
 
 /**
@@ -114,6 +115,13 @@ function distanceToSegmentSquared(
   return cx * cx + cy * cy;
 }
 
+/** Does a modifier — a disc, or a capsule when it has a far end — cover this point? */
+function covers(mod: PropagationModifier, wx: number, wy: number): boolean {
+  return mod.x2 === undefined || mod.y2 === undefined
+    ? (wx - mod.x) * (wx - mod.x) + (wy - mod.y) * (wy - mod.y) <= mod.radiusM * mod.radiusM
+    : distanceToSegmentSquared(wx, wy, mod.x, mod.y, mod.x2, mod.y2) <= mod.radiusM * mod.radiusM;
+}
+
 export class Terrain {
   readonly widthM: number;
   readonly heightM: number;
@@ -140,6 +148,25 @@ export class Terrain {
    * hot path — the walk hoists it once per call.
    */
   private peak: number;
+  /**
+   * Scattered water, per cell — docs/systems-echo.md §3 "Scattered water".
+   *
+   * 1 where a contact resolved through this cell is reported on a bearing that
+   * lies, 0 elsewhere. A third array beside `biomes` and `pf` rather than a
+   * bit read off the biome, because it is not the biome's alone: a Standing
+   * Wave corridor written through the Fields *un-scatters* the cells it sets
+   * (crystal ringing at one interval is the opposite of scatter,
+   * docs/mission-standing-wave.md §7), and the biome under it is still the
+   * Fields. Maintained by every writer of `pf`, exactly as `peak` is.
+   */
+  private readonly scatter: Uint8Array;
+  /**
+   * How many cells scatter right now. The Echo pass reads this before it
+   * walks anything: a map with no crystal on it — every skirmish map but one,
+   * most missions — pays nothing for the feature, which is the same bargain
+   * `peak` strikes for the corridor.
+   */
+  private scatteredCells = 0;
   /**
    * The water column, per cell: how deep the water goes and what is above it
    * (docs/systems-depth.md §1). Integer metres, so a comparison against a band
@@ -203,6 +230,7 @@ export class Terrain {
     // Float32Array, and the rounded value it stores can sit a few ulps above
     // the double it was given. The peak has to bound what is *stored*.
     this.peak = Math.fround(PROPAGATION_FACTOR[Biome.OpenWater]);
+    this.scatter = new Uint8Array(this.cols * this.rows);
     // Defaults to the ruleset's deepest orderable depth, which is exactly the
     // flat 3,000 m every map had before floors existed. A map that authors
     // nothing therefore behaves as it always did.
@@ -264,6 +292,60 @@ export class Terrain {
    */
   get peakPf(): number {
     return this.peak;
+  }
+
+  /** Does any cell on the grid scatter? The Echo pass's gate on the whole feature. */
+  get hasScatter(): boolean {
+    return this.scatteredCells > 0;
+  }
+
+  /**
+   * Is the water here scattered — docs/systems-echo.md §3.
+   *
+   * Asked of a *pinger's* position: a ping transmitted from a scattered cell
+   * returns phantoms, and one transmitted from a corridor cut through the
+   * Fields does not. What a contact's bearing does is a question about the
+   * path, which is `scatteredFraction` below.
+   */
+  scatterAt(x: number, y: number): boolean {
+    return this.scatter[this.index(x, y)] === 1;
+  }
+
+  /**
+   * The share of the path from (x0, y0) to (x1, y1) that crosses scattered
+   * cells, in [0, 1] — what a resolved contact's bearing lie scales by.
+   *
+   * The same sampling as `pathPropagation`, one sample per cell of length at
+   * the sample midpoints, so the two walks agree about which cells a path
+   * crosses. It is not folded *into* that walk on purpose: the propagation
+   * walk runs for every candidate pair and aborts early, while this one runs
+   * once per resolved contact per observer — dozens against tens of
+   * thousands — and only on a grid that has scatter to find.
+   */
+  scatteredFraction(x0: number, y0: number, x1: number, y1: number): number {
+    if (this.scatteredCells === 0) return 0;
+    const distance = Math.hypot(x1 - x0, y1 - y0);
+    const samples = Math.max(1, Math.ceil(distance / this.cellM));
+    const { cols, rows, cellM, scatter } = this;
+    const maxCx = cols - 1;
+    const maxCy = rows - 1;
+    const sx = (x1 - x0) / samples;
+    const sy = (y1 - y0) / samples;
+    let px = x0 + sx * 0.5;
+    let py = y0 + sy * 0.5;
+    let hits = 0;
+    for (let i = 0; i < samples; i++) {
+      let cx = (px / cellM) | 0;
+      let cy = (py / cellM) | 0;
+      if (cx < 0) cx = 0;
+      else if (cx > maxCx) cx = maxCx;
+      if (cy < 0) cy = 0;
+      else if (cy > maxCy) cy = maxCy;
+      hits += scatter[cy * cols + cx]!;
+      px += sx;
+      py += sy;
+    }
+    return hits / samples;
   }
 
   /** How deep the water goes here, in metres. */
@@ -446,8 +528,10 @@ export class Terrain {
     const y1 = Math.min(this.rows - 1, this.lastCentreBefore(y + h));
     for (let cy = y0; cy <= y1; cy++) {
       for (let cx = x0; cx <= x1; cx++) {
-        this.biomes[cy * this.cols + cx] = biome;
-        this.pf[cy * this.cols + cx] = PROPAGATION_FACTOR[biome];
+        const index = cy * this.cols + cx;
+        this.biomes[index] = biome;
+        this.pf[index] = PROPAGATION_FACTOR[biome];
+        this.writeScatter(index, this.scatterAtCell(cx, cy, biome));
       }
     }
     // Monotone rather than rescanned: this is authoring, a repaint that lowers
@@ -509,6 +593,7 @@ export class Terrain {
           // keep its old PF indefinitely, and `propagationAt` would disagree
           // with the biome the client is already drawing.
           this.pf[index] = this.propagationAtCell(cx, cy, ground.biome);
+          this.writeScatter(index, this.scatterAtCell(cx, cy, ground.biome));
         }
         // Recorded only when the cell actually moved. A mission that repaints
         // ground it has already painted — Sorrowgate re-cuts the service lock
@@ -580,12 +665,46 @@ export class Terrain {
     for (let cy = 0; cy < this.rows; cy++) {
       for (let cx = 0; cx < this.cols; cx++) {
         const index = cy * this.cols + cx;
-        const value = Math.fround(this.propagationAtCell(cx, cy, this.biomes[index] as Biome));
+        const biome = this.biomes[index] as Biome;
+        const value = Math.fround(this.propagationAtCell(cx, cy, biome));
         this.pf[index] = value;
         if (value > peak) peak = value;
+        // A corridor coming down re-scatters the cells it stood on, on the
+        // same tick and by the same recompute that lowers their PF.
+        this.writeScatter(index, this.scatterAtCell(cx, cy, biome));
       }
     }
     this.peak = peak;
+  }
+
+  /** Write one cell's scatter flag, keeping the count exact. */
+  private writeScatter(index: number, value: 0 | 1): void {
+    this.scatteredCells += value - this.scatter[index]!;
+    this.scatter[index] = value;
+  }
+
+  /**
+   * Whether a cell scatters, given the biome it now holds — the twin of
+   * `propagationAtCell`, and the one place the corridor's exception lives.
+   *
+   * An absolute `set` is water that has been *tuned*: today only a Standing
+   * Wave corridor writes one, and crystal ringing at one interval is the
+   * opposite of scatter (docs/mission-standing-wave.md §7). A `scale` or a
+   * `delta` — a storm, a jelly cluster — changes how loud the water is and
+   * leaves what it lies about alone; a Resonance Storm over the Fields is
+   * still the Fields.
+   */
+  private scatterAtCell(cx: number, cy: number, biome: Biome): 0 | 1 {
+    if (!SCATTERED_BIOME[biome]) return 0;
+    if (this.mods.length > 0) {
+      const wx = (cx + 0.5) * this.cellM;
+      const wy = (cy + 0.5) * this.cellM;
+      for (let m = 0; m < this.mods.length; m++) {
+        const mod = this.mods[m]!;
+        if (mod.set !== undefined && covers(mod, wx, wy)) return 0;
+      }
+    }
+    return 1;
   }
 
   /**
@@ -630,12 +749,7 @@ export class Terrain {
       let forced = -Infinity;
       for (let m = 0; m < this.mods.length; m++) {
         const mod = this.mods[m]!;
-        const inside =
-          mod.x2 === undefined || mod.y2 === undefined
-            ? (wx - mod.x) * (wx - mod.x) + (wy - mod.y) * (wy - mod.y) <= mod.radiusM * mod.radiusM
-            : distanceToSegmentSquared(wx, wy, mod.x, mod.y, mod.x2, mod.y2) <=
-              mod.radiusM * mod.radiusM;
-        if (!inside) continue;
+        if (!covers(mod, wx, wy)) continue;
         if (mod.scale !== undefined) value *= mod.scale;
         if (mod.delta !== undefined) delta += mod.delta;
         if (mod.set !== undefined && mod.set > forced) forced = mod.set;

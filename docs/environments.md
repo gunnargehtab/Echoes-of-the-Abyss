@@ -23,7 +23,7 @@ Every biome is also an acoustic space: terrain sets how far sound travels under 
 | Thermal Veins | **0.45** | Vent roar masks you — natural ambush terrain |
 | Kelp Forest Plateaus | **0.55** | Absorption muffles movement — the stealth biome |
 | Abyssal Trenches | **1.60 (axial)** | Trench walls channel sound impossibly far down the axis — no secrets, only distances |
-| Resonance Fields | **0.70 (scattered)** | Bearings lie — pings return false contacts |
+| Resonance Fields | **0.70 (scattered)** | Bearings lie by up to ±30° and read up to 15% long; a ping returns one to three false contacts ([systems-echo.md](systems-echo.md) §3, "Scattered water") |
 | Coral Ruins | **0.80 (occluded)** | Hard shadows behind structures — the only biome *specified* to change during a match, not yet built |
 
 PF is a property of a *place*, and it is not the only thing that scales a signature. The **thermocline** at 1,200 m applies a second multiplier that no cell of the map carries, because it depends on the depths of both ends of the path: 0.3 across the layer, 1.2 along its duct, 1.0 otherwise. It multiplies the biome's PF rather than replacing it — crossing the layer inside a Thermal Vein is quieter than crossing it in open water. See [systems-echo.md](systems-echo.md) §3.
@@ -113,7 +113,11 @@ Sacred territory of the Hadron Knights.
 
 **Gameplay Readability**
 
-- PF 0.70 scattered — bearings lie, pings return false contacts
+- PF 0.70 scattered — bearings lie by up to ±30° and read up to 15% long at every tier that
+  carries a bearing, and a ping transmitted from inside the Fields returns one to three phantoms.
+  The numbers, and what a Standing Wave corridor does to them, are
+  [systems-echo.md](systems-echo.md) §3, "Scattered water" — the 0.70 prices loudness like any
+  PF and never moves a tier
 - Purple/blue palette
 - Crystals act as natural light sources
 - Clear geometric shapes
