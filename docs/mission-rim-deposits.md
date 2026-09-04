@@ -97,8 +97,8 @@ is not a party, and what rises at 14:30 rises from it.
 
 The one party for everything Directorate is not tidiness. Every mission slot is hostile to every
 other slot, so twelve armed Choristers on a slot of their own would open fire on the 9th's
-submersibles standing 224 m from the nearest of them, and the mission would spend its first
-minute manufacturing a Directorate civil war (§13).
+submersibles standing 200 m from the nearest of them — and on the dome 447 m from it — and the
+mission would spend its first minute manufacturing a Directorate civil war (§13).
 
 ---
 
@@ -106,9 +106,9 @@ minute manufacturing a Directorate civil war (§13).
 
 | Hull | Count | Stats | Why |
 | --- | --- | --- | --- |
-| Cruiser hull, Knight-rigged — the Voice | 1 | SIG 55 idle / 65 live in the cone · 19.25 / 22.75 flank · 5.5 / 6.5 wake · HYD 65 · PR-2 · armed · 12 souls ([units.md](units.md)) | Kalliso's hull: the ears, the 900 m gun, and the only thing on the party that out-ranges a Chorister by more than a hundred metres |
-| Corvette hulls, Knight-rigged — the cutters | 3 | SIG 28 cone / 9.8 flank / 2.8 wake · HYD 50 · PR-2 · armed · 5 souls each | `cutter-a`, `cutter-b`, `cutter-c`. Three hulls, five loads: two of them cut twice |
-| Corvette hulls, Knight-rigged — the escort | 2 | Identical, role `escort` · 5 souls each | `escort-a`, `escort-b`. With the Voice they are the three hulls that can answer a correction |
+| Cruiser hull, Knight-rigged — the Voice | 1 | SIG 55 idle / 65 live in the cone · 19.25 / 22.75 flank · 5.5 / 6.5 wake · HYD 65 · PR-2 · **role `escort`** · armed · 12 souls ([units.md](units.md)) | Kalliso's hull: the ears, the 900 m gun, and the only thing on the party that out-ranges a Chorister by more than a hundred metres |
+| Corvette hulls, Knight-rigged — the cutters | 3 | SIG 28 cone / 9.8 flank / 2.8 wake · HYD 50 · PR-2 · **role `cutter`** · armed · 5 souls each | `cutter-a`, `cutter-b`, `cutter-c`. Three hulls, five loads: two of them cut twice |
+| Corvette hulls, Knight-rigged — the escort | 2 | Identical, **role `escort`** · 5 souls each | `escort-a`, `escort-b`. The Voice carries the same role, which is how §8's `escort` row counts three |
 | Sounding Spire — the nodes | 2 | SIG **30 idle / 80 active** · HYD 45 · 1,800 HP · PR+1 to allied hulls within **600 m**, horizontal ([units.md](units.md)) | `node-one` and `node-two`, raised at the turn, prebuilt at 2,600 m. The mission |
 
 Thirty-seven souls, and the roster still has no Knight hull in it: the party flies Order colours
@@ -181,7 +181,7 @@ rating in place of a bought one ([mission-prospect.md](mission-prospect.md) §4;
    cutter is a bearing to a dome and nothing else can be done about it.
 
 **The answer the mission does not hide.** The Voice's gun reaches 900 m and a Chorister's reaches
-450, so three escort hulls at 143.4 damage a second take a wave of six — 1,200 HP — in 8.4 seconds
+450, so three escort hulls at 143.3 damage a second take a wave of six — 1,200 HP — in 8.4 seconds
 from water the wave cannot answer from. It costs noise (a Knight Corvette firing in the cone is
 38, Classification to the dome-ear from 2,170 m), it costs time, and
 [mission-nineteen.md](mission-nineteen.md) has already said what a lost hull costs. The twelve
@@ -226,7 +226,7 @@ Commune's ending and this document does not carry it
 it is the Veil's symmetric quiet, and the Order's whole policy toward it is one sentence at 06:00.
 
 Naming follows [culture.md](culture.md) §4: Sull and Kalliso by title and family; Cohort-Prime
-Adze by the one name the programme's limit leaves him ([mission-standing-wave.md](mission-standing-wave.md)
+Adze by the one name the programme's limit leaves them ([mission-standing-wave.md](mission-standing-wave.md)
 §5); the Watch-Speaker and the charting pair are offices, because the Directorate names a function
 and the Commune does not name a hull at all. The attendants are called nothing, which is a
 courtesy and the only one available.
@@ -244,13 +244,21 @@ them.** The chart is Prospect's, taken from the reconnaissance's own reading of 
 | --- | --- | --- | --- | --- |
 | The fourth | `face-four` 3250, 2250, 500, 500 | `load-one`, `load-two` on `cutter-a` | `node-one`, 269 m from the face; the whole rectangle inside 600 m (far corners 559 m) | Eight minutes on one face, the second four of them under the first correction |
 | The fifth | `face-five` 4000, 2000, 500, 500 | `load-three`, `load-four` on `cutter-b` | `node-one`, 570 m from the face — **thirty metres inside the grant** | corners at 250, 559, 750 and 901 m from node-one, and the north-eastern corner is 721 m from node-two as well: a cutter that works it is outside both grants and bleeding |
-| The sixth | `face-six` 4750, 2500, 500, 500 | `load-five` on `cutter-c` | `node-two`, 224 m from the face; the rectangle inside 600 m (corners 180–531 m) | 707 m from the dome. The loudest place on the map to do quiet work |
+| The sixth | `face-six` 4750, 2500, 500, 500 | `load-five` on `cutter-c` | `node-two`, 224 m from the face; the rectangle inside 600 m (corners 180–532 m) | 707 m from the dome. The loudest place on the map to do quiet work |
 
 Each load is a `MissionLift`: four minutes of held presence inside the region at a SIG floor of
 65, progress paused while the hull is elsewhere and resumed when it returns, stopped outright by
 Silent Running. Three cutters and five loads is deliberate arithmetic — **two of the three stand
 on their face and cut it twice**, and their second cuts run from about 05:30 to about 09:30,
 which is entirely inside the correction.
+
+**And a rectangle is not a room.** A `MissionRegion` is a plan-view rectangle and the runtime's
+lift test is two-dimensional, so the format cannot require a cutter to be *at* the crystal to
+cut it: a player who holds 1,750 m over the faces rigs all five loads with the nodes idle at 30
+and never enters Abyssal water at all. Nothing in the mission refuses that, and the document
+declines to pretend otherwise — the descent is the fiction the beats and the briefing carry, the
+node's own silence is the tell that nobody is under it, and §13 names the field that would make
+the depth a condition rather than a courtesy.
 
 **Where the correction stands, and why the node is what it shoots.** A scripted hull that is
 moving holds its fire, and a stationary one takes the *nearest* live enemy inside its range
@@ -260,7 +268,15 @@ second wave stops north of node-two, 150–269 m from it, on the water a loaded 
 through; from there a cutter on the sixth face is 320–461 m away and the node is nearer again. So
 the doctrine holds: the Directorate corrects the node. **A Knight hull that puts itself nearer
 than the node is the thing corrected instead**, which is the raid's own geometry turned against
-it, and the fourth face's eastern edge is 150 m from one of those six stops.
+it: the fourth face's eastern edge is 150 m from one of the first wave's stops and the sixth
+face's north-western corner is 100 m from one of the second's, and a cutter that works either
+corner has volunteered.
+
+**And the cutters shoot back whether or not the player says so.** Auto-acquire runs on any armed
+hull that is stationary and not silent, and a hull cutting a face is stationary by definition, so
+a cutter with a Chorister inside its 550 m opens fire on it — at SIG 38 in the cone, Classification
+to the dome-lifted ear from 2,170 m — without an order. The escort's decision in §4 is whether to
+answer a wave; the cutters' is already made by where the wave stopped.
 
 **Nobody is wrong.** The cohort is correcting two structures that stood into a watch on ground it
 has attended for two centuries; the raid is cutting the only crystal that exists for the only
@@ -274,10 +290,12 @@ instrument that matters. Both are true in the same 500 m rectangle, which is wha
 **Everything the raid does, and most of what everyone else is.** The rim is the most heavily
 attended water in the bible and the Order has just built two beacons on it.
 
-- **The two nodes, from tick zero.** Idle at 30, standing on the terraces, and already at Track
-  in the dome-lifted ears: a Chorister under the Cantor listens at HYD 95, and 30 through 0.70
-  water is Track inside 1,396 m — node-two is 781 m from the nearest seat and 806 m from the dome
-  itself. The count in §8 was running before the party was ordered to dive.
+- **The two nodes, from tick zero.** Idle at 30, standing on the terraces, and both already
+  resolved in the dome-lifted ears: a Chorister under the Cantor listens at HYD 95, and 30
+  through 0.70 water is Classification inside 1,872 m and Track inside 1,396 m. Node-two stands
+  781 m from the nearest seat — Track — and node-one 1,792 m from it, which is Classification
+  with eighty metres to spare. The count in §8 reads Classification *or better*, so it was
+  running before the party was ordered to dive.
 - **The nodes under load.** 80 through the terraces' 0.70 is Contact at 6,127 m, Classification
   at 3,456 and Track at 2,576 to that ear; along the lip's 1.60 the Classification figure is
   5,793 m, which is most of the map.
@@ -308,8 +326,8 @@ and Sull's 06:00 line is about a thing most players will not have heard.
 **And the week's ledger comes due again.** At 14:30 a Sounder lifts off the lip at 3000, 3600 and
 is driven to 3000, 2400 at 2,000 m — Prospect's own literal, on Prospect's own point, ninety
 seconds ahead of the close ([mission-prospect.md](mission-prospect.md) §7). Its line passes 750 m
-east of node-one and grinds nothing on the terraces except a hull of 95 m or more within 102.5 m
-of it, horizontally and in depth, at 220 a second. There is exactly one such hull on this party
+west of node-one and grinds nothing on the terraces — no structure and no hull — except a hull of
+95 m or more within 102.5 m of it, horizontally and in depth, at 220 a second. There is exactly one such hull on this party
 and it is the Voice, and 2,000 m is the depth a Voice is at when it is climbing home.
 
 No hazard event, no second creature, and no Directorate hull that is not standing where *First
@@ -368,13 +386,18 @@ arrangement):
   name to the house yourself."*
 - `the-count` — met: *"The raid is in the Directorate's record at length. So are the nodes, and
   the nodes were there first."* Unmet: *"The raid was heard and classified by nobody for long,
-  which on this rim means the dome was struck before it could."*
+  which on this rim means the lip has stopped listening, and the Order is the reason."*
 
-**`the-count` is met by 00:30 and that is the design.** Two structures at SIG 30 standing at Track
-in dome-lifted ears from the first tick spend thirty cumulative seconds of Classification before
-the party has finished descending. The tolerance is therefore not a rule, a recall or a threshold
-but a reading, and its one conditional line says so in the Directorate's own register. Reaching
-the *unmet* branch requires striking the dome, which is why §3 prices two torpedoes.
+**`the-count` is met by 00:30 and that is the design.** Two structures at SIG 30 standing in
+dome-lifted ears from the first tick — node-two at Track from 781 m, node-one at Classification
+from 1,792 m — spend thirty cumulative seconds at Classification or better before the party has
+finished descending. The tolerance is therefore not a rule, a recall or a threshold but a
+reading, and its one conditional line says so in the Directorate's own register. The *unmet*
+branch is very nearly unreachable, and the arithmetic is worth stating so nobody plans around
+it: striking the dome — 1,200 HP, two torpedoes (§3) — drops the cohort's ears from HYD 95 to
+75, which moves node-two's Classification radius from 1,872 m to 1,615 m and leaves it standing
+781 m from a seat. Silencing the count means silencing every ear on the lip, and that is not a
+raid.
 
 **Six terminal rows, one keystone.** An unmet keystone is Lost whatever else came home; all six
 met is Complete; any partial set beneath a met keystone is Partial (`runtime.ts`'s ladder). The
@@ -420,7 +443,7 @@ long, the loudest thing on the rim is the raid's own instrument.
 
 | Time | Beat |
 | --- | --- |
-| 00:00 | **Sull authorises** (§12). The party at the Staging at 1,400 m; both nodes idle at 30 and already at Track in the dome-lifted ears; the attendants sounding; the watch and the 9th at station; twelve Choristers seated on the eastern lip; the bed on the western one |
+| 00:00 | **Sull authorises** (§12). The party at the Staging at 1,400 m; both nodes idle at 30 and already resolved in the dome-lifted ears, node-two at Track and node-one at Classification (§7); the attendants sounding; the watch and the 9th at station; twelve Choristers seated on the eastern lip; the bed on the western one |
 | **01:00** | **Sull: "Descend."** — Osk's word, in the Order's mouth, and the document notes the theft ([mission-prospect.md](mission-prospect.md) §12) |
 | *[01:00–01:36]* | *[the descent: 1,200 m at 45 m/s and SIG 72, 26.7 s of it; each node goes to 80 the tick a hull is under it below its own rating; the cut opens on three faces between 01:28 and 01:36]* |
 | 03:00 | **move ×6** — `cohort-1`…`cohort-6` muster in step on the lip, 3,000 m. The sixty seconds (§8) |
@@ -538,7 +561,7 @@ Everything seated, and the depth each thing is admitted at:
 
 **The descent path, priced as it is rather than as it sounds.** A PR-2 hull holds any depth above
 1,800 m anywhere on this chart — the Slopes' 2,200, the Terraces' 2,600 and the Lip's 3,100 all
-admit it — so the raid crosses south at 1,750 m for nothing and takes the last 800 m of the dive
+admit it — so the raid crosses south at 1,750 m for nothing and takes the last 850 m of the dive
 only over Terraces ground and only inside a node's six hundred. Coming home, terrain raises and
 never lowers ([systems-depth.md](systems-depth.md) §2): a hull crossing into the Staging at 1,750
 m is lifted to the 1,500 m floor by the ground itself.
@@ -695,12 +718,13 @@ is buildable today.** What it cannot do is let the player raise the node.
 | **Player-built structures at their true depth** | **Not built** — a player-raised structure sits at `CONSTRUCTION.WORKING_DEPTH_M`, 600 m, wherever the floor is ([mission-standing-wave.md](mission-standing-wave.md) §13). `MissionStructure.depthM` is fine, so the two nodes are prebuilt at 2,600 m and construction is locked with a reason in register. **The better mission is the one the format cannot build**: the player raising a 150-second site at SIG 70 on attended ground while the cohort walks. The smallest shape is a working depth resolved against the ground rather than a constant — a site takes the floor at its own cell, clamped to the builder's effective rating — and it is a change to construction, not to the mission format |
 | **Starting crystal** | **Not built** and moot here. `MissionDefinition` carries `startingNodules` and nothing else; nothing is bought in this mission, and the 240 is a sentence in [mission-the-three.md](mission-the-three.md) §3 that this document cites rather than a number the literal holds |
 | **`extract … loaded` counts carriers, not loads** | **A finding, stated rather than requested.** `predicates.ts` counts hulls in the role standing in the region that carry any rigged lift, so a cutter with two cuts aboard reads as one and the keystone's honest wording is *two cutters*, not *two loads* (§8). The shape a genuine need would take is `loaded: number` — count loads, not carriers — beside the existing `true` and named forms; this document does not ask for it, because five named per-load rows already say everything the close needs to read and the keystone's job is to be the ladder, not the inventory |
-| **The tolerance counts the player's structures, and it runs before the party does** | **Built, and the consequence is authored rather than worked around.** `ExposureReport.tier` is the best tier anybody holds on *any* entity of the player's, structures included, so two nodes idling at 30 inside a dome-lifted Chorister's 1,396 m Track radius put `the-count` at Met by about 00:30 — before the descent finishes. The row is therefore non-terminal and read as a record, with one conditional line on the tally and no mechanism hung off it. A `tolerance` that could name a role, or exclude structures, would be the union's first predicate with a scope argument; the mission does not need one and says so |
+| **The tolerance counts the player's structures, and it runs before the party does** | **Built, and the consequence is authored rather than worked around.** `ExposureReport.tier` is the best tier anybody holds on *any* entity of the player's, structures included, so two nodes idling at 30 inside a dome-lifted Chorister's 1,872 m Classification radius — node-two at Track from 781 m, node-one at Classification from 1,792 m — put `the-count` at Met by about 00:30, before the descent finishes. The row is therefore non-terminal and read as a record, with one conditional line on the tally and no mechanism hung off it. A `tolerance` that could name a role, or exclude structures, would be the union's first predicate with a scope argument; the mission does not need one and says so |
 | **The correction goes to the nearest hostile in range** | **Built and emergent** (`combat.ts`): a stationary armed hull takes the nearest live enemy inside its profile range, a moving one holds fire, and structures are targetable while static emitters, ordnance and ambient fauna are not. §6 seats both waves so the node is nearer than a cutter working its face, and states plainly that a Knight hull which puts itself nearer is corrected instead. Nothing scripted pursues, and nothing needs to |
-| **One Directorate party** | **A format finding, shared with [mission-second-chord.md](mission-second-chord.md).** `MissionParty` hostility is `Owner.slot` and every party is an enemy of every other (`types.ts`), so twelve armed Choristers seated 250 m from the watch on a second Directorate slot would open fire on it. The watch, the 9th, the dome and the cohort are therefore one party. The attendants are a *second* Directorate-faction party and are safe there, because `combat.ts` refuses to auto-acquire a `StaticEmitter` |
+| **One Directorate party** | **A format finding, shared with [mission-second-chord.md](mission-second-chord.md).** `MissionParty` hostility is `Owner.slot` and every party is an enemy of every other (`types.ts`), so twelve armed Choristers on a second Directorate slot would open fire on the 9th's submersibles standing 200 m from the nearest seat, and on the dome 447 m from it, inside the Chorister's 450 m. The watch, the 9th, the dome and the cohort are therefore one party. The attendants are a *second* Directorate-faction party and are safe there, because `combat.ts` refuses to auto-acquire a `StaticEmitter` |
 | **Fauna answering a ping as a challenge call** | **Not built, and this document does not claim it.** [bestiary.md](bestiary.md) §4 has a Sounder turn toward a ping for two minutes; what ships is `ACTIVE_SONAR.FAUNA_AGGRO_MULTIPLIER`, ×3, and nothing else ([mission-nineteen.md](mission-nineteen.md) §13). §3 prices the ping by the multiplier's own arithmetic — Commit-loud to a Sounder from 1,479 m in the lip's water — and promises no turn |
 | **The basin's spawn depth against the bestiary's floor** | **A docs-versus-literal disagreement, recorded and not resolved by moving a number.** [bestiary.md](bestiary.md) §4 puts a Sounder's working band at 2,000 ± 700 m, so 2,700 m is its floor; `prospect.ts` spawns the riser at 3,050 m on the lip and drives it up. All four rim documents keep Prospect's literal to the metre, because four missions disagreeing with the bestiary identically is a fact somebody can fix in one place, and four missions disagreeing with each other is not. The side that should move is the bestiary's band or the literal's spawn, and it is one call for one pull request |
 | Five `MissionLift`s with named `loaded` extracts | **Built** (#239 for the hold-and-cut; the named form for [mission-tend.md](mission-tend.md) §5). `cutTicks` is sim ticks — `T(4)`, four minutes — accrued at `ECHO_TICK_INTERVAL` per pass, and `cutSig` 65 floors the carrier's SIG while it works. Silence stopping the cut is the runtime's own rule and is why §3 says the button has no use under a node |
+| **A lift with a depth** | **Not built, and named rather than requested.** `MissionRegion` is a plan-view rectangle and `MissionRuntime.applyLifts` tests `Position.x` and `Position.y` and nothing else, so no lift can require the hull that cuts it to be at the depth the crystal is at. The consequence is stated in §6 and is the one hole in the system this mission teaches: a cutter held at 1,750 m over the faces rigs all five loads for free, with the nodes idle at 30 and the whole rented rating unspent. The smallest shape is a `depthMinM?` on `MissionLift` — the sibling of the `depthMaxM?` [mission-second-chord.md](mission-second-chord.md) §13 names for `MissionSounding`, and the same finding twice, which is an argument for one field on both. The mission is playable without it, at the price of an argument it cannot enforce |
 | Standing `survive` as a count read at the close | **Built** (corrected in the runtime for [mission-intake.md](mission-intake.md) §8). Both rows are re-derived every tick, so a cutter lost at 09:00 reads *entered* at 16:00 rather than *home*, which is the whole reason they are `survive` and not `extract` |
 | The `creature` beat with a depth, and a driven creature | **Built** (#349). The basin is spawned and driven in one beat with `driveTo.depthM` 2,000; a driven creature is deaf, holds Committed at its species' `sigActive`, and takes no weapon damage, which is what makes the telegraph a fact rather than a fight |
 | Emitters with readings, off the player's party | **Built** (#240, #246). Prospect's two attendants verbatim — 2800, 3400 at 7 s / 1 s and 4100, 3500 at 11 s / 2 s, SIG 24, 3,050 m, hp 5,000 — re-authored here with the Order's own entered-and-gap lines, which differ from the concern's in one respect: *the Order does not keep a gap* |
@@ -709,7 +733,7 @@ is buildable today.** What it cannot do is let the player raise the node.
 | `pressureRating` on scripted hulls | **A test finding, carried.** `missions.test.ts` reads `statsFor(kind).pressureRating` and not `effectivePressureRating`, so the Directorate's PR-3 baseline does not rescue a PR-2 Chorister authored at 3,000 m and every one of the twelve carries `pressureRating: 3` in the literal, as do the plateaus' two Light Scouts at 2,100 m. First recorded by [mission-the-dome.md](mission-the-dome.md) §13 and repeated by [mission-first-arrival.md](mission-first-arrival.md) §13; repeated again here because this is the fifth mission to field the hull |
 | **1,800 m is the Abyssal band's first metre, not Mid-Water's last** | **A finding against three documents' prose, corrected here.** `depthBandFor` returns Abyssal at exactly 1,800 (`DEPTH_BANDS[MidWater].max` is exclusive), so `requiredPressureRating(1800)` is 3 and a PR-2 hull bleeds *at* 1,800 m. The free depth is 1,799, and this document authors 1,750 m — as [mission-nineteen.md](mission-nineteen.md) §11 and [mission-first-arrival.md](mission-first-arrival.md) §5 do — rather than write a figure that is one metre wrong. §4's "800 m of climb, 53.3 seconds" is the distance to the band edge; the honest orderable figure is 850 m and 56.7 seconds |
 | **Permanent roster attrition, and a roster carried between missions** | **Not built**, and it is [mission-nineteen.md](mission-nineteen.md) §13's row rather than this one's. The progression *record* now exists (#371, `echoes.progression`), but nothing writes survivors into it and `MissionDefinition` has no `rosterFrom`; this mission seats six hulls whatever happened at the Rest, and its two `survive` rows are the only place the loss is real. Stated here because this is the fourth Chord document to seat six and say so |
-| **Cross-mission Drift Health** | **Not built** ([docs/README.md](README.md)). This is the third mission on `mouth-rim` in one authored week and the second loud one: a rim that carried its own damage would arrive at [mission-second-chord.md](mission-second-chord.md) quieter, deader and more legible, which is [campaign.md](campaign.md) §2 rule 5's whole promise. The document does not depend on it and says what the fourth tide would have found if it existed |
+| **Cross-mission Drift Health** | **Not built** ([docs/README.md](README.md)). This is the fourth mission on `mouth-rim` inside one authored week — *Prospect* and *The Second Seeding* on D, *First Arrival* on D+1 — and the second loud one: a rim that carried its own damage would arrive at [mission-second-chord.md](mission-second-chord.md) quieter, deader and more legible, which is [campaign.md](campaign.md) §2 rule 5's whole promise. The document does not depend on it and says what the fourth tide would have found if it existed |
 | `sigBudget` as metadata | **Built** — shipped to the HUD as a ceiling and never a live threshold, which is why 80 can be the figure the mission *is* without becoming a rule the player is failed against |
 | Souls, read out | **Not built, and it is documentation.** Nothing in `packages/backend/src` reads `MissionUnit.souls`. The thirty-seven is carried by hand in §3, and the epilogue reads hulls rather than people, which is the one place this register and the format's gap agree |
 | The mix | **Not started** ([audio-direction.md](audio-direction.md)). A structure singing at eighty for eight minutes while six hulls work under it is the longest sustained loud cue the bible has asked for, and the moment it stops is the mission's ending |
