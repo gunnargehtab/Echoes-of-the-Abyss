@@ -305,8 +305,9 @@ which the record enters as the bed's doing and not as a fault.
 - **The plateaus' bed**, sustained at 8 through the lip's carrying water, audible to the western
   half of the walk and to nothing east of the third face (§6).
 - **The charting pair**, at 12 in 0.70 water: contact to a submersible at 1,746 m, bearing at
-  1,355, and a track to a Chorister standing on the first face at 461 m. They walk Prospect's
-  own eastern leg at 03:00 and turn for home at 12:00.
+  1,355, and a track to a Chorister standing on the first face at 461 m, which is the figure
+  from their home-water seats. They walk Prospect's own first eastern leg — 1800, 2150 and
+  1950, 2200 — at 03:00 and turn for home at 12:00.
 - **The reconnaissance**, one Order hull at 1,750 m over the slopes, cone 1.00 / flank 0.35 /
   wake 0.10 ([systems-echo.md](systems-echo.md) §8). Cone-on at 28 it is a classification to the
   9th from 2,072 m and a ratio of 2.70; on the flank at 9.8 it is contact from 1,923 m and on
@@ -465,18 +466,19 @@ over the cohort, debt capped at 45 s — §6.
 | 00:00 | **Korrin assigns the rim** (§12). Twelve Choristers and six submersibles on the eastern lip at 3,000 m; the dome stood where the column stopped; the two returns already sounding |
 | 00:00 | `silent` beats on all eighteen hulls, active. The column arrives quiet and is not handed the toggle |
 | **00:30** | **Cohort-Prime Adze, on the lip** (§12). The mission's one sentence about ground |
-| 03:00 | The charting pair walks east — Prospect's own leg, on the tide after it was walked |
+| 03:00 | The charting pair walks east to 1800, 2150 and 1950, 2200 — Prospect's own first eastern leg, walked on the tide after |
 | **05:00** | **The charting pair, for the plateaus** (§12) |
 | 08:00 | The stalls, entering the lip: the two returns at their periods, and the bed at its figure |
 | **10:00** | **The Voice of the reconnaissance, for the Order** (§12) |
 | 11:00 | The reconnaissance takes its measure — 4600, 2100 |
 | 12:00 | The pair turns for home water, 1200, 2050 and 1350, 2100 |
 | 14:00 | The reconnaissance resumes Prospect's station at 5200, 1600 |
-| **15:30** | **The plateaus, from under the bed** (§12) |
+| **15:30** | **The charting pair, for the plateaus** (§12), from the western terraces |
 | **16:00** | **The Order's party comes down.** Three hulls to 5400, 2100 · 5450, 2250 · 5350, 1950 at 1,750 m — 350 m of descent at 72, and a Cruiser hull cone-on is Track to the 9th from 1,553 m |
 | 16:30 | The stalls, on the party: three hulls at seventeen-fifty, projecting nothing |
 | **17:30** | **The party stands over the sixth face** — 5150, 2450 · 5200, 2550 · 5100, 2350. 255 m from the face and 850 m above it |
-| **18:00** | **The Order sounds the sixth face.** Emitter window opens at 5150, 2450: SIG 80, sustained, until 18:20. The stalls read it back against the week's law |
+| **18:00** | **The Order sounds the sixth face.** Emitter window opens at 5150, 2450: SIG 80, sustained, until 18:20. The stalls read it back against the law of these tides |
+| **18:00** | **Adze, on the Order's sounding** (§12). The order the campaign has been holding for them, held |
 | **18:30** | **The riser lifts off the lip**, loud. 3000, 3600 at 3,050 m, driven to 3000, 2400 until 19:30 — Prospect's literal, on the next tide |
 | **18:45** | **Adze, at the riser** (§12) |
 | **19:00** | The stalls: the tide turns at the count. **The reveal tick of `the-rim`** |
@@ -528,7 +530,8 @@ What this mission deliberately does not teach:
 - **The correction.** The Order stands into the watch at 18:00 and the watch does not answer it.
   What the Order raises and what the cohort does about it is D+2, in
   [mission-rim-deposits.md](mission-rim-deposits.md) and
-  [mission-second-chord.md](mission-second-chord.md) — the same law read on two tides.
+  [mission-second-chord.md](mission-second-chord.md) — the law of these tides, read on two more
+  of them.
 - **The bed.** It is entered as a bed. Whether the lip was sown, and whether the people who sowed
   it stayed, is [mission-second-seeding.md](mission-second-seeding.md)'s ending.
 - **Active sonar.** Aboard, live, locked, and the lock is the ending.
@@ -574,6 +577,7 @@ Everything else on the chart, and the depth each thing is admitted at:
 | 2 Abyssal Submersibles, `watch` | 4600, 3300 and 4750, 3350 | 3,000 m | Prospect's seats, to the metre |
 | Cantor, `dome` | 5000, 3400 | 3,000 m | Lip floor 3,100; a structure is admitted at its authored depth |
 | 2 Light Scouts, the pair | 1200, 2050 and 1350, 2100 | 2,100 m | Terrace floor 2,600; PR-3 by refit, as Prospect authors them |
+| 2 Light Scouts, the pair, on the 03:00 leg | 1800, 2150 and 1950, 2200 | 2,100 m | Terrace floor 2,600. Prospect's first eastern leg, walked at 03:00 and left at 12:00 |
 | Spore Veil, the bed | 1250, 3250 | 3,000 m | Lip floor 3,100 |
 | Corvette, the reconnaissance | 5200, 1600 | 1,750 m | Slope floor 2,200; 1,750 m is Mid-Water and PR-2 covers it |
 | Cruiser + 2 Corvettes, the party | 5875, 450 · 5900, 600 · 5850, 300 | 1,400 m | Staging floor 1,500; PR-2, no refit |
@@ -620,11 +624,11 @@ its sentences.
 > from, and this tide it is attended from the ground it is attended over, which is a difference
 > of posture and not of doctrine.
 >
-> What the watch heard on the concern's day is given to the column, because a column that is not
-> told what its own record holds is a column being asked to find it twice. A descent at
+> What the watch heard on the concern's tide is given to the column, because a column that is
+> not told what its own record holds is a column being asked to find it twice. A descent at
 > seventy-two for three minutes. Transmissions at eighty against six charted faces, in an
-> account that is not theirs. And a bed on the western lip, entered as a bed. The Ninth heard
-> all of it as well, which is why the column left a tide early and walked.
+> account that is not theirs. And a bed on the western lip, entered as a bed. The account went
+> up the Ninth as well, which is why the column left a tide early and walked.
 >
 > Eighteen hulls are given to the rim. Twelve are the cohort and six attend the lip, and the
 > dome is stood where the column stopped, because a dome is not carried and there was nothing on
@@ -634,8 +638,9 @@ its sentences.
 > spread two to a face. Nothing is raised and nothing is put into the water: the arrays are
 > aboard, they are live, and they are not used. The rim is attended. It is not asked.
 >
-> Nothing has stood into the watch. That is the week's law and it is entered as the week's law,
-> and it is entered again at the count, whatever the week has done with it by then.
+> Nothing has stood into the watch. That is the law of these tides and it is entered as the law
+> of these tides, and it is entered again at the count, whatever the tides have done with it by
+> then.
 >
 > What is heard is entered. What is not heard is not entered, and the gap is entered too.
 >
@@ -673,15 +678,21 @@ or the impersonal:
 > slow. The Order is measuring, from above the line, with nothing raised. What it raises, and
 > when, is not for an open channel. It would be discourteous to the faces.
 
-**The plateaus, from under the bed — 15:30**
+**The charting pair, for the plateaus — 15:30**
 
 > We're still here. That's the whole of the message, and we'd rather you had it from us than
-> worked it out from the bed.
+> worked it out from the water. We're on the western terraces, where we've been reading since
+> before either of us had a reason to say so.
 
 **The stalls, on the Order's sounding — 18:00**
 
 > The Order sounds the sixth face, from above the line. Eighty, twenty seconds. It has stood
-> into the watch and the watch is not asked to answer it this tide.
+> into the watch.
+
+**Cohort-Prime Adze, on the Order's sounding — 18:00**
+
+> It has stood into the watch. The watch is not asked to answer it this tide. That is the
+> order, and it is entered as the order, and the cohorts are attending it.
 
 **Cohort-Prime Adze, at the riser — 18:45**
 
