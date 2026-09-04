@@ -272,11 +272,18 @@ describe('the sowing, as docs/mission-deep-furrow.md §4.3 authors it', () => {
     );
   });
 
-  it('costs the hull §4’s arithmetic, and leaves forty-five of three hundred', () => {
+  it('costs the hull §4’s arithmetic, and leaves thirty-five of three hundred', () => {
     // §4's table, re-derived from the crush rule rather than transcribed: a
-    // PR-2 hull at 2,200 m pays 4 × deficit² a second, the walk from the
-    // grant's edge to the hold's edge is 75 m at the roster's 40 m/s, and the
-    // hold is sixty seconds.
+    // PR-2 hull at 2,200 m pays 4 × deficit² a second, the hold is sixty
+    // seconds, and the walk is measured rather than quoted — the grant ends
+    // where `standing-furrow` ends and the hold begins at the sounding's west
+    // edge, so it is 125 m each way at the roster's 40 m/s.
+    //
+    // The document said 75 m and this test agreed with it by accident: it
+    // reused the 75 it had just derived as *seconds of hull* as though it were
+    // metres of ground. Two wrongs that read as one right. The furrow's grant
+    // ends at 2,250; only the Sounding Spire approximation §3 has since
+    // disowned ended at 2,300, and 2,375 − 2,300 is where the 75 came from.
     const perSecond = crushAttritionPerSecond(HARVESTER.pressureRating, 2200);
     assert.equal(requiredPressureRating(2200), 3, '§4: the water asks PR-3');
     assert.equal(perSecond, 4, '§4: four points a second, unhealable');
@@ -285,16 +292,20 @@ describe('the sowing, as docs/mission-deep-furrow.md §4.3 authors it', () => {
       75,
       '§4: three hundred points is seventy-five seconds'
     );
-    const walkS = 75 / HARVESTER.speed;
-    near(walkS, 1.9, 0.05, '§4: the walk out from under the grant');
+    const standing = region('standing-furrow');
+    const walkM = sowing.x - sowing.radiusM - (standing.x + standing.widthM);
+    assert.equal(walkM, 125, '§4: the grant ends at 2,250 and the hold begins at 2,375');
+    const walkS = walkM / HARVESTER.speed;
+    near(walkS, 3.125, 0.001, '§4: the walk out from under the grant');
     const spent = perSecond * (60 + 2 * walkS);
-    near(HARVESTER.maxHp - spent, 45, 0.5, '§4: left, of three hundred');
+    near(spent, 265, 0.5, '§4: the sowing costs this much hull');
+    near(HARVESTER.maxHp - spent, 35, 0.5, '§4: left, of three hundred');
     // §4's last row: a sower that climbs to the Abyssal line instead of
     // walking back west is dead before it gets there.
     const climbS = (2200 - 1800) / DEPTH.ASCENT_RATE_MPS;
     near(climbS, 26.7, 0.1, '§4: 400 m at 15 m/s');
     near(climbS * perSecond, 107, 0.5, '§4: 107, and it is dead at eighteen hundred');
-    assert.ok(climbS * perSecond > 45, '§4: “and it is dead at eighteen hundred”');
+    assert.ok(climbS * perSecond > 35, '§4: “and it is dead at eighteen hundred”');
   });
 
   it('addresses the sower by its load rather than by a second role', () => {

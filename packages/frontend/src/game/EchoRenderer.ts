@@ -4954,12 +4954,16 @@ export class EchoRenderer {
       const cell = size / regions;
       for (let i = 0; i < this.driftHealth.length; i++) {
         const health = this.driftHealth[i]!;
-        if (health >= 75) continue;
+        // The threshold is the one the simulation strains at, not a number that
+        // happens to match it today — `drift.ts` reads the same constant when it
+        // decides a region has stopped paying, so a tuning change moves the
+        // scope and the model together.
+        if (health >= DRIFT.HEALTH_STRAINED) continue;
         const rx = (i % regions) * cell;
         const ry = Math.floor(i / regions) * cell;
         og.rect(rx, ry, cell, cell).fill({
           color: 0x000000,
-          alpha: 0.16 + (1 - health / 75) * 0.3,
+          alpha: 0.16 + (1 - health / DRIFT.HEALTH_STRAINED) * 0.3,
         });
       }
     }

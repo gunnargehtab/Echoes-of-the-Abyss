@@ -778,10 +778,12 @@ opened at all: §1's unlock rule is one rung, the prologue, and after it nothing
 slot that is `unbuilt` is refused by not having a mission behind it, never by being locked,
 so the two are independent and the board never has to render a fourth state.
 
-Until the twenty-eight missions exist, the board still renders the way it will render on the
-day it ships: the prologue available — and ticked, once it has been played — twenty-eight
-slots dimmed to 40% with their teaching targets attached, and the shape of the finished game
-on screen.
+The board now renders twenty-eight of its twenty-nine slots against a mission that exists, and
+the twenty-ninth — *Standing Wave*, the Order's second — against nothing, which is the state
+the `unbuilt` rendering was written for and had never actually been asked to show mixed in
+among live ones. What that proves is the thing worth having: the dimming is a property of the
+slot rather than of the board's emptiness, so a campaign column with one hole in the middle of
+it reads correctly without a fourth state.
 
 #### Keyboard
 

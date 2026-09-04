@@ -942,6 +942,23 @@ export const MISSION = {
   /** SPEC — §10: 12–25 minutes, the two authored sieges excepted. */
   LENGTH_MIN_S: 720,
   LENGTH_MAX_S: 1500,
+  /**
+   * SPEC — docs/mission-tend.md §6: a sweep that hears something on its lane
+   * files it, "and the pair's course bends a few degrees toward what it heard".
+   *
+   * A few degrees, and not a re-aim. The runtime used to answer a filing by
+   * ordering the sweeping hulls to the position they heard, which is a
+   * different mechanic wearing the same word: on docs/mission-nineteen.md's map
+   * it flew both watch hulls off their chart, across the north wall's coils and
+   * into six armed Knight hulls, so a run in which the player gave no order at
+   * all had no watch left by 02:30 — and the watch is that mission's only
+   * observer, so §8's count could never be met.
+   *
+   * The bend is what the design asks for and is also the safe shape: it shows
+   * the player they were heard without handing a mission's scripted transit to
+   * whoever is loudest.
+   */
+  SWEEP_BEND_DEG: 5,
 } as const;
 
 /**
