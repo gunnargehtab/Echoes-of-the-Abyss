@@ -24,7 +24,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | **[factions.md](factions.md)** | The four powers — doctrine, politics, weakness |
 | **[characters.md](characters.md)** | Twelve commanders and the neutrals |
 | **[culture.md](culture.md)** | How the Rift speaks — five registers, names, rituals, writing guide |
-| **[campaign.md](campaign.md)** | 29 missions designed, four campaigns, four irreconcilable endings — the Consortium's seven, convergence and ending included, are specified and built |
+| **[campaign.md](campaign.md)** | 29 missions designed, four campaigns, four irreconcilable endings — the Consortium's seven, convergence and ending included, are specified and built, and 28 of the 29 now have a document of record |
 | **[mission-sorrowgate.md](mission-sorrowgate.md)** | The prologue, specified: the court, the flight, the silence order, the ping, and what answers it |
 | **[mission-asset-recovery.md](mission-asset-recovery.md)** | The Ledger 1, specified: Face Six, the manifest, the taps, and the Klaxon posture |
 | **[mission-shift-change.md](mission-shift-change.md)** | The Ledger 2, specified: the throttle handed over, a filed audit, and the layer as cover |
@@ -36,10 +36,23 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | **[mission-tend.md](mission-tend.md)** | The Second Seeding 1, specified: a working day, the sweep, the stillness, and what *unfiled* is worth |
 | **[mission-thin-water.md](mission-thin-water.md)** | The Second Seeding 2, specified: a column in water that hides nothing, an unwinnable fight nobody chose, and six of ten read out in people |
 | **[mission-convocation.md](mission-convocation.md)** | The Second Seeding 3, specified: a vote that has to be walked, a row too loud to hear itself, and the bell Marr has never rung |
+| **[mission-deep-furrow.md](mission-deep-furrow.md)** | The Second Seeding 4, specified: a cleft under Anholt's terrace, a piece of the Abyssal made habitable, and ground that changes biome at an authored tick |
+| **[mission-in-writing.md](mission-in-writing.md)** | The Second Seeding 5, specified: the Furrow again on the same map literal unchanged, the Veil against the best listeners in the Rift, and a 205 PC letter that stops being a document |
+| **[mission-radicals.md](mission-radicals.md)** | The Second Seeding 6, specified: Sorrowgate two tides on, an escort of what you voted against, and a faction's own momentum as the thing you fight |
+| **[mission-second-seeding.md](mission-second-seeding.md)** | The Second Seeding 7, specified: the rim from under a bed on the western lip — the Commune's convergence and its ending in one mission |
 | **[mission-attendance.md](mission-attendance.md)** | The Attending 1, specified: one watch of the Mouth's cycle, the nine arrivals, and the silence a rite is owed |
 | **[mission-intake.md](mission-intake.md)** | The Attending 2, specified: an intake at the top of its own water, an economy that will not come when called, and one finding the mission refuses to score |
+| **[mission-the-dome.md](mission-the-dome.md)** | The Attending 3, specified: a closed trench, a spoofed army, and the ping handed to a campaign that spent two missions not needing it |
+| **[mission-shallow.md](mission-shallow.md)** | The Attending 4, specified: the Kell Shoulder above 400 m, and the most feared army in the Rift losing to altitude |
+| **[mission-trench-awakening.md](mission-trench-awakening.md)** | The Attending 5, specified: the First Trench at 1,800 m, something called and not steered, and the bill for mission 3's ping |
+| **[mission-conclave-attending.md](mission-conclave-attending.md)** | The Attending 6, specified: Sufficiency's upper terraces, half an army, and a First Cantor who answers by not crossing |
+| **[mission-first-arrival.md](mission-first-arrival.md)** | The Attending 7, specified: the rim reached first and held with the slowest hulls in the game — the Directorate's convergence and its ending in one mission |
 | **[mission-aptitude.md](mission-aptitude.md)** | The Second Chord 1, specified: six hulls, six formations, and the quarter of the compass a Knight is loud in |
 | **[mission-standing-wave.md](mission-standing-wave.md)** | The Second Chord 2, specified: two nodes, the interval between them, and a weapon the Order builds against itself on purpose |
+| **[mission-nineteen.md](mission-nineteen.md)** | The Second Chord 3, specified: the Rest, the 211 PC cadre entered by name, and the ping handed over on the tide the Order can least afford it |
+| **[mission-conclave-chord.md](mission-conclave-chord.md)** | The Second Chord 4, specified: no room and nine at once, a defence you are meant to almost lose, and a vote Vrey is heard not calling |
+| **[mission-the-three.md](mission-the-three.md)** | The Second Chord 5, specified: the First at 2,900 m, twelve minutes without combat, and the transcripts the Choirmaster reads alone |
+| **[mission-rim-deposits.md](mission-rim-deposits.md)** | The Second Chord 6, specified: the raid the crystal makes unavoidable, extraction under fire, and the Order's convergence slot on D+2 of the rim week |
 
 ## Gameplay
 
@@ -92,10 +105,20 @@ The prologue and one full campaign are built; the rest of the campaign is not. W
 designed, or already stated in a doc that ships, and unbuilt — named in plain text except where
 a document already points at it:
 
-- **The remaining 15 missions.** campaign.md §5–§7 gives them titles, teaching targets and
-  beats, which is not a specification. Each needs a document of its own — one doc per mission,
-  the pattern mission-sorrowgate.md sets and fourteen documents now follow — before it needs
-  code. The Ledger's seven are specified and built end to end, and so are Tend, Attendance and
+- **The remaining 15 missions — fourteen documents without literals, and one row still
+  unwritten.** campaign.md §5–§7 used to give them titles, teaching targets and beats, which is
+  not a specification. Each needs a document of its own — one doc per mission, the pattern
+  mission-sorrowgate.md sets — before it needs code, and thirteen more rows now have one beside
+  *Standing Wave*'s: the Commune's *Deep Furrow*, *In Writing*, *Radicals* and *The Second
+  Seeding*, the Directorate's *The Dome*, *Shallow*, *Trench Awakening*, *Conclave* and *First
+  Arrival*, and the Order's *Nineteen*, *Conclave*, *The Three* and *The Rim Deposits* — each
+  linked from the World & narrative table above and from its row in campaign.md §5–§7. The one
+  row still without a document is *The Second Chord*; `mission-second-chord.md` is a stub the
+  other thirteen link forward to. **So what is planned here is the literals and not the prose**
+  — none of the fourteen has a mission literal, a map or a test, and each §13 is a build list
+  written against a format that has moved four times since Intake, which is the argument for
+  re-reading a §13 at the moment its literal is started rather than trusting it at rest. The
+  Ledger's seven are specified and built end to end, and so are Tend, Attendance and
   Aptitude. [mission-thin-water.md](mission-thin-water.md) was the first document specified
   *ahead* of its literal, and is now built as well — `kell-shoulder` and `seeding-thin-water`,
   with tests — its §13's prediction holding that everything they needed already shipped.
@@ -142,10 +165,16 @@ a document already points at it:
   was no forward, because no two missions shared a map; that document reuses *Tend*'s
   `marr-plateau` unchanged, so the rule now has a concrete first pair and still no mechanism.
   It has somewhere to live, though: the progression record is a container of collections, and
-  per-map Drift Health is a sibling key beside `missions` rather than a new store.
+  per-map Drift Health is a sibling key beside `missions` rather than a new store. There is a
+  second pair now, and it is a specified one rather than a built one:
+  [mission-in-writing.md](mission-in-writing.md) §11 reuses *Deep Furrow*'s `anholt-furrow`
+  literal unchanged, three tides later, on ground the earlier mission spends a beat repainting.
 - **Permanent roster attrition.** Knights mission 3, *Nineteen*, spends units for the rest of a
   campaign. Today nothing outlives the match it was built in — except the progression record,
   which is where a spent roster would go, beside `missions` and Drift Health.
+  [mission-nineteen.md](mission-nineteen.md) §13 is the document that asks for it, and the three
+  Order documents after it each seat their hulls whatever the last tide cost and say so in their
+  own §13 rather than implying a carry the format does not have.
 - **"Already seen" briefing variants.** campaign.md §1 intends a scene you witnessed from the
   other side to change its briefing text and never its mission. Nothing tracks what you have
   seen.
