@@ -710,7 +710,7 @@ export const SEEDING_SECOND_SEEDING: MissionDefinition = {
       reading: {
         met: "Three guns came down at seventy-two into the basin's noise and every navy on the rim heard the plateaus' army arrive, struck. That's the sentence the Directorate wrote in 205, and we've finished it for them.",
         unmet:
-          'Juno’s people stayed up. The arrangement ends without a gun in the water, and it ends.',
+          "Juno's people stayed up. The arrangement ends without a gun in the water, and it ends.",
       },
     },
   ],
@@ -753,7 +753,7 @@ export const SEEDING_SECOND_SEEDING: MissionDefinition = {
     {
       atTick: 0,
       kind: 'say',
-      speaker: 'The watch, on the terraces',
+      speaker: 'The charting pair, on the terraces',
       text: "We're on the terraces, where we've been since before anybody. The column's under the bed on the western lip and we can't hear it from here, which is the bed working. There's two things on the lip breathing on a count — we've got the nearer one, just, and we're not saying what it is. The concern's at the staging and hasn't come down. When it does, nobody on this rim will need telling.",
       note: 'Read, not heard — the standing status of the say channel',
     },
@@ -807,11 +807,11 @@ export const SEEDING_SECOND_SEEDING: MissionDefinition = {
       note: '',
     },
 
-    // 02:30 — the watch, on the descent (§12).
+    // 02:30 — the charting pair, on the descent (§12).
     {
       atTick: T(2, 30),
       kind: 'say',
-      speaker: 'The watch, on the descent',
+      speaker: 'The charting pair, on the descent',
       text: "That's the concern coming down. Seventy-two, four of them, and everything on this rim has it. We said they'd come loud. They've never once come any other way.",
       note: '',
     },
@@ -961,8 +961,8 @@ export const SEEDING_SECOND_SEEDING: MissionDefinition = {
     {
       atTick: T(14),
       kind: 'say',
-      speaker: 'The watch, as the quiet window opens',
-      text: "They've walked back east, both of them, to where they sit. The nearest ears now are the reader on the third face and the heavy on the terraces, and neither of those has a name for us at this range. The watch had one for the bed. It's had the bed since the morning, and it's going to have had it whatever we do next.",
+      speaker: 'The charting pair, as the quiet window opens',
+      text: "They've walked back east, both of them, to where they sit. The nearest ears now are the reader on the third face and the heavy on the terraces, and neither of those has a name for us at this range. Those below had one for the bed. They've had the bed since the morning, and they're going to have had it whatever we do next.",
       note: '',
     },
 
@@ -1055,11 +1055,11 @@ export const SEEDING_SECOND_SEEDING: MissionDefinition = {
       note: '',
     },
 
-    // 21:00 — the watch, on the riser (§12).
+    // 21:00 — the charting pair, on the riser (§12).
     {
       atTick: T(21),
       kind: 'say',
-      speaker: 'The watch, on the riser',
+      speaker: 'The charting pair, on the riser',
       text: "The basin's up. You'll not need us for where. The concern's going home the slow way, and we're not going anywhere, which is the whole of what we came to say.",
       note: '',
     },
@@ -1113,7 +1113,7 @@ export const SEEDING_SECOND_SEEDING: MissionDefinition = {
     },
     {
       kind: 'say',
-      speaker: 'The watch, on the ledger',
+      speaker: 'The charting pair, on the ledger',
       text: "Somebody's had us exact for a minute — hull and heading, not a smudge. We'd like to know whose ears, and we never will.",
       note: "The ledger's own condition, said by the player's own pair the moment *the-ledger* is met (§9, §12)",
       when: { kind: 'tolerance', ticks: T(1), tier: ResolutionTier.Track },

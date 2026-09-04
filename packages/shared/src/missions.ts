@@ -716,6 +716,86 @@ export const ATTENDING_SHALLOW_HEADER: MissionHeader = {
   ],
 };
 
+// Append to packages/shared/src/missions.ts, after ATTENDING_SHALLOW_HEADER,
+// and add ATTENDING_TRENCH_AWAKENING_HEADER to MISSION_HEADERS in the same
+// order. (The Attending 5, `attending-trench-awakening`, on the `shallow-band`
+// map — the map literal is built and registered already.)
+
+export const ATTENDING_TRENCH_AWAKENING_HEADER: MissionHeader = {
+  id: 'attending-trench-awakening',
+  campaign: 'attending',
+  ordinal: 5,
+  name: 'The Attending — Trench Awakening',
+  premise:
+    "The shallow band renders what the trench brings. This tide the trench is sounded, and what answers is the Drift's to decide.",
+  mapId: 'shallow-band',
+  // The close at 20:00 (docs/mission-trench-awakening.md §9), inside
+  // campaign.md §10's 12–25, and the document's own advertised 1,140–1,260 s.
+  // Not a conclusion: the tide does not end here (§8).
+  lengthBandS: [1140, 1260],
+  /**
+   * Undermarshal Setha Korrin, assigning the band at the band —
+   * docs/mission-trench-awakening.md §12, verbatim. There is no Cantorate
+   * formula for the third time in the campaign: the Cantorate does not attend a
+   * rendering row, and First Cantor Ossary is absent and unmentioned.
+   *
+   * Public for Attendance's, Intake's, The Dome's and Shallow's reason: it
+   * names the band, the muster and the arithmetic that makes the band
+   * unanswerable from the walls alone — two hundred and sixty against two
+   * hundred and ten — and withholds the only thing the Directorate withholds,
+   * which is what the trench will answer with. It is the first briefing in the
+   * campaign that hands the player a yard, and it does not say what a yard is
+   * for either.
+   */
+  briefing: [
+    'The shallow band is at work. The First is sounded on this tide, and what the trench brings is rendered here, as it is rendered here on every tide, by the people who are posted here.',
+    'Eight hulls are given to the row, and a plant, and a dome, and a grower. The band is two hundred and sixty. It is not rendered from the walls alone; the walls are two hundred and ten and the Undermarshalcy can add. What is short of it is what the trench answers with.',
+    'Six of eight muster. The Undermarshalcy does not round up.',
+    'What answers a sounding is not chosen. It is entered as what came.',
+  ],
+};
+
+// Append to packages/shared/src/missions.ts, after ATTENDING_SHALLOW_HEADER,
+// and add ATTENDING_CONCLAVE_HEADER to MISSION_HEADERS in the same order.
+// (The Attending 6, `attending-conclave`, on the `upper-terraces` map — the map
+// literal is built and registered already.)
+
+export const ATTENDING_CONCLAVE_HEADER: MissionHeader = {
+  id: 'attending-conclave',
+  campaign: 'attending',
+  ordinal: 6,
+  name: 'The Attending — Conclave',
+  premise:
+    'A calling is put at the head of the Ninth, and it is answered by who crosses the water between the terraces. The Cantorate does not cross.',
+  mapId: 'upper-terraces',
+  // The cycle closes at 20:00 (docs/mission-conclave-attending.md §9), inside
+  // campaign.md §10's 12–25 — and the band is the document's own 19:00–21:00.
+  lengthBandS: [1140, 1260],
+  /**
+   * Two voices at the opening, in the order the rite fixes — the First
+   * Cantor's formula, then the Undermarshal's calling
+   * (docs/mission-conclave-attending.md §12, verbatim). The Dome's
+   * arrangement, one city higher: the formula is unchanged and unabridged
+   * because there is no version of it for a conclave and Ossary does not make
+   * one.
+   *
+   * Public for Attendance's, Intake's and The Dome's reason: it names the
+   * roster, the order the galleries keep, the lent dome and the count, and
+   * withholds the only thing the Directorate withholds — which here is what
+   * the Cantorate will do, and nobody in the water is told that either. It is
+   * also the one briefing in the campaign that states an obligation and then
+   * refuses to give a reason for it, in as many words, which no other
+   * register would think worth writing down.
+   */
+  briefing: [
+    'The stalls are open. The cohorts are seated. Nothing is expected of the watch but sufficiency, and sufficiency is not a small thing to be expected of.',
+    'A calling is put at the head of the Ninth. It is put because something is happening to the thing the cohorts attend, and the account is the watch’s own: a descent at seventy-two for three minutes, and transmissions at eighty against six charted faces, on the rim, entered by people who were there.',
+    'Sixteen hulls are given to the calling. The order the galleries keep reaches this water, and it is twenty-five: a hull that listens is compliant and a hull under way is heard, and what is heard is entered. The dome is lent down for the length of the calling and stands where the galleries stand.',
+    'A calling is answered by who crosses. The Cantorate is asked whether it will attend the calling of the assignment. It is not asked for a reason and it will not be given one.',
+    'What is assigned descends when the cycle closes. Eight of sixteen is a column. The Undermarshalcy does not round up.',
+  ],
+};
+
 export const CHORD_APTITUDE_HEADER: MissionHeader = {
   id: 'chord-aptitude',
   campaign: 'chord',
@@ -762,6 +842,8 @@ export const MISSION_HEADERS: readonly MissionHeader[] = [
   ATTENDING_INTAKE_HEADER,
   ATTENDING_THE_DOME_HEADER,
   ATTENDING_SHALLOW_HEADER,
+  ATTENDING_CONCLAVE_HEADER,
+  ATTENDING_TRENCH_AWAKENING_HEADER,
   CHORD_APTITUDE_HEADER,
 ];
 

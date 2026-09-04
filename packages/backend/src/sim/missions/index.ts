@@ -14,6 +14,8 @@
 import { ATTENDING_ATTENDANCE } from './attendance.ts';
 import { ATTENDING_INTAKE } from './intake.ts';
 import { ATTENDING_SHALLOW } from './shallow.ts';
+import { ATTENDING_TRENCH_AWAKENING } from './trenchAwakening.ts';
+import { ATTENDING_CONCLAVE } from './conclaveAttending.ts';
 import { ATTENDING_THE_DOME } from './theDome.ts';
 import { CHORD_APTITUDE } from './aptitude.ts';
 import { SEEDING_DEEP_FURROW } from './deepFurrow.ts';
@@ -42,9 +44,11 @@ export * from './view.ts';
 export * from './runtime.ts';
 export {
   ATTENDING_ATTENDANCE,
+  ATTENDING_CONCLAVE,
   ATTENDING_INTAKE,
   ATTENDING_SHALLOW,
   ATTENDING_THE_DOME,
+  ATTENDING_TRENCH_AWAKENING,
   CHORD_APTITUDE,
   LEDGER_ASSET_RECOVERY,
   LEDGER_BAFFLE,
@@ -83,6 +87,8 @@ export const MISSIONS: readonly MissionDefinition[] = [
   ATTENDING_INTAKE,
   ATTENDING_THE_DOME,
   ATTENDING_SHALLOW,
+  ATTENDING_TRENCH_AWAKENING,
+  ATTENDING_CONCLAVE,
   CHORD_APTITUDE,
 ];
 
