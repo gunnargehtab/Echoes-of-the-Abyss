@@ -494,6 +494,38 @@ to pay that cost in advance instead of under fire.
 > There's no kelp between Kell and here. You know that. We're saying it anyway, because the
 > number on your hull was measured somewhere with kelp in it.
 
+### Already seen: a filed plateau
+
+[campaign.md](campaign.md) §1's rule, given its first concrete pair. A player who came to this
+mission from a *Tend* the sweep filed ([mission-tend.md](mission-tend.md) §8) reads the briefing
+below instead. **Nothing else about the mission changes** — the ten tenders, the four kilometres,
+the six, the closure and every beat behind them are the same mission, and the rule requires that
+they be.
+
+One paragraph differs, and that is the argument rather than an economy of effort: what a witness
+carries out of *Tend* is not a different day at Kell but a different thing known about the
+closure. The concern is moving on charted water, and Marr knows the charting happened because
+she heard it happen.
+
+> The concern has a line closed above Kell, and they'll have posted it. They post everything.
+> This one sits on water they have already been over: the sweep heard us on the lane when they
+> came up charting, and what their instruments hear their ledgers keep. So they are not guessing
+> at what moves between two gardens tonight. They have it written down, in a hand that is tidier
+> than ours. If they ask you what you are, you won't have the answer they're asking for, and
+> we'd rather you spent that second moving.
+
+The register holds under the change and is worth checking, because this is the first variant in
+the campaign: she still declines the imperative, she still hands the column a fact and stops, and
+"in a hand that is tidier than ours" is the Commune's own accounting compared with the concern's
+and found wanting on exactly the axis the concern would grade it on — which is
+[culture.md](culture.md) §3's test, since no other faction could say it as a complaint about the
+tidiness.
+
+**What the player is not told is that they are reading a variant.** There is no marker on the
+screen and no second entry on the board. A briefing that announced itself as the earned one
+would turn a consequence into a collectible, and the consequence is that the closure is not a
+coincidence.
+
 ### Objective readings, in play
 
 The Commune cannot command, so its objectives arrive as statements of what has already been
@@ -583,7 +615,7 @@ campaigns" row carries where the queue stands now.
 | The map, its seven regions, trench paint on the slope and a vent under the corridor | **Built** — `kell-shoulder`, one row of the literal per row of §11's table, painted in the table's order and every rectangle on the 250 m cell grid. No new region shape, no new biome, no hazard sites, and not in the public catalogue |
 | The mission definition `seeding-thin-water` | **Built** — and it needed one thing this document did not anticipate: §8's Results table has three rows and the runtime reads the outcome ladder off *how many* terminal objectives were met, so the middle rung needs a terminal row of its own. The literal authors `column` at six and `crossing` at one, which is the arrangement [mission-sorrowgate.md](mission-sorrowgate.md) §8 already uses for its count of fourteen. The ask the player is given is still six |
 | **Jettison** — a load a hull can drop to move faster | **Not built, and deliberately not asked for.** `MissionLift` is hold-and-cut and rides its carrier to the end; there is no drop. §8's alternative reading is the mission that would need it, and this document chose the other reading partly so that a design question would not arrive disguised as a missing mechanism |
-| Filed → this mission's briefing variant | **Not built** — [mission-tend.md](mission-tend.md) §8 promises that a *filed* Tend changes this briefing (the concern moves on charted water) and never its mission. That is [campaign.md](campaign.md) §11's progression row, still the same row, now with its second concrete case |
+| Filed → this mission's briefing variant | **Built** (#378), and it is the first of the two pairs the campaign had written ahead of the mechanism. The variant is §12's, transcribed into `SEEDING_THIN_WATER_HEADER.briefingVariants` and selected client-side off the seen-scene set in the progression record, so the room is never told which briefing was read — and cannot be, because [campaign.md](campaign.md) §1 says a scene changes the text and never the mission. What *Tend* writes is the scene `marr-plateau-filed`, latched with the same condition as the filed reading it is the machine-readable half of, so the id the client stores is a sentence the player has already been shown |
 | Commune escorts as a distinct hull | Not needed — the Corvette in [units.md](units.md) with the Commune's faction values is what §3 fields. Nothing here asks for a new roster entry |
 | In-mission character speech, heard | Text only, the standing status ([mission-sorrowgate.md](mission-sorrowgate.md) §13) |
 

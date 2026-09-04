@@ -28,7 +28,7 @@ import { ControlsScreen } from './menu/ControlsScreen.tsx';
 import { SettingsScreen } from './menu/SettingsScreen.tsx';
 import { TitleScreen } from './menu/TitleScreen.tsx';
 import { storedMissionId } from './net/GameClient.ts';
-import { hasPlayed } from './progression/store.ts';
+import { hasPlayed, seenScenes } from './progression/store.ts';
 import { loadSettings } from './settings/store.ts';
 
 type Screen =
@@ -203,6 +203,10 @@ function App() {
       {screen.kind === 'briefing' && (
         <BriefingScreen
           missionId={screen.missionId}
+          // Read at mount rather than held in shell state, so a briefing
+          // opened after a mission finished in this same session already
+          // knows what that mission witnessed (docs/campaign.md §1).
+          seenScenes={seenScenes()}
           onDescend={() =>
             setScreen({
               kind: 'match',

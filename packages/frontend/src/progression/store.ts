@@ -72,11 +72,26 @@ export interface Progression {
   version: 1;
   /** Keyed by `MissionHeader.id`. Absent means never finished. */
   missions: Record<string, MissionRecord>;
+  /**
+   * The scenes this player has witnessed — the first of the three sibling keys
+   * this record was shaped to receive (docs/campaign.md §1, §11).
+   *
+   * A set, spelled as a record of `true` because JSON has no set and an array
+   * would make the union in `recordMissionResult` a dedup rather than a merge.
+   * Keyed by scene and not by mission for `MissionBriefingVariant`'s reason:
+   * two missions witness one scene, and *Tend* played to a quiet, unfiled day
+   * witnessed nothing at all.
+   *
+   * Absent in a record written by a build that predates this key, which is
+   * what "no migration story in the first version" was promised to mean:
+   * `sanitise` fills it with an empty set and nothing else notices.
+   */
+  scenes: Record<string, true>;
 }
 
 /** An empty history — what a first boot, a cleared browser or a bad read gives. */
 export function emptyProgression(): Progression {
-  return { version: 1, missions: {} };
+  return { version: 1, missions: {}, scenes: {} };
 }
 
 function isOutcome(value: unknown): value is MissionOutcome {
@@ -115,7 +130,20 @@ function sanitise(raw: unknown): Progression {
     missions[id] = { ...(entry as object), outcome } as MissionRecord;
   }
 
-  return { ...record, version: 1, missions } as Progression;
+  const storedScenes =
+    typeof record.scenes === 'object' && record.scenes !== null
+      ? (record.scenes as Record<string, unknown>)
+      : {};
+
+  // Entry-by-entry, as `missions` is, and membership is the only fact: any
+  // truthy value stored under a scene id reads as witnessed, and anything else
+  // drops that one id rather than the set.
+  const scenes: Record<string, true> = {};
+  for (const [id, seen] of Object.entries(storedScenes)) {
+    if (seen === true) scenes[id] = true;
+  }
+
+  return { ...record, version: 1, missions, scenes } as Progression;
 }
 
 export function loadProgression(): Progression {
@@ -151,12 +179,19 @@ export function recordMissionResult(result: MissionResultPayload): Progression {
   const outcome: MissionOutcome =
     previous === undefined || result.outcome < previous.outcome ? result.outcome : previous.outcome;
 
+  // A set union, so the replayed `missionOver` of the reconnect case adds
+  // nothing the first delivery did not, and a scene once witnessed is never
+  // un-witnessed by a later run of the same mission that went differently.
+  const scenes = { ...current.scenes };
+  for (const scene of result.scenes ?? []) scenes[scene] = true;
+
   const next: Progression = {
     ...current,
     missions: {
       ...current.missions,
       [result.missionId]: { ...previous, outcome },
     },
+    scenes,
   };
 
   try {
@@ -201,4 +236,15 @@ export function isMissionUnlocked(missionId: string): boolean {
   // if it ever holds a second mission that one is not gated behind itself.
   if (missionHeaderById(missionId)?.campaign === 'prologue') return true;
   return hasPlayed(PROLOGUE_MISSION_ID);
+}
+
+/**
+ * The scenes this player has witnessed, as the set `missionBriefing` reads.
+ *
+ * Built on each call rather than cached: the briefing screen asks once, when
+ * it mounts, and a cached set would be the thing that shows a stale briefing
+ * to a player who finished *Tend* in this same session.
+ */
+export function seenScenes(): ReadonlySet<string> {
+  return new Set(Object.keys(loadProgression().scenes));
 }

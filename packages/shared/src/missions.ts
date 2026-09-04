@@ -25,6 +25,43 @@
  */
 export type CampaignId = 'prologue' | 'ledger' | 'seeding' | 'attending' | 'chord';
 
+/**
+ * One alternate briefing, and the scene whose having-been-witnessed selects it
+ * — docs/campaign.md §1: a scene you have already seen from the other side
+ * changes the **briefing text** and never the mission.
+ *
+ * Keyed by a **scene** rather than by a mission id, because the point of the
+ * rule is that two missions witness one scene. *Tend*'s sweep hearing the
+ * gardens and *Thin Water*'s column meeting a closure on charted water are the
+ * same event read from either end, so the thing the record remembers has to be
+ * the event. A mission-keyed variant would have to say "if Tend was played",
+ * which is not the fact anybody wants: Tend can be played without the sweep
+ * ever hearing anything, and then nothing was witnessed at all.
+ *
+ * An **ordered list** rather than a map from scene to briefing, so that a
+ * mission whose two variants could both apply resolves to one of them by an
+ * authoring decision rather than by object key order. First match wins.
+ */
+export interface MissionBriefingVariant {
+  /** The scene id, as the mission that authored it names in its resolution. */
+  scene: string;
+  /** The whole briefing, not a patch. Paragraphs, exactly as `briefing` is. */
+  briefing: readonly string[];
+}
+
+/**
+ * The sweep heard the Marr Plateau's gardens working, and filed them —
+ * docs/mission-tend.md §8, the *filed* reading.
+ *
+ * Named here rather than in the mission that latches it because a scene is
+ * shared by construction: `seeding-tend` writes it, `seeding-thin-water` and
+ * `seeding-convocation` read it, and a string typed out three times in three
+ * packages is the shape of a bug that never fails a build. The value is the
+ * event, not the mission — a plateau that came home unfiled witnessed nothing,
+ * however completely it was played.
+ */
+export const MARR_PLATEAU_FILED = 'marr-plateau-filed';
+
 export interface MissionHeader {
   /**
    * Namespaced by campaign. Two missions in the campaign are both called
@@ -52,6 +89,22 @@ export interface MissionHeader {
    * fact, so it ships public and the player may read it before committing.
    */
   briefing: readonly string[] | null;
+  /**
+   * Alternates for a player who has already witnessed the scene each names —
+   * docs/campaign.md §1. Omitted is the twelve missions with no pair yet.
+   *
+   * Public for the same reason `briefing` is, and no more public than it: a
+   * shell that ships both texts holds two things the player may read, not one
+   * thing they have not earned. The variant is chosen **client-side** from the
+   * progression record, so a mission's alternates cost nothing on the wire and
+   * the room never learns which one was read — the mission does not know, and
+   * §1 requires that it cannot: a briefing that changed the mission would be
+   * the rule arguing with itself.
+   *
+   * A mission whose `briefing` is `null` withholds it on purpose (see above)
+   * and authors no variants; `missionBriefing` keeps that true.
+   */
+  briefingVariants?: readonly MissionBriefingVariant[];
 }
 
 export const PROLOGUE_SORROWGATE_HEADER: MissionHeader = {
@@ -308,6 +361,30 @@ export const SEEDING_THIN_WATER_HEADER: MissionHeader = {
     'The concern has a line closed above Kell. They\u2019ll have posted it. They post everything. If they ask you what you are, you won\u2019t have the answer they\u2019re asking for, and we\u2019d rather you spent that second moving.',
     'There\u2019s no kelp between Kell and here. You know that. We\u2019re saying it anyway, because the number on your hull was measured somewhere with kelp in it.',
   ],
+  /**
+   * docs/mission-thin-water.md \u00a712, "Already seen: a filed plateau" \u2014 the first
+   * concrete case of docs/campaign.md \u00a71's rule, promised by
+   * docs/mission-tend.md \u00a78 before either end of it existed.
+   *
+   * Exactly one paragraph differs from the default, and that is the whole
+   * argument for the rule rather than a saving of effort: the column, the
+   * count, the six and the kelp are the same load-out either way, because the
+   * mission is the same mission. What changed is what Marr knows about the
+   * closure \u2014 the concern is moving on water it has already charted, and she
+   * knows it because the sweep that charted it was heard doing so.
+   */
+  briefingVariants: [
+    {
+      scene: MARR_PLATEAU_FILED,
+      briefing: [
+        'We\u2019re not going to tell you what to do out there. That hasn\u2019t changed and we\u2019re not going to change it today of all days, because today is the day somebody will wish we had.',
+        'The bloom at Kell came early and the turning wants seed. Ten went. We think ten was more than the shoulder is owed and the count didn\u2019t finish before the tide did, so ten is what\u2019s out there, and that\u2019s ours, not yours.',
+        'Here\u2019s the thing we\u2019re saying now while it\u2019s daylight and nobody\u2019s frightened. We\u2019d like six of you home at the least. We\u2019re saying the number here so that nobody has to say it out there \u2014 so that when it\u2019s loud, it\u2019s already been agreed, and no one aboard has to be the person who decides that six is enough. Six isn\u2019t enough. It\u2019s what we agreed.',
+        'The concern has a line closed above Kell, and they\u2019ll have posted it. They post everything. This one sits on water they have already been over: the sweep heard us on the lane when they came up charting, and what their instruments hear their ledgers keep. So they are not guessing at what moves between two gardens tonight. They have it written down, in a hand that is tidier than ours. If they ask you what you are, you won\u2019t have the answer they\u2019re asking for, and we\u2019d rather you spent that second moving.',
+        'There\u2019s no kelp between Kell and here. You know that. We\u2019re saying it anyway, because the number on your hull was measured somewhere with kelp in it.',
+      ],
+    },
+  ],
 };
 
 export const SEEDING_CONVOCATION_HEADER: MissionHeader = {
@@ -336,6 +413,29 @@ export const SEEDING_CONVOCATION_HEADER: MissionHeader = {
     "The concern is coming up the drop this morning to read something at us. We think they mean to stand on the rows while they do it. They won't fire on a garden \u2014 a garden's worth nothing to them burnt, and we'd rather you heard that from us than worked it out.",
     "A row turns when there's somebody on it and it's quiet enough to hear itself. Juno's brought hulls. We didn't vote on that either. They're loud, so they can't be where the question is \u2014 the question has to be able to hear itself, and a corvette at twenty-eight is two rows of nothing.",
     "There's a bell for all of this. Every row at once. It exists. Nobody has rung it, and I've had thirty years to. We'd rather come home without ringing it. We're saying *rather*.",
+  ],
+  /**
+   * docs/mission-convocation.md §12, "Already seen: a filed plateau" — §1's
+   * third concrete case, and the one that shows where the rule stops.
+   *
+   * The assertion read into the water at 03:30 says *this survey year*, and a
+   * filed *Tend* is where that year's figures came from. §13 wanted the
+   * assertion itself to change; §1 refuses, and this is the half §1 allows —
+   * Marr knows in advance that the numbers will be right and whose rows they
+   * were taken off, and says so before the drop rather than after. The mission
+   * is byte-for-byte the definition it was.
+   */
+  briefingVariants: [
+    {
+      scene: MARR_PLATEAU_FILED,
+      briefing: [
+        "We rang it off-tide. You'll have heard. Everyone will have heard — Anholt's people, Teel's, and the lane. That's not a slip. A plateau that convenes says so, out loud, and stops working while it does.",
+        "Anholt asks us to turn a second seeding. We're turning it. It opens on the east gardens and it goes row to row, and it comes back when it comes back with nothing new in it. We can't make that faster. We've never been able to, and most tides that's been the best thing about us.",
+        "The concern is coming up the drop this morning to read something at us, and we know roughly what. They have had our numbers since the sweep came up the lane and heard the gardens working, so when they say *this survey year* they will mean ours, and the figures will be right. That is the part worth sitting with before they get here. It isn't a claim they are inventing on the way up. We think they mean to stand on the rows while they read it. They won't fire on a garden — a garden's worth nothing to them burnt, and we'd rather you heard that from us than worked it out.",
+        "A row turns when there's somebody on it and it's quiet enough to hear itself. Juno's brought hulls. We didn't vote on that either. They're loud, so they can't be where the question is — the question has to be able to hear itself, and a corvette at twenty-eight is two rows of nothing.",
+        "There's a bell for all of this. Every row at once. It exists. Nobody has rung it, and I've had thirty years to. We'd rather come home without ringing it. We're saying *rather*.",
+      ],
+    },
   ],
 };
 
@@ -433,6 +533,30 @@ export const MISSION_HEADERS: readonly MissionHeader[] = [
 
 export function missionHeaderById(id: string): MissionHeader | undefined {
   return MISSION_HEADERS.find((header) => header.id === id);
+}
+
+/**
+ * The briefing this player should read — docs/campaign.md §1.
+ *
+ * Pure, and deliberately not a method on anything: the header is compiled-in
+ * data and the scene set is the client's own memory, so the choice is a fact
+ * about those two arguments and nothing else. Nothing about the room, the
+ * match or the player's slot reaches it, which is what makes "the mission does
+ * not know which one was shown" true rather than merely intended.
+ *
+ * `null` — a briefing withheld until arrival — stays `null`. A withheld
+ * briefing has no default to vary from, and a variant that appeared where the
+ * default was suppressed would leak exactly the mission the suppression was
+ * protecting.
+ */
+export function missionBriefing(
+  header: MissionHeader,
+  seenScenes: ReadonlySet<string>
+): readonly string[] | null {
+  if (header.briefing === null) return null;
+  // First match wins, in the authored order — see `MissionBriefingVariant`.
+  const variant = header.briefingVariants?.find((v) => seenScenes.has(v.scene));
+  return variant?.briefing ?? header.briefing;
 }
 
 // --- Wire types -------------------------------------------------------------
@@ -565,4 +689,23 @@ export interface MissionResultPayload {
   epilogue: string;
   /** The objectives as the player was told them, frozen at the close. */
   objectives: ObjectiveView[];
+  /**
+   * The scenes this run witnessed, for the progression record to remember —
+   * docs/campaign.md §1. Omitted is none, which is every mission that authors
+   * no scene.
+   *
+   * **This adds no information to the wire, and that is the test it had to
+   * pass.** A scene is latched from something the epilogue already states in
+   * words: `marr-plateau-filed` is emitted exactly when the sweep's *filed*
+   * reading is appended to the count, so the player has read the fact on the
+   * result screen before the client stores its id. What crosses here is a
+   * machine-readable spelling of a sentence that was already shown, never a
+   * fact the mission withheld — the same standard the progression record holds
+   * itself to (`progression/store.ts`).
+   *
+   * Ids and not prose, because the client selects on them and a briefing that
+   * varied on a substring of an epilogue would break the first time an author
+   * fixed a comma.
+   */
+  scenes?: readonly string[];
 }

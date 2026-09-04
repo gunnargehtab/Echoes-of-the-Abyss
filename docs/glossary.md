@@ -123,6 +123,16 @@ Briefing
 - The authored mission text a player is given before a mission runs, in the voice of whoever is speaking (campaign.md §10).
 - **It is not the join-time map payload.** tech-stack.md used "briefing" for the terrain grid and spawn data every client receives on join; that is corrected to *survey chart*, because a briefing is addressed to somebody and a terrain grid is not. campaign.md's usage is the older and load-bearing one, so the technical doc is the one that moves.
 
+Scene
+
+- An event two missions witness from opposite sides, identified by a stable id so that having seen it in one can change what the other reads out (campaign.md §1). *The sweep filed the Marr Plateau's gardens* is a scene: **Tend** witnesses it as being heard, **Thin Water** and **Convocation** meet it as water the concern has already charted.
+- A scene is not a mission. Playing a mission does not witness its scenes — a Tend that came home unfiled witnessed nothing, however completely it was played — which is why the progression record remembers scenes rather than mission ids.
+- What a witnessed scene may change is **briefing text and nothing else**. A line spoken inside a mission is the mission, and no variant may move one.
+
+Briefing Variant
+
+- An alternate briefing a mission ships for a player who has already witnessed a named scene. Authored prose in the same voice as the default, shipped in the mission's public header, and chosen on the player's own device — the room is never told which was read.
+
 Mission Outcome
 
 - How a mission ends. A mission concludes on its own authored terms — a count read aloud, a retreat completed, a refusal — rather than resolving a winner the way a skirmish match does; three of the 29 are winnable only as evacuations (campaign.md §2).

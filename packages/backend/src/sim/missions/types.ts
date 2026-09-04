@@ -992,6 +992,17 @@ export interface MissionSweep {
   windows: readonly { fromTick: number; untilTick: number }[];
   /** Appended to the count's reading when the day is filed. Authored, in-register. */
   filedReading: string;
+  /**
+   * The scene id latched alongside that reading — docs/campaign.md §1, and
+   * `MissionBriefingVariant` in `@echoes/shared` for what a scene is.
+   *
+   * Optional, and on the sweep rather than on the mission because the sweep is
+   * the thing that witnesses: a day is filed by its hearing and by nothing
+   * else. A second source of scenes gets its own field beside whatever latches
+   * it, rather than a mission-level list that would have to restate the
+   * condition a mechanism already holds.
+   */
+  scene?: string;
   note: string;
 }
 

@@ -613,6 +613,7 @@ export class MatchRoom extends Room<MatchState> {
           outcome: resolution.outcome,
           epilogue: resolution.epilogue,
           objectives: resolution.objectives,
+          scenes: resolution.scenes,
         });
       }
     }
@@ -861,6 +862,9 @@ export class MatchRoom extends Room<MatchState> {
         outcome: resolution.outcome,
         epilogue: resolution.epilogue,
         objectives: resolution.objectives,
+        // Sent on both paths, so a player who reconnected into an ended room
+        // records the same scenes as one who never dropped.
+        scenes: resolution.scenes,
       });
     }
 

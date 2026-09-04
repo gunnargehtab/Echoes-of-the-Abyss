@@ -11,7 +11,7 @@
  */
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { MissionOutcome, type MissionResultPayload } from '@echoes/shared';
+import { MARR_PLATEAU_FILED, MissionOutcome, type MissionResultPayload } from '@echoes/shared';
 import {
   emptyProgression,
   hasPlayed,
@@ -20,6 +20,7 @@ import {
   missionRecord,
   PROLOGUE_MISSION_ID,
   recordMissionResult,
+  seenScenes,
 } from '../src/progression/store.ts';
 
 const STORAGE_KEY = 'echoes.progression';
@@ -36,8 +37,12 @@ function installStorage(): Map<string, string> {
 }
 
 /** A `missionOver` payload, with only the fields this store reads populated. */
-function result(missionId: string, outcome: MissionOutcome): MissionResultPayload {
-  return { missionId, outcome, epilogue: 'The court adjourns.', objectives: [] };
+function result(
+  missionId: string,
+  outcome: MissionOutcome,
+  scenes?: readonly string[]
+): MissionResultPayload {
+  return { missionId, outcome, epilogue: 'The court adjourns.', objectives: [], scenes };
 }
 
 describe('the progression record', () => {
@@ -194,5 +199,78 @@ describe('the unlock rule', () => {
   it('opens on any reading of the prologue, including a lost one', () => {
     recordMissionResult(result(PROLOGUE_MISSION_ID, MissionOutcome.Lost));
     assert.equal(isMissionUnlocked('ledger-asset-recovery'), true);
+  });
+});
+
+describe('the seen-scene set (#378)', () => {
+  beforeEach(() => {
+    installStorage();
+  });
+
+  afterEach(() => {
+    delete (globalThis as { localStorage?: unknown }).localStorage;
+  });
+
+  it('remembers nothing on a first boot', () => {
+    assert.deepEqual(emptyProgression().scenes, {});
+    assert.equal(seenScenes().size, 0);
+  });
+
+  it('records the scenes a conclusion names', () => {
+    recordMissionResult(result('seeding-tend', MissionOutcome.Complete, [MARR_PLATEAU_FILED]));
+    assert.equal(seenScenes().has(MARR_PLATEAU_FILED), true);
+  });
+
+  it('records nothing for a mission that witnessed nothing', () => {
+    // A quiet, unfiled Tend is a completed Tend that saw no scene — which is
+    // the whole reason the set is keyed by scene and not by mission id.
+    recordMissionResult(result('seeding-tend', MissionOutcome.Complete, []));
+    assert.equal(seenScenes().size, 0);
+  });
+
+  it('takes a payload from a build that sends no scenes at all', () => {
+    recordMissionResult(result('ledger-baffle', MissionOutcome.Complete));
+    assert.equal(seenScenes().size, 0);
+  });
+
+  it('unions rather than replaces, so a replayed conclusion is a no-op', () => {
+    // The reconnect case: `MatchRoom` re-sends `missionOver` to a client that
+    // rejoins an ended room, and the same scene arriving twice must not differ
+    // from it arriving once.
+    recordMissionResult(result('seeding-tend', MissionOutcome.Complete, [MARR_PLATEAU_FILED]));
+    recordMissionResult(result('seeding-tend', MissionOutcome.Complete, [MARR_PLATEAU_FILED]));
+    assert.deepEqual([...seenScenes()], [MARR_PLATEAU_FILED]);
+  });
+
+  it('never un-witnesses a scene a later, quieter run did not repeat', () => {
+    recordMissionResult(result('seeding-tend', MissionOutcome.Complete, [MARR_PLATEAU_FILED]));
+    recordMissionResult(result('seeding-tend', MissionOutcome.Complete, []));
+    assert.equal(seenScenes().has(MARR_PLATEAU_FILED), true);
+  });
+
+  it('reads a record written before this key existed as an empty set', () => {
+    // #371's promise, tested rather than trusted: the first sibling key added
+    // to the record needs no migration.
+    installStorage().set(
+      STORAGE_KEY,
+      JSON.stringify({
+        version: 1,
+        missions: { 'seeding-tend': { outcome: MissionOutcome.Complete } },
+      })
+    );
+    assert.deepEqual(loadProgression().scenes, {});
+    assert.equal(hasPlayed('seeding-tend'), true);
+  });
+
+  it('drops one nonsense entry rather than the whole set', () => {
+    installStorage().set(
+      STORAGE_KEY,
+      JSON.stringify({
+        version: 1,
+        missions: {},
+        scenes: { [MARR_PLATEAU_FILED]: true, 'half-written': 'yes', broken: null },
+      })
+    );
+    assert.deepEqual(loadProgression().scenes, { [MARR_PLATEAU_FILED]: true });
   });
 });
