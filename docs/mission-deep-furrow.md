@@ -147,10 +147,10 @@ lower it. The constant is right, and the two built documents are the side that m
 4. **Active sonar, available and priced.** This is mission 4, the button arrived in mission 3
    ([campaign.md](campaign.md) §10), and it is not locked. A ping's aggro contribution is tripled
    ([bestiary.md](bestiary.md) §2), so 95 × 3 through the cleft's 1.6 is Commit-loud to a
-   Hollow's HYD 80 from **1,434 m** — the throat is 1,500 m wide, so a ping anywhere in it is
-   Commit-loud to both walls at once — and the self-reveal hands the sill a Track from anywhere
-   under the layer (§7). The plateaus have never asked the deep anything. The button is on the
-   panel anyway.
+   Hollow's HYD 80 from **1,434 m** — and the two walls' Hollows stand 1,300 m apart, so a ping
+   anywhere between them is Commit-loud to both at once — and the self-reveal hands the sill a
+   Track from anywhere under the layer (§7). The plateaus have never asked the deep anything.
+   The button is on the panel anyway.
 
 **Silent Running is present, and this mission prices it in both directions.** It **stops the
 sowing outright**: a sounding needs a hull that is not silent (`runtime.ts`, `holdingSounding`),
@@ -177,19 +177,22 @@ to zero ([systems-depth.md](systems-depth.md) §2; `crushAttritionPerSecond`). T
 points of hull is seventy-five seconds.
 
 Inside the furrow it pays nothing. The standing furrow is a **region pressure grant** — every
-hull inside its rectangle operates at PR + 1, exactly as a Sounding Spire's aura grants
-`Pressure.bonus` within 600 m of it, and evaporating the same way when a hull leaves. The day
-dives from the lanes into the garden in the first two minutes and the tenders do not crush
-there, because the ground holds them. That is the system introduced, by the water doing it,
-before anybody says a word about it.
+hull inside `standing-furrow`, the ten-year ground alone (§11), operates at PR + 1, exactly as a
+Sounding Spire's aura grants `Pressure.bonus` within 600 m of it, and evaporating the same way
+when a hull leaves the rectangle. The day dives from the lanes into the garden in the first two
+minutes and the tenders do not crush there, because the ground holds them. That is the system
+introduced, by the water doing it, before anybody says a word about it.
 
 **Which mechanism this is, stated so nobody builds the other one.** It is
 [systems-depth.md](systems-depth.md) §3's Deepbloom conversion — "Deepbloom structures slowly
 convert Abyssal tiles to habitable ground" — written by a sowing as a grant on a region that
-stays. It is **not** §4's *Seeding* ability — a 400 m radius, +1 PR for sixty seconds — which is
-a commander ability with no grant mechanism behind it
-([mission-convocation.md](mission-convocation.md) §13), neither built nor asked for here. A zone
-that lasted a minute would be a stunt; a furrow is somewhere people sleep.
+stays. It is **not** §4's *Seeding* ability — a 400 m radius, +1 PR for sixty seconds. A
+commander ability now has a mechanism — `MissionCommanderAbility` shipped with
+[mission-convocation.md](mission-convocation.md) §13's row (#373) — but what it grants is a
+radius, a duration, a speed multiplier, a Silent Running immunity and the SIG the act
+broadcasts, and *not* a rating: Anholt's ability still has nothing behind it, and this document
+asks for the region row instead of a second grant mechanism beside Marr's. A zone that lasted a
+minute would be a stunt; a furrow is somewhere people sleep.
 
 ### 2. The water absorbs
 
@@ -239,10 +242,10 @@ the only one that makes ground *better*.
 Home cannot hear the furrow. The Foot's ears have the observer's idle at Tier 1 only inside
 1,785 m across the layer, and the sill is 2,500 m off; the day learns what is at the sill only by
 going under the layer to it, and learns in the same second that the sill has had the day since
-the dive began — Classification from its first second (72 through 1.6 and 0.3 is ratio 3.01 at
-2,125 m) and Track from its fifth, once the hull is in the duct and the pair factor is 1.0
-(ratio 10.0). The layer does not hide the day from the deep. It hides the deep from home, and
-the plateau has never once been on that side of the arrangement.
+the dive began — Classification from its first second (72 through 1.6 and 0.3 is ratio 2.74 at
+the mouth's 2,250 m) and Track from its fifth, once the hull is in the duct and the pair factor
+is 1.0 (ratio 9.14). The layer does not hide the day from the deep. It hides the deep from home,
+and the plateau has never once been on that side of the arrangement.
 
 ### Where you dive is the whole lesson
 
@@ -340,8 +343,8 @@ What it hears, through the layer and under it, against its HYD 85:
 | What | SIG × PF | Distance | Ratio | Entered as |
 | --- | --- | --- | --- | --- |
 | The day at the Foot, idle | 8 × 1.0 × 0.3 | 2,500 m | 0.2 | Nothing. The Foot is a layer up and 2,500 m off, and a Contact at that figure reaches 798 m |
-| **The dive at the mouth**, from its first second | 72 × 1.6 × 0.3 | 2,125 m | **3.01** | Classification. The plateau has never been heard by the sill before, and the first thing it is heard doing is blowing ballast |
-| The dive, from its fifth second, in the duct | 72 × 1.6 | 2,125 m | 10.0 | Track. Three hulls, then two, at the plateaus' figure |
+| **The dive at the mouth**, from its first second | 72 × 1.6 × 0.3 | 2,250 m | **2.74** | Classification. The plateau has never been heard by the sill before, and the first thing it is heard doing is blowing ballast |
+| The dive, from its fifth second, in the duct | 72 × 1.6 | 2,250 m | 9.14 | Track. Three hulls, then two, at the plateaus' figure |
 | The garden, idling, under kelp | 8 × 0.55 | 673 m | **2.41** | Bearing. The furrow's centre is fifteen metres short of a name — Classification begins at 658 |
 | **The sowing**, on bare rock | 45 × 1.6 | 884 m | **25.5** | Track, every second of the sixty. It hears the seed go in |
 | The sown furrow, idling, after the repaint | 8 × 0.55 | 884 m | 1.6 | Bearing. Sixty seconds ago this ground carried a Track |
@@ -411,7 +414,7 @@ is where a Hollow strikes inside its sphere and a pack closes:
 | A tender idling, 8 | 203 m | 154 m | 208 m | 133 m |
 | Silent, 4.5 | 141 m | 107 m | | |
 | Sowing at 45, 1,125 m from the eastern wall | ratio **16.3** — below Interest | | | |
-| Pinging, 95 × 3 | 1,891 m | **1,434 m** | 1,684 m | 1,077 m |
+| Pinging, 95 × 3 | 1,891 m | **1,434 m** | 1,936 m | 1,238 m |
 
 The pack is 1,500 m west of the Foot's seat and 1,521 m from the mouth, on the Foot's side of
 the layer: it is interested in a dive from 819 m and never in this one. Under kelp a Hollow
@@ -602,9 +605,11 @@ What this mission deliberately does not teach:
   Nothing in this cleft moves without the player; the barge that does is in the yard.
 - **The rim** — mission 7, [mission-second-seeding.md](mission-second-seeding.md): the same
   sounding, the same figures, further down, and without the repaint.
-- **The Seeding ability.** [systems-depth.md](systems-depth.md) §4's 400 m, sixty-second grant is
-  a commander ability with no mechanism behind it, and this document neither builds it nor asks
-  for it (§4, §13). The zone is the conversion, not the stunt.
+- **The Seeding ability.** [systems-depth.md](systems-depth.md) §4's 400 m, sixty-second grant
+  is a commander ability, and the commander-ability row is now built — Marr's, in
+  [mission-convocation.md](mission-convocation.md) §13 — but it grants speed and silence, never a
+  rating, so Anholt's is still nothing but prose and this document neither builds it nor asks for
+  it (§4, §13). The zone is the conversion, not the stunt.
 - **Drift Health carried between missions.** *In Writing* reuses this literal and is
   [campaign.md](campaign.md) §2 rule 5's second concrete pair; the carrying is named in §13 and
   not asked for, exactly as [mission-convocation.md](mission-convocation.md) §11 named the first.
@@ -643,7 +648,8 @@ separate from the map's own ([mission-intake.md](mission-intake.md) §11):
 | --- | --- | --- |
 | `the-foot` | 1500, 0, 1000, 500 | The Kell seed's lift, at cut time zero |
 | `the-furrows` | 1250, 1750, 1500, 750 | *tended* — both furrows, one answer |
-| `second-furrow` | 2250, 1750, 500, 750 | The ground beat; the seed's first step onto the rock |
+| `standing-furrow` | 1250, 1750, 1000, 750 | The 204 PC ground alone, and the rectangle §4's static grant lands on when the row exists (§13). Deliberately not `the-furrows`: a grant across both would rate the second furrow before it is sown and take the four a second out of the sowing, which is the mission |
+| `second-furrow` | 2250, 1750, 500, 750 | The ground beat; the seed's first step onto the rock; the grant the sowing writes |
 
 Where everything is seated, with the depth its ground admits and the rating the seat test
 reads (`missions.test.ts`, "rates every authored hull for the depth it is authored at"):
@@ -829,6 +835,15 @@ nine years without acting on it; and Marr's last line is sentiment stated beside
 one fact, the Consortium's worst insult spent on purpose by the person who will be charged for
 both halves.
 
+**One line bends the register, and it is priced rather than tidied.** Anholt's *hear it a minute
+before anybody says anything about it* is the imperative mood, which [culture.md](culture.md) §3
+calls genuinely rude and the Commune does not use; it sits with Teel apologising in advance and
+Marr's *All of them. Now, please.* as the register at its limit
+([mission-convocation.md](mission-convocation.md) §12). It is Anholt's on purpose. She is the
+one person on this water who has the votes, and the one moment she reaches for an order is the
+moment the thing she was right about is under her hull — which is the whole of what
+[mission-radicals.md](mission-radicals.md) is about. Nobody else in this document uses it once.
+
 ---
 
 ## 13. Scaffold Status
@@ -844,7 +859,7 @@ with the row; the table says which is which.
 | Requirement | Status |
 | --- | --- |
 | The mission format — beats, predicates, registry, private rooms | **Built** (#190). `sound`, `extract`, `survive`, `creature`, `move`, `ground`, `say` and `resolve` cover §8 and §9; four conditional beats cover the seed's step, the repaint and two lines |
-| **A region pressure grant** — the standing furrow holds a PR-2 hull, and the sown one does after the sowing | **Not built, and it is the mission's headline row and the reason it ships doc-first.** The shape is `MissionRegion.pressureBonus?: number` (static — the standing furrow) and `pressureBonus?: number` on the `ground` beat (the sowing writes it), applied as `Pressure.bonus` exactly as the Sounding Spire's aura is (`auras.ts`; `pressure.ts` reads rating plus bonus) and evaporating when a hull leaves the rectangle; and the seat test (`missions.test.ts`, "rates every authored hull") reading `requiredPressureRating(depth)` minus the region's bonus, since today it reads the hull alone. §4 states which mechanism this is — [systems-depth.md](systems-depth.md) §3's Deepbloom conversion as a grant that stays, and not §4's sixty-second ability. **Playable without it to the sowing, and not past it**: with the row absent the sown furrow holds nothing and the night is a crush ledger |
+| **A region pressure grant** — the standing furrow holds a PR-2 hull, and the sown one does after the sowing | **Not built, and it is the mission's headline row and the reason it ships doc-first.** The shape is `MissionRegion.pressureBonus?: number` (static — `standing-furrow`, and not `the-furrows`, or the second furrow would be rated before it is sown) and `pressureBonus?: number` on the `ground` beat (the sowing writes it onto `second-furrow`), applied as `Pressure.bonus` exactly as the Sounding Spire's aura is (`auras.ts`; `pressure.ts` reads rating plus bonus) and evaporating when a hull leaves the rectangle; and the seat test (`missions.test.ts`, "rates every authored hull") reading `requiredPressureRating(depth)` minus the region's bonus, since today it reads the hull alone. §4 states which mechanism this is — [systems-depth.md](systems-depth.md) §3's Deepbloom conversion as a grant that stays, and not §4's sixty-second ability. **Playable without it to the sowing, and not past it**: with the row absent the sown furrow holds nothing and the night is a crush ledger |
 | The cheapest honest approximation, until the row lands | **Built, and dishonest twice, stated.** A `SoundingSpire`-kind `MissionStructure` on the player's party, prebuilt, at 1700, 2125 — the 600 m aura grants +1 PR to the player's hulls inside it (`auras.ts` tests `spire.slot === slot`) and the mission path places any kind on any party (`runtime.ts`, `spawnStructure` with `prebuilt: true`; the faction lock is the build path's). It is active at SIG 80 whenever a tender under it is below its own rating, which at 2,200 m is always, so the garden hums like a Knight structure and hands the observer a Track it should not have (§6); and it is a circle where the zone is a region — x 1,100–2,300, which is why the sowing point is at 2625. There is no approximation at all for the sown furrow, because no beat spawns a structure |
 | **The biome ground beat** — the second furrow turning Kelp Forest | **Built** (#259; `terrain.ts`, `fillGround` writes the cell's PF on the same tick), **and this is the first document to spend it.** The judge's decision is that the repaint is spent by exactly two missions — this one, on a garden, and *The Attending* 6, on a dome — and that [mission-second-seeding.md](mission-second-seeding.md) does not repaint the lip. A 00:00 restatement of this sown furrow on the reused literal ([mission-in-writing.md](mission-in-writing.md) §11) is a restatement, not a spend |
 | **The sowing as a `MissionSounding`** — 250 m, sixty seconds, SIG 45, bow on, a broken hold resetting | **Built** (#275). The figures are the literal's own, as Aptitude's 400 / 20 / 80 are; `holdingSounding` refuses a silent hull, which is §3's price, and `accrueSounding` resets, which is §4's |
@@ -862,8 +877,8 @@ with the row; the table says which is which.
 | **The Furrow as new geography** | **A §1 row, not a code row.** The cleft is authored as a branch of the scar under Anholt's terrace, cited to [world-map.md](world-map.md) §1 and [timeline.md](timeline.md)'s 204 PC entry; [world-map.md](world-map.md) §3's gazetteer should gain the entry when this document merges, under the Plateaus |
 | `souls` | **Documentation** — nothing in the runtime reads it ([mission-thin-water.md](mission-thin-water.md) §13); the epilogue carries sixteen by hand, and *the-day*'s met reading says the number |
 | Cross-mission Drift Health — rule 5's second pair | **Not built**, named here and not asked for: [mission-in-writing.md](mission-in-writing.md) reuses this literal unchanged, exactly as [mission-convocation.md](mission-convocation.md) §11 reused *Tend*'s, and the carrying is its own row of #212 |
-| Progression — the sower's hull and the furrow's count into *In Writing*; which plateaus turned | **Not built** — the same [campaign.md](campaign.md) §11 progression row, with its fourth concrete case: *In Writing* seats the households that stayed below tonight, and authors them whole because nothing carries them |
-| The Seeding ability — 400 m, +1 PR for sixty seconds | **Not built, and deliberately not asked for.** It is a commander ability, and a commander ability has no mechanism ([mission-convocation.md](mission-convocation.md) §13). This document's zone is the §3 conversion and is built by the row above, not by the ability; a document that wants the ability builds on Convocation's shape |
+| Progression — the sower's hull and the furrow's count into *In Writing*; which plateaus turned | **The record is built; this is not.** [campaign.md](campaign.md) §11 now reads the record as shipped (#371): a per-mission history under `echoes.progression`, written once from the `missionOver` payload, keeping the best reading a mission has ever returned. What it keeps is an outcome, and what this row wants is mission-scoped — whether the second furrow was sown, how much hull the sower had left, and which plateaus turned — which is a sibling key beside `missions` in the same record and is **not started**, with the three systems already queued there. Its fourth concrete case: *In Writing* seats the households that stayed below tonight, and authors them whole because nothing carries them |
+| The Seeding ability — 400 m, +1 PR for sixty seconds | **Not built, and deliberately not asked for.** The commander-ability row itself has landed since this document was drafted — `MissionCommanderAbility` (#373), built for Marr's Convocation, which [mission-convocation.md](mission-convocation.md) §13 now records as **Built** — but it carries a point, a radius, a duration, a speed multiplier, a Silent Running immunity, a SIG and one mission-specific flag, and nothing that grants a rating. So Anholt's ability has a slot to sit in and still no mechanism, and this document does not ask for one: its zone is the §3 conversion, built by the region row above. A document that does want the ability adds the grant to Convocation's shape rather than opening a second one |
 | The mix — a garden lit from its own pigment, a dive that carries, water going quiet on a tick | **Not started** ([audio-direction.md](audio-direction.md)). §4's third movement is the half of this mission that only exists in prose |
 | In-mission character speech, heard | Text only, the standing status ([mission-sorrowgate.md](mission-sorrowgate.md) §13) |
 

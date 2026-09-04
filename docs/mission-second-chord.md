@@ -79,9 +79,10 @@ the same fact.
 Nobody here is wrong ([campaign.md](campaign.md) §2 rule 1). The cohort holds the rim and corrects
 what stands into its watch, and is right to. The Order believes it is discourteous not to reply and
 has spent everything it has arriving at the sentence. Two hulls of the plateaus are still on the
-western terraces under a bed, having asked nothing of anyone. And in the Underway, on this same
-tide, a chair is deciding Item Nine ([mission-item-nine.md](mission-item-nine.md)). The Order does
-not know that and the document does not say it.
+western terraces under a bed, having asked nothing of anyone. And somewhere in the Underway this
+week a Board has read the registration of this field into its own record and moved on
+([mission-item-nine.md](mission-item-nine.md) §6, item six). The Order does not know that, nobody
+on this rim mentions it, and the document goes no further.
 
 ---
 
@@ -113,7 +114,7 @@ not a party, and what rises at 16:30 rises from it.
 The one party for everything Directorate is the same finding
 [mission-rim-deposits.md](mission-rim-deposits.md) §2 records: hostility is `Owner.slot` and every
 party is an enemy of every other, so twelve armed Choristers on a slot of their own would open fire
-on the watch standing 250 m from the Chord. The attendants and the lip are safe as separate parties
+on the watch, which their second correction stops 427 m from. The attendants and the lip are safe as separate parties
 because `combat.ts` refuses to auto-acquire a static emitter (§13).
 
 ---
@@ -125,7 +126,7 @@ because `combat.ts` refuses to auto-acquire a static emitter (§13).
 | Cruiser hull, Knight-rigged — the Choirmaster's hull | 1 | SIG 55 idle / 65 live in the cone · 19.25 / 22.75 flank · 5.5 / 6.5 wake · HYD 65 · PR-2 · **unarmed** · 9 souls ([units.md](units.md)) | `the-choirmaster`, role `tender` — the hold's word, and the document says *the Choirmaster's hull* throughout. **Held to 15:30.** She carries the sounding and nothing else |
 | Cruiser hull, Knight-rigged — the Voice | 1 | Identical, armed · 12 souls | `the-voice`, role `escort`. Kalliso's hull: the 900 m gun, and the only thing on the party that out-ranges a Chorister by more than a hundred metres |
 | Corvette hulls, Knight-rigged — the carriers | 2 | SIG 28 cone / 9.8 flank / 2.8 wake · HYD 50 · PR-2 · armed · 5 souls each | `carrier-a`, `carrier-b`, role `carrier`. Each opens the mission with a load of rim crystal already aboard |
-| Corvette hulls, Knight-rigged — the escort | 2 | Identical, role `escort` · 5 souls each | `escort-a` on the lip; `escort-b` **held to 15:30**, beside the Choirmaster, because a tender with no escort inside 600 m does not move |
+| Corvette hulls, Knight-rigged — the escort | 2 | Identical, role `escort` · 5 souls each | `escort-a` on the lip; `escort-b` **held to 15:30**, beside the Choirmaster, because a tender with no escort inside 600 m does not move. The hold is documentation until §13's row lands |
 | Sounding Spire — the lattice | 3 | SIG **30 idle / 80 active** · HYD 45 · 1,800 HP · PR+1 to allied hulls within **600 m**, horizontal ([units.md](units.md)) | `node-one` 3750, 2500 and `node-two` 4900, 2600 at 2,600 m — the raid's, unchanged — and `the-chord` 4800, 3150 at 3,000 m |
 
 Forty-one souls, and the roster still has no Knight hull in it: the party flies Order colours on
@@ -151,8 +152,8 @@ ability quoted at the one number the format can carry: *SIG 100 for the full dur
 ### What the party does not carry
 
 1. **No refit.** The ledger is empty ([mission-the-three.md](mission-the-three.md) §3). Every metre
-   below 1,800 m the Order holds this tide is rented from a structure, and at sixteen minutes two
-   thirds of the rent stops being paid.
+   from 1,800 m down that the Order holds this tide is rented from a structure, and at sixteen
+   minutes two thirds of the rent stops being paid.
 2. **No construction.** Locked: *three nodes stand; the ledger is empty.* There is nothing left to
    raise and nothing to raise it with.
 3. **The array, carried and unfenced.** Active sonar has been in the Order's hands since *Nineteen*
@@ -214,6 +215,17 @@ nobody: *Transmitted. The reply is not entered here.* or the Chord standing unst
 Nine's shape kept from the Order's side ([mission-item-nine.md](mission-item-nine.md) §8) and it is
 a property of the runtime rather than of anybody's restraint (§13).
 
+**The answer the mission does not hide, and the fight it actually is.** Six Choristers stopped
+200–412 m from the Chord are 20 damage a second each inside 450 m — 120 a second against 1,800 HP,
+which is fifteen seconds. Four Knight guns on the lip (the Voice at 60 a second out to 900 m, three
+Corvette hulls at 41.7 each out to 550) are 185 a second against a wave's 1,200 HP, which is six and
+a half. So a wave answered the instant it stands costs the node about 780 points and a wave answered
+while it is still *walking* costs it nothing at all, because a moving scripted hull holds its fire
+(`combat.ts`'s `busy`). Two waves answered late is 1,560 of 1,800 and the Chord ends the tide with
+two hundred and forty. **A Knight hull that puts itself nearer than the node is corrected instead**,
+which is [mission-rim-deposits.md](mission-rim-deposits.md) §6's geometry one tide on and 400 m
+lower.
+
 ### The SIG budget
 
 **SIG budget: 100** — the transmission's own figure, and the first budget in the bible at the
@@ -225,7 +237,7 @@ exceed it, and the fact that the scale runs out is the point: the Order has arri
 sentence it is able to say.
 
 Playtested against two adversaries. The player who tries to play the tone early finds the row is
-not scored before 16:00, the carrier is held to 15:30, and the sounding point is 3,413 m from where
+not scored before 16:00, the carrier is held to 15:30, and the sounding point is 3,715 m from where
 she is sitting. And the player who holds the lip by standing on it and trading with the cohort
 under the Chord finds that the escort is what brings the Choirmaster down, and that a party with
 nothing left at 15:30 has an instrument, a node, and nobody to play it.
@@ -589,7 +601,7 @@ Everything seated, and the depth each thing is admitted at:
 | --- | --- | --- | --- |
 | 2 Cruiser hulls, 4 Corvette hulls — the Order | 3000, 300 · 2850, 450 · 2900, 600 · 3100, 600 · 2700, 450 · 3300, 450 | 1,400 m | Staging floor 1,500; Mid-Water, PR-2, no refit |
 | 3 Sounding Spires — the lattice | 3750, 2500 · 4900, 2600 · 4800, 3150 | 2,600 m, 2,600 m, 3,000 m | Terrace floor 2,600 and lip floor 3,100. A structure carries no `crushable` component: `spawnUnit` attaches it and `spawnStructure` does not |
-| 12 Choristers, seated, then twice corrected | x 5400–5900 step 100 at y 3200 and 3450; musters at 5300–5400 × 3350–3700; stops at 5000–5200 × 3050–3350 | 3,000 m | Lip floor 3,100; `pressureRating: 3` authored per hull (§13) |
+| 12 Choristers, seated, twice corrected, and walked at 16:00 | x 5400–5900 step 100 at y 3200 and 3450; musters at 5300–5400 × 3350–3700; stops at 5000–5200 × 3050–3350; the Collapse's twelve seconds 480 m east of each stop, the farthest at 5680, 3250 | 3,000 m | Lip floor 3,100 everywhere, and every point inside the chart; `pressureRating: 3` authored per hull (§13) |
 | 2 + 4 Abyssal Submersibles, and the Cantor | 4600, 3300 · 4750, 3350; 5500–5800 at y 3650; the dome at 5000, 3400 | 3,000 m | Lip floor 3,100; PR-3 on the hull |
 | 2 Light Scouts and the bed | 1200, 2050 · 1350, 2100; the Veil at 1250, 3250 | 2,100 m; 3,000 m | Terrace floor 2,600 and lip floor 3,100; the scouts PR-3 by refit, as Prospect authors them |
 | 2 emitters — the attendants | 2800, 3400 and 4100, 3500 | 3,050 m | Lip floor 3,100. Emitters are not hulls and `DEPTH.MAX_M` does not bind them |
@@ -804,7 +816,7 @@ absence — a reply — it does not want filled.
 - **[mission-first-arrival.md](mission-first-arrival.md)** — D+1: the Directorate's seats, the dome, the 9th and the twelve on the eastern lip, taken whole
 - **[mission-prospect.md](mission-prospect.md)** — the map, the watch's legs, the attendants and the basin's riser, all inherited to the metre
 - **[mission-second-seeding.md](mission-second-seeding.md)** — the bed on the western lip, heard at Bearing by a Voice that goes west and not discussed
-- **[mission-item-nine.md](mission-item-nine.md)** — one close at its own length, two records unranked, and a sentence that cannot be untransmitted, pressed on the same tide
+- **[mission-item-nine.md](mission-item-nine.md)** — one close at its own length, two records unranked, and a sentence that cannot be untransmitted, pressed in the same week
 - **[mission-aptitude.md](mission-aptitude.md)** — the sounding: the campaign's first verb is its last, and a tone you interrupt is a tone you have not played
 - **[mission-standing-wave.md](mission-standing-wave.md)** — the lattice as paired nodes, and a door that only shuts one way, turned here on the Order's own instrument
 - **[mission-nineteen.md](mission-nineteen.md)** — the named hulls, the discourteous button, and nineteen counted correctly
