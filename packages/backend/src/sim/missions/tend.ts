@@ -37,6 +37,7 @@
 import {
   Faction,
   FaunaSpecies,
+  MARR_PLATEAU_FILED,
   MissionOutcome,
   ObjectiveStatus,
   SEEDING_TEND_HEADER,
@@ -191,6 +192,11 @@ export const SEEDING_TEND: MissionDefinition = {
     ],
     filedReading:
       "The sweep heard us. Nobody was hurt, and we'd rather you didn't learn to think of it that way. A ledger is patient. We will be meeting that entry again.",
+    // §8's "we will be meeting that entry again", made a thing two later
+    // missions can read — docs/campaign.md §1. Latched with the reading and
+    // never before it, so the id the client stores is the sentence the player
+    // has already been shown.
+    scene: MARR_PLATEAU_FILED,
     note: 'What its instruments hear, its ledgers keep',
   },
 

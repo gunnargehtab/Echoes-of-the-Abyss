@@ -549,6 +549,36 @@ already lost the argument the campaign is making.
 > There's a bell for all of this. Every row at once. It exists. Nobody has rung it, and I've had
 > thirty years to. We'd rather come home without ringing it. We're saying *rather*.
 
+### Already seen: a filed plateau
+
+[campaign.md](campaign.md) §1's rule again, on the same scene and from the other end of the
+plateau. A player who came here from a *Tend* the sweep filed reads the briefing below instead,
+and **the mission is byte-for-byte the mission** — the walk, the ceiling, the rows, the heavy
+over the lip and the bell are untouched.
+
+The changed paragraph is the third. The assertion read into the water at 03:30 says *this survey
+year*, and a filed *Tend* is where that survey year's figures came from: the sweep took them off
+these rows while the gardens were working. So Marr arrives knowing not just that the concern is
+coming but that what they read will be *accurate*, and that its accuracy is the plateau's own
+doing.
+
+> The concern is coming up the drop this morning to read something at us, and we know roughly
+> what. They have had our numbers since the sweep came up the lane and heard the gardens working,
+> so when they say *this survey year* they will mean ours, and the figures will be right. That is
+> the part worth sitting with before they get here. It isn't a claim they are inventing on the
+> way up. We think they mean to stand on the rows while they read it. They won't fire on a garden
+> — a garden's worth nothing to them burnt, and we'd rather you heard that from us than worked it
+> out.
+
+**Where the rule stops, stated because §13 asked for the other side of it.** An earlier draft of
+this document's scaffold row wanted the assertion at 03:30 to change as well — Anholt's figures
+in the concern's mouth, read differently to a plateau that had been surveyed. §1 refuses that,
+and the refusal is the rule rather than a limitation of the build: a beat spoken inside the
+mission is the mission, and a variant that moved it would make two players' *Convocations*
+different scenarios wearing one name. The knowledge still reaches the player — it reaches them
+before the drop, from Ysolde, where a plateau's knowledge belongs — and the assertion is heard by
+both players identically, which is what makes it land differently for one of them.
+
 ### Objective readings, in play
 
 The Commune cannot command, so its objectives arrive as statements of what the tide holds:
@@ -634,7 +664,7 @@ all three are somebody else's (see below).
 | **Emergency convocation's second half** — the bell collapsing the remaining circuit | **Built** (#373), and built with the first half rather than after it, as this row required. `collapsesWalk` rings every row's bell and turns every remaining row together over one hold instead of in sequence; the walk stops returning altered from that tick, because a circuit that restarted after an emergency convocation would be the mission taking back the one thing it gave |
 | The Holdfast held as a failure state | **Built** (#373), and it was nothing new, exactly as predicted: `MissionHold` is a region, a duration and an objective, and `foreignPresence` answers it and the walk's stall with the same call. One thing the row did not anticipate — campaign.md §10's telegraph is measured between two authored ticks and a hold has one, so the rule is paid out of the hold's own sixty seconds instead, and `missions.test.ts` holds every closing hold to `MISSION.FAILURE_TELEGRAPH_S` |
 | **Cross-mission Drift Health** — §2 rule 5's first concrete pair | **Not built**, named here and not asked for. This document chooses the map that makes the rule buildable (§11) and stops there; it is its own row of #212 |
-| Progression → this mission's briefing variant | **Not built** — the same [campaign.md](campaign.md) §11 progression row, now with its third concrete case: a plateau *filed* in *Tend* is a plateau the assertion arrives at with a survey year's figures already in hand, which should change what is read at 03:30 and never the mission |
+| Progression → this mission's briefing variant | **Built** (#378), and it is the row that found where §1's rule stops. The briefing half is §12's *Already seen* section, transcribed into `SEEDING_CONVOCATION_HEADER.briefingVariants` and selected client-side off the seen-scene set: a plateau *filed* in *Tend* is a plateau whose Tidespeaker already knows the survey year's figures are hers, and says so before the drop. The half this row originally asked for — the assertion at 03:30 reading differently — is **refused by [campaign.md](campaign.md) §1**, not deferred: a line spoken inside the mission is the mission. §12 argues that out at the point where the two readings meet |
 | In-mission character speech, heard | Text only, the standing status ([mission-sorrowgate.md](mission-sorrowgate.md) §13) |
 
 ### One question this document does not settle

@@ -14,10 +14,20 @@
  * its own to the court's register.
  */
 
-import { missionHeaderById } from '@echoes/shared';
+import { missionBriefing, missionHeaderById } from '@echoes/shared';
 
 export interface BriefingScreenProps {
   missionId: string;
+  /**
+   * The scenes this player has already witnessed — docs/campaign.md §1.
+   *
+   * Passed in rather than read from the store inside this component, for the
+   * reason the campaign board's `hasPlayed` is passed in: what a screen reads
+   * of the player's history should be visible from the shell that mounts it.
+   * An empty set is the honest default and the only one a caller with no
+   * record can give, and it selects the authored briefing.
+   */
+  seenScenes: ReadonlySet<string>;
   /** Commit: join the room and play it. */
   onDescend(): void;
   onBack(): void;
@@ -28,7 +38,7 @@ function minutes([lowS, highS]: readonly [number, number]): string {
   return `${Math.round(lowS / 60)}–${Math.round(highS / 60)} min`;
 }
 
-export function BriefingScreen({ missionId, onDescend, onBack }: BriefingScreenProps) {
+export function BriefingScreen({ missionId, seenScenes, onDescend, onBack }: BriefingScreenProps) {
   const mission = missionHeaderById(missionId);
 
   // A mission id that resolves to nothing is a broken link, not a mission with
@@ -52,6 +62,12 @@ export function BriefingScreen({ missionId, onDescend, onBack }: BriefingScreenP
     );
   }
 
+  // The variant, if this player has already seen the scene one is written for
+  // (docs/campaign.md §1). The screen does not say which it is showing and
+  // there is no marking on it: a briefing the player has earned a different
+  // reading of should read as the briefing, not as an unlockable.
+  const briefing = missionBriefing(mission, seenScenes);
+
   return (
     <div className="menu-screen" role="dialog" aria-label="Briefing">
       <div className="menu-panel">
@@ -65,13 +81,13 @@ export function BriefingScreen({ missionId, onDescend, onBack }: BriefingScreenP
 
         <section className="briefing" aria-label="Briefing">
           <header className="briefing-title">THE RECORD</header>
-          {mission.briefing === null ? (
+          {briefing === null ? (
             // A withheld briefing is a per-mission decision, not an omission —
             // for a mission that is only winnable as an evacuation, the
             // briefing can itself be the leak. The room reads it on arrival.
             <p className="briefing-withheld">This briefing is read on arrival.</p>
           ) : (
-            mission.briefing.map((paragraph, index) => (
+            briefing.map((paragraph, index) => (
               // Paragraph order is the authored order and paragraphs are not
               // otherwise identified, so the index is genuinely the key here.
               <p className="briefing-line" key={index}>
