@@ -1,7 +1,7 @@
 # The Second Chord 4 — Conclave
 
-> The fourth mission of the Knight campaign ([campaign.md](campaign.md) §7), specified. One of the
-> fourteen documents that complete the bible's campaign, written to the pattern
+> The fourth mission of the Knight campaign ([campaign.md](campaign.md) §7), specified and since
+> built. One of the fourteen documents that complete the bible's campaign, written to the pattern
 > [mission-sorrowgate.md](mission-sorrowgate.md) sets and the documents after it continue:
 > everything here is authored — the forces, the water, the beats, the numbers and the text — and
 > code transcribes this document.
@@ -286,13 +286,15 @@ obstruct* — and the Board is buying crystal it can neither make nor buy
 files what the column hears; he is the man who logged the Order as *the second fault this year*, and
 the fault has since been filed as ground.
 
-The party's seat is 4,494 m from the escort, and a Cruiser idling at 55 in 0.70 water is a contact to
-the Voice from **3,824 m**, so **the column is not audible at 00:00** — deliberate, and not a hole.
-What the Third has at the top of the tide is a writ on an open channel and Vrey's arithmetic. The
-first thing that crosses its ear is the escort's *walk* — a Cruiser under way at 65 is a contact from
-4,245 m, so it is audible from about 03:07 and inaudible again the moment it stands, at 3,905 m
-against an idle Cruiser's 3,824. Eleven seconds, and then the water is empty again. What the Third
-*knows* long before that it knows without hearing anything, because the lattice is its own (§7).
+The party's seat is 4,494 m from the escort, and a Cruiser idling at 55 in 0.70 water is a contact
+to the Voice from **3,824 m**, so **the column is not audible at 00:00** — deliberate, and not a
+hole. What the Third has at the top of the tide is a writ on an open channel and Vrey's arithmetic.
+The first thing that crosses its ear is the cutters' guns at about 02:40, two of their three Bass
+stops below being inside the Voice's ear while they fire (§7). The first *movement* it hears is the
+escort's *walk* — a Cruiser under way at 65 is a contact from 4,245 m, so it is audible from about
+03:07 and inaudible again the moment it stands, at 3,905 m against an idle Cruiser's 3,824. Eleven
+seconds, and then the water is empty again. What the Third *knows* long before that it knows without
+hearing anything, because the lattice is its own (§7).
 
 **The legs, and their real arrival times.** The column stops to work and only fires when stopped, so
 the escort walks half a minute behind the cutters and a standing Cruiser covers every walk. Each
@@ -386,20 +388,24 @@ names three formations and not a search.
 
 - **The writ, at 00:30.** Bramm, on the works channel, in the concern's own register. It is the
   telegraph, and it is a document rather than an alarm.
-- **The escort's walk, from about 03:07.** The one thing that crosses the Voice's ear in the first
-  five minutes, and it is a smudge: a Cruiser under way at 65 is a contact from **4,245 m**, so it is
-  Tier 1 for the eleven seconds it takes to close on the Bass and gone the instant it stands — 3,905 m
-  against an idle Cruiser's 3,824. Its second walk, to the Drone at 05:45, buys twenty-nine seconds
-  of the same smudge and ends outside the ear at 4,326 m.
+- **The escort's walk, from about 03:07.** The one *movement* the Voice hears in the first five
+  minutes, because a Corvette under way at 28 is a contact only from 2,508 m and the cutters work
+  from 3,590 m out. It is a smudge: a Cruiser under way at 65 is a contact from **4,245 m**, so it
+  is Tier 1 for the eleven seconds it takes to close on the Bass and gone the instant it stands —
+  3,905 m against an idle Cruiser's 3,824. Its second walk, to the Drone at 05:45, buys twenty-nine
+  seconds of the same smudge and ends outside the ear at 4,327 m.
 - **The column's guns, which are figures rather than events.** The escort firing at 85 is a contact
   to the Voice from **5,020 m** and a classification from 2,831; the cutters firing at 53 are a
-  contact from 3,737 m, and their nearest Bass stop is 3,775 m from the party's seat. **Thirty-eight
-  metres outside it** — so a party that has not moved hears nothing at 02:40 and a party that has
-  moved one hull's length west hears the lattice being cut. And the loudest of those figures is one
-  the player has to buy: three cutters put a formation down in 14.4 seconds and the escort is ordered
-  half a minute behind them (§5), so **unopposed the escort never fires at all**. It arrives at the
-  Bass twenty-three seconds after the Bass has gone, and it fires when somebody stands in front of
-  it.
+  contact from **3,737 m**, and their three Bass stops are 3,590 m, 3,699 m and 3,775 m from the
+  party's seat (§5). **Two of the three are inside that ear and only the farthest is outside it, by
+  thirty-eight metres** — so a party that has not moved does hear the cutters at work from 02:40,
+  and hears them as a directionless Tier 1 smudge and nothing more: a bearing on a cutter at 53
+  wants 2,900 m and a classification 2,108, and the nearest stop is outside both. What names the
+  Bass is not the ear at all but the player's own panel, below. And the loudest of those figures is
+  one the player has to buy: three cutters put a formation down in 14.4 seconds and the escort is
+  ordered half a minute behind them (§5), so **unopposed the escort never fires at all**. It arrives
+  at the Bass twenty-three seconds after the Bass has gone, and it fires when somebody stands in
+  front of it.
 - **A formation coming apart, and the fact that the Third does not have to hear it.** A destroyed
   structure lays an Echo Mark at SIG 18 for 180 seconds ([systems-echo.md](systems-echo.md) §7) — a
   contact from 1,903 m, a classification from 1,073 — and it sits there three minutes saying
@@ -567,9 +573,9 @@ party that intervenes moves every one of them.
 | 00:00–02:30 | **The water is empty.** The column is 4,494 m out and 670 m outside the Voice's own threshold. The only thing the Third has is a channel |
 | **00:30** | **Surveyor Ade Bramm, on the works channel.** The writ, filed and read out (§12) |
 | 02:30 | **Move ×4** — the hold and three cutters to the Bass. Cutters standing ~02:40–02:43, the hold ~02:57 |
-| *[02:43–02:55]* | *[The Bass, cut. Three cutters at 125 a second against 1,800 hit points, thirty-eight metres outside the Third's hearing]* |
+| *[02:43–02:55]* | *[The Bass, cut. Three cutters at 125 a second against 1,800 hit points, two of the three inside the Third's hearing while they fire and the farthest thirty-eight metres outside it (§7)]* |
 | 03:00 | **Move** — the escort follows to the Bass, standing ~03:18 |
-| *[03:07–03:18]* | *[**The only thing that crosses the Voice's ear in the first five minutes.** The escort under way at 65, inside 4,245 m for eleven seconds, and inaudible again the moment it stands: 3,905 m against an idle Cruiser's 3,824. Unopposed it has nothing to fire at — the Bass went twenty-three seconds before it arrived]* |
+| *[03:07–03:18]* | *[**The only hull movement the Voice hears in the first five minutes.** The escort under way at 65, inside 4,245 m for eleven seconds, and inaudible again the moment it stands: 3,905 m against an idle Cruiser's 3,824. Unopposed it has nothing to fire at — the Bass went twenty-three seconds before it arrived]* |
 | 05:00 | **Move ×4** — the hold and cutters to the Drone. Cutters standing ~05:18–05:21, the hold ~05:42 |
 | *[05:35]* | *[The Drone, cut, if nothing has stood in front of it]* |
 | 05:45 | **Move** — the escort to the Drone, standing ~06:19 |
@@ -807,16 +813,16 @@ re-derive §4's damage table, §5's arrival times and §6's distances from the s
 than copying them, and that drive the keystone rest against the real runtime rather than reading it
 off the literal. **The transcription moved nothing in this document's arithmetic** — every figure
 §3 to §9 quotes came back the same out of the model, which is what a document of record is for. It
-found one defect in the document's *prose*, and the row that carries it reads *a finding, not a
-request*. What is left is a design agenda rather than a work list: the predicate
-[mission-standing-wave.md](mission-standing-wave.md) §13 asked for first and this document is the
-second and simpler customer for; the transmission [mission-the-dome.md](mission-the-dome.md) §13
-found and left unasked-for; four findings made against the engine; and the absences this document
-declines to ask for. **Every one of the eight rows that read Not built before the build still
-reads Not built**, and a ninth joined them by splitting: two are things this document asks the
-format for, three are absences it refuses on purpose, three sit in the progression record and are
-about what carries between tides, and one is the propagation model. A tenth reads *Not written*,
-and it is [units.md](units.md)'s.
+found one defect in the document's *prose*, since corrected in §5 and §7, and the row that carries
+it records the correction rather than owing it. What is left is a design agenda rather than a work
+list: the predicate [mission-standing-wave.md](mission-standing-wave.md) §13 asked for first and
+this document is the second and simpler customer for; the transmission
+[mission-the-dome.md](mission-the-dome.md) §13 found and left unasked-for; four findings made
+against the engine; and the absences this document declines to ask for. **Every one of the eight
+rows that read Not built before the build still reads Not built**, and a ninth joined them by
+splitting: two are things this document asks the format for, three are absences it refuses on
+purpose, three sit in the progression record and are about what carries between tides, and one is
+the propagation model. A tenth reads *Not written*, and it is [units.md](units.md)'s.
 
 | Requirement | Status |
 | --- | --- |
@@ -836,7 +842,7 @@ and it is [units.md](units.md)'s.
 | **A condition on another party's losses** | **Not built, and this document does not ask.** Every predicate is a query over the observer's own force, so *the column has lost a cutter* is inexpressible by construction. Kalliso's 09:30 line is therefore on the clock and is written to be true either way (§9), and the test pins it to `T(9, 30)` for that reason rather than for tidiness |
 | **`the-quiet` is a reading and not a rung** | **A decision, stated so it can be argued with, and shipped as stated.** `quiet` is standing and re-derived every tick, so as a terminal row it would flip the whole outcome on one tick's SIG — a Corvette firing at 38 in the last second would demote a Complete tide to Partial. It is authored non-terminal with a `reading`, which the neutrality guard ([mission-intake.md](mission-intake.md) §5) keeps out of the ladder entirely. The Order reads a courtesy out; it does not rank one against a voice. **The decision costs the deliberate case as well as the incidental one, and the row below is where that is stated**: the same guard that spares a Corvette's accidental 38 spares a ping fired on purpose at 14:00, which is neither a courtesy nor incidental. The document keeps the decision and declines to hide what it costs |
 | **No predicate reads the player's own transmissions** | **A finding, and the one thing this mission's ladder cannot price.** The union asks about position, hulls alive, emitters attended, soundings completed, rows walked, the loudest hull, elapsed ticks, exposure and the stockpile, and about nothing the player's own force *emits* ([mission-the-dome.md](mission-the-dome.md) §9, with §13 there declining to ask for the fix). So the ping [Nineteen](mission-nineteen.md) handed over cannot be latched against `the-rest` the way a sounding is — `sound` counts the authored `soundings` and no other emission (§8) — and the only row it touches is `the-quiet`, which the row above keeps out of the ladder. **So a player who presses SIG 95 omnidirectional at 14:00 — the loudest available breach of an interval, in the mission whose whole subject is being heard at one — still scores Complete**, and the document says so rather than letting a reader assume the ceiling caught it. **And it is thinner than merely unranked**: `quiet` is standing, and the ping's 95 lasts three seconds, so the row goes Pending and comes back Met before the close, and only a ping inside the last three seconds of the tide is still showing at 14:30. Nor does a conditional beat reach it — a beat fires on a predicate being **met**, never on one being breached (`conditional.ts`), so *the party was loud at fourteen* is not a condition the format has, and a beat cannot fail `the-quiet` in any case: it refuses to fail a row that is already `Met`, which `the-quiet` is at every tick the party has not just pinged. **What would close it** is the Dome's own shape — `{ kind: 'transmit'; count: number }` over the player's own pings — spent as a condition rather than as a row, against a second objective built like `the-rest`: an `endure` run to the close, Pending until it comes due, set **Failed** by the first transmission. That is this mission's existing machinery pointed at its other refusal, one predicate away, and a latched `Failed` does not flip back — so it could be a rung without the objection the row above makes to `quiet`. **Accepted, not built, and not fatal**: what the ping costs is carried in the Order's register instead — the ceiling is said out loud in the briefing, again in the readings and a third time at 13:30, and Sull is listening at fourteen whatever the panel scores. The lock list is where a reader will look for the alternative, and it is not there on purpose: `activeSonar` is unlocked in the literal and asserted unlocked, because it was handed over and is not taken back |
-| **§7 reads the farthest Bass stop as the nearest** | **A finding, not a request**, and the only place the transcription contradicted the document. §7 says the cutters "firing at 53 are a contact from 3,737 m, and their nearest Bass stop is 3,775 m from the party's seat. Thirty-eight metres outside it — so a party that has not moved hears nothing at 02:40." From the seat at 4,500, 500 the three stops §5 authors are **3,590 m, 3,699 m and 3,775 m**: 3,775 is the *farthest* of them, two of the three are inside the Voice's ear, and a party that has not moved does hear the Bass being cut. **§5's stops are the authored fact and the literal transcribes them unchanged** — the fix belongs in §7's inference and not in the water — and the error runs toward a *louder* telegraph than the document claims rather than a quieter one, so nothing downstream of it is unsafe: §8's telegraph argument already stood on the writ at 00:30 and on the Bass's own hull points falling on the player's own panel from 02:40, neither of which needs an ear. Pinned by test so the correction cannot be lost again. A second, smaller one beside it: §7's 4,326 m for the escort's second stop is 4,326.7 truncated where every other distance in §5 and §7 rounds to nearest, and the inequality it is quoted for is unaffected |
+| **§7 read the farthest Bass stop as the nearest — corrected** | **A finding the transcription made against the document, the only place the two disagreed, and §7 now reads the other way.** §7 used to say the cutters "firing at 53 are a contact from 3,737 m, and their nearest Bass stop is 3,775 m from the party's seat. Thirty-eight metres outside it — so a party that has not moved hears nothing at 02:40." From the seat at 4,500, 500 the three stops §5 authors are **3,590 m, 3,699 m and 3,775 m**: 3,775 is the *farthest* of them, two of the three are inside the Voice's ear, and a party that has not moved does hear the Bass being cut. **§5's stops were the authored fact and the literal transcribes them unchanged** — the fix belonged in §7's inference and not in the water — and the error ran toward a *louder* telegraph than the document claimed rather than a quieter one, so nothing downstream of it was unsafe: §8's telegraph argument already stood on the writ at 00:30 and on the Bass's own hull points falling on the player's own panel from 02:40, neither of which needs an ear. §7 now prints all three stops and gives the ear a directionless Tier 1 smudge and nothing more, and §5's *first thing that crosses its ear* moved off the escort's walk onto the guns, with §9's two bracketed rows behind it. Pinned by test so the correction cannot be lost again. A second, smaller one beside it, corrected in the same pass: §7's 4,326 m for the escort's second stop was 4,326.7 truncated where every other distance in §5 and §7 rounds to nearest, and now reads **4,327 m**; the inequality it is quoted for is unaffected |
 | **Two ways to lose, one Lost epilogue** | **Built, and a constraint rather than a want.** `epilogue` is `Record<MissionOutcome, string>` — three strings — so §8's four-row Results table is three rungs, and the difference between *Drift* and *Called* is carried by the two keystones' own unmet readings printing beneath a Lost line true of both. The literal ships seven terminal rows with exactly two keystones, `the-drone-stood` and `the-rest`, and the objectives are authored in §8's order because the readings print in it. [mission-aptitude.md](mission-aptitude.md) §8 has the same shape for the same reason and this document copies it deliberately |
 | **Torpedoes locked** | **Built** — `AbilityLock`, ability `'torpedoes'`, denied for the player's slot and enforced server-side, with the reason attached for the HUD ([ui-ux.md](ui-ux.md) §7). The reason is §3's arithmetic and not a mood: twelve shots at 700 damage against 4,500 hull points would make [campaign.md](campaign.md) §2 rule 4's label false. Two locks ship and not one — `construction` carries §3's second sentence, *nothing is raised in a house's water on the tide of an interval*, and it costs nothing because the Order builds nothing here. Neither `activeSonar` nor `weapons` is locked, and the test says so, because the fight is available and lost rather than fenced off |
 | **A commander ability** | **Not needed, not asked for, and now settled by fact** — `commanderAbility` is `undefined` in the literal and the test asserts it. The one act this mission is about, calling a conclave, is a `MissionSounding`, which ships. The campaign's ability rows belong to [The Second Chord](mission-second-chord.md), and this document does not open a second grant mechanism beside the one [mission-convocation.md](mission-convocation.md) §13 asked for and has since been given — `MissionCommanderAbility` shipped with that mission (#373). What it carries is a speed multiplier, a Silent Running immunity and a flag that collapses a walk, so it could not have struck a chord even if this document had wanted it to; declining it costs nothing and is the honest entry |
