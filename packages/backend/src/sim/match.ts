@@ -163,6 +163,16 @@ export interface MatchOptions {
    * replay as an empty map.
    */
   mission?: MissionDefinition;
+  /**
+   * Start the Drift from an earlier mission's close on this map rather than
+   * from the biome defaults — docs/campaign.md §2 rule 5 (#379).
+   *
+   * Already bounded by `validateDriftGrid` when it gets here; the room does
+   * that at the trust boundary, not the sim. Installed in the constructor for
+   * `mission`'s reason: a replay of a carried match has to carry the same
+   * grid, and a grid seeded room-side would replay as a fresh map.
+   */
+  driftHealth?: readonly number[];
 }
 
 const FIXED_DT = 1 / SIM.TICK_HZ;
@@ -295,13 +305,18 @@ export class Match {
     this.map = map;
     this.seed = options.seed ?? randomSeed();
     this.world = createSimWorld(options.terrain ?? terrainFor(map), FIXED_DT, this.seed);
+    // Before anything reads the grid: `seedFauna` places herds against
+    // `spawnsAllowed`, and a carried Failing cell has to be Failing first.
+    // One-time, off the tick path — the Echo budget never sees it.
+    if (options.driftHealth !== undefined) this.world.drift.seed(options.driftHealth);
     this.recorder =
       options.record === true
         ? new ReplayRecorder(
             this.seed,
             map.id,
             options.fauna !== false,
-            options.mission?.id ?? null
+            options.mission?.id ?? null,
+            options.driftHealth
           )
         : null;
     this.seedResourceNodes();

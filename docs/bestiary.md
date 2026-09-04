@@ -225,7 +225,7 @@ Every map region carries a **Drift Health** value, 0–100, starting between 70 
 
 A dead region is quieter, more legible, and worth less to everyone — which means **the Commune loses their concealment, the Directorate loses their income, and the Consortium barely notices.** That asymmetry is deliberate: environmental collapse in this game is not a moral event with a lecture attached, it is a strategic act that helps exactly one faction and is available to all four.
 
-In campaign play, Drift Health persists between missions on the same map ([campaign.md](campaign.md)).
+In campaign play, Drift Health persists between missions on the same map ([campaign.md](campaign.md)), healed across the gap by one flat `DRIFT.CARRY_RECOVERY` and never past a fresh map's start.
 
 ---
 

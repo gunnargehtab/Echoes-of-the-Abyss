@@ -266,6 +266,14 @@ export interface ConnectOptions {
    */
   missionId?: string;
   /**
+   * The Drift Health grid to seed a mission's map from — the last close on
+   * that map, as the progression record kept it (docs/campaign.md §2 rule 5;
+   * #379). Sent only with a `missionId`, because only a mission carries, and
+   * only when this client creates the room. The caller resolves it: this
+   * client knows rooms, not records.
+   */
+  driftHealth?: readonly number[];
+  /**
    * Whether a held seat should be redeemed. Omitted means yes — a reload is a
    * disconnection like any other. Explicitly false abandons the seat first:
    * the shell's "Solo game" must start a new match, not resurrect an old one.
@@ -349,6 +357,11 @@ export class GameClient {
         mapId,
         missionId: wanted,
         ...(options.create === undefined ? {} : { private: options.create === 'private' }),
+        // Only under a mission: a skirmish room handed a grid would ignore it,
+        // and the key is better absent than ignored.
+        ...(wanted === '' || options.driftHealth === undefined
+          ? {}
+          : { driftHealth: [...options.driftHealth] }),
       };
       // `create` makes a room of its own rather than looking for one. Quick
       // match keeps `joinOrCreate` — picking a map is picking a queue, and that

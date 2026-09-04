@@ -32,7 +32,7 @@ import { MissionLog } from './MissionLog.tsx';
 import { MissionPanel } from './MissionPanel.tsx';
 import { MissionResult } from './MissionResult.tsx';
 import { AudioEngine, dbToGain } from '../audio/engine.ts';
-import { recordMissionResult } from '../progression/store.ts';
+import { driftHealthFor, recordMissionResult } from '../progression/store.ts';
 import {
   GameClient,
   type ConnectionStatus,
@@ -473,7 +473,21 @@ export function GameCanvas({
       unsubscribeSettings = subscribeSettings(applySettings);
 
       clientRef.current = client;
-      await client.connect({ name: playerName, mapId, missionId, roomId, create, resume });
+      // The other half of the progression record's one write above: the grid
+      // the last mission on this map left, presented to the room that seeds
+      // the next (docs/campaign.md §2 rule 5). `mapId` is the mission's own
+      // map here — the shell resolves it through the public catalogue — and
+      // the record is read at connect time and nowhere else, so nothing the
+      // player sees before the drop can say the plateau is quieter than it was.
+      await client.connect({
+        name: playerName,
+        mapId,
+        missionId,
+        roomId,
+        create,
+        resume,
+        driftHealth: missionId === undefined ? undefined : driftHealthFor(mapId),
+      });
       setSessionId(client.sessionId);
       setJoinedRoomId(client.roomId);
     };

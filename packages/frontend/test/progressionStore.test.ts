@@ -11,8 +11,15 @@
  */
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { MARR_PLATEAU_FILED, MissionOutcome, type MissionResultPayload } from '@echoes/shared';
 import {
+  DRIFT,
+  MARR_PLATEAU_FILED,
+  MissionOutcome,
+  missionHeaderById,
+  type MissionResultPayload,
+} from '@echoes/shared';
+import {
+  driftHealthFor,
   emptyProgression,
   hasPlayed,
   isMissionUnlocked,
@@ -272,5 +279,124 @@ describe('the seen-scene set (#378)', () => {
       })
     );
     assert.deepEqual(loadProgression().scenes, { [MARR_PLATEAU_FILED]: true });
+  });
+});
+
+describe('the per-map Drift grid (#379)', () => {
+  const CELLS = DRIFT.HEALTH_REGIONS ** 2;
+
+  /** A fresh grid with one cell as the last match left it. */
+  function grid(cell: number, value: number): number[] {
+    const out = new Array<number>(CELLS).fill(DRIFT.HEALTH_START);
+    out[cell] = value;
+    return out;
+  }
+
+  /** A `missionOver` payload carrying the map as the mission closed on it. */
+  function closed(missionId: string, driftHealth?: readonly number[]): MissionResultPayload {
+    return { ...result(missionId, MissionOutcome.Complete), driftHealth };
+  }
+
+  let backing: Map<string, string>;
+
+  beforeEach(() => {
+    backing = installStorage();
+  });
+
+  afterEach(() => {
+    delete (globalThis as { localStorage?: unknown }).localStorage;
+  });
+
+  it('remembers no map on a first boot', () => {
+    assert.deepEqual(emptyProgression().drift, {});
+    assert.equal(driftHealthFor('marr-plateau'), undefined);
+  });
+
+  it('keeps the grid a conclusion carries under the map, not the mission', () => {
+    recordMissionResult(closed('seeding-tend', grid(6, 20)));
+    assert.deepEqual(driftHealthFor('marr-plateau'), grid(6, 20));
+    assert.equal(driftHealthFor('seeding-tend'), undefined);
+    // Which is what lets the second mission on the plateau find it: the rule
+    // is about ground, and Convocation resolves to the same key.
+    assert.equal(missionHeaderById('seeding-convocation')?.mapId, 'marr-plateau');
+  });
+
+  it('replaces the grid on every close — the latest reading, not the best', () => {
+    // The one field in the record that is not "best ever". A map that healed
+    // is a later reading, not a better one, and a record that kept the
+    // healthiest grid it had seen would let a loud run be undone by
+    // remembering a quiet one.
+    recordMissionResult(closed('seeding-tend', grid(6, 20)));
+    recordMissionResult(closed('seeding-convocation', grid(6, DRIFT.HEALTH_START)));
+    assert.deepEqual(driftHealthFor('marr-plateau'), grid(6, DRIFT.HEALTH_START));
+    recordMissionResult(closed('seeding-convocation', grid(9, 0)));
+    assert.deepEqual(driftHealthFor('marr-plateau'), grid(9, 0));
+  });
+
+  it('is idempotent, because a reconnection re-sends the same conclusion', () => {
+    const payload = closed('seeding-tend', grid(6, 20));
+    recordMissionResult(payload);
+    recordMissionResult(payload);
+    assert.deepEqual(driftHealthFor('marr-plateau'), grid(6, 20));
+  });
+
+  it('leaves the map alone when a conclusion carries no grid', () => {
+    // A payload from a server build that predates the field: the outcome is
+    // still recorded, and the map stays as the last grid-carrying close left
+    // it rather than being wiped to fresh by an absence.
+    recordMissionResult(closed('seeding-tend', grid(6, 20)));
+    recordMissionResult(closed('seeding-tend'));
+    assert.deepEqual(driftHealthFor('marr-plateau'), grid(6, 20));
+  });
+
+  it('does not lose one map when another map is closed', () => {
+    recordMissionResult(closed('seeding-tend', grid(6, 20)));
+    recordMissionResult(closed('seeding-deep-furrow', grid(1, 30)));
+    assert.deepEqual(driftHealthFor('marr-plateau'), grid(6, 20));
+    assert.deepEqual(driftHealthFor('anholt-furrow'), grid(1, 30));
+  });
+
+  it('stores nothing for a mission id this build has no map for, and keeps the outcome', () => {
+    recordMissionResult(closed('a-mission-from-a-later-build', grid(6, 20)));
+    assert.deepEqual(loadProgression().drift, {});
+    assert.equal(hasPlayed('a-mission-from-a-later-build'), true);
+  });
+
+  it('reads a record written before this key existed as no maps at all', () => {
+    backing.set(
+      STORAGE_KEY,
+      JSON.stringify({
+        version: 1,
+        missions: { 'seeding-tend': { outcome: MissionOutcome.Complete } },
+        scenes: {},
+      })
+    );
+    assert.deepEqual(loadProgression().drift, {});
+    assert.equal(driftHealthFor('marr-plateau'), undefined);
+    assert.equal(hasPlayed('seeding-tend'), true);
+  });
+
+  it("drops one map's unreadable grid without dropping its neighbours", () => {
+    // One map's corrupt grid costs that map its carry — it plays fresh, which
+    // rule 5 permits — and never the record. NaN is here for the reason it
+    // cannot be typed: JSON turns it into null on the way in.
+    backing.set(
+      STORAGE_KEY,
+      JSON.stringify({
+        version: 1,
+        missions: {},
+        scenes: {},
+        drift: {
+          'marr-plateau': grid(6, 20),
+          'anholt-furrow': [...grid(0, DRIFT.HEALTH_START).slice(1), 'x'],
+          'kelp-labyrinth': grid(2, DRIFT.HEALTH_MAX + 1),
+          'mouth-rim': grid(3, -4),
+          'fourth-foot': grid(1, Number.NaN),
+          'banding-ground': 'not a grid',
+          'upper-terraces': null,
+        },
+      })
+    );
+    assert.deepEqual(loadProgression().drift, { 'marr-plateau': grid(6, 20) });
   });
 });

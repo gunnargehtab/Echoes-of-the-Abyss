@@ -17,6 +17,7 @@
 import { Room, type Client } from '@colyseus/core';
 import {
   AiDifficulty,
+  DRIFT,
   Faction,
   HarvestThrottle,
   LIFECYCLE,
@@ -29,6 +30,7 @@ import {
 } from '@echoes/shared';
 import { AiSeat, briefingFor } from '../ai/seat.ts';
 import { Match } from '../sim/match.ts';
+import { validateDriftGrid } from '../sim/drift.ts';
 import { DEFAULT_MAP_ID, mapById, missionMapById } from '../sim/maps/index.ts';
 import type { MapDefinition } from '../sim/maps/types.ts';
 import { missionById } from '../sim/missions/index.ts';
@@ -165,6 +167,17 @@ export interface MatchRoomOptions {
    * Ignored for a mission, which is private whatever anyone asks for.
    */
   private?: boolean;
+  /**
+   * The Drift Health grid this map closed on the last time this player played
+   * a mission on it — docs/campaign.md §2 rule 5, "the map persists" (#379).
+   * Row-major over `DRIFT.HEALTH_REGIONS`², as `MissionResultPayload` sent it.
+   *
+   * Presented by the client from its own progression record, so the server
+   * cannot know whether it is true; `onCreate` bounds its shape and its
+   * ceiling and takes nothing else on trust. Ignored for a skirmish, which
+   * never carries.
+   */
+  driftHealth?: number[];
 }
 
 export class MatchRoom extends Room<MatchState> {
@@ -174,6 +187,12 @@ export class MatchRoom extends Room<MatchState> {
   private map!: MapDefinition;
   /** The authored mission this room is running, or null for a skirmish. */
   private mission: MissionDefinition | null = null;
+  /**
+   * The carried Drift grid this mission seeds from, once validated, or null
+   * for a fresh map. Held on the room rather than read once, because a
+   * rematch rebuilds the match and the plateau has to be the same plateau.
+   */
+  private driftHealth: readonly number[] | null = null;
   private readonly slotBySession = new Map<string, number>();
   /** Live AI commanders, by slot. Rebuilt from the roster on every start. */
   private readonly aiSeats = new Map<number, AiSeat>();
@@ -204,6 +223,20 @@ export class MatchRoom extends Room<MatchState> {
       this.mission !== null
         ? missionMapById(this.mission.mapId)!
         : (mapById(options?.mapId ?? DEFAULT_MAP_ID) ?? mapById(DEFAULT_MAP_ID)!);
+    // The trust boundary for campaign.md §2 rule 5, stated honestly: the
+    // progression record lives in the client's storage, so the grid it
+    // presents is a claim about a match this server may never have run. What
+    // can be checked is that the claim is *possible* — one finite reading per
+    // region on §6's scale — and `DriftHealth.seed` then caps every cell at the
+    // biome start, so no grid a client can present seeds a map healthier than
+    // a fresh one. That cap is what stops the carry being a lever upward. A
+    // player who clears their storage plays a fresh map, which rule 5
+    // permits; a player who edits it plays, at best, the same fresh map. Only
+    // a mission carries: a skirmish is nobody's campaign.
+    this.driftHealth =
+      this.mission === null
+        ? null
+        : validateDriftGrid(options?.driftHealth, DRIFT.HEALTH_REGIONS ** 2);
     this.match = this.newMatch();
     // A map's spawn list is its player count — except a mission's, which has
     // one spawn and authors its other parties itself. A mission is not a lobby.
@@ -536,7 +569,11 @@ export class MatchRoom extends Room<MatchState> {
   private newMatch(): Match {
     return this.mission === null
       ? new Match(this.map)
-      : new Match(this.map, { mission: this.mission, fauna: this.mission.fauna });
+      : new Match(this.map, {
+          mission: this.mission,
+          fauna: this.mission.fauna,
+          ...(this.driftHealth === null ? {} : { driftHealth: this.driftHealth }),
+        });
   }
 
   /**
@@ -614,6 +651,7 @@ export class MatchRoom extends Room<MatchState> {
           epilogue: resolution.epilogue,
           objectives: resolution.objectives,
           scenes: resolution.scenes,
+          driftHealth: this.match.world.drift.snapshot(),
         });
       }
     }
@@ -865,6 +903,15 @@ export class MatchRoom extends Room<MatchState> {
         // Sent on both paths, so a player who reconnected into an ended room
         // records the same scenes as one who never dropped.
         scenes: resolution.scenes,
+        // The map as this run left it, for the next mission on it to seed from
+        // (campaign.md §2 rule 5; #379). The first per-map state to leave a
+        // match, and not a wall violation: Drift Health is public on every
+        // Echo snapshot already — bestiary.md §5, the tell is light, not sound
+        // — so this is the last copy of a grid both sides have watched all
+        // match, not a fact the player had not earned. Read from the ended
+        // world rather than the resolution so the reconnect path above sends
+        // the identical grid.
+        driftHealth: this.match.world.drift.snapshot(),
       });
     }
 

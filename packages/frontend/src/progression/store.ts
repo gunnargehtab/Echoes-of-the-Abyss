@@ -29,7 +29,12 @@
  * threw is a bug.
  */
 
-import { MissionOutcome, missionHeaderById, type MissionResultPayload } from '@echoes/shared';
+import {
+  DRIFT,
+  MissionOutcome,
+  missionHeaderById,
+  type MissionResultPayload,
+} from '@echoes/shared';
 
 /** The prologue's id. §1: the order is free *after* this one. */
 export const PROLOGUE_MISSION_ID = 'prologue-sorrowgate';
@@ -87,11 +92,49 @@ export interface Progression {
    * `sanitise` fills it with an empty set and nothing else notices.
    */
   scenes: Record<string, true>;
+  /**
+   * Drift Health per map, as the last mission on that map left it — the second
+   * sibling key, and docs/campaign.md §2 rule 5's half of the record (#379).
+   *
+   * Keyed by **map id**, not mission id, because the rule is about ground:
+   * *Tend* and *Convocation* are two missions on one `marr-plateau`, and what
+   * the second inherits is what the first did to the plateau, whichever
+   * mission did it. Each value is the grid `MissionResultPayload.driftHealth`
+   * carried, row-major over `DRIFT.HEALTH_REGIONS`², copied as sent.
+   *
+   * **The one field in this record that is not "best ever".** A mission's
+   * outcome keeps its best reading because replaying is free; a map's grid is
+   * *replaced* on every close, because a map that healed is not a better
+   * reading, it is a later one — the ground is where the last tide left it,
+   * and a record that kept the healthiest grid ever seen would be a record
+   * that let a player undo a loud run by remembering a quiet one.
+   *
+   * The client presents this to the room when it creates the next mission on
+   * the map, and the server bounds it (`MatchRoom.onCreate`); nothing here is
+   * shown to the player, per rule 5 — the map is the message.
+   */
+  drift: Record<string, number[]>;
 }
 
 /** An empty history — what a first boot, a cleared browser or a bad read gives. */
 export function emptyProgression(): Progression {
-  return { version: 1, missions: {}, scenes: {} };
+  return { version: 1, missions: {}, scenes: {}, drift: {} };
+}
+
+/**
+ * Whether a stored value could be a Drift grid at all: an array of finite
+ * numbers on docs/bestiary.md §6's 0–100 scale. Its *length* is deliberately
+ * not checked here — the server holds a presented grid to the map's exact
+ * region count at seeding, and the region count is the server's to know.
+ */
+function isDriftGrid(value: unknown): value is number[] {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (cell) =>
+        typeof cell === 'number' && Number.isFinite(cell) && cell >= 0 && cell <= DRIFT.HEALTH_MAX
+    )
+  );
 }
 
 function isOutcome(value: unknown): value is MissionOutcome {
@@ -143,7 +186,19 @@ function sanitise(raw: unknown): Progression {
     if (seen === true) scenes[id] = true;
   }
 
-  return { ...record, version: 1, missions, scenes } as Progression;
+  const storedDrift =
+    typeof record.drift === 'object' && record.drift !== null
+      ? (record.drift as Record<string, unknown>)
+      : {};
+
+  // Map by map, for the same reason: one map's unreadable grid costs that map
+  // its carry — it plays fresh, which rule 5 permits — never the record.
+  const drift: Record<string, number[]> = {};
+  for (const [mapId, grid] of Object.entries(storedDrift)) {
+    if (isDriftGrid(grid)) drift[mapId] = grid;
+  }
+
+  return { ...record, version: 1, missions, scenes, drift } as Progression;
 }
 
 export function loadProgression(): Progression {
@@ -185,6 +240,18 @@ export function recordMissionResult(result: MissionResultPayload): Progression {
   const scenes = { ...current.scenes };
   for (const scene of result.scenes ?? []) scenes[scene] = true;
 
+  // Replaced, not merged, and keyed by the map the mission was played on: see
+  // `Progression.drift`. Resolved through the public catalogue because the
+  // payload names a mission and the rule is about ground; a payload naming a
+  // mission this build does not have has no map to file the grid under, so it
+  // stores none — the outcome above is still kept, because the id is the
+  // player's history whether or not the map is.
+  const drift = { ...current.drift };
+  const mapId = missionHeaderById(result.missionId)?.mapId;
+  if (mapId !== undefined && isDriftGrid(result.driftHealth)) {
+    drift[mapId] = [...result.driftHealth];
+  }
+
   const next: Progression = {
     ...current,
     missions: {
@@ -192,6 +259,7 @@ export function recordMissionResult(result: MissionResultPayload): Progression {
       [result.missionId]: { ...previous, outcome },
     },
     scenes,
+    drift,
   };
 
   try {
@@ -247,4 +315,17 @@ export function isMissionUnlocked(missionId: string): boolean {
  */
 export function seenScenes(): ReadonlySet<string> {
   return new Set(Object.keys(loadProgression().scenes));
+}
+
+/**
+ * The Drift Health grid a map was last left in, or `undefined` for a map this
+ * player has never closed a mission on — which the room reads as a fresh map.
+ *
+ * Read by the canvas at the moment it creates a mission room, and by nothing
+ * that draws: docs/campaign.md §2 rule 5 says nobody tells the player why the
+ * plateau is quieter, and a store that offered the grid to a briefing would be
+ * the first step toward telling them.
+ */
+export function driftHealthFor(mapId: string): readonly number[] | undefined {
+  return loadProgression().drift[mapId];
 }

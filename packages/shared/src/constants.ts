@@ -1115,6 +1115,15 @@ export const DRIFT = {
    * kilometre away is untouched.
    */
   HEALTH_REGIONS: 4,
+  /** SPEC — §6: "0–100". The scale's ceiling, and the most a quiet cell heals to. */
+  HEALTH_MAX: 100,
+  /**
+   * TUNABLE, inside a SPEC range — where a fresh map's cells start: §6's
+   * "between 70 and 95 by biome", flattened to one figure until a biome asks
+   * for its own. Also the ceiling a *carried* cell may arrive at
+   * (`DriftHealth.seed`): a map brought back from an earlier mission is never
+   * healthier than a fresh one.
+   */
   HEALTH_START: 88,
   /** Health lost per fauna kill in a region. */
   HEALTH_PER_KILL: 4,
@@ -1137,6 +1146,23 @@ export const DRIFT = {
    * 60 the documents state, not 60 plus whatever recovery would cancel.
    */
   HEALTH_RECOVERY_PER_S: 0.02,
+  /**
+   * Health returned to every living cell of a carried grid when the next
+   * mission on that map seeds from it (campaign.md §2 rule 5; #379).
+   *
+   * TUNABLE. §6 pins recovery only as "far more slowly than a match lasts",
+   * and the gap between two campaign missions on one map is authored in tides
+   * — *Tend* to *Convocation* is days on Marr Plateau — so the ground is owed
+   * *some* healing across it, and a flat figure is the honest shape for a gap
+   * nobody times. Five is a kill and a bit: a quiet run's cells, all at or
+   * above `HEALTH_START`, arrive exactly as a fresh map would, while a loud
+   * run's Failing cell at 20 comes back at 25 and is still Failing, and a
+   * cell driven to 0 recovers nothing at all — Dead is permanent
+   * (`DriftHealth.tick`), and the campaign carries it that way. A gap that
+   * healed a strip-mined cell back to Healthy would make rule 5 a rule about
+   * nothing.
+   */
+  CARRY_RECOVERY: 5,
   /** §6's table, as thresholds. */
   HEALTH_STRAINED: 75,
   HEALTH_FAILING: 50,

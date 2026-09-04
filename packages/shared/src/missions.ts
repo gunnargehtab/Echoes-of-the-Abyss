@@ -1242,4 +1242,19 @@ export interface MissionResultPayload {
    * fixed a comma.
    */
   scenes?: readonly string[];
+  /**
+   * The map's Drift Health at the close, row-major over a
+   * `DRIFT.HEALTH_REGIONS` grid — the first per-map state to leave a match,
+   * and the half of docs/campaign.md §2 rule 5 the record carries forward
+   * (#379). Omitted by a skirmish; a mission always sends it.
+   *
+   * **Public by design, so this is not a wall violation.** Drift Health is
+   * already on every `EchoSnapshot` (`types.ts`) for docs/bestiary.md §6's
+   * reason: killing a region is a strategic act available to everyone, and an
+   * act nobody can see is not one — the tell is light in the darkest water on
+   * Earth, not sound (§5). The final grid is the last of those per-tick copies,
+   * held one more time so a client that reconnects into an ended room records
+   * the same map as one that never dropped.
+   */
+  driftHealth?: readonly number[];
 }
