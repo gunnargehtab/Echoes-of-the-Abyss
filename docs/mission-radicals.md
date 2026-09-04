@@ -399,9 +399,10 @@ structures in the chamber for it to take; the array went in the spring. What is 
 chamber is whatever the player left there, and a barge at the arch's foot is inside its
 reach.
 
-**The decoy's geometry, and its cost.** The colossus lies 250 m from the map's western edge
-and 350 m from its southern one, so a decoy draws it west or south by less than the lane's
-width and it returns home across the same water; what a decoy buys is not distance but
+**The decoy's geometry, and its cost.** The colossus lies 250 m from the Commit's western
+edge and 350 m from its southern one, and the water past either is ground it does not fit
+under, so a decoy draws it west or south by less than the lane's width and it returns home
+across the same water; what a decoy buys is not distance but
 *target* — the thirty seconds it is Committed to a corvette are thirty seconds it is not
 Committed to a barge, and a corvette that stays the loudest thing it hears keeps it. The
 price is the doorway. The decoy water closest to the colossus is the basin's north-west, and
@@ -544,15 +545,17 @@ factor (`THERMOCLINE.ACROSS` 0.3) where the two ends are on opposite sides of th
 | A ping, to whoever is listening | 95 × 0.8 | Track 2,088 to HYD 50 | Self-reveal at Tier 4 to every listener inside the model's 2,400 m — and there is no other party to be lit to |
 
 **Above the layer**, to the watch's HYD 70 — the pair at the Concourse, and the pair at the
-span's edge, which is as far south as a PR-1 hull can go:
+span's edge, which is as far south as a PR-1 hull can go. The edge station is **1500, 1950**,
+west of the lock's mouth: the lock's own two cell columns are roofed at 1,300 m and admit
+nothing at three hundred, and everything south of y 2,000 is the span, which is rock.
 
-| Source | SIG × PF × 0.3 | From the seat, 2500, 400 | From the span's edge, 2000, 1950 |
+| Source | SIG × PF × 0.3 | From the seat, 2500, 400 | From the span's edge, 1500, 1950 |
 | --- | --- | --- | --- |
-| The pack, on the watch's own side of the layer | 26 × 0.8 | Classification, 1,310 m (ratio 3.2) — five, at a name, from tick zero | Classification, 1,490 m |
+| The pack, on the watch's own side of the layer | 26 × 0.8 | Classification, 1,310 m (ratio 3.2) — five, at a name, from tick zero | Bearing, 1,961 m (1.7) |
 | The colossus, idling | 45 × 1.6 × 0.3 | Nothing — Contact reaches 2,791 m and the basin is 3,335 off | **Bearing**, 1,718 m (2.2). The basin, at a third |
 | The colossus, calling | 100 × 1.6 × 0.3 | Bearing, 3,335 m (1.7) | **Track**, 1,718 m (4.8). The watch hears the mistake from the arch's row |
-| The barge in the far water, idling | 55 × 1.6 × 0.3 | Nothing | Bearing, 1,989 m (2.1) — the watch can hear that the column arrived, and the column cannot hear the watch at all (a scout at 12 across the layer is nothing to HYD 65 past 1,167 m) |
-| A dive, in the basin | 72 × 1.6 × 0.3 | Nothing | Classification, 1,718–1,989 m |
+| The barge in the far water, idling | 55 × 1.6 × 0.3 | Nothing — Contact reaches 3,164 m and the far water is 3,475 off | Bearing, 2,169 m (1.8) — the watch can hear that the column arrived, and the column cannot hear the watch at all (a scout at 12 across the layer is nothing to HYD 65 past 1,167 m) |
+| A dive, in the basin | 72 × 1.6 × 0.3 | Bearing at the arch's foot (2,603 m, 1.8), Contact at the crossing (2,950 m, 1.5) | **Track**, 1,539 m (4.2) at the arch's foot; Classification, 1,720 m (3.5) at the crossing |
 
 **What the Drift hears of the player** is §6, waypoint by waypoint. The rest of the crossing's
 sound, in order, all of it true and none of it the player's business to act on:
@@ -587,7 +590,8 @@ counted at all.**
 The row shapes are the format's own, and every one is a query over the player's own force
 ([mission-thin-water.md](mission-thin-water.md) §8; `types.ts`, `MissionPredicate`). The seed
 hulls carry the role **`tender`** — the Commune's own word, and the one role the `releaseTick`
-hold binds (§13) — and the escort carries `escort`.
+hold binds (§13) — the escort carries `escort`, and the watch carries `watch`, which no
+predicate names and no rule binds.
 
 **`the-column`** — *Thirty-three are going south in four hulls, and we didn't turn it, and
 they're ours. We'd like four in the far water.* —
@@ -644,11 +648,14 @@ water, or it is read from the Concourse* — as the runtime already behaves.
 | **Some of the seed** | *the-seed* only — two or three | "Some of the seed's in the basin and some of it's south of it, and we agreed nothing about which, because we agreed nothing about any of this. This is a result. Sefa will say it's the price of waiting; Juno will say it's the price of not having guns; and we're saying it's thirty-three people by household and some of them are on the list." |
 | **The basin has the column** | Neither — fewer than two | "The basin has the column. We never turned it and it went anyway and it didn't get there, and nobody on this plateau is going to be able to say which of those three things they're sorriest about." |
 
-Beneath whichever row the run earned, in authored order: *the-escorts*' reading, then
-*the-households*', in the arrangement [mission-shift-change.md](mission-shift-change.md) §8
-built. Marr reads; Anholt speaks last, if she is through (§12). No keystone: a column that
-got two hulls south of the basin is a result, not a failure, and the Commune closes nothing
-([culture.md](culture.md) §3).
+Beneath whichever row the run earned, in authored order and all four of them: *the-column*'s
+reading, then *the-seed*'s, then *the-escorts*' and *the-households*'. The close appends every
+objective that carries a reading, terminal rows included (`runtime.ts`, `objectiveReadings`
+— it walks the authored list and asks each one's frozen status), which is the arrangement
+[mission-shift-change.md](mission-shift-change.md) §8 built and the reason all eight lines are
+written to be true under every outcome they can print beneath. Marr reads; Anholt speaks last,
+if she is through (§12). No keystone: a column that got two hulls south of the basin is a
+result, not a failure, and the Commune closes nothing ([culture.md](culture.md) §3).
 
 **The count's content is stated, and only this far.** *Convocation* withheld what the plateaus
 decided; this mission says it for the first time and says no more than the column needs: the
@@ -717,7 +724,7 @@ waits for an escort, and the only hold on the seed hulls is the `releaseTick` at
 | 11:30 | `move` × 4 — **the last order.** After this the column is where it is, and if all four are in the far water the mission has already closed |
 | **12:00** | `creature` — `the-colossus`, `driveTo` 3250, 3650 at 2,300 m, `untilTick` 13:30, **loud**: the basin rises off the floor west of the lane and crosses it along the tenth waypoint's row at the crossing's depth, deaf and unhurt, 1,500 m in fifty seconds, at x 2,500 at about 12:25. The loud beat the close is measured from |
 | 12:15 | `say` — the watch: it's up, it's crossing at twenty-three hundred, and it's crossing where the lane is (§12) |
-| 13:30 | The drive expires with no beat: released where it stands, at 3250, 3650, the Drift's again, cooling at 100 for forty-five seconds and then listening at 45, 783 m from the far water. `say` — the watch (§12) |
+| 13:30 | The drive expires — no second `creature` beat is needed, and none is authored: released where it stands, at 3250, 3650, the Drift's again, cooling at 100 for forty-five seconds and then listening at 45, 783 m from the far water. `say` — the watch (§12) |
 | **15:00** | `resolve` — the count is read from the Concourse. Not a conclusion: the telegraph is 12:00 against 15:00, 180 s |
 
 **Conditional beats**, in no order, checked every mission tick (`types.ts`,
@@ -874,6 +881,7 @@ this is the only Commune briefing that names the thing it is not doing.
 > seeding. Sefa's plateau turned it, and the terraces past hers turned it, and this one walked
 > it and came back still turning, and the count's the plateaus' and not ours. Nobody turned
 > the rim. Nobody turned this week.
+>
 > Sefa's people are going to the rim this week, through the drowned city and out over the
 > basin, with the barge and the three tenders and thirty-three of ours aboard by household,
 > and we're not stopping it. We'd like that heard the way it's meant: we're not saying we
@@ -908,10 +916,10 @@ what was agreed at the Concourse:
   Concourse, the way we agreed six at Kell.*
 - *Juno's three are yours to spend, and so, this time, is the noise.*
 - *Four went down. We'd like four read, wherever they're read.*
-- *That's the column diving again. It was told to.*
-- *It's up. It's crossing where the lane is.*
 
-The third line is the hardest sentence in the document and it is the one the mission is
+Four rows, four lines, and no fifth: what the watch calls in the water is a `say` beat and
+not an objective, so nothing in the panel says it. The third line is the hardest sentence in
+the document and it is the one the mission is
 built on: it is not permission to fire and it is not an instruction to, and the word *noise*
 in it is the Commune saying out loud, for the first time in six missions, that its answer to
 the water is going to be heard.
@@ -983,8 +991,8 @@ the water is going to be heard.
 
 ### The reading at the close
 
-The close reads one of three, verbatim from §8, in Marr's voice; *the-escorts*' and
-*the-households*' readings print beneath it, met or unmet, and Anholt's line stands last in
+The close reads one of three, verbatim from §8, in Marr's voice; the four objectives'
+readings print beneath it in authored order, met or unmet, and Anholt's line stands last in
 the log if the column is through.
 
 | Outcome | Marr's reading |
@@ -1014,18 +1022,18 @@ She is *she* throughout, as [characters.md](characters.md) writes her.
 
 What exists against this document and what does not, continuing the list
 [mission-asset-recovery.md](mission-asset-recovery.md) §13 started. **This mission is
-specified and not built.** It is the first Commune document since *Thin Water* that needs no
-row the format does not have — every mechanism it spends is one a shipped literal has spent or
-one the runtime already carries unspent — and what it carries instead is three findings
-against the engine as built, each large enough to have moved the plan for this mission, each
-stated so a reviewer can overrule it in one place.
+specified and not built.** Like [mission-in-writing.md](mission-in-writing.md) before it, it
+needs no row the format does not have — every mechanism it spends is one a shipped literal has
+spent or one the runtime already carries unspent — and what it carries instead is three
+findings against the engine as built, each large enough to have moved the plan for this
+mission, each stated so a reviewer can overrule it in one place.
 
 | Requirement | Status |
 | --- | --- |
 | The mission format — beats, predicates, registry, private rooms | **Built** (#190). `extract`, `survive`, `move`, `release`, `ground`, `creature`, `say` and `resolve` cover §8 and §9; two conditional `say` beats on `extract` are Thin Water's row (#282) |
 | **A `move` beat that orders the player's own hull** | **Built, and unspent by any shipped literal — this document spends it as its whole system.** `runtime.ts`'s `fire` applies a `move` on whatever slot owns the tag (`sink.applyMove(Owner.slot[eid], eid, x, y, false)`, then `applyDepth` if the beat carries one), and nothing in the format or its tests forbids a player-party tag: `missions.test.ts` holds a beat's tag to a *placed* entity and says nothing about whose. The consequence is the mechanic and not a hole, and §4 states it: the order is an unqueued `MoveOrder` that replaces the hull's plan, the player may countermand it until the next beat lands, and the next beat lands every thirty seconds. Beside it the rule that prices it: `match.ts`'s `applyDepth` clears Silent Running only for an order deeper than the hull (*"diving is not something you do quietly"*), so a re-order to a depth already reached costs a silent column nothing, and every climb is paid for at 72 |
 | **The `releaseTick` hold binds one role, and it moved the plan** | **Built, with a finding.** The plan held four hulls of role `'seed'` to 01:00. `runtime.ts` records `heldUntil` for any tag with a `releaseTick`, but enforces it in two places that both read the role: `applyEscortHold` skips every unit whose role is not `'tender'` (`if (unit.role !== 'tender') continue`), and `holdsMovement` resolves the entity through `tagOfTender`, which walks `tenderTags` alone. A held hull of any other role is recorded and never held. This document therefore authors the four seed hulls as **`role: 'tender'`** — the Commune's own word for them anyway — and every predicate that counts them says `tender`; with `escortRadiusM: 0` the hold's escort half is switched off (*"every tender reads as escorted"*) and the `releaseTick` half keeps its force, exactly as the runtime's comment says. The finding travels: [mission-second-seeding.md](mission-second-seeding.md)'s plan holds three `'escort'` hulls to 20:30 with a `releaseTick`, and as the runtime stands that hold does nothing. The row that would fix it is one line — the hold reading `heldUntil` for every player-party tag rather than for tenders — and this document does not need it |
-| **The prologue's two ground beats at 00:00** | **Built** (#197). Geometry only, on `arch-span` and `service-lock` authored in this literal from `sorrowgate.ts`, with the prologue's values; `SOLID` from `'../terrain.ts'`. No biome is written, so nothing is spent: the repaint is capped by the judge at *Deep Furrow* and *Attending* 6, and a 00:00 restatement of a previous mission's ground on a reused literal is a restatement ([mission-in-writing.md](mission-in-writing.md) §11). The span is solid at every depth, which is what confines the watch to the north of the arch's row (§3) |
+| **The prologue's two ground beats at 00:00** | **Built** (#197). Geometry only, on `arch-span` and `service-lock` authored in this literal from `sorrowgate.ts`, with the prologue's values; `SOLID` from `'../terrain.ts'`. No biome is written, so nothing is spent: the repaint is capped by the judge at *Deep Furrow* and *Attending* 6, and a 00:00 restatement of a previous mission's ground on a reused literal is a restatement ([mission-in-writing.md](mission-in-writing.md) §11). The span is rock at every depth except the lock's two cell columns, which the second beat re-cuts as roofed water at 1,300–1,500 m; between the rock and the roof there is no route south for a PR-1 hull, which is what confines the watch to the north of the arch's row (§3, §7) |
 | **A placed, un-driven Sounder that answers the loudest thing** | **Built, with the findings that decide §6, stated so nobody corrects them into bugs or a balance pass.** `listen` re-chooses a creature's target every `SENSE_INTERVAL_S` (0.5 s) by detection ratio, horizontally, through the path's PF and the thermocline, with no Interest gate on the choice; the ping's ×3 applies only while `ActivePing.remainingS > 0`, which is `REVEAL_DURATION_S` (3 s); `advanceStage` needs `INTEREST_DWELL_S` (4 s) of *continuous* Interest from Ambient — `interestS` resets the tick the sound drops under — commits at Commit or after 20 s Interested, cools after 30 s under Interest or on a dead target, and re-commits from Cooling on any Commit-loud sound with no dwell; `act` climbs or sinks a chasing creature toward its target's depth at `VERTICAL_SPEED_MPS` within its band and never below the floor, refuses it cells it does not fit, ploughs a Sounder to its target and through it, and returns before damage for a Sounder and any non-structure; `transit` grinds structures and hulls of `TRANSIT_MIN_HULL_M` (95) and up within a body plus a radius in three dimensions along the swept segment; `wreckBonus` adds `WRECK_AGGRO_BONUS` × intensity for any battle mark within `WRECK_RADIUS_M` (800 m). Three consequences in §4 and §6: **a three-second ping is three seconds of a four-second dwell** and wakes nothing alone; **a cooling colossus re-commits at once**; and **a fight at the western doorway is +15 on the barge**. The plan priced the ping as the decoy; the engine prices it as the decoy's first three seconds, and this document is written against the engine |
 | **The four loud tools** | **Built.** The break-silence spike (`SILENT_RUNNING.BREAK_SILENCE_SIG_SPIKE` 40 for 2 s), the noisemaker (`ORDNANCE.NOISEMAKER`: 70, 8 s, 20 s cooldown, 60 m astern), the torpedo (`ORDNANCE.TORPEDO`: 60 running, +25 at launch, 160 m/s, 20 s, magazine 2 — no rearm here, there being no Bastion or Foundry — and a rating inherited from the launcher, so a corvette's torpedo implodes below 1,800 m), and the ping (`ACTIVE_SONAR`, which breaks silence by definition, `applyPing`). All four are the roster's; §4 prices them and §12 names them |
 | **A driven creature crossing the player's lane** | **Built** (#349; [mission-intake.md](mission-intake.md) §13), with `driveTo.depthM` 2,300 held every pass. Two findings the drive leans on: a driven creature climbs from wherever it was at 12 m/s, so a colossus placed at 2,000 m is at 2,300 after twenty-five seconds and 750 m of the drive — at the lane; and `holdCommitments` restores `homeDepth`, `senseS` and `driven` on release and does not restore `homeX`/`homeY`, so a released creature cools toward the *end* of its drive and stays there, which is what §6's *released where it stands* means and the reason it listens 783 m from the far water rather than swimming home. The plan's drive ended at 3250, 3300; this document ends it at 3250, 3650 so the line passes through the tenth waypoint and lands 783 m from the far water's marker — the distance the plan gave for a point it did not compute (945 m) |
@@ -1039,9 +1047,9 @@ stated so a reviewer can overrule it in one place.
 | **The thermocline, for a watch that cannot cross it** | **Built** — `THERMOCLINE`, pair factor 0.3 across; §7's second table is priced with it, and the mission's tests should re-derive it from `thermoclineFactor` rather than the biome PF. The span solid at every depth is what keeps the watch's whole water above the layer |
 | **PR-3 refits on the four seed hulls** | **Built** — `pressureRating: 3` authored on a Cruiser and three Harvesters (the roster's 2), because `requiredPressureRating(2300)` is 3 and the seat test reads the hull. The Cruiser is not a roster change: no hull carries a faction lock (`PRODUCIBLE`) and the Corvette in Commune hands is *Thin Water*'s precedent; *Commune-grown* is fiction, and the barge's 55 / 65 / 7.6 are the roster's figures and not a quieter cruiser |
 | **The tender's figures** | **A roster gap, already recorded** ([mission-in-writing.md](mission-in-writing.md) §13). This document prices the tender at the roster's 18 idle / 40 cruise / 4.5 silent and the barge silent at 7.6 by `silentRunningSig`; the plan's *8* for a silent barge is `SILENT_RUNNING.SIG_MAX`, which the curve reaches only at an idle of 60 |
-| **The map, reused** | **Built** — `sorrowgate`, resolved by `prologue-sorrowgate` and, once this literal lands, by `seeding-radicals`: the third literal to carry two mission ids and the first to pair a campaign with the prologue. Two of the plan's mission regions are dropped because nothing addresses them (§11) |
+| **The map, reused** | **Built** — `sorrowgate`, resolved by `prologue-sorrowgate` and, once this literal lands, by `seeding-radicals`: one more literal carrying two mission ids, and the only one that pairs a campaign mission with the prologue. Two of the plan's mission regions are dropped because nothing addresses them (§11) |
 | **`souls`** | **Documentation** — nothing in the runtime reads it ([mission-thin-water.md](mission-thin-water.md) §13); the epilogue carries thirty-three by hand, and *the-households*' met reading says the number |
-| **Progression** — which plateaus turned in *Convocation*, the escorts' count from *Thin Water*, the sixteen from *In Writing* | **Not built** ([campaign.md](campaign.md) §11). The document authors the column whole and states what it assumes: a second seeding turned by the plateaus and not by Marr's, the rim and the week turned nowhere, three corvettes still standing after *Thin Water* and *In Writing*, and the four seed hulls out of the yard |
+| **Progression** — which plateaus turned in *Convocation*, the escorts' count from *Thin Water*, the sixteen from *In Writing* | **The record is built; this is not**, and [mission-deep-furrow.md](mission-deep-furrow.md) §13 states the split first. A per-mission history shipped with the campaign board (#371, `packages/frontend/src/progression/store.ts`): written once from the `missionOver` payload, keeping the best reading a mission has ever returned. What it keeps is an *outcome*, and what this row wants is mission-scoped — which plateaus turned, and how many corvettes are still Juno's — which is a sibling key beside `missions` in the same record and is not started ([campaign.md](campaign.md) §11). So the document authors the column whole and states what it assumes: a second seeding turned by the plateaus and not by Marr's, the rim and the week turned nowhere, three corvettes still standing after *Thin Water* and *In Writing*, and the four seed hulls out of the yard |
 | **Cross-mission Drift Health with the prologue** | **Not built**, named here and not asked for — [campaign.md](campaign.md) §2 rule 5's third concrete pair, after Marr Plateau and the Furrow, and the first with the prologue on one side of it. A basin the prologue's colossus crossed twice is the basin this column crosses, and nobody tells the player why it sounds the way it does |
 | **The momentum as a format row** | **Not built, and deliberately not asked for.** Eighty-eight `move` beats is the honest shape of a schedule the format already carries, and a `MissionUnit.schedule` or a standing re-asserting order would be a second way of saying one thing. If a fourth mission wants a column on somebody else's clock, the row is worth writing then; see the open question below |
 | **The mix** — the calling voice at 100, a colossus crossing at 30 m/s, a shoal going out | **Not started** ([audio-direction.md](audio-direction.md)). The calling voice — *the only sound in the game that means you have made a mistake that is now coming* — is the row the mix owes this mission first, because on this map the player makes that mistake on purpose |
