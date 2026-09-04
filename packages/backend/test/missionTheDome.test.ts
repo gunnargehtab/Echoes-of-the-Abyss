@@ -27,12 +27,15 @@
  *   are Met on the pass `the-mouth` is revealed and the runtime closes at
  *   19:00 exactly.
  *
- * Three findings against the document are asserted rather than described, so
- * the day any of them is corrected this file is what notices:
+ * Three findings this file made against the document. All three have since been
+ * carried into the document itself, so these assertions now hold the two sides
+ * together rather than pulling them apart — which is the same job, and the day
+ * either side drifts this file is still what notices:
  *
- * 1. **The gates do not begin where §6, §9 and §13 say they begin.** §13: "the
- *    gate fights begin when the convoy berths at 05:00 and 14:00 rather than as
- *    it passes." §9's own 02:30 leg parks the flagship 112 m from `watch-one`
+ * 1. **The gates do not begin where §6, §9 and §13 used to say they begin.**
+ *    They said the gate fights begin when the convoy berths, at 05:00 and
+ *    14:00, rather than as it passes. §9's own 02:30 leg parks the flagship
+ *    112 m from `watch-one`
  *    and leaves it there until 05:00, and its 10:00 leg parks it 856 m from
  *    `watch-three` — inside a Cruiser's 900 m gun — until 13:30. Played
  *    passively, the first watch dies at 02:49 and the second at 10:29, and
@@ -48,12 +51,12 @@
  * 3. **§7's and §11's Drift-side figures are read off an array that is not
  *    under Silent Running, and §3 puts all six under it at tick zero.** Both
  *    `listen` and `driftTick` read `Acoustic.sig`, which is 4.33 for a silent
- *    Chorister and not the roster's 16. So §7's "six idling Choristers read 4.3
- *    to 9.0" is 1.2 to 2.4 as the mission is authored, and §11's ledger under
- *    the foot does not add up: the west cell carries 13 rather than 48, the
+ *    Chorister and not the roster's 16. So the array §7 once read at 4.3
+ *    to 9.0 reads 1.2 to 2.4 as the mission is authored, and §11's ledger under
+ *    the foot did not add up: the west cell carries 13 rather than 48, the
  *    array and the dome together carry 48 rather than 83 — twelve *under* the
- *    threshold — and "the one thing at the foot that damages the ground is the
- *    Cantorate's instrument" is not true of this tide. What does take that cell
+ *    threshold — so the one thing at the foot that damages the ground is not
+ *    the Cantorate's instrument after all. What does take that cell
  *    over is the yard's failing plant, standing in the same cell and striking
  *    at 35 for two seconds of every eight: 13 + 35 + 35 is §11's own 83,
  *    arrived at from the concern's side. Nothing here changes the literal —
@@ -384,14 +387,15 @@ describe("the Fourth's Foot, as docs/mission-the-dome.md §11 paints it", () => 
     );
   });
 
-  it('wears the cell under the foot, and not for the reason §11 gives', () => {
-    // A finding, asserted so a correction is noticed. §11: "three Choristers
-    // idling west of it sum 48 and wear nothing, while three east of it plus
+  it('wears the cell under the foot, and not for the reason §11 first gave', () => {
+    // A finding, asserted so a correction is noticed — and since carried into
+    // §11, which now names the plant. What it used to say: three Choristers
+    // idling west of the foot sum 48 and wear nothing, three east of it plus
     // the Cantor's own 35 sum 83 against a threshold of 60 and wear that cell
-    // at 0.46 a second. The one thing at the foot that damages the ground is
-    // the Cantorate's instrument."
+    // at 0.46 a second, and so the one thing at the foot that damages the
+    // ground is the Cantorate's instrument.
     //
-    // The geometry is right and the arithmetic is read off the Chorister's
+    // The geometry was right and the arithmetic was read off the Chorister's
     // *idle* 16 — but §3 seats all six under Silent Running at tick zero, and
     // `driftTick` sums `Acoustic.sig`, which is 4.33 for a silent hull. So the
     // west cell carries 13 and the array and dome together carry 48, which is
