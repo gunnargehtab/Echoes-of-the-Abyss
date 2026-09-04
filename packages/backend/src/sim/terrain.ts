@@ -62,18 +62,56 @@ export interface TerrainCellChange {
 export const SOLID = { floorM: 0, ceilingM: 1 } as const;
 
 /**
- * One area effect on the PF grid. Two kinds, composed in a fixed order
+ * One area effect on the PF grid. Three kinds, composed in a fixed order
  * however the list is arranged: every `scale` multiplies the biome baseline
  * (Resonance Storms), then every `delta` is added (Tetherjelly fields, whose
  * −0.10 is absolute by design — docs/bestiary.md §4 says why a percentage
- * would be the wrong species). A modifier may carry either or both.
+ * would be the wrong species), and then a `set` replaces whatever the first
+ * two arrived at (a Standing Wave corridor, whose 2.0 is a figure and not a
+ * factor — docs/systems-echo.md §7 says the corridor *raises PF to* 2.0, and a
+ * multiplier would make the same corridor a different megaphone over kelp
+ * than over a trench). A modifier may carry any of the three.
+ *
+ * A modifier is a disc, or a **capsule** when `x2`/`y2` name a second point:
+ * every cell within `radiusM` of the segment from (x, y) to (x2, y2). The
+ * capsule exists for the corridor and nothing else, since a corridor is the
+ * one effect in the game that is a line between two things rather than a
+ * place — docs/mission-standing-wave.md §13 records that the disc alone
+ * "does not yet describe" it.
  */
 export interface PropagationModifier {
   x: number;
   y: number;
+  /** The segment's far end, when the effect is a line rather than a disc. */
+  x2?: number;
+  y2?: number;
   radiusM: number;
   scale?: number;
   delta?: number;
+  /** An absolute figure for every cell covered. The loudest `set` wins overlap. */
+  set?: number;
+}
+
+/** Squared distance from a point to the segment a–b — the capsule's test. */
+function distanceToSegmentSquared(
+  px: number,
+  py: number,
+  ax: number,
+  ay: number,
+  bx: number,
+  by: number
+): number {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const lengthSquared = dx * dx + dy * dy;
+  // A degenerate segment is its one point, which is the disc case.
+  const t =
+    lengthSquared === 0
+      ? 0
+      : Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / lengthSquared));
+  const cx = ax + t * dx - px;
+  const cy = ay + t * dy - py;
+  return cx * cx + cy * cy;
 }
 
 export class Terrain {
@@ -585,15 +623,25 @@ export class Terrain {
       // order-independent within one list, which is the property the method
       // comment above promises about overlap.
       let delta = 0;
+      // A `set` is remembered rather than applied in place so that it wins
+      // over a scale or a delta listed *after* it: the corridor's figure is
+      // absolute, and a storm standing over a corridor still hears the
+      // corridor. Where two lines cross, the louder figure stands.
+      let forced = -Infinity;
       for (let m = 0; m < this.mods.length; m++) {
         const mod = this.mods[m]!;
-        const dx = wx - mod.x;
-        const dy = wy - mod.y;
-        if (dx * dx + dy * dy > mod.radiusM * mod.radiusM) continue;
+        const inside =
+          mod.x2 === undefined || mod.y2 === undefined
+            ? (wx - mod.x) * (wx - mod.x) + (wy - mod.y) * (wy - mod.y) <= mod.radiusM * mod.radiusM
+            : distanceToSegmentSquared(wx, wy, mod.x, mod.y, mod.x2, mod.y2) <=
+              mod.radiusM * mod.radiusM;
+        if (!inside) continue;
         if (mod.scale !== undefined) value *= mod.scale;
         if (mod.delta !== undefined) delta += mod.delta;
+        if (mod.set !== undefined && mod.set > forced) forced = mod.set;
       }
       value += delta;
+      if (forced !== -Infinity) value = forced;
     }
     // Clamped on the argument `applyPropagationModifiers` makes: the ceiling
     // is the loudest anything is *specified* to make water — the corridor's

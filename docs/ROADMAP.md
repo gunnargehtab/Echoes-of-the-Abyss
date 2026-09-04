@@ -35,11 +35,11 @@ vertical slice — it is a game you can sit down and play alone:
   chart mark composited over the world through one shared camera, band verbs and
   floor-following on the command surface, and the Lid pricing the top of the column.
 
-What is *not* done is the long tail the harness has started to surface, one mission of the
-campaign — *Standing Wave*, the Order's second, which wants a predicate over what the player
-has built — and everything in [world.md](world.md) that is still only prose. The other
-twenty-seven missions written since this line was first drafted are built: a literal, a map
-and a test file each.
+What is *not* done is the long tail the harness has started to surface, and everything in
+[world.md](world.md) that is still only prose. Every one of the twenty-eight missions written
+since this line was first drafted is built: a literal, a map and a test file each — *Standing
+Wave*, the Order's second, was the last, and it got the predicate over what the player has
+built that it was waiting for (#382).
 
 ---
 
@@ -233,11 +233,14 @@ and remembered nothing, so nothing recorded that it was played, and the briefing
 [campaign.md](campaign.md) intends for a scene you have already witnessed from the other side
 had no history to read.
 
-Both have since landed, and the bet this phase made came in. Twenty-seven of those
-twenty-eight missions are built on the machinery *Sorrowgate* proved, and between them they
-asked the format for eleven things rather than a rewrite — the last three in #391. The record
-is built (#371), and the briefing variation it was owed with it (#378). What is left of the
-twenty-eight is *Standing Wave*, and [campaign.md](campaign.md) §11 says what it still wants.
+Both have since landed, and the bet this phase made came in. All twenty-eight missions are
+built on the machinery *Sorrowgate* proved, and between them they asked the format for
+fourteen things rather than a rewrite — the last three from *Standing Wave* (#382): a
+predicate over what the player has built, a beat that walks a route, and a rule that a site
+needs the works beside it. The record is built (#371), the briefing variation it was owed with
+it (#378), and the three systems that stood on the record behind them — Drift Health carried
+between missions on one map, the roster a mission spends, and a voice under every line
+([campaign.md](campaign.md) §11).
 
 ---
 

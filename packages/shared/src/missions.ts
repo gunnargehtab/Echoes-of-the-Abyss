@@ -794,6 +794,36 @@ export const CHORD_APTITUDE_HEADER: MissionHeader = {
   ],
 };
 
+export const CHORD_STANDING_WAVE_HEADER: MissionHeader = {
+  id: 'chord-standing-wave',
+  campaign: 'chord',
+  ordinal: 2,
+  name: 'The Second Chord \u2014 Standing Wave',
+  premise:
+    'A works order from the Ninth: two nodes, either wall of the Fifth, and the interval between them. Then be north of it.',
+  mapId: 'the-fifth',
+  // The close at 18:00 (docs/mission-standing-wave.md §9), inside campaign.md
+  // §10's 12–25 and at the long end deliberately: two 150-second
+  // commissionings and a twelve-and-a-half-minute stipend do not fit in
+  // fourteen, and a mission whose economy is a clock has to be long enough for
+  // the clock to matter.
+  lengthBandS: [1020, 1140],
+  /**
+   * Choirmaster Ivane Sull, setting the works — docs/mission-standing-wave.md
+   * §12, verbatim. Public for Aptitude's reason: it names no hidden fact. It
+   * specifies the weapon's symmetry as a *feature*, prices the third node in
+   * minutes of stipend, and says out loud that the line does not know whose
+   * hulls are in it — because a Knight briefing that withheld the arithmetic
+   * would be teaching by ambush, and this faction examines.
+   */
+  briefing: [
+    'The Fifth has been a road for a hundred and forty years because we never wrote down that it was ours. I am not going to write it down now. I am going to make it a poor road.',
+    'Two nodes, either wall, and the interval between them. You know what that does. It is worth saying the whole of what it does rather than the flattering half: the line does not know whose hulls are in it, and the water inside it will carry you exactly as far as it carries them. That is not a defect I am asking you to tolerate. It is the specification. A door that only shuts one way is not a door, it is a preference, and a preference is the sort of thing an Order talks itself out of at three in the morning eleven years from now.',
+    'So: build it, and then be north of it. Both halves. If you bring me a closed Fifth and four hulls I will thank you and I will mean it and I will also have to explain the arithmetic to the Third, and Halden will be courteous about it, which is worse.',
+    'You have the stipend and the stipend does not hurry. Two voices are paid for. A third is twelve and a half minutes, and I would rather you spent them than spent the Fifth.',
+  ],
+};
+
 export const ATTENDING_FIRST_ARRIVAL_HEADER: MissionHeader = {
   id: 'attending-first-arrival',
   campaign: 'attending',
@@ -1058,6 +1088,7 @@ export const MISSION_HEADERS: readonly MissionHeader[] = [
   ATTENDING_CONCLAVE_HEADER,
   ATTENDING_FIRST_ARRIVAL_HEADER,
   CHORD_APTITUDE_HEADER,
+  CHORD_STANDING_WAVE_HEADER,
   CHORD_NINETEEN_HEADER,
   CHORD_CONCLAVE_HEADER,
   CHORD_THE_THREE_HEADER,

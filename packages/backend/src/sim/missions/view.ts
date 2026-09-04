@@ -22,10 +22,11 @@ import type {
   ObjectiveView,
 } from '@echoes/shared';
 
-import { exposedAtLeast, progressOf } from './predicates.ts';
+import { exposedAtLeast, progressOf, type PairedIds } from './predicates.ts';
 import type {
   MissionDefinition,
   MissionObjective,
+  MissionPredicate,
   MissionRegion,
   MissionRole,
   MissionWalkRow,
@@ -73,6 +74,11 @@ export interface MissionState {
    * been heard and cannot say by whom.
    */
   exposedByTier: readonly number[];
+  /**
+   * The player's own nodes holding a Standing Wave interval — see `PairedIds`.
+   * Empty in every mission that raises none, which is every mission but one.
+   */
+  paired: PairedIds;
   debtS: number;
 }
 
@@ -133,9 +139,33 @@ function objectiveView(
   state: MissionState,
   own: EchoSnapshot
 ): ObjectiveView {
+  // One judgement, shared by the counter and by the readings that key on a
+  // predicate: the same arguments, so a reading and a status cannot disagree
+  // about the force they are both describing.
+  const judge = (predicate: MissionPredicate) =>
+    progressOf(
+      predicate,
+      own,
+      (role) => state.roleIds.get(role) ?? NO_IDS,
+      (id) => regionById(definition, id),
+      state.startedAt.get(objective.id) ?? 0,
+      (lift) => {
+        if (lift === undefined) return state.loadedIds;
+        const carrier = state.loadedByLift.get(lift);
+        return carrier === undefined ? NO_IDS : new Set([carrier]);
+      },
+      state.attended,
+      (tier) => exposedAtLeast(state.exposedByTier, tier),
+      state.sounded,
+      state.walk?.turned ?? 0,
+      state.paired
+    );
   const view: ObjectiveView = {
     id: objective.id,
-    text: textFor(objective, state),
+    text: textFor(objective, state, (predicate) => {
+      const { done, of } = judge(predicate);
+      return done >= of;
+    }),
     status: state.statuses.get(objective.id) ?? objective.initial,
   };
   if (objective.markerId !== undefined) view.markerId = objective.markerId;
@@ -150,22 +180,7 @@ function objectiveView(
     if (row?.markerId !== undefined) view.markerId = row.markerId;
   }
   if (counts(objective)) {
-    const progress = progressOf(
-      objective.predicate,
-      own,
-      (role) => state.roleIds.get(role) ?? NO_IDS,
-      (id) => regionById(definition, id),
-      state.startedAt.get(objective.id) ?? 0,
-      (lift) => {
-        if (lift === undefined) return state.loadedIds;
-        const carrier = state.loadedByLift.get(lift);
-        return carrier === undefined ? NO_IDS : new Set([carrier]);
-      },
-      state.attended,
-      (tier) => exposedAtLeast(state.exposedByTier, tier),
-      state.sounded,
-      state.walk?.turned ?? 0
-    );
+    const progress = judge(objective.predicate);
     view.progress = objective.predicate.kind === 'tolerance' ? inSeconds(progress) : progress;
   }
   return view;
@@ -199,13 +214,22 @@ function inSeconds(progress: { done: number; of: number }): { done: number; of: 
  * The court's reading of a rule changes while the flight owes it a silence —
  * docs/mission-sorrowgate.md §12 authors both readings of the same objective.
  */
-function textFor(objective: MissionObjective, state: MissionState): string {
+function textFor(
+  objective: MissionObjective,
+  state: MissionState,
+  holds: (predicate: MissionPredicate) => boolean
+): string {
   if (objective.debtText !== undefined && state.debtS > 0) return objective.debtText;
   // The plateau's second reading of the same rule, while the walk is stalled —
   // docs/mission-convocation.md §12. `debtText`'s arrangement, and checked
   // after it for the same reason it is checked at all: a mission authors at
   // most one of the two, and no mission authors both.
   if (objective.stallText !== undefined && state.walk?.stalled === true) return objective.stallText;
+  // The readings keyed on the player's own force (types.ts, `states`): the
+  // first whose predicate holds, in authored order, judged as an objective is.
+  for (const reading of objective.states ?? []) {
+    if (holds(reading.when)) return reading.text;
+  }
   return objective.text;
 }
 
@@ -247,7 +271,12 @@ function counts(objective: MissionObjective): boolean {
     // the same figure the player's own stockpile readout carries. Whatever
     // the account: a band of Biomass (docs/mission-intake.md §8) is counted
     // for the same reason a quota of Nodules is.
-    objective.predicate.kind === 'deliver'
+    objective.predicate.kind === 'deliver' ||
+    // "One voice" and "two" is the whole of what the works know about the
+    // interval, and docs/mission-standing-wave.md §4's odd node is taught by a
+    // counter that reads one when the player expected the line: a node is the
+    // most countable thing the Order builds, at 750 apiece.
+    objective.predicate.kind === 'build'
   );
 }
 

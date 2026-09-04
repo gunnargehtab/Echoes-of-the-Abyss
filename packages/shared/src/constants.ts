@@ -58,6 +58,36 @@ export const STANDING_WAVE = {
    * is that it out-carries the loudest water on the map.
    */
   CORRIDOR_PF: 2.0,
+  /**
+   * Half the corridor's width — how far either side of the line between two
+   * paired nodes the PF write and the damage reach.
+   *
+   * TUNABLE. Half a cell, so the line is one cell of water wide, which is the
+   * finest thing the PF grid can draw and the coarsest thing the mission that
+   * teaches it can afford: docs/mission-standing-wave.md §11's "nodes set in
+   * from the walls leave a gap, and a gap is a road" needs the gap to be at
+   * least a cell for the road to exist.
+   */
+  CORRIDOR_HALF_WIDTH_M: 125,
+  /**
+   * Hull lost per second by anything standing in a standing corridor.
+   *
+   * TUNABLE — docs/systems-echo.md §7 and docs/factions.md specify "a line of
+   * sonic damage" and price it nowhere. Chosen against the roster's TTK bands
+   * (docs/systems-combat.md §9): a Corvette crossing one cell of it at cruise
+   * pays about six per cent of its hull, a Corvette that stands in it is gone
+   * inside a minute, and a Cruiser inside three. A kill-line is a place you
+   * do not stop, not a wall you cannot cross. Applied to every hull and every
+   * creature, whoever raised the line — "harming everyone equally, including
+   * them" is the mechanic and not a flavour note.
+   */
+  CORRIDOR_DAMAGE_PER_S: 8,
+  /**
+   * SPEC — docs/mission-standing-wave.md §8: a node under fire "detunes below
+   * 40% of its HP". A paired node under this fraction of its hull reads as
+   * sour on the panel; the `build` predicate's `detuned` flag counts them.
+   */
+  DETUNE_HP_FRACTION: 0.4,
 } as const;
 
 /**

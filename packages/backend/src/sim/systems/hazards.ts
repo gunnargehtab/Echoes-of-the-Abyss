@@ -50,6 +50,7 @@ import {
 } from '../components.ts';
 import type { PropagationModifier } from '../terrain.ts';
 import type { SimWorld } from '../world.ts';
+import { corridorModifiers } from './standingWave.ts';
 
 /**
  * Everything a hazard can act on.
@@ -345,6 +346,12 @@ export function rebuildPropagation(world: SimWorld): void {
       delta: -DRIFT.JELLY_PF_DELTA,
     });
   }
+  // A third source on a third cadence: a Standing Wave corridor closes when
+  // its second node completes and falls when either node does, and
+  // `standingWaveSystem` reports both so `Match` rebuilds on that tick. Listed
+  // last, and it would not matter if it were first — a corridor's figure is
+  // a `set`, and `propagationAtCell` composes a set after everything else.
+  mods.push(...corridorModifiers(world));
   world.terrain.applyPropagationModifiers(mods);
 }
 

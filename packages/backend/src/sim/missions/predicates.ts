@@ -20,7 +20,7 @@
  * mission asks the player to do.
  */
 
-import type { EchoSnapshot, ResolutionTier } from '@echoes/shared';
+import { STANDING_WAVE, type EchoSnapshot, type ResolutionTier } from '@echoes/shared';
 import type { MissionPredicate, MissionRegion, MissionRole } from './types.ts';
 
 export interface Progress {
@@ -70,6 +70,17 @@ export type LoadedIds = (lift?: string) => ReadonlySet<number>;
  */
 export type ExposedTicks = (tier: ResolutionTier) => number;
 
+/**
+ * The observer's own structures that are holding a Standing Wave interval, by
+ * id exactly as `own.structures` reports them — the pairing pass's output,
+ * handed in as a set for `LoadedIds`' reason: the runtime asks
+ * `pairedNodesOf` about `definition.playerSlot` and has no second slot to ask
+ * about, so no set this file is given can name a node the observer did not
+ * raise. Which of *my* nodes are paired is the same kind of own-force fact as
+ * the hp the snapshot already carries for each of them.
+ */
+export type PairedIds = ReadonlySet<number>;
+
 export function progressOf(
   predicate: MissionPredicate,
   own: EchoSnapshot,
@@ -80,7 +91,8 @@ export function progressOf(
   attended: number,
   exposed: ExposedTicks,
   sounded: number,
-  turned: number
+  turned: number,
+  paired: PairedIds
 ): Progress {
   switch (predicate.kind) {
     case 'extract': {
@@ -161,6 +173,22 @@ export function progressOf(
       // why Biomass needed a query and not a wire change. Capped, like every
       // counter — the register does not over-count.
       return { done: Math.min(own[predicate.account], predicate.amount), of: predicate.amount };
+    case 'build': {
+      // The observer's own structures, off the snapshot their own HUD draws
+      // from — completed ones only, because a site is a promise and the
+      // predicate asks about a thing that stands. `paired` and `detuned` are
+      // both narrowings of the same own-force list: which of my nodes hold an
+      // interval, and which of those are going flat. Capped, like every
+      // counter: a fourth node does not read "4 of 3".
+      const standing = own.structures.filter(
+        (s) =>
+          s.kind === predicate.structure &&
+          s.buildProgress >= 1 &&
+          (predicate.paired === undefined || paired.has(s.id)) &&
+          (predicate.detuned === undefined || s.hp < STANDING_WAVE.DETUNE_HP_FRACTION * s.maxHp)
+      );
+      return { done: Math.min(standing.length, predicate.count), of: predicate.count };
+    }
   }
 }
 
@@ -174,7 +202,8 @@ export function isMet(
   attended: number,
   exposed: ExposedTicks,
   sounded: number,
-  turned: number
+  turned: number,
+  paired: PairedIds
 ): boolean {
   const { done, of } = progressOf(
     predicate,
@@ -186,7 +215,8 @@ export function isMet(
     attended,
     exposed,
     sounded,
-    turned
+    turned,
+    paired
   );
   return done >= of;
 }
