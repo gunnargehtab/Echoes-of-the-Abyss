@@ -87,7 +87,7 @@ Tidespeaker Ysolde Marr speaks the briefing on the lane at the cleft's mouth, to
 going down to carry it, because the furrow cannot hear her. She reads the count at the close
 when the watch brings it up. She orders nobody to do anything.
 
-**Engine bound, stated so nobody corrects it into a bug.** Three parties and a court slot:
+**Engine bound, stated so nobody corrects it into a bug.** Two parties and a court slot:
 the furrow's people carry the Commune faction value, the Second Trench Cohort carries the
 Directorate's, and the court slot is reserved and empty, as every literal reserves it. The
 Drift is not a party. The map literal is `anholt-furrow`, *Deep Furrow*'s, unchanged (§11).
@@ -128,12 +128,14 @@ whenever a hull under it is below its rating.
 95 × 0.4 = 38 through kelp, Bearing to the dome-lent 95 out to 2,568 m — from every bed to
 every ear on the map — and the one thing it does is tell the dome which bed the pinger is
 under. There is nothing here the player needs Tier 4 on: the dome is audible from every
-metre of the garden and the Choristers announce themselves by walking.
+metre of the garden a hull is not veiled in, and the Choristers announce themselves by
+walking.
 
 **Silent Running is present, and this is the mission where it is the whole posture.** The
 veil multiplies; it does not replace. A tender idling at the roster's 18 reads 7.2 under a
 bed; one running silent at 4.5 reads 1.8; and the dome — a listener at 80 in its own right,
-450 m from the middle bed's centre — has the first at Bearing and the second at nothing (§7).
+450 m from the middle bed's centre — has the first at Classification and the second at
+nothing at all, ratio 0.97 (§7).
 Every hull is authored silent at 00:00, silence stops no work because there is none, and it
 costs the Commune the difference between 40 m/s and 32. What the player does with the toggle
 is the mission's whole account of them.
@@ -147,19 +149,22 @@ in the first three minutes, load-bearing by the last five. The system is **the S
 against the best listeners in the game**, and it lands in four movements.
 
 **1. A bed is a hole in a dome's ears, and it is horizontal.** At 00:00 the dome is audible
-from every metre of the furrow — 35 through kelp is Tier 1 to a scout's 70 from 2,597 m and
-to a tender's 30 from 1,529 — and the player's hulls are inside three clouds the dome's ears
-do not reach. A bed's own hum is 20, veiled by its own cloud to 8; 8 through 0.55 is Bearing
+from every metre of the furrow a hull is not veiled in — 35 through kelp is Tier 1 to a
+scout's 70 from 2,597 m and to a tender's 30 from 1,529, and to ears blinded to 5 inside a
+cloud only from 499 — and the player's hulls are inside three clouds the dome's ears do not
+reach. A bed's own hum is 20, veiled by its own cloud to 8; 8 through 0.55 is Bearing
 to a dome-lent 95 only inside 970 m, the Submersibles are 1,125 m from the nearest bed's
-centre, and the dome, 450 m from the middle bed, has the *beds* at Track and nothing under
-them at all. The cloud covers a column of water 350 m across from the surface to the floor,
+centre, and the dome, 450 m from the middle bed and 625 m from the other two, has the middle
+bed at Track (ratio 4.32) and the outer pair at Classification (2.55) and nothing silent
+under any of them. The cloud covers a column of water 350 m across from the surface to the floor,
 which is why nothing under a bed can be found by looking down.
 
 **2. Inside the cloud everyone is deaf and quiet, and it is the same everyone.** The veil is
 the one symmetric aura the game has ([systems-echo.md](systems-echo.md) §8). At 03:00 the
 cohort's line of eight walks north across the beds, and inside a cloud a Chorister with the
-dome's 95 hears at 5: Contact on a silent tender never past the reference distance, Contact
-on a tender idling at 18 inside 186 m and Bearing inside 144, nothing beyond. The Commune's
+dome's 95 hears at 5: nothing at all on a silent tender, whose 1.8 does not reach Contact
+even at the reference distance, Contact on a tender idling at 18 inside 186 m and Bearing
+inside 144, nothing beyond. The Commune's
 doctrine is that it already works silent and blind ([units.md](units.md)); this is the
 mission where the other side has to.
 
@@ -169,8 +174,9 @@ the throat's 95 out to 1,197 m with the throat 1,125 m off, and Classification t
 own 80 from where the eastern bed stands (ratio 3.57 at 625 m). The bed hides a hull that is
 already hiding. It does not hide one that is not.
 
-**4. Hiding is a schedule.** The dome has the beds at Track, the line finds each one by
-walking into it, and the beds are corrected as a mooring was corrected in closed water
+**4. Hiding is a schedule.** The dome has the beds — the middle one at Track, the outer two
+at Classification — the line finds each one by walking into it, and the beds are corrected
+as a mooring was corrected in closed water
 ([mission-baffle.md](mission-baffle.md) §7) — the west at 09:00, the middle at 12:00, the
 east at 15:00. What is under a dead bed is at its own figure: a silent tender at 4.5 through
 kelp is Bearing to 95 at 677 m and Classification at 492; one idling at 18 is Bearing at 1,610
@@ -221,7 +227,7 @@ be cruel for the furrow to be lost.**
 
 | Element | Seat | Numbers | What it does |
 | --- | --- | --- | --- |
-| `the-dome` — a Cantor | 2000, 1750 at 2,000 m, the first furrow's north edge | SIG 35 · HYD 80 · 1,200 HP · +25 HYD to the cohort within 1,200 m, cap 95 ([units.md](units.md)) | Stands. 450 m from the middle bed and 625 from the others — outside every cloud, so its ears are its own. Its radius covers y 550–2,950: the throat, both furrows, the sill's head. It has each bed at Track by its own 8 (ratio 4.32 at 450 m), and has since it was commissioned |
+| `the-dome` — a Cantor | 2000, 1750 at 2,000 m, the first furrow's north edge | SIG 35 · HYD 80 · 1,200 HP · +25 HYD to the cohort within 1,200 m, cap 95 ([units.md](units.md)) | Stands. 450 m from the middle bed and 625 from the others — outside every cloud, so its ears are its own. Its radius covers y 550–2,950: the throat, both furrows, the sill's head. It has the middle bed at Track by its own 8 (ratio 4.32 at 450 m) and the outer two at Classification (2.55 at 625 m), and has since it was commissioned |
 | `throat-west`, `throat-east` — Abyssal Submersibles | 1500, 1000 and 2500, 1000 **at 1,200 m, in the duct** | SIG 22 idle / 28 cruise · HYD 85, **95 under the dome** · PR-3 · 520 HP · gun 80 at 650 m, 1.8 s · **armed** | Hold the doorway from 00:00. From the duct a Listener hears both halves of the water at 1.0 and the duct itself at 1.2 ([systems-echo.md](systems-echo.md) §3): a silent tender in the cleft at 4.5 × 1.6 is Track to 95 inside 715 m and Classification inside 959, so the throat's middle (500 m from either) and its walls (250 m from one) are Track at every depth a hull can pass at. At 12:00 they leave for the garden's dead water; at 15:00 they come back |
 | `cohort-1` … `cohort-8` — Choristers | The sill, y 2,700, x 1,350 to 2,650 at 186 m spacing, at 2,400 m | SIG 16 idle / 24 cruise, 4.3 silent · HYD 75, **95 under the dome** · PR-2 hull, **`pressureRating: 3` authored** · 200 HP · 50 m hulls a Sounder ignores · **weapons-cold** | Seated silent. Rise silent at 02:00; walk the garden from 03:00 on the legs of §9. Inside a cloud each hears at 5; outside one, at 95. They count. They do not fire, and the reason is a finding rather than mercy |
 
@@ -276,7 +282,10 @@ figures; one down the middle, 650 m from either, passes nothing.
 the cleft's centre to 2000, 900 at 1,750 m until 16:00, loud: SIG 100 the whole way, the
 sound of the deep answering a cohort's noise the way it answers everyone's. It ignores every
 Commune hull — transit grinds hulls of 95 m and up, and the plateaus' largest is an 80 m
-corvette — and passes 500 m from each Submersible against a reach of 85 (`fauna.ts`). It is
+corvette — and clears both Submersibles (`fauna.ts`): from 15:00 they stand 500 m off its
+line against a reach of 85, and in the half-minute before that `throat-east` is standing on
+the line itself at 2000, 2000 and is clear only by depth — the riser is at 1,840 m as it
+passes, 260 m above a gun at 2,100. It is
 spawned at the garden's depth rather than the sill floor's because a driven creature climbs
 at 12 m/s from wherever it was placed: one placed at 2,450 m would pass the dome at 1,990 m,
 inside a transit reach of 117.5 m. Placed at 2,200 m it clears the dome by 250 (§13).
@@ -296,7 +305,8 @@ Every figure is arithmetic over the shipped model (`PROPAGATION_MODEL`, `BASE_TH
 0.147) and the roster ([units.md](units.md)), through the water it is priced in.
 
 - **The dome** — 35 through kelp: Tier 1 to the watch from 2,597 m, to a tender from 1,529,
-  from every hull not inside a cloud. Inside one, nothing past 394 m.
+  from every hull not inside a cloud. Inside one, where the ears are 5, nothing past 499 m —
+  which is why the watch has to leave a bed to hear the building it is hiding from.
 - **The Submersibles in the duct** — 22 idle through trench water, duct-to-below at 1.0:
   Tier 1 to a scout outside a cloud from 3,787 m and to a tender from 2,230.
 - **The line** — rising silent at 02:00, 4.3 through the sill's 1.6, Tier 1 to a scout outside
@@ -330,12 +340,13 @@ Every figure is arithmetic over the shipped model (`PROPAGATION_MODEL`, `BASE_TH
 | A bed's own hum | 20 × 0.4 = 8 | 1,250 | 970 | 705 | 525 |
 | A ping under a bed | 95 × 0.4 = 38 | 3,309 | 2,568 | 1,866 | 1,391 |
 
-Inside a cloud a Chorister hears at 5, and the same rows read: a silent tender never past the
-reference distance; an idle tender Contact inside 186 m and Bearing inside 144; a corvette
-that is not silent Bearing inside 190; a bed's own hum Bearing inside 154. In the cleft, to a
+Inside a cloud a Chorister hears at 5, and the same rows read: a silent tender not at all, at
+any range, because 1.8 is under threshold even at the reference distance; an idle tender
+Contact inside 186 m and Bearing inside 144; a corvette that is not silent Bearing inside
+190; a bed's own hum Bearing inside 154. In the cleft, to a
 Submersible in the duct at 95, a silent tender at 4.5 × 1.6 is Contact from 1,700 m, Bearing
 from 1,320, Classification from 959 and Track from 715 — the throat's middle is Track at ratio
-6.6, its walls at 21.5. A tender idling at 18 in the Foot is Track to the same ears from
+7.1, its walls at 21.5. A tender idling at 18 in the Foot is Track to the same ears from
 1,267 m across the duct's 1.0: the first water the plateau can hear again is, from the duct,
 the first water the cohort can hear the plateau from.
 
@@ -361,9 +372,10 @@ layer. The rest are in the cohort's water, and the Directorate has never yet rou
 up.*
 
 **`the-crossing`** — *One of ours over the layer is a plateau that still has people in it.* —
-`{ kind: 'extract'; role: 'tender'; region: 'the-foot'; count: 1 }` — **terminal**. The middle
-rung, in *Thin Water*'s and *Sorrowgate*'s arrangement: the ladder reads how many terminal
-rows were met, so a three-row Results table needs two, and the ask is still three.
+`{ kind: 'extract'; role: 'tender'; region: 'the-foot'; count: 1 }` — **terminal**, revealed
+00:00, marker `the-foot`, the same circle. The middle rung, in *Thin Water*'s and
+*Sorrowgate*'s arrangement: the ladder reads how many terminal rows were met, so a
+three-row Results table needs two, and the ask is still three.
 
 **`the-letter`** — *What they hear of us they'll enter, and this time they came to enter it in
 person.* — `{ kind: 'tolerance'; ticks: 30 * SIM.TICK_HZ; tier: ResolutionTier.Classification }`
@@ -461,7 +473,7 @@ minutes, and one minute for the tide to turn on whatever stands.
 | **12:00** | `lose` `bed-mid`. `move` `throat-west` → 1500, 2000, `depthM` 2,100; `move` `throat-east` → 2000, 2000, `depthM` 2,100 — the doorway empties into the dead water, at 72, and everything in the cleft hears it. **The window opens** |
 | 12:30 | `say` — the watch: the throat's empty; three minutes, we'd guess; down the middle, not the walls |
 | 13:30 | `move` × 8 — y 2,200: the line stands on the beds' row a third time, on the dead ones at its own 95 and inside the east one at 5 |
-| **14:30** | `creature` `the-sill-riser` — Sounder, `spawnAt` 2000, 2900 at 2,200 m, `driveTo` 2000, 900 at 1,750 m, `untilTick` 16:00, **loud**: SIG 100 up the cleft's centre, 500 m from either gun, ignoring every hull the plateaus own. The beat the close's telegraph is measured from |
+| **14:30** | `creature` `the-sill-riser` — Sounder, `spawnAt` 2000, 2900 at 2,200 m, `driveTo` 2000, 900 at 1,750 m, `untilTick` 16:00, **loud**: SIG 100 up the cleft's centre, ignoring every hull the plateaus own and clearing both guns — `throat-east` is on its line until 15:00 and 260 m above it, and from 15:00 both are 500 m off it (§6). The beat the close's telegraph is measured from |
 | **15:00** | `lose` `bed-east`. `move` `throat-west` → 1500, 1000, `depthM` 1,200; `move` `throat-east` → 2500, 1000, `depthM` 1,200 — the guns climb back to the duct over sixty seconds, and the doorway closes from the floor up. `say` — the Band-Speaker: the furrow is attended; what is in it is counted |
 | **16:00** | `resolve` — the tide. Whatever is over the layer is the column; whatever is under the dome is in the cohort's water. Not a conclusion: the telegraph is 14:30 against 16:00, ninety seconds |
 
@@ -554,19 +566,22 @@ terminal rows.
 
 **Seats, checked against the floor and the band.** The households, the watch and the escorts
 at 1,790 m over the furrows' 2,200 — `tender-1` 1400, 2100 under the west bed; `tender-2`
-2000, 2300, `watch-1` 1900, 2200 and `watch-2` 2100, 2200 under the middle; `tender-3`
+2000, 2300, `watch-1` 1850, 2300 and `watch-2` 2150, 2300 under the middle; `tender-3`
 2700, 2150, `escort-1` 2600, 2000, `escort-2` 2650, 2100 and `escort-3` 2600, 2250 under the
-east — every seat inside 350 m of its bed's centre, and PR-2 owns 1,790. The beds at 1,790
-over 2,200; the dome at 2,000 m over 2,200; the Submersibles at 1,200 m over the cleft's
-1,800; the line at 2,400 m over the sill's 2,600 with `pressureRating: 3` authored on a PR-2
-hull (§13); the riser spawned at 2,200 m over 2,600 and driven at 1,750 m over 1,800, inside
-its 1,300–2,700 band.
+east — every seat inside 350 m of its bed's centre, PR-2 owns 1,790, and every one of the
+eight is more than 499 m from the dome, so no hull opens the mission able to hear it. The
+beds at 1,790 over 2,200; the dome at 2,000 m over 2,200; the Submersibles at 1,200 m over
+the cleft's 1,800; the line at 2,400 m over the sill's 2,600 with `pressureRating: 3`
+authored on a PR-2 hull (§13); the riser spawned at 2,200 m over 2,600 and driven at 1,750 m
+over 1,800, inside its 1,300–2,700 band.
 
-**Two posts the watch can stand at, computed rather than hoped.** The garden's corners at
-1250, 1800 and 2750, 1800 are outside every cloud — 410 m from the nearest bed's centre —
-752 m from the dome, where a silent scout at 3.5 through kelp is nothing to a listener at 80
-past 670 m, and 838 m from the near Submersible. A scout there hears at 70: the doorway from
-838 m, the line from 2,052, the dome from 2,597. It is the only water in the garden where a
+**Two posts the watch can stand at, computed rather than hoped.** The garden's northern
+corners at 1250, 1800 and 2700, 1800 are outside every cloud — 410 and 382 m from the nearest
+bed's centre — and 752 and 702 m from the dome, where a silent scout at 3.5 through kelp is
+nothing to a listener at 80 past 670 m. The eastern post is 2700 and not 2750 because the
+cell whose centre is 2875 belongs to the East Wall and is rock: the garden's last water is the
+cell that ends there. A scout at either hears at 70: the near Submersible from 838 and 825 m,
+the line from 2,052, the dome from 2,597. It is the only water in the garden where a
 hull can have its ears and keep its name.
 
 **Why this ground argues the mission.** The cleft is the only road out, 1,500 m wide, with
@@ -684,8 +699,9 @@ beds and what the plateau agreed at the top of the cleft:
 **Tidespeaker Ysolde Marr, at the tide's turn — 16:00**
 
 > The reading of the count, per §8, when the watch has brought it up, and then one sentence
-> she should not say aloud and does: "We were the only people in the Rift who never kept a
-> letter. Tonight I'd like to know exactly what it said."
+> she should not say aloud and does: "We keep nothing, and keeping nothing has been the whole
+> of our protection for two hundred years. Theirs has been on Sefa's shelf for nine of them.
+> Tonight I'd like there to be one sentence of ours somebody could read out in nine years."
 
 **Bloomwright Sefa Anholt, on the lane, after the count**
 
@@ -729,7 +745,7 @@ each stated so a reviewer can overrule it in one place.
 | **`lose` beats on the player's own structures** | **Built** — Sorrowgate loses the court's array at 10:40 the same way. The beds die on the clock and never to a gun; the line is authored transits per [mission-sorrowgate.md](mission-sorrowgate.md) §9, and the correction is the document's, not the roster's |
 | **`silent` beats on scripted hulls, and on the player's own** | **Built** — `applySilent` acts on the tag's own slot whoever owns it. The line is seated silent and dropped at 03:00; the player's eight hulls are authored silent at 00:00 and the player may drop it, which is the mission |
 | **Armed scripted hulls with live fire control** | **Built** — Thin Water's corridor. Two Submersibles carry it here and nothing else does |
-| **A Sounder driven at an authored depth** | **Built** (#349; [mission-intake.md](mission-intake.md) §13), with a finding about where it starts: a driven creature climbs toward `driveTo.depthM` at `DRIFT.VERTICAL_SPEED_MPS`, 12 m/s, from wherever it was spawned, and the transit grinds any structure whose depth is within a body plus its radius (`fauna.ts`, `transit`). Spawned at the sill floor's 2,450 m, as planned, the riser would pass the dome at 1,990 m against the dome's 2,000 and a reach of 117.5, and grind a 1,200 HP Cantor through in 7.8 s at 220/s. Spawned at 2,200 m it is at 1,750 by y 1,775 and clears the dome by 250 m; §6 authors that and says why |
+| **A Sounder driven at an authored depth** | **Built** (#349; [mission-intake.md](mission-intake.md) §13), with a finding about where it starts: a driven creature climbs toward `driveTo.depthM` at `DRIFT.VERTICAL_SPEED_MPS`, 12 m/s, from wherever it was spawned, and the transit grinds any structure whose depth is within a body plus its radius (`fauna.ts`, `transit`). Spawned at the sill floor's 2,450 m, as planned, the riser would pass the dome at 1,990 m against the dome's 2,000 and a reach of 117.5, and stand inside that reach for 7.8 s, which at 220/s is 1,716 points against a 1,200 HP Cantor — the kill takes 5.5 of those seconds and it has 7.8. Spawned at 2,200 m it is at 1,750 by y 1,775 and clears the dome by 250 m; §6 authors that and says why |
 | **The `ground` beat as a restatement** | **Built** (#259), and not a spend: the repaint is capped at *Deep Furrow* and *Attending* 6 by the judge, and this beat turns water that was turned three tides ago. If *Deep Furrow*'s region pressure grant lands as a `ground` field, this beat should carry it too, so the standing furrow's zone is restated with its paint |
 | **The region pressure grant** — *Deep Furrow*'s headline row | **Not needed here, and not leaned on.** Every player hull is seated at 1,790 m, where `requiredPressureRating` returns 2 and a PR-2 hull owns the water; the seat test (`missions.test.ts`, reading the hull's rating) passes as written, and a PR-2 hull leaving the furrow region at 1,790 m pays no crush anywhere on this map. Both Spire-kind approximations *Deep Furrow* carries are dropped: a Sounding Spire is active at SIG 80 whenever a hull under it is below its rating, and a garden that hums at 80 is a different mission. See the open question below for what the seat costs the fiction |
 | **The Chorister's rating, authored** | **A finding, not a request.** The Chorister is PR-2 on the hull and PR-3 in Directorate hands by `effectivePressureRating` ([units.md](units.md)), and the seat test reads `unit.pressureRating ?? statsFor(kind).pressureRating` — the hull, not the faction. Eight Choristers seated at 2,400 m therefore carry `pressureRating: 3` in the literal so the test does not report them dead of crush where they stand. The test is the side that should move: a seat check that read `effectivePressureRating` would let a Directorate literal author its cohort hull without restating the faction's baseline on every row |
@@ -743,7 +759,7 @@ each stated so a reviewer can overrule it in one place.
 | **`souls`, per hull** | **Built** as a field the tests read and the runtime does not; the epilogue carries sixteen by hand, and the readings say *by household* because that is how the plateau counts |
 | **Bloom Surge** — the Commune's superweapon, and the row the format brief owes this title | **Absent, and deliberately not asked for.** [factions.md](factions.md) describes a detonating spore mass that blinds hydrophones across a vast radius for 25 s; nothing in `packages/` carries it, and no commander-ability or superweapon layer exists ([mission-convocation.md](mission-convocation.md) §13). This mission's system is the Veil as a *structure* — a bed that stays, under which hiding is a schedule — and a detonation that blinds the dome for twenty-five seconds would be an answer to the letter in the letter's own grammar, which the Commune declines to give. The mission is playable without it and would be worse with it |
 | **A predicate over another party's state** — *the furrow is theirs* | **Not expressible, and not needed.** The union asks nothing about where another party stands (`types.ts`); the furrow is lost by authorship — the dome stands and the line stays in every outcome — and Marr reads it as a fact in every epilogue rather than as a row |
-| **Progression** — *Deep Furrow*'s count and the sown furrow into this tide | **Not built** ([campaign.md](campaign.md) §11). The `ground` beat at 00:00 is the honest restatement; the households are authored as the sixteen that stayed below, and the document says which run of *Deep Furrow* it assumes |
+| **Progression** — *Deep Furrow*'s count and the sown furrow into this tide | **The record is built; this is not**, and [mission-deep-furrow.md](mission-deep-furrow.md) §13 states the split first. A per-mission history shipped with the campaign board (#371, `packages/frontend/src/progression/store.ts`): written once from the `missionOver` payload, keeping the best reading a mission has ever returned. What it keeps is an *outcome*, and what this row wants is mission-scoped — whether the second furrow was sown, and which sixteen came up off the garden floor — which is a sibling key beside `missions` in the same record and is not started. So the `ground` beat at 00:00 is the honest restatement, the households are authored as the sixteen that stayed below, and the document says which run of *Deep Furrow* it assumes |
 | **Cross-mission Drift Health** — rule 5's second concrete pair | **Not built**, named here and not asked for, as [mission-convocation.md](mission-convocation.md) §13 named the first pair. A furrow the last mission dived through loudly is a quieter garden this tide, and nobody tells the player why |
 | **The 205 PC letter, as a document** | **Text only** — the letter is speech in the briefing and in the Band-Speaker's mouth, not an artefact the format carries |
 | In-mission character speech, heard | Text only, the standing status ([mission-sorrowgate.md](mission-sorrowgate.md) §13) |

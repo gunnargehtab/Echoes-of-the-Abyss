@@ -21,7 +21,7 @@ city, and Marr Plateau's guns are asked to go with them.*
 **This is the first mission in which the player's own hulls are ordered by somebody else, and
 the first the Commune plays on ground it did not tend.** Every Commune mission so far has put
 the plateau's whole force under the player's hand and asked nothing of it but a number agreed
-in daylight. Here four of the seven hulls the player commands are given their orders by the
+in daylight. Here four of the nine hulls the player commands are given their orders by the
 Bloomwright, on her clock, from the barge she is aboard — a leg a minute, stood again at the
 half, with a dive wherever the ground drops — and the player may countermand every one of them
 for thirty seconds at a time. §4 says what that costs and §13 records that the format could do
@@ -38,7 +38,7 @@ the north shoulder to the far south that runs through a place nobody built.**
 Sorrowgate is the Surface Age's one attempt at a permanent deep colony, fallen in some year
 nobody kept, and the Rift calls the whole ruin after the gate its dead went through
 ([world-map.md](world-map.md) §3; [habitats.md](habitats.md) §4). The prologue spent it: an
-exchange, a ping, a colossus, an arch. This mission arrives two seasons later and finds the
+exchange, a ping, a colossus, an arch. This mission arrives many tides later and finds the
 city as the prologue left it, because nothing here is maintained and nobody moves into a
 place that fell. The plateaus are not moving in. They are moving *through*, south, toward
 the rim, with the Kell seed and the barge that carries the programme, on the tide Anholt said
@@ -121,7 +121,7 @@ are authored creatures on the Drift's own slot, and `fauna` is off. The map lite
 | **The barge** — `the-barge` | 1 | Cruiser hull, Commune-grown · **SIG 55 idle / 65 with systems live** / +30 · 7.6 silent · HYD 65 · 1,200 HP · speed 45 · **130 m** · **PR-3 by refit** (the roster's 2) ([units.md](units.md)) | The programme made a hull. The first hull in the roster's largest class the plateaus have ever grown, the loudest thing they own, and — at 130 m against `DRIFT.TRANSIT_MIN_HULL_M`'s 95 — the first they have grown that a Sounder grinds. Unarmed. Fourteen aboard, Anholt among them |
 | **The tenders** — `seed-one`, `seed-two`, `seed-three` | 3 | Harvester hull, Commune-grown · SIG 18 idle / 40 cruise · 4.5 silent · HYD 30 · 300 HP · speed 40 · 75 m · **PR-3 by refit** (the roster's 2) | The seed, in three hulls a Sounder does not notice. Six, five and eight aboard — nineteen. Deaf below the mark-reading floor ([systems-echo.md](systems-echo.md) §7), so the escort hears for them |
 | **The escort** — `escort-one` … `escort-three` | 3 | Corvette hull, Commune-grown · SIG 28 idle and cruise / +25 firing · 5.3 silent · HYD 50 · 420 HP · speed 85 · 80 m · **PR-2** · **armed** · torpedoes, magazine 2 · noisemakers · active sonar | Juno's three, live. PR-2 stands anywhere to 1,800 m and pays four points a second below it (§4); a corvette can follow the column to the arch's foot and stand over the basin at 1,790 m, and has 105 s of hull if it goes into it. Four aboard each |
-| **The watch** — `watch-one`, `watch-two` | 2 | Light Scout · SIG 6 idle / 12 cruise · 3.5 silent · **HYD 70** · 180 HP · speed 120 · 60 m · **PR-1** | The plateau's ordinary pair. The Shelf is their water — 400 m is the deepest they own — and the span that went solid in the spring is solid at every depth, so they cannot pass the arch's row by any route and hear the basin only across the layer, at a third. Two aboard each |
+| **The watch** — `watch-one`, `watch-two` | 2 | Light Scout · SIG 6 idle / 12 cruise · 3.5 silent · **HYD 70** · 180 HP · speed 120 · 60 m · **PR-1** | The plateau's ordinary pair. The Shelf is their water — 400 m is the deepest they own — and the span that went solid in the spring is rock at every depth but the lock's two cell columns, which the 00:00 beat re-cuts as roofed water at 1,300–1,500 m. Between the rock and the roof a PR-1 hull cannot pass the arch's row by any route, and hears the basin only across the layer, at a third. Two aboard each |
 
 **Souls, authored per hull and read at the close.** The barge carries **14**, the tenders **6,
 5 and 8** — thirty-three, by household, the way a plateau crews its freight
@@ -195,9 +195,10 @@ The consequence is the mechanic and not a hole: **the Bloomwright's order is an 
 order, and the player may countermand it until the next one lands.** A player who wants the
 column stopped, or elsewhere, or higher, gives that order and has it for thirty seconds; at
 the half the table gives Anholt's again. Holding the column is therefore a thing done against
-her, for half a minute at a time, by hand, and the price is arithmetic: a column that is held
-for the last twenty-five seconds of every half-minute covers the lane in twice the time, and
-the basin's clock (§6) does not stretch to meet it.
+her, for half a minute at a time, by hand, and the price is arithmetic: every second the
+column is held is a second later it stands on the row the basin crosses, and the basin's
+clock (§6) does not stretch to meet it — three holds of twenty-five seconds put the column on
+the lane at 12:25, which is the second the basin is on it (§9).
 
 ### 2. The column can be made quiet, and cannot be made slow — and every climb is paid for in a dive
 
@@ -274,7 +275,7 @@ the 1.6th power of range.
 
 Read across: a cruising corvette out-shouts a barge with its systems live only from inside
 **0.59** of the barge's distance, out-shouts a silent barge from anywhere inside **2.26** of
-it, and a noisemaker out-shouts a live barge at equal distance by five per cent. Read down:
+it, and a noisemaker out-shouts a live barge at equal distance by eight per cent. Read down:
 nothing the column does on the lane is over the colossus's Interest — the lane is drawn at
 750 m (§6) — and everything in the lower half of the table is, from a corvette that is closer
 than the barge. The decoy is **ping-plus-position**: a ping is the only sound that reaches the
@@ -406,8 +407,11 @@ Committed to a barge, and a corvette that stays the loudest thing it hears keeps
 price is the doorway. The decoy water closest to the colossus is the basin's north-west, and
 the western Hollow lies at 1750, 3100, 550 m north of where the colossus rests: a corvette at
 2250, 3600 at 1,790 m is 502 m from the colossus, Commit-loud with a noisemaker, and 707 m
-from the western Hollow, which coils it at ratio 53.3 and cannot strike past 500 m; a
-corvette a hundred metres further north is inside both.
+from the western Hollow, which coils it at ratio 53.3 and cannot strike past 500 m. The two
+are 550 m apart, so there is water that is inside both, and it is the water a corvette
+reaches by working in rather than by drifting north: at 2000, 3500 at 1,790 m it is 292 m
+from the colossus and 480 m from the Hollow in three dimensions — Commit-loud to each, and
+inside the 500 m the strike needs.
 
 **At 12:00 it is driven.** A `creature` beat, `loud: true`, drives it from where it lies to
 3250, 3650 at 2,300 m until 13:30 — 1,500 m due east along the row the tenth waypoint stands
@@ -480,11 +484,11 @@ dimensions, pursuing within 500–1,300 m. Through the city's 0.8:
 | --- | --- | --- | --- |
 | The barge live, 65 | 669 m | 427 m | ratio **17.1** — five under |
 | A dive, 72 | 713 m | 456 m | 18.9 |
-| A tender at cruise, 40 | 494 m | 316 m | 8.9 |
-| A corvette cruising, 28 | 395 m | 253 m | 6.3 |
+| A tender at cruise, 40 | 494 m | 316 m | 10.5 |
+| A corvette cruising, 28 | 395 m | 253 m | 7.4 |
 | A corvette breaking silence, 68 | 688 m | 440 m | 17.9 |
 | A noisemaker, 70 | 700 m | 448 m | 18.4 |
-| A torpedo, 60 | 636 m | 407 m | 15.4 |
+| A torpedo, 60 | 636 m | 407 m | 15.8 |
 | A ping, 95 × 3 | 1,684 m | 1,077 m | **74.9** |
 
 The lane passes 791 m from the pack at the first dive and 783 at the third waypoint, and
@@ -532,10 +536,10 @@ factor (`THERMOCLINE.ACROSS` 0.3) where the two ends are on opposite sides of th
 | --- | --- | --- | --- |
 | The colossus, idling | 45 × 1.6 | Contact 4,800 m · Bearing 3,726 · Classification 2,707 · **Track 2,018** | Contact 5,655 · Track 2,378. **From the lock (1,299 m) the column has it at Track** (ratio 10.5) and never loses it |
 | The colossus, calling | 100 × 1.6 | Contact 7,907 m · Track 3,324 | Contact 5,746 to a tender's 30 — every hull the plateaus own, wherever it is |
-| A Hollow, coiled | 3 × 1.6 | Contact 883 m · Bearing 686 · Classification 498 | Contact 1,041 · Bearing 808 · Classification 587. **From the arch's foot the eastern Hollow is a Bearing (ratio 1.7) and the western a Contact (1.0)** — enough to know which doorway is which |
-| A Hollow, striking | 60 × 1.6 | Contact 5,746 m | Contact 6,769 — the whole map, and to the watch across the layer (60 × 1.6 × 0.3), Contact from 3,342 |
+| A Hollow, coiled | 3 × 1.6 | Contact 883 m · Bearing 686 · Classification 498 | Contact 1,041 · Bearing 808 · Classification 587. **From the arch's foot the barge has the eastern Hollow at a Bearing (633 m, ratio 2.2) and the western at a Contact (881 m, 1.3)** — enough to know which doorway is which |
+| A Hollow, striking | 60 × 1.6 | Contact 5,746 m | Contact 6,769 — every hull the column owns, and to the watch across the layer (60 × 1.6 × 0.3), Contact from 3,341 |
 | The pack, idling | 26 × 0.8 | Contact 2,209 m · Classification 1,246 | Contact 2,603 · Classification 1,468 — the column at the third waypoint, 783 m off, has five at a name |
-| A torpedo, running | 60 × 0.8 in the city, × 1.6 in the basin | Contact 4,389 to HYD 65 in the city | Contact 7,090 to HYD 70 in the basin, and across the layer to the watch from 3,342 |
+| A torpedo, running | 60 × 0.8 in the city, × 1.6 in the basin | Contact 4,389 to HYD 65 in the city | Contact 7,090 to HYD 70 in the basin, and across the layer to the watch from 3,341 |
 | A noisemaker | 70 × 0.8 | Contact 4,833 to HYD 65 | |
 | A ping, to whoever is listening | 95 × 0.8 | Track 2,088 to HYD 50 | Self-reveal at Tier 4 to every listener inside the model's 2,400 m — and there is no other party to be lit to |
 
