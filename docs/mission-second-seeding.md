@@ -309,9 +309,8 @@ reconnaissance at Contact (1.15) from the seat it withdrew to at 17:00 — 4,402
 Bearing at 2.01 from the inner station it had left — and the pair in home water at Track from
 696 m. Over the lip, at 1.6, the watch has it at Track (4.72) for the nine seconds of the last
 dive. That is *the arrangement that kept the Directorate from having to fight* ending
-([campaign.md](campaign.md)
-§9), as a sound — a Commune gun descending, struck, into ground that will hold it — and the close
-counts, by household, the people it is over for first.
+([campaign.md](campaign.md) §9), as a sound — a Commune gun descending, struck, into ground
+that will hold it — and the close counts, by household, the people it is over for first.
 
 ### The SIG budget
 
@@ -358,8 +357,8 @@ terraces wherever its player put it, and this mission has to put it somewhere. T
 the flagship at 3000, 2500, the centre of Prospect's terrace marker; this document seats it at
 **3000, 2750** and the bunkerage at 3000, 2850 — 250 and 300 m further south than the plan
 seated them — and says why. Prospect's own 07:00 leg brings `chart-b` to 2850, 2150 — 381 m
-from a hull at 3000, 2500, which is a
-Track at idle to a Cruiser's 65 for six minutes, and would have latched the ledger of §8 in
+from a hull at 3000, 2500, which is a Track at idle to a Cruiser's 65 for six minutes, and
+would have latched the ledger of §8 in
 every run the player let the table's order stand. At 618 m the same leg is a Bearing (2.01) at
 idle, and a Track only at cruise inside 621 m, which the leg reaches for less than a second.
 The readers' terrace seats stay where the plan put them, at 2700, 2450 and 3300, 2450, because
@@ -501,8 +500,8 @@ is audible to any scout not under a cloud — and the reads at eighty are Track 
 
 **The column, HYD 5, under the bed:** the concern's descent nothing — 0.54 at its closest,
 when the flagship is over its terrace station — the watch at its western station nothing
-(0.47), the flagship nothing (0.41), `attendant-a` nothing (0.32). Two
-things reach it all day. The reader's read at face-two, 750 m off through a path mean of 1.0,
+(0.47), the flagship nothing (0.41), `attendant-a` nothing (0.32). Two things reach it all
+day. The reader's read at face-two, 750 m off through a path mean of 1.0,
 is a Bearing (2.17) even to a hull hearing at 5 — the column hears the concern working the
 face beside it. And the riser at 100 through 1.6 is a Contact (1.08–1.12) from the moment it
 lifts off until it is north of y ≈ 2,900, so the column hears the basin wake and loses it as it
