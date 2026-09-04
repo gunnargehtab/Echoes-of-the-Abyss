@@ -132,6 +132,14 @@ export interface MissionResolution {
   outcome: MissionOutcome;
   epilogue: string;
   objectives: ObjectiveView[];
+  /**
+   * Scene ids this run witnessed — docs/campaign.md §1, and
+   * `MissionResultPayload.scenes` for why carrying them costs nothing.
+   *
+   * Empty is the normal case: thirteen of the fourteen shipped missions author
+   * no scene, and a mission that authored one may still witness nothing.
+   */
+  scenes: readonly string[];
 }
 
 /** One authored line, spoken by a `say` beat. */
@@ -1924,6 +1932,13 @@ export class MissionRuntime {
       outcome,
       epilogue: this.definition.epilogue[outcome] + filedReading + transcript,
       objectives,
+      // Latched off the same condition as the reading above, and never off a
+      // separate one: the scene the client remembers is exactly the sentence
+      // the player was just shown (docs/campaign.md §1).
+      scenes:
+        this.filed && this.definition.sweep?.scene !== undefined
+          ? [this.definition.sweep.scene]
+          : [],
     };
   }
 

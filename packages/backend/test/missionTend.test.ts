@@ -20,7 +20,13 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { MissionOutcome, SIM, UnitKind, type EchoSnapshot } from '@echoes/shared';
+import {
+  MARR_PLATEAU_FILED,
+  MissionOutcome,
+  SIM,
+  UnitKind,
+  type EchoSnapshot,
+} from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { missionMapById } from '../src/sim/maps/index.ts';
 import { SEEDING_TEND } from '../src/sim/missions/index.ts';
@@ -42,7 +48,12 @@ function tendMatch(seed: number): Match {
 function runOut(
   match: Match,
   drive?: (tick: number, own: EchoSnapshot | undefined) => void
-): { outcome: MissionOutcome; epilogue: string; resolvedAtTick: number } {
+): {
+  outcome: MissionOutcome;
+  epilogue: string;
+  scenes: readonly string[];
+  resolvedAtTick: number;
+} {
   let last: EchoSnapshot | undefined;
   for (let tick = 0; tick <= T(16, 30); tick++) {
     const own = match.update(STEP_MS)?.get(PLAYER);
@@ -53,7 +64,12 @@ function runOut(
   }
   const over = match.missionOver;
   assert.ok(over !== null, 'the tide never ended');
-  return { outcome: over.outcome, epilogue: over.epilogue, resolvedAtTick: match.world.tick };
+  return {
+    outcome: over.outcome,
+    epilogue: over.epilogue,
+    scenes: over.scenes,
+    resolvedAtTick: match.world.tick,
+  };
 }
 
 describe('the tide, run out untouched — docs/mission-tend.md §8', () => {
@@ -116,6 +132,52 @@ describe('the sweep — docs/mission-tend.md §6, §8', () => {
     });
     assert.match(epilogue, /Less came in/, 'the base reading was replaced rather than appended');
     assert.match(epilogue, /The sweep heard us/, 'a working hull on the lane went unfiled');
+  });
+
+  it('names the scene it filed, and names it only when the reading is given', () => {
+    // docs/campaign.md §1 (#378). The scene id is the machine-readable half of
+    // the sentence above it, so the two are latched together or not at all —
+    // a resolution that carried the scene without the reading would be the
+    // client remembering something the player was never shown, and one that
+    // gave the reading without the scene would leave *Thin Water* cold.
+    const match = tendMatch(31);
+    let tender = 0;
+    const filed = runOut(match, (tick, own) => {
+      if (own === undefined) return;
+      if (tender === 0) {
+        tender = own.units.find((u) => u.kind === UnitKind.Harvester)?.id ?? 0;
+      }
+      if (tender !== 0 && tick % (10 * SIM.TICK_HZ) === 0 && tick < T(8)) {
+        match.orderMove(PLAYER, tender, ON_THE_LANE.x, ON_THE_LANE.y);
+      }
+    });
+    assert.match(filed.epilogue, /The sweep heard us/);
+    assert.deepEqual(filed.scenes, [MARR_PLATEAU_FILED]);
+  });
+
+  it('witnesses nothing on a day the sweep never heard', () => {
+    // The stillness practised, as above — and a completed, quiet Tend leaves
+    // the pair's later briefings exactly as they were authored. This is the
+    // assertion that makes the set scene-keyed rather than mission-keyed.
+    const match = tendMatch(41);
+    const silenced = new Set<number>();
+    const unfiled = runOut(match, (tick, own) => {
+      if (own === undefined) return;
+      const inWindow =
+        (tick >= T(5, 50) && tick <= T(9, 40)) || (tick >= T(11, 20) && tick <= T(14, 10));
+      for (const unit of own.units) {
+        if (inWindow && !silenced.has(unit.id)) {
+          match.setSilentRunning(PLAYER, unit.id, true);
+          silenced.add(unit.id);
+        }
+        if (!inWindow && silenced.has(unit.id)) {
+          match.setSilentRunning(PLAYER, unit.id, false);
+          silenced.delete(unit.id);
+        }
+      }
+    });
+    assert.doesNotMatch(unfiled.epilogue, /The sweep heard us/);
+    assert.deepEqual(unfiled.scenes, []);
   });
 });
 
