@@ -168,8 +168,8 @@ submersible idles at 22 and cruises at 28 — under. One that fires is at 42 idl
 cruising; one that drops Silent Running spikes +40 for two seconds
 ([systems-echo.md](systems-echo.md) §6). Either is over, debt accrues a second for a second up
 to thirty, and while the shift is in debt the dome's grant goes to the court's slot and every
-Chorister at the foot drops from 95 to 75 — sixteen per cent of range, gone, four kilometres
-from the hull that spent it. **Engaging costs hearing**: the Directorate's price, written down
+Chorister at the foot drops from 95 to 75, losing the sixteen per cent of range the dome was
+buying it, four kilometres from the hull that spent it. **Engaging costs hearing**: the Directorate's price, written down
 rather than felt. The joke — the Cantorate's instrument withdrawn from the Cantorate's own
 array by a picket doing its job — is one nobody in the water makes.
 
@@ -266,9 +266,13 @@ player never stood on this side of it, is the arithmetic. Here it is, and it is 
   against the 150.5 the flagship's Klaxon band buys it. Two watch hulls die in about seven.
 - **Four watch hulls take the flagship in 6.7 seconds** — 177.8 a second against 1,200 HP — and
   spend the array's dome for thirty seconds doing it, and are two hulls fewer at the end.
-- **A watch that yields is not heard at all.** Silent at 4.8 in trench water, the second watch
-  reads 2.4 and 2.8 to the Cruiser in Lay-by Two at 750 and 678 m: Bearing and Classification,
-  not Track. Four hundred metres further north it is nothing.
+- **A watch that yields is barely heard, and then not at all.** Silent at 4.8 in trench water,
+  the second watch in its own seat reads 2.4 and 2.8 to the Cruiser in Lay-by Two at 750 and
+  678 m — Bearing and Classification, not Track. Withdrawn a kilometre and a half up the axis
+  to y 2,000 it reads 1.1; at y 1,800 it reads 0.82 and is **nothing**, and at 14:00 a hull
+  holding y 2,000 is 0.73 to the flagship standing in the mouth. A Cruiser hears a silent
+  submersible from 1,402 m of clean trench and no further, against 4,204 m for a cruising one:
+  **silence is worth two and a half kilometres of the pipe.**
 
 The law is therefore a law and not a lever. Standing is legal, correct in its own register, and
 expensive; yielding is legal, correct in the same register, and free. The mission counts the
@@ -328,8 +332,7 @@ says so to nobody.
   A Chorister at 95 hears the Cruiser from 9,022 and the plant at 35 from 6,127.
 - **The concern's ears, pointed back.** A Cruiser at 65 hears a cruising submersible from
   4,204 m (Bearing 3,263, Classification 2,371, Track 1,768), an idle one from 3,616, a
-  **silent one from only 1,402 m** and a firing one from 5,888 (Track 2,476). Silence is worth
-  two and a half kilometres of the pipe.
+  **silent one from only 1,402 m** and a firing one from 5,888 (Track 2,476).
 - **The Call, from the concern's side.** From Lay-by Two at 13:30 the six read **1.33 to 1.66**
   at about two kilometres — three at Contact, three barely at Bearing, a smudge with a rhythm.
   From the mouth at 14:00, 1,301 to 1,504 m out, all six read **2.64 to 3.27: Classification**
@@ -610,9 +613,9 @@ its sentences.
 > the water and counts has also attended, and the record does not grade the two.
 >
 > Six of the cohort are at the foot, under the dome, and are not the picket. The array is
-> lent — the Cantorate lends its ears and its ears are worth more to a Chorister than to
-> anything the Undermarshalcy has ever built — and it is withdrawn while the picket is loud.
-> That is written down. It has always been written down.
+> lent — the Cantorate lends its ears, and its ears are worth more to a cohort hull than to
+> the hulls the Undermarshalcy has paid most for — and it is withdrawn while the picket is
+> loud. That is written down. It has always been written down.
 >
 > The survey array is aboard and it is live. It is not sealed and it is not recommended. A
 > transmission at the foot is a question put to water that has not been asked one, and what is
