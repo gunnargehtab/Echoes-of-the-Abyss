@@ -351,7 +351,7 @@ export const LEDGER_PROSPECT: MissionDefinition = {
       kind: 'say',
       speaker: 'Foreman Corwin Osk',
       text: 'Works order for the shift: go down loud, read four faces clean, come up slow, and be counted at the staging. Twenty-nine years I have run shifts on ground that was dying. This is the first one on ground that is not born yet. I find I do not care for the difference, and the shift does not care what I care for. Descend.',
-      note: 'Read, not heard — the standing status of the say channel',
+      note: 'Hailed and read — the say channel since #381',
     },
 
     // The visitors' transits — authored legs, weapons-cold, each navy about
@@ -388,6 +388,7 @@ export const LEDGER_PROSPECT: MissionDefinition = {
       atTick: T(5, 30),
       kind: 'say',
       speaker: 'The charting pair, for the plateaus',
+      voice: 'plateaus',
       text: "We're here too — we thought you'd rather hear it from us than from your instruments. We're reading the rim for what could live on it. You're reading it for what can be taken out of it. The rim doesn't mind either of us yet. We'd ask you to notice the *yet*.",
       note: '',
     },
@@ -400,6 +401,7 @@ export const LEDGER_PROSPECT: MissionDefinition = {
       atTick: T(8),
       kind: 'say',
       speaker: 'Watch-Speaker, for those below',
+      voice: 'cohorts',
       text: 'The rim is attended. It was attended before the concern had a registry and it will be attended after. What is done on it this week is entered — in an account that is not yours, against a debt that is not stated.',
       note: '',
     },
@@ -413,6 +415,7 @@ export const LEDGER_PROSPECT: MissionDefinition = {
       atTick: T(11),
       kind: 'say',
       speaker: 'Voice of the reconnaissance, for the Order',
+      voice: 'order',
       text: "The Order notes the concern's instruments are in tune, and returns the compliment of assuming it was meant. What the crystal is for, we will not discuss on an open channel. It would be discourteous to the crystal.",
       note: '',
     },

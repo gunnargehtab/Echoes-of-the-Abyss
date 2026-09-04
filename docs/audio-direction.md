@@ -228,6 +228,7 @@ AudioContext
 ├── worldBus  (ambience, biome beds, fauna) ─────────────────────┤
 ├── contactBus ─────────────────────────────────────────────────┼─► master ─► destination
 │    └── per-contact voice: source → biomeFilter → panner → gain │
+├── speechBus (the hail and the murmur bed, §13) ───────────────┤
 ├── selfBus   (own hull, drive, cavitation) ────────────────────┤
 └── uiBus     (Howler) ─────────────────────────────────────────┘
 ```
@@ -298,6 +299,11 @@ the water. It claims no precedence rung and ducks nothing, because a chore may n
 a contact; that the ui bus sits outside the ducking chain is now load-bearing rather than
 incidental.
 
+**Speech has a bus** (§13). A `say` beat is hailed in its speaker's register — five
+synthesised signatures, one per voice of docs/culture.md §3, then a murmur bed for the
+reading — on a bus of its own with a rung under contacts, a trim that can go to zero, and a
+whisper under the silence order. No line is recorded; the log is the caption.
+
 The one thing deliberately withheld is the pinger's **position**. The victim gets a bearing,
 which is what §11's screen-edge flash asks for. A ping resolves by hard radius while the
 pinger's own self-reveal travels by propagation, so in a masking biome a player can be lit
@@ -355,7 +361,77 @@ without hearing.
 
 ---
 
-## 13. Related
+## 13. Speech — The Voice in the Water
+
+Twenty-eight mission documents carry a §12 of lines, and until #381 every one of them was read and none was heard: the `say` beat carried speaker and text to the mission log beside the orders panel ([ui-ux.md](ui-ux.md) §10), at the times each document's §12 gives, and this document owned no bus for a voice. This section is that bus. It is a **channel**, not a cast.
+
+**A channel, not a cast.** No recorded line ships, and none is specified here. [culture.md](culture.md) §3 has five voices and §6's test is *which faction could not have said it*; a speech channel whose four Sorrowgate voices sounded like one narrator would have failed before the first line played. So what the mix does is narrower than reading the line aloud, and more honest: it says **somebody is speaking on this channel, and it is one of these five**. The words stay the log's.
+
+### The hail
+
+Every line opens with a **hail** — 600 ms of signature in the speaker's register's material. Four of the materials are §8's timbre families, carried into speech so a player who has learned a faction's drive by ear already knows its voice; the fifth is new, because §8 has four rows and §3 has five voices.
+
+| Register | Self-description ([culture.md](culture.md) §3) | Material | The hail |
+| --- | --- | --- | --- |
+| Bathyarch Consortium | *the concern* | Machinery under load — steel, reciprocating | Three strikes of a 68 Hz square on a fixed period. The only voice with a beat in it |
+| Pelagia Commune | *the plateaus* | Breathing — muscle, fluid, arrhythmic | One swell of a 52 Hz sine, its pitch drifting up and back, that does not repeat |
+| Abyssal Directorate | *the cohorts* | Many small things agreeing | Six triangle ticks around 140 Hz that start scattered and land together — heard *organising* |
+| Hadron Knights | *the Order* | Pure tone — crystal, sustained | One 196 Hz note, clean attack, long release |
+| The Sorrowgate court | *the court*, *the record* | A dead room | A single dry tap of high-passed noise, 25 ms, no tail and no tone |
+
+The court's is the fifth because it is the one voice that is not heard through water. Every other hail carries the Rift in it — a beat, a breath, a chorus, a note — and the court speaks from a place that is not the Rift: a room with no water in it to carry anything ([culture.md](culture.md) §3, "the one voice in the Rift that describes a room without joining it"). A tap with no tail is what such a room sounds like.
+
+### The murmur bed
+
+After the hail the channel stays audibly **open** for as long as the line takes to read — band-passed noise gated at a syllable rate, in the register's own band and cadence (the concern's gate is metronomic, the plateaus' never repeats), and never voiced: no formants, no pitch, nothing a listener could take for a word. It reads as *someone is speaking on this channel* and as nothing more specific than that.
+
+The length is the line's: **fifteen characters a second, never under 1.5 s, never over 8 s.** A player with their eyes on the water hears the channel close when the line would have been read, which is the cue to look at the log if they have not.
+
+### Where it sits
+
+Speech has its own bus (`speechBus`), trimmed like the others, and a rung in §2's chain:
+
+> self-exposure › contact › **speech** › self › world › music
+
+Information outranks a voice: a contact arriving mid-sentence dips the speaker and never the reverse, because a line is authored and the log already has it while a contact is news. A voice outranks atmosphere. The table, as `precedence.ts` transcribes it — a rung never ducks itself or anything above it, and the pairs that predate speech keep the values they had:
+
+| While this sounds | contact | speech | world | music |
+| --- | --- | --- | --- | --- |
+| Exposure (§5) | 0.55 | 0.3 | 0.3 | 0.3 |
+| A contact | — | 0.55 | 0.3 | 0.3 |
+| **A line** | — | — | **1** | 0.5 |
+| An own cue — the ping, a broken silence, a blow, the bite | — | — | 0.55 | 0.3 |
+| The world | — | — | — | 0.55 |
+
+The world's cell under a line is deliberately **1**. The world bus carries §5's Sounder call "at a level the −8 dB duck cannot bury", and a voice that talked for eight seconds over a world at −10 dB would bury the one warning this document promises never to. The self bus has no column at all, for the same shape of reason: it carries the exposure strike and the ping, which are the top of the chain, and a bus-level duck to make room for anything would cut the loudest event in the game. A line sits *over* the player's own noise and the water. It does not press them down; the one thing it presses down is the score.
+
+### Under a silence order, and under Silent Running
+
+A briefing voice that keeps talking at full level while the player is ordered quiet is not loud. It is **wrong**: the court has told the flight that twenty SIG is the ceiling ([mission-sorrowgate.md](mission-sorrowgate.md) §4), and a mix that hailed the court's own observer at full power would be contradicting the court in the same breath.
+
+So while the mission view carries silence-debt — `debtS > 0`, the one signal the client already holds, and the same number the debt gauge shows — or while any own hull is running silent, the channel is kept open at a **whisper**: the hail drops **−6 dB** and loses its top octave (a low-pass at half the register's own ceiling, so each voice loses *its* top and the court is thinned by the same amount as the concern), and the murmur bed runs **half as long**. A low-power link, kept open. It never mutes, because the log is the caption and the ear is owed the cue that a line landed — a line the player did not hear land is a line they will not look for.
+
+The rule is read as the line arrives and rides the line: a line spoken under the order and one spoken after it lifts are each hailed as they were when spoken.
+
+### Accessibility
+
+§11's rule holds with nothing added. The log stays; **captions are the log**, and a line's text was on screen before this section existed. The speech trim can go to zero and nothing is lost. Under the visual-first preset the hail is neither delayed nor inverted — there is nothing to race, because the line and the log row are the same event, queued from the same message.
+
+### What it is not
+
+**It is not a side channel.** A line is heard when its beat fires and never earlier, and never for a beat the observer did not receive: the hail is queued from the same `missionLine` message that writes the log row, and the register rides the line from the server — resolved there, so a beat with no authored voice arrives already in the player's own and the client infers nothing. An audio rendering of authored mission data the observer already holds discloses nothing new.
+
+**Nothing here feeds back.** §12's determinism note applies unchanged: the simulation never learns a line was heard, whispered or trimmed away.
+
+### Scaffold status
+
+**Built** (#381): the five hails, the murmur bed and its reading rule, the `speech` bus and its trim, the rung and its table, the whisper rule, and the register on the wire — `MissionVoice` in `@echoes/shared`, `voice` on the `say` beat and on `MissionLine`, authored on the minority of lines spoken by somebody other than the player's own faction and defaulted to the player's register otherwise. Sorrowgate's four lines are the first content, and they are four registers by construction — the Order at 06:20, the concern at 09:00, the cohorts at 09:20, the plateaus at 10:40 — and `missionRuntime.test.ts` plays the mission and asserts they arrive as four different voices. The court's hail is built and has no line yet to carry: Halloran speaks in the briefing and the objective readings, which are read before the socket opens and are not beats.
+
+**Not built**, and not this section's to build: recorded lines, or a voice per speaker — the hail is per register, and Vrey and Sull share the Order's note; the Collapse's thirty seconds at SIG 100 as a *sound* is §5's business, not speech; and [mission-first-arrival.md](mission-first-arrival.md) §13's largest item — Korrin's silence, a thing an actor does not say — has no channel here either, because a channel that hails what is said cannot hail what is withheld.
+
+---
+
+## 14. Related
 
 - **[systems-echo.md](systems-echo.md)** — the mechanic this mix carries
 - **[ui-ux.md](ui-ux.md)** — the visual half, and the accessibility mirror

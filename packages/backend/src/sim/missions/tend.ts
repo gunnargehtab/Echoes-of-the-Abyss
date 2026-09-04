@@ -432,7 +432,7 @@ export const SEEDING_TEND: MissionDefinition = {
       kind: 'say',
       speaker: 'The watch',
       text: "Two on the lane, coming up the chart. Four minutes, we'd say. Teel's people have gone quiet already — you can hear the hush walking.",
-      note: 'Read, not heard — the standing status of the say channel',
+      note: 'Hailed and read — the say channel since #381',
     },
     {
       atTick: T(6),

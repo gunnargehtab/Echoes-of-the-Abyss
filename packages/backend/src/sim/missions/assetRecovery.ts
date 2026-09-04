@@ -439,7 +439,7 @@ export const LEDGER_ASSET_RECOVERY: MissionDefinition = {
       kind: 'say',
       speaker: 'Foreman Corwin Osk',
       text: "Shoring on Five held in '06 because the Board bought the time to do it right. Six got the other kind of time. Put that in the log with the rest of it.",
-      note: 'Read, not heard — the standing status of the say channel',
+      note: 'Hailed and read — the say channel since #381',
     },
     {
       atTick: T(3, 10),

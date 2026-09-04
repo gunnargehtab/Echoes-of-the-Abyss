@@ -20,6 +20,7 @@ import {
   type MatchListingMetadata,
   type MissionResultPayload,
   type MissionView,
+  type MissionVoice,
   type ResourceNodeInfo,
   type StructureKind,
   type UnitKind,
@@ -113,6 +114,12 @@ export interface MissionLine {
   tick: number;
   speaker: string;
   text: string;
+  /**
+   * The register the line is spoken in, resolved server-side — the mix keys
+   * its hail on it (docs/audio-direction.md §13). Authored data about an
+   * authored line, so it discloses nothing the log row did not.
+   */
+  voice: MissionVoice;
 }
 
 export interface GameClientHandlers {

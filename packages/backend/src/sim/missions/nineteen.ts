@@ -677,7 +677,7 @@ export const CHORD_NINETEEN: MissionDefinition = {
       kind: 'say',
       speaker: 'Choirmaster Ivane Sull',
       text: 'The Order has nineteen unentered. It has had nineteen unentered for three years and I have signed the reason twice, in the same words both times: nobody could go down and get them, and a committal is played over the body. The words were true. I am not signing them again.',
-      note: '§12, the committal order, read to the party at the Head. Read, not heard — the standing status of the say channel',
+      note: '§12, the committal order, read to the party at the Head. Hailed and read — the say channel since #381',
     },
 
     // 00:00 — the walls. Four coil on the north wall at y 1,400 and three on
@@ -738,6 +738,7 @@ export const CHORD_NINETEEN: MissionDefinition = {
       atTick: T(4),
       kind: 'say',
       speaker: 'Watch-Speaker, for those below',
+      voice: 'cohorts',
       text: 'The trench is attended. What is played over it is counted. It is not being threatened.',
       note: '§12 — it is not being threatened, it is being counted. The Undermarshalcy states the law once and does not repeat it',
     },
@@ -831,6 +832,7 @@ export const CHORD_NINETEEN: MissionDefinition = {
     {
       kind: 'say',
       speaker: 'Watch-Speaker, for those below',
+      voice: 'cohorts',
       text: 'Entered: the Order, at the eightieth, over the trench, nineteen times or fewer. The count will say which.',
       note: '§12 — on sixty seconds at Classification. It enters a number it declines to complete, because the Undermarshalcy does not round and does not guess',
       when: {

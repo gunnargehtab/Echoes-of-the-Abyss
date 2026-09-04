@@ -913,7 +913,7 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
       kind: 'say',
       speaker: 'Choirmaster Ivane Sull, from the Ninth',
       text: 'The plan is authorised. It has been on my desk since the year opened, I have declined it four times, and what changed is that the nineteen are entered and the window is shorter than the one I wrote to the houses.',
-      note: 'Read, not heard — the standing status of the say channel. The line she had not crossed, crossed',
+      note: 'Hailed and read — the say channel since #381. The line she had not crossed, crossed',
     },
 
     // 01:00 — the order to dive. One word, and it is Osk's: the Order has been
@@ -968,6 +968,7 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
       atTick: T(4, 30),
       kind: 'say',
       speaker: 'Cohort-Prime Adze, 9th Trench Cohort',
+      voice: 'cohorts',
       text: 'Correction is filed. Two nodes stood into the watch at the turn and were entered as they rose; one is singing on the fourth face and there are hulls under it. The node is corrected. What is under it is counted at what leaves.',
       note: 'Filed in the passive, and it never says who is being corrected. The whole Directorate liturgy is in "counted at what leaves"',
     },
@@ -977,6 +978,7 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
       atTick: T(5, 30),
       kind: 'say',
       speaker: 'The charting pair, for the plateaus',
+      voice: 'plateaus',
       text: "We can hear you cutting. We're not going to ask you to stop — we don't ask. We've been on these terraces since before the concern had ears here, and there's a bed of ours on the western lip, and we'd only say that the rim is what it is because nobody had, yet, and you're the third navy this week to make that a past tense.",
       note: 'Refuses the imperative twice in one sentence and offers a distinction instead of a demand',
     },
@@ -1001,6 +1003,7 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
       atTick: T(8),
       kind: 'say',
       speaker: 'Watch-Speaker, for those below',
+      voice: 'cohorts',
       text: 'The rim is attended. Two nodes were entered when they were raised. What is done under them this tide is corrected, and the correction is entered against an account that is not the Order’s.',
       note: '',
     },
@@ -1093,6 +1096,7 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
     {
       kind: 'say',
       speaker: 'Watch-Speaker, for those below',
+      voice: 'cohorts',
       text: 'Entered: hulls under a node, classified. The count began when the node was raised; it is not begun again.',
       note: 'In practice this fires at about 00:30, before the party is at working depth: two structures at SIG 30 standing in dome-lifted ears from the first tick spend thirty cumulative seconds at Classification or better before the descent finishes (§8)',
       when: { kind: 'tolerance', ticks: COUNT_TICKS, tier: ResolutionTier.Classification },

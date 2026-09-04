@@ -370,7 +370,7 @@ What exists against this document and what does not, continuing the Ledger's lis
 | **The exclusive choice — one load, two apertures, authored exclusivity** | **Built on #282's conditional beats, plus the two smallest rules they needed** ([mission-exposure.md](mission-exposure.md) §13). Each delivery fires the other objective's failure and the Chair's entry, keyed on the `extract` predicate with a named load. The choice group retires the mirror's rows the pass the choice fires, so a spent barge driven through the second aperture's water cannot make the Chair enter an order nobody gave; and an `objective` beat never fails an objective the player has met — the runtime's own monotonicity invariant, held against beats, so the seal the player set stays set |
 | Readings per objective, assembling the close | **Built** ([mission-shift-change.md](mission-shift-change.md) §13) |
 | The alarm and the complaint — placed periodic sounds | **Built** (#240, the emitters) |
-| In-mission character speech, heard | Text only, the standing status — and this is the mission that will hurt most for it: Varr-Kest's two conditional lines are the campaign's centre, and they arrive as text in a log ([mission-sorrowgate.md](mission-sorrowgate.md) §13) |
+| In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line: Varr-Kest's two conditional lines are the campaign's centre, and they now arrive as the concern's beat under text in a log — hailed, not voiced, and this is still the mission that will hurt most for the difference |
 
 ---
 

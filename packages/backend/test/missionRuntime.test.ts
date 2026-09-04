@@ -52,7 +52,7 @@ import { Acoustic, Fauna, MoveOrder } from '../src/sim/components.ts';
 import { Match } from '../src/sim/match.ts';
 import { missionMapById } from '../src/sim/maps/index.ts';
 import { REPLAY_FORMAT_VERSION, playReplay } from '../src/sim/replay.ts';
-import { PROLOGUE_SORROWGATE } from '../src/sim/missions/index.ts';
+import { PROLOGUE_SORROWGATE, type MissionLine } from '../src/sim/missions/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 const SEED = 7;
@@ -113,6 +113,8 @@ interface Run {
   views: MissionView[];
   /** The last snapshot the player was sent. */
   last: EchoSnapshot;
+  /** Every line the room would have sent, in the order the beats spoke them. */
+  lines: MissionLine[];
   /** Snapshots at the sampled ticks, keyed by the second they landed on. */
   sampled: Map<number, EchoSnapshot>;
   /** The loudest a tender and the loudest an escort ever were, over the run. */
@@ -145,6 +147,7 @@ interface DriveOptions {
 function drive(options: DriveOptions): Run {
   const match = missionMatch();
   const views: MissionView[] = [];
+  const lines: MissionLine[] = [];
   const sampled = new Map<number, EchoSnapshot>();
   const wanted = new Set(options.sampleAtS ?? []);
   let last: EchoSnapshot | null = null;
@@ -210,11 +213,12 @@ function drive(options: DriveOptions): Run {
 
     const view = match.takeMissionView();
     if (view !== null) views.push(view);
+    lines.push(...match.takeMissionLines());
     if (match.missionOver !== null) break;
   }
 
   assert.ok(last !== null, 'the mission produced no snapshot at all');
-  return { match, views, last, sampled, peakTenderSig, peakEscortSig, refusedWhileHeld };
+  return { match, views, last, lines, sampled, peakTenderSig, peakEscortSig, refusedWhileHeld };
 }
 
 /** The authored load time for the nth tender, in ticks. */
@@ -717,6 +721,33 @@ describe('a mission is not a fight somebody wins', () => {
     assert.equal(match.takeMissionView(), null);
     assert.deepEqual(match.takeMissionLines(), []);
     assert.equal(match.worstMissionMsCost, 0, 'a skirmish spends nothing on a mission pass');
+  });
+});
+
+describe('the four voices in the water', () => {
+  it('arrive at the minutes §12 gives, each in its own register', () => {
+    // docs/culture.md §6's register test, made mechanical: "take any line and
+    // ask which faction could not have said it" — §12 answers that each of
+    // the four fails §3 for the other three. The mix keys a hail on the
+    // register (docs/audio-direction.md §13), so four voices that resolved to
+    // one would be the failure #381 names — a channel whose speakers sound
+    // like one narrator — and this is where that would show. Sorrowgate's
+    // player is the court's flight rather than a faction's fleet, so every
+    // voice here is authored; the assertion is that the union, the literal
+    // and the runtime's default agree on four different answers.
+    const run = passiveRun();
+    const spoken = run.lines.map((line) => ({
+      atS: Math.round(line.tick / SIM.TICK_HZ),
+      speaker: line.speaker,
+      voice: line.voice,
+    }));
+    assert.deepEqual(spoken, [
+      { atS: 6 * 60 + 20, speaker: 'Voice Ren Kalliso', voice: 'order' },
+      { atS: 9 * 60, speaker: 'Underwriter Sela Drenn', voice: 'concern' },
+      { atS: 9 * 60 + 20, speaker: 'Sende', voice: 'cohorts' },
+      { atS: 10 * 60 + 40, speaker: 'Warden Juno Teel', voice: 'plateaus' },
+    ]);
+    assert.equal(new Set(spoken.map((line) => line.voice)).size, 4, 'four voices, four registers');
   });
 });
 

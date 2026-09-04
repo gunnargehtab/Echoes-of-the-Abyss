@@ -35,6 +35,8 @@ import {
   missionHeaderById,
   requiredPressureRating,
   statsFor,
+  voiceOf,
+  type MissionVoice,
 } from '@echoes/shared';
 import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import { MISSIONS, PROLOGUE_SORROWGATE } from '../src/sim/missions/index.ts';
@@ -1050,6 +1052,59 @@ describe('Sorrowgate, as docs/mission-sorrowgate.md states it', () => {
     // through, so the court reads what it took rather than a count it did not.
     assert.match(PROLOGUE_SORROWGATE.epilogue[1], /^One tender is through\./);
     assert.match(PROLOGUE_SORROWGATE.epilogue[2], /^The gate is closed\. Fourteen are behind it\./);
+  });
+});
+
+describe('the register a line is spoken in', () => {
+  /** docs/culture.md §3's five, spelled out so a sixth cannot drift in unnamed. */
+  const VOICES: ReadonlySet<MissionVoice> = new Set<MissionVoice>([
+    'concern',
+    'plateaus',
+    'cohorts',
+    'order',
+    'court',
+  ]);
+
+  it('is one of the five voices, on every line in every mission', () => {
+    // A typo fails type-check, so what this holds is the other half: the
+    // runtime's default — the player's own faction's register — is itself a
+    // member of the union, and the literal has not smuggled a `voice` onto a
+    // beat kind that does not speak. `missionRuntime.test.ts` plays the four
+    // Sorrowgate lines and asserts they arrive as four different registers.
+    for (const mission of MISSIONS) {
+      assert.ok(VOICES.has(voiceOf(mission.playerFaction)), `${mission.id}: no default voice`);
+      const spoken = [...mission.beats, ...(mission.conditionalBeats ?? [])].filter(
+        (beat) => beat.kind === 'say'
+      );
+      for (const beat of spoken) {
+        if (beat.voice === undefined) continue;
+        assert.ok(VOICES.has(beat.voice), `${mission.id}: "${beat.speaker}" speaks in no register`);
+      }
+      const line = mission.commanderAbility?.line;
+      if (line?.voice !== undefined) {
+        assert.ok(VOICES.has(line.voice), `${mission.id}: the commander's line is in no register`);
+      }
+    }
+  });
+
+  it('is authored only on the minority spoken by somebody else', () => {
+    // The `say` beat's own rule: absent is the player's register, and a
+    // `voice` equal to it is a redundancy that would hide the one case the
+    // field exists for. Sorrowgate is the exception and says so in its
+    // literal — the flight is the court's, not a faction's, so nothing in
+    // that chamber speaks as the player and all four are authored.
+    for (const mission of MISSIONS) {
+      if (mission === PROLOGUE_SORROWGATE) continue;
+      const own = voiceOf(mission.playerFaction);
+      for (const beat of [...mission.beats, ...(mission.conditionalBeats ?? [])]) {
+        if (beat.kind !== 'say') continue;
+        assert.notEqual(
+          beat.voice,
+          own,
+          `${mission.id}: "${beat.speaker}" is authored in the player's own register`
+        );
+      }
+    }
   });
 });
 

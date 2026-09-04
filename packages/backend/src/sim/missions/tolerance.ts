@@ -296,7 +296,7 @@ export const LEDGER_TOLERANCE: MissionDefinition = {
       kind: 'say',
       speaker: 'Executor Odile Varr-Kest',
       text: 'This is the Chair. I am on the channel and I am not in your chain of command for the next seventeen minutes; the writ put the casting in your yard, not in mine. I have run this table once. I will not describe it. Proceed.',
-      note: 'Read, not heard — the standing status of the say channel',
+      note: 'Hailed and read — the say channel since #381',
     },
 
     // 02:30 — the arithmetic, stated once (§12).

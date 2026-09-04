@@ -1116,7 +1116,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
       kind: 'say',
       speaker: 'Choirmaster Ivane Sull, the order to descend',
       text: 'The interval is at seventeen. The lattice comes down at sixteen; I come down at half past fifteen and I am over the slopes when it goes. Set the crystal and hold the lip. Descend.',
-      note: '1,250 m at 45 m/s is 27.8 seconds at a SIG floor of 72, and each node goes to 80 the tick a hull is under it below its own rating. Read, not heard — the standing status of the say channel',
+      note: '1,250 m at 45 m/s is 27.8 seconds at a SIG floor of 72, and each node goes to 80 the tick a hull is under it below its own rating. Hailed and read — the say channel since #381',
     },
 
     // 02:30 — the northern row musters in step on the lip. Six Choristers
@@ -1164,6 +1164,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
       atTick: T(4, 30),
       kind: 'say',
       speaker: 'Cohort-Prime Adze, 9th Trench Cohort',
+      voice: 'cohorts',
       text: 'Correction is filed against the node on the lip. It was entered when it rose and stood into nothing; it stands into the watch now. What was set into it is counted. What is under it is corrected at what leaves.',
       note: 'Filed in the passive, and it never says who is being corrected. Adze is correct in every word of it, and the debt the transmission is entered against is not stated (§5)',
     },
@@ -1173,6 +1174,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
       atTick: T(6),
       kind: 'say',
       speaker: 'The charting pair, for the plateaus',
+      voice: 'plateaus',
       text: "We're still here, on the terraces. We'd like it in somebody's record that we asked nothing of the rim and it asked nothing of us. We think you're about to ask it something.",
       note: 'Refuses the imperative twice and offers a distinction where anybody else would put a request',
     },
@@ -1182,6 +1184,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
       atTick: T(8),
       kind: 'say',
       speaker: 'Watch-Speaker, for those below',
+      voice: 'cohorts',
       text: 'The rim is attended. Three nodes are entered. The third was entered when it was raised and was not corrected, because a node with nothing under it is a silence, and silence is attended too.',
       note: '',
     },
@@ -1367,6 +1370,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
     {
       kind: 'say',
       speaker: 'Watch-Speaker, for those below',
+      voice: 'cohorts',
       text: 'Entered: the Order on the lip, at length, under a node, with something set into it.',
       note: 'In practice about 00:30, before the party has finished descending: three structures at SIG 30, one of them 320 m from a Cantor, spend thirty cumulative seconds of Classification before anything of the Order’s is in Abyssal water (§8)',
       when: { kind: 'tolerance', ticks: COUNT_TICKS, tier: ResolutionTier.Classification },

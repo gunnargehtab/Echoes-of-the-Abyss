@@ -450,7 +450,7 @@ export const ATTENDING_TRENCH_AWAKENING: MissionDefinition = {
       kind: 'say',
       speaker: 'Undermarshal Setha Korrin',
       text: 'The shallow band is at work. Eight hulls are given to the row, and a plant, and a dome, and a grower. The band is two hundred and sixty. It is not rendered from the walls alone; the walls are two hundred and ten and the Undermarshalcy can add. What is short of it is what the trench answers with.',
-      note: "Read, not heard — the standing status of the say channel. The whole assignment is the header's briefing; this is the part the water is told",
+      note: "Hailed and read — the say channel since #381. The whole assignment is the header's briefing; this is the part the water is told",
     },
     // 00:00 — the six on the two overhangs, at working depth 1,700 m over a
     // 2,150 m floor (§5, §11). The nearest is 1,552 m from `row-one` against

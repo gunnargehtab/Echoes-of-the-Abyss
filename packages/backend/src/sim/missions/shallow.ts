@@ -335,6 +335,7 @@ const firstAsking = (
 ): MissionConditionalBeat => ({
   kind: 'say',
   speaker: RELL,
+  voice: 'plateaus',
   text:
     'Bearing inside a posted closure is asked for an asset number and a charter reference. ' +
     'This is the first time of asking.',
@@ -821,7 +822,7 @@ export const ATTENDING_SHALLOW: MissionDefinition = {
       kind: 'say',
       speaker: 'Undermarshal Setha Korrin',
       text: "A cohort of the Fourth is on the Kell shoulder at three hundred and forty metres. It went up the slope in the tide's dark and it is lying quiet, and it is above the line, and it has been above the line since before this was said.",
-      note: 'Read, not heard — the standing status of the say channel. She is born at 2,780 m and cannot survive above 400 m without a suit; the water this mission is fought in would kill her in it, and nobody says so',
+      note: 'Hailed and read — the say channel since #381. She is born at 2,780 m and cannot survive above 400 m without a suit; the water this mission is fought in would kill her in it, and nobody says so',
     },
     // 00:00 — sixteen `silent` beats. The bleed is already running: every hull
     // is above the line at tick zero and `pressure.ts` is charging it whatever
@@ -900,6 +901,7 @@ export const ATTENDING_SHALLOW: MissionDefinition = {
       atTick: T(6, 30),
       kind: 'say',
       speaker: "The watch at Kell's edge",
+      voice: 'plateaus',
       text: "We can hear you. We'd rather you knew that we can, so that nobody has to pretend afterwards. Nothing out here means you harm, and we'd like to keep saying that.",
       note: 'A warning offered as an offer, in the collective first person, closing on what it would *like*',
     },
@@ -1031,6 +1033,7 @@ export const ATTENDING_SHALLOW: MissionDefinition = {
     {
       kind: 'say',
       speaker: RELL,
+      voice: 'plateaus',
       text: 'This is not a threat and it is not a negotiation; it is the second time of asking, and there is a third.',
       note: 'Thirty cumulative seconds at Classification. No group: the second asking retires nothing and is retired by nothing',
       when: { kind: 'tolerance', ticks: SECOND_ASKING_TICKS, tier: ResolutionTier.Classification },
@@ -1038,6 +1041,7 @@ export const ATTENDING_SHALLOW: MissionDefinition = {
     {
       kind: 'say',
       speaker: RELL,
+      voice: 'plateaus',
       text: 'The corridor is closed and the order is enforced. Whatever is in it is a matter for the registry now, and the registry is patient.',
       note: "Ninety cumulative seconds at Classification, and the only thing that moves the Holding's column. Rell's third and last, all three procedure",
       when: { kind: 'tolerance', ticks: THIRD_ASKING_TICKS, tier: ResolutionTier.Classification },

@@ -384,7 +384,7 @@ What exists against this document and what does not, continuing the Ledger's lis
 | Four navies weapons-cold in one water | **Built** (#190 — `armed` is authored per hull, and this mission authors none) |
 | The directional contact — an Order hull loud in one quarter | **Built** (#269). [units.md](units.md)'s note stands: no Knight hull exists in the roster, so the reconnaissance flies Order colours on a generic hull and its cone figure is low for the faction. The contact behaviour — appearing and vanishing by facing — is the term working, not a bug |
 | Cross-mission consequence — the survey's exposure read at the next table | **Not built.** The tolerance's reading is entered at this close and mission 7's document assumes the player remembers it; nothing carries it forward, which is the campaign-progression row of #212, not this mission's |
-| In-mission character speech, heard | Text only, the standing status ([mission-sorrowgate.md](mission-sorrowgate.md) §13) |
+| In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line |
 
 ---
 

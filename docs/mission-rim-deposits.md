@@ -808,7 +808,7 @@ player raise the node.
 | `sigBudget` as metadata | **Built** — shipped to the HUD as a ceiling and never a live threshold, which is why 80 can be the figure the mission *is* without becoming a rule the player is failed against |
 | Souls, read out | **Not built, and it is documentation.** Nothing in `packages/backend/src` reads `MissionUnit.souls`. The thirty-seven is carried by hand in §3, and the epilogue reads hulls rather than people, which is the one place this register and the format's gap agree |
 | The mix | **Not started** ([audio-direction.md](audio-direction.md)). A structure singing at eighty for the five unbroken minutes a clean raid spends under it — 01:30 to about 06:23, and longer for a raid that stays — is the longest sustained loud cue the bible has asked for, and the moment it stops is the mission's ending |
-| In-mission character speech, heard | Text only, the standing status ([mission-sorrowgate.md](mission-sorrowgate.md) §13) |
+| In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line |
 
 ---
 

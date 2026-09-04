@@ -724,7 +724,7 @@ deliberately not making alone.
 | A Knight hull in the roster | **Not written**, and this is a [units.md](units.md) gap rather than a code one — unchanged from [mission-aptitude.md](mission-aptitude.md) §13. §3 fields generic hulls and says so |
 | Resonance Field 0.70 as **scattered** — bearings that lie, pings that return phantoms | **Not built**, and this mission does not rely on it, exactly as mission 1 did not. Named again because a corridor that raises PF inside scattered water is the first place the unmodelled half would have a second-order effect, and nobody should add it and assume §7's table survived |
 | Permanent roster attrition | **Not built**, and not wanted here — mission 3's row, and §10 argues why the two must stay apart |
-| In-mission character speech, heard | Text only, the standing status ([mission-sorrowgate.md](mission-sorrowgate.md) §13) |
+| In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line |
 | A canyon that rings at a fifth, and a corridor that changes what it rings *as* | Not started ([audio-direction.md](audio-direction.md)). The Fields' ambient bed is already the first tuned water in the bible ([mission-aptitude.md](mission-aptitude.md) §13); this is that bed with a player-placed interval written over the top of it, which is a new problem for the mix and the most interesting one the campaign has posed it |
 
 ---

@@ -326,7 +326,7 @@ export const LEDGER_SHIFT_CHANGE: MissionDefinition = {
       kind: 'say',
       speaker: 'Foreman Corwin Osk',
       text: 'The review will read this shift twice, so we run it clean twice over. Number on the board, watches on the bell, and the road hears a working face. It is not a performance. It is the face working. There is a difference, and the difference is what an auditor is paid to hear.',
-      note: 'Read, not heard — the standing status of the say channel',
+      note: 'Hailed and read — the say channel since #381',
     },
 
     // 03:00 — first watch stands down (§9).
