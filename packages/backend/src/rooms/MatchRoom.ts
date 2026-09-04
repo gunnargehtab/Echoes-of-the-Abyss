@@ -24,6 +24,9 @@ import {
   SIM,
   StructureKind,
   UnitKind,
+  driftCarryFrom,
+  validDriftCarry,
+  type DriftCarry,
   type EchoSnapshot,
   type MatchListingMetadata,
 } from '@echoes/shared';
@@ -165,6 +168,19 @@ export interface MatchRoomOptions {
    * Ignored for a mission, which is private whatever anyone asks for.
    */
   private?: boolean;
+  /**
+   * Drift Health this map is already carrying, from the client's progression
+   * record — docs/campaign.md §2 rule 5.
+   *
+   * The one thing a client presents that changes the world it is about to be
+   * seated in, so it is the one option that is *validated* rather than
+   * defaulted: `validDriftCarry` refuses a grid of the wrong length, a
+   * non-finite value, or anything healthier than the ground opens at, and a
+   * refused grid falls back to the biome defaults. Ignored outside a mission,
+   * because §2 rule 5 is a rule about the campaign and a skirmish has no
+   * record to have earned one.
+   */
+  driftCarry?: readonly number[];
 }
 
 export class MatchRoom extends Room<MatchState> {
@@ -183,6 +199,16 @@ export class MatchRoom extends Room<MatchState> {
    * a client that joins mid-match gets the whole grid instead.
    */
   private sentGroundRevision = 0;
+  /**
+   * The Drift Health this room's world opened on — docs/campaign.md §2 rule 5
+   * — or null for the biome defaults.
+   *
+   * Held rather than consumed so a rematch starts on the same ground the first
+   * attempt did, and updated at `endMission` so it stays the grid the player's
+   * record now holds: the room and the record must not disagree about what
+   * this water looks like.
+   */
+  private driftCarry: number[] | null = null;
 
   override async onCreate(options?: MatchRoomOptions): Promise<void> {
     const requested = options?.missionId ?? '';
@@ -204,6 +230,9 @@ export class MatchRoom extends Room<MatchState> {
       this.mission !== null
         ? missionMapById(this.mission.mapId)!
         : (mapById(options?.mapId ?? DEFAULT_MAP_ID) ?? mapById(DEFAULT_MAP_ID)!);
+    // Validated before the world is built, and only for a mission: what
+    // arrives here is a number the client chose.
+    this.driftCarry = this.mission === null ? null : validDriftCarry(options?.driftCarry);
     this.match = this.newMatch();
     // A map's spawn list is its player count — except a mission's, which has
     // one spawn and authors its other parties itself. A mission is not a lobby.
@@ -536,7 +565,11 @@ export class MatchRoom extends Room<MatchState> {
   private newMatch(): Match {
     return this.mission === null
       ? new Match(this.map)
-      : new Match(this.map, { mission: this.mission, fauna: this.mission.fauna });
+      : new Match(this.map, {
+          mission: this.mission,
+          fauna: this.mission.fauna,
+          driftCarry: this.driftCarry,
+        });
   }
 
   /**
@@ -614,6 +647,7 @@ export class MatchRoom extends Room<MatchState> {
           epilogue: resolution.epilogue,
           objectives: resolution.objectives,
           scenes: resolution.scenes,
+          driftCarry: this.driftResult(),
         });
       }
     }
@@ -852,6 +886,11 @@ export class MatchRoom extends Room<MatchState> {
    * evacuation as a conquest.
    */
   private endMission(resolution: MissionResolution): void {
+    // Read before the room is told the match is over, and adopted as this
+    // room's own carry: a rematch then opens on the ground this attempt left,
+    // which is what the player's record now says about this water.
+    const carried = this.driftResult();
+    this.driftCarry = carried === undefined ? this.driftCarry : [...carried.health];
     this.aiSeats.clear();
     this.state.phase = MatchPhase.Ended;
     this.state.winnerSlot = -1;
@@ -865,12 +904,30 @@ export class MatchRoom extends Room<MatchState> {
         // Sent on both paths, so a player who reconnected into an ended room
         // records the same scenes as one who never dropped.
         scenes: resolution.scenes,
+        driftCarry: carried,
       });
     }
 
     this.postMatchTimeout = this.clock.setTimeout(() => {
       if (this.state.phase === MatchPhase.Ended) this.disconnect();
     }, LIFECYCLE.POST_MATCH_S * 1000);
+  }
+
+  /**
+   * The ground as this mission is leaving it — docs/campaign.md §2 rule 5.
+   *
+   * Public, and no new disclosure: the same grid is in every resolved snapshot
+   * already (docs/bestiary.md §5 — the Drift's tell is light, not sound), so
+   * what crosses here is a fact the player has been looking at all match, in a
+   * form the record can keep. Undefined outside a mission, because a skirmish
+   * has nowhere to carry it to.
+   */
+  private driftResult(): DriftCarry | undefined {
+    if (this.mission === null) return undefined;
+    // `driftCarryFrom`, not the raw snapshot: a region that recovered past the
+    // opening value inside this match carries forward at the opening value,
+    // because §2 rule 5 carries damage and never a surplus.
+    return { mapId: this.map.id, health: driftCarryFrom(this.match.world.drift.snapshot()) };
   }
 
   private endMatch(winnerSlot: number): void {

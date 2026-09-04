@@ -17,12 +17,16 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  DRIFT,
+  DRIFT_REGION_COUNT,
   MARR_PLATEAU_FILED,
   MISSION,
   MISSION_HEADERS,
   PROLOGUE_SORROWGATE_HEADER,
+  driftCarryFrom,
   missionBriefing,
   missionHeaderById,
+  validDriftCarry,
 } from '../dist/index.js';
 
 describe('the public mission catalogue', () => {
@@ -183,5 +187,84 @@ describe('the public mission catalogue', () => {
         assert.ok(!premise.includes(word), `${mission.id}: premise gives away the objective`);
       }
     }
+  });
+});
+
+/**
+ * The seeding guard for cross-mission Drift Health — docs/campaign.md §2 rule
+ * 5, the record's grid on its way back into a match.
+ *
+ * This validator is the only thing standing between a `localStorage` key the
+ * player owns and the world the next mission is built in, so the cases here
+ * are adversarial rather than illustrative. The one that matters most is the
+ * ceiling: a grid of 100s is *well-formed*, would pass every shape check, and
+ * would hand the player a healthier map than a first visit gives — full
+ * spawns, intact Tetherjelly masking, uncut Biomass. §2 rule 5 carries damage,
+ * so the carry may only ever be a debt.
+ */
+describe('validDriftCarry', () => {
+  const wrecked = (): number[] => new Array<number>(DRIFT_REGION_COUNT).fill(0);
+
+  it('accepts a grid a played match could have produced', () => {
+    const grid = wrecked();
+    grid[0] = DRIFT.HEALTH_START;
+    grid[1] = 41.5;
+    assert.deepEqual(validDriftCarry(grid), grid);
+  });
+
+  it('refuses anything healthier than the ground opens at', () => {
+    const grid = wrecked();
+    grid[2] = DRIFT.HEALTH_START + 0.01;
+    assert.equal(validDriftCarry(grid), null, 'one cell over the ceiling voids the grid');
+    // And 100 — the in-match cap a quiet region really can reach — is not a
+    // legal *carry*, which is the distinction the ceiling exists to draw.
+    assert.equal(validDriftCarry(new Array<number>(DRIFT_REGION_COUNT).fill(100)), null);
+  });
+
+  it('refuses a grid that is not one', () => {
+    assert.equal(validDriftCarry(undefined), null);
+    assert.equal(validDriftCarry(null), null);
+    assert.equal(validDriftCarry('88,88,88'), null);
+    assert.equal(validDriftCarry([]), null, 'wrong length');
+    assert.equal(validDriftCarry([...wrecked(), 0]), null, 'one cell too many');
+    const short = wrecked();
+    short.pop();
+    assert.equal(validDriftCarry(short), null, 'one cell too few');
+  });
+
+  it('refuses a cell that is not a finite number in range', () => {
+    for (const bad of [Number.NaN, Number.POSITIVE_INFINITY, -1, '40', {}, null, undefined]) {
+      const grid: unknown[] = wrecked();
+      grid[3] = bad;
+      assert.equal(validDriftCarry(grid), null, `rejects ${String(bad)}`);
+    }
+  });
+
+  /**
+   * The pairing that decides whether the feature works at all in the common
+   * case. A mission played *carefully* ends with regions recovered past the
+   * opening value; if the grid that leaves a match were the raw snapshot, the
+   * validator on the way back in would refuse it and a quiet player would
+   * silently carry nothing.
+   */
+  it('accepts every grid a match can actually end on, once carried', () => {
+    const ended = new Array<number>(DRIFT_REGION_COUNT).fill(100);
+    ended[0] = 0;
+    ended[1] = DRIFT.HEALTH_START - 0.5;
+    ended[2] = DRIFT.HEALTH_START + 0.5;
+    assert.equal(validDriftCarry(ended), null, 'the raw grid is not a carry');
+
+    const carried = driftCarryFrom(ended);
+    assert.deepEqual(validDriftCarry(carried), carried, 'and the carry always is');
+    assert.equal(carried[0], 0, 'Dead is carried as Dead');
+    assert.equal(carried[1], DRIFT.HEALTH_START - 0.5, 'a worn region carries its wear');
+    assert.equal(carried[2], DRIFT.HEALTH_START, 'and recovery above the opening value does not');
+  });
+
+  it('copies rather than aliases, so the caller cannot edit a validated grid', () => {
+    const grid = wrecked();
+    const valid = validDriftCarry(grid)!;
+    grid[0] = DRIFT.HEALTH_START;
+    assert.equal(valid[0], 0);
   });
 });

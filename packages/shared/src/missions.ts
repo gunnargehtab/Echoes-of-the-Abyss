@@ -13,6 +13,8 @@
  * a decision somebody argued for rather than one that drifted in.
  */
 
+import { DRIFT } from './constants.js';
+
 /**
  * Campaign keys, from the campaign titles rather than the faction names —
  * docs/campaign.md §4–§7 title the four campaigns *The Ledger*, *The Second
@@ -1024,4 +1026,91 @@ export interface MissionResultPayload {
    * fixed a comma.
    */
   scenes?: readonly string[];
+  /**
+   * The ground as this mission left it, for the record to carry forward —
+   * docs/campaign.md §2 rule 5. Omitted is a skirmish, which carries nothing.
+   */
+  driftCarry?: DriftCarry;
+}
+
+/**
+ * One map's Drift Health, leaving a match or presented to the next one —
+ * docs/campaign.md §2 rule 5, docs/bestiary.md §6.
+ *
+ * **Public, and the first per-map state to leave a match.** That needs saying
+ * out loud, because CLAUDE.md's rule is that nothing crosses the wire the
+ * observer has not resolved. This clears it twice over: docs/bestiary.md §5
+ * makes the Drift's tell *light, not sound* — every commander sees a region's
+ * state and always could — and the grid is already in every resolved snapshot
+ * (`Match.snapshots`, `driftHealth`). Nothing new is disclosed here; what is
+ * new is that a grid the player has been watching all match is now written
+ * down.
+ *
+ * Keyed by map and not by mission because §2 rule 5 is a rule about *ground*:
+ * `mission-convocation.md` reuses `seeding-tend`'s `marr-plateau` unchanged so
+ * that the same water can be returned to, and a mission-keyed carry would miss
+ * exactly the case the rule was written for.
+ */
+export interface DriftCarry {
+  /** The water this grid belongs to — `MapDefinition.id`, already public. */
+  mapId: string;
+  /** Row-major, `DRIFT.HEALTH_REGIONS` squared. 0-100, one per region. */
+  health: readonly number[];
+}
+
+/** How many regions a Drift grid has — `DriftHealth`'s square grid, flattened. */
+export const DRIFT_REGION_COUNT = DRIFT.HEALTH_REGIONS * DRIFT.HEALTH_REGIONS;
+
+/**
+ * A live Drift grid as a *carry* — docs/campaign.md §2 rule 5.
+ *
+ * The two are not the same array, and the difference is one line: inside a
+ * match a quiet region recovers toward 100, and a carry is capped at what the
+ * ground opens at. Without this the common case would be the broken one — a
+ * mission played quietly ends with regions above `DRIFT.HEALTH_START`, and a
+ * grid holding one of those is refused by `validDriftCarry`, so the carry that
+ * survives a *loud* match would be dropped after a careful one.
+ *
+ * Applied where the grid leaves the match, so what the record holds is already
+ * a legal carry and the validator on the way back in is a check rather than a
+ * transformation.
+ */
+export function driftCarryFrom(health: readonly number[]): number[] {
+  return health.map((value) => Math.min(DRIFT.HEALTH_START, Math.max(0, value)));
+}
+
+/**
+ * Coerce something a client presented into a grid a match may be seeded from,
+ * or `null` if it is not one.
+ *
+ * **Rejection, not clamping, and whole-grid rather than per-cell.** The record
+ * lives in the player's `localStorage`, so what arrives here is a number the
+ * client chose; a clamp would let a tampered grid keep whatever part of itself
+ * survived the clamp, which prices cheating at "some of it works". Refusing
+ * the grid entirely drops the room back to the biome defaults, so tampering
+ * buys exactly the mission the player would have got by clearing their
+ * browser.
+ *
+ * The ceiling is `DRIFT.HEALTH_START` — what the map is authored to open at —
+ * and not the in-match cap of 100. A quiet match really can heal a region past
+ * the opening value, and carrying that forward would make a mission *easier*
+ * to arrive at than a first visit: masking intact, spawns full, Biomass
+ * uncut. §2 rule 5 carries damage, so the carry may only ever be a debt. Above
+ * the ceiling is therefore not a legal reading of a played match, and a grid
+ * claiming one is refused rather than trimmed.
+ *
+ * Shared rather than server-only so the store that writes the record and the
+ * room that reads it agree on what a record *is* — but the server runs it
+ * again on arrival regardless, because a validation the client performs is not
+ * one.
+ */
+export function validDriftCarry(raw: unknown): number[] | null {
+  if (!Array.isArray(raw) || raw.length !== DRIFT_REGION_COUNT) return null;
+  const out: number[] = [];
+  for (const value of raw as unknown[]) {
+    if (typeof value !== 'number' || !Number.isFinite(value)) return null;
+    if (value < 0 || value > DRIFT.HEALTH_START) return null;
+    out.push(value);
+  }
+  return out;
 }

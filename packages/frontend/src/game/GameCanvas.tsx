@@ -32,7 +32,7 @@ import { MissionLog } from './MissionLog.tsx';
 import { MissionPanel } from './MissionPanel.tsx';
 import { MissionResult } from './MissionResult.tsx';
 import { AudioEngine, dbToGain } from '../audio/engine.ts';
-import { recordMissionResult } from '../progression/store.ts';
+import { driftCarryForMap, recordMissionResult } from '../progression/store.ts';
 import {
   GameClient,
   type ConnectionStatus,
@@ -473,7 +473,22 @@ export function GameCanvas({
       unsubscribeSettings = subscribeSettings(applySettings);
 
       clientRef.current = client;
-      await client.connect({ name: playerName, mapId, missionId, roomId, create, resume });
+      // What this player's earlier missions did to this water — read at the
+      // moment of joining rather than held in state, because a mission that
+      // just ended writes the record and a stale copy would carry the ground
+      // as it was two missions ago. Missions only: §2 rule 5 is a campaign
+      // rule, and a skirmish has no record to have earned one.
+      const driftCarry =
+        missionId === undefined || mapId === undefined ? undefined : driftCarryForMap(mapId);
+      await client.connect({
+        name: playerName,
+        mapId,
+        missionId,
+        roomId,
+        create,
+        resume,
+        driftCarry,
+      });
       setSessionId(client.sessionId);
       setJoinedRoomId(client.roomId);
     };

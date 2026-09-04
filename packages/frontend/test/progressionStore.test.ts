@@ -11,8 +11,16 @@
  */
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { MARR_PLATEAU_FILED, MissionOutcome, type MissionResultPayload } from '@echoes/shared';
 import {
+  DRIFT,
+  DRIFT_REGION_COUNT,
+  MARR_PLATEAU_FILED,
+  MissionOutcome,
+  type DriftCarry,
+  type MissionResultPayload,
+} from '@echoes/shared';
+import {
+  driftCarryForMap,
   emptyProgression,
   hasPlayed,
   isMissionUnlocked,
@@ -40,9 +48,24 @@ function installStorage(): Map<string, string> {
 function result(
   missionId: string,
   outcome: MissionOutcome,
-  scenes?: readonly string[]
+  scenes?: readonly string[],
+  driftCarry?: DriftCarry
 ): MissionResultPayload {
-  return { missionId, outcome, epilogue: 'The court adjourns.', objectives: [], scenes };
+  return {
+    missionId,
+    outcome,
+    epilogue: 'The court adjourns.',
+    objectives: [],
+    scenes,
+    driftCarry,
+  };
+}
+
+/** A plateau as a match left it: one region dead, the rest merely worn. */
+function grid(dead = 1): number[] {
+  const health = new Array<number>(DRIFT_REGION_COUNT).fill(DRIFT.HEALTH_START - 9);
+  for (let i = 0; i < dead; i++) health[i] = 0;
+  return health;
 }
 
 describe('the progression record', () => {
@@ -272,5 +295,95 @@ describe('the seen-scene set (#378)', () => {
       })
     );
     assert.deepEqual(loadProgression().scenes, { [MARR_PLATEAU_FILED]: true });
+  });
+});
+
+/**
+ * Cross-mission Drift Health — docs/campaign.md §2 rule 5, the record's half
+ * of it. The rule is about *ground*, so everything here is keyed by map.
+ */
+describe('the ground a mission left behind', () => {
+  beforeEach(() => {
+    installStorage();
+  });
+
+  afterEach(() => {
+    delete (globalThis as { localStorage?: unknown }).localStorage;
+  });
+
+  it('remembers it by map, so the next mission on that water finds it', () => {
+    const health = grid();
+    recordMissionResult(
+      result('seeding-tend', MissionOutcome.Complete, undefined, {
+        mapId: 'marr-plateau',
+        health,
+      })
+    );
+    assert.deepEqual(driftCarryForMap('marr-plateau'), health);
+    // Keyed by map and not by mission: the pair §2 rule 5 was written for
+    // share `marr-plateau`, and *Convocation* is the one that has to find it.
+    assert.equal(driftCarryForMap('seeding-tend'), undefined);
+    assert.equal(driftCarryForMap('ventfront-divide'), undefined, 'other water is untouched');
+  });
+
+  it('takes the latest reading rather than the kindest one', () => {
+    recordMissionResult(
+      result('seeding-tend', MissionOutcome.Complete, undefined, {
+        mapId: 'marr-plateau',
+        health: grid(4),
+      })
+    );
+    recordMissionResult(
+      result('seeding-convocation', MissionOutcome.Lost, undefined, {
+        mapId: 'marr-plateau',
+        health: grid(1),
+      })
+    );
+    // The outcome ladder keeps the best; the ground keeps the last. A "best
+    // of" here would let a replay launder a map the player had wrecked.
+    assert.deepEqual(driftCarryForMap('marr-plateau'), grid(1));
+    assert.equal(missionRecord('seeding-tend')?.outcome, MissionOutcome.Complete);
+  });
+
+  it('is a no-op when the same conclusion arrives twice', () => {
+    const payload = result('seeding-tend', MissionOutcome.Partial, undefined, {
+      mapId: 'marr-plateau',
+      health: grid(2),
+    });
+    recordMissionResult(payload);
+    const after = loadProgression();
+    recordMissionResult(payload);
+    assert.deepEqual(loadProgression(), after);
+  });
+
+  it('records nothing for a result that carries no ground', () => {
+    recordMissionResult(result('prologue-sorrowgate', MissionOutcome.Complete));
+    assert.deepEqual(loadProgression().drift, {});
+  });
+
+  it('drops a stored grid that no room would accept, and only that one', () => {
+    installStorage().set(
+      STORAGE_KEY,
+      JSON.stringify({
+        version: 1,
+        missions: {},
+        scenes: {},
+        drift: {
+          'marr-plateau': grid(),
+          // Well-formed and healthier than the ground opens at — the shape a
+          // hand-edited record takes when someone wants an easier mission.
+          'ventfront-divide': new Array<number>(DRIFT_REGION_COUNT).fill(100),
+          'kelp-labyrinth': [0, 0],
+          'thermal-vein': 'wrecked',
+        },
+      })
+    );
+    assert.deepEqual(loadProgression().drift, { 'marr-plateau': grid() });
+  });
+
+  it('reads as no carry at all from a record written before it existed', () => {
+    installStorage().set(STORAGE_KEY, JSON.stringify({ version: 1, missions: {}, scenes: {} }));
+    assert.deepEqual(loadProgression().drift, {});
+    assert.equal(driftCarryForMap('marr-plateau'), undefined);
   });
 });

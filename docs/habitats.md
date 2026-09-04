@@ -149,7 +149,8 @@ exactly as long as it takes; a plateau under attack cannot vote faster. Which te
 the mission document's to choose ([world-map.md](world-map.md) names four): the room needs a full
 row-set to walk, a watch-edge that carries, and a bell.
 [mission-convocation.md](mission-convocation.md) §11 chose Marr Plateau and reuses *Tend*'s map
-literal unchanged, so [campaign.md](campaign.md) §2 rule 5 finally has two missions on one map.
+literal unchanged, so [campaign.md](campaign.md) §2 rule 5 has two missions on one map — and,
+since #379, a carry between them.
 
 ---
 

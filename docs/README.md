@@ -153,20 +153,18 @@ a document already points at it:
   needed nothing for that. The one question it left open it still leaves open, and the build did
   not need it settled: whether the count read at the watch's edge and the active ping are the
   same act.
-- **Cross-mission Drift Health.** campaign.md §2 rule 5 has a map carry its damage forward to
-  the next mission played on it. Until [mission-convocation.md](mission-convocation.md) there
-  was no forward, because no two missions shared a map; that document reuses *Tend*'s
-  `marr-plateau` unchanged, so the rule now has a concrete first pair and still no mechanism.
-  It has somewhere to live, though: the progression record is a container of collections, and
-  per-map Drift Health is a sibling key beside `missions` rather than a new store — a shape the
-  seen-scene set of the briefing variants (#378) has now been added under without a migration,
-  which is the evidence that claim was worth making. There is a
-  second pair now, and it is a specified one rather than a built one:
+- **A second map carrying its damage forward.** Cross-mission Drift Health itself is **built**
+  (#379) — campaign.md §11 and [bestiary.md](bestiary.md) §6 carry the account — against the
+  pair [mission-convocation.md](mission-convocation.md) chose its map to make buildable. What
+  is planned is the second pair, which is specified rather than built:
   [mission-in-writing.md](mission-in-writing.md) §11 reuses *Deep Furrow*'s `anholt-furrow`
   literal unchanged, three tides later, on ground the earlier mission spends a beat repainting.
+  Nothing new is needed for it — the carry is keyed by map, so it applies the moment both
+  literals exist — which is the row's remaining work.
 - **Permanent roster attrition.** Knights mission 3, *Nineteen*, spends units for the rest of a
   campaign. Today nothing outlives the match it was built in — except the progression record,
-  which is where a spent roster would go, beside `missions` and Drift Health.
+  which is where a spent roster would go, beside `missions`, the seen-scene set and the per-map
+  Drift grid.
   [mission-nineteen.md](mission-nineteen.md) §13 is the document that asks for it, and the three
   Order documents after it each seat their hulls whatever the last tide cost and say so in their
   own §13 rather than implying a carry the format does not have.
