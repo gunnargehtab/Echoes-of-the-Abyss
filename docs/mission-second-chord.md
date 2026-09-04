@@ -70,19 +70,21 @@ The instant a Knight hull stands under it below its own rating, the node sings a
 silence stops being one.
 
 **The interval is a time, and it belongs to the lip.** The cycle is at thirty-nine hours and
-shortening ([timeline.md](timeline.md), 213 PC). Sull's window is the lip's next return, which the
-Order times at the sixteenth minute and forty seconds of the mission clock and which the
-Directorate's own transcripts would have predicted to the hour and never published
-([mission-attendance.md](mission-attendance.md) §2). Nobody in this mission says the two facts are
-the same fact.
+shortening ([timeline.md](timeline.md), 213 PC). The lip's next return sounds at the sixteenth
+minute and forty seconds of the mission clock and holds for twenty seconds, and the Directorate's
+own transcripts would have predicted it to the hour and never published it
+([mission-attendance.md](mission-attendance.md) §2). **The return is not the window. The interval
+Sull appoints is the seventeenth minute**, which the Order reads off the return the way it reads
+off any precursor, and the tone is held inside it (§6). Nobody in this mission says the two facts
+are the same fact.
 
 Nobody here is wrong ([campaign.md](campaign.md) §2 rule 1). The cohort holds the rim and corrects
 what stands into its watch, and is right to. The Order believes it is discourteous not to reply and
 has spent everything it has arriving at the sentence. Two hulls of the plateaus are still on the
-western terraces under a bed, having asked nothing of anyone. And somewhere in the Underway this
-week a Board has read the registration of this field into its own record and moved on
-([mission-item-nine.md](mission-item-nine.md) §6, item six). The Order does not know that, nobody
-on this rim mentions it, and the document goes no further.
+western terraces, having asked nothing of anyone, and a bed of theirs stands on the western lip.
+And somewhere in the Underway this week a Board has read the registration of this field into its
+own record and moved on ([mission-item-nine.md](mission-item-nine.md) §6, item six). The Order does
+not know that, nobody on this rim mentions it, and the document goes no further.
 
 ---
 
@@ -128,7 +130,7 @@ auto-acquire a static emitter (§13).
 | Cruiser hull, Knight-rigged — the Voice | 1 | Identical, armed · 12 souls | `the-voice`, role `escort`. Kalliso's hull: the 900 m gun, and the only thing on the party that out-ranges a Chorister by more than a hundred metres |
 | Corvette hulls, Knight-rigged — the carriers | 2 | SIG 28 cone / 9.8 flank / 2.8 wake · HYD 50 · PR-2 · armed · 5 souls each | `carrier-a`, `carrier-b`, role `carrier`. Each opens the mission with a load of rim crystal already aboard |
 | Corvette hulls, Knight-rigged — the escort | 2 | Identical, role `escort` · 5 souls each | `escort-a` on the lip; `escort-b` **held to 15:30**, beside the Choirmaster, because a tender with no escort inside 600 m does not move. The hold is documentation until §13's row lands |
-| Sounding Spire — the lattice | 3 | SIG **30 idle / 80 active** · HYD 45 · 1,800 HP · PR+1 to allied hulls within **600 m**, horizontal ([units.md](units.md)) | `node-one` 3750, 2500 and `node-two` 4900, 2600 at 2,600 m — the raid's, unchanged — and `the-chord` 4800, 3150 at 3,000 m |
+| Sounding Spire — the lattice | 3 | SIG **30 idle / 80 active** · HYD 45 · 1,800 HP · PR+1 to allied hulls within **600 m**, horizontal ([units.md](units.md)) | `node-one` 3750, 2500 and `node-two` 4900, 2600 at 2,600 m — the raid's, unchanged — and `the-chord` 4800, 3150 at 3,000 m. Three grants, all inside the pairing range and **not a pair** (§4) |
 
 Forty-one souls, and the roster still has no Knight hull in it: the party flies Order colours on
 generic hulls and the directional figures are Aptitude's ([units.md](units.md);
@@ -189,6 +191,21 @@ same slot only (`STRUCTURE_AURAS.SOUNDING_SPIRE`). `node-two` to `the-chord` is 
 passing from the raid's water to the Chord's is never uncovered. Every Knight hull in the Abyssal
 band on this map is alive because a structure says so, and none of them is certificated for a
 single metre of it.
+
+**And none of the three is a pair.** `node-one` to `node-two` is 1,154 m, `node-two` to `the-chord`
+559 m and `node-one` to `the-chord` 1,235 m — all three inside the 1,500 m the pairing rule spends
+([mission-standing-wave.md](mission-standing-wave.md) §4) — and there is no corridor on this map:
+no line of sonic damage across the water the carriers walk down, no PF 2.00, and no Spire standing
+at eighty with nothing under it. The terrace pair was decided at the turn, raised together as two
+grants with neither finished beside the other, and *decided once and never re-decided* means it
+stays decided that way ([mission-rim-deposits.md](mission-rim-deposits.md) §4); `the-chord`
+completes a tide later beside two nodes whose pairing has already been settled as none, and takes
+what a third node takes, which is nothing. In the literal it is shorter still — all three are
+prebuilt, and a prebuilt structure never completes, so the rule is never offered any of them
+([mission-conclave-chord.md](mission-conclave-chord.md) §3) — and the pairing pass is unbuilt in
+any case ([mission-standing-wave.md](mission-standing-wave.md) §13). **What the Collapse spends at
+sixteen is two grants and not a standing corridor**, which is why §7 prices all three nodes at 30
+idle and the Order's own instrument never turns its weapon inward.
 
 **2. The lattice can be collapsed once, and collapsing it spends the nodes.** Resonance Collapse is
 *simultaneous detonation of a crystal lattice: no damage, total system failure, everything caught
@@ -251,7 +268,7 @@ nothing left at 15:30 has an instrument, a node, and nobody to play it.
 | --- | --- | --- |
 | **The Order** — the player | 2 Cruiser hulls, 4 Corvette hulls, Knight-rigged, PR-2; 3 Sounding Spires prebuilt; two loads aboard; one sounding | The last works order. Two hulls held above the line until 15:30 |
 | **The plateaus** | 2 Light Scouts, PR-3 by refit, weapons-cold, where *First Arrival* left them; 1 Spore Veil — the bed — on the western lip | Home water, and a garden. One line at 06:00 |
-| **Those below** | 2 Abyssal Submersibles (the watch), 4 more (the 9th Trench Cohort), 1 Cantor (the dome), 12 Choristers — PR-3 by explicit refit, armed, and the only guns on the rim | Attending, and correcting. One party, for the engine's reason (§2) |
+| **Those below** | 2 Abyssal Submersibles (the watch), 4 more (the 9th Trench Cohort), 1 Cantor (the dome), 12 Choristers — PR-3 by explicit refit, armed, and the only guns on the rim that are not the player's | Attending, and correcting. One party, for the engine's reason (§2) |
 | **The attendants** | Two returns on the lip, periodic, structured, unclassifiable | Filed three times as equipment fault by somebody else ([mission-item-nine.md](mission-item-nine.md) §1). The Order enters them and calls them nothing |
 | **The lip** | One return, 3,050 m, SIG 3, twenty seconds, from 16:40 | Not a party in any sense a person would use. It is a time, and the Order keeps it |
 | **The Drift** | The basin, and the week's noise coming due for the third time | 16:30 (§7) |
@@ -286,7 +303,7 @@ five times in it.**
 | 03:30, 09:30 | The lip is held. Two waves of six correct a node that now has hulls under it | 120 damage a second against 1,800 HP: fifteen seconds a wave if the escort is late |
 | **15:30** | `release` on `the-choirmaster` and `escort-b`. She comes down over the slopes with ears | 3,413 m at 45 m/s — 75.8 s — over water she is rated for. She is at the Chord at **16:46** |
 | **16:00** | **The Collapse.** Both terrace nodes are lost | Every Knight hull in the Abyssal band outside the Chord's 600 m bleeds four points a second from this tick |
-| **16:40**, then **~17:14–17:44** | The lip returns at SIG 3 for twenty seconds; then the tone, thirty seconds at a hundred, bow south | The return costs nothing and is entered as a time. The tone tells everything within eleven kilometres of the axis exactly where the Order is |
+| **16:40**, then the seventeenth minute — **~17:14–17:44** | The lip returns at SIG 3 for twenty seconds; then the interval, and the tone: thirty seconds at a hundred, bow south | The return costs nothing and is entered as a time. The tone tells everything within eleven kilometres of the axis exactly where the Order is |
 
 **The dive, and why the document asks for it and the literal cannot.** 1,750 m is a free depth on
 every floor of this chart — the Slopes' 2,200, the Terraces' 2,600 and the Lip's 3,100 all admit
@@ -305,12 +322,16 @@ the Chord is already pointed at the sounding point, which is 350 m further south
 bearing she arrived on — inside the cone's forty-five, and the only margin in the mission nobody
 had to author. The Order does not have to turn to face the Mouth. It arrives facing it.
 
-**The interval is the lip's and not the Order's.** Sull times her window at the sixteenth minute
-and forty seconds and is right about it, which is the most the document will say. The return sounds
-at SIG 3 for twenty seconds — Attendance's figures exactly ([mission-attendance.md](mission-attendance.md)
-§6) — and is Bearing to the Voice from 808 m and to a Corvette from 686 m. Eleven kilometres north
-of here the same thing comes up the Ninth's axis nine times a cycle and is entered as a time by
-people who would have predicted this one to the hour. Nobody in this mission connects the two.
+**The interval is the lip's and not the Order's.** The return sounds at the sixteenth minute and
+forty seconds, at SIG 3 for twenty seconds — Attendance's figures exactly
+([mission-attendance.md](mission-attendance.md) §6) — and is Bearing to the Voice from 808 m and to
+a Corvette from 686 m. **The interval Sull appoints is the seventeenth minute**, which begins the
+tick the return stops, and the tone is held from about 17:14 to about 17:44 inside it: the lip
+speaks for twenty seconds and the Order answers fourteen after it has finished. She reads the
+return as the interval's precursor and is right about both, which is the most the document will
+say. Eleven kilometres north of here the same thing comes up the Ninth's axis nine times a cycle
+and is entered as a time by people who would have predicted this one to the hour. Nobody in this
+mission connects the two.
 
 ---
 
@@ -718,7 +739,7 @@ and counts at the end:
 
 **The charting pair, for the plateaus — 06:00**
 
-> We're still here, under the bed. We'd like it in somebody's record that we asked nothing of the
+> We're still here, on the terraces. We'd like it in somebody's record that we asked nothing of the
 > rim and it asked nothing of us. We think you're about to ask it something.
 
 **Watch-Speaker, for those below — 08:00**
@@ -837,7 +858,7 @@ absence — a reply — it does not want filled.
 - **[mission-second-seeding.md](mission-second-seeding.md)** — the bed on the western lip, heard at Bearing by a Voice that goes west and not discussed
 - **[mission-item-nine.md](mission-item-nine.md)** — one close at its own length, two records unranked, and a sentence that cannot be untransmitted, pressed in the same week
 - **[mission-aptitude.md](mission-aptitude.md)** — the sounding: the campaign's first verb is its last, and a tone you interrupt is a tone you have not played
-- **[mission-standing-wave.md](mission-standing-wave.md)** — the lattice as paired nodes, and a door that only shuts one way, turned here on the Order's own instrument
+- **[mission-standing-wave.md](mission-standing-wave.md)** — §4's pairing rule, which leaves this lattice three grants and no corridor, and a door that only shuts one way, turned here on the Order's own instrument
 - **[mission-nineteen.md](mission-nineteen.md)** — the named hulls, the discourteous button, and nineteen counted correctly
 - **[mission-conclave-chord.md](mission-conclave-chord.md)** — Vrey heard not calling, and the lattice he built, collapsing here on somebody else's rim
 - **[mission-the-three.md](mission-the-three.md)** — §3, the Order's crystal counted once: the third Spire is the last 120

@@ -30,9 +30,9 @@ the column does.
 
 The rim is the edge of an eleven-kilometre depression that returns pings before they should
 arrive, on a cycle that shortened from 43 hours to 39 in 213 PC and is still shortening
-([world-map.md](world-map.md); [timeline.md](timeline.md)). That edge stands at 4,410 m,
-carries the richest resonant-crystal deposits ever surveyed, and has carried — since this year
-— two returns that a Consortium survey has filed three times as equipment fault
+([world-map.md](world-map.md); [timeline.md](timeline.md)). That edge stands at 4,410 m and
+carries the richest resonant-crystal deposits ever surveyed, and — since this year — two
+returns that a Consortium survey has filed three times as equipment fault
 ([mission-prospect.md](mission-prospect.md) §1; [mission-item-nine.md](mission-item-nine.md)
 §1). Every other campaign arrives at it from above or across. The Directorate arrives along
 it, out of trench country, on the only side of the rim anybody was ever born on.
@@ -63,10 +63,11 @@ thing the cohort does.
 concern descend at 72 for three minutes and sound six charted faces at 80, and entered both;
 it entered the plateaus' bed on the western lip on the same day. The account went up the
 Ninth, which is what put a calling at the head of it
-([mission-conclave-attending.md](mission-conclave-attending.md) §1) — and the calling was put
-because something is happening to the thing the cohorts attend
-([campaign.md](campaign.md) §8), which is the cycle above and not the record. Knowing a tide
-early is worth exactly what the slowest hulls in the game can convert it into, which is ground.
+([mission-conclave-attending.md](mission-conclave-attending.md) §1). The calling was not put
+about a record, though: it was put because something is happening to the thing the cohorts
+attend ([campaign.md](campaign.md) §8), and the cycle at the head of this section is what that
+sentence means. The record only bought the tide. Knowing a tide early is worth exactly what the
+slowest hulls in the game can convert it into, which is ground.
 
 Nobody in this mission says any of that. It is what the column is standing on.
 
@@ -78,9 +79,9 @@ Nobody in this mission says any of that. It is what the column is standing on.
 eastern lip, with the Cantorate's dome stood over them and their weapons locked.**
 
 Cohort-Prime Adze commands in the water; Undermarshal Setha Korrin assigns from Sufficiency and
-reads the count. The twelve are the cohort grown at the shallow band and called at the head of
-the Ninth ([mission-trench-awakening.md](mission-trench-awakening.md) §6;
-[mission-conclave-attending.md](mission-conclave-attending.md) §8) — authored fresh here,
+reads the count. The twelve are the cohort grown at the shallow band
+([mission-trench-awakening.md](mission-trench-awakening.md) §6) and called at the head of the
+Ninth ([mission-conclave-attending.md](mission-conclave-attending.md) §8) — authored fresh here,
 because nothing carries a roster between missions
 ([mission-conclave-attending.md](mission-conclave-attending.md) §13), and named so the walk is
 the same hulls arriving. The 9th Trench Cohort joins at the sill, exactly as Adze said it would
@@ -213,10 +214,9 @@ offices, because the Order names ranks before people and the Commune does not na
 
 **Nobody is wrong** ([campaign.md](campaign.md) §2 rule 1). The plateaus are in home water on
 ground they read before anyone, and there is a bed of theirs on the western lip; the Order is
-measuring what its Chord needs and declining to
-say when it will take it; the column is standing on a rim it has attended for two centuries
-without ever having stood on it. Three true sentences on one tide, none of them fitting inside
-another.
+measuring what its Chord needs and declining to say when it will take it; the column is
+standing on a rim it has attended for two centuries without ever having stood on it. Three true
+sentences on one tide, none of them fitting inside another.
 
 ### The Order, on D+1, and what it does not do
 
@@ -305,8 +305,9 @@ which the record enters as the bed's doing and not as a fault.
 - **The plateaus' bed**, sustained at 8 through the lip's carrying water, audible to the western
   half of the walk and to nothing east of the third face (§6).
 - **The charting pair**, at 12 in 0.70 water: contact to a submersible at 1,746 m, bearing at
-  1,355, and a track to a Chorister standing on the first face at 461 m. They walk Prospect's
-  own eastern leg at 03:00 and turn for home at 12:00.
+  1,355, and a track to a Chorister standing on the first face at 461 m, which is the figure
+  from their home-water seats. They walk Prospect's own first eastern leg — 1800, 2150 and
+  1950, 2200 — at 03:00 and turn for home at 12:00.
 - **The reconnaissance**, one Order hull at 1,750 m over the slopes, cone 1.00 / flank 0.35 /
   wake 0.10 ([systems-echo.md](systems-echo.md) §8). Cone-on at 28 it is a classification to the
   9th from 2,072 m and a ratio of 2.70; on the flank at 9.8 it is contact from 1,923 m and on
@@ -465,18 +466,19 @@ over the cohort, debt capped at 45 s — §6.
 | 00:00 | **Korrin assigns the rim** (§12). Twelve Choristers and six submersibles on the eastern lip at 3,000 m; the dome stood where the column stopped; the two returns already sounding |
 | 00:00 | `silent` beats on all eighteen hulls, active. The column arrives quiet and is not handed the toggle |
 | **00:30** | **Cohort-Prime Adze, on the lip** (§12). The mission's one sentence about ground |
-| 03:00 | The charting pair walks east — Prospect's own leg, on the tide after it was walked |
+| 03:00 | The charting pair walks east to 1800, 2150 and 1950, 2200 — Prospect's own first eastern leg, walked on the tide after |
 | **05:00** | **The charting pair, for the plateaus** (§12) |
 | 08:00 | The stalls, entering the lip: the two returns at their periods, and the bed at its figure |
 | **10:00** | **The Voice of the reconnaissance, for the Order** (§12) |
 | 11:00 | The reconnaissance takes its measure — 4600, 2100 |
 | 12:00 | The pair turns for home water, 1200, 2050 and 1350, 2100 |
 | 14:00 | The reconnaissance resumes Prospect's station at 5200, 1600 |
-| **15:30** | **The plateaus, from under the bed** (§12) |
+| **15:30** | **The charting pair, for the plateaus** (§12), from the western terraces |
 | **16:00** | **The Order's party comes down.** Three hulls to 5400, 2100 · 5450, 2250 · 5350, 1950 at 1,750 m — 350 m of descent at 72, and a Cruiser hull cone-on is Track to the 9th from 1,553 m |
 | 16:30 | The stalls, on the party: three hulls at seventeen-fifty, projecting nothing |
 | **17:30** | **The party stands over the sixth face** — 5150, 2450 · 5200, 2550 · 5100, 2350. 255 m from the face and 850 m above it |
-| **18:00** | **The Order sounds the sixth face.** Emitter window opens at 5150, 2450: SIG 80, sustained, until 18:20. The stalls read it back against the week's law |
+| **18:00** | **The Order sounds the sixth face.** Emitter window opens at 5150, 2450: SIG 80, sustained, until 18:20. The stalls read it back against the law of these tides |
+| **18:00** | **Adze, on the Order's sounding** (§12). The order the campaign has been holding for them, held |
 | **18:30** | **The riser lifts off the lip**, loud. 3000, 3600 at 3,050 m, driven to 3000, 2400 until 19:30 — Prospect's literal, on the next tide |
 | **18:45** | **Adze, at the riser** (§12) |
 | **19:00** | The stalls: the tide turns at the count. **The reveal tick of `the-rim`** |
@@ -528,7 +530,8 @@ What this mission deliberately does not teach:
 - **The correction.** The Order stands into the watch at 18:00 and the watch does not answer it.
   What the Order raises and what the cohort does about it is D+2, in
   [mission-rim-deposits.md](mission-rim-deposits.md) and
-  [mission-second-chord.md](mission-second-chord.md) — the same law read on two tides.
+  [mission-second-chord.md](mission-second-chord.md) — the law of these tides, read on two more
+  of them.
 - **The bed.** It is entered as a bed. Whether the lip was sown, and whether the people who sowed
   it stayed, is [mission-second-seeding.md](mission-second-seeding.md)'s ending.
 - **Active sonar.** Aboard, live, locked, and the lock is the ending.
@@ -574,6 +577,7 @@ Everything else on the chart, and the depth each thing is admitted at:
 | 2 Abyssal Submersibles, `watch` | 4600, 3300 and 4750, 3350 | 3,000 m | Prospect's seats, to the metre |
 | Cantor, `dome` | 5000, 3400 | 3,000 m | Lip floor 3,100; a structure is admitted at its authored depth |
 | 2 Light Scouts, the pair | 1200, 2050 and 1350, 2100 | 2,100 m | Terrace floor 2,600; PR-3 by refit, as Prospect authors them |
+| 2 Light Scouts, the pair, on the 03:00 leg | 1800, 2150 and 1950, 2200 | 2,100 m | Terrace floor 2,600. Prospect's first eastern leg, walked at 03:00 and left at 12:00 |
 | Spore Veil, the bed | 1250, 3250 | 3,000 m | Lip floor 3,100 |
 | Corvette, the reconnaissance | 5200, 1600 | 1,750 m | Slope floor 2,200; 1,750 m is Mid-Water and PR-2 covers it |
 | Cruiser + 2 Corvettes, the party | 5875, 450 · 5900, 600 · 5850, 300 | 1,400 m | Staging floor 1,500; PR-2, no refit |
@@ -620,11 +624,11 @@ its sentences.
 > from, and this tide it is attended from the ground it is attended over, which is a difference
 > of posture and not of doctrine.
 >
-> What the watch heard on the concern's day is given to the column, because a column that is not
-> told what its own record holds is a column being asked to find it twice. A descent at
+> What the watch heard on the concern's tide is given to the column, because a column that is
+> not told what its own record holds is a column being asked to find it twice. A descent at
 > seventy-two for three minutes. Transmissions at eighty against six charted faces, in an
-> account that is not theirs. And a bed on the western lip, entered as a bed. The Ninth heard
-> all of it as well, which is why the column left a tide early and walked.
+> account that is not theirs. And a bed on the western lip, entered as a bed. The account went
+> up the Ninth as well, which is why the column left a tide early and walked.
 >
 > Eighteen hulls are given to the rim. Twelve are the cohort and six attend the lip, and the
 > dome is stood where the column stopped, because a dome is not carried and there was nothing on
@@ -634,8 +638,9 @@ its sentences.
 > spread two to a face. Nothing is raised and nothing is put into the water: the arrays are
 > aboard, they are live, and they are not used. The rim is attended. It is not asked.
 >
-> Nothing has stood into the watch. That is the week's law and it is entered as the week's law,
-> and it is entered again at the count, whatever the week has done with it by then.
+> Nothing has stood into the watch. That is the law of these tides and it is entered as the law
+> of these tides, and it is entered again at the count, whatever the tides have done with it by
+> then.
 >
 > What is heard is entered. What is not heard is not entered, and the gap is entered too.
 >
@@ -673,15 +678,21 @@ or the impersonal:
 > slow. The Order is measuring, from above the line, with nothing raised. What it raises, and
 > when, is not for an open channel. It would be discourteous to the faces.
 
-**The plateaus, from under the bed — 15:30**
+**The charting pair, for the plateaus — 15:30**
 
 > We're still here. That's the whole of the message, and we'd rather you had it from us than
-> worked it out from the bed.
+> worked it out from the water. We're on the western terraces, where we've been reading since
+> before either of us had a reason to say so.
 
 **The stalls, on the Order's sounding — 18:00**
 
-> The Order sounds the sixth face, from above the line. Eighty, twenty seconds. It has stood
-> into the watch and the watch is not asked to answer it this tide.
+> The Order sounds the sixth face, from above the line. Eighty, twenty seconds. It is the first
+> hull of these tides to stand into the watch.
+
+**Cohort-Prime Adze, on the Order's sounding — 18:00**
+
+> It has stood into the watch. The watch is not asked to answer it this tide. That is the
+> order, and it is entered as the order, and the cohorts are attending it.
 
 **Cohort-Prime Adze, at the riser — 18:45**
 
@@ -722,8 +733,11 @@ or the impersonal:
 
 Each line fails [culture.md](culture.md) §3 for the other three factions, which is that
 document's own test (§6). Adze makes tempo a fact about ground rather than a claim about a
-cohort, which the Knights would make courteous and the Consortium would cost. The pair offers a
-distinction as a question and a presence as a message and never once uses the imperative. The
+cohort, which the Knights would make courteous and the Consortium would cost, and at 18:00
+states a refusal as an assignment being carried out — *the cohorts are attending it* — which is
+the only register in the Rift that can describe not answering as a thing being done. The pair
+offers a distinction as a question and a presence as a message and never once uses the
+imperative. The
 Order pays a courtesy to a rock face and declines to name a date, which only a navy that thinks
 in intervals would take for an answer. And Korrin's absence of a line is the line: the register
 whose highest praise is *sufficient* has been building to one sentence for seven missions and
@@ -749,7 +763,7 @@ them owns.
 | The mission format — beats, predicates, registry, private rooms | **Built** (#190). `extract`, `survive`, `attend`, `tolerance`, `say`, `move`, `silent`, `creature` and `resolve` cover §9's whole schedule |
 | The map, reused unchanged | **Decided, and not a build.** `mouth-rim` is `packages/backend/src/sim/maps/missions/mouthRim.ts`, authored for [mission-prospect.md](mission-prospect.md) §11; §11's table is that literal's table, row for row, and the literal for this mission adds no region and moves no metre. Cross-mission Drift Health on a shared map — [campaign.md](campaign.md) §2 rule 5 — is **absent everywhere**, so this mission inherits a chart and cannot inherit what the tide before it did to the ground |
 | **The ending, as one outcome with three readings and no fork** | **Built on the outcome ladder.** The Ledger's ending forks because a chair transmits or does not, and it needed readings-per-objective to keep the branches unranked ([mission-item-nine.md](mission-item-nine.md) §13). This one does not fork at all: [campaign.md](campaign.md) §9's Directorate row is one sentence, all three of its clauses appear under all three readings, and the ladder grades only the hold. No new mechanism, and the row is here so a reviewer can check that the refusal to fork was a decision rather than an omission |
-| **Campaign progression — this ending recorded, and read back** | **The record is built and nothing reads it back** (#371, #374). `packages/frontend/src/progression/store.ts` keeps a per-mission history and the campaign board reads it, so it is no longer true that nothing remembers a mission was played ([campaign.md](campaign.md) §11; [mission-the-dome.md](mission-the-dome.md) §13 and [mission-shallow.md](mission-shallow.md) §13 say the same from earlier in the campaign). What is still absent is everything queued behind that record: a briefing variant that could turn *the ping was handed over in mission 3 and is locked here* into a line, and the cross-mission carry. The Directorate's ending is the one that most wants them, because its content is that nothing changed and the record continues — and a record nothing reads back cannot make that point twice ([mission-item-nine.md](mission-item-nine.md) §13, written before the record existed) |
+| **Campaign progression — this ending recorded, and read back** | **The record is built and nothing reads it back** (#371, #374). `packages/frontend/src/progression/store.ts` keeps a per-mission history and the campaign board reads it, so it is no longer true that nothing remembers a mission was played ([campaign.md](campaign.md) §11; [mission-the-dome.md](mission-the-dome.md) §13 and [mission-shallow.md](mission-shallow.md) §13 say the same from earlier in the campaign). What is still absent is everything queued behind that record: a briefing variant that could turn *the ping was handed over in mission 3 and is locked here* into a line, and the cross-mission carry. The Directorate's ending is the one that most wants them, because its content is that nothing changed and the record continues — and a record nothing reads back cannot make that point twice ([mission-item-nine.md](mission-item-nine.md) §13, written before the record existed). **The roster is the concrete half of that absence, and this mission is where the campaign owes it.** §2's twelve are the cohort grown at the shallow band ([mission-trench-awakening.md](mission-trench-awakening.md) §6) and called at the head of the Ninth ([mission-conclave-attending.md](mission-conclave-attending.md) §8); nothing carries a hull out of either mission, so the twelve are authored fresh here and the continuity is prose. Both documents say so from their own end — Trench Awakening §13's "the cohort grown in this yard is First Arrival's column in prose only", and Conclave §13's "mission 7's column is authored rather than inherited" — and this row is the third statement of one missing field |
 | **A tide that runs its length** | **Built** — `MissionDefinition.runsItsLength` ([mission-intake.md](mission-intake.md) §13), and this ending needs it exactly as [Conclave](mission-conclave-attending.md) §13 does. `the-watch` is met from tick zero and `the-rim` is revealed at 19:00, so both terminal rows land on one pass and the court's default rule would resolve the mission there — before the Order withdraws, before Korrin reads the count, and before the one silence the campaign is for. Omitted is the default, and most literals omit it |
 | A carried dome | **Not built, and the mission is authored around not having it.** Structures do not move; a Cantor cannot be walked to a rim. So the dome is a `MissionStructure` seated prebuilt at 5000, 3400 where the column stopped, and §3 says so out loud rather than implying the column dragged it four kilometres. The roster gap is the same one [mission-baffle.md](mission-baffle.md) §13 records for a mobile Baffle Barge, and neither document asks for it |
 | **An `extract` row read at the close** | **Built, with the idiom the runtime forces.** `predicates.ts` makes only `quiet` and `survive` standing, and the runtime never re-derives a Met non-standing row, so an `extract` latches the first pass it is satisfied and stays Met. A hold read *at the tide's turn* therefore has to be revealed late: `the-rim` carries `revealAtTick` T(19), the stalls' beat shares that tick because a reveal needs one, and an unrevealed objective is not scored ([mission-intake.md](mission-intake.md) §13's roll, at its second spender) |
@@ -767,11 +781,11 @@ them owns.
 | The lock on noisemakers | **Built, and this document's own addition.** Six locks are obvious on a rim nobody fires on; the seventh is not, and it is the one worth arguing about. A decoy is a transmission that lies, and the ending's whole claim is that this faction does neither of the two things a transmission can be — so `noisemakers` is locked with the reason *a countermeasure is a sentence, and the rim is not lied to*. Recorded as a row rather than folded into §3, so it can be overruled in one place |
 | A Knight hull in the roster | **Absent** ([units.md](units.md)), as it has been since [mission-aptitude.md](mission-aptitude.md). The reconnaissance and the party fly Order colours on generic hulls and carry the directional term — cone 1.00, flank 0.35, wake 0.10 — which is the term working and not a substitute for a hull |
 | The Order at PR-2 with no refit | **A calendar decision, stated.** The Order has no refit crystal after *The Three* and projects depth with Sounding Spires, of which none stands on D+1, so its four hulls sit at or above 1,750 m — Mid-Water, which PR-2 covers — and nothing of the Order's is ever admitted into Abyssal water in this mission. [mission-rim-deposits.md](mission-rim-deposits.md) is where that changes |
-| Choristers below 1,800 m, refit explicitly | **A test finding, carried.** `missions.test.ts` reads `statsFor(kind).pressureRating` rather than `effectivePressureRating`, so the Directorate's PR-3 baseline does not rescue a PR-2 Chorister authored at 3,000 m: every one of the twelve carries `pressureRating: 3` in the literal. First recorded by [mission-the-dome.md](mission-the-dome.md) §13; repeated here because this is the fourth mission in the campaign to field the hull and the fourth to have to author the refit |
+| Choristers below 1,800 m, refit explicitly | **A test finding, carried.** `missions.test.ts` reads `statsFor(kind).pressureRating` rather than `effectivePressureRating`, so the Directorate's PR-3 baseline does not rescue a PR-2 Chorister authored at 3,000 m: every one of the twelve carries `pressureRating: 3` in the literal. First recorded by [mission-the-dome.md](mission-the-dome.md) §13; repeated here because this is the fifth mission in the campaign to field the hull and the fourth to have to author the refit — [Shallow](mission-shallow.md)'s eight sit at 340 m and need none |
 | **Silent Running's SIG is the hull's, not the band's** | **A finding carried, and the one place a reader is most likely to mis-derive this document.** `silentRunningSig` places a hull inside `SILENT_RUNNING`'s 3–8 band by its idle figure — `3 + 5 x min(1, sigIdle / 60)` (`acoustics.ts`) — so a Chorister runs silent at **4.3** and an Abyssal Submersible at 4.8, and only a hull idling at 60 or more ever reads the eight. Every silent figure in §1, §6 and §7 is computed at the hull's own value: the eight would inflate a Chorister's silent ranges by a factor of 1.85, would make the seat's cell die in half the time, and would put the pair at Track on the first face where the model says Classification. First recorded by [mission-shallow.md](mission-shallow.md) §13 |
 | The seat's Drift cell, dead inside eighty seconds | **Arithmetic over the shipped ledger, stated and not fenced.** Twelve Choristers, six submersibles and a dome in one 1,500 × 1,000 m cell sum 116 silent against a threshold of 60 and take the cell to zero in seventy-nine seconds; idle they sum 359 and take fifteen. **Nothing in this mission is paid in Biomass**, so it costs the player nothing — but it is public on the snapshot, a reader will compute it, and [mission-intake.md](mission-intake.md) §13's decision holds: say so, and move nothing |
 | A predicate over a hull's depth | **Not built, and named rather than asked for.** §8's hold wants "on the terraces *and* under 2,600 m"; `extract` reads a rectangle. A hull hovering at 3,000 m inside the terraces rectangle counts as one standing on the bench. The shape a genuine need would take is a `depthM` ceiling on `extract`, and this mission does not need it: the ground lifts every hull that crosses, so the two populations differ only for a player who ordered depth on purpose ([mission-shallow.md](mission-shallow.md) §13 records the same row from the other end) |
-| A predicate over what the player declined to do | **Not built, and deliberately not asked for.** The mission's most load-bearing non-event — the watch not answering a hull that stood into it — is a fact about restraint, and the union has no way to read one. It is authored as a `say` beat and an epilogue clause, which is where a refusal belongs anyway |
+| A predicate over what the player declined to do | **Not built, and deliberately not asked for.** The mission's most load-bearing non-event — the watch not answering a hull that stood into it — is a fact about restraint, and the union has no way to read one. It is authored as Adze's `say` beat at 18:00 and an epilogue clause, which is where a refusal belongs anyway — and it is also the order [characters.md](characters.md) says the campaign puts in front of Adze that they might not obey, paid off by being held (§6) |
 | In-mission character speech, heard | Text only, the standing status ([mission-sorrowgate.md](mission-sorrowgate.md) §13) — and the campaign closes owing this debt its own largest item: **Korrin's silence is a thing an actor does not say**, and there is no channel on which not-saying-it can currently be performed |
 | The mix — a rim, a bed, two returns and one call | Not started ([audio-direction.md](audio-direction.md)). The one authored sound the mix has never had to place is a twenty-second transmission from a navy the player is not fighting, arriving from above and behind |
 
@@ -785,7 +799,7 @@ them owns.
 - **[mission-intake.md](mission-intake.md)** — the Chorister, the ledger under a massed cohort, and the colossus that grinds the 95 m hull and not the 50
 - **[mission-the-dome.md](mission-the-dome.md)** — the ping handed over, whose cost is this mission's lock
 - **[mission-shallow.md](mission-shallow.md)** — tempo learned at thirty-two metres a second, and the other document that wanted a depth on an extract
-- **[mission-trench-awakening.md](mission-trench-awakening.md)** — what a ping does in a basin, priced, so that locking it here means something
+- **[mission-trench-awakening.md](mission-trench-awakening.md)** — what a ping does in a basin, priced, so that locking it here means something; and the yard the twelve were grown in, carried forward in prose because nothing carries a roster
 - **[mission-conclave-attending.md](mission-conclave-attending.md)** — the column that crossed the head of the Ninth is this column, and Korrin's stopped sentence is finished here by not being finished
 - **[mission-item-nine.md](mission-item-nine.md)** — the other ending built on the same instrument: two returns filed three times, and a chair who transmits where this faction will not
 - **[mission-second-seeding.md](mission-second-seeding.md)** — the bed on the western lip, whose ending this document enters as a bed and carries no further
@@ -799,7 +813,7 @@ them owns.
 - **[factions.md](factions.md)** — the Listeners, and the navy whose ending is that it never asked
 - **[world-map.md](world-map.md)** · **[habitats.md](habitats.md)** — the Rim, the trench country the column walks out of, the cycle at thirty-nine hours, and the terraces this assignment is issued from
 - **[culture.md](culture.md)** — §3, the register that may not explain; §5, the written silence-debt; §6, the Mouth, kept
-- **[characters.md](characters.md)** — Korrin's one sentence, unspent; Ossary's nothing; Adze at the floor of everything
+- **[characters.md](characters.md)** — Korrin's one sentence, unspent; Ossary's nothing; Adze at the floor of everything, and the one order the campaign puts in front of them that they might not obey, held at 18:00
 - **[timeline.md](timeline.md)** — 88 PC, 205 PC, 214 PC, and a cycle that is still shortening
 - **[maps.md](maps.md)** — how a mission map is written, and why this one is not in the catalogue
 - **[glossary.md](glossary.md)** — mission outcome, silence order, and the partial that is a result

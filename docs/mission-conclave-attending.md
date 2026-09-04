@@ -14,8 +14,9 @@ it entered what the concern did there ([habitats.md](habitats.md) §6, *The Uppe
 [world-map.md](world-map.md); [mission-prospect.md](mission-prospect.md) §5).
 
 **Mission id:** `attending-conclave` — namespaced by campaign, per
-[campaign.md](campaign.md) §1, and the prefix is the whole of what distinguishes it from the
-Knights' *Conclave* four rows away.
+[campaign.md](campaign.md) §1. The prefix is the whole of what separates the two *ids*; what
+separates the two missions is that the Knights, four rows away, do not mean the same act by the
+word (§1).
 
 **Premise, for the entry that offers it:** *A calling is put at the head of the Ninth, and it
 is answered by who crosses the water between the terraces. The Cantorate does not cross.*
@@ -46,6 +47,17 @@ attended the calling of it.
 
 So the Cantorate's authority is not a veto. It is a body in a place, and the whole of it can be
 exercised by remaining where it already is.
+
+**The Order means something else by the word, and this document is one of the two places the
+collision is visible.** A Knights' conclave is not an attendance and not a gathering: it is
+*sounded* — each chapter-master strikes their own house's chord where they stand, the lattice
+carries it, and the count is which of the nine answered and how far into the appointed interval
+each waited ([habitats.md](habitats.md) §5; [mission-conclave-chord.md](mission-conclave-chord.md)
+§1). The two are cousins and not synonyms: both are decided by whether a body moves and both are
+heard rather than tallied, but one is a crossing that is attended or is not and the other is a
+chord that is answered or is not. `attending-` separates two rows in a registry; this paragraph is
+what separates the meanings, and §13 records that the bible has not yet separated them where
+[glossary.md](glossary.md) would.
 
 **What is being put is the rim.** The cycle before this one, a Consortium survey descended on
 the Mouth's northern edge at 72 for three minutes and sounded six charted faces at 80
@@ -104,7 +116,7 @@ arrives instead is not anybody's.
 
 | Hull | Count | Stats | Why |
 | --- | --- | --- | --- |
-| Chorister — the called | 12 | **SIG 16 idle / 24 cruise / +15 firing · HYD 75 (95 under the dome) · PR-2, refit to 3 · 200 HP · 20 dmg at 450 m · 40 m/s · 50 m** ([units.md](units.md)) | The cohort hull, fielded for the first time in the campaign's own water. Two numbers do the whole mission: it cruises at 24 under a ceiling of 25, and at fifty metres it is forty-five short of `DRIFT.TRANSIT_MIN_HULL_M` — the shortest hull a colossus can grind is the Submersible's 95 |
+| Chorister — the called | 12 | **SIG 16 idle / 24 cruise / +15 firing · HYD 75 (95 under the dome) · PR-2, refit to 3 · 200 HP · 20 dmg at 450 m · 40 m/s · 50 m** ([units.md](units.md)) | The cohort hull, in Directorate hands for the fourth mission running, and for the first time inside Sufficiency ([mission-trench-awakening.md](mission-trench-awakening.md) §2). Two numbers do the whole mission: it cruises at 24 under a ceiling of 25, and at fifty metres it is forty-five short of `DRIFT.TRANSIT_MIN_HULL_M` — the shortest hull a colossus can grind is the Submersible's 95 |
 | Abyssal Submersible — the standing cohort | 4 | **SIG 22 / 28 / +20 · HYD 85 · PR-3 · 520 HP · 80 at 650 m / 1.8 s · 60 m/s · 95 m** ([units.md](units.md)) | The heavy half, and the half the order will not let cross quietly: 28 is three over the ceiling. Ninety-five metres exactly, which is the one length in the roster a Sounder's transit is written against |
 | Cantor — the dome | 1 | SIG 35 · HYD 80 · **+25 HYD within 1,200 m, capped at 95** ([units.md](units.md)) | The galleries' own instrument, lent up to the calling and standing where the galleries stand — at 2,900 m, a hundred metres off the bench's own floor. Structure, not hull; placed, never moved; and standing seventy-five metres off the line of what comes up the trench at 10:40, and a hundred metres below it |
 
@@ -253,10 +265,22 @@ came close enough to enter that they were there.
 | --- | --- | --- | --- | --- |
 | `cell-one` … `cell-six` | 1500, 1900, 2300, 2700, 3100, 3500, all at y 2875 | 2,800 m | 3 | Sustained — period 20 s, on 20 s, hp 5,000 |
 
-Each carries a reading, and the pair is the mission's whole editorial position:
+Each carries its own reading, parameterised by ordinal in the form
+[mission-shallow.md](mission-shallow.md) §6 sets for Marr's six outer rows, and the pair is the
+mission's whole editorial position:
 
-- **Entered:** *the second cohort, in its cells. Called; not assigned; breathing.*
-- **Not entered:** *the cells. The record notes that the First Cantor was present.*
+- **Entered:** *the [first…sixth] row of the second cohort, in its cells. Called; not assigned;
+  breathing.*
+- **Not entered:** *the [ordinal] row. The record notes that the First Cantor was present.*
+
+**The ordinal is what makes the count a count.** Six emitters sharing one string would append the
+same two sentences to the close up to six times, and `the-cells`' count of three would read as one
+row heard three times rather than as three rows of the south terrace entered by name — the padding
+[mission-the-dome.md](mission-the-dome.md) §6 refuses by withholding a reading from five of its six
+Call emitters. This mission wants all six countable, so it distinguishes them instead of silencing
+them. Only the entered lines are counted; the gap lines are the record's own repetition, and the
+Cantorate's sentence riding on each of them — once per row that did not answer — is the register
+doing what §8 says it does rather than a line printed twice by accident.
 
 Naming follows [culture.md](culture.md) §4. Setha Korrin and Vehl Ossary are given-plus-cohort-line;
 Adze carries one name only, which is what the most modified carry. The stalls, the cells and the
@@ -401,9 +425,10 @@ Ossary's line and in the cells' gap reading rather than counted.
 | **The calling stands open** | Neither | "No column and no muster. What came up the Ninth is in the head of it, and the calling stands open with nobody crossing in either direction. It is not a failure of the called; it is a calling put at the wrong cycle, and the next one will be put anyway." |
 
 Beneath whichever of the three the count earned, in authored order: `the-cells`' reading, then
-`the-crossing`'s, then the six cells' own entered-and-gap lines. Ossary's last line is **not** part
-of that string — it is the `say` beat at 20:00, in the log, one beat before the `resolve` on the
-same tick — and it is authored to be read after every one of the three:
+`the-crossing`'s, then the six cells' own entered-and-gap lines, each naming its own row. Ossary's
+last line is **not** part of that string — it is the `say` beat at 20:00, in the log, one beat
+before the `resolve` on the same tick — and it is authored to be read after every one of the
+three:
 
 > *Nothing.* The record notes that the First Cantor was present.
 
@@ -521,8 +546,14 @@ What this mission deliberately does not teach:
   account the second one credits if the Choristers take it apart is read out by nobody.
 - **The rim** — mission 7, [First Arrival](mission-first-arrival.md), where the column at the
   axis is going, and which authors its own force rather than inheriting this one's (§13).
-- **Active sonar** — §2, and the campaign's oldest argument, spent once in mission 3 and refused
-  everywhere after it.
+- **Active sonar** — §2, and the campaign's oldest argument, which this mission declines rather
+  than inherits. It was spent in mission 3, [The Dome](mission-the-dome.md); it was left unlocked
+  and priced rather than refused in the two missions between — [Shallow](mission-shallow.md) §3
+  states its cost on a shoulder where it buys nothing and refuses nothing, and
+  [Trench Awakening](mission-trench-awakening.md) §3 hands the bill over at three times its weight
+  to the Drift. It is locked in exactly two Directorate missions, this one and the rim
+  ([First Arrival](mission-first-arrival.md) §3), and both times by doctrine rather than by
+  [campaign.md](campaign.md) §10's schedule.
 
 ---
 
@@ -683,8 +714,9 @@ or the impersonal:
 
 - *The calling stands. Nothing has crossed from the south terrace.*
 - *The calling closes at the cycle. What is assigned descends.*
-- *Entered: the second cohort, in its cells. Called; not assigned; breathing.*
-- *Not entered: the cells. The record notes that the First Cantor was present.*
+- *Entered: the [first…sixth] row of the second cohort, in its cells. Called; not assigned;
+  breathing.*
+- *Not entered: the [ordinal] row. The record notes that the First Cantor was present.*
 - *The called owe the stalls a silence.*
 - *Twelve of sixteen. The Undermarshalcy does not round up.*
 
@@ -750,8 +782,10 @@ What exists against this document and what does not, continuing the list
 [mission-asset-recovery.md](mission-asset-recovery.md) §13 started. **This mission is specified
 and not built.** Almost all of it is shipped and named below; one row is a first spend of a built
 mechanism no mission has used, four are findings this document made against the engine rather
-than requests, two are absences it declines to ask for, and one is a row every §13 before
-[Convocation](mission-convocation.md) carried as missing and which is now closed.
+than requests, one is a finding against the bible rather than against the engine and is left open
+in two files this document does not touch, two are absences it declines to ask for, and one is a
+row every §13 before [Convocation](mission-convocation.md) carried as missing and which is now
+closed.
 
 | Requirement | Status |
 | --- | --- |
@@ -776,6 +810,7 @@ than requests, two are absences it declines to ask for, and one is a row every �
 | The dome's aura, and what it is worth to whom | **Built** — `STRUCTURE_AURAS.CANTOR`, +25 HYD capped at 95 within 1,200 m, granted through `Structure.grantSlot` and measured horizontally (`auras.ts`, `Math.hypot` over x and y), which is why the dome's depth moves the transit and not the disc. §3's arithmetic is a consequence of the shipped cap and this mission's roster, not a change to either: sixteen per cent of range on a Chorister's 75, seven on a Submersible's 85, and nothing at all on a row of hulls 2,875 m away |
 | A hull ordered below 3,000 m | **Refused, by `Match.applyDepth`** (`DEPTH.MAX_M`), which rejects rather than clamps. Stated in §11 so the head's 3,400 m floor is not read as reachable water — and so that the arrivals' 2,800, which is a hundred metres under the seat the called hold, is understood as water the player can be ordered into |
 | The chart's deviation from `attendingGalleries.ts` | **A decision, stated in §11.** The channel's head runs between the two gallery benches on this chart and stops at their southern edge on the other. Both documents' §11 now describe the same place from two sides and disagree about five hundred metres of it; this one says so rather than quietly agreeing |
+| **The word *conclave*, defined twice in the bible** | **A finding against the docs rather than the engine, and this document does not close it.** [habitats.md](habitats.md) §5 defines a conclave as a chord *struck* across nine houses at an appointed interval, and §6 defines it as an *attendance* crossed for between two terraces. Neither section references the other, and [glossary.md](glossary.md) has no entry for the word at all — which is the case [CLAUDE.md](../CLAUDE.md) makes the glossary authoritative for. §1 states the distinction here, so that a reader who arrives at this mission from [mission-conclave-chord.md](mission-conclave-chord.md) is told the two words are two acts rather than left to infer it from a mission id. **What is owed is in two files this document does not touch**: a `Conclave` entry in the glossary carrying both senses under their factions and citing habitats.md §5 and §6, and one reciprocal cross-reference between those two sections. The Knights' document needs no change; it is grounded in §5 already |
 | Korrin's commander ability — *The Listening* | **Built, and deliberately not authored.** The row every §13 before Convocation carried — "`MissionAbility` is a lock list and nothing grants an ability" — is closed: `MissionCommanderAbility` ships, with an origin point, a radius, a duration, a speed term and the SIG it broadcasts, and [mission-convocation.md](mission-convocation.md) §13 is where it was asked for. `MissionDefinition.commanderAbility` is optional and this mission omits it. Eight seconds of full Tier-3 resolution across this map would hand a player the cells for nothing and end §4's first movement, so the mission is better without the button that now exists — which is a stronger claim than the one this row used to make, and the reason it is worth making at all |
 | Progression | **The record is built** (#371) — `packages/frontend/src/progression/store.ts` keeps a per-mission history and the campaign board reads it, so [campaign.md](campaign.md) §1's tracking is no longer a plan. **What is absent is anything the record carries *between* missions**: nothing takes a survivor out of this mission, and mission 7's column is authored rather than inherited — twelve Choristers and the 9th at the rim, seated fresh ([mission-first-arrival.md](mission-first-arrival.md)). A campaign that carried this count would make the departure mean more than it currently can, and the row is where that is owed ([docs/README.md](README.md)) |
 | Cross-mission Drift Health | **Absent**, and moot here: no other mission uses `upper-terraces`, and nothing on this map pays Biomass. §11 prices the terrace's cells anyway, because rule 5 is the reason a reader would ask |
@@ -795,8 +830,8 @@ than requests, two are absences it declines to ask for, and one is a row every �
 - **[mission-first-arrival.md](mission-first-arrival.md)** — The Attending 7: the column at the axis is the column at the rim, and Korrin's stopped sentence is finished by not being finished
 - **[mission-sorrowgate.md](mission-sorrowgate.md)** — the pattern, the silence order this one is the liturgical form of, and the authored-beat rule §9 inherits
 - **[mission-prospect.md](mission-prospect.md)** — the concern's descent and its six sounded faces, heard down the Ninth as the thing this calling is put about
-- **[mission-conclave-chord.md](mission-conclave-chord.md)** — the other *Conclave*, and the rule-4 slot this mission does not take
-- **[habitats.md](habitats.md)** — §6, the Upper Terraces and what a conclave is; §8, cut structure as Coral Ruins and a dome that comes down as one event at one tick
+- **[mission-conclave-chord.md](mission-conclave-chord.md)** — the other *Conclave*: a struck chord rather than an attendance (§1), and the rule-4 slot this mission does not take
+- **[habitats.md](habitats.md)** — §6, the Upper Terraces and what a conclave is here; §5, what the same word is in the Fields, and the collision §13 records; §8, cut structure as Coral Ruins and a dome that comes down as one event at one tick
 - **[environments.md](environments.md)** — Coral Ruins as the one biome specified to change during a match, and the beat that changes it
 - **[mission-deep-furrow.md](mission-deep-furrow.md)** — the other document that spends the repaint, in the other direction: a garden arriving where this one has a building leave
 - **[systems-echo.md](systems-echo.md)** — §3, the trench that carries and the shadows the benches lose; §4, the tier a cohort is entered at
@@ -807,4 +842,4 @@ than requests, two are absences it declines to ask for, and one is a row every �
 - **[characters.md](characters.md)** — Korrin, Ossary and Adze, and the civil war this campaign has been keeping one sentence at a time
 - **[world-map.md](world-map.md)** — Sufficiency, the Ninth's head, and the axis that aims at the Mouth
 - **[maps.md](maps.md)** — how a mission map is written, and why this one is not in the catalogue
-- **[glossary.md](glossary.md)** — mission outcome, and the silence order whose penalty is never the mission
+- **[glossary.md](glossary.md)** — mission outcome, and the silence order whose penalty is never the mission; the authority that owes the word *conclave* an entry (§13)
