@@ -357,7 +357,7 @@ metres wide.** West of x 426 the closure's gate holds a silent hull at Classific
 cumulative seconds of that is the second asking. East of x 1,244 the western turret has it inside
 seven hundred metres, which is a firing solution rather than a hearing. Between those two lines a
 silent hull is Bearing to the gate out to x 760, Contact out to x 996 and heard by nothing at all
-from there to the turret's own 1,043 — and nothing to the escort at the frame anywhere in it, and
+from there to the turret's own x 1,043 — and nothing to the escort at the frame anywhere in it, and
 outside every gun.
 
 **And two stations inside that band each hold five rows at once.** From (900, 1850) a submersible

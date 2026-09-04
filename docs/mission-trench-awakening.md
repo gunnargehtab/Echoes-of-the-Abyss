@@ -131,9 +131,14 @@ The band is three structures, standing in three different Drift cells on purpose
 **The plant is the difference between a ten-second hull and a forty-second one.** Thermal Draw's
 only consequence is that a starved line runs slower, and the floor is
 `THERMAL_DRAW.MIN_SATISFACTION`'s 0.25 — never zero, because a frozen line is a spiral
-([economy.md](economy.md) §2). The plant stands 1,750 m west of the grower and covers it, because a
-mission-placed structure sums its capacity like any other; without it a Chorister takes forty
-seconds and this is a different mission.
+([economy.md](economy.md) §2). The plant stands 1,750 m west of the grower and pays for it, because draw
+is a slot's sum and not a radius: a mission-placed structure counts its capacity like any other.
+Without it a Chorister takes forty seconds and this is a different mission. **And it is the row's
+stake, which nothing else on this map is** — `reap` eliminates the slot whose Bastion falls, and
+elimination removes every entity that slot owns, so a plant lost is not a plant lost, it is the row
+gone. Nothing here is aimed at it: a released colossus reads a structure at 14 and commits only
+inside 225 m, and one centre-line pass costs a Bastion 3,784 of its 5,000. It takes two, which
+takes a row that spent ninety seconds making noise beside its own plant (§13).
 
 **The dome covers six of the eight.** At (1500, 1000) with a 1,200 m radius it reaches `row-one` at
 510 m and the Choristers seated at x 2,200 through 2,680; the easternmost Chorister at 1,301 m and
@@ -241,6 +246,14 @@ goes up.
 There is no court in the water and no second navy. Slot 1 is reserved and empty, as every literal
 reserves it.
 
+**Naming follows [culture.md](culture.md) §4.** Setha Korrin is given-plus-cohort-line, as every
+Directorate name in the campaign is, and she is addressed by her office because getting a title
+wrong is a real error in all four cultures. The Cohort-Prime of the row is a rank and not a name:
+the reassigned keep their cohort-lines and this document does not spend one, for
+[mission-intake.md](mission-intake.md) §5's reason — the eight per cent are counted here and not
+editorialised. The ground, the yard and the stalls are channels rather than people, which is the
+register's own habit: the agent is the record, the water and the assignment.
+
 **The stalls.** One emitter at (4250, 1000), 1,850 m, SIG 12, period 30 s on 30 s — sustained, 5,000
 HP, carrying **no reading**, so it cannot be attended and cannot count. It is
 [mission-exposure.md](mission-exposure.md) §6's *intake stalls, cohort induction, heard as
@@ -330,8 +343,9 @@ water and Intake only what the year was paid for; this mission puts in the Direc
 industry and lets the Drift price it ([audio-direction.md](audio-direction.md)).
 
 - **The plant and the dome.** SIG 35 each, sustained, all tide — Contact to a Chorister from
-  5,286 m, which is the map. One pays for the yard's speed; one is the expense the Directorate wears
-  openly ([mission-exposure.md](mission-exposure.md) §6), heard from underneath it this time.
+  5,286 m in trench water and 3,428 m in the yard's own, which is the map either way. One pays for
+  the yard's speed; one is the expense the Directorate wears openly
+  ([mission-exposure.md](mission-exposure.md) §6), heard from underneath it this time.
 - **The stalls.** SIG 12, thirty on and thirty off — Classification from `row-two` at 1,055 m. The
   eight per cent, working, and the only sound on this map that is a person.
 - **The grower, producing.** SIG 25 to 55 the moment a hull is queued: Contact to a Chorister from
@@ -377,7 +391,8 @@ role and are counted by nothing, which is a property of the format and not a dec
 **`the-second` cannot say what it means, and the document says so.** Every predicate is a query over
 the observer's own force — there is no `party`, `slot` or `group` field in the union — so *the
 second colossus was rendered* is not discouraged, it is inexpressible. Four hundred banked at once
-is the closest honest shadow: more than one colossus and four animals, less than two colossi.
+is the closest honest shadow: one colossus and four animals exactly, and a hundred and twenty short
+of two colossi.
 
 **`the-grower` is not an objective.** What the player has built or lost is not a predicate
 ([mission-standing-wave.md](mission-standing-wave.md) §13), so the grower is read in the epilogue by
@@ -550,10 +565,11 @@ Where everything stands, and what admits it:
 and the doorway is what a Hollow guards ([bestiary.md](bestiary.md) §4), so the row's income is
 1,552 m out on either wall and has to be walked to, twice. The trench carries at 1.60, so every
 rendering is heard the length of the map and a colossus calling from the sill is heard from outside
-it. The yard's cut structure at 0.80 is the only quiet water on the chart and it is exactly the shape
-of the row — which is why the grower producing reads 7,011 m in trench water and 4,546 m in its own
-yard. And the three structures stand in three different cells of the Drift ledger, so the yard's
-floor plan is its own pay slip (§3).
+it. The worked ground at 0.80 — the rim, and the row and the stalls cut under it — is the only quiet
+water on the chart, and the row's own strip of it is exactly the shape of the row — which is why
+the grower producing reads 7,011 m in trench water and 4,546 m in its own yard. And the three
+structures stand in three different cells of the Drift ledger, so the yard's floor plan is its own
+pay slip (§3).
 
 **The Shallow Band is a mission map and is not in the public catalogue.** One seat, no resources,
 not balanced, resolved by mission id and nothing else ([maps.md](maps.md)).
@@ -563,8 +579,9 @@ not balanced, resolved by mission id and nothing else ([maps.md](maps.md)).
 ## 12. The Briefing
 
 Spoken by Undermarshal Setha Korrin, at the band. There is no Cantorate formula — the Cantorate does
-not attend a rendering row, and First Cantor Ossary is absent and unmentioned for the second time in
-the campaign ([mission-intake.md](mission-intake.md) §2). The register is
+not attend a rendering row, and First Cantor Ossary is absent and unmentioned for the third time in
+the campaign ([mission-intake.md](mission-intake.md) §2;
+[mission-shallow.md](mission-shallow.md) §2). The register is
 [culture.md](culture.md) §3's: passive, impersonal, structurally humble, and unshortened. The one
 line the entry screen carries, which is never the win condition: *The shallow band renders what the
 trench brings. This tide the trench is sounded, and what answers is the Drift's to decide.*
@@ -633,6 +650,10 @@ or the impersonal:
 > What was called went to the grower, and the grower is entered as spent. The animal is in the row
 > and is not steered.
 
+**The ground, on the band — fired by the tally at two hundred and sixty**
+
+> The band is answered. What answered it is entered too.
+
 **The stalls — 17:00**
 
 > A second is coming up the First. Nobody said one.
@@ -656,10 +677,14 @@ it. The yard files a birth as a depth. The Cohort-Prime restates the dignity of 
 hold its band without once claiming it, which is [mission-intake.md](mission-intake.md) §12's line
 given to the people it was about. Korrin's 07:00 states her own visit in the passive, as a thing
 said about her, which is the only way this register can say *and she visits*
-([characters.md](characters.md)). And the last is the third consecutive Directorate mission to close
-on one sentence she should not say aloud — and the first in which the sentence is *I*. The campaign
-spends the fourth in [mission-conclave-attending.md](mission-conclave-attending.md), one clause
-short.
+([characters.md](characters.md)). And the last is the fifth consecutive Directorate mission to close
+on one sentence she should not say aloud ([mission-attendance.md](mission-attendance.md) §12;
+[mission-intake.md](mission-intake.md) §12; [mission-the-dome.md](mission-the-dome.md) §12;
+[mission-shallow.md](mission-shallow.md) §12) — and the first in which she claims the act. The four
+before it are statements about a record, a memory, a lie and a rule; this one is *I called it*, in
+the active, from the register that gives the agency to the water and the assignment. The campaign
+spends the sixth in [mission-conclave-attending.md](mission-conclave-attending.md), one clause
+short, and mission 7 is the silence.
 
 ---
 
@@ -677,6 +702,7 @@ and approximated on purpose.
 | **Trench Awakening, the ability** | **Not built** ([factions.md](factions.md); nothing in `packages/`). The Sounder answers a ping — `ACTIVE_SONAR.FAUNA_AGGRO_MULTIPLIER` is read and the ladder commits toward the emitter — but nothing *summons*, and a mission may not claim otherwise. The cheapest honest approximation, used here: the summons is two authored `creature` beats (up the axis, then across the grower, then released) plus the player's own ping, which the ladder already answers at ×3. The difference is the whole difference — **a ping summons to the pinger and the ability summons to a point** — and it is why §4's fourth movement is about the ladder rather than about a button. The shape a real one would take is [mission-convocation.md](mission-convocation.md) §13's: one authored, once-per-match, player-fired effect with a point, a radius, a duration and a SIG cost (100 for its length), realised as *a `creature` beat whose `driveTo` the player chooses*. This document builds on that row's shape and does not propose a second grant mechanism. **The mission is playable without it** — that is what the two beats are for — and it is a poorer mission, because the one thing the player never does is the thing the mission is named after |
 | Production from a mission-placed Foundry | **Built.** `Match.produce`, `PRODUCIBLE` (which lists the Chorister off a Foundry), and affordability summed over the economy record's three accounts (#351). `MissionStructure` spawns it `prebuilt`, so the line runs from tick zero |
 | A Bastion on the player's party as the band's plant | **Built.** `thermal.ts` sums `drawCapacity` per owned structure with no special case for mission-placed ones, so the Bastion's 6 covers the Foundry's demand of 4 and `powerRate` is 1.0. Stated because the alternative is authored in the same table: without the plant, satisfaction is `THERMAL_DRAW.MIN_SATISFACTION`'s 0.25 and a ten-second Chorister takes forty. §3 states the floor as the price a row without a plant pays |
+| **A Bastion on the player's party is the player's stake** | **Built, and a FINDING worth stating before somebody discovers it.** `reap` collects any destroyed Bastion and calls `eliminate` on its owner's slot, and `eliminate` removes *every* entity that slot owns — so on a mission that places one, losing it does not lose a structure, it ends the row. The seated-slot rules do not save it: a mission seats one commander, so `checkConcessions` returns early, but the Bastion branch does not read `slots.length` at all. [mission-standing-wave.md](mission-standing-wave.md) §13 called its own Bastion "the mission's stake by accident" and priced the tithe stopping; this is the harder half of the same accident, and it is named here rather than requested, because the fix is either a mission flag that exempts the player's slot from elimination or a document that keeps the colossus off the plant. This one keeps the colossus off the plant (§3) |
 | **A grown hull is born at 600 m** | **Built, and a FINDING.** `productionSystem` delivers off the structure's apron and deliberately omits a depth; `spawnUnit` then seats the hull at "the deepest band the hull is rated for (capped at Mid-Water)", which is 600 m for anything PR-2 or better. So a yard on an 1,850 m floor delivers its hulls 1,200 m above itself and 600 m above the thermocline. **This document does not ask for a fix** — it makes the dive the hull's own announcement (§6: 26.7 s at a SIG floor of 72, heard by the Drift at 28.8 effective, and the layer's 0.3 paying for the first seven hundred metres of it) — but it names the shape one would take, so the choice is a choice: either a production depth on the structure, or spawning at the factory's own depth when the ground admits it. A mission on a Shelf map would find the same line delivering into the Directorate's own shallow-water penalty, which is the reason this row is worth writing down. The same path also arms the hull: `spawnUnit` adds a Weapon to anything with `attackDamage > 0` unless `weaponsCold` is set, and production sets nothing, so a row that grows twelve Choristers gets twelve live guns and no order to hold fire |
 | **A grown hull carries no `MissionRole`** | **Not built, and named rather than asked for.** Roles are recorded at install and only for player-party hulls, so *the cohort you grew* is not countable by `survive` or `extract`: §8's muster is over the eight authored hulls and the document says so instead of letting a player discover it at the close. The shape a genuine need would take is a per-kind default on the definition — `producedRole?: Partial<Record<UnitKind, MissionRole>>` — and this mission does not need it, because a muster of what the tide was given is the truer count for a shallow band |
 | **A driven creature that has arrived grinds nothing** | **Not built, and a FINDING this document is the first to hit.** `transit()` is called only inside the branch that moves the creature — `if (distance > stopAtM)` — so a colossus parked inside a structure's reach does no damage at all, and a driven creature's `stopAtM` is the default 40 m because the runtime clears its target. The plan this document was written from had `the-first` *held* on the grower's apron for a minute; that would have ground nothing. **The geometry is authored around it instead**: the 13:00 beat drives the colossus *through* the yard to (2750, 800), 41 m off the Foundry's centre, so 349 m of the swept line lies inside the 197.5 m reach — 11.6 s at 30 m/s against the 9.09 s that 2,000 HP at 220/s needs. Whether a stationary colossus *should* grind is a design question this document leaves open; it is arguable either way (a colossus that camps a structure is exactly what `disengageAfterPass` was written against), and every number in §5 and §9 is measured against the engine as it stands |
@@ -710,7 +736,7 @@ and approximated on purpose.
 - **[factions.md](factions.md)** — Trench Awakening, and the income that is drawn to somebody else's noise when there is nobody else
 - **[bestiary.md](bestiary.md)** — §2, the aggro ladder, the ×0.4 and the ping's triple; §4, the Hollow's trigger model and the Sounder's transit; §6, the ledger the ground keeps
 - **[economy.md](economy.md)** — §1, everything that makes you strong makes you loud; §2, Thermal Draw and the starved line; §9, the guard-rail this mission is priced by
-- **[units.md](units.md)** — the Chorister, fielded at last, and the 95 metres that decide which of the row a colossus can touch
+- **[units.md](units.md)** — the Chorister, and the 95 metres that decide which of the row a colossus can touch
 - **[systems-echo.md](systems-echo.md)** — §3, the trench that carries; §5, the button this mission unlocks and the Drift's answer to it
 - **[systems-depth.md](systems-depth.md)** — §2, the fast loud descent every grown hull pays; §3, the band 1,800 m is the first metre of
 - **[habitats.md](habitats.md)** — §6, the shallow band, the eight per cent, and *Korrin visits*
