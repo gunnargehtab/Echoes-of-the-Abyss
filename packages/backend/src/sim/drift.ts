@@ -19,49 +19,42 @@
 
 import { DRIFT } from '@echoes/shared';
 
-/**
- * Bound a grid a client presents before it is allowed to seed a match
- * (docs/campaign.md §2 rule 5; #379).
- *
- * The record lives in the client's storage, so the server cannot know whether
- * a grid is *true* — only whether it is *possible*. What it can hold a grid to
- * is its shape and its ceiling: exactly one number per region, every one of
- * them a finite reading on §6's 0–100 scale. The ceiling is `HEALTH_MAX` and
- * not `HEALTH_START`, because the server's own honest output exceeds the
- * start: `tick` heals a quiet cell toward 100, so a *Tend* played softly
- * closes above 88 and a validator holding the start would refuse precisely the
- * run rule 5 wants to reward. What stops the carry being a lever upward is
- * `seed`'s cap, not this one.
- *
- * Any fault rejects the **whole** grid rather than clamping the bad cell. A
- * clamp would hand a tampered cell the ceiling — which, for a cell the player
- * drove to nothing, is a free heal with a comma in it — and a grid with one
- * impossible reading in it has told the server everything it needs to know
- * about the other fifteen. Rejected is a fresh map, which is what clearing the
- * storage would have given, and what §2 rule 5 permits.
- */
-export function validateDriftGrid(grid: unknown, expectedLength: number): number[] | null {
-  if (!Array.isArray(grid) || grid.length !== expectedLength) return null;
-  const out: number[] = [];
-  for (const value of grid) {
-    if (typeof value !== 'number' || !Number.isFinite(value)) return null;
-    if (value < 0 || value > DRIFT.HEALTH_MAX) return null;
-    out.push(value);
-  }
-  return out;
-}
-
 export class DriftHealth {
   private readonly health: Float32Array;
   private readonly cols: number;
   private readonly widthM: number;
   private readonly heightM: number;
 
-  constructor(widthM: number, heightM: number) {
+  /**
+   * A fresh grid, or one seeded from what an earlier mission left on this map.
+   *
+   * `carried` is docs/campaign.md §2 rule 5 — "Drift Health carries between
+   * missions on the same map" — and it arrives from the player's own
+   * progression record, which means it arrives from the client. It must have
+   * been through `validDriftCarry` before it reaches here; a grid of the wrong
+   * length is ignored rather than trusted part-way, so the one caller that
+   * forgets gets biome defaults instead of a half-seeded map.
+   *
+   * Two rules shape the seed, both from docs/bestiary.md §6. A region still
+   * living heals by `DRIFT.HEALTH_CARRY_RECOVERY` across the gap (zero, and
+   * that constant says why at length). A region at 0 does not: §6's table
+   * makes Dead permanent, and the campaign is exactly the thing that carries
+   * it that way.
+   */
+  constructor(widthM: number, heightM: number, carried?: readonly number[] | null) {
     this.cols = DRIFT.HEALTH_REGIONS;
     this.widthM = widthM;
     this.heightM = heightM;
     this.health = new Float32Array(this.cols * this.cols).fill(DRIFT.HEALTH_START);
+    if (carried == null || carried.length !== this.health.length) return;
+    for (let i = 0; i < this.health.length; i++) {
+      const value = carried[i]!;
+      // Dead stays dead; everything else heals by the gap's allowance and is
+      // held under the value the map opens at, so the carry can only ever be
+      // a debt (see `validDriftCarry`).
+      const healed = value <= 0 ? 0 : value + DRIFT.HEALTH_CARRY_RECOVERY;
+      this.health[i] = Math.min(DRIFT.HEALTH_START, healed);
+    }
   }
 
   private index(x: number, y: number): number {
@@ -77,38 +70,6 @@ export class DriftHealth {
   /** Row-major copy for the wire. Public: killing a region is a visible act. */
   snapshot(): number[] {
     return Array.from(this.health);
-  }
-
-  /**
-   * Start this match's grid from an earlier mission's close on the same map —
-   * docs/campaign.md §2 rule 5, "the map persists" — instead of the biome's
-   * defaults (#379). Runs before anything reads the grid: fauna is seeded
-   * against `spawnsAllowed`, so a carried Failing cell has to be Failing
-   * before the herds are placed, not after.
-   *
-   * The gap between missions is where the ground gets its one flat recovery,
-   * `CARRY_RECOVERY`, and it is applied here rather than by the room so a
-   * replay and a test seed through exactly the path a live room does. Two
-   * caps on it. A cell never arrives above `HEALTH_START`: a carried map is
-   * never healthier than a fresh one, and since a fresh map is always one
-   * cleared browser away, that cap is the whole of what keeps a presented grid
-   * from being a lever upward — a grid of hundreds seeds as a fresh map, not a
-   * better one. And a cell at 0 stays at 0: `tick` says Dead is permanent
-   * because there is nothing left in a dead cell to recover *from*, and a gap
-   * of days does not change what a dead cell contains.
-   *
-   * Callers hand this `validateDriftGrid`'s output; a grid of the wrong size
-   * is a contract breach and throws rather than half-seeding.
-   */
-  seed(grid: readonly number[]): void {
-    if (grid.length !== this.health.length) {
-      throw new Error(`drift grid has ${grid.length} regions, this map has ${this.health.length}`);
-    }
-    for (let i = 0; i < grid.length; i++) {
-      const carried = grid[i]!;
-      this.health[i] =
-        carried <= 0 ? 0 : Math.min(DRIFT.HEALTH_START, carried + DRIFT.CARRY_RECOVERY);
-    }
   }
 
   /** A kill takes a bite out of the region it happened in. */
@@ -143,7 +104,7 @@ export class DriftHealth {
       if (excess > 0) {
         this.health[i] = Math.max(0, health - excess * DRIFT.HEALTH_SIG_DRAIN_PER_S * dt);
       } else {
-        this.health[i] = Math.min(DRIFT.HEALTH_MAX, health + DRIFT.HEALTH_RECOVERY_PER_S * dt);
+        this.health[i] = Math.min(100, health + DRIFT.HEALTH_RECOVERY_PER_S * dt);
       }
     }
   }

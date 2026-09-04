@@ -273,19 +273,22 @@ export interface ConnectOptions {
    */
   missionId?: string;
   /**
-   * The Drift Health grid to seed a mission's map from — the last close on
-   * that map, as the progression record kept it (docs/campaign.md §2 rule 5;
-   * #379). Sent only with a `missionId`, because only a mission carries, and
-   * only when this client creates the room. The caller resolves it: this
-   * client knows rooms, not records.
-   */
-  driftHealth?: readonly number[];
-  /**
    * Whether a held seat should be redeemed. Omitted means yes — a reload is a
    * disconnection like any other. Explicitly false abandons the seat first:
    * the shell's "Solo game" must start a new match, not resurrect an old one.
    */
   resume?: boolean;
+  /**
+   * Drift Health this water is already carrying, from the progression record
+   * — docs/campaign.md §2 rule 5.
+   *
+   * Consumed only when this client creates the room, like `mapId`: joining a
+   * mission room somebody else opened takes the ground that room is already
+   * standing on, and a mission room is single-seat and private anyway. The
+   * server validates it and falls back to the biome defaults if it does not
+   * hold, so a cleared browser is a first visit rather than an error.
+   */
+  driftCarry?: readonly number[];
   /**
    * Cadre ids the campaign has already spent, for a mission room to seat
    * around (docs/campaign.md §7 row 3). Read from the progression record by
@@ -371,12 +374,10 @@ export class GameClient {
         name,
         mapId,
         missionId: wanted,
+        // Omitted rather than sent as undefined, so a skirmish's join request
+        // is byte-identical to what it was before §2 rule 5 existed.
+        ...(options.driftCarry === undefined ? {} : { driftCarry: options.driftCarry }),
         ...(options.create === undefined ? {} : { private: options.create === 'private' }),
-        // Only under a mission: a skirmish room handed a grid would ignore it,
-        // and the key is better absent than ignored.
-        ...(wanted === '' || options.driftHealth === undefined
-          ? {}
-          : { driftHealth: [...options.driftHealth] }),
         // Only into a mission room: the server reads it nowhere else, and an
         // array on a skirmish join would be a roster nobody asked about.
         ...(wanted !== '' && options.spent !== undefined ? { spent: [...options.spent] } : {}),

@@ -387,7 +387,16 @@ export function eidOfLocalId(world: SimWorld, local: number): number {
   return world.eidOfLocal.get(local) ?? 0;
 }
 
-export function createSimWorld(terrain: Terrain, dt: number, seed: number): SimWorld {
+/**
+ * `driftCarry` is docs/campaign.md §2 rule 5 — what an earlier mission on this
+ * same map left behind. Absent is a first visit, and every skirmish.
+ */
+export function createSimWorld(
+  terrain: Terrain,
+  dt: number,
+  seed: number,
+  driftCarry?: readonly number[] | null
+): SimWorld {
   const world = createWorld() as SimWorld;
   world.terrain = terrain;
   // The map is built; from here, a cell write is something that happened in
@@ -422,7 +431,7 @@ export function createSimWorld(terrain: Terrain, dt: number, seed: number): SimW
   world.marks = new EchoMarkLayer();
   world.hazards = [];
   world.draw = new Map();
-  world.drift = new DriftHealth(terrain.widthM, terrain.heightM);
+  world.drift = new DriftHealth(terrain.widthM, terrain.heightM, driftCarry);
   world.driftNoise = new Float32Array(world.drift.regionCount);
   world.environmentalDeaths = new Set();
   // Burn entity id 0 so components can use eid 0 as a "none" sentinel

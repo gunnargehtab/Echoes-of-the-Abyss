@@ -128,6 +128,12 @@ import { eidOfLocalId } from './world.ts';
  * tick, and a v10 file cannot say which mission it was. The layout gained a
  * field; the rules gained a second way a match can start.
  *
+ * 13: replays carry the Drift Health the map opened on. docs/campaign.md §2
+ * rule 5 lets a campaign mission start on ground an earlier mission wore down,
+ * and that grid decides which regions admit fauna at all (`spawnsAllowed`), so
+ * a v12 replay of a carried mission would seed a different Drift and diverge
+ * at the first checkpoint. Null is a first visit, and every skirmish.
+ *
  * 3: replays carry whether the Drift was populated.
  *
  * 2: replays carry the map they were played on.
@@ -139,7 +145,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 12;
+export const REPLAY_FORMAT_VERSION = 13;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =
@@ -197,16 +203,11 @@ export interface Replay {
    */
   missionId: string | null;
   /**
-   * The Drift Health grid the match was seeded from, when it carried one
-   * (docs/campaign.md §2 rule 5; #379) — as *presented*, before `seed` applied
-   * `CARRY_RECOVERY`, so playback runs the same arithmetic the live match did.
-   *
-   * Absent means the biome defaults, which is also what every recording from
-   * before this field means: an optional field that reads as "no carry" needs
-   * no version bump, because a file without it replays exactly as it was
-   * played. A carried match without it would not, which is why it is here.
+   * Drift Health the map opened on — docs/campaign.md §2 rule 5 — or null for
+   * the biome defaults. Part of the setup like `fauna`: it decides where the
+   * Drift may be seeded, so playback needs it before the first tick.
    */
-  driftHealth?: number[];
+  driftCarry: number[] | null;
   /**
    * Cadre ids the campaign had spent when this mission was played, if any
    * (`MatchOptions.spent`). Part of the setup the way `missionId` is: the
@@ -244,7 +245,7 @@ export class ReplayRecorder {
   private readonly mapId: string;
   private readonly fauna: boolean;
   private readonly missionId: string | null;
-  private readonly driftHealth: number[] | undefined;
+  private readonly driftCarry: number[] | null;
   private readonly spent: readonly string[];
   private readonly checkpointInterval: number;
   /**
@@ -260,7 +261,7 @@ export class ReplayRecorder {
     mapId: string,
     fauna: boolean,
     missionId: string | null = null,
-    driftHealth?: readonly number[],
+    driftCarry: readonly number[] | null = null,
     spent: readonly string[] = [],
     checkpointIntervalTicks = 300
   ) {
@@ -268,7 +269,10 @@ export class ReplayRecorder {
     this.mapId = mapId;
     this.fauna = fauna;
     this.missionId = missionId;
-    this.driftHealth = driftHealth === undefined ? undefined : [...driftHealth];
+    // Copied rather than held: the caller's array is the room's record of what
+    // the client presented, and a replay must describe the world that was, not
+    // whatever that reference becomes later.
+    this.driftCarry = driftCarry === null ? null : [...driftCarry];
     // Sorted for `players`' reason: the set arrived from a client's storage in
     // whatever order it was written, and a replay of the same match should
     // not differ by it.
@@ -299,7 +303,7 @@ export class ReplayRecorder {
       mapId: this.mapId,
       fauna: this.fauna,
       missionId: this.missionId,
-      ...(this.driftHealth === undefined ? {} : { driftHealth: [...this.driftHealth] }),
+      driftCarry: this.driftCarry === null ? null : [...this.driftCarry],
       ...(this.spent.length === 0 ? {} : { spent: [...this.spent] }),
       // Sorted so a replay of the same match is byte-identical regardless of
       // the order players happened to connect in.
@@ -344,15 +348,13 @@ export function playReplay(replay: Replay, terrain?: Terrain): ReplayResult {
   }
 
   // `fauna` matters as much as the map: a match with animals in it and the
-  // same match without are different matches. So does a carried Drift grid —
-  // it decides where the herds may spawn before the first tick — and so does
-  // the spent roster: a mission fielded five hulls is not the mission fielded
-  // six.
+  // same match without are different matches. So does the spent roster: a
+  // mission fielded five hulls is not the mission fielded six.
   const options = {
     seed: replay.seed,
     fauna: replay.fauna,
     mission,
-    ...(replay.driftHealth === undefined ? {} : { driftHealth: replay.driftHealth }),
+    driftCarry: replay.driftCarry,
     spent: new Set(replay.spent ?? []),
   };
   const match = new Match(map, terrain === undefined ? options : { ...options, terrain });

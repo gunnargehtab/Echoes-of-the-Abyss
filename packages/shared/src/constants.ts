@@ -1145,15 +1145,6 @@ export const DRIFT = {
    * kilometre away is untouched.
    */
   HEALTH_REGIONS: 4,
-  /** SPEC — §6: "0–100". The scale's ceiling, and the most a quiet cell heals to. */
-  HEALTH_MAX: 100,
-  /**
-   * TUNABLE, inside a SPEC range — where a fresh map's cells start: §6's
-   * "between 70 and 95 by biome", flattened to one figure until a biome asks
-   * for its own. Also the ceiling a *carried* cell may arrive at
-   * (`DriftHealth.seed`): a map brought back from an earlier mission is never
-   * healthier than a fresh one.
-   */
   HEALTH_START: 88,
   /** Health lost per fauna kill in a region. */
   HEALTH_PER_KILL: 4,
@@ -1177,22 +1168,27 @@ export const DRIFT = {
    */
   HEALTH_RECOVERY_PER_S: 0.02,
   /**
-   * Health returned to every living cell of a carried grid when the next
-   * mission on that map seeds from it (campaign.md §2 rule 5; #379).
+   * How much a region heals in the gap between two campaign missions on the
+   * same map — TUNABLE, and **zero on purpose**.
    *
-   * TUNABLE. §6 pins recovery only as "far more slowly than a match lasts",
-   * and the gap between two campaign missions on one map is authored in tides
-   * — *Tend* to *Convocation* is days on Marr Plateau — so the ground is owed
-   * *some* healing across it, and a flat figure is the honest shape for a gap
-   * nobody times. Five is a kill and a bit: a quiet run's cells, all at or
-   * above `HEALTH_START`, arrive exactly as a fresh map would, while a loud
-   * run's Failing cell at 20 comes back at 25 and is still Failing, and a
-   * cell driven to 0 recovers nothing at all — Dead is permanent
-   * (`DriftHealth.tick`), and the campaign carries it that way. A gap that
-   * healed a strip-mined cell back to Healthy would make rule 5 a rule about
-   * nothing.
+   * campaign.md §2 rule 5 wants the return to be a *reading*: "a quieter,
+   * deader, more legible version of it, and nobody tells them why". The
+   * cheapest way to break that is to heal the ground behind the player's back,
+   * because they cannot see the heal either.
+   *
+   * Zero rather than a small number, for two reasons that are not about taste.
+   * There is no clock between missions — the board has no calendar and the
+   * campaign has no elapsed time (§1: the prologue first, then the order is
+   * free), so a rate has nothing to integrate against. And the record is held
+   * *client-side*, so any elapsed-time input to a recovery would be a number
+   * the client chooses: "wait a week and the map comes back" is a lever, and a
+   * lever is the one thing the seeding validation exists to refuse.
+   *
+   * So the carry is exact and this constant is the lever if that is ever
+   * wrong. Applied only to a region still living, because §6's table makes
+   * Dead permanent and `DriftHealth.tick` already honours that within a match.
    */
-  CARRY_RECOVERY: 5,
+  HEALTH_CARRY_RECOVERY: 0,
   /** §6's table, as thresholds. */
   HEALTH_STRAINED: 75,
   HEALTH_FAILING: 50,

@@ -13,13 +13,14 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   DRIFT,
+  DRIFT_REGION_COUNT,
   MARR_PLATEAU_FILED,
   MissionOutcome,
-  missionHeaderById,
+  type DriftCarry,
   type MissionResultPayload,
 } from '@echoes/shared';
 import {
-  driftHealthFor,
+  driftCarryForMap,
   emptyProgression,
   hasPlayed,
   isMissionUnlocked,
@@ -52,9 +53,32 @@ function result(
   missionId: string,
   outcome: MissionOutcome,
   scenes?: readonly string[],
-  spent?: readonly string[]
+  driftCarry?: DriftCarry
 ): MissionResultPayload {
-  return { missionId, outcome, epilogue: 'The court adjourns.', objectives: [], scenes, spent };
+  return {
+    missionId,
+    outcome,
+    epilogue: 'The court adjourns.',
+    objectives: [],
+    scenes,
+    driftCarry,
+  };
+}
+
+/** A plateau as a match left it: one region dead, the rest merely worn. */
+function grid(dead = 1): number[] {
+  const health = new Array<number>(DRIFT_REGION_COUNT).fill(DRIFT.HEALTH_START - 9);
+  for (let i = 0; i < dead; i++) health[i] = 0;
+  return health;
+}
+
+/** A spending conclusion — `result` with the cadre ids a mission with attrition reports. */
+function spending(
+  missionId: string,
+  outcome: MissionOutcome,
+  spent: readonly string[]
+): MissionResultPayload {
+  return { ...result(missionId, outcome), spent };
 }
 
 describe('the progression record', () => {
@@ -287,122 +311,93 @@ describe('the seen-scene set (#378)', () => {
   });
 });
 
-describe('the per-map Drift grid (#379)', () => {
-  const CELLS = DRIFT.HEALTH_REGIONS ** 2;
-
-  /** A fresh grid with one cell as the last match left it. */
-  function grid(cell: number, value: number): number[] {
-    const out = new Array<number>(CELLS).fill(DRIFT.HEALTH_START);
-    out[cell] = value;
-    return out;
-  }
-
-  /** A `missionOver` payload carrying the map as the mission closed on it. */
-  function closed(missionId: string, driftHealth?: readonly number[]): MissionResultPayload {
-    return { ...result(missionId, MissionOutcome.Complete), driftHealth };
-  }
-
-  let backing: Map<string, string>;
-
+/**
+ * Cross-mission Drift Health — docs/campaign.md §2 rule 5, the record's half
+ * of it. The rule is about *ground*, so everything here is keyed by map.
+ */
+describe('the ground a mission left behind', () => {
   beforeEach(() => {
-    backing = installStorage();
+    installStorage();
   });
 
   afterEach(() => {
     delete (globalThis as { localStorage?: unknown }).localStorage;
   });
 
-  it('remembers no map on a first boot', () => {
-    assert.deepEqual(emptyProgression().drift, {});
-    assert.equal(driftHealthFor('marr-plateau'), undefined);
-  });
-
-  it('keeps the grid a conclusion carries under the map, not the mission', () => {
-    recordMissionResult(closed('seeding-tend', grid(6, 20)));
-    assert.deepEqual(driftHealthFor('marr-plateau'), grid(6, 20));
-    assert.equal(driftHealthFor('seeding-tend'), undefined);
-    // Which is what lets the second mission on the plateau find it: the rule
-    // is about ground, and Convocation resolves to the same key.
-    assert.equal(missionHeaderById('seeding-convocation')?.mapId, 'marr-plateau');
-  });
-
-  it('replaces the grid on every close — the latest reading, not the best', () => {
-    // The one field in the record that is not "best ever". A map that healed
-    // is a later reading, not a better one, and a record that kept the
-    // healthiest grid it had seen would let a loud run be undone by
-    // remembering a quiet one.
-    recordMissionResult(closed('seeding-tend', grid(6, 20)));
-    recordMissionResult(closed('seeding-convocation', grid(6, DRIFT.HEALTH_START)));
-    assert.deepEqual(driftHealthFor('marr-plateau'), grid(6, DRIFT.HEALTH_START));
-    recordMissionResult(closed('seeding-convocation', grid(9, 0)));
-    assert.deepEqual(driftHealthFor('marr-plateau'), grid(9, 0));
-  });
-
-  it('is idempotent, because a reconnection re-sends the same conclusion', () => {
-    const payload = closed('seeding-tend', grid(6, 20));
-    recordMissionResult(payload);
-    recordMissionResult(payload);
-    assert.deepEqual(driftHealthFor('marr-plateau'), grid(6, 20));
-  });
-
-  it('leaves the map alone when a conclusion carries no grid', () => {
-    // A payload from a server build that predates the field: the outcome is
-    // still recorded, and the map stays as the last grid-carrying close left
-    // it rather than being wiped to fresh by an absence.
-    recordMissionResult(closed('seeding-tend', grid(6, 20)));
-    recordMissionResult(closed('seeding-tend'));
-    assert.deepEqual(driftHealthFor('marr-plateau'), grid(6, 20));
-  });
-
-  it('does not lose one map when another map is closed', () => {
-    recordMissionResult(closed('seeding-tend', grid(6, 20)));
-    recordMissionResult(closed('seeding-deep-furrow', grid(1, 30)));
-    assert.deepEqual(driftHealthFor('marr-plateau'), grid(6, 20));
-    assert.deepEqual(driftHealthFor('anholt-furrow'), grid(1, 30));
-  });
-
-  it('stores nothing for a mission id this build has no map for, and keeps the outcome', () => {
-    recordMissionResult(closed('a-mission-from-a-later-build', grid(6, 20)));
-    assert.deepEqual(loadProgression().drift, {});
-    assert.equal(hasPlayed('a-mission-from-a-later-build'), true);
-  });
-
-  it('reads a record written before this key existed as no maps at all', () => {
-    backing.set(
-      STORAGE_KEY,
-      JSON.stringify({
-        version: 1,
-        missions: { 'seeding-tend': { outcome: MissionOutcome.Complete } },
-        scenes: {},
+  it('remembers it by map, so the next mission on that water finds it', () => {
+    const health = grid();
+    recordMissionResult(
+      result('seeding-tend', MissionOutcome.Complete, undefined, {
+        mapId: 'marr-plateau',
+        health,
       })
     );
-    assert.deepEqual(loadProgression().drift, {});
-    assert.equal(driftHealthFor('marr-plateau'), undefined);
-    assert.equal(hasPlayed('seeding-tend'), true);
+    assert.deepEqual(driftCarryForMap('marr-plateau'), health);
+    // Keyed by map and not by mission: the pair §2 rule 5 was written for
+    // share `marr-plateau`, and *Convocation* is the one that has to find it.
+    assert.equal(driftCarryForMap('seeding-tend'), undefined);
+    assert.equal(driftCarryForMap('ventfront-divide'), undefined, 'other water is untouched');
   });
 
-  it("drops one map's unreadable grid without dropping its neighbours", () => {
-    // One map's corrupt grid costs that map its carry — it plays fresh, which
-    // rule 5 permits — and never the record. NaN is here for the reason it
-    // cannot be typed: JSON turns it into null on the way in.
-    backing.set(
+  it('takes the latest reading rather than the kindest one', () => {
+    recordMissionResult(
+      result('seeding-tend', MissionOutcome.Complete, undefined, {
+        mapId: 'marr-plateau',
+        health: grid(4),
+      })
+    );
+    recordMissionResult(
+      result('seeding-convocation', MissionOutcome.Lost, undefined, {
+        mapId: 'marr-plateau',
+        health: grid(1),
+      })
+    );
+    // The outcome ladder keeps the best; the ground keeps the last. A "best
+    // of" here would let a replay launder a map the player had wrecked.
+    assert.deepEqual(driftCarryForMap('marr-plateau'), grid(1));
+    assert.equal(missionRecord('seeding-tend')?.outcome, MissionOutcome.Complete);
+  });
+
+  it('is a no-op when the same conclusion arrives twice', () => {
+    const payload = result('seeding-tend', MissionOutcome.Partial, undefined, {
+      mapId: 'marr-plateau',
+      health: grid(2),
+    });
+    recordMissionResult(payload);
+    const after = loadProgression();
+    recordMissionResult(payload);
+    assert.deepEqual(loadProgression(), after);
+  });
+
+  it('records nothing for a result that carries no ground', () => {
+    recordMissionResult(result('prologue-sorrowgate', MissionOutcome.Complete));
+    assert.deepEqual(loadProgression().drift, {});
+  });
+
+  it('drops a stored grid that no room would accept, and only that one', () => {
+    installStorage().set(
       STORAGE_KEY,
       JSON.stringify({
         version: 1,
         missions: {},
         scenes: {},
         drift: {
-          'marr-plateau': grid(6, 20),
-          'anholt-furrow': [...grid(0, DRIFT.HEALTH_START).slice(1), 'x'],
-          'kelp-labyrinth': grid(2, DRIFT.HEALTH_MAX + 1),
-          'mouth-rim': grid(3, -4),
-          'fourth-foot': grid(1, Number.NaN),
-          'banding-ground': 'not a grid',
-          'upper-terraces': null,
+          'marr-plateau': grid(),
+          // Well-formed and healthier than the ground opens at — the shape a
+          // hand-edited record takes when someone wants an easier mission.
+          'ventfront-divide': new Array<number>(DRIFT_REGION_COUNT).fill(100),
+          'kelp-labyrinth': [0, 0],
+          'thermal-vein': 'wrecked',
         },
       })
     );
-    assert.deepEqual(loadProgression().drift, { 'marr-plateau': grid(6, 20) });
+    assert.deepEqual(loadProgression().drift, { 'marr-plateau': grid() });
+  });
+
+  it('reads as no carry at all from a record written before it existed', () => {
+    installStorage().set(STORAGE_KEY, JSON.stringify({ version: 1, missions: {}, scenes: {} }));
+    assert.deepEqual(loadProgression().drift, {});
+    assert.equal(driftCarryForMap('marr-plateau'), undefined);
   });
 });
 
@@ -421,7 +416,7 @@ describe('the spent roster (#380)', () => {
   });
 
   it('keeps the hulls a spending conclusion names, under the mission’s campaign', () => {
-    recordMissionResult(result(NINETEEN, MissionOutcome.Partial, undefined, ['third']));
+    recordMissionResult(spending(NINETEEN, MissionOutcome.Partial, ['third']));
     assert.deepEqual([...spentCadre('chord')], ['third']);
     // Keyed by campaign: the Order's Third is nobody else's.
     assert.equal(spentCadre('ledger').size, 0);
@@ -429,19 +424,19 @@ describe('the spent roster (#380)', () => {
   });
 
   it('unions rather than replaces — a spent hull is never un-spent', () => {
-    recordMissionResult(result(NINETEEN, MissionOutcome.Partial, undefined, ['third']));
+    recordMissionResult(spending(NINETEEN, MissionOutcome.Partial, ['third']));
     // A second, worse run of the same tide spends another and gives none back.
-    recordMissionResult(result(NINETEEN, MissionOutcome.Lost, undefined, ['fifth']));
+    recordMissionResult(spending(NINETEEN, MissionOutcome.Lost, ['fifth']));
     assert.deepEqual([...spentCadre('chord')].sort(), ['fifth', 'third']);
     // And a perfect run afterwards returns nothing either.
-    recordMissionResult(result(NINETEEN, MissionOutcome.Complete, undefined, []));
+    recordMissionResult(spending(NINETEEN, MissionOutcome.Complete, []));
     assert.deepEqual([...spentCadre('chord')].sort(), ['fifth', 'third']);
   });
 
   it('takes a replayed conclusion as a no-op', () => {
     // The reconnect case: `MatchRoom` re-sends `missionOver` into an ended
     // room, and the same loss arriving twice is one loss.
-    const payload = result(NINETEEN, MissionOutcome.Partial, undefined, ['third']);
+    const payload = spending(NINETEEN, MissionOutcome.Partial, ['third']);
     recordMissionResult(payload);
     const after = recordMissionResult(payload);
     assert.deepEqual(after.spent, { chord: { third: true } });
@@ -450,7 +445,7 @@ describe('the spent roster (#380)', () => {
   it('changes nothing on a payload that carries no spent field', () => {
     // Every mission that does not author attrition sends none — Conclave
     // fields the Third and loses it and says nothing, and the Third returns.
-    recordMissionResult(result(NINETEEN, MissionOutcome.Partial, undefined, ['third']));
+    recordMissionResult(spending(NINETEEN, MissionOutcome.Partial, ['third']));
     const after = recordMissionResult(result(CONCLAVE, MissionOutcome.Lost));
     assert.deepEqual(after.spent, { chord: { third: true } });
     assert.deepEqual(after.missions[CONCLAVE], { outcome: MissionOutcome.Lost });
@@ -459,9 +454,7 @@ describe('the spent roster (#380)', () => {
   it('spends nothing for a mission this build cannot place in a campaign', () => {
     // The outcome is still stored — the id is the player's history — but
     // there is no campaign to charge the hulls to.
-    const after = recordMissionResult(
-      result('gone-mission', MissionOutcome.Lost, undefined, ['x'])
-    );
+    const after = recordMissionResult(spending('gone-mission', MissionOutcome.Lost, ['x']));
     assert.equal(hasPlayed('gone-mission'), true);
     assert.deepEqual(after.spent, {});
   });
@@ -502,7 +495,7 @@ describe('the spent roster (#380)', () => {
     // The sibling-key promise, the other way round: writing a mission record
     // must not lose the roster beside it.
     const backing = installStorage();
-    recordMissionResult(result(NINETEEN, MissionOutcome.Partial, undefined, ['third']));
+    recordMissionResult(spending(NINETEEN, MissionOutcome.Partial, ['third']));
     recordMissionResult(result(PROLOGUE_MISSION_ID, MissionOutcome.Complete));
     const raw = JSON.parse(backing.get(STORAGE_KEY) ?? '{}') as { spent: unknown };
     assert.deepEqual(raw.spent, { chord: { third: true } });

@@ -166,15 +166,14 @@ export interface MatchOptions {
    */
   mission?: MissionDefinition;
   /**
-   * Start the Drift from an earlier mission's close on this map rather than
-   * from the biome defaults — docs/campaign.md §2 rule 5 (#379).
+   * Drift Health this map is already carrying — docs/campaign.md §2 rule 5.
    *
-   * Already bounded by `validateDriftGrid` when it gets here; the room does
-   * that at the trust boundary, not the sim. Installed in the constructor for
-   * `mission`'s reason: a replay of a carried match has to carry the same
-   * grid, and a grid seeded room-side would replay as a fresh map.
+   * A grid the *client* presented, so it is validated (`validDriftCarry`) by
+   * the room before it gets here. Constructor-side for `mission`'s reason: a
+   * replay rebuilds a `Match` from its options, and a carry installed
+   * room-side would replay on a map that opens at the biome defaults.
    */
-  driftHealth?: readonly number[];
+  driftCarry?: readonly number[] | null;
   /**
    * Cadre ids of the player's hulls the campaign has already spent
    * (docs/campaign.md §7 row 3; `missions/roster.ts`). A mission that fields
@@ -319,11 +318,12 @@ export class Match {
   constructor(map: MapDefinition = VENTFRONT_DIVIDE, options: MatchOptions = {}) {
     this.map = map;
     this.seed = options.seed ?? randomSeed();
-    this.world = createSimWorld(options.terrain ?? terrainFor(map), FIXED_DT, this.seed);
-    // Before anything reads the grid: `seedFauna` places herds against
-    // `spawnsAllowed`, and a carried Failing cell has to be Failing first.
-    // One-time, off the tick path — the Echo budget never sees it.
-    if (options.driftHealth !== undefined) this.world.drift.seed(options.driftHealth);
+    this.world = createSimWorld(
+      options.terrain ?? terrainFor(map),
+      FIXED_DT,
+      this.seed,
+      options.driftCarry
+    );
     this.recorder =
       options.record === true
         ? new ReplayRecorder(
@@ -331,7 +331,7 @@ export class Match {
             map.id,
             options.fauna !== false,
             options.mission?.id ?? null,
-            options.driftHealth,
+            options.driftCarry ?? null,
             [...(options.spent ?? [])]
           )
         : null;
