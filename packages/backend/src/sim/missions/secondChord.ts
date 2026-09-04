@@ -13,7 +13,7 @@
  * `STANDING_WAVE.PAIR_RANGE_M` 1,500, `ECHO_MARKS.DESTROYED_STRUCTURE_SIG` 18
  * over `PERSISTENCE.DESTROYED_STRUCTURE_S` 180, the 4 HP/s of a single band's
  * overreach, 45 m/s down and 15 m/s up, and `DEPTH.MAX_M` 3,000. Nothing moved.
- * What the literal found on the day is seven things, each stated here so a
+ * What the literal found on the day is eight things, each stated here so a
  * reviewer can overrule them rather than discover them:
  *
  * 1. **The rim is authored weapons-cold, and the measurement is why** (§4, §5,
@@ -86,6 +86,17 @@
  *    Chord's *northern* water, whose nearest stop to the dome is 250 m. The
  *    beat table and the bounding boxes win, because they are what this file
  *    transcribes; §2's "the second one" is the loose word.
+ * 8. **§13's ordinal for the Chorister refit is stale, and this file does not
+ *    restate it as its own.** §13 calls this "sixth mission to field the hull,
+ *    sixth document to say so"; `rimDeposits.ts` reads its own §13 as "the
+ *    sixth mission to field the hull and the fifth to author the refit", and
+ *    that document's row says *fifth*. Counted off the shipped literals
+ *    instead: eight of them seat a `UnitKind.Chorister` and seven of those
+ *    author `pressureRating: 3` on it, this one included. The refit itself is
+ *    not in doubt — `missions.test.ts` reads the authored rating and a PR-2
+ *    Chorister at 3,000 m fails it — so the `chorister` helper attributes the
+ *    ordinal to §13 rather than asserting one of its own. Four documents carry
+ *    this row and no two of them count the same way.
  *
  * Four things make this mission the shape it is, and all four are data:
  *
@@ -265,8 +276,10 @@ const corvette = (
  * `pressureRating: 3` is the mission's fact and never the roster's: `units.ts`
  * rates the hull PR-2, the Directorate's baseline lifts it for nothing at
  * runtime, and `missions.test.ts` reads the *authored* rating — so a PR-2
- * Chorister seated at 3,000 m fails the suite. Seventh mission to field the
- * hull, seventh document to say so (§13).
+ * Chorister seated at 3,000 m fails the suite. §13 records this as the sixth
+ * mission to field the hull and the sixth document to say so; the count is the
+ * document's rather than this file's, because eight shipped literals field the
+ * hull and seven of them author the refit (finding 8 in the file header).
  *
  * **Weapons-cold, and that is finding 1 rather than a softening** (§4, §5,
  * §13). A Chorister reaches 450 m and §9 stands six of them 255 to 412 m from
@@ -376,7 +389,7 @@ const WAVE_ONE: readonly CohortHull[] = [
     seat: { x: 5400, y: 3200 },
     muster: { x: 5300, y: 3350 },
     stop: { x: 5100, y: 3200 },
-    note: 'The western end of the northern row, and the shortest muster of the twelve at 180 m. 304 m from the node when it stands',
+    note: 'The western end of the northern row, and the shortest muster of the wave at 180 m — `cohort-7` walks the shortest of the twelve. 304 m from the node when it stands',
   },
   {
     ordinal: 2,
@@ -658,7 +671,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
       radiusM: 400,
       holdTicks: TONE_TICKS,
       sig: TONE_SIG,
-      note: 'Four hundred metres north of the map’s southern edge, three hundred and fifty south of the node, and aimed at water the chart declines to author. A hull that has come 3.4 km south from the Staging and stopped over the Chord is already inside the cone at 32° — the Order does not have to turn to face the Mouth, it arrives facing it (§6)',
+      note: 'Four hundred and fifty metres north of the map’s southern edge, three hundred and fifty south of the node, and aimed at water the chart declines to author. A hull that has come 3.4 km south from the Staging and stopped over the Chord is already inside the cone at 32° — the Order does not have to turn to face the Mouth, it arrives facing it (§6)',
     },
   ],
 
@@ -712,14 +725,14 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
           role: 'escort',
           armed: true,
           souls: 12,
-          note: "Voice Ren Kalliso's hull: the ears at HYD 65, the 900 m gun at 60 damage a second, and — the rim being weapons-cold (finding 1) — one of only four guns in this water, all four of them the Order's and none of them aimed at anything. Nothing on this rim answers them, which is the shape §1 describes: the rank corrects by standing there and filing it",
+          note: "Voice Ren Kalliso's hull: the ears at HYD 65, the 900 m gun at 60 damage a second, and — the rim being weapons-cold (finding 1) — one of only five guns in this water, all five of them the Order's and none of them aimed at anything. Nothing on this rim answers them, which is the shape §1 describes: the rank corrects by standing there and filing it",
         },
         corvette(
           'carrier-a',
           'carrier',
           2900,
           600,
-          "The first carrier, seated inside `the-cache`: `load-one` rigs on the first pass. 2,700 m from the Chord's water, which is why the keystone cannot latch at tick zero (§13)"
+          "The first carrier, seated inside `the-cache`: `load-one` rigs on the first pass. 2,802 m from the nearest corner of the Chord's water — `carrier-b` is §13's round 2,700 at 2,693 — which is why the keystone cannot latch at tick zero (§13)"
         ),
         corvette('carrier-b', 'carrier', 3100, 600, 'The second carrier, carrying `load-two`'),
         corvette(
@@ -753,7 +766,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
           x: 4900,
           y: 2600,
           depthM: NODE_DEPTH_M,
-          note: "The eastern terrace node, 1,154 m from the first and 559 from the Chord, so a hull passing from the raid's water to the Chord's is never uncovered. 806 m from the dome, which is why its mark at 16:00 is Contact to a dome-lifted ear with fifteen hundred metres to spare. Lost at 16:00",
+          note: "The eastern terrace node, 1,154 m from the first and 559 from the Chord, so a hull passing from the raid's water to the Chord's is never uncovered. 806 m from the dome, which is why its mark at 16:00 is Contact to a dome-lifted ear with sixteen hundred metres to spare. Lost at 16:00",
         },
         {
           tag: 'the-chord',
@@ -818,7 +831,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
             hull.ordinal === 1
               ? 'The northern row, western end, and the nearest Chorister seat to the Chord at 602 m — 152 m outside the reach the doctrine is stated at, so the twelve enter the node when it rises and correct nothing from where they sit (§1)'
               : hull.ordinal === 7
-                ? 'The southern row, western end, and 447 m from the dome: every hull of the twelve listens at the 95 cap from its seat'
+                ? 'The southern row, western end, and 403 m from the dome — the nearest seat of the twelve to it, against 922 m for the furthest: every hull of the twelve listens at the 95 cap from where it sits'
                 : ''
           )
         ),
@@ -919,7 +932,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
               'Entered: the return on the lip, at the sixteenth minute and forty seconds, for twenty seconds. The Order keeps the time and does not say what keeps it. The interval was read off it and was not the same fact.',
             gap: 'Not entered: the return on the lip. The interval was appointed anyway, and was kept anyway, and the Order has a time in its record that it did not hear arrive.',
           },
-          note: "The lip's own return, 350 m south of the sounding point and 100 m north of the map's southern edge. Its window opens fourteen seconds before the Order answers it: the lip speaks for twenty seconds and the Order replies fourteen after it has finished, and nobody in this mission says the two facts are the same fact (§6)",
+          note: "The lip's own return, 350 m south of the sounding point and 100 m north of the map's southern edge. Its window closes fourteen seconds before the Order answers it: the lip speaks for twenty seconds and the Order replies fourteen after it has finished, and nobody in this mission says the two facts are the same fact (§6)",
         },
       ],
     },

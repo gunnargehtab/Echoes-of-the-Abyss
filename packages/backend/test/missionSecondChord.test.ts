@@ -765,11 +765,18 @@ describe('what is heard, as docs/mission-second-chord.md §7 prices it', () => {
       '§4, §13: 1,800 m is the Abyssal band’s first metre'
     );
     assert.equal(crushAttritionPerSecond(2, 1799), 0, '§13: and 1,799 is the free depth');
-    assert.equal(
-      crushAttritionPerSecond(2, 1750),
-      0,
-      '§6: 1,750 m is free on every floor of this chart'
-    );
+    assert.equal(crushAttritionPerSecond(2, 1750), 0, '§6: 1,750 m costs a PR-2 hull nothing');
+    // §6, §11 — and *free* is the crush reading rather than the ground's. The
+    // Staging's own floor is 1,500 m, two hundred and fifty metres shallower
+    // than the depth the crossing is priced at, which is why every Order hull
+    // is seated at 1,400 and takes 1,750 only once it is over the Slopes. The
+    // three bands south of the Staging are the ones §6 enumerates, and they
+    // are the ones that admit it.
+    const [, staging, slopes, terraces, lip] = MOUTH_RIM.regions;
+    assert.ok(staging!.floorM! < 1750, '§11: the Staging does not admit the crossing depth');
+    for (const band of [slopes, terraces, lip]) {
+      assert.ok(band!.floorM! > 1750, '§6: the Slopes, the Terraces and the Lip all admit it');
+    }
     assert.equal(Math.round(CORVETTE.maxHp / 4), 105, '§4: 105 seconds for a Corvette');
     assert.equal(Math.round(CRUISER.maxHp / 4), 300, '§4: 300 for a Cruiser');
     // §4's three ways out, in seconds and in points.
@@ -991,10 +998,14 @@ describe('the beats, as docs/mission-second-chord.md §9 schedules them', () => 
     assert.equal((resolveBeat.atTick - loud[0]!.atTick) / SIM.TICK_HZ, 90, '§9: ninety seconds');
     assert.ok(90 >= MISSION.FAILURE_TELEGRAPH_S, '§9: against §10’s sixty');
     assert.equal(M.runsItsLength, true, '§9: and only the resolve closes it');
+    // §1, §6 — the interval Sull appoints is the seventeenth minute, and it
+    // begins the tick the lip's return stops: sixty seconds of tide between
+    // the window closing and the count being read, with the tone's thirty
+    // held fourteen seconds into it.
     assert.equal(
       (resolveBeat.atTick - emitter('the-return').untilTick!) / SIM.TICK_HZ,
       60,
-      '§9: the last forty seconds, plus the twenty the tone runs into'
+      '§6: the seventeenth minute, which is the whole of what is left'
     );
   });
 
@@ -1014,11 +1025,26 @@ describe('the beats, as docs/mission-second-chord.md §9 schedules them', () => 
       ],
       '§9, §12: and the 00:00 row is the seating and the briefing, not a line'
     );
-    assert.equal(says.at(-1)!.text, 'The interval.');
-    assert.equal(
-      says.find((beat) => beat.speaker.startsWith('Chapter-Master'))!.text,
-      'I hear it. Enter that I said nothing else.',
-      '§12: six words, and a refusal that only means something where silence is written down'
+    // §12's nine, verbatim and in order. Held here rather than trusted,
+    // because the register *is* the mission: a line reworded in the literal
+    // and nowhere else would ship a Knight speaking somebody else's language
+    // with a green suite. Kalliso's is the only one that counts two kinds of
+    // number in one breath, and Vrey's six words are a refusal that only means
+    // something where silence is written down and played.
+    assert.deepEqual(
+      says.map((beat) => beat.text),
+      [
+        'The interval is at seventeen. The lattice comes down at sixteen; I come down at half past fifteen and I am over the slopes when it goes. Set the crystal and hold the lip. Descend.',
+        'Correction is filed against the node on the lip. It was entered when it rose and stood into nothing; it stands into the watch now. What was set into it is counted. What is under it is corrected at what leaves.',
+        "We're still here, on the terraces. We'd like it in somebody's record that we asked nothing of the rim and it asked nothing of us. We think you're about to ask it something.",
+        'The rim is attended. Three nodes are entered. The third was entered when it was raised and was not corrected, because a node with nothing under it is a silence, and silence is attended too.',
+        'Nineteen were the cadre. Twenty-two years are mine, since nine. Thirty seconds are the Order’s. I would like it entered that I counted, and that the numbers are not the same kind of number.',
+        'I am coming down, with ears. Half a minute of slopes and the lattice goes under me.',
+        'The lattice is spent. Everything below the line and outside the Chord’s six hundred is bleeding from this tick. Hold the lip.',
+        'I hear it. Enter that I said nothing else.',
+        'The interval.',
+      ],
+      '§12: the voices in the water, word for word'
     );
   });
 
@@ -1149,8 +1175,9 @@ describe('the tide, run out — docs/mission-second-chord.md §4, §8 and §9', 
     // stands 206 m from an 1,800 HP Spire with a 650 m gun and `combat.ts`
     // auto-acquires it, because a structure carries Position, Owner and Health
     // like anything else; the node was measured at hp −40 at 20.0 s. Cold, it
-    // is untouched at the close of a tide in which the Order does nothing at
-    // all — which is §1's sentence, and the only way the format can write it.
+    // is untouched a full minute in — three times the tick an armed watch
+    // would have finished it on — which is §1's sentence, and the only way the
+    // format can write it. The case below carries the same reading to 18:00.
     const run = play(undefined, T(1));
     assert.equal(run.chordHpFloor, SPIRE.maxHp, 'something corrected the node');
     const chord = chordOf(run.match);
@@ -1284,7 +1311,19 @@ describe('the tide, run out — docs/mission-second-chord.md §4, §8 and §9', 
       Math.abs(tone - T(17, 14)) <= 5 * SIM.TICK_HZ,
       `§6: the tone lands at about 17:14, and landed at ${(tone / SIM.TICK_HZ).toFixed(0)}s`
     );
-    assert.ok(tone + 0 < CLOSE, '§9: and the last forty seconds are the reply not being shown');
+    assert.ok(tone < CLOSE, '§9: the tone is held inside the tide, not across its end');
+    // §9's "the last forty seconds are the reply not being shown" is the
+    // *undived* reading — from 1,750 m she is inside the sounding's radius at
+    // about 16:45 and finished by about 17:16, which leaves forty-four. Played
+    // as §6's own clock authors it the silence is sixteen seconds, and what
+    // the literal actually guarantees is the shape rather than the figure:
+    // nothing at all is authored between the tone and the close but the
+    // `resolve`, and §13 says that gap must not acquire anything.
+    assert.deepEqual(
+      M.beats.filter((beat) => beat.atTick > tone).map((beat) => beat.kind),
+      ['resolve'],
+      '§13: the reply is a gap, and nothing is scheduled inside it'
+    );
     // §6, §13 — and she played it from 1,750 m. `soundingHolds` is a hypot and
     // a cone with no depth term, so the tone the document asks for from under
     // the instrument is taken twelve hundred and fifty metres above it.
@@ -1351,10 +1390,12 @@ describe('the tide, run out — docs/mission-second-chord.md §4, §8 and §9', 
 
   it('latches the keystone from the transit depth, with the node idle at thirty', () => {
     // §8's other gap, and §13's: "a rectangle is not a room". `inRegion` tests
-    // x and y and nothing else, so a player who never leaves 1,750 m sets the
-    // crystal with the Chord humming at thirty and the whole rented rating
-    // unspent. Stated here rather than discovered, because it is the shape the
-    // same `depthMaxM?` would close on both types.
+    // x and y and nothing else, so a player who never dives sets the crystal
+    // with the Chord humming at thirty and the whole rented rating unspent.
+    // Driven from the Staging's own 1,400 m rather than §8's 1,750, because
+    // the shallower reading is the harder one and the region cannot tell the
+    // difference. Stated here rather than discovered, because it is the shape
+    // the same `depthMaxM?` would close on both types.
     let carriers: number[] = [];
     const match = newMatch();
     let latched = -1;
