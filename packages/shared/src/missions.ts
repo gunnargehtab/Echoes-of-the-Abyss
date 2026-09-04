@@ -471,11 +471,6 @@ export const SEEDING_DEEP_FURROW_HEADER: MissionHeader = {
   ],
 };
 
-// Append to packages/shared/src/missions.ts, after SEEDING_CONVOCATION_HEADER,
-// and add SEEDING_IN_WRITING_HEADER to MISSION_HEADERS in the same order.
-// (The Second Seeding 4, `seeding-deep-furrow`, sits ahead of it in the
-// campaign and owns the map literal; this header is ordinal 5.)
-
 export const SEEDING_IN_WRITING_HEADER: MissionHeader = {
   id: 'seeding-in-writing',
   campaign: 'seeding',
@@ -510,9 +505,6 @@ export const SEEDING_IN_WRITING_HEADER: MissionHeader = {
     "Juno went down with the families when the dome was heard. She brought three guns and they're struck, and that's hers, not a vote. Nothing is struck under a bed. We'd like that heard once, down there, so it's been said.",
   ],
 };
-
-// Append to packages/shared/src/missions.ts, beside the other Second Seeding
-// headers, and add SEEDING_RADICALS_HEADER to MISSION_HEADERS in campaign order.
 
 export const SEEDING_RADICALS_HEADER: MissionHeader = {
   id: 'seeding-radicals',
@@ -608,11 +600,6 @@ export const ATTENDING_ATTENDANCE_HEADER: MissionHeader = {
   ],
 };
 
-// Append to packages/shared/src/missions.ts, after ATTENDING_INTAKE_HEADER,
-// and add ATTENDING_THE_DOME_HEADER to MISSION_HEADERS in the same order.
-// (The Attending 3, `attending-the-dome`, on the `fourth-foot` map — the map
-// literal is built and registered already.)
-
 export const ATTENDING_THE_DOME_HEADER: MissionHeader = {
   id: 'attending-the-dome',
   campaign: 'attending',
@@ -673,11 +660,6 @@ export const ATTENDING_INTAKE_HEADER: MissionHeader = {
   ],
 };
 
-// Append to packages/shared/src/missions.ts, after ATTENDING_THE_DOME_HEADER,
-// and add ATTENDING_SHALLOW_HEADER to MISSION_HEADERS in the same order.
-// (The Attending 4, `attending-shallow`, on the `kell-shoulder` map — reused
-// unchanged from `seeding-thin-water`, and built and registered already.)
-
 export const ATTENDING_SHALLOW_HEADER: MissionHeader = {
   id: 'attending-shallow',
   campaign: 'attending',
@@ -716,11 +698,6 @@ export const ATTENDING_SHALLOW_HEADER: MissionHeader = {
   ],
 };
 
-// Append to packages/shared/src/missions.ts, after ATTENDING_SHALLOW_HEADER,
-// and add ATTENDING_TRENCH_AWAKENING_HEADER to MISSION_HEADERS in the same
-// order. (The Attending 5, `attending-trench-awakening`, on the `shallow-band`
-// map — the map literal is built and registered already.)
-
 export const ATTENDING_TRENCH_AWAKENING_HEADER: MissionHeader = {
   id: 'attending-trench-awakening',
   campaign: 'attending',
@@ -754,11 +731,6 @@ export const ATTENDING_TRENCH_AWAKENING_HEADER: MissionHeader = {
     'What answers a sounding is not chosen. It is entered as what came.',
   ],
 };
-
-// Append to packages/shared/src/missions.ts, after ATTENDING_SHALLOW_HEADER,
-// and add ATTENDING_CONCLAVE_HEADER to MISSION_HEADERS in the same order.
-// (The Attending 6, `attending-conclave`, on the `upper-terraces` map — the map
-// literal is built and registered already.)
 
 export const ATTENDING_CONCLAVE_HEADER: MissionHeader = {
   id: 'attending-conclave',
@@ -822,11 +794,6 @@ export const CHORD_APTITUDE_HEADER: MissionHeader = {
   ],
 };
 
-// Append to packages/shared/src/missions.ts, after ATTENDING_CONCLAVE_HEADER,
-// and add ATTENDING_FIRST_ARRIVAL_HEADER to MISSION_HEADERS in the same order.
-// (The Attending 7, `attending-first-arrival`, on the `mouth-rim` map — reused
-// unchanged from `ledger-prospect`, and built and registered already.)
-
 export const ATTENDING_FIRST_ARRIVAL_HEADER: MissionHeader = {
   id: 'attending-first-arrival',
   campaign: 'attending',
@@ -870,12 +837,6 @@ export const ATTENDING_FIRST_ARRIVAL_HEADER: MissionHeader = {
   ],
 };
 
-// Append to packages/shared/src/missions.ts, after CHORD_APTITUDE_HEADER (and
-// after whichever Second Chord header lands as ordinal 2), and add
-// CHORD_NINETEEN_HEADER to MISSION_HEADERS in the same order.
-// (The Second Chord 3, `chord-nineteen`, on the `the-rest` map — the map
-// literal is built and registered already.)
-
 export const CHORD_NINETEEN_HEADER: MissionHeader = {
   id: 'chord-nineteen',
   campaign: 'chord',
@@ -913,12 +874,6 @@ export const CHORD_NINETEEN_HEADER: MissionHeader = {
   ],
 };
 
-// Append to packages/shared/src/missions.ts, after CHORD_APTITUDE_HEADER, and
-// add CHORD_CONCLAVE_HEADER to MISSION_HEADERS in the same order. (The Second
-// Chord 4, `chord-conclave`, on the `outer-formations` map — the same map
-// literal Aptitude plays on, built and registered already, and now resolved by
-// two mission ids.)
-
 export const CHORD_CONCLAVE_HEADER: MissionHeader = {
   id: 'chord-conclave',
   campaign: 'chord',
@@ -954,12 +909,6 @@ export const CHORD_CONCLAVE_HEADER: MissionHeader = {
     'Six of you. Six voices. I said that to a party on this ground a year ago and the two numbers were a courtesy to each other; today they are one number, because a hull you lose out there is a voice the Third cannot stand at fourteen. I will be in the chord. You will not hear me there, which is the point of a chord. Stand the voices.',
   ],
 };
-
-// Append to packages/shared/src/missions.ts, after CHORD_CONCLAVE_HEADER (and
-// after whichever Second Chord headers land as ordinals 2-4), and add
-// CHORD_THE_THREE_HEADER to MISSION_HEADERS in the same order.
-// (The Second Chord 5, `chord-the-three`, on the `the-first` map — the map
-// literal is built and registered already.)
 
 export const CHORD_THE_THREE_HEADER: MissionHeader = {
   id: 'chord-the-three',
@@ -1003,6 +952,44 @@ export const CHORD_THE_THREE_HEADER: MissionHeader = {
   ],
 };
 
+export const CHORD_RIM_DEPOSITS_HEADER: MissionHeader = {
+  id: 'chord-rim-deposits',
+  campaign: 'chord',
+  ordinal: 6,
+  name: 'The Second Chord — The Rim Deposits',
+  premise:
+    'The crystal the Second Chord needs exists in exactly one place, on an attended rim, under two nodes the Order raised to reach it, and the Choirmaster authorises the plan.',
+  mapId: 'mouth-rim',
+  // The count is taken at 16:00 (docs/mission-rim-deposits.md §9), inside §10's
+  // 12–25 — at the short end, because the tide is five cuts of four minutes
+  // laid over a correction that is walking from 03:00 and a basin that lifts at
+  // 14:30, and a longer one would only add water for the nodes to sing over.
+  lengthBandS: [900, 1020],
+  /**
+   * Choirmaster Ivane Sull, the authorisation — docs/mission-rim-deposits.md
+   * §12, verbatim. Public for Aptitude's and Nineteen's reason: it names no
+   * hidden fact. It states the grant, its radius, its price in noise and the
+   * two loads that are the Chord, because a Knight briefing that withheld the
+   * arithmetic would be teaching by ambush and this faction examines.
+   *
+   * Paragraph three is the mission's whole system said once, in the register
+   * that apologises for an instrument's physics and not for the people under
+   * it: the node sings at eighty for exactly as long as its grant is holding
+   * somebody up, and that is a condition rather than a surprise. Paragraph
+   * five names the cohort, the garden and the Board in one breath and then
+   * declines all three as reasons — docs/campaign.md §2 rule 1, spoken by the
+   * only person in the mission who could have graded them.
+   */
+  briefing: [
+    'The plan is authorised. It has been on my desk since the year opened, I have declined it four times, and what changed is that the nineteen are entered and the window is shorter than the one I wrote to the houses. The cycle is at thirty-nine hours and it is shortening. The Order does not spend itself at the rim with nineteen of it unentered, and it does not decline the same window twice. I am not going to spend the chapter’s afternoon explaining any of that further, because what changed is arithmetic and every one of you was tested on arithmetic at nine.',
+    'Two nodes stand on the eastern terraces. They were raised at the turn of this tide and they cost the ledger two hundred and forty of the three hundred and sixty it had left; there is one Spire’s worth in it after them, and it is not for this tide. Under a node you are rated for the ground you are standing on. Six hundred metres, horizontal, measured from the instrument and not from you. The metre after that is eight hundred metres of water no certificate of ours covers, and the Order has no certificates.',
+    'A node carrying a grant sings at eighty. That is not a fault, and it is not a cost we have failed to control; it is what the instrument is. You will be the loudest thing on this rim for as long as you are alive underneath one. Enter that as a condition and not as a surprise.',
+    'Three faces. Five cuts, four minutes a cut, and two loads above the Staging line are the Second Chord. Anything past two is margin. The Order has never had margin, so I will take it if the tide offers it and I will not ask the tide for it.',
+    'The rim is attended. It was attended when the nodes went up and the nodes were entered while they were rising, so there is nothing for anyone to discover and nothing for you to conceal. There is a cohort on the eastern lip that will correct what stood into its watch, and it will be right to, and I would ask you to be courteous to people who are being correct at you. There is a garden on the western lip. There is a Board somewhere this tide reading out the registration of the field you are cutting. None of that is the reason.',
+    'The reason is that something is speaking, and it is discourteous not to reply, and the reply takes crystal, and the crystal is here. Come up before you are asked to. Go and be dry.',
+  ],
+};
+
 export const MISSION_HEADERS: readonly MissionHeader[] = [
   PROLOGUE_SORROWGATE_HEADER,
   LEDGER_ASSET_RECOVERY_HEADER,
@@ -1023,13 +1010,14 @@ export const MISSION_HEADERS: readonly MissionHeader[] = [
   ATTENDING_INTAKE_HEADER,
   ATTENDING_THE_DOME_HEADER,
   ATTENDING_SHALLOW_HEADER,
-  ATTENDING_CONCLAVE_HEADER,
   ATTENDING_TRENCH_AWAKENING_HEADER,
-  CHORD_APTITUDE_HEADER,
-  CHORD_THE_THREE_HEADER,
-  CHORD_CONCLAVE_HEADER,
-  CHORD_NINETEEN_HEADER,
+  ATTENDING_CONCLAVE_HEADER,
   ATTENDING_FIRST_ARRIVAL_HEADER,
+  CHORD_APTITUDE_HEADER,
+  CHORD_NINETEEN_HEADER,
+  CHORD_CONCLAVE_HEADER,
+  CHORD_THE_THREE_HEADER,
+  CHORD_RIM_DEPOSITS_HEADER,
 ];
 
 export function missionHeaderById(id: string): MissionHeader | undefined {
