@@ -764,20 +764,41 @@ describe('what is heard, as §7 tables it', () => {
       4102,
       '§8: a Track to the pair from 4,102 m'
     );
-    // §4 — the descent at 72, from the middle of the slopes, to every stationary
-    // ear the document names. Each of these is an ear that does not move while
-    // the escorts are falling, which is why the figures are exact.
+    // §4 and §7 — the descent at 72, from the middle of the slopes, to each ear
+    // §7's sentence names, priced at the station §7 names it by.
+    //
+    // Three of the five stand still while the escorts fall, and their figures
+    // are exact at the moment the sentence names. **Two do not**, and this
+    // literal is where that is on the record rather than in a reviewer's head:
+    // the same 20:30 beat that releases Teel's element sends the concern's four
+    // north (§6), so fifteen seconds later the flagship has left 3000, 2750 and
+    // the western reader has left the third face. §7 prices both at the seat
+    // they keep during the day and dates the reading to a moment at which they
+    // have both weighed anchor — a document finding, recorded here and not
+    // authored into the literal, whose beats are §9's to the tick. The
+    // assertions below are the arithmetic §7 states; the pair of them beneath
+    // is the schedule that moves the ear.
     near(
       ratio(DEPTH.DESCENT_SIG, AT.midSlopes, AT.readerFaceThree, CORVETTE.hyd),
       3.8,
       0.02,
-      '§4: the reader on the third face'
+      '§7: the reader, at the third face it stands at until the ascent'
+    );
+    assert.deepEqual(
+      [moveTo('reader-west', RELEASE), moveTo('flagship', RELEASE)].map((beat) =>
+        beat.kind === 'move' ? [beat.x, beat.y] : []
+      ),
+      [
+        [2850, 350],
+        [3000, 420],
+      ],
+      '§6, §9: both of those ears are ordered north on the release tick itself'
     );
     near(
       ratio(DEPTH.DESCENT_SIG, AT.midSlopes, AT.watchHome, SUBMERSIBLE.hyd),
       1.98,
       0.02,
-      '§4: the watch at home'
+      '§4: the watch at home, which is where 14:00 left it and where it stays'
     );
     near(
       ratio(DEPTH.DESCENT_SIG, AT.midSlopes, AT.reconOuter, CORVETTE.hyd),
@@ -989,7 +1010,7 @@ describe('the objective, as §8 chooses it', () => {
     // §8: "A column that sowed at 15:00 and is under the bed at 20:30 meets
     // both terminal rows on the riser's tick, and the court's rule would close
     // the tide there — before Teel's element has left the staging, before the
-    // watch has said the basin is up, and two and a half minutes before the
+    // pair has said the basin is up, and two and a half minutes before the
     // tide."
     assert.equal(SEEDING_SECOND_SEEDING.runsItsLength, true);
     assert.equal((CLOSE - RELEASE) / SIM.TICK_HZ, 150, '§8: two and a half minutes');
@@ -997,7 +1018,7 @@ describe('the objective, as §8 chooses it', () => {
       SEEDING_SECOND_SEEDING.beats.some(
         (beat) => beat.kind === 'say' && beat.atTick > RELEASE && beat.atTick < CLOSE
       ),
-      '§9: the watch says the basin is up after the tide would otherwise have closed'
+      '§9: the pair says the basin is up after the tide would otherwise have closed'
     );
   });
 
@@ -1216,16 +1237,52 @@ describe('the beats, as §9 schedules them', () => {
       [0, T(0, 30), T(2, 30), T(5, 30), T(8), T(11), T(14), T(20, 35), T(21)],
       "§9's nine spoken beats"
     );
-    assert.match(said[0]!.text, /which is the bed working/, '§12: the watch, on the terraces');
-    assert.match(said[1]!.text, /We'd like you to notice we said \*planting\*/, '§12: the coda');
-    assert.match(said[2]!.text, /They've never once come any other way/, '§12: the descent');
-    assert.match(said[3]!.text, /We'd ask you to notice the \*yet\*/, "§12: Prospect's line");
-    assert.equal(said[3]!.speaker, 'The charting pair, for the plateaus');
-    assert.match(said[4]!.text, /against a debt that is not stated/, '§12: the Watch-Speaker');
-    assert.match(said[5]!.text, /discourteous to the crystal/, '§12: the Order');
-    assert.match(said[6]!.text, /whatever we do next/, '§12: the quiet window');
-    assert.match(said[7]!.text, /we're coming down struck/, '§12: Teel at the release');
-    assert.match(said[8]!.text, /we're not going anywhere/, '§12: the watch, on the riser');
+    // §12's own headings, in §12's order — the speaker as well as the line,
+    // because five of these nine are the player's *own* charting pair and the
+    // one thing a `say` beat can get wrong without failing anything is whose
+    // voice it is. The watch is a Directorate party on this water (§5), and a
+    // pair line filed under it would have the plateaus' own hulls reported as
+    // those below — including "somebody's had us exact", which only the party
+    // being heard can say.
+    const script: [string, RegExp][] = [
+      ['The charting pair, on the terraces', /which is the bed working/],
+      ['Bloomwright Sefa Anholt', /We'd like you to notice we said \*planting\*/],
+      ['The charting pair, on the descent', /They've never once come any other way/],
+      ['The charting pair, for the plateaus', /We'd ask you to notice the \*yet\*/],
+      ['Watch-Speaker, for those below', /against a debt that is not stated/],
+      ['Voice of the reconnaissance, for the Order', /discourteous to the crystal/],
+      ['The charting pair, as the quiet window opens', /Those below had one for the bed/],
+      ['Warden Juno Teel', /we're coming down struck/],
+      ['The charting pair, on the riser', /we're not going anywhere/],
+    ];
+    assert.equal(said.length, script.length);
+    for (const [index, [speaker, line]] of script.entries()) {
+      assert.equal(said[index]!.speaker, speaker, `§12: the voice at beat ${index}`);
+      assert.match(said[index]!.text, line, `§12: the line at beat ${index}`);
+    }
+    // The three conditional lines carry §12's other three headings, and the
+    // ledger's is the pair's for the reason above: it is the sentence about
+    // what was heard *of* the plateaus, said by the plateaus.
+    assert.deepEqual(
+      (SEEDING_SECOND_SEEDING.conditionalBeats ?? [])
+        .filter((beat) => beat.kind === 'say')
+        .map((beat) => (beat.kind === 'say' ? beat.speaker : '')),
+      [
+        'Bloomwright Sefa Anholt, as the lip turns',
+        'Warden Juno Teel, in the furrow',
+        'The charting pair, on the ledger',
+      ],
+      "§12: the three lines fired by a condition, in §9's order"
+    );
+    // Nothing the player owns speaks in another navy's name: every Commune
+    // line is Anholt's, Teel's or the pair's, and the two that are not are the
+    // Watch-Speaker's and the Order's, which §12 marks as such.
+    for (const beat of said) {
+      assert.ok(
+        !/^The watch\b/.test(beat.speaker),
+        `§5: "${beat.speaker}" is the Directorate's party, not a Commune voice`
+      );
+    }
     // Prospect's two shared lines, verbatim across both documents.
     for (const speaker of [
       'The charting pair, for the plateaus',

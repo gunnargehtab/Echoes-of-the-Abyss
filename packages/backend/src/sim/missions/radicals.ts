@@ -65,6 +65,14 @@
  *   and no `ground` beat sows one: nothing manufactures habitable water in a
  *   place that fell, and the Commit is PR-3 water that stays PR-3.
  *
+ * And one place the close is authored somewhere the document does not point at:
+ * §12 gives Marr "the reading of the count, per §8, and then one sentence she
+ * should not say aloud and does", and heads it *at the close — from the
+ * Concourse at 15:00, or at the far water*. This mission's close moves, so a
+ * `say` beat at T(15) would be heard only by a column that failed. The sentence
+ * therefore rides all three `epilogue` readings, which is the one channel that
+ * prints at whatever tick the close lands on, and in §12's own order.
+ *
  * And one finding this literal makes against the format as built, stated here
  * rather than discovered: **a pack is one entity.** `spawnFauna` places one
  * creature per `creature` beat, and §9 authors `creature` × 7 — so the five
@@ -122,6 +130,16 @@ const COLOSSUS_DEPTH_M = faunaStatsFor(FaunaSpecies.Sounder).workingDepthM;
 
 /** §9 — the four seed hulls, held to 01:00 and ordered by the barge thereafter. */
 const COLUMN = ['the-barge', 'seed-one', 'seed-two', 'seed-three'];
+
+/**
+ * §12 — the one sentence Marr should not say aloud and does, appended to each
+ * of §8's three readings because she says it under every one of them.
+ *
+ * The Commune's own insult — *you'd own it* — spent by the person it was built
+ * to be spent on, on herself, and declined in the same breath.
+ */
+const MARR_AT_THE_CLOSE =
+  "Thirty years of not owning any of it, and tonight thirty-three people went where I said they shouldn't, with our guns beside them, and I find I'd like to own that. I'm not going to. I'd like it heard that I'd like to.";
 
 /**
  * One leg of the column, on the Bloomwright's clock — four `move` beats at one
@@ -759,13 +777,26 @@ export const SEEDING_RADICALS: MissionDefinition = {
    * §8's Results, verbatim — Marr's three readings, with the four objective
    * readings printing beneath whichever row the run earned, in authored order
    * and all four of them.
+   *
+   * **Each carries Marr's own last sentence after it** (§12, *the voices on the
+   * water*: "the reading of the count, per §8, and then one sentence she should
+   * not say aloud and does"). It is authored here rather than as a `say` beat
+   * because §12 heads it *at the close — from the Concourse at 15:00, or at the
+   * far water*, and this mission's close moves: a column that takes every order
+   * is read at about 11:10 and a `say` at T(15) would never fire beneath it.
+   * `epilogue` is the one channel that prints at whatever tick the close lands
+   * on, and `resolve` emits it before the objective readings — which is §12's
+   * order exactly: the count, then the sentence, then the four rows beneath.
    */
   epilogue: {
     [MissionOutcome.Complete]:
-      "We asked you to take them where we said they shouldn't go, and you took them, and you were louder than they were the whole way. We're not going to call that a contradiction. We're going to call it a tide, and the next one's at the rim, and we can't hear the rim from here.",
+      "We asked you to take them where we said they shouldn't go, and you took them, and you were louder than they were the whole way. We're not going to call that a contradiction. We're going to call it a tide, and the next one's at the rim, and we can't hear the rim from here. " +
+      MARR_AT_THE_CLOSE,
     [MissionOutcome.Partial]:
-      "Some of the seed's in the basin and some of it's south of it, and we agreed nothing about which, because we agreed nothing about any of this. This is a result. Sefa will say it's the price of waiting; Juno will say it's the price of not having guns; and we're saying it's thirty-three people by household and some of them are on the list.",
+      "Some of the seed's in the basin and some of it's south of it, and we agreed nothing about which, because we agreed nothing about any of this. This is a result. Sefa will say it's the price of waiting; Juno will say it's the price of not having guns; and we're saying it's thirty-three people by household and some of them are on the list. " +
+      MARR_AT_THE_CLOSE,
     [MissionOutcome.Lost]:
-      "The basin has the column. We never turned it and it went anyway and it didn't get there, and nobody on this plateau is going to be able to say which of those three things they're sorriest about.",
+      "The basin has the column. We never turned it and it went anyway and it didn't get there, and nobody on this plateau is going to be able to say which of those three things they're sorriest about. " +
+      MARR_AT_THE_CLOSE,
   },
 };
