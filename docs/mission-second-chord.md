@@ -1,8 +1,8 @@
 # The Second Chord 7 — The Second Chord
 
-> The seventh mission of the Knight campaign ([campaign.md](campaign.md) §7), specified — and the
-> campaign's ending ([campaign.md](campaign.md) §9): not canon, not ranked, not merged, and not a
-> fight. One of the fourteen documents that complete the bible's campaign, written to the pattern
+> The seventh mission of the Knight campaign ([campaign.md](campaign.md) §7), specified and built —
+> and the campaign's ending ([campaign.md](campaign.md) §9): not canon, not ranked, not merged, and
+> not a fight. One of the fourteen documents that complete the bible's campaign, written to the pattern
 > [mission-sorrowgate.md](mission-sorrowgate.md) sets and the Chord documents continue: everything
 > here is authored — the forces, the water, the beats, the numbers and the text — and code
 > transcribes this document.
@@ -117,7 +117,10 @@ The one party for everything Directorate is the same finding
 [mission-rim-deposits.md](mission-rim-deposits.md) §2 records: hostility is `Owner.slot` and every
 party is an enemy of every other, so twelve armed Choristers on a slot of their own would open fire
 on the watch, which their corrections stop 304 m from — and on the dome, which the second one stops
-112 m from. The attendants and the lip are safe as separate parties because `combat.ts` refuses to
+112 m from. On this rim the point is inherited rather than live, because **every Directorate hull
+here is weapons-cold** (§5, §13): the mission still seats them on one slot, because a rim that is
+attended by four separate Directorate parties is four separate lies about who is standing with
+whom. The attendants and the lip are safe as separate parties because `combat.ts` refuses to
 auto-acquire a static emitter (§13).
 
 ---
@@ -233,16 +236,21 @@ nobody: *Transmitted. The reply is not entered here.* or the Chord standing unst
 Nine's shape kept from the Order's side ([mission-item-nine.md](mission-item-nine.md) §8) and it is
 a property of the runtime rather than of anybody's restraint (§13).
 
-**The answer the mission does not hide, and the fight it actually is.** Six Choristers stopped
-200–412 m from the Chord are 20 damage a second each inside 450 m — 120 a second against 1,800 HP,
-which is fifteen seconds. Four Knight guns on the lip (the Voice at 60 a second out to 900 m, three
-Corvette hulls at 41.7 each out to 550) are 185 a second against a wave's 1,200 HP, which is six and
-a half. So a wave answered the instant it stands costs the node about 780 points and a wave answered
-while it is still *walking* costs it nothing at all, because a moving scripted hull holds its fire
-(`combat.ts`'s `busy`). Two waves answered late is 1,560 of 1,800 and the Chord ends the tide with
-two hundred and forty. **A Knight hull that puts itself nearer than the node is corrected instead**,
-which is [mission-rim-deposits.md](mission-rim-deposits.md) §6's geometry one tide on and 400 m
-lower.
+**The answer the mission does not hide, and the correction it actually is.** Six Choristers stopped
+200–412 m from the Chord are inside the 450 m their doctrine reaches, and they do not fire, because
+**every Directorate hull on this rim is weapons-cold** (§5). That is not a softening; it is the only
+sentence the format can write. `combat.ts` auto-acquires the nearest hostile thing carrying position
+and hull, and a structure is one of those — so an armed cohort standing 255 m from a Sounding Spire
+takes 1,800 HP down in fifteen seconds whatever anybody intended, and the watch, inherited at 206 m
+from the Chord with a 650 m gun, does it in twenty from tick zero. There is no way to author a hull
+that answers hulls and leaves a node alone (§13). And the node cannot be allowed to fall: every
+point of `chord-water` is inside its six hundred, and a PR-2 carrier is only rated for the 3,000 m
+the crystal is set at because the node says so. So the rim attends and does not police, which is the
+sentence §1 already writes — the correction is a rank of six standing between the Order and its own
+instrument, entered, filed and heard, and the pressure it applies is acoustic and geometric rather
+than ballistic. **The only guns in this water are the Order's**, they are aimed at nothing, and
+[mission-rim-deposits.md](mission-rim-deposits.md) §6's geometry one tide on is a fact about where
+the Directorate stands rather than about what it shoots.
 
 ### The SIG budget
 
@@ -268,7 +276,7 @@ nothing left at 15:30 has an instrument, a node, and nobody to play it.
 | --- | --- | --- |
 | **The Order** — the player | 2 Cruiser hulls, 4 Corvette hulls, Knight-rigged, PR-2; 3 Sounding Spires prebuilt; two loads aboard; one sounding | The last works order. Two hulls held above the line until 15:30 |
 | **The plateaus** | 2 Light Scouts, PR-3 by refit, weapons-cold, where *First Arrival* left them; 1 Spore Veil — the bed — on the western lip | Home water, and a garden. One line at 06:00 |
-| **Those below** | 2 Abyssal Submersibles (the watch), 4 more (the 9th Trench Cohort), 1 Cantor (the dome), 12 Choristers — PR-3 by explicit refit, armed, and the only guns on the rim that are not the player's | Attending, and correcting. One party, for the engine's reason (§2) |
+| **Those below** | 2 Abyssal Submersibles (the watch), 4 more (the 9th Trench Cohort), 1 Cantor (the dome), 12 Choristers — the twelve PR-3 by explicit refit, the six submersibles PR-3 on the roster, and **every hull of them weapons-cold** | Attending, and not policing (§4, §13). One party, for the engine's reason (§2) |
 | **The attendants** | Two returns on the lip, periodic, structured, unclassifiable | Filed three times as equipment fault by somebody else ([mission-item-nine.md](mission-item-nine.md) §1). The Order enters them and calls them nothing |
 | **The lip** | One return, 3,050 m, SIG 3, twenty seconds, from 16:40 | Not a party in any sense a person would use. It is a time, and the Order keeps it |
 | **The Drift** | The basin, and the week's noise coming due for the third time | 16:30 (§7) |
@@ -300,7 +308,7 @@ five times in it.**
 | Time | What the Order does | What it costs |
 | --- | --- | --- |
 | 00:00–03:00 | The crystal goes down through the lattice: both carriers stand inside `chord-water` loaded, and the keystone latches | SIG 72 for 27.8 s of descent, and three nodes at 80 the tick a hull is under one below rating |
-| 03:30, 09:30 | The lip is held. Two waves of six correct a node that now has hulls under it | 120 damage a second against 1,800 HP: fifteen seconds a wave if the escort is late |
+| 03:30, 09:30 | The lip is held. Two waves of six correct a node that now has hulls under it | Nothing fired: the correction is twelve hulls standing 200–412 m off the node, entered and filed, and heard at 24 through 1.60 from 3,818 m (§4) |
 | **15:30** | `release` on `the-choirmaster` and `escort-b`. She comes down over the slopes with ears | 3,413 m at 45 m/s — 75.8 s — over water she is rated for. She is at the Chord at **16:46** |
 | **16:00** | **The Collapse.** Both terrace nodes are lost | Every Knight hull in the Abyssal band outside the Chord's 600 m bleeds four points a second from this tick |
 | **16:40**, then the seventeenth minute — **~17:14–17:44** | The lip returns at SIG 3 for twenty seconds; then the interval, and the tone: thirty seconds at a hundred, bow south | The return costs nothing and is entered as a time. The tone tells everything within eleven kilometres of the axis exactly where the Order is |
@@ -457,11 +465,13 @@ is Partial. **The middle rung is the Order short and never the Order silent**, w
 reason the transmission is not on the ladder.
 
 **Three things this ladder cannot say, said here instead.** First, **that the Chord still stands**:
-there is no predicate over what the player holds standing, so a node corrected at 03:56 with the
-crystal already inside it reads Met (§13, and [mission-standing-wave.md](mission-standing-wave.md)
-§13's row, third customer). It matters anyway, and mechanically: after 16:00 the Chord's 600 m is
-the only water on the map a Knight hull is rated for, so a party that let the node fall plays the
-tone bleeding and climbs home bleeding. Second, **which return was heard**: `attend` counts
+there is no predicate over what the player holds standing, so a node struck at 03:56 with the
+crystal already inside it would read Met (§13, and
+[mission-standing-wave.md](mission-standing-wave.md) §13's row, third customer). Nothing on this rim
+strikes it — the water is weapons-cold on every slot but the player's (§4) — so the gap is a
+statement about the union rather than a hole this tide falls through. It matters anyway, and
+mechanically: after 16:00 the Chord's 600 m is the only water on the map a Knight hull is rated for,
+so a party that spent the node itself plays the tone bleeding and climbs home bleeding. Second, **which return was heard**: `attend` counts
 attendable emitters and names none, so the row is worded in threes rather than pretending to point
 at the lip's own. Third, **that the tone was hers**: `sound` names no sounding, and there is exactly
 one authored, so the two happen to coincide.
@@ -500,10 +510,11 @@ thousand people stated as *nothing with which to do it twice*.
 ### The failure, and the sounds that precede it
 
 The close at 18:00 is **not** a conclusion. This mission can be lost, in three specific audible
-ways: the crystal never set, because the carriers never reached the Chord's water; a hull entered,
-which is a fight the Order arranged and then lost; and the Choirmaster entered, which is the only
-one that also takes the tone with it, because the sounding is tagged to her hull and nothing else
-can play it.
+ways, and none of them is a gun: the crystal never set, because the carriers never reached the
+Chord's water; a hull entered, which on this rim means the Collapse's four points a second collected
+by somebody who stayed below the line outside the Chord's six hundred; and the Choirmaster entered,
+which is the only one that also takes the tone with it, because the sounding is tagged to her hull
+and nothing else can play it.
 
 Nothing fails on a timer. The correction has been walking since 02:30 — a full minute of a cohort
 mustering in step, Contact to the Voice from 3,818 m, before it moves at 03:30. The Collapse is
@@ -531,7 +542,7 @@ pair, the lattice and the lip. Bracketed rows are where a competent party tends 
 | *[01:30–03:00]* | *[the descent through node-one to node-two to the Chord's water — 27.8 s at SIG 72 — and the delivery: both carriers stand inside `chord-water` loaded, and the keystone latches]* |
 | **02:30** | **move ×6** — `cohort-1`…`cohort-6` muster in step, 180–559 m at 40 m/s: standing between 02:35 and 02:44. The sixty seconds (§8) |
 | 03:00 | move ×2 — the charting pair walks east, First Arrival's leg |
-| **03:30** | **move ×6 — the first correction.** Onto the Chord's water at 3,000 m, 224–430 m: standing between 03:36 and 03:41, 255–412 m from the node, and from then firing on the nearest hostile inside 450 m |
+| **03:30** | **move ×6 — the first correction.** Onto the Chord's water at 3,000 m, 224–430 m: standing between 03:36 and 03:41, 255–412 m from the node — inside the 450 m the doctrine is stated at, and weapons-cold, so what stands there is a correction filed rather than fired (§4) |
 | 04:00 | move ×2 — the watch's first leg, Prospect's |
 | **04:30** | **Cohort-Prime Adze** (§12). The correction, filed as a correction |
 | **06:00** | **The charting pair, for the plateaus** (§12) |
@@ -809,27 +820,33 @@ one breath, which is why she says it to nobody.
 
 What exists against this document and what does not, continuing the list
 [mission-asset-recovery.md](mission-asset-recovery.md) §13 started and the documents after it
-extended. **This mission is specified and not built**, and it is the last of the fourteen: the one
-whose headline row is a superweapon that has never existed in code, and the one whose largest
-absence — a reply — it does not want filled.
+extended. **This mission is built** — the literal is `secondChord.ts` (#397), the water is
+`mouth-rim` reused unchanged for the fifth time, and `missionSecondChord.test.ts` plays the tide
+out at thirty-seven tests. It is the last of the fourteen, and it stays the one whose headline row
+is a superweapon that has never existed in code, and the one whose largest absence — a reply — it
+does not want filled. What the transcription found is below, and one of the six was a mission that
+could not be finished: the Directorate stood inside its own gun of the Chord and took the node down
+twenty seconds into every run, which made the keystone unreachable, because a PR-2 carrier is only
+rated for `chord-water` while the node is standing. This rim is now weapons-cold on every slot but
+the player's, which is the sentence §1 was already writing.
 
 | Requirement | Status |
 | --- | --- |
 | The mission format — beats, predicates, registry, private rooms | **Built** (#190). `extract` with `loaded`, standing `survive`, `sound`, `attend`, `tolerance`, `MissionLift`, `MissionSounding`, the `creature` beat, `lose`, `release`, `move`, `say` and `resolve` cover every row of §8 and §9 |
-| **Resonance Collapse** | **Not built, and it is this mission's headline row** ([factions.md](factions.md); the format brief's absent list). The smallest shape is [mission-convocation.md](mission-convocation.md) §13's: one authored, once-per-match, player-fired effect with a duration, a radius, a SIG cost and a mission-specific consequence — here `{ kind: 'collapse'; radiusM; durationTicks }`, setting every listener inside the radius to HYD 0 for twelve seconds and consuming the firing commander's completed Spires. This document does not specify a second grant mechanism; it builds on that row's shape. **The cheapest honest approximation, and what the literal ships:** the Collapse fires on the world's clock at 16:00 instead of the player's — two `lose` beats spend the lattice, and twelve `move` beats walk every living Chorister 480 m east and twelve more walk them back, because a moving scripted hull holds its fire (`combat.ts`'s `busy`). Twelve seconds out, three standing 480 m further from the node than its guns reach, twelve back. **It is an imitation of a stun and the document calls it one.** The mission is playable without the row, and worse |
+| **Resonance Collapse** | **Not built, and it is this mission's headline row** ([factions.md](factions.md); the format brief's absent list). The smallest shape is [mission-convocation.md](mission-convocation.md) §13's: one authored, once-per-match, player-fired effect with a duration, a radius, a SIG cost and a mission-specific consequence — here `{ kind: 'collapse'; radiusM; durationTicks }`, setting every listener inside the radius to HYD 0 for twelve seconds and consuming the firing commander's completed Spires. This document does not specify a second grant mechanism; it builds on that row's shape. **The cheapest honest approximation, and what the literal ships:** the Collapse fires on the world's clock at 16:00 instead of the player's — two `lose` beats spend the lattice, and twelve `move` beats walk every living Chorister 480 m east and twelve more walk them back, because a moving scripted hull holds its fire (`combat.ts`'s `busy`). Twelve seconds out, every one of the twelve standing 680 to 886 m from the node against the 450 m its doctrine reaches, twelve back. **It is an imitation of a stun and the document calls it one.** The mission is playable without the row, and worse |
 | **The Second Chord, as a commander ability** | **Not built, and the half that shipped is not the half this needs.** `MissionCommanderAbility` now exists (#373) and carries an origin, a radius, a duration and a broadcast SIG — but its effects are a speed multiplier and Silent Running immunity, so neither of the two this ability turns on can be written with it. [characters.md](characters.md) gives Sull a placed resonance node that over 30 s grants global Tier-2 vision and +20 % damage to every Knight unit and emits SIG 100 throughout. What the literal carries is one fifth of that: a `MissionSounding` at `sig` 100 for `holdTicks` 1,800 on the Choirmaster's hull — **built**, and directional where the ability is omnidirectional (100 down the axis, 35 across the rim, 10 astern), and granting nothing at all. The Tier-2 vision and the damage bonus are not approximated, faked or hinted at, and §7 quotes the numbers the literal does carry so nobody has to guess which half shipped |
 | **A sounding, and a region, with a depth** | **Not built, and deliberately not asked for beyond this row.** `soundingHolds` is `Math.hypot` on x and y plus a cone test — a point, a radius and a bearing, with no depth term — so the literal cannot require the Choirmaster to be at 3,000 m under the Chord when she plays, and §6 asks it in register instead and prices the dive. `extract` is the same shape and the same gap: a `MissionRegion` is a plan-view rectangle, so the keystone cannot require the carriers to be at the node either, and §8 says so rather than pretending the descent is enforced. The shape, if anybody wants it, is `depthMaxM?` on `MissionSounding` and on `MissionRegion`, tested the way the radius is. It would be one line in `soundingHolds`, one in the region test and one field on each type, and this mission is the bible's loudest customer for both |
 | **`releaseTick` binds only a hull whose role is `'tender'`** | **A finding against the format, stated rather than worked around.** `applyEscortHold` iterates player units and `continue`s on anything that is not a `'tender'`, and `holdsMovement` returns false unless `tagOfTender` resolves — so `heldUntil` is inert on every other role. `escort-b` therefore carries `releaseTick` (which `missions.test.ts`'s held-⇔-released rule obliges the literal to pair with a `release` beat) and **is not actually held today**. The smallest fix is to check `heldUntil` by tag before the tender test in both places: a schedule is the mission's, and the escort radius is the tender's, and they were never the same rule. Until it lands, the hold on `escort-b` is documentation, and a player who walks every escort onto the lip strands the Choirmaster at the Staging with no ears — which §9 prices, and which is a legitimate and audible way to reach the unstruck record |
 | Hulls held by `releaseTick` and released at the same tick | **Built** (Sorrowgate's loaded tenders). It works on `the-choirmaster`, who is a `'tender'`, and it is what makes the row above the only half that is missing |
 | Cut-time-zero lifts and `loaded` extracts | **Built** (#239 for hold-and-cut; `cutTicks: 0` for [mission-tend.md](mission-tend.md) §13's gift run). Both loads rig on the first pass because both carriers are seated inside `the-cache`, and the keystone cannot latch at tick zero because `chord-water` is 2,700 m away |
-| **A predicate over what the player holds standing** | **Not built, and this is its third customer** ([mission-standing-wave.md](mission-standing-wave.md) §13; [mission-conclave-chord.md](mission-conclave-chord.md) §8). The union cannot ask whether the Chord is still there, so a node corrected at 03:56 with the crystal already inside it reads Met and the ladder never notices. The shape is unchanged — `{ kind: 'build'; structure: StructureKind; count: number }`, a query over the observer's own force naming a structure kind rather than a party, and it wants a `tag?` so a mission can name *this* node. §8 says out loud what the ladder cannot read, and §4 makes the node's death cost four points a second instead of a rung |
+| **A predicate over what the player holds standing** | **Not built, and this is its third customer** ([mission-standing-wave.md](mission-standing-wave.md) §13; [mission-conclave-chord.md](mission-conclave-chord.md) §8). The union cannot ask whether the Chord is still there, so a node struck with the crystal already inside it would read Met and the ladder would never notice — the row above is why nothing on this rim strikes it, and this one is still open. The shape is unchanged — `{ kind: 'build'; structure: StructureKind; count: number }`, a query over the observer's own force naming a structure kind rather than a party, and it wants a `tag?` so a mission can name *this* node. §8 says out loud what the ladder cannot read, and §4 makes the node's absence after 16:00 cost four points a second instead of a rung |
 | `runsItsLength` | **Built** ([mission-intake.md](mission-intake.md) §13) and load-bearing in a way no shipped mission has needed. All four terminal rows can be met by about 03:00; without the flag the campaign's ending would close fifteen minutes early, with the crystal set and nothing said |
 | **The transmission as a non-terminal reading** | **Built** ([mission-intake.md](mission-intake.md) §5's neutrality guard). `objectiveReadings()` appends every objective's reading pair and only `terminal` rows enter the ladder, so `the-transmission` is unrankable by construction rather than by restraint. This is what keeps [campaign.md](campaign.md) §9's two records level, and it is the same mechanism [mission-item-nine.md](mission-item-nine.md) used one campaign over |
 | The `sound` tally is monotone and a reveal does not window it | **Built, and priced rather than patched** ([mission-conclave-chord.md](mission-conclave-chord.md) §13). `revealAtTick` stops a row being *scored* before its tick but the tally runs from zero, so a tone completed at 05:00 would read Met the instant 16:00 arrived. What actually windows it here is physical: the only tagged hull is held to 15:30 and the sounding point is 3,715 m from her seat. No window on soundings exists and none is asked for |
 | `attend` names no emitter | **A finding.** The predicate counts attendable emitters resolved at Bearing or better while sounding and cannot name which; three are authored, so `the-lip` asks for three rather than pretending to point at the return. The return's own entered-and-gap lines print at the close regardless of any predicate (`runtime.ts`'s epilogue assembly), which is where the sixteenth minute is actually entered |
 | The tolerance counts structures, and it runs before the party does | **Built, and the consequence is authored** ([mission-rim-deposits.md](mission-rim-deposits.md) §13). Three Spires idling at 30, one of them 320 m from a Cantor, put `the-count` at Met by about 00:30. The row is non-terminal, read as a record, with one conditional line and no mechanism hung off it |
 | **One Directorate party** | **A format finding, shared with [mission-rim-deposits.md](mission-rim-deposits.md) §13.** Hostility is `Owner.slot`, so the watch, the 9th, the dome and the twelve Choristers are one party or the mission opens with a Directorate civil war 250 m from the Chord. The attendants and the lip are separate emitter-only parties and are safe there, because `combat.ts` refuses to auto-acquire a `StaticEmitter` |
-| The correction goes to the nearest hostile in range | **Built and emergent** (`combat.ts`). Both waves stop 200–412 m from the Chord, which is inside a Chorister's 450 m and nearer than any Knight hull working the water above it — so the doctrine holds and the node is what is shot. Six at 20 damage a second take 1,800 HP in fifteen seconds; four Knight guns at 185 a second take a wave of six in 6.5; and a wave killed during its transit costs the node nothing, because a moving hull holds its fire |
+| **A hull that answers hulls and leaves a structure alone** | **Not built, and it is why this rim is weapons-cold.** `combatSystem` auto-acquires the nearest live thing carrying `Position`, `Owner` and `Health` that is not on its own slot, and a structure carries all three — there is no target class, no doctrine flag and no per-party rule of engagement. An armed cohort standing 255 m from a Sounding Spire therefore takes its 1,800 HP down in fifteen seconds, and the watch, inherited at Prospect's 4600, 3300 and 4750, 3350, does it from 206 m in twenty seconds from tick zero. Measured: the Chord at hp −40 at 20.0 s of an untouched run. Since every point of `chord-water` is inside the node's six hundred and a PR-2 carrier is only rated for 3,000 m because the node says so, a struck node makes the keystone unreachable — so **the six submersibles and the twelve Choristers are authored `armed: false`**, which is [mission-prospect.md](mission-prospect.md)'s own posture of four navies cold in one water and is the sentence §1 writes anyway. The shape, if anybody wants the other reading, is a target filter on the auto-acquire — `engages?: 'hulls' \| 'anything'` on `MissionUnit`, tested where `targetables` is walked. §10 never claimed combat as a thing this mission teaches, and §4 now says so out loud |
 | The `lose` beat on a structure, and the mark it leaves | **Built.** `lose` zeroes the hull and `reap` tears it down, and `reap` is also where a `DestroyedStructure` mark is laid — SIG 18 for 180 s (`ECHO_MARKS`, `PERSISTENCE`) — so the Collapse is audible as two events rather than as an absence, which is the only way the format has of making it a thing that happened |
 | The `creature` beat with a depth, and a driven creature | **Built** (#349). The basin is spawned and driven in one beat with `driveTo.depthM` 2,000; a driven creature is deaf, holds Committed at `sigActive`, and takes no weapon damage, which is what makes the telegraph a fact rather than a fight |
 | Emitters with readings, off the player's party | **Built** (#240, #246). Prospect's two attendants verbatim — 2800, 3400 at 7 s / 1 s and 4100, 3500 at 11 s / 2 s, SIG 24, 3,050 m, hp 5,000 — and the lip's return as a sustained window, `periodTicks === onTicks === 1200`, `fromTick` 16:40, `untilTick` 17:00: Attendance's arrival idiom, twenty seconds at SIG 3 |

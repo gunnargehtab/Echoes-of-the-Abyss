@@ -990,6 +990,50 @@ export const CHORD_RIM_DEPOSITS_HEADER: MissionHeader = {
   ],
 };
 
+export const CHORD_SECOND_CHORD_HEADER: MissionHeader = {
+  id: 'chord-second-chord',
+  campaign: 'chord',
+  ordinal: 7,
+  name: 'The Second Chord — The Second Chord',
+  premise:
+    'The crystal is set into a node on the lip, the lattice is spent to buy thirty seconds, and the Choirmaster comes down to play them.',
+  mapId: 'mouth-rim',
+  // Eighteen minutes, and the `resolve` lands at 1,080 s
+  // (docs/mission-second-chord.md §9). The band is narrow on purpose: this one
+  // is not a tide that can be finished early. `runsItsLength` is set, all four
+  // terminal rows can be met by about 03:00, and the last forty seconds are
+  // the reply not being shown — so the close is a fixed point rather than a
+  // window, and the band is drawn tight around it.
+  lengthBandS: [1020, 1140],
+  /**
+   * Choirmaster Ivane Sull, the Order's last works order —
+   * docs/mission-second-chord.md §12, verbatim, read at the Staging aboard her
+   * own hull and held there.
+   *
+   * Public, for the reason every Knight briefing in this campaign is public:
+   * it names no hidden fact and it withholds no arithmetic. Paragraph five
+   * states the Collapse by the tick it happens on and prices the bleed it buys
+   * — "entered as a condition of the tide rather than discovered as a
+   * surprise" — which is docs/campaign.md §10's telegraph paid in prose an
+   * entire mission ahead of the beat, and the reason §8's failure is never a
+   * timer.
+   *
+   * Paragraph six is the only place in the bible where the Order says what the
+   * First Chord's reply cost and declines to say what it was. The briefing
+   * stops where docs/campaign.md §2 rule 3 stops, and so does everything after
+   * it: no epilogue, no beat and no line goes further.
+   */
+  briefing: [
+    'This is the third tide the Order has spent on this rim and the last works order it will issue here, and I would rather say that at the top than have any of you work it out at the bottom.',
+    'There is a node on the lip. It went up in the tide between under the grant of the one you raised yesterday, it was entered by the watch while it was still rising, and it was not corrected, because a node with nothing under it is a silence and silence is attended too. It cost a hundred and twenty crystal, which is the last hundred and twenty. There is no fourth Spire and there is no certificate, and after this tide the Order projects nothing at all.',
+    'You are carrying what you brought up yesterday. Two loads, and they go into the node on the lip and nowhere else. A tone over an empty node is a tone; the chapter would hear a note and nothing above it, and the Third would be courteous about that for the rest of my life.',
+    'Then you hold the lip. There is a cohort on it that will correct a node with hulls under it, and it will be right to, and it is faster to answer six of them while they are walking than to argue with six of them while they are standing. I am not asking you to be unheard today. Being unheard stopped being available at some point in the last two tides and I have not decided which.',
+    'At sixteen minutes I bring the lattice down. Both terrace nodes, at once, on my order and not on yours. Everything on this rim loses its ears for twelve seconds and everything of ours below the line and outside the Chord’s six hundred begins bleeding four points a second in the same instant, and I would like that entered as a condition of the tide rather than discovered as a surprise. I come down at half past fifteen with one hull for ears and I am over the slopes when it goes.',
+    'The interval is at seventeen. Thirty seconds, bow to the south, held — a tone you interrupt is a tone you have not played, and this is the one the Order has been in tune for since a hundred and eighteen. I am aware of what was said the first time. I have read every page of it, in a dry room, alone, for eleven years, and I remain of the same mind: something is speaking, and it is discourteous not to reply.',
+    'Count at the close. Go and be dry.',
+  ],
+};
+
 export const MISSION_HEADERS: readonly MissionHeader[] = [
   PROLOGUE_SORROWGATE_HEADER,
   LEDGER_ASSET_RECOVERY_HEADER,
@@ -1018,6 +1062,7 @@ export const MISSION_HEADERS: readonly MissionHeader[] = [
   CHORD_CONCLAVE_HEADER,
   CHORD_THE_THREE_HEADER,
   CHORD_RIM_DEPOSITS_HEADER,
+  CHORD_SECOND_CHORD_HEADER,
 ];
 
 export function missionHeaderById(id: string): MissionHeader | undefined {

@@ -22,6 +22,7 @@ import { CHORD_NINETEEN } from './nineteen.ts';
 import { CHORD_CONCLAVE } from './conclaveChord.ts';
 import { CHORD_THE_THREE } from './theThree.ts';
 import { CHORD_RIM_DEPOSITS } from './rimDeposits.ts';
+import { CHORD_SECOND_CHORD } from './secondChord.ts';
 import { CHORD_APTITUDE } from './aptitude.ts';
 import { SEEDING_DEEP_FURROW } from './deepFurrow.ts';
 import { SEEDING_IN_WRITING } from './inWriting.ts';
@@ -59,6 +60,7 @@ export {
   CHORD_CONCLAVE,
   CHORD_THE_THREE,
   CHORD_RIM_DEPOSITS,
+  CHORD_SECOND_CHORD,
   CHORD_APTITUDE,
   LEDGER_ASSET_RECOVERY,
   LEDGER_BAFFLE,
@@ -104,6 +106,7 @@ export const MISSIONS: readonly MissionDefinition[] = [
   CHORD_CONCLAVE,
   CHORD_THE_THREE,
   CHORD_RIM_DEPOSITS,
+  CHORD_SECOND_CHORD,
   CHORD_APTITUDE,
 ];
 
