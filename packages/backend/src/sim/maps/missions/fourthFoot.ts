@@ -68,6 +68,11 @@ export const FOURTH_FOOT: MapDefinition = {
   // bench out of the slope — the same order-of-paint argument as everywhere
   // else. Every rectangle lands on the 250 m cell grid and paints exactly the
   // metres it reads.
+  //
+  // A pocket states a floor and no ceiling, so it keeps the metre of rock the
+  // wall painted over it — `fourth-trench`'s ground exactly, inherited rather
+  // than tidied. It costs nothing here: the shallowest thing this mission
+  // seats is the muster at 1,000 m, and a lay-by admits everything below 1 m.
   regions: [
     {
       x: 0,
