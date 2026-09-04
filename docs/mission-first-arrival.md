@@ -28,10 +28,12 @@ the column does.
 
 ## 1. What the Rim Is, From Below
 
-The rim is the depression's edge at 4,410 m, carrying the richest resonant-crystal deposits
-ever surveyed, and — since this year — two returns that a Consortium survey has filed three
-times as equipment fault ([world-map.md](world-map.md);
-[mission-prospect.md](mission-prospect.md) §1; [mission-item-nine.md](mission-item-nine.md)
+The rim is the edge of an eleven-kilometre depression that returns pings before they should
+arrive, on a cycle that shortened from 43 hours to 39 in 213 PC and is still shortening
+([world-map.md](world-map.md); [timeline.md](timeline.md)). That edge stands at 4,410 m,
+carries the richest resonant-crystal deposits ever surveyed, and has carried — since this year
+— two returns that a Consortium survey has filed three times as equipment fault
+([mission-prospect.md](mission-prospect.md) §1; [mission-item-nine.md](mission-item-nine.md)
 §1). Every other campaign arrives at it from above or across. The Directorate arrives along
 it, out of trench country, on the only side of the rim anybody was ever born on.
 
@@ -59,10 +61,12 @@ thing the cohort does.
 
 **The tide is the whole advantage, and it was bought with a record.** The watch heard the
 concern descend at 72 for three minutes and sound six charted faces at 80, and entered both;
-it entered the plateaus' bed on the western lip on the same day. The Ninth heard the same
-transmissions down its own axis, which is what put a calling at the head of it
-([mission-conclave-attending.md](mission-conclave-attending.md) §1). Knowing a tide early is
-worth exactly what the slowest hulls in the game can convert it into, which is ground.
+it entered the plateaus' bed on the western lip on the same day. The account went up the
+Ninth, which is what put a calling at the head of it
+([mission-conclave-attending.md](mission-conclave-attending.md) §1) — and the calling was put
+because something is happening to the thing the cohorts attend
+([campaign.md](campaign.md) §8), which is the cycle above and not the record. Knowing a tide
+early is worth exactly what the slowest hulls in the game can convert it into, which is ground.
 
 Nobody in this mission says any of that. It is what the column is standing on.
 
@@ -74,7 +78,12 @@ Nobody in this mission says any of that. It is what the column is standing on.
 eastern lip, with the Cantorate's dome stood over them and their weapons locked.**
 
 Cohort-Prime Adze commands in the water; Undermarshal Setha Korrin assigns from Sufficiency and
-reads the count. The 9th Trench Cohort joins at the sill, exactly as Adze said it would
+reads the count. The twelve are the cohort grown at the shallow band and called at the head of
+the Ninth ([mission-trench-awakening.md](mission-trench-awakening.md) §6;
+[mission-conclave-attending.md](mission-conclave-attending.md) §8) — authored fresh here,
+because nothing carries a roster between missions
+([mission-conclave-attending.md](mission-conclave-attending.md) §13), and named so the walk is
+the same hulls arriving. The 9th Trench Cohort joins at the sill, exactly as Adze said it would
 ([mission-conclave-attending.md](mission-conclave-attending.md) §12), and the rim's own two
 submersibles are the pair that have been on the lip since before anyone had ears here
 ([mission-prospect.md](mission-prospect.md) §5). First Cantor Vehl Ossary is not on the channel

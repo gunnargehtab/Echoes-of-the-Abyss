@@ -36,6 +36,14 @@
  * It is longer, it is 1.60 water, and a dive at 72 SIG on that bearing is the
  * loudest thing anybody could do on this map.
  *
+ * That door is under all three rooms and not only under the chord. The trench
+ * runs the map's whole width and the rooms stop at y = 2500, so the hospice
+ * shares 2,750–2,900 m of column with it and the sealed room 2,800–2,900: the
+ * cells and the case are both reachable from the south without crossing the
+ * hall. §11 names the chord because that is the approach it expects, and the
+ * map fences none of the three — §6's hospice is heard and never entered
+ * because the escort declines to go in, not because the ground refused it.
+ *
  * Everything else the systems could have said, this ground refuses to let them
  * say. The shallowest seat is 2,300 m, so every hull is Abyssal from the first
  * tick and the four PR-3 refits in §3 cover the whole map — depth costs
@@ -64,7 +72,7 @@ import type { MapDefinition } from '../types.ts';
 export const THE_FIRST: MapDefinition = {
   id: 'the-first',
   name: 'The First',
-  idealUse: 'The Three, Second Chord 5. A house in working order, and nothing in it is safe.',
+  idealUse: 'The Second Chord, mission five. A house in working order, and nothing in it is safe.',
   seats: 1,
   widthM: 4000,
   heightM: 3000,
