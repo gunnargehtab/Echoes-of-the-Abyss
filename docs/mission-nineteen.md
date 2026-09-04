@@ -211,13 +211,11 @@ is about to do nineteen times. **The button is not a mistake and it is not free,
 says so rather than the mission punishing it in the dark.**
 
 **4. An interval is played by the hull it was given to.** Nineteen `MissionSounding` rows, each
-naming a carrier — the Voice one, the Corvettes four, four, four, three and three. A sounding's
-carrier is fixed at authoring (`MissionSounding.tag`), and the runtime's own comment names the
-consequence: a hull the mission has lost is "the ultimate broken hold". **So a hull entered at
-09:00 takes its intervals with it, and they are unplayable for the rest of the mission.** The
-Third carries four intervals and all four have a coil inside their metre; the Fifth carries three
-and none of them does. The count at 18:00 is not what the player attempted. It is what the Order
-has left.
+naming a carrier — the Voice one, the Corvettes four, four, four, three and three — fixed at
+authoring, and the runtime's own comment names the consequence: a hull the mission has lost is
+"the ultimate broken hold". **So a hull entered at 09:00 takes its intervals with it, and they are
+unplayable for the rest of the mission.** The count at 18:00 is not what the player attempted; it
+is what the Order has left.
 
 ### The SIG budget
 
@@ -328,16 +326,14 @@ mission's whole quiet cruelty.
 **The trench, and everything on it, and nothing of the walls.**
 
 - **The Fields, above and behind.** The Head and the shoulders are Resonance Field at PF 0.70,
-  ringing faintly the way crystal country always does
-  ([world-map.md](world-map.md)) — the pitched ambient bed
-  [mission-aptitude.md](mission-aptitude.md) §13 first asked the mix for.
-- **The axis, and what it does to everything.** PF 1.60 down the trench. A sounding at 80 is a
-  Contact to the watch from **9,582 m** and a Classification from **5,404 m**; the same tone
-  reaches the Voice's own ears from 8,103 m. There is no distance on this map at which an interval
-  is private.
+  ringing faintly the way crystal country always does ([world-map.md](world-map.md)) — the pitched
+  ambient bed [mission-aptitude.md](mission-aptitude.md) §13 first asked the mix for.
+- **The axis, and what it does to everything.** PF 1.60 down the trench: a sounding at 80 is a
+  Contact to the watch from **9,582 m** and a Classification from **5,404 m**, and reaches the
+  Voice's own ears from 8,103 m. There is no distance on this map at which an interval is private.
 - **The watch, walking.** 22 idle, 28 under way, on six authored legs at 60 m/s — 1,300 m of leg
-  in twenty-two seconds and then two and a half minutes of standing. Audible from the first tick
-  and classified from the first minute.
+  in twenty-two seconds, then two and a half minutes of standing. Audible from the first tick and
+  classified from the first minute.
 - **The walls: nothing.** Seven animals at SIG 3, which is under the Voice's Contact threshold at
   anything beyond 1,041 m and under a Corvette's at 883 m. **The player will cross this map
   hearing six of the seven only when they are already inside a Classification.** This is the
@@ -354,11 +350,11 @@ mission's whole quiet cruelty.
   from 3,772 m. The Order arrives on the bench announced, every time, and the climb home at 15 m/s
   is silent.
 
-And what is not here: no hazard site, no second Order party, no Consortium anywhere, no Spire, no
-structure of any kind, and no thermocline. The shallowest ground on the map is 1,600 m and the
-duct ends at 1,300, so every emitter-listener pair on this map is Below-to-Below and the layer's
-factor is 1 throughout — arranged exactly as [mission-aptitude.md](mission-aptitude.md) §11
-arranged it, so that the mission's one system is the only system talking.
+And what is not here: no hazard site, no second Order party, no Consortium anywhere, no structure
+of any kind, and no thermocline — the shallowest ground is 1,600 m and the duct ends at 1,300, so
+every pair on this map is Below-to-Below and the layer's factor is 1 throughout, arranged as
+[mission-aptitude.md](mission-aptitude.md) §11 arranged it so that the mission's one system is the
+only system talking.
 
 ---
 
@@ -415,9 +411,9 @@ does not grade inside it. That is not the ladder being lazy; it is the register 
 which of a rest and a berth is the larger number — a thing the Consortium could say in a sentence
 and the Knights cannot say at all.
 
-**How the close assembles**, in the order the runtime writes it: Sull's reading for the rung the
-count earned, then the watch's filed line in the same paragraph, then the eight objective readings
-on their own lines in authored order.
+**How the close assembles**, in the runtime's own order: Sull's reading for the rung the count
+earned, the watch's filed line in the same paragraph, then the eight objective readings on their
+own lines in authored order.
 
 - `the-nineteen` — met: "Nineteen are entered. The Order has not said their names in three years
   and has now played them, which is the only way the Order says anything." / unmet: "Entered
@@ -534,11 +530,11 @@ they have to see, and the basin at 16:30 taking a decision about the Voice while
 still be short.
 
 Underneath it, the campaign's real subject, and the same trick rule 2 plays on every faction:
-**the Order is told nothing about being few, poor, or mortal, and is now made to say the number
-out loud.** [mission-aptitude.md](mission-aptitude.md) taught six hulls inside one afternoon;
-[mission-standing-wave.md](mission-standing-wave.md) taught a budget that does not refill; this one
-gives the six hulls names and reads them out one at a time, and the player is the person who has
-to hear "the Third is entered" said about a thing they were commanding four minutes ago.
+**the Order is told nothing about being few, poor or mortal, and is now made to say the number out
+loud.** [mission-aptitude.md](mission-aptitude.md) taught six hulls inside one afternoon and
+[mission-standing-wave.md](mission-standing-wave.md) a budget that does not refill; this one gives
+the six hulls names and reads them out one at a time, and the player is the person who has to hear
+"the Third is entered" said about a thing they were commanding four minutes ago.
 
 And a third thing, which is why the mission is called what it is. **The title is a count, and the
 count is the mission.** Nineteen is the number of people the Order lost in one year and cannot
@@ -607,9 +603,9 @@ cutting anything today — no hazard sites, and `fauna: false`.
 **Why this ground argues the mission.** Three reasons and they are the three facts of §1.
 
 - **The party can stand over every metre of the trench and enter none of it.** The floor is
-  350–650 m under the rating everywhere, so there is no route, no bearing and no corner that gets
-  the party closer to the nineteen than four hundred metres. A map that had one would be a map
-  arguing with its own mission.
+  350–650 m under the rating everywhere, so no route, bearing or corner gets the party closer to
+  the nineteen than four hundred metres. A map that had one would be arguing with its own
+  mission.
 - **The walls are between the bench and everything.** Both sounding rows sit 250 m in plan from a
   wall and 250 m above the coils on it, which is what makes 433 m the number the whole mission
   turns on. Move either row 100 m toward the axis and the mission has no walls; move it 100 m the

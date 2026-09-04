@@ -48,12 +48,12 @@ nothing here: he is heard not calling, at every interval where the Third could h
 
 Three facts about this water decide the mission.
 
-**The lattice is a thing that can be cut.** Since the tuning, the concern's survey has filed: the
-outer Fields are now, in the Board's registry, a coring field under a works order.
-[Aptitude](mission-aptitude.md) §12's *"we have never written down that this water is ours and they
-have written down that it is not"* has become *they have written down that it is theirs*. A works
-column comes to core three formations on the tide of an appointed interval, and a house whose
-formations are broken has no voice in the next count.
+**The lattice is a thing that can be cut.** Since the tuning the concern's survey has filed, and the
+outer Fields are now a coring field in the Board's registry. [Aptitude](mission-aptitude.md) §12's
+*"we have never written down that this water is ours and they have written down that it is not"* has
+become *they have written down that it is theirs*. A works column comes to core three formations on
+the tide of an appointed interval, and a house whose formations are broken has no voice in the next
+count.
 
 **The room is off this map.** A chord is struck in the hall at the house's heart — the one room
 where nothing is struck and nothing is spoken, of which a conclave is the single exception. The
@@ -101,12 +101,11 @@ player's to lose. The Drift is not populated: `fauna` is off and no creature is 
 | Cruiser hull, Knight-rigged — *the Voice*, tag `the-voice` | 1 | SIG **55 idle / 65 live** in the cone · 19.25 / 22.75 flank · 5.5 / 6.5 wake · HYD 65 · PR-2 · armed ([units.md](units.md)) | Kalliso's hull and the party's ears, and the hull the six soundings are rigged to. It idles at 55 against a ceiling of 28, which is §4's fourth movement |
 | Corvette hull, Knight-rigged — tags `first` … `fifth` | 5 | SIG **28 cruise** in the cone · 9.8 flank · 2.8 wake · HYD 50 · +10 energy burst · PR-2 · armed | The working hulls. Twenty-eight is exactly the interval's ceiling, which is the one piece of luck the Third has |
 
-**Generic hulls flying Knight colours, and the roster is still the reason**
-([units.md](units.md) has no Knight entry) — unchanged from
-[mission-aptitude.md](mission-aptitude.md) §3, restated because §4's arithmetic is quoted off it. A
-louder roster moves every distance below outward together without changing which side of the trade
+**Generic hulls flying Knight colours, and the roster is still the reason** — unchanged from
+[mission-aptitude.md](mission-aptitude.md) §3 and restated because §4's arithmetic is quoted off it;
+a louder roster moves every distance below outward together without changing which side of the trade
 wins. Souls: **37**, twelve on the Voice and five on each Corvette
-([Nineteen](mission-nineteen.md)'s figures); nothing in the runtime reads the field and the readings
+([Nineteen](mission-nineteen.md)'s figures); nothing in the runtime reads the field, and the readings
 carry the count by hand.
 
 **The lattice.** Six `StructureKind.SoundingSpire`, prebuilt on the player's party at the six voice
@@ -242,11 +241,10 @@ The Drift has no row: this map seeds no fauna and none is authored.
 unarmed — the coring barge, and the slow part of every leg. `escort` is a Cruiser at 55 / 65 / +30,
 HYD 65, 1,200 HP, **150 damage at 900 m on a 2.5 s cycle**: the column's ears, and the listener every
 distance in §4 is quoted against. The three cutters are Corvettes at 28 / +25, HYD 50, 420 HP, **50
-damage at 550 m on a 1.2 s cycle**, cutter-fit — **their guns are the cutters**, and a formation is
-cored by being fired on. `relief-lead` and two relief Corvettes are the second element out of the
-Holding. All eight are seated at 1,700 m at 00:00: the hold at 150, 1100; the escort at 300, 1200;
-the cutters at 250, 1000 · 250, 1200 · 400, 1100; the relief standing off at the west edge at 100,
-2900 · 100, 3050 · 250, 2950.
+damage at 550 m on a 1.2 s cycle** — **their guns are the cutters**, and a formation is cored by
+being fired on. `relief-lead` and two relief Corvettes are the second element out of the Holding.
+All eight are seated at 1,700 m at 00:00: the hold at 150, 1100; the escort at 300, 1200; the cutters
+at 250, 1000 · 250, 1200 · 400, 1100; the relief standing off at 100, 2900 · 100, 3050 · 250, 2950.
 
 **Nobody here is wrong** ([campaign.md](campaign.md) §2 rule 1). The ground is filed, the order is a
 works order, the escort's posture is the one [Convocation](mission-convocation.md) §12 puts in the
@@ -256,11 +254,10 @@ obstruct* — and the Board is buying crystal it can neither make nor buy
 files what the column hears; he is the man who logged the Order as *the second fault this year*, and
 the fault has since been filed as ground.
 
-The party's seat is 4,258 m from the escort, and a Cruiser idling at 55 in 0.70 water is a contact
-to the Voice from **3,824 m**. **So the column is not audible at 00:00**, which is deliberate and is
-not a hole: what the Third has at the top of the tide is a writ on an open channel and Vrey's
-arithmetic, and the first thing it *hears* is a Cruiser's gun at 03:10, at 3,905 m, by which time a
-formation is already gone (§7).
+The party's seat is 4,258 m from the escort, and a Cruiser idling at 55 in 0.70 water is a contact to
+the Voice from **3,824 m**, so **the column is not audible at 00:00** — deliberate, and not a hole.
+What the Third has at the top of the tide is a writ on an open channel and Vrey's arithmetic; the
+first thing it *hears* is a Cruiser's gun at 03:10, at 3,905 m, by which time a formation is gone.
 
 **The legs, and their real arrival times.** The column stops to work and only fires when stopped, so
 the escort walks half a minute behind the cutters and a standing Cruiser covers every walk. Each
@@ -269,36 +266,32 @@ four hulls arrives spread, which is what a works column looks like when the barg
 
 | Ordered | Who | To | Standing by |
 | --- | --- | --- | --- |
-| 02:30 | the cutters | 800, 1250 · 1000, 1300 · 900, 1350 | ~02:39 (559–757 m at 85 m/s) |
-| 02:30 | `the-hold` | 900, 1250 | ~02:49 (765 m at 40 m/s) |
+| 02:30 | the cutters, then `the-hold` | 800, 1250 · 1000, 1300 · 900, 1350 — the hold at 900, 1250 | ~02:39 (559–757 m at 85 m/s); the hold ~02:49 (765 m at 40) |
 | 03:00 | `escort` | 700, 1400 | ~03:10 (447 m at 45 m/s) |
-| 05:00 | the cutters | 1000, 2850 · 1200, 2850 · 1100, 3150 | ~05:21 (1,562–1,811 m) |
-| 05:00 | `the-hold` | 1100, 2900 | ~05:42 (1,662 m) |
+| 05:00 | the cutters, then `the-hold` | 1000, 2850 · 1200, 2850 · 1100, 3150 — the hold at 1100, 2900 | ~05:21 (1,562–1,811 m); the hold ~05:42 (1,662 m) |
 | 05:45 | `escort` | 900, 2900 | ~06:19 (1,513 m) |
 | 09:00 | the relief | 1300, 3100 · 1350, 3250 · 1250, 3300 | ~09:27, and it does not move again |
-| 10:30 | the cutters | 2200, 3150 · 2400, 3150 · 2300, 3450 | ~10:45 (1,237 m) |
-| 10:30 | `the-hold` | 2300, 3200 | ~11:01 |
-| 11:15 | `escort` | 2100, 3200 | ~11:43 |
+| 10:30 | the cutters, then `the-hold` | 2200, 3150 · 2400, 3150 · 2300, 3450 — the hold at 2300, 3200 | ~10:45 (1,237 m); the hold ~11:01 |
+| 11:15 | `escort` | 2100, 3200 | ~11:43 (1,237 m) |
 
 Every stop is on Fields ground at 1,700 m — the Alto's southern cutter at (2300, 3450) included,
 because the Seam begins at y 3,500 (§11). **Three formations, in the order the writ names them: the
 Bass, the Drone, the Alto.** Unopposed, the Bass comes apart at about **02:53**, the Drone at about
-**05:35** and the Alto at about **10:59**. Descant, Tenor and Treble are not on the order and
-nothing goes near them.
+**05:35** and the Alto at about **10:59**; Descant, Tenor and Treble are not on the order and nothing
+goes near them.
 
 Naming follows [culture.md](culture.md) §4: Vrey, Sull and Kalliso are title-plus-family, because
-Knight families are finite and the family name is the one that is kept; Bramm is given-plus-family
-with no hyphen, because he is not Board. The other eight houses are voices on the lattice and are
-named only if the call is struck, which is the one line here nobody wants to hear.
+Knight families are finite and the family name is the one kept; Bramm is given-plus-family with no
+hyphen, because he is not Board. The other eight houses are voices on the lattice and are named only
+if the call is struck, which is the one line here nobody wants to hear.
 
 ---
 
 ## 6. The Six Voices, Stood
 
-The Third's outer lattice is a chord of seven: the house and its six formations, named for the
-voices they carry. The six points are [Aptitude](mission-aptitude.md) §6's, to the metre, because
-they are the same six formations and a document that moved them would be describing a different
-house.
+The Third's outer lattice is a chord of seven: the house and its six formations, named for the voices
+they carry. The six points are [Aptitude](mission-aptitude.md) §6's to the metre, because they are
+the same six formations and a document that moved them would be describing a different house.
 
 **What the interval asks is not what the tuning asked.** A year ago the ask was a tone into each,
 bow on, held. This tide it is the opposite: **a hull at each voice, quiet, and no tone at all.** The
@@ -383,10 +376,7 @@ Two counts and one refusal, and the refusal is the one that can be lost by actin
 | Id | Text, in register | Predicate | Standing |
 | --- | --- | --- | --- |
 | `descant-stood` | *Descant is stood. A hull at the voice, under the ceiling, for the interval.* | `{ kind: 'extract', role: 'party', region: 'descant', count: 1 }` | Terminal · revealed 13:30 |
-| `tenor-stood` | *Tenor is stood.* | `{ kind: 'extract', role: 'party', region: 'tenor', count: 1 }` | Terminal · revealed 13:30 |
-| `treble-stood` | *Treble is stood.* | `{ kind: 'extract', role: 'party', region: 'treble', count: 1 }` | Terminal · revealed 13:30 |
-| `alto-stood` | *Alto is stood.* | `{ kind: 'extract', role: 'party', region: 'alto', count: 1 }` | Terminal · revealed 13:30 |
-| `bass-stood` | *Bass is stood.* | `{ kind: 'extract', role: 'party', region: 'bass', count: 1 }` | Terminal · revealed 13:30 |
+| `tenor-stood`, `treble-stood`, `alto-stood`, `bass-stood` | *Tenor is stood.* · *Treble is stood.* · *Alto is stood.* · *Bass is stood.* | the same predicate, region by region | Terminal · revealed 13:30 |
 | `drone-stood` | *The Drone is stood. The chord does not certify without it.* | `{ kind: 'extract', role: 'party', region: 'the-drone', count: 1 }` | Terminal · **KEYSTONE** · revealed 13:30 |
 | `the-rest` | *The interval is the Third's. Nothing is struck. A rest is written down, it is played, and it is not an absence.* | `{ kind: 'endure', ticks: T(14, 30) }` | Terminal · **KEYSTONE** · shown from 00:00 |
 | `the-quiet` | *The Third is quiet at its own interval. Twenty-eight, and the Voice under silence.* | `{ kind: 'quiet', role: 'party', ceilingSig: 28 }` | Non-terminal, standing · revealed 13:30 |
@@ -527,10 +517,10 @@ has no tick:
 
 The column's transits are authored, not patrol AI, for the standing reason
 ([mission-sorrowgate.md](mission-sorrowgate.md) §9): a mission's beats happen at the time the
-document says they happen. The works order is why; the beats are when. Kalliso's 09:30 line is on
-the clock for a format reason rather than a taste one — every predicate is a query over the
-player's own force, so *the column has lost a cutter* is not a condition a beat can carry (§13) —
-and the line is written to be true whether or not the player has taken one.
+document says they happen. The works order is why; the beats are when. Kalliso's 09:30 line is on the
+clock for a format reason and not a taste one — every predicate is a query over the player's own
+force, so *the column has lost a cutter* is not a condition a beat can carry (§13) — and the line is
+written to be true whether or not the player has taken one.
 
 ---
 
@@ -632,9 +622,9 @@ mission ids.
 ## 12. The Briefing
 
 Spoken by Chapter-Master Halden Vrey from the Third, at the top of the interval. The Knight register
-is defined in [culture.md](culture.md) §3: precise, courteous, slightly archaic, musical and
-mathematical metaphor used literally rather than poetically, and unfailingly polite in a way that
-reads to everyone else as condescension.
+is defined in [culture.md](culture.md) §3: precise, courteous, slightly archaic, musical metaphor
+used literally rather than poetically, and unfailingly polite in a way that reads to everyone else as
+condescension.
 
 **Chapter-Master Halden Vrey, setting the interval — 00:00**
 
