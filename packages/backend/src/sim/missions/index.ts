@@ -13,6 +13,7 @@
 
 import { ATTENDING_ATTENDANCE } from './attendance.ts';
 import { ATTENDING_INTAKE } from './intake.ts';
+import { ATTENDING_SHALLOW } from './shallow.ts';
 import { ATTENDING_THE_DOME } from './theDome.ts';
 import { CHORD_APTITUDE } from './aptitude.ts';
 import { SEEDING_DEEP_FURROW } from './deepFurrow.ts';
@@ -42,6 +43,7 @@ export * from './runtime.ts';
 export {
   ATTENDING_ATTENDANCE,
   ATTENDING_INTAKE,
+  ATTENDING_SHALLOW,
   ATTENDING_THE_DOME,
   CHORD_APTITUDE,
   LEDGER_ASSET_RECOVERY,
@@ -80,6 +82,7 @@ export const MISSIONS: readonly MissionDefinition[] = [
   ATTENDING_ATTENDANCE,
   ATTENDING_INTAKE,
   ATTENDING_THE_DOME,
+  ATTENDING_SHALLOW,
   CHORD_APTITUDE,
 ];
 

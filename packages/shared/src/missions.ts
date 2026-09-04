@@ -573,6 +573,49 @@ export const ATTENDING_INTAKE_HEADER: MissionHeader = {
   ],
 };
 
+// Append to packages/shared/src/missions.ts, after ATTENDING_THE_DOME_HEADER,
+// and add ATTENDING_SHALLOW_HEADER to MISSION_HEADERS in the same order.
+// (The Attending 4, `attending-shallow`, on the `kell-shoulder` map — reused
+// unchanged from `seeding-thin-water`, and built and registered already.)
+
+export const ATTENDING_SHALLOW_HEADER: MissionHeader = {
+  id: 'attending-shallow',
+  campaign: 'attending',
+  ordinal: 4,
+  name: 'The Attending — Shallow',
+  premise:
+    'Marr has rung. The plateaus are turning a second seeding, garden by garden, and a cohort is on the Kell shoulder at three hundred and forty metres to hear which of them rings next.',
+  mapId: 'kell-shoulder',
+  // The tide turns at 19:00 (docs/mission-shallow.md §9), inside campaign.md
+  // §10's 12–25 — and the band is the document's own 1,080–1,200 s.
+  // Convocation's nineteen minutes, one tide earlier, chosen against the walk:
+  // the strip is 2,302 m from the seat and the Holdfast's window is three
+  // minutes in the middle of it.
+  lengthBandS: [1080, 1200],
+  /**
+   * Undermarshal Setha Korrin, assigning from Sufficiency to a column she
+   * cannot join — docs/mission-shallow.md §12, verbatim. There is no formula
+   * at the opening for the second time in the campaign: the Cantorate does not
+   * attend a shoulder.
+   *
+   * Public for Attendance's, Intake's and The Dome's reason, and one of its
+   * own: this is the briefing that states the *penalty* rather than the
+   * asset. Both halves of the shallow-water arithmetic — the fifth off the
+   * way a hull moves and the fifteen in a hundred off what it is made of —
+   * are read out before the first order is given, "so that nobody performs
+   * the arithmetic for the first time while being asked for an asset number".
+   * It withholds the only thing the Directorate withholds, which is what a
+   * garden has decided.
+   */
+  briefing: [
+    "A cohort of the Fourth is on the Kell shoulder at three hundred and forty metres. It went up the slope in the tide's dark and it is lying quiet, and it is above the line, and it has been above the line since before this was said.",
+    'The shallows take a fifth of the way a hull moves and fifteen in a hundred of what it is made of. The fifteen is taken once, it is taken in twenty seconds, and it is not given back when the hull comes down. That is written where it has always been written and it is stated here so that nobody performs the arithmetic for the first time while being asked for an asset number.',
+    'Marr rang off-tide. The plateaus are turning a second seeding, garden by garden, and what a garden decides about the deep is not sent to those below and never has been. It is heard, or it is not heard. It is at twelve, it is in kelp, and it is north of a corridor that is closed to everyone including the people who posted it.',
+    "The Undermarshalcy is not present. It cannot be. What is entered will be entered by the stalls and read at the turn, and the reading will not be improved by anybody's having been there. Five of ten is sufficiency. The Undermarshalcy does not round up.",
+    "The column is asked to be under the line at the tide's turn. It is not asked to be anywhere else.",
+  ],
+};
+
 export const CHORD_APTITUDE_HEADER: MissionHeader = {
   id: 'chord-aptitude',
   campaign: 'chord',
@@ -618,6 +661,7 @@ export const MISSION_HEADERS: readonly MissionHeader[] = [
   ATTENDING_ATTENDANCE_HEADER,
   ATTENDING_INTAKE_HEADER,
   ATTENDING_THE_DOME_HEADER,
+  ATTENDING_SHALLOW_HEADER,
   CHORD_APTITUDE_HEADER,
 ];
 
