@@ -589,6 +589,35 @@ describe('what the day hears — docs/mission-deep-furrow.md §7', () => {
     );
   });
 
+  it('completes §7’s home-water table — the sowing heard up the cleft, and the cleft waking', () => {
+    // The two rows of §7's first table that are not the sill's and not the
+    // Drift's, and §13 asks for every figure in §6 and §7 re-derived rather
+    // than most of them: what home hears of the work, and what home hears of
+    // the doorway closing behind the hulls that stayed.
+    //
+    // The sowing, from home water: a Bearing and no more. "The plateau hears
+    // that the seed is going in and cannot hear whether it takes" — the whole
+    // of §4.4 in one ratio, and it is the layer that does it.
+    near(terrain.pathPropagation(SOWING.x, SOWING.y, FOOT.x, FOOT.y), 1.53, 0.01, '§7: the walk');
+    assert.equal(thermoclineFactor(SOWING.depthM, FOOT.depthM), 0.3, '§7: across the layer');
+    near(Math.round(Math.hypot(FOOT.x - SOWING.x, FOOT.y - SOWING.y)), 1976, 1, '§7: 1,976 m');
+    const sowingHeard = ratio(45, SOWING, FOOT, SCOUT.hyd);
+    near(sowingHeard, 1.66, 0.01, '§7: a Bearing, and the plateau cannot hear whether it takes');
+    assert.ok(
+      sowingHeard >= TIER_THRESHOLD_MULTIPLIER.BEARING &&
+        sowingHeard < TIER_THRESHOLD_MULTIPLIER.CLASSIFICATION,
+      '§7: a Bearing — no more, and not nothing'
+    );
+    // A Hollow striking at the throat's centre at 15:00, heard from home
+    // water: Track, across the layer, at 650 m. "A watch that went home hears
+    // the doorway close behind the ones that stayed."
+    const centre = { x: 2000, y: 900, depthM: HOLLOW.workingDepthM };
+    near(terrain.pathPropagation(centre.x, centre.y, FOOT.x, FOOT.y), 1.4, 0.01, '§7: the walk');
+    const waking = ratio(HOLLOW.sigActive, centre, FOOT, SCOUT.hyd);
+    near(waking, 12.0, 0.05, '§7: the cleft waking is heard from home water');
+    assert.ok(waking >= TIER_THRESHOLD_MULTIPLIER.TRACK, '§7: Track');
+  });
+
   it('gives the watch a bearing on each wall from the middle of the road', () => {
     // §7's "the Drift's own Silent Running, priced at three, and exactly
     // enough to know where not to dive" — and the tender's deafness beside it,
@@ -734,18 +763,86 @@ describe('the objective, as docs/mission-deep-furrow.md §8 chooses it', () => {
     );
     assert.equal(byId('sown').revealAtTick, undefined, '§8: sown is shown from 00:00');
     assert.equal(byId('the-day').revealAtTick, undefined);
-    // §8's residual, measured rather than asserted: a day that leaves the
-    // garden at 15:54 is at the Foot by 18:00, so there are twenty-four
-    // seconds in which a plateau can read as having stayed and be gone.
+    // §8's residual, re-derived leg by leg from the document's own three
+    // figures rather than from a route of the test's choosing: "thirty seconds
+    // to the top of the garden's water, thirty-nine up the throat silent,
+    // fifty-seven to the Foot". The legs are sequential because the floors
+    // step — a hull at 2,200 m is below the cleft's 1,800 and cannot move
+    // north until it has climbed, and it cannot enter the Foot's 900 m water
+    // until it has climbed again.
+    const cleft = ANHOLT_FURROW.regions.find((r) => r.floorM === 1800)!;
+    assert.equal(cleft.heightM, 1250, '§11: the throat is the cleft’s own height');
     const climbGarden = (2200 - 1750) / DEPTH.ASCENT_RATE_MPS;
-    const throatRun = (1750 - 900) / DEPTH.ASCENT_RATE_MPS;
-    const runHome = 1875 / (HARVESTER.speed * SILENT_RUNNING.PELAGIA_SPEED_MULTIPLIER);
+    const throatRun = cleft.heightM / (HARVESTER.speed * SILENT_RUNNING.PELAGIA_SPEED_MULTIPLIER);
+    const climbThroat = (1750 - 900) / DEPTH.ASCENT_RATE_MPS;
     near(climbGarden, 30, 0.1, '§8: thirty seconds to the top of the garden’s water');
-    near(throatRun, 56.7, 0.5, '§8: and up the throat');
-    assert.ok(
-      climbGarden + throatRun + runHome < (T(18) - T(15, 30)) / SIM.TICK_HZ,
-      '§8: the residual is real, and the document owns it'
+    near(throatRun, 39, 0.1, '§8: thirty-nine up the throat silent — the cleft’s own 1,250 m');
+    near(climbThroat, 57, 0.5, '§8: fifty-seven to the Foot');
+    // And the figure the whole row hangs on: the window between the reveal and
+    // the tide, less the trip home, is the number §8 prints. A residual that
+    // quietly grew would mean a plateau could be read as having stayed with
+    // minutes to spare, which is the reading §8 argues is worse than this one.
+    const home = climbGarden + throatRun + climbThroat;
+    near(home, 125.7, 0.5, '§8: a day that leaves the garden at 15:54 is home by 18:00');
+    near(
+      (T(18) - T(15, 30)) / SIM.TICK_HZ - home,
+      24,
+      0.5,
+      '§8: a twenty-four-second window in which a plateau can read as having stayed and be gone'
     );
+  });
+
+  it('scores nothing of *tended* before 15:30, with two tenders standing in the furrows', () => {
+    // The trap the reveal exists for, played rather than reasoned about.
+    // `extract` is not standing, so a row that latched Met at 02:00 would still
+    // read Met at the tide over a day that went home at 15:30 — and the only
+    // thing between the literal and that reading is `revealAtTick`. So the
+    // assertion is that the row is not on the wire at all before its beat, and
+    // that its marker is not either (`projectMissionView` ships a marker only
+    // while an objective naming it is revealed).
+    const match = furrowMatch();
+    const tenderEids = () =>
+      hulls(match.world).filter(
+        (eid) => Owner.slot[eid] === PLAYER && Unit.kind[eid] === UnitKind.Harvester
+      );
+    let sawTendedEarly = false;
+    let sawMarkerEarly = false;
+    let revealedAtTick = -1;
+    for (let tick = 0; tick <= T(15, 30); tick++) {
+      const now = match.world.tick;
+      const eids = tenderEids();
+      if (now === T(0, 1)) for (const eid of eids) match.orderMove(PLAYER, eid, MOUTH.x, MOUTH.y);
+      if (now === T(0, 12)) for (const eid of eids) match.orderDepth(PLAYER, eid, 1750);
+      if (now === T(0, 40)) {
+        for (const eid of eids) match.orderMove(PLAYER, eid, GARDEN.x, GARDEN.y);
+      }
+      if (now === T(1, 30)) for (const eid of eids) match.orderDepth(PLAYER, eid, 2200);
+      match.update(STEP_MS);
+      const view = match.takeMissionView();
+      if (view === null) continue;
+      const tended = view.objectives.find((o) => o.id === 'tended');
+      if (tended !== undefined) {
+        if (view.tick < T(15, 30)) sawTendedEarly = true;
+        else if (revealedAtTick < 0) revealedAtTick = view.tick;
+      }
+      if (view.tick < T(15, 30) && view.markers.some((marker) => marker.id === 'the-furrows')) {
+        sawMarkerEarly = true;
+      }
+    }
+    // The premise of the trap: the hulls really are in the region the row
+    // counts, and have been since about 02:00.
+    const both = region('the-furrows');
+    const inside = tenderEids().filter(
+      (eid) =>
+        Position.x[eid]! >= both.x &&
+        Position.x[eid]! <= both.x + both.widthM &&
+        Position.y[eid]! >= both.y &&
+        Position.y[eid]! <= both.y + both.heightM
+    );
+    assert.ok(inside.length >= 2, '§8: two tenders are standing in the furrows well before 15:30');
+    assert.equal(sawTendedEarly, false, '§8: not scored, and not shown, before the roll');
+    assert.equal(sawMarkerEarly, false, '§8: and the marker it names stays off the wire with it');
+    assert.equal(revealedAtTick, T(15, 30), '§8: revealed on the beat, and on that beat');
   });
 
   it('reads all three of Marr’s results, and lets a plateau that planted nothing be a result', () => {

@@ -379,23 +379,23 @@ export const SEEDING_DEEP_FURROW: MissionDefinition = {
   locks: [
     {
       ability: 'weapons',
-      reason: 'not grown — a garden’s watch is ears, and a garden’s freight is seed',
+      reason: "not grown — a garden's watch is ears, and a garden's freight is seed",
     },
     {
       ability: 'torpedoes',
-      reason: 'not grown — a garden’s watch is ears, and a garden’s freight is seed',
+      reason: "not grown — a garden's watch is ears, and a garden's freight is seed",
     },
     {
       ability: 'mines',
-      reason: 'not grown — a garden’s watch is ears, and a garden’s freight is seed',
+      reason: "not grown — a garden's watch is ears, and a garden's freight is seed",
     },
     {
       ability: 'depthCharges',
-      reason: 'not grown — a garden’s watch is ears, and a garden’s freight is seed',
+      reason: "not grown — a garden's watch is ears, and a garden's freight is seed",
     },
     {
       ability: 'noisemakers',
-      reason: 'not grown — a garden’s watch is ears, and a garden’s freight is seed',
+      reason: "not grown — a garden's watch is ears, and a garden's freight is seed",
     },
     {
       ability: 'construction',
@@ -693,7 +693,7 @@ export const SEEDING_DEEP_FURROW: MissionDefinition = {
     {
       kind: 'say',
       speaker: 'The observer, for those below',
-      text: 'It is entered. The band is the Second’s. What was stated in 205 was stated in writing because the plateaus keep none, and it is stated again now, in the band, so that it is kept somewhere.',
+      text: "It is entered. The band is the Second's. What was stated in 205 was stated in writing because the plateaus keep none, and it is stated again now, in the band, so that it is kept somewhere.",
       note: 'The same event, in the only register that can hear a garden as a claim. Nobody is wrong (campaign.md §2, rule 1)',
       when: { kind: 'sound', count: 1 },
     },
