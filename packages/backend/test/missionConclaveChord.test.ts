@@ -20,10 +20,12 @@
  * - **The lattice is the party's armour, and its own hull points are the
  *   telegraph** (§6, §7, §8). Every column seat is outside its own gun's reach
  *   of a formation, every stop is inside it, and the legs arrive when §5 says.
- * - **§7 is wrong about one thing, and the correction is pinned here** rather
- *   than authored into the literal: the cutters' *nearest* Bass stop is
- *   3,590 m from the party's seat and not 3,775 m, which is inside the Voice's
- *   3,737 m rather than thirty-eight metres outside it.
+ * - **The two places §7's own arithmetic decides something, pinned here.** The
+ *   Bass stops are held to 3,590 / 3,699 / 3,775 m against the cutters'
+ *   3,737 m, because §7 once read the farthest of the three as the nearest and
+ *   concluded the opposite of what the water does (§13 records the repair). And
+ *   the "Fields ring" paragraph is held to what the column can actually resolve
+ *   from its seats: the Bass and the Drone, and not the Alto.
  */
 
 import { describe, it } from 'node:test';
@@ -200,6 +202,21 @@ describe('the Third’s party, as docs/mission-conclave-chord.md §3 fields it',
       UnitKind.Cruiser,
       '§3: Kalliso’s hull and the party’s ears'
     );
+    // §11's seat table, to the metre, and §3's roster beside it. Every distance
+    // §5, §6 and §7 quote is measured off these six points, so they are the one
+    // piece of data in the party worth asserting outright.
+    assert.deepEqual(
+      player.units.map((unit) => [unit.tag, unit.kind, unit.x, unit.y]),
+      [
+        ['the-voice', UnitKind.Cruiser, 4500, 500],
+        ['first', UnitKind.Corvette, 4300, 400],
+        ['second', UnitKind.Corvette, 4700, 400],
+        ['third', UnitKind.Corvette, 4200, 600],
+        ['fourth', UnitKind.Corvette, 4800, 600],
+        ['fifth', UnitKind.Corvette, 4500, 700],
+      ],
+      '§11: the party, seated at the Approach'
+    );
     for (const unit of player.units) {
       assert.equal(unit.role, 'party', '§8: one role, and the mission never marks a hull');
       assert.equal(unit.armed, true, '§5: armed, and told not to win');
@@ -303,6 +320,28 @@ describe('the Third’s party, as docs/mission-conclave-chord.md §3 fields it',
     for (const beat of CHORD_CONCLAVE.conditionalBeats ?? []) {
       assert.equal(beat.choiceGroup, undefined, '§9: nothing here is exclusive with anything');
     }
+    // §9's second table, whole: four conditional beats and no fifth — three on
+    // the first completed tone and one on the concern's documented reflex. The
+    // relief is scheduled rather than conditional because the works order was
+    // written before anybody heard the Order.
+    assert.equal(CHORD_CONCLAVE.conditionalBeats?.length, 4);
+    assert.deepEqual(CHORD_CONCLAVE.conditionalBeats?.[3]?.when, {
+      kind: 'tolerance',
+      ticks: 30 * SIM.TICK_HZ,
+      tier: ResolutionTier.Classification,
+    });
+    // The one that matters: the tone fails `the-rest`, latched, and no other
+    // conditional touches an objective.
+    const failures = (CHORD_CONCLAVE.conditionalBeats ?? []).filter(
+      (beat) => beat.kind === 'objective'
+    );
+    assert.equal(failures.length, 1);
+    assert.equal(failures[0]!.kind === 'objective' && failures[0]!.id, 'the-rest');
+    assert.equal(
+      failures[0]!.kind === 'objective' && failures[0]!.status,
+      ObjectiveStatus.Failed,
+      '§8: the first completed tone fails the rest'
+    );
   });
 });
 
@@ -427,6 +466,23 @@ describe('the works, as docs/mission-conclave-chord.md §5 seats it', () => {
       assert.equal(unit.role, undefined, 'a role on a scripted hull is another party in a counter');
       assert.equal(unit.depthM, 1700, '§11: the Fields’ floor');
     }
+    // §5's seat table, to the metre. Every arrival time below is walked from
+    // these eight points, and §7's whole "what is heard" section is measured
+    // against the escort's and the relief's.
+    assert.deepEqual(
+      works.units.map((unit) => [unit.tag, unit.x, unit.y]),
+      [
+        ['the-hold', 150, 2000],
+        ['escort', 300, 2100],
+        ['cutter-one', 250, 1900],
+        ['cutter-two', 250, 2100],
+        ['cutter-three', 400, 2000],
+        ['relief-lead', 100, 2900],
+        ['relief-one', 100, 3050],
+        ['relief-two', 250, 2950],
+      ],
+      '§5: seated on the west edge, off the writ’s first stop'
+    );
   });
 
   it('seats every hull outside its own gun’s reach of a formation', () => {
@@ -478,6 +534,7 @@ describe('the works, as docs/mission-conclave-chord.md §5 seats it', () => {
     assert.equal(Math.round(standsAt('the-hold', 0)), 177);
     assert.equal(Math.round(standsAt('escort', 0)), 198);
     // Leg two, onto the Drone: ~05:18–05:21, the hold ~05:42, the escort ~06:19.
+    assert.equal(Math.round(standsAt('cutter-one', 1)), 319);
     assert.equal(Math.round(standsAt('cutter-two', 1)), 318);
     assert.equal(Math.round(standsAt('cutter-three', 1)), 321);
     assert.equal(Math.round(standsAt('the-hold', 1)), 342);
@@ -558,49 +615,78 @@ describe('what is heard — docs/mission-conclave-chord.md §7', () => {
     assert.equal(Math.round(dist(SEAT, first)), 3905);
     assert.ok(dist(SEAT, first) > idle, '§7: inaudible again the moment it stands');
     assert.ok(dist(SEAT, first) < underWay, '§7: it was audible while it walked');
-    // 4,326.7 m. §7 prints "4,326", which is the one distance in the document
-    // truncated rather than rounded — every other figure in §5 and §7 rounds to
-    // nearest. Recorded here rather than smoothed over, because the claim that
-    // matters is the inequality on the line below and it is unaffected.
+    // 4,326.7 m, which §7 prints as 4,327 — it read 4,326 until the same pass
+    // that repaired the Bass stops, being the one distance in the document
+    // truncated where every other figure in §5 and §7 rounds to nearest. The
+    // claim it is quoted for is the inequality on the line below, unaffected
+    // either way.
     assert.equal(Math.round(dist(SEAT, second)), 4327);
     assert.ok(dist(SEAT, second) > underWay, '§7: the second walk ends outside the ear');
   });
 
-  it('lets the column resolve the two formations it stands over before it moves', () => {
+  it('lets the column resolve two of the writ’s three formations before it moves', () => {
     // §7: to the escort at HYD 65 a formation at 30 is a bearing from 2,032 m
-    // and a classification from 1,477 m. The Bass and the Drone are inside
-    // that from the seat, which is why the writ names formations and not a
-    // search — the Alto is not, and §1 has the survey filing the ground first.
+    // and a classification from 1,477 m.
+    //
+    // **A second defect in §7's prose, pinned rather than authored around.**
+    // The paragraph reads "the column resolved this lattice from over a
+    // kilometre out before it moved, which is why the writ names three
+    // formations and not a search". From the seats §5 authors it resolved
+    // *two* of the three: the Bass at 1,166 m and the Drone at 1,204 m are
+    // inside the escort's classification, and the Alto at 2,332 m is outside
+    // even its 2,032 m bearing — as is the nearest relief seat, at 2,236 m.
+    // §1's "the concern's survey has filed" already supplies the third, so the
+    // sentence is over-claimed rather than load-bearing; nothing in the writ
+    // moves. Held by test in both directions so a rewrite of either is felt.
     assert.equal(heardBy(SPIRE.sigIdle, ESCORT_HYD, ResolutionTier.Bearing), 2032);
+    const bearing = heardBy(SPIRE.sigIdle, ESCORT_HYD, ResolutionTier.Bearing);
     const classified = heardBy(SPIRE.sigIdle, ESCORT_HYD, ResolutionTier.Classification);
     assert.equal(classified, 1477);
+    assert.equal(Math.round(dist(hull('escort'), spire('bass'))), 1166);
+    assert.equal(Math.round(dist(hull('escort'), spire('the-drone'))), 1204);
     assert.ok(dist(hull('escort'), spire('bass')) < classified);
     assert.ok(dist(hull('escort'), spire('the-drone')) < classified);
+    // The Alto, from every seat the column has, against the escort's own ears —
+    // the best on the writ's side of the map.
+    assert.equal(Math.round(dist(hull('escort'), spire('alto'))), 2332);
+    assert.equal(Math.round(dist(hull('relief-lead'), spire('alto'))), 2236);
+    for (const unit of works.units) {
+      assert.ok(
+        dist(unit, spire('alto')) > bearing,
+        `${unit.tag}: §7's "resolved this lattice" would hold for the Alto after all`
+      );
+    }
   });
 
-  it('corrects §7: the nearest Bass stop is inside the Voice’s ear, not outside it', () => {
-    // **A defect in the document, pinned rather than authored.** §7 says the
-    // cutters "firing at 53 are a contact from 3,737 m, and their nearest Bass
-    // stop is 3,775 m from the party's seat. Thirty-eight metres outside it —
-    // so a party that has not moved hears nothing at 02:40."
-    //
-    // 3,775 m is the *farthest* of §5's three Bass stops. From the seat they
-    // are 3,590 m, 3,699 m and 3,775 m, so two of the three are inside the
-    // Voice's ear and a party that has not moved does hear the lattice being
-    // cut. §5's stops are the authored fact and the literal transcribes them
-    // unchanged; only §7's inference is wrong, and it errs toward a louder
-    // telegraph than the document claims rather than a quieter one.
-    const firing = heardBy(
-      CORVETTE.sigCruise + CORVETTE.sigFiringBurst,
-      CRUISER.hyd,
-      ResolutionTier.Contact
-    );
+  it('reads §7’s three Bass stops the way the water does, nearest first', () => {
+    // §7 once called 3,775 m the cutters' *nearest* Bass stop and concluded
+    // that a party which has not moved hears nothing at 02:40. It is the
+    // *farthest* of §5's three: from the seat they are 3,590 m, 3,699 m and
+    // 3,775 m, so two of the three are inside the Voice's 3,737 m and the
+    // party does hear the lattice being cut without moving — as a directionless
+    // Tier 1 smudge, because a bearing on a cutter at 53 wants 2,900 m and a
+    // classification 2,108, and the nearest stop is outside both. §5's stops
+    // were the authored fact and the literal transcribes them unchanged; §7 is
+    // corrected and §13 records it. Pinned here so it cannot be lost again.
+    const cutterSig = CORVETTE.sigCruise + firingSigFor(Faction.Bathyarch, CORVETTE.sigFiringBurst);
+    assert.equal(cutterSig, 53);
+    const firing = heardBy(cutterSig, CRUISER.hyd, ResolutionTier.Contact);
     assert.equal(firing, 3737, '§7: the cutters firing at 53');
     const bassStops = ['cutter-one', 'cutter-two', 'cutter-three']
       .map((tag) => Math.round(dist(SEAT, stopsFor(tag)[0]!)))
       .sort((a, b) => a - b);
     assert.deepEqual(bassStops, [3590, 3699, 3775]);
-    assert.ok(bassStops[0]! < firing, '§7 reads the farthest stop as the nearest');
+    assert.ok(bassStops[0]! < firing, '§7: two of the three are inside the Voice’s ear');
+    assert.ok(bassStops[1]! < firing);
+    assert.ok(bassStops[2]! > firing, '§7: and only the farthest is outside it');
+    // The smudge, and the whole of it: no bearing and no classification.
+    assert.equal(
+      heardBy(cutterSig, CRUISER.hyd, ResolutionTier.Bearing),
+      2900,
+      '§7: a bearing on a cutter at 53 wants 2,900 m'
+    );
+    assert.equal(heardBy(cutterSig, CRUISER.hyd, ResolutionTier.Classification), 2108);
+    assert.ok(bassStops[0]! > 2900, '§7: the nearest stop is outside both');
     // And the half of §8's telegraph that needs no ear at all: the lattice is
     // the player's own force, so the Bass's hull points fall on their own panel
     // while they fall, eleven and a half minutes before the close.
@@ -655,10 +741,19 @@ describe('the six voices, stood — docs/mission-conclave-chord.md §6 and §8',
       assert.ok(row.reading !== undefined, `${row.id}: the close cannot read it`);
       assert.equal(row.markerId, row.id.replace(/-stood$/, ''));
     }
+    // §8 and §9: the reveal needs a beat on its own tick (`missions.test.ts`
+    // holds every mission to that), and this mission's is Vrey handing the six
+    // voices over — not any beat that happens to share the tick.
+    const handover = CHORD_CONCLAVE.beats.find((beat) => beat.atTick === T(13, 30))!;
+    assert.equal(handover.kind, 'say');
     assert.equal(
-      CHORD_CONCLAVE.beats.some((beat) => beat.atTick === T(13, 30)),
-      true,
-      '§9: a say beat shares the tick, as the format requires'
+      handover.kind === 'say' && handover.speaker,
+      'Chapter-Master Halden Vrey',
+      '§12: the thirty-seconds line'
+    );
+    assert.match(
+      handover.kind === 'say' ? handover.text : '',
+      /^Thirty seconds\. Six voices, and the ceiling is twenty-eight\./
     );
   });
 
@@ -934,6 +1029,59 @@ describe('the close, as docs/mission-conclave-chord.md §8 and §9 read it', () 
       ticks: 30 * SIM.TICK_HZ,
       tier: ResolutionTier.Classification,
     });
+    // §8's "Text, in register" column, verbatim. The panel is the only place
+    // the player is told what the interval asks, and campaign.md §10 forbids
+    // assembling one — so the nine strings are the document's or they are
+    // wrong, and a paraphrase is not a smaller failure than a missing row.
+    assert.deepEqual(
+      CHORD_CONCLAVE.objectives.map((o) => o.text),
+      [
+        'Descant is stood. A hull at the voice, under the ceiling, for the interval.',
+        'Tenor is stood.',
+        'Treble is stood.',
+        'Alto is stood.',
+        'Bass is stood.',
+        'The Drone is stood. The chord does not certify without it.',
+        "The interval is the Third's. Nothing is struck. A rest is written down, it is played, and it is not an absence.",
+        'The Third is quiet at its own interval. Twenty-eight, and the Voice under silence.',
+        'A concern is coring under a writ. What is classified of the party is filed, and the escort defines obstruction.',
+      ]
+    );
+    // §8's readings, in the document's own template: the voice rows carry the
+    // placeholder filled with the name, and the Drone's marker is the one §8
+    // quotes outright.
+    assert.deepEqual(
+      ['descant-stood', 'the-drone-stood']
+        .map((id) => CHORD_CONCLAVE.objectives.find((o) => o.id === id)!)
+        .map((row) => [row.reading!.met, row.reading!.unmet]),
+      [
+        ['Descant was stood.', 'Descant was not stood. The interval passed it as drift.'],
+        ['The Drone was stood.', 'The Drone was not stood. The interval passed it as drift.'],
+      ]
+    );
+    assert.equal(
+      CHORD_CONCLAVE.markers.find((marker) => marker.id === 'the-drone')!.label,
+      'The Drone. The chord does not certify without it.',
+      '§8: the Drone’s marker, verbatim'
+    );
+  });
+
+  it('runs the mission to its own resolve, with nothing that could close it early', () => {
+    // Trap two, as data: a terminal row met at tick zero would close the
+    // mission on its first pass unless `runsItsLength` says otherwise, and this
+    // literal authors neither the flag nor the need for it. Six of the seven
+    // terminal rows are withheld from derivation until 13:30 and the seventh is
+    // an `endure` that cannot read Met before 14:30, so `terminal.every(Met)`
+    // is false on every pass before the close's own. Driven at the runtime in
+    // the suite above; asserted here as the two authored facts it rests on.
+    assert.equal(CHORD_CONCLAVE.runsItsLength, undefined, '§8: nothing needs the flag');
+    for (const row of CHORD_CONCLAVE.objectives) {
+      if (row.terminal !== true) continue;
+      const withheld = row.revealAtTick === T(13, 30);
+      const endures = row.predicate.kind === 'endure';
+      assert.ok(withheld || endures, `${row.id}: terminal, derived from tick zero, and latching`);
+      assert.equal(row.initial, ObjectiveStatus.Pending);
+    }
   });
 
   it('closes at fourteen-thirty as a conclusion, and clears §10 anyway', () => {
@@ -967,6 +1115,33 @@ describe('the close, as docs/mission-conclave-chord.md §8 and §9 read it', () 
       .filter((beat) => beat.kind === 'say')
       .map((beat) => beat.atTick);
     assert.deepEqual(said, [0, T(0, 30), T(8), T(9, 30), T(13, 30), T(14), T(14, 30)]);
+    // §13: twenty-six beats — eighteen `move`, seven `say`, one `resolve`, and
+    // nothing else. The breakdown is the assertion that catches a beat added or
+    // dropped, and it is where the absent kinds are held: no `creature`, so
+    // nothing in this mission carries a species' working depth (§2), and no
+    // `ping`, `silent`, `lose`, `release`, `ground`, `bell` or `objective`.
+    assert.equal(CHORD_CONCLAVE.beats.length, 26);
+    const kinds = new Map<string, number>();
+    for (const beat of CHORD_CONCLAVE.beats) kinds.set(beat.kind, (kinds.get(beat.kind) ?? 0) + 1);
+    assert.deepEqual([...kinds].sort(), [
+      ['move', 18],
+      ['resolve', 1],
+      ['say', 7],
+    ]);
+    // §5's three legs, in the order the writ names them: the Bass, the Drone,
+    // the Alto, with the escort ordered half a minute behind each.
+    assert.deepEqual(
+      CHORD_CONCLAVE.beats.filter((beat) => beat.kind === 'move').map((beat) => beat.atTick),
+      [
+        ...Array<number>(4).fill(T(2, 30)),
+        T(3),
+        ...Array<number>(4).fill(T(5)),
+        T(5, 45),
+        ...Array<number>(3).fill(T(9)),
+        ...Array<number>(4).fill(T(10, 30)),
+        T(11, 15),
+      ]
+    );
     for (let i = 1; i < CHORD_CONCLAVE.beats.length; i++) {
       assert.ok(
         CHORD_CONCLAVE.beats[i]!.atTick >= CHORD_CONCLAVE.beats[i - 1]!.atTick,

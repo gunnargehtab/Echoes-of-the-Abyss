@@ -54,16 +54,18 @@
  *    player who presses it at 14:00 still scores Complete. The document says
  *    so rather than letting a reader assume the ceiling caught it.
  *
- * And one finding this literal makes against its own document, stated here
- * rather than authored in: §7 says the cutters' "nearest Bass stop is 3,775 m
- * from the party's seat" against 3,737 m of firing contact, and concludes that
- * a party which has not moved hears nothing at 02:40. 3,775 m is the *farthest*
- * of §5's three Bass stops. From the seat at 4,500, 500 they are 3,590 m
+ * And one finding this transcription made against its own document, which §7
+ * has since been corrected for and §13 records: §7 used to call 3,775 m the
+ * cutters' *nearest* Bass stop, against 3,737 m of firing contact, and concluded
+ * that a party which has not moved hears nothing at 02:40. 3,775 m is the
+ * *farthest* of §5's three stops. From the seat at 4,500, 500 they are 3,590 m
  * (1,000, 1,300), 3,699 m (900, 1,350) and 3,775 m (800, 1,250), so two of the
  * three are inside the Voice's ear and the party does hear the Bass being cut
- * without moving. §5's stops are the authored fact and are transcribed
- * unchanged; only §7's inference off them is wrong, and it errs toward a
- * louder telegraph rather than a quieter one.
+ * without moving. **§5's stops were the authored fact and are transcribed here
+ * unchanged** — the repair belonged in §7's inference and not in the water, and
+ * it ran toward a louder telegraph rather than a quieter one, so nothing in §8's
+ * telegraph argument moved. The test pins all three distances so the correction
+ * cannot be lost again.
  */
 
 import {
@@ -685,7 +687,7 @@ export const CHORD_CONCLAVE: MissionDefinition = {
       atTick: 0,
       kind: 'say',
       speaker: 'Chapter-Master Halden Vrey',
-      text: 'Good. You have stood this ground before and you stood it quiet, and the only thing that has changed is what is standing on it. The interval is at fourteen. It is the Third’s, it is appointed, and the Order will be listening at it. What the other eight houses will hear from this house at fourteen is nothing. I would like you to understand that the nothing is the instruction.',
+      text: 'Good. You have stood this ground before and you stood it quiet, and the only thing that has changed is what is standing on it. The interval is at fourteen. It is the Third’s, it is appointed, and the Order will be listening at it, because that is the whole of what an interval is. What the other eight houses will hear from this house at fourteen is nothing. I would like you to understand that the nothing is the instruction.',
       note: '§9, §12 — Vrey sets the interval. Read, not heard: the standing status of the say channel',
     },
     {
@@ -747,7 +749,7 @@ export const CHORD_CONCLAVE: MissionDefinition = {
       tag: 'escort',
       x: 900,
       y: 2900,
-      note: '§7 — twenty-nine seconds of the same smudge, ending outside the Voice’s ear at 4,326 m',
+      note: '§7 — twenty-nine seconds of the same smudge, ending outside the Voice’s ear at 4,327 m',
     },
 
     {
