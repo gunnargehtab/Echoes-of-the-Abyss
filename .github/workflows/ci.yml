@@ -89,10 +89,14 @@ jobs:
       - name: Build shared package
         run: npm run build:shared
 
-      # The shared and frontend suites are a few seconds between them, so they
-      # ride along with the first shard rather than earning a job of their own.
+      # The shared and frontend suites are ten seconds between them, so they
+      # ride along with a shard rather than earning a job of their own. The
+      # last shard, because `--test-shard` deals files out in name order and
+      # the heaviest mission files fall to the first: on the first run shard 1
+      # finished 38 s behind shard 2, and these ten seconds belong on the
+      # lighter side of that.
       - name: Run shared and frontend tests
-        if: matrix.shard == 1
+        if: matrix.shard == strategy.job-total
         run: |
           npm -w packages/shared run test
           npm -w packages/frontend run test
