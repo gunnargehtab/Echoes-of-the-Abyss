@@ -181,15 +181,19 @@ const STATION = { one: { x: 4800, y: AXIS_Y }, two: { x: 4850, y: 2080 } };
  *
  * So the basin is seated at the southern end of the same rectangle instead:
  * still the Deep End, still 2,000 m, still x 4,700 so the transit still stands
- * under the Head at 18:00 (x ≈ 2,032). It is 714 m from the station in three
- * dimensions and never nearer than ~620 m to any authored leg, which is half
- * as loud again as a Submersible under way can reach (421 m at Interest). The
- * cost is that the 16:30 transit converges on the axis rather than running
- * down it, so §8's "only if the Voice is on the axis" is, in this literal,
- * "only if the Voice is south of the southern row"; the swept line clears
- * every one of the nineteen points for the whole ninety seconds either way.
- * The other correction — moving the watch — would cost §6's row 19, §9's six
- * leg coordinates and §11's own table row, and the document should choose.
+ * under the Head at 18:00 (x ≈ 2,032). It is 646 m from the nearer of the two
+ * station seats in three dimensions and never nearer than 628 m to any point
+ * of any authored leg, which is half as loud again as a Submersible under way
+ * can reach (421 m at Interest, 347 at Commit).
+ *
+ * The cost is stated rather than hidden: the 16:30 transit now converges on
+ * the axis instead of running down it, so §8's "it takes the Voice only if the
+ * Voice is on the axis" is, in this literal, "only if the Voice is south of
+ * the southern row" — the swept line stays 100–420 m south of that row for the
+ * whole ninety seconds and finishes 47 m off Emris Kalliso's point, and the
+ * northern row is out of it entirely. The other correction — moving the watch
+ * — would cost §6's row 19, §9's six leg coordinates and §11's own table row,
+ * so the choice is the document's and this is the cheaper half of it.
  */
 const BASIN = { x: 4700, y: 2700 };
 
@@ -484,6 +488,27 @@ export const CHORD_NINETEEN: MissionDefinition = {
    *
    * No scene: nothing later in the campaign reads this as a thing witnessed,
    * because the Order is never shown the record it is entered in.
+   *
+   * **This mission is where the bend was found to be a re-aim, and the
+   * runtime is the side that moved.** `MissionRuntime.file` used to answer a
+   * filing by ordering the sweeping hulls *to* the position they heard. The
+   * first window opens at 01:00, the pair hears the party from anywhere on
+   * this map, and both hulls then flew 2,800 m at 60 m/s toward the Head — off
+   * the axis, through the north wall's coils, and into six armed Knight hulls
+   * that auto-engage because hostility is `Owner.slot`. In a run where the
+   * player gave no order at all, both were dead by about 02:30, which unmade
+   * §5's "it never fires, never closes and never names the Order", §7's "the
+   * watch, walking", four of §9's six legs, the Watch-Speaker's 04:00 line and
+   * `the-count` itself, since the watch is this map's only observer.
+   *
+   * Nothing in the data could have fixed it: §3 needs the party's weapons live
+   * for the walls, `weaponsCold` removes the `Weapon` component outright
+   * rather than only the auto-acquire, and §8 and §9 own the sweep and the
+   * legs. But docs/mission-tend.md §6 had said all along that the course
+   * "bends a few degrees toward what it heard", so the re-aim was never the
+   * specified behaviour. `file` now turns the leg by `MISSION.SWEEP_BEND_DEG`
+   * and keeps its range, and the next authored beat restores the chart.
+   * A sweep reports; it does not intercept.
    */
   sweep: {
     tags: ['watch-one', 'watch-two'],

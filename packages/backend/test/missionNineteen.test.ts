@@ -24,13 +24,22 @@
  * - **The close is a failure, not a conclusion** (§8, §9). Ninety seconds
  *   between a basin that lifts off the Deep End calling at 100 and a `resolve`
  *   that is not marked a conclusion, against §10's sixty.
+ * - **The basin stands clear of the watch, which §11's own coordinate does
+ *   not** (§5, §9, §13). A placed Sounder is released to its own trigger model
+ *   on the first mission pass and hears a Submersible idle at 22 from 362 m;
+ *   §11 seats it 141 m from the watch's station and on the line the watch
+ *   walks at 01:00, which eats both hulls by 00:12 and takes the legs, the
+ *   Watch-Speaker, the sweep and `the-count` with them. The literal seats it
+ *   south instead and this file states the rule §11 needed and did not.
  *
- * Nothing here steps a match. Everything this document claims that a run would
- * be needed to see — that the sweep files, that a wounded coil closes, that a
- * lost carrier resets its ledger — is a property of systems with their own
- * suites (`hollow.test.ts`, `missionIntake.test.ts`, `missions.test.ts`); what
- * is unique to this mission is a table of coordinates and the arithmetic over
- * it, and that is what is checked.
+ * Nothing here steps a match, and the row above is why that is a decision
+ * rather than a policy: the seating rule is a *static* form of something only
+ * a run showed, written as a distance because a distance is what an author can
+ * check. The three claims that still need a run — that the sweep files, that a
+ * wounded coil closes, that a lost carrier resets its ledger — belong to
+ * systems with their own suites (`hollow.test.ts`, `missionIntake.test.ts`,
+ * `missions.test.ts`). What is unique to this mission is a table of
+ * coordinates and the arithmetic over it, and that is what is checked.
  */
 
 import { describe, it } from 'node:test';
@@ -64,6 +73,9 @@ import {
   thermoclineFactor,
 } from '@echoes/shared';
 
+import { defineQuery } from 'bitecs';
+import { Health, Owner, Position, Unit } from '../src/sim/components.ts';
+import { Match } from '../src/sim/match.ts';
 import { THE_REST, mapById, missionMapById, terrainFor } from '../src/sim/maps/index.ts';
 import { CHORD_NINETEEN } from '../src/sim/missions/nineteen.ts';
 import { isStanding } from '../src/sim/missions/predicates.ts';
@@ -462,13 +474,39 @@ describe('the nineteen, as docs/mission-nineteen.md §6 lays them out', () => {
       );
     }
     // And the other half: the ten free points are free *at the point* and not
-    // in their discs — 610 m off a coil is two hundred and ten metres of drift
-    // (§6), which is the mission's whole quiet cruelty.
+    // in their discs. §6's closing paragraph calls the nearest free point "610
+    // m off its coil, which is two hundred and ten metres of drift" — 610 −
+    // 400, measured to the edge of the disc rather than to the reach. The
+    // number that decides anything is 610.3 − 497.5, so the mission's quiet
+    // cruelty is 113 m and nearly twice what the sentence claims.
     const nearestFree = Math.min(
       ...soundings.map((s) => nearestCoilM(s.x, s.y)).filter((d) => d >= REACH_M)
     );
     assert.equal(Math.round(nearestFree), 610);
-    assert.equal(Math.round(nearestFree - REACH_M), 113, 'and the drift that spends it is smaller');
+    assert.equal(Math.round(nearestFree - REACH_M), 113, '§6, corrected: not two hundred and ten');
+  });
+
+  it('gives the Voice the nearest free point to the Head, which is not the nearest point', () => {
+    // §6 row 6 calls Ando Kalliso's "the point nearest the Head", and it is a
+    // tie rather than a description: Fen Tessaly's point is exactly as far
+    // from the spawn, to the metre, and both sit inside the Head's own span.
+    // What is true of row 6 alone is that it is the nearest *free* point — row
+    // 5 is one of the nine — which is what makes it the first interval a
+    // competent party plays and the Voice's only one.
+    const spawn = THE_REST.spawns[0]!;
+    const fromSpawn = (s: { x: number; y: number }): number =>
+      Math.hypot(s.x - spawn.x, s.y - spawn.y);
+    const ando = soundings.find((s) => s.id === 'ando-kalliso')!;
+    const fen = soundings.find((s) => s.id === 'fen-tessaly')!;
+    assert.equal(Math.round(fromSpawn(ando)), Math.round(fromSpawn(fen)), '§6 row 6: a tie');
+    assert.ok(nearestCoilM(fen.x, fen.y) < REACH_M, 'and the other half of it is contested');
+    const free = soundings.filter((s) => nearestCoilM(s.x, s.y) >= REACH_M);
+    assert.equal(
+      free.reduce((best, s) => (fromSpawn(s) < fromSpawn(best) ? s : best)).id,
+      'ando-kalliso',
+      '§6 row 6, corrected: the nearest free point to the Head'
+    );
+    assert.equal(ando.tag, 'the-voice', '§6: and the Voice carries it');
   });
 
   it('shares one coil between two names twice, and one with nobody once', () => {
@@ -1007,5 +1045,68 @@ describe('the beat table, as docs/mission-nineteen.md §9 clocks it', () => {
       Math.round(rangeAt(DEPTH.DESCENT_SIG, SUBMERSIBLE.hyd, TIER_THRESHOLD_MULTIPLIER.TRACK)),
       3772
     );
+  });
+});
+
+/**
+ * The sweep, played — and the reason `MISSION.SWEEP_BEND_DEG` exists.
+ *
+ * `MissionRuntime.file` used to order the sweeping hulls *to* the position they
+ * heard, and this is the map where that stopped being a detail: the first
+ * window opens at 01:00, the pair hears the party from anywhere on the Rest,
+ * and both hulls then flew 2,800 m into six armed Knight hulls that auto-engage
+ * on slot alone. A run in which the player did nothing had no watch by 02:30,
+ * and the watch is the only observer here that can classify anybody — so §8's
+ * count could not be met by playing well or by playing at all.
+ *
+ * docs/mission-tend.md §6 had always said the course "bends a few degrees",
+ * so the fix was to make the runtime do what the bible already specified.
+ * These two cases are what would notice it being undone.
+ */
+describe('the sweep bends and does not intercept — docs/mission-tend.md §6', () => {
+  const hulls = defineQuery([Unit, Owner, Position, Health]);
+  const STEP_MS = 1000 / SIM.TICK_HZ;
+
+  const played = (seconds: number) => {
+    const match = new Match(missionMapById(CHORD_NINETEEN.mapId)!, {
+      mission: CHORD_NINETEEN,
+      fauna: false,
+      seed: 4,
+    });
+    const world = (match as unknown as { world: Parameters<typeof hulls>[0] }).world;
+    const watch = hulls(world).filter((eid) => Owner.slot[eid] !== CHORD_NINETEEN.playerSlot);
+    const seats = watch.map((eid) => ({ x: Position.x[eid]!, y: Position.y[eid]! }));
+    for (let tick = 0; tick < seconds * SIM.TICK_HZ; tick++) {
+      match.update(STEP_MS);
+      match.takeMissionView();
+    }
+    return { watch, seats };
+  };
+
+  it('leaves the watch alive through a run in which the player gives no order', () => {
+    // Five minutes, which is past the first window at 01:00 and past the leg
+    // that used to end in the player's guns at about 02:30.
+    const { watch } = played(300);
+    assert.equal(watch.length, 2, '§5: the two hulls of the watch');
+    for (const eid of watch) {
+      assert.ok(
+        Health.hp[eid]! > 0,
+        `§5: the watch never fires and is never fired on — hull ${eid} is at ${Health.hp[eid]}`
+      );
+    }
+  });
+
+  it('keeps the bent pair on their own chart rather than on the party', () => {
+    // The bend is bounded, so after it the pair is still in the eastern half of
+    // the map it patrols. The party opens in the west, and the old behaviour put
+    // both hulls within a few hundred metres of it.
+    const { watch } = played(150);
+    for (const eid of watch) {
+      assert.ok(
+        Position.x[eid]! > 2500,
+        `§9: the watch holds its own water — hull ${eid} is at x ${Position.x[eid]!.toFixed(0)}`
+      );
+    }
+    assert.ok(MISSION.SWEEP_BEND_DEG > 0 && MISSION.SWEEP_BEND_DEG <= 15, '§6: a few degrees');
   });
 });

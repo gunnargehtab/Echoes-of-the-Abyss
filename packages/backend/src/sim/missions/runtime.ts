@@ -31,6 +31,7 @@ import {
   DRIFT,
   FaunaSpecies,
   FaunaStage,
+  MISSION,
   MissionOutcome,
   ObjectiveStatus,
   ResolutionTier,
@@ -1646,12 +1647,39 @@ export class MissionRuntime {
     this.filed = true;
     if (this.bentWindows.has(windowIndex)) return;
     this.bentWindows.add(windowIndex);
-    // The bend: the pair re-aims at the sound. Their next authored move beat
-    // restores the chart, which is what "bends a few degrees" costs a transit
-    // whose schedule is not the player's business (§6).
+    // The bend: the pair's course turns `MISSION.SWEEP_BEND_DEG` toward the
+    // sound and keeps its range. Their next authored move beat restores the
+    // chart, which is what "bends a few degrees" costs a transit whose
+    // schedule is not the player's business (docs/mission-tend.md §6).
+    //
+    // It used to order them *to* the sound, which is a different mechanic
+    // wearing the same word — and on `the-rest` it flew the watch off its
+    // chart into the player's guns and left docs/mission-nineteen.md with no
+    // observer to meet its count. A sweep reports; it does not intercept.
+    const bend = (MISSION.SWEEP_BEND_DEG * Math.PI) / 180;
     for (const tag of this.definition.sweep?.tags ?? []) {
       const eid = this.eidOf(world, tag);
-      if (eid !== 0) sink.applyMove(Owner.slot[eid]!, eid, x, y, false);
+      if (eid === 0) continue;
+      const px = Position.x[eid]!;
+      const py = Position.y[eid]!;
+      // The leg it is flying, or the bow it is holding if it is not flying one.
+      const running = MoveOrder.active[eid] === 1;
+      const legX = running ? MoveOrder.x[eid]! - px : Math.cos(Heading.rad[eid] ?? 0);
+      const legY = running ? MoveOrder.y[eid]! - py : Math.sin(Heading.rad[eid] ?? 0);
+      const range = Math.hypot(legX, legY);
+      if (range < 1) continue;
+      const course = Math.atan2(legY, legX);
+      // Signed shortest turn from the course to the sound, clamped to the bend.
+      let delta = Math.atan2(y - py, x - px) - course;
+      delta = Math.atan2(Math.sin(delta), Math.cos(delta));
+      const turn = course + Math.max(-bend, Math.min(bend, delta));
+      sink.applyMove(
+        Owner.slot[eid]!,
+        eid,
+        px + Math.cos(turn) * range,
+        py + Math.sin(turn) * range,
+        false
+      );
     }
   }
 
