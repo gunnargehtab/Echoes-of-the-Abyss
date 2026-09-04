@@ -17,6 +17,7 @@ import { CHORD_APTITUDE } from './aptitude.ts';
 import { SEEDING_DEEP_FURROW } from './deepFurrow.ts';
 import { SEEDING_IN_WRITING } from './inWriting.ts';
 import { SEEDING_RADICALS } from './radicals.ts';
+import { SEEDING_SECOND_SEEDING } from './secondSeeding.ts';
 import { LEDGER_ASSET_RECOVERY } from './assetRecovery.ts';
 import { LEDGER_BAFFLE } from './baffle.ts';
 import { LEDGER_EXPOSURE } from './exposure.ts';
@@ -53,6 +54,7 @@ export {
   SEEDING_DEEP_FURROW,
   SEEDING_IN_WRITING,
   SEEDING_RADICALS,
+  SEEDING_SECOND_SEEDING,
   SEEDING_TEND,
   SEEDING_THIN_WATER,
 };
@@ -71,6 +73,7 @@ export const MISSIONS: readonly MissionDefinition[] = [
   SEEDING_DEEP_FURROW,
   SEEDING_IN_WRITING,
   SEEDING_RADICALS,
+  SEEDING_SECOND_SEEDING,
   SEEDING_CONVOCATION,
   ATTENDING_ATTENDANCE,
   ATTENDING_INTAKE,

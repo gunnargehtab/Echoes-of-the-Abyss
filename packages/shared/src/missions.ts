@@ -446,6 +446,43 @@ export const SEEDING_RADICALS_HEADER: MissionHeader = {
   ],
 };
 
+export const SEEDING_SECOND_SEEDING_HEADER: MissionHeader = {
+  id: 'seeding-second-seeding',
+  campaign: 'seeding',
+  ordinal: 7,
+  name: 'The Second Seeding — The Second Seeding',
+  premise:
+    "The plateaus were on the rim before anybody, under a bed, with the Kell seed and a garden's whole argument. Today the concern comes down loud to read six faces, and somebody has to plant.",
+  mapId: 'mouth-rim',
+  // The tide turns at 23:00 (docs/mission-second-seeding.md §9) — Prospect's
+  // day plus one hour of the tide — and the band is the document's own
+  // 1,320-1,440 s, inside §10's 12-25. The second mission to resolve to
+  // `mouth-rim`, and the second of four once the rim week is built
+  // (campaign.md §8).
+  lengthBandS: [1320, 1440],
+  /**
+   * Spoken by Bloomwright Sefa Anholt, aboard the barge, under the bed on the
+   * western lip at 3,000 m — docs/mission-second-seeding.md §12, verbatim. The
+   * first Commune briefing not spoken by Marr, because Marr cannot order
+   * anyone and cannot be heard from eighty kilometres north and a layer up.
+   *
+   * Public for Tend's and Radicals' reason, and one of its own: it withholds
+   * nothing the mission holds. The schedule the ears keep, the bed's
+   * arithmetic, the ping's availability and the count of three are all stated
+   * before the first order is given — and none of them is an instruction,
+   * because the register cannot give one. *We're saying they walk*, and
+   * *we're saying said*.
+   */
+  briefing: [
+    "We're not going to tell you what to do down here. Ysolde would say that, and she can't be heard from where she is, so we're saying it for her, and we mean it a little less than she does.",
+    "We were here first. Two of ours have been on the terraces since before the concern had ears on this water, and the rest of us have been under a bed on the western lip since the tide before last, with the Kell seed aboard, and we told nobody. Today everybody hears us. That was always going to be the day, and it isn't ours. It's the concern's: they come down loud this morning to read six faces on the terraces, the watch walks the lip while they do it, and the Order measures its crystal from wherever the Order stands. Tomorrow is somebody else's, and the day after that. We're planting on this one.",
+    "The lip wants sowing. Sixty seconds, bow on, at the working figure, under the bed — and there are three navies on this rim with ears, and we're not going to tell you when. We're saying they walk. The watch comes west along the lip in the morning and goes home in the afternoon; the readers come to the western faces and go east. A bed takes most of a sound and all of a hearing, ours and theirs the same, and a sowing under it is eighteen on the loudest water in the Rift, which is a whisper from here and a name from a kilometre and a half.",
+    "Nobody's hull pays for this water. The four of us are rated for it and so are the two on the terraces, and there has never been a seventh. Juno's people aren't: they're at the staging with their guns struck, and the staging is as deep as a gun of ours goes. Once the lip is a furrow it will hold a hull the deep never rated — that's the whole of what a garden is — and then it will hold them. They're not coming until the basin's awake, and it wakes when the concern leaves.",
+    "The button's on the panel. The rim answers a ping before it should, the Directorate has never asked it anything, and neither have we. It's on the panel.",
+    "Three of ours in the furrow when the tide turns is a garden. Fewer is a claim, and we said we'd never make one. We're saying *said*.",
+  ],
+};
+
 export const ATTENDING_ATTENDANCE_HEADER: MissionHeader = {
   id: 'attending-attendance',
   campaign: 'attending',
@@ -536,6 +573,7 @@ export const MISSION_HEADERS: readonly MissionHeader[] = [
   SEEDING_DEEP_FURROW_HEADER,
   SEEDING_IN_WRITING_HEADER,
   SEEDING_RADICALS_HEADER,
+  SEEDING_SECOND_SEEDING_HEADER,
   ATTENDING_ATTENDANCE_HEADER,
   ATTENDING_INTAKE_HEADER,
   CHORD_APTITUDE_HEADER,
