@@ -163,9 +163,8 @@ attenuation exponent of 1.6, so the grant is worth **×1.16 of range to a Choris
 cent), and **×1.29 to a Corvette** (50 → 75). The Cantorate's standing rests on an instrument
 that is nearly wasted on the Directorate's own deep hull and transforms its cheapest one. Under
 the dome a Chorister holds a Cruiser at contact from 9,022 m in trench water and the yard's
-plant from 6,127 m. Nothing in the
-mission remarks on it. Korrin has read the number
-([mission-attendance.md](mission-attendance.md) §5).
+plant from 6,127 m. Nothing in the mission remarks on it. Korrin has read the
+number ([mission-attendance.md](mission-attendance.md) §5).
 
 **2. The instrument is withdrawn from the Cantorate's array by the picket's own guns.** The
 silence ledger runs on `silenceRole: 'watch'` at `silenceCeilingSig: 30`, `debtCapS: 30`. A
@@ -179,18 +178,18 @@ Directorate's price, written down rather than felt. The joke — the Cantorate's
 withdrawn from the Cantorate's own array by a picket doing its job — is one nobody in the water
 makes.
 
-**3. The Call is a lie, and it is entered as one.** At 13:00 the stalls sound a Chorus Call at
-the foot: six emitters at SIG 16, the loudness of a Chorister at rest, on periods of 7, 9, 11,
-13, 15 and 17 seconds, five seconds on, for two minutes. They stand in the Fan at 1,950 m, in
-the spread a cohort at rest would keep — `call-a` (1300, 5050), `call-b` (1450, 5000), `call-c`
-(1600, 5100), `call-d` (1750, 5050), `call-e` (1900, 5150), `call-f` (1400, 5150) — and each
-carries 5,000 hp, which is the whole of what stands between a lie and a Cruiser that decided to
-argue with it (§13). To the concern it reads as six
-positioned contacts with a bearing and a depth and **no kind and no faction**, because that is
-what a mission emitter is at Tier 3 ([mission-attendance.md](mission-attendance.md) §4) — and a
-cohort at rest is exactly what the registry has a column for. What the Call costs the stalls is
-not the sounding but that **`call-a` carries a reading**: the six thousand pages acquire their
-first line since 88 PC that was written before it was heard.
+**3. The Call is a lie, and it is entered as one.** At 13:00 the stalls sound a Chorus Call at the
+foot: six emitters at SIG 16, the loudness of a Chorister at rest, on periods of 7, 9, 11, 13, 15
+and 17 seconds, five seconds on, for two minutes. They stand in the Fan at 1,950 m, in the spread
+a cohort at rest would keep — `call-a` (1300, 5050), `call-b` (1450, 5000), `call-c` (1600, 5100),
+`call-d` (1750, 5050), `call-e` (1900, 5150), `call-f` (1400, 5150) — and each carries 5,000 hp,
+which is the whole of what stands between a lie and a Cruiser that decided to argue with it (§13).
+To the concern it reads as six positioned contacts with a bearing and a depth and **no kind and no
+faction**, because that is what a mission emitter is at Tier 3
+([mission-attendance.md](mission-attendance.md) §4) — and a cohort at rest is exactly what the
+registry has a column for. What the Call costs the stalls is not the sounding but that **`call-a`
+carries a reading**: the six thousand pages acquire their first line since 88 PC that was written
+before it was heard.
 
 **4. The ping is a question, and the deep answers it.** Active sonar is SIG 95 for three
 seconds, Tier-4 inside 900 m, self-revealing at 2,400 m in open water at HYD 50
