@@ -49,6 +49,7 @@ export * from './sounding.ts';
 export * from './walk.ts';
 export * from './view.ts';
 export * from './runtime.ts';
+export * from './roster.ts';
 export {
   ATTENDING_ATTENDANCE,
   ATTENDING_CONCLAVE,

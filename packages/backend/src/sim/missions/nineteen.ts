@@ -230,6 +230,14 @@ const interval = (
  * Armed, all six: unlike Aptitude's tuning party this one is not asked to avoid
  * a fight it did not arrange — the Order arranged this one, with an animal,
  * three years late (§3).
+ *
+ * **Each carries a cadre id, and it is the same word as its role.** The role
+ * is what this mission's six `survive` rows count; the cadre id is what the
+ * campaign's record keeps when one of them stops answering (`types.ts`,
+ * `MissionUnit.cadre`; docs/campaign.md §7 row 3). They coincide here because
+ * §8 names the six and counts them by the same names, and the four missions
+ * after this one seat their Knight hulls under those names whatever tag or
+ * role their own documents give them. The campaign's roster is this file's.
  */
 const hull = (
   tag: string,
@@ -246,6 +254,7 @@ const hull = (
   y,
   depthM: HEAD_DEPTH_M,
   role,
+  cadre: role,
   armed: true,
   souls,
   note,
@@ -345,6 +354,17 @@ export const CHORD_NINETEEN: MissionDefinition = {
   escortRadiusM: 0,
   /** §3 — there is nothing to buy and nothing to spend. */
   startingNodules: 0,
+  /**
+   * §13's headline row, and docs/campaign.md §7 row 3: **a hull lost here is
+   * lost for the campaign.** The only mission in the bible that authors this,
+   * because it is the only one whose subject it is — mission 2 argued the two
+   * lessons apart (docs/mission-standing-wave.md §10) and missions 4–7 inherit
+   * the loss rather than repeating it. The close reports which of the six
+   * were not answering (`MissionResolution.spent`), the record keeps them by
+   * cadre id, and the next Knights mission that fields the name seats nobody
+   * under it.
+   */
+  attrition: true,
 
   /**
    * §11 — **this mission authors no regions.** A mission restates only the

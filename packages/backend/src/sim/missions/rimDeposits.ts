@@ -172,14 +172,29 @@ const COUNT_TICKS = 30 * SIM.TICK_HZ;
  * rather than struck. Five souls each, and the roster still has no Knight hull
  * in it — the party flies Order colours on generic hulls and the directional
  * figures are Aptitude's (28 cone, 9.8 flank, 2.8 wake).
+ *
+ * `cadre` is the hull's name in Nineteen's roster (`nineteen.ts`, `hull`): the
+ * raid is the Order's six and the Order has no others (§2), so the five
+ * Corvettes are the five, and one the Rest kept is not seated here. Which of
+ * the five cuts and which escorts is this document's arrangement, not
+ * Nineteen's — the three cutters are the First, Second and Third in the order
+ * §6 lists their faces, and the escort pair the Fourth and Fifth.
  */
-const corvette = (tag: string, role: string, x: number, y: number, note: string): MissionUnit => ({
+const corvette = (
+  tag: string,
+  role: string,
+  cadre: string,
+  x: number,
+  y: number,
+  note: string
+): MissionUnit => ({
   tag,
   kind: UnitKind.Corvette,
   x,
   y,
   depthM: STAGING_DEPTH_M,
   role,
+  cadre,
   armed: true,
   souls: 5,
   note,
@@ -538,6 +553,7 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
           y: 420,
           depthM: STAGING_DEPTH_M,
           role: 'escort',
+          cadre: 'voice',
           armed: true,
           souls: 12,
           note: "Kalliso's hull: the ears at HYD 65, the 900 m gun, and the only thing on the party that out-ranges a Chorister by more than a hundred metres. SIG 55 idle and 65 live in the cone, 19.25 and 22.75 on the flank, 5.5 and 6.5 in the wake — Classification to a dome-lifted ear at 2,734 m bow-on and 648 m astern through the terraces' 0.70",
@@ -545,6 +561,7 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
         corvette(
           'cutter-a',
           'cutter',
+          'first',
           2850,
           350,
           "Prospect's western reader's seat. Cuts the fourth face twice: `load-one` and `load-two`"
@@ -552,6 +569,7 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
         corvette(
           'cutter-b',
           'cutter',
+          'second',
           3150,
           350,
           "Prospect's eastern reader's seat. Cuts the fifth face twice — the face whose far corners are outside both grants"
@@ -559,6 +577,7 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
         corvette(
           'cutter-c',
           'cutter',
+          'third',
           3000,
           550,
           "Prospect's bunkerage seat. One cut, on the sixth face, 707 m from the dome"
@@ -566,11 +585,12 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
         corvette(
           'escort-a',
           'escort',
+          'fourth',
           2700,
           450,
           'Three escort hulls at 143.3 damage a second take a wave of six — 1,200 HP — in 8.4 seconds, from water the wave cannot answer from (§4)'
         ),
-        corvette('escort-b', 'escort', 3300, 450, ''),
+        corvette('escort-b', 'escort', 'fifth', 3300, 450, ''),
       ],
       structures: [
         {

@@ -15,6 +15,7 @@ import {
   LIFECYCLE,
   MatchPhase,
   ResolutionTier,
+  missionHeaderById,
   type AiDifficulty,
   type EchoSnapshot,
   type Faction,
@@ -32,7 +33,7 @@ import { MissionLog } from './MissionLog.tsx';
 import { MissionPanel } from './MissionPanel.tsx';
 import { MissionResult } from './MissionResult.tsx';
 import { AudioEngine, dbToGain } from '../audio/engine.ts';
-import { driftHealthFor, recordMissionResult } from '../progression/store.ts';
+import { driftHealthFor, recordMissionResult, spentCadre } from '../progression/store.ts';
 import {
   GameClient,
   type ConnectionStatus,
@@ -479,6 +480,14 @@ export function GameCanvas({
       // map here — the shell resolves it through the public catalogue — and
       // the record is read at connect time and nowhere else, so nothing the
       // player sees before the drop can say the plateau is quieter than it was.
+      // The campaign's spent roster rides the join (docs/campaign.md §7 row 3)
+      // — read here, at the one place the shell knows both which mission is
+      // being entered and how to ask the record, so `GameClient` never
+      // imports progression. Resolved by the mission's *campaign* rather than
+      // by the mission, because a hull the Order entered at the Rest is spent
+      // at the First and the rim too; and read fresh at connect rather than
+      // at mount for `seenScenes`' reason, since this is the moment it counts.
+      const campaign = missionId === undefined ? undefined : missionHeaderById(missionId)?.campaign;
       await client.connect({
         name: playerName,
         mapId,
@@ -487,6 +496,7 @@ export function GameCanvas({
         create,
         resume,
         driftHealth: missionId === undefined ? undefined : driftHealthFor(mapId),
+        ...(campaign === undefined ? {} : { spent: [...spentCadre(campaign)] }),
       });
       setSessionId(client.sessionId);
       setJoinedRoomId(client.roomId);

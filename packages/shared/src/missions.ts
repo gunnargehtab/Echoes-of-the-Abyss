@@ -1288,4 +1288,23 @@ export interface MissionResultPayload {
    * the same map as one that never dropped.
    */
   driftHealth?: readonly number[];
+  /**
+   * The cadre ids of the player's own hulls that were not answering at the
+   * close, for the progression record to keep — docs/campaign.md §7 row 3,
+   * "Every unit lost in this mission is gone for the rest of the campaign".
+   *
+   * Sent **only by a mission that authors attrition**, and omitted by every
+   * other — a hull lost on a tide that does not spend is not reported, so the
+   * record has nothing to keep and the hull returns (docs/mission-standing-wave.md
+   * §10 argues why mission 2 must not spend what mission 3 teaches). Empty
+   * when the attriting mission lost nobody.
+   *
+   * Own-force information, and the narrowest kind: which of *my* named hulls
+   * died, each of which the player watched happen and each of which the
+   * epilogue has just read out by name. It says nothing about who took them
+   * or from where. A cadre id is an authored roster name
+   * (`MissionUnit.cadre`), never an entity id, so nothing here can be joined
+   * back to a contact.
+   */
+  spent?: readonly string[];
 }

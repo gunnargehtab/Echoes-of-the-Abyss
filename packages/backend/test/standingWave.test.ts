@@ -64,7 +64,7 @@ function advance(match: Match, seconds: number): EchoSnapshot | undefined {
 function fund(match: Match, count: number): void {
   const economy = match.world.economies.get(0)!;
   economy.nodules = SPIRE.cost * count;
-  economy.crystal = SPIRE.crystalCost * count;
+  economy.crystal = (SPIRE.crystalCost ?? 0) * count;
 }
 
 /** The player's Bastion, which every build radius is anchored on. */

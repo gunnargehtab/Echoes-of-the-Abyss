@@ -279,6 +279,14 @@ export interface ConnectOptions {
    * the shell's "Solo game" must start a new match, not resurrect an old one.
    */
   resume?: boolean;
+  /**
+   * Cadre ids the campaign has already spent, for a mission room to seat
+   * around (docs/campaign.md §7 row 3). Read from the progression record by
+   * the caller and handed in here, so this file stays what it is — a socket
+   * with no opinion about the player's history — and sent only with a
+   * `missionId`, because a skirmish has no roster to have spent.
+   */
+  spent?: readonly string[];
 }
 
 export class GameClient {
@@ -362,6 +370,9 @@ export class GameClient {
         ...(wanted === '' || options.driftHealth === undefined
           ? {}
           : { driftHealth: [...options.driftHealth] }),
+        // Only into a mission room: the server reads it nowhere else, and an
+        // array on a skirmish join would be a roster nobody asked about.
+        ...(wanted !== '' && options.spent !== undefined ? { spent: [...options.spent] } : {}),
       };
       // `create` makes a room of its own rather than looking for one. Quick
       // match keeps `joinOrCreate` — picking a map is picking a queue, and that

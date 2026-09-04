@@ -301,6 +301,12 @@ export const CHORD_THE_THREE: MissionDefinition = {
           souls: 9,
           note: "Choirmaster Ivane Sull's hull, and the mission's tender: 55 idle / 65 live in the cone, HYD 65, unarmed. It does not move without ears and it does not run silent — it is the one thing in this water the house is entitled to hear (§4, §8)",
         },
+        // The three Knight hulls of the escort carry Nineteen's cadre ids —
+        // the Voice, and the two Corvettes §11's seating table names *First*
+        // and *Second* — so a hull the Rest kept is not seated here and the
+        // `survive`/`quiet` rows over `escort` count what came (`roster.ts`).
+        // The Choirmaster's hull above carries none: she was at the Ninth for
+        // the committal, and hers is nobody's to have spent.
         {
           tag: 'the-voice',
           kind: UnitKind.Cruiser,
@@ -308,6 +314,7 @@ export const CHORD_THE_THREE: MissionDefinition = {
           y: 450,
           depthM: PARTY_DEPTH_M,
           role: 'escort',
+          cadre: 'voice',
           pressureRating: REFIT_PR,
           souls: 12,
           note: "Voice Ren Kalliso's hull and the party's ears — the same figures, and the loudest hull the hush measures: silent at 7.583 against a ceiling of 8, which is four tenths of a point and no other way to buy it",
@@ -319,6 +326,7 @@ export const CHORD_THE_THREE: MissionDefinition = {
           y: 450,
           depthM: PARTY_DEPTH_M,
           role: 'escort',
+          cadre: 'first',
           pressureRating: REFIT_PR,
           souls: 5,
           note: "§11's First — 28 in the cone, 9.8 on the flank, 2.8 in the wake, HYD 50, unarmed. Silent at 5.333",
@@ -330,6 +338,7 @@ export const CHORD_THE_THREE: MissionDefinition = {
           y: 600,
           depthM: PARTY_DEPTH_M,
           role: 'escort',
+          cadre: 'second',
           pressureRating: REFIT_PR,
           souls: 5,
           note: "§11's Second. One of these two ends up at the hall's east end inside 600 m of the Choirmaster, and the room is 559 m across from there",

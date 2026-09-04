@@ -34,6 +34,7 @@ import { validateDriftGrid } from '../sim/drift.ts';
 import { DEFAULT_MAP_ID, mapById, missionMapById } from '../sim/maps/index.ts';
 import type { MapDefinition } from '../sim/maps/types.ts';
 import { missionById } from '../sim/missions/index.ts';
+import { validateSpent } from '../sim/missions/roster.ts';
 import type { MissionDefinition } from '../sim/missions/types.ts';
 import type { MissionResolution } from '../sim/missions/runtime.ts';
 import { isSimulated } from '../sim/systems/hazards.ts';
@@ -178,6 +179,14 @@ export interface MatchRoomOptions {
    * never carries.
    */
   driftHealth?: number[];
+  /**
+   * Cadre ids the campaign has spent, as the client's record holds them
+   * (docs/campaign.md §7 row 3; `progression/store.ts`, `spentCadre`). Read
+   * only for a mission room, and bounded before it is believed — see
+   * `validateSpent` for what the room can and cannot check about it, and why
+   * the record living in the client's storage is the honest place for it.
+   */
+  spent?: string[];
 }
 
 export class MatchRoom extends Room<MatchState> {
@@ -193,6 +202,12 @@ export class MatchRoom extends Room<MatchState> {
    * rematch rebuilds the match and the plateau has to be the same plateau.
    */
   private driftHealth: readonly number[] | null = null;
+  /**
+   * The spent roster this room was created with, validated once and kept for
+   * the rematch: a rematch is the same tide replayed, and the campaign has
+   * not un-spent anybody between attempts.
+   */
+  private spent: ReadonlySet<string> = new Set();
   private readonly slotBySession = new Map<string, number>();
   /** Live AI commanders, by slot. Rebuilt from the roster on every start. */
   private readonly aiSeats = new Map<number, AiSeat>();
@@ -215,6 +230,16 @@ export class MatchRoom extends Room<MatchState> {
     // orders that are never coming. Better a named error the shell can show.
     if (requested !== '' && this.mission === null) {
       throw new Error(`unknown mission: ${requested}`);
+    }
+    // A spent set the record could not have written fails the room the way an
+    // unknown mission does, rather than seating a full party and pretending:
+    // a client that sends one is not a client this room should be guessing
+    // for. Absent is nothing spent, which is every skirmish and every mission
+    // whose campaign has no attrition to carry.
+    if (this.mission !== null && options?.spent !== undefined) {
+      const spent = validateSpent(options.spent, this.mission);
+      if (spent === null) throw new Error(`malformed spent roster for ${requested}`);
+      this.spent = spent;
     }
     // An unknown id falls back to the default rather than failing the room:
     // a client asking for a map this build does not have should get a game,
@@ -573,6 +598,7 @@ export class MatchRoom extends Room<MatchState> {
           mission: this.mission,
           fauna: this.mission.fauna,
           ...(this.driftHealth === null ? {} : { driftHealth: this.driftHealth }),
+          spent: this.spent,
         });
   }
 
@@ -652,6 +678,7 @@ export class MatchRoom extends Room<MatchState> {
           objectives: resolution.objectives,
           scenes: resolution.scenes,
           driftHealth: this.match.world.drift.snapshot(),
+          ...(this.mission.attrition === true ? { spent: resolution.spent } : {}),
         });
       }
     }
@@ -912,6 +939,10 @@ export class MatchRoom extends Room<MatchState> {
         // world rather than the resolution so the reconnect path above sends
         // the identical grid.
         driftHealth: this.match.world.drift.snapshot(),
+        // Only where the mission spends (`MissionDefinition.attrition`): a
+        // hull lost on any other tide is nobody's business after the close,
+        // and a payload that carried it would be a record that could keep it.
+        ...(this.mission!.attrition === true ? { spent: resolution.spent } : {}),
       });
     }
 
