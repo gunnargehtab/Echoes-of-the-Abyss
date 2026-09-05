@@ -44,6 +44,7 @@ import { SIM, type EchoMarkKind, type MissionVoice } from '@echoes/shared';
 import { ContactMixer, type ContactAudioFrame, type Spatialisation } from './contactMixer.ts';
 import { ContactVoice, ensureNoiseBuffer } from './contactVoice.ts';
 import { MarkBed } from './markBed.ts';
+import { TunedBed, tunedMixFor, type TunedInputs, type TunedMix } from './tunedBed.ts';
 import { duckFor, louderRung, type BusRung } from './precedence.ts';
 import { SelfMixer, type SelfAudioFrame } from './selfMixer.ts';
 import { playHail, readingSeconds } from './speechVoice.ts';
@@ -134,6 +135,10 @@ export class AudioEngine {
   private sourBed: SourBed | null = null;
   private markBed: MarkBed | null = null;
   private pendingMarks: Map<EchoMarkKind, number> | null = null;
+  private tunedBed: TunedBed | null = null;
+  private pendingTuned: TunedInputs | null = null;
+  /** The last mix the tuned bed was driven to — the harness's "does it ring". */
+  private lastTuned: TunedMix | null = null;
   private pendingSelf: SelfAudioFrame | null = null;
   /**
    * Lines spoken since the last tick, each with the whisper rule as it stood
@@ -311,6 +316,10 @@ export class AudioEngine {
     // remembering, not a detection, and §4's own-noise attenuation should make
     // a loud player deaf to the past exactly as it does to the present.
     this.markBed = new MarkBed(context, world);
+    // Tuned water rides the world bus beside the residue, for the same reason
+    // residue does: it is the ocean, so §4's own-noise attenuation should make
+    // a loud player deaf to the crystal exactly as it does to the past.
+    this.tunedBed = new TunedBed(context, world);
 
     const bed = new SelfBed(context, self);
     this.selfBed = bed;
@@ -403,6 +412,15 @@ export class AudioEngine {
       markBed.update(marks, this.context.currentTime);
     }
 
+    const tunedBed = this.tunedBed;
+    const tuned = this.pendingTuned;
+    this.pendingTuned = null;
+    if (tunedBed !== null && tuned !== null && this.context !== null) {
+      const mix = tunedMixFor(tuned);
+      this.lastTuned = mix;
+      tunedBed.update(mix, this.context.currentTime);
+    }
+
     const selfMixer = this.selfMixer;
     const selfFrame = this.pendingSelf;
     this.pendingSelf = null;
@@ -486,6 +504,16 @@ export class AudioEngine {
   /** Hand the mix what is true of the player's own force on this tick. */
   applySelf(frame: SelfAudioFrame): void {
     this.pendingSelf = frame;
+  }
+
+  /** Hand the mix the water the player is in, and the interval standing in it (§9). */
+  applyTuned(inputs: TunedInputs): void {
+    this.pendingTuned = inputs;
+  }
+
+  /** What the tuned bed is currently ringing, or null before the first tick. */
+  get tunedMix(): TunedMix | null {
+    return this.lastTuned;
   }
 
   /**
@@ -599,6 +627,10 @@ export class AudioEngine {
     this.markBed?.stop(this.context?.currentTime ?? 0);
     this.markBed = null;
     this.pendingMarks = null;
+    this.tunedBed?.stop(this.context?.currentTime ?? 0);
+    this.tunedBed = null;
+    this.pendingTuned = null;
+    this.lastTuned = null;
     this.selfBed?.stop(this.context?.currentTime ?? 0);
     this.selfBed = null;
     this.sourBed?.stop(this.context?.currentTime ?? 0);

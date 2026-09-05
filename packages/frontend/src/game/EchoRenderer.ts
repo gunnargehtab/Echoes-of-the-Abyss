@@ -131,6 +131,7 @@ import {
 } from './echoMarks.ts';
 import type { ContactAudioEntry, ContactAudioFrame } from '../audio/contactMixer.ts';
 import type { PingReturn, SelfAudioFrame } from '../audio/selfMixer.ts';
+import { TUNED, corridorFrom, type TunedInputs, type TunedNode } from '../audio/tunedBed.ts';
 import {
   PRECEDENCE_MS,
   markOpacity,
@@ -216,6 +217,15 @@ export interface RendererCallbacks {
   onSelfAudio(frame: SelfAudioFrame): void;
   /** How much residue of each kind the player can hear (§6). */
   onMarkAudio(intensityByKind: Map<EchoMarkKind, number>): void;
+  /**
+   * The water the player is in, and the interval standing in it (§9).
+   *
+   * Assembled here for `onContactAudio`'s reason and one more: the corridor is
+   * an *inference* over what the wire carries, and an inference belongs where
+   * the tracked contacts and the terrain already are rather than in a bed that
+   * would have to be handed both.
+   */
+  onTunedAudio(inputs: TunedInputs): void;
   /** Live hazards, once per Echo tick. Public to every player by design. */
   onHazards(hazards: HazardState[]): void;
 }
@@ -821,6 +831,16 @@ export class EchoRenderer {
   private readonly callbacks: RendererCallbacks;
 
   private terrain: TerrainPayload | null = null;
+  /**
+   * The deepest floor among the map's crystal cells, metres — the datum the
+   * chapter-house chord is measured from (docs/audio-direction.md §9).
+   *
+   * Cached because it is a sweep of the whole grid and the grid almost never
+   * changes; `null` means "not yet computed", and both `setTerrain` and
+   * `applyGround` clear it rather than recomputing, so a ground delta costs one
+   * sweep on the next Echo tick instead of one on the frame it arrived.
+   */
+  private crystalFloorDatum: number | null = null;
   /**
    * The map this match is on.
    *
@@ -2719,6 +2739,7 @@ export class EchoRenderer {
     // renderer keeps the payload for what the *instruments* read off it:
     // biome lookups, the scope's chart, blocked-ground cells.
     this.terrain = terrain;
+    this.crystalFloorDatum = null;
     this.minimapCachedSize = 0;
   }
 
@@ -2748,7 +2769,8 @@ export class EchoRenderer {
       terrain.biomes[cell.index] = cell.biome;
     }
     // The scope caches its own terrain layer, and the ground it cached is the
-    // ground that just stopped existing.
+    // ground that just stopped existing. The chord's datum is ground too.
+    this.crystalFloorDatum = null;
     this.minimapCachedSize = 0;
   }
 
@@ -2973,6 +2995,7 @@ export class EchoRenderer {
     this.callbacks.onContactAudio(this.contactAudioFrame(snapshot.tick, now));
     this.callbacks.onSelfAudio(this.selfAudioFrame(snapshot, now));
     this.callbacks.onMarkAudio(this.markIntensity());
+    this.callbacks.onTunedAudio(this.tunedAudioFrame(now));
 
     // Drop selections and motion history for entities that no longer exist.
     const alive = new Set<number>();
@@ -3147,16 +3170,25 @@ export class EchoRenderer {
    * table asks for spatialisation "matched to the rendered position" — the ear
    * is where the player is looking.
    */
+  /**
+   * Where the player is listening from: the water under the screen centre,
+   * asked of the conn camera. Before the conn exists there is no rendered
+   * position to match, and the map origin is as honest as any.
+   *
+   * Shared by the contact picture and the tuned bed so the two cannot disagree
+   * about where the ear is — a bed centred somewhere the contacts are not
+   * would put the water and the things in it in different rooms.
+   */
+  private earPosition(): { x: number; y: number } {
+    const rect = this.app.canvas.getBoundingClientRect();
+    return (
+      this.screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2) ?? { x: 0, y: 0 }
+    );
+  }
+
   private contactAudioFrame(tick: number, now: number): ContactAudioFrame {
     const decayMs = PERSISTENCE.GHOST_MARKER_DECAY_S * 1000;
-    // The ear is where the player is looking: the water under the screen
-    // centre, asked of the conn camera. Before the conn exists there is no
-    // rendered position to match, and the map origin is as honest as any.
-    const rect = this.app.canvas.getBoundingClientRect();
-    const ear = this.screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2) ?? {
-      x: 0,
-      y: 0,
-    };
+    const ear = this.earPosition();
 
     const entries: ContactAudioEntry[] = [];
     for (const entry of this.tracked.values()) {
@@ -3182,6 +3214,121 @@ export class EchoRenderer {
     }
 
     return { tick, entries };
+  }
+
+  /**
+   * The water the player is in, and the interval standing in it —
+   * docs/audio-direction.md §9, "Tuned water".
+   *
+   * Three readings, all off things the client already holds. The crystal share
+   * and the rise are the terrain grid, which is public chart data every
+   * commander has. The corridor is an inference over own structures and Tier-4
+   * tracks — see `corridorFrom`, which owns the argument for why that is an
+   * instrument rather than a leak.
+   *
+   * **Own and tracked nodes are two pools, never one.** Pairing is
+   * per-commander (docs/mission-standing-wave.md §4), so a pool that mixed
+   * them would sound a corridor nobody built. The louder of the two readings
+   * wins, which is the doctrine as well as the mix: the Fifth is closed
+   * against them and against us, and the water does not care who raised the
+   * line standing in it.
+   */
+  private tunedAudioFrame(now: number): TunedInputs {
+    const terrain = this.terrain;
+    if (terrain === null) return { crystal: 0, riseM: 0, corridor: null };
+    const ear = this.earPosition();
+
+    const cellM = terrain.cellM;
+    const reach = Math.max(1, Math.round(TUNED.EAR_RADIUS_M / cellM));
+    const col = Math.floor(ear.x / cellM);
+    const row = Math.floor(ear.y / cellM);
+    let sampled = 0;
+    let crystalCells = 0;
+    // A square rather than a disc: the corners are 1.4 radii out, the bed is
+    // an average, and a disc test would cost a hypot per cell inside §12's
+    // 1 ms tick to move a fraction by a few percent.
+    for (let r = row - reach; r <= row + reach; r++) {
+      if (r < 0 || r >= terrain.rows) continue;
+      for (let c = col - reach; c <= col + reach; c++) {
+        if (c < 0 || c >= terrain.cols) continue;
+        sampled++;
+        if (terrain.biomes[r * terrain.cols + c] === Biome.ResonanceField) crystalCells++;
+      }
+    }
+    const crystal = sampled === 0 ? 0 : crystalCells / sampled;
+
+    // The chord's rise, measured from the deepest crystal on the map rather
+    // than from the ground next door: a chapter-house is cut into the
+    // formation that stands proudest of its slope, and "proudest" is a fact
+    // about the slope and not about the cell beside it.
+    const cellIndex =
+      Math.min(terrain.rows - 1, Math.max(0, row)) * terrain.cols +
+      Math.min(terrain.cols - 1, Math.max(0, col));
+    const floorHere = terrain.floor[cellIndex] ?? 0;
+    const datum = this.crystalDatum();
+    const riseM = crystal > 0 && datum > 0 ? Math.max(0, datum - floorHere) : 0;
+
+    const activeSig = structureStatsFor(StructureKind.SoundingSpire).sigActive;
+    const own: TunedNode[] = [];
+    for (const structure of this.structures) {
+      if (structure.kind !== StructureKind.SoundingSpire) continue;
+      // Completed and singing. A site is not a node, and a node humming at 30
+      // is a node holding nothing (docs/mission-standing-wave.md §4).
+      if (structure.buildProgress < 1 || structure.sig < activeSig) continue;
+      if (structure.maxHp <= 0) continue;
+      own.push({ x: structure.x, y: structure.y, hpFraction: structure.hp / structure.maxHp });
+    }
+
+    // The other side of §8's sentence. A track is the tier that carries hull,
+    // so it is the tier at which somebody else's line can be heard failing —
+    // and a ghost is not a track, so the same decay window the contact picture
+    // applies is applied here.
+    const decayMs = PERSISTENCE.GHOST_MARKER_DECAY_S * 1000;
+    const tracked: TunedNode[] = [];
+    for (const entry of this.tracked.values()) {
+      const contact = entry.contact;
+      if (contact.structure !== StructureKind.SoundingSpire) continue;
+      if (contact.tier < ResolutionTier.Track) continue;
+      if (contact.hp === undefined || contact.maxHp === undefined || contact.maxHp <= 0) continue;
+      if (now - entry.lastSeenMs > decayMs) continue;
+      tracked.push({ x: contact.x, y: contact.y, hpFraction: contact.hp / contact.maxHp });
+    }
+
+    const mine = corridorFrom(own, ear);
+    const theirs = corridorFrom(tracked, ear);
+    const corridor =
+      mine === null
+        ? theirs
+        : theirs === null
+          ? mine
+          : mine.rangeM <= theirs.rangeM
+            ? mine
+            : theirs;
+
+    return { crystal, riseM, corridor };
+  }
+
+  /**
+   * The deepest floor among the map's crystal cells — the chord's datum.
+   *
+   * One sweep of the grid, cached until the ground changes. A map with no
+   * crystal on it returns 0, which `tunedAudioFrame` reads as "no chord", and
+   * that is correct: there is no chapter-house country on a map with no
+   * crystal country.
+   */
+  private crystalDatum(): number {
+    const cached = this.crystalFloorDatum;
+    if (cached !== null) return cached;
+    const terrain = this.terrain;
+    if (terrain === null) return 0;
+    let deepest = 0;
+    for (let i = 0; i < terrain.biomes.length; i++) {
+      if (terrain.biomes[i] !== Biome.ResonanceField) continue;
+      const floor = terrain.floor[i] ?? 0;
+      if (floor > deepest) deepest = floor;
+    }
+    this.crystalFloorDatum = deepest;
+    return deepest;
   }
 
   /**

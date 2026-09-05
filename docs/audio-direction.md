@@ -172,6 +172,122 @@ PropagationFactor is a number in the detection maths and a **DSP chain** in the 
 | Coral Ruins | 0.8 occluded | Hard occlusion behind geometry | Strong early reflections | Acoustic shadows are sharp — one step sideways restores a contact |
 | Thermocline boundary | 0.3 across / 1.2 along | Heavy low-pass across the layer | — | Crossing it is a *whoomp*: the map changes state in the mix |
 
+### Tuned water — the Fields' bed
+
+The table above is six colours. Every row of it changes how a contact *sounds*, and not one of
+them has a pitch in it, because a colour cannot be out of tune.
+
+The Resonance Fields are the exception, and they are the first water in the bible that is. Crystal
+formations resonate under any pressure change — a storm, a passing hull, a distant detonation — so
+crystal country sounds faintly and never quite settles, and the Order reads that chime the way the
+Directorate reads silence ([mission-aptitude.md](mission-aptitude.md) §7). The Fifth is named for
+the interval its walls ring at, by people who meant it literally
+([mission-standing-wave.md](mission-standing-wave.md) §1). **So the Fields get a bed with notes in
+it**, and once the water has a pitch, a thing standing in the water can be *sharp* or *flat*
+against it. That is what the rest of this section spends.
+
+**The pitches are just, not tempered.** A chapter-house is "a physical instrument tuned over
+generations" ([mission-aptitude.md](mission-aptitude.md) §1), and nothing tuned by ear over
+generations lands on equal temperament. The fifth is exactly 3:2 and the third exactly 5:4, which
+is also what gives *goes flat* a number to be measured against.
+
+| Voice | Pitch | Level | When |
+| --- | --- | --- | --- |
+| **Root** | 880 Hz | Bed ceiling × crystal share | Wherever crystal is within earshot |
+| **Fifth** | 1,320 Hz — 3:2 | 0.70 of the root | With it, always. This is the canyon |
+| **Third** | 1,100 Hz — 5:4 | 0.55 of the root, × rise | Where the formation stands proud of its slope |
+| **Corridor** | 1,320 Hz, panned | Corridor ceiling × range | While a Standing Wave stands (§4 below) |
+
+**Register, and why it is up there.** §6 confines residue to 120–800 Hz and §10 gives 40–160 Hz to
+contacts permanently. Every voice of this bed is above both — 880 Hz is also where the port's cold
+partials start (§10, "The port"), which is not a coincidence but a decision already made: this game
+has settled what crystal sounds like, and it is thin and high and pure, the same material §8 gives
+the Knights. **The one cost is that the bed shares the register the in-game score would use.** The
+score is unwritten; when it is written it must leave the fifth alone, in the same way it already
+leaves the contact band alone.
+
+**Level.** The bed's ceiling is 6 dB under the mark bed, which §6 already put 6 dB under the live
+contact bus. So the water sits 12 dB under the contacts it carries and 6 dB under the memory of
+them, which is the right order — the ocean is the least urgent true thing in the mix, and it is
+still true. It rides the **world bus** beside the residue, so §2's chain ducks it under a contact,
+under the self bus and under a line of speech, and §4's own-noise attenuation makes a loud player
+deaf to the crystal exactly as it makes them deaf to the past. It never pans: the Fields are
+"diffuse, unlocatable" by the table above, and a bed that panned would claim a direction the water
+is defined by not having.
+
+**The chord, and how the mix finds a chapter-house.** A chapter-house is cut into the formation
+that stands proudest of its slope, so the third arrives where the ground *rises*: measured against
+the deepest crystal cell on the map, fully in at 250 m of rise. Both maps that have crystal country
+already author exactly that — the Third's Approach stands 250 m over the Fields around it, and the
+North Gallery stands 250 m over the defile — so the chord is the Third's own country on both, and
+neither map had to be asked. The one settlement in the game whose ambient signature is a chord
+([mission-aptitude.md](mission-aptitude.md) §7) is therefore a fact about the ground rather than an
+authored point, which is the same choice the formations themselves were given.
+
+### A corridor written over it, and an interval that goes flat
+
+A Standing Wave is two paired Sounding Spires holding an interval between them, and the water
+between them carries at 2.00 ([mission-standing-wave.md](mission-standing-wave.md) §4). **In the
+mix it is a second fifth, placed on the canyon's own root and panned to the line's midpoint.** So
+the megaphone is heard as the thing the ground was already ringing at, made louder and given a
+bearing the Fields never had — which is also what it *is*: an absolute PF write, water tuned by
+hand, and the one place in their own country where a Knight's instruments do not lie (§13 of that
+document). It does not scale with the crystal around it, because tuned water is exactly as loud
+wherever it was laid. It fades to nothing at four kilometres, because a megaphone you can only hear
+from inside is not one.
+
+It starts the tick both nodes are singing and stops when either falls.
+
+**The flat.** A paired node under `STANDING_WAVE.DETUNE_HP_FRACTION` — 40% of hull — drags the
+corridor's fifth flat, twelve cents at the crossing and widening to fifty (a quarter-tone) at zero.
+
+- **Fifty, because a quarter-tone is the widest error that is still unambiguously *this interval,
+  wrong*.** Anything narrower reads as beating and nothing more; anything wider reads as a
+  different interval — the party having retuned rather than the party being shot — and §8 of that
+  document needs the player to hear a fifth failing, not a tritone arriving.
+- **Twelve at the crossing, not zero**, because a flat that grew from nothing would make the
+  crossing silent, and the crossing is the warning. Twelve cents against 1,320 Hz beats at about
+  9 Hz.
+- **The flat is on the corridor's fifth alone and never on the canyon's.** That is not a mixing
+  convenience; it is what is happening. The ground goes on ringing true and the player's instrument
+  stops agreeing with it, so what is actually heard is the *beat* between the two, widening as the
+  node falls. It is a slide rather than a step: §8 wants the line heard failing, and a step would
+  report a threshold instead.
+
+**Who hears it.** The owner always, off their own `OwnStructure.hp`. Anyone else at **Tier 4 and
+not before** — a track is the tier that carries hull, so it is the tier at which somebody else's
+line can be heard failing. Classification tells you a Spire is there; it does not tell you how it
+is. [mission-standing-wave.md](mission-standing-wave.md) §8 says so now; it used to say "everyone
+on the map", which the wire never carried and which would have handed the column a free reading of
+a structure it had not earned a track on.
+
+**The corridor is an inference, and the mix is not allowed to be coy about it.** `paired` is not on
+the wire and neither is the PF grid, so the mix never learns that two Spires are a pair. What it
+has is the pairing rule and the geometry: two completed, singing nodes of one commander inside
+`STANDING_WAVE.PAIR_RANGE_M`.
+
+It leaks nothing in either direction — own structures are the player's own, and the other pool is
+Tier-4 tracks, which already carry position and hull. Arithmetic over facts the player was handed
+is what an instrument is. Own and tracked nodes are two pools and never one, because pairing is
+per-commander and a pool that mixed them would sound a corridor nobody built.
+
+**What it can get wrong is a false positive, twice over, and both come from the same place.** A
+Spire sings at 80 when "the depth grant is load-bearing **or** an interval is held"
+([units.md](units.md)), and the client cannot tell those two apart. So a *prebuilt* lattice, whose
+nodes never pair and are lit by the grant ([mission-rim-deposits.md](mission-rim-deposits.md) §4),
+reads as a line; and a node still paired to a dead partner, with a third standing nearby, reads as
+a line to the wrong pair. Both sound a fifth reinforced where a lattice stands. That is the cheap
+direction for this to be wrong in — nothing here is an alarm, nothing here fires a one-shot, and
+the accessible half is the panel's *sour* reading, which is server-resolved and unaffected. **A
+`paired` flag on `OwnStructure` would close it**, and is not proposed here: it would be the first
+field on the wire that exists for the mix.
+
+**Nothing feeds back.** §12's determinism note holds: the bed reads the snapshot and the public
+terrain grid, and writes nothing. And the accessible half is already built and stays the panel's —
+the interval objective reads *The interval is sour* while a node is under the threshold
+([mission-standing-wave.md](mission-standing-wave.md) §13), so the one fact this section makes
+audible has a caption that arrives with it.
+
 ---
 
 ## 10. Music
@@ -349,6 +465,25 @@ different mechanism, and worth knowing before someone tries to "fix" it into a c
 sonar is unusually well suited to synthesis — tonal returns and filtered noise beds are what
 the material actually is. The buffer path is in place for when banks exist; the Opus/AAC
 format requirement in the table above applies to those banks, not to the prototype.
+
+**Tuned water is built** (§9, "Tuned water"). The Fields have a bed with notes in it — a just
+dyad at 880 and 1,320 Hz over the world bus, a third at 1,100 where the ground rises into
+chapter-house country, and a fourth voice that is a Standing Wave's own interval placed over the
+canyon's and panned to the line. It is four sine oscillators and one slow LFO, held open for the
+match and built at the unlock gesture rather than on first crystal, so the whole of its cost is
+outside the tick: the measured figure is unchanged at **0.1–0.3 ms** with contacts sounding,
+against the 1 ms budget. The crystal share is a 9×9 sweep of the public terrain grid around the
+ear, and the chord's datum — the deepest crystal cell on the map — is swept once and cached until
+the ground changes.
+
+**The corridor is the first thing in the mix assembled by inference rather than by report**, and
+§9 is explicit about which kind. The wire does not carry `paired`, so the reading is the pairing
+rule applied to two completed, singing nodes of one commander inside the pairing range — exact
+except for a node still paired to a dead partner with a third standing nearby. That is a departure
+from "nothing about the player's own force is inferred" above, and the reason it is allowed where
+the exposure cue was not: this one is arithmetic over facts already on the player's screen rather
+than a guess at a fact the server withheld, and its failure mode is a bed voicing a line that is
+not there rather than an alarm firing on nothing.
 
 Two rows of §9's table are deliberately **not** voiced. The Abyssal Trench's *axial*
 behaviour needs PF as a function of bearing, which the simulation does not model — voicing
