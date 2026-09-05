@@ -74,11 +74,11 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   [UnitKind.Corvette]: 'corvette',
   [UnitKind.Cruiser]: 'cruiser',
   [UnitKind.AbyssalSubmersible]: 'abyssal-submersible',
-  // No approved model yet: the slug resolves to no file, so the Chorister
-  // stays on the procedural sprite (graphics-standards.md, gate 1) until one
-  // passes intake.
+  // The Chorister carries no faction lock, so a navy rendering for one
+  // resolves chorister-<its faction>.glb: only the Directorate's exists, and
+  // the others stay on the recoloured sprite (graphics-standards.md, gate 1)
+  // until a variant passes intake — the Submersible's rule.
   [UnitKind.Chorister]: 'chorister',
-  // Nor the Clarion, for the same reason and on the same terms.
   [UnitKind.Clarion]: 'clarion',
   [UnitKind.Harvester]: 'harvester',
   // The rung's roster (#461), approved in #466 — one model per hull, since

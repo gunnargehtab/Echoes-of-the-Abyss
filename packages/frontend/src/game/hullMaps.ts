@@ -87,6 +87,12 @@ import harvesterHadEmissive from '../assets/hulls/maps/harvester-hadron-emissive
 import abyssalHadAlbedo from '../assets/hulls/maps/abyssal-submersible-hadron-albedo.png';
 import abyssalHadHeight from '../assets/hulls/maps/abyssal-submersible-hadron-height.png';
 import abyssalHadEmissive from '../assets/hulls/maps/abyssal-submersible-hadron-emissive.png';
+import choristerAlbedo from '../assets/hulls/maps/chorister-albedo.png';
+import choristerHeight from '../assets/hulls/maps/chorister-height.png';
+import choristerEmissive from '../assets/hulls/maps/chorister-emissive.png';
+import clarionAlbedo from '../assets/hulls/maps/clarion-albedo.png';
+import clarionHeight from '../assets/hulls/maps/clarion-height.png';
+import clarionEmissive from '../assets/hulls/maps/clarion-emissive.png';
 import tenderAlbedo from '../assets/hulls/maps/tender-albedo.png';
 import tenderHeight from '../assets/hulls/maps/tender-height.png';
 import tenderEmissive from '../assets/hulls/maps/tender-emissive.png';
@@ -152,6 +158,19 @@ const KIND_MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
     albedo: abyssalAlbedo,
     height: abyssalHeight,
     emissive: abyssalEmissive,
+  },
+  // The cohort hull and the Order's line hull: the Chorister's canonical
+  // model is the Directorate's (it carries no lock, like the Submersible);
+  // the Clarion is the Knights' alone.
+  [UnitKind.Chorister]: {
+    albedo: choristerAlbedo,
+    height: choristerHeight,
+    emissive: choristerEmissive,
+  },
+  [UnitKind.Clarion]: {
+    albedo: clarionAlbedo,
+    height: clarionHeight,
+    emissive: clarionEmissive,
   },
   // The rung's roster (#466): each hull is one navy's, so its model is the
   // kind's canonical one and no variant dimension exists — the signature

@@ -102,6 +102,14 @@ const UNITS = [
   // SIG; the Reciter's listed 90 is a cone figure (systems-echo.md §8), so
   // its emissive sits on the compass average the doc gives, 40.5 — the light
   // is *placed* forward on the lance, which is where the 90 is.
+  // The Chorister is the Directorate's without a lock (units.md, design
+  // notes), so its Directorate model is the kind's canonical one and serves
+  // any navy that renders for it, recoloured — the Submersible's rule. The
+  // Clarion's listed 62 is a cone figure like the Reciter's; its emissive
+  // calibrates on the compass average the doc gives, 27.9, and the light is
+  // placed on the bow array, which is where the 62 is.
+  { slug: 'chorister', model: 'chorister-directorate.glb', lengthM: 50, sig: 16 },
+  { slug: 'clarion', model: 'clarion-hadron.glb', lengthM: 90, sig: 27.9 },
   { slug: 'tender', model: 'tender-bathyarch.glb', lengthM: 85, sig: 48 },
   { slug: 'bulwark', model: 'bulwark-bathyarch.glb', lengthM: 150, sig: 70 },
   { slug: 'spinner', model: 'spinner-pelagia.glb', lengthM: 55, sig: 8 },
