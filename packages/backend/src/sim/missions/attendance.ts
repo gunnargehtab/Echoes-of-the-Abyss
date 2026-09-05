@@ -4,8 +4,9 @@
  * A data literal in `sorrowgate.ts`'s idiom: the document owns the forces, the
  * water, the beats, the numbers and the text. Where this file and that
  * document disagree, one of them is wrong and the fix says which — and this
- * mission is the first where the answer was the document, in one place, for a
- * reason recorded in §4 and §13 rather than hidden here.
+ * mission was the first where the answer was the document, in one place, for
+ * a reason recorded in §4 and §13; the document has since moved to match
+ * (#421), and the note below is kept as the history of why.
  *
  * Four things make this mission the shape it is, and all four are data:
  *
@@ -26,19 +27,20 @@
  *   dome is withdrawn while anything is owed, which costs the shift the band's
  *   outer hundred metres and therefore the arrivals standing in it (§5).
  *
- * **The one place the document moved, stated here and in §4 and §13.** §6
- * reasons about reach in *depth* — "850 m of depth against a 955 m band" — and
- * the Echo Layer resolves on horizontal distance alone, with the thermocline
- * as its only depth term. Every depth on this map is below the duct, so the
- * layer is uniform and depth is acoustically free: the arrivals' reach is the
- * distance down the axis, not the drop. The ranges §4 states are exact — 1,230
- * m to contact, 955 to bearing, and about 800 across the galleries' occluded
- * ground — so the transposition keeps every number the document measured and
- * changes only which axis carries them. What it costs is the dive: descending
- * is still the loudest thing this water hears, and it no longer buys hearing.
- * What replaces it is the going: the far two arrivals are two kilometres down
- * the channel, and a hull that goes for them is under way in a gallery of
- * sleeping people, which is the same invoice in the same currency.
+ * **Where the document once moved, stated here and in §4 and §13.** §6 as
+ * first written reasoned about reach in *depth* — "850 m of depth against a
+ * 955 m band" — and the Echo Layer resolves on horizontal distance alone, with
+ * the thermocline as its only depth term; and `DEPTH.MAX_M` orders no hull
+ * below 3,000 m, so the dive it priced was refused before it was priced. Every
+ * depth on this map is below the duct, so the layer is uniform and depth is
+ * acoustically free: the arrivals' reach is the distance down the axis, not
+ * the drop. The ranges §4 states are exact — 1,230 m to contact, 955 to
+ * bearing, and about 800 across the galleries' occluded ground — so the
+ * transposition keeps every number the document measured and changes only
+ * which axis carries them. The far two arrivals are two kilometres and more
+ * down the channel, and a hull that goes for them is under way in a gallery
+ * of sleeping people, which is the same invoice in the same currency. §6's
+ * table now carries the distance column this file always spent.
  */
 
 import {
@@ -85,8 +87,9 @@ const AXIS_X = 2500;
  * `y` is the distance down the axis, and it is what decides who hears it: the
  * seated watch holds bearing to about nine hundred metres inside the dome and
  * eight hundred outside it, measured against this map's own path. The depth is
- * the document's, unchanged, and is what the arrival *is* rather than how far
- * away it is — see the header's note on the transposition.
+ * the document's (§6's Depth column) and is what the arrival *is* rather than
+ * how far away it is — the return comes up out of water no hull is ordered
+ * into, and the emitter carries the number.
  */
 const arrival = (
   ordinal: string,
@@ -153,7 +156,7 @@ export const ATTENDING_ATTENDANCE: MissionDefinition = {
   silenceCeilingSig: 25,
   /** The order binds the watch. The dome is exempt, and idles ten over it. */
   silenceRole: 'shift',
-  /** §5 — one dive cannot black out the rest of the watch. */
+  /** §5 — one trip down the channel cannot black out the rest of the watch. */
   debtCapS: 45,
   /** No held freight here: the watch moves on its own orders, and pays for it. */
   escortRadiusM: 0,
@@ -376,12 +379,12 @@ export const ATTENDING_ATTENDANCE: MissionDefinition = {
       atTick: T(7),
       kind: 'say',
       speaker: 'Cohort-Prime Adze',
-      text: 'This is the floor. It is where I was made for and I am glad of it, which I am told is the part people find difficult. If the watch comes down here it will be welcome, and it will be slower than it likes, and it will not be able to go back up in time for anything.',
+      text: 'This is the floor. It is where I was made for and I am glad of it, which I am told is the part people find difficult. If the watch comes down the channel it will be welcome, and it will be slower than it likes, and it will not be back at the head in time for anything.',
       note: 'The 9th Trench Cohort, passing below southbound. Not an offer of help. There is no help to offer',
     },
     // 08:40 — the axis tightens for the approach, and this is the mission's
-    // decision: a depth, or a distance, that the watch cannot reach from where
-    // it is standing. Made in silence, with nothing chasing the player.
+    // decision: a distance down the channel that the watch cannot hear from
+    // where it is seated. Made in silence, with nothing chasing the player.
     call(
       T(9, 40),
       'Nine-four calls it. South, and deeper than the last. The watch is not asked to move.'

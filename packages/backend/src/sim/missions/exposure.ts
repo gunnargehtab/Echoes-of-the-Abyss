@@ -109,7 +109,7 @@ export const LEDGER_EXPOSURE: MissionDefinition = {
           y: 350,
           depthM: 900,
           role: 'survey',
-          note: "The lead hull — Tull's, and his father's water two trenches west",
+          note: "The lead hull — Tull's, and his father's water: the west wall's deep, where the Halvard salvors work (§1)",
         },
         {
           tag: 'survey-2',

@@ -15,8 +15,9 @@ the Directorate's working ground meets water the Consortium can reach, 214 PC
 
 ## 1. What the Margin Is
 
-The First Trench is the shallowest of the nine — the top step of the Directorate's country —
-and its western margin is where their working economy comes nearest the surface world's reach:
+The First Trench is the shallowest of the nine — the top step of the Directorate's country,
+counted as every trench is by where its floor goes and not by where it is entered
+([world-map.md](world-map.md) §3) — and its western margin is where their working economy comes nearest the surface world's reach:
 rendering yards on the rim, freight screws on the axis, the whole industrial breath of a
 society that publishes nothing. The margin's water carries it all, because the trench paints
 its own rim: PF 1.6 down the worked ground, and three days of cohort economy standing in the
@@ -52,9 +53,11 @@ has been rationing — silence and hearing — and none of the ones it taught fi
 does not come down here. That is why the Division does.
 
 Tull rides the lead hull. It is his model, his charter, and — although the mission never says
-so — his father's water: Halvard is on the west wall to the north, at this water's own depth
-([world-map.md](world-map.md) §3), and the paperwork said *exposure*
-([characters.md](characters.md)).
+so — his father's water: the west wall's deep, where the Halvard salvors work their recoveries
+and where the wreck that named the trade stands to the north, at this water's own depth and
+entered by nobody since 14 PC ([world-map.md](world-map.md) §3; [glossary.md](glossary.md),
+*Halvard*). His father was a salvor of that trade, not of that wreck, and the paperwork said
+*exposure* ([characters.md](characters.md)).
 
 **Engine bound, stated so nobody corrects it into a bug.** Three parties and a court slot: the
 survey, the trench watch, and the worked ground itself — whose assets in the water are sounds.
@@ -145,7 +148,7 @@ missions built, arriving in water that prices it.
 | **The Division's survey** — the player | 3 corvettes, survey fit, unarmed | Under charter, deniable while unclassified |
 | **The trench watch** | 2 Abyssal Submersibles | The First Trench's standing western watch, on its own clock. Not hunting anything — until the ledger says otherwise |
 | **The worked ground** | Six sounds: five of economy, and a sixth | The margin's three days of industrial breath, standing in the water |
-| **The Drift** | 1 Draymaw pack, on the rim | Trench packs follow the freight ([bestiary.md](bestiary.md) §4). At the watch change, they follow the relief in |
+| **The Drift** | 1 Draymaw pack, on the rim | Trench packs follow the freight, and this one is driven along the rim at 1,700 m, four hundred metres under the species' 500–1,300 m band — the band is where the Drift lives, not where a beat may send it ([bestiary.md](bestiary.md) §4, #420). At the watch change, they follow the relief in |
 
 The watch is two hulls because the Directorate does not need more: their doctrine is to know
 first, and in their own country, against an unarmed survey, knowing *is* the arsenal. Armed,
@@ -407,7 +410,8 @@ What exists against this document and what does not, continuing the Ledger's lis
 | The six points as *authored emitters*, standing in for three days of hum and residue | **Built as emitters** (#240), and the stand-in is the honest note: the real residue layer ([systems-echo.md](systems-echo.md) §7) is written by live events and cannot be authored into a mission's past. A mission that wanted the survey to read *actual* Echo Marks would need a way to author marks at install, which nothing needs yet and nobody should build until a second mission asks |
 | The watch — authored transits, armed, on their own clock | **Built** (#190's `move` beats; hostility is `Owner.slot`) |
 | In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line |
-| **Where Halvard is** | **A finding against this document, and this document moved** (#408). §2 and the Related list said Halvard was *two trenches west*; the gazetteer puts it on the west wall at 1,600 m ([world-map.md](world-map.md) §3), and the trenches are counted downward, not laterally. The literal's seating note on the lead hull still carries the old phrase, which is a comment and not a line the player hears, and nothing in a literal changes for a docs pass |
+| **Where Halvard is** | **A finding against this document, and this document moved** (#408). §2 and the Related list said Halvard was *two trenches west*; the gazetteer puts it on the west wall at 1,600 m ([world-map.md](world-map.md) §3), and the trenches are counted downward, not laterally. The literal's seating note on the lead hull now says the same. **Whose salvor Tull's father was** is settled the same way (#424): Halvard imploded in 14 PC and is entered by nobody, so *Halvard salvor* is the concern's standing trade name for its deep-recovery crews and not a claim to have worked the wreck — §1 reads it that way, and the line in [characters.md](characters.md) survives as spoken |
+| **A pack under its band** | **Landed** (#420) — `exposure.ts` drives the rim pack at 1,700 m against the Draymaw's 500–1,300 m band in [bestiary.md](bestiary.md) §4, under that section's rider: the band is where the Drift lives, not where a beat may send it. §5's roster row says so, and nothing in the literal moves |
 
 ---
 

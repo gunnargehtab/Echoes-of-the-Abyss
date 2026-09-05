@@ -136,10 +136,10 @@ survey, no column. The mission seats the player and the Drift is not populated.
 is not the button's teaching mission — Tend is ([mission-tend.md](mission-tend.md) §3), and the
 campaigns are playable in either order, so Attendance may not depend on it having been taught.
 The shift is authored silent because that is what attending is, and the only thing in the mission
-that breaks it breaks it by the depth rules rather than by choice: **ordering a dive breaks
-Silent Running, and re-asserting it mid-dive does not buy quiet**
-([systems-depth.md](systems-depth.md) §2). The player is not given a switch. The player is given
-a decision that happens to throw one.
+that breaks it breaks it by the silence order rather than by choice: **a hull under way is over
+the ceiling** — it cruises at 28 against §5's 25, in a gallery of sleeping people — and the far
+arrivals are two kilometres and more down the channel. The player is not given a switch. The
+player is given a decision that happens to throw one.
 
 ---
 
@@ -174,25 +174,29 @@ and it lands in four movements.
    Directorate's taboo rendered exactly: *you may describe it, measure it, dream about it, and
    record the dream; you may not say what it is* ([culture.md](culture.md) §3). The best ears in
    the Rift, pointed at the one thing that does not resolve.
-4. **Where a listener stands is three numbers, and one of them is expensive.** North and east are
-   free: a silent hull moves at 33 m/s and the shift may spread itself down the axis at no cost
-   at all. Depth is not free. Descent is 45 m/s **at a SIG floor of 72**, and ascent is 15 m/s and
-   silent ([systems-depth.md](systems-depth.md) §2). The mission's arithmetic is one line:
-   **sixty seconds of warning buys nine hundred metres of climb, and bearing reaches nine hundred
-   and fifty-five.** A shift can always just barely rise into the next arrival's band, once. It
-   can never do it twice, and it can never do it from the floor.
+4. **Where a listener stands is two numbers, and one of them is expensive.** Depth is not one of
+   them. The whole map is below the duct, so the layer is uniform and the return is heard the
+   same from 3,000 m as from anywhere a hull could stand ([systems-echo.md](systems-echo.md)
+   §3) — and 3,000 is the deepest a hull is ever ordered, so the watch could not follow the return
+   down if it wanted to ([systems-depth.md](systems-depth.md) §1; §11). What is expensive is
+   **distance down the axis**. A seated hull holds bearing to 955 m; the approach and the sill
+   arrive 2,400 and 2,875 m down the channel from the face (§6); and a hull under way to get there
+   is cruising at 28 against a ceiling of 25 (§5), in a gallery of sleeping people. The mission's
+   arithmetic is one line: **the far two arrivals are outside the band from the face, and the
+   only way to have them is to leave it.** A hull that goes is in debt for the going, the dome is
+   withdrawn while the debt stands, and the three it left behind hold the band's edge without it.
 
 Asset Recovery aims loudness and Tend tends quiet; Attendance does neither. It **spends the
-mission not acting**, and the one act available is a dive that is the loudest thing this water has
-heard in a century. Same detection maths, third life ([campaign.md](campaign.md) §2, rule 2).
+mission not acting**, and the one act available is sending a hull down the axis, which is the
+loudest thing this gallery has heard in a century. Same detection maths, third life
+([campaign.md](campaign.md) §2, rule 2).
 
-> **On the fourth movement, against the engine as built.** The ranges above are exact and were
-> measured against it. The *axis* they are spent on is not: detection resolves on horizontal
-> distance, and every depth on this map is below the thermocline duct, so depth is acoustically
-> free and a dive buys no hearing. The built mission spends the same ranges down the channel —
-> the arrivals keep these depths and stand at the distances those depths stood for — which keeps
-> everything this section argues except the direction the expense runs in. §13 carries the full
-> finding and what restoring the climb would cost.
+> **The fourth movement, as it was first written**, priced the far arrivals in *depth* — a dive
+> from 3,000 to 4,100 m at 45 m/s and SIG 72, and a climb back at 15 that could not be made twice
+> — against an engine that resolves detection on horizontal distance and a ruleset that orders no
+> hull below 3,000 m. The literal transposed the expense to distance down the axis, and this
+> document now says what is built rather than recording the difference (#421). §13 keeps the
+> history.
 
 ### The SIG budget
 
@@ -202,8 +206,8 @@ watch emits while it is doing its job ([systems-echo.md](systems-echo.md) §6). 
 decides anything sits under it all watch.
 
 It is playtested against a player who exceeds it, per [campaign.md](campaign.md) §10, because most
-will — by dropping silence to cross the axis faster at 28, by diving after the return at 72, by
-treating the stalls as a staging area. Exceeding it costs no hull and fails nothing. It is heard,
+will — by dropping silence to cross the axis faster at 28, by going down the channel after the
+return, by treating the stalls as a staging area. Exceeding it costs no hull and fails nothing. It is heard,
 and here what hears it is a room full of people who were asleep.
 
 ---
@@ -216,8 +220,9 @@ Order*).
 
 Twenty-five is chosen against the hull and not against the fiction. An Abyssal Submersible idles
 at 22 and cruises at 28, so **the watch may listen and may not travel**. A hull that drops silence
-and holds station is compliant. A hull under way is shoving. A hull descending at 72 is shoving so
-loudly that the ledger caps before the dive finishes.
+and holds station is compliant. A hull under way is shoving, and a hull that goes down the channel
+for the far arrivals is shoving for long enough that the ledger is well into its cap before it
+gets there.
 
 The clauses are Sorrowgate's, restated in the register that invented them
 ([mission-sorrowgate.md](mission-sorrowgate.md) §4):
@@ -232,8 +237,8 @@ The clauses are Sorrowgate's, restated in the register that invented them
    it.
 3. **Silence-debt.** Every second any watch hull spends over the ceiling adds a second of debt to
    the shift. While the shift is in debt the dome is withdrawn from all four hulls. Debt repays a
-   second for a second and caps at **45 seconds**, so one dive cannot black out the rest of the
-   watch.
+   second for a second and caps at **45 seconds**, so one trip down the channel cannot black out the
+   rest of the watch.
 
 **What the dome is actually worth here, stated because the number is surprising.** On a hull that
 already hears at 85, the Cantor's +25 runs into its own cap at 95 and buys **seven per cent of
@@ -273,31 +278,33 @@ Tier 2 or better from any watch hull and the arrival is **attended** — entered
 dream for that window. Resolve it at Tier 1 and there is a smudge and no line. Miss it and the gap
 is entered too, which is the transcript's own convention and not a punishment invented for a game.
 
-| # | Time | Where, on the axis | Depth | What it asks of the watch |
-| --- | --- | --- | --- | --- |
-| 1 | 01:20 | The head, in the dome | 2,900 m | Nothing. It arrives in the stalls' own water and everyone files it |
-| 2 | 03:00 | The head | 3,050 m | Nothing, and the player is starting to believe the mission |
-| 3 | 04:40 | Upper channel | 3,250 m | The first arrival that rewards a hull placed south rather than seated |
-| 4 | 06:20 | Mid channel | 3,550 m | Reachable from the stalls' band. The last one that is |
-| 5 | 08:00 | Lower channel | 3,850 m | Marginal from 3,000 m — 850 m of depth against a 955 m band |
-| **6** | **09:40** | **The approach** | **4,100 m** | **Out of reach without a dive.** The first of the two the transcript's last line costs |
-| 7 | 11:20 | Mid channel | 3,150 m | The return comes back up, and a watch that followed it down is a thousand metres under it |
-| **8** | **13:00** | **The sill** | **4,100 m** | The second. Deepest, furthest, and two minutes before the last |
-| 9 | **15:40** | The head | 2,850 m | Highest, nearest the stalls, and **1,250 m of climb from the sill against 900 m of warning.** A watch at the floor cannot have it |
+The depth is what an arrival *is* — the return comes up out of water no hull is ordered into, and
+the emitter carries the number ([world-map.md](world-map.md) §3, *The Ninth, head to Mouth*). The
+distance down the axis from the gallery face is what decides who hears it.
+
+| # | Time | Where, on the axis | Down the axis | Depth | What it asks of the watch |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 01:20 | The head, in the dome | 700 m | 2,900 m | Nothing. It arrives in the stalls' own water and everyone files it |
+| 2 | 03:00 | The head | 750 m | 3,050 m | Nothing, and the player is starting to believe the mission |
+| 3 | 04:40 | Upper channel | 900 m | 3,250 m | The band's outer edge, where the dome is doing the work and a shift in debt loses it |
+| 4 | 06:20 | Mid channel | 800 m | 3,550 m | Comfortably inside the seated band |
+| 5 | 08:00 | Lower channel | 900 m | 3,850 m | Marginal from the face — the band's edge, felt rather than read |
+| **6** | **09:40** | **The approach** | **2,400 m** | **4,100 m** | **Out of reach from the face.** The first of the two the transcript's last line costs |
+| 7 | 11:20 | Mid channel | 750 m | 3,150 m | The return comes back up, and a hull that went south for the approach is a kilometre and a half from it |
+| **8** | **13:00** | **The sill** | **2,875 m** | **4,100 m** | The second. Deepest, furthest, and two minutes before the last |
+| 9 | **15:40** | The head | 650 m | 2,850 m | Highest, nearest the stalls, and **2,200 m of channel from the sill against sixty seconds of warning.** A hull still at the sill cannot have it |
 
 Read rows 6, 8 and 9 together, because they are the mission: **the two arrivals you can only have
-by going down are the two that put the last one out of reach.** A watch that never changes depth
-attends seven of the nine. A watch that dives well attends all nine and runs a debt doing it. A
-watch that chases every arrival attends four, spends the watch in transit and in debt, and is not
-in the record.
+by going down the channel are two kilometres from the one that comes last, and the hull that went
+for them is not at the face when it does.** A watch that never moves attends seven of the nine. A
+watch that sends one hull down the channel between arrivals, and leaves three at the face, attends
+all nine and runs a debt doing it. A watch that goes south whole trades the head's arrivals for
+the channel's, comes back to none, and has attended no more than the seated watch did with a
+ledger to show for it.
 
 That is the decision the mission is made of, and it is made once, at about eight minutes, in the
-quiet before arrival 6 is called.
-
-> **As built**, the first two of those three sentences hold exactly — a seated watch attends
-> seven, and the whole cycle costs a debt inside §5's cap. The third does not: chasing cost four
-> because the climb is slow, and horizontal travel is not, so a watch that chases can have all
-> nine. See §13.
+quiet before arrival 6 is called. `missionAttendance.test.ts` plays the first two of those three
+watches.
 
 ---
 
@@ -354,8 +361,9 @@ is an outcome ([glossary.md](glossary.md), *Mission Outcome*). A player who sat 
 eighteen minutes, never moved, and filed seven has played the Directorate exactly right and is
 told so in the strongest words the faction owns.
 
-**And the whole cycle costs a breach.** Arrivals 6 and 8 are at 4,100 m and cannot be attended
-from the stalls' band, so nine of nine requires the dive, and the dive is a shove in a gallery of
+**And the whole cycle costs a breach.** Arrivals 6 and 8 come up the channel from 4,100 m — water
+no hull is ordered into — and stop two kilometres and more short of the stalls' band, so nine of
+nine requires sending a hull down the axis, and a hull under way is a shove in a gallery of
 sleeping people. The mission ranks the transcript, because the transcript is what a record is for.
 The voices rank the manner, and they disagree: Ossary reads the debt, Korrin reads the count, and
 the mission does not say which of them is right. That is [campaign.md](campaign.md) §2 rule 1
@@ -399,11 +407,11 @@ crushes at any depth the map holds, and there is no party to fight. The stake is
 | 06:20 | **Arrival 4**, 3,550 m. The last one the stalls' band reaches comfortably |
 | **07:00** | **Adze, on the floor.** The 9th Trench Cohort passes below, southbound, and says one thing to the watch (§12). Not an offer of help. There is no help to offer |
 | 08:00 | **Arrival 5**, 3,850 m — marginal. The band's edge, felt rather than read |
-| **08:40** | **The axis tightens for the approach.** Sixty seconds, and the call from the stalls names a depth below anything the watch can reach from where it is. **This is the mission's decision**, and it is made in silence, with nothing chasing the player, in the last quiet stretch before the deep half |
-| **09:40** | **Arrival 6**, 4,100 m. Attended only by a hull that dove for it — 1,100 m at 45 m/s and SIG 72, which is a shove the ledger caps on |
-| 11:20 | **Arrival 7**, 3,150 m. The return comes back up. A watch that followed it down is a thousand metres under this and climbing at fifteen metres a second |
-| 13:00 | **Arrival 8**, the sill, 4,100 m. The deepest and the furthest. A watch that takes it is at the floor with two minutes and forty seconds left |
-| 15:40 | **Arrival 9**, the head, 2,850 m, nearest the stalls. **1,250 m of climb from the sill against 900 m of warning.** The mission's last five minutes, load-bearing exactly as §10 asks |
+| **08:40** | **The axis tightens for the approach.** Sixty seconds, and the call from the stalls names a bearing further down the channel than anything the watch can hear from where it is. **This is the mission's decision**, and it is made in silence, with nothing chasing the player, in the last quiet stretch before the deep half |
+| **09:40** | **Arrival 6**, the approach, 2,400 m down the axis. Attended only by a hull that went for it — a kilometre and a half of channel under way at 28 against a ceiling of 25, which is a shove the ledger caps on |
+| 11:20 | **Arrival 7**, 3,150 m, back at the head. The return comes back up. A hull that went for the approach is a kilometre and a half down the channel from this, and the three at the face have it |
+| 13:00 | **Arrival 8**, the sill, 4,100 m and 2,875 down the axis. The deepest and the furthest. A hull that takes it is at the map's edge with two minutes and forty seconds left |
+| 15:40 | **Arrival 9**, the head, 2,850 m, nearest the stalls. **2,200 m of channel from the sill against sixty seconds of warning**, so the hull that went south cannot have it and the three that stayed can. The mission's last five minutes, load-bearing exactly as §10 asks |
 | 17:00 | The stalls wake. The dreams are read into the record, without interpretation, in the order they were dreamt (§12) |
 | **18:00** | **The watch ends.** Korrin reads the count. Ossary is present and, after her last sentence, says nothing, and the record notes that he was there |
 
@@ -473,13 +481,15 @@ on it but the player.
 Every rectangle lands on the 250 m cell grid and paints exactly the metres it reads
 ([maps.md](maps.md), "How a map is written").
 
-**The benches are the map's one piece of gameplay geometry, and they are not a fence.** They stand
-at 3,200 m against a channel floor of 4,100. A hull that strays off the axis onto a bench is
-*lifted* — terrain may raise a hull and may never lower one
-([systems-depth.md](systems-depth.md) §2) — and getting back down costs a dive, which costs
-seventy-two. So the channel is a corridor for movement for the same reason it is a corridor for
-sound, and nothing had to be made solid to say so. The trench walls are doing what trench walls
-do.
+**The benches and the channel are the map's geometry, and none of it is a fence, or reachable.**
+The benches stand at 3,200 m and the channel at 4,100 against a ruleset ceiling of 3,000
+(`DEPTH.MAX_M`; [systems-depth.md](systems-depth.md) §1), so every hull on this map holds 3,000 m
+over water it never touches: nothing is lifted, nothing crushes, and a hull that strays off the
+axis onto a bench is on the same acoustic ground it left. The channel is a corridor for sound and
+not for movement — PF 1.60 down its length, and the galleries' cut structure occluding the head of
+it — and the far arrivals are heard from it or not at all. The trench walls are doing what trench
+walls do, and the floor under them is a number the return comes up out of
+([world-map.md](world-map.md) §3, *The Ninth, head to Mouth*; #421).
 
 **The Attending Galleries is a mission map and is not in the public catalogue.** One seat, no
 resources, not balanced, resolved by mission id and nothing else ([maps.md](maps.md)).
@@ -537,8 +547,8 @@ or the impersonal:
 **Cohort-Prime Adze, passing below southbound — 07:00**
 
 > This is the floor. It is where I was made for and I am glad of it, which I am told is the part
-> people find difficult. If the watch comes down here it will be welcome, and it will be slower
-> than it likes, and it will not be able to go back up in time for anything.
+> people find difficult. If the watch comes down the channel it will be welcome, and it will be
+> slower than it likes, and it will not be back at the head in time for anything.
 
 **The record, read from the stalls — 17:00**
 
@@ -592,15 +602,15 @@ what it was missing.
 | The mission format — beats, predicates, registry, private rooms | **Built** (#190). `say`, `objective`, `endure`, `quiet` and `resolve` cover most of §9's schedule |
 | The silence order — ceiling, debt, the withdrawn dome | **Built**, and reused unchanged: `silenceCeilingSig`, `debtCapS`, `arrayTag` and the `courtSlot` withdrawal are the prologue's, and the Cantor they move is already a Cantor ([mission-sorrowgate.md](mission-sorrowgate.md) §4) |
 | The Cantor's dome — +25 HYD, 1,200 m, cap 95 | **Built** — `STRUCTURE_AURAS.CANTOR`. The seven-per-cent finding in §5 is a consequence of the shipped cap and this document's hull, not a change to either |
-| Silent Running, and a dive breaking it | **Built** ([systems-depth.md](systems-depth.md) §2) — the SIG floor of 72 on descent, the 45 m/s down and 15 m/s up, and the fact that re-asserting silence mid-dive buys nothing. The mission's whole decision is made of these three and none of them is new |
-| PR-3 across the Abyssal, with no floor under it | **Built** — `requiredPressureRating` is band-derived, so nothing on this map crushes a Directorate hull at any depth the map authors. Stated because a reader will ask what 4,100 m costs, and the answer is nothing but time and noise |
+| Silent Running, and a dive breaking it | **Built, and no longer what the decision is made of** — the SIG floor of 72 on descent and the 45 m/s down against 15 up are in the engine ([systems-depth.md](systems-depth.md) §2), and this map has no water for them: every hull holds the 3,000 m ceiling (#421). The decision is made of §5's ceiling against the hull's own cruise, which is older still |
+| PR-3 across the Abyssal, with no floor under it | **Built** — `requiredPressureRating` is band-derived, so nothing on this map crushes a Directorate hull at any depth the map authors. Stated because a reader will ask what 4,100 m costs, and the answer is that no hull is ordered there (`DEPTH.MAX_M`): the channel is water the return comes up out of, and the watch hears it from 3,000 |
 | The map, its eight regions, the benches that lift | **Built** — `attending-galleries`, one row of the literal per row of §11's table, with one change recorded in that section: the channel is cut north to the galleries' own edge, because §6 row 1 has the first arrival reach the stalls' own water and a channel head a kilometre south of the stalls could not deliver that. The mission definition is `attending-attendance` |
 | **The arrivals — an emitter that starts and stops at authored ticks** | **Built**, as the smaller of the two shapes this row offered: a `fromTick`/`untilTick` pair on the emitter. The window and the pattern compose — the pattern says what the sound does while it is sounding, the window says when that is — and an arrival is the case where they are the same length, so it is simply on for its twenty seconds |
 | **The attended count — a tally over the player's own resolution of an authored emitter** | **Built**, and exactly as this row scoped it: an `attend` predicate over a per-arrival tally at Tier 2, monotone, counted only while the arrival is sounding. The tier comes from the Echo Layer's own answer for the player's own slot, pre-bound so the runtime has no way to ask what anybody else resolved — the wall holds because there is no argument with which to breach it |
 | **A listening role** | **Built**, and the roles are authored per mission as this row asks: `MissionRole` is a mission's own word rather than a union in shared, and `silenceRole` names the set the ceiling measures — the watch here, the flight at Sorrowgate. What the union used to buy is bought instead by a test that holds every role a mission *names* to being one it *assigns*, which the union never checked |
 | **The transcript as a variable close** | **Built** — the epilogue assembles: each arrival authors both of its readings (`Entered:` / `Not entered:`), and the close prints the nine the run earned under whichever of §8's three readings the count chose. Nothing is templated, which is why the lines are authored in pairs rather than built from a number and a noun |
 | The sixty-second telegraph as the rite's own structure | Ambient authoring and `say` beats; no new mechanism. The existing telegraph test measures the gap between the last loud beat and the resolve, and this mission satisfies it nine times over |
-| **Depth as acoustic range** — §4's fourth movement and §6's table | **Not built, and not buildable here.** The Echo Layer resolves detection on *horizontal* distance, with the thermocline as its only depth term; every depth on this map is below the duct, so the layer is uniform and depth is acoustically free. The ranges §4 states are exact against the engine — 1,230 m to contact, 955 to bearing, about 800 across the galleries' occluded ground — but §6 spends them on vertical separation ("850 m of depth against a 955 m band"), which the model does not price. The built mission carries them down the axis instead: the arrivals keep their authored depths and are placed at the distances those depths stood for, so §6's spine holds where it is about reach — a seated watch attends seven of the nine, the approach and the sill are out of it, and the whole cycle costs a debt inside §5's cap. What does **not** survive is the third of that spine's three sentences: chasing every arrival costs four *because ascent is 15 m/s and descent is 45*, and horizontal travel has no such asymmetry, so a watch that chases can have all nine. Restoring it means one of two things nobody should do quietly — making detection three-dimensional, which reprices every range in the bible, or giving the mission a cost that bites the way the climb did |
+| **Depth as acoustic range** — §4's fourth movement and §6's table | **Landed, on the literal's side** (#421). As first written, §4 and §6 spent the mission's ranges on *depth* — a dive from the watch's 3,000 m to arrivals at 4,100, at 45 m/s and SIG 72, and a climb back at 15 that could not be made twice — and two facts about the engine made that unplayable: the Echo Layer resolves detection on horizontal distance, with the thermocline as its only depth term, so below the duct depth is acoustically free; and `DEPTH.MAX_M` orders no hull below 3,000 m, so the dive was refused before it was priced. The literal transposed the expense to distance down the axis from the first commit, keeping every range §4 measured — 1,230 m to contact, 955 to bearing, about 800 across the galleries' occluded ground — and the arrivals' authored depths, and this document now says the same: the far two arrivals are 2,400 and 2,875 m down the channel, the going is priced in §5's ledger rather than in a climb, and the third sentence of §6's spine is written for the watch that is built rather than the one that was not. The ceiling stays at 3,000, [world-map.md](world-map.md) §3 now gives the Ninth a profile the 4,100 m channel fits in, and the return comes up out of water nobody stands in, which is a better sentence than the dive was |
 | **The Hollow's working depth** | **Specified and built since** — [bestiary.md](bestiary.md) §4 gives the Hollow 1,700 m, pursuing to 2,150, and §1 reads it that way: six hundred metres short of the shallowest gallery, so the mission's opening claim stands as written |
 | The Drift, absent | **Built** — `fauna: false`, which the format already carries for a mission whose only creatures are authored. This is the first that authors none |
 | In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line |
@@ -616,7 +626,7 @@ what it was missing.
 - **[mission-asset-recovery.md](mission-asset-recovery.md)** — the emitter this mission's return is shaped from, and the classification that names nothing
 - **[factions.md](factions.md)** — the Listeners, the cohort programme, and the fear Korrin will not state
 - **[systems-echo.md](systems-echo.md)** — §3, HYD and the trench that carries; §4, the tier a transcript is written at
-- **[systems-depth.md](systems-depth.md)** — §2, the fast loud descent and the slow silent climb this whole mission is priced in
+- **[systems-depth.md](systems-depth.md)** — §1, the 3,000 m ceiling every hull on this map holds, and the floor under it that nothing stands on
 - **[world-map.md](world-map.md)** — Sufficiency, the attending galleries, the Ninth's axis, and the Mouth it aims at
 - **[culture.md](culture.md)** — §3, the register that may not explain; §5, the rite and the written silence-debt
 - **[characters.md](characters.md)** — Korrin, Ossary and Adze, and the civil war this mission plants

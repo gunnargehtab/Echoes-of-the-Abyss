@@ -27,15 +27,19 @@ it takes ground — is the mission rather than an awkwardness in it.
 ## 1. What the Fifth Is
 
 A canyon in crystal that rings at a fifth, and has been called that for a hundred and forty
-years by people who meant it literally.
+years by people who meant it literally — forty-four of those years before there was an Order to
+mean it ([timeline.md](timeline.md), 118 PC).
 
 The Resonance Fields seam the eastern slope from 1,400 m down to 2,900 m, and at their southern
 margin they break toward trench country ([world-map.md](world-map.md)). The break is not a cliff.
 It is a defile — three kilometres of crystal-walled ground, a kilometre wall to wall at the
 narrows, running north from the Seam up into the Third Chapter-House's country. The walls are
 seamed formation, the same crystal the chapter-houses are cut into, and under any pressure change
-they ring. What they ring at is a perfect fifth, and the Order named the ground for the interval
-the way it names a person for the interval their name resolves to ([culture.md](culture.md) §5).
+they ring. What they ring at is a perfect fifth, and the road was named for the interval by
+whoever used it first — the Consortium's survey engineers, two generations before the schism
+that made their successors the Order — the way the Order now names a person for the interval their
+name resolves to ([culture.md](culture.md) §5). The Order inherited the name with the road, and
+has never written down that either is theirs.
 
 **Three facts about this water decide the mission.**
 
@@ -759,6 +763,7 @@ works left standing in it.
 | Permanent roster attrition | **Built elsewhere, and declined here** (#380). The mechanism is `MissionDefinition.attrition` — the flag [mission-nineteen.md](mission-nineteen.md) alone authors — and `MissionUnit.cadre`, the roster name a spent hull is kept under; a mission that authors neither neither spends nor reads the spent set, and this literal authors neither, which is §10's argument made as an absence rather than a rule. Hulls lost here are lost for this tide and no further |
 | In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line |
 | A canyon that rings at a fifth, and a corridor that changes what it rings *as* | **Built** (#402), on top of the Fields' bed the same change laid down ([mission-aptitude.md](mission-aptitude.md) §13). The canyon is a just dyad at 880 and 1,320 Hz; a standing corridor is a **second fifth placed on that root and panned to the line's midpoint**, so the megaphone is heard as the thing the ground was already ringing at, made louder and given a bearing the Fields never had. It does not scale with the crystal around it — an absolute PF write is water tuned by hand, and tuned water is exactly as loud wherever it was laid — and it fades to nothing at four kilometres, because a megaphone you can only hear from inside is not one. **It is the first thing in the mix assembled by inference rather than by report**, and the departure is recorded rather than quiet: `paired` is not on the wire, so the reading is §4's pairing rule applied to two completed, singing nodes of one commander inside `PAIR_RANGE_M`. It leaks nothing, since the pools are the player's own structures and Tier-4 tracks, both of which already carry position and hull. What it can get wrong is a false positive in two shapes with one cause: a Spire sings at 80 when the depth grant is load-bearing *or* an interval is held ([units.md](units.md)), and the client cannot tell those apart — so a prebuilt lattice lit by the grant ([mission-rim-deposits.md](mission-rim-deposits.md) §4) reads as a line, and so does a node still paired to a dead partner with a third standing nearby. Both sound a fifth reinforced where a lattice stands, which is the cheap direction to be wrong in: nothing here is an alarm, and the accessible half is the panel's *sour* reading, which is server-resolved. A `paired` flag on `OwnStructure` would close it and is not proposed, because it would be the first field on the wire that exists for the mix. Own and tracked nodes are two pools and never one, because pairing is per-commander and a mixed pool would sound a corridor nobody built |
+| **The Fifth's age, and who commands the column** | **Landed** (#423, #425). The road has been called the Fifth for a hundred and forty years and the Order is ninety-six years old ([timeline.md](timeline.md), 118 PC), so §1 no longer says the Order named it: the road and its name are older than the Order, which inherited both and has never written down that either is theirs — which is what Sull's 00:00 line says, and that line is unchanged in the literal. And Cohort-Prime Adze walks a Mid-Water transit up a canyon in the Third's country because [characters.md](characters.md) now says Adze cannot *live* off the trench floor rather than survive there — a posting Adze can walk and never keep — and the two lines Adze speaks here stay as written |
 
 ---
 

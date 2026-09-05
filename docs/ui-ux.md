@@ -820,8 +820,10 @@ margin with its own ticks. The plate's survey text is *not* transcribed — at a
 it would be noise — so the chart carries the six region names and nothing else, and reads the
 ground of the lit slot in DOM text under it at a reading size: the place, the depth, and whose
 water, as *Sorrowgate, the drowned city · 1,500 m · nobody's water — all four deny using it*.
-The place and its water are [world-map.md](world-map.md) §3's; the depth is the map's base
-floor from the mission document's §11. A mission on a ground the chart does not know fails a
+The place, its depth and its water are all [world-map.md](world-map.md) §3's — the depth is
+the *place's*, the reading a player would give the ground, and not the map's base floor from
+the mission document's §11, which differs on eight grounds and is what the mission is played
+over rather than what the chart names (#422; `riftChart.test.ts` holds every row to §3). A mission on a ground the chart does not know fails a
 test rather than drawing nowhere.
 
 **Whose water and whose mission are two facts, and the chart keeps them apart.** A region is

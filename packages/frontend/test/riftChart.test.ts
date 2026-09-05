@@ -90,6 +90,40 @@ describe('the gazetteer', () => {
       'Sorrowgate, the drowned city · 1,500 m · nobody’s water — all four deny using it'
     );
   });
+
+  it('marks the place’s depth from world-map.md §3, not the map’s floor (#422)', () => {
+    // The rail is a gazetteer: the depth under a slot is the reading a player
+    // would give the ground, which is §3's number for the place. The map's
+    // base floor from each mission document's §11 differs on eight of these,
+    // and the chart's own label says *depth*, so §3 wins — one row per map,
+    // held here so a literal's floor cannot drift back into the column.
+    const PLACE_DEPTHS: Record<string, number> = {
+      'marr-plateau': 320, // the plateau
+      'kell-shoulder': 340, // the shoulder, at the Concourse's own depth
+      'anholt-furrow': 2200, // the seeded floor, not the Foot at 900
+      'holding-underworks': 1300, // the Holding's lowest berths, over the roofed works
+      'holding-board': 1350, // Board country, at the bottom of the city
+      'ninefold-face-six': 1000, // the founding field, 900–1,400 m
+      'ninefold-workings': 1100, // the upper workings, astride the layer
+      sorrowgate: 1500, // the court
+      'outer-formations': 1700, // the Third's outer formations
+      'the-fifth': 1700, // the canyon's floor
+      'the-rest': 1600, // the Head
+      'the-first': 2900, // the deepest chapter-house
+      'first-trench-margin': 1800, // the First Trench
+      'shallow-band': 1800, // the First Trench
+      'fourth-trench': 1700, // the pipe's floor
+      'fourth-foot': 2400, // the Foot, the last bench
+      'banding-ground': 2400, // the upper Ninth, 1,500–2,400 m
+      'upper-terraces': 2750, // the top of Sufficiency, 2,750–3,400 m
+      'attending-galleries': 3000, // the galleries, on the axis
+      'mouth-rim': 2600, // the Terraces, where every rim mission is fought
+    };
+    for (const ground of GROUNDS) {
+      assert.equal(ground.depthM, PLACE_DEPTHS[ground.mapId], `${ground.mapId}: not §3's depth`);
+    }
+    assert.equal(Object.keys(PLACE_DEPTHS).length, GROUNDS.length);
+  });
 });
 
 describe('the depth rail', () => {

@@ -79,7 +79,7 @@ Depth Bands
 
 The Shallow Band
 
-- **A place, not a depth band.** The First Trench at 1,800 m — the Directorate's shallowest holding, and the posting the roughly eight per cent of each intake who cannot hold their band are reassigned to (habitats.md §6; factions.md, "shallow-band labour"). It is the setting of mission-trench-awakening.md and the name of that mission's map.
+- **A place, not a depth band.** The First Trench at 1,800 m — the Directorate's shallowest posting (the Ninth's head at 1,500 m is shallower ground, and nobody is posted to it; a trench is counted by its floor, world-map.md §3), and the posting the roughly eight per cent of each intake who cannot hold their band are reassigned to (habitats.md §6; factions.md, "shallow-band labour"). It is the setting of mission-trench-awakening.md and the name of that mission's map.
 - It is *shallow* only relative to the Directorate, whose city stands at 2,750–3,400 m and whose trench runs deeper. In the ruleset's own terms 1,800 m is the first metre of the **Abyssal** band, not the Shelf.
 - Deliberately distinct from two neighbours it is easy to hear as the same word. **Shelf** is the 0–400 m depth band (see Depth Bands). The **Directorate's shallow-water penalty** is their physiology above 400 m and theirs alone — −20% speed and −15% HP — which is the subject of mission-shallow.md, one mission earlier in the same campaign and four hundred metres from the surface rather than eighteen hundred below it.
 - So: a Directorate hull is never penalised for being in the shallow band, and is always penalised for being in shallow water. The two are unrelated, and the campaign uses both within two missions of each other.
@@ -206,6 +206,7 @@ Halvard
 
 - A pre-Collapse habitat at 1,600 m on the west wall that imploded in **14 PC**: the Rift's founding grave. Bathyarch salvage — not yet a government, not yet chartered — recovered the bodies, and was chartered five years later on the strength of it (timeline.md).
 - The wreck has been left exactly as the salvors closed it. By unspoken agreement across all four powers, Halvard is not entered, not mined, and not built within a kilometre of (world-map.md §3).
+- **The Halvard salvors** are a standing trade, not the crews of 14 PC: the concern's deep-recovery crews have carried the name of the recovery that chartered them ever since, the way the field on the seal is older than the concern, and none of them has entered the wreck. A *Halvard salvor* is a job, and the water it dies in is any recovery the Board prices — Underwriter Tull's father was one (characters.md; mission-exposure.md §1).
 - **Sound:** none. Crews cut engines passing it, which in the Rift is what reverence is.
 
 Ninefold Vein

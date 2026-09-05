@@ -12,12 +12,13 @@
  * Every pair on this map is Below-to-Below, which is the one row of the
  * thermocline table that is simply 1.
  *
- * **The benches are the map's only gameplay geometry and they are not a
- * fence.** They stand at 3,200 m against a channel floor of 4,100, so a hull
- * that strays off the axis onto one is *lifted* — terrain may raise a hull and
- * may never lower one — and getting back down costs a dive. The channel is a
- * corridor for movement for the same reason it is a corridor for sound, and
- * nothing had to be made solid to say so.
+ * **The benches and the channel are geometry nothing stands on.** They are
+ * authored at 3,200 and 4,100 m against a ruleset ceiling of 3,000
+ * (`DEPTH.MAX_M`), so every hull here holds 3,000 m over water it never
+ * touches: nothing is lifted, nothing crushes, and the channel is a corridor
+ * for sound rather than for movement. The floor under it is a number the
+ * return comes up out of (docs/world-map.md §3, "The Ninth, head to Mouth";
+ * #421), and a map may author a floor below the ceiling for exactly that.
  *
  * **Not in `MAPS` and not in `MAP_HEADERS`, deliberately** — the standing
  * argument: one seat, no resources, not balanced, resolved by mission id and

@@ -10,11 +10,14 @@
  * **The gazetteer is transcribed, never invented.** Each ground is a map the
  * catalogue already names by `mapId`, placed where Plate VII places its region
  * (docs/concept-art/plate-07-rift-chart.svg — the coordinates below are the
- * plate's own, in its 2000 × 2750 space), at the depth its mission document's
- * §11 gives as the map's base floor, in the water docs/world-map.md §3 says it
- * is. A ground the catalogue does not stand on is not here, and a mission the
- * catalogue adds on a ground that is not here fails `riftChart.test.ts` rather
- * than drawing nowhere.
+ * plate's own, in its 2000 × 2750 space), at the depth docs/world-map.md §3
+ * gives the *place* — the reading a player would give the ground, "the First
+ * at 2,900 m" — in the water that section says it is. Not the map's base
+ * floor from the mission document's §11: the two differ on eight grounds, and
+ * the rail marks the place (#422; docs/ui-ux.md §14, "The chart"). A ground
+ * the catalogue does not stand on is not here, and a mission the catalogue
+ * adds on a ground that is not here fails `riftChart.test.ts` rather than
+ * drawing nowhere — as does a depth that drifts from §3.
  *
  * Whose water and whose mission are two different facts, and the chart keeps
  * them apart: a mark takes its **campaign's** ink, the ground it stands on is
@@ -41,11 +44,11 @@ export interface Ground {
   /** The region of §3 it sits in, as Plate VII labels it. */
   region: string;
   /**
-   * The depth the rail marks: the mission map's base floor, from its document's
-   * §11 — except Sorrowgate, whose row carries the court's 1,500 m from
-   * docs/world-map.md §3 rather than the map's 1,600 m floor. Where a place's
-   * depth in §3/§5 and its map's floor differ, which one the rail should mean is
-   * #422's call.
+   * The depth the rail marks: the place's, from docs/world-map.md §3 — the
+   * court at 1,500 m rather than Sorrowgate's 1,600 m map floor, the First
+   * Trench's shallow band at 1,800 rather than the 2,400 its map falls to.
+   * The rail is a gazetteer, not a playing-depth gauge (#422), and
+   * `riftChart.test.ts` holds every row to §3's number.
    */
   depthM: number;
   water: Faction | null;
@@ -126,7 +129,9 @@ export const GROUNDS: readonly Ground[] = [
     mapId: 'anholt-furrow',
     name: 'The Furrow, under Anholt’s terrace',
     region: 'The Plateaus',
-    depthM: 1100,
+    // The furrow itself — the seeded floor at 2,200 m, not the Foot at 900
+    // where the plateau's lane comes down (docs/world-map.md §3).
+    depthM: 2200,
     ...held(Faction.Pelagia),
     x: 900,
     y: 720,
@@ -202,7 +207,9 @@ export const GROUNDS: readonly Ground[] = [
     mapId: 'the-rest',
     name: 'The Rest',
     region: 'The Resonance Fields',
-    depthM: 1700,
+    // The Head, at 1,600 m: the trench head the place is named for, above
+    // the Order's bench at 1,750 and the floor at 2,150 (docs/world-map.md §3).
+    depthM: 1600,
     ...held(Faction.Hadron),
     x: 1393,
     y: 1507,
@@ -211,7 +218,7 @@ export const GROUNDS: readonly Ground[] = [
     mapId: 'the-first',
     name: 'The First Chapter-House',
     region: 'The Resonance Fields',
-    depthM: 2700,
+    depthM: 2900,
     ...held(Faction.Hadron),
     x: 1314,
     y: 1682,
@@ -221,7 +228,7 @@ export const GROUNDS: readonly Ground[] = [
     mapId: 'first-trench-margin',
     name: 'The Western Margin, First Trench',
     region: 'The Trench Country',
-    depthM: 1500,
+    depthM: 1800,
     // The concern surveys it; the water is the top step of the cohorts'
     // country (docs/mission-exposure.md §1).
     ...held(Faction.Directorate),
@@ -232,7 +239,7 @@ export const GROUNDS: readonly Ground[] = [
     mapId: 'shallow-band',
     name: 'The shallow band, the First Trench',
     region: 'The Trench Country',
-    depthM: 2400,
+    depthM: 1800,
     ...held(Faction.Directorate),
     x: 860,
     y: 1850,
@@ -241,7 +248,7 @@ export const GROUNDS: readonly Ground[] = [
     mapId: 'fourth-trench',
     name: 'The Fourth Trench',
     region: 'The Trench Country',
-    depthM: 1450,
+    depthM: 1700,
     water: null,
     whose: 'claimed by the concern and the cohorts, and neither patrols it alone',
     x: 840,
@@ -251,7 +258,9 @@ export const GROUNDS: readonly Ground[] = [
     mapId: 'fourth-foot',
     name: 'The Fourth’s foot',
     region: 'The Trench Country',
-    depthM: 1450,
+    // The Foot, the last bench at 2,400 m, where the listening dome stands —
+    // not the fan above it (docs/world-map.md §3).
+    depthM: 2400,
     ...held(Faction.Directorate),
     x: 960,
     y: 2060,
@@ -269,7 +278,9 @@ export const GROUNDS: readonly Ground[] = [
     mapId: 'upper-terraces',
     name: 'Sufficiency’s upper terraces',
     region: 'The Trench Country',
-    depthM: 3400,
+    // The top of the city: Sufficiency runs 2,750–3,400 m and the terraces
+    // the calling is seated on are its upper ones (docs/world-map.md §3).
+    depthM: 2750,
     ...held(Faction.Directorate),
     x: 900,
     y: 2270,
@@ -278,7 +289,9 @@ export const GROUNDS: readonly Ground[] = [
     mapId: 'attending-galleries',
     name: 'The attending galleries, Sufficiency',
     region: 'The Trench Country',
-    depthM: 3400,
+    // The galleries stand at 3,000 m on the Ninth's axis, the deepest any
+    // hull is ordered; the axis under them falls to 4,100 (docs/world-map.md §3).
+    depthM: 3000,
     ...held(Faction.Directorate),
     x: 930,
     y: 2312,
