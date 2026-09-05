@@ -74,11 +74,11 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   [UnitKind.Corvette]: 'corvette',
   [UnitKind.Cruiser]: 'cruiser',
   [UnitKind.AbyssalSubmersible]: 'abyssal-submersible',
-  // No approved model yet: the slug resolves to no file, so the Chorister
-  // stays on the procedural sprite (graphics-standards.md, gate 1) until one
-  // passes intake.
+  // The Chorister carries no faction lock, so a navy rendering for one
+  // resolves chorister-<its faction>.glb: only the Directorate's exists, and
+  // the others stay on the recoloured sprite (graphics-standards.md, gate 1)
+  // until a variant passes intake — the Submersible's rule.
   [UnitKind.Chorister]: 'chorister',
-  // Nor the Clarion, for the same reason and on the same terms.
   [UnitKind.Clarion]: 'clarion',
   [UnitKind.Harvester]: 'harvester',
   // The rung's roster (#461), approved in #466 — one model per hull, since
@@ -93,7 +93,8 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   [UnitKind.Reciter]: 'reciter',
 };
 
-/** VentTap has no approved model yet; it stays on the sprite fallback. */
+/** Every structure kind has an approved model; the Partial stays for the
+ * decode-failure path and the next kind the docs design. */
 const STRUCTURE_SLUG: Partial<Record<StructureKind, string>> = {
   [StructureKind.Bastion]: 'bastion',
   [StructureKind.Refinery]: 'refinery',
@@ -104,6 +105,7 @@ const STRUCTURE_SLUG: Partial<Record<StructureKind, string>> = {
   [StructureKind.SoundingSpire]: 'sounding-spire',
   [StructureKind.SporeVeil]: 'spore-veil',
   [StructureKind.Slipway]: 'slipway',
+  [StructureKind.VentTap]: 'vent-tap',
 };
 
 const FACTION_SLUG: Record<Faction, string> = {

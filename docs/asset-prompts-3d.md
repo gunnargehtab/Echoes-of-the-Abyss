@@ -145,6 +145,27 @@ external intake dredge gear; dim at rest, with floodlit mining machinery
 that reads as its loud state.
 ```
 
+```text
+UNIT — Chorister (pair with Directorate): the cohort hull, 50 m — the
+shortest and cheapest hull in the roster, grown chitin over a pressure
+bladder (SIG 16 idle, 24 cruise). Three overlapping segments with the
+bladder showing through the middle one as a paler dome, a rostrum, a
+telson, folded walking limbs, one small dorsal spine-gun off the
+centreline. Dim: a short row of photophores along one flank and one on the
+other, in a pattern that repeats on neither side.
+```
+
+```text
+UNIT — Clarion (pair with Hadron Knights): the line hull, 90 m — the cone
+made a ship, a longer hull built around a bow array (SIG 62 ahead, 6
+astern; an energy weapon). A faceted blade hull, widest aft, bilaterally
+symmetric, flaring at the bow into a six-facet horn with an emitter crystal
+standing in its mouth; canards at the bow, swept guard wings with crystal
+edges aft, a crystal inlay along the spine. Lit at the horn's lip and along
+its ridge seams, dark astern but for one mark — louder than a Corvette in
+front, quieter behind.
+```
+
 ### The rung's roster — one hull a navy at the Foundry, one behind the Slipway
 
 The eight faction-locked hulls of [units.md](units.md) "The rung, and two hulls a navy"
@@ -289,6 +310,17 @@ STRUCTURE — Sounding Spire (pair with Hadron Knights): tall crystalline
 resonance spire, bilaterally symmetrical, pale alloy frame around a violet
 crystal core (SIG 80 when active, directional). Burning bright along the
 crystal when active; heat-shimmer distortion.
+```
+
+```text
+STRUCTURE — Vent Tap (any faction): the power source, bolted to a
+hydrothermal vent on Thermal Vein ground and never quiet (SIG 55 idle, 75
+at full draw — loud precisely where the ground is quiet). A basalt chimney
+at the centre with a wellhead clamp and a draw manifold over its mouth,
+four radial draw pipes running out to heat exchangers on the corners,
+anchor feet into the scorched ground. Burning bright: the vent's ember
+mouth under the manifold, floodlit working platforms around the wellhead,
+lamps along every pipe run.
 ```
 
 ```text
