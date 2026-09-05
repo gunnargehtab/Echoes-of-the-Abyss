@@ -95,11 +95,12 @@ jobs:
       # the heaviest mission files fall to the first: on the first run shard 1
       # finished 38 s behind shard 2, and these ten seconds belong on the
       # lighter side of that.
-      - name: Run shared and frontend tests
+      - name: Run shared, frontend and roadmap-site tests
         if: matrix.shard == strategy.job-total
         run: |
           npm -w packages/shared run test
           npm -w packages/frontend run test
+          npm run test:roadmap
 
       # `--test-shard` is node:test's own file-level partition — deterministic,
       # so the same file always lands in the same shard and a failure is
