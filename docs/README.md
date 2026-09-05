@@ -171,10 +171,10 @@ planned from a thing nobody wrote down:
   map or a second entry, and the table says so rather than choosing. It is the one item in this
   group that is work: the choice is that document's to make, and a Kelp Labyrinth map
   ([maps.md](maps.md)) is where it would first be missed.
-- **The Mouth's open questions** — *open by rule, not planned.* [timeline.md](timeline.md)'s *Open
-  Questions* — what replied to the First Chord, what Item 9 says, what happens at zero — are not a
-  to-do list. [campaign.md](campaign.md) §2 rule 3 is that the Mouth is never explained, and a doc
-  that answered one of them would be breaking the rule rather than finishing the work.
+- **The Mouth's open questions** — *open by rule, not planned.* [timeline.md](timeline.md)'s
+  *Open Questions* — what replied to the First Chord, what Item 9 says, what happens at zero — are
+  not a to-do list. [campaign.md](campaign.md) §2 rule 3 is that the Mouth is never explained, and
+  a doc that answered one of them would be breaking the rule rather than finishing the work.
 
 Beyond these five, nothing in the world or storyline docs is planned. A loose end in one of them
 that is not on this list is one nobody has written down, and it belongs here before it belongs
