@@ -41,68 +41,71 @@
 import { Application, Container, Graphics, Text } from 'pixi.js';
 import {
   ACTIVE_SONAR,
+  affords,
+  BERTHS,
   Biome,
   DEPTH,
-  DRIFT,
   DEPTH_BANDS,
-  inLid,
-  LID,
   DepthBand,
+  depthBandFor,
+  DRIFT,
+  EchoMarkKind,
+  effectivePressureRating,
   Faction,
+  FACTION_STRUCTURE,
+  FaunaSpecies,
+  faunaStatsFor,
   HarvestIdleReason,
   HarvestThrottle,
+  HazardPhase,
+  inLid,
+  LID,
+  maxAudibleRangeM,
+  MissionOutcome,
+  ORDNANCE,
+  OrdnanceKind,
   PERSISTENCE,
+  priceOf,
   PRODUCIBLE,
-  YARDS,
-  unitAvailableTo,
   PROPAGATION_FACTOR,
   PROPAGATION_MODEL,
+  requiredPressureRating,
   ResolutionTier,
   ResourceKind,
-  SIM,
-  EchoMarkKind,
   SelfEventKind,
+  SIM,
+  statsFor,
   StructureKind,
+  structureStatsFor,
   THERMOCLINE,
   THERMOCLINE_DUCT_BOTTOM_M,
   THERMOCLINE_DUCT_TOP_M,
   THERMOCLINE_ZONE_MAX,
   ThermoclineZone,
-  UnitKind,
-  depthBandFor,
-  effectivePressureRating,
   thermoclineZone,
-  maxAudibleRangeM,
-  requiredPressureRating,
-  FaunaSpecies,
-  faunaStatsFor,
-  MissionOutcome,
-  statsFor,
-  structureStatsFor,
-  FACTION_STRUCTURE,
-  affords,
-  priceOf,
+  unitAvailableTo,
+  UnitKind,
+  YARDS,
   type AbilityLock,
+  type BerthReport,
   type Contact,
-  HazardPhase,
   type DrawReport,
   type EchoMarkInfo,
-  type HazardState,
-  type JellyCluster,
-  type ShoalTell,
   type EchoSnapshot,
   type ExposureReport,
   type GameOverPayload,
+  type HazardState,
+  type JellyCluster,
   type MissionAbility,
   type MissionResultPayload,
+  type OwnOrdnance,
   type OwnStructure,
   type OwnUnit,
   type Price,
-  type ResourceNodeInfo,
-  type Stockpile,
   type QueuedOrderView,
-  type BerthReport,
-  BERTHS,
+  type ResourceNodeInfo,
+  type ShoalTell,
+  type Stockpile,
 } from '@echoes/shared';
 import {
   BIOME_COLOR,
@@ -806,6 +809,8 @@ export class EchoRenderer {
   private readonly structureSymbols = new SymbolPool();
   private readonly contactSymbols = new SymbolPool();
   private readonly unitSymbols = new SymbolPool();
+  /** The player's own ordnance: a mark per shot, over the conn view's mesh. */
+  private readonly ordnanceSymbols = new SymbolPool();
   private readonly hud = new Container();
   private readonly hudGraphics = new Graphics();
   private readonly barGraphics = new Graphics();
@@ -903,6 +908,7 @@ export class EchoRenderer {
    */
   private map: MapPayload | null = null;
   private units: OwnUnit[] = [];
+  private ordnance: OwnOrdnance[] = [];
   private structures: OwnStructure[] = [];
   private nodes: ResourceNodeInfo[] = [];
   private readonly tracked = new Map<number, TrackedContact>();
@@ -1241,7 +1247,8 @@ export class EchoRenderer {
       this.structureSymbols.layer,
       this.contactLayer,
       this.contactSymbols.layer,
-      this.unitSymbols.layer
+      this.unitSymbols.layer,
+      this.ordnanceSymbols.layer
     );
     this.hud.addChild(
       this.hudGraphics,
@@ -3203,6 +3210,7 @@ export class EchoRenderer {
     this.missionOver = null;
     this.units = [];
     this.structures = [];
+    this.ordnance = [];
     this.previousUnits = [];
     this.previousStructures = [];
     this.pendingOrders.clear();
@@ -3254,6 +3262,7 @@ export class EchoRenderer {
     this.previousStructures = this.structures;
     this.units = snapshot.units;
     this.structures = snapshot.structures;
+    this.ordnance = snapshot.ordnance;
     this.peakSig = snapshot.peakSig;
     this.exposure = snapshot.exposure;
     this.marks = snapshot.marks;
@@ -3866,6 +3875,10 @@ export class EchoRenderer {
     // a break-silence ring — keeps them on the frame cadence while it lasts.
     const moving =
       (this.conn?.motion.animating(now) ?? false) ||
+      (this.conn?.ordnanceMotion.animating(now) ?? false) ||
+      // A noisemaker's mark pulses and a torpedo's arc closes: ordnance in
+      // the water keeps the force ink on the frame cadence.
+      this.ordnance.length > 0 ||
       this.orderMarkers.length > 0 ||
       this.brokeSilence.size > 0;
     const force = `${base}|${this.previewPing}|${this.ordersSeq}|${moving ? now : 0}`;
@@ -4924,7 +4937,62 @@ export class EchoRenderer {
         }
       }
     }
+
+    for (const shot of this.ordnance) {
+      // The shot itself — spindle, trail, lamp — is the conn view's
+      // (ordnanceLayer.ts). This is the instrument ink about it, in the own
+      // voice: what it is and, for a torpedo, how much run it has left.
+      const conn = this.conn;
+      const d =
+        conn === null ? shot : conn.ordnanceMotion.at(shot, this.frameNowMs, this.drawnScratch);
+      const p = this.project(d.x, d.y, d.depth);
+      if (p === null) break;
+      const g = this.ordnanceSymbols.acquire(shot.id);
+      if (!p.visible) {
+        g.visible = false;
+        continue;
+      }
+      g.position.set(p.x, p.y);
+      g.scale.set(p.pxPerM);
+      const inverseScale = 1 / p.pxPerM;
+      const r = 6 * this.hullDrawScale();
+      const width = 1.5 * inverseScale;
+      switch (shot.kind) {
+        case OrdnanceKind.Torpedo: {
+          // The run left, as an arc closing from the bow's twelve o'clock.
+          const left = Math.max(0, Math.min(1, shot.remainingS / ORDNANCE.TORPEDO.RUN_TIME_S));
+          g.circle(0, 0, r).stroke({ width, color: UI.accent, alpha: 0.3 });
+          g.arc(0, 0, r, -Math.PI / 2, -Math.PI / 2 + left * Math.PI * 2).stroke({
+            width: 2 * inverseScale,
+            color: UI.accent,
+            alpha: 0.85,
+          });
+          break;
+        }
+        case OrdnanceKind.Mine:
+          g.poly([0, -r, r, 0, 0, r, -r, 0]).stroke({ width, color: UI.accent, alpha: 0.7 });
+          break;
+        case OrdnanceKind.Noisemaker: {
+          // A decoy is noise: its mark breathes for the eight seconds it lives.
+          const pulse = 0.5 + 0.5 * Math.sin(now / 120);
+          g.circle(0, 0, r * (0.8 + 0.4 * pulse)).stroke({
+            width,
+            color: UI.accent,
+            alpha: 0.4 + 0.5 * pulse,
+          });
+          break;
+        }
+        case OrdnanceKind.DepthCharge:
+          g.poly([-r * 0.7, -r * 0.6, r * 0.7, -r * 0.6, 0, r * 0.8]).stroke({
+            width,
+            color: UI.accent,
+            alpha: 0.7,
+          });
+          break;
+      }
+    }
     this.unitSymbols.sweep();
+    this.ordnanceSymbols.sweep();
   }
 
   /**
@@ -5590,6 +5658,11 @@ export class EchoRenderer {
     }
     for (const unit of this.units) {
       og.circle(unit.x * k, unit.y * k, 1.5).fill({ color: palette.accent });
+    }
+    // Own ordnance is own force, and drawn on the scope as such: a smaller
+    // dot in the same ink, so a laid field and a running shot read at a glance.
+    for (const shot of this.ordnance) {
+      og.circle(shot.x * k, shot.y * k, 1).fill({ color: palette.accent, alpha: 0.75 });
     }
 
     // Returns carry the same tier fidelity as the world view, scaled down.

@@ -363,6 +363,11 @@ and reserves the opposite gesture for a crush cue the mix still does not have.
 
 ### Phase 5 — landed
 
+Own ordnance, the last of the presentation debts above, is in the conn view: the
+player's torpedoes, mines, noisemakers and depth charges as instanced geometry on the
+fleet's own depth cues, lit by live SIG ([art-direction.md](art-direction.md) "Own
+ordnance is geometry too").
+
 The switch is thrown: the conn view is the game view, and the chart's world renderer is
 retired. The Pixi canvas is now transparent glass composited over the GL world, and it
 kept everything that was ever *instrument* rather than *world*: the whole HUD, the sonar

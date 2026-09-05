@@ -110,6 +110,11 @@ const UNITS = [
   // placed on the bow array, which is where the 62 is.
   { slug: 'chorister', model: 'chorister-directorate.glb', lengthM: 50, sig: 16 },
   { slug: 'clarion', model: 'clarion-hadron.glb', lengthM: 90, sig: 27.9 },
+  // The Chorister as the other navies field it through a rendering contract:
+  // the cohort plan in each navy's shape language.
+  { slug: 'chorister-bathyarch', model: 'chorister-bathyarch.glb', lengthM: 50, sig: 16 },
+  { slug: 'chorister-pelagia', model: 'chorister-pelagia.glb', lengthM: 50, sig: 16 },
+  { slug: 'chorister-hadron', model: 'chorister-hadron.glb', lengthM: 50, sig: 16 },
   { slug: 'tender', model: 'tender-bathyarch.glb', lengthM: 85, sig: 48 },
   { slug: 'bulwark', model: 'bulwark-bathyarch.glb', lengthM: 150, sig: 70 },
   { slug: 'spinner', model: 'spinner-pelagia.glb', lengthM: 55, sig: 8 },

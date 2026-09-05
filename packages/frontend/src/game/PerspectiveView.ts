@@ -58,10 +58,11 @@ import {
   structureStatsFor,
   type EchoSnapshot,
   type OwnStructure,
+  type OwnOrdnance,
   type OwnUnit,
 } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
-import { UI, VENT_EMBER } from './palette.ts';
+import { FACTION_PALETTE, UI, VENT_EMBER } from './palette.ts';
 import { DepthCues } from './depthCues.ts';
 import {
   bakeSeabed,
@@ -92,6 +93,7 @@ import {
   type RosterModelKey,
 } from './rosterModels.ts';
 import { OwnMotion } from './ownMotion.ts';
+import { OrdnanceLayer } from './ordnanceLayer.ts';
 import { EnvironmentLayer } from './environmentLayer.ts';
 
 /**
@@ -229,6 +231,11 @@ export class PerspectiveView {
   private readonly structureGroup = new Group();
   /** Every plumb and every shadow, two draw calls in all (#434). */
   private readonly cues = new DepthCues(UI.accent);
+  /** The player's own ordnance, instanced (ordnanceLayer.ts); shares the cues. */
+  private readonly ordnanceLayer = new OrdnanceLayer(this.cues);
+  private ordnance: OwnOrdnance[] = [];
+  /** Own ordnance glides between ticks as own hulls do (ownMotion.ts). */
+  readonly ordnanceMotion = new OwnMotion();
 
   private faction: Faction = Faction.Bathyarch;
   private units: OwnUnit[] = [];
@@ -278,6 +285,7 @@ export class PerspectiveView {
       this.terrainDressing,
       this.environment.group,
       this.unitGroup,
+      this.ordnanceLayer.group,
       this.structureGroup,
       this.cues.group
     );
@@ -390,7 +398,10 @@ export class PerspectiveView {
   applySnapshot(snapshot: EchoSnapshot): void {
     this.units = snapshot.units;
     this.structures = snapshot.structures;
-    this.motion.record(snapshot.units, performance.now());
+    this.ordnance = snapshot.ordnance;
+    const arrivedAt = performance.now();
+    this.motion.record(snapshot.units, arrivedAt);
+    this.ordnanceMotion.record(snapshot.ordnance, arrivedAt);
     // Headings from motion, exactly as the chart derived them: the server
     // sends none for own units, and a hull snapping to 0° when it stops
     // would read as broken here too.
@@ -412,9 +423,11 @@ export class PerspectiveView {
   resetForNewMatch(): void {
     this.units = [];
     this.structures = [];
+    this.ordnance = [];
     this.headings.clear();
     this.lastPositions.clear();
     this.motion.reset();
+    this.ordnanceMotion.reset();
     if (this.renderer !== null) this.syncEntities();
   }
 
@@ -422,6 +435,7 @@ export class PerspectiveView {
     this.setActive(false);
     this.resizeObserver?.disconnect();
     this.environment.destroy();
+    this.ordnanceLayer.dispose();
     this.cues.dispose();
     for (const texture of this.spriteTextures.values()) texture.dispose();
     this.renderer?.dispose();
@@ -1124,6 +1138,29 @@ export class PerspectiveView {
         restSig: structureStatsFor(structure.kind).sigIdle,
       });
     }
+    this.syncOrdnance(now);
+  }
+
+  /**
+   * The player's own ordnance, drawn where it is between ticks. Runs with
+   * the entity sync (a zoom, a snapshot) and per frame while anything moves.
+   */
+  private syncOrdnance(nowMs: number): void {
+    const ink = FACTION_PALETTE[this.faction];
+    this.ordnanceLayer.setPalette(ink.primary, ink.glow);
+    this.ordnanceLayer.sync(
+      this.ordnance,
+      (item) => {
+        const at = this.ordnanceMotion.at(item, nowMs, this.drawn);
+        return {
+          x: at.x,
+          z: at.y,
+          worldY: depthToWorldY(at.depth),
+          groundY: this.groundYAt(at.x, at.y),
+        };
+      },
+      this.drawScale
+    );
   }
 
   private mapDiagonal(): number {
@@ -1217,10 +1254,12 @@ export class PerspectiveView {
     if (Math.abs(scale - this.drawScale) > 1e-3) {
       this.drawScale = scale;
       this.syncEntities();
-    } else if (this.motion.animating(now)) {
-      // Own hulls glide between Echo ticks (docs/ui-ux.md §12); contacts do
-      // not, and the chart owns those. A still fleet costs the frame nothing.
+    } else if (this.motion.animating(now) || this.ordnanceMotion.animating(now)) {
+      // Own hulls and own ordnance glide between Echo ticks (docs/ui-ux.md
+      // §12); contacts do not, and the chart owns those. A still fleet costs
+      // the frame nothing.
       this.placeUnits(now);
+      this.syncOrdnance(now);
     }
     renderer.render(this.scene, this.camera);
   }
@@ -1242,6 +1281,8 @@ export class PerspectiveView {
         worstFrameMs: Number(this.worstFrameMs.toFixed(2)),
         units: this.unitHandles.size,
         structures: this.structureHandles.size,
+        // Own ordnance in the water, drawn by the instanced layer (gate 6).
+        ordnance: this.ordnanceLayer.count,
         // The prop layer's own ledger (gate 6): a prop regression is a
         // number, not an impression.
         ...this.environment.stats(),
