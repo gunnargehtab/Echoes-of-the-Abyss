@@ -25,6 +25,7 @@
 
 import {
   ACTIVE_SONAR,
+  CONSTRUCTION,
   DEPTH,
   DEPTH_BANDS,
   DepthBand,
@@ -468,12 +469,19 @@ export class AiCommander implements AiPlayer {
       biomass: snapshot.biomass,
     };
 
+    // Read once, and before anything acts on it: the defend watch is about the
+    // Bastion rather than about the army, so it has to keep running through the
+    // minutes a commander has no hulls left — and both the branch that recalls
+    // the army and the branch that buys a turret are answering the same
+    // question, so they must not answer it differently.
+    const raiders = this.approachingHome(snapshot);
+
     this.commandEconomy(snapshot, harvesters, commands);
-    this.commandConstruction(snapshot, purse, commands);
+    this.commandConstruction(snapshot, harvesters, raiders, purse, commands);
     this.commandProduction(snapshot, harvesters, army, purse, commands);
     this.commandScout(snapshot, scout, commands);
-    this.commandArmy(snapshot, army, commands);
-    this.commandSonar(snapshot, army, commands);
+    this.commandArmy(snapshot, army, raiders, commands);
+    this.commandSonar(snapshot, army, raiders, commands);
 
     return commands;
   }
@@ -684,7 +692,38 @@ export class AiCommander implements AiPlayer {
 
   // --- Construction ---------------------------------------------------------
 
-  private commandConstruction(snapshot: EchoSnapshot, purse: Stockpile, out: AiCommand[]): void {
+  private commandConstruction(
+    snapshot: EchoSnapshot,
+    harvesters: readonly OwnUnit[],
+    raiders: readonly Contact[],
+    purse: Stockpile,
+    out: AiCommand[]
+  ): void {
+    // Nothing gets built out of an economy that has stopped. With no harvester
+    // in the water and none on a line, the bank is all the money there will
+    // ever be, and the only thing worth spending it on is the hull that starts
+    // the income again — which is the next branch, and which only gets its turn
+    // if this one leaves the purse alone.
+    //
+    // Without it the commander livelocks, and that livelock decided the
+    // four-faction baseline (#440). The construction branch runs before the
+    // production branch and reserves the site's price out of the same purse, so
+    // a build the server keeps refusing spends the whole bank on every
+    // observation and hull production never sees a nodule. On seed 4000 the
+    // Consortium lost its last harvester at minute seventeen holding 300
+    // nodules and three standing structures, then asked for the same
+    // unbuildable Vent Tap 1,400 times in seven minutes: never built it, never
+    // queued the harvester that would have restarted the economy, and never
+    // scuttled either, because `Match.checkConcessions` reads a bank that could
+    // buy a harvester as a commander who still has a move. It had no move. Two
+    // of the four commanders were dead by minute eight and the match still
+    // timed out.
+    const queuedHarvesters = snapshot.structures.reduce(
+      (total, s) => total + s.queue.filter((q) => q === UnitKind.Harvester).length,
+      0
+    );
+    if (harvesters.length === 0 && queuedHarvesters === 0) return;
+
     const has = (kind: StructureKind): boolean => snapshot.structures.some((s) => s.kind === kind);
 
     // A Refinery first: it shortens every haul, and the hauls are where the
@@ -701,21 +740,24 @@ export class AiCommander implements AiPlayer {
     // A Vent Tap once the plant is nearly drawing more than it makes. Thermal
     // Draw is a rate, so "nearly" is the whole warning you get.
     const tight = snapshot.draw.demand >= snapshot.draw.capacity - 1;
-    if (tight && !has(StructureKind.VentTap) && this.afford(StructureKind.VentTap, purse)) {
-      const vent = this.nearestVent();
-      if (vent !== null) {
+    if (tight && !has(StructureKind.VentTap)) {
+      const vent = this.nearestVent(snapshot.structures);
+      if (vent !== null && this.afford(StructureKind.VentTap, purse)) {
         out.push({ kind: 'build', structure: StructureKind.VentTap, x: vent.x, y: vent.y });
         this.buildAttempt++;
         return;
       }
     }
 
-    // A turret only once something has actually been heard near home. Building
-    // one pre-emptively is loud, expensive and aimed at nothing.
-    const threatened = snapshot.contacts.some(
-      (c) => c.fauna === undefined && distance(c, this.home) < RANGE.DEFEND_M
-    );
-    if (threatened && !has(StructureKind.SentinelTurret)) {
+    // A turret only once something has actually been *raiding*, which is a
+    // narrower reading than "heard near home" and for the reason DEFEND_WATCH
+    // gives at length: the Drift is seeded near spawns, an unclassified smudge
+    // is a contact by construction, and so "something near home" is true nearly
+    // all the time. Bought on that test, a turret is a hundred nodules aimed at
+    // a grazer — and the branch was previously masked by the phantom Vent Tap
+    // above it reserving the purse first, so it had never actually been paid
+    // for. It buys on the same closing trend the army recalls on.
+    if (raiders.length > 0 && !has(StructureKind.SentinelTurret)) {
       if (this.afford(StructureKind.SentinelTurret, purse)) {
         const toward = this.remembered ?? this.enemyStarts[0] ?? this.home;
         out.push({
@@ -769,8 +811,24 @@ export class AiCommander implements AiPlayer {
     return best;
   }
 
-  /** The nearest Thermal Vein cell to home, read off the biome grid. */
-  private nearestVent(): { x: number; y: number } | null {
+  /**
+   * The nearest Thermal Vein cell to home that a tap could actually rise on.
+   *
+   * "Could actually rise on" is the part that was missing, and it is the one
+   * placement in the whole branch the commander cannot nudge: a tap only works
+   * on a vent (docs/economy.md §2), so unlike `nearHome` there is no spiral to
+   * walk — the same cell comes back every time. Ask for one the server will
+   * refuse and the commander asks forever.
+   *
+   * The server's rule is that a new site must rise within
+   * `CONSTRUCTION.BUILD_RADIUS_M` of a structure the commander already owns,
+   * so that is the rule applied here, against the same structures — not
+   * against `this.home`, because a Refinery placed out toward a field is a
+   * legitimate anchor and a player would chain off it. TAP_SEARCH_M stays as
+   * the outer bound: a vent further away than that is not worth reaching for
+   * even when something of ours happens to stand near it.
+   */
+  private nearestVent(structures: readonly OwnStructure[]): { x: number; y: number } | null {
     const { cols, rows, cellM, biomes } = this.briefing.terrain;
     let best: { x: number; y: number } | null = null;
     let bestDistance: number = RANGE.TAP_SEARCH_M;
@@ -780,10 +838,13 @@ export class AiCommander implements AiPlayer {
         const x = (col + 0.5) * cellM;
         const y = (row + 0.5) * cellM;
         const d = distance({ x, y }, this.home);
-        if (d < bestDistance) {
-          bestDistance = d;
-          best = { x, y };
-        }
+        if (d >= bestDistance) continue;
+        const anchored = structures.some(
+          (s) => distance(s, { x, y }) <= CONSTRUCTION.BUILD_RADIUS_M
+        );
+        if (!anchored) continue;
+        bestDistance = d;
+        best = { x, y };
       }
     }
     return best;
@@ -920,14 +981,19 @@ export class AiCommander implements AiPlayer {
    * parked on an enemy Bastion doing nothing. Measured, that mistake was worth
    * about 0.8 damage per second against a stationary target.
    */
-  private commandArmy(snapshot: EchoSnapshot, army: readonly OwnUnit[], out: AiCommand[]): void {
+  private commandArmy(
+    snapshot: EchoSnapshot,
+    army: readonly OwnUnit[],
+    raiders: readonly Contact[],
+    out: AiCommand[]
+  ): void {
     if (army.length === 0) return;
     const ids = army.map((u) => u.id);
 
     // Home first. A push that leaves the Bastion undefended trades the match
     // for a raid, and losing the Bastion is losing — but not everything near
     // the Bastion is a raid. See `approachingHome`.
-    const athome = this.bestThreat(this.approachingHome(snapshot));
+    const athome = this.bestThreat(raiders);
     if (athome !== null) {
       this.setSilent(ids, false, out);
       this.setCrossed(army, false, out);
@@ -936,7 +1002,7 @@ export class AiCommander implements AiPlayer {
     }
 
     const threshold = Math.ceil(this.doctrine.attackAtArmySize * this.tuning.patience);
-    if (army.length < threshold && this.stillMassing(snapshot.tick, army.length, threshold)) {
+    if (this.stillMassing(snapshot.tick, army.length, threshold)) {
       // Waiting is a position, not a pause: sit between home and the enemy so
       // the push does not start from the back of the map.
       const rally = this.rallyPoint();
@@ -951,11 +1017,34 @@ export class AiCommander implements AiPlayer {
       return;
     }
 
+    // Where a push goes, and it is not wherever the last thing it heard was.
+    //
+    // `remembered` is refreshed from the best current contact on every
+    // observation, so using it as the destination made a committed push a
+    // chase by another name: the army walked at a smudge in the middle of the
+    // map, arrived, found the smudge had moved, and walked at the next one —
+    // for twenty-five minutes, in a four-seat match where the seat that needed
+    // killing was in a corner nobody visited (#440). A commitment that does
+    // not carry an objective is not a commitment.
+    //
+    // So a committed force walks at a *base*: `searchTarget` is the enemy
+    // start it has not yet crossed off, which is the one place a Bastion is
+    // certainly known to have been. An uncommitted force keeps the old
+    // behaviour and follows the freshest lead it has, because a force with
+    // nothing decided has nothing better to do than look.
+    //
+    // `searchTarget` crosses starts off as a side effect of being asked, so it
+    // is asked exactly once here whichever way the answer is used.
+    const committed = snapshot.tick < this.commitUntilTick;
+    const start = this.searchTarget(snapshot, army);
+    const objective =
+      (committed ? (start ?? this.remembered) : (this.remembered ?? start)) ?? this.home;
+
     // An attack order chases and then holds to shoot, so this covers both
     // closing and firing. The leash is what stops one heard scout from towing
     // the whole army off the map.
     // A committed push keeps its own, much shorter leash: see PUSH_ENGAGE_M.
-    const leash = snapshot.tick < this.commitUntilTick ? RANGE.PUSH_ENGAGE_M : RANGE.PURSUIT_M;
+    const leash = committed ? RANGE.PUSH_ENGAGE_M : RANGE.PURSUIT_M;
     const engaging = this.bestThreat(snapshot.contacts.filter((c) => nearest(army, c) < leash));
     if (engaging !== null) {
       // Silent Running trades weapons for quiet, so it comes off the moment
@@ -976,7 +1065,7 @@ export class AiCommander implements AiPlayer {
     // triggered by being heard: a commander that dove whenever exposure rose
     // would go deaf on the way down, lose the contact that justified the dive,
     // surface, hear it again, and oscillate.
-    const target = this.remembered ?? this.searchTarget(snapshot, army) ?? this.home;
+    const target = objective;
     this.setSilent(ids, this.doctrine.approachesSilently && this.tuning.usesSilentRunning, out);
     this.setCrossed(army, this.doctrine.crossesTheLayer, out);
     if (nearest(army, target) > RANGE.ARRIVE_M) {
@@ -997,6 +1086,18 @@ export class AiCommander implements AiPlayer {
    * Below half the doctrine's number it keeps waiting whatever the clock says.
    * A stalled push is "go with what you have"; with two hulls that is not an
    * army going in, it is a hull being posted.
+   *
+   * **Reaching the number is a decision too**, and until #440 it was the only
+   * way of leaving the rally point that did not come with one. The caller used
+   * to ask this only while `size < threshold`, so a force that made its
+   * doctrine's number skipped the gate entirely and never opened a commitment
+   * — which meant it kept the 2,800 m pursuit leash, and with the Drift in the
+   * water there is nearly always something inside 2,800 m for the engage
+   * branch to prefer over a base (see RANGE.PUSH_ENGAGE_M). The impatient push
+   * got the short leash and the strong one did not: the army that had every
+   * reason to walk in was the one still chasing fish. Both ways of opening the
+   * gate now commit, so "we are going" means the same thing however the force
+   * got there.
    */
   private stillMassing(tick: number, size: number, threshold: number): boolean {
     // Already gone. A push is a decision, and a decision that is reconsidered
@@ -1011,6 +1112,17 @@ export class AiCommander implements AiPlayer {
     }
 
     if (this.massingPeakTick < 0) this.massingPeakTick = tick;
+
+    // The doctrine's own number, met. Nothing left to wait for.
+    //
+    // Deliberately *after* the expiry above rather than before it, so that a
+    // commitment which runs out puts the force through one massing observation
+    // before the next one opens. That observation is the regroup, and it is
+    // worth more than it looks: hulls come off the line at home while the army
+    // is across the map, and without it they walk at the objective one at a
+    // time and are killed one at a time. Going, arriving and going again in
+    // company is the whole reason the gate has a size in it.
+    if (size >= threshold) return this.commit(tick);
 
     // Not an army yet. Rebuilding from nothing gets the clock in full rather
     // than inheriting whatever was left running when the last force died.
@@ -1028,6 +1140,11 @@ export class AiCommander implements AiPlayer {
 
     if ((tick - this.massingPeakTick) / SIM.TICK_HZ < MASSING.STALL_S) return true;
 
+    return this.commit(tick);
+  }
+
+  /** Open a commitment window, and stop massing. Always returns false. */
+  private commit(tick: number): boolean {
     this.commitUntilTick = tick + MASSING.COMMIT_S * SIM.TICK_HZ;
     return false;
   }
@@ -1217,18 +1334,42 @@ export class AiCommander implements AiPlayer {
    * nothing. And pinging from *home* pays it to identify the local wildlife,
    * which is worse: it tells the map exactly where the base is, in exchange for
    * the name of a creature that was never going to matter.
+   *
+   * The second of those has one exception, added by the same method that
+   * produced it. A creature on the doorstep is not always one that was never
+   * going to matter: the defend branch cannot tell it from a raid, so it recalls
+   * the army for it, and a commander forbidden from naming it is a commander
+   * that can be pinned at home by a grazer for the length of a match. The
+   * exception is narrow on purpose — only the contacts the defend branch is
+   * actually reacting to, never everything drifting past. See below.
    */
-  private commandSonar(snapshot: EchoSnapshot, army: readonly OwnUnit[], out: AiCommand[]): void {
+  private commandSonar(
+    snapshot: EchoSnapshot,
+    army: readonly OwnUnit[],
+    raiders: readonly Contact[],
+    out: AiCommand[]
+  ): void {
     if (!this.tuning.pingsToClassify) return;
     if (snapshot.tick < this.nextPingTick) return;
     if (army.length === 0) return;
 
     const centre = centroid(army);
-    // Not from the doorstep. A force still sitting on its own spawn has
-    // nothing to gain from naming what is drifting past it.
-    if (distance(centre, this.home) < RANGE.RALLY_M) return;
+    // Not from the doorstep — **unless the doorstep is what is holding it
+    // there**. A force sitting on its own spawn has nothing to gain from naming
+    // what is drifting past it, which is why the rule was written; but the one
+    // thing that keeps an army on its own spawn is the defend branch, and the
+    // defend branch fires on contacts it cannot name. Fauna are drawn to noise
+    // and a base is the noisiest thing a commander owns, so the doorstep is
+    // exactly where unnameable contacts collect — and the commander was
+    // forbidden from pinging precisely the contacts that were pinning it. On
+    // seed 4000 the defend branch took between 20% and 40% of every decision
+    // (#440). Naming one is how it learns it does not have to go home.
+    const atHome = distance(centre, this.home) < RANGE.RALLY_M;
     const ambiguous = snapshot.contacts.find(
-      (c) => c.tier <= ResolutionTier.Bearing && distance(centre, c) < RANGE.PING_CLASSIFY_M
+      (c) =>
+        c.tier <= ResolutionTier.Bearing &&
+        distance(centre, c) < RANGE.PING_CLASSIFY_M &&
+        (!atHome || raiders.some((r) => r.id === c.id))
     );
     if (ambiguous === undefined) return;
 
