@@ -351,8 +351,13 @@ listening side at the two inputs it has always had: distance and HYD.
 at 0.35, one at 0.10 is 0.45 of the listed figure. **A Knight hull is an ordinary hull with its
 loudness moved**, not a quiet one — which is why the roster's Knight entries are expected to run
 roughly 2.2× the listed SIG of a comparable hull, so that the compass average lands at parity and
-the *cone* is genuinely the loudest thing in the game. No Knight hull is written yet
-([units.md](units.md)), so nothing carries that multiplier today.
+the *cone* is genuinely the loudest thing in the game. **The Clarion is that entry**
+([units.md](units.md), #401): 62 in the cone against a Corvette's 28, 21.7 on the flank, 6.2
+astern, and 27.9 averaged over the circle. It is the roster's one faction-locked hull, for a
+reason this section supplies rather than the roster — a cone figure is unreadable without the
+term, and the first exclusion below makes the term one navy's. Everything *else* flying Knight
+colours is still a generic hull with the term applied, and its cone figure is therefore low for
+the faction; the Order's mission literals field exactly that and say so.
 
 **What it does not apply to.** Three exclusions, and the first is the interesting one:
 

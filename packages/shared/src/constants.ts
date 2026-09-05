@@ -266,6 +266,22 @@ export const DIRECTIONAL_WAKE_COS = Math.cos(
 );
 
 /**
+ * Derived — the term averaged over the compass: one quarter of the circle at
+ * the cone factor, two at the flank, one at the wake.
+ *
+ * docs/systems-echo.md §8 states it as 0.45 and calls it the balance clause:
+ * "a Knight hull is an ordinary hull with its loudness moved, not a quiet
+ * one", so a Knight entry's listed *cone* SIG runs 1/this — about 2.2× — of a
+ * comparable generic hull's, and the two land at parity averaged over the
+ * compass. The Clarion is solved from it (docs/units.md), and `units.test.ts`
+ * holds the roster to it, so it is computed from the sector table rather than
+ * transcribed: a table edit that moved the average would otherwise leave the
+ * roster quietly out of balance with the model it was solved from.
+ */
+export const DIRECTIONAL_COMPASS_AVERAGE =
+  (DIRECTIONAL_SIGNATURE.CONE + 2 * DIRECTIONAL_SIGNATURE.FLANK + DIRECTIONAL_SIGNATURE.WAKE) / 4;
+
+/**
  * SPEC — docs/systems-echo.md §4. A contact resolves to a tier when the
  * perceived loudness reaches this multiple of the listener's threshold.
  */
@@ -702,9 +718,10 @@ export const FACTION_COMBAT = {
    * SPEC — §3 and §11. The Knights fight with energy weapons, and an energy
    * discharge is the quiet class: +10 burst against the kinetic +25.
    *
-   * A faction modifier rather than a per-hull stat because the roster has no
-   * Hadron-specific hulls yet, and because it *is* a faction fact — the Order
-   * builds resonance weapons, whatever it hangs them on. It replaces the hull's
+   * A faction modifier rather than a per-hull stat because it *is* a faction
+   * fact — the Order builds resonance weapons, whatever it hangs them on, and
+   * a Knight-rigged Corvette discharges exactly as the Order's own Clarion
+   * does. It replaces the hull's
    * own firing burst rather than scaling it, so a Knight discharge is quiet in
    * absolute terms and not merely quieter than it would have been.
    */

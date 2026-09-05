@@ -119,11 +119,14 @@ text except where a document already points at it:
   and [audio-direction.md](audio-direction.md) has not yet said what a fifth going flat sounds
   like. The first place a player-placed interval is written over a biome's bed, and the most
   interesting problem the campaign has posed the mix.
-- **A Knight hull in the roster.** [units.md](units.md) has no Knight entry, so every Order
-  mission fields generic hulls flying Knight colours and says so; a real Knight hull's cone
-  figure is expected to run about 2.2× a comparable hull's so that the compass average lands at
-  parity ([systems-echo.md](systems-echo.md) §8). A roster gap rather than a code one, and every
-  distance the Order's seven documents quote moves outward together when it is filled.
+- **The Order's seven missions, re-tuned to the hull they now have.** The roster gap is closed —
+  the Clarion is written and buildable ([units.md](units.md), #401) — but every Order mission
+  literal still fields generic hulls flying Knight colours and still says so, because switching
+  one moves every distance that document quotes outward together and is a document's decision
+  before it is a literal's. Seven decisions, one per mission, and
+  [mission-aptitude.md](mission-aptitude.md)'s tolerance and
+  [mission-standing-wave.md](mission-standing-wave.md) §7's tables are the two that cost the
+  most to move.
 - **A voice cast.** The speech channel ships as a hail in the speaker's register and a murmur
   under the words, and the words are the log's ([audio-direction.md](audio-direction.md) §13).
   Recorded lines, or a per-speaker voice, are a call that document has deliberately not made;

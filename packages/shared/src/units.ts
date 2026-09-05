@@ -12,7 +12,7 @@
  */
 
 import { Faction, UnitKind } from './types.js';
-import { FACTION_PRESSURE_BASELINE } from './constants.js';
+import { FACTION_COMBAT, FACTION_PRESSURE_BASELINE } from './constants.js';
 
 export interface UnitStats {
   kind: UnitKind;
@@ -62,6 +62,25 @@ export interface UnitStats {
    */
   biomassCost?: number;
   buildTimeS: number;
+  /**
+   * The one navy allowed to build this hull, when the hull is one navy's.
+   *
+   * Absent on every generic hull, which is the roster's default and stays it:
+   * the Light Scout and the Abyssal Submersible carry a faction in their
+   * *names* and no lock in their stats, and the Chorister is the Directorate's
+   * by its price rather than by a rule (docs/units.md, design notes).
+   *
+   * The Clarion is the exception and the first one. Its listed SIG is a *cone*
+   * figure and only means anything under the directional term, and that term
+   * is gated on the owner being Hadron (docs/systems-echo.md §8's first
+   * exclusion — "one navy's doctrine, not physics", `directional.ts`). Another
+   * navy's Clarion would emit its cone figure in every direction: the loudest
+   * hull in the game with nothing bought for it. That is not a balance
+   * concern, it is a stat line that cannot be read, so the lock is the same
+   * instrument the four signature structures use and is enforced the same way
+   * — server-side in `Match.produce`, mirrored by the command bar.
+   */
+  faction?: Faction;
   /**
    * Weapon stats.
    *
@@ -222,6 +241,72 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     attackCooldownS: 1,
     carriesTorpedoes: false,
   },
+  [UnitKind.Clarion]: {
+    kind: UnitKind.Clarion,
+    name: 'Clarion',
+    /**
+     * SPEC — docs/systems-echo.md §8's balance clause, solved rather than
+     * chosen. The listed figure is the hull's loudness *in the cone*; over the
+     * compass the term takes it to `62 × 0.45 = 27.9`, which is the Corvette's
+     * 28. "A Knight hull is an ordinary hull with its loudness moved, not a
+     * quiet one" — so the Clarion is the Corvette with its noise aimed, and
+     * `units.test.ts` holds the arithmetic against
+     * `DIRECTIONAL_COMPASS_AVERAGE` rather than against the number 62.
+     *
+     * Flat idle-to-cruise for the Corvette's reason: the plant, not the
+     * screw, is most of what a hull this size radiates.
+     */
+    sigIdle: 62,
+    sigCruise: 62,
+    /**
+     * Not 2.2× anything. The Order fights with energy, and §11's class
+     * replaces a hull's burst outright rather than scaling it
+     * (`firingSigFor`), so the number a Clarion actually discharges at is the
+     * faction's and is read from it here rather than transcribed beside it.
+     * The 2.2× is about what the *hull* radiates; the weapon is the navy's.
+     */
+    sigFiringBurst: FACTION_COMBAT.ENERGY.FIRING_SIG,
+    /**
+     * The Corvette's ears exactly, and deliberately. §8: the term "changes
+     * what a Knight emits and never what a Knight hears" — so the whole of
+     * what this hull buys is on the emitting side, and the trade is entirely
+     * positional.
+     */
+    hyd: 50,
+    /**
+     * PR-2, which is the Hadron baseline, so the hull grants nothing.
+     * The Order rents depth from the Sounding Spire's +1 (docs/factions.md,
+     * "projects access"); a deep Knight hull would buy for 180 nodules what
+     * the doctrine charges 750 for.
+     */
+    pressureRating: 2,
+    maxHp: 420,
+    // Longer and slower than the Corvette it is scaled against: a finer hull
+    // built around a bow array, which is also why it reaches further.
+    speed: 75,
+    hullLengthM: 90,
+    /**
+     * Two Clarions cost what three Corvettes cost, which is the choice a
+     * Knight commander makes at the yard: numbers, or facing. No crystal —
+     * the Order's Resonance goes into the Spire (docs/economy.md §2), and the
+     * Abyssal Submersible remains the roster's crystal-locked hull.
+     */
+    cost: 180,
+    buildTimeS: 40,
+    faction: Faction.Hadron,
+    /**
+     * A bow lance: more alpha and a third more reach than a Corvette, on a
+     * slower cycle, so sustained damage lands just under it (40 against 41.7).
+     * Solved inside docs/systems-combat.md §9's bands exactly as the rest of
+     * the roster is, and `ttkBands.test.ts` holds all four: it kills a Light
+     * Scout in 3 s, duels another Clarion in 9 s, and needs 28.5 s to bring
+     * down a Cruiser alone.
+     */
+    attackDamage: 60,
+    attackRangeM: 700,
+    attackCooldownS: 1.5,
+    carriesTorpedoes: true,
+  },
   [UnitKind.Harvester]: {
     kind: UnitKind.Harvester,
     name: 'Harvester',
@@ -261,6 +346,19 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
 
 export function statsFor(kind: UnitKind): UnitStats {
   return UNIT_STATS[kind];
+}
+
+/**
+ * May this navy build this hull?
+ *
+ * One rule with two readers, for `PRODUCIBLE`'s reason: the server validates
+ * production against it and the command bar renders the yard's roster from
+ * it, and two copies would eventually disagree about which navy owns which
+ * hull. Almost every hull is nobody's — see `UnitStats.faction`.
+ */
+export function unitAvailableTo(kind: UnitKind, faction: Faction): boolean {
+  const locked = UNIT_STATS[kind].faction;
+  return locked === undefined || locked === faction;
 }
 
 /**

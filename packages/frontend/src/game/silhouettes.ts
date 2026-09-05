@@ -39,6 +39,7 @@ export const HULL_LENGTH_M: Record<UnitKind, number> = {
   [UnitKind.Cruiser]: statsFor(UnitKind.Cruiser).hullLengthM,
   [UnitKind.AbyssalSubmersible]: statsFor(UnitKind.AbyssalSubmersible).hullLengthM,
   [UnitKind.Chorister]: statsFor(UnitKind.Chorister).hullLengthM,
+  [UnitKind.Clarion]: statsFor(UnitKind.Clarion).hullLengthM,
   [UnitKind.Harvester]: statsFor(UnitKind.Harvester).hullLengthM,
 };
 
@@ -103,6 +104,25 @@ export const HULL_OUTLINE: Record<UnitKind, number[][]> = {
     [0.0, -0.19],
     [0.18, -0.11],
     [0.3, -0.17],
+  ],
+  // The cone, drawn: a long forward spine flaring into a narrow bow array,
+  // and a hull that falls away sharply behind it. The shape is the doctrine —
+  // everything is in front, and there is almost nothing astern to hear
+  // (systems-echo.md §8). Reads apart from the Corvette's wedge by being
+  // longer, finer and asymmetric fore-and-aft.
+  [UnitKind.Clarion]: [
+    [0.5, 0.04],
+    [0.42, 0.11],
+    [0.1, 0.15],
+    [-0.16, 0.2],
+    [-0.36, 0.12],
+    [-0.5, 0.06],
+    [-0.5, -0.06],
+    [-0.36, -0.12],
+    [-0.16, -0.2],
+    [0.1, -0.15],
+    [0.42, -0.11],
+    [0.5, -0.04],
   ],
   // A barge with a mouth: wide scoop bow, box body. Built to carry, not fight.
   [UnitKind.Harvester]: [

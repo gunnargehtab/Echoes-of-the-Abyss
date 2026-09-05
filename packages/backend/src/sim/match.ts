@@ -31,6 +31,7 @@ import {
   UnitKind,
   statsFor,
   structureStatsFor,
+  unitAvailableTo,
   affords,
   charge,
   priceOf,
@@ -1269,6 +1270,11 @@ export class Match {
     if (hasComponent(this.world, UnderConstruction, structureEid)) return false;
     const allowed = PRODUCIBLE[Structure.kind[structureEid] as StructureKind];
     if (allowed === undefined || !allowed.includes(kind)) return false;
+    // ...and the faction half of the same question. A hull that is one navy's
+    // is refused to the other three server-side, exactly as a signature
+    // structure is above — the command bar greys the button, and this is what
+    // makes the greying true rather than decorative.
+    if (!unitAvailableTo(kind, this.factionOf(slot))) return false;
 
     const economy = economyFor(this.world, slot);
     const stats = statsFor(kind);

@@ -92,6 +92,12 @@ export enum UnitKind {
    * recorded hull.
    */
   Chorister = 5,
+  /**
+   * The Order's own hull — the roster's first faction-locked one (issue #401).
+   * Appended for the Chorister's reason: the value crosses the wire and sits
+   * in replays, so renumbering would relabel every recorded hull.
+   */
+  Clarion = 6,
 }
 
 /** Prototype structure roster. Stats live in structures.ts. See docs/units.md. */

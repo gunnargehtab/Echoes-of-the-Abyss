@@ -97,6 +97,52 @@ Chorister (Directorate)
   guard-rail written into the hull. No torpedo tubes. Above 400 m the shallow penalty
   applies to it as to every hull the Directorate crews.
 
+Clarion (Knights)
+
+- Role: Line hull — the cone made a ship. Strike, escort, and the Order's answer
+- SIG: **62 / 62 / +10** — and the first two are **cone** figures, not compass ones.
+  [systems-echo.md](systems-echo.md) §8 measures a Knight hull's signature from its own bow:
+  the listed 62 is what a listener standing ahead of it hears, 21.7 is what a listener on the
+  beam hears, and 6.2 is what a listener astern hears. Averaged over the compass the term
+  takes 62 to **27.9**, which is a Corvette's 28 — §8's balance clause, solved rather than
+  chosen, and the whole reason the entry is 62 and not some rounder number. **The Clarion is
+  the Corvette with its noise aimed**: louder than one in front, quieter than one behind,
+  and level with one over the circle
+- The firing figure is the Order's, not the hull's: energy is a different weapon class
+  ([systems-combat.md](systems-combat.md) §3, §11), and the class replaces a hull's burst
+  outright at +10 rather than scaling it. A 2.2×'d kinetic burst would be a number this hull
+  could never emit, so `packages/shared/src/units.ts` reads it from `FACTION_COMBAT` instead
+  of listing one
+- HYD: 50 — a Corvette's ears exactly, and deliberately. §8: the term "changes what a Knight
+  emits and never what a Knight hears", so everything this hull buys is on the emitting side
+  and the trade is entirely positional
+- PR: 2 — the Hadron baseline, so the hull grants nothing. The Order rents depth from the
+  Sounding Spire's +1 ([factions.md](factions.md), "projects access"); a deep Knight hull
+  would buy for 180 nodules what the doctrine charges 750 for
+- Cost: 180. No Resonance Crystal — the Order's crystal goes into the Spire
+  ([economy.md](economy.md) §2), and the Abyssal Submersible stays the roster's crystal-locked
+  hull. **Two Clarions cost what three Corvettes cost**, which is the choice a Knight commander
+  makes at the yard: numbers, or facing
+- Build time: 40s
+- Speed: 75 (below the Corvette's 85 — a longer hull built around a bow array)
+- HP: 420
+- Hull: 90 m
+- Weapon: 60 damage at 700 m, 1.5 s cycle (prototype). A third more reach and a heavier
+  discharge than a Corvette, paid for on the cycle — sustained damage lands at 40/s against
+  the Corvette's 41.7. Inside [systems-combat.md](systems-combat.md) §9's bands on all four
+  counts, and `ttkBands.test.ts` holds them
+- **Crystal-locked: no. Faction-locked: yes — and it is the roster's first.** See the design
+  note below; the short version is that a cone figure is unreadable without the term, and the
+  term is one navy's
+- Notes: The hull the directional term was written for, and the one the Order's missions have
+  been short of since [mission-aptitude.md](mission-aptitude.md). A Clarion travelling at a
+  listener is the loudest thing that listener will hear all match; a Clarion travelling away
+  is quieter than a Corvette running silent. *Never travel at a listener* is a rule about
+  routes rather than about a button (§8), and this is the hull that makes it expensive to
+  forget. It does not change the seven Order mission literals, which still field generic
+  hulls Knight-rigged and still say so — switching one is a document's decision before it is
+  a literal's
+
 Harvester
 
 - Role: Resource production (economy)
@@ -235,12 +281,16 @@ Design notes
   what it *hears* — throttling engines does not unplug the hydrophones. Anything that
   modifies listening does so as an explicit HYD modifier (the Cantor's dome), so the
   detection formula keeps exactly two listening-side inputs: distance and HYD.
-- **The Knights have no hull in this roster yet, and their doctrine is a multiplier waiting
-  for one.** Directional signature is spec'd in systems-echo.md §8: a Knight hull's listed SIG
-  is its **cone** figure, and the compass average of the term is 0.45, so a Knight entry should
-  run roughly 2.2× a comparable hull's SIG for the two to balance. Until such an entry exists,
-  anything flying Knight colours is a generic hull with the term applied, and its cone figure is
-  therefore *low* for the faction. mission-aptitude.md fields exactly that and says so.
+- **The Knights have a hull now, and it is solved from the multiplier rather than beside it
+  (issue #401).** Directional signature is spec'd in systems-echo.md §8: a Knight hull's listed
+  SIG is its **cone** figure, and the compass average of the term is 0.45, so a Knight entry
+  runs roughly 2.2× a comparable hull's SIG for the two to balance. The Clarion is that entry —
+  62 against a Corvette's 28, which the term returns to 27.9 over the circle — and the figure
+  is derived in code from `DIRECTIONAL_COMPASS_AVERAGE` rather than transcribed, so a sector
+  table that ever moved would take the roster with it instead of leaving the faction quietly
+  mistuned. **Anything else flying Knight colours is still a generic hull with the term
+  applied**, and its cone figure is therefore *low* for the faction; the seven Order mission
+  literals field exactly that and say so, and each is its own decision to make later.
 - **The Directorate's listening doctrine is carried by numbers, not a special case.** Their
   native hull owns the highest mobile HYD (85) and their Cantor raises allied HYD in an
   area. The "passively detect one tier higher" phrasing in systems-echo.md §8 is realised
@@ -272,11 +322,19 @@ Design notes
   roster lacked one of them; the alternative — reading §6 as *cheapest per point of value* —
   would have left factions.md's "very many, cheap, slow" and campaign.md §6's "cheap
   expendable units" describing a navy with nothing cheap in it. Three calls inside that one:
-  - **Nobody's by lock.** The four signature structures carry a faction lock; hulls never
-    have, and this one does not either. The rendering-contract rate (30%) already makes it
-    the Directorate's — a Draymaw pays them a Chorister and pays anyone else a third of one —
-    so a lock would be a second lever for an effect the rate carries, exactly as a tier bonus
-    would be for HYD (above).
+  - **Nobody's by lock.** The four signature structures carry a faction lock; this hull does
+    not. The rendering-contract rate (30%) already makes it the Directorate's — a Draymaw pays
+    them a Chorister and pays anyone else a third of one — so a lock would be a second lever
+    for an effect the rate carries, exactly as a tier bonus would be for HYD (above). **The
+    Clarion is the one hull that does carry a lock, and the two cases are different in kind
+    rather than in degree** (issue #401): a Chorister's price is legible to anyone who reads
+    it, while a Clarion's stat line *cannot be read at all* outside the Order. Its 62 is a
+    cone figure, and §8's first exclusion makes the cone "one navy's doctrine, not physics" —
+    so another navy's Clarion would emit 62 in every direction and be the loudest hull in the
+    game with nothing bought for it. The lock is not protecting a balance number; it is
+    refusing to sell an entry that means nothing once it leaves the faction it was solved
+    for. `Match.produce` enforces it server-side, exactly as `Match.build` enforces the
+    structures', and the command bar mirrors it rather than owning it.
   - **PR-2 on the hull, not 3.** A PR-3 hull at 30 Nodules would sell the Abyssal band to any
     navy with a rendering contract, and economy.md §7 makes going deep a decision somebody
     pays for. The Directorate's baseline lifts it to 3 for free, which is what "born to it"
