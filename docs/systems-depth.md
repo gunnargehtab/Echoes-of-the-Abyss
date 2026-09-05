@@ -185,7 +185,7 @@ what exists or assumes what does not. Constants live in `DEPTH` in
 | Sounding Spire rents depth (§3, §4) | **Implemented** | `STRUCTURE_AURAS.SOUNDING_SPIRE`; the grant is real while the aura holds and lost on leaving it |
 | Directorate shallow-water penalty (§3) | **Implemented** | Speed in `movementSystem`, stacking multiplicatively with silent running, storms, currents and kelp; hull in `pressureSystem`, as a bleed to `DIRECTORATE_SHALLOW.HULL_FLOOR` that shares the unhealable ledger with crush. The 400 m line is `DEPTH_BANDS`' Shelf boundary rather than a number of its own |
 | Pelagia Deepbloom terraforming (§3) | Not modelled | Requires terrain that can change band. The per-region floor is the substrate for it; what is missing is the ability to write to it mid-match |
-| Commander abilities, e.g. Seeding (§4) | Not modelled | No commander-ability layer exists yet |
+| Commander abilities, e.g. Seeding (§4) | Not modelled | The commander-ability layer exists — `MissionCommanderAbility`, built for Marr's Convocation — but carries a speed term and a Silent Running immunity, not a PR grant or a band change, so Seeding's +1 PR zone has nothing to stand on |
 | Map floor (§1) | **Implemented** | Per-region, authored in the map. `DEPTH.MAX_M` is now only the ruleset's ceiling on what a map may author and what may be ordered |
 | Map ceiling (§1) | **Implemented** | Per-region, 0 on open water. Two maps author roofed passages: the Ventfront flanking tunnels and the Kelp Labyrinth's wall runs |
 | Ground you do not fit through (§2) | **Implemented** | `movementSystem` resolves each step against the water column and slides along ground it cannot enter, rather than refusing the order |

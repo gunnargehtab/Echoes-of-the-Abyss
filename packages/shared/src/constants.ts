@@ -458,8 +458,12 @@ export const SILENT_RUNNING = {
 } as const;
 
 /**
- * A commander's one authored act — docs/characters.md, the four *Commander
- * ability* entries, of which Marr's is the first with a mechanism behind it.
+ * A commander's one authored act — docs/characters.md, the seven *Commander
+ * ability* entries (Varr-Kest, Osk, Marr, Anholt, Korrin, Adze, Sull), of which
+ * Marr's is the only one with a mechanism behind it. These are campaign
+ * abilities — the act a mission hands its commander — and not hero-unit kit:
+ * skirmish picks a navy, never a commander, and characters.md stopped claiming
+ * otherwise in #416.
  *
  * Here rather than in a mission literal for the rule `CLAUDE.md` states about
  * both: a mission's authored figures (a sounding's 400 m, a row's ceiling) live
