@@ -8,6 +8,54 @@ Each is also anchored to one axis of asymmetry — their relationship to **sound
 
 ---
 
+## What a superweapon is
+
+Each power has one. None is built — they appear in `packages/` only as comments recording their
+absence, and the mission documents that have wanted one have approximated it on the world's
+clock rather than transcribing it ([mission-the-dome.md](mission-the-dome.md) §13,
+[mission-second-chord.md](mission-second-chord.md) §13). So this section is the design being
+settled *before* the transcription, which is the cheap moment to settle it (#438).
+
+The earlier drafts were each a sentence, and two of the four sentences decided matches. A spore
+mass that blinded every hydrophone across a vast radius for twenty-five seconds, and a lattice
+that put everything caught at Tier 0 for twelve, were both *executions* in a game whose entire
+skill expression is knowing — the Bloom Surge entry said so itself. The Chorus Call cost
+"nothing but cooldown". None of that survives. **A superweapon here is a hazard the commander
+fires** ([hazards.md](hazards.md), "The lifecycle"): it has the same four phases weather has,
+and it is held to the same rule that an unannounced effect teaches a player the map is
+arbitrary rather than dangerous. Six things are true of all four:
+
+1. **It fires from a site the enemy can find.** A stabilised vent, a seeded Veil, a Cantor, a
+   paired lattice — a thing on the map, a contact like any other, named at Tier 3. No
+   superweapon is fired from the commander's chair at a point of the commander's choosing.
+2. **It announces itself before it lands.** Every one has a charge at a stated SIG for a stated
+   window, and the window is at least what the slowest hull needs to leave the effect. The
+   Lance's is the loudest sound short of the Second Chord; the Surge's is a bed the whole rim
+   can classify; the Awakening's charge *is* the weapon; the Collapse rings for ten seconds down
+   a corridor built to carry.
+3. **Its radius is drawn.** For the firer as a preview before commit, in the manner of the
+   ping's rings ([ui-ux.md](ui-ux.md) §6), and for every player who has classified the site,
+   from the first tick of the charge. The Surge's cloud is light rather than sound and is
+   therefore public outright, like a Lampfry shoal ([bestiary.md](bestiary.md) §4).
+4. **Its duration is seconds a hull can act inside of, and the floor is Tier 1.** No superweapon
+   takes a hydrophone to Tier 0. [systems-echo.md](systems-echo.md) §4's design note — *the
+   player should always know that something is happening* — is a floor every one of these
+   stands on, not a preference two of them used to override. Twelve and fifteen seconds of
+   knowing *that* and not *what* is dread. Twenty-five seconds of nothing was a loading screen.
+5. **It is priced in the faction's own currency.** The Lance spends a vent, the Surge a Veil,
+   the Call a Cantor's dome, the Collapse a lattice — each the thing that faction's doctrine is
+   made of, and each a thing the enemy can see was spent. Nothing costs only cooldown.
+6. **Where it blinds, it blinds both sides.** The Surge and the Collapse deafen the firer's
+   hulls inside the radius exactly as they deafen everyone else's — the Spore Veil's trade,
+   scaled up ([systems-echo.md](systems-echo.md) §8). The faction that fires one has decided it
+   is fine with that; that decision is what the button is for.
+
+The entries below are the four, in those terms. The two that were already bounded — the Lance
+warned the whole map from the moment it charged, and the Awakening never steered what it
+summoned — kept their shape and gained their numbers. The two that were not were redesigned.
+
+---
+
 ## ⛏ Bathyarch Consortium
 
 **"Pressure is a cost. Costs can be financed."**
@@ -44,7 +92,25 @@ Blocky, riveted, over-engineered. Steel, tungsten, hazard yellow, rust bleed. Ev
 
 ### Superweapon — **Thermal Lance**
 
-Redirects a captured vent's full geothermal output into a sustained cutting beam. Ten-second channel, devastating against structures, and it makes a noise the whole map hears from the moment it starts charging. Perfectly on-brand: *unstoppable, and it warns you*.
+Redirects a stabilised vent's full geothermal output into a sustained cutting beam. Perfectly
+on-brand: *unstoppable, and it warns you*.
+
+- **Site:** a vent the Consortium has stabilised ([hazards.md](hazards.md) §1) — a hazard site
+  every player has had drawn since the first second of the match.
+- **Charge:** **10 s** at **SIG 95**, omnidirectional, from the vent — the ping's figure, and
+  Track to every listener in 2,400 m of open water. The beam's line is fixed at commit and is
+  drawn, for the whole charge, for everyone who has the vent classified.
+- **Effect:** a beam up to **1,500 m** long and **60 m** wide, held for **10 s**: **120 damage
+  per second to structures, 40 to hulls.** A Corvette that stands in it for the full channel is a
+  Corvette that has died; one that takes two seconds to step out of it has paid 80. A Bastion
+  cannot step out of anything, and 1,200 off 5,000 is the argument for the Lance's range being
+  the build radius: it reaches what was built within reach of the vent, and nothing else.
+- **Price:** the vent is spent — it drops out of stabilisation, returns to its natural cycle,
+  pays no draw, and must be stabilised again, which is a Consortium hull standing in the vein
+  band being loud ([economy.md](economy.md) §2). **300 s** before the same vent can be fired
+  again.
+- **Counter-play:** kill the stabilising hull during the charge, or step out of a line you can
+  see. The Klaxon does not sneak; it never claimed to.
 
 ### What they'd never admit
 
@@ -90,7 +156,28 @@ Organic, curved, asymmetric. Chitin and algae composite in deep green-teal, vein
 
 ### Superweapon — **Bloom Surge**
 
-A detonating spore mass that blinds hydrophones across a vast radius for 25 seconds. It does no damage. It removes the enemy's ability to *know*, in a game built entirely on knowing. Against a Directorate player it is functionally an execution.
+A Spore Veil that ripens and bursts. It does no damage. It takes the *what* out of a circle of
+water for fifteen seconds and leaves the *that*, in a game built entirely on knowing — and it is
+the Veil's own trade, scaled up: it hides them from you and you from them, and the Commune is
+fine with that.
+
+- **Site:** a seeded Spore Veil ([units.md](units.md)) — a structure, 450 nodules and 90 s to
+  grow, and a contact named at Tier 3 like any structure.
+- **Charge:** **20 s** of ripening — the hazard framework's warning window, sized so the slowest
+  hull in the roster can leave the largest plume ([hazards.md](hazards.md)) — with the bed at
+  **SIG 45**, the loudness of a working harvester, and the cloud visibly swelling. Everyone who
+  has the Veil classified sees the 1,200 m it will fill.
+- **Effect:** the cloud fills **1,200 m** for **15 s**, and every hydrophone inside it — friend
+  and foe — is capped at **Tier 1**. You know something is there. You do not know where, what, or
+  how many, and a gun without a bearing has no solution. The cloud is light, not sound, so its
+  edge is public and drawn for every player, exactly.
+- **Price:** the Veil is consumed, and with it the 350 m of concealment it was giving. The
+  Commune's own hulls inside are as deaf as anyone's. The floor on a second Surge is a second Veil:
+  110 s and 450 nodules.
+- **Counter-play:** it ripened for twenty seconds in a circle you were shown. Leave it, or hold
+  the edge and wait fifteen. Against a Directorate player it is no longer an execution; it is a
+  quarter of a minute in which the best ears in the Rift are ordinary, at a place and time they
+  were told.
 
 ### What they'd never admit
 
@@ -138,7 +225,27 @@ Spiked, insectoid, chitinous. Abyssal shell in bruise-black and deep violet, sho
 
 ### Superweapon — **Trench Awakening**
 
-A sustained infrasonic call that summons the Rift's megafauna to a target location. The Directorate does not control what arrives. They simply know, better than anyone, what it will do when it gets there.
+A sustained infrasonic call that summons the Rift's fauna. The Directorate does not control what
+arrives, and it does not choose where it arrives either — it chooses where to stand. They simply
+know, better than anyone, what it will do when it gets there.
+
+- **Site:** a Cantor. The call is sung, and a singer is somewhere.
+- **Charge:** there is none apart from the weapon, because the weapon *is* an announcement:
+  **30 s** at **SIG 80**, omnidirectional, Track to everything in earshot. Every listener who
+  classifies the singing Cantor sees the ring the call reaches — the range at which the map's
+  creatures hear it at Commit.
+- **Effect:** the call is weighted **×3** to fauna, as a ping is ([bestiary.md](bestiary.md) §2),
+  and the Directorate's own ×0.4 does not shield the singer — a call is meant to be answered.
+  Every creature that hears it at Commit closes on the Cantor, at its own speed; a Sounder in its
+  corridor answers as it answers a ping ([bestiary.md](bestiary.md) §4). When the call ends, what
+  arrived attacks the loudest thing it can hear, which is whoever is fighting there. The ladder
+  is deterministic and every commit has its tell ([bestiary.md](bestiary.md) §8), so the
+  Awakening is an argument about the ladder rather than a roll of it.
+- **Price:** the Cantor's dome is withdrawn for the call and for **60 s** after it; the Cantor is
+  Track to every hydrophone in 2,400 m for the thirty seconds; and it cannot call again for
+  **180 s**. What it summons does not distinguish cohorts from concerns once the singing stops.
+- **Counter-play:** kill the singer, or be quieter than the Directorate when the animals arrive
+  — which, against the loudest navy in the game, is the whole of the Directorate's plan.
 
 ### What they'd never admit
 
@@ -188,7 +295,28 @@ Symmetrical, blade-like, crystalline. Polished pale alloy and violet resonance c
 
 ### Superweapon — **Resonance Collapse**
 
-Simultaneous detonation of a crystal lattice across an enormous area: no damage, total system failure. Everything caught is stunned, deafened, and reduced to Tier-0 sensory blackout for 12 seconds. The Knights do not kill you. They remove you from the conversation.
+Simultaneous detonation of a paired lattice: no damage, and inside a line you watched them draw,
+twelve seconds in which nobody's hydrophones resolve a bearing. The Knights do not kill you. They
+remove you from the conversation — briefly, and at a price they cannot pay twice without paying
+for it in crystal.
+
+- **Site:** a paired lattice — two Standing Wave nodes within 1,500 m with a corridor standing
+  between them ([systems-echo.md](systems-echo.md) §8). Two structures, both named at Tier 3.
+- **Charge:** **10 s** with both nodes ringing at **SIG 80**, down a corridor that carries at
+  2.0 — the loudest fixed thing on the map. Everyone who has either node classified sees the
+  footprint for the whole ten seconds.
+- **Effect:** the corridor's own water — the line between the nodes, **600 m** either side of it
+  and 600 m past each end, the radius the Spires already grant across — for **12 s**. Every
+  hydrophone inside, friend and foe, is capped at **Tier 1**; a torpedo seeker inside loses its
+  lock; a gun without a bearing has no solution. Not Tier 0: you know they are coming, and you
+  do not know from where.
+- **Price:** both nodes are destroyed, the corridor is gone, and — in the Fields, where the Order
+  builds — the cells the corridor had un-scattered scatter again ([systems-echo.md](systems-echo.md)
+  §3). The Collapse hands the water back to the crystal. A second Collapse is two more Spires,
+  which is Resonance the thinnest economy in the game does not have to spare.
+- **Counter-play:** the lattice is two buildings on a known map, the charge is ten seconds of
+  the loudest thing the Order owns, and the footprint is a line. Stand off it, or come in from
+  outside it when the nodes go — the Knights inside are as deaf as you are.
 
 ### What they'd never admit
 

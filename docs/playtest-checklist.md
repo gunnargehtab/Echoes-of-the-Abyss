@@ -200,6 +200,11 @@ would be worse than no metric at all.
 1. **Dread, not confusion.** A Tier-1 smudge should feel like a problem you can reason
    about. If it feels like the interface malfunctioning, the rule is too complicated —
    simplify it rather than explaining it. ([game-identity.md](game-identity.md))
+   The Resonance Fields are this question's hardest case, and the one with a stated answer:
+   a contact in crystal is wrong by up to 30° and 15% to one hull and true to two hulls 30°
+   apart ([systems-echo.md](systems-echo.md) §3, "Two ears"). Does a player who has lost a
+   corvette to a phantom reach for a second hull next time, or for the settings menu? The
+   first is the rule being learned; the second is #438's failure coming back.
 2. **Legibility of the tiers.** Can a player tell Bearing from Classification without
    reading a label? ([ui-ux.md](ui-ux.md) §11)
 3. **The mix.** Does the exposure cue land as the loudest thing in the game? Can you tell a

@@ -56,6 +56,7 @@ import {
 import { hasBow } from '../directional.ts';
 import { SpatialHash } from '../spatialHash.ts';
 import { localIdOf, type SimWorld } from '../world.ts';
+import type { Terrain } from '../terrain.ts';
 
 /** Player slots the room admits. Sized for the flat per-slot scratch arrays. */
 const MAX_SLOTS = 8;
@@ -169,6 +170,32 @@ interface BestContact {
    */
   reportedX: number;
   reportedY: number;
+  /**
+   * The share of the best listener's path that crossed scattered cells — the
+   * input the Fields' lie scales with (docs/systems-echo.md §3). Walked when
+   * that listener is recorded rather than when the payload is built, because
+   * the pair loop needs to know *while it is still running* whether this
+   * contact is one the Fields are lying about, and kept so the payload does
+   * not walk the same path a second time. Always 0 on a grid with no crystal.
+   */
+  fraction: number;
+  /**
+   * The "two ears" rule — docs/systems-echo.md §3. How many listeners of this
+   * slot hold a bearing on the emitter this pass, the bearing the first of
+   * them held, and the spread of every later one relative to it. `crossed`
+   * latches once that spread reaches `SCATTER.CROSS_BEARING_RAD`, and a
+   * crossed contact is reported where it truly is.
+   *
+   * Min and max of the *relative* bearing, unwrapped to (−π, π], rather than
+   * every bearing kept: exact whenever the spread is under 180°, and when it
+   * is not, one of the extremes is itself over 90° from the reference, which
+   * is a cross by any reading. Two floats per contact, no allocation.
+   */
+  ears: number;
+  refBearing: number;
+  minRel: number;
+  maxRel: number;
+  crossed: boolean;
 }
 
 export interface EchoResult {
@@ -319,6 +346,32 @@ export class EchoLayer {
    * once per candidate pair instead of two Map lookups.
    */
   private readonly bestTierThisEmitter = new Int8Array(MAX_SLOTS);
+  /**
+   * Per slot, for the emitter in hand: is the best resolution so far one the
+   * Fields are lying about, with no second ear yet to straighten it? Written
+   * by `record`, read by `secondEarPass` — the one place the pass spends a
+   * path integral on a listener that cannot improve the tier. Cleared the
+   * moment a cross bearing latches or an open-water listener takes the best,
+   * so that spend goes only on contacts actually being lied about and stops
+   * as soon as the lie is solved.
+   */
+  private readonly secondEarWanted = new Uint8Array(MAX_SLOTS);
+  /**
+   * Listeners the pair loop set aside for `secondEarPass`, for the emitter
+   * in hand: within Bearing range, and pruned or aborted for not beating the
+   * standing tier. Parallel arrays of numbers so the hot loop pushes ints and
+   * allocates nothing; `deferredRel` and `order` are that pass's scratch.
+   */
+  private readonly deferredEid: number[] = [];
+  private readonly deferredSlot: number[] = [];
+  private readonly deferredRel: number[] = [];
+  private readonly order: number[] = [];
+  /** Furthest-off-the-reference first — see `secondEarPass` for why. */
+  private readonly byRelDescending = (a: number, b: number): number =>
+    Math.abs(this.deferredRel[b]!) - Math.abs(this.deferredRel[a]!);
+  /** Whether the grid in hand has any scattered water — hoisted per pass. */
+  private scatterPass = false;
+  private terrain: Terrain | undefined;
 
   constructor() {
     for (let h = 0; h <= 100; h++) {
@@ -451,6 +504,103 @@ export class EchoLayer {
     return handle;
   }
 
+  /**
+   * The "two ears" search — docs/systems-echo.md §3.
+   *
+   * Runs once per emitter, after the candidate loop, and only on a grid with
+   * crystal. For every slot whose best resolution of this emitter is a
+   * contact the Fields are lying about, it asks whether one of the listeners
+   * the loop set aside would give that slot a bearing at least
+   * `SCATTER.CROSS_BEARING_RAD` from one it already holds — and walks the
+   * fewest paths that can settle the question.
+   *
+   * The order is the whole trick. Candidates are sorted by how far their
+   * bearing sits from the first confirmed ear's, furthest first, so the one
+   * most likely to cross is walked first and a latch ends the search after a
+   * single integral. The stop is exact rather than a cap: with `M` the widest
+   * confirmed offset and `r` the next candidate's, no cross remains possible
+   * once `r + M` is under the bound (nothing left can cross a confirmed ear —
+   * the same side is nearer than the opposite one) *and* `2r` is under it
+   * (no two remaining candidates can cross each other). Which listener the
+   * hash happened to visit first therefore never decides whether a player
+   * is told the truth; only where their hulls are does.
+   *
+   * The loudness arithmetic is the pair loop's, repeated for these few
+   * survivors rather than hoisted out of a loop that is on the 2 ms budget.
+   * The bar is Bearing, so the walk aborts as soon as a listener cannot hold
+   * a bearing at all.
+   */
+  private secondEarPass(
+    emitter: number,
+    ex: number,
+    ey: number,
+    eRow: number,
+    sigMasked: number,
+    directional: boolean,
+    bowX: number,
+    bowY: number,
+    observers: readonly number[],
+    terrain: Terrain
+  ): void {
+    const { REFERENCE_DISTANCE_M, ATTENUATION_EXPONENT } = PROPAGATION_MODEL;
+    const bearingBar = RATIO_TO_BEAT[ResolutionTier.Contact]!;
+    for (const slot of observers) {
+      if (this.secondEarWanted[slot] !== 1) continue;
+      const entry = this.best.get(slot)?.get(emitter);
+      if (entry === undefined || entry.ears === 0) continue;
+
+      this.order.length = 0;
+      for (let i = 0; i < this.deferredEid.length; i++) {
+        if (this.deferredSlot[i] !== slot) continue;
+        const listener = this.deferredEid[i]!;
+        let rel =
+          Math.atan2(ey - Position.y[listener]!, ex - Position.x[listener]!) - entry.refBearing;
+        if (rel > Math.PI) rel -= Math.PI * 2;
+        else if (rel <= -Math.PI) rel += Math.PI * 2;
+        this.deferredRel[i] = rel;
+        this.order.push(i);
+      }
+      if (this.order.length === 0) continue;
+      this.order.sort(this.byRelDescending);
+
+      for (const i of this.order) {
+        const r = Math.abs(this.deferredRel[i]!);
+        const widest = Math.max(entry.maxRel, -entry.minRel);
+        if (r + widest < SCATTER.CROSS_BEARING_RAD && 2 * r < SCATTER.CROSS_BEARING_RAD) break;
+
+        const listener = this.deferredEid[i]!;
+        const lx = Position.x[listener]!;
+        const ly = Position.y[listener]!;
+        const dx = ex - lx;
+        const dy = ey - ly;
+        const distance = Math.hypot(dx, dy);
+        const hyd = Acoustic.hyd[listener]! | 0;
+        const clamped = hyd > 100 ? 100 : hyd;
+        const k = THERMOCLINE_PAIR_FACTOR[eRow + thermoclineZone(Position.depth[listener]!)]!;
+        const dirFactor = directional
+          ? directionalSectorFactor(bowX * -dx + bowY * -dy, distance)
+          : 1;
+        const perceivedPerPf =
+          k *
+          dirFactor *
+          sigMasked *
+          Math.pow(
+            REFERENCE_DISTANCE_M / Math.max(distance, REFERENCE_DISTANCE_M),
+            ATTENUATION_EXPONENT
+          );
+        const threshold = this.thresholdByHyd[clamped]!;
+        const pfNeeded = (threshold * bearingBar) / perceivedPerPf;
+        this.contactWalks++;
+        const pf = terrain.pathPropagation(ex, ey, lx, ly, pfNeeded);
+        if (pf < pfNeeded) continue;
+        const tier = tierFromRatio((perceivedPerPf * pf) / threshold);
+        if (tier < ResolutionTier.Bearing) continue;
+        this.record(slot, emitter, tier, lx, ly);
+        if (entry.crossed) break;
+      }
+    }
+  }
+
   private record(
     slot: number,
     eid: number,
@@ -463,25 +613,66 @@ export class EchoLayer {
       slotBest = new Map();
       this.best.set(slot, slotBest);
     }
-    const existing = slotBest.get(eid);
+    const ex = Position.x[eid]!;
+    const ey = Position.y[eid]!;
+    let existing = slotBest.get(eid);
     // Multiple listeners may hear the same emitter; the player learns the most
     // any single one of them resolved.
     if (existing === undefined) {
       // Reported position is filled in when the contact payload is built,
       // which is the only place that knows what each tier discloses. Seeded
       // with the truth so a read before then is never a wild value.
-      slotBest.set(eid, {
+      existing = {
         tier,
         listenerX,
         listenerY,
-        reportedX: Position.x[eid]!,
-        reportedY: Position.y[eid]!,
-      });
+        reportedX: ex,
+        reportedY: ey,
+        fraction: 0,
+        ears: 0,
+        refBearing: 0,
+        minRel: 0,
+        maxRel: 0,
+        crossed: false,
+      };
+      slotBest.set(eid, existing);
+      if (this.scatterPass && tier >= ResolutionTier.Bearing) {
+        existing.fraction = this.terrain!.scatteredFraction(listenerX, listenerY, ex, ey);
+      }
     } else if (tier > existing.tier) {
       existing.tier = tier;
       existing.listenerX = listenerX;
       existing.listenerY = listenerY;
+      if (this.scatterPass) {
+        existing.fraction =
+          tier >= ResolutionTier.Bearing
+            ? this.terrain!.scatteredFraction(listenerX, listenerY, ex, ey)
+            : 0;
+      }
     }
+    if (!this.scatterPass) return;
+
+    // The "two ears" rule — docs/systems-echo.md §3. Only a listener that
+    // holds a *bearing* is an ear: a Tier-1 smudge has no direction to cross
+    // with. Bearings are taken from the emitter's true position, which is
+    // the server's to know; the client is told only the outcome.
+    if (tier >= ResolutionTier.Bearing) {
+      const bearing = Math.atan2(ey - listenerY, ex - listenerX);
+      if (existing.ears === 0) {
+        existing.refBearing = bearing;
+        existing.minRel = 0;
+        existing.maxRel = 0;
+      } else if (!existing.crossed) {
+        let rel = bearing - existing.refBearing;
+        if (rel > Math.PI) rel -= Math.PI * 2;
+        else if (rel <= -Math.PI) rel += Math.PI * 2;
+        if (rel < existing.minRel) existing.minRel = rel;
+        if (rel > existing.maxRel) existing.maxRel = rel;
+        if (existing.maxRel - existing.minRel >= SCATTER.CROSS_BEARING_RAD) existing.crossed = true;
+      }
+      existing.ears++;
+    }
+    this.secondEarWanted[slot] = existing.fraction > 0 && !existing.crossed ? 1 : 0;
   }
 
   /**
@@ -747,6 +938,8 @@ export class EchoLayer {
     const started = performance.now();
     const terrain = world.terrain;
     const entities = acousticEntities(world);
+    this.terrain = terrain;
+    this.scatterPass = terrain.hasScatter;
 
     for (const slot of observers) {
       this.best.get(slot)?.clear();
@@ -856,6 +1049,7 @@ export class EchoLayer {
       const { REFERENCE_DISTANCE_M, ATTENUATION_EXPONENT } = PROPAGATION_MODEL;
 
       this.bestTierThisEmitter.fill(ResolutionTier.Silent);
+      if (this.scatterPass) this.secondEarWanted.fill(0);
 
       const range2 = range * range;
 
@@ -926,7 +1120,25 @@ export class EchoLayer {
           const clamped = hyd > 100 ? 100 : hyd;
           const bestTier = this.bestTierThisEmitter[listenerSlot]!;
           const cutoff2 = range2 * this.rangeScaleSqByHyd[clamped]! * RATIO_SCALE_SQ[bestTier]!;
-          if (d2 > cutoff2) continue;
+          if (d2 > cutoff2) {
+            // Pruned — but on a grid with crystal, a listener that cannot
+            // *beat* the standing tier may still be the second ear that
+            // straightens the Fields' lie (docs/systems-echo.md §3, "Two
+            // ears"). Set aside, not walked: `secondEarPass` below decides
+            // after the candidate loop whether any of them is worth a path
+            // integral, and it only asks when this slot's best is actually
+            // being lied about. Bearing is the bar, because a Tier-1 smudge
+            // has no bearing to cross with.
+            if (
+              this.scatterPass &&
+              d2 <=
+                range2 * this.rangeScaleSqByHyd[clamped]! * RATIO_SCALE_SQ[ResolutionTier.Contact]!
+            ) {
+              this.deferredEid.push(listener);
+              this.deferredSlot.push(listenerSlot);
+            }
+            continue;
+          }
 
           // Survivors — a small minority — pay for the pow.
           const distance = Math.sqrt(d2);
@@ -975,7 +1187,18 @@ export class EchoLayer {
           // axis. The walk aborts once its mean cannot reach that same bar.
           this.contactWalks++;
           const pf = terrain.pathPropagation(ex, ey, lx, ly, pfNeeded);
-          if (pf < pfNeeded) continue;
+          if (pf < pfNeeded) {
+            // An aborted walk hands back an upper bound, not a tier, so a
+            // listener that failed to beat Bearing may still *reach* it. Set
+            // aside for the same second-ear question as the pruned ones; a
+            // bar at or below Contact that was not met is a listener that
+            // heard nothing, and is not.
+            if (this.scatterPass && bestTier >= ResolutionTier.Bearing) {
+              this.deferredEid.push(listener);
+              this.deferredSlot.push(listenerSlot);
+            }
+            continue;
+          }
 
           const tier = tierFromRatio((perceivedPerPf * pf) / threshold);
           if (tier === ResolutionTier.Silent) continue;
@@ -983,6 +1206,23 @@ export class EchoLayer {
           this.bestTierThisEmitter[listenerSlot] = tier;
           this.record(listenerSlot, emitter, tier, lx, ly);
         }
+      }
+
+      if (this.deferredEid.length > 0) {
+        this.secondEarPass(
+          emitter,
+          ex,
+          ey,
+          eRow,
+          sigMasked,
+          directional,
+          bowX,
+          bowY,
+          observers,
+          terrain
+        );
+        this.deferredEid.length = 0;
+        this.deferredSlot.length = 0;
       }
     }
 
@@ -1157,13 +1397,14 @@ export class EchoLayer {
         // pair — dozens of walks against tens of thousands — and only on a
         // grid with crystal on it. The key is the *match-local* id, for the
         // same reason the Tier-2 blur's is.
-        if (scattered && resolved.tier >= ResolutionTier.Bearing) {
-          const fraction = terrain.scatteredFraction(
-            resolved.listenerX,
-            resolved.listenerY,
-            trueX,
-            trueY
-          );
+        //
+        // And not at all when the slot holds a cross bearing on it: two ears
+        // solve the Fields (§3, "Two ears"), and a solved contact is reported
+        // where it truly is. What the client learns from that is only a
+        // position it earned twice over. The fraction was walked when the
+        // best listener was recorded, so nothing is walked again here.
+        if (scattered && resolved.tier >= ResolutionTier.Bearing && !resolved.crossed) {
+          const fraction = resolved.fraction;
           if (fraction > 0) {
             const lied = scatterContact(
               contact.x,

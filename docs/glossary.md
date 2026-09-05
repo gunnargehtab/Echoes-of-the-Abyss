@@ -59,11 +59,11 @@ Ghost Markers
 
 Scattered Water
 
-- Water that lies about *where* a sound came from. The Resonance Field's PF is "0.70, scattered": the 0.70 prices loudness like any PF, and *scattered* means a contact resolved through those cells is reported up to ±30° off its true bearing and up to 15% long in range — never short — at every tier that carries a bearing, Classification and Track included. It never moves a tier (systems-echo.md §3, "Scattered water"). Deterministic per match and moving over time, so it cannot be averaged or triangulated back to the truth. A Standing Wave corridor un-scatters the cells it writes; a storm does not.
+- Water that lies about *where* a sound came from. The Resonance Field's PF is "0.70, scattered": the 0.70 prices loudness like any PF, and *scattered* means a contact resolved through those cells is reported up to ±30° off its true bearing and up to 15% long in range — never short — at every tier that carries a bearing, Classification and Track included. It never moves a tier (systems-echo.md §3, "Scattered water"). Deterministic per match and moving over time, so **one ear** cannot average or track its way back to the truth — and **two ears** can: a player holding the emitter from two hulls at least 30° apart, as the emitter sees them, is told the true position (systems-echo.md §3, "Two ears"). The lie is bounded and the way out costs a second hull. A Standing Wave corridor un-scatters the cells it writes; a storm does not; a Resonance Collapse re-scatters what its corridor had cleared.
 
 Phantom
 
-- A false contact returned by an active ping transmitted from scattered water: a handle, Tier 4, a plausible enemy hull with health and a heading, and no entity behind it. One to three per transmission (audio-direction.md §5); an attack or torpedo order on one resolves to nothing; it is held for the transmission's three seconds and then fades like a ghost marker. It sounds and reads identical to a true return (systems-echo.md §3).
+- A false contact returned by an active ping transmitted from scattered water: a handle, Tier 4, a plausible enemy hull with health and a heading, and no entity behind it. One to three per transmission (audio-direction.md §5); an attack or torpedo order on one resolves to nothing; it is held for the transmission's three seconds and then fades like a ghost marker. It sounds and reads identical to a true return (systems-echo.md §3) — and it is a return no second ear ever confirms: no cross bearing straightens it, no friendly hull holds it after the transmission fades, and a scout sent to the spot finds water.
 - **Not a Ghost Marker**, which is a stale reading of a real unit. A phantom was never anything.
 
 Echo Marks
@@ -296,6 +296,11 @@ Doctrine Names
 - **The Listening** (Abyssal Directorate) — the best hydrophone ratings by a wide margin: Directorate units resolve one tier higher than anyone else, and their Cantors project 1,200 m domes.
 - **The Score** (Hadron Knights) — sound as a weapon rather than a liability: high SIG, aimed. The term in the formula is Directional Signature, above.
 - Used as bare nouns in faction voice — *the Klaxon posture*, *under the Veil* — and never as the name of a unit, structure or ability.
+
+Superweapon
+
+- One per faction — the Thermal Lance, the Bloom Surge, the Trench Awakening, the Resonance Collapse — and none built. A superweapon is **a hazard the commander fires** (factions.md, "What a superweapon is"): it fires from a site on the map the enemy can find, it announces itself at a stated SIG for a stated window before it lands, its radius is drawn, its duration is seconds a hull can act inside of, it never takes a hydrophone below Tier 1, and it is priced in the thing its faction's doctrine is made of — a vent, a Veil, a Cantor's dome, a lattice. Where it blinds, it blinds both sides.
+- The Directorate's **Chorus Call** is a faction unique rather than the superweapon (systems-echo.md §8), and is held to the same shape: sung by a Cantor within its dome, six real voices at SIG 16 for 120 s, the singer at SIG 40 with its dome withdrawn, 180 s before it can sing again.
 
 The Answering
 
