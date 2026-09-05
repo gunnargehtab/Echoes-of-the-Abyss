@@ -196,7 +196,7 @@ export const LEDGER_ITEM_NINE: MissionDefinition = {
           2050,
           {
             entered:
-              'Item Six: the rim field, entered on the registry. The page kept blank for eleven years is written, and the projection acquires the floor the Board has been sitting over since the ninth year of decline.',
+              'Item Six: the rim field, entered on the registry. The page kept blank for five years is written, and the projection acquires the floor the Board has been sitting over since 209.',
             gap: 'Item Six was not attended. The field is on the registry all the same.',
           },
           ''
@@ -389,7 +389,7 @@ export const LEDGER_ITEM_NINE: MissionDefinition = {
    */
   epilogue: {
     [MissionOutcome.Complete]:
-      "The session closes. The field is entered, the air keeps running, and the Board adjourns to the next tide's business — which, for the first time in eleven years, it is projected to have.",
+      "The session closes. The field is entered, the air keeps running, and the Board adjourns to the next tide's business — which, for the first time since 209, it is projected to have.",
     [MissionOutcome.Partial]:
       'The session closes short of its own procedure, which the minutes record and the registry queries. The reading below stands regardless.',
     [MissionOutcome.Lost]:

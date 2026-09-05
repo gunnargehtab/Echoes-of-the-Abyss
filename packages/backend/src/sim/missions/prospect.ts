@@ -494,7 +494,7 @@ export const LEDGER_PROSPECT: MissionDefinition = {
    */
   epilogue: {
     [MissionOutcome.Complete]:
-      'The field is proven. Four faces read to survey standard, the cores of the readings in duplicate, the column returned. The registry opens the page it has kept blank for eleven years, and the projection acquires a floor. Item Nine acquires an appendix.',
+      'The field is proven. Four faces read to survey standard, the cores of the readings in duplicate, the column returned. The registry opens the page it has kept blank for five years, and the projection acquires a floor. Item Nine acquires an appendix.',
     [MissionOutcome.Partial]:
       'The survey returns short of standard. What was read is real and insufficient; the Board is asked to authorise a second descent, and the actuarial note attached to the request is one sentence long.',
     [MissionOutcome.Lost]:

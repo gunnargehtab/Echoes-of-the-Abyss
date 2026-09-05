@@ -90,6 +90,7 @@ Four unrelated institutional problems become terminal within twenty years of eac
 | --- | --- |
 | **197 PC** | **Kell.** A containment failure threatens the main Consortium habitat. Executor Varr-Kest signs the order to flood Sector Kell: **1,900 dead**, the habitat saved. The flood front reaches the Kell Plateau, and Warden Juno Teel evacuates 4,000 Commune farmers, leaving 200 behind because the boats were full |
 | **199 PC** | The **Kelp Enclosure standoff**. Tidespeaker Marr has the votes to authorise armed defence and does not call for them. Her partner is among the dead |
+| ~203 PC | **Ivane Sull is elevated to Choirmaster**, and the Order's centre moves with her to the Ninth Chapter-House, the youngest of the nine, where it has stayed ([world-map.md](world-map.md) §3, [habitats.md](habitats.md) §5). Dated from her own account and nothing else: eleven years reading the First's sealed room alone, which only the Choirmaster does ([mission-second-chord.md](mission-second-chord.md) §12; [factions.md](factions.md)) |
 | **204 PC** | **Deepbloom.** Bloomwright Sefa Anholt proves engineered algae can seed at 2,200 m — habitable depth can be *manufactured*. The single most important scientific result in two centuries |
 | 205 PC | The Directorate states, in writing, that a second seeding constitutes an act of war. The Commune files the letter and continues the programme |
 | 205 PC | From the letter onward, a **Directorate cohort stands north of the trenches** for the first time — the Second Trench Cohort, attending Commune ground rather than holding a band ([mission-in-writing.md](mission-in-writing.md) §5) |
@@ -103,11 +104,10 @@ Four unrelated institutional problems become terminal within twenty years of eac
 
 ## Undated
 
-Four events the rest of the bible asserts as history and dates nowhere. They are carried here because a reader who looks for them should find them, and they are carried as *undated* because this document's rule is that a row is dated from what the docs already assert and never from what would be convenient — the same rule that leaves the drowned city's fall in some year nobody kept.
+Three events the rest of the bible asserts as history and dates nowhere. They are carried here because a reader who looks for them should find them, and they are carried as *undated* because this document's rule is that a row is dated from what the docs already assert and never from what would be convenient — the same rule that leaves the drowned city's fall in some year nobody kept.
 
 | Year | Event |
 | --- | --- |
-| *undated* | **Ivane Sull is elevated to Choirmaster.** The Order's centre moves with her to the Ninth Chapter-House, the youngest of the nine, and has stayed there ([world-map.md](world-map.md) §3, [habitats.md](habitats.md) §5) |
 | *undated* | **Fivewell is drilled** — the youngest producing field on the west wall, shallower and smaller than Ninefold, and the thermal grid's second pillar. Drilled by the book, after Ninefold taught the book ([world-map.md](world-map.md) §3) |
 | *undated* | **The Deepbloom radicals emerge** as a minority faction on the plateaus, holding that the Rift should be terraformed whether the Directorate consents or not. Downstream of the 191 PC programme and still growing in 214 PC; the Commune, which does not classify things, has also never dated it ([factions.md](factions.md)) |
 | *undated* | **The chapter-houses' order of founding** is First through Ninth, the Order founding deep and the number being an age rather than a depth. Only the ~140 PC row above dates the building at all, and it dates the practice rather than any one house ([world-map.md](world-map.md) §3) |

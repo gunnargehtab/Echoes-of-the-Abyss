@@ -30,7 +30,7 @@ import type { BoardSlot, CampaignBoard } from './campaignBoard.ts';
  * A place the campaign is played, as the chart needs it.
  *
  * `water` is `null` for ground nobody holds — the drowned city, the rim, the
- * Fourth that two parties claim and neither patrols — and `whose` says so in
+ * Fourth that two parties claim and neither patrols alone — and `whose` says so in
  * words either way, because "nobody's" is a fact about the Rift and not an
  * absence of one.
  */
@@ -40,7 +40,13 @@ export interface Ground {
   name: string;
   /** The region of §3 it sits in, as Plate VII labels it. */
   region: string;
-  /** The map's base floor, from the mission document's §11. */
+  /**
+   * The depth the rail marks: the mission map's base floor, from its document's
+   * §11 — except Sorrowgate, whose row carries the court's 1,500 m from
+   * docs/world-map.md §3 rather than the map's 1,600 m floor. Where a place's
+   * depth in §3/§5 and its map's floor differ, which one the rail should mean is
+   * #422's call.
+   */
   depthM: number;
   water: Faction | null;
   /** Whose water it is, in the water's own word for itself. */
@@ -237,7 +243,7 @@ export const GROUNDS: readonly Ground[] = [
     region: 'The Trench Country',
     depthM: 1450,
     water: null,
-    whose: 'claimed by the concern and the cohorts, patrolled by neither',
+    whose: 'claimed by the concern and the cohorts, and neither patrols it alone',
     x: 840,
     y: 1988,
   },

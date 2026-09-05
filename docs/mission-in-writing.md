@@ -742,7 +742,7 @@ flagged in advance, the register at its limit for the second time
 thirty years on the plateau's one protection wanting, for one sentence, the other side's.
 
 She is *she* throughout, as [characters.md](characters.md) writes her;
-[mission-thin-water.md](mission-thin-water.md) §8 and §12 are the side that moves.
+[mission-thin-water.md](mission-thin-water.md) §8 and §12 were the side that moved.
 
 ---
 

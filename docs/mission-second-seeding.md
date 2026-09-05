@@ -348,7 +348,7 @@ sowing and a descent, and both are loud rather than armed.
 
 Naming follows [culture.md](culture.md) §4. Anholt, Marr and Teel are plateau names carried by
 the people who tend them; Anholt is *she*, as [characters.md](characters.md) writes her, and
-[mission-thin-water.md](mission-thin-water.md) §8 and §12 are the side that moves. Osk is
+[mission-thin-water.md](mission-thin-water.md) §8 and §12 were the side that moved. Osk is
 given-plus-family with no hyphen, because he is not Board. The Watch-Speaker and the Voice of
 the reconnaissance are the offices [mission-prospect.md](mission-prospect.md) §12 fixed, and
 their lines are that document's, verbatim. The charting pair speaks *for the plateaus*, and its
@@ -1085,7 +1085,7 @@ sentence is opposition and abstention stated as one fact, by the person who will
 for both halves, inside the reading where the plateaus got everything they asked for.
 
 Anholt is *she* throughout, as [characters.md](characters.md) writes her;
-[mission-thin-water.md](mission-thin-water.md) §8 and §12 are the side that moves.
+[mission-thin-water.md](mission-thin-water.md) §8 and §12 were the side that moved.
 
 ---
 

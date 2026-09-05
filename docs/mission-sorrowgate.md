@@ -455,10 +455,10 @@ resources and no second spawn, so it is not an archetype, is not balanced, and i
 selectable in a skirmish. It is resolved by mission id and by nothing else
 ([maps.md](maps.md)).
 
-**On the Coral Ruins state change that [environments.md](environments.md) specifies and has not
-built:** the prologue does not rely on it and does not implement it. Its state
+**On the Coral Ruins state change that [environments.md](environments.md) specifies, and three
+shipped missions now spend:** the prologue does not rely on it and does not implement it. Its state
 change is the gate coming down — a structure, on a slot that is not the player's. The biome
-repaint remains unwritten and is not owed here.
+repaint is built elsewhere and is not owed here.
 
 ---
 
@@ -548,9 +548,9 @@ not.
 | Objectives, results, and the failure at adjournment | Implemented (#190) |
 | The briefing and the objective readings | Implemented (#190) |
 | The four voices in the water | **Built** (#381) — the `say` beat carries speaker and line to the mission log beside the orders panel at the times §12 gives, and the mix now hails each on the speech bus [audio-direction.md](audio-direction.md) §13 owns: 600 ms of signature in the speaker's register's material, then a murmur bed for the reading. The four are four registers by construction — Kalliso in the Order's note at 06:20, Drenn in the concern's beat at 09:00, Sende in the cohorts' ticks at 09:20, Teel in the plateaus' breath at 10:40 — and `missionRuntime.test.ts` plays the mission and asserts they arrive as four different voices. Under the silence order the hail whispers (−6 dB, the top octave gone, the bed half as long) and never mutes; the log stays the caption, so a player with their eyes on the water now hears that somebody spoke and which of the four it was. Under the cast (#403) Kalliso and Teel are signed — the Order's own note at a soldier's pace, and the warden's breath — and Drenn and Sende, who have no entry in [characters.md](characters.md), speak as the grid and as those below: still four registers, and now four speakers |
-| Ghost markers as a taught system | **Not taught here, and [campaign.md](campaign.md) §2 still says it is.** §10's fourth beat was written for a fading twenty-second trail; measured, the colossus holds Tier 4 from 09:00 to the adjournment in every drive — passive, escorted, and escorted-with-the-climb — because SIG 100 through PF 1.6 stays four times over threshold even across the thermocline. §10 row 4 has been rewritten to what the phase does teach. Whether the lesson moves to another mission or the colossus is made quieter is a campaign-level decision, not this document's |
-| Mid-match Coral Ruins state change | Not built, and not relied on ([environments.md](environments.md)) |
-| Campaign progression, and recording that the prologue was played | Not built — the prologue is replayable and remembers nothing |
+| Ghost markers as a taught system | **Not taught here, and [campaign.md](campaign.md) §3 now says so.** §10's fourth beat was written for a fading twenty-second trail; measured, the colossus holds Tier 4 from 09:00 to the adjournment in every drive — passive, escorted, and escorted-with-the-climb — because SIG 100 through PF 1.6 stays four times over threshold even across the thermocline. §10 row 4 has been rewritten to what the phase does teach. Whether the lesson moves to another mission or the colossus is made quieter is a campaign-level decision, not this document's |
+| Mid-match Coral Ruins state change | Built, and spent by three other missions; not relied on here ([environments.md](environments.md)) |
+| Campaign progression, and recording that the prologue was played | Built (#371) — the prologue is still replayable, and the shell now knows whether it has been played ([campaign.md](campaign.md) §11) |
 
 ---
 

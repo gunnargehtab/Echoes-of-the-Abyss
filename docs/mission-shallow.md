@@ -45,8 +45,9 @@ Three facts about this water decide the mission, and none of them is a fence.
 corridor is Marr's approach and the Holdfast gate; east is Kell's replanted face; south the rock
 falls away to 900 m and keeps falling. So it is the one stair the Directorate can climb without
 standing in a garden — which is the entire reason a cohort is up here rather than anywhere else
-above four hundred metres, and the entire reason the 205 PC letter is served a second time by
-presence rather than by paper ([timeline.md](timeline.md)).
+above four hundred metres, and the entire reason the 205 PC letter is served again by
+presence rather than by paper — as it has been, north of the trenches, since the letter itself
+([timeline.md](timeline.md)).
 
 **Eighteen carries eighteen here, and so does everything else.** Thin Water's argument was that a
 Commune tender's 18 SIG means 9.9 at home in kelp and 18 on this rock, because the shoulder is

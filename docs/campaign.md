@@ -27,7 +27,7 @@ The count is 1 + 4×7. Convergence and Ending are slots *inside* each campaign's
 2. **Mechanics are the argument.** Each mission introduces at most one system, and the system is chosen to make the faction's worldview physically true under your hands. The Directorate campaign teaches patience because Directorate units are slow, and being told they are patient would not work.
 3. **The Mouth is never explained.** Not in a cutscene, not in a codex entry, not in the final mission of any campaign ([culture.md](culture.md) §6).
 4. **Losing is content.** Three missions across the campaign are *unwinnable as fights* and winnable as evacuations, retreats or refusals. The Rift is not a place where force resolves things cleanly.
-5. **The map persists.** Drift Health carries between missions on the same map ([bestiary.md](bestiary.md) §6). A player who fights loudly through the Kelp Labyrinth returns later to a quieter, deader, more legible version of it, and nobody tells them why.
+5. **The map persists.** Drift Health carries between missions on the same map ([bestiary.md](bestiary.md) §6). A player who fights loudly across Marr Plateau at *Tend* returns to it at *Convocation* to a quieter, deader, more legible version of the same ground, and nobody tells them why.
 
 ---
 
@@ -83,11 +83,11 @@ Specified in full — map, forces, beats, numbers, register and text — in [mis
 | --- | --- | --- | --- |
 | 1 | **[Attendance](mission-attendance.md)** | HYD, passive listening, patience | No combat. You listen to the Mouth for one full cycle and record what the cohorts dream. Specified in full in [mission-attendance.md](mission-attendance.md), and built as `attending-attendance` |
 | 2 | **[Intake](mission-intake.md)** | Cohort economy, cheap expendable units | The 8% who cannot adapt are reassigned. Korrin does it herself. The mission does not editorialise. Specified in full in [mission-intake.md](mission-intake.md), and built as `attending-intake` |
-| 3 | **[The Dome](mission-the-dome.md)** | Cantors, listening domes, Chorus Call | You spoof an army. It works perfectly and teaches you what your own ears are worth. Specified in full in [mission-the-dome.md](mission-the-dome.md), and built as `attending-the-dome` on the `fourth-foot` map |
+| 3 | **[The Dome](mission-the-dome.md)** | Cantors, listening domes, Chorus Call | You spoof an army — or the Cantorate does, on the world's clock, and you decide whether to enter it. It works, and it teaches you what your own ears are worth. Specified in full in [mission-the-dome.md](mission-the-dome.md), and built as `attending-the-dome` on the `fourth-foot` map |
 | 4 | **[Shallow](mission-shallow.md)** | Your own weakness | Above 400 m: −20% speed, −15% HP. The most feared army in the Rift, losing to altitude. Specified in full in [mission-shallow.md](mission-shallow.md), and built as `attending-shallow` on *Thin Water*’s `kell-shoulder` unchanged |
 | 5 | **[Trench Awakening](mission-trench-awakening.md)** | Megafauna, fauna aggro, Biomass | You call something and you do not steer it ([bestiary.md](bestiary.md)). Specified in full in [mission-trench-awakening.md](mission-trench-awakening.md), and built as `attending-trench-awakening` on the `shallow-band` map |
 | 6 | **[Conclave](mission-conclave-attending.md)** | Fighting with half an army | First Cantor Ossary does not move against Korrin directly. He simply does not move. Specified in full in [mission-conclave-attending.md](mission-conclave-attending.md), and built as `attending-conclave` on the `upper-terraces` map, whose `attending-` prefix is the whole of what distinguishes it from the Order's *Conclave* in §7 (§1) |
-| 7 | **[First Arrival](mission-first-arrival.md)** | Information into tempo | Arrive at the rim before anyone. Hold it with the slowest units in the game. Specified in full in [mission-first-arrival.md](mission-first-arrival.md), and built as `attending-first-arrival` on *Prospect*'s `mouth-rim` unchanged — the Directorate's convergence slot and its ending in one mission (§8, §9) |
+| 7 | **[First Arrival](mission-first-arrival.md)** | Information into tempo | Arrive at the rim before the armies, on the tide after the survey went home. Hold it with the slowest units in the game. Specified in full in [mission-first-arrival.md](mission-first-arrival.md), and built as `attending-first-arrival` on *Prospect*'s `mouth-rim` unchanged — the Directorate's convergence slot and its ending in one mission (§8, §9) |
 
 ---
 

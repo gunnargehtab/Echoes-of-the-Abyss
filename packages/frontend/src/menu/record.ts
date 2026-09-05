@@ -65,7 +65,7 @@ export const RECORD_PAGES: readonly RecordPage[] = [
     entries: [
       'No date in this part of the record is firm, and the court does not pretend otherwise. What is entered here is entered as approximate, by parties who were not there.',
       'The deep ocean stopped turning over across roughly two generations. The middle of the ocean lost its oxygen, and the loss climbed toward the light. The water at the top went sour. The word is the old industry’s, and it is the word that survived.',
-      'Deep habitation existed before the Collapse: research stations, vent-field industry, a handful of colonies. None of it was built to be lived in. The Ninefold Vein was producing decades before year 0, and the Pelagion Rift was already lit and already worked.',
+      'Deep habitation existed before the Collapse: research stations, vent-field industry, a handful of colonies. None of it was built to be lived in permanently. The Ninefold Vein was producing decades before year 0, and the Pelagion Rift was already lit and already worked.',
       'One civic deep colony was under construction in the Rift at year 0 — a transit line, a passenger terminus, a hydrophone array larger than any built since. It was half finished. Its name is not in the record. The Rift calls the ruin Sorrowgate, after the gate its dead went through, and this court sits in it.',
       'The count for the Surface Age is not kept. It was not kept at the time.',
     ],
