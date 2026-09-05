@@ -286,6 +286,238 @@ Hadron Spire / Sounding Spire (Structure — Knights)
 - Effect: Grants PR+1 to allied units within 600 m and can form Standing Wave corridors when two nodes pair.
 - Notes: High-cost strategic structure; transforms local depth economics.
 
+The rung, and two hulls a navy — designed, not yet transcribed (#436)
+
+Status: **designed here; not in `packages/shared/src/units.ts` or `structures.ts` yet.** Every
+entry below is written to the roster's own rules — a stat line that is an argument about sound
+or depth, a berth figure, a weapon inside [systems-combat.md](systems-combat.md) §9's bands,
+and a faction lock only where the entry cannot be read outside the navy — so that transcribing
+one is a literal's job and not a design decision. Until then the seven hulls above are the
+roster, and `unitAvailableTo` knows nothing of these.
+
+Why this exists: three of the four navies field an identical combat roster, one hull in the
+game carries a faction lock, and Resonance Crystal — "the tech gate for every faction"
+([economy.md](economy.md) §2) — gates four structures and one hull. That is a one-rung tree
+with the rung at the top. [factions.md](factions.md) promises four armies (*few, heavy,
+tough · many, fast, fragile · very many, cheap, slow · very few, elite, precise*) and the
+roster delivers one army in four colours. The shape below is: **one more yard**, crystal-locked,
+and **two hulls a navy** — the first at the Foundry, so it is an opening; the second behind the
+rung, so the crystal is a decision about *what* to field and not only about where.
+
+Slipway (Structure — all factions) — the rung
+
+- Role: The second yard. Produces each navy's second exclusive hull, and nothing the Foundry
+  already builds
+- SIG: 30 idle / **70 while the line runs** — louder than a Foundry's 55, and the loudest line
+  in the base. A navy building its upper tier is audibly building it, which is the whole of
+  [economy.md](economy.md) §1 applied to tech: the ambition is heard before the hull is
+- HP: 2500
+- Cost: 600, plus **120 Resonance Crystal** — the same crystal price as a signature structure,
+  because it is the same kind of decision: the deep, spent on a building
+- Build time: 120s
+- Berths granted: +8 while commissioned, to the ceiling of 40 ([economy.md](economy.md) §10) —
+  so the ceiling is a Bastion, two Foundries and a Slipway, and a navy that wants forty berths
+  has to want the rung
+- Notes: One per navy is enough and two are allowed; the second buys a line, not a tier. A
+  Slipway lost mid-match takes its eight berths and its line with it — the hulls it launched
+  stay afloat
+
+Bathyarch Consortium — *few, heavy, tough*
+
+Tender (Foundry)
+
+- Role: The repair hull. The Consortium's identity is *best repair* and nothing in the
+  roster repairs; this is the hull that makes attrition a doctrine rather than a word
+- SIG: 48 / 55 / — (no weapon). **+12 while working**: a floating workshop is pumps,
+  welding and hull plate, and a force that is healing is a force that is heard. A Consortium
+  push repairs *behind* the Baffle Barge or it repairs in the open
+- HYD: 40
+- PR: 2
+- Cost: 320
+- Build time: 50s
+- Berths: 2
+- Speed: 45
+- HP: 900
+- Effect: Restores 15 HP/s to one allied hull within 300 m, nearest first. Never touches
+  unhealable damage ([systems-depth.md](systems-depth.md) §2): crush and sour stay crushed and
+  sour, which is what keeps depth a commitment even for the navy with the tenders
+- Faction-locked: yes. The repair rate is the Klaxon's other half — a navy built to survive
+  being heard needs the thing that makes surviving cumulative — and a Commune Tender would be
+  the quietest repair in the game bolted onto the navy that never stands still to use it
+
+Bulwark (Slipway)
+
+- Role: The heavy. Line-breaker, torpedo-eater, and the hull built to stand in front of a
+  Bastion and stay there
+- SIG: **70 / 75 / +30** — the loudest hull in the game, and the Klaxon is never off it:
+  +12% damage while SIG > 60 is a Bulwark's resting state, not a choice
+- HYD: 35
+- PR: 2
+- Cost: 700
+- Build time: 120s
+- Berths: 4 — a Cruiser and a third, in tonnage, which is what makes a Bulwark line the
+  Consortium's whole grant
+- Speed: 30 — the slowest hull in the roster
+- HP: **2400**. §9: *survives one torpedo, dies to two* is the Cruiser's band; a Bulwark
+  survives three. "Armour that makes surviving the torpedo the plan"
+  ([systems-combat.md](systems-combat.md) §11) is this hull's stat line
+- Weapon: 220 damage at **800 m**, 4.0 s cycle (55/s). Outranges a Sentinel Turret's 700 m,
+  which is the point: a Bulwark shoots the static defence from outside it, and the Bastion
+  behind it from inside its own hull's tolerance. Bands to hold on transcription: kills a
+  Corvette in ≥ 8 s (two cycles), a Bastion alone in ~90 s, and dies to Corvette guns in
+  ≥ 55 s — an anchor that does not fall to chip damage, §9's rule for the Cruiser applied
+  twice over
+- Faction-locked: yes — "few, heavy, tough" is the navy, and a hull that is loud by
+  construction in a navy that is punished for being loud would be a Corvette with a worse
+  price
+
+Pelagia Commune — *many, fast, fragile*
+
+Spinner (Foundry)
+
+- Role: The mine-layer. The Commune is the mine navy ([systems-combat.md](systems-combat.md)
+  §11 — grown, living mines, cheaper and more of them) and no hull in the roster lays them at
+  more than one
+- SIG: **8 / 14 / —** — no weapon; a Spinner is quieter running than a Light Scout idling
+- HYD: 55
+- PR: 1
+- Cost: 150
+- Build time: 25s
+- Berths: 1
+- Speed: 80
+- HP: 260
+- Effect: Carries **4 mines** against the roster's one, and regrows one every 40 s while
+  inside a Spore Veil or within 300 m of a Bastion. Laying is silent; the mine's own trigger
+  bar is §6's and unchanged
+- Faction-locked: yes. The Commune's mine cap (18 against 12) is the doctrine and this hull
+  is the way to reach it; the Consortium with Spinners would be the loud navy laying the quiet
+  navy's wall
+
+Sower (Slipway)
+
+- Role: The terraformer. *Deepbloom structures slowly convert Abyssal tiles into habitable
+  ones* ([factions.md](factions.md)) has been the Commune's headline for as long as the
+  document has existed and nothing in the game does it. This is the first thing that does,
+  in the one form the simulation can already carry: rented depth ([systems-depth.md](systems-depth.md)
+  §3, the Sounding Spire's grant)
+- SIG: 20 / 26 / — (no weapon). **45 while seeding** — the bloom is a chemical roar, and a
+  Commune force that has made the deep habitable has told the map where
+- HYD: 60
+- PR: **2** — the only Commune hull above PR-1, grown for the water it plants
+- Cost: 380, plus 80 Resonance Crystal — crystal-locked like the Submersible, for the same
+  reason: it is the hull built to live where the crystal is
+- Build time: 70s
+- Berths: 2
+- Speed: 55
+- HP: 500
+- Effect: After 20 s stationary it is *seeded*, and grants **+1 PR within 400 m** to allied
+  hulls for as long as it stands there. A PR-1 Corvette under a Sower works Mid-Water; under a
+  Sower and a second Sower it does not go deeper — the grant does not stack, exactly as the
+  Spire's does not
+- Faction-locked: yes — the entry is a bloom, and the Directorate would use it to be somewhere
+  it was already born to be
+
+Abyssal Directorate — *very many, cheap, slow*
+
+Precentor (Foundry)
+
+- Role: The ears on the move. The Cantor's dome does not travel; a swarm that arrives in
+  numbers has to know first *where it is going*
+- SIG: 12 / 18 / — (no weapon)
+- HYD: **95** — the cap, mobile. The best ears in the game, on a hull that is only ears
+- PR: 3 (PR-2 on the hull, the Directorate's baseline lifting it — the Chorister's rule)
+- Cost: 200, plus 30 Biomass
+- Build time: 30s
+- Berths: 1
+- Speed: 50
+- HP: 220
+- Effect: Grants **+10 HYD within 500 m** to allied hulls, capped at 95 — a Cantor's dome at a
+  third of the radius, moving at the swarm's pace. Under a Cantor as well it adds nothing: the
+  cap is the cap
+- Faction-locked: yes. A 95-HYD hull is the Listening made a ship; the Consortium with
+  Precentors would hear what its doctrine says it does not need to
+
+Dredge (Slipway)
+
+- Role: The hull for the floor of the map. The crystal field sits at 2,400 m and every navy
+  raids it; the Directorate is meant to *hold* it, and a PR-3 hull under crush at 2,400 m
+  ([systems-depth.md](systems-depth.md) §3) holds it on a clock
+- SIG: 40 / 52 / +25 — loud for a Directorate hull, on purpose: a Dredge at the field is the
+  tell that the field is held
+- HYD: 70
+- PR: **4** — the only PR-4 entry in the roster. Nothing below the Abyssal floor crushes it
+- Cost: 450, plus 60 Biomass and 40 Resonance Crystal — three accounts, the first hull priced
+  in all of them
+- Build time: 80s
+- Berths: 3
+- Speed: 35
+- HP: 1400
+- Weapon: 120 damage at 650 m, 2.0 s cycle (60/s). Bands to hold: kills a Corvette in ~8 s
+  and a Cruiser in ~20 s; dies to Corvette guns in ~34 s
+- Faction-locked: yes — a PR-4 hull sold to any navy with a rendering contract would sell the
+  bottom of the map, and [economy.md](economy.md) §7 makes the deep a thing somebody pays for
+
+Hadron Knights — *very few, elite, precise*
+
+Cantus (Foundry) — the early tempo tool
+
+- Role: Projected depth, mobile and cheap. The Order's win condition "is meant to be early"
+  ([economy.md](economy.md) §9) and its cheapest way down was a 750-nodule, 120-crystal Spire on
+  a 150 s build. This is a Spire's grant on a hull, at a third of the price and none of the
+  crystal, so two Clarions and a Cantus can raid the field in the opening
+- SIG: **10 / 10 / —** moving; **80 while singing** — the Spire's figure, for the Spire's
+  reason: rented depth is never quiet
+- HYD: 50
+- PR: 2
+- Cost: 400
+- Build time: 60s
+- Berths: 2
+- Speed: 55
+- HP: 600
+- Effect: Stationary for 10 s it *sings*: **+1 PR within 300 m**, and SIG 80 in every quarter —
+  the one Knight hull the directional term does not apply to, because a resonance node is
+  omnidirectional by construction ([systems-echo.md](systems-echo.md) §8, the ping's exemption).
+  Moving, it is silent and grants nothing. Does not pair into a Standing Wave; the corridor is
+  the Spire's
+- Faction-locked: yes — the entry is the Spire's term on a hull, and the Spire's term is one
+  navy's crystal
+
+Reciter (Slipway)
+
+- Role: The precise one. A glass cannon whose whole existence is the quarter it is loud in
+- SIG: **90 / 90 / +10** — cone figures, like the Clarion's: 90 ahead, 31.5 on the beam, 9
+  astern, **40.5 over the compass** — louder than a Corvette and quieter than a Cruiser on
+  average, and the loudest thing on the map from the front. A Reciter travelling at a
+  listener is classified from ~2,000 m; travelling across it, from ~700
+- HYD: 50
+- PR: 2
+- Cost: 260
+- Build time: 45s
+- Berths: 2
+- Speed: 70
+- HP: 300
+- Weapon: 140 damage at **1,000 m**, 3.0 s cycle (46.7/s) — outranges the Cruiser's 900.
+  Bands to hold: kills a Corvette in ~9 s and a Light Scout in one cycle; dies to a Corvette
+  in ~7 s if the Corvette gets there. The trade is the whole hull: it wins every fight it
+  arranged and loses every one it did not, which is [factions.md](factions.md)'s sentence
+  about the navy
+- Faction-locked: yes, for the Clarion's reason exactly: a cone figure is unreadable without
+  the term, and another navy's Reciter would emit 90 in every direction
+
+What this does to the summary table. [factions.md](factions.md)'s *Army* row becomes true in
+the roster: the Consortium fields the heaviest hull and the only repair; the Commune the most
+mines and the only terraformer; the Directorate the best ears and the only PR-4; the Knights
+the longest gun and a cheap way down. Each navy's Foundry hull is an opening and each Slipway
+hull is a decision the crystal buys — and every one of the eight is a sentence about sound or
+depth, per the editing rules, or it would not be here.
+
+Transcription order, when it comes: the Slipway first (a structure and a `PRODUCIBLE` row);
+then the four Foundry hulls, whose effects the simulation already has mechanisms for (the
+Precentor's aura is the Cantor's, the Cantus's and the Sower's grant is the Spire's, the
+Spinner's magazine is the mine cap's); then the four Slipway hulls, whose weapons
+`ttkBands.test.ts` has to hold to the figures above; and the Tender last, because repair is the
+one mechanism the simulation does not have.
+
 Design notes
 
 - Numbers are prototyping intent. Exact costs and timings are tuneable.
@@ -421,7 +653,8 @@ Notes for testers
 
 Next steps
 
-- Author unit variants for each faction (transports, artillery, static defence)
+- Transcribe the rung and the eight faction hulls above (#436) — the Slipway, then the four
+  Foundry hulls, then the four Slipway hulls, the Tender last; transports remain unwritten
 - Done: per-unit HYD values are authored in the stat blocks above and transcribed into
   `packages/shared/src/units.ts`
 - Done: `tools/echo-sim` runs these stats through the shared detection model

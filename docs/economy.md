@@ -263,8 +263,10 @@ has berths for, and berths are infrastructure — which in this game means they 
   [units.md](units.md): one for a Light Scout, a Harvester or a Chorister; two for a
   Corvette, a Clarion or an Abyssal Submersible; three for a Cruiser.
 - The **Bastion grants 16 berths** and every commissioned **Foundry grants 8 more**, to a
-  hard **ceiling of 40** per commander. Nothing else grants any: a Refinery is a depot, a
-  turret has no crew to speak of, and the four signature structures are instruments.
+  hard **ceiling of 40** per commander — and so will the Slipway, the second yard
+  [units.md](units.md) designs and the scaffold does not yet build. Nothing else grants any:
+  a Refinery is a depot, a turret has no crew to speak of, and the four signature structures
+  are instruments.
 - A hull counts against the berths from the moment it is **queued** — the crew is called
   up when the keel is laid, not when it launches — and stops counting when it dies. A
   Foundry lost mid-match takes its eight berths with it; the hulls already afloat stay
