@@ -51,9 +51,21 @@ export interface MissionResultProps {
   onAgain(ready: boolean): void;
   /** Leave the room for the shell. Abandons the seat — another run needs it. */
   onExitToMenu(): void;
+  /**
+   * Leave the room for the record — docs/ui-ux.md §14, "The record". The
+   * same leaving as "Return to port" with a different screen at the end of
+   * it: the record is what sits between two missions, and this is between.
+   */
+  onRecord(): void;
 }
 
-export function MissionResult({ result, ready, onAgain, onExitToMenu }: MissionResultProps) {
+export function MissionResult({
+  result,
+  ready,
+  onAgain,
+  onExitToMenu,
+  onRecord,
+}: MissionResultProps) {
   return (
     <div className="mission-result" role="dialog" aria-label="Mission result">
       <div className="mission-result-panel">
@@ -81,6 +93,9 @@ export function MissionResult({ result, ready, onAgain, onExitToMenu }: MissionR
         <div className="mission-result-actions">
           <button type="button" className="mission-result-again" onClick={() => onAgain(!ready)}>
             {ready ? 'Waiting…' : 'Again'}
+          </button>
+          <button type="button" className="mission-result-exit" onClick={onRecord}>
+            The record
           </button>
           <button type="button" className="mission-result-exit" onClick={onExitToMenu}>
             Return to port

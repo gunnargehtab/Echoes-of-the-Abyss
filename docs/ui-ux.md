@@ -606,6 +606,7 @@ title ──▶ setup (solo) ────────────────▶
   │  │       └──── join a listing, or a code ┤
   │  ├── settings · credits · controls ── back
   │  ├── campaign ──▶ briefing ─────────▶ mission (playing ▶ result)
+  │  │       └─────▶ record ◀───────────────────────────────┘ "The record"
   │  ├── tutorial ──▶ briefing ─────────▶ mission (playing ▶ result)
   └── resume banner ────────────────────▶ match (seat resumed)
 ```
@@ -638,7 +639,9 @@ title screen, and reads the briefing on the way in.
   campaign precisely so that nothing implies a mission 2. It is the one screen in the port
   that renders progression, and both halves of that now exist: the record
   ([campaign.md](campaign.md) §11) and the screen that reads it (#374). Specified in full
-  there.
+  there. Beside the board is **the chart** — Plate VII, with every slot drawn on the ground
+  its mission is played on — and under the board is the door to **the record**, the setting
+  read between missions; both are specified below.
 - **Setup** — shared by Solo and hosting: a commander-name field and one card per map
   archetype (name, doctrine line, seats), from the shared catalogue. Faction choice and AI
   opponents stay in the in-room ready room, because faction uniqueness is enforced by the
@@ -659,7 +662,9 @@ title screen, and reads the briefing on the way in.
   the match, because the match opens a socket and a simulation and a briefing has no
   business holding either. The shell does hold an audio context of its own now (#194), but
   it is the shell's and it is released on the way in — the briefing is still in the port,
-  and it still sounds like it. It commits with the same "Descend" the setup screen uses.
+  and it still sounds like it. It commits with the same "Descend" the setup screen uses. The
+  screen names **who is reading it, and in which register** — the court for the prologue,
+  the faction's own word for itself everywhere else — see "Who is speaking" below.
 - **Settings** — see below.
 - **Credits** — static, and honest: the technology roll from
   [tech-stack.md](tech-stack.md) and a note that every sound is synthesised. No invented
@@ -797,6 +802,136 @@ twenty-nine slots to reach it, which is the reason the board is one stop and not
 Entering the board lands on the first available slot — the prologue, today — because the
 first thing a keyboard reaches should be a door that opens. Every other slot is still
 reachable with an arrow key and still announces why it will not.
+
+#### The chart
+
+**The board sits beside Plate VII** ([world-map.md](world-map.md), the chart that document
+calls the canonical map of the setting), and every one of the twenty-nine slots is drawn on
+it as a mark, on the ground its mission is played on. The table says which mission; the chart
+says **where in the Rift, how deep, and in whose water**, which is what a player choosing a
+mission had no way to know — the board was built from campaign and ordinal alone, and none of
+the bible's geography reached it.
+
+What is drawn is the plate's anatomy, transcribed from its own paths rather than redrawn to
+resemble it: the Lid hatched across the top, the valley's five contours narrowing from the
+shallow north to the Mouth, the thermocline at 1,200 m as a dashed contour, the old transit
+line through the drowned city, the Mouth's rings, and the plate's depth rail down the right
+margin with its own ticks. The plate's survey text is *not* transcribed — at a board's scale
+it would be noise — so the chart carries the six region names and nothing else, and reads the
+ground of the lit slot in DOM text under it at a reading size: the place, the depth, and whose
+water, as *Sorrowgate, the drowned city · 1,500 m · nobody's water — all four deny using it*.
+The place and its water are [world-map.md](world-map.md) §3's; the depth is the map's base
+floor from the mission document's §11. A mission on a ground the chart does not know fails a
+test rather than drawing nowhere.
+
+**Whose water and whose mission are two facts, and the chart keeps them apart.** A region is
+labelled in the ink of the navy whose water it is, as the plate does — faction accents only
+where the world itself is that faction's — and a mark is inked in its **campaign's** navy,
+the same ink as its column head. A Directorate slot on the Kell Shoulder is a red mark on the
+plateaus' country, which is that mission in one glance; the prologue's mark is chrome, because
+the court is nobody's. Five missions share the Rim and two share Marr Plateau, so marks on one
+ground are fanned in a small ring around it rather than drawn on top of one another. Inks are
+`FACTION_PALETTE`'s glow, read at render so the colour-vision palettes apply; every other
+stroke is chrome from the tokens. No new hexes. The chart's language is
+[art-direction.md](art-direction.md)'s Pressure Cartography, because it *is* the plate.
+
+**One mark is lit at a time** — the hovered slot, else the focused one — with a halo in its
+ink and a tick on the depth rail at its depth, so the keyboard and the mouse read the same
+chart and the pointer's last position never pins it. Pressing a mark moves the board's focus
+to its slot; it does not open anything, because the chart is a reading of the board and not a
+second board. The halo belongs to the one lit mark for the reason the slot halo belongs to one
+slot, and nothing else on the chart moves.
+
+**The chart is decorative to a screen reader, and loses nothing by it.** Every fact on it is
+also in the slot's accessible name, after the state: *Available · The Kell Shoulder · 340 m ·
+the plateaus' water*. Hiding two hundred SVG paths costs nobody a fact; announcing them would
+gain nobody one. Below the width the chart and four readable columns need, the chart goes
+above the board rather than beside it and stops holding its place, so it never covers the
+slots it is meant to sit beside.
+
+Review screenshots live in `docs/screenshots/issue-410/`: the board with the chart beside it,
+and the chart lit on the Kell Shoulder and on the Rim.
+
+### Who is speaking
+
+The briefing names its reader. About 28,000 words of authored prose ship across the campaign's
+briefings, readings and lines, every one in-register ([campaign.md](campaign.md) §10), and
+until #410 the briefing screen rendered the text under a fixed heading with no attribution at
+all — so a player never learned whose voice the prologue is in, though
+[characters.md](characters.md) says Halloran is heard at length exactly once, there.
+
+**The header of the briefing carries two things**: the register, in the faction's own word for
+itself — *the concern*, *the plateaus*, *the cohorts*, *the Order*, *the court*
+([culture.md](culture.md) §3) — and the reading's attribution, quoted from the mission
+document's §12: *Read into the record by Arbiter Mosk Halloran, 214 PC*; *Tidespeaker Ysolde
+Marr, at dawn tide*; *The recovery writ, read to the column. Signed for the Ninth Board*. It is
+the same hail [audio-direction.md](audio-direction.md) §13 gives the `say` channel, on the
+screen instead of the bus: the register first, then whose. A writ signed for the Board has no
+single reader and is attributed to the concern, exactly as an unnamed `say` line is the
+register's chorus.
+
+The register takes its navy's ink and glyph, which is §12.5's licensed dress on a screen that
+is not the instrument; the court has no navy and takes chrome, because it is the one voice in
+the Rift that is not heard through water. The "already seen" variant is attributed identically
+and stays unmarked, as [campaign.md](campaign.md) §1 requires: the reader does not change with
+what the player has already witnessed, only the reading.
+
+**Both facts are on the public header, never on the room.** `MissionHeader.speaker` is a
+`MissionSpeaker` and `spokenBy` the quoted line; the register is derived, and the shared test
+holds every briefing's speaker to its campaign's register — the court for the prologue, and
+Halloran nowhere else. A fact about authored text the player is about to read discloses
+nothing about the water.
+
+Review screenshots: `docs/screenshots/issue-410/` has the prologue's briefing in the court's
+register and *Tend*'s in the plateaus'.
+
+### The record
+
+**A surface in the fifth register, between missions.** The bible answers every question the
+world asks — why humanity is underwater, why nobody goes back, where the Rift is and who holds
+it — and none of it reached the player: the campaign's text, by design, uses only the
+registers' self-descriptions, so a campaign player is never told there are four powers or what
+they are called, and *the Sounding*, *Halvard*, *Sector Kell*, *the Salinity Collapse* and *the
+Lid* had zero occurrences in player-facing text. The record is where those words are said.
+
+It is read in the court's voice ([culture.md](culture.md) §3), the one register built to
+describe a room without joining it: third person, perfect tense, named parties at stated times,
+the count read aloud and left to sit. That register is what makes the surface possible without
+breaking [campaign.md](campaign.md) §2 rule 3. **This is not a codex.** The Mouth is on the
+record as it is in [timeline.md](timeline.md)'s anomaly log — a cycle measured at forty-three
+hours and then thirty-nine, a reply that came forty-one seconds early, thirty-six years of text
+nobody can read — and no line on it says what the Mouth is. The court enters what was filed
+and does not say what it means; it does not say who was right, because the court never does.
+Every line was held to §6's register test, and the test is also the constraint list: the
+surface is *before*, not *above* (nothing on any page wants the water to clear); every fact
+is public canon from [world.md](world.md) and [timeline.md](timeline.md), never match state.
+
+**One page per era of [timeline.md](timeline.md)** — the Surface Age, Year 0, the Descent, the
+Settlement, the Long Arrangement, the Present Crisis — **entered as the campaign is played.**
+The record derives what it reads from the progression record and stores nothing of its own:
+
+| Page | Entered when |
+| --- | --- |
+| The Surface Age · Year 0 · The Descent | the prologue has been finished — the drowned city is the Surface Age's, and the player has stood in it |
+| The Settlement | one mission of any faction campaign has been finished — the player has been one of the four powers |
+| The Long Arrangement | missions in two campaigns have been finished — parity was four powers each able to hear the other, and the player has stood on two sides |
+| The Present Crisis | any mission on the Rim has been finished — 214 PC is the rim week |
+
+The pages need not be entered in order. A Ledger player who reaches the rim has the Present
+Crisis and not the Long Arrangement, and the gap is shown rather than closed: a page not yet
+entered keeps the disabled rule the board keeps — dimmed to 40%, never removed, its condition
+attached in the register (*Not yet entered. Entered when a second party has appeared — missions
+finished in two campaigns.*). The count is read at the top: *Six pages. Three entered.*
+
+**Two doors in, one door out.** The record is reached from the board's footer and from a
+mission's result screen, beside *Return to port*; Back returns to the board either way,
+because the board is where the next mission is chosen and the record is what sits between two
+of them. The result screen it may have come from is gone with the room by then, and the title
+is not where a player between missions is. No new storage key, no new state on the union
+beyond the screen itself.
+
+Review screenshots: `docs/screenshots/issue-410/` has the record read to a history of three
+missions, with the Long Arrangement withheld and its reason attached.
 
 ### Rooms, and who may see them
 

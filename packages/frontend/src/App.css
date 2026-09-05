@@ -2218,3 +2218,360 @@ button.objectives-row:hover {
 .campaign-row {
   min-width: 44rem;
 }
+
+/* ---------------------------------------------------------------------------
+   The chart beside the board — docs/ui-ux.md §14, "The chart".
+
+   Plate VII's anatomy in the plate's own chrome (`--text-bright` at the
+   plate's opacities) with a mark per slot in its campaign's ink. Tokens only:
+   the faction inks arrive as `color` on the SVG groups from FACTION_PALETTE,
+   so the colour-vision palettes apply, and every other stroke is chrome. The
+   halo belongs to the one lit mark, as the slot halo belongs to one slot.
+   ------------------------------------------------------------------------- */
+/* Auto block margins rather than the screen's `align-items: center`: a panel
+   taller than the viewport centred by the container is clipped at the top
+   and cannot be scrolled to, whereas auto margins collapse to zero when there
+   is no room and the panel starts at the top. The board and the record are
+   the two panels that can be taller than a phone. */
+.menu-panel-board {
+  width: min(1360px, 100%);
+  margin-block: auto;
+}
+
+.campaign-body {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  gap: 1.1rem;
+  align-items: start;
+}
+
+/* The chart holds its place while the eight rows scroll past it, so the mark
+   the focus is on is always beside the slot it is on. */
+.campaign-chart {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rift-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid color-mix(in srgb, var(--text-bright) 18%, transparent);
+  border-radius: 4px;
+  background: var(--abyss-void);
+  /* The chrome; a mark's group overrides it with its campaign's ink, and the
+     prologue's group sets nothing, so its mark is chrome — nobody's. */
+  color: var(--text-bright);
+  font-family: var(--font-data);
+}
+
+.rift-chart-hatch {
+  stroke: var(--text-dim);
+  stroke-opacity: 0.35;
+  stroke-width: 2;
+  fill: none;
+}
+
+.rift-chart-lid-line {
+  stroke: var(--text-dim);
+  stroke-opacity: 0.6;
+  stroke-width: 2;
+}
+
+.rift-chart-contour path {
+  stroke: var(--text-bright);
+  stroke-width: 2.2;
+  fill: none;
+}
+
+.rift-chart-transit {
+  stroke: var(--text-bright);
+  stroke-opacity: 0.16;
+  stroke-width: 2.5;
+  stroke-dasharray: 10 14;
+  fill: none;
+}
+
+/* The layer: not a place but a divide, so a dashed contour and not a fill. */
+.rift-chart-layer {
+  stroke: var(--text-bright);
+  stroke-opacity: 0.35;
+  stroke-width: 2.4;
+  stroke-dasharray: 3 12;
+  fill: none;
+}
+
+.rift-chart-mouth circle {
+  stroke: var(--neon-violet);
+  stroke-width: 2.2;
+  fill: none;
+}
+
+.rift-chart-mouth-core {
+  fill: var(--mouth-glow);
+  stroke: none !important;
+}
+
+/* Region names in the plate's letterspaced caps; `currentColor` is the
+   water's ink, set on the element, and chrome where nobody's. */
+.rift-chart-label {
+  font-size: 46px;
+  letter-spacing: 5px;
+  fill: currentColor;
+  opacity: 0.8;
+}
+
+.rift-chart-label-dim {
+  opacity: 0.5;
+}
+
+.rift-chart-label-lid {
+  fill: var(--text-dim);
+  opacity: 0.9;
+}
+
+.rift-chart-label-mouth {
+  fill: var(--mouth-glow);
+}
+
+.rift-chart-rail line {
+  stroke: var(--text-bright);
+  stroke-opacity: 0.3;
+  stroke-width: 2;
+}
+
+.rift-chart-rail-lit line {
+  stroke: currentColor;
+  stroke-opacity: 1;
+  stroke-width: 6;
+}
+
+.rift-chart-mark {
+  cursor: pointer;
+}
+
+.rift-chart-mark-hit {
+  fill: transparent;
+}
+
+.rift-chart-mark-dot {
+  fill: currentColor;
+  opacity: 0.85;
+}
+
+.rift-chart-mark-played {
+  fill: none;
+  stroke: var(--neon-cyan);
+  stroke-width: 3;
+  opacity: 0.9;
+}
+
+.rift-chart-mark-halo {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  opacity: 0.55;
+}
+
+.rift-chart-mark-lit .rift-chart-mark-dot {
+  opacity: 1;
+}
+
+.campaign-chart-caption {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-height: 3.6rem;
+  padding: 0 0.2rem;
+  text-align: left;
+}
+
+.campaign-chart-title {
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.campaign-chart-ground {
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: var(--text-bright);
+}
+
+.campaign-chart-facts {
+  font-size: 0.64rem;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  color: var(--text-cyan);
+}
+
+/* Below the width the chart and four readable columns need, the chart goes
+   above the board rather than beside it, and stops holding its place: a
+   sticky chart on a phone would cover the slots it is meant to sit beside. */
+@media (max-width: 1080px) {
+  .campaign-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .campaign-chart {
+    position: static;
+    max-width: 300px;
+  }
+}
+
+/* A second door in a footer that only had Back: cyan, because the record
+   tells and never asks. */
+.menu-secondary {
+  padding: 0.45rem 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--neon-cyan) 50%, transparent);
+  border-radius: 3px;
+  background: var(--abyss-glass);
+  color: var(--text-cyan);
+  font: inherit;
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.menu-secondary:hover {
+  background: rgba(53, 224, 255, 0.1);
+}
+
+.menu-secondary:focus-visible {
+  outline: 1px solid var(--text-cyan);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------------
+   Who is speaking — docs/ui-ux.md §14, "Who is speaking".
+
+   The briefing's head names the reader and the register, in the navy's ink
+   and glyph where the register has a navy (§12.5's licensed dress) and in
+   chrome for the court, which has none. The paragraphs under it are
+   untouched; the words were always the mission's, and the name is now the
+   mission's too.
+   ------------------------------------------------------------------------- */
+.briefing-speaker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--faction, var(--text-dim)) 40%, transparent);
+}
+
+.briefing-speaker-line {
+  font-size: 0.66rem;
+  line-height: 1.5;
+  letter-spacing: 0.03em;
+  color: var(--text-bright);
+}
+
+.briefing-register {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faction, var(--text-cyan));
+}
+
+/* ---------------------------------------------------------------------------
+   The record — docs/ui-ux.md §14, "The record".
+
+   The court's register on a screen: pages entered or withheld, and the count
+   read at the top. A withheld page keeps the disabled rule the board keeps
+   — dimmed to 40%, never removed, the reason attached — because a page the
+   player has not earned is still a fact about the shape of the record.
+   ------------------------------------------------------------------------- */
+.menu-panel-record {
+  width: min(760px, 100%);
+  margin-block: auto;
+}
+
+.record-count {
+  margin: 0.35rem 0 0;
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-cyan);
+  opacity: 0.7;
+}
+
+.record-pages {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 0.2rem;
+}
+
+.record-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--neon-cyan) 30%, transparent);
+  border-radius: 4px;
+  background: var(--abyss-glass);
+  text-align: left;
+}
+
+.record-page-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.record-page-era {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--neon-cyan);
+}
+
+.record-page-span {
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.record-entry {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+  color: var(--text-bright);
+}
+
+.record-page-withheld {
+  border-color: color-mix(in srgb, var(--text-dim) 45%, transparent);
+}
+
+.record-page-withheld > * {
+  opacity: 0.4;
+  filter: saturate(0.3);
+}
+
+.record-condition {
+  margin: 0;
+  font-size: 0.66rem;
+  line-height: 1.6;
+  font-style: italic;
+  color: var(--text-dim);
+}

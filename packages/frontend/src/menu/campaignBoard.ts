@@ -49,6 +49,12 @@ export interface BoardSlot {
   state: SlotState;
   /** Present exactly when the slot can be opened. */
   missionId?: string;
+  /**
+   * The water the mission is played on, present with `missionId`. Public
+   * already — the room sends the map on join — and what `riftChart.ts` places
+   * the slot by.
+   */
+  mapId?: string;
 }
 
 export interface BoardColumn {
@@ -222,6 +228,7 @@ function slotFor(campaign: CampaignId, source: SlotSource, hasPlayed: PlayedLook
     line: header.premise,
     state: hasPlayed(header.id) ? 'played' : 'available',
     missionId: header.id,
+    mapId: header.mapId,
   };
 }
 
