@@ -561,7 +561,14 @@ describe('it pings and hides for reasons', () => {
     const home = briefing(AiDifficulty.Veteran).spawns[1]!;
     let recalled = false;
     for (let i = 0; i < 12; i++) {
-      const raid = contact({ tier: ResolutionTier.Bearing, x: home.x + 400, y: home.y + 400 });
+      // Classified, not a bearing: inside the Bastion's own ears nothing stays
+      // a smudge for long, and a smudge on the doorstep is what a grazer
+      // looks like — it no longer recalls the army (#440).
+      const raid = contact({
+        tier: ResolutionTier.Classification,
+        x: home.x + 400,
+        y: home.y + 400,
+      });
       for (const command of commander.observe(armySnapshot([raid]))) {
         if (command.kind === 'move' && Math.hypot(command.x - home.x, command.y - home.y) < 1200) {
           recalled = true;

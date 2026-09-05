@@ -356,6 +356,12 @@ interface Remembered {
   y: number;
   /** Sim tick this was last confirmed on. */
   tick: number;
+  /**
+   * Whether the layer had put a faction or a structure on it — something the
+   * commander may cross the map for, as opposed to a smudge or a mark that
+   * only says *something* was here.
+   */
+  classified: boolean;
 }
 
 export class AiCommander implements AiPlayer {
@@ -492,13 +498,18 @@ export class AiCommander implements AiPlayer {
   private remember(snapshot: EchoSnapshot): void {
     const best = this.bestThreat(snapshot.contacts);
     if (best !== null) {
-      this.remembered = { x: best.x, y: best.y, tick: snapshot.tick };
+      this.remembered = {
+        x: best.x,
+        y: best.y,
+        tick: snapshot.tick,
+        classified: best.structure !== undefined || best.faction !== undefined,
+      };
       return;
     }
 
     const mark = this.freshestMark(snapshot.marks);
     if (mark !== null) {
-      this.remembered = { x: mark.x, y: mark.y, tick: snapshot.tick };
+      this.remembered = { x: mark.x, y: mark.y, tick: snapshot.tick, classified: false };
       return;
     }
 
@@ -935,8 +946,31 @@ export class AiCommander implements AiPlayer {
       return;
     }
 
+    // What is inside a gun's reach is a fight already happening, massing or
+    // not: the longest weapon in the roster is the Cruiser's at 900 m, so
+    // anything inside PUSH_ENGAGE_M is shooting or about to be. Checked ahead
+    // of the massing branch, which used to win — an army gathering at home
+    // walked to its rally point past a contact four hundred metres off.
+    const inReach = this.bestThreat(
+      snapshot.contacts.filter((c) => nearest(army, c) < RANGE.PUSH_ENGAGE_M)
+    );
+    if (inReach !== null) {
+      this.setSilent(ids, false, out);
+      this.setCrossed(army, false, out);
+      out.push({ kind: 'attack', unitIds: ids, contactId: inReach.id });
+      return;
+    }
+
     const threshold = Math.ceil(this.doctrine.attackAtArmySize * this.tuning.patience);
-    if (army.length < threshold && this.stillMassing(snapshot.tick, army.length, threshold)) {
+    // Evaluated whatever the size, because `stillMassing` is where the
+    // commitment is *made*: a force at or above its number is committed by
+    // the fact, and a force below it is committed once its high-water mark
+    // has stood still. Guarding the call on size used to leave the army at
+    // full strength — the state production holds it in — with no commitment
+    // and the 2,800 m leash, which is the state #440 found every commander in
+    // (`stillMassing`).
+    const massing = this.stillMassing(snapshot.tick, army.length, threshold);
+    if (army.length < threshold && massing) {
       // Waiting is a position, not a pause: sit between home and the enemy so
       // the push does not start from the back of the map.
       const rally = this.rallyPoint();
@@ -953,10 +987,13 @@ export class AiCommander implements AiPlayer {
 
     // An attack order chases and then holds to shoot, so this covers both
     // closing and firing. The leash is what stops one heard scout from towing
-    // the whole army off the map.
-    // A committed push keeps its own, much shorter leash: see PUSH_ENGAGE_M.
-    const leash = snapshot.tick < this.commitUntilTick ? RANGE.PUSH_ENGAGE_M : RANGE.PURSUIT_M;
-    const engaging = this.bestThreat(snapshot.contacts.filter((c) => nearest(army, c) < leash));
+    // the whole army off the map — and a committed push has no leash beyond
+    // the gun's reach handled above (PUSH_ENGAGE_M): on the way in, the army
+    // shoots what is in its way rather than what it can hear.
+    const committed = snapshot.tick < this.commitUntilTick;
+    const engaging = committed
+      ? null
+      : this.bestThreat(snapshot.contacts.filter((c) => nearest(army, c) < RANGE.PURSUIT_M));
     if (engaging !== null) {
       // Silent Running trades weapons for quiet, so it comes off the moment
       // there is something to shoot. The crossing is given back for the same
@@ -976,11 +1013,26 @@ export class AiCommander implements AiPlayer {
     // triggered by being heard: a commander that dove whenever exposure rose
     // would go deaf on the way down, lose the contact that justified the dive,
     // surface, hear it again, and oscillate.
-    const target = this.remembered ?? this.searchTarget(snapshot, army) ?? this.home;
+    //
+    // Where to: something the layer has *classified* as an enemy's, if it has
+    // one in memory — a structure, or a hull with a faction; failing that the
+    // next enemy start the search has not crossed off; failing that whatever
+    // the memory holds, a smudge or a mark. The order matters (#440): memory
+    // used to come first, with no filter at all, so with the Drift in the
+    // water the "attack run" was a walk toward the loudest grazer, and the
+    // only function that knows where the bases are was reached when the
+    // commander could hear nothing anywhere.
+    const known = this.remembered !== null && this.remembered.classified ? this.remembered : null;
+    const target = known ?? this.searchTarget(snapshot, army) ?? this.remembered ?? this.home;
     this.setSilent(ids, this.doctrine.approachesSilently && this.tuning.usesSilentRunning, out);
     this.setCrossed(army, this.doctrine.crossesTheLayer, out);
+    // An attack-move, not a move (#435): the army fights what it meets on the
+    // way and then carries on, and it walks *into* the base rather than
+    // parking a gun's reach short of it — a move order stopped re-issuing at
+    // ARRIVE_M and left the force between 550 and 700 m from a Bastion with
+    // nothing in range.
     if (nearest(army, target) > RANGE.ARRIVE_M) {
-      out.push({ kind: 'move', unitIds: ids, x: target.x, y: target.y });
+      out.push({ kind: 'attackMove', unitIds: ids, x: target.x, y: target.y });
     }
   }
 
@@ -999,6 +1051,19 @@ export class AiCommander implements AiPlayer {
    * army going in, it is a hull being posted.
    */
   private stillMassing(tick: number, size: number, threshold: number): boolean {
+    // The numbers are there: the gate is open, and open is a commitment too.
+    // Production holds the army two hulls *above* its threshold in steady
+    // state, so this is the branch a full-strength force lives in — and it
+    // used to set no commitment at all, which left the push on the long leash
+    // for the whole match (#440).
+    if (size >= threshold) {
+      if (tick >= this.commitUntilTick) {
+        this.commitUntilTick = tick + MASSING.COMMIT_S * SIM.TICK_HZ;
+      }
+      this.massingPeak = size;
+      this.massingPeakTick = tick;
+      return false;
+    }
     // Already gone. A push is a decision, and a decision that is reconsidered
     // every 200 ms is a walk to the rally point with extra steps.
     if (this.commitUntilTick >= 0) {
@@ -1049,11 +1114,21 @@ export class AiCommander implements AiPlayer {
     snapshot: EchoSnapshot,
     army: readonly OwnUnit[]
   ): { x: number; y: number } | null {
-    // Anything unclassified counts as somebody. A grazer does not: it wanders
-    // past a dead base as readily as a live one, and letting one reopen a
-    // start would put the walk to the empty corner straight back on.
+    // Evidence of *somebody*: a contact the layer has put a faction or a
+    // structure on. An unclassified smudge is not — a grazer wanders past a
+    // dead base as readily as a live one, and letting one reopen a start put
+    // the walk to the empty corner straight back on. The old test here was
+    // `fauna === undefined`, which excludes only what is *classified* as
+    // fauna and so admitted every smudge on the map (#440); and since the
+    // starts are tried in index order, a reopened dead corner outranked the
+    // live enemy behind it.
     const heardNear = (place: { x: number; y: number }): boolean =>
-      snapshot.contacts.some((c) => c.fauna === undefined && distance(c, place) < SEARCH.REOPEN_M);
+      snapshot.contacts.some(
+        (c) =>
+          (c.faction !== undefined || c.structure !== undefined) &&
+          c.fauna === undefined &&
+          distance(c, place) < SEARCH.REOPEN_M
+      );
 
     for (let index = 0; index < this.enemyStarts.length; index++) {
       if (!this.clearedStarts.has(index)) continue;
@@ -1152,8 +1227,15 @@ export class AiCommander implements AiPlayer {
       if (range >= RANGE.DEFEND_M) continue;
 
       if (range < RANGE.DEFEND_URGENT_M) {
-        out.push(contact);
-        continue;
+        // Nothing this close to a Bastion's own ears (HYD 60) stays
+        // unclassified for long, so a smudge inside the ring is what a
+        // grazer looks like on the doorstep, and it used to recall the whole
+        // army from wherever it was (#440). A classified contact recalls it
+        // at once; a smudge waits for the watch below like anything else.
+        if (contact.tier >= ResolutionTier.Classification) {
+          out.push(contact);
+          continue;
+        }
       }
 
       const seen = this.homeWatch.get(contact.id);
