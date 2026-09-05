@@ -226,6 +226,12 @@ describe('a base you have stood on and heard nothing at is not where the enemy i
   it('keeps the start on the list while something is audible there', () => {
     // Standing on a live base resolves its hulls. The crossing-off is about
     // silence, and there is none here.
+    //
+    // The smudge sits 1,500 m off the start: inside SEARCH.REOPEN_M, so it is
+    // audible *there*, and outside RANGE.PUSH_ENGAGE_M of the army, so the
+    // engage branch does not swallow the observation before the search runs.
+    // What is watched is whether the commander gives up on this start and asks
+    // for the next one, which is the only way crossing it off can show.
     const { enemyStarts } = rig();
     const start = enemyStarts[0]!;
     // A hull the layer has put a faction on: somebody is home. A Tier-1
@@ -234,10 +240,18 @@ describe('a base you have stood on and heard nothing at is not where the enemy i
       seconds: 150,
       at: start,
       size: 8,
-      contacts: (tick) => [classified(9, start.x + 300, start.y, tick)],
+      // Fifteen hundred metres off: inside SEARCH.REOPEN_M, so it is audible
+      // *there*, and outside RANGE.PUSH_ENGAGE_M of the army, so the in-reach
+      // branch does not swallow the observation before the search runs.
+      contacts: (tick) => [classified(9, start.x + 1500, start.y, tick)],
     });
+    // Crossing a start off means walking at the *next* one, so that is what is
+    // watched here. It is asked of every move rather than of the pushes alone
+    // because a commitment that runs out puts the force through one massing
+    // observation before the next opens, and that observation asks for the
+    // rally point — a regroup, not an abandonment, and nowhere near any start.
     assert.ok(
-      asked.every((move) => distance(move, start) < 700),
+      asked.every((move) => nearestStart(move, enemyStarts.slice(1)) > 700),
       'it abandoned a start it could still hear something at'
     );
   });
@@ -352,9 +366,17 @@ describe('on the way in, the army shoots what is in its way', () => {
     const { home, enemyStarts } = rig();
     // Two kilometres out, and deliberately *away* from the enemy: inside the
     // pursuit leash, far outside a gun's reach, and nowhere near the rally
-    // point — so a move order that goes there is the army travelling rather
-    // than massing. Under the old leash the commander only ever issued an
-    // attack order for this and never moved at all.
+    // point. Under the old leash the commander only ever issued an attack
+    // order for this and never moved at all.
+    //
+    // What it goes at once it does move is a *base*, not the smudge (#440). A
+    // committed push used to take its destination from `remembered`, which is
+    // refreshed from the best current contact on every observation — so the
+    // push was a chase by another name, and it was the smudge behind the army
+    // that this test originally watched it walk to. A commitment that does not
+    // carry an objective is not a commitment, so the destination is now the
+    // enemy start the commander has not crossed off, and the smudge is
+    // something the guns deal with on the way past.
     const away = enemyStarts[0]!;
     const length = Math.hypot(away.x - home.x, away.y - home.y) || 1;
     const behind = {
@@ -371,7 +393,11 @@ describe('on the way in, the army shoots what is in its way', () => {
     // being the destination; the smudge is passed, not walked to.
     assert.ok(
       asked.some((move) => nearestStart(move, enemyStarts) < 700),
-      'the army sat still for something it could hear but never closed on'
+      'the army sat still for something it could hear and never went anywhere'
+    );
+    assert.ok(
+      asked.every((move) => distance(move, behind) > 700),
+      'the push walked at a smudge instead of at a base'
     );
   });
 

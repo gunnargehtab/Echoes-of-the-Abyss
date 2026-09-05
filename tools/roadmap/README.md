@@ -84,9 +84,12 @@ thing that decides to make part of a private repository public, so
 
 1. **Settings → Pages → Source:** *GitHub Actions*
 2. **Settings → Secrets and variables → Actions → Variables:** add `PUBLISH_ROADMAP` = `true`
+   — on the **Variables** tab, not Secrets; at the repository level or on the
+   `github-pages` environment, either works.
 
 Until both are done the workflow is still green — an un-enabled Pages setup should not be
-a red X on every push.
+a red X on every push. The deploy job's first step prints what the check saw, so a skipped
+deploy says why in its log.
 
 ## What gets published
 

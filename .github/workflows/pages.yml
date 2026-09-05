@@ -3,15 +3,22 @@
 # Publishing is **opt-in and off by default**, which is deliberate. This
 # repository is private; a Pages site is not. Merging a workflow should never
 # be the thing that decides to make part of a private repository public, so the
-# deploy job runs only once someone has knowingly turned it on:
+# deploy step runs only once someone has knowingly turned it on:
 #
 #   1. Settings -> Pages -> Source: "GitHub Actions"
 #   2. Settings -> Secrets and variables -> Actions -> Variables:
 #      add PUBLISH_ROADMAP = true
 #
-# Until both are done this workflow builds the site, uploads it as an artifact
-# you can download and open locally, and skips the deploy. It stays green
-# either way, so an un-enabled Pages setup is not a red X on every push.
+# The variable may live at the repository level or on the `github-pages`
+# environment — both work. The check is a *step* inside the deploy job rather
+# than a job-level `if`, because environment variables are only visible from
+# inside a job that references the environment, and a job-level condition is
+# evaluated before that binding exists. The job logs print what the check
+# saw, so a skipped deploy says why.
+#
+# Until the variable is set this workflow builds the site, uploads it as an
+# artifact you can download and open locally, and skips the deploy. It stays
+# green either way, so an un-enabled Pages setup is not a red X on every push.
 name: Roadmap site
 
 on:
@@ -27,10 +34,11 @@ on:
   # Issue state is half the page, and it changes without any push at all.
   issues:
     types: [closed, reopened, edited]
-  # So does the merged-PR count on the stat tiles.
-  pull_request:
-    types: [closed]
-    branches: [main]
+  # No `pull_request: closed` trigger, though the merged-PR count is on the
+  # page: that event runs the workflow at the PR's own ref, and the
+  # github-pages environment only admits main, so its deploy is refused —
+  # and on the way it cancels the push run that would have succeeded, since
+  # both share the concurrency group. The daily schedule carries the count.
   # A backstop for anything the events above miss.
   schedule:
     - cron: '0 6 * * *'
@@ -62,14 +70,14 @@ jobs:
         with:
           name: roadmap-site
           path: dist/roadmap
+      # The Pages artifact is uploaded unconditionally: uploading is not
+      # publishing, and the deploy job below is the only thing that is.
       - uses: actions/upload-pages-artifact@v3
-        if: vars.PUBLISH_ROADMAP == 'true'
         with:
           path: dist/roadmap
 
   deploy:
     needs: build
-    if: vars.PUBLISH_ROADMAP == 'true'
     runs-on: ubuntu-latest
     permissions:
       pages: write
@@ -78,5 +86,26 @@ jobs:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
+      # The switch is read in bash rather than in an expression so the log
+      # shows the raw value, and so the match can be forgiving: the settings
+      # form has a Name box and a Value box, and twice in real use the whole
+      # "PUBLISH_ROADMAP = true" landed in Value. A value whose last word is
+      # `true`, in any case, is still someone deliberately saying yes; an unset
+      # or any other value still means no.
+      - name: Is publishing switched on?
+        id: switch
+        env:
+          RAW: ${{ vars.PUBLISH_ROADMAP }}
+        run: |
+          echo "PUBLISH_ROADMAP=[$RAW]"
+          last="${RAW##* }"; last="${last##*=}"; last="${last,,}"
+          if [ "$last" = "true" ]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+            echo "Publishing is on — deploying."
+          else
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "Publishing is off — set the PUBLISH_ROADMAP variable's value to true (repository or github-pages environment) to deploy."
+          fi
       - id: deploy
+        if: steps.switch.outputs.publish == 'true'
         uses: actions/deploy-pages@v4
