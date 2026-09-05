@@ -847,7 +847,21 @@ export class AiCommander implements AiPlayer {
           ...this.nearHome(toward),
         });
         this.buildAttempt++;
+        return;
       }
+    }
+
+    // The rung (docs/units.md, the Slipway; #461): the second yard, last, and
+    // only once the crystal is aboard. The commander's crystal arrives the way
+    // a player's does — a harvester rated for the field — so a navy that never
+    // reached the deep never builds one, which is the doc's point: the crystal
+    // is a decision about what to field. Placed away from the enemy, like a
+    // yard and unlike a turret.
+    if (!has(StructureKind.Slipway) && this.afford(StructureKind.Slipway, purse)) {
+      const away = this.enemyStarts[0] ?? this.home;
+      const toward = { x: 2 * this.home.x - away.x, y: 2 * this.home.y - away.y };
+      out.push({ kind: 'build', structure: StructureKind.Slipway, ...this.nearHome(toward) });
+      this.buildAttempt++;
     }
   }
 
@@ -978,8 +992,18 @@ export class AiCommander implements AiPlayer {
     //
     // A commander that cannot buy its first choice buys its second, which is
     // what a player does.
-    const cycled = this.doctrine.composition[army.length % this.doctrine.composition.length]!;
-    for (const wanted of [cycled, ...affordableFirst(this.doctrine.composition, purse)]) {
+    //
+    // "Second" is the doctrine's next entry before it is the cheapest one. The
+    // rung's roster (#461) put a Slipway hull on every composition, and a
+    // Slipway hull with no Slipway standing has no yard — so a cycle index
+    // that lands on one must move on to the doctrine's *next* hull, not fall
+    // straight through to whatever is cheapest, or the rung would quietly
+    // reduce every navy to Corvettes for as long as it went unbuilt. The
+    // cheapest-first list stays last, for the deadlock above.
+    const { composition } = this.doctrine;
+    const start = army.length % composition.length;
+    const rotated = composition.map((_, k) => composition[(start + k) % composition.length]!);
+    for (const wanted of [...rotated, ...affordableFirst(composition, purse)]) {
       const yard = this.freeYard(snapshot.structures, wanted);
       if (yard === null) continue;
       if (!this.affordUnit(wanted, purse)) continue;

@@ -29,7 +29,9 @@ import {
   DepthOrder,
   Harvester,
   HarvestMode,
+  HullEffect,
   Laying,
+  MineMagazine,
   SilentRunning,
   StaticEmitter,
   Structure,
@@ -114,8 +116,26 @@ export function acousticsSystem(world: SimWorld): void {
     // it must never make an already-louder hull quieter, and it must hold
     // through a hull that tries to go silent mid-lay. The field it produces is
     // silent — the counter-play is hearing it *being built*.
-    if (hasComponent(world, Laying, eid) && Laying.remainingS[eid]! > 0) {
+    //
+    // Unless the mine was grown aboard rather than built in the water: a
+    // Spinner's "laying is silent" (docs/units.md) — the field is the same
+    // §6 field, but the noise of making it was paid at the nursery.
+    if (
+      hasComponent(world, Laying, eid) &&
+      Laying.remainingS[eid]! > 0 &&
+      !hasComponent(world, MineMagazine, eid)
+    ) {
       sig = Math.max(sig, ORDNANCE.MINE.SIG_LAYING);
+    }
+
+    // An effect hull at work (docs/units.md, the rung's roster): the Sower's
+    // bloom at 45, the Cantus's song at 80, the Tender's welding at +12 on its
+    // idle. A floor for descent's reasons — it never makes an already-louder
+    // hull quieter — and the state is this tick's, written by
+    // `hullEffectsSystem` before the auras that grant on it read it, so what
+    // a hull grants and what it is heard doing are one fact.
+    if (stats.sigWorking !== undefined && HullEffect.active[eid] === 1) {
+      sig = Math.max(sig, stats.sigWorking);
     }
 
     // A mission's hold-and-cut lift is Overburden's work at Overburden's

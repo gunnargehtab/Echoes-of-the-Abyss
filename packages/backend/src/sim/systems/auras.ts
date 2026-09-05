@@ -1,30 +1,38 @@
 /**
- * Faction structure auras — the three signature buildings, made mechanical.
+ * Faction auras — the signature buildings, and the hulls that carry the same
+ * grants, made mechanical.
  *
  * Each aura is an argument about sound or depth (docs/units.md): the Baffle
  * Barge bends propagation around a loud army, the Cantor lends every ally
  * under its dome the Directorate's ears, the Sounding Spire rents out a
- * band of depth. None of them touch the Echo Layer directly — this system
- * writes *effective* values (Acoustic.pfFactor, Acoustic.hyd,
+ * band of depth. The rung's roster puts three of those on hulls (#461): the
+ * Precentor is a Cantor's dome at a third of the radius, moving at the
+ * swarm's pace; a singing Cantus and a seeded Sower are the Spire's grant
+ * where the hull stands. None of them touch the Echo Layer directly — this
+ * system writes *effective* values (Acoustic.pfFactor, Acoustic.hyd,
  * Pressure.bonus) each tick, and the systems that already consume those
  * values pick the auras up for free.
  *
  * Rewriting every tick rather than on enter/leave keeps the auras stateless:
  * a barge that dies stops masking on the next tick because nothing
- * remembers it ever masked.
+ * remembers it ever masked, and a Cantus that moves stops granting on the
+ * tick `hullEffectsSystem` says it moved.
  */
 
 import { defineQuery, hasComponent } from 'bitecs';
 import {
+  HULL_EFFECTS,
   STRUCTURE_AURAS,
   StructureKind,
+  UnitKind,
   requiredPressureRating,
   statsFor,
   structureStatsFor,
-  type UnitKind,
 } from '@echoes/shared';
 import {
   Acoustic,
+  Health,
+  HullEffect,
   Owner,
   Position,
   Pressure,
@@ -51,6 +59,12 @@ const barges: Aura[] = [];
 const cantors: Aura[] = [];
 const spires: Aura[] = [];
 const veils: Aura[] = [];
+// The hull-borne grants (docs/units.md, the rung's roster). A Precentor's dome
+// is always up; a Cantus's and a Sower's grant is up exactly while
+// `HullEffect.active` says the hull is singing or seeded.
+const precentors: Aura[] = [];
+const singers: Aura[] = [];
+const seeders: Aura[] = [];
 
 function inRange(unit: number, auras: Aura[], slot: number, radiusM: number): boolean {
   const ux = Position.x[unit]!;
@@ -68,6 +82,9 @@ export function aurasSystem(world: SimWorld): void {
   cantors.length = 0;
   spires.length = 0;
   veils.length = 0;
+  precentors.length = 0;
+  singers.length = 0;
+  seeders.length = 0;
   world.spireActive.clear();
 
   // A construction site projects nothing — the aura arrives with commission.
@@ -106,7 +123,30 @@ export function aurasSystem(world: SimWorld): void {
   }
 
   const { BAFFLE_BARGE, CANTOR, SOUNDING_SPIRE } = STRUCTURE_AURAS;
+  const { PRECENTOR, CANTUS, SOWER } = HULL_EFFECTS;
   const roster = units(world);
+
+  // The hull-borne sources, gathered before the grant pass for the reason the
+  // structures are: a grant is a fact about the source's position this tick,
+  // and the pass below must see every source before it hands out anything.
+  // A hull is a source only while it is alive — reap runs after this — and
+  // the grant key is `Owner.slot`: nothing lends a hull's aura away.
+  for (let i = 0; i < roster.length; i++) {
+    const eid = roster[i]!;
+    if (Health.hp[eid]! <= 0) continue;
+    const kind = Unit.kind[eid] as UnitKind;
+    const list =
+      kind === UnitKind.Precentor
+        ? precentors
+        : kind === UnitKind.Cantus && HullEffect.active[eid] === 1
+          ? singers
+          : kind === UnitKind.Sower && HullEffect.active[eid] === 1
+            ? seeders
+            : null;
+    if (list === null) continue;
+    list.push({ eid, x: Position.x[eid]!, y: Position.y[eid]!, slot: Owner.slot[eid]! });
+  }
+
   for (let i = 0; i < roster.length; i++) {
     const eid = roster[i]!;
     const slot = Owner.slot[eid]!;
@@ -116,16 +156,24 @@ export function aurasSystem(world: SimWorld): void {
     }
 
     // HYD is derived state exactly like SIG: base hull rating, plus the dome,
-    // plus whatever weather is doing to it. A Resonance Storm is applied here
-    // rather than by the hazard system for the same reason auras are — this
-    // pass rewrites HYD from scratch every tick, so anything that wrote it
-    // earlier in the step would simply be overwritten.
+    // plus the Precentor's, plus whatever weather is doing to it. A Resonance
+    // Storm is applied here rather than by the hazard system for the same
+    // reason auras are — this pass rewrites HYD from scratch every tick, so
+    // anything that wrote it earlier in the step would simply be overwritten.
+    // The two domes sum and then meet the one cap: under a Cantor as well, a
+    // Precentor "adds nothing: the cap is the cap" (docs/units.md).
     const weather = stormModifiers(world, eid);
-    const baseHyd = statsFor(Unit.kind[eid] as UnitKind).hyd + weather.hyd;
-    Acoustic.hyd[eid] =
-      cantors.length > 0 && inRange(eid, cantors, slot, CANTOR.RADIUS_M)
-        ? Math.min(CANTOR.HYD_CAP, baseHyd + CANTOR.HYD_BONUS)
-        : baseHyd;
+    let hyd = statsFor(Unit.kind[eid] as UnitKind).hyd + weather.hyd;
+    let lent = false;
+    if (cantors.length > 0 && inRange(eid, cantors, slot, CANTOR.RADIUS_M)) {
+      hyd += CANTOR.HYD_BONUS;
+      lent = true;
+    }
+    if (precentors.length > 0 && inRange(eid, precentors, slot, PRECENTOR.RADIUS_M)) {
+      hyd += PRECENTOR.HYD_BONUS;
+      lent = true;
+    }
+    Acoustic.hyd[eid] = lent ? Math.min(CANTOR.HYD_CAP, hyd) : hyd;
 
     if (hasComponent(world, Pressure, eid)) {
       let bonus = 0;
@@ -144,6 +192,19 @@ export function aurasSystem(world: SimWorld): void {
             world.spireActive.add(spire.eid);
           }
         }
+      }
+      // The Spire's grant on a hull — a singing Cantus, a seeded Sower — and
+      // resolved against the Spire's as a **max and never a sum**, for the
+      // reason the mission grant below gives: "under a Sower and a second
+      // Sower it does not go deeper — the grant does not stack, exactly as
+      // the Spire's does not" (docs/units.md). Unlike the Spire there is no
+      // load-bearing test: the hull sings at 80 or seeds at 45 for as long as
+      // it stands there, whoever is underneath.
+      if (singers.length > 0 && inRange(eid, singers, slot, CANTUS.RADIUS_M)) {
+        if (CANTUS.PR_BONUS > bonus) bonus = CANTUS.PR_BONUS;
+      }
+      if (seeders.length > 0 && inRange(eid, seeders, slot, SOWER.RADIUS_M)) {
+        if (SOWER.PR_BONUS > bonus) bonus = SOWER.PR_BONUS;
       }
       // A mission's own habitable water — `MissionRegion.pressureBonus`, and
       // the `ground` beat that sows one. Resolved against the Spire's grant as

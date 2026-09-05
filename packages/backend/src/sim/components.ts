@@ -454,6 +454,40 @@ export const Countermeasure = defineComponent({
 });
 
 /**
+ * An effect hull's state — docs/units.md, the rung's roster (#461).
+ *
+ * The Cantus sings and the Sower seeds after a stationary interval, and the
+ * Tender is loud exactly while it welds. `stationaryS` is the interval's clock
+ * and `active` is this tick's answer, written by `hullEffectsSystem` before
+ * the auras that grant on it and the acoustics that price it read it — so
+ * what a hull grants and what it is heard doing are one fact rather than two
+ * re-derivations that could disagree by a tick.
+ *
+ * Carried only by the hulls whose stat block lists a `sigWorking`; everything
+ * else has no effect to clock.
+ */
+export const HullEffect = defineComponent({
+  /** Seconds the hull has been stationary. Zeroed the tick it moves. */
+  stationaryS: Types.f32,
+  /** 1 while the effect is running this tick. */
+  active: Types.ui8,
+});
+
+/**
+ * Grown mines aboard a hull that carries more than the roster's one — the
+ * Spinner (docs/units.md). A magazine and not a cooldown, for the torpedo's
+ * reason: the decision is "is this worth one of my four", and the regrowth
+ * clock runs only where the doc says the hull can regrow — inside a Spore
+ * Veil or by a Bastion — so a Spinner in the field is a Spinner with what it
+ * brought.
+ */
+export const MineMagazine = defineComponent({
+  mines: Types.ui8,
+  /** Seconds until the next mine is grown; only counts down at a nursery. */
+  regrowRemainingS: Types.f32,
+});
+
+/**
  * A hull in the act of laying a mine — docs/systems-combat.md §6.
  *
  * Exists so the *laying* can be loud while the field is silent. Read by

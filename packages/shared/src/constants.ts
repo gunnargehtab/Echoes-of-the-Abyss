@@ -1297,13 +1297,15 @@ export const HAZARDS = {
      * Telegraph.
      *
      * Sized against the *slowest* hull in the roster clearing the *largest*
-     * authored plume: a Harvester at 40 m/s needs 17.5 s to cross 700 m from
-     * the centre. The first draft was 9 s, which meant a Harvester parked on a
-     * vent could not escape however early it started — a warning nobody can
-     * act on is not a warning, and `CLAUDE.md` calls that confusion rather
-     * than dread. There is a test that keeps this honest.
+     * authored plume: a Bulwark at 30 m/s needs 23.3 s to cross 700 m from
+     * the centre (it was 20 s for the Harvester's 40 m/s, until the rung's
+     * roster brought a slower hull, #461). The first draft was 9 s, which
+     * meant a Harvester parked on a vent could not escape however early it
+     * started — a warning nobody can act on is not a warning, and `CLAUDE.md`
+     * calls that confusion rather than dread. There is a test that keeps this
+     * honest, against whichever hull is slowest.
      */
-    WARNING_S: 20,
+    WARNING_S: 25,
     /** Erupting. */
     ACTIVE_S: 4,
     /** Subsiding: damage tapers rather than stopping dead. */
@@ -1388,14 +1390,15 @@ export const HAZARDS = {
     DORMANT_S: 70,
     /**
      * Telegraph, sized the way the eruption's is: the *slowest* hull clearing
-     * the *largest* authored current from its centre. A Harvester at 40 m/s
-     * covers 720 m in this window against a 600 m site, so leaving is always
-     * possible for a player who starts when told. A current does no damage, so
-     * this is not a matter of survival — but doc "Readability" asks every
-     * hazard to telegraph, and a current you cannot see coming is one you can
-     * only discover by having already lost your line.
+     * the *largest* authored current from its centre. A Bulwark at 30 m/s
+     * covers 660 m in this window against a 600 m site (18 s was enough for
+     * the Harvester's 40 m/s, until #461), so leaving is always possible for a
+     * player who starts when told. A current does no damage, so this is not a
+     * matter of survival — but doc "Readability" asks every hazard to
+     * telegraph, and a current you cannot see coming is one you can only
+     * discover by having already lost your line.
      */
-    WARNING_S: 18,
+    WARNING_S: 22,
     /**
      * Long, and that is the design. An eruption is an event you flee; a
      * current is a condition you route around, and it has to outlast a
@@ -1841,6 +1844,12 @@ export const BERTHS = {
   BASTION: 16,
   /** Berths each commissioned Foundry adds. A site under construction adds none. */
   FOUNDRY: 8,
+  /**
+   * SPEC — docs/units.md, the Slipway: "+8 berths while commissioned, to the
+   * ceiling of 40". The Foundry's grant, so the ceiling is a Bastion, two
+   * Foundries and a Slipway.
+   */
+  SLIPWAY: 8,
   /** The most any commander may hold, however many Foundries stand. */
   CEILING: 40,
 } as const;
@@ -1905,5 +1914,56 @@ export const STRUCTURE_AURAS = {
     SIG_FACTOR: 0.4,
     /** Hydrophone-blind: threshold 10× baseline; deaf past point blank. */
     BLIND_HYD: 5,
+  },
+} as const;
+
+/**
+ * The effect hulls of docs/units.md's rung roster (#461) — each the mechanism
+ * one of the signature structures already has, on a hull: the Precentor's
+ * dome is the Cantor's, the Cantus's and the Sower's grant is the Spire's, the
+ * Spinner's magazine is the mine cap's, and the Tender is the one mechanism
+ * the simulation did not have. All SPEC, cited to the hull's stat block.
+ */
+export const HULL_EFFECTS = {
+  /** SPEC — Tender: "15 HP/s to one allied hull within 300 m, nearest first". */
+  TENDER: {
+    REPAIR_HP_PER_S: 15,
+    RADIUS_M: 300,
+  },
+  /**
+   * SPEC — Spinner: "carries 4 mines against the roster's one, and regrows one
+   * every 40 s while inside a Spore Veil or within 300 m of a Bastion".
+   */
+  SPINNER: {
+    MAGAZINE: 4,
+    REGROW_S: 40,
+    BASTION_RADIUS_M: 300,
+  },
+  /**
+   * SPEC — Precentor: "+10 HYD within 500 m to allied hulls, capped at 95". The
+   * cap is the Cantor's: under a dome as well it adds nothing.
+   */
+  PRECENTOR: {
+    RADIUS_M: 500,
+    HYD_BONUS: 10,
+  },
+  /**
+   * SPEC — Cantus: "Stationary for 10 s it sings: +1 PR within 300 m, and SIG
+   * 80 in every quarter. Moving, it is silent and grants nothing."
+   */
+  CANTUS: {
+    RADIUS_M: 300,
+    PR_BONUS: 1,
+    STATIONARY_S: 10,
+  },
+  /**
+   * SPEC — Sower: "After 20 s stationary it is seeded, and grants +1 PR within
+   * 400 m to allied hulls for as long as it stands there." The grant does not
+   * stack with the Spire's, exactly as the Spire's does not with itself.
+   */
+  SOWER: {
+    RADIUS_M: 400,
+    PR_BONUS: 1,
+    STATIONARY_S: 20,
   },
 } as const;

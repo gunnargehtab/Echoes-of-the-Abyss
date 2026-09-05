@@ -53,6 +53,7 @@ import {
   HarvestThrottle,
   PERSISTENCE,
   PRODUCIBLE,
+  YARDS,
   unitAvailableTo,
   PROPAGATION_FACTOR,
   PROPAGATION_MODEL,
@@ -623,6 +624,14 @@ const UNIT_SHORT: Record<UnitKind, string> = {
   [UnitKind.Chorister]: 'CHR',
   [UnitKind.Clarion]: 'CLR',
   [UnitKind.Harvester]: 'HRV',
+  [UnitKind.Tender]: 'TND',
+  [UnitKind.Bulwark]: 'BLW',
+  [UnitKind.Spinner]: 'SPN',
+  [UnitKind.Sower]: 'SOW',
+  [UnitKind.Precentor]: 'PRC',
+  [UnitKind.Dredge]: 'DRG',
+  [UnitKind.Cantus]: 'CNT',
+  [UnitKind.Reciter]: 'RCT',
 };
 
 /** Compact structure names for the build buttons. */
@@ -636,6 +645,7 @@ const STRUCTURE_SHORT: Record<StructureKind, string> = {
   [StructureKind.VentTap]: 'TAP',
   [StructureKind.SoundingSpire]: 'SPI',
   [StructureKind.SporeVeil]: 'VEI',
+  [StructureKind.Slipway]: 'SLP',
 };
 
 /** One command-bar button: screen-space bounds plus what pressing it does. */
@@ -2236,11 +2246,13 @@ export class EchoRenderer {
     if (this.shownTab === 'units') {
       // One row of the whole roster; each button routes to a structure that
       // can actually build it, selected or not.
-      // The yard's roster, less whatever belongs to another navy: the Clarion
+      // Every yard's roster, less whatever belongs to another navy: the Clarion
       // is the Order's and the server refuses it to anyone else, so showing a
       // Pelagia commander a button that can only be refused would be the bar
-      // lying about the rules (units.ts, `unitAvailableTo`).
-      const roster = (PRODUCIBLE[StructureKind.Foundry] ?? []).filter((kind) =>
+      // lying about the rules (units.ts, `unitAvailableTo`). The Slipway's
+      // hull is listed beside the Foundry's — greyed until a Slipway stands,
+      // which is what tells a commander what the rung is for.
+      const roster = YARDS.flatMap((yard) => PRODUCIBLE[yard] ?? []).filter((kind) =>
         unitAvailableTo(kind, this.faction)
       );
       const stockpile = this.stockpile();
@@ -2394,6 +2406,7 @@ export class EchoRenderer {
         StructureKind.Foundry,
         StructureKind.SentinelTurret,
         StructureKind.VentTap,
+        StructureKind.Slipway,
       ];
       const signature = FACTION_STRUCTURE[this.faction];
       if (signature !== undefined) roster.push(signature);

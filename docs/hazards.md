@@ -289,7 +289,7 @@ A **site** is a position and a radius authored into a map ([maps.md](maps.md)); 
 
 Every hazard runs **dormant → warning → active → decay → dormant**.
 
-The warning phase is a design constraint, not polish. [CLAUDE.md](../CLAUDE.md) fixes the target emotion as *dread, not confusion*, and an unannounced instant kill teaches a player that the map is arbitrary rather than that it is dangerous. The warning is sized against the **slowest hull in the roster clearing the largest authored plume** — a Harvester at 40 m/s needs 17.5 s to cross 700 m from the centre, so the window is 20 s. There is a test that keeps that true when either number moves.
+The warning phase is a design constraint, not polish. [CLAUDE.md](../CLAUDE.md) fixes the target emotion as *dread, not confusion*, and an unannounced instant kill teaches a player that the map is arbitrary rather than that it is dangerous. The warning is sized against the **slowest hull in the roster clearing the largest authored plume** — a Bulwark at 30 m/s ([units.md](units.md), the slowest hull in the roster since #461) needs 23.3 s to cross 700 m from the centre, so the window is 25 s; it was 20 s while the Harvester's 40 m/s was the floor. There is a test that keeps that true when either number moves.
 
 Dormant sites stay drawn, faintly. A hazard the player can forget is a hazard that will surprise them, and surprise is the failure mode the warning exists to prevent.
 

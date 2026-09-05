@@ -98,6 +98,28 @@ export enum UnitKind {
    * in replays, so renumbering would relabel every recorded hull.
    */
   Clarion = 6,
+  /**
+   * The rung's roster — two hulls a navy, one at the Foundry and one behind
+   * the Slipway (docs/units.md, "The rung, and two hulls a navy"; #461).
+   * Appended in the doc's own transcription order, for the Chorister's
+   * reason: the value crosses the wire and sits in replays.
+   */
+  /** Consortium, Foundry: the repair hull. */
+  Tender = 7,
+  /** Consortium, Slipway: the heavy. */
+  Bulwark = 8,
+  /** Commune, Foundry: the mine-layer. */
+  Spinner = 9,
+  /** Commune, Slipway: the terraformer — rented depth on a hull. */
+  Sower = 10,
+  /** Directorate, Foundry: the ears on the move. */
+  Precentor = 11,
+  /** Directorate, Slipway: the PR-4 hull for the floor of the map. */
+  Dredge = 12,
+  /** Knights, Foundry: the Spire's grant on a hull. */
+  Cantus = 13,
+  /** Knights, Slipway: the long lance. */
+  Reciter = 14,
 }
 
 /** Prototype structure roster. Stats live in structures.ts. See docs/units.md. */
@@ -130,6 +152,13 @@ export enum StructureKind {
    * the whole resource exists to create (docs/economy.md §2).
    */
   VentTap = 8,
+  /**
+   * The Slipway — the second yard, and the rung (docs/units.md; #461). Every
+   * navy's, crystal-locked, and the only place its Slipway hull is built. Louder
+   * than a Foundry while its line runs and grants the Foundry's eight berths:
+   * a navy that wants forty berths has to want the rung.
+   */
+  Slipway = 9,
 }
 
 /**

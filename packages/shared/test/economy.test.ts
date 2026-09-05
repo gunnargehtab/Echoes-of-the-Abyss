@@ -26,6 +26,7 @@ import assert from 'node:assert/strict';
 
 import {
   ECONOMY_ACCOUNTS,
+  Faction,
   STRUCTURE_STATS,
   UNIT_STATS,
   UnitKind,
@@ -162,19 +163,30 @@ describe('the roster’s prices', () => {
     }
   });
 
-  it('price exactly one hull in Biomass, and it is the cohort hull', () => {
+  it('price the Directorate’s hulls in Biomass, and nobody else’s', () => {
     // docs/economy.md §6: Biomass is what a cohort costs, not a discount on
-    // what a hull costs. The Chorister is the roster's cohort entry (#352);
-    // the Abyssal Submersible is the crystal-locked deep hull and stays
-    // priced as one, so a second Biomass price here is a roster edit that
-    // needs its docs, and a Submersible with one is the two hulls' roles
-    // drifting together.
+    // what a hull costs. The Chorister is the roster's cohort entry (#352),
+    // and the rung's roster adds the Directorate's two — the Precentor at 30
+    // and the Dredge at 60, "three accounts, the first hull priced in all of
+    // them" (docs/units.md; #461). The Abyssal Submersible is the
+    // crystal-locked deep hull and stays priced as one, so a Biomass price on
+    // any hull outside the Directorate's is a roster edit that needs its
+    // docs, and a Submersible with one is the two hulls' roles drifting
+    // together.
     const inBiomass = roster.filter((stats) => priceOf(stats).biomass > 0);
     assert.deepEqual(
-      inBiomass.map((stats) => stats.name),
-      ['Chorister'],
-      'the Biomass column names the cohort hull and nothing else'
+      inBiomass.map((stats) => stats.name).sort(),
+      ['Chorister', 'Dredge', 'Precentor'],
+      'the Biomass column names the cohort programme’s hulls and nothing else'
     );
+    for (const stats of inBiomass) {
+      if (stats.kind === UnitKind.Chorister) continue;
+      assert.equal(
+        stats.faction,
+        Faction.Directorate,
+        `${stats.name} is priced in Biomass and must be the Directorate’s`
+      );
+    }
     const submersible = priceOf(UNIT_STATS[UnitKind.AbyssalSubmersible]);
     assert.ok(submersible.crystal > 0 && submersible.biomass === 0);
   });
