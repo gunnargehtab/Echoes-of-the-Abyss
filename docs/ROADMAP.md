@@ -1,52 +1,101 @@
 # Project Roadmap — Echoes of the Abyss
 
-The repo-side companion to the development epic on GitHub
-(<https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/97>). The epic carries the
-live checkboxes; this document carries the reasoning.
+The repo-side companion to the current backlog on GitHub: the September 2026 audit epic
+(<https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/428>). The epic carries the live
+checkboxes; this document carries the reasoning. The first development epic
+(<https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/97>) is closed, and its phases
+are kept below as the record of how the build got here.
+
+This document is also what the roadmap site renders (`tools/roadmap/build.mjs`). The site
+reads the phase tables, asks GitHub whether each issue is open, and draws that — so a table
+row is a claim that the work is tracked, not a claim that it is live. The prose is what says
+which.
 
 ---
 
-## Where the build stands
+## Where the build actually stands
 
-Every issue in Phases 1 through 5 is closed. The scaffold in `packages/` is no longer a
-vertical slice — it is a game you can sit down and play alone:
+Twenty-one issues are open. Sixteen are the audit epic's findings, filed on one day against
+a build that had closed every issue before it. The other three are older: the world epic
+(#224), the frame-time measurement the presentation switch still owes (#286), and PC input
+(#294). Everything else this document has ever tracked is closed.
 
-- the **Echo Layer** resolving per player at 5 Hz inside its 2 ms budget, with
-  PropagationFactor integrated along the emitter-to-listener path;
-- **depth as an order** — descent fast and deafening, ascent slow and silent, crush
-  attrition that no repair undoes, and Resonance Crystal at the bottom of it;
+That is the issue tracker's account. The build's own account is less flattering, and the two
+numbers below are the ones that decide whether the game is playable end to end — which is
+the bar `CONTRIBUTING.md` sets for the first tag.
+
+| Question | Reading | Tracked |
+| --- | --- | --- |
+| Does a skirmish finish? | **29 of 30** baseline matches — four AI seats, Veteran, the Ventfront Divide, seeds 4000–4029, a 25-minute cap — ended without a winner, on a median 2 of the 3 eliminations a win needs. Three of the five guard-rails read "no data", because one decided match is not ten | [#440](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/440) |
+| Does the Echo pass hold its budget? | The 2 ms budget (`SIM.ECHO_BUDGET_MS`) breaks at about 160 entities: a median 0.99 ms at ~84, 2.44 ms at ~164, 7.16 ms at ~324 on a CI-class container. The worst case is tracked (`Match.worstEchoPassMs`) and never enforced or degraded | [#430](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/430) |
+| Is the frame time real? | Every conn-view frame-time number on record prices SwiftShader in a container. Nothing has been timed on a real GPU or on the Termux floor the game promises | [#286](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/286) |
+
+The first row is the one that matters. The committed baseline
+(`tools/balance/baselines/four-faction-baseline.md`) has said this since it was written, and
+until this revision nothing in the roadmap had turned it into work. A game "you can sit down
+and play alone" — the phrase earlier revisions of this document used — is a game whose
+matches end, and the harness's own README already warned that running more matches only buys
+more draws.
+
+The baselines beside it narrow the question. The two-seat batches resolve — ten of ten
+Consortium-versus-Commune matches ended, at a median 564 seconds — and the four-seat batch
+does not, on the same map and the same cap. A four-seat win needs three eliminations and the
+median match reaches two, so what #440 has to explain is why the third commander survives
+twenty-five minutes. Two suspects, and they are not exclusive: the commander plans no build
+order, holds no economy-to-military ratio, and its pursuit branch pre-empts its push branch
+so hard the tuning comment records reaching a push between zero and eight times in
+twenty-five minutes; and the scuttling rule ([game-identity.md](game-identity.md)) may be
+too patient to close a match whose last seat is beaten but not gone. Fix the AI first,
+re-run the baseline, then read the guard-rails again.
+
+The second row is the reason the first cannot be fixed by adding units. Every hull the roster
+grows and every seat a population cap admits is an entity in the detection pass, and the pass
+is already over budget at the counts a four-player match reaches. The two design questions
+that want more entities — the exclusive hulls (#436) and the population cap (#437) — are
+gated on the budget, not on their own merits.
+
+What *is* done is substantial, and all of it stands:
+
+- the **Echo Layer** resolving per player at 5 Hz, with PropagationFactor integrated along
+  the emitter-to-listener path and a thermocline the docs always specified;
+- **depth as an order** — descent fast and deafening, ascent slow and silent, crush attrition
+  no repair undoes, and Resonance Crystal at the bottom of it;
 - **the mix** — a bus graph, contacts sonified by resolution tier, and the player's own
   loudness as a bed the exposure cue cuts through;
-- **a map that argues back** — three authored archetypes, vent eruptions and resonance
-  storms, Echo Marks as acoustic residue, and Thermal Draw as a rate rather than a pile;
-- **the Drift** — fauna that listen, answer the loudest thing, and are indistinguishable
-  from a warship until Tier 3;
-- **a lobby, a skirmish AI, reconnection and a rematch**, so a solo player can reach a win
-  or a loss;
-- **a balance harness** that runs ten matches headless and reports every guard-rail in
-  [economy.md](economy.md) §9 and [bestiary.md](bestiary.md) §8 against a number;
-- **a mission runtime and its first mission** — authored parties, a beat schedule and
-  objectives the server resolves, so the Prologue *reaches an outcome*: a count the court
-  reads into the record, where a skirmish would have a win or a loss
-  ([mission-sorrowgate.md](mission-sorrowgate.md));
+- **a map that argues back** — three authored archetypes, vent eruptions, resonance storms,
+  cold-shock currents and kelp fields, Echo Marks as acoustic residue, and Thermal Draw as a
+  rate rather than a pile;
+- **the Drift** — fauna that listen, answer the loudest thing, and are indistinguishable from
+  a warship until Tier 3;
+- **combat with a design behind it** — [systems-combat.md](systems-combat.md), and every row
+  of its §14 mapping implemented: guns, torpedoes as ordnance with their own SIG, mines,
+  countermeasures, firing solutions gated at Tier 2, vertical combat;
+- **a lobby, a skirmish AI, reconnection and a rematch**, with the AI restricted to the same
+  `EchoSnapshot` a human receives;
+- **a balance harness** that reports every guard-rail in [economy.md](economy.md) §9 and
+  [bestiary.md](bestiary.md) §8 against a number — which is how the first row above is known
+  at all;
+- **the campaign** — a mission runtime and all twenty-nine missions on it, the Prologue
+  ([mission-sorrowgate.md](mission-sorrowgate.md)) through *Standing Wave*, with a record
+  that remembers what was played and briefings that read it;
 - **the conn view** — the August 2026 presentation revision landed whole
-  ([three-layer-ocean.md](three-layer-ocean.md)): a WC3-lineage perspective camera over a
-  sculpted seabed, the approved roster models sailing at true depth, the HUD and every
-  chart mark composited over the world through one shared camera, band verbs and
-  floor-following on the command surface, and the Lid pricing the top of the column.
+  ([three-layer-ocean.md](three-layer-ocean.md)): a perspective camera over a sculpted
+  seabed, the roster models sailing at true depth, and the HUD composited over the world
+  through one shared camera.
 
-What is *not* done is the long tail the harness has started to surface, and everything in
-[world.md](world.md) that is still only prose. Every one of the twenty-eight missions written
-since this line was first drafted is built: a literal, a map and a test file each — *Standing
-Wave*, the Order's second, was the last, and it got the predicate over what the player has
-built that it was waiting for (#382).
+The engineering around it is in good order — server-authoritative hidden information,
+deterministic replays with a state hash, a benchmarked Echo pass, a test suite past 1,900
+cases, and a green CI in about two minutes. The audit's headline was that the discipline is
+production-grade and the *game* around the core mechanic is still a prototype: a six-hull
+roster shared across factions, no pathfinding, no competitive mode, matches that do not end,
+and nothing about shipping in place. Phase 10 is that list.
 
 ---
 
 ## The two pillars, honestly assessed
 
 `CLAUDE.md` states the design axis: every mechanic in this game is an argument about
-**sound** or **depth**. Both pillars now stand.
+**sound** or **depth**. Both pillars stand.
 
 | Pillar | Status |
 | --- | --- |
@@ -66,11 +115,17 @@ a thermocline row since it was written. The gap was in the code, not in the desi
 worth remembering, because a doc read as silent for long enough starts to be treated as
 undecided. The layer is implemented now (§3, "Where the layer sits").
 
+The same lesson applies to the first row of the table above this one. A baseline that reads
+"29 of 30 undecided" for long enough starts to be treated as the harness's problem rather
+than the game's.
+
+---
+
 ## Phase 1 — Make the second pillar playable
 
-Depth becomes an order, with the asymmetry the doc specs: descent fast and deafening,
-ascent slow and silent. Then the HUD can show it, and the Abyssal band gets a reason to
-exist.
+**Closed.** Depth became an order, with the asymmetry the doc specs: descent fast and
+deafening, ascent slow and silent. Then the HUD could show it, and the Abyssal band got a
+reason to exist.
 
 | Work | Issue |
 | --- | --- |
@@ -78,15 +133,15 @@ exist.
 | Depth HUD — depth ribbon, PR badge, crush hatching ([ui-ux.md](ui-ux.md) §8) | [#99](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/99) |
 | Resonance Crystal in the Abyssal band, and a tech gate on it | [#100](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/100) |
 
-**Why first.** Everything downstream — deep raids, the Directorate's birthright, the
-Consortium's paid refits, [economy.md](economy.md) §7 in its entirety — is inert until a
-unit can change depth.
+**Why it went first.** Everything downstream — deep raids, the Directorate's birthright, the
+Consortium's paid refits, [economy.md](economy.md) §7 in its entirety — was inert until a
+unit could change depth.
 
 ---
 
 ## Phase 2 — The game about sound makes sound
 
-The bus architecture from [audio-direction.md](audio-direction.md) §12, contact
+**Closed.** The bus architecture from [audio-direction.md](audio-direction.md) §12, contact
 sonification by tier, and the player's own loudness in the mix.
 
 | Work | Issue |
@@ -95,15 +150,17 @@ sonification by tier, and the player's own loudness in the mix.
 | Contact sonification — tier timbre, panning as information, biome filtering | [#102](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/102) |
 | Own loudness — self bus, the exposure cue, active sonar, silent running | [#103](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/103) |
 
-**Two rules hold across the phase.** Audio is presentation only: no audio state may feed
-back into the simulation, and the mix must never be why two clients disagree. And
-accessibility is a gate rather than a follow-up — audio-only information is a bug
+**Two rules held across the phase and still hold.** Audio is presentation only: no audio
+state may feed back into the simulation, and the mix must never be why two clients disagree.
+And accessibility is a gate rather than a follow-up — audio-only information is a bug
 ([audio-direction.md](audio-direction.md) §11), so every cue ships with its visual
 equivalent.
 
 ---
 
 ## Phase 3 — The map becomes an opponent
+
+**Closed.**
 
 | Work | Issue |
 | --- | --- |
@@ -113,15 +170,21 @@ equivalent.
 | Authored map archetypes from [maps.md](maps.md), replacing `Terrain.demo()` | [#107](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/107) |
 | Thermal Draw — the resource that is a rate, not a stockpile | [#108](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/108) |
 
-**Why this phase matters more than it looks.** Fauna make every Tier-1 smear ambiguous,
+**Why this phase mattered more than it looked.** Fauna make every Tier-1 smear ambiguous,
 which is the difference between hidden information and merely absent information. Echo
-Marks make the past legible and give HYD something to be worth. And with one map, there is
-exactly one PF landscape — so faction balance cannot be assessed at all until there are
-several.
+Marks make the past legible and give HYD something to be worth. And with one map, there was
+exactly one PF landscape — so faction balance could not be assessed at all until there were
+several. There are three now, and the balance harness runs on one of them; the other two
+have no baseline yet.
 
 ---
 
 ## Phase 4 — A game you can sit down and play
+
+**Closed as filed.** The lobby, the AI, the control surface and the minimap all exist. What
+the phase title promised — a match one person can play to a result — is what Phase 10's
+first row is about, because the AI that was built to be beaten cannot yet beat anyone
+either.
 
 | Work | Issue |
 | --- | --- |
@@ -133,12 +196,18 @@ several.
 
 **The AI's information restriction is a design test, not an implementation detail.** An
 opponent that reads world state is playing a different game from the one the player is
-playing. If an AI restricted to resolved contacts can play competently, the information
-model works.
+playing. The restriction held: `AiTuning` has no vision multiplier and a test fails by name
+if one is added. What the restriction did not test is whether a restricted opponent can
+*finish* — it finds the enemy in 26 seconds and draws first blood in 51, and then the match
+runs to the cap.
 
 ---
 
 ## Phase 5 — Hold the line
+
+**Closed.** Seeded RNG, replay capture and the determinism test landed before fauna, hazards
+and the AI, as the sequencing notes asked, and the balance harness turned the design bible's
+guard-rail tables into a command you can run.
 
 | Work | Issue |
 | --- | --- |
@@ -146,39 +215,45 @@ model works.
 | Seeded RNG, replay capture, determinism test | [#114](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/114) |
 | Headless balance harness and match telemetry | [#115](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/115) |
 
+**The first row did not stay won.** #90 brought the pass inside 2 ms at the entity counts of
+the day, and the detection kernel it pruned is still well pruned. What the September bench
+found is the cost *around* the kernel — full entity-id walks per slot per pass, and public
+payloads recomputed once per player — growing with a roster and a fauna cap the pass did
+not have then. That is Phase 10's #430, and the budget it is against is the same one.
+
 ---
 
 ## Phase 6 — What the harness found
 
-The balance harness ([#115](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/115))
-exists to turn design claims into numbers, and the first numbers it produced were about
-mechanics the docs specify and the code does not have.
+**Closed.** The balance harness
+([#115](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/115)) exists to turn
+design claims into numbers, and the first numbers it produced were about mechanics the docs
+specified and the code did not have.
 
 | Work | Issue |
 | --- | --- |
 | Industrial hum lives 5 s, so a working economy does not hum ([economy.md](economy.md) §5) | [#136](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/136) |
 | The Hadron tithe is specified in [economy.md](economy.md) §6 and implemented nowhere | [#140](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/140) |
 
-**Both were found the same way**, and it is the way this phase is meant to work: a
-guard-rail read as breached, the number underneath it pointed at a specific doc section,
-and that section turned out to describe something nobody had built. The Knights lose every
-long game because the mitigation §9 names for exactly that risk — the tithe — does not
-exist. A scout sweeping a depot hears nothing four times in five because a hum's lifetime
-is its intensity times its decay, and one delivery buys 5.4 seconds against a forty-second
-round trip.
+**Both were found the same way**, and it is the way this phase was meant to work: a
+guard-rail read as breached, the number underneath it pointed at a specific doc section, and
+that section turned out to describe something nobody had built. Neither was a balance tuning
+question. Both were "the doc says this and the code does not", and both are built.
 
-Neither is a balance tuning question. Both are "the doc says this and the code does not".
+The harness's second finding is the one it could not point at a doc section for, because no
+section says a match must end: the 29 of 30 above. It sat in a committed baseline for a
+month while this phase was recorded as closed.
 
 ---
 
 ## Phase 7 — What the physics audit found
 
-Epic [#121](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/121) asked whether to
-adopt a third-party physics engine. The answer is no, and the reasoning is on the issue: the
-simulation's whole physics is a few hundred lines of deliberate steering, determinism here is
-load-bearing for replays, the state hash and the balance harness, and an impulse solver would
-inject energy into a game where position *is* information. What the question exposed is that
-nobody had audited those few hundred lines.
+**Closed.** Epic [#121](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/121) asked
+whether to adopt a third-party physics engine. The answer was no, and the reasoning is on the
+issue: the simulation's whole physics is a few hundred lines of deliberate steering,
+determinism here is load-bearing for replays, the state hash and the balance harness, and an
+impulse solver would inject energy into a game where position *is* information. What the
+question exposed was that nobody had audited those few hundred lines.
 
 | Work | Issue |
 | --- | --- |
@@ -189,102 +264,182 @@ nobody had audited those few hundred lines.
 | Sounder transit collision ([bestiary.md](bestiary.md), [hazards.md](hazards.md) §6) | [#153](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/153) |
 | Directorate shallow-water penalty ([factions.md](factions.md), [systems-depth.md](systems-depth.md) §6) | [#154](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/154) |
 
-The first row is different in kind from the other five. #149 is defects — a hull overlapping
-three neighbours separated from one of them, a stacked-hull tie-break seeded from
-process-global entity ids in a codebase that has already been bitten by exactly that twice,
-and a vent eruption at the map edge throwing hulls off the map, where they stayed simulated,
-stayed audible, and could not be ordered back. None of that was reachable by the tests,
-because there was no movement test at all.
+The first row was different in kind from the other five. #149 was defects — a hull
+overlapping three neighbours separated from one of them, a stacked-hull tie-break seeded from
+process-global entity ids in a codebase that had already been bitten by exactly that twice,
+and a vent eruption at the map edge throwing hulls off the map. None of that was reachable by
+the tests, because there was no movement test at all.
 
-The other five are Phase 6's pattern again: the doc says this and the code does not. Every
-force named in [hazards.md](hazards.md) except vent knockback is an authored site with no
-behaviour — currents that push, kelp that entangles, a megafauna that is supposed to destroy
-structures by transit and instead stops and gnaws at attack range.
+The other five were Phase 6's pattern again: the doc says this and the code does not. Every
+force named in [hazards.md](hazards.md) except vent knockback was an authored site with no
+behaviour.
 
-Two known gaps are deliberately not on this list. **Travelling munitions** are the largest
-physics commitment the docs gesture at — [tech-stack.md](tech-stack.md) promises an ECS for
-projectiles and combat is hit-scan — but [units.md](units.md) admits its weapon numbers are
-placeholders "until a combat design doc exists", and that doc does not exist yet. Filing the
-implementation before the design would be building on sand, and munitions are also the one
-thing that could genuinely reopen the engine question. **Fauna separation** is a design
-question rather than a defect: creatures currently overlap hulls, structures and each other
-freely, which may well be right, but nobody has decided it in writing.
+Two gaps were deliberately kept off this list at the time, and both have since been settled
+the right way round — design first. **Travelling munitions** waited on a combat design doc;
+[systems-combat.md](systems-combat.md) is that doc, and torpedoes are ordnance entities with
+their own SIG. **Fauna separation** was a design question rather than a defect, and
+[bestiary.md](bestiary.md) has decided it: creatures pass through hulls freely, on purpose,
+because separation exists so a formation does not pile up on itself and a creature over a
+submarine is not a formation problem.
+
+What the audit did not ask, because it was auditing the lines that exist, is whether a hull
+should steer *around* ground rather than into it. It should, and does not: hulls steer
+straight at the order and slide along whatever blocks them. That is Phase 10's #431.
 
 ---
 
 ## Phase 8 — Missions
 
-[campaign.md](campaign.md) describes twenty-nine missions and the scaffold could run none of
-them. A skirmish ends when one side has no Bastion left; a mission ends when the thing it is
-about has happened, and nothing in the match loop knew how to ask that question. This phase
-built the machinery that asks it — authored parties seated outside the lobby, a schedule of
-beats that fire at the times the design doc says they fire, and objective predicates the
-server evaluates — and proved it against one mission specified down to the briefing text.
+**Closed.** [campaign.md](campaign.md) describes twenty-nine missions and the scaffold could
+run none of them. A skirmish ends when one side has no Bastion left; a mission ends when the
+thing it is about has happened, and nothing in the match loop knew how to ask that question.
+This phase built the machinery that asks it — authored parties seated outside the lobby, a
+schedule of beats that fire at the times the design doc says they fire, and objective
+predicates the server evaluates — and proved it against one mission specified down to the
+briefing text.
 
 | Work | Issue |
 | --- | --- |
 | Mission runtime — seated parties, beat schedule, objective predicates — proven by the Prologue, *Sorrowgate* ([mission-sorrowgate.md](mission-sorrowgate.md)) | [#190](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/190) |
 
-**Two things were deliberately outside it.** The other twenty-eight missions are authoring
-rather than runtime, and one mission taken all the way to its text is what tells you whether
-the runtime can carry them; twenty-eight written against machinery nobody has played would be
-twenty-eight rewrites. And there was no progression persistence — the Prologue was replayable
-and remembered nothing, so nothing recorded that it was played, and the briefing variation
-[campaign.md](campaign.md) intends for a scene you have already witnessed from the other side
-had no history to read.
+**Two things were deliberately outside it**, and the bet paid. The other twenty-eight
+missions are all built on the machinery *Sorrowgate* proved, and between them they asked the
+format for fourteen things rather than a rewrite — the last three from *Standing Wave*
+(#382): a predicate over what the player has built, a beat that walks a route, and a rule
+that a site needs the works beside it. The progression record is built (#371), the briefing
+variation it was owed with it (#378), and the three systems that stood on the record behind
+them — Drift Health carried between missions on one map, the roster a mission spends, and a
+voice under every line ([campaign.md](campaign.md) §11).
 
-Both have since landed, and the bet this phase made came in. All twenty-eight missions are
-built on the machinery *Sorrowgate* proved, and between them they asked the format for
-fourteen things rather than a rewrite — the last three from *Standing Wave* (#382): a
-predicate over what the player has built, a beat that walks a route, and a rule that a site
-needs the works beside it. The record is built (#371), the briefing variation it was owed with
-it (#378), and the three systems that stood on the record behind them — Drift Health carried
-between missions on one map, the roster a mission spends, and a voice under every line
-([campaign.md](campaign.md) §11).
+The world the campaign lives in has its own epic (#224). Its six sub-issues are closed and
+the missions have been audited against the world documents; what remains is a short list of
+design calls and one undecided shape, recorded in plain text in the Planned section of
+[README.md](README.md) rather than as issues, because none of them is work until somebody
+chooses.
 
 ---
 
 ## Phase 9 — What the switch left owed
 
-The presentation revision ([three-layer-ocean.md](three-layer-ocean.md)) landed in five
-phases, and each phase's record names the debts it chose to carry rather than hide. With
-the switch merged (#281), those debts are the open work — none of them discovered late;
-every one written into the record of the phase that created it, which is the record
-system doing its job.
+**Three of four closed.** The presentation revision
+([three-layer-ocean.md](three-layer-ocean.md)) landed in five phases, and each phase's record
+named the debts it chose to carry rather than hide. With the switch merged (#281), those
+debts were the open work — none discovered late; every one written into the record of the
+phase that created it.
 
 | Work | Issue |
 | --- | --- |
-| ~~The honest column glyph — contacts below Tier 3 hover at a 600 m reference nobody earned~~ — **landed**: the mark is the water column now | [#283](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/283) |
-| ~~A far-zoom readability scale — hulls at true metre scale vanish at survey zoom (gate 7)~~ — **settled**, [art-direction.md](art-direction.md) "Far-zoom readability scale" | [#284](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/284) |
-| An audio cue for sour exposure — [audio-direction.md](audio-direction.md) decides the channel first | [#285](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/285) |
+| The honest column glyph — contacts below Tier 3 hovered at a 600 m reference nobody earned; the mark is the water column now | [#283](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/283) |
+| A far-zoom readability scale — hulls at true metre scale vanished at survey zoom (gate 7); settled in [art-direction.md](art-direction.md) | [#284](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/284) |
+| An audio cue for sour exposure — [audio-direction.md](audio-direction.md) decided the channel first | [#285](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/285) |
 | Wall-clock validation of the composited frame on a real GPU and the Termux floor | [#286](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/286) |
 
-**Three kinds of debt, worth keeping distinct.** The first two were honesty of
-presentation, and both are settled: a mark that implied a depth the tier never carried —
-the sub-Tier-3 mark is drawn about its water column now, not at a height — and a
-readability rule ([graphics-standards.md](graphics-standards.md) gate 7) the true-scale
-models failed at survey zoom until the far-zoom scale answered it. The third is the parity
-rule — the Lid bleeds unrecoverable hull in silence, and [audio-direction.md](audio-direction.md) §11 makes a visible fact with no
-audible equivalent a bug in a game whose primary channel is the mix. The fourth is
-measurement: every frame-time number in the phase records prices SwiftShader in a
-container, and the budgets stay container-shaped until the composited two-canvas frame is
-timed on the hardware the game actually promises to run on.
+**Three kinds of debt, worth keeping distinct.** The first two were honesty of presentation,
+and both are settled. The third was the parity rule — the Lid bleeds unrecoverable hull, and
+[audio-direction.md](audio-direction.md) §11 makes a visible fact with no audible equivalent a
+bug in a game whose primary channel is the mix — and it is settled too. The fourth is
+measurement, and it is the one still open: every frame-time number in the phase records
+prices SwiftShader in a container, and the budgets stay container-shaped until the composited
+two-canvas frame is timed on the hardware the game actually promises to run on. It needs a
+desktop with a GPU and an Android device under Termux, which is why an unattended run cannot
+take it.
+
+---
+
+## Phase 10 — What the audit found
+
+The September 2026 audit (epic
+[#428](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/428)) read the backend
+simulation, the frontend renderer and netcode, the design bible against the RTS genre, and
+the engineering around all of it. Each finding is one issue with the evidence behind it and
+a concrete change, so an unattended run can take them one at a time. The epic ranks them by
+impact; this table groups them by what they are, and the ranking is on the issue.
+
+**The match that does not end**
+
+| Work | Issue |
+| --- | --- |
+| Match resolution — 29 of 30 baseline skirmishes end at the cap without a winner; fix the commander, re-run the baseline, re-read the guard-rails | [#440](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/440) |
+
+**Performance and netcode**
+
+| Work | Issue |
+| --- | --- |
+| Echo pass scaling — replace the full entity-id walks in `Match` with queries, share the public payloads across slots, re-run the bench | [#430](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/430) |
+| Interpolate own-force positions between Echo snapshots and echo orders locally — own hulls only; [ui-ux.md](ui-ux.md) §4 forbids it for contacts | [#429](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/429) |
+| The Pixi overlay repaints everything at display rate from 5 Hz data | [#432](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/432) |
+| Delta-encode the per-player Echo snapshot | [#433](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/433) |
+| Draw calls — batch plumb lines and shadow discs; rebuild terrain partially on ground change | [#434](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/434) |
+| Backend hot spots — structure separation broadphase, handle reverse index, terrain-history hashing, replay changelog | [#444](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/444) |
+
+**Controls**
+
+| Work | Issue |
+| --- | --- |
+| Pathfinding — navigate hulls around blocked ground instead of steering straight and sliding | [#431](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/431) |
+| RTS control conventions — attack-move, rally points, stop and hold, edge scroll, a production queue | [#435](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/435) |
+| Mouse and keyboard on a PC — what the input surface owes a desk that the touch surface does not | [#294](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/294) |
+
+**Design**
+
+| Work | Issue |
+| --- | --- |
+| Two exclusive hulls per faction, and one tech rung above crystal | [#436](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/436) |
+| A population cap, resolved against the Echo budget and the Directorate swarm doctrine | [#437](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/437) |
+| Bound scattered water so it is learnable, and redesign the superweapons before they are built | [#438](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/438) |
+| A competitive-mode document — map pool, ladder, accounts, observer mode | [#439](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/439) |
+
+**Shipping and hygiene**
+
+| Work | Issue |
+| --- | --- |
+| Deployment config, origin lock, and the unused pg and redis dependencies | [#441](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/441) |
+| Frontend housekeeping — dead dependencies, code splitting, on-demand art loading, production sourcemaps | [#442](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/442) |
+| Test gaps — an untested renderer and client, no counted-work budget for the 60 Hz step, unhashed Echo Marks | [#443](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/443) |
+| This document — it cited closed issues as live work and omitted the balance finding | [#445](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/445) |
+
+**Why match resolution stands alone at the top.** Every other row is an improvement to a
+game; the first row is whether there is one. The balance guard-rails are the only instrument
+this project has for reading its own design claims, and two of them refuse to rule below ten
+decided matches. Until skirmishes end, "quiet economies simply win" and "loud economies are
+unplayable" — the two risks [economy.md](economy.md) §9 names first — cannot be read at all,
+and every tuning constant moved in the meantime is moved blind.
+
+**The top three of the epic's ranking go together.** Interpolation (#429), the Echo pass
+(#430) and pathfinding (#431) are being implemented in one PR, because they meet in the same
+files: the pass that decides what a client may know, the client that draws it, and the
+movement that both are about. The interpolation is for the player's *own* hulls only.
+[ui-ux.md](ui-ux.md) §4 and §12 forbid smoothing a contact between snapshots, and that rule
+is not on the table — a contact that glides is a contact the server never resolved.
+
+**The design rows are documents before they are code.** Four of them ask for a decision in
+`docs/` first, and [units.md](units.md)'s own "Next steps" has listed faction unit variants
+as the next thing to author for as long as the roster has existed. The population cap in particular has
+sat in the Planned section of [README.md](README.md) as a deferred question; it is an issue
+now because the Echo budget puts a number on what a cap can be.
 
 ---
 
 ## Sequencing notes
 
-Three dependencies survive any reordering of the phases:
+The three dependencies the first epic named all held — seeded RNG landed before fauna,
+hazards and the AI; Echo pass scaling landed before fauna; depth orders landed before the
+depth HUD and the crystal. Three new ones survive any reordering of Phase 10:
 
-1. **Seeded RNG ([#114](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/114))
-   should land before fauna, hazards and the AI.** Those three are the natural homes for
-   `Math.random()`; retrofitting determinism across all of them later is strictly more work.
-2. **Echo pass scaling ([#90](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/90))
-   gates fauna.** Fauna are entities in the detection pass, and the pass already misses its
-   budget past ~150 entities.
-3. **Depth orders ([#98](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/98))
-   gate the depth HUD and Resonance Crystal**, and are what make `pressureSystem` reachable
-   in a normal match.
+1. **Match resolution ([#440](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/440))
+   before any balance tuning.** The win-rate guard-rails cannot rule on one decided match,
+   so a constant moved before skirmishes end is moved without the instrument that would
+   show whether it helped.
+2. **Echo pass scaling ([#430](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/430))
+   before the population cap ([#437](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/437))
+   and the exclusive hulls ([#436](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/436)).**
+   Both add entities to the detection pass, and the pass breaks its budget at about 160
+   already. A cap chosen against today's pass would be chosen against a budget that is
+   already blown.
+3. **Pathfinding ([#431](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/431))
+   before the control conventions ([#435](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/435)).**
+   Attack-move and rally points are promises about where a hull will go; a hull that slides
+   along the first wall it meets cannot keep them.
 
 ---
 
@@ -302,8 +457,24 @@ Three dependencies survive any reordering of the phases:
   on the 2 ms one. A PR that touches either should report the cost it measured.
 - **Neither pillar, no feature.** A mechanic that is an argument about neither sound nor
   depth is arbitrary, and should be reconsidered before it is implemented.
+- **A baseline is a finding.** A committed harness result that reads badly is work, not a
+  footnote. This document went a month presenting the game as playable while its own
+  baseline said matches do not end; a roadmap that does not carry the harness's numbers is
+  not a roadmap of the game that exists.
 
 ---
+
+## Completed — Sprint 3 (August–September 2026)
+
+Phases 6 through 9, and the campaign. The harness's first two findings were built; the
+physics audit turned every authored force in [hazards.md](hazards.md) into behaviour and
+found the movement defects no test could reach; the combat design was written and every row
+of it implemented; the mission runtime carried all twenty-nine missions, a progression
+record and a cast; and the conn view landed as a perspective camera over a sculpted seabed,
+with three of the four debts it declared paid.
+
+The world epic's six sub-issues closed with the missions audited against the world documents
+and about forty small facts corrected.
 
 ## Completed — Sprint 2 (August 2026)
 
@@ -341,8 +512,13 @@ ESLint and Prettier in CI, and both markdown gates on `docs/`.
 
 ## Related
 
-- **[README.md](README.md)** — the documentation index
+- **[README.md](README.md)** — the documentation index, and the Planned section where
+  undecided design questions wait as plain text
 - **[systems-echo.md](systems-echo.md)** · **[systems-depth.md](systems-depth.md)** — the
   two systems everything else descends from
+- **[tech-stack.md](tech-stack.md)** — the Echo budget, determinism, the skirmish AI and
+  the balance harness
+- **[economy.md](economy.md)** §9 · **[bestiary.md](bestiary.md)** §8 — the guard-rails
+  the baseline reads
 - **[DEVELOPER_QUICKSTART.md](DEVELOPER_QUICKSTART.md)** — how to run the thing
 - **[playtest-checklist.md](playtest-checklist.md)** — what to watch for when you do
