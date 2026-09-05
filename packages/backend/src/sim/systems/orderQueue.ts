@@ -26,6 +26,7 @@ import {
   ResourceNode,
   Unit,
   Weapon,
+  Posture,
 } from '../components.ts';
 import type { SimWorld } from '../world.ts';
 
@@ -34,6 +35,7 @@ const ordered = defineQuery([Unit, MoveOrder]);
 /** One pending order. `x`/`y` are where it pointed when it was issued. */
 export type QueuedOrder =
   | { kind: 'move'; x: number; y: number }
+  | { kind: 'attackMove'; x: number; y: number }
   | { kind: 'attack'; x: number; y: number; target: number }
   | { kind: 'harvest'; x: number; y: number; node: number };
 
@@ -44,6 +46,8 @@ export type QueuedOrder =
  */
 function busy(world: SimWorld, eid: number): boolean {
   if (MoveOrder.active[eid] === 1) return true;
+  // An attack-move that has stopped to fight is still on its way.
+  if (hasComponent(world, Posture, eid) && Posture.engage[eid] === 1) return true;
 
   if (hasComponent(world, Weapon, eid)) {
     const target = Weapon.orderedTargetEid[eid]!;
@@ -70,6 +74,15 @@ function begin(world: SimWorld, eid: number, order: QueuedOrder): void {
         Harvester.mode[eid] = HarvestMode.Idle;
         Harvester.idleReason[eid] = 0;
       }
+      break;
+    case 'attackMove':
+      MoveOrder.x[eid] = order.x;
+      MoveOrder.y[eid] = order.y;
+      MoveOrder.active[eid] = 1;
+      Posture.engage[eid] = 1;
+      Posture.engageX[eid] = order.x;
+      Posture.engageY[eid] = order.y;
+      Posture.hold[eid] = 0;
       break;
     case 'attack':
       // The target may have died while the order waited its turn. Dropping it

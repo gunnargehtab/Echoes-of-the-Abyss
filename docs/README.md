@@ -133,11 +133,15 @@ document already points at it:
   and closed with nothing said — is a beat kind the mission format does not have, and
   [mission-first-arrival.md](mission-first-arrival.md) §13 holds the decision.
 
-Deferred design questions, parked here as plain text until decided:
+- **The rung, and two hulls a navy** — [units.md](units.md) designs a crystal-locked second yard
+  (the Slipway) and eight faction-locked hulls, one at the Foundry and one behind the rung for
+  each navy, each argued from sound or depth (#436). Designed in full; none is transcribed into
+  `packages/shared` yet, and the doc says in what order they should be.
 
-- **Supply / berth capacity** — a population cap (berth tonnage granted by structures)
-  in the classic RTS mould. Deliberately deferred until the current economy loop has
-  been playtested; nodule cost and build time are the only production limiters for now.
+Supply, once the one deferred design question here, is decided and built:
+[economy.md](economy.md) §10 gives every hull a berth cost and every commander a grant the
+Bastion and the Foundries add up to, with a ceiling of forty solved against the Echo pass
+budget (#437).
 
 World and storyline. The world docs flag their own loose ends in the margin of the document that
 carries them, where only that document's reader finds them. They are gathered here with a decision

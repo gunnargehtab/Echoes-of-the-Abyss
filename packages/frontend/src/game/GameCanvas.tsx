@@ -300,6 +300,10 @@ export function GameCanvas({
 
       const activeRenderer = new EchoRenderer({
         onMoveOrder: (unitIds, x, y, queued) => client?.moveTo(unitIds, x, y, queued),
+        onAttackMoveOrder: (unitIds, x, y, queued) => client?.attackMoveTo(unitIds, x, y, queued),
+        onStopOrder: (unitIds) => client?.stop(unitIds),
+        onHoldOrder: (unitIds, active) => client?.setHoldPosition(unitIds, active),
+        onRallyOrder: (structureIds, x, y) => client?.setRally(structureIds, x, y),
         onToggleSilent: (unitIds, active) => client?.setSilentRunning(unitIds, active),
         onPing: (unitId) => client?.activeSonar(unitId),
         onAttackOrder: (unitIds, contactId, queued) =>
@@ -512,6 +516,7 @@ export function GameCanvas({
         setPalette(settings.palette);
         activeRenderer.setReducedMotion(settings.reducedMotion);
         perspective.setReducedMotion(settings.reducedMotion);
+        activeRenderer.setEdgeScroll(settings.edgeScroll);
         activeRenderer.setUiScale(settings.uiScale);
         setUiScale(settings.uiScale);
       };

@@ -49,6 +49,14 @@ export class AiSeat {
       case 'move':
         for (const id of command.unitIds) this.match.orderMove(slot, id, command.x, command.y);
         return;
+      case 'attackMove':
+        for (const id of command.unitIds) {
+          this.match.orderAttackMove(slot, id, command.x, command.y);
+        }
+        return;
+      case 'stop':
+        for (const id of command.unitIds) this.match.orderStop(slot, id);
+        return;
       case 'attack':
         for (const id of command.unitIds) {
           this.match.orderAttackContact(slot, id, command.contactId);

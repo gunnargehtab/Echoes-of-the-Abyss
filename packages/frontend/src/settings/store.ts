@@ -57,6 +57,13 @@ export interface Settings {
    * once written, an explicit `false` is honoured over the OS.
    */
   reducedMotion: boolean;
+  /**
+   * Screen-edge scrolling (§9): the camera pans while the pointer rests on
+   * an edge of the water. On by default, as every RTS has it; a toggle
+   * because a trackpad or a small window makes the edge a place the pointer
+   * lands by accident.
+   */
+  edgeScroll: boolean;
 }
 
 /**
@@ -86,6 +93,7 @@ export const DEFAULT_SETTINGS: Settings = {
   palette: 'standard',
   uiScale: 1,
   reducedMotion: false,
+  edgeScroll: true,
 };
 
 const STORAGE_KEY = 'echoes.settings';
@@ -144,6 +152,7 @@ function sanitise(raw: unknown): Settings {
         : 1,
     reducedMotion:
       typeof record.reducedMotion === 'boolean' ? record.reducedMotion : prefersReducedMotion(),
+    edgeScroll: typeof record.edgeScroll === 'boolean' ? record.edgeScroll : true,
   };
 }
 

@@ -77,7 +77,11 @@ function smudge(id: number, x: number, y: number, tick: number): Contact {
  * Feed the commander `seconds` of observations with the contact at each of
  * `track`, and report whether it ever ordered the army to attack it.
  */
-function recalled(track: Array<{ x: number; y: number }>, secondsEach: number): boolean {
+function recalled(
+  track: Array<{ x: number; y: number }>,
+  secondsEach: number,
+  tier: ResolutionTier = ResolutionTier.Contact
+): boolean {
   const { brief, base, home } = rig();
   const commander = new AiCommander(brief);
   // An army well short of its threshold, parked at home. Only the defend
@@ -93,7 +97,7 @@ function recalled(track: Array<{ x: number; y: number }>, secondsEach: number): 
         ...base,
         tick,
         units: army,
-        contacts: [smudge(77, at.x, at.y, tick)],
+        contacts: [{ ...smudge(77, at.x, at.y, tick), tier }],
       };
       for (const command of commander.observe(snapshot) as AiCommand[]) {
         if (command.kind === 'attack') attacked = true;
@@ -134,14 +138,28 @@ describe('a contact near home has to earn the alarm', () => {
   });
 
   it('answers one already on the doorstep, without waiting to be sure', () => {
-    // Inside the urgent radius there is nothing to deliberate: being wrong
-    // about a grazer costs a wasted trip, being wrong about a raid costs the
-    // match. No confirmation window applies here.
+    // Inside the urgent radius there is nothing to deliberate about a contact
+    // the layer has classified: being wrong about a raid costs the match. No
+    // confirmation window applies here.
+    const { home } = rig();
+    assert.equal(
+      recalled([{ x: home.x + 400, y: home.y }], 1, ResolutionTier.Classification),
+      true,
+      'a contact on top of the Bastion did not trigger an immediate response'
+    );
+  });
+
+  it('does not answer a smudge on the doorstep at once', () => {
+    // Inside the Bastion's own ears nothing that is somebody's stays a smudge
+    // for long, so an unclassified contact this close is what a grazer looks
+    // like on the doorstep — and it used to recall the army from wherever it
+    // was, every observation, for as long as it grazed (#440). It earns the
+    // alarm the way anything farther out does: by closing.
     const { home } = rig();
     assert.equal(
       recalled([{ x: home.x + 400, y: home.y }], 1),
-      true,
-      'a contact on top of the Bastion did not trigger an immediate response'
+      false,
+      'a smudge on the doorstep recalled the army at once'
     );
   });
 

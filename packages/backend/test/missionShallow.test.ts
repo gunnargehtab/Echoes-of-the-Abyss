@@ -887,6 +887,7 @@ describe('the mission runs its length — docs/mission-shallow.md §9, §13', ()
       ordnance: [],
       contacts: [],
       peakSig: 0,
+      berths: { used: 0, granted: 0 },
       nodules: 0,
       crystal: 0,
       biomass: 0,

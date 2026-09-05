@@ -402,7 +402,7 @@ describe('production does not deadlock', () => {
    * because the phantom Vent Tap above it reserved the purse first and the
    * turret was never actually paid for.
    */
-  function turretsFor(range: number): StructureKind[] {
+  function turretsFor(range: number, tier = ResolutionTier.Contact): StructureKind[] {
     const brief = { ...briefing(AiDifficulty.Veteran), faction: Faction.Bathyarch };
     const home = brief.spawns[brief.slot]!;
     const commander = new AiCommander(brief);
@@ -417,7 +417,7 @@ describe('production does not deadlock', () => {
           { ...base.structures[0]!, id: 21, kind: StructureKind.Refinery },
         ],
         // Holding its range: seen, never closing. A grazer, in other words.
-        contacts: [contact({ tier: ResolutionTier.Contact, x: home.x + range, y: home.y })],
+        contacts: [contact({ tier, x: home.x + range, y: home.y })],
       };
       for (const command of commander.observe(snapshot)) {
         if (command.kind === 'build') sites.push(command.structure);
@@ -434,9 +434,17 @@ describe('production does not deadlock', () => {
   });
 
   it('does fortify against something already on the Bastion', () => {
+    // Classified: inside the Bastion's own ears nothing that is somebody's
+    // stays a smudge, so a smudge on the doorstep is a grazer until a ping
+    // says otherwise (#440), and a turret aimed at it is a turret aimed at a
+    // fish, however close the fish.
     assert.ok(
-      turretsFor(400).includes(StructureKind.SentinelTurret),
+      turretsFor(400, ResolutionTier.Classification).includes(StructureKind.SentinelTurret),
       'it left the doorstep to whatever was standing on it'
+    );
+    assert.ok(
+      !turretsFor(400).includes(StructureKind.SentinelTurret),
+      'a hundred nodules of static defence, aimed at a fish on the doorstep'
     );
   });
 });
@@ -778,7 +786,14 @@ describe('it pings and hides for reasons', () => {
     const home = briefing(AiDifficulty.Veteran).spawns[1]!;
     let recalled = false;
     for (let i = 0; i < 12; i++) {
-      const raid = contact({ tier: ResolutionTier.Bearing, x: home.x + 400, y: home.y + 400 });
+      // Classified, not a bearing: inside the Bastion's own ears nothing stays
+      // a smudge for long, and a smudge on the doorstep is what a grazer
+      // looks like — it no longer recalls the army (#440).
+      const raid = contact({
+        tier: ResolutionTier.Classification,
+        x: home.x + 400,
+        y: home.y + 400,
+      });
       for (const command of commander.observe(armySnapshot([raid]))) {
         if (command.kind === 'move' && Math.hypot(command.x - home.x, command.y - home.y) < 1200) {
           recalled = true;
@@ -873,6 +888,7 @@ function exposedSnapshot(): EchoSnapshot {
     structures: [],
     contacts: [],
     peakSig: 40,
+    berths: { used: 0, granted: 0 },
     nodules: 0,
     crystal: 0,
     biomass: 0,
@@ -975,8 +991,12 @@ function assertOnlyKnown(command: AiCommand, known: Known): void {
 
   switch (command.kind) {
     case 'move':
+    case 'attackMove':
       owns(command.unitIds);
       inBounds(command.x, command.y);
+      return;
+    case 'stop':
+      owns(command.unitIds);
       return;
     case 'attack':
       owns(command.unitIds);
@@ -1028,6 +1048,12 @@ function applyTo(match: Match, slot: number, command: AiCommand): void {
   switch (command.kind) {
     case 'move':
       for (const id of command.unitIds) match.orderMove(slot, id, command.x, command.y);
+      return;
+    case 'attackMove':
+      for (const id of command.unitIds) match.orderAttackMove(slot, id, command.x, command.y);
+      return;
+    case 'stop':
+      for (const id of command.unitIds) match.orderStop(slot, id);
       return;
     case 'attack':
       for (const id of command.unitIds) match.orderAttackContact(slot, id, command.contactId);

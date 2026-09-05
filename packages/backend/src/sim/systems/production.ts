@@ -9,7 +9,7 @@
 
 import { hasComponent } from 'bitecs';
 import { statsFor, structureStatsFor, type Faction, type StructureKind } from '@echoes/shared';
-import { Health, Owner, Position, Structure, UnderConstruction } from '../components.ts';
+import { Health, MoveOrder, Owner, Position, Structure, UnderConstruction } from '../components.ts';
 import { spawnUnit, type SimWorld } from '../world.ts';
 import { powerRate } from './thermal.ts';
 
@@ -39,7 +39,7 @@ export function productionSystem(world: SimWorld): void {
     const dx = world.terrain.widthM / 2 - Position.x[eid]!;
     const dy = world.terrain.heightM / 2 - Position.y[eid]!;
     const length = Math.hypot(dx, dy) || 1;
-    spawnUnit(world, {
+    const hull = spawnUnit(world, {
       kind,
       slot: Owner.slot[eid]!,
       faction: Owner.faction[eid]! as Faction,
@@ -48,6 +48,15 @@ export function productionSystem(world: SimWorld): void {
       // Depth deliberately omitted: spawnUnit picks a band the hull's
       // pressure rating tolerates, whatever depth the factory sits at.
     });
+    // The yard's rally point (#435): a launched hull goes where the yard was
+    // told to send it, on the tick it launches, as a plain move — it routes
+    // like any other and is loud like any other.
+    const rally = world.rallies.get(eid);
+    if (rally !== undefined) {
+      MoveOrder.x[hull] = rally.x;
+      MoveOrder.y[hull] = rally.y;
+      MoveOrder.active[hull] = 1;
+    }
 
     line.remainingS = line.queue.length > 0 ? statsFor(line.queue[0]!).buildTimeS : 0;
   }

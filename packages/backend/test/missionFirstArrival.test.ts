@@ -1064,6 +1064,7 @@ describe('the tide has to run its length — §9, §13', () => {
       ordnance: [],
       contacts: [],
       peakSig: 0,
+      berths: { used: 0, granted: 0 },
       nodules: 0,
       crystal: 0,
       biomass: 0,

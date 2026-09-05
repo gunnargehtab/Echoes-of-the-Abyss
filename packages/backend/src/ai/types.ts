@@ -92,6 +92,9 @@ export interface AiBriefing {
  */
 export type AiCommand =
   | { kind: 'move'; unitIds: number[]; x: number; y: number }
+  /** Attack-move: go there and fight what you meet (#435). The push order. */
+  | { kind: 'attackMove'; unitIds: number[]; x: number; y: number }
+  | { kind: 'stop'; unitIds: number[] }
   | { kind: 'attack'; unitIds: number[]; contactId: number }
   | { kind: 'harvest'; unitIds: number[]; nodeId: number }
   | { kind: 'throttle'; unitIds: number[]; throttle: HarvestThrottle }

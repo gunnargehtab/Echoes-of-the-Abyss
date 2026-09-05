@@ -84,6 +84,30 @@ interface AttackMessage {
   queued?: boolean;
 }
 
+/** Attack-move: a move that fights whatever it meets on the way (#435). */
+interface AttackMoveMessage {
+  unitIds: number[];
+  x: number;
+  y: number;
+  queued?: boolean;
+}
+
+interface StopMessage {
+  unitIds: number[];
+}
+
+interface HoldMessage {
+  unitIds: number[];
+  active: boolean;
+}
+
+/** Where a yard sends the hulls it launches. */
+interface RallyMessage {
+  structureIds: number[];
+  x: number;
+  y: number;
+}
+
 /** Opaque per-observer contact handle, like AttackMessage — never an entity id. */
 interface TorpedoMessage {
   unitIds: number[];
@@ -328,6 +352,38 @@ export class MatchRoom extends Room<MatchState> {
       const slot = this.commandSlot(client);
       if (slot === undefined) return;
       this.match.commanderAbility(slot);
+    });
+
+    this.onMessage('attackMove', (client, message: AttackMoveMessage) => {
+      const slot = this.commandSlot(client);
+      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      if (!Number.isFinite(message.x) || !Number.isFinite(message.y)) return;
+      for (const unitId of message.unitIds) {
+        this.match.orderAttackMove(slot, unitId, message.x, message.y, message.queued === true);
+      }
+    });
+
+    this.onMessage('stop', (client, message: StopMessage) => {
+      const slot = this.commandSlot(client);
+      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      for (const unitId of message.unitIds) this.match.orderStop(slot, unitId);
+    });
+
+    this.onMessage('hold', (client, message: HoldMessage) => {
+      const slot = this.commandSlot(client);
+      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      for (const unitId of message.unitIds) {
+        this.match.orderHold(slot, unitId, Boolean(message.active));
+      }
+    });
+
+    this.onMessage('rally', (client, message: RallyMessage) => {
+      const slot = this.commandSlot(client);
+      if (slot === undefined || !Array.isArray(message?.structureIds)) return;
+      if (!Number.isFinite(message.x) || !Number.isFinite(message.y)) return;
+      for (const structureId of message.structureIds) {
+        this.match.setRally(slot, structureId, message.x, message.y);
+      }
     });
 
     this.onMessage('attack', (client, message: AttackMessage) => {

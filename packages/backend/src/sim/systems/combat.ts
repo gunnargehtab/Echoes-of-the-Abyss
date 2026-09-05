@@ -31,6 +31,7 @@ import {
   type FaunaSpecies,
   type StructureKind,
   type UnitKind,
+  MOVEMENT,
 } from '@echoes/shared';
 import {
   Acoustic,
@@ -46,6 +47,7 @@ import {
   UnderConstruction,
   Unit,
   Weapon,
+  Posture,
 } from '../components.ts';
 import { applyFiringSpike } from './acoustics.ts';
 import { isDriven, wound } from './fauna.ts';
@@ -221,15 +223,31 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
     const slot = Owner.slot[eid]!;
     const isMobile = hasComponent(world, MoveOrder, eid);
     const silent = hasComponent(world, SilentRunning, eid) && SilentRunning.active[eid] === 1;
+    const posture = hasComponent(world, Posture, eid);
+    // Attack-move (#435): bound somewhere, and fighting whatever it meets on
+    // the way. Hold position: fighting whatever comes, and going nowhere.
+    const engaging = posture && Posture.engage[eid] === 1;
+    const holding = posture && Posture.hold[eid] === 1;
 
     let target = Weapon.orderedTargetEid[eid]!;
-    const ordered = targetAlive(world, target);
+    let ordered = targetAlive(world, target);
+    // Held, with its ordered target out of reach: the order stands — the
+    // hull will take the shot if the target comes close — but a held gun's
+    // job is what is in range now, so it acquires like an idle one meanwhile.
+    const orderStands = ordered && holding && engagementRangeM(eid, target) > profile.rangeM;
+    if (orderStands) {
+      ordered = false;
+      target = 0;
+    }
     if (!ordered) {
-      Weapon.orderedTargetEid[eid] = 0;
+      if (!orderStands) Weapon.orderedTargetEid[eid] = 0;
       target = 0;
       // Auto-acquire: nearest live enemy in range. Silent hulls hold fire, and
-      // units already travelling somewhere do not stop to brawl on their own.
-      const busy = isMobile && MoveOrder.active[eid] === 1;
+      // units already travelling somewhere do not stop to brawl on their own —
+      // unless they were told to: an attack-move is the order to do exactly
+      // that, and is the one order that lets a force advance into water it
+      // cannot see, which in this game is most of it.
+      const busy = isMobile && MoveOrder.active[eid] === 1 && !engaging;
 
       // Point defence first, and only inside the terminal range
       // (docs/systems-combat.md §5). A gun with an inbound torpedo 250 m away
@@ -293,13 +311,29 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
         }
       }
     }
-    if (target === 0) continue;
+    if (target === 0) {
+      // Nothing to fight: an attack-move that stopped to fight resumes its
+      // course, and one that has reached it is spent.
+      if (engaging && isMobile && MoveOrder.active[eid] === 0) {
+        const dx = Posture.engageX[eid]! - Position.x[eid]!;
+        const dy = Posture.engageY[eid]! - Position.y[eid]!;
+        if (dx * dx + dy * dy > MOVEMENT.ARRIVAL_EPSILON_M * MOVEMENT.ARRIVAL_EPSILON_M) {
+          MoveOrder.x[eid] = Posture.engageX[eid]!;
+          MoveOrder.y[eid] = Posture.engageY[eid]!;
+          MoveOrder.active[eid] = 1;
+        } else {
+          Posture.engage[eid] = 0;
+        }
+      }
+      continue;
+    }
 
     const distance = engagementRangeM(eid, target);
     if (distance > profile.rangeM) {
       // Only an explicit order chases; auto-acquired targets were in range by
-      // construction. Turrets have no MoveOrder and simply wait.
-      if (ordered && isMobile) {
+      // construction. Turrets have no MoveOrder and simply wait, and so does
+      // a hull holding position — it was told to.
+      if (ordered && isMobile && !holding) {
         MoveOrder.x[eid] = Position.x[target]!;
         MoveOrder.y[eid] = Position.y[target]!;
         MoveOrder.active[eid] = 1;
@@ -307,8 +341,9 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
       continue;
     }
 
-    if (ordered && isMobile && MoveOrder.active[eid] === 1) {
-      // In range: hold position to shoot.
+    if ((ordered || engaging) && isMobile && MoveOrder.active[eid] === 1) {
+      // In range: hold position to shoot. An attack-move keeps its course in
+      // `Posture` and takes it up again when there is nothing left to fight.
       MoveOrder.active[eid] = 0;
     }
 

@@ -118,10 +118,49 @@ function moves(options: {
       contacts: options.contacts?.(tick) ?? [],
     };
     for (const command of commander.observe(snapshot) as AiCommand[]) {
-      if (command.kind === 'move') asked.push({ x: command.x, y: command.y });
+      // The push is an attack-move since #435; the rally is still a move.
+      // Both are the army being sent somewhere, which is what this collects.
+      if (command.kind === 'move' || command.kind === 'attackMove') {
+        asked.push({ x: command.x, y: command.y });
+      }
     }
   }
   return asked;
+}
+
+/** Every command, for the claims about *which* order was given. */
+function commands(options: Parameters<typeof moves>[0]): AiCommand[] {
+  const { brief, base } = rig();
+  const commander = new AiCommander(brief);
+  const out: AiCommand[] = [];
+  let tick = base.tick;
+  for (let step = 0; step < options.seconds * SIM.ECHO_HZ; step++) {
+    tick += ECHO_EVERY;
+    const elapsedS = step / SIM.ECHO_HZ;
+    const size = options.size + (options.grow?.(elapsedS) ?? 0);
+    const army = Array.from({ length: size }, (_, i) => hull(i + 1, options.at.x, options.at.y));
+    const snapshot: EchoSnapshot = {
+      ...base,
+      tick,
+      units: army,
+      contacts: options.contacts?.(tick) ?? [],
+    };
+    out.push(...(commander.observe(snapshot) as AiCommand[]));
+  }
+  return out;
+}
+
+/** A contact the layer has classified as somebody's: Tier 3, with a faction. */
+function classified(id: number, x: number, y: number, tick: number): Contact {
+  return {
+    id,
+    tier: ResolutionTier.Classification,
+    x,
+    y,
+    tick,
+    kind: UnitKind.Corvette,
+    faction: Faction.Bathyarch,
+  };
 }
 
 /** How near a move order came to any enemy start — a push, rather than a rally. */
@@ -195,11 +234,16 @@ describe('a base you have stood on and heard nothing at is not where the enemy i
     // for the next one, which is the only way crossing it off can show.
     const { enemyStarts } = rig();
     const start = enemyStarts[0]!;
+    // A hull the layer has put a faction on: somebody is home. A Tier-1
+    // smudge would not do (#440) — see the next case.
     const asked = moves({
       seconds: 150,
       at: start,
       size: 8,
-      contacts: (tick) => [smudge(9, start.x + 1500, start.y, tick)],
+      // Fifteen hundred metres off: inside SEARCH.REOPEN_M, so it is audible
+      // *there*, and outside RANGE.PUSH_ENGAGE_M of the army, so the in-reach
+      // branch does not swallow the observation before the search runs.
+      contacts: (tick) => [classified(9, start.x + 1500, start.y, tick)],
     });
     // Crossing a start off means walking at the *next* one, so that is what is
     // watched here. It is asked of every move rather than of the pushes alone
@@ -209,6 +253,84 @@ describe('a base you have stood on and heard nothing at is not where the enemy i
     assert.ok(
       asked.every((move) => nearestStart(move, enemyStarts.slice(1)) > 700),
       'it abandoned a start it could still hear something at'
+    );
+  });
+
+  it('does not let a smudge reopen a corner it has crossed off', () => {
+    // The Drift wanders: an unclassified contact two kilometres from a dead
+    // corner is what a grazer looks like, and it used to put the corner back
+    // on the list — ahead of the live enemy, since the starts are tried in
+    // order (#440). The army stands on start 0, hears nothing that is
+    // anybody's, and must go on to start 1 and stay gone.
+    const { enemyStarts } = rig();
+    const dead = enemyStarts[0]!;
+    const asked = moves({
+      seconds: 200,
+      at: dead,
+      size: 8,
+      contacts: (tick) => (tick > 60 * SIM.TICK_HZ ? [smudge(9, dead.x + 2000, dead.y, tick)] : []),
+    });
+    const afterCrossing = asked.filter((move) => distance(move, dead) > 700);
+    assert.ok(afterCrossing.length > 0, 'the empty corner was never crossed off');
+    const last = asked[asked.length - 1]!;
+    assert.ok(distance(last, dead) > 700, 'a smudge put the dead corner back on the list');
+  });
+});
+
+describe('a force with the numbers is a committed force', () => {
+  it('pushes at a base past a smudge it can hear but not reach', () => {
+    // At full strength — which is where production holds the army — the
+    // commander used never to reach the commitment, so the long leash stood
+    // and the push branch was reached "between zero and eight times in
+    // twenty-five minutes" (#440). Two kilometres out is inside the pursuit
+    // leash and outside any gun: a committed force walks past it.
+    const { home, enemyStarts } = rig();
+    const away = enemyStarts[0]!;
+    const length = Math.hypot(away.x - home.x, away.y - home.y) || 1;
+    const behind = {
+      x: home.x - ((away.x - home.x) / length) * 2000,
+      y: home.y - ((away.y - home.y) / length) * 2000,
+    };
+    const issued = commands({
+      seconds: 60,
+      at: home,
+      size: 8,
+      contacts: (tick) => [smudge(31, behind.x, behind.y, tick)],
+    });
+    const pushes = issued.filter(
+      (c) => c.kind === 'attackMove' && nearestStart(c, enemyStarts) < 700
+    );
+    const chases = issued.filter((c) => c.kind === 'attack');
+    assert.ok(pushes.length > 0, 'a full-strength force never pushed');
+    assert.equal(chases.length, 0, 'it chased a smudge it could not reach');
+  });
+
+  it('still recalls the army for a classified contact on the doorstep, and not for a smudge', () => {
+    const { home, enemyStarts } = rig();
+    const forward = {
+      x: home.x + (enemyStarts[0]!.x - home.x) * 0.5,
+      y: home.y + (enemyStarts[0]!.y - home.y) * 0.5,
+    };
+    const forSmudge = commands({
+      seconds: 20,
+      at: forward,
+      size: 8,
+      contacts: (tick) => [smudge(41, home.x + 300, home.y, tick)],
+    });
+    assert.equal(
+      forSmudge.filter((c) => c.kind === 'attack').length,
+      0,
+      'a smudge inside the urgent ring recalled the army'
+    );
+    const forRaid = commands({
+      seconds: 20,
+      at: forward,
+      size: 8,
+      contacts: (tick) => [classified(42, home.x + 300, home.y, tick)],
+    });
+    assert.ok(
+      forRaid.some((c) => c.kind === 'attack' && c.contactId === 42),
+      'a classified hull inside the urgent ring did not recall the army'
     );
   });
 });
@@ -267,6 +389,8 @@ describe('on the way in, the army shoots what is in its way', () => {
       size: 4,
       contacts: (tick) => [smudge(21, behind.x, behind.y, tick)],
     });
+    // It travels — at a base, since #440 stopped an unclassified memory from
+    // being the destination; the smudge is passed, not walked to.
     assert.ok(
       asked.some((move) => nearestStart(move, enemyStarts) < 700),
       'the army sat still for something it could hear and never went anywhere'
@@ -280,14 +404,30 @@ describe('on the way in, the army shoots what is in its way', () => {
   it('still stops for what is actually in front of it', () => {
     // Inside a gun's reach the fight is already happening, and walking past it
     // would be a different bug. No move order should be issued at all here:
-    // the commander is attacking, not travelling.
+    // the commander is attacking, not travelling. Classified, since #440 —
+    // a smudge at the same range is the next case.
     const { home } = rig();
     const asked = moves({
       seconds: 300,
       at: home,
       size: 4,
-      contacts: (tick) => [smudge(22, home.x + 400, home.y, tick)],
+      contacts: (tick) => [classified(22, home.x + 400, home.y, tick)],
     });
     assert.equal(asked.length, 0, 'it walked away from a contact in weapons range');
+  });
+
+  it('does not order an attack on a smudge, however close', () => {
+    // A Tier-1 contact four hundred metres off is what a grazer looks like,
+    // and an attack order chases the entity behind it. The hulls fight
+    // whatever actually enters their guns' reach on their own; the
+    // commander's order is for something the layer has named (#440).
+    const { home } = rig();
+    const issued = commands({
+      seconds: 60,
+      at: home,
+      size: 4,
+      contacts: (tick) => [smudge(23, home.x + 400, home.y, tick)],
+    });
+    assert.equal(issued.filter((c) => c.kind === 'attack').length, 0, 'it chased a smudge');
   });
 });

@@ -357,6 +357,12 @@ interface Remembered {
   y: number;
   /** Sim tick this was last confirmed on. */
   tick: number;
+  /**
+   * Whether the layer had put a faction or a structure on it — something the
+   * commander may cross the map for, as opposed to a smudge or a mark that
+   * only says *something* was here.
+   */
+  classified: boolean;
 }
 
 export class AiCommander implements AiPlayer {
@@ -500,13 +506,18 @@ export class AiCommander implements AiPlayer {
   private remember(snapshot: EchoSnapshot): void {
     const best = this.bestThreat(snapshot.contacts);
     if (best !== null) {
-      this.remembered = { x: best.x, y: best.y, tick: snapshot.tick };
+      this.remembered = {
+        x: best.x,
+        y: best.y,
+        tick: snapshot.tick,
+        classified: best.structure !== undefined || best.faction !== undefined,
+      };
       return;
     }
 
     const mark = this.freshestMark(snapshot.marks);
     if (mark !== null) {
-      this.remembered = { x: mark.x, y: mark.y, tick: snapshot.tick };
+      this.remembered = { x: mark.x, y: mark.y, tick: snapshot.tick, classified: false };
       return;
     }
 
@@ -519,10 +530,11 @@ export class AiCommander implements AiPlayer {
   /**
    * The contact most worth acting on.
    *
-   * Anything classified as fauna is skipped, and anything *not yet* classified
-   * is not — which is the honest reading of §3. At Tier 1 there is no marker
-   * that distinguishes a grazer from a cruiser, so this commander will
-   * sometimes commit to a Draymaw, exactly as a player does.
+   * Anything classified as fauna is skipped, and so — since #440 — is
+   * anything not yet classified at all. At Tier 1 there is no marker that
+   * distinguishes a grazer from a cruiser; the earlier reading of §3 was that
+   * the commander should therefore sometimes commit to a Draymaw, as a player
+   * does, and the measurement said it committed to little else.
    *
    * A **Bastion outranks everything**, because losing one is losing the match,
    * and any structure outranks any hull: a hull is somewhere else in thirty
@@ -530,10 +542,22 @@ export class AiCommander implements AiPlayer {
    * Tier 3 — classification is where a contact acquires a *kind* — so it is
    * information the commander earned rather than a preference it was handed.
    */
-  private bestThreat(contacts: readonly Contact[]): Contact | null {
+  private bestThreat(contacts: readonly Contact[], allowUnclassified = false): Contact | null {
     let best: Contact | null = null;
     for (const contact of contacts) {
       if (contact.fauna !== undefined) continue;
+      // Classified or nothing (#440). An explicit attack order chases the
+      // *entity* behind the handle, and on seed 4000 every commander spent
+      // the match — 1,233 of one commander's 1,976 attack orders, 1,828 of
+      // another's 2,181 — chasing Tier-1 smudges inside a gun's reach, which
+      // with the Drift in the water are grazers. What is genuinely in range
+      // is fought by the hulls themselves (attack-move, auto-acquire), and
+      // what is ambiguous is what the ping is for; the commander's own order
+      // is reserved for something the layer has told it is somebody's.
+      // The one caller allowed past this is home defence, whose watch has
+      // already confirmed the contact is *closing* on the Bastion — evidence
+      // of intent a grazer rarely supplies, and the alarm is cheap.
+      if (!allowUnclassified && contact.tier < ResolutionTier.Classification) continue;
       if (best === null || priority(contact) > priority(best)) best = contact;
     }
     return best;
@@ -993,11 +1017,26 @@ export class AiCommander implements AiPlayer {
     // Home first. A push that leaves the Bastion undefended trades the match
     // for a raid, and losing the Bastion is losing — but not everything near
     // the Bastion is a raid. See `approachingHome`.
-    const athome = this.bestThreat(raiders);
+    const athome = this.bestThreat(raiders, true);
     if (athome !== null) {
       this.setSilent(ids, false, out);
       this.setCrossed(army, false, out);
       out.push({ kind: 'attack', unitIds: ids, contactId: athome.id });
+      return;
+    }
+
+    // What is inside a gun's reach is a fight already happening, massing or
+    // not: the longest weapon in the roster is the Cruiser's at 900 m, so
+    // anything inside PUSH_ENGAGE_M is shooting or about to be. Checked ahead
+    // of the massing branch, which used to win — an army gathering at home
+    // walked to its rally point past a contact four hundred metres off.
+    const inReach = this.bestThreat(
+      snapshot.contacts.filter((c) => nearest(army, c) < RANGE.PUSH_ENGAGE_M)
+    );
+    if (inReach !== null) {
+      this.setSilent(ids, false, out);
+      this.setCrossed(army, false, out);
+      out.push({ kind: 'attack', unitIds: ids, contactId: inReach.id });
       return;
     }
 
@@ -1042,10 +1081,12 @@ export class AiCommander implements AiPlayer {
 
     // An attack order chases and then holds to shoot, so this covers both
     // closing and firing. The leash is what stops one heard scout from towing
-    // the whole army off the map.
-    // A committed push keeps its own, much shorter leash: see PUSH_ENGAGE_M.
-    const leash = committed ? RANGE.PUSH_ENGAGE_M : RANGE.PURSUIT_M;
-    const engaging = this.bestThreat(snapshot.contacts.filter((c) => nearest(army, c) < leash));
+    // the whole army off the map — and a committed push has no leash beyond
+    // the gun's reach handled above (PUSH_ENGAGE_M): on the way in, the army
+    // shoots what is in its way rather than what it can hear.
+    const engaging = committed
+      ? null
+      : this.bestThreat(snapshot.contacts.filter((c) => nearest(army, c) < RANGE.PURSUIT_M));
     if (engaging !== null) {
       // Silent Running trades weapons for quiet, so it comes off the moment
       // there is something to shoot. The crossing is given back for the same
@@ -1065,11 +1106,22 @@ export class AiCommander implements AiPlayer {
     // triggered by being heard: a commander that dove whenever exposure rose
     // would go deaf on the way down, lose the contact that justified the dive,
     // surface, hear it again, and oscillate.
-    const target = objective;
+    //
+    // Where to: something the layer has *classified* as an enemy's, if the
+    // memory holds one — a structure, or a hull with a faction — ahead of the
+    // objective above; a mark or a smudge in memory only ever comes after the
+    // next uncrossed start (#440).
+    const known = this.remembered !== null && this.remembered.classified ? this.remembered : null;
+    const target = known ?? objective;
     this.setSilent(ids, this.doctrine.approachesSilently && this.tuning.usesSilentRunning, out);
     this.setCrossed(army, this.doctrine.crossesTheLayer, out);
+    // An attack-move, not a move (#435): the army fights what it meets on the
+    // way and then carries on, and it walks *into* the base rather than
+    // parking a gun's reach short of it — a move order stopped re-issuing at
+    // ARRIVE_M and left the force between 550 and 700 m from a Bastion with
+    // nothing in range.
     if (nearest(army, target) > RANGE.ARRIVE_M) {
-      out.push({ kind: 'move', unitIds: ids, x: target.x, y: target.y });
+      out.push({ kind: 'attackMove', unitIds: ids, x: target.x, y: target.y });
     }
   }
 
@@ -1166,11 +1218,21 @@ export class AiCommander implements AiPlayer {
     snapshot: EchoSnapshot,
     army: readonly OwnUnit[]
   ): { x: number; y: number } | null {
-    // Anything unclassified counts as somebody. A grazer does not: it wanders
-    // past a dead base as readily as a live one, and letting one reopen a
-    // start would put the walk to the empty corner straight back on.
+    // Evidence of *somebody*: a contact the layer has put a faction or a
+    // structure on. An unclassified smudge is not — a grazer wanders past a
+    // dead base as readily as a live one, and letting one reopen a start put
+    // the walk to the empty corner straight back on. The old test here was
+    // `fauna === undefined`, which excludes only what is *classified* as
+    // fauna and so admitted every smudge on the map (#440); and since the
+    // starts are tried in index order, a reopened dead corner outranked the
+    // live enemy behind it.
     const heardNear = (place: { x: number; y: number }): boolean =>
-      snapshot.contacts.some((c) => c.fauna === undefined && distance(c, place) < SEARCH.REOPEN_M);
+      snapshot.contacts.some(
+        (c) =>
+          (c.faction !== undefined || c.structure !== undefined) &&
+          c.fauna === undefined &&
+          distance(c, place) < SEARCH.REOPEN_M
+      );
 
     for (let index = 0; index < this.enemyStarts.length; index++) {
       if (!this.clearedStarts.has(index)) continue;
@@ -1269,8 +1331,15 @@ export class AiCommander implements AiPlayer {
       if (range >= RANGE.DEFEND_M) continue;
 
       if (range < RANGE.DEFEND_URGENT_M) {
-        out.push(contact);
-        continue;
+        // Nothing this close to a Bastion's own ears (HYD 60) stays
+        // unclassified for long, so a smudge inside the ring is what a
+        // grazer looks like on the doorstep, and it used to recall the whole
+        // army from wherever it was (#440). A classified contact recalls it
+        // at once; a smudge waits for the watch below like anything else.
+        if (contact.tier >= ResolutionTier.Classification) {
+          out.push(contact);
+          continue;
+        }
       }
 
       const seen = this.homeWatch.get(contact.id);
@@ -1364,12 +1433,19 @@ export class AiCommander implements AiPlayer {
     // forbidden from pinging precisely the contacts that were pinning it. On
     // seed 4000 the defend branch took between 20% and 40% of every decision
     // (#440). Naming one is how it learns it does not have to go home.
+    //
+    // Since the urgent ring recalls only for a *classified* contact (#440,
+    // `approachingHome`), a smudge on the doorstep is the one thing there the
+    // commander must name to act on at all — so it is pinged whether or not
+    // the watch has made a raider of it yet.
     const atHome = distance(centre, this.home) < RANGE.RALLY_M;
     const ambiguous = snapshot.contacts.find(
       (c) =>
         c.tier <= ResolutionTier.Bearing &&
         distance(centre, c) < RANGE.PING_CLASSIFY_M &&
-        (!atHome || raiders.some((r) => r.id === c.id))
+        (!atHome ||
+          raiders.some((r) => r.id === c.id) ||
+          distance(c, this.home) < RANGE.DEFEND_URGENT_M)
     );
     if (ambiguous === undefined) return;
 

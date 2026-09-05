@@ -51,6 +51,7 @@ import {
   Unit,
   Velocity,
   Weapon,
+  Posture,
 } from './components.ts';
 import { DriftHealth } from './drift.ts';
 import { DRIFT_SLOT } from './systems/fauna.ts';
@@ -112,6 +113,13 @@ export interface SimWorld extends IWorld {
   economies: Map<number, PlayerEconomy>;
   /** producing structure eid -> its queue. */
   production: Map<number, ProductionQueue>;
+  /**
+   * Rally points, by producing structure (#435): where a hull goes the tick
+   * it launches. Simulation state, like the order queue and for the same
+   * reason — a reconnecting player's yard still sends its hulls where it was
+   * told to.
+   */
+  rallies: Map<number, { x: number; y: number }>;
   /**
    * Sounding Spires whose PR grant is load-bearing this tick — an allied
    * unit under the aura is actually below its own rating. Written by the
@@ -416,6 +424,7 @@ export function createSimWorld(
   world.dt = dt;
   world.economies = new Map();
   world.production = new Map();
+  world.rallies = new Map();
   world.spireActive = new Set();
   world.blooms = [];
   world.liftCutSig = new Map();
@@ -825,6 +834,11 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
 
   addComponent(world, MoveOrder, eid);
   MoveOrder.active[eid] = 0;
+
+  // Every hull has a posture, so the order paths need no component check.
+  addComponent(world, Posture, eid);
+  Posture.hold[eid] = 0;
+  Posture.engage[eid] = 0;
 
   // Units carry a depth order from birth; structures never get one. The
   // component is what makes a hull orderable vertically at all, so the

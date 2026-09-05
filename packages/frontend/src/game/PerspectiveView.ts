@@ -115,6 +115,23 @@ export interface ProjectedPoint {
  * GC part of the frame budget.
  */
 const PROJECT_TMP = new Vector3();
+/**
+ * More scratch, for the same reason (#432): `resolveGround` runs per pointer
+ * event, `groundQuad` and `applyCamera` per frame, and each used to allocate
+ * a Raycaster, a Vector2 and a cloned Vector3 or four on the way.
+ */
+const RAY_TMP = new Raycaster();
+const NDC_TMP = new Vector2();
+const LOOK_TMP = new Vector3();
+const DIR_TMP = new Vector3();
+const EMBER_COLOR = new Color(VENT_EMBER);
+/** Screen corners in NDC, the order `groundQuad` has always returned them in. */
+const QUAD_CORNERS: ReadonlyArray<readonly [number, number]> = [
+  [-1, 1],
+  [1, 1],
+  [1, -1],
+  [-1, -1],
+];
 
 interface EntityHandle {
   mesh: Mesh;
@@ -200,6 +217,13 @@ export class PerspectiveView {
   readonly motion = new OwnMotion();
   /** Scratch for `motion.at`, consumed before the next call. */
   private readonly drawn = { x: 0, y: 0, depth: 0 };
+  /** `groundQuad`'s four corners, rewritten in place per frame. */
+  private readonly quadScratch = [
+    { x: 0, y: 0 },
+    { x: 0, y: 0 },
+    { x: 0, y: 0 },
+    { x: 0, y: 0 },
+  ];
 
   private readonly unitHandles = new Map<number, EntityHandle>();
   private readonly structureHandles = new Map<number, EntityHandle>();
@@ -377,11 +401,11 @@ export class PerspectiveView {
     const canvas = this.renderer?.domElement;
     if (terrain === null || canvas === undefined || canvas === null) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
-    const ndc = new Vector2(
+    const ndc = NDC_TMP.set(
       ((clientX - rect.left) / rect.width) * 2 - 1,
       -((clientY - rect.top) / rect.height) * 2 + 1
     );
-    const raycaster = new Raycaster();
+    const raycaster = RAY_TMP;
     raycaster.setFromCamera(ndc, this.camera);
     if (this.terrainMesh !== null) {
       const hit = raycaster.intersectObject(this.terrainMesh, false)[0];
@@ -395,7 +419,7 @@ export class PerspectiveView {
     const groundY = this.groundYAt(this.target.x, this.target.z);
     const direction = raycaster.ray.direction;
     const t = Math.abs(direction.y) < 1e-6 ? 1e6 : (groundY - raycaster.ray.origin.y) / direction.y;
-    const point = raycaster.ray.origin.clone().addScaledVector(direction, Math.max(1, t));
+    const point = DIR_TMP.copy(raycaster.ray.origin).addScaledVector(direction, Math.max(1, t));
     return {
       x: Math.min(terrain.cols * terrain.cellM, Math.max(0, point.x)),
       y: Math.min(terrain.rows * terrain.cellM, Math.max(0, point.z)),
@@ -409,20 +433,33 @@ export class PerspectiveView {
    * a symbol drawn at this point can size itself the way the old chart's
    * zoom did.
    */
-  projectPoint(xM: number, yM: number, depthM: number | null): ProjectedPoint {
-    if (this.renderer === null) return { x: 0, y: 0, pxPerM: 1, visible: false };
+  projectPoint(
+    xM: number,
+    yM: number,
+    depthM: number | null,
+    out: ProjectedPoint = { x: 0, y: 0, pxPerM: 1, visible: false }
+  ): ProjectedPoint {
+    // Written into `out` when the caller hands one over (#432): the chart
+    // projects a few thousand points a frame at survey zoom, and an object
+    // per point was most of the frame's garbage.
+    if (this.renderer === null) {
+      out.x = 0;
+      out.y = 0;
+      out.pxPerM = 1;
+      out.visible = false;
+      return out;
+    }
     const y = depthM === null ? this.groundYAt(xM, yM) : depthToWorldY(depthM);
     const point = PROJECT_TMP.set(xM, y, yM);
     const viewDistance = point.distanceTo(this.camera.position);
     point.project(this.camera);
     const pxPerM =
       this.viewHeight / 2 / (Math.tan(((FOV_DEG / 2) * Math.PI) / 180) * Math.max(1, viewDistance));
-    return {
-      x: ((point.x + 1) / 2) * this.viewWidth,
-      y: ((1 - point.y) / 2) * this.viewHeight,
-      pxPerM,
-      visible: point.z < 1 && point.z > -1,
-    };
+    out.x = ((point.x + 1) / 2) * this.viewWidth;
+    out.y = ((1 - point.y) / 2) * this.viewHeight;
+    out.pxPerM = pxPerM;
+    out.visible = point.z < 1 && point.z > -1;
+    return out;
   }
 
   /**
@@ -502,23 +539,22 @@ export class PerspectiveView {
     const terrain = this.terrain;
     if (terrain === null || this.renderer === null) return [];
     const groundY = this.groundYAt(this.target.x, this.target.z);
-    const corners: Array<[number, number]> = [
-      [-1, 1],
-      [1, 1],
-      [1, -1],
-      [-1, -1],
-    ];
-    const out: Array<{ x: number; y: number }> = [];
-    for (const [nx, ny] of corners) {
-      const ray = new Raycaster();
-      ray.setFromCamera(new Vector2(nx, ny), this.camera);
-      const direction = ray.ray.direction;
-      const t = Math.abs(direction.y) < 1e-6 ? 1e6 : (groundY - ray.ray.origin.y) / direction.y;
-      const point = ray.ray.origin.clone().addScaledVector(direction, Math.max(1, t));
-      out.push({
-        x: Math.min(terrain.cols * terrain.cellM, Math.max(0, point.x)),
-        y: Math.min(terrain.rows * terrain.cellM, Math.max(0, point.z)),
-      });
+    // The same four objects every frame, rewritten in place (#432): the one
+    // caller reads them and keeps nothing. A perspective camera's ray from a
+    // screen corner is the unprojected corner minus the eye, which needs no
+    // Raycaster to say.
+    const out = this.quadScratch;
+    const origin = this.camera.position;
+    for (let i = 0; i < 4; i++) {
+      const [nx, ny] = QUAD_CORNERS[i]!;
+      const direction = DIR_TMP.set(nx, ny, 0.5).unproject(this.camera).sub(origin).normalize();
+      const t = Math.abs(direction.y) < 1e-6 ? 1e6 : (groundY - origin.y) / direction.y;
+      const scale = Math.max(1, t);
+      const px = origin.x + direction.x * scale;
+      const pz = origin.z + direction.z * scale;
+      const corner = out[i]!;
+      corner.x = Math.min(terrain.cols * terrain.cellM, Math.max(0, px));
+      corner.y = Math.min(terrain.rows * terrain.cellM, Math.max(0, pz));
     }
     return out;
   }
@@ -954,8 +990,10 @@ export class PerspectiveView {
   private syncEntities(): void {
     if (this.terrain === null) return;
 
+    // Liveness by set, not by scan (#432): `some` per handle was quadratic.
+    const liveUnits = new Set(this.units.map((u) => u.id));
     for (const [id, handle] of this.unitHandles) {
-      if (!this.units.some((u) => u.id === id)) {
+      if (!liveUnits.has(id)) {
         this.dropHandle(this.unitGroup, handle);
         this.unitHandles.delete(id);
       }
@@ -982,8 +1020,9 @@ export class PerspectiveView {
       });
     }
 
+    const liveStructures = new Set(this.structures.map((s) => s.id));
     for (const [id, handle] of this.structureHandles) {
-      if (!this.structures.some((s) => s.id === id)) {
+      if (!liveStructures.has(id)) {
         this.dropHandle(this.structureGroup, handle);
         this.structureHandles.delete(id);
       }
@@ -1030,7 +1069,7 @@ export class PerspectiveView {
   private applyCamera(): void {
     const pitch = (PITCH_DEG * Math.PI) / 180;
     const groundY = this.groundYAt(this.target.x, this.target.z);
-    const look = new Vector3(this.target.x, groundY, this.target.z);
+    const look = LOOK_TMP.set(this.target.x, groundY, this.target.z);
     this.camera.position.set(
       look.x,
       look.y + Math.sin(pitch) * this.distance,
@@ -1076,7 +1115,7 @@ export class PerspectiveView {
       if (bucket !== this.emberBucket) {
         this.emberBucket = bucket;
         const colors = this.embers.geometry.getAttribute('color') as BufferAttribute;
-        const ember = new Color(VENT_EMBER);
+        const ember = EMBER_COLOR;
         for (let i = 0; i < this.emberPhases.length; i++) {
           const level = 0.55 * emberFlicker(i, bucket, this.emberPhases[i]!);
           colors.setXYZ(i, ember.r * level, ember.g * level, ember.b * level);

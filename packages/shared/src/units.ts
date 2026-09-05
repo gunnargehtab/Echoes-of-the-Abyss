@@ -63,6 +63,12 @@ export interface UnitStats {
   biomassCost?: number;
   buildTimeS: number;
   /**
+   * Berths the hull's crew occupies on the base (docs/economy.md §10) — the
+   * population cap, in tonnage rather than in hulls. SPEC, transcribed from
+   * docs/units.md. Counted from the moment the hull is queued.
+   */
+  berths: number;
+  /**
    * The one navy allowed to build this hull, when the hull is one navy's.
    *
    * Absent on every generic hull, which is the roster's default and stays it:
@@ -130,6 +136,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     hullLengthM: 60,
     cost: 50,
     buildTimeS: 12,
+    berths: 1,
     attackDamage: 18,
     attackRangeM: 400,
     attackCooldownS: 1,
@@ -148,6 +155,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     hullLengthM: 80,
     cost: 120,
     buildTimeS: 30,
+    berths: 2,
     attackDamage: 50,
     attackRangeM: 550,
     attackCooldownS: 1.2,
@@ -167,6 +175,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     hullLengthM: 130,
     cost: 420,
     buildTimeS: 90,
+    berths: 3,
     attackDamage: 150,
     attackRangeM: 900,
     attackCooldownS: 2.5,
@@ -187,6 +196,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     cost: 260,
     crystalCost: 80,
     buildTimeS: 45,
+    berths: 2,
     attackDamage: 80,
     attackRangeM: 650,
     attackCooldownS: 1.8,
@@ -232,6 +242,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     cost: 30,
     biomassCost: 20,
     buildTimeS: 10,
+    berths: 1,
     // Roster arithmetic rather than a §9 band, and ttkBands.test.ts holds it:
     // a Corvette kills one inside the Scout's ≤ 4 s, a Chorister duel lasts
     // as long as a Corvette duel, one alone needs twenty seconds against a
@@ -293,6 +304,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
      */
     cost: 180,
     buildTimeS: 40,
+    berths: 2,
     faction: Faction.Hadron,
     /**
      * A bow lance: more alpha and a third more reach than a Corvette, on a
@@ -337,6 +349,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     hullLengthM: 75,
     cost: 80,
     buildTimeS: 20,
+    berths: 1,
     attackDamage: 0,
     attackRangeM: 0,
     attackCooldownS: 0,

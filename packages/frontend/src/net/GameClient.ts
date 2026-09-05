@@ -566,6 +566,28 @@ export class GameClient {
     this.room?.send('move', { unitIds, x, y, queued });
   }
 
+  /** Attack-move (#435): go there, and fight whatever is met on the way. */
+  attackMoveTo(unitIds: number[], x: number, y: number, queued = false): void {
+    if (unitIds.length === 0) return;
+    this.room?.send('attackMove', { unitIds, x, y, queued });
+  }
+
+  stop(unitIds: number[]): void {
+    if (unitIds.length === 0) return;
+    this.room?.send('stop', { unitIds });
+  }
+
+  setHoldPosition(unitIds: number[], active: boolean): void {
+    if (unitIds.length === 0) return;
+    this.room?.send('hold', { unitIds, active });
+  }
+
+  /** Where a yard sends the hulls it launches. */
+  setRally(structureIds: number[], x: number, y: number): void {
+    if (structureIds.length === 0) return;
+    this.room?.send('rally', { structureIds, x, y });
+  }
+
   setSilentRunning(unitIds: number[], active: boolean): void {
     if (unitIds.length === 0) return;
     this.room?.send('silent', { unitIds, active });

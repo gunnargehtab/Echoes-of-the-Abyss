@@ -26,7 +26,7 @@ the bar `CONTRIBUTING.md` sets for the first tag.
 
 | Question | Reading | Tracked |
 | --- | --- | --- |
-| Does a skirmish finish? | **22 of 30** baseline matches — four AI seats, Veteran, the Ventfront Divide, seeds 4000–4029, a 25-minute cap — end without a winner, on a median 2 of the 3 eliminations a win needs. Eight decide, against one before the commander's construction livelock was found; still short of the ten a win-rate guard-rail needs to rule | [#440](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/440) |
+| Does a skirmish finish? | **29 of 30** baseline matches — four AI seats, Veteran, the Ventfront Divide, seeds 4000–4029, a 25-minute cap — now decide, at a median 1,003 s against the 1,500 s cap, and all five guard-rails read for the first time. From one decided match before the commander's construction livelock, its uncommitted full-strength army, its walk at smudges and its chase after Tier-1 contacts inside a gun's reach were found (#452, #453). What the harness can now see is the balance: the Knights win 83% of decided matches | [#440](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/440) |
 | Does the Echo pass hold its budget? | The 2 ms budget (`SIM.ECHO_BUDGET_MS`) breaks at about 160 entities: a median 0.99 ms at ~84, 2.44 ms at ~164, 7.16 ms at ~324 on a CI-class container. The worst case is tracked (`Match.worstEchoPassMs`) and never enforced or degraded | [#430](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/430) |
 | Is the frame time real? | Every conn-view frame-time number on record prices SwiftShader in a container. Nothing has been timed on a real GPU or on the Termux floor the game promises | [#286](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/286) |
 
@@ -370,7 +370,7 @@ impact; this table groups them by what they are, and the ranking is on the issue
 
 | Work | Issue |
 | --- | --- |
-| Match resolution — 22 of 30 baseline skirmishes still end at the cap without a winner, down from 29 once the commander's construction livelock was fixed; give it a build order, an economy-to-military ratio and an attack it presses home, re-run the baseline, re-read the guard-rails | [#440](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/440) |
+| Match resolution — done: 29 of 30 baseline skirmishes decide, and every guard-rail reads. The number the harness surfaced next is the Knights' 83% win rate among decided matches, which is a balance issue and not a resolution one | [#440](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/440) |
 
 **Performance and netcode**
 
