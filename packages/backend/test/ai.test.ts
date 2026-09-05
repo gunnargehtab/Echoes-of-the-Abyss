@@ -622,6 +622,48 @@ describe('quiet costs half an economy, so it is a judgement', () => {
     );
   });
 
+  it('does not pay for quiet that something it cannot throttle would spoil', () => {
+    // Rule 0 (#454). A Refinery idles at 65 SIG, louder than a hauler working
+    // at Standard, and it is the commander's first build, standing beside the
+    // field its haulers work. A bearing held on that base is not one Trickle
+    // can cut, so the bet is refused before it is placed — where a Bastion at
+    // 35 leaves the haulers the loudest thing in the water, and the judgement
+    // stands as it was.
+    const standing = (kind: StructureKind, sig: number): EchoSnapshot['structures'][number] => ({
+      id: 20,
+      kind,
+      x: 1000,
+      y: 1000,
+      depth: 300,
+      hp: 1500,
+      maxHp: 1500,
+      sig,
+      buildProgress: 1,
+      queue: [],
+      queueProgress: 0,
+    });
+    const refinery = watched(Faction.Pelagia, AiDifficulty.Veteran, [
+      standing(StructureKind.Refinery, 65),
+    ]);
+    assert.equal(
+      refinery.feed(120, ResolutionTier.Bearing),
+      HarvestThrottle.Standard,
+      'a Refinery is louder than a working hauler, so throttling the haulers buys nothing'
+    );
+    assert.ok(
+      refinery.ordered.length === 0,
+      `it never ordered a throttle at all: ${refinery.ordered.join(', ')}`
+    );
+    const bastion = watched(Faction.Pelagia, AiDifficulty.Veteran, [
+      standing(StructureKind.Bastion, 35),
+    ]);
+    assert.equal(
+      bastion.feed(10, ResolutionTier.Bearing),
+      HarvestThrottle.Trickle,
+      'a Bastion is quieter than a working hauler, so the haulers are what is heard'
+    );
+  });
+
   it('never touches the throttle of a navy that has no answer to being heard', () => {
     for (const faction of [Faction.Bathyarch, Faction.Hadron]) {
       const rig = watched(faction);
@@ -825,7 +867,8 @@ function briefing(difficulty: AiDifficulty): AiBriefing {
  */
 function watched(
   faction = Faction.Pelagia,
-  difficulty = AiDifficulty.Veteran
+  difficulty = AiDifficulty.Veteran,
+  structures: EchoSnapshot['structures'] = []
 ): {
   feed: (seconds: number, tier: ResolutionTier) => HarvestThrottle;
   ordered: HarvestThrottle[];
@@ -846,6 +889,7 @@ function watched(
         ...base,
         tick,
         units: [{ ...base.units[0]!, throttle }],
+        structures,
         exposure: { tier, trackedCount: tier >= ResolutionTier.Bearing ? 1 : 0 },
       };
       for (const command of commander.observe(snapshot)) {

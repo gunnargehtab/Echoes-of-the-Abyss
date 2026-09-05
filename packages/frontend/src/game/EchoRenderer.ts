@@ -930,6 +930,20 @@ export class EchoRenderer {
   private barLayout: BarButton[] = [];
   /** Bumped by `onSelectionChanged`, so the bar and the selection cache notice. */
   private selectionSeq = 0;
+  /**
+   * The per-layer repaint gate (#432). A static layer — ground, nodes, the
+   * ring/route layer, own hulls and structures — is repainted only when a
+   * signature of what it reads changes: the snapshot, the selection, the
+   * camera, the world (map, ground, nodes, palette, scale, identity), the
+   * orders, or an animation it carries. Contacts, the HUD, the ribbon, the
+   * scope and the panels keep the frame cadence, because freshness fades and
+   * the sweep move by rule (docs/ui-ux.md §4, §11).
+   */
+  private readonly layerStamps = new Map<string, string>();
+  /** Bumped by every setter that changes what the static layers read. */
+  private worldRev = 0;
+  /** Bumped when a local order or marker is added or dropped. */
+  private ordersSeq = 0;
   private selectedUnitsCache: { seq: string; units: OwnUnit[] } = { seq: '', units: [] };
   private selected = new Set<number>();
   private peakSig = 0;
@@ -1143,6 +1157,7 @@ export class EchoRenderer {
    * cache keys carry the palette's name.
    */
   setPalette(name: PaletteName): void {
+    this.worldRev++;
     setActivePalette(name);
   }
 
@@ -1153,6 +1168,7 @@ export class EchoRenderer {
    * scaled to zero is a HUD the player cannot use to fix the setting.
    */
   setUiScale(scale: number): void {
+    this.worldRev++;
     const clamped = Number.isFinite(scale) ? Math.min(2, Math.max(0.75, scale)) : 1;
     this.uiScale = clamped;
     this.hud.scale.set(clamped);
@@ -1164,6 +1180,7 @@ export class EchoRenderer {
   }
 
   setReducedMotion(reduced: boolean): void {
+    this.worldRev++;
     this.reducedMotion = reduced;
   }
 
@@ -2713,6 +2730,7 @@ export class EchoRenderer {
     this.callbacks.onStopOrder(ids);
     // Nothing pending is worth drawing for a hull that was told to stand.
     for (const id of ids) this.pendingOrders.delete(id);
+    this.ordersSeq++;
   }
 
   /** Hold position, toggled like floor-following: on unless all already hold. */
@@ -2858,6 +2876,7 @@ export class EchoRenderer {
       if (yards.length > 0) {
         this.callbacks.onRallyOrder(yards, water.x, water.y);
         this.orderMarkers.push({ kind: 'move', x: water.x, y: water.y, atMs: performance.now() });
+        this.ordersSeq++;
       }
       return;
     }
@@ -2997,11 +3016,13 @@ export class EchoRenderer {
   }
 
   setIdentity(slot: number, faction: Faction): void {
+    this.worldRev++;
     this.slot = slot;
     this.faction = faction;
   }
 
   setMap(map: MapPayload): void {
+    this.worldRev++;
     this.map = map;
     this.mapLabel.text = map.name.toUpperCase();
     this.mapNamed = true;
@@ -3011,6 +3032,7 @@ export class EchoRenderer {
   }
 
   setTerrain(terrain: TerrainPayload): void {
+    this.worldRev++;
     // The ground itself — seabed, routes, rim — is the conn view's. This
     // renderer keeps the payload for what the *instruments* read off it:
     // biome lookups, the scope's chart, blocked-ground cells.
@@ -3036,6 +3058,7 @@ export class EchoRenderer {
   applyGround(
     cells: readonly { index: number; floorM: number; ceilingM: number; biome: number }[]
   ): void {
+    this.worldRev++;
     const terrain = this.terrain;
     if (terrain === null || cells.length === 0) return;
     for (const cell of cells) {
@@ -3051,6 +3074,7 @@ export class EchoRenderer {
   }
 
   setNodes(nodes: ResourceNodeInfo[]): void {
+    this.worldRev++;
     this.nodes = nodes;
     // Nodes are baked into the scope's cached terrain layer.
     this.minimapCachedSize = 0;
@@ -3173,6 +3197,7 @@ export class EchoRenderer {
     this.snapshotSeq = 0;
     this.pendingAttackMove = false;
     this.arrowsDown.clear();
+    this.layerStamps.clear();
     // A rematch is T+00:00 again, and the water carries none of the last
     // match's blows into it.
     this.lastTick = 0;
@@ -3817,13 +3842,28 @@ export class EchoRenderer {
     // The world under these marks — seabed, routes, rim, embers, own hulls —
     // is the conn view's. This pass draws only what the chart language owes
     // on top, everything projected through the one shared camera.
-    this.drawBlockedGround();
-    this.drawNodes();
-    this.drawRings();
+    const now = this.frameNowMs;
+    const view = this.conn?.viewRevision ?? 0;
+    const base = `${this.snapshotSeq}|${this.selectionSeq}|${view}|${this.worldRev}`;
+    if (this.stale('ground', base)) this.drawBlockedGround();
+    if (this.stale('nodes', `${view}|${this.worldRev}`)) this.drawNodes();
+    // The force layers share the ring Graphics (rings, routes, a rally) and
+    // the symbol pools, so they repaint together. Anything on them that
+    // moves between snapshots — a gliding hull, a contracting order marker,
+    // a break-silence ring — keeps them on the frame cadence while it lasts.
+    const moving =
+      (this.conn?.motion.animating(now) ?? false) ||
+      this.orderMarkers.length > 0 ||
+      this.brokeSilence.size > 0;
+    const force = `${base}|${this.previewPing}|${this.ordersSeq}|${moving ? now : 0}`;
+    const forceStale = this.stale('force', force);
+    if (forceStale) this.drawRings();
     this.drawContacts();
-    this.drawStructures();
-    this.drawUnits();
-    this.drawOrderPlans();
+    if (forceStale) {
+      this.drawStructures();
+      this.drawUnits();
+      this.drawOrderPlans();
+    }
     this.drawHud();
     // After the HUD, so the flash sits over the panels it warns through.
     this.drawExposureFlashes();
@@ -3832,6 +3872,13 @@ export class EchoRenderer {
     this.drawCommandBar();
     this.drawMinimap();
     this.drawInfoPanel();
+  }
+
+  /** True — and the stamp is taken — when a layer's inputs have changed. */
+  private stale(layer: string, signature: string): boolean {
+    if (this.layerStamps.get(layer) === signature) return false;
+    this.layerStamps.set(layer, signature);
+    return true;
   }
 
   /**
@@ -5146,6 +5193,7 @@ export class EchoRenderer {
     queued: boolean
   ): void {
     this.orderMarkers.push({ kind, x, y, atMs: performance.now() });
+    this.ordersSeq++;
     for (const id of unitIds) {
       let pending = this.pendingOrders.get(id);
       if (pending === undefined) {

@@ -29,6 +29,8 @@ import {
   type DriftCarry,
   type EchoSnapshot,
   type MatchListingMetadata,
+  encodeEcho,
+  type EchoWire,
 } from '@echoes/shared';
 import { AiSeat, briefingFor } from '../ai/seat.ts';
 import { Match } from '../sim/match.ts';
@@ -851,6 +853,9 @@ export class MatchRoom extends Room<MatchState> {
         this.sendMapData(client);
         this.sendMatchData(client);
         client.send('phase', { phase: this.state.phase });
+        // And the next Echo tick whole: the client's copy of the last
+        // snapshot went with the page.
+        this.echoSent.delete(client.sessionId);
       }
     } catch {
       // Out of grace. Same answer as walking out: abandoning is losing.
@@ -865,8 +870,26 @@ export class MatchRoom extends Room<MatchState> {
     this.releasePlayer(sessionId);
   }
 
+  /**
+   * The delta channel's memory (#433): the last snapshot each client was sent
+   * and its sequence, so the next one can be the difference. Dropped when the
+   * seat is released, and on a reconnection — a reloaded page starts from
+   * nothing and must be sent the whole snapshot, not a patch onto a state it
+   * no longer holds.
+   */
+  private readonly echoSent = new Map<string, { seq: number; snapshot: EchoSnapshot }>();
+
+  private echoWireFor(sessionId: string, snapshot: EchoSnapshot): EchoWire {
+    const last = this.echoSent.get(sessionId) ?? null;
+    const seq = (last?.seq ?? 0) + 1;
+    const wire = encodeEcho(last?.snapshot ?? null, snapshot, seq);
+    this.echoSent.set(sessionId, { seq, snapshot });
+    return wire;
+  }
+
   private releasePlayer(sessionId: string): void {
     this.slotBySession.delete(sessionId);
+    this.echoSent.delete(sessionId);
     this.state.players.delete(sessionId);
     void this.publishListing();
   }
@@ -949,7 +972,7 @@ export class MatchRoom extends Room<MatchState> {
       const slot = this.slotBySession.get(client.sessionId);
       if (slot === undefined) continue;
       const snapshot: EchoSnapshot | undefined = snapshots.get(slot);
-      if (snapshot !== undefined) client.send('echo', snapshot);
+      if (snapshot !== undefined) client.send('echo', this.echoWireFor(client.sessionId, snapshot));
       // Per-client rather than broadcast, even though a mission room seats one
       // player: "it is safe because of a config line" is not a guarantee, and
       // this is the channel carrying the only numbers the mission computes.

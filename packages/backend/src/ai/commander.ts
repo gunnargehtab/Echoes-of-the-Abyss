@@ -30,6 +30,7 @@ import {
   DEPTH_BANDS,
   DepthBand,
   EchoMarkKind,
+  HARVEST_THROTTLE,
   PRODUCIBLE,
   ResolutionTier,
   SIM,
@@ -319,6 +320,20 @@ const EXPOSURE_WATCH = {
    * strength of the reading is not what it learned.
    */
   WORK_MIN_S: 45,
+  /**
+   * The most a lost bet may stretch the working spell to, in seconds.
+   *
+   * Each spell of quiet that runs to HIDE_MAX_S without the bearing going
+   * away doubles the next WORK_MIN_S, up to this; a spell that works resets
+   * it. Without the backoff a commander tracked for a whole match hid for 90
+   * of every 135 seconds — 67% of the time, at 46% of its income — which is
+   * what the duel batches read as the quiet navies starving against a loud
+   * one (#454): the Directorate and the Commune throttled down for 69–72% of
+   * every match and earned half of what the Knights did. A bet that has lost
+   * three times running is not a bet any more, and the fourth spell should
+   * cost the economy less than the first did.
+   */
+  WORK_MAX_S: 360,
 } as const;
 
 /** Longest a remembered enemy position stays worth walking to, in seconds. */
@@ -421,6 +436,8 @@ export class AiCommander implements AiPlayer {
   private lastHeardTick = 0;
   /** Earliest tick it will pay for quiet again, after a spell that did not work. */
   private hideAgainTick = 0;
+  /** Working seconds the next lost bet costs; doubles per loss, resets on a win. */
+  private workMinS: number = EXPOSURE_WATCH.WORK_MIN_S;
   /**
    * What it has seen loitering near the Bastion, by contact handle.
    *
@@ -621,9 +638,20 @@ export class AiCommander implements AiPlayer {
   /**
    * Whether the economy should be paying for quiet right now.
    *
-   * Four rules, in the order they are allowed to fire (see EXPOSURE_WATCH for
+   * Five rules, in the order they are allowed to fire (see EXPOSURE_WATCH for
    * why each one exists):
    *
+   * 0. **A bet it can win.** Quiet is bought with the haulers' throttle, so it
+   *    can only break a bearing the haulers are carrying. Its own SIG is its
+   *    own information, and if anything it cannot throttle — a Refinery idles
+   *    at 65, a Cruiser cruises at 65, a hull blowing ballast at 72 — is at
+   *    least as loud as a hauler working at the resting throttle (45), the
+   *    line is not one that Trickle can cut, and it keeps its income. This is
+   *    the rule that stopped the quiet navies starving (#454): a Refinery is
+   *    the commander's first build and stands beside the field its haulers
+   *    work, so before this rule every bearing held on a working base was a
+   *    bet the throttle had already lost, and the Commune and the Directorate
+   *    paid 46% of an economy for 60–72% of every match to make it go away.
    * 1. **The quiet worked.** Already hiding, and the bearing is gone — not
    *    blinking, gone. Back to work immediately; this is the cheap direction.
    * 2. **The quiet did not work.** Already hiding for HIDE_MAX_S and still
@@ -660,16 +688,29 @@ export class AiCommander implements AiPlayer {
     }
     const heardSince = this.heardSinceTick;
 
+    // A bet it can win. The loudest thing the throttle does not govern,
+    // against what a hauler sounds like when it is working: if the first is
+    // the louder, throttling buys nothing but the loss. A spell already under
+    // way keeps its clocks — it still ends when the bearing goes or HIDE_MAX_S
+    // runs out — so a Cruiser passing through does not reopen the judgement
+    // every five seconds; it only stops the paying while it is the loud one.
+    const haulerSig = HARVEST_THROTTLE[this.doctrine.restingThrottle].sig;
+    if (this.loudestUnthrottled(snapshot) >= haulerSig) return false;
+
     if (this.hidingSinceTick !== null) {
-      // The quiet worked. Go and earn something before they find it again.
+      // The quiet worked. Go and earn something before they find it again —
+      // and the next bet is worth its full price again.
       if (heardSince === null) {
         this.hidingSinceTick = null;
+        this.workMinS = EXPOSURE_WATCH.WORK_MIN_S;
         return false;
       }
       // The quiet did not work, and ninety seconds is long enough to know.
+      // Each lost bet doubles the working spell before the next (WORK_MAX_S).
       if (seconds(this.hidingSinceTick) >= EXPOSURE_WATCH.HIDE_MAX_S) {
         this.hidingSinceTick = null;
-        this.hideAgainTick = now + EXPOSURE_WATCH.WORK_MIN_S * SIM.TICK_HZ;
+        this.hideAgainTick = now + this.workMinS * SIM.TICK_HZ;
+        this.workMinS = Math.min(EXPOSURE_WATCH.WORK_MAX_S, this.workMinS * 2);
         return false;
       }
       return true;
@@ -682,6 +723,22 @@ export class AiCommander implements AiPlayer {
 
     this.hidingSinceTick = now;
     return true;
+  }
+
+  /**
+   * The live SIG of the loudest thing the harvest throttle has no say over:
+   * every structure, and every hull that is not a harvester. Own information
+   * — the HUD prints the same numbers — so reading it reveals nothing.
+   */
+  private loudestUnthrottled(snapshot: EchoSnapshot): number {
+    let loudest = 0;
+    for (const structure of snapshot.structures) {
+      if (structure.sig > loudest) loudest = structure.sig;
+    }
+    for (const unit of snapshot.units) {
+      if (unit.kind !== UnitKind.Harvester && unit.sig > loudest) loudest = unit.sig;
+    }
+    return loudest;
   }
 
   /**

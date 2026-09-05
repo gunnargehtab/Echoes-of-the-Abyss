@@ -269,6 +269,18 @@ itself, and each is a place this could have gone quietly wrong:
   value they already held are not recorded at all, which is what lets a span be painted across
   a passage and the passage cut straight back through it without the client being told to seal
   a route and then unseal it.
+- **The snapshot travels as a difference (#433).** Every Echo snapshot used to cross the wire
+  whole, five times a second per player. It is now a keyframe on a client's first tick, on a
+  reconnection and every fiftieth tick, and otherwise a patch onto the snapshot before it:
+  id-keyed collections send only the entries that changed and only the fields that changed,
+  plus the ids that left and the order when an entry came or went; scalars are sent when they
+  differ; the Drift grid as the regions that moved. A WebSocket delivers in order, so the
+  previous message *is* the client's state and no acknowledgement exists. A patch that cannot
+  be applied — a sequence gap, which can only be a bug — is dropped and the next keyframe
+  restores the picture; nothing is guessed, and the reconstructed snapshot is asserted equal
+  to the server's over a live match (`test/echoDelta.test.ts`), which measured **30% of the
+  bytes** with two forces engaged and the Drift in the water. The delta of a snapshot carries
+  exactly what the snapshot did: it decides nothing about what a client may know.
 - **Ground stops a step, not a hull.** Every branch of the passability check tests the
   *destination*, so a hull that ground closed over had no admitting neighbour to step to and
   was entombed for the rest of the match. A hull already inside ground is not held by it. It
@@ -593,6 +605,27 @@ cost more exposure — that is the trade — and the tracked seconds did not shi
 (739 → 722 and 1,104 → 1,108). The fifth of an economy those commanders were handing over was
 buying them nothing measurable, which is the claim the ninety-second cap is built on rather
 than merely an argument for it.
+
+**And it does not place a bet it cannot win**, which is the rule the cap was standing in for.
+The ninety seconds were the commander finding out, at 46% of its income, that the bearing was
+being held on something its haulers' throttle has no say over — and it could have known that
+before paying, because its own SIG is its own information. A Nodule Refinery idles at 65
+([economy.md](economy.md) §3 puts a hauler working at Standard at 45), it is the first thing
+the commander builds, and it stands beside the field the haulers work: from the moment it is
+laid, no spell of Trickle will ever make a bearing on that base go away. So the watch reads
+the loudest thing the throttle does not govern — every structure, every hull that is not a
+harvester — against what a hauler sounds like working, and while the first is the louder it
+keeps its income and lets the bearing stand. Once matches started deciding (#440) this was
+what the duel batches had been reading as the quiet navies starving against a loud one
+(#454): the Commune and the Directorate were below Standard for 60–72% of every match, at
+half an economy, buying nothing, and the Knights won 80–100% of their duels against both. On
+the same seeds the rule takes the Commune from 0% to 70% against the Knights and from 0% to
+50% against the Consortium, the Directorate from 0% to 70% against the Knights, and in the
+four-faction baseline the four win rates go from 63 / 0 / 0 / 38 to 31 / 12 / 15 / 42 with
+the quiet navies throttled down for 4% and 0% of their time instead of 66% and 60%. The
+tracked seconds, again, barely move. The response is still in the doctrine and still fires —
+in the opening, before the Refinery is up, when the haulers really are the loudest thing a
+sweep can hear — which is exactly the window a first scout arrives in.
 
 It **manoeuvres in depth**, and for most of this file's life it did not. That was a deliberate
 omission before the thermocline — depth had no acoustic consequence, so an AI diving for
