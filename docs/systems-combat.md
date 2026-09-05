@@ -354,6 +354,11 @@ them* — a tuning change that leaves these bands is a bug.
 | Mine (single) vs Light Scout | killed |
 | Mine (single) vs Corvette | survives, wounded |
 
+These are **rank-0** figures. A hull's rank ([systems-progression.md](systems-progression.md)
+§3) multiplies gun damage and hull by up to +15% and +30%, and the per-rank figures are sized
+so that no band moves by more than a third at rank 3 against rank 0; the test that holds the
+bands should hold a rank-3 row too.
+
 The current prototype numbers do not meet these bands (they predate this document); the
 transcription pass that follows it retunes them. Fast TTK is safe *because* of rule 2 in
 §1: everything lethal is audible before it lands, so short fights punish bad approaches,
@@ -474,3 +479,4 @@ what exists or assumes what does not. The combat loop lives in
 - **[bestiary.md](bestiary.md)** — the ordnance nobody owns
 - **[ui-ux.md](ui-ux.md)** — how solutions, torpedoes and the PR warning must read
 - **[economy.md](economy.md)** — what a spent magazine and a lost hull actually cost
+- **[systems-progression.md](systems-progression.md)** — rank, earned in the discharges §12 records, and the refits that touch a magazine and a hull
