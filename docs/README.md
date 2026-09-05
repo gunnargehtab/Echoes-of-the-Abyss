@@ -139,4 +139,45 @@ Deferred design questions, parked here as plain text until decided:
   in the classic RTS mould. Deliberately deferred until the current economy loop has
   been playtested; nodule cost and build time are the only production limiters for now.
 
+World and storyline. The world docs flag their own loose ends in the margin of the document that
+carries them, where only that document's reader finds them. They are gathered here with a decision
+each — planned, deliberately open, or closed as it stands — so a reader can tell a thing nobody
+planned from a thing nobody wrote down:
+
+- **Four words the player never hears** — *deliberately open.* The Enclosure, the Deep Choir, the
+  Answering and Anwen Sull are the words [factions.md](factions.md) builds two cultures on, and no
+  mission says any of them ([world-map.md](world-map.md) §5; [glossary.md](glossary.md), *The Deep
+  Choir* and *The Answering*). That stays a fact and not a fault: a faction does not say its own
+  name for itself out loud. Two of the four reach the player anyway, because the record's era pages
+  ([ui-ux.md](ui-ux.md) §14, *The record*) carry the timeline's rows, and the 88 PC and 199 PC
+  rows are Sull's dismissal and the Enclosure. No line, briefing or page is planned to carry the
+  other two. The rule until one is: a briefing may assume a reader who has finished the prologue
+  has met Sull and the Enclosure once, and may not assume the Deep Choir or the Answering at all.
+- **The undated rows** — *closed as they stand.* [timeline.md](timeline.md)'s *Undated* table
+  carries Fivewell's drilling, the Deepbloom radicals' emergence and the chapter-houses' order of
+  founding without a year, by that document's rule that a row is dated from what the docs assert
+  and never from what would be convenient. None of the three is planned to get a year. Ivane
+  Sull's elevation, which #418 counted with them, is not undated but approximate — ~203 PC, dated
+  from her own account and nothing else — and stays so. A year for any of the four is a change to
+  the world first and a timeline row second.
+- **A commander in the water** — *deliberately unasked.* No commander is a unit; skirmish picks a
+  navy and never a person ([characters.md](characters.md)). What one would sound like — a SIG, a
+  register, a depth — is a question the bible has not put, and nothing is planned to put it. A
+  mission that wants a commander in a hull asks in its own §13, as it does for an ability, and
+  answers the sound before the stats.
+- **The Tetherjelly's second home** — *planned, shape undecided.* [bestiary.md](bestiary.md) §4
+  gives the species two habitats, Kelp Forest and the thermocline, and its depth table seeds it in
+  one, the duct at 1,100–1,300 m. A Kelp Forest population needs either a second seeding depth per
+  map or a second entry, and the table says so rather than choosing. It is the one item in this
+  group that is work: the choice is that document's to make, and a Kelp Labyrinth map
+  ([maps.md](maps.md)) is where it would first be missed.
+- **The Mouth's open questions** — *open by rule, not planned.* [timeline.md](timeline.md)'s
+  *Open Questions* — what replied to the First Chord, what Item 9 says, what happens at zero — are
+  not a to-do list. [campaign.md](campaign.md) §2 rule 3 is that the Mouth is never explained, and
+  a doc that answered one of them would be breaking the rule rather than finishing the work.
+
+Beyond these five, nothing in the world or storyline docs is planned. A loose end in one of them
+that is not on this list is one nobody has written down, and it belongs here before it belongs
+in a margin.
+
 **Links in `docs/` are checked in CI and the check is blocking** — a link to a document that does not exist will fail the build. If you want to mark future work, add it to this section as plain text rather than as a link.
