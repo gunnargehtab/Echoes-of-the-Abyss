@@ -75,7 +75,7 @@ The rendering contract, matching `TIER_STYLE` in the client scaffold:
 Rules that apply to all tiers:
 
 - **Ghosts fade, they do not vanish.** Contacts decay over 20 s with alpha tracking freshness. A stale contact is still information — just less of it ([systems-echo.md](systems-echo.md) §4).
-- **No interpolation below Tier 4.** The server sends positions at 5 Hz; smoothing a Tier-2 blob between snapshots invents a velocity the player was never told. Tier 4 may interpolate, because at Tier 4 heading is known.
+- **No interpolation below Tier 4.** The server sends positions at 5 Hz; smoothing a Tier-2 blob between snapshots invents a velocity the player was never told. Tier 4 may interpolate, because at Tier 4 heading is known. The player's **own** hulls are not contacts and are drawn gliding between the last two snapshots (§12) — nothing is invented by drawing a hull where it must have been between two positions the player was told in full.
 - **Faction colour is earned at Tier 3.** Below that, contacts are scope-blue for everyone, because the player does not know whose they are.
 - **Count is an estimate and must look like one.** Tier 3 renders `~4`, never `4`.
 
@@ -497,9 +497,10 @@ The exposure strike is the harder of the two, and [audio-direction.md](audio-dir
 ## 12. Latency and Feedback
 
 - The client predicts **its own units only** — its own movement, its own SIG, its own detection rings. `packages/shared/src/echo.ts` exists so the client can compute those honestly with the same maths the server uses.
-- The client **never** extrapolates a contact. Not for smoothness, not for feel.
-- Detection arrives at 5 Hz and the UI shows that rhythm rather than hiding it. Freshness fade is permitted because it represents decaying confidence; positional smoothing is not, because it represents knowledge.
-- Order feedback is immediate and local (the order marker appears on click) while the result is server-confirmed. Input latency is never traded for information honesty.
+- Own hulls are drawn **interpolated, one Echo interval behind the server**: each glides from its previous reported position to its latest, arriving as the next snapshot is due (`ownMotion.ts`). The conn view and every chart mark about a hull — selection ring, SIG tick, health bar, route — read the same interpolated position, so nothing drifts off the hull it captions. A jump no hull can make in one interval (a mission lift, a respawn) snaps rather than glides. Interpolation rather than extrapolation on purpose: a predicted hull has to be walked back after a stop the client did not see coming, and a hull that reverses is a lie the interpolated one never tells.
+- The client **never** extrapolates or interpolates a contact. Not for smoothness, not for feel.
+- Detection arrives at 5 Hz and the UI shows that rhythm rather than hiding it. Freshness fade is permitted because it represents decaying confidence; positional smoothing of a contact is not, because it represents knowledge.
+- Order feedback is immediate and local while the result is server-confirmed: a right-click paints a contracting ring at the point ordered, and the route line to it, before the server has heard the order; the server's own plan replaces the local one within two snapshots. Input latency is never traded for information honesty — the marker says what was *asked*, and only the snapshot says what the hull is doing.
 
 ---
 

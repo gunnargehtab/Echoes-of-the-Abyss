@@ -10,6 +10,11 @@
  * (docs/systems-depth.md §3). That is the whole of their documented weakness on
  * this side; the hull half of it lives in the pressure system, where the rest of
  * the game's depth attrition already is.
+ *
+ * Ground reaches in twice (docs/systems-depth.md §2). A hull whose straight
+ * course crosses ground that will not admit it at its depth follows a route
+ * around it (`steerPoint`, sim/pathfinding.ts); and every step, routed or not,
+ * is then resolved against the water column and slides along ground it grazes.
  */
 
 import { defineQuery } from 'bitecs';
@@ -38,6 +43,110 @@ const movable = defineQuery([Position, Velocity, MoveOrder, Unit, SilentRunning,
 
 /** Reused across hulls and ticks: resolveStep writes here rather than allocating. */
 const step = { x: 0, y: 0 };
+/** Where the hull steers this tick — its order, or the next waypoint on the way to it. */
+const aim = { x: 0, y: 0 };
+
+/**
+ * Pick the point a hull steers at on its way to (tx, ty), routing around
+ * ground that will not admit it (#431; docs/systems-depth.md §2).
+ *
+ * The common case costs nothing: a hull with a clear segment to its order
+ * holds a "straight" plan with no waypoints and re-checks it on the Echo beat.
+ * Only a hull whose segment crosses refusing ground searches, and the search
+ * is `Pathfinder.findPath` over the terrain's cells at the hull's depth.
+ *
+ * A plan is revisited when the order moves by more than a creep, when the
+ * ground changes (terrain revision), when the hull's depth has moved enough
+ * to change what admits it, or on the revalidation cadence — except that a
+ * plan whose goal was unreachable waits for the ground or the depth, because
+ * re-searching a sealed goal twelve times a second is the one way routing
+ * could become a per-tick cost.
+ */
+function steerPoint(
+  world: SimWorld,
+  eid: number,
+  px: number,
+  py: number,
+  tx: number,
+  ty: number,
+  depthM: number
+): void {
+  const terrain = world.terrain;
+  const tick = world.tick;
+  let plan = world.paths.get(eid);
+
+  if (plan !== undefined) {
+    const shiftX = plan.targetX - tx;
+    const shiftY = plan.targetY - ty;
+    const shift2 = shiftX * shiftX + shiftY * shiftY;
+    if (shift2 > MOVEMENT.ROUTE_RETARGET_M * MOVEMENT.ROUTE_RETARGET_M) {
+      // A new order. Keep the object, drop everything it knew.
+      plan.waypoints.length = 0;
+      plan.index = 0;
+      plan.tick = -MOVEMENT.ROUTE_REVALIDATE_TICKS;
+      plan.exhausted = false;
+    } else if (shift2 > 0) {
+      // The order crept — a pursued hull moving. The route to where it was
+      // is still the route to where it is; only the final leg bends.
+      plan.targetX = tx;
+      plan.targetY = ty;
+    }
+  }
+
+  const groundMoved = plan !== undefined && plan.revision !== terrain.revision;
+  const depthMoved =
+    plan !== undefined && Math.abs(depthM - plan.depthM) > MOVEMENT.ROUTE_DEPTH_TOLERANCE_M;
+  const due =
+    plan !== undefined && !plan.exhausted && tick - plan.tick >= MOVEMENT.ROUTE_REVALIDATE_TICKS;
+
+  if (plan === undefined || groundMoved || depthMoved || due) {
+    if (plan === undefined) {
+      plan = {
+        targetX: tx,
+        targetY: ty,
+        revision: 0,
+        depthM,
+        tick,
+        waypoints: [],
+        index: 0,
+        exhausted: false,
+      };
+      world.paths.set(eid, plan);
+    }
+    plan.targetX = tx;
+    plan.targetY = ty;
+    plan.revision = terrain.revision;
+    plan.depthM = depthM;
+    plan.tick = tick;
+    plan.index = 0;
+    if (terrain.segmentAdmits(px, py, tx, ty, depthM)) {
+      plan.waypoints.length = 0;
+      plan.exhausted = false;
+    } else {
+      plan.exhausted = !world.pathfinder.findPath(terrain, px, py, tx, ty, depthM, plan.waypoints);
+    }
+  }
+
+  // Follow: consume every waypoint already inside reach, then steer at the
+  // next one. Past the last, the final leg is straight at the order — the
+  // step every leg used to be, slide included.
+  const waypoints = plan.waypoints;
+  const count = waypoints.length >> 1;
+  const reach2 = MOVEMENT.WAYPOINT_REACH_M * MOVEMENT.WAYPOINT_REACH_M;
+  while (plan.index < count) {
+    const wx = waypoints[2 * plan.index]!;
+    const wy = waypoints[2 * plan.index + 1]!;
+    if ((px - wx) * (px - wx) + (py - wy) * (py - wy) > reach2) break;
+    plan.index++;
+  }
+  if (plan.index < count) {
+    aim.x = waypoints[2 * plan.index]!;
+    aim.y = waypoints[2 * plan.index + 1]!;
+  } else {
+    aim.x = tx;
+    aim.y = ty;
+  }
+}
 
 function speedMultiplier(world: SimWorld, eid: number): number {
   // Storm interference stacks with silent running rather than replacing it
@@ -119,25 +228,44 @@ export function movementSystem(world: SimWorld): void {
       MoveOrder.active[eid] = 0;
       Velocity.x[eid] = 0;
       Velocity.y[eid] = 0;
+      world.paths.delete(eid);
       continue;
     }
 
     const stats = statsFor(Unit.kind[eid] as UnitKind);
     const speed = stats.speed * speedMultiplier(world, eid);
-    // Never overshoot the target within a single step.
-    const travel = Math.min(speed * dt, distance);
-    const nx = dx / distance;
-    const ny = dy / distance;
-
-    // Ground has a say now (docs/systems-depth.md §2). A hull too deep for the
-    // water ahead does not drive into it; resolveStep slides it along the edge
-    // instead, and depthSystem lifts it until it fits — so a plateau costs a
-    // fleet time and a detour rather than stopping it dead. That matters more
-    // than it looks: nothing in this simulation can path around an obstacle,
-    // and the AI has no depth command at all, so ground that merely blocked
-    // would strand every hull that met it.
     const fromX = Position.x[eid]!;
     const fromY = Position.y[eid]!;
+
+    // The course is to the next waypoint of a route around ground the hull
+    // does not fit through (#431), and to the order itself in open water —
+    // which is most water, most of the time, and costs one segment test on
+    // the Echo beat.
+    steerPoint(
+      world,
+      eid,
+      fromX,
+      fromY,
+      MoveOrder.x[eid]!,
+      MoveOrder.y[eid]!,
+      Position.depth[eid]!
+    );
+    const ax = aim.x - fromX;
+    const ay = aim.y - fromY;
+    const leg = Math.hypot(ax, ay);
+    // Never overshoot the point being steered at within a single step: a
+    // waypoint is landed on and consumed next tick, the order is arrived at.
+    const travel = Math.min(speed * dt, leg);
+    const nx = leg > 0 ? ax / leg : dx / distance;
+    const ny = leg > 0 ? ay / leg : dy / distance;
+
+    // Ground still has the last word on the step itself (docs/systems-depth.md
+    // §2). A hull too deep for the water ahead does not drive into it;
+    // resolveStep slides it along the edge instead, and depthSystem lifts it
+    // until it fits. The route above keeps that from being the whole story —
+    // a slide is a graze off a route's edge now, not a fleet pinned in a bay —
+    // but the AI still has no depth command, so ground that merely blocked
+    // would still strand every hull that met it below a plateau.
     world.terrain.resolveStep(
       fromX,
       fromY,

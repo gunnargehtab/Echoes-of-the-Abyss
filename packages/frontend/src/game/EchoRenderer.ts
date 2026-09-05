@@ -99,6 +99,7 @@ import {
   type Price,
   type ResourceNodeInfo,
   type Stockpile,
+  type QueuedOrderView,
 } from '@echoes/shared';
 import {
   BIOME_COLOR,
@@ -162,6 +163,33 @@ import {
 } from './contactColumn.ts';
 
 /** A contact plus when we last actually heard it, for ghost decay. */
+/**
+ * An order the player gave that the server has not yet echoed back
+ * (docs/ui-ux.md §12). Drawn as the route it asked for until the snapshot
+ * carries the server's own plan, and dropped after two snapshots whether or
+ * not it does — by then the order was either taken or refused.
+ */
+interface PendingOrder {
+  kind: QueuedOrderView['kind'];
+  x: number;
+  y: number;
+  queued: boolean;
+  /** The snapshot count when the order was given. */
+  seq: number;
+}
+
+/** The ring painted at the point ordered, the instant it was ordered. */
+interface OrderMarker {
+  kind: QueuedOrderView['kind'];
+  x: number;
+  y: number;
+  atMs: number;
+}
+
+const ORDER_MARKER_MS = 600;
+/** Snapshots a pending order outlives before the server's plan is trusted to carry it. */
+const PENDING_ORDER_SNAPSHOTS = 2;
+
 interface TrackedContact {
   contact: Contact;
   lastSeenMs: number;
@@ -854,6 +882,15 @@ export class EchoRenderer {
   private structures: OwnStructure[] = [];
   private nodes: ResourceNodeInfo[] = [];
   private readonly tracked = new Map<number, TrackedContact>();
+  /** Orders given and not yet echoed back, by unit (docs/ui-ux.md §12). */
+  private readonly pendingOrders = new Map<number, PendingOrder[]>();
+  private readonly orderMarkers: OrderMarker[] = [];
+  /** Snapshots received this match; what a pending order's age is measured in. */
+  private snapshotSeq = 0;
+  /** `performance.now()` at the top of the frame, one clock for every pass in it. */
+  private frameNowMs = 0;
+  /** Scratch for `drawnPosition`, consumed before the next call. */
+  private readonly drawnScratch = { x: 0, y: 0, depth: 0 };
   private selected = new Set<number>();
   private peakSig = 0;
   /** Loudest SIG across own *units* — the self bed's input, see selfAudioFrame. */
@@ -1848,7 +1885,8 @@ export class EchoRenderer {
     const canvasRect = this.app.canvas.getBoundingClientRect();
     const inside: number[] = [];
     for (const unit of this.units) {
-      const p = this.project(unit.x, unit.y, unit.depth);
+      const d = this.drawnPosition(unit);
+      const p = this.project(d.x, d.y, d.depth);
       if (p === null || !p.visible) continue;
       const sx = p.x + canvasRect.left;
       const sy = p.y + canvasRect.top;
@@ -1870,7 +1908,8 @@ export class EchoRenderer {
     const width = this.app.screen.width;
     const height = this.app.screen.height;
     return this.units.filter((unit) => {
-      const p = this.project(unit.x, unit.y, unit.depth);
+      const d = this.drawnPosition(unit);
+      const p = this.project(d.x, d.y, d.depth);
       return p !== null && p.visible && p.x >= 0 && p.x <= width && p.y >= 0 && p.y <= height;
     });
   }
@@ -2596,10 +2635,13 @@ export class EchoRenderer {
     const harvesterIds = selectedUnits.filter((u) => u.throttle !== undefined).map((u) => u.id);
     if (node !== null && harvesterIds.length > 0) {
       this.callbacks.onHarvestOrder(harvesterIds, node.id, queued);
+      this.noteOrder(harvesterIds, 'harvest', node.x, node.y, queued);
       // Everything else in the selection escorts the harvesters.
       const rest = unitIds.filter((id) => !harvesterIds.includes(id));
-      if (rest.length > 0 && water !== null)
+      if (rest.length > 0 && water !== null) {
         this.callbacks.onMoveOrder(rest, water.x, water.y, queued);
+        this.noteOrder(rest, 'move', water.x, water.y, queued);
+      }
       return;
     }
 
@@ -2610,12 +2652,14 @@ export class EchoRenderer {
       // The hint bar says which of the two the player got, and why.
       if (!this.refusedByMission('weapons')) {
         this.callbacks.onAttackOrder(unitIds, contact.id, queued);
+        this.noteOrder(unitIds, 'attack', contact.x, contact.y, queued);
         return;
       }
     }
 
     if (unitIds.length > 0 && water !== null) {
       this.callbacks.onMoveOrder(unitIds, water.x, water.y, queued);
+      this.noteOrder(unitIds, 'move', water.x, water.y, queued);
     }
   }
 
@@ -2691,7 +2735,8 @@ export class EchoRenderer {
     let best: number | null = null;
     let bestDistance = Infinity;
     for (const unit of this.units) {
-      const p = this.project(unit.x, unit.y, unit.depth);
+      const d = this.drawnPosition(unit);
+      const p = this.project(d.x, d.y, d.depth);
       if (p === null || !p.visible) continue;
       const reach = Math.max(SELECT_RADIUS_M * p.pxPerM, AIM_FLOOR_PX);
       const distance = Math.hypot(p.x - at.x, p.y - at.y);
@@ -2892,6 +2937,9 @@ export class EchoRenderer {
     this.structures = [];
     this.previousUnits = [];
     this.previousStructures = [];
+    this.pendingOrders.clear();
+    this.orderMarkers.length = 0;
+    this.snapshotSeq = 0;
     // A rematch is T+00:00 again, and the water carries none of the last
     // match's blows into it.
     this.lastTick = 0;
@@ -2919,6 +2967,17 @@ export class EchoRenderer {
 
   applySnapshot(snapshot: EchoSnapshot): void {
     this.lastTick = snapshot.tick;
+    this.snapshotSeq++;
+    // A pending order has had its two snapshots: the server's plan carries
+    // it now, or it was refused and there is nothing to draw.
+    for (const [id, pending] of this.pendingOrders) {
+      let keep = 0;
+      for (const order of pending) {
+        if (this.snapshotSeq - order.seq < PENDING_ORDER_SNAPSHOTS) pending[keep++] = order;
+      }
+      pending.length = keep;
+      if (keep === 0) this.pendingOrders.delete(id);
+    }
     this.previousUnits = this.units;
     this.previousStructures = this.structures;
     this.units = snapshot.units;
@@ -3488,6 +3547,7 @@ export class EchoRenderer {
   // --- Draw ----------------------------------------------------------------
 
   private draw(): void {
+    this.frameNowMs = performance.now();
     // The world under these marks — seabed, routes, rim, embers, own hulls —
     // is the conn view's. This pass draws only what the chart language owes
     // on top, everything projected through the one shared camera.
@@ -3746,7 +3806,8 @@ export class EchoRenderer {
       // hull in the duct is about 12% further audible than an unpriced ring
       // shows. A preview that under-draws the danger is the one kind of
       // inaccuracy this HUD may not have.
-      const pf = this.propagationAt(unit.x, unit.y);
+      const d = this.drawnPosition(unit);
+      const pf = this.propagationAt(d.x, d.y);
       const range = maxAudibleRangeM(
         unit.sig,
         pf * THERMOCLINE_ZONE_MAX[thermoclineZone(unit.depth)]!,
@@ -3760,7 +3821,7 @@ export class EchoRenderer {
       // is the opposite: a line on an instrument, drawn in screen pixels and
       // carrying the UI scale (§11 names the ping preview as one of the two
       // things to scale first).
-      if (this.traceCircle(g, unit.x, unit.y, range, null)) {
+      if (this.traceCircle(g, d.x, d.y, range, null)) {
         g.stroke({
           width: 2 * this.uiScale,
           color: sigColor(unit.sig),
@@ -3770,10 +3831,10 @@ export class EchoRenderer {
 
       // Hold the preview key to see exactly how badly a ping would expose you.
       if (this.previewPing) {
-        if (this.traceCircle(g, unit.x, unit.y, ACTIVE_SONAR.REVEAL_RADIUS_M, null)) {
+        if (this.traceCircle(g, d.x, d.y, ACTIVE_SONAR.REVEAL_RADIUS_M, null)) {
           g.stroke({ width: 2 * this.uiScale, color: UI.friendly, alpha: 0.5 });
         }
-        if (this.traceCircle(g, unit.x, unit.y, ACTIVE_SONAR.SELF_REVEAL_RADIUS_M, null)) {
+        if (this.traceCircle(g, d.x, d.y, ACTIVE_SONAR.SELF_REVEAL_RADIUS_M, null)) {
           g.stroke({ width: 3 * this.uiScale, color: UI.threat, alpha: 0.8 });
         }
       }
@@ -4434,7 +4495,8 @@ export class EchoRenderer {
       // The hull itself — model, heading, silent-running dimming — is the
       // conn view's. What this pass owns is the instrument ink *about* the
       // hull, billboarded at its drawn depth.
-      const p = this.project(unit.x, unit.y, unit.depth);
+      const d = this.drawnPosition(unit);
+      const p = this.project(d.x, d.y, d.depth);
       if (p === null) break;
       const g = this.unitSymbols.acquire(unit.id);
       if (!p.visible) {
@@ -4760,19 +4822,70 @@ export class EchoRenderer {
    * given — for a queued attack that is deliberately not the target's live
    * position, which the player may no longer be entitled to.
    */
+  /**
+   * Where one of the player's own hulls is drawn this frame: between its last
+   * two snapshots, from the conn's tracker (#429; docs/ui-ux.md §12), so the
+   * ink this pass paints about a hull sits on the hull the conn is drawing.
+   * Without a conn there is nothing to glide toward, and the snapshot stands.
+   */
+  private drawnPosition(unit: OwnUnit): { x: number; y: number; depth: number } {
+    const conn = this.conn;
+    if (conn === null) {
+      this.drawnScratch.x = unit.x;
+      this.drawnScratch.y = unit.y;
+      this.drawnScratch.depth = unit.depth;
+      return this.drawnScratch;
+    }
+    return conn.motion.at(unit, this.frameNowMs, this.drawnScratch);
+  }
+
+  /**
+   * The local half of order feedback (docs/ui-ux.md §12): a ring at the point
+   * ordered, now, and the route to it drawn from the hull until the server's
+   * plan takes over. What was *asked*, never what the hull is doing.
+   */
+  private noteOrder(
+    unitIds: readonly number[],
+    kind: QueuedOrderView['kind'],
+    x: number,
+    y: number,
+    queued: boolean
+  ): void {
+    this.orderMarkers.push({ kind, x, y, atMs: performance.now() });
+    for (const id of unitIds) {
+      let pending = this.pendingOrders.get(id);
+      if (pending === undefined) {
+        pending = [];
+        this.pendingOrders.set(id, pending);
+      }
+      // An unqueued order replaces the whole plan, exactly as it does on the
+      // server (Match.applyMove).
+      if (!queued) pending.length = 0;
+      pending.push({ kind, x, y, queued, seq: this.snapshotSeq });
+    }
+  }
+
   private drawOrderPlans(): void {
     const g = this.ringLayer;
+    const now = this.frameNowMs;
 
     for (const unit of this.units) {
       if (!this.selected.has(unit.id)) continue;
-      const plan = unit.queuedOrders;
-      if (plan === undefined || plan.length === 0) continue;
+      const pending = this.pendingOrders.get(unit.id);
+      const local = pending !== undefined && pending.length > 0;
+      // An unqueued local order stands in for the server's plan until the
+      // server has it; a queued one is drawn after the plan it extends.
+      const served = local && !pending[0]!.queued ? undefined : unit.queuedOrders;
+      if ((served === undefined || served.length === 0) && !local) continue;
 
       // The route is plotted on the ground — a course on the chart floor —
       // and its markers are instrument glyphs, held at screen size.
-      let fromX = unit.x;
-      let fromY = unit.y;
-      for (const order of plan) {
+      const d = this.drawnPosition(unit);
+      let fromX = d.x;
+      let fromY = d.y;
+      const legs = served === undefined ? [] : served;
+      for (let i = 0; i < legs.length + (pending?.length ?? 0); i++) {
+        const order = i < legs.length ? legs[i]! : pending![i - legs.length]!;
         if (this.traceLine(g, fromX, fromY, order.x, order.y, null)) {
           g.stroke({ width: 1.5, color: UI.accent, alpha: 0.45 });
         }
@@ -4789,6 +4902,26 @@ export class EchoRenderer {
         fromY = order.y;
       }
     }
+
+    // The click's own acknowledgement: a ring that closes on the point over
+    // ORDER_MARKER_MS, in the order's colour. Under reduced motion it holds
+    // its size and only fades. Painted for every order given, selected or
+    // not, because the click happened whether or not the hull stays selected.
+    let keep = 0;
+    for (const marker of this.orderMarkers) {
+      const t = (now - marker.atMs) / ORDER_MARKER_MS;
+      if (t >= 1) continue;
+      this.orderMarkers[keep++] = marker;
+      const p = this.project(marker.x, marker.y, null);
+      if (p === null || !p.visible) continue;
+      const radius = this.reducedMotion ? 9 : 16 - 11 * t;
+      g.circle(p.x, p.y, radius * this.uiScale).stroke({
+        width: 1.5 * this.uiScale,
+        color: marker.kind === 'attack' ? UI.threat : UI.accent,
+        alpha: 0.9 * (1 - t),
+      });
+    }
+    this.orderMarkers.length = keep;
   }
 
   /** Effective Pressure Rating: what the hull owns plus what it is renting. */

@@ -59,6 +59,7 @@ import type { Hazard } from './systems/hazards.ts';
 import { Rng } from './rng.ts';
 import { SpatialHash } from './spatialHash.ts';
 import type { QueuedOrder } from './systems/orderQueue.ts';
+import { Pathfinder, type PathPlan } from './pathfinding.ts';
 import { Terrain } from './terrain.ts';
 
 /**
@@ -284,6 +285,14 @@ export interface SimWorld extends IWorld {
    */
   orderQueues: Map<number, QueuedOrder[]>;
   /**
+   * The route each moving hull is following (#431), by entity. Derived
+   * state — from position, order and ground — so not hashed; dropped with
+   * the entity like the order queue is, and for the same reason.
+   */
+  paths: Map<number, PathPlan>;
+  /** One search's worth of scratch, sized to the terrain grid once. */
+  pathfinder: Pathfinder;
+  /**
    * Things that happened to a player's own force this tick, drained into the
    * Echo snapshot and cleared.
    *
@@ -427,6 +436,8 @@ export function createSimWorld(
   world.fuseGrid = new SpatialHash(SEPARATION.CELL_M);
   world.fuseBuffer = [];
   world.orderQueues = new Map();
+  world.paths = new Map();
+  world.pathfinder = new Pathfinder(terrain.cols, terrain.rows);
   world.selfEvents = [];
   world.marks = new EchoMarkLayer();
   world.hazards = [];

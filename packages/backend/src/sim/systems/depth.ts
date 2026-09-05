@@ -127,8 +127,9 @@ function followTheFloor(world: SimWorld, eid: number): void {
  * (docs/systems-depth.md §2).
  *
  * Runs whether or not the hull is under a depth order, because it is not
- * always the hull that moved — knockback and separation both write positions,
- * and either can put a hull over ground shallower than it is.
+ * always the hull that moved — hazard knockback writes positions outright and
+ * can put a hull over ground shallower than it is (separation used to as well,
+ * and now steps through `resolveStep` like movement does).
  *
  * `DepthOrder.targetM` is deliberately left alone. The order is not cancelled
  * and not rewritten; the ground simply holds the hull above where it asked to
@@ -155,7 +156,7 @@ function holdAgainstGround(world: SimWorld, eid: number, dt: number, wasAtM: num
   // The cap is the shallower of the floor and one ascent step above where the
   // hull started. For a hull the order is trying to push through the seabed
   // that is the floor itself, which stops it dead. For a hull that was already
-  // too deep — knockback and separation both write positions without asking —
+  // too deep — hazard knockback writes positions without asking —
   // it is a steady rise at the ascent rate rather than a jump, because a hull
   // teleporting 2 km upward is not something a player can be asked to read.
   const cap = Math.max(floor, wasAtM - DEPTH.ASCENT_RATE_MPS * dt);

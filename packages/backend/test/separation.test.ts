@@ -19,6 +19,7 @@ import {
   unitRadiusM,
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
+import { Terrain } from '../src/sim/terrain.ts';
 import { spawnStructure, spawnUnit } from '../src/sim/world.ts';
 import { Position, SilentRunning } from '../src/sim/components.ts';
 
@@ -82,7 +83,16 @@ describe('separation', () => {
     // The symptom was a hull that separated cleanly along one axis and stayed
     // buried along the other — still sharing an acoustic position with a
     // neighbour, which is the one thing this system exists to prevent.
-    const match = new Match(undefined, { fauna: false, seed: 21 });
+    //
+    // On open ground, and that has to be said: a push is a step now (#431),
+    // and on the Ventfront Divide the cell west of this spot is a 380 m
+    // plateau a 600 m hull cannot be pushed onto — which would read here as
+    // the solver ignoring a neighbour when it is the ground refusing one.
+    const match = new Match(undefined, {
+      fauna: false,
+      seed: 21,
+      terrain: new Terrain(8000, 8000, 250, { floorM: 2600 }),
+    });
 
     const radius = unitRadiusM(UnitKind.Corvette);
     // Comfortably inside a hull diameter, so both pairs genuinely overlap.

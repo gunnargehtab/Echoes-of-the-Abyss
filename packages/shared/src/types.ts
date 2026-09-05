@@ -675,8 +675,9 @@ export interface SelfEvent {
  * Why a harvester went idle without being told to (docs/ui-ux.md §5).
  *
  * These are the only two starvations `harvestSystem` can reach: there is no
- * "unreachable" — the simulation has no pathfinding to be defeated by, and
- * depth is a cost rather than a wall.
+ * "unreachable" — a route the ground seals off is walked to the reachable
+ * cell nearest the order rather than refused (sim/pathfinding.ts), and depth
+ * is a cost rather than a wall.
  */
 export enum HarvestIdleReason {
   /** No live resource node anywhere on the map. */

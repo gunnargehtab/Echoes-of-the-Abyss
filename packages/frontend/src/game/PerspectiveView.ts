@@ -81,6 +81,7 @@ import {
   type RosterModelInstance,
   type RosterModelKey,
 } from './rosterModels.ts';
+import { OwnMotion } from './ownMotion.ts';
 import { EnvironmentLayer } from './environmentLayer.ts';
 
 /**
@@ -191,6 +192,14 @@ export class PerspectiveView {
   private structures: OwnStructure[] = [];
   private readonly headings = new Map<number, number>();
   private readonly lastPositions = new Map<number, { x: number; y: number }>();
+  /**
+   * Where own hulls are drawn between Echo ticks (#429; docs/ui-ux.md §12).
+   * Public so the chart's ink about a hull — its ring, its bar, its route —
+   * reads the same answer and never drifts off the hull it captions.
+   */
+  readonly motion = new OwnMotion();
+  /** Scratch for `motion.at`, consumed before the next call. */
+  private readonly drawn = { x: 0, y: 0, depth: 0 };
 
   private readonly unitHandles = new Map<number, EntityHandle>();
   private readonly structureHandles = new Map<number, EntityHandle>();
@@ -310,6 +319,7 @@ export class PerspectiveView {
   applySnapshot(snapshot: EchoSnapshot): void {
     this.units = snapshot.units;
     this.structures = snapshot.structures;
+    this.motion.record(snapshot.units, performance.now());
     // Headings from motion, exactly as the chart derived them: the server
     // sends none for own units, and a hull snapping to 0° when it stops
     // would read as broken here too.
@@ -333,6 +343,7 @@ export class PerspectiveView {
     this.structures = [];
     this.headings.clear();
     this.lastPositions.clear();
+    this.motion.reset();
     if (this.renderer !== null) this.syncEntities();
   }
 
@@ -866,23 +877,52 @@ export class PerspectiveView {
     const draw = this.drawScale;
     handle.mesh.scale.set(handle.widthM * draw, handle.heightM * draw, 1);
 
-    const y = depthToWorldY(spec.depthM);
-    const groundY = this.groundYAt(spec.x, spec.z);
-    // The clearance rides the scale: a bottomed hull drawn four times over
-    // would otherwise bury half its own height in the seabed at survey zoom.
-    const hullY = Math.max(y, groundY + 4 * draw);
     if (model !== null) {
-      model.root.position.set(spec.x, hullY, spec.z);
-      model.root.rotation.y = -spec.yaw;
       model.root.scale.setScalar(model.baseScale * draw);
       // Loudness is the lights, not the paint: live SIG swings the lamps
       // around the intake-approved resting strength (gate 3), so a hull
       // running silent goes dark instead of translucent.
       applyLiveGlow(model, spec.liveSig, spec.restSig);
     } else {
-      handle.mesh.position.set(spec.x, hullY, spec.z);
-      handle.mesh.rotation.y = -spec.yaw;
       (handle.mesh.material as MeshBasicMaterial).opacity = spec.dimmed ? 0.45 : 1;
+    }
+    const shadowRadius =
+      draw *
+      (model !== null
+        ? Math.max(model.lengthM, model.beamM) * 0.4
+        : Math.max(handle.widthM, handle.heightM) * 0.35);
+    handle.shadow.scale.set(shadowRadius, shadowRadius, 1);
+
+    this.placeHandle(handle, spec.x, spec.z, spec.depthM, spec.yaw);
+  }
+
+  /**
+   * Put an entity's hull, plumb and shadow where it is. Split from the sync
+   * because own hulls move between snapshots (#429): this runs per frame for
+   * a hull with ground still to cover, and it must cost only what a move costs
+   * — no texture lookups, no glow, nothing allocated.
+   */
+  private placeHandle(
+    handle: EntityHandle,
+    x: number,
+    z: number,
+    depthM: number,
+    yaw: number
+  ): void {
+    const draw = this.drawScale;
+    // The sync hides the sprite exactly when the model is showing.
+    const model = handle.mesh.visible ? null : handle.model;
+    const y = depthToWorldY(depthM);
+    const groundY = this.groundYAt(x, z);
+    // The clearance rides the scale: a bottomed hull drawn four times over
+    // would otherwise bury half its own height in the seabed at survey zoom.
+    const hullY = Math.max(y, groundY + 4 * draw);
+    if (model !== null) {
+      model.root.position.set(x, hullY, z);
+      model.root.rotation.y = -yaw;
+    } else {
+      handle.mesh.position.set(x, hullY, z);
+      handle.mesh.rotation.y = -yaw;
     }
 
     // The plumb line and ground shadow are what make the water column
@@ -892,16 +932,23 @@ export class PerspectiveView {
     // would be the one place this factor told a lie. The shadow is, because a
     // true-scale shadow under an exaggerated hull reads as the wrong depth.
     const positions = handle.plumb.geometry.getAttribute('position') as BufferAttribute;
-    positions.setXYZ(0, spec.x, y, spec.z);
-    positions.setXYZ(1, spec.x, groundY + 1, spec.z);
+    positions.setXYZ(0, x, y, z);
+    positions.setXYZ(1, x, groundY + 1, z);
     positions.needsUpdate = true;
-    const shadowRadius =
-      draw *
-      (model !== null
-        ? Math.max(model.lengthM, model.beamM) * 0.4
-        : Math.max(handle.widthM, handle.heightM) * 0.35);
-    handle.shadow.scale.set(shadowRadius, shadowRadius, 1);
-    handle.shadow.position.set(spec.x, groundY + 2, spec.z);
+    handle.shadow.position.set(x, groundY + 2, z);
+  }
+
+  /**
+   * The per-frame half of the sync: own hulls only, positions only. Runs
+   * while any hull still has ground to cover before the next Echo tick.
+   */
+  private placeUnits(nowMs: number): void {
+    for (const unit of this.units) {
+      const handle = this.unitHandles.get(unit.id);
+      if (handle === undefined) continue;
+      const at = this.motion.at(unit, nowMs, this.drawn);
+      this.placeHandle(handle, at.x, at.y, at.depth, this.headings.get(unit.id) ?? 0);
+    }
   }
 
   private syncEntities(): void {
@@ -913,14 +960,19 @@ export class PerspectiveView {
         this.unitHandles.delete(id);
       }
     }
+    const now = performance.now();
     for (const unit of this.units) {
+      // Between ticks, not at the last one (#429): a sync that lands mid-glide
+      // — a zoom, a snapshot — must not yank the hull to the newest sample
+      // and back.
+      const at = this.motion.at(unit, now, this.drawn);
       this.syncEntity(this.unitHandles, this.unitGroup, unit.id, {
         spriteKey: `unit:${unit.kind}:${this.faction}:${ACTIVE_PALETTE.name}`,
         canvas: hullSpriteCanvas(unit.kind, this.faction),
         sizeM: hullSpriteSizeM(unit.kind, this.faction),
-        x: unit.x,
-        z: unit.y,
-        depthM: unit.depth,
+        x: at.x,
+        z: at.y,
+        depthM: at.depth,
         yaw: this.headings.get(unit.id) ?? 0,
         dimmed: unit.silentRunning,
         modelDesc: { unit: unit.kind, faction: this.faction },
@@ -1045,6 +1097,10 @@ export class PerspectiveView {
     if (Math.abs(scale - this.drawScale) > 1e-3) {
       this.drawScale = scale;
       this.syncEntities();
+    } else if (this.motion.animating(now)) {
+      // Own hulls glide between Echo ticks (docs/ui-ux.md §12); contacts do
+      // not, and the chart owns those. A still fleet costs the frame nothing.
+      this.placeUnits(now);
     }
     renderer.render(this.scene, this.camera);
   }
