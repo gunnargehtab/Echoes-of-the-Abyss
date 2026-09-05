@@ -168,16 +168,132 @@ Silence-Debt
 - The Rift's social ledger for interrupting a listener: you owe the silence back, and you repay it by being quiet the next time that person listens (culture.md §5).
 - Informal in three factions and written down in the fourth (culture.md §5). At Sorrowgate it is neither: it is a condition of admission counted in seconds, and it is the mechanical form the silence order takes.
 
+The Setting's Proper Nouns
+
+The entries above are the ruleset's. The entries below are the world's, and they are here for the same reason: rule 1 of docs/README.md makes this document the place a term that means two things in two docs is resolved. Three such collisions are arbitrated here — the Sounding, the Descent, and Sufficiency — and the rest are terms five or more world docs use without any of them owning the definition.
+
+PC (Post-Collapse)
+
+- The Rift's calendar. Year 0 is the Salinity Collapse; the present of the game is **214 PC**. Everything before year 0 is the **Surface Age**, dated only in approximations — partly because the records were lost and partly because nobody down here is sentimental about it (timeline.md).
+- There is no other era, no other epoch, and no BC equivalent. A date without PC on it is not a Rift date.
+
+Tide
+
+- The Rift's short interval, standing where the hour stands elsewhere. "Three tides" is a working day and a bit; "every first tide" is a monthly obligation (culture.md §2).
+- Horizontal distance is stated in metres and immediately forgotten. **Depth** is stated in metres and never forgotten. Hours, days and weeks are not used in dialogue.
+
+The Mouth
+
+- The eleven-kilometre depression at **4,410 m** at the Rift's southern terminus — the floor of the setting, in every sense (world-map.md §3). It returns sonar pings *before they should arrive*, on a cycle measured at 43 hours from 88 PC and at 39 hours since 213 PC (timeline.md).
+- **Described, measured, never explained.** No character and no line of narration is ever authoritatively correct about what it is (culture.md §6). Characters may speculate, contradict each other, and be wrong. This entry stops where the bible stops.
+- Each faction has an incompatible relationship to it: the Consortium files for mineral rights, the Commune calls it a wound, the Directorate attends it, and the Knights are building something to answer it (world.md).
+
+Debt-Berth
+
+- The Consortium contract that trades berth space for obligation, first recorded in 11 PC and now covering roughly 40% of the Rift's population (timeline.md, factions.md). The Rift's dominant financial instrument.
+- The word *berth* alone now means obligation everywhere, including among people who have never signed one (culture.md §2). "He married dry" is about the same economy from the other end.
+- The Directorate has no debt and despises the instrument — which is what makes shallow-band labour, the posting for the 8% of each intake who cannot hold their band, the one job in the Directorate that resembles it (factions.md; see The Shallow Band).
+
+Halvard
+
+- A pre-Collapse habitat at 1,600 m on the west wall that imploded in **14 PC**: the Rift's founding grave. Bathyarch salvage — not yet a government, not yet chartered — recovered the bodies, and was chartered five years later on the strength of it (timeline.md).
+- The wreck has been left exactly as the salvors closed it. By unspoken agreement across all four powers, Halvard is not entered, not mined, and not built within a kilometre of (world-map.md §3).
+- **Sound:** none. Crews cut engines passing it, which in the Rift is what reverence is.
+
+Ninefold Vein
+
+- The Consortium's founding vent field and the one on the corporate seal: nine vents on a fault line at 900–1,400 m on the west wall, producing decades before year 0 (world-map.md §3).
+- In **terminal decline since 209 PC**, with an internal actuarial projection of eleven years to insolvency without a new field. That projection, and not ambition, is why the Consortium is at the Rim in 214 PC (factions.md).
+
+The Thermal Grid
+
+- The pipe-and-cable spine built in **71 PC** along the west wall, linking the major vent fields and carrying heat and power to every habitat that pays for *draw* (world-map.md §3, economy.md).
+- Whoever runs the grid runs the air, and everyone understood this immediately when it was built (timeline.md). The Consortium runs the grid.
+
+Sorrowgate
+
+- Two things at once, and most sentences mean both. The **drowned city** is the Surface Age's one attempt at a permanent deep colony — a transit line, a passenger terminus, and a hydrophone array larger than anything built since — half-finished at year 0, which took the descent's whole weight and fell in some year nobody kept. Its own name did not survive it; the Rift calls the ruin Sorrowgate, after the gate its dead went through (world-map.md §3).
+- The **Sorrowgate Arbitration Court** is inside it: a collapsed transit dome at 1,500 m, under the thermocline, where Arbiter Mosk Halloran has kept the Rift's only neutral record since **165 PC**. All four powers use it; all four deny using it (mission-sorrowgate.md).
+- Unqualified, *Sorrowgate* means the court unless the context is geography. The city is *the drowned city* when the two need separating.
+
+The Undermarshalcy
+
+- The Abyssal Directorate's military-theocratic command structure, constituted in **104 PC**, headed by the Undermarshal and seated at Sufficiency — cut into the north wall at the head of the Ninth Trench, facing the Cantorate across it (factions.md, habitats.md §6).
+- The Directorate's own word for itself in the third person, alongside *the cohorts* and *those below* (culture.md §3). A faction voice that says "the Undermarshalcy has decided" is not naming a building.
+
+The Cantorate
+
+- The body beneath the Undermarshalcy that manages the Deep Choir, seated on Sufficiency's south wall (factions.md, habitats.md §6). Its officers are **Cantors**, who are also a structure in play: a Cantor projects a 1,200 m listening dome (units.md).
+- Its careful institutional position is that the Mouth **must be attended, never understood** — and Korrin's crisis is that she can no longer hold it without lying (factions.md).
+
+The Deep Choir
+
+- The Directorate's state religion: *attending* to the Mouth. Not a choir in the musical sense and not a body of people — the Cantorate is the body; the Choir is the practice and what the practice is addressed to.
+- Its central rite is **attendance**: a shift spent listening down the trench toward the Mouth's return cycle and recording, without interpretation, what you dreamt. Compulsory, unpaid, and universally described by Directorate citizens as the best part of their month (culture.md §5).
+- The dream transcripts run to 6,000 pages since 88 PC, are collected in Sufficiency's attending galleries, and are published nowhere (world-map.md §3).
+
+The First Chord · The Second Chord
+
+- The **First Chord** is the instrument raised at the First Chapter-House (2,900 m) in **178 PC** and aimed down the trench axis into the Mouth — the one alignment in the Rift where PF 1.6 water carries a transmission that far. It transmitted, and a reply arrived **forty-one seconds early**. Three technicians never regained speech; they began to write, and have not stopped (timeline.md, world-map.md §3).
+- The **Second Chord** is what the Order is building to transmit something *structured* — a message rather than a tone. It requires more resonant crystal than exists in Knight territory, which is what points the Order at the Mouth's rim deposits and makes 214 PC a war rather than a project (factions.md).
+- Both are instruments, not places and not chapter-houses. *The Second Chord* is also the name of the Knight campaign and of its seventh mission (campaign.md §7).
+
+The Sounding
+
+- **The Sounding of 141** is the event: the only joint expedition in the Rift's history, up through the Lid in sealed hulls for three tides on the surface. It found white water to the horizon, air breathable on a good wind, and nothing to eat, nothing to burn and nothing to hear. Its four-hour hydrophone record is the real report and the reason there was never a second expedition; after it, *when do we go back* left the Rift's politics and did not return (world.md, timeline.md).
+- A **Sounding Spire** is a Hadron Knight structure, granting allied units **+1 PR within 600 m** — depth access as a support ability (factions.md).
+- The two share a verb rather than a subject: *to sound* is to measure by listening (culture.md §1). Unqualified, *the Sounding* is the 141 PC expedition; the structure is always named in full.
+
+The Descent
+
+- **The Descent**, capitalised and dated, is the era **0 to 50 PC**: the rout downward and the overload decades after it (timeline.md).
+- **The descent**, uncapitalised, is the universal funeral rite: all four cultures commit their dead to water below their own habitation, for four incompatible reasons and by four incompatible methods (culture.md §5).
+- The era takes the article and a date; the rite takes neither. A line that could be read either way should carry the years.
+
+Sufficiency
+
+- **Sufficiency** is the Directorate's seat: terraced galleries cut into the slope at the head of the Ninth Trench, **2,750–3,400 m**, housing the Undermarshalcy, the Cantorate, and the largest population in the deep (world-map.md §3, habitats.md §6).
+- **Sufficient** is the Directorate's highest word of praise — *"You were sufficient"*, said without sarcasm and heard as praise (culture.md §3).
+- This is a pun the Directorate made on purpose: the city is the word turned into an address, and it means it. Capital S with no article is the place; the adjective is the praise. Not a collision to remove.
+
+Offices and Titles
+
+- Address is by title in all four cultures, and getting a title wrong is a real error rather than a small one (culture.md §4).
+- **Tidespeaker** (Commune) — the rotating coordinator of the bloom-collectives, with almost no unilateral authority. Outsiders keep treating it as *head of state*, which is precisely the misunderstanding the Commune is built on. Ysolde Marr holds it.
+- **Bloomwright** (Commune) — the office of a programme lead on the plateaus. Sefa Anholt is the Deepbloom Bloomwright.
+- **Executor** (Consortium) — the title carried by a member of the Ninth Board. Odile Varr-Kest is an Executor and chairs the Board; the two are not the same fact.
+- **Undermarshal** (Directorate) — the head of the Undermarshalcy. Setha Korrin holds it.
+- **Cohort-Prime** (Directorate) — the field commander of a trench cohort. Adze commands the 9th Trench Cohort, the deepest standing formation in the Rift.
+- **Choirmaster** (Knights) — the coordinator of the nine chapter-houses. Ivane Sull holds it, and the Order's centre moved to her house with her.
+- **Chapter-Master** (Knights) — the head of one chapter-house. Halden Vrey holds the Third.
+- **Arbiter** (Sorrowgate) — the presiding officer of the Arbitration Court, and the only title here belonging to no faction. Mosk Halloran holds it.
+- Knight and court usage puts the title before the name and keeps it there; a Knight is *Choirmaster Sull* in the third sentence as well as the first.
+
+Doctrine Names
+
+- One per faction, and a set: each names that faction's answer to noise, and no two are the same *kind* of answer (factions.md).
+- **The Klaxon** (Bathyarch Consortium) — stealth as a rounding error. The loudest units in the game, built to survive being heard: **+12% damage while SIG > 60**.
+- **The Veil** (Pelagia Commune) — the lowest SIG in the game. They harvest at 18 SIG where others harvest at 50, and Silent Running costs them only −20% speed.
+- **The Listening** (Abyssal Directorate) — the best hydrophone ratings by a wide margin: Directorate units resolve one tier higher than anyone else, and their Cantors project 1,200 m domes.
+- **The Score** (Hadron Knights) — sound as a weapon rather than a liability: high SIG, aimed. The term in the formula is Directional Signature, above.
+- Used as bare nouns in faction voice — *the Klaxon posture*, *under the Veil* — and never as the name of a unit, structure or ability.
+
 Related
 
-- systems-echo.md — the Echo Layer and detailed detection rules
-- systems-depth.md — depth bands, PR, and pressure mechanics
-- units.md — per-unit SIG, HYD, and PR values
-- audio-direction.md — audio mix and player perception
-- ui-ux.md — how resolution tiers are rendered and read
-- bestiary.md — fauna as listeners, and what SIG attracts
-- economy.md — resources, the noise curve, and per-faction economies
-- game-identity.md — the match loop, the win condition, and scuttling
-- campaign.md — missions, briefings, objectives, and how one ends
-- mission-sorrowgate.md — the prologue, where the silence order is set out with its numbers
-- mission-aptitude.md — the Knights' first mission, where directional signature is worked in full
+- [systems-echo.md](systems-echo.md) — the Echo Layer and detailed detection rules
+- [systems-depth.md](systems-depth.md) — depth bands, PR, and pressure mechanics
+- [units.md](units.md) — per-unit SIG, HYD, and PR values
+- [audio-direction.md](audio-direction.md) — audio mix and player perception
+- [ui-ux.md](ui-ux.md) — how resolution tiers are rendered and read
+- [bestiary.md](bestiary.md) — fauna as listeners, and what SIG attracts
+- [economy.md](economy.md) — resources, the noise curve, and per-faction economies
+- [game-identity.md](game-identity.md) — the match loop, the win condition, and scuttling
+- [campaign.md](campaign.md) — missions, briefings, objectives, and how one ends
+- [mission-sorrowgate.md](mission-sorrowgate.md) — the prologue, where the silence order is set out with its numbers
+- [mission-aptitude.md](mission-aptitude.md) — the Knights' first mission, where directional signature is worked in full
+- [world.md](world.md) — the Collapse, the Lid, the Sounding, and the Mouth
+- [world-map.md](world-map.md) — the gazetteer every place named above is an entry in
+- [habitats.md](habitats.md) — inside those places: berths, light, air, and the hush
+- [timeline.md](timeline.md) — the PC calendar and every year cited above
+- [culture.md](culture.md) — tides, titles, the five registers, and the writing guide
+- [factions.md](factions.md) — the four doctrines, in institutional detail

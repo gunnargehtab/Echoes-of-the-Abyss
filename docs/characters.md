@@ -208,7 +208,7 @@ The Order's best field officer and its most ordinary person — a soldier, not a
 
 Runs the Rift's only functioning neutral court out of a collapsed transit dome. All four powers use it, all four deny using it. Halloran's authority rests on nothing but the fact that everybody needs somewhere to swap prisoners.
 
-**Campaign role:** hub character, quest-giver, and the only person who can get all four commanders in one room.
+**Campaign role:** the prologue's arbiter and the Rift's neutral record — not a hub. The built campaign has none: the four campaigns are played apart and converge on the same eleven kilometres from four directions in the same week, never at the same table ([campaign.md](campaign.md) §8). What Halloran is, is the one register in the setting that describes a room without joining it, and the one person all four powers will be read to by.
 
 **Voice:** the fifth register — [culture.md](culture.md) §3, *the language of the record*. He is heard at length exactly once, in the prologue ([mission-sorrowgate.md](mission-sorrowgate.md) §12).
 
@@ -224,4 +224,9 @@ Alive at 2,900 m. They do not speak. They **write**, continuously, and have for 
 
 ## Related
 
-- **[factions.md](factions.md)** · **[campaign.md](campaign.md)** · **[culture.md](culture.md)** · **[habitats.md](habitats.md)** — the cities these depths of birth are berths in
+- **[factions.md](factions.md)** — the institutions these twelve run, and the four crises they are running into
+- **[campaign.md](campaign.md)** — the missions each of them is in, and the four endings none of them ranks
+- **[culture.md](culture.md)** — the five registers these people speak, and the titles they are addressed by
+- **[habitats.md](habitats.md)** — the cities these depths of birth are berths in
+- **[world-map.md](world-map.md)** — the gazetteer every quoted depth of birth is an address on
+- **[timeline.md](timeline.md)** — the years behind *already paid*: Kell, the Enclosure, Deepbloom, the crystal raids

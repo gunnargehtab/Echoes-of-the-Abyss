@@ -216,3 +216,9 @@ The First Chord's three mute technicians are alive, in a chapter-house at 2,900 
 - **[units.md](units.md)** — full rosters
 - **[art-direction.md](art-direction.md)** — silhouette and palette law
 - **[campaign.md](campaign.md)** — how these crises collide
+- **[world.md](world.md)** — the descent that produced all four, in a paragraph each
+- **[world-map.md](world-map.md)** — the ground each holds: the plateaus, the west wall, the Fields, the trench country
+- **[habitats.md](habitats.md)** — inside their cities: the Holding, the plateaus, the chapter-houses, Sufficiency
+- **[timeline.md](timeline.md)** — 19, 33, 52 and 118 PC, and the four crises dated
+- **[culture.md](culture.md)** — the register each doctrine is argued in
+- **[glossary.md](glossary.md)** — the Klaxon, the Veil, the Listening and the Score, defined as a set

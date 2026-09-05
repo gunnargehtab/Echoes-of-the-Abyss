@@ -40,6 +40,7 @@ Somewhere in these decades the old city fell in — the dome, the arch, the line
 | Year | Event |
 | --- | --- |
 | 0–9 PC | Uncontrolled migration into the Rift. Habitat capacity is exceeded roughly fourfold |
+| 9 PC | **Face Two opens** on the Ninefold Vein, the second-oldest working on the field. It is still producing in 214 PC, and its seam is done ([mission-shift-change.md](mission-shift-change.md) §1) |
 | 11 PC | First recorded use of debt against berth space — the practice that becomes debt-berth |
 | **14 PC** | **Halvard implodes.** A pre-Collapse habitat at 1,600 m fails catastrophically. The Bathyarch salvage combine — not yet a government, not yet chartered — recovers the bodies. Two centuries later the Consortium is still willing to bring it up |
 | **19 PC** | **The Bathyarch Consortium is chartered** as a vent-field concession, on the strength of the Halvard salvage. It has never formally acknowledged becoming a government |
@@ -65,14 +66,14 @@ Somewhere in these decades the old city fell in — the dome, the arch, the line
 
 ---
 
-## The Long Arrangement — 120 to 195 PC
+## The Long Arrangement — 120 to 197 PC
 
-Seventy-five years without a general war, for one reason: **acoustic parity**. Every faction could hear every mobilisation, and no offensive could be prepared in silence. Historians of the Rift call it peace. Soldiers call it what it was — four powers holding still because none of them could move first without being heard.
+Seventy-seven years without a general war, for one reason: **acoustic parity**. Every faction could hear every mobilisation, and no offensive could be prepared in silence. Historians of the Rift call it peace. Soldiers call it what it was — four powers holding still because none of them could move first without being heard.
 
 | Year | Event |
 | --- | --- |
 | 121 PC | First Baffle installed at a Consortium refinery: the beginning of masking as an industry, and the first crack in parity |
-| ~140 PC | Chapter-houses are built into Resonance Fields, each a physical instrument. The Knights become the only faction working resonant crystal |
+| ~140 PC | Chapter-houses are built into Resonance Fields, each a physical instrument, **numbered First through Ninth in the order they were founded**. The Order founded deep and grew shallower, so the First at 2,900 m is the oldest and the Ninth at 1,900 m the youngest — the Order's whole doctrine in one architectural fact ([world-map.md](world-map.md) §3). The Knights become the only faction working resonant crystal |
 | **141 PC** | **The Sounding of 141.** The only joint expedition in the Rift's history goes up through the Lid in sealed hulls and spends three tides on the surface. It finds white water, breathable air on a good wind, and nothing to eat, nothing to burn, nothing to hear. The hydrophone record — four hours of a dead ocean — is the real report; the Directorate keeps a copy, and nobody plays it twice. *When do we go back* leaves the Rift's politics and does not return ([world.md](world.md)) |
 | 165 PC | The **Sorrowgate Arbitration Court** opens in a collapsed transit dome. All four powers use it. All four deny using it |
 | **178 PC** | **The First Chord** is completed and transmits into the Mouth. A reply arrives **forty-one seconds early**. Three technicians never regain speech. They begin to write, and have not stopped |
@@ -81,7 +82,7 @@ Seventy-five years without a general war, for one reason: **acoustic parity**. E
 
 ---
 
-## The Present Crisis — 195 to 214 PC
+## The Present Crisis — 197 to 214 PC
 
 Four unrelated institutional problems become terminal within twenty years of each other. Nobody planned the convergence, which is exactly why nobody can stop it.
 
@@ -91,11 +92,25 @@ Four unrelated institutional problems become terminal within twenty years of eac
 | **199 PC** | The **Kelp Enclosure standoff**. Tidespeaker Marr has the votes to authorise armed defence and does not call for them. Her partner is among the dead |
 | **204 PC** | **Deepbloom.** Bloomwright Sefa Anholt proves engineered algae can seed at 2,200 m — habitable depth can be *manufactured*. The single most important scientific result in two centuries |
 | 205 PC | The Directorate states, in writing, that a second seeding constitutes an act of war. The Commune files the letter and continues the programme |
+| 205 PC | From the letter onward, a **Directorate cohort stands north of the trenches** for the first time — the Second Trench Cohort, attending Commune ground rather than holding a band ([mission-in-writing.md](mission-in-writing.md) §5) |
 | **206 PC** | Foreman Corwin Osk refuses a rushed shoring order at Ninefold. The Board demotes him two grades. The shoring holds; eleven people are alive who would not be |
 | **209 PC** | **Ninefold Vein enters terminal decline.** Internal actuarial projection: eleven years to insolvency without a new field. Item 9 is read by a fourth Board member |
 | **211 PC** | The **crystal raids**. Knight losses include an entire junior cadre — nineteen Knights, unreplaceable. Voice Ren Kalliso commands the survivors |
 | **213 PC** | **The Mouth's cycle shortens from 43 hours to 39.** The 96 PC transcript predicted it, to the hour. Undermarshal Korrin reads the prediction and the measurement on the same evening |
 | **214 PC** | **Present.** The Commune schedules a second seeding. The Consortium models a short war as cheaper than a slow collapse. Sull calculates a window for the Second Chord and has a raid plan on her desk she has not authorised. Korrin prepares for something she cannot name |
+
+---
+
+## Undated
+
+Four events the rest of the bible asserts as history and dates nowhere. They are carried here because a reader who looks for them should find them, and they are carried as *undated* because this document's rule is that a row is dated from what the docs already assert and never from what would be convenient — the same rule that leaves the drowned city's fall in some year nobody kept.
+
+| Year | Event |
+| --- | --- |
+| *undated* | **Ivane Sull is elevated to Choirmaster.** The Order's centre moves with her to the Ninth Chapter-House, the youngest of the nine, and has stayed there ([world-map.md](world-map.md) §3, [habitats.md](habitats.md) §5) |
+| *undated* | **Fivewell is drilled** — the youngest producing field on the west wall, shallower and smaller than Ninefold, and the thermal grid's second pillar. Drilled by the book, after Ninefold taught the book ([world-map.md](world-map.md) §3) |
+| *undated* | **The Deepbloom radicals emerge** as a minority faction on the plateaus, holding that the Rift should be terraformed whether the Directorate consents or not. Downstream of the 191 PC programme and still growing in 214 PC; the Commune, which does not classify things, has also never dated it ([factions.md](factions.md)) |
+| *undated* | **The chapter-houses' order of founding** is First through Ninth, the Order founding deep and growing shallower. Only the ~140 PC row above dates the building at all, and it dates the practice rather than any one house ([world-map.md](world-map.md) §3) |
 
 ---
 

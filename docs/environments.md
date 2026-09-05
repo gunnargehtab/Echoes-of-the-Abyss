@@ -24,7 +24,7 @@ Every biome is also an acoustic space: terrain sets how far sound travels under 
 | Kelp Forest Plateaus | **0.55** | Absorption muffles movement — the stealth biome |
 | Abyssal Trenches | **1.60 (axial)** | Trench walls channel sound impossibly far down the axis — no secrets, only distances |
 | Resonance Fields | **0.70 (scattered)** | Bearings lie by up to ±30° and read up to 15% long; a ping returns one to three false contacts ([systems-echo.md](systems-echo.md) §3, "Scattered water") |
-| Coral Ruins | **0.80 (occluded)** | Hard shadows behind structures — the only biome *specified* to change during a match, not yet built |
+| Coral Ruins | **0.80 (occluded)** | Hard shadows behind structures — the only biome that changes during a match, specified below and built |
 
 PF is a property of a *place*, and it is not the only thing that scales a signature. The **thermocline** at 1,200 m applies a second multiplier that no cell of the map carries, because it depends on the depths of both ends of the path: 0.3 across the layer, 1.2 along its duct, 1.0 otherwise. It multiplies the biome's PF rather than replacing it — crossing the layer inside a Thermal Vein is quieter than crossing it in open water. See [systems-echo.md](systems-echo.md) §3.
 
@@ -156,25 +156,22 @@ ground as it *is*; one that was already here is sent the difference.
 [campaign.md](campaign.md) §10 states the same fact from the mission side; the two lines
 move together.
 
-### Toxic Brine Zones
+### Not Biomes — three seed-batch entries, and where each went
 
-- Greenish fog
-- Chemical waste barrels
-- Damaged fauna
-- Slow damage over time
+The Rift has **five biomes and no others**: the four above plus Coral Ruins, which is the set
+[world-map.md](world-map.md) builds its regions from and the set the `Biome` enum carries. An
+early draft of this document listed three more. None of them ever got a PropagationFactor, a
+region on the chart, or a map archetype, because none of them is a *place with a sound* — they
+are a hazard, a lighting rule and a dressing pass, and each already has an owner:
 
-### Bioluminescent Caverns
+| Seed-batch entry | What it actually is | Where it lives now |
+| --- | --- | --- |
+| **Toxic Brine Zones** | A hazard, not terrain: it moves, it expires, and it damages over time | [hazards.md](hazards.md) §2 (Toxic Brine Clouds) and §7 (Chemical Spill Zones) |
+| **Bioluminescent Caverns** | Two things at once — a lighting rule, and a roofed passage. A cavern is a **ceiling**, which is map data every biome can carry, and the glow is the global light rule this document already states | *Lighting & Atmosphere Guide*, below; [maps.md](maps.md) for ceilings; [glossary.md](glossary.md), "Ceiling" |
+| **Industrial Scrap Fields** | A dressing pass on ground that belongs to somebody: wrecks and dead pipelines are the west wall's industry and the drowned city's works | *Environmental Storytelling*, below; [world-map.md](world-map.md) §3 |
 
-- Glowing flora
-- Soft blue/pink lights
-- Peaceful but eerie atmosphere
-
-### Industrial Scrap Fields
-
-- Submarine wrecks
-- Rusted pipelines
-- Floating debris
-- High-risk navigation
+Adding a sixth biome is a real decision — it means a PF, a region on Plate VII, a place in the
+gazetteer, and an argument about sound. It is not a mood board entry.
 
 ## Lighting & Atmosphere Guide
 
@@ -232,14 +229,40 @@ move together.
 
 ### Techniques
 
-- Abandoned mining rigs → Bathyarch overreach
-- Coral-covered ruins → Pelagia reclamation
+- Abandoned mining rigs → Consortium overreach, and the west wall's own history: a field is
+  worked until it is finished and then left on the registry, because the concern does not strike
+  assets ([world-map.md](world-map.md) §3)
+- Coral-covered ruins → **the Surface Age's works, not anybody's reclamation.** Coral Ruins are
+  the drowned city and the dead stations of before year 0, overgrown in two centuries of coral
+  and algae. Neutral ground is ruined ground: the places the factions share are the places none
+  of them built ([world-map.md](world-map.md) §3, §6). A ruin that reads as a Commune garden
+  taking a city back is the one story this biome must not tell
+- Wrecks and dead pipelines → industry that stopped, wherever it stopped. Ordinary on the west
+  wall, and a grave at Halvard, which is entered by nobody and passed with engines cut
 - Chitin growths → Directorate bio-engineering
 - Crystal shrines → Hadron rituals
 
-### Campaign Hooks
+### The Campaign, on this ground
 
-- Collapsing vent fields
-- Toxic spill disasters
-- Abyssal creature migrations
-- Crystal resonance storms
+The four campaigns are written and each is placed on a region of the chart rather than on a
+biome in the abstract — the Vein and the Holding on the west wall, the plateaus and the
+Enclosure in the north, Sufficiency and the Ninth Trench in the south, the Fields and the
+chapter-houses on the east slope, and the Rim below all of it four times over
+([world-map.md](world-map.md) §5, [campaign.md](campaign.md) §8).
+
+What this document owes them is the **acoustic politics of the ground**: a mission set on the
+west wall is loud before anyone fires, and one cut from the plateaus is quiet enough that any
+noise is an event. Placing a mission on this geography is choosing what its silence costs.
+
+---
+
+## Related
+
+- **[world-map.md](world-map.md)** — the regions these biomes make up, and the named places in them
+- **[systems-echo.md](systems-echo.md)** — PropagationFactor in the detection formula, scattered water, and the thermocline
+- **[hazards.md](hazards.md)** — the eight hazards that move over this terrain, brine and spills among them
+- **[bestiary.md](bestiary.md)** — the Drift that lives here, and how a biome is killed
+- **[maps.md](maps.md)** — the six archetypes cut from these regions, and how a map is authored
+- **[campaign.md](campaign.md)** — the missions placed on this ground, and the mid-match biome change §10 states from the mission side
+- **[art-direction.md](art-direction.md)** — palette, silhouette law, and the readability rules above in full
+- **[world.md](world.md)** — the setting these five places belong to

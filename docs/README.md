@@ -17,14 +17,14 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 
 | Doc | What it covers |
 | --- | --- |
-| **[world.md](world.md)** | The Pelagion Rift, the Salinity Collapse, the Mouth, culture and language |
+| **[world.md](world.md)** | The front door to the setting: one valley holding everyone, the Collapse, the Lid, why nobody goes back, the four powers, the Drift, and the Mouth |
 | **[timeline.md](timeline.md)** | Two centuries, from the Collapse to 214 PC, and the Mouth's anomaly log |
 | **[world-map.md](world-map.md)** | The Rift's geography: regions, the vertical order, every named place, and where the campaign happens |
 | **[habitats.md](habitats.md)** | Inside the cities: berths, light, air, the hush, and what each culture calls beautiful — the plateaus, the Holding, Sorrowgate, the chapter-houses, Sufficiency |
 | **[factions.md](factions.md)** | The four powers — doctrine, politics, weakness |
 | **[characters.md](characters.md)** | Twelve commanders and the neutrals |
 | **[culture.md](culture.md)** | How the Rift speaks — five registers, names, rituals, writing guide |
-| **[campaign.md](campaign.md)** | 29 missions designed, four campaigns, four irreconcilable endings — the Consortium's seven, convergence and ending included, are specified and built, and 28 of the 29 now have a document of record |
+| **[campaign.md](campaign.md)** | 29 missions designed, four campaigns, four irreconcilable endings — the Consortium's seven, convergence and ending included, are specified and built, and all 29 now have a document of record |
 | **[mission-sorrowgate.md](mission-sorrowgate.md)** | The prologue, specified: the court, the flight, the silence order, the ping, and what answers it |
 | **[mission-asset-recovery.md](mission-asset-recovery.md)** | The Ledger 1, specified: Face Six, the manifest, the taps, and the Klaxon posture |
 | **[mission-shift-change.md](mission-shift-change.md)** | The Ledger 2, specified: the throttle handed over, a filed audit, and the layer as cover |
@@ -53,6 +53,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | **[mission-conclave-chord.md](mission-conclave-chord.md)** | The Second Chord 4, specified: no room and nine at once, a defence you are meant to almost lose, and a vote Vrey is heard not calling |
 | **[mission-the-three.md](mission-the-three.md)** | The Second Chord 5, specified: the First at 2,900 m, twelve minutes without combat, and the transcripts the Choirmaster reads alone |
 | **[mission-rim-deposits.md](mission-rim-deposits.md)** | The Second Chord 6, specified: the raid the crystal makes unavoidable, extraction under fire, and the Order's convergence slot on D+2 of the rim week |
+| **[mission-second-chord.md](mission-second-chord.md)** | The Second Chord 7, specified: thirty seconds bought with the lattice, the Choirmaster come down to play them, and the last of the four endings |
 
 ## Gameplay
 
@@ -71,7 +72,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | Doc | What it covers |
 | --- | --- |
 | **[art-direction.md](art-direction.md)** | Palettes, shape language, silhouette law, Echo Layer UI requirements |
-| **[three-layer-ocean.md](three-layer-ocean.md)** | The presentation revision: WC3-lineage perspective camera, the visible seabed, band navigation, and the Lid proposal |
+| **[three-layer-ocean.md](three-layer-ocean.md)** | The presentation revision: WC3-lineage perspective camera, the visible seabed, band navigation, and the Lid — proposed in §7 and adopted |
 | **[graphics-standards.md](graphics-standards.md)** | The acceptance bar: pipeline of record, seven shipping gates, art PR checklist |
 | **[audio-direction.md](audio-direction.md)** | The mix as the primary information channel; tier sonification |
 | **[ui-ux.md](ui-ux.md)** | The Echo Layer HUD, sonar scope, ping preview, esc menu, accessibility |
@@ -99,7 +100,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 
 ## Planned / Not Yet Written
 
-One forward reference remains: `concept-art/DESIGN-PHILOSOPHY.md`, linked from the root README, which would set out the Pressure Cartography visual language behind the four survey plates.
+One forward reference remains: `concept-art/DESIGN-PHILOSOPHY.md`, which would set out the Pressure Cartography visual language behind the five survey plates. The root README used to link it and no longer does — the link gate covers `docs/**` only, so a dead link there is invisible to CI and had to be found by hand. Until the document exists, [art-direction.md](art-direction.md) carries the plate table.
 
 The prologue and all twenty-eight of the campaign's missions are built — a document of record,
 a literal, a map and a test file each — and so are the four systems that stood behind them:
