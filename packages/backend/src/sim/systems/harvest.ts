@@ -286,7 +286,13 @@ export function harvestSystem(world: SimWorld): void {
           Owner.faction[eid] === Faction.Hadron ? HADRON.CRYSTAL_YIELD_MULTIPLIER : 1;
         economy.crystal += Harvester.cargo[eid]! * efficiency;
       } else {
-        economy.nodules += Harvester.cargo[eid]!;
+        // SPEC — docs/economy.md §6: the Order banks half the nodules per
+        // load. The same shape as the crystal premium above, in the other
+        // direction, and for the same reason it is applied here: the field
+        // depletes by what the hold holds, and the trip costs what it costs.
+        const yieldRate =
+          Owner.faction[eid] === Faction.Hadron ? HADRON.NODULE_YIELD_MULTIPLIER : 1;
+        economy.nodules += Harvester.cargo[eid]! * yieldRate;
       }
       // Industrial hum, at the depot and scaled by what actually arrived —
       // measured in Standard holds, so an Overburden delivery pushes it 1.4

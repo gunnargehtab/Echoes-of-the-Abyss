@@ -606,6 +606,27 @@ cost more exposure — that is the trade — and the tracked seconds did not shi
 buying them nothing measurable, which is the claim the ninety-second cap is built on rather
 than merely an argument for it.
 
+**And it does not place a bet it cannot win**, which is the rule the cap was standing in for.
+The ninety seconds were the commander finding out, at 46% of its income, that the bearing was
+being held on something its haulers' throttle has no say over — and it could have known that
+before paying, because its own SIG is its own information. A Nodule Refinery idles at 65
+([economy.md](economy.md) §3 puts a hauler working at Standard at 45), it is the first thing
+the commander builds, and it stands beside the field the haulers work: from the moment it is
+laid, no spell of Trickle will ever make a bearing on that base go away. So the watch reads
+the loudest thing the throttle does not govern — every structure, every hull that is not a
+harvester — against what a hauler sounds like working, and while the first is the louder it
+keeps its income and lets the bearing stand. Once matches started deciding (#440) this was
+what the duel batches had been reading as the quiet navies starving against a loud one
+(#454): the Commune and the Directorate were below Standard for 60–72% of every match, at
+half an economy, buying nothing, and the Knights won 80–100% of their duels against both. On
+the same seeds the rule takes the Commune from 0% to 70% against the Knights and from 0% to
+50% against the Consortium, the Directorate from 0% to 70% against the Knights, and in the
+four-faction baseline the four win rates go from 63 / 0 / 0 / 38 to 31 / 12 / 15 / 42 with
+the quiet navies throttled down for 4% and 0% of their time instead of 66% and 60%. The
+tracked seconds, again, barely move. The response is still in the doctrine and still fires —
+in the opening, before the Refinery is up, when the haulers really are the loudest thing a
+sweep can hear — which is exactly the window a first scout arrives in.
+
 It **manoeuvres in depth**, and for most of this file's life it did not. That was a deliberate
 omission before the thermocline — depth had no acoustic consequence, so an AI diving for
 stealth would have been modelling a mechanic the simulation did not have — and a real gap
