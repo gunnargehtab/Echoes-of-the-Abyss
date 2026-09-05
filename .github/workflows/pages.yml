@@ -34,10 +34,11 @@ on:
   # Issue state is half the page, and it changes without any push at all.
   issues:
     types: [closed, reopened, edited]
-  # So does the merged-PR count on the stat tiles.
-  pull_request:
-    types: [closed]
-    branches: [main]
+  # No `pull_request: closed` trigger, though the merged-PR count is on the
+  # page: that event runs the workflow at the PR's own ref, and the
+  # github-pages environment only admits main, so its deploy is refused —
+  # and on the way it cancels the push run that would have succeeded, since
+  # both share the concurrency group. The daily schedule carries the count.
   # A backstop for anything the events above miss.
   schedule:
     - cron: '0 6 * * *'
