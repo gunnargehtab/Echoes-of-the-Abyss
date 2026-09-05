@@ -36,11 +36,28 @@ export class SpatialHash {
   /**
    * Drop all entries but keep the bucket arrays allocated — the grid is
    * rebuilt every tick, and reusing the arrays keeps this off the GC's radar.
+   *
+   * A bucket that is *already* empty here was not used in the whole rebuild
+   * since the last clear, and is released. Buckets were never released at
+   * all, and on a large map every cell a hull had ever crossed stayed in the
+   * table for the rest of the match — which is not a leak worth the name,
+   * but `queryRadius` reads `cells.size` as "how many cells are occupied" to
+   * decide when sweeping the buckets beats walking the rectangle, and a
+   * table padded with the ghosts of every past position made that heuristic
+   * choose the rectangle walk long after the sweep had become cheaper. One
+   * empty cycle is the right grace: a hull that leaves a cell and comes back
+   * next tick keeps its array, and everything else goes.
    */
   clear(): void {
-    for (const bucket of this.cells.values()) {
-      bucket.length = 0;
+    for (const [k, bucket] of this.cells) {
+      if (bucket.length === 0) this.cells.delete(k);
+      else bucket.length = 0;
     }
+  }
+
+  /** How many cells hold a bucket — the number `queryRadius` weighs its sweep by. */
+  get bucketCount(): number {
+    return this.cells.size;
   }
 
   insert(entity: number, x: number, y: number): void {

@@ -195,6 +195,17 @@ number, not an impression, and a test sums the registry's worst case over the sh
 maps so the reservation cannot be exceeded by accretion. Terrain never rebuilds
 per frame: props rebuild only when the ground does.
 
+The fleet's depth cues follow the same rule (#434). Every own hull hangs over a ground
+shadow on a plumb line — the cue that makes the water column readable — and each used to
+be its own line and its own disc: two draw calls per hull, ninety-six at the berth
+ceiling, against the one hundred and fifty the whole frame has. They are one
+`LineSegments` and one `InstancedMesh` now (`depthCues.ts`), two draw calls for the
+whole fleet, updated in place from wherever the hull is drawn; the probe's `drawCalls`
+is where the difference shows. And a ground delta no longer rebuilds the world: a
+collapsed span moves the vertices within a cell of itself and re-shades those cells
+and a ring on the seabed canvas the join baked, on the seed and the depth ramp the join
+set — so the arch falls and nothing else on the map re-textures.
+
 ### 7. Readability outranks richness
 
 RTS readability beats realism, at every zoom the camera allows: faction from silhouette,

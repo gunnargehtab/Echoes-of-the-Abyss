@@ -276,6 +276,14 @@ export interface SimWorld extends IWorld {
   /** Reused query buffer, so separation allocates nothing per tick. */
   separationBuffer: number[];
   /**
+   * Broadphase for hull-against-structure separation, rebuilt every tick from
+   * the standing structures. Its own grid rather than an entry in `unitGrid`
+   * because the two passes query different radii — a hull against the widest
+   * hull, and a hull against the widest footprint — and one grid holding both
+   * would hand each pass the other's candidates to reject.
+   */
+  structureGrid: SpatialHash;
+  /**
    * Broadphase for torpedo fuses, rebuilt each tick a torpedo is in the water.
    *
    * A third grid rather than a reuse of either of the others, for the reason
@@ -442,6 +450,7 @@ export function createSimWorld(
   world.maxEid = 0;
   world.unitGrid = new SpatialHash(SEPARATION.CELL_M);
   world.separationBuffer = [];
+  world.structureGrid = new SpatialHash(SEPARATION.CELL_M);
   world.fuseGrid = new SpatialHash(SEPARATION.CELL_M);
   world.fuseBuffer = [];
   world.orderQueues = new Map();

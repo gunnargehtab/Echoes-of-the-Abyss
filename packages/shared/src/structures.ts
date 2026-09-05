@@ -276,6 +276,15 @@ export function structureStatsFor(kind: StructureKind): StructureStats {
 }
 
 /**
+ * The widest footprint in the table, for broadphase queries that have to
+ * catch every structure a hull could be overlapping without knowing which.
+ * Derived rather than written so a new structure cannot fall outside it.
+ */
+export const MAX_STRUCTURE_RADIUS_M = Math.max(
+  ...Object.values(STRUCTURE_STATS).map((stats) => stats.radiusM)
+);
+
+/**
  * What each structure kind is allowed to produce — the classic tech split:
  * the Bastion can always rebuild an economy; combat hulls need a Foundry.
  * Shared because the server validates against it and the client's command

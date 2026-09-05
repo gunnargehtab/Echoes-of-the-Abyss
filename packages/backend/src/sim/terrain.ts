@@ -27,6 +27,7 @@ import {
   PROPAGATION_FACTOR,
   SCATTERED_BIOME,
 } from '@echoes/shared';
+import { FNV_OFFSET, mixU32 } from './fnv.ts';
 
 /**
  * One cell that changed after the match began.
@@ -200,6 +201,14 @@ export class Terrain {
    * cursor is an index into exactly this list.
    */
   private changes: TerrainCellChange[] = [];
+  /**
+   * `changes`, folded into one number as it is written — what `hashWorld`
+   * mixes in place of walking the list. Every field of every change goes in,
+   * in order, so two grounds with the same history digest alike and a beat
+   * that wrote a different cell, a different depth, or only a different biome
+   * (#259) reads as the divergence it is.
+   */
+  private digest = FNV_OFFSET;
   /**
    * The PF modifiers currently in force — the last set `applyPropagationModifiers`
    * was handed.
@@ -660,6 +669,11 @@ export class Terrain {
             ceilingM: this.ceiling[index]!,
             biome: this.biomes[index] as Biome,
           });
+          let digest = mixU32(this.digest, index);
+          digest = mixU32(digest, this.floor[index]!);
+          digest = mixU32(digest, this.ceiling[index]!);
+          digest = mixU32(digest, this.biomes[index]!);
+          this.digest = digest;
         }
       }
     }
@@ -839,6 +853,7 @@ export class Terrain {
    */
   markBaseline(): void {
     this.changes = [];
+    this.digest = FNV_OFFSET;
   }
 
   /** The cell writes a client at `revision` has not seen. */
@@ -852,6 +867,11 @@ export class Terrain {
    */
   get groundHistory(): readonly TerrainCellChange[] {
     return this.changes;
+  }
+
+  /** `groundHistory` as one number, kept up to date by every write. */
+  get historyDigest(): number {
+    return this.digest;
   }
 
   /** Flat copy of the grid, for shipping to the client. Terrain is public. */

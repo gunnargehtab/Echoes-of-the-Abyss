@@ -20,6 +20,7 @@
 
 import { defineQuery } from 'bitecs';
 import {
+  MAX_STRUCTURE_RADIUS_M,
   MAX_UNIT_RADIUS_M,
   SEPARATION,
   structureStatsFor,
@@ -157,12 +158,34 @@ function separateFromStructures(world: SimWorld, units: ArrayLike<number>): void
   const structures = blockers(world);
   if (structures.length === 0) return;
 
+  // Every hull against every structure was fine at one Bastion and a Foundry,
+  // and 8,000 pair tests a tick at a late-game four-seat match's 200 hulls
+  // and 40 structures, nearly all of them on opposite sides of the map. The
+  // grid is rebuilt from the structures rather than the hulls because there
+  // are far fewer of them and a hull's query then reads only the footprints
+  // it could actually be standing in. Candidates come back in grid order,
+  // which is a fixed function of the query order — deterministic, which is
+  // all a replay needs.
+  const grid = world.structureGrid;
+  grid.clear();
+  for (let j = 0; j < structures.length; j++) {
+    const s = structures[j]!;
+    grid.insert(s, Position.x[s]!, Position.y[s]!);
+  }
+  const buffer = world.separationBuffer;
+
   for (let i = 0; i < units.length; i++) {
     const a = units[i]!;
     const ra = unitRadiusM(Unit.kind[a] as UnitKind);
+    const near = grid.queryRadius(
+      Position.x[a]!,
+      Position.y[a]!,
+      ra + MAX_STRUCTURE_RADIUS_M,
+      buffer
+    );
 
-    for (let j = 0; j < structures.length; j++) {
-      const s = structures[j]!;
+    for (let j = 0; j < near.length; j++) {
+      const s = near[j]!;
       const sx = Position.x[s]!;
       const sy = Position.y[s]!;
       const dx = Position.x[a]! - sx;

@@ -38,6 +38,14 @@ import { eidOfLocalId } from './world.ts';
 
 /** The current replay wire format. Bump when a change breaks old files. */
 /**
+ * Newest first. Two of the numbers below carry two entries each: 12 and 11
+ * were both bumped on two branches that parted at 10 and merged together, so
+ * one on-disk version means both changes — a v11 file lacks the mission field
+ * *and* predates the hazard stagger, and a v12 file predates the ground hash
+ * *and* the pressure floor alike. The ledger used to list the second entry of
+ * each pair below 4, where it had been appended, which read as the numbers
+ * having gone backwards. They did not; they were shared.
+ *
  * 14: four commands a player did not have (#435) — attack-move, stop, hold
  * position and a yard's rally point — and one field a replayed hull carries
  * for them, its posture. None of them appears in a v13 file, so a v13 file
@@ -48,6 +56,12 @@ import { eidOfLocalId } from './world.ts';
  * lands its pushes through the same step check — a v13 recording on any map
  * with a plateau in a hull's way diverges at the first refused step.
  *
+ * 13: replays carry the Drift Health the map opened on. docs/campaign.md §2
+ * rule 5 lets a campaign mission start on ground an earlier mission wore down,
+ * and that grid decides which regions admit fauna at all (`spawnsAllowed`), so
+ * a v12 replay of a carried mission would seed a different Drift and diverge
+ * at the first checkpoint. Null is a first visit, and every skirmish.
+ *
  * 12: each navy carries the baseline Pressure Rating docs/systems-depth.md §3
  * publishes for it — Consortium 2, Commune 1, Directorate 3, Knights 2 — as a
  * floor on the hull's own rating. Directorate hulls are consequently rated
@@ -55,6 +69,21 @@ import { eidOfLocalId } from './world.ts';
  * commander no longer recalls its army for any contact near the Bastion, only
  * for one that has closed on it. Both change what happens on the first tick of
  * any match with those seats, so a v11 recording diverges immediately.
+ *
+ * 12, at the same time: the state hash includes the ground. Terrain became
+ * writable mid-match (#197) — a mission beat can collapse a span — so a replay that reproduced
+ * every hull perfectly while the arch fell on a different tick used to agree
+ * at every checkpoint. It no longer does. The layout is unchanged; this bump
+ * is about the rules, and a v11 file replayed under them would report a
+ * divergence at its first checkpoint that is really its own age.
+ *
+ * Still 12 after `spent` (#380): a mission replay may now carry the cadre ids
+ * the campaign had spent when it was played, so playback fields the same
+ * short party. Optional and absent-is-empty, and that default is *correct*
+ * for every v12 file recorded before the field existed — no roster was ever
+ * spent then, so none is the party those files were played with. A layout
+ * that gains a field whose absence reproduces the old match is not a new
+ * format.
  *
  * 11: every hazard is staggered across its own dormancy. The head start each
  * site gets into its wait used to be scaled by the eruption's 55 s whatever
@@ -66,6 +95,13 @@ import { eidOfLocalId } from './world.ts';
  * `ventfront-divide` carries only eruptions, whose dormancy *is* the 55 s, so
  * recordings on it are unaffected in substance and still refused, because a
  * replay that quietly means something else is worse than one that is refused.
+ *
+ * 11, at the same time: replays carry the mission they were played as, if
+ * any. A mission's authored forces and its beat schedule are installed by the Match
+ * constructor, so playback reproduces them from the id alone — but a v10
+ * replay of a mission would reconstruct an empty map and diverge on the first
+ * tick, and a v10 file cannot say which mission it was. The layout gained a
+ * field; the rules gained a second way a match can start.
  *
  * 10: shallow water poisons the Directorate. Their hulls run at 80% speed
  * above the Shelf line and bleed unhealable hull down to 85% of max while they
@@ -115,34 +151,6 @@ import { eidOfLocalId } from './world.ts';
  * unchanged — this bump is about the rules, not the format. A v3 recording
  * replayed under these rules diverges at its first crowded checkpoint, and
  * rejecting it names the real fault instead of reporting a determinism bug.
- *
- * 12: the state hash includes the ground. Terrain became writable mid-match
- * (#197) — a mission beat can collapse a span — so a replay that reproduced
- * every hull perfectly while the arch fell on a different tick used to agree
- * at every checkpoint. It no longer does. The layout is unchanged; this bump
- * is about the rules, and a v11 file replayed under them would report a
- * divergence at its first checkpoint that is really its own age.
- *
- * Still 12 after `spent` (#380): a mission replay may now carry the cadre ids
- * the campaign had spent when it was played, so playback fields the same
- * short party. Optional and absent-is-empty, and that default is *correct*
- * for every v12 file recorded before the field existed — no roster was ever
- * spent then, so none is the party those files were played with. A layout
- * that gains a field whose absence reproduces the old match is not a new
- * format.
- *
- * 11: replays carry the mission they were played as, if any. A mission's
- * authored forces and its beat schedule are installed by the Match
- * constructor, so playback reproduces them from the id alone — but a v10
- * replay of a mission would reconstruct an empty map and diverge on the first
- * tick, and a v10 file cannot say which mission it was. The layout gained a
- * field; the rules gained a second way a match can start.
- *
- * 13: replays carry the Drift Health the map opened on. docs/campaign.md §2
- * rule 5 lets a campaign mission start on ground an earlier mission wore down,
- * and that grid decides which regions admit fauna at all (`spawnsAllowed`), so
- * a v12 replay of a carried mission would seed a different Drift and diverge
- * at the first checkpoint. Null is a first visit, and every skirmish.
  *
  * 3: replays carry whether the Drift was populated.
  *
