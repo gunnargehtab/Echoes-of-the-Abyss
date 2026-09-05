@@ -215,6 +215,17 @@ export class EchoLayer {
    * system exists to prevent.
    */
   private readonly handles = new Map<number, Map<number, number>>();
+  /**
+   * slot -> handle -> emitter eid: `handles` the other way round, kept in
+   * step by the two places that write it (`handleFor`, `forget`).
+   *
+   * `entityForHandle` used to scan `handles` for the value, once per hull in
+   * the order, and an attack from a forty-hull box select was forty scans
+   * over every handle the slot had ever been issued — a list that only grows
+   * for as long as the match runs. A reverse map is the same information
+   * indexed the way the order path reads it.
+   */
+  private readonly byHandle = new Map<number, Map<number, number>>();
   private readonly nextHandle = new Map<number, number>();
   private readonly results = new Map<number, Contact[]>();
   private readonly exposure = new Map<number, ExposureReport>();
@@ -337,12 +348,7 @@ export class EchoLayer {
    * resolve — a client cannot guess its way to entities it never heard.
    */
   entityForHandle(slot: number, handle: number): number | undefined {
-    const slotHandles = this.handles.get(slot);
-    if (slotHandles === undefined) return undefined;
-    for (const [eid, issued] of slotHandles) {
-      if (issued === handle) return eid;
-    }
-    return undefined;
+    return this.byHandle.get(slot)?.get(handle);
   }
 
   /**
@@ -416,7 +422,12 @@ export class EchoLayer {
    * simulation makes a death real.
    */
   forget(eid: number): void {
-    for (const slotHandles of this.handles.values()) slotHandles.delete(eid);
+    for (const [slot, slotHandles] of this.handles) {
+      const handle = slotHandles.get(eid);
+      if (handle === undefined) continue;
+      slotHandles.delete(eid);
+      this.byHandle.get(slot)?.delete(handle);
+    }
     for (const slotBest of this.best.values()) slotBest.delete(eid);
     this.litAlready.delete(eid);
     this.phantoms.delete(eid);
@@ -432,6 +443,12 @@ export class EchoLayer {
     if (handle === undefined) {
       handle = this.mintHandle(slot);
       slotHandles.set(eid, handle);
+      let slotByHandle = this.byHandle.get(slot);
+      if (slotByHandle === undefined) {
+        slotByHandle = new Map();
+        this.byHandle.set(slot, slotByHandle);
+      }
+      slotByHandle.set(handle, eid);
     }
     return handle;
   }

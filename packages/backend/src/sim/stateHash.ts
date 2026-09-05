@@ -31,22 +31,8 @@ import {
   Structure,
   Unit,
 } from './components.ts';
+import { FNV_OFFSET, mixFloat, mixU32 } from './fnv.ts';
 import { economyFor, type SimWorld } from './world.ts';
-
-/** Scratch view for reading a double's raw bits without allocating per call. */
-const scratch = new Float64Array(1);
-const scratchBits = new Uint32Array(scratch.buffer);
-
-const FNV_PRIME = 0x01000193;
-
-function mixU32(hash: number, value: number): number {
-  return Math.imul(hash ^ (value >>> 0), FNV_PRIME) >>> 0;
-}
-
-function mixFloat(hash: number, value: number): number {
-  scratch[0] = value;
-  return mixU32(mixU32(hash, scratchBits[0]!), scratchBits[1]!);
-}
 
 /**
  * Hash the simulation's observable state.
@@ -66,7 +52,7 @@ function mixFloat(hash: number, value: number): number {
  * differently. It just stops the hash caring which process it is running in.
  */
 export function hashWorld(world: SimWorld): number {
-  let h = 0x811c9dc5;
+  let h = FNV_OFFSET;
   h = mixU32(h, world.tick);
   h = mixU32(h, world.rng.snapshot());
 
@@ -163,15 +149,14 @@ export function hashWorld(world: SimWorld): number {
   // What a replay can genuinely diverge on is *when* and *what* a beat wrote,
   // and that is exactly the list — a match whose arch fell on a different tick
   // now reports as divergent instead of quietly playing on different ground.
+  //
+  // Read as the digest the terrain keeps as it writes, not by walking the
+  // list: a checkpoint used to re-hash every change since the baseline, so a
+  // long mission that kept collapsing ground paid for its whole history at
+  // every checkpoint — quadratic in the beats, for a value the ground could
+  // carry along with the list for one mix per write.
   h = mixU32(h, world.terrain.revision);
-  for (const change of world.terrain.groundHistory) {
-    h = mixU32(h, change.index);
-    h = mixU32(h, change.floorM);
-    h = mixU32(h, change.ceilingM);
-    // A beat that changed what the water sounds like and nothing else is a
-    // divergence the floor and ceiling cannot see (#259).
-    h = mixU32(h, change.biome);
-  }
+  h = mixU32(h, world.terrain.historyDigest);
 
   // Economies live outside the ECS, and a match where one side is quietly
   // richer has diverged just as surely as one where a hull moved.
