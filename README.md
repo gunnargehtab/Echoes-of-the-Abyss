@@ -58,7 +58,7 @@ Status runs downward: *"shallow"* is a universal insult. Water is free but **dry
 
 At **4,410 m** sits **the Mouth**: an eleven-kilometre depression that returns sonar pings **before they should arrive**, on a cycle that shortened from 43 hours to 39 in 213 PC. The Consortium files for mineral rights. The Commune calls it a wound. The Directorate worships it. The Knights are building something to answer it.
 
-→ **[world.md](docs/world.md)** · **[timeline.md](docs/timeline.md)** · **[culture.md](docs/culture.md)**
+→ **[world.md](docs/world.md)** · **[world-map.md](docs/world-map.md)** · **[habitats.md](docs/habitats.md)** · **[timeline.md](docs/timeline.md)** · **[culture.md](docs/culture.md)**
 
 ---
 
@@ -80,7 +80,7 @@ The map is **alive**. A simulated ecosystem responds to noise, hunger, and over-
 
 ## 🎨 Concept Art
 
-Four survey plates in the **Pressure Cartography** visual language — the discipline of measuring things that resist measurement.
+Seven plates: five survey plates in the **Pressure Cartography** visual language — the discipline of measuring things that resist measurement — and two neon-noir presentation plates.
 
 | Plate | Subject |
 |---|---|
@@ -88,8 +88,11 @@ Four survey plates in the **Pressure Cartography** visual language — the disci
 | **[II — Four Powers](docs/concept-art/plate-02-four-powers.png)** | Shape language, palettes, silhouettes, signature doctrine |
 | **[III — The Echo Layer](docs/concept-art/plate-03-echo-layer.png)** | Resolution tiers and the cost of the ping |
 | **[IV — The Mouth](docs/concept-art/plate-04-the-mouth.png)** | Concentric banding, return anomaly, unresolved |
+| **[V — Submarine Classes](docs/concept-art/plate-05-submarine-classes.png)** | Neon-noir key art: hull line-up surfaced at night |
+| **[VI — Build Menu UI](docs/concept-art/plate-06-build-menu-ui.jpg)** | Neon-noir command panel mock: glass cards, magenta bevels |
+| **[VII — The Pelagion Rift](docs/concept-art/plate-07-rift-chart.png)** | Survey chart of the whole Rift: the Lid, the named places, the Mouth |
 
-→ **[art-direction.md](docs/art-direction.md)** · **[DESIGN-PHILOSOPHY.md](docs/concept-art/DESIGN-PHILOSOPHY.md)**
+→ **[art-direction.md](docs/art-direction.md)** · **[style-neon-noir.md](docs/style-neon-noir.md)**
 
 ---
 

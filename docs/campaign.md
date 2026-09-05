@@ -180,5 +180,7 @@ What is built of the campaign, so nobody re-implements what exists or assumes wh
 - **[timeline.md](timeline.md)** — how 214 PC was arrived at
 - **[culture.md](culture.md)** — the five registers the briefings are written in
 - **[maps.md](maps.md)** — archetypes the campaign missions are built from
+- **[world-map.md](world-map.md)** §5 — every campaign block placed on the Rift's geography, written expressly to sync with this document
+- **[habitats.md](habitats.md)** §9 — the interiors the missions go inside, mission by mission
 - **[bestiary.md](bestiary.md)** — Drift Health, which the campaign carries between missions
 - **[glossary.md](glossary.md)** — mission, objective and briefing, which mean one thing each

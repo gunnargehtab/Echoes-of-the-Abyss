@@ -98,3 +98,17 @@ is the record that the collision was seen rather than inherited.
 4. **The map is alive and can be killed** — a simulated ecosystem responds to noise, hunger, and over-extraction
 5. **Asymmetry that means something** — mechanics *are* worldview (see [factions.md](factions.md))
 6. **No villains** — every faction is correct from inside; all four campaign endings are coherent, costly, and irreconcilable
+
+---
+
+## Related
+
+- **[systems-echo.md](systems-echo.md)** — the Echo Layer: SIG, PF, HYD, the tiers, and the ping
+- **[systems-depth.md](systems-depth.md)** — depth bands, Pressure Rating, crush and the sour timer
+- **[factions.md](factions.md)** — the four answers to noise, and the asymmetry the pillars promise
+- **[economy.md](economy.md)** — the harvest and build beats, and the noise curve under both
+- **[systems-combat.md](systems-combat.md)** — the fight beat: guns, torpedoes, mines, TTK bands
+- **[campaign.md](campaign.md)** — where the loop is authored rather than played out, and the four endings
+- **[glossary.md](glossary.md)** — scuttling, mission, objective, and every other term used once here
+- **[world.md](world.md)** — the setting the pitch is set in
+- **[naming.md](naming.md)** — title, taglines, and how the pitch is said out loud
