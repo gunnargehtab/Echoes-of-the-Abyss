@@ -83,6 +83,21 @@ export const factions = [
   },
 ];
 
+/**
+ * The roster contact sheet — the one picture on the page. The image itself is
+ * the newest `rung-roster-sprites.png` an art PR committed under
+ * docs/screenshots (see lib/sheet.mjs); these are the words around it. The
+ * facts are graphics-standards.md's: baked from the approved models, glow set
+ * from the hull's own SIG band, own force only.
+ */
+export const roster = {
+  title: 'The fleet, as it renders today',
+  text: 'Every hull in the game, seen from above the way the sonar chart shows your own force: four navies, four hulls each, and the yards that build them. Each is lit from its own 3D model and glows exactly as loud as it is — the brighter the running lights, the further away it can be heard. You only ever see your own ships like this. An enemy is a silhouette at best.',
+  alt: 'Contact sheet of every hull and yard in the game, seen from above, one row per navy: Consortium in amber, Commune in green, Directorate in red, Knights in violet, each hull labelled with its class and its length in metres.',
+  caption:
+    'Re-baked whenever the art changes. This picture is whatever the newest roster looks like, not a mock-up.',
+};
+
 /** What exists and runs today. Counts are filled in at build time. */
 export const playable = [
   {
@@ -272,7 +287,7 @@ export const sprints = {
 };
 
 export const footer = {
-  note: 'Screenshots, gameplay footage and the stories of the Rift are on their way. Until then, the roadmap is the game.',
+  note: 'Gameplay footage and the stories of the Rift are on their way. Until then, the roadmap is the game.',
   provenance:
     'Progress on this page is read live from the project’s issue tracker when the page is built; nothing here is updated by hand.',
 };

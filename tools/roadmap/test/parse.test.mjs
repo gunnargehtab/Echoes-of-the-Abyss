@@ -1,12 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { parseRoadmap } from '../lib/parse.mjs';
 import * as content from '../lib/content.mjs';
+import { driftReport, mentionedIssues, placedIssues } from '../lib/drift.mjs';
 import { inline, render } from '../lib/render.mjs';
+import { SHEET_FILE, findContactSheet, pngSize } from '../lib/sheet.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const REPO = 'gunnargehtab/Echoes-of-the-Abyss';
@@ -258,4 +261,101 @@ test('content: every row of the real roadmap has a player-facing sentence', () =
   for (const s of roadmap.sprints) {
     assert.ok(content.sprints[s.id], `${s.id} has a player-facing summary`);
   }
+});
+
+test('sheet: the newest issue directory with a contact sheet wins, and its size is read', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'roadmap-sheet-'));
+  for (const name of ['issue-461', 'issue-466', 'issue-470', 'logo-hud'])
+    mkdirSync(join(dir, name));
+  // A 1×2 PNG header is enough: signature, IHDR length and type, width, height.
+  const png = Buffer.from([
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52, 0, 0, 0, 1,
+    0, 0, 0, 2,
+  ]);
+  writeFileSync(join(dir, 'issue-461', SHEET_FILE), png);
+  writeFileSync(join(dir, 'issue-466', SHEET_FILE), png);
+  // issue-470 has other screenshots but no sheet, so it is not the newest sheet.
+  writeFileSync(join(dir, 'issue-470', 'other.png'), png);
+  writeFileSync(join(dir, 'logo-hud', SHEET_FILE), png);
+  const found = findContactSheet(dir);
+  assert.equal(found.issue, 466);
+  assert.equal(found.path, join(dir, 'issue-466', SHEET_FILE));
+  assert.deepEqual(pngSize(readFileSync(found.path)), { width: 1, height: 2 });
+  assert.equal(pngSize(Buffer.from('not a png')), null);
+  assert.equal(findContactSheet(join(dir, 'missing')), null);
+  rmSync(dir, { recursive: true });
+});
+
+test('sheet: the repository has one, so the public page has its picture', () => {
+  const found = findContactSheet(join(here, '..', '..', '..', 'docs', 'screenshots'));
+  assert.ok(found !== null, 'a rung-roster-sprites.png under docs/screenshots/issue-N/');
+  const size = pngSize(readFileSync(found.path));
+  assert.ok(size.width > 0 && size.height > 0);
+});
+
+test('drift: open issues the roadmap has no row for, epics excluded, prose mentions noted', () => {
+  const roadmap = parseRoadmap(SAMPLE);
+  const issue = (number, labels = []) => ({
+    number,
+    title: `Issue ${number}`,
+    url: url(number),
+    labels,
+  });
+  const openIssues = [
+    issue(440), // a row in Phase 10 — placed
+    issue(286), // a status row — placed
+    issue(428, ['epic']), // an epic — never counted
+    issue(382), // mentioned nowhere in SAMPLE
+    issue(99), // a row in Phase 1 — placed
+  ];
+  const { unplaced, unmentioned } = driftReport({
+    markdown: SAMPLE + '\nThe sequel to #382 is in progress.\n',
+    roadmap,
+    openIssues: [...openIssues, issue(500)],
+  });
+  assert.deepEqual(
+    unplaced.map((i) => i.number),
+    [382, 500]
+  );
+  assert.deepEqual(
+    unmentioned.map((i) => i.number),
+    [500]
+  );
+  assert.deepEqual(
+    [...placedIssues(roadmap)].sort((a, b) => a - b),
+    [98, 99, 104, 286, 436, 437, 440]
+  );
+  assert.ok(mentionedIssues(SAMPLE).has(428));
+});
+
+test('render: the roster figure and the unplaced line appear only when there is something to show', () => {
+  const roadmap = parseRoadmap(SAMPLE);
+  const base = {
+    roadmap,
+    states: new Map(),
+    content,
+    counts: { missions: 29, maps: 3, factions: 4 },
+    repo: REPO,
+    generatedAt: 'never',
+    fontHref: 'fonts/x.woff2',
+  };
+  const bare = render(base);
+  assert.doesNotMatch(bare, /class="sheet/);
+  assert.doesNotMatch(bare, /not yet placed on this roadmap/);
+
+  const full = render({
+    ...base,
+    sheet: { href: 'roster-contact-sheet.png', width: 1424, height: 1204 },
+    unplaced: 4,
+  });
+  assert.match(
+    full,
+    /<img src="roster-contact-sheet.png" width="1424" height="1204"[^>]*alt="Contact sheet/
+  );
+  assert.match(full, /The fleet, as it renders today/);
+  assert.match(full, /4 more open items in the tracker are not yet placed on this roadmap/);
+  assert.match(
+    render({ ...base, unplaced: 1 }),
+    /One more open item in the tracker is not yet placed/
+  );
 });
