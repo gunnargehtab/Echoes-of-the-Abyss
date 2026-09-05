@@ -700,7 +700,7 @@ export const SEEDING_THIN_WATER: MissionDefinition = {
         // campaign is actually about.
         met: 'Both of them came home and we are not going to make a thing of it tonight. Somebody will want to know how, and the honest answer is that you did not have to find out.',
         unmet:
-          'We grew two hulls that could shoot and we spent them both in eleven minutes buying a crossing. Sefa is going to say what that means and he’s going to be right, and we would like a night before he says it.',
+          'We grew two hulls that could shoot and we spent them both in eleven minutes buying a crossing. Sefa is going to say what that means and she’s going to be right, and we would like a night before she says it.',
       },
     },
   ],

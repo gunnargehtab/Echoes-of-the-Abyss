@@ -592,6 +592,7 @@ room. Missions not listed are fought in open water or on ground the gazetteer ow
 | Ledger 5 — [Tolerance](mission-tolerance.md) | The Underworks, and Sector Vayle's bulkhead frame at 1,050 m (§3) |
 | Ledger 7 — [Item Nine](mission-item-nine.md) | The Underway, Asset 002, at the bottom of Board country (§3) |
 | Seeding 1 — [Tend](mission-tend.md) | Marr Plateau: the rows, the drop, the watch at the edge (§2) |
+| Seeding 6 — [Radicals](mission-radicals.md) | The court's ground again, two tides on: the roofed water joining the chamber to the districts, and the fallen Gate (§4) |
 | Seeding 3 — [Convocation](mission-convocation.md) | A plateau voting while it is attacked: the rows as the room, the bell rung off-tide, and the count read at the watch's edge — the first time the Commune's one hush is broken on purpose (§2, *The Turning*). The terrace is Marr Plateau, the same ground as *Tend*, chosen in [mission-convocation.md](mission-convocation.md) §11 |
 | Attending 1 — [Attendance](mission-attendance.md) | The attending galleries and the Cantorate's dome (§6) |
 | Attending 2 — [Intake](mission-intake.md) | The cohort halls on the banding ground, above the city (§6) |

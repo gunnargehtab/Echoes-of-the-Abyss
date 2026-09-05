@@ -32,7 +32,7 @@ it all along.
 ## 1. What the Commit Is
 
 **The basin the city committed its dead into — 2,400 m of Abyssal Trench under the court's
-fallen chamber, the ground all four cultures inherited the Descent from, and the one road from
+fallen chamber, the ground all four cultures inherited the descent from, and the one road from
 the north shoulder to the far south that runs through a place nobody built.**
 
 Sorrowgate is the Surface Age's one attempt at a permanent deep colony, fallen in some year
@@ -319,8 +319,8 @@ what is in it and then doing something on the fourth second.
 
 Naming follows [culture.md](culture.md) §4. Marr, Anholt and Teel are plateau names carried by
 the people who tend them, and Anholt is *she*, as [characters.md](characters.md) writes her —
-[mission-thin-water.md](mission-thin-water.md) §8 and §12 have *he*, and that document is the
-side that moves ([mission-deep-furrow.md](mission-deep-furrow.md) §5). The watch is *the
+[mission-thin-water.md](mission-thin-water.md) §8 and §12 had *he*, and that document was the
+side that moved ([mission-deep-furrow.md](mission-deep-furrow.md) §5). The watch is *the
 watch*, as in every Commune document. The colossus is not a character and is never named; to
 the plateau it is *the basin*, which is the drowned city's own word for it, and the mission
 keeps the register's distance.

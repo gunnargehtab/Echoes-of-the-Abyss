@@ -312,8 +312,8 @@ out what is on the walls and is answered by both of them.
 Naming follows [culture.md](culture.md) §4. Marr and Anholt are plateau names carried by the
 people who tend them, and this cleft is under Anholt's terrace, which is why the map is called
 what it is. Anholt is *she*, as [characters.md](characters.md) writes her;
-[mission-thin-water.md](mission-thin-water.md) §8 and §12 have *he*, and that document is the
-side that moves. **Ottilie Marr** is [habitats.md](habitats.md) §2's face at the hatch — tender
+[mission-thin-water.md](mission-thin-water.md) §8 and §12 had *he*, and that document was the
+side that moved. **Ottilie Marr** is [habitats.md](habitats.md) §2's face at the hatch — tender
 crew, b. 290 m, twenty-three, her mother was a Kell — and she crews the sower because the seed
 is Kell seed. The observer is never named: to the plateau it is *the observer*, to itself it is
 those below, and the precedent is Sende at Sorrowgate, an observer that does not move

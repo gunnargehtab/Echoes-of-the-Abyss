@@ -276,7 +276,7 @@ The twelve above are commanders: each has a conviction, a cost and a line. The p
 ### Pelagia Commune
 
 - **Bloomwright Idris Kell** — aboard the harvest column on the shoulder, named for the plateau in the Commune's ordinary way, which means named for two hundred people who did not get out of it in 197 PC. Nobody in the mission remarks on this. Reads the count — ten hulls, sixty-eight aboard — as a fact about people and not a target, and will not let it be rounded. Heard in [Thin Water](mission-thin-water.md).
-- **Ottilie Marr** — tender crew, b. 290 m, twenty-three; her mother was a Kell. The face [habitats.md](habitats.md) §2 gives the plateaus, and the crew of the sower in the Furrow and on the rim, because the seed is Kell seed and she can count. Heard in [Deep Furrow](mission-deep-furrow.md) and [The Second Seeding](mission-second-seeding.md).
+- **Ottilie Marr** — tender crew, b. 290 m, twenty-three; her mother was a Kell. The face [habitats.md](habitats.md) §2 gives the plateaus, and the crew of the sower in the Furrow and on the rim, because the seed is Kell seed and she can count. Heard in [Deep Furrow](mission-deep-furrow.md); crews the sower again, without a line, in [The Second Seeding](mission-second-seeding.md).
 
 ### Abyssal Directorate
 
@@ -305,7 +305,7 @@ Nineteen berths at the Ninth have been empty since 211 PC ([habitats.md](habitat
 
 ### Named in the docs and in no mission
 
-**Anwen Sull** — the Consortium survey officer who recorded the Mouth's return anomaly in 88 PC and was dismissed for falsifying data ([timeline.md](timeline.md)); Ivane's great-great-grandmother, and the disgrace the Order was founded on. She appears in no mission document. Her name is the timeline's and Ivane's inheritance, not a word the player has heard — as the Deep Choir and the Answering are the world docs' and no mission's ([world-map.md](world-map.md) §5; [glossary.md](glossary.md)).
+**Anwen Sull** — the Consortium survey officer who recorded the Mouth's return anomaly in 88 PC and was dismissed for falsifying data ([timeline.md](timeline.md)); Ivane's great-great-grandmother, and the disgrace the Order was founded on. She appears in no mission document. Her name is the timeline's and Ivane's inheritance, and the one place the player reads it is the record between missions — the Settlement's page enters her dismissal in 88 PC ([ui-ux.md](ui-ux.md) §14, *The record*) — as the Deep Choir and the Answering are the world docs' and no mission's, and the record's neither ([world-map.md](world-map.md) §5; [glossary.md](glossary.md)).
 
 ---
 

@@ -14,8 +14,9 @@
 **This is the first mission fought on ground another mission has already been fought on.** It
 is deliberately the same plateau and deliberately the same map literal, `marr-plateau`, and
 §11 says why at length. [campaign.md](campaign.md) §2 rule 5 — "Drift Health carries between
-missions on the same map… A player who fights loudly through the Kelp Labyrinth returns later
-to a quieter, deader, more legible version of it, and nobody tells them why" — has been a
+missions on the same map… A player who fights loudly across Marr Plateau at *Tend* returns to
+it at *Convocation* to a quieter, deader, more legible version of the same ground, and nobody
+tells them why" — has been a
 design rule with no mission behind it since the epic opened, because until now no two missions
 shared ground. This pair is the first that could carry it, and the carrying is now built
 against exactly this pair (§13).
@@ -84,8 +85,8 @@ not carrying share; they are carrying the question, drifting the holdfast lines 
 can turn around them. Their 8 SIG idle is the mission's working figure, and 18 is what the
 player pays for moving one in a hurry.
 
-**Teel is here, and Teel is armed.** *Thin Water* was the campaign's stated loss and Teel walked
-out of it having got six of ten home; she has spent the tides since arguing that the Commune's
+**Teel is here, and Teel is armed.** *Thin Water* was the campaign's stated loss and the plateau walked
+out of it with six of ten home; Teel has spent the tides since arguing that the Commune's
 pacifism is a subsidy paid in other people's children ([characters.md](characters.md)), and
 nobody has out-argued her. Three Commune Corvettes stand on Marr Plateau today because the
 Warden put them there and no vote was taken about it, which is a joke the mission does not make

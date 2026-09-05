@@ -27,7 +27,7 @@ The count is 1 + 4×7. Convergence and Ending are slots *inside* each campaign's
 2. **Mechanics are the argument.** Each mission introduces at most one system, and the system is chosen to make the faction's worldview physically true under your hands. The Directorate campaign teaches patience because Directorate units are slow, and being told they are patient would not work.
 3. **The Mouth is never explained.** Not in a cutscene, not in a codex entry, not in the final mission of any campaign ([culture.md](culture.md) §6).
 4. **Losing is content.** Three missions across the campaign are *unwinnable as fights* and winnable as evacuations, retreats or refusals. The Rift is not a place where force resolves things cleanly.
-5. **The map persists.** Drift Health carries between missions on the same map ([bestiary.md](bestiary.md) §6). A player who fights loudly through the Kelp Labyrinth returns later to a quieter, deader, more legible version of it, and nobody tells them why.
+5. **The map persists.** Drift Health carries between missions on the same map ([bestiary.md](bestiary.md) §6). A player who fights loudly across Marr Plateau at *Tend* returns to it at *Convocation* to a quieter, deader, more legible version of the same ground, and nobody tells them why.
 
 ---
 

@@ -160,7 +160,7 @@ simply *heard*, and what hears it keeps books.
 | **The working day** — the player | 3 tenders, 2 watch scouts | The plateau's own |
 | **Marr Plateau** | The Holdfast, the garden nodes, the jelly lanes | Home. Tidespeaker Ysolde Marr speaks the briefing and the readings, and orders nobody to do anything, because she cannot ([characters.md](characters.md)) |
 | **The survey pair** — the concern | 2 × Corvette, hydrophones out, weapons live and irrelevant | Charting the drop lane under grid right-of-way. Entirely legal, entirely unhurried, and the only thing on the map the plateau organises its day around |
-| **Teel's landing** | The neighbouring terrace's edge, storm-damaged | The gift's destination. Warden Juno Teel receives it, one mission before her own ([campaign.md](campaign.md) §5, *Thin Water*) |
+| **Teel's landing** | The neighbouring terrace's edge, storm-damaged | The gift's destination. Warden Juno Teel receives it, two missions before the one she is armed in ([campaign.md](campaign.md) §5, *Convocation*) |
 | **The Drift** | A Draymaw pack at the foot of the drop; Lampfry through the gardens; the jelly clusters | Owned by nobody. Heard all day. Out of reach by depth, not by mercy ([bestiary.md](bestiary.md) §4) |
 
 Naming follows [culture.md](culture.md): Marr and Teel are plateau names carried by the people

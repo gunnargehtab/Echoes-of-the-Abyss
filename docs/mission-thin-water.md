@@ -352,8 +352,8 @@ earned, in the arrangement [mission-shift-change.md](mission-shift-change.md) §
   here."
 - **The escorts** — `{ kind: 'survive'; role: 'escort'; count: 2 }`, and the unmet reading is
   the one the campaign is actually about: "We grew two hulls that could shoot and we spent them
-  both in eleven minutes buying a crossing. Sefa is going to say what that means and he's going
-  to be right, and we would like a night before he says it."
+  both in eleven minutes buying a crossing. Sefa is going to say what that means and she's going
+  to be right, and we would like a night before she says it."
 
 The watch is in no objective at all. Two Light Scouts sent east to be heard is a legitimate and
 unhinted solution (§4), and the mission declines to grade it in either direction.
@@ -618,7 +618,7 @@ campaigns" row carries where the queue stands now.
 | Filed → this mission's briefing variant | **Built** (#378), and it is the first of the two pairs the campaign had written ahead of the mechanism. The variant is §12's, transcribed into `SEEDING_THIN_WATER_HEADER.briefingVariants` and selected client-side off the seen-scene set in the progression record, so the room is never told which briefing was read — and cannot be, because [campaign.md](campaign.md) §1 says a scene changes the text and never the mission. What *Tend* writes is the scene `marr-plateau-filed`, latched with the same condition as the filed reading it is the machine-readable half of, so the id the client stores is a sentence the player has already been shown |
 | Commune escorts as a distinct hull | Not needed — the Corvette in [units.md](units.md) with the Commune's faction values is what §3 fields. Nothing here asks for a new roster entry |
 | In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line |
-| **Anholt's pronoun** | **A finding against this document, and this document moved** (#408). [characters.md](characters.md) writes Sefa Anholt as *she*, and [mission-deep-furrow.md](mission-deep-furrow.md) §5, [mission-radicals.md](mission-radicals.md) §5 and [mission-second-seeding.md](mission-second-seeding.md) §5 each named this document as the side that moves; §5, §12 and the Related list now read *she*. The literal's authoring note under the 14:00 speech still says *him*, which is a comment and not a line the player hears, and nothing in a literal changes for a docs pass |
+| **Anholt's pronoun** | **A finding against this document, and this document moved** (#408). [characters.md](characters.md) writes Sefa Anholt as *she*, and [mission-deep-furrow.md](mission-deep-furrow.md) §5, [mission-radicals.md](mission-radicals.md) §5 and [mission-second-seeding.md](mission-second-seeding.md) §5 each named this document as the side that moves; §5, §12 and the Related list read *she* from that pass, and §8 — the *escorts* objective's unmet reading, which the literal carries verbatim and the player is shown at the close — was missed by it and moved with #224's sync pass, the literal's string with it. The literal's authoring note under the 14:00 speech still says *him*, which is a comment and not a line the player hears |
 
 ---
 
