@@ -11,38 +11,41 @@ npm run test:roadmap
 
 ## What is on the page
 
-One page, in the neon-noir register of `docs/style-neon-noir.md`, under the Mouth lockup
-from `docs/naming.md`:
+One page, written for a player rather than for the people building the game, in the
+neon-noir register of `docs/style-neon-noir.md` under the Mouth lockup from `docs/naming.md`:
 
 - **The lockup**, with the sounding: every seven seconds a pulse descends the bands, the
   throat answers, and one echo comes back out. The bands' resting order never changes —
   the mark still brightens downward, always — and the whole animation is off under
   `prefers-reduced-motion`.
-- **The build in numbers** — phases complete, roadmap items done, and the repository's
-  closed issues, merged pull requests and open issues.
-- **Where the build actually stands** — the status table from the doc, each row linked to
-  the issue that tracks it, with that issue's live state.
-- **What is built** — the doc's bullet list of what stands.
-- **The roadmap** — every phase as a collapsible card with its verdict, its live count and
-  its rows; Phase 10's group labels become sub-headings. Filter by open or done, search,
-  expand all; `#phase-N` deep-links open the phase they point at.
-- **What gates what** — the sequencing notes.
-- **Completed sprints** — the milestone record.
+- **The game in numbers** — campaign missions, navies, maps (all counted from the
+  repository at build time), roadmap percentage, phases finished.
+- **What kind of game this is** — the five rules everything descends from.
+- **Four navies, one argument** — a card per faction, in its own accent colour.
+- **What you can play today**, then **Known rough edges** — the doc's status table, each
+  row in player terms and linked to the issue that tracks it, with that issue's live state.
+  A rough edge whose issue has closed reads as fixed, never as current.
+- **What is next** — every phase with something still open, as a collapsible card with a
+  player-facing title, its live count and its rows; group labels become sub-headings.
+  Filter by planned or done, search, expand all; `#phase-N` deep-links open the phase.
+- **The road so far** — the finished phases, folded, then the milestone record.
 
-## Where the data comes from
+## Whose words these are
 
-Two sources, and the split is the design:
+Three sources, and the split is the design:
 
-- **`docs/ROADMAP.md` owns the structure and the reasoning** — phases, what belongs in
-  each, why it is ordered that way, what is built, what gates what. This repository's
-  first rule is that the docs are canonical, so the generator parses the doc rather than
-  keeping a second copy that would drift by Thursday. **Adding a row to a phase table is
-  how you add an item to the site.**
+- **`docs/ROADMAP.md` owns the structure.** Which phases exist, which issues sit in each,
+  the status rows, the sprints. **Adding a row to a phase table is how you add an item to
+  the site.**
 - **GitHub owns the state.** Whether an issue is open or closed is not something a
-  checked-in file can know, and a hand-maintained checkbox is wrong the moment somebody
-  closes an issue from their phone.
-
-Nothing about progress is stored anywhere. The page is a view.
+  checked-in file can know.
+- **`lib/content.mjs` owns the words.** The roadmap is written for engineers — "Echo pass
+  scaling", "replace the O(maxEid) scans" — and a fan cares about neither. The content
+  module carries a player-facing sentence for every row, keyed by issue number, plus the
+  sections a fan actually came for. Every fact in it is transcribed from `docs/`; when a
+  number moves in a doc, it moves here. A row with no sentence renders in the doc's own
+  words and the build says so by name, and `test/parse.test.mjs` fails if any row of the
+  real roadmap is uncovered — so a new row cannot reach the public page in engineering-speak.
 
 The parser (`lib/parse.mjs`) is small and strict on purpose: it reads exactly the shapes
 the doc already uses — `## Phase N — Title` headings with `[#123](url)` table rows, a bold
@@ -55,10 +58,7 @@ page that nobody wrote. `test/parse.test.mjs` pins every one of those shapes, an
 parses the real roadmap so a doc edit that breaks the site fails `npm test` rather than
 the Pages build.
 
-Repository counts come from repository-scoped endpoints only, paged, never from the
-search API: a token scoped to one repository may not be allowed to search, and a count
-that works in one place and not another is worse than one that pages. Anything that could
-not be read is left off the page rather than shown as zero.
+Nothing about progress is stored anywhere. The page is a view.
 
 The generator is dependency-free by design — three plain modules under `lib/` — so the
 site cannot fail to build because of something in `node_modules`. The two brand assets it
@@ -94,12 +94,13 @@ deploy says why in its log.
 ## What gets published
 
 Only what is already in `docs/ROADMAP.md`, the titles and numbers of the issues it links,
-the repository's issue and pull-request counts, the two-line pitch from the root README,
-the logo, and the display font. No source, no design bible, no internal notes. Worth
-re-reading before enabling, because that is the moment it becomes public.
+the player-facing copy in `lib/content.mjs` (itself transcribed from the design docs), the
+mission and map counts, the logo, and the display font. No source, no design bible, no
+internal notes. Worth re-reading before enabling, because that is the moment it becomes
+public.
 
-Gameplay footage, screenshots, lore and the rest are for later; the page's footer says
-so, and the sections are laid out so they can take them.
+Gameplay footage, screenshots and lore are for later; the page's footer says so, and the
+sections are laid out so they can take them.
 
 Related: `docs/ROADMAP.md` · `docs/naming.md` (the logo) · `docs/style-neon-noir.md`
 (the palette the page uses) · `.github/workflows/pages.yml`

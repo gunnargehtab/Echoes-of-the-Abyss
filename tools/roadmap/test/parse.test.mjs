@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { parseRoadmap } from '../lib/parse.mjs';
+import * as content from '../lib/content.mjs';
 import { inline, render } from '../lib/render.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -197,32 +198,64 @@ test('render: builds without state, and every tracked item appears with its stat
   const roadmap = parseRoadmap(SAMPLE);
   const states = new Map([
     [98, { state: 'closed', title: 'Depth', url: url(98), closedAt: null }],
-    [440, { state: 'open', title: 'Match resolution', url: url(440), closedAt: null }],
+    [440, { state: 'closed', title: 'Match resolution', url: url(440), closedAt: null }],
   ]);
+  const counts = { missions: 29, maps: 3, factions: 4 };
   const html = render({
     roadmap,
     states,
-    stats: { issuesClosed: 400, issuesOpen: null, prsMerged: 300 },
+    content,
+    counts,
     repo: REPO,
     generatedAt: '2026-09-05 15:00 UTC',
     fontHref: 'fonts/x.woff2',
   });
   assert.match(html, /class="item closed" data-state="closed"[\s\S]*?#98</);
-  assert.match(html, /class="item open" data-state="open"[\s\S]*?#440</);
+  assert.match(html, /class="item closed" data-state="closed"[\s\S]*?#440</);
   assert.match(html, /class="item unknown" data-state="unknown"[\s\S]*?#99</);
-  // A stat that could not be read is left out, not shown as zero.
-  assert.match(html, /Issues closed/);
-  assert.match(html, /Pull requests merged/);
-  assert.doesNotMatch(html, /Issues open/);
-  assert.match(html, /Issue state read from GitHub at 2026-09-05 15:00 UTC/);
+  // The player-facing sentence replaces the doc's engineering wording.
+  assert.match(html, /Dive and surface on command/);
+  assert.doesNotMatch(html, /Depth orders — descent SIG/);
+  // Counts fill the playable cards and the stat tiles.
+  assert.match(html, /A 29-mission campaign/);
+  assert.match(html, /3 maps, 4 navies/);
+  assert.match(html, /Last read 2026-09-05 15:00 UTC/);
+  // A rough edge whose issue has closed reads as fixed, not as current.
+  assert.match(html, /They do now\. The AI used to stall/);
+  assert.doesNotMatch(html, /Not reliably, not yet/);
+  // Nothing on the page talks about the repository's plumbing.
+  assert.doesNotMatch(html, /green main|pull request|merged/i);
 
   const blind = render({
     roadmap,
     states: new Map(),
-    stats: { issuesClosed: null, issuesOpen: null, prsMerged: null },
+    content,
+    counts,
     repo: REPO,
     generatedAt: 'never',
     fontHref: 'fonts/x.woff2',
   });
-  assert.match(blind, /Built without a GitHub token/);
+  assert.match(blind, /without access to the issue tracker/);
+});
+
+test('content: every row of the real roadmap has a player-facing sentence', () => {
+  const markdown = readFileSync(join(here, '..', '..', '..', 'docs', 'ROADMAP.md'), 'utf8');
+  const roadmap = parseRoadmap(markdown);
+  const missing = roadmap.phases
+    .flatMap((p) => p.items)
+    .filter((i) => !(i.number in content.items))
+    .map((i) => `#${i.number}`);
+  assert.deepEqual(missing, [], `rows without copy in lib/content.mjs: ${missing.join(', ')}`);
+  for (const phase of roadmap.phases) {
+    assert.ok(content.phases[phase.number]?.title, `${phase.id} has a player-facing title`);
+  }
+  for (const group of roadmap.phases.flatMap((p) => p.groups)) {
+    assert.ok(content.groups[group], `group "${group}" has a player-facing label`);
+  }
+  for (const q of roadmap.standing.questions) {
+    assert.ok(content.roughEdges[q.number], `status row #${q.number} has player-facing copy`);
+  }
+  for (const s of roadmap.sprints) {
+    assert.ok(content.sprints[s.id], `${s.id} has a player-facing summary`);
+  }
 });

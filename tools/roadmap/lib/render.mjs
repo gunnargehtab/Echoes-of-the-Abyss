@@ -57,134 +57,164 @@ function progress(items, states) {
   };
 }
 
-function itemRow(item, states, repo) {
+function itemRow(item, states, repo, content) {
   const known = states.get(item.number);
   const state = known?.state ?? 'unknown';
   const href = known?.url ?? `https://github.com/${repo}/issues/${item.number}`;
-  const label = { closed: 'done', open: 'open', unknown: 'unknown' }[state];
+  const label = { closed: 'done', open: 'planned', unknown: 'unknown' }[state];
+  const copy = content.items[item.number];
   return `<li class="item ${state}" data-state="${state}">
   <span class="mark" aria-hidden="true"></span>
-  <span class="work">${inline(item.work, repo)}</span>
+  <span class="work">${copy ? escape(copy) : inline(item.work, repo)}</span>
   <span class="state-tag">${label}</span>
   <a class="ref" href="${escape(href)}" title="${escape(known?.title ?? `Issue #${item.number}`)}">#${item.number}</a>
 </li>`;
 }
 
-function phaseCard(phase, states, repo, open) {
+function phaseCard(phase, states, repo, content, open) {
   const p = progress(phase.items, states);
   const status = p.complete ? 'complete' : p.closed > 0 ? 'active' : 'pending';
+  const copy = content.phases[phase.number] ?? {};
+  const title = copy.title ?? phase.title;
+  const row = (i) => itemRow(i, states, repo, content);
   const groups =
     phase.groups.length === 0
-      ? `<ul class="items">${phase.items.map((i) => itemRow(i, states, repo)).join('')}</ul>`
+      ? `<ul class="items">${phase.items.map(row).join('')}</ul>`
       : phase.groups
           .map((group) => {
             const items = phase.items.filter((i) => i.group === group);
-            return `<div class="group"><h4>${escape(group)}</h4><ul class="items">${items
-              .map((i) => itemRow(i, states, repo))
+            return `<div class="group"><h4>${escape(content.groups[group] ?? group)}</h4><ul class="items">${items
+              .map(row)
               .join('')}</ul></div>`;
           })
           .join('') +
         (phase.items.some((i) => i.group === null)
           ? `<ul class="items">${phase.items
               .filter((i) => i.group === null)
-              .map((i) => itemRow(i, states, repo))
+              .map(row)
               .join('')}</ul>`
           : '');
+  const verdict = p.complete ? 'done' : p.closed > 0 ? 'in progress' : 'planned';
 
   return `<details class="phase ${status}" id="phase-${phase.number}"${open ? ' open' : ''}>
   <summary>
     <span class="node" aria-hidden="true"></span>
     <span class="phase-head">
       <span class="phase-id">${escape(phase.id)}</span>
-      <span class="phase-title">${escape(phase.title)}</span>
+      <span class="phase-title">${escape(title)}</span>
     </span>
     <span class="phase-meta">
-      ${phase.verdict ? `<span class="verdict">${escape(phase.verdict)}</span>` : ''}
+      <span class="verdict">${verdict}</span>
       <span class="count"><b>${p.closed}</b> of ${p.total}</span>
       <span class="bar small" role="progressbar" aria-valuenow="${p.pct}" aria-valuemin="0" aria-valuemax="100" aria-label="${escape(phase.id)} progress"><span style="width:${p.pct}%"></span></span>
       <span class="chevron" aria-hidden="true"></span>
     </span>
   </summary>
   <div class="phase-body">
-    ${phase.summary ? `<p class="summary">${inline(phase.summary, repo)}</p>` : ''}
+    ${copy.blurb ? `<p class="summary">${escape(copy.blurb)}</p>` : ''}
     ${groups}
   </div>
 </details>`;
 }
 
-export function render({ roadmap, states, stats, repo, generatedAt, fontHref }) {
+const fill = (text, counts) =>
+  text.replace(/\{(\w+)\}/g, (_, key) => (key in counts ? String(counts[key]) : `{${key}}`));
+
+export function render({ roadmap, states, content, counts, repo, generatedAt, fontHref }) {
   const all = roadmap.phases.flatMap((phase) => phase.items);
   const overall = progress(all, states);
-  const phasesComplete = roadmap.phases.filter((p) => progress(p.items, states).complete).length;
-  const openItems = all.filter((i) => stateOf(states, i.number) === 'open').length;
+  const done = roadmap.phases.filter((p) => progress(p.items, states).complete);
+  const live = roadmap.phases.filter((p) => !progress(p.items, states).complete);
   const haveState = states.size > 0;
 
-  // The newest phase with anything still open is the one a visitor came to
-  // read, so it opens by default; closed phases fold to a row.
-  const liveNumbers = roadmap.phases
-    .filter((p) => !progress(p.items, states).complete)
-    .map((p) => p.number);
-  const openByDefault = new Set(
-    haveState ? liveNumbers : [Math.max(...roadmap.phases.map((p) => p.number))]
-  );
+  // Without state nothing is "complete", so every phase would land under
+  // "what is next"; fall back to the newest phase there and the rest as past.
+  const next = haveState ? live : roadmap.phases.slice(-1);
+  const past = haveState ? done : roadmap.phases.slice(0, -1);
 
-  const statusCards = roadmap.standing.questions
+  const pillars = content.pillars
+    .map(
+      (c) =>
+        `<article class="card pillar"><h3>${escape(c.title)}</h3><p>${escape(c.text)}</p></article>`
+    )
+    .join('\n');
+
+  const factions = content.factions
+    .map(
+      (f) => `<article class="card faction" style="--accent:${escape(f.accent)}">
+  <h3>${escape(f.name)}</h3>
+  <p class="line">${escape(f.line)}</p>
+  <p>${escape(f.text)}</p>
+  <p class="plays">${escape(f.plays)}</p>
+</article>`
+    )
+    .join('\n');
+
+  const playable = content.playable
+    .map(
+      (c) =>
+        `<article class="card play"><span class="tick" aria-hidden="true"></span><h3>${escape(fill(c.title, counts))}</h3><p>${escape(fill(c.text, counts))}</p></article>`
+    )
+    .join('\n');
+
+  const roughEdges = roadmap.standing.questions
     .map((q) => {
+      const copy = q.number === null ? null : content.roughEdges[q.number];
       const state = q.number === null ? 'unknown' : stateOf(states, q.number);
       const href =
         q.number === null
           ? null
           : (states.get(q.number)?.url ?? `https://github.com/${repo}/issues/${q.number}`);
+      const label = { closed: 'fixed', open: 'being worked on', unknown: 'unknown' }[state];
       return `<article class="card status ${state}">
-  <h3>${inline(q.question, repo)}</h3>
-  <p>${inline(q.reading, repo)}</p>
-  ${
-    href
-      ? `<a class="ref-line" href="${escape(href)}"><span class="mark" aria-hidden="true"></span> tracked in #${q.number} · <span class="state-tag">${
-          { closed: 'done', open: 'open', unknown: 'unknown' }[state]
-        }</span></a>`
-      : ''
-  }
+  <h3>${copy ? escape(copy.question) : inline(q.question, repo)}</h3>
+  <p>${copy ? escape(state === 'closed' && copy.fixed ? copy.fixed : copy.text) : inline(q.reading, repo)}</p>
+  ${href ? `<a class="ref-line" href="${escape(href)}"><span class="mark" aria-hidden="true"></span> <span class="state-tag">${label}</span> · #${q.number}</a>` : ''}
 </article>`;
     })
     .join('\n');
 
-  const builtCards = roadmap.standing.built
-    .map(
-      (b) => `<article class="card built">
-  <h3>${inline(b.lead, repo)}</h3>
-  <p>${inline(b.detail, repo)}</p>
-</article>`
-    )
-    .join('\n');
-
-  const sequencing = roadmap.sequencing
-    .map(
-      (n, i) => `<article class="card gate">
-  <span class="gate-n">${i + 1}</span>
-  ${n.lead ? `<h3>${inline(n.lead, repo)}</h3>` : ''}
-  <p>${inline(n.detail, repo)}</p>
-</article>`
-    )
-    .join('\n');
-
   const sprints = roadmap.sprints
     .map(
-      (s) => `<article class="card sprint">
+      (sp) => `<article class="card sprint">
   <span class="node done" aria-hidden="true"></span>
-  <h3>${escape(s.id)} <span class="when">${escape(s.when)}</span></h3>
-  <p>${inline(s.summary, repo)}</p>
+  <h3>${escape(sp.id)} <span class="when">${escape(sp.when)}</span></h3>
+  <p>${escape(content.sprints[sp.id] ?? sp.summary)}</p>
 </article>`
     )
     .join('\n');
 
-  const phases = roadmap.phases
-    .map((phase) => phaseCard(phase, states, repo, openByDefault.has(phase.number)))
-    .join('\n');
+  const nextPhases = next.map((phase) => phaseCard(phase, states, repo, content, true)).join('\n');
+  const pastPhases = past.map((phase) => phaseCard(phase, states, repo, content, false)).join('\n');
 
   const provenance = haveState
-    ? `Issue state read from GitHub at ${escape(generatedAt)}.`
-    : `Built without a GitHub token, so no issue state could be read — every item is shown as unknown.`;
+    ? `${content.footer.provenance} Last read ${escape(generatedAt)}.`
+    : `This copy of the page was built without access to the issue tracker, so every item shows as unknown.`;
+
+  const stats = [
+    { n: counts.missions, cls: 'cool', label: 'Campaign missions', sub: 'playable today' },
+    { n: counts.factions, cls: 'cool', label: 'Navies', sub: 'each a different answer to noise' },
+    { n: counts.maps, cls: 'cool', label: 'Maps', sub: 'three ways sound travels' },
+    {
+      n: overall.pct,
+      cls: '',
+      label: 'Roadmap complete',
+      sub: `${overall.closed} of ${overall.total} items`,
+      suffix: '%',
+    },
+    {
+      n: done.length,
+      cls: 'hot',
+      label: 'Phases finished',
+      sub: `of ${roadmap.phases.length} on the roadmap`,
+    },
+  ]
+    .filter((t) => typeof t.n === 'number')
+    .map(
+      (t) =>
+        `      <div class="stat reveal"><div class="n ${t.cls}"><span data-count="${t.n}">${fmt(t.n)}</span>${t.suffix ?? ''}</div><div class="l">${t.label}</div><div class="sub">${escape(t.sub)}</div></div>`
+    )
+    .join('\n');
 
   return `<!doctype html>
 <html lang="en">
@@ -465,10 +495,22 @@ footer p { margin: 0.3rem 0; }
 .reveal { opacity: 0; transform: translateY(10px); transition: opacity 0.5s ease, transform 0.5s ease; }
 .reveal.in { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } .bar span { transition: none; } }
+
+/* pillars, navies, playable */
+.pillar h3 { color: var(--neon-cyan); }
+.faction { border-left: 2px solid var(--accent); }
+.faction h3 { color: var(--accent); }
+.faction .line { font-family: var(--display); font-size: 1.05rem; letter-spacing: 0.03em; color: var(--text-bright); margin-bottom: 0.5rem; }
+.faction .plays { margin-top: 0.7rem; font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); }
+.play { padding-left: 2.4rem; }
+.play .tick { position: absolute; left: 1rem; top: 1.25rem; width: 10px; height: 10px; border-radius: 50%; background: var(--neon-teal); box-shadow: 0 0 8px rgba(95, 208, 192, 0.7); }
+.play h3 { color: var(--text-bright); }
+.subhead { font-size: 1rem; letter-spacing: 0.16em; color: var(--text-cyan); margin: 2.4rem 0 0.8rem; }
+footer .note { color: var(--text-bright); font-family: var(--display); font-size: 1.05rem; letter-spacing: 0.03em; text-transform: none; }
 </style>
 </head>
 <body>
-<a class="sr" href="#roadmap">Skip to the roadmap</a>
+<a class="sr" href="#play" >Skip to what you can play</a>
 <nav class="nav" aria-label="Sections">
   <div class="wrap">
     <a class="wordmark" href="#top" aria-label="Echoes of the Abyss — top of page">
@@ -476,11 +518,11 @@ footer p { margin: 0.3rem 0; }
       <span class="wordmark-name">Echoes</span><span class="wordmark-sub">of the Abyss</span>
     </a>
     <ul>
-      <li><a href="#status">Status</a></li>
-      <li><a href="#built">Built</a></li>
-      <li><a href="#roadmap">Roadmap</a></li>
-      <li><a href="#gates">Gates</a></li>
-      <li><a href="#sprints">Sprints</a></li>
+      <li><a href="#game">The game</a></li>
+      <li><a href="#navies">Navies</a></li>
+      <li><a href="#play">Play</a></li>
+      <li><a href="#next">Next</a></li>
+      <li><a href="#past">So far</a></li>
     </ul>
     <span class="pill" title="${escape(provenance)}"><b>${overall.pct}%</b> · ${overall.closed} of ${overall.total}</span>
   </div>
@@ -497,13 +539,10 @@ footer p { margin: 0.3rem 0; }
     <div class="lockup" aria-label="Echoes of the Abyss">
       <svg class="mark" viewBox="0 0 240 184" fill="none" role="img" aria-label="The Mouth — the game's mark">
         <defs><filter id="halo" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3"/></filter></defs>
-        <!-- The echo: one faint arc returning out of the throat. Not a second light — the throat's own, coming back. -->
         <path class="echo-arc" d="M 20 28 Q 120 74 220 28" stroke="var(--mouth-glow)" stroke-width="1.4"/>
-        <!-- Halo pass: the glow recipe's second layer. -->
         <g class="halo" stroke="var(--neon-violet)" filter="url(#halo)" opacity="0.35" stroke-width="3">
           <path d="M 20 28 Q 120 74 220 28"/><path d="M 42 56 Q 120 96 198 56"/><path d="M 62 84 Q 120 118 178 84"/><path d="M 80 112 Q 120 138 160 112"/><path d="M 96 138 Q 120 154 144 138"/>
         </g>
-        <!-- The banding: narrower, deeper, brighter. Depth is below and the deep end is the lit end. -->
         <g class="bands" stroke="var(--neon-violet)">
           <path class="b b1" d="M 20 28 Q 120 74 220 28" stroke-width="1.6" style="--o:0.45"/>
           <path class="b b2" d="M 42 56 Q 120 96 198 56" stroke-width="1.8" style="--o:0.6"/>
@@ -511,7 +550,6 @@ footer p { margin: 0.3rem 0; }
           <path class="b b4" d="M 80 112 Q 120 138 160 112" stroke-width="2.2" style="--o:0.9"/>
           <path class="b b5" d="M 96 138 Q 120 154 144 138" stroke-width="2.4" style="--o:1"/>
         </g>
-        <!-- The throat: the one point of light, and it is not yours. -->
         <circle class="throat-halo" cx="120" cy="162" r="7" fill="var(--mouth-glow)" opacity="0.3" filter="url(#halo)"/>
         <circle class="throat" cx="120" cy="162" r="2.5" fill="var(--mouth-glow)"/>
       </svg>
@@ -519,107 +557,89 @@ footer p { margin: 0.3rem 0; }
         <span class="name"><span class="ghost" aria-hidden="true">Echoes</span><span class="ghost g2" aria-hidden="true">Echoes</span><span class="core">Echoes</span></span>
         <span class="sub">of the Abyss</span>
       </h1>
-      <p class="motto">In the abyss, every echo is a warning.</p>
+      <p class="motto">${escape(content.hero.motto)}</p>
     </div>
     <div class="hero-copy">
-      <p class="eyebrow">Pelagion Rift survey · development roadmap</p>
-      <p class="tagline">An RTS where you cannot see — only listen — and every action you take tells the enemy where you are.</p>
-      <p class="pitch">A browser-native real-time strategy game with acoustic fog of war. Four factions fight for the last habitable water on the planet, in a world where everything that makes you strong makes you loud. This page is where the build stands, phase by phase, read live from the issue tracker.</p>
-    <div class="cta">
-      <a class="btn magenta" href="#status">Where it stands</a>
-      <a class="btn cyan" href="#roadmap">The roadmap</a>
-    </div>
-    <div class="readout">
-      <div class="label">Tracked work complete</div>
-      <div class="big"><span data-count="${overall.pct}">${overall.pct}</span>%<small>${overall.closed} of ${overall.total} items</small></div>
-      <span class="bar" role="progressbar" aria-valuenow="${overall.pct}" aria-valuemin="0" aria-valuemax="100" aria-label="Overall progress"><span style="--w:${overall.pct}%"></span></span>
-    </div>
+      <p class="eyebrow">${escape(content.hero.eyebrow)}</p>
+      <p class="tagline">${escape(content.hero.tagline)}</p>
+      <p class="pitch">${escape(content.hero.pitch)}</p>
+      <div class="cta">
+        <a class="btn magenta" href="${escape(content.hero.primary.href)}">${escape(content.hero.primary.label)}</a>
+        <a class="btn cyan" href="${escape(content.hero.secondary.href)}">${escape(content.hero.secondary.label)}</a>
+      </div>
+      <div class="readout">
+        <div class="label">Roadmap complete</div>
+        <div class="big"><span data-count="${overall.pct}">${overall.pct}</span>%<small>${overall.closed} of ${overall.total} items</small></div>
+        <span class="bar" role="progressbar" aria-valuenow="${overall.pct}" aria-valuemin="0" aria-valuemax="100" aria-label="Overall progress"><span style="--w:${overall.pct}%"></span></span>
+      </div>
     </div>
   </div>
 </header>
 
 <main>
   <div class="wrap">
-    <div class="stats" aria-label="The build in numbers">
-${[
-  {
-    n: phasesComplete,
-    cls: 'cool',
-    label: 'Phases complete',
-    sub: `of ${roadmap.phases.length} on the roadmap`,
-  },
-  {
-    n: overall.closed,
-    cls: 'cool',
-    label: 'Roadmap items done',
-    sub: haveState ? `${openItems} still open` : 'state unknown',
-  },
-  { n: stats.issuesClosed, cls: '', label: 'Issues closed', sub: 'across the repository' },
-  {
-    n: stats.prsMerged,
-    cls: '',
-    label: 'Pull requests merged',
-    sub: 'every one against a green main',
-  },
-  { n: stats.issuesOpen, cls: 'hot', label: 'Issues open', sub: 'the backlog, today' },
-]
-  .filter((t) => typeof t.n === 'number')
-  .map(
-    (t) =>
-      `      <div class="stat reveal"><div class="n ${t.cls}" data-count="${t.n}">${fmt(t.n)}</div><div class="l">${t.label}</div><div class="sub">${escape(t.sub)}</div></div>`
-  )
-  .join('\n')}
+    <div class="stats" aria-label="The game in numbers">
+${stats}
     </div>
   </div>
 
-  <section id="status">
+  <section id="game">
     <div class="wrap">
-      <div class="section-head"><h2>Where the build actually stands</h2><span class="kicker">the honest readout</span></div>
-      ${roadmap.standing.intro ? `<p class="lede">${inline(roadmap.standing.intro, repo)}</p>` : ''}
+      <div class="section-head"><h2>What kind of game this is</h2><span class="kicker">five rules the whole design descends from</span></div>
       <div class="grid">
-${statusCards}
+${pillars}
       </div>
     </div>
   </section>
 
-  <section id="built">
+  <section id="navies">
     <div class="wrap">
-      <div class="section-head"><h2>What is built</h2><span class="kicker">and all of it stands</span></div>
+      <div class="section-head"><h2>Four navies, one argument</h2><span class="kicker">each a different answer to the same problem: noise</span></div>
+      <p class="lede">No faction is written as the villain. All four campaign endings are coherent, costly, and irreconcilable.</p>
       <div class="grid">
-${builtCards}
+${factions}
       </div>
     </div>
   </section>
 
-  <section id="roadmap">
+  <section id="play">
     <div class="wrap">
-      <div class="section-head"><h2>The roadmap</h2><span class="kicker">${roadmap.phases.length} phases · state read live from GitHub</span></div>
-      <p class="lede">Each phase is a table in the design bible's roadmap, and each row is an issue. Whether a row is done is not written anywhere — the page asks the issue tracker when it is built. Closed phases fold to a line; the live ones are open.</p>
+      <div class="section-head"><h2>What you can play today</h2><span class="kicker">built, working, and in the game right now</span></div>
+      <div class="grid">
+${playable}
+      </div>
+      <h3 class="subhead">Known rough edges</h3>
+      <p class="lede">The honest part. These are the things a player would notice first, and each one is tracked in the open.</p>
+      <div class="grid">
+${roughEdges}
+      </div>
+    </div>
+  </section>
+
+  <section id="next">
+    <div class="wrap">
+      <div class="section-head"><h2>What is next</h2><span class="kicker">progress read live from the project tracker</span></div>
+      <p class="lede">Every line below is a piece of work the team has committed to, and its state comes straight from the tracker when this page is built. Nothing here is a wish list.</p>
       <div class="controls" role="group" aria-label="Filter items">
         <button class="chip" type="button" data-filter="all" aria-pressed="true">All</button>
-        <button class="chip" type="button" data-filter="open" aria-pressed="false">Open</button>
+        <button class="chip" type="button" data-filter="open" aria-pressed="false">Planned</button>
         <button class="chip" type="button" data-filter="closed" aria-pressed="false">Done</button>
         <input class="search" type="search" placeholder="Search the roadmap…" aria-label="Search roadmap items">
         <button class="chip ghost" type="button" data-toggle="expand">Expand all</button>
       </div>
       <div class="timeline">
-${phases}
+${nextPhases}
       </div>
     </div>
   </section>
 
-  <section id="gates">
+  <section id="past">
     <div class="wrap">
-      <div class="section-head"><h2>What gates what</h2><span class="kicker">dependencies that survive any reordering</span></div>
-      <div class="grid">
-${sequencing}
+      <div class="section-head"><h2>The road so far</h2><span class="kicker">${past.length} phases finished</span></div>
+      <div class="timeline">
+${pastPhases}
       </div>
-    </div>
-  </section>
-
-  <section id="sprints">
-    <div class="wrap">
-      <div class="section-head"><h2>Completed sprints</h2><span class="kicker">the milestones behind the phases</span></div>
+      <h3 class="subhead">Milestones</h3>
       <div class="sprints">
 ${sprints}
       </div>
@@ -628,9 +648,9 @@ ${sprints}
 
   <footer>
     <div class="wrap">
+      <p class="note">${escape(content.footer.note)}</p>
       <p class="${haveState ? 'stamp' : 'warn'}">${provenance}</p>
-      <p>Generated from <code>docs/ROADMAP.md</code>, which owns the structure and the reasoning, and the GitHub issue API, which owns the state. Nothing about progress is stored in this page. · <a href="https://github.com/${repo}">Repository</a></p>
-      <p>Gameplay, lore, screenshots and the sound of the thing: later. Until then, the roadmap is the game.</p>
+      <p><a href="https://github.com/${repo}">The project on GitHub</a></p>
     </div>
   </footer>
 </main>

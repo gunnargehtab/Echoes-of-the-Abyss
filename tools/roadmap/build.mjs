@@ -28,11 +28,12 @@
  * cannot fail to build because of something in node_modules.
  */
 
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { fetchIssueStates, fetchRepoStats } from './lib/github.mjs';
+import * as content from './lib/content.mjs';
+import { fetchIssueStates } from './lib/github.mjs';
 import { parseRoadmap } from './lib/parse.mjs';
 import { render } from './lib/render.mjs';
 
@@ -85,16 +86,37 @@ const numbers = [
   ]),
 ];
 const states = await fetchIssueStates(REPO, numbers, TOKEN);
-const stats = await fetchRepoStats(REPO, TOKEN);
 if (TOKEN === '') {
   console.error('No GITHUB_TOKEN — building with every item marked unknown.');
+}
+
+// The numbers on the stat tiles are counted from the repository rather than
+// typed in, so a new mission or map shows up without anyone editing the site.
+const counts = {
+  missions: readdirSync(join(repoRoot, 'docs')).filter((f) => /^mission-.*\.md$/.test(f)).length,
+  maps: readdirSync(join(repoRoot, 'packages', 'backend', 'src', 'sim', 'maps')).filter(
+    (f) => f.endsWith('.ts') && f !== 'index.ts' && f !== 'types.ts'
+  ).length,
+  factions: content.factions.length,
+};
+
+// A row without player-facing copy renders in the doc's own words, which are
+// written for engineers. Say so, loudly, so it gets a sentence.
+const uncovered = numbers.filter(
+  (n) => !(n in content.items) && roadmap.phases.some((p) => p.items.some((i) => i.number === n))
+);
+if (uncovered.length > 0) {
+  console.error(
+    `No player-facing copy in lib/content.mjs for: ${uncovered.map((n) => `#${n}`).join(', ')}`
+  );
 }
 
 const generatedAt = new Date().toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
 const html = render({
   roadmap,
   states,
-  stats,
+  content,
+  counts,
   repo: REPO,
   generatedAt,
   fontHref: 'fonts/big-shoulders-display-latin.woff2',
@@ -112,6 +134,6 @@ writeFileSync(join(target, '.nojekyll'), '');
 
 console.error(
   `Wrote ${join(target, 'index.html')} — ${roadmap.phases.length} phases, ${numbers.length} items, ` +
-    `${states.size} states resolved, ${roadmap.standing.built.length} built entries, ` +
+    `${states.size} states resolved, ${counts.missions} missions, ${counts.maps} maps, ` +
     `${roadmap.sprints.length} sprints.`
 );
