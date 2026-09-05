@@ -141,12 +141,14 @@ export interface HeightGrid {
  * north to south, matching the seabed bake's canvas rows, so `u = x / widthM`
  * and `v = z / heightM` with an unflipped texture line the two up.
  */
-export function buildHeightGrid(terrain: TerrainPayload): HeightGrid {
+export function buildHeightGrid(
+  terrain: TerrainPayload,
+  seed = seabedSeed(terrain),
+  rockTop = rockTopDepthM(terrain)
+): HeightGrid {
   const vertsX = terrain.cols * VERTS_PER_CELL + 1;
   const vertsZ = terrain.rows * VERTS_PER_CELL + 1;
   const stepM = terrain.cellM / VERTS_PER_CELL;
-  const seed = seabedSeed(terrain);
-  const rockTop = rockTopDepthM(terrain);
   const y = new Float32Array(vertsX * vertsZ);
   for (let iz = 0; iz < vertsZ; iz++) {
     for (let ix = 0; ix < vertsX; ix++) {
@@ -163,4 +165,37 @@ export function buildHeightGrid(terrain: TerrainPayload): HeightGrid {
     widthM: terrain.cols * terrain.cellM,
     heightM: terrain.rows * terrain.cellM,
   };
+}
+
+/**
+ * Recompute the vertices a ground delta moved, in place (#434).
+ *
+ * The heightfield interpolates the floor between cell centres and the rock
+ * relief reaches one cell past its own edge, so a changed cell moves every
+ * vertex within one cell of it and none further: the touched rectangle plus
+ * a one-cell ring is recomputed, and the rest of the grid is left exactly as
+ * the full build made it. With the same seed and rock top, the result is the
+ * grid a full rebuild would produce — which the tests hold — for a fraction
+ * of the 16k vertices a whole-map rebuild walks. Returns the vertex index
+ * range that changed, for a caller that uploads only that span.
+ */
+export function patchHeightGrid(
+  grid: HeightGrid,
+  terrain: TerrainPayload,
+  seed: number,
+  rockTop: number,
+  touched: { col0: number; row0: number; col1: number; row1: number }
+): { first: number; last: number } {
+  const ix0 = Math.max(0, (touched.col0 - 1) * VERTS_PER_CELL);
+  const iz0 = Math.max(0, (touched.row0 - 1) * VERTS_PER_CELL);
+  const ix1 = Math.min(grid.vertsX - 1, (touched.col1 + 2) * VERTS_PER_CELL);
+  const iz1 = Math.min(grid.vertsZ - 1, (touched.row1 + 2) * VERTS_PER_CELL);
+  for (let iz = iz0; iz <= iz1; iz++) {
+    for (let ix = ix0; ix <= ix1; ix++) {
+      grid.y[iz * grid.vertsX + ix] = depthToWorldY(
+        seabedDepthAtM(terrain, seed, rockTop, ix * grid.stepM, iz * grid.stepM)
+      );
+    }
+  }
+  return { first: iz0 * grid.vertsX + ix0, last: iz1 * grid.vertsX + ix1 };
 }

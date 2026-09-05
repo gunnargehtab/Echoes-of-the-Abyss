@@ -137,8 +137,11 @@ const MOTTLE_FAST_WAVELENGTH_M = 55;
 
 /**
  * FNV-1a over the payload's dimensions and floor. The seed is the ground
- * itself: same terrain, same bake, on every client — and a mid-match ground
- * delta reseeds only because the ground genuinely changed.
+ * itself: same terrain, same bake, on every client. The view takes it once,
+ * from the ground the match opened on, and keeps it across ground deltas —
+ * a collapse that reseeded the whole detail field would re-texture every
+ * cell on the map to change a handful (#434), and a player watching an arch
+ * fall should see the arch fall and nothing else move.
  */
 export function seabedSeed(terrain: {
   cols: number;
@@ -336,24 +339,72 @@ export function emberFlicker(index: number, bucket: number, phase: number): numb
  * as raised stone rather than as a hole in the map, with a matching shadow
  * lapping the open floor at its base.
  */
-export function bakeSeabed(terrain: TerrainPayload): HTMLCanvasElement {
-  const { cols, rows, cellM } = terrain;
-  const w = cols * SEABED_PX_PER_CELL;
-  const h = rows * SEABED_PX_PER_CELL;
-  const seed = seabedSeed(terrain);
+/** The open floor's depth range, which `depthShade` spreads its ramp across. */
+export interface SeabedRange {
+  shallowest: number;
+  deepest: number;
+}
 
-  const isRock = (i: number) => terrain.ceiling[i]! > terrain.floor[i]!;
-
-  // The map's own depth range, rock excluded — same scan drawTerrain ran, for
-  // the same reason: one collapsed span must not re-shade the whole seabed.
+/**
+ * The map's own depth range, rock excluded — the same scan drawTerrain ran,
+ * for the same reason: one collapsed span must not re-shade the whole seabed.
+ * Taken once per map by the view and held across ground deltas, so a
+ * mid-match cut deeper than anything authored darkens its own cells rather
+ * than re-ramping every other one.
+ */
+export function seabedRange(terrain: TerrainPayload): SeabedRange {
   let shallowest = Number.POSITIVE_INFINITY;
   let deepest = 0;
   for (let i = 0; i < terrain.floor.length; i++) {
-    if (isRock(i)) continue;
+    if (terrain.ceiling[i]! > terrain.floor[i]!) continue;
     const f = terrain.floor[i]!;
     if (f < shallowest) shallowest = f;
     if (f > deepest) deepest = f;
   }
+  return { shallowest, deepest };
+}
+
+/** A rectangle of cells, inclusive at both ends. */
+export interface CellRect {
+  col0: number;
+  row0: number;
+  col1: number;
+  row1: number;
+}
+
+/** The pixels of a shaded cell rectangle, with where they go on the canvas. */
+export interface SeabedPixels {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  /** RGBA, row-major, `w * h * 4` long — `ImageData.data` shaped. */
+  data: Uint8ClampedArray;
+}
+
+/**
+ * Shade one cell rectangle of the seabed, pure and canvas-free.
+ *
+ * The whole bake is this over every cell; a ground delta is this over the
+ * cells it touched plus one ring, because both passes reach into their
+ * neighbours — the floor and the relief parameters interpolate across cell
+ * centres, and the cliff treatments look one cell out for the other kind of
+ * ground — and one cell is as far as either reaches. The result is identical
+ * to the same pixels of a full bake, which is the promise the partial rebuild
+ * stands on and the tests hold.
+ */
+export function shadeSeabed(
+  terrain: TerrainPayload,
+  seed: number,
+  range: SeabedRange,
+  rect: CellRect
+): SeabedPixels {
+  const { cols, rows, cellM } = terrain;
+  const w = cols * SEABED_PX_PER_CELL;
+  const h = rows * SEABED_PX_PER_CELL;
+  const { shallowest, deepest } = range;
+
+  const isRock = (i: number) => terrain.ceiling[i]! > terrain.floor[i]!;
 
   const clampCol = (c: number) => Math.min(cols - 1, Math.max(0, c));
   const clampRow = (r: number) => Math.min(rows - 1, Math.max(0, r));
@@ -363,15 +414,28 @@ export function bakeSeabed(terrain: TerrainPayload): HTMLCanvasElement {
     return isRock(i) ? terrain.floor[homeIndex]! : terrain.floor[i]!;
   };
 
+  // The pixels asked for, and the one-pixel ring around them that pass 2's
+  // gradients read — clamped to the canvas, where the edge pixel reads itself
+  // exactly as it always has.
+  const x0 = Math.max(0, rect.col0) * SEABED_PX_PER_CELL;
+  const y0 = Math.max(0, rect.row0) * SEABED_PX_PER_CELL;
+  const x1 = Math.min(cols, rect.col1 + 1) * SEABED_PX_PER_CELL;
+  const y1 = Math.min(rows, rect.row1 + 1) * SEABED_PX_PER_CELL;
+  const ex0 = Math.max(0, x0 - 1);
+  const ey0 = Math.max(0, y0 - 1);
+  const ex1 = Math.min(w, x1 + 1);
+  const ey1 = Math.min(h, y1 + 1);
+  const ew = ex1 - ex0;
+
   // Pass 1: the heightfield, so pass 2 can take gradients off it directly.
-  const height = new Float32Array(w * h);
+  const height = new Float32Array(ew * (ey1 - ey0));
   const mPerPx = cellM / SEABED_PX_PER_CELL;
-  for (let py = 0; py < h; py++) {
+  for (let py = ey0; py < ey1; py++) {
     // Continuous cell coordinate of this pixel's centre.
     const cy = (py + 0.5) / SEABED_PX_PER_CELL - 0.5;
     const r0 = Math.floor(cy);
     const fy = smooth(cy - r0);
-    for (let px = 0; px < w; px++) {
+    for (let px = ex0; px < ex1; px++) {
       const cx = (px + 0.5) / SEABED_PX_PER_CELL - 0.5;
       const c0 = Math.floor(cx);
       const fx = smooth(cx - c0);
@@ -400,7 +464,7 @@ export function bakeSeabed(terrain: TerrainPayload): HTMLCanvasElement {
         (b10[k] - b00[k]) * fx +
         (b01[k] + (b11[k] - b01[k]) * fx - b00[k] - (b10[k] - b00[k]) * fx) * fy;
 
-      height[py * w + px] =
+      height[(py - ey0) * ew + (px - ex0)] =
         floor +
         detailM(
           px * mPerPx,
@@ -416,12 +480,9 @@ export function bakeSeabed(terrain: TerrainPayload): HTMLCanvasElement {
   // Pass 2: light it. Gradients come off the baked heightfield, converted to
   // metres-per-cell so reliefShade's reference scale means what it meant for
   // the vector pass — one tuning, both renderers.
-  const canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext('2d');
-  if (ctx === null) throw new Error('seabed bake: no 2d context');
-  const img = ctx.createImageData(w, h);
+  const outW = x1 - x0;
+  const outH = y1 - y0;
+  const data = new Uint8ClampedArray(outW * outH * 4);
   const dropScale = SEABED_PX_PER_CELL / 2;
 
   /**
@@ -449,12 +510,12 @@ export function bakeSeabed(terrain: TerrainPayload): HTMLCanvasElement {
   const edgeGain = (distM: number, reachM: number, gain: number) =>
     distM >= reachM ? 1 : gain + (1 - gain) * smooth(distM / reachM);
 
-  for (let py = 0; py < h; py++) {
+  for (let py = y0; py < y1; py++) {
     const row = clampRow(Math.floor(py / SEABED_PX_PER_CELL));
-    for (let px = 0; px < w; px++) {
+    for (let px = x0; px < x1; px++) {
       const col = clampCol(Math.floor(px / SEABED_PX_PER_CELL));
       const index = row * cols + col;
-      const j = (py * w + px) * 4;
+      const j = ((py - y0) * outW + (px - x0)) * 4;
       const xM = px * mPerPx;
       const yM = py * mPerPx;
 
@@ -476,11 +537,11 @@ export function bakeSeabed(terrain: TerrainPayload): HTMLCanvasElement {
             edgeGain(oppositeDistM(xM, yM, row, col, false), ROCK_EDGE_M, ROCK_EDGE_GAIN)
         );
       } else {
-        const i = py * w + px;
+        const i = (py - ey0) * ew + (px - ex0);
         const hL = height[i - (px > 0 ? 1 : 0)]!;
         const hR = height[i + (px < w - 1 ? 1 : 0)]!;
-        const hU = height[i - (py > 0 ? w : 0)]!;
-        const hD = height[i + (py < h - 1 ? w : 0)]!;
+        const hU = height[i - (py > 0 ? ew : 0)]!;
+        const hD = height[i + (py < h - 1 ? ew : 0)]!;
         const biome = terrain.biomes[index] as Biome;
         const base = BIOME_COLOR[biome] ?? BIOME_COLOR[Biome.OpenWater];
         const relief = BIOME_RELIEF[biome] ?? BIOME_RELIEF[Biome.OpenWater];
@@ -499,13 +560,70 @@ export function bakeSeabed(terrain: TerrainPayload): HTMLCanvasElement {
         );
       }
 
-      img.data[j] = (color >> 16) & 0xff;
-      img.data[j + 1] = (color >> 8) & 0xff;
-      img.data[j + 2] = color & 0xff;
-      img.data[j + 3] = 255;
+      data[j] = (color >> 16) & 0xff;
+      data[j + 1] = (color >> 8) & 0xff;
+      data[j + 2] = color & 0xff;
+      data[j + 3] = 255;
     }
   }
 
-  ctx.putImageData(img, 0, 0);
+  return { x: x0, y: y0, w: outW, h: outH, data };
+}
+
+/** Put one shaded rectangle onto the seabed canvas, in place. */
+function paintSeabed(canvas: HTMLCanvasElement, pixels: SeabedPixels): void {
+  const ctx = canvas.getContext('2d');
+  if (ctx === null) throw new Error('seabed bake: no 2d context');
+  const img = ctx.createImageData(pixels.w, pixels.h);
+  img.data.set(pixels.data);
+  ctx.putImageData(img, pixels.x, pixels.y);
+}
+
+/**
+ * Bake the whole seabed to a canvas. `seed` and `range` default to the
+ * terrain's own; the view passes the ones it froze at the join so that a
+ * later partial rebake shades on exactly the same terms.
+ */
+export function bakeSeabed(
+  terrain: TerrainPayload,
+  seed = seabedSeed(terrain),
+  range = seabedRange(terrain)
+): HTMLCanvasElement {
+  const canvas = document.createElement('canvas');
+  canvas.width = terrain.cols * SEABED_PX_PER_CELL;
+  canvas.height = terrain.rows * SEABED_PX_PER_CELL;
+  paintSeabed(
+    canvas,
+    shadeSeabed(terrain, seed, range, {
+      col0: 0,
+      row0: 0,
+      col1: terrain.cols - 1,
+      row1: terrain.rows - 1,
+    })
+  );
   return canvas;
+}
+
+/**
+ * Re-bake the cells a ground delta touched, plus the one-cell ring the
+ * shading reaches into, onto the canvas the full bake produced (#434). A
+ * collapsed span used to re-bake the whole map — a million pixels for a
+ * handful of cells.
+ */
+export function rebakeSeabedCells(
+  canvas: HTMLCanvasElement,
+  terrain: TerrainPayload,
+  seed: number,
+  range: SeabedRange,
+  touched: CellRect
+): void {
+  paintSeabed(
+    canvas,
+    shadeSeabed(terrain, seed, range, {
+      col0: touched.col0 - 1,
+      row0: touched.row0 - 1,
+      col1: touched.col1 + 1,
+      row1: touched.row1 + 1,
+    })
+  );
 }

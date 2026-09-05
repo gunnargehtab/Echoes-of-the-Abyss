@@ -16,6 +16,7 @@ import { Biome } from '@echoes/shared';
 import { BIOME_RELIEF, ROCK_RELIEF, seabedSeed } from '../src/game/seabed.ts';
 import {
   buildHeightGrid,
+  patchHeightGrid,
   DEPTH_VISUAL_M_PER_M,
   depthToWorldY,
   rockTopDepthM,
@@ -91,5 +92,38 @@ describe('perspective heightfield', () => {
     assert.equal(grid.heightM, 1000);
     assert.equal(grid.stepM * (grid.vertsX - 1), grid.widthM);
     assert.equal(grid.y.length, grid.vertsX * grid.vertsZ);
+  });
+
+  it('patches a ground delta into the grid a full build would make (#434)', () => {
+    const before = demoTerrain();
+    const seed = seabedSeed(before);
+    const rockTop = rockTopDepthM(before);
+    const grid = buildHeightGrid(before, seed, rockTop);
+
+    const after = demoTerrain();
+    after.floor[6] = 2500; // (row 1, col 2) drops
+    after.ceiling[9] = 3000; // (row 2, col 1) becomes rock
+    const span = patchHeightGrid(grid, after, seed, rockTop, {
+      col0: 1,
+      row0: 1,
+      col1: 2,
+      row1: 2,
+    });
+    const fresh = buildHeightGrid(after, seed, rockTop);
+    assert.deepEqual([...grid.y], [...fresh.y]);
+    assert.ok(span.first < span.last, 'the changed span is a real range of vertices');
+
+    // The ring is enough: with the same seed and rock top, nothing outside it
+    // moved between the two full builds either.
+    const untouched = buildHeightGrid(before, seed, rockTop);
+    const ix0 = 0 * VERTS_PER_CELL;
+    const ix1 = 3 * VERTS_PER_CELL + VERTS_PER_CELL;
+    for (let iz = 0; iz < fresh.vertsZ; iz++) {
+      for (let ix = 0; ix < fresh.vertsX; ix++) {
+        const inRing = ix >= ix0 && ix <= ix1 && iz >= 0 && iz <= 4 * VERTS_PER_CELL;
+        if (inRing) continue;
+        assert.equal(fresh.y[iz * fresh.vertsX + ix], untouched.y[iz * fresh.vertsX + ix]);
+      }
+    }
   });
 });

@@ -30,13 +30,11 @@ import {
   BufferAttribute,
   BufferGeometry,
   CanvasTexture,
-  CircleGeometry,
   Color,
   DirectionalLight,
   DoubleSide,
   Fog,
   Group,
-  Line,
   LineBasicMaterial,
   LineLoop,
   LineSegments,
@@ -64,9 +62,21 @@ import {
 } from '@echoes/shared';
 import type { TerrainPayload } from '../net/GameClient.ts';
 import { UI, VENT_EMBER } from './palette.ts';
-import { bakeSeabed, emberFlicker, seabedSeed, ventEmbers } from './seabed.ts';
+import { DepthCues } from './depthCues.ts';
+import {
+  bakeSeabed,
+  emberFlicker,
+  rebakeSeabedCells,
+  seabedRange,
+  seabedSeed,
+  ventEmbers,
+  type CellRect,
+  type SeabedRange,
+} from './seabed.ts';
 import {
   buildHeightGrid,
+  patchHeightGrid,
+  type HeightGrid,
   depthToWorldY,
   rockTopDepthM,
   seabedDepthAtM,
@@ -135,9 +145,11 @@ const QUAD_CORNERS: ReadonlyArray<readonly [number, number]> = [
 
 interface EntityHandle {
   mesh: Mesh;
-  /** The depth line and ground shadow that make band membership readable. */
-  plumb: Line;
-  shadow: Mesh;
+  /** Its slot in the batched depth cues — the plumb line and ground shadow
+   * that make band membership readable (depthCues.ts). */
+  cue: number;
+  /** The shadow's drawn radius, recomputed by the sync and applied per place. */
+  shadowRadius: number;
   /** Cache key of the sprite canvas currently on the mesh. */
   spriteKey: string;
   widthM: number;
@@ -193,7 +205,19 @@ export class PerspectiveView {
    */
   private groundSeed = 0;
   private groundRockTopM = 0;
+  /** The bake's depth ramp, taken with the seed and held with it. */
+  private seabedRange: SeabedRange = { shallowest: 0, deepest: 0 };
   private terrainMesh: Mesh | null = null;
+  /**
+   * What `rebuildTerrain` made, kept so `applyGround` can patch it (#434): the
+   * vertex grid the mesh's positions came from, and the canvas its texture
+   * is. A collapsed span used to rebuild all 16k vertices and re-bake every
+   * pixel of the seabed; now it moves the vertices within a cell of the
+   * change and re-shades those cells and a ring.
+   */
+  private terrainGrid: HeightGrid | null = null;
+  private seabedCanvas: HTMLCanvasElement | null = null;
+  private seabedTexture: CanvasTexture | null = null;
   private readonly terrainDressing = new Group();
   /** Environment props (environmentLayer.ts) — rebuilt on the terrain cadence. */
   private readonly environment = new EnvironmentLayer();
@@ -203,6 +227,8 @@ export class PerspectiveView {
 
   private readonly unitGroup = new Group();
   private readonly structureGroup = new Group();
+  /** Every plumb and every shadow, two draw calls in all (#434). */
+  private readonly cues = new DepthCues(UI.accent);
 
   private faction: Faction = Faction.Bathyarch;
   private units: OwnUnit[] = [];
@@ -252,7 +278,8 @@ export class PerspectiveView {
       this.terrainDressing,
       this.environment.group,
       this.unitGroup,
-      this.structureGroup
+      this.structureGroup,
+      this.cues.group
     );
     this.scene.background = new Color(UI.background);
 
@@ -336,14 +363,28 @@ export class PerspectiveView {
   ): void {
     const terrain = this.terrain;
     if (terrain === null || cells.length === 0) return;
+    let touched: CellRect | null = null;
     for (const cell of cells) {
       if (cell.index < 0 || cell.index >= terrain.floor.length) continue;
       terrain.floor[cell.index] = cell.floorM;
       terrain.ceiling[cell.index] = cell.ceilingM;
       terrain.biomes[cell.index] = cell.biome;
+      const col = cell.index % terrain.cols;
+      const row = Math.floor(cell.index / terrain.cols);
+      if (touched === null) touched = { col0: col, row0: row, col1: col, row1: row };
+      else {
+        touched.col0 = Math.min(touched.col0, col);
+        touched.row0 = Math.min(touched.row0, row);
+        touched.col1 = Math.max(touched.col1, col);
+        touched.row1 = Math.max(touched.row1, row);
+      }
     }
-    this.refreshGroundCache();
-    this.rebuildTerrain();
+    if (touched === null) return;
+    // The seed, the rock top and the depth ramp stay what the join set them
+    // to: a delta changes the cells it names, and re-deriving any of the
+    // three from the new ground would move every cell on the map to change a
+    // few (seabed.ts, `seabedSeed`).
+    this.patchTerrain(touched);
   }
 
   applySnapshot(snapshot: EchoSnapshot): void {
@@ -381,6 +422,7 @@ export class PerspectiveView {
     this.setActive(false);
     this.resizeObserver?.disconnect();
     this.environment.destroy();
+    this.cues.dispose();
     for (const texture of this.spriteTextures.values()) texture.dispose();
     this.renderer?.dispose();
     this.renderer?.domElement.remove();
@@ -576,6 +618,9 @@ export class PerspectiveView {
       this.terrainMesh.geometry.dispose();
       (this.terrainMesh.material as MeshBasicMaterial).map?.dispose();
       (this.terrainMesh.material as MeshBasicMaterial).dispose();
+      this.terrainGrid = null;
+      this.seabedCanvas = null;
+      this.seabedTexture = null;
     }
     if (this.embers !== null) {
       this.scene.remove(this.embers);
@@ -587,7 +632,7 @@ export class PerspectiveView {
     // The grid gives the ground its shape; the seabed bake gives it its skin.
     // One texture, one geometry, one draw call — the lighting is already in
     // the bake, so the material is deliberately unlit.
-    const grid = buildHeightGrid(terrain);
+    const grid = buildHeightGrid(terrain, this.groundSeed, this.groundRockTopM);
     const positions = new Float32Array(grid.vertsX * grid.vertsZ * 3);
     const uvs = new Float32Array(grid.vertsX * grid.vertsZ * 2);
     for (let iz = 0; iz < grid.vertsZ; iz++) {
@@ -621,7 +666,8 @@ export class PerspectiveView {
     geometry.setAttribute('uv', new BufferAttribute(uvs, 2));
     geometry.setIndex(new BufferAttribute(indices, 1));
 
-    const texture = new CanvasTexture(bakeSeabed(terrain));
+    const canvas = bakeSeabed(terrain, this.groundSeed, this.seabedRange);
+    const texture = new CanvasTexture(canvas);
     // The bake's row 0 is the map's north edge, and so is the grid's iz 0;
     // an unflipped texture keeps the two aligned without inverting the v axis.
     texture.flipY = false;
@@ -629,6 +675,9 @@ export class PerspectiveView {
     texture.anisotropy = Math.min(4, this.renderer.capabilities.getMaxAnisotropy());
     this.terrainMesh = new Mesh(geometry, new MeshBasicMaterial({ map: texture }));
     this.scene.add(this.terrainMesh);
+    this.terrainGrid = grid;
+    this.seabedCanvas = canvas;
+    this.seabedTexture = texture;
 
     // Depth haze: the fog is the water. Scaled to the map so a small arena
     // and a large one both fade at their own horizon, in the same abyss hue
@@ -636,15 +685,57 @@ export class PerspectiveView {
     const diagonal = Math.hypot(grid.widthM, grid.heightM);
     this.scene.fog = new Fog(UI.background, diagonal * 0.55, diagonal * 2.1);
 
+    this.rebuildDressing();
+    this.syncEntities();
+  }
+
+  /**
+   * Everything that stands on the ground and reads its heights: the chart
+   * register, the embers, the props. Cheap next to the mesh and the bake —
+   * a few hundred instance matrices and a handful of lines — and every one
+   * of them is placed by rules that look at the cells around a change
+   * (environment.ts, the locality guard), so a delta rebuilds them whole and
+   * they land exactly where a full rebuild would have put them.
+   */
+  private rebuildDressing(): void {
+    const terrain = this.terrain;
+    if (terrain === null) return;
+    this.terrainDressing.clear();
     this.buildTerrainDressing(terrain);
     this.buildEmbers(terrain);
     // Props stand on the drawn ground — the same heights the mesh has, crag
     // included — and rebuild only here, never per frame (gate 6).
-    const seed = seabedSeed(terrain);
-    const rockTop = rockTopDepthM(terrain);
-    this.environment.rebuild(terrain, (xM, yM) =>
-      depthToWorldY(seabedDepthAtM(terrain, seed, rockTop, xM, yM))
-    );
+    this.environment.rebuild(terrain, (xM, yM) => this.groundYAt(xM, yM));
+  }
+
+  /**
+   * The ground delta path (#434): move the vertices within a cell of the
+   * change, re-shade those cells and their ring on the existing canvas, and
+   * leave the other sixteen thousand vertices and million pixels alone.
+   */
+  private patchTerrain(touched: CellRect): void {
+    const terrain = this.terrain;
+    const mesh = this.terrainMesh;
+    const grid = this.terrainGrid;
+    const canvas = this.seabedCanvas;
+    const texture = this.seabedTexture;
+    if (terrain === null || mesh === null || grid === null || canvas === null || texture === null) {
+      this.rebuildTerrain();
+      return;
+    }
+    const span = patchHeightGrid(grid, terrain, this.groundSeed, this.groundRockTopM, touched);
+    const positions = mesh.geometry.getAttribute('position') as BufferAttribute;
+    for (let i = span.first; i <= span.last; i++) positions.setY(i, grid.y[i]!);
+    positions.needsUpdate = true;
+    // The raycast `resolveGround` runs reads the mesh's bounds; a cut deeper
+    // than the old floor would otherwise fall outside them.
+    mesh.geometry.computeBoundingSphere();
+    mesh.geometry.computeBoundingBox();
+
+    rebakeSeabedCells(canvas, terrain, this.groundSeed, this.seabedRange, touched);
+    texture.needsUpdate = true;
+
+    this.rebuildDressing();
     this.syncEntities();
   }
 
@@ -656,10 +747,7 @@ export class PerspectiveView {
    * never explains.
    */
   private buildTerrainDressing(terrain: TerrainPayload): void {
-    const seed = seabedSeed(terrain);
-    const rockTop = rockTopDepthM(terrain);
-    const groundY = (xM: number, yM: number) =>
-      depthToWorldY(seabedDepthAtM(terrain, seed, rockTop, xM, yM));
+    const groundY = (xM: number, yM: number) => this.groundYAt(xM, yM);
     const isRock = (i: number) => terrain.ceiling[i]! > terrain.floor[i]!;
 
     // Tunnel routes: a line across each roofed cell, lifted just off the
@@ -733,7 +821,7 @@ export class PerspectiveView {
    * attribute under additive blending, so 400 embers stay one draw call.
    * The 5 Hz step and the SPEC ember hue are seabed.ts's, unchanged. */
   private buildEmbers(terrain: TerrainPayload): void {
-    const embers = ventEmbers(terrain, seabedSeed(terrain));
+    const embers = ventEmbers(terrain, this.groundSeed);
     this.emberPhases = embers.map((e) => e.phase);
     if (embers.length === 0) {
       this.embers = null;
@@ -741,12 +829,9 @@ export class PerspectiveView {
     }
     const emberPositions = new Float32Array(embers.length * 3);
     const emberColors = new Float32Array(embers.length * 3);
-    const seed = seabedSeed(terrain);
-    const rockTop = rockTopDepthM(terrain);
     embers.forEach((ember, i) => {
       emberPositions[i * 3] = ember.xM;
-      emberPositions[i * 3 + 1] =
-        depthToWorldY(seabedDepthAtM(terrain, seed, rockTop, ember.xM, ember.yM)) + 6;
+      emberPositions[i * 3 + 1] = this.groundYAt(ember.xM, ember.yM) + 6;
       emberPositions[i * 3 + 2] = ember.yM;
     });
     const emberGeometry = new BufferGeometry();
@@ -775,6 +860,7 @@ export class PerspectiveView {
     if (terrain === null) return;
     this.groundSeed = seabedSeed(terrain);
     this.groundRockTopM = rockTopDepthM(terrain);
+    this.seabedRange = seabedRange(terrain);
   }
 
   /**
@@ -828,7 +914,8 @@ export class PerspectiveView {
 
   /** Remove everything one entity put in the scene. */
   private dropHandle(group: Group, handle: EntityHandle): void {
-    group.remove(handle.mesh, handle.plumb, handle.shadow);
+    group.remove(handle.mesh);
+    this.cues.release(handle.cue);
     if (handle.model !== null) group.remove(handle.model.root);
   }
 
@@ -856,25 +943,11 @@ export class PerspectiveView {
       );
       mesh.rotation.order = 'YXZ';
       mesh.rotation.x = -Math.PI / 2;
-      const plumb = new Line(
-        new BufferGeometry().setFromPoints([new Vector3(), new Vector3()]),
-        new LineBasicMaterial({ color: UI.accent, transparent: true, opacity: 0.22 })
-      );
-      const shadow = new Mesh(
-        new CircleGeometry(1, 20),
-        new MeshBasicMaterial({
-          color: 0x000000,
-          transparent: true,
-          opacity: 0.3,
-          depthWrite: false,
-        })
-      );
-      shadow.rotation.x = -Math.PI / 2;
-      group.add(mesh, plumb, shadow);
+      group.add(mesh);
       handle = {
         mesh,
-        plumb,
-        shadow,
+        cue: this.cues.allocate(),
+        shadowRadius: 0,
         spriteKey: '',
         widthM: 0,
         heightM: 0,
@@ -928,12 +1001,11 @@ export class PerspectiveView {
     } else {
       (handle.mesh.material as MeshBasicMaterial).opacity = spec.dimmed ? 0.45 : 1;
     }
-    const shadowRadius =
+    handle.shadowRadius =
       draw *
       (model !== null
         ? Math.max(model.lengthM, model.beamM) * 0.4
         : Math.max(handle.widthM, handle.heightM) * 0.35);
-    handle.shadow.scale.set(shadowRadius, shadowRadius, 1);
 
     this.placeHandle(handle, spec.x, spec.z, spec.depthM, spec.yaw);
   }
@@ -973,11 +1045,8 @@ export class PerspectiveView {
     // The plumb is never scaled — its length is the depth, and a scaled plumb
     // would be the one place this factor told a lie. The shadow is, because a
     // true-scale shadow under an exaggerated hull reads as the wrong depth.
-    const positions = handle.plumb.geometry.getAttribute('position') as BufferAttribute;
-    positions.setXYZ(0, x, y, z);
-    positions.setXYZ(1, x, groundY + 1, z);
-    positions.needsUpdate = true;
-    handle.shadow.position.set(x, groundY + 2, z);
+    this.cues.setPlumb(handle.cue, x, y, groundY + 1, z);
+    this.cues.setShadow(handle.cue, x, groundY + 2, z, handle.shadowRadius);
   }
 
   /**
