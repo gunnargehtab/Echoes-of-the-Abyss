@@ -347,51 +347,74 @@ export interface HullMap {
 
 /** Keyed 'kind' for canonical models, 'faction:kind' for variants. */
 const maps = new Map<string, HullMap>();
+/**
+ * One decode per key, however many hulls ask. A canonical model serves every
+ * faction, so two navies asking for the same kind must share the job rather
+ * than decode it twice; and a key that failed stays failed — its lookup drops
+ * a level, and a retry per frame would only repeat the miss.
+ */
+const decodes = new Map<string, Promise<void>>();
 
-async function decodeInto(key: string, urls: MapUrls): Promise<void> {
-  const decode = async (src: string): Promise<HTMLImageElement> => {
-    const img = new Image();
-    img.src = src;
-    await img.decode();
-    return img;
-  };
-  try {
-    const [albedo, height, emissive] = await Promise.all([
-      decode(urls.albedo),
-      decode(urls.height),
-      decode(urls.emissive),
-    ]);
-    maps.set(key, {
-      albedo,
-      height,
-      emissive,
-      widthPx: albedo.naturalWidth,
-      heightPx: albedo.naturalHeight,
-    });
-  } catch {
-    // Absent map => next fallback level. Not fatal.
+function decodeInto(key: string, urls: MapUrls): Promise<void> {
+  let job = decodes.get(key);
+  if (job === undefined) {
+    job = (async () => {
+      const decode = async (src: string): Promise<HTMLImageElement> => {
+        const img = new Image();
+        img.src = src;
+        await img.decode();
+        return img;
+      };
+      try {
+        const [albedo, height, emissive] = await Promise.all([
+          decode(urls.albedo),
+          decode(urls.height),
+          decode(urls.emissive),
+        ]);
+        maps.set(key, {
+          albedo,
+          height,
+          emissive,
+          widthPx: albedo.naturalWidth,
+          heightPx: albedo.naturalHeight,
+        });
+      } catch {
+        // Absent map => next fallback level. Not fatal.
+      }
+    })();
+    decodes.set(key, job);
   }
+  return job;
 }
 
 /**
- * Decode every hull map. A map that fails to decode is simply absent, which
- * drops that lookup to its fallback (variant -> canonical -> procedural)
- * rather than breaking the renderer — the same failure posture as the
- * concept-art plates.
+ * Decode the maps one hull needs as one faction fields it — and only those
+ * (#442). A match touches one navy's hulls, so decoding every model on the
+ * disk at match start spent most of its work on navies not in the water.
+ *
+ * The lookup chain `hullMap` reads is built here in the same order: the
+ * faction's variant when one is approved, falling to the kind's canonical
+ * model if the variant is absent or fails to decode, and to nothing — the
+ * procedural bake in hullTextures.ts — when the kind has no model at all.
+ * A map that fails to decode is simply absent rather than an error, the same
+ * failure posture as the concept-art plates.
  */
-export async function loadHullMaps(): Promise<void> {
-  await Promise.all([
-    ...Object.entries(KIND_MAP_URL).map(([kind, urls]) => decodeInto(kind, urls)),
-    ...Object.entries(VARIANT_MAP_URL).flatMap(([faction, byKind]) =>
-      Object.entries(byKind).map(([kind, urls]) => decodeInto(`${faction}:${kind}`, urls))
-    ),
-  ]);
+export async function loadHullMap(kind: UnitKind, faction: Faction): Promise<void> {
+  const variant = VARIANT_MAP_URL[faction]?.[kind];
+  if (variant !== undefined) {
+    const key = `${faction}:${kind}`;
+    await decodeInto(key, variant);
+    if (maps.has(key)) return;
+  }
+  const canonical = KIND_MAP_URL[kind];
+  if (canonical !== undefined) await decodeInto(`${kind}`, canonical);
 }
 
 /**
  * The decoded maps for a hull as a faction fields it: the faction's own
  * variant when one is approved, the kind's canonical model otherwise, null
- * when the kind has no model at all.
+ * when the kind has no model at all — or none decoded yet; `loadHullMap` is
+ * what makes this answer.
  */
 export function hullMap(kind: UnitKind, faction: Faction): HullMap | null {
   return maps.get(`${faction}:${kind}`) ?? maps.get(`${kind}`) ?? null;

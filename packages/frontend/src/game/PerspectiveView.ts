@@ -83,8 +83,12 @@ import {
   seabedDepthAtM,
 } from './perspectiveTerrain.ts';
 import { groundPxPerM, hullReadabilityScale } from './readability.ts';
-import { hullSpriteCanvas, hullSpriteSizeM } from './hullTextures.ts';
-import { structureSpriteCanvas, structureSpriteSizeM } from './structureTextures.ts';
+import { hullSpriteCanvas, hullSpriteSizeM, primeHullArt } from './hullTextures.ts';
+import {
+  primeStructureArt,
+  structureSpriteCanvas,
+  structureSpriteSizeM,
+} from './structureTextures.ts';
 import { ACTIVE_PALETTE } from './palette.ts';
 import {
   applyLiveGlow,
@@ -349,6 +353,13 @@ export class PerspectiveView {
 
   setIdentity(_slot: number, faction: Faction): void {
     this.faction = faction;
+    // The seat is the first moment the client knows which navy's art it will
+    // draw, so this is where that navy's plates and maps start decoding —
+    // and only that navy's (#442). A hull asked for before its art lands
+    // draws as vectors and starts its own load, so a rematch in another seat
+    // is covered either way; this is what keeps the first hull from popping.
+    primeHullArt(faction);
+    primeStructureArt(faction);
   }
 
   setTerrain(terrain: TerrainPayload): void {

@@ -33,11 +33,11 @@
  */
 
 import { Texture } from 'pixi.js';
-import { Faction, UnitKind } from '@echoes/shared';
+import { Faction, unitAvailableTo, UnitKind } from '@echoes/shared';
 import { ACTIVE_PALETTE, FACTION_PALETTE } from './palette.ts';
 import { HULL_LENGTH_M, HULL_OUTLINE } from './silhouettes.ts';
 import { bakeModelSprite, cssColor, distanceTransform, glowDot, lightAndCompose } from './bake.ts';
-import { hullMap, loadHullMaps, MAP_PPM, type HullMap } from './hullMaps.ts';
+import { hullMap, loadHullMap, MAP_PPM, type HullMap } from './hullMaps.ts';
 
 import raiderUrl from '../assets/hulls/raider.png';
 import corvetteUrl from '../assets/hulls/corvette.png';
@@ -81,7 +81,12 @@ const PX_PER_M = 3;
 const MARGIN_PX = 10;
 
 const artImages = new Map<UnitKind, HTMLImageElement>();
-let artLoaded = false;
+/** One decode per plate: five patches clad eighteen hulls. */
+const plateDecodes = new Map<string, Promise<HTMLImageElement>>();
+/** Hulls whose plate and maps are both decoded, keyed `kind:faction`. */
+const artReady = new Set<string>();
+/** One job per hull and faction, shared by everything that asks. */
+const artLoads = new Map<string, Promise<void>>();
 
 /**
  * Two caches over one bake: the canvas is the artwork, the Texture is Pixi's
@@ -92,21 +97,62 @@ let artLoaded = false;
 const bakedCanvas = new Map<string, HTMLCanvasElement>();
 const baked = new Map<string, Texture>();
 
-/** Decode every hull patch. Failure is non-fatal: units fall back to vectors. */
-export async function loadHullArt(): Promise<void> {
-  await Promise.all([
-    ...Object.entries(HULL_ART_URL).map(async ([kind, url]) => {
+function decodePlate(url: string): Promise<HTMLImageElement> {
+  let job = plateDecodes.get(url);
+  if (job === undefined) {
+    job = (async () => {
       const img = new Image();
       img.src = url;
       await img.decode();
-      // Object.entries stringifies the numeric enum key; restore it.
-      artImages.set(Number(kind) as UnitKind, img);
-    }),
-    // Model maps decode alongside the plates; a hull whose maps fail simply
-    // bakes procedurally, so this never blocks the art from loading.
-    loadHullMaps(),
-  ]);
-  artLoaded = true;
+      return img;
+    })();
+    plateDecodes.set(url, job);
+  }
+  return job;
+}
+
+/**
+ * Decode what one hull needs as one faction fields it: its plate-05 patch and
+ * the maps of whichever model serves it. Per hull rather than all at once
+ * (#442): the whole hull and structure library is some 130 maps and 2.4 MB,
+ * and a match draws one navy's share of it. The first draw that asks for a
+ * sprite starts its load — `hullSpriteCanvas` does that — and `primeHullArt`
+ * starts the whole navy's the moment the seat is known, so the hulls are
+ * baked before the first one surfaces.
+ *
+ * Failure is non-fatal and final: the hull draws as its vector silhouette,
+ * and nothing retries a plate the network has already refused.
+ */
+export function loadHullArt(kind: UnitKind, faction: Faction): Promise<void> {
+  const key = `${kind}:${faction}`;
+  let job = artLoads.get(key);
+  if (job === undefined) {
+    job = (async () => {
+      // Model maps decode alongside the plate; a hull whose maps fail simply
+      // bakes procedurally, so this never blocks the art from loading.
+      const [img] = await Promise.all([
+        decodePlate(HULL_ART_URL[kind]),
+        loadHullMap(kind, faction),
+      ]);
+      artImages.set(kind, img);
+      artReady.add(key);
+    })();
+    artLoads.set(key, job);
+  }
+  return job;
+}
+
+/**
+ * Start decoding every hull this faction can field. Called when the seat is
+ * assigned, so a navy's sprites are ready by the time its first hull is in
+ * the water rather than popping in from vectors a few frames after it.
+ */
+export function primeHullArt(faction: Faction): void {
+  for (const kind of Object.keys(HULL_ART_URL)) {
+    // Object.keys stringifies the numeric enum key; restore it.
+    const unit = Number(kind) as UnitKind;
+    if (unitAvailableTo(unit, faction)) loadHullArt(unit, faction).catch(() => {});
+  }
 }
 
 /** Half-beam of a hull outline, as a fraction of hull length. */
@@ -145,7 +191,7 @@ export function hullSpriteSizeM(
 
 /**
  * The baked texture for a kind + faction, or null while the art is decoding.
- * Bakes lazily and caches: a match only ever touches one faction's five hulls.
+ * Bakes lazily and caches: a match only ever touches one faction's hulls.
  */
 export function hullTexture(kind: UnitKind, faction: Faction): Texture | null {
   const canvas = hullSpriteCanvas(kind, faction);
@@ -168,7 +214,11 @@ export function hullTexture(kind: UnitKind, faction: Faction): Texture | null {
  * still a handful.
  */
 export function hullSpriteCanvas(kind: UnitKind, faction: Faction): HTMLCanvasElement | null {
-  if (!artLoaded) return null;
+  if (!artReady.has(`${kind}:${faction}`)) {
+    // The first ask starts the decode; every ask until it lands draws vectors.
+    loadHullArt(kind, faction).catch(() => {});
+    return null;
+  }
   const key = `${kind}:${faction}:${ACTIVE_PALETTE.name}`;
   let canvas = bakedCanvas.get(key);
   if (canvas === undefined) {

@@ -154,8 +154,8 @@ import {
   drawUnitSilhouette,
   HULL_LENGTH_M,
 } from './silhouettes.ts';
-import { destroyHullTextures, loadHullArt } from './hullTextures.ts';
-import { destroyStructureTextures, loadStructureArt } from './structureTextures.ts';
+import { destroyHullTextures } from './hullTextures.ts';
+import { destroyStructureTextures } from './structureTextures.ts';
 import type { MapPayload, TerrainPayload } from '../net/GameClient.ts';
 import type { PerspectiveView, ProjectedPoint } from './PerspectiveView.ts';
 import {
@@ -1278,10 +1278,10 @@ export class EchoRenderer {
     this.buildHudText();
     this.attachInput();
 
-    // Decode the concept-art plating in the background. Until it lands (or if
-    // it never does), units and structures fall back to the vector shapes.
-    loadHullArt().catch(() => {});
-    loadStructureArt().catch(() => {});
+    // The concept-art plating is not decoded here any more (#442): the conn
+    // view is the sprites' only consumer, and it starts its own navy's decode
+    // the moment the seat is assigned (PerspectiveView.setIdentity). Until
+    // that lands, or if it never does, hulls draw as their vector shapes.
 
     this.app.ticker.add(() => this.draw());
   }
