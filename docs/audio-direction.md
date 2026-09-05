@@ -261,15 +261,26 @@ is. [mission-standing-wave.md](mission-standing-wave.md) §8 says so now; it use
 on the map", which the wire never carried and which would have handed the column a free reading of
 a structure it had not earned a track on.
 
-**The corridor is an inference, and a narrow one.** `paired` is not on the wire and neither is the
-PF grid, so the mix never learns that two Spires are a pair. What it has is the pairing rule and
-the geometry: two completed, singing nodes of one commander inside `STANDING_WAVE.PAIR_RANGE_M`.
-Two such nodes that were *not* going to pair is a narrow case — a node still paired to a dead
-partner with a third standing nearby — and it is the one thing the reading can get wrong. It leaks
-nothing in either direction: own structures are the player's own, and the other pool is Tier-4
-tracks, which already carry position and hull. Arithmetic over facts the player was handed is what
-an instrument is. Own and tracked nodes are two pools and never one, because pairing is
+**The corridor is an inference, and the mix is not allowed to be coy about it.** `paired` is not on
+the wire and neither is the PF grid, so the mix never learns that two Spires are a pair. What it
+has is the pairing rule and the geometry: two completed, singing nodes of one commander inside
+`STANDING_WAVE.PAIR_RANGE_M`.
+
+It leaks nothing in either direction — own structures are the player's own, and the other pool is
+Tier-4 tracks, which already carry position and hull. Arithmetic over facts the player was handed
+is what an instrument is. Own and tracked nodes are two pools and never one, because pairing is
 per-commander and a pool that mixed them would sound a corridor nobody built.
+
+**What it can get wrong is a false positive, twice over, and both come from the same place.** A
+Spire sings at 80 when "the depth grant is load-bearing **or** an interval is held"
+([units.md](units.md)), and the client cannot tell those two apart. So a *prebuilt* lattice, whose
+nodes never pair and are lit by the grant ([mission-rim-deposits.md](mission-rim-deposits.md) §4),
+reads as a line; and a node still paired to a dead partner, with a third standing nearby, reads as
+a line to the wrong pair. Both sound a fifth reinforced where a lattice stands. That is the cheap
+direction for this to be wrong in — nothing here is an alarm, nothing here fires a one-shot, and
+the accessible half is the panel's *sour* reading, which is server-resolved and unaffected. **A
+`paired` flag on `OwnStructure` would close it**, and is not proposed here: it would be the first
+field on the wire that exists for the mix.
 
 **Nothing feeds back.** §12's determinism note holds: the bed reads the snapshot and the public
 terrain grid, and writes nothing. And the accessible half is already built and stays the panel's —

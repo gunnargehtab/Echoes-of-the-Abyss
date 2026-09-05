@@ -193,10 +193,23 @@ export interface TunedNode {
  * geometry and the pairing rule
  * (docs/mission-standing-wave.md §13): a node pairs with the nearest
  * completed, unpaired node of the same commander within
- * `STANDING_WAVE.PAIR_RANGE_M` at the moment it completes. Two completed nodes
- * inside that range that were *not* going to pair is therefore a narrow case —
- * a node still paired to a dead partner with a third standing nearby — and
- * that is the one thing this can get wrong.
+ * `STANDING_WAVE.PAIR_RANGE_M` at the moment it completes, and a node holding
+ * an interval sings at `sigActive`.
+ *
+ * **Two cases can sound a corridor that is not there, and both are worth
+ * naming rather than discovering.** A *prebuilt* node never pairs — the pass
+ * offers a partner only to a node it saw as a site first — so an authored
+ * lattice (docs/mission-rim-deposits.md §4) whose nodes are lit by the depth
+ * grant rather than by an interval reads as a line to this. And a node still
+ * paired to a dead partner, with a third standing nearby, reads as a line to
+ * the wrong pair. Both are the same root cause: `sigActive` means "the depth
+ * grant is load-bearing **or** an interval is held" (docs/units.md), and the
+ * client cannot tell those two apart.
+ *
+ * That is a bed voicing a fifth where a lattice stands, which is the cheap
+ * direction for this to be wrong in — nothing here is an alarm, nothing here
+ * fires a one-shot, and the panel's *sour* reading, which is the accessible
+ * half, is server-resolved and unaffected.
  *
  * It leaks nothing either way. Own structures are the player's own, and the
  * enemy pool is Tier-4 tracks, which already carry position and hull; the
