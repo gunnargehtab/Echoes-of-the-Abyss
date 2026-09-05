@@ -234,6 +234,12 @@ export class PerspectiveView {
   private viewWidth = 1;
   private viewHeight = 1;
 
+  /**
+   * Bumped whenever the camera or the viewport changes (#432), so the chart
+   * can tell a frame that moved the world from one that did not and leave
+   * its static layers alone.
+   */
+  private cameraRevision = 0;
   private active = false;
   private frameHandle = 0;
   private lastFrameAt = 0;
@@ -1079,6 +1085,12 @@ export class PerspectiveView {
     );
     this.camera.lookAt(look);
     this.camera.updateMatrixWorld();
+    this.cameraRevision++;
+  }
+
+  /** See `cameraRevision`. */
+  get viewRevision(): number {
+    return this.cameraRevision;
   }
 
   private resize(): void {
