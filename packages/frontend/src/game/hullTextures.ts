@@ -58,6 +58,10 @@ const HULL_ART_URL: Record<UnitKind, string> = {
   // The Directorate's plate class, same as the Submersible; the outline is
   // what tells the two apart.
   [UnitKind.Chorister]: shadowUrl,
+  // The heavy plate class on a 90 m hull: the Clarion is a premium strike
+  // hull and should read as one beside a Corvette. Same plate as the Cruiser,
+  // and the outline is again what tells the two apart.
+  [UnitKind.Clarion]: cruiserUrl,
   [UnitKind.Harvester]: siegeUrl,
 };
 

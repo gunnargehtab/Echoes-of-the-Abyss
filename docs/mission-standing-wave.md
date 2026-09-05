@@ -112,12 +112,12 @@ are seeded and none is authored, for the reason §10 gives.
 | Cruiser hull, Knight-rigged — *the Voice* | 1 | SIG **55 idle / 65 live** in the cone · 19 / 23 flank · 5.5 / 6.5 wake · HYD 65 · PR-2 ([units.md](units.md)) | Kalliso's hull and the party's ears, unchanged from mission 1 |
 | Corvette hull, Knight-rigged | 5 | SIG **28 cruise** in the cone · 9.8 flank · 2.8 wake · HYD 50 · +25 firing burst · PR-2 | The working hulls. The same five, and the mission never says so |
 
-**These are generic hulls flying Knight colours, and the roster is still the reason.**
-[units.md](units.md) has no Knight entry, so this mission fields what mission 1 fielded and
-applies the same doctrine to it; a real Knight hull's cone figure is expected to run about 2.2×
-a comparable hull's so that the compass average lands at parity
-([systems-echo.md](systems-echo.md) §8). Every figure in §7 is quoted from the model, and a
-louder roster moves them all outward together.
+**These are generic hulls flying Knight colours, and the reason is now mission 1's rather than
+the roster's.** [units.md](units.md) carries the Clarion (#401), at 62 in the cone against a
+Corvette's 28; this mission fields what mission 1 fielded and applies the same doctrine to it,
+because the two parties are the same six hulls and moving one without the other would break the
+carry. Every figure in §7 is quoted from the model, and a louder party moves them all outward
+together — which is why the switch is §7's re-tune before it is §3's substitution.
 
 | Structure | Count | Stats | Why |
 | --- | --- | --- | --- |
@@ -754,7 +754,7 @@ works left standing in it.
 | The column's walk | **Built, and it asked for one thing** — the `transit` beat, the format's twelfth kind: one hull, a route of legs, and the runtime re-asserting on every pass an order to where the route says the hull should be *now*. `MissionSweep` turned out to be the wrong tool: it is a listener whose hearing is an outcome, and this column is a walk whose *schedule* is the mission. A `move` beat could not be it either, for the reason the next row gives. Seven transits at 00:40 — 400 m of trench water in five minutes twenty, 1,200 m of the defile in ten and a half, and the last 1,800 m in one minute in step from the narrows — and the block arrives as a block because each hull walks the axis at its own offset |
 | Adze's turn, fired by the corridor standing | **Built** (#382). Seven conditional transits and one line, all keyed on `build` at two paired, and a second transit for a tag *replaces* the first outright — the `creature` beat's rule — so the walk north is cancelled by being the walk south now. That is the whole reason the walk is a transit and not a schedule of `move` beats: a schedule is a cursor and a condition cannot reach into one, and a corridor that stood at 09:00 would have had its column re-ordered north at 09:30 by a beat the mission could not retire. A corridor that stands at 04:00 turns the column at 04:00; one that stands at 15:00 turns it at the narrows; one that never stands never does, and the walk arrives at 17:30 as filed. `missionStandingWave.test.ts` plays both |
 | The map, four regions, no resources | **Built** — `the-fifth`, one row of the literal per row of §11's table, painted in the document's order, `fauna: false`. One correction to §11's parties table, made in the literal and recorded here: the six are seated *beside* the Bastion rather than on its coordinates, because a Bastion's footprint is 220 m and `separationSystem` shoves a hull clear of it on the first tick — seated at (2,500, 400) four of the six were in the defile before the works order had been read. They stand east of it, at 1,450 m, in the Gallery, which is what the row says |
-| A Knight hull in the roster | **Not written**, and this is a [units.md](units.md) gap rather than a code one — unchanged from [mission-aptitude.md](mission-aptitude.md) §13. §3 fields generic hulls and says so |
+| A Knight hull in the roster | **Written, and not yet fielded here** (#401) — unchanged from [mission-aptitude.md](mission-aptitude.md) §13, which owns the decision for both parties. [units.md](units.md) carries the Clarion; §3 still fields generic hulls and still says so, and §7's tables are the cost of changing that |
 | Resonance Field 0.70 as **scattered** — bearings that lie, pings that return phantoms | **Built** (#400), and §7's tables survived intact, for the reason [mission-aptitude.md](mission-aptitude.md) §13 gives: scatter is a rule about *where* and never about *how loud*, so every figure in §7 is unchanged and `missionStandingWave.test.ts` plays the Fifth closed, open and sour exactly as before. The second-order effect this row warned about was decided rather than discovered: **a corridor un-scatters its cells.** An absolute PF write is water that has been *tuned*, and crystal ringing at one interval is the opposite of scatter — §7 now says so, and `scatter.test.ts` holds a corridor cut through the Fields to it, truth inside the line and the lie back the tick it comes down. A Resonance Storm over the same cells scales PF and leaves scatter alone. What it cost this mission: nothing in tuning, and one sentence of doctrine — the line the Knights raise is now the one place in their own water their instruments are honest, which is a reading §10 did not have and a reason to stand in it that the damage figure argues against |
 | Permanent roster attrition | **Built elsewhere, and declined here** (#380). The mechanism is `MissionDefinition.attrition` — the flag [mission-nineteen.md](mission-nineteen.md) alone authors — and `MissionUnit.cadre`, the roster name a spent hull is kept under; a mission that authors neither neither spends nor reads the spent set, and this literal authors neither, which is §10's argument made as an absence rather than a rule. Hulls lost here are lost for this tide and no further |
 | In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line |
@@ -778,7 +778,7 @@ works left standing in it.
 - **[world-map.md](world-map.md)** — the Resonance Fields, and where crystal country breaks toward the trenches
 - **[culture.md](culture.md)** — §3, the register; §4, the names; §5, the interval a name resolves to
 - **[characters.md](characters.md)** — Sull, who has not authorised the raid; Kalliso, who has not refused an order; Adze, who has not disobeyed
-- **[units.md](units.md)** — the Sounding Spire, which §3 argues is the node, and the roster with no Knight hull in it
+- **[units.md](units.md)** — the Sounding Spire, which §3 argues is the node, and the Clarion this party does not yet fly
 - **[maps.md](maps.md)** — how a mission map is written, and why this one is not in the catalogue
 - **[ui-ux.md](ui-ux.md)** — §7, why a build page the player cannot use has to say so
 - **[bestiary.md](bestiary.md)** — the Drift this map does not seed, and §10's reason

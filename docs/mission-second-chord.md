@@ -135,9 +135,9 @@ auto-acquire a static emitter (§13).
 | Corvette hulls, Knight-rigged — the escort | 2 | Identical, role `escort` · 5 souls each | `escort-a` on the lip; `escort-b` **held to 15:30**, beside the Choirmaster, because a tender with no escort inside 600 m does not move. The hold is documentation until §13's row lands |
 | Sounding Spire — the lattice | 3 | SIG **30 idle / 80 active** · HYD 45 · 1,800 HP · PR+1 to allied hulls within **600 m**, horizontal ([units.md](units.md)) | `node-one` 3750, 2500 and `node-two` 4900, 2600 at 2,600 m — the raid's, unchanged — and `the-chord` 4800, 3150 at 3,000 m. Three grants, all inside the pairing range and **not a pair** (§4) |
 
-Forty-one souls, and the roster still has no Knight hull in it: the party flies Order colours on
-generic hulls and the directional figures are Aptitude's ([units.md](units.md);
-[mission-aptitude.md](mission-aptitude.md) §3).
+Forty-one souls, and the party still flies Order colours on generic hulls: the roster carries the
+Clarion now (#401) and this document has not yet spent it, so the directional figures are
+Aptitude's ([units.md](units.md); [mission-aptitude.md](mission-aptitude.md) §3, §13).
 
 **Whether the terraces' two nodes were corrected on D+2 is not carried.** The carry between
 missions is hulls by name and nothing else (§13; [mission-nineteen.md](mission-nineteen.md) §13),
@@ -884,7 +884,7 @@ the player's, which is the sentence §1 was already writing.
 - **[mission-attendance.md](mission-attendance.md)** — the return at the sill: SIG 3, twenty seconds, entered as a time by the wrong people, eleven kilometres north
 - **[systems-echo.md](systems-echo.md)** — §3, the water this is priced through; §5, the ping; §8, the quartered circle the tone is aimed with
 - **[systems-depth.md](systems-depth.md)** — §2 and §3, the band, the crush, the fast loud dive and the slow silent climb
-- **[units.md](units.md)** — the Spire that sings while its grant is load-bearing, and the roster with no Knight hull in it
+- **[units.md](units.md)** — the Spire that sings while its grant is load-bearing, and the Clarion this party does not yet fly
 - **[environments.md](environments.md)** — the terraces at 0.70 and the lip at 1.60, four hundred metres apart
 - **[bestiary.md](bestiary.md)** — the basin, its transit rule, and the working band this document disagrees with in §13
 - **[factions.md](factions.md)** — Resonance Collapse, and the Order that removes you from the conversation

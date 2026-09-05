@@ -78,6 +78,8 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   // stays on the procedural sprite (graphics-standards.md, gate 1) until one
   // passes intake.
   [UnitKind.Chorister]: 'chorister',
+  // Nor the Clarion, for the same reason and on the same terms.
+  [UnitKind.Clarion]: 'clarion',
   [UnitKind.Harvester]: 'harvester',
 };
 

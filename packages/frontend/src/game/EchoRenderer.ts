@@ -53,6 +53,7 @@ import {
   HarvestThrottle,
   PERSISTENCE,
   PRODUCIBLE,
+  unitAvailableTo,
   PROPAGATION_FACTOR,
   PROPAGATION_MODEL,
   ResolutionTier,
@@ -579,6 +580,7 @@ const UNIT_SHORT: Record<UnitKind, string> = {
   [UnitKind.Cruiser]: 'CRZ',
   [UnitKind.AbyssalSubmersible]: 'SUB',
   [UnitKind.Chorister]: 'CHR',
+  [UnitKind.Clarion]: 'CLR',
   [UnitKind.Harvester]: 'HRV',
 };
 
@@ -2066,7 +2068,13 @@ export class EchoRenderer {
     if (this.shownTab === 'units') {
       // One row of the whole roster; each button routes to a structure that
       // can actually build it, selected or not.
-      const roster = PRODUCIBLE[StructureKind.Foundry] ?? [];
+      // The yard's roster, less whatever belongs to another navy: the Clarion
+      // is the Order's and the server refuses it to anyone else, so showing a
+      // Pelagia commander a button that can only be refused would be the bar
+      // lying about the rules (units.ts, `unitAvailableTo`).
+      const roster = (PRODUCIBLE[StructureKind.Foundry] ?? []).filter((kind) =>
+        unitAvailableTo(kind, this.faction)
+      );
       const stockpile = this.stockpile();
       for (const kind of roster) {
         const stats = statsFor(kind);

@@ -24,6 +24,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  DIRECTIONAL_COMPASS_AVERAGE,
   DIRECTIONAL_CONE_COS,
   DIRECTIONAL_SIGNATURE,
   DIRECTIONAL_WAKE_COS,
@@ -34,6 +35,7 @@ import {
   SIM,
   UnitKind,
   detectionRatio,
+  statsFor,
   directionalFactor,
   directionalSectorFactor,
 } from '@echoes/shared';
@@ -83,6 +85,11 @@ describe('the quartered circle — §8', () => {
     // One quarter at 1.00, two at 0.35, one at 0.10. A Knight is an ordinary
     // hull with its loudness moved, not a quiet one.
     assert.equal((S.CONE + 2 * S.FLANK + S.WAKE) / 4, 0.45);
+    // And the constant the roster is solved from is that same average rather
+    // than a second copy of 0.45 — the Clarion's cone figure is 1/this, so a
+    // sector-table edit that moved the average has to move the hull with it
+    // (docs/units.md, `units.test.ts`).
+    assert.equal(DIRECTIONAL_COMPASS_AVERAGE, 0.45);
   });
 
   it('puts a listener at the emitter’s own position in the cone', () => {
@@ -97,19 +104,19 @@ describe('the quartered circle — §8', () => {
   });
 });
 
-describe('the ranges docs/mission-aptitude.md §4 quotes', () => {
-  /** Where `sig` stops resolving to Classification, in PF 0.70 water, to HYD 65. */
-  const classificationRangeM = (sig: number): number => {
-    let lo = 1;
-    let hi = 20000;
-    for (let i = 0; i < 200; i++) {
-      const mid = (lo + hi) / 2;
-      if (detectionRatio(sig, 0.7, mid, 65) >= 2.5) lo = mid;
-      else hi = mid;
-    }
-    return lo;
-  };
+/** Where `sig` stops resolving to Classification, in PF 0.70 water, to HYD 65. */
+const classificationRangeM = (sig: number): number => {
+  let lo = 1;
+  let hi = 20000;
+  for (let i = 0; i < 200; i++) {
+    const mid = (lo + hi) / 2;
+    if (detectionRatio(sig, 0.7, mid, 65) >= 2.5) lo = mid;
+    else hi = mid;
+  }
+  return lo;
+};
 
+describe('the ranges docs/mission-aptitude.md §4 quotes', () => {
   it('classifies a corvette at 1,414 m bow-on, 734 m beam-on and 335 m stern-on', () => {
     // The table §4 prints. A factor of four in distance, decided by nothing but
     // where the hull is pointed — this is the mission's whole lesson and it is
@@ -143,8 +150,20 @@ describe('the ranges docs/mission-aptitude.md §4 quotes', () => {
   });
 });
 
-/** One Knight emitter and one listener, `deg` off the Knight's bow. */
-function pair(options: { headingRad: number; distanceM: number; deg: number }): {
+/**
+ * One emitter and one listener, `deg` off the emitter's bow.
+ *
+ * The emitter is a Knight Corvette unless told otherwise; `kind` and `faction`
+ * exist so the Order's own hull can be compared against the generic one it is
+ * scaled against (#401), which is a comparison rather than a single reading.
+ */
+function pair(options: {
+  headingRad: number;
+  distanceM: number;
+  deg: number;
+  kind?: UnitKind;
+  faction?: Faction;
+}): {
   tier: ResolutionTier;
   knightHearsBack: boolean;
 } {
@@ -155,9 +174,9 @@ function pair(options: { headingRad: number; distanceM: number; deg: number }): 
   const ex = 6000;
   const ey = 6000;
   const knight = spawnUnit(match.world, {
-    kind: UnitKind.Corvette,
+    kind: options.kind ?? UnitKind.Corvette,
     slot: 0,
-    faction: Faction.Hadron,
+    faction: options.faction ?? Faction.Hadron,
     x: ex,
     y: ey,
     heading: options.headingRad,
@@ -180,6 +199,51 @@ function pair(options: { headingRad: number; distanceM: number; deg: number }): 
   );
   return { tier: held?.tier ?? ResolutionTier.Silent, knightHearsBack: back };
 }
+
+describe('the Clarion — the hull the term was waiting for (#401)', () => {
+  const clarion = statsFor(UnitKind.Clarion);
+  const corvette = statsFor(UnitKind.Corvette);
+
+  it('is heard further bow-on and less astern than the generic hull it replaces', () => {
+    // The doctrine as two distances, in the same water §4 quotes: an Order
+    // commander who builds the Order's hull buys reach in front and pays for
+    // it nowhere, because the compass average is the Corvette's. What they
+    // actually give up is the ability to be sloppy — the cone is now twice as
+    // far as a generic Corvette's, and so is the price of showing it to the
+    // wrong listener.
+    const clarionBow = classificationRangeM(clarion.sigCruise * S.CONE);
+    const clarionWake = classificationRangeM(clarion.sigCruise * S.WAKE);
+    const generic = classificationRangeM(corvette.sigCruise);
+
+    assert.ok(
+      clarionBow > generic,
+      `a Clarion bow-on (${clarionBow.toFixed(0)} m) should out-reach a generic ` +
+        `Corvette (${generic.toFixed(0)} m)`
+    );
+    assert.ok(
+      clarionWake < generic,
+      `and a Clarion showing its wake (${clarionWake.toFixed(0)} m) should be the quieter of ` +
+        'the two, or the hull is simply louder rather than aimed'
+    );
+  });
+
+  it('resolves better bow-on than a Knight-rigged Corvette in the same water', () => {
+    // In the water rather than in the arithmetic, and against the hull the
+    // Order fields today: the Clarion is what those missions are short of.
+    const clarionBow = pair({
+      headingRad: 0,
+      distanceM: 1400,
+      deg: 0,
+      kind: UnitKind.Clarion,
+    });
+    const riggedBow = pair({ headingRad: 0, distanceM: 1400, deg: 0 });
+    assert.ok(
+      clarionBow.tier > riggedBow.tier,
+      `the Order's own hull should be the louder one in its own cone ` +
+        `(${clarionBow.tier} vs ${riggedBow.tier})`
+    );
+  });
+});
 
 describe('in the Echo pass', () => {
   it('resolves a Knight better bow-on than beam-on, and beam-on than stern-on', () => {

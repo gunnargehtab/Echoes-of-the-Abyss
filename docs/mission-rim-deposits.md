@@ -116,9 +116,9 @@ mission would spend its first minute manufacturing a Directorate civil war (§13
 | Corvette hulls, Knight-rigged — the escort | 2 | Identical, **role `escort`** · 5 souls each | `escort-a`, `escort-b`. The Voice carries the same role, which is how §8's `escort` row counts three |
 | Sounding Spire — the nodes | 2 | SIG **30 idle / 80 active** · HYD 45 · 1,800 HP · PR+1 to allied hulls within **600 m**, horizontal ([units.md](units.md)) | `node-one` and `node-two`, raised at the turn, prebuilt at 2,600 m and 1,154 m apart — inside the pairing range and **not a pair** (§4). The mission |
 
-Thirty-seven souls, and the roster still has no Knight hull in it: the party flies Order colours
-on generic hulls and the directional figures are Aptitude's ([units.md](units.md);
-[mission-aptitude.md](mission-aptitude.md) §3).
+Thirty-seven souls, and the party still flies Order colours on generic hulls: the roster carries
+the Clarion now (#401) and this document has not yet spent it, so the directional figures are
+Aptitude's ([units.md](units.md); [mission-aptitude.md](mission-aptitude.md) §3, §13).
 
 **The ledger, cited and not restated.** [mission-the-three.md](mission-the-three.md) §3 counts the
 Order's crystal once: the two Spires standing on the terraces are 240 of the 360 that document
@@ -831,7 +831,7 @@ player raise the node.
 - **[systems-echo.md](systems-echo.md)** — §3, the water this is all priced through; §5, the ping; §8, the quartered circle
 - **[systems-depth.md](systems-depth.md)** — §2 and §3, the band, the crush, the fast loud dive and the slow silent climb
 - **[economy.md](economy.md)** — §7, the round trip with a clock on it, and the crystal premium the cut is loud by
-- **[units.md](units.md)** — the Spire that sings when its grant is load-bearing, and the roster with no Knight in it
+- **[units.md](units.md)** — the Spire that sings when its grant is load-bearing, and the Clarion this party does not yet fly
 - **[environments.md](environments.md)** — the terraces at 0.70 and the lip at 1.60, four hundred metres apart
 - **[bestiary.md](bestiary.md)** — the basin, its transit rule, and the working band this document disagrees with in §13
 - **[factions.md](factions.md)** — four crises, one rim, no villains

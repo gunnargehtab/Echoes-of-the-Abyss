@@ -42,6 +42,7 @@ const scout = statsFor(UnitKind.LightScout);
 const corvette = statsFor(UnitKind.Corvette);
 const cruiser = statsFor(UnitKind.Cruiser);
 const chorister = statsFor(UnitKind.Chorister);
+const clarion = statsFor(UnitKind.Clarion);
 const turret = structureStatsFor(StructureKind.SentinelTurret);
 
 describe('§9 time-to-kill bands', () => {
@@ -81,6 +82,37 @@ describe('§9 time-to-kill bands', () => {
     // And the duel band survives the bonus too, at the fast end.
     const duel = ttkS(corvette.maxHp, boosted, corvette.attackCooldownS);
     assert.ok(duel >= 8, `a Klaxon duel still sits inside 8-10 s, got ${duel.toFixed(2)} s`);
+  });
+
+  it('the Clarion sits inside the same bands the Corvette is scaled against', () => {
+    // #401. The Order's hull trades reach and alpha for a slower cycle, which
+    // is a weapon change and therefore a §9 question rather than a §8 one:
+    // whatever a Knight hull's noise does, a fight involving one still has to
+    // feel like a fight in this game. All four bands, on the hull it is a peer
+    // of.
+    const vsScout = ttkS(scout.maxHp, clarion.attackDamage, clarion.attackCooldownS);
+    assert.ok(vsScout <= 4, `a Clarion should kill a Light Scout in ≤ 4 s, got ${vsScout}`);
+
+    const duel = ttkS(clarion.maxHp, clarion.attackDamage, clarion.attackCooldownS);
+    assert.ok(duel >= 8 && duel <= 10, `a Clarion duel should sit in 8-10 s, got ${duel}`);
+
+    const vsCruiser = ttkS(cruiser.maxHp, clarion.attackDamage, clarion.attackCooldownS);
+    assert.ok(vsCruiser >= 25, `anchors do not fall to chip damage; got ${vsCruiser} s`);
+
+    const byCruiser = ttkS(clarion.maxHp, cruiser.attackDamage, cruiser.attackCooldownS);
+    assert.ok(byCruiser >= 4 && byCruiser <= 6, `a Cruiser kills one in ~5 s, got ${byCruiser}`);
+
+    // And the trade itself, stated as arithmetic rather than as a comment: it
+    // reaches further and hits harder per shot than the Corvette, and pays for
+    // both in sustained damage. A retune that made it simply better would make
+    // the Corvette pointless for the one navy that can build either.
+    assert.ok(clarion.attackRangeM > corvette.attackRangeM, 'the lance is the longer weapon');
+    assert.ok(clarion.attackDamage > corvette.attackDamage, 'and the heavier discharge');
+    assert.ok(
+      clarion.attackDamage / clarion.attackCooldownS <
+        corvette.attackDamage / corvette.attackCooldownS,
+      'paid for on the cycle: sustained damage stays under the Corvette’s'
+    );
   });
 
   it('a Sentinel Turret deters a Corvette rather than deleting it', () => {

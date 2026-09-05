@@ -143,6 +143,32 @@ describe('faction combat kits', () => {
     );
   });
 
+  it('the Order’s own hull carries the energy class rather than a kinetic burst (#401)', () => {
+    // The Clarion is the roster's first Hadron hull, and the question it poses
+    // for §11 is whether the class is still a *faction* fact once the faction
+    // has a hull of its own. It is: the entry reads its burst from
+    // FACTION_COMBAT rather than listing a 2.2×'d kinetic figure it would
+    // never emit, so there is one number and it is the navy's.
+    assert.equal(statsFor(UnitKind.Clarion).sigFiringBurst, FACTION_COMBAT.ENERGY.FIRING_SIG);
+    assert.equal(
+      firingSigFor(Faction.Hadron, statsFor(UnitKind.Clarion).sigFiringBurst),
+      FACTION_COMBAT.ENERGY.FIRING_SIG,
+      'and the class applied to it is idempotent rather than a second discount'
+    );
+
+    // The other half of the same claim: the hull is loud where it is pointed
+    // and the *weapon* is not. A Clarion's listed cruise SIG is more than
+    // twice a Corvette's, and its discharge is under half of one's.
+    assert.ok(
+      statsFor(UnitKind.Clarion).sigCruise > statsFor(UnitKind.Corvette).sigCruise,
+      'the hull is the loud one'
+    );
+    assert.ok(
+      statsFor(UnitKind.Clarion).sigFiringBurst < statsFor(UnitKind.Corvette).sigFiringBurst,
+      'and the weapon is not'
+    );
+  });
+
   it('a Directorate seeker hears what a Consortium seeker cannot', () => {
     // §11: their torpedoes carry "the best mobile ears in the game,
     // miniaturised". Asserted as an acquisition a baseline seeker fails to make

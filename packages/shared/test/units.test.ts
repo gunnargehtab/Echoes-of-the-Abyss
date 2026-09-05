@@ -29,7 +29,17 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { MAX_UNIT_RADIUS_M, UNIT_STATS, unitRadiusM } from '../dist/index.js';
+import {
+  DIRECTIONAL_COMPASS_AVERAGE,
+  DIRECTIONAL_SIGNATURE,
+  Faction,
+  MAX_UNIT_RADIUS_M,
+  UNIT_STATS,
+  UnitKind,
+  statsFor,
+  unitAvailableTo,
+  unitRadiusM,
+} from '../dist/index.js';
 
 const roster = Object.values(UNIT_STATS);
 
@@ -134,6 +144,79 @@ describe('roster invariants', () => {
       assert.ok(
         Number.isFinite(stats.hullLengthM) && stats.hullLengthM > 0,
         `${stats.name} has a degenerate hull length: ${stats.hullLengthM}`
+      );
+    }
+  });
+});
+
+describe('the Clarion carries the directional balance clause (#401)', () => {
+  const clarion = statsFor(UnitKind.Clarion);
+  const corvette = statsFor(UnitKind.Corvette);
+
+  it('lists a cone figure whose compass average is the Corvette it is scaled against', () => {
+    // docs/systems-echo.md §8's balance clause is the whole reason a Knight
+    // entry exists as its own hull rather than as a generic one in Order
+    // colours: "a Knight hull is an ordinary hull with its loudness moved, not
+    // a quiet one." The listed SIG is what the hull emits *in the cone*, and
+    // averaged over the compass it must come back to the hull it is a peer of.
+    //
+    // Asserted against DIRECTIONAL_COMPASS_AVERAGE rather than against 2.2 or
+    // against 62, so the day somebody re-tunes the sector table this fails
+    // here — where a roster number is wrong — instead of silently making the
+    // faction quieter or louder than the model says it is.
+    const averaged = clarion.sigCruise * DIRECTIONAL_COMPASS_AVERAGE;
+    assert.ok(
+      Math.abs(averaged - corvette.sigCruise) <= 0.5,
+      `a Clarion averaged over the compass is ${averaged.toFixed(2)}, ` +
+        `which should land on the Corvette's ${corvette.sigCruise}`
+    );
+  });
+
+  it('moves the Corvette’s loudness rather than adding to it', () => {
+    // The other half of the same clause, and the difference between a doctrine
+    // and a drawback. §8's sentence is "an ordinary hull with its loudness
+    // moved": the cone has to be *louder* than the hull it is scaled against
+    // and the wake *quieter* than it, or the entry is simply a noisier
+    // Corvette with a discount in one quarter. The average above says the
+    // trade is even; this says there is a trade at all.
+    assert.ok(
+      clarion.sigCruise > corvette.sigCruise,
+      `bow-on, ${clarion.sigCruise} should beat a generic Corvette's ${corvette.sigCruise}`
+    );
+    assert.ok(
+      clarion.sigCruise * DIRECTIONAL_SIGNATURE.WAKE < corvette.sigCruise,
+      'and stern-on it should be the quieter of the two'
+    );
+
+    // A Clarion is also dearer and slower than the hull it replaces: the
+    // doctrine is bought, not granted. A retune that made it cheaper *and*
+    // better would leave the Order with no reason ever to build a Corvette.
+    assert.ok(clarion.cost > corvette.cost, 'the doctrine is paid for at the yard');
+    assert.ok(clarion.speed < corvette.speed, '...and in the water');
+  });
+
+  it('is the Order\u2019s and is refused to the other three navies', () => {
+    assert.equal(unitAvailableTo(UnitKind.Clarion, Faction.Hadron), true);
+    for (const faction of [Faction.Bathyarch, Faction.Pelagia, Faction.Directorate]) {
+      assert.equal(
+        unitAvailableTo(UnitKind.Clarion, faction),
+        false,
+        'a cone figure means nothing without the term, and the term is one navy\u2019s'
+      );
+    }
+  });
+
+  it('leaves every other hull nobody\u2019s', () => {
+    // The lock is an exception and has to stay one — docs/units.md's design
+    // note argues the Chorister is the Directorate's by its *price*, and a
+    // later edit that reached for a faction field instead would quietly
+    // replace that argument with a rule.
+    for (const stats of roster) {
+      if (stats.kind === UnitKind.Clarion) continue;
+      assert.equal(
+        stats.faction,
+        undefined,
+        `${stats.name} carries a faction lock; only the Clarion is meant to`
       );
     }
   });
