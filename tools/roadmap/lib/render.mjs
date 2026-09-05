@@ -120,7 +120,17 @@ function phaseCard(phase, states, repo, content, open) {
 const fill = (text, counts) =>
   text.replace(/\{(\w+)\}/g, (_, key) => (key in counts ? String(counts[key]) : `{${key}}`));
 
-export function render({ roadmap, states, content, counts, repo, generatedAt, fontHref }) {
+export function render({
+  roadmap,
+  states,
+  content,
+  counts,
+  repo,
+  generatedAt,
+  fontHref,
+  sheet = null,
+  unplaced = 0,
+}) {
   const all = roadmap.phases.flatMap((phase) => phase.items);
   const overall = progress(all, states);
   const done = roadmap.phases.filter((p) => progress(p.items, states).complete);
@@ -190,6 +200,27 @@ export function render({ roadmap, states, content, counts, repo, generatedAt, fo
   const provenance = haveState
     ? `${content.footer.provenance} Last read ${escape(generatedAt)}.`
     : `This copy of the page was built without access to the issue tracker, so every item shows as unknown.`;
+
+  // The one picture on the page. Width and height are written into the
+  // markup so the box is reserved before the bytes arrive; without a sheet
+  // the section simply ends at the navies, and the build has already said so.
+  const roster =
+    sheet === null
+      ? ''
+      : `      <h3 class="subhead" id="fleet">${escape(content.roster.title)}</h3>
+      <p class="lede">${escape(content.roster.text)}</p>
+      <figure class="sheet reveal">
+        <a href="${escape(sheet.href)}"><img src="${escape(sheet.href)}" width="${sheet.width}" height="${sheet.height}" loading="lazy" decoding="async" alt="${escape(content.roster.alt)}"></a>
+        <figcaption>${escape(content.roster.caption)}</figcaption>
+      </figure>`;
+
+  // What the tracker has that the roadmap has not placed yet. Said in one
+  // line rather than hidden, so the page never claims the rows are the whole
+  // of the work when the build knows they are not.
+  const backlog =
+    unplaced === 0
+      ? ''
+      : `      <p class="lede backlog"><a href="https://github.com/${repo}/issues?q=is%3Aissue+is%3Aopen">${unplaced === 1 ? 'One more open item in the tracker is' : `${unplaced} more open items in the tracker are`} not yet placed on this roadmap.</a></p>`;
 
   const stats = [
     { n: counts.missions, cls: 'cool', label: 'Campaign missions', sub: 'playable today' },
@@ -507,6 +538,16 @@ footer p { margin: 0.3rem 0; }
 .play h3 { color: var(--text-bright); }
 .subhead { font-size: 1rem; letter-spacing: 0.16em; color: var(--text-cyan); margin: 2.4rem 0 0.8rem; }
 footer .note { color: var(--text-bright); font-family: var(--display); font-size: 1.05rem; letter-spacing: 0.03em; text-transform: none; }
+
+/* the roster sheet: the image is already on the void, so the frame is the
+   card's own — one corner tick, a hairline, no second background. */
+.sheet { margin: 0; position: relative; border: 1px solid rgba(53, 224, 255, 0.14); border-radius: 3px; background: var(--abyss-void); padding: 0.6rem; }
+.sheet::before { content: ''; position: absolute; top: -1px; left: -1px; width: 8px; height: 8px; border: 1px solid rgba(53, 224, 255, 0.45); border-width: 1px 0 0 1px; }
+.sheet a { display: block; }
+.sheet img { display: block; width: 100%; height: auto; }
+.sheet figcaption { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); padding: 0.7rem 0.3rem 0.1rem; }
+.backlog { font-size: 0.8rem; margin-top: -0.8rem; }
+.backlog a { color: var(--neon-amber); }
 </style>
 </head>
 <body>
@@ -599,6 +640,7 @@ ${pillars}
       <div class="grid">
 ${factions}
       </div>
+${roster}
     </div>
   </section>
 
@@ -620,6 +662,7 @@ ${roughEdges}
     <div class="wrap">
       <div class="section-head"><h2>What is next</h2><span class="kicker">progress read live from the project tracker</span></div>
       <p class="lede">Every line below is a piece of work the team has committed to, and its state comes straight from the tracker when this page is built. Nothing here is a wish list.</p>
+${backlog}
       <div class="controls" role="group" aria-label="Filter items">
         <button class="chip" type="button" data-filter="all" aria-pressed="true">All</button>
         <button class="chip" type="button" data-filter="open" aria-pressed="false">Planned</button>

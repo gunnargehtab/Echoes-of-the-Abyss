@@ -30,10 +30,15 @@ on:
       - 'tools/roadmap/**'
       - 'packages/frontend/public/favicon.svg'
       - 'packages/frontend/src/assets/fonts/**'
+      # The roster contact sheet: the page shows the newest one an art PR
+      # committed (tools/roadmap/lib/sheet.mjs), so a re-bake is a page change.
+      - 'docs/screenshots/**/rung-roster-sprites.png'
       - '.github/workflows/pages.yml'
   # Issue state is half the page, and it changes without any push at all.
+  # `opened` too: the page counts the open issues the roadmap has not placed,
+  # so a new issue changes the page before anyone writes it a row.
   issues:
-    types: [closed, reopened, edited]
+    types: [opened, closed, reopened, edited]
   # No `pull_request: closed` trigger, though the merged-PR count is on the
   # page: that event runs the workflow at the PR's own ref, and the
   # github-pages environment only admits main, so its deploy is refused —

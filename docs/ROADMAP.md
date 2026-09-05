@@ -9,16 +9,22 @@ are kept below as the record of how the build got here.
 This document is also what the roadmap site renders (`tools/roadmap/build.mjs`). The site
 reads the phase tables, asks GitHub whether each issue is open, and draws that — so a table
 row is a claim that the work is tracked, not a claim that it is live. The prose is what says
-which.
+which. The site also counts the open issues this document places in no table, and shows the
+newest roster contact sheet an art PR committed under `docs/screenshots/`.
 
 ---
 
 ## Where the build actually stands
 
-Twenty-one issues are open. Sixteen are the audit epic's findings, filed on one day against
-a build that had closed every issue before it. The other three are older: the world epic
-(#224), the frame-time measurement the presentation switch still owes (#286), and PC input
-(#294). Everything else this document has ever tracked is closed.
+Twelve issues are open. Four are what remains of the audit epic (#428) and its findings,
+filed on one day against a build that had closed every issue before it: frontend
+housekeeping (#442), the test gaps (#443) and the competitive-mode document (#439). Three
+are older: the world epic (#224), the frame-time measurement the presentation switch still
+owes (#286), and PC input (#294). Five were filed since the audit and have no row below yet:
+a second balance finding, the Consortium beating the Directorate 90/10 in duels (#458); a
+combat-depth design (#463); mines and depth seeding for the AI commander (#467); the
+storyline epic (#469); and a fog-of-war question (#472). Everything else this document has
+ever tracked is closed.
 
 That is the issue tracker's account. The build's own account is less flattering, and the two
 numbers below are the ones that decide whether the game is playable end to end — which is
