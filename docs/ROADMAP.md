@@ -26,27 +26,38 @@ the bar `CONTRIBUTING.md` sets for the first tag.
 
 | Question | Reading | Tracked |
 | --- | --- | --- |
-| Does a skirmish finish? | **29 of 30** baseline matches — four AI seats, Veteran, the Ventfront Divide, seeds 4000–4029, a 25-minute cap — ended without a winner, on a median 2 of the 3 eliminations a win needs. Three of the five guard-rails read "no data", because one decided match is not ten | [#440](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/440) |
+| Does a skirmish finish? | **22 of 30** baseline matches — four AI seats, Veteran, the Ventfront Divide, seeds 4000–4029, a 25-minute cap — end without a winner, on a median 2 of the 3 eliminations a win needs. Eight decide, against one before the commander's construction livelock was found; still short of the ten a win-rate guard-rail needs to rule | [#440](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/440) |
 | Does the Echo pass hold its budget? | The 2 ms budget (`SIM.ECHO_BUDGET_MS`) breaks at about 160 entities: a median 0.99 ms at ~84, 2.44 ms at ~164, 7.16 ms at ~324 on a CI-class container. The worst case is tracked (`Match.worstEchoPassMs`) and never enforced or degraded | [#430](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/430) |
 | Is the frame time real? | Every conn-view frame-time number on record prices SwiftShader in a container. Nothing has been timed on a real GPU or on the Termux floor the game promises | [#286](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/286) |
 
-The first row is the one that matters. The committed baseline
-(`tools/balance/baselines/four-faction-baseline.md`) has said this since it was written, and
-until this revision nothing in the roadmap had turned it into work. A game "you can sit down
-and play alone" — the phrase earlier revisions of this document used — is a game whose
-matches end, and the harness's own README already warned that running more matches only buys
-more draws.
+The first row is the one that matters. A game "you can sit down and play alone" — the phrase
+earlier revisions of this document used — is a game whose matches end, and the harness's own
+README already warned that running more matches only buys more draws.
 
 The baselines beside it narrow the question. The two-seat batches resolve — ten of ten
 Consortium-versus-Commune matches ended, at a median 564 seconds — and the four-seat batch
-does not, on the same map and the same cap. A four-seat win needs three eliminations and the
-median match reaches two, so what #440 has to explain is why the third commander survives
-twenty-five minutes. Two suspects, and they are not exclusive: the commander plans no build
-order, holds no economy-to-military ratio, and its pursuit branch pre-empts its push branch
-so hard the tuning comment records reaching a push between zero and eight times in
-twenty-five minutes; and the scuttling rule ([game-identity.md](game-identity.md)) may be
-too patient to close a match whose last seat is beaten but not gone. Fix the AI first,
-re-run the baseline, then read the guard-rails again.
+still mostly does not, on the same map and the same cap. A four-seat win needs three
+eliminations and the median match reaches two, so what #440 has to explain is why the third
+commander survives twenty-five minutes.
+
+Part of the answer is in, and it was not a balance question at all. The commander could ask
+for a Vent Tap the server would always refuse — the search that chose the vent did not know
+the placement rule the server enforces — and because the construction branch reserves a
+site's price out of the same purse the production branch spends from, a commander that had
+lost its harvesters spent its whole bank on that refusal on every observation and could never
+queue the harvester that would have saved it. It could not concede either: the scuttling rule
+([game-identity.md](game-identity.md)) reads a bank that could buy a harvester as a commander
+who still has a move, which was true of every commander except that one. So a seat that was
+finished by minute eight sat on its Bastion until the cap. That, a turret bought against a
+grazer, a strong army that never opened the commitment its weaker self got, and a push whose
+destination was re-chosen from the freshest contact every 200 ms are all fixed, and decided
+matches went from one in thirty to eight.
+
+What remains is the harder half, and it is what the issue named first: the commander plans no
+build order, holds no economy-to-military ratio, and does not press an attack it has arrived
+at. The armies now reach each other's bases and do not finish them. The scuttling rule looks
+patient rather than wrong now that the position it was reading has stopped being a bug —
+re-read it against a baseline where the AI plays, not before.
 
 The second row is the reason the first cannot be fixed by adding units. Every hull the roster
 grows and every seat a population cap admits is an entity in the detection pass, and the pass
@@ -359,7 +370,7 @@ impact; this table groups them by what they are, and the ranking is on the issue
 
 | Work | Issue |
 | --- | --- |
-| Match resolution — 29 of 30 baseline skirmishes end at the cap without a winner; fix the commander, re-run the baseline, re-read the guard-rails | [#440](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/440) |
+| Match resolution — 22 of 30 baseline skirmishes still end at the cap without a winner, down from 29 once the commander's construction livelock was fixed; give it a build order, an economy-to-military ratio and an attack it presses home, re-run the baseline, re-read the guard-rails | [#440](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/440) |
 
 **Performance and netcode**
 

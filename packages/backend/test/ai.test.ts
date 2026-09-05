@@ -16,6 +16,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  CONSTRUCTION,
   ACTIVE_SONAR,
   AiDifficulty,
   DEPTH,
@@ -255,6 +256,189 @@ describe('production does not deadlock', () => {
   it('builds nothing at all when it can afford nothing at all', () => {
     assert.deepEqual(produced(Faction.Hadron, 10), []);
   });
+
+  /**
+   * The other deadlock, and the one that decided the four-faction baseline
+   * (#440): a commander whose economy is gone, whose bank could restart it, and
+   * which spends that bank on a building it can never place.
+   *
+   * `commandConstruction` runs before `commandProduction` and reserves out of
+   * the same purse, so a site the server keeps refusing takes the whole bank on
+   * every observation and production never sees a nodule. On seed 4000 the
+   * Consortium sat on 300 nodules and three structures with nothing in the
+   * water for the last seven minutes of the match, asking for the same
+   * unbuildable Vent Tap and never queueing the harvester that would have
+   * saved it. It could not scuttle either — the scuttling rule reads a bank
+   * that could buy a harvester as a commander who still has a move
+   * (docs/game-identity.md), which was true of every commander except this one.
+   */
+  function dead(nodules: number): EchoSnapshot {
+    const base = broke(nodules);
+    return {
+      ...base,
+      // Nothing in the water at all: no harvester to earn with, no hull to
+      // fight with. Everything it will ever have is in the bank and on the
+      // ground.
+      units: [],
+      structures: [
+        {
+          id: 20,
+          kind: StructureKind.Bastion,
+          x: 1000,
+          y: 1000,
+          depth: 300,
+          hp: 5000,
+          maxHp: 5000,
+          sig: 40,
+          buildProgress: 1,
+          queue: [],
+          queueProgress: 0,
+        },
+        ...base.structures,
+      ],
+      // The demand that used to send it after a Vent Tap it could not anchor.
+      draw: { ...base.draw, demand: base.draw.capacity },
+    };
+  }
+
+  it('rebuilds the economy rather than reserving the bank for works', () => {
+    const commander = new AiCommander({
+      ...briefing(AiDifficulty.Veteran),
+      faction: Faction.Bathyarch,
+    });
+    const built: UnitKind[] = [];
+    for (let i = 0; i < 12; i++) {
+      for (const command of commander.observe(dead(300))) {
+        if (command.kind === 'produce') built.push(command.unit);
+      }
+    }
+    assert.ok(
+      built.includes(UnitKind.Harvester),
+      'a commander with no harvesters and the price of one must queue it'
+    );
+  });
+
+  it('asks for no site at all while there is nothing in the water to pay for it', () => {
+    const commander = new AiCommander({
+      ...briefing(AiDifficulty.Veteran),
+      faction: Faction.Bathyarch,
+    });
+    const sites: StructureKind[] = [];
+    for (let i = 0; i < 12; i++) {
+      for (const command of commander.observe(dead(300))) {
+        if (command.kind === 'build') sites.push(command.structure);
+      }
+    }
+    assert.deepEqual(sites, [], 'the bank is the only economy left and it went into a building');
+  });
+
+  /**
+   * The site the commander could never place, and the reason the deadlock
+   * above was permanent rather than a bad minute (#440).
+   *
+   * A Vent Tap only works on a vent (docs/economy.md §2), so unlike every other
+   * placement there is no spiral to walk — the same cell comes back on every
+   * observation. The server refuses a site that does not rise within
+   * `CONSTRUCTION.BUILD_RADIUS_M` of a structure the commander already owns,
+   * and the search that picked the vent did not know that rule, so a commander
+   * whose nearest vent was 1,575 m away asked for the same impossible tap for
+   * the rest of the match — reserving its whole bank each time.
+   */
+  function tappingAt(structure: { x: number; y: number }): StructureKind[] {
+    const brief = { ...briefing(AiDifficulty.Veteran), faction: Faction.Bathyarch };
+    const commander = new AiCommander(brief);
+    const base = broke(2000);
+    const snapshot: EchoSnapshot = {
+      ...base,
+      // A Refinery already up, so the branch under test is the one that runs:
+      // construction takes the Refinery first and returns when it is missing.
+      structures: [
+        ...base.structures.map((s) => ({ ...s, ...structure })),
+        { ...base.structures[0]!, id: 21, kind: StructureKind.Refinery, ...structure },
+      ],
+      draw: { ...base.draw, demand: base.draw.capacity },
+    };
+    const sites: StructureKind[] = [];
+    for (let i = 0; i < 12; i++) {
+      for (const command of commander.observe(snapshot)) {
+        if (command.kind === 'build') sites.push(command.structure);
+      }
+    }
+    return sites;
+  }
+
+  it('asks for no vent tap it could not anchor to something it owns', () => {
+    const brief = briefing(AiDifficulty.Veteran);
+    const home = brief.spawns[brief.slot]!;
+    // Anchored to nothing: the commander's only structure sits on its spawn,
+    // and the fixture asserts the map really does put every vent out of reach
+    // of it, so the check below cannot pass by having nothing to refuse.
+    const { cols, rows, cellM, biomes } = brief.terrain;
+    let nearestVentM = Infinity;
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (biomes[row * cols + col] !== 1) continue;
+        const d = Math.hypot((col + 0.5) * cellM - home.x, (row + 0.5) * cellM - home.y);
+        nearestVentM = Math.min(nearestVentM, d);
+      }
+    }
+    assert.ok(
+      nearestVentM > CONSTRUCTION.BUILD_RADIUS_M,
+      `this fixture needs a spawn with no vent in build range (${Math.round(nearestVentM)} m)`
+    );
+    assert.ok(
+      !tappingAt(home).includes(StructureKind.VentTap),
+      'it ordered a tap the server would refuse, and reserved the bank to do it'
+    );
+  });
+
+  /**
+   * A turret is bought against a *raid*, not against a fish (#440).
+   *
+   * The branch used to read "any contact inside the watch around the Bastion",
+   * which is the same naive test DEFEND_WATCH exists to replace: the Drift is
+   * seeded near spawns and an unclassified smudge is a contact by
+   * construction, so it was true nearly all the time. It went unnoticed
+   * because the phantom Vent Tap above it reserved the purse first and the
+   * turret was never actually paid for.
+   */
+  function turretsFor(range: number): StructureKind[] {
+    const brief = { ...briefing(AiDifficulty.Veteran), faction: Faction.Bathyarch };
+    const home = brief.spawns[brief.slot]!;
+    const commander = new AiCommander(brief);
+    const base = broke(2000);
+    const sites: StructureKind[] = [];
+    for (let i = 0; i < 40; i++) {
+      const snapshot: EchoSnapshot = {
+        ...base,
+        tick: base.tick + i * (SIM.TICK_HZ / SIM.ECHO_HZ),
+        structures: [
+          ...base.structures,
+          { ...base.structures[0]!, id: 21, kind: StructureKind.Refinery },
+        ],
+        // Holding its range: seen, never closing. A grazer, in other words.
+        contacts: [contact({ tier: ResolutionTier.Contact, x: home.x + range, y: home.y })],
+      };
+      for (const command of commander.observe(snapshot)) {
+        if (command.kind === 'build') sites.push(command.structure);
+      }
+    }
+    return sites;
+  }
+
+  it('does not fortify against something that has only ever drifted past', () => {
+    assert.ok(
+      !turretsFor(1400).includes(StructureKind.SentinelTurret),
+      'a hundred nodules of static defence, aimed at a fish'
+    );
+  });
+
+  it('does fortify against something already on the Bastion', () => {
+    assert.ok(
+      turretsFor(400).includes(StructureKind.SentinelTurret),
+      'it left the doorstep to whatever was standing on it'
+    );
+  });
 });
 
 describe('difficulty is decision quality, not information', () => {
@@ -471,12 +655,45 @@ describe('it pings and hides for reasons', () => {
     assert.ok(pingsAt(fielded(), [contact({ tier: ResolutionTier.Contact, x: 2600, y: 2000 })]));
   });
 
-  it('does not transmit from its own doorstep', () => {
+  it('does not transmit from its own doorstep at what is merely drifting past', () => {
     // Half of a bug the balance harness caught: every commander of every
     // faction used to transmit 0.4 s into the match. The Drift puts creatures
     // near a spawn, so there was always something unclassified beside the
     // opening force — and naming it cost 2,400 m of self-reveal to identify
     // a fish. A force that has not deployed has nothing to learn.
+    //
+    // Still true of a smudge that is only *near*: 1,400 m out is inside the
+    // watch around the Bastion and outside the ring that recalls the army
+    // without debate, and one that holds its range never earns the alarm. The
+    // commander has nothing to gain by naming it and pays 2,400 m to do it.
+    const commander = fielded();
+    const home = briefing(AiDifficulty.Veteran).spawns[1]!;
+    const smudge = [contact({ tier: ResolutionTier.Contact, x: home.x + 1400, y: home.y })];
+    const atHome = (): EchoSnapshot => {
+      const snapshot = armySnapshot(smudge);
+      return { ...snapshot, units: snapshot.units.map((u) => ({ ...u, x: home.x, y: home.y })) };
+    };
+
+    let pinged = false;
+    for (let i = 0; i < 12; i++) {
+      for (const command of commander.observe(atHome())) {
+        if (command.kind === 'ping') pinged = true;
+      }
+    }
+    assert.equal(pinged, false);
+  });
+
+  it('does transmit at the one on the doorstep that is holding its army there', () => {
+    // The other side of the same rule, and the reason it needed one (#440).
+    // The defend branch recalls the army for a contact inside the urgent ring
+    // whatever that contact turns out to be, and it fires on contacts it
+    // cannot name. Fauna are drawn to noise and a base is the noisiest thing a
+    // commander owns, so the doorstep is exactly where unnameable contacts
+    // collect — and a commander forbidden from pinging them was forbidden from
+    // pinging the only contacts that were pinning it at home. Measured over
+    // the four-faction baseline, the defend branch took between a fifth and
+    // two fifths of every decision. Naming one is how the army learns it does
+    // not have to stay.
     const commander = fielded();
     const home = briefing(AiDifficulty.Veteran).spawns[1]!;
     const smudge = [contact({ tier: ResolutionTier.Contact, x: home.x + 200, y: home.y })];
@@ -491,7 +708,7 @@ describe('it pings and hides for reasons', () => {
         if (command.kind === 'ping') pinged = true;
       }
     }
-    assert.equal(pinged, false);
+    assert.equal(pinged, true);
   });
 
   it('holds its first transmission until the opening is over', () => {
