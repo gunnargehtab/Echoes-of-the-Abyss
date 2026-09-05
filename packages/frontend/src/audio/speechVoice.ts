@@ -17,12 +17,20 @@
  * water in it — a dry, dead-room tap — because the court speaks from a place
  * that is not the Rift.
  *
+ * Inside each material, a **signature** per named speaker (#403, §13 "The
+ * cast"): the register's own mechanism at that speaker's fundamental and
+ * cadence, so Sull's note is not Vrey's and the chair is one particular
+ * machine. Authored as data in `CAST`, keyed on docs/characters.md, with the
+ * register's chorus — the plain hail — for everyone that document has no
+ * entry for. A signature cannot leave its register's material, which is how
+ * the cast passes §6's test structurally rather than by care.
+ *
  * Everything here is a pure function of the audio context, in the style of
  * `selfVoice.ts`: one-shots built on demand and left to expire. Nothing feeds
  * back — the simulation never learns a line was heard.
  */
 
-import type { MissionVoice } from '@echoes/shared';
+import { chorusOf, registerOf, type MissionSpeaker, type MissionVoice } from '@echoes/shared';
 import { ensureNoiseBuffer } from './contactVoice.ts';
 
 /**
@@ -81,7 +89,16 @@ export interface Hail {
   syllableHz: number;
   /** How much the cadence wanders, 0–1. The plateaus never repeat. */
   jitter: number;
+  /**
+   * How many of the signature sound at once, each a little sharp of and
+   * behind the last. Absent is one. The charting pair is two: two breathing
+   * together, not quite in step (docs/characters.md).
+   */
+  unison?: number;
 }
+
+/** A second voice in a unison is this much sharp of the first, and this late. */
+const UNISON = { DETUNE: 1.04, LAG_S: 0.04 } as const;
 
 /**
  * The five, as data — so the register test can be run over the table
@@ -143,8 +160,77 @@ export const HAILS: Readonly<Record<MissionVoice, Hail>> = {
   },
 };
 
-export function hailFor(voice: MissionVoice): Hail {
-  return HAILS[voice];
+/**
+ * The cast — docs/audio-direction.md §13's table, transcribed. Every figure
+ * is anchored in the speaker's entry in docs/characters.md, and the choruses
+ * are the plain hails by identity rather than by copy, so the one table above
+ * stays the one place a register's material is defined.
+ *
+ * Two laws the register test holds this table to: within a register no two
+ * signatures share a fundamental and a cadence, and a signature keeps its
+ * register's material and its register's law — the concern's machines are
+ * all metronomes, and none of the plateaus' breaths repeats.
+ */
+export const CAST: Readonly<Record<MissionSpeaker, Hail>> = {
+  // The concern. The chair is the lowest and slowest machine in the register
+  // — one particular machine, at the pace of a names list read in full; Osk
+  // is a working machine at the Vein's pace; Tull an instrument, not a press.
+  'varr-kest': { ...HAILS.concern, hz: 54, bedHz: 240, syllableHz: 3.2 },
+  osk: { ...HAILS.concern, hz: 76, bedHz: 340, syllableHz: 4.6 },
+  tull: { ...HAILS.concern, hz: 90, bedHz: 420, syllableHz: 4.4 },
+  'the-grid': HAILS.concern,
+  // The plateaus. Marr is the slowest breath in the Rift and the one that
+  // least repeats; Anholt's is shorter than it wants to be; Teel's is the one
+  // with something regular in it, and still never the same twice. The pair
+  // is the register's own breath, twice, not quite in step.
+  marr: { ...HAILS.plateaus, hz: 46, bedHz: 190, syllableHz: 2.2, jitter: 0.9 },
+  anholt: { ...HAILS.plateaus, hz: 60, bedHz: 260, syllableHz: 3.1, jitter: 0.7 },
+  teel: { ...HAILS.plateaus, hz: 56, bedHz: 240, syllableHz: 2.9, jitter: 0.5 },
+  'charting-pair': { ...HAILS.plateaus, unison: 2 },
+  'the-bloom': HAILS.plateaus,
+  // The cohorts. Korrin is the lowest swarm, born deepest, and the most
+  // gathered; Ossary the slowest cadence in the register — liturgy; Adze the
+  // highest and quickest, the fifth generation at the limit.
+  korrin: { ...HAILS.cohorts, hz: 112, bedHz: 700, syllableHz: 4.2, jitter: 0.15 },
+  ossary: { ...HAILS.cohorts, hz: 128, bedHz: 820, syllableHz: 3.6, jitter: 0.25 },
+  adze: { ...HAILS.cohorts, hz: 170, bedHz: 1100, syllableHz: 5.8, jitter: 0.2 },
+  'those-below': HAILS.cohorts,
+  // The Order. Sull a fourth above the Order's G, Vrey a fourth below it —
+  // the two notes the Order's own sits between, and a seventh without it;
+  // Kalliso on the Order's own note, at a soldier's pace through a wider bed.
+  sull: { ...HAILS.order, hz: 262, bedHz: 800, syllableHz: 3 },
+  vrey: { ...HAILS.order, hz: 147, bedHz: 450, syllableHz: 2.6 },
+  kalliso: { ...HAILS.order, bedQ: 4, syllableHz: 3.5 },
+  'the-chapter': HAILS.order,
+  // The court. Halloran's tap is heavier than the record's and read slower:
+  // the count, said aloud and left to sit.
+  halloran: { ...HAILS.court, hz: 900, bedHz: 1000, syllableHz: 2.8 },
+  'the-record': HAILS.court,
+};
+
+/** The row `playHail` will sign a line with — the speaker's, in the cast. */
+export function hailFor(speaker: MissionSpeaker): Hail {
+  return CAST[speaker];
+}
+
+/** What a line arrives as — the register and the speaker, both resolved server-side. */
+export interface SpokenBy {
+  voice: MissionVoice;
+  speakerId: MissionSpeaker;
+}
+
+/**
+ * The row for a line as it arrived. The register is the fact the hail must
+ * never get wrong — it is §6's test — so a speaker whose register is not the
+ * line's is not trusted over it: a line from a malformed wire is hailed
+ * plainly in its register rather than signed in another's. The runtime
+ * resolves both from one beat and `missions.test.ts` holds them together, so
+ * this is a guard on the wire and not a rule the literals lean on.
+ */
+export function rowFor(line: SpokenBy): Hail {
+  return registerOf(line.speakerId) === line.voice
+    ? CAST[line.speakerId]
+    : CAST[chorusOf(line.voice)];
 }
 
 export interface HailOptions {
@@ -162,11 +248,11 @@ export interface HailOptions {
 export function playHail(
   context: AudioContext,
   destination: AudioNode,
-  voice: MissionVoice,
+  line: SpokenBy,
   at: number,
   opts: HailOptions
 ): number {
-  const hail = HAILS[voice];
+  const hail = rowFor(line);
 
   // The channel: a trim for the whisper, then a low-pass that is wide open at
   // full power and takes the top octave under the whisper rule. Built per
@@ -184,8 +270,27 @@ export function playHail(
   return HAIL_S + opts.readingS;
 }
 
-/** The signature — what says *which* of the five is on the channel. */
+/**
+ * The signature — what says *which* of the five is on the channel, and since
+ * #403 which of the cast within it. A unison is the same signature sounded
+ * `unison` times, each a little sharp of and behind the last, at a share of
+ * the level so two do not read as one louder.
+ */
 function signature(context: AudioContext, out: AudioNode, hail: Hail, at: number): void {
+  const voices = hail.unison ?? 1;
+  if (voices <= 1) {
+    single(context, out, hail, at);
+    return;
+  }
+  const share = context.createGain();
+  share.gain.value = 1 / voices;
+  share.connect(out);
+  for (let i = 0; i < voices; i++) {
+    single(context, share, { ...hail, hz: hail.hz * UNISON.DETUNE ** i }, at + UNISON.LAG_S * i);
+  }
+}
+
+function single(context: AudioContext, out: AudioNode, hail: Hail, at: number): void {
   switch (hail.material) {
     case 'reciprocating': {
       // Three strikes on a fixed period. The beat is the identity, so it is

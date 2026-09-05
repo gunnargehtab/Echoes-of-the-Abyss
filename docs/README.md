@@ -124,11 +124,14 @@ document already points at it:
   [mission-aptitude.md](mission-aptitude.md)'s tolerance and
   [mission-standing-wave.md](mission-standing-wave.md) §7's tables are the two that cost the
   most to move.
-- **A voice cast.** The speech channel ships as a hail in the speaker's register and a murmur
-  under the words, and the words are the log's ([audio-direction.md](audio-direction.md) §13).
-  Recorded lines, or a per-speaker voice, are a call that document has deliberately not made;
-  the chair's transmission line, Korrin's silence and Varr-Kest's two conditional lines are the
-  three debts the mission documents name against it.
+- **Recorded lines.** The speech channel hails every line in its speaker's own signature and
+  the words are the log's ([audio-direction.md](audio-direction.md) §13, *The cast*, #403). That
+  section chose a synthesised voice per named speaker and sequenced recorded lines behind three
+  things the repository does not have: a size budget in [tech-stack.md](tech-stack.md), a loading
+  story for a client that must stay playable muted, and a direction document per register.
+- **Korrin's silence, as a beat.** The one line the cast could not sign — a channel keyed open
+  and closed with nothing said — is a beat kind the mission format does not have, and
+  [mission-first-arrival.md](mission-first-arrival.md) §13 holds the decision.
 
 Deferred design questions, parked here as plain text until decided:
 

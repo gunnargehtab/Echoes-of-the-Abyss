@@ -39,10 +39,12 @@ import {
   detectionRatio,
   faunaStatsFor,
   thermoclineFactor,
+  speakerOf,
   voiceOf,
   type CommanderAbilityView,
   type EchoSnapshot,
   type MissionAbility,
+  type MissionSpeaker,
   type MissionView,
   type MissionVoice,
   type ObjectiveView,
@@ -171,6 +173,13 @@ export interface MissionLine {
    * (docs/audio-direction.md §13); the log ignores it.
    */
   voice: MissionVoice;
+  /**
+   * Who — the cast of docs/audio-direction.md §13, resolved here from the
+   * speaker string and never on the client, so the mix signs the hail with
+   * the speaker the server named and infers nothing from free text. Authored
+   * data about an authored line: it discloses nothing the string did not.
+   */
+  speakerId: MissionSpeaker;
 }
 
 /**
@@ -950,14 +959,17 @@ export class MissionRuntime {
         // convening is not a partial act (habitats.md §2).
         this.ring(world, () => true, this.definition.walk?.bell.ticks ?? 0);
         return;
-      case 'say':
+      case 'say': {
+        const voice = beat.voice ?? voiceOf(this.definition.playerFaction);
         this.lines.push({
           tick: world.tick,
           speaker: beat.speaker,
           text: beat.text,
-          voice: beat.voice ?? voiceOf(this.definition.playerFaction),
+          voice,
+          speakerId: beat.speakerId ?? speakerOf(beat.speaker, voice),
         });
         return;
+      }
       case 'resolve':
         // Deferred, not applied here. Beats fire before objectives are
         // re-derived, so resolving inside the beat would close the mission
@@ -1565,11 +1577,13 @@ export class MissionRuntime {
       this.ring(this.lastWorld, () => true, ability.durationTicks);
     }
     if (ability.line !== undefined) {
+      const voice = ability.line.voice ?? voiceOf(this.definition.playerFaction);
       this.lines.push({
         tick: this.lastWorld.tick,
         speaker: ability.line.speaker,
         text: ability.line.text,
-        voice: ability.line.voice ?? voiceOf(this.definition.playerFaction),
+        voice,
+        speakerId: ability.line.speakerId ?? speakerOf(ability.line.speaker, voice),
       });
     }
     return true;

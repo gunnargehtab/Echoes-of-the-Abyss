@@ -6,6 +6,8 @@ Design rule: every commander has a **conviction**, a **cost they've already paid
 
 Two figures named in the prologue are not here. Underwriter Sela Drenn fires the ping and the observer Sende does not move; neither commands anything, and the entry price of this list is a conviction. They are specified where they act ([mission-sorrowgate.md](mission-sorrowgate.md) §5).
 
+An entry here is also what a **voice** is. Every commander below carries one — a signature in their register's material, stated in numbers under *Voice* and built as data by [audio-direction.md](audio-direction.md) §13 — and anyone a mission literal names who has no entry here speaks as their register's chorus: *the grid*, *the bloom*, *those below*, *the chapter*, *the record*. Drenn is the grid and Sende is those below. The one exception is a crew rather than a person, and it is entered under the Commune.
+
 ---
 
 ## Bathyarch Consortium
@@ -24,6 +26,8 @@ She has read Item 9. She has read the Ninefold projections. She knows the Consor
 
 **Commander ability — *Write-Down*:** Sacrifice a friendly structure to instantly complete production at all others within 1,200 m. The Consortium in one button.
 
+**Voice:** the concern's beat at 54 Hz and 3.2 syllables a second — the lowest and slowest machine in the register. One particular machine, and the pace of a names list read in full.
+
 ---
 
 ### Foreman Corwin Osk
@@ -40,6 +44,8 @@ He knows Ninefold is dying. He hasn't told his crews. He's trying to negotiate t
 
 **Commander ability — *Shift Change*:** All harvesters gain +40% yield and −50% SIG for 20 s.
 
+**Voice:** the concern's beat at 76 Hz and 4.6 a second — a working machine, at the Vein's pace.
+
 ---
 
 ### Underwriter Baen Tull
@@ -53,6 +59,8 @@ He wants Item 9 declassified. He is the only Consortium character who might defe
 **Conviction:** A model that excludes the thing you can't explain is not a model, it's a comfort.
 **Already paid:** His father was a Halvard salvor. Died of what the paperwork called *exposure*.
 **Hasn't crossed:** He hasn't shown his model to anyone outside the Division.
+
+**Voice:** the concern's beat at 90 Hz and 4.4 a second — an instrument, not a press; the lightest machine in the register.
 
 ---
 
@@ -72,6 +80,8 @@ She opposes the second Deepbloom seeding. She will not stop it, because stopping
 
 **Commander ability — *Convocation*:** All Commune units within 2,000 m gain +25% speed and immunity to Silent Running penalties for 15 s. Usable **once per match.**
 
+**Voice:** the plateaus' breath at 46 Hz and 2.2 a second, wandering 0.9 — the slowest breath in the Rift and the one that least repeats. She convenes and cannot order.
+
 ---
 
 ### Bloomwright Sefa Anholt
@@ -88,6 +98,8 @@ She is going to seed again. Marr can't stop her. Anholt has the votes.
 
 **Commander ability — *Seeding*:** Instantly converts a 400 m radius of Abyssal terrain to habitable, granting all friendly units +1 PR in the zone for 60 s.
 
+**Voice:** the plateaus' breath at 60 Hz and 3.1 a second, wandering 0.7 — a breath shorter than it wants to be.
+
 ---
 
 ### Warden Juno Teel
@@ -101,6 +113,18 @@ The Commune's reluctant general — a farm-warden who became a soldier because t
 **Hasn't crossed:** She has never struck first.
 
 **Also appears:** Prologue — Sorrowgate, 214 PC. Teel is at the exchange, in a second chamber where the boats are not big enough.
+
+**Voice:** the plateaus' breath at 56 Hz and 2.9 a second, wandering 0.5 — the one plateaus breath with something regular in it, and still never the same twice.
+
+---
+
+### The charting pair
+
+*Two survey hulls · Seeding campaign · no names, one voice*
+
+Not a commander and not a person: the pair of charting hulls that reads the Mouth's rim for what could live on it, and the one crew in the campaign every faction hears. They are the player's own at [the Second Seeding](mission-second-seeding.md), the concern's contact at [Prospect](mission-prospect.md), the cohorts' at [the First Arrival](mission-first-arrival.md), the Order's at [the Rim Deposits](mission-rim-deposits.md) and [the Second Chord](mission-second-chord.md) — the same line, verbatim, heard from four directions. They are entered here for that reason and no other: a voice is a thing this document has an entry for ([audio-direction.md](audio-direction.md) §13), and the pair needed one so that a player at the Second Seeding hears *their own pair* at 05:30 and not the plateaus in general.
+
+**Voice:** the plateaus' breath at the register's own 52 Hz, as two swells — the second four per cent sharp and 40 ms behind. Two breathing together, not quite in step.
 
 ---
 
@@ -122,6 +146,8 @@ So she is preparing for something she cannot name, and everyone beneath her thin
 
 **Commander ability — *The Listening*:** Full Tier-3 resolution across the entire map for 8 s. No SIG cost. Once per match.
 
+**Voice:** the cohorts' ticks at 112 Hz and 4.2 a second, scattered 0.15 — the lowest swarm, born deepest, and the most gathered.
+
 ---
 
 ### First Cantor Vehl Ossary
@@ -135,6 +161,8 @@ He is right. Korrin is also right. This is the Directorate's civil war, conducte
 **Conviction:** The value of the Choir is that we cannot understand it. Understanding it would ruin us.
 **Already paid:** Sealed his own teacher's research in 186 PC. The teacher died in confinement, still writing.
 **Hasn't crossed:** He has never used the Cantorate's authority against Korrin directly. He could. It would split the Directorate.
+
+**Voice:** the cohorts' ticks at 128 Hz and 3.6 a second, scattered 0.25 — the slowest cadence in the register. Liturgy.
 
 ---
 
@@ -151,6 +179,8 @@ Adze is the game's argument in a body: **is a life you didn't choose, but genuin
 **Hasn't crossed:** Adze has never disobeyed. The campaign puts one order in front of them that they might.
 
 **Commander ability — *Cohort Surge*:** All Directorate units gain +30% attack speed while below 1,800 m for 20 s.
+
+**Voice:** the cohorts' ticks at 170 Hz and 5.8 a second, scattered 0.2 — the highest and quickest swarm: the fifth generation, at the limit, and happy.
 
 ---
 
@@ -172,6 +202,8 @@ She also knows the mute technicians' writings match the Directorate's dream tran
 
 **Commander ability — *The Second Chord*:** Places a resonance node that, over 30 s, grants global Tier-2 vision and +20% damage to all Knight units — and emits SIG 100 for the full duration. You announce yourself to the entire Rift.
 
+**Voice:** the Order's note at 262 Hz and 3.0 a second — a fourth above the Order's own G. With Vrey's, a seventh.
+
 ---
 
 ### Chapter-Master Halden Vrey
@@ -183,6 +215,8 @@ The Knights' conservative — a master crystal-wright who believes the Order's p
 **Conviction:** We were answered once. Nothing good has ever been said twice.
 **Already paid:** Built the First Chord's resonance lattice with his own hands. He designed the thing he now wants shut down.
 **Hasn't crossed:** He has not moved against Sull. He has the standing to call a conclave.
+
+**Voice:** the Order's note at 147 Hz and 2.6 a second — a fourth below the Order's G. Sull's and his are the two notes the Order's own sits between, and without it they do not make a chord: *nothing good has ever been said twice*.
 
 ---
 
@@ -198,6 +232,8 @@ The Order's best field officer and its most ordinary person — a soldier, not a
 
 **Also appears:** Prologue — Sorrowgate, 214 PC. She is the Knight nobody invited, she behaves impeccably throughout, and her hull's directional signature is why the exchange ends the way it does. She never fires anything.
 
+**Voice:** the Order's own 196 Hz at 3.5 a second, through a wider bed than the register's. The Order's most ordinary person sounds like the Order and talks like a soldier.
+
 ---
 
 ## Neutrals
@@ -210,7 +246,7 @@ Runs the Rift's only functioning neutral court out of a collapsed transit dome. 
 
 **Campaign role:** the prologue's arbiter and the Rift's neutral record — not a hub. The built campaign has none: the four campaigns are played apart and converge on the same eleven kilometres from four directions in the same week, never at the same table ([campaign.md](campaign.md) §8). What Halloran is, is the one register in the setting that describes a room without joining it, and the one person all four powers will be read to by.
 
-**Voice:** the fifth register — [culture.md](culture.md) §3, *the language of the record*. He is heard at length exactly once, in the prologue ([mission-sorrowgate.md](mission-sorrowgate.md) §12).
+**Voice:** the fifth register — [culture.md](culture.md) §3, *the language of the record*. He is heard at length exactly once, in the prologue ([mission-sorrowgate.md](mission-sorrowgate.md) §12), and in the mix his signature is a heavier tap than the record's — high-passed at 900 Hz against the court's 1,200, read at 2.8 a second: the count, said aloud and left to sit. Built and unspent, since the briefing is read before the socket opens ([audio-direction.md](audio-direction.md) §13).
 
 ### The Three
 
@@ -227,6 +263,7 @@ Alive at 2,900 m. They do not speak. They **write**, continuously, and have for 
 - **[factions.md](factions.md)** — the institutions these twelve run, and the four crises they are running into
 - **[campaign.md](campaign.md)** — the missions each of them is in, and the four endings none of them ranks
 - **[culture.md](culture.md)** — the five registers these people speak, and the titles they are addressed by
+- **[audio-direction.md](audio-direction.md)** — §13, the cast: what each *Voice* line above sounds like on the speech bus, and who speaks as a chorus
 - **[habitats.md](habitats.md)** — the cities these depths of birth are berths in
 - **[world-map.md](world-map.md)** — the gazetteer every quoted depth of birth is an address on
 - **[timeline.md](timeline.md)** — the years behind *already paid*: Kell, the Enclosure, Deepbloom, the crystal raids

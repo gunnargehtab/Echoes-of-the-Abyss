@@ -168,6 +168,13 @@ Silence-Debt
 - The Rift's social ledger for interrupting a listener: you owe the silence back, and you repay it by being quiet the next time that person listens (culture.md §5).
 - Informal in three factions and written down in the fourth (culture.md §5). At Sorrowgate it is neither: it is a condition of admission counted in seconds, and it is the mechanical form the silence order takes.
 
+Register · Hail · Signature · Chorus
+
+- **Register** — one of the five voices of culture.md §3: *the concern*, *the plateaus*, *the cohorts*, *the Order*, *the court*. A fact about *how* a line is spoken. On the wire it is `MissionVoice`, resolved on the server (audio-direction.md §13).
+- **Hail** — the 600 ms of the register's material that opens every spoken line on the speech bus, followed by a murmur bed for as long as the line takes to read. It says *somebody is speaking, and it is one of these five*. The words are the log's.
+- **Signature**, of a speaker — the hail and bed at one named speaker's own fundamental and cadence, inside the register's material; a fact about *who*. Not the Acoustic Signature (SIG) or the Directional Signature above, which are a hull's; a speaker's signature is the speech channel's word and audio-direction.md §13 is the only document that uses it. On the wire it is `MissionSpeaker`, keyed on characters.md.
+- **Chorus** — the speaker a line resolves to when nobody in characters.md is named: the register's plain hail, unsigned. Named by the register's other word for itself — *the grid*, *the bloom*, *those below*, *the chapter*, *the record*.
+
 The Setting's Proper Nouns
 
 The entries above are the ruleset's. The entries below are the world's, and they are here for the same reason: rule 1 of docs/README.md makes this document the place a term that means two things in two docs is resolved. Three such collisions are arbitrated here — the Sounding, the Descent, and Sufficiency — and the rest are terms five or more world docs use without any of them owning the definition.

@@ -29,6 +29,7 @@ import type {
   MissionHeader,
   MissionMarker,
   MissionOutcome,
+  MissionSpeaker,
   MissionVoice,
   ObjectiveStatus,
   ResolutionTier,
@@ -747,7 +748,7 @@ export interface MissionCommanderAbility {
    * it" is a query over the commander. So the line rides the act, which is the
    * thing that happened.
    */
-  line?: { speaker: string; text: string; voice?: MissionVoice };
+  line?: { speaker: string; text: string; voice?: MissionVoice; speakerId?: MissionSpeaker };
   note: string;
 }
 
@@ -1029,8 +1030,23 @@ export type MissionBeatEffect =
    * (docs/audio-direction.md §13) rather than in the player's. A speaker that
    * is the mission's own water talking ("The ground", "The turning", "The
    * lattice") carries none and speaks as the player does.
+   *
+   * `speakerId` is *who* — docs/audio-direction.md §13's cast, keyed on
+   * docs/characters.md. Absent is the common case and means the runtime
+   * resolves it from the speaker string (`speakerOf`): a string that names one
+   * of the cast in its own register is that member, and anything else is the
+   * register's chorus. Authored only for a line whose string does not name
+   * its speaker — none yet does — and never to contradict the string, which
+   * `missions.test.ts` holds.
    */
-  | { kind: 'say'; speaker: string; text: string; voice?: MissionVoice; note: string }
+  | {
+      kind: 'say';
+      speaker: string;
+      text: string;
+      voice?: MissionVoice;
+      speakerId?: MissionSpeaker;
+      note: string;
+    }
   /**
    * `conclusion` marks a close that is not a failure state: the tide ending,
    * not a timer running out (docs/glossary.md, *Mission Outcome*;

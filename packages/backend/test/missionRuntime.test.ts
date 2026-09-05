@@ -740,12 +740,16 @@ describe('the four voices in the water', () => {
       atS: Math.round(line.tick / SIM.TICK_HZ),
       speaker: line.speaker,
       voice: line.voice,
+      speakerId: line.speakerId,
     }));
+    // Four registers, and since #403 four speakers: Kalliso and Teel are
+    // signed, and Drenn and Sende — who have no entry in docs/characters.md —
+    // are the grid and those below, which is the register's plain hail.
     assert.deepEqual(spoken, [
-      { atS: 6 * 60 + 20, speaker: 'Voice Ren Kalliso', voice: 'order' },
-      { atS: 9 * 60, speaker: 'Underwriter Sela Drenn', voice: 'concern' },
-      { atS: 9 * 60 + 20, speaker: 'Sende', voice: 'cohorts' },
-      { atS: 10 * 60 + 40, speaker: 'Warden Juno Teel', voice: 'plateaus' },
+      { atS: 6 * 60 + 20, speaker: 'Voice Ren Kalliso', voice: 'order', speakerId: 'kalliso' },
+      { atS: 9 * 60, speaker: 'Underwriter Sela Drenn', voice: 'concern', speakerId: 'the-grid' },
+      { atS: 9 * 60 + 20, speaker: 'Sende', voice: 'cohorts', speakerId: 'those-below' },
+      { atS: 10 * 60 + 40, speaker: 'Warden Juno Teel', voice: 'plateaus', speakerId: 'teel' },
     ]);
     assert.equal(new Set(spoken.map((line) => line.voice)).size, 4, 'four voices, four registers');
   });
