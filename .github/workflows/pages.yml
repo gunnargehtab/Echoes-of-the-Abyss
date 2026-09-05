@@ -3,15 +3,22 @@
 # Publishing is **opt-in and off by default**, which is deliberate. This
 # repository is private; a Pages site is not. Merging a workflow should never
 # be the thing that decides to make part of a private repository public, so the
-# deploy job runs only once someone has knowingly turned it on:
+# deploy step runs only once someone has knowingly turned it on:
 #
 #   1. Settings -> Pages -> Source: "GitHub Actions"
 #   2. Settings -> Secrets and variables -> Actions -> Variables:
 #      add PUBLISH_ROADMAP = true
 #
-# Until both are done this workflow builds the site, uploads it as an artifact
-# you can download and open locally, and skips the deploy. It stays green
-# either way, so an un-enabled Pages setup is not a red X on every push.
+# The variable may live at the repository level or on the `github-pages`
+# environment — both work. The check is a *step* inside the deploy job rather
+# than a job-level `if`, because environment variables are only visible from
+# inside a job that references the environment, and a job-level condition is
+# evaluated before that binding exists. The job logs print what the check
+# saw, so a skipped deploy says why.
+#
+# Until the variable is set this workflow builds the site, uploads it as an
+# artifact you can download and open locally, and skips the deploy. It stays
+# green either way, so an un-enabled Pages setup is not a red X on every push.
 name: Roadmap site
 
 on:
@@ -62,14 +69,14 @@ jobs:
         with:
           name: roadmap-site
           path: dist/roadmap
+      # The Pages artifact is uploaded unconditionally: uploading is not
+      # publishing, and the deploy job below is the only thing that is.
       - uses: actions/upload-pages-artifact@v3
-        if: vars.PUBLISH_ROADMAP == 'true'
         with:
           path: dist/roadmap
 
   deploy:
     needs: build
-    if: vars.PUBLISH_ROADMAP == 'true'
     runs-on: ubuntu-latest
     permissions:
       pages: write
@@ -78,5 +85,14 @@ jobs:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
+      - name: Is publishing switched on?
+        run: |
+          echo "PUBLISH_ROADMAP=[${{ vars.PUBLISH_ROADMAP }}]"
+          if [ "${{ vars.PUBLISH_ROADMAP }}" = "true" ]; then
+            echo "Publishing is on — deploying."
+          else
+            echo "Publishing is off — set the PUBLISH_ROADMAP variable to true (repository or github-pages environment) to deploy."
+          fi
       - id: deploy
+        if: vars.PUBLISH_ROADMAP == 'true'
         uses: actions/deploy-pages@v4
