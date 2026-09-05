@@ -155,6 +155,11 @@ centreline. Dim: a short row of photophores along one flank and one on the
 other, in a pattern that repeats on neither side.
 ```
 
+The Chorister carries no faction lock, so a navy rendering for one fields it in its own
+shape language: the same cohort plan — three segments over the bladder, the rostrum, the
+spine-gun, the limbs — composed with that navy's FACTION block, with only the light kept
+dim.
+
 ```text
 UNIT — Clarion (pair with Hadron Knights): the line hull, 90 m — the cone
 made a ship, a longer hull built around a bow array (SIG 62 ahead, 6

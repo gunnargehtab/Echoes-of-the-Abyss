@@ -195,6 +195,12 @@ number, not an impression, and a test sums the registry's worst case over the sh
 maps so the reservation cannot be exceeded by accretion. Terrain never rebuilds
 per frame: props rebuild only when the ground does.
 
+Own ordnance is instanced the same way (`ordnanceLayer.ts`, [art-direction.md](art-direction.md)
+"Own ordnance is geometry too"): one body and one lamp mesh per kind and one line object
+for every torpedo's trail — nine draw calls at most for any number of shots, none for a
+kind with nothing in the water — sharing the fleet's depth cues, and reported by the
+probe as `ordnance`.
+
 The fleet's depth cues follow the same rule (#434). Every own hull hangs over a ground
 shadow on a plumb line — the cue that makes the water column readable — and each used to
 be its own line and its own disc: two draw calls per hull, ninety-six at the berth

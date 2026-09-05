@@ -87,6 +87,15 @@ import harvesterHadEmissive from '../assets/hulls/maps/harvester-hadron-emissive
 import abyssalHadAlbedo from '../assets/hulls/maps/abyssal-submersible-hadron-albedo.png';
 import abyssalHadHeight from '../assets/hulls/maps/abyssal-submersible-hadron-height.png';
 import abyssalHadEmissive from '../assets/hulls/maps/abyssal-submersible-hadron-emissive.png';
+import choristerBathAlbedo from '../assets/hulls/maps/chorister-bathyarch-albedo.png';
+import choristerBathHeight from '../assets/hulls/maps/chorister-bathyarch-height.png';
+import choristerBathEmissive from '../assets/hulls/maps/chorister-bathyarch-emissive.png';
+import choristerPelAlbedo from '../assets/hulls/maps/chorister-pelagia-albedo.png';
+import choristerPelHeight from '../assets/hulls/maps/chorister-pelagia-height.png';
+import choristerPelEmissive from '../assets/hulls/maps/chorister-pelagia-emissive.png';
+import choristerHadAlbedo from '../assets/hulls/maps/chorister-hadron-albedo.png';
+import choristerHadHeight from '../assets/hulls/maps/chorister-hadron-height.png';
+import choristerHadEmissive from '../assets/hulls/maps/chorister-hadron-emissive.png';
 import choristerAlbedo from '../assets/hulls/maps/chorister-albedo.png';
 import choristerHeight from '../assets/hulls/maps/chorister-height.png';
 import choristerEmissive from '../assets/hulls/maps/chorister-emissive.png';
@@ -224,13 +233,18 @@ const KIND_MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
  * (e.g. corvette-bathyarch).
  */
 const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<UnitKind, MapUrls>>>> = {
-  // Pelagia is the canonical navy for most hulls, so its only variant is the
-  // one kind whose canonical model belongs to another faction.
+  // Pelagia is the canonical navy for most hulls, so its variants are the
+  // kinds whose canonical model belongs to another faction.
   [Faction.Pelagia]: {
     [UnitKind.AbyssalSubmersible]: {
       albedo: abyssalPelAlbedo,
       height: abyssalPelHeight,
       emissive: abyssalPelEmissive,
+    },
+    [UnitKind.Chorister]: {
+      albedo: choristerPelAlbedo,
+      height: choristerPelHeight,
+      emissive: choristerPelEmissive,
     },
   },
   [Faction.Bathyarch]: {
@@ -258,6 +272,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<UnitKind, MapUrls>
       albedo: abyssalBathAlbedo,
       height: abyssalBathHeight,
       emissive: abyssalBathEmissive,
+    },
+    [UnitKind.Chorister]: {
+      albedo: choristerBathAlbedo,
+      height: choristerBathHeight,
+      emissive: choristerBathEmissive,
     },
   },
   [Faction.Directorate]: {
@@ -307,6 +326,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<UnitKind, MapUrls>
       albedo: abyssalHadAlbedo,
       height: abyssalHadHeight,
       emissive: abyssalHadEmissive,
+    },
+    [UnitKind.Chorister]: {
+      albedo: choristerHadAlbedo,
+      height: choristerHadHeight,
+      emissive: choristerHadEmissive,
     },
   },
 };

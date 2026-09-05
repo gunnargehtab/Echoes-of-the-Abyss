@@ -21,7 +21,20 @@
  * a hull read the same answer and a selection ring never drifts off its hull.
  */
 
-import { SIM, type OwnUnit } from '@echoes/shared';
+import { SIM } from '@echoes/shared';
+
+/**
+ * What the interpolator reads — the fields own units and own ordnance share.
+ * Own ordnance glides between ticks for the same reason and under the same
+ * permission (§12: the client may predict its own force and nothing else); a
+ * torpedo at 160 m/s written straight through would jump 32 m a tick.
+ */
+export interface Tracked {
+  id: number;
+  x: number;
+  y: number;
+  depth: number;
+}
 
 export interface DrawnPosition {
   x: number;
@@ -40,13 +53,13 @@ const MAX_INTERVAL_MS = 2 * (1000 / SIM.ECHO_HZ);
 const SNAP_M = 500;
 
 export class OwnMotion {
-  private previous = new Map<number, OwnUnit>();
-  private current = new Map<number, OwnUnit>();
+  private previous = new Map<number, Tracked>();
+  private current = new Map<number, Tracked>();
   private arrivedAtMs = -1;
   private intervalMs = 1000 / SIM.ECHO_HZ;
 
   /** A snapshot's own-unit list, at the moment it arrived. */
-  record(units: readonly OwnUnit[], nowMs: number): void {
+  record(units: readonly Tracked[], nowMs: number): void {
     if (this.arrivedAtMs >= 0) {
       const gap = nowMs - this.arrivedAtMs;
       this.intervalMs = Math.min(MAX_INTERVAL_MS, Math.max(MIN_INTERVAL_MS, gap));
@@ -94,7 +107,7 @@ export class OwnMotion {
    * A hull without a prior sample — just built, just arrived — is drawn
    * where the server put it.
    */
-  at(unit: OwnUnit, nowMs: number, out: DrawnPosition): DrawnPosition {
+  at(unit: Tracked, nowMs: number, out: DrawnPosition): DrawnPosition {
     const prior = this.previous.get(unit.id);
     const latest = this.current.get(unit.id) ?? unit;
     if (prior === undefined) {

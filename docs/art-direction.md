@@ -164,8 +164,9 @@ Foundry's recessed launch bay, the turret's mount and barrel). Everything is lit
 pixel with rim light and glow marks in the faction's colours. Vector primitives remain in three deliberate places: the fallback while the art
 decodes, every enemy contact, which the law below caps at a flat silhouette, and
 **construction sites** — a half-built structure is schematic on purpose, and reads as
-scaffolding until it is commissioned. Cavitation trails and animated bases are still to
-come.
+scaffolding until it is commissioned. Cavitation trails run behind the player's own
+torpedoes in the conn view ("Own ordnance is geometry too", below); animated bases are
+still to come.
 
 ### The Asymmetric Fidelity Law
 
@@ -324,6 +325,23 @@ plan-view sprite bake (`packages/frontend/src/game/bake.ts`) survives as the loa
 fallback and the sonar scope's language. Glow is loudness (gate 3): the model lamps swing
 with live SIG, so a hull running silent goes dark instead of translucent. The enemy never
 renders as a model at any tier — the Asymmetric Fidelity Law is untouched by the camera.
+
+### Own ordnance is geometry too
+
+The player's own torpedoes, mines, noisemakers and depth charges render in the conn view
+as small instanced meshes (`packages/frontend/src/game/ordnanceLayer.ts`): a spindle with
+a cavitation trail climbing behind it, a faceted mine, a lit canister, a falling can —
+each on the plumb line and ground shadow every own entity carries, so a torpedo's depth
+reads exactly as a hull's does. They are the player's own information, sent in full
+(`OwnOrdnance`), so drawing them leaks nothing; the enemy's torpedo stays a contact,
+resolved by the Echo Layer and drawn by the chart at the tier it earned. Glow encodes
+loudness here as on a hull (gate 3): each lamp burns at the faction glow scaled by live
+SIG on the spec curve, normalised to the noisemaker's 70 — a running torpedo (60) burns, a
+noisemaker outshines it for its eight seconds, and an armed mine (2) is the near-black
+[systems-combat.md](systems-combat.md) §6 describes, a listener rather than an emitter.
+The chart annotates each shot in the own voice — a ring whose arc is the run a torpedo
+has left, a diamond for a mine, a breathing ring for a noisemaker, a down-pointing tick
+for a depth charge — and the scope carries an own-force dot for every one.
 
 ### Far-zoom readability scale — SPEC
 
