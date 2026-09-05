@@ -1,15 +1,16 @@
 ---
 name: work-issue
-description: Pick one open issue off the backlog, work it end to end, and open a pull request — the unattended loop. When nothing is eligible, file one sub-issue off an epic instead, so the next run has work. Use this when asked to work the backlog, pick up an issue, make progress on open issues, or when a scheduled Routine fires with no human watching. Prefer this over improvising a selection rule; the claim check and the open-PR cap are what keep two firings from colliding and what keep CI spend bounded.
+description: Pick one open issue off the backlog, work it end to end, and open a pull request — the unattended loop. When nothing is eligible, file one sub-issue off an epic instead, so the next run has work. Use this when asked to work the backlog, pick up an issue, make progress on open issues, or when a scheduled Routine fires with no human watching. Prefer this over improvising a selection rule; the claim check, the self-assignment, and the open-PR cap are what keep two firings from colliding and what keep CI spend bounded.
 ---
 
 # Working one issue, unattended
 
 This is the loop a scheduled Routine runs several times a day with nobody
-watching. It picks **one** issue, takes it to a pull request, and stops. The
-selection rule and the cap below are the whole reason the loop is safe to leave
-running — skipping them is how you get two sessions on the same issue, or six
-open PRs each burning a twenty-minute CI run.
+watching. It picks **one** issue, assigns it to itself so everyone can see it
+is taken, takes it to a pull request, and stops. The selection rule, the claim,
+and the cap below are the whole reason the loop is safe to leave running —
+skipping them is how you get two sessions on the same issue, or six open PRs
+each burning a twenty-minute CI run.
 
 **The one thing this loop must not do is guess.** `docs/` is canonical and code
 transcribes it; when they disagree, that is a bug in one of them, and which one
@@ -38,10 +39,10 @@ half-filed.
     https://api.github.com/repos/gunnargehtab/Echoes-of-the-Abyss/issues?state=open
   ```
 
-- **If a write comes back 401, 403 or 404** — creating an issue, linking a
-  sub-issue, opening a pull request — **stop and say so plainly.** Do not retry
-  against a different credential and do not carry on with the half of the job
-  that works. An issue filed but never linked to its epic is worse than no issue
+- **If a write comes back 401, 403 or 404** — assigning an issue, commenting
+  on it, creating one, linking a sub-issue, opening a pull request — **stop and
+  say so plainly.** Do not retry against a different credential and do not
+  carry on with the half of the job that works. An issue filed but never linked to its epic is worse than no issue
   at all: step 4's dedup reads the epic's children, so an unlinked issue gets
   filed again on the next firing, and again after that.
 
@@ -63,6 +64,10 @@ open pull requests (their head refs and their `Fixes #<n>` lines) to get the set
 of **claimed** issue numbers. Both halves matter: a session that died before
 pushing leaves no branch, and a PR whose branch was renamed leaves no matching
 ref, so either source alone will let you collide with work already in flight.
+
+The third source, and the earliest, is the issue's **assignee** — step 3 reads
+it. An assignee exists from the moment somebody, person or loop, decides to
+start; a branch exists only once something has been pushed.
 
 ## 2. Stop early if the backlog is already saturated
 
@@ -96,13 +101,24 @@ labelled `epic`, take the oldest. Three exclusions, for different reasons:
   takes it produces a PR that cannot honestly say `Fixes`. Step 4 is what to do
   with them instead.
 - Anything already claimed is someone else's — including an earlier you.
-- **An issue with an assignee is a person's, and you are not it.** This is the
-  cheapest exclusion to honour and the most valuable, because it is the only
-  signal that exists *before* a branch or a pull request does. Step 1's claim
-  check can only see work that has already been pushed; an assignee is there
-  from the moment somebody decides to start. Never assign an issue to yourself
-  to reserve it — the branch is your claim, and an assignee the loop wrote would
-  make the one human-owned signal untrustworthy.
+- **An issue with an assignee is taken, whoever took it.** A person who
+  assigned themselves is on it, and so is an earlier firing of this loop, which
+  assigns itself in step 5 before it does anything else. This is the cheapest
+  exclusion to honour and the most valuable, because it is the only signal that
+  exists *before* a branch or a pull request does: step 1's claim check can
+  only see work that has already been pushed. Do not try to tell the two apart
+  from the assignee's name — the loop runs under the repository owner's own
+  login, so the name is the same either way, and it makes no difference to
+  eligibility. The claim comment (step 5) is what says which it is.
+
+An assigned issue can also be a **stale claim**: a firing that assigned itself
+and then died before pushing leaves the assignee behind with no branch and no
+pull request. If the latest comment from this loop on such an issue is a claim
+rather than a release, and it is more than a day old, say so in the end-of-run
+summary — issue number, claim time — so a person can clear it. **Still skip it,
+and do not clear it yourself.** The same login could be a person who took the
+issue over after the run died, and a wrong guess here recreates the collision
+this whole rule exists to prevent.
 
 Prefer `bug` over `enhancement` when the ages are close: a bug is a statement
 about behaviour that is already wrong, and its acceptance criteria are usually
@@ -128,7 +144,9 @@ exactly one piece of it, and stop.
 3. Open a normal issue for it. Title and body in the register of the epic, the
    epic's constraints restated where they bind, and a line saying which epic
    box it came from. Label it by its nature — `enhancement`, `docs`, `infra`,
-   `bug` — and **never `epic`**, or the next run will skip it too.
+   `bug` — and **never `epic`**, or the next run will skip it too. Leave it
+   **unassigned** for the same reason: an assignee means taken, and you are not
+   taking it.
 4. Link it to the epic with the sub-issue API. This is what stops the next
    firing re-filing the same box, so it is not optional bookkeeping.
 5. **Stop.** Do not then work the issue you just filed. The gap until the next
@@ -147,12 +165,36 @@ have taken and the scoping decision it needs from a human, and end the run. That
 comment is a good outcome. Filing a vague issue is not — it converts a design
 question into a work item that some later run will treat as settled.
 
-## 5. Work it like any other change
+## 5. Claim it, then work it like any other change
 
-Branch **`claude/issue-<n>-<slug>`**. The issue number in the branch name is not
-cosmetic — step 1 is how the next firing sees your claim, and it only works if
-the number is there. Push the branch early, before the work is finished, so the
-claim is visible to a firing that starts while you are still going.
+Before you touch a file, put the claim where the next firing — and a person
+opening the issue — will see it first. Two writes, in this order:
+
+1. **Assign the issue to the account you are running as.** `get_me` (or
+   `GET /user`) tells you the login; it is the repository owner's. This is what
+   step 3 keys on, and it is visible from the moment you decide rather than
+   from the moment you push — the #275 collision happened inside a seven-minute
+   gap that no branch scan could have closed.
+2. **Comment on the issue saying the Routine took it.** The assignee alone
+   cannot say *who*, because the loop and the owner share one login; the
+   comment can. Keep it to the facts a person needs in order to decide whether
+   to step in:
+
+   > Taken by the work-issue Routine, unattended. Branch
+   > `claude/issue-<n>-<slug>`; session <link, when you have one>.
+   > To take this over, unassign the issue or say so in a comment — the run
+   > re-reads the issue before it opens a pull request and stands down.
+
+   Assigning without the comment is worse than not assigning: it makes the
+   issue look like a person's, and nobody can tell it is safe to reclaim.
+
+If either write fails, stop per step 0 — do not carry on unclaimed.
+
+Then branch **`claude/issue-<n>-<slug>`**. The issue number in the branch name
+is not cosmetic — step 1 is how the next firing sees your claim in git, and it
+only works if the number is there. Push the branch early, before the work is
+finished, so the claim is visible to a firing that starts while you are still
+going, and so the branch named in your claim comment actually exists.
 
 Commit subjects take the `feat:` / `fix:` / `docs:` / `test:` / `refactor:`
 prefixes from `CONTRIBUTING.md`, imperative mood. Read `CLAUDE.md` before
@@ -187,6 +229,10 @@ hour ago, and it does not stay true. So before opening, repeat it: list the open
 pull requests and look for another one that closes your issue — its `Fixes #<n>`
 line, or a title that describes the work you just did.
 
+**Re-read the issue too.** If the assignee you set is gone, or a comment newer
+than your claim says a person is taking it, they have taken it over exactly as
+your claim comment invited them to. Treat that the same as finding a PR.
+
 This is not hypothetical. On #275 the loop selected at 12:13, a person's session
 opened its own PR for the same issue at 12:20, and the loop opened a duplicate at
 12:55 and merged it at 14:04 — the person's 558-line branch was closed unmerged.
@@ -197,15 +243,22 @@ step 1's `claude/issue-*` scan was blind to it even at the second look. That is
 why this re-check reads **open pull requests** rather than branch names: a PR
 declares its issue in a way a branch name need not.
 
-**If another pull request now covers your issue, you yield. Always.** Not a
-judgement call, and not a comparison of whose diff is better:
+**If another pull request now covers your issue, or a person has taken it
+over, you yield. Always.** Not a judgement call, and not a comparison of whose
+diff is better:
 
 1. Do not open your PR.
 2. **Delete the branch you pushed in step 5.** This matters more than it looks —
    step 1 reads pushed `claude/issue-*` branches as claims, so a stood-down
    branch left behind marks the issue claimed forever and every later firing
    skips it.
-3. Say plainly what you found, which PR you yielded to, and that your work was
+3. **Release the claim.** Unassign the issue if it is still assigned and nobody
+   has said they are taking it; if a person has, the assignee is theirs now and
+   you leave it alone. Either way, post a one-line comment saying the Routine
+   stood down and why (the PR number, or the takeover) — that comment is what
+   step 3 reads as a release, so a later firing knows the assignee is not a
+   dead run's leftover.
+4. Say plainly what you found, which PR you yielded to, and that your work was
    discarded. A run that discovers a collision and stands down is a *successful*
    run; it spent an hour and saved a person's afternoon.
 
@@ -275,7 +328,11 @@ Open no PR, comment on the issue, and end the run when:
 
 A comment that sharpens an issue is worth more than a PR that guesses at it.
 State the finding, name what you would need in order to proceed, and leave the
-issue open.
+issue open — **and unassigned**. Release the claim exactly as in step 6: take
+the assignee off, delete the branch if you pushed one, and say in the stopping
+comment that the Routine has let go of the issue. A stopped run that stays
+assigned looks, to the next firing and to every person, like work in progress
+that will never arrive.
 
 ## Related
 

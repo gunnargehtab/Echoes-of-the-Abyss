@@ -144,8 +144,9 @@ process lives in the repo instead of in one person's head:
   screenshot an art PR needs.
 - **hull-intake** — validates a 3D model export (GLB) and bakes the review maps; the
   intake gate in [docs/graphics-standards.md](docs/graphics-standards.md).
-- **work-issue** — picks one unclaimed, non-epic issue off the backlog and takes it to a
-  PR, or comments and stops when the call is a design one. When nothing is eligible it
+- **work-issue** — picks one unclaimed, non-epic issue off the backlog, assigns it to
+  itself with a comment saying the Routine has it, and takes it to a PR — or comments,
+  releases the claim, and stops when the call is a design one. When nothing is eligible it
   files a single sub-issue off an epic instead, so the backlog refills itself one scoped
   item at a time. This is the skill a scheduled Routine runs unattended several times a
   day; its open-PR cap, not its schedule, is what keeps CI spend bounded.
