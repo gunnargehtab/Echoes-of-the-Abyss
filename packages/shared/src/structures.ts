@@ -280,6 +280,11 @@ export function structureStatsFor(kind: StructureKind): StructureStats {
  * the Bastion can always rebuild an economy; combat hulls need a Foundry.
  * Shared because the server validates against it and the client's command
  * bar renders from it; two copies would eventually disagree.
+ *
+ * This is the *building* half of the question only. Whether a given navy may
+ * build a hull it has a Foundry for is `unitAvailableTo` in units.ts, and both
+ * readers ask both — the Clarion is listed here and is still refused to three
+ * of the four navies.
  */
 export const PRODUCIBLE: Partial<Record<StructureKind, readonly UnitKind[]>> = {
   [StructureKind.Bastion]: [UnitKind.Harvester],
@@ -289,6 +294,7 @@ export const PRODUCIBLE: Partial<Record<StructureKind, readonly UnitKind[]>> = {
     UnitKind.Cruiser,
     UnitKind.AbyssalSubmersible,
     UnitKind.Chorister,
+    UnitKind.Clarion,
     UnitKind.Harvester,
   ],
 };

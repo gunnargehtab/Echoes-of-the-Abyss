@@ -608,6 +608,44 @@ describe('Resonance Crystal', () => {
       'with crystal aboard it builds'
     );
   });
+
+  it('refuses the Order’s own hull to every navy but the Order (#401)', () => {
+    // The Clarion is the roster's first faction-locked hull, for the reason
+    // docs/units.md gives: its listed SIG is a *cone* figure, and the cone is
+    // one navy's doctrine (docs/systems-echo.md §8). Enforced server-side
+    // rather than by the command bar hiding a button, because a client is not
+    // trusted with a rule — the same brace `build` puts under the four
+    // signature structures.
+    const yardFor = (faction: Faction): { match: Match; foundry: number } => {
+      const match = new Match(undefined, { fauna: false });
+      match.addPlayer(0, faction);
+      advance(match, 0.5);
+      const foundry = advance(match, 0.4)!
+        .get(0)!
+        .structures.find((s) => s.kind === StructureKind.Foundry)!;
+      match.world.economies.get(0)!.nodules = 5000;
+      match.world.economies.get(0)!.crystal = 500;
+      match.world.economies.get(0)!.biomass = 500;
+      return { match, foundry: foundry.id };
+    };
+
+    for (const faction of [Faction.Bathyarch, Faction.Pelagia, Faction.Directorate]) {
+      const { match, foundry } = yardFor(faction);
+      assert.equal(
+        match.produce(0, foundry, UnitKind.Clarion),
+        false,
+        'a Clarion in another navy’s colours would emit its cone figure everywhere'
+      );
+      assert.equal(
+        match.produce(0, foundry, UnitKind.Corvette),
+        true,
+        'and the generic roster is untouched by the lock'
+      );
+    }
+
+    const order = yardFor(Faction.Hadron);
+    assert.equal(order.match.produce(0, order.foundry, UnitKind.Clarion), true);
+  });
 });
 
 describe('construction and production', () => {
