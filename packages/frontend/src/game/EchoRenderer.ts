@@ -189,6 +189,8 @@ interface OrderMarker {
 }
 
 const ORDER_MARKER_MS = 600;
+/** Projected-point scratch depth; see `project`. */
+const PROJECT_RING = 16;
 /** The strip of screen, in px, that counts as its edge for scrolling (§9). */
 const EDGE_SCROLL_PX = 14;
 const EDGE_SCROLL_PX_PER_S = 900;
@@ -912,6 +914,23 @@ export class EchoRenderer {
   private frameNowMs = 0;
   /** Scratch for `drawnPosition`, consumed before the next call. */
   private readonly drawnScratch = { x: 0, y: 0, depth: 0 };
+  private readonly projectRing: ProjectedPoint[] = Array.from({ length: PROJECT_RING }, () => ({
+    x: 0,
+    y: 0,
+    pxPerM: 1,
+    visible: false,
+  }));
+  private projectNext = 0;
+  /**
+   * The command bar's model and layout, rebuilt only when something it
+   * reads has changed (#432): it used to be rebuilt, closures and all,
+   * every frame. `barSignature` is the concatenation of those inputs.
+   */
+  private barSignature = '';
+  private barLayout: BarButton[] = [];
+  /** Bumped by `onSelectionChanged`, so the bar and the selection cache notice. */
+  private selectionSeq = 0;
+  private selectedUnitsCache: { seq: string; units: OwnUnit[] } = { seq: '', units: [] };
   private selected = new Set<number>();
   private peakSig = 0;
   /** Loudest SIG across own *units* — the self bed's input, see selfAudioFrame. */
@@ -1369,7 +1388,14 @@ export class EchoRenderer {
 
   /** A world point as screen pixels, or null before the conn view exists. */
   private project(xM: number, yM: number, depthM: number | null): ProjectedPoint | null {
-    return this.conn?.projectPoint(xM, yM, depthM) ?? null;
+    if (this.conn === null) return null;
+    // A ring of scratch points rather than an object per call (#432). The
+    // contract: a projected point is valid until PROJECT_RING more have been
+    // asked for. The widest caller holds four (a blocked cell's corners);
+    // the ring is sixteen, and nothing here stores one across a frame.
+    const out = this.projectRing[this.projectNext]!;
+    this.projectNext = (this.projectNext + 1) % PROJECT_RING;
+    return this.conn.projectPoint(xM, yM, depthM, out);
   }
 
   /**
@@ -2158,6 +2184,7 @@ export class EchoRenderer {
 
   /** Auto-open the page that matches what was just selected. */
   private onSelectionChanged(): void {
+    this.selectionSeq++;
     const structure = this.structures.find((s) => this.selected.has(s.id));
     if (structure !== undefined && (PRODUCIBLE[structure.kind]?.length ?? 0) > 0) {
       this.activeTab = 'units';
@@ -2425,6 +2452,29 @@ export class EchoRenderer {
     g.rect(0, barY, screenWidth, BAR_HEIGHT).fill({ color: UI.glass, alpha: 0.92 });
     g.rect(0, barY, screenWidth, 1).fill({ color: UI.glassStroke });
 
+    // Everything the model and its layout read, as one string. Same string,
+    // same bar: the buttons are painted from the cached layout and nothing
+    // is rebuilt (#432).
+    const signature = [
+      this.shownTab,
+      this.pendingBuild,
+      this.pendingAttackMove,
+      this.snapshotSeq,
+      this.selectionSeq,
+      this.missionLocks.length,
+      screenWidth,
+      barY,
+    ].join('|');
+    if (signature !== this.barSignature) {
+      this.barSignature = signature;
+      this.barLayout = this.layoutCommandBar(screenWidth, barY);
+    }
+    this.barButtons = this.barLayout;
+    this.paintCommandBar(g);
+  }
+
+  /** The bar's buttons, placed: the tab strip, the menu door, and the row. */
+  private layoutCommandBar(screenWidth: number, barY: number): BarButton[] {
     // Tab strip. 'squad' only exists while units are selected, and 'build' and
     // 'units' only exist where there is an economy to use them: a mission that
     // has locked construction has no yard, no stockpile and nothing to place,
@@ -2484,14 +2534,16 @@ export class EchoRenderer {
     }
 
     let x = 10;
-    this.barButtons = model.map((entry) => {
+    const buttons = model.map((entry) => {
       const w = widthFor(entry.label);
       const button: BarButton = { ...entry, x, y: buttonY, w, h: BAR_BUTTON_HEIGHT };
       x += w + gap;
       return button;
     });
-    this.barButtons.push(...tabButtons);
+    return [...buttons, ...tabButtons];
+  }
 
+  private paintCommandBar(g: Graphics): void {
     this.barButtons.forEach((button, i) => {
       const alpha = button.enabled ? 1 : 0.35;
       // Neon is edges, never fills (docs/style-neon-noir.md): activeness lives
@@ -2519,7 +2571,16 @@ export class EchoRenderer {
   // --- Commands shared by keyboard and the command bar ----------------------
 
   private selectedUnits(): OwnUnit[] {
-    return this.units.filter((u) => this.selected.has(u.id));
+    // Fourteen callers, three of them on the draw path: filtered once per
+    // selection or snapshot rather than once per call (#432).
+    const seq = `${this.selectionSeq}:${this.snapshotSeq}`;
+    if (this.selectedUnitsCache.seq !== seq) {
+      this.selectedUnitsCache = {
+        seq,
+        units: this.units.filter((u) => this.selected.has(u.id)),
+      };
+    }
+    return this.selectedUnitsCache.units;
   }
 
   /**
