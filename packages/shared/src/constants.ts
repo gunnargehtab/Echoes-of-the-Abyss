@@ -1801,6 +1801,25 @@ export const HARVEST_THROTTLE: Record<HarvestThrottle, { cargoMultiplier: number
 };
 
 /** Base building. Construction is loud — SPEC in kind (docs/systems-echo.md §2), TUNABLE in number. */
+/**
+ * Berths — the population cap (docs/economy.md §10). SPEC throughout.
+ *
+ * A hull occupies `UnitStats.berths` from the moment it is queued; the grant
+ * is what the commander's standing Bastion and commissioned Foundries add up
+ * to, capped at the ceiling. Capacity is loud: the only way to raise the
+ * grant is a Foundry, and a Foundry hums. The ceiling is also the engine's
+ * promise — at forty berths a four-commander match is at most 160 hulls, the
+ * entity count the Echo pass is budgeted against (docs/tech-stack.md).
+ */
+export const BERTHS = {
+  /** Berths the Bastion grants by standing. */
+  BASTION: 16,
+  /** Berths each commissioned Foundry adds. A site under construction adds none. */
+  FOUNDRY: 8,
+  /** The most any commander may hold, however many Foundries stand. */
+  CEILING: 40,
+} as const;
+
 export const CONSTRUCTION = {
   /**
    * The depth a structure sits at, and the depth the ground must admit it at.

@@ -72,6 +72,7 @@ function banked(
     ordnance: [],
     contacts: [],
     peakSig: 0,
+    berths: { used: 0, granted: 0 },
     nodules: decoy,
     crystal: decoy,
     biomass: decoy,

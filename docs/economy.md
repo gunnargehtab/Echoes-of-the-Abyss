@@ -251,6 +251,64 @@ exactly one hull priced in Biomass, and it the cheapest in Nodules.
 
 ---
 
+## 10. Berths — the population cap
+
+Every hull afloat is crewed from somewhere, and a crew is quartered in a **berth**: a
+hull-house on the base that feeds, airs and sleeps it. A navy can field as many hulls as it
+has berths for, and berths are infrastructure — which in this game means they hum.
+
+### The rule
+
+- Each hull occupies a number of berths set by its tonnage, listed on its stat block in
+  [units.md](units.md): one for a Light Scout, a Harvester or a Chorister; two for a
+  Corvette, a Clarion or an Abyssal Submersible; three for a Cruiser.
+- The **Bastion grants 16 berths** and every commissioned **Foundry grants 8 more**, to a
+  hard **ceiling of 40** per commander. Nothing else grants any: a Refinery is a depot, a
+  turret has no crew to speak of, and the four signature structures are instruments.
+- A hull counts against the berths from the moment it is **queued** — the crew is called
+  up when the keel is laid, not when it launches — and stops counting when it dies. A
+  Foundry lost mid-match takes its eight berths with it; the hulls already afloat stay
+  afloat, and nothing new is laid down until the count is back under the grant.
+- The cap is a **production** rule, enforced on the same server path as the price
+  (`Match.produce`): a mission that hands the player a fleet, or a beat that lifts one in,
+  is not asking a yard, and the runtime is not bound by it.
+
+### Why it is an argument about sound
+
+Supply in the classic RTS mould is a silent number that goes up when you build a house. Here
+the only way to raise the ceiling is a **Foundry** — 25 SIG idle and 55 while the line runs,
+the second-loudest permanent thing you can own — so a base that can field forty berths is a
+base with three Foundries humming on it. The size of the army you *could* have is audible
+before the army is. That is the premise of this document applied to the one number every RTS
+has and none of them price: **capacity is loud**.
+
+The other half of the argument is the Directorate. [factions.md](factions.md) gives them
+*very many, cheap, slow*, and berths are the sentence that makes that true without making it
+free: forty berths is forty Choristers for them and thirteen Cruisers for the Consortium. The
+swarm is real, it is bought in Biomass, and it fills the same forty berths everyone else
+does — so "very many" is a shape the tonnage takes, not an exemption from it.
+
+### Why the ceiling is forty
+
+The ceiling is the engine's promise as much as the design's. Detection is priced per
+emitter–listener pair ([tech-stack.md](tech-stack.md), "What keeps the pass inside 2 ms"),
+and a match with no upper bound on hulls has no upper bound on what the Echo pass costs. At
+the ceiling a four-commander skirmish is at most 160 hulls, the structures that granted
+them, the Drift's 48 creatures and whatever ordnance is in the water — the ~250-entity mark
+at which the pass meets its budget on the reference machine. A larger ceiling is a design
+decision that has to be paid for in that pass first; a smaller one is free.
+
+### Prototype mapping
+
+| Doc concept | Prototype today | Implementation note |
+| --- | --- | --- |
+| Berths per hull | **Implemented** — `berths` on every stat block in `packages/shared/src/units.ts` | Transcribed from [units.md](units.md); a hull without the field cannot be built |
+| Grant and ceiling | **Implemented** — `BERTHS` in `packages/shared/src/constants.ts` | SPEC, this section. Bastion 16, Foundry +8, ceiling 40 |
+| Enforcement | **Implemented** — `Match.produce` refuses past the grant; queued hulls count | The command bar greys the button with the reason, and the HUD's top bar reads the count |
+| Loss of a Foundry | **Implemented** — the grant is recounted every pass from what is standing | A commissioned Foundry only; a site still under construction grants nothing |
+
+---
+
 ## Related
 
 - **[systems-echo.md](systems-echo.md)** — why income is a detection event

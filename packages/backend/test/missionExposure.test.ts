@@ -57,6 +57,7 @@ function heardAs(tick: number, tier: ResolutionTier): EchoSnapshot {
     ordnance: [],
     contacts: [],
     peakSig: 0,
+    berths: { used: 0, granted: 0 },
     nodules: 0,
     crystal: 0,
     biomass: 0,

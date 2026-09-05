@@ -17,6 +17,8 @@
 import { addComponent, defineQuery, hasComponent, removeEntity } from 'bitecs';
 import {
   ACTIVE_SONAR,
+  BERTHS,
+  type BerthReport,
   CONCESSION,
   CONSTRUCTION,
   CRYSTAL,
@@ -1317,6 +1319,12 @@ export class Match {
       this.world.production.set(structureEid, line);
     }
     if (line.queue.length >= MAX_QUEUE_LENGTH) return false;
+    // The berths (docs/economy.md §10), before the price: a hull the base has
+    // no crew for is refused whatever the stockpile says, and it is refused
+    // at the queue, because that is when the crew is called up. Same path as
+    // the price so the command bar's greying is true rather than decorative.
+    const berths = this.berthsFor(slot);
+    if (berths.used + stats.berths > berths.granted) return false;
     // All three accounts on the one path the shell prices from (economy.ts):
     // a hull short in Biomass alone is refused here exactly as one short in
     // Nodules is, and the button that showed it greyed showed the same sum.
@@ -1327,6 +1335,44 @@ export class Match {
     line.queue.push(kind);
     if (line.queue.length === 1) line.remainingS = stats.buildTimeS;
     return true;
+  }
+
+  /**
+   * The commander's berths (docs/economy.md §10): what the standing base
+   * grants against what is afloat and queued.
+   *
+   * Recounted from the world every time rather than kept as a running
+   * total, so a Foundry that dies takes its grant with it on the tick it
+   * dies and a hull that dies frees its berths the same way — the two
+   * events that a cached count would have to be told about, and the two a
+   * mission beat can cause without going through any command path.
+   */
+  berthsFor(slot: number): BerthReport {
+    let granted = 0;
+    const yards = this.structureOwners(this.world);
+    for (let i = 0; i < yards.length; i++) {
+      const eid = yards[i]!;
+      if (Owner.slot[eid] !== slot || Health.hp[eid]! <= 0) continue;
+      if (hasComponent(this.world, UnderConstruction, eid)) continue;
+      const kind = Structure.kind[eid] as StructureKind;
+      if (kind === StructureKind.Bastion) granted += BERTHS.BASTION;
+      else if (kind === StructureKind.Foundry) granted += BERTHS.FOUNDRY;
+    }
+    granted = Math.min(BERTHS.CEILING, granted);
+
+    let used = 0;
+    const hulls = this.unitOwners(this.world);
+    for (let i = 0; i < hulls.length; i++) {
+      const eid = hulls[i]!;
+      if (Owner.slot[eid] !== slot || Health.hp[eid]! <= 0) continue;
+      used += statsFor(Unit.kind[eid] as UnitKind).berths;
+    }
+    // Queued hulls count from the moment the keel is laid.
+    for (const [eid, line] of this.world.production) {
+      if (Owner.slot[eid] !== slot) continue;
+      for (const kind of line.queue) used += statsFor(kind).berths;
+    }
+    return { used, granted };
   }
 
   private factionOf(slot: number): Faction {
@@ -1909,6 +1955,7 @@ export class Match {
         hazards,
         draw: { ...drawFor(this.world, slot) },
         biomass: economyFor(this.world, slot).biomass,
+        berths: this.berthsFor(slot),
         driftHealth,
         shoals,
         jellies,

@@ -881,6 +881,7 @@ describe('the rest, and the twelve ticks that make it read — §8 and §13', ()
       ordnance: [],
       contacts: [],
       peakSig: 0,
+      berths: { used: 0, granted: 0 },
       nodules: 0,
       crystal: 0,
       biomass: 0,

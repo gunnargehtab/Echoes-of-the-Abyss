@@ -700,6 +700,16 @@ export interface ExposureReport {
   trackedCount: number;
 }
 
+/**
+ * The commander's berths (docs/economy.md §10): hulls afloat and queued
+ * against what the standing base grants. Own information; the HUD's top bar
+ * reads it and the yard's buttons grey on it.
+ */
+export interface BerthReport {
+  used: number;
+  granted: number;
+}
+
 export interface EchoSnapshot {
   tick: number;
   units: OwnUnit[];
@@ -720,6 +730,8 @@ export interface EchoSnapshot {
    * through Consortium rendering contracts at a fraction.
    */
   biomass: number;
+  /** Hulls afloat and queued against the base's grant (docs/economy.md §10). */
+  berths: BerthReport;
   /** What the rest of the map currently knows about you. */
   exposure: ExposureReport;
   /** Discrete things that happened to your own force on this tick. */

@@ -100,6 +100,8 @@ import {
   type ResourceNodeInfo,
   type Stockpile,
   type QueuedOrderView,
+  type BerthReport,
+  BERTHS,
 } from '@echoes/shared';
 import {
   BIOME_COLOR,
@@ -834,6 +836,7 @@ export class EchoRenderer {
   private drawLabel!: Text;
   /** Biomass stockpile, shown only once a player has any. */
   private biomassLabel!: Text;
+  private berthsLabel!: Text;
   /** The map's name, so a player can tell which ground they are on. */
   private mapLabel!: Text;
   /**
@@ -927,6 +930,8 @@ export class EchoRenderer {
    */
   private drawReport: DrawReport = { capacity: 0, demand: 0, satisfaction: 1 };
   private biomass = 0;
+  /** Hulls afloat and queued against the base's grant (docs/economy.md §10). */
+  private berths: BerthReport = { used: 0, granted: 0 };
   /** Drift Health per region — docs/bestiary.md §6. Public, like terrain. */
   private driftHealth: number[] = [];
   private nodules = 0;
@@ -1250,6 +1255,7 @@ export class EchoRenderer {
 
     this.biomassLabel = new Text({ text: '', style: { ...mono, fontSize: 13 } });
     this.biomassLabel.visible = false;
+    this.berthsLabel = new Text({ text: '', style: { ...mono, fontSize: 13 } });
 
     this.statusLabel = new Text({
       text: '',
@@ -1307,6 +1313,7 @@ export class EchoRenderer {
       this.clockLabel,
       this.drawLabel,
       this.biomassLabel,
+      this.berthsLabel,
       this.resourceLabel,
       this.crystalLabel,
       this.statusLabel,
@@ -2121,18 +2128,26 @@ export class EchoRenderer {
         // hull says so on its button, and so will a cohort's Biomass.
         const price = priceOf(stats);
         const target = this.produceTargetFor(kind);
+        // The berths (docs/economy.md §10), mirrored from the server's own
+        // rule: a hull the base has no crew for is greyed whatever the
+        // stockpile says, and the reason names the Foundry that would fix it.
+        const berthed = this.berths.used + stats.berths <= this.berths.granted;
         buttons.push({
           label: `${UNIT_SHORT[kind]} ${priceTag(price)}`,
-          enabled: target !== undefined && affords(stockpile, price),
+          enabled: target !== undefined && berthed && affords(stockpile, price),
           active: false,
           action: () => this.commandProduce(kind),
-          // Greyed for a reason (§7): the account it fell short in, or the
-          // yard it has not got. The Bastion always stands and builds the
-          // Harvester, so the second only ever names a combat hull.
+          // Greyed for a reason (§7): the account it fell short in, the
+          // berths it has not got, or the yard it has not got. The Bastion
+          // always stands and builds the Harvester, so the last only ever
+          // names a combat hull.
           refusal:
             target === undefined
               ? `${stats.name}: no Foundry standing`
-              : (shortfallLine(stats.name, stockpile, price) ?? undefined),
+              : !berthed
+                ? `${stats.name}: no berth — ${stats.berths} needed, ` +
+                  `${this.berths.granted - this.berths.used} free · a Foundry grants ${BERTHS.FOUNDRY}`
+                : (shortfallLine(stats.name, stockpile, price) ?? undefined),
         });
       }
     } else if (this.shownTab === 'squad') {
@@ -2960,6 +2975,7 @@ export class EchoRenderer {
     this.exposure = { tier: ResolutionTier.Silent, trackedCount: 0 };
     this.drawReport = { capacity: 0, demand: 0, satisfaction: 1 };
     this.biomass = 0;
+    this.berths = { used: 0, granted: 0 };
     this.nodules = 0;
     this.crystal = 0;
     this.pendingBuild = null;
@@ -2990,6 +3006,7 @@ export class EchoRenderer {
     this.jellies = snapshot.jellies;
     this.drawReport = snapshot.draw;
     this.biomass = snapshot.biomass;
+    this.berths = snapshot.berths;
     this.driftHealth = snapshot.driftHealth;
     this.callbacks.onHazards(snapshot.hazards);
     this.nodules = snapshot.nodules;
@@ -4623,12 +4640,20 @@ export class EchoRenderer {
     // banked, so it reads "6/4" — what you make over what you owe — with a
     // segmented bar rather than a filling one. A number that could be mistaken
     // for a balance would be teaching the player the wrong thing about it.
-    const beforeDraw = this.biomassLabel.visible
+    const beforeBerths = this.biomassLabel.visible
       ? this.biomassLabel
       : this.crystalLabel.visible
         ? this.crystalLabel
         : this.resourceLabel;
-    const drawX = beforeDraw.x + beforeDraw.width + 16;
+    // Berths (docs/economy.md §10): what is afloat and queued over what the
+    // base grants. Always on, unlike Crystal and Biomass — a commander with
+    // no hulls still has a grant, and the grant is a decision about Foundries.
+    // Threat ink at the ceiling, where the next hull is refused.
+    const full = this.berths.used >= this.berths.granted;
+    this.berthsLabel.text = `BERTHS ${this.berths.used}/${this.berths.granted}`;
+    this.berthsLabel.style.fill = full ? UI.threat : UI.text;
+    this.berthsLabel.position.set(beforeBerths.x + beforeBerths.width + 16, 8);
+    const drawX = this.berthsLabel.x + this.berthsLabel.width + 16;
     const deficit = this.drawReport.satisfaction < 1;
     this.drawLabel.text = `DRAW ${this.drawReport.capacity.toFixed(0)}/${this.drawReport.demand.toFixed(0)}`;
     this.drawLabel.style.fill = deficit ? UI.threat : UI.accent;

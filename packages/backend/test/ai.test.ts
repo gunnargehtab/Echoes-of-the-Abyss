@@ -656,6 +656,7 @@ function exposedSnapshot(): EchoSnapshot {
     structures: [],
     contacts: [],
     peakSig: 40,
+    berths: { used: 0, granted: 0 },
     nodules: 0,
     crystal: 0,
     biomass: 0,

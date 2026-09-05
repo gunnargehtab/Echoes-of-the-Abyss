@@ -13,6 +13,8 @@ Unit stat format
   Biomass lists that too (economy.md §2, §8); the accounts are checked together and never
   exchanged
 - Build time: seconds (prototype simulation)
+- Berths: what the hull's crew occupies on the base, against the commander's grant
+  (economy.md §10). Tonnage, not headcount: a Cruiser is three, a Chorister one
 - Role: short
 - Notes: design intent, biome synergies
 
@@ -26,6 +28,7 @@ Light Scout (Pelagia)
 - PR: 1
 - Cost: 50
 - Build time: 12s
+- Berths: 1 (economy.md §10)
 - Speed: Very high
 - Notes: Extremely low baseline SIG; excels in Kelp Forest and Thermal Veins. Fragile; primary scouting platform.
 
@@ -37,6 +40,7 @@ Corvette
 - PR: 2
 - Cost: 120
 - Build time: 30s
+- Berths: 2 (economy.md §10)
 - Speed: High
 - Notes: Versatile skirmisher. Good balance of noise and combat capability.
 
@@ -48,6 +52,7 @@ Cruiser
 - PR: 2
 - Cost: 420
 - Build time: 90s
+- Berths: 3 (economy.md §10)
 - Speed: Medium
 - HP: 1200
 - Notes: Heavy sensors and sustained combat presence. Produces sustained SIG when power systems are online.
@@ -62,6 +67,7 @@ Abyssal Submersible (Directorate)
 - Cost: 260, plus 80 Resonance Crystal — the crystal-locked hull, built to live where the
   crystal is (economy.md §8)
 - Build time: 45s
+- Berths: 2 (economy.md §10)
 - Speed: Medium
 - Notes: Born to depth; no refit required for abyssal pressure. Strong HYD synergy; benefits from Directorate listening mechanics.
 
@@ -83,6 +89,7 @@ Chorister (Directorate)
   for a third of one — which is the whole of why the hull is the Directorate's without a
   faction lock (design notes)
 - Build time: 10s
+- Berths: 1 (economy.md §10)
 - Speed: Slow (the slowest combat hull in the roster — factions.md, "Very many, cheap, slow")
 - HP: 200
 - Hull: 50 m — the shortest in the roster, and beneath a Sounder's notice (bestiary.md §4:
@@ -124,6 +131,7 @@ Clarion (Knights)
   hull. **Two Clarions cost what three Corvettes cost**, which is the choice a Knight commander
   makes at the yard: numbers, or facing
 - Build time: 40s
+- Berths: 2 (economy.md §10)
 - Speed: 75 (below the Corvette's 85 — a longer hull built around a bow array)
 - HP: 420
 - Hull: 90 m
@@ -153,6 +161,7 @@ Harvester
 - PR: 1–2 (variant)
 - Cost: 80
 - Build time: 20s
+- Berths: 1 (economy.md §10)
 - Production: 50-nodule cargo per trip at Standard throttle, cut at a flat 10/s on the node;
   the throttle scales the load, not the cut, so Overburden hauls 70 and stands there longer
   for it (economy.md §3). Income is the round trip, so route length is part of the price
@@ -173,6 +182,7 @@ Bastion (Structure — all factions)
 - HP: 5000
 - Cost: — (one per player, never rebuilt; losing it is elimination)
 - Produces: Harvesters
+- Berths granted: 16 (economy.md §10)
 - Notes: The win condition. A settlement hums; it can never run silent.
 
 Nodule Refinery (Structure — all factions)
@@ -193,7 +203,9 @@ Foundry (Structure — all factions)
 - Cost: 400
 - Build time: 60s
 - Produces: all combat hulls and harvesters
-- Notes: A producing base is audibly producing.
+- Berths granted: +8 each while commissioned, to the ceiling of 40 (economy.md §10)
+- Notes: A producing base is audibly producing. Also the only thing that raises the berth
+  ceiling, which is why a base that *could* field forty hulls hums before it does.
 
 Sentinel Turret (Structure — all factions)
 
