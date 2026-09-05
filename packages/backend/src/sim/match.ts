@@ -272,6 +272,32 @@ export class Match {
   >();
   private readonly unitOwners = defineQuery([Unit, Owner]);
   private readonly structureOwners = defineQuery([Structure, Owner]);
+  /**
+   * The rest of the reads that used to walk every entity id from 0 to
+   * `maxEid` (#430). That walk never shrinks — `maxEid` only rises — so on a
+   * long match with ordnance churn it grew for the whole match, and it ran
+   * three times per slot on every Echo pass and once per 60 Hz tick in
+   * `driftTick`. A query is proportional to what actually exists.
+   *
+   * Wire lists are still emitted in ascending entity order (`ascending`):
+   * bitecs returns a query in insertion order, which diverges from id order
+   * the moment an id is recycled, and the order of a snapshot's `units` is
+   * something tests and the client have always been allowed to rely on.
+   */
+  private readonly owners = defineQuery([Owner]);
+  private readonly placedOwners = defineQuery([Owner, Position]);
+  private readonly emitters = defineQuery([Acoustic, Owner, Position]);
+  private readonly faunaQuery = defineQuery([Fauna, Health, Position]);
+  private readonly ordnanceOwners = defineQuery([Ordnance, Owner]);
+  /** Scratch for `ascending`, so an Echo pass sorts into one array it already owns. */
+  private readonly ascendingScratch: number[] = [];
+  /**
+   * Faction per seated slot, recorded at `addPlayer`. `factionOf` used to
+   * find it by scanning for any entity the slot owned; the map answers the
+   * question a seat already knew the answer to, and the scan stays only as
+   * the fallback for a slot seated by a mission runtime rather than a player.
+   */
+  private readonly factionBySlot = new Map<number, Faction>();
   private accumulator = 0;
   /** Snapshots produced by an Echo pass inside `step`, collected by `update`. */
   private pendingSnapshots: Map<number, EchoSnapshot> | null = null;
@@ -632,6 +658,7 @@ export class Match {
   addPlayer(slot: number, faction: Faction): void {
     this.recorder?.addPlayer(slot, faction);
     if (!this.slots.includes(slot)) this.slots.push(slot);
+    this.factionBySlot.set(slot, faction);
     economyFor(this.world, slot);
     this.spawnStartingBase(slot, faction);
   }
@@ -781,6 +808,7 @@ export class Match {
 
     // An unqueued order replaces the whole plan, not just its current leg.
     clearQueue(this.world, eid);
+    this.world.paths.delete(eid);
     MoveOrder.x[eid] = x;
     MoveOrder.y[eid] = y;
     MoveOrder.active[eid] = 1;
@@ -840,6 +868,7 @@ export class Match {
       return;
     }
     clearQueue(this.world, eid);
+    this.world.paths.delete(eid);
     Weapon.orderedTargetEid[eid] = target;
   }
 
@@ -990,6 +1019,7 @@ export class Match {
       return;
     }
     clearQueue(this.world, eid);
+    this.world.paths.delete(eid);
     Harvester.nodeEid[eid] = nodeEid;
     Harvester.mode[eid] = HarvestMode.ToNode;
     Harvester.idleReason[eid] = 0;
@@ -1186,8 +1216,10 @@ export class Match {
     if (works?.hullRadiusM !== undefined) {
       let attended = false;
       const reach2 = works.hullRadiusM * works.hullRadiusM;
-      for (let eid = 0; eid <= this.world.maxEid; eid++) {
-        if (!hasComponent(this.world, Unit, eid) || Owner.slot[eid] !== slot) continue;
+      const hulls = this.unitOwners(this.world);
+      for (let i = 0; i < hulls.length; i++) {
+        const eid = hulls[i]!;
+        if (Owner.slot[eid] !== slot) continue;
         if (Health.hp[eid]! <= 0) continue;
         const d2 = (Position.x[eid]! - x) ** 2 + (Position.y[eid]! - y) ** 2;
         if (d2 <= reach2) {
@@ -1218,8 +1250,9 @@ export class Match {
     if (!affords(economy, price)) return false;
 
     let anchored = false;
-    for (let eid = 0; eid <= this.world.maxEid; eid++) {
-      if (!hasComponent(this.world, Structure, eid)) continue;
+    const placed = this.structureOwners(this.world);
+    for (let i = 0; i < placed.length; i++) {
+      const eid = placed[i]!;
       const d = Math.hypot(Position.x[eid]! - x, Position.y[eid]! - y);
       const otherRadius = structureStatsFor(Structure.kind[eid] as StructureKind).radiusM;
       if (d < stats.radiusM + otherRadius + PLACEMENT_CLEARANCE_M) return false;
@@ -1297,14 +1330,30 @@ export class Match {
   }
 
   private factionOf(slot: number): Faction {
-    // Any surviving entity of the slot knows its faction; the Bastion always
-    // exists while the player does.
-    for (let eid = 0; eid <= this.world.maxEid; eid++) {
-      if (hasComponent(this.world, Owner, eid) && Owner.slot[eid] === slot) {
-        return Owner.faction[eid] as Faction;
-      }
+    const seated = this.factionBySlot.get(slot);
+    if (seated !== undefined) return seated;
+    // A slot the mission runtime seated rather than a player: any surviving
+    // entity of the slot knows its faction, and the Bastion always exists
+    // while the player does.
+    const owned = this.owners(this.world);
+    for (let i = 0; i < owned.length; i++) {
+      const eid = owned[i]!;
+      if (Owner.slot[eid] === slot) return Owner.faction[eid] as Faction;
     }
     return Faction.Bathyarch;
+  }
+
+  /**
+   * A query's entities in ascending id order, in a scratch array this match
+   * owns. Sorting a few hundred ids is microseconds; the `maxEid` walk it
+   * replaces touched every id ever allocated, twice, per slot, per pass.
+   */
+  private ascending(entities: ArrayLike<number>): number[] {
+    const out = this.ascendingScratch;
+    out.length = entities.length;
+    for (let i = 0; i < entities.length; i++) out[i] = entities[i]!;
+    out.sort((a, b) => a - b);
+    return out;
   }
 
   // --- Loop ----------------------------------------------------------------
@@ -1432,9 +1481,13 @@ export class Match {
    */
   private driftTick(): void {
     this.world.driftNoise.fill(0);
-    for (let eid = 0; eid <= this.world.maxEid; eid++) {
-      if (!hasComponent(this.world, Acoustic, eid)) continue;
-      if (!hasComponent(this.world, Owner, eid)) continue;
+    // Query order rather than id order, and that is safe: two runs of one
+    // command sequence add and remove the same entities in the same order, so
+    // the query walks them in the same order and the per-region float sums
+    // land on the same bits. The state hash proves it (test/determinism).
+    const loud = this.emitters(this.world);
+    for (let i = 0; i < loud.length; i++) {
+      const eid = loud[i]!;
       if (Owner.slot[eid] === DRIFT_SLOT) continue;
       const sig = Acoustic.sig[eid]!;
       if (sig <= 0) continue;
@@ -1515,6 +1568,7 @@ export class Match {
       // — a brand-new unit walking off to finish a dead one's last waypoint.
       this.echo.forget(eid);
       clearQueue(this.world, eid);
+      this.world.paths.delete(eid);
       removeEntity(this.world, eid);
     }
 
@@ -1686,11 +1740,15 @@ export class Match {
   private eliminate(slot: number): void {
     if (this.eliminated.has(slot)) return;
     this.eliminated.add(slot);
-    for (let eid = 0; eid <= this.world.maxEid; eid++) {
-      if (!hasComponent(this.world, Owner, eid) || Owner.slot[eid] !== slot) continue;
+    // Copied before the loop: removing an entity edits the query's own list.
+    const owned = this.ascending(this.owners(this.world));
+    for (let i = 0; i < owned.length; i++) {
+      const eid = owned[i]!;
+      if (Owner.slot[eid] !== slot) continue;
       this.world.production.delete(eid);
       this.echo.forget(eid);
       clearQueue(this.world, eid);
+      this.world.paths.delete(eid);
       removeEntity(this.world, eid);
     }
   }
@@ -1724,10 +1782,12 @@ export class Match {
     let bestSlot = -1;
     let bestD2 = Infinity;
     let bestFaction = Faction.Bathyarch;
-    for (let other = 0; other <= this.world.maxEid; other++) {
-      if (!hasComponent(this.world, Owner, other)) continue;
+    // Ascending, because an exact tie in distance goes to the lower id — the
+    // answer this gave when it walked ids, kept so a replay agrees with it.
+    const placed = this.ascending(this.placedOwners(this.world));
+    for (let i = 0; i < placed.length; i++) {
+      const other = placed[i]!;
       if (Owner.slot[other] === DRIFT_SLOT) continue;
-      if (!hasComponent(this.world, Position, other)) continue;
       const d2 = (Position.x[other]! - x) ** 2 + (Position.y[other]! - y) ** 2;
       if (d2 >= bestD2) continue;
       bestD2 = d2;
@@ -1810,6 +1870,13 @@ export class Match {
     // identical lists.
     const shoals = this.collectShoals();
     const jellies = this.collectJellies();
+    // The same argument, and the same two lists were being rebuilt per slot
+    // anyway (#430): hazard telegraphing is public (docs/maps.md — a telegraph
+    // only one player can read is not one) and Drift Health is chart data.
+    // One array each, shared by reference across every snapshot; nothing
+    // downstream writes to either.
+    const hazards = hazardStates(this.world);
+    const driftHealth = this.world.drift.snapshot();
 
     const snapshots = new Map<number, EchoSnapshot>();
     for (const slot of this.slots) {
@@ -1839,10 +1906,10 @@ export class Match {
         marks: result.marksBySlot.get(slot) ?? [],
         // Public, unlike everything else here: docs/maps.md requires hazard
         // telegraphing, and a telegraph only one player can read is not one.
-        hazards: hazardStates(this.world),
+        hazards,
         draw: { ...drawFor(this.world, slot) },
         biomass: economyFor(this.world, slot).biomass,
-        driftHealth: this.world.drift.snapshot(),
+        driftHealth,
         shoals,
         jellies,
       });
@@ -1860,8 +1927,9 @@ export class Match {
    */
   private collectShoals(): ShoalTell[] {
     const out: ShoalTell[] = [];
-    for (let eid = 0; eid <= this.world.maxEid; eid++) {
-      if (!hasComponent(this.world, Fauna, eid)) continue;
+    const creatures = this.ascending(this.faunaQuery(this.world));
+    for (let i = 0; i < creatures.length; i++) {
+      const eid = creatures[i]!;
       if (Fauna.species[eid] !== FaunaSpecies.Lampfry) continue;
       if (Health.hp[eid]! <= 0) continue;
       out.push({
@@ -1878,8 +1946,9 @@ export class Match {
   /** Every living Tetherjelly cluster — chart data, same argument as shoals. */
   private collectJellies(): JellyCluster[] {
     const out: JellyCluster[] = [];
-    for (let eid = 0; eid <= this.world.maxEid; eid++) {
-      if (!hasComponent(this.world, Fauna, eid)) continue;
+    const creatures = this.ascending(this.faunaQuery(this.world));
+    for (let i = 0; i < creatures.length; i++) {
+      const eid = creatures[i]!;
       if (Fauna.species[eid] !== FaunaSpecies.Tetherjelly) continue;
       if (Health.hp[eid]! <= 0) continue;
       out.push({
@@ -1895,14 +1964,14 @@ export class Match {
   /** A player always sees their own units in full. */
   private collectOwnUnits(slot: number): OwnUnit[] {
     const out: OwnUnit[] = [];
-    // bitecs entity ids are dense from 0; iterating the Owner store directly is
-    // cheaper than a query for this small, per-slot filtered read — but only
-    // when bounded by `maxEid`. The store's own length is the world capacity,
-    // which would make this walk 100,000 slots to read a dozen hulls.
-    for (let eid = 0; eid <= this.world.maxEid; eid++) {
-      if (!hasComponent(this.world, Owner, eid)) continue;
+    // This used to walk the Owner store from 0 to `maxEid` on the argument
+    // that a query was dearer than a bounded walk. It was, for a dozen hulls
+    // in a fresh world; it was not once `maxEid` had climbed through a match's
+    // worth of torpedoes and the walk ran fourteen times per Echo pass (#430).
+    const hulls = this.ascending(this.unitOwners(this.world));
+    for (let i = 0; i < hulls.length; i++) {
+      const eid = hulls[i]!;
       if (Owner.slot[eid] !== slot) continue;
-      if (!hasComponent(this.world, Unit, eid)) continue;
 
       const unit: OwnUnit = {
         id: eid,
@@ -1971,10 +2040,10 @@ export class Match {
    */
   private collectOwnOrdnance(slot: number): OwnOrdnance[] {
     const out: OwnOrdnance[] = [];
-    for (let eid = 0; eid <= this.world.maxEid; eid++) {
-      if (!hasComponent(this.world, Owner, eid)) continue;
+    const shots = this.ascending(this.ordnanceOwners(this.world));
+    for (let i = 0; i < shots.length; i++) {
+      const eid = shots[i]!;
       if (Owner.slot[eid] !== slot) continue;
-      if (!hasComponent(this.world, Ordnance, eid)) continue;
 
       out.push({
         id: eid,
@@ -1992,10 +2061,10 @@ export class Match {
 
   private collectOwnStructures(slot: number): OwnStructure[] {
     const out: OwnStructure[] = [];
-    for (let eid = 0; eid <= this.world.maxEid; eid++) {
-      if (!hasComponent(this.world, Owner, eid)) continue;
+    const yards = this.ascending(this.structureOwners(this.world));
+    for (let i = 0; i < yards.length; i++) {
+      const eid = yards[i]!;
       if (Owner.slot[eid] !== slot) continue;
-      if (!hasComponent(this.world, Structure, eid)) continue;
 
       let buildProgress = 1;
       if (hasComponent(this.world, UnderConstruction, eid)) {

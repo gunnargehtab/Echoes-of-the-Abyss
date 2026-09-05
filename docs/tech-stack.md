@@ -76,6 +76,78 @@ sorting candidates nearest-first made the pass **slower** (a comparator sort cos
 the walks its ordering avoids), and so did approximating that ordering with a two-sweep split
 at a distance cut.
 
+### Around the pass: the snapshot
+
+The pass is not the whole Echo tick. Around it `Match.resolveEcho` assembles one snapshot
+per player — own units, structures, ordnance, the public hazard and Drift Health layers —
+and that assembly used to walk every entity id from 0 to `maxEid`, three times per slot,
+with two more full walks per 60 Hz tick in `driftTick`. `maxEid` only rises, so the walk
+grew for the whole match, through every torpedo ever fired (#430). Those walks are bitecs
+queries now, and the two public layers are built once per pass and shared across every
+snapshot by reference.
+
+The bench reports both numbers — the pass alone, and the **Echo tick** as the server pays
+it: the 60 Hz step carrying the pass, the pass, and the snapshot assembly. Measured back to
+back on one CI-class container (slower than the machine the table above was taken on, and
+noisier: treat the p90 as weather):
+
+| Entities | Pass, before | Pass, after | Echo tick, before | Echo tick, after |
+| --- | --- | --- | --- | --- |
+| ~84 | 0.88 ms | 1.12 ms | 1.29 ms | 1.54 ms |
+| ~164 | 2.06 ms | 2.08 ms | 3.12 ms | 2.74 ms |
+| ~324 | 5.17 ms | 5.41 ms | 6.63 ms | 5.80 ms |
+
+The pass itself was not touched and reads as noise either way; the assembly around it —
+the tick minus the pass — went from 1.05 ms to 0.66 ms at ~164 entities and from 1.46 ms to
+0.39 ms at ~324, and no longer scales with how many entities the match has *ever* had. The
+2 ms budget is still crossed by the pass alone at ~160 entities on this hardware; the
+population cap that has to be resolved against it is #437.
+
+## Navigation
+
+Until #431 nothing in the simulation could path around an obstacle: `movementSystem`
+steered straight at its order and `Terrain.resolveStep` slid the hull along whatever it
+hit, one axis at a time. That is collision response, and it fails in exactly one shape — a
+concave one. A hull aimed past a U-shaped ridge slid into the pocket and stayed there for
+the rest of the match, and the only thing that ever got a fleet out of a bay was
+`depthSystem` lifting it over the ground.
+
+Routing is A* over the terrain's own cells (`sim/pathfinding.ts`), at the depth the hull is
+at, with `Terrain.admitsCell` as the one passability question — the same question
+`resolveStep` asks of each step, so a route and the steps that follow it never disagree.
+Three properties are load-bearing:
+
+- **Integer costs.** Ten a side, fourteen a diagonal, an octile heuristic in the same units,
+  and a total tie-break (lower f, then lower h, then lower cell index). No float sum whose
+  order could differ between two runs; a replay reproduces every route bit for bit, and
+  `test/pathfinding.test.ts` holds two seeds to the same state hash for thirty seconds of
+  routing.
+- **No corner cutting.** A diagonal step is allowed only when both cells it brushes admit the
+  hull. A route that cut a corner would hand movement a leg through rock.
+- **A partial answer is still an answer.** When the goal cell is sealed off — the player
+  clicked a plateau, or the ground closed behind the hull — the route ends at the reachable
+  cell nearest the goal and the final leg is steered straight, slide included, which is what
+  every leg used to be. The hull ends up pressed against the ground nearest its order, as it
+  did before; now it gets there.
+
+What keeps it off the 60 Hz budget is that most hulls never search. A hull with a clear
+segment to its order (`Terrain.segmentAdmits`, sampled at a quarter-cell) holds a
+"straight" plan with no waypoints and re-checks it on the Echo beat. Only a hull whose
+segment crosses refusing ground searches, and a search is bounded by the grid: a thousand
+cells on an 8 km map. A route is re-read when the order moves by more than
+`MOVEMENT.ROUTE_RETARGET_M` (a pursued hull creeping two metres a tick keeps its route and
+bends only the final leg), when the terrain revision changes, when the hull's depth has
+moved more than `MOVEMENT.ROUTE_DEPTH_TOLERANCE_M`, and on the revalidation cadence — except
+that a plan whose goal was unreachable waits for the ground or the depth, because
+re-searching a sealed goal five times a second is the one way routing could become a
+per-tick cost. Routes are string-pulled at planning time, so a hull follows a course rather
+than a staircase. Every array the search uses is sized once per world and reused.
+
+Routes are derived state — from position, order and ground, all of which the state hash
+covers — and are not hashed themselves. They are dropped with the entity, exactly as the
+order queue is and for the same reason: a recycled id must not inherit a dead hull's last
+waypoint.
+
 ## Rationale & Alternatives Considered
 
 ### Core Engine
@@ -200,7 +272,10 @@ itself, and each is a place this could have gone quietly wrong:
 - **Ground stops a step, not a hull.** Every branch of the passability check tests the
   *destination*, so a hull that ground closed over had no admitting neighbour to step to and
   was entombed for the rest of the match. A hull already inside ground is not held by it. It
-  still cannot be walked into from outside.
+  still cannot be walked into from outside — nor, since #431, shoved into: hull separation
+  lands its corrections through the same step check as movement, because a route parks a
+  refused hull at the corner nearest its order, and a crowd pushing it across that corner
+  used to put it inside ground the inside-ground clause then let it drive on through.
 
 ---
 

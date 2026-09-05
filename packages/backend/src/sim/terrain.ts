@@ -126,8 +126,8 @@ export class Terrain {
   readonly widthM: number;
   readonly heightM: number;
   readonly cellM: number;
-  private readonly cols: number;
-  private readonly rows: number;
+  private readonly cols_: number;
+  private readonly rows_: number;
   private readonly biomes: Uint8Array;
   /**
    * PF per cell, maintained alongside `biomes`. The Echo pass walks tens of
@@ -222,20 +222,20 @@ export class Terrain {
     this.widthM = widthM;
     this.heightM = heightM;
     this.cellM = cellM;
-    this.cols = Math.ceil(widthM / cellM);
-    this.rows = Math.ceil(heightM / cellM);
-    this.biomes = new Uint8Array(this.cols * this.rows).fill(Biome.OpenWater);
-    this.pf = new Float32Array(this.cols * this.rows).fill(PROPAGATION_FACTOR[Biome.OpenWater]);
+    this.cols_ = Math.ceil(widthM / cellM);
+    this.rows_ = Math.ceil(heightM / cellM);
+    this.biomes = new Uint8Array(this.cols_ * this.rows_).fill(Biome.OpenWater);
+    this.pf = new Float32Array(this.cols_ * this.rows_).fill(PROPAGATION_FACTOR[Biome.OpenWater]);
     // `Math.fround` wherever the peak is set from a double: the grid is a
     // Float32Array, and the rounded value it stores can sit a few ulps above
     // the double it was given. The peak has to bound what is *stored*.
     this.peak = Math.fround(PROPAGATION_FACTOR[Biome.OpenWater]);
-    this.scatter = new Uint8Array(this.cols * this.rows);
+    this.scatter = new Uint8Array(this.cols_ * this.rows_);
     // Defaults to the ruleset's deepest orderable depth, which is exactly the
     // flat 3,000 m every map had before floors existed. A map that authors
     // nothing therefore behaves as it always did.
-    this.floor = new Uint16Array(this.cols * this.rows).fill(options.floorM ?? DEPTH.MAX_M);
-    this.ceiling = new Uint16Array(this.cols * this.rows);
+    this.floor = new Uint16Array(this.cols_ * this.rows_).fill(options.floorM ?? DEPTH.MAX_M);
+    this.ceiling = new Uint16Array(this.cols_ * this.rows_);
   }
 
   /**
@@ -260,9 +260,9 @@ export class Terrain {
   }
 
   private index(x: number, y: number): number {
-    const cx = Math.min(this.cols - 1, Math.max(0, Math.floor(x / this.cellM)));
-    const cy = Math.min(this.rows - 1, Math.max(0, Math.floor(y / this.cellM)));
-    return cy * this.cols + cx;
+    const cx = Math.min(this.cols_ - 1, Math.max(0, Math.floor(x / this.cellM)));
+    const cy = Math.min(this.rows_ - 1, Math.max(0, Math.floor(y / this.cellM)));
+    return cy * this.cols_ + cx;
   }
 
   biomeAt(x: number, y: number): Biome {
@@ -374,6 +374,56 @@ export class Terrain {
   admits(x: number, y: number, depthM: number): boolean {
     const index = this.index(x, y);
     return depthM >= this.ceiling[index]! && depthM <= this.floor[index]!;
+  }
+
+  /** Grid width in cells — the pathfinder's row stride (#431). */
+  get cols(): number {
+    return this.cols_;
+  }
+
+  get rows(): number {
+    return this.rows_;
+  }
+
+  /** The cell a point falls in, as an index into the flat grids. */
+  cellIndexAt(x: number, y: number): number {
+    return this.index(x, y);
+  }
+
+  /** `admits`, asked of a cell by coordinate rather than of a point in metres. */
+  admitsCell(cx: number, cy: number, depthM: number): boolean {
+    const index = cy * this.cols_ + cx;
+    return depthM >= this.ceiling[index]! && depthM <= this.floor[index]!;
+  }
+
+  cellCentreX(cx: number): number {
+    return (cx + 0.5) * this.cellM;
+  }
+
+  cellCentreY(cy: number): number {
+    return (cy + 0.5) * this.cellM;
+  }
+
+  /**
+   * Does every cell along the segment admit a hull at `depthM`?
+   *
+   * The line-of-sight test routing is built on: a hull whose order it can
+   * reach in a straight line never plans, and a planned route is pulled taut
+   * across every cell this says yes to. Sampled at a quarter of a cell, which
+   * is close enough that a segment can only enter a refusing cell for a
+   * fraction of a cell's width between samples — a graze `resolveStep` slides
+   * off in a tick, not a leg through rock.
+   */
+  segmentAdmits(x0: number, y0: number, x1: number, y1: number, depthM: number): boolean {
+    const dx = x1 - x0;
+    const dy = y1 - y0;
+    const length = Math.hypot(dx, dy);
+    const samples = Math.max(1, Math.ceil(length / (this.cellM * 0.25)));
+    for (let i = 0; i <= samples; i++) {
+      const t = i / samples;
+      if (!this.admits(x0 + dx * t, y0 + dy * t, depthM)) return false;
+    }
+    return true;
   }
 
   /**
@@ -524,11 +574,11 @@ export class Terrain {
   fillRect(x: number, y: number, w: number, h: number, biome: Biome): void {
     const x0 = Math.max(0, this.firstCentreFrom(x));
     const y0 = Math.max(0, this.firstCentreFrom(y));
-    const x1 = Math.min(this.cols - 1, this.lastCentreBefore(x + w));
-    const y1 = Math.min(this.rows - 1, this.lastCentreBefore(y + h));
+    const x1 = Math.min(this.cols_ - 1, this.lastCentreBefore(x + w));
+    const y1 = Math.min(this.rows_ - 1, this.lastCentreBefore(y + h));
     for (let cy = y0; cy <= y1; cy++) {
       for (let cx = x0; cx <= x1; cx++) {
-        const index = cy * this.cols + cx;
+        const index = cy * this.cols_ + cx;
         this.biomes[index] = biome;
         this.pf[index] = PROPAGATION_FACTOR[biome];
         this.writeScatter(index, this.scatterAtCell(cx, cy, biome));
@@ -575,11 +625,11 @@ export class Terrain {
       return;
     const x0 = Math.max(0, this.firstCentreFrom(x));
     const y0 = Math.max(0, this.firstCentreFrom(y));
-    const x1 = Math.min(this.cols - 1, this.lastCentreBefore(x + w));
-    const y1 = Math.min(this.rows - 1, this.lastCentreBefore(y + h));
+    const x1 = Math.min(this.cols_ - 1, this.lastCentreBefore(x + w));
+    const y1 = Math.min(this.rows_ - 1, this.lastCentreBefore(y + h));
     for (let cy = y0; cy <= y1; cy++) {
       for (let cx = x0; cx <= x1; cx++) {
-        const index = cy * this.cols + cx;
+        const index = cy * this.cols_ + cx;
         const beforeFloor = this.floor[index]!;
         const beforeCeiling = this.ceiling[index]!;
         const beforeBiome = this.biomes[index]!;
@@ -662,9 +712,9 @@ export class Terrain {
     // so folding the maximum in costs nothing and a storm passing or a
     // corridor coming down lowers the bound the same tick.
     let peak = MIN_PROPAGATION_FACTOR;
-    for (let cy = 0; cy < this.rows; cy++) {
-      for (let cx = 0; cx < this.cols; cx++) {
-        const index = cy * this.cols + cx;
+    for (let cy = 0; cy < this.rows_; cy++) {
+      for (let cx = 0; cx < this.cols_; cx++) {
+        const index = cy * this.cols_ + cx;
         const biome = this.biomes[index] as Biome;
         const value = Math.fround(this.propagationAtCell(cx, cy, biome));
         this.pf[index] = value;
@@ -814,8 +864,8 @@ export class Terrain {
     ceiling: number[];
   } {
     return {
-      cols: this.cols,
-      rows: this.rows,
+      cols: this.cols_,
+      rows: this.rows_,
       cellM: this.cellM,
       biomes: Array.from(this.biomes),
       floor: Array.from(this.floor),

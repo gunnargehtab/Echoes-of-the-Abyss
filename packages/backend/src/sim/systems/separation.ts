@@ -29,6 +29,7 @@ import {
 } from '@echoes/shared';
 import { Position, Structure, Unit } from '../components.ts';
 import { localIdOf, type SimWorld } from '../world.ts';
+import type { Terrain } from '../terrain.ts';
 
 const movable = defineQuery([Position, Unit]);
 const blockers = defineQuery([Position, Structure]);
@@ -43,6 +44,29 @@ export function separationSystem(world: SimWorld): void {
   // footprint until you built a second one.
   if (units.length > 1) separateHulls(world, units);
   separateFromStructures(world, units);
+}
+
+/** Reused across hulls and ticks: `resolveStep` writes here rather than allocating. */
+const settled = { x: 0, y: 0 };
+
+/**
+ * Land a correction where the ground allows it.
+ *
+ * Separation used to write positions outright, and the depth system was left
+ * to lift whatever a shove had put over shallower ground. That was a slow
+ * loophole while hulls only ever met walls head-on; routing (#431) parks a
+ * refused hull at the *corner* nearest its order, and a crowd of escorts
+ * shoving it there can push it across the corner into ground it does not
+ * fit — after which `resolveStep`'s inside-ground clause lets it drive on
+ * through the rock it was pushed into, toward wherever it was sent. A push is
+ * a step like any other now: it slides along ground it cannot enter and the
+ * map edge alike, and a hull is only ever inside ground the ground closed
+ * over it.
+ */
+function settle(terrain: Terrain, eid: number, toX: number, toY: number): void {
+  terrain.resolveStep(Position.x[eid]!, Position.y[eid]!, toX, toY, Position.depth[eid]!, settled);
+  Position.x[eid] = settled.x;
+  Position.y[eid] = settled.y;
 }
 
 function separateHulls(world: SimWorld, units: ArrayLike<number>): void {
@@ -117,10 +141,8 @@ function separateHulls(world: SimWorld, units: ArrayLike<number>): void {
       }
 
       const push = overlap * SEPARATION.STIFFNESS * 0.5;
-      Position.x[a] = terrain.clampXM(ax - nx * push);
-      Position.y[a] = terrain.clampYM(ay - ny * push);
-      Position.x[b] = terrain.clampXM(bx + nx * push);
-      Position.y[b] = terrain.clampYM(by + ny * push);
+      settle(terrain, a, ax - nx * push, ay - ny * push);
+      settle(terrain, b, bx + nx * push, by + ny * push);
     }
   }
 }
@@ -151,7 +173,7 @@ function separateFromStructures(world: SimWorld, units: ArrayLike<number>): void
 
       if (d2 < SEPARATION.COINCIDENT_EPSILON_M * SEPARATION.COINCIDENT_EPSILON_M) {
         // Dead centre of a footprint: leave along +X, deterministically.
-        Position.x[a] = terrain.clampXM(sx + minD);
+        settle(terrain, a, sx + minD, Position.y[a]!);
         continue;
       }
       const d = Math.sqrt(d2);
@@ -167,8 +189,7 @@ function separateFromStructures(world: SimWorld, units: ArrayLike<number>): void
       // two failures: a hull pinned against a wall is reachable, and a hull
       // pushed off the map is not. Sliding along the boundary instead is real
       // contact resolution, which is terrain passability's problem (#150).
-      Position.x[a] = terrain.clampXM(sx + (dx / d) * minD);
-      Position.y[a] = terrain.clampYM(sy + (dy / d) * minD);
+      settle(terrain, a, sx + (dx / d) * minD, sy + (dy / d) * minD);
     }
   }
 }

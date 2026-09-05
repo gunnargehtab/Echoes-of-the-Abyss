@@ -1607,6 +1607,26 @@ export const SIM = {
 export const MOVEMENT = {
   /** Close enough to a move target to count as arrived, in metres. */
   ARRIVAL_EPSILON_M: 5,
+  /**
+   * Routing around ground (#431) — TUNABLE throughout. The docs specify what
+   * ground does to a hull (docs/systems-depth.md §2), not how a hull finds
+   * its way round it; these are the prototype's numbers for that.
+   */
+  /** A route waypoint counts as reached inside this radius, in metres. */
+  WAYPOINT_REACH_M: 40,
+  /**
+   * A move target that shifts by less than this keeps its route. A pursued
+   * hull creeps a couple of metres a tick; re-searching for every creep would
+   * make a chase the most expensive thing on the 60 Hz path.
+   */
+  ROUTE_RETARGET_M: 125,
+  /**
+   * Ticks between route checks — the Echo beat, so a hull re-reads the ground
+   * no more often than the world it steers through is redrawn.
+   */
+  ROUTE_REVALIDATE_TICKS: 12,
+  /** Depth change that invalidates a route: passability is a function of depth. */
+  ROUTE_DEPTH_TOLERANCE_M: 50,
 } as const;
 
 /**
