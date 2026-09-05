@@ -269,6 +269,18 @@ itself, and each is a place this could have gone quietly wrong:
   value they already held are not recorded at all, which is what lets a span be painted across
   a passage and the passage cut straight back through it without the client being told to seal
   a route and then unseal it.
+- **The snapshot travels as a difference (#433).** Every Echo snapshot used to cross the wire
+  whole, five times a second per player. It is now a keyframe on a client's first tick, on a
+  reconnection and every fiftieth tick, and otherwise a patch onto the snapshot before it:
+  id-keyed collections send only the entries that changed and only the fields that changed,
+  plus the ids that left and the order when an entry came or went; scalars are sent when they
+  differ; the Drift grid as the regions that moved. A WebSocket delivers in order, so the
+  previous message *is* the client's state and no acknowledgement exists. A patch that cannot
+  be applied — a sequence gap, which can only be a bug — is dropped and the next keyframe
+  restores the picture; nothing is guessed, and the reconstructed snapshot is asserted equal
+  to the server's over a live match (`test/echoDelta.test.ts`), which measured **30% of the
+  bytes** with two forces engaged and the Drift in the water. The delta of a snapshot carries
+  exactly what the snapshot did: it decides nothing about what a client may know.
 - **Ground stops a step, not a hull.** Every branch of the passability check tests the
   *destination*, so a hull that ground closed over had no admitting neighbour to step to and
   was entombed for the rest of the match. A hull already inside ground is not held by it. It

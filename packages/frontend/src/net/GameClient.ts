@@ -25,6 +25,8 @@ import {
   type ResourceNodeInfo,
   type StructureKind,
   type UnitKind,
+  applyEchoWire,
+  type EchoWire,
 } from '@echoes/shared';
 import { toListings } from './rooms.ts';
 
@@ -310,6 +312,8 @@ export class GameClient {
   private readonly client: Client;
   private readonly handlers: GameClientHandlers;
   private room: Room | null = null;
+  /** The last Echo snapshot reconstructed, and its sequence (#433). */
+  private echoLast: { seq: number; snapshot: EchoSnapshot } | null = null;
   /** Which room kind this client is in, so a parked token can be matched. */
   private missionId = '';
   /** True once the player has deliberately left; suppresses reconnection. */
@@ -424,7 +428,18 @@ export class GameClient {
     room.onMessage('map', (payload: MapPayload) => this.handlers.onMap(payload));
     room.onMessage('nodes', (payload: ResourceNodeInfo[]) => this.handlers.onNodes(payload));
     room.onMessage('assigned', (payload: AssignedPayload) => this.handlers.onAssigned(payload));
-    room.onMessage('echo', (payload: EchoSnapshot) => this.handlers.onEcho(payload));
+    // The delta channel (#433): a keyframe, or a patch onto the snapshot
+    // before it. A patch this client cannot apply — a gap, which can only be
+    // a bug — is dropped and the next keyframe restores the picture; nothing
+    // is ever guessed. Reset per room, because a reconnection is a fresh
+    // client and the server sends it whole.
+    this.echoLast = null;
+    room.onMessage('echo', (wire: EchoWire) => {
+      const snapshot = applyEchoWire(this.echoLast, wire);
+      if (snapshot === null) return;
+      this.echoLast = { seq: wire.seq, snapshot };
+      this.handlers.onEcho(snapshot);
+    });
     room.onMessage('gameOver', (payload: GameOverPayload) => this.handlers.onGameOver(payload));
     // The mission channel. Per-client rather than schema, because a mission's
     // objectives are resolved for one observer the way a detection is — see

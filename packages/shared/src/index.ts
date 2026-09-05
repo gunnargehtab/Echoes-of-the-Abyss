@@ -11,6 +11,7 @@ export * from './types.js';
 export * from './constants.js';
 export * from './economy.js';
 export * from './echo.js';
+export * from './echoDelta.js';
 export * from './units.js';
 export * from './structures.js';
 export * from './ordnance.js';

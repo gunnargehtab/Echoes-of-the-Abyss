@@ -900,6 +900,17 @@ export const HADRON = {
    * that trip is the whole reason crystal is worth having.
    */
   CRYSTAL_YIELD_MULTIPLIER: 2.2,
+  /**
+   * SPEC — §6: the haulers are not an industry. Nodules are banked at half
+   * the field's yield per load, applied at the deposit exactly as the crystal
+   * premium is, so the field depletes by the full cut and the Order keeps
+   * half. The tithe was calibrated in a baseline where nobody's haulers lived
+   * long enough to matter (#440); once matches decided, tithe plus a full
+   * extraction economy made the Knights the richest navy on the map and an
+   * 80–100% duel winner against every other (#454). This is where "30,000
+   * people cannot run an industrial base" becomes a number.
+   */
+  NODULE_YIELD_MULTIPLIER: 0.5,
 } as const;
 
 /**
