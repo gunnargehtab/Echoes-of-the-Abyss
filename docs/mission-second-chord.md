@@ -7,7 +7,8 @@
 > here is authored — the forces, the water, the beats, the numbers and the text — and code
 > transcribes this document.
 
-**Setting:** The Rim — the Mouth's northern edge, 4,410 m below everything, on D+3 of the rim week
+**Setting:** The Rim — the Mouth's northern edge, the lip at 3,100 m over a floor 4,410 m
+below everything ([world-map.md](world-map.md) §3), on D+3 of the rim week
 of 214 PC, one tide after *The Rim Deposits* ([world-map.md](world-map.md) §5;
 [campaign.md](campaign.md) §8; [mission-rim-deposits.md](mission-rim-deposits.md) §1).
 

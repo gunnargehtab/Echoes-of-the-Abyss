@@ -25,9 +25,10 @@ and nobody hears more than anyone else ([environments.md](environments.md), *Cor
 The concern was chartered by people who trusted no ledger they could not audit, and they held
 their meetings in a room built on the same principle.
 
-Tonight the Board sits its two hundred and fourteenth annual session. Nine items stand. Eight
-of them are the year — rates, consolidations, the files the campaign has spent six missions
-writing. The ninth is the ninth.
+Tonight the Board sits its one hundred and ninety-sixth annual session — the concern was
+chartered in 19 PC ([timeline.md](timeline.md)), and there was no Board before the charter.
+Nine items stand. Eight of them are the year — rates, consolidations, the files the campaign
+has spent six missions writing. The ninth is the ninth.
 
 **Item 9 has been classified for one hundred and twenty-six years** ([timeline.md](timeline.md),
 88 PC). It is re-classified at every session, by annual continuance, moved by the chair. It

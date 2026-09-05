@@ -195,7 +195,7 @@ The **Sounder** is the exception, because §4 says it is: it "destroys structure
 
 **Attendants** — organisms found only within 400 m of the Mouth's rim.
 
-They do not respond to noise. They do not feed, breed, migrate, or flee. Their emissions are periodic, structured, and do not match any biological signature the Rift has recorded, and Consortium survey teams have twice filed them as equipment fault. The Directorate does not call them animals. The Knights do not call them anything.
+They do not respond to noise. They do not feed, breed, migrate, or flee. Their emissions are periodic, structured, and do not match any biological signature the Rift has recorded, and Consortium survey teams have three times filed them as equipment fault, the third time from the lip itself ([mission-prospect.md](mission-prospect.md); [timeline.md](timeline.md)). The Directorate does not call them animals. The Knights do not call them anything.
 
 **This entry has no stat block, and that is the entry.** Nothing in the bestiary explains the Mouth ([world.md](world.md)).
 

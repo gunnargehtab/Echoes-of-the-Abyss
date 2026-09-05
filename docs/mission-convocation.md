@@ -42,7 +42,8 @@ room, and a person turns it on the ground they are named for.
 Three consequences follow, and the whole mission is made of them:
 
 **A convocation cannot be hurried, because hurrying it is what it is for.** The circuit's length
-is a physical fact about a terrace — seven rows, four kilometres of holdfast line, and a voice
+is a physical fact about a terrace — seven rows, six and a half kilometres of holdfast line (§4:
+6,579 m), and a voice
 that carries two rows. The campaign row's beat says the vote "takes exactly as long as it
 takes", and that sentence is not a mood. It is the pace of the one institution in the Rift that
 has no way to make a decision faster than people can walk one to each other.

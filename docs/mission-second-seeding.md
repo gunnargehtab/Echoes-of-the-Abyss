@@ -9,7 +9,8 @@
 > everything here is authored — the forces, the water, the beats, the numbers and the text —
 > and code transcribes this document.
 
-**Setting:** The Rim — the Mouth's northern edge, 4,410 m below everything, 214 PC, on the
+**Setting:** The Rim — the Mouth's northern edge, the lip at 3,100 m over a floor 4,410 m
+below everything ([world-map.md](world-map.md) §3), 214 PC, on the
 concern's day of the rim week — day D of the week's calendar (§1, §6) — from under a bed on the
 western lip ([mission-prospect.md](mission-prospect.md); [world-map.md](world-map.md);
 [campaign.md](campaign.md) §8).

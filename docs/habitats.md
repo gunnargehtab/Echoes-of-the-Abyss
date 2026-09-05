@@ -196,8 +196,10 @@ Rift. At the top, in the cheap sectors, the walls run. *Married dry* is a Consor
   sealed and unlit ([world-map.md](world-map.md)). The concern does not strike assets. Sectors
   either side of it have been re-pressurised twice since, and their walls still run.
 - **The Underworks**, beneath everything — the Surface Age vent works the city was roofed onto,
-  galleries and castings poured before year 0, which the engineers call the root
-  ([mission-tolerance.md](mission-tolerance.md) §1). The Holding is heated from its own root,
+  galleries and castings poured before year 0, which the engineers call the root: roofed water,
+  admitted only between 1,900 and 2,100 m, reached through one open shaft and priced in crush for
+  every working hull the city owns ([mission-tolerance.md](mission-tolerance.md) §1;
+  [world-map.md](world-map.md) §3). The Holding is heated from its own root,
   and the root is two centuries older than the concern that depends on it.
 - **The Underway**, at the very bottom — Asset 002, half a Surface Age transit hall the first
   concessionaires roofed their first vault into, and the room the Ninth Board has met in since
@@ -288,8 +290,9 @@ and it is the only one it has ([culture.md](culture.md) §3).
 
 Nine houses, each built *into* a natural resonance formation, each a physical instrument tuned
 over generations, numbered First through Ninth in order of founding — and the Order founded
-deep and grew shallower, so the First stands nearest the Mouth, which is the Order's whole
-doctrine in one architectural fact ([world-map.md](world-map.md)). Perhaps thirty thousand souls
+deep, so the First stands nearest the Mouth, which is the Order's whole doctrine in one
+architectural fact; the number is an age and not a depth, and the Third at 1,450 m stands above
+the Ninth at 1,900 ([world-map.md](world-map.md)). Perhaps thirty thousand souls
 between the nine, the least populous power by an order of magnitude, and entry only at nine years
 old, by ear ([factions.md](factions.md)).
 
@@ -347,7 +350,9 @@ children's testing panel for twelve years and can still name every child who did
 
 ### The Conclave — nine chords, and the count is the order they answer in
 
-*The room [campaign.md](campaign.md) §7 puts Chord 4 in: the vote Vrey has the standing to call.*
+*The room [campaign.md](campaign.md) §7 puts Chord 4 in: the vote Vrey has the standing to call.
+The Directorate means another act by the same word — a crossing attended, not a chord struck —
+at §6, The Upper Terraces; [glossary.md](glossary.md)'s Conclave entry carries both.*
 
 **It is not a gathering.** Nine houses cannot convene. The Order cannot replace a hull or a
 Knight ([factions.md](factions.md)), the houses are instruments and do not travel, and a chapter
@@ -510,7 +515,9 @@ lower and has not, because the Cantorate is seated where the Undermarshalcy can 
 question is put by the Undermarshalcy at a cycle, and it is answered by who crosses the open
 water between the terraces to attend it. An assignment is sufficient when a cantor has attended
 the calling of it — so the Cantorate's authority is not a veto, it is a body in a place, and the
-whole of it can be exercised by remaining where it already is.
+whole of it can be exercised by remaining where it already is. The Order means another act by the
+same word — a chord struck across nine houses and answered in turn, at §5, *The Conclave* — and
+[glossary.md](glossary.md)'s *Conclave* entry carries both senses under their factions.
 
 That is why the First Cantor does not move against the Undermarshal. He does not have to. Nothing
 is refused, nothing is said that anyone could quote, no cantor crosses, and the cohorts whose
@@ -567,7 +574,7 @@ A mission set inside a city is authored in the same grammar as one set in open w
 | **A habitat's hush is a silence order.** Where a city keeps its quiet, a mission holds the player to a SIG ceiling and writes the debt down — SIG 25 at the galleries, struck hardpoints at the court. The Directorate's is written; the court's is enforced; the others are courtesy, and a mission on a plateau or in the Holding should price them as such | [mission-attendance.md](mission-attendance.md) §3; [mission-sorrowgate.md](mission-sorrowgate.md) §3 |
 | **A city has a sound before it has a skyline.** The Holding is heard four minutes before it is reached; Sufficiency is heard as the hush deepening; a plateau is the turn-of-tide bell; a chapter-house is a chord. The ambient bed is the establishing shot | [audio-direction.md](audio-direction.md); [world-map.md](world-map.md) |
 | **Neutral ground is ruined ground.** The places factions share are the places none of them built. A habitat is never neutral; a mission that needs all four parties in one room needs Sorrowgate | [world-map.md](world-map.md) §6 |
-| **A dome that comes down is one event at one tick.** A mission beat may repaint a region's biome and collapse its geometry in the same breath — specified and built, and authored in no shipped mission yet. It is the only way a habitat is allowed to change during play | [environments.md](environments.md), *Coral Ruins* |
+| **A dome that comes down is one event at one tick.** A mission beat may repaint a region's biome and collapse its geometry in the same breath — specified, built, and spent by two shipped missions: `attending-conclave` brings a dome down into Abyssal Trench, and `seeding-deep-furrow` turns a sown furrow to Kelp Forest, the one repaint in the bible that makes ground better. It is the only way a habitat is allowed to change during play | [environments.md](environments.md), *Coral Ruins*; [mission-conclave-attending.md](mission-conclave-attending.md) §13; [mission-deep-furrow.md](mission-deep-furrow.md) §13 |
 
 ---
 

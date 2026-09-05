@@ -52,7 +52,8 @@ has been rationing — silence and hearing — and none of the ones it taught fi
 does not come down here. That is why the Division does.
 
 Tull rides the lead hull. It is his model, his charter, and — although the mission never says
-so — his father's water: Halvard is two trenches west, and the paperwork said *exposure*
+so — his father's water: Halvard is on the west wall to the north, at this water's own depth
+([world-map.md](world-map.md) §3), and the paperwork said *exposure*
 ([characters.md](characters.md)).
 
 **Engine bound, stated so nobody corrects it into a bug.** Three parties and a court slot: the
@@ -406,6 +407,7 @@ What exists against this document and what does not, continuing the Ledger's lis
 | The six points as *authored emitters*, standing in for three days of hum and residue | **Built as emitters** (#240), and the stand-in is the honest note: the real residue layer ([systems-echo.md](systems-echo.md) §7) is written by live events and cannot be authored into a mission's past. A mission that wanted the survey to read *actual* Echo Marks would need a way to author marks at install, which nothing needs yet and nobody should build until a second mission asks |
 | The watch — authored transits, armed, on their own clock | **Built** (#190's `move` beats; hostility is `Owner.slot`) |
 | In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line |
+| **Where Halvard is** | **A finding against this document, and this document moved** (#408). §2 and the Related list said Halvard was *two trenches west*; the gazetteer puts it on the west wall at 1,600 m ([world-map.md](world-map.md) §3), and the trenches are counted downward, not laterally. The literal's seating note on the lead hull still carries the old phrase, which is a comment and not a line the player hears, and nothing in a literal changes for a docs pass |
 
 ---
 
@@ -418,7 +420,7 @@ What exists against this document and what does not, continuing the Ledger's lis
 - **[systems-echo.md](systems-echo.md)** — §3, the layer; §7, the records the Rift keeps; §9, the exposure readout the tolerance is played on
 - **[economy.md](economy.md)** — §5, reading a budget off the seabed, done here to somebody else
 - **[factions.md](factions.md)** — the Listening, met on its own ground by three unarmed hulls
-- **[world-map.md](world-map.md)** — the trench country's counted steps, and Halvard, two trenches west
+- **[world-map.md](world-map.md)** — the trench country's counted steps, and Halvard, on the west wall at 1,600 m
 - **[characters.md](characters.md)** — Tull, his model, and the variable it acquires here
 - **[culture.md](culture.md)** — §3, the two registers that never meet on this channel because one of them never transmits
 - **[bestiary.md](bestiary.md)** — the rim pack, and whose wake it rides in

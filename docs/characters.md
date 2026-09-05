@@ -1,10 +1,10 @@
 # Characters & Commanders
 
-Twelve named figures — three per faction — plus neutrals. Each is written to be **playable as a campaign commander**, **usable as a multiplayer hero-unit**, and **arguable with**. Nobody here is wrong on purpose.
+Twelve named figures — three per faction — plus neutrals, and below them the campaign's secondary cast. Each of the twelve is written to be **playable as a campaign commander**, **usable as a multiplayer hero-unit**, and **arguable with**. Nobody here is wrong on purpose.
 
 Design rule: every commander has a **conviction**, a **cost they've already paid**, and a **line they haven't crossed yet**. The campaign is about which ones cross.
 
-Two figures named in the prologue are not here. Underwriter Sela Drenn fires the ping and the observer Sende does not move; neither commands anything, and the entry price of this list is a conviction. They are specified where they act ([mission-sorrowgate.md](mission-sorrowgate.md) §5).
+Two figures named in the prologue are not among the twelve. Underwriter Sela Drenn fires the ping and the observer Sende does not move; neither commands anything, and the entry price of the list above is a conviction. They are specified where they act ([mission-sorrowgate.md](mission-sorrowgate.md) §5) and carried, with the rest of the people the twenty-nine missions named, in the *Secondary cast* below.
 
 An entry here is also what a **voice** is. Every commander below carries one — a signature in their register's material, stated in numbers under *Voice* and built as data by [audio-direction.md](audio-direction.md) §13 — and anyone a mission literal names who has no entry here speaks as their register's chorus: *the grid*, *the bloom*, *those below*, *the chapter*, *the record*. Drenn is the grid and Sende is those below. The one exception is a crew rather than a person, and it is entered under the Commune.
 
@@ -258,6 +258,55 @@ Alive at 2,900 m. They do not speak. They **write**, continuously, and have for 
 
 ---
 
+## Secondary cast
+
+The twelve above are commanders: each has a conviction, a cost and a line. The people below have none of those, by design — each holds an office, speaks in its register, and is kept by the campaign from one mission to the next. The twenty-nine mission documents carry ninety-two distinct speakers; these are the ones that recur, or that the world docs give a face to elsewhere, with the missions each is heard in. Depth of birth and age are given where a document states them and invented nowhere ([culture.md](culture.md) §6). The offices are defined in [glossary.md](glossary.md), *Offices and Titles*; every name follows [culture.md](culture.md) §4.
+
+### Bathyarch Consortium
+
+- **Lift Foreman Dessa Vail** — foreman of Ninefold's lift crews; a compressor lift is her trade, and the campaign keeps her. She rides the loads: the recovery on Face Six, the shift on Face Two, the compressor barge up the Fourth Trench, and the concern's open channel that the picket hears down the trench. Her register prices nineteen years and forty-one lives in freight terms without a gram of sentiment. Heard in [Asset Recovery](mission-asset-recovery.md), [Shift Change](mission-shift-change.md), [Baffle](mission-baffle.md) and, from the other side of the water, [The Dome](mission-the-dome.md).
+- **Surveyor Ade Bramm** — the survey's officer on the works channel in the Resonance Fields, whose job is to file what the instruments hear: as a fault, by standing practice, or — once, and it changes the mission — as a contact. No hyphen; he is not Board. Heard in [Aptitude](mission-aptitude.md) and the Order's [Conclave](mission-conclave-chord.md).
+- **Corridor Warden Anse Rell** — walks the posted closure on the grid spur across the Kell Shoulder with an escort, a book written for salvage poachers, and the authority to ask a bearing for an asset number. Not elevated and will not be. Everything he says is procedure, and he never learns what he closed the line on. Heard in [Thin Water](mission-thin-water.md) and [Shallow](mission-shallow.md).
+- **Yardmaster Brann Holt** — the Deep Yard's officer at the Fourth Trench's mouth: forty-one souls, berths and a failing plant. His line is the Klaxon doctrine spoken as a yard report — *we can hear you, and nobody down here is calling that a defect in the plan*. Heard in [Baffle](mission-baffle.md) and [The Dome](mission-the-dome.md).
+- **Underworks Warden Cass Ohlen** — holds the Holding's root: a third-generation castings engineer whose whole function is to state the arithmetic once and decline, three times, to weigh it. Heard in [Tolerance](mission-tolerance.md).
+- **Underwriter Sela Drenn** — the Consortium's delegate at the exchange, who fires the ping. No hyphen; she is not Board. Heard in [Sorrowgate](mission-sorrowgate.md).
+
+### Pelagia Commune
+
+- **Bloomwright Idris Kell** — aboard the harvest column on the shoulder, named for the plateau in the Commune's ordinary way, which means named for two hundred people who did not get out of it in 197 PC. Nobody in the mission remarks on this. Reads the count — ten hulls, sixty-eight aboard — as a fact about people and not a target, and will not let it be rounded. Heard in [Thin Water](mission-thin-water.md).
+- **Ottilie Marr** — tender crew, b. 290 m, twenty-three; her mother was a Kell. The face [habitats.md](habitats.md) §2 gives the plateaus, and the crew of the sower in the Furrow and on the rim, because the seed is Kell seed and she can count. Heard in [Deep Furrow](mission-deep-furrow.md) and [The Second Seeding](mission-second-seeding.md).
+
+### Abyssal Directorate
+
+- **Mara Tessen** — 4th Trench Cohort, b. 2,900 m, thirty-one, assigned to the freight galleries at the Fourth's foot ([habitats.md](habitats.md) §6). The column's voice on the Kell Shoulder, where she reports her own hull's physiology in the passive and does not command; the answer from the galleries when the yard says it can hear. Heard in [The Dome](mission-the-dome.md) and [Shallow](mission-shallow.md).
+- **Sende** — the Directorate's observer at the exchange: one name, which the Directorate regards as an honour, and one submersible that has not moved since it arrived. *It will pass, and then it will pass again* is the watch's whole posture, and three later documents quote it as the precedent for an observer that does not move. Heard in [Sorrowgate](mission-sorrowgate.md).
+- **The Speakers** — the Directorate's other voices are offices, not people: the **Watch-Speaker, for those below**, wherever a watch stands; the **Band-Speaker** of a cohort posted away from its trench; the **Picket-Speaker** of a closure. Unnamed by design, and in the passive — the agent is the record, the water and the assignment, never the person ([glossary.md](glossary.md), *Offices and Titles*).
+
+### Hadron Knights
+
+- **Chapter-wright Aldis Fenn** — b. 2,900 m, sixty-eight, one of the First's five surnames, forty years on the Chord and never out of the Fields. Speaks for the deepest house because somebody has to say the times aloud: he enters times and refuses to enter meanings. Heard in [The Three](mission-the-three.md).
+- **Chapter-wright Anselm Vrey** — b. 1,460 m, fifty-four, one of the Third's eleven Vreys and no relation the Chapter-Master can trace closer than four generations. Has tuned the Third's fourth outer formation for thirty years; sat the children's testing panel for twelve and can still name every child who did not pass. The face [habitats.md](habitats.md) §5 gives the chapter-houses, and the reason the Third has standing ([mission-conclave-chord.md](mission-conclave-chord.md)).
+
+### The nineteen of 211 PC
+
+The junior cadre Voice Ren Kalliso lost in the crystal raids, on the floor of the Rest ([timeline.md](timeline.md); [world-map.md](world-map.md) §3), and the names the Order plays intervals for in [Nineteen](mission-nineteen.md) §6. Five surnames across nineteen people, which is what a house's handful of family lines looks like from inside ([culture.md](culture.md) §4) — four of the lines new to the bible with that document, and one of them the Voice's own.
+
+| Line | The names |
+| --- | --- |
+| **Tessaly** | Sera, Fen, Perrin, Yorrick |
+| **Orme** | Ilar, Ottiline, Corin, Aled |
+| **Brannock** | Wen, Hale, Neve, Sunniva |
+| **Vale** | Marek, Ise, Talin, Roelle |
+| **Kalliso** | Ando, Emris, Deri |
+
+Nineteen berths at the Ninth have been empty since 211 PC ([habitats.md](habitats.md) §5). The Order cannot replace them and never will.
+
+### Named in the docs and in no mission
+
+**Anwen Sull** — the Consortium survey officer who recorded the Mouth's return anomaly in 88 PC and was dismissed for falsifying data ([timeline.md](timeline.md)); Ivane's great-great-grandmother, and the disgrace the Order was founded on. She appears in no mission document. Her name is the timeline's and Ivane's inheritance, not a word the player has heard — as the Deep Choir and the Answering are the world docs' and no mission's ([world-map.md](world-map.md) §5; [glossary.md](glossary.md)).
+
+---
+
 ## Related
 
 - **[factions.md](factions.md)** — the institutions these twelve run, and the four crises they are running into
@@ -267,3 +316,5 @@ Alive at 2,900 m. They do not speak. They **write**, continuously, and have for 
 - **[habitats.md](habitats.md)** — the cities these depths of birth are berths in
 - **[world-map.md](world-map.md)** — the gazetteer every quoted depth of birth is an address on
 - **[timeline.md](timeline.md)** — the years behind *already paid*: Kell, the Enclosure, Deepbloom, the crystal raids
+- **[mission-nineteen.md](mission-nineteen.md)** — the nineteen, named, and the committal the Order owed them
+- **[mission-sorrowgate.md](mission-sorrowgate.md)** — Drenn and Sende, specified where they act

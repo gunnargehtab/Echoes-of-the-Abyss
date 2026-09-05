@@ -192,7 +192,7 @@ procedure. **Bloomwright Idris Kell** is aboard the column, named for the platea
 Commune's ordinary way, which means named for two hundred people who did not get out of it in
 197 PC. Nobody in the mission remarks on this. Tidespeaker Ysolde Marr speaks from home and
 orders nobody to do anything; Bloomwright Sefa Anholt speaks once, at the end, and it is the
-first time in the campaign he is right.
+first time in the campaign she is right.
 
 ---
 
@@ -589,8 +589,8 @@ and declines to say what to do with it, which the Directorate would formalise in
 the Knights into a courtesy; Rell's challenge states a cost without pricing it and threatens
 nobody while being entirely a threat, which is the language of instruments at its most exact;
 and Anholt's speech is the only one in the campaign so far where a Commune speaker announces
-that he will ask — a future imposition, flagged in advance, which is as close to the imperative
-mood as the register can come and which the register makes him pay for by saying it out loud in
+that she will ask — a future imposition, flagged in advance, which is as close to the imperative
+mood as the register can come and which the register makes her pay for by saying it out loud in
 front of the dead.
 
 ---
@@ -618,6 +618,7 @@ campaigns" row carries where the queue stands now.
 | Filed → this mission's briefing variant | **Built** (#378), and it is the first of the two pairs the campaign had written ahead of the mechanism. The variant is §12's, transcribed into `SEEDING_THIN_WATER_HEADER.briefingVariants` and selected client-side off the seen-scene set in the progression record, so the room is never told which briefing was read — and cannot be, because [campaign.md](campaign.md) §1 says a scene changes the text and never the mission. What *Tend* writes is the scene `marr-plateau-filed`, latched with the same condition as the filed reading it is the machine-readable half of, so the id the client stores is a sentence the player has already been shown |
 | Commune escorts as a distinct hull | Not needed — the Corvette in [units.md](units.md) with the Commune's faction values is what §3 fields. Nothing here asks for a new roster entry |
 | In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line |
+| **Anholt's pronoun** | **A finding against this document, and this document moved** (#408). [characters.md](characters.md) writes Sefa Anholt as *she*, and [mission-deep-furrow.md](mission-deep-furrow.md) §5, [mission-radicals.md](mission-radicals.md) §5 and [mission-second-seeding.md](mission-second-seeding.md) §5 each named this document as the side that moves; §5, §12 and the Related list now read *she*. The literal's authoring note under the 14:00 speech still says *him*, which is a comment and not a line the player hears, and nothing in a literal changes for a docs pass |
 
 ---
 
@@ -634,7 +635,7 @@ campaigns" row carries where the queue stands now.
 - **[environments.md](environments.md)** — the PF table §1 does arithmetic over, and Open Water as the water that takes nothing back
 - **[economy.md](economy.md)** — §3, the 18-SIG harvest and the kelp it was measured in
 - **[culture.md](culture.md)** — §3, the register that cannot command and the word *thin*; §4, the names
-- **[characters.md](characters.md)** — Marr, Anholt, and the argument this mission hands him
+- **[characters.md](characters.md)** — Marr, Anholt, and the argument this mission hands her
 - **[world-map.md](world-map.md)** — Kell Plateau, the two hundred, and the grid that runs the air
 - **[bestiary.md](bestiary.md)** — the pack that comes up the slope for the noise
 - **[units.md](units.md)** — the roster the unwinnable fight is unwinnable in

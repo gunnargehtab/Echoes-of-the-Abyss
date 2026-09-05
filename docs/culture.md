@@ -43,7 +43,7 @@ There are four factions and five registers. A court is not a culture — Sorrowg
 Consortium speech is **procedural, exact, and quietly euphemistic**. They talk about people using the vocabulary of assets and outcomes, not because they are hiding cruelty but because the vocabulary is genuinely how they think — Varr-Kest's confidence intervals are sincere ([characters.md](characters.md)).
 
 - **Self-description:** *the concern*, *the Board*, *the grid*
-- **Vocabulary:** write-down, tolerance, shift, grade, asset number, exposure, orderly
+- **Vocabulary:** write-down, tolerance, shift, grade, asset number, exposure, orderly, works order (the paper a shift works ground under — a *writ* or a *charter* is narrower, and the concern says which; [glossary.md](glossary.md))
 - **Taboo:** enthusiasm. A Consortium officer who sounds excited sounds unreliable
 - **A compliment:** "That was well-costed."
 - **An insult:** "Sentimental." Second worst: "Unfunded."
@@ -139,7 +139,9 @@ Naming conventions are legible at a glance and each one encodes the faction's ce
 | **Consortium** | Given name plus family name; **hyphenation on Board elevation**, joining the two lineages a seat merges. A hyphen is a rank you can hear | Odile **Varr-Kest**, Corwin **Osk**, Baen **Tull** |
 | **Commune** | Given name plus **plateau name**. You are named for ground you helped tend, and a person who moves plateaus renames | Ysolde **Marr**, Sefa **Anholt**, Juno **Teel** |
 | **Directorate** | Given name plus cohort-line name. The most heavily modified — those at the programme's limit — carry **one name only**, which the Directorate regards as an honour and everyone else finds chilling | Setha **Korrin**, Vehl **Ossary**, **Adze** |
-| **Knights** | Family name, always, retained across generations because the Order cannot grow and its families are finite. Titles precede: Choirmaster, Chapter-Master, Voice | Ivane **Sull**, Halden **Vrey**, Ren **Kalliso** |
+| **Knights** | Family name, always, retained across generations because the Order cannot grow and its families are finite. Titles precede: Choirmaster, Chapter-Master, Voice, Chapter-wright | Ivane **Sull**, Halden **Vrey**, Ren **Kalliso**; and the cadre lines **Tessaly**, **Orme**, **Brannock**, **Vale** |
+
+The Order's family lines are a finite list, and the bible keeps it: Sull, Vrey and Kalliso, and — from the 211 PC junior cadre, whose nineteen are named in [mission-nineteen.md](mission-nineteen.md) §6 and listed in [characters.md](characters.md) — Tessaly, Orme, Brannock and Vale. Five surnames across nineteen people is what a house looks like from inside; a new Knight name is a new family, and the Order does not have those.
 
 Address is by title in all four cultures, and getting a title wrong is a real error rather than a small one. The Commune's titles are the trap: *Tidespeaker* is an office with almost no authority, and outsiders keep treating it as *head of state*, which is precisely the misunderstanding the Commune is built on.
 
@@ -149,7 +151,7 @@ Address is by title in all four cultures, and getting a title wrong is a real er
 
 - **Food.** The only pleasant food in the Rift comes from Commune plateaus, which makes the Commune beloved and militarily irrelevant in the same breath. Everyone else eats reconstituted protein and pretends not to mind. Offering someone real food is the strongest social gesture available in the setting, and the Commune knows exactly what it is doing when they do it at a negotiation.
 - **Attending.** The Directorate's central rite: a shift spent listening to the Mouth's return cycle and recording, without interpretation, what you dreamt. Attendance is compulsory, unpaid, and universally described by Directorate citizens as the best part of their month.
-- **The Descent.** All four cultures commit their dead to deeper water. The Consortium logs the coordinates; the Commune plants over them; the Directorate attends the body for one full cycle; the Knights play the interval the person's name resolves to. Same act, four incompatible reasons.
+- **The Descent.** All four cultures commit their dead to deeper water. The Consortium logs the coordinates; the Commune plants over them; the Directorate attends the body for one full cycle; the Knights play the interval the person's name resolves to, over the body — **the committal**, the one of the four rites the campaign names ([mission-nineteen.md](mission-nineteen.md) §1; [glossary.md](glossary.md)). Same act, four incompatible reasons.
 - **Silence-debt.** Interrupting a listener incurs an owed silence, repaid by staying quiet the next time that person listens. It is a real social ledger, informal in three factions and written down in the fourth.
 
 ---

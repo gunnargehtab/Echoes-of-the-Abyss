@@ -73,7 +73,7 @@ Seventy-seven years without a general war, for one reason: **acoustic parity**. 
 | Year | Event |
 | --- | --- |
 | 121 PC | First Baffle installed at a Consortium refinery: the beginning of masking as an industry, and the first crack in parity |
-| ~140 PC | Chapter-houses are built into Resonance Fields, each a physical instrument, **numbered First through Ninth in the order they were founded**. The Order founded deep and grew shallower, so the First at 2,900 m is the oldest and the Ninth at 1,900 m the youngest — the Order's whole doctrine in one architectural fact ([world-map.md](world-map.md) §3). The Knights become the only faction working resonant crystal |
+| ~140 PC | Chapter-houses are built into Resonance Fields, each a physical instrument, **numbered First through Ninth in the order they were founded**. The Order founded deep, so the First at 2,900 m is the oldest and stands nearest the Mouth — the Order's whole doctrine in one architectural fact; the number is an age and not a depth, and the Ninth at 1,900 m, the youngest, stands below the Third at 1,450 ([world-map.md](world-map.md) §3). The Knights become the only faction working resonant crystal |
 | **141 PC** | **The Sounding of 141.** The only joint expedition in the Rift's history goes up through the Lid in sealed hulls and spends three tides on the surface. It finds white water, breathable air on a good wind, and nothing to eat, nothing to burn, nothing to hear. The hydrophone record — four hours of a dead ocean — is the real report; the Directorate keeps a copy, and nobody plays it twice. *When do we go back* leaves the Rift's politics and does not return ([world.md](world.md)) |
 | 165 PC | The **Sorrowgate Arbitration Court** opens in a collapsed transit dome. All four powers use it. All four deny using it |
 | **178 PC** | **The First Chord** is completed and transmits into the Mouth. A reply arrives **forty-one seconds early**. Three technicians never regain speech. They begin to write, and have not stopped |
@@ -110,7 +110,7 @@ Four events the rest of the bible asserts as history and dates nowhere. They are
 | *undated* | **Ivane Sull is elevated to Choirmaster.** The Order's centre moves with her to the Ninth Chapter-House, the youngest of the nine, and has stayed there ([world-map.md](world-map.md) §3, [habitats.md](habitats.md) §5) |
 | *undated* | **Fivewell is drilled** — the youngest producing field on the west wall, shallower and smaller than Ninefold, and the thermal grid's second pillar. Drilled by the book, after Ninefold taught the book ([world-map.md](world-map.md) §3) |
 | *undated* | **The Deepbloom radicals emerge** as a minority faction on the plateaus, holding that the Rift should be terraformed whether the Directorate consents or not. Downstream of the 191 PC programme and still growing in 214 PC; the Commune, which does not classify things, has also never dated it ([factions.md](factions.md)) |
-| *undated* | **The chapter-houses' order of founding** is First through Ninth, the Order founding deep and growing shallower. Only the ~140 PC row above dates the building at all, and it dates the practice rather than any one house ([world-map.md](world-map.md) §3) |
+| *undated* | **The chapter-houses' order of founding** is First through Ninth, the Order founding deep and the number being an age rather than a depth. Only the ~140 PC row above dates the building at all, and it dates the practice rather than any one house ([world-map.md](world-map.md) §3) |
 
 ---
 
@@ -127,7 +127,7 @@ Kept separately because it is the one record all four powers maintain and none o
 | 178 PC → present | The Three write continuously. Thirty-six years of text in no known language |
 | ~180 PC | The Knights' transcripts and the Directorate's dream records are found — by Ivane Sull alone, decades later — to match **word for word**. Two organisations that have never shared data |
 | 213 PC | Cycle measured at **39 hours** and continuing to shorten |
-| 214 PC | Attendant organisms on the rim are logged by a Consortium survey team and filed, for the second time, as equipment fault ([bestiary.md](bestiary.md)) |
+| 214 PC | Attendant organisms on the rim are logged by a Consortium survey team and filed as equipment fault — for the second time by standing practice, and for the third when the concern's own survey descends to the lip and hears them ([bestiary.md](bestiary.md); [mission-prospect.md](mission-prospect.md) §1; [mission-item-nine.md](mission-item-nine.md) §1) |
 
 ---
 

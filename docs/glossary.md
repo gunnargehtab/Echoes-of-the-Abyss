@@ -194,6 +194,7 @@ The Mouth
 - The eleven-kilometre depression at **4,410 m** at the Rift's southern terminus — the floor of the setting, in every sense (world-map.md §3). It returns sonar pings *before they should arrive*, on a cycle measured at 43 hours from 88 PC and at 39 hours since 213 PC (timeline.md).
 - **Described, measured, never explained.** No character and no line of narration is ever authoritatively correct about what it is (culture.md §6). Characters may speculate, contradict each other, and be wrong. This entry stops where the bible stops.
 - Each faction has an incompatible relationship to it: the Consortium files for mineral rights, the Commune calls it a wound, the Directorate attends it, and the Knights are building something to answer it (world.md).
+- **Its edge is not its floor.** The **Rim** is the depression's northern edge, and the **Lip** — the last band of it, where the attendants are — stands at **3,100 m** (world-map.md §3; mission-prospect.md §11). Everything the campaign fights over at the Mouth is fought on the Lip and the terraces above it; 4,410 m is the floor of the depression the Rim stands over, and nothing of the Rift's stands on it.
 
 Debt-Berth
 
@@ -238,6 +239,7 @@ The Deep Choir
 - The Directorate's state religion: *attending* to the Mouth. Not a choir in the musical sense and not a body of people — the Cantorate is the body; the Choir is the practice and what the practice is addressed to.
 - Its central rite is **attendance**: a shift spent listening down the trench toward the Mouth's return cycle and recording, without interpretation, what you dreamt. Compulsory, unpaid, and universally described by Directorate citizens as the best part of their month (culture.md §5).
 - The dream transcripts run to 6,000 pages since 88 PC, are collected in Sufficiency's attending galleries, and are published nowhere (world-map.md §3).
+- **Named in no mission.** The seven Directorate missions attend, enter and are sufficient without once saying *the Deep Choir*; the phrase is the world docs', the Cantorate's and Korrin's private belief (characters.md), and a faction does not say its own name for itself out loud. A line that assumes the player has heard it has not been written yet (world-map.md §5). The same is true of the Order's *Answering*, below.
 
 The First Chord · The Second Chord
 
@@ -267,7 +269,7 @@ Offices and Titles
 
 - Address is by title in all four cultures, and getting a title wrong is a real error rather than a small one (culture.md §4).
 - **Tidespeaker** (Commune) — the rotating coordinator of the bloom-collectives, with almost no unilateral authority. Outsiders keep treating it as *head of state*, which is precisely the misunderstanding the Commune is built on. Ysolde Marr holds it.
-- **Bloomwright** (Commune) — the office of a programme lead on the plateaus. Sefa Anholt is the Deepbloom Bloomwright.
+- **Bloomwright** (Commune) — the office of a programme lead on the plateaus. Sefa Anholt is the Deepbloom Bloomwright; Idris Kell is Kell Plateau's (mission-thin-water.md §5).
 - **Executor** (Consortium) — the title carried by a member of the Ninth Board. Odile Varr-Kest is an Executor and chairs the Board; the two are not the same fact.
 - **Undermarshal** (Directorate) — the head of the Undermarshalcy. Setha Korrin holds it.
 - **Cohort-Prime** (Directorate) — the field commander of a trench cohort. Adze commands the 9th Trench Cohort, the deepest standing formation in the Rift.
@@ -275,6 +277,14 @@ Offices and Titles
 - **Chapter-Master** (Knights) — the head of one chapter-house. Halden Vrey holds the Third.
 - **Arbiter** (Sorrowgate) — the presiding officer of the Arbitration Court, and the only title here belonging to no faction. Mosk Halloran holds it.
 - Knight and court usage puts the title before the name and keeps it there; a Knight is *Choirmaster Sull* in the third sentence as well as the first.
+- The campaign's offices, held by the secondary cast (characters.md):
+  - **Lift Foreman** (Consortium) — the foreman of a field's lift crews: the compressor barges, the loads they carry and the schedule they carry them on. Dessa Vail holds Ninefold's.
+  - **Corridor Warden** (Consortium) — the officer who walks a posted closure on the grid: an escort, a book, and the authority to ask a bearing for an asset number. Anse Rell holds the Kell Shoulder's.
+  - **Yardmaster** (Consortium) — the officer of a yard, its berths and its plant. Brann Holt holds the Deep Yard at the Fourth Trench's mouth.
+  - **Underworks Warden** (Consortium) — the engineer who holds the Holding's root. Cass Ohlen.
+  - **Surveyor** (Consortium) — a survey's officer on the works channel, who files what its instruments hear: as a fault, by standing practice, or as a contact. Ade Bramm; Anwen Sull was one, in 88 PC.
+  - **Chapter-wright** (Knights) — a house's tuner. The wrights keep the outer formations corrected, which is what a house's standing physically is (habitats.md §5). Anselm Vrey at the Third, Aldis Fenn at the First.
+  - **Watch-Speaker · Band-Speaker · Picket-Speaker** (Directorate) — offices of speech rather than titles. A Directorate hull that speaks on a channel speaks *for* something — a watch, a cohort's band, a closure's picket — unnamed and in the passive, because in that register the agent is the record and never the person. The Watch-Speaker speaks *for those below* wherever a watch stands (mission-nineteen.md §5); the Band-Speaker for a cohort posted away from its trench (mission-in-writing.md §5); the Picket-Speaker for a closure's picket (mission-the-dome.md §5). Getting a Speaker's name is not possible, and asking for it is the outsider's error.
 
 Doctrine Names
 
@@ -284,6 +294,29 @@ Doctrine Names
 - **The Listening** (Abyssal Directorate) — the best hydrophone ratings by a wide margin: Directorate units resolve one tier higher than anyone else, and their Cantors project 1,200 m domes.
 - **The Score** (Hadron Knights) — sound as a weapon rather than a liability: high SIG, aimed. The term in the formula is Directional Signature, above.
 - Used as bare nouns in faction voice — *the Klaxon posture*, *under the Veil* — and never as the name of a unit, structure or ability.
+
+The Answering
+
+- The Order's name for itself in the third person, beside *the Order* and *the chapter* (culture.md §3), and the name of its liturgy — what a child who passes the testing at nine is taught alongside crystal-craft and resonance mathematics (factions.md). It is the Knights' whole doctrine as a noun: something is speaking, and it is discourteous not to reply.
+- **Docs-only.** No Knight mission document says the word, as no Directorate one says *the Deep Choir* (above). Both are the words factions.md builds those cultures on, and neither has reached the player.
+
+Conclave
+
+- Two acts under one word, and both are canon, so this entry keeps both. They are cousins and not synonyms: each is decided by whether a body moves, and each is heard rather than tallied.
+- **The Order's conclave** (Hadron Knights) is *sounded*. A chapter-master with standing — a house whose lattice is in tune this year — breaks their own house's silence and strikes its chord at an appointed interval; the lattice carries it, the other eight houses answer in turn, and **the count** is the sequence: which of the nine answered, and how far into the interval each waited. A house that lets its interval pass has abstained, and everybody hears the abstention. Done perhaps twice in a generation, and understood as a cost paid before an argument rather than as a procedure (habitats.md §5, *The Conclave*; mission-conclave-chord.md).
+- **The Directorate's conclave** is *attended*. A question is put by the Undermarshalcy at a cycle and answered by who crosses the open water between Sufficiency's upper terraces to attend it; an assignment is sufficient when a cantor has attended the calling of it, so the Cantorate's authority is not a veto but a body in a place, and the whole of it can be exercised by remaining where it already is. The cohorts whose calling goes unattended are not withheld and not disobedient — they are not assigned (habitats.md §6, *The Upper Terraces*; mission-conclave-attending.md §1).
+- Two missions carry the name — `chord-conclave` and `attending-conclave` (campaign.md §1). The campaign prefix is what separates the rows in the registry; this entry is what separates the meanings.
+
+Works Order
+
+- The Consortium's instrument of authorisation: the paper under which a shift works ground — cuts, cores, lifts, harvests, runs a face and reports its number. A works order is why a mission happens; the beats are when (mission-shift-change.md §12; mission-thin-water.md §9). It belongs in the concern's vocabulary beside *write-down* and *tolerance* (culture.md §3), and in eleven mission documents it is the first thing read on a channel.
+- A **writ** is narrower — a recovery writ, a relief writ, a survey's charter — and a mission map under a writ authors no resources, because a writ does something *to* ground without opening it. *A charter, not a works order* is a sentence a Consortium officer says and means (mission-asset-recovery.md §11; mission-baffle.md §11; mission-exposure.md §11; mission-prospect.md §1).
+- The Order borrows the word when the Ninth is speaking like the concern — the works order for the Fifth, and the Order's last works order at the rim (mission-standing-wave.md §2; mission-second-chord.md §12) — and the borrowing is audible. It is the campaign's oldest register, and a Knight using it is being exact rather than courteous.
+
+The Committal
+
+- The Knights' name for their descent (see *The Descent*): the interval a person's name resolves to, played *over* the body by a hull within a sounding's reach of it — 400 m, twenty seconds, at SIG 80, the tuning's own instrument (mission-nineteen.md §1, §6). Where a name repeats the interval repeats — four Tessalys are four tones — because the interval belongs to the name and the count belongs to the house.
+- The act is the one culture.md §5 describes; the name is the campaign's. It is why nineteen Knights could lie uncommitted for three years: a committal cannot be played from a distance, and the floor they were on was under the Order's rating. The tide the Choirmaster stops signing the reason is the mission.
 
 Related
 
@@ -298,6 +331,9 @@ Related
 - [campaign.md](campaign.md) — missions, briefings, objectives, and how one ends
 - [mission-sorrowgate.md](mission-sorrowgate.md) — the prologue, where the silence order is set out with its numbers
 - [mission-aptitude.md](mission-aptitude.md) — the Knights' first mission, where directional signature is worked in full
+- [mission-nineteen.md](mission-nineteen.md) — the committal, played nineteen times
+- [mission-conclave-chord.md](mission-conclave-chord.md) · [mission-conclave-attending.md](mission-conclave-attending.md) — the two conclaves, one sounded and one attended
+- [characters.md](characters.md) — the twelve, and the secondary cast the offices above are held by
 - [world.md](world.md) — the Collapse, the Lid, the Sounding, and the Mouth
 - [world-map.md](world-map.md) — the gazetteer every place named above is an entry in
 - [habitats.md](habitats.md) — inside those places: berths, light, air, and the hush
