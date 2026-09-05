@@ -45,7 +45,7 @@ export interface Ground {
    * §11 — except Sorrowgate, whose row carries the court's 1,500 m from
    * docs/world-map.md §3 rather than the map's 1,600 m floor. Where a place's
    * depth in §3/§5 and its map's floor differ, which one the rail should mean is
-   * an open call on the docs' side.
+   * #422's call.
    */
   depthM: number;
   water: Faction | null;

@@ -828,7 +828,7 @@ player raise the node.
 - **[mission-second-chord.md](mission-second-chord.md)** — D+3, where this lattice is spent
 - **[mission-item-nine.md](mission-item-nine.md)** — item six, the registration of the field this raid cuts crystal out of
 - **[mission-intake.md](mission-intake.md)** — standing `survive`, the late-revealed extract, and what leaves being counted at what leaves
-- **[mission-baffle.md](mission-baffle.md)** — a picket correcting a mooring found in closed water: the same act, two hundred kilometres north
+- **[mission-baffle.md](mission-baffle.md)** — a picket correcting a mooring found in closed water: the same act, the length of the Rift to the north
 - **[systems-echo.md](systems-echo.md)** — §3, the water this is all priced through; §5, the ping; §8, the quartered circle
 - **[systems-depth.md](systems-depth.md)** — §2 and §3, the band, the crush, the fast loud dive and the slow silent climb
 - **[economy.md](economy.md)** — §7, the round trip with a clock on it, and the crystal premium the cut is loud by

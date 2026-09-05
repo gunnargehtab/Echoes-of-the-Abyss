@@ -9,7 +9,7 @@
 **Setting:** Sufficiency's Upper Terraces — the Undermarshalcy cut into the north wall at
 2,750 m and the Cantorate into the south at 2,800, facing each other across the head of the
 Ninth Trench, with the Cantorate standing directly over the attending galleries at 3,000 —
-214 PC, the cycle after the concern's survey descended to the rim and the watch that stands on
+214 PC, the tide after the concern's survey descended to the rim and the watch that stands on
 it entered what the concern did there ([habitats.md](habitats.md) §6, *The Upper Terraces*;
 [world-map.md](world-map.md); [mission-prospect.md](mission-prospect.md) §5).
 
@@ -21,12 +21,12 @@ word (§1).
 **Premise, for the entry that offers it:** *A calling is put at the head of the Ninth, and it
 is answered by who crosses the water between the terraces. The Cantorate does not cross.*
 
-**This is one of the two missions in the bible that change the water under them.** The mid-match
+**This is one of the three missions in the bible that change the water under them**, and the one whose repaint makes ground worse. The mid-match
 repaint has been specified since [environments.md](environments.md) and built since #197 and #259,
-and [campaign.md](campaign.md) §10 has carried the sentence "no shipped mission changes a biome
+and [campaign.md](campaign.md) §10 carried the sentence "no shipped mission changes a biome
 yet — what brings a dome down, and in which mission, is authoring rather than plumbing"
-ever since. This is that authoring, and the other is the Commune's second furrow turning Kelp
-Forest ([mission-deep-furrow.md](mission-deep-furrow.md)); the two are opposites, a garden
+until this mission answered it. This is that authoring, and the other is the Commune's second furrow turning Kelp
+Forest ([mission-deep-furrow.md](mission-deep-furrow.md), sown again on the same ground in [mission-in-writing.md](mission-in-writing.md)); the two are opposites, a garden
 arriving and a building leaving. At 11:00 the galleries' two benches stop being cut structure and
 become trench — floor 2,900, biome Abyssal Trench, one beat per bench at one tick, and a hundred
 metres of rubble where the shadows were. Nobody orders it and nobody in the water is responsible
@@ -88,7 +88,7 @@ army the player does not have, and §5 authors it as what it actually is — a s
 six rows at 2,800 m — rather than as casualties or as a reinforcement timer.
 
 **Ossary was born at 3,100 m and sits at 2,800.** Three hundred metres above the water he came
-from, on the shallowest terrace in the city, and shallow is the insult
+from, on the Cantorate's terrace at the head of the Ninth, and shallow is the insult
 ([culture.md](culture.md) §3; [characters.md](characters.md)). He could ask to be seated lower
 and has not, because the Cantorate is seated where the Undermarshalcy can be answered. Every
 citizen reads that as obviously correct and no visitor does.
@@ -788,8 +788,8 @@ What exists against this document and what does not, continuing the list
 `MISSION_MAPS` in #393), and `missionConclaveAttending.test.ts` plays the twenty minutes out and
 asserts what they resolve to rather than what they were authored to be. The repaint is spent for
 the first time in that batch, here and in [mission-deep-furrow.md](mission-deep-furrow.md)'s
-second furrow, so the sentence [campaign.md](campaign.md) §10 has carried since #259 is now false
-and is owed an edit. The transcription found **one sentence of this document wrong** — §4's,
+second furrow, so the sentence [campaign.md](campaign.md) §10 carried since #259 was false,
+and §10 now says three shipped missions change a biome. The transcription found **one sentence of this document wrong** — §4's,
 about who can enter the cells, since corrected — and one figure in §3 read up the chart where an
 aura is read as a range; every other number here reproduced against the shipped model, the dome's
 fall and both arrivals' arithmetic included. What is left is a design agenda rather than a build:
@@ -801,7 +801,7 @@ no scene to key on — one carry between missions that it does ask for, and a mi
 | Requirement | Status |
 | --- | --- |
 | The mission format — beats, predicates, registry, private rooms | **Built** (#190), and spent entire (#396). `extract`, `survive`, `attend`, `quiet`, `creature`, `ground`, `silent`, `say` and `resolve` cover §8 and §9 with nothing left over, and `conditionalBeats` carries the one condition-fired line. Two fields the format grew alongside this literal stay empty here, and the test names both rather than leaving the emptiness to be inferred: no region and neither `ground` beat carries the `pressureBonus` #391 added, because nothing on this chart manufactures habitable water; and `escortRadiusM` is 0, with no `MissionHold` authored beside it, so the held-non-tender rule the same pull request added — a hull a `MissionHold` names is now held whether or not it is escorting anything, where before only a tender with a populated `lastEscorted` was — has nothing on this map to hold |
-| **The ground beat, with a biome** | **Built** (#197, #259) **and spent here** (#396) — one of the two literals that spend it, the other being [mission-deep-furrow.md](mission-deep-furrow.md)'s second furrow (#394). `MissionBeatEffect`'s `ground` row carries `floorM`, `ceilingM` and `biome`, `Terrain.fillGround` writes the biome and recomputes `pf` in the same pass so `pathPropagation` moves at the tick rather than at the next storm, and the cell changes go on the wire because terrain is public. Two beats at one tick, one per bench, because a mission region is a rectangle and the axis strip between them must not move (§11). Asserted against the terrain a running match is holding rather than against the beats that asked for it: at the close both benches read floor 2,900 and PF 1.6, and the strip between them still reads 3,400. **[campaign.md](campaign.md) §10's standing sentence — "no shipped mission changes a biome yet" — is now false, and that edit is what this row has been asking for since it was written** |
+| **The ground beat, with a biome** | **Built** (#197, #259) **and spent here** (#396) — one of the two literals that spend it, the other being [mission-deep-furrow.md](mission-deep-furrow.md)'s second furrow (#394). `MissionBeatEffect`'s `ground` row carries `floorM`, `ceilingM` and `biome`, `Terrain.fillGround` writes the biome and recomputes `pf` in the same pass so `pathPropagation` moves at the tick rather than at the next storm, and the cell changes go on the wire because terrain is public. Two beats at one tick, one per bench, because a mission region is a rectangle and the axis strip between them must not move (§11). Asserted against the terrain a running match is holding rather than against the beats that asked for it: at the close both benches read floor 2,900 and PF 1.6, and the strip between them still reads 3,400. **[campaign.md](campaign.md) §10's standing sentence — "no shipped mission changes a biome yet" — was false, and §10 has since made the edit this row asked for: three shipped missions change a biome** |
 | The axis strip's floor, left at 3,400 | **Built, a decision worth naming, and now measured.** The two ground beats name the benches and not the strip between them, because the strip is the Ninth's channel — the door the return comes through every cycle and the door the column leaves by at the close — and one event should do one thing. `fauna.ts` clamps a creature's wanted depth to the floor under it, so a beat that raised a floor under a driven line would move that line; this one raises nothing either arrival crosses. Played out, `floorAt(2500, 3400)` is still 3,400 m at 20:00 with both benches at 2,900, which is the assertion that fails the day somebody widens either rectangle into the tidy one |
 | **Ground refuses a driven creature** | **Built, a finding this document paid for, and now run rather than reasoned about.** `faunaSystem` moves every creature through `Terrain.resolveStep`, driven or not, and a step whose destination cell will not admit the mover's depth is simply not taken. Driven from the sill at 2,800 m a Sounder crosses the Cantorate's terrace and reaches the head of the crossing; driven at the 3,000 m the plan for this mission carried it stops at y 3,250, the terrace's northern face, and is never lifted, because ground does not lift a creature. **The transcription added the reason this row did not have: the stall is silent.** `resolveStep` retries a blocked step on the x axis first, and both lines run due north — so with `dx` zero the retry is a no-op that always admits, and a colossus that cannot enter the water ahead of it holds station for the rest of the mission with nothing logged and nothing thrown. Nothing is asked for: the engine is right and the line was wrong |
 | A creature driven at an authored depth | **Built** — `driveTo.depthM`, built for [Intake](mission-intake.md) §13's transit and held every pass. Both arrivals run at 2,800 m rather than at the species' 2,000, and the margin is one metre: `Terrain.admits` is inclusive of the floor, so 2,800 crosses the terrace and 2,801 is a wall |

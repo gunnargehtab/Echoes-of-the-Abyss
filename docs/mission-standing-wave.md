@@ -41,7 +41,7 @@ the way it names a person for the interval their name resolves to ([culture.md](
 
 **It is the only road.** Crystal territory ends where Directorate water begins
 ([world-map.md](world-map.md)), and between the two there is trench country on one side and
-three hundred kilometres of open slope on the other. The Fifth is four kilometres of covered
+the whole of the open east slope on the other. The Fifth is four kilometres of covered
 ground between them, and it is covered in the Order's sense rather than anybody else's: PF 0.70,
 scattered, bearings that lie ([environments.md](environments.md)). A column that wants to be
 somewhere without having been heard crossing to it uses the Fifth. Everyone has always used the
@@ -85,7 +85,7 @@ not exempt the player's own faction and a doctrine that only holds in the briefi
 the mission has quietly written out.
 
 **Chapter-Master Vrey is not in this mission.** He has the standing to call a conclave and he does
-not use it; that is §7 row 4, *Conclave*, and it is four missions away
+not use it; that is §7 row 4, *Conclave*, and it is two missions away
 ([characters.md](characters.md)). A mission 2 that put the Order's internal politics on the
 channel would spend mission 4's only material to decorate a works order. Vrey is told about the
 Fifth afterwards, off-screen, and the campaign is the poorer for nothing.
@@ -304,8 +304,8 @@ doctrine still works — §7 — and for the first time it works against somethi
 make it not work.
 
 Naming follows [culture.md](culture.md) §4. **Cohort-Prime Adze** carries one name, which the
-Directorate regards as an honour and everyone else finds chilling, and speaks three times, all
-three procedural. **Choirmaster Ivane Sull** speaks from the Ninth at the top, once at the pairing,
+Directorate regards as an honour and everyone else finds chilling, and speaks twice, both
+times procedural. **Choirmaster Ivane Sull** speaks from the Ninth at the top, once at the pairing,
 and at the close. Kalliso speaks once, to nobody, as she did in mission 1.
 
 ---

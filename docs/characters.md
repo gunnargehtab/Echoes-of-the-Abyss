@@ -124,7 +124,7 @@ The Commune's reluctant general — a farm-warden who became a soldier because t
 
 *Two survey hulls · Seeding campaign · no names, one voice*
 
-Not a commander and not a person: the pair of charting hulls that reads the Mouth's rim for what could live on it, and the one crew in the campaign every faction hears. They are the player's own at [the Second Seeding](mission-second-seeding.md), the concern's contact at [Prospect](mission-prospect.md), the cohorts' at [the First Arrival](mission-first-arrival.md), the Order's at [the Rim Deposits](mission-rim-deposits.md) and [the Second Chord](mission-second-chord.md) — the same line, verbatim, heard from four directions. They are entered here for that reason and no other: a voice is a thing this document has an entry for ([audio-direction.md](audio-direction.md) §13), and the pair needed one so that a player at the Second Seeding hears *their own pair* at 05:30 and not the plateaus in general.
+Not a commander and not a person: the pair of charting hulls that reads the Mouth's rim for what could live on it, and the one crew in the campaign every faction hears. They are the player's own at [the Second Seeding](mission-second-seeding.md), the concern's contact at [Prospect](mission-prospect.md), the cohorts' at [the First Arrival](mission-first-arrival.md), the Order's at [the Rim Deposits](mission-rim-deposits.md) and [the Second Chord](mission-second-chord.md) — the same crew heard from four directions, and the same line verbatim only where the Seeding's tide repeats the concern's. They are entered here for that reason and no other: a voice is a thing this document has an entry for ([audio-direction.md](audio-direction.md) §13), and the pair needed one so that a player at the Second Seeding hears *their own pair* at 05:30 and not the plateaus in general.
 
 **Voice:** the plateaus' breath at the register's own 52 Hz, as two swells — the second four per cent sharp and 40 ms behind. Two breathing together, not quite in step.
 
@@ -224,7 +224,7 @@ The Knights' conservative — a master crystal-wright who believes the Order's p
 
 ### Voice Ren Kalliso
 
-*Field-commander, Resonance Fields · b. 2,050 m · age 31*
+*Field-commander, Resonance Fields, of the Ninth Chapter-House · b. 2,050 m · age 31*
 
 The Order's best field officer and its most ordinary person — a soldier, not a mystic, who joined at nine because she was good at hearing and stayed because she was good at fighting. Kalliso's function in the story is to be the one who asks *what happens to the people who live here* while everyone else discusses cosmology.
 
@@ -287,7 +287,7 @@ The twelve above are commanders: each has a conviction, a cost and a line. The p
 ### Hadron Knights
 
 - **Chapter-wright Aldis Fenn** — b. 2,900 m, sixty-eight, one of the First's five surnames, forty years on the Chord and never out of the Fields. Speaks for the deepest house because somebody has to say the times aloud: he enters times and refuses to enter meanings. Heard in [The Three](mission-the-three.md).
-- **Chapter-wright Anselm Vrey** — b. 1,460 m, fifty-four, one of the Third's eleven Vreys and no relation the Chapter-Master can trace closer than four generations. Has tuned the Third's fourth outer formation for thirty years; sat the children's testing panel for twelve and can still name every child who did not pass. The face [habitats.md](habitats.md) §5 gives the chapter-houses, and the reason the Third has standing ([mission-conclave-chord.md](mission-conclave-chord.md)).
+- **Chapter-wright Anselm Vrey** — b. 1,460 m, fifty-four, one of the Third's eleven Vreys and no relation the Chapter-Master can trace closer than four generations. Has tuned the Third's fourth outer formation for thirty years; sat the children's testing panel for twelve and can still name every child who did not pass. The face [habitats.md](habitats.md) §5 gives the chapter-houses, and the reason the Third has standing ([habitats.md](habitats.md) §5, *The Conclave* — standing [mission-conclave-chord.md](mission-conclave-chord.md) spends without naming him).
 
 ### The nineteen of 211 PC
 

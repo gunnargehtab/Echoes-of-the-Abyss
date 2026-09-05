@@ -80,7 +80,7 @@ Depth Bands
 The Shallow Band
 
 - **A place, not a depth band.** The First Trench at 1,800 m — the Directorate's shallowest holding, and the posting the roughly eight per cent of each intake who cannot hold their band are reassigned to (habitats.md §6; factions.md, "shallow-band labour"). It is the setting of mission-trench-awakening.md and the name of that mission's map.
-- It is *shallow* only relative to the Directorate, whose cities stand at 2,750–4,000 m. In the ruleset's own terms 1,800 m is the first metre of the **Abyssal** band, not the Shelf.
+- It is *shallow* only relative to the Directorate, whose city stands at 2,750–3,400 m and whose trench runs deeper. In the ruleset's own terms 1,800 m is the first metre of the **Abyssal** band, not the Shelf.
 - Deliberately distinct from two neighbours it is easy to hear as the same word. **Shelf** is the 0–400 m depth band (see Depth Bands). The **Directorate's shallow-water penalty** is their physiology above 400 m and theirs alone — −20% speed and −15% HP — which is the subject of mission-shallow.md, one mission earlier in the same campaign and four hundred metres from the surface rather than eighteen hundred below it.
 - So: a Directorate hull is never penalised for being in the shallow band, and is always penalised for being in shallow water. The two are unrelated, and the campaign uses both within two missions of each other.
 
@@ -272,11 +272,12 @@ Offices and Titles
 - **Bloomwright** (Commune) — the office of a programme lead on the plateaus. Sefa Anholt is the Deepbloom Bloomwright; Idris Kell is Kell Plateau's (mission-thin-water.md §5).
 - **Executor** (Consortium) — the title carried by a member of the Ninth Board. Odile Varr-Kest is an Executor and chairs the Board; the two are not the same fact.
 - **Undermarshal** (Directorate) — the head of the Undermarshalcy. Setha Korrin holds it.
-- **Cohort-Prime** (Directorate) — the field commander of a trench cohort. Adze commands the 9th Trench Cohort, the deepest standing formation in the Rift.
+- **Cohort-Prime** (Directorate) — the field commander of a trench cohort. Adze commands the 9th Trench Cohort, the deepest standing formation in the Rift. The office also names the commander of a formation that is not a trench cohort — an intake year's, a rendering row's (mission-intake.md §12; mission-trench-awakening.md §12).
 - **Choirmaster** (Knights) — the coordinator of the nine chapter-houses. Ivane Sull holds it, and the Order's centre moved to her house with her.
 - **Chapter-Master** (Knights) — the head of one chapter-house. Halden Vrey holds the Third.
 - **Arbiter** (Sorrowgate) — the presiding officer of the Arbitration Court, and the only title here belonging to no faction. Mosk Halloran holds it.
-- Knight and court usage puts the title before the name and keeps it there; a Knight is *Choirmaster Sull* in the third sentence as well as the first.
+- Knight and court usage puts the title before the name and keeps it there; a Knight is *Choirmaster Sull* in the third sentence as well as the first. The one exception the campaign writes is between the two offices at the top: Choirmaster Sull says *Halden* of Chapter-Master Vrey, in her own voice, about him and never to him (mission-standing-wave.md §12; mission-second-chord.md §12) — a given name between equals, and heard by the Order as exactly that.
+- **Voice** (Knights) — a chapter's field-commander: the officer who leads its hulls in the water and speaks the count for them. Ren Kalliso holds the Ninth's (characters.md; mission-nineteen.md §5).
 - The campaign's offices, held by the secondary cast (characters.md):
   - **Lift Foreman** (Consortium) — the foreman of a field's lift crews: the compressor barges, the loads they carry and the schedule they carry them on. Dessa Vail holds Ninefold's.
   - **Corridor Warden** (Consortium) — the officer who walks a posted closure on the grid: an escort, a book, and the authority to ask a bearing for an asset number. Anse Rell holds the Kell Shoulder's.
@@ -310,7 +311,7 @@ Conclave
 Works Order
 
 - The Consortium's instrument of authorisation: the paper under which a shift works ground — cuts, cores, lifts, harvests, runs a face and reports its number. A works order is why a mission happens; the beats are when (mission-shift-change.md §12; mission-thin-water.md §9). It belongs in the concern's vocabulary beside *write-down* and *tolerance* (culture.md §3), and in eleven mission documents it is the first thing read on a channel.
-- A **writ** is narrower — a recovery writ, a relief writ, a survey's charter — and a mission map under a writ authors no resources, because a writ does something *to* ground without opening it. *A charter, not a works order* is a sentence a Consortium officer says and means (mission-asset-recovery.md §11; mission-baffle.md §11; mission-exposure.md §11; mission-prospect.md §1).
+- A **writ** is narrower — a recovery writ, a relief writ, a survey's charter — and a mission map under a writ authors no resources, because a writ does something *to* ground without opening it. *A charter, not a works order* is a sentence a Consortium officer says and means (mission-asset-recovery.md §11; mission-baffle.md §11; mission-exposure.md §11; mission-prospect.md §3).
 - The Order borrows the word when the Ninth is speaking like the concern — the works order for the Fifth, and the Order's last works order at the rim (mission-standing-wave.md §2; mission-second-chord.md §12) — and the borrowing is audible. It is the campaign's oldest register, and a Knight using it is being exact rather than courteous.
 
 The Committal

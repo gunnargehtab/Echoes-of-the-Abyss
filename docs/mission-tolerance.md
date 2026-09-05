@@ -129,7 +129,7 @@ does not price noise today. It prices seconds.
 
 Naming follows [culture.md](culture.md): **Underworks Warden Cass Ohlen** holds the root — a
 third-generation castings engineer whose entire function in the mission is to state the
-arithmetic once and decline, twice, to weigh it. Executor Odile Varr-Kest speaks three times
+arithmetic once and decline, three times, to weigh it. Executor Odile Varr-Kest speaks three times
 and orders nothing.
 
 ---

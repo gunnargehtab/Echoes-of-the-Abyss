@@ -178,7 +178,7 @@ the circulation, the way a Commune farmer reads kelp lanes ([world-map.md](world
 hum is not noise. It is the sound of the air being on, and a sector that goes quiet is a sector
 that has been sealed.
 
-**The hush.** The array floor, below Board country, where the registry's open arrays stand — the
+**The hush.** The array floor, at 1,250 m at the bottom of Board country and above the Underway, where the registry's open arrays stand — the
 listening instruments the concern keeps for the Board's own ears
 ([mission-item-nine.md](mission-item-nine.md)). The workplace regulation the Consortium made of
 silence ([culture.md](culture.md) §1) is absolute there, and a grid-walker sent down to the
@@ -189,12 +189,15 @@ condensate control where its standing is, and a Board member's vault is the drie
 Rift. At the top, in the cheap sectors, the walls run. *Married dry* is a Consortium phrase first
 ([culture.md](culture.md) §1), and in the Holding it has a floor number.
 
-**Three places the city is built around.**
+**Four places the city is built around.**
 
 - **Sector Kell**, at 350 m — the top of the city, the cheap berths, the debt-berth families,
   and the sector Varr-Kest flooded in 197 PC to save the rest: 1,900 dead, still on the registry,
   sealed and unlit ([world-map.md](world-map.md)). The concern does not strike assets. Sectors
   either side of it have been re-pressurised twice since, and their walls still run.
+- **Sector Vayle**, at 1,050 m — eleven hundred berths behind a bulkhead frame that stands where
+  a cascade from the root reaches the city, and the section the Ledger weighs against the
+  Underworks in 214 PC ([mission-tolerance.md](mission-tolerance.md) §1).
 - **The Underworks**, beneath everything — the Surface Age vent works the city was roofed onto,
   galleries and castings poured before year 0, which the engineers call the root: roofed water,
   admitted only between 1,900 and 2,100 m, reached through one open shaft and priced in crush for
@@ -207,12 +210,12 @@ Rift. At the top, in the cheap sectors, the walls run. *Married dry* is a Consor
   nobody hears more than anyone else ([mission-item-nine.md](mission-item-nine.md) §1).
 
 **The workings.** The Holding is where the Consortium sleeps; the vent fields are where it lives.
-Ninefold Vein's faces work below the layer at 900–1,400 m, its rail head stands above it at
+Ninefold Vein's faces straddle the layer at 900–1,400 m, its rail head stands above it at
 Fivewell, and a crew moves between the two by barge — three watches to a face, seventy-one
 berths across the three barges that carry them, transferred *at grade* if the face is producing
 and reverted to pool rate if it has closed ([mission-shift-change.md](mission-shift-change.md) §1). A face has a muster hall, a
 registry office and a refuge chamber, and the refuge chamber is the only room on the Vein with a
-door that closes from the inside ([mission-asset-recovery.md](mission-asset-recovery.md)).
+door that closes from the inside (the refuge chamber is [mission-asset-recovery.md](mission-asset-recovery.md)'s, the registry office is the rail head's in [mission-shift-change.md](mission-shift-change.md) §11, and the rest is this document's).
 
 **What it costs.** Roughly 40% of the Rift lives in Consortium debt-berth
 ([factions.md](factions.md)), and a debt-berth berth is exactly what it sounds like: housing,
@@ -326,8 +329,9 @@ so that the crystal can be heard settling.
   tuning party of six hulls once a year, and *"Enter it, and go and be dry"* as the whole
   hospitality the Order offers ([mission-aptitude.md](mission-aptitude.md)).
 - **The Ninth**, 1,900 m — the youngest and now the first: Choirmaster Sull's house and the
-  Order's centre since her elevation, with thirty-six years of sealed transcripts in it that
-  she has shown nobody ([characters.md](characters.md)).
+  Order's centre since her elevation; the thirty-six years of sealed transcripts she has shown
+  nobody are not here but at the First, where she goes down to read them alone
+  ([characters.md](characters.md); *The First*, below).
 - **The First**, 2,900 m — the deepest, where the Fields break toward the trenches, where the
   First Chord was raised in 178 PC and aimed down the trench axis into the Mouth. The Chord
   still stands; so do its three surviving technicians, who have not spoken since the reply and
@@ -418,7 +422,8 @@ it is kept.
 
 **The sealed room.** Thirty-six years of writing in three hands: more paper than is held anywhere
 else in the Rift, sealed a case at a season by the house's own wrights, dated, and stacked in a
-cut dry room off the hospice. The Choirmaster reads there alone ([factions.md](factions.md)), and
+cut dry room off the chord's east end, the hospice off its west and the hall between
+([mission-the-three.md](mission-the-three.md) §11). The Choirmaster reads there alone ([factions.md](factions.md)), and
 Ivane Sull was one of the apprentices in the room in 178 PC, so she has been going back to a
 place she was already in ([characters.md](characters.md)). What the three write is described here
 by its volume, its cases and its room, and it is not read out — not in this document, not in a
@@ -480,7 +485,7 @@ visitors find genuinely shocking.
   is below; the year is above it, at the top of the water it will spend its life in.
 - **The shallow band**, the First Trench at 1,800 m — the Directorate's shallowest holding,
   where the 8% of each intake who cannot hold their band are reassigned to labour
-  ([factions.md](factions.md); [mission-exposure.md](mission-exposure.md)). Nobody dies. It is
+  ([factions.md](factions.md); [mission-trench-awakening.md](mission-trench-awakening.md)). Nobody dies. It is
   a posting, and it is the one posting in the Directorate that resembles the debt-berth they
   despise, and Korrin visits.
 
@@ -574,7 +579,7 @@ A mission set inside a city is authored in the same grammar as one set in open w
 | **A habitat's hush is a silence order.** Where a city keeps its quiet, a mission holds the player to a SIG ceiling and writes the debt down — SIG 25 at the galleries, struck hardpoints at the court. The Directorate's is written; the court's is enforced; the others are courtesy, and a mission on a plateau or in the Holding should price them as such | [mission-attendance.md](mission-attendance.md) §3; [mission-sorrowgate.md](mission-sorrowgate.md) §3 |
 | **A city has a sound before it has a skyline.** The Holding is heard four minutes before it is reached; Sufficiency is heard as the hush deepening; a plateau is the turn-of-tide bell; a chapter-house is a chord. The ambient bed is the establishing shot | [audio-direction.md](audio-direction.md); [world-map.md](world-map.md) |
 | **Neutral ground is ruined ground.** The places factions share are the places none of them built. A habitat is never neutral; a mission that needs all four parties in one room needs Sorrowgate | [world-map.md](world-map.md) §6 |
-| **A dome that comes down is one event at one tick.** A mission beat may repaint a region's biome and collapse its geometry in the same breath — specified, built, and spent by two shipped missions: `attending-conclave` brings a dome down into Abyssal Trench, and `seeding-deep-furrow` turns a sown furrow to Kelp Forest, the one repaint in the bible that makes ground better. It is the only way a habitat is allowed to change during play | [environments.md](environments.md), *Coral Ruins*; [mission-conclave-attending.md](mission-conclave-attending.md) §13; [mission-deep-furrow.md](mission-deep-furrow.md) §13 |
+| **A dome that comes down is one event at one tick.** A mission beat may repaint a region's biome and collapse its geometry in the same breath — specified, built, and spent by three shipped missions: `attending-conclave` brings a dome down into Abyssal Trench, and `seeding-deep-furrow` and `seeding-in-writing` turn a sown furrow to Kelp Forest, the one repaint in the bible that makes ground better. It is the only way a habitat is allowed to change during play | [environments.md](environments.md), *Coral Ruins*; [mission-conclave-attending.md](mission-conclave-attending.md) §13; [mission-deep-furrow.md](mission-deep-furrow.md) §13 |
 
 ---
 
@@ -597,6 +602,7 @@ room. Missions not listed are fought in open water or on ground the gazetteer ow
 | Attending 1 — [Attendance](mission-attendance.md) | The attending galleries and the Cantorate's dome (§6) |
 | Attending 2 — [Intake](mission-intake.md) | The cohort halls on the banding ground, above the city (§6) |
 | Attending 3 — [The Dome](mission-the-dome.md) | The 4th Trench Cohort's freight galleries at the Fourth's foot, cut into the fan's east wall at 2,900 m — Mara Tessen's water, and the only interior on a map that is otherwise trench and open ground (§6) |
+| Attending 5 — [Trench Awakening](mission-trench-awakening.md) | The shallow band's rendering row, cut into the First Trench's north wall at 1,850 m — the plant, the dome and the grower — and the stalls of the reassigned at 1,900 (§6) |
 | Attending 6 — [Conclave](mission-conclave-attending.md) | Sufficiency's upper terraces: the Undermarshalcy and the Cantorate facing across the head of the Ninth, where a calling is answered by who crosses and the Cantorate does not (§6, *The Upper Terraces*) |
 | Chord 1 — [Aptitude](mission-aptitude.md) | The Third and its six outer formations (§5) |
 | Chord 4 — [Conclave](mission-conclave-chord.md) | No room, and nine at once: a conclave is struck in each house's chord and carried by the lattice, and Vrey — who has the standing, because the Third is in tune — is heard not calling one (§5, *The Conclave*) |

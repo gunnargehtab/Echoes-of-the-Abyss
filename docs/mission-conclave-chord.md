@@ -74,8 +74,8 @@ standing, and it passes at its own time whether or not anybody is alive to be qu
 
 ## 2. Whose Hulls the Player Commands
 
-**The player commands the same six hulls under Voice Ren Kalliso that tuned this lattice a year
-ago, put back on the same ground for the opposite reason.**
+**The player commands the same six hulls under Voice Ren Kalliso that tuned this lattice this
+year, put back on the same ground for the opposite reason.**
 
 Kalliso is thirty-one, the Order's best field officer and its most ordinary person
 ([characters.md](characters.md)). Six tides ago she read nineteen names over a trench floor she
@@ -628,7 +628,7 @@ Underneath, what the mission is actually for: **an omission with a mechanism und
 standing and will not use it, and the player is what that decision looks like from outside — six
 hulls at six points, under a ceiling, with the one loud thing they own left alone. A refusal is
 usually a line of dialogue; this one has an objective table, a keystone, and a way to fail it by
-being helpful. And it is played on ground the player has already worked: a year ago this lattice was
+being helpful. And it is played on ground the player has already worked: a season ago this lattice was
 an examination, this tide it is the Third's vote, and it can be lost to nine and a half seconds of
 somebody else's works order. **Standing is maintenance** ([habitats.md](habitats.md) §5), and the
 campaign has now shown both halves of that sentence.
@@ -736,7 +736,7 @@ condescension.
 > discussion. Torpedoes are struck for the interval — nothing is launched on the tide of one — and
 > nothing is raised, either.
 >
-> Six of you. Six voices. I said that to a party on this ground a year ago and the two numbers were
+> Six of you. Six voices. I said that to a party on this ground a season ago and the two numbers were
 > a courtesy to each other; today they are one number, because a hull you lose out there is a voice
 > the Third cannot stand at fourteen. I will be in the chord. You will not hear me there, which is
 > the point of a chord. Stand the voices.

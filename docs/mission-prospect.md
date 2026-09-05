@@ -204,7 +204,7 @@ this one does.
 
 | Result | Condition | The reading |
 | --- | --- | --- |
-| **The field is proven** | Four faces read, and the column off the rim | "The field is proven. Four faces read to survey standard, the cores of the readings in duplicate, the column returned. The registry opens the page it has kept blank for eleven years, and the projection acquires a floor. Item Nine acquires an appendix." |
+| **The field is proven** | Four faces read, and the column off the rim | "The field is proven. Four faces read to survey standard, the cores of the readings in duplicate, the column returned. The registry opens the page it has kept blank for five years, and the projection acquires a floor. Item Nine acquires an appendix." |
 | **The survey returns short** | The column off the rim, under four faces | "The survey returns short of standard. What was read is real and insufficient; the Board is asked to authorise a second descent, and the actuarial note attached to the request is one sentence long." |
 | **The rim keeps the survey** | The column does not come off | "The rim keeps the survey. The registry enters four hulls and their certificates against a field it can now neither prove nor forget, and the projection continues, minus everything, as projections do." |
 

@@ -5,7 +5,7 @@
  * owns the forces, the water, the beats, the numbers and the text, and where
  * this file and that document disagree one of them is wrong and the fix says
  * which. It is the second mission to resolve `outer-formations`, which is §11's
- * argument rather than a saving — the lattice Aptitude tuned a year ago *is*
+ * argument rather than a saving — the lattice Aptitude tuned a season ago *is*
  * the standing Vrey has, and a second map would be a second Third.
  *
  * **The mission is a refusal with an objective table under it**, and four
@@ -376,7 +376,7 @@ export const CHORD_CONCLAVE: MissionDefinition = {
     {
       slot: PLAYER,
       faction: Faction.Hadron,
-      note: "The Third's party — the same six hulls under Voice Ren Kalliso that tuned this lattice a year ago, put back on the same ground for the opposite reason (§2, §3), and the six formations they are here not to call",
+      note: "The Third's party — the same six hulls under Voice Ren Kalliso that tuned this lattice a season ago, put back on the same ground for the opposite reason (§2, §3), and the six formations they are here not to call",
       units: [
         /**
          * Kalliso's hull, the party's ears, and the hull the six tones are
