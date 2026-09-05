@@ -61,6 +61,152 @@ export function voiceOf(faction: Faction): MissionVoice {
 }
 
 /**
+ * Who is speaking — docs/audio-direction.md §13's cast, keyed on
+ * docs/characters.md: the twelve commanders, the one neutral with an entry,
+ * the one crew the campaign hears from all four sides, and a chorus per
+ * register for everyone else.
+ *
+ * A separate key from `MissionVoice` because the register is a fact about
+ * *how* a line is spoken and this is a fact about *who*, and the mix needs
+ * both: the hail is the register's material, and the signature inside it is
+ * the speaker's. It is also deliberately not the free-text `speaker` string,
+ * which is per line and descriptive ("Choirmaster Ivane Sull, at the close")
+ * and belongs to the log; nothing on the wire identified a speaker stably
+ * before this, so Vrey and Sull shared the Order's note.
+ *
+ * The choruses are named by each register's *other* word for itself
+ * (docs/culture.md §3) so they cannot be mistaken for the register keys: the
+ * concern is *the grid*, the plateaus *the bloom*, the cohorts *those
+ * below*, the Order *the chapter*, the court *the record*. A chorus is the
+ * plain hail exactly as #381 built it. The rule for who is not a chorus is
+ * an entry in characters.md, stated there, so the next name a literal adds
+ * does not quietly acquire a voice.
+ */
+export type MissionSpeaker =
+  // The Consortium's three.
+  | 'varr-kest'
+  | 'osk'
+  | 'tull'
+  // The Commune's three, and the charting pair — the player's own at the
+  // Second Seeding, everybody else's contact at Prospect, the First Arrival,
+  // the Rim Deposits and the Second Chord.
+  | 'marr'
+  | 'anholt'
+  | 'teel'
+  | 'charting-pair'
+  // The Directorate's three.
+  | 'korrin'
+  | 'ossary'
+  | 'adze'
+  // The Order's three.
+  | 'sull'
+  | 'vrey'
+  | 'kalliso'
+  // The court's one.
+  | 'halloran'
+  // The choruses, one per register.
+  | 'the-grid'
+  | 'the-bloom'
+  | 'those-below'
+  | 'the-chapter'
+  | 'the-record';
+
+/** The chorus each register falls back to — the plain hail. */
+export function chorusOf(voice: MissionVoice): MissionSpeaker {
+  switch (voice) {
+    case 'concern':
+      return 'the-grid';
+    case 'plateaus':
+      return 'the-bloom';
+    case 'cohorts':
+      return 'those-below';
+    case 'order':
+      return 'the-chapter';
+    case 'court':
+      return 'the-record';
+  }
+}
+
+/**
+ * The register every speaker belongs to. A speaker has exactly one — a
+ * signature is built inside its register's material and cannot leave it
+ * (docs/audio-direction.md §13) — which is what lets `missions.test.ts` hold
+ * a resolved line's `voice` and `speakerId` to each other.
+ */
+export function registerOf(speaker: MissionSpeaker): MissionVoice {
+  switch (speaker) {
+    case 'varr-kest':
+    case 'osk':
+    case 'tull':
+    case 'the-grid':
+      return 'concern';
+    case 'marr':
+    case 'anholt':
+    case 'teel':
+    case 'charting-pair':
+    case 'the-bloom':
+      return 'plateaus';
+    case 'korrin':
+    case 'ossary':
+    case 'adze':
+    case 'those-below':
+      return 'cohorts';
+    case 'sull':
+    case 'vrey':
+    case 'kalliso':
+    case 'the-chapter':
+      return 'order';
+    case 'halloran':
+    case 'the-record':
+      return 'court';
+  }
+}
+
+/**
+ * How a speaker string names one of the cast. Given name and surname
+ * together — never the surname alone — because the literals carry an
+ * *Ottilie Marr, on the sower* who is not the Tidespeaker and a *Cohort-Prime
+ * of the row* who is not Adze; Adze has no surname and is matched on the rank
+ * that is only ever theirs. Ordered, and the first match wins, though no two
+ * entries can match one string.
+ */
+const CAST_NAMES: ReadonlyArray<readonly [string, MissionSpeaker]> = [
+  ['Odile Varr-Kest', 'varr-kest'],
+  ['Corwin Osk', 'osk'],
+  ['Baen Tull', 'tull'],
+  ['Ysolde Marr', 'marr'],
+  ['Sefa Anholt', 'anholt'],
+  ['Juno Teel', 'teel'],
+  ['The charting pair', 'charting-pair'],
+  ['Setha Korrin', 'korrin'],
+  ['Vehl Ossary', 'ossary'],
+  ['Cohort-Prime Adze', 'adze'],
+  ['Ivane Sull', 'sull'],
+  ['Halden Vrey', 'vrey'],
+  ['Ren Kalliso', 'kalliso'],
+  ['Mosk Halloran', 'halloran'],
+];
+
+/**
+ * Resolve a `say` beat's speaker string to the cast, or to the register's
+ * chorus. Run on the server, so the client receives the answer and infers
+ * nothing (docs/audio-direction.md §13, "The speaker key"); a beat that
+ * authors its own `speakerId` bypasses this.
+ *
+ * A name found in the string but belonging to another register is not a
+ * match: the string is descriptive, and "Lift Foreman Dessa Vail, on the
+ * concern's open channel" must not become the concern's foreman because a
+ * line mentions the concern. The register decides which chorus; the name
+ * decides which member of it.
+ */
+export function speakerOf(speaker: string, voice: MissionVoice): MissionSpeaker {
+  for (const [name, id] of CAST_NAMES) {
+    if (speaker.includes(name) && registerOf(id) === voice) return id;
+  }
+  return chorusOf(voice);
+}
+
+/**
  * One alternate briefing, and the scene whose having-been-witnessed selects it
  * — docs/campaign.md §1: a scene you have already seen from the other side
  * changes the **briefing text** and never the mission.

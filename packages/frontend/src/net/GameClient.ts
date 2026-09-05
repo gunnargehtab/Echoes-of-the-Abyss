@@ -20,6 +20,7 @@ import {
   type MatchListingMetadata,
   type MissionResultPayload,
   type MissionView,
+  type MissionSpeaker,
   type MissionVoice,
   type ResourceNodeInfo,
   type StructureKind,
@@ -120,6 +121,12 @@ export interface MissionLine {
    * authored line, so it discloses nothing the log row did not.
    */
   voice: MissionVoice;
+  /**
+   * Who — the cast of docs/audio-direction.md §13, resolved server-side from
+   * the speaker string. The mix signs the hail with it; the log reads the
+   * string. Same provenance as `voice`, same disclosure: none.
+   */
+  speakerId: MissionSpeaker;
 }
 
 export interface GameClientHandlers {

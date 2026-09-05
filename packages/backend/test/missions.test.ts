@@ -36,7 +36,11 @@ import {
   requiredPressureRating,
   statsFor,
   structureStatsFor,
+  chorusOf,
+  registerOf,
+  speakerOf,
   voiceOf,
+  type MissionSpeaker,
   type MissionVoice,
 } from '@echoes/shared';
 import { missionMapById, terrainFor } from '../src/sim/maps/index.ts';
@@ -1280,6 +1284,159 @@ describe('the register a line is spoken in', () => {
         );
       }
     }
+  });
+});
+
+describe('who is speaking', () => {
+  /** docs/audio-direction.md §13's cast, spelled out so a twentieth cannot drift in unnamed. */
+  const SPEAKERS: ReadonlySet<MissionSpeaker> = new Set<MissionSpeaker>([
+    'varr-kest',
+    'osk',
+    'tull',
+    'marr',
+    'anholt',
+    'teel',
+    'charting-pair',
+    'korrin',
+    'ossary',
+    'adze',
+    'sull',
+    'vrey',
+    'kalliso',
+    'halloran',
+    'the-grid',
+    'the-bloom',
+    'those-below',
+    'the-chapter',
+    'the-record',
+  ]);
+
+  /** Every line as the runtime would resolve it, without playing the mission. */
+  function resolved(mission: MissionDefinition) {
+    const own = voiceOf(mission.playerFaction);
+    const lines: Array<{ speaker: string; voice: MissionVoice; speakerId: MissionSpeaker }> = [];
+    for (const beat of [...mission.beats, ...(mission.conditionalBeats ?? [])]) {
+      if (beat.kind !== 'say') continue;
+      const voice = beat.voice ?? own;
+      lines.push({
+        speaker: beat.speaker,
+        voice,
+        speakerId: beat.speakerId ?? speakerOf(beat.speaker, voice),
+      });
+    }
+    const line = mission.commanderAbility?.line;
+    if (line !== undefined) {
+      const voice = line.voice ?? own;
+      lines.push({
+        speaker: line.speaker,
+        voice,
+        speakerId: line.speakerId ?? speakerOf(line.speaker, voice),
+      });
+    }
+    return lines;
+  }
+
+  it('is one of the cast, in its own register, on every line in every mission', () => {
+    // The mirror of the register test above: a typo in an authored
+    // `speakerId` fails type-check, so what this holds is the resolution —
+    // that the runtime's default lands in the union for every speaker string
+    // the literals carry, and that the speaker and the register never
+    // disagree, because a signature is built inside its register's material
+    // and a line signed in another's would fail docs/culture.md §6's test.
+    for (const mission of MISSIONS) {
+      for (const line of resolved(mission)) {
+        assert.ok(SPEAKERS.has(line.speakerId), `${mission.id}: "${line.speaker}" is nobody`);
+        assert.equal(
+          registerOf(line.speakerId),
+          line.voice,
+          `${mission.id}: "${line.speaker}" is signed in another register`
+        );
+      }
+    }
+  });
+
+  it('names the twelve wherever their names are spoken, and nobody else', () => {
+    // docs/characters.md's rule: a voice is a thing that document has an
+    // entry for. The literals carry names that are near misses on purpose —
+    // Ottilie Marr on the sower is not the Tidespeaker, the Cohort-Prime of
+    // the row is not Adze — and a surname match would hand each a voice.
+    const named = new Map<string, MissionSpeaker>();
+    for (const mission of MISSIONS) {
+      for (const line of resolved(mission)) {
+        if (line.speakerId === chorusOf(line.voice)) continue;
+        const before = named.get(line.speaker);
+        if (before !== undefined) assert.equal(before, line.speakerId, line.speaker);
+        named.set(line.speaker, line.speakerId);
+      }
+    }
+    assert.equal(speakerOf('Ottilie Marr, on the sower', 'plateaus'), 'the-bloom');
+    assert.equal(speakerOf('The Cohort-Prime of the row', 'cohorts'), 'those-below');
+    assert.equal(
+      speakerOf('Cohort-Prime of Intake 11, on the halls’ channel', 'cohorts'),
+      'those-below'
+    );
+    assert.equal(speakerOf('Cohort-Prime Adze, 9th Trench Cohort', 'cohorts'), 'adze');
+    assert.equal(speakerOf('Choirmaster Ivane Sull, at the Collapse', 'order'), 'sull');
+    // A name in the wrong register is the string mentioning somebody, not
+    // them speaking: the register decides which chorus, the name which member.
+    assert.equal(speakerOf('Executor Odile Varr-Kest', 'order'), 'the-chapter');
+    // The cast that is actually spent: every commander but Halloran speaks
+    // somewhere, and the pair is heard.
+    const spent = new Set(named.values());
+    for (const speaker of SPEAKERS) {
+      if (speaker === 'halloran' || speaker === chorusOf(registerOf(speaker))) continue;
+      assert.ok(spent.has(speaker), `${speaker} has a voice and no line`);
+    }
+    assert.ok(!spent.has('halloran'), 'Halloran speaks in the briefing, which is not a beat');
+  });
+
+  it('is authored only where the string does not say', () => {
+    // The `speakerId` field's own rule: a value equal to what the string
+    // resolves to is a redundancy that would hide the one case the field
+    // exists for. No literal needs it yet, and this is where the first one
+    // that does gets argued for.
+    for (const mission of MISSIONS) {
+      for (const beat of [...mission.beats, ...(mission.conditionalBeats ?? [])]) {
+        if (beat.kind !== 'say' || beat.speakerId === undefined) continue;
+        const voice = beat.voice ?? voiceOf(mission.playerFaction);
+        assert.notEqual(
+          beat.speakerId,
+          speakerOf(beat.speaker, voice),
+          `${mission.id}: "${beat.speaker}" authors the speaker its string already names`
+        );
+      }
+    }
+  });
+
+  it('signs the three debts the mission documents named', () => {
+    // docs/audio-direction.md §13, "The three debts, paid first": the chair's
+    // transmission (Item Nine, conditional), Varr-Kest's two conditional
+    // lines (Tolerance), and the pair's 05:30 at the Second Seeding as the
+    // player's own — the same voice the concern hears at Prospect.
+    const byId = new Map(MISSIONS.map((mission) => [mission.id, mission] as const));
+    const lines = (id: string) => {
+      const mission = byId.get(id);
+      assert.ok(mission, id);
+      return resolved(mission);
+    };
+    const chair = lines('ledger-item-nine').filter((line) => line.speakerId === 'varr-kest');
+    assert.equal(chair.length, 2, 'the chair speaks twice at Item Nine, once conditionally');
+    assert.ok(chair.some((line) => line.speaker === 'Executor Odile Varr-Kest'));
+    const tolerance = lines('ledger-tolerance').filter((line) => line.speakerId === 'varr-kest');
+    assert.equal(tolerance.length, 3, 'the opening, and the two Entered.');
+    const seeding = lines('seeding-second-seeding').filter(
+      (line) => line.speakerId === 'charting-pair'
+    );
+    assert.equal(seeding.length, 6);
+    const prospect = lines('ledger-prospect').filter((line) => line.speakerId === 'charting-pair');
+    assert.equal(prospect.length, 1, "heard once from the concern's side");
+    assert.equal(prospect[0]!.voice, 'plateaus', 'and in the plateaus, not the concern');
+    // Second Chord's Collapse line, which matched the chair's debt.
+    const collapse = lines('chord-second-chord').filter(
+      (line) => line.speaker === 'Choirmaster Ivane Sull, at the Collapse'
+    );
+    assert.equal(collapse.length, 1);
+    assert.equal(collapse[0]!.speakerId, 'sull');
   });
 });
 

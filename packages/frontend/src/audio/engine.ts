@@ -40,7 +40,7 @@
  *    applies to those banks and not to the prototype.
  */
 
-import { SIM, type EchoMarkKind, type MissionVoice } from '@echoes/shared';
+import { SIM, type EchoMarkKind, type MissionSpeaker, type MissionVoice } from '@echoes/shared';
 import { ContactMixer, type ContactAudioFrame, type Spatialisation } from './contactMixer.ts';
 import { ContactVoice, ensureNoiseBuffer } from './contactVoice.ts';
 import { MarkBed } from './markBed.ts';
@@ -93,11 +93,13 @@ export type TrimBus = 'music' | 'world' | 'contact' | 'speech' | 'self' | 'ui';
 
 /**
  * One authored line, reduced to what the mix needs — docs/audio-direction.md
- * §13. The register picks the hail; the text's length is the bed's duration
- * and nothing else about the text is read. The words are the log's.
+ * §13. The register picks the hail's material and the speaker signs it; the
+ * text's length is the bed's duration and nothing else about the text is
+ * read. The words are the log's.
  */
 export interface SpeechLine {
   voice: MissionVoice;
+  speakerId: MissionSpeaker;
   text: string;
 }
 
@@ -437,7 +439,7 @@ export class AudioEngine {
       const now = this.context.currentTime;
       for (const line of this.pendingSpeech) {
         const readingS = readingSeconds(line.text, line.whisper);
-        const occupied = playHail(this.context, buses.speech, line.voice, now, {
+        const occupied = playHail(this.context, buses.speech, line, now, {
           whisper: line.whisper,
           readingS,
         });
@@ -527,7 +529,12 @@ export class AudioEngine {
    * to it.
    */
   say(line: SpeechLine, whisper: boolean): void {
-    this.pendingSpeech.push({ voice: line.voice, text: line.text, whisper });
+    this.pendingSpeech.push({
+      voice: line.voice,
+      speakerId: line.speakerId,
+      text: line.text,
+      whisper,
+    });
   }
 
   /** How many lines this session has hailed. */
