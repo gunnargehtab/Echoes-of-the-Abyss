@@ -8,15 +8,17 @@
  * Two tests below defend the issue #149 change that made `MAX_UNIT_RADIUS_M`
  * derive itself from `UNIT_STATS` instead of being written down beside it, and
  * they defend it from opposite sides. The source-shape test is the only one
- * that fails against the pre-fix code. The 65 m value pin does not — it passes
+ * that fails against the pre-fix code. The value pin does not — it passes
  * either way — and is there for the other direction: a derivation that reads
  * the wrong field would still be self-consistent, and would still be wrong.
  * That change was
  * value-preserving — the old `130 / 2` and the new `Math.max(…) / 2` both
- * evaluate to exactly 65, because the Cruiser was the longest hull before and
- * still is — so no comparison of runtime values can tell the two versions
+ * evaluated to exactly 65, because the Cruiser was the longest hull before and
+ * after it — so no comparison of runtime values could tell the two versions
  * apart. Only the source can, which is why one test here does something as
- * unusual as reading it.
+ * unusual as reading it. (The pin has since moved to 75: the rung's roster
+ * added a longer hull, #461, and the derivation followed it, which is the
+ * whole point of the derivation.)
  *
  * Everything under `roster invariants` is not a regression test. Those
  * assertions held before #149 and hold after it, and most are identities under
@@ -33,9 +35,13 @@ import {
   DIRECTIONAL_COMPASS_AVERAGE,
   DIRECTIONAL_SIGNATURE,
   Faction,
+  HULL_EFFECTS,
   MAX_UNIT_RADIUS_M,
+  PRODUCIBLE,
+  StructureKind,
   UNIT_STATS,
   UnitKind,
+  YARDS,
   statsFor,
   unitAvailableTo,
   unitRadiusM,
@@ -90,14 +96,20 @@ describe('MAX_UNIT_RADIUS_M is derived from the roster', () => {
     );
   });
 
-  it('still reaches 65 m, so the refactor preserved the broadphase it was sizing', () => {
+  it('reaches 75 m — the Bulwark’s half-length — so the bound followed the fleet', () => {
     // The derivation had a job beyond being self-consistent: it had to land on
-    // the reach separation was already tuned against. A derivation that read
-    // the wrong field would be internally tidy and quietly wrong — mapping
+    // the reach separation was tuned against. A derivation that read the wrong
+    // field would be internally tidy and quietly wrong — mapping
     // `attackRangeM` instead of `hullLengthM` would widen every neighbour query
     // to 450 m and still pass every test that only compares the constant to
     // itself. This is the assertion that says which number was correct.
-    assert.equal(MAX_UNIT_RADIUS_M, 65);
+    //
+    // It was 65 for as long as the Cruiser was the longest hull. The rung's
+    // roster (#461) added the Bulwark at 150 m, and this pin is the "legitimately
+    // rewritten to the new figure" the header promised — the day it was, the
+    // derivation did exactly what it was written to do.
+    assert.equal(MAX_UNIT_RADIUS_M, 75);
+    assert.equal(statsFor(UnitKind.Bulwark).hullLengthM / 2, MAX_UNIT_RADIUS_M);
   });
 });
 
@@ -206,18 +218,123 @@ describe('the Clarion carries the directional balance clause (#401)', () => {
     }
   });
 
-  it('leaves every other hull nobody\u2019s', () => {
-    // The lock is an exception and has to stay one — docs/units.md's design
-    // note argues the Chorister is the Directorate's by its *price*, and a
-    // later edit that reached for a faction field instead would quietly
-    // replace that argument with a rule.
-    for (const stats of roster) {
-      if (stats.kind === UnitKind.Clarion) continue;
+  it('leaves the seven generic hulls nobody\u2019s', () => {
+    // The lock stays an exception on the generic roster — docs/units.md's
+    // design note argues the Chorister is the Directorate's by its *price*,
+    // and a later edit that reached for a faction field instead would quietly
+    // replace that argument with a rule. The rung's eight are the other kind
+    // of entry, and are held to their navies below.
+    for (const kind of [
+      UnitKind.LightScout,
+      UnitKind.Corvette,
+      UnitKind.Cruiser,
+      UnitKind.AbyssalSubmersible,
+      UnitKind.Chorister,
+      UnitKind.Harvester,
+    ]) {
       assert.equal(
-        stats.faction,
+        statsFor(kind).faction,
         undefined,
-        `${stats.name} carries a faction lock; only the Clarion is meant to`
+        `${statsFor(kind).name} carries a faction lock; the generic roster is nobody’s`
       );
     }
+  });
+});
+
+describe('the rung’s roster — two hulls a navy (#461)', () => {
+  /** Each navy's Foundry hull and Slipway hull, as docs/units.md writes them. */
+  const NAVY: Record<Faction, [UnitKind, UnitKind]> = {
+    [Faction.Bathyarch]: [UnitKind.Tender, UnitKind.Bulwark],
+    [Faction.Pelagia]: [UnitKind.Spinner, UnitKind.Sower],
+    [Faction.Directorate]: [UnitKind.Precentor, UnitKind.Dredge],
+    [Faction.Hadron]: [UnitKind.Cantus, UnitKind.Reciter],
+  };
+  const factions = [Faction.Bathyarch, Faction.Pelagia, Faction.Directorate, Faction.Hadron];
+
+  it('locks each of the eight to exactly the navy it is written for', () => {
+    // The acceptance line of the issue: `unitAvailableTo` returns true for
+    // exactly the navy each hull is written for. Every entry in the doc's
+    // section carries "Faction-locked: yes" with its reason, so the matrix
+    // is the whole rule — one true per row, three false.
+    for (const owner of factions) {
+      for (const kind of NAVY[owner]) {
+        for (const asker of factions) {
+          assert.equal(
+            unitAvailableTo(kind, asker),
+            asker === owner,
+            `${statsFor(kind).name} is ${Faction[owner]}'s and ${Faction[asker]} asked`
+          );
+        }
+      }
+    }
+  });
+
+  it('puts each navy’s first hull at the Foundry and its second behind the rung', () => {
+    // "The first at the Foundry, so it is an opening; the second behind the
+    // rung, so the crystal is a decision about *what* to field." The Slipway
+    // "produces each navy's second exclusive hull, and nothing the Foundry
+    // already builds", so the two rows are disjoint.
+    const foundry = PRODUCIBLE[StructureKind.Foundry]!;
+    const slipway = PRODUCIBLE[StructureKind.Slipway]!;
+    for (const owner of factions) {
+      const [opening, decision] = NAVY[owner];
+      assert.ok(foundry.includes(opening), `${statsFor(opening).name} is a Foundry hull`);
+      assert.ok(slipway.includes(decision), `${statsFor(decision).name} is a Slipway hull`);
+    }
+    for (const kind of slipway) {
+      assert.ok(!foundry.includes(kind), `${statsFor(kind).name} is built at one yard only`);
+    }
+    assert.ok(YARDS.includes(StructureKind.Foundry) && YARDS.includes(StructureKind.Slipway));
+    assert.ok(!YARDS.includes(StructureKind.Bastion), 'the Bastion is a depot, not a yard');
+  });
+
+  it('carries the Reciter’s cone figure the way it carries the Clarion’s', () => {
+    // docs/units.md: "90 ahead, 31.5 on the beam, 9 astern, 40.5 over the
+    // compass — louder than a Corvette and quieter than a Cruiser on
+    // average". Held against the term rather than against 40.5, as the
+    // Clarion's is.
+    const reciter = statsFor(UnitKind.Reciter);
+    const corvette = statsFor(UnitKind.Corvette);
+    const cruiser = statsFor(UnitKind.Cruiser);
+    const averaged = reciter.sigCruise * DIRECTIONAL_COMPASS_AVERAGE;
+    assert.ok(Math.abs(averaged - 40.5) <= 0.5, `over the compass: ${averaged.toFixed(2)}`);
+    assert.ok(averaged > corvette.sigCruise && averaged < cruiser.sigCruise);
+    assert.ok(reciter.sigCruise * DIRECTIONAL_SIGNATURE.WAKE < corvette.sigIdle, 'astern: 9');
+  });
+
+  it('reads the Cantus as a plain figure, because a node has no cone', () => {
+    // The one Knight hull the term does not apply to while it sings — so its
+    // listed SIG must be readable without the term, unlike the other two
+    // Order hulls. A Cantus listed at 2.2× anything would be the mistake the
+    // Clarion's lock exists to refuse, in the Order's own colours.
+    const cantus = statsFor(UnitKind.Cantus);
+    assert.ok(cantus.sigIdle <= statsFor(UnitKind.LightScout).sigCruise, 'silent moving');
+    assert.equal(cantus.sigWorking, 80, 'and the Spire’s figure singing');
+  });
+
+  it('prices the deep in the accounts the doc names', () => {
+    // The Sower is crystal-locked like the Submersible; the Dredge is the
+    // first hull priced in all three; the Cantus is the Spire's grant "at a
+    // third of the price and none of the crystal".
+    assert.equal(statsFor(UnitKind.Sower).crystalCost, 80);
+    const dredge = statsFor(UnitKind.Dredge);
+    assert.ok(dredge.cost > 0 && dredge.crystalCost === 40 && dredge.biomassCost === 60);
+    assert.equal(statsFor(UnitKind.Cantus).crystalCost, undefined);
+    assert.equal(statsFor(UnitKind.Dredge).pressureRating, 4, 'the only PR-4 entry');
+    for (const stats of roster) {
+      if (stats.kind === UnitKind.Dredge) continue;
+      assert.ok(stats.pressureRating < 4, `${stats.name} must not reach the Dredge's band`);
+    }
+  });
+
+  it('gives an effect clock to exactly the hulls with work to clock', () => {
+    // `sigWorking` is what `spawnUnit` reads to attach a HullEffect, so the
+    // set has to be the doc's: the Tender welding, the Sower seeded, the
+    // Cantus singing — and the Spinner's magazine is the one grown magazine.
+    const working = roster.filter((s) => s.sigWorking !== undefined).map((s) => s.name);
+    assert.deepEqual(working.sort(), ['Cantus', 'Sower', 'Tender']);
+    const grown = roster.filter((s) => s.mineMagazine !== undefined).map((s) => s.name);
+    assert.deepEqual(grown, ['Spinner']);
+    assert.equal(statsFor(UnitKind.Spinner).mineMagazine, HULL_EFFECTS.SPINNER.MAGAZINE);
   });
 });

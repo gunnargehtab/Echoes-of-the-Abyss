@@ -38,12 +38,28 @@ function ttkS(hp: number, damage: number, cooldownS: number): number {
   return (Math.ceil(hp / damage) - 1) * cooldownS;
 }
 
+/**
+ * The same kill, counted the way docs/units.md counts it for the rung's
+ * roster: in *cycles*, each shot with its cooldown behind it — "kills a
+ * Corvette in ≥ 8 s (two cycles)" for a 4.0 s gun. The time the gun is busy
+ * rather than the time to the killing shot; one cooldown apart from `ttkS`,
+ * and the doc's figures for the Bulwark, Dredge and Reciter are all stated in
+ * this accounting, so this is what holds them to it.
+ */
+function cyclesS(hp: number, damage: number, cooldownS: number): number {
+  return Math.ceil(hp / damage) * cooldownS;
+}
+
 const scout = statsFor(UnitKind.LightScout);
 const corvette = statsFor(UnitKind.Corvette);
 const cruiser = statsFor(UnitKind.Cruiser);
 const chorister = statsFor(UnitKind.Chorister);
 const clarion = statsFor(UnitKind.Clarion);
+const bulwark = statsFor(UnitKind.Bulwark);
+const dredge = statsFor(UnitKind.Dredge);
+const reciter = statsFor(UnitKind.Reciter);
 const turret = structureStatsFor(StructureKind.SentinelTurret);
+const bastion = structureStatsFor(StructureKind.Bastion);
 
 describe('§9 time-to-kill bands', () => {
   it('a Corvette kills a Light Scout in four seconds or less', () => {
@@ -182,6 +198,66 @@ describe('§9 time-to-kill bands', () => {
       threeOnCruiser > twoCorvettes,
       'three cohort hulls are slower on a Cruiser than two Corvettes'
     );
+  });
+
+  it('holds the Bulwark to the bands docs/units.md states for it (#461)', () => {
+    // "Kills a Corvette in ≥ 8 s (two cycles), a Bastion alone in ~90 s, and
+    // dies to Corvette guns in ≥ 55 s — an anchor that does not fall to chip
+    // damage, §9's rule for the Cruiser applied twice over."
+    assert.equal(Math.ceil(corvette.maxHp / bulwark.attackDamage), 2, 'two cycles');
+    const vsCorvette = cyclesS(corvette.maxHp, bulwark.attackDamage, bulwark.attackCooldownS);
+    assert.ok(vsCorvette >= 8, `a Bulwark takes ≥ 8 s on a Corvette, got ${vsCorvette}`);
+
+    const vsBastion = cyclesS(bastion.maxHp, bulwark.attackDamage, bulwark.attackCooldownS);
+    assert.ok(vsBastion >= 80 && vsBastion <= 100, `~90 s on a Bastion alone, got ${vsBastion}`);
+
+    const byCorvette = cyclesS(bulwark.maxHp, corvette.attackDamage, corvette.attackCooldownS);
+    assert.ok(byCorvette >= 55, `Corvette guns need ≥ 55 s, got ${byCorvette}`);
+
+    // "The Klaxon is never off it": at rest it is above the +12% threshold, so
+    // the two-cycle claim holds with the bonus on, which is how the hull is
+    // actually fired. The Corvette side of the band is the generic gun — the
+    // only Consortium Corvette that meets a Bulwark is in a mirror.
+    assert.ok(bulwark.sigIdle > FACTION_COMBAT.KLAXON.SIG_THRESHOLD, 'loud by construction');
+    const boosted = bulwark.attackDamage * FACTION_COMBAT.KLAXON.DAMAGE_MULTIPLIER;
+    assert.equal(Math.ceil(corvette.maxHp / boosted), 2, 'still two cycles under the Klaxon');
+
+    // §9's torpedo band, once more over: a Cruiser survives one and dies to
+    // two; "a Bulwark survives three".
+    assert.ok(ORDNANCE.TORPEDO.DAMAGE * 3 < bulwark.maxHp, 'survives three torpedoes');
+    assert.ok(ORDNANCE.TORPEDO.DAMAGE * 4 >= bulwark.maxHp, '...and not four');
+    // And it out-reaches the static defence it is built to shoot from outside.
+    assert.ok(bulwark.attackRangeM > turret.attackRangeM!, 'outranges a Sentinel Turret');
+  });
+
+  it('holds the Dredge to the bands docs/units.md states for it (#461)', () => {
+    // "Kills a Corvette in ~8 s and a Cruiser in ~20 s; dies to Corvette guns
+    // in ~34 s."
+    const vsCorvette = cyclesS(corvette.maxHp, dredge.attackDamage, dredge.attackCooldownS);
+    assert.ok(vsCorvette >= 7 && vsCorvette <= 9, `~8 s on a Corvette, got ${vsCorvette}`);
+    const vsCruiser = cyclesS(cruiser.maxHp, dredge.attackDamage, dredge.attackCooldownS);
+    assert.ok(vsCruiser >= 18 && vsCruiser <= 22, `~20 s on a Cruiser, got ${vsCruiser}`);
+    const byCorvette = cyclesS(dredge.maxHp, corvette.attackDamage, corvette.attackCooldownS);
+    assert.ok(
+      byCorvette >= 32 && byCorvette <= 36,
+      `dies to a Corvette in ~34 s, got ${byCorvette}`
+    );
+  });
+
+  it('holds the Reciter to the bands docs/units.md states for it (#461)', () => {
+    // "Kills a Corvette in ~9 s and a Light Scout in two cycles; dies to a
+    // Corvette in ~7 s if the Corvette gets there." The trade is the whole
+    // hull: the longest gun in the roster on the thinnest combat hull.
+    const vsCorvette = cyclesS(corvette.maxHp, reciter.attackDamage, reciter.attackCooldownS);
+    assert.ok(vsCorvette >= 8 && vsCorvette <= 10, `~9 s on a Corvette, got ${vsCorvette}`);
+    assert.equal(Math.ceil(scout.maxHp / reciter.attackDamage), 2, 'a Light Scout in two cycles');
+    const byCorvette = cyclesS(reciter.maxHp, corvette.attackDamage, corvette.attackCooldownS);
+    assert.ok(byCorvette >= 6 && byCorvette <= 8, `dies to a Corvette in ~7 s, got ${byCorvette}`);
+
+    assert.ok(reciter.attackRangeM > cruiser.attackRangeM, 'outranges the Cruiser');
+    assert.ok(reciter.maxHp < corvette.maxHp, 'and is the glass in "glass cannon"');
+    // Under the energy class, like the Clarion: the weapon is the navy's.
+    assert.equal(reciter.sigFiringBurst, FACTION_COMBAT.ENERGY.FIRING_SIG);
   });
 
   it('leaves the Light Scout unable to fight, whatever the retune did', () => {

@@ -1,0 +1,480 @@
+/**
+ * The rung, and two hulls a navy (#461) — docs/units.md, "The rung, and two
+ * hulls a navy".
+ *
+ * The Slipway and the eight faction hulls, transcribed. Each block holds one
+ * entry to the sentence its stat block makes about sound or depth: the rung
+ * grants berths and is loud while its line runs; the Precentor is a Cantor's
+ * dome on the move; a Cantus sings and a Sower seeds only standing still, and
+ * the grant is the Spire's and never stacks with it; a Spinner lays four,
+ * silently, and regrows only at a nursery; a Tender welds the nearest hull and
+ * never the part the deep took.
+ */
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  BERTHS,
+  DIRECTIONAL_SIGNATURE,
+  Faction,
+  HULL_EFFECTS,
+  ORDNANCE,
+  SIM,
+  STRUCTURE_AURAS,
+  StructureKind,
+  UnitKind,
+  statsFor,
+  structureStatsFor,
+} from '@echoes/shared';
+import { Match } from '../src/sim/match.ts';
+import { spawnStructure, spawnUnit } from '../src/sim/world.ts';
+import { directionalFactorFor } from '../src/sim/directional.ts';
+import { Terrain } from '../src/sim/terrain.ts';
+import {
+  Acoustic,
+  Health,
+  HullEffect,
+  MineMagazine,
+  Position,
+  Pressure,
+} from '../src/sim/components.ts';
+
+const STEP_MS = 1000 / SIM.TICK_HZ;
+
+function advance(match: Match, seconds: number): void {
+  const steps = Math.ceil((seconds * 1000) / STEP_MS);
+  for (let i = 0; i < steps; i++) match.update(STEP_MS);
+}
+
+/** A commander of this navy on flat open water, with a full purse. */
+function skirmish(
+  faction: Faction,
+  seed = 461
+): { match: Match; bastion: number; foundry: number } {
+  const match = new Match(undefined, {
+    fauna: false,
+    seed,
+    terrain: new Terrain(12000, 12000, 250, { floorM: 2600 }),
+  });
+  match.addPlayer(0, faction);
+  match.addPlayer(1, faction === Faction.Pelagia ? Faction.Directorate : Faction.Pelagia);
+  advance(match, 0.5);
+  const own = match.update(STEP_MS)?.get(0) ?? snapshotOf(match);
+  const bastion = own.structures.find((s) => s.kind === StructureKind.Bastion)!.id;
+  const foundry = own.structures.find((s) => s.kind === StructureKind.Foundry)!.id;
+  const purse = match.world.economies.get(0)!;
+  purse.nodules = 20000;
+  purse.crystal = 2000;
+  purse.biomass = 2000;
+  return { match, bastion, foundry };
+}
+
+function snapshotOf(match: Match) {
+  for (let i = 0; i < 2 * SIM.TICK_HZ; i++) {
+    const own = match.update(STEP_MS)?.get(0);
+    if (own !== undefined) return own;
+  }
+  throw new Error('no Echo pass in two seconds');
+}
+
+/** Spawn an own hull of this kind for slot 0, at a position and depth. */
+function hull(
+  match: Match,
+  faction: Faction,
+  kind: UnitKind,
+  x: number,
+  y: number,
+  depth?: number
+): number {
+  return spawnUnit(match.world, {
+    kind,
+    slot: 0,
+    faction,
+    x,
+    y,
+    ...(depth !== undefined ? { depth } : {}),
+  });
+}
+
+describe('the Slipway — the rung', () => {
+  it('is every navy’s, is crystal-locked, and grants the Foundry’s eight berths once it stands', () => {
+    for (const faction of [
+      Faction.Bathyarch,
+      Faction.Pelagia,
+      Faction.Directorate,
+      Faction.Hadron,
+    ]) {
+      const { match, bastion } = skirmish(faction);
+      const purse = match.world.economies.get(0)!;
+      const x = Position.x[bastion]! + 900;
+      const y = Position.y[bastion]!;
+      const before = match.berthsFor(0).granted;
+
+      purse.crystal = structureStatsFor(StructureKind.Slipway).crystalCost! - 1;
+      assert.equal(match.build(0, StructureKind.Slipway, x, y), false, 'refused short of crystal');
+      purse.crystal = 2000;
+      assert.equal(
+        match.build(0, StructureKind.Slipway, x, y),
+        true,
+        `${Faction[faction]} builds it`
+      );
+
+      // A site under construction grants nothing; a commissioned yard grants
+      // eight. The doc's ceiling: a Bastion, two Foundries and a Slipway.
+      advance(match, 1);
+      assert.equal(match.berthsFor(0).granted, before, 'a site grants nothing');
+      advance(match, structureStatsFor(StructureKind.Slipway).buildTimeS + 1);
+      assert.equal(match.berthsFor(0).granted, before + BERTHS.SLIPWAY, 'commissioned: +8');
+    }
+  });
+
+  it('reaches the ceiling with a Bastion, two Foundries and a Slipway, and not past it', () => {
+    const { match, bastion } = skirmish(Faction.Bathyarch);
+    const at = (dx: number): { x: number; y: number } => ({
+      x: Position.x[bastion]! + dx,
+      y: Position.y[bastion]! + 900,
+    });
+    spawnStructure(match.world, {
+      kind: StructureKind.Foundry,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      ...at(-800),
+      prebuilt: true,
+    });
+    spawnStructure(match.world, {
+      kind: StructureKind.Slipway,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      ...at(0),
+      prebuilt: true,
+    });
+    advance(match, 0.1);
+    assert.equal(match.berthsFor(0).granted, BERTHS.CEILING, 'exactly forty');
+    assert.equal(BERTHS.BASTION + 2 * BERTHS.FOUNDRY + BERTHS.SLIPWAY, BERTHS.CEILING);
+    spawnStructure(match.world, {
+      kind: StructureKind.Slipway,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      ...at(800),
+      prebuilt: true,
+    });
+    advance(match, 0.1);
+    assert.equal(
+      match.berthsFor(0).granted,
+      BERTHS.CEILING,
+      'a second Slipway buys a line, not a tier'
+    );
+  });
+
+  it('builds each navy’s second hull and nothing the Foundry builds, and the Foundry refuses it back', () => {
+    const second: Record<Faction, UnitKind> = {
+      [Faction.Bathyarch]: UnitKind.Bulwark,
+      [Faction.Pelagia]: UnitKind.Sower,
+      [Faction.Directorate]: UnitKind.Dredge,
+      [Faction.Hadron]: UnitKind.Reciter,
+    };
+    const first: Record<Faction, UnitKind> = {
+      [Faction.Bathyarch]: UnitKind.Tender,
+      [Faction.Pelagia]: UnitKind.Spinner,
+      [Faction.Directorate]: UnitKind.Precentor,
+      [Faction.Hadron]: UnitKind.Cantus,
+    };
+    for (const faction of [
+      Faction.Bathyarch,
+      Faction.Pelagia,
+      Faction.Directorate,
+      Faction.Hadron,
+    ]) {
+      const { match, bastion, foundry } = skirmish(faction);
+      const slipway = spawnStructure(match.world, {
+        kind: StructureKind.Slipway,
+        slot: 0,
+        faction,
+        x: Position.x[bastion]! + 900,
+        y: Position.y[bastion]!,
+        prebuilt: true,
+      });
+      advance(match, 0.1);
+      const name = Faction[faction];
+      assert.equal(match.produce(0, slipway, second[faction]), true, `${name}'s Slipway hull`);
+      assert.equal(match.produce(0, foundry, second[faction]), false, 'not at the Foundry');
+      assert.equal(match.produce(0, foundry, first[faction]), true, `${name}'s Foundry hull`);
+      assert.equal(match.produce(0, slipway, first[faction]), false, 'not at the Slipway');
+      assert.equal(
+        match.produce(0, slipway, UnitKind.Corvette),
+        false,
+        'nothing the Foundry builds'
+      );
+      // ...and another navy's second hull is refused at the yard that could
+      // build it, server-side, exactly as the Clarion is.
+      for (const other of [
+        Faction.Bathyarch,
+        Faction.Pelagia,
+        Faction.Directorate,
+        Faction.Hadron,
+      ]) {
+        if (other === faction) continue;
+        assert.equal(
+          match.produce(0, slipway, second[other]),
+          false,
+          `${name} cannot build ${Faction[other]}'s`
+        );
+        assert.equal(match.produce(0, foundry, first[other]), false);
+      }
+
+      // The loudest line in the base: 70 while it runs, against a Foundry's 55.
+      advance(match, 0.1);
+      assert.equal(Acoustic.sig[slipway], structureStatsFor(StructureKind.Slipway).sigActive);
+      assert.ok(Acoustic.sig[slipway]! > structureStatsFor(StructureKind.Foundry).sigActive);
+    }
+  });
+});
+
+describe('the Precentor — the ears on the move', () => {
+  it('lends +10 HYD within 500 m to allied hulls, to the Cantor’s cap and no further', () => {
+    const { match, bastion } = skirmish(Faction.Directorate);
+    const x = Position.x[bastion]! + 3000;
+    const y = Position.y[bastion]!;
+    const precentor = hull(match, Faction.Directorate, UnitKind.Precentor, x, y);
+    const near = hull(match, Faction.Directorate, UnitKind.Corvette, x + 400, y);
+    const far = hull(match, Faction.Directorate, UnitKind.Corvette, x + 700, y);
+    const cohort = hull(match, Faction.Directorate, UnitKind.Chorister, x, y + 300);
+    advance(match, 0.1);
+
+    const corvette = statsFor(UnitKind.Corvette).hyd;
+    assert.equal(Acoustic.hyd[near], corvette + HULL_EFFECTS.PRECENTOR.HYD_BONUS, 'under the dome');
+    assert.equal(Acoustic.hyd[far], corvette, 'outside it');
+    assert.equal(Acoustic.hyd[precentor], STRUCTURE_AURAS.CANTOR.HYD_CAP, 'the cap, mobile');
+    // Under a Cantor as well it adds nothing: the cap is the cap. A Chorister
+    // is 75; the dome's +25 already reaches 95, and the Precentor's +10 on top
+    // stays there.
+    spawnStructure(match.world, {
+      kind: StructureKind.Cantor,
+      slot: 0,
+      faction: Faction.Directorate,
+      x,
+      y: y + 500,
+      prebuilt: true,
+    });
+    advance(match, 0.1);
+    assert.equal(Acoustic.hyd[cohort], STRUCTURE_AURAS.CANTOR.HYD_CAP);
+    assert.equal(
+      Acoustic.hyd[near],
+      Math.min(
+        STRUCTURE_AURAS.CANTOR.HYD_CAP,
+        corvette + STRUCTURE_AURAS.CANTOR.HYD_BONUS + HULL_EFFECTS.PRECENTOR.HYD_BONUS
+      ),
+      'the two domes sum, under the one cap'
+    );
+  });
+});
+
+describe('the Cantus — the Spire’s grant on a hull', () => {
+  it('sings after 10 s stationary: +1 PR within 300 m, SIG 80 in every quarter; moving, nothing', () => {
+    const { match, bastion } = skirmish(Faction.Hadron);
+    const x = Position.x[bastion]! + 3000;
+    const y = Position.y[bastion]!;
+    const cantus = hull(match, Faction.Hadron, UnitKind.Cantus, x, y);
+    const near = hull(match, Faction.Hadron, UnitKind.Corvette, x + 250, y);
+    const far = hull(match, Faction.Hadron, UnitKind.Corvette, x + 350, y);
+    const { STATIONARY_S, PR_BONUS } = HULL_EFFECTS.CANTUS;
+
+    advance(match, STATIONARY_S - 1);
+    assert.equal(Pressure.bonus[near], 0, 'not yet');
+    assert.equal(Acoustic.sig[cantus], statsFor(UnitKind.Cantus).sigIdle, 'and quiet');
+    // A Knight hull that is not singing is a Knight hull: the term applies.
+    const beam = directionalFactorFor(match.world, cantus, x, y + 1000);
+    assert.equal(beam, DIRECTIONAL_SIGNATURE.FLANK, 'beam-on, the term is on');
+
+    advance(match, 2);
+    assert.equal(HullEffect.active[cantus], 1, 'singing');
+    assert.equal(Pressure.bonus[near], PR_BONUS, 'within 300 m');
+    assert.equal(Pressure.bonus[far], 0, 'not at 350');
+    assert.equal(Pressure.bonus[cantus], PR_BONUS, 'and under its own song');
+    assert.equal(Acoustic.sig[cantus], statsFor(UnitKind.Cantus).sigWorking, 'the Spire’s figure');
+    assert.equal(directionalFactorFor(match.world, cantus, x, y + 1000), 1, 'in every quarter');
+
+    // Moving, it is silent and grants nothing — on the tick it moves.
+    match.orderMove(0, cantus, x + 2000, y);
+    advance(match, 0.1);
+    assert.equal(HullEffect.active[cantus], 0);
+    assert.equal(Pressure.bonus[near], 0, 'the grant left with the hull');
+    assert.equal(Acoustic.sig[cantus], statsFor(UnitKind.Cantus).sigCruise);
+  });
+
+  it('is the Spire’s grant and never a second one on top of it', () => {
+    const { match, bastion } = skirmish(Faction.Hadron);
+    const x = Position.x[bastion]! + 3000;
+    const y = Position.y[bastion]!;
+    spawnStructure(match.world, {
+      kind: StructureKind.SoundingSpire,
+      slot: 0,
+      faction: Faction.Hadron,
+      x,
+      y: y - 200,
+      prebuilt: true,
+    });
+    hull(match, Faction.Hadron, UnitKind.Cantus, x, y);
+    const corvette = hull(match, Faction.Hadron, UnitKind.Corvette, x + 100, y);
+    advance(match, HULL_EFFECTS.CANTUS.STATIONARY_S + 1);
+    assert.equal(
+      Pressure.bonus[corvette],
+      STRUCTURE_AURAS.SOUNDING_SPIRE.PR_BONUS,
+      'one band, not two'
+    );
+  });
+
+  it('can be told to stop singing without moving: Silent Running is the off switch', () => {
+    const { match, bastion } = skirmish(Faction.Hadron);
+    const x = Position.x[bastion]! + 3000;
+    const y = Position.y[bastion]!;
+    const cantus = hull(match, Faction.Hadron, UnitKind.Cantus, x, y);
+    advance(match, HULL_EFFECTS.CANTUS.STATIONARY_S + 1);
+    assert.equal(HullEffect.active[cantus], 1);
+    match.setSilentRunning(0, cantus, true);
+    advance(match, 0.1);
+    assert.equal(HullEffect.active[cantus], 0, 'quiet means quiet');
+    assert.ok(Acoustic.sig[cantus]! < 10, 'and it is');
+    match.setSilentRunning(0, cantus, false);
+    advance(match, 0.1);
+    assert.equal(HullEffect.active[cantus], 1, 'the clock did not reset: it never moved');
+  });
+});
+
+describe('the Sower — the terraformer', () => {
+  it('seeds after 20 s stationary: +1 PR within 400 m at SIG 45, and does not stack', () => {
+    const { match, bastion } = skirmish(Faction.Pelagia);
+    const x = Position.x[bastion]! + 3000;
+    const y = Position.y[bastion]!;
+    const sower = hull(match, Faction.Pelagia, UnitKind.Sower, x, y);
+    const second = hull(match, Faction.Pelagia, UnitKind.Sower, x - 100, y);
+    const near = hull(match, Faction.Pelagia, UnitKind.Corvette, x + 380, y);
+    const far = hull(match, Faction.Pelagia, UnitKind.Corvette, x + 420, y);
+    const { STATIONARY_S, PR_BONUS } = HULL_EFFECTS.SOWER;
+
+    advance(match, STATIONARY_S - 1);
+    assert.equal(Pressure.bonus[near], 0, 'not yet');
+    advance(match, 2);
+    assert.equal(
+      Pressure.bonus[near],
+      PR_BONUS,
+      'seeded: a PR-1 Corvette under a Sower works Mid-Water'
+    );
+    assert.equal(Pressure.bonus[far], 0, 'not at 420');
+    assert.equal(Acoustic.sig[sower], statsFor(UnitKind.Sower).sigWorking, 'the bloom is a roar');
+    assert.equal(HullEffect.active[second], 1, 'two Sowers, both seeded');
+    assert.equal(Pressure.bonus[near], PR_BONUS, '...and under both it does not go deeper');
+  });
+});
+
+describe('the Spinner — the mine-layer', () => {
+  it('lays four, silently, refuses a fifth, and regrows one per 40 s by a Bastion', () => {
+    const { match, bastion } = skirmish(Faction.Pelagia);
+    const bx = Position.x[bastion]!;
+    const by = Position.y[bastion]!;
+    // In the field: well past the Bastion's 300 m nursery.
+    const spinner = hull(match, Faction.Pelagia, UnitKind.Spinner, bx + 3000, by);
+    advance(match, 0.1);
+    assert.equal(MineMagazine.mines[spinner], HULL_EFFECTS.SPINNER.MAGAZINE, 'full at launch');
+
+    let laid = 0;
+    for (let i = 0; i < HULL_EFFECTS.SPINNER.MAGAZINE + 2; i++) {
+      if (match.layMine(0, spinner) !== 0) laid++;
+      advance(match, 0.1);
+      // Laying is silent: no construction floor on a grown mine.
+      assert.equal(Acoustic.sig[spinner], statsFor(UnitKind.Spinner).sigIdle, 'silent laying');
+      advance(match, ORDNANCE.MINE.ARMING_S + 0.2);
+    }
+    assert.equal(laid, HULL_EFFECTS.SPINNER.MAGAZINE, 'four and no fifth');
+    assert.equal(MineMagazine.mines[spinner], 0);
+
+    // In the field the magazine stays empty however long it waits.
+    advance(match, HULL_EFFECTS.SPINNER.REGROW_S + 5);
+    assert.equal(MineMagazine.mines[spinner], 0, 'no nursery, no regrowth');
+
+    // Home to the Bastion: one per interval.
+    Position.x[spinner] = bx + 250;
+    Position.y[spinner] = by;
+    advance(match, HULL_EFFECTS.SPINNER.REGROW_S - 1);
+    assert.equal(MineMagazine.mines[spinner], 0, 'not yet');
+    advance(match, 2);
+    assert.equal(MineMagazine.mines[spinner], 1, 'regrown');
+    assert.notEqual(match.layMine(0, spinner), 0, 'and it can lay again');
+  });
+
+  it('leaves the roster’s one-mine layer exactly as it was', () => {
+    const { match, bastion } = skirmish(Faction.Pelagia);
+    const corvette = hull(
+      match,
+      Faction.Pelagia,
+      UnitKind.Corvette,
+      Position.x[bastion]! + 3000,
+      Position.y[bastion]!
+    );
+    advance(match, 0.1);
+    assert.notEqual(match.layMine(0, corvette), 0, 'an armed hull still lays');
+    advance(match, 0.1);
+    assert.equal(Acoustic.sig[corvette], ORDNANCE.MINE.SIG_LAYING, 'and is heard building it');
+  });
+});
+
+describe('the Tender — the repair hull', () => {
+  it('welds the nearest damaged allied hull within 300 m at 15 HP/s, loudly, and stops when there is nothing to weld', () => {
+    const { match, bastion } = skirmish(Faction.Bathyarch);
+    const x = Position.x[bastion]! + 3000;
+    const y = Position.y[bastion]!;
+    const tender = hull(match, Faction.Bathyarch, UnitKind.Tender, x, y);
+    const near = hull(match, Faction.Bathyarch, UnitKind.Corvette, x + 100, y);
+    const farther = hull(match, Faction.Bathyarch, UnitKind.Corvette, x + 200, y);
+    const out = hull(match, Faction.Bathyarch, UnitKind.Corvette, x + 400, y);
+    const { REPAIR_HP_PER_S } = HULL_EFFECTS.TENDER;
+    const max = statsFor(UnitKind.Corvette).maxHp;
+
+    advance(match, 0.1);
+    assert.equal(HullEffect.active[tender], 0, 'nothing to weld');
+    assert.equal(Acoustic.sig[tender], statsFor(UnitKind.Tender).sigIdle);
+
+    Health.hp[near] = max - 60;
+    Health.hp[farther] = max - 60;
+    Health.hp[out] = max - 60;
+    advance(match, 2);
+    assert.equal(HullEffect.active[tender], 1, 'working');
+    assert.equal(Acoustic.sig[tender], statsFor(UnitKind.Tender).sigWorking, '+12 while working');
+    assert.ok(Math.abs(Health.hp[near]! - (max - 60 + 2 * REPAIR_HP_PER_S)) < 1, 'nearest first');
+    assert.equal(Health.hp[farther], max - 60, 'one hull at a time');
+    assert.equal(Health.hp[out], max - 60, 'and none at 400 m');
+
+    advance(match, 3);
+    assert.equal(Health.hp[near], max, 'whole, and no more');
+    assert.ok(Health.hp[farther]! > max - 60, 'then the next');
+  });
+
+  it('never touches the hull the deep took', () => {
+    const { match, bastion } = skirmish(Faction.Bathyarch);
+    const x = Position.x[bastion]! + 3000;
+    const y = Position.y[bastion]!;
+    hull(match, Faction.Bathyarch, UnitKind.Tender, x, y);
+    const crushed = hull(match, Faction.Bathyarch, UnitKind.Corvette, x + 100, y);
+    const max = statsFor(UnitKind.Corvette).maxHp;
+    Health.hp[crushed] = 100;
+    Pressure.unhealable[crushed] = 200;
+    advance(match, 30);
+    assert.equal(Health.hp[crushed], max - 200, 'crush stays crushed');
+  });
+
+  it('does not weld its own plate, and cannot weld quietly', () => {
+    const { match, bastion } = skirmish(Faction.Bathyarch);
+    const x = Position.x[bastion]! + 3000;
+    const y = Position.y[bastion]!;
+    const tender = hull(match, Faction.Bathyarch, UnitKind.Tender, x, y);
+    Health.hp[tender] = 100;
+    advance(match, 2);
+    assert.equal(Health.hp[tender], 100, 'a workshop welds other hulls');
+
+    const patient = hull(match, Faction.Bathyarch, UnitKind.Corvette, x + 100, y);
+    Health.hp[patient] = 100;
+    match.setSilentRunning(0, tender, true);
+    advance(match, 2);
+    assert.equal(Health.hp[patient], 100, 'silent is not working');
+    assert.equal(HullEffect.active[tender], 0);
+  });
+});

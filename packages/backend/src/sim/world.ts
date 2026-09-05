@@ -37,7 +37,9 @@ import {
   Fauna,
   Health,
   Heading,
+  HullEffect,
   Magazine,
+  MineMagazine,
   MoveOrder,
   Ordnance,
   Owner,
@@ -903,6 +905,23 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   if (stats.attackDamage > 0 && opts.weaponsCold !== true) {
     addComponent(world, Countermeasure, eid);
     Countermeasure.cooldownRemainingS[eid] = 0;
+  }
+
+  // An effect hull's clock (docs/units.md, the rung's roster): the stat block
+  // says which hulls have work that is neither moving nor shooting, and this
+  // is what makes that work a state the systems can read.
+  if (stats.sigWorking !== undefined) {
+    addComponent(world, HullEffect, eid);
+    HullEffect.stationaryS[eid] = 0;
+    HullEffect.active[eid] = 0;
+  }
+
+  // A grown magazine, full at launch — the Spinner leaves the yard with its
+  // four aboard and regrows only at a nursery (`hullEffectsSystem`).
+  if (stats.mineMagazine !== undefined) {
+    addComponent(world, MineMagazine, eid);
+    MineMagazine.mines[eid] = stats.mineMagazine;
+    MineMagazine.regrowRemainingS[eid] = 0;
   }
 
   if (opts.kind === UnitKind.Harvester) {

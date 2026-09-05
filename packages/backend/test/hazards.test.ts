@@ -25,6 +25,7 @@ import {
   ResolutionTier,
   SIM,
   StructureKind,
+  UNIT_STATS,
   UnitKind,
   ResourceKind,
   statsFor,
@@ -121,15 +122,16 @@ describe('the hazard lifecycle', () => {
   });
 
   it('warns for long enough to walk out of', () => {
-    // Sized against the slowest hull in the roster: if a Harvester cannot
+    // Sized against the slowest hull in the roster: if the slowest hull cannot
     // clear the radius from the centre in the warning window, the warning is
-    // decoration.
-    const slowest = statsFor(UnitKind.Harvester).speed;
+    // decoration. Read off the roster rather than named — it was the Harvester
+    // until the Bulwark (#461), and the rule is about whichever is slowest.
+    const slowest = Math.min(...Object.values(UNIT_STATS).map((s) => s.speed));
     const map = hazardMap('geothermal-eruption');
     const reach = slowest * HAZARDS.ERUPTION.WARNING_S;
     assert.ok(
       reach >= map.hazards[0]!.radiusM,
-      `a Harvester covers ${reach} m in the warning; the plume is ${map.hazards[0]!.radiusM} m`
+      `a ${slowest} m/s hull covers ${reach} m in the warning; the plume is ${map.hazards[0]!.radiusM} m`
     );
   });
 

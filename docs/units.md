@@ -286,14 +286,16 @@ Hadron Spire / Sounding Spire (Structure — Knights)
 - Effect: Grants PR+1 to allied units within 600 m and can form Standing Wave corridors when two nodes pair.
 - Notes: High-cost strategic structure; transforms local depth economics.
 
-The rung, and two hulls a navy — designed, not yet transcribed (#436)
+The rung, and two hulls a navy (#436, transcribed in #461)
 
-Status: **designed here; not in `packages/shared/src/units.ts` or `structures.ts` yet.** Every
-entry below is written to the roster's own rules — a stat line that is an argument about sound
-or depth, a berth figure, a weapon inside [systems-combat.md](systems-combat.md) §9's bands,
-and a faction lock only where the entry cannot be read outside the navy — so that transcribing
-one is a literal's job and not a design decision. Until then the seven hulls above are the
-roster, and `unitAvailableTo` knows nothing of these.
+Status: **transcribed.** Every entry below is in `packages/shared/src/units.ts` and
+`structures.ts`, each SPEC comment citing its stat block here, and `unitAvailableTo` returns
+true for exactly the navy each hull is written for. Every entry was written to the roster's own
+rules — a stat line that is an argument about sound or depth, a berth figure, a weapon inside
+[systems-combat.md](systems-combat.md) §9's bands, and a faction lock only where the entry
+cannot be read outside the navy — so that transcribing one was a literal's job and not a design
+decision. The effect hulls run in `packages/backend/src/sim/systems/hullEffects.ts` and the
+auras system; their figures are `HULL_EFFECTS` in `constants.ts`.
 
 Why this exists: three of the four navies field an identical combat roster, one hull in the
 game carries a faction lock, and Resonance Crystal — "the tech gate for every faction"
@@ -497,8 +499,9 @@ Reciter (Slipway)
 - Speed: 70
 - HP: 300
 - Weapon: 140 damage at **1,000 m**, 3.0 s cycle (46.7/s) — outranges the Cruiser's 900.
-  Bands to hold: kills a Corvette in ~9 s and a Light Scout in one cycle; dies to a Corvette
-  in ~7 s if the Corvette gets there. The trade is the whole hull: it wins every fight it
+  Bands to hold: kills a Corvette in ~9 s and a Light Scout in two cycles (the stat line is
+  the spec, and 140 does not reach a Scout's 180; an earlier draft claimed one); dies to a
+  Corvette in ~7 s if the Corvette gets there. The trade is the whole hull: it wins every fight it
   arranged and loses every one it did not, which is [factions.md](factions.md)'s sentence
   about the navy
 - Faction-locked: yes, for the Clarion's reason exactly: a cone figure is unreadable without
@@ -511,12 +514,18 @@ the longest gun and a cheap way down. Each navy's Foundry hull is an opening and
 hull is a decision the crystal buys — and every one of the eight is a sentence about sound or
 depth, per the editing rules, or it would not be here.
 
-Transcription order, when it comes: the Slipway first (a structure and a `PRODUCIBLE` row);
-then the four Foundry hulls, whose effects the simulation already has mechanisms for (the
-Precentor's aura is the Cantor's, the Cantus's and the Sower's grant is the Spire's, the
+Transcription order, as it was done (#461): the Slipway first (a structure and a `PRODUCIBLE`
+row); then the four Foundry hulls, whose effects the simulation already had mechanisms for
+(the Precentor's aura is the Cantor's, the Cantus's and the Sower's grant is the Spire's, the
 Spinner's magazine is the mine cap's); then the four Slipway hulls, whose weapons
-`ttkBands.test.ts` has to hold to the figures above; and the Tender last, because repair is the
-one mechanism the simulation does not have.
+`ttkBands.test.ts` holds to the figures above — in *cycles*, each shot with its cooldown behind
+it, which is how the bands above are counted; and the Tender last, because repair was the one
+mechanism the simulation did not have. Three readings the code had to make where the entries
+were silent: a stationary hull under Silent Running is not singing, seeding or welding — quiet
+is the off switch, so a Cantus can be stopped without moving it; a Tender welds other hulls and
+never its own plate; and a Spinner's grown mine still spends the arming interval per drop, so a
+magazine is not a volley. Hull lengths are TUNABLE and not authored here; the Bulwark's 150 m is
+the roster's longest.
 
 Design notes
 
@@ -653,8 +662,8 @@ Notes for testers
 
 Next steps
 
-- Transcribe the rung and the eight faction hulls above (#436) — the Slipway, then the four
-  Foundry hulls, then the four Slipway hulls, the Tender last; transports remain unwritten
+- Done (#461): the rung and the eight faction hulls above are transcribed — the Slipway, the
+  four Foundry hulls, the four Slipway hulls, the Tender last; transports remain unwritten
 - Done: per-unit HYD values are authored in the stat blocks above and transcribed into
   `packages/shared/src/units.ts`
 - Done: `tools/echo-sim` runs these stats through the shared detection model

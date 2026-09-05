@@ -93,6 +93,7 @@ import { depthSystem } from './systems/depth.ts';
 import { separationSystem } from './systems/separation.ts';
 import { clearQueue, enqueue, orderQueueSystem, queueView } from './systems/orderQueue.ts';
 import { harvestSystem } from './systems/harvest.ts';
+import { hullEffectsSystem } from './systems/hullEffects.ts';
 import { movementSystem } from './systems/movement.ts';
 import {
   deployNoisemaker,
@@ -1484,6 +1485,7 @@ export class Match {
       const kind = Structure.kind[eid] as StructureKind;
       if (kind === StructureKind.Bastion) granted += BERTHS.BASTION;
       else if (kind === StructureKind.Foundry) granted += BERTHS.FOUNDRY;
+      else if (kind === StructureKind.Slipway) granted += BERTHS.SLIPWAY;
     }
     granted = Math.min(BERTHS.CEILING, granted);
 
@@ -1598,6 +1600,10 @@ export class Match {
     orderQueueSystem(this.world);
     constructionSystem(this.world);
     productionSystem(this.world);
+    // The rung's hull effects before auras: a Cantus that stopped this tick
+    // is singing on this tick's grant pass, and a Tender's weld lands before
+    // pressure bills for where the patient is standing.
+    hullEffectsSystem(this.world);
     // Auras before acoustics: the spire's SIG-80 "projecting" state and
     // every effective HYD/PF value must be this tick's, not last tick's.
     aurasSystem(this.world);

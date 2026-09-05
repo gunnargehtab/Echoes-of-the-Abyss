@@ -81,9 +81,18 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   // Nor the Clarion, for the same reason and on the same terms.
   [UnitKind.Clarion]: 'clarion',
   [UnitKind.Harvester]: 'harvester',
+  // The rung's roster (#461): no approved models yet, on the same terms.
+  [UnitKind.Tender]: 'tender',
+  [UnitKind.Bulwark]: 'bulwark',
+  [UnitKind.Spinner]: 'spinner',
+  [UnitKind.Sower]: 'sower',
+  [UnitKind.Precentor]: 'precentor',
+  [UnitKind.Dredge]: 'dredge',
+  [UnitKind.Cantus]: 'cantus',
+  [UnitKind.Reciter]: 'reciter',
 };
 
-/** VentTap has no approved model yet; it stays on the sprite fallback. */
+/** VentTap and Slipway have no approved model yet; they stay on the sprite fallback. */
 const STRUCTURE_SLUG: Partial<Record<StructureKind, string>> = {
   [StructureKind.Bastion]: 'bastion',
   [StructureKind.Refinery]: 'refinery',
