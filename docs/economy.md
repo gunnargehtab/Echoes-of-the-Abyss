@@ -27,7 +27,7 @@ Three consequences shape every rule below:
 | **Biomass** | Rendered fauna — what the cohort programme grows its hulls from. Cheap, fast, morally simple to nobody | Wherever the Drift is healthy | Directorate at full rate; others at ~30% via rendering contracts | 45–60 during harvest |
 | **Resonance Crystal** | The tech gate. Every faction's upper tech tier is crystal-locked | **Almost entirely Abyssal** | Everyone, insufficiently | 60–70 sustained |
 
-Nodules and Thermal Draw are the working economy. Biomass is a faction-shaped bonus channel ([bestiary.md](bestiary.md) §5). **Resonance Crystal is the reason anybody goes deep at all** ([systems-depth.md](systems-depth.md)), and its scarcity is the clock every match runs on.
+Nodules and Thermal Draw are the working economy. Biomass is a faction-shaped bonus channel ([bestiary.md](bestiary.md) §5). **Resonance Crystal is the reason anybody goes deep at all** ([systems-depth.md](systems-depth.md)), and its scarcity is the clock every match runs on. It is also the account every refit is priced in — the five fleet-wide upgrades of [systems-progression.md](systems-progression.md) §2, bought on the Slipway's line — so the deep, not a research timer, paces the mid-game.
 
 ---
 
@@ -167,6 +167,7 @@ drive to a field, mine, haul home, deposit at a Bastion or Refinery. Constants l
 | Resonance Crystal | **Implemented** — Abyssal field, second stockpile, tech gate | See below |
 | Depth economics (§7) | **Implemented** — the round trip has a clock on it | Harvesters issue their own depth orders: loud descent to the field, slow climb home |
 | Industrial hum (§5) | **Implemented** — a decaying Echo Mark at the depot, intensity per delivered cargo | Keyed to throughput, not to the building: a refinery nobody hauls to is silent, and throttling down drops the hum because the loads shrink with it |
+| Refits ([systems-progression.md](systems-progression.md) §2) | **Designed, not built** — five fleet-wide upgrades priced in Nodules and Crystal, the Pressure Refit at a signature structure's 120 | Each is a `Priced` roster entry through the same `priceOf`, `affords` and `charge`; none can land before the Slipway does, because they are produced on its line |
 
 ### Thermal Draw in the scaffold
 
@@ -321,3 +322,4 @@ decision that has to be paid for in that pass first; a smaller one is free.
 - **[factions.md](factions.md)** — the doctrines these four economies express
 - **[units.md](units.md)** — harvester stats and the abstract prototype pool
 - **[maps.md](maps.md)** — node placement and the refine-forward question
+- **[systems-progression.md](systems-progression.md)** — what the crystal buys after the rung: refits, and the Hold Refit's effect on the hum

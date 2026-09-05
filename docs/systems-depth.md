@@ -116,6 +116,8 @@ Depth access is one of the two axes (with sound) that every faction's mechanics 
 | **Abyssal Directorate** | PR-3 | **Born to it** — no refit needed, free access to the map's richest third; the trade-off is shallow water poisons them (−20% speed, −15% HP above 400 m) |
 | **Hadron Knights** | PR-2 | **Projects** access — instant refits paid in Resonance, and **Sounding Spire** structures grant allied units +1 PR within 600 m as a support ability |
 
+The refits this table has always named are specified in [systems-progression.md](systems-progression.md) §2: one fleet-wide **Pressure Refit** of +1 PR, priced at a signature structure's 120 Crystal and bought on the Slipway's line, with the Consortium paying ×0.7 crystal, the Commune capped at PR-2, the Directorate offered nothing it does not already have, and the Knights buying it instantly in crystal alone and sounding the purchase at SIG 80.
+
 ### The baseline is what makes the weakness a trade
 
 The **Baseline PR** column above is a floor, not a stat block: a hull whose own rating is
@@ -206,3 +208,4 @@ numbers. The asymmetry itself is not tunable: it is what §5 above is about.
 - **[factions.md](factions.md)** — per-faction doctrine and depth economics
 - **[characters.md](characters.md)** — commanders whose abilities manipulate depth directly
 - **[environments.md](environments.md)** — biome-level PropagationFactor and terrain
+- **[systems-progression.md](systems-progression.md)** — the Pressure Refit, and what each navy pays for it

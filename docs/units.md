@@ -321,6 +321,10 @@ Slipway (Structure — all factions) — the rung
 - Notes: One per navy is enough and two are allowed; the second buys a line, not a tier. A
   Slipway lost mid-match takes its eight berths and its line with it — the hulls it launched
   stay afloat
+- The refit line: every one of the five fleet-wide refits in
+  [systems-progression.md](systems-progression.md) §2 is produced here, at the same 70, and
+  occupies the line a hull would. A navy refitting is a navy not launching its second hull,
+  and a second Slipway is how it does both
 
 Bathyarch Consortium — *few, heavy, tough*
 
@@ -655,6 +659,8 @@ Next steps
 
 - Transcribe the rung and the eight faction hulls above (#436) — the Slipway, then the four
   Foundry hulls, then the four Slipway hulls, the Tender last; transports remain unwritten
+- Then the refits and rank of systems-progression.md (#462), in that order: refits need the
+  Slipway's line to exist, and rank needs the TTK band test to grow a rank-3 row
 - Done: per-unit HYD values are authored in the stat blocks above and transcribed into
   `packages/shared/src/units.ts`
 - Done: `tools/echo-sim` runs these stats through the shared detection model
@@ -664,4 +670,5 @@ Related
 
 - systems-echo.md — detection math and Echo Marks
 - systems-depth.md — PR and depth behaviour
+- systems-progression.md — refits bought on the Slipway's line, and the rank a hull earns
 - glossary.md — authoritative definitions
