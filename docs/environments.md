@@ -23,7 +23,7 @@ Every biome is also an acoustic space: terrain sets how far sound travels under 
 | Thermal Veins | **0.45** | Vent roar masks you — natural ambush terrain |
 | Kelp Forest Plateaus | **0.55** | Absorption muffles movement — the stealth biome |
 | Abyssal Trenches | **1.60 (axial)** | Trench walls channel sound impossibly far down the axis — no secrets, only distances |
-| Resonance Fields | **0.70 (scattered)** | Bearings lie by up to ±30° and read up to 15% long; a ping returns one to three false contacts ([systems-echo.md](systems-echo.md) §3, "Scattered water") |
+| Resonance Fields | **0.70 (scattered)** | Bearings lie by up to ±30° and read up to 15% long to one ear, and are true to two of the same player's hulls 30° apart; a ping returns one to three false contacts that no second ear ever confirms ([systems-echo.md](systems-echo.md) §3, "Scattered water") |
 | Coral Ruins | **0.80 (occluded)** | Hard shadows behind structures — the only biome that changes during a match, specified below, built, and spent by three shipped missions |
 
 PF is a property of a *place*, and it is not the only thing that scales a signature. The **thermocline** at 1,200 m applies a second multiplier that no cell of the map carries, because it depends on the depths of both ends of the path: 0.3 across the layer, 1.2 along its duct, 1.0 otherwise. It multiplies the biome's PF rather than replacing it — crossing the layer inside a Thermal Vein is quieter than crossing it in open water. See [systems-echo.md](systems-echo.md) §3.

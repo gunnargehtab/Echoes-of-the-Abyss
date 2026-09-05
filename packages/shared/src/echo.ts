@@ -194,7 +194,10 @@ const SCATTER_STANDING_STEP = -1;
  * wall: a standing offset can be solved from two Echo ticks of a moving
  * listener, and pure drift averages back to the truth given a long enough
  * watch. Summed, the long-run mean is the standing half, which is itself a
- * lie, and no run of samples recovers the truth (docs/systems-echo.md §3).
+ * lie, and no run of samples from one listener recovers the truth. Two
+ * listeners on a cross bearing do — the "two ears" rule in
+ * docs/systems-echo.md §3 — and that lives in the Echo pass, which is the
+ * only place that knows how many ears a slot has on an emitter.
  *
  * `key` is the pair — the observer folded with the emitter's *match-local*
  * id, never its entity id, for the reason the Tier-2 blur learned the hard

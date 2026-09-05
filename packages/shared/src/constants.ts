@@ -1677,6 +1677,11 @@ export const BEARING_BLUR_FRACTION = 0.15;
  * The lie is hashed off the match seed, the pair and the tick — never drawn
  * from `world.rng` — so a replay and both clients agree and adding a contact
  * shifts nobody else's dice. See `scatterContact` for the shape of it.
+ *
+ * One listener cannot solve it and two can (§3 "Two ears"): a player holding
+ * the emitter from two hulls on a cross bearing is told the truth. That is
+ * what makes the Fields a rule rather than dice — the lie is bounded, and the
+ * way out costs a second hull committed to the water.
  */
 export const SCATTER = {
   /** SPEC — §3: up to ±30° on a path that is all crystal. */
@@ -1699,8 +1704,8 @@ export const SCATTER = {
    * observer-and-emitter pair. The rest drifts. Neither half is enough on its
    * own: a lie that only stood could be solved from two Echo ticks of a
    * moving listener, and one that only drifted would average back to the
-   * truth over a long enough watch. Together, no number of samples recovers
-   * the truth.
+   * truth over a long enough watch. Together, no number of samples from one
+   * listener recovers the truth; `CROSS_BEARING_RAD` below is the way out.
    */
   STANDING_FRACTION: 0.5,
   /**
@@ -1711,6 +1716,15 @@ export const SCATTER = {
    * noise; the target emotion is dread, not confusion.
    */
   DRIFT_PERIOD_S: 2,
+  /**
+   * SPEC — §3 "Two ears": the Fields cannot lie to a player who holds a
+   * bearing on the emitter from two listeners at least this far apart, seen
+   * from the emitter. Deliberately the same figure as the bearing bound, so
+   * the rule a player carries is one number — the Fields lie by up to 30°,
+   * and two ears 30° apart tell the truth. Two hulls in convoy are one ear:
+   * a pair 100 m apart hearing something 1,000 m away are 6° apart.
+   */
+  CROSS_BEARING_RAD: (30 * Math.PI) / 180,
   /**
    * SPEC — docs/audio-direction.md §5: on a ping in a Resonance Field "one to
    * three of them are false". Per transmission, from a pinger standing in a

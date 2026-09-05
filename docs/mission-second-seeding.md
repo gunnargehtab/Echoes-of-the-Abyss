@@ -810,9 +810,9 @@ What this mission deliberately does not teach:
   walking a lip with a bed on it, the Order's raid, the Chord — and the Complete reading counts
   the tides still to come without showing one.
 - **Bloom Surge.** The Commune's superweapon is absent from the engine and not asked for
-  ([mission-in-writing.md](mission-in-writing.md) §13); a spore mass that blinds every
-  hydrophone on the rim for twenty-five seconds would be an answer in the letter's grammar,
-  and the plateaus decline to give one.
+  ([mission-in-writing.md](mission-in-writing.md) §13); a Veil that ripens and caps every
+  hydrophone in 1,200 m at Tier 1 for fifteen seconds ([factions.md](factions.md), #438) would
+  be an answer in the letter's grammar, and the plateaus decline to give one.
 - **A fight.** Four navies are weapons-cold on D, and the plateaus' three guns come down struck.
   Nothing here is a combat lesson; the arrangement ends as a sound, not a shot.
 

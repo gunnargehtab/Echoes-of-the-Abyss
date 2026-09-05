@@ -11,9 +11,12 @@
  * - **It must never move a tier.** Scatter is a rule about *where*, not *how
  *   loud*. Every distance the Order's mission documents quote is a range to a
  *   tier, and all of them stand to the metre.
- * - **The lie has to be a wall, not a puzzle.** Deterministic per replay,
- *   different per seed, moving over time, and never shorter than the truth in
- *   range — each of those is a property a program could otherwise exploit.
+ * - **The lie has to be a wall to one ear and a door to two.** Deterministic
+ *   per replay, different per seed, moving over time, and never shorter than
+ *   the truth in range — each of those is a property a program with one
+ *   listener could otherwise exploit. Two listeners on a cross bearing are
+ *   told the truth, and that is the rule that makes the Fields learnable
+ *   rather than dice (§3, "Two ears").
  * - **A phantom has to be indistinguishable on the wire and refused by every
  *   order.** A Tier-4 return with a handle from the same counter, a kind, a
  *   faction, health and a heading, and no entity behind it.
@@ -231,6 +234,182 @@ describe('bearings lie in scattered water — docs/systems-echo.md §3', () => {
     assert.equal(terrain.scatteredFraction(MAP_M / 2 + 100, 4000, MAP_M - 100, 4000), 0, 'none');
     const half = terrain.scatteredFraction(1000, 4000, MAP_M - 1000, 4000);
     assert.ok(half > 0.4 && half < 0.6, `half of the path: ${half}`);
+  });
+});
+
+describe('two ears solve the Fields — docs/systems-echo.md §3, "Two ears"', () => {
+  /**
+   * The `pair` fixture plus more of slot 1's hulls, each placed on a bearing
+   * *from the emitter* and a range from it. The emitter sits at (2000, 4000).
+   */
+  function ears(
+    hulls: readonly { bearingDeg: number; rangeM?: number }[],
+    options: { seed?: number } = {}
+  ) {
+    const fixture = pair({ terrain: fieldsMap(), seed: options.seed });
+    // The fixture's own listener is at bearing 0°, CLASSIFIED_AT_M away.
+    const listeners = [fixture.listener];
+    for (const hull of hulls) {
+      const rad = (hull.bearingDeg * Math.PI) / 180;
+      const range = hull.rangeM ?? CLASSIFIED_AT_M;
+      listeners.push(
+        spawnUnit(fixture.match.world, {
+          kind: UnitKind.Cruiser,
+          slot: 1,
+          faction: Faction.Pelagia,
+          x: 2000 + Math.cos(rad) * range,
+          y: 4000 + Math.sin(rad) * range,
+        })
+      );
+    }
+    return { ...fixture, listeners };
+  }
+
+  function truthOf(emitter: number) {
+    return { x: Position.x[emitter]!, y: Position.y[emitter]! };
+  }
+
+  it('reports the truth to a player holding the emitter from two hulls on a cross bearing', () => {
+    const { match, emitter } = ears([{ bearingDeg: 90 }]);
+    const contact = heard(match, emitter);
+    assert.ok(contact !== undefined);
+    assert.ok(contact.tier >= ResolutionTier.Classification, 'both ears classify it');
+    assert.deepEqual(
+      { x: contact.x, y: contact.y },
+      truthOf(emitter),
+      'two ears: the truth, exactly'
+    );
+  });
+
+  it('still lies to two hulls in convoy — a second ear is a second bearing, not a second hull', () => {
+    // 10° apart seen from the emitter, well inside the 30° the rule asks for.
+    const { match, emitter } = ears([{ bearingDeg: 10 }]);
+    const contact = heard(match, emitter);
+    assert.ok(contact !== undefined);
+    assert.notDeepEqual(
+      { x: contact.x, y: contact.y },
+      truthOf(emitter),
+      'one bearing twice is one ear'
+    );
+  });
+
+  it('crosses at exactly the documented spread, and not a degree under', () => {
+    const under = ears([{ bearingDeg: 29 }]);
+    const underContact = heard(under.match, under.emitter)!;
+    assert.notDeepEqual(
+      { x: underContact.x, y: underContact.y },
+      truthOf(under.emitter),
+      '29°: lied to'
+    );
+
+    const at = ears([{ bearingDeg: 30.5 }]);
+    const atContact = heard(at.match, at.emitter)!;
+    assert.deepEqual({ x: atContact.x, y: atContact.y }, truthOf(at.emitter), '30°: told');
+  });
+
+  it('counts a cross between two later ears, not only against the first one heard', () => {
+    // The first ear sits between the other two: neither is 30° from it, but
+    // they are 40° from each other. Which hull the pass visits first must not
+    // decide whether the player is told the truth.
+    const { match, emitter } = ears([{ bearingDeg: 20 }, { bearingDeg: -20 }]);
+    const contact = heard(match, emitter)!;
+    assert.deepEqual(
+      { x: contact.x, y: contact.y },
+      truthOf(emitter),
+      '±20° about the first ear is a 40° cross'
+    );
+  });
+
+  it('accepts a second ear that holds only a bearing, and refuses one that holds only a contact', () => {
+    // Find where a lone Cruiser resolves this Corvette at exactly Bearing in
+    // the Fields, then at exactly Contact, by walking a lone listener out.
+    let bearingAt: number | undefined;
+    let contactAt: number | undefined;
+    for (
+      let distance = CLASSIFIED_AT_M;
+      distance <= 3000 && contactAt === undefined;
+      distance += 25
+    ) {
+      const probe = pair({ terrain: fieldsMap(), distanceM: distance });
+      const tier = heard(probe.match, probe.emitter)?.tier ?? ResolutionTier.Silent;
+      if (tier === ResolutionTier.Bearing && bearingAt === undefined) bearingAt = distance;
+      if (tier === ResolutionTier.Contact) contactAt = distance;
+    }
+    assert.ok(
+      bearingAt !== undefined && contactAt !== undefined,
+      'the premise: both tiers are reachable'
+    );
+
+    const bearing = ears([{ bearingDeg: 90, rangeM: bearingAt }]);
+    const told = heard(bearing.match, bearing.emitter)!;
+    assert.ok(told.tier >= ResolutionTier.Classification, 'the near ear still sets the tier');
+    assert.deepEqual(
+      { x: told.x, y: told.y },
+      truthOf(bearing.emitter),
+      'a Tier-2 ear on a cross bearing is an ear'
+    );
+
+    const contact = ears([{ bearingDeg: 90, rangeM: contactAt }]);
+    const lied = heard(contact.match, contact.emitter)!;
+    assert.notDeepEqual(
+      { x: lied.x, y: lied.y },
+      truthOf(contact.emitter),
+      'a Tier-1 smudge has no bearing to cross with'
+    );
+  });
+
+  it("does not move the tier, and a cross never leaks a contact the player's ears did not earn", () => {
+    const alone = pair({ terrain: fieldsMap() });
+    const aloneContact = heard(alone.match, alone.emitter)!;
+    const crossed = ears([{ bearingDeg: 90 }]);
+    const crossedContact = heard(crossed.match, crossed.emitter)!;
+    assert.equal(
+      crossedContact.tier,
+      aloneContact.tier,
+      'scatter never moved a tier; neither does solving it'
+    );
+    const result = crossed.match.echo.run(crossed.match.world, [0, 1]);
+    assert.equal((result.contactsBySlot.get(1) ?? []).length, 1, 'one emitter, one contact');
+  });
+
+  it('a pinger in the Fields is an ear, and a phantom is never confirmed by one', () => {
+    // The pinger's own return lies (§3), unless a second hull holds a cross
+    // bearing on the same emitter — then the true return is true and the
+    // phantoms, which no second ear can ever hear, stay exactly where the
+    // transmission put them.
+    const match = new Match(VENTFRONT_DIVIDE, { fauna: false, seed: 31, terrain: fieldsMap() });
+    const pinger = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 4000,
+      y: 4000,
+    });
+    const enemy = spawnUnit(match.world, {
+      kind: UnitKind.Cruiser,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: 4700,
+      y: 4000,
+    });
+    // A second ear of the pinger's, 90° round from the pinger as the enemy sees
+    // it, close enough to classify it passively.
+    spawnUnit(match.world, {
+      kind: UnitKind.Cruiser,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 4700,
+      y: 4000 + CLASSIFIED_AT_M,
+    });
+    match.activeSonar(0, pinger);
+    const result = match.echo.run(match.world, [0, 1]);
+    const contacts = result.contactsBySlot.get(0) ?? [];
+    const real = contacts.find((c) => match.echo.entityForHandle(0, c.id) === enemy);
+    const phantoms = contacts.filter((c) => match.echo.entityForHandle(0, c.id) === undefined);
+    assert.ok(real !== undefined);
+    assert.equal(real.tier, ResolutionTier.Track, 'lit by the ping');
+    assert.deepEqual({ x: real.x, y: real.y }, truthOf(enemy), 'the true return, crossed, is true');
+    assert.ok(phantoms.length >= SCATTER.PHANTOMS_MIN, 'the phantoms are still returned');
   });
 });
 

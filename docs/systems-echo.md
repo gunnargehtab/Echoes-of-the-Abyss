@@ -144,8 +144,54 @@ than jumps. It is hashed off the match seed, the pair and the tick rather than d
 simulation's random stream, so a replay and both clients agree and adding a contact shifts
 nobody's dice. Neither half would do alone: a lie that only stood could be solved from two ticks
 of a moving listener, and one that only drifted would average back to the truth over a long
-enough watch. Together, no number of samples recovers the truth — which is what makes it a lie
-rather than a puzzle.
+enough watch. Together, **one ear** never recovers the truth, however long it listens and
+however far it moves — one hull sampled twice is still one hull.
+
+#### Two ears
+
+**A player who holds the emitter from two hulls on a cross bearing is told the truth.** Two of
+the same player's listeners, each resolving the emitter at a tier that carries a bearing —
+Bearing or better — and standing **at least 30° apart as the emitter sees them**, straighten the
+lie entirely: the contact is reported where it is, at the range it is, and stays there for as
+long as both ears hold it. 30° is the bearing lie's own bound on purpose, so the rule a player
+carries into the Fields is one number: *crystal lies by up to thirty degrees, and two ears thirty
+degrees apart hear straight.*
+
+The rule is what turns the Fields from dice into terrain. The bible refuses randomness twice
+already — kelp will not seize a hull on a roll ([hazards.md](hazards.md) §4) and no creature
+commits without a deterministic threshold and a tell ([bestiary.md](bestiary.md) §8) — on the
+one ground that a player must be able to *learn from* a rule. A lie no number of samples could
+solve was deterministic in code and indistinguishable from a malfunction in play, which is the
+exact failure [playtest-checklist.md](playtest-checklist.md)'s first human question exists to
+catch. Now the lie has a bound a player can hold in their head and a solution a player can
+*buy*, and the price is the point: the second ear is a second hull committed to the same water,
+within listening range of the same enemy, and itself audible there. Hostile terrain stays
+hostile — a single scout in crystal is still wrong by up to a third of a compass quarter — but it
+stops being arbitrary. The Fields ask for a second hull the way the trench asks for silence.
+
+What counts, precisely:
+
+- **Two hulls, not one hull twice.** A cross is between listeners that both hold the emitter
+  *this pass*. Yesterday's bearing from a hull that has since moved is not an ear.
+- **Two bearings, not two hulls.** Hulls in convoy are one ear: a pair 100 m apart hearing
+  something 1,000 m away are six degrees apart, and are lied to together. The spread is
+  measured at the emitter, so the same two hulls are a cross on a near contact and a convoy on a
+  far one — which is a range rule a player can feel without a protractor.
+- **A Tier-2 ear is an ear.** The second hull need not classify; it needs a bearing. A Tier-1
+  smudge has none and confirms nothing.
+- **The tier is untouched.** Solving the Fields moves a contact's *position*; it does not
+  sharpen it. The best ear still sets the tier, exactly as it always did.
+- **A ping is an ear.** The pinger holds every return at Track, so a second hull on a cross
+  bearing straightens a lit contact like any other — and a hull that transmits from inside the
+  Fields with a friend on the flank gets straight returns out of the one biome built to bend
+  them, at the ping's usual price.
+- **A cross is decided by where the hulls are and by nothing else.** Not by which listener the
+  server happened to walk first, not by the seed. Two ears thirty degrees apart is the truth on
+  every replay.
+
+**The client is told the outcome and nothing more.** Whether a contact was solved never crosses
+the wire; a solved contact is simply a contact at its true position, which is a fact the
+player's ears earned twice over. §9 says what the HUD may draw from that.
 
 **A ping transmitted from scattered water returns phantoms.** One to three false contacts per
 transmission ([audio-direction.md](audio-direction.md) §5), each with a handle from the same
@@ -157,6 +203,16 @@ resolves a phantom to nothing and does nothing. The true returns from the same p
 bearing like any other contact. A phantom sounds and reads identical to a true one
 ([audio-direction.md](audio-direction.md) §9): the terrain teaches its own rule, and it teaches it
 to the pinger.
+
+**A phantom is a return nobody else can hear** — and that is the tell, and the whole of it. A
+true return is a hull, and a hull is heard by whatever else the player has in range of it: a
+second ear on a cross bearing straightens it, and a friendly hull close enough to classify it
+passively holds it after the three seconds end. A phantom has no hull. No second ear ever
+confirms it, nothing holds it once the transmission fades, and a scout sent to the spot finds
+water. So the phantom rule is the two-ears rule read the other way — *what one ear alone
+reports from crystal, do not trust; what two report, do* — and the phantoms are bounded by the
+same number, the same hull count and the same price as the bearing lie. A player who learns one
+has learned both.
 
 **What is not scattered.** A Standing Wave corridor written through the Fields *un-scatters* the
 cells it sets: crystal ringing at one interval is the opposite of scatter, so inside the line
@@ -285,7 +341,7 @@ Lowest SIG. Organic hulls, algae reactors, muscle-driven propulsion. Silent Runn
 
 Best HYD ratings by a wide margin. Directorate units passively detect one tier higher than anyone else, and their **Cantor** support unit grants a 1,200 m Tier-3 listening dome.
 Their doctrine is not to hide or to endure but to **know first and arrive in numbers**. They also gain resources from fauna kills, and fauna are drawn to *your* noise — so the Directorate is rewarded for letting you be loud near their creatures.
-*Unique:* **Chorus Call** — emits a false SIG signature at a chosen map point, spoofing an entire phantom army. Costs nothing but cooldown. Devastating against players who trust their ears.
+*Unique:* **Chorus Call** — a Cantor sings a cohort that is not there: six voices at a chosen point within its own 1,200 m dome, each at SIG 16 (a Chorister at rest) on staggered periods, for 120 s. They are real emitters and they lie in the only register a lie can be told in here: at Tier 3 a listener classifies six Choristers; at Tier 4 — a ping, or an ear close enough — a voice reads as what it is, a sound with no hull behind it. The Cantor sings at SIG 40 for the two minutes, its dome withdrawn while it does, and cannot sing again for 180 s. Devastating against players who trust one ear; priced for the faction whose whole doctrine is having two ([factions.md](factions.md), "What a superweapon is").
 
 ### Hadron Knights — **The Loud On Purpose**
 
@@ -414,6 +470,7 @@ The Echo Layer only works if it's readable at a glance. See **[ui-ux.md](ui-ux.m
 - **Selected-unit detection radius** renders as a soft ring on the terrain.
 - **Ping cost is previewed before commit** — hovering the ping button shows the 2,400 m reveal radius in threat-red. Never let a ping be an accident.
 - **The thermocline is on the depth ribbon.** §3 says crossing it is meant to be a moment, and a moment needs a pixel: the layer is drawn at 1,200 m with its duct shaded, in the cyan of a passive readout rather than the ink the band boundaries use — it is not a fourth band. What may be drawn is bounded by what a client is entitled to know: the boundary depth is a published constant and identical on every map, and a hull's own zone is its own state, but the **factor** may never be rendered, because 0.3 is the *across* value and asserting it would assert a listener's depth.
+- **The Fields' lie is drawn as a bound, never as a flag.** A contact reported from crystal carries a soft **scatter envelope** — the ±30° wedge and the 15% of range the lie can reach — computed on the client from what it already holds: its own hulls, the public map and the reported point. The envelope collapses when two of the player's own hulls in listening range of the point sit 30° apart from it, which is the client drawing the §3 rule it is entitled to know, not a disclosure. Whether a given contact *was* solved is never sent ([ui-ux.md](ui-ux.md) §4).
 - **Audio mix is the primary channel.** A Tier-1 contact should be *heard* before it is *seen* on the minimap. See **[audio-direction.md](audio-direction.md)**.
 
 ### The resolution runs both ways
@@ -440,6 +497,8 @@ Systems this asymmetric fail in predictable ways. Known risks and mitigations:
 | Directorate always knows everything | Their HYD advantage is passive-only; they are the worst faction at *acting* on late information (slowest units) |
 | Knights are simply never heard | The cone is where their weapons are, so **fighting is announcing**; averaged over the compass they are an ordinary hull (§8); and their two signature emissions — the ping and the Standing Wave corridor — are omnidirectional and permanent respectively |
 | Snowballing via Echo Marks | Marks show *past*, never *present*. They reward inference, not omniscience |
+| The Fields feel like the interface malfunctioning | The lie is bounded — ±30°, +15% — and solvable by a second hull on a cross bearing (§3, "Two ears"); a phantom is a return no second ear ever confirms. What one ear hears in crystal is *wrong by a known amount*, which is dread; a lie with no bound and no answer was confusion |
+| A superweapon decides the match | None of the four can take a listener below Tier 1 (§4's design note is a floor, not a preference), every one is a site the enemy can see or a charge the enemy can hear before it lands, its radius is drawn, and its duration is seconds a hull can leave in ([factions.md](factions.md), "What a superweapon is") |
 
 ---
 

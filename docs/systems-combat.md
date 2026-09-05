@@ -185,8 +185,8 @@ launched torpedo, both end when it does, and neither is available without spendi
   8 seconds, 20 s cooldown (TUNABLE). Seekers re-acquire onto it; so does everything else
   listening, because a noisemaker is real noise at your real position. Saving the hull
   costs the formation its quiet. The Directorate's Chorus Call
-  ([systems-echo.md](systems-echo.md) §8) spoofs at map range what a noisemaker does
-  locally — seekers give both their teeth.
+  ([systems-echo.md](systems-echo.md) §8) does the same thing six times over, at the reach of a
+  Cantor's dome and for two minutes — seekers give both their teeth.
 - **Point defence:** guns can engage torpedoes in their terminal 250 m. A torpedo has
   40 HP — one or two gun cycles kill it, if the gun is idle and the arithmetic works out.
   Point defence is not a shield; it is a gun *choosing* — every cycle spent on a torpedo

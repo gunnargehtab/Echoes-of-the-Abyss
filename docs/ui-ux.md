@@ -78,6 +78,16 @@ Rules that apply to all tiers:
 - **No interpolation below Tier 4.** The server sends positions at 5 Hz; smoothing a Tier-2 blob between snapshots invents a velocity the player was never told. Tier 4 may interpolate, because at Tier 4 heading is known. The player's **own** hulls are not contacts and are drawn gliding between the last two snapshots (§12) — nothing is invented by drawing a hull where it must have been between two positions the player was told in full.
 - **Faction colour is earned at Tier 3.** Below that, contacts are scope-blue for everyone, because the player does not know whose they are.
 - **Count is an estimate and must look like one.** Tier 3 renders `~4`, never `4`.
+- **The Fields' lie is drawn as a bound.** A contact whose line from the player's nearest
+  listening hull crosses scattered cells carries a **scatter envelope**: a soft wedge of ±30°
+  about that line and 15% beyond the reported range, in the Tier-1 haze's ink, behind the mark
+  ([systems-echo.md](systems-echo.md) §3). It is computed on the client from what the client
+  already holds — its own hulls, the public map, the reported point — and it collapses when two
+  of the player's own hulls in listening range of the point stand 30° apart from it, because
+  that is the rule the server applies and the player is entitled to know it. Whether a given
+  contact *was* solved is never sent: a solved contact is simply a contact at its true position.
+  The envelope is the uncertainty, not the contact, so it can never be clicked, and it is never
+  drawn on the scope, where the mark's own size already says how much to trust it (§5).
 
 ---
 
@@ -593,6 +603,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | The match clock | Implemented (#208) — the log's T+ axis live in the top strip, from the server tick both share |
 | Own-force log rows | Implemented (§10, #206, #209) — `you were pinged`, `under fire`, `idle — mined out` |
 | The log's `MARK` row | Implemented (§10, #214) — residue derived by diffing the mark set by id, once per mark per match |
+| The scatter envelope on a contact reported from crystal (§4) | Not implemented — the rule it draws shipped server-side with #438 (two ears at 30° tell the truth); the wedge and its collapse are the client's half and are owed |
 | Priced buttons, and the reason a greyed one gives | Implemented (#351) — a button carries its whole price from the sum the server charges (`SUB 260+80c`), greys when any account falls short, and a press on it says which — *Abyssal Submersible: 80 crystal short* — on the hint bar, the way a locked key does (§7). Biomass is the third column ([economy.md](economy.md) §8); nothing is priced in it yet |
 
 ---
