@@ -87,6 +87,30 @@ import harvesterHadEmissive from '../assets/hulls/maps/harvester-hadron-emissive
 import abyssalHadAlbedo from '../assets/hulls/maps/abyssal-submersible-hadron-albedo.png';
 import abyssalHadHeight from '../assets/hulls/maps/abyssal-submersible-hadron-height.png';
 import abyssalHadEmissive from '../assets/hulls/maps/abyssal-submersible-hadron-emissive.png';
+import tenderAlbedo from '../assets/hulls/maps/tender-albedo.png';
+import tenderHeight from '../assets/hulls/maps/tender-height.png';
+import tenderEmissive from '../assets/hulls/maps/tender-emissive.png';
+import bulwarkAlbedo from '../assets/hulls/maps/bulwark-albedo.png';
+import bulwarkHeight from '../assets/hulls/maps/bulwark-height.png';
+import bulwarkEmissive from '../assets/hulls/maps/bulwark-emissive.png';
+import spinnerAlbedo from '../assets/hulls/maps/spinner-albedo.png';
+import spinnerHeight from '../assets/hulls/maps/spinner-height.png';
+import spinnerEmissive from '../assets/hulls/maps/spinner-emissive.png';
+import sowerAlbedo from '../assets/hulls/maps/sower-albedo.png';
+import sowerHeight from '../assets/hulls/maps/sower-height.png';
+import sowerEmissive from '../assets/hulls/maps/sower-emissive.png';
+import precentorAlbedo from '../assets/hulls/maps/precentor-albedo.png';
+import precentorHeight from '../assets/hulls/maps/precentor-height.png';
+import precentorEmissive from '../assets/hulls/maps/precentor-emissive.png';
+import dredgeAlbedo from '../assets/hulls/maps/dredge-albedo.png';
+import dredgeHeight from '../assets/hulls/maps/dredge-height.png';
+import dredgeEmissive from '../assets/hulls/maps/dredge-emissive.png';
+import cantusAlbedo from '../assets/hulls/maps/cantus-albedo.png';
+import cantusHeight from '../assets/hulls/maps/cantus-height.png';
+import cantusEmissive from '../assets/hulls/maps/cantus-emissive.png';
+import reciterAlbedo from '../assets/hulls/maps/reciter-albedo.png';
+import reciterHeight from '../assets/hulls/maps/reciter-height.png';
+import reciterEmissive from '../assets/hulls/maps/reciter-emissive.png';
 
 /**
  * Pixels per world metre the maps were baked at. The maps carry no metadata,
@@ -128,6 +152,49 @@ const KIND_MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
     albedo: abyssalAlbedo,
     height: abyssalHeight,
     emissive: abyssalEmissive,
+  },
+  // The rung's roster (#466): each hull is one navy's, so its model is the
+  // kind's canonical one and no variant dimension exists — the signature
+  // structures' rule in structureMaps.ts, applied to hulls.
+  [UnitKind.Tender]: {
+    albedo: tenderAlbedo,
+    height: tenderHeight,
+    emissive: tenderEmissive,
+  },
+  [UnitKind.Bulwark]: {
+    albedo: bulwarkAlbedo,
+    height: bulwarkHeight,
+    emissive: bulwarkEmissive,
+  },
+  [UnitKind.Spinner]: {
+    albedo: spinnerAlbedo,
+    height: spinnerHeight,
+    emissive: spinnerEmissive,
+  },
+  [UnitKind.Sower]: {
+    albedo: sowerAlbedo,
+    height: sowerHeight,
+    emissive: sowerEmissive,
+  },
+  [UnitKind.Precentor]: {
+    albedo: precentorAlbedo,
+    height: precentorHeight,
+    emissive: precentorEmissive,
+  },
+  [UnitKind.Dredge]: {
+    albedo: dredgeAlbedo,
+    height: dredgeHeight,
+    emissive: dredgeEmissive,
+  },
+  [UnitKind.Cantus]: {
+    albedo: cantusAlbedo,
+    height: cantusHeight,
+    emissive: cantusEmissive,
+  },
+  [UnitKind.Reciter]: {
+    albedo: reciterAlbedo,
+    height: reciterHeight,
+    emissive: reciterEmissive,
   },
 };
 

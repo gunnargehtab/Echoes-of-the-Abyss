@@ -145,6 +145,91 @@ external intake dredge gear; dim at rest, with floodlit mining machinery
 that reads as its loud state.
 ```
 
+### The rung's roster — one hull a navy at the Foundry, one behind the Slipway
+
+The eight faction-locked hulls of [units.md](units.md) "The rung, and two hulls a navy"
+(#436, #461). Each is one navy's and never another's, so each prompt names its faction
+block — there is no "any faction" here — and each transcribes the entry's argument about
+sound or depth, which is what the silhouette has to say at RTS distance: the Bulwark is a
+slab that survives three torpedoes, the Precentor is only ears, the Cantus is a resonance
+node on a hull, the Reciter is the Clarion's spine drawn out further still.
+
+```text
+UNIT — Tender (pair with Consortium): the repair hull, 85 m — a floating
+workshop, not a warship (SIG 48 idle, +12 while welding; no weapon). Box
+hull with an open work deck forward under two derricks, a riveted workshop
+deckhouse amidships, spare-plate racks, gas bottles, pump houses and pipe
+runs, twin prop tunnels notched into the stern. Sustained glow from the
+welding bay, the workshop's lit ports and the stern vents; floodlit when it
+works.
+```
+
+```text
+UNIT — Bulwark (pair with Consortium): the heavy, 150 m — the loudest hull
+in the game (SIG 70 idle, 75 cruise) and the widest beam in the roster. A
+slab: blunt ram bow with a plough plate and teeth, blunt stern, three
+stepped armour tiers, flank plates patchworked older-under-newer, one
+enormous forward twin turret (an 800 m gun), a bridge citadel aft, four
+stacks and three prop shrouds. Burning bright: floodlit deck surfaces and
+rows of floods along both deck edges — the loud state is the resting state.
+```
+
+```text
+UNIT — Spinner (pair with Pelagia): the mine-layer, 55 m — a seed pod
+(SIG 8 idle: quieter running than a Light Scout idling; no weapon). A
+spindle swollen at the waist by the four mine sacs it carries, growth rings,
+leaf pectorals and tail flukes, a spinneret at the bow. Nearly black:
+navigation marks only and a dorsal vein that barely shows.
+```
+
+```text
+UNIT — Sower (pair with Pelagia): the terraformer, 90 m — a leaf, the one
+hull in the roster wider at the bow than at the waist (SIG 20 idle, 45
+while seeding; no weapon; PR 2, grown for the water it plants). A broad flat
+bloom-bed forward with radial ribs and pale seed pods, a pressure bladder
+at the node, a narrow grown stem aft with a caudal fin. Dim accent veins
+along the ribs and one lit bud at the node; the bloom flares when it seeds.
+```
+
+```text
+UNIT — Precentor (pair with Directorate): the ears on the move, 60 m — a
+hull that is only ears (SIG 12 idle; HYD 95, the cap; no weapon). Short
+segmented body carrying a hydrophone array athwartships, so the plan is a
+cross and the hull is broader than it is long amidships: ranks of spines
+along the boom, the port rank one longer, a studded listening dome, folded
+walking limbs. Nearly black: four photophores in a pattern that repeats on
+neither side.
+```
+
+```text
+UNIT — Dredge (pair with Directorate): the hull for the floor of the map,
+120 m — the roster's only PR-4 entry (SIG 40 idle, 52 cruise). The Abyssal
+Submersible's deep body with the Directorate's armour grown over it: five
+wide overlapping tergites with a spine off each, a scoop bow with mandibles
+and a glowing gullet, one great folded claw to starboard and the dredge
+boom to port, a hopper amidships lit around its throat. Sustained glow:
+rows of photophores along every plate edge.
+```
+
+```text
+UNIT — Cantus (pair with Hadron Knights): a resonance node on a hull, 80 m
+— the Sounding Spire's grant made mobile (SIG 10 moving; 80 singing, in
+every quarter; no weapon). A faceted lozenge blade, bilaterally symmetric,
+carrying an octahedral crystal amidships in a four-strut alloy cradle;
+guard blades aft, a dorsal fin, drive prism astern. Nearly black at rest —
+the node's four ridges barely marked — because the node is the light when
+it sings, and dark when it does not.
+```
+
+```text
+UNIT — Reciter (pair with Hadron Knights): the precise one, 100 m — the
+Clarion's forward spine drawn out further still into a lance (SIG 90 ahead,
+9 astern; a 1,000 m gun). A long faceted blade hull with swept guard wings
+aft, a crystal inlay along the spine and the gun rail running the length of
+the lance to a muzzle crystal. Lit from the bow back and dark astern: the
+quarter it is loud in is the quarter it faces, and the rail is the light.
+```
+
 ## Block 3b — STRUCTURE (one per generation)
 
 Architecture anchors from the Rendering Target and Base Identity sections of
@@ -204,6 +289,18 @@ STRUCTURE — Sounding Spire (pair with Hadron Knights): tall crystalline
 resonance spire, bilaterally symmetrical, pale alloy frame around a violet
 crystal core (SIG 80 when active, directional). Burning bright along the
 crystal when active; heat-shimmer distortion.
+```
+
+```text
+STRUCTURE — Slipway (any faction): the second yard, the rung — a longer
+hall than the Foundry (340 m to its 320) with the slip cut through its
+whole length and open at both ends, so a hull is laid at the head gate,
+walked down the line under three gantries, and launched out of the mouth
+(SIG 30 idle, 70 while the line runs — the loudest line in the base). Two
+halls flank the slip, each grown in the navy's own architecture; a keel on
+blocks two thirds down the slip. Dim at rest: the line lights along the slip
+floor, the gantry working lights and the launch sill; floodlit when a hull
+is on the line.
 ```
 
 ## Block 4 — ENVIRONMENT (props: no faction, no SIG)

@@ -53,7 +53,12 @@ const UNITS = [
   { slug: 'corvette', model: 'corvette-pelagia.glb', lengthM: 80, sig: 28 },
   { slug: 'cruiser', model: 'cruiser-pelagia.glb', lengthM: 130, sig: 55 },
   { slug: 'harvester', model: 'harvester-pelagia.glb', lengthM: 75, sig: 18 },
-  { slug: 'abyssal-submersible', model: 'abyssal-submersible-directorate.glb', lengthM: 95, sig: 22 },
+  {
+    slug: 'abyssal-submersible',
+    model: 'abyssal-submersible-directorate.glb',
+    lengthM: 95,
+    sig: 22,
+  },
   // Faction variants: same kind, another navy's shape language. The slug's
   // faction suffix pairs with VARIANT_MAP_URL in hullMaps.ts.
   { slug: 'light-scout-bathyarch', model: 'light-scout-bathyarch.glb', lengthM: 60, sig: 6 },
@@ -91,6 +96,20 @@ const UNITS = [
     lengthM: 95,
     sig: 22,
   },
+  // The rung's roster (docs/units.md "The rung, and two hulls a navy"): each
+  // hull is one navy's, so its model is canonical for the kind — the
+  // signature-structure rule, applied to hulls. Glow calibrates on the idle
+  // SIG; the Reciter's listed 90 is a cone figure (systems-echo.md §8), so
+  // its emissive sits on the compass average the doc gives, 40.5 — the light
+  // is *placed* forward on the lance, which is where the 90 is.
+  { slug: 'tender', model: 'tender-bathyarch.glb', lengthM: 85, sig: 48 },
+  { slug: 'bulwark', model: 'bulwark-bathyarch.glb', lengthM: 150, sig: 70 },
+  { slug: 'spinner', model: 'spinner-pelagia.glb', lengthM: 55, sig: 8 },
+  { slug: 'sower', model: 'sower-pelagia.glb', lengthM: 90, sig: 20 },
+  { slug: 'precentor', model: 'precentor-directorate.glb', lengthM: 60, sig: 12 },
+  { slug: 'dredge', model: 'dredge-directorate.glb', lengthM: 120, sig: 40 },
+  { slug: 'cantus', model: 'cantus-hadron.glb', lengthM: 80, sig: 10 },
+  { slug: 'reciter', model: 'reciter-hadron.glb', lengthM: 100, sig: 40.5 },
 ];
 
 /**
@@ -130,6 +149,12 @@ const STRUCTURES = [
   { slug: 'cantor', model: 'cantor-directorate.glb', lengthM: 160, sig: 35 },
   { slug: 'sounding-spire', model: 'sounding-spire-hadron.glb', lengthM: 140, sig: 30 },
   { slug: 'spore-veil', model: 'spore-veil-pelagia.glb', lengthM: 170, sig: 20 },
+  // The Slipway (#466): every navy's yard, grown in each navy's architecture
+  // like the Foundry it stands beside. 340 m is 2 × radiusM 170.
+  { slug: 'slipway', model: 'slipway-bathyarch.glb', lengthM: 340, sig: 30 },
+  { slug: 'slipway-pelagia', model: 'slipway-pelagia.glb', lengthM: 340, sig: 30 },
+  { slug: 'slipway-directorate', model: 'slipway-directorate.glb', lengthM: 340, sig: 30 },
+  { slug: 'slipway-hadron', model: 'slipway-hadron.glb', lengthM: 340, sig: 30 },
 ];
 
 const JOBS = [
