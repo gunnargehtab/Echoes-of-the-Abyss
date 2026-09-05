@@ -41,6 +41,14 @@ export const HULL_LENGTH_M: Record<UnitKind, number> = {
   [UnitKind.Chorister]: statsFor(UnitKind.Chorister).hullLengthM,
   [UnitKind.Clarion]: statsFor(UnitKind.Clarion).hullLengthM,
   [UnitKind.Harvester]: statsFor(UnitKind.Harvester).hullLengthM,
+  [UnitKind.Tender]: statsFor(UnitKind.Tender).hullLengthM,
+  [UnitKind.Bulwark]: statsFor(UnitKind.Bulwark).hullLengthM,
+  [UnitKind.Spinner]: statsFor(UnitKind.Spinner).hullLengthM,
+  [UnitKind.Sower]: statsFor(UnitKind.Sower).hullLengthM,
+  [UnitKind.Precentor]: statsFor(UnitKind.Precentor).hullLengthM,
+  [UnitKind.Dredge]: statsFor(UnitKind.Dredge).hullLengthM,
+  [UnitKind.Cantus]: statsFor(UnitKind.Cantus).hullLengthM,
+  [UnitKind.Reciter]: statsFor(UnitKind.Reciter).hullLengthM,
 };
 
 /**
@@ -134,6 +142,130 @@ export const HULL_OUTLINE: Record<UnitKind, number[][]> = {
     [0.28, -0.16],
     [0.5, -0.28],
     [0.38, 0],
+  ],
+
+  // --- The rung's roster (#461). Silhouette-first, as above: each must read
+  // apart from the seven it is built beside, and from its own navy's other
+  // hull, from shape alone.
+
+  // A workshop: a box hull with a notched stern where the gantry reaches out
+  // over the hull it is welding. Squarer than the Harvester, no mouth.
+  [UnitKind.Tender]: [
+    [0.5, 0.14],
+    [0.3, 0.24],
+    [-0.3, 0.24],
+    [-0.5, 0.12],
+    [-0.38, 0],
+    [-0.5, -0.12],
+    [-0.3, -0.24],
+    [0.3, -0.24],
+    [0.5, -0.14],
+  ],
+  // The heavy: a slab. Blunt bow, blunt stern, and the widest beam in the
+  // roster — a wall that moves, and the Cruiser's outline stretched until it
+  // stops looking like a Cruiser.
+  [UnitKind.Bulwark]: [
+    [0.5, 0.16],
+    [0.36, 0.26],
+    [-0.36, 0.26],
+    [-0.5, 0.16],
+    [-0.5, -0.16],
+    [-0.36, -0.26],
+    [0.36, -0.26],
+    [0.5, -0.16],
+  ],
+  // The mine-layer: a spindle with a swollen waist — the magazine it carries —
+  // and a fine bow either end. Reads as a seed pod, which is what it is.
+  [UnitKind.Spinner]: [
+    [0.5, 0],
+    [0.2, 0.18],
+    [0.0, 0.24],
+    [-0.2, 0.18],
+    [-0.5, 0],
+    [-0.2, -0.18],
+    [0.0, -0.24],
+    [0.2, -0.18],
+  ],
+  // The terraformer: a broad flat bloom-bed forward and a narrow stem aft, a
+  // leaf rather than a hull. Nothing else in the roster is wider at the bow
+  // than at the waist.
+  [UnitKind.Sower]: [
+    [0.5, 0.1],
+    [0.34, 0.28],
+    [0.02, 0.24],
+    [-0.2, 0.1],
+    [-0.5, 0.06],
+    [-0.5, -0.06],
+    [-0.2, -0.1],
+    [0.02, -0.24],
+    [0.34, -0.28],
+    [0.5, -0.1],
+  ],
+  // The ears: a short grown hull carrying a wide array athwartships, so the
+  // outline is a cross — the one hull that is broader than it is long in the
+  // middle. It is only ears, and the shape says so.
+  [UnitKind.Precentor]: [
+    [0.5, 0],
+    [0.18, 0.12],
+    [0.08, 0.3],
+    [-0.08, 0.3],
+    [-0.18, 0.12],
+    [-0.5, 0],
+    [-0.18, -0.12],
+    [-0.08, -0.3],
+    [0.08, -0.3],
+    [0.18, -0.12],
+  ],
+  // The floor hull: a segmented deep body like the Chorister's, but heavy —
+  // wide plates, a scoop bow. The Submersible's teardrop with the
+  // Directorate's armour grown over it.
+  [UnitKind.Dredge]: [
+    [0.5, 0.1],
+    [0.34, 0.22],
+    [0.1, 0.18],
+    [-0.1, 0.24],
+    [-0.36, 0.18],
+    [-0.5, 0.06],
+    [-0.5, -0.06],
+    [-0.36, -0.18],
+    [-0.1, -0.24],
+    [0.1, -0.18],
+    [0.34, -0.22],
+    [0.5, -0.1],
+  ],
+  // The node on a hull: a lozenge with a diamond amidships — the Spire's own
+  // top-down mark carried by a hull, so a singing Cantus reads as the thing
+  // it is doing the Spire's job.
+  [UnitKind.Cantus]: [
+    [0.5, 0],
+    [0.3, 0.14],
+    [0.12, 0.14],
+    [0.0, 0.26],
+    [-0.12, 0.14],
+    [-0.3, 0.14],
+    [-0.5, 0],
+    [-0.3, -0.14],
+    [-0.12, -0.14],
+    [0.0, -0.26],
+    [0.12, -0.14],
+    [0.3, -0.14],
+  ],
+  // The lance: the Clarion's forward spine drawn out further still, with
+  // almost no beam anywhere — a needle with a bow array. Longer and finer
+  // than the Clarion, which is the whole difference between the two.
+  [UnitKind.Reciter]: [
+    [0.5, 0.03],
+    [0.44, 0.09],
+    [0.14, 0.1],
+    [-0.1, 0.15],
+    [-0.4, 0.09],
+    [-0.5, 0.04],
+    [-0.5, -0.04],
+    [-0.4, -0.09],
+    [-0.1, -0.15],
+    [0.14, -0.1],
+    [0.44, -0.09],
+    [0.5, -0.03],
   ],
 };
 
@@ -361,6 +493,24 @@ export function drawStructureSilhouette(
           alpha: style.alpha * 0.55,
         });
         g.rect(x - w * 0.28, y - h * 0.22, w * 0.56, h * 0.44).stroke(edge);
+      }
+      break;
+    }
+    case StructureKind.Slipway: {
+      // The second yard: a longer hall than the Foundry's, with the slip
+      // itself cut through the whole length — a channel open at the bow end,
+      // where the Foundry's bay is a pit. The hulls it launches are the
+      // roster's heaviest, and the outline is built to say so.
+      const w = radiusM * 2.0;
+      const h = radiusM * 1.1;
+      g.rect(x - w / 2, y - h / 2, w, h).fill(body);
+      g.rect(x - w / 2, y - h / 2, w, h).stroke(edge);
+      if (style.detail) {
+        g.rect(x - w * 0.5, y - h * 0.16, w * 0.86, h * 0.32).fill({
+          color: 0x000000,
+          alpha: style.alpha * 0.55,
+        });
+        g.rect(x - w * 0.5, y - h * 0.16, w * 0.86, h * 0.32).stroke(edge);
       }
       break;
     }

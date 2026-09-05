@@ -96,7 +96,19 @@ export interface Doctrine {
   attackAtArmySize: number;
   /** Harvesters it wants working before it stops building them. */
   harvesterTarget: number;
-  /** What the Foundry builds, cycled in order. */
+  /**
+   * What the yards build, cycled in order.
+   *
+   * The rung's roster (#461) puts two hulls a navy on this list where the
+   * commander can use them: the armed Slipway hulls and the passive grants —
+   * a Precentor's dome and a Tender's weld work on a force that is simply
+   * standing near them. A Slipway hull with no Slipway standing has no yard
+   * and costs nothing to skip — the commander takes the doctrine's next entry
+   * — so the list can name the second hull before the commander has bought
+   * the rung. The Spinner and the Sower are left off:
+   * the commander lays no mines and terraforms nothing, and a hull it cannot
+   * use is berths it cannot spend.
+   */
   composition: readonly UnitKind[];
 }
 
@@ -116,7 +128,16 @@ export const DOCTRINE: Record<Faction, Doctrine> = {
     pingIntervalS: 25,
     attackAtArmySize: 4,
     harvesterTarget: 4,
-    composition: [UnitKind.Corvette, UnitKind.Cruiser, UnitKind.Cruiser],
+    // The Tender behind the first Corvette: repair is the navy's identity,
+    // and it only counts once there is something to weld. The Bulwark once
+    // the rung stands.
+    composition: [
+      UnitKind.Corvette,
+      UnitKind.Tender,
+      UnitKind.Cruiser,
+      UnitKind.Bulwark,
+      UnitKind.Cruiser,
+    ],
   },
   // "The Veil." Harvests at 18 where others harvest at 50, and loses any fight
   // it did not choose — so it takes the quiet money, runs silent, and waits
@@ -157,7 +178,16 @@ export const DOCTRINE: Record<Faction, Doctrine> = {
     pingIntervalS: 120,
     attackAtArmySize: 7,
     harvesterTarget: 5,
-    composition: [UnitKind.Corvette, UnitKind.Corvette, UnitKind.LightScout],
+    // A Precentor with the first pair: the swarm "has to know first where it
+    // is going", and the dome is the cheapest ears it can add. The Dredge
+    // once the rung stands.
+    composition: [
+      UnitKind.Corvette,
+      UnitKind.Corvette,
+      UnitKind.Precentor,
+      UnitKind.LightScout,
+      UnitKind.Dredge,
+    ],
   },
   // "The Score." Elite, expensive, few — deafening in front and quiet on the
   // flank. It masses the longest and fields the least.
@@ -175,7 +205,16 @@ export const DOCTRINE: Record<Faction, Doctrine> = {
     pingIntervalS: 40,
     attackAtArmySize: 5,
     harvesterTarget: 4,
-    composition: [UnitKind.Cruiser, UnitKind.Corvette, UnitKind.Cruiser],
+    // The Cantus is the Order's early tempo tool (docs/units.md): a Spire's
+    // grant on a hull, at the Foundry, so the force that masses at the rally
+    // masses with a band of depth under it. The Reciter once the rung stands.
+    composition: [
+      UnitKind.Cruiser,
+      UnitKind.Corvette,
+      UnitKind.Cantus,
+      UnitKind.Reciter,
+      UnitKind.Cruiser,
+    ],
   },
 };
 

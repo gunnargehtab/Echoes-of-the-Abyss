@@ -12,7 +12,7 @@
  */
 
 import { Faction, UnitKind } from './types.js';
-import { FACTION_COMBAT, FACTION_PRESSURE_BASELINE } from './constants.js';
+import { FACTION_COMBAT, FACTION_PRESSURE_BASELINE, HULL_EFFECTS } from './constants.js';
 
 export interface UnitStats {
   kind: UnitKind;
@@ -115,6 +115,22 @@ export interface UnitStats {
    * one-shot a Corvette from a Tier-2 bearing would be doing both.
    */
   carriesTorpedoes: boolean;
+  /**
+   * SIG while the hull's effect runs, for the three hulls whose work is
+   * neither moving nor shooting (docs/units.md, the rung's roster): the
+   * Tender welding, the Sower seeded, the Cantus singing. Applied by
+   * acoustics as a floor over the idle/cruise chain, the way descent is —
+   * working never makes an already-louder hull quieter — and the hulls that
+   * carry it are the hulls `spawnUnit` gives a `HullEffect` clock.
+   */
+  sigWorking?: number;
+  /**
+   * Grown mines aboard, for a hull that carries more than the roster's one —
+   * the Spinner (docs/units.md). A magazine the way torpedoes are one: the
+   * player's cap still binds, this is what the hull can lay before it has to
+   * go home and regrow.
+   */
+  mineMagazine?: number;
 }
 
 /** Half a hull's length: the radius the simulation keeps clear around it. */
@@ -355,6 +371,323 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     attackCooldownS: 0,
     carriesTorpedoes: false,
   },
+
+  // --- The rung's roster: two hulls a navy (docs/units.md, #461) -----------
+  //
+  // Every figure below is SPEC, transcribed from the hull's stat block in
+  // docs/units.md, "The rung, and two hulls a navy". Hull lengths are the one
+  // number the doc does not author and are TUNABLE, sized against the seven
+  // hulls above so each reads at a glance beside them.
+
+  [UnitKind.Tender]: {
+    kind: UnitKind.Tender,
+    name: 'Tender',
+    /**
+     * SPEC — docs/units.md, Tender: "48 / 55 / — (no weapon). +12 while
+     * working". A floating workshop is pumps, welding and hull plate, and a
+     * force that is healing is a force that is heard.
+     */
+    sigIdle: 48,
+    sigCruise: 55,
+    sigFiringBurst: 0,
+    // The doc's "+12" on the idle figure: a Tender welds alongside a hull
+    // that has stopped for it, so this is what a working Tender is heard at.
+    sigWorking: 48 + 12,
+    hyd: 40,
+    pressureRating: 2,
+    maxHp: 900,
+    speed: 45,
+    hullLengthM: 85,
+    cost: 320,
+    buildTimeS: 50,
+    berths: 2,
+    /**
+     * The repair rate is the Klaxon's other half — a navy built to survive
+     * being heard needs the thing that makes surviving cumulative — and a
+     * Commune Tender would be the quietest repair in the game bolted onto the
+     * navy that never stands still to use it (docs/units.md).
+     */
+    faction: Faction.Bathyarch,
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: false,
+  },
+  [UnitKind.Bulwark]: {
+    kind: UnitKind.Bulwark,
+    name: 'Bulwark',
+    /**
+     * SPEC — docs/units.md, Bulwark: "70 / 75 / +30 — the loudest hull in the
+     * game, and the Klaxon is never off it": +12% damage while SIG > 60 is a
+     * Bulwark's resting state, not a choice.
+     */
+    sigIdle: 70,
+    sigCruise: 75,
+    sigFiringBurst: 30,
+    hyd: 35,
+    pressureRating: 2,
+    /**
+     * §9: "survives one torpedo, dies to two" is the Cruiser's band; a Bulwark
+     * survives three. "Armour that makes surviving the torpedo the plan"
+     * (docs/systems-combat.md §11) is this hull's stat line.
+     */
+    maxHp: 2400,
+    // The slowest hull in the roster.
+    speed: 30,
+    // Longer than the Cruiser it out-weighs: the roster's longest hull, and
+    // the one `MAX_UNIT_RADIUS_M` is now sized by.
+    hullLengthM: 150,
+    cost: 700,
+    buildTimeS: 120,
+    // A Cruiser and a third, in tonnage, which is what makes a Bulwark line
+    // the Consortium's whole grant.
+    berths: 4,
+    /**
+     * "Few, heavy, tough" is the navy, and a hull that is loud by construction
+     * in a navy that is punished for being loud would be a Corvette with a
+     * worse price (docs/units.md).
+     */
+    faction: Faction.Bathyarch,
+    /**
+     * "220 damage at 800 m, 4.0 s cycle (55/s)". Outranges a Sentinel Turret's
+     * 700 m, which is the point. `ttkBands.test.ts` holds the doc's bands:
+     * a Corvette in two cycles, a Bastion alone in ~90 s, and it dies to
+     * Corvette guns in ≥ 55 s — an anchor that does not fall to chip damage,
+     * §9's rule for the Cruiser applied twice over.
+     */
+    attackDamage: 220,
+    attackRangeM: 800,
+    attackCooldownS: 4,
+    // The torpedo-eater carries tubes of its own, as the Cruiser does.
+    carriesTorpedoes: true,
+  },
+  [UnitKind.Spinner]: {
+    kind: UnitKind.Spinner,
+    name: 'Spinner',
+    /**
+     * SPEC — docs/units.md, Spinner: "8 / 14 / — no weapon; a Spinner is
+     * quieter running than a Light Scout idling". Laying is silent too: the
+     * mine is grown aboard and dropped, not built in the water.
+     */
+    sigIdle: 8,
+    sigCruise: 14,
+    sigFiringBurst: 0,
+    hyd: 55,
+    pressureRating: 1,
+    maxHp: 260,
+    speed: 80,
+    hullLengthM: 55,
+    cost: 150,
+    buildTimeS: 25,
+    berths: 1,
+    /**
+     * The Commune's mine cap (18 against 12) is the doctrine and this hull is
+     * the way to reach it; the Consortium with Spinners would be the loud navy
+     * laying the quiet navy's wall (docs/units.md).
+     */
+    faction: Faction.Pelagia,
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: false,
+    mineMagazine: HULL_EFFECTS.SPINNER.MAGAZINE,
+  },
+  [UnitKind.Sower]: {
+    kind: UnitKind.Sower,
+    name: 'Sower',
+    /**
+     * SPEC — docs/units.md, Sower: "20 / 26 / — (no weapon). 45 while
+     * seeding" — the bloom is a chemical roar, and a Commune force that has
+     * made the deep habitable has told the map where.
+     */
+    sigIdle: 20,
+    sigCruise: 26,
+    sigFiringBurst: 0,
+    sigWorking: 45,
+    hyd: 60,
+    // The only Commune hull above PR-1, grown for the water it plants.
+    pressureRating: 2,
+    maxHp: 500,
+    speed: 55,
+    hullLengthM: 90,
+    /**
+     * Crystal-locked like the Submersible, for the same reason: it is the
+     * hull built to live where the crystal is (docs/economy.md §8).
+     */
+    cost: 380,
+    crystalCost: 80,
+    buildTimeS: 70,
+    berths: 2,
+    /**
+     * The entry is a bloom, and the Directorate would use it to be somewhere
+     * it was already born to be (docs/units.md).
+     */
+    faction: Faction.Pelagia,
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: false,
+  },
+  [UnitKind.Precentor]: {
+    kind: UnitKind.Precentor,
+    name: 'Precentor',
+    // SPEC — docs/units.md, Precentor: "12 / 18 / — (no weapon)".
+    sigIdle: 12,
+    sigCruise: 18,
+    sigFiringBurst: 0,
+    // The cap, mobile: the best ears in the game, on a hull that is only
+    // ears. Its dome is HULL_EFFECTS.PRECENTOR, applied by the auras system.
+    hyd: 95,
+    /**
+     * PR-2 on the hull, the Directorate's baseline lifting it to 3 — the
+     * Chorister's rule, and for the Chorister's reason.
+     */
+    pressureRating: 2,
+    maxHp: 220,
+    speed: 50,
+    hullLengthM: 60,
+    // Grown: the cohort programme's account beside the Nodules.
+    cost: 200,
+    biomassCost: 30,
+    buildTimeS: 30,
+    berths: 1,
+    /**
+     * A 95-HYD hull is the Listening made a ship; the Consortium with
+     * Precentors would hear what its doctrine says it does not need to
+     * (docs/units.md).
+     */
+    faction: Faction.Directorate,
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: false,
+  },
+  [UnitKind.Dredge]: {
+    kind: UnitKind.Dredge,
+    name: 'Dredge',
+    /**
+     * SPEC — docs/units.md, Dredge: "40 / 52 / +25 — loud for a Directorate
+     * hull, on purpose: a Dredge at the field is the tell that the field is
+     * held".
+     */
+    sigIdle: 40,
+    sigCruise: 52,
+    sigFiringBurst: 25,
+    hyd: 70,
+    // The only PR-4 entry in the roster. Nothing below the Abyssal floor
+    // crushes it.
+    pressureRating: 4,
+    maxHp: 1400,
+    speed: 35,
+    hullLengthM: 120,
+    // Three accounts: the first hull priced in all of them.
+    cost: 450,
+    biomassCost: 60,
+    crystalCost: 40,
+    buildTimeS: 80,
+    berths: 3,
+    /**
+     * A PR-4 hull sold to any navy with a rendering contract would sell the
+     * bottom of the map, and docs/economy.md §7 makes the deep a thing
+     * somebody pays for (docs/units.md).
+     */
+    faction: Faction.Directorate,
+    /**
+     * "120 damage at 650 m, 2.0 s cycle (60/s)". `ttkBands.test.ts` holds the
+     * doc's bands: a Corvette in ~8 s and a Cruiser in ~20 s; it dies to
+     * Corvette guns in ~34 s.
+     */
+    attackDamage: 120,
+    attackRangeM: 650,
+    attackCooldownS: 2,
+    carriesTorpedoes: true,
+  },
+  [UnitKind.Cantus]: {
+    kind: UnitKind.Cantus,
+    name: 'Cantus',
+    /**
+     * SPEC — docs/units.md, Cantus: "10 / 10 / — moving; 80 while singing —
+     * the Spire's figure, for the Spire's reason: rented depth is never
+     * quiet". The 80 is emitted in every quarter — a resonance node is
+     * omnidirectional by construction, so a singing Cantus is the one Knight
+     * hull `hasBow` refuses the directional term to (docs/systems-echo.md §8,
+     * the ping's exemption). Its listed idle is therefore a plain figure and
+     * not a cone one, unlike the Clarion's and the Reciter's.
+     */
+    sigIdle: 10,
+    sigCruise: 10,
+    sigFiringBurst: 0,
+    sigWorking: 80,
+    hyd: 50,
+    pressureRating: 2,
+    maxHp: 600,
+    speed: 55,
+    hullLengthM: 80,
+    /**
+     * A Spire's grant at a third of the price and none of the crystal, so two
+     * Clarions and a Cantus can raid the field in the opening — the Order's
+     * early tempo tool (docs/units.md; docs/economy.md §9).
+     */
+    cost: 400,
+    buildTimeS: 60,
+    berths: 2,
+    /**
+     * The entry is the Spire's term on a hull, and the Spire's term is one
+     * navy's crystal (docs/units.md).
+     */
+    faction: Faction.Hadron,
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: false,
+  },
+  [UnitKind.Reciter]: {
+    kind: UnitKind.Reciter,
+    name: 'Reciter',
+    /**
+     * SPEC — docs/units.md, Reciter: "90 / 90 / +10 — cone figures, like the
+     * Clarion's: 90 ahead, 31.5 on the beam, 9 astern, 40.5 over the compass".
+     * `units.test.ts` holds the compass average against
+     * `DIRECTIONAL_COMPASS_AVERAGE` rather than against 40.5, as it does the
+     * Clarion's: louder than a Corvette and quieter than a Cruiser on average,
+     * and the loudest thing on the map from the front.
+     */
+    sigIdle: 90,
+    sigCruise: 90,
+    // The Clarion's reason: the Order fights with energy, and the discharge
+    // figure is the navy's (`firingSigFor`), read from it rather than beside
+    // it.
+    sigFiringBurst: FACTION_COMBAT.ENERGY.FIRING_SIG,
+    hyd: 50,
+    pressureRating: 2,
+    // A glass cannon: the whole hull is the lance.
+    maxHp: 300,
+    speed: 70,
+    hullLengthM: 100,
+    cost: 260,
+    buildTimeS: 45,
+    berths: 2,
+    /**
+     * The Clarion's reason exactly: a cone figure is unreadable without the
+     * term, and another navy's Reciter would emit 90 in every direction
+     * (docs/units.md).
+     */
+    faction: Faction.Hadron,
+    /**
+     * "140 damage at 1,000 m, 3.0 s cycle (46.7/s) — outranges the Cruiser's
+     * 900." `ttkBands.test.ts` holds the doc's bands: a Corvette in ~9 s, a
+     * Light Scout in two cycles, and it dies to a Corvette in ~7 s if the
+     * Corvette gets there. The trade is the whole hull.
+     */
+    attackDamage: 140,
+    attackRangeM: 1000,
+    attackCooldownS: 3,
+    // No tubes. The hull is the lance and nothing else: a 300 HP hull that
+    // also carried two Corvette-killing torpedoes would be an ambush kit on
+    // the navy whose doctrine is the fight it arranged, and §5's magazine
+    // stays with the hulls built to close.
+    carriesTorpedoes: false,
+  },
 };
 
 export function statsFor(kind: UnitKind): UnitStats {
@@ -367,7 +700,8 @@ export function statsFor(kind: UnitKind): UnitStats {
  * One rule with two readers, for `PRODUCIBLE`'s reason: the server validates
  * production against it and the command bar renders the yard's roster from
  * it, and two copies would eventually disagree about which navy owns which
- * hull. Almost every hull is nobody's — see `UnitStats.faction`.
+ * hull. The seven generic hulls are nobody's; the rung's eight are each one
+ * navy's — see `UnitStats.faction`.
  */
 export function unitAvailableTo(kind: UnitKind, faction: Faction): boolean {
   const locked = UNIT_STATS[kind].faction;

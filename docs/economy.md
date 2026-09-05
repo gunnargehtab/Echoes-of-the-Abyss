@@ -167,7 +167,7 @@ drive to a field, mine, haul home, deposit at a Bastion or Refinery. Constants l
 | Resonance Crystal | **Implemented** — Abyssal field, second stockpile, tech gate | See below |
 | Depth economics (§7) | **Implemented** — the round trip has a clock on it | Harvesters issue their own depth orders: loud descent to the field, slow climb home |
 | Industrial hum (§5) | **Implemented** — a decaying Echo Mark at the depot, intensity per delivered cargo | Keyed to throughput, not to the building: a refinery nobody hauls to is silent, and throttling down drops the hum because the loads shrink with it |
-| Refits ([systems-progression.md](systems-progression.md) §2) | **Designed, not built** — five fleet-wide upgrades priced in Nodules and Crystal, the Pressure Refit at a signature structure's 120 | Each is a `Priced` roster entry through the same `priceOf`, `affords` and `charge`; none can land before the Slipway does, because they are produced on its line |
+| Refits ([systems-progression.md](systems-progression.md) §2) | **Designed, not built** — five fleet-wide upgrades priced in Nodules and Crystal, the Pressure Refit at a signature structure's 120 | Each is a `Priced` roster entry through the same `priceOf`, `affords` and `charge`, produced on the Slipway's line, which #461 built |
 
 ### Thermal Draw in the scaffold
 
@@ -263,13 +263,14 @@ has berths for, and berths are infrastructure — which in this game means they 
 ### The rule
 
 - Each hull occupies a number of berths set by its tonnage, listed on its stat block in
-  [units.md](units.md): one for a Light Scout, a Harvester or a Chorister; two for a
-  Corvette, a Clarion or an Abyssal Submersible; three for a Cruiser.
+  [units.md](units.md): one for a Light Scout, a Harvester, a Chorister, a Spinner or a
+  Precentor; two for a Corvette, a Clarion, an Abyssal Submersible, a Tender, a Sower, a
+  Cantus or a Reciter; three for a Cruiser or a Dredge; four for a Bulwark.
 - The **Bastion grants 16 berths** and every commissioned **Foundry grants 8 more**, to a
-  hard **ceiling of 40** per commander — and so will the Slipway, the second yard
-  [units.md](units.md) designs and the scaffold does not yet build. Nothing else grants any:
-  a Refinery is a depot, a turret has no crew to speak of, and the four signature structures
-  are instruments.
+  hard **ceiling of 40** per commander — and so does the **Slipway**, the second yard
+  [units.md](units.md) designs (#461), so the ceiling is a Bastion, two Foundries and a
+  Slipway. Nothing else grants any: a Refinery is a depot, a turret has no crew to speak of,
+  and the four signature structures are instruments.
 - A hull counts against the berths from the moment it is **queued** — the crew is called
   up when the keel is laid, not when it launches — and stops counting when it dies. A
   Foundry lost mid-match takes its eight berths with it; the hulls already afloat stay

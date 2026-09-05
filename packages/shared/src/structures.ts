@@ -236,6 +236,36 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
     constructible: true,
     faction: Faction.Pelagia,
   },
+  [StructureKind.Slipway]: {
+    kind: StructureKind.Slipway,
+    name: 'Slipway',
+    /**
+     * SPEC — docs/units.md, the Slipway: "30 idle / 70 while the line runs —
+     * louder than a Foundry's 55, and the loudest line in the base." A navy
+     * building its upper tier is audibly building it: the ambition is heard
+     * before the hull is (docs/economy.md §1 applied to tech).
+     */
+    sigIdle: 30,
+    sigActive: 70,
+    hyd: 30,
+    maxHp: 2500,
+    /**
+     * The same crystal price as a signature structure, because it is the same
+     * kind of decision: the deep, spent on a building. Every navy's — the
+     * rung is not one doctrine's — so no faction lock; the hulls it builds
+     * carry the locks instead (`unitAvailableTo`).
+     */
+    cost: 600,
+    crystalCost: 120,
+    buildTimeS: 120,
+    // TUNABLE — a yard for the roster's heaviest hulls, a little wider than
+    // the Foundry's 160.
+    radiusM: 170,
+    acceptsDeposits: false,
+    constructible: true,
+    // A line is a line: the Foundry's demand, for the Foundry's reason.
+    drawDemand: 4,
+  },
   [StructureKind.VentTap]: {
     kind: StructureKind.VentTap,
     name: 'Vent Tap',
@@ -286,14 +316,19 @@ export const MAX_STRUCTURE_RADIUS_M = Math.max(
 
 /**
  * What each structure kind is allowed to produce — the classic tech split:
- * the Bastion can always rebuild an economy; combat hulls need a Foundry.
- * Shared because the server validates against it and the client's command
- * bar renders from it; two copies would eventually disagree.
+ * the Bastion can always rebuild an economy; combat hulls need a Foundry; the
+ * rung's hulls need the rung. Shared because the server validates against it
+ * and the client's command bar renders from it; two copies would eventually
+ * disagree.
  *
  * This is the *building* half of the question only. Whether a given navy may
- * build a hull it has a Foundry for is `unitAvailableTo` in units.ts, and both
+ * build a hull it has a yard for is `unitAvailableTo` in units.ts, and both
  * readers ask both — the Clarion is listed here and is still refused to three
- * of the four navies.
+ * of the four navies, and each Slipway row is one navy's for the same reason.
+ *
+ * The Slipway "produces each navy's second exclusive hull, and nothing the
+ * Foundry already builds" (docs/units.md), so the two rows are disjoint on
+ * purpose.
  */
 export const PRODUCIBLE: Partial<Record<StructureKind, readonly UnitKind[]>> = {
   [StructureKind.Bastion]: [UnitKind.Harvester],
@@ -305,5 +340,19 @@ export const PRODUCIBLE: Partial<Record<StructureKind, readonly UnitKind[]>> = {
     UnitKind.Chorister,
     UnitKind.Clarion,
     UnitKind.Harvester,
+    UnitKind.Tender,
+    UnitKind.Spinner,
+    UnitKind.Precentor,
+    UnitKind.Cantus,
   ],
+  [StructureKind.Slipway]: [UnitKind.Bulwark, UnitKind.Sower, UnitKind.Dredge, UnitKind.Reciter],
 };
+
+/**
+ * The yards: every structure with a production line, in the order the command
+ * bar lists their rosters. Derived from `PRODUCIBLE` so a third yard could not
+ * be added to one reader and not the other.
+ */
+export const YARDS: readonly StructureKind[] = (
+  Object.keys(PRODUCIBLE).map(Number) as StructureKind[]
+).filter((kind) => kind !== StructureKind.Bastion);

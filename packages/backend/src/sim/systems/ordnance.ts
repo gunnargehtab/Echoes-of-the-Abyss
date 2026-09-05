@@ -52,6 +52,7 @@ import {
   Countermeasure,
   Health,
   Laying,
+  MineMagazine,
   Magazine,
   Ordnance,
   Owner,
@@ -353,7 +354,13 @@ export function deployNoisemaker(world: SimWorld, hull: number): number {
  * heard first.
  */
 export function layMine(world: SimWorld, hull: number, capPerPlayer: number): number {
-  if (!hasComponent(world, Countermeasure, hull)) return 0;
+  // Two kinds of layer: an armed hull with the roster's one mine, and a
+  // Spinner with a grown magazine (docs/units.md). The magazine is a third
+  // refusal — empty is empty — on top of the two below, and the player's cap
+  // binds the Spinner exactly as it binds everyone.
+  const grown = hasComponent(world, MineMagazine, hull);
+  if (!grown && !hasComponent(world, Countermeasure, hull)) return 0;
+  if (grown && MineMagazine.mines[hull]! <= 0) return 0;
   if (hasComponent(world, Laying, hull) && Laying.remainingS[hull]! > 0) return 0;
   const slot = Owner.slot[hull]!;
   if (liveMineCount(world, slot) >= capPerPlayer) return 0;
@@ -375,9 +382,15 @@ export function layMine(world: SimWorld, hull: number, capPerPlayer: number): nu
   // construction grade for exactly as long as the mine takes to arm, which is
   // the counter-play §6 asks for: you cannot see a minefield, but you can hear
   // one being built, and residue remembers where.
+  //
+  // A grown mine is the exception the doc makes: "laying is silent". The
+  // Spinner still spends the arming interval on each drop — a magazine is
+  // not a volley — but acoustics reads its `Laying` as occupancy and not as a
+  // floor, and it keeps whatever silence it was running in.
   if (!hasComponent(world, Laying, hull)) addComponent(world, Laying, hull);
   Laying.remainingS[hull] = ORDNANCE.MINE.ARMING_S;
-  SilentRunning.active[hull] = 0;
+  if (grown) MineMagazine.mines[hull] = MineMagazine.mines[hull]! - 1;
+  else SilentRunning.active[hull] = 0;
 
   return mine;
 }

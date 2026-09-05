@@ -52,6 +52,8 @@ const STRUCT_ART_URL: Record<StructureKind, string> = {
   // Industrial plant bolted to a vent: the same siege plating the refinery
   // wears, because a tap is refinery machinery pointed at heat.
   [StructureKind.VentTap]: siegeUrl,
+  // A yard is a yard: the Foundry's plating, on a longer hall.
+  [StructureKind.Slipway]: corvetteUrl,
 };
 
 /**
@@ -96,6 +98,8 @@ function halfExtentsM(kind: StructureKind): { hx: number; hy: number } {
       return { hx: r * 0.85, hy: r * 0.575 };
     case StructureKind.Foundry:
       return { hx: r * 0.9, hy: r * 0.625 };
+    case StructureKind.Slipway:
+      return { hx: r, hy: r * 0.55 };
     case StructureKind.SentinelTurret:
       // The 45° barrel reaches 1.7r; keep the canvas square around it.
       return { hx: r * 1.35, hy: r * 1.35 };
@@ -245,6 +249,9 @@ function bakeProcedural(kind: StructureKind, faction: Faction): HTMLCanvasElemen
     case StructureKind.Foundry:
       ctx.rect(cx - r * 0.9, cy - r * 0.625, r * 1.8, r * 1.25);
       break;
+    case StructureKind.Slipway:
+      ctx.rect(cx - r, cy - r * 0.55, r * 2.0, r * 1.1);
+      break;
     case StructureKind.Cantor:
     case StructureKind.SoundingSpire:
     case StructureKind.SporeVeil:
@@ -360,6 +367,25 @@ function bakeProcedural(kind: StructureKind, faction: Faction): HTMLCanvasElemen
       }
       break;
     }
+    case StructureKind.Slipway: {
+      // The slip: a channel cut the length of the hall and open at one end,
+      // where the Foundry's bay is a pit. Same interior-shadow treatment.
+      const bw = r * 2.0 * 0.43;
+      const bh = r * 1.1 * 0.16;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          if (x - cx > -bw && x - cx < bw + r * 0.1 && Math.abs(y - cy) < bh) {
+            const i = y * w + x;
+            if (mask[i] === 0) continue;
+            height[i] = Math.min(height[i]!, 0.12);
+            albedo[i * 4] = albedo[i * 4]! * 0.35;
+            albedo[i * 4 + 1] = albedo[i * 4 + 1]! * 0.35;
+            albedo[i * 4 + 2] = albedo[i * 4 + 2]! * 0.35;
+          }
+        }
+      }
+      break;
+    }
     case StructureKind.SentinelTurret:
       addDome(height, w, h, cx, cy, r * 0.5, 1);
       break;
@@ -417,6 +443,14 @@ function drawGlow(
       glowDot(ctx, cx, cy, r * 0.3, accent, 0.55);
       glowDot(ctx, cx - r * 0.7, cy - r * 0.45, r * 0.07, '#f2b233', 0.6);
       glowDot(ctx, cx + r * 0.7, cy - r * 0.45, r * 0.07, '#f2b233', 0.6);
+      break;
+    case StructureKind.Slipway:
+      // Work light down the length of the slip: the loudest line in the base
+      // is also the brightest.
+      glowDot(ctx, cx - r * 0.3, cy, r * 0.22, accent, 0.5);
+      glowDot(ctx, cx + r * 0.3, cy, r * 0.22, accent, 0.5);
+      glowDot(ctx, cx - r * 0.8, cy - r * 0.4, r * 0.06, '#f2b233', 0.6);
+      glowDot(ctx, cx + r * 0.8, cy - r * 0.4, r * 0.06, '#f2b233', 0.6);
       break;
     case StructureKind.BaffleBarge:
       // Dim running lights at the baffle stacks — a masking ship keeps quiet.

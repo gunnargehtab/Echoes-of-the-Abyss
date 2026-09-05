@@ -222,13 +222,15 @@ close enough to know everything.
 ## 5. Prototype Mapping
 
 **Designed here; nothing below is implemented.** Constants land only after this section
-exists ([CLAUDE.md](../CLAUDE.md), *Constants live in exactly one place*), and the order
-matters: the Slipway must be transcribed first ([units.md](units.md), *Next steps*; #436),
-because §2 puts every refit on its line and there is no line to put them on yet.
+exists ([CLAUDE.md](../CLAUDE.md), *Constants live in exactly one place*). The line the
+refits need does exist: the Slipway and its four hulls were transcribed in #461
+(`StructureKind.Slipway` in `packages/shared/src/structures.ts`, with the per-yard
+`PRODUCIBLE` table that decides what its line may build), so a refit is a new kind of
+producible on a yard that already runs at 70, not a new yard.
 
 | Doc concept | Prototype today | Where it would land |
 | --- | --- | --- |
-| Refits (§2) | **Not built** | A `Priced` roster entry each, so `priceOf`, `affords` and `charge` in `packages/shared/src/economy.ts` refuse and debit them exactly as they do a hull — no new account, no new path (economy.md §8). Produced through `Match.produce` on a Slipway, applied as a per-player set the stat readers consult |
+| Refits (§2) | **Not built** | A `Priced` roster entry each, so `priceOf`, `affords` and `charge` in `packages/shared/src/economy.ts` refuse and debit them exactly as they do a hull — no new account, no new path (economy.md §8). Produced through `Match.produce` on the Slipway beside its `PRODUCIBLE` hulls, applied as a per-player set the stat readers consult |
 | Pressure Refit's faction rules (§2) | **Not built** | The rate and the Commune's cap beside `FACTION_COMBAT` in `packages/shared/src/constants.ts`; the Knights' instant, sounded variant is a Bastion emission for 15 s at 80 |
 | Rank (§3) | **Not built** | A component on the entity: experience and rank, written by `sim/systems/combat.ts` where damage is applied, read by the same file where damage is dealt. Rank crosses the wire as own-force hull data and inside a Tier-4 contact only |
 | Guard-rails (§4) | **Not built** | `test/ttkBands.test.ts` grows a rank-3 row per band |

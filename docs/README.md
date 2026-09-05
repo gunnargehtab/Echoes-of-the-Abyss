@@ -136,13 +136,13 @@ document already points at it:
 
 - **The rung, and two hulls a navy** — [units.md](units.md) designs a crystal-locked second yard
   (the Slipway) and eight faction-locked hulls, one at the Foundry and one behind the rung for
-  each navy, each argued from sound or depth (#436). Designed in full; none is transcribed into
-  `packages/shared` yet, and the doc says in what order they should be.
+  each navy, each argued from sound or depth (#436). Transcribed into `packages/shared` and the
+  simulation in #461; transports remain unwritten.
 - **Refits and rank** — [systems-progression.md](systems-progression.md) decides the question
   #436 left open: five fleet-wide refits priced in Resonance Crystal and bought on the Slipway's
   line at SIG 70, three ranks a hull earns by fighting and not dying, and no research tree
-  (#462). Designed in full; nothing is transcribed, and it cannot be until the Slipway is,
-  because there is no line to put a refit on yet.
+  (#462). Designed in full; nothing is transcribed. The Slipway's line exists since #461, so
+  the refits have somewhere to land; the doc's §5 says where.
 
 Supply, once the one deferred design question here, is decided and built:
 [economy.md](economy.md) §10 gives every hull a berth cost and every commander a grant the

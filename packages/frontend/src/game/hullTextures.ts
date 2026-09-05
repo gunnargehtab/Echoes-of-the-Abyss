@@ -63,6 +63,16 @@ const HULL_ART_URL: Record<UnitKind, string> = {
   // and the outline is again what tells the two apart.
   [UnitKind.Clarion]: cruiserUrl,
   [UnitKind.Harvester]: siegeUrl,
+  // The rung's roster (#461), on the plate class each hull's tonnage puts it
+  // in until a model passes intake. The outline is what tells each apart.
+  [UnitKind.Tender]: siegeUrl,
+  [UnitKind.Bulwark]: cruiserUrl,
+  [UnitKind.Spinner]: raiderUrl,
+  [UnitKind.Sower]: shadowUrl,
+  [UnitKind.Precentor]: shadowUrl,
+  [UnitKind.Dredge]: cruiserUrl,
+  [UnitKind.Cantus]: corvetteUrl,
+  [UnitKind.Reciter]: cruiserUrl,
 };
 
 /** Sprite resolution. 3 px per world metre keeps even the scout's hull crisp. */

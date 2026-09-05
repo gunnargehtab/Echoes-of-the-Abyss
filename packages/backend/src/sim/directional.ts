@@ -10,10 +10,10 @@
  * is written once.
  */
 
-import { Faction, directionalFactor } from '@echoes/shared';
+import { Faction, UnitKind, directionalFactor } from '@echoes/shared';
 import { hasComponent } from 'bitecs';
 
-import { ActivePing, Heading, Owner, Position } from './components.ts';
+import { ActivePing, Heading, HullEffect, Owner, Position, Unit } from './components.ts';
 import type { SimWorld } from './world.ts';
 
 /**
@@ -27,12 +27,19 @@ import type { SimWorld } from './world.ts';
  * - **Not mid-ping.** §5 fixes active sonar at SIG 95 *omnidirectional*, and
  *   `acoustics.ts` writes that 95 into `Acoustic.sig` for the duration. The
  *   ping is the one emission a Knight owns that has no bow.
+ * - **Not a singing Cantus.** The ping's exemption applied to a hull
+ *   (docs/units.md): a resonance node is omnidirectional by construction, so
+ *   the Spire's 80 on a hull is 80 "in every quarter" — the one Knight hull
+ *   the term does not apply to, and only while it sings. Moving, it is a
+ *   Knight hull like any other. The kind is read before the clock because
+ *   `HullEffect` is only carried by effect hulls, and every Cantus is one.
  */
 export function hasBow(world: SimWorld, eid: number): boolean {
   return (
     Owner.faction[eid] === Faction.Hadron &&
     hasComponent(world, Heading, eid) &&
-    !(hasComponent(world, ActivePing, eid) && ActivePing.remainingS[eid]! > 0)
+    !(hasComponent(world, ActivePing, eid) && ActivePing.remainingS[eid]! > 0) &&
+    !(Unit.kind[eid] === UnitKind.Cantus && HullEffect.active[eid] === 1)
   );
 }
 

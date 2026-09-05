@@ -103,6 +103,15 @@ the tick minus the pass — went from 1.05 ms to 0.66 ms at ~164 entities and fr
 2 ms budget is still crossed by the pass alone at ~160 entities on this hardware; the
 population cap that has to be resolved against it is #437.
 
+The rung's roster (#461) does not move the entity count: the Slipway grants the Foundry's
+eight berths to the same ceiling of 40 per navy ([economy.md](economy.md) §10), so a
+four-commander match is still at most 160 hulls. What it adds is on the 60 Hz path, not the
+Echo pass — the Precentor, a singing Cantus and a seeded Sower are aura sources the way the
+Cantor and the Spire are, and `aurasSystem` tests every allied hull against each of them, one
+distance per hull per source. That is the same shape as the structure auras and a few
+sources at most, so the per-tick cost stays linear in hulls; a Tender's weld is one nearest
+search per Tender per tick, on the same terms.
+
 ## Navigation
 
 Until #431 nothing in the simulation could path around an obstacle: `movementSystem`
