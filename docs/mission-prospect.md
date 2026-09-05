@@ -6,7 +6,8 @@
 > [mission-sorrowgate.md](mission-sorrowgate.md) sets and the Ledger documents continue:
 > everything here is authored, and code transcribes this document.
 
-**Setting:** The Rim — the Mouth's edge, 4,410 m below everything, in the same week of 214 PC
+**Setting:** The Rim — the Mouth's edge, the lip at 3,100 m over a floor 4,410 m below
+everything (§11; [world-map.md](world-map.md) §3), in the same week of 214 PC
 that three other navies arrive for three other reasons ([world-map.md](world-map.md);
 [campaign.md](campaign.md) §8).
 

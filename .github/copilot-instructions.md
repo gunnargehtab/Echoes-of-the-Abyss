@@ -93,7 +93,7 @@ Read: **[tech-stack.md](../docs/tech-stack.md)** · **[CLAUDE.md](../CLAUDE.md)*
 - **[timeline.md](../docs/timeline.md)** — Two centuries of history; the present is 214 PC
 - **[habitats.md](../docs/habitats.md)** — Inside the cities: berths, light, air, the hush, and what each culture calls beautiful
 - **[factions.md](../docs/factions.md)** — Four factions, their doctrines and politics
-- **[characters.md](../docs/characters.md)** — Twelve commanders and neutrals
+- **[characters.md](../docs/characters.md)** — Twelve commanders, neutrals, and the campaign's secondary cast
 - **[culture.md](../docs/culture.md)** — Four registers, naming conventions, and the dialogue writing guide
 - **[campaign.md](../docs/campaign.md)** — 29 missions and four irreconcilable endings
 

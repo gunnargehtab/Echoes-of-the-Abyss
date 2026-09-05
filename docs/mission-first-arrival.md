@@ -7,7 +7,8 @@
 > [mission-sorrowgate.md](mission-sorrowgate.md) sets: everything here is authored — the forces, the
 > water, the beats, the numbers and the text — and code transcribes this document.
 
-**Setting:** The Rim — the Mouth's northern edge, 4,410 m below everything, on the tide after
+**Setting:** The Rim — the Mouth's northern edge, the lip at 3,100 m over a floor 4,410 m
+below everything ([world-map.md](world-map.md) §3), on the tide after
 the concern's survey went home, in the same week of 214 PC that three other navies arrive for
 three other reasons ([world-map.md](world-map.md); [campaign.md](campaign.md) §8;
 [mission-prospect.md](mission-prospect.md) §1).
@@ -30,7 +31,8 @@ the column does.
 
 The rim is the edge of an eleven-kilometre depression that returns pings before they should
 arrive, on a cycle that shortened from 43 hours to 39 in 213 PC and is still shortening
-([world-map.md](world-map.md); [timeline.md](timeline.md)). That edge stands at 4,410 m and
+([world-map.md](world-map.md); [timeline.md](timeline.md)). That edge — the lip — stands at
+3,100 m over a floor at 4,410 m ([mission-prospect.md](mission-prospect.md) §11), and
 carries the richest resonant-crystal deposits ever surveyed, and — since this year — two
 returns that a Consortium survey has filed three times as equipment fault
 ([mission-prospect.md](mission-prospect.md) §1; [mission-item-nine.md](mission-item-nine.md)

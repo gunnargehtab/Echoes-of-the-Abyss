@@ -24,7 +24,7 @@ Every biome is also an acoustic space: terrain sets how far sound travels under 
 | Kelp Forest Plateaus | **0.55** | Absorption muffles movement — the stealth biome |
 | Abyssal Trenches | **1.60 (axial)** | Trench walls channel sound impossibly far down the axis — no secrets, only distances |
 | Resonance Fields | **0.70 (scattered)** | Bearings lie by up to ±30° and read up to 15% long; a ping returns one to three false contacts ([systems-echo.md](systems-echo.md) §3, "Scattered water") |
-| Coral Ruins | **0.80 (occluded)** | Hard shadows behind structures — the only biome that changes during a match, specified below and built |
+| Coral Ruins | **0.80 (occluded)** | Hard shadows behind structures — the only biome that changes during a match, specified below, built, and spent by two shipped missions |
 
 PF is a property of a *place*, and it is not the only thing that scales a signature. The **thermocline** at 1,200 m applies a second multiplier that no cell of the map carries, because it depends on the depths of both ends of the path: 0.3 across the layer, 1.2 along its duct, 1.0 otherwise. It multiplies the biome's PF rather than replacing it — crossing the layer inside a Thermal Vein is quieter than crossing it in open water. See [systems-echo.md](systems-echo.md) §3.
 
@@ -132,7 +132,7 @@ Sacred territory of the Hadron Knights.
 - Remnants of pre-collapse cities
 - Overgrown with coral and algae
 - Broken domes, collapsed tunnels
-- **The only biome that changes state during a match** — specified here, and built
+- **The only biome that changes state during a match** — specified here, built, and spent by two shipped missions: `attending-conclave` brings a dome down into Abyssal Trench, and `seeding-deep-furrow` turns a sown furrow to Kelp Forest ([mission-conclave-attending.md](mission-conclave-attending.md) §13; [mission-deep-furrow.md](mission-deep-furrow.md) §13)
 - Perfect for campaign missions
 
 The state change is specified here and belongs here rather than in any other biome: a dome
