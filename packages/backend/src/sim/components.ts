@@ -54,6 +54,25 @@ export const MoveOrder = defineComponent({
 });
 
 /**
+ * A hull's standing posture — the two orders that outlive a single move
+ * (docs/ui-ux.md §9; #435).
+ *
+ * `hold`: hold position. The hull fires at what comes into range and never
+ * chases it; any move order releases it. `engage`: attack-move. The hull is
+ * bound for (engageX, engageY) and stops to fight anything it meets on the
+ * way, then resumes — the one order that lets a force advance into water it
+ * cannot see, which in this game is most of it. Separate from `MoveOrder`
+ * because the move is spent when the hull stops to fight and the posture is
+ * what brings it back to the course.
+ */
+export const Posture = defineComponent({
+  hold: Types.ui8,
+  engage: Types.ui8,
+  engageX: Types.f32,
+  engageY: Types.f32,
+});
+
+/**
  * The Echo Layer's two numbers.
  *
  * `sig` is live and recomputed every tick from what the unit is doing;

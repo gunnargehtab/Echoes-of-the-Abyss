@@ -189,6 +189,9 @@ interface OrderMarker {
 }
 
 const ORDER_MARKER_MS = 600;
+/** The strip of screen, in px, that counts as its edge for scrolling (§9). */
+const EDGE_SCROLL_PX = 14;
+const EDGE_SCROLL_PX_PER_S = 900;
 /** Snapshots a pending order outlives before the server's plan is trusted to carry it. */
 const PENDING_ORDER_SNAPSHOTS = 2;
 
@@ -208,6 +211,12 @@ interface TrackedContact {
 
 export interface RendererCallbacks {
   onMoveOrder(unitIds: number[], x: number, y: number, queued: boolean): void;
+  /** Attack-move (§9, #435): go there and fight what you meet on the way. */
+  onAttackMoveOrder(unitIds: number[], x: number, y: number, queued: boolean): void;
+  onStopOrder(unitIds: number[]): void;
+  onHoldOrder(unitIds: number[], active: boolean): void;
+  /** Where a selected yard sends the hulls it launches. */
+  onRallyOrder(structureIds: number[], x: number, y: number): void;
   onToggleSilent(unitIds: number[], active: boolean): void;
   onPing(unitId: number): void;
   onAttackOrder(unitIds: number[], contactId: number, queued: boolean): void;
@@ -887,6 +896,15 @@ export class EchoRenderer {
   private readonly tracked = new Map<number, TrackedContact>();
   /** Orders given and not yet echoed back, by unit (docs/ui-ux.md §12). */
   private readonly pendingOrders = new Map<number, PendingOrder[]>();
+  /** Attack-move is armed: the next click on the water is where to go (§9). */
+  private pendingAttackMove = false;
+  /** Screen-edge scrolling (§9), a setting; the arrows pan regardless. */
+  private edgeScroll = true;
+  private readonly pointerClient = { x: 0, y: 0 };
+  private pointerOverWater = false;
+  private readonly arrowsDown = new Set<string>();
+  /** The previous frame's clock, for the pan's dt. */
+  private lastFrameMs = 0;
   private readonly orderMarkers: OrderMarker[] = [];
   /** Snapshots received this match; what a pending order's age is measured in. */
   private snapshotSeq = 0;
@@ -1122,6 +1140,10 @@ export class EchoRenderer {
   }
 
   /** Reduced motion (§11) — static equivalents, never removals. */
+  setEdgeScroll(on: boolean): void {
+    this.edgeScroll = on;
+  }
+
   setReducedMotion(reduced: boolean): void {
     this.reducedMotion = reduced;
   }
@@ -1581,6 +1603,12 @@ export class EchoRenderer {
         return;
       }
 
+      // Left click with attack-move armed: that is the point.
+      if (this.pendingAttackMove) {
+        this.commandAttackMove(e.clientX, e.clientY, e.shiftKey);
+        return;
+      }
+
       // Left click while a build is pending: place it.
       if (this.pendingBuild !== null) {
         this.commandPlace(e.clientX, e.clientY);
@@ -1595,6 +1623,10 @@ export class EchoRenderer {
     };
 
     const onPointerMove = (e: PointerEvent) => {
+      // Where the pointer rests, for edge scrolling; a touch never rests.
+      this.pointerClient.x = e.clientX;
+      this.pointerClient.y = e.clientY;
+      this.pointerOverWater = e.pointerType !== 'touch';
       if (this.menuOpen) {
         endGesture(e);
         return;
@@ -1694,6 +1726,10 @@ export class EchoRenderer {
       // way out of a pending build, and a way out you have to aim for is not
       // one. `RESERVED_CODES` is what stops a rebinder taking it.
       if (e.code === 'Escape') {
+        if (this.pendingAttackMove) {
+          this.pendingAttackMove = false;
+          return;
+        }
         if (this.pendingBuild !== null) {
           this.pendingBuild = null;
           return;
@@ -1712,7 +1748,19 @@ export class EchoRenderer {
       // route while production does. Also unbindable, for that reason.
       const digit = DIGIT_KEYS[e.code];
       if (digit !== undefined) {
-        this.controlGroup(digit, e.ctrlKey || e.metaKey);
+        this.controlGroup(digit, e.ctrlKey || e.metaKey, e.shiftKey);
+        return;
+      }
+      // `0` is the tenth group nobody has to assign: every hull that fights.
+      if (e.code === 'Digit0') {
+        this.selectArmy();
+        return;
+      }
+      // The arrows pan, per frame while held (see `panFromInput`); reserved
+      // alongside the digits so a rebind cannot take them.
+      if (e.code.startsWith('Arrow')) {
+        e.preventDefault();
+        this.arrowsDown.add(e.code);
         return;
       }
 
@@ -1752,6 +1800,22 @@ export class EchoRenderer {
       if (this.selected.size === 0) return;
 
       switch (action) {
+        case 'attackMove':
+          // Armed, then aimed: the next click on the water is the point, as a
+          // build key arms a placement. A press with a build pending drops
+          // the build — one thing armed at a time.
+          e.preventDefault();
+          this.pendingBuild = null;
+          this.pendingAttackMove = true;
+          return;
+        case 'stop':
+          e.preventDefault();
+          this.commandStop();
+          return;
+        case 'holdPosition':
+          e.preventDefault();
+          this.commandHold();
+          return;
         case 'silentRunning':
           e.preventDefault();
           this.commandToggleSilent();
@@ -1787,8 +1851,12 @@ export class EchoRenderer {
     };
 
     const onKeyUp = (e: KeyboardEvent) => {
+      this.arrowsDown.delete(e.code);
       if (this.menuOpen) return;
       if (actionFor(this.bindings, e.code) === 'pingPreview') this.previewPing = false;
+    };
+    const onPointerLeave = () => {
+      this.pointerOverWater = false;
     };
 
     canvas.addEventListener('contextmenu', onContextMenu);
@@ -1799,6 +1867,7 @@ export class EchoRenderer {
     // touch state or the next finger inherits a phantom pinch.
     canvas.addEventListener('pointercancel', onPointerUp);
     canvas.addEventListener('wheel', onWheel, { passive: false });
+    canvas.addEventListener('pointerleave', onPointerLeave);
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
 
@@ -1808,6 +1877,7 @@ export class EchoRenderer {
       canvas.removeEventListener('pointermove', onPointerMove);
       canvas.removeEventListener('pointerup', onPointerUp);
       canvas.removeEventListener('pointercancel', onPointerUp);
+      canvas.removeEventListener('pointerleave', onPointerLeave);
       canvas.removeEventListener('wheel', onWheel);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
@@ -1929,10 +1999,18 @@ export class EchoRenderer {
    * Recalling twice in quick succession centres the camera on the group —
    * the binding every RTS player already has in their hands.
    */
-  private controlGroup(group: number, assign: boolean): void {
+  private controlGroup(group: number, assign: boolean, append = false): void {
     if (assign) {
       if (this.selected.size === 0) this.controlGroups.delete(group);
       else this.controlGroups.set(group, [...this.selected]);
+      return;
+    }
+    // Shift adds the selection to the group rather than recalling it (§9).
+    if (append) {
+      if (this.selected.size === 0) return;
+      const members = new Set(this.controlGroups.get(group) ?? []);
+      for (const id of this.selected) members.add(id);
+      this.controlGroups.set(group, [...members]);
       return;
     }
 
@@ -2191,6 +2269,31 @@ export class EchoRenderer {
         enabled: units.length > 0,
         active: units.some((u) => u.followFloor === true),
         action: () => this.commandFollowFloor(),
+      });
+      // The three standing orders (§9, #435). ENGAGE arms an attack-move the
+      // way a build button arms a placement; on a touchscreen it is the only
+      // way to give one. HOLD is lit while the selection holds.
+      const fighters = units.some((u) => u.throttle === undefined);
+      buttons.push({
+        label: 'ENGAGE',
+        enabled: fighters && this.missionLock('weapons') === null,
+        active: this.pendingAttackMove,
+        action: () => {
+          this.pendingBuild = null;
+          this.pendingAttackMove = !this.pendingAttackMove;
+        },
+      });
+      buttons.push({
+        label: 'STOP',
+        enabled: units.length > 0,
+        active: false,
+        action: () => this.commandStop(),
+      });
+      buttons.push({
+        label: 'HOLD',
+        enabled: units.length > 0,
+        active: units.some((u) => u.holding === true),
+        action: () => this.commandHold(),
       });
       // Ordnance, docs/systems-combat.md §5, §6, §8. Each button reports its
       // own scarcity rather than merely greying out: a torpedo count and a
@@ -2523,6 +2626,45 @@ export class EchoRenderer {
    * converge-then-toggle shape a mixed silent squad gets, so one press means
    * one thing for the whole selection.
    */
+  /** `0`: every hull that fights, wherever it is (§9). */
+  private selectArmy(): void {
+    const army = this.units.filter((u) => u.throttle === undefined);
+    if (army.length === 0) return;
+    this.selected.clear();
+    for (const unit of army) this.selected.add(unit.id);
+    this.onSelectionChanged();
+  }
+
+  private commandAttackMove(clientX: number, clientY: number, queued: boolean): void {
+    this.pendingAttackMove = false;
+    const units = this.selectedUnits();
+    const water = this.screenToWorld(clientX, clientY);
+    if (units.length === 0 || water === null) return;
+    const ids = units.map((u) => u.id);
+    this.callbacks.onAttackMoveOrder(ids, water.x, water.y, queued);
+    this.noteOrder(ids, 'attackMove', water.x, water.y, queued);
+  }
+
+  private commandStop(): void {
+    const units = this.selectedUnits();
+    if (units.length === 0) return;
+    const ids = units.map((u) => u.id);
+    this.callbacks.onStopOrder(ids);
+    // Nothing pending is worth drawing for a hull that was told to stand.
+    for (const id of ids) this.pendingOrders.delete(id);
+  }
+
+  /** Hold position, toggled like floor-following: on unless all already hold. */
+  private commandHold(): void {
+    const units = this.selectedUnits();
+    if (units.length === 0) return;
+    const engage = !units.every((u) => u.holding === true);
+    this.callbacks.onHoldOrder(
+      units.map((u) => u.id),
+      engage
+    );
+  }
+
   private commandFollowFloor(): void {
     const units = this.selectedUnits();
     if (units.length === 0) return;
@@ -2645,6 +2787,19 @@ export class EchoRenderer {
     const selectedUnits = this.units.filter((u) => this.selected.has(u.id));
     const unitIds = selectedUnits.map((u) => u.id);
     const water = this.screenToWorld(clientX, clientY);
+
+    // A yard and nothing else selected: the right click is its rally point —
+    // where every hull it launches goes first (§9, #435).
+    if (unitIds.length === 0 && water !== null) {
+      const yards = this.structures
+        .filter((st) => this.selected.has(st.id) && (PRODUCIBLE[st.kind]?.length ?? 0) > 0)
+        .map((st) => st.id);
+      if (yards.length > 0) {
+        this.callbacks.onRallyOrder(yards, water.x, water.y);
+        this.orderMarkers.push({ kind: 'move', x: water.x, y: water.y, atMs: performance.now() });
+      }
+      return;
+    }
 
     const node = this.nearestNodeAt(clientX, clientY);
     const harvesterIds = selectedUnits.filter((u) => u.throttle !== undefined).map((u) => u.id);
@@ -2955,6 +3110,8 @@ export class EchoRenderer {
     this.pendingOrders.clear();
     this.orderMarkers.length = 0;
     this.snapshotSeq = 0;
+    this.pendingAttackMove = false;
+    this.arrowsDown.clear();
     // A rematch is T+00:00 again, and the water carries none of the last
     // match's blows into it.
     this.lastTick = 0;
@@ -3563,8 +3720,39 @@ export class EchoRenderer {
 
   // --- Draw ----------------------------------------------------------------
 
+  /**
+   * The keyboard's and the screen edge's share of the camera (§9): the
+   * arrows while held, the edge while the pointer rests on it. Per frame,
+   * by dt, so a slow frame does not pan slower.
+   */
+  private panFromInput(now: number): void {
+    const dt = this.lastFrameMs > 0 ? Math.min(0.1, (now - this.lastFrameMs) / 1000) : 0;
+    this.lastFrameMs = now;
+    if (this.menuOpen || this.conn === null || dt === 0) return;
+    let vx = 0;
+    let vy = 0;
+    if (this.arrowsDown.has('ArrowLeft')) vx -= 1;
+    if (this.arrowsDown.has('ArrowRight')) vx += 1;
+    if (this.arrowsDown.has('ArrowUp')) vy -= 1;
+    if (this.arrowsDown.has('ArrowDown')) vy += 1;
+    if (this.edgeScroll && this.pointerOverWater && this.marquee === null) {
+      const rect = this.app.canvas.getBoundingClientRect();
+      const px = this.pointerClient.x - rect.left;
+      const py = this.pointerClient.y - rect.top;
+      if (px <= EDGE_SCROLL_PX) vx -= 1;
+      else if (px >= rect.width - EDGE_SCROLL_PX) vx += 1;
+      if (py <= EDGE_SCROLL_PX) vy -= 1;
+      else if (py >= rect.height - EDGE_SCROLL_PX) vy += 1;
+    }
+    if (vx === 0 && vy === 0) return;
+    // `panBy` moves the ground with the pointer; looking right means the
+    // ground goes left.
+    this.conn.panBy(-vx * EDGE_SCROLL_PX_PER_S * dt, -vy * EDGE_SCROLL_PX_PER_S * dt);
+  }
+
   private draw(): void {
     this.frameNowMs = performance.now();
+    this.panFromInput(this.frameNowMs);
     // The world under these marks — seabed, routes, rim, embers, own hulls —
     // is the conn view's. This pass draws only what the chart language owes
     // on top, everything projected through the one shared camera.
@@ -3727,6 +3915,26 @@ export class EchoRenderer {
           color: UI.text,
           alpha: 0.8,
         });
+        // The yard's rally point, drawn only while the yard is selected: a
+        // course from the apron to the point, and a glyph at the point.
+        if (structure.rally !== undefined) {
+          const rg = this.ringLayer;
+          if (
+            this.traceLine(rg, structure.x, structure.y, structure.rally.x, structure.rally.y, null)
+          ) {
+            rg.stroke({ width: 1, color: UI.accent, alpha: 0.35 });
+          }
+          const rp = this.project(structure.rally.x, structure.rally.y, null);
+          if (rp !== null && rp.visible) {
+            const arm = 6 * this.uiScale;
+            rg.moveTo(rp.x, rp.y - arm)
+              .lineTo(rp.x + arm, rp.y)
+              .lineTo(rp.x, rp.y + arm)
+              .lineTo(rp.x - arm, rp.y)
+              .closePath()
+              .stroke({ width: 1.5 * this.uiScale, color: UI.accent, alpha: 0.8 });
+          }
+        }
       }
 
       // The conn view owns the architecture: the commissioned model, and the
@@ -4900,7 +5108,13 @@ export class EchoRenderer {
       const local = pending !== undefined && pending.length > 0;
       // An unqueued local order stands in for the server's plan until the
       // server has it; a queued one is drawn after the plan it extends.
-      const served = local && !pending[0]!.queued ? undefined : unit.queuedOrders;
+      // An attack-move under way is the head of the plan the server holds,
+      // ahead of whatever is queued behind it.
+      const standing: QueuedOrderView[] =
+        unit.engaging === undefined
+          ? (unit.queuedOrders ?? [])
+          : [{ kind: 'attackMove', ...unit.engaging }, ...(unit.queuedOrders ?? [])];
+      const served = local && !pending[0]!.queued ? undefined : standing;
       if ((served === undefined || served.length === 0) && !local) continue;
 
       // The route is plotted on the ground — a course on the chart floor —
@@ -4917,9 +5131,10 @@ export class EchoRenderer {
         const p = this.project(order.x, order.y, null);
         if (p !== null && p.visible) {
           const marker = order.kind === 'move' ? 7 : 11;
+          const hostile = order.kind === 'attack' || order.kind === 'attackMove';
           g.circle(p.x, p.y, marker).stroke({
             width: 1.5,
-            color: order.kind === 'attack' ? UI.threat : UI.accent,
+            color: hostile ? UI.threat : UI.accent,
             alpha: 0.8,
           });
         }
@@ -4942,7 +5157,7 @@ export class EchoRenderer {
       const radius = this.reducedMotion ? 9 : 16 - 11 * t;
       g.circle(p.x, p.y, radius * this.uiScale).stroke({
         width: 1.5 * this.uiScale,
-        color: marker.kind === 'attack' ? UI.threat : UI.accent,
+        color: marker.kind === 'attack' || marker.kind === 'attackMove' ? UI.threat : UI.accent,
         alpha: 0.9 * (1 - t),
       });
     }
@@ -5619,7 +5834,9 @@ export class EchoRenderer {
     }
     return this.isTouch
       ? `${this.selected.size} selected  ·  tap map to order`
-      : `${this.selected.size} selected  ·  RMB move (SHIFT queue)  ·  CTRL+RMB torpedo  ·  SPACE silent  ·  P ping  ·  N decoy  ·  M mine  ·  C charge  ·  D dive  ·  A rise`;
+      : this.pendingAttackMove
+        ? `${this.selected.size} selected  ·  ATTACK-MOVE armed: click the water (SHIFT queues, ESC cancels)`
+        : `${this.selected.size} selected  ·  RMB move (SHIFT queue)  ·  W attack-move  ·  X stop  ·  H hold  ·  CTRL+RMB torpedo  ·  SPACE silent  ·  P ping  ·  D dive  ·  A rise`;
   }
 
   destroy(): void {

@@ -38,6 +38,16 @@ import { eidOfLocalId } from './world.ts';
 
 /** The current replay wire format. Bump when a change breaks old files. */
 /**
+ * 14: four commands a player did not have (#435) — attack-move, stop, hold
+ * position and a yard's rally point — and one field a replayed hull carries
+ * for them, its posture. None of them appears in a v13 file, so a v13 file
+ * replays *identically* under these rules; it is refused anyway, on the
+ * grounds every bump before it was: the format now means something a v13
+ * recording cannot say, and a reader that accepted both would be guessing
+ * which. Replayed hulls also route around ground now (#431), and separation
+ * lands its pushes through the same step check — a v13 recording on any map
+ * with a plateau in a hull's way diverges at the first refused step.
+ *
  * 12: each navy carries the baseline Pressure Rating docs/systems-depth.md §3
  * publishes for it — Consortium 2, Commune 1, Directorate 3, Knights 2 — as a
  * floor on the hull's own rating. Directorate hulls are consequently rated
@@ -145,7 +155,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 13;
+export const REPLAY_FORMAT_VERSION = 14;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =
@@ -160,6 +170,18 @@ export type ReplayCommand =
     }
   | { tick: number; type: 'depth'; slot: number; unit: number; depth: number }
   | { tick: number; type: 'followFloor'; slot: number; unit: number; active: boolean }
+  | {
+      tick: number;
+      type: 'attackMove';
+      slot: number;
+      unit: number;
+      x: number;
+      y: number;
+      queued: boolean;
+    }
+  | { tick: number; type: 'stop'; slot: number; unit: number }
+  | { tick: number; type: 'hold'; slot: number; unit: number; active: boolean }
+  | { tick: number; type: 'rally'; slot: number; structure: number; x: number; y: number }
   | { tick: number; type: 'attack'; slot: number; unit: number; contact: number; queued: boolean }
   | { tick: number; type: 'torpedo'; slot: number; unit: number; contact: number }
   | { tick: number; type: 'noisemaker'; slot: number; unit: number }
@@ -400,6 +422,18 @@ function applyCommand(match: Match, command: ReplayCommand): void {
       break;
     case 'followFloor':
       match.orderFollowFloor(command.slot, eid(command.unit), command.active);
+      break;
+    case 'attackMove':
+      match.orderAttackMove(command.slot, eid(command.unit), command.x, command.y, command.queued);
+      break;
+    case 'stop':
+      match.orderStop(command.slot, eid(command.unit));
+      break;
+    case 'hold':
+      match.orderHold(command.slot, eid(command.unit), command.active);
+      break;
+    case 'rally':
+      match.setRally(command.slot, eid(command.structure), command.x, command.y);
       break;
     case 'attack':
       match.orderAttackContact(command.slot, eid(command.unit), command.contact, command.queued);

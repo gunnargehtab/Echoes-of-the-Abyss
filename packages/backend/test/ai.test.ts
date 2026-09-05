@@ -759,8 +759,12 @@ function assertOnlyKnown(command: AiCommand, known: Known): void {
 
   switch (command.kind) {
     case 'move':
+    case 'attackMove':
       owns(command.unitIds);
       inBounds(command.x, command.y);
+      return;
+    case 'stop':
+      owns(command.unitIds);
       return;
     case 'attack':
       owns(command.unitIds);
@@ -812,6 +816,12 @@ function applyTo(match: Match, slot: number, command: AiCommand): void {
   switch (command.kind) {
     case 'move':
       for (const id of command.unitIds) match.orderMove(slot, id, command.x, command.y);
+      return;
+    case 'attackMove':
+      for (const id of command.unitIds) match.orderAttackMove(slot, id, command.x, command.y);
+      return;
+    case 'stop':
+      for (const id of command.unitIds) match.orderStop(slot, id);
       return;
     case 'attack':
       for (const id of command.unitIds) match.orderAttackContact(slot, id, command.contactId);

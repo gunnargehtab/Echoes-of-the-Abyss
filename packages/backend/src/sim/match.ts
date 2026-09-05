@@ -81,6 +81,7 @@ import {
   UnderConstruction,
   Unit,
   Weapon,
+  Posture,
 } from './components.ts';
 import { EchoLayer } from './systems/echoLayer.ts';
 import { acousticsSystem } from './systems/acoustics.ts';
@@ -781,6 +782,128 @@ export class Match {
   }
 
   /**
+   * Attack-move (#435; docs/ui-ux.md §9): go there, and fight whatever you
+   * meet on the way. The order a force advances into unheard water on.
+   */
+  orderAttackMove(slot: number, eid: number, x: number, y: number, queued = false): void {
+    this.recordCommand({
+      tick: this.world.tick,
+      type: 'attackMove',
+      slot,
+      unit: this.localId(eid),
+      x,
+      y,
+      queued,
+    });
+    if (this.missionRuntime?.holdsMovement(slot, eid) === true) return;
+    if (this.missionDenies(slot, 'weapons')) {
+      // Weapons struck: the order falls through to the move it can still be,
+      // exactly as a refused attack does at the client (docs/ui-ux.md §7).
+      this.applyMove(slot, eid, x, y, queued);
+      return;
+    }
+    if (!this.owns(slot, eid) || !hasComponent(this.world, MoveOrder, eid)) return;
+    if (!hasComponent(this.world, Weapon, eid)) {
+      // A hull with nothing to fight with can only go there.
+      this.applyMove(slot, eid, x, y, queued);
+      return;
+    }
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    x = this.world.terrain.clampXM(x);
+    y = this.world.terrain.clampYM(y);
+
+    if (queued) {
+      enqueue(this.world, eid, { kind: 'attackMove', x, y });
+      return;
+    }
+    clearQueue(this.world, eid);
+    this.world.paths.delete(eid);
+    MoveOrder.x[eid] = x;
+    MoveOrder.y[eid] = y;
+    MoveOrder.active[eid] = 1;
+    Posture.engage[eid] = 1;
+    Posture.engageX[eid] = x;
+    Posture.engageY[eid] = y;
+    Posture.hold[eid] = 0;
+    Weapon.orderedTargetEid[eid] = 0;
+    if (hasComponent(this.world, Harvester, eid)) {
+      Harvester.mode[eid] = HarvestMode.Idle;
+      Harvester.idleReason[eid] = 0;
+    }
+  }
+
+  /**
+   * Stop: drop the plan, the route, the chase and the posture, and stand
+   * where you are. Depth is left alone — a depth order is a commitment
+   * (docs/systems-depth.md §2), and stopping the hull's course is not the
+   * same decision as stopping its climb.
+   */
+  orderStop(slot: number, eid: number): void {
+    this.recordCommand({ tick: this.world.tick, type: 'stop', slot, unit: this.localId(eid) });
+    if (!this.owns(slot, eid) || !hasComponent(this.world, MoveOrder, eid)) return;
+    clearQueue(this.world, eid);
+    this.world.paths.delete(eid);
+    MoveOrder.active[eid] = 0;
+    Posture.engage[eid] = 0;
+    Posture.hold[eid] = 0;
+    if (hasComponent(this.world, Weapon, eid)) Weapon.orderedTargetEid[eid] = 0;
+    if (hasComponent(this.world, Harvester, eid)) {
+      Harvester.mode[eid] = HarvestMode.Idle;
+      Harvester.idleReason[eid] = 0;
+    }
+  }
+
+  /**
+   * Hold position: fire at what comes into range, chase nothing, go nowhere.
+   * Any move order releases it. An ordered target is kept — a held hull told
+   * to attack a contact shoots it if it comes close, which is the whole use.
+   */
+  orderHold(slot: number, eid: number, active: boolean): void {
+    this.recordCommand({
+      tick: this.world.tick,
+      type: 'hold',
+      slot,
+      unit: this.localId(eid),
+      active,
+    });
+    if (!this.owns(slot, eid) || !hasComponent(this.world, MoveOrder, eid)) return;
+    Posture.hold[eid] = active ? 1 : 0;
+    if (!active) return;
+    clearQueue(this.world, eid);
+    this.world.paths.delete(eid);
+    MoveOrder.active[eid] = 0;
+    Posture.engage[eid] = 0;
+    if (hasComponent(this.world, Harvester, eid)) {
+      Harvester.mode[eid] = HarvestMode.Idle;
+      Harvester.idleReason[eid] = 0;
+    }
+  }
+
+  /**
+   * A yard's rally point: where every hull it launches goes first. Only a
+   * structure that produces anything takes one; the rest have nothing to
+   * send. Recorded by structure, like `produce`.
+   */
+  setRally(slot: number, structureEid: number, x: number, y: number): void {
+    this.recordCommand({
+      tick: this.world.tick,
+      type: 'rally',
+      slot,
+      structure: this.localId(structureEid),
+      x,
+      y,
+    });
+    if (!this.owns(slot, structureEid)) return;
+    if (!hasComponent(this.world, Structure, structureEid)) return;
+    if (PRODUCIBLE[Structure.kind[structureEid] as StructureKind] === undefined) return;
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    this.world.rallies.set(structureEid, {
+      x: this.world.terrain.clampXM(x),
+      y: this.world.terrain.clampYM(y),
+    });
+  }
+
+  /**
    * The unrecorded half of `orderMove`, for the mission runtime.
    *
    * A mission's beats are re-issued on playback, because the runtime lives
@@ -814,7 +937,11 @@ export class Match {
     MoveOrder.x[eid] = x;
     MoveOrder.y[eid] = y;
     MoveOrder.active[eid] = 1;
-    // A manual move overrides standing behaviour: stop chasing, stop the loop.
+    // A manual move overrides standing behaviour: stop chasing, stop the
+    // loop, and drop the posture — a plain move is neither an attack-move
+    // nor a hold.
+    Posture.engage[eid] = 0;
+    Posture.hold[eid] = 0;
     if (hasComponent(this.world, Weapon, eid)) Weapon.orderedTargetEid[eid] = 0;
     if (hasComponent(this.world, Harvester, eid)) {
       Harvester.mode[eid] = HarvestMode.Idle;
@@ -1607,6 +1734,7 @@ export class Match {
         }
       }
       this.world.production.delete(eid);
+      this.world.rallies.delete(eid);
       // Before the id goes back into bitecs's free list: anything keyed by eid
       // outside the ECS has to be dropped, or it comes back attached to
       // whatever inherits the id. A contact handle would name a hull the player
@@ -1792,6 +1920,7 @@ export class Match {
       const eid = owned[i]!;
       if (Owner.slot[eid] !== slot) continue;
       this.world.production.delete(eid);
+      this.world.rallies.delete(eid);
       this.echo.forget(eid);
       clearQueue(this.world, eid);
       this.world.paths.delete(eid);
@@ -2038,6 +2167,10 @@ export class Match {
       if (queue !== undefined) {
         unit.queuedOrders = queue.map((order) => ({ kind: order.kind, x: order.x, y: order.y }));
       }
+      if (Posture.hold[eid] === 1) unit.holding = true;
+      if (Posture.engage[eid] === 1) {
+        unit.engaging = { x: Posture.engageX[eid]!, y: Posture.engageY[eid]! };
+      }
       if (hasComponent(this.world, DepthOrder, eid) && DepthOrder.active[eid] === 1) {
         unit.depthOrder = DepthOrder.targetM[eid]!;
       }
@@ -2126,7 +2259,7 @@ export class Match {
         queueProgress = total > 0 ? 1 - line.remainingS / total : 1;
       }
 
-      out.push({
+      const structure: OwnStructure = {
         id: eid,
         kind: Structure.kind[eid] as StructureKind,
         x: Position.x[eid]!,
@@ -2138,7 +2271,10 @@ export class Match {
         buildProgress,
         queue: line !== undefined ? [...line.queue] : [],
         queueProgress,
-      });
+      };
+      const rally = this.world.rallies.get(eid);
+      if (rally !== undefined) structure.rally = { x: rally.x, y: rally.y };
+      out.push(structure);
     }
     return out;
   }

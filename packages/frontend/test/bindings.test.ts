@@ -59,6 +59,8 @@ describe('the shipped layouts', () => {
     const leftHand = new Set([
       'Space',
       'AltLeft',
+      'Backquote',
+      'Tab',
       'KeyQ',
       'KeyW',
       'KeyE',
@@ -93,7 +95,17 @@ describe('the shipped layouts', () => {
     const moved = ACTIONS.filter(
       ({ action }) => ONE_HANDED_BINDINGS[action] !== DEFAULT_BINDINGS[action]
     ).map(({ action }) => action);
-    assert.deepEqual(moved.sort(), ['buildSignature', 'mine', 'noisemaker', 'ping', 'throttle']);
+    // `stop` moves too, although `X` is a left-hand key: the mine takes `X`
+    // in this layout, so stop steps aside rather than collide with it.
+    assert.deepEqual(moved.sort(), [
+      'buildSignature',
+      'holdPosition',
+      'mine',
+      'noisemaker',
+      'ping',
+      'stop',
+      'throttle',
+    ]);
   });
 });
 

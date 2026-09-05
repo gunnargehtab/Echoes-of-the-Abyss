@@ -25,6 +25,9 @@ import { StructureKind } from '@echoes/shared';
  * record. An action is here only if moving it is safe.
  */
 export type BindableAction =
+  | 'attackMove'
+  | 'stop'
+  | 'holdPosition'
   | 'silentRunning'
   | 'ping'
   | 'pingPreview'
@@ -63,6 +66,19 @@ export interface ActionSpec {
  * document put it.
  */
 export const ACTIONS: readonly ActionSpec[] = [
+  {
+    action: 'attackMove',
+    label: 'Attack-move',
+    hint: 'Arm, then click: go there and fight what you meet',
+    group: 'fleet',
+  },
+  { action: 'stop', label: 'Stop', hint: 'Drop the plan and stand where you are', group: 'fleet' },
+  {
+    action: 'holdPosition',
+    label: 'Hold position',
+    hint: 'Fire at what comes; chase nothing',
+    group: 'fleet',
+  },
   {
     action: 'silentRunning',
     label: 'Silent running',
@@ -122,6 +138,12 @@ export type Bindings = Record<BindableAction, string>;
 
 /** §9's table, exactly. Changing one of these changes the document first. */
 export const DEFAULT_BINDINGS: Bindings = {
+  // Attack-move is `W` rather than the genre's `A` because `A` is *rise*
+  // (§9: dive and rise sit on D and A, mnemonic over convention). `W` is
+  // "weapons free", and it sits under the same finger.
+  attackMove: 'KeyW',
+  stop: 'KeyX',
+  holdPosition: 'KeyH',
   silentRunning: 'Space',
   ping: 'KeyP',
   pingPreview: 'AltLeft',
@@ -154,6 +176,11 @@ export const DEFAULT_BINDINGS: Bindings = {
  */
 export const ONE_HANDED_BINDINGS: Bindings = {
   ...DEFAULT_BINDINGS,
+  // `H` is a right-hand key; `X` is left-hand but the mine takes it here.
+  // The two keys left of the top row are the only left-hand keys nothing
+  // else in either layout wants.
+  stop: 'Backquote',
+  holdPosition: 'Tab',
   ping: 'KeyQ',
   throttle: 'KeyE',
   noisemaker: 'KeyZ',
@@ -193,6 +220,11 @@ export const RESERVED_CODES: ReadonlyMap<string, string> = new Map([
     `Digit${i + 1}`,
     'recalls a control group, which has no other route (§9)',
   ]),
+  ['Digit0', 'selects the whole army — every hull that fights (§9)'],
+  ['ArrowUp', 'pans the camera (§9)'],
+  ['ArrowDown', 'pans the camera (§9)'],
+  ['ArrowLeft', 'pans the camera (§9)'],
+  ['ArrowRight', 'pans the camera (§9)'],
 ]);
 
 /**
@@ -200,7 +232,12 @@ export const RESERVED_CODES: ReadonlyMap<string, string> = new Map([
  * whole of §9 rather than the editable half and leave the player wondering.
  */
 export const FIXED_CONTROLS: readonly { label: string; keys: string; why: string }[] = [
-  { label: 'Control groups', keys: '1 – 9', why: 'Ctrl assigns; recall twice to centre' },
+  {
+    label: 'Control groups',
+    keys: '1 – 9',
+    why: 'Ctrl assigns, Shift adds the selection; recall twice to centre',
+  },
+  { label: 'Select the army', keys: '0', why: 'Every hull that fights, wherever it is' },
   {
     label: 'Cancel / menu',
     keys: 'Esc',
@@ -210,6 +247,12 @@ export const FIXED_CONTROLS: readonly { label: string; keys: string; why: string
   { label: 'Add to selection', keys: 'Shift + click', why: 'Ctrl subtracts' },
   { label: 'Select by class', keys: 'Alt + click', why: 'Or double-click' },
   { label: 'Pan', keys: 'Middle drag', why: 'Wheel zooms about the cursor' },
+  {
+    label: 'Pan',
+    keys: 'Arrows / screen edge',
+    why: 'Edge scrolling can be turned off in Settings',
+  },
+  { label: 'Rally point', keys: 'Right click', why: 'With a yard selected: where its hulls go' },
 ];
 
 /** Structures the build actions arm, so the renderer needs no second table. */

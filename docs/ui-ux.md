@@ -214,10 +214,15 @@ Implemented in the client scaffold today (`packages/frontend/src/game/EchoRender
 | Left click | Select nearest own unit; `Shift` adds, `Ctrl` subtracts |
 | Left drag | Box select own units; `Shift` adds, `Ctrl` subtracts |
 | Double click | Select every visible unit of that class (`Alt`-click does the same) |
-| Right click | Context order — move, attack a contact, or work a field |
+| Right click | Context order — move, attack a contact, or work a field. With a yard and nothing else selected: its rally point, where every hull it launches goes first |
 | `Shift` + right click | Queue the order behind the unit's current plan |
-| `1`–`9` | Recall control group; `Ctrl` + digit assigns; recall twice to centre |
+| `W`, then click | Attack-move: go there, and stop to fight whatever is met on the way, then carry on. The one order that advances a force into water it cannot hear — which is most of it. `Esc` disarms; `Shift` + click queues it |
+| `X` | Stop: drop the plan, the route, the chase and the posture, and stand. A depth order is a commitment and is left alone |
+| `H` | Hold position: fire at what comes into range, chase nothing, go nowhere. Any move releases it |
+| `1`–`9` | Recall control group; `Ctrl` + digit assigns; `Shift` + digit adds the selection; recall twice to centre |
+| `0` | Select the army — every hull that fights, wherever it is |
 | Middle drag | Pan |
+| Arrows, screen edge | Pan. Edge scrolling is a setting (§14), because a trackpad makes the edge a place the pointer lands by accident |
 | Wheel | Zoom about the cursor |
 | `Space` | Toggle Silent Running for the selection |
 | `P` | Active sonar ping from the first selected unit |
@@ -237,7 +242,8 @@ conflict this document settled:
 
 | Fixed | Why it cannot move |
 | --- | --- |
-| `1`–`9` | Control groups have no alternative route; production has the UNITS tab |
+| `0`–`9` | Control groups have no alternative route; production has the UNITS tab. `0` is the army |
+| Arrows | Pan, with the screen edge; a rebind that took an arrow would take half the camera |
 | `Shift` | Queues an order, and adds to a selection |
 | `Ctrl` | Subtracts from a selection, and assigns a control group |
 | `Esc` | Drops a pending build, and is handled before every other key; with nothing left to drop, it opens the esc menu (§9.5) |
@@ -248,20 +254,22 @@ quietly changed meaning, with nothing to press and notice.
 
 ### The one-handed layout
 
-§11 owes a one-handed layout, and the default is not one: `P`, `N`, `M` and `B` sit under a
-right hand that is on the mouse. The alternative layout moves exactly those four and leaves
-the nine that were already within reach alone, because a layout that also shuffles the keys
-a player knows is a worse layout.
+§11 owes a one-handed layout, and the default is not one: `P`, `N`, `M`, `B` and `H` sit under
+a right hand that is on the mouse, and `X` is the mine's once `M` has moved. The alternative
+layout moves exactly those and leaves the rest alone, because a layout that also shuffles the
+keys a player knows is a worse layout.
 
 | Action | Standard | One-handed |
 | --- | --- | --- |
+| Stop | `X` | `` ` `` — `X` is the mine's in this layout |
+| Hold position | `H` | `Tab` |
 | Active sonar | `P` | `Q` |
 | Harvest throttle | `V` | `E` |
 | Noisemaker | `N` | `Z` |
 | Mine | `M` | `X` |
 | Faction structure | `B` | `V` |
 
-Everything else — `Space`, `A`, `D`, `S`, `C`, `R`, `F`, `T`, `G` and `Alt` — is unchanged.
+Everything else — `Space`, `W`, `A`, `D`, `S`, `C`, `R`, `F`, `T`, `G` and `Alt` — is unchanged.
 Control groups are the one thing this cannot fix: the digits are fixed for the reason above,
 and `6`–`9` are out of reach. That is a real limitation of playing one-handed rather than
 something the layout is hiding.
@@ -983,6 +991,7 @@ the screen, not a technology.
 | Colour vision | standard · deuteranopia · protanopia · tritanopia | The four palettes in [style-neon-noir.md](style-neon-noir.md); tier *shape* never moves, only its ink (§11) |
 | UI scale | 75–200% | A transform on the HUD layer and the DOM panels, never on the world (§11) |
 | Reduced motion | toggle | Static equivalents for the scope sweep, the exposure flash and the crush badge — same information, no movement (§11) |
+| Edge scrolling | toggle | The camera pans while the pointer rests on an edge of the water (§9). On by default; off for the trackpad player whose pointer lands there by accident. The arrows and the middle button pan either way |
 
 User volume lives on trim nodes *beside* the ducking chain, never on the ducked gains —
 the Precedence Law's ducking writes those every tick, and a user slider fighting it would

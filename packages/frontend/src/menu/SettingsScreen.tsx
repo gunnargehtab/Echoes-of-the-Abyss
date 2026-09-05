@@ -193,6 +193,19 @@ export function SettingsScreen({ onBack, onControls }: SettingsScreenProps) {
               mark carrying the same thing it said.
             </span>
           </label>
+
+          <label className="menu-toggle-row">
+            <input
+              type="checkbox"
+              checked={settings.edgeScroll}
+              onChange={(event) => patch({ edgeScroll: event.target.checked })}
+            />
+            <span className="menu-toggle-label">Edge scrolling</span>
+            <span className="menu-toggle-note">
+              The camera pans while the pointer rests on an edge of the water. The arrow keys and
+              the middle button pan either way.
+            </span>
+          </label>
         </div>
 
         <button type="button" className="menu-subscreen" onClick={onControls}>

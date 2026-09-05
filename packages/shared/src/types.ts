@@ -482,6 +482,14 @@ export interface OwnUnit {
    * contact when they gave the order, not to where it is now.
    */
   queuedOrders?: QueuedOrderView[];
+  /** Holding position (docs/ui-ux.md §9): fires at what comes, chases nothing. */
+  holding?: boolean;
+  /**
+   * The attack-move the hull is on, when it is on one — where it is bound,
+   * fighting whatever it meets on the way. Present while the posture stands,
+   * including while the hull has stopped to fight.
+   */
+  engaging?: { x: number; y: number };
   /** Harvesters only: cargo aboard, what it is, and the throttle setting. */
   cargo?: number;
   cargoKind?: ResourceKind;
@@ -539,7 +547,7 @@ export interface OwnOrdnance {
 
 /** One pending order, as much of it as the client needs to draw the plan. */
 export interface QueuedOrderView {
-  kind: 'move' | 'attack' | 'harvest';
+  kind: 'move' | 'attackMove' | 'attack' | 'harvest';
   /** Where the order pointed when it was given. */
   x: number;
   y: number;
@@ -562,6 +570,8 @@ export interface OwnStructure {
   queue: UnitKind[];
   /** 0-1 progress of queue[0]. Meaningless when the queue is empty. */
   queueProgress: number;
+  /** Where this yard sends a hull the tick it launches, when it has been told. */
+  rally?: { x: number; y: number };
 }
 
 /**

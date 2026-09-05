@@ -17,6 +17,7 @@ import {
   Acoustic,
   Countermeasure,
   DepthOrder,
+  Posture,
   Harvester,
   Health,
   Laying,
@@ -110,6 +111,12 @@ export function hashWorld(world: SimWorld): number {
       h = mixU32(h, Pressure.bonus[eid]!);
       h = mixFloat(h, Pressure.unhealable[eid]!);
     }
+    if (hasComponent(world, Posture, eid)) {
+      h = mixU32(h, Posture.hold[eid]!);
+      h = mixU32(h, Posture.engage[eid]!);
+      h = mixFloat(h, Posture.engageX[eid]!);
+      h = mixFloat(h, Posture.engageY[eid]!);
+    }
     if (hasComponent(world, DepthOrder, eid)) {
       h = mixU32(h, DepthOrder.active[eid]!);
       h = mixFloat(h, DepthOrder.targetM[eid]!);
@@ -187,6 +194,16 @@ export function hashWorld(world: SimWorld): number {
     h = mixU32(h, ordinalOf.get(eid) ?? -1);
     h = mixFloat(h, line.remainingS);
     for (const kind of line.queue) h = mixU32(h, kind);
+  }
+
+  // Rally points, by ordinal like the lines: same yards, different places
+  // their hulls walk off to, is an army in a different place a minute later.
+  const rallied = [...world.rallies.keys()].sort((a, b) => a - b);
+  for (const eid of rallied) {
+    const rally = world.rallies.get(eid)!;
+    h = mixU32(h, ordinalOf.get(eid) ?? -1);
+    h = mixFloat(h, rally.x);
+    h = mixFloat(h, rally.y);
   }
 
   return h >>> 0;
