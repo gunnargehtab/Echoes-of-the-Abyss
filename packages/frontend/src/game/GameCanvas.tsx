@@ -33,6 +33,7 @@ import { MissionLog } from './MissionLog.tsx';
 import { MissionPanel } from './MissionPanel.tsx';
 import { MissionResult } from './MissionResult.tsx';
 import { AudioEngine, dbToGain } from '../audio/engine.ts';
+import type { TunedInputs } from '../audio/tunedBed.ts';
 import { driftCarryForMap, recordMissionResult, spentCadre } from '../progression/store.ts';
 import {
   GameClient,
@@ -219,6 +220,10 @@ export function GameCanvas({
 
     const audio = new AudioEngine();
     audioRef.current = audio;
+    // The last water reading handed to the mix, kept for the probe alone: the
+    // mix reports what it is *doing*, and the harness also wants to see what
+    // it was told.
+    let tunedInputs: TunedInputs | null = null;
 
     // A read-only window into the mix, for the headless harness. Reports
     // state only; it can neither drive the engine nor reach the simulation.
@@ -234,6 +239,19 @@ export function GameCanvas({
       selfRung: audio.activeRung,
       selfCues: audio.selfCuesFired,
       speechCues: audio.speechCuesFired,
+      tuned:
+        audio.tunedMix === null
+          ? null
+          : {
+              root: Number(audio.tunedMix.root.toFixed(4)),
+              fifth: Number(audio.tunedMix.fifth.toFixed(4)),
+              third: Number(audio.tunedMix.third.toFixed(4)),
+              corridor: Number(audio.tunedMix.corridor.toFixed(4)),
+              corridorPan: Number(audio.tunedMix.corridorPan.toFixed(3)),
+              flatCents: Number(audio.tunedMix.flatCents.toFixed(2)),
+              crystal: Number((tunedInputs?.crystal ?? 0).toFixed(3)),
+              riseM: Math.round(tunedInputs?.riseM ?? 0),
+            },
       worstTickMs: Number(audio.worstTickCostMs.toFixed(4)),
       lastTickMs: Number(audio.lastTickCostMs.toFixed(4)),
       lastTickBuilt: audio.lastTickVoicesBuilt,
@@ -309,6 +327,13 @@ export function GameCanvas({
                   remainingS: Number(hazards[0]!.remainingS.toFixed(1)),
                   kind: hazards[0]!.kind,
                 };
+        },
+        // The water, and any interval standing in it (§9). Applied like the
+        // rest and read back by the probe, so the harness can assert that the
+        // Fields ring and that a line going flat is heard going flat.
+        onTunedAudio: (inputs) => {
+          audio.applyTuned(inputs);
+          tunedInputs = inputs;
         },
         onMarkAudio: (totals) => {
           audio.applyMarks(totals);

@@ -109,16 +109,12 @@ between missions on one map, the roster a mission spends, and a voice under ever
 [mission-standing-wave.md](mission-standing-wave.md) (#382), whose §13 was a design agenda before
 it was a build list and which asked the format for its last three things: a predicate over what
 the player has built, a beat that walks a route, and a rule that a site needs the works beside
-it. What follows is designed, or already stated in a doc that ships, and unbuilt — named in plain
-text except where a document already points at it:
+it. Its ear landed after it (#402): the Fields are the first water in the bible with a pitch in
+them, a standing corridor is a second fifth over the canyon's own, and a node under forty per cent
+drags that fifth flat ([audio-direction.md](audio-direction.md) §9, "Tuned water"). What follows is
+designed, or already stated in a doc that ships, and unbuilt — named in plain text except where a
+document already points at it:
 
-- **A canyon that rings at a fifth, and a corridor that changes what it rings *as*.**
-  [mission-standing-wave.md](mission-standing-wave.md) §13's last row, and the audible half of
-  its detune: a paired node under forty per cent of its hull reads *The interval is sour* on the
-  panel, and the mix has the node's hp and the Fields' tuned bed to write a flat interval over,
-  and [audio-direction.md](audio-direction.md) has not yet said what a fifth going flat sounds
-  like. The first place a player-placed interval is written over a biome's bed, and the most
-  interesting problem the campaign has posed the mix.
 - **A Knight hull in the roster.** [units.md](units.md) has no Knight entry, so every Order
   mission fields generic hulls flying Knight colours and says so; a real Knight hull's cone
   figure is expected to run about 2.2× a comparable hull's so that the compass average lands at
