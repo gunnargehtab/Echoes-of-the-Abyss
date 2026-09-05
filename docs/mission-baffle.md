@@ -131,7 +131,7 @@ offline and its escort's solutions cold.
 | **The relief convoy** — the player | 1 Cruiser, 2 Corvettes, the compressor barge, 2 moored stations | Under writ, unfiled |
 | **The Fourth Trench picket** | 4 Abyssal Submersibles, in two standing watches | Attending a closed trench under their own law. Counting, until counting is not enough |
 | **The Deep Yard** | Forty-one souls and a failing plant | On the channel by the only voice it has left: the plant itself, missing beats |
-| **The Drift** | 1 Draymaw pack, deep on the axis | Trench packs follow the freight the way vein packs follow industry ([bestiary.md](bestiary.md) §4) |
+| **The Drift** | 1 Draymaw pack, deep on the axis | Trench packs follow the freight the way vein packs follow industry, and this one is driven up the axis at 1,600 m, three hundred metres under the species' 500–1,300 m band — the band is where the Drift lives, not where a beat may send it ([bestiary.md](bestiary.md) §4, #420) |
 
 The pickets are not villains and the mission does not need them to be
 ([campaign.md](campaign.md) §2, rule 1). They hold a closed trench under a claim two centuries
@@ -382,6 +382,7 @@ What exists against this document and what does not, continuing the Ledger's lis
 | A mobile Baffle Barge | **Not built, and not needed here.** [systems-echo.md](systems-echo.md) §8 calls the Barge mobile; `structures.ts` holds every structure static, and this mission moors its two at the lay-bys — which is what the freight charter always did. A Barge that advances with a push remains a roster gap, named so nobody reads this mission as having closed it |
 | A picket that *answers* what it hears | **Not built.** The watches walk authored legs and engage what stands into range; nothing scripted reacts to being resolved or to resolving. The beat-fired-by-condition row of [mission-aptitude.md](mission-aptitude.md) §13 is the shape such a picket would need, and mission 4's recall is where the Ledger first spends it |
 | In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line |
+| **A pack under its band** | **Landed** (#420) — `baffle.ts` drives the pack at 1,600 m, and [bestiary.md](bestiary.md) §4 gives the Draymaw 500–1,300. §4's rider settles it without moving the literal: the band is where the Drift lives, not where a beat may send it, and a driven pack holds the depth it was given for its commitment and climbs home when that lapses. §5's roster row says so |
 
 ---
 

@@ -483,7 +483,7 @@ visitors find genuinely shocking.
   wall where a year lives during its intake, the shift on which it finds out whether the band
   it was made for is the band it can hold ([mission-intake.md](mission-intake.md) §1). The city
   is below; the year is above it, at the top of the water it will spend its life in.
-- **The shallow band**, the First Trench at 1,800 m — the Directorate's shallowest holding,
+- **The shallow band**, the First Trench at 1,800 m — the Directorate's shallowest posting,
   where the 8% of each intake who cannot hold their band are reassigned to labour
   ([factions.md](factions.md); [mission-trench-awakening.md](mission-trench-awakening.md)). Nobody dies. It is
   a posting, and it is the one posting in the Directorate that resembles the debt-berth they
@@ -561,9 +561,11 @@ a kilometre of ([world-map.md](world-map.md)). Crews cut engines passing it.
 
 It is listed here because it is the rule the other six habitats are built against. A place that
 fell is not resettled — not Halvard, not the drowned city, not Sector Kell — and every inhabited
-structure in the Rift is a place that has not fallen *yet*. Underwriter Tull's father was a
-Halvard salvor ([characters.md](characters.md)). The Rift's architecture is the salvors' habit,
-two centuries on: hold what holds, and close what does not.
+structure in the Rift is a place that has not fallen *yet*. The recovery gave its name to a trade:
+the concern's deep-recovery crews have been *the Halvard salvors* ever since, without one of them
+entering the wreck, and Underwriter Tull's father was one ([characters.md](characters.md);
+[glossary.md](glossary.md), *Halvard*). The Rift's architecture is the salvors' habit, two
+centuries on: hold what holds, and close what does not.
 
 ---
 

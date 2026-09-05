@@ -59,7 +59,7 @@ Varr-Kest's protégé and the Consortium's internal antagonist. Tull's job is to
 He wants Item 9 declassified. He is the only Consortium character who might defect.
 
 **Conviction:** A model that excludes the thing you can't explain is not a model, it's a comfort.
-**Already paid:** His father was a Halvard salvor. Died of what the paperwork called *exposure*.
+**Already paid:** His father was a Halvard salvor — the concern's deep-recovery trade, which has kept the name of the wreck that chartered it since 14 PC and has not entered that wreck since ([glossary.md](glossary.md), *Halvard*). Died on some other recovery, of what the paperwork called *exposure*.
 **Hasn't crossed:** He hasn't shown his model to anyone outside the Division.
 
 **Voice:** the concern's beat at 90 Hz and 4.4 a second — an instrument, not a press; the lightest machine in the register.
@@ -172,7 +172,7 @@ He is right. Korrin is also right. This is the Directorate's civil war, conducte
 
 *Field commander, 9th Trench Cohort · b. 3,400 m · age 29*
 
-The most modified human alive — a fifth-generation cohort at the programme's theoretical limit. Adze does not remember being asked. Adze does not experience this as a grievance. Adze is genuinely, uncomplicatedly happy, extremely good at their job, and functionally unable to survive anywhere but the trench floor.
+The most modified human alive — a fifth-generation cohort at the programme's theoretical limit. Adze does not remember being asked. Adze does not experience this as a grievance. Adze is genuinely, uncomplicatedly happy, extremely good at their job, and functionally unable to *live* anywhere but the trench floor — a posting Adze can walk, up the Fifth or onto a rim, and never keep.
 
 Adze is the game's argument in a body: **is a life you didn't choose, but genuinely love, a life that was taken from you?** The game does not answer.
 

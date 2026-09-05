@@ -116,7 +116,7 @@ function detached(): Run {
 
 describe('the watch, seated — docs/mission-attendance.md §6, §8', () => {
   it('attends seven of the nine and owes nothing', () => {
-    // §6: "A watch that never changes depth attends seven of the nine." The
+    // §6: "A watch that never moves attends seven of the nine." The
     // seated band reaches every arrival at the head and neither of the two
     // down the channel, and a watch that never travels never shoves.
     const run = seated();

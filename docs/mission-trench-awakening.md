@@ -25,7 +25,7 @@ against the engine as it stands rather than things it asks for; §13 carries the
 
 ## 1. What the Shallow Band Is
 
-The **shallow band** is the First Trench at 1,800 m: the Directorate's shallowest holding, and
+The **shallow band** is the First Trench at 1,800 m: the Directorate's shallowest posting, and
 the posting the roughly eight per cent of each intake who cannot hold their band are reassigned
 to ([factions.md](factions.md); [habitats.md](habitats.md) §6). Nobody dies. It is labour, it is
 the one job in the Directorate that resembles the debt-berth they despise, and **Korrin visits**
