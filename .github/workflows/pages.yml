@@ -34,10 +34,11 @@ on:
   # Issue state is half the page, and it changes without any push at all.
   issues:
     types: [closed, reopened, edited]
-  # So does the merged-PR count on the stat tiles.
-  pull_request:
-    types: [closed]
-    branches: [main]
+  # No `pull_request: closed` trigger, though the merged-PR count is on the
+  # page: that event runs the workflow at the PR's own ref, and the
+  # github-pages environment only admits main, so its deploy is refused —
+  # and on the way it cancels the push run that would have succeeded, since
+  # both share the concurrency group. The daily schedule carries the count.
   # A backstop for anything the events above miss.
   schedule:
     - cron: '0 6 * * *'
@@ -85,14 +86,26 @@ jobs:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
+      # The switch is read in bash rather than in an expression so the log
+      # shows the raw value, and so the match can be forgiving: the settings
+      # form has a Name box and a Value box, and twice in real use the whole
+      # "PUBLISH_ROADMAP = true" landed in Value. A value whose last word is
+      # `true`, in any case, is still someone deliberately saying yes; an unset
+      # or any other value still means no.
       - name: Is publishing switched on?
+        id: switch
+        env:
+          RAW: ${{ vars.PUBLISH_ROADMAP }}
         run: |
-          echo "PUBLISH_ROADMAP=[${{ vars.PUBLISH_ROADMAP }}]"
-          if [ "${{ vars.PUBLISH_ROADMAP }}" = "true" ]; then
+          echo "PUBLISH_ROADMAP=[$RAW]"
+          last="${RAW##* }"; last="${last##*=}"; last="${last,,}"
+          if [ "$last" = "true" ]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
             echo "Publishing is on — deploying."
           else
-            echo "Publishing is off — set the PUBLISH_ROADMAP variable to true (repository or github-pages environment) to deploy."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "Publishing is off — set the PUBLISH_ROADMAP variable's value to true (repository or github-pages environment) to deploy."
           fi
       - id: deploy
-        if: vars.PUBLISH_ROADMAP == 'true'
+        if: steps.switch.outputs.publish == 'true'
         uses: actions/deploy-pages@v4
