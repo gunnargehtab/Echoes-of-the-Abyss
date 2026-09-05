@@ -130,7 +130,7 @@ The Rift is small enough that its wars are neighbourhood disputes, and the campa
 
 ## 5. Where the Campaign Happens
 
-The sync point with [campaign.md](campaign.md): every mission block, placed. Mission maps stay authored per mission ([maps.md](maps.md)); this table is geography, not layout.
+The sync point with [campaign.md](campaign.md): every mission block, placed. Mission maps stay authored per mission ([maps.md](maps.md)); this table is geography, not layout. The campaign board draws it: every slot stands on Plate VII at its ground, in its campaign's ink, with the place, the depth and whose water read beside it ([ui-ux.md](ui-ux.md) §14, "The chart") — one row per map in `packages/frontend/src/menu/riftChart.ts`, held to the catalogue by test.
 
 | Campaign block | Ground |
 | --- | --- |

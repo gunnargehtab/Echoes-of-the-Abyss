@@ -26,7 +26,10 @@ import {
   driftCarryFrom,
   missionBriefing,
   missionHeaderById,
+  registerOf,
+  speakerOf,
   validDriftCarry,
+  voiceOfCampaign,
 } from '../dist/index.js';
 
 describe('the public mission catalogue', () => {
@@ -92,11 +95,51 @@ describe('the public mission catalogue', () => {
       // would *not* belong is the record of which variant a player saw, and
       // nothing here carries one.
       'briefingVariants',
+      // Added on purpose (#410): who reads the briefing, and how the mission
+      // document introduces the reading. Each document's §12 already opens
+      // by saying whose voice its briefing is in; the screen was shipping the
+      // words without the name. A fact about authored text the player is
+      // about to read, not about the room — the court is on the header, not
+      // in the water.
+      'speaker',
+      'spokenBy',
     ]);
     for (const mission of MISSION_HEADERS) {
       for (const key of Object.keys(mission)) {
         assert.ok(allowed.has(key), `${mission.id}: unexpected public field "${key}"`);
       }
+    }
+  });
+
+  it('reads every briefing in its campaign’s own register', () => {
+    // docs/campaign.md §10: briefings are in-register, and docs/culture.md §3
+    // has five registers for four campaigns and a prologue. A Ledger briefing
+    // attributed to the plateaus would be a header contradicting the text
+    // under it.
+    for (const mission of MISSION_HEADERS) {
+      assert.equal(
+        registerOf(mission.speaker),
+        voiceOfCampaign(mission.campaign),
+        `${mission.id}: briefing spoken outside its campaign's register`
+      );
+      assert.ok(mission.spokenBy.trim().length > 0, `${mission.id}: blank attribution`);
+      // The attribution names the speaker the key says it does — resolved the
+      // way a `say` line's speaker string is, so a writ signed for the Board
+      // is the concern's chorus and a line naming Marr is Marr.
+      assert.equal(
+        speakerOf(mission.spokenBy, registerOf(mission.speaker)),
+        mission.speaker,
+        `${mission.id}: attribution and speaker disagree`
+      );
+    }
+  });
+
+  it('attributes the prologue to Halloran, and to nobody else', () => {
+    // docs/characters.md: he is heard at length exactly once, in the prologue.
+    assert.equal(PROLOGUE_SORROWGATE_HEADER.speaker, 'halloran');
+    for (const mission of MISSION_HEADERS) {
+      if (mission.campaign === 'prologue') continue;
+      assert.notEqual(mission.speaker, 'halloran', mission.id);
     }
   });
 

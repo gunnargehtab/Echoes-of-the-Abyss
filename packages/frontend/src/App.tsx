@@ -21,6 +21,7 @@ import { GameCanvas } from './game/GameCanvas.tsx';
 import { BriefingScreen } from './menu/BriefingScreen.tsx';
 import { CampaignScreen } from './menu/CampaignScreen.tsx';
 import { CreditsScreen } from './menu/CreditsScreen.tsx';
+import { RecordScreen } from './menu/RecordScreen.tsx';
 import { BrowseScreen } from './menu/BrowseScreen.tsx';
 import { SetupScreen } from './menu/SetupScreen.tsx';
 import { doorFor, type SetupMode } from './net/rooms.ts';
@@ -50,6 +51,14 @@ type Screen =
   | { kind: 'settings' }
   | { kind: 'controls' }
   | { kind: 'credits' }
+  /**
+   * The record between missions (docs/ui-ux.md §14, "The record"). Two doors
+   * in — the board and a mission's result — and one door out, to the board,
+   * which is where the next mission is chosen. No `from` field, because the
+   * result screen it may have come from is gone with the room by the time
+   * Back is pressed, and the title is not where a player between missions is.
+   */
+  | { kind: 'record' }
   | {
       kind: 'match';
       name: string;
@@ -108,6 +117,8 @@ function initialScreen(): Screen {
 function App() {
   const [screen, setScreen] = useState<Screen>(initialScreen);
   const toTitle = () => setScreen({ kind: 'title' });
+  const toCampaign = () => setScreen({ kind: 'campaign' });
+  const toRecord = () => setScreen({ kind: 'record' });
   // The port has music; the ocean has its own mix (#194). Held for exactly as
   // long as the shell is on screen, so the shell's AudioContext is closed
   // before the match opens one — a device handle, not a singleton.
@@ -197,9 +208,11 @@ function App() {
           // screen so what it reads is visible from the shell.
           hasPlayed={hasPlayed}
           onSelect={(missionId) => setScreen({ kind: 'briefing', missionId, from: 'campaign' })}
+          onRecord={toRecord}
           onBack={toTitle}
         />
       )}
+      {screen.kind === 'record' && <RecordScreen hasPlayed={hasPlayed} onBack={toCampaign} />}
       {screen.kind === 'briefing' && (
         <BriefingScreen
           missionId={screen.missionId}
@@ -216,7 +229,7 @@ function App() {
               missionId: screen.missionId,
             })
           }
-          onBack={screen.from === 'campaign' ? () => setScreen({ kind: 'campaign' }) : toTitle}
+          onBack={screen.from === 'campaign' ? toCampaign : toTitle}
         />
       )}
       {screen.kind === 'settings' && (
@@ -235,6 +248,7 @@ function App() {
           create={screen.create}
           resume={screen.resume}
           onExit={toTitle}
+          onRecord={toRecord}
         />
       )}
     </div>

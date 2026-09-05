@@ -128,6 +128,46 @@ export function chorusOf(voice: MissionVoice): MissionSpeaker {
 }
 
 /**
+ * Each register's own word for itself — docs/culture.md §3's self-descriptions,
+ * as a briefing screen names the voice it is showing (docs/ui-ux.md §14). The
+ * key is the same word lower-cased, except that the Order capitalises its own.
+ */
+export function registerName(voice: MissionVoice): string {
+  switch (voice) {
+    case 'concern':
+      return 'the concern';
+    case 'plateaus':
+      return 'the plateaus';
+    case 'cohorts':
+      return 'the cohorts';
+    case 'order':
+      return 'the Order';
+    case 'court':
+      return 'the court';
+  }
+}
+
+/**
+ * The register a campaign's briefings are read in — docs/campaign.md §10:
+ * each campaign's mission text obeys its faction's voice rules, and the
+ * prologue is the court's (docs/mission-sorrowgate.md §12).
+ */
+export function voiceOfCampaign(campaign: CampaignId): MissionVoice {
+  switch (campaign) {
+    case 'prologue':
+      return 'court';
+    case 'ledger':
+      return 'concern';
+    case 'seeding':
+      return 'plateaus';
+    case 'attending':
+      return 'cohorts';
+    case 'chord':
+      return 'order';
+  }
+}
+
+/**
  * The register every speaker belongs to. A speaker has exactly one — a
  * signature is built inside its register's material and cannot leave it
  * (docs/audio-direction.md §13) — which is what lets `missions.test.ts` hold
@@ -258,6 +298,28 @@ export interface MissionHeader {
   premise: string;
   /** Already public: the room sends the map on join either way. */
   mapId: string;
+  /**
+   * Who reads the briefing — docs/ui-ux.md §14, "Who is speaking".
+   *
+   * On the public header and never on the room, because the briefing is read
+   * before a socket exists and the attribution is a fact about the text, not
+   * the water: each mission document's §12 opens by saying whose voice its
+   * briefing is in, and the screen had been shipping the words without the
+   * name. A `MissionSpeaker` rather than a free string so the register is
+   * derivable (`registerOf`) and `missions.test.ts` can hold every briefing's
+   * voice to its campaign's — the court for the prologue, the faction's own
+   * register everywhere else (docs/campaign.md §10, "Briefings are
+   * in-register"). A writ signed for the Board has no single reader, and is
+   * the concern's chorus, exactly as an unnamed `say` line is.
+   */
+  speaker: MissionSpeaker;
+  /**
+   * How the mission document introduces the reading, quoted from its §12:
+   * "Read into the record by Arbiter Mosk Halloran, 214 PC". Descriptive and
+   * for the screen, as the `say` beat's speaker string is for the log; the
+   * stable key is `speaker`.
+   */
+  spokenBy: string;
   /** docs/campaign.md §10 — 12–25 minutes, in seconds. */
   lengthBandS: readonly [number, number];
   /**
@@ -295,6 +357,8 @@ export const PROLOGUE_SORROWGATE_HEADER: MissionHeader = {
   name: 'Prologue — Sorrowgate',
   premise: "Arbiter Halloran's court, a collapsed transit dome, and an order not to make a sound.",
   mapId: 'sorrowgate',
+  speaker: 'halloran',
+  spokenBy: 'Read into the record by Arbiter Mosk Halloran, 214 PC',
   lengthBandS: [1080, 1260],
   briefing: [
     'Four hulls have been admitted. Their hardpoints were struck in this chamber in front of all four parties and the tools are on the table where they were struck. Nobody has to take anybody’s word for anything today. That is the whole of what this court is.',
@@ -313,6 +377,8 @@ export const LEDGER_ASSET_RECOVERY_HEADER: MissionHeader = {
   premise:
     'Face Six stopped transmitting. A salvage column, a recovery writ, and everything that listens.',
   mapId: 'ninefold-face-six',
+  speaker: 'the-grid',
+  spokenBy: 'The recovery writ, read to the column. Signed for the Ninth Board',
   // Closes at 18:00 exactly (docs/mission-asset-recovery.md §9), inside
   // campaign.md §10's 12-25.
   lengthBandS: [1020, 1140],
@@ -340,6 +406,8 @@ export const LEDGER_SHIFT_CHANGE_HEADER: MissionHeader = {
   premise:
     'Face Two runs its last shift like any other. The audit is on the road, and the crews do not know yet.',
   mapId: 'ninefold-workings',
+  speaker: 'osk',
+  spokenBy: 'Foreman Corwin Osk, to the shift command, at muster. Not read from anything',
   // The whistle at 16:00 (docs/mission-shift-change.md §9), inside §10's 12-25.
   lengthBandS: [900, 1020],
   /**
@@ -365,6 +433,8 @@ export const LEDGER_BAFFLE_HEADER: MissionHeader = {
   premise:
     'A closed trench, a failing plant at the far end of it, and two chambers of quiet water on the only road.',
   mapId: 'fourth-trench',
+  speaker: 'the-grid',
+  spokenBy: 'The relief writ, read to the convoy at muster. Signed for the Ninth Board',
   // The yard's plant fails at 20:00 (docs/mission-baffle.md §9), inside §10's 12-25.
   lengthBandS: [1140, 1260],
   /**
@@ -391,6 +461,9 @@ export const LEDGER_EXPOSURE_HEADER: MissionHeader = {
   premise:
     "Three unarmed hulls under the layer, six sounds in somebody else's country, and thirty seconds of deniability.",
   mapId: 'first-trench-margin',
+  speaker: 'tull',
+  spokenBy:
+    'The survey charter, read at muster. Issued by the Risk & Actuarial Division over Underwriter Baen Tull’s signature',
   // The watch change at 18:00 (docs/mission-exposure.md §9), inside §10's 12-25.
   lengthBandS: [1020, 1140],
   /**
@@ -417,6 +490,9 @@ export const LEDGER_TOLERANCE_HEADER: MissionHeader = {
   premise:
     'A casting poured before year zero has failed. The yard’s tungsten pours once, and the gauge fits both apertures.',
   mapId: 'holding-underworks',
+  speaker: 'the-grid',
+  spokenBy:
+    'The breach writ, read to the column at the yard. Signed for the Ninth Board, with the Chair present',
   // The water stops at 17:00 (docs/mission-tolerance.md §9), inside §10's 12-25.
   lengthBandS: [960, 1080],
   /**
@@ -442,6 +518,8 @@ export const LEDGER_PROSPECT_HEADER: MissionHeader = {
   premise:
     'The only candidate field is the rim. Four navies are on it this week, and the survey goes down anyway.',
   mapId: 'mouth-rim',
+  speaker: 'the-grid',
+  spokenBy: 'The survey writ, read at the staging. Signed for the Ninth Board',
   // The writ turns north at 22:00 (docs/mission-prospect.md §9), inside §10's 12-25.
   lengthBandS: [1260, 1380],
   /**
@@ -467,6 +545,8 @@ export const LEDGER_ITEM_NINE_HEADER: MissionHeader = {
   premise:
     'Nine items stand. The chamber hears everyone at once. What the chair does with the ninth is the chair’s.',
   mapId: 'holding-board',
+  speaker: 'the-grid',
+  spokenBy: 'The session notice, as the registry circulates it',
   // The chamber empties at 12:30 (docs/mission-item-nine.md §9), just over §10's floor.
   lengthBandS: [720, 840],
   /**
@@ -492,6 +572,8 @@ export const SEEDING_TEND_HEADER: MissionHeader = {
   name: 'The Second Seeding — Tend',
   premise: 'One tide of Marr Plateau’s ordinary work. Nothing attacks you. The sweep is listening.',
   mapId: 'marr-plateau',
+  speaker: 'marr',
+  spokenBy: 'Tidespeaker Ysolde Marr, at dawn tide',
   // The tide ends at 16:00 (docs/mission-tend.md §9), inside §10's 12-25.
   lengthBandS: [900, 1020],
   /**
@@ -518,6 +600,8 @@ export const SEEDING_THIN_WATER_HEADER: MissionHeader = {
   premise:
     'Ten loaded tenders, four kilometres of bare rock between two gardens, and a line the concern has closed across it.',
   mapId: 'kell-shoulder',
+  speaker: 'marr',
+  spokenBy: 'Tidespeaker Ysolde Marr, at the load-out, from Marr, on the plateau channel',
   // The count is read at 14:00 (docs/mission-thin-water.md \u00a79), at the short
   // end of campaign.md \u00a710's 12\u201325 and deliberately so: the mission is one
   // continuous withdrawal, and a longer one would be the same decision taken
@@ -576,6 +660,8 @@ export const SEEDING_CONVOCATION_HEADER: MissionHeader = {
   premise:
     'A plateau votes while it is being stood on. The walk goes row to row, and it takes exactly as long as it takes.',
   mapId: 'marr-plateau',
+  speaker: 'marr',
+  spokenBy: 'Tidespeaker Ysolde Marr, off-tide, after the bell',
   // The tide turns at 19:00 (docs/mission-convocation.md §9), inside §10's
   // 12–25. The second mission to resolve to `marr-plateau`, which is §11's
   // most consequential scoping decision and is deliberate.
@@ -628,6 +714,8 @@ export const SEEDING_DEEP_FURROW_HEADER: MissionHeader = {
   premise:
     'The bloom that proved the deep can be gardened is ten years old and one furrow wide. Today the plateaus carry the Kell seed down to it and plant the next one.',
   mapId: 'anholt-furrow',
+  speaker: 'marr',
+  spokenBy: 'Tidespeaker Ysolde Marr, on the lane at the cleft’s mouth, at 900 m',
   // The tide turns at 18:00 (docs/mission-deep-furrow.md §9), inside
   // campaign.md §10's 12–25. The first Commune mission played under the
   // layer, and the second to resolve to `anholt-furrow` when mission 5 lands.
@@ -660,6 +748,9 @@ export const SEEDING_IN_WRITING_HEADER: MissionHeader = {
   premise:
     'Three beds grown over the households, a dome that hears the whole garden, and a doorway held at the layer.',
   mapId: 'anholt-furrow',
+  speaker: 'marr',
+  spokenBy:
+    'Tidespeaker Ysolde Marr, on the lane at the cleft’s mouth, the tide the dome was heard',
   // The tide turns at 16:00 (docs/mission-in-writing.md §9), inside §10's
   // 12–25. The second mission to resolve to `anholt-furrow`, after
   // docs/mission-deep-furrow.md — §11's reuse, region for region.
@@ -695,6 +786,9 @@ export const SEEDING_RADICALS_HEADER: MissionHeader = {
   premise:
     "The plateaus turned a second seeding. Nobody turned the rim, and nobody turned this week. Anholt's people are going anyway, through the drowned city, and Marr Plateau's guns are asked to go with them.",
   mapId: 'sorrowgate',
+  speaker: 'marr',
+  spokenBy:
+    'Tidespeaker Ysolde Marr, from home, on the plateau channel, to the escort at the Upper Concourse',
   // The count is read at 15:00 (docs/mission-radicals.md §9), inside §10's
   // 12-25 — and the band is the document's own 840-960 s.
   lengthBandS: [840, 960],
@@ -727,6 +821,8 @@ export const SEEDING_SECOND_SEEDING_HEADER: MissionHeader = {
   premise:
     "The plateaus were on the rim before anybody, under a bed, with the Kell seed and a garden's whole argument. Today the concern comes down loud to read six faces, and somebody has to plant.",
   mapId: 'mouth-rim',
+  speaker: 'anholt',
+  spokenBy: 'Bloomwright Sefa Anholt, aboard the barge, under the bed, on the western lip',
   // The tide turns at 23:00 (docs/mission-second-seeding.md §9) — Prospect's
   // day plus one hour of the tide — and the band is the document's own
   // 1,320-1,440 s, inside §10's 12-25. The second mission to resolve to
@@ -763,6 +859,9 @@ export const ATTENDING_ATTENDANCE_HEADER: MissionHeader = {
   name: 'The Attending — Attendance',
   premise: 'A shift spent listening down the Ninth. Nothing arrives that can be fought.',
   mapId: 'attending-galleries',
+  speaker: 'korrin',
+  spokenBy:
+    'Undermarshal Setha Korrin, at the opening of the watch, after the First Cantor’s formula',
   // The watch ends at 18:00 (docs/mission-attendance.md §9), inside §10's 12-25.
   lengthBandS: [1020, 1140],
   /**
@@ -789,6 +888,9 @@ export const ATTENDING_THE_DOME_HEADER: MissionHeader = {
   premise:
     "The Fourth is closed while the inquiry runs, and what enters it is counted. At the trench's foot the stalls put a sound into the water instead of taking one out.",
   mapId: 'fourth-foot',
+  speaker: 'korrin',
+  spokenBy:
+    'Undermarshal Setha Korrin’s assignment, after First Cantor Vehl Ossary’s formula, in the order the rite fixes',
   // The whistle at 20:00 (docs/mission-the-dome.md §9), inside campaign.md
   // §10's 12–25 — and Baffle's twenty minutes to the second, because it is the
   // same tide from the counting side.
@@ -825,6 +927,8 @@ export const ATTENDING_INTAKE_HEADER: MissionHeader = {
   premise:
     'The banding ground above Sufficiency, twelve hulls of one year, and a living that will not come to them.',
   mapId: 'banding-ground',
+  speaker: 'korrin',
+  spokenBy: 'Undermarshal Setha Korrin, at the muster',
   // The shift ends at 20:00 (docs/mission-intake.md \u00a79), inside \u00a710's 12\u201325.
   lengthBandS: [1140, 1260],
   /**
@@ -849,6 +953,8 @@ export const ATTENDING_SHALLOW_HEADER: MissionHeader = {
   premise:
     'Marr has rung. The plateaus are turning a second seeding, garden by garden, and a cohort is on the Kell shoulder at three hundred and forty metres to hear which of them rings next.',
   mapId: 'kell-shoulder',
+  speaker: 'korrin',
+  spokenBy: 'Undermarshal Setha Korrin, from Sufficiency, to a column she cannot join',
   // The tide turns at 19:00 (docs/mission-shallow.md §9), inside campaign.md
   // §10's 12–25 — and the band is the document's own 1,080–1,200 s.
   // Convocation's nineteen minutes, one tide earlier, chosen against the walk:
@@ -887,6 +993,8 @@ export const ATTENDING_TRENCH_AWAKENING_HEADER: MissionHeader = {
   premise:
     "The shallow band renders what the trench brings. This tide the trench is sounded, and what answers is the Drift's to decide.",
   mapId: 'shallow-band',
+  speaker: 'korrin',
+  spokenBy: 'Undermarshal Setha Korrin, at the band',
   // The close at 20:00 (docs/mission-trench-awakening.md §9), inside
   // campaign.md §10's 12–25, and the document's own advertised 1,140–1,260 s.
   // Not a conclusion: the tide does not end here (§8).
@@ -921,6 +1029,8 @@ export const ATTENDING_CONCLAVE_HEADER: MissionHeader = {
   premise:
     'A calling is put at the head of the Ninth, and it is answered by who crosses the water between the terraces. The Cantorate does not cross.',
   mapId: 'upper-terraces',
+  speaker: 'korrin',
+  spokenBy: 'Undermarshal Setha Korrin’s calling, after First Cantor Vehl Ossary’s formula',
   // The cycle closes at 20:00 (docs/mission-conclave-attending.md §9), inside
   // campaign.md §10's 12–25 — and the band is the document's own 19:00–21:00.
   lengthBandS: [1140, 1260],
@@ -957,6 +1067,8 @@ export const CHORD_APTITUDE_HEADER: MissionHeader = {
   premise:
     "The Third's annual tuning. Six voices stand off the house, and a concern is coring in the middle of them.",
   mapId: 'outer-formations',
+  speaker: 'vrey',
+  spokenBy: 'Chapter-Master Halden Vrey, from the Third, at the top of the exercise',
   // The tuning closes at 16:00 (docs/mission-aptitude.md \u00a79), inside \u00a710's 12-25.
   lengthBandS: [900, 1020],
   /**
@@ -983,6 +1095,8 @@ export const CHORD_STANDING_WAVE_HEADER: MissionHeader = {
   premise:
     'A works order from the Ninth: two nodes, either wall of the Fifth, and the interval between them. Then be north of it.',
   mapId: 'the-fifth',
+  speaker: 'sull',
+  spokenBy: 'Choirmaster Ivane Sull, from the Ninth, at the top of the works',
   // The close at 18:00 (docs/mission-standing-wave.md §9), inside campaign.md
   // §10's 12–25 and at the long end deliberately: two 150-second
   // commissionings and a twelve-and-a-half-minute stipend do not fit in
@@ -1013,6 +1127,9 @@ export const ATTENDING_FIRST_ARRIVAL_HEADER: MissionHeader = {
   premise:
     'The rim, the tide after the concern’s survey went home. The slowest hulls in the Rift are on it before the armies, and the returns on the lip are still there to be entered.',
   mapId: 'mouth-rim',
+  speaker: 'korrin',
+  spokenBy:
+    'Undermarshal Setha Korrin, from Sufficiency, on the channel the column carries down the Ninth',
   // The tide turns at 21:00 (docs/mission-first-arrival.md §9), inside
   // campaign.md §10's 12–25 — and the band is the document's own 1,200–1,320 s.
   // Twenty-one minutes, the longest tide the campaign authors, because the
@@ -1056,6 +1173,8 @@ export const CHORD_NINETEEN_HEADER: MissionHeader = {
   premise:
     'The Order goes back to the trench where it lost nineteen, to play nineteen intervals over ground it cannot reach.',
   mapId: 'the-rest',
+  speaker: 'sull',
+  spokenBy: 'Choirmaster Ivane Sull, from the Ninth, to the party at the Head',
   // The committal closes at 18:00 (docs/mission-nineteen.md §9), inside §10's
   // 12–25 — at the long end, because nineteen twenty-second holds are three
   // hundred and eighty seconds of standing still before a metre of transit is
@@ -1093,6 +1212,8 @@ export const CHORD_CONCLAVE_HEADER: MissionHeader = {
   premise:
     "A concern comes to core the Third's outer formations on the tide of an appointed interval, and the Chapter-Master with the standing to call the Order together does not.",
   mapId: 'outer-formations',
+  speaker: 'vrey',
+  spokenBy: 'Chapter-Master Halden Vrey, from the Third, at the top of the interval',
   // The interval is at 14:00, lasts sixty seconds, and the tide is over thirty
   // seconds after it (docs/mission-conclave-chord.md §9) — 870 s, inside
   // campaign.md §10's 12–25, and the document's own advertised 840–900 s.
@@ -1129,6 +1250,8 @@ export const CHORD_THE_THREE_HEADER: MissionHeader = {
   premise:
     'Twelve minutes at 2,900 m: the Choirmaster is taken to the First, where the Chord still stands and three people who have not spoken since 178 PC are still writing.',
   mapId: 'the-first',
+  speaker: 'sull',
+  spokenBy: 'Choirmaster Ivane Sull, aboard her own hull, at the foot of the Fields',
   // The tide ends at 12:00 exactly (docs/mission-the-three.md §9), which is
   // both the floor of campaign.md §10's 12–25 and `MISSION.LENGTH_MIN_S` — the
   // shortest mission in the bible, deliberately, and the band test admits the
@@ -1171,6 +1294,8 @@ export const CHORD_RIM_DEPOSITS_HEADER: MissionHeader = {
   premise:
     'The crystal the Second Chord needs exists in exactly one place, on an attended rim, under two nodes the Order raised to reach it, and the Choirmaster authorises the plan.',
   mapId: 'mouth-rim',
+  speaker: 'sull',
+  spokenBy: 'Choirmaster Ivane Sull, from the Ninth, to the party at the Staging',
   // The count is taken at 16:00 (docs/mission-rim-deposits.md §9), inside §10's
   // 12–25 — at the short end, because the tide is five cuts of four minutes
   // laid over a correction that is walking from 03:00 and a basin that lifts at
@@ -1209,6 +1334,8 @@ export const CHORD_SECOND_CHORD_HEADER: MissionHeader = {
   premise:
     'The crystal is set into a node on the lip, the lattice is spent to buy thirty seconds, and the Choirmaster comes down to play them.',
   mapId: 'mouth-rim',
+  speaker: 'sull',
+  spokenBy: 'Choirmaster Ivane Sull, aboard her own hull, to the party at the Staging',
   // Eighteen minutes, and the `resolve` lands at 1,080 s
   // (docs/mission-second-chord.md §9). The band is narrow on purpose: this one
   // is not a tide that can be finished early. `runsItsLength` is set, all four

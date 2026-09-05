@@ -96,6 +96,8 @@ export interface GameCanvasProps {
    * so the title screen does not offer to resume a seat left on purpose.
    */
   onExit(): void;
+  /** Leave a concluded mission for the record rather than the title (docs/ui-ux.md §14). */
+  onRecord(): void;
 }
 
 export function GameCanvas({
@@ -106,6 +108,7 @@ export function GameCanvas({
   create,
   resume,
   onExit,
+  onRecord,
 }: GameCanvasProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<ConnectionStatus>('connecting');
@@ -670,6 +673,7 @@ export function GameCanvas({
             ready={selfReady}
             onAgain={setReady}
             onExitToMenu={onExit}
+            onRecord={onRecord}
           />
         )}
         {live && phase === MatchPhase.Ended && missionOver === null && lobby !== null && (
