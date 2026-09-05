@@ -150,9 +150,14 @@ process lives in the repo instead of in one person's head:
   files a single sub-issue off an epic instead, so the backlog refills itself one scoped
   item at a time. This is the skill a scheduled Routine runs unattended several times a
   day; its open-PR cap, not its schedule, is what keeps CI spend bounded.
+- **steward** — what a session subscribed to an open PR does between "opened" and
+  "merged", where this repository differs from the generic drive-to-green rules: reproduce
+  locally before reading job logs, when a CI re-run is affordable on this account's Actions
+  minutes, merge rather than rebase on `claude/` branches, and which review asks are design
+  calls that stop on a comment instead of a push.
 
 When you find yourself re-explaining a workflow a second time — a bake step, a test
-harness, a review checklist — turn it into a skill next to these three rather than a wiki
+harness, a review checklist — turn it into a skill next to these four rather than a wiki
 page nobody runs.
 
 `.claude/hooks/session-start.sh` runs `npm install` and `npm run build:shared` when a
