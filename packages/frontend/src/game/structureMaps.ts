@@ -5,7 +5,7 @@
  * build.mjs`; see hullMaps.ts for what each map carries.
  *
  * A structure with no entry here keeps the procedural architecture bake in
- * structureTextures.ts. All four current structures are model-backed; the
+ * structureTextures.ts. Every current structure is model-backed; the
  * fallback remains for future structures and for decode failures.
  *
  * Lookup mirrors hullMaps.ts exactly: faction variant -> canonical model ->
@@ -89,6 +89,18 @@ import slipwayDirEmissive from '../assets/structures/maps/slipway-directorate-em
 import slipwayHadAlbedo from '../assets/structures/maps/slipway-hadron-albedo.png';
 import slipwayHadHeight from '../assets/structures/maps/slipway-hadron-height.png';
 import slipwayHadEmissive from '../assets/structures/maps/slipway-hadron-emissive.png';
+import ventTapAlbedo from '../assets/structures/maps/vent-tap-albedo.png';
+import ventTapHeight from '../assets/structures/maps/vent-tap-height.png';
+import ventTapEmissive from '../assets/structures/maps/vent-tap-emissive.png';
+import ventTapPelAlbedo from '../assets/structures/maps/vent-tap-pelagia-albedo.png';
+import ventTapPelHeight from '../assets/structures/maps/vent-tap-pelagia-height.png';
+import ventTapPelEmissive from '../assets/structures/maps/vent-tap-pelagia-emissive.png';
+import ventTapDirAlbedo from '../assets/structures/maps/vent-tap-directorate-albedo.png';
+import ventTapDirHeight from '../assets/structures/maps/vent-tap-directorate-height.png';
+import ventTapDirEmissive from '../assets/structures/maps/vent-tap-directorate-emissive.png';
+import ventTapHadAlbedo from '../assets/structures/maps/vent-tap-hadron-albedo.png';
+import ventTapHadHeight from '../assets/structures/maps/vent-tap-hadron-height.png';
+import ventTapHadEmissive from '../assets/structures/maps/vent-tap-hadron-emissive.png';
 
 /**
  * Pixels per world metre the structure maps were baked at — the contract with
@@ -155,6 +167,13 @@ const MAP_URL: Partial<Record<StructureKind, MapUrls>> = {
     height: slipwayHeight,
     emissive: slipwayEmissive,
   },
+  // The Vent Tap, on the same terms as the Slipway: Bathyarch canonical,
+  // three variants below.
+  [StructureKind.VentTap]: {
+    albedo: ventTapAlbedo,
+    height: ventTapHeight,
+    emissive: ventTapEmissive,
+  },
 };
 
 /**
@@ -191,6 +210,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<StructureKind, Map
       height: slipwayPelHeight,
       emissive: slipwayPelEmissive,
     },
+    [StructureKind.VentTap]: {
+      albedo: ventTapPelAlbedo,
+      height: ventTapPelHeight,
+      emissive: ventTapPelEmissive,
+    },
   },
   [Faction.Directorate]: {
     [StructureKind.Bastion]: {
@@ -218,6 +242,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<StructureKind, Map
       height: slipwayDirHeight,
       emissive: slipwayDirEmissive,
     },
+    [StructureKind.VentTap]: {
+      albedo: ventTapDirAlbedo,
+      height: ventTapDirHeight,
+      emissive: ventTapDirEmissive,
+    },
   },
   [Faction.Hadron]: {
     [StructureKind.Bastion]: {
@@ -244,6 +273,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<StructureKind, Map
       albedo: slipwayHadAlbedo,
       height: slipwayHadHeight,
       emissive: slipwayHadEmissive,
+    },
+    [StructureKind.VentTap]: {
+      albedo: ventTapHadAlbedo,
+      height: ventTapHadHeight,
+      emissive: ventTapHadEmissive,
     },
   },
 };

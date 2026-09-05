@@ -163,6 +163,12 @@ const STRUCTURES = [
   { slug: 'slipway-pelagia', model: 'slipway-pelagia.glb', lengthM: 340, sig: 30 },
   { slug: 'slipway-directorate', model: 'slipway-directorate.glb', lengthM: 340, sig: 30 },
   { slug: 'slipway-hadron', model: 'slipway-hadron.glb', lengthM: 340, sig: 30 },
+  // The Vent Tap: every navy's, on Thermal Vein ground only, and never quiet
+  // (economy.md §2: 55–75 sustained at the tap). 180 m is 2 × radiusM 90.
+  { slug: 'vent-tap', model: 'vent-tap-bathyarch.glb', lengthM: 180, sig: 55 },
+  { slug: 'vent-tap-pelagia', model: 'vent-tap-pelagia.glb', lengthM: 180, sig: 55 },
+  { slug: 'vent-tap-directorate', model: 'vent-tap-directorate.glb', lengthM: 180, sig: 55 },
+  { slug: 'vent-tap-hadron', model: 'vent-tap-hadron.glb', lengthM: 180, sig: 55 },
 ];
 
 const JOBS = [

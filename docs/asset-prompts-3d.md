@@ -313,6 +313,17 @@ crystal when active; heat-shimmer distortion.
 ```
 
 ```text
+STRUCTURE — Vent Tap (any faction): the power source, bolted to a
+hydrothermal vent on Thermal Vein ground and never quiet (SIG 55 idle, 75
+at full draw — loud precisely where the ground is quiet). A basalt chimney
+at the centre with a wellhead clamp and a draw manifold over its mouth,
+four radial draw pipes running out to heat exchangers on the corners,
+anchor feet into the scorched ground. Burning bright: the vent's ember
+mouth under the manifold, floodlit working platforms around the wellhead,
+lamps along every pipe run.
+```
+
+```text
 STRUCTURE — Slipway (any faction): the second yard, the rung — a longer
 hall than the Foundry (340 m to its 320) with the slip cut through its
 whole length and open at both ends, so a hull is laid at the head gate,

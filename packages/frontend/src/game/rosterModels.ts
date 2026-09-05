@@ -93,7 +93,8 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   [UnitKind.Reciter]: 'reciter',
 };
 
-/** VentTap has no approved model yet; it stays on the sprite fallback. */
+/** Every structure kind has an approved model; the Partial stays for the
+ * decode-failure path and the next kind the docs design. */
 const STRUCTURE_SLUG: Partial<Record<StructureKind, string>> = {
   [StructureKind.Bastion]: 'bastion',
   [StructureKind.Refinery]: 'refinery',
@@ -104,6 +105,7 @@ const STRUCTURE_SLUG: Partial<Record<StructureKind, string>> = {
   [StructureKind.SoundingSpire]: 'sounding-spire',
   [StructureKind.SporeVeil]: 'spore-veil',
   [StructureKind.Slipway]: 'slipway',
+  [StructureKind.VentTap]: 'vent-tap',
 };
 
 const FACTION_SLUG: Record<Faction, string> = {
