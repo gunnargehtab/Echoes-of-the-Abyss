@@ -77,6 +77,18 @@ import spireEmissive from '../assets/structures/maps/sounding-spire-emissive.png
 import veilAlbedo from '../assets/structures/maps/spore-veil-albedo.png';
 import veilHeight from '../assets/structures/maps/spore-veil-height.png';
 import veilEmissive from '../assets/structures/maps/spore-veil-emissive.png';
+import slipwayAlbedo from '../assets/structures/maps/slipway-albedo.png';
+import slipwayHeight from '../assets/structures/maps/slipway-height.png';
+import slipwayEmissive from '../assets/structures/maps/slipway-emissive.png';
+import slipwayPelAlbedo from '../assets/structures/maps/slipway-pelagia-albedo.png';
+import slipwayPelHeight from '../assets/structures/maps/slipway-pelagia-height.png';
+import slipwayPelEmissive from '../assets/structures/maps/slipway-pelagia-emissive.png';
+import slipwayDirAlbedo from '../assets/structures/maps/slipway-directorate-albedo.png';
+import slipwayDirHeight from '../assets/structures/maps/slipway-directorate-height.png';
+import slipwayDirEmissive from '../assets/structures/maps/slipway-directorate-emissive.png';
+import slipwayHadAlbedo from '../assets/structures/maps/slipway-hadron-albedo.png';
+import slipwayHadHeight from '../assets/structures/maps/slipway-hadron-height.png';
+import slipwayHadEmissive from '../assets/structures/maps/slipway-hadron-emissive.png';
 
 /**
  * Pixels per world metre the structure maps were baked at — the contract with
@@ -136,6 +148,13 @@ const MAP_URL: Partial<Record<StructureKind, MapUrls>> = {
     height: veilHeight,
     emissive: veilEmissive,
   },
+  // The Slipway (#466): every navy's, like the Foundry, so the Bathyarch
+  // model is canonical and the other three navies carry variants below.
+  [StructureKind.Slipway]: {
+    albedo: slipwayAlbedo,
+    height: slipwayHeight,
+    emissive: slipwayEmissive,
+  },
 };
 
 /**
@@ -167,6 +186,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<StructureKind, Map
       height: turretPelHeight,
       emissive: turretPelEmissive,
     },
+    [StructureKind.Slipway]: {
+      albedo: slipwayPelAlbedo,
+      height: slipwayPelHeight,
+      emissive: slipwayPelEmissive,
+    },
   },
   [Faction.Directorate]: {
     [StructureKind.Bastion]: {
@@ -189,6 +213,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<StructureKind, Map
       height: turretDirHeight,
       emissive: turretDirEmissive,
     },
+    [StructureKind.Slipway]: {
+      albedo: slipwayDirAlbedo,
+      height: slipwayDirHeight,
+      emissive: slipwayDirEmissive,
+    },
   },
   [Faction.Hadron]: {
     [StructureKind.Bastion]: {
@@ -210,6 +239,11 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<StructureKind, Map
       albedo: turretHadAlbedo,
       height: turretHadHeight,
       emissive: turretHadEmissive,
+    },
+    [StructureKind.Slipway]: {
+      albedo: slipwayHadAlbedo,
+      height: slipwayHadHeight,
+      emissive: slipwayHadEmissive,
     },
   },
 };

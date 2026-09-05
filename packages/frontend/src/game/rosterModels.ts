@@ -81,7 +81,8 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   // Nor the Clarion, for the same reason and on the same terms.
   [UnitKind.Clarion]: 'clarion',
   [UnitKind.Harvester]: 'harvester',
-  // The rung's roster (#461): no approved models yet, on the same terms.
+  // The rung's roster (#461), approved in #466 — one model per hull, since
+  // each is one navy's and never another's.
   [UnitKind.Tender]: 'tender',
   [UnitKind.Bulwark]: 'bulwark',
   [UnitKind.Spinner]: 'spinner',
@@ -92,7 +93,7 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   [UnitKind.Reciter]: 'reciter',
 };
 
-/** VentTap and Slipway have no approved model yet; they stay on the sprite fallback. */
+/** VentTap has no approved model yet; it stays on the sprite fallback. */
 const STRUCTURE_SLUG: Partial<Record<StructureKind, string>> = {
   [StructureKind.Bastion]: 'bastion',
   [StructureKind.Refinery]: 'refinery',
@@ -102,6 +103,7 @@ const STRUCTURE_SLUG: Partial<Record<StructureKind, string>> = {
   [StructureKind.Cantor]: 'cantor',
   [StructureKind.SoundingSpire]: 'sounding-spire',
   [StructureKind.SporeVeil]: 'spore-veil',
+  [StructureKind.Slipway]: 'slipway',
 };
 
 const FACTION_SLUG: Record<Faction, string> = {

@@ -136,7 +136,8 @@ document already points at it:
 - **The rung, and two hulls a navy** — [units.md](units.md) designs a crystal-locked second yard
   (the Slipway) and eight faction-locked hulls, one at the Foundry and one behind the rung for
   each navy, each argued from sound or depth (#436). Transcribed into `packages/shared` and the
-  simulation in #461; transports remain unwritten.
+  simulation in #461, and given approved models through the pipeline of record in #466 — the
+  eight hulls and the Slipway in every navy's architecture; transports remain unwritten.
 
 Supply, once the one deferred design question here, is decided and built:
 [economy.md](economy.md) §10 gives every hull a berth cost and every commander a grant the
