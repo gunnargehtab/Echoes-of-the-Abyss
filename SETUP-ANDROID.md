@@ -112,13 +112,21 @@ If you would rather not build on the phone, run it on a computer and open it
 over the LAN:
 
 ```bash
-npm -w packages/backend run dev
-npm -w packages/frontend run dev -- --host
+npm -w packages/frontend run dev -- --host       # prints a Network: URL
+CORS_ORIGIN=http://192.168.1.20:5173 npm -w packages/backend run dev
 ```
 
-Vite prints a `Network:` URL — open that on the phone. No configuration is
-needed: the backend binds all interfaces, and the client derives its WebSocket
-endpoint from whatever host served the page.
+Open the `Network:` URL on the phone. The client needs no configuration — the
+backend binds all interfaces, and the client derives its WebSocket endpoint from
+whatever host served the page — but the server does need one thing: with
+`CORS_ORIGIN` unset it accepts loopback origins only, and a page served over the
+LAN is not loopback. Give it the exact `Network:` URL Vite printed, scheme, host
+and port. The server logs the origins it applied as it starts, and a mismatch
+shows up in the browser console as a CORS error naming the origin it refused.
+
+Running on the phone itself needs none of this: the page is served from
+`localhost`, which is the default. See [SETUP.md](SETUP.md) for the full
+variable.
 
 ## Related
 

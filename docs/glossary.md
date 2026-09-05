@@ -24,6 +24,18 @@ Pressure Rating (PR)
 - Integer rating describing a unit's depth resilience. Operating below a unit's PR causes unhealable crush attrition.
 - PR is used by faction mechanics and depth-affecting abilities (see systems-depth.md).
 
+Refit
+
+- A fleet-wide upgrade, bought once, applying to every hull a navy has afloat and every hull it launches afterwards. Five exist — Pressure, Plate, Drive, Magazine, Hold — and the list is closed (systems-progression.md §2).
+- Priced in Nodules and Resonance Crystal and produced on the Slipway's line at SIG 70, occupying it exactly as a hull would. No refit lowers SIG or raises HYD at any state.
+- The **Pressure Refit** is the one economy.md §7 and factions.md have always called a *refit*: +1 PR for the fleet, at a signature structure's 120 Crystal. The Commune can buy it to PR-2 only; the Directorate is not offered it; the Knights buy it instantly in crystal alone and the Bastion sounds the purchase.
+
+Rank
+
+- A hull's veterancy, 0–3, earned by that hull alone from damage dealt plus half the damage taken and survived, in multiples of its own maximum hull. Costs nothing in any account; dies with the hull; survives repair (systems-progression.md §3).
+- Each rank adds +10% maximum hull and +5% gun damage, the hull arriving as current hull too. Nothing to SIG, HYD, PR, speed or torpedo damage.
+- Own-force information on the health bar. To an enemy it is Tier 4 information and nothing lower.
+
 Resolution Tiers (0–4)
 
 - Tier 0 — Silent: not detected.

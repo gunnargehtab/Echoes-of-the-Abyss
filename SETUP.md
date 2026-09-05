@@ -127,6 +127,62 @@ npm run type-check
 npm run lint
 ```
 
+## Deployment
+
+### Environment variables
+
+| Variable | Read by | Default | What it does |
+| --- | --- | --- | --- |
+| `PORT` | backend | `3000` | Port the game server listens on. |
+| `NODE_ENV` | backend | unset | `production` arms the origin lock below. |
+| `CORS_ORIGIN` | backend | loopback | Origins allowed to reach matchmaking. |
+| `VITE_SERVER_URL` | frontend, **at build time** | `ws://<page host>:3000` | Where the client dials the server. |
+
+`CORS_ORIGIN` is the one to understand. The WebSocket upgrade is not subject to
+CORS, but colyseus.js POSTs to `/matchmake/` first, so this decides whether a
+browser can reach the server at all:
+
+- **Unset outside production** — loopback origins only, on any port. That covers
+  `npm run dev`, a second Vite instance on 5174, and the on-device Termux setup,
+  and it covers nothing else.
+- **Unset with `NODE_ENV=production`** — the server prints why and exits 1. This
+  is deliberate. Wide-open CORS is invisible when it is wrong: the server comes
+  up, serves happily, and nothing tells you it is answering strangers.
+- **Set** — a comma-separated allow-list, matched exactly (scheme, host and port
+  all count; no trailing slash). Reaching the dev server from another machine on
+  the LAN is `CORS_ORIGIN=http://192.168.1.20:5173`.
+- **`*`** — opts out of the lock on purpose, in production too. A public
+  playtest server is a real thing to want; the lock only removes the *silent*
+  wildcard.
+
+`VITE_SERVER_URL` is substituted by Vite at compile time, so it is a build
+argument rather than a runtime one — pointing the client at a different server
+means rebuilding it.
+
+### Containers
+
+```bash
+docker compose up --build     # → http://localhost:8080
+```
+
+Two images, both built from the repository root because each needs the workspace
+lockfile:
+
+- `packages/backend/Dockerfile` — esbuild bundles the server into a single
+  self-contained file, so the runtime stage is Node 22 plus that one file and no
+  `node_modules` at all. It sets `NODE_ENV=production`, which means the image
+  will not start without `CORS_ORIGIN`; `docker-compose.yml` supplies it.
+- `packages/frontend/Dockerfile` — Vite build, served by nginx, with
+  `VITE_SERVER_URL` as a build argument.
+
+This is the deployed shape rather than the development loop: the client is a
+static build, so a source edit needs a rebuild. Use `npm run dev` for iterating;
+compose is for checking that what deploys actually comes up.
+
+What is **not** here is the platform half — no Vercel project, no Hetzner host,
+no Actions job that deploys anything. `.github/workflows/pages.yml` publishes the
+roadmap site, not the game.
+
 ## Architecture Notes
 
 ### The match is a classic RTS loop with the Echo Layer underneath

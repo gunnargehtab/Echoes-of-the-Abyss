@@ -342,6 +342,7 @@ The First Chord's three mute technicians are alive, in a chapter-house at 2,900 
 
 - **[characters.md](characters.md)** — the people running all this
 - **[units.md](units.md)** — full rosters
+- **[systems-progression.md](systems-progression.md)** — what each navy's refit rate and rank story do to its doctrine
 - **[art-direction.md](art-direction.md)** — silhouette and palette law
 - **[campaign.md](campaign.md)** — how these crises collide
 - **[world.md](world.md)** — the descent that produced all four, in a paragraph each

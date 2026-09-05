@@ -46,9 +46,9 @@ No faction is written as the villain. Read: **[factions.md](../docs/factions.md)
 ## Tech Stack & Implementation
 
 - **Frontend:** TypeScript · three.js (the conn-view world) · PixiJS (HUD and chart marks over it) · bitecs (ECS) · Howler.js + raw Web Audio · React (menus only)
-- **Backend:** Node.js · Colyseus (multiplayer state sync) · Redis (real-time caching) · PostgreSQL (accounts/saves)
+- **Backend:** Node.js · Colyseus (multiplayer state sync) · Redis (real-time caching) and PostgreSQL (accounts/saves), both planned rather than built
 - **Build:** Vite · ESBuild · npm workspaces
-- **Deployment:** Vercel (frontend) · Hetzner Cloud (game servers, low latency in EU)
+- **Deployment:** container images (`packages/*/Dockerfile`, root `docker-compose.yml`) targeting Vercel (frontend) · Hetzner Cloud (game servers, low latency in EU); no platform project is configured yet
 
 **Node 22+ is required.** The backend dev and test scripts use `node --import tsx` and the stable `node:test` runner; CI pins Node 22.
 
@@ -69,7 +69,7 @@ packages/frontend  React shell + two-canvas renderer (three.js world, PixiJS
 tools/echo-sim     Standalone deterministic Echo scenario harness.
 ```
 
-Redis and PostgreSQL are declared dependencies for accounts and caching but are not yet wired into the match path.
+Redis and PostgreSQL are the intended shape for accounts and caching, and neither exists — there is no auth or persistence code, and the match server holds everything in memory for the life of a room. They were once declared as backend dependencies and imported nowhere; that was removed, because an installed driver reads as persistence already there.
 
 **Tuning constants live in exactly one place:** `packages/shared/src/constants.ts`. Each is tagged **SPEC** (transcribed from a design doc — change the doc first, and cite the section) or **TUNABLE** (a prototype number the docs do not pin down). Some are *derived* rather than chosen: `BASE_THRESHOLD` is solved from the spec'd 2,400 m active-sonar self-reveal so the documented ping radii fall out of the general propagation model. Do not replace a derived value with a literal to make a test pass.
 

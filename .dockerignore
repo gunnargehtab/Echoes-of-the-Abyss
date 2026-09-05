@@ -1,0 +1,31 @@
+# The build context is the repository root, so without this every image build
+# uploads node_modules — hundreds of megabytes, none of it used, since both
+# Dockerfiles run their own `npm ci` from the lockfile.
+node_modules
+**/node_modules
+
+# Build outputs are produced inside the image. Copying a host `dist/` in would
+# also let a stale local build silently become the shipped one.
+dist
+**/dist
+build
+**/build
+*.tsbuildinfo
+
+.git
+.github
+.claude
+
+docs
+*.md
+
+coverage
+.nyc_output
+tools/balance/baselines
+
+.env
+.env.*
+*.log
+.DS_Store
+.vscode
+.idea
