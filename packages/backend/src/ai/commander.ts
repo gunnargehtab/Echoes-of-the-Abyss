@@ -522,10 +522,11 @@ export class AiCommander implements AiPlayer {
   /**
    * The contact most worth acting on.
    *
-   * Anything classified as fauna is skipped, and anything *not yet* classified
-   * is not — which is the honest reading of §3. At Tier 1 there is no marker
-   * that distinguishes a grazer from a cruiser, so this commander will
-   * sometimes commit to a Draymaw, exactly as a player does.
+   * Anything classified as fauna is skipped, and so — since #440 — is
+   * anything not yet classified at all. At Tier 1 there is no marker that
+   * distinguishes a grazer from a cruiser; the earlier reading of §3 was that
+   * the commander should therefore sometimes commit to a Draymaw, as a player
+   * does, and the measurement said it committed to little else.
    *
    * A **Bastion outranks everything**, because losing one is losing the match,
    * and any structure outranks any hull: a hull is somewhere else in thirty
@@ -533,10 +534,22 @@ export class AiCommander implements AiPlayer {
    * Tier 3 — classification is where a contact acquires a *kind* — so it is
    * information the commander earned rather than a preference it was handed.
    */
-  private bestThreat(contacts: readonly Contact[]): Contact | null {
+  private bestThreat(contacts: readonly Contact[], allowUnclassified = false): Contact | null {
     let best: Contact | null = null;
     for (const contact of contacts) {
       if (contact.fauna !== undefined) continue;
+      // Classified or nothing (#440). An explicit attack order chases the
+      // *entity* behind the handle, and on seed 4000 every commander spent
+      // the match — 1,233 of one commander's 1,976 attack orders, 1,828 of
+      // another's 2,181 — chasing Tier-1 smudges inside a gun's reach, which
+      // with the Drift in the water are grazers. What is genuinely in range
+      // is fought by the hulls themselves (attack-move, auto-acquire), and
+      // what is ambiguous is what the ping is for; the commander's own order
+      // is reserved for something the layer has told it is somebody's.
+      // The one caller allowed past this is home defence, whose watch has
+      // already confirmed the contact is *closing* on the Bastion — evidence
+      // of intent a grazer rarely supplies, and the alarm is cheap.
+      if (!allowUnclassified && contact.tier < ResolutionTier.Classification) continue;
       if (best === null || priority(contact) > priority(best)) best = contact;
     }
     return best;
@@ -938,7 +951,7 @@ export class AiCommander implements AiPlayer {
     // Home first. A push that leaves the Bastion undefended trades the match
     // for a raid, and losing the Bastion is losing — but not everything near
     // the Bastion is a raid. See `approachingHome`.
-    const athome = this.bestThreat(this.approachingHome(snapshot));
+    const athome = this.bestThreat(this.approachingHome(snapshot), true);
     if (athome !== null) {
       this.setSilent(ids, false, out);
       this.setCrossed(army, false, out);

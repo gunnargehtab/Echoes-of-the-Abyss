@@ -378,14 +378,30 @@ describe('on the way in, the army shoots what is in its way', () => {
   it('still stops for what is actually in front of it', () => {
     // Inside a gun's reach the fight is already happening, and walking past it
     // would be a different bug. No move order should be issued at all here:
-    // the commander is attacking, not travelling.
+    // the commander is attacking, not travelling. Classified, since #440 —
+    // a smudge at the same range is the next case.
     const { home } = rig();
     const asked = moves({
       seconds: 300,
       at: home,
       size: 4,
-      contacts: (tick) => [smudge(22, home.x + 400, home.y, tick)],
+      contacts: (tick) => [classified(22, home.x + 400, home.y, tick)],
     });
     assert.equal(asked.length, 0, 'it walked away from a contact in weapons range');
+  });
+
+  it('does not order an attack on a smudge, however close', () => {
+    // A Tier-1 contact four hundred metres off is what a grazer looks like,
+    // and an attack order chases the entity behind it. The hulls fight
+    // whatever actually enters their guns' reach on their own; the
+    // commander's order is for something the layer has named (#440).
+    const { home } = rig();
+    const issued = commands({
+      seconds: 60,
+      at: home,
+      size: 4,
+      contacts: (tick) => [smudge(23, home.x + 400, home.y, tick)],
+    });
+    assert.equal(issued.filter((c) => c.kind === 'attack').length, 0, 'it chased a smudge');
   });
 });
