@@ -9,14 +9,14 @@ For a browser-based RTS (PC-first), the stack needs to give high performance for
 - TypeScript
 - three.js (rendering — the conn view: the world, since [three-layer-ocean.md](three-layer-ocean.md) Phase 5)
 - PixiJS (rendering — the HUD and chart marks, on a transparent canvas over the conn view)
-- bitecs (ECS)
-- Howler.js (audio)
+- Web Audio (audio — the whole mix, raw; no wrapper library, see [audio-direction.md](audio-direction.md) §12)
 - Optional: React for menus/lobby
 
 ### Backend
 
 - Node.js
 - Colyseus (multiplayer)
+- bitecs (ECS — the simulation's entity store)
 - Redis (real-time caching) — planned, not built
 - PostgreSQL (persistent data) — planned, not built
 
@@ -53,7 +53,7 @@ Detection (see [systems-echo.md](systems-echo.md)) is **server-authoritative and
 
 - The Echo Layer runs on a **spatial hash**, evaluated at **5 Hz**
 - Hard budget: **2 ms/tick** for the full detection pass, to stay inside the simulation's frame budget under Colyseus
-- Howler.js handles standard audio playback; raw Web Audio is layered on top for the mix requirements in [art-direction.md](art-direction.md) (Tier-1 contacts must be heard before they're seen)
+- The mix is raw Web Audio end to end, with no playback wrapper in front of it: the mix requirements in [art-direction.md](art-direction.md) (Tier-1 contacts must be heard before they're seen) need per-voice filtering and sample-accurate scheduling on every bus, and a wrapper that could only own the simple buses was a second audio device for nothing
 
 ### What keeps the pass inside 2 ms
 

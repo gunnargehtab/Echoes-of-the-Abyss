@@ -336,7 +336,7 @@ Because audio carries primary information, every audible fact **must** have a vi
 
 ## 12. Technical Specification
 
-**Split of responsibilities** ([tech-stack.md](tech-stack.md)): Howler.js owns UI sounds, music playback and one-shots — anything where a simple play/stop API is sufficient. The **contact bus is raw Web Audio**, because it needs per-voice filtering, side-chaining and sample-accurate scheduling that a wrapper cannot give.
+**One graph, raw Web Audio** ([tech-stack.md](tech-stack.md)): every bus below is built directly on the AudioContext, the UI and music buses included. The contact bus needs per-voice filtering, side-chaining and sample-accurate scheduling that a wrapper cannot give, and once the engine owns that graph, handing the simple buses to a playback library would mean a second device handle and a second clock for a play/stop API the engine already has.
 
 ```text
 AudioContext
@@ -346,7 +346,7 @@ AudioContext
 │    └── per-contact voice: source → biomeFilter → panner → gain │
 ├── speechBus (the hail and the murmur bed, §13) ───────────────┤
 ├── selfBus   (own hull, drive, cavitation) ────────────────────┤
-└── uiBus     (Howler) ─────────────────────────────────────────┘
+└── uiBus     (the interface's own notice) ──────────────────────┘
 ```
 
 | Constraint | Value | Reason |
@@ -615,4 +615,4 @@ Within a register no two signatures share a fundamental and a cadence, and every
 - **[bestiary.md](bestiary.md)** — what shares the Tier-1 band with you
 - **[environments.md](environments.md)** — biome PF values the DSP chain implements
 - **[art-direction.md](art-direction.md)** — the visual language this sits inside
-- **[tech-stack.md](tech-stack.md)** — Howler.js, Web Audio, and the performance budget
+- **[tech-stack.md](tech-stack.md)** — Web Audio and the performance budget
