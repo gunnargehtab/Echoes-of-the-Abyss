@@ -1,0 +1,39 @@
+# Local end-to-end, one command:
+#
+#   docker compose up --build     →  http://localhost:8080
+#
+# This is the deployed shape rather than the development loop. The client is a
+# static build behind nginx, so a source edit needs a rebuild — for iterating,
+# use `npm run dev` (see SETUP.md). What this file is for is checking that the
+# thing which actually deploys comes up and can be played.
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: packages/backend/Dockerfile
+    environment:
+      PORT: 3000
+      # The image runs with NODE_ENV=production, so the origin lock refuses to
+      # start without this. Set deliberately here rather than left blank: the
+      # compose file should have the same requirement a real deployment does.
+      CORS_ORIGIN: http://localhost:8080
+    ports:
+      - '3000:3000'
+
+  frontend:
+    build:
+      context: .
+      dockerfile: packages/frontend/Dockerfile
+      args:
+        # Compiled into the bundle, so it has to name the address the *browser*
+        # will dial. Not `ws://backend:3000` — `backend` resolves inside the
+        # compose network, and the browser is not on it.
+        VITE_SERVER_URL: ws://localhost:3000
+    ports:
+      - '8080:80'
+    depends_on:
+      backend:
+        # The backend image declares a HEALTHCHECK against /health, so the
+        # client is not served until there is a server for it to reach.
+        condition: service_healthy

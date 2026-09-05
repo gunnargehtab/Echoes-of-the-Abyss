@@ -17,8 +17,16 @@ For a browser-based RTS (PC-first), the stack needs to give high performance for
 
 - Node.js
 - Colyseus (multiplayer)
-- Redis (real-time caching)
-- PostgreSQL (persistent data)
+- Redis (real-time caching) — planned, not built
+- PostgreSQL (persistent data) — planned, not built
+
+Redis and PostgreSQL are the intended shape for accounts, saves and matchmaking
+cache. Neither exists: there is no auth code and no persistence code, and the
+match server keeps everything in memory for the life of a room. Both were
+declared as backend dependencies and imported nowhere, which is worse than
+absent — an installed driver reads as persistence that is already there — so
+they were removed from `packages/backend/package.json`. They come back with the
+code that uses them.
 
 ### Build Tools
 
@@ -29,6 +37,15 @@ For a browser-based RTS (PC-first), the stack needs to give high performance for
 
 - Vercel (frontend)
 - Hetzner Cloud (game servers, low latency in Germany)
+
+The repository carries the container half of that: `packages/backend/Dockerfile`
+builds the server as its self-contained esbuild bundle,
+`packages/frontend/Dockerfile` builds the client and serves it from nginx, and
+the root `docker-compose.yml` brings both up together for a local end-to-end
+check. The platform half — a Vercel project, a Hetzner host — is not configured
+here. See [SETUP.md](../SETUP.md) for the commands and the environment
+variables, including `CORS_ORIGIN`, which the server refuses to start without
+when `NODE_ENV=production`.
 
 ## Echo Layer Implementation Notes
 
@@ -181,8 +198,8 @@ waypoint.
 ### Backend & Infrastructure
 
 - **Server runtime:** Node.js (TypeScript)
-- **Database:** PostgreSQL for player accounts/saves, Redis for matchmaking and real-time state caching
-- **Hosting:** Vercel/Netlify for frontend; AWS/Hetzner for game servers
+- **Database:** PostgreSQL for player accounts/saves, Redis for matchmaking and real-time state caching — planned; neither is wired up, see "Backend" above
+- **Hosting:** Vercel/Netlify for frontend; AWS/Hetzner for game servers. Container images and a compose file exist ([SETUP.md](../SETUP.md)); no platform project is configured
 
 ### Art & Asset Pipeline
 
