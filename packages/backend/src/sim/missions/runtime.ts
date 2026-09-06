@@ -37,7 +37,6 @@ import {
   ResolutionTier,
   SIM,
   detectionRatio,
-  faunaStatsFor,
   thermoclineFactor,
   speakerOf,
   voiceOf,
@@ -64,6 +63,7 @@ import {
   Structure,
 } from '../components.ts';
 import {
+  ambientBandFor,
   economyFor,
   eidOfLocalId,
   localIdOf,
@@ -80,6 +80,7 @@ import { directionalFactorFor } from '../directional.ts';
 import { dueConditionalBeats } from './conditional.ts';
 import { exposedAtLeast, inRegion, isMet, isStanding, peakSigOf } from './predicates.ts';
 import { pairedNodesOf } from '../systems/standingWave.ts';
+import { rebuildPropagation } from '../systems/hazards.ts';
 import type {
   MissionBeatEffect,
   MissionConditionalBeat,
@@ -864,6 +865,13 @@ export class MissionRuntime {
             depth: beat.spawnAt.depthM,
           });
           if (eid !== 0) this.register(world, beat.tag, eid);
+          // Living terrain has to reach the grid. The propagation rebuild
+          // gathers every surviving cluster, but nothing schedules it for a
+          // *birth*: the seeder rebuilds once after its roster and `reap`
+          // rebuilds on a death, so a cluster a beat placed masked nothing
+          // until a storm boundary or another jelly's death happened to
+          // rebuild the grid. Deep Furrow's three sat that way from #306.
+          if (eid !== 0 && beat.species === FaunaSpecies.Tetherjelly) rebuildPropagation(world);
         }
         if (eid === 0) return;
         // One creature, one commitment: a second beat for the same tag
@@ -1019,8 +1027,11 @@ export class MissionRuntime {
         if (released !== 0 && hasComponent(world, Fauna, released)) {
           Fauna.senseS[released] = DRIFT.SENSE_INTERVAL_S;
           // And its own water back: a transit's depth is the transit's, and a
-          // released creature holds the species' band again.
-          Fauna.homeDepth[released] = faunaStatsFor(
+          // released creature holds the species' band again — the band it
+          // rests in on *this* map, so a re-homed cluster comes home to the
+          // canopy and not to a duct the plateau does not have.
+          Fauna.homeDepth[released] = ambientBandFor(
+            world,
             Fauna.species[released] as FaunaSpecies
           ).workingDepthM;
           // And its hull: a released creature is the Drift's again, and the
@@ -1047,7 +1058,8 @@ export class MissionRuntime {
       // every pass for `homeX`'s reason: `act` climbs or sinks toward it at
       // the Drift's vertical speed, and nothing else may pull it off.
       Fauna.homeDepth[eid] =
-        commitment.depthM ?? faunaStatsFor(Fauna.species[eid] as FaunaSpecies).workingDepthM;
+        commitment.depthM ??
+        ambientBandFor(world, Fauna.species[eid] as FaunaSpecies).workingDepthM;
       Fauna.targetEid[eid] = 0;
       Fauna.stage[eid] = FaunaStage.Committed;
       // Deaf for the length of the commitment. `faunaSystem` counts this down
