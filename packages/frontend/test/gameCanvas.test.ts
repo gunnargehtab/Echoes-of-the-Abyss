@@ -30,15 +30,17 @@ import { createElement } from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { Faction, MatchPhase, encodeEcho, SERVER_MSG } from '@echoes/shared';
 import {
+  clearStorage,
   createHost,
   dispatchWindow,
+  installStorage,
   HeadlessApplication,
   HeadlessWebGLRenderer,
   pumpAnimationFrames,
   type StubElement,
 } from './support/headless.ts';
 import { installHeadlessAudio, uninstallHeadlessAudio } from './support/headlessAudio.ts';
-import { installSessionStorage, StubClient, StubRoom } from './support/colyseusStub.ts';
+import { StubClient, StubRoom } from './support/colyseusStub.ts';
 import { cannedMap, cannedNodes, cannedSnapshot, cannedTerrain } from './support/cannedMatch.ts';
 import { GameCanvas, type GameCanvasProps } from '../src/game/GameCanvas.tsx';
 
@@ -188,13 +190,13 @@ let audioContext = installHeadlessAudio();
 
 beforeEach(() => {
   audioContext = installHeadlessAudio();
-  installSessionStorage();
+  installStorage();
 });
 
 afterEach(() => {
   uninstallHeadlessAudio();
   const g = globalThis as unknown as { window: Record<string, unknown> };
-  delete g.window.sessionStorage;
+  clearStorage();
   delete g.window.__audioProbe;
   delete g.window.__perspectiveProbe;
   delete g.window.__hazardProbe;

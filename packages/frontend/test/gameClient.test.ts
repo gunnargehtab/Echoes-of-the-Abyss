@@ -30,13 +30,8 @@ import {
   StructureKind,
   UnitKind,
 } from '@echoes/shared';
-import './support/headless.ts';
-import {
-  installSessionStorage,
-  StubClient,
-  StubRoom,
-  type SentMessage,
-} from './support/colyseusStub.ts';
+import { clearStorage, installStorage } from './support/headless.ts';
+import { StubClient, StubRoom, type SentMessage } from './support/colyseusStub.ts';
 import {
   GameClient,
   hasStoredSession,
@@ -108,12 +103,11 @@ async function connected(
 }
 
 beforeEach(() => {
-  installSessionStorage();
+  installStorage();
 });
 
 afterEach(() => {
-  const g = globalThis as unknown as { window: Record<string, unknown> };
-  delete g.window.sessionStorage;
+  clearStorage();
 });
 
 /** Every intent, and the message the room is listening for. */
@@ -220,7 +214,7 @@ describe('the match client: getting into a room', () => {
   it('takes the three doors in the documented order of specificity', async () => {
     // A room id names a room, and matchmaking cannot improve on that.
     const byId = await connected({ roomId: '  ABC123  ', name: 'Marr' });
-    installSessionStorage();
+    installStorage();
     assert.equal(byId.net.callOf('joinById')?.target, 'ABC123', 'the code is trimmed');
     assert.deepEqual(byId.net.callOf('joinById')?.options, { name: 'Marr' });
 
@@ -235,7 +229,7 @@ describe('the match client: getting into a room', () => {
       private: true,
     });
 
-    installSessionStorage();
+    installStorage();
 
     // Quick match keeps joinOrCreate: picking a map is picking a queue.
     const quick = await connected({ mapId: 'smoke-basin' });
