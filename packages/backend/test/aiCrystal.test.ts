@@ -33,6 +33,7 @@ import assert from 'node:assert/strict';
 import {
   AiDifficulty,
   CRYSTAL,
+  FACTION_STRUCTURE,
   Faction,
   HULL_EFFECTS,
   HarvestThrottle,
@@ -41,7 +42,9 @@ import {
   ResourceKind,
   StructureKind,
   UnitKind,
+  priceOf,
   statsFor,
+  structureStatsFor,
   type EchoSnapshot,
   type HazardState,
   type ResourceNodeInfo,
@@ -534,6 +537,161 @@ describe('the Sower makes the field ordinary water', () => {
     assert.ok(
       !sent.some((c) => c.kind === 'throttle' && c.throttle === HarvestThrottle.Overburden),
       'nobody is on a raid throttle over water that costs nothing to stand in'
+    );
+  });
+});
+
+describe('the commander saves for what it cannot buy out of pocket', () => {
+  /** A structure of any kind, standing and idle. */
+  function structure(id: number, kind: StructureKind): EchoSnapshot['structures'][number] {
+    const stats = structureStatsFor(kind);
+    return {
+      id,
+      kind,
+      x: 1000,
+      y: 1000,
+      depth: 300,
+      hp: stats.maxHp,
+      maxHp: stats.maxHp,
+      sig: stats.sigIdle,
+      buildProgress: 1,
+      queue: [],
+      queueProgress: 0,
+    };
+  }
+
+  const yards = (): EchoSnapshot['structures'] => [
+    structure(20, StructureKind.Foundry),
+    structure(21, StructureKind.Refinery),
+  ];
+
+  it('holds its nodules for the rung instead of spending them on hulls', () => {
+    // The measurement this exists for: nothing in this commander had ever held
+    // money back, so the branch that buys the second yard was reached
+    // thousands of times a match and the *most* any navy held when it got
+    // there was 630 nodules against a 600 price — 180 for the Commune. The 600
+    // a navy starts with is the only time it is ever that rich.
+    const brief = briefing();
+    const commander = new AiCommander(brief);
+    const half = Math.floor(priceOf(structureStatsFor(StructureKind.Slipway)).nodules / 2);
+    const sent = commander.observe(
+      snapshot(fleet(brief, DOCTRINE[Faction.Pelagia].harvesterTarget), {
+        structures: yards(),
+        nodules: half,
+      })
+    );
+    assert.ok(
+      !sent.some((c) => c.kind === 'produce'),
+      `half a yard in the bank buys no hulls: ${JSON.stringify(sent.filter((c) => c.kind === 'produce'))}`
+    );
+  });
+
+  it('buys haulers rather than saving while the economy is short of them', () => {
+    // Saving is holding money back from the yards, and a navy short of haulers
+    // has a better use for it: teching on an economy that cannot fund what it
+    // unlocks is the same mistake in a longer form. Counted *with the line*,
+    // because production only ever builds up to the target, so any loss puts a
+    // navy under it — the Commune spends a match oscillating either side.
+    const brief = briefing();
+    const commander = new AiCommander(brief);
+    const short = DOCTRINE[Faction.Pelagia].harvesterTarget - 2;
+    const sent = commander.observe(
+      snapshot(fleet(brief, short), {
+        structures: yards(),
+        nodules: priceOf(structureStatsFor(StructureKind.Slipway)).nodules,
+      })
+    );
+    assert.ok(
+      sent.some((c) => c.kind === 'produce' && c.unit === UnitKind.Harvester),
+      'a yard in the bank and two haulers missing buys a hauler'
+    );
+    assert.ok(
+      !sent.some((c) => c.kind === 'build' && c.structure === StructureKind.Slipway),
+      'and not the yard'
+    );
+  });
+
+  it('buys the rung the moment the saving covers it', () => {
+    const brief = briefing();
+    const commander = new AiCommander(brief);
+    const sent = commander.observe(
+      snapshot(fleet(brief, DOCTRINE[Faction.Pelagia].harvesterTarget), {
+        structures: yards(),
+        nodules: priceOf(structureStatsFor(StructureKind.Slipway)).nodules,
+      })
+    );
+    assert.ok(
+      sent.some((c) => c.kind === 'build' && c.structure === StructureKind.Slipway),
+      'a full yard in the bank is a yard'
+    );
+  });
+
+  it('will not save in front of something cheaper it already wants', () => {
+    // A commander with 200 nodules and no Refinery banking every one of them
+    // against a 600 nodule yard is the rung bought with the economy's own
+    // money. The Refinery falls through when it cannot pay, so "fell through"
+    // had to stop meaning "not wanted".
+    const brief = briefing();
+    const commander = new AiCommander(brief);
+    const sent = commander.observe(
+      snapshot(fleet(brief, DOCTRINE[Faction.Pelagia].harvesterTarget), {
+        structures: [structure(20, StructureKind.Foundry)],
+        nodules: Math.floor(priceOf(structureStatsFor(StructureKind.Refinery)).nodules / 2),
+      })
+    );
+    assert.ok(
+      sent.some((c) => c.kind === 'produce'),
+      'with no Refinery yet, the money is the economy’s and the yards may spend it'
+    );
+  });
+
+  it('will not save nodules against a gap only a hauler can close', () => {
+    // Saving only helps where *waiting* helps. The signature structure is the
+    // one thing this commander spends crystal on, and crystal does not arrive
+    // by waiting — so a Commune holding 450 nodules for a Spore Veil it has no
+    // crystal for is starving the yards of the very hull that would fetch it.
+    const brief = briefing();
+    const commander = new AiCommander(brief);
+    const veil = FACTION_STRUCTURE[Faction.Pelagia]!;
+    assert.ok(
+      priceOf(structureStatsFor(veil)).crystal > 0,
+      'the premise: the signature structure is the crystal sink'
+    );
+    const sent = commander.observe(
+      snapshot(fleet(brief, DOCTRINE[Faction.Pelagia].harvesterTarget), {
+        structures: [...yards(), structure(22, StructureKind.Slipway)],
+        // Exactly its nodule price, so a commander that saved here would have
+        // nothing left and the assertion below could not pass by accident.
+        nodules: priceOf(structureStatsFor(veil)).nodules,
+        crystal: 0,
+      })
+    );
+    assert.ok(
+      sent.some((c) => c.kind === 'produce'),
+      'nodules held against a crystal gap are nodules the yards never see'
+    );
+  });
+
+  it('builds the navy’s own structure once the crystal is aboard', () => {
+    // docs/economy.md §8's crystal-locked tier is exactly one building a navy,
+    // so this is the only thing the commander spends crystal on — and before
+    // the branch existed, a commander that banked crystal had nothing to bank
+    // it for and the whole trip to the bottom was a hauler spent on a number
+    // going up.
+    const brief = briefing();
+    const commander = new AiCommander(brief);
+    const veil = FACTION_STRUCTURE[Faction.Pelagia]!;
+    const price = priceOf(structureStatsFor(veil));
+    const sent = commander.observe(
+      snapshot(fleet(brief, DOCTRINE[Faction.Pelagia].harvesterTarget), {
+        structures: [...yards(), structure(22, StructureKind.Slipway)],
+        nodules: price.nodules,
+        crystal: price.crystal,
+      })
+    );
+    assert.ok(
+      sent.some((c) => c.kind === 'build' && c.structure === veil),
+      'the Commune builds its Spore Veil'
     );
   });
 });

@@ -68,7 +68,7 @@ the other four are the same mechanism pointed at the other stats a hull has.
 ### Where they are bought
 
 **On the Slipway's line** ([units.md](units.md), *The rung*), and nowhere else. The Slipway
-is the crystal-locked second yard, 600 Nodules and 120 Crystal, SIG 30 idle and **70 while
+is the second yard, 600 Nodules, SIG 30 idle and **70 while
 the line runs** — louder than a Foundry and the loudest line in the base. A refit occupies
 that line exactly as a hull does: for its build time the Slipway runs at 70 and launches
 nothing. A navy refitting is audibly refitting, and a navy refitting is a navy *not* building

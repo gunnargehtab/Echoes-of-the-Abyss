@@ -34,6 +34,8 @@ import { readFileSync } from 'node:fs';
 import {
   DIRECTIONAL_COMPASS_AVERAGE,
   DIRECTIONAL_SIGNATURE,
+  FACTION_PRESSURE_BASELINE,
+  FACTION_STRUCTURE,
   Faction,
   HULL_EFFECTS,
   MAX_UNIT_RADIUS_M,
@@ -43,7 +45,9 @@ import {
   UNIT_STATS,
   UnitKind,
   YARDS,
+  priceOf,
   statsFor,
+  structureStatsFor,
   unitAvailableTo,
   unitRadiusM,
 } from '../dist/index.js';
@@ -356,10 +360,8 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
   });
 
   it('prices the deep in the accounts the doc names', () => {
-    // The Sower is crystal-locked like the Submersible; the Dredge is the
-    // first hull priced in all three; the Cantus is the Spire's grant "at a
-    // third of the price and none of the crystal".
-    assert.equal(statsFor(UnitKind.Sower).crystalCost, 80);
+    // The Dredge is the first hull priced in all three; the Cantus is the
+    // Spire's grant "at a third of the price and none of the crystal".
     const dredge = statsFor(UnitKind.Dredge);
     assert.ok(dredge.cost > 0 && dredge.crystalCost === 40 && dredge.biomassCost === 60);
     assert.equal(statsFor(UnitKind.Cantus).crystalCost, undefined);
@@ -378,6 +380,43 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
     );
     for (const stats of hadal) {
       assert.equal(stats.faction, Faction.Directorate, `${stats.name} is rated PR-4`);
+    }
+  });
+
+  it('keeps the path to a rented band clear of the crystal that path is for', () => {
+    // The circle #491 found, and the rule that closes it. Crystal is Abyssal,
+    // so a navy whose harvester is not PR-3 reaches it only by renting a band
+    // — and the Commune's source of one, the Sower, was itself priced in the
+    // crystal it existed to reach, behind a yard priced the same way. A key
+    // priced in the thing it unlocks is not a price, it is a wall: measured
+    // across every map, no navy ever built a second yard.
+    //
+    // Asserted for the two navies that have a source at all. The Consortium
+    // has none — its route is the Pressure Refit, designed and not built
+    // (systems-progression.md §2) — and that is the open half of #491 rather
+    // than something this file can hold.
+    const free = (crystal: number, what: string) =>
+      assert.equal(crystal, 0, `${what} is on the path to crystal and must not cost crystal`);
+    free(priceOf(statsFor(UnitKind.Cantus)).crystal, "the Order's source");
+    free(priceOf(statsFor(UnitKind.Sower)).crystal, "the Commune's source");
+    free(priceOf(structureStatsFor(StructureKind.Slipway)).crystal, 'the yard that builds it');
+
+    // Both navies that need a rented band have one they can buy without it.
+    for (const faction of [Faction.Pelagia, Faction.Hadron]) {
+      assert.ok(
+        FACTION_PRESSURE_BASELINE[faction] < 3,
+        `${Faction[faction]} is only in this test because it needs to rent a band`
+      );
+    }
+
+    // And the gate itself is untouched: what a rented band lets you *field*
+    // still costs crystal, which is economy.md §8's whole tech tier.
+    assert.equal(priceOf(statsFor(UnitKind.AbyssalSubmersible)).crystal, 80);
+    for (const [faction, kind] of Object.entries(FACTION_STRUCTURE)) {
+      assert.ok(
+        priceOf(structureStatsFor(kind as StructureKind)).crystal > 0,
+        `signature structure ${faction} must stay crystal-locked`
+      );
     }
   });
 

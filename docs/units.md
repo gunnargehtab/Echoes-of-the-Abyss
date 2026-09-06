@@ -315,8 +315,17 @@ Slipway (Structure — all factions) — the rung
   in the base. A navy building its upper tier is audibly building it, which is the whole of
   [economy.md](economy.md) §1 applied to tech: the ambition is heard before the hull is
 - HP: 2500
-- Cost: 600, plus **120 Resonance Crystal** — the same crystal price as a signature structure,
-  because it is the same kind of decision: the deep, spent on a building
+- Cost: 600 — **Nodules only**, which is a correction rather than a discount. It carried a
+  signature structure's 120 Crystal on the reasoning that it was "the same kind of decision:
+  the deep, spent on a building", and the decision it actually made was the opposite one.
+  [economy.md](economy.md) §8 names the crystal-locked producibles exactly — the four
+  signature structures and the Abyssal Submersible — and this yard is in neither group: it
+  is shared, and the price was added past what the doc specifies. The consequence was a
+  circle. Crystal is Abyssal, so working it needs PR-3; of the three sources of a rented PR
+  in the game the Commune's is a hull *this yard builds*, and the Consortium has none at all
+  — so two navies needed the rung to reach the crystal that bought the rung, and neither
+  ever built one (#467, #491). The crystal stays where §8 puts it: on what the yard lets you
+  **field**
 - Build time: 120s
 - Berths granted: +8 while commissioned, to the ceiling of 40 ([economy.md](economy.md) §10) —
   so the ceiling is a Bastion, two Foundries and a Slipway, and a navy that wants forty berths
@@ -411,8 +420,14 @@ Sower (Slipway)
   Commune force that has made the deep habitable has told the map where
 - HYD: 60
 - PR: **2** — the only Commune hull above PR-1, grown for the water it plants
-- Cost: 380, plus 80 Resonance Crystal — crystal-locked like the Submersible, for the same
-  reason: it is the hull built to live where the crystal is
+- Cost: 380 — **Nodules only**. It was crystal-locked "like the Submersible, for the same
+  reason: it is the hull built to live where the crystal is", but the Submersible *works*
+  the crystal and this hull is what makes the crystal workable, so the same reason points
+  the other way: a key priced in the thing it unlocks is not a price, it is a wall. Symmetry
+  with the Order settles it — the Cantus grants the same +1 PR by standing still, is built at
+  the Foundry, and costs 400 Nodules and no crystal, so the Knights open the deep whenever
+  they choose to pay for it. This is the Commune's answer to the same water, priced the same
+  way (#467, #491)
 - Build time: 70s
 - Berths: 2
 - Speed: 55

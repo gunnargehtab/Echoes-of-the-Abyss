@@ -32,6 +32,7 @@ import {
   DepthBand,
   ECONOMY,
   EchoMarkKind,
+  FACTION_STRUCTURE,
   Faction,
   HAZARDS,
   HARVEST_THROTTLE,
@@ -54,6 +55,7 @@ import {
   requiredPressureRating,
   statsFor,
   structureStatsFor,
+  ECONOMY_ACCOUNTS,
   affords,
   charge,
   priceOf,
@@ -1352,18 +1354,21 @@ export class AiCommander implements AiPlayer {
    * Crystal the commander is currently saving for, or zero if it has nothing
    * to spend it on.
    *
-   * The Slipway first, because the rung is what a crystal-locked tier is *for*
-   * (docs/economy.md §8) and because a navy with no second yard has no other
-   * crystal price it can reach. Once it stands, whichever of the doctrine's
-   * own hulls carries a crystal price and is not in the water — for the
-   * Commune that is the Sower, which is the hull that ends this branch.
+   * The navy's signature structure first, because after #491 that is what the
+   * crystal-locked tier *is*: docs/economy.md §8 names "the four faction
+   * signature structures ... and the Abyssal Submersible", and the Slipway and
+   * the Sower have given their crystal prices back for being the two things
+   * standing between the Commune and the water it is built to change. Then
+   * whichever of the doctrine's own hulls carries a crystal price and is not
+   * in the water.
    *
    * Priced through `priceOf` rather than off `crystalCost`, so the commander
    * budgets in the same three accounts the server charges in.
    */
   private crystalWanted(snapshot: EchoSnapshot): number {
-    if (!snapshot.structures.some((s) => s.kind === StructureKind.Slipway)) {
-      return priceOf(structureStatsFor(StructureKind.Slipway)).crystal;
+    const signature = FACTION_STRUCTURE[this.briefing.faction];
+    if (signature !== undefined && !snapshot.structures.some((s) => s.kind === signature)) {
+      return priceOf(structureStatsFor(signature)).crystal;
     }
     let want = 0;
     for (const kind of this.doctrine.composition) {
@@ -1511,14 +1516,26 @@ export class AiCommander implements AiPlayer {
 
     const has = (kind: StructureKind): boolean => snapshot.structures.some((s) => s.kind === kind);
 
+    // Anything cheaper that is already wanted and unpaid for. The three
+    // branches below buy out of pocket and fall through when they cannot, so
+    // "fell through" on its own does not say whether the build was unwanted or
+    // merely unaffordable — and the saving branch at the bottom has to know
+    // the difference. Without it a commander with 200 nodules and no Refinery
+    // banks every one of them against a 600 nodule yard, which is the rung
+    // bought with the economy's own money.
+    let urgent = false;
+
     // A Refinery first: it shortens every haul, and the hauls are where the
     // economy actually lives.
     if (!has(StructureKind.Refinery)) {
       const node = this.busiestNode();
-      if (node !== null && this.afford(StructureKind.Refinery, purse)) {
-        out.push({ kind: 'build', structure: StructureKind.Refinery, ...this.nearHome(node) });
-        this.buildAttempt++;
-        return;
+      if (node !== null) {
+        if (this.afford(StructureKind.Refinery, purse)) {
+          out.push({ kind: 'build', structure: StructureKind.Refinery, ...this.nearHome(node) });
+          this.buildAttempt++;
+          return;
+        }
+        urgent = true;
       }
     }
 
@@ -1527,10 +1544,13 @@ export class AiCommander implements AiPlayer {
     const tight = snapshot.draw.demand >= snapshot.draw.capacity - 1;
     if (tight && !has(StructureKind.VentTap)) {
       const vent = this.nearestVent(snapshot.structures);
-      if (vent !== null && this.afford(StructureKind.VentTap, purse)) {
-        out.push({ kind: 'build', structure: StructureKind.VentTap, x: vent.x, y: vent.y });
-        this.buildAttempt++;
-        return;
+      if (vent !== null) {
+        if (this.afford(StructureKind.VentTap, purse)) {
+          out.push({ kind: 'build', structure: StructureKind.VentTap, x: vent.x, y: vent.y });
+          this.buildAttempt++;
+          return;
+        }
+        urgent = true;
       }
     }
 
@@ -1553,6 +1573,7 @@ export class AiCommander implements AiPlayer {
         this.buildAttempt++;
         return;
       }
+      urgent = true;
     }
 
     // The rung (docs/units.md, the Slipway; #461): the second yard, last, and
@@ -1561,11 +1582,111 @@ export class AiCommander implements AiPlayer {
     // reached the deep never builds one, which is the doc's point: the crystal
     // is a decision about what to field. Placed away from the enemy, like a
     // yard and unlike a turret.
-    if (!has(StructureKind.Slipway) && this.afford(StructureKind.Slipway, purse)) {
-      const away = this.enemyStarts[0] ?? this.home;
-      const toward = { x: 2 * this.home.x - away.x, y: 2 * this.home.y - away.y };
-      out.push({ kind: 'build', structure: StructureKind.Slipway, ...this.nearHome(toward) });
-      this.buildAttempt++;
+    // --- The two builds a commander has to save for -----------------------
+    //
+    // Everything above is bought out of pocket, and everything above is cheap
+    // enough for that to work. These two are not, and the branch used to treat
+    // them the same way: ask whether the bank covers the price *right now*,
+    // and if not, do nothing and let the yards spend it.
+    //
+    // The yards always did. Measured over four four-seat matches, the Slipway
+    // branch was reached between 2,460 and 5,227 times and the **most** any
+    // commander ever held when it got there was 630 nodules — 180 for the
+    // Commune — against a 600 price. The 600 a navy starts with is the only
+    // time it is ever that rich, and that is spent in the opening minute. So a
+    // rung nobody could afford was not a pricing problem at all: nothing in
+    // this commander had ever saved for anything (#491).
+    //
+    // Saving is holding money back from the army, so it is guarded: a navy
+    // short of haulers buys haulers, because teching on an economy that cannot
+    // fund what it unlocks is the same mistake in a longer form.
+    //
+    // Counted *with the line*, which matters more than it looks. Production
+    // only ever builds up to the target, so any loss puts a navy under it —
+    // and the Commune, which is the navy this whole thread is about, spends a
+    // match oscillating three to six against a target of six. Read as a bare
+    // headcount the guard almost never opened for it: a replacement already on
+    // the line is an economy being staffed, and a commander that will not save
+    // while one is building will not save at all.
+    //
+    // Being raided is *not* a second guard, and that is deliberate. The turret
+    // branch above already answers a raid and returns before this one is
+    // reached, so a commander under attack buys its defence first and saves
+    // afterwards, which is what a player does. Guarding on it as well cost the
+    // loud navies the rung outright: the Consortium is heard from four minutes
+    // out, so something is closing on it for most of a match, and it built a
+    // Slipway in none of eight.
+    if (urgent) return;
+    if (harvesters.length + queuedHarvesters < this.doctrine.harvesterTarget) return;
+
+    // The rung first, then the navy's own structure, because the second is
+    // what the first is *for*: the Slipway carries the roster's heavy hulls
+    // and the signature structure is the only thing this commander spends
+    // crystal on. docs/economy.md §8's crystal-locked tier is exactly that
+    // one building per navy, so before this branch existed a commander that
+    // banked crystal had nothing to bank it for, and the whole trip to the
+    // bottom was a hauler spent on a number going up.
+    const signature = FACTION_STRUCTURE[this.briefing.faction];
+    for (const kind of [StructureKind.Slipway, signature]) {
+      if (kind === undefined || has(kind)) continue;
+      if (this.afford(kind, purse)) {
+        // Placement differs, and for a reason each. A yard goes *away* from
+        // the enemy, like the Slipway always did. The signature structure goes
+        // to the rally point, because three of the four are arguments about
+        // the approach and the fourth does not mind: the Barge hides what
+        // stands in it, the Veil blinds both ways *and* is where a Spinner
+        // regrows its magazine (`HULL_EFFECTS.SPINNER`), and the Cantor's
+        // 1,200 m reaches back over the base from there anyway. It is also the
+        // one forward placement the build radius allows without chaining a
+        // second site: `RANGE.RALLY_M` is inside `CONSTRUCTION.BUILD_RADIUS_M`
+        // of the Bastion.
+        const where =
+          kind === StructureKind.Slipway
+            ? this.nearHome({
+                x: 2 * this.home.x - (this.enemyStarts[0]?.x ?? this.home.x),
+                y: 2 * this.home.y - (this.enemyStarts[0]?.y ?? this.home.y),
+              })
+            : this.rallyPoint();
+        out.push({ kind: 'build', structure: kind, ...where });
+        this.buildAttempt++;
+        return;
+      }
+
+      // Saving only helps where *waiting* helps. Nodules arrive on their own,
+      // so holding them back closes a nodule gap; crystal does not — it
+      // arrives because a hauler went and got it (`commandCrystal`), so a
+      // build short of crystal is not short of savings, and holding its
+      // nodules back starves the yards for something the wait will never
+      // deliver.
+      //
+      // That was not hypothetical. With the rung standing, a Commune saving
+      // for its Spore Veil held 450 nodules against a crystal price it could
+      // only earn by first building the Sower those very nodules would have
+      // bought — the same circle #491 was about, one rung further up.
+      if (priceOf(structureStatsFor(kind)).crystal > purse.crystal) continue;
+
+      // Hold what there is against the price rather than letting the yards
+      // spend it. One structure at a time: saving for two at once is saving
+      // for neither.
+      this.saveToward(kind, purse);
+      return;
+    }
+  }
+
+  /**
+   * Hold the purse back against a price this commander cannot yet meet.
+   *
+   * The purse is the running budget the rest of the decision spends from, so
+   * making it look poor *is* the saving — there is nothing to bank, because
+   * the bank is the server's and this is only how the commander divides one
+   * observation's spending. Every account, because a price can be written in
+   * any of them and a structure held up by its crystal must not have its
+   * nodules quietly spent on Corvettes in the meantime.
+   */
+  private saveToward(kind: StructureKind, purse: Stockpile): void {
+    const price = priceOf(structureStatsFor(kind));
+    for (const account of ECONOMY_ACCOUNTS) {
+      purse[account] = Math.max(0, purse[account] - price[account]);
     }
   }
 
@@ -1706,18 +1827,20 @@ export class AiCommander implements AiPlayer {
     //
     // The composition is still where the hull is declared (see `Doctrine`).
     // This is how a navy that declares it actually gets one.
+    // Not before the escort, for either of the unarmed hulls below. §6 makes a
+    // minefield "kill in numbers or not at all", and a wall with nothing
+    // holding it is 150 nodules the opening did not spend on the hulls that
+    // make the wall matter; a seeder parked four kilometres out is the same
+    // argument with a longer walk. Half the doctrine's massing size is the
+    // floor `stillMassing` uses for the same judgement: below it, this is not
+    // a navy, it is a hull.
+    const escorted =
+      army.length + queuedArmy >= Math.ceil(this.doctrine.attackAtArmySize * MASSING.MIN_FRACTION);
+
     if (this.doctrine.composition.includes(UnitKind.Spinner)) {
       const layers =
         snapshot.units.reduce((n, u) => n + (u.kind === UnitKind.Spinner ? 1 : 0), 0) +
         queuedOf(UnitKind.Spinner);
-      // Not before the escort. §6 makes a minefield "kill in numbers or not at
-      // all", and a wall with nothing holding it is 150 nodules the opening
-      // did not spend on the hulls that make the wall matter. Half the
-      // doctrine's massing size is the same floor `stillMassing` uses for the
-      // same judgement: below it, this is not a navy, it is a hull.
-      const escorted =
-        army.length + queuedArmy >=
-        Math.ceil(this.doctrine.attackAtArmySize * MASSING.MIN_FRACTION);
       if (layers < MINE_WALL.SPINNERS && escorted) {
         const yard = this.freeYard(snapshot.structures, UnitKind.Spinner);
         if (yard !== null && this.affordUnit(UnitKind.Spinner, purse)) {
@@ -1736,18 +1859,38 @@ export class AiCommander implements AiPlayer {
     // over the same field is 380 nodules and 80 crystal buying a duplicate of
     // something the navy already has. `freeYard` supplies the rest of the
     // gate: the Sower is a Slipway hull, so this branch cannot fire before the
-    // rung is standing, which is itself 120 crystal the commander had to go
-    // to the bottom for.
+    // rung is standing.
+    //
+    // And it is **saved for**, which is the difference between wanting the
+    // hull and getting it. A Commune's working capital sits near 180 nodules —
+    // it spends what it earns, on Corvettes, every observation — so a 380
+    // nodule hull is not something it is ever a moment away from affording.
+    // Measured with the rung reachable and this branch buying only out of
+    // pocket: two Slipways in eight matches and not one Sower. So when the
+    // yard is standing and the hull is wanted, an observation that cannot pay
+    // for it buys *nothing*, and the bank grows instead. It is the same rule
+    // `commandConstruction` saves the rung with, one deck down.
+    //
+    // **Not** guarded by the escort, which is the one place this parts company
+    // with the Spinner above. That guard is an argument about a *wall*: §6
+    // makes a minefield kill in numbers or not at all, so laying one with
+    // nothing holding it is 150 nodules wasted. A Sower is not a wall, it is
+    // the hull that pays for walls — and gating it on having an army first is
+    // the same circle #491 was about, one deck down, because the navy that
+    // most needs the economy this unlocks is the one least able to hold a
+    // fleet while it saves. Measured with the guard on: the Commune's army
+    // oscillates either side of the floor, so every dip reopened the tap and
+    // the bank topped out at 320 against a 380 price, in 11,902 observations.
     if (this.doctrine.composition.includes(UnitKind.Sower) && this.crystalField !== null) {
       const seeders =
         snapshot.units.reduce((n, u) => n + (u.kind === UnitKind.Sower ? 1 : 0), 0) +
         queuedOf(UnitKind.Sower);
-      if (seeders < 1) {
-        const yard = this.freeYard(snapshot.structures, UnitKind.Sower);
-        if (yard !== null && this.affordUnit(UnitKind.Sower, purse)) {
+      const yard = this.freeYard(snapshot.structures, UnitKind.Sower);
+      if (seeders < 1 && yard !== null) {
+        if (this.affordUnit(UnitKind.Sower, purse)) {
           out.push({ kind: 'produce', structureId: yard.id, unit: UnitKind.Sower });
-          return;
         }
+        return;
       }
     }
 

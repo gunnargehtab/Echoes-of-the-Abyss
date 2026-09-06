@@ -116,14 +116,16 @@ export interface Doctrine {
    * `commandProduction`.
    *
    * The **Sower** joined it once the commander learned to go to the bottom
-   * (#467). It was left off before for a reason that turned out to be upstream
-   * of the doctrine table: it is a Slipway hull, the Slipway costs 120
-   * Resonance Crystal, crystal sits in the Abyssal band, and no navy but the
-   * Directorate has a harvester rated for that water — so the yard was
-   * unreachable, and not only for the Commune. What was missing was the trip
-   * docs/economy.md §7 already describes: "abyssal extraction is run as raids,
-   * not as expansions, by everyone except the Directorate." `commandCrystal`
-   * runs that raid, and the Sower is what ends it for this navy.
+   * (#467), and it took two corrections above this table to make the entry
+   * mean anything. It is a Slipway hull, and both the yard and the hull were
+   * priced in crystal that sits in the Abyssal band — which no navy but the
+   * Directorate has a harvester rated for. So the Commune needed the crystal
+   * to buy the key to the crystal, and neither price was in what
+   * docs/economy.md §8 actually specifies; both are nodules now (#491). The
+   * other half is docs/economy.md §7's own answer for a navy that has not
+   * bought the key yet: "abyssal extraction is run as raids, not as expansions,
+   * by everyone except the Directorate." `commandCrystal` runs that raid, and
+   * the Sower is what ends it for this navy.
    */
   composition: readonly UnitKind[];
 }
