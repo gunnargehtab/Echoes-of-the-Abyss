@@ -8,8 +8,9 @@ are kept below as the record of how the build got here.
 
 This document is also what the roadmap site renders (`tools/roadmap/build.mjs`). The site
 reads the phase tables, asks GitHub whether each issue is open, and draws that — so a table
-row is a claim that the work is tracked, not a claim that it is live. The prose is what says
-which. The site also counts the open issues this document places in no table, shows the
+row is a claim that the work is tracked, not a claim that it is live. The tracker is what
+says which, and the site asks it on every build. The site also counts the open issues this
+document places in no table, shows the
 newest roster contact sheet an art PR committed under `docs/screenshots/`, and dates every
 phase from the tracker — the day its first issue was filed to the day its last one closed —
 so no phase date is typed anywhere. The first issue on this roadmap was filed on 15 August
@@ -19,27 +20,29 @@ so no phase date is typed anywhere. The first issue on this roadmap was filed on
 
 ## Where the build actually stands
 
-What is open sorts into four kinds. The count itself is deliberately not written here — it
-was wrong twice inside a month, and the roadmap site reads it live from the tracker on every
-build, which a paragraph cannot.
+What is open sorts into four kinds. Which issues are in each is deliberately not written
+here, and neither is the count. Both were wrong twice inside a month — the phase tables
+in #445, then the prose that replaced them in #502, twenty-three hours later — because
+a sentence about what is open goes false on its own, with nobody touching the file. The
+roadmap site reads every state live from the tracker on each build, which a paragraph
+cannot; the kinds are the part that keeps.
 
-- **What the audit still owes** — the epic (#428). The test gaps it named (#443) closed with
-  the integration seams built; what the screens still owe is #494 below.
-- **Older than the audit** — the world epic (#224), the frame-time measurement the
-  presentation switch still owes (#286), and PC input (#294).
-- **Parked** — the Consortium's 90-in-10 duel win over the Directorate (#458) and the
-  competitive-mode document (#439), both labelled `wontfix`. On #458 that label means the
-  investigation is written down and the next move is a posture the commander does not have,
-  not that the finding stopped being true; the reading stands, and the row below says so.
-- **Filed since the audit** — the storyline epic (#469), the Commune's own hulls in the
-  commander's hands (#467), a fog of war for the chart (#472), the crystal tier no navy can
-  reach (#491), the screens that implement §11's accessibility commitments with nothing
-  checking them (#494), and the full roster line (#495) with its first wave (#501). The
-  harvesters that would not move in the Prologue (#478) and the Tetherjelly's second home
-  (#480) have both closed; their rows below stay as the record.
+- **What the audit still owes** — the audit epic itself, and the findings under it that
+  have not landed. It is the only kind that shrinks by being worked rather than by being
+  re-read.
+- **Older than the audit** — issues filed before it and not superseded by it: the world
+  epic, and the debts a presentation or platform decision left behind rather than paid.
+- **Parked** — issues labelled `wontfix`. The label means the investigation is written
+  down and the next move is one the build cannot make yet, not that the finding stopped
+  being true; the reading stands, and the rows below say so.
+- **Filed since the audit** — everything opened after it, epics included. Most of it comes
+  from working the audit's own findings, which is the shape of a healthy backlog rather
+  than a symptom.
 
-Everything else this document has ever tracked is closed, and every open issue above has a
-row below — which is the state the site now checks for on every build.
+Every issue this document tracks belongs in a row below, closed ones included — a closed row
+is the record of how the build got here, not clutter. The open issues that have no row are
+counted on every build and named in the log, so the gap is measured rather than asserted
+away here.
 
 That is the issue tracker's account. The build's own account is less flattering, and the two
 numbers below are the ones that decide whether the game is playable end to end — which is
@@ -444,7 +447,8 @@ phase that created it.
 and both are settled. The third was the parity rule — the Lid bleeds unrecoverable hull, and
 [audio-direction.md](audio-direction.md) §11 makes a visible fact with no audible equivalent a
 bug in a game whose primary channel is the mix — and it is settled too. The fourth is
-measurement, and it is the one still open: every frame-time number in the phase records
+measurement, and it is the one this phase did not settle: every frame-time number in the
+phase records
 prices SwiftShader in a container, and the budgets stay container-shaped until the composited
 two-canvas frame is timed on the hardware the game actually promises to run on. It needs a
 desktop with a GPU and an Android device under Termux, which is why an unattended run cannot
