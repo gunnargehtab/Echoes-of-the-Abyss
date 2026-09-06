@@ -30,6 +30,17 @@ import { StubElement } from './headless.ts';
 export class FocusableNode extends StubElement {
   focusCount = 0;
 
+  /**
+   * Scroll geometry, for the two in-match feeds that follow their own tail.
+   *
+   * `StubElement` has none: nothing in the renderer scrolls. The contact log
+   * and the mission log both do, and both stop doing it the moment the player
+   * scrolls up to read something (docs/ui-ux.md §10) — a rule that is only
+   * observable if the host they write through remembers what they wrote.
+   */
+  scrollTop = 0;
+  scrollHeight = 0;
+
   focus(): void {
     this.focusCount++;
     focusOrder.push(this);

@@ -198,11 +198,19 @@ than on a stopwatch.
   the shell test. **Assert what a doc section promises, never what the JSX says** — a
   test that mirrors markup is a change detector, and screenshots already cover how things
   look. `Rendered.button()` matches a control's *accessible name* for the same reason.
+- `test/missionPanel.test.ts`, `matchFeeds.test.ts`, `resultCards.test.ts` — the in-match
+  panels and the two ways a room ends, under the same rule. What they hold is what a row is
+  allowed to *claim*: `docs/ui-ux.md` §10.5's status region that changes in place and its
+  verbatim, never-templated objective text; §10's sample rows and the `MARK` row that spends
+  its range column on the fade; the one `T+mm:ss` clock both feeds stamp with, which
+  `MissionLog` spells out a second time rather than importing; and the pair of anti-reveal
+  rules on the result cards — a match names only the winner, and a partial mission *ended*
+  rather than lost (`docs/mission-sorrowgate.md` §8).
 - `test/campaignScreen.test.ts`, `briefingAndRecord.test.ts`, `portScreens.test.ts`,
   `escMenu.test.ts` — the port's own screens and the one door mid-match, under that same
-  rule. What they hold is §14's accessibility
-  arithmetic rather than its layout: the board's one tab stop and its `aria-disabled` that
-  is never a DOM `disabled` (which would delete twenty-eight slots for a keyboard), the
+  rule. What they hold is §14's accessibility arithmetic rather than its layout: the
+  board's one tab stop and its `aria-disabled` that is never a DOM `disabled` (which would
+  delete twenty-eight slots for a keyboard), the
   chart being decorative *because* every fact on it is in a slot's accessible name, the
   authored prose of a briefing and of the record rendered whole and unedited with the
   "already seen" variant attributed identically and left unmarked, and the two anti-reveal
