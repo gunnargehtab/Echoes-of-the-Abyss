@@ -109,6 +109,12 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   [UnitKind.Weaver]: 'weaver',
   [UnitKind.Thurible]: 'thurible',
   [UnitKind.Lance]: 'lance',
+  // The siege hulls (#508). No model yet: the procedural bake is gate 1's
+  // sanctioned state until one clears intake, and the slug is where it lands.
+  [UnitKind.Furnace]: 'furnace',
+  [UnitKind.Blight]: 'blight',
+  [UnitKind.Lure]: 'lure',
+  [UnitKind.Tocsin]: 'tocsin',
 };
 
 /** Every structure kind has an approved model; the Partial stays for the

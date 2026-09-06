@@ -543,6 +543,35 @@ export const DecoyMagazine = defineComponent({
   rearmRemainingS: Types.f32,
 });
 
+/**
+ * A Deepbloom strain eating a structure — docs/systems-combat.md §9, and
+ * docs/units.md, the Blight. Carried by the *structure*, not the Blight: the
+ * hull seeds it and leaves, and killing the hull does not lift the spore, which
+ * is the whole reason a silent siege is worth flying one hull for.
+ */
+export const Spore = defineComponent({
+  remainingS: Types.f32,
+  /** Hull a second, precomputed from the target's maximum at seeding time. */
+  perS: Types.f32,
+  /** Who seeded it, so a wall that falls to a spore falls to somebody. */
+  slot: Types.ui8,
+});
+
+/**
+ * A Lure's song and the point it sang at — docs/units.md, the Lure.
+ *
+ * The point is stored rather than read from the hull each tick, because the
+ * hull may move or die while the song runs and the Drift was called *there*.
+ * A song is a thing that happened to a place.
+ */
+export const Song = defineComponent({
+  remainingS: Types.f32,
+  x: Types.f32,
+  y: Types.f32,
+  /** Seconds until this hull may sing again. */
+  cooldownS: Types.f32,
+});
+
 export const MineMagazine = defineComponent({
   mines: Types.ui8,
   /** Seconds until the next mine is grown; only counts down at a nursery. */

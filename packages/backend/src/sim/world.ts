@@ -51,6 +51,7 @@ import {
   DecoyMagazine,
   EngineOff,
   PingCadence,
+  Song,
   SilentRunning,
   StaticEmitter,
   Structure,
@@ -178,6 +179,17 @@ export interface SimWorld extends IWorld {
    * per emitter in a skirmish, both gated on an empty map.
    */
   soundingSig: Map<number, number>;
+  /**
+   * A siege hull's working SIG while it is engaged — the Furnace's cutters at
+   * 75, the Tocsin's bell at 88, the Lure's song at 55
+   * (docs/systems-combat.md §9).
+   *
+   * `liftCutSig`'s arrangement a third time, and for its reason: the systems
+   * that know a hull is working (combat, siege) are not the system that
+   * computes SIG, and both run before it. Cleared and rebuilt every tick, so a
+   * hull that stopped cutting is quiet on the next pass with nothing to undo.
+   */
+  siegeWorkSig: Map<number, number>;
   /**
    * Hulls carrying a mission commander's one authored act this tick — eid to
    * the speed multiplier it grants (docs/characters.md; `MissionCommanderAbility`).
@@ -469,6 +481,7 @@ export function createSimWorld(
   world.blooms = [];
   world.liftCutSig = new Map();
   world.soundingSig = new Map();
+  world.siegeWorkSig = new Map();
   world.regionPressureBonus = [];
   world.commanderHaste = new Map();
   world.commanderSilentImmune = new Set();
@@ -879,6 +892,18 @@ export interface SpawnOptions {
  * out of that system rather than erroring — spawning goes through this one
  * function so that cannot happen by accident.
  */
+/**
+ * The hulls whose work *is* standing still (docs/units.md, the rung's roster):
+ * the Tender welding, the Sower seeded, the Cantus singing for PR. These are
+ * the hulls `hullEffectsSystem` drives from a stationary clock, and the only
+ * ones for which "stopped" and "working" are the same fact.
+ */
+const WORKS_BY_STANDING_STILL: ReadonlySet<UnitKind> = new Set([
+  UnitKind.Tender,
+  UnitKind.Sower,
+  UnitKind.Cantus,
+]);
+
 export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   const stats = statsFor(opts.kind);
   const eid = addEntity(world);
@@ -1002,10 +1027,30 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   // An effect hull's clock (docs/units.md, the rung's roster): the stat block
   // says which hulls have work that is neither moving nor shooting, and this
   // is what makes that work a state the systems can read.
-  if (stats.sigWorking !== undefined) {
+  //
+  // Gated on the *kind* rather than on `sigWorking` alone, which is what it
+  // used to be. `stationaryNeededS` returns 0 for anything it does not name, so
+  // `HullEffect.active` goes true the instant such a hull stops — which was
+  // harmless while every hull with a working figure worked by standing still,
+  // and became a bug the moment wave 4 added three whose work is cutting,
+  // firing and singing (#508). A Furnace that merely halted read as a Furnace
+  // cutting, at SIG 75, forever. Those three carry their working figure through
+  // `world.siegeWorkSig` instead, written by the system that knows.
+  if (WORKS_BY_STANDING_STILL.has(opts.kind)) {
     addComponent(world, HullEffect, eid);
     HullEffect.stationaryS[eid] = 0;
     HullEffect.active[eid] = 0;
+  }
+
+  // The Lure's song and its cooldown (docs/units.md, the Lure). Given to the
+  // one hull whose effect is a *place* rather than a posture, which is why it
+  // is its own component and not another HullEffect clock.
+  if (opts.kind === UnitKind.Lure) {
+    addComponent(world, Song, eid);
+    Song.remainingS[eid] = 0;
+    Song.cooldownS[eid] = 0;
+    Song.x[eid] = 0;
+    Song.y[eid] = 0;
   }
 
   // A grown magazine, full at launch — the Spinner leaves the yard with its

@@ -208,7 +208,7 @@ is used four ways. Each wave is one pull request and one row in
 | 1 — transports (done, #501) | Freighter, Drifter, Verger, Antiphon | embark / disembark, carried hulls unresolvable | a carried force crosses the Shelf line in a mission test; the AI uses a transport in ≥ 1 of 4 doctrines |
 | 2 — scouts (done, #506) | Beacon, Glider, Acolyte, Herald | engine-off glide; cheap cadence ping | first-classified-enemy time per navy moves, and differently per navy |
 | 3 — ordnance (done, #507) | Broadside, Weaver, Thurible, Lance | noisemakers laid from a hull; upward depth charge | the weapon triangle reads in duels: torpedo navy beats heavy pushes, decoy navy survives them |
-| 4 — siege | Furnace, Blight, Lure, Tocsin | structure-only damage; spore over time; fauna weighting from a hull | match length falls without the win rates spreading |
+| 4 — siege (done, #508) | Furnace, Blight, Lure, Tocsin | structure-only damage; spore over time; fauna weighting from a hull | match length falls without the win rates spreading |
 | 5 — line and anchor | Caisson, Reed, Bower | none | the Consortium and Commune doctrines stop buying Corvettes |
 | 6 — the commons | none | none | a decision, from the harness: retire the Light Scout, Corvette and Cruiser from the bars, or keep them as the surplus market |
 
@@ -304,6 +304,46 @@ laid decoy's figures against the countermeasure's, the cone gate refusing a bear
 and keeping the shot in the tube, the committed solution, the charge that floats and the
 rack that cycles for it. That is a weaker gate than the duels honestly, and it is the gate
 this wave actually passed.
+
+**Wave 4** landed the four siege hulls and both remaining mechanisms, and found two bugs
+that had been sitting in the simulation rather than in the wave.
+
+The first: **`sigWorking` used to imply a stationary clock.** `spawnUnit` attached a
+`HullEffect` to any hull with a working figure, and `stationaryNeededS` returns 0 for
+anything it does not name — so such a hull read as *working* the instant it stopped moving.
+That was harmless while every hull with a working figure worked by standing still (the
+Tender, the Sower, the Cantus) and became a bug the moment three hulls arrived whose work is
+cutting, firing and singing: a Furnace halted in open water sat at SIG 75 for the rest of the
+match. The clock is now gated on the three hulls it was written for, and the siege hulls
+carry their figure through a per-tick map written by the system that knows they are engaged.
+
+The second: **a 200 m siege weapon could not reach anything.** Hulls are held off a
+structure's footprint by the separation system — measured, a Refinery holds one at 198 m, a
+Foundry at 218 and a **Bastion at 278**. The Furnace's sketched 200 m reach meant it walked
+to the ring, sat outside its own range and cut air, forever. Its reach is 320 m for that
+reason and no other, and every siege weapon added after this has to clear 278 or it does not
+work. `ttkBands.test.ts` holds that as a rule rather than as four numbers.
+
+Two things the sketches did not decide. The spore takes **60% of a wall and never the last of
+it** — a percentage of *maximum* hull, so it is linear and finite; a percentage of current
+hull decays asymptotically, reads as the same sentence and is a different weapon, one that
+can be left running instead of followed up. And a Furnace ordered to run silent does not stop
+cutting: the next cycle *breaks* the silence (§6), so the trade is real but arrives from the
+other side — you may have the wall or the silence, never both.
+
+**Wave 4's gate is unmet for wave 3's reason, and this time the evidence is total.** The
+four-faction baseline re-run on the finished wave is **byte-identical** to the one before it:
+same median length, same five held guard-rails, same four win rates, and not one Furnace,
+Blight, Lure or Tocsin in the loss table. All four are Slipway hulls, the commander does not
+reach the rung, and so a wave gated on "match length falls without the win rates spreading"
+moved match length by zero seconds — because none of it was ever built.
+
+That is #518, and wave 3 predicted it in this document before wave 4 was written. It now has
+the strongest form of the evidence it will ever get: a wave that changed nothing measurable
+not because the hulls are weak but because the harness cannot see them. **Wave 5 has one
+Slipway hull of three and will be partly visible; wave 6 decides what to retire from data
+that currently cannot see a third of the roster.** #518 before #510, or wave 6 is guesswork
+wearing a table.
 
 **Wave 6** is a decision the harness makes, not this document. If after five waves every
 doctrine builds its own line and the commons are dead weight on the bar, retire them from

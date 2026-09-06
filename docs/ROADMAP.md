@@ -503,7 +503,7 @@ the phase the build is in, not because the audit found them.
 | Work | Issue |
 | --- | --- |
 | Two exclusive hulls per faction, and one tech rung above crystal | [#436](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/436) |
-| A full line per navy — sixteen hulls across a role matrix in six waves, planned in [roster-plan.md](roster-plan.md); follows #436. Wave 0 (the ground), wave 1 (the four transports, and a hull in a hold) and wave 2 (the four scouts, engine off and the cadence ping) and wave 3 (the four ordnance hulls, a laid screen and a committed shot) have landed | [#495](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/495) |
+| A full line per navy — sixteen hulls across a role matrix in six waves, planned in [roster-plan.md](roster-plan.md); follows #436. Wave 0 (the ground), wave 1 (the four transports, and a hull in a hold) and wave 2 (the four scouts, engine off and the cadence ping) wave 3 (the four ordnance hulls, a laid screen and a committed shot) and wave 4 (the four siege hulls, and damage that reads its target) have landed | [#495](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/495) |
 | Wave 1 of that line — done: the four transports and carrying, the first of the five mechanisms the matrix asks for; follows wave 0 | [#501](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/501) |
 | A population cap, resolved against the Echo budget and the Directorate swarm doctrine | [#437](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/437) |
 | Bound scattered water so it is learnable, and redesign the superweapons before they are built | [#438](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/438) |

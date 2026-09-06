@@ -402,7 +402,7 @@ describe('the hold — determinism', () => {
     // Hand-spawned hulls are not in a replay's opening, so playback cannot
     // reproduce this world; what it must do is *carry* the commands and
     // refuse nothing on the way in.
-    assert.equal(replay.version, 17);
+    assert.equal(replay.version, 18);
   });
 
   it('changes the hash while a hull is aboard, even though it has no position', () => {

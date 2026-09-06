@@ -485,6 +485,133 @@ rail to the collar, thrown forward, faint on the beam and dark astern but
 for one mark — the quarter it is loud in is the quarter it can fire into.
 ```
 
+### The siege hulls — one a navy, and four answers to a wall
+
+The four siege hulls of [units.md](units.md) "The siege hulls" (wave 4 of
+[roster-plan.md](roster-plan.md), #508), each its navy's way of taking a wall down, and only
+one of them a gun ([systems-combat.md](systems-combat.md) §9, "A weapon that is not a
+weapon"). What a siege hull's silhouette has to say at RTS distance is *what it does to a
+wall*: cutters that reach, a seeding arm that does not, a resonator that is an instrument
+rather than a weapon, and a barrel with the whole hull braced behind it. Three of the four are
+a working state made into geometry, and the model is generated in it, as the Glider was with
+its drive cut: the Furnace with its cutter ladders run out, the Lure with its fan spread, the
+Tocsin braced and firing. The lighting clause is therefore three bands rather than the
+idle/cruise pair — at rest, under way, and working — because the working figure is a band
+jump for those three (the Furnace's 55 to 75, the Lure's 24 to 55, the Tocsin's 55 to 88),
+and the Tocsin's are cone figures, lit ahead and dark astern like every Order hull. The
+Blight is the fourth and the exception on purpose: it has no working figure, nothing on it
+brightens when it seeds, and the wall it seeds goes on sounding exactly as it did — the
+silence is the design claim, not an omission.
+
+```text
+UNIT — Furnace (pair with Consortium): the cutters, 115 m — thermal cutters,
+the same tool that opens kelp, turned on plate at 200 m, on a hull that must
+stand still at a wall for half a minute while a Bulwark keeps the line off it
+(SIG 40 idle, 55 cruise, 75 cutting; cutters that do 100 to a structure and
+9 to a hull every two seconds at 200 m, so a Corvette out-trades it four to
+one; 900 hull; 32 m/s; 380 nodules). A riveted box hull — the Tender's
+workshop turned outward — with three cutter ladders run out ahead of the bow
+from a boxed gantry frame, one on the keel and one either side: each a
+lattice boom with a hooded burner head at its end and gas lines strapped
+along it back to the manifold, so the plan is a box with three prongs at the
+bow and the prongs are the count. Behind the frame the gas plant, two ranks
+of banded gas cylinders in racks on the deck with a pump house and pipe runs
+between them; a bridge citadel aft; ballast blisters low on the hull; two
+prop tunnels in a square stern; plate patchworked older-under-newer. The
+flanks are bare — no casings, no tubes, no turret — because everything this
+hull does, it does ahead of itself at arm's length, and a burner head is a
+nozzle under a hood, not a muzzle. The model is the hull with its ladders
+run out and lit, which is the state it is built for; under way they stow
+raised against the frame. Sustained amber glow from the bridge ports, the
+gas plant's lamps and the stern vents, at rest and under way alike; cutting,
+burning bright — the three burner heads the brightest thing on the hull, the
+bow floodlit, the ladders and manifolds lit along their length, visible
+machinery light: a siege you can hear being prepared.
+```
+
+```text
+UNIT — Blight (pair with Pelagia): the spore, 80 m — a hull that seeds a
+Deepbloom strain on a structure at 350 m and leaves, and the strain eats 1%
+of the wall's maximum hull a second for 60 s, 60% of it and never the last,
+while the wall's own SIG never moves (SIG 10 idle, 20 cruise, and no working
+figure; no weapon; 340 hull; 60 m/s; 300 nodules and 60 Resonance Crystal).
+A split seed: a slim grown pod with growth rings, widest a little forward of
+amidships and never wider at the bow than at the waist, its husk parted at
+the bow into two rounded lobes that curl outward, and standing in the cleft
+between them the seeding arm — a short jointed stem folded back on itself
+with the spore head at its tip, a pale sac under a membrane, reaching no
+further than the husk's own lips; one spore sac sunk into the back
+amidships, showing through the shell as a paler dome; leaf trim vanes
+forward; a muscle-drive fluke astern. The arm does not reach and is not a
+boom: this hull seeds by coming close and touching, and the plan is a pod
+with a cleft nose, curved everywhere, not a fork. The model is the hull with
+its husk open and the arm presented, which is the state it seeds in; under
+way the lobes close over it and it is a seed again. Nearly black at rest,
+navigation marks only, the sac's dome unlit; under way a dim vein along the
+stem. Nothing on it brightens when it seeds — no flare at the arm, no light
+in the sac, no change on the wall — because the silence is the weapon: every
+other way of taking a wall down announces itself, and this one is a Refinery
+whose hull is falling with nothing to hear.
+```
+
+```text
+UNIT — Lure (pair with Directorate): the song, 100 m — a PR-3 hull that
+sings for 60 s and doubles what fauna hear from anything within 500 m of the
+point it sang at: the Listening does not knock the wall down, it tells the
+Drift where the wall is (SIG 14 idle, 24 cruise, 55 singing; no weapon; HYD
+60; 560 hull; 40 m/s; 280 nodules and 50 Biomass). A segmented deep body,
+ribbed and domed like the Verger's — a rostrum, three overlapping tergites,
+a jointed abdomen, folded walking limbs, a ribbed pressure keel — with the
+abdomen's last segment spread into a sounding fan: five chitin plates opened
+wide astern, two a side about a telson, a file ridge down the abdomen's back
+with a plectrum limb raised over it, and a resonating bladder in the abdomen
+forward of the fan, showing through the segment as a paler dome. The fan is
+an instrument and not a weapon — nothing on it points and nothing on it
+fires — and the plan is a rostrum forward and a fan astern, widest at the
+stern, where the sound leaves it. The model is the hull with its fan spread
+and the plectrum raised, which is the state it sings in; under way the
+plates fold into a telson and the limb lies flat. Nearly black at rest,
+photophores in a pattern that repeats on neither side; under way a dim row
+along each tergite's edge; singing, sustained glow — the bladder's dome lit
+through the shell and each plate of the fan lit along its rib — because the
+song is the loudest thing this hull does, and it is still a band short of a
+cutter.
+```
+
+The Lure carries no faction lock — the Biomass is the lock, as the Chorister's, the
+Acolyte's and the Thurible's are — so a navy rendering for one fields the same plan, the
+segmented body, the fan spread astern and the raised plectrum, composed with its own FACTION
+block, with the light kept nearly black at rest and a band short of a cutter when it sings.
+
+```text
+UNIT — Tocsin (pair with Hadron Knights): the bell, 105 m — an energy gun
+with 1,400 m of reach that fires only while stationary, and stationary it is
+the loudest thing in the water short of a ping: outranged by nothing, caught
+by anything that reaches it (SIG 22 idle; 55 cruise ahead, 19.3 on the beam,
+5.5 astern; 88 firing ahead, 30.8 on the beam, 8.8 astern; a 70-damage gun
+that does 200 to a structure at 1,400 m; 340 hull; 55 m/s; 340 nodules and
+40 Resonance Crystal). A bell in plan, bilaterally symmetric, laid on its
+side with the crown forward and the mouth astern. The barrel stands out of
+the crown: a faceted emitter rail on the centreline, a third of the length,
+ending in a crystal muzzle collar. Behind it the whole hull is the bell — a
+faceted skirt of pale alloy widening in one unbroken flare from the crown's
+shoulders to a lip astern that is the widest beam on any Order hull, a
+violet crystal spine down its back from breech to lip, and at the lip's two
+corners brace blades that swing out and down when the hull stops, and lock;
+in the mouth of the bell, the drive prism, dark, because a hull that is
+firing is a hull that is not moving. No guard wings, no crossguard, no
+canards — nothing of the Lance's chevron or the Reciter's needle: the barrel
+is thin and the hull is wide, and neither is anything without the other. The
+model is the hull braced and firing, which is the only state it fires in;
+under way the blades fold flat along the skirt and the prism is lit. Dim at
+rest but for the crystal in the collar; under way, sustained glow up the
+rail and along the crown's ridge seams, thrown forward, faint on the beam
+and dark astern but for one mark; firing, burning bright — the rail lit from
+breech to muzzle, the crystal spine lit down the skirt, heat-shimmer about
+the collar — with the mouth of the bell still dark, because the quarter it is
+loud in is the quarter it fires into.
+```
+
 ## Block 3b — STRUCTURE (one per generation)
 
 Architecture anchors from the Rendering Target and Base Identity sections of

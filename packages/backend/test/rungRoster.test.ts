@@ -33,10 +33,12 @@ import { Match } from '../src/sim/match.ts';
 import { spawnStructure, spawnUnit } from '../src/sim/world.ts';
 import { directionalFactorFor } from '../src/sim/directional.ts';
 import { launchTorpedo } from '../src/sim/systems/ordnance.ts';
+import { seedSpore, songWeightAt } from '../src/sim/systems/siege.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import {
   Acoustic,
   Health,
+  Weapon,
   HullEffect,
   Heading,
   Magazine,
@@ -806,5 +808,206 @@ describe('the Broadside — twelve seconds of ordnance', () => {
     // Far from home: the field never refills a magazine (§5, "Ammunition").
     advance(match, ORDNANCE.TORPEDO.REARM_TIME_S * 2);
     assert.equal(Magazine.torpedoes[broadside], 0, 'a spent Broadside stays spent out here');
+  });
+});
+
+/**
+ * The siege hulls (#508) — docs/units.md, "The siege hulls";
+ * docs/systems-combat.md §9, "A weapon that is not a weapon".
+ *
+ * Four answers to a wall, and only one of them is a gun. Each block holds the
+ * sentence its stat block makes: the cutter is useless against hulls, the
+ * spore is silent and finite, the song is a place, and the bell will not ring
+ * while it moves.
+ */
+describe('the Furnace — one weapon, two numbers', () => {
+  it('cuts a wall down and cannot fight a hull', () => {
+    const furnace = statsFor(UnitKind.Furnace);
+    const corvette = statsFor(UnitKind.Corvette);
+    const refinery = structureStatsFor(StructureKind.Refinery);
+
+    const wall =
+      Math.ceil(refinery.maxHp / furnace.attackDamageStructure!) * furnace.attackCooldownS;
+    assert.ok(wall >= 25 && wall <= 40, `§9 wants 25–40 s on a Refinery, got ${wall}`);
+
+    const hull_ = Math.ceil(corvette.maxHp / furnace.attackDamage) * furnace.attackCooldownS;
+    assert.ok(hull_ >= 90, `§9 wants ≥ 90 s on a Corvette, got ${hull_}`);
+    // And the other way round is the trade: a Corvette eats it in a third of
+    // the time the cutter would need to answer — 32 s against 94.
+    const eaten = Math.ceil(furnace.maxHp / corvette.attackDamage) * corvette.attackCooldownS;
+    assert.ok(
+      eaten * 2 < hull_,
+      `a Corvette must out-trade a cutter: ${eaten} s against the Furnace's ${hull_} s`
+    );
+  });
+
+  it('is heard cutting, and cannot be ordered quiet while it works', () => {
+    // You may have the wall or the silence, never both — and the mechanism is
+    // not that silence stops the cutting, it is that the next cycle *breaks*
+    // the silence (docs/systems-combat.md §6). A Furnace told to go quiet
+    // mid-siege keeps cutting and is loud again within one cycle, which is the
+    // same promise arrived at from the other side.
+    const { match } = skirmish(Faction.Bathyarch);
+    const foundry = spawnStructure(match.world, {
+      kind: StructureKind.Foundry,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: 3100,
+      y: 3000,
+      prebuilt: true,
+    });
+    const furnace = hull(match, Faction.Bathyarch, UnitKind.Furnace, 3000, 3000);
+    // Ordered, not opportunistic: a structure is never auto-acquired, which is
+    // the right rule for a hull whose gun is almost useless against anything
+    // that moves. `Weapon.orderedTargetEid` is the field `orderAttackContact`
+    // writes; the handle path needs an Echo pass this test has no use for.
+    Weapon.orderedTargetEid[furnace] = foundry;
+    const full = Health.hp[foundry]!;
+
+    // Long enough for it to close, settle against the footprint and start
+    // cutting: an ordered siege hull walks in first, and the SIG that matters
+    // is the one it makes once it is working.
+    advance(match, 12);
+    assert.ok(Health.hp[foundry]! < full, 'the cutters should be biting');
+    assert.ok(
+      Acoustic.sig[furnace]! >= statsFor(UnitKind.Furnace).sigWorking!,
+      `a cutting Furnace should be heard at 75, got ${Acoustic.sig[furnace]!.toFixed(1)}`
+    );
+
+    match.setSilentRunning(0, furnace, true);
+    const held = Health.hp[foundry]!;
+    advance(match, 3);
+    assert.ok(Health.hp[foundry]! < held, 'the order did not stop the cutters');
+    assert.ok(
+      Acoustic.sig[furnace]! >= statsFor(UnitKind.Furnace).sigWorking!,
+      `and the silence did not survive the next cycle, got ${Acoustic.sig[furnace]!.toFixed(1)}`
+    );
+  });
+});
+
+describe('the Blight — a spore, and silence', () => {
+  it('eats 60% of a wall in 60 s and stops', () => {
+    const { match } = skirmish(Faction.Pelagia);
+    const refinery = spawnStructure(match.world, {
+      kind: StructureKind.Refinery,
+      slot: 1,
+      faction: Faction.Directorate,
+      x: 3100,
+      y: 3000,
+      prebuilt: true,
+    });
+    const full = structureStatsFor(StructureKind.Refinery).maxHp;
+    assert.equal(Health.hp[refinery], full, 'prebuilt, so the fraction below is honest');
+    assert.ok(seedSpore(match.world, refinery, 0), 'the first strain takes');
+    assert.equal(seedSpore(match.world, refinery, 0), false, 'and a second does not stack');
+
+    advance(match, HULL_EFFECTS.BLIGHT.DURATION_S + 2);
+    const taken = (full - Health.hp[refinery]!) / full;
+    const wanted = HULL_EFFECTS.BLIGHT.PER_S * HULL_EFFECTS.BLIGHT.DURATION_S;
+    assert.ok(
+      Math.abs(taken - wanted) < 0.02,
+      `expected ~${(wanted * 100).toFixed(0)}% taken, got ${(taken * 100).toFixed(1)}%`
+    );
+    // And never the last of it: a spore makes a base takeable, it does not
+    // take one (docs/systems-combat.md §9).
+    assert.ok(Health.hp[refinery]! > 0, 'a spore alone must not finish a wall');
+  });
+
+  it('does not change what the wall sounds like while it dies', () => {
+    // The design claim, and the reason the counter-play is *looking*.
+    const { match } = skirmish(Faction.Pelagia);
+    const refinery = spawnStructure(match.world, {
+      kind: StructureKind.Refinery,
+      slot: 1,
+      faction: Faction.Directorate,
+      x: 6000,
+      y: 6000,
+      prebuilt: true,
+    });
+    advance(match, 1);
+    const before = Acoustic.sig[refinery]!;
+    seedSpore(match.world, refinery, 0);
+    advance(match, 10);
+
+    assert.ok(Health.hp[refinery]! < structureStatsFor(StructureKind.Refinery).maxHp);
+    assert.equal(
+      Acoustic.sig[refinery],
+      before,
+      'a spored wall must sound exactly like an unspored one'
+    );
+  });
+});
+
+describe('the Lure — a song, and the Drift', () => {
+  it('weights what fauna hear near the point it sang at, and only there', () => {
+    const { match } = skirmish(Faction.Directorate);
+    const lure = hull(match, Faction.Directorate, UnitKind.Lure, 4000, 4000);
+
+    assert.equal(songWeightAt(match.world, 4000, 4000), 1, 'silent until it sings');
+    assert.ok(match.sing(0, lure), 'the song starts');
+    assert.equal(match.sing(0, lure), false, 'and does not restart while it runs');
+
+    assert.equal(songWeightAt(match.world, 4000, 4000), HULL_EFFECTS.LURE.AGGRO_MULTIPLIER);
+    assert.equal(
+      songWeightAt(match.world, 4000 + HULL_EFFECTS.LURE.RADIUS_M + 50, 4000),
+      1,
+      'and nothing outside its radius'
+    );
+  });
+
+  it('is a place, not a hull — the song outlives the singer moving away', () => {
+    const { match } = skirmish(Faction.Directorate);
+    const lure = hull(match, Faction.Directorate, UnitKind.Lure, 4000, 4000);
+    assert.ok(match.sing(0, lure));
+
+    match.orderMove(0, lure, 9000, 4000);
+    advance(match, 10);
+    assert.ok(Position.x[lure]! > 4200, 'the Lure should have left');
+    assert.equal(
+      songWeightAt(match.world, 4000, 4000),
+      HULL_EFFECTS.LURE.AGGRO_MULTIPLIER,
+      'and the Drift should still be being called to where it sang'
+    );
+  });
+
+  it('runs out, and then goes quiet', () => {
+    const { match } = skirmish(Faction.Directorate);
+    const lure = hull(match, Faction.Directorate, UnitKind.Lure, 4000, 4000);
+    assert.ok(match.sing(0, lure));
+    advance(match, HULL_EFFECTS.LURE.SONG_S + 1);
+    assert.equal(songWeightAt(match.world, 4000, 4000), 1);
+  });
+});
+
+describe('the Tocsin — the bell', () => {
+  it('will not fire while it moves, and does while it stands', () => {
+    const { match } = skirmish(Faction.Hadron);
+    const turret = spawnStructure(match.world, {
+      kind: StructureKind.SentinelTurret,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: 5000,
+      y: 4000,
+      prebuilt: true,
+    });
+    const tocsin = hull(match, Faction.Hadron, UnitKind.Tocsin, 4000, 4000);
+    Weapon.orderedTargetEid[tocsin] = turret;
+
+    // Under way, well inside its 1,400 m reach: nothing happens.
+    match.orderMove(0, tocsin, 4000, 9000);
+    advance(match, 3);
+    assert.equal(
+      Health.hp[turret],
+      structureStatsFor(StructureKind.SentinelTurret).maxHp,
+      'a moving Tocsin must not have fired'
+    );
+
+    // Stopped: the bell rings.
+    match.orderStop(0, tocsin);
+    advance(match, 12);
+    assert.ok(
+      Health.hp[turret]! < structureStatsFor(StructureKind.SentinelTurret).maxHp,
+      'a standing Tocsin should be cutting the turret down'
+    );
   });
 });

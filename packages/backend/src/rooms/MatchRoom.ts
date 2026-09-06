@@ -362,6 +362,19 @@ export class MatchRoom extends Room<MatchState> {
       this.match.layDecoy(slot, message.unitId);
     });
 
+    this.onClientMessage(CLIENT_MSG.seedSpore, (client, message) => {
+      const slot = this.commandSlot(client);
+      if (slot === undefined) return;
+      if (!Number.isFinite(message?.unitId) || !Number.isFinite(message?.contactHandle)) return;
+      this.match.seedSpore(slot, message.unitId, message.contactHandle);
+    });
+
+    this.onClientMessage(CLIENT_MSG.sing, (client, message) => {
+      const slot = this.commandSlot(client);
+      if (slot === undefined || !Number.isFinite(message?.unitId)) return;
+      this.match.sing(slot, message.unitId);
+    });
+
     this.onClientMessage(CLIENT_MSG.mine, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;

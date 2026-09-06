@@ -2097,6 +2097,50 @@ export const HULL_EFFECTS = {
    * Spire's grant on a clock. It does not stack with a Spire, a Cantus or a
    * Sower — one band rented, never two — and it does not renew."
    */
+  /**
+   * The Blight's spore — docs/systems-combat.md §9, "A weapon that is not a
+   * weapon". A Deepbloom strain seeded on a structure.
+   *
+   * A percentage of *maximum* hull rather than of current, so it is linear and
+   * finite: 1% a second for 60 s is 60% of the wall and never the last of it.
+   * A percentage of current hull would decay asymptotically and never finish,
+   * which reads as the same sentence and is a different weapon — one that can
+   * be left running instead of followed up.
+   *
+   * The silence is the design claim (§9): a structure under a spore emits
+   * exactly what it emitted before, so the first sign is the hull falling.
+   * There is a test that the target's SIG does not move while it dies.
+   */
+  BLIGHT: {
+    /** Fraction of maximum hull taken each second. */
+    PER_S: 0.01,
+    /** Seconds the strain lives. 60% of the wall, and then nothing. */
+    DURATION_S: 60,
+    /** How close the Blight must be to seed one, metres. */
+    RANGE_M: 350,
+    /** Seconds before the same hull can seed another. */
+    COOLDOWN_S: 45,
+  },
+
+  /**
+   * The Lure's song — docs/systems-combat.md §9, and docs/bestiary.md §2's
+   * modifier table with a source, a radius and a clock.
+   *
+   * The Directorate does not knock a wall down; it tells the Drift where the
+   * wall is. Worth nothing against a base nothing lives near, which is what a
+   * Biomass price should buy.
+   */
+  LURE: {
+    /** Seconds the song runs. */
+    SONG_S: 60,
+    /** What fauna hear from anything inside the radius, multiplied. */
+    AGGRO_MULTIPLIER: 2,
+    /** How far from the sung point the weighting reaches, metres. */
+    RADIUS_M: 500,
+    /** Seconds before the same hull can sing again. */
+    COOLDOWN_S: 90,
+  },
+
   ANTIPHON: {
     PR_BONUS: 1,
     GRANT_S: 20,

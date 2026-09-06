@@ -624,6 +624,19 @@ band it is not in, and only at a contact it has classified, because the depth it
 arrives at Tier 3 and nowhere earlier. One of each, bought behind the escort — ordnance is
 for a fight that exists.
 
+**And it besieges, which is the one thing it does that is not "go somewhere and shoot".**
+Wave 4's four hulls (#508) are a wall-breaker apiece, and three of them do not shoot at all,
+so the army branch would never have moved them. `commandSiege` picks the nearest enemy
+structure the commander has *classified* — a Tier-2 smudge might be a hull, and a siege hull
+walked onto a Corvette dies there for nothing — and then does what that navy's hull does: a
+Blight seeds from 350 m and leaves, because the strain keeps eating after the hull has gone
+and standing at the wall it just poisoned is the one thing it has no reason to do; a Lure
+sings from beside the wall rather than on it, because what arrives is the Drift and not the
+Lure; a Furnace and a Tocsin walk to a standoff just inside their own reach and engage. That
+standoff is 95% of the weapon's range for a measured reason: hulls are held off a footprint,
+a Bastion's ring is 278 m, and a comfortable fraction of a short reach parks a siege hull
+where it can never fire.
+
 **And, where its navy has one, it moves a force in a hold.** [units.md](units.md) "The
 transports" gives every navy a carrier and [systems-echo.md](systems-echo.md) §3 says what a
 hold does to the picture; two doctrines declare one — the Consortium's Freighter and the

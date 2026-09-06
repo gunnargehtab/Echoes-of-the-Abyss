@@ -658,6 +658,11 @@ const UNIT_SHORT: Record<UnitKind, string> = {
   [UnitKind.Weaver]: 'WVR',
   [UnitKind.Thurible]: 'THR',
   [UnitKind.Lance]: 'LNC',
+  // The siege hulls (#508).
+  [UnitKind.Furnace]: 'FRN',
+  [UnitKind.Blight]: 'BLT',
+  [UnitKind.Lure]: 'LUR',
+  [UnitKind.Tocsin]: 'TCS',
 };
 
 /** Compact structure names for the build buttons. */
