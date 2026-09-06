@@ -549,6 +549,18 @@ export interface OwnUnit {
    * not there (docs/systems-combat.md §5).
    */
   decoyCooldownS?: number;
+  /**
+   * Mines aboard, for a hull that carries a grown magazine — the Spinner
+   * (docs/units.md). Absent for the roster's one-mine hulls, whose count is
+   * the decoy's story rather than the torpedo's: they either have it or they
+   * have just used it.
+   *
+   * Sent for the same reason `torpedoes` is. A magazine that regrows only at
+   * a nursery (`HULL_EFFECTS.SPINNER`) is a supply line, and a player who
+   * cannot see how much of it is left cannot decide whether the next mine
+   * goes in the wall or is worth walking home for.
+   */
+  mines?: number;
 }
 
 /**

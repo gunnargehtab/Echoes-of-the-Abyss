@@ -105,9 +105,21 @@ export interface Doctrine {
    * standing near them. A Slipway hull with no Slipway standing has no yard
    * and costs nothing to skip — the commander takes the doctrine's next entry
    * — so the list can name the second hull before the commander has bought
-   * the rung. The Spinner and the Sower are left off:
-   * the commander lays no mines and terraforms nothing, and a hull it cannot
-   * use is berths it cannot spend.
+   * the rung.
+   *
+   * The **Spinner** joined the list once the commander learned to lay (#467):
+   * docs/systems-combat.md §11 makes the Commune the mine navy and
+   * docs/units.md calls the Spinner "the way to reach" its cap of 18, so a
+   * Commune that never fielded one was the one navy on this table missing the
+   * hull its own doctrine sentence names. It is unarmed, which the commander
+   * has to handle specially — see `commandLayers` and the Spinner gate in
+   * `commandProduction`.
+   *
+   * The **Sower** is still off, and now for a reason upstream of the
+   * commander: it is a Slipway hull, the Slipway costs 120 Resonance Crystal,
+   * crystal sits in the Abyssal band, and the Commune is the one navy with no
+   * hull rated to work it. Its yard is unreachable, so naming the hull here
+   * would buy nothing.
    */
   composition: readonly UnitKind[];
 }
@@ -158,7 +170,12 @@ export const DOCTRINE: Record<Faction, Doctrine> = {
     pingIntervalS: 60,
     attackAtArmySize: 6,
     harvesterTarget: 6,
-    composition: [UnitKind.LightScout, UnitKind.Corvette, UnitKind.Corvette],
+    // The Spinner third: after the scout that finds the approach and the
+    // Corvette that can hold it, because a wall is worth laying only where
+    // the commander already knows something walks. §6's counter-play is
+    // hearing a field being built, and the Spinner's laying is silent — so
+    // the Commune can wall where a Corvette could not.
+    composition: [UnitKind.LightScout, UnitKind.Corvette, UnitKind.Spinner, UnitKind.Corvette],
   },
   // "The Listening." Best hydrophones by a wide margin, so it pings least and
   // scouts most, and it arrives in numbers rather than in quality.

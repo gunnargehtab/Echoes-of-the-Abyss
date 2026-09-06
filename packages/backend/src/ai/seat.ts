@@ -76,6 +76,9 @@ export class AiSeat {
       case 'ping':
         this.match.activeSonar(slot, command.unitId);
         return;
+      case 'mine':
+        this.match.layMine(slot, command.unitId);
+        return;
       case 'build':
         this.match.build(slot, command.structure, command.x, command.y);
         return;

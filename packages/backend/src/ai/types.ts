@@ -100,6 +100,16 @@ export type AiCommand =
   | { kind: 'throttle'; unitIds: number[]; throttle: HarvestThrottle }
   | { kind: 'silent'; unitIds: number[]; active: boolean }
   | { kind: 'ping'; unitId: number }
+  /**
+   * Lay a mine where the hull is standing (docs/systems-combat.md §6).
+   *
+   * One hull, like `ping`, and for the same reason: it is a thing a single
+   * boat does at a single point, and a group order would put four mines on
+   * one spot. It carries no position either — a mine is dropped, never aimed
+   * — so the commander's only way to choose where the wall goes is to have
+   * walked the layer there first.
+   */
+  | { kind: 'mine'; unitId: number }
   | { kind: 'build'; structure: StructureKind; x: number; y: number }
   | { kind: 'produce'; structureId: number; unit: UnitKind }
   /**
