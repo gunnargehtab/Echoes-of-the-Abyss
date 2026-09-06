@@ -198,13 +198,30 @@ than on a stopwatch.
   the shell test. **Assert what a doc section promises, never what the JSX says** — a
   test that mirrors markup is a change detector, and screenshots already cover how things
   look. `Rendered.button()` matches a control's *accessible name* for the same reason.
+- `test/campaignScreen.test.ts`, `briefingAndRecord.test.ts`, `portScreens.test.ts`,
+  `escMenu.test.ts` — the port's own screens and the one door mid-match, under that same
+  rule. What they hold is §14's accessibility
+  arithmetic rather than its layout: the board's one tab stop and its `aria-disabled` that
+  is never a DOM `disabled` (which would delete twenty-eight slots for a keyboard), the
+  chart being decorative *because* every fact on it is in a slot's accessible name, the
+  authored prose of a briefing and of the record rendered whole and unedited with the
+  "already seen" variant attributed identically and left unmarked, and the two anti-reveal
+  rules of the port — a setup screen that names no navy, and a listing row that says the
+  water and the seat count and never the room's code. The esc menu's §9.5 contract is held
+  as far as it goes without a DOM: the dialog, Escape stepping back one level, and the
+  leave entry armed rather than instant. Where focus actually *is*, and whether Tab can
+  walk under the glass, stay unobservable here and are #494's separate jsdom question —
+  `escMenu.test.ts` says so at its head rather than leaving the gap to be inferred.
 
-Four seams in production code exist for these and have no other caller: `EchoRenderer`'s
+Five seams in production code exist for these and have no other caller: `EchoRenderer`'s
 constructor takes an optional `Application`, `PerspectiveView.mount` an optional renderer
-factory, `GameClient`'s constructor an optional `Client`, and `GameCanvas` an optional
+factory, `GameClient`'s constructor an optional `Client`, `GameCanvas` an optional
 `harness` prop carrying all three — it needs its own because it is where the other three
-are *constructed*, so without it the boot stops at `mount()` on a machine with no GPU. All
-default to the real thing; none is a feature.
+are *constructed*, so without it the boot stops at `mount()` on a machine with no GPU —
+and `BrowseScreen` an optional `listRooms`, because `listMatches` reaches a matchmaker a
+test has none of, and the empty list a refused connection returns is the only listing its
+rows could otherwise ever be asked about. All default to the real thing; none is a
+feature.
 
 ### Style
 
