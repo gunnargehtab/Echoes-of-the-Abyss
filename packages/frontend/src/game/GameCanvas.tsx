@@ -42,6 +42,9 @@ import {
   type MissionLine,
 } from '../net/GameClient.ts';
 import { resolveBindings } from '../input/bindings.ts';
+import type { Application } from 'pixi.js';
+import type { WebGLRenderer } from 'three';
+import type { Client } from 'colyseus.js';
 import { loadSettings, subscribeSettings, type Settings } from '../settings/store.ts';
 
 /** Longest log a player will ever scroll back through. */
@@ -63,6 +66,28 @@ function cssVariables(uiScale: number, palette: PaletteName): CSSProperties {
     '--tier-3': hex(tier[ResolutionTier.Classification].color),
     '--tier-4': hex(tier[ResolutionTier.Track].color),
   } as CSSProperties;
+}
+
+/**
+ * Stand-ins for the three things this shell constructs that need a device: the
+ * Pixi application, the conn view's GL renderer, and the socket.
+ *
+ * A seam with one non-default caller — test/gameCanvas.test.ts (#487) — and
+ * the same seam `EchoRenderer`, `PerspectiveView` and `GameClient` each
+ * already take one level down. It has to exist *here* because this component
+ * is where those three are constructed: without it the boot stops at `mount()`
+ * on a runner with no GPU, and the 277 lines below that wire the four
+ * subsystems to each other never run at all.
+ *
+ * All three or none: a harness that supplied only some would be a half-real
+ * client, which is a worse thing to test than either a real one or a stubbed
+ * one. Production renders `<GameCanvas>` without the prop and gets the real
+ * three.
+ */
+export interface GameCanvasHarness {
+  application: () => Application;
+  glRenderer: () => WebGLRenderer;
+  netClient: () => Client;
 }
 
 export interface GameCanvasProps {
@@ -98,6 +123,12 @@ export interface GameCanvasProps {
   onExit(): void;
   /** Leave a concluded mission for the record rather than the title (docs/ui-ux.md §14). */
   onRecord(): void;
+  /**
+   * Device stand-ins for the headless test. Absent in production, and
+   * deliberately absent from the mount-identity dependency array below: a
+   * harness is a property of the run, not of the match being joined.
+   */
+  harness?: GameCanvasHarness;
 }
 
 export function GameCanvas({
@@ -109,6 +140,7 @@ export function GameCanvas({
   resume,
   onExit,
   onRecord,
+  harness,
 }: GameCanvasProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<ConnectionStatus>('connecting');
@@ -289,7 +321,7 @@ export function GameCanvas({
       const perspective = new PerspectiveView();
       perspectiveRef.current = perspective;
       const perspectiveHost = perspectiveHostRef.current;
-      if (perspectiveHost === null || !perspective.mount(perspectiveHost)) {
+      if (perspectiveHost === null || !perspective.mount(perspectiveHost, harness?.glRenderer)) {
         // No WebGL, no world. Say so rather than leaving a black screen
         // wearing a working HUD — and take no seat in a match this device
         // cannot render.
@@ -298,70 +330,73 @@ export function GameCanvas({
       }
       perspective.setActive(true);
 
-      const activeRenderer = new EchoRenderer({
-        onMoveOrder: (unitIds, x, y, queued) => client?.moveTo(unitIds, x, y, queued),
-        onAttackMoveOrder: (unitIds, x, y, queued) => client?.attackMoveTo(unitIds, x, y, queued),
-        onStopOrder: (unitIds) => client?.stop(unitIds),
-        onHoldOrder: (unitIds, active) => client?.setHoldPosition(unitIds, active),
-        onRallyOrder: (structureIds, x, y) => client?.setRally(structureIds, x, y),
-        onToggleSilent: (unitIds, active) => client?.setSilentRunning(unitIds, active),
-        onPing: (unitId) => client?.activeSonar(unitId),
-        onAttackOrder: (unitIds, contactId, queued) =>
-          client?.attackContact(unitIds, contactId, queued),
-        onLaunchTorpedo: (unitIds, contactId) => client?.launchTorpedo(unitIds, contactId),
-        onDeployNoisemaker: (unitIds) => client?.deployNoisemaker(unitIds),
-        onLayMine: (unitIds) => client?.layMine(unitIds),
-        onDepthCharge: (unitIds, depth) => client?.dropDepthCharge(unitIds, depth),
-        onHarvestOrder: (unitIds, nodeId, queued) => client?.harvest(unitIds, nodeId, queued),
-        onThrottle: (unitIds, throttle) => client?.setThrottle(unitIds, throttle),
-        onBuild: (kind, x, y) => client?.build(kind, x, y),
-        onProduce: (structureId, kind) => client?.produce(structureId, kind),
-        onDepthOrder: (unitIds, depth) => client?.setDepth(unitIds, depth),
-        onFollowFloor: (unitIds, active) => client?.setFollowFloor(unitIds, active),
-        // Contacts, reduced to what the mix is allowed to know. Buffered by
-        // the engine and applied on the tick, so the cost is measured and the
-        // mix never moves between ticks (docs/audio-direction.md §12).
-        onContactAudio: (frame) => audio.applyContacts(frame),
-        // The other half of the mix: what is true of the player's own force.
-        onSelfAudio: (frame) => audio.applySelf(frame),
-        onHazards: (hazards) => {
-          // Read-only, for the headless harness. Hazards are public anyway.
-          (window as unknown as { __hazardProbe?: () => unknown }).__hazardProbe = () =>
-            hazards.length === 0
-              ? null
-              : {
-                  phase: hazards[0]!.phase,
-                  remainingS: Number(hazards[0]!.remainingS.toFixed(1)),
-                  kind: hazards[0]!.kind,
-                };
+      const activeRenderer = new EchoRenderer(
+        {
+          onMoveOrder: (unitIds, x, y, queued) => client?.moveTo(unitIds, x, y, queued),
+          onAttackMoveOrder: (unitIds, x, y, queued) => client?.attackMoveTo(unitIds, x, y, queued),
+          onStopOrder: (unitIds) => client?.stop(unitIds),
+          onHoldOrder: (unitIds, active) => client?.setHoldPosition(unitIds, active),
+          onRallyOrder: (structureIds, x, y) => client?.setRally(structureIds, x, y),
+          onToggleSilent: (unitIds, active) => client?.setSilentRunning(unitIds, active),
+          onPing: (unitId) => client?.activeSonar(unitId),
+          onAttackOrder: (unitIds, contactId, queued) =>
+            client?.attackContact(unitIds, contactId, queued),
+          onLaunchTorpedo: (unitIds, contactId) => client?.launchTorpedo(unitIds, contactId),
+          onDeployNoisemaker: (unitIds) => client?.deployNoisemaker(unitIds),
+          onLayMine: (unitIds) => client?.layMine(unitIds),
+          onDepthCharge: (unitIds, depth) => client?.dropDepthCharge(unitIds, depth),
+          onHarvestOrder: (unitIds, nodeId, queued) => client?.harvest(unitIds, nodeId, queued),
+          onThrottle: (unitIds, throttle) => client?.setThrottle(unitIds, throttle),
+          onBuild: (kind, x, y) => client?.build(kind, x, y),
+          onProduce: (structureId, kind) => client?.produce(structureId, kind),
+          onDepthOrder: (unitIds, depth) => client?.setDepth(unitIds, depth),
+          onFollowFloor: (unitIds, active) => client?.setFollowFloor(unitIds, active),
+          // Contacts, reduced to what the mix is allowed to know. Buffered by
+          // the engine and applied on the tick, so the cost is measured and the
+          // mix never moves between ticks (docs/audio-direction.md §12).
+          onContactAudio: (frame) => audio.applyContacts(frame),
+          // The other half of the mix: what is true of the player's own force.
+          onSelfAudio: (frame) => audio.applySelf(frame),
+          onHazards: (hazards) => {
+            // Read-only, for the headless harness. Hazards are public anyway.
+            (window as unknown as { __hazardProbe?: () => unknown }).__hazardProbe = () =>
+              hazards.length === 0
+                ? null
+                : {
+                    phase: hazards[0]!.phase,
+                    remainingS: Number(hazards[0]!.remainingS.toFixed(1)),
+                    kind: hazards[0]!.kind,
+                  };
+          },
+          // The water, and any interval standing in it (§9). Applied like the
+          // rest and read back by the probe, so the harness can assert that the
+          // Fields ring and that a line going flat is heard going flat.
+          onTunedAudio: (inputs) => {
+            audio.applyTuned(inputs);
+            tunedInputs = inputs;
+          },
+          onMarkAudio: (totals) => {
+            audio.applyMarks(totals);
+            // Read-only, for the headless harness. Reports counts only, and
+            // only what the server already resolved for this player.
+            (window as unknown as { __markProbe?: () => unknown }).__markProbe = () => ({
+              byKind: Object.fromEntries(totals),
+              total: [...totals.values()].reduce((a, b) => a + b, 0),
+            });
+          },
+          onContactEvent: (entry) =>
+            // Capped: a long match would otherwise grow an unbounded list, and
+            // nobody scrolls back past a few hundred detections.
+            setLog((previous) => {
+              const next = [...previous, entry];
+              return next.length > MAX_LOG_ENTRIES ? next.slice(-MAX_LOG_ENTRIES) : next;
+            }),
+          onOpenMenu: () => {
+            if (statusRef.current === 'connected') setMenuOpen(true);
+          },
         },
-        // The water, and any interval standing in it (§9). Applied like the
-        // rest and read back by the probe, so the harness can assert that the
-        // Fields ring and that a line going flat is heard going flat.
-        onTunedAudio: (inputs) => {
-          audio.applyTuned(inputs);
-          tunedInputs = inputs;
-        },
-        onMarkAudio: (totals) => {
-          audio.applyMarks(totals);
-          // Read-only, for the headless harness. Reports counts only, and
-          // only what the server already resolved for this player.
-          (window as unknown as { __markProbe?: () => unknown }).__markProbe = () => ({
-            byKind: Object.fromEntries(totals),
-            total: [...totals.values()].reduce((a, b) => a + b, 0),
-          });
-        },
-        onContactEvent: (entry) =>
-          // Capped: a long match would otherwise grow an unbounded list, and
-          // nobody scrolls back past a few hundred detections.
-          setLog((previous) => {
-            const next = [...previous, entry];
-            return next.length > MAX_LOG_ENTRIES ? next.slice(-MAX_LOG_ENTRIES) : next;
-          }),
-        onOpenMenu: () => {
-          if (statusRef.current === 'connected') setMenuOpen(true);
-        },
-      });
+        harness?.application()
+      );
 
       await activeRenderer.init(host);
       if (cancelled) {
@@ -374,125 +409,129 @@ export function GameCanvas({
       // the Pixi layer goes through the conn view from here on.
       activeRenderer.setConn(perspective);
 
-      client = new GameClient({
-        // The perspective view rides the same resolved payloads the chart
-        // does — a renderer must never be a second source of truth, and there
-        // is nothing else for it to draw from (the server-authoritative rule).
-        onTerrain: (terrain) => {
-          activeRenderer.setTerrain(terrain);
-          perspective.setTerrain(terrain);
+      client = new GameClient(
+        {
+          // The perspective view rides the same resolved payloads the chart
+          // does — a renderer must never be a second source of truth, and there
+          // is nothing else for it to draw from (the server-authoritative rule).
+          onTerrain: (terrain) => {
+            activeRenderer.setTerrain(terrain);
+            perspective.setTerrain(terrain);
+          },
+          onGround: (cells) => {
+            activeRenderer.applyGround(cells);
+            perspective.applyGround(cells);
+          },
+          onMap: (map) => {
+            activeRenderer.setMap(map);
+            setMapName(map.name);
+            setMaxSlots(map.seats);
+          },
+          onNodes: (nodes) => activeRenderer.setNodes(nodes),
+          onAssigned: ({ slot, faction }) => {
+            activeRenderer.setIdentity(slot, faction);
+            perspective.setIdentity(slot, faction);
+          },
+          onEcho: (snapshot: EchoSnapshot) => {
+            anyHullSilent = snapshot.units.some((unit) => unit.silentRunning);
+            activeRenderer.applySnapshot(snapshot);
+            perspective.applySnapshot(snapshot);
+            // Audio work happens on the tick contacts arrive on, never per
+            // frame: anything smoother would imply knowledge the server did
+            // not send.
+            audio.onEchoTick();
+          },
+          onGameOver: (payload) => activeRenderer.setGameOver(payload),
+          onMission: (view) => {
+            underSilenceOrder = view.debtS > 0;
+            setMission(view);
+            // The renderer needs the locks, not the objectives: they decide
+            // which keys still do anything and what the hint bar says when one
+            // does not (docs/ui-ux.md §7).
+            activeRenderer.setMissionLocks(view.locks);
+            // And which of the player's own hulls the mission is holding still,
+            // for the same reason: the key that does nothing owes an answer, and
+            // so does the right-click (#478, docs/ui-ux.md §10.5).
+            activeRenderer.setMissionHolds(view.held);
+          },
+          onMissionLine: (line) => {
+            // Heard when its beat fires and never earlier: the hail is queued
+            // from the same message that writes the log row, so the two are one
+            // event. The whisper rule is read as the line lands (§13).
+            audio.say(line, underSilenceOrder || anyHullSilent);
+            setMissionLines((previous) => {
+              const next = [...previous, line];
+              return next.length > MAX_LOG_ENTRIES ? next.slice(-MAX_LOG_ENTRIES) : next;
+            });
+          },
+          onMissionOver: (payload) => {
+            setMissionOver(payload);
+            activeRenderer.setMissionOver(payload);
+            // The one write of the progression record (docs/campaign.md §11).
+            // Here rather than inside `MissionResult`, because this is the
+            // moment the result *arrives* and a render is not a moment — a
+            // component that wrote on every paint would write on every paint.
+            // The room re-sends `missionOver` to a client that reconnects into
+            // an ended room, so this fires twice for one conclusion after a
+            // reload on the result screen; `recordMissionResult` is idempotent
+            // for exactly that reason.
+            recordMissionResult(payload);
+            // A result outranks chrome: the menu steps aside so the outcome is
+            // seen the moment it exists (§9.5). Esc reopens it over the result,
+            // in its settled dress.
+            setMenuOpen(false);
+          },
+          onLobby: (view) => {
+            // A rematch reuses the room and the connection, so nothing else
+            // would tell the renderer its entity ids just became meaningless.
+            setLobby((previous) => {
+              // **Ended → Playing, and nothing else.** That transition is a
+              // rematch and only a rematch, which is the one case this clears
+              // for. It used to be "any phase change into Playing", and that
+              // caught a reconnection: a resumed client receives its `mission`
+              // payload immediately, then the schema catches up from its own
+              // default and reports a Lobby → Playing move that never happened —
+              // wiping the orders panel a few milliseconds after it arrived, on
+              // a match already ten minutes old. Lobby → Playing is a first
+              // start, where there is nothing stale to clear by construction.
+              if (
+                previous !== null &&
+                previous.phase === MatchPhase.Ended &&
+                view.phase === MatchPhase.Playing
+              ) {
+                activeRenderer.resetForNewMatch();
+                perspective.resetForNewMatch();
+                setLog([]);
+                // The mission starts again from nothing too: a stale result
+                // would sit over the new run, and stale lines would read as
+                // having been spoken in it.
+                setMission(null);
+                setMissionLines([]);
+                setMissionOver(null);
+              }
+              return view;
+            });
+            setSessionId(client?.sessionId ?? null);
+            // Same rule as the mission's ending: a resolved match must be seen,
+            // so the menu does not stay open over the result card.
+            if (view.phase === MatchPhase.Ended) setMenuOpen(false);
+          },
+          onStatus: (next, why) => {
+            if (cancelled) return;
+            statusRef.current = next;
+            setStatus(next);
+            setDetail(why ?? '');
+            activeRenderer.setStatus(next);
+            // A lost signal closes the menu: the reconnect overlay is
+            // information the player must see, and the menu would otherwise sit
+            // invisible but clickable beneath its wash — one blind click from
+            // arming a leave the grace window would have saved them from.
+            if (next !== 'connected') setMenuOpen(false);
+          },
         },
-        onGround: (cells) => {
-          activeRenderer.applyGround(cells);
-          perspective.applyGround(cells);
-        },
-        onMap: (map) => {
-          activeRenderer.setMap(map);
-          setMapName(map.name);
-          setMaxSlots(map.seats);
-        },
-        onNodes: (nodes) => activeRenderer.setNodes(nodes),
-        onAssigned: ({ slot, faction }) => {
-          activeRenderer.setIdentity(slot, faction);
-          perspective.setIdentity(slot, faction);
-        },
-        onEcho: (snapshot: EchoSnapshot) => {
-          anyHullSilent = snapshot.units.some((unit) => unit.silentRunning);
-          activeRenderer.applySnapshot(snapshot);
-          perspective.applySnapshot(snapshot);
-          // Audio work happens on the tick contacts arrive on, never per
-          // frame: anything smoother would imply knowledge the server did
-          // not send.
-          audio.onEchoTick();
-        },
-        onGameOver: (payload) => activeRenderer.setGameOver(payload),
-        onMission: (view) => {
-          underSilenceOrder = view.debtS > 0;
-          setMission(view);
-          // The renderer needs the locks, not the objectives: they decide
-          // which keys still do anything and what the hint bar says when one
-          // does not (docs/ui-ux.md §7).
-          activeRenderer.setMissionLocks(view.locks);
-          // And which of the player's own hulls the mission is holding still,
-          // for the same reason: the key that does nothing owes an answer, and
-          // so does the right-click (#478, docs/ui-ux.md §10.5).
-          activeRenderer.setMissionHolds(view.held);
-        },
-        onMissionLine: (line) => {
-          // Heard when its beat fires and never earlier: the hail is queued
-          // from the same message that writes the log row, so the two are one
-          // event. The whisper rule is read as the line lands (§13).
-          audio.say(line, underSilenceOrder || anyHullSilent);
-          setMissionLines((previous) => {
-            const next = [...previous, line];
-            return next.length > MAX_LOG_ENTRIES ? next.slice(-MAX_LOG_ENTRIES) : next;
-          });
-        },
-        onMissionOver: (payload) => {
-          setMissionOver(payload);
-          activeRenderer.setMissionOver(payload);
-          // The one write of the progression record (docs/campaign.md §11).
-          // Here rather than inside `MissionResult`, because this is the
-          // moment the result *arrives* and a render is not a moment — a
-          // component that wrote on every paint would write on every paint.
-          // The room re-sends `missionOver` to a client that reconnects into
-          // an ended room, so this fires twice for one conclusion after a
-          // reload on the result screen; `recordMissionResult` is idempotent
-          // for exactly that reason.
-          recordMissionResult(payload);
-          // A result outranks chrome: the menu steps aside so the outcome is
-          // seen the moment it exists (§9.5). Esc reopens it over the result,
-          // in its settled dress.
-          setMenuOpen(false);
-        },
-        onLobby: (view) => {
-          // A rematch reuses the room and the connection, so nothing else
-          // would tell the renderer its entity ids just became meaningless.
-          setLobby((previous) => {
-            // **Ended → Playing, and nothing else.** That transition is a
-            // rematch and only a rematch, which is the one case this clears
-            // for. It used to be "any phase change into Playing", and that
-            // caught a reconnection: a resumed client receives its `mission`
-            // payload immediately, then the schema catches up from its own
-            // default and reports a Lobby → Playing move that never happened —
-            // wiping the orders panel a few milliseconds after it arrived, on
-            // a match already ten minutes old. Lobby → Playing is a first
-            // start, where there is nothing stale to clear by construction.
-            if (
-              previous !== null &&
-              previous.phase === MatchPhase.Ended &&
-              view.phase === MatchPhase.Playing
-            ) {
-              activeRenderer.resetForNewMatch();
-              perspective.resetForNewMatch();
-              setLog([]);
-              // The mission starts again from nothing too: a stale result
-              // would sit over the new run, and stale lines would read as
-              // having been spoken in it.
-              setMission(null);
-              setMissionLines([]);
-              setMissionOver(null);
-            }
-            return view;
-          });
-          setSessionId(client?.sessionId ?? null);
-          // Same rule as the mission's ending: a resolved match must be seen,
-          // so the menu does not stay open over the result card.
-          if (view.phase === MatchPhase.Ended) setMenuOpen(false);
-        },
-        onStatus: (next, why) => {
-          if (cancelled) return;
-          statusRef.current = next;
-          setStatus(next);
-          setDetail(why ?? '');
-          activeRenderer.setStatus(next);
-          // A lost signal closes the menu: the reconnect overlay is
-          // information the player must see, and the menu would otherwise sit
-          // invisible but clickable beneath its wash — one blind click from
-          // arming a leave the grace window would have saved them from.
-          if (next !== 'connected') setMenuOpen(false);
-        },
-      });
+        undefined,
+        harness?.netClient()
+      );
 
       // The player's stored preferences, applied to the live handles. Audio
       // values buffer safely before the graph exists; the renderer needs the

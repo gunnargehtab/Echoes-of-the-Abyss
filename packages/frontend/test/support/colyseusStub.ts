@@ -134,6 +134,7 @@ export class StubClient {
   room: StubRoom;
   /** Methods that should reject once, consumed in order. */
   private readonly failures: string[] = [];
+  private readonly hangs = new Set<string>();
 
   constructor(room: StubRoom = new StubRoom()) {
     this.room = room;
@@ -144,8 +145,19 @@ export class StubClient {
     this.failures.push(method);
   }
 
+  /**
+   * Make every call to `method` hang for ever — a server that is simply not
+   * there. Distinct from `fail`, and worth having: a refusal produces an error
+   * status, while silence leaves the client waiting, which is the state the
+   * "Listening…" overlay exists for.
+   */
+  hang(method: JoinCall['method']): void {
+    this.hangs.add(method);
+  }
+
   private async answer(call: JoinCall): Promise<StubRoom> {
     this.calls.push(call);
+    if (this.hangs.has(call.method)) return new Promise<StubRoom>(() => {});
     const at = this.failures.indexOf(call.method);
     if (at >= 0) {
       this.failures.splice(at, 1);

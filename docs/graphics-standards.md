@@ -259,8 +259,17 @@ frames allocate **no new display object** (identity-checked, not merely counted 
 renderer that rebuilds its marks each frame holds its size while replacing everything in
 it), own-force symbols return to their pools the frame after the force leaves while the
 contact ghosts correctly outlive it, project-and-resolve round-trips inside one cell,
-and teardown detaches every listener it attached. It also covers the one path a
-screenshot can never reach: a client whose `mount` found no WebGL still draws its chart.
+and teardown detaches every listener it attached.
+
+The shell that owns both painters is held the same way
+(`packages/frontend/test/gameCanvas.test.ts`). React renders to an object tree rather than
+a DOM there, and the two host elements come from the same stubs, so what is checked is the
+thing a composition root gets wrong: a server message that reaches the chart but not the
+conn view, a snapshot that never reaches the mix, a device left open on unmount. It also
+covers the two paths a screenshot review can never reach — a machine that can take a
+screenshot has a GPU and a person to touch the page — namely that a client which finds no
+WebGL says so and **takes no seat**, and that the mix stays silent until the first gesture
+and opens on it.
 
 Its budgets are **counted**, never timed — display objects, draw instructions, scene
 objects, index counts — for the reason `packages/backend/test/match.test.ts` argues at
