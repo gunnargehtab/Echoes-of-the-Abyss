@@ -312,6 +312,7 @@ export const items = {
   435: 'Attack-move, rally points, stop and hold, edge scrolling, and a production queue',
   294: 'Mouse and keyboard done properly for desktop play',
   436: 'Two hulls unique to each navy, and one more tech tier above crystal',
+  495: 'A whole fleet of your own: scouts, line ships, siege, ordnance and transports that belong to one navy and no other',
   437: 'A population cap, sized to what the water can carry',
   438: 'A tighter map and redesigned superweapons',
   439: 'Competitive play: a map pool, a ladder, accounts and an observer mode',
