@@ -413,6 +413,10 @@ export function GameCanvas({
           // which keys still do anything and what the hint bar says when one
           // does not (docs/ui-ux.md §7).
           activeRenderer.setMissionLocks(view.locks);
+          // And which of the player's own hulls the mission is holding still,
+          // for the same reason: the key that does nothing owes an answer, and
+          // so does the right-click (#478, docs/ui-ux.md §10.5).
+          activeRenderer.setMissionHolds(view.held);
         },
         onMissionLine: (line) => {
           // Heard when its beat fires and never earlier: the hail is queued

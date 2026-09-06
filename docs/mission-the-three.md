@@ -221,7 +221,8 @@ Corvette's own cruise figure. Eight is the button, and the Voice keeps it by fou
 
 **2. The hold is the escort, and it puts them where the room is.** `escortRadiusM` is **600 m**: the
 `'tender'` moves only while an `'escort'` is inside that radius, measured horizontally, and its
-orders are cleared every pass it is not (`runtime.ts`, `applyEscortHold`). The sealed room is a
+orders are suspended every pass it is not — and given back the pass its ears return
+(`runtime.ts`, `applyMovementHolds`). The sealed room is a
 500 × 500 m cut off the hall's east end; an escort standing at the hall's east end, (2500, 2250),
 holds **every metre of the room inside the hold — the farthest corner is 559 m**. So the geometry
 does what no predicate can: the escort waits at the mouth of the room and does not go in, not

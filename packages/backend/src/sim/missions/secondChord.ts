@@ -45,11 +45,11 @@
  *    and that the hold on `escort-b` is therefore documentation. It is not, any
  *    more: `holdsMovement` now resolves `tagOfHeld` *before* `tagOfTender` and
  *    refuses an order to any held hull whatever its role, which is exactly the
- *    fix the row asks for. What is still tender-only is the continuous half,
- *    `applyEscortHold`, and that half has nothing to do here — a hull the
- *    runtime has never let take an order has no order to clear. So the hold
+ *    fix the row asks for. What is still tender-only is the *clamping* half,
+ *    `applyMovementHolds`, and that half has nothing to do here — a hull the
+ *    runtime has never let take an order has no order to suspend. So the hold
  *    bites, the escort cannot be walked onto the lip before 15:30, and §13's
- *    row and its "until it lands" clause both want deleting.
+ *    row now says so.
  * 3. **The refit is the twelve's and not the six's.** `missions.test.ts` reads
  *    the authored rating or the hull's own, never `effectivePressureRating`,
  *    so a PR-2 Chorister seated at 3,000 m fails the suite — and an Abyssal
