@@ -144,6 +144,25 @@ working fine once bundled. `@colyseus/schema` needs legacy decorators, which is 
 `useDefineForClassFields` stays `false` in the backend tsconfig — flipping it silently
 wipes the `@type()` metadata.
 
+### Frontend tests run under a Vite shim
+
+The client is authored for Vite, and two of its idioms are build-time transforms rather
+than runtime APIs: `import url from './thing.png'` and `import.meta.glob(...)`. Node has
+neither, so `packages/frontend`'s test script passes loader hooks
+(`test/support/viteAssets.mjs`) alongside tsx. Any hand-rolled `node --test` invocation
+that reaches a client module through to `EchoRenderer` or `PerspectiveView` needs them
+too, or the import throws before a single assertion runs.
+
+`test/rendererSmoke.test.ts` is what those hooks exist for: it boots both painters
+against a canned match with only the two rasterisers stubbed
+(`test/support/headless.ts`), and asserts on counted work — display objects, draw
+instructions, scene-graph identities — never on a stopwatch. Pixels stay the screenshot
+gates in `docs/graphics-standards.md`.
+
+Two seams in production code exist for it and have no other caller: `EchoRenderer`'s
+constructor takes an optional `Application`, and `PerspectiveView.mount` an optional
+renderer factory. Both default to the real thing; neither is a feature.
+
 ### Style
 
 Prettier: 100 columns, single quotes, ES5 trailing commas, semicolons. It covers

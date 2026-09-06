@@ -182,6 +182,14 @@ interface EntitySpec {
   restSig: number;
 }
 
+/**
+ * The real rasteriser. A named function only so `mount` has a default to
+ * declare — production has no other renderer, and this is the whole of it.
+ */
+function glRenderer(): WebGLRenderer {
+  return new WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+}
+
 export class PerspectiveView {
   private renderer: WebGLRenderer | null = null;
   private readonly scene = new Scene();
@@ -310,11 +318,19 @@ export class PerspectiveView {
     this.scene.add(rim, rim.target);
   }
 
-  /** Create the GL surface. Returns false when WebGL is unavailable. */
-  mount(host: HTMLElement): boolean {
+  /**
+   * Create the GL surface. Returns false when WebGL is unavailable.
+   *
+   * `makeRenderer` is a seam with one non-default caller: the headless smoke
+   * test (#443) hands in a stand-in that walks the scene and counts what a
+   * frame asked for instead of rasterising it, so the terrain build, the
+   * entity sync and the frame path are all verified on a runner with no GPU.
+   * Production calls this with one argument.
+   */
+  mount(host: HTMLElement, makeRenderer: () => WebGLRenderer = glRenderer): boolean {
     if (this.renderer !== null) return true;
     try {
-      this.renderer = new WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+      this.renderer = makeRenderer();
     } catch {
       return false;
     }
