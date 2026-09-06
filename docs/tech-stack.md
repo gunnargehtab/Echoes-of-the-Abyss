@@ -570,12 +570,42 @@ a commander that never went back would lay four mines a match. §6's counter-pla
 cannot see a minefield but you can hear one being built; a grown mine is the exception that
 doc makes, which is why this is the Commune's wall and nobody else's.
 
-Its Slipway hull, the **Sower**, is still not on that list, and the reason is upstream of the
-commander rather than in it: the Sower is built at the Slipway, the Slipway is crystal-locked,
-crystal sits in the Abyssal band, and the Commune is the one navy with no hull rated to work
-it — the Sower itself would be, and it is the hull behind the gate. The commander refuses to
-send a harvester into water that eats it, exactly as it should, so the yard never gets bought.
-That is a roster question, not an AI one.
+**And it prices the trip to the bottom before it takes one.**
+[economy.md](economy.md) §7 says the Abyssal band "is run as raids, not as expansions, by
+everyone except the Directorate", and until now no commander could run one: it refuses any
+field its rating does not cover, which is the right rule for the standing economy and the
+wrong one for the deep. The crystal field is at 2,400 m, only the Directorate's baseline
+covers it, and so the crystal-locked tier of §8 — every navy's signature structure, and the
+Slipway the whole rung hangs off — was Directorate-only by accident. The raid it can now run
+is a budget rather than a nerve: crush is `4 x deficit²` per second and the ascent rate is
+fixed, so what the climb out will cost is known before the dive starts, and the boat is sent
+only if it can pay. It goes at Overburden, because the trip's price is the clock and not the
+cut — 53 HP on the way down and 160 on the climb against 25 spent over the node, so on this
+one trip the loudest setting in the game is also the cheapest. It goes once: 238 of a
+Harvester's 300 does not grow back, so nothing has to remember that a boat has been — the
+hull is the memory.
+
+**And the Sower is what makes the raid stop being one.** [units.md](units.md) is precise about
+what the grant is — "a PR-1 Corvette *under* a Sower works Mid-Water" — a **place**, held for
+as long as the hull stands in it, and not a rating carried away on an attack run. So the
+commander stands one over the crystal field, which is the only water this navy has a reason
+to work and no rating to work with; the deficit goes to zero, the same arithmetic that priced
+a raid prices a haul, and the field enters the ordinary distance-and-crowding score like any
+other. Walk, stop, *then* dive: the seed clock reads horizontal velocity, so a hull that
+arrives and settles is seeded before it crosses 1,800 m and pays nothing for the water it is
+about to make habitable. The Order's **Cantus** is the same mechanism on far cheaper terms — a
+400-nodule Foundry hull against a Slipway hull at 80 crystal behind a 120-crystal yard — so
+its first one still masses with the army and only a second is spare.
+
+On `ventfront-divide` the commander declines that raid every time, and the arithmetic is worth
+recording because nothing had done it before. The crystal sits 500 m inside *both* authored
+eruption plumes, where a combined pass is 175 HP — a figure solved so that a pass "wounds
+badly and leaves the trip possible" ([hazards.md](hazards.md) §1). It leaves a *crossing*
+possible. It does not leave possible a crossing that has also paid 238 HP of crush, and for
+the Commune, whose organic hulls take half as much again, the pass alone is 262. So the boat
+is not sent, the yard is not bought, and the Sower stays a hull a human fields. That is a map
+and roster question rather than an AI one — but it is now a question the commander asks out
+loud, in numbers, instead of one it never reached.
 
 **It decides for itself what counts as an attack on its base**, and that is a harder question
 than it sounds. A contact near the Bastion used to recall the whole army, unconditionally,
