@@ -205,7 +205,7 @@ is used four ways. Each wave is one pull request and one row in
 | Wave | Hulls | New mechanism | Gate to pass |
 | --- | --- | --- | --- |
 | 0 — the ground | none | tests generalised, harness extended, kit keyed | every existing test green; the baseline unchanged |
-| 1 — transports | Freighter, Drifter, Verger, Antiphon | embark / disembark, carried hulls unresolvable | a carried force crosses the Shelf line in a mission test; the AI uses a transport in ≥ 1 of 4 doctrines |
+| 1 — transports (done, #501) | Freighter, Drifter, Verger, Antiphon | embark / disembark, carried hulls unresolvable | a carried force crosses the Shelf line in a mission test; the AI uses a transport in ≥ 1 of 4 doctrines |
 | 2 — scouts | Beacon, Glider, Acolyte, Herald | engine-off glide; cheap cadence ping | first-classified-enemy time per navy moves, and differently per navy |
 | 3 — ordnance | Broadside, Weaver, Thurible, Lance | noisemakers laid from a hull; upward depth charge | the weapon triangle reads in duels: torpedo navy beats heavy pushes, decoy navy survives them |
 | 4 — siege | Furnace, Blight, Lure, Tocsin | structure-only damage; spore over time; fauna weighting from a hull | match length falls without the win rates spreading |
@@ -235,6 +235,17 @@ settled four things:
   Clarion only against the Order; the Chorister, whose lock is a price, is faked against
   anyone ([economy.md](economy.md) §6). [systems-echo.md](systems-echo.md) §3 says the same
   in words.
+
+**Wave 1** landed the four transports and the hold ([units.md](units.md), "The transports"),
+with the mechanism [systems-echo.md](systems-echo.md) §3 had already fixed the rule for. Two
+things it decided that the sketches had not: boarding is an order to the *hull*, which
+closes on its carrier and boards within 150 m and 100 m of its depth, so a transport loads
+while it moves and a hull that cannot reach it never pretends to; and landing is an order to
+the *carrier*, which puts its whole hold in a ring around itself at its own depth, with no
+orders — where the hull is and how deep it is are the carrier's, and the rest is the
+player's next order. The commander uses two of the four, the Freighter and the Verger
+([tech-stack.md](tech-stack.md), "it moves a force in a hold"); the Drifter and the Antiphon
+are a human's until the harness can judge a raid.
 
 **Wave 6** is a decision the harness makes, not this document. If after five waves every
 doctrine builds its own line and the commons are dead weight on the bar, retire them from

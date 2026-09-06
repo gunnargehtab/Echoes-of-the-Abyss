@@ -15,16 +15,20 @@
 import { hasComponent } from 'bitecs';
 import {
   Acoustic,
+  Carried,
   Countermeasure,
   DepthOrder,
-  Posture,
+  Embarking,
   Harvester,
   Health,
+  Hold,
+  LandingGrant,
   Laying,
   Magazine,
   Ordnance,
   Owner,
   Position,
+  Posture,
   Pressure,
   ResourceNode,
   SilentRunning,
@@ -72,16 +76,32 @@ export function hashWorld(world: SimWorld): number {
   // the hash uses; see the note above.
   const live: number[] = [];
   for (let eid = 0; eid <= world.maxEid; eid++) {
-    if (hasComponent(world, Position, eid)) live.push(eid);
+    // A hull in a hold has no Position and is still the world's: its health,
+    // its kind and its carrier are state a replay must agree on, or a hold
+    // that landed a different force would hash the same as one that did not.
+    if (hasComponent(world, Position, eid) || hasComponent(world, Carried, eid)) live.push(eid);
   }
   const ordinalOf = new Map<number, number>();
   live.forEach((eid, index) => ordinalOf.set(eid, index));
 
   for (const eid of live) {
     h = mixU32(h, ordinalOf.get(eid)!);
-    h = mixFloat(h, Position.x[eid]!);
-    h = mixFloat(h, Position.y[eid]!);
-    h = mixFloat(h, Position.depth[eid]!);
+    if (hasComponent(world, Carried, eid)) {
+      // Where it is, is the carrier — by ordinal, like every entity reference.
+      h = mixU32(h, ordinalOf.get(Carried.carrier[eid]!) ?? -1);
+    } else {
+      h = mixFloat(h, Position.x[eid]!);
+      h = mixFloat(h, Position.y[eid]!);
+      h = mixFloat(h, Position.depth[eid]!);
+    }
+    if (hasComponent(world, Hold, eid)) h = mixU32(h, Hold.used[eid]!);
+    if (hasComponent(world, Embarking, eid)) {
+      h = mixU32(h, ordinalOf.get(Embarking.carrier[eid]!) ?? -1);
+    }
+    if (hasComponent(world, LandingGrant, eid)) {
+      h = mixFloat(h, LandingGrant.remainingS[eid]!);
+      h = mixU32(h, LandingGrant.bonus[eid]!);
+    }
 
     if (hasComponent(world, Health, eid)) {
       h = mixFloat(h, Health.hp[eid]!);

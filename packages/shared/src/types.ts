@@ -120,6 +120,18 @@ export enum UnitKind {
   Cantus = 13,
   /** Knights, Slipway: the long lance. */
   Reciter = 14,
+  /**
+   * The transports — one a navy, and a hold (docs/units.md, "The transports";
+   * wave 1 of docs/roster-plan.md, #501). Appended, for the same reason.
+   */
+  /** Consortium, Foundry: the armoured hold, six berths. */
+  Freighter = 15,
+  /** Commune, Foundry: the quiet way in, two berths. */
+  Drifter = 16,
+  /** Directorate, Foundry: the cohort's way down, four berths at PR-3. */
+  Verger = 17,
+  /** Knights, Slipway: three berths, and what it lands, lands with +1 PR. */
+  Antiphon = 18,
 }
 
 /** Prototype structure roster. Stats live in structures.ts. See docs/units.md. */
@@ -561,6 +573,36 @@ export interface OwnUnit {
    * goes in the wall or is worth walking home for.
    */
   mines?: number;
+  /**
+   * A transport's hold: the berths it can carry and the berths aboard
+   * (docs/units.md, "The transports"; docs/systems-echo.md §3, "A hull in a
+   * hold"). Absent on every hull without one.
+   *
+   * Sent to the owner and to nobody else. The load is a fact the owner has
+   * to plan around — a hold with two berths left takes a scout and not a
+   * Corvette — and the rule that what is aboard is heard only as SIG is a
+   * rule about *other* listeners; the contact a carrier makes on an enemy's
+   * scope carries none of this.
+   */
+  hold?: { berths: number; used: number };
+  /**
+   * The id of the carrier this hull is aboard. Present only while carried.
+   *
+   * A carried hull is still the owner's, and the owner is told where it is
+   * — the carrier's position, which is where the `x`, `y` and `depth` above
+   * are read from — but it is not in the water: no order but the carrier's
+   * disembark reaches it, and the client draws it as cargo, not as a hull.
+   */
+  aboard?: number;
+  /** The id of the carrier this hull has been ordered to board, while it closes on it. */
+  embarking?: number;
+  /**
+   * Seconds left on the Pressure Rating grant a landing gave this hull —
+   * the Antiphon's (docs/units.md): +1 PR for 20 s after it is disembarked.
+   * Absent when no clock runs. Sent because it is a countdown the player has
+   * to act inside: what was landed below its rating has this long.
+   */
+  landingGrantS?: number;
 }
 
 /**

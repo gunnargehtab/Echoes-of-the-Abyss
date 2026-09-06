@@ -249,7 +249,7 @@ and the price the server charges cannot drift — they are one figure, written t
 | Accounts | Nodules, Crystal, Biomass — checked together, never exchanged | §6: the Directorate's living is a different resource, not a discount on the same one. A commander short one rendering is refused however rich in Nodules |
 | Rendering contracts | The same account, at `DRIFT.RENDERING_CONTRACT_RATE` (0.3) | §2's "others at ~30%". The price is as faction-blind as every other price in the roster; the doctrine is the rate |
 | Where a refusal shows | The button, greyed, and on a press the account it fell short in — *Abyssal Submersible: 80 crystal short* | [ui-ux.md](ui-ux.md) §7 forbids the silent grey-out, and naming the account names the readout to watch. The same wording serves a Biomass price the day one exists |
-| The roster's Biomass column | **The Chorister, at 30 Nodules and 20 Biomass** ([units.md](units.md), #352). The Abyssal Submersible stays the crystal-locked deep hull, at 260 Nodules and 80 Crystal | One mid-water rendering at full rate; a third of one through a contract, which is how the hull is the Directorate's without a faction lock. Under a strained region the same rendering pays 16.5 and is refused, so §9's guard-rail bites at the first hull rather than the tenth |
+| The roster's Biomass column | **The Chorister, at 30 Nodules and 20 Biomass** ([units.md](units.md), #352); since #461 the Precentor and the Dredge, and since #501 the Verger at 140 and 30. The Abyssal Submersible stays the crystal-locked deep hull, at 260 Nodules and 80 Crystal | One mid-water rendering at full rate; a third of one through a contract, which is how the hull is the Directorate's without a faction lock. Under a strained region the same rendering pays 16.5 and is refused, so §9's guard-rail bites at the first hull rather than the tenth |
 
 **Why the mechanism shipped ahead of the entry.** [mission-intake.md](mission-intake.md)
 §13 found that *"cheap expendable units"* — [campaign.md](campaign.md) §6 row 2's teaching
@@ -257,7 +257,9 @@ target — cannot be taught by any mission until spending exists, and that the m
 will ask is the Directorate's fifth. The account, the query over it (#330) and the price
 (#351) each landed before the hull, so the entry (#352) was a roster row and nothing else:
 no new path, no new account. `packages/shared/test/economy.test.ts` holds the roster to it —
-exactly one hull priced in Biomass, and it the cheapest in Nodules.
+the Biomass column names the cohort programme's hulls and nobody else's (the Chorister and,
+since wave 1 of [roster-plan.md](roster-plan.md), the Verger, both locked by the price alone;
+the Precentor and the Dredge, locked besides), and the Chorister the cheapest in Nodules.
 
 ---
 
@@ -283,9 +285,11 @@ has berths for, and berths are infrastructure — which in this game means they 
 ### The rule
 
 - Each hull occupies a number of berths set by its tonnage, listed on its stat block in
-  [units.md](units.md): one for a Light Scout, a Harvester, a Chorister, a Spinner or a
-  Precentor; two for a Corvette, a Clarion, an Abyssal Submersible, a Tender, a Sower, a
-  Cantus or a Reciter; three for a Cruiser or a Dredge; four for a Bulwark.
+  [units.md](units.md): one for a Light Scout, a Harvester, a Chorister, a Spinner, a
+  Precentor or a Drifter; two for a Corvette, a Clarion, an Abyssal Submersible, a Tender, a
+  Sower, a Cantus, a Reciter, a Verger or an Antiphon; three for a Cruiser, a Dredge or a
+  Freighter; four for a Bulwark. A transport's *hold* is a separate number and is not
+  quarters: what it carries keeps its own berths ([systems-echo.md](systems-echo.md) §3).
 - The **Bastion grants 16 berths** and every commissioned **Foundry grants 8 more**, to a
   hard **ceiling of 40** per commander — and so does the **Slipway**, the second yard
   [units.md](units.md) designs (#461), so the ceiling is a Bastion, two Foundries and a

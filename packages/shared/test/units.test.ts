@@ -101,7 +101,7 @@ describe('MAX_UNIT_RADIUS_M is derived from the roster', () => {
     );
   });
 
-  it('reaches 75 m — the Bulwark’s half-length — so the bound followed the fleet', () => {
+  it('reaches 80 m — the Freighter’s half-length — so the bound followed the fleet', () => {
     // The derivation had a job beyond being self-consistent: it had to land on
     // the reach separation was tuned against. A derivation that read the wrong
     // field would be internally tidy and quietly wrong — mapping
@@ -109,12 +109,13 @@ describe('MAX_UNIT_RADIUS_M is derived from the roster', () => {
     // to 450 m and still pass every test that only compares the constant to
     // itself. This is the assertion that says which number was correct.
     //
-    // It was 65 for as long as the Cruiser was the longest hull. The rung's
-    // roster (#461) added the Bulwark at 150 m, and this pin is the "legitimately
-    // rewritten to the new figure" the header promised — the day it was, the
-    // derivation did exactly what it was written to do.
-    assert.equal(MAX_UNIT_RADIUS_M, 75);
-    assert.equal(statsFor(UnitKind.Bulwark).hullLengthM / 2, MAX_UNIT_RADIUS_M);
+    // It was 65 for as long as the Cruiser was the longest hull, and 75 once
+    // the rung's roster (#461) added the Bulwark at 150 m. The transports
+    // (#501) added the Freighter at 160, and this pin is the "legitimately
+    // rewritten to the new figure" the header promised — each time it was,
+    // the derivation did exactly what it was written to do.
+    assert.equal(MAX_UNIT_RADIUS_M, 80);
+    assert.equal(statsFor(UnitKind.Freighter).hullLengthM / 2, MAX_UNIT_RADIUS_M);
   });
 });
 
@@ -255,10 +256,12 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
    * quietly widening a navy.
    */
   const NAVY: Record<Faction, readonly UnitKind[]> = {
-    [Faction.Bathyarch]: [UnitKind.Tender, UnitKind.Bulwark],
-    [Faction.Pelagia]: [UnitKind.Spinner, UnitKind.Sower],
+    [Faction.Bathyarch]: [UnitKind.Tender, UnitKind.Bulwark, UnitKind.Freighter],
+    [Faction.Pelagia]: [UnitKind.Spinner, UnitKind.Sower, UnitKind.Drifter],
+    // The Verger is the Directorate's by its price and carries no lock, as
+    // the Chorister is and does (docs/units.md), so it is not in this row.
     [Faction.Directorate]: [UnitKind.Precentor, UnitKind.Dredge],
-    [Faction.Hadron]: [UnitKind.Clarion, UnitKind.Cantus, UnitKind.Reciter],
+    [Faction.Hadron]: [UnitKind.Clarion, UnitKind.Cantus, UnitKind.Reciter, UnitKind.Antiphon],
   };
   const factions = [Faction.Bathyarch, Faction.Pelagia, Faction.Directorate, Faction.Hadron];
   const own = (faction: Faction) => roster.filter((s) => s.faction === faction);

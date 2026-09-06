@@ -118,7 +118,15 @@ export type AiCommand =
    * force is mixed, because a hull may only be sent as deep as its own
    * Pressure Rating allows.
    */
-  | { kind: 'depth'; unitIds: number[]; depthM: number };
+  | { kind: 'depth'; unitIds: number[]; depthM: number }
+  /**
+   * Board a carrier (#501). The carrier is an own unit id, as `unitIds` are:
+   * a commander boards its own hulls and nobody else's, and the snapshot
+   * tells it which of its own hulls carries a hold.
+   */
+  | { kind: 'embark'; unitIds: number[]; carrierId: number }
+  /** Land the hold of each of these carriers where it stands. */
+  | { kind: 'disembark'; unitIds: number[] };
 
 /** What a commander is: snapshot in, commands out, and nothing else. */
 export interface AiPlayer {

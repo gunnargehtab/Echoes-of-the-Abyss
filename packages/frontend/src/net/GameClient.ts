@@ -571,6 +571,18 @@ export class GameClient {
     this.order(CLIENT_MSG.hold, { unitIds, active });
   }
 
+  /** Board a friendly transport: the hulls close on it (docs/systems-echo.md §3). */
+  embark(unitIds: number[], carrierId: number): void {
+    if (unitIds.length === 0) return;
+    this.order(CLIENT_MSG.embark, { unitIds, carrierId });
+  }
+
+  /** Land each transport's whole hold where it stands. */
+  disembark(unitIds: number[]): void {
+    if (unitIds.length === 0) return;
+    this.order(CLIENT_MSG.disembark, { unitIds });
+  }
+
   /** Where a yard sends the hulls it launches. */
   setRally(structureIds: number[], x: number, y: number): void {
     if (structureIds.length === 0) return;

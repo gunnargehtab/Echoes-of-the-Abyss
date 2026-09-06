@@ -359,8 +359,19 @@ export const PRODUCIBLE: Partial<Record<StructureKind, readonly UnitKind[]>> = {
     UnitKind.Spinner,
     UnitKind.Precentor,
     UnitKind.Cantus,
+    // The transports (docs/units.md, #501): three openings, and the Antiphon
+    // behind the rung.
+    UnitKind.Freighter,
+    UnitKind.Drifter,
+    UnitKind.Verger,
   ],
-  [StructureKind.Slipway]: [UnitKind.Bulwark, UnitKind.Sower, UnitKind.Dredge, UnitKind.Reciter],
+  [StructureKind.Slipway]: [
+    UnitKind.Bulwark,
+    UnitKind.Sower,
+    UnitKind.Dredge,
+    UnitKind.Reciter,
+    UnitKind.Antiphon,
+  ],
 };
 
 /**

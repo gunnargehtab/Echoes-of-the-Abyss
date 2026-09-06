@@ -138,7 +138,7 @@ the seat assignment, the mission view. That is not an optimisation, it is the fi
 model — a fact that differs by who is asking cannot live in shared state without leaking.
 
 Both directions of the message channel are declared once, in
-`packages/shared/src/wire.ts`: 24 names a client may send, 11 the room may send, and the
+`packages/shared/src/wire.ts`: 26 names a client may send, 11 the room may send, and the
 payload of each. Neither package writes a message name as a string literal, and each side
 reaches the wire through a thin generic wrapper that takes the name and infers the payload
 from the same map. The result is that a message renamed or reshaped anywhere is a compile
@@ -595,6 +595,24 @@ within 300 m of a Bastion, so a spent layer walks home — the supply line is th
 a commander that never went back would lay four mines a match. §6's counter-play is that you
 cannot see a minefield but you can hear one being built; a grown mine is the exception that
 doc makes, which is why this is the Commune's wall and nobody else's.
+
+**And, where its navy has one, it moves a force in a hold.** [units.md](units.md) "The
+transports" gives every navy a carrier and [systems-echo.md](systems-echo.md) §3 says what a
+hold does to the picture; two doctrines declare one — the Consortium's Freighter and the
+Directorate's Verger — and the commander's plan for either is the same, because it cannot
+see the argument any better than a player can. The carrier is bought once, on the Spinner's
+terms: unarmed, so by a want of its own rather than the composition cycle, and never before
+the escort, because a hold with nothing to carry is 260 nodules the opening did not spend.
+It loads at the rally point, where the force masses anyway, from the hulls that have
+gathered there, lowest ids first until the hold is full; a hull ordered aboard leaves the
+army branch's hands the moment it is ordered, or the next move-to-rally would cancel the
+boarding in the same breath. A full hold sails for a gun's reach short of the objective, at
+the doctrine's depth — the Verger takes its cohort under the layer for one descent, which
+is the whole of what a PR-3 transport is for — and lands it there, or wherever it is found
+first. The landing commits the push, so what came out of the hold walks into the base and
+the rest of the army comes after it rather than calling it back. The Drifter and the
+Antiphon stay a human's: the one is a raid and the other a rung-gated grant, and neither
+is a behaviour the harness can judge yet.
 
 **And it prices the trip to the bottom before it takes one.**
 [economy.md](economy.md) §7 says the Abyssal band "is run as raids, not as expansions, by

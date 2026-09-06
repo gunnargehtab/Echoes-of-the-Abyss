@@ -223,6 +223,10 @@ export interface RendererCallbacks {
   onAttackMoveOrder(unitIds: number[], x: number, y: number, queued: boolean): void;
   onStopOrder(unitIds: number[]): void;
   onHoldOrder(unitIds: number[], active: boolean): void;
+  /** Board a friendly transport (docs/systems-echo.md §3): the hulls close on the carrier. */
+  onEmbarkOrder(unitIds: number[], carrierId: number): void;
+  /** Land the whole hold of each selected transport where it stands. */
+  onDisembarkOrder(unitIds: number[]): void;
   /** Where a selected yard sends the hulls it launches. */
   onRallyOrder(structureIds: number[], x: number, y: number): void;
   onToggleSilent(unitIds: number[], active: boolean): void;
@@ -637,6 +641,10 @@ const UNIT_SHORT: Record<UnitKind, string> = {
   [UnitKind.Dredge]: 'DRG',
   [UnitKind.Cantus]: 'CNT',
   [UnitKind.Reciter]: 'RCT',
+  [UnitKind.Freighter]: 'FRT',
+  [UnitKind.Drifter]: 'DRF',
+  [UnitKind.Verger]: 'VRG',
+  [UnitKind.Antiphon]: 'ANT',
 };
 
 /** Compact structure names for the build buttons. */
@@ -918,6 +926,13 @@ export class EchoRenderer {
    */
   private map: MapPayload | null = null;
   private units: OwnUnit[] = [];
+  /**
+   * Own hulls aboard a carrier (docs/systems-echo.md §3). Kept apart from
+   * `units`: they are not in the water, so nothing draws them, nothing
+   * selects them and no order reaches them — the carrier's inspector says
+   * what it holds, and that is the whole of their presence on the scope.
+   */
+  private cargo: OwnUnit[] = [];
   private ordnance: OwnOrdnance[] = [];
   private structures: OwnStructure[] = [];
   private nodes: readonly ResourceNodeInfo[] = [];
@@ -2427,6 +2442,20 @@ export class EchoRenderer {
           action: () => this.commandCycleThrottle(),
         });
       }
+      // A transport's hold: the button is the readout and the landing. Boarding
+      // is a right-click on the transport with the hulls selected, because it
+      // needs the one thing a button does not carry — which carrier.
+      const transport = units.find((u) => u.hold !== undefined);
+      if (transport !== undefined) {
+        const { used, berths } = transport.hold!;
+        buttons.push({
+          label: `LAND ${used}/${berths}`,
+          enabled: used > 0,
+          active: used > 0,
+          action: () => this.commandDisembark(),
+          refusal: 'hold is empty: select hulls and right-click the transport to board',
+        });
+      }
     } else {
       const roster = [
         StructureKind.Refinery,
@@ -2777,6 +2806,16 @@ export class EchoRenderer {
     this.ordersSeq++;
   }
 
+  /** Land the whole hold of every selected transport where it stands. */
+  private commandDisembark(): void {
+    const ids = this.selectedUnits()
+      .filter((u) => u.hold !== undefined && u.hold.used > 0)
+      .map((u) => u.id);
+    if (ids.length === 0) return;
+    this.callbacks.onDisembarkOrder(ids);
+    this.ordersSeq++;
+  }
+
   /** Hold position, toggled like floor-following: on unless all already hold. */
   private commandHold(): void {
     const units = this.selectedUnits();
@@ -2936,6 +2975,24 @@ export class EchoRenderer {
         this.noteOrder(rest, 'move', water.x, water.y, queued);
       }
       return;
+    }
+
+    // A friendly transport under the cursor, with other hulls selected: the
+    // order is to board it (docs/systems-echo.md §3, "A hull in a hold").
+    // Above the contact test, because the carrier is the player's own and
+    // the click is on it — and a transport cannot board a transport.
+    const target = this.nearestOwnEntityAt(clientX, clientY);
+    const carrier =
+      target === null ? undefined : this.units.find((u) => u.id === target && u.hold !== undefined);
+    if (carrier !== undefined) {
+      const boarding = this.movable(
+        selectedUnits.filter((u) => u.id !== carrier.id && u.hold === undefined).map((u) => u.id)
+      );
+      if (boarding.length > 0) {
+        this.callbacks.onEmbarkOrder(boarding, carrier.id);
+        this.noteOrder(boarding, 'move', carrier.x, carrier.y, false);
+        return;
+      }
     }
 
     const contact = this.nearestContactAt(clientX, clientY);
@@ -3259,6 +3316,7 @@ export class EchoRenderer {
     this.refusal = null;
     this.missionOver = null;
     this.units = [];
+    this.cargo = [];
     this.structures = [];
     this.ordnance = [];
     this.previousUnits = [];
@@ -3310,7 +3368,8 @@ export class EchoRenderer {
     }
     this.previousUnits = this.units;
     this.previousStructures = this.structures;
-    this.units = snapshot.units;
+    this.units = snapshot.units.filter((u) => u.aboard === undefined);
+    this.cargo = snapshot.units.filter((u) => u.aboard !== undefined);
     this.structures = snapshot.structures;
     this.ordnance = snapshot.ordnance;
     this.peakSig = snapshot.peakSig;
@@ -3391,6 +3450,9 @@ export class EchoRenderer {
     // Drop selections and motion history for entities that no longer exist.
     const alive = new Set<number>();
     for (const unit of this.units) alive.add(unit.id);
+    // A hull in a hold is alive and still the player's: a control group that
+    // sailed aboard a Freighter is the same group when it lands.
+    for (const unit of this.cargo) alive.add(unit.id);
     for (const structure of this.structures) alive.add(structure.id);
     for (const id of this.selected) {
       if (!alive.has(id)) this.selected.delete(id);
@@ -6031,6 +6093,15 @@ export class EchoRenderer {
       // and outrank it, and above every steady-state line, because a hull that
       // is not taking orders is the most important thing about it (#478).
       this.infoLine2.text = hold.toUpperCase();
+    } else if (unit !== undefined && unit.landingGrantS !== undefined) {
+      // A countdown the player has to act inside (docs/units.md, Antiphon):
+      // what was landed below its rating has this long before it crushes.
+      this.infoLine2.text = `LANDED · +1 PR for ${Math.ceil(unit.landingGrantS)}s · ${unit.depth.toFixed(0)}m`;
+    } else if (unit !== undefined && unit.hold !== undefined) {
+      const aboard = this.cargo.filter((c) => c.aboard === unit.id);
+      const manifest =
+        aboard.length === 0 ? 'empty' : aboard.map((c) => UNIT_SHORT[c.kind]).join(' ');
+      this.infoLine2.text = `HOLD ${unit.hold.used}/${unit.hold.berths} · ${manifest} · ${unit.depth.toFixed(0)}m`;
     } else if (unit !== undefined && unit.followFloor === true && unit.throttle === undefined) {
       this.infoLine2.text = `FOLLOWING FLOOR · ${unit.depth.toFixed(0)}m`;
     } else if (unit !== undefined && unit.throttle !== undefined) {
@@ -6077,6 +6148,13 @@ export class EchoRenderer {
       const name = structureStatsFor(structure.kind).name;
       if (this.isTouch || !canBuild) return `${name}${queue}`;
       return `${name}${queue}  ·  UNITS tab to produce  ·  ${this.buildKeyHint()} build`;
+    }
+    const transport = this.units.find((u) => this.selected.has(u.id) && u.hold !== undefined);
+    if (transport !== undefined && this.selected.size === 1) {
+      const state = `transport [HOLD ${transport.hold!.used}/${transport.hold!.berths}]`;
+      return this.isTouch
+        ? `${state}  ·  select hulls, tap the transport to board  ·  LAND to unload`
+        : `${state}  ·  select hulls, RMB the transport to board  ·  LAND to unload  ·  RMB move`;
     }
     const harvester = this.units.find((u) => this.selected.has(u.id) && u.throttle !== undefined);
     if (harvester !== undefined) {

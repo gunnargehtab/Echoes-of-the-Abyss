@@ -149,12 +149,16 @@ export const DOCTRINE: Record<Faction, Doctrine> = {
     // The Tender behind the first Corvette: repair is the navy's identity,
     // and it only counts once there is something to weld. The Bulwark once
     // the rung stands.
+    // The Freighter declared here and bought by its own want (#501): the
+    // Klaxon's transport is the one heard coming that arrives anyway, which
+    // is this navy's argument on every hull it fields.
     composition: [
       UnitKind.Corvette,
       UnitKind.Tender,
       UnitKind.Cruiser,
       UnitKind.Bulwark,
       UnitKind.Cruiser,
+      UnitKind.Freighter,
     ],
   },
   // "The Veil." Harvests at 18 where others harvest at 50, and loses any fight
@@ -216,12 +220,16 @@ export const DOCTRINE: Record<Faction, Doctrine> = {
     // A Precentor with the first pair: the swarm "has to know first where it
     // is going", and the dome is the cheapest ears it can add. The Dredge
     // once the rung stands.
+    // The Verger declared here and bought by its own want (#501): the navy
+    // that crosses the layer takes its cohort under it at PR-3 for one
+    // descent, which is what a transport is for a navy that lives deep.
     composition: [
       UnitKind.Corvette,
       UnitKind.Corvette,
       UnitKind.Precentor,
       UnitKind.LightScout,
       UnitKind.Dredge,
+      UnitKind.Verger,
     ],
   },
   // "The Score." Elite, expensive, few — deafening in front and quiet on the

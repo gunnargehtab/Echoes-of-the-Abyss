@@ -66,7 +66,7 @@ Silent Running
 
 Hold
 
-- The berths a transport carries other hulls in (roster-plan.md, wave 1). A carried hull is not in the water: no position, no SIG, no ears, unresolvable at any tier; it keeps its commander's berths, takes the carrier's depth and PR, and dies with it (systems-echo.md §3, "A hull in a hold").
+- The berths a transport carries other hulls in — the Freighter's six, the Verger's four, the Antiphon's three, the Drifter's two (units.md, "The transports"). A carried hull is not in the water: no position, no SIG, no ears, unresolvable at any tier; it keeps its commander's berths, takes the carrier's depth and PR, and dies with it (systems-echo.md §3, "A hull in a hold").
 - The load is audible only as SIG — +3 per berth carried, Silent Running included — and a kill reveals nothing beyond the battle site any hull's death leaves.
 
 Ghost Markers

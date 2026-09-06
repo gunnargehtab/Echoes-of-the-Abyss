@@ -15,6 +15,9 @@ Unit stat format
 - Build time: seconds (prototype simulation)
 - Berths: what the hull's crew occupies on the base, against the commander's grant
   (economy.md §10). Tonnage, not headcount: a Cruiser is three, a Chorister one
+- Hold: for a transport, the berths of hull it carries (systems-echo.md §3, "A hull in a
+  hold"). Tonnage carried, not crew: a hold of six takes three Corvettes or six scouts. The
+  Hold Refit of systems-progression.md is a harvester's cargo hold, and not this
 - Role: short
 - Notes: design intent, biome synergies
 
@@ -527,6 +530,106 @@ Reciter (Slipway)
 - Faction-locked: yes, for the Clarion's reason exactly: a cone figure is unreadable without
   the term, and another navy's Reciter would emit 90 in every direction
 
+The transports — one a navy (roster-plan.md wave 1, #495, #501)
+
+A transport carries hulls, and what a hold does to the acoustic picture is one rule,
+[systems-echo.md](systems-echo.md) §3, "A hull in a hold": a carried hull is not in the water
+— no position, no SIG, no ears, unresolvable at any tier, still counted against the berths,
+taking the carrier's depth and Pressure Rating and dying with it — and the load is heard as
+**+3 SIG per berth carried**, at every posture, Silent Running included, and as nothing else.
+Every SIG figure below is the *empty* figure; a full hold adds three times its capacity, and
+the full figures are written beside them. Embarking is an order given to the hull, which
+closes on its carrier and boards within 150 m of it and 100 m of its depth; disembarking is an
+order given to the carrier, which lands its whole hold in a ring around itself, at its own
+depth. None of the four carries a weapon, and none can be carried: a hold is not a berth for
+another hold. Each is the fourth line of its navy's argument, and each is that navy's way of
+*arriving*.
+
+Freighter (Foundry)
+
+- Role: The armoured hold. Six berths of hull moved in one slow, loud, very tough hull — the
+  Klaxon's transport is the one that is heard coming and arrives anyway
+- SIG: 30 / 50 / — (no weapon), empty; **48 / 68 full**. A loaded Freighter at cruise is as
+  loud as a Cruiser at flank, and it stays that loud under Silent Running: a hold cannot be
+  hushed
+- HYD: 35
+- PR: 2 — the Consortium baseline, and the rating everything aboard takes for the trip, which
+  is what makes the hull a *depth* argument: a hold of PR-1 scouts crosses the Shelf line
+  aboard a Freighter and comes out of it below
+- Cost: 260
+- Build time: 60s
+- Berths: 3
+- Hold: **6** berths — three Corvettes, or two Cruisers, or a Bulwark and two scouts
+- Speed: 30
+- HP: 1800 — the Bulwark's plate on a hull with nothing to shoot back with. What a Freighter
+  buys is that being found is not the same as being sunk
+- Faction-locked: yes. Eighteen SIG of load on a hull that runs at 68 is only readable inside
+  a doctrine that plans to be heard; a Commune Freighter would be a hull the Veil could never
+  sail quietly and never afford to lose
+
+Drifter (Foundry)
+
+- Role: The quiet way in. Two berths of hull moved at 90 m/s and SIG 10 — a Corvette, or a
+  pair of scouts, arriving somewhere nobody was listening
+- SIG: 4 / 10 / — (no weapon), empty; **10 / 16 full**. A full Drifter at cruise is a Light
+  Scout at idle: the quietest way the roster moves a Corvette anywhere
+- HYD: 45
+- PR: 1 — the Commune baseline, and the hull's own. A Drifter is a horizontal argument, not a
+  vertical one; a Commune that wants its Drifters under the Shelf line buys the Pressure Refit
+  like every other Commune hull
+- Cost: 90
+- Build time: 30s
+- Berths: 1
+- Hold: **2** berths — one Corvette, or two scouts
+- Speed: 90 — faster than anything it can carry
+- HP: 300 — a Corvette's. Found is sunk, which is the Veil's bargain on every hull it fields
+- Faction-locked: yes. SIG 10 at 90 m/s is the Veil's floor written onto a drive, and a
+  Klaxon Drifter would be the quietest hull on a navy whose doctrine is to be heard
+
+Verger (Foundry)
+
+- Role: The cohort's way down. Four berths of hull taken below the Shelf line at PR-3 without
+  paying four descents: the Listening does not dive its cohort, it carries it
+- SIG: 14 / 26 / — (no weapon), empty; **26 / 38 full**
+- HYD: 60
+- PR: 3 — on the hull, not lent by the baseline. A cohort of Choristers, or two Corvettes,
+  crosses the layer at the Verger's rating and lands at the Verger's depth, and the one descent
+  the trip pays for is the Verger's own
+- Cost: 140, plus 30 Biomass — the Precentor's price shape, the cohort programme's account
+- Build time: 45s
+- Berths: 2
+- Hold: **4** berths — four Choristers, or two Corvettes
+- Speed: 40
+- HP: 800
+- Faction-locked: no. The Biomass is the lock, as the Chorister's is: a four-berth PR-3
+  transport reads the same under any flag, and the rendering contracts price it for everyone
+  else at a third of the rate ([economy.md](economy.md) §6)
+
+Antiphon (Slipway)
+
+- Role: The Order's way of arriving somewhere it has not built a Spire. Three berths of hull,
+  and what it lands, lands with **+1 PR for 20 s** — a Standing Wave's grant at a hull's
+  scale, for exactly as long as it takes a landing to become a raid or a mistake
+- SIG: **12 / 35 / —** (no weapon), empty; **21 / 44 full** — and the figures are **cone**
+  figures, as every Order hull's are ([systems-echo.md](systems-echo.md) §8): 35 ahead, 12.3
+  on the beam, 3.5 astern, 15.8 over the compass. An Antiphon runs quiet by running away and
+  lands loud by turning to
+- HYD: 50
+- PR: 2 — the Hadron baseline. The grant is what it carries, not what it is: an Antiphon rated
+  2 lands a hull rated 3, for twenty seconds
+- Cost: 300, plus 40 Resonance Crystal — a Slipway hull, so a decision the crystal buys
+- Build time: 70s
+- Berths: 2
+- Hold: **3** berths — a Clarion and a scout, or three scouts
+- Speed: 60
+- HP: 700
+- Effect: Every hull it disembarks carries **+1 PR for 20 s**, the Spire's grant on a clock.
+  It does not stack with a Spire, a Cantus or a Sower — one band rented, never two — and it
+  does not renew: what is landed below its own rating has twenty seconds to win, retreat, or
+  start to crush
+- Faction-locked: yes — the cone figure fails the Clarion test the way the Clarion does, and
+  the grant is the Spire's, which is the Order's
+
 What this does to the summary table. [factions.md](factions.md)'s *Army* row becomes true in
 the roster: the Consortium fields the heaviest hull and the only repair; the Commune the most
 mines and the only terraformer; the Directorate the best ears and the only PR-4; the Knights
@@ -546,8 +649,8 @@ mechanism the simulation did not have. Three readings the code had to make where
 were silent: a stationary hull under Silent Running is not singing, seeding or welding — quiet
 is the off switch, so a Cantus can be stopped without moving it; a Tender welds other hulls and
 never its own plate; and a Spinner's grown mine still spends the arming interval per drop, so a
-magazine is not a volley. Hull lengths are TUNABLE and not authored here; the Bulwark's 150 m is
-the roster's longest.
+magazine is not a volley. Hull lengths are TUNABLE and not authored here; the Freighter's 160 m is
+the roster's longest, and the Bulwark's 150 m was until it.
 
 Design notes
 
@@ -588,8 +691,9 @@ Design notes
   them, and `packages/shared/src/economy.ts` is the one place they become a sum and the one
   rule for spending it — the server, the commander AI and the command bar all read that sum
   and never the columns (economy.md §8). Biomass is the cohort programme's account
-  (economy.md §6), and the Chorister is the one hull priced in it. The Abyssal Submersible
-  is not — it is the crystal-locked deep hull and stays priced as one.
+  (economy.md §6): the Chorister and the Verger are priced in it and locked by nothing else,
+  and the Precentor and the Dredge are priced in it and locked besides. The Abyssal
+  Submersible is not — it is the crystal-locked deep hull and stays priced as one.
 - **The cohort hull is the Chorister, and the decision is recorded here so it can be
   overruled in one place (issue #352).** economy.md §6 called the Directorate "cheapest per
   unit" while the Submersible, at 260 and 80 Crystal, was the faction's only hull and the
@@ -685,8 +789,9 @@ Notes for testers
 Next steps
 
 - Done (#461): the rung and the eight faction hulls above are transcribed — the Slipway, the
-  four Foundry hulls, the four Slipway hulls, the Tender last; transports remain unwritten,
-  and are the first wave of roster-plan.md (#495), which sketches a full line per navy
+  four Foundry hulls, the four Slipway hulls, the Tender last
+- Done (#501): the four transports above and the hold they carry, the first wave of
+  roster-plan.md (#495), which sketches a full line per navy; the scouts are the second
 - Transcribe the refits and rank of systems-progression.md (#462): the five refits as
   producibles on the Slipway's line, which #461 built, then rank, which needs the TTK band
   test to grow a rank-3 row
