@@ -1060,6 +1060,11 @@ function assertOnlyKnown(command: AiCommand, known: Known): void {
     case 'ping':
       owns([command.unitId]);
       return;
+    case 'mine':
+      // A mine carries no position: it is dropped where the hull stands, so
+      // the only thing to audit is that the hull is one of its own.
+      owns([command.unitId]);
+      return;
     case 'build':
       inBounds(command.x, command.y);
       return;
@@ -1113,6 +1118,9 @@ function applyTo(match: Match, slot: number, command: AiCommand): void {
       return;
     case 'ping':
       match.activeSonar(slot, command.unitId);
+      return;
+    case 'mine':
+      match.layMine(slot, command.unitId);
       return;
     case 'build':
       match.build(slot, command.structure, command.x, command.y);

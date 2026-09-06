@@ -555,6 +555,28 @@ enemy start with a Light Scout, rallies between home and the enemy, and pushes w
 the hulls. It prioritises a Bastion over any other structure and any structure over any
 hull — an ordering only available at Tier 3, so it is information it earned.
 
+**And, for the Commune, it lays a wall.** [systems-combat.md](systems-combat.md) §11 makes the
+Commune the mine navy and [units.md](units.md) calls the Spinner "the way to reach" its cap of
+eighteen; until the commander had a word for laying, both sentences described a hull that only
+ever appeared in a human's hands, and the balance harness was measuring one navy short of its
+own roster. The Spinner is the one thing on any composition that has to be *told to stand
+still*: it carries no weapon, so it never joins the army the push branch commands, and its
+want is sized on its own — two, one laying while the other walks home, and never before the
+escort that makes a minefield kill in numbers rather than not at all. Where the wall goes is
+the rally point, because that is the water the commander has already decided matters: the line
+the force masses on and falls back through. The magazine regrows only inside a Spore Veil or
+within 300 m of a Bastion, so a spent layer walks home — the supply line is the mechanic, and
+a commander that never went back would lay four mines a match. §6's counter-play is that you
+cannot see a minefield but you can hear one being built; a grown mine is the exception that
+doc makes, which is why this is the Commune's wall and nobody else's.
+
+Its Slipway hull, the **Sower**, is still not on that list, and the reason is upstream of the
+commander rather than in it: the Sower is built at the Slipway, the Slipway is crystal-locked,
+crystal sits in the Abyssal band, and the Commune is the one navy with no hull rated to work
+it — the Sower itself would be, and it is the hull behind the gate. The commander refuses to
+send a harvester into water that eats it, exactly as it should, so the yard never gets bought.
+That is a roster question, not an AI one.
+
 **It decides for itself what counts as an attack on its base**, and that is a harder question
 than it sounds. A contact near the Bastion used to recall the whole army, unconditionally,
 which reads as caution and was ruinous: the Drift is seeded near spawns, and at Tier 1 a

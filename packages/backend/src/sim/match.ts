@@ -69,6 +69,7 @@ import {
   HarvestMode,
   Health,
   Magazine,
+  MineMagazine,
   MoveOrder,
   Ordnance,
   Owner,
@@ -2200,6 +2201,12 @@ export class Match {
         if (Magazine.rearmRemainingS[eid]! > 0) {
           unit.rearmRemainingS = Magazine.rearmRemainingS[eid]!;
         }
+      }
+      // The Spinner's grown magazine, on the same terms as the torpedo one: a
+      // count that only refills at a nursery is a supply line, and it is the
+      // owner's own (docs/units.md, the Spinner).
+      if (hasComponent(this.world, MineMagazine, eid)) {
+        unit.mines = MineMagazine.mines[eid]!;
       }
       if (hasComponent(this.world, Harvester, eid)) {
         unit.cargo = Harvester.cargo[eid]!;

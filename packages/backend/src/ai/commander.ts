@@ -31,6 +31,9 @@ import {
   DepthBand,
   EchoMarkKind,
   HARVEST_THROTTLE,
+  HULL_EFFECTS,
+  ORDNANCE,
+  OrdnanceKind,
   PRODUCIBLE,
   ResolutionTier,
   SIM,
@@ -38,6 +41,7 @@ import {
   THERMOCLINE_DUCT_BOTTOM_M,
   UnitKind,
   effectivePressureRating,
+  mineCapFor,
   requiredPressureRating,
   statsFor,
   structureStatsFor,
@@ -340,6 +344,67 @@ const EXPOSURE_WATCH = {
 const MEMORY_S = 90;
 
 /**
+ * The wall, and the hull that grows it.
+ *
+ * docs/systems-combat.md §11 makes the Commune the mine navy and docs/units.md
+ * calls the Spinner "the way to reach" its cap of 18. Both sentences described
+ * a hull no commander had ever fielded (#467), because ordering one to stand
+ * still on purpose is the one thing `commandArmy` has no word for: a Spinner
+ * has no weapon, so it is not in the army at all.
+ *
+ * Where the wall goes is the interesting decision, and the answer is the rally
+ * point — the water the commander has already named as the approach, the place
+ * the force masses at and the line it comes back through. §6's counter-play is
+ * that you cannot see a minefield but you can hear one being built; a grown
+ * mine is the exception the doc makes, so the Commune is the one navy that can
+ * lay this wall without announcing it. Laying it anywhere the commander had
+ * not already decided mattered would be four mines spent on water.
+ *
+ * TUNABLE throughout. The balance harness is the argument about them.
+ */
+const MINE_WALL = {
+  /**
+   * Spinners the commander wants in the water.
+   *
+   * A gate rather than a cycle position, because an unarmed hull never enters
+   * `army` and so never advances the composition index that chose it — left
+   * ungated, a navy whose index landed on the Spinner would queue Spinners
+   * until the yard backed up, and buy nothing that could hold the wall it had
+   * just laid. Two: one laying while the other walks home to regrow.
+   */
+  SPINNERS: 2,
+  /**
+   * Metres between spots on the wall.
+   *
+   * Two trigger radii, so a hull crossing the line passes inside exactly one
+   * mine's hearing rather than none or three. §6 makes a minefield kill "in
+   * numbers or not at all", and overlapping the triggers would spend the
+   * numbers on one passer-by.
+   */
+  SPACING_M: ORDNANCE.MINE.TRIGGER_RADIUS_M * 2,
+  /** Spots across the approach, centred on the rally point. Odd, so one sits on it. */
+  SPOTS: 5,
+  /** How near a spot counts as standing on it. A mine is dropped, not aimed. */
+  ARRIVE_M: 120,
+  /**
+   * How near the Bastion an empty Spinner has to get to start regrowing.
+   *
+   * Inside `HULL_EFFECTS.SPINNER.BASTION_RADIUS_M` with room to spare, because
+   * the commander is aiming a hull at a point rather than at a radius and a
+   * target on the rim is a hull that arrives just outside it.
+   */
+  NURSERY_M: HULL_EFFECTS.SPINNER.BASTION_RADIUS_M * 0.6,
+  /**
+   * Echo ticks between re-issuing a walk order to the same place.
+   *
+   * The scout's rule, for the scout's reason: a hull already under way does
+   * not need telling again, and re-issuing every cadence tick would reset its
+   * plan forever. A hull that has stopped short does need telling.
+   */
+  REISSUE_OBSERVATIONS: 25,
+} as const;
+
+/**
  * The deepest water this Pressure Rating is actually rated for.
  *
  * The commander clamps every depth order through this. `Match.orderDepth`
@@ -449,6 +514,19 @@ export class AiCommander implements AiPlayer {
     number,
     { seenTick: number; lastTick: number; farthest: number }
   >();
+  /**
+   * What each Spinner is doing: the spot on the wall it is walking to, and the
+   * earliest tick it may drop the next mine.
+   *
+   * The lay clock is local rather than read off the hull, because
+   * `Match.layMine` refuses silently while the last mine is still arming and a
+   * refusal teaches the commander nothing. `ORDNANCE.MINE.ARMING_S` is the
+   * interval the server is enforcing, so the commander waits it out rather
+   * than asking ten times and being told nothing ten times.
+   */
+  private readonly layerPlan = new Map<number, { spot: number; nextLayTick: number }>();
+  /** Next spot on the wall to hand out, so two Spinners do not stack. */
+  private nextMineSpot = 0;
 
   constructor(briefing: AiBriefing) {
     this.briefing = briefing;
@@ -503,6 +581,7 @@ export class AiCommander implements AiPlayer {
     this.commandConstruction(snapshot, harvesters, raiders, purse, commands);
     this.commandProduction(snapshot, harvesters, army, purse, commands);
     this.commandScout(snapshot, scout, commands);
+    this.commandLayers(snapshot, commands);
     this.commandArmy(snapshot, army, raiders, commands);
     this.commandSonar(snapshot, army, raiders, commands);
 
@@ -969,11 +1048,50 @@ export class AiCommander implements AiPlayer {
       }
     }
 
-    const target = Math.ceil(this.doctrine.attackAtArmySize * this.tuning.patience) + 2;
+    // Queued hulls that will actually join the army. The Spinner is subtracted
+    // because it never will — it has no weapon — and counting a layer toward
+    // the army's own target would stop the navy two Corvettes short of it.
     const queuedArmy = snapshot.structures.reduce(
-      (total, s) => total + s.queue.filter((q) => q !== UnitKind.Harvester).length,
+      (total, s) =>
+        total + s.queue.filter((q) => q !== UnitKind.Harvester && q !== UnitKind.Spinner).length,
       0
     );
+
+    // The wall next, and **ahead of the army gate on purpose**.
+    //
+    // A Spinner is not an army hull, so `target` below is not counting it; but
+    // a want that sat behind the army's would never be reached at all. The
+    // Commune is broke exactly while its army is small — on seed 4000 it holds
+    // ten nodules from minute one to minute four, which buys a 50-nodule
+    // Light Scout and not a 150-nodule layer — and by the time it is rich its
+    // army is at target and this branch has already returned. Measured with
+    // the Spinner on the composition and nowhere else: fifteen minutes, 1,490
+    // nodules idle from minute ten, and not one layer bought.
+    //
+    // The composition is still where the hull is declared (see `Doctrine`).
+    // This is how a navy that declares it actually gets one.
+    if (this.doctrine.composition.includes(UnitKind.Spinner)) {
+      const layers =
+        snapshot.units.reduce((n, u) => n + (u.kind === UnitKind.Spinner ? 1 : 0), 0) +
+        queuedOf(UnitKind.Spinner);
+      // Not before the escort. §6 makes a minefield "kill in numbers or not at
+      // all", and a wall with nothing holding it is 150 nodules the opening
+      // did not spend on the hulls that make the wall matter. Half the
+      // doctrine's massing size is the same floor `stillMassing` uses for the
+      // same judgement: below it, this is not a navy, it is a hull.
+      const escorted =
+        army.length + queuedArmy >=
+        Math.ceil(this.doctrine.attackAtArmySize * MASSING.MIN_FRACTION);
+      if (layers < MINE_WALL.SPINNERS && escorted) {
+        const yard = this.freeYard(snapshot.structures, UnitKind.Spinner);
+        if (yard !== null && this.affordUnit(UnitKind.Spinner, purse)) {
+          out.push({ kind: 'produce', structureId: yard.id, unit: UnitKind.Spinner });
+          return;
+        }
+      }
+    }
+
+    const target = Math.ceil(this.doctrine.attackAtArmySize * this.tuning.patience) + 2;
     if (army.length + queuedArmy >= target) return;
 
     // Composition cycles rather than being solved: it keeps the mix roughly
@@ -1000,10 +1118,17 @@ export class AiCommander implements AiPlayer {
     // straight through to whatever is cheapest, or the rung would quietly
     // reduce every navy to Corvettes for as long as it went unbuilt. The
     // cheapest-first list stays last, for the deadlock above.
+    //
+    // The Spinner is skipped here, having been bought above. It must be: the
+    // cycle index is `army.length`, a hull with no weapon never joins the
+    // army, so a navy whose index landed on the Spinner would select it again
+    // on the next observation and the one after — buying layers until the yard
+    // backed up and never buying the hulls that hold the wall.
     const { composition } = this.doctrine;
     const start = army.length % composition.length;
     const rotated = composition.map((_, k) => composition[(start + k) % composition.length]!);
     for (const wanted of [...rotated, ...affordableFirst(composition, purse)]) {
+      if (wanted === UnitKind.Spinner) continue;
       const yard = this.freeYard(snapshot.structures, wanted);
       if (yard === null) continue;
       if (!this.affordUnit(wanted, purse)) continue;
@@ -1070,6 +1195,145 @@ export class AiCommander implements AiPlayer {
       x: p.x,
       y: p.y,
     }));
+  }
+
+  // --- The wall -------------------------------------------------------------
+
+  /**
+   * The Spinners: build a wall on the approach, and go home when the magazine
+   * is out.
+   *
+   * A branch of its own rather than a clause in `commandArmy`, because a
+   * Spinner is not in the army — it has no weapon, so the army filter never
+   * sees it — and because what it is asked to do is the opposite of what an
+   * army is asked to do. An army is told where to go and shoots what it meets.
+   * A layer is told where to *stand*, and the standing is the whole order.
+   *
+   * Three states, in the order they are allowed to fire:
+   *
+   * 1. **Empty.** Walk home. The magazine regrows one mine every 40 s inside a
+   *    Spore Veil or within 300 m of a Bastion (docs/units.md), and the
+   *    commander builds no Spore Veils, so home is the nursery. The clock only
+   *    runs in range, so a Spinner that leaves mid-growth has lost nothing.
+   * 2. **At the cap.** Hold. §6 caps live mines per player and the Commune's
+   *    cap is the doctrine's own number; asking past it is a refusal the
+   *    server does not explain, and a hull standing on a full wall is a hull
+   *    that has finished its job rather than one that is idle.
+   * 3. **Laying.** Walk to its spot and drop one, then take the next spot.
+   *
+   * Nothing here toggles Silent Running. The Spinner cruises at 14 SIG —
+   * quieter than a Light Scout idling — and laying a grown mine keeps whatever
+   * silence the hull was already running in (docs/units.md), so the toggle
+   * buys this hull less than it buys anything else in the roster and costs it
+   * the same speed.
+   */
+  private commandLayers(snapshot: EchoSnapshot, out: AiCommand[]): void {
+    const layers = snapshot.units.filter((u) => u.kind === UnitKind.Spinner);
+    if (layers.length === 0) {
+      // Nothing to plan for, and a plan kept for a dead hull is a spot on the
+      // wall nobody will ever walk to.
+      if (this.layerPlan.size > 0) this.layerPlan.clear();
+      return;
+    }
+
+    const alive = new Set(layers.map((u) => u.id));
+    for (const id of [...this.layerPlan.keys()]) if (!alive.has(id)) this.layerPlan.delete(id);
+
+    // Own ordnance, counted the way the server counts it: the cap is on live
+    // mines, arming ones included, and every one of them is in this list
+    // because it is the commander's own.
+    const live = snapshot.ordnance.reduce(
+      (total, o) => total + (o.kind === OrdnanceKind.Mine ? 1 : 0),
+      0
+    );
+    const atCap = live >= mineCapFor(this.briefing.faction);
+    const spots = this.mineWall();
+
+    for (const layer of layers) {
+      // A grown magazine is always reported for a hull that carries one, so an
+      // absent count is a hull that does not lay — not an empty one.
+      const mines = layer.mines ?? 0;
+
+      if (mines <= 0) {
+        this.layerPlan.delete(layer.id);
+        if (distance(layer, this.home) > MINE_WALL.NURSERY_M) {
+          this.walk(layer, this.home, snapshot.tick, out);
+        }
+        continue;
+      }
+
+      if (atCap) continue;
+
+      let plan = this.layerPlan.get(layer.id);
+      if (plan === undefined) {
+        plan = { spot: this.nextMineSpot++ % spots.length, nextLayTick: 0 };
+        this.layerPlan.set(layer.id, plan);
+      }
+      const spot = spots[plan.spot % spots.length]!;
+
+      if (distance(layer, spot) > MINE_WALL.ARRIVE_M) {
+        this.walk(layer, spot, snapshot.tick, out);
+        continue;
+      }
+      if (snapshot.tick < plan.nextLayTick) continue;
+
+      out.push({ kind: 'mine', unitId: layer.id });
+      // The server holds the hull for the arming interval whatever the
+      // commander asks, so the next drop is paced to that rather than to the
+      // decision cadence — and the next drop is somewhere else, because four
+      // mines on one spot is one mine with extra steps.
+      plan.nextLayTick = snapshot.tick + ORDNANCE.MINE.ARMING_S * SIM.TICK_HZ;
+      plan.spot = this.nextMineSpot++ % spots.length;
+    }
+  }
+
+  /**
+   * The wall: a line of spots across the approach, centred on the rally point.
+   *
+   * Across rather than along, because a minefield is a thing you walk *into*.
+   * The rally point is on the line from home to the enemy start the commander
+   * is working, so the perpendicular through it is the width of the approach —
+   * and the same water the army masses in, which is the second half of §6's
+   * argument: the wall covers the ground the force falls back through.
+   *
+   * Clamped to the map, so a rally point near an edge folds the wall against
+   * it rather than putting half of it in water that does not exist.
+   */
+  private mineWall(): { x: number; y: number }[] {
+    const rally = this.rallyPoint();
+    const dx = rally.x - this.home.x;
+    const dy = rally.y - this.home.y;
+    const length = Math.hypot(dx, dy) || 1;
+    // The normal to the approach, unit length.
+    const nx = -dy / length;
+    const ny = dx / length;
+
+    const spots: { x: number; y: number }[] = [];
+    const half = (MINE_WALL.SPOTS - 1) / 2;
+    for (let i = 0; i < MINE_WALL.SPOTS; i++) {
+      const offset = (i - half) * MINE_WALL.SPACING_M;
+      spots.push({
+        x: clamp(rally.x + nx * offset, 200, this.briefing.widthM - 200),
+        y: clamp(rally.y + ny * offset, 200, this.briefing.heightM - 200),
+      });
+    }
+    return spots;
+  }
+
+  /**
+   * Send a lone hull somewhere, without telling it again every cadence tick.
+   *
+   * The scout's rule (`commandScout`) generalised, and paced off the same
+   * clock: a move order re-issued at 5 Hz resets the hull's plan forever, and
+   * a hull that has stopped short of where it was sent needs telling again.
+   * Read off the tick rather than off the decision counter so the interval is
+   * the same wall-clock five seconds at either difficulty — a Recruit's slower
+   * cadence is meant to make its decisions worse, not its walking.
+   */
+  private walk(unit: OwnUnit, to: { x: number; y: number }, tick: number, out: AiCommand[]): void {
+    const window = TICKS_PER_OBSERVATION * MINE_WALL.REISSUE_OBSERVATIONS;
+    if (tick % window >= TICKS_PER_OBSERVATION) return;
+    out.push({ kind: 'move', unitIds: [unit.id], x: to.x, y: to.y });
   }
 
   // --- The army -------------------------------------------------------------
