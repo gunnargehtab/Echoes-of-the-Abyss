@@ -115,11 +115,15 @@ export interface Doctrine {
    * has to handle specially — see `commandLayers` and the Spinner gate in
    * `commandProduction`.
    *
-   * The **Sower** is still off, and now for a reason upstream of the
-   * commander: it is a Slipway hull, the Slipway costs 120 Resonance Crystal,
-   * crystal sits in the Abyssal band, and the Commune is the one navy with no
-   * hull rated to work it. Its yard is unreachable, so naming the hull here
-   * would buy nothing.
+   * The **Sower** joined it once the commander learned to go to the bottom
+   * (#467). It was left off before for a reason that turned out to be upstream
+   * of the doctrine table: it is a Slipway hull, the Slipway costs 120
+   * Resonance Crystal, crystal sits in the Abyssal band, and no navy but the
+   * Directorate has a harvester rated for that water — so the yard was
+   * unreachable, and not only for the Commune. What was missing was the trip
+   * docs/economy.md §7 already describes: "abyssal extraction is run as raids,
+   * not as expansions, by everyone except the Directorate." `commandCrystal`
+   * runs that raid, and the Sower is what ends it for this navy.
    */
   composition: readonly UnitKind[];
 }
@@ -175,7 +179,19 @@ export const DOCTRINE: Record<Faction, Doctrine> = {
     // the commander already knows something walks. §6's counter-play is
     // hearing a field being built, and the Spinner's laying is silent — so
     // the Commune can wall where a Corvette could not.
-    composition: [UnitKind.LightScout, UnitKind.Corvette, UnitKind.Spinner, UnitKind.Corvette],
+    //
+    // The Sower last, and it is the entry this navy's whole doctrine line
+    // points at: "they don't survive the deep, they change it." Both of the
+    // unarmed hulls here are bought by a gate rather than by the cycle — see
+    // `WANTED_SEPARATELY` in the commander — so their position on this list
+    // declares that the navy fields them, not when.
+    composition: [
+      UnitKind.LightScout,
+      UnitKind.Corvette,
+      UnitKind.Spinner,
+      UnitKind.Corvette,
+      UnitKind.Sower,
+    ],
   },
   // "The Listening." Best hydrophones by a wide margin, so it pings least and
   // scouts most, and it arrives in numbers rather than in quality.

@@ -26,20 +26,29 @@
 import {
   ACTIVE_SONAR,
   CONSTRUCTION,
+  CRYSTAL,
   DEPTH,
   DEPTH_BANDS,
   DepthBand,
+  ECONOMY,
   EchoMarkKind,
+  Faction,
+  HAZARDS,
   HARVEST_THROTTLE,
   HULL_EFFECTS,
+  HarvestThrottle,
   ORDNANCE,
   OrdnanceKind,
   PRODUCIBLE,
+  RESOURCE,
   ResolutionTier,
+  ResourceKind,
   SIM,
   StructureKind,
   THERMOCLINE_DUCT_BOTTOM_M,
   UnitKind,
+  crushAttritionPerSecond,
+  depthBandFor,
   effectivePressureRating,
   mineCapFor,
   requiredPressureRating,
@@ -51,6 +60,7 @@ import {
   type Contact,
   type EchoMarkInfo,
   type EchoSnapshot,
+  type HazardState,
   type OwnStructure,
   type OwnUnit,
   type ResourceNodeInfo,
@@ -405,6 +415,179 @@ const MINE_WALL = {
 } as const;
 
 /**
+ * The crystal run — the one trip that is not an expansion.
+ *
+ * docs/economy.md §7 is explicit that the Abyssal band "is run as raids, not
+ * as expansions, by everyone except the Directorate", and until now the
+ * commander could not run one. `pickNode` refuses any field its rating does
+ * not cover, which is the right rule for the standing economy and the wrong
+ * one for the deep: the crystal field sits at CRYSTAL.FIELD_DEPTH_M, and the
+ * only navy whose harvesters are rated for it is the one with the PR-3
+ * baseline. So three of the four never banked a crystal, never bought the
+ * Slipway or their signature structure, and the whole crystal-locked tier of
+ * docs/economy.md §8 was Directorate-only by accident (#467).
+ *
+ * What makes a raid decidable is that its price is arithmetic rather than
+ * judgement. Crush is `4·deficit²` per second and the ascent is fixed at
+ * DEPTH.ASCENT_RATE_MPS, so the hull the climb out will cost is known before
+ * the dive starts — `roundTripCrush` is that sum, and the commander simply
+ * refuses a trip it cannot pay for. That is the same decision a player makes
+ * looking at a health bar, taken with the same numbers.
+ *
+ * And it is the branch the Sower turns off. A seeded Sower over the field
+ * grants +1 PR inside HULL_EFFECTS.SOWER.RADIUS_M, the deficit goes to zero,
+ * `roundTripCrush` returns zero, and the same code stops treating the field as
+ * a raid and starts treating it as ground. That is docs/factions.md's Commune
+ * line as a mechanic rather than as flavour: they do not survive the deep,
+ * they change it.
+ *
+ * TUNABLE throughout. The balance harness is the argument about them.
+ */
+const CRYSTAL_RUN = {
+  /**
+   * Boats on the raid at once.
+   *
+   * Two, and the number is set by the clock rather than by taste. A round trip
+   * to the centre of Ventfront Divide is about five and a half minutes — 80 s
+   * out, a 40 s dive, six seconds on the node, a two-minute climb and 80 s
+   * home — so one boat delivers 28 crystal every five and a half minutes and
+   * the Slipway's 120 arrives at minute twenty-seven of a twenty-five minute
+   * match. That is a branch that only ever runs in the transcript. Two boats
+   * put the yard inside the match; a third is most of the economy standing in
+   * one place, and the deep is not worth that.
+   */
+  RAID_PARTY: 2,
+  /**
+   * Fraction of its own hull a raider must still have after the climb out.
+   *
+   * The margin, and it is what makes the estimate safe to be slightly wrong
+   * about. A round trip to 2,400 m at PR-2 costs 238.2 of a Harvester's 300 —
+   * 53 going down, 25 over the node, 160 on the climb — so what this really
+   * says is that only a hauler still near its build strength may be sent, and
+   * that it comes home at about a fifth of a boat. That is the honest reading
+   * of §7 rather than a conservative one: the deep takes most of the hull and
+   * none of it grows back (docs/systems-depth.md §2).
+   *
+   * Fifteen per cent rather than twenty, because twenty leaves two HP of slack
+   * against that 238: a hauler grazed once by anything would never be sent
+   * again, and a branch decided by a single hit point is a branch that is
+   * really being decided by rounding.
+   */
+  RESERVE: 0.15,
+  /**
+   * Hull kept in hand against the climb out, as a fraction of the hull's max.
+   *
+   * The other half of `RESERVE`, and a different question: that one asks
+   * whether the *trip* is affordable, this one whether the hull can still
+   * leave. They come apart the moment something other than the deep hurts a
+   * raider — over Ventfront Divide's field, two overlapping eruption plumes
+   * put a combined pass at 175 HP (262 for the Commune, whose organic hulls
+   * take 1.5x) on top of the trip's 238, and 300 HP does not cover both.
+   *
+   * Lower than the reserve on purpose. A hull that has already paid for most
+   * of its descent should spend its last margin getting home rather than
+   * refuse to move; this is the floor below which the climb itself stops being
+   * survivable, not a comfort margin.
+   */
+  ESCAPE_MARGIN: 0.05,
+  /**
+   * The throttle a raider runs at, and the one place the commander overrides
+   * its own doctrine.
+   *
+   * The trip's cost is the clock, not the cut: 53 HP going down and 160
+   * climbing back, against 18 spent on the node. Overburden buys 40% more
+   * crystal for about six extra seconds over the field — seven HP — so on
+   * this one trip the loudest setting in the game is also the cheapest, and
+   * the commander would be wrong to haul twenty out of water that charged it
+   * for twenty-eight. It is loud, and §7 says it should be: "an Abyssal mining
+   * operation announces itself on arrival."
+   */
+  THROTTLE: HarvestThrottle.Overburden,
+  /**
+   * Haulers the commander will buy *above* the doctrine's target to spend on
+   * the deep — the price of this whole branch, stated as one number.
+   *
+   * A raid is paid in hulls. 238 of 300, unhealable, so a boat goes to the
+   * bottom once and works the shallows at a fifth of a hull forever after.
+   * `harvesterTarget` is a statement about the *economy* — how many haulers it
+   * takes to fund a navy — and borrowing against it to buy a yard would be
+   * spending the income that has to fill the yard. So the run recruits rather
+   * than borrows, and this caps what it may recruit.
+   *
+   * Four, against the 200 crystal a Commune needs for the Slipway and then the
+   * Sower: at 28 a trip that is eight trips, and a navy of six plus these four
+   * has ten boats to make them with. A budget that could not reach the Sower
+   * would fund the yard and then stop one hull short of the hull that makes
+   * the yard worth having.
+   */
+  HULL_BUDGET: 4,
+  /** How near the field a Sower counts as standing over it. */
+  SEED_ARRIVE_M: 400,
+  /** How near the field's depth counts as being down at it. */
+  SEED_DEPTH_M: CRYSTAL.WORKING_DEPTH_TOLERANCE_M,
+} as const;
+
+/**
+ * Hulls the commander buys by a want of its own rather than by the composition
+ * cycle, and why the list has to exist at all.
+ *
+ * The cycle index is `army.length`, so every hull it selects has to be one
+ * that joins the army — otherwise buying it does not advance the index, the
+ * next observation selects the same hull, and the yard fills with it. Both
+ * entries here are unarmed and neither ever joins: the Spinner lays the wall
+ * (#467, `commandLayers`) and the Sower stands over the crystal field
+ * (`commandSeeders`). Each is bought instead by a gate that names how many the
+ * navy wants, which is also where "not before the escort" and "not before the
+ * yard" belong.
+ *
+ * The Tender and the Precentor are the same shape and are deliberately *not*
+ * here: they are on their navies' compositions today and go through the cycle,
+ * which is a live bug of the same family and a wider blast radius than this
+ * branch — it is filed rather than fixed in passing, so that the measurement
+ * of this change is a measurement of this change.
+ */
+const WANTED_SEPARATELY: readonly UnitKind[] = [UnitKind.Spinner, UnitKind.Sower];
+
+/**
+ * Hulls that make water habitable by standing in it, and what the army keeps
+ * before one may be sent away to do it.
+ *
+ * The Spire's grant on a hull, in the two places docs/units.md puts it: the
+ * Commune's Sower seeds after twenty seconds and the Order's Cantus sings
+ * after ten, and both hand +1 PR to allied hulls inside their radius for as
+ * long as they stand there. That is the mechanism `commandSeeders` spends, and
+ * it is worth naming both rather than special-casing the Sower, because the
+ * two navies reach it on completely different terms: the Cantus is a 400
+ * nodule Foundry hull with no crystal price, so the Order can make the deep
+ * habitable *before* it has been there, while the Sower is a Slipway hull at
+ * 80 crystal behind a 120 crystal yard and the Commune cannot.
+ *
+ * `armyKeeps` is what the doctrine has already promised the army. The Order's
+ * Cantus is its early tempo tool — "the force that masses at the rally masses
+ * with a band of depth under it" — so the first one stays and only a second is
+ * spare. A Sower has no such job: nothing else in this commander wants one.
+ */
+const GRANT_HULLS: readonly {
+  kind: UnitKind;
+  radiusM: number;
+  prBonus: number;
+  armyKeeps: number;
+}[] = [
+  {
+    kind: UnitKind.Sower,
+    radiusM: HULL_EFFECTS.SOWER.RADIUS_M,
+    prBonus: HULL_EFFECTS.SOWER.PR_BONUS,
+    armyKeeps: 0,
+  },
+  {
+    kind: UnitKind.Cantus,
+    radiusM: HULL_EFFECTS.CANTUS.RADIUS_M,
+    prBonus: HULL_EFFECTS.CANTUS.PR_BONUS,
+    armyKeeps: 1,
+  },
+];
+
+/**
  * The deepest water this Pressure Rating is actually rated for.
  *
  * The commander clamps every depth order through this. `Match.orderDepth`
@@ -427,6 +610,105 @@ function ratedDepthCeiling(pressureRating: number): number {
   const band = Math.min(Math.max(pressureRating, 1), DepthBand.Abyssal + 1) - 1;
   const max = DEPTH_BANDS[band as DepthBand].max;
   return Number.isFinite(max) ? max - DEPTH_PLAN.BAND_MARGIN_M : DEPTH.MAX_M;
+}
+
+/**
+ * Hull a vertical transit between `deepM` and this rating's own ceiling costs.
+ *
+ * Crush is `4·deficit²` per second and the deficit is a property of the *band*
+ * (docs/systems-depth.md §2), so the integral is a short sum over the bands
+ * the transit crosses rather than a simulation of it. Evaluated at each band's
+ * shallow edge, which is the depth whose `requiredPressureRating` is that
+ * band's — restating the band table here would be a second copy of it.
+ *
+ * Parameterised by rate because the two halves of the round trip are not the
+ * same journey: descent is DEPTH.DESCENT_RATE_MPS and the climb back is a
+ * third of that, so the ascent is three quarters of what the deep charges. It
+ * is also the abort test — from wherever the hull is *now*, this is what
+ * getting it out will cost, and a hull that cannot afford that is already too
+ * deep.
+ */
+function transitCrush(deepM: number, rating: number, ratePerS: number): number {
+  let cost = 0;
+  let depth = deepM;
+  for (let band = depthBandFor(deepM); band >= DepthBand.Shelf; band--) {
+    const top = DEPTH_BANDS[band as DepthBand].min;
+    const dps = crushAttritionPerSecond(rating, top);
+    // The first band that does not charge is the ceiling: everything above it
+    // is water this rating covers, and the transit through it is free.
+    if (dps <= 0) break;
+    cost += ((depth - top) / ratePerS) * dps;
+    depth = top;
+  }
+  return cost;
+}
+
+/**
+ * Hull one crystal round trip costs a hauler at this rating — down, cut, up.
+ *
+ * Zero for a rating the field's band covers, which is the whole of what the
+ * Sower does to this branch: the grant is +1 PR inside its radius, the deficit
+ * goes to zero, and the same call that priced a raid prices a haul.
+ *
+ * The cut is charged at the raid's own throttle rather than the doctrine's,
+ * because that is the throttle `commandCrystal` puts a raider on — budgeting
+ * the trip at a load the hull will not be carrying would under-price it.
+ */
+function roundTripCrush(fieldDepthM: number, rating: number): number {
+  const hold = CRYSTAL.CARGO_CAPACITY * HARVEST_THROTTLE[CRYSTAL_RUN.THROTTLE].cargoMultiplier;
+  const cutS =
+    hold / (ECONOMY.MINING_RATE_PER_S * RESOURCE[ResourceKind.ResonanceCrystal].rateMultiplier);
+  return (
+    transitCrush(fieldDepthM, rating, DEPTH.DESCENT_RATE_MPS) +
+    cutS * crushAttritionPerSecond(rating, fieldDepthM) +
+    transitCrush(fieldDepthM, rating, DEPTH.ASCENT_RATE_MPS)
+  );
+}
+
+/**
+ * Hull one full eruption pass over this point would take off a hull of this
+ * faction — the map's own price for standing there, on top of the deep's.
+ *
+ * This is here because the two prices were never added together before, and
+ * nothing had to add them: until the commander learned to go to the bottom,
+ * no under-rated hull ever stood on a crystal field. `HAZARDS.ERUPTION`'s own
+ * comment records the arithmetic from the other side — on Ventfront Divide the
+ * field "sits 500 m inside *both* authored plumes, where the falloff is
+ * 0.286", and a combined pass is 175 HP, chosen so that it "wounds badly and
+ * leaves the trip possible" (#179). It leaves a *crossing* possible. It does
+ * not leave possible a crossing that has also paid 238 HP of crush, and a
+ * commander that budgeted only the crush would send boats it could not
+ * afford — which, measured, is exactly what it did.
+ *
+ * A pass is the active phase at full rate plus the decay at half, which is the
+ * taper `applyEffects` runs and the derivation `DAMAGE_PER_S` is solved from.
+ * Assuming a full pass is the conservative reading and the honest one: a hull
+ * is over the field for about a minute of an eighty-nine second cycle, so it
+ * is more likely than not to be there when the vent goes, and the commander
+ * cannot wait it out — the transit is longer than the dormant phase.
+ *
+ * Public information throughout. Hazards are the one thing in this game that
+ * is deliberately not hidden (docs/maps.md, docs/hazards.md §8): a plume is
+ * telegraphed to everybody, and reading one leaks nothing.
+ */
+function plumeCost(
+  hazards: readonly HazardState[],
+  at: { x: number; y: number },
+  faction: Faction
+): number {
+  const { DAMAGE_PER_S, ACTIVE_S, DECAY_S, PELAGIA_DAMAGE_MULTIPLIER } = HAZARDS.ERUPTION;
+  const passS = ACTIVE_S + DECAY_S / 2;
+  let cost = 0;
+  for (const hazard of hazards) {
+    if (hazard.kind !== 'geothermal-eruption') continue;
+    const distance = Math.hypot(hazard.x - at.x, hazard.y - at.y);
+    if (distance > hazard.radiusM) continue;
+    // Falls off to the rim, exactly as the hazard system applies it.
+    cost += DAMAGE_PER_S * (1 - distance / hazard.radiusM) * passS;
+  }
+  // "Suffers extra damage (organic hulls)" — docs/hazards.md §1. The navy this
+  // whole branch is for is the one the plume charges half as much again.
+  return faction === Faction.Pelagia ? cost * PELAGIA_DAMAGE_MULTIPLIER : cost;
 }
 
 /** Sim ticks between Echo snapshots — the commander's clock unit. */
@@ -527,6 +809,45 @@ export class AiCommander implements AiPlayer {
   private readonly layerPlan = new Map<number, { spot: number; nextLayTick: number }>();
   /** Next spot on the wall to hand out, so two Spinners do not stack. */
   private nextMineSpot = 0;
+  /**
+   * The crystal field, or null on a map with none.
+   *
+   * Briefing data, read once. A field is painted on the survey chart every
+   * client is handed on join — what it costs to *work* is the part nobody is
+   * told (docs/economy.md §8).
+   */
+  private readonly crystalField: ResourceNodeInfo | null;
+  /**
+   * Haulers currently on the crystal run.
+   *
+   * Nothing here remembers that a boat has *been*, and nothing needs to: a
+   * trip takes 238 HP of a Harvester's 300 and none of it grows back, so the
+   * reserve test below looks at the hull and the hull says no. That is what
+   * makes a raid one trip without a flag to enforce it — and it is also why
+   * the rule correctly does *not* apply to a Directorate hauler or to one
+   * standing in a grant, which come home with everything they left with.
+   */
+  private readonly crystalRun = new Set<number>();
+  /**
+   * Boats this commander has sent to the bottom, ever.
+   *
+   * The campaign's ledger, and the thing that stops it being open-ended. A
+   * trip that costs hull costs it whether or not the crystal arrives, so a run
+   * that keeps dispatching until the target is met is a run that will spend
+   * every hauler a navy ever builds on a yard it is not going to finish. See
+   * `CRYSTAL_RUN.HULL_BUDGET`.
+   */
+  private crystalTrips = 0;
+  /**
+   * Fields a live grant is currently making habitable, by node id, and the
+   * band it is lending them.
+   *
+   * Recomputed every observation because a grant is a fact about where a hull
+   * is standing this tick: it is up while the Sower stands there and gone the
+   * moment it moves, which is the whole difference between terraforming a
+   * place and carrying a rating around (docs/units.md).
+   */
+  private readonly grantedFields = new Map<number, number>();
 
   constructor(briefing: AiBriefing) {
     this.briefing = briefing;
@@ -539,6 +860,8 @@ export class AiCommander implements AiPlayer {
     };
     this.enemyStarts = briefing.spawns.filter((_, index) => index !== briefing.slot);
     this.nextPingTick = this.doctrine.pingIntervalS * SIM.TICK_HZ;
+    this.crystalField =
+      briefing.nodes.find((node) => node.kind === ResourceKind.ResonanceCrystal) ?? null;
   }
 
   observe(snapshot: EchoSnapshot): AiCommand[] {
@@ -558,6 +881,7 @@ export class AiCommander implements AiPlayer {
 
     this.remember(snapshot);
     this.forgetDeadHarvesters(harvesters);
+    this.readGrants(snapshot);
 
     // A running budget, so two decisions in one tick cannot both spend the
     // same nodule. The server would refuse the second anyway; spending it
@@ -577,11 +901,15 @@ export class AiCommander implements AiPlayer {
     // question, so they must not answer it differently.
     const raiders = this.approachingHome(snapshot);
 
+    // Before the economy, not after: the crystal branch claims and releases
+    // haulers, and the throttle line below has to see the list it leaves.
+    this.commandCrystal(snapshot, harvesters, commands);
     this.commandEconomy(snapshot, harvesters, commands);
     this.commandConstruction(snapshot, harvesters, raiders, purse, commands);
     this.commandProduction(snapshot, harvesters, army, purse, commands);
     this.commandScout(snapshot, scout, commands);
     this.commandLayers(snapshot, commands);
+    this.commandSeeders(snapshot, commands);
     this.commandArmy(snapshot, army, raiders, commands);
     this.commandSonar(snapshot, army, raiders, commands);
 
@@ -710,7 +1038,15 @@ export class AiCommander implements AiPlayer {
       response !== null && this.wantsQuiet(snapshot, response)
         ? response.throttle
         : this.doctrine.restingThrottle;
-    const wrong = harvesters.filter((h) => h.throttle !== want).map((h) => h.id);
+    // A hull on the crystal run is exempt, and it is the only exemption in the
+    // branch. Its throttle is not an economy decision at all — the deep prices
+    // the trip in hull rather than in seconds, so the load is the only thing
+    // worth turning up and the doctrine's quiet buys it nothing at 2,400 m
+    // (see `CRYSTAL_RUN.THROTTLE`). Left in, this line would take a raider off
+    // Overburden on the very next observation and send it home with twenty.
+    const wrong = harvesters
+      .filter((h) => h.throttle !== want && !this.crystalRun.has(h.id))
+      .map((h) => h.id);
     if (wrong.length > 0) out.push({ kind: 'throttle', unitIds: wrong, throttle: want });
   }
 
@@ -828,8 +1164,8 @@ export class AiCommander implements AiPlayer {
    * water that eats it (docs/economy.md §7). Pressure ratings are stat-table
    * data, not world state — the HUD prints them.
    */
-  private pickNode(harvester: OwnUnit): ResourceNodeInfo | null {
-    const rating = effectivePressureRating(harvester.kind, this.briefing.faction);
+  private pickNode(harvester: OwnUnit, exclude: number | null = null): ResourceNodeInfo | null {
+    const own = effectivePressureRating(harvester.kind, this.briefing.faction);
     const crowd = new Map<number, number>();
     for (const nodeId of this.nodeByHarvester.values()) {
       crowd.set(nodeId, (crowd.get(nodeId) ?? 0) + 1);
@@ -838,7 +1174,20 @@ export class AiCommander implements AiPlayer {
     let best: ResourceNodeInfo | null = null;
     let bestScore = Number.POSITIVE_INFINITY;
     for (const node of this.briefing.nodes) {
-      if (requiredPressureRating(node.depth) > rating) continue;
+      // The one caller that excludes anything is the crystal branch pulling a
+      // raider off the field: the whole point of the recall is that this hull
+      // stops working *that* water, and the rating test below would happily
+      // send a PR-3 navy's hauler straight back down.
+      if (node.id === exclude) continue;
+      // Rented ratings count, and this is where the Sower is finally worth
+      // its price: a field standing in a live grant is water this hauler is
+      // rated for, so it enters the ordinary distance-and-crowding score
+      // rather than being refused outright. The grant is read per node
+      // because it is a property of a *place* — the hull is rated there and
+      // nowhere else (docs/units.md, and `readGrants`).
+      if (requiredPressureRating(node.depth) > own + (this.grantedFields.get(node.id) ?? 0)) {
+        continue;
+      }
       // Crowding costs a notional kilometre per harvester already there, so a
       // second field opens before a first one is stacked four deep.
       const score = distance(node, this.home) + (crowd.get(node.id) ?? 0) * 1000;
@@ -848,6 +1197,282 @@ export class AiCommander implements AiPlayer {
       }
     }
     return best;
+  }
+
+  // --- The crystal run ------------------------------------------------------
+
+  /**
+   * The trip to the bottom, and the decision to stop making it.
+   *
+   * Four questions in order, and each one is a way the branch would be wrong
+   * to run:
+   *
+   * 1. **Is there anything to buy with it?** Crystal banked against no price
+   *    is a hauler spent on nothing, so the run only opens while something
+   *    crystal-locked is still unbought (`crystalWanted`). This is also what
+   *    closes it: the moment the bank covers the yard, everybody comes home.
+   * 2. **What does the trip cost?** `roundTripCrush` against the rating the
+   *    hull will actually have down there, Sower grant included. Zero means
+   *    the field is ground rather than a raid, and the rules below relax
+   *    accordingly — a hull that pays nothing has no reason to leave.
+   * 3. **Is this hull's own trip already over?** A raid is one trip: down,
+   *    a full hold, and out. The hull that comes back is not sent again,
+   *    because after 238 HP of a Harvester's 300 it could not survive being.
+   * 4. **Can the next one afford to go?** The reserve, checked before the dive
+   *    rather than during it, because the expensive half of the trip is the
+   *    climb and the climb is paid at the end.
+   *
+   * Everything here is the commander's own: its own haulers' hull and cargo,
+   * its own bank, its own Sower's rented rating, and a field painted on the
+   * chart. Nothing about it needs an enemy to be visible.
+   */
+  private commandCrystal(
+    snapshot: EchoSnapshot,
+    harvesters: readonly OwnUnit[],
+    out: AiCommand[]
+  ): void {
+    const field = this.crystalField;
+    if (field === null) return;
+
+    // A plan kept for a hull the deep already took is a berth on the run that
+    // nobody will ever fill.
+    const alive = new Set(harvesters.map((h) => h.id));
+    for (const id of [...this.crystalRun]) if (!alive.has(id)) this.crystalRun.delete(id);
+
+    const rating =
+      effectivePressureRating(UnitKind.Harvester, this.briefing.faction) +
+      (this.grantedFields.get(field.id) ?? 0);
+
+    // Ordinary water, and therefore none of this branch's business. A field a
+    // hauler is rated for is a field, and `pickNode` scores it against every
+    // other one on distance and crowding like the economy it belongs to —
+    // which is exactly what a Sower standing over it is *for*. Pinning a shift
+    // here instead would be this branch deciding an economic question it has
+    // no business deciding, and it measured like one: two haulers held on a
+    // 45%-rate field cost the Directorate a fifth of its nodule income.
+    const trip = roundTripCrush(field.depth, rating);
+    if (trip <= 0) {
+      this.crystalRun.clear();
+      return;
+    }
+
+    // Two prices, and they answer different questions. The **crush** is what
+    // makes this a raid rather than a shift: it is unhealable, so a hull that
+    // pays it is spent, and it decides the party and the one-trip rule. The
+    // **plume** is ordinary damage the map charges for standing on the field,
+    // and it decides nothing except whether the boat comes back — so it is in
+    // the affordability test and nowhere else.
+    const cost = trip + plumeCost(snapshot.hazards, field, this.briefing.faction);
+    const wanted = this.crystalWanted(snapshot);
+
+    if (snapshot.crystal >= wanted) {
+      for (const harvester of harvesters) {
+        if (this.crystalRun.has(harvester.id)) this.release(harvester, out);
+      }
+      return;
+    }
+
+    for (const harvester of harvesters) {
+      if (!this.crystalRun.has(harvester.id)) continue;
+
+      // Turning back, and it is two questions rather than one. Both are asked
+      // of a hauler with nothing aboard only: a full one is already climbing
+      // at the only speed there is, so it has nothing left to decide.
+      if ((harvester.cargo ?? 0) <= 0) {
+        // **Can it still get out?** The climb from here, against what is left
+        // of the hull. This is the question that has to be asked on the way
+        // *down*, because the answer gets worse the deeper the hull goes — the
+        // escape costs 53 HP at 2,000 m and 160 at the bottom — and something
+        // that wounds a hauler over the field (the crystal on Ventfront Divide
+        // sits 500 m inside two eruption plumes, see HAZARDS.ERUPTION) leaves
+        // it unable to afford the climb it has already committed to. Asked
+        // every observation, it turns that hull round at 1,900 m for the price
+        // of a wasted trip instead of losing it at 2,400 m.
+        const escape = transitCrush(harvester.depth, rating, DEPTH.ASCENT_RATE_MPS);
+        // **And is the rest of the trip still worth making?** The dispatch
+        // budget below, re-asked from where the hull now is: the whole trip,
+        // less the descent crush it has already paid.
+        const remaining = cost - transitCrush(harvester.depth, rating, DEPTH.DESCENT_RATE_MPS);
+        const stranded = harvester.hp - escape < harvester.maxHp * CRYSTAL_RUN.ESCAPE_MARGIN;
+        const unaffordable = harvester.hp - remaining < harvester.maxHp * CRYSTAL_RUN.RESERVE;
+        if (stranded || unaffordable) {
+          this.release(harvester, out);
+          // A climb, and never anything else. `ratedDepthCeiling` is the
+          // *deepest* water this rating covers, so sending a hull that is
+          // still on its way down straight to it would finish the dive this
+          // exists to stop — which is precisely what it did: a hauler pulled
+          // out at 1,343 m obediently descended to 1,750 and sat there.
+          const ceiling = ratedDepthCeiling(rating);
+          if (harvester.depth > ceiling) {
+            out.push({ kind: 'depth', unitIds: [harvester.id], depthM: ceiling });
+          }
+        }
+      }
+    }
+
+    // The campaign's own end. Every raid costs hull whether or not the crystal
+    // comes home — the plume over Ventfront Divide's field takes boats that
+    // the crush was not going to — so a run with no end condition spends every
+    // hauler a navy will ever build on a yard it is not going to finish. Eight
+    // is the Commune's own arithmetic for the Slipway and the Sower (see
+    // `HULL_BUDGET`): a campaign that has not converged in eight boats is not
+    // converging, and the right thing to do with the ninth is work the
+    // shallows. Habitable water returned above and is not counted.
+    if (this.crystalTrips >= CRYSTAL_RUN.HULL_BUDGET * 2) return;
+    if (this.crystalRun.size >= CRYSTAL_RUN.RAID_PARTY) return;
+    // The economy first. A navy that raids itself down to four haulers has
+    // bought a yard with the income that was going to fill it — and the hull
+    // it spends does not grow back, so the trip is only affordable at all
+    // while the fleet it is taken from is at strength.
+    if (harvesters.length < this.doctrine.harvesterTarget) return;
+
+    let pick: OwnUnit | null = null;
+    for (const harvester of harvesters) {
+      if (this.crystalRun.has(harvester.id)) continue;
+      // An empty hold only. A hauler sent down mid-haul carries its nodules
+      // all the way to the bottom, discovers on arrival that a hold cannot mix
+      // two resources (`harvestSystem`), and turns straight round — a six
+      // minute round trip that mines nothing, which is what it did.
+      if ((harvester.cargo ?? 0) > 0) continue;
+      if (harvester.hp - cost < harvester.maxHp * CRYSTAL_RUN.RESERVE) continue;
+      if (pick === null || harvester.hp > pick.hp) pick = harvester;
+    }
+    if (pick === null) return;
+
+    this.crystalRun.add(pick.id);
+    this.crystalTrips++;
+    this.nodeByHarvester.set(pick.id, field.id);
+    out.push({ kind: 'harvest', unitIds: [pick.id], nodeId: field.id });
+    if (pick.throttle !== CRYSTAL_RUN.THROTTLE) {
+      out.push({ kind: 'throttle', unitIds: [pick.id], throttle: CRYSTAL_RUN.THROTTLE });
+    }
+  }
+
+  /**
+   * Crystal the commander is currently saving for, or zero if it has nothing
+   * to spend it on.
+   *
+   * The Slipway first, because the rung is what a crystal-locked tier is *for*
+   * (docs/economy.md §8) and because a navy with no second yard has no other
+   * crystal price it can reach. Once it stands, whichever of the doctrine's
+   * own hulls carries a crystal price and is not in the water — for the
+   * Commune that is the Sower, which is the hull that ends this branch.
+   *
+   * Priced through `priceOf` rather than off `crystalCost`, so the commander
+   * budgets in the same three accounts the server charges in.
+   */
+  private crystalWanted(snapshot: EchoSnapshot): number {
+    if (!snapshot.structures.some((s) => s.kind === StructureKind.Slipway)) {
+      return priceOf(structureStatsFor(StructureKind.Slipway)).crystal;
+    }
+    let want = 0;
+    for (const kind of this.doctrine.composition) {
+      const price = priceOf(statsFor(kind)).crystal;
+      if (price > want && !snapshot.units.some((u) => u.kind === kind)) want = price;
+    }
+    return want;
+  }
+
+  /**
+   * Which of the map's fields a grant is currently making habitable.
+   *
+   * Read off the granting hull's *own* `pressureBonus`, which is the seeded
+   * flag stated in the one place the snapshot already carries it: the grant
+   * goes to every allied hull inside the radius and the source is inside its
+   * own, so a bonus on that hull means its clock is up and the bloom or the
+   * song is out (`HULL_EFFECTS`, and the aura pass that hands it out). A
+   * separate "is it seeded" field on the wire would be the same fact twice.
+   *
+   * The one other thing that could put a bonus on that hull is a Sounding
+   * Spire, and it cannot reach here: a Spire is 120 crystal, so a commander
+   * that has one has already solved the problem this reading is for, and its
+   * 600 m sits around a structure at home rather than around a field four
+   * kilometres away.
+   *
+   * A **max and never a sum**, because that is how the simulation resolves two
+   * grants over the same water: "under a Sower and a second Sower it does not
+   * go deeper" (docs/units.md).
+   */
+  private readGrants(snapshot: EchoSnapshot): void {
+    this.grantedFields.clear();
+    for (const grant of GRANT_HULLS) {
+      for (const hull of snapshot.units) {
+        if (hull.kind !== grant.kind || hull.pressureBonus <= 0) continue;
+        for (const node of this.briefing.nodes) {
+          if (distance(hull, node) > grant.radiusM) continue;
+          const held = this.grantedFields.get(node.id) ?? 0;
+          if (grant.prBonus > held) this.grantedFields.set(node.id, grant.prBonus);
+        }
+      }
+    }
+  }
+
+  /**
+   * Extra haulers the crystal run still wants building, over the doctrine's
+   * economic target.
+   *
+   * Zero unless the deep is wanted, expensive, and *affordable*: no field,
+   * nothing left to buy with crystal, a field a grant has already made
+   * habitable, or a trip no fresh hauler could survive, and the run is not
+   * going to spend a hull at all. Otherwise it asks for the budget, less
+   * however many boats it has already been given — counted as *hulls over the
+   * target* rather than as trips taken, because that is the thing the
+   * commander can actually see, and a spent hauler stays in the water working
+   * the shallows at a fifth of a boat.
+   */
+  private raidHulls(snapshot: EchoSnapshot, harvesters: readonly OwnUnit[]): number {
+    const field = this.crystalField;
+    if (field === null) return 0;
+    if (snapshot.crystal >= this.crystalWanted(snapshot)) return 0;
+    if (this.crystalTrips >= CRYSTAL_RUN.HULL_BUDGET * 2) return 0;
+
+    const rating =
+      effectivePressureRating(UnitKind.Harvester, this.briefing.faction) +
+      (this.grantedFields.get(field.id) ?? 0);
+    const trip = roundTripCrush(field.depth, rating);
+    // Habitable water needs no boats bought for it — and, the part that has to
+    // be the *same* question the dispatch asks, neither does a trip the
+    // dispatch is going to refuse. Recruiting against a budget another branch
+    // would decline is how a commander ends up with four extra haulers and no
+    // crystal, which is what it measured as while this read only the crush.
+    if (trip <= 0) return 0;
+    const stats = statsFor(UnitKind.Harvester);
+    const cost = trip + plumeCost(snapshot.hazards, field, this.briefing.faction);
+    if (stats.maxHp - cost < stats.maxHp * CRYSTAL_RUN.RESERVE) return 0;
+
+    // Replacements only, never founders. A run that has not managed to
+    // dispatch once has not shown that it can pay for a trip at all, and the
+    // doctrine's target is a statement about what the *economy* needs — the
+    // deep does not get to raise it on the strength of a campaign it has yet
+    // to open.
+    if (this.crystalTrips === 0) return 0;
+
+    // Only once the run has nobody left to send, and then one boat, not a
+    // budget's worth. The harvester want is the *first* branch in production
+    // and it returns as soon as it fires, so a line that asked for four extra
+    // haulers up front would buy all four before the navy's first Cruiser or
+    // its first Spinner — which is not a doctrine, it is a queue jump. This
+    // recruits to replace what the deep has already taken.
+    const spendable = harvesters.some(
+      (h) =>
+        !this.crystalRun.has(h.id) &&
+        (h.cargo ?? 0) <= 0 &&
+        h.hp - cost >= h.maxHp * CRYSTAL_RUN.RESERVE
+    );
+    if (spendable) return 0;
+
+    const over = Math.max(0, harvesters.length - this.doctrine.harvesterTarget);
+    return over < CRYSTAL_RUN.HULL_BUDGET ? 1 : 0;
+  }
+
+  /** Take a hauler off the crystal run and put it back on ordinary work. */
+  private release(harvester: OwnUnit, out: AiCommand[]): void {
+    this.crystalRun.delete(harvester.id);
+    this.nodeByHarvester.delete(harvester.id);
+    const node = this.pickNode(harvester, this.crystalField?.id ?? null);
+    if (node === null) return;
+    this.nodeByHarvester.set(harvester.id, node.id);
+    out.push({ kind: 'harvest', unitIds: [harvester.id], nodeId: node.id });
   }
 
   // --- Construction ---------------------------------------------------------
@@ -1038,8 +1663,18 @@ export class AiCommander implements AiPlayer {
 
     // Harvesters first, always. An army built on four harvesters is a one-shot
     // army, and this game rewards the long economy.
+    //
+    // The target rises by whatever the crystal run still has to spend, and
+    // only while it has something to spend it on. A boat that has been to the
+    // bottom cannot go again — 238 of 300 HP and none of it grows back — so
+    // the run consumes haulers rather than borrowing them, and a target that
+    // did not know that would let a raid quietly eat the economy it is
+    // supposed to be funding (see `CRYSTAL_RUN.HULL_BUDGET`).
     const wantHarvesters =
-      this.doctrine.harvesterTarget - harvesters.length - queuedOf(UnitKind.Harvester);
+      this.doctrine.harvesterTarget +
+      this.raidHulls(snapshot, harvesters) -
+      harvesters.length -
+      queuedOf(UnitKind.Harvester);
     if (wantHarvesters > 0) {
       const yard = this.freeYard(snapshot.structures, UnitKind.Harvester);
       if (yard !== null && this.affordUnit(UnitKind.Harvester, purse)) {
@@ -1053,7 +1688,8 @@ export class AiCommander implements AiPlayer {
     // the army's own target would stop the navy two Corvettes short of it.
     const queuedArmy = snapshot.structures.reduce(
       (total, s) =>
-        total + s.queue.filter((q) => q !== UnitKind.Harvester && q !== UnitKind.Spinner).length,
+        total +
+        s.queue.filter((q) => q !== UnitKind.Harvester && !WANTED_SEPARATELY.includes(q)).length,
       0
     );
 
@@ -1091,6 +1727,30 @@ export class AiCommander implements AiPlayer {
       }
     }
 
+    // The seeder, on the same terms and for the same reason: unarmed, so it
+    // needs a want of its own or the cycle would buy nothing else (see
+    // `WANTED_SEPARATELY`).
+    //
+    // One, and only one. The grant does not stack — "under a Sower and a
+    // second Sower it does not go deeper" (docs/units.md) — so a second hull
+    // over the same field is 380 nodules and 80 crystal buying a duplicate of
+    // something the navy already has. `freeYard` supplies the rest of the
+    // gate: the Sower is a Slipway hull, so this branch cannot fire before the
+    // rung is standing, which is itself 120 crystal the commander had to go
+    // to the bottom for.
+    if (this.doctrine.composition.includes(UnitKind.Sower) && this.crystalField !== null) {
+      const seeders =
+        snapshot.units.reduce((n, u) => n + (u.kind === UnitKind.Sower ? 1 : 0), 0) +
+        queuedOf(UnitKind.Sower);
+      if (seeders < 1) {
+        const yard = this.freeYard(snapshot.structures, UnitKind.Sower);
+        if (yard !== null && this.affordUnit(UnitKind.Sower, purse)) {
+          out.push({ kind: 'produce', structureId: yard.id, unit: UnitKind.Sower });
+          return;
+        }
+      }
+    }
+
     const target = Math.ceil(this.doctrine.attackAtArmySize * this.tuning.patience) + 2;
     if (army.length + queuedArmy >= target) return;
 
@@ -1119,16 +1779,17 @@ export class AiCommander implements AiPlayer {
     // reduce every navy to Corvettes for as long as it went unbuilt. The
     // cheapest-first list stays last, for the deadlock above.
     //
-    // The Spinner is skipped here, having been bought above. It must be: the
-    // cycle index is `army.length`, a hull with no weapon never joins the
-    // army, so a navy whose index landed on the Spinner would select it again
-    // on the next observation and the one after — buying layers until the yard
-    // backed up and never buying the hulls that hold the wall.
+    // The Spinner and the Sower are skipped here, having been bought above.
+    // They must be: the cycle index is `army.length`, a hull with no weapon
+    // never joins the army, so a navy whose index landed on one would select
+    // it again on the next observation and the one after — buying layers or
+    // seeders until the yard backed up and never buying the hulls that hold
+    // the wall. See `WANTED_SEPARATELY`.
     const { composition } = this.doctrine;
     const start = army.length % composition.length;
     const rotated = composition.map((_, k) => composition[(start + k) % composition.length]!);
     for (const wanted of [...rotated, ...affordableFirst(composition, purse)]) {
-      if (wanted === UnitKind.Spinner) continue;
+      if (WANTED_SEPARATELY.includes(wanted)) continue;
       const yard = this.freeYard(snapshot.structures, wanted);
       if (yard === null) continue;
       if (!this.affordUnit(wanted, purse)) continue;
@@ -1334,6 +1995,61 @@ export class AiCommander implements AiPlayer {
     const window = TICKS_PER_OBSERVATION * MINE_WALL.REISSUE_OBSERVATIONS;
     if (tick % window >= TICKS_PER_OBSERVATION) return;
     out.push({ kind: 'move', unitIds: [unit.id], x: to.x, y: to.y });
+  }
+
+  /**
+   * The seeders, and the one position in the game worth terraforming.
+   *
+   * docs/units.md is precise about what the grant is: "a PR-1 Corvette *under*
+   * a Sower works Mid-Water" — a **place**, held for as long as the hull
+   * stands in it, not a rating carried away on an attack run. So the question
+   * this branch answers is which place, and the crystal field is the only
+   * candidate the Commune has: it is the one water this navy has a reason to
+   * work and no rating to work with, and standing a Sower over it turns
+   * `commandCrystal`'s raid into an ordinary haul for every hauler inside 400
+   * m. Nothing else on the map changes that much by being stood on.
+   *
+   * The Order's Cantus does the same job on far cheaper terms — a 400 nodule
+   * Foundry hull against a Slipway hull at 80 crystal behind a 120 crystal
+   * yard — so the navy that can make the deep habitable *before* it has been
+   * there is the one that never needed to raid it. That asymmetry is not this
+   * branch's to fix; naming both hulls in `GRANT_HULLS` is what makes it
+   * visible rather than an accident of which hull got special-cased.
+   *
+   * The order of operations is the interesting part, and it is why this is
+   * walk-then-dive rather than one attack-move. The seed clock reads
+   * horizontal velocity (`hullEffectsSystem`), so a Sower that arrives, stops
+   * and *then* descends is stationary the whole way down: it seeds twenty
+   * seconds in, at about 1,500 m, and crosses into the Abyssal band already
+   * carrying its own grant. It pays no crush at all. A Sower still drifting
+   * sideways as it sinks arrives at the bottom rated for Mid-Water and starts
+   * paying 4 HP/s for the privilege.
+   */
+  private commandSeeders(snapshot: EchoSnapshot, out: AiCommand[]): void {
+    const field = this.crystalField;
+    if (field === null) return;
+    for (const grant of GRANT_HULLS) {
+      const held = snapshot.units.filter((u) => u.kind === grant.kind);
+      // Whatever the doctrine already promised the army stays with it, and the
+      // rest is sent. Sorted by id so the *same* hull is sent every time: the
+      // seed clock resets on any horizontal movement, so a branch that changed
+      // its mind about which hull was spare would keep two of them walking and
+      // neither of them singing.
+      const spare = held.sort((a, b) => a.id - b.id).slice(grant.armyKeeps);
+      for (const hull of spare) {
+        if (distance(hull, field) > CRYSTAL_RUN.SEED_ARRIVE_M) {
+          this.walk(hull, field, snapshot.tick, out);
+          continue;
+        }
+        // Over the field and stopped. The dive is re-asked rather than latched
+        // because a depth order is a target rather than a plan — re-sending
+        // the same one costs the hull nothing, unlike a move order, which is
+        // why this branch does not need the walk's re-issue window.
+        if (Math.abs(hull.depth - field.depth) > CRYSTAL_RUN.SEED_DEPTH_M) {
+          out.push({ kind: 'depth', unitIds: [hull.id], depthM: field.depth });
+        }
+      }
+    }
   }
 
   // --- The army -------------------------------------------------------------
