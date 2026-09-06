@@ -229,6 +229,37 @@ it exactly as a player is: it will walk an army to a scattered bearing and open 
 
 **Consequence:** the same army is a different army in a different biome. Positioning is not just about chokepoints — it's about *acoustics*.
 
+### A hull in a hold
+
+Wave 1 of [roster-plan.md](roster-plan.md) gives every navy a transport, and a transport carries
+hulls. What a hold does to the acoustic picture is one rule read three ways, decided on #495
+before the wave wrote a line of code:
+
+**A carried hull is not in the water.** It has no position, no depth and no SIG of its own, and
+no ears either: the Echo pass never resolves it at any tier, ping or no ping, and it resolves
+nothing from inside a hold — a Freighter full of Light Scouts is not a HYD-70 listener. It still
+occupies its commander's berths ([economy.md](economy.md) §10: a hold is transport, not
+quarters), and it takes the carrier's depth and Pressure Rating for as long as it is aboard
+([systems-depth.md](systems-depth.md) §2), which is what makes a transport a *depth* argument:
+a Freighter takes PR-1 hulls into water that would crush them, and if the Freighter dies there,
+so do they. What a listener can resolve is the carrier, and only the carrier.
+
+**The load is audible, as sound and nothing else.** A carrier's SIG rises by **+3 per berth
+carried**, at every posture, Silent Running included — a full hold rides low and drives hard,
+and cannot be hushed. The stat block lists the empty figure, so a Freighter with six berths
+aboard is 18 SIG louder than one running home empty, and a Drifter with two is 6 louder. A
+listener who classifies a Freighter at Tier 3 and hears it at a full load's figure knows it is
+full, or nearly; *what* is aboard is never said, at any tier, to any ear. That is the shape of
+every rule in this document: a fact the player can reason about, never a manifest. The +3 is
+TUNABLE until the wave's stat blocks land; that the load is a figure and not a list is not.
+
+**A kill reveals nothing.** When a carrier dies its load dies with it, all of it, and nothing is
+announced. The battle site the fight leaves (§7) is the mark any hull's death leaves — a
+position, a kind and an intensity, no casualties — and the carried hulls leave no mark of their
+own, because they were never in the water to make a sound. The killer learns what they earned:
+that a transport went down where they were shooting. Whether it was full is a question their
+ears had to answer while it was afloat, and cannot answer after.
+
 ---
 
 ## 4. Resolution Tiers
@@ -499,6 +530,7 @@ Systems this asymmetric fail in predictable ways. Known risks and mitigations:
 | Knights are simply never heard | The cone is where their weapons are, so **fighting is announcing**; averaged over the compass they are an ordinary hull (§8); and their two signature emissions — the ping and the Standing Wave corridor — are omnidirectional and permanent respectively |
 | Snowballing via Echo Marks | Marks show *past*, never *present*. They reward inference, not omniscience |
 | The Fields feel like the interface malfunctioning | The lie is bounded — ±30°, +15% — and solvable by a second hull on a cross bearing (§3, "Two ears"); a phantom is a return no second ear ever confirms. What one ear hears in crystal is *wrong by a known amount*, which is dread; a lie with no bound and no answer was confusion |
+| A transport is a silent army | A carried hull emits nothing, but the hold does: +3 SIG per berth carried, Silent Running included (§3, "A hull in a hold"). A loaded transport is a louder transport, and a Tier-3 ear that knows the empty figure reads the load off the difference — the load, never the manifest |
 | A superweapon decides the match | None of the four can take a listener below Tier 1 (§4's design note is a floor, not a preference), every one is a site the enemy can see or a charge the enemy can hear before it lands, its radius is drawn, and its duration is seconds a hull can leave in ([factions.md](factions.md), "What a superweapon is") |
 
 ---
