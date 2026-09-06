@@ -295,7 +295,7 @@ commander reaches the rung occasionally in a four-way match (the Knights lose 0.
 match) and never in a duel, so three of this wave's four hulls are invisible to the one
 measurement that was supposed to judge them. That is a pre-existing limit of
 `commandConstruction` rather than anything this wave introduced, and it will block waves 4
-and 5 identically: their hulls are Slipway hulls too.
+and 5 identically: their hulls are Slipway hulls too. Filed as #518.
 
 What *is* measured: the Weaver is built and lost (0.2 a match for the Commune in the
 four-faction baseline), so the one Foundry hull of the four is a behaviour and not just a
