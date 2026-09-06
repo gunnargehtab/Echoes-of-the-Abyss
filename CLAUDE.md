@@ -100,6 +100,14 @@ Anything you add to the per-tick path is on the 60 Hz budget. Anything touching 
 is on the 2 ms one — `Match` tracks the rolling worst-case cost, so a regression here is
 observable rather than theoretical.
 
+Both budgets are asserted on **counted work**, never on a stopwatch: the Echo pass by its
+path integrals (`Match.contactPathWalksLastPass`), the 60 Hz step by its pair tests and
+cell probes (`Match.worstStepWork`, defined in `sim/stepWork.ts`). A maximum of a
+wall-clock sample is the noisiest statistic available on a shared runner — identical work
+has spread eightfold between runs in one process and failed CI on the spread alone — while
+a count is a property of the algorithm and is the same everywhere. The milliseconds are
+still tracked and still worth printing; they are not what a test fails on.
+
 ### Constants live in exactly one place
 
 All tuning numbers belong in `packages/shared/src/constants.ts`, tagged in their comment:

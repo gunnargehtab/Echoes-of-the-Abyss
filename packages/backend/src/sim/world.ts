@@ -60,6 +60,7 @@ import { DRIFT_SLOT } from './systems/fauna.ts';
 import { EchoMarkLayer } from './echoMarks.ts';
 import type { Hazard } from './systems/hazards.ts';
 import { Rng } from './rng.ts';
+import { newStepWork, type StepWork } from './stepWork.ts';
 import { SpatialHash } from './spatialHash.ts';
 import type { QueuedOrder } from './systems/orderQueue.ts';
 import { Pathfinder, type PathPlan } from './pathfinding.ts';
@@ -278,6 +279,12 @@ export interface SimWorld extends IWorld {
   /** Reused query buffer, so separation allocates nothing per tick. */
   separationBuffer: number[];
   /**
+   * Counted work on the 60 Hz path for the tick in progress — see
+   * sim/stepWork.ts for why it is counted rather than timed. Zeroed at the top
+   * of every step by `Match.step`, so a system may only ever add to it.
+   */
+  stepWork: StepWork;
+  /**
    * Broadphase for hull-against-structure separation, rebuilt every tick from
    * the standing structures. Its own grid rather than an entry in `unitGrid`
    * because the two passes query different radii — a hull against the widest
@@ -452,6 +459,7 @@ export function createSimWorld(
   world.maxEid = 0;
   world.unitGrid = new SpatialHash(SEPARATION.CELL_M);
   world.separationBuffer = [];
+  world.stepWork = newStepWork();
   world.structureGrid = new SpatialHash(SEPARATION.CELL_M);
   world.fuseGrid = new SpatialHash(SEPARATION.CELL_M);
   world.fuseBuffer = [];

@@ -60,6 +60,17 @@ export class SpatialHash {
     return this.cells.size;
   }
 
+  /**
+   * Cells examined by `queryRadius` since the counter was last zeroed.
+   *
+   * Owned by the caller, exactly as `EchoMarkLayer.pathWalks` is: the grid has
+   * no idea what a tick or a pass is, and a counter it reset itself would only
+   * ever report the last query. Counted rather than timed for the reason
+   * sim/stepWork.ts records — a probe count is a property of the algorithm, and
+   * the same on every machine.
+   */
+  cellsVisited = 0;
+
   insert(entity: number, x: number, y: number): void {
     const k = this.key(this.cellCoord(x), this.cellCoord(y));
     const bucket = this.cells.get(k);
@@ -90,6 +101,7 @@ export class SpatialHash {
     // the occupied buckets and test their coordinates against the rectangle.
     const rectCells = (maxX - minX + 1) * (maxY - minY + 1);
     if (rectCells > this.cells.size) {
+      this.cellsVisited += this.cells.size;
       for (const [k, bucket] of this.cells) {
         if (bucket.length === 0) continue;
         const cx = Math.floor(k / 65536) - 32768;
@@ -102,6 +114,7 @@ export class SpatialHash {
       return out;
     }
 
+    this.cellsVisited += rectCells;
     for (let cx = minX; cx <= maxX; cx++) {
       for (let cy = minY; cy <= maxY; cy++) {
         const bucket = this.cells.get(this.key(cx, cy));

@@ -386,11 +386,20 @@ describe('separation', () => {
     assert.ok(travelled < full * 0.7, 'silent running still costs speed');
   });
 
-  it('stays inside the 60 Hz per-tick budget with a crowd', () => {
+  it('stays inside the 60 Hz per-tick work budget with a crowd', () => {
+    // Counted work, not wall clock — and this assertion used to be the second
+    // kind. It read `perTick < 8` over 300 steps, which is the exact pattern
+    // the Echo pass's budget in match.test.ts abandoned after an eightfold
+    // spread on identical work failed CI once. A crowd of 200 hulls on a
+    // shared runner is the noisiest place in the suite to take that sample,
+    // and a stopwatch cannot tell a busy runner from a broadphase that quietly
+    // stopped pruning. The second is the failure worth catching, and the
+    // counters in sim/stepWork.ts are what catch it.
+    const HULLS = 200;
     const match = new Match(undefined, { fauna: false, seed: 8 });
     for (let slot = 0; slot < 4; slot++) match.addPlayer(slot, slot as Faction);
-    // 200 hulls, deliberately clustered so separation has real work to do.
-    for (let i = 0; i < 200; i++) {
+    // Deliberately clustered so separation has real work to do.
+    for (let i = 0; i < HULLS; i++) {
       spawnUnit(match.world, {
         kind: (i % 5) as UnitKind,
         slot: i % 4,
@@ -405,11 +414,78 @@ describe('separation', () => {
     const steps = 300;
     for (let i = 0; i < steps; i++) match.update(STEP_MS);
     const perTick = (performance.now() - started) / steps;
+    const work = match.worstStepWork;
 
-    // The whole 60 Hz step gets 16.6 ms; this asserts the entire sim stays
-    // well inside it with a crowd, which is the number that actually matters.
-    assert.ok(perTick < 8, `whole-sim tick averaged ${perTick.toFixed(3)} ms with 200 hulls`);
-    console.log(`      separation crowd: whole sim ${perTick.toFixed(3)} ms/tick, 200 hulls`);
+    // Every hull against every other is 19,900 pairs a tick before a single
+    // structure is counted. Measured worst tick: 4,349. The budget is headroom
+    // over that for ordinary tuning of SEPARATION.CELL_M, and nowhere near
+    // enough to hide the grid going away.
+    const PAIR_BUDGET = 8_000;
+    assert.ok(
+      work.separationPairs <= PAIR_BUDGET,
+      `separation did ${work.separationPairs} pair tests in its worst tick, ` +
+        `budget ${PAIR_BUDGET} (all-pairs would be ${(HULLS * (HULLS - 1)) / 2})`
+    );
+    assert.ok(
+      work.separationPairs < (HULLS * (HULLS - 1)) / 2,
+      'the broadphase must prune something — this is all-pairs or worse'
+    );
+
+    // The cheap half, and the one that catches a cell size that has drifted
+    // away from the radii it is queried at: a grid too fine walks a rectangle
+    // of empty water per hull, and neither failure moves the pair count.
+    // Measured worst tick: 2,768.
+    const CELL_BUDGET = 6_000;
+    assert.ok(
+      work.separationCells <= CELL_BUDGET,
+      `separation probed ${work.separationCells} cells in its worst tick, budget ${CELL_BUDGET}`
+    );
+
+    // Target acquisition genuinely *is* all-pairs today — every shooter walks
+    // every targetable entity — so this budget pins the current design rather
+    // than proving a broadphase. That is still worth asserting: it is by far
+    // the largest counted number in a crowded step (measured worst tick:
+    // 38,528, against 8,619 for the whole of separation), so it is where the
+    // 60 Hz step will run out of room first, and a change that walks the
+    // candidates more than once per shooter fails here instead of arriving as
+    // a frame-rate report.
+    const ACQUISITION_BUDGET = 45_000;
+    assert.ok(
+      work.acquisitionPairs <= ACQUISITION_BUDGET,
+      `combat considered ${work.acquisitionPairs} candidates in its worst tick, ` +
+        `budget ${ACQUISITION_BUDGET}`
+    );
+
+    // The clock is still worth seeing, and still not worth failing on.
+    console.log(
+      `      separation crowd, ${HULLS} hulls: ${work.separationPairs} pair tests, ` +
+        `${work.separationCells} cell probes, ${work.acquisitionPairs} acquisition candidates, ` +
+        `worst tick ${match.worstStepMsCost.toFixed(3)} ms (${perTick.toFixed(3)} ms/tick mean)`
+    );
+  });
+
+  it('counts the same work twice from one seed', () => {
+    // The counters are only a budget if they are a property of the algorithm
+    // rather than of the run. Two identical matches must agree exactly —
+    // otherwise a threshold set from one machine's figure means nothing on
+    // another, which is the whole complaint against the stopwatch above.
+    const run = (): string => {
+      const match = new Match(undefined, { fauna: false, seed: 21 });
+      for (let slot = 0; slot < 2; slot++) match.addPlayer(slot, slot as Faction);
+      for (let i = 0; i < 24; i++) {
+        spawnUnit(match.world, {
+          kind: (i % 5) as UnitKind,
+          slot: i % 2,
+          faction: (i % 2) as Faction,
+          x: 3600 + ((i * 37) % 400),
+          y: 3600 + ((i * 53) % 400),
+        });
+      }
+      for (let i = 0; i < 180; i++) match.update(STEP_MS);
+      return JSON.stringify(match.worstStepWork);
+    };
+
+    assert.equal(run(), run(), 'counted work must not depend on the run');
   });
 
   it('is deterministic', () => {

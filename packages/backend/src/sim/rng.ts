@@ -21,6 +21,15 @@
 export class Rng {
   private state: number;
   readonly seed: number;
+  /**
+   * Sub-streams handed out by `fork`, by key.
+   *
+   * Held rather than discarded because a fork's position is simulation state
+   * like the root's is, and state nothing holds is state no fingerprint can
+   * read — `hashWorld` walks this map, and a stream that existed only for the
+   * duration of the call that made it would be invisible to it.
+   */
+  private readonly derived = new Map<string, Rng>();
 
   constructor(seed: number) {
     // Force an unsigned 32-bit seed so a caller passing a negative or
@@ -67,11 +76,31 @@ export class Rng {
    * recorded replay. The key should be a stable string like 'fauna'.
    */
   fork(key: string): Rng {
+    // Memoised, and that is not a cache. Re-deriving on every call handed the
+    // second caller a stream rewound to the start, so two subsystems sharing a
+    // key — or one subsystem forking inside a loop — would draw the identical
+    // sequence and neither would look wrong from the call site. One key is one
+    // stream for the life of the match.
+    const existing = this.derived.get(key);
+    if (existing !== undefined) return existing;
+
     let h = this.seed ^ 0x9e3779b9;
     for (let i = 0; i < key.length; i++) {
       h = Math.imul(h ^ key.charCodeAt(i), 0x01000193);
     }
-    return new Rng(h >>> 0);
+    const stream = new Rng(h >>> 0);
+    this.derived.set(key, stream);
+    return stream;
+  }
+
+  /**
+   * Every sub-stream forked off this one, by key. Part of simulation state.
+   *
+   * Exposed for the state hash rather than for drawing from: a caller that
+   * wants a stream asks `fork` for it by name and gets the same one back.
+   */
+  get streams(): ReadonlyMap<string, Rng> {
+    return this.derived;
   }
 
   /** Current position of the stream. Part of simulation state. */
