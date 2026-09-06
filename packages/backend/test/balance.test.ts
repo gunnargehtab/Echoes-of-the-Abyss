@@ -21,6 +21,7 @@ import {
   HARVEST_THROTTLE,
   HarvestThrottle,
   SIM,
+  StructureKind,
   UnitKind,
 } from '@echoes/shared';
 import { runBatch, runMatch, seedHasAnyEffect, type Seat } from '../src/balance/runner.ts';
@@ -300,11 +301,87 @@ describe('a draw says how close it came (#223)', () => {
     }
 
     const markdown = toMarkdown(summary, 'losses');
-    assert.match(markdown, /## Losses per match, by hull/);
+    assert.match(markdown, /## Hulls per match — built \/ lost/);
     assert.match(
       markdown,
-      /\| Corvette \| 0\.0 \| 2\.0 \| 0\.0 \|/,
-      'Consortium, Commune, Directorate'
+      /\| Corvette \| 0\.0 \/ 0\.0 \| 0\.0 \/ 2\.0 \| 0\.0 \/ 0\.0 \|/,
+      'Consortium, Commune, Directorate — nobody built one, the Commune lost two'
+    );
+  });
+
+  it('counts a hull on its launch and a site on its rise (#518)', () => {
+    // The measurement the report was missing, and the reason #518 read the
+    // wrong finding out of the right table: a loss column cannot tell a hull
+    // that was never built from one that was built and lived, so three of wave
+    // 3's four hulls showed 0.0 and nothing could say which zero it was.
+    //
+    // A hull and a site, because the two are counted differently on purpose.
+    // A hull exists the moment it exists; a site is a hole in the ground for
+    // three quarters of a minute, and a commander that laid one it never got
+    // to use did not reach that rung.
+    const map = mapById(DEFAULT_MAP_ID)!;
+    const match = new Match(map, { seed: 909, fauna: false });
+    const roster = [{ slot: 0, faction: Faction.Bathyarch }];
+    match.addPlayer(0, Faction.Bathyarch);
+
+    const telemetry = new MatchTelemetry(909, map.id, roster);
+    const stepMs = 1000 / SIM.TICK_HZ;
+    const home = map.spawns[0]!;
+    let ordered = false;
+
+    // Long enough for a 20 s hull and a 45 s site, with room for the Echo tick
+    // the rise is noticed on.
+    for (let tick = 0; tick < SIM.TICK_HZ * 70; tick++) {
+      const snapshots = match.update(stepMs);
+      if (snapshots === null) continue;
+      const own = snapshots.get(0)!;
+      if (!ordered) {
+        const bastion = own.structures.find((st) => st.kind === StructureKind.Bastion)!;
+        assert.ok(match.produce(0, bastion.id, UnitKind.Harvester), 'the opening bank buys a hull');
+        assert.ok(match.build(0, StructureKind.Refinery, home.x, home.y + 400), 'and a site');
+        ordered = true;
+      }
+      telemetry.observe(match.tick, snapshots);
+    }
+
+    const summary = summarise([telemetry.finish(match.tick, null, true)]);
+    const consortium = summary.factions.find((f) => f.faction === Faction.Bathyarch)!;
+
+    assert.deepEqual(
+      consortium.buildsPerMatchByKind,
+      { [UnitKind.Harvester]: 1 },
+      'the hull it launched, and nothing of the opening escort'
+    );
+    assert.deepEqual(
+      consortium.structuresPerMatchByKind,
+      { [StructureKind.Refinery]: 1 },
+      'the site that rose, and neither of the two it was given'
+    );
+
+    const markdown = toMarkdown(summary, 'builds');
+    assert.match(markdown, /\| Harvester \| 1\.0 \/ 0\.0 \|/, 'built one, lost none');
+    assert.match(markdown, /## Structures commissioned per match/);
+    assert.match(markdown, /\| Nodule Refinery \| 1\.0 \|/);
+  });
+
+  it('counts nothing of the opening as built — a base is a gift, not a decision', () => {
+    // The rule `accrueIncome` applies to the opening stockpile, applied to what
+    // that stockpile could have bought. Twenty seconds is not long enough for
+    // any of these three commanders to finish a hull or raise a site, so every
+    // number here should still be zero — and before this counted from the first
+    // observation it read a Bastion, a Foundry, a Light Scout, two Corvettes
+    // and a Harvester apiece, which would have made every wave's gate read as
+    // met on the opening kit alone.
+    const { result } = matchWithOneDeadSeat();
+    const summary = summarise([result]);
+
+    for (const f of summary.factions) {
+      assert.deepEqual(f.buildsPerMatchByKind, {}, 'no hull was finished in twenty seconds');
+      assert.deepEqual(f.structuresPerMatchByKind, {}, 'and no site rose');
+    }
+    assert.ok(
+      !toMarkdown(summary, 'openings').includes('## Structures commissioned per match'),
+      'a batch in which nobody built anything prints no table for it'
     );
   });
 
