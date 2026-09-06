@@ -326,8 +326,18 @@ export class GameClient {
    */
   private lastLobbyKey = '';
 
-  constructor(handlers: GameClientHandlers, endpoint: string = DEFAULT_ENDPOINT) {
-    this.client = new Client(endpoint);
+  /**
+   * `client` is a seam with exactly one non-default caller: the headless
+   * message-contract test (#487) hands in a stand-in room, so `attach`'s
+   * wiring and every order this class sends are verified without a socket.
+   * Production calls this with one or two arguments.
+   */
+  constructor(
+    handlers: GameClientHandlers,
+    endpoint: string = DEFAULT_ENDPOINT,
+    client: Client = new Client(endpoint)
+  ) {
+    this.client = client;
     this.handlers = handlers;
   }
 

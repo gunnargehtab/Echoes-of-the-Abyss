@@ -10,7 +10,10 @@
  *     string. Node refuses the extension outright.
  *   * `import.meta.glob('.../*.glb', { eager: true })` — Vite expands the call
  *     at build time. Under Node it is a call to a property that does not exist,
- *     and the module throws while evaluating.
+ *     and the module throws while evaluating. `import.meta.env` is the same
+ *     shape of problem one step earlier: `GameClient.ts` reads
+ *     `import.meta.env.VITE_SERVER_URL` at module scope, and a property read on
+ *     `undefined` throws before any test body runs.
  *
  * Both are answered here rather than by mocking the modules that use them:
  * the point of the smoke test is that it boots the *real* renderer, and a
@@ -29,12 +32,18 @@
 const ASSET = /\.(?:png|jpe?g|gif|svg|webp|avif|woff2?|ttf|otf|glb|gltf|mp3|ogg|wav|css)(?:\?.*)?$/i;
 
 /**
- * `import.meta.glob` returns nothing, so no roster or environment model is
- * ever offered and every hull draws as its vector shape. Assigned onto
- * `import.meta` from inside the module, which is the only place it is
- * writable.
+ * The two `import.meta` extensions, assigned from inside the module — the only
+ * place `import.meta` is writable.
+ *
+ * `glob` returns nothing, so no roster or environment model is ever offered and
+ * every hull draws as its vector shape. `env` is an empty bag, so a module
+ * reading `import.meta.env.VITE_SERVER_URL` gets `undefined` and falls through
+ * to its own default rather than throwing on a property of `undefined`.
  */
-const GLOB_SHIM = 'import.meta.glob = () => ({});';
+const META_SHIM = 'import.meta.glob ??= () => ({}); import.meta.env ??= {};';
+
+/** Cheap test for whether a module needs the shim at all. */
+const USES_META = /import\.meta\.(?:glob|env)/;
 
 export async function resolve(specifier, context, nextResolve) {
   if (!ASSET.test(specifier)) return nextResolve(specifier, context);
@@ -57,10 +66,10 @@ export async function load(url, context, nextLoad) {
   if (loaded.source === undefined || loaded.source === null) return loaded;
   const source =
     typeof loaded.source === 'string' ? loaded.source : Buffer.from(loaded.source).toString('utf8');
-  if (!source.includes('import.meta.glob')) return loaded;
+  if (!USES_META.test(source)) return loaded;
 
-  // Prepended without a newline on purpose: the shim is a whole statement, so
+  // Prepended without a newline on purpose: the shim is whole statements, so
   // JS does not care, and every line of the real module keeps the number it
   // has in the file. A stack trace off by one is a bad trade for a newline.
-  return { ...loaded, source: GLOB_SHIM + source };
+  return { ...loaded, source: META_SHIM + source };
 }
