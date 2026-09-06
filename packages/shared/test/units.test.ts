@@ -256,11 +256,23 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
    * quietly widening a navy.
    */
   const NAVY: Record<Faction, readonly UnitKind[]> = {
-    [Faction.Bathyarch]: [UnitKind.Tender, UnitKind.Bulwark, UnitKind.Freighter, UnitKind.Beacon],
-    [Faction.Pelagia]: [UnitKind.Spinner, UnitKind.Sower, UnitKind.Drifter, UnitKind.Glider],
-    // The Verger and the Acolyte are the Directorate's by their price and
-    // carry no lock, as the Chorister is and does (docs/units.md), so neither
-    // is in this row.
+    [Faction.Bathyarch]: [
+      UnitKind.Tender,
+      UnitKind.Bulwark,
+      UnitKind.Freighter,
+      UnitKind.Beacon,
+      UnitKind.Broadside,
+    ],
+    [Faction.Pelagia]: [
+      UnitKind.Spinner,
+      UnitKind.Sower,
+      UnitKind.Drifter,
+      UnitKind.Glider,
+      UnitKind.Weaver,
+    ],
+    // The Verger, the Acolyte and the Thurible are the Directorate's by their
+    // price and carry no lock, as the Chorister is and does (docs/units.md),
+    // so none of them is in this row.
     [Faction.Directorate]: [UnitKind.Precentor, UnitKind.Dredge],
     [Faction.Hadron]: [
       UnitKind.Clarion,
@@ -268,6 +280,7 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
       UnitKind.Reciter,
       UnitKind.Antiphon,
       UnitKind.Herald,
+      UnitKind.Lance,
     ],
   };
   const factions = [Faction.Bathyarch, Faction.Pelagia, Faction.Directorate, Faction.Hadron];

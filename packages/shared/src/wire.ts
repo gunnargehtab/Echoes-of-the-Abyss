@@ -75,6 +75,7 @@ export const CLIENT_MSG = {
   // Ordnance.
   torpedo: 'torpedo',
   noisemaker: 'noisemaker',
+  layDecoy: 'layDecoy',
   mine: 'mine',
   // Lower-case on the wire, unlike every other multi-word name here. Kept as
   // it is because the name is the contract: correcting the casing would be a
@@ -181,6 +182,20 @@ export interface EngineOffMessage {
   active: boolean;
 }
 
+/**
+ * Lay one decoy from a hull's magazine — the offensive half of the noisemaker
+ * (docs/systems-combat.md §5, "A screen, laid").
+ *
+ * Its own message rather than a flag on `noisemaker`, because the two are
+ * different orders with different costs: one spends a suite cooldown to save
+ * the hull, the other spends a magazine to tell a lie. A client that had to
+ * send the countermeasure's name to mean the weapon would be hiding the second
+ * order inside the first.
+ */
+export interface LayDecoyMessage {
+  unitId: number;
+}
+
 export interface PingMessage {
   unitId: number;
 }
@@ -273,6 +288,7 @@ export interface ClientMessages {
   ability: AbilityMessage;
   torpedo: TorpedoMessage;
   noisemaker: NoisemakerMessage;
+  layDecoy: LayDecoyMessage;
   mine: MineMessage;
   depthcharge: DepthChargeMessage;
   harvest: HarvestMessage;

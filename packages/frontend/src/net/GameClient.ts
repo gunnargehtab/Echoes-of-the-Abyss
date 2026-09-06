@@ -661,6 +661,16 @@ export class GameClient {
     this.order(CLIENT_MSG.noisemaker, { unitIds });
   }
 
+  /**
+   * Lay one decoy from a hull's magazine — the screen, not the countermeasure
+   * (docs/systems-combat.md §5). One hull at a time, because the magazine and
+   * its interval are the hull's: a selection-wide order would silently drop
+   * every lay but the first on each hull that was still spacing.
+   */
+  layDecoy(unitId: number): void {
+    this.order(CLIENT_MSG.layDecoy, { unitId });
+  }
+
   /** Lay a mine at the hull's own position. Loud to lay, silent once laid. */
   layMine(unitIds: number[]): void {
     if (unitIds.length === 0) return;

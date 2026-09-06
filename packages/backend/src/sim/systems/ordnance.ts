@@ -27,6 +27,7 @@
 import { addComponent, defineQuery, hasComponent } from 'bitecs';
 import {
   DEPTH,
+  DIRECTIONAL_SIGNATURE,
   EchoMarkKind,
   Faction,
   seekerHydFor,
@@ -39,6 +40,7 @@ import {
   ordnanceStatsFor,
   structureStatsFor,
   ORDNANCE_STATS,
+  statsFor,
   STRUCTURE_STATS,
   UNIT_STATS,
   perceivedLoudness,
@@ -50,6 +52,8 @@ import {
 import {
   Acoustic,
   Countermeasure,
+  DecoyMagazine,
+  Heading,
   Health,
   Laying,
   MineMagazine,
@@ -284,6 +288,8 @@ function rearmSystem(world: SimWorld): void {
   }
 }
 
+const decoyRacks = defineQuery([DecoyMagazine, Position, Owner, Unit, Health]);
+
 /** The two structures §5 names as able to put torpedoes back in a hull. */
 function isRearmDepot(kind: number): boolean {
   return kind === StructureKind.Bastion || kind === StructureKind.Foundry;
@@ -343,6 +349,102 @@ export function deployNoisemaker(world: SimWorld, hull: number): number {
     // and the water it sits in is the water its hull was already surviving.
     pressureRating: Pressure.rating[hull]!,
   });
+}
+
+/**
+ * Lay a decoy from a magazine — the offensive half of the same emitter.
+ * docs/systems-combat.md §5, "A screen, laid".
+ *
+ * A branch beside `deployNoisemaker` rather than a flag inside it, because the
+ * two orders answer different questions and share only their spawn. A
+ * countermeasure is dropped *behind* a hull that is running, on a suite
+ * cooldown, to break a lock that already exists. A screen is laid *where the
+ * hull is*, out of a magazine, ahead of a fight that has not started — so it
+ * takes the hull's own position rather than an offset astern: the point is the
+ * track the Weaver walked, and a screen displaced 60 m backwards from each lay
+ * would be a screen of the wrong shape.
+ *
+ * Not a second `OrdnanceKind`. It has to be a noisemaker, or a seeker would
+ * have to learn which decoys to believe, and the one thing the whole class is
+ * for is that it cannot tell.
+ *
+ * Returns the decoy, or 0 when the magazine is empty or the interval has not
+ * run out.
+ */
+export function layDecoy(world: SimWorld, hull: number): number {
+  if (!hasComponent(world, DecoyMagazine, hull)) return 0;
+  if (DecoyMagazine.decoys[hull]! <= 0) return 0;
+  if (DecoyMagazine.layCooldownS[hull]! > 0) return 0;
+
+  DecoyMagazine.decoys[hull] = DecoyMagazine.decoys[hull]! - 1;
+  DecoyMagazine.layCooldownS[hull] = ORDNANCE.LAID_DECOY.INTERVAL_S;
+  // A part-finished reload is lost when the rack fires, as a torpedo's is.
+  DecoyMagazine.rearmRemainingS[hull] = 0;
+
+  return spawnOrdnance(world, {
+    kind: OrdnanceKind.Noisemaker,
+    slot: Owner.slot[hull]!,
+    faction: Owner.faction[hull]!,
+    x: Position.x[hull]!,
+    y: Position.y[hull]!,
+    depth: Position.depth[hull]!,
+    heading: 0,
+    laid: true,
+    pressureRating: Pressure.rating[hull]!,
+  });
+}
+
+/**
+ * The magazine's clocks: the interval between lays, and the reload.
+ *
+ * The reload is the torpedo's rule and the same depots — a magazine that
+ * refilled in the field would undo what a magazine is (§5, "Ammunition"). The
+ * interval is not a reload and runs everywhere: it is the spacing that turns
+ * three decoys into a front rather than a point.
+ */
+function decoyMagazines(world: SimWorld): void {
+  const dt = world.dt;
+  const carriers = decoyRacks(world);
+  if (carriers.length === 0) return;
+  const bases = depots(world);
+
+  for (let i = 0; i < carriers.length; i++) {
+    const eid = carriers[i]!;
+    if (DecoyMagazine.layCooldownS[eid]! > 0) {
+      DecoyMagazine.layCooldownS[eid] = Math.max(0, DecoyMagazine.layCooldownS[eid]! - dt);
+    }
+
+    const full = statsFor(Unit.kind[eid] as UnitKind).decoyMagazine ?? ORDNANCE.LAID_DECOY.MAGAZINE;
+    if (DecoyMagazine.decoys[eid]! >= full) {
+      DecoyMagazine.rearmRemainingS[eid] = 0;
+      continue;
+    }
+
+    const x = Position.x[eid]!;
+    const y = Position.y[eid]!;
+    const slot = Owner.slot[eid]!;
+    let atDepot = false;
+    for (let j = 0; j < bases.length; j++) {
+      const depot = bases[j]!;
+      if (Owner.slot[depot] !== slot) continue;
+      if (!isRearmDepot(Structure.kind[depot]!)) continue;
+      const d = Math.hypot(Position.x[depot]! - x, Position.y[depot]! - y);
+      if (d <= ORDNANCE.TORPEDO.REARM_RANGE_M) {
+        atDepot = true;
+        break;
+      }
+    }
+    if (!atDepot) continue;
+
+    if (DecoyMagazine.rearmRemainingS[eid]! <= 0) {
+      DecoyMagazine.rearmRemainingS[eid] = ORDNANCE.TORPEDO.REARM_TIME_S;
+    }
+    DecoyMagazine.rearmRemainingS[eid] = DecoyMagazine.rearmRemainingS[eid]! - dt;
+    if (DecoyMagazine.rearmRemainingS[eid]! <= 0) {
+      DecoyMagazine.decoys[eid] = DecoyMagazine.decoys[eid]! + 1;
+      DecoyMagazine.rearmRemainingS[eid] = 0;
+    }
+  }
 }
 
 /**
@@ -634,7 +736,11 @@ function tickDepthCharge(world: SimWorld, eid: number, destroyed: number[]): voi
 export function dropDepthCharge(world: SimWorld, hull: number, depthM: number): number {
   if (!hasComponent(world, Countermeasure, hull)) return 0;
   if (Countermeasure.cooldownRemainingS[hull]! > 0) return 0;
-  Countermeasure.cooldownRemainingS[hull] = ORDNANCE.DEPTH_CHARGE.COOLDOWN_S;
+  // Half the general rack for the hull that does this for a living
+  // (docs/units.md, the Thurible); every other hull drops one and goes back to
+  // its own weapon.
+  Countermeasure.cooldownRemainingS[hull] =
+    statsFor(Unit.kind[hull] as UnitKind).depthChargeCooldownS ?? ORDNANCE.DEPTH_CHARGE.COOLDOWN_S;
 
   const eid = spawnOrdnance(world, {
     kind: OrdnanceKind.DepthCharge,
@@ -680,6 +786,7 @@ export function isInterceptable(kind: OrdnanceKind): boolean {
 export function ordnanceSystem(world: SimWorld, destroyed: number[]): void {
   const dt = world.dt;
   rearmSystem(world);
+  decoyMagazines(world);
   countermeasureCooldowns(world);
   layingSystem(world);
 
@@ -738,7 +845,14 @@ export function ordnanceSystem(world: SimWorld, destroyed: number[]): void {
       // Re-acquired every pass rather than locked once, which is what makes a
       // noisemaker work at all: the loudest thing *now* wins, and a decoy is
       // louder than the hull it is protecting.
-      Ordnance.targetEid[eid] = acquire(world, eid);
+      //
+      // Unless the shot was committed. A locked weapon acquires on its first
+      // pass and never looks again, so a screen laid across its run does not
+      // turn it — the triangle's missing edge, and the reason the hull that
+      // fires it may only fire forward (docs/units.md, the Lance).
+      if (Ordnance.locked[eid] !== 1 || Ordnance.targetEid[eid] === 0) {
+        Ordnance.targetEid[eid] = acquire(world, eid);
+      }
     }
 
     let target = Ordnance.targetEid[eid]!;
@@ -914,6 +1028,24 @@ export function launchTorpedo(
   if (!hasComponent(world, Magazine, launcher)) return 0;
   if (Magazine.torpedoes[launcher]! <= 0) return 0;
 
+  const stats = statsFor(Unit.kind[launcher] as UnitKind);
+
+  // A cone-gated tube refuses a bearing the hull is not facing (docs/units.md,
+  // the Lance). Refused rather than swung round to, matching every other order
+  // that names water the hull cannot use: the player is told no, and the shot
+  // is still in the tube.
+  //
+  // The gate is the hull's *own* cone — the same half-angle its signature is
+  // shaped by (docs/systems-echo.md §8) — so the arc it can shoot through and
+  // the arc it is loudest in are one arc, which is the trade the hull is for.
+  if (stats.coneLockedTorpedo === true) {
+    if (!hasComponent(world, Heading, launcher)) return 0;
+    const bearing = Math.atan2(aimY - Position.y[launcher]!, aimX - Position.x[launcher]!);
+    let off = bearing - Heading.rad[launcher]!;
+    off = Math.abs(Math.atan2(Math.sin(off), Math.cos(off)));
+    if (off > (DIRECTIONAL_SIGNATURE.CONE_HALF_ANGLE_DEG * Math.PI) / 180) return 0;
+  }
+
   Magazine.torpedoes[launcher] = Magazine.torpedoes[launcher]! - 1;
   // A part-finished reload is lost when the tube fires, not carried over.
   Magazine.rearmRemainingS[launcher] = 0;
@@ -941,6 +1073,13 @@ export function launchTorpedo(
     // was rated for, so a shallow hull cannot reach into the deep by proxy.
     pressureRating: Pressure.rating[launcher]!,
   });
+
+  // A locked shot acquires once, on its first seeker pass, and keeps what it
+  // found. Set here rather than resolved here because the launcher's picture is
+  // not the weapon's: the torpedo is 20 m ahead by the time it looks, and the
+  // one thing this hull is buying is that what it looks at *first* is what it
+  // hits (docs/units.md, the Lance).
+  if (stats.coneLockedTorpedo === true) Ordnance.locked[eid] = 1;
 
   // Launching is loud, and launching out of Silent Running is the loudest
   // moment an ambush has (docs/systems-combat.md §3).

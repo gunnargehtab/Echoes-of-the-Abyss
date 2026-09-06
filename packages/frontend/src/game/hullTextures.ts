@@ -89,6 +89,15 @@ const HULL_ART_URL: Record<UnitKind, string> = {
   [UnitKind.Glider]: raiderUrl,
   [UnitKind.Acolyte]: shadowUrl,
   [UnitKind.Herald]: corvetteUrl,
+  // The ordnance hulls (#507), on the class each hull's tonnage and navy put
+  // it in until a model passes intake: the Broadside is a Consortium warship
+  // on the Bulwark's plate, the Weaver a raider's shell, the Thurible the
+  // Directorate's, the Lance a premium Order strike hull — the Clarion's
+  // class, not the Herald's.
+  [UnitKind.Broadside]: cruiserUrl,
+  [UnitKind.Weaver]: raiderUrl,
+  [UnitKind.Thurible]: shadowUrl,
+  [UnitKind.Lance]: cruiserUrl,
 };
 
 /** Sprite resolution. 3 px per world metre keeps even the scout's hull crisp. */
@@ -97,7 +106,7 @@ const PX_PER_M = 3;
 const MARGIN_PX = 10;
 
 const artImages = new Map<UnitKind, HTMLImageElement>();
-/** One decode per plate: five patches clad twenty-three hulls. */
+/** One decode per plate: five patches clad twenty-seven hulls. */
 const plateDecodes = new Map<string, Promise<HTMLImageElement>>();
 /** Hulls whose plate and maps are both decoded, keyed `kind:faction`. */
 const artReady = new Set<string>();

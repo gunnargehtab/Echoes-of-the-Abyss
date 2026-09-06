@@ -618,6 +618,37 @@ export const ORDNANCE = {
   },
 
   /**
+   * SPEC — §5, "A screen, laid". The same emitter used as a weapon.
+   *
+   * Not a second `OrdnanceKind`: a laid decoy *is* a noisemaker, and has to be,
+   * or a seeker would have to learn which decoys to believe. What differs is
+   * who fires it and what it is asked to pretend, and both figures follow from
+   * that.
+   *
+   * **Quieter and longer than the countermeasure**, which reads backwards until
+   * you ask what each lie is for. A countermeasure must out-shout its own hull
+   * for a few seconds to break a lock, so it is 70 for 8. A laid decoy must be
+   * mistaken for a *hull* for as long as an approach takes, so it is 45 for 25
+   * — 45 being the roster's cruise band, between a Corvette's 28 and a
+   * Cruiser's 65. A decoy at 70 would announce itself as ordnance; one at 12
+   * would be beneath notice. The lie has to be plausible, not loud.
+   */
+  LAID_DECOY: {
+    /** Sustained SIG — inside the roster's cruise band, on purpose. */
+    SIG: 45,
+    /** Seconds it stays loud. Long enough to cover an approach. */
+    LIFETIME_S: 25,
+    /** Decoys aboard a Weaver (docs/units.md). */
+    MAGAZINE: 3,
+    /**
+     * Seconds between lays, so a magazine strings out along the track rather
+     * than arriving as one event. Three lays take 6 s, which at the Weaver's
+     * 75 m/s is 450 m of screen — a front, not a point.
+     */
+    INTERVAL_S: 3,
+  },
+
+  /**
    * SPEC — §5. Point defence: a gun choosing to shoot at ordnance.
    *
    * "Not a shield; a gun *choosing*" — every cycle spent on a torpedo is a

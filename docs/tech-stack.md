@@ -610,6 +610,20 @@ walks to the first contested node and parks with its drive cut. And a Herald tur
 the moment anything comes inside seven hundred metres, because its protection is its wake
 and a wake only helps a hull already pointed away.
 
+**It spends its navy's ordnance, which is the first time it has spent any.** Until wave 3
+(#507) the commander had no torpedo order at all — every torpedo in every baseline was
+fired by a player and none by a doctrine — so an ordnance hull it bought would have been a
+hull the harness never saw work. Now `torpedo`, `depthCharge` and `layDecoy` are orders it
+can give, and each navy's hull has a branch that spends them: the Broadside empties its
+four tubes at the nearest resolved contact because there is nothing to hold back for and
+the rearm is a trip home either way; the Weaver lays its screen only while it is moving and
+a fight is close, since three decoys dropped in empty water are three contacts announcing
+where the Commune is going; the Lance checks the cone itself from its own heading rather
+than firing and being refused, and comes about when the answer is no; the Thurible bombs the
+band it is not in, and only at a contact it has classified, because the depth it needs
+arrives at Tier 3 and nowhere earlier. One of each, bought behind the escort — ordnance is
+for a fight that exists.
+
 **And, where its navy has one, it moves a force in a hold.** [units.md](units.md) "The
 transports" gives every navy a carrier and [systems-echo.md](systems-echo.md) §3 says what a
 hold does to the picture; two doctrines declare one — the Consortium's Freighter and the

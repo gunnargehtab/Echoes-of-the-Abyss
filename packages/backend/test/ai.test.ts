@@ -1073,8 +1073,24 @@ function assertOnlyKnown(command: AiCommand, known: Known): void {
       owns([command.unitId]);
       return;
     case 'mine':
-      // A mine carries no position: it is dropped where the hull stands, so
-      // the only thing to audit is that the hull is one of its own.
+    case 'layDecoy':
+      // Neither carries a position: both are released where the hull stands,
+      // so the only thing to audit is that the hull is one of its own.
+      owns([command.unitId]);
+      return;
+    case 'torpedo':
+      owns([command.unitId]);
+      assert.ok(
+        known.contactIds.has(command.contactId),
+        `torpedoed contact ${command.contactId}, which was never resolved for this slot`
+      );
+      return;
+    case 'depthCharge':
+      // A depth is water, not a contact — you are bombing a band, and there is
+      // nothing to have resolved. What the commander must not do is name a
+      // depth it could only know from a contact it never classified, and it
+      // cannot: the depth it passes comes off a contact in its own snapshot,
+      // which is where Tier 3 already gated it.
       owns([command.unitId]);
       return;
     case 'build':
@@ -1145,6 +1161,15 @@ function applyTo(match: Match, slot: number, command: AiCommand): void {
       return;
     case 'mine':
       match.layMine(slot, command.unitId);
+      return;
+    case 'layDecoy':
+      match.layDecoy(slot, command.unitId);
+      return;
+    case 'torpedo':
+      match.orderLaunchTorpedo(slot, command.unitId, command.contactId);
+      return;
+    case 'depthCharge':
+      match.orderDepthCharge(slot, command.unitId, command.depthM);
       return;
     case 'build':
       match.build(slot, command.structure, command.x, command.y);

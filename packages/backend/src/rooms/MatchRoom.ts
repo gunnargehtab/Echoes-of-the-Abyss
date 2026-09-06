@@ -356,6 +356,12 @@ export class MatchRoom extends Room<MatchState> {
       }
     });
 
+    this.onClientMessage(CLIENT_MSG.layDecoy, (client, message) => {
+      const slot = this.commandSlot(client);
+      if (slot === undefined || !Number.isFinite(message?.unitId)) return;
+      this.match.layDecoy(slot, message.unitId);
+    });
+
     this.onClientMessage(CLIENT_MSG.mine, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;

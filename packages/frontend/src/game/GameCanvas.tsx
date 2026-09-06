@@ -341,6 +341,7 @@ export function GameCanvas({
           onRallyOrder: (structureIds, x, y) => client?.setRally(structureIds, x, y),
           onToggleSilent: (unitIds, active) => client?.setSilentRunning(unitIds, active),
           onToggleEngineOff: (unitIds, active) => client?.setEngineOff(unitIds, active),
+          onLayDecoy: (unitId) => client?.layDecoy(unitId),
           onPing: (unitId) => client?.activeSonar(unitId),
           onAttackOrder: (unitIds, contactId, queued) =>
             client?.attackContact(unitIds, contactId, queued),

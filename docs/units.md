@@ -720,6 +720,107 @@ Herald (Foundry)
   direction: a scout as loud at cruise as a Cruiser, with nothing bought for it. The lock is
   the stat line being readable at all
 
+The ordnance hulls — one a navy, and one corner of the triangle each
+
+[systems-combat.md](systems-combat.md) §2 puts three weapon classes in a cycle: guns beat
+torpedoes, torpedoes beat loud heavies, mines beat committed pushes. Until now every navy
+fought that triangle with the same tubes. These four are how each navy *argues* it — the
+Consortium spends everything at once, the Commune lies, the Directorate bombs upward out of
+water it already owns, and the Order fires once, at something it is looking at.
+
+Broadside (Slipway)
+
+- Role: The alpha strike. Four tubes and a magazine of four, and no gun at all — twelve
+  seconds of ordnance, then ninety of sailing home empty
+- SIG: 42 / 58 / — (no gun). The figure that matters is not listed: four launches at +25
+  apiece put a hull already in the high fifties into ping territory, which is the Klaxon
+  paying for its own doctrine
+- HYD: 45
+- PR: 2 — the Consortium baseline
+- Cost: 400
+- Build time: 70s
+- Berths: 3
+- Speed: 40
+- HP: 700
+- Effect: a **magazine of four** against the roster's two ([systems-combat.md](systems-combat.md)
+  §5). Rearm is unchanged — a Bastion or a Foundry, 15 s a torpedo — so a spent Broadside is
+  out of the fight for a minute, which is the cost the four tubes are bought with
+- Faction-locked: yes. A navy that plans to be quiet cannot spend everything in twelve
+  seconds and be useless for ninety; the Consortium is the only one whose doctrine already
+  pays that bill
+
+Weaver (Foundry)
+
+- Role: The lie. Three noisemakers in a magazine, laid on the move ahead of an approach —
+  the Veil's other silent weapon, and the only hull in the roster that wins by making noise
+- SIG: 12 / 22 / — (no weapon). The hull is quiet and the things it leaves behind are not
+- HYD: 50
+- PR: 1 — the Commune baseline
+- Cost: 150
+- Build time: 32s
+- Berths: 2
+- Speed: 75
+- HP: 320
+- Effect: **three laid decoys**, one every 3 s, at SIG 45 for 25 s each
+  ([systems-combat.md](systems-combat.md) §5, "A screen, laid") — quieter and longer than
+  the countermeasure every combat hull carries, because a countermeasure has to out-shout
+  one hull for a few seconds and a laid decoy has to be mistaken for a hull for as long as
+  an approach takes. They break seekers too: it is the same emitter, and the loudest thing
+  now still wins
+- Faction-locked: yes. Only the Veil prices its decoys against a Veil. A navy that is
+  already the loudest thing in the water gains nothing by adding three contacts to its own
+  picture; a navy that is normally four quiet hulls gains an army that is not there
+
+Thurible (Slipway)
+
+- Role: The censer. A PR-3 hull that fights *upward* — depth charges fused above itself,
+  into water the Listening does not own. The deep is a sanctuary from guns; this is how the
+  navy that lives there reaches out of it
+- SIG: 16 / 28 / — from the hull, and **85 at every detonation**, a band away
+  ([systems-combat.md](systems-combat.md) §8)
+- HYD: 65
+- PR: 3 — on the hull, and it is the weapon's precondition rather than a bonus: a hull that
+  bombs upward has to be under something first
+- Cost: 300, plus 40 Biomass — the cohort programme's account
+- Build time: 60s
+- Berths: 3
+- Speed: 42
+- HP: 620
+- Effect: a **charge rack on 6 s**, half the general cooldown, plus a 45-damage gun at 500 m
+  — short and slow, so the hull is not helpless between racks and is not mistaken for a line
+  hull either. A floated charge rises at the *ascent* rate, a third
+  of the descent, so the shallow attack is slow where the deep one is fast — the defender
+  above gets three times the warning a defender below does, and that asymmetry is
+  [systems-depth.md](systems-depth.md) §2 arriving in the weapon
+- Faction-locked: no. The Biomass is the lock, as the Chorister's and the Acolyte's are.
+  Every navy may drop a charge; only this one lives deep enough for *up* to be where the
+  enemy is
+
+Lance (Slipway)
+
+- Role: The committed shot. One torpedo, a magazine of one, and a tube that refuses any
+  bearing outside the hull's own cone — you can only fire at what you are facing, and a
+  hull facing you is at its loudest
+- SIG: **20 / 50 / —**, and the figures are **cone** figures as every Order hull's are
+  ([systems-echo.md](systems-echo.md) §8): 50 ahead, 17.5 on the beam, 5 astern. The hull is
+  loudest in exactly the arc it can shoot through, which is the whole trade written as one
+  stat line
+- HYD: 50
+- PR: 2 — the Hadron baseline
+- Cost: 320, plus 40 Resonance Crystal — a Slipway hull, so a decision the crystal buys
+- Build time: 60s
+- Berths: 2
+- Speed: 65
+- HP: 380
+- Effect: the torpedo it launches **holds the solution it was fired with** and never
+  re-acquires. That is the triangle's missing edge
+  ([systems-combat.md](systems-combat.md) §2, §5): a decoy works by being the loudest thing
+  *now*, and this is the one weapon that is not listening. A screen does not turn it, a
+  countermeasure does not break it, and a Chorus Call does not either
+- Faction-locked: yes. The cone term is one navy's doctrine and not physics, so under any
+  other flag the gate would be a tube refusing shots for no reason its own signature could
+  explain
+
 What this does to the summary table. [factions.md](factions.md)'s *Army* row becomes true in
 the roster: the Consortium fields the heaviest hull and the only repair; the Commune the most
 mines and the only terraformer; the Directorate the best ears and the only PR-4; the Knights

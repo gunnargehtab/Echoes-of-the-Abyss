@@ -64,6 +64,7 @@ import {
 import {
   Acoustic,
   ActivePing,
+  DecoyMagazine,
   EngineOff,
   Carried,
   Countermeasure,
@@ -112,6 +113,7 @@ import { hullEffectsSystem } from './systems/hullEffects.ts';
 import { movementSystem } from './systems/movement.ts';
 import {
   deployNoisemaker,
+  layDecoy,
   dropDepthCharge,
   launchTorpedo,
   layMine,
@@ -1192,6 +1194,29 @@ export class Match {
     if (this.missionDenies(slot, 'noisemakers')) return 0;
     if (!this.owns(slot, eid)) return 0;
     return deployNoisemaker(this.world, eid);
+  }
+
+  /**
+   * Lay one decoy from a hull's magazine — the screen, not the countermeasure
+   * (docs/systems-combat.md §5, "A screen, laid").
+   *
+   * Behind the same mission lock as the countermeasure, and deliberately: a
+   * mission that has taken a player's decoys away has taken the emitter away,
+   * and the second order is the same emitter used differently.
+   *
+   * Returns the decoy, or 0 when the magazine is empty or the interval is
+   * still running.
+   */
+  layDecoy(slot: number, eid: number): number {
+    this.recordCommand({
+      tick: this.world.tick,
+      type: 'layDecoy',
+      slot,
+      unit: this.localId(eid),
+    });
+    if (this.missionDenies(slot, 'noisemakers')) return 0;
+    if (!this.owns(slot, eid)) return 0;
+    return layDecoy(this.world, eid);
   }
 
   /**
@@ -2401,6 +2426,12 @@ export class Match {
         Countermeasure.cooldownRemainingS[eid]! > 0
       ) {
         unit.decoyCooldownS = Countermeasure.cooldownRemainingS[eid]!;
+      }
+      if (hasComponent(this.world, DecoyMagazine, eid)) {
+        unit.decoys = DecoyMagazine.decoys[eid]!;
+        if (DecoyMagazine.layCooldownS[eid]! > 0) {
+          unit.decoyLayCooldownS = DecoyMagazine.layCooldownS[eid]!;
+        }
       }
       if (hasComponent(this.world, Magazine, eid)) {
         unit.torpedoes = Magazine.torpedoes[eid]!;

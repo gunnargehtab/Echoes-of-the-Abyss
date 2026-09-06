@@ -46,6 +46,15 @@ import { eidOfLocalId } from './world.ts';
  * each pair below 4, where it had been appended, which read as the numbers
  * having gone backwards. They did not; they were shared.
  *
+ * 17: ordnance a recording can see for the first time (#507,
+ * docs/systems-combat.md §5, §8). One command a player did not have — laying a
+ * decoy from a magazine — and three things that change what existing ordnance
+ * means: a magazine whose size is the hull's rather than the roster's, a
+ * torpedo that keeps the solution it launched with instead of re-acquiring,
+ * and a charge rack whose cooldown is the hull's. A v16 file replayed under
+ * these rules would run the same commands into different weapons; it is
+ * refused on the grounds every bump before it was.
+ *
  * 16: a drive that can be cut, and a hull that pings itself (#506,
  * docs/systems-echo.md §5, §6). One command a player did not have — engine
  * off — and one thing that happens with no command at all: a picket's sonar
@@ -190,7 +199,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 16;
+export const REPLAY_FORMAT_VERSION = 17;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =
@@ -220,6 +229,7 @@ export type ReplayCommand =
   | { tick: number; type: 'attack'; slot: number; unit: number; contact: number; queued: boolean }
   | { tick: number; type: 'torpedo'; slot: number; unit: number; contact: number }
   | { tick: number; type: 'noisemaker'; slot: number; unit: number }
+  | { tick: number; type: 'layDecoy'; slot: number; unit: number }
   | { tick: number; type: 'mine'; slot: number; unit: number }
   | { tick: number; type: 'depthcharge'; slot: number; unit: number; depth: number }
   | { tick: number; type: 'harvest'; slot: number; unit: number; node: number; queued: boolean }
@@ -483,6 +493,9 @@ function applyCommand(match: Match, command: ReplayCommand): void {
       break;
     case 'noisemaker':
       match.deployNoisemaker(command.slot, eid(command.unit));
+      break;
+    case 'layDecoy':
+      match.layDecoy(command.slot, eid(command.unit));
       break;
     case 'mine':
       match.layMine(command.slot, eid(command.unit));

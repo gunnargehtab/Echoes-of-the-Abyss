@@ -387,6 +387,104 @@ the quarter it is loud in is the quarter it faces, and the quarter it shows
 you is the one it runs in.
 ```
 
+### The ordnance hulls — one a navy, and one corner of the triangle each
+
+The four ordnance hulls of [units.md](units.md) "The ordnance hulls" (wave 3 of
+[roster-plan.md](roster-plan.md), #507), one on each corner of
+[systems-combat.md](systems-combat.md) §2's triangle. What an ordnance hull's silhouette has
+to say at RTS distance is *what it carries and how much of it*: four tubes are countable, a
+magazine of one reads as a single committed weapon, a decoy rack is not a gun, and a charge
+rack is not a tube. Two of the four are a cycle made into geometry — the Broadside is a box
+that four tubes are bolted to, so a spent one is four open doors on a bare deck, and the
+Lance is a rail for one weapon with the weapon's nose for a bow, so a spent one is a hilt
+with no blade. The lighting clause is the idle/cruise pair as ever: the Broadside's launches
+are its one transient, the Thurible's 85 belongs to the charge and not the hull, the Weaver's
+light is what it leaves behind rather than what it carries, and the Lance's cruise figure is
+a cone figure, lit ahead and dark astern like every Order hull.
+
+```text
+UNIT — Broadside (pair with Consortium): the alpha strike, 120 m — four tubes
+and a magazine of four, and no gun at all: twelve seconds of ordnance, then
+ninety of sailing home empty (SIG 42 idle, 58 cruise, +25 at each of the four
+launches; no gun; 700 hull; 40 m/s). A long riveted box hull, narrower than
+the Freighter's slab, carrying its four tubes outside the hull as four
+casings, two a side in tandem along each flank: each a banded pressure
+cylinder toed a few degrees outboard so the aft tube fires clear of the
+forward casing's tail, a hinged muzzle door on its forward face, a dogged
+breech door at its tail, so the plan is a box with two teeth a side and the
+teeth are the count. A chamfered ram bow, a square stern with two prop
+tunnels, a low bridge citadel aft, ballast blisters under the casings, plate
+patchworked older-under-newer. Between the casings the deck is bare plate —
+no turret, no crane, no mount: the hull is a box four tubes are bolted to,
+and once the four doors have opened there is nothing on it that points at
+anything. Sustained amber glow from the bridge ports, the hoop lamps at each
+breech door and the stern vents; each muzzle door floods for the instant of
+a launch, four times in twelve seconds, and is dark again after.
+```
+
+```text
+UNIT — Weaver (pair with Pelagia): the lie, 70 m — three noisemakers in a
+magazine, laid on the move ahead of an approach, and no weapon on the hull
+itself (SIG 12 idle, 22 cruise; each laid decoy 45 for 25 s, astern of it; no
+weapon; 320 hull; 75 m/s). A grown stem with three decoy pods strung along it
+like seeds on a stalk: a fine nose, a slim seed body with growth rings, then
+three bulbs in a row down the aft two thirds, each a smooth bladder the same
+size as the one before it, so the plan is a beaded thread and the beads are
+the count; the aftmost sits at an open lay port in the tail, a muscle-drive
+fluke behind it, a pair of leaf trim vanes forward. The pods are not the
+Spinner's sacs and not tubes: each is a whole bladder that leaves the hull,
+and the stem is what stays. Nearly black at rest, navigation marks only;
+under way a dim vein along the stem, and the pods dark, because a decoy is
+dark until it is laid and loud after — the light this hull makes is behind
+it in the water, never on it.
+```
+
+```text
+UNIT — Thurible (pair with Directorate): the censer, 105 m — a PR-3 hull that
+bombs upward, depth charges fused above itself into water the Listening does
+not own, and a modest gun so it is not helpless between racks (SIG 16 idle,
+28 cruise; 85 at every detonation, and that is the charge's, a band above; a
+45-damage gun at 500 m; 620 hull; 42 m/s; 300 nodules and 40 Biomass). A
+horseshoe crab: a rostrum, then a broad domed carapace forward that steps
+down sharply at its trailing edge to a narrow jointed abdomen and a telson,
+so the plan is a shield over a tail; the charge rack let into the shield's
+back as open-topped cells in two ranks, each a round well with a hinged lid,
+the lids standing open upward because up is the way this hull fires — a
+rack, not a tube, and no muzzle faces forward; one small spine-gun off the
+centreline ahead of the rack, spines off the shield's rim at different
+stations each side, folded walking limbs, a ribbed pressure keel under all
+of it. Dim: rows of photophores along the shield's rim and down the abdomen
+in a pattern that repeats on neither side, the cells dark; nothing on the
+hull flares when it fires, because the light and the 85 are the charge's,
+above it.
+```
+
+The Thurible carries no faction lock — the Biomass is the lock, as the Chorister's and the
+Acolyte's are — so a navy rendering for one fields the same plan, the shield over the tail,
+the open-lidded rack on its back and the one spine-gun, composed with its own FACTION block,
+with the light kept dim.
+
+```text
+UNIT — Lance (pair with Hadron Knights): the committed shot, 95 m — one
+torpedo, a magazine of one, and a tube that refuses any bearing outside the
+hull's own cone, so it can only fire at what it faces, and a hull facing you
+is at its loudest (SIG 20 idle; 50 cruise ahead, 17.5 on the beam, 5 astern;
+no gun; 380 hull; 65 m/s; 320 nodules and 40 Resonance Crystal). A lance in
+plan, bilaterally symmetric: a spike, a crossguard and a grip. The spike is
+an open faceted rail the length of the forward third with the one torpedo
+lying in it, its nose standing in a crystal muzzle collar as the bow — the
+weapon is the point of the ship, and with it fired the hull is a hilt with
+no blade. The crossguard is two crystal-edged guard blades amidships opened
+to a right angle, their leading edges at 45° to the keel: the cone's own 90°
+drawn as the guard, and the tube launches only between them. The grip is a
+narrow faceted shaft aft to a flat transom with the drive prism in the
+spine — no canards, no guard wings astern, nothing behind the guard to hear,
+and nothing of the Reciter's needle. Dim at rest but for the crystal in the
+collar; under way, sustained glow along the guard's leading edges and up the
+rail to the collar, thrown forward, faint on the beam and dark astern but
+for one mark — the quarter it is loud in is the quarter it can fire into.
+```
+
 ## Block 3b — STRUCTURE (one per generation)
 
 Architecture anchors from the Rendering Target and Base Identity sections of

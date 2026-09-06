@@ -145,6 +145,19 @@ export enum UnitKind {
   Acolyte = 21,
   /** Knights, Foundry: the cone hull that scouts by leaving. */
   Herald = 22,
+  /**
+   * The ordnance hulls — one a navy, each on its doctrine's corner of the
+   * weapon triangle (docs/units.md, "The ordnance hulls"; wave 3 of
+   * docs/roster-plan.md, #507). Appended, for the same reason.
+   */
+  /** Consortium, Slipway: four tubes and a magazine of four. */
+  Broadside = 23,
+  /** Commune, Foundry: three decoys, laid on the move. */
+  Weaver = 24,
+  /** Directorate, Slipway: the hull that bombs upward. */
+  Thurible = 25,
+  /** Knights, Slipway: one torpedo, and only at what it faces. */
+  Lance = 26,
 }
 
 /** Prototype structure roster. Stats live in structures.ts. See docs/units.md. */
@@ -582,6 +595,17 @@ export interface OwnUnit {
    * not there (docs/systems-combat.md §5).
    */
   decoyCooldownS?: number;
+  /**
+   * Decoys left in a laying hull's magazine, and the seconds until the next lay
+   * (docs/systems-combat.md §5, "A screen, laid"). Absent on every hull without
+   * a rack, which is every hull but the Weaver.
+   *
+   * Separate from `decoyCooldownS`, which is the countermeasure suite: a Weaver
+   * has both, and a HUD that showed one number would be hiding whichever the
+   * player was about to use.
+   */
+  decoys?: number;
+  decoyLayCooldownS?: number;
   /**
    * Mines aboard, for a hull that carries a grown magazine — the Spinner
    * (docs/units.md). Absent for the roster's one-mine hulls, whose count is

@@ -207,7 +207,7 @@ is used four ways. Each wave is one pull request and one row in
 | 0 — the ground | none | tests generalised, harness extended, kit keyed | every existing test green; the baseline unchanged |
 | 1 — transports (done, #501) | Freighter, Drifter, Verger, Antiphon | embark / disembark, carried hulls unresolvable | a carried force crosses the Shelf line in a mission test; the AI uses a transport in ≥ 1 of 4 doctrines |
 | 2 — scouts (done, #506) | Beacon, Glider, Acolyte, Herald | engine-off glide; cheap cadence ping | first-classified-enemy time per navy moves, and differently per navy |
-| 3 — ordnance | Broadside, Weaver, Thurible, Lance | noisemakers laid from a hull; upward depth charge | the weapon triangle reads in duels: torpedo navy beats heavy pushes, decoy navy survives them |
+| 3 — ordnance (done, #507) | Broadside, Weaver, Thurible, Lance | noisemakers laid from a hull; upward depth charge | the weapon triangle reads in duels: torpedo navy beats heavy pushes, decoy navy survives them |
 | 4 — siege | Furnace, Blight, Lure, Tocsin | structure-only damage; spore over time; fauna weighting from a hull | match length falls without the win rates spreading |
 | 5 — line and anchor | Caisson, Reed, Bower | none | the Consortium and Commune doctrines stop buying Corvettes |
 | 6 — the commons | none | none | a decision, from the harness: retire the Light Scout, Corvette and Cruiser from the bars, or keep them as the surplus market |
@@ -265,6 +265,45 @@ roster edit.
 The opening kit still sends a Light Scout. Moving it to each navy's own hull is wave 6's
 call, where the commons' fate is decided; wave 2 buys the scout as a want of its own on the
 first affordable observation instead, which is what makes the gate's column move.
+
+**Wave 3** landed the four ordnance hulls and found the wave's real cost exactly where §7
+said it would be — the opponent. The commander had never launched a torpedo at all: the AI
+command set had no such order, so every torpedo fired in every baseline to date was fired by
+a player and none by a doctrine. A wave gated on "the triangle reads in the duels" cannot be
+judged by a commander that cannot use two of the triangle's three corners, so `torpedo` and
+`depthCharge` joined `layDecoy` as orders the AI can give, and each navy's ordnance hull got
+a branch that spends it.
+
+Two things it decided that the sketches had not. The laid decoy is **quieter and longer**
+than the countermeasure it reuses — 45 for 25 s against 70 for 8 — which reads backwards
+until you ask what each lie is for: one out-shouts a hull for a moment to break a lock, the
+other has to be mistaken for a hull for as long as an approach takes. And the Lance's cone
+gate carries a second behaviour that makes the first worth paying for: a torpedo that keeps
+the solution it launched with. That is the edge §2's triangle was missing — a decoy wins by
+being the loudest thing *now*, and this is the one weapon that is not listening — and it is
+what a magazine of one buys.
+
+The upward charge needed no sign change: `tickDepthCharge` already chose the ascent rate for
+a negative delta, and `DEPTH_CHARGE.LIFETIME_S` was already derived against the float rather
+than the fall. What the wave added there was the hull, the rack that cycles for it, and the
+tests that had never been written.
+
+**Wave 3's gate is not met, and the reason is not wave 3's.** "The triangle reads in the
+duels" cannot be read, because *no Slipway hull is built in any duel* — not the Broadside,
+the Thurible or the Lance, and not the Bulwark, the Dredge or the Reciter either. The
+commander reaches the rung occasionally in a four-way match (the Knights lose 0.1 Reciters a
+match) and never in a duel, so three of this wave's four hulls are invisible to the one
+measurement that was supposed to judge them. That is a pre-existing limit of
+`commandConstruction` rather than anything this wave introduced, and it will block waves 4
+and 5 identically: their hulls are Slipway hulls too.
+
+What *is* measured: the Weaver is built and lost (0.2 a match for the Commune in the
+four-faction baseline), so the one Foundry hull of the four is a behaviour and not just a
+row. Every mechanism is held by a test instead — the magazine's spacing and burn-down, the
+laid decoy's figures against the countermeasure's, the cone gate refusing a bearing astern
+and keeping the shot in the tube, the committed solution, the charge that floats and the
+rack that cycles for it. That is a weaker gate than the duels honestly, and it is the gate
+this wave actually passed.
 
 **Wave 6** is a decision the harness makes, not this document. If after five waves every
 doctrine builds its own line and the commons are dead weight on the bar, retire them from

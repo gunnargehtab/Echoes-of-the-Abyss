@@ -103,6 +103,12 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   [UnitKind.Glider]: 'glider',
   [UnitKind.Acolyte]: 'acolyte',
   [UnitKind.Herald]: 'herald',
+  // The ordnance hulls (#507). No model yet: the procedural bake is gate 1's
+  // sanctioned state until one clears intake, and the slug is where it lands.
+  [UnitKind.Broadside]: 'broadside',
+  [UnitKind.Weaver]: 'weaver',
+  [UnitKind.Thurible]: 'thurible',
+  [UnitKind.Lance]: 'lance',
 };
 
 /** Every structure kind has an approved model; the Partial stays for the

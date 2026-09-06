@@ -77,6 +77,14 @@ Cadence Ping
 
 - An active ping a hull fires on its own clock rather than on a commander's order (systems-echo.md §5). The same mechanism as the button at one lower number — SIG 80 against 95 — from which both radii follow: 808 m of Tier-4 reveal, 2,156 m of self-reveal. The Beacon carries one, on a 20 s cycle. A cadence is a rhythm, so it buys continuous coverage and sells the enemy a schedule.
 
+Laid Decoy
+
+- A noisemaker used as a weapon rather than a countermeasure (systems-combat.md §5, "A screen, laid"). Three in a Weaver's magazine, laid one every 3 s on the move, at SIG 45 for 25 s each — quieter and longer than the countermeasure's 70 for 8, because it has to be mistaken for a hull rather than out-shout one. Same `OrdnanceKind`, and it has to be: a seeker that could tell a laid decoy from a dropped one could tell a decoy from a hull.
+
+Committed Shot
+
+- A torpedo that keeps the solution it launched with instead of re-acquiring (units.md, the Lance). The launch is refused outside the hull's own cone, and what results cannot be turned by a decoy, a countermeasure or a Chorus Call. The triangle's missing edge: everything else in the water wins by being the loudest thing now, and this is the one weapon that is not listening.
+
 Ghost Markers
 
 - The decaying last-known position of a contact a listener has already detected. Tier 1 and Tier 2 contacts persist this way and fade over 20 s (systems-echo.md §4). A ghost marker is your own stale reading of a live unit, and it lies to you by exactly as much as that unit has moved since you heard it.

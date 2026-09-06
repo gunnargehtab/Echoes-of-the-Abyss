@@ -32,12 +32,16 @@ import {
 import { Match } from '../src/sim/match.ts';
 import { spawnStructure, spawnUnit } from '../src/sim/world.ts';
 import { directionalFactorFor } from '../src/sim/directional.ts';
+import { launchTorpedo } from '../src/sim/systems/ordnance.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import {
   Acoustic,
   Health,
   HullEffect,
+  Heading,
+  Magazine,
   MineMagazine,
+  Ordnance,
   Position,
   Pressure,
   Velocity,
@@ -650,5 +654,157 @@ describe('the Beacon — the picket that shouts', () => {
       Acoustic.sig[beacon]! < 20,
       `a silenced Beacon was heard at ${Acoustic.sig[beacon]!.toFixed(1)}`
     );
+  });
+});
+
+/**
+ * The ordnance hulls (#507) — docs/units.md, "The ordnance hulls";
+ * docs/systems-combat.md §5, §8.
+ *
+ * Three mechanisms and one thing that was already true and had never been
+ * proven: a screen laid from a magazine, a torpedo that keeps its solution, a
+ * charge that goes up, and the arming rules reading the same when it does.
+ */
+describe('the Weaver — a screen, laid', () => {
+  it('lays from its magazine, spaced, and empties', () => {
+    const { match } = skirmish(Faction.Pelagia);
+    const weaver = hull(match, Faction.Pelagia, UnitKind.Weaver, 3000, 3000);
+    const magazine = statsFor(UnitKind.Weaver).decoyMagazine!;
+
+    const first = match.layDecoy(0, weaver);
+    assert.ok(first > 0, 'the first lay should come out');
+    // Spaced: the second is refused until the interval has run.
+    assert.equal(match.layDecoy(0, weaver), 0, 'a magazine must not empty in one tick');
+
+    let laid = 1;
+    for (let i = 0; i < magazine * 3; i++) {
+      advance(match, ORDNANCE.LAID_DECOY.INTERVAL_S + 0.1);
+      if (match.layDecoy(0, weaver) > 0) laid++;
+    }
+    assert.equal(laid, magazine, `the magazine is ${magazine} and no more, got ${laid}`);
+  });
+
+  it('lays a decoy that is quieter and longer-lived than a countermeasure', () => {
+    // The two lies are asked for different things (docs/systems-combat.md §5):
+    // a countermeasure out-shouts one hull for a moment, a laid decoy has to
+    // be mistaken for a hull for as long as an approach takes.
+    const { match } = skirmish(Faction.Pelagia);
+    const weaver = hull(match, Faction.Pelagia, UnitKind.Weaver, 3000, 3000);
+    const corvette = hull(match, Faction.Pelagia, UnitKind.Corvette, 5000, 5000);
+
+    const screen = match.layDecoy(0, weaver);
+    const reflex = match.deployNoisemaker(0, corvette);
+    assert.ok(screen > 0 && reflex > 0);
+
+    assert.equal(Acoustic.sig[screen], ORDNANCE.LAID_DECOY.SIG);
+    assert.equal(Acoustic.sig[reflex], ORDNANCE.NOISEMAKER.SIG);
+    assert.ok(Acoustic.sig[screen]! < Acoustic.sig[reflex]!, 'quieter');
+    assert.ok(Ordnance.remainingS[screen]! > Ordnance.remainingS[reflex]!, 'and longer-lived');
+    // Still the same kind, and it has to be: a seeker that could tell them
+    // apart could tell a decoy from a hull.
+    assert.equal(Ordnance.kind[screen], Ordnance.kind[reflex]);
+  });
+});
+
+describe('the Lance — one shot, and only at what it faces', () => {
+  it('refuses a bearing outside the hull’s own cone', () => {
+    const { match } = skirmish(Faction.Hadron);
+    const lance = hull(match, Faction.Hadron, UnitKind.Lance, 3000, 3000);
+    Heading.rad[lance] = 0; // pointing up +X
+
+    // Dead astern: the one bearing the hull is quietest in, and cannot shoot.
+    assert.equal(launchTorpedo(match.world, lance, 1000, 3000), 0, 'astern is refused');
+    assert.equal(
+      Magazine.torpedoes[lance],
+      statsFor(UnitKind.Lance).torpedoMagazine,
+      'and a refused shot stays in the tube'
+    );
+
+    // Dead ahead: allowed, and it is the only torpedo aboard.
+    const fired = launchTorpedo(match.world, lance, 6000, 3000);
+    assert.ok(fired > 0, 'ahead is allowed');
+    assert.equal(Magazine.torpedoes[lance], 0, 'a magazine of one is now empty');
+    assert.equal(Ordnance.locked[fired], 1, 'and the shot is committed');
+  });
+
+  it('holds its solution where an ordinary torpedo would be decoyed', () => {
+    // The triangle's missing edge (docs/systems-combat.md §2, §5): a decoy
+    // works by being the loudest thing *now*, and this is the one weapon that
+    // is not listening.
+    const { match } = skirmish(Faction.Hadron);
+    const lance = hull(match, Faction.Hadron, UnitKind.Lance, 3000, 3000);
+    const corvette = hull(match, Faction.Hadron, UnitKind.Corvette, 3000, 3200);
+    Heading.rad[lance] = 0;
+
+    const locked = launchTorpedo(match.world, lance, 6000, 3000);
+    const loose = launchTorpedo(match.world, corvette, 6000, 3200);
+    assert.ok(locked > 0 && loose > 0);
+    assert.equal(Ordnance.locked[locked], 1);
+    assert.equal(Ordnance.locked[loose], 0, 'an ordinary tube commits to nothing');
+  });
+});
+
+describe('the Thurible — the charge that goes up', () => {
+  it('floats a charge into the band above, at the ascent rate', () => {
+    const { match } = skirmish(Faction.Directorate);
+    // Abyssal, which is the water the Listening owns and the only place "up"
+    // is a different band: the Shelf ends at 400 m and MidWater at 1,800.
+    const thurible = hull(match, Faction.Directorate, UnitKind.Thurible, 3000, 3000, 2000);
+    const charge = match.orderDepthCharge(0, thurible, 900);
+    assert.ok(charge > 0, 'a charge set above should be accepted');
+
+    const from = Position.depth[charge]!;
+    advance(match, 1);
+    const travelled = from - Position.depth[charge]!;
+    assert.ok(travelled > 0, 'it should be rising');
+    // The slow direction, and that asymmetry is the point: a defender above
+    // gets three times the warning a defender below does.
+    assert.ok(
+      travelled <= DEPTH.ASCENT_RATE_MPS * 1.1,
+      `rose ${travelled.toFixed(0)} m in a second, faster than the ascent rate`
+    );
+    assert.ok(
+      DEPTH.ASCENT_RATE_MPS < DEPTH.DESCENT_RATE_MPS,
+      'and up is slower than down, which is what makes it a different weapon'
+    );
+  });
+
+  it('still refuses a charge that does not cross a band, in either direction', () => {
+    const { match } = skirmish(Faction.Directorate);
+    const thurible = hull(match, Faction.Directorate, UnitKind.Thurible, 3000, 3000, 2000);
+    assert.equal(match.orderDepthCharge(0, thurible, 2200), 0, 'its own band is refused');
+  });
+
+  it('cycles its rack twice as fast as a hull that is not built for it', () => {
+    const { match } = skirmish(Faction.Directorate);
+    // Both in MidWater, bombing up into the Shelf, so the Corvette is not
+    // being crushed while the comparison runs.
+    const thurible = hull(match, Faction.Directorate, UnitKind.Thurible, 3000, 3000, 1000);
+    const corvette = hull(match, Faction.Directorate, UnitKind.Corvette, 3200, 3000, 1000);
+
+    assert.ok(match.orderDepthCharge(0, thurible, 200) > 0);
+    assert.ok(match.orderDepthCharge(0, corvette, 200) > 0);
+
+    // Between the two cooldowns: the Thurible is ready and the Corvette is not.
+    advance(match, statsFor(UnitKind.Thurible).depthChargeCooldownS! + 0.5);
+    assert.ok(match.orderDepthCharge(0, thurible, 200) > 0, 'the rack should be back');
+    assert.equal(match.orderDepthCharge(0, corvette, 200), 0, 'and everyone else waits');
+  });
+});
+
+describe('the Broadside — twelve seconds of ordnance', () => {
+  it('carries four and rearms only at a depot', () => {
+    const { match } = skirmish(Faction.Bathyarch);
+    const broadside = hull(match, Faction.Bathyarch, UnitKind.Broadside, 6000, 6000);
+    assert.equal(Magazine.torpedoes[broadside], 4, 'four tubes, four fish');
+
+    for (let i = 0; i < 4; i++) {
+      assert.ok(launchTorpedo(match.world, broadside, 9000, 6000) > 0, `launch ${i + 1}`);
+    }
+    assert.equal(launchTorpedo(match.world, broadside, 9000, 6000), 0, 'and then nothing');
+
+    // Far from home: the field never refills a magazine (§5, "Ammunition").
+    advance(match, ORDNANCE.TORPEDO.REARM_TIME_S * 2);
+    assert.equal(Magazine.torpedoes[broadside], 0, 'a spent Broadside stays spent out here');
   });
 });

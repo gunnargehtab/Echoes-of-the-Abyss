@@ -141,7 +141,8 @@ document already points at it:
   simulation in #461, and given approved models through the pipeline of record in #466 — the
   eight hulls and the Slipway in every navy's architecture. The transports followed as wave 1
   of [roster-plan.md](roster-plan.md) (#501), with the hold they carry, and the four scouts as
-  wave 2 (#506), with the two postures a scout needs.
+  wave 2 (#506), with the two postures a scout needs, and the four ordnance hulls as wave 3
+  (#507), with a screen laid from a magazine and a shot that cannot be decoyed.
 - **Refits and rank** — [systems-progression.md](systems-progression.md) decides the question
   #436 left open: five fleet-wide refits priced in Resonance Crystal and bought on the Slipway's
   line at SIG 70, three ranks a hull earns by fighting and not dying, and no research tree

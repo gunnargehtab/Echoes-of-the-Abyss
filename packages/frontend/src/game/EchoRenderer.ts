@@ -231,6 +231,7 @@ export interface RendererCallbacks {
   onRallyOrder(structureIds: number[], x: number, y: number): void;
   onToggleSilent(unitIds: number[], active: boolean): void;
   onToggleEngineOff(unitIds: number[], active: boolean): void;
+  onLayDecoy(unitId: number): void;
   onPing(unitId: number): void;
   onAttackOrder(unitIds: number[], contactId: number, queued: boolean): void;
   /** docs/systems-combat.md §5 — launch at a contact this player has resolved. */
@@ -652,6 +653,11 @@ const UNIT_SHORT: Record<UnitKind, string> = {
   [UnitKind.Glider]: 'GLD',
   [UnitKind.Acolyte]: 'ACO',
   [UnitKind.Herald]: 'HLD',
+  // The ordnance hulls (#507).
+  [UnitKind.Broadside]: 'BRD',
+  [UnitKind.Weaver]: 'WVR',
+  [UnitKind.Thurible]: 'THR',
+  [UnitKind.Lance]: 'LNC',
 };
 
 /** Compact structure names for the build buttons. */
@@ -2435,6 +2441,22 @@ export class EchoRenderer {
           active: false,
           action: () => this.commandNoisemaker(),
         });
+        // The screen, for the one hull that carries a magazine of decoys
+        // (docs/systems-combat.md §5). Button only, no key: every left-hand
+        // key is spoken for in both layouts since engine off took the last one
+        // (#506), and §11's rebinding promise is about the keys that exist
+        // rather than a promise that everything gets one. TORP is the
+        // precedent — it is a readout and a right-click.
+        if (first?.decoys !== undefined) {
+          const spacing = first.decoyLayCooldownS;
+          buttons.push({
+            label: `SCREEN ${first.decoys}`,
+            enabled:
+              first.decoys > 0 && spacing === undefined && this.missionLock('noisemakers') === null,
+            active: false,
+            action: () => this.commandLayDecoy(),
+          });
+        }
         buttons.push({
           label: 'MINE',
           enabled: this.missionLock('mines') === null,
@@ -2895,6 +2917,24 @@ export class EchoRenderer {
     const units = this.selectedUnits().filter((u) => u.decoyCooldownS === undefined);
     if (units.length === 0) return;
     this.callbacks.onDeployNoisemaker(units.map((u) => u.id));
+  }
+
+  /**
+   * Lay one decoy from the magazine — the screen, not the countermeasure.
+   *
+   * One hull, unlike every other ordnance order on this bar: the magazine and
+   * its spacing are per hull, so a selection-wide lay would silently drop every
+   * hull that was still between decoys and read as a button that sometimes did
+   * nothing. The first selected hull that actually has a rack is the one that
+   * lays, which is the same rule the TORP readout uses.
+   */
+  private commandLayDecoy(): void {
+    if (this.refusedByMission('noisemakers')) return;
+    const layer = this.selectedUnits().find(
+      (u) => (u.decoys ?? 0) > 0 && u.decoyLayCooldownS === undefined
+    );
+    if (layer === undefined) return;
+    this.callbacks.onLayDecoy(layer.id);
   }
 
   private commandLayMine(): void {

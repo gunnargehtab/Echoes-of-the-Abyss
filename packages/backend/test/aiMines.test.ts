@@ -349,6 +349,10 @@ describe('the Commune lays a wall', () => {
         // without one here this fixture would measure the scout want and not
         // the Spinner's.
         hull(30, UnitKind.Glider, home),
+        // And its ordnance hull, for the scout's reason: wave 3 buys one once
+        // the escort is up (#507), so without it here this fixture would
+        // measure the Weaver want and not the Spinner's.
+        hull(31, UnitKind.Weaver, home),
       ];
       for (const command of commander.observe(snapshot(units, { tick: 6000 + i * 12 }))) {
         if (command.kind !== 'produce') continue;

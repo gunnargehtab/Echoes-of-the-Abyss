@@ -31,7 +31,7 @@ function duplicates(map: Record<string, string>): string[] {
 describe('the message contract', () => {
   it('gives every client message its own name on the wire', () => {
     assert.deepEqual(duplicates(CLIENT_MSG), [], 'two keys sharing a wire name collapse silently');
-    assert.equal(Object.keys(CLIENT_MSG).length, 27, 'the orders a client may send');
+    assert.equal(Object.keys(CLIENT_MSG).length, 28, 'the orders a client may send');
   });
 
   it('gives every server message its own name on the wire', () => {

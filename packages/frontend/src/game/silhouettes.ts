@@ -57,6 +57,10 @@ export const HULL_LENGTH_M: Record<UnitKind, number> = {
   [UnitKind.Glider]: statsFor(UnitKind.Glider).hullLengthM,
   [UnitKind.Acolyte]: statsFor(UnitKind.Acolyte).hullLengthM,
   [UnitKind.Herald]: statsFor(UnitKind.Herald).hullLengthM,
+  [UnitKind.Broadside]: statsFor(UnitKind.Broadside).hullLengthM,
+  [UnitKind.Weaver]: statsFor(UnitKind.Weaver).hullLengthM,
+  [UnitKind.Thurible]: statsFor(UnitKind.Thurible).hullLengthM,
+  [UnitKind.Lance]: statsFor(UnitKind.Lance).hullLengthM,
 };
 
 /**
@@ -444,6 +448,129 @@ export const HULL_OUTLINE: Record<UnitKind, number[][]> = {
     [0.08, -0.2],
     [0.5, -0.12],
     [0.16, 0.0],
+  ],
+
+  // --- The ordnance hulls (#507). What each silhouette has to say at RTS
+  // distance is what it carries and how much of it: the Broadside's four
+  // tubes are countable, the Lance's one weapon is the bow, the Weaver's
+  // three decoys are beads on a stem, and the Thurible's rack is on its back
+  // rather than in its nose.
+
+  // A box with four teeth: a riveted hull narrower than the Freighter's slab,
+  // and the four tubes carried outside it as casings toed outboard, two a
+  // side in tandem, each a tooth in the plan with its muzzle face forward.
+  // The count is the outline. Reads apart from the Freighter's parallel
+  // flanks by the teeth, and from the Beacon's drum by having a notch
+  // amidships where the Beacon has a bulge.
+  [UnitKind.Broadside]: [
+    [0.5, 0.06],
+    [0.44, 0.13],
+    [0.4, 0.13],
+    [0.38, 0.22],
+    [0.1, 0.15],
+    [0.08, 0.13],
+    [0.04, 0.13],
+    [0.02, 0.22],
+    [-0.26, 0.15],
+    [-0.28, 0.13],
+    [-0.5, 0.13],
+    [-0.5, -0.13],
+    [-0.28, -0.13],
+    [-0.26, -0.15],
+    [0.02, -0.22],
+    [0.04, -0.13],
+    [0.08, -0.13],
+    [0.1, -0.15],
+    [0.38, -0.22],
+    [0.4, -0.13],
+    [0.44, -0.13],
+    [0.5, -0.06],
+  ],
+  // Beads on a stem: a fine nose, a slim seed body, and three pods in a row
+  // down the aft two thirds, each the same bulb as the one before it, with a
+  // fluke astern where the aftmost is laid. The count is the outline. Reads
+  // apart from the Spinner's one swollen waist by having three, and from the
+  // Drifter's lens by being smooth nowhere aft of the nose.
+  [UnitKind.Weaver]: [
+    [0.5, 0.0],
+    [0.38, 0.05],
+    [0.26, 0.07],
+    [0.2, 0.14],
+    [0.08, 0.14],
+    [0.02, 0.08],
+    [-0.04, 0.15],
+    [-0.16, 0.15],
+    [-0.22, 0.08],
+    [-0.28, 0.15],
+    [-0.4, 0.14],
+    [-0.5, 0.06],
+    [-0.5, -0.06],
+    [-0.4, -0.14],
+    [-0.28, -0.15],
+    [-0.22, -0.08],
+    [-0.16, -0.15],
+    [-0.04, -0.15],
+    [0.02, -0.08],
+    [0.08, -0.14],
+    [0.2, -0.14],
+    [0.26, -0.07],
+    [0.38, -0.05],
+  ],
+  // A horseshoe crab: a rostrum, a broad domed shield forward that steps
+  // down sharply at its trailing edge to a narrow jointed abdomen and a
+  // telson, so the plan is a shield over a tail. The rack is on the shield's
+  // back, which the outline cannot show and the step can: the wide end is
+  // the end that carries. Reads apart from the Dredge's segmented teardrop
+  // and the Submersible's smooth one by the step, and stays narrower at the
+  // rostrum than at the waist, which keeps the Sower's leaf its own.
+  [UnitKind.Thurible]: [
+    [0.5, 0.0],
+    [0.44, 0.1],
+    [0.34, 0.21],
+    [0.2, 0.28],
+    [0.04, 0.27],
+    [-0.04, 0.23],
+    [-0.08, 0.13],
+    [-0.22, 0.12],
+    [-0.28, 0.09],
+    [-0.42, 0.08],
+    [-0.5, 0.03],
+    [-0.5, -0.03],
+    [-0.42, -0.08],
+    [-0.28, -0.09],
+    [-0.22, -0.12],
+    [-0.08, -0.13],
+    [-0.04, -0.23],
+    [0.04, -0.27],
+    [0.2, -0.28],
+    [0.34, -0.21],
+    [0.44, -0.1],
+  ],
+  // A lance in plan: a spike, a crossguard and a grip. The forward third is
+  // the open rail with the one torpedo in it, its nose the bow — a magazine
+  // of one, drawn as the hull's point; then two guard blades opened to a
+  // right angle amidships, their leading edges 45° to the keel, which is the
+  // cone's own 90° (systems-echo.md §8) drawn as the guard the tube fires
+  // between; then a narrow shaft to a flat transom. Widest at the guard, so
+  // it reads apart from the Reciter's smooth needle and the Clarion's
+  // widest-aft blade at a glance, and the guard is a swept chevron on a
+  // thread where the Cantus's diamond is a point on a lozenge.
+  [UnitKind.Lance]: [
+    [0.5, 0.0],
+    [0.42, 0.04],
+    [0.16, 0.05],
+    [0.14, 0.07],
+    [-0.02, 0.23],
+    [-0.12, 0.09],
+    [-0.42, 0.07],
+    [-0.5, 0.04],
+    [-0.5, -0.04],
+    [-0.42, -0.07],
+    [-0.12, -0.09],
+    [-0.02, -0.23],
+    [0.14, -0.07],
+    [0.16, -0.05],
+    [0.42, -0.04],
   ],
 };
 
