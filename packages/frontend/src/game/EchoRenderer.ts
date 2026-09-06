@@ -788,7 +788,15 @@ const TAB_LABEL: Record<CommandTab, string> = {
 };
 
 export class EchoRenderer {
-  private readonly app = new Application();
+  /**
+   * The Pixi application. Injectable, with exactly one non-default caller:
+   * the headless smoke test (#443) hands in a stand-in whose stage, ticker and
+   * canvas are real and whose GPU is not. That is how a renderer ending in a
+   * GL context gets verified on a runner that has none — the scene graph, the
+   * HUD build and the frame path all run for real, and only the rasteriser is
+   * absent. Production calls the constructor with one argument.
+   */
+  private readonly app: Application;
   /**
    * The conn camera — the three.js world under this canvas. Every world
    * coordinate this renderer draws or interprets goes through it; there is
@@ -1151,8 +1159,9 @@ export class EchoRenderer {
   private destroyed = false;
   private detachInput: (() => void) | null = null;
 
-  constructor(callbacks: RendererCallbacks) {
+  constructor(callbacks: RendererCallbacks, app: Application = new Application()) {
     this.callbacks = callbacks;
+    this.app = app;
   }
 
   /**

@@ -78,6 +78,25 @@ Run one backend test file:
 npm -w packages/backend exec -- node --import tsx --test test/match.test.ts
 ```
 
+### Frontend tests need the Vite shim
+
+The client is authored for Vite, and two of its idioms are build-time transforms rather
+than runtime APIs: `import url from './thing.png'` and `import.meta.glob(...)`. Node
+refuses the first and has never heard of the second, so any test that imports a client
+module through to `EchoRenderer` or `PerspectiveView` needs the loader hooks in
+`packages/frontend/test/support/viteAssetHooks.mjs`. `npm -w packages/frontend run test`
+already passes them; a hand-rolled invocation must too:
+
+```bash
+npm -w packages/frontend exec -- node --import tsx \
+  --import ./test/support/viteAssets.mjs --test test/rendererSmoke.test.ts
+```
+
+That test is the headless renderer smoke test — it boots both painters against a canned
+match with the GL contexts stubbed out. See
+[graphics-standards.md](graphics-standards.md), "What `npm test` holds, and what only a
+screenshot can", for what it covers and what it deliberately does not.
+
 ## Echo simulator
 
 A standalone deterministic harness for Echo Layer scenarios:

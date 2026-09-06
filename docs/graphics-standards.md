@@ -243,6 +243,38 @@ shear or rotate the projection — sway is translation only. The sonar scope sta
 chart, and its camera box is the view's true ground footprint: a trapezoid, because that
 is what a tilted camera honestly sees.
 
+## What `npm test` holds, and what only a screenshot can
+
+The gates above are reviewed by looking at the picture, because most of them are claims
+about the picture. Two things are not: whether the renderers *boot*, and whether a frame
+costs what it costs. Those are now held by a headless smoke test in the ordinary suite
+(`packages/frontend/test/rendererSmoke.test.ts`), which builds both painters against a
+canned match — a snapshot with contacts at every tier, a building under construction, a
+hull below its Pressure Rating, hazards in three phases — and runs frames against them.
+
+Only the two rasterisers are stand-ins. The Pixi and three.js scene graphs are real, so
+what the test verifies is real: the overlay's eight layers are wired in the documented
+order, the HUD's labels are built, a frame puts ink on every layer, thirty repeated
+frames allocate **no new display object** (identity-checked, not merely counted — a
+renderer that rebuilds its marks each frame holds its size while replacing everything in
+it), own-force symbols return to their pools the frame after the force leaves while the
+contact ghosts correctly outlive it, project-and-resolve round-trips inside one cell,
+and teardown detaches every listener it attached. It also covers the one path a
+screenshot can never reach: a client whose `mount` found no WebGL still draws its chart.
+
+Its budgets are **counted**, never timed — display objects, draw instructions, scene
+objects, index counts — for the reason `packages/backend/test/match.test.ts` argues at
+length about the simulation's budgets: a wall-clock maximum is the noisiest statistic a
+shared runner produces, and a count is a property of the algorithm.
+
+What it cannot hold is everything the gates are actually about. It has no GPU, so it
+renders nothing; it decodes no art, so every hull is on its vector-fallback path; and it
+would pass happily on a frame that drew the whole scene in the wrong colour, at the wrong
+scale, or on top of the HUD. The gate-6 draw-call and triangle budgets are still read off
+`__perspectiveProbe` in a real browser via the **run-game** skill, and the screenshot in
+the PR is still how a visual change is reviewed. The smoke test's job is to make sure
+there is a picture to review.
+
 ## Review checklist for any PR that touches visuals
 
 - [ ] New or changed hull/structure art goes through the pipeline of record (gate 1) —
@@ -264,6 +296,8 @@ is what a tilted camera honestly sees.
 - [ ] World marks still project through the conn camera — measurements conform, symbols
   billboard, no second projection, no rotation, atmosphere effects stay screen-space
   (gate 8)
+- [ ] `npm test` still passes, including the headless renderer smoke test — a change that
+  boots, pools and tears down correctly is the floor a screenshot review starts from
 - [ ] Screenshot in the PR, taken via the **run-game** skill — a visual change is reviewed
   by looking at it, not by reading its diff
 - [ ] If the change alters what things *should* look like (not just how they are built),
