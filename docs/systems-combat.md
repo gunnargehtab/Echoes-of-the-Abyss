@@ -14,10 +14,13 @@ PR, Resolution Tiers, Active Sonar, Silent Running, Echo Marks).
 
 Submarine warfare has a rhythm this game already wants: long minutes of manoeuvring,
 listening and guessing, then seconds of extreme violence once somebody commits. Combat in
-*Echoes of the Abyss* is designed around that release. Time-to-kill is short and
-engagements are decisive, so the weight of a fight lands on the decisions *before* the
-first shot — where to be, how loud to be, when to ping, when to break silence. The Echo
-Layer makes the approach the game; combat is the answer to whether you read it right.
+*Echoes of the Abyss* is designed around that release. Time-to-kill is short by the standards
+of the genre and engagements are decisive, so the weight of a fight lands on the decisions
+*before* the first shot — where to be, how loud to be, when to ping, when to break silence.
+The Echo Layer makes the approach the game; combat is the answer to whether you read it
+right. But "short" is measured in the snapshots a player can act in, not in seconds alone,
+and §9.5 holds every band to that count: a fight the loser can only watch is a fight this
+document has mis-sized.
 
 Two rules keep the design honest:
 
@@ -49,7 +52,9 @@ The counter cycle:
 - **Torpedoes beat loud heavies** — seekers home on SIG, so the strongest hulls in the
   game are torpedo bait *because* they are strong (§5).
 - **Mines beat committed pushes** — a mine is a listener, and a push is the loudest thing
-  a player does on purpose (§6).
+  a player does on purpose (§6). A running torpedo is committed too, and loud, so a mine
+  dropped astern is the second leg of the torpedo's counter (§5): the gun shoots it, the
+  mine waits for it.
 
 Silent Running and Active Sonar rotate the triangle: silence slips mines and starves
 seekers but disarms you; a ping buys perfect firing solutions and sweeps minefields, at
@@ -123,7 +128,13 @@ hull. The defender hears a fast contact closing. That is the dread the game is n
 - **Audible its whole run.** SPEC behaviour, not a number: a running torpedo (SIG 60) must
   be resolvable by its target at baseline HYD 50 across its entire remaining run in open
   water. You always hear the thing coming; the question is what you do with the seconds
-  you have.
+  you have — and §9.5 counts them.
+- **A running hull is hard to catch.** A Corvette at 85 m/s gives up only 75 m/s to a
+  torpedo, so a launch from beyond about 1,500 m runs dry before it closes; a Light Scout
+  at 120 outruns anything launched from beyond 800 m. Launches that connect are launches
+  from inside a kilometre — five seconds against a hull that stands still, nine against one
+  that runs from 800 m, measured (§9.5) — which is the window every countermeasure below is
+  sized against.
 
 ### The seeker
 
@@ -191,11 +202,27 @@ launched torpedo, both end when it does, and neither is available without spendi
   40 HP — one or two gun cycles kill it, if the gun is idle and the arithmetic works out.
   Point defence is not a shield; it is a gun *choosing* — every cycle spent on a torpedo
   is a cycle not spent on the hull that launched it, and simultaneous bearings beat it.
+- **A mine astern:** a running torpedo is louder than the cruising Corvette a mine's
+  trigger is calibrated on, so it trips any hostile mine it passes within 150 m of, and a
+  blast spends every torpedo and depth charge inside its 200 m (§6). Any armed hull carries
+  a mine and can drop one where it stands; it arms in 3 s, which is 480 m of torpedo, and
+  the mine's 150 m ear buys a little of that back — so the drop works against a torpedo
+  still **about 450 m astern** and fails against one closer, which is the read the defender
+  is asked to make. That boundary is measured rather than reasoned, in
+  `test/mines.test.ts`: at 450 m the mine takes the weapon and at 400 m the weapon is past
+  it before it wakes. The drop is loud (construction-grade SIG 55 for the 3 s, and it ends
+  Silent Running), so it is a bet that the chase is the worst thing in the water. A Spinner
+  drops from its magazine silently, which is the Commune's doctrine paying out.
 
 ### Ammunition
 
-- **Damage 700 on impact.** A Corvette (420 HP) dies to one. A Cruiser (1,200 HP) survives
-  one — barely, visibly — and not two. See §9.
+- **Damage 350 on impact.** A Corvette (420 HP) survives one, wounded to a sixth of its
+  hull, and dies to two. A Cruiser (1,200 HP) survives three and not four. See §9. It was
+  700 — one hit on a Corvette — until #463 asked what the defender could *do* between
+  hearing the weapon and losing the hull to it: the answer was "several things, none of
+  which they could afford to get wrong once", so the first hit became a lesson rather than
+  an obituary. Two of a magazine of two still delete a Corvette; the alpha strike is intact,
+  it simply has to be *two* decisions the defender failed rather than one.
 - **Magazine of 2** per torpedo-armed hull (TUNABLE). Rearm within 300 m of an own Bastion
   or Foundry at 15 s per torpedo. Scarcity is the class identity: the gun never runs dry,
   the torpedo always might.
@@ -263,19 +290,39 @@ ahead of the loudness test — and the version that ships is the better rule any
 minefield's footprint is a property of the field, so a commander can look at one and know
 what it covers without first knowing what is about to drive into it.
 
+**Ordnance that travels to kill trips a mine too.** A running torpedo (SIG 60) is louder
+than the Corvette the bar was calibrated on, so a hostile torpedo passing inside 150 m
+detonates the mine; a falling depth charge (SIG 30) reads 15.7 at 150 m against the 14.7 bar
+and clears it just inside. That is the same rule read once more, not an exception to it — a
+mine beats *commitment*, and nothing in the water is more committed than a weapon already
+launched. What a mine does not hear is a noisemaker or another mine: a decoy that swept
+fields would hand the ping's third job to a 20 s cooldown, and a field that chained off its
+own edge would be a wall that fell over. The doc-level consequence, and the reason #463
+asked for it, is in §5: a mine dropped astern is the hull-sized answer to a seeker.
+
 ### The blast
 
 - **Damage 300** at centre, linear falloff to zero at **200 m**. A Light Scout dies; a
   Corvette survives one, wounded. Minefields kill in numbers or not at all — one mine is
   a warning, a field is a wall.
+- **Ordnance inside the blast is spent**, not whittled: every hostile torpedo and depth
+  charge inside the 200 m is gone with the mine. A torpedo is a fuse and a charge, and a
+  shock front sets one off or breaks the other; there is no plate to argue with. Decoys and
+  mines are untouched, for the trigger's reasons above.
 - **Detonation is SIG 90** and lays a battle-site Echo Mark: a triggered mine maps the
   field's edge for whoever is paying attention. The field spends secrecy to deal damage.
 
 ### Laying and sweeping
 
-- **Laying is loud** — construction-grade SIG 55 for the 10 s each mine takes to arm
+- **Laying is loud** — construction-grade SIG 55 for the **3 s** each mine takes to arm
   ([systems-echo.md](systems-echo.md) §2). The field is silent; *making* it is not.
-  Reading where the enemy has been is how you guess where the mines are.
+  Reading where the enemy has been is how you guess where the mines are. It was 10 s, and
+  #463 shortened it so that a mine could be dropped in a torpedo's path and be armed when
+  the torpedo arrived (§5): a seeker passes the drop point `distance ÷ 160` seconds after
+  the drop, and at 10 s no launch from inside 1,600 m — every launch that can catch a
+  running hull — ever met an armed mine. The price is paid in the field: twelve mines are
+  now 36 s of broadcast rather than 120, so a field is quicker to lay and quicker to miss
+  being laid, and the Echo Marks the laying leaves are the record that remains.
 - **Active sonar sweeps mines:** a ping resolves every mine in its 900 m radius to Tier 4.
   This is the third job of the big red button — information, firing solutions (§7), and
   now minesweeping — and it costs the same 2,400 m self-reveal every time.
@@ -344,25 +391,70 @@ them* — a tuning change that leaves these bands is a bug.
 
 | Engagement (guns, both sides awake) | TTK target |
 | --- | --- |
-| Corvette kills Light Scout | ≤ 4 s |
-| Corvette vs Corvette | 8–10 s |
-| Cruiser kills Corvette | ~5 s |
-| Corvette kills Cruiser, guns alone | ≥ 25 s — anchors do not fall to chip damage |
-| Sentinel Turret kills Corvette | ~12 s — a turret deters and punishes; it does not delete |
-| Torpedo vs Corvette | one hit |
-| Torpedo vs Cruiser | survives one, dies to two |
+| Corvette kills Light Scout | ≤ 6 s |
+| Corvette vs Corvette | 12–15 s |
+| Cruiser kills Corvette | ~8 s |
+| Corvette kills Cruiser, guns alone | ≥ 37 s — anchors do not fall to chip damage |
+| Sentinel Turret kills Corvette | ~18 s — a turret deters and punishes; it does not delete |
+| Torpedo vs Corvette | survives one, wounded; dies to two |
+| Torpedo vs Cruiser | survives three, dies to four |
 | Mine (single) vs Light Scout | killed |
 | Mine (single) vs Corvette | survives, wounded |
+
+Every gun band is one and a half times what it was (#463): the first table had a Corvette
+duel at 8–10 s and a Scout dead in 4, and the stretch was made on the *cooldown* — every gun
+in the roster cycles 1.5× slower and hits exactly as hard — so every claim counted in cycles
+elsewhere in this bible still holds and only the seconds moved. The 37 s floor is 25 × 1.5
+rounded down to the second the Klaxon still clears. §9.5 is why.
 
 These are **rank-0** figures. A hull's rank ([systems-progression.md](systems-progression.md)
 §3) multiplies gun damage and hull by up to +15% and +30%, and the per-rank figures are sized
 so that no band moves by more than a third at rank 3 against rank 0; the test that holds the
 bands should hold a rank-3 row too.
 
-The current prototype numbers do not meet these bands (they predate this document); the
-transcription pass that follows it retunes them. Fast TTK is safe *because* of rule 2 in
-§1: everything lethal is audible before it lands, so short fights punish bad approaches,
-not slow reflexes.
+Fast TTK is safe *because* of rule 2 in §1: everything lethal is audible before it lands,
+so short fights punish bad approaches, not slow reflexes. That defends the intent. The next
+section measures whether the player can act on it.
+
+---
+
+## 9.5 The Beat — what a fight contains
+
+Two facts stated elsewhere have a consequence this section owns. Detection resolves at
+**5 Hz** ([ui-ux.md](ui-ux.md) §4, §12) and a contact below Tier 4 is never smoothed, so the
+enemy half of every fight is a sequence of discrete snapshots; and a hull's own damage is a
+self-event carried in the very next snapshot ([ui-ux.md](ui-ux.md) §5), so the losing side
+*knows* it is being hit within 200 ms of the first hit. The question is how many snapshots
+follow that one, and what a player can do inside them. This table is the answer, per band,
+and `packages/backend/test/combatBeat.test.ts` measures it by playing the fights out at
+60 Hz rather than by arithmetic.
+
+| Band | Snapshots, first hit to kill | What the loser can change inside them |
+| --- | --- | --- |
+| Corvette kills Light Scout | ~27 (5.4 s) | **Break off** — the Scout out-runs the Corvette by 35 m/s and is inside the gun's 550 m by less than that in 4 s; dive at 45 m/s to put the water column into the gun's 3D range. Fire back is not a verb: the Scout's gun is unbanded and hopeless |
+| Corvette vs Corvette | ~72 (14.4 s) | **Torpedo** — 350 damage is seven gun shots landed at once, and the duel's one decisive act; **point defence, decoy, or a dive** against the other side's; **dive** to break the 3D range — from 400 m apart it takes 377 m of water to leave a 550 m gun, 8.4 s at 45 m/s and five hits taken, loud, and committed downward. Equal speed means breaking off horizontally is terrain's gift or nobody's |
+| Cruiser kills Corvette | ~37 (7.5 s, three shots) | **Break off** — 40 m/s faster, out of the Cruiser's 900 m in 5 s from 700, taking the second shot and not the third; two torpedoes wound the Cruiser and do not kill it |
+| Corvette kills Cruiser | ~208 (41.6 s) | Everything, including shooting the Corvette dead in 7.5 s. The band exists so that this fight is the Cruiser's to lose |
+| Sentinel Turret kills Corvette | ~90 (18 s) | **Leave.** A turret does not move; a hull that stays in its 700 m for 18 s has decided to |
+| Torpedo, launched inside 1 km | 27–60 from first hearing to impact: 27 (5.4 s) against a hull standing at a kilometre, 44 (8.8 s) against one running from 800 m | **Decoy** — heard by the seeker within one 0.2 s pass; **a mine astern** — works from about 450 m of separation, fails inside it, and the read is the skill; **dive** through a thermocline (0.3 across blinds the seeker) or below the launcher's PR (§8); **silence**, which starves a seeker that has not yet acquired and does nothing against one aimed at where you stand; **point defence** in the last 250 m — 8 snapshots; **break across its nose**, since 150 m of turn radius can be made to overshoot. Then, wounded, the same list again with the second torpedo already known about |
+| Mine (single) vs Light Scout | 0 | Nothing, and that is correct: the Scout is the hull sent to *find* the field, and finding it is what happened. The push behind it now knows |
+| Mine (single) vs Corvette | 0, then a 120 HP hull | **Stop pushing.** The blast is the field's edge, published to everyone as SIG 90 |
+
+Read down the last column: the verbs that resolve inside a fight are **break off, dive,
+decoy, mine astern, point defence, torpedo, silence** — and none of them is a reflex. Each
+is a bet about the water (is the chase the worst thing out there? is there a layer to drop
+through? is the torpedo far enough astern?) that a player makes on partial information they
+were given honestly. That is the design's claim about combat depth, stated so that #439 can
+be designed against it and so a playtest can call it wrong: the fight is not decided by the
+approach and then watched. It is decided by the approach, and then the loser is asked one
+more question, at a length they can answer.
+
+Two levers this section deliberately did not pull. The Echo rate stays at 5 Hz in contact:
+the 2 ms budget (`SIM.ECHO_BUDGET_MS`) could bear more, but a faster tick in combat only
+would tell the map that combat was happening, which is a leak. And no band was lengthened
+past ×1.5, because the table above already has an answer in every row that is not a mine,
+and a longer fight buys nothing a shorter one did not already offer — it would only make
+the approach matter less.
 
 ---
 
@@ -441,7 +533,8 @@ still telling on everyone who was in it.
 | Torpedo spam deletes every heavy | Magazines of 2, rearm at base, point defence, noisemakers — and a running torpedo is the loudest thing its owner has, announcing the ambush it came from |
 | Minefields fossilise the map | Caps and lifetimes; mines cannot hear silence, so scouts always pass; a ping sweeps a field for the standard price |
 | Bearing-only launch makes pinging pointless | The ghost lies by ±15% of range — speculative torpedoes genuinely miss, and each miss is a fifth of your magazine swimming away |
-| TTK too fast to feel fair | Rule 2 of §1: torpedoes are audible their whole run, gun range implies mutual audibility, depth charges are heard falling. Nothing lethal is silent — only patient |
+| TTK too fast to feel fair | Rule 2 of §1: torpedoes are audible their whole run, gun range implies mutual audibility, depth charges are heard falling. Nothing lethal is silent — only patient. And §9.5 counts the snapshots: every band that is not a mine has a verb inside it |
+| A mine astern makes torpedoes pointless | It needs 480 m of separation and 3 s of construction-grade noise; from a launch inside that it fails, and from one outside it the torpedo was going to run dry on a running hull anyway. A mine spent on a torpedo is a mine not in the wall, and the drop tells everyone where you ran |
 | Point defence trivialises torpedoes | PD is a gun choosing targets; saturation volleys, simultaneous bearings, and every cycle it spends on ordnance is free for the launcher |
 | Noisemakers make seekers useless | A noisemaker is real SIG 70 at your real position: it saves the hull by feeding every other listener on the map |
 
@@ -459,11 +552,12 @@ what exists or assumes what does not. The combat loop lives in
 | Guns (§4) | **Implemented** | Hitscan with cooldown; chase on ordered targets, auto-return-fire, silent hulls hold fire; every discharge spikes SIG and lays battle residue |
 | Ordnance acoustics (§3) | **Implemented** | The `ORDNANCE` group in `packages/shared/src/constants.ts` carries the §3 table |
 | Torpedoes (§5) | **Implemented** | `Ordnance` entities with their own SIG; seekers run the standard propagation model in `sim/systems/ordnance.ts` |
-| Countermeasures (§5) | **Implemented** | Noisemaker decoys, and point defence as a target priority inside the terminal range in `sim/systems/combat.ts` |
-| Mines (§6) | **Implemented** | `MINE_TRIGGER_LOUDNESS`, solved from the two SPEC behaviours; caps, arming noise and blast falloff in `sim/systems/ordnance.ts` |
+| Countermeasures (§5) | **Implemented** | Noisemaker decoys, and point defence as a target priority inside the terminal range in `sim/systems/combat.ts`; a mine astern falls out of §6's trigger set |
+| Mines (§6) | **Implemented** | `MINE_TRIGGER_LOUDNESS`, solved from the two SPEC behaviours; caps, arming noise and blast falloff in `sim/systems/ordnance.ts`; `tripsMines` is the ordnance a mine hears and a blast spends |
 | Firing solutions (§7) | **Implemented** | `EchoLayer.firingSolution` gates launches at Tier 2 and hands over the same ghost the contact payload carried |
 | Vertical combat (§8) | **Implemented** | Ordnance inherits launcher PR and implodes; depth charges fall at `DEPTH`'s rates with a volumetric blast; the depth ribbon warns before a dive that would crush |
 | TTK bands (§9) | **Implemented** | Weapon damage solved from the bands; `test/ttkBands.test.ts` holds every one, including under the Klaxon |
+| The beat (§9.5) | **Measured** | `test/combatBeat.test.ts` plays each gun band and the torpedo run out at 60 Hz and counts the Echo snapshots between first hit and kill; the mine astern is held in `test/mines.test.ts` against a live seeker, at 900 m and at 300 m, and the decoy in `test/countermeasures.test.ts` |
 | Retreat dynamics (§10) | Emergent | Falls out of the existing ascent/descent and Silent Running rules, now that seekers exist to be starved |
 | Faction kits (§11) | **Implemented** | `FACTION_COMBAT` in `packages/shared/src/constants.ts`, read through `packages/shared/src/combat.ts` |
 

@@ -12,11 +12,12 @@
  * things make it the shape it is. All four are data:
  *
  * - **The fight is lost in figures before anybody fires** (§4). Two Cruisers
- *   and five Corvettes is 4,500 hull points and 342.7 a second against the
- *   party's 3,300 and 268.3, over a 900 m gun against a 550 m one. Nothing
+ *   and five Corvettes is 4,500 hull points and 228.5 a second against the
+ *   party's 3,300 and 178.9, over a 900 m gun against a 550 m one. Nothing
  *   here enforces that; it is the roster, seated. campaign.md §2 rule 4's
  *   third and last mission earns its label by arithmetic, so torpedoes are
- *   struck (§3) — twelve shots at 700 damage would make the label false.
+ *   struck (§3) — twelve shots at 350 damage, with the lances behind them,
+ *   would make the label false.
  * - **The lattice is six structures on the player's own party** (§2, §3), at
  *   the Sounding Spire's roster line: SIG 30 idle, HYD 45, 1,800 hull points.
  *   That makes a formation shootable, makes it the player's to lose, and —
@@ -207,7 +208,7 @@ const VOICES: readonly Voice[] = [
     y: 3300,
     cellX: 2000,
     cellY: 3000,
-    note: 'Alto — 3,561 m, 42 s. The whole column stands on it from 10:45: every metre inside the escort’s 900 and one cutter’s 550, and over most of it all three bear at 192.2 a second',
+    note: 'Alto — 3,561 m, 42 s. The whole column stands on it from 10:45: every metre inside the escort’s 900 and one cutter’s 550, and over most of it all three bear at 128.1 a second',
   },
   {
     id: 'bass',
@@ -225,7 +226,7 @@ const VOICES: readonly Voice[] = [
     y: 3000,
     cellX: 750,
     cellY: 2750,
-    note: 'The Drone — 4,220 m, 50 s. The relief stands over it from 09:27 and does not leave; the cheapest metre is the north-west corner at 652 m from relief-lead, one Cruiser and neither Corvette, 67.2 a second. KEYSTONE',
+    note: 'The Drone — 4,220 m, 50 s. The relief stands over it from 09:27 and does not leave; the cheapest metre is the north-west corner at 652 m from relief-lead, one Cruiser and neither Corvette, 44.8 a second. KEYSTONE',
   },
 ];
 
@@ -508,7 +509,7 @@ export const CHORD_CONCLAVE: MissionDefinition = {
           y: 2100,
           depthM: FIELD_FLOOR_M,
           armed: true,
-          note: "The column's ears and the listener every distance in §4 is quoted against — HYD 65, 150 at 900 m on a 2.5 s cycle. 1,166 m from the Bass at its seat, against a 900 m gun",
+          note: "The column's ears and the listener every distance in §4 is quoted against — HYD 65, 150 at 900 m on a 3.75 s cycle. 1,166 m from the Bass at its seat, against a 900 m gun",
         },
         {
           tag: 'cutter-one',
@@ -517,7 +518,7 @@ export const CHORD_CONCLAVE: MissionDefinition = {
           y: 1900,
           depthM: FIELD_FLOOR_M,
           armed: true,
-          note: 'Their guns are the cutters: 50 at 550 m on a 1.2 s cycle, 125 a second between the three of them, and a formation is cored by being fired on',
+          note: 'Their guns are the cutters: 50 at 550 m on a 1.8 s cycle, 83.3 a second between the three of them, and a formation is cored by being fired on',
         },
         {
           tag: 'cutter-two',
@@ -737,7 +738,7 @@ export const CHORD_CONCLAVE: MissionDefinition = {
       tag: 'escort',
       x: 700,
       y: 1400,
-      note: "§5, §7 — half a minute behind three cutters that need 14.4 seconds, so unopposed it arrives twenty-three seconds after the Bass has gone and never fires. Its walk is the only thing that crosses the Voice's ear in the first five minutes: inside 4,245 m from about 03:07, and outside it again the moment it stands at 3,905 m",
+      note: "§5, §7 — half a minute behind three cutters that need 21.6 seconds, so unopposed it arrives twenty-three seconds after the Bass has gone and never fires. Its walk is the only thing that crosses the Voice's ear in the first five minutes: inside 4,245 m from about 03:07, and outside it again the moment it stands at 3,905 m",
     },
 
     // 05:00 — the second leg, onto the Drone. Cutters standing ~05:18–05:21,

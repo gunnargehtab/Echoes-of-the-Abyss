@@ -623,19 +623,31 @@ describe('the ladder read as an economy — docs/mission-trench-awakening.md §4
   });
 
   it('prices a rendering by the count that takes it, as §4 does', () => {
-    // §4 — "Eight Choristers at 20/s are 160/s and have its 640 HP in 4.0 s;
-    // six are 120/s, take 5.33 s, and are bitten for 0.8 s at 55/s — 44 HP off
-    // one 200-HP hull." Damage is a sound: the first shell springs the strike
-    // from any range and the animal comes at the gun.
+    // §4 — "Eight Choristers at 13.3/s are 106.7/s and have its 640 HP in
+    // 6.0 s; six are 80/s, take 8.0 s, and are bitten for 3.5 s at 55/s —
+    // 191 HP off one 200-HP hull." Damage is a sound: the first shell springs
+    // the strike from any range and the animal comes at the gun.
     const dps = (hulls: number) => (hulls * CHORISTER.attackDamage) / CHORISTER.attackCooldownS;
-    assert.equal(dps(8), 160);
-    assert.equal(HOLLOW.maxHp / dps(8), 4, '§4: eight take it in four seconds');
+    assert.equal(Number(dps(8).toFixed(1)), 106.7);
+    assert.equal(HOLLOW.maxHp / dps(8), 6, '§4: eight take it in six seconds');
     const six = HOLLOW.maxHp / dps(6);
-    assert.equal(Number(six.toFixed(2)), 5.33, '§4: six take 5.33 s');
+    assert.equal(six, 8, '§4: six take 8.0 s');
     const closing = (450 - HOLLOW.attackRangeM) / HOLLOW.speed;
     assert.equal(Number(closing.toFixed(2)), 4.53, '§4: 340 m at 75 m/s');
-    assert.equal(Math.round((six - closing) * HOLLOW.damagePerS), 44, '§4: 44 HP off one hull');
-    assert.ok(44 < CHORISTER.maxHp / 4, '§4: a fifth of a hull, and the row keeps the hull');
+    const bill = Math.round((six - closing) * HOLLOW.damagePerS);
+    assert.equal(bill, 191, '§4: 191 HP off one hull');
+    assert.ok(bill < CHORISTER.maxHp, '§4: the row keeps the hull, and only just');
+    assert.ok(bill > CHORISTER.maxHp / 2, '§4: it is most of one, which is the sharper count');
+
+    // And the count the row actually fields: six Choristers with both
+    // submersibles are inside the closing, so the animal barely bites at all.
+    // That is what makes the two heavy hulls the difference between a
+    // rendering that costs nothing and one that costs a hull.
+    const withBoth = dps(6) + (2 * SUBMERSIBLE.attackDamage) / SUBMERSIBLE.attackCooldownS;
+    assert.equal(Number(withBoth.toFixed(1)), 139.3, '§4: 139.3 a second');
+    const rendered = HOLLOW.maxHp / withBoth;
+    assert.equal(Number(rendered.toFixed(1)), 4.6, '§4: 4.6 s against 4.53 of closing');
+    assert.equal(Math.round((rendered - closing) * HOLLOW.damagePerS), 3, '§4: three hit points');
   });
 });
 

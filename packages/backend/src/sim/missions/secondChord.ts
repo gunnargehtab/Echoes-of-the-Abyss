@@ -23,11 +23,14 @@
  *    `Health` that is not on its own slot, and a structure carries all three.
  *    So the watch, inherited at Prospect's 4600, 3300 and 4750, 3350, stands
  *    250 m and 206 m from a node this document raised a tide after those
- *    coordinates were written, against a 650 m gun at 44.4 damage a second,
- *    and takes the Chord's 1,800 HP down in twenty seconds from tick zero —
- *    measured, hp −40 at 20.0 s of an untouched run. Disarming the watch alone
- *    does not save it: §9's first correction stands six Choristers 255 to
- *    412 m away at 03:36, inside their own 450 m, and finishes it by 03:56.
+ *    coordinates were written, against a 650 m gun at 29.6 damage a second,
+ *    and takes the Chord's 1,800 HP down in thirty seconds from tick zero.
+ *    Arithmetic rather than a measurement since #463: the 20.0 s this note
+ *    carried was measured before the §9 retune lengthened every gun cycle by
+ *    half, and the run was never re-played because the watch is cold either
+ *    way. Disarming the watch alone does not save it: §9's first correction
+ *    stands six Choristers 255 to 412 m away at 03:36, inside their own
+ *    450 m, and finishes it by 03:59.
  *    **And the node is not optional** — every point of `chord-water` is inside
  *    its six hundred, and a PR-2 carrier is only rated for the 3,000 m the
  *    crystal is set at because the node says so. An armed rim therefore
@@ -247,8 +250,8 @@ const CHORD = { x: 4800, y: 3150 };
  * SIG 28 in the cone, 9.8 on the flank, 2.8 in the wake; HYD 50; five souls
  * each. The roster still has no Knight hull in it (§3): the party flies Order
  * colours on generic hulls and the directional figures are Aptitude's. Two
- * torpedoes apiece at 700 damage, which is the arithmetic §3 states rather than
- * pretends nobody did — the dome is 1,200 HP and dies to two of them.
+ * torpedoes apiece at 350 damage, which is the arithmetic §3 states rather than
+ * pretends nobody did — the dome is 1,200 HP and dies to four of them.
  *
  * `cadre` is the hull's name in Nineteen's roster (`nineteen.ts`, `hull`), and
  * only the escort pair carries one: `escort-a` and `escort-b` are the raid's
@@ -893,7 +896,7 @@ export const CHORD_SECOND_CHORD: MissionDefinition = {
           x: 5000,
           y: 3400,
           depthM: LIP_DEPTH_M,
-          note: "The Cantorate's dome, where First Arrival stood it. +25 HYD to the 95 cap inside 1,200 m, which is the Chord's whole water and every seat of the twelve: 30 through the lip's 1.60 is Track to a lifted ear inside 2,340 m, and the Chord stands 320 m away — so §8's count was running before the party was ordered to dive. 1,200 HP, and two torpedoes at 700 would take it, which §8 prices rather than pretending nobody thought of it",
+          note: "The Cantorate's dome, where First Arrival stood it. +25 HYD to the 95 cap inside 1,200 m, which is the Chord's whole water and every seat of the twelve: 30 through the lip's 1.60 is Track to a lifted ear inside 2,340 m, and the Chord stands 320 m away — so §8's count was running before the party was ordered to dive. 1,200 HP, and four torpedoes at 350 — two Corvettes' magazines — would take it, which §8 prices rather than pretending nobody thought of it",
         },
       ],
     },

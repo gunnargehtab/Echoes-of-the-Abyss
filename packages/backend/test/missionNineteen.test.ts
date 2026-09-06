@@ -612,18 +612,18 @@ describe('the walls, as docs/mission-nineteen.md §4 prices them', () => {
     );
   });
 
-  it('costs 640 HP to clear, which is 2.4 seconds under six guns and 15.4 under one', () => {
+  it('costs 640 HP to clear, which is 3.6 seconds under six guns and 23 under one', () => {
     // §4: "Clearing one is 640 HP." The guns are the roster's, so the arithmetic
     // moves if the roster does — which is the point of deriving it here.
     assert.equal(HOLLOW.maxHp, 640);
     const cruiserDps = CRUISER.attackDamage / CRUISER.attackCooldownS;
     const corvetteDps = CORVETTE.attackDamage / CORVETTE.attackCooldownS;
-    assert.equal(cruiserDps, 60, '§4: 60/s from the Voice');
-    assert.equal(corvetteDps.toFixed(1), '41.7', '§4: 41.7/s from each Corvette');
+    assert.equal(cruiserDps, 40, '§4: 40/s from the Voice');
+    assert.equal(corvetteDps.toFixed(1), '27.8', '§4: 27.8/s from each Corvette');
     const array = cruiserDps + 5 * corvetteDps;
-    assert.equal(Math.round(array), 268, '§4: 268/s together');
-    assert.equal((HOLLOW.maxHp / array).toFixed(1), '2.4', '§4: 2.4 seconds under all six guns');
-    assert.equal((HOLLOW.maxHp / corvetteDps).toFixed(1), '15.4', '§4: 15.4 under one Corvette');
+    assert.equal(Math.round(array), 179, '§4: 179/s together');
+    assert.equal((HOLLOW.maxHp / array).toFixed(1), '3.6', '§4: 3.6 seconds under all six guns');
+    assert.equal((HOLLOW.maxHp / corvetteDps).toFixed(1), '23.0', '§4: 23.0 under one Corvette');
     // §4: a wound springs the strike, the lunge covers 400 m in 5.3 seconds,
     // and the strike is 55/s.
     assert.equal(HOLLOW.speed, 75);

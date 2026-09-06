@@ -667,15 +667,19 @@ describe('the cohort, as §6 authors it', () => {
       )
     );
     assert.equal(BED.maxHp, 900, '§3: 900 HP a bed');
-    assert.equal(CHORISTER.attackDamage / CHORISTER.attackCooldownS, 20, '§6: 20 hull a second');
-    assert.equal(slowest, 22.5);
-    // §6's "about 04:55": the last bed dies 22.5 s into a leg that begins at
+    assert.equal(
+      Math.round((CHORISTER.attackDamage / CHORISTER.attackCooldownS) * 10) / 10,
+      13.3,
+      '§6: 13.3 hull a second'
+    );
+    assert.equal(slowest, 33.75);
+    // §6's "about 05:04": the last bed dies 33.75 s into a leg that begins at
     // 04:30. Bounded on both sides, so a leg moved to another tick or a bed
     // re-priced would have to fail here rather than pass a one-sided bound.
     const lastBedDownS = T(4, 30) / SIM.TICK_HZ + slowest;
     assert.ok(
-      lastBedDownS >= 4 * 60 + 45 && lastBedDownS <= 5 * 60,
-      `§6: every bed down at about 04:55, and this run says ${lastBedDownS}s`
+      lastBedDownS >= 4 * 60 + 55 && lastBedDownS <= 5 * 60 + 10,
+      `§6: every bed down at about 05:04, and this run says ${lastBedDownS}s`
     );
   });
 
@@ -743,8 +747,8 @@ describe('the cohort, as §6 authors it', () => {
     assert.equal(2750 - 2557, 193, '§6: a strip some 200 m wide against the east wall');
     assert.equal(
       Math.ceil(TENDER.maxHp / SUBMERSIBLE.attackDamage) * SUBMERSIBLE.attackCooldownS,
-      7.2,
-      '§6: a tender at 300 hull against 80 every 1.8 s has seven seconds'
+      10.8,
+      '§6: a tender at 300 hull against 80 every 2.7 s has eleven seconds'
     );
     // §9: a hull with a live move order holds its fire, so the guns in the
     // dead water fire from about 12:20 and the guns climbing back from 15:17.

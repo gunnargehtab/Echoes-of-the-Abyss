@@ -93,7 +93,7 @@
  * - **Twelve live guns at the muster brought the colossus down before it
  *   reached them.** The bestiary rates a Sounder at 9,000 HP and 260 Biomass
  *   and says it "cannot be reliably killed by any single player before the
- *   twenty-minute mark"; twelve of the intake's 44.4/s are 533 a second, the
+ *   twenty-minute mark"; twelve of the intake's 29.6/s are 356 a second, the
  *   transit is inside 650 m of the muster for forty seconds, and the roster
  *   paid the full 260 for it — the band, answered by an intake that never
  *   moved. Settled in the engine (#349), as item 5 above: a driven creature

@@ -211,8 +211,8 @@ const corvette = (
  * the hull and the fifth to author the refit.
  *
  * Armed, and the only guns on the rim that are not the player's (§5). 20 damage
- * a second at 450 m: six of them are 120 a second, and 1,800 HP of Sounding
- * Spire is fifteen seconds of that.
+ * on a 1.5 s cycle at 450 m: six of them are 80 a second, and 1,800 HP of
+ * Sounding Spire is twenty-two and a half seconds of that.
  */
 const chorister = (ordinal: number, x: number, y: number, note: string): MissionUnit => ({
   tag: `cohort-${ordinal}`,
@@ -705,7 +705,7 @@ export const CHORD_RIM_DEPOSITS: MissionDefinition = {
           x: 5000,
           y: 3400,
           depthM: LIP_DEPTH_M,
-          note: "The Cantorate's dome, where First Arrival stood it. +25 HYD to the 95 cap inside 1,200 m, which is node-one's whole water: 30 through the terraces' 0.70 is Classification inside 1,872 m to a lifted ear and Track inside 1,396. 1,200 HP, and two torpedoes at 700 would take it — which moves node-two's Classification radius only from 1,872 m to 1,615 and leaves it standing 781 m from a seat. Silencing the count means silencing every ear on the lip, and that is not a raid (§8)",
+          note: "The Cantorate's dome, where First Arrival stood it. +25 HYD to the 95 cap inside 1,200 m, which is node-one's whole water: 30 through the terraces' 0.70 is Classification inside 1,872 m to a lifted ear and Track inside 1,396. 1,200 HP, and four torpedoes at 350 — two Corvettes' magazines — would take it, which moves node-two's Classification radius only from 1,872 m to 1,615 and leaves it standing 781 m from a seat. Silencing the count means silencing every ear on the lip, and that is not a raid (§8)",
         },
       ],
     },

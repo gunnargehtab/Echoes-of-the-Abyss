@@ -1189,7 +1189,7 @@ describe('the concern — docs/mission-shallow.md §5, and why it is one slot', 
 describe('the fight, priced and not asked — docs/mission-shallow.md §8', () => {
   it('reads §8’s table off the roster and off the Klaxon', () => {
     const dps = (damage: number, cooldown: number) => damage / cooldown;
-    assert.equal(to1(dps(CRUISER.attackDamage, CRUISER.attackCooldownS)), 60);
+    assert.equal(to1(dps(CRUISER.attackDamage, CRUISER.attackCooldownS)), 40);
     assert.equal(
       to1(
         dps(
@@ -1197,22 +1197,22 @@ describe('the fight, priced and not asked — docs/mission-shallow.md §8', () =
           CRUISER.attackCooldownS
         )
       ),
-      67.2,
-      '§8: 67 in the Klaxon band'
+      44.8,
+      '§8: 45 in the Klaxon band'
     );
-    assert.equal(to1(dps(CORVETTE.attackDamage, CORVETTE.attackCooldownS)), 41.7);
-    assert.equal(to1(dps(TURRET.attackDamage!, TURRET.attackCooldownS!)), 33.3);
+    assert.equal(to1(dps(CORVETTE.attackDamage, CORVETTE.attackCooldownS)), 27.8);
+    assert.equal(to1(dps(TURRET.attackDamage!, TURRET.attackCooldownS!)), 22.2);
     // The column's eleven together, which is the other half of §8's table.
     const column =
       8 * dps(CHORISTER.attackDamage, CHORISTER.attackCooldownS) +
       2 * dps(SUBMERSIBLE.attackDamage, SUBMERSIBLE.attackCooldownS) +
       dps(CRUISER.attackDamage, CRUISER.attackCooldownS);
-    assert.equal(Math.round(column), 309, '§8: the column’s eleven together');
+    assert.equal(Math.round(column), 206, '§8: the column’s eleven together');
     // And the sentence the pricing exists for: a Chorister at 170 dies to one
-    // Corvette in 4.1 s instead of 4.8, because the shallows took the thirty.
+    // Corvette in 6.1 s instead of 7.2, because the shallows took the thirty.
     const bled = CHORISTER.maxHp * DIRECTORATE_SHALLOW.HULL_FLOOR;
-    assert.equal(to1(bled / dps(CORVETTE.attackDamage, CORVETTE.attackCooldownS)), 4.1);
-    assert.equal(to1(CHORISTER.maxHp / dps(CORVETTE.attackDamage, CORVETTE.attackCooldownS)), 4.8);
+    assert.equal(to1(bled / dps(CORVETTE.attackDamage, CORVETTE.attackCooldownS)), 6.1);
+    assert.equal(to1(CHORISTER.maxHp / dps(CORVETTE.attackDamage, CORVETTE.attackCooldownS)), 7.2);
   });
 
   it('drives the pack at the depth §11 authors rather than at the species’ own', () => {

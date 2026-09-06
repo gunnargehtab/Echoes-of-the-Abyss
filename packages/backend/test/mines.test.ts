@@ -32,9 +32,17 @@ import {
   statsFor,
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
-import { spawnUnit } from '../src/sim/world.ts';
-import { deployNoisemaker } from '../src/sim/systems/ordnance.ts';
-import { Acoustic, Health, Ordnance, Owner, Structure, Unit } from '../src/sim/components.ts';
+import { spawnOrdnance, spawnUnit } from '../src/sim/world.ts';
+import { deployNoisemaker, launchTorpedo } from '../src/sim/systems/ordnance.ts';
+import {
+  Acoustic,
+  Health,
+  Ordnance,
+  Owner,
+  Position,
+  Structure,
+  Unit,
+} from '../src/sim/components.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
@@ -67,6 +75,31 @@ function liveMines(match: Match): number[] {
  * Lay one armed mine for slot 0 at a position, and remove the hull that laid it
  * so the thing under test is the field rather than its escort.
  */
+/**
+ * An armed mine with nothing loud left near it: the layer goes silent once the
+ * clock has run, so a seeker in these tests has only the mine's water to run
+ * through and not a cruising Corvette to bend toward.
+ */
+function soloMineAt(match: Match, x: number, y: number): number {
+  const layer = spawnUnit(match.world, {
+    kind: UnitKind.Corvette,
+    slot: 0,
+    faction: Faction.Bathyarch,
+    x,
+    y,
+  });
+  advance(match, 0.2);
+  const mine = match.layMine(0, layer);
+  assert.notEqual(mine, 0, 'the mine should be accepted');
+  // Out of every seeker's hearing before the field is even armed: a laying
+  // clock ticks wherever the hull is, and a silent hull holds its fire.
+  Position.x[layer] = 11500;
+  Position.y[layer] = 11500;
+  match.setSilentRunning(0, layer, true);
+  advance(match, ORDNANCE.MINE.ARMING_S + 1);
+  return mine;
+}
+
 function armedMineAt(match: Match, x: number, y: number): number {
   const layer = spawnUnit(match.world, {
     kind: UnitKind.Corvette,
@@ -571,5 +604,200 @@ describe('mines', () => {
       statsFor(UnitKind.Cruiser).maxHp,
       'a mine must ignore the fleet that laid it'
     );
+  });
+
+  it('hears a hostile torpedo and the blast spends it (#463)', () => {
+    // §6: a running torpedo at SIG 60 is louder than the Corvette the bar is
+    // calibrated on, so it trips a mine from the full 150 m — and §6's blast
+    // rule spends it, since a torpedo is a fuse and a charge with no plate to
+    // whittle. The launcher runs silent so nothing but the weapon is loud.
+    const match = openWaterMatch();
+    const mine = soloMineAt(match, 6000, 6000);
+    const launcher = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: 6000,
+      y: 5000,
+    });
+    match.setSilentRunning(1, launcher, true);
+    advance(match, 0.5);
+
+    // Straight through the mine: aimed at a point a kilometre beyond it, with
+    // nothing loud in the water for the seeker to bend toward.
+    const torpedo = launchTorpedo(match.world, launcher, 6000, 7000);
+    assert.notEqual(torpedo, 0);
+    let diedAtY = NaN;
+    for (let i = 0; i < 60 * 12; i++) {
+      match.update(STEP_MS);
+      if (Health.hp[torpedo]! <= 0) {
+        diedAtY = Position.y[torpedo]!;
+        break;
+      }
+    }
+    // The bang outlives the bomb by DETONATION_ECHO_S so it can be heard.
+    advance(match, 1);
+
+    assert.ok(Health.hp[torpedo]! <= 0, 'the torpedo should not survive the field');
+    assert.ok(Health.hp[mine]! <= 0, 'and the mine is spent doing it');
+    assert.ok(
+      Math.abs(diedAtY - 6000) <= ORDNANCE.MINE.TRIGGER_RADIUS_M,
+      `it should die at the mine, not run dry; died ${(diedAtY - 6000).toFixed(0)} m past it`
+    );
+  });
+
+  it('is deaf to a decoy: noisemakers do not sweep fields', () => {
+    // §6 draws the line at ordnance that travels to kill. A noisemaker at SIG
+    // 70 would clear the bar from anywhere inside the trigger radius, and a
+    // decoy that swept fields would hand the ping's third job to a 20 s
+    // cooldown — so a mine does not hear one at all.
+    const match = openWaterMatch();
+    const mine = soloMineAt(match, 6000, 6000);
+    const decoy = spawnOrdnance(match.world, {
+      kind: OrdnanceKind.Noisemaker,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: 6050,
+      y: 6000,
+      depth: 0,
+      pressureRating: 2,
+    });
+    advance(match, 2);
+    assert.ok(Health.hp[decoy]! > 0, 'the decoy is still shouting');
+    assert.ok(Health.hp[mine]! > 0, 'and the mine has ignored it');
+  });
+
+  it('hears a falling depth charge, and the blast spends that too', () => {
+    // The other half of the trigger set. A charge falls at SIG 30, which reads
+    // 15.7 at 150 m against the 14.7 bar — it clears, just, and a mine that
+    // beats commitment has no reason to let a weapon already dropped go by.
+    const match = openWaterMatch();
+    const mine = soloMineAt(match, 6000, 6000);
+    const charge = spawnOrdnance(match.world, {
+      kind: OrdnanceKind.DepthCharge,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: 6100,
+      y: 6000,
+      depth: 0,
+      targetDepthM: 1000,
+      pressureRating: 2,
+    });
+    advance(match, 2);
+    assert.ok(Health.hp[mine]! <= 0, 'the mine should trip on the falling charge');
+    assert.ok(Health.hp[charge]! <= 0, 'and spend it');
+  });
+
+  describe('a mine astern (#463, docs/systems-combat.md §5)', () => {
+    // The verb the arming clock was shortened for. A hull running from a
+    // torpedo drops a mine where it stands and keeps running; the seeker
+    // passes the drop point `distance / 160` seconds later, and whether the
+    // mine is armed by then is the whole of the read.
+    interface Chase {
+      prey: number;
+      preyHp: number;
+      mine: number;
+      mineSpent: boolean;
+      /** Metres from the hull at which the torpedo was spent, or NaN. */
+      diedFromPrey: number;
+    }
+
+    function chase(astern: number, preyKind: UnitKind): Chase {
+      const match = openWaterMatch();
+      // One depth for both, spelled out: a hull spawns at the depth its
+      // pressure rating picks, and a torpedo follows its target down at
+      // 60 m/s, so two hulls at two defaults would put a descent into the
+      // timing of a test that is about a horizontal distance.
+      const prey = spawnUnit(match.world, {
+        kind: preyKind,
+        slot: 1,
+        faction: Faction.Pelagia,
+        x: 6000,
+        y: 6000,
+        depth: 400,
+      });
+      const launcher = spawnUnit(match.world, {
+        kind: UnitKind.Corvette,
+        slot: 0,
+        faction: Faction.Bathyarch,
+        x: 6000 - astern,
+        y: 6000,
+        depth: 400,
+      });
+      // The launcher runs silent so its *gun* never joins in: `launchTorpedo`
+      // is called directly, below the order gate, so the tube still fires.
+      // What is measured is the weapon against the mine, not a gun duel.
+      match.setSilentRunning(0, launcher, true);
+      advance(match, 0.4);
+
+      match.orderMove(1, prey, 11000, 6000);
+      const mine = match.layMine(1, prey);
+      assert.notEqual(mine, 0, 'the drop should be accepted');
+      const torpedo = launchTorpedo(match.world, launcher, Position.x[prey]!, Position.y[prey]!);
+      assert.notEqual(torpedo, 0);
+
+      let diedFromPrey = NaN;
+      let mineSpent = false;
+      for (let i = 0; i < 60 * 20; i++) {
+        match.update(STEP_MS);
+        // Caught on the tick it happens: a spent mine is removed once its bang
+        // has finished ringing, so hp alone would read the same as never
+        // having gone off.
+        if (Ordnance.detonatingS[mine]! > 0 || Health.hp[mine]! <= 0) mineSpent = true;
+        if (Health.hp[torpedo]! <= 0) {
+          diedFromPrey = Math.hypot(
+            Position.x[torpedo]! - Position.x[prey]!,
+            Position.y[torpedo]! - Position.y[prey]!
+          );
+          break;
+        }
+      }
+      return { prey, preyHp: Health.hp[prey]!, mine, mineSpent, diedFromPrey };
+    }
+
+    it('works when the torpedo is far enough astern for the mine to arm first', () => {
+      // 900 m astern: the seeker reaches the drop point 5.6 s after the drop,
+      // and the mine has been armed for 2.6 of them. The prey is the roster's
+      // Corvette — any armed hull carries the mine that makes this drop.
+      const { preyHp, mineSpent, diedFromPrey } = chase(900, UnitKind.Corvette);
+      assert.ok(mineSpent, 'the mine should have gone off on the torpedo');
+      assert.ok(
+        diedFromPrey > ORDNANCE.POINT_DEFENCE.RANGE_M,
+        `and taken it well astern of the hull, not at its gun: ${diedFromPrey.toFixed(0)} m`
+      );
+      assert.equal(preyHp, statsFor(UnitKind.Corvette).maxHp, 'the hull that dropped it is whole');
+    });
+
+    it('puts the line just under 450 m, which is the figure §5 quotes', () => {
+      // Three seconds of arming is 480 m of torpedo, and the mine's 150 m ear
+      // and 0.2 s sense interval trade against that — so the boundary is not
+      // the 480 the arithmetic alone suggests. Measured here rather than
+      // reasoned, and the doc quotes what this says: a drop works from about
+      // 450 m of separation and not from 400.
+      assert.equal(chase(450, UnitKind.Spinner).mineSpent, true, 'at 450 m the mine gets it');
+      assert.equal(chase(400, UnitKind.Spinner).mineSpent, false, 'at 400 m it does not');
+    });
+
+    it('fails inside the arming distance, which is the read the defender is asked to make', () => {
+      // 300 m astern: the seeker is past the drop point in under two seconds
+      // and the mine arms behind it. §5 puts the line at 480 m, and this is
+      // what keeps that number honest — the drop is a decision that can be
+      // made too late, and the hull pays for it.
+      //
+      // A Spinner makes this drop because it has no gun: a Corvette would take
+      // the point-defence shot inside 250 m and hide whether the mine ever had
+      // a chance.
+      const { preyHp, mine, mineSpent, diedFromPrey } = chase(300, UnitKind.Spinner);
+      assert.equal(mineSpent, false, 'the mine never went off');
+      assert.ok(Health.hp[mine]! > 0, 'and is still in the water, spent on nothing');
+      assert.ok(
+        diedFromPrey < ORDNANCE.TORPEDO.FUSE_MARGIN_M + statsFor(UnitKind.Spinner).hullLengthM,
+        `the torpedo reached the hull instead: ${diedFromPrey.toFixed(0)} m`
+      );
+      assert.ok(
+        preyHp <= statsFor(UnitKind.Spinner).maxHp - ORDNANCE.TORPEDO.DAMAGE,
+        'and the hull took the whole 350 for dropping too late'
+      );
+    });
   });
 });

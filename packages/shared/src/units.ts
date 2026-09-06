@@ -153,9 +153,14 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     cost: 50,
     buildTimeS: 12,
     berths: 1,
+    // Every gun cycle in the roster is ×1.5 what it was (#463): §9's bands
+    // were lengthened by stretching the cooldown and leaving damage-per-shot
+    // alone, so every "n cycles" claim in docs/units.md still holds and only
+    // the seconds moved. The Scout's own gun is unbanded and simply scaled
+    // with the rest, so it did not become relatively deadlier by accident.
     attackDamage: 18,
     attackRangeM: 400,
-    attackCooldownS: 1,
+    attackCooldownS: 1.5,
     carriesTorpedoes: false,
   },
   [UnitKind.Corvette]: {
@@ -172,9 +177,13 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     cost: 120,
     buildTimeS: 30,
     berths: 2,
+    // The centre of §9: a duel of 12-15 s, a Light Scout in ≤ 6 s, and ≥ 37 s
+    // on a Cruiser alone — the last of which holds under the Klaxon only at
+    // 50 damage or less, which is why the figure is 50 and not 55
+    // (ttkBands.test.ts). 1.8 s is 1.2 × 1.5, the #463 stretch.
     attackDamage: 50,
     attackRangeM: 550,
-    attackCooldownS: 1.2,
+    attackCooldownS: 1.8,
     carriesTorpedoes: true,
   },
   [UnitKind.Cruiser]: {
@@ -192,9 +201,10 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     cost: 420,
     buildTimeS: 90,
     berths: 3,
+    // §9: kills a Corvette in ~8 s — three shots, two cycles of 3.75 s.
     attackDamage: 150,
     attackRangeM: 900,
-    attackCooldownS: 2.5,
+    attackCooldownS: 3.75,
     carriesTorpedoes: true,
   },
   [UnitKind.AbyssalSubmersible]: {
@@ -215,7 +225,7 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     berths: 2,
     attackDamage: 80,
     attackRangeM: 650,
-    attackCooldownS: 1.8,
+    attackCooldownS: 2.7,
     carriesTorpedoes: true,
   },
   [UnitKind.Chorister]: {
@@ -260,12 +270,12 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     buildTimeS: 10,
     berths: 1,
     // Roster arithmetic rather than a §9 band, and ttkBands.test.ts holds it:
-    // a Corvette kills one inside the Scout's ≤ 4 s, a Chorister duel lasts
-    // as long as a Corvette duel, one alone needs twenty seconds against a
+    // a Corvette kills one inside the Scout's ≤ 6 s, a Chorister duel lasts
+    // as long as a Corvette duel, one alone needs thirty seconds against a
     // Corvette. "Expendable" is a sum.
     attackDamage: 20,
     attackRangeM: 450,
-    attackCooldownS: 1,
+    attackCooldownS: 1.5,
     carriesTorpedoes: false,
   },
   [UnitKind.Clarion]: {
@@ -324,15 +334,15 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     faction: Faction.Hadron,
     /**
      * A bow lance: more alpha and a third more reach than a Corvette, on a
-     * slower cycle, so sustained damage lands just under it (40 against 41.7).
-     * Solved inside docs/systems-combat.md §9's bands exactly as the rest of
-     * the roster is, and `ttkBands.test.ts` holds all four: it kills a Light
-     * Scout in 3 s, duels another Clarion in 9 s, and needs 28.5 s to bring
-     * down a Cruiser alone.
+     * slower cycle, so sustained damage lands just under it (26.7 against
+     * 27.8). Solved inside docs/systems-combat.md §9's bands exactly as the
+     * rest of the roster is, and `ttkBands.test.ts` holds all four: it kills
+     * a Light Scout in 4.5 s, duels another Clarion in 13.5 s, and needs
+     * 42.75 s to bring down a Cruiser alone.
      */
     attackDamage: 60,
     attackRangeM: 700,
-    attackCooldownS: 1.5,
+    attackCooldownS: 2.25,
     carriesTorpedoes: true,
   },
   [UnitKind.Harvester]: {
@@ -449,15 +459,15 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
      */
     faction: Faction.Bathyarch,
     /**
-     * "220 damage at 800 m, 4.0 s cycle (55/s)". Outranges a Sentinel Turret's
-     * 700 m, which is the point. `ttkBands.test.ts` holds the doc's bands:
-     * a Corvette in two cycles, a Bastion alone in ~90 s, and it dies to
-     * Corvette guns in ≥ 55 s — an anchor that does not fall to chip damage,
-     * §9's rule for the Cruiser applied twice over.
+     * "220 damage at 800 m, 6.0 s cycle (36.7/s)". Outranges a Sentinel
+     * Turret's 700 m, which is the point. `ttkBands.test.ts` holds the doc's
+     * bands: a Corvette in two cycles, a Bastion alone in ~135 s, and it dies
+     * to Corvette guns in ≥ 82 s — an anchor that does not fall to chip
+     * damage, §9's rule for the Cruiser applied twice over.
      */
     attackDamage: 220,
     attackRangeM: 800,
-    attackCooldownS: 4,
+    attackCooldownS: 6,
     // The torpedo-eater carries tubes of its own, as the Cruiser does.
     carriesTorpedoes: true,
   },
@@ -593,13 +603,13 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
      */
     faction: Faction.Directorate,
     /**
-     * "120 damage at 650 m, 2.0 s cycle (60/s)". `ttkBands.test.ts` holds the
-     * doc's bands: a Corvette in ~8 s and a Cruiser in ~20 s; it dies to
-     * Corvette guns in ~34 s.
+     * "120 damage at 650 m, 3.0 s cycle (40/s)". `ttkBands.test.ts` holds the
+     * doc's bands: a Corvette in ~12 s and a Cruiser in ~30 s; it dies to
+     * Corvette guns in ~50 s.
      */
     attackDamage: 120,
     attackRangeM: 650,
-    attackCooldownS: 2,
+    attackCooldownS: 3,
     carriesTorpedoes: true,
   },
   [UnitKind.Cantus]: {
@@ -674,14 +684,14 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
      */
     faction: Faction.Hadron,
     /**
-     * "140 damage at 1,000 m, 3.0 s cycle (46.7/s) — outranges the Cruiser's
-     * 900." `ttkBands.test.ts` holds the doc's bands: a Corvette in ~9 s, a
-     * Light Scout in two cycles, and it dies to a Corvette in ~7 s if the
+     * "140 damage at 1,000 m, 4.5 s cycle (31.1/s) — outranges the Cruiser's
+     * 900." `ttkBands.test.ts` holds the doc's bands: a Corvette in ~14 s, a
+     * Light Scout in two cycles, and it dies to a Corvette in ~11 s if the
      * Corvette gets there. The trade is the whole hull.
      */
     attackDamage: 140,
     attackRangeM: 1000,
-    attackCooldownS: 3,
+    attackCooldownS: 4.5,
     // No tubes. The hull is the lance and nothing else: a 300 HP hull that
     // also carried two Corvette-killing torpedoes would be an ambush kit on
     // the navy whose doctrine is the fight it arranged, and §5's magazine

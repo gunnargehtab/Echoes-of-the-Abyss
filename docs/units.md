@@ -94,9 +94,9 @@ Chorister (Directorate)
 - HP: 200
 - Hull: 50 m — the shortest in the roster, and beneath a Sounder's notice (bestiary.md §4:
   the colossus grinds hulls of 95 m and up, which is the Submersible exactly)
-- Weapon: 20 damage at 450 m, 1.0 s cycle (prototype). Not a §9 band; the roster's own
+- Weapon: 20 damage at 450 m, 1.5 s cycle (prototype). Not a §9 band; the roster's own
   arithmetic, and `ttkBands.test.ts` holds it: a Corvette kills one inside the Light Scout's
-  ≤ 4 s, a Chorister duel lasts as long as a Corvette duel, and one alone needs twenty
+  ≤ 6 s, a Chorister duel lasts as long as a Corvette duel, and one alone needs thirty
   seconds against a Corvette. "Expendable" is a sum, not a claim
 - Notes: Grown, not built — the cohort programme's own hull (economy.md §2). Quiet alone and
   loud in company: four idling in one Drift cell cross the ledger's 60 (bestiary.md §6), so
@@ -135,9 +135,9 @@ Clarion (Knights)
 - Speed: 75 (below the Corvette's 85 — a longer hull built around a bow array)
 - HP: 420
 - Hull: 90 m
-- Weapon: 60 damage at 700 m, 1.5 s cycle (prototype). A third more reach and a heavier
-  discharge than a Corvette, paid for on the cycle — sustained damage lands at 40/s against
-  the Corvette's 41.7. Inside [systems-combat.md](systems-combat.md) §9's bands on all four
+- Weapon: 60 damage at 700 m, 2.25 s cycle (prototype). A third more reach and a heavier
+  discharge than a Corvette, paid for on the cycle — sustained damage lands at 26.7/s against
+  the Corvette's 27.8. Inside [systems-combat.md](systems-combat.md) §9's bands on all four
   counts, and `ttkBands.test.ts` holds them
 - **Crystal-locked: no. Faction-locked: yes — and it is the roster's first.** See the design
   note below; the short version is that a cone figure is unreadable without the term, and the
@@ -215,7 +215,8 @@ Sentinel Turret (Structure — all factions)
 - HP: 1000
 - Cost: 250
 - Build time: 30s
-- Damage: 24 at 700 m, 1.5s cycle (prototype values)
+- Damage: 50 at 700 m, 2.25 s cycle — solved from [systems-combat.md](systems-combat.md)
+  §9's band: a Corvette in ~18 s. It deters and punishes; it does not delete
 - Notes: An ambush predator — near-silent until it fires, then it tells the region.
 
 Construction rules (prototype): sites must rise within 1,500 m of an existing own
@@ -364,15 +365,15 @@ Bulwark (Slipway)
 - Berths: 4 — a Cruiser and a third, in tonnage, which is what makes a Bulwark line the
   Consortium's whole grant
 - Speed: 30 — the slowest hull in the roster
-- HP: **2400**. §9: *survives one torpedo, dies to two* is the Cruiser's band; a Bulwark
-  survives three. "Armour that makes surviving the torpedo the plan"
+- HP: **2400**. §9: *survives three torpedoes, dies to four* is the Cruiser's band; a
+  Bulwark survives six. "Armour that makes surviving the torpedo the plan"
   ([systems-combat.md](systems-combat.md) §11) is this hull's stat line
-- Weapon: 220 damage at **800 m**, 4.0 s cycle (55/s). Outranges a Sentinel Turret's 700 m,
-  which is the point: a Bulwark shoots the static defence from outside it, and the Bastion
-  behind it from inside its own hull's tolerance. Bands to hold on transcription: kills a
-  Corvette in ≥ 8 s (two cycles), a Bastion alone in ~90 s, and dies to Corvette guns in
-  ≥ 55 s — an anchor that does not fall to chip damage, §9's rule for the Cruiser applied
-  twice over
+- Weapon: 220 damage at **800 m**, 6.0 s cycle (36.7/s). Outranges a Sentinel Turret's
+  700 m, which is the point: a Bulwark shoots the static defence from outside it, and the
+  Bastion behind it from inside its own hull's tolerance. Bands to hold on transcription:
+  kills a Corvette in ≥ 12 s (two cycles), a Bastion alone in ~135 s, and dies to Corvette
+  guns in ≥ 82 s — an anchor that does not fall to chip damage, §9's rule for the Cruiser
+  applied twice over
 - Faction-locked: yes — "few, heavy, tough" is the navy, and a hull that is loud by
   construction in a navy that is punished for being loud would be a Corvette with a worse
   price
@@ -458,8 +459,8 @@ Dredge (Slipway)
 - Berths: 3
 - Speed: 35
 - HP: 1400
-- Weapon: 120 damage at 650 m, 2.0 s cycle (60/s). Bands to hold: kills a Corvette in ~8 s
-  and a Cruiser in ~20 s; dies to Corvette guns in ~34 s
+- Weapon: 120 damage at 650 m, 3.0 s cycle (40/s). Bands to hold: kills a Corvette in ~12 s
+  and a Cruiser in ~30 s; dies to Corvette guns in ~50 s
 - Faction-locked: yes — a PR-4 hull sold to any navy with a rendering contract would sell the
   bottom of the map, and [economy.md](economy.md) §7 makes the deep a thing somebody pays for
 
@@ -502,12 +503,12 @@ Reciter (Slipway)
 - Berths: 2
 - Speed: 70
 - HP: 300
-- Weapon: 140 damage at **1,000 m**, 3.0 s cycle (46.7/s) — outranges the Cruiser's 900.
-  Bands to hold: kills a Corvette in ~9 s and a Light Scout in two cycles (the stat line is
+- Weapon: 140 damage at **1,000 m**, 4.5 s cycle (31.1/s) — outranges the Cruiser's 900.
+  Bands to hold: kills a Corvette in ~14 s and a Light Scout in two cycles (the stat line is
   the spec, and 140 does not reach a Scout's 180; an earlier draft claimed one); dies to a
-  Corvette in ~7 s if the Corvette gets there. The trade is the whole hull: it wins every fight it
-  arranged and loses every one it did not, which is [factions.md](factions.md)'s sentence
-  about the navy
+  Corvette in ~11 s if the Corvette gets there. The trade is the whole hull: it wins every
+  fight it arranged and loses every one it did not, which is [factions.md](factions.md)'s
+  sentence about the navy
 - Faction-locked: yes, for the Clarion's reason exactly: a cone figure is unreadable without
   the term, and another navy's Reciter would emit 90 in every direction
 
@@ -523,7 +524,9 @@ row); then the four Foundry hulls, whose effects the simulation already had mech
 (the Precentor's aura is the Cantor's, the Cantus's and the Sower's grant is the Spire's, the
 Spinner's magazine is the mine cap's); then the four Slipway hulls, whose weapons
 `ttkBands.test.ts` holds to the figures above — in *cycles*, each shot with its cooldown behind
-it, which is how the bands above are counted; and the Tender last, because repair was the one
+it, which is how the bands above are counted (every cycle in the roster is 1.5× what it was
+when the eight were transcribed, per #463, and the seconds above moved with it — the cycle
+counts did not); and the Tender last, because repair was the one
 mechanism the simulation did not have. Three readings the code had to make where the entries
 were silent: a stationary hull under Silent Running is not singing, seeding or welding — quiet
 is the off switch, so a Cantus can be stopped without moving it; a Tender welds other hulls and

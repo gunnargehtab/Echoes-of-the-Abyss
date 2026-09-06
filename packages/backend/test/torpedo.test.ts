@@ -173,12 +173,16 @@ describe('torpedoes', () => {
     );
   });
 
-  it('kills a Corvette in one hit, per the §9 band', () => {
+  it('wounds a Corvette with the first hit and kills it with the second, per the §9 band', () => {
     // The target runs silent, and that is load-bearing rather than incidental.
     // Since the §9 retune a Corvette's gun does 50 against a torpedo's 40 hull,
     // so any armed hull with a free cycle shoots one down inside the terminal
     // 250 m — which is §5 working as intended, and makes an unmodified version
     // of this test measure point defence rather than the damage band.
+    //
+    // Two torpedoes rather than one since #463: the first is a lesson the hull
+    // survives with less than a fifth of its plate, and the second is the
+    // magazine emptied. The alpha strike is intact; it is two decisions.
     //
     // A silent hull holds its fire, so the torpedo connects. It also starves
     // the seeker, which does not matter here: the aim point is the hull's own
@@ -208,10 +212,16 @@ describe('torpedoes', () => {
     // the torpedo has.
     advance(match, 12);
 
+    const maxHp = statsFor(UnitKind.Corvette).maxHp;
     assert.ok(
-      Health.hp[prey]! <= 0,
-      `one torpedo (${ORDNANCE.TORPEDO.DAMAGE}) should finish a Corvette (${statsFor(UnitKind.Corvette).maxHp} HP)`
+      Health.hp[prey]! > 0 && Health.hp[prey]! < maxHp / 5,
+      `one torpedo (${ORDNANCE.TORPEDO.DAMAGE}) should leave a Corvette (${maxHp} HP) alive and ` +
+        `nearly gone, left ${Health.hp[prey]}`
     );
+
+    launchTorpedo(match.world, launcher, Position.x[prey]!, Position.y[prey]!);
+    advance(match, 12);
+    assert.ok(Health.hp[prey]! <= 0, 'and the second torpedo of the magazine finishes it');
   });
 
   it('spends a magazine that only a depot refills', () => {
