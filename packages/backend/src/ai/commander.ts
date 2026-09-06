@@ -624,6 +624,24 @@ const ORDNANCE_REACH_M = 2200;
  */
 const SCREEN_RANGE_M = 2600;
 
+/**
+ * Each navy's siege hull (#508), on `OWN_SCOUT`'s and `OWN_ORDNANCE`'s terms:
+ * a roster fact, kept off the composition so it cannot re-phase the cycle.
+ */
+const OWN_SIEGE: Record<Faction, UnitKind> = {
+  [Faction.Bathyarch]: UnitKind.Furnace,
+  [Faction.Pelagia]: UnitKind.Blight,
+  [Faction.Directorate]: UnitKind.Lure,
+  [Faction.Hadron]: UnitKind.Tocsin,
+};
+
+/**
+ * How close a siege hull is willing to be told to get to the wall it is
+ * working on. Inside every siege weapon's own reach — the Furnace's 200 m is
+ * the shortest — so a hull walked to this ring is a hull that can start.
+ */
+const SIEGE_STANDOFF_M = 180;
+
 const WANTED_SEPARATELY: readonly UnitKind[] = [
   UnitKind.Spinner,
   UnitKind.Sower,
@@ -645,6 +663,10 @@ const WANTED_SEPARATELY: readonly UnitKind[] = [
   // doctrine that counted it as a line hull would field one fewer Corvette
   // than it thinks.
   ...Object.values(OWN_ORDNANCE),
+  // The siege hulls (#508), a fifth time. Three of the four are unarmed or
+  // nearly so and none belongs in a line: a Furnace counted as army would be a
+  // doctrine fielding one fewer Bulwark and calling it a heavy.
+  ...Object.values(OWN_SIEGE),
 ];
 
 /**
@@ -1153,6 +1175,7 @@ export class AiCommander implements AiPlayer {
     this.commandProduction(snapshot, harvesters, army, purse, commands);
     this.commandScout(snapshot, scout, commands);
     this.commandOrdnance(snapshot, commands);
+    this.commandSiege(snapshot, commands);
     this.commandLayers(snapshot, commands);
     this.commandSeeders(snapshot, commands);
     // The lift claims the hulls it orders aboard this observation, so the
@@ -2181,6 +2204,22 @@ export class AiCommander implements AiPlayer {
       }
     }
 
+    // The navy's siege hull, on the ordnance hull's terms: behind the escort,
+    // one only. A wall-breaker with no fleet to hold the water while it works
+    // is the most expensive way in the game to lose a hull.
+    const ownSiege = OWN_SIEGE[this.briefing.faction];
+    if (escorted) {
+      const engines =
+        snapshot.units.reduce((n, u) => n + (u.kind === ownSiege ? 1 : 0), 0) + queuedOf(ownSiege);
+      if (engines < 1) {
+        const yard = this.freeYard(snapshot.structures, ownSiege);
+        if (yard !== null && this.affordUnit(ownSiege, purse)) {
+          out.push({ kind: 'produce', structureId: yard.id, unit: ownSiege });
+          return;
+        }
+      }
+    }
+
     if (this.doctrine.composition.includes(UnitKind.Spinner)) {
       const layers =
         snapshot.units.reduce((n, u) => n + (u.kind === UnitKind.Spinner ? 1 : 0), 0) +
@@ -2601,6 +2640,121 @@ export class AiCommander implements AiPlayer {
           break;
       }
     }
+  }
+
+  /**
+   * The navy's siege hull, used rather than merely owned — and the reason
+   * `roster-plan.md` §7 calls the opponent the real cost of this wave.
+   *
+   * Besieging is the one behaviour in the commander that is not "go somewhere
+   * and shoot what you meet": it is *pick a wall, walk to it, and stay*. Three
+   * of the four hulls do not even shoot, so the army branch would never move
+   * them, and a siege hull the AI bought and parked at the rally would leave
+   * this wave's gate — match length — measuring a hole in four economies.
+   *
+   * One target at a time, and it is the nearest enemy *structure* this
+   * commander has classified. Classification is required where a plain gun
+   * needs only a bearing (§7): a Tier-2 smudge might be a hull, and a siege
+   * hull that walked 200 m onto a Corvette would die there for nothing.
+   */
+  private commandSiege(snapshot: EchoSnapshot, out: AiCommand[]): void {
+    const kind = OWN_SIEGE[this.briefing.faction];
+    for (const hull of snapshot.units) {
+      if (hull.kind !== kind) continue;
+
+      let wall: EchoSnapshot['contacts'][number] | null = null;
+      let bestD = Infinity;
+      for (const contact of snapshot.contacts) {
+        if (contact.structure === undefined) continue;
+        const d = distance(hull, contact);
+        if (d >= bestD) continue;
+        bestD = d;
+        wall = contact;
+      }
+      if (wall === null) {
+        // Nothing classified to besiege. Wait with the fleet rather than
+        // wandering: a siege hull alone in open water is a gift.
+        if (snapshot.tick % (TICKS_PER_OBSERVATION * 25) < TICKS_PER_OBSERVATION) {
+          out.push({ kind: 'move', unitIds: [hull.id], ...this.rallyPoint() });
+        }
+        continue;
+      }
+
+      switch (kind) {
+        case UnitKind.Blight: {
+          // Seed and leave. The strain keeps eating after the hull has gone, so
+          // standing at the wall it just poisoned is the one thing a Blight has
+          // no reason to do (docs/units.md).
+          if (bestD <= HULL_EFFECTS.BLIGHT.RANGE_M) {
+            out.push({ kind: 'seedSpore', unitId: hull.id, contactId: wall.id });
+            out.push({ kind: 'move', unitIds: [hull.id], ...this.rallyPoint() });
+          } else {
+            this.walkToWall(snapshot, hull, wall, HULL_EFFECTS.BLIGHT.RANGE_M, out);
+          }
+          break;
+        }
+        case UnitKind.Lure: {
+          // Sing from beside the wall, not on top of it: the song weights what
+          // fauna hear near the *point it was sung at*, and the Drift is what
+          // arrives, not the Lure. Then hold — the song runs on its own clock
+          // and the hull has nothing further to add for a minute.
+          if (bestD <= HULL_EFFECTS.LURE.RADIUS_M) {
+            out.push({ kind: 'sing', unitId: hull.id });
+          } else {
+            this.walkToWall(snapshot, hull, wall, HULL_EFFECTS.LURE.RADIUS_M, out);
+          }
+          break;
+        }
+        default: {
+          // The Furnace and the Tocsin do shoot, so the order is the ordinary
+          // one — walk into reach and engage the wall. The Tocsin's gun refuses
+          // to fire while the hull moves, which is why this stops *short* of
+          // the target rather than ordering an attack that would chase it: a
+          // hull walked to a standoff ring and told to attack stands still and
+          // works, and one told to attack from out of range walks in firing at
+          // nothing.
+          const reach = statsFor(kind).attackRangeM;
+          if (bestD > reach) {
+            this.walkToWall(snapshot, hull, wall, reach, out);
+          } else {
+            out.push({ kind: 'attack', unitIds: [hull.id], contactId: wall.id });
+          }
+          break;
+        }
+      }
+    }
+  }
+
+  /**
+   * Walk a siege hull to a standoff ring short of the wall.
+   *
+   * Short of it rather than onto it, because every one of these weapons has
+   * reach and none of them wants to be inside a base: the point on the line
+   * between the hull and the wall, pulled back by the smaller of the weapon's
+   * own range and `SIEGE_STANDOFF_M`.
+   */
+  private walkToWall(
+    snapshot: EchoSnapshot,
+    hull: EchoSnapshot['units'][number],
+    wall: EchoSnapshot['contacts'][number],
+    reachM: number,
+    out: AiCommand[]
+  ): void {
+    if (snapshot.tick % (TICKS_PER_OBSERVATION * 25) >= TICKS_PER_OBSERVATION) return;
+    const dx = wall.x - hull.x;
+    const dy = wall.y - hull.y;
+    const d = Math.hypot(dx, dy) || 1;
+    // Just inside the weapon's reach, and outside the ring the separation
+    // system holds a hull on: a Bastion pushes one out to 278 m, so a standoff
+    // computed as a comfortable fraction of a short reach would park the hull
+    // where it can never fire.
+    const standoff = Math.max(SIEGE_STANDOFF_M, reachM * 0.95);
+    out.push({
+      kind: 'move',
+      unitIds: [hull.id],
+      x: wall.x - (dx / d) * standoff,
+      y: wall.y - (dy / d) * standoff,
+    });
   }
 
   /** Enemy starts first — the one place an enemy is guaranteed to have been. */

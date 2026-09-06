@@ -262,6 +262,7 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
       UnitKind.Freighter,
       UnitKind.Beacon,
       UnitKind.Broadside,
+      UnitKind.Furnace,
     ],
     [Faction.Pelagia]: [
       UnitKind.Spinner,
@@ -269,10 +270,11 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
       UnitKind.Drifter,
       UnitKind.Glider,
       UnitKind.Weaver,
+      UnitKind.Blight,
     ],
-    // The Verger, the Acolyte and the Thurible are the Directorate's by their
-    // price and carry no lock, as the Chorister is and does (docs/units.md),
-    // so none of them is in this row.
+    // The Verger, the Acolyte, the Thurible and the Lure are the Directorate's
+    // by their price and carry no lock, as the Chorister is and does
+    // (docs/units.md), so none of them is in this row.
     [Faction.Directorate]: [UnitKind.Precentor, UnitKind.Dredge],
     [Faction.Hadron]: [
       UnitKind.Clarion,
@@ -281,6 +283,7 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
       UnitKind.Antiphon,
       UnitKind.Herald,
       UnitKind.Lance,
+      UnitKind.Tocsin,
     ],
   };
   const factions = [Faction.Bathyarch, Faction.Pelagia, Faction.Directorate, Faction.Hadron];
@@ -444,17 +447,26 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
   });
 
   it('gives an effect clock to exactly the hulls with work to clock', () => {
-    // `sigWorking` is what `spawnUnit` reads to attach a HullEffect, so the
-    // set has to be the doc's — per navy, because an effect is a doctrine:
-    // the Tender welding, the Sower seeded, the Cantus singing — and the
-    // Spinner's magazine is the one grown magazine. The commons carry
-    // neither, because a clock on a hull nobody owns is an effect without a
-    // doctrine to argue it.
+    // `sigWorking` is the SIG a hull makes *while its work runs*, per navy,
+    // because an effect is a doctrine: the Tender welding, the Sower seeded,
+    // the Cantus singing, and since wave 4 the Furnace cutting and the Tocsin
+    // firing (#508). The commons carry none, because a working figure on a
+    // hull nobody owns is an effect with no doctrine to argue it.
+    //
+    // What `sigWorking` no longer implies is a *clock*. It used to be exactly
+    // what `spawnUnit` read to attach a `HullEffect`, and that was safe only
+    // while every hull with a working figure worked by standing still.
+    // `stationaryNeededS` returns 0 for anything it does not name, so a siege
+    // hull given that clock read as working the instant it halted — a Furnace
+    // stopped in open water at SIG 75, forever. The clock is now gated on
+    // `WORKS_BY_STANDING_STILL` in `world.ts` and the siege hulls carry their
+    // figure through `world.siegeWorkSig` instead, written by the system that
+    // knows they are engaged.
     const WORKING: Record<Faction, readonly UnitKind[]> = {
-      [Faction.Bathyarch]: [UnitKind.Tender],
+      [Faction.Bathyarch]: [UnitKind.Tender, UnitKind.Furnace],
       [Faction.Pelagia]: [UnitKind.Sower],
       [Faction.Directorate]: [],
-      [Faction.Hadron]: [UnitKind.Cantus],
+      [Faction.Hadron]: [UnitKind.Cantus, UnitKind.Tocsin],
     };
     const GROWN: Record<Faction, readonly UnitKind[]> = {
       [Faction.Bathyarch]: [],
@@ -476,10 +488,21 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
         `${Faction[owner]} grown`
       );
     }
-    for (const stats of roster.filter((s) => s.faction === undefined)) {
+    // The *commons* — nobody's by lock and nobody's by price. A Biomass price
+    // is a lock (docs/units.md, design notes): the Chorister, the Verger, the
+    // Acolyte, the Thurible and the Lure are the Directorate's as surely as the
+    // Precentor is, so "carries no `faction`" is not the same question. This
+    // loop used to ask the wrong one and passed only because no price-locked
+    // hull had a working figure until the Lure (#508).
+    const commons = roster.filter((s) => s.faction === undefined && (s.biomassCost ?? 0) === 0);
+    for (const stats of commons) {
       assert.equal(stats.sigWorking, undefined, `${stats.name} is nobody's and clocks nothing`);
       assert.equal(stats.mineMagazine, undefined, `${stats.name} grows nothing`);
     }
+    // Deliberately no converse claim here: a Biomass price and a `faction` are
+    // not exclusive. The Precentor and the Dredge carry both, which is the
+    // point of "two ways a Biomass hull is the Directorate's, and the roster
+    // uses both" (economy.test.ts).
     assert.equal(statsFor(UnitKind.Spinner).mineMagazine, HULL_EFFECTS.SPINNER.MAGAZINE);
   });
 });

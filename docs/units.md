@@ -821,6 +821,107 @@ Lance (Slipway)
   other flag the gate would be a tube refusing shots for no reason its own signature could
   explain
 
+The siege hulls — one a navy, and four answers to a wall
+
+Nothing in the roster killed a structure well, and the superweapons are sites rather than
+hulls ([factions.md](factions.md)). So a base was a timer: whoever won the field walked in
+eventually. These four are how each navy takes a wall down instead, and *only one of them is
+a gun* — the other three are a spore, a song, and a bell
+([systems-combat.md](systems-combat.md) §9, "A weapon that is not a weapon"). All four sit
+behind the Slipway and share its line with the five refits
+([systems-progression.md](systems-progression.md) §1): a navy building its siege hull is a
+navy not refitting its fleet, and that tension is the point.
+
+Furnace (Slipway)
+
+- Role: The cutter. Thermal cutters — the same tool that opens kelp
+  ([hazards.md](hazards.md) §4) — turned on plate at 320 m
+- SIG: 40 / 55 / — , and **75 while cutting**: above every cruise figure in the roster and
+  below a ping. A siege you can hear being prepared, which is the half-minute the defender
+  is given
+- HYD: 40
+- PR: 2 — the Consortium baseline
+- Cost: 380
+- Build time: 68s
+- Berths: 3
+- Speed: 32
+- HP: 900
+- Effect: **100 damage a cycle to a structure and 9 to a hull**, on a 2 s cycle at 320 m —
+  the reach is the footprint's, not a preference: a hull is held 278 m off a Bastion, and a
+  siege weapon that cannot out-reach that ring cuts air.
+  Thirty seconds on a Refinery; ninety-four on a Corvette, which is four Corvettes' worth of
+  losing. The cutter is a tool and the gap is deliberate — a siege hull that could also
+  fight would be the best line hull in the game
+- Faction-locked: yes. A hull that must stand 200 m off a wall for half a minute at SIG 75
+  is only fieldable by a navy that brings a Bulwark to stand in front of it; every other
+  doctrine would be buying a siege it cannot escort
+
+Blight (Slipway)
+
+- Role: The spore. Seeds a Deepbloom strain on a structure and leaves — the only way a wall
+  comes down in this game without a sound
+- SIG: 10 / 20 / — (no weapon), and the hull is the loudest part of the operation
+- HYD: 45
+- PR: 1 — the Commune baseline
+- Cost: 300, plus 60 Resonance Crystal — the strain is a Deepbloom strain, so the deep's own
+  account pays for it ([economy.md](economy.md) §2, §7)
+- Build time: 55s
+- Berths: 2
+- Speed: 60
+- HP: 340
+- Effect: **1% of the structure's maximum hull a second for 60 s**, seeded from 350 m and
+  reseedable every 45 s. Sixty per cent of the wall and never the last of it: a spore does
+  not take a base, it makes one takeable, and something still has to arrive. **The
+  structure's SIG never moves while it dies** — every other siege announces itself, and this
+  one is a Refinery whose hull is falling with nothing to hear. The counter-play is
+  *looking*, which is the one sense this game otherwise never asks for
+- Faction-locked: yes. A wall that falls in silence is the Veil's argument and nobody
+  else's; under another flag the strain is a damage-over-time with no doctrine behind it
+
+Lure (Slipway)
+
+- Role: The song. The Listening does not knock the wall down — it tells the Drift where the
+  wall is
+- SIG: 14 / 24 / — , and **55 while singing**. Loud enough to be the reason the fauna came
+- HYD: 60
+- PR: 3 — on the hull, the Listening's own water
+- Cost: 280, plus 50 Biomass — the cohort programme's account, and the lock
+- Build time: 58s
+- Berths: 3
+- Speed: 40
+- HP: 560
+- Effect: a **60 s song** that doubles what fauna hear from anything within **500 m of the
+  point it sang at** ([bestiary.md](bestiary.md) §2's modifier table, with a source, a
+  radius and a clock), on a 90 s cooldown. Worth nothing against a base nothing lives near,
+  and worth a great deal beside a Drift that is healthy — which is the one siege in the
+  roster whose strength is a property of the map rather than of the hull
+- Faction-locked: no. The Biomass is the lock, as the Chorister's, the Verger's, the
+  Acolyte's and the Thurible's are: a song reads the same under any flag, and what does not
+  is paying for it out of the account whose yield rises and falls with Drift Health
+
+Tocsin (Slipway)
+
+- Role: The bell. An energy gun with 1,400 m of reach that fires only while stationary, and
+  stationary it is the loudest thing in the water short of a ping
+- SIG: **22 / 55 / —** as cone figures like every Order hull's
+  ([systems-echo.md](systems-echo.md) §8), and **88 while firing** — sustained, omni-
+  directional in effect because a hull that is not moving has stopped hiding behind its bow
+- HYD: 45
+- PR: 2 — the Hadron baseline
+- Cost: 340, plus 40 Resonance Crystal
+- Build time: 62s
+- Berths: 2
+- Speed: 55
+- HP: 340
+- Effect: **200 damage a cycle to a structure and 70 to a hull** on a 5 s cycle at 1,400 m,
+  and **the gun will not fire while the hull is moving**. Twenty-five seconds on a Sentinel
+  Turret from outside anything's reply; thirty on a Corvette against a Corvette's own
+  sixteen, so nothing mistakes this for a line hull. Standing still to work already exists
+  — a Sower seeds and a Cantus sings that way — but a *gun* gated on it is new, and it is the
+  whole hull
+- Faction-locked: yes. A gun that announces its navy's position for as long as it works is
+  the Order's doctrine stated as a weapon, and an unpriced liability under any other
+
 What this does to the summary table. [factions.md](factions.md)'s *Army* row becomes true in
 the roster: the Consortium fields the heaviest hull and the only repair; the Commune the most
 mines and the only terraformer; the Directorate the best ears and the only PR-4; the Knights

@@ -17,6 +17,7 @@
 import { addComponent, defineQuery, hasComponent, removeEntity } from 'bitecs';
 import {
   ACTIVE_SONAR,
+  HULL_EFFECTS,
   BERTHS,
   type BerthReport,
   CONCESSION,
@@ -93,6 +94,7 @@ import {
 } from './components.ts';
 import { EchoLayer } from './systems/echoLayer.ts';
 import { cadencePingSystem } from './systems/cadencePing.ts';
+import { seedSpore, siegeSystem, startSong } from './systems/siege.ts';
 import { acousticsSystem } from './systems/acoustics.ts';
 import { aurasSystem } from './systems/auras.ts';
 import { standingWaveSystem } from './systems/standingWave.ts';
@@ -1473,6 +1475,57 @@ export class Match {
     return this.missionRuntime?.fireAbility(slot) === true;
   }
 
+  /**
+   * Seed a structure with the Blight's strain — docs/units.md, the Blight.
+   *
+   * By handle, like a torpedo launch: the handle is the proof this slot
+   * resolved this structure. Unlike a launch there is no tier floor beyond
+   * having a handle at all, because the weapon needs no firing solution — you
+   * are touching a wall, not leading a moving target.
+   *
+   * Returns false when the target is not a structure, is out of reach, already
+   * carries a strain, or the seeder is still cold.
+   */
+  seedSpore(slot: number, eid: number, contactHandle: number): boolean {
+    this.recordCommand({
+      tick: this.world.tick,
+      type: 'seedSpore',
+      slot,
+      unit: this.localId(eid),
+      contact: contactHandle,
+    });
+    if (!this.owns(slot, eid) || !hasComponent(this.world, Unit, eid)) return false;
+    if (statsFor(Unit.kind[eid] as UnitKind).kind !== UnitKind.Blight) return false;
+    if (Countermeasure.cooldownRemainingS[eid]! > 0) return false;
+
+    const target = this.echo.entityForHandle(slot, contactHandle);
+    if (target === undefined) return false;
+    if (!hasComponent(this.world, Structure, target)) return false;
+    if (Owner.slot[target] === slot) return false;
+    if (!hasComponent(this.world, Health, target) || Health.hp[target]! <= 0) return false;
+
+    const reach = HULL_EFFECTS.BLIGHT.RANGE_M;
+    const dx = Position.x[target]! - Position.x[eid]!;
+    const dy = Position.y[target]! - Position.y[eid]!;
+    if (dx * dx + dy * dy > reach * reach) return false;
+
+    if (!seedSpore(this.world, target, slot)) return false;
+    Countermeasure.cooldownRemainingS[eid] = HULL_EFFECTS.BLIGHT.COOLDOWN_S;
+    return true;
+  }
+
+  /**
+   * Sing — docs/units.md, the Lure. The Drift is called to where the hull is
+   * standing, which is why there is nothing to name and nothing to resolve.
+   *
+   * Returns false while the hull is still cold or already singing.
+   */
+  sing(slot: number, eid: number): boolean {
+    this.recordCommand({ tick: this.world.tick, type: 'sing', slot, unit: this.localId(eid) });
+    if (!this.owns(slot, eid)) return false;
+    return startSong(this.world, eid);
+  }
+
   /** The unrecorded half of `activeSonar` — see `applyMove`. */
   private applyPing(slot: number, eid: number): void {
     if (!this.owns(slot, eid) || !hasComponent(this.world, Unit, eid)) return;
@@ -1769,6 +1822,13 @@ export class Match {
     this.recorder?.maybeCheckpoint(this.world.tick, () => hashWorld(this.world));
     this.destroyedScratch.length = 0;
     this.world.environmentalDeaths.clear();
+    // The siege floor is rebuilt from scratch every step, like every other
+    // derived acoustic state: combat writes it for a hull that is engaged and
+    // `siegeSystem` for one that is singing, both before the SIG pass reads it.
+    // Cleared *here* rather than after that read, because a hull that stopped
+    // cutting must be quiet on the very next tick — a floor that latched would
+    // leave a Furnace at 75 for the rest of the match.
+    this.world.siegeWorkSig.clear();
     harvestSystem(this.world);
     combatSystem(this.world, this.destroyedScratch);
     const physicsStarted = performance.now();
@@ -1817,6 +1877,11 @@ export class Match {
     // SIG pass, not the next one. The Echo pass runs at 5 Hz and would
     // otherwise read a ping that had already been counted down.
     cadencePingSystem(this.world);
+    // Before acoustics for the cadence ping's reason: a spore ticking and a
+    // song running are both this tick's facts, and the song writes the working
+    // floor that the SIG pass is about to read — after combat has written its
+    // half of the same map, and after the step's own clear at the top.
+    siegeSystem(this.world, this.destroyedScratch);
     acousticsSystem(this.world);
     pressureSystem(this.world, this.destroyedScratch);
     // Hazards after pressure and before reap: a hull killed by an eruption

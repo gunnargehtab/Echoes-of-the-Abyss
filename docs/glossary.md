@@ -85,6 +85,14 @@ Committed Shot
 
 - A torpedo that keeps the solution it launched with instead of re-acquiring (units.md, the Lance). The launch is refused outside the hull's own cone, and what results cannot be turned by a decoy, a countermeasure or a Chorus Call. The triangle's missing edge: everything else in the water wins by being the loudest thing now, and this is the one weapon that is not listening.
 
+Spore
+
+- A Deepbloom strain seeded on a structure by the Blight (systems-combat.md §9). Eats 1% of the structure's *maximum* hull a second for 60 s — 60% of the wall and never the last of it — and the structure's SIG never moves while it does. The only way a wall comes down in this game without a sound; the counter-play is looking.
+
+Song (a hull's)
+
+- The Lure's 60 s call at SIG 55, which doubles what fauna hear from anything within 500 m of the point it was sung at (bestiary.md §2's modifier table, with a source, a radius and a clock). A song is a thing that happened to a *place*: it outlives the singer leaving, and it weights the Directorate's own hulls too.
+
 Ghost Markers
 
 - The decaying last-known position of a contact a listener has already detected. Tier 1 and Tier 2 contacts persist this way and fade over 20 s (systems-echo.md §4). A ghost marker is your own stale reading of a live unit, and it lies to you by exactly as much as that unit has moved since you heard it.

@@ -202,6 +202,27 @@ export interface UnitStats {
    * the hull that does it for a living.
    */
   depthChargeCooldownS?: number;
+  /**
+   * What this weapon does to a *structure*, when that differs from what it does
+   * to a hull (docs/systems-combat.md §9, "One weapon, two numbers").
+   *
+   * The triangle's one-damage-number-per-weapon stays true **per target
+   * class**: this is a second figure on the same weapon, not a second weapon.
+   * It exists because until wave 4 every hull was an equally bad wall-breaker,
+   * and a roster with no siege in it makes a base a timer rather than an
+   * objective.
+   *
+   * Absent means the hull hits a wall exactly as hard as it hits a hull, which
+   * is every hull outside the siege row.
+   */
+  attackDamageStructure?: number;
+  /**
+   * This gun fires only while the hull is stationary (docs/units.md, the
+   * Tocsin). Standing still to work already exists — a Sower seeds and a Cantus
+   * sings that way — but a *gun* gated on it is the hull's whole argument:
+   * nothing outranges it, and anything that reaches it kills it.
+   */
+  firesOnlyStationary?: boolean;
 }
 
 /** Half a hull's length: the radius the simulation keeps clear around it. */
@@ -1206,6 +1227,162 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     carriesTorpedoes: true,
     torpedoMagazine: 1,
     coneLockedTorpedo: true,
+  },
+
+  /**
+   * The siege hulls — one a navy (docs/units.md, "The siege hulls"; wave 4 of
+   * docs/roster-plan.md, #508). Nothing in the roster killed a structure well,
+   * and the superweapons are sites rather than hulls (docs/factions.md), so
+   * these four are each navy's answer to a wall. Only one of them is a gun.
+   */
+  [UnitKind.Furnace]: {
+    kind: UnitKind.Furnace,
+    name: 'Furnace',
+    // SPEC — docs/units.md, Furnace: "40 / 55 / 75 cutting".
+    sigIdle: 40,
+    sigCruise: 55,
+    sigFiringBurst: 0,
+    hyd: 40,
+    pressureRating: 2,
+    maxHp: 900,
+    speed: 32,
+    hullLengthM: 115,
+    cost: 380,
+    buildTimeS: 68,
+    berths: 3,
+    /**
+     * Thermal cutters are the Consortium's tool (docs/hazards.md §4 — the same
+     * gear that opens kelp), and a hull that must stand at 200 m of a wall for
+     * half a minute at SIG 75 is only fieldable by a navy that brings a Bulwark
+     * to stand in front of it. Every other doctrine would be buying a siege it
+     * cannot escort.
+     */
+    faction: Faction.Bathyarch,
+    /**
+     * Nine. Floored deliberately low so a Corvette out-trades it four to one
+     * (§9's ≥ 90 s band): the cutter is a tool, and a siege hull that could
+     * also fight would be the best line hull in the game.
+     */
+    attackDamage: 9,
+    // 15 cycles on a 1,500 HP Refinery at 2 s a cycle — 30 s, inside §9's
+    // 25–40 s band, which is long enough that the defender can arrive.
+    attackDamageStructure: 100,
+    /**
+     * 320, not the 200 the sketch asked for (docs/roster-plan.md §3), and the
+     * difference is the separation system rather than a balance opinion.
+     *
+     * Hulls are held off a structure's footprint: measured, a Refinery holds
+     * one at 198 m, a Foundry at 218 and a **Bastion at 278**. A 200 m cutter
+     * can therefore reach exactly nothing — it walks to the ring, sits 18 m
+     * outside its own range and cuts air, forever, which is what the first
+     * draft of this hull did. Anything that besieges has to out-reach the ring
+     * around the biggest wall in the game, and the Bastion is the one a siege
+     * exists for.
+     */
+    attackRangeM: 320,
+    attackCooldownS: 2,
+    carriesTorpedoes: false,
+    // The cutters, while they run. Above every cruise SIG in the roster and
+    // below a ping: a siege you can hear being prepared.
+    sigWorking: 75,
+  },
+  [UnitKind.Blight]: {
+    kind: UnitKind.Blight,
+    name: 'Blight',
+    // SPEC — docs/units.md, Blight: "10 / 20 / — (no weapon)". The hull is
+    // quiet and what it leaves behind makes no sound at all.
+    sigIdle: 10,
+    sigCruise: 20,
+    sigFiringBurst: 0,
+    hyd: 45,
+    pressureRating: 1,
+    maxHp: 340,
+    speed: 60,
+    hullLengthM: 80,
+    cost: 300,
+    // The spore is a Deepbloom strain, so the crystal pays for it
+    // (docs/economy.md §2, §7) — the one siege hull priced in the deep's own
+    // account rather than in tonnage.
+    crystalCost: 60,
+    buildTimeS: 55,
+    berths: 2,
+    /**
+     * A wall that falls in silence is the Veil's argument and nobody else's.
+     * Under any other flag the strain would be a damage-over-time with no
+     * doctrine behind it — and the Commune is the navy whose whole case is
+     * that you do not hear it coming.
+     */
+    faction: Faction.Pelagia,
+    // Unarmed. The spore is the weapon, and a Blight that could also shoot
+    // would have a reason to be seen.
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: false,
+  },
+  [UnitKind.Lure]: {
+    kind: UnitKind.Lure,
+    name: 'Lure',
+    // SPEC — docs/units.md, Lure: "14 / 24 / 55 singing".
+    sigIdle: 14,
+    sigCruise: 24,
+    sigFiringBurst: 0,
+    hyd: 60,
+    /** PR-3 on the hull, the Listening's own water. */
+    pressureRating: 3,
+    maxHp: 560,
+    speed: 40,
+    cost: 280,
+    // Grown, and that is the lock — the Chorister's rule a fourth time. A song
+    // that calls the Drift reads the same under any flag; what does not is
+    // paying for it out of the account whose yield rises with Drift Health.
+    biomassCost: 50,
+    hullLengthM: 100,
+    buildTimeS: 58,
+    berths: 3,
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: false,
+    // The song, while it runs. Loud enough to be the reason the fauna came.
+    sigWorking: 55,
+  },
+  [UnitKind.Tocsin]: {
+    kind: UnitKind.Tocsin,
+    name: 'Tocsin',
+    // SPEC — docs/units.md, Tocsin: "22 / 55 / 88 firing", and the hull
+    // figures are cone figures like every Order hull's.
+    sigIdle: 22,
+    sigCruise: 55,
+    sigFiringBurst: 0,
+    hyd: 45,
+    pressureRating: 2,
+    maxHp: 340,
+    speed: 55,
+    hullLengthM: 105,
+    cost: 340,
+    crystalCost: 40,
+    buildTimeS: 62,
+    berths: 2,
+    /**
+     * The bell. A gun that only fires standing still, at the loudest sustained
+     * figure in the roster, is a hull that announces its navy's position for
+     * as long as it works — which is the Order's doctrine stated as a weapon
+     * and would be an unpriced liability under any other.
+     */
+    faction: Faction.Hadron,
+    // 6 cycles on a Corvette at 5 s — 30 s, twice a Corvette's own duel band,
+    // so nothing mistakes this for a line hull.
+    attackDamage: 70,
+    // 5 cycles on a 1,000 HP turret — 25 s, inside §9's 20–35 s band.
+    attackDamageStructure: 200,
+    attackRangeM: 1400,
+    attackCooldownS: 5,
+    carriesTorpedoes: false,
+    firesOnlyStationary: true,
+    // Standing and firing. Above the Furnace's cutters and below a ping: §9's
+    // "the loudest thing in the water short of a ping".
+    sigWorking: 88,
   },
 };
 

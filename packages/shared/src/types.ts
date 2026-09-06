@@ -158,6 +158,19 @@ export enum UnitKind {
   Thurible = 25,
   /** Knights, Slipway: one torpedo, and only at what it faces. */
   Lance = 26,
+  /**
+   * The siege hulls — one a navy, and four answers to a wall (docs/units.md,
+   * "The siege hulls"; wave 4 of docs/roster-plan.md, #508). Appended, for the
+   * same reason: the value crosses the wire and sits in replays.
+   */
+  /** Consortium, Slipway: thermal cutters turned on plate. */
+  Furnace = 27,
+  /** Commune, Slipway: a spore, and silence. */
+  Blight = 28,
+  /** Directorate, Slipway: a song, and the Drift. */
+  Lure = 29,
+  /** Knights, Slipway: a bell, and 1,400 m of reach. */
+  Tocsin = 30,
 }
 
 /** Prototype structure roster. Stats live in structures.ts. See docs/units.md. */

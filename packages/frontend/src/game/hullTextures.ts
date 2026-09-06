@@ -98,6 +98,16 @@ const HULL_ART_URL: Record<UnitKind, string> = {
   [UnitKind.Weaver]: raiderUrl,
   [UnitKind.Thurible]: shadowUrl,
   [UnitKind.Lance]: cruiserUrl,
+  // The siege hulls (#508), on the class each hull's tonnage and navy put it
+  // in until a model passes intake: the Furnace is a Consortium working hull
+  // — the Tender's and the Beacon's class rather than the Broadside's,
+  // because its cutters are gear and not guns — the Blight a raider's shell
+  // like every quiet Commune hull, the Lure the Directorate's, the Tocsin a
+  // premium Order gun hull on the Reciter's and the Lance's class.
+  [UnitKind.Furnace]: siegeUrl,
+  [UnitKind.Blight]: raiderUrl,
+  [UnitKind.Lure]: shadowUrl,
+  [UnitKind.Tocsin]: cruiserUrl,
 };
 
 /** Sprite resolution. 3 px per world metre keeps even the scout's hull crisp. */
@@ -106,7 +116,7 @@ const PX_PER_M = 3;
 const MARGIN_PX = 10;
 
 const artImages = new Map<UnitKind, HTMLImageElement>();
-/** One decode per plate: five patches clad twenty-seven hulls. */
+/** One decode per plate: five patches clad thirty-one hulls. */
 const plateDecodes = new Map<string, Promise<HTMLImageElement>>();
 /** Hulls whose plate and maps are both decoded, keyed `kind:faction`. */
 const artReady = new Set<string>();

@@ -56,6 +56,7 @@ import {
 import { directionalFactorFor } from '../directional.ts';
 import { activeCurrentAt } from './hazards.ts';
 import { raiseSelfEvent, type SimWorld } from '../world.ts';
+import { anySongRunning, songWeightAt } from './siege.ts';
 
 /** Slot fauna are owned by. Never a player, so every player can hear them. */
 export const DRIFT_SLOT = 200;
@@ -184,6 +185,9 @@ function listen(
   // Which side of the thermocline the *listener* is on, hoisted because it is
   // the same for every candidate this creature considers.
   const fZone = thermoclineZone(fd);
+  // Hoisted for the same reason: a song is the same fact for every candidate,
+  // and in the overwhelming majority of matches the answer is "nobody sang".
+  const singing = anySongRunning(world);
   // Bounded by the loudest thing that could exist, so the prune below can
   // never reject something the exact test would have accepted. The bound has
   // to cover the thermocline too: a creature in the duct hears along it at
@@ -262,6 +266,18 @@ function listen(
     // taste worse."
     if (Owner.faction[other] === Faction.Directorate) {
       heard *= DRIFT.DIRECTORATE_AGGRO_MULTIPLIER;
+    }
+    // A Lure's song (docs/units.md; docs/systems-combat.md §9) — the modifier
+    // table's newest row, and the only one with a source, a radius and a clock.
+    // Applied to the *target's* position rather than the creature's, because
+    // the song is an argument about where the interesting water is, and it is
+    // deliberately not keyed on faction: a Lure that made the Drift ignore the
+    // navy that called it would be area denial rather than a siege.
+    //
+    // The size gate keeps this free in the overwhelming majority of ticks: no
+    // Lure has ever sung in most matches.
+    if (singing) {
+      heard *= songWeightAt(world, Position.x[other]!, Position.y[other]!);
     }
 
     if (heard > bestHeard) {

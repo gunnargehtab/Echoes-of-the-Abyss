@@ -208,7 +208,7 @@ is used four ways. Each wave is one pull request and one row in
 | 1 — transports (done, #501) | Freighter, Drifter, Verger, Antiphon | embark / disembark, carried hulls unresolvable | a carried force crosses the Shelf line in a mission test; the AI uses a transport in ≥ 1 of 4 doctrines |
 | 2 — scouts (done, #506) | Beacon, Glider, Acolyte, Herald | engine-off glide; cheap cadence ping | first-classified-enemy time per navy moves, and differently per navy |
 | 3 — ordnance (done, #507) | Broadside, Weaver, Thurible, Lance | noisemakers laid from a hull; upward depth charge | the weapon triangle reads in duels: torpedo navy beats heavy pushes, decoy navy survives them |
-| 4 — siege | Furnace, Blight, Lure, Tocsin | structure-only damage; spore over time; fauna weighting from a hull | match length falls without the win rates spreading — read in the four-faction baseline, not a duel (#518) |
+| 4 — siege (done, #508) | Furnace, Blight, Lure, Tocsin | structure-only damage; spore over time; fauna weighting from a hull | match length falls without the win rates spreading — read in the four-faction baseline, not a duel (#518) |
 | 5 — line and anchor | Caisson, Reed, Bower | none | the Consortium and Commune doctrines stop buying Corvettes; the Bower is judged where the Slipway is reached (#518) |
 | 6 — the commons | none | none | a decision, from the harness: retire the Light Scout, Corvette and Cruiser from the bars, or keep them as the surplus market |
 
@@ -302,6 +302,32 @@ and keeping the shot in the tube, the committed solution, the charge that floats
 rack that cycles for it. That is a weaker gate than the duels honestly, and it is the gate
 this wave actually passed.
 
+**Wave 4** landed the four siege hulls and both remaining mechanisms, and found two bugs
+that had been sitting in the simulation rather than in the wave.
+
+The first: **`sigWorking` used to imply a stationary clock.** `spawnUnit` attached a
+`HullEffect` to any hull with a working figure, and `stationaryNeededS` returns 0 for
+anything it does not name — so such a hull read as *working* the instant it stopped moving.
+That was harmless while every hull with a working figure worked by standing still (the
+Tender, the Sower, the Cantus) and became a bug the moment three hulls arrived whose work is
+cutting, firing and singing: a Furnace halted in open water sat at SIG 75 for the rest of the
+match. The clock is now gated on the three hulls it was written for, and the siege hulls
+carry their figure through a per-tick map written by the system that knows they are engaged.
+
+The second: **a 200 m siege weapon could not reach anything.** Hulls are held off a
+structure's footprint by the separation system — measured, a Refinery holds one at 198 m, a
+Foundry at 218 and a **Bastion at 278**. The Furnace's sketched 200 m reach meant it walked
+to the ring, sat outside its own range and cut air, forever. Its reach is 320 m for that
+reason and no other, and every siege weapon added after this has to clear 278 or it does not
+work. `ttkBands.test.ts` holds that as a rule rather than as four numbers.
+
+Two things the sketches did not decide. The spore takes **60% of a wall and never the last of
+it** — a percentage of *maximum* hull, so it is linear and finite; a percentage of current
+hull decays asymptotically, reads as the same sentence and is a different weapon, one that
+can be left running instead of followed up. And a Furnace ordered to run silent does not stop
+cutting: the next cycle *breaks* the silence (§6), so the trade is real but arrives from the
+other side — you may have the wall or the silence, never both.
+
 ### What #518 found, and where these hulls are judged from now on
 
 The reading above was inferred from hulls that *died*, because losses were the only per-kind
@@ -349,6 +375,20 @@ there was nothing to read at all. The Lance is unchanged at one in thirty. The w
 move less than the noise on twenty-odd decided matches, and in both directions on different
 seed sets. The Bulwark, the Dredge and the Thurible are still never built, for the second
 and third reasons above.
+
+**Wave 4 read the same columns and found a fourth cause, which is the queue itself.** Its
+four siege hulls are still never built, and #518's first cause does not explain it: giving
+the siege want the same duty-cycle hold the rung hulls now use changes nothing except the
+win rates, and for the worse — the Knights fall seven points and the Directorate gain seven,
+on a hull that never arrives either way. The hold is spent and never closed.
+
+The reason is that `commandProduction` is a queue of separate wants that each `return`, and
+the siege hull is fifth in it: scout, ordnance, siege, wall, seeder, transport, heavy, then
+the composition cycle. A navy holding its purse for a Broadside never starts holding for a
+Furnace, because `rungSave` names one kind at a time and the ordnance want claims it first.
+So the fix is not another hold — it is that a navy can only be saving for one thing, and the
+roster now asks it to want five. That change belongs with #518's rather than inside a wave,
+and the siege hulls stay held by tests until it lands.
 
 Wave 3's gate stays unmet and its hulls stay held by tests. What has changed is that the
 gate is now *readable*: what it reads is a list of named causes rather than a column of

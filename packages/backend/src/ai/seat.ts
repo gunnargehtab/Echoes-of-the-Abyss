@@ -87,6 +87,12 @@ export class AiSeat {
       case 'depthCharge':
         this.match.orderDepthCharge(slot, command.unitId, command.depthM);
         return;
+      case 'seedSpore':
+        this.match.seedSpore(slot, command.unitId, command.contactId);
+        return;
+      case 'sing':
+        this.match.sing(slot, command.unitId);
+        return;
       case 'ping':
         this.match.activeSonar(slot, command.unitId);
         return;

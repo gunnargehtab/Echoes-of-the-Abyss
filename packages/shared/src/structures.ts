@@ -387,6 +387,13 @@ export const PRODUCIBLE: Partial<Record<StructureKind, readonly UnitKind[]>> = {
     UnitKind.Broadside,
     UnitKind.Thurible,
     UnitKind.Lance,
+    // The siege hulls (#508). All four behind the rung, sharing its line with
+    // the five refits: a navy building its siege hull is a navy not refitting
+    // its fleet (docs/systems-progression.md §1), and that tension is the point.
+    UnitKind.Furnace,
+    UnitKind.Blight,
+    UnitKind.Lure,
+    UnitKind.Tocsin,
   ],
 };
 
