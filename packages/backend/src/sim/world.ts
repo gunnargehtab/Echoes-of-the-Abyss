@@ -19,6 +19,7 @@ import {
   ordnanceStatsFor,
   ORDNANCE,
   OrdnanceKind,
+  type AmbientBand,
   type DrawReport,
   type FaunaSpecies,
   type Stockpile,
@@ -108,6 +109,13 @@ export interface ProductionQueue {
 
 export interface SimWorld extends IWorld {
   terrain: Terrain;
+  /**
+   * The map's re-homed ambient species (`MapDefinition.ambientBands`) — the
+   * one piece of map data the Drift reads after the terrain is built, because
+   * where a cluster *rests* is decided here and not in the profile
+   * (docs/bestiary.md §4). Empty for every map that keeps the profile's band.
+   */
+  ambientBands: Partial<Record<FaunaSpecies, AmbientBand>>;
   /** Monotonic fixed-step tick counter. */
   tick: number;
   /** Seconds per fixed step. */
@@ -433,6 +441,7 @@ export function createSimWorld(
 ): SimWorld {
   const world = createWorld() as SimWorld;
   world.terrain = terrain;
+  world.ambientBands = {};
   // The map is built; from here, a cell write is something that happened in
   // the match. That is the distinction the wire and the state hash both need
   // (#197) — the join payload already carries the constructed ground.
@@ -498,11 +507,31 @@ export function economyFor(world: SimWorld, slot: number): PlayerEconomy {
  * docs/bestiary.md §3: fauna are contacts because nothing marks them out as
  * anything else.
  */
+/**
+ * The band a species rests in on *this* map — its profile's, unless the map
+ * re-homed it (docs/bestiary.md §4, "One species, two waters").
+ *
+ * The one place that answer is given. The seeder's floor test, a seeded
+ * animal's resting depth, and the depth a released creature climbs home to
+ * all read it, so a Kelp Forest cluster placed by a beat and one the seeder
+ * scattered agree about where home is.
+ */
+export function ambientBandFor(world: SimWorld, species: FaunaSpecies): AmbientBand {
+  const stats = faunaStatsFor(species);
+  return (
+    world.ambientBands[species] ?? {
+      workingDepthM: stats.workingDepthM,
+      seedSpreadM: stats.seedSpreadM,
+    }
+  );
+}
+
 export function spawnFauna(
   world: SimWorld,
   options: { species: FaunaSpecies; x: number; y: number; depth?: number }
 ): number {
   const stats = faunaStatsFor(options.species);
+  const band = ambientBandFor(world, options.species);
   const eid = addEntity(world);
   registerEntity(world, eid);
 
@@ -521,10 +550,13 @@ export function spawnFauna(
   // draw from the match RNG (a mission spawning one shoal must not shift
   // every later roll), and deterministic across processes for the reason the
   // sense stagger below gives.
-  let restingDepth = stats.workingDepthM;
-  if (stats.seedSpreadM > 0) {
+  //
+  // The band is the map's answer, not the profile's: a re-homed Tetherjelly
+  // seeds across its Kelp Forest band on the map that named it (§4).
+  let restingDepth = band.workingDepthM;
+  if (band.seedSpreadM > 0) {
     const fraction = (((localIdOf(world, eid) ?? 0) * 0.6180339887498949) % 1) * 2 - 1;
-    restingDepth += fraction * stats.seedSpreadM;
+    restingDepth += fraction * band.seedSpreadM;
   }
   Position.depth[eid] =
     options.depth ?? Math.min(restingDepth, world.terrain.floorAt(options.x, options.y));
@@ -563,7 +595,7 @@ export function spawnFauna(
   Fauna.senseS[eid] = ((localIdOf(world, eid) ?? 0) % 30) / 60;
   Fauna.homeX[eid] = options.x;
   Fauna.homeY[eid] = options.y;
-  Fauna.homeDepth[eid] = stats.workingDepthM;
+  Fauna.homeDepth[eid] = band.workingDepthM;
   // Nothing is born under a beat; the runtime raises this when one takes hold.
   Fauna.driven[eid] = 0;
   // Nor shot before it was born — the recycled-id argument below.

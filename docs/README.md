@@ -176,18 +176,19 @@ planned from a thing nobody wrote down:
   register, a depth — is a question the bible has not put, and nothing is planned to put it. A
   mission that wants a commander in a hull asks in its own §13, as it does for an ability, and
   answers the sound before the stats.
-- **The Tetherjelly's second home** — *planned, shape undecided.* [bestiary.md](bestiary.md) §4
-  gives the species two habitats, Kelp Forest and the thermocline, and its depth table seeds it in
-  one, the duct at 1,100–1,300 m. A Kelp Forest population needs either a second seeding depth per
-  map or a second entry, and the table says so rather than choosing. It is the one item in this
-  group that is work: the choice is that document's to make, and a Kelp Labyrinth map
-  ([maps.md](maps.md)) is where it would first be missed.
 - **The Mouth's open questions** — *open by rule, not planned.* [timeline.md](timeline.md)'s
   *Open Questions* — what replied to the First Chord, what Item 9 says, what happens at zero — are
   not a to-do list. [campaign.md](campaign.md) §2 rule 3 is that the Mouth is never explained, and
   a doc that answered one of them would be breaking the rule rather than finishing the work.
 
-Beyond these five, nothing in the world or storyline docs is planned. A loose end in one of them
+The Tetherjelly's second home, once the fifth item here and the one that was work, is decided and
+built: [bestiary.md](bestiary.md) §4 settles it as one animal re-homed per map rather than a
+second species, `marr-plateau` names the Kelp Forest band, and *Tend* seeds its shoals and
+clusters (#480). It was expected to be missed on a Kelp Labyrinth map first; in the event the
+Labyrinth's kelp floor is 1,800 m and already holds the duct population, and the map that lacked
+the species was Marr Plateau.
+
+Beyond these four, nothing in the world or storyline docs is planned. A loose end in one of them
 that is not on this list is one nobody has written down, and it belongs here before it belongs
 in a margin.
 

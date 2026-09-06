@@ -251,6 +251,8 @@ Regions may also set a **floor** and a **ceiling**. Both are optional: a region 
 
 Because regions paint in order, terrain is authored the way it reads — the ground, then what was cut into it. The same property that lets a trench cut *through* a vent line in two lines of data lets a tunnel run *under* a ridge in two: paint the plateau, then paint a narrower region across it with a ceiling and a deeper floor. Read in order, that is a shelf with a hole bored through it.
 
+A map may also **re-home an ambient species**. A species carries one working depth ([bestiary.md](bestiary.md) §4) and the Tetherjelly is documented with two homes; a map whose kelp is shallower than the duct names the species' Kelp Forest band, 250 m ±50 m, in its `ambientBands`, and every cluster on that map — seeded, placed by a mission, or released from a beat — rests there instead. Only a band the bestiary documents is admissible, and the map tests refuse any other. Marr Plateau is the one shipped map that does it; every skirmish map's kelp is deeper than the duct and names nothing.
+
 The ruleset does not care how deep a map goes. The depth bands mean the same thing on every map ([systems-depth.md](systems-depth.md) §1), and the maximum-floor constant is only a sanity ceiling on what a map may author, so a mistyped floor of 300,000 m fails a map test rather than producing a match.
 
 A map's **spawn list is its player count**, which is why the Abyssal Rift Corridor has two and the others four. The old spawn logic computed corners from the map's width and height, which quietly assumed every map is a square — false the moment a corridor map exists.

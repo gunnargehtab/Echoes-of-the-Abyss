@@ -25,6 +25,7 @@ import {
   FaunaStage,
   SIM,
   StructureKind,
+  TETHERJELLY_KELP_BAND,
   UnitKind,
   faunaStatsFor,
   statsFor,
@@ -98,6 +99,46 @@ describe('a creature lives where the bestiary says', () => {
     const m = new Match(bareMap(), { fauna: false, seed: 82, terrain: shallow });
     const eid = spawnFauna(m.world, { species: FaunaSpecies.Sounder, x: 4000, y: 4000 });
     assert.equal(Position.depth[eid], 700, 'a colossus in a puddle sits on the bottom of it');
+  });
+
+  it('seeds a re-homed species where the map says, and nowhere the profile cannot reach', () => {
+    // docs/bestiary.md §4, "One species, two waters": the Tetherjelly rests in
+    // the duct unless a map names its Kelp Forest band. Three hundred metres
+    // of water is ground for the canopy population and none at all for the
+    // duct's, so the same seeder places five clusters on one map and zero on
+    // the other — and the difference is one line of map data.
+    const clusters = (m: Match): number[] => {
+      const out: number[] = [];
+      for (let eid = 0; eid <= m.world.maxEid; eid++) {
+        if (hasComponent(m.world, Fauna, eid) && Fauna.species[eid] === FaunaSpecies.Tetherjelly) {
+          out.push(eid);
+        }
+      }
+      return out;
+    };
+    const shallow = () => new Terrain(8000, 8000, 250, { floorM: 300 });
+
+    const duct = new Match(bareMap(), { seed: 83, terrain: shallow() });
+    assert.equal(clusters(duct).length, 0, 'the duct population seeded over a 300 m floor');
+
+    const canopy = new Match(
+      { ...bareMap(), ambientBands: { [FaunaSpecies.Tetherjelly]: TETHERJELLY_KELP_BAND } },
+      { seed: 83, terrain: shallow() }
+    );
+    const seeded = clusters(canopy);
+    assert.equal(seeded.length, 5, `${seeded.length} clusters seeded on the re-homed map`);
+    for (const eid of seeded) {
+      assert.ok(
+        Math.abs(Position.depth[eid]! - TETHERJELLY_KELP_BAND.workingDepthM) <=
+          TETHERJELLY_KELP_BAND.seedSpreadM,
+        `a cluster at ${Position.depth[eid]} m, outside the Kelp Forest band`
+      );
+      assert.equal(Fauna.homeDepth[eid], TETHERJELLY_KELP_BAND.workingDepthM);
+    }
+    // Spread across the band rather than stacked at one depth — §4's
+    // "seeded across" column, honoured for the re-homed band too.
+    const depths = new Set(seeded.map((eid) => Position.depth[eid]));
+    assert.ok(depths.size > 1, 'five clusters at one depth: the band was not seeded across');
   });
 
   it('returns to its working depth when it has nothing to chase', () => {

@@ -21,15 +21,23 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  Biome,
+  DRIFT,
+  FaunaSpecies,
   MARR_PLATEAU_FILED,
   MissionOutcome,
+  PROPAGATION_FACTOR,
   SIM,
+  TETHERJELLY_KELP_BAND,
   UnitKind,
+  faunaStatsFor,
   type EchoSnapshot,
 } from '@echoes/shared';
+import { hasComponent } from 'bitecs';
 import { Match } from '../src/sim/match.ts';
 import { missionMapById } from '../src/sim/maps/index.ts';
 import { SEEDING_TEND } from '../src/sim/missions/index.ts';
+import { Fauna, Position } from '../src/sim/components.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 const PLAYER = SEEDING_TEND.playerSlot;
@@ -228,5 +236,98 @@ describe('silence stops the work — docs/mission-tend.md §3; systems-echo.md �
       `silent, the scout still read ${silentSig} — the floor held through the button`
     );
     assert.ok(resumedSig >= 45, `the cut did not resume with the button — ${resumedSig}`);
+  });
+});
+
+describe("the plateau's own Drift — docs/mission-tend.md §11; docs/bestiary.md §4", () => {
+  /** §11's rects, as the doc's table reads them. */
+  const GARDENS = { x: 500, y: 250, w: 1250, h: 750 };
+  const WEST_LANE = { x: 250, y: 1000, w: 1000, h: 750 };
+  /** Convocation's row 3 — the head's cluster sits on it to the metre. */
+  const LANE_HEAD = { x: 500, y: 1125 };
+  /** Convocation's row 4 — the lane's foot, outside every cluster's reach. */
+  const LANE_FOOT = { x: 1125, y: 1625 };
+
+  const inside = (r: { x: number; y: number; w: number; h: number }, x: number, y: number) =>
+    x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
+
+  function drift(match: Match): { species: FaunaSpecies; eid: number }[] {
+    const out: { species: FaunaSpecies; eid: number }[] = [];
+    for (let eid = 0; eid <= match.world.maxEid; eid++) {
+      if (!hasComponent(match.world, Fauna, eid)) continue;
+      out.push({ species: Fauna.species[eid] as FaunaSpecies, eid });
+    }
+    return out;
+  }
+
+  it('seeds shoals through the Gardens and clusters along the West Lane, each in its band', () => {
+    const match = tendMatch(41);
+    // The 00:00 beats fire on the first step; a second is more than enough.
+    for (let tick = 0; tick < SIM.TICK_HZ; tick++) match.update(STEP_MS);
+
+    const shoals = drift(match).filter((c) => c.species === FaunaSpecies.Lampfry);
+    const clusters = drift(match).filter((c) => c.species === FaunaSpecies.Tetherjelly);
+    assert.equal(shoals.length, 4, '§11: four shoals on the farm rows');
+    assert.equal(clusters.length, 3, "§11: three clusters along the lane's head");
+
+    const shelf = faunaStatsFor(FaunaSpecies.Lampfry);
+    for (const { eid } of shoals) {
+      assert.ok(inside(GARDENS, Position.x[eid]!, Position.y[eid]!), 'a shoal outside the Gardens');
+      assert.ok(
+        Math.abs(Position.depth[eid]! - shelf.workingDepthM) <= shelf.seedSpreadM,
+        `§4: a shoal at ${Position.depth[eid]} m is outside the Shelf band`
+      );
+    }
+    // The clusters rest in the *Kelp Forest* band, the one this map names —
+    // 250 m ±50 m — and never the duct's 1,200 m, which this plateau does not
+    // have. `homeDepth` is what the runtime holds a released animal at, so it
+    // is the number that decides where a cluster actually lives.
+    for (const { eid } of clusters) {
+      assert.ok(inside(WEST_LANE, Position.x[eid]!, Position.y[eid]!), 'a cluster off the lane');
+      assert.ok(
+        Math.abs(Position.depth[eid]! - TETHERJELLY_KELP_BAND.workingDepthM) <=
+          TETHERJELLY_KELP_BAND.seedSpreadM,
+        `§4: a cluster at ${Position.depth[eid]} m is outside the Kelp Forest band`
+      );
+      assert.equal(
+        Fauna.homeDepth[eid],
+        TETHERJELLY_KELP_BAND.workingDepthM,
+        'a cluster whose home is the duct, on a map with no duct'
+      );
+    }
+  });
+
+  it("lowers the lane's PF by exactly one cluster at the head, and none at the foot", () => {
+    const match = tendMatch(43);
+    const kelp = PROPAGATION_FACTOR[Biome.KelpForest];
+    for (let tick = 0; tick < SIM.TICK_HZ; tick++) match.update(STEP_MS);
+
+    // Measurable, which the doc's "the lane is quieter for every day after"
+    // requires and which a placed cluster used not to be: nothing rebuilt the
+    // PF grid for a birth, so a mission's clusters masked nothing until an
+    // unrelated rebuild happened along.
+    const head = match.world.terrain.propagationAt(LANE_HEAD.x, LANE_HEAD.y);
+    assert.ok(
+      Math.abs(kelp - head - DRIFT.JELLY_PF_DELTA) < 1e-6,
+      `§4: the head reads ${head} against a kelp baseline of ${kelp}; expected one −0.10`
+    );
+    // Convocation's row 4 is "the row the concern holds longest" because no
+    // cluster reaches it: row 3 is the one row that is quiet on its own.
+    const foot = match.world.terrain.propagationAt(LANE_FOOT.x, LANE_FOOT.y);
+    assert.ok(Math.abs(foot - kelp) < 1e-6, `the foot reads ${foot}: a cluster reaches row 4`);
+  });
+
+  it('holds a released cluster in its Kelp Forest band rather than sending it to the duct', () => {
+    const match = tendMatch(47);
+    for (let tick = 0; tick < 10 * SIM.TICK_HZ; tick++) match.update(STEP_MS);
+    for (const { eid } of drift(match).filter((c) => c.species === FaunaSpecies.Tetherjelly)) {
+      // Ten seconds is 120 m of vertical travel at the Drift's speed: a
+      // cluster homing on 1,200 m would already be on the lane's 300 m floor.
+      assert.equal(
+        Position.depth[eid],
+        TETHERJELLY_KELP_BAND.workingDepthM,
+        `a cluster drifted to ${Position.depth[eid]} m after release`
+      );
+    }
   });
 });

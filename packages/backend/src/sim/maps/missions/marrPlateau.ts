@@ -16,7 +16,7 @@
  * freedom pointed the other way: biome is acoustics, not band.
  */
 
-import { Biome } from '@echoes/shared';
+import { Biome, FaunaSpecies, TETHERJELLY_KELP_BAND } from '@echoes/shared';
 import type { MapDefinition } from '../types.ts';
 
 export const MARR_PLATEAU: MapDefinition = {
@@ -111,4 +111,10 @@ export const MARR_PLATEAU: MapDefinition = {
   ],
   // No hazard sites — the plateau's weather is other people (§11).
   hazards: [],
+  // The jelly lane is Kelp Forest at a 300 m floor and the plateau has no
+  // duct — its deepest ground is the Drop at 900 m — so the Tetherjelly
+  // rests here in its Kelp Forest band, 250 m ±50 m (docs/bestiary.md §4,
+  // "One species, two waters"). Named rather than inferred: the plateau is
+  // the one shipped map whose kelp is shallower than the duct.
+  ambientBands: { [FaunaSpecies.Tetherjelly]: TETHERJELLY_KELP_BAND },
 };

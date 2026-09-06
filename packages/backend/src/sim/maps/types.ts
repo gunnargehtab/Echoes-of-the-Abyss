@@ -18,7 +18,14 @@
  * at match start, and it costs no loader and no schema validator to get that.
  */
 
-import type { Biome, HazardKind, MapHeader, ResourceKind } from '@echoes/shared';
+import type {
+  AmbientBand,
+  Biome,
+  FaunaSpecies,
+  HazardKind,
+  MapHeader,
+  ResourceKind,
+} from '@echoes/shared';
 
 /**
  * A painted region. Rectangles only, and deliberately so: every layout in
@@ -159,4 +166,18 @@ export interface MapDefinition extends MapHeader {
   /** Bloom-share nodes — see `MapBloom`. Omitted is none, and no map is owed any. */
   blooms?: MapBloom[];
   hazards: MapHazardSite[];
+  /**
+   * Where this map re-homes an ambient species — docs/bestiary.md §4, "One
+   * species, two waters".
+   *
+   * A species carries one working depth and the Tetherjelly is documented
+   * with two homes; §4 settled that as one animal re-homed per map rather
+   * than a second species. A map that wants the Kelp Forest population names
+   * `TETHERJELLY_KELP_BAND` here and every cluster on it — seeded, placed by
+   * a mission, or released from a beat — rests in that band instead of the
+   * duct. Omitted is the profile's own band, which is what every map wants
+   * unless its kelp is shallower than 1,100 m. Only bands §4 documents are
+   * admissible (`ambientBandsFor`), and `maps.test.ts` refuses any other.
+   */
+  ambientBands?: Partial<Record<FaunaSpecies, AmbientBand>>;
 }

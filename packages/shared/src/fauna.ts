@@ -238,9 +238,10 @@ export const FAUNA_STATS: Record<FaunaSpecies, FaunaStats> = {
   [FaunaSpecies.Tetherjelly]: {
     species: FaunaSpecies.Tetherjelly,
     // "1,100-1,300 m — the duct itself, the boundary it is named for" (§4).
-    // §4's open question — the doc names Kelp Forest too — is resolved for
-    // now as the thermocline; a Kelp population would need a second seeding
-    // depth per map, and is flagged in the doc rather than invented here.
+    // The species' other home, the Kelp Forest canopy, is not a second
+    // working depth here: §4 settled it as one animal re-homed per map, and
+    // `TETHERJELLY_KELP_BAND` below is that band. A map opts into it by
+    // name; the profile stays the duct.
     workingDepthM: 1200,
     depthBandM: 0,
     seedSpreadM: 100,
@@ -301,4 +302,40 @@ export const FAUNA_STATS: Record<FaunaSpecies, FaunaStats> = {
 
 export function faunaStatsFor(species: FaunaSpecies): FaunaStats {
   return FAUNA_STATS[species];
+}
+
+/**
+ * A band an ambient species is seeded across — §4's *Working depth* and
+ * *Seeded across* columns as one value, because for the two species that
+ * never commit those two columns are the whole of where the animal is.
+ */
+export interface AmbientBand {
+  workingDepthM: number;
+  seedSpreadM: number;
+}
+
+/**
+ * SPEC — docs/bestiary.md §4, "One species, two waters": the Tetherjelly's
+ * Kelp Forest band, 250 m ±50 m.
+ *
+ * The species is documented with two homes and carries one working depth,
+ * and §4 resolved that as **one animal re-homed per map** rather than a
+ * second species: a canopy cluster is the same SIG 1 and the same −0.10 PF as
+ * a duct cluster, so a second name would be a species invented to dodge a
+ * table, and the thing that actually differs — depth — is a property of the
+ * ground. A map names this band in its `ambientBands` to seed the species
+ * here; nothing chooses it on the map's behalf, and the seeder never places
+ * an ambient animal outside a band this file documents for it.
+ */
+export const TETHERJELLY_KELP_BAND: AmbientBand = { workingDepthM: 250, seedSpreadM: 50 };
+
+/**
+ * Every band §4 documents for a species — the profile's own first, then any
+ * the doc lets a map re-home it to. The set a map's `ambientBands` must draw
+ * from, and what a test holds every literal to.
+ */
+export function ambientBandsFor(species: FaunaSpecies): readonly AmbientBand[] {
+  const stats = FAUNA_STATS[species];
+  const own: AmbientBand = { workingDepthM: stats.workingDepthM, seedSpreadM: stats.seedSpreadM };
+  return species === FaunaSpecies.Tetherjelly ? [own, TETHERJELLY_KELP_BAND] : [own];
 }

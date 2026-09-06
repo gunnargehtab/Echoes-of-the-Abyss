@@ -358,9 +358,18 @@ crystal, nothing to build. No hazard sites — the plateau's weather is other pe
 
 Every rectangle lands on the 250 m cell grid and paints exactly the metres it reads
 ([maps.md](maps.md), "How a map is written"). The Draymaw pack enters by authored `creature`
-beat at 00:00 at the foot of the drop and holds its band all mission; the Lampfry and the
-jelly clusters are noted for the day their species are built ([bestiary.md](bestiary.md),
-Implementation Status).
+beat at 00:00 at the foot of the drop and holds its band all mission.
+
+The plateau's ambient Drift is authored the same way, placed and not driven. Four Lampfry
+shoals sit on the Gardens' farm rows at the Shelf's 250 m, one over the first garden node, so
+a tender working a load is announced by light for the length of it — the tell §4 of
+[bestiary.md](bestiary.md) puts in exactly this water, and the one thing on the plateau the
+stillness cannot switch off. Three Tetherjelly clusters sit along the West Lane's head at 250 m,
+the species' **Kelp Forest band**, which `marr-plateau` names in its `ambientBands` because the
+plateau has no duct to put a cluster in ([bestiary.md](bestiary.md) §4, "One species, two
+waters"). The clusters are spaced so none overlap, each worth exactly its −0.10 PF within 250 m;
+the head's cluster sits on [mission-convocation.md](mission-convocation.md) §11's third row to
+the metre, and the lane's foot is outside every cluster's reach.
 
 **Marr Plateau is a mission map and is not in the public catalogue.** One seat, not balanced,
 resolved by mission id and nothing else ([maps.md](maps.md)).
@@ -455,7 +464,7 @@ one mission at a time, what it was missing.
 | **The gift as cargo** — a load carried point to point | **Built** (#239), exactly as this row predicted: the hold-and-cut lift with the cut time at zero, and the `extract` predicate naming its load so the gift reaching the landing is a fact about the bread rather than about the hull being loaded at all |
 | The stillness as culture — Teel's day going quiet ahead of the sweep | Ambient authoring, `say` and mix work; no new mechanism |
 | Filed → *Thin Water* briefing variant | **Built** (#378), and it turned out to be two variants rather than one: [mission-thin-water.md](mission-thin-water.md) §12 and [mission-convocation.md](mission-convocation.md) §12 both read this day's filing. What this mission contributes is the **scene** — `marr-plateau-filed`, latched by the sweep on the same condition as §8's filed reading, so the id a client stores is exactly the sentence it was just shown. A day that came home unfiled writes nothing, which is why the record is keyed by scene and not by mission: *Tend* completed in silence witnessed nothing, and both later briefings stay as authored |
-| Lampfry scatter and Tetherjelly PF, on the map they were designed for | **Species built** (#306) — the scatter tell, the reform, the jelly masking and both Failing-water consequences are simulated and tested ([bestiary.md](bestiary.md), Implementation Status). What remains is this mission's own authoring: seeding shoals through the Gardens and clusters along the duct in `seeding-tend`, which currently places neither |
+| Lampfry scatter and Tetherjelly PF, on the map they were designed for | **Built** (#306, #480) — the species first: the scatter tell, the reform, the jelly masking and both Failing-water consequences are simulated and tested ([bestiary.md](bestiary.md), Implementation Status). Then this mission's own authoring, once §4 of that document had decided where a Kelp Forest cluster lives: four shoals through the Gardens and three clusters along the West Lane, `creature` beats placed and not driven (§11). The clusters' masking is measurable on the lane from the first tick, which turned up a fault the same change closed — nothing rebuilt the PF grid for a cluster's *birth*, so a cluster a beat placed masked nothing until an unrelated rebuild happened along |
 | In-mission character speech, heard | **Heard** (#381) — the channel [mission-sorrowgate.md](mission-sorrowgate.md) §13 records, and the [audio-direction.md](audio-direction.md) §13 hail under every line |
 
 ---

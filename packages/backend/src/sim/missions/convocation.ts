@@ -49,6 +49,7 @@ import {
 } from '@echoes/shared';
 
 import type { MissionDefinition } from './types.ts';
+import { WEST_LANE_CLUSTERS } from './tend.ts';
 
 /** §9's beat table is mm:ss; the simulation counts ticks. */
 const T = (minutes: number, seconds = 0): number => (minutes * 60 + seconds) * SIM.TICK_HZ;
@@ -171,7 +172,7 @@ export const SEEDING_CONVOCATION: MissionDefinition = {
         y: 1125,
         radiusM: ROW_RADIUS_M,
         markerId: 'row-three',
-        note: "The lane's head. The Tetherjelly clusters re-seated in Tend are here, and the -0.10 PF they bought is the one row that is quiet on its own — once mission-tend.md §13's cluster authoring lands",
+        note: "The lane's head. The Tetherjelly clusters re-seated in Tend are here, and the -0.10 PF they bought is the one row that is quiet on its own",
       },
       {
         id: 'row-four',
@@ -539,6 +540,13 @@ export const SEEDING_CONVOCATION: MissionDefinition = {
       loud: false,
       note: '',
     },
+    // 00:00 — the West Lane's clusters, the same three Tend re-seated and in
+    // the same water (§11): the −0.10 PF the third row leans on is theirs,
+    // and it is what makes row 3 the one row that is quiet on its own. The
+    // lane's foot sits outside every cluster's 250 m, so row 4 gets none of
+    // it (§13). Drift Health carries between the two missions on this map;
+    // a player who worked Tend loudly finds the field thinner (§2 rule 5).
+    ...WEST_LANE_CLUSTERS,
 
     // 01:00 — the walk opens at the first row. Nothing is on the map that
     // should not be.
