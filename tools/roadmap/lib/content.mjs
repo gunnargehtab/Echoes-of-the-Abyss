@@ -212,6 +212,8 @@ export const groups = {
   Controls: 'Controls',
   Design: 'New things to play with',
   'Shipping and hygiene': 'Getting it out the door',
+  'The opponent': 'A better opponent',
+  'Filed since the audit': 'Since then',
 };
 
 export const items = {
@@ -275,6 +277,12 @@ export const items = {
   442: 'Faster loading: art fetched on demand, smaller downloads',
   443: 'More automated testing so updates do not break things',
   445: 'This roadmap, rewritten to tell the truth',
+  458: 'A fair fight between the Consortium and the Directorate — today the Consortium wins nine duels in ten',
+  467: 'The Commune’s minelayer and its living seeder, in the hands of the computer opponent',
+  463: 'Longer fights, and a mine the defender can drop in the face of whatever is chasing it',
+  472: 'A chart that goes vague where nothing of yours is listening',
+  478: 'Harvesters that would not move in the Prologue',
+  480: 'The tetherjelly forests one mission needs before it can grow them',
 };
 
 export const sprints = {
