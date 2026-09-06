@@ -40,16 +40,26 @@ import {
   Structure,
   UnderConstruction,
   Unit,
+  Velocity,
 } from '../components.ts';
 import { stormModifiers } from './hazards.ts';
 import type { SimWorld } from '../world.ts';
 
 const structures = defineQuery([Structure, Position, Owner]);
-const units = defineQuery([Unit, Position, Owner, Acoustic]);
+const units = defineQuery([Unit, Position, Owner, Acoustic, Velocity]);
 // `Position`, so a hull in a hold (systems/carrying.ts) is neither reset nor
 // veiled here: the Spore Veil pass reads a position, and a carried hull has
 // none to read.
 const emitters = defineQuery([Acoustic, Position]);
+
+/**
+ * Below this speed a hull counts as stationary for the Acolyte's second HYD
+ * figure. The same figure acoustics uses to tell idle from cruise, so "quiet
+ * because it is stopped" and "listening because it is stopped" agree about
+ * what stopped means — two different epsilons would have produced a hull that
+ * was idle and not yet listening for one tick after every halt.
+ */
+const STATIONARY_EPSILON_MPS = 0.01;
 
 interface Aura {
   eid: number;
@@ -167,7 +177,19 @@ export function aurasSystem(world: SimWorld): void {
     // The two domes sum and then meet the one cap: under a Cantor as well, a
     // Precentor "adds nothing: the cap is the cap" (docs/units.md).
     const weather = stormModifiers(world, eid);
-    let hyd = statsFor(Unit.kind[eid] as UnitKind).hyd + weather.hyd;
+    const stats = statsFor(Unit.kind[eid] as UnitKind);
+    // A hull whose listening is its posture (docs/units.md, the Acolyte): 85
+    // parked against 60 under way. Keyed on the hull actually being still, not
+    // on a state it was ordered into — "HYD is a flat hull property" and
+    // Silent Running never touches it, so a silent Acolyte at cruise hears 60
+    // like any other hull that is moving.
+    //
+    // Read here rather than in the Echo pass because this is where effective
+    // HYD is built, and a second place that adjusted it would be a second
+    // place to forget the cap below.
+    const moving = Math.hypot(Velocity.x[eid]!, Velocity.y[eid]!) > STATIONARY_EPSILON_MPS;
+    const base = !moving && stats.hydStationary !== undefined ? stats.hydStationary : stats.hyd;
+    let hyd = base + weather.hyd;
     let lent = false;
     if (cantors.length > 0 && inRange(eid, cantors, slot, CANTOR.RADIUS_M)) {
       hyd += CANTOR.HYD_BONUS;

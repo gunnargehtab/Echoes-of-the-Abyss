@@ -58,6 +58,10 @@ const clarion = statsFor(UnitKind.Clarion);
 const bulwark = statsFor(UnitKind.Bulwark);
 const dredge = statsFor(UnitKind.Dredge);
 const reciter = statsFor(UnitKind.Reciter);
+const broadside = statsFor(UnitKind.Broadside);
+const weaver = statsFor(UnitKind.Weaver);
+const thurible = statsFor(UnitKind.Thurible);
+const lance = statsFor(UnitKind.Lance);
 const turret = structureStatsFor(StructureKind.SentinelTurret);
 const bastion = structureStatsFor(StructureKind.Bastion);
 
@@ -279,6 +283,61 @@ describe('§9 time-to-kill bands', () => {
     assert.ok(reciter.maxHp < corvette.maxHp, 'and is the glass in "glass cannon"');
     // Under the energy class, like the Clarion: the weapon is the navy's.
     assert.equal(reciter.sigFiringBurst, FACTION_COMBAT.ENERGY.FIRING_SIG);
+  });
+
+  it('holds the ordnance hulls to §5\u2019s ammunition arithmetic (#507)', () => {
+    // All four are ordnance rather than guns, so §9's gun bands do not reach
+    // them. What does reach them is §5, "Ammunition": 350 a torpedo, a Corvette
+    // dead to two and a Cruiser to four. A wave that quietly gave a hull a
+    // heavier torpedo would move every one of those numbers at once, so the
+    // magazines are held against the damage rather than against each other.
+    const perFish = ORDNANCE.TORPEDO.DAMAGE;
+
+    // The Broadside's magazine is exactly one Cruiser and no more. That is the
+    // hull: twelve seconds of ordnance that kills the biggest thing in the
+    // roster, and then ninety seconds of being a 700 HP hull with no weapon.
+    assert.equal(broadside.torpedoMagazine, 4);
+    assert.equal(Math.ceil(cruiser.maxHp / perFish), 4, 'a Cruiser takes four');
+    assert.ok(
+      broadside.torpedoMagazine! * perFish >= cruiser.maxHp,
+      'a full Broadside should be able to finish a Cruiser'
+    );
+    assert.ok(
+      (broadside.torpedoMagazine! - 1) * perFish < cruiser.maxHp,
+      'and should have nothing left over when it does'
+    );
+    assert.equal(broadside.attackDamage, 0, 'and no gun to fall back on');
+
+    // The Lance sells three of those four for a solution nothing can break.
+    // Two Corvettes' worth of hull, one torpedo, and a cone to fire it through.
+    assert.equal(lance.torpedoMagazine, 1);
+    assert.equal(lance.coneLockedTorpedo, true);
+    assert.equal(lance.attackDamage, 0);
+    assert.ok(
+      lance.torpedoMagazine! * perFish < corvette.maxHp * 2,
+      'one shot is one shot, whatever it is worth'
+    );
+
+    // The Thurible's gun is not a line hull's and must not read as one: it is
+    // there so the hull is not helpless between racks, and so `spawnUnit`
+    // gives it the rack at all (§5, "any combat hull can deploy one").
+    const vsCorvette = cyclesS(corvette.maxHp, thurible.attackDamage, thurible.attackCooldownS);
+    assert.ok(
+      vsCorvette > cyclesS(corvette.maxHp, corvette.attackDamage, corvette.attackCooldownS),
+      `a Thurible must be worse than a Corvette at killing one, got ${vsCorvette} s`
+    );
+    assert.equal(thurible.depthChargeCooldownS, 6);
+    assert.ok(
+      thurible.depthChargeCooldownS! < ORDNANCE.DEPTH_CHARGE.COOLDOWN_S,
+      'the rack is the weapon, so it cycles faster than everyone else\u2019s'
+    );
+
+    // The Weaver is unarmed, and that is the argument rather than an omission.
+    // Held here for the Light Scout's reason: a later retune must not quietly
+    // hand the Commune's liar a gun.
+    assert.equal(weaver.attackDamage, 0);
+    assert.equal(weaver.carriesTorpedoes, false);
+    assert.equal(weaver.decoyMagazine, ORDNANCE.LAID_DECOY.MAGAZINE);
   });
 
   it('leaves the Light Scout unable to fight, whatever the retune did', () => {

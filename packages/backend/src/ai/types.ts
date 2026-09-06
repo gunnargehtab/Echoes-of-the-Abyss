@@ -99,6 +99,7 @@ export type AiCommand =
   | { kind: 'harvest'; unitIds: number[]; nodeId: number }
   | { kind: 'throttle'; unitIds: number[]; throttle: HarvestThrottle }
   | { kind: 'silent'; unitIds: number[]; active: boolean }
+  | { kind: 'engineOff'; unitIds: number[]; active: boolean }
   | { kind: 'ping'; unitId: number }
   /**
    * Lay a mine where the hull is standing (docs/systems-combat.md §6).
@@ -110,6 +111,9 @@ export type AiCommand =
    * walked the layer there first.
    */
   | { kind: 'mine'; unitId: number }
+  | { kind: 'layDecoy'; unitId: number }
+  | { kind: 'torpedo'; unitId: number; contactId: number }
+  | { kind: 'depthCharge'; unitId: number; depthM: number }
   | { kind: 'build'; structure: StructureKind; x: number; y: number }
   | { kind: 'produce'; structureId: number; unit: UnitKind }
   /**

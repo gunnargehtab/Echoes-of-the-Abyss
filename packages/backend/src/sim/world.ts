@@ -48,6 +48,9 @@ import {
   Position,
   Pressure,
   ResourceNode,
+  DecoyMagazine,
+  EngineOff,
+  PingCadence,
   SilentRunning,
   StaticEmitter,
   Structure,
@@ -714,6 +717,17 @@ export interface SpawnOrdnanceOptions {
   pressureRating: number;
   /** Depth a charge is set to detonate at. Defaults to where it was released. */
   targetDepthM?: number;
+  /**
+   * This noisemaker was *laid* rather than deployed — the offensive half of the
+   * same emitter (docs/systems-combat.md §5, "A screen, laid").
+   *
+   * The kind stays `Noisemaker`, and must: a seeker that could tell a laid
+   * decoy from a dropped one would be a seeker that could tell a decoy from a
+   * hull. What changes is only how loud it is and how long it lasts, which is
+   * the difference between out-shouting one hull for a moment and being
+   * mistaken for a hull for an approach.
+   */
+  laid?: boolean;
 }
 
 /**
@@ -765,7 +779,7 @@ export function spawnOrdnance(world: SimWorld, opts: SpawnOrdnanceOptions): numb
   Position.depth[eid] = opts.depth;
 
   addComponent(world, Acoustic, eid);
-  Acoustic.sig[eid] = stats.sig;
+  Acoustic.sig[eid] = opts.laid === true ? ORDNANCE.LAID_DECOY.SIG : stats.sig;
   // Deaf to the Echo Layer by construction — see the note above.
   Acoustic.hyd[eid] = 0;
   Acoustic.pfFactor[eid] = 1;
@@ -786,7 +800,7 @@ export function spawnOrdnance(world: SimWorld, opts: SpawnOrdnanceOptions): numb
 
   addComponent(world, Ordnance, eid);
   Ordnance.kind[eid] = opts.kind;
-  Ordnance.remainingS[eid] = stats.lifetimeS;
+  Ordnance.remainingS[eid] = opts.laid === true ? ORDNANCE.LAID_DECOY.LIFETIME_S : stats.lifetimeS;
   Ordnance.heading[eid] = opts.heading ?? 0;
   Ordnance.seekerHyd[eid] = opts.seekerHyd ?? 0;
   Ordnance.targetEid[eid] = 0;
@@ -937,6 +951,21 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   addComponent(world, SilentRunning, eid);
   SilentRunning.active[eid] = 0;
 
+  // Every hull can cut its drive (docs/systems-echo.md §6). What differs is
+  // whether anything happens next: only a hull with `glideSpeedFraction` is
+  // still under way once it has, and the roster has one.
+  addComponent(world, EngineOff, eid);
+  EngineOff.active[eid] = 0;
+
+  // A picket set fires on the hull's own clock rather than on an order, so the
+  // clock is spawned with it. Started at the full interval rather than at zero:
+  // a Beacon that pinged the instant it left the yard would announce its navy's
+  // build order, which is a different game than the one the cadence is for.
+  if (stats.pingCadenceS !== undefined) {
+    addComponent(world, PingCadence, eid);
+    PingCadence.remainingS[eid] = stats.pingCadenceS;
+  }
+
   if (stats.attackDamage > 0 && opts.weaponsCold !== true) {
     addComponent(world, Weapon, eid);
     Weapon.cooldownRemainingS[eid] = 0;
@@ -945,8 +974,20 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
 
   if (stats.carriesTorpedoes && opts.weaponsCold !== true) {
     addComponent(world, Magazine, eid);
-    Magazine.torpedoes[eid] = ORDNANCE.TORPEDO.MAGAZINE;
+    // The roster's two, unless the hull is one of the two that argue about the
+    // number: the Broadside's four and the Lance's one (docs/units.md).
+    Magazine.torpedoes[eid] = stats.torpedoMagazine ?? ORDNANCE.TORPEDO.MAGAZINE;
     Magazine.rearmRemainingS[eid] = 0;
+  }
+
+  // A rack of decoys, for the one hull that lays them as a screen rather than
+  // carrying one as a countermeasure (docs/systems-combat.md §5). Not gated on
+  // being armed: the Weaver has no gun, and the magazine *is* its weapon.
+  if (stats.decoyMagazine !== undefined && opts.weaponsCold !== true) {
+    addComponent(world, DecoyMagazine, eid);
+    DecoyMagazine.decoys[eid] = stats.decoyMagazine;
+    DecoyMagazine.layCooldownS[eid] = 0;
+    DecoyMagazine.rearmRemainingS[eid] = 0;
   }
 
   // "Any combat hull can deploy one" (docs/systems-combat.md §5) — so the gate

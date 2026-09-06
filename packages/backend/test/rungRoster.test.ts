@@ -13,8 +13,12 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  ACTIVE_SONAR,
   BERTHS,
+  CADENCE_PING,
+  DEPTH,
   DIRECTIONAL_SIGNATURE,
+  ENGINE_OFF,
   Faction,
   HULL_EFFECTS,
   ORDNANCE,
@@ -28,14 +32,19 @@ import {
 import { Match } from '../src/sim/match.ts';
 import { spawnStructure, spawnUnit } from '../src/sim/world.ts';
 import { directionalFactorFor } from '../src/sim/directional.ts';
+import { launchTorpedo } from '../src/sim/systems/ordnance.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import {
   Acoustic,
   Health,
   HullEffect,
+  Heading,
+  Magazine,
   MineMagazine,
+  Ordnance,
   Position,
   Pressure,
+  Velocity,
 } from '../src/sim/components.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
@@ -476,5 +485,326 @@ describe('the Tender — the repair hull', () => {
     advance(match, 2);
     assert.equal(Health.hp[patient], 100, 'silent is not working');
     assert.equal(HullEffect.active[tender], 0);
+  });
+});
+
+/**
+ * The scouts (#506) — docs/units.md, "The scouts"; docs/systems-echo.md §5, §6.
+ *
+ * Four hulls and the two mechanisms the wave built for them. Each block holds
+ * one entry to the sentence its stat block makes: engine off is below silence
+ * for every hull and the Glider is the only one still moving there; the
+ * Acolyte's ears are its posture; a Beacon transmits on its own clock at a
+ * figure the propagation model, not the wave, chose.
+ */
+describe('engine off — the state below silence', () => {
+  it('is quieter than Silent Running, for every hull in the roster', () => {
+    // The claim ENGINE_OFF.SIG_FACTOR exists to make structural rather than
+    // lucky. A factor on idle would have put a Cruiser above its own silence.
+    const { match } = skirmish(Faction.Pelagia);
+    for (const kind of Object.values(UnitKind).filter((k) => typeof k === 'number')) {
+      const stats = statsFor(kind as UnitKind);
+      const eid = hull(match, Faction.Pelagia, kind as UnitKind, 3000, 3000);
+      match.setSilentRunning(0, eid, true);
+      advance(match, 0.1);
+      const silent = Acoustic.sig[eid]!;
+      match.setEngineOff(0, eid, true);
+      advance(match, 0.1);
+      const off = Acoustic.sig[eid]!;
+      assert.ok(
+        off < silent,
+        `${stats.name}: engine off ${off.toFixed(2)} is not below silent ${silent.toFixed(2)}`
+      );
+      assert.ok(off >= ENGINE_OFF.SIG_FLOOR, `${stats.name} fell through the floor at ${off}`);
+    }
+  });
+
+  it('stops a hull dead — unless it is the one built to coast', () => {
+    const { match } = skirmish(Faction.Pelagia);
+    const scout = hull(match, Faction.Pelagia, UnitKind.LightScout, 3000, 3000);
+    const glider = hull(match, Faction.Pelagia, UnitKind.Glider, 3000, 3200);
+    for (const eid of [scout, glider]) {
+      match.orderMove(0, eid, 9000, 3000);
+      match.setEngineOff(0, eid, true);
+    }
+    const scoutFrom = Position.x[scout]!;
+    const gliderFrom = Position.x[glider]!;
+    advance(match, 6);
+
+    assert.equal(
+      Math.round(Position.x[scout]! - scoutFrom),
+      0,
+      'a Light Scout with its drive cut is a rock'
+    );
+    // A third of 105 m/s over six seconds, less whatever the order cost it.
+    assert.ok(
+      Position.x[glider]! - gliderFrom > 100,
+      `the Glider coasted only ${(Position.x[glider]! - gliderFrom).toFixed(0)} m`
+    );
+  });
+
+  it('is the quietest thing in the roster that is still under way', () => {
+    // "Nothing else under way is quieter" (docs/units.md, Glider). A Light
+    // Scout is quieter with its engine off and is not going anywhere, which is
+    // the distinction the doc draws and the one worth holding.
+    const { match } = skirmish(Faction.Pelagia);
+    const glider = hull(match, Faction.Pelagia, UnitKind.Glider, 3000, 3000);
+    match.orderMove(0, glider, 9000, 3000);
+    match.setEngineOff(0, glider, true);
+    advance(match, 2);
+    const gliding = Acoustic.sig[glider]!;
+    assert.ok(gliding > 0, 'a gliding hull still emits something');
+
+    for (const kind of Object.values(UnitKind).filter((k) => typeof k === 'number')) {
+      const other = hull(match, Faction.Pelagia, kind as UnitKind, 5000, 5000);
+      match.orderMove(0, other, 9000, 5000);
+      match.setSilentRunning(0, other, true);
+      advance(match, 1);
+      if (Math.hypot(Velocity.x[other]!, Velocity.y[other]!) < 0.01) continue;
+      assert.ok(
+        Acoustic.sig[other]! >= gliding,
+        `${statsFor(kind as UnitKind).name} moves at ${Acoustic.sig[other]!.toFixed(2)}, ` +
+          `under the Glider's ${gliding.toFixed(2)}`
+      );
+    }
+  });
+
+  it('cannot hush a hull that is diving', () => {
+    // Descent is a floor over the whole posture chain (docs/systems-depth.md
+    // §2): there is no quiet way down, and a third posture does not add one.
+    const { match } = skirmish(Faction.Pelagia);
+    const glider = hull(match, Faction.Pelagia, UnitKind.Glider, 3000, 3000, 100);
+    match.setEngineOff(0, glider, true);
+    match.orderDepth(0, glider, 1200);
+    advance(match, 1);
+    assert.ok(
+      Acoustic.sig[glider]! >= DEPTH.DESCENT_SIG,
+      `a diving Glider was heard at ${Acoustic.sig[glider]!.toFixed(1)}`
+    );
+  });
+});
+
+describe('the Acolyte — the ears that sit still', () => {
+  it('hears at its stationary figure only while it is stopped', () => {
+    const { match } = skirmish(Faction.Directorate);
+    const stats = statsFor(UnitKind.Acolyte);
+    const acolyte = hull(match, Faction.Directorate, UnitKind.Acolyte, 3000, 3000);
+    advance(match, 0.5);
+    assert.equal(Acoustic.hyd[acolyte], stats.hydStationary);
+
+    match.orderMove(0, acolyte, 9000, 3000);
+    advance(match, 1);
+    assert.equal(Acoustic.hyd[acolyte], stats.hyd, 'an Acolyte under way hears like any hull');
+  });
+
+  it('keeps hearing 60 under way even when it is running silent', () => {
+    // docs/units.md design notes: "Silent Running changes what a unit emits,
+    // never what it hears." The step is keyed on the hull being still, not on
+    // a posture — a moving silent Acolyte is still moving.
+    const { match } = skirmish(Faction.Directorate);
+    const acolyte = hull(match, Faction.Directorate, UnitKind.Acolyte, 3000, 3000);
+    match.orderMove(0, acolyte, 9000, 3000);
+    match.setSilentRunning(0, acolyte, true);
+    advance(match, 1);
+    assert.equal(Acoustic.hyd[acolyte], statsFor(UnitKind.Acolyte).hyd);
+  });
+});
+
+describe('the Beacon — the picket that shouts', () => {
+  it('pings on its own clock, with nobody ordering it', () => {
+    const { match } = skirmish(Faction.Bathyarch);
+    const beacon = hull(match, Faction.Bathyarch, UnitKind.Beacon, 3000, 3000);
+    const cadenceS = statsFor(UnitKind.Beacon).pingCadenceS!;
+
+    // Nothing yet: the clock starts at a full interval so a Beacon does not
+    // announce its navy's build order the instant it leaves the yard.
+    advance(match, cadenceS - 2);
+    assert.equal(Acoustic.sig[beacon]! > CADENCE_PING.EMITTER_SIG - 1, false, 'pinged early');
+
+    advance(match, 3);
+    assert.ok(
+      Math.abs(Acoustic.sig[beacon]! - CADENCE_PING.EMITTER_SIG) < 1,
+      `the Beacon was heard at ${Acoustic.sig[beacon]!.toFixed(1)}, not its cadence figure`
+    );
+  });
+
+  it('transmits at the figures the propagation model chose, not at the button’s', () => {
+    // The whole point of deriving the cheap ping: it is the same mechanism at
+    // a lower emitter figure, and both radii fall out of that one number.
+    assert.equal(CADENCE_PING.EMITTER_SIG, 80);
+    assert.ok(CADENCE_PING.REVEAL_RADIUS_M < ACTIVE_SONAR.REVEAL_RADIUS_M);
+    assert.ok(CADENCE_PING.SELF_REVEAL_RADIUS_M < ACTIVE_SONAR.SELF_REVEAL_RADIUS_M);
+    // Both scale by the same factor, because both come from the same curve.
+    const reveal = CADENCE_PING.REVEAL_RADIUS_M / ACTIVE_SONAR.REVEAL_RADIUS_M;
+    const self = CADENCE_PING.SELF_REVEAL_RADIUS_M / ACTIVE_SONAR.SELF_REVEAL_RADIUS_M;
+    assert.ok(Math.abs(reveal - self) < 1e-9, 'the two radii came off different curves');
+    // The figures docs/units.md and docs/systems-echo.md §5 quote.
+    assert.equal(Math.round(CADENCE_PING.REVEAL_RADIUS_M), 808);
+    assert.equal(Math.round(CADENCE_PING.SELF_REVEAL_RADIUS_M), 2156);
+  });
+
+  it('stops transmitting when its owner tells it to be quiet', () => {
+    // The hull's only counter-play for its own side: a picket that could not
+    // be shut up is a hull you can never move past your own map quietly.
+    const { match } = skirmish(Faction.Bathyarch);
+    const beacon = hull(match, Faction.Bathyarch, UnitKind.Beacon, 3000, 3000);
+    match.setSilentRunning(0, beacon, true);
+    advance(match, statsFor(UnitKind.Beacon).pingCadenceS! + 3);
+    assert.ok(
+      Acoustic.sig[beacon]! < 20,
+      `a silenced Beacon was heard at ${Acoustic.sig[beacon]!.toFixed(1)}`
+    );
+  });
+});
+
+/**
+ * The ordnance hulls (#507) — docs/units.md, "The ordnance hulls";
+ * docs/systems-combat.md §5, §8.
+ *
+ * Three mechanisms and one thing that was already true and had never been
+ * proven: a screen laid from a magazine, a torpedo that keeps its solution, a
+ * charge that goes up, and the arming rules reading the same when it does.
+ */
+describe('the Weaver — a screen, laid', () => {
+  it('lays from its magazine, spaced, and empties', () => {
+    const { match } = skirmish(Faction.Pelagia);
+    const weaver = hull(match, Faction.Pelagia, UnitKind.Weaver, 3000, 3000);
+    const magazine = statsFor(UnitKind.Weaver).decoyMagazine!;
+
+    const first = match.layDecoy(0, weaver);
+    assert.ok(first > 0, 'the first lay should come out');
+    // Spaced: the second is refused until the interval has run.
+    assert.equal(match.layDecoy(0, weaver), 0, 'a magazine must not empty in one tick');
+
+    let laid = 1;
+    for (let i = 0; i < magazine * 3; i++) {
+      advance(match, ORDNANCE.LAID_DECOY.INTERVAL_S + 0.1);
+      if (match.layDecoy(0, weaver) > 0) laid++;
+    }
+    assert.equal(laid, magazine, `the magazine is ${magazine} and no more, got ${laid}`);
+  });
+
+  it('lays a decoy that is quieter and longer-lived than a countermeasure', () => {
+    // The two lies are asked for different things (docs/systems-combat.md §5):
+    // a countermeasure out-shouts one hull for a moment, a laid decoy has to
+    // be mistaken for a hull for as long as an approach takes.
+    const { match } = skirmish(Faction.Pelagia);
+    const weaver = hull(match, Faction.Pelagia, UnitKind.Weaver, 3000, 3000);
+    const corvette = hull(match, Faction.Pelagia, UnitKind.Corvette, 5000, 5000);
+
+    const screen = match.layDecoy(0, weaver);
+    const reflex = match.deployNoisemaker(0, corvette);
+    assert.ok(screen > 0 && reflex > 0);
+
+    assert.equal(Acoustic.sig[screen], ORDNANCE.LAID_DECOY.SIG);
+    assert.equal(Acoustic.sig[reflex], ORDNANCE.NOISEMAKER.SIG);
+    assert.ok(Acoustic.sig[screen]! < Acoustic.sig[reflex]!, 'quieter');
+    assert.ok(Ordnance.remainingS[screen]! > Ordnance.remainingS[reflex]!, 'and longer-lived');
+    // Still the same kind, and it has to be: a seeker that could tell them
+    // apart could tell a decoy from a hull.
+    assert.equal(Ordnance.kind[screen], Ordnance.kind[reflex]);
+  });
+});
+
+describe('the Lance — one shot, and only at what it faces', () => {
+  it('refuses a bearing outside the hull’s own cone', () => {
+    const { match } = skirmish(Faction.Hadron);
+    const lance = hull(match, Faction.Hadron, UnitKind.Lance, 3000, 3000);
+    Heading.rad[lance] = 0; // pointing up +X
+
+    // Dead astern: the one bearing the hull is quietest in, and cannot shoot.
+    assert.equal(launchTorpedo(match.world, lance, 1000, 3000), 0, 'astern is refused');
+    assert.equal(
+      Magazine.torpedoes[lance],
+      statsFor(UnitKind.Lance).torpedoMagazine,
+      'and a refused shot stays in the tube'
+    );
+
+    // Dead ahead: allowed, and it is the only torpedo aboard.
+    const fired = launchTorpedo(match.world, lance, 6000, 3000);
+    assert.ok(fired > 0, 'ahead is allowed');
+    assert.equal(Magazine.torpedoes[lance], 0, 'a magazine of one is now empty');
+    assert.equal(Ordnance.locked[fired], 1, 'and the shot is committed');
+  });
+
+  it('holds its solution where an ordinary torpedo would be decoyed', () => {
+    // The triangle's missing edge (docs/systems-combat.md §2, §5): a decoy
+    // works by being the loudest thing *now*, and this is the one weapon that
+    // is not listening.
+    const { match } = skirmish(Faction.Hadron);
+    const lance = hull(match, Faction.Hadron, UnitKind.Lance, 3000, 3000);
+    const corvette = hull(match, Faction.Hadron, UnitKind.Corvette, 3000, 3200);
+    Heading.rad[lance] = 0;
+
+    const locked = launchTorpedo(match.world, lance, 6000, 3000);
+    const loose = launchTorpedo(match.world, corvette, 6000, 3200);
+    assert.ok(locked > 0 && loose > 0);
+    assert.equal(Ordnance.locked[locked], 1);
+    assert.equal(Ordnance.locked[loose], 0, 'an ordinary tube commits to nothing');
+  });
+});
+
+describe('the Thurible — the charge that goes up', () => {
+  it('floats a charge into the band above, at the ascent rate', () => {
+    const { match } = skirmish(Faction.Directorate);
+    // Abyssal, which is the water the Listening owns and the only place "up"
+    // is a different band: the Shelf ends at 400 m and MidWater at 1,800.
+    const thurible = hull(match, Faction.Directorate, UnitKind.Thurible, 3000, 3000, 2000);
+    const charge = match.orderDepthCharge(0, thurible, 900);
+    assert.ok(charge > 0, 'a charge set above should be accepted');
+
+    const from = Position.depth[charge]!;
+    advance(match, 1);
+    const travelled = from - Position.depth[charge]!;
+    assert.ok(travelled > 0, 'it should be rising');
+    // The slow direction, and that asymmetry is the point: a defender above
+    // gets three times the warning a defender below does.
+    assert.ok(
+      travelled <= DEPTH.ASCENT_RATE_MPS * 1.1,
+      `rose ${travelled.toFixed(0)} m in a second, faster than the ascent rate`
+    );
+    assert.ok(
+      DEPTH.ASCENT_RATE_MPS < DEPTH.DESCENT_RATE_MPS,
+      'and up is slower than down, which is what makes it a different weapon'
+    );
+  });
+
+  it('still refuses a charge that does not cross a band, in either direction', () => {
+    const { match } = skirmish(Faction.Directorate);
+    const thurible = hull(match, Faction.Directorate, UnitKind.Thurible, 3000, 3000, 2000);
+    assert.equal(match.orderDepthCharge(0, thurible, 2200), 0, 'its own band is refused');
+  });
+
+  it('cycles its rack twice as fast as a hull that is not built for it', () => {
+    const { match } = skirmish(Faction.Directorate);
+    // Both in MidWater, bombing up into the Shelf, so the Corvette is not
+    // being crushed while the comparison runs.
+    const thurible = hull(match, Faction.Directorate, UnitKind.Thurible, 3000, 3000, 1000);
+    const corvette = hull(match, Faction.Directorate, UnitKind.Corvette, 3200, 3000, 1000);
+
+    assert.ok(match.orderDepthCharge(0, thurible, 200) > 0);
+    assert.ok(match.orderDepthCharge(0, corvette, 200) > 0);
+
+    // Between the two cooldowns: the Thurible is ready and the Corvette is not.
+    advance(match, statsFor(UnitKind.Thurible).depthChargeCooldownS! + 0.5);
+    assert.ok(match.orderDepthCharge(0, thurible, 200) > 0, 'the rack should be back');
+    assert.equal(match.orderDepthCharge(0, corvette, 200), 0, 'and everyone else waits');
+  });
+});
+
+describe('the Broadside — twelve seconds of ordnance', () => {
+  it('carries four and rearms only at a depot', () => {
+    const { match } = skirmish(Faction.Bathyarch);
+    const broadside = hull(match, Faction.Bathyarch, UnitKind.Broadside, 6000, 6000);
+    assert.equal(Magazine.torpedoes[broadside], 4, 'four tubes, four fish');
+
+    for (let i = 0; i < 4; i++) {
+      assert.ok(launchTorpedo(match.world, broadside, 9000, 6000) > 0, `launch ${i + 1}`);
+    }
+    assert.equal(launchTorpedo(match.world, broadside, 9000, 6000), 0, 'and then nothing');
+
+    // Far from home: the field never refills a magazine (§5, "Ammunition").
+    advance(match, ORDNANCE.TORPEDO.REARM_TIME_S * 2);
+    assert.equal(Magazine.torpedoes[broadside], 0, 'a spent Broadside stays spent out here');
   });
 });

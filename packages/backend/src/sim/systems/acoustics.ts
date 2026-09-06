@@ -10,9 +10,9 @@
 import { defineQuery, hasComponent } from 'bitecs';
 import {
   HOLD,
-  ACTIVE_SONAR,
   CONSTRUCTION,
   DEPTH,
+  ENGINE_OFF,
   HARVEST_THROTTLE,
   ORDNANCE,
   RESOURCE,
@@ -28,6 +28,7 @@ import {
   Acoustic,
   ActivePing,
   DepthOrder,
+  EngineOff,
   Harvester,
   HarvestMode,
   Hold,
@@ -48,7 +49,7 @@ import type { SimWorld } from '../world.ts';
 // `Position` is what a hull in a hold lacks (systems/carrying.ts), and the
 // hazard modifiers below read one; a carried hull emits nothing and is not
 // walked here at all.
-const emitters = defineQuery([Acoustic, Unit, Velocity, SilentRunning, Position]);
+const emitters = defineQuery([Acoustic, Unit, Velocity, SilentRunning, EngineOff, Position]);
 const structureEmitters = defineQuery([Acoustic, Structure]);
 const staticEmitters = defineQuery([Acoustic, StaticEmitter]);
 
@@ -65,6 +66,17 @@ const MOVING_EPSILON = 0.01;
 function silentRunningSig(idleSig: number): number {
   const t = Math.min(1, Math.max(0, idleSig / 60));
   return SILENT_RUNNING.SIG_MIN + (SILENT_RUNNING.SIG_MAX - SILENT_RUNNING.SIG_MIN) * t;
+}
+
+/**
+ * The floor a hull reaches with its drive cut (docs/systems-echo.md §6).
+ *
+ * Half the Silent Running figure rather than a fraction of idle, so the state
+ * is below silence for every hull by construction and not by coincidence —
+ * see ENGINE_OFF.SIG_FACTOR for the Cruiser that made the difference matter.
+ */
+function engineOffSig(idleSig: number): number {
+  return Math.max(ENGINE_OFF.SIG_FLOOR, silentRunningSig(idleSig) * ENGINE_OFF.SIG_FACTOR);
 }
 
 /** Transient spikes (firing, breaking silence) stack on the current baseline. */
@@ -88,9 +100,17 @@ export function acousticsSystem(world: SimWorld): void {
     let sig: number;
 
     if (hasComponent(world, ActivePing, eid) && ActivePing.remainingS[eid]! > 0) {
-      // A ping drowns out everything else the unit is doing.
-      sig = ACTIVE_SONAR.EMITTER_SIG;
+      // A ping drowns out everything else the unit is doing — at this
+      // transmission's own figure, which is the commander's 95 or a picket's
+      // cadence 80 (docs/systems-echo.md §5). The self-reveal radius is not
+      // applied anywhere: a quieter emitter is simply heard less far by the
+      // general pass, which is what deriving the cheap ping bought.
+      sig = ActivePing.emitterSig[eid]!;
       ActivePing.remainingS[eid] = Math.max(0, ActivePing.remainingS[eid]! - dt);
+    } else if (EngineOff.active[eid]) {
+      // Below silence, and checked before it: a hull with its drive cut is
+      // not running quietly, it is not running (docs/systems-echo.md §6).
+      sig = engineOffSig(stats.sigIdle);
     } else if (SilentRunning.active[eid]) {
       sig = silentRunningSig(stats.sigIdle);
     } else if (hasComponent(world, Harvester, eid) && Harvester.mode[eid] === HarvestMode.Mining) {

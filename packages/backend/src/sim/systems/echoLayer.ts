@@ -13,7 +13,6 @@
 
 import { defineQuery, hasComponent } from 'bitecs';
 import {
-  ACTIVE_SONAR,
   THERMOCLINE_PAIR_FACTOR,
   THERMOCLINE_ZONE_MAX,
   thermoclineZone,
@@ -745,6 +744,8 @@ export class EchoLayer {
     slot: number,
     px: number,
     py: number,
+    /** This transmission's reach — a picket's cadence carries less far. */
+    revealRadiusM: number,
     revealed: readonly number[],
     entities: readonly number[]
   ): void {
@@ -784,7 +785,7 @@ export class EchoLayer {
         const range =
           SCATTER.PHANTOM_MIN_RANGE_M +
           stableUnit(seed, key, PHANTOM_SALT_RANGE, step) *
-            (ACTIVE_SONAR.REVEAL_RADIUS_M - SCATTER.PHANTOM_MIN_RANGE_M);
+            (revealRadiusM - SCATTER.PHANTOM_MIN_RANGE_M);
         const x = terrain.clampXM(px + Math.cos(bearing) * range);
         const y = terrain.clampYM(py + Math.sin(bearing) * range);
         // Clamping to the map edge can pull a phantom back onto the pinger.
@@ -1304,12 +1305,12 @@ export class EchoLayer {
       const px = Position.x[pinger]!;
       const py = Position.y[pinger]!;
       const pingerSlot = Owner.slot[pinger]!;
-      const revealed = this.hash.queryRadius(
-        px,
-        py,
-        ACTIVE_SONAR.REVEAL_RADIUS_M,
-        this.queryBuffer
-      );
+      // This transmission's reach, not the button's: the commander's ping
+      // punches 900 m and a picket's cadence 808 (docs/systems-echo.md §5).
+      // Carried on the component so every consumer reads the same figure for
+      // the same ping — see `ActivePing` on why it is not a constant here.
+      const radiusM = ActivePing.revealRadiusM[pinger]!;
+      const revealed = this.hash.queryRadius(px, py, radiusM, this.queryBuffer);
 
       // A ping transmitted from scattered water returns phantoms — the one
       // terrain that punishes the button directly (docs/systems-echo.md §5).
@@ -1317,7 +1318,7 @@ export class EchoLayer {
       // pinger's *own* cell decides, so a corridor cut through the Fields is
       // a place to ping from with a straight answer (mission-standing-wave §7).
       if (firstTick && pingerSlot < MAX_SLOTS && terrain.hasScatter && terrain.scatterAt(px, py)) {
-        this.conjurePhantoms(world, pinger, pingerSlot, px, py, revealed, entities);
+        this.conjurePhantoms(world, pinger, pingerSlot, px, py, radiusM, revealed, entities);
       }
 
       for (let j = 0; j < revealed.length; j++) {
@@ -1327,7 +1328,7 @@ export class EchoLayer {
         const tx = Position.x[target]!;
         const ty = Position.y[target]!;
         const distance = Math.hypot(px - tx, py - ty);
-        if (distance > ACTIVE_SONAR.REVEAL_RADIUS_M) continue;
+        if (distance > radiusM) continue;
         this.record(pingerSlot, target, ResolutionTier.Track, px, py);
 
         // The victim's side of the same event. Bearing only, from their hull

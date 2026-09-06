@@ -90,15 +90,24 @@ describe('the shipped layouts', () => {
 
   it('moves only what the standard layout puts out of reach', () => {
     // A layout that also shuffles the keys a player already knows is a worse
-    // layout, so this is a claim about restraint: exactly the bindings the
-    // standard puts under a right hand should differ.
+    // layout, so this is a claim about restraint: a binding differs only
+    // because the standard put it under a right hand, or because something
+    // that moved for that reason took its key.
     const moved = ACTIONS.filter(
       ({ action }) => ONE_HANDED_BINDINGS[action] !== DEFAULT_BINDINGS[action]
     ).map(({ action }) => action);
     // `stop` moves too, although `X` is a left-hand key: the mine takes `X`
     // in this layout, so stop steps aside rather than collide with it.
+    //
+    // `engineOff` is the second of those, and the reason the claim above is
+    // worded as it is rather than as "exactly the right-hand bindings": `Q` is
+    // a left-hand key and the standard's engine off sits on it, but the ping
+    // moved to `Q` here because `P` was out of reach. By the time engine off
+    // landed (#506) no left-hand key was free in *both* layouts, so it takes
+    // the `B` the signature structure vacated.
     assert.deepEqual(moved.sort(), [
       'buildSignature',
+      'engineOff',
       'holdPosition',
       'mine',
       'noisemaker',

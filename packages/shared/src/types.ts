@@ -132,6 +132,32 @@ export enum UnitKind {
   Verger = 17,
   /** Knights, Slipway: three berths, and what it lands, lands with +1 PR. */
   Antiphon = 18,
+  /**
+   * The scouts — one a navy, and the two states a scout needs (docs/units.md,
+   * "The scouts"; wave 2 of docs/roster-plan.md, #506). Appended, for the same
+   * reason: the value crosses the wire and sits in replays.
+   */
+  /** Consortium, Foundry: the picket that pings on a cadence. */
+  Beacon = 19,
+  /** Commune, Foundry: the hull that cuts its drive and coasts. */
+  Glider = 20,
+  /** Directorate, Foundry: the ears that sit still. */
+  Acolyte = 21,
+  /** Knights, Foundry: the cone hull that scouts by leaving. */
+  Herald = 22,
+  /**
+   * The ordnance hulls — one a navy, each on its doctrine's corner of the
+   * weapon triangle (docs/units.md, "The ordnance hulls"; wave 3 of
+   * docs/roster-plan.md, #507). Appended, for the same reason.
+   */
+  /** Consortium, Slipway: four tubes and a magazine of four. */
+  Broadside = 23,
+  /** Commune, Foundry: three decoys, laid on the move. */
+  Weaver = 24,
+  /** Directorate, Slipway: the hull that bombs upward. */
+  Thurible = 25,
+  /** Knights, Slipway: one torpedo, and only at what it faces. */
+  Lance = 26,
 }
 
 /** Prototype structure roster. Stats live in structures.ts. See docs/units.md. */
@@ -482,6 +508,14 @@ export interface OwnUnit {
   sig: number;
   silentRunning: boolean;
   /**
+   * The drive is cut — the posture below Silent Running
+   * (docs/systems-echo.md §6). Its own field rather than a third value on
+   * `silentRunning`, for the reason the wire keeps them as two messages: they
+   * are two orders, and a HUD showing one toggle with three positions would be
+   * inventing a state machine the server does not have.
+   */
+  engineOff: boolean;
+  /**
    * Depth the unit has been ordered to, when a depth change is in progress.
    * Absent once it arrives. The player's own order coming back to them, so
    * the HUD can draw where a hull is headed as well as where it is.
@@ -561,6 +595,17 @@ export interface OwnUnit {
    * not there (docs/systems-combat.md §5).
    */
   decoyCooldownS?: number;
+  /**
+   * Decoys left in a laying hull's magazine, and the seconds until the next lay
+   * (docs/systems-combat.md §5, "A screen, laid"). Absent on every hull without
+   * a rack, which is every hull but the Weaver.
+   *
+   * Separate from `decoyCooldownS`, which is the countermeasure suite: a Weaver
+   * has both, and a HUD that showed one number would be hiding whichever the
+   * player was about to use.
+   */
+  decoys?: number;
+  decoyLayCooldownS?: number;
   /**
    * Mines aboard, for a hull that carries a grown magazine — the Spinner
    * (docs/units.md). Absent for the roster's one-mine hulls, whose count is

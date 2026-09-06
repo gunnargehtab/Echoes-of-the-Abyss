@@ -595,6 +595,17 @@ export class GameClient {
   }
 
   /**
+   * Cut or restart the drive — the posture below Silent Running
+   * (docs/systems-echo.md §6). The server owns the exclusivity: ordering this
+   * clears Silent Running, and ordering Silent Running clears this, so the
+   * client never has to send two messages to change one posture.
+   */
+  setEngineOff(unitIds: number[], active: boolean): void {
+    if (unitIds.length === 0) return;
+    this.order(CLIENT_MSG.engineOff, { unitIds, active });
+  }
+
+  /**
    * Order a depth change. Descent is fast and loud, ascent slow and silent —
    * the server owns both rates and refuses a depth outside the map's range.
    */
@@ -648,6 +659,16 @@ export class GameClient {
   deployNoisemaker(unitIds: number[]): void {
     if (unitIds.length === 0) return;
     this.order(CLIENT_MSG.noisemaker, { unitIds });
+  }
+
+  /**
+   * Lay one decoy from a hull's magazine — the screen, not the countermeasure
+   * (docs/systems-combat.md §5). One hull at a time, because the magazine and
+   * its interval are the hull's: a selection-wide order would silently drop
+   * every lay but the first on each hull that was still spacing.
+   */
+  layDecoy(unitId: number): void {
+    this.order(CLIENT_MSG.layDecoy, { unitId });
   }
 
   /** Lay a mine at the hull's own position. Loud to lay, silent once laid. */

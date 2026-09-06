@@ -230,6 +230,8 @@ export interface RendererCallbacks {
   /** Where a selected yard sends the hulls it launches. */
   onRallyOrder(structureIds: number[], x: number, y: number): void;
   onToggleSilent(unitIds: number[], active: boolean): void;
+  onToggleEngineOff(unitIds: number[], active: boolean): void;
+  onLayDecoy(unitId: number): void;
   onPing(unitId: number): void;
   onAttackOrder(unitIds: number[], contactId: number, queued: boolean): void;
   /** docs/systems-combat.md §5 — launch at a contact this player has resolved. */
@@ -645,6 +647,17 @@ const UNIT_SHORT: Record<UnitKind, string> = {
   [UnitKind.Drifter]: 'DRF',
   [UnitKind.Verger]: 'VRG',
   [UnitKind.Antiphon]: 'ANT',
+  // The scouts (#506). 'BCN' rather than 'BEA' so no two codes in the roster
+  // share their first two letters at a glance on a narrow bar.
+  [UnitKind.Beacon]: 'BCN',
+  [UnitKind.Glider]: 'GLD',
+  [UnitKind.Acolyte]: 'ACO',
+  [UnitKind.Herald]: 'HLD',
+  // The ordnance hulls (#507).
+  [UnitKind.Broadside]: 'BRD',
+  [UnitKind.Weaver]: 'WVR',
+  [UnitKind.Thurible]: 'THR',
+  [UnitKind.Lance]: 'LNC',
 };
 
 /** Compact structure names for the build buttons. */
@@ -1915,6 +1928,10 @@ export class EchoRenderer {
           e.preventDefault();
           this.commandToggleSilent();
           return;
+        case 'engineOff':
+          e.preventDefault();
+          this.commandToggleEngineOff();
+          return;
         case 'ping':
           this.commandPing();
           return;
@@ -2342,6 +2359,12 @@ export class EchoRenderer {
       // silent drop. Applies to the whole ordnance row below for the same
       // reason — every one of them is an ability a mission can withhold.
       buttons.push({
+        label: 'DRIVE OFF',
+        enabled: units.length > 0,
+        active: first?.engineOff ?? false,
+        action: () => this.commandToggleEngineOff(),
+      });
+      buttons.push({
         label: 'PING',
         enabled: units.length > 0 && this.missionLock('activeSonar') === null,
         active: false,
@@ -2418,6 +2441,22 @@ export class EchoRenderer {
           active: false,
           action: () => this.commandNoisemaker(),
         });
+        // The screen, for the one hull that carries a magazine of decoys
+        // (docs/systems-combat.md §5). Button only, no key: every left-hand
+        // key is spoken for in both layouts since engine off took the last one
+        // (#506), and §11's rebinding promise is about the keys that exist
+        // rather than a promise that everything gets one. TORP is the
+        // precedent — it is a readout and a right-click.
+        if (first?.decoys !== undefined) {
+          const spacing = first.decoyLayCooldownS;
+          buttons.push({
+            label: `SCREEN ${first.decoys}`,
+            enabled:
+              first.decoys > 0 && spacing === undefined && this.missionLock('noisemakers') === null,
+            active: false,
+            action: () => this.commandLayDecoy(),
+          });
+        }
         buttons.push({
           label: 'MINE',
           enabled: this.missionLock('mines') === null,
@@ -2724,6 +2763,19 @@ export class EchoRenderer {
     );
   }
 
+  private commandToggleEngineOff(): void {
+    const units = this.selectedUnits();
+    if (units.length === 0) return;
+    // The first selected unit's state decides, exactly as it does for silence.
+    // Nothing here clears the other posture: the server owns that rule
+    // (`Match.applyEngineOff`), and a client that also enforced it would be
+    // the second place it was written down.
+    this.callbacks.onToggleEngineOff(
+      units.map((u) => u.id),
+      !(units[0]?.engineOff ?? false)
+    );
+  }
+
   private commandPing(): void {
     // A struck array is not a cooldown: the hull has no transmitter, and the
     // mission says so on the hint bar rather than letting P do nothing.
@@ -2865,6 +2917,24 @@ export class EchoRenderer {
     const units = this.selectedUnits().filter((u) => u.decoyCooldownS === undefined);
     if (units.length === 0) return;
     this.callbacks.onDeployNoisemaker(units.map((u) => u.id));
+  }
+
+  /**
+   * Lay one decoy from the magazine — the screen, not the countermeasure.
+   *
+   * One hull, unlike every other ordnance order on this bar: the magazine and
+   * its spacing are per hull, so a selection-wide lay would silently drop every
+   * hull that was still between decoys and read as a button that sometimes did
+   * nothing. The first selected hull that actually has a rack is the one that
+   * lays, which is the same rule the TORP readout uses.
+   */
+  private commandLayDecoy(): void {
+    if (this.refusedByMission('noisemakers')) return;
+    const layer = this.selectedUnits().find(
+      (u) => (u.decoys ?? 0) > 0 && u.decoyLayCooldownS === undefined
+    );
+    if (layer === undefined) return;
+    this.callbacks.onLayDecoy(layer.id);
   }
 
   private commandLayMine(): void {

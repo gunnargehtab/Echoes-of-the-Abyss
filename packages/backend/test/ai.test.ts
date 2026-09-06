@@ -191,6 +191,7 @@ describe('production does not deadlock', () => {
       heading: 0,
       sig: 30,
       silentRunning: false,
+      engineOff: false,
       pressureBonus: 0,
       unhealableDamage: 0,
       ...(kind === UnitKind.Harvester ? { cargo: 0, throttle: HarvestThrottle.Standard } : {}),
@@ -202,9 +203,17 @@ describe('production does not deadlock', () => {
       exposure: { tier: ResolutionTier.Silent, trackedCount: 0 },
       // Four harvesters, so nothing is wanted there, and three armed hulls —
       // the opening escort, and the army length that selects a Cruiser.
+      //
+      // Plus the navy's own scout, which wave 2 put at the head of every
+      // composition (#506). Held here rather than left out so these three
+      // tests keep asking what they were written to ask: with a scout already
+      // afloat the next want is the Cruiser, and "takes its first choice"
+      // stays a claim about doctrine rather than one a 100-nodule hull could
+      // satisfy by being the cheapest thing on the bar.
       units: [
         ...[1, 2, 3, 4].map((id) => hull(id, UnitKind.Harvester)),
         ...[5, 6, 7].map((id) => hull(id, UnitKind.Corvette)),
+        hull(8, UnitKind.Herald),
       ],
       structures: [
         {
@@ -923,6 +932,7 @@ function exposedSnapshot(): EchoSnapshot {
         heading: 0,
         sig: 40,
         silentRunning: false,
+        engineOff: false,
         pressureBonus: 0,
         unhealableDamage: 0,
         cargo: 0,
@@ -973,6 +983,7 @@ function armySnapshot(contacts: Contact[], tick = 6000): EchoSnapshot {
     heading: 0,
     sig: 30,
     silentRunning: false,
+    engineOff: false,
     pressureBonus: 0,
     unhealableDamage: 0,
   });
@@ -1055,14 +1066,31 @@ function assertOnlyKnown(command: AiCommand, known: Known): void {
       return;
     case 'throttle':
     case 'silent':
+    case 'engineOff':
       owns(command.unitIds);
       return;
     case 'ping':
       owns([command.unitId]);
       return;
     case 'mine':
-      // A mine carries no position: it is dropped where the hull stands, so
-      // the only thing to audit is that the hull is one of its own.
+    case 'layDecoy':
+      // Neither carries a position: both are released where the hull stands,
+      // so the only thing to audit is that the hull is one of its own.
+      owns([command.unitId]);
+      return;
+    case 'torpedo':
+      owns([command.unitId]);
+      assert.ok(
+        known.contactIds.has(command.contactId),
+        `torpedoed contact ${command.contactId}, which was never resolved for this slot`
+      );
+      return;
+    case 'depthCharge':
+      // A depth is water, not a contact — you are bombing a band, and there is
+      // nothing to have resolved. What the commander must not do is name a
+      // depth it could only know from a contact it never classified, and it
+      // cannot: the depth it passes comes off a contact in its own snapshot,
+      // which is where Tier 3 already gated it.
       owns([command.unitId]);
       return;
     case 'build':
@@ -1125,11 +1153,23 @@ function applyTo(match: Match, slot: number, command: AiCommand): void {
     case 'silent':
       for (const id of command.unitIds) match.setSilentRunning(slot, id, command.active);
       return;
+    case 'engineOff':
+      for (const id of command.unitIds) match.setEngineOff(slot, id, command.active);
+      return;
     case 'ping':
       match.activeSonar(slot, command.unitId);
       return;
     case 'mine':
       match.layMine(slot, command.unitId);
+      return;
+    case 'layDecoy':
+      match.layDecoy(slot, command.unitId);
+      return;
+    case 'torpedo':
+      match.orderLaunchTorpedo(slot, command.unitId, command.contactId);
+      return;
+    case 'depthCharge':
+      match.orderDepthCharge(slot, command.unitId, command.depthM);
       return;
     case 'build':
       match.build(slot, command.structure, command.x, command.y);

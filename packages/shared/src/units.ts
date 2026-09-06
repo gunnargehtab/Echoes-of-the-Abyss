@@ -141,6 +141,67 @@ export interface UnitStats {
    * carried. Absent on every other hull.
    */
   holdBerths?: number;
+  /**
+   * Seconds between the pings this hull fires on its own, for a hull that
+   * carries a picket set rather than the commander's button
+   * (docs/systems-echo.md §5, "A ping a hull fires itself"). The figures the
+   * ping is heard at are the mechanism's and live in `ACTIVE_SONAR.CADENCE`;
+   * this is the hull's cycle, which is the part that differs per hull and the
+   * part an enemy can learn. The Beacon is the first to carry it.
+   */
+  pingCadenceS?: number;
+  /**
+   * Fraction of its speed this hull keeps with the drive cut, for a hull built
+   * to coast (docs/systems-echo.md §6, "Engine off"). Absent on every other
+   * hull, which is what makes engine off a full stop for them: the Glider is
+   * the only thing in the roster still under way at its acoustic floor.
+   */
+  glideSpeedFraction?: number;
+  /**
+   * Hydrophone rating while stationary, for a hull whose listening is its
+   * posture rather than its dome (docs/units.md, "The scouts"). The Acolyte
+   * hears at 85 parked and 60 under way; the step is worth about a resolution
+   * tier at the ranges a chokepoint watch is set at, which is the sketch
+   * roster-plan.md §3 asked for, written as a figure the Echo pass can read
+   * rather than as a special case in the tier ladder. Absent means `hyd` holds
+   * at every speed, which is every other hull.
+   */
+  hydStationary?: number;
+  /**
+   * Torpedoes aboard, when the hull carries more or fewer than the roster's
+   * two (docs/systems-combat.md §5, "Ammunition"). The Broadside's four and
+   * the Lance's one are the two ends of the same argument: scarcity is the
+   * class identity, and a hull that changes the number is buying or selling
+   * exactly that. Absent means `ORDNANCE.TORPEDO.MAGAZINE`.
+   */
+  torpedoMagazine?: number;
+  /**
+   * A torpedo that holds the solution it launched with, for a hull whose tubes
+   * are cone-gated (docs/units.md, the Lance). Two behaviours, and they are one
+   * thing: the launch is refused outside the hull's own cone, and the weapon
+   * that results never re-acquires. That is what a *locked* solution means —
+   * you spent the shot on something you were facing, and it goes there.
+   *
+   * It is also the triangle's missing edge (docs/systems-combat.md §2, §5): a
+   * decoy works by being the loudest thing now, and this is the one weapon that
+   * is not listening. The price is that it can only ever be fired forward, from
+   * a hull that is loudest forward.
+   */
+  coneLockedTorpedo?: boolean;
+  /**
+   * Decoys aboard, for a hull that lays them as a screen rather than carrying
+   * one as a countermeasure (docs/systems-combat.md §5, "A screen, laid"). The
+   * Weaver is the only hull with a magazine of them. Absent means the hull has
+   * the general countermeasure and nothing more.
+   */
+  decoyMagazine?: number;
+  /**
+   * Seconds between depth charges for a hull whose rack is its weapon
+   * (docs/units.md, the Thurible), against the general
+   * `ORDNANCE.DEPTH_CHARGE.COOLDOWN_S`. Every armed hull can drop one; this is
+   * the hull that does it for a living.
+   */
+  depthChargeCooldownS?: number;
 }
 
 /** Half a hull's length: the radius the simulation keeps clear around it. */
@@ -856,6 +917,295 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     attackRangeM: 0,
     attackCooldownS: 0,
     carriesTorpedoes: false,
+  },
+
+  /**
+   * The scouts — one a navy (docs/units.md, "The scouts"; wave 2 of
+   * docs/roster-plan.md, #506). None of the four carries a gun: the Light
+   * Scout is the scout that also shoots, and each of these is a sensor
+   * argument instead. Two of them are the wave's mechanisms made into hulls.
+   */
+  [UnitKind.Beacon]: {
+    kind: UnitKind.Beacon,
+    name: 'Beacon',
+    // SPEC — docs/units.md, Beacon: "30 / 42 / — (no weapon)". Loud at rest
+    // for a scout, which is the Klaxon's whole account of scouting: this hull
+    // was never going to sneak.
+    sigIdle: 30,
+    sigCruise: 42,
+    sigFiringBurst: 0,
+    // Mediocre ears on purpose. The Beacon does not listen its way to a
+    // contact, it pings and reads the return; a good hydrophone would make the
+    // cadence redundant and the hull incoherent.
+    hyd: 55,
+    pressureRating: 1,
+    maxHp: 260,
+    speed: 60,
+    hullLengthM: 70,
+    cost: 110,
+    buildTimeS: 22,
+    berths: 1,
+    /**
+     * A picket that pings every twenty seconds is only legible inside a navy
+     * whose doctrine is being heard (docs/factions.md, the Klaxon). Anywhere
+     * else it is a hull that reveals its owner on a clock for no compensating
+     * argument — the Clarion test, failed the same way.
+     */
+    faction: Faction.Bathyarch,
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: false,
+    /**
+     * The cycle. Twenty seconds is long enough that the schedule is a real
+     * gift to a patient enemy (docs/systems-echo.md §5) and short enough that
+     * the hull is genuinely holding a picket rather than decorating one.
+     */
+    pingCadenceS: 20,
+  },
+  [UnitKind.Glider]: {
+    kind: UnitKind.Glider,
+    name: 'Glider',
+    // SPEC — docs/units.md, Glider: "8 / 16 / — (no weapon)". The figures that
+    // matter are not these: with the drive cut it sits at 1.8, half its Silent
+    // Running figure, and it is the only hull that is still moving there.
+    sigIdle: 8,
+    sigCruise: 16,
+    sigFiringBurst: 0,
+    /**
+     * Deliberately poor. The Veil's scout is built to be *not heard* rather
+     * than to hear — it finds things by being able to go and look at them, and
+     * a Glider that also had ears would be the Acolyte with a better engine.
+     */
+    hyd: 45,
+    pressureRating: 1,
+    maxHp: 200,
+    speed: 105,
+    hullLengthM: 55,
+    cost: 70,
+    buildTimeS: 16,
+    berths: 1,
+    /**
+     * A floor no other economy could stand behind (docs/roster-plan.md §3).
+     * The Commune can field a hull that spends most of its life not moving
+     * usefully because the Commune fields many of everything; a navy of few
+     * heavy hulls cannot buy a scout that is switched off half the time.
+     */
+    faction: Faction.Pelagia,
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: false,
+    /**
+     * Steerage with the drive cut — 35 m/s of the hull's 105. The one thing
+     * that separates engine off from parking, and the reason this hull is a
+     * doctrine rather than a stat line (docs/systems-echo.md §6).
+     */
+    glideSpeedFraction: 1 / 3,
+  },
+  [UnitKind.Acolyte]: {
+    kind: UnitKind.Acolyte,
+    name: 'Acolyte',
+    // SPEC — docs/units.md, Acolyte: "10 / 20 / — (no weapon)".
+    sigIdle: 10,
+    sigCruise: 20,
+    sigFiringBurst: 0,
+    // Ordinary ears under way; see hydStationary for the ones it was built
+    // for. The gap between the two figures is the hull.
+    hyd: 60,
+    hydStationary: 85,
+    /**
+     * PR-2 on the hull, the Directorate's baseline lifting it to 3 — the
+     * Chorister's rule, and for the Chorister's reason.
+     */
+    pressureRating: 2,
+    maxHp: 200,
+    speed: 40,
+    hullLengthM: 58,
+    // Grown, and that is the lock. Not faction-bound: the Biomass column is
+    // what keeps this hull in the Directorate's hands, exactly as it keeps the
+    // Chorister there (docs/economy.md §8).
+    cost: 90,
+    biomassCost: 15,
+    buildTimeS: 20,
+    berths: 1,
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: false,
+  },
+  [UnitKind.Herald]: {
+    kind: UnitKind.Herald,
+    name: 'Herald',
+    // SPEC — docs/units.md, Herald: "14 / 45 / — (no weapon)". The cruise
+    // figure is the loudest of the four scouts and means the least: it is a
+    // cone figure, and the Order emits it forward (docs/systems-echo.md §8).
+    sigIdle: 14,
+    sigCruise: 45,
+    sigFiringBurst: 0,
+    hyd: 55,
+    pressureRating: 1,
+    maxHp: 240,
+    speed: 100,
+    hullLengthM: 65,
+    cost: 100,
+    buildTimeS: 20,
+    berths: 1,
+    /**
+     * The cone term is gated on the owner being Hadron — "one navy's doctrine,
+     * not physics" (docs/systems-echo.md §8, directional.ts), the same
+     * exclusion that locks the Clarion. Another navy's Herald would emit 45 in
+     * every direction: a scout as loud as a Cruiser at cruise, with nothing
+     * bought for it. The lock is the stat line being readable at all.
+     */
+    faction: Faction.Hadron,
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: false,
+  },
+
+  /**
+   * The ordnance hulls — one a navy (docs/units.md, "The ordnance hulls"; wave
+   * 3 of docs/roster-plan.md, #507). Each sits on one corner of
+   * docs/systems-combat.md §2's triangle and argues its navy's relationship to
+   * the weapon: the Consortium spends everything at once, the Commune lies, the
+   * Directorate bombs upward out of water it owns, the Order fires once at
+   * something it is looking at.
+   */
+  [UnitKind.Broadside]: {
+    kind: UnitKind.Broadside,
+    name: 'Broadside',
+    // SPEC — docs/units.md, Broadside: "42 / 58 / — (no gun)". The burst that
+    // matters is not here: four launches at ORDNANCE.TORPEDO.LAUNCH_SIG apiece,
+    // on a hull already in the sixties.
+    sigIdle: 42,
+    sigCruise: 58,
+    sigFiringBurst: 0,
+    hyd: 45,
+    pressureRating: 2,
+    maxHp: 700,
+    speed: 40,
+    hullLengthM: 120,
+    cost: 400,
+    buildTimeS: 70,
+    berths: 3,
+    /**
+     * Four tubes on one hull is the Klaxon's alpha strike and nobody else's
+     * (docs/factions.md). A navy that plans to be quiet cannot spend its whole
+     * ordnance in twelve seconds and then sail home for ninety, which is what
+     * this magazine costs: the hull is useless for the length of a rearm, and
+     * the Consortium is the only navy whose doctrine already pays that bill.
+     */
+    faction: Faction.Bathyarch,
+    // No gun at all. Every tube is a torpedo tube; the hull that spends its
+    // ordnance has nothing left, which is the decision the magazine is for.
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: true,
+    torpedoMagazine: 4,
+  },
+  [UnitKind.Weaver]: {
+    kind: UnitKind.Weaver,
+    name: 'Weaver',
+    // SPEC — docs/units.md, Weaver: "12 / 22 / — (no weapon)". The hull is
+    // quiet and the things it leaves behind are not, which is the whole trick.
+    sigIdle: 12,
+    sigCruise: 22,
+    sigFiringBurst: 0,
+    hyd: 50,
+    pressureRating: 1,
+    maxHp: 320,
+    speed: 75,
+    hullLengthM: 70,
+    cost: 150,
+    buildTimeS: 32,
+    berths: 2,
+    /**
+     * Only the Veil prices its decoys against a Veil (docs/roster-plan.md §3).
+     * A navy that is already the loudest thing in the water gains nothing by
+     * adding three more contacts to its own picture; a navy that is normally
+     * four quiet hulls gains an army that is not there.
+     */
+    faction: Faction.Pelagia,
+    // Unarmed, and that is the argument rather than an omission: the Spinner is
+    // the Commune's mine hull and this is its other silent weapon. A Weaver
+    // that could also shoot would be a Corvette that lies.
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: false,
+    decoyMagazine: 3,
+  },
+  [UnitKind.Thurible]: {
+    kind: UnitKind.Thurible,
+    name: 'Thurible',
+    // SPEC — docs/units.md, Thurible: "16 / 28 / 85 firing". The firing figure
+    // is the charge's own detonation, heard a band away.
+    sigIdle: 16,
+    sigCruise: 28,
+    sigFiringBurst: 0,
+    hyd: 65,
+    /**
+     * PR-3 on the hull, which is the weapon's precondition and not a bonus: a
+     * hull that bombs upward has to be under something first.
+     */
+    pressureRating: 3,
+    maxHp: 620,
+    speed: 42,
+    // Grown, the cohort programme's account again — and not faction-locked, as
+    // the Chorister and the Acolyte are not. Every navy may drop a charge; only
+    // this one lives deep enough for "up" to be where the enemy is.
+    cost: 300,
+    biomassCost: 40,
+    hullLengthM: 105,
+    buildTimeS: 60,
+    berths: 3,
+    // A modest gun, and it earns its place twice: the hull is not helpless
+    // between racks, and `spawnUnit` hangs the charge rack off being armed at
+    // all (docs/systems-combat.md §5, "any combat hull can deploy one").
+    attackDamage: 45,
+    attackRangeM: 500,
+    attackCooldownS: 3,
+    carriesTorpedoes: false,
+    // Half the general rack. The Thurible does this for a living; every other
+    // hull does it once and goes back to its own weapon.
+    depthChargeCooldownS: 6,
+  },
+  [UnitKind.Lance]: {
+    kind: UnitKind.Lance,
+    name: 'Lance',
+    // SPEC — docs/units.md, Lance: "20 / 50 / —", and the figures are cone
+    // figures like every Order hull's (docs/systems-echo.md §8): 50 ahead, 17.5
+    // on the beam, 5 astern. The hull is loudest exactly where it can shoot.
+    sigIdle: 20,
+    sigCruise: 50,
+    sigFiringBurst: 0,
+    hyd: 50,
+    pressureRating: 2,
+    maxHp: 380,
+    speed: 65,
+    hullLengthM: 95,
+    cost: 320,
+    // A Slipway hull, so the crystal is the decision (docs/economy.md §8).
+    crystalCost: 40,
+    buildTimeS: 60,
+    berths: 2,
+    /**
+     * The cone term is one navy's doctrine and not physics
+     * (docs/systems-echo.md §8), and this hull's whole weapon is built on it:
+     * a launch is refused outside the bearing the hull is loudest in. Under any
+     * other flag the gate would be a rule with nothing behind it — a tube that
+     * refuses shots for no reason its own signature can explain.
+     */
+    faction: Faction.Hadron,
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: true,
+    torpedoMagazine: 1,
+    coneLockedTorpedo: true,
   },
 };
 

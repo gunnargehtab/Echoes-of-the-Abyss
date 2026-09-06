@@ -25,6 +25,7 @@
 
 import {
   ACTIVE_SONAR,
+  DIRECTIONAL_SIGNATURE,
   CONSTRUCTION,
   CRYSTAL,
   DEPTH,
@@ -556,6 +557,60 @@ const TRANSPORTS: readonly UnitKind[] = [
  * branch — it is filed rather than fixed in passing, so that the measurement
  * of this change is a measurement of this change.
  */
+/**
+ * Each navy's own scout, for `designateScout` (#506).
+ *
+ * A table rather than a field on the doctrine because it is a roster fact and
+ * not a policy: which hull a navy scouts with follows from which scout it can
+ * build, and `unitAvailableTo` already owns that. Wave 6 decides whether the
+ * Light Scout fallback beside it survives.
+ *
+ * Deliberately **not** an entry on each navy's `composition`, which is how the
+ * Spinner, the Sower and the transports declare themselves. The composition
+ * cycle indexes on `army.length` modulo its own length, so adding a hull to it
+ * re-phases every selection that navy makes — the Knights' cycle stopped
+ * landing on the Cruiser the moment a fifth entry was added, which is a
+ * balance change nobody asked for dressed as a roster edit. This table is the
+ * declaration instead, and the want reads it directly.
+ */
+const OWN_SCOUT: Record<Faction, UnitKind> = {
+  [Faction.Bathyarch]: UnitKind.Beacon,
+  [Faction.Pelagia]: UnitKind.Glider,
+  [Faction.Directorate]: UnitKind.Acolyte,
+  [Faction.Hadron]: UnitKind.Herald,
+};
+
+/**
+ * Each navy's ordnance hull (#507), on the same terms as `OWN_SCOUT` and for
+ * the same reason: a roster fact, kept off the composition so it cannot
+ * re-phase the cycle.
+ */
+const OWN_ORDNANCE: Record<Faction, UnitKind> = {
+  [Faction.Bathyarch]: UnitKind.Broadside,
+  [Faction.Pelagia]: UnitKind.Weaver,
+  [Faction.Directorate]: UnitKind.Thurible,
+  [Faction.Hadron]: UnitKind.Lance,
+};
+
+/**
+ * How close a contact has to be before an ordnance hull spends anything on it.
+ *
+ * Inside a torpedo's 3,200 m run with room for the target to still be there
+ * when it arrives: at 160 m/s a 2,200 m shot is fourteen seconds of swimming,
+ * which is about as long as a firing solution stays worth having.
+ */
+const ORDNANCE_REACH_M = 2200;
+
+/**
+ * How far ahead of the push a Weaver lays, and how close an enemy has to be
+ * before it bothers.
+ *
+ * A screen is worth nothing behind the fight and worth nothing before there is
+ * one: three decoys at SIG 45 laid in empty water are three contacts telling
+ * the enemy exactly where the Commune is going.
+ */
+const SCREEN_RANGE_M = 2600;
+
 const WANTED_SEPARATELY: readonly UnitKind[] = [
   UnitKind.Spinner,
   UnitKind.Sower,
@@ -563,6 +618,20 @@ const WANTED_SEPARATELY: readonly UnitKind[] = [
   // the line, and bought by a want of their own — one, once there is an
   // army to carry (`commandProduction`), used by `commandTransports`.
   ...TRANSPORTS,
+  // The scouts (#506) are the same shape a fourth time, and they are the case
+  // the note on the composition cycle predicted in words: not one of the four
+  // carries a gun, the cycle index is `army.length`, and a hull with no weapon
+  // never joins the army — so a navy whose index landed on its scout would
+  // select it again on the next observation and the one after, buying scouts
+  // until the yard backed up. Bought by a want of their own instead, one
+  // apiece, in `commandProduction`.
+  ...Object.values(OWN_SCOUT),
+  // The ordnance hulls (#507). Three of the four carry no gun at all, so they
+  // would never join the army the cycle counts; the Thurible does and is here
+  // anyway, because it is bought for a rack rather than for a line and a
+  // doctrine that counted it as a line hull would field one fewer Corvette
+  // than it thinks.
+  ...Object.values(OWN_ORDNANCE),
 ];
 
 /**
@@ -769,6 +838,25 @@ function plumeCost(
 }
 
 /** Sim ticks between Echo snapshots — the commander's clock unit. */
+
+/**
+ * How close a Glider gets under power before it cuts the drive and coasts in.
+ *
+ * Its glide is 35 m/s, so this is about twelve seconds of coasting — long
+ * enough that it arrives at its floor rather than at its cruise figure, short
+ * enough that the hull is not crawling across the map at a third of its speed.
+ */
+const GLIDE_APPROACH_M = 420;
+
+/**
+ * How close a contact gets before a Herald turns for home.
+ *
+ * Outside a Corvette's gun (400 m) with room to have already turned by the
+ * time it matters: the hull's protection is its wake, and a wake only helps a
+ * hull that is already pointed away.
+ */
+const HERALD_TURN_M = 700;
+
 const TICKS_PER_OBSERVATION = SIM.TICK_HZ / SIM.ECHO_HZ;
 
 interface Remembered {
@@ -976,6 +1064,7 @@ export class AiCommander implements AiPlayer {
     this.commandConstruction(snapshot, harvesters, raiders, purse, commands);
     this.commandProduction(snapshot, harvesters, army, purse, commands);
     this.commandScout(snapshot, scout, commands);
+    this.commandOrdnance(snapshot, commands);
     this.commandLayers(snapshot, commands);
     this.commandSeeders(snapshot, commands);
     // The lift claims the hulls it orders aboard this observation, so the
@@ -1907,6 +1996,51 @@ export class AiCommander implements AiPlayer {
     const escorted =
       army.length + queuedArmy >= Math.ceil(this.doctrine.attackAtArmySize * MASSING.MIN_FRACTION);
 
+    // The navy's own scout, first of the separate wants and **not** gated on
+    // the escort, which is where it parts company with the wall below.
+    //
+    // A scout is not something a navy fields once it has an army; it is how it
+    // finds out what army to have. Gating it behind the escort would be the
+    // circle #491 was about — the navy that most needs to know where the enemy
+    // is would be the last to be allowed to look — and the hull is cheap
+    // enough (70–110 nodules) that the guard would buy nothing anyway.
+    //
+    // One. A second is a second patrol route the commander has no plan for:
+    // `commandScout` designates a single hull and walks one leg at a time, so
+    // a second scout would idle at the spawn being audible.
+    const ownScout = OWN_SCOUT[this.briefing.faction];
+    const scouts =
+      snapshot.units.reduce((n, u) => n + (u.kind === ownScout ? 1 : 0), 0) + queuedOf(ownScout);
+    if (scouts < 1) {
+      const yard = this.freeYard(snapshot.structures, ownScout);
+      if (yard !== null && this.affordUnit(ownScout, purse)) {
+        out.push({ kind: 'produce', structureId: yard.id, unit: ownScout });
+        return;
+      }
+    }
+
+    // The navy's ordnance hull, on the Spinner's terms rather than the scout's:
+    // **behind** the escort, because ordnance is bought for a fight that
+    // exists. A Broadside with nothing to escort it is 400 nodules of tubes
+    // waiting to be found, and a screen laid in empty water is three decoys
+    // telling the enemy where the Commune is going.
+    //
+    // One. Every one of these is a magazine rather than a line hull, and a
+    // second would double a cost the commander has no second plan for.
+    const ownOrdnance = OWN_ORDNANCE[this.briefing.faction];
+    if (escorted) {
+      const carried =
+        snapshot.units.reduce((n, u) => n + (u.kind === ownOrdnance ? 1 : 0), 0) +
+        queuedOf(ownOrdnance);
+      if (carried < 1) {
+        const yard = this.freeYard(snapshot.structures, ownOrdnance);
+        if (yard !== null && this.affordUnit(ownOrdnance, purse)) {
+          out.push({ kind: 'produce', structureId: yard.id, unit: ownOrdnance });
+          return;
+        }
+      }
+    }
+
     if (this.doctrine.composition.includes(UnitKind.Spinner)) {
       const layers =
         snapshot.units.reduce((n, u) => n + (u.kind === UnitKind.Spinner ? 1 : 0), 0) +
@@ -2079,32 +2213,206 @@ export class AiCommander implements AiPlayer {
 
   // --- Scouting -------------------------------------------------------------
 
-  /** The lowest-id Light Scout, so the choice is stable across observations. */
+  /**
+   * The navy's own scout if it has one, else the Light Scout — lowest id
+   * within whichever, so the choice is stable across observations.
+   *
+   * Preferring the navy's own is what makes wave 2's gate measurable: the
+   * per-navy time to first classified enemy cannot move differently per navy
+   * while all four scout with the same hull (#506). The Light Scout stays the
+   * fallback rather than being dropped, because whether it stays in the roster
+   * at all is wave 6's decision and not this one's.
+   */
   private designateScout(units: readonly OwnUnit[]): OwnUnit | null {
-    let best: OwnUnit | null = null;
+    let own: OwnUnit | null = null;
+    let common: OwnUnit | null = null;
     for (const unit of units) {
-      if (unit.kind !== UnitKind.LightScout) continue;
-      if (best === null || unit.id < best.id) best = unit;
+      if (unit.kind === OWN_SCOUT[this.briefing.faction]) {
+        if (own === null || unit.id < own.id) own = unit;
+      } else if (unit.kind === UnitKind.LightScout) {
+        if (common === null || unit.id < common.id) common = unit;
+      }
     }
-    return best;
+    return own ?? common;
   }
 
   private commandScout(snapshot: EchoSnapshot, scout: OwnUnit | null, out: AiCommand[]): void {
     if (scout === null) return;
+
+    // The Acolyte does not run a route at all: its second HYD figure is worth
+    // about a tier and is only paid while it is stopped (docs/units.md), so a
+    // patrolling Acolyte is a slow Light Scout with worse ears. It walks to one
+    // watch post and stays there.
+    if (scout.kind === UnitKind.Acolyte) {
+      this.commandWatchPost(snapshot, scout, out);
+      return;
+    }
+
     const route = this.scoutRoute();
     const leg = route[this.scoutLeg % route.length]!;
+
+    // A Herald is caught by facing the enemy and safe running from it — the
+    // cone term, ×0.10 astern (docs/systems-echo.md §8). So the one thing it
+    // must not do is hold its heading into a contact: turn for home, and the
+    // leg it was walking is abandoned rather than resumed, because a Herald
+    // that turned back into the same water would simply be heard on the way in
+    // a second time.
+    if (
+      scout.kind === UnitKind.Herald &&
+      this.nearestContactWithin(snapshot, scout, HERALD_TURN_M)
+    ) {
+      this.scoutLeg++;
+      out.push({ kind: 'move', unitIds: [scout.id], x: this.home.x, y: this.home.y });
+      return;
+    }
+
     if (distance(scout, leg) < RANGE.ARRIVE_M) {
       this.scoutLeg++;
+      // Restart the drive before taking the next leg: a Glider that arrived
+      // coasting is still coasting, and would take the whole map at 35 m/s.
+      if (scout.engineOff) out.push({ kind: 'engineOff', unitIds: [scout.id], active: false });
       out.push({ kind: 'move', unitIds: [scout.id], ...route[this.scoutLeg % route.length]! });
       return;
     }
+
+    // The Glider's approach: cut the drive for the last stretch and coast in at
+    // its floor. This is the whole hull — every other navy's scout arrives at
+    // its cruise figure, and the Commune's arrives at 1.8 (docs/systems-echo.md
+    // §6). Ordered once, at the boundary, because engine off clears the move
+    // order it was given and re-issuing would restart the drive every tick.
+    if (scout.kind === UnitKind.Glider && !scout.engineOff) {
+      if (distance(scout, leg) < GLIDE_APPROACH_M) {
+        out.push({ kind: 'engineOff', unitIds: [scout.id], active: true });
+        return;
+      }
+    }
+    if (scout.engineOff) return;
+
     // A scout that has stopped needs telling again; one that is under way does
     // not, and re-issuing would reset its plan every cadence tick.
-    if (!scout.silentRunning && this.tuning.usesSilentRunning) {
+    //
+    // The Beacon is the exception: silence stops its sonar set, and a picket
+    // that has been told to be quiet is a picket that has been switched off.
+    // Its whole argument is that it is heard (docs/units.md).
+    const canHide = scout.kind !== UnitKind.Beacon;
+    if (canHide && !scout.silentRunning && this.tuning.usesSilentRunning) {
       out.push({ kind: 'silent', unitIds: [scout.id], active: true });
     }
     if (snapshot.tick % (TICKS_PER_OBSERVATION * 25) < TICKS_PER_OBSERVATION) {
       out.push({ kind: 'move', unitIds: [scout.id], x: leg.x, y: leg.y });
+    }
+  }
+
+  /**
+   * A hull whose listening is its posture: walk to a chokepoint and stop.
+   *
+   * The post is the first contested node — the water both sides want, and so
+   * the water something crosses. Once there the hull is told to cut its drive
+   * rather than merely to stop: engine off costs an Acolyte nothing it was
+   * using (it is not going anywhere and has no gun) and buys the quietest
+   * posture in the game on the hull with the best stationary ears in it.
+   */
+  private commandWatchPost(snapshot: EchoSnapshot, scout: OwnUnit, out: AiCommand[]): void {
+    const post = this.scoutRoute()[0] ?? this.home;
+    if (distance(scout, post) >= RANGE.ARRIVE_M) {
+      if (scout.engineOff) out.push({ kind: 'engineOff', unitIds: [scout.id], active: false });
+      if (snapshot.tick % (TICKS_PER_OBSERVATION * 25) < TICKS_PER_OBSERVATION) {
+        out.push({ kind: 'move', unitIds: [scout.id], x: post.x, y: post.y });
+      }
+      return;
+    }
+    if (!scout.engineOff) out.push({ kind: 'engineOff', unitIds: [scout.id], active: true });
+  }
+
+  /** Is anything the commander can see inside `radiusM` of this hull? */
+  private nearestContactWithin(snapshot: EchoSnapshot, of: OwnUnit, radiusM: number): boolean {
+    for (const contact of snapshot.contacts) {
+      if (distance(of, contact) < radiusM) return true;
+    }
+    return false;
+  }
+
+  /**
+   * The navy's ordnance hull, used rather than merely owned.
+   *
+   * `roster-plan.md` §7 names this as the real cost of the wave: "every hull
+   * the commander cannot use is a hull the baseline never sees". A Weaver the
+   * AI buys and never lays would leave the duel matrix — which is this wave's
+   * gate — measuring a 150-nodule hole in the Commune's economy and calling it
+   * a decoy doctrine.
+   *
+   * Four branches, because the four hulls are four different arguments about
+   * the weapon triangle and share only the hull that carries them.
+   */
+  private commandOrdnance(snapshot: EchoSnapshot, out: AiCommand[]): void {
+    const kind = OWN_ORDNANCE[this.briefing.faction];
+    for (const hull of snapshot.units) {
+      if (hull.kind !== kind) continue;
+
+      // The nearest enemy this commander has actually resolved. Classification
+      // is not required to shoot — §7 puts the gate at Tier 2, a bearing — but
+      // fauna are excluded where the tier names them, because spending a
+      // magazine of four on a Lampfry is not an alpha strike.
+      let best: EchoSnapshot['contacts'][number] | null = null;
+      let bestD = ORDNANCE_REACH_M;
+      for (const contact of snapshot.contacts) {
+        if (contact.fauna !== undefined) continue;
+        const d = distance(hull, contact);
+        if (d >= bestD) continue;
+        bestD = d;
+        best = contact;
+      }
+
+      switch (kind) {
+        case UnitKind.Weaver: {
+          // Lay while the fight is close and the hull is moving: the screen is
+          // the track it walked, so a Weaver standing still lays three decoys
+          // on top of each other and has spent its magazine on one contact.
+          if (best === null || bestD > SCREEN_RANGE_M) break;
+          if (Math.hypot(hull.x - this.home.x, hull.y - this.home.y) < RANGE.ARRIVE_M) break;
+          out.push({ kind: 'layDecoy', unitId: hull.id });
+          break;
+        }
+        case UnitKind.Broadside: {
+          // Spend the magazine. There is no holding back a hull whose whole
+          // argument is that it empties itself — and nothing to hold back
+          // *for*, since the rearm is a trip home either way.
+          if (best === null) break;
+          out.push({ kind: 'torpedo', unitId: hull.id, contactId: best.id });
+          break;
+        }
+        case UnitKind.Lance: {
+          // One shot, and only at what the bow is pointed at. The commander
+          // checks the cone itself rather than firing and being refused: a
+          // refused launch is a command in the replay that did nothing, and the
+          // hull's own heading is in its snapshot, so the check is free.
+          if (best === null) break;
+          const bearing = Math.atan2(best.y - hull.y, best.x - hull.x);
+          let off = bearing - hull.heading;
+          off = Math.abs(Math.atan2(Math.sin(off), Math.cos(off)));
+          if (off <= (DIRECTIONAL_SIGNATURE.CONE_HALF_ANGLE_DEG * Math.PI) / 180) {
+            out.push({ kind: 'torpedo', unitId: hull.id, contactId: best.id });
+          } else {
+            // Come round. Facing the target is the cost of the weapon, and it
+            // is paid in the one currency the Order minds: the bow is where a
+            // Knight is loudest (docs/systems-echo.md §8).
+            out.push({ kind: 'move', unitIds: [hull.id], x: best.x, y: best.y });
+          }
+          break;
+        }
+        case UnitKind.Thurible: {
+          // Bomb the band it is not in. A charge must cross a band to be
+          // legal, and the depth only exists on the contact at Tier 3 — which
+          // is the same gate §7 puts on knowing what you are shooting at,
+          // arriving by a different road. No classification, no charge.
+          if (best?.depth === undefined) break;
+          if (depthBandFor(best.depth) === depthBandFor(hull.depth)) break;
+          out.push({ kind: 'depthCharge', unitId: hull.id, depthM: best.depth });
+          break;
+        }
+        default:
+          break;
+      }
     }
   }
 

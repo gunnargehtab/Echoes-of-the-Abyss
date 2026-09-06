@@ -52,6 +52,21 @@ export interface FactionSummary {
   /** Seconds per match with somebody holding Bearing or better. */
   secondsTracked: number;
   /**
+   * Seconds until *this navy* first classified an enemy hull, meaned over the
+   * matches where it managed to at all.
+   *
+   * The batch's `firstEnemyContactS` is the first tick anybody did, which
+   * cannot see the thing a scout is bought for: the gap between finding and
+   * being found. Wave 2's gate is that this column moves per navy and moves
+   * differently per navy (#506), and before this column existed the gate was
+   * unmeasurable.
+   *
+   * NaN when a navy never classified an enemy in any match — reported as such
+   * rather than as a confident zero, for the reason the batch-wide
+   * distributions are not filtered to non-zero.
+   */
+  firstEnemyContactS: number;
+  /**
    * Share of hauling time spent below Standard — Trickle or Idle.
    *
    * What a navy actually paid for its quiet, rather than what its doctrine
@@ -266,6 +281,15 @@ export function summarise(results: MatchTelemetryResult[]): BatchSummary {
       biomassPerMinute: mean(rows.map((r) => r.player.biomassEarned / lifetimeMinutes(r))),
       meanPeakSig: mean(rows.map((r) => mean(r.player.peakSig))),
       secondsTracked: mean(rows.map((r) => r.player.secondsTracked)),
+      // Meaned over the matches this navy actually met somebody in. A match
+      // where it never did is dropped rather than counted as the time limit:
+      // "never found them" and "found them at 900 s" are different facts, and
+      // averaging them together would report the second and hide the first.
+      firstEnemyContactS: mean(
+        rows
+          .filter((r) => r.player.firstEnemyContactTick !== null)
+          .map((r) => r.player.firstEnemyContactTick! / SIM.TICK_HZ)
+      ),
       throttledDownShare: mean(
         rows.map((r) =>
           r.player.harvesterSeconds === 0
@@ -555,14 +579,15 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
   lines.push('');
   lines.push(
     '| Faction | Matches | Decided | Win rate | Nodules/min | Biomass/min | Mean SIG | ' +
-      'Tracked, s | Throttled down | Losses | Below the Shelf | Under the layer |'
+      'Tracked, s | Found enemy, s | Throttled down | Losses | Below the Shelf | Under the layer |'
   );
-  lines.push('| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |');
+  lines.push('| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |');
   for (const f of summary.factions) {
     lines.push(
       `| ${FACTION_NAME[f.faction]} | ${f.matches} | ${f.decided} | ${winRate(f)} | ` +
         `${f.incomePerMinute.toFixed(0)} | ${f.biomassPerMinute.toFixed(1)} | ` +
         `${f.meanPeakSig.toFixed(0)} | ${f.secondsTracked.toFixed(0)} | ` +
+        `${Number.isFinite(f.firstEnemyContactS) ? f.firstEnemyContactS.toFixed(0) : '—'} | ` +
         `${pct(f.throttledDownShare)} | ${f.lossesPerMatch.toFixed(1)} | ${pct(f.deepTimeShare)} | ${pct(f.belowLayerShare)} |`
     );
   }

@@ -69,11 +69,13 @@ export const CLIENT_MSG = {
   depth: 'depth',
   followFloor: 'followFloor',
   silent: 'silent',
+  engineOff: 'engineOff',
   ping: 'ping',
   ability: 'ability',
   // Ordnance.
   torpedo: 'torpedo',
   noisemaker: 'noisemaker',
+  layDecoy: 'layDecoy',
   mine: 'mine',
   // Lower-case on the wire, unlike every other multi-word name here. Kept as
   // it is because the name is the contract: correcting the casing would be a
@@ -167,6 +169,33 @@ export interface SilentRunningMessage {
   active: boolean;
 }
 
+/**
+ * Cut or restart the drive — the posture below Silent Running
+ * (docs/systems-echo.md §6). Its own message rather than a mode field on
+ * `SilentRunningMessage`, because the two are separate orders a player gives
+ * for separate reasons, and a client that had to send "silent: false" to mean
+ * "engine off" would be encoding the server's exclusivity rule on the wrong
+ * side of the socket.
+ */
+export interface EngineOffMessage {
+  unitIds: number[];
+  active: boolean;
+}
+
+/**
+ * Lay one decoy from a hull's magazine — the offensive half of the noisemaker
+ * (docs/systems-combat.md §5, "A screen, laid").
+ *
+ * Its own message rather than a flag on `noisemaker`, because the two are
+ * different orders with different costs: one spends a suite cooldown to save
+ * the hull, the other spends a magazine to tell a lie. A client that had to
+ * send the countermeasure's name to mean the weapon would be hiding the second
+ * order inside the first.
+ */
+export interface LayDecoyMessage {
+  unitId: number;
+}
+
 export interface PingMessage {
   unitId: number;
 }
@@ -254,10 +283,12 @@ export interface ClientMessages {
   depth: DepthMessage;
   followFloor: FollowFloorMessage;
   silent: SilentRunningMessage;
+  engineOff: EngineOffMessage;
   ping: PingMessage;
   ability: AbilityMessage;
   torpedo: TorpedoMessage;
   noisemaker: NoisemakerMessage;
+  layDecoy: LayDecoyMessage;
   mine: MineMessage;
   depthcharge: DepthChargeMessage;
   harvest: HarvestMessage;

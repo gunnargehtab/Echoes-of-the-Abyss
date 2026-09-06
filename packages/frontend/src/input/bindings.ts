@@ -29,6 +29,7 @@ export type BindableAction =
   | 'stop'
   | 'holdPosition'
   | 'silentRunning'
+  | 'engineOff'
   | 'ping'
   | 'pingPreview'
   | 'dive'
@@ -83,6 +84,12 @@ export const ACTIONS: readonly ActionSpec[] = [
     action: 'silentRunning',
     label: 'Silent running',
     hint: 'Toggle for the selection',
+    group: 'fleet',
+  },
+  {
+    action: 'engineOff',
+    label: 'Engine off',
+    hint: 'Cut the drive — quieter than silent, and stopped',
     group: 'fleet',
   },
   {
@@ -145,6 +152,9 @@ export const DEFAULT_BINDINGS: Bindings = {
   stop: 'KeyX',
   holdPosition: 'KeyH',
   silentRunning: 'Space',
+  // Beside Silent Running in meaning, and the only left-hand key the default
+  // layout had left (docs/systems-echo.md §6).
+  engineOff: 'KeyQ',
   ping: 'KeyP',
   pingPreview: 'AltLeft',
   throttle: 'KeyV',
@@ -186,6 +196,9 @@ export const ONE_HANDED_BINDINGS: Bindings = {
   noisemaker: 'KeyZ',
   mine: 'KeyX',
   buildSignature: 'KeyV',
+  // Q is the ping here, so engine off takes the B the signature structure
+  // vacated — the one left-hand key this layout does not otherwise want.
+  engineOff: 'KeyB',
   // V was the throttle; the throttle moved to E, so V is free for the
   // signature structure and B — a right-hand key — is not needed.
 };

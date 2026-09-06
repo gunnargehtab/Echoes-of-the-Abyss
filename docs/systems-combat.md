@@ -214,6 +214,31 @@ launched torpedo, both end when it does, and neither is available without spendi
   Silent Running), so it is a bet that the chase is the worst thing in the water. A Spinner
   drops from its magazine silently, which is the Commune's doctrine paying out.
 
+### A screen, laid
+
+The noisemaker above is a *countermeasure*: one decoy, on a suite cooldown, dropped behind a
+hull that is already in trouble. The Pelagia Commune's Weaver
+([units.md](units.md)) carries the same emitter as a **weapon** — three in a magazine, laid
+on the move ahead of an approach rather than behind a retreat.
+
+- **Three per magazine**, laid one every 3 s, rearmed at a Bastion or a Foundry on the
+  torpedo's terms above. The field never refills a magazine, and a screen is spent the
+  moment it is laid.
+- **SIG 45 for 25 seconds**, against a countermeasure's 70 for 8. Quieter *and* longer,
+  because the two are asked for different lies: a countermeasure has to out-shout its own
+  hull for a few seconds to break a seeker, and a laid decoy has to be mistaken for a hull
+  for as long as an approach takes. Forty-five is the roster's cruise band — a Corvette
+  runs at 28, a Cruiser at 65 — so a laid decoy reads as something worth firing at rather
+  than as an obvious emitter.
+- It still breaks seekers, because it is the same emitter and the loudest thing *now*
+  wins. A screen laid across an approach is a minefield for torpedoes as much as a lie to
+  hydrophones.
+
+**The deception is the Veil's, and it is an inversion.** Every other Commune hull buys
+quiet. The Weaver spends noise, and spends it in the shape of somebody else's navy: an
+approach behind three decoys reads as four contacts in the cruise band, and a retreat reads
+as nothing at all, because a Weaver going home lays none.
+
 ### Ammunition
 
 - **Damage 350 on impact.** A Corvette (420 HP) survives one, wounded to a sixth of its
@@ -376,6 +401,17 @@ Combat argues about depth too, or it is only half the game
   this document blesses it — with one obligation: the UI must warn when a pursuit or
   attack order would carry a unit below its PR ([ui-ux.md](ui-ux.md)). The bait should
   beat the inattentive, never the uninformed.
+
+**Floating is the same weapon upward, and deliberately so.** A charge set above its dropper
+rises at the *ascent* rate — a third of the descent ([systems-depth.md](systems-depth.md)
+§2) — so the shallow attack is slow where the deep one is fast, and a defender above gets
+three times the warning a defender below does. Nothing else changes, and nothing else
+should: it arms the same, blasts the same 200 through the same 180 m sphere, is spent by a
+passing blast the same way, and stirs the Drift the same. It must still cross a band, which
+is what stops a charge fused at the dropper's own depth from being a free area attack
+centred on the one hull it cannot hurt. The Directorate's Thurible is the hull built for it
+— PR-3, at home under the layer, reaching up into water it does not own
+([units.md](units.md)).
 
 Ramming is parked as a design question — descent is fast and deafening, and a Consortium
 hull dropping onto a target is thematically irresistible, but it needs the collision model

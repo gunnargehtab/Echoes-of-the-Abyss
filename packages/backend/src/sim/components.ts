@@ -264,9 +264,48 @@ export const SilentRunning = defineComponent({
   active: Types.ui8,
 });
 
-/** An active sonar ping in flight. docs/systems-echo.md §5. */
+/**
+ * Engine off — the posture below Silent Running (docs/systems-echo.md §6).
+ *
+ * Its own component rather than a second flag on `SilentRunning`, because the
+ * two are read by different systems for different reasons: movement asks
+ * whether the drive is turning, acoustics asks how quiet the hull is, and a
+ * single field would have made "silent *and* stopped" representable when the
+ * design has three postures and not four. `Match.applyEngineOff` clears the
+ * other one, which is where that exclusivity is enforced.
+ */
+export const EngineOff = defineComponent({
+  active: Types.ui8,
+});
+
+/**
+ * The clock a picket's sonar set runs on (docs/systems-echo.md §5, "A ping a
+ * hull fires itself"). Only hulls whose stats carry `pingCadenceS` have one.
+ *
+ * A countdown rather than a modulo of the tick, so that two Beacons built ten
+ * seconds apart ping ten seconds apart. A cadence a whole navy fired in unison
+ * would be one loud event every twenty seconds instead of continuous coverage,
+ * which is the opposite of what the hull is bought for.
+ */
+export const PingCadence = defineComponent({
+  remainingS: Types.f32,
+});
+
+/**
+ * An active sonar ping in flight. docs/systems-echo.md §5.
+ *
+ * The figures ride on the component rather than being read from a constant at
+ * the point of use, because there are two pings now — the commander's button
+ * and a picket's cadence — and every consumer wants *this* transmission's
+ * reach and loudness. A second constant read at four call sites would have
+ * been four places to forget which ping was in flight.
+ */
 export const ActivePing = defineComponent({
   remainingS: Types.f32,
+  /** What the pinger is heard at while it transmits. */
+  emitterSig: Types.f32,
+  /** The hard Tier-4 radius this transmission punches, in metres. */
+  revealRadiusM: Types.f32,
 });
 
 /** Index into the StructureKind enum. Mutually exclusive with Unit. */
@@ -423,6 +462,13 @@ export const Ordnance = defineComponent({
    * A depth charge is the one weapon whose aim is entirely vertical.
    */
   targetDepthM: Types.f32,
+  /**
+   * This torpedo keeps the target it launched with (docs/units.md, the Lance).
+   * A field on the weapon rather than a lookup back to the launcher, because
+   * the launcher may be dead long before the weapon arrives — which is exactly
+   * the case a committed shot is bought for.
+   */
+  locked: Types.ui8,
 });
 
 /**
@@ -481,6 +527,22 @@ export const HullEffect = defineComponent({
  * Veil or by a Bastion — so a Spinner in the field is a Spinner with what it
  * brought.
  */
+/**
+ * Decoys aboard a hull that lays them as a screen (docs/systems-combat.md §5,
+ * "A screen, laid"). Only the Weaver has one.
+ *
+ * Separate from `Countermeasure`, which every armed hull carries and which is
+ * one decoy on a suite cooldown. A Weaver has both, and they are different
+ * weapons: the suite saves the hull, the magazine tells the lie.
+ */
+export const DecoyMagazine = defineComponent({
+  decoys: Types.ui8,
+  /** Seconds until the next lay is allowed, so a magazine strings out. */
+  layCooldownS: Types.f32,
+  /** Seconds of the current reload, at a depot. */
+  rearmRemainingS: Types.f32,
+});
+
 export const MineMagazine = defineComponent({
   mines: Types.ui8,
   /** Seconds until the next mine is grown; only counts down at a nursery. */

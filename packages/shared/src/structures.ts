@@ -364,6 +364,16 @@ export const PRODUCIBLE: Partial<Record<StructureKind, readonly UnitKind[]>> = {
     UnitKind.Freighter,
     UnitKind.Drifter,
     UnitKind.Verger,
+    // The scouts (docs/units.md, #506): all four at the Foundry, because a
+    // scout that arrives behind the rung has missed the part of the match it
+    // was bought for.
+    UnitKind.Beacon,
+    UnitKind.Glider,
+    UnitKind.Acolyte,
+    UnitKind.Herald,
+    // The Weaver alone of the ordnance hulls (docs/units.md, #507): a screen is
+    // an opening decision, and the other three are things the crystal buys.
+    UnitKind.Weaver,
   ],
   [StructureKind.Slipway]: [
     UnitKind.Bulwark,
@@ -371,6 +381,12 @@ export const PRODUCIBLE: Partial<Record<StructureKind, readonly UnitKind[]>> = {
     UnitKind.Dredge,
     UnitKind.Reciter,
     UnitKind.Antiphon,
+    // The ordnance hulls behind the rung (#507). The Slipway's line is shared
+    // with the five refits (docs/systems-progression.md §1), which is a cost
+    // these three doctrines pay knowingly.
+    UnitKind.Broadside,
+    UnitKind.Thurible,
+    UnitKind.Lance,
   ],
 };
 
