@@ -198,6 +198,14 @@ than on a stopwatch.
   the shell test. **Assert what a doc section promises, never what the JSX says** — a
   test that mirrors markup is a change detector, and screenshots already cover how things
   look. `Rendered.button()` matches a control's *accessible name* for the same reason.
+- `test/missionPanel.test.ts`, `matchFeeds.test.ts`, `resultCards.test.ts` — the in-match
+  panels and the two ways a room ends, under the same rule. What they hold is what a row is
+  allowed to *claim*: `docs/ui-ux.md` §10.5's status region that changes in place and its
+  verbatim, never-templated objective text; §10's sample rows and the `MARK` row that spends
+  its range column on the fade; the one `T+mm:ss` clock both feeds stamp with, which
+  `MissionLog` spells out a second time rather than importing; and the pair of anti-reveal
+  rules on the result cards — a match names only the winner, and a partial mission *ended*
+  rather than lost (`docs/mission-sorrowgate.md` §8).
 
 Four seams in production code exist for these and have no other caller: `EchoRenderer`'s
 constructor takes an optional `Application`, `PerspectiveView.mount` an optional renderer
