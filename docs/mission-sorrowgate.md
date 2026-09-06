@@ -290,6 +290,14 @@ stripped, PR-2, HYD 30, slow — a poor court's freight, which is what Halloran 
 and a deaf hull in a drowned district does not move without ears. This is the escort, and it is
 made entirely of listening and position. Nothing is shot at.
 
+**The hold is a pause and it says so.** *While* is the load-bearing word: a tender whose ears fly
+off stops where it stands and takes its route back the moment they return, with nothing to
+re-issue — the flight scouting ahead costs the freight the seconds it was away, never its whole
+plan. And the tender says which hold it is under, on its own inspector line and on the hint bar
+when it is ordered anyway: `held — not released yet` before it is loaded, `held — no ears in
+range` after. That is [ui-ux.md](ui-ux.md) §10.5's rule about a locked ability applied to an
+order, and it is the difference between the mission's one rule and a hull that appears broken.
+
 **Four escorts, two tenders, one colossus, and you cannot be in both places.** Split the flight
 and both tenders crawl with two hulls of cover each; commit all four to one and the other sits
 in a chamber that is about to stop existing. That is the mission's single decision and the

@@ -33,6 +33,7 @@ import {
   FaunaStage,
   MISSION,
   MissionOutcome,
+  MovementHoldReason,
   ObjectiveStatus,
   ResolutionTier,
   SIM,
@@ -46,6 +47,7 @@ import {
   type MissionSpeaker,
   type MissionView,
   type MissionVoice,
+  type MovementHold,
   type ObjectiveView,
 } from '@echoes/shared';
 import {
@@ -200,6 +202,23 @@ export interface MissionCommandSink {
   applyPing(slot: number, eid: number): void;
 }
 
+/**
+ * A movement order suspended by the escort hold, so it can be resumed.
+ *
+ * The hold is a *pause*, not a cancellation — docs/mission-sorrowgate.md §8's
+ * "a tender moves only while a hull of the flight is within 400 m of it".
+ * Zeroing `MoveOrder.active` and forgetting what it said made the flight
+ * flying ahead to scout cost the player their tender's whole route, with
+ * nothing on screen to say so and no way back but re-issuing the order: the
+ * hull read as broken rather than as held (#478).
+ */
+interface SuspendedOrder {
+  /** Where it was going, or null when it was standing still anyway. */
+  move: { x: number; y: number } | null;
+  /** The depth it was flying, or null when it held station. */
+  depthM: number | null;
+}
+
 /** A creature being driven somewhere by a beat, re-asserted until `untilTick`. */
 interface Commitment {
   tag: MissionTag;
@@ -256,6 +275,20 @@ export class MissionRuntime {
   private readonly tenderTags = new Set<MissionTag>();
   /** Tenders that had an escort in range on the last pass. */
   private readonly lastEscorted = new Set<MissionTag>();
+  /**
+   * What the escort hold took off each tender, to give back when its ears
+   * return — see `SuspendedOrder`.
+   */
+  private readonly suspended = new Map<MissionTag, SuspendedOrder>();
+  /**
+   * Every player hull held still this pass, in authored order, for the wire.
+   *
+   * Rebuilt whole on each pass rather than edited, the `liftCutSig`
+   * arrangement: a hold can never outlive the condition that set it, and the
+   * view's change key (`rebuildView`) sees a stable list rather than one whose
+   * order depends on which tender was released first.
+   */
+  private held: MovementHold[] = [];
   /**
    * The world, for the order-time hold check.
    *
@@ -628,8 +661,21 @@ export class MissionRuntime {
    * already said why (docs/mission-sorrowgate.md §8).
    */
   holdsMovement(slot: number, eid: number): boolean {
-    if (slot !== this.definition.playerSlot) return false;
-    if (this.lastWorld === null) return false;
+    return this.holdReason(slot, eid) !== null;
+  }
+
+  /**
+   * Why the mission is holding this hull still, or null when it is not.
+   *
+   * `holdsMovement`'s answer with the rule attached, because the boolean was
+   * the whole of the bug in #478: the server refused the order and said
+   * nothing, so a tender that would not take an order read as a hull that did
+   * not work. The same code goes to the wire (`MovementHold`) and to the order
+   * path, so what the shell says and what the server does cannot drift.
+   */
+  private holdReason(slot: number, eid: number): MovementHoldReason | null {
+    if (slot !== this.definition.playerSlot) return null;
+    if (this.lastWorld === null) return null;
 
     // `releaseTick` first, and by tag rather than by role. types.ts states the
     // field's contract with no role in it — "held by the runtime until this
@@ -640,16 +686,18 @@ export class MissionRuntime {
     // and never enforced.
     //
     // A leading branch and not a wider `tagOfTender`: the escort half below
-    // reads `lastEscorted`, which `applyEscortHold` writes for tenders alone,
+    // reads `lastEscorted`, which `applyMovementHolds` writes for tenders alone,
     // so resolving every player hull through that lookup would hold every hull
     // in those eight missions forever.
     const held = this.tagOfHeld(eid);
-    if (held !== null && this.lastWorld.tick < (this.heldUntil.get(held) ?? 0)) return true;
+    if (held !== null && this.lastWorld.tick < (this.heldUntil.get(held) ?? 0)) {
+      return MovementHoldReason.Unreleased;
+    }
 
     const tag = this.tagOfTender(eid);
-    if (tag === null) return false;
-    if (this.lastWorld.tick < (this.heldUntil.get(tag) ?? 0)) return true;
-    return this.lastEscorted.has(tag) === false;
+    if (tag === null) return null;
+    if (this.lastWorld.tick < (this.heldUntil.get(tag) ?? 0)) return MovementHoldReason.Unreleased;
+    return this.lastEscorted.has(tag) ? null : MovementHoldReason.Unescorted;
   }
 
   /** The held tag behind this entity, or null when nothing holds it. */
@@ -709,7 +757,7 @@ export class MissionRuntime {
     this.applyAttendance(world, heardTier);
     this.applyTolerance(own);
     this.applySweep(world, sink);
-    this.applyEscortHold(world, own);
+    this.applyMovementHolds(world, own);
     this.applySilenceLedger(world, own);
     this.fireConditionalBeats(world, sink, own);
     this.deriveObjectives(world, own);
@@ -1154,29 +1202,111 @@ export class MissionRuntime {
    * whatever the rule says. `Match.orderDepth` refuses the *order*; this is the
    * continuous half, for an order that was legal when it was given and stopped
    * being so when the flight flew off.
+   *
+   * **The clamp is a pause and the pass says so out loud.** Both halves are
+   * #478. An order taken off a tender is kept (`suspend`) and given back the
+   * pass its ears return (`resume`), because §8's rule is that a tender moves
+   * *while* an escort is in range — a hull that had to be re-ordered after
+   * every scouting run was a cancellation wearing a pause's name. And every
+   * hull held by either rule is listed for the wire, so the shell can say which
+   * hold a hull is under instead of the server refusing in silence; the
+   * `releaseTick` half of that covers hulls of any role, which is why this pass
+   * no longer skips everything that is not a `tender`.
    */
-  private applyEscortHold(world: SimWorld, own: EchoSnapshot): void {
+  private applyMovementHolds(world: SimWorld, own: EchoSnapshot): void {
     // Radius zero is the rule switched off (types.ts, `escortRadiusM`): every
     // tender reads as escorted, which also settles `holdsMovement` through
     // `lastEscorted`, while a `releaseTick` hold keeps its own force — the
     // writ's schedule is not the escort's permission.
     const disabled = this.definition.escortRadiusM <= 0;
     const escorts = this.idsFor('escort');
+    const held: MovementHold[] = [];
     for (const party of this.definition.parties) {
       if (party.slot !== this.definition.playerSlot) continue;
       for (const unit of party.units) {
-        if (unit.role !== 'tender') continue;
+        const tender = unit.role === 'tender';
+        // A hull the mission holds by neither rule is not the wire's business.
+        if (!tender && unit.releaseTick === undefined) continue;
         const eid = this.eidOf(world, unit.tag);
         if (eid === 0 || !hasComponent(world, MoveOrder, eid)) continue;
-        const held = world.tick < (this.heldUntil.get(unit.tag) ?? 0);
+
+        const unreleased = world.tick < (this.heldUntil.get(unit.tag) ?? 0);
+        if (!tender) {
+          // Held by the clock alone: `holdsMovement` refuses the orders, and
+          // this pass only has to say so. Nothing is clamped, because nothing
+          // put a legal order on this hull to clamp — the refusal has been in
+          // force since tick zero.
+          if (unreleased) held.push({ unitId: eid, reason: MovementHoldReason.Unreleased });
+          continue;
+        }
+
         const escortedNow = disabled || this.escorted(own, escorts, eid);
         if (escortedNow) this.lastEscorted.add(unit.tag);
         else this.lastEscorted.delete(unit.tag);
-        if (held || !escortedNow) {
-          MoveOrder.active[eid] = 0;
-          if (hasComponent(world, DepthOrder, eid)) DepthOrder.active[eid] = 0;
+        if (unreleased || !escortedNow) {
+          this.suspend(world, unit.tag, eid);
+          held.push({
+            unitId: eid,
+            reason: unreleased ? MovementHoldReason.Unreleased : MovementHoldReason.Unescorted,
+          });
+        } else {
+          this.resume(world, unit.tag, eid);
         }
       }
+    }
+    this.held = held;
+  }
+
+  /**
+   * Take the hull's orders off it, remembering them.
+   *
+   * Written on every pass the hold is in force rather than only on its leading
+   * edge, because the order can be re-asserted underneath it: a `transit` beat
+   * drives a scripted hull through `applyMove`, which is the sink's path and
+   * so is not refused, and the order queue pops the next leg the moment
+   * `MoveOrder.active` reads 0. Both write a fresher order than the one this
+   * is holding, and the fresher one is the one to give back.
+   */
+  private suspend(world: SimWorld, tag: MissionTag, eid: number): void {
+    let saved = this.suspended.get(tag);
+    if (saved === undefined) {
+      saved = { move: null, depthM: null };
+      this.suspended.set(tag, saved);
+    }
+    if (MoveOrder.active[eid] === 1) {
+      saved.move = { x: MoveOrder.x[eid]!, y: MoveOrder.y[eid]! };
+      MoveOrder.active[eid] = 0;
+    }
+    if (hasComponent(world, DepthOrder, eid) && DepthOrder.active[eid] === 1) {
+      saved.depthM = DepthOrder.targetM[eid]!;
+      DepthOrder.active[eid] = 0;
+    }
+  }
+
+  /**
+   * Give them back, if the hull is not already doing something newer.
+   *
+   * The `active === 0` guard is the whole of the courtesy: a player who
+   * ordered the tender somewhere else in the interval between the ears
+   * returning and this pass has said the more recent thing, and a resumed
+   * route that overwrote it would be the hold arguing with the player.
+   */
+  private resume(world: SimWorld, tag: MissionTag, eid: number): void {
+    const saved = this.suspended.get(tag);
+    if (saved === undefined) return;
+    this.suspended.delete(tag);
+    if (saved.move !== null && MoveOrder.active[eid] === 0) {
+      MoveOrder.x[eid] = saved.move.x;
+      MoveOrder.y[eid] = saved.move.y;
+      MoveOrder.active[eid] = 1;
+    }
+    if (
+      saved.depthM !== null &&
+      hasComponent(world, DepthOrder, eid) &&
+      DepthOrder.active[eid] === 0
+    ) {
+      DepthOrder.targetM[eid] = saved.depthM;
+      DepthOrder.active[eid] = 1;
     }
   }
 
@@ -2195,6 +2325,7 @@ export class MissionRuntime {
       exposedByTier: this.exposedByTier,
       sounded: this.soundedIds.size,
       paired: this.pairedIds,
+      held: this.held,
       debtS: this.debtS,
     };
     if (this.definition.walk !== undefined) {

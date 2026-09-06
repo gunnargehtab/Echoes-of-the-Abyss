@@ -1476,6 +1476,47 @@ export interface AbilityLock {
   reason: string;
 }
 
+/**
+ * Which of the two rules is holding a hull still.
+ *
+ * A code and not a sentence, unlike `AbilityLock.reason` next door, and the
+ * difference is who the words belong to. A lock's reason names *which* rule
+ * withholds a button and varies mission to mission, so the mission authors it.
+ * These two are the engine's own — a hull is either still on the mission's
+ * clock (`MissionUnit.releaseTick`) or out of earshot of its escort
+ * (`MissionDefinition.escortRadiusM`) — and the same sentence is true of every
+ * mission that sets either field. Sending the sentence would put a string on
+ * the wire that no literal authored, which is the door `missionSafety.test.ts`
+ * exists to keep shut; the shell says it in its own voice, as it already does
+ * for every other line about a hull.
+ */
+export enum MovementHoldReason {
+  /** Held by the mission's schedule — the hull is not the player's to move yet. */
+  Unreleased = 0,
+  /** Held by the escort rule — no hull with ears is close enough to hear for it. */
+  Unescorted = 1,
+}
+
+/**
+ * A hull the mission is holding still right now, and why.
+ *
+ * `AbilityLock`'s arrangement, for an order rather than for a button, and it
+ * exists for the same sentence in docs/ui-ux.md §10.5: the lock is continuous
+ * state, not a reply to a click, because "a refusal delivered afterwards
+ * teaches nothing". A tender that does not move without ears was refused
+ * server-side and told the player nothing at all, so the rule the mission is
+ * built around (docs/mission-sorrowgate.md §8) read as a hull that was broken.
+ *
+ * Own-force state and the narrowest kind: which of *my* hulls is not taking
+ * orders, which the player can see for themselves by watching it sit there.
+ * It names no threshold, no other party, and no place.
+ */
+export interface MovementHold {
+  /** The hull, by the id the player's own snapshot reports it under. */
+  unitId: number;
+  reason: MovementHoldReason;
+}
+
 /** Where the player is being sent. Authored and public; never an entity. */
 export interface MissionMarker {
   id: string;
@@ -1544,6 +1585,11 @@ export interface MissionView {
   objectives: ObjectiveView[];
   markers: MissionMarker[];
   locks: AbilityLock[];
+  /**
+   * The player's own hulls the mission is holding still — see `MovementHold`.
+   * Empty in every mission that holds nothing, which is most of them.
+   */
+  held: readonly MovementHold[];
   /** docs/campaign.md §10 metadata, shown as a ceiling. Never a live threshold. */
   sigBudget: number;
   /** Seconds of silence-debt owed. 0 while compliant (docs/mission-sorrowgate.md §4). */

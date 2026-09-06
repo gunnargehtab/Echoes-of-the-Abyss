@@ -98,6 +98,7 @@ import {
   type JellyCluster,
   type MissionAbility,
   type MissionResultPayload,
+  type MovementHold,
   type OwnOrdnance,
   type OwnStructure,
   type OwnUnit,
@@ -128,6 +129,7 @@ import {
   type Bindings,
 } from '../input/bindings.ts';
 import { FACTION_NAME } from './factions.ts';
+import { holdReasonFor, movableIn } from './movementHolds.ts';
 import { priceTag, priceWords, shortfallLine } from './price.ts';
 import {
   drawScopeEchoMarks,
@@ -1017,6 +1019,15 @@ export class EchoRenderer {
    * Empty in a skirmish, which is every match that is not a mission.
    */
   private missionLocks: AbilityLock[] = [];
+  /**
+   * The player's own hulls this mission is holding still, each with the reason
+   * — `missionLocks`' arrangement for an *order* rather than for a button.
+   *
+   * The same list the server refuses on, so the shell never paints a route for
+   * a hull the server will not move (#478). Empty in a skirmish, and in every
+   * mission that holds nothing.
+   */
+  private missionHolds: readonly MovementHold[] = [];
   /**
    * The last refused press, and when: a locked key pressed anyway, or a
    * priced button the player could not cover. The orders panel carries the
@@ -2712,10 +2723,13 @@ export class EchoRenderer {
     if (units.length === 0) return;
     const target = this.stepDepthTarget(units, direction);
     if (target === null) return;
-    this.callbacks.onDepthOrder(
-      units.map((u) => u.id),
-      target
-    );
+    // The vertical half of the same hold: `Match.orderDepth` refuses a held
+    // hull's dive for the reason it refuses its move, and a run north that is
+    // mostly a climb would otherwise leave the player pressing a key that did
+    // nothing (docs/mission-sorrowgate.md §8).
+    const ids = this.movable(units.map((u) => u.id));
+    if (ids.length === 0) return;
+    this.callbacks.onDepthOrder(ids, target);
   }
 
   /**
@@ -2738,7 +2752,8 @@ export class EchoRenderer {
     const units = this.selectedUnits();
     const water = this.screenToWorld(clientX, clientY);
     if (units.length === 0 || water === null) return;
-    const ids = units.map((u) => u.id);
+    const ids = this.movable(units.map((u) => u.id));
+    if (ids.length === 0) return;
     this.callbacks.onAttackMoveOrder(ids, water.x, water.y, queued);
     this.noteOrder(ids, 'attackMove', water.x, water.y, queued);
   }
@@ -2768,10 +2783,9 @@ export class EchoRenderer {
     const units = this.selectedUnits();
     if (units.length === 0) return;
     const engage = !units.every((u) => u.followFloor === true);
-    this.callbacks.onFollowFloor(
-      units.map((u) => u.id),
-      engage
-    );
+    const ids = this.movable(units.map((u) => u.id));
+    if (ids.length === 0) return;
+    this.callbacks.onFollowFloor(ids, engage);
   }
 
   /**
@@ -2907,7 +2921,7 @@ export class EchoRenderer {
       this.callbacks.onHarvestOrder(harvesterIds, node.id, queued);
       this.noteOrder(harvesterIds, 'harvest', node.x, node.y, queued);
       // Everything else in the selection escorts the harvesters.
-      const rest = unitIds.filter((id) => !harvesterIds.includes(id));
+      const rest = this.movable(unitIds.filter((id) => !harvesterIds.includes(id)));
       if (rest.length > 0 && water !== null) {
         this.callbacks.onMoveOrder(rest, water.x, water.y, queued);
         this.noteOrder(rest, 'move', water.x, water.y, queued);
@@ -2928,8 +2942,10 @@ export class EchoRenderer {
     }
 
     if (unitIds.length > 0 && water !== null) {
-      this.callbacks.onMoveOrder(unitIds, water.x, water.y, queued);
-      this.noteOrder(unitIds, 'move', water.x, water.y, queued);
+      const moving = this.movable(unitIds);
+      if (moving.length === 0) return;
+      this.callbacks.onMoveOrder(moving, water.x, water.y, queued);
+      this.noteOrder(moving, 'move', water.x, water.y, queued);
     }
   }
 
@@ -3142,6 +3158,10 @@ export class EchoRenderer {
     this.missionLocks = locks;
   }
 
+  setMissionHolds(held: readonly MovementHold[]): void {
+    this.missionHolds = held;
+  }
+
   setMissionOver(payload: MissionResultPayload): void {
     this.missionOver = payload;
   }
@@ -3161,6 +3181,26 @@ export class EchoRenderer {
     if (reason === null) return false;
     this.refuse(reason);
     return true;
+  }
+
+  /** Why the mission will not move this hull, or null while it will. */
+  private movementHold(unitId: number): string | null {
+    return holdReasonFor(this.missionHolds, unitId);
+  }
+
+  /**
+   * The hulls of a selection the server would actually move — and, on the way,
+   * hands the first refusal to the hint bar, `refusedByMission`'s arrangement.
+   *
+   * What must not survive the filter is the *marker*: an order painted for a
+   * hull that is not going anywhere is the shell asserting something the server
+   * has already refused, and docs/ui-ux.md §12 lets the marker say what was
+   * asked only because the ask was real.
+   */
+  private movable(ids: readonly number[]): number[] {
+    const { ids: free, refused } = movableIn(this.missionHolds, ids);
+    if (refused !== null) this.refuse(refused);
+    return free;
   }
 
   /**
@@ -3206,6 +3246,7 @@ export class EchoRenderer {
     // run would otherwise keep a greyed-out ping key and a concluded mission's
     // banner over live water for the rest of the session.
     this.missionLocks = [];
+    this.missionHolds = [];
     this.refusal = null;
     this.missionOver = null;
     this.units = [];
@@ -5948,6 +5989,7 @@ export class EchoRenderer {
     }
 
     this.infoLine2.visible = true;
+    const hold = unit === undefined ? null : this.movementHold(unit.id);
     if (structure !== undefined) {
       this.infoLine2.text =
         structure.buildProgress < 1
@@ -5972,6 +6014,14 @@ export class EchoRenderer {
       this.infoLine2.text = `SOUR — BLEEDING at ${unit.depth.toFixed(0)}m · dive below ${LID.DEPTH_M}m`;
     } else if (unit !== undefined && (unit.sourS ?? 0) > 0 && inLid(unit.depth)) {
       this.infoLine2.text = `SOUR · ${Math.max(0, LID.GRACE_S - (unit.sourS ?? 0)).toFixed(0)}s of grace`;
+    } else if (hold !== null) {
+      // Continuous state, which is the whole point of putting it here rather
+      // than leaving it to the hint bar: docs/ui-ux.md §10.5 wants the player
+      // to learn the rule *before* pressing, because "a refusal delivered
+      // afterwards teaches nothing". Below crush and sour, which are hull loss
+      // and outrank it, and above every steady-state line, because a hull that
+      // is not taking orders is the most important thing about it (#478).
+      this.infoLine2.text = hold.toUpperCase();
     } else if (unit !== undefined && unit.followFloor === true && unit.throttle === undefined) {
       this.infoLine2.text = `FOLLOWING FLOOR · ${unit.depth.toFixed(0)}m`;
     } else if (unit !== undefined && unit.throttle !== undefined) {

@@ -18,6 +18,7 @@ import type {
   EchoSnapshot,
   MissionMarker,
   MissionView,
+  MovementHold,
   ObjectiveStatus,
   ObjectiveView,
 } from '@echoes/shared';
@@ -79,6 +80,15 @@ export interface MissionState {
    * Empty in every mission that raises none, which is every mission but one.
    */
   paired: PairedIds;
+  /**
+   * The player's own hulls the mission is holding still, and why — the
+   * runtime's `MovementHold` list, straight through.
+   *
+   * Own-force state, so it clears the same bar `loadedIds` and `roleIds`
+   * clear: every id in it is one of this observer's own hulls, and the reason
+   * beside it is a rule the mission has already told them.
+   */
+  held: readonly MovementHold[];
   debtS: number;
 }
 
@@ -127,6 +137,10 @@ export function projectMissionView(
       .filter((marker) => named.has(marker.id))
       .map((marker): MissionMarker => ({ ...marker })),
     locks: definition.locks.map((lock): AbilityLock => ({ ...lock })),
+    // Copied for `markers`' reason: the runtime rebuilds this list in place
+    // every pass, and a payload that aliased it would change under a client
+    // that had not been sent anything.
+    held: state.held.map((hold): MovementHold => ({ ...hold })),
     sigBudget: definition.sigBudget,
     debtS: state.debtS,
     ...(state.ability === undefined ? {} : { ability: state.ability }),

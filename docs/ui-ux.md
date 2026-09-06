@@ -457,6 +457,13 @@ something new, and a log role would re-announce the whole panel every time a cou
   affordance: `disabled — silence order`. The lock is continuous state, not a reply to a
   click — the player learns the rule before pressing, because a refusal delivered afterwards
   teaches nothing and §1.5 forbids finding out what something cost by paying it.
+- **A hull the mission is holding still shows its reason on the same terms**, on the inspector
+  line and in the same form: `held — no ears in range`, `held — not released yet`. A hull is the
+  affordance here, and the rule is stricter than for a button because there is nothing to grey
+  out — a hull that declines every order and says nothing does not read as held, it reads as
+  broken. An order given to a mixed selection still moves everything the mission is not holding,
+  and the hint bar carries the reason for the rest; nothing is painted for a hull that is not
+  going anywhere, because §12's order marker may only ever say what was actually asked.
 
 **The panel may only ever show the player's own force and what they have resolved.** A row
 reading `3 of 5 hostiles remaining` is a maphack in a numeral: it is precisely the map-wide

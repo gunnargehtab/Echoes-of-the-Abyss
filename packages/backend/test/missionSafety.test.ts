@@ -250,12 +250,18 @@ describe('a mission view says only what the player could have worked out', () =>
       'objectives',
       'markers',
       'locks',
+      'held',
       'sigBudget',
       'debtS',
     ]);
     const objective = new Set(['id', 'text', 'status', 'progress', 'markerId']);
     const marker = new Set(['id', 'label', 'x', 'y', 'radiusM']);
     const lock = new Set(['ability', 'reason']);
+    // A held hull is the one place the payload names an *entity*, so it gets
+    // the same treatment as everything else here and one extra check below:
+    // the id has to be the observer's own hull, and the reason has to be a code
+    // rather than a sentence somebody could compose a leak into.
+    const hold = new Set(['unitId', 'reason']);
 
     for (const { view: sentView } of sentViews()) {
       for (const key of Object.keys(sentView)) {
@@ -279,7 +285,30 @@ describe('a mission view says only what the player could have worked out', () =>
           assert.ok(lock.has(key), `unexpected field "${key}" on an AbilityLock`);
         }
       }
+      for (const shown of sentView.held) {
+        for (const key of Object.keys(shown)) {
+          assert.ok(hold.has(key), `unexpected field "${key}" on a MovementHold`);
+        }
+        assert.equal(typeof shown.reason, 'number', 'a hold reason is a code, never prose');
+      }
     }
+  });
+
+  it('holds only hulls the observer owns', () => {
+    // The one field on this payload that names an entity, so it is the one that
+    // could name somebody else's. Every id in it has to appear in the player's
+    // own resolved snapshot — the same list the client draws its own force
+    // from — because a hold on a hull the player cannot see would be a contact
+    // handed over in a friendlier field.
+    let seen = 0;
+    for (const { view, own } of sentViews()) {
+      const mine = new Set(own.units.map((unit) => unit.id));
+      for (const hold of view.held) {
+        assert.ok(mine.has(hold.unitId), `tick ${view.tick}: held a hull the player does not own`);
+        seen++;
+      }
+    }
+    assert.ok(seen > 0, 'the Prologue holds its tenders, so this asserted nothing');
   });
 });
 
