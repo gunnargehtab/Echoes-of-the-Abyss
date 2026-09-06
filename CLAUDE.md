@@ -183,13 +183,20 @@ than on a stopwatch.
   number and is *not* what the test asserts; nodes built per tick is.
 - `test/gameClient.test.ts` — the message contract, against a stub room
   (`test/support/colyseusStub.ts`). A renamed or reshaped message is a compile error
-  since #489 (see "The wire" below), so what is left here is the half types cannot
+  since #489 (see "The wire" above), so what is left here is the half types cannot
   reach: that the client actually registers a handler for every name the room can send.
+- `test/gameCanvas.test.ts` — the shell, through `react-test-renderer`, which renders to
+  an object tree and needs no DOM (hence no jsdom). `createNodeMock` supplies the two
+  host elements. It tests *connections*, because that is what a composition root gets
+  wrong: a message that reaches one painter and not the other, a snapshot that never
+  reaches the mix, a device left open on unmount.
 
-Three seams in production code exist for these and have no other caller: `EchoRenderer`'s
+Four seams in production code exist for these and have no other caller: `EchoRenderer`'s
 constructor takes an optional `Application`, `PerspectiveView.mount` an optional renderer
-factory, and `GameClient`'s constructor an optional `Client`. All default to the real
-thing; none is a feature.
+factory, `GameClient`'s constructor an optional `Client`, and `GameCanvas` an optional
+`harness` prop carrying all three — it needs its own because it is where the other three
+are *constructed*, so without it the boot stops at `mount()` on a machine with no GPU. All
+default to the real thing; none is a feature.
 
 ### Style
 

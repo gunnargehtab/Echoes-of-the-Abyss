@@ -48,6 +48,12 @@ interface StubRect {
 
 type Listener = (event: unknown) => void;
 
+/** A handler and whether the DOM should detach it after one delivery. */
+interface Registered {
+  fn: Listener;
+  once: boolean;
+}
+
 /**
  * One node of the stub tree.
  *
@@ -63,23 +69,24 @@ export class StubElement {
   clientWidth = 0;
   clientHeight = 0;
 
-  private readonly listeners = new Map<string, Listener[]>();
+  private readonly listeners = new Map<string, Registered[]>();
   private readonly captured = new Set<number>();
 
   constructor(tagName = 'div') {
     this.tagName = tagName;
   }
 
-  addEventListener(type: string, fn: Listener): void {
+  addEventListener(type: string, fn: Listener, options?: { once?: boolean }): void {
+    const entry: Registered = { fn, once: options?.once === true };
     const bucket = this.listeners.get(type);
-    if (bucket === undefined) this.listeners.set(type, [fn]);
-    else bucket.push(fn);
+    if (bucket === undefined) this.listeners.set(type, [entry]);
+    else bucket.push(entry);
   }
 
   removeEventListener(type: string, fn: Listener): void {
     const bucket = this.listeners.get(type);
     if (bucket === undefined) return;
-    const at = bucket.indexOf(fn);
+    const at = bucket.findIndex((entry) => entry.fn === fn);
     if (at >= 0) bucket.splice(at, 1);
     if (bucket.length === 0) this.listeners.delete(type);
   }
@@ -96,7 +103,13 @@ export class StubElement {
     const bucket = this.listeners.get(type);
     if (bucket === undefined) return;
     const payload = { type, preventDefault() {}, stopPropagation() {}, ...event };
-    for (const fn of [...bucket]) fn(payload);
+    for (const entry of [...bucket]) {
+      // `{ once: true }` detaches before the handler runs, exactly as the DOM
+      // does — the autoplay unlock in `GameCanvas` is registered that way, and
+      // a stub that re-fired it would hide a leak rather than reveal one.
+      if (entry.once) this.removeEventListener(type, entry.fn);
+      entry.fn(payload);
+    }
   }
 
   appendChild<T extends StubElement>(child: T): T {
