@@ -9,8 +9,11 @@ are kept below as the record of how the build got here.
 This document is also what the roadmap site renders (`tools/roadmap/build.mjs`). The site
 reads the phase tables, asks GitHub whether each issue is open, and draws that — so a table
 row is a claim that the work is tracked, not a claim that it is live. The prose is what says
-which. The site also counts the open issues this document places in no table, and shows the
-newest roster contact sheet an art PR committed under `docs/screenshots/`.
+which. The site also counts the open issues this document places in no table, shows the
+newest roster contact sheet an art PR committed under `docs/screenshots/`, and dates every
+phase from the tracker — the day its first issue was filed to the day its last one closed —
+so no phase date is typed anywhere. The first issue on this roadmap was filed on 15 August
+2026, and Phase 0 below is that week.
 
 ---
 
@@ -143,6 +146,80 @@ undecided. The layer is implemented now (§3, "Where the layer sits").
 The same lesson applies to the first row of the table above this one. A baseline that reads
 "29 of 30 undecided" for long enough starts to be treated as the harness's problem rather
 than the game's.
+
+---
+
+## Phase 0 — The bible, the scaffold, and the gates
+
+**Closed.** The project's first day filed twenty-five issues and closed twenty-two of them:
+a design bible, a repository that could build it, and the checks that stop the two from
+drifting apart. The order is the point, and it is the order everything since has followed —
+the documents first, the scaffold second, the gates third, and then a read of all three
+against each other, which found six places where they already disagreed on the day they
+were written.
+
+**The design bible**
+
+| Work | Issue |
+| --- | --- |
+| [glossary.md](glossary.md) — the authoritative terms, written before the systems that use them | [#6](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/6) |
+| The glossary reviewed and finalised, which is what made it authoritative rather than a draft | [#20](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/20) |
+| Glossary cross-links, so a term defined once is linked from every document that uses it | [#21](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/21) |
+| [units.md](units.md) — the first roster | [#7](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/7) |
+| The roster expanded with per-unit stats and a playtest plan | [#22](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/22) |
+| A unit playtest checklist and the data capture behind it ([playtest-checklist.md](playtest-checklist.md)) | [#23](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/23) |
+| This document, in its first form | [#8](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/8) |
+
+**The scaffold**
+
+| Work | Issue |
+| --- | --- |
+| The frontend starter — a client that builds and runs | [#9](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/9) |
+| The Echo Layer prototype: the detection model as runnable code before there was a game around it | [#10](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/10) |
+| An example scene and input handling in the client | [#24](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/24) |
+| `tools/echo-sim` scenarios and datasets — deterministic Echo cases outside the game | [#26](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/26) |
+| echo-sim documented and converted to a module, so tests can require it | [#27](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/27) |
+
+**The gates**
+
+| Work | Issue |
+| --- | --- |
+| CI and linting, from the first week | [#11](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/11) |
+| The client build in CI, so a client that does not build fails the build | [#25](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/25) |
+| ESLint and Prettier, enforced rather than suggested | [#28](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/28) |
+| markdownlint and the link check over `docs/` | [#29](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/29) |
+| The README's developer quickstart | [#12](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/12) |
+| The quickstart refined against somebody actually following it | [#30](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/30) |
+| `CONTRIBUTING.md` and the contributor quickstart | [#16](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/16) |
+| GitHub labels, and the issue and pull-request templates | [#17](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/17) |
+| Branch and commit conventions | [#18](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/18) |
+
+**How the project runs**
+
+| Work | Issue |
+| --- | --- |
+| Owners and roles | [#14](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/14) |
+| The project board | [#15](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/15) |
+| A channel to talk in, and the kickoff | [#19](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/19) |
+| Graphics standards, repo conventions and an Android smoke test — the first version of the acceptance bar in [graphics-standards.md](graphics-standards.md) | [#57](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/57) |
+
+**What the first read-through found**
+
+| Work | Issue |
+| --- | --- |
+| The resolution tiers contradicted themselves across the docs and the tools — 0–4 in one place, 0–5 in another | [#34](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/34) |
+| Per-unit HYD values were invented by the code; [units.md](units.md) had never authored them | [#35](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/35) |
+| `tools/echo-sim` implemented a different detection formula from `@echoes/shared` | [#36](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/36) |
+| PropagationFactor was sampled at the emitter instead of integrated along the path — the model the whole game rests on, wrong in the one place it is computed | [#37](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/37) |
+| markdownlint reported about 270 issues in `docs/`, and the gate was reporting-only | [#38](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/38) |
+| Seven documents were linked and never written, and that gate was reporting-only too | [#39](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/39) |
+
+**Six findings on a five-day-old repository is the whole argument for the rule this project
+runs on.** Every one of them is the same shape — the documents say one thing and the code
+does another — and #37 is the one worth remembering: the propagation model every mechanic in
+the game descends from was being sampled at the emitter rather than integrated along the
+path, so the docs described a game the code was not playing. "Docs are canonical, change the
+doc first" is not a style preference here. It is what these six cost.
 
 ---
 
@@ -510,7 +587,7 @@ depth HUD and the crystal. Three new ones survive any reordering of Phase 10:
 
 ---
 
-## Completed — Sprint 3 (August–September 2026)
+## Completed — Sprint 3 (23 August – 5 September 2026)
 
 Phases 6 through 9, and the campaign. The harness's first two findings were built; the
 physics audit turned every authored force in [hazards.md](hazards.md) into behaviour and
@@ -522,7 +599,7 @@ with three of the four debts it declared paid.
 The world epic's six sub-issues closed with the missions audited against the world documents
 and about forty small facts corrected.
 
-## Completed — Sprint 2 (August 2026)
+## Completed — Sprint 2 (22–24 August 2026)
 
 Phases 1 through 5, in order, each landing as its own pull request against a green `main`.
 Depth became an order and the crystal gate opened; the game about sound started making
@@ -543,16 +620,14 @@ and all three were only reachable from the outside:
   run twice blurred differently. Latent from the day it was written; live from the day an
   AI started walking an army toward a blurred position.
 
-## Completed — Sprint 1 (August 2026)
+## Completed — Sprint 1 (15–24 August 2026)
 
 The first sprint established the design bible, the CI gates, and the engineering scaffold.
 Its epic and all of its issues are closed:
 <https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/13>.
 
-Delivered: `CONTRIBUTING.md` and the contributor quickstart, GitHub labels and issue/PR
-templates, the glossary and its cross-links, the expanded unit roster and playtest
-checklist, the client scene and input handling, echo-sim scenarios and its module form,
-ESLint and Prettier in CI, and both markdown gates on `docs/`.
+Every issue of it is a row in Phase 0 above, and the six findings at the end of that phase
+are why the first rule of this repository is that the documents win.
 
 ---
 

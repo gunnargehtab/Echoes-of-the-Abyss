@@ -8,6 +8,8 @@
  * state, cyan tells you, magenta asks you, glow only where it carries data.
  */
 
+import { firstFiled, formatSpan, span } from './dates.mjs';
+
 export const escape = (text) =>
   String(text)
     .replace(/&/g, '&amp;')
@@ -73,6 +75,7 @@ function itemRow(item, states, repo, content) {
 
 function phaseCard(phase, states, repo, content, open) {
   const p = progress(phase.items, states);
+  const when = formatSpan(span(phase.items, states));
   const status = p.complete ? 'complete' : p.closed > 0 ? 'active' : 'pending';
   const copy = content.phases[phase.number] ?? {};
   const title = copy.title ?? phase.title;
@@ -102,6 +105,7 @@ function phaseCard(phase, states, repo, content, open) {
     <span class="phase-head">
       <span class="phase-id">${escape(phase.id)}</span>
       <span class="phase-title">${escape(title)}</span>
+      ${when === null ? '' : `<span class="phase-when">${escape(when)}</span>`}
     </span>
     <span class="phase-meta">
       <span class="verdict">${verdict}</span>
@@ -197,8 +201,10 @@ export function render({
   const nextPhases = next.map((phase) => phaseCard(phase, states, repo, content, true)).join('\n');
   const pastPhases = past.map((phase) => phaseCard(phase, states, repo, content, false)).join('\n');
 
+  const began = haveState ? firstFiled(states) : null;
   const provenance = haveState
-    ? `${content.footer.provenance} Last read ${escape(generatedAt)}.`
+    ? `${content.footer.provenance} Last read ${escape(generatedAt)}.` +
+      (began === null ? '' : ` The first issue on this roadmap was filed ${escape(began)}.`)
     : `This copy of the page was built without access to the issue tracker, so every item shows as unknown.`;
 
   // The one picture on the page. Width and height are written into the
@@ -480,6 +486,7 @@ section { padding: 4.5rem 0 1rem; }
 .phase-head { display: flex; align-items: baseline; gap: 0.7rem; flex: 1 1 14rem; min-width: 0; }
 .phase-id { font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-cyan); white-space: nowrap; }
 .phase-title { font-family: var(--display); font-size: 1.2rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-bright); font-weight: 600; }
+.phase-when { font-size: 0.66rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); white-space: nowrap; }
 .phase-meta { display: flex; align-items: center; gap: 0.8rem; font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; }
 .verdict { color: var(--text-dim); border: 1px solid rgba(111, 138, 156, 0.35); border-radius: 2px; padding: 0.1rem 0.4rem; }
 .phase.complete .verdict { color: var(--neon-teal); border-color: rgba(95, 208, 192, 0.45); }
@@ -661,7 +668,7 @@ ${roughEdges}
   <section id="next">
     <div class="wrap">
       <div class="section-head"><h2>What is next</h2><span class="kicker">progress read live from the project tracker</span></div>
-      <p class="lede">Every line below is a piece of work the team has committed to, and its state comes straight from the tracker when this page is built. Nothing here is a wish list.</p>
+      <p class="lede">Every line below is a piece of work the team has committed to, and its state comes straight from the tracker when this page is built. Nothing here is a wish list. The dates are the tracker's too: each phase runs from the day its first issue was filed to the day its last one closed.</p>
 ${backlog}
       <div class="controls" role="group" aria-label="Filter items">
         <button class="chip" type="button" data-filter="all" aria-pressed="true">All</button>
