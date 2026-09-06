@@ -153,15 +153,27 @@ neither, so `packages/frontend`'s test script passes loader hooks
 that reaches a client module through to `EchoRenderer` or `PerspectiveView` needs them
 too, or the import throws before a single assertion runs.
 
-`test/rendererSmoke.test.ts` is what those hooks exist for: it boots both painters
-against a canned match with only the two rasterisers stubbed
-(`test/support/headless.ts`), and asserts on counted work — display objects, draw
-instructions, scene-graph identities — never on a stopwatch. Pixels stay the screenshot
-gates in `docs/graphics-standards.md`.
+Three tests are what those hooks exist for, and all three follow the same rule: boot the
+real class, stub only what the runner genuinely lacks, and assert on counted work rather
+than on a stopwatch.
 
-Two seams in production code exist for it and have no other caller: `EchoRenderer`'s
-constructor takes an optional `Application`, and `PerspectiveView.mount` an optional
-renderer factory. Both default to the real thing; neither is a feature.
+- `test/rendererSmoke.test.ts` — both painters against a canned match, with only the two
+  rasterisers stubbed (`test/support/headless.ts`). Display objects, draw instructions,
+  scene-graph identities. Pixels stay the screenshot gates in `docs/graphics-standards.md`.
+- `test/audioEngine.test.ts` — the bus graph against a stubbed `AudioContext`
+  (`test/support/headlessAudio.ts`), which models edges and parameter writes rather than
+  swallowing them, so routing and ducking are checkable. `AUDIO_BUDGET_MS` is a wall-clock
+  number and is *not* what the test asserts; nodes built per tick is.
+- `test/gameClient.test.ts` — the message contract, against a stub room
+  (`test/support/colyseusStub.ts`). Its last two cases read `MatchRoom`'s own
+  registrations out of `packages/backend` and check both directions, because a renamed
+  message is silent everywhere else. That scan is a stopgap: by the rule above, these
+  names belong in `@echoes/shared`, which would make it a type error instead.
+
+Three seams in production code exist for these and have no other caller: `EchoRenderer`'s
+constructor takes an optional `Application`, `PerspectiveView.mount` an optional renderer
+factory, and `GameClient`'s constructor an optional `Client`. All default to the real
+thing; none is a feature.
 
 ### Style
 

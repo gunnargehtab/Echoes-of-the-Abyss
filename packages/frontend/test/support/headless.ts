@@ -407,7 +407,20 @@ export function installHeadlessDom(): void {
     devicePixelRatio: 1,
     innerWidth: 1280,
     innerHeight: 720,
-    location: { hostname: 'localhost', href: 'http://localhost/' },
+    // Fuller than the client needs, because `colyseus.js` reads
+    // `location.protocol` and `location.port` at module scope to derive its
+    // default endpoint — a missing field there throws before any test body runs.
+    location: {
+      hostname: 'localhost',
+      href: 'http://localhost/',
+      protocol: 'http:',
+      port: '',
+      host: 'localhost',
+      origin: 'http://localhost',
+      pathname: '/',
+      search: '',
+      hash: '',
+    },
     matchMedia: (query: string) => ({ matches: false, media: query }),
     addEventListener: (type: string, fn: Listener) => windowElement.addEventListener(type, fn),
     removeEventListener: (type: string, fn: Listener) =>

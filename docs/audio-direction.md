@@ -453,6 +453,20 @@ The engine reports both the worst case and the most recent tick, because a budge
 only while *building* voices is a different problem from one blown every tick, and a
 worst-case figure alone cannot tell them apart.
 
+**Held by a test, in counted work rather than milliseconds.** The millisecond figures above
+are a measurement, not a gate: a wall-clock maximum is the noisiest statistic a shared
+runner produces, and asserting on one buys a flaky build rather than a fast mix. What
+`packages/frontend/test/audioEngine.test.ts` asserts instead is what a tick *builds*, which
+is a property of the algorithm and identical everywhere — a tick with nothing pending
+allocates no node at all, and twenty ticks of an unchanged contact picture build no voice
+and allocate no node, because the mixer finds every voice already in hand. It boots the
+real engine against a stubbed `AudioContext` and holds the rest of this section too: every
+bus reaches master and only music through the duck, the duck follows the measured contact
+level, the voice cap holds however many returns arrive, a frame is inaudible until the tick
+applies it, a resent one-shot does not fire twice, contacts trim to +12 dB and nothing else
+above unity, and a client with no `AudioContext` at all stays fully playable in silence
+(§11).
+
 Two departures from the diagram above, both deliberate:
 
 **The music sidechain is a measured duck, not a compressor sidechain.** Web Audio's
