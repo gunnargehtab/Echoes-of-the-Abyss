@@ -670,7 +670,8 @@ Notes for testers
 Next steps
 
 - Done (#461): the rung and the eight faction hulls above are transcribed — the Slipway, the
-  four Foundry hulls, the four Slipway hulls, the Tender last; transports remain unwritten
+  four Foundry hulls, the four Slipway hulls, the Tender last; transports remain unwritten,
+  and are the first wave of roster-plan.md (#495), which sketches a full line per navy
 - Transcribe the refits and rank of systems-progression.md (#462): the five refits as
   producibles on the Slipway's line, which #461 built, then rank, which needs the TTK band
   test to grow a rank-3 row
@@ -684,4 +685,5 @@ Related
 - systems-echo.md — detection math and Echo Marks
 - systems-depth.md — PR and depth behaviour
 - systems-progression.md — refits bought on the Slipway's line, and the rank a hull earns
+- roster-plan.md — the second expansion: a role matrix per navy, in six waves
 - glossary.md — authoritative definitions
