@@ -191,16 +191,3 @@ export class StubClient {
     return this.calls.find((call) => call.method === method);
   }
 }
-
-/** An in-memory `sessionStorage`, installed on the stub window. */
-export function installSessionStorage(): Map<string, string> {
-  const backing = new Map<string, string>();
-  const g = globalThis as unknown as { window: Record<string, unknown> };
-  g.window.sessionStorage = {
-    getItem: (key: string) => backing.get(key) ?? null,
-    setItem: (key: string, value: string) => void backing.set(key, value),
-    removeItem: (key: string) => void backing.delete(key),
-    clear: () => backing.clear(),
-  };
-  return backing;
-}

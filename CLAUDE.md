@@ -190,6 +190,14 @@ than on a stopwatch.
   host elements. It tests *connections*, because that is what a composition root gets
   wrong: a message that reaches one painter and not the other, a snapshot that never
   reaches the mix, a device left open on unmount.
+- `test/appShell.test.ts`, `lobby.test.ts`, `settingsScreen.test.ts`,
+  `controlsScreen.test.ts` — the screens that implement a written rule, through the same
+  renderer and the helpers in `test/support/screen.ts`. `docs/ui-ux.md` §11 calls
+  accessibility "a correctness requirement, not a feature tier", so full rebinding, the
+  75–200% UI scale and the colour-vision palettes are held here; §14's doors are held in
+  the shell test. **Assert what a doc section promises, never what the JSX says** — a
+  test that mirrors markup is a change detector, and screenshots already cover how things
+  look. `Rendered.button()` matches a control's *accessible name* for the same reason.
 
 Four seams in production code exist for these and have no other caller: `EchoRenderer`'s
 constructor takes an optional `Application`, `PerspectiveView.mount` an optional renderer

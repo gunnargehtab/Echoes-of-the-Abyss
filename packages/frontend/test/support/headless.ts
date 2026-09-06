@@ -502,6 +502,65 @@ export function pumpAnimationFrames(count = 1): void {
   }
 }
 
+/** One in-memory Storage, shaped like the browser's. */
+function memoryStorage(backing: Map<string, string>): Record<string, unknown> {
+  return {
+    getItem: (key: string) => backing.get(key) ?? null,
+    setItem: (key: string, value: string) => void backing.set(key, value),
+    removeItem: (key: string) => void backing.delete(key),
+    clear: () => backing.clear(),
+    key: (index: number) => [...backing.keys()][index] ?? null,
+    get length() {
+      return backing.size;
+    },
+  };
+}
+
+/**
+ * Fresh `localStorage` and `sessionStorage`, and the maps behind them.
+ *
+ * Both, because the client deliberately uses each for a different lifetime:
+ * device preferences and the campaign record survive the tab in
+ * `localStorage`, while the reconnection token is a bearer credential for one
+ * seat and dies with the tab in `sessionStorage`. A test that installed one
+ * would silently exercise the wrong half.
+ *
+ * On `globalThis` *and* on the stub window, because the stores reach for
+ * `globalThis.localStorage` and `GameClient` for `window.sessionStorage`.
+ */
+export function installStorage(): { local: Map<string, string>; session: Map<string, string> } {
+  const local = new Map<string, string>();
+  const session = new Map<string, string>();
+  const g = globalThis as unknown as { window: Record<string, unknown> } & Record<string, unknown>;
+  g.localStorage = memoryStorage(local);
+  g.sessionStorage = memoryStorage(session);
+  g.window.localStorage = g.localStorage;
+  g.window.sessionStorage = g.sessionStorage;
+  return { local, session };
+}
+
+/** Forget the stub storages, so one test's record cannot reach the next. */
+export function clearStorage(): void {
+  const g = globalThis as unknown as { window: Record<string, unknown> } & Record<string, unknown>;
+  delete g.localStorage;
+  delete g.sessionStorage;
+  delete g.window.localStorage;
+  delete g.window.sessionStorage;
+}
+
+/**
+ * Set the query string the shell reads at boot.
+ *
+ * `?map=` and `?mission=` are the harness's and a pasted dev URL's door
+ * straight into the water (App.tsx), so which screen the shell opens on is a
+ * function of this and nothing else.
+ */
+export function setSearch(search: string): void {
+  const g = globalThis as unknown as { window: { location: Record<string, string> } };
+  g.window.location.search = search;
+  g.window.location.href = `http://localhost/${search}`;
+}
+
 /** A host element of a given CSS size, as `GameCanvas` would hand over. */
 export function createHost(width = 1280, height = 720): StubElement {
   const host = new StubElement('div');
