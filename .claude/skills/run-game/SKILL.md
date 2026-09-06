@@ -177,6 +177,33 @@ One mechanical catch: `page.mouse.wheel` only zooms if the pointer is already
 over the canvas, because the listener is on the canvas rather than the window.
 Call `page.mouse.move(x, y)` into the playfield first.
 
+### The gate-6 review drive
+
+```bash
+STATION_SECONDS=8 node .claude/skills/run-game/scripts/drive.mjs --out /tmp/stations \
+  --steps .claude/skills/run-game/scripts/stations.mjs
+```
+
+A ready-made `--steps` module that walks the five stations gate 6 specifies — base
+opening, marquee selection, ping preview, survey zoom, and a fight with own
+ordnance in the water — screenshotting each and printing a markdown table of
+`__perspectiveProbe()` readings.
+
+It prices the frame as three numbers, not one: the shipped interval, the conn
+view's half, and the overlay's half. `window.__perspectiveStation(label)` is the
+boundary between stations — it zeroes all three series and returns the reading
+of the station it closed — so a worst case never leaks from one station into the
+next. Hold each station for at least 240 frames or the average is a tail rather
+than the station; `STATION_SECONDS` is that knob, and the table prints the frame
+counts so a short station is visible rather than assumed.
+
+**Frame times from this container are worthless and should never be recorded.**
+The only rasteriser here is SwiftShader, and a drive of the five stations shows
+why: the composited frame runs ~170 ms while both CPU halves inside it total
+under 3 ms. The draw-call and triangle columns are real; the millisecond columns
+are the software rasteriser. Real numbers need a real GPU and a Termux device
+(docs/graphics-standards.md gate 6).
+
 ## 3. Stop the servers
 
 ```bash

@@ -1331,7 +1331,16 @@ export class EchoRenderer {
     // the moment the seat is assigned (PerspectiveView.setIdentity). Until
     // that lands, or if it never does, hulls draw as their vector shapes.
 
-    this.app.ticker.add(() => this.draw());
+    // Timed, and the cost handed to the conn view (#286): the composited
+    // frame's two halves run on separate loops, so the interval between shipped
+    // frames prices both and can attribute neither. This is the overlay's
+    // half — every ring vertex, symbol and route re-projected through the
+    // shared camera — which is the half gate 6's remedies would act on.
+    this.app.ticker.add(() => {
+      const startedAt = performance.now();
+      this.draw();
+      this.conn?.recordOverlayCost(performance.now() - startedAt);
+    });
   }
 
   private buildHudText(): void {
