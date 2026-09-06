@@ -77,7 +77,14 @@ tighter:
   not a flake.** That is the signature of the minutes being exhausted, and it
   is written down in the workflow header precisely so nobody re-runs it. A
   re-run does nothing; say what it is in one comment on the PR, and stop. The
-  fix is a person's, outside the repository.
+  fix is a person's, outside the repository. Tell it apart from a real run by
+  the per-job durations, not by the suite finishing fast: the four jobs run in
+  parallel and a healthy run is over in under two minutes of wall clock. PR
+  #482's run is the reference — `docs` 21 s, `test (shard 1)` 37 s, `build`
+  49 s, `test (shard 2)` 72 s, every job with a runner and a log, and the
+  suite complete 80 s after it started. Green with those durations is green;
+  green at three seconds a job is nothing having run at all, and a red at three
+  seconds is the same nothing.
 - **Batch fixes into one push.** The workflow cancels a branch's in-progress
   run when a new push starts one, but the minutes already spent stay billed.
   Three speculative pushes start three runs; one validated push starts one.
