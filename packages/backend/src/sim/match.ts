@@ -128,6 +128,7 @@ import { drawFor, thermalSystem } from './systems/thermal.ts';
 import { titheSystem } from './systems/tithe.ts';
 import { bloomShareSystem } from './systems/bloomShare.ts';
 import {
+  ambientBandFor,
   createSimWorld,
   economyFor,
   localIdOf,
@@ -367,6 +368,10 @@ export class Match {
       this.seed,
       options.driftCarry
     );
+    // Before anything is seeded or placed: where an ambient species rests is
+    // the map's to say (docs/bestiary.md §4), and the Drift and the mission
+    // runtime both read it from the world rather than from the literal.
+    this.world.ambientBands = map.ambientBands ?? {};
     this.recorder =
       options.record === true
         ? new ReplayRecorder(
@@ -642,7 +647,13 @@ export class Match {
           // Deep enough for the species to live there. A Sounder seeded over a
           // 700 m plateau would be a colossus in a puddle, and the roster's
           // habitats are the reason the depths exist at all (bestiary.md §4).
-          if (this.world.terrain.floorAt(x, y) < faunaStatsFor(species).workingDepthM) continue;
+          // Against the band the species rests in *here*: a map that re-homed
+          // its Tetherjelly to the canopy has ground for it at 300 m.
+          if (
+            this.world.terrain.floorAt(x, y) < ambientBandFor(this.world, species).workingDepthM
+          ) {
+            continue;
+          }
           // Never on someone's doorstep: see DRIFT.SPAWN_EXCLUSION_M.
           if (this.map.spawns.some((s) => Math.hypot(s.x - x, s.y - y) < DRIFT.SPAWN_EXCLUSION_M)) {
             continue;

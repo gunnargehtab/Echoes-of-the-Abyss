@@ -42,10 +42,12 @@ import {
   ObjectiveStatus,
   SEEDING_TEND_HEADER,
   SIM,
+  TETHERJELLY_KELP_BAND,
   UnitKind,
+  faunaStatsFor,
 } from '@echoes/shared';
 
-import type { MissionDefinition } from './types.ts';
+import type { MissionBeat, MissionDefinition } from './types.ts';
 
 /** §9's beat table is mm:ss; the simulation counts ticks. */
 const T = (minutes: number, seconds = 0): number => (minutes * 60 + seconds) * SIM.TICK_HZ;
@@ -63,6 +65,74 @@ const JELLY_SIG = 45;
 /** A load is ninety seconds of held work, share and jellies alike (§9). */
 const WORK_TICKS = T(1, 30);
 
+/**
+ * §11 — the plateau's own ambient Drift, at the depths bestiary.md §4 prices.
+ *
+ * Read off the roster rather than retyped, because a placed creature is held
+ * at the band it rests in on this map, whatever a beat spawned it at: the
+ * shoals at the Lampfry's 250 m, which on the Gardens' 250 m floor is the
+ * bottom; the clusters at the Tetherjelly's *Kelp Forest* band, 250 m ±50 m,
+ * which `marr-plateau` names in its `ambientBands` — the plateau has no duct
+ * to put a cluster in, and §4 settled the species' second home as one animal
+ * re-homed per map rather than a second species.
+ */
+const SHOAL_DEPTH_M = faunaStatsFor(FaunaSpecies.Lampfry).workingDepthM;
+const KELP_JELLY_DEPTH_M = TETHERJELLY_KELP_BAND.workingDepthM;
+
+/**
+ * A creature placed and not driven — `deepFurrow.ts`' idiom, and Intake's
+ * before it. `driveTo` is required, so an animal that must be left to itself
+ * is committed to its own spawn until tick zero: the first pass finds the
+ * commitment already expired and hands the creature its ears back, at the
+ * band this map gives it. `loud: false`, because a shoal holding its water
+ * and a moored cluster are not precursors to anything.
+ */
+const placed = (
+  tag: string,
+  species: FaunaSpecies,
+  x: number,
+  y: number,
+  depthM: number,
+  note: string
+): MissionBeat => ({
+  atTick: 0,
+  kind: 'creature',
+  tag,
+  species,
+  spawnAt: { x, y, depthM },
+  driveTo: { x, y },
+  untilTick: 0,
+  loud: false,
+  note,
+});
+
+/**
+ * The West Lane's clusters (§11) — three, along the lane's head, where
+ * mission-convocation.md §11 puts its third row: "the Tetherjelly clusters
+ * the player re-seated in *Tend* are here". Exported so *Convocation* seeds
+ * the same water a tide later rather than retyping it; the two missions
+ * share a map and a Drift, and the clusters are the map's, not the day's.
+ *
+ * Spaced so no two overlap: each is worth exactly the −0.10 PF §4 prices
+ * within 250 m, and a field that stacked would make the lane quieter than
+ * the document says it is. The head's cluster sits on Convocation's row 3
+ * marker to the metre, and the lane's foot — its row 4, "the row the concern
+ * holds longest" — is outside every cluster's reach, which is what makes row
+ * 3 the *one* row that is quiet on its own.
+ */
+export const WEST_LANE_CLUSTERS: readonly MissionBeat[] = [
+  placed(
+    'jelly-head',
+    FaunaSpecies.Tetherjelly,
+    500,
+    1125,
+    KELP_JELLY_DEPTH_M,
+    "The lane's head, and the field the re-seat tends. Living terrain: chart data, priced by the path walk (§3)"
+  ),
+  placed('jelly-west', FaunaSpecies.Tetherjelly, 350, 1400, KELP_JELLY_DEPTH_M, ''),
+  placed('jelly-mid', FaunaSpecies.Tetherjelly, 750, 1400, KELP_JELLY_DEPTH_M, ''),
+];
+
 export const SEEDING_TEND: MissionDefinition = {
   ...SEEDING_TEND_HEADER,
   doc: 'docs/mission-tend.md',
@@ -70,9 +140,9 @@ export const SEEDING_TEND: MissionDefinition = {
   playerFaction: Faction.Pelagia,
   courtSlot: COURT,
   /**
-   * §11 — a mission owns its own water. The pack at the foot of the drop is
-   * authored; the Lampfry and the jelly clusters wait on their species
-   * (bestiary.md, Implementation Status).
+   * §11 — a mission owns its own water. The pack at the foot of the drop, the
+   * shoals through the Gardens and the clusters along the West Lane are all
+   * authored below; the seeder places nothing here.
    */
   fauna: false,
   /** §9 — 20, a ceiling. Exceeding it costs no hull and fails nothing (§4). */
@@ -424,6 +494,30 @@ export const SEEDING_TEND: MissionDefinition = {
       loud: false,
       note: '',
     },
+
+    // 00:00 — the gardens waking (§9): four shoals on the farm rows, placed
+    // and not driven. Each scatters from any hull within 300 m regardless of
+    // SIG, so a tender working a node is announced by light for the length
+    // of its load — the tell §4 puts in exactly this water, and the one
+    // thing on the plateau the stillness cannot switch off (§4, "Shelf
+    // mechanic"; §6's Healthy row, "Lampfry tells everywhere").
+    placed(
+      'shoal-north',
+      FaunaSpecies.Lampfry,
+      700,
+      350,
+      SHOAL_DEPTH_M,
+      'The north rows, over the first garden node. A shoal is light, not sound: the sweep never hears one, and the player sees every one'
+    ),
+    placed('shoal-west', FaunaSpecies.Lampfry, 600, 800, SHOAL_DEPTH_M, ''),
+    placed('shoal-mid', FaunaSpecies.Lampfry, 1150, 900, SHOAL_DEPTH_M, ''),
+    placed('shoal-east', FaunaSpecies.Lampfry, 1600, 400, SHOAL_DEPTH_M, ''),
+
+    // 00:00 — the jelly lane (§11). The clusters have walked in the current
+    // and the lane is louder than the plateau likes; what the 04:30 lift
+    // re-seats is this field, and the −0.10 PF within 250 m of each cluster
+    // is what the lane is quieter by for every day after (§9).
+    ...WEST_LANE_CLUSTERS,
 
     // 06:00 — the watch calls the sweep (§12), and the pair starts up the
     // lane, westward. The first pass's window opens with the call.

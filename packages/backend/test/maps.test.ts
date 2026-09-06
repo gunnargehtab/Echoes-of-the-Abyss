@@ -27,6 +27,9 @@ import {
   SIM,
   UnitKind,
   mapHeaderById,
+  ambientBandsFor,
+  faunaStatsFor,
+  type FaunaSpecies,
 } from '@echoes/shared';
 import {
   ABYSSAL_RIFT_CORRIDOR,
@@ -234,6 +237,26 @@ describe('the map catalogue', () => {
     for (const map of MAPS) {
       const crystal = map.resources.filter((r) => r.kind === ResourceKind.ResonanceCrystal);
       assert.equal(crystal.length, 1, `${map.id} should have exactly one crystal field`);
+    }
+  });
+
+  it('re-homes an ambient species only to a band the bestiary documents for it', () => {
+    // docs/bestiary.md §4: a map may re-home the Tetherjelly to its Kelp
+    // Forest band, and to nothing else. The public catalogue names no band
+    // today — every skirmish map's kelp is deeper than the duct — and the
+    // mission maps are held to the same rule in missions.test.ts.
+    for (const map of [...MAPS, ...MISSION_MAPS]) {
+      for (const [key, band] of Object.entries(map.ambientBands ?? {})) {
+        const species = Number(key) as FaunaSpecies;
+        assert.ok(
+          ambientBandsFor(species).some(
+            (documented) =>
+              documented.workingDepthM === band.workingDepthM &&
+              documented.seedSpreadM === band.seedSpreadM
+          ),
+          `${map.id} re-homes ${faunaStatsFor(species).name} to a band §4 does not document`
+        );
+      }
     }
   });
 

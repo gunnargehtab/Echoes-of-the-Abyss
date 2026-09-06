@@ -44,6 +44,10 @@ import {
   ObjectiveStatus,
   SIM,
   UnitKind,
+  Biome,
+  DRIFT,
+  FaunaSpecies,
+  PROPAGATION_FACTOR,
   type EchoSnapshot,
   type MissionView,
 } from '@echoes/shared';
@@ -579,6 +583,31 @@ describe('the Convocation literal, against its document', () => {
 
   it('reuses Tend’s map literal unchanged, which §11 chose it for', () => {
     assert.equal(SEEDING_CONVOCATION.mapId, SEEDING_TEND.mapId);
+  });
+
+  it("seeds the West Lane's clusters Tend re-seated, and row 3 alone is quiet on its own", () => {
+    // §11: "the Tetherjelly clusters the player re-seated in Tend are here" —
+    // the same three beats, not a retyping, so the two missions cannot drift
+    // apart about where the lane's masking is.
+    const clusters = (mission: MissionDefinition) =>
+      mission.beats.filter(
+        (beat) => beat.kind === 'creature' && beat.species === FaunaSpecies.Tetherjelly
+      );
+    assert.equal(clusters(SEEDING_CONVOCATION).length, 3);
+    assert.deepEqual(clusters(SEEDING_CONVOCATION), clusters(SEEDING_TEND));
+
+    // §13: the −0.10 PF the third row leans on is theirs, and no other row's.
+    const h = harness(SEEDING_CONVOCATION);
+    h.settle(1);
+    const kelp = PROPAGATION_FACTOR[Biome.KelpForest];
+    for (const row of walk.rows) {
+      const pf = h.match.world.terrain.propagationAt(row.x, row.y);
+      const expected = row.id === 'row-three' ? kelp - DRIFT.JELLY_PF_DELTA : kelp;
+      assert.ok(
+        Math.abs(pf - expected) < 1e-6,
+        `${row.id} reads ${pf}; §11 has row 3 masked by one cluster and every other row bare`
+      );
+    }
   });
 
   it('closes at 19:00 as a conclusion — a tide turning is not a timer', () => {

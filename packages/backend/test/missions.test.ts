@@ -29,7 +29,10 @@ import assert from 'node:assert/strict';
 import {
   Biome,
   DIRECTIONAL_SIGNATURE,
+  FaunaSpecies,
   MISSION,
+  ambientBandsFor,
+  faunaStatsFor,
   ResolutionTier,
   SIM,
   missionHeaderById,
@@ -314,6 +317,46 @@ describe('a mission is seated in water the map actually has', () => {
         assert.ok(
           terrain.admits(beat.spawnAt.x, beat.spawnAt.y, beat.spawnAt.depthM),
           `${mission.id}: ${beat.tag} is spawned into ground that does not admit it`
+        );
+      }
+    }
+  });
+
+  it('places every ambient animal inside a band the bestiary documents for it on that map', () => {
+    // docs/bestiary.md §4's table is "literally true of every animal the
+    // Drift owns on every shipped map", and a mission literal is the one
+    // place that could quietly make it false: a hunter placed below its band
+    // is a beat (§4, "the band is where the Drift lives, not where a beat may
+    // send it"), but a shoal or a cluster never pursues, so where it is
+    // placed is where it *lives*. A map may re-home an ambient species, and
+    // only to a band the doc names for it.
+    const ambient = [FaunaSpecies.Lampfry, FaunaSpecies.Tetherjelly];
+    for (const mission of MISSIONS) {
+      const map = missionMapById(mission.mapId)!;
+      for (const [key, band] of Object.entries(map.ambientBands ?? {})) {
+        const species = Number(key) as FaunaSpecies;
+        assert.ok(
+          ambientBandsFor(species).some(
+            (documented) =>
+              documented.workingDepthM === band.workingDepthM &&
+              documented.seedSpreadM === band.seedSpreadM
+          ),
+          `${map.id} re-homes ${faunaStatsFor(species).name} to ${band.workingDepthM} m, ` +
+            'a band docs/bestiary.md §4 does not document for it'
+        );
+      }
+      for (const beat of mission.beats) {
+        if (beat.kind !== 'creature' || beat.spawnAt === undefined) continue;
+        if (beat.species === undefined || !ambient.includes(beat.species)) continue;
+        const stats = faunaStatsFor(beat.species);
+        const band = map.ambientBands?.[beat.species] ?? {
+          workingDepthM: stats.workingDepthM,
+          seedSpreadM: stats.seedSpreadM,
+        };
+        assert.ok(
+          Math.abs(beat.spawnAt.depthM - band.workingDepthM) <= band.seedSpreadM,
+          `${mission.id}: ${beat.tag} is a ${stats.name} placed at ${beat.spawnAt.depthM} m, ` +
+            `outside the ${band.workingDepthM} ±${band.seedSpreadM} m band it rests in on ${map.id}`
         );
       }
     }
