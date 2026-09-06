@@ -156,11 +156,12 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
     acceptsDeposits: false,
     constructible: true,
     // Solved from docs/systems-combat.md §9's band: a turret takes about
-    // twelve seconds to kill a Corvette. It deters and punishes; it does not
-    // delete, which is what keeps static defence a wall rather than a trap.
+    // eighteen seconds to kill a Corvette. It deters and punishes; it does
+    // not delete, which is what keeps static defence a wall rather than a
+    // trap. The cycle is ×1.5 what it was, with the whole roster (#463).
     attackDamage: 50,
     attackRangeM: 700,
-    attackCooldownS: 1.5,
+    attackCooldownS: 2.25,
     sigFiringBurst: 30,
   },
   [StructureKind.BaffleBarge]: {

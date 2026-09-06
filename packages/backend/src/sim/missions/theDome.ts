@@ -382,7 +382,7 @@ export const ATTENDING_THE_DOME: MissionDefinition = {
           y: 300,
           depthM: 1000,
           armed: true,
-          note: 'The Klaxon anchor — 150 every 2.5 s to 900 m, auto-acquiring the nearest live enemy in range as soon as it stops moving. The sweep listens through it at both gates',
+          note: 'The Klaxon anchor — 150 every 3.75 s to 900 m, auto-acquiring the nearest live enemy in range as soon as it stops moving. The sweep listens through it at both gates',
         },
         {
           tag: 'corvette-1',
@@ -391,7 +391,7 @@ export const ATTENDING_THE_DOME: MissionDefinition = {
           y: 250,
           depthM: 1000,
           armed: true,
-          note: 'The working escort — 50 every 1.2 s to 550 m',
+          note: 'The working escort — 50 every 1.8 s to 550 m',
         },
         {
           tag: 'corvette-2',

@@ -665,9 +665,10 @@ describe('the faces, as docs/mission-rim-deposits.md §6 sites them', () => {
       [1185, 1485],
       '§9: 1,185–1,485 m'
     );
-    // §4 — fifteen seconds of six guns is what 1,800 HP of Sounding Spire is.
-    assert.equal((CHORISTER.attackDamage / CHORISTER.attackCooldownS) * 6, 120, '§4: 120 a second');
-    assert.equal(SPIRE.maxHp / 120, 15, '§4: fifteen seconds');
+    // §4 — twenty-two and a half seconds of six guns is what 1,800 HP of
+    // Sounding Spire is.
+    assert.equal((CHORISTER.attackDamage / CHORISTER.attackCooldownS) * 6, 80, '§4: 80 a second');
+    assert.equal(SPIRE.maxHp / 80, 22.5, '§4: twenty-two and a half seconds');
   });
 });
 
@@ -677,7 +678,7 @@ describe('what is heard, as docs/mission-rim-deposits.md §7 prices it', () => {
     // at working depth: two structures at SIG 30 standing in ears the dome has
     // lifted to the 95 cap, one at Track and one at Classification with eighty
     // metres to spare.
-    assert.equal(CANTOR.maxHp, 1200, '§8: 1,200 HP, and two torpedoes would take it');
+    assert.equal(CANTOR.maxHp, 1200, '§8: 1,200 HP, and four torpedoes would take it');
     assert.equal(LIFTED_HYD, 95);
     assert.equal(SPIRE.sigIdle, 30);
     assert.equal(SPIRE.sigActive, 80, '§4: 80 when active');

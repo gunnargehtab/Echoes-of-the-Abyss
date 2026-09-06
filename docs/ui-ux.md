@@ -76,6 +76,7 @@ Rules that apply to all tiers:
 
 - **Ghosts fade, they do not vanish.** Contacts decay over 20 s with alpha tracking freshness. A stale contact is still information — just less of it ([systems-echo.md](systems-echo.md) §4).
 - **No interpolation below Tier 4.** The server sends positions at 5 Hz; smoothing a Tier-2 blob between snapshots invents a velocity the player was never told. Tier 4 may interpolate, because at Tier 4 heading is known. The player's **own** hulls are not contacts and are drawn gliding between the last two snapshots (§12) — nothing is invented by drawing a hull where it must have been between two positions the player was told in full.
+- **The 5 Hz is also the unit a fight is measured in.** A rule about drawing is a rule about deciding: the enemy half of an engagement arrives as a run of discrete snapshots, so a combat band is only as deep as the number of them the losing side can act inside. [systems-combat.md](systems-combat.md) §9.5 counts them per band and lists what a player can change in each, and the rate stays 5 Hz in contact deliberately — a faster tick while fighting would tell the map that fighting was happening.
 - **Faction colour is earned at Tier 3.** Below that, contacts are scope-blue for everyone, because the player does not know whose they are.
 - **Count is an estimate and must look like one.** Tier 3 renders `~4`, never `4`.
 - **The Fields' lie is drawn as a bound.** A contact whose line from the player's nearest
@@ -1040,6 +1041,7 @@ renderer work rather than mixer work, so each names what it moves:
 - **[systems-echo.md](systems-echo.md)** — the five non-negotiables this document expands
 - **[audio-direction.md](audio-direction.md)** — the other half of the information channel
 - **[art-direction.md](art-direction.md)** — glass panels, palette, and the visual language
+- **[systems-combat.md](systems-combat.md)** — the fight this document's 5 Hz is the clock of; §9.5 counts the snapshots each band contains
 - **[systems-depth.md](systems-depth.md)** — depth bands and pressure, as surfaced in §8
 - **[campaign.md](campaign.md)** — the twenty-nine missions §14's board is a rendering of
 - **[tech-stack.md](tech-stack.md)** — why the client is allowed so little

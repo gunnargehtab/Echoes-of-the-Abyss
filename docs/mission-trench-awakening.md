@@ -71,7 +71,7 @@ listening dome and a grower.**
 
 | Hull | Count | Stats | Why |
 | --- | --- | --- | --- |
-| Abyssal Submersible — the row, role `yard` | 2 | **SIG 22 idle / 28 cruise · HYD 85 · PR-3 · 520 HP · 80 dmg at 650 m / 1.8 s** ([units.md](units.md)) | The band's own two heavy hulls, and the only two things on the map a colossus can grind at 95 m of hull ([bestiary.md](bestiary.md) §4) |
+| Abyssal Submersible — the row, role `yard` | 2 | **SIG 22 idle / 28 cruise · HYD 85 · PR-3 · 520 HP · 80 dmg at 650 m / 2.7 s** ([units.md](units.md)) | The band's own two heavy hulls, and the only two things on the map a colossus can grind at 95 m of hull ([bestiary.md](bestiary.md) §4) |
 | Chorister — the row, role `yard` | 6 | **SIG 16 idle / 24 cruise / +15 firing · HYD 75 (95 under the dome) · PR-2 on the hull, refit to 3 · 200 HP · 20 dmg at 450 m / 1.0 s · 40 m/s · 50 m** ([units.md](units.md)) | The cohort hull, in Directorate hands for the third mission running ([mission-the-dome.md](mission-the-dome.md) §3). At 50 m it is under `DRIFT.TRANSIT_MIN_HULL_M`'s 95 and a colossus cannot touch it, which is why it is the only hull in the game that renders one |
 
 The Choristers carry `pressureRating: 3` as an authored refit: the Directorate's baseline lifts the
@@ -187,10 +187,14 @@ its 45 / 70, in trench water:
 
 Damage is a sound: the first shell springs the strike from any range and the animal comes at the gun
 ([bestiary.md](bestiary.md) §4, #353). From 450 m a Hollow has 340 m to cover to its 110 m bite at
-75 m/s — 4.53 s. **Eight Choristers at 20/s are 160/s and have its 640 HP in 4.0 s; six are 120/s,
-take 5.33 s, and are bitten for 0.8 s at 55/s — 44 HP off one 200-HP hull.** The row's six
-Choristers render a Hollow and lose a fifth of a hull doing it; the six and both submersibles render
-one for nothing. That is the count the whole economy is priced in.
+75 m/s — 4.53 s. **Eight Choristers at 13.3/s are 106.7/s and have its 640 HP in 6.0 s; six are
+80/s, take 8.0 s, and are bitten for 3.5 s at 55/s — 191 HP off one 200-HP hull.** The row's six
+Choristers render a Hollow and all but lose a hull doing it; the six with both submersibles are
+139.3/s, take 4.6 s against the 4.53 s of closing, and give up three hit points. That is the count
+the whole economy is priced in, and since the §9 retune lengthened every gun cycle by half
+([systems-combat.md](systems-combat.md) §9) it is a sharper count than it was: six hulls used to
+render an animal for a fifth of one, and now the two submersibles are the difference between a
+rendering that costs nothing and one that costs a hull.
 
 **2. The Directorate's own works are the exception nobody discounts.** ×0.4 applies to structures
 and hulls alike, and it does not save the yard, because the yard is louder than any hull it owns.

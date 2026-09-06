@@ -172,8 +172,9 @@ ability quoted at the one number the format can carry: *SIG 100 for the full dur
    accident, so the interface previews it and the document prices it ([mission-item-nine.md](mission-item-nine.md)
    §3's rule for an irreversible act in a quiet room). **A ping from any hull is a ping and not the
    Chord**: the sounding is the only thing that feeds `sound`.
-4. **Torpedoes, carried.** Two per Corvette at 700 damage. The dome is 1,200 HP and dies to two of
-   them, and §8 prices a struck dome rather than pretending nobody thought of it.
+4. **Torpedoes, carried.** Two per Corvette at 350 damage. The dome is 1,200 HP and dies to four of
+   them — two Corvettes' magazines — and §8 prices a struck dome rather than pretending nobody
+   thought of it.
 
 **Silent Running is present, right once, and worth nothing the rest of the tide.** On the climb out
 it is redundant — ascent is silent already ([systems-depth.md](systems-depth.md) §6). Under a node
@@ -245,8 +246,8 @@ a property of the runtime rather than of anybody's restraint (§13).
 **every Directorate hull on this rim is weapons-cold** (§5). That is not a softening; it is the only
 sentence the format can write. `combat.ts` auto-acquires the nearest hostile thing carrying position
 and hull, and a structure is one of those — so an armed cohort standing 255 m from a Sounding Spire
-takes 1,800 HP down in fifteen seconds whatever anybody intended, and the watch, inherited at 206 m
-from the Chord with a 650 m gun, does it in twenty from tick zero. There is no way to author a hull
+takes 1,800 HP down in twenty-two seconds whatever anybody intended, and the watch, inherited at
+206 m from the Chord with a 650 m gun, does it in thirty from tick zero. There is no way to author a hull
 that answers hulls and leaves a node alone (§13). And the node cannot be allowed to fall: every
 point of `chord-water` is inside its six hundred, and a PR-2 carrier is only rated for the 3,000 m
 the crystal is set at because the node says so. So the rim attends and does not police, which is the
@@ -469,7 +470,7 @@ is Partial. **The middle rung is the Order short and never the Order silent**, w
 reason the transmission is not on the ladder.
 
 **Three things this ladder cannot say, said here instead.** First, **that the Chord still stands**:
-there is no predicate over what the player holds standing, so a node struck at 03:56 with the
+there is no predicate over what the player holds standing, so a node struck at 03:59 with the
 crystal already inside it would read Met (§13, and
 [mission-standing-wave.md](mission-standing-wave.md) §13's row, third customer). Nothing on this rim
 strikes it — the water is weapons-cold on every slot but the player's (§4) — so the gap is a
@@ -850,7 +851,7 @@ the player's, which is the sentence §1 was already writing.
 | `attend` names no emitter | **A finding.** The predicate counts attendable emitters resolved at Bearing or better while sounding and cannot name which; three are authored, so `the-lip` asks for three rather than pretending to point at the return. The return's own entered-and-gap lines print at the close regardless of any predicate (`runtime.ts`'s epilogue assembly), which is where the sixteenth minute is actually entered |
 | The tolerance counts structures, and it runs before the party does | **Built, and the consequence is authored** ([mission-rim-deposits.md](mission-rim-deposits.md) §13). Three Spires idling at 30, one of them 320 m from a Cantor, put `the-count` at Met by about 00:30. The row is non-terminal, read as a record, with one conditional line and no mechanism hung off it |
 | **One Directorate party** | **A format finding, shared with [mission-rim-deposits.md](mission-rim-deposits.md) §13.** Hostility is `Owner.slot`, so the watch, the 9th, the dome and the twelve Choristers are one party or the mission opens with a Directorate civil war 250 m from the Chord. The attendants and the lip are separate emitter-only parties and are safe there, because `combat.ts` refuses to auto-acquire a `StaticEmitter` |
-| **A hull that answers hulls and leaves a structure alone** | **Not built, and it is why this rim is weapons-cold.** `combatSystem` auto-acquires the nearest live thing carrying `Position`, `Owner` and `Health` that is not on its own slot, and a structure carries all three — there is no target class, no doctrine flag and no per-party rule of engagement. An armed cohort standing 255 m from a Sounding Spire therefore takes its 1,800 HP down in fifteen seconds, and the watch, inherited at Prospect's 4600, 3300 and 4750, 3350, does it from 206 m in twenty seconds from tick zero. Measured: the Chord at hp −40 at 20.0 s of an untouched run. Since every point of `chord-water` is inside the node's six hundred and a PR-2 carrier is only rated for 3,000 m because the node says so, a struck node makes the keystone unreachable — so **the six submersibles and the twelve Choristers are authored `armed: false`**, which is [mission-prospect.md](mission-prospect.md)'s own posture of four navies cold in one water and is the sentence §1 writes anyway. The shape, if anybody wants the other reading, is a target filter on the auto-acquire — `engages?: 'hulls' \| 'anything'` on `MissionUnit`, tested where `targetables` is walked. §10 never claimed combat as a thing this mission teaches, and §4 now says so out loud |
+| **A hull that answers hulls and leaves a structure alone** | **Not built, and it is why this rim is weapons-cold.** `combatSystem` auto-acquires the nearest live thing carrying `Position`, `Owner` and `Health` that is not on its own slot, and a structure carries all three — there is no target class, no doctrine flag and no per-party rule of engagement. An armed cohort standing 255 m from a Sounding Spire therefore takes its 1,800 HP down in twenty-two seconds, and the watch, inherited at Prospect's 4600, 3300 and 4750, 3350, does it from 206 m in thirty seconds from tick zero. Both figures are arithmetic off the roster: the measured 20.0 s this row used to quote predates #463, which lengthened every gun cycle by half ([systems-combat.md](systems-combat.md) §9), and the run was not replayed because the rim is cold either way. Since every point of `chord-water` is inside the node's six hundred and a PR-2 carrier is only rated for 3,000 m because the node says so, a struck node makes the keystone unreachable — so **the six submersibles and the twelve Choristers are authored `armed: false`**, which is [mission-prospect.md](mission-prospect.md)'s own posture of four navies cold in one water and is the sentence §1 writes anyway. The shape, if anybody wants the other reading, is a target filter on the auto-acquire — `engages?: 'hulls' \| 'anything'` on `MissionUnit`, tested where `targetables` is walked. §10 never claimed combat as a thing this mission teaches, and §4 now says so out loud |
 | The `lose` beat on a structure, and the mark it leaves | **Built.** `lose` zeroes the hull and `reap` tears it down, and `reap` is also where a `DestroyedStructure` mark is laid — SIG 18 for 180 s (`ECHO_MARKS`, `PERSISTENCE`) — so the Collapse is audible as two events rather than as an absence, which is the only way the format has of making it a thing that happened |
 | The `creature` beat with a depth, and a driven creature | **Built** (#349). The basin is spawned and driven in one beat with `driveTo.depthM` 2,000; a driven creature is deaf, holds Committed at `sigActive`, and takes no weapon damage, which is what makes the telegraph a fact rather than a fight |
 | Emitters with readings, off the player's party | **Built** (#240, #246). Prospect's two attendants verbatim — 2800, 3400 at 7 s / 1 s and 4100, 3500 at 11 s / 2 s, SIG 24, 3,050 m, hp 5,000 — and the lip's return as a sustained window, `periodTicks === onTicks === 1200`, `fromTick` 16:40, `untilTick` 17:00: Attendance's arrival idiom, twenty seconds at SIG 3 |

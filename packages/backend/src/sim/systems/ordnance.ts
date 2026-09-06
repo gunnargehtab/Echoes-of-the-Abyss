@@ -448,9 +448,16 @@ function tickMine(world: SimWorld, eid: number, destroyed: number[]): void {
     const other = candidates[i]!;
     if (Owner.slot[other] === slot) continue;
     if (Health.hp[other]! <= 0) continue;
-    // A mine does not trigger on ordnance. It is waiting for somebody to walk
-    // into it, and a torpedo passing overhead is not somebody.
-    if (hasComponent(world, Ordnance, other)) continue;
+    // A mine hears hulls, and the ordnance that travels to kill them. A
+    // running torpedo at SIG 60 is the loudest committed thing in the water
+    // and clears the bar at the full 150 m; a falling depth charge at 30
+    // clears it just inside. Neither a decoy nor another mine is anybody
+    // walking into anything: a noisemaker that swept fields would hand the
+    // ping's third job to a 20 s cooldown, and a mine that heard a mine would
+    // chain a field off its own edge (docs/systems-combat.md §6, #463).
+    if (hasComponent(world, Ordnance, other) && !tripsMines(Ordnance.kind[other] as OrdnanceKind)) {
+      continue;
+    }
 
     const distance = Math.hypot(Position.x[other]! - x, Position.y[other]! - y);
     if (distance > ORDNANCE.MINE.TRIGGER_RADIUS_M) continue;
@@ -509,13 +516,25 @@ function blast(
     if (other === eid) continue;
     if (Owner.slot[other] === slot) continue;
     if (Health.hp[other]! <= 0) continue;
-    if (hasComponent(world, Ordnance, other)) continue;
     // Nor a creature under a mission beat — the gun's rule (combat.ts).
     if (isDriven(world, other)) continue;
 
     const dz = options.volumetric ? Position.depth[other]! - depth : 0;
     const distance = Math.hypot(Position.x[other]! - x, Position.y[other]! - y, dz);
     if (distance >= options.radiusM) continue;
+
+    if (hasComponent(world, Ordnance, other)) {
+      // Ordnance in a blast is spent, not whittled. A torpedo or a depth
+      // charge is a fuse and a charge with no plate to speak of, and a shock
+      // front inside its radius sets the one off or breaks the other — which
+      // is the whole of what makes a mine dropped astern an answer to a
+      // seeker (docs/systems-combat.md §5, #463). Decoys and mines are left
+      // alone for the trigger's reasons above: a decoy a blast could delete
+      // would stop working the instant it worked, and a field that chained
+      // off its own edge would be a wall that fell over.
+      if (tripsMines(Ordnance.kind[other] as OrdnanceKind)) expire(other, destroyed);
+      continue;
+    }
 
     // Linear falloff to zero at the rim (docs/systems-combat.md §6), so a
     // minefield kills in numbers or not at all: one mine is a warning.
@@ -632,6 +651,18 @@ export function dropDepthCharge(world: SimWorld, hull: number, depthM: number): 
     raiseSelfEvent(world, { kind: SelfEventKind.BreakSilence, eid: hull });
   }
   return eid;
+}
+
+/**
+ * Does a mine hear this, and does a blast spend it?
+ *
+ * The ordnance that *travels to kill* — a running torpedo, a falling depth
+ * charge. The same predicate answers both questions because they are the same
+ * fact about the thing: it is committed, and a mine is the weapon that beats
+ * commitment (docs/systems-combat.md §2, §6).
+ */
+export function tripsMines(kind: OrdnanceKind): boolean {
+  return kind === OrdnanceKind.Torpedo || kind === OrdnanceKind.DepthCharge;
 }
 
 /**

@@ -152,7 +152,7 @@ it.
 ### What it does carry, for the first time
 
 Everything loud the roster gives a corvette, and the button. **Weapons live**: three guns at
-550 m, 50 a cycle at 1.2 s, +25 on the discharge and +40 for two seconds if the hull was
+550 m, 50 a cycle at 1.8 s, +25 on the discharge and +40 for two seconds if the hull was
 silent. **Torpedoes**: two aboard each, SIG 60 for twenty seconds of run at 160 m/s, 3,200 m,
 and — because a torpedo inherits its launcher's rating and implodes below it
 ([systems-combat.md](systems-combat.md) §5) — a corvette's torpedo runs at 1,790 m over the

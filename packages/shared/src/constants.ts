@@ -503,7 +503,10 @@ export const COMMANDER_ABILITY = {
  * inaudible**. A torpedo runs at SIG 60 for its entire twenty seconds, which is
  * louder than every cruise SIG in the roster — that is what makes a short
  * time-to-kill survivable rather than arbitrary, and it is asserted by test
- * rather than left as an intention.
+ * rather than left as an intention. §9.5 goes one step further and prices the
+ * seconds: every band is also a count of Echo snapshots, and the verbs a
+ * player can use inside them are listed against it. `combatBeat.test.ts`
+ * measures those counts by playing the fights out.
  */
 export const ORDNANCE = {
   /** SPEC — §5. The alpha-strike weapon, and the reason silence is a defence. */
@@ -520,8 +523,19 @@ export const ORDNANCE = {
     SEEKER_CONE_DEG: 60,
     /** Baseline seeker sensitivity. Factions differ — §11. */
     SEEKER_HYD: 50,
-    /** §5, and §9's band: a Corvette dies to one, a Cruiser to two. */
-    DAMAGE: 700,
+    /**
+     * §5, and §9's band: a Corvette survives one, wounded, and dies to two; a
+     * Cruiser survives three and dies to four.
+     *
+     * Was 700 — one hit on a Corvette — until #463 asked what a player could
+     * *do* between hearing a torpedo and losing the hull to it. A one-hit
+     * kill gave the defender verbs (decoy, dive, silence, a mine astern) and
+     * no reason to learn them: get one wrong and the fight was over before the
+     * next snapshot. Half the damage keeps the torpedo the alpha-strike weapon
+     * — two of a magazine of two still delete a Corvette — and makes the first
+     * hit a lesson rather than an obituary.
+     */
+    DAMAGE: 350,
     /** §5 — one or two gun cycles kill it, if the gun is free. */
     MAX_HP: 40,
     /** Torpedoes aboard a launcher. Scarcity is the class identity. §5. */
@@ -596,7 +610,10 @@ export const ORDNANCE = {
    *
    * A mine does not emit and then wait to be found; it **listens, and waits for
    * you to be loud**. That inversion is the third pole of the weapon triangle:
-   * silence walks through a minefield and a committed push does not.
+   * silence walks through a minefield and a committed push does not. A
+   * running torpedo is the loudest committed thing in the water, so it trips
+   * mines too (§6, #463) — which is what makes a mine dropped astern the
+   * hull-sized answer to the alpha strike.
    *
    * See `MINE_TRIGGER_LOUDNESS` below for the derivation, which is the
    * interesting part — the trigger is *solved* from two behaviours the doc
@@ -609,8 +626,19 @@ export const ORDNANCE = {
     SIG_DETONATION: 90,
     /** Sustained SIG at the layer while a mine arms. Construction-grade. §6. */
     SIG_LAYING: 55,
-    /** Seconds a mine takes to arm, and that the laying hull broadcasts for. §6. */
-    ARMING_S: 10,
+    /**
+     * Seconds a mine takes to arm, and that the laying hull broadcasts for. §6.
+     *
+     * Was 10 s. Shortened (#463) so a mine dropped astern is an answer to a
+     * torpedo: a seeker passes the drop point `distance / 160` seconds after
+     * the drop, so at 10 s nothing launched from inside 1,600 m — every
+     * launch that can actually catch a running hull — met an armed mine. At
+     * 3 s the drop works against anything still 480 m or more astern, which
+     * is the read §9.5 asks the defender to make. A field of twelve is now laid
+     * in 36 s of construction-grade broadcast rather than 120, which is the
+     * price §6 pays for it and says so.
+     */
+    ARMING_S: 3,
     /** It hears out to here, and no further. §6. */
     TRIGGER_RADIUS_M: 150,
     /** Damage at the centre of the blast. §6. */

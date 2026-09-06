@@ -141,8 +141,9 @@ exactly one thing.
    from 4,808 m, and it is the ×3 the basin has been waiting for all week — Commit-loud to a
    Sounder from 1,479 m ([systems-echo.md](systems-echo.md) §5). It is priced in §4 and never
    struck.
-4. **Torpedoes, carried.** Two per Corvette at 700 damage; the dome is 1,200 HP and dies to two
-   of them, which §8 prices rather than pretending nobody thought of it.
+4. **Torpedoes, carried.** Two per Corvette at 350 damage; the dome is 1,200 HP and dies to four
+   of them — two Corvettes' magazines — which §8 prices rather than pretending nobody thought
+   of it.
 
 **Silent Running is present and is wrong in a new way.** Under a node it buys nothing: the node
 sings whether the hull beneath it is silent or not, because what makes it sing is the *grant*
@@ -188,8 +189,9 @@ rating in place of a bought one ([mission-prospect.md](mission-prospect.md) §4;
    45 plus the crystal premium 20, `HARVEST_THROTTLE` and `RESOURCE`), which through the
    terraces' 0.70 is Classification to that ear from 3,035 m. The descent announces; the cut
    moves in.
-3. **The Directorate corrects the node, not the hull.** Six Choristers are 20 damage a second
-   each at 450 m — 120 a second, and 1,800 HP of Sounding Spire is fifteen seconds of that. The
+3. **The Directorate corrects the node, not the hull.** Six Choristers are 13.3 damage a second
+   each at 450 m — 80 a second, and 1,800 HP of Sounding Spire is twenty-two and a half seconds
+   of that. The
    tick the node falls, every Knight hull inside its 600 m is one band under its rating and takes
    `4 × 1²` = **4 HP/s**, unhealable: 105 seconds for a Corvette, 300 for the Voice. The way out
    is 800 m of climb at 15 m/s — 53.3 seconds, and the bleeding stops at the first metre above
@@ -469,9 +471,9 @@ Order's, and different from the concern's, because *the Order does not keep a ga
 ### The failure, and the sounds that precede it
 
 The close at 16:00 is **not** a conclusion. A raid can fail, and this one fails in three specific
-audible ways: a node corrected under working hulls (fifteen seconds of six guns, and then 4 HP/s
-on everything under it); a cutter that stood nearer than the node and was corrected instead
-(120 damage a second against 420 HP is three and a half seconds); and a climb begun too late,
+audible ways: a node corrected under working hulls (twenty-two seconds of six guns, and then
+4 HP/s on everything under it); a cutter that stood nearer than the node and was corrected instead
+(80 damage a second against 420 HP is five and a quarter seconds); and a climb begun too late,
 with the basin on the line at 2,000 m.
 
 Nothing here fails on a timer. The correction is audible from 03:00, when six Choristers muster

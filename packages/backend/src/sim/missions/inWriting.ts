@@ -509,7 +509,7 @@ export const SEEDING_IN_WRITING: MissionDefinition = {
          * A Chorister standing inside a cloud 90 m from its centre has the bed
          * 270 m inside its 450 m reach at the 360 m depth difference, and an
          * armed line would have had every bed on this map down on its first
-         * stationary pass at about 04:55, at 20 hull a second per gun against
+         * stationary pass at about 05:04, at 13.3 hull a second per gun against
          * 900. The beds' schedule would belong to the guns, and the veil would
          * be no cover from the one thing it is fielded against.
          *

@@ -6,7 +6,7 @@
  * §13 says the per-mission test has to hold.
  *
  * - **The fight is lost in figures before it starts** (§4). Every number in
- *   the briefing — 4,500 against 3,300, 342.7 against 268.3, three hundred and
+ *   the briefing — 4,500 against 3,300, 228.5 against 178.9, three hundred and
  *   fifty metres of gun — is re-derived here from the roster and the Klaxon
  *   rule rather than copied, because campaign.md §2 rule 4's third mission has
  *   to *be* unwinnable rather than say so. If a tuning pass moves a hull, this
@@ -247,7 +247,7 @@ describe('the Third’s party, as docs/mission-conclave-chord.md §3 fields it',
     }
     assert.equal(SPIRE.sigIdle, 30, '§3: 30 idle — the Fields ringing, all tide');
     assert.equal(SPIRE.hyd, 45);
-    assert.equal(SPIRE.maxHp, 1800, '§4: nine and a half seconds of a works column');
+    assert.equal(SPIRE.maxHp, 1800, '§4: fourteen seconds of a works column');
     // §3's price argument: six at the roster's crystal would be 720 against the
     // 600 the Ninth holds in total, so a formation carries the Spire's figures
     // and not its price. Nothing pays for these; they were cut thirty years ago.
@@ -267,8 +267,9 @@ describe('the Third’s party, as docs/mission-conclave-chord.md §3 fields it',
   });
 
   it('strikes the torpedoes and the yard, and leaves the ping in the party’s hands', () => {
-    // §3: the torpedo lock is arithmetic and not a mood — twelve shots at 700
-    // against 4,500 hull points would make campaign.md §2 rule 4's label false
+    // §3: the torpedo lock is arithmetic and not a mood — twelve shots at 350
+    // against 4,500 hull points, with the lances behind them, would make
+    // campaign.md §2 rule 4's label false
     // — and active sonar is priced rather than fenced, which §13 says plainly
     // costs the mission a rung it declines to build.
     const locked = new Set(CHORD_CONCLAVE.locks.map((lock) => lock.ability));
@@ -368,8 +369,8 @@ describe('the fight, lost in figures before it starts — docs/mission-conclave-
       '§4: the escort is over the Klaxon line and the cutters are not'
     );
     assert.ok(cutterFiringSig <= FACTION_COMBAT.KLAXON.SIG_THRESHOLD);
-    assert.equal(Math.round(klaxonCruiserDps * 10) / 10, 67.2, '§4: 67.2 under the Klaxon');
-    assert.equal(Math.round(corvetteDps * 10) / 10, 41.7);
+    assert.equal(Math.round(klaxonCruiserDps * 10) / 10, 44.8, '§4: 44.8 under the Klaxon');
+    assert.equal(Math.round(corvetteDps * 10) / 10, 27.8);
 
     // §4's table, both rows.
     const columnHull = 2 * CRUISER.maxHp + 5 * CORVETTE.maxHp;
@@ -378,45 +379,45 @@ describe('the fight, lost in figures before it starts — docs/mission-conclave-
     const partyDps = cruiserDps + 5 * corvetteDps;
     assert.equal(columnHull, 4500, '§12: four thousand five hundred of hull');
     assert.equal(partyHull, 3300, '§12: against your three thousand three hundred');
-    assert.equal(Math.round(columnDps * 10) / 10, 342.7);
-    assert.equal(Math.round(partyDps * 10) / 10, 268.3);
+    assert.equal(Math.round(columnDps * 10) / 10, 228.5);
+    assert.equal(Math.round(partyDps * 10) / 10, 178.9);
     assert.equal(
       CRUISER.attackRangeM - CORVETTE.attackRangeM,
       350,
       '§12: a gun that reaches three hundred and fifty metres further than yours'
     );
 
-    // "Concentrated in sequence, the party is gone in 9.6 seconds and the
-    // column in 16.8." The mission is unwinnable by arithmetic, which is what
+    // "Concentrated in sequence, the party is gone in 14.4 seconds and the
+    // column in 25.2." The mission is unwinnable by arithmetic, which is what
     // campaign.md §2 rule 4's third and last mission has to be rather than say.
-    assert.equal(Math.round((partyHull / columnDps) * 10) / 10, 9.6);
-    assert.equal(Math.round((columnHull / partyDps) * 10) / 10, 16.8);
+    assert.equal(Math.round((partyHull / columnDps) * 10) / 10, 14.4);
+    assert.equal(Math.round((columnHull / partyDps) * 10) / 10, 25.2);
     assert.ok(partyHull / columnDps < columnHull / partyDps, '§4: the party loses the exchange');
   });
 
-  it('prices a formation at nine and a half seconds, and the two cells at 2.2 and 6.3', () => {
+  it('prices a formation at fourteen seconds, and the two cells at 3.3 and 9.4', () => {
     // §4 and §6. The three cutters are the coring; the escort is the figure a
     // player buys by standing in front of it, because it is ordered half a
-    // minute behind three cutters that need 14.4 seconds and arrives after
+    // minute behind three cutters that need 21.6 seconds and arrives after
     // every cut (§7, §13).
     const cutters = 3 * corvetteDps;
-    assert.equal(Math.round(cutters), 125, '§4: 125 a second between the three of them');
-    assert.equal(Math.round((SPIRE.maxHp / cutters) * 10) / 10, 14.4, '§4: three cutters alone');
+    assert.equal(Math.round(cutters), 83, '§4: 83.3 a second between the three of them');
+    assert.equal(Math.round((SPIRE.maxHp / cutters) * 10) / 10, 21.6, '§4: three cutters alone');
     const withEscort = cutters + klaxonCruiserDps;
-    assert.equal(Math.round(withEscort * 10) / 10, 192.2);
-    assert.equal(Math.round((SPIRE.maxHp / withEscort) * 10) / 10, 9.4, '§4: nine and a half');
+    assert.equal(Math.round(withEscort * 10) / 10, 128.1);
+    assert.equal(Math.round((SPIRE.maxHp / withEscort) * 10) / 10, 14, '§4: fourteen seconds');
     // The Alto, where all three cutters and the escort bear.
-    assert.equal(Math.round((CORVETTE.maxHp / withEscort) * 10) / 10, 2.2);
+    assert.equal(Math.round((CORVETTE.maxHp / withEscort) * 10) / 10, 3.3);
     // The Alto's west corners, where a hull holding the Approach's depth drops
-    // one cutter — §6's 2.8, and §4's 150.5 a second.
+    // one cutter — §6's 4.2, and §4's 100.4 a second.
     const twoCutters = 2 * corvetteDps + klaxonCruiserDps;
-    assert.equal(Math.round(twoCutters * 10) / 10, 150.5);
-    assert.equal(Math.round((CORVETTE.maxHp / twoCutters) * 10) / 10, 2.8);
+    assert.equal(Math.round(twoCutters * 10) / 10, 100.4);
+    assert.equal(Math.round((CORVETTE.maxHp / twoCutters) * 10) / 10, 4.2);
     // The Drone's north-west corner: one Cruiser, neither relief Corvette.
-    assert.equal(Math.round((CORVETTE.maxHp / klaxonCruiserDps) * 10) / 10, 6.3, '§6: KEYSTONE');
+    assert.equal(Math.round((CORVETTE.maxHp / klaxonCruiserDps) * 10) / 10, 9.4, '§6: KEYSTONE');
     // §6's opening lesson: a Corvette that interposes at the Bass at 00:43 is
-    // then the nearest hostile, and lasts 3.4 seconds.
-    assert.equal(Math.round((CORVETTE.maxHp / cutters) * 10) / 10, 3.4);
+    // then the nearest hostile, and lasts 5.0 seconds.
+    assert.equal(Math.round((CORVETTE.maxHp / cutters) * 10) / 10, 5);
   });
 
   it('keeps 250 m of water worth something, in three dimensions', () => {

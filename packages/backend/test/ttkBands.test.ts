@@ -41,7 +41,7 @@ function ttkS(hp: number, damage: number, cooldownS: number): number {
 /**
  * The same kill, counted the way docs/units.md counts it for the rung's
  * roster: in *cycles*, each shot with its cooldown behind it — "kills a
- * Corvette in ≥ 8 s (two cycles)" for a 4.0 s gun. The time the gun is busy
+ * Corvette in ≥ 12 s (two cycles)" for a 6.0 s gun. The time the gun is busy
  * rather than the time to the killing shot; one cooldown apart from `ttkS`,
  * and the doc's figures for the Bulwark, Dredge and Reciter are all stated in
  * this accounting, so this is what holds them to it.
@@ -62,28 +62,36 @@ const turret = structureStatsFor(StructureKind.SentinelTurret);
 const bastion = structureStatsFor(StructureKind.Bastion);
 
 describe('§9 time-to-kill bands', () => {
-  it('a Corvette kills a Light Scout in four seconds or less', () => {
+  // Every band below is ×1.5 the figure the table was first written with
+  // (#463): the stretch went on the cooldown and not the damage, so the cycle
+  // counts docs/units.md states are the same and only the seconds moved.
+  // docs/systems-combat.md §9.5 is the argument for the length — a fight is
+  // measured in the snapshots the loser can act in, and combatBeat.test.ts
+  // counts those by playing the fights out.
+
+  it('a Corvette kills a Light Scout in six seconds or less', () => {
     const t = ttkS(scout.maxHp, corvette.attackDamage, corvette.attackCooldownS);
-    assert.ok(t <= 4, `band is ≤ 4 s, got ${t.toFixed(2)} s`);
+    assert.ok(t <= 6, `band is ≤ 6 s, got ${t.toFixed(2)} s`);
   });
 
-  it('a Corvette duel lasts eight to ten seconds', () => {
+  it('a Corvette duel lasts twelve to fifteen seconds', () => {
     // The centre of the whole design: the fight every player has most often,
     // and the number the rest of the roster is scaled against.
     const t = ttkS(corvette.maxHp, corvette.attackDamage, corvette.attackCooldownS);
-    assert.ok(t >= 8 && t <= 10, `band is 8-10 s, got ${t.toFixed(2)} s`);
+    assert.ok(t >= 12 && t <= 15, `band is 12-15 s, got ${t.toFixed(2)} s`);
   });
 
-  it('a Cruiser kills a Corvette in about five seconds', () => {
+  it('a Cruiser kills a Corvette in about eight seconds', () => {
     const t = ttkS(corvette.maxHp, cruiser.attackDamage, cruiser.attackCooldownS);
-    assert.ok(t >= 4 && t <= 6, `band is ~5 s, got ${t.toFixed(2)} s`);
+    assert.ok(t >= 6.5 && t <= 9.5, `band is ~8 s, got ${t.toFixed(2)} s`);
   });
 
-  it('a Corvette needs twenty-five seconds to bring down a Cruiser with guns alone', () => {
+  it('a Corvette needs thirty-seven seconds to bring down a Cruiser with guns alone', () => {
     // "Anchors do not fall to chip damage" — the band that stops the cheapest
-    // hull in the roster being the answer to the most expensive one.
+    // hull in the roster being the answer to the most expensive one. 37 is
+    // 25 × 1.5 rounded down to the second the Klaxon still clears (below).
     const t = ttkS(cruiser.maxHp, corvette.attackDamage, corvette.attackCooldownS);
-    assert.ok(t >= 25, `band is ≥ 25 s, got ${t.toFixed(2)} s`);
+    assert.ok(t >= 37, `band is ≥ 37 s, got ${t.toFixed(2)} s`);
   });
 
   it('...and still needs it under the Klaxon', () => {
@@ -93,11 +101,11 @@ describe('§9 time-to-kill bands', () => {
     // above 51 this fails, which is why the figure is 50 and not 55.
     const boosted = corvette.attackDamage * FACTION_COMBAT.KLAXON.DAMAGE_MULTIPLIER;
     const t = ttkS(cruiser.maxHp, boosted, corvette.attackCooldownS);
-    assert.ok(t >= 25, `the Klaxon must not breach the ≥ 25 s floor; got ${t.toFixed(2)} s`);
+    assert.ok(t >= 37, `the Klaxon must not breach the ≥ 37 s floor; got ${t.toFixed(2)} s`);
 
     // And the duel band survives the bonus too, at the fast end.
     const duel = ttkS(corvette.maxHp, boosted, corvette.attackCooldownS);
-    assert.ok(duel >= 8, `a Klaxon duel still sits inside 8-10 s, got ${duel.toFixed(2)} s`);
+    assert.ok(duel >= 12, `a Klaxon duel still sits inside 12-15 s, got ${duel.toFixed(2)} s`);
   });
 
   it('the Clarion sits inside the same bands the Corvette is scaled against', () => {
@@ -107,16 +115,19 @@ describe('§9 time-to-kill bands', () => {
     // feel like a fight in this game. All four bands, on the hull it is a peer
     // of.
     const vsScout = ttkS(scout.maxHp, clarion.attackDamage, clarion.attackCooldownS);
-    assert.ok(vsScout <= 4, `a Clarion should kill a Light Scout in ≤ 4 s, got ${vsScout}`);
+    assert.ok(vsScout <= 6, `a Clarion should kill a Light Scout in ≤ 6 s, got ${vsScout}`);
 
     const duel = ttkS(clarion.maxHp, clarion.attackDamage, clarion.attackCooldownS);
-    assert.ok(duel >= 8 && duel <= 10, `a Clarion duel should sit in 8-10 s, got ${duel}`);
+    assert.ok(duel >= 12 && duel <= 15, `a Clarion duel should sit in 12-15 s, got ${duel}`);
 
     const vsCruiser = ttkS(cruiser.maxHp, clarion.attackDamage, clarion.attackCooldownS);
-    assert.ok(vsCruiser >= 25, `anchors do not fall to chip damage; got ${vsCruiser} s`);
+    assert.ok(vsCruiser >= 37, `anchors do not fall to chip damage; got ${vsCruiser} s`);
 
     const byCruiser = ttkS(clarion.maxHp, cruiser.attackDamage, cruiser.attackCooldownS);
-    assert.ok(byCruiser >= 4 && byCruiser <= 6, `a Cruiser kills one in ~5 s, got ${byCruiser}`);
+    assert.ok(
+      byCruiser >= 6.5 && byCruiser <= 9.5,
+      `a Cruiser kills one in ~8 s, got ${byCruiser}`
+    );
 
     // And the trade itself, stated as arithmetic rather than as a comment: it
     // reaches further and hits harder per shot than the Corvette, and pays for
@@ -133,13 +144,20 @@ describe('§9 time-to-kill bands', () => {
 
   it('a Sentinel Turret deters a Corvette rather than deleting it', () => {
     const t = ttkS(corvette.maxHp, turret.attackDamage!, turret.attackCooldownS!);
-    assert.ok(t >= 10 && t <= 14, `band is ~12 s, got ${t.toFixed(2)} s`);
+    assert.ok(t >= 15 && t <= 21, `band is ~18 s, got ${t.toFixed(2)} s`);
   });
 
-  it('a torpedo kills a Corvette outright and a Cruiser in two', () => {
-    assert.ok(ORDNANCE.TORPEDO.DAMAGE >= corvette.maxHp, 'one torpedo should finish a Corvette');
-    assert.ok(ORDNANCE.TORPEDO.DAMAGE < cruiser.maxHp, 'a Cruiser survives one...');
-    assert.ok(ORDNANCE.TORPEDO.DAMAGE * 2 >= cruiser.maxHp, '...and not two');
+  it('a torpedo wounds a Corvette and a second one kills it; a Cruiser takes four', () => {
+    // #463: the first hit is a lesson and not an obituary. Two of a magazine
+    // of two still delete a Corvette, so the alpha strike is intact — it is
+    // simply two decisions the defender failed rather than one.
+    assert.ok(ORDNANCE.TORPEDO.DAMAGE < corvette.maxHp, 'a Corvette survives one torpedo...');
+    assert.ok(ORDNANCE.TORPEDO.DAMAGE * 2 >= corvette.maxHp, '...and not two');
+    assert.ok(ORDNANCE.TORPEDO.DAMAGE * 3 < cruiser.maxHp, 'a Cruiser survives three...');
+    assert.ok(ORDNANCE.TORPEDO.DAMAGE * 4 >= cruiser.maxHp, '...and not four');
+    // Wounded means wounded: a Corvette that took one is left with less than a
+    // fifth of its hull, so the second torpedo is a question it cannot ignore.
+    assert.ok(corvette.maxHp - ORDNANCE.TORPEDO.DAMAGE < corvette.maxHp / 5);
   });
 
   it('a mine kills a Light Scout and only wounds a Corvette', () => {
@@ -176,13 +194,13 @@ describe('§9 time-to-kill bands', () => {
     // fight at a sixth of the price; and one alone takes twenty seconds
     // against a Corvette, which is the arithmetic of "very many".
     const dies = ttkS(chorister.maxHp, corvette.attackDamage, corvette.attackCooldownS);
-    assert.ok(dies <= 4, `a Corvette should kill a Chorister in ≤ 4 s, got ${dies.toFixed(2)} s`);
+    assert.ok(dies <= 6, `a Corvette should kill a Chorister in ≤ 6 s, got ${dies.toFixed(2)} s`);
 
     const duel = ttkS(chorister.maxHp, chorister.attackDamage, chorister.attackCooldownS);
-    assert.ok(duel >= 8 && duel <= 10, `a Chorister duel should sit in 8-10 s, got ${duel} s`);
+    assert.ok(duel >= 12 && duel <= 15, `a Chorister duel should sit in 12-15 s, got ${duel} s`);
 
     const alone = ttkS(corvette.maxHp, chorister.attackDamage, chorister.attackCooldownS);
-    assert.ok(alone >= 18, `one Chorister should need ~20 s on a Corvette, got ${alone} s`);
+    assert.ok(alone >= 27, `one Chorister should need ~30 s on a Corvette, got ${alone} s`);
 
     // Numbers are the answer, and they are a worse answer to an anchor than
     // two Corvettes are: three cohort hulls cost less than one Corvette in
@@ -201,18 +219,18 @@ describe('§9 time-to-kill bands', () => {
   });
 
   it('holds the Bulwark to the bands docs/units.md states for it (#461)', () => {
-    // "Kills a Corvette in ≥ 8 s (two cycles), a Bastion alone in ~90 s, and
-    // dies to Corvette guns in ≥ 55 s — an anchor that does not fall to chip
+    // "Kills a Corvette in ≥ 12 s (two cycles), a Bastion alone in ~135 s, and
+    // dies to Corvette guns in ≥ 82 s — an anchor that does not fall to chip
     // damage, §9's rule for the Cruiser applied twice over."
     assert.equal(Math.ceil(corvette.maxHp / bulwark.attackDamage), 2, 'two cycles');
     const vsCorvette = cyclesS(corvette.maxHp, bulwark.attackDamage, bulwark.attackCooldownS);
-    assert.ok(vsCorvette >= 8, `a Bulwark takes ≥ 8 s on a Corvette, got ${vsCorvette}`);
+    assert.ok(vsCorvette >= 12, `a Bulwark takes ≥ 12 s on a Corvette, got ${vsCorvette}`);
 
     const vsBastion = cyclesS(bastion.maxHp, bulwark.attackDamage, bulwark.attackCooldownS);
-    assert.ok(vsBastion >= 80 && vsBastion <= 100, `~90 s on a Bastion alone, got ${vsBastion}`);
+    assert.ok(vsBastion >= 120 && vsBastion <= 150, `~135 s on a Bastion alone, got ${vsBastion}`);
 
     const byCorvette = cyclesS(bulwark.maxHp, corvette.attackDamage, corvette.attackCooldownS);
-    assert.ok(byCorvette >= 55, `Corvette guns need ≥ 55 s, got ${byCorvette}`);
+    assert.ok(byCorvette >= 82, `Corvette guns need ≥ 82 s, got ${byCorvette}`);
 
     // "The Klaxon is never off it": at rest it is above the +12% threshold, so
     // the two-cycle claim holds with the bonus on, which is how the hull is
@@ -222,37 +240,40 @@ describe('§9 time-to-kill bands', () => {
     const boosted = bulwark.attackDamage * FACTION_COMBAT.KLAXON.DAMAGE_MULTIPLIER;
     assert.equal(Math.ceil(corvette.maxHp / boosted), 2, 'still two cycles under the Klaxon');
 
-    // §9's torpedo band, once more over: a Cruiser survives one and dies to
-    // two; "a Bulwark survives three".
-    assert.ok(ORDNANCE.TORPEDO.DAMAGE * 3 < bulwark.maxHp, 'survives three torpedoes');
-    assert.ok(ORDNANCE.TORPEDO.DAMAGE * 4 >= bulwark.maxHp, '...and not four');
+    // §9's torpedo band, once more over: a Cruiser survives three and dies to
+    // four; "a Bulwark survives six".
+    assert.ok(ORDNANCE.TORPEDO.DAMAGE * 6 < bulwark.maxHp, 'survives six torpedoes');
+    assert.ok(ORDNANCE.TORPEDO.DAMAGE * 7 >= bulwark.maxHp, '...and not seven');
     // And it out-reaches the static defence it is built to shoot from outside.
     assert.ok(bulwark.attackRangeM > turret.attackRangeM!, 'outranges a Sentinel Turret');
   });
 
   it('holds the Dredge to the bands docs/units.md states for it (#461)', () => {
-    // "Kills a Corvette in ~8 s and a Cruiser in ~20 s; dies to Corvette guns
-    // in ~34 s."
+    // "Kills a Corvette in ~12 s and a Cruiser in ~30 s; dies to Corvette guns
+    // in ~50 s."
     const vsCorvette = cyclesS(corvette.maxHp, dredge.attackDamage, dredge.attackCooldownS);
-    assert.ok(vsCorvette >= 7 && vsCorvette <= 9, `~8 s on a Corvette, got ${vsCorvette}`);
+    assert.ok(vsCorvette >= 10.5 && vsCorvette <= 13.5, `~12 s on a Corvette, got ${vsCorvette}`);
     const vsCruiser = cyclesS(cruiser.maxHp, dredge.attackDamage, dredge.attackCooldownS);
-    assert.ok(vsCruiser >= 18 && vsCruiser <= 22, `~20 s on a Cruiser, got ${vsCruiser}`);
+    assert.ok(vsCruiser >= 27 && vsCruiser <= 33, `~30 s on a Cruiser, got ${vsCruiser}`);
     const byCorvette = cyclesS(dredge.maxHp, corvette.attackDamage, corvette.attackCooldownS);
     assert.ok(
-      byCorvette >= 32 && byCorvette <= 36,
-      `dies to a Corvette in ~34 s, got ${byCorvette}`
+      byCorvette >= 48 && byCorvette <= 54,
+      `dies to a Corvette in ~50 s, got ${byCorvette}`
     );
   });
 
   it('holds the Reciter to the bands docs/units.md states for it (#461)', () => {
-    // "Kills a Corvette in ~9 s and a Light Scout in two cycles; dies to a
-    // Corvette in ~7 s if the Corvette gets there." The trade is the whole
+    // "Kills a Corvette in ~14 s and a Light Scout in two cycles; dies to a
+    // Corvette in ~11 s if the Corvette gets there." The trade is the whole
     // hull: the longest gun in the roster on the thinnest combat hull.
     const vsCorvette = cyclesS(corvette.maxHp, reciter.attackDamage, reciter.attackCooldownS);
-    assert.ok(vsCorvette >= 8 && vsCorvette <= 10, `~9 s on a Corvette, got ${vsCorvette}`);
+    assert.ok(vsCorvette >= 12 && vsCorvette <= 15, `~14 s on a Corvette, got ${vsCorvette}`);
     assert.equal(Math.ceil(scout.maxHp / reciter.attackDamage), 2, 'a Light Scout in two cycles');
     const byCorvette = cyclesS(reciter.maxHp, corvette.attackDamage, corvette.attackCooldownS);
-    assert.ok(byCorvette >= 6 && byCorvette <= 8, `dies to a Corvette in ~7 s, got ${byCorvette}`);
+    assert.ok(
+      byCorvette >= 9 && byCorvette <= 12,
+      `dies to a Corvette in ~11 s, got ${byCorvette}`
+    );
 
     assert.ok(reciter.attackRangeM > cruiser.attackRangeM, 'outranges the Cruiser');
     assert.ok(reciter.maxHp < corvette.maxHp, 'and is the glass in "glass cannon"');
@@ -266,7 +287,7 @@ describe('§9 time-to-kill bands', () => {
     // roster so it did not become relatively harmless by accident, but it must
     // stay hopeless in absolute terms.
     const t = ttkS(corvette.maxHp, scout.attackDamage, scout.attackCooldownS);
-    assert.ok(t > 20, `a scout should still take an age to kill a Corvette, got ${t.toFixed(0)} s`);
+    assert.ok(t > 30, `a scout should still take an age to kill a Corvette, got ${t.toFixed(0)} s`);
     assert.equal(damageMultiplierFor(Faction.Pelagia, 99), 1, 'and no doctrine rescues it');
   });
 });

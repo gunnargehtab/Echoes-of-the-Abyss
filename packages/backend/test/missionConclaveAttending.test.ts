@@ -468,12 +468,17 @@ describe('the order, as docs/mission-conclave-attending.md §4 and §6 price it'
     );
     assert.equal(Number(heard.toFixed(1)), 27.5);
     assert.ok(heard < SOUNDER.interest, '§6: it does not register at all');
+    // Damage a second, not damage a shell: the cohort's cycle is 1.5 s, so
+    // dividing by `attackDamage` alone silently assumed a one-second gun and
+    // read the same until #463 stretched every cycle by half.
+    const cohortDps = (hulls: number) =>
+      (hulls * CHORISTER.attackDamage) / CHORISTER.attackCooldownS;
+    assert.equal(SOUNDER.maxHp / cohortDps(12), 56.25, '§6: twelve, in 56.25 seconds');
     assert.equal(
-      SOUNDER.maxHp / (12 * CHORISTER.attackDamage),
-      37.5,
-      '§6: twelve, in 37.5 seconds'
+      Number((SOUNDER.maxHp / cohortDps(8)).toFixed(2)),
+      84.38,
+      '§6: and eight in eighty-four'
     );
-    assert.equal(SOUNDER.maxHp / (8 * CHORISTER.attackDamage), 56.25, '§6: and eight in fifty-six');
     // §6: what it does grow interested in is the half that cannot cross.
     assert.equal(
       rangeAt(

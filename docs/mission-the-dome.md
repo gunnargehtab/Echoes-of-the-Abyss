@@ -109,7 +109,7 @@ by the picket's own guns.
 
 | Hull | Count | Stats | Why |
 | --- | --- | --- | --- |
-| Abyssal Submersible — the picket, role `watch` | 4 | **SIG 22 idle / 28 cruise / +20 firing · HYD 85 · PR-3 · 520 HP · 80 dmg at 650 m every 1.8 s · 60 m/s (33 silent) · 95 m** ([units.md](units.md)) | *Baffle*'s four, in *Baffle*'s seats. Armed, and the first Directorate hulls another navy shoots at. Ninety-five metres is the shortest hull a colossus grinds ([mission-intake.md](mission-intake.md) §6), which matters at the foot and not in the pipe |
+| Abyssal Submersible — the picket, role `watch` | 4 | **SIG 22 idle / 28 cruise / +20 firing · HYD 85 · PR-3 · 520 HP · 80 dmg at 650 m every 2.7 s · 60 m/s (33 silent) · 95 m** ([units.md](units.md)) | *Baffle*'s four, in *Baffle*'s seats. Armed, and the first Directorate hulls another navy shoots at. Ninety-five metres is the shortest hull a colossus grinds ([mission-intake.md](mission-intake.md) §6), which matters at the foot and not in the pipe |
 | Chorister — the array, role `array` | 6 | **SIG 16 / 24 / +15 · HYD 75, 95 under the dome · 200 HP · 20 dmg at 450 m · 40 m/s (22 silent) · 50 m · PR-2 on the hull, `pressureRating: 3` authored** ([units.md](units.md)) | The cohort hull, fielded at last. It is not here to fight: 20 a second at 450 m against a Klaxon escort is arithmetic nobody runs twice. It is here because the dome is worth more to it than to anything else in the Rift (§4) |
 | Cantor — the dome, `arrayTag: 'dome'` | 1 | SIG 35 idle · HYD 80 · 1,200 HP · **+25 HYD capped at 95 within 1,200 m** ([units.md](units.md)) | The Cantorate's instrument, standing on the last bench at 2,300 m. Structure, not hull; placed, never moved. Called by its own name for the second time in the campaign |
 
@@ -267,9 +267,9 @@ and the formation is 300 m wide: into Lay-by One at 08:30 the escorts take (1300
 At the berth at 17:00 the barge closes to (1500, 4550), and the yard's floor at 1,650 m is the
 one place in the mission where a hull is seated on the bottom rather than over it.
 
-**The convoy's guns are the Klaxon bill from the other side**: a Cruiser at 150 every 2.5 s to
-900 m (60 a second, 67 inside the Klaxon band) and two Corvettes at 50 every 1.2 s to 550 m
-(41.7 each), auto-acquiring the nearest live enemy in range and stopping for nothing while under
+**The convoy's guns are the Klaxon bill from the other side**: a Cruiser at 150 every 3.75 s to
+900 m (40 a second, 44.8 inside the Klaxon band) and two Corvettes at 50 every 1.8 s to 550 m
+(27.8 each), auto-acquiring the nearest live enemy in range and stopping for nothing while under
 way.
 
 **The Deep Yard is *Baffle*'s plant, literally** — an emitter at (1500, 4500) at 1,640 m, SIG 35,

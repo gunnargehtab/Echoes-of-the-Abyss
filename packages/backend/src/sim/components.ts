@@ -220,8 +220,8 @@ export const Fauna = defineComponent({
    * document says they happen (docs/mission-sorrowgate.md §9). A driven
    * creature therefore takes no weapon damage: docs/mission-intake.md §6 puts
    * the mission's teeth in a colossus that "cannot be killed", and twelve
-   * Abyssal Submersibles at 44.4/s each brought the roster's 9,000 HP down in
-   * seventeen seconds of auto-fire from the muster, before it reached the
+   * Abyssal Submersibles at 29.6/s each brought the roster's 9,000 HP down in
+   * twenty-five seconds of auto-fire from the muster, before it reached the
    * line (§13, "The colossus, killed"; #349). Held here rather than inferred
    * from the pinned `senseS`, so the guns read a fact and not a side effect.
    * Cleared when the commitment expires, so a placed Hollow is rendered as

@@ -117,7 +117,7 @@ arrives instead is not anybody's.
 | Hull | Count | Stats | Why |
 | --- | --- | --- | --- |
 | Chorister — the called | 12 | **SIG 16 idle / 24 cruise / +15 firing · HYD 75 (95 under the dome) · PR-2, refit to 3 · 200 HP · 20 dmg at 450 m · 40 m/s · 50 m** ([units.md](units.md)) | The cohort hull, in Directorate hands for the fourth mission running, and for the first time inside Sufficiency ([mission-trench-awakening.md](mission-trench-awakening.md) §2). Two numbers do the whole mission: it cruises at 24 under a ceiling of 25, and at fifty metres it is forty-five short of `DRIFT.TRANSIT_MIN_HULL_M` — the shortest hull a colossus can grind is the Submersible's 95 |
-| Abyssal Submersible — the standing cohort | 4 | **SIG 22 / 28 / +20 · HYD 85 · PR-3 · 520 HP · 80 at 650 m / 1.8 s · 60 m/s · 95 m** ([units.md](units.md)) | The heavy half, and the half the order will not let cross quietly: 28 is three over the ceiling. Ninety-five metres exactly, which is the one length in the roster a Sounder's transit is written against |
+| Abyssal Submersible — the standing cohort | 4 | **SIG 22 / 28 / +20 · HYD 85 · PR-3 · 520 HP · 80 at 650 m / 2.7 s · 60 m/s · 95 m** ([units.md](units.md)) | The heavy half, and the half the order will not let cross quietly: 28 is three over the ceiling. Ninety-five metres exactly, which is the one length in the roster a Sounder's transit is written against |
 | Cantor — the dome | 1 | SIG 35 · HYD 80 · **+25 HYD within 1,200 m, capped at 95** ([units.md](units.md)) | The galleries' own instrument, lent up to the calling and standing where the galleries stand — at 2,900 m, a hundred metres off the bench's own floor. Structure, not hull; placed, never moved; and standing seventy-five metres off the line of what comes up the trench at 10:40, and a hundred metres below it |
 
 **All sixteen carry one role.** `MissionUnit.role` is singular and the ledger measures one role,
@@ -336,8 +336,8 @@ the depth the called are seated at**. Against the ×0.4 the faction is heard thr
 water, it grows interested in a cruising Submersible inside **237 m** and commits inside **195**;
 an idle one, 204 and 168; a firing Chorister, 292 and 241. **A Chorister firing at its own full
 450 m reach reads 27.5 against an Interest of 55 and does not register at all** — so twelve of
-them, at 20 a second each, take a 9,000-point colossus apart in **37.5 seconds** without it ever
-turning, and eight do it in fifty-six. The half that can cross is also the half that can render
+them, at 13.3 a second each, take a 9,000-point colossus apart in **56.25 seconds** without it
+ever turning, and eight do it in eighty-four. The half that can cross is also the half that can render
 the thing in the crossing, and it cannot do both at once, and that is the whole of the last five
 minutes.
 
