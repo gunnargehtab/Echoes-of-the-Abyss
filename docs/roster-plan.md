@@ -209,21 +209,29 @@ is used four ways. Each wave is one pull request and one row in
 | 5 — line and anchor | Caisson, Reed, Bower | none | the Consortium and Commune doctrines stop buying Corvettes |
 | 6 — the commons | none | none | a decision, from the harness: retire the Light Scout, Corvette and Cruiser from the bars, or keep them as the surplus market |
 
-**Wave 0** is the part that is not glamorous and cannot be skipped:
+**Wave 0** is the part that is not glamorous and cannot be skipped. It is issue #498, and it
+settled four things:
 
-- `packages/shared/test/units.test.ts` encodes *exactly two hulls a navy* as a
-  `Record<Faction, [UnitKind, UnitKind]>`, pins the Dredge as the only PR-4 hull, and holds
-  the `sigWorking` and `mineMagazine` sets by exact list. Generalise all three to per-yard
-  partitions and per-navy lists before the first wave, or every wave rewrites them.
-- The balance report sums `lossesByKind` into one number. Add a per-kind row, because a
-  wave is judged on whether its hulls fought and died in proportion, and #458 showed what a
-  kind-blind loss column hides.
-- The opening kit in `Match.spawnStartingBase` is faction-blind. Key it per navy — a scout,
-  two line hulls, a harvester — so wave 2 and wave 5 can put a navy's own hulls in its
+- `packages/shared/test/units.test.ts` used to encode *exactly two hulls a navy* as a
+  `Record<Faction, [UnitKind, UnitKind]>`, pin the Dredge as the only PR-4 hull, and hold
+  the `sigWorking` and `mineMagazine` sets by exact list. It now holds one per-navy table
+  that a wave appends to, and invariants a wave may not break: every locked hull sits in its
+  navy's row and at exactly one yard, every navy has a hull at each rung, the Directorate
+  owns every PR-4 hull, and the commons clock nothing.
+- The balance report used to sum `lossesByKind` into one number. It now carries a per-hull
+  table under the per-faction one, because a wave is judged on whether its hulls fought and
+  died in proportion, and #458 showed what a kind-blind loss column hides.
+- The opening kit in `Match.spawnStartingBase` was faction-blind. It now reads
+  `OPENING_ESCORT`, keyed per navy and holding the same scout and two Corvettes for all four,
+  so the baseline did not move and so wave 2 and wave 5 can put a navy's own hulls in its
   opening without touching the spawn again.
-- `PHANTOM_HULLS` in the Echo Layer is a hand list of the commons plus the Directorate's
-  Chorister. Decide the rule once: a false return may claim any hull its *observer's enemy*
-  could field, and derive the list from `unitAvailableTo` rather than maintaining it.
+- `PHANTOM_HULLS` in the Echo Layer was a hand list of the commons plus the Directorate's
+  Chorister. The rule is now derived: a false return may claim any hull one of its
+  *observer's enemies on the map* could field, from `unitAvailableTo`, and each phantom
+  picks a navy among those present. A Tender is only ever faked against the Consortium and a
+  Clarion only against the Order; the Chorister, whose lock is a price, is faked against
+  anyone ([economy.md](economy.md) §6). [systems-echo.md](systems-echo.md) §3 says the same
+  in words.
 
 **Wave 6** is a decision the harness makes, not this document. If after five waves every
 doctrine builds its own line and the commons are dead weight on the bar, retire them from
@@ -251,7 +259,8 @@ entry for an aura hull, a new branch for a transport or a siege hull).
 magazine; a branch in `hullEffects.ts`, `auras.ts` or the ordnance system; a new component in
 `spawnUnit` only when no stat field implies it. The replay format does not bump for an
 additive hull, and does bump the moment a wave changes an existing hull, the opening kit or a
-shared system — wave 0 and wave 2 both will.
+shared system — wave 2 will. Wave 0 did not: it keyed the kit without changing it, and a
+phantom's class decides nothing a recording can see.
 
 **Required to be judged.** A `ttkBands.test.ts` block for every armed hull; a behaviour test
 in the `rungRoster.test.ts` register for every effect hull; the four-faction baseline and the
@@ -311,19 +320,22 @@ grants from a hull all exist and are reused, which is most of the matrix.
 
 ## 8. Open questions
 
-Three the plan does not settle, for the person who owns the design:
+Two the plan does not settle, for the person who owns the design:
 
 1. **Retire the commons?** Wave 6 says the harness decides. The alternative is a design
    decision now — the Light Scout, Corvette and Cruiser become the *surplus market*,
    buildable by everyone at a premium, and the fiction ([culture.md](culture.md)) gets a
    sentence about who sells them.
-2. **Twelve, or fewer?** Nine own hulls a navy is the target. If the answer is that the
-   Commune should field seven and the Directorate eleven — *very many* is also an argument
-   about roster width — the matrix takes uneven columns and the waves stay as they are.
-3. **Carried hulls and hidden information.** A Freighter that dies with six berths aboard
+2. **Carried hulls and hidden information.** A Freighter that dies with six berths aboard
    tells its killer what it carried the moment they are not there. Whether the carried hulls
    are announced at Tier 3 on the carrier, or never, is a rule for
    [systems-echo.md](systems-echo.md) before wave 1 writes a line of code.
+
+And one that was: **twelve a navy stays the target.** *Very many* is an argument about roster
+width too, and the Commune could end at seven and the Directorate at eleven — but that is a
+finding for a wave to make, not a shape to draw in advance. The matrix keeps even columns,
+and a cell that cannot be argued stays empty rather than being filled to reach the number
+(decided on #495 with wave 0).
 
 ---
 
