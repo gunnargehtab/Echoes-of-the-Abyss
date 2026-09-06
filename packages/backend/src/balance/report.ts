@@ -19,7 +19,15 @@
  * harness can honestly say.
  */
 
-import { Faction, SIM, ThermoclineZone, UNIT_STATS, type UnitKind } from '@echoes/shared';
+import {
+  Faction,
+  SIM,
+  STRUCTURE_STATS,
+  ThermoclineZone,
+  UNIT_STATS,
+  type StructureKind,
+  type UnitKind,
+} from '@echoes/shared';
 import type { MatchTelemetryResult, PlayerTelemetry } from './telemetry.ts';
 
 const FACTION_NAME: Record<Faction, string> = {
@@ -47,6 +55,19 @@ export interface FactionSummary {
   /** Nodules banked plus spent, per simulated minute. */
   incomePerMinute: number;
   biomassPerMinute: number;
+  /**
+   * Crystal earned per simulated minute — the third account, and the one a
+   * report could not previously see at all.
+   *
+   * Here for the reason #518 exists. Half the roster is priced in crystal or
+   * Biomass (docs/economy.md §8), a commander that cannot fill those accounts
+   * cannot field what they buy however well it saves, and until this column the
+   * only symptom was a hull row of zeros. The Directorate is the case that
+   * makes the point: it commissions a Slipway in nine matches of ten and builds
+   * neither hull the yard is for, because both are priced in accounts it earns
+   * a tenth of what they cost.
+   */
+  crystalPerMinute: number;
   /** Mean of the per-sample loudest own hull. */
   meanPeakSig: number;
   /** Seconds per match with somebody holding Bearing or better. */
@@ -87,6 +108,29 @@ export interface FactionSummary {
    * a line that broke. A kind that is absent was never lost.
    */
   lossesPerMatchByKind: Partial<Record<UnitKind, number>>;
+  /**
+   * Hulls *built* per match, by kind — the other half of the loss table.
+   *
+   * A loss column cannot tell a hull that was never built from one that was
+   * built and lived, and the two are opposite findings about a wave. #518 was
+   * opened on three zeros in this table's loss half and read them as "never
+   * built"; only this column can say so.
+   */
+  buildsPerMatchByKind: Partial<Record<UnitKind, number>>;
+  /**
+   * Structures commissioned per match, by kind — how far up its own tech tree
+   * this navy actually got.
+   *
+   * The column #518 was opened for. Three waves of docs/roster-plan.md §3 put
+   * their hulls behind the Slipway, the loss table read 0.0 for every one of
+   * them in every duel, and the report had no way to say whether that was a
+   * finding about the hulls or about the yard — a hull never built never dies,
+   * and a kind-blind zero looks exactly like a kind that fought and survived.
+   *
+   * Read beside the loss table, not instead of it: this says what a navy
+   * reached, that says what it spent.
+   */
+  structuresPerMatchByKind: Partial<Record<StructureKind, number>>;
   /** Share of hull-time spent below the Shelf. */
   deepTimeShare: number;
   /**
@@ -222,18 +266,26 @@ function distribution(values: number[]): Distribution {
 }
 
 /**
- * Losses per match for each hull kind any of these players lost, in
- * `UnitKind` order so the report's rows never reorder between runs.
+ * A per-kind tally, per match, in enum order so the report's rows never
+ * reorder between runs.
+ *
+ * One function for all three of these tallies — hulls built, hulls lost,
+ * structures commissioned — because they are the same arithmetic over the same
+ * shape of record, and three copies of it would be three places for the divisor
+ * to drift.
  */
-function lossesByKind(players: readonly PlayerTelemetry[]): Partial<Record<UnitKind, number>> {
-  const totals = new Map<UnitKind, number>();
+function perMatchByKind<Kind extends number>(
+  players: readonly PlayerTelemetry[],
+  pick: (player: PlayerTelemetry) => Record<number, number>
+): Partial<Record<Kind, number>> {
+  const totals = new Map<Kind, number>();
   for (const player of players) {
-    for (const [kind, count] of Object.entries(player.lossesByKind)) {
-      const k = Number(kind) as UnitKind;
+    for (const [kind, count] of Object.entries(pick(player))) {
+      const k = Number(kind) as Kind;
       totals.set(k, (totals.get(k) ?? 0) + count);
     }
   }
-  const out: Partial<Record<UnitKind, number>> = {};
+  const out: Partial<Record<Kind, number>> = {};
   for (const kind of [...totals.keys()].sort((a, b) => a - b)) {
     out[kind] = totals.get(kind)! / players.length;
   }
@@ -279,6 +331,7 @@ export function summarise(results: MatchTelemetryResult[]): BatchSummary {
       winRate: decided.length === 0 ? 0 : wins / decided.length,
       incomePerMinute: mean(rows.map((r) => r.player.nodulesEarned / lifetimeMinutes(r))),
       biomassPerMinute: mean(rows.map((r) => r.player.biomassEarned / lifetimeMinutes(r))),
+      crystalPerMinute: mean(rows.map((r) => r.player.crystalEarned / lifetimeMinutes(r))),
       meanPeakSig: mean(rows.map((r) => mean(r.player.peakSig))),
       secondsTracked: mean(rows.map((r) => r.player.secondsTracked)),
       // Meaned over the matches this navy actually met somebody in. A match
@@ -300,7 +353,18 @@ export function summarise(results: MatchTelemetryResult[]): BatchSummary {
       lossesPerMatch: mean(
         rows.map((r) => Object.values(r.player.lossesByKind).reduce((a, b) => a + b, 0))
       ),
-      lossesPerMatchByKind: lossesByKind(rows.map((r) => r.player)),
+      lossesPerMatchByKind: perMatchByKind<UnitKind>(
+        rows.map((r) => r.player),
+        (p) => p.lossesByKind
+      ),
+      buildsPerMatchByKind: perMatchByKind<UnitKind>(
+        rows.map((r) => r.player),
+        (p) => p.unitsBuiltByKind
+      ),
+      structuresPerMatchByKind: perMatchByKind<StructureKind>(
+        rows.map((r) => r.player),
+        (p) => p.structuresBuiltByKind
+      ),
       deepTimeShare: mean(
         rows.map((r) => {
           const bands = Object.values(r.player.hullSecondsByBand);
@@ -578,34 +642,82 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
   lines.push('## Per faction');
   lines.push('');
   lines.push(
-    '| Faction | Matches | Decided | Win rate | Nodules/min | Biomass/min | Mean SIG | ' +
-      'Tracked, s | Found enemy, s | Throttled down | Losses | Below the Shelf | Under the layer |'
+    '| Faction | Matches | Decided | Win rate | Nodules/min | Crystal/min | Biomass/min | ' +
+      'Mean SIG | Tracked, s | Found enemy, s | Throttled down | Losses | Below the Shelf | ' +
+      'Under the layer |'
   );
-  lines.push('| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |');
+  lines.push(
+    '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |'
+  );
   for (const f of summary.factions) {
     lines.push(
       `| ${FACTION_NAME[f.faction]} | ${f.matches} | ${f.decided} | ${winRate(f)} | ` +
-        `${f.incomePerMinute.toFixed(0)} | ${f.biomassPerMinute.toFixed(1)} | ` +
+        `${f.incomePerMinute.toFixed(0)} | ${f.crystalPerMinute.toFixed(1)} | ` +
+        `${f.biomassPerMinute.toFixed(1)} | ` +
         `${f.meanPeakSig.toFixed(0)} | ${f.secondsTracked.toFixed(0)} | ` +
         `${Number.isFinite(f.firstEnemyContactS) ? f.firstEnemyContactS.toFixed(0) : '—'} | ` +
         `${pct(f.throttledDownShare)} | ${f.lossesPerMatch.toFixed(1)} | ${pct(f.deepTimeShare)} | ${pct(f.belowLayerShare)} |`
     );
   }
   lines.push('');
-  // One row per hull anybody lost, one column per navy, so a wave's hulls
-  // can be read against the commons they were meant to replace.
-  const lostKinds = [
-    ...new Set(summary.factions.flatMap((f) => Object.keys(f.lossesPerMatchByKind).map(Number))),
+  // One row per hull anybody built or lost, one column per navy, so a wave's
+  // hulls can be read against the commons they were meant to replace.
+  //
+  // Built *and* lost, in that order, because either number alone is ambiguous
+  // in the direction a wave is judged in. A hull with no losses was never
+  // built or was never caught, and those are opposite findings; a hull built
+  // in numbers and never lost is a hull sitting at home. #518 is what reading
+  // only the second half costs — three of wave 3's four hulls read 0.0 and the
+  // report could not say which zero it was.
+  const hullKinds = [
+    ...new Set(
+      summary.factions.flatMap((f) => [
+        ...Object.keys(f.buildsPerMatchByKind).map(Number),
+        ...Object.keys(f.lossesPerMatchByKind).map(Number),
+      ])
+    ),
   ].sort((a, b) => a - b) as UnitKind[];
-  if (lostKinds.length > 0) {
-    lines.push('## Losses per match, by hull');
+  if (hullKinds.length > 0) {
+    lines.push('## Hulls per match — built / lost');
     lines.push('');
     lines.push(`| Hull | ${summary.factions.map((f) => FACTION_NAME[f.faction]).join(' | ')} |`);
     lines.push(`| --- |${summary.factions.map(() => ' --- |').join('')}`);
-    for (const kind of lostKinds) {
-      const cells = summary.factions.map((f) => (f.lossesPerMatchByKind[kind] ?? 0).toFixed(1));
+    for (const kind of hullKinds) {
+      const cells = summary.factions.map(
+        (f) =>
+          `${(f.buildsPerMatchByKind[kind] ?? 0).toFixed(1)} / ` +
+          `${(f.lossesPerMatchByKind[kind] ?? 0).toFixed(1)}`
+      );
       lines.push(`| ${UNIT_STATS[kind].name} | ${cells.join(' | ')} |`);
     }
+    lines.push('');
+    lines.push('_The opening escort is not counted as built: it is a gift, not a decision._');
+    lines.push('');
+  }
+  // What each navy reached, under what each navy spent — the two halves of the
+  // same question, and the pair #518 needed to read a wave's gate. Every kind
+  // anybody raised gets a row, so a zero in a navy's column is that navy never
+  // raising one rather than a row nobody thought to print.
+  const builtKinds = [
+    ...new Set(
+      summary.factions.flatMap((f) => Object.keys(f.structuresPerMatchByKind).map(Number))
+    ),
+  ].sort((a, b) => a - b) as StructureKind[];
+  if (builtKinds.length > 0) {
+    lines.push('## Structures commissioned per match');
+    lines.push('');
+    lines.push(
+      `| Structure | ${summary.factions.map((f) => FACTION_NAME[f.faction]).join(' | ')} |`
+    );
+    lines.push(`| --- |${summary.factions.map(() => ' --- |').join('')}`);
+    for (const kind of builtKinds) {
+      const cells = summary.factions.map((f) => (f.structuresPerMatchByKind[kind] ?? 0).toFixed(1));
+      lines.push(`| ${STRUCTURE_STATS[kind].name} | ${cells.join(' | ')} |`);
+    }
+    lines.push('');
+    lines.push(
+      '_The opening Bastion and Foundry are not counted: they are a gift, not a decision._'
+    );
     lines.push('');
   }
   lines.push(

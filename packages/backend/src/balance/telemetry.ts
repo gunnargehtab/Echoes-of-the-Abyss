@@ -113,6 +113,39 @@ export interface PlayerTelemetry {
   hullSecondsByZone: Record<ThermoclineZone, number>;
   /** Units lost, by kind ordinal. Counted by id disappearing from their own list. */
   lossesByKind: Record<number, number>;
+  /**
+   * Units built, by kind ordinal — the same list read the other way round.
+   *
+   * The half of #518's measurement that is about hulls. `lossesByKind` cannot
+   * tell a hull that was never built from one that was built and survived, and
+   * every wave of docs/roster-plan.md §4 is gated on hulls whose whole point is
+   * that they are expensive and rare: the wave-3 gate read three zeros in the
+   * loss table and could not say whether the ordnance hulls never fought or
+   * never existed. This says which.
+   */
+  unitsBuiltByKind: Record<number, number>;
+  /**
+   * Structures commissioned, by kind ordinal — what this navy actually reached.
+   *
+   * The measurement #518 found missing. Every reading in the report about
+   * whether a commander gets up its tech tree was inferred from the hulls that
+   * *died*, and a hull that is never built never dies: three waves of the
+   * roster expansion put their hulls behind the Slipway, the loss table showed
+   * zeros for all of them in every duel, and nothing in the harness could say
+   * whether that meant the hulls were bad or the yard was never bought.
+   *
+   * Counted on the rise rather than on the order, because a commander that
+   * asks for a build the server refuses asks again on every observation
+   * (`nearHome`, the placement spiral) — so orders count intent hundreds of
+   * times over and structures count it once. The opening Bastion and Foundry
+   * are excluded for the reason the opening stockpile is not income: they are
+   * a gift, not a decision.
+   *
+   * The blind spot is deliberate and narrow: a site killed on the way up never
+   * rises and so never appears here. That is what `structuresLost` is for, and
+   * a navy that laid a rung and lost it reads as a loss with no build.
+   */
+  structuresBuiltByKind: Record<number, number>;
   structuresLost: number;
   /**
    * Gross income: every rise in the stockpile, summed.
@@ -165,6 +198,23 @@ export class MatchTelemetry {
   /** Own entity ids seen last tick, per slot, to spot a loss as a deletion. */
   private readonly lastUnits = new Map<number, Map<number, number>>();
   private readonly lastStructures = new Map<number, Map<number, number>>();
+  /**
+   * Which of a slot's structures were finished at the previous observation.
+   *
+   * A transition rather than a set of ids seen once, because entity ids are
+   * **recycled** — `match.ts` says so where it explains why wire lists are
+   * sorted rather than emitted in query order — and a lifetime set would credit
+   * a rebuilt Refinery to whatever died and freed its id.
+   */
+  private readonly lastComplete = new Map<number, Set<number>>();
+  /**
+   * Slots whose opening base has been recorded.
+   *
+   * Deliberately not pre-populated in the constructor, so an absent slot means
+   * "never observed" — the same trick `lastPurse` uses, and here for the same
+   * reason.
+   */
+  private readonly opened = new Set<number>();
   private firstContact: number | null = null;
   private firstEnemyContact: number | null = null;
   private firstBlood: number | null = null;
@@ -208,6 +258,8 @@ export class MatchTelemetry {
           [ThermoclineZone.Below]: 0,
         },
         lossesByKind: {},
+        unitsBuiltByKind: {},
+        structuresBuiltByKind: {},
         structuresLost: 0,
         nodulesEarned: 0,
         crystalEarned: 0,
@@ -295,7 +347,7 @@ export class MatchTelemetry {
       }
 
       this.accrueIncome(player, snapshot);
-      this.countLosses(tick, player, snapshot);
+      this.countBuildsAndLosses(tick, player, snapshot);
       if (snapshot.driftHealth.length > 0) this.drift = snapshot.driftHealth;
       if (sampling) this.sample(player, snapshot);
     }
@@ -341,13 +393,26 @@ export class MatchTelemetry {
   }
 
   /**
-   * A loss is an id that was in this player's own list and is not any more.
+   * What appeared and what went away, both read off the player's own lists.
    *
-   * Their own units are always sent in full, so this is exact — no inference,
-   * no fog. The kind is remembered from the last tick the hull existed,
-   * because by the time it is gone there is nothing left to ask.
+   * A loss is an id that was in this player's own list and is not any more; a
+   * build is an id that was not and now is. Their own units and structures are
+   * always sent in full, so both are exact — no inference, no fog. The kind of
+   * a loss is remembered from the last tick the hull existed, because by the
+   * time it is gone there is nothing left to ask.
    */
-  private countLosses(tick: number, player: PlayerTelemetry, snapshot: EchoSnapshot): void {
+  private countBuildsAndLosses(
+    tick: number,
+    player: PlayerTelemetry,
+    snapshot: EchoSnapshot
+  ): void {
+    // The opening base and its escort are a gift, not a decision, so the first
+    // observation of a slot records what is standing and credits none of it —
+    // the rule `accrueIncome` applies to the opening stockpile, applied to the
+    // things that stockpile could have bought.
+    const opening = !this.opened.has(player.slot);
+    this.opened.add(player.slot);
+
     const previousUnits = this.lastUnits.get(player.slot)!;
     const currentUnits = new Map<number, number>();
     for (const unit of snapshot.units) currentUnits.set(unit.id, unit.kind);
@@ -356,6 +421,17 @@ export class MatchTelemetry {
       if (currentUnits.has(id)) continue;
       player.lossesByKind[kind] = (player.lossesByKind[kind] ?? 0) + 1;
       if (this.firstBlood === null) this.firstBlood = tick;
+    }
+    // A hull is built the tick its id first appears in its owner's own list,
+    // which is the tick the yard launches it. Landing is not a birth: a
+    // carried hull keeps its id and stays in this list the whole time it is
+    // aboard, carrying `aboard` instead of a position (`match.ts`, the own-unit
+    // snapshot), so a Freighter emptying its hold adds nothing here.
+    if (!opening) {
+      for (const [id, kind] of currentUnits) {
+        if (previousUnits.has(id)) continue;
+        player.unitsBuiltByKind[kind] = (player.unitsBuiltByKind[kind] ?? 0) + 1;
+      }
     }
     this.lastUnits.set(player.slot, currentUnits);
 
@@ -370,6 +446,22 @@ export class MatchTelemetry {
       if (this.firstBlood === null) this.firstBlood = tick;
     }
     this.lastStructures.set(player.slot, currentStructures);
+
+    // A structure is counted on the *rise* rather than on the placement, which
+    // is the one place these two counts differ. A hull exists the moment it
+    // exists; a site is a hole in the ground for up to two minutes, and a
+    // commander that laid one it never got to use did not reach that rung.
+    // `buildProgress` crossing 1 is that moment.
+    const wasComplete = this.lastComplete.get(player.slot);
+    const nowComplete = new Set<number>();
+    for (const structure of snapshot.structures) {
+      if (structure.buildProgress < 1) continue;
+      nowComplete.add(structure.id);
+      if (opening || wasComplete?.has(structure.id) === true) continue;
+      player.structuresBuiltByKind[structure.kind] =
+        (player.structuresBuiltByKind[structure.kind] ?? 0) + 1;
+    }
+    this.lastComplete.set(player.slot, nowComplete);
   }
 
   finish(finalTick: number, winnerSlot: number | null, timedOut: boolean): MatchTelemetryResult {

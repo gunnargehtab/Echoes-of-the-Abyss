@@ -208,8 +208,8 @@ is used four ways. Each wave is one pull request and one row in
 | 1 — transports (done, #501) | Freighter, Drifter, Verger, Antiphon | embark / disembark, carried hulls unresolvable | a carried force crosses the Shelf line in a mission test; the AI uses a transport in ≥ 1 of 4 doctrines |
 | 2 — scouts (done, #506) | Beacon, Glider, Acolyte, Herald | engine-off glide; cheap cadence ping | first-classified-enemy time per navy moves, and differently per navy |
 | 3 — ordnance (done, #507) | Broadside, Weaver, Thurible, Lance | noisemakers laid from a hull; upward depth charge | the weapon triangle reads in duels: torpedo navy beats heavy pushes, decoy navy survives them |
-| 4 — siege | Furnace, Blight, Lure, Tocsin | structure-only damage; spore over time; fauna weighting from a hull | match length falls without the win rates spreading |
-| 5 — line and anchor | Caisson, Reed, Bower | none | the Consortium and Commune doctrines stop buying Corvettes |
+| 4 — siege | Furnace, Blight, Lure, Tocsin | structure-only damage; spore over time; fauna weighting from a hull | match length falls without the win rates spreading — read in the four-faction baseline, not a duel (#518) |
+| 5 — line and anchor | Caisson, Reed, Bower | none | the Consortium and Commune doctrines stop buying Corvettes; the Bower is judged where the Slipway is reached (#518) |
 | 6 — the commons | none | none | a decision, from the harness: retire the Light Scout, Corvette and Cruiser from the bars, or keep them as the surplus market |
 
 **Wave 0** is the part that is not glamorous and cannot be skipped. It is issue #498, and it
@@ -289,13 +289,10 @@ than the fall. What the wave added there was the hull, the rack that cycles for 
 tests that had never been written.
 
 **Wave 3's gate is not met, and the reason is not wave 3's.** "The triangle reads in the
-duels" cannot be read, because *no Slipway hull is built in any duel* — not the Broadside,
-the Thurible or the Lance, and not the Bulwark, the Dredge or the Reciter either. The
-commander reaches the rung occasionally in a four-way match (the Knights lose 0.1 Reciters a
-match) and never in a duel, so three of this wave's four hulls are invisible to the one
-measurement that was supposed to judge them. That is a pre-existing limit of
-`commandConstruction` rather than anything this wave introduced, and it will block waves 4
-and 5 identically: their hulls are Slipway hulls too. Filed as #518.
+duels" cannot be read: no Slipway hull is built in any duel — not the Broadside, the
+Thurible or the Lance, and not the Bulwark, the Dredge or the Reciter either. Three of this
+wave's four hulls are invisible to the one measurement that was supposed to judge them, and
+the same is true of waves 4 and 5, whose hulls are Slipway hulls too. Filed as #518.
 
 What *is* measured: the Weaver is built and lost (0.2 a match for the Commune in the
 four-faction baseline), so the one Foundry hull of the four is a behaviour and not just a
@@ -304,6 +301,59 @@ laid decoy's figures against the countermeasure's, the cone gate refusing a bear
 and keeping the shot in the tube, the committed solution, the charge that floats and the
 rack that cycles for it. That is a weaker gate than the duels honestly, and it is the gate
 this wave actually passed.
+
+### What #518 found, and where these hulls are judged from now on
+
+The reading above was inferred from hulls that *died*, because losses were the only per-kind
+column the report had — and a hull that is never built never dies. The report now counts
+what a navy **built** beside what it lost, and what it **commissioned** beside neither, and
+with those two columns the diagnosis is not the one the issue assumed.
+
+**The rung is reached.** A Slipway is commissioned up to 0.6 times a match across the six
+duels and 0.3–1.0 in the four-faction baseline — most often by the Directorate, which raises
+one in nearly every match it plays. `commandConstruction`'s saving rule (#491) works. What
+never happens is the hull, and there are three separate reasons for that.
+
+- **Nobody saved for a hull behind the rung.** The composition cycle spends every purse it
+  is handed on the next 150 nodule Corvette, so a 700 nodule Bulwark is never a moment away
+  from being affordable — the argument the Sower's gate already makes one deck down. In the
+  Consortium/Knights duel, the pairing where it raises the rung most often, its bank after
+  the yard rose peaked at 600 against that 700 and spent most of the time under 300. The
+  rung's hulls now save on the transport's **duty cycle**: an observation that cannot pay
+  for one buys nothing, for a window, and then the cycle gets a turn. Not the Sower's
+  unconditional hold — a duel is decided in exactly the minutes the yard finishes in, and a
+  commander that stops building outright has traded the Bulwark for the fight the Bulwark
+  was for. And not from any bank at all: below half the price it keeps buying its line,
+  because a hold that cannot close is a standing tax on a hull the navy was not going to
+  reach.
+- **A duel ends before the yard is worth having, and no flag fixes that.** The Slipway rises
+  around 420 s. A duel's median length is 272–650 s — against a 25 minute cap, because duels
+  do not end on the clock but when one commander concedes — so the yard gets somewhere
+  between fifty seconds and four minutes of use, and a raised `--max-minutes` adds none of
+  it. The long-form duel #518 proposed therefore does not exist to be built. **The
+  four-faction baseline is where a Slipway hull is measurable**: the yard rises at the same
+  420 s into a median just over 1,000 s, which is about ten minutes of yard rather than two, and it is
+  the scenario waves 4 and 5 are judged in.
+- **The Directorate cannot pay for either of its rung hulls, anywhere.** The Dredge is 40
+  crystal and 60 Biomass, the Thurible 40 Biomass — against a measured 0.0 crystal and 10.0
+  Biomass a match. That is not a saving problem and no window closes it; it is a navy whose
+  two rung hulls are priced in accounts its commander barely fills, and it is the navy that
+  reaches the rung most. The report now carries a Crystal/min column beside Biomass/min so
+  the next reader sees it in the table rather than inferring it from a row of zeros. Filed
+  as #520.
+
+What the fix moves, measured on a paired thirty-match baseline run before and after on the
+same seeds: the Knights build **ten** Reciters where they built two, and the Consortium
+builds its first Broadside — one navy's heavy and one corner of §2's triangle, where before
+there was nothing to read at all. The Lance is unchanged at one in thirty. The win rates
+move less than the noise on twenty-odd decided matches, and in both directions on different
+seed sets. The Bulwark, the Dredge and the Thurible are still never built, for the second
+and third reasons above.
+
+Wave 3's gate stays unmet and its hulls stay held by tests. What has changed is that the
+gate is now *readable*: what it reads is a list of named causes rather than a column of
+zeros, and two of the three are now somebody's issue rather than an absence nobody could
+see.
 
 **Wave 6** is a decision the harness makes, not this document. If after five waves every
 doctrine builds its own line and the commons are dead weight on the bar, retire them from

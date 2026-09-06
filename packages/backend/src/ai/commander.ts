@@ -593,6 +593,19 @@ const OWN_ORDNANCE: Record<Faction, UnitKind> = {
 };
 
 /**
+ * Whether a hull is built behind the rung — at the Slipway and nowhere else.
+ *
+ * Derived from `PRODUCIBLE` rather than listed, because docs/units.md already
+ * makes the two yards' rosters disjoint ("the Slipway produces each navy's
+ * second exclusive hull, and nothing the Foundry already builds") and a second
+ * list here would be a copy of that one, free to drift, in the file least
+ * likely to be edited when a wave adds a hull.
+ */
+function atTheRung(kind: UnitKind): boolean {
+  return PRODUCIBLE[StructureKind.Slipway]?.includes(kind) === true;
+}
+
+/**
  * How close a contact has to be before an ordnance hull spends anything on it.
  *
  * Inside a torpedo's 3,200 m run with room for the target to still be there
@@ -672,6 +685,71 @@ const LIFT = {
   SAVE_S: 45,
   /** The carrier stops short of the objective by a gun's reach, and lands there. */
   STANDOFF_M: RANGE.PUSH_ENGAGE_M,
+} as const;
+
+/**
+ * Saving for what the rung was bought *for*.
+ *
+ * The Slipway is the most expensive thing a commander buys and `#491` taught it
+ * to save for the yard; nothing taught it to save for the hulls the yard
+ * builds, and #518 is what that cost. Measured on the six duels: the Consortium
+ * commissions a Slipway in six matches of ten — the rung *is* reached — and
+ * builds a Bulwark in none of them. The yard rises around 420 s, the duel ends
+ * between 470 and 670, and across every observation in between the bank never
+ * passed 600 against a 700 nodule hull, because the composition cycle spends
+ * every purse it is handed on the next 150 nodule Corvette. A hull priced above
+ * a navy's working capital is not a hull it is ever a moment away from
+ * affording, which is the sentence the Sower's gate already makes one deck
+ * down.
+ *
+ * So the rung's hulls save, on the transport's **duty cycle** rather than the
+ * Sower's unconditional hold. The difference is what the harness said it should
+ * be: this hold falls in the minutes a duel is decided in, and a commander that
+ * stops buying hulls outright while the enemy is closing has traded a Bulwark
+ * for the fight the Bulwark was for. Held for a window, then the cycle gets an
+ * observation and the holding starts again — the bank climbs and the army still
+ * grows, slower.
+ */
+const RUNG = {
+  /**
+   * Seconds the purse is held for a hull behind the rung before the cycle gets
+   * a turn.
+   *
+   * Twice `LIFT.SAVE_S`, and the prices are why: a transport is 260 nodules
+   * against a working capital near 200, so 45 s of a Consortium's ~4.5/s
+   * closes that gap on its own. The heaviest hull the rung builds is 700, and
+   * a window that cannot close *any* navy's gap inside one hold is a window
+   * that only ever taxes the army — it would buy the Corvette at the end of
+   * every cycle and never the hull the cycle is for.
+   *
+   * TUNABLE. The balance harness is the argument about it, and the argument is
+   * two-sided: longer fields the rung's hulls more often, shorter keeps more
+   * hulls in the water while the saving happens.
+   */
+  SAVE_S: 120,
+  /**
+   * How much of the price has to be in the bank already before the purse is
+   * held at all, as a fraction.
+   *
+   * The gate that stops this rule from being a tax. Without it the hold fires
+   * from any bank at all, so a Consortium whose 700 nodule Bulwark is four
+   * Corvettes away holds for a window, buys one hull, and holds again — for the
+   * rest of the match, because at that income the want never closes. The line
+   * pays for a hull the navy was not going to reach.
+   *
+   * The argument is that behaviour rather than a number, and deliberately so:
+   * measured over two paired thirty-match baselines on different seeds, the
+   * ungated hold moved the win rates about twice as far from the pre-change
+   * baseline as the gated one does, at no cost in rung hulls built — but a win
+   * rate over twenty-odd decided matches carries ten points of noise, so
+   * neither difference clears it on one seed set alone.
+   *
+   * Half is where a player stops: you do not stop building because you might
+   * one day afford a heavy, you stop when you can nearly afford one. Below it
+   * the commander keeps buying the line — which is also the state in which the
+   * line is what it actually needs.
+   */
+  SAVE_FROM: 0.5,
 } as const;
 
 /**
@@ -910,6 +988,16 @@ export class AiCommander implements AiPlayer {
   private commitUntilTick = -1;
   /** When the purse was first held for a transport, or -1 (see `LIFT.SAVE_S`). */
   private transportSaveSinceTick = -1;
+  /**
+   * The hull behind the rung the purse is currently being held for.
+   *
+   * `lastTick` is what makes the window a *streak* rather than a stopwatch left
+   * running while nobody is saving. Two wants share this record — the navy's
+   * ordnance hull and its heavy — and either can stop wanting between two
+   * observations, so a hold that is not renewed starts again from zero rather
+   * than expiring the instant it is next asked for. See `RUNG.SAVE_S`.
+   */
+  private rungSave: { kind: UnitKind; sinceTick: number; lastTick: number } | null = null;
   /** The transport plan, if the navy has a carrier afloat (see `LIFT`). */
   private lift: { carrierId: number; phase: 'loading' | 'sailing'; sinceTick: number } | null =
     null;
@@ -2034,9 +2122,61 @@ export class AiCommander implements AiPlayer {
         queuedOf(ownOrdnance);
       if (carried < 1) {
         const yard = this.freeYard(snapshot.structures, ownOrdnance);
-        if (yard !== null && this.affordUnit(ownOrdnance, purse)) {
-          out.push({ kind: 'produce', structureId: yard.id, unit: ownOrdnance });
-          return;
+        if (yard !== null) {
+          if (this.affordUnit(ownOrdnance, purse)) {
+            this.rungSave = null;
+            out.push({ kind: 'produce', structureId: yard.id, unit: ownOrdnance });
+            return;
+          }
+          // Three of the four are behind the rung, and out of pocket they were
+          // bought by luck: 400 nodules had to be standing in the bank at one
+          // of the observations between the yard rising and the duel ending.
+          // The Weaver is at the Foundry and is the one this never fires for —
+          // it is affordable out of an opening, which is what §3's "a screen is
+          // an opening decision" costs in nodules.
+          if (atTheRung(ownOrdnance) && this.holdForRung(ownOrdnance, purse, snapshot.tick)) {
+            return;
+          }
+        }
+      }
+    }
+
+    // The navy's heavy — the hull its composition puts behind the rung, and the
+    // reason the rung was bought (docs/units.md, "The rung, and two hulls a
+    // navy"). Wanted one at a time, on the ordnance hull's terms and for the
+    // same reason #518 records: the composition cycle can only select it at one
+    // exact army size, so a navy whose army passes through that size while
+    // holding less than the price simply never fields it. The cycle still buys
+    // a second when the navy is rich enough for the index to land there and pay
+    // out of pocket; this is only the floor of one.
+    //
+    // **Not** gated on the escort, unlike the ordnance hull above. `freeYard`
+    // already requires the Slipway, and the Slipway already requires 600
+    // nodules banked behind a met harvester target — a far later gate than half
+    // a massing size, and stacking the escort on top of it would be the circle
+    // #491 was about: the navy that has just spent everything on the yard is
+    // the one least able to hold an army while it saves for what the yard
+    // builds.
+    //
+    // The Commune has no entry here: its composition's Slipway hull is the
+    // Sower, which is unarmed, is bought by `WANTED_SEPARATELY`'s own gate
+    // below, and is not a heavy at all — "the doctrine is many, fast, fragile,
+    // so the Commune's heavy is not a heavy" (docs/roster-plan.md §3).
+    const ownHeavy = this.doctrine.composition.find(
+      (kind) => atTheRung(kind) && !WANTED_SEPARATELY.includes(kind)
+    );
+    if (ownHeavy !== undefined) {
+      const heavies =
+        snapshot.units.reduce((n, u) => n + (u.kind === ownHeavy ? 1 : 0), 0) + queuedOf(ownHeavy);
+      if (heavies < 1) {
+        const yard = this.freeYard(snapshot.structures, ownHeavy);
+        if (yard !== null) {
+          if (this.affordUnit(ownHeavy, purse)) {
+            this.rungSave = null;
+            out.push({ kind: 'produce', structureId: yard.id, unit: ownHeavy });
+            return;
+          }
+          if (this.holdForRung(ownHeavy, purse, snapshot.tick)) return;
         }
       }
     }
@@ -2189,6 +2329,53 @@ export class AiCommander implements AiPlayer {
       out.push({ kind: 'produce', structureId: yard.id, unit: wanted });
       return;
     }
+  }
+
+  /**
+   * Hold the purse against a hull behind the rung, for a window at a time.
+   *
+   * True means *stop spending this observation*: the caller returns, nothing is
+   * queued, and the bank the yards would have emptied climbs instead. False
+   * means the window is up (or waiting would not have helped), and the rest of
+   * the branch may buy what it likes — which is the half of the duty cycle that
+   * keeps the army growing while the saving happens.
+   *
+   * Waiting only ever closes a **nodule** gap, exactly as `commandConstruction`
+   * argues one deck up: crystal and Biomass arrive because a hauler went and
+   * got them (`commandCrystal`), so a hull short of either is not short of
+   * savings and holding its nodules back starves the yards for something the
+   * wait will never deliver. The Dredge and the Lance are both priced in a
+   * second account, so this is not a hypothetical for two of the four navies.
+   */
+  private holdForRung(kind: UnitKind, purse: Stockpile, tick: number): boolean {
+    const price = priceOf(statsFor(kind));
+    if (purse.crystal < price.crystal || purse.biomass < price.biomass) {
+      this.rungSave = null;
+      return false;
+    }
+    // Close enough that a window can finish it, or the hold is a standing tax
+    // on a hull the navy was never going to reach this match. See
+    // `RUNG.SAVE_FROM`.
+    if (purse.nodules < price.nodules * RUNG.SAVE_FROM) {
+      this.rungSave = null;
+      return false;
+    }
+    // Two observations of slack, because that is what an *unbroken* hold looks
+    // like at this commander's own cadence — a Veteran decides every 0.6 s and
+    // a Recruit every three, and a fixed number of ticks would mean a stricter
+    // rule for one of them than for the other.
+    const gapTicks = (SIM.TICK_HZ / SIM.ECHO_HZ) * this.tuning.cadenceTicks * 2;
+    const held =
+      this.rungSave !== null &&
+      this.rungSave.kind === kind &&
+      tick - this.rungSave.lastTick <= gapTicks
+        ? this.rungSave
+        : { kind, sinceTick: tick, lastTick: tick };
+    held.lastTick = tick;
+    this.rungSave = held;
+    if ((tick - held.sinceTick) / SIM.TICK_HZ < RUNG.SAVE_S) return true;
+    this.rungSave = null;
+    return false;
   }
 
   private affordUnit(kind: UnitKind, purse: Stockpile): boolean {
