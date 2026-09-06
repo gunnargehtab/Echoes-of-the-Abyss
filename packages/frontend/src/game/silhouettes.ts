@@ -49,6 +49,10 @@ export const HULL_LENGTH_M: Record<UnitKind, number> = {
   [UnitKind.Dredge]: statsFor(UnitKind.Dredge).hullLengthM,
   [UnitKind.Cantus]: statsFor(UnitKind.Cantus).hullLengthM,
   [UnitKind.Reciter]: statsFor(UnitKind.Reciter).hullLengthM,
+  [UnitKind.Freighter]: statsFor(UnitKind.Freighter).hullLengthM,
+  [UnitKind.Drifter]: statsFor(UnitKind.Drifter).hullLengthM,
+  [UnitKind.Verger]: statsFor(UnitKind.Verger).hullLengthM,
+  [UnitKind.Antiphon]: statsFor(UnitKind.Antiphon).hullLengthM,
 };
 
 /**
@@ -265,6 +269,74 @@ export const HULL_OUTLINE: Record<UnitKind, number[][]> = {
     [-0.1, -0.15],
     [0.14, -0.1],
     [0.44, -0.09],
+    [0.5, -0.03],
+  ],
+
+  // --- The transports (#501). A hold with a drive: what each silhouette has
+  // to say at RTS distance is *volume*, sized to the berths it carries, and
+  // each in its navy's register — the Consortium's slab, the Commune's pod,
+  // the Directorate's pressure hull, the Order's blade.
+
+  // A long slab-sided box, near-parallel flanks the whole length, a bluff
+  // bow and a heavy squared stern: the fattest outline in the roster, and
+  // the only one with no taper worth the name.
+  [UnitKind.Freighter]: [
+    [0.5, 0.16],
+    [0.42, 0.24],
+    [-0.4, 0.24],
+    [-0.5, 0.2],
+    [-0.5, -0.2],
+    [-0.4, -0.24],
+    [0.42, -0.24],
+    [0.5, -0.16],
+  ],
+  // A seed pod: a slim lens with the two bays as a swelling amidships and a
+  // single fin astern. Narrower than the Light Scout at the ends, wider at
+  // the middle.
+  [UnitKind.Drifter]: [
+    [0.5, 0.02],
+    [0.2, 0.12],
+    [-0.1, 0.13],
+    [-0.4, 0.06],
+    [-0.5, 0.03],
+    [-0.5, -0.03],
+    [-0.4, -0.06],
+    [-0.1, -0.13],
+    [0.2, -0.12],
+    [0.5, -0.02],
+  ],
+  // A pressure hull: a rounded, ribbed capsule with a listening dome forward
+  // and a heavy keel — the Precentor's family, twice the beam, with the four
+  // bays reading as a belly.
+  [UnitKind.Verger]: [
+    [0.5, 0.08],
+    [0.38, 0.18],
+    [0.1, 0.22],
+    [-0.3, 0.22],
+    [-0.46, 0.14],
+    [-0.5, 0.06],
+    [-0.5, -0.06],
+    [-0.46, -0.14],
+    [-0.3, -0.22],
+    [0.1, -0.22],
+    [0.38, -0.18],
+    [0.5, -0.08],
+  ],
+  // The Clarion's blade with a landing deck let into its back: the faceted
+  // bow, then the beam opening wide amidships for the three bays, and swept
+  // guard wings aft.
+  [UnitKind.Antiphon]: [
+    [0.5, 0.03],
+    [0.36, 0.1],
+    [0.1, 0.2],
+    [-0.2, 0.2],
+    [-0.42, 0.14],
+    [-0.5, 0.05],
+    [-0.5, -0.05],
+    [-0.42, -0.14],
+    [-0.2, -0.2],
+    [0.1, -0.2],
+    [0.36, -0.1],
     [0.5, -0.03],
   ],
 };

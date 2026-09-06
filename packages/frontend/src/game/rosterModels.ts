@@ -91,6 +91,12 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   [UnitKind.Dredge]: 'dredge',
   [UnitKind.Cantus]: 'cantus',
   [UnitKind.Reciter]: 'reciter',
+  // The transports (#501). No model yet: the procedural bake is gate 1's
+  // sanctioned state until one clears intake, and the slug is where it lands.
+  [UnitKind.Freighter]: 'freighter',
+  [UnitKind.Drifter]: 'drifter',
+  [UnitKind.Verger]: 'verger',
+  [UnitKind.Antiphon]: 'antiphon',
 };
 
 /** Every structure kind has an approved model; the Partial stays for the

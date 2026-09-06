@@ -46,6 +46,14 @@ import { eidOfLocalId } from './world.ts';
  * each pair below 4, where it had been appended, which read as the numbers
  * having gone backwards. They did not; they were shared.
  *
+ * 15: a hull in a hold (#501, docs/systems-echo.md §3). Two commands a
+ * player did not have — embark and disembark — and a state a replayed hull
+ * can be in that no v14 file can say: aboard a carrier, with no position of
+ * its own, dying when it dies. The state hash walks carried hulls by their
+ * carrier's ordinal, and a landing's twenty-second grant is hashed on its
+ * clock. A v14 file carries none of it and would replay identically under
+ * these rules; it is refused on the grounds every bump before it was.
+ *
  * Still 14 after the roster's ground (#498): the opening kit is read from a
  * per-navy table that holds the same three hulls for all four navies, and a
  * phantom's kind is drawn from what the navy it impersonates could field
@@ -173,7 +181,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 14;
+export const REPLAY_FORMAT_VERSION = 15;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =
@@ -206,6 +214,10 @@ export type ReplayCommand =
   | { tick: number; type: 'mine'; slot: number; unit: number }
   | { tick: number; type: 'depthcharge'; slot: number; unit: number; depth: number }
   | { tick: number; type: 'harvest'; slot: number; unit: number; node: number; queued: boolean }
+  /** Board a carrier (#501). Both are match-local ids, like `harvest`'s two. */
+  | { tick: number; type: 'embark'; slot: number; unit: number; carrier: number }
+  /** Land a carrier's hold. `unit` is the carrier. */
+  | { tick: number; type: 'disembark'; slot: number; unit: number }
   | { tick: number; type: 'throttle'; slot: number; unit: number; throttle: HarvestThrottle }
   | { tick: number; type: 'silent'; slot: number; unit: number; active: boolean }
   | { tick: number; type: 'ping'; slot: number; unit: number }
@@ -470,6 +482,12 @@ function applyCommand(match: Match, command: ReplayCommand): void {
       break;
     case 'harvest':
       match.orderHarvest(command.slot, eid(command.unit), eid(command.node), command.queued);
+      break;
+    case 'embark':
+      match.orderEmbark(command.slot, eid(command.unit), eid(command.carrier));
+      break;
+    case 'disembark':
+      match.orderDisembark(command.slot, eid(command.unit));
       break;
     case 'throttle':
       match.setThrottle(command.slot, eid(command.unit), command.throttle);

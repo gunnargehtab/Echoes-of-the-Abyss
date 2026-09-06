@@ -73,6 +73,14 @@ const HULL_ART_URL: Record<UnitKind, string> = {
   [UnitKind.Dredge]: cruiserUrl,
   [UnitKind.Cantus]: corvetteUrl,
   [UnitKind.Reciter]: cruiserUrl,
+  // The transports (#501), on the class their tonnage and their navy put
+  // them in until a model passes intake: the Consortium's and the
+  // Directorate's are working hulls, the Drifter is a raider's shell, the
+  // Antiphon is the Order's.
+  [UnitKind.Freighter]: siegeUrl,
+  [UnitKind.Drifter]: raiderUrl,
+  [UnitKind.Verger]: siegeUrl,
+  [UnitKind.Antiphon]: cruiserUrl,
 };
 
 /** Sprite resolution. 3 px per world metre keeps even the scout's hull crisp. */

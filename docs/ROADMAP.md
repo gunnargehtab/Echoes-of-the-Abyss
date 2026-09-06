@@ -499,7 +499,7 @@ the phase the build is in, not because the audit found them.
 | Work | Issue |
 | --- | --- |
 | Two exclusive hulls per faction, and one tech rung above crystal | [#436](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/436) |
-| A full line per navy — sixteen hulls across a role matrix in six waves, planned in [roster-plan.md](roster-plan.md); follows #436 | [#495](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/495) |
+| A full line per navy — sixteen hulls across a role matrix in six waves, planned in [roster-plan.md](roster-plan.md); follows #436. Wave 0 (the ground) and wave 1 (the four transports, and a hull in a hold) have landed | [#495](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/495) |
 | A population cap, resolved against the Echo budget and the Directorate swarm doctrine | [#437](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/437) |
 | Bound scattered water so it is learnable, and redesign the superweapons before they are built | [#438](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/438) |
 | A competitive-mode document — map pool, ladder, accounts, observer mode | [#439](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/439) |

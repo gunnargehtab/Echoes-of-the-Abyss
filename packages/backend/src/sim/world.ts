@@ -38,6 +38,7 @@ import {
   Fauna,
   Health,
   Heading,
+  Hold,
   HullEffect,
   Magazine,
   MineMagazine,
@@ -131,6 +132,15 @@ export interface SimWorld extends IWorld {
    * told to.
    */
   rallies: Map<number, { x: number; y: number }>;
+  /**
+   * What each carrier has aboard, by carrier entity, in boarding order —
+   * docs/systems-echo.md §3, systems/carrying.ts. Simulation state, like the
+   * order queue and for the same reason: a reconnecting player must get
+   * their hold back. Hashed, because a hull in a hold is a hull the state
+   * hash would otherwise not see (it has no Position). Dropped with the
+   * carrier in `reap`, exactly as the rallies are.
+   */
+  holds: Map<number, number[]>;
   /**
    * Sounding Spires whose PR grant is load-bearing this tick — an allied
    * unit under the aura is actually below its own rating. Written by the
@@ -451,6 +461,7 @@ export function createSimWorld(
   world.economies = new Map();
   world.production = new Map();
   world.rallies = new Map();
+  world.holds = new Map();
   world.spireActive = new Set();
   world.blooms = [];
   world.liftCutSig = new Map();
@@ -962,6 +973,15 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
     addComponent(world, MineMagazine, eid);
     MineMagazine.mines[eid] = stats.mineMagazine;
     MineMagazine.regrowRemainingS[eid] = 0;
+  }
+
+  // A transport's hold, empty at launch (docs/units.md, "The transports").
+  // The stat block says which hulls carry one; this is what makes carrying a
+  // state the carrying system can read, and what `Match.orderEmbark` tests.
+  if (stats.holdBerths !== undefined) {
+    addComponent(world, Hold, eid);
+    Hold.berths[eid] = stats.holdBerths;
+    Hold.used[eid] = 0;
   }
 
   if (opts.kind === UnitKind.Harvester) {

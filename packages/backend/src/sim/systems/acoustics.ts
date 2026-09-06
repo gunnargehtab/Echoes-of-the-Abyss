@@ -9,6 +9,7 @@
 
 import { defineQuery, hasComponent } from 'bitecs';
 import {
+  HOLD,
   ACTIVE_SONAR,
   CONSTRUCTION,
   DEPTH,
@@ -29,9 +30,11 @@ import {
   DepthOrder,
   Harvester,
   HarvestMode,
+  Hold,
   HullEffect,
   Laying,
   MineMagazine,
+  Position,
   SilentRunning,
   StaticEmitter,
   Structure,
@@ -42,7 +45,10 @@ import {
 import { currentModifiers, kelpModifiers, stormModifiers } from './hazards.ts';
 import type { SimWorld } from '../world.ts';
 
-const emitters = defineQuery([Acoustic, Unit, Velocity, SilentRunning]);
+// `Position` is what a hull in a hold lacks (systems/carrying.ts), and the
+// hazard modifiers below read one; a carried hull emits nothing and is not
+// walked here at all.
+const emitters = defineQuery([Acoustic, Unit, Velocity, SilentRunning, Position]);
 const structureEmitters = defineQuery([Acoustic, Structure]);
 const staticEmitters = defineQuery([Acoustic, StaticEmitter]);
 
@@ -178,6 +184,11 @@ export function acousticsSystem(world: SimWorld): void {
     // The trade the masking biome exists for: sit still in it and you are the
     // quietest thing on the map; drive through it and you are the loudest.
     sig += kelpModifiers(world, eid).sig;
+    // A hold is heard as its load: HOLD.SIG_PER_BERTH a berth carried, at
+    // every posture, Silent Running included — added after the posture chain
+    // so a full hold cannot be hushed, and before the veil's cut so a cloud
+    // still muffles it (docs/systems-echo.md §3, "A hull in a hold").
+    if (hasComponent(world, Hold, eid)) sig += Hold.used[eid]! * HOLD.SIG_PER_BERTH;
     // A Spore Veil muffles the *derived* SIG — whatever the unit is doing,
     // the cloud takes its cut last (auras system, symmetric).
     sig *= Acoustic.sigFactor[eid]! || 1;

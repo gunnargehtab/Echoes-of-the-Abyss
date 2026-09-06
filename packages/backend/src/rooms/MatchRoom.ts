@@ -295,6 +295,21 @@ export class MatchRoom extends Room<MatchState> {
       }
     });
 
+    this.onClientMessage(CLIENT_MSG.embark, (client, message) => {
+      const slot = this.commandSlot(client);
+      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      if (typeof message.carrierId !== 'number') return;
+      for (const unitId of message.unitIds) {
+        this.match.orderEmbark(slot, unitId, message.carrierId);
+      }
+    });
+
+    this.onClientMessage(CLIENT_MSG.disembark, (client, message) => {
+      const slot = this.commandSlot(client);
+      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      for (const unitId of message.unitIds) this.match.orderDisembark(slot, unitId);
+    });
+
     this.onClientMessage(CLIENT_MSG.rally, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.structureIds)) return;

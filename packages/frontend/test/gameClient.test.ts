@@ -130,6 +130,12 @@ const ORDERS: Array<[string, (client: GameClient) => void, SentMessage]> = [
     { type: 'aiDifficulty', payload: { sessionId: 'seat-2', difficulty: AiDifficulty.Veteran } },
   ],
   [
+    'embark',
+    (c) => c.embark([11, 12], 40),
+    { type: 'embark', payload: { unitIds: [11, 12], carrierId: 40 } },
+  ],
+  ['disembark', (c) => c.disembark([40]), { type: 'disembark', payload: { unitIds: [40] } }],
+  [
     'moveTo',
     (c) => c.moveTo([11], 100, 200, true),
     { type: 'move', payload: { unitIds: [11], x: 100, y: 200, queued: true } },

@@ -336,6 +336,8 @@ export function GameCanvas({
           onAttackMoveOrder: (unitIds, x, y, queued) => client?.attackMoveTo(unitIds, x, y, queued),
           onStopOrder: (unitIds) => client?.stop(unitIds),
           onHoldOrder: (unitIds, active) => client?.setHoldPosition(unitIds, active),
+          onEmbarkOrder: (unitIds, carrierId) => client?.embark(unitIds, carrierId),
+          onDisembarkOrder: (unitIds) => client?.disembark(unitIds),
           onRallyOrder: (structureIds, x, y) => client?.setRally(structureIds, x, y),
           onToggleSilent: (unitIds, active) => client?.setSilentRunning(unitIds, active),
           onPing: (unitId) => client?.activeSonar(unitId),

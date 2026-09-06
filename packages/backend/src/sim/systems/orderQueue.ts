@@ -23,14 +23,17 @@ import {
   HarvestMode,
   Health,
   MoveOrder,
+  Position,
+  Posture,
   ResourceNode,
   Unit,
   Weapon,
-  Posture,
 } from '../components.ts';
 import type { SimWorld } from '../world.ts';
 
-const ordered = defineQuery([Unit, MoveOrder]);
+// `Position`, so a hull in a hold (systems/carrying.ts) never pops a leg it
+// cannot walk; its queue is cleared when it boards, and this is the backstop.
+const ordered = defineQuery([Unit, MoveOrder, Position]);
 
 /** One pending order. `x`/`y` are where it pointed when it was issued. */
 export type QueuedOrder =

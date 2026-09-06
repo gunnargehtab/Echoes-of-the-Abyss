@@ -88,6 +88,12 @@ export class AiSeat {
       case 'depth':
         for (const id of command.unitIds) this.match.orderDepth(slot, id, command.depthM);
         return;
+      case 'embark':
+        for (const id of command.unitIds) this.match.orderEmbark(slot, id, command.carrierId);
+        return;
+      case 'disembark':
+        for (const id of command.unitIds) this.match.orderDisembark(slot, id);
+        return;
       default: {
         // No silent gap. A variant the commander emits and this switch ignores
         // produces an AI that looks like it decided something and then did

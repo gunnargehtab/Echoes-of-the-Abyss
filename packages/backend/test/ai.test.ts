@@ -1081,6 +1081,15 @@ function assertOnlyKnown(command: AiCommand, known: Known): void {
         `dived to ${command.depthM}, which is not a depth`
       );
       return;
+    case 'embark':
+      // The carrier is an own hull too: a commander boards nothing it was
+      // not sent, and it was sent only its own (docs/systems-echo.md §3).
+      owns(command.unitIds);
+      owns([command.carrierId]);
+      return;
+    case 'disembark':
+      owns(command.unitIds);
+      return;
     default: {
       // This audit is the acceptance criterion of the whole feature, and a
       // switch with no default audits nothing it forgot. A new variant used to
@@ -1130,6 +1139,12 @@ function applyTo(match: Match, slot: number, command: AiCommand): void {
       return;
     case 'depth':
       for (const id of command.unitIds) match.orderDepth(slot, id, command.depthM);
+      return;
+    case 'embark':
+      for (const id of command.unitIds) match.orderEmbark(slot, id, command.carrierId);
+      return;
+    case 'disembark':
+      for (const id of command.unitIds) match.orderDisembark(slot, id);
       return;
     default: {
       const untranslated: never = command;

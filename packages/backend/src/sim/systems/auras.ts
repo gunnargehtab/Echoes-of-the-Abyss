@@ -33,6 +33,7 @@ import {
   Acoustic,
   Health,
   HullEffect,
+  LandingGrant,
   Owner,
   Position,
   Pressure,
@@ -45,7 +46,10 @@ import type { SimWorld } from '../world.ts';
 
 const structures = defineQuery([Structure, Position, Owner]);
 const units = defineQuery([Unit, Position, Owner, Acoustic]);
-const emitters = defineQuery([Acoustic]);
+// `Position`, so a hull in a hold (systems/carrying.ts) is neither reset nor
+// veiled here: the Spore Veil pass reads a position, and a carried hull has
+// none to read.
+const emitters = defineQuery([Acoustic, Position]);
 
 interface Aura {
   eid: number;
@@ -205,6 +209,13 @@ export function aurasSystem(world: SimWorld): void {
       }
       if (seeders.length > 0 && inRange(eid, seeders, slot, SOWER.RADIUS_M)) {
         if (SOWER.PR_BONUS > bonus) bonus = SOWER.PR_BONUS;
+      }
+      // What an Antiphon landed, for the twenty seconds it landed it with
+      // (docs/units.md; systems/carrying.ts runs the clock). Into the same
+      // max, for the same reason: a hull landed under a Cantus has rented one
+      // band, not two.
+      if (hasComponent(world, LandingGrant, eid) && LandingGrant.remainingS[eid]! > 0) {
+        if (LandingGrant.bonus[eid]! > bonus) bonus = LandingGrant.bonus[eid]!;
       }
       // A mission's own habitable water — `MissionRegion.pressureBonus`, and
       // the `ground` beat that sows one. Resolved against the Spire's grant as

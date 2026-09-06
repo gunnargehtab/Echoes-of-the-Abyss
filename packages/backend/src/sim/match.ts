@@ -64,18 +64,23 @@ import {
 import {
   Acoustic,
   ActivePing,
+  Carried,
   Countermeasure,
   DepthOrder,
+  Embarking,
+  Fauna,
   Harvester,
   HarvestMode,
   Health,
+  Hold,
+  LandingGrant,
   Magazine,
   MineMagazine,
   MoveOrder,
   Ordnance,
   Owner,
-  Fauna,
   Position,
+  Posture,
   Pressure,
   ResourceNode,
   SilentRunning,
@@ -83,7 +88,6 @@ import {
   UnderConstruction,
   Unit,
   Weapon,
-  Posture,
 } from './components.ts';
 import { EchoLayer } from './systems/echoLayer.ts';
 import { acousticsSystem } from './systems/acoustics.ts';
@@ -94,6 +98,13 @@ import { constructionSystem } from './systems/construction.ts';
 import { depthSystem } from './systems/depth.ts';
 import { separationSystem } from './systems/separation.ts';
 import { clearQueue, enqueue, orderQueueSystem, queueView } from './systems/orderQueue.ts';
+import {
+  canBoard,
+  cancelEmbark,
+  carryingSystem,
+  forgetCarried,
+  landHold,
+} from './systems/carrying.ts';
 import { harvestSystem } from './systems/harvest.ts';
 import { hullEffectsSystem } from './systems/hullEffects.ts';
 import { movementSystem } from './systems/movement.ts';
@@ -250,6 +261,8 @@ export class Match {
   private readonly observerScratch: number[] = [];
   private readonly eliminated = new Set<number>();
   private readonly destroyedScratch: number[] = [];
+  /** Hulls that boarded a carrier this tick, for the Echo Layer to forget. */
+  private readonly boardedScratch: number[] = [];
   /**
    * Every entity that can die, for `reap`'s zero-HP backstop. Held on the
    * instance because a bitecs query caches its result set per world.
@@ -791,7 +804,15 @@ export class Match {
 
   /** Commands are validated against ownership here; never trust the client. */
   private owns(slot: number, eid: number): boolean {
-    return hasComponent(this.world, Owner, eid) && Owner.slot[eid] === slot;
+    // A hull in a hold is still the player's and still counts against their
+    // berths, but it takes no order of its own: it is not in the water, and
+    // the one thing that reaches it is its carrier's disembark
+    // (docs/systems-echo.md §3; systems/carrying.ts).
+    return (
+      hasComponent(this.world, Owner, eid) &&
+      Owner.slot[eid] === slot &&
+      !hasComponent(this.world, Carried, eid)
+    );
   }
 
   /**
@@ -873,6 +894,7 @@ export class Match {
       Harvester.mode[eid] = HarvestMode.Idle;
       Harvester.idleReason[eid] = 0;
     }
+    cancelEmbark(this.world, eid);
   }
 
   /**
@@ -894,6 +916,7 @@ export class Match {
       Harvester.mode[eid] = HarvestMode.Idle;
       Harvester.idleReason[eid] = 0;
     }
+    cancelEmbark(this.world, eid);
   }
 
   /**
@@ -920,6 +943,7 @@ export class Match {
       Harvester.mode[eid] = HarvestMode.Idle;
       Harvester.idleReason[eid] = 0;
     }
+    cancelEmbark(this.world, eid);
   }
 
   /**
@@ -991,6 +1015,65 @@ export class Match {
       // Chosen, not stalled: a move order is the player parking the hull.
       Harvester.idleReason[eid] = 0;
     }
+    cancelEmbark(this.world, eid);
+  }
+
+  /**
+   * Board a friendly transport — docs/systems-echo.md §3, "A hull in a hold".
+   *
+   * Given to the hull, not the carrier: the hull closes on its carrier and
+   * boards when it gets there (systems/carrying.ts), so a Freighter can load
+   * while it moves and a hull that cannot reach it never pretends to. The
+   * carrier is an own entity id, never a contact handle — a player boards
+   * their own hulls and nobody else's. Refused for a hull that cannot be
+   * carried (a hold, a structure, a hull already aboard) and for a hold
+   * with no room *now*; a hold that fills on the way refuses at the door.
+   * Recorded before any of that, like every order.
+   */
+  orderEmbark(slot: number, eid: number, carrierEid: number): void {
+    this.recordCommand({
+      tick: this.world.tick,
+      type: 'embark',
+      slot,
+      unit: this.localId(eid),
+      carrier: this.localId(carrierEid),
+    });
+    if (this.missionRuntime?.holdsMovement(slot, eid) === true) return;
+    if (!this.owns(slot, eid) || !this.owns(slot, carrierEid)) return;
+    if (!canBoard(this.world, carrierEid, eid)) return;
+
+    // Replaces the plan the way a move does: the harvest loop, the chase,
+    // the posture and the queue all end, and the closing begins.
+    clearQueue(this.world, eid);
+    this.world.paths.delete(eid);
+    Posture.engage[eid] = 0;
+    Posture.hold[eid] = 0;
+    if (hasComponent(this.world, Weapon, eid)) Weapon.orderedTargetEid[eid] = 0;
+    if (hasComponent(this.world, Harvester, eid)) {
+      Harvester.mode[eid] = HarvestMode.Idle;
+      Harvester.idleReason[eid] = 0;
+    }
+    addComponent(this.world, Embarking, eid);
+    Embarking.carrier[eid] = carrierEid;
+  }
+
+  /**
+   * Land a transport's whole hold around it, at its depth. Given to the
+   * carrier. What lands lands with no orders — and, from an Antiphon, with
+   * the Spire's grant for twenty seconds (docs/units.md). Not a movement
+   * order, so a mission's movement hold does not refuse it: a held carrier
+   * may still open its doors.
+   */
+  orderDisembark(slot: number, carrierEid: number): void {
+    this.recordCommand({
+      tick: this.world.tick,
+      type: 'disembark',
+      slot,
+      unit: this.localId(carrierEid),
+    });
+    if (!this.owns(slot, carrierEid) || !hasComponent(this.world, Hold, carrierEid)) return;
+    if (!hasComponent(this.world, Position, carrierEid)) return;
+    landHold(this.world, carrierEid);
   }
 
   /** Attack a contact the player has actually heard, by its opaque handle. */
@@ -1042,6 +1125,7 @@ export class Match {
     clearQueue(this.world, eid);
     this.world.paths.delete(eid);
     Weapon.orderedTargetEid[eid] = target;
+    cancelEmbark(this.world, eid);
   }
 
   /**
@@ -1195,6 +1279,7 @@ export class Match {
     Harvester.nodeEid[eid] = nodeEid;
     Harvester.mode[eid] = HarvestMode.ToNode;
     Harvester.idleReason[eid] = 0;
+    cancelEmbark(this.world, eid);
   }
 
   /** docs/economy.md §3 — how loud am I willing to be paid. */
@@ -1645,6 +1730,13 @@ export class Match {
     orderQueueSystem(this.world);
     constructionSystem(this.world);
     productionSystem(this.world);
+    // Boarding and landing after the movement that brings a hull to its
+    // carrier and before the effects, auras and acoustics that read what is
+    // and is not in the water this tick. A hull that boarded is forgotten by
+    // the Echo Layer on the same tick, so it comes back as a new contact.
+    this.boardedScratch.length = 0;
+    carryingSystem(this.world, this.boardedScratch);
+    for (const eid of this.boardedScratch) this.echo.forget(eid);
     // The rung's hull effects before auras: a Cantus that stopped this tick
     // is singing on this tick's grant pass, and a Tender's weld lands before
     // pressure bills for where the patient is standing.
@@ -1747,6 +1839,20 @@ export class Match {
 
     if (this.destroyedScratch.length === 0) return;
 
+    // The load dies with the carrier (docs/systems-echo.md §3): every hull
+    // aboard a dying carrier is appended, at zero, so the one loop below
+    // makes both deaths real on the same tick. By index, because the list
+    // grows under the walk, and a carried hull carries no hold of its own.
+    for (let i = 0; i < this.destroyedScratch.length; i++) {
+      const aboard = this.world.holds.get(this.destroyedScratch[i]!);
+      if (aboard === undefined) continue;
+      for (const carried of aboard) {
+        if (!hasComponent(this.world, Health, carried) || Health.hp[carried]! <= 0) continue;
+        Health.hp[carried] = 0;
+        this.destroyedScratch.push(carried);
+      }
+    }
+
     const lostBastions: number[] = [];
     let jellyDied = false;
     for (const eid of this.destroyedScratch) {
@@ -1787,6 +1893,11 @@ export class Match {
       }
       this.world.production.delete(eid);
       this.world.rallies.delete(eid);
+      // A dying hull leaves whatever hold it was in, and a dying carrier's
+      // hold goes with it — a hold that outlived its carrier would be a list
+      // of ids waiting to come back attached to whatever inherits them.
+      forgetCarried(this.world, eid);
+      this.world.holds.delete(eid);
       // Before the id goes back into bitecs's free list: anything keyed by eid
       // outside the ECS has to be dropped, or it comes back attached to
       // whatever inherits the id. A contact handle would name a hull the player
@@ -1973,6 +2084,8 @@ export class Match {
       if (Owner.slot[eid] !== slot) continue;
       this.world.production.delete(eid);
       this.world.rallies.delete(eid);
+      forgetCarried(this.world, eid);
+      this.world.holds.delete(eid);
       this.echo.forget(eid);
       clearQueue(this.world, eid);
       this.world.paths.delete(eid);
@@ -2201,12 +2314,16 @@ export class Match {
       const eid = hulls[i]!;
       if (Owner.slot[eid] !== slot) continue;
 
+      // A hull in a hold has no position of its own; the owner is told the
+      // carrier's, which is where it is (docs/systems-echo.md §3). The owner
+      // and nobody else: this list is the own-force payload.
+      const at = hasComponent(this.world, Carried, eid) ? Carried.carrier[eid]! : eid;
       const unit: OwnUnit = {
         id: eid,
         kind: Unit.kind[eid] as UnitKind,
-        x: Position.x[eid]!,
-        y: Position.y[eid]!,
-        depth: Position.depth[eid]!,
+        x: Position.x[at]!,
+        y: Position.y[at]!,
+        depth: Position.depth[at]!,
         hp: Health.hp[eid]!,
         maxHp: Health.max[eid]!,
         heading: 0,
@@ -2252,6 +2369,14 @@ export class Match {
       // owner's own (docs/units.md, the Spinner).
       if (hasComponent(this.world, MineMagazine, eid)) {
         unit.mines = MineMagazine.mines[eid]!;
+      }
+      if (at !== eid) unit.aboard = at;
+      if (hasComponent(this.world, Embarking, eid)) unit.embarking = Embarking.carrier[eid]!;
+      if (hasComponent(this.world, Hold, eid)) {
+        unit.hold = { berths: Hold.berths[eid]!, used: Hold.used[eid]! };
+      }
+      if (hasComponent(this.world, LandingGrant, eid) && LandingGrant.remainingS[eid]! > 0) {
+        unit.landingGrantS = LandingGrant.remainingS[eid]!;
       }
       if (hasComponent(this.world, Harvester, eid)) {
         unit.cargo = Harvester.cargo[eid]!;

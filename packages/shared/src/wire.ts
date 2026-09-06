@@ -63,6 +63,8 @@ export const CLIENT_MSG = {
   stop: 'stop',
   hold: 'hold',
   rally: 'rally',
+  embark: 'embark',
+  disembark: 'disembark',
   attack: 'attack',
   depth: 'depth',
   followFloor: 'followFloor',
@@ -123,6 +125,22 @@ export interface RallyMessage {
   structureIds: number[];
   x: number;
   y: number;
+}
+
+/**
+ * Board a friendly transport (docs/systems-echo.md §3, "A hull in a hold").
+ * Given to the hulls, which close on the carrier and board when they reach
+ * it; a hull that cannot fit, or cannot be carried, is refused on the server.
+ */
+export interface EmbarkMessage {
+  unitIds: number[];
+  /** The carrier's id — an own unit, never a contact handle. */
+  carrierId: number;
+}
+
+/** Land a transport's whole hold around it, at its depth. Given to the carriers. */
+export interface DisembarkMessage {
+  unitIds: number[];
 }
 
 export interface AttackMessage {
@@ -230,6 +248,8 @@ export interface ClientMessages {
   stop: StopMessage;
   hold: HoldMessage;
   rally: RallyMessage;
+  embark: EmbarkMessage;
+  disembark: DisembarkMessage;
   attack: AttackMessage;
   depth: DepthMessage;
   followFloor: FollowFloorMessage;

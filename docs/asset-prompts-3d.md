@@ -256,6 +256,55 @@ the lance to a muzzle crystal. Lit from the bow back and dark astern: the
 quarter it is loud in is the quarter it faces, and the rail is the light.
 ```
 
+### The transports — one a navy, and a hold
+
+The four transports of [units.md](units.md) "The transports" (wave 1 of
+[roster-plan.md](roster-plan.md), #501). What a transport's silhouette has to say at RTS
+distance is *volume*: each is a hold with a drive, sized to the berths it carries, and the
+lighting clause is the empty figure — a hold is heard as load, +3 SIG a berth, and the glow
+budget is for the hull running home empty. None carries a weapon.
+
+```text
+UNIT — Freighter (pair with Consortium): the armoured hold, 160 m — six berths
+of hull moved slowly and loudly and very hard to sink (SIG 30 idle, 50 cruise,
+68 with a full hold; no weapon; 1,800 hull). A long slab-sided box hull with
+the Bulwark's riveted plate, a raised bridge castle aft, two great hold doors
+along the flank with hinge rails and dogging wheels, crane gantries over the
+foredeck, ballast blisters low on the hull, and four prop tunnels in a heavy
+skeg. Lit along the hold-door seams and the bridge ports, and floodlit when
+the doors open.
+```
+
+```text
+UNIT — Drifter (pair with Commune): the quiet way in, 62 m — two berths of hull
+at 90 m/s and SIG 10 (4 idle; 10 cruise; 16 with a full hold; no weapon; 300
+hull). A slim seed-pod hull of grown shell, the two berths as a pair of
+swelling bays amidships under a membrane that opens like a bivalve, a single
+muscle-drive fin astern and trim vanes rather than planes. Almost dark: a
+faint bioluminescent seam along each bay, brightening only as it opens.
+```
+
+```text
+UNIT — Verger (pair with Abyssal Directorate): the cohort's way down, 100 m —
+four berths of hull taken below the Shelf line at PR-3 (SIG 14 idle, 26 cruise,
+38 with a full hold; no weapon; 800 hull). A deep-pressure hull, ribbed and
+domed like the Precentor's, with four cohort bays set into its belly behind
+pressure hatches, a listening dome forward, ballast tanks flanking a heavy keel,
+and a single ducted drive. Lit low and cold at the hatch rims and the dome;
+the bays glow through their hatches while they are occupied.
+```
+
+```text
+UNIT — Antiphon (pair with Hadron Knights): the Order's way of arriving, 110 m
+— three berths of hull, and what it lands, lands with +1 PR for twenty seconds
+(SIG 12 idle, 35 cruise ahead, 3.5 astern; 44 ahead with a full hold; no
+weapon; 700 hull). A faceted blade hull in the Clarion's family with a wide
+three-bay landing deck let into its back, a crystal resonator ring around the
+deck that is the grant made visible, swept guard wings, and the drive in the
+spine. Lit from the bow back like every Order hull and dark astern; the
+resonator ring flares when the deck opens.
+```
+
 ## Block 3b — STRUCTURE (one per generation)
 
 Architecture anchors from the Rendering Target and Base Identity sections of

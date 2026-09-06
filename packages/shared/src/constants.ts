@@ -1994,4 +1994,40 @@ export const HULL_EFFECTS = {
     PR_BONUS: 1,
     STATIONARY_S: 20,
   },
+  /**
+   * SPEC — Antiphon: "Every hull it disembarks carries +1 PR for 20 s, the
+   * Spire's grant on a clock. It does not stack with a Spire, a Cantus or a
+   * Sower — one band rented, never two — and it does not renew."
+   */
+  ANTIPHON: {
+    PR_BONUS: 1,
+    GRANT_S: 20,
+  },
+} as const;
+
+/**
+ * A hull in a hold — docs/systems-echo.md §3, docs/units.md "The transports".
+ *
+ * A transport carries hulls; a carried hull is not in the water and is heard
+ * only as the load on its carrier. The load is the one SPEC figure here. The
+ * boarding distances are the doc's too, but as a description of the
+ * mechanism rather than a balance number — TUNABLE, expected to move.
+ */
+export const HOLD = {
+  /**
+   * SPEC — systems-echo.md §3: "+3 per berth carried, at every posture,
+   * Silent Running included". Added after the posture chain, so a hold
+   * cannot be hushed, and before the veil's cut, so a cloud still muffles it.
+   */
+  SIG_PER_BERTH: 3,
+  /** TUNABLE — a hull boards its carrier from within this range... */
+  BOARD_RANGE_M: 150,
+  /** ...and this close to its depth. A Freighter loads shallow or not at all. */
+  BOARD_DEPTH_M: 100,
+  /**
+   * TUNABLE — the ring a disembarking hold lands in, as a multiple of the
+   * carrier's own radius. Wide enough that separation does not have to
+   * untangle a Bulwark from the hull that brought it.
+   */
+  LANDING_RING_RADII: 2.5,
 } as const;

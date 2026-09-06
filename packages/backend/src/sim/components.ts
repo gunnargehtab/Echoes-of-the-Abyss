@@ -525,3 +525,49 @@ export const StaticEmitter = defineComponent({
   /** 1 while transmitting on its pattern; 0 once silenced. */
   active: Types.ui8,
 });
+
+/**
+ * A transport's hold — docs/systems-echo.md §3, docs/units.md "The
+ * transports". `berths` is the capacity the stat block lists; `used` is the
+ * berths of hull aboard, and is what acoustics prices the load at
+ * (`HOLD.SIG_PER_BERTH` a berth). Which hulls are aboard is `world.holds`,
+ * a side table keyed by carrier, because a component holds numbers and a
+ * hold holds a list.
+ *
+ * Carried only by the hulls whose stat block lists a `holdBerths`.
+ */
+export const Hold = defineComponent({
+  berths: Types.ui8,
+  used: Types.ui8,
+});
+
+/**
+ * A hull aboard a carrier. The hull has no `Position` while it carries this —
+ * that absence is what takes it out of every system (see systems/carrying.ts)
+ * — and this is what remembers where it is: the carrier, whose position and
+ * depth are its own for the trip, and whose death is its death.
+ */
+export const Carried = defineComponent({
+  carrier: Types.eid,
+});
+
+/**
+ * A hull closing on a carrier to board it. Steered by the carrying system
+ * toward the carrier's position and depth until it is within boarding range;
+ * dropped by any other order, as a harvest loop is.
+ */
+export const Embarking = defineComponent({
+  carrier: Types.eid,
+});
+
+/**
+ * The Spire's grant on a clock — what an Antiphon lands, lands with +1 PR
+ * for HULL_EFFECTS.ANTIPHON.GRANT_S (docs/units.md). Counted down by the
+ * carrying system and read by auras into the same max-never-sum chain the
+ * Spire, the Cantus and the Sower resolve in, so a landed hull under a
+ * Cantus has rented one band, not two. Removed at zero: it does not renew.
+ */
+export const LandingGrant = defineComponent({
+  remainingS: Types.f32,
+  bonus: Types.ui8,
+});

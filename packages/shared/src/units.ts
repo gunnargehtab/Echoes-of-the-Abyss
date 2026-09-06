@@ -131,6 +131,16 @@ export interface UnitStats {
    * go home and regrow.
    */
   mineMagazine?: number;
+  /**
+   * Berths of hull this hull can carry — a transport's hold (docs/units.md,
+   * "The transports"; docs/systems-echo.md §3, "A hull in a hold"). Tonnage
+   * carried, in the same unit the population cap counts: a hold of six takes
+   * three Corvettes or six scouts, and what it carries keeps its own berths
+   * on the base. SPEC, transcribed. The hulls that carry it are the hulls
+   * `spawnUnit` gives a `Hold`, and a hull with a hold can never itself be
+   * carried. Absent on every other hull.
+   */
+  holdBerths?: number;
 }
 
 /** Half a hull's length: the radius the simulation keeps clear around it. */
@@ -696,6 +706,145 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     // also carried two Corvette-killing torpedoes would be an ambush kit on
     // the navy whose doctrine is the fight it arranged, and §5's magazine
     // stays with the hulls built to close.
+    carriesTorpedoes: false,
+  },
+
+  // --- The transports: one a navy, and a hold (docs/units.md, #501) --------
+  //
+  // Every figure below is SPEC, transcribed from the hull's stat block in
+  // docs/units.md, "The transports". Every SIG is the *empty* figure: the
+  // load is heard as HOLD.SIG_PER_BERTH a berth carried, added by acoustics
+  // at every posture (docs/systems-echo.md §3). None carries a weapon.
+  [UnitKind.Freighter]: {
+    kind: UnitKind.Freighter,
+    name: 'Freighter',
+    /**
+     * SPEC — docs/units.md, Freighter: "30 / 50 / — (no weapon), empty; 48 /
+     * 68 full". A loaded Freighter at cruise is as loud as a Cruiser at
+     * flank, and it stays that loud under Silent Running.
+     */
+    sigIdle: 30,
+    sigCruise: 50,
+    sigFiringBurst: 0,
+    hyd: 35,
+    pressureRating: 2,
+    maxHp: 1800,
+    speed: 30,
+    // The roster's longest hull, past the Bulwark's 150: six berths of hold
+    // have to read as volume at RTS distance. MAX_UNIT_RADIUS_M follows it.
+    hullLengthM: 160,
+    cost: 260,
+    buildTimeS: 60,
+    berths: 3,
+    /** "Six berths — three Corvettes, or two Cruisers, or a Bulwark and two scouts." */
+    holdBerths: 6,
+    /**
+     * Eighteen SIG of load on a hull that runs at 68 is only readable inside
+     * a doctrine that plans to be heard; a Commune Freighter would be a hull
+     * the Veil could never sail quietly and never afford to lose
+     * (docs/units.md).
+     */
+    faction: Faction.Bathyarch,
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: false,
+  },
+  [UnitKind.Drifter]: {
+    kind: UnitKind.Drifter,
+    name: 'Drifter',
+    /**
+     * SPEC — docs/units.md, Drifter: "4 / 10 / — (no weapon), empty; 10 / 16
+     * full". A full Drifter at cruise is a Light Scout at idle.
+     */
+    sigIdle: 4,
+    sigCruise: 10,
+    sigFiringBurst: 0,
+    hyd: 45,
+    // The Commune baseline, and the hull's own: a horizontal argument.
+    pressureRating: 1,
+    maxHp: 300,
+    speed: 90,
+    // A hair longer than the Light Scout, which stays the roster's shortest.
+    hullLengthM: 62,
+    cost: 90,
+    buildTimeS: 30,
+    berths: 1,
+    /** "Two berths — one Corvette, or two scouts." */
+    holdBerths: 2,
+    /**
+     * SIG 10 at 90 m/s is the Veil's floor written onto a drive, and a Klaxon
+     * Drifter would be the quietest hull on a navy whose doctrine is to be
+     * heard (docs/units.md).
+     */
+    faction: Faction.Pelagia,
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: false,
+  },
+  [UnitKind.Verger]: {
+    kind: UnitKind.Verger,
+    name: 'Verger',
+    /** SPEC — docs/units.md, Verger: "14 / 26 / — (no weapon), empty; 26 / 38 full". */
+    sigIdle: 14,
+    sigCruise: 26,
+    sigFiringBurst: 0,
+    hyd: 60,
+    // "On the hull, not lent by the baseline": what it carries crosses the
+    // layer at this rating.
+    pressureRating: 3,
+    maxHp: 800,
+    speed: 40,
+    hullLengthM: 100,
+    // The Precentor's price shape: the cohort programme's account beside the
+    // Nodules. Nobody's by lock — the Biomass is the lock, as the
+    // Chorister's is (docs/units.md; docs/economy.md §6).
+    cost: 140,
+    biomassCost: 30,
+    buildTimeS: 45,
+    berths: 2,
+    /** "Four berths — four Choristers, or two Corvettes." */
+    holdBerths: 4,
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: false,
+  },
+  [UnitKind.Antiphon]: {
+    kind: UnitKind.Antiphon,
+    name: 'Antiphon',
+    /**
+     * SPEC — docs/units.md, Antiphon: "12 / 35 / — (no weapon), empty; 21 /
+     * 44 full — and the figures are cone figures, as every Order hull's are".
+     * The term applies at the listener (directional.ts), as it does to the
+     * Clarion and the Reciter; the load is added before it.
+     */
+    sigIdle: 12,
+    sigCruise: 35,
+    sigFiringBurst: 0,
+    hyd: 50,
+    // The Hadron baseline. The grant is what it carries, not what it is.
+    pressureRating: 2,
+    maxHp: 700,
+    speed: 60,
+    hullLengthM: 110,
+    // A Slipway hull, so a decision the crystal buys.
+    cost: 300,
+    crystalCost: 40,
+    buildTimeS: 70,
+    berths: 2,
+    /** "Three berths — a Clarion and a scout, or three scouts." */
+    holdBerths: 3,
+    /**
+     * The cone figure fails the Clarion test the way the Clarion does, and
+     * the grant (HULL_EFFECTS.ANTIPHON) is the Spire's, which is the Order's
+     * (docs/units.md).
+     */
+    faction: Faction.Hadron,
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
     carriesTorpedoes: false,
   },
 };
