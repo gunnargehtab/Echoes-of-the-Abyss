@@ -593,6 +593,14 @@ const LIFT = {
   GATHER_M: RANGE.ARRIVE_M * 2,
   /** A load that has waited this long sails with what it has. */
   PATIENCE_S: 90,
+  /**
+   * How long the commander holds the purse for a transport it cannot yet
+   * afford before letting the cycle buy a hull. Bounded, because #503's
+   * commander already saves for its structures by reserving the purse, and
+   * a second open-ended reserve on top of it starved the Consortium to a
+   * 0% baseline: two navies' worth of patience on one income.
+   */
+  SAVE_S: 45,
   /** The carrier stops short of the objective by a gun's reach, and lands there. */
   STANDOFF_M: RANGE.PUSH_ENGAGE_M,
 } as const;
@@ -812,6 +820,8 @@ export class AiCommander implements AiPlayer {
   private massingPeakTick = -1;
   /** While set, the army is committed to a push it started without the numbers. */
   private commitUntilTick = -1;
+  /** When the purse was first held for a transport, or -1 (see `LIFT.SAVE_S`). */
+  private transportSaveSinceTick = -1;
   /** The transport plan, if the navy has a carrier afloat (see `LIFT`). */
   private lift: { carrierId: number; phase: 'loading' | 'sailing'; sinceTick: number } | null =
     null;
@@ -1980,12 +1990,23 @@ export class AiCommander implements AiPlayer {
         const yard = this.freeYard(snapshot.structures, transport);
         if (yard !== null) {
           if (this.affordUnit(transport, purse)) {
+            this.transportSaveSinceTick = -1;
             out.push({ kind: 'produce', structureId: yard.id, unit: transport });
             return;
           }
           const price = priceOf(statsFor(transport));
-          if (purse.crystal >= price.crystal && purse.biomass >= price.biomass) return;
+          if (purse.crystal >= price.crystal && purse.biomass >= price.biomass) {
+            // Hold the purse — for LIFT.SAVE_S at a time. Then the cycle gets
+            // a hull, and the holding starts again: a duty cycle, so the
+            // purse still climbs and the army still grows.
+            if (this.transportSaveSinceTick < 0) this.transportSaveSinceTick = snapshot.tick;
+            const heldS = (snapshot.tick - this.transportSaveSinceTick) / SIM.TICK_HZ;
+            if (heldS < LIFT.SAVE_S) return;
+            this.transportSaveSinceTick = -1;
+          }
         }
+      } else {
+        this.transportSaveSinceTick = -1;
       }
     }
 
