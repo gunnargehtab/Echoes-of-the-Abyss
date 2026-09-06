@@ -33,9 +33,25 @@ export interface BrowseScreenProps {
   /** `joinOrCreate` on whatever water is picked next. Still the fastest way in. */
   onQuickMatch(): void;
   onBack(): void;
+  /**
+   * How the open rooms are found. Defaults to the real matchmaker query.
+   *
+   * The fifth of the seams described in CLAUDE.md, and it exists for the same
+   * reason as the other four: `listMatches` reaches a server, and a test has
+   * none, so every row rule below — a full room refused up front, a row that
+   * says the water and the seat count and nothing else — would be unreachable
+   * behind the empty list a refused connection returns.
+   */
+  listRooms?: () => Promise<MatchListing[]>;
 }
 
-export function BrowseScreen({ onJoin, onHost, onQuickMatch, onBack }: BrowseScreenProps) {
+export function BrowseScreen({
+  onJoin,
+  onHost,
+  onQuickMatch,
+  onBack,
+  listRooms = listMatches,
+}: BrowseScreenProps) {
   const [rooms, setRooms] = useState<MatchListing[] | null>(null);
   const [code, setCode] = useState('');
 
@@ -45,13 +61,13 @@ export function BrowseScreen({ onJoin, onHost, onQuickMatch, onBack }: BrowseScr
     // "we have not looked yet" are different sentences, and showing the first
     // one before it is true is the kind of small lie that empties a lobby.
     setRooms(null);
-    void listMatches().then((found) => {
+    void listRooms().then((found) => {
       if (!cancelled) setRooms(found);
     });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [listRooms]);
 
   useEffect(() => refresh(), [refresh]);
 
