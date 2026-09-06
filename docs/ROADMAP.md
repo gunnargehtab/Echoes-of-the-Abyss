@@ -23,7 +23,8 @@ What is open sorts into four kinds. The count itself is deliberately not written
 was wrong twice inside a month, and the roadmap site reads it live from the tracker on every
 build, which a paragraph cannot.
 
-- **What the audit still owes** — the epic (#428) and the test gaps (#443).
+- **What the audit still owes** — the epic (#428). The test gaps it named (#443) closed with
+  the integration seams built; what the screens still owe is #494 below.
 - **Older than the audit** — the world epic (#224), the frame-time measurement the
   presentation switch still owes (#286), and PC input (#294).
 - **Parked** — the Consortium's 90-in-10 duel win over the Directorate (#458) and the
@@ -31,8 +32,11 @@ build, which a paragraph cannot.
   investigation is written down and the next move is a posture the commander does not have,
   not that the finding stopped being true; the reading stands, and the row below says so.
 - **Filed since the audit** — the storyline epic (#469), the Commune's own hulls in the
-  commander's hands (#467), a fog of war for the chart (#472), harvesters that would not
-  move in the Prologue (#478), and the Tetherjelly's second home (#480).
+  commander's hands (#467), a fog of war for the chart (#472), the crystal tier no navy can
+  reach (#491), the screens that implement §11's accessibility commitments with nothing
+  checking them (#494), and the full roster line (#495), whose first wave (#501) has landed.
+  The harvesters that would not move in the Prologue (#478) and the Tetherjelly's second
+  home (#480) have both closed; their rows below stay as the record.
 
 Everything else this document has ever tracked is closed, and every open issue above has a
 row below — which is the state the site now checks for on every build.
@@ -500,6 +504,7 @@ the phase the build is in, not because the audit found them.
 | --- | --- |
 | Two exclusive hulls per faction, and one tech rung above crystal | [#436](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/436) |
 | A full line per navy — sixteen hulls across a role matrix in six waves, planned in [roster-plan.md](roster-plan.md); follows #436. Wave 0 (the ground) and wave 1 (the four transports, and a hull in a hold) have landed | [#495](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/495) |
+| Wave 1 of that line — the four transports and carrying, the first of the five mechanisms the matrix asks for; landed with the hulls, the hold and the commander that loads one | [#501](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/501) |
 | A population cap, resolved against the Echo budget and the Directorate swarm doctrine | [#437](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/437) |
 | Bound scattered water so it is learnable, and redesign the superweapons before they are built | [#438](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/438) |
 | A competitive-mode document — map pool, ladder, accounts, observer mode | [#439](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/439) |
@@ -520,7 +525,9 @@ the phase the build is in, not because the audit found them.
 | --- | --- |
 | A fog of war for the chart — the world going vague where no hull of yours is listening, which is the Echo Layer's own rule drawn on the map | [#472](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/472) |
 | Harvesters that would not move in the Prologue, found by playing it | [#478](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/478) |
-| The Tetherjelly's second home — [bestiary.md](bestiary.md) §4 gives the species two and seeds it in one, and *Tend* cannot author the fauna of its own kelp lane until that is decided | [#480](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/480) |
+| The Tetherjelly's second home — settled in [bestiary.md](bestiary.md) §4 as **one animal re-homed per map** rather than a second species: a canopy cluster is the same SIG 1 and the same −0.10 PF as a duct one, so the only thing that differs is depth, and depth is a property of the ground. `marr-plateau` names the Kelp Forest band in its `ambientBands`, and *Tend* seeds its own lane | [#480](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/480) |
+| The crystal tier no navy can reach — the round trip is longer than the match, the field sits 500 m inside two eruption plumes, and only the Directorate can work it without paying crush. Found by teaching the commander to raid for it (#467) | [#491](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/491) |
+| Test gaps, part three — the screens implement [ui-ux.md](ui-ux.md) §11's accessibility commitments, which that document calls a correctness requirement rather than a feature tier, and nothing checks them | [#494](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/494) |
 
 **Why match resolution stands alone at the top.** Every other row is an improvement to a
 game; the first row is whether there is one. The balance guard-rails are the only instrument

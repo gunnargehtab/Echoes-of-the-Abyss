@@ -313,6 +313,7 @@ export const items = {
   294: 'Mouse and keyboard done properly for desktop play',
   436: 'Two hulls unique to each navy, and one more tech tier above crystal',
   495: 'A whole fleet of your own: scouts, line ships, siege, ordnance and transports that belong to one navy and no other',
+  501: 'Transports: hulls that carry a force across the map in their hold, where nothing can hear it',
   437: 'A population cap, sized to what the water can carry',
   438: 'A tighter map and redesigned superweapons',
   439: 'Competitive play: a map pool, a ladder, accounts and an observer mode',
@@ -326,6 +327,8 @@ export const items = {
   472: 'A chart that goes vague where nothing of yours is listening',
   478: 'Harvesters that would not move in the Prologue',
   480: 'The tetherjelly forests one mission needs before it can grow them',
+  491: 'Crystal worth going after: today the deep field is further away and more dangerous than any navy can afford',
+  494: 'Automated testing for the menus, so key rebinding, UI scale and the colour-vision palettes keep working',
 };
 
 export const sprints = {

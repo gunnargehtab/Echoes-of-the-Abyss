@@ -531,11 +531,21 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     speed: 55,
     hullLengthM: 90,
     /**
-     * Crystal-locked like the Submersible, for the same reason: it is the
-     * hull built to live where the crystal is (docs/economy.md §8).
+     * Nodules only. It was crystal-locked "like the Submersible, for the same
+     * reason: it is the hull built to live where the crystal is" — but the
+     * Submersible *works* the crystal and this hull is what makes the crystal
+     * workable, so the same reason points the other way. A key priced in the
+     * thing it unlocks is not a price, it is a wall: the Commune could not
+     * seed the field without the crystal it could not reach without seeding it
+     * (#467, #491).
+     *
+     * Symmetry with the Order settles it. The Cantus grants the same +1 PR by
+     * standing still, is built at the Foundry, and costs 400 nodules and no
+     * crystal — so the Knights open the deep whenever they choose to pay for
+     * it. This is the Commune's answer to the same water and it is priced the
+     * same way; docs/economy.md §8's crystal-locked list names neither.
      */
     cost: 380,
-    crystalCost: 80,
     buildTimeS: 70,
     berths: 2,
     /**
