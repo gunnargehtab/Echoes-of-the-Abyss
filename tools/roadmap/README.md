@@ -128,6 +128,14 @@ roadmap, the logo, and the display font. No source, no design bible, no
 internal notes. Worth re-reading before enabling, because that is the moment it becomes
 public.
 
+**The roster sheet is public on purpose** — decided, so it does not have to be re-argued
+the next time somebody reads this list. The page ships the baked top-down picture and
+nothing behind it: the models it was baked from (`docs/concept-art/models/*.glb`) stay in
+the repository, and the sheet shows only what a player sees of their own force anyway. The
+Asymmetric Fidelity Law ([docs/graphics-standards.md](../../docs/graphics-standards.md))
+is about what an *opponent* is shown in a match, and it is not weakened by a fan knowing
+what a Bulwark looks like.
+
 Gameplay footage and lore are for later; the page's footer says so, and the sections are
 laid out so they can take them.
 

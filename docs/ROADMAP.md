@@ -16,15 +16,23 @@ newest roster contact sheet an art PR committed under `docs/screenshots/`.
 
 ## Where the build actually stands
 
-Twelve issues are open. Four are what remains of the audit epic (#428) and its findings,
-filed on one day against a build that had closed every issue before it: frontend
-housekeeping (#442), the test gaps (#443) and the competitive-mode document (#439). Three
-are older: the world epic (#224), the frame-time measurement the presentation switch still
-owes (#286), and PC input (#294). Five were filed since the audit and have no row below yet:
-a second balance finding, the Consortium beating the Directorate 90/10 in duels (#458); a
-combat-depth design (#463); mines and depth seeding for the AI commander (#467); the
-storyline epic (#469); and a fog-of-war question (#472). Everything else this document has
-ever tracked is closed.
+What is open sorts into four kinds. The count itself is deliberately not written here — it
+was wrong twice inside a month, and the roadmap site reads it live from the tracker on every
+build, which a paragraph cannot.
+
+- **What the audit still owes** — the epic (#428) and the test gaps (#443).
+- **Older than the audit** — the world epic (#224), the frame-time measurement the
+  presentation switch still owes (#286), and PC input (#294).
+- **Parked** — the Consortium's 90-in-10 duel win over the Directorate (#458) and the
+  competitive-mode document (#439), both labelled `wontfix`. On #458 that label means the
+  investigation is written down and the next move is a posture the commander does not have,
+  not that the finding stopped being true; the reading stands, and the row below says so.
+- **Filed since the audit** — the storyline epic (#469), the Commune's own hulls in the
+  commander's hands (#467), a fog of war for the chart (#472), harvesters that would not
+  move in the Prologue (#478), and the Tetherjelly's second home (#480).
+
+Everything else this document has ever tracked is closed, and every open issue above has a
+row below — which is the state the site now checks for on every build.
 
 That is the issue tracker's account. The build's own account is less flattering, and the two
 numbers below are the ones that decide whether the game is playable end to end — which is
@@ -372,11 +380,23 @@ the engineering around all of it. Each finding is one issue with the evidence be
 a concrete change, so an unattended run can take them one at a time. The epic ranks them by
 impact; this table groups them by what they are, and the ranking is on the issue.
 
+Two groups below are not the audit's. **The opponent** is where the harness's own findings
+went once matches started ending, and **filed since the audit** holds what has been opened
+since — a bug found by playing, and two design calls. They sit in this phase because it is
+the phase the build is in, not because the audit found them.
+
 **The match that does not end**
 
 | Work | Issue |
 | --- | --- |
 | Match resolution — done: 29 of 30 baseline skirmishes decide, and every guard-rail reads. The number the harness surfaced next is the Knights' 83% win rate among decided matches, which is a balance issue and not a resolution one | [#440](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/440) |
+
+**The opponent**
+
+| Work | Issue |
+| --- | --- |
+| The Consortium beats the Directorate 90 in 10 in duels. Parked with the evidence: no doctrine knob moves it, and thirty matches at even trades and even incomes still read 87/13, so what remains is the shallows poison on every Directorate attack, a Biomass income the commander never spends, and a line that arrives piecemeal | [#458](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/458) |
+| The Commune's own hulls in the commander's hands — the mine command and a Spinner doctrine landed; the Sower half waits on whether the Commune is meant to reach crystal at all | [#467](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/467) |
 
 **Performance and netcode**
 
@@ -405,6 +425,7 @@ impact; this table groups them by what they are, and the ranking is on the issue
 | A population cap, resolved against the Echo budget and the Directorate swarm doctrine | [#437](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/437) |
 | Bound scattered water so it is learnable, and redesign the superweapons before they are built | [#438](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/438) |
 | A competitive-mode document — map pool, ladder, accounts, observer mode | [#439](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/439) |
+| Combat depth — how many Echo snapshots a decided fight spans and what the losing side can still do inside one; answered by lengthening the TTK bands and giving the defender a mine astern | [#463](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/463) |
 
 **Shipping and hygiene**
 
@@ -414,6 +435,14 @@ impact; this table groups them by what they are, and the ranking is on the issue
 | Frontend housekeeping — dead dependencies, code splitting, on-demand art loading, production sourcemaps | [#442](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/442) |
 | Test gaps — an untested renderer and client, no counted-work budget for the 60 Hz step, unhashed Echo Marks | [#443](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/443) |
 | This document — it cited closed issues as live work and omitted the balance finding | [#445](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/445) |
+
+**Filed since the audit**
+
+| Work | Issue |
+| --- | --- |
+| A fog of war for the chart — the world going vague where no hull of yours is listening, which is the Echo Layer's own rule drawn on the map | [#472](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/472) |
+| Harvesters that would not move in the Prologue, found by playing it | [#478](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/478) |
+| The Tetherjelly's second home — [bestiary.md](bestiary.md) §4 gives the species two and seeds it in one, and *Tend* cannot author the fauna of its own kelp lane until that is decided | [#480](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/480) |
 
 **Why match resolution stands alone at the top.** Every other row is an improvement to a
 game; the first row is whether there is one. The balance guard-rails are the only instrument
@@ -429,7 +458,7 @@ movement that both are about. The interpolation is for the player's *own* hulls 
 [ui-ux.md](ui-ux.md) §4 and §12 forbid smoothing a contact between snapshots, and that rule
 is not on the table — a contact that glides is a contact the server never resolved.
 
-**The design rows are documents before they are code.** Four of them ask for a decision in
+**The design rows are documents before they are code.** Most of them ask for a decision in
 `docs/` first, and [units.md](units.md)'s own "Next steps" has listed faction unit variants
 as the next thing to author for as long as the roster has existed. The population cap in particular has
 sat in the Planned section of [README.md](README.md) as a deferred question; it is an issue
