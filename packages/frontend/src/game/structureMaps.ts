@@ -284,49 +284,60 @@ const VARIANT_MAP_URL: Partial<Record<Faction, Partial<Record<StructureKind, Map
 
 /** Keyed 'kind' for canonical models, 'faction:kind' for variants. */
 const maps = new Map<string, ModelMaps>();
+/** One decode per key, shared and never retried — hullMaps.ts says why. */
+const decodes = new Map<string, Promise<void>>();
 
-async function decodeInto(key: string, urls: MapUrls): Promise<void> {
-  const decode = async (src: string): Promise<HTMLImageElement> => {
-    const img = new Image();
-    img.src = src;
-    await img.decode();
-    return img;
-  };
-  try {
-    const [albedo, height, emissive] = await Promise.all([
-      decode(urls.albedo),
-      decode(urls.height),
-      decode(urls.emissive),
-    ]);
-    maps.set(key, {
-      albedo,
-      height,
-      emissive,
-      widthPx: albedo.naturalWidth,
-      heightPx: albedo.naturalHeight,
-    });
-  } catch {
-    // Absent map => next fallback level. Not fatal.
+function decodeInto(key: string, urls: MapUrls): Promise<void> {
+  let job = decodes.get(key);
+  if (job === undefined) {
+    job = (async () => {
+      const decode = async (src: string): Promise<HTMLImageElement> => {
+        const img = new Image();
+        img.src = src;
+        await img.decode();
+        return img;
+      };
+      try {
+        const [albedo, height, emissive] = await Promise.all([
+          decode(urls.albedo),
+          decode(urls.height),
+          decode(urls.emissive),
+        ]);
+        maps.set(key, {
+          albedo,
+          height,
+          emissive,
+          widthPx: albedo.naturalWidth,
+          heightPx: albedo.naturalHeight,
+        });
+      } catch {
+        // Absent map => next fallback level. Not fatal.
+      }
+    })();
+    decodes.set(key, job);
   }
+  return job;
 }
 
-/** Decode every structure map; a failed decode drops that lookup down the
- * variant -> canonical -> procedural chain rather than breaking the renderer. */
-export async function loadStructureMaps(): Promise<void> {
-  const jobs: Promise<void>[] = [];
-  for (const [kind, urls] of Object.entries(MAP_URL)) {
-    jobs.push(decodeInto(kind, urls));
+/**
+ * Decode the maps one structure needs as one faction builds it, and only
+ * those (#442) — the same per-hull discipline as `loadHullMap`, with the
+ * same chain: variant, then canonical if the variant is absent or fails,
+ * then nothing, which is the procedural bake in structureTextures.ts.
+ */
+export async function loadStructureMap(kind: StructureKind, faction: Faction): Promise<void> {
+  const variant = VARIANT_MAP_URL[faction]?.[kind];
+  if (variant !== undefined) {
+    const key = `${faction}:${kind}`;
+    await decodeInto(key, variant);
+    if (maps.has(key)) return;
   }
-  for (const [faction, byKind] of Object.entries(VARIANT_MAP_URL)) {
-    for (const [kind, urls] of Object.entries(byKind)) {
-      jobs.push(decodeInto(`${faction}:${kind}`, urls));
-    }
-  }
-  await Promise.all(jobs);
+  const canonical = MAP_URL[kind];
+  if (canonical !== undefined) await decodeInto(String(kind), canonical);
 }
 
 /** The decoded maps for a structure as this faction builds it, or null when
- * it has none (or none yet). */
+ * it has none (or none yet — `loadStructureMap` is what fills this in). */
 export function structureMap(kind: StructureKind, faction: Faction): ModelMaps | null {
   return maps.get(`${faction}:${kind}`) ?? maps.get(String(kind)) ?? null;
 }

@@ -11,13 +11,21 @@
  * needs them, and the unmount teardown is what makes "Return to port" true.
  * The shell holds an AudioContext of its own for the menu bed, on the same
  * terms and never at the same time: see `useMenuAudio`.
+ *
+ * `GameCanvas` is also the only screen loaded on demand (#442). Everything
+ * behind it — three.js, Pixi, the conn view, the sprite bakes — is most of
+ * the bundle and none of the port, so the title screen ships the menus and
+ * the match screen fetches the rest as the player descends. The mix is the
+ * one match system that stays in the shell, because the port's music rides
+ * its bus (`useMenuAudio` says why). The fallback under the lazy screen is
+ * the same "Listening…" glass the canvas itself shows until the room
+ * answers, so the download and the join read as one wait, not two.
  */
 
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import './App.css';
 import { useMenuAudio } from './audio/useMenuAudio.ts';
 import { DEFAULT_MAP_ID, missionHeaderById, PROLOGUE_SORROWGATE_HEADER } from '@echoes/shared';
-import { GameCanvas } from './game/GameCanvas.tsx';
 import { BriefingScreen } from './menu/BriefingScreen.tsx';
 import { CampaignScreen } from './menu/CampaignScreen.tsx';
 import { CreditsScreen } from './menu/CreditsScreen.tsx';
@@ -31,6 +39,10 @@ import { TitleScreen } from './menu/TitleScreen.tsx';
 import { storedMissionId } from './net/GameClient.ts';
 import { hasPlayed, seenScenes } from './progression/store.ts';
 import { loadSettings } from './settings/store.ts';
+
+const GameCanvas = lazy(() =>
+  import('./game/GameCanvas.tsx').then((module) => ({ default: module.GameCanvas }))
+);
 
 type Screen =
   | { kind: 'title' }
@@ -240,16 +252,26 @@ function App() {
       )}
       {screen.kind === 'credits' && <CreditsScreen onBack={toTitle} />}
       {screen.kind === 'match' && (
-        <GameCanvas
-          playerName={screen.name}
-          mapId={screen.mapId}
-          missionId={screen.missionId}
-          roomId={screen.roomId}
-          create={screen.create}
-          resume={screen.resume}
-          onExit={toTitle}
-          onRecord={toRecord}
-        />
+        <Suspense
+          fallback={
+            <div className="game-root">
+              <div className="game-overlay">
+                <h2>Listening…</h2>
+              </div>
+            </div>
+          }
+        >
+          <GameCanvas
+            playerName={screen.name}
+            mapId={screen.mapId}
+            missionId={screen.missionId}
+            roomId={screen.roomId}
+            create={screen.create}
+            resume={screen.resume}
+            onExit={toTitle}
+            onRecord={toRecord}
+          />
+        </Suspense>
       )}
     </div>
   );

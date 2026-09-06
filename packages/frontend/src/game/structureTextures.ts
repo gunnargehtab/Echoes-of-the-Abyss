@@ -25,10 +25,10 @@
  */
 
 import { Texture } from 'pixi.js';
-import { Faction, StructureKind, structureStatsFor } from '@echoes/shared';
+import { Faction, FACTION_STRUCTURE, StructureKind, structureStatsFor } from '@echoes/shared';
 import { ACTIVE_PALETTE, FACTION_PALETTE } from './palette.ts';
 import { bakeModelSprite, cssColor, distanceTransform, glowDot, lightAndCompose } from './bake.ts';
-import { loadStructureMaps, structureMap, STRUCT_MAP_PPM } from './structureMaps.ts';
+import { loadStructureMap, structureMap, STRUCT_MAP_PPM } from './structureMaps.ts';
 
 import cruiserUrl from '../assets/hulls/cruiser.png';
 import siegeUrl from '../assets/hulls/siege.png';
@@ -66,26 +66,70 @@ const PX_PER_M = 1.5;
 const MARGIN_PX = 10;
 
 const artImages = new Map<StructureKind, HTMLImageElement>();
-let artLoaded = false;
+/** One decode per plate: four patches clad ten structures. */
+const plateDecodes = new Map<string, Promise<HTMLImageElement>>();
+/** Structures whose plate and maps are both decoded, keyed `kind:faction`. */
+const artReady = new Set<string>();
+/** One job per structure and faction, shared by everything that asks. */
+const artLoads = new Map<string, Promise<void>>();
 
-/** Canvas beside Texture, exactly as hullTextures.ts keeps them, and why. */
 const bakedCanvas = new Map<string, HTMLCanvasElement>();
 const baked = new Map<string, Texture>();
 
-/** Decode the plating patches. Failure is non-fatal: scaffolding stays up. */
-export async function loadStructureArt(): Promise<void> {
-  await Promise.all([
-    ...Object.entries(STRUCT_ART_URL).map(async ([kind, url]) => {
+function decodePlate(url: string): Promise<HTMLImageElement> {
+  let job = plateDecodes.get(url);
+  if (job === undefined) {
+    job = (async () => {
       const img = new Image();
       img.src = url;
       await img.decode();
-      artImages.set(Number(kind) as StructureKind, img);
-    }),
-    // Model maps decode alongside; a structure whose maps fail simply bakes
-    // procedurally, so this never blocks the art from loading.
-    loadStructureMaps(),
-  ]);
-  artLoaded = true;
+      return img;
+    })();
+    plateDecodes.set(url, job);
+  }
+  return job;
+}
+
+/**
+ * Decode what one structure needs as one faction builds it — its plate and
+ * the maps of the model that serves it — on the terms hullTextures.ts sets
+ * out (#442): per kind, on first ask or when the seat is primed, and never
+ * retried once refused. The structure maps are the larger half of the art by
+ * bytes, and a Bathyarch match has no use for a Pelagian Bastion.
+ */
+export function loadStructureArt(kind: StructureKind, faction: Faction): Promise<void> {
+  const key = `${kind}:${faction}`;
+  let job = artLoads.get(key);
+  if (job === undefined) {
+    job = (async () => {
+      // Model maps decode alongside; a structure whose maps fail simply bakes
+      // procedurally, so this never blocks the art from loading.
+      const [img] = await Promise.all([
+        decodePlate(STRUCT_ART_URL[kind]),
+        loadStructureMap(kind, faction),
+      ]);
+      artImages.set(kind, img);
+      artReady.add(key);
+    })();
+    artLoads.set(key, job);
+  }
+  return job;
+}
+
+/**
+ * Start decoding every structure this faction can build: the common set, and
+ * its own signature structure but not the other navies'. Called when the seat
+ * is assigned, for the reason `primeHullArt` gives.
+ */
+export function primeStructureArt(faction: Faction): void {
+  const signatures = new Set(Object.values(FACTION_STRUCTURE));
+  for (const kind of Object.keys(STRUCT_ART_URL)) {
+    // Object.keys stringifies the numeric enum key; restore it.
+    const structure = Number(kind) as StructureKind;
+    if (!signatures.has(structure) || FACTION_STRUCTURE[faction] === structure) {
+      loadStructureArt(structure, faction).catch(() => {});
+    }
+  }
 }
 
 /** Canvas half-extents in world metres, per footprint (before margin). */
@@ -161,7 +205,11 @@ export function structureSpriteCanvas(
   kind: StructureKind,
   faction: Faction
 ): HTMLCanvasElement | null {
-  if (!artLoaded) return null;
+  if (!artReady.has(`${kind}:${faction}`)) {
+    // The first ask starts the decode; every ask until it lands draws vectors.
+    loadStructureArt(kind, faction).catch(() => {});
+    return null;
+  }
   const key = `${kind}:${faction}:${ACTIVE_PALETTE.name}`;
   let canvas = bakedCanvas.get(key);
   if (canvas === undefined) {

@@ -45,8 +45,8 @@ No faction is written as the villain. Read: **[factions.md](../docs/factions.md)
 
 ## Tech Stack & Implementation
 
-- **Frontend:** TypeScript · three.js (the conn-view world) · PixiJS (HUD and chart marks over it) · bitecs (ECS) · Howler.js + raw Web Audio · React (menus only)
-- **Backend:** Node.js · Colyseus (multiplayer state sync) · Redis (real-time caching) and PostgreSQL (accounts/saves), both planned rather than built
+- **Frontend:** TypeScript · three.js (the conn-view world) · PixiJS (HUD and chart marks over it) · raw Web Audio · React (menus only)
+- **Backend:** Node.js · Colyseus (multiplayer state sync) · bitecs (ECS) · Redis (real-time caching) and PostgreSQL (accounts/saves), both planned rather than built
 - **Build:** Vite · ESBuild · npm workspaces
 - **Deployment:** container images (`packages/*/Dockerfile`, root `docker-compose.yml`) targeting Vercel (frontend) · Hetzner Cloud (game servers, low latency in EU); no platform project is configured yet
 

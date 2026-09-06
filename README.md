@@ -98,8 +98,8 @@ Seven plates: five survey plates in the **Pressure Cartography** visual language
 
 ## 🧱 Tech Stack
 
-**Frontend:** TypeScript · three.js (the conn-view world) · PixiJS (HUD over it) · bitecs (ECS) · Howler.js + raw Web Audio · React (menus only)
-**Backend:** Node.js · Colyseus · Redis and PostgreSQL (planned — no persistence code yet)
+**Frontend:** TypeScript · three.js (the conn-view world) · PixiJS (HUD over it) · raw Web Audio · React (menus only)
+**Backend:** Node.js · Colyseus · bitecs (ECS) · Redis and PostgreSQL (planned — no persistence code yet)
 **Build:** Vite · ESBuild · Docker images and a compose file · Vercel (frontend) · Hetzner Cloud (game servers)
 
 Detection is **server-authoritative and per-player** — in a game about hidden information, maphack is the whole threat model. The Echo Layer runs on a spatial hash at 5 Hz with a hard **2 ms/tick budget**.
