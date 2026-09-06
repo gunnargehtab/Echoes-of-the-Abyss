@@ -10,6 +10,7 @@ import * as content from '../lib/content.mjs';
 import { driftReport, mentionedIssues, placedIssues } from '../lib/drift.mjs';
 import { inline, render } from '../lib/render.mjs';
 import { SHEET_FILE, findContactSheet, pngSize } from '../lib/sheet.mjs';
+import { firstFiled, formatSpan, span } from '../lib/dates.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const REPO = 'gunnargehtab/Echoes-of-the-Abyss';
@@ -358,4 +359,87 @@ test('render: the roster figure and the unplaced line appear only when there is 
     render({ ...base, unplaced: 1 }),
     /One more open item in the tracker is not yet placed/
   );
+});
+
+test('dates: a phase spans from its first issue filed to its last one closed', () => {
+  const items = [{ number: 1 }, { number: 2 }, { number: 3 }];
+  const at = (created, closed, state = 'closed') => ({
+    state,
+    createdAt: created,
+    closedAt: closed,
+  });
+  const states = new Map([
+    [1, at('2026-08-23T09:00:00Z', '2026-08-24T10:00:00Z')],
+    [2, at('2026-08-22T09:00:00Z', '2026-08-23T10:00:00Z')],
+    [3, at('2026-08-25T09:00:00Z', '2026-08-26T10:00:00Z')],
+  ]);
+  assert.deepEqual(span(items, states), {
+    start: '2026-08-22T09:00:00Z',
+    end: '2026-08-26T10:00:00Z',
+    ongoing: false,
+  });
+  assert.equal(formatSpan(span(items, states)), '22–26 Aug 2026');
+
+  // One item still open: the phase has no end date, however much of it closed.
+  const withOpen = new Map(states);
+  withOpen.set(3, at('2026-08-25T09:00:00Z', null, 'open'));
+  const partial = span(items, withOpen);
+  assert.equal(partial.end, null);
+  assert.equal(partial.ongoing, true);
+  assert.equal(formatSpan(partial), 'since 22 Aug 2026');
+
+  // Nothing known — a build with no token draws no dates at all.
+  assert.equal(span(items, new Map()), null);
+  assert.equal(formatSpan(null), null);
+  assert.equal(firstFiled(states), '22 Aug 2026');
+});
+
+test('dates: a range is set by how far apart its ends are', () => {
+  const at = (start, end) => formatSpan({ start, end, ongoing: false });
+  assert.equal(at('2026-08-23T01:00:00Z', '2026-08-23T23:00:00Z'), '23 Aug 2026');
+  assert.equal(at('2026-08-15T01:00:00Z', '2026-08-24T01:00:00Z'), '15–24 Aug 2026');
+  assert.equal(at('2026-08-30T01:00:00Z', '2026-09-06T01:00:00Z'), '30 Aug – 6 Sep 2026');
+  assert.equal(at('2026-12-30T01:00:00Z', '2027-01-06T01:00:00Z'), '30 Dec 2026 – 6 Jan 2027');
+  // The day is read in UTC, not the builder's timezone: a late-evening close
+  // must not roll onto the next day for a runner east of Greenwich.
+  assert.equal(at('2026-08-23T23:30:00Z', '2026-08-23T23:59:00Z'), '23 Aug 2026');
+});
+
+test('render: every phase carries the dates it ran, and the page says when it began', () => {
+  const roadmap = parseRoadmap(SAMPLE);
+  const states = new Map([
+    [
+      98,
+      {
+        state: 'closed',
+        title: 'D',
+        url: url(98),
+        createdAt: '2026-08-23T01:00:00Z',
+        closedAt: '2026-08-23T09:00:00Z',
+      },
+    ],
+    [
+      99,
+      {
+        state: 'closed',
+        title: 'H',
+        url: url(99),
+        createdAt: '2026-08-22T01:00:00Z',
+        closedAt: '2026-08-24T09:00:00Z',
+      },
+    ],
+  ]);
+  const html = render({
+    roadmap,
+    states,
+    content,
+    counts: { missions: 29, maps: 3, factions: 4 },
+    repo: REPO,
+    generatedAt: '2026-09-06 09:00 UTC',
+    fontHref: 'fonts/x.woff2',
+  });
+  assert.match(html, /class="phase-when">22–24 Aug 2026</);
+  assert.match(html, /The first issue on this roadmap was filed 22 Aug 2026\./);
+  // A phase whose issues are unknown draws no date rather than a wrong one.
+  assert.doesNotMatch(html, /phase-when">(null|undefined|NaN)/);
 });

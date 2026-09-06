@@ -27,11 +27,17 @@ neon-noir register of `docs/style-neon-noir.md` under the Mouth lockup from `doc
   row in player terms and linked to the issue that tracks it, with that issue's live state.
   A rough edge whose issue has closed reads as fixed, never as current.
 - **What is next** — every phase with something still open, as a collapsible card with a
-  player-facing title, its live count and its rows; group labels become sub-headings.
+  player-facing title, **the dates it ran**, its live count and its rows; group labels become sub-headings.
   Filter by planned or done, search, expand all; `#phase-N` deep-links open the phase.
   Above the phases, one line counts the open issues the roadmap has not placed in any row
   yet, so the page never presents the rows as the whole of the work when they are not.
-- **The road so far** — the finished phases, folded, then the milestone record.
+- **The road so far** — the finished phases, folded, then the milestone record. Phase 0 is
+  the first week of the project, and the sprint cards carry their real date ranges.
+
+Phase dates are derived, never written down (`lib/dates.mjs`): a phase runs from the day its
+first issue was filed to the day its last one closed, both read from the tracker, and a phase
+with anything still open reads *since* that first day rather than inventing an end. The
+footer says when the first issue on the whole roadmap was filed.
 
 ## Whose words these are
 
@@ -79,6 +85,7 @@ Each thing on the page has one owner, and each owner has a check:
 | Player-facing words | `lib/content.mjs` | the test fails if any row, phase, group, status row or sprint of the real doc has no copy |
 | Mission, map, navy counts | counted from the repository at build time | nothing to drift — they are not typed anywhere |
 | The roster sheet | newest `docs/screenshots/issue-<N>/rung-roster-sprites.png` | `pages.yml` rebuilds when one lands; the test fails if none exists |
+| The dates each phase ran | issue `created_at` / `closed_at`, at build time | nothing to drift — no date is typed anywhere, and a phase with open rows says *since* rather than guessing an end |
 | Open issues with no row | the GitHub API against the doc | the build log names them, and the page counts them |
 
 Two things stay on people. **A new issue is not a row until somebody adds one** — the build
@@ -121,7 +128,8 @@ deploy says why in its log.
 
 ## What gets published
 
-Only what is already in `docs/ROADMAP.md`, the titles and numbers of the issues it links,
+Only what is already in `docs/ROADMAP.md`, the titles, numbers and open/close dates of the
+issues it links,
 the player-facing copy in `lib/content.mjs` (itself transcribed from the design docs), the
 mission and map counts, the roster contact sheet, a count of open issues not yet on the
 roadmap, the logo, and the display font. No source, no design bible, no

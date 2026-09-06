@@ -25,7 +25,7 @@ async function getJson(url, token) {
   return response.json().catch(() => null);
 }
 
-/** `Map<number, {state, title, url, closedAt}>` for the issues asked about. */
+/** `Map<number, {state, title, url, createdAt, closedAt}>` for the issues asked about. */
 export async function fetchIssueStates(repo, numbers, token) {
   const states = new Map();
   if (!token) return states;
@@ -36,6 +36,9 @@ export async function fetchIssueStates(repo, numbers, token) {
       state: issue.state,
       title: issue.title,
       url: issue.html_url,
+      // Both timestamps, because lib/dates.mjs spans each phase from the day
+      // its first issue was filed to the day its last one closed.
+      createdAt: issue.created_at ?? null,
       closedAt: issue.closed_at ?? null,
     });
   }

@@ -162,6 +162,11 @@ export const roughEdges = {
  * fan ones.
  */
 export const phases = {
+  0: {
+    title: 'Before there was a game',
+    blurb:
+      'A glossary, a simulation of sound with nothing around it yet, and the checks that stop the writing and the code from drifting apart.',
+  },
   1: {
     title: 'Depth becomes a choice',
     blurb: 'The ocean was always three bands deep on paper. This is where ships learned to dive.',
@@ -212,11 +217,48 @@ export const groups = {
   Controls: 'Controls',
   Design: 'New things to play with',
   'Shipping and hygiene': 'Getting it out the door',
+  'The design bible': 'Writing the game down',
+  'The scaffold': 'The first working code',
+  'The gates': 'Checks that keep it honest',
+  'How the project runs': 'Getting organised',
+  'What the first read-through found': 'What the first read-through found',
   'The opponent': 'A better opponent',
   'Filed since the audit': 'Since then',
 };
 
 export const items = {
+  // Phase 0 — the first week
+  6: 'A glossary, so that every word in the design means one thing',
+  20: 'The glossary settled, and made the document the others answer to',
+  21: 'Every term linked back to the one place it is defined',
+  7: 'The first roster: what each submarine is and what it is for',
+  22: 'Stats for every hull, and a plan for testing whether they are the right ones',
+  23: 'A checklist for playtesting a unit, and somewhere to write down what happened',
+  8: 'This roadmap, in its first form',
+  9: 'A game client that builds and runs',
+  10: 'The sound model as working code — how far a noise carries, and who hears it — before there was a game around it',
+  24: 'A first scene on screen, and controls that move something in it',
+  26: 'A test bench for the sound model: fixed scenarios that must always come out the same',
+  27: 'That bench written up and made reusable, so the tests can call it',
+  11: 'Automated checks on every change, from the first week',
+  25: 'The client built on every change, so one that does not build cannot land',
+  28: 'One code style, enforced rather than suggested',
+  29: 'The design documents checked for broken links and bad formatting',
+  12: 'A quickstart for anyone who wants to run it',
+  30: 'That quickstart fixed after somebody actually followed it',
+  16: 'How to contribute, written down',
+  17: 'Labels and templates, so an issue arrives with what it needs',
+  18: 'Naming and commit conventions',
+  14: 'Who owns what',
+  15: 'A board to track it on',
+  19: 'A place to talk, and the meeting that started it',
+  57: 'The bar a piece of art has to clear before it ships, and a check that the game still runs on a phone',
+  34: 'The five grades of certainty disagreed with themselves — some documents counted five, others six',
+  35: 'Every hull\u2019s listening range was a number the code made up; the design had never chosen one',
+  36: 'The test bench and the game were computing detection two different ways',
+  37: 'Sound was being measured at the source instead of along the path it travels — the model the whole game rests on, wrong in the one place it is worked out',
+  38: 'About 270 formatting faults in the design documents, and a check that only reported them',
+  39: 'Seven documents were linked from others and had never been written',
   // Phase 1
   98: 'Dive and surface on command — diving fast and loud, rising slow and silent',
   99: 'A depth ribbon, a pressure badge and crush warnings on the HUD',
