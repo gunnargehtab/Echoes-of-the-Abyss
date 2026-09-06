@@ -129,6 +129,32 @@ distance per hull per source. That is the same shape as the structure auras and 
 sources at most, so the per-tick cost stays linear in hulls; a Tender's weld is one nearest
 search per Tender per tick, on the same terms.
 
+### The wire contract: schema, and messages
+
+Colyseus gives two channels and the split is deliberate. **Schema state** — the lobby
+roster, the phase, the tick — syncs automatically to everyone, because it is the same for
+everyone. **Messages** carry everything that is resolved *per observer*: the Echo snapshot,
+the seat assignment, the mission view. That is not an optimisation, it is the fidelity
+model — a fact that differs by who is asking cannot live in shared state without leaking.
+
+Both directions of the message channel are declared once, in
+`packages/shared/src/wire.ts`: 24 names a client may send, 11 the room may send, and the
+payload of each. Neither package writes a message name as a string literal, and each side
+reaches the wire through a thin generic wrapper that takes the name and infers the payload
+from the same map. The result is that a message renamed or reshaped anywhere is a compile
+error in both packages at once.
+
+Before that, the names were string literals written twice, once per package, and the
+payloads were object literals on the server against hand-written interfaces on the client.
+The failure mode was silent and is worth remembering, because it is the reason the
+indirection is worth its weight: rename a message on one side and the socket still carries
+it, the other side has no handler registered, and it is dropped — no type error, no runtime
+error, no log line. The player presses a key and the water stays quiet.
+
+The one thing types still cannot catch is a handler never registered at all. That is held
+by a test instead (`packages/frontend/test/gameClient.test.ts`), which checks the client
+registers a handler for every name in `SERVER_MSG` and sends nothing outside `CLIENT_MSG`.
+
 ## Navigation
 
 Until #431 nothing in the simulation could path around an obstacle: `movementSystem`

@@ -18,19 +18,22 @@ import { Room, type Client } from '@colyseus/core';
 import {
   AiDifficulty,
   Faction,
-  HarvestThrottle,
   LIFECYCLE,
   MatchPhase,
   SIM,
-  StructureKind,
-  UnitKind,
   driftCarryFrom,
   validDriftCarry,
   type DriftCarry,
   type EchoSnapshot,
   type MatchListingMetadata,
   encodeEcho,
+  CLIENT_MSG,
+  SERVER_MSG,
   type EchoWire,
+  type ClientMessageName,
+  type ClientMessages,
+  type ServerMessageName,
+  type ServerMessages,
 } from '@echoes/shared';
 import { AiSeat, briefingFor } from '../ai/seat.ts';
 import { Match } from '../sim/match.ts';
@@ -49,124 +52,6 @@ import {
   everyoneIsReady,
   type RosterEntry,
 } from './lobby.ts';
-
-interface MoveMessage {
-  unitIds: number[];
-  x: number;
-  y: number;
-  /** Append to the unit's plan instead of replacing it. */
-  queued?: boolean;
-}
-
-interface SilentRunningMessage {
-  unitIds: number[];
-  active: boolean;
-}
-
-interface DepthMessage {
-  unitIds: number[];
-  /** Ordered depth in metres. Validated and range-checked in the sim. */
-  depth: number;
-}
-
-interface FollowFloorMessage {
-  unitIds: number[];
-  /** Arm or disarm the standing order (docs/systems-depth.md §2). */
-  active: boolean;
-}
-
-interface PingMessage {
-  unitId: number;
-}
-
-interface AttackMessage {
-  unitIds: number[];
-  /** Opaque per-observer contact handle, not an entity id. */
-  contactId: number;
-  queued?: boolean;
-}
-
-/** Attack-move: a move that fights whatever it meets on the way (#435). */
-interface AttackMoveMessage {
-  unitIds: number[];
-  x: number;
-  y: number;
-  queued?: boolean;
-}
-
-interface StopMessage {
-  unitIds: number[];
-}
-
-interface HoldMessage {
-  unitIds: number[];
-  active: boolean;
-}
-
-/** Where a yard sends the hulls it launches. */
-interface RallyMessage {
-  structureIds: number[];
-  x: number;
-  y: number;
-}
-
-/** Opaque per-observer contact handle, like AttackMessage — never an entity id. */
-interface TorpedoMessage {
-  unitIds: number[];
-  contactId: number;
-}
-
-interface NoisemakerMessage {
-  unitIds: number[];
-}
-
-interface MineMessage {
-  unitIds: number[];
-}
-
-interface DepthChargeMessage {
-  unitIds: number[];
-  depth: number;
-}
-
-interface HarvestMessage {
-  unitIds: number[];
-  nodeId: number;
-  queued?: boolean;
-}
-
-interface ThrottleMessage {
-  unitIds: number[];
-  throttle: HarvestThrottle;
-}
-
-interface BuildMessage {
-  kind: StructureKind;
-  x: number;
-  y: number;
-}
-
-interface ProduceMessage {
-  structureId: number;
-  kind: UnitKind;
-}
-
-interface FactionMessage {
-  faction: Faction;
-}
-
-interface ReadyMessage {
-  ready?: boolean;
-}
-
-interface AddAiMessage {
-  difficulty?: AiDifficulty;
-}
-
-interface AiSeatMessage {
-  sessionId: string;
-  difficulty?: AiDifficulty;
-}
 
 /**
  * An AI seat's stand-in session id.
@@ -251,6 +136,37 @@ export class MatchRoom extends Room<MatchState> {
    */
   private driftCarry: number[] | null = null;
 
+  // --- The wire, typed ------------------------------------------------------
+  //
+  // Three wrappers, and they are the whole mechanism behind #489. Because the
+  // name and the payload both come from the map in `@echoes/shared/wire`, a
+  // message renamed or reshaped on one side of the socket stops compiling on
+  // both — where before it compiled fine, travelled fine, and was silently
+  // dropped by a room with no handler registered for it. They add nothing at
+  // runtime; each is one call through to the Colyseus method it wraps.
+
+  /** Register a handler for one client message, payload type and all. */
+  private onClientMessage<K extends ClientMessageName>(
+    type: K,
+    handler: (client: Client, message: ClientMessages[K]) => void
+  ): void {
+    this.onMessage(type, handler);
+  }
+
+  /** Send one message to one client. */
+  private sendTo<K extends ServerMessageName>(
+    client: Client,
+    type: K,
+    payload: ServerMessages[K]
+  ): void {
+    client.send(type, payload);
+  }
+
+  /** Send one message to everyone in the room. */
+  private announce<K extends ServerMessageName>(type: K, payload: ServerMessages[K]): void {
+    this.broadcast(type, payload);
+  }
+
   override async onCreate(options?: MatchRoomOptions): Promise<void> {
     const requested = options?.missionId ?? '';
     this.mission = requested === '' ? null : (missionById(requested) ?? null);
@@ -303,7 +219,7 @@ export class MatchRoom extends Room<MatchState> {
     if (this.mission !== null || options?.private === true) await this.setPrivate(true);
     await this.publishListing();
 
-    this.onMessage('move', (client, message: MoveMessage) => {
+    this.onClientMessage(CLIENT_MSG.move, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;
       if (!Number.isFinite(message.x) || !Number.isFinite(message.y)) return;
@@ -314,7 +230,7 @@ export class MatchRoom extends Room<MatchState> {
       }
     });
 
-    this.onMessage('silent', (client, message: SilentRunningMessage) => {
+    this.onClientMessage(CLIENT_MSG.silent, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;
       for (const unitId of message.unitIds) {
@@ -322,7 +238,7 @@ export class MatchRoom extends Room<MatchState> {
       }
     });
 
-    this.onMessage('depth', (client, message: DepthMessage) => {
+    this.onClientMessage(CLIENT_MSG.depth, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;
       if (!Number.isFinite(message.depth)) return;
@@ -333,7 +249,7 @@ export class MatchRoom extends Room<MatchState> {
       }
     });
 
-    this.onMessage('followFloor', (client, message: FollowFloorMessage) => {
+    this.onClientMessage(CLIENT_MSG.followFloor, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;
       for (const unitId of message.unitIds) {
@@ -341,7 +257,7 @@ export class MatchRoom extends Room<MatchState> {
       }
     });
 
-    this.onMessage('ping', (client, message: PingMessage) => {
+    this.onClientMessage(CLIENT_MSG.ping, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined || !Number.isFinite(message?.unitId)) return;
       this.match.activeSonar(slot, message.unitId);
@@ -350,13 +266,13 @@ export class MatchRoom extends Room<MatchState> {
     // The commander's one act (docs/characters.md). No payload at all — the
     // act carries no unit, and a message that named one would be a client
     // choosing where the plateau's bell hangs.
-    this.onMessage('ability', (client) => {
+    this.onClientMessage(CLIENT_MSG.ability, (client) => {
       const slot = this.commandSlot(client);
       if (slot === undefined) return;
       this.match.commanderAbility(slot);
     });
 
-    this.onMessage('attackMove', (client, message: AttackMoveMessage) => {
+    this.onClientMessage(CLIENT_MSG.attackMove, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;
       if (!Number.isFinite(message.x) || !Number.isFinite(message.y)) return;
@@ -365,13 +281,13 @@ export class MatchRoom extends Room<MatchState> {
       }
     });
 
-    this.onMessage('stop', (client, message: StopMessage) => {
+    this.onClientMessage(CLIENT_MSG.stop, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;
       for (const unitId of message.unitIds) this.match.orderStop(slot, unitId);
     });
 
-    this.onMessage('hold', (client, message: HoldMessage) => {
+    this.onClientMessage(CLIENT_MSG.hold, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;
       for (const unitId of message.unitIds) {
@@ -379,7 +295,7 @@ export class MatchRoom extends Room<MatchState> {
       }
     });
 
-    this.onMessage('rally', (client, message: RallyMessage) => {
+    this.onClientMessage(CLIENT_MSG.rally, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.structureIds)) return;
       if (!Number.isFinite(message.x) || !Number.isFinite(message.y)) return;
@@ -388,7 +304,7 @@ export class MatchRoom extends Room<MatchState> {
       }
     });
 
-    this.onMessage('attack', (client, message: AttackMessage) => {
+    this.onClientMessage(CLIENT_MSG.attack, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;
       if (!Number.isFinite(message.contactId)) return;
@@ -397,7 +313,7 @@ export class MatchRoom extends Room<MatchState> {
       }
     });
 
-    this.onMessage('torpedo', (client, message: TorpedoMessage) => {
+    this.onClientMessage(CLIENT_MSG.torpedo, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;
       if (!Number.isFinite(message.contactId)) return;
@@ -409,7 +325,7 @@ export class MatchRoom extends Room<MatchState> {
       }
     });
 
-    this.onMessage('noisemaker', (client, message: NoisemakerMessage) => {
+    this.onClientMessage(CLIENT_MSG.noisemaker, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;
       for (const unitId of message.unitIds) {
@@ -417,7 +333,7 @@ export class MatchRoom extends Room<MatchState> {
       }
     });
 
-    this.onMessage('mine', (client, message: MineMessage) => {
+    this.onClientMessage(CLIENT_MSG.mine, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;
       for (const unitId of message.unitIds) {
@@ -427,7 +343,7 @@ export class MatchRoom extends Room<MatchState> {
       }
     });
 
-    this.onMessage('depthcharge', (client, message: DepthChargeMessage) => {
+    this.onClientMessage(CLIENT_MSG.depthCharge, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;
       if (!Number.isFinite(message.depth)) return;
@@ -438,7 +354,7 @@ export class MatchRoom extends Room<MatchState> {
       }
     });
 
-    this.onMessage('harvest', (client, message: HarvestMessage) => {
+    this.onClientMessage(CLIENT_MSG.harvest, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;
       if (!Number.isFinite(message.nodeId)) return;
@@ -447,7 +363,7 @@ export class MatchRoom extends Room<MatchState> {
       }
     });
 
-    this.onMessage('throttle', (client, message: ThrottleMessage) => {
+    this.onClientMessage(CLIENT_MSG.throttle, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;
       if (!Number.isFinite(message.throttle)) return;
@@ -456,14 +372,14 @@ export class MatchRoom extends Room<MatchState> {
       }
     });
 
-    this.onMessage('build', (client, message: BuildMessage) => {
+    this.onClientMessage(CLIENT_MSG.build, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined || !Number.isFinite(message?.kind)) return;
       if (!Number.isFinite(message.x) || !Number.isFinite(message.y)) return;
       this.match.build(slot, message.kind, message.x, message.y);
     });
 
-    this.onMessage('produce', (client, message: ProduceMessage) => {
+    this.onClientMessage(CLIENT_MSG.produce, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined || !Number.isFinite(message?.structureId)) return;
       if (!Number.isFinite(message.kind)) return;
@@ -472,7 +388,7 @@ export class MatchRoom extends Room<MatchState> {
 
     // --- Lifecycle messages ------------------------------------------------
 
-    this.onMessage('faction', (client, message: FactionMessage) => {
+    this.onClientMessage(CLIENT_MSG.faction, (client, message) => {
       if (this.state.phase !== MatchPhase.Lobby) return;
       // A mission pins the navy and seats no commanders: there is nothing here
       // to choose. Refused rather than quietly ignored, because the screen that
@@ -488,10 +404,10 @@ export class MatchRoom extends Room<MatchState> {
       // Changing your pick un-readies you. Otherwise "everyone is ready" could
       // be true of a roster nobody has looked at since it last changed.
       player.ready = false;
-      client.send('assigned', { slot: player.slot, faction: player.faction });
+      this.sendTo(client, SERVER_MSG.assigned, { slot: player.slot, faction: player.faction });
     });
 
-    this.onMessage('ready', (client, message: ReadyMessage) => {
+    this.onClientMessage(CLIENT_MSG.ready, (client, message) => {
       const player = this.state.players.get(client.sessionId);
       if (player === undefined) return;
       // Ready means "start" in the lobby and "rematch" after a result. Same
@@ -501,14 +417,14 @@ export class MatchRoom extends Room<MatchState> {
       this.startIfEveryoneIsReady();
     });
 
-    this.onMessage('addAi', (client, message: AddAiMessage) => {
+    this.onClientMessage(CLIENT_MSG.addAi, (client, message) => {
       if (this.state.phase !== MatchPhase.Lobby) return;
       if (this.mission !== null) return;
       if (!this.state.players.has(client.sessionId)) return;
       this.addAiSeat(message?.difficulty);
     });
 
-    this.onMessage('removeAi', (client, message: AiSeatMessage) => {
+    this.onClientMessage(CLIENT_MSG.removeAi, (client, message) => {
       if (this.state.phase !== MatchPhase.Lobby) return;
       if (this.mission !== null) return;
       if (!this.state.players.has(client.sessionId)) return;
@@ -519,7 +435,7 @@ export class MatchRoom extends Room<MatchState> {
       this.startIfEveryoneIsReady();
     });
 
-    this.onMessage('aiDifficulty', (client, message: AiSeatMessage) => {
+    this.onClientMessage(CLIENT_MSG.aiDifficulty, (client, message) => {
       if (this.state.phase !== MatchPhase.Lobby) return;
       if (this.mission !== null) return;
       if (!this.state.players.has(client.sessionId)) return;
@@ -634,7 +550,7 @@ export class MatchRoom extends Room<MatchState> {
     }
 
     this.sendMapData(client);
-    client.send('assigned', { slot, faction: player.faction });
+    this.sendTo(client, SERVER_MSG.assigned, { slot, faction: player.faction });
     if (this.mission !== null) this.startIfEveryoneIsReady();
   }
 
@@ -667,11 +583,11 @@ export class MatchRoom extends Room<MatchState> {
     // the ground as it *is* rather than as it was authored — which is what
     // makes a reconnection at 15:00 land on a map with the arch already down.
     // The revision it carries is that client's cursor into the change log.
-    client.send('terrain', {
+    this.sendTo(client, SERVER_MSG.terrain, {
       ...this.match.world.terrain.serialize(),
       revision: this.match.world.terrain.revision,
     });
-    client.send('map', {
+    this.sendTo(client, SERVER_MSG.map, {
       id: this.map.id,
       name: this.map.name,
       idealUse: this.map.idealUse,
@@ -701,8 +617,8 @@ export class MatchRoom extends Room<MatchState> {
     if (player === undefined) return;
     // Nodule fields are map data too — every commander has the same survey
     // charts. Depletion is never broadcast; see docs/economy.md.
-    client.send('nodes', this.match.resourceNodes);
-    client.send('assigned', { slot: player.slot, faction: player.faction });
+    this.sendTo(client, SERVER_MSG.nodes, this.match.resourceNodes);
+    this.sendTo(client, SERVER_MSG.assigned, { slot: player.slot, faction: player.faction });
     // The mission's standing orders, if there are any.
     //
     // `takeMissionView` is an *edge* — it fires when something moves — and a
@@ -714,7 +630,7 @@ export class MatchRoom extends Room<MatchState> {
     // for one observer and is not broadcast material.
     if (this.mission !== null && player.slot === this.mission.playerSlot) {
       const view = this.match.missionView;
-      if (view !== null) client.send('mission', view);
+      if (view !== null) this.sendTo(client, SERVER_MSG.mission, view);
       // And the court's reading, if it has already been given.
       //
       // `endMission` announces once, to whoever is connected at the tick the
@@ -725,7 +641,7 @@ export class MatchRoom extends Room<MatchState> {
       // the match rather than only broadcast, so it can simply be re-sent.
       const resolution = this.match.missionOver;
       if (resolution !== null) {
-        client.send('missionOver', {
+        this.sendTo(client, SERVER_MSG.missionOver, {
           missionId: this.mission.id,
           outcome: resolution.outcome,
           epilogue: resolution.epilogue,
@@ -804,7 +720,7 @@ export class MatchRoom extends Room<MatchState> {
       this.sendMapData(client);
       this.sendMatchData(client);
     }
-    this.broadcast('phase', { phase: MatchPhase.Playing });
+    this.announce(SERVER_MSG.phase, { phase: MatchPhase.Playing });
   }
 
   /**
@@ -852,7 +768,7 @@ export class MatchRoom extends Room<MatchState> {
         // looking at their fleet floating over blank water.
         this.sendMapData(client);
         this.sendMatchData(client);
-        client.send('phase', { phase: this.state.phase });
+        this.sendTo(client, SERVER_MSG.phase, { phase: this.state.phase });
         // And the next Echo tick whole: the client's copy of the last
         // snapshot went with the page.
         this.echoSent.delete(client.sessionId);
@@ -948,7 +864,7 @@ export class MatchRoom extends Room<MatchState> {
     // is public — both commanders are standing on it.
     const groundRevision = this.match.world.terrain.revision;
     if (groundRevision > this.sentGroundRevision) {
-      this.broadcast('ground', {
+      this.announce(SERVER_MSG.ground, {
         revision: groundRevision,
         cells: this.match.world.terrain.changesSince(this.sentGroundRevision),
       });
@@ -972,14 +888,15 @@ export class MatchRoom extends Room<MatchState> {
       const slot = this.slotBySession.get(client.sessionId);
       if (slot === undefined) continue;
       const snapshot: EchoSnapshot | undefined = snapshots.get(slot);
-      if (snapshot !== undefined) client.send('echo', this.echoWireFor(client.sessionId, snapshot));
+      if (snapshot !== undefined)
+        this.sendTo(client, SERVER_MSG.echo, this.echoWireFor(client.sessionId, snapshot));
       // Per-client rather than broadcast, even though a mission room seats one
       // player: "it is safe because of a config line" is not a guarantee, and
       // this is the channel carrying the only numbers the mission computes.
       if (missionView !== null && slot === this.mission?.playerSlot) {
-        client.send('mission', missionView);
+        this.sendTo(client, SERVER_MSG.mission, missionView);
       }
-      for (const line of missionLines) client.send('missionLine', line);
+      for (const line of missionLines) this.sendTo(client, SERVER_MSG.missionLine, line);
     }
   }
 
@@ -1002,7 +919,7 @@ export class MatchRoom extends Room<MatchState> {
     this.state.winnerSlot = -1;
     for (const player of this.state.players.values()) player.ready = false;
     for (const client of this.clients) {
-      client.send('missionOver', {
+      this.sendTo(client, SERVER_MSG.missionOver, {
         missionId: this.mission!.id,
         outcome: resolution.outcome,
         epilogue: resolution.epilogue,
@@ -1045,7 +962,7 @@ export class MatchRoom extends Room<MatchState> {
     this.state.phase = MatchPhase.Ended;
     this.state.winnerSlot = winnerSlot;
     for (const player of this.state.players.values()) player.ready = false;
-    this.broadcast('gameOver', { winnerSlot });
+    this.announce(SERVER_MSG.gameOver, { winnerSlot });
 
     // A room whose match is over holds a slot on the server and answers no
     // useful question. It gets long enough for a rematch to be called, then

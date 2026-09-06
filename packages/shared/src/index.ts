@@ -19,3 +19,4 @@ export * from './combat.js';
 export * from './fauna.js';
 export * from './maps.js';
 export * from './missions.js';
+export * from './wire.js';

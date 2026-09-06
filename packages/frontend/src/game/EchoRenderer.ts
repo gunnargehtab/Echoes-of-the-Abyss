@@ -920,7 +920,7 @@ export class EchoRenderer {
   private units: OwnUnit[] = [];
   private ordnance: OwnOrdnance[] = [];
   private structures: OwnStructure[] = [];
-  private nodes: ResourceNodeInfo[] = [];
+  private nodes: readonly ResourceNodeInfo[] = [];
   private readonly tracked = new Map<number, TrackedContact>();
   /** Orders given and not yet echoed back, by unit (docs/ui-ux.md §12). */
   private readonly pendingOrders = new Map<number, PendingOrder[]>();
@@ -3118,7 +3118,7 @@ export class EchoRenderer {
     this.minimapCachedSize = 0;
   }
 
-  setNodes(nodes: ResourceNodeInfo[]): void {
+  setNodes(nodes: readonly ResourceNodeInfo[]): void {
     this.worldRev++;
     this.nodes = nodes;
     // Nodes are baked into the scope's cached terrain layer.

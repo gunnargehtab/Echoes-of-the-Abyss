@@ -20,76 +20,41 @@ import {
   type MatchListingMetadata,
   type MissionResultPayload,
   type MissionView,
-  type MissionSpeaker,
-  type MissionVoice,
   type ResourceNodeInfo,
   type StructureKind,
   type UnitKind,
   applyEchoWire,
-  type EchoWire,
+  CLIENT_MSG,
+  SERVER_MSG,
+  type ClientMessageName,
+  type ClientMessages,
+  type ServerMessageName,
+  type ServerMessages,
+  type AssignedPayload,
+  type GroundDeltaPayload,
+  type MapPayload,
+  type MissionLine,
+  type TerrainPayload,
 } from '@echoes/shared';
 import { toListings } from './rooms.ts';
 
 /**
- * Which map this match is on.
+ * The wire payloads, re-exported.
  *
- * Public by definition — both players are standing on it. Hazard sites are
- * included because docs/maps.md makes hazard telegraphing a core principle:
- * "players must see danger before entering."
+ * They live in `@echoes/shared` now (#489), so the room and this client
+ * describe the same bytes with the same types instead of each keeping its own
+ * idea of them. The re-export is not ceremony: ten files import
+ * `TerrainPayload` from here and none of them has anything to do with the
+ * socket — the seabed bake, the heightfield and the prop scatter want the
+ * ground, and this is where they have always asked for it.
  */
-export interface MapPayload {
-  id: string;
-  name: string;
-  idealUse: string;
-  widthM: number;
-  heightM: number;
-  /** Seats this map has. A map's spawn list is its player count. */
-  seats: number;
-  hazards: {
-    x: number;
-    y: number;
-    radiusM: number;
-    kind: string;
-    note?: string;
-    /** True when the hazard framework runs this one; false means site only. */
-    simulated: boolean;
-  }[];
-}
-
-export interface TerrainPayload {
-  cols: number;
-  rows: number;
-  cellM: number;
-  biomes: number[];
-  /**
-   * The water column per cell, parallel to `biomes`. `ceiling` is 0 on open
-   * water; non-zero is a roofed passage (docs/systems-depth.md §1).
-   */
-  floor: number[];
-  ceiling: number[];
-}
-
-/**
- * Cells that changed mid-match, and the ground's revision after applying them.
- *
- * Cells rather than the rectangle a mission authored: a rect would make both
- * sides redo the metres-to-cells arithmetic and agree about every `Math.floor`,
- * and cells are what actually changed.
- *
- * `biome` rides along on every cell (#259), because the record is the cell
- * rather than the fields that moved — see `TerrainCellChange` on the server.
- * It carries no hidden information: terrain is public on join by design, and
- * this makes a published fact mutable rather than publishing a new one.
- */
-export interface GroundDeltaPayload {
-  revision: number;
-  cells: { index: number; floorM: number; ceilingM: number; biome: number }[];
-}
-
-export interface AssignedPayload {
-  slot: number;
-  faction: Faction;
-}
+export type {
+  AssignedPayload,
+  GroundDeltaPayload,
+  MapPayload,
+  MissionLine,
+  TerrainPayload,
+} from '@echoes/shared';
 
 /**
  * The room's public facts: who is here, what they picked, and what the room is
@@ -105,38 +70,12 @@ export interface LobbyView {
   players: LobbyPlayerView[];
 }
 
-/**
- * One authored line of in-mission speech — docs/mission-sorrowgate.md §12.
- *
- * Stamped with the simulation tick it was spoken on, like every other thing
- * this client timestamps: there is no wall-clock anywhere near the match.
- * Carries no position and no entity, so it tells the player nothing about the
- * water it was spoken into.
- */
-export interface MissionLine {
-  tick: number;
-  speaker: string;
-  text: string;
-  /**
-   * The register the line is spoken in, resolved server-side — the mix keys
-   * its hail on it (docs/audio-direction.md §13). Authored data about an
-   * authored line, so it discloses nothing the log row did not.
-   */
-  voice: MissionVoice;
-  /**
-   * Who — the cast of docs/audio-direction.md §13, resolved server-side from
-   * the speaker string. The mix signs the hail with it; the log reads the
-   * string. Same provenance as `voice`, same disclosure: none.
-   */
-  speakerId: MissionSpeaker;
-}
-
 export interface GameClientHandlers {
   onTerrain(terrain: TerrainPayload): void;
   /** Ground the match changed under the client's feet (#197). */
   onGround(cells: GroundDeltaPayload['cells']): void;
   onMap(map: MapPayload): void;
-  onNodes(nodes: ResourceNodeInfo[]): void;
+  onNodes(nodes: readonly ResourceNodeInfo[]): void;
   onAssigned(assigned: AssignedPayload): void;
   onEcho(snapshot: EchoSnapshot): void;
   onGameOver(payload: GameOverPayload): void;
@@ -417,6 +356,35 @@ export class GameClient {
     }
   }
 
+  // --- The wire, typed ------------------------------------------------------
+  //
+  // Two wrappers, matching the three on the room's side (#489). Because the
+  // name and the payload both come from the map in `@echoes/shared`, a message
+  // renamed or reshaped on one side of the socket stops compiling on both —
+  // where before it compiled fine, travelled fine, and was dropped by a room
+  // with no handler registered for it, leaving a control that silently did
+  // nothing. Neither adds anything at runtime.
+
+  /** Handle one server message, payload type and all. */
+  private handle<K extends ServerMessageName>(
+    room: Room,
+    type: K,
+    handler: (payload: ServerMessages[K]) => void
+  ): void {
+    room.onMessage(type, handler);
+  }
+
+  /**
+   * Send one intent, if there is a room to send it to.
+   *
+   * The optional call is the point as much as the types are: the shell's
+   * buttons exist before the socket does, and an order given while
+   * disconnected is a no-op rather than a crash.
+   */
+  private order<K extends ClientMessageName>(type: K, payload: ClientMessages[K]): void {
+    this.room?.send(type, payload);
+  }
+
   /**
    * Wire a room's messages up. Separate from connect() because a reconnection
    * produces a *different* Room object for the same seat, and it needs exactly
@@ -427,42 +395,38 @@ export class GameClient {
     this.lastLobbyKey = '';
     rememberToken(room.reconnectionToken, this.missionId);
 
-    room.onMessage('terrain', (payload: TerrainPayload) => this.handlers.onTerrain(payload));
+    this.handle(room, SERVER_MSG.terrain, (payload) => this.handlers.onTerrain(payload));
     // Ground that changed after the join payload was sent (#197). A mission
     // beat can collapse a span, and a client still drawing the route that is
     // no longer there is worse than one drawing nothing — the player would be
     // steering into rock they can see is open.
-    room.onMessage('ground', (payload: GroundDeltaPayload) =>
-      this.handlers.onGround(payload.cells ?? [])
-    );
-    room.onMessage('map', (payload: MapPayload) => this.handlers.onMap(payload));
-    room.onMessage('nodes', (payload: ResourceNodeInfo[]) => this.handlers.onNodes(payload));
-    room.onMessage('assigned', (payload: AssignedPayload) => this.handlers.onAssigned(payload));
+    this.handle(room, SERVER_MSG.ground, (payload) => this.handlers.onGround(payload.cells ?? []));
+    this.handle(room, SERVER_MSG.map, (payload) => this.handlers.onMap(payload));
+    this.handle(room, SERVER_MSG.nodes, (payload) => this.handlers.onNodes(payload));
+    this.handle(room, SERVER_MSG.assigned, (payload) => this.handlers.onAssigned(payload));
     // The delta channel (#433): a keyframe, or a patch onto the snapshot
     // before it. A patch this client cannot apply — a gap, which can only be
     // a bug — is dropped and the next keyframe restores the picture; nothing
     // is ever guessed. Reset per room, because a reconnection is a fresh
     // client and the server sends it whole.
     this.echoLast = null;
-    room.onMessage('echo', (wire: EchoWire) => {
+    this.handle(room, SERVER_MSG.echo, (wire) => {
       const snapshot = applyEchoWire(this.echoLast, wire);
       if (snapshot === null) return;
       this.echoLast = { seq: wire.seq, snapshot };
       this.handlers.onEcho(snapshot);
     });
-    room.onMessage('gameOver', (payload: GameOverPayload) => this.handlers.onGameOver(payload));
+    this.handle(room, SERVER_MSG.gameOver, (payload) => this.handlers.onGameOver(payload));
     // The mission channel. Per-client rather than schema, because a mission's
     // objectives are resolved for one observer the way a detection is — see
     // packages/backend/src/rooms/MatchRoom.ts. `mission` arrives on change
     // only, so there is nothing here to throttle.
-    room.onMessage('mission', (payload: MissionView) => this.handlers.onMission(payload));
-    room.onMessage('missionLine', (payload: MissionLine) => this.handlers.onMissionLine(payload));
-    room.onMessage('missionOver', (payload: MissionResultPayload) =>
-      this.handlers.onMissionOver(payload)
-    );
+    this.handle(room, SERVER_MSG.mission, (payload) => this.handlers.onMission(payload));
+    this.handle(room, SERVER_MSG.missionLine, (payload) => this.handlers.onMissionLine(payload));
+    this.handle(room, SERVER_MSG.missionOver, (payload) => this.handlers.onMissionOver(payload));
     // Sent on start and on reconnection. The schema carries the phase too;
     // this is the edge-triggered version, for anything that must happen once.
-    room.onMessage('phase', () => this.pushLobby());
+    this.handle(room, SERVER_MSG.phase, () => this.pushLobby());
     room.onStateChange(() => this.pushLobby());
     room.onError((code, message) => this.handlers.onStatus('error', `${code}: ${message ?? ''}`));
 
@@ -563,59 +527,59 @@ export class GameClient {
 
   /** Ask for a navy. Refused server-side if someone else already has it. */
   chooseFaction(faction: Faction): void {
-    this.room?.send('faction', { faction });
+    this.order(CLIENT_MSG.faction, { faction });
   }
 
   /** Ready up, or call a rematch — the server reads it as whichever applies. */
   setReady(ready: boolean): void {
-    this.room?.send('ready', { ready });
+    this.order(CLIENT_MSG.ready, { ready });
   }
 
   /** Seat a commander. It takes a slot and a navy exactly as a person does. */
   addAi(difficulty: AiDifficulty): void {
-    this.room?.send('addAi', { difficulty });
+    this.order(CLIENT_MSG.addAi, { difficulty });
   }
 
   removeAi(sessionId: string): void {
-    this.room?.send('removeAi', { sessionId });
+    this.order(CLIENT_MSG.removeAi, { sessionId });
   }
 
   setAiDifficulty(sessionId: string, difficulty: AiDifficulty): void {
-    this.room?.send('aiDifficulty', { sessionId, difficulty });
+    this.order(CLIENT_MSG.aiDifficulty, { sessionId, difficulty });
   }
 
   // --- Intents -------------------------------------------------------------
 
   moveTo(unitIds: number[], x: number, y: number, queued = false): void {
     if (unitIds.length === 0) return;
-    this.room?.send('move', { unitIds, x, y, queued });
+    this.order(CLIENT_MSG.move, { unitIds, x, y, queued });
   }
 
   /** Attack-move (#435): go there, and fight whatever is met on the way. */
   attackMoveTo(unitIds: number[], x: number, y: number, queued = false): void {
     if (unitIds.length === 0) return;
-    this.room?.send('attackMove', { unitIds, x, y, queued });
+    this.order(CLIENT_MSG.attackMove, { unitIds, x, y, queued });
   }
 
   stop(unitIds: number[]): void {
     if (unitIds.length === 0) return;
-    this.room?.send('stop', { unitIds });
+    this.order(CLIENT_MSG.stop, { unitIds });
   }
 
   setHoldPosition(unitIds: number[], active: boolean): void {
     if (unitIds.length === 0) return;
-    this.room?.send('hold', { unitIds, active });
+    this.order(CLIENT_MSG.hold, { unitIds, active });
   }
 
   /** Where a yard sends the hulls it launches. */
   setRally(structureIds: number[], x: number, y: number): void {
     if (structureIds.length === 0) return;
-    this.room?.send('rally', { structureIds, x, y });
+    this.order(CLIENT_MSG.rally, { structureIds, x, y });
   }
 
   setSilentRunning(unitIds: number[], active: boolean): void {
     if (unitIds.length === 0) return;
-    this.room?.send('silent', { unitIds, active });
+    this.order(CLIENT_MSG.silent, { unitIds, active });
   }
 
   /**
@@ -624,7 +588,7 @@ export class GameClient {
    */
   setDepth(unitIds: number[], depth: number): void {
     if (unitIds.length === 0) return;
-    this.room?.send('depth', { unitIds, depth });
+    this.order(CLIENT_MSG.depth, { unitIds, depth });
   }
 
   /**
@@ -634,12 +598,12 @@ export class GameClient {
    */
   setFollowFloor(unitIds: number[], active: boolean): void {
     if (unitIds.length === 0) return;
-    this.room?.send('followFloor', { unitIds, active });
+    this.order(CLIENT_MSG.followFloor, { unitIds, active });
   }
 
   /** The big red button. Cost is previewed in the HUD before this is called. */
   activeSonar(unitId: number): void {
-    this.room?.send('ping', { unitId });
+    this.order(CLIENT_MSG.ping, { unitId });
   }
 
   /**
@@ -652,7 +616,7 @@ export class GameClient {
    * refused, which is where that decision belongs.
    */
   commanderAbility(): void {
-    this.room?.send('ability', {});
+    this.order(CLIENT_MSG.ability, {});
   }
 
   /**
@@ -665,49 +629,49 @@ export class GameClient {
    */
   launchTorpedo(unitIds: number[], contactId: number): void {
     if (unitIds.length === 0) return;
-    this.room?.send('torpedo', { unitIds, contactId });
+    this.order(CLIENT_MSG.torpedo, { unitIds, contactId });
   }
 
   /** Drop a noisemaker decoy. Aimed at nothing; heard by everything. */
   deployNoisemaker(unitIds: number[]): void {
     if (unitIds.length === 0) return;
-    this.room?.send('noisemaker', { unitIds });
+    this.order(CLIENT_MSG.noisemaker, { unitIds });
   }
 
   /** Lay a mine at the hull's own position. Loud to lay, silent once laid. */
   layMine(unitIds: number[]): void {
     if (unitIds.length === 0) return;
-    this.room?.send('mine', { unitIds });
+    this.order(CLIENT_MSG.mine, { unitIds });
   }
 
   /** Drop a depth charge set to detonate at `depth`. Bombing water, not a contact. */
   dropDepthCharge(unitIds: number[], depth: number): void {
     if (unitIds.length === 0) return;
-    this.room?.send('depthcharge', { unitIds, depth });
+    this.order(CLIENT_MSG.depthCharge, { unitIds, depth });
   }
 
   /** Attack a heard contact, by its opaque per-observer handle. */
   attackContact(unitIds: number[], contactId: number, queued = false): void {
     if (unitIds.length === 0) return;
-    this.room?.send('attack', { unitIds, contactId, queued });
+    this.order(CLIENT_MSG.attack, { unitIds, contactId, queued });
   }
 
   harvest(unitIds: number[], nodeId: number, queued = false): void {
     if (unitIds.length === 0) return;
-    this.room?.send('harvest', { unitIds, nodeId, queued });
+    this.order(CLIENT_MSG.harvest, { unitIds, nodeId, queued });
   }
 
   setThrottle(unitIds: number[], throttle: HarvestThrottle): void {
     if (unitIds.length === 0) return;
-    this.room?.send('throttle', { unitIds, throttle });
+    this.order(CLIENT_MSG.throttle, { unitIds, throttle });
   }
 
   build(kind: StructureKind, x: number, y: number): void {
-    this.room?.send('build', { kind, x, y });
+    this.order(CLIENT_MSG.build, { kind, x, y });
   }
 
   produce(structureId: number, kind: UnitKind): void {
-    this.room?.send('produce', { structureId, kind });
+    this.order(CLIENT_MSG.produce, { structureId, kind });
   }
 
   disconnect(): void {
