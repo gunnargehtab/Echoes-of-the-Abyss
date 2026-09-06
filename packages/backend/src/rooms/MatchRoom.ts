@@ -238,6 +238,14 @@ export class MatchRoom extends Room<MatchState> {
       }
     });
 
+    this.onClientMessage(CLIENT_MSG.engineOff, (client, message) => {
+      const slot = this.commandSlot(client);
+      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      for (const unitId of message.unitIds) {
+        this.match.setEngineOff(slot, unitId, Boolean(message.active));
+      }
+    });
+
     this.onClientMessage(CLIENT_MSG.depth, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;

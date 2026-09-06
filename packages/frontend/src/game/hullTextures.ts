@@ -81,6 +81,14 @@ const HULL_ART_URL: Record<UnitKind, string> = {
   [UnitKind.Drifter]: raiderUrl,
   [UnitKind.Verger]: siegeUrl,
   [UnitKind.Antiphon]: cruiserUrl,
+  // The scouts (#506), on the class each hull's tonnage and navy put it in
+  // until a model passes intake: the Beacon is a Consortium working hull with
+  // a set on it, the Glider a raider's shell, the Acolyte the Directorate's,
+  // the Herald a small Order blade — the Cantus's class, not the Clarion's.
+  [UnitKind.Beacon]: siegeUrl,
+  [UnitKind.Glider]: raiderUrl,
+  [UnitKind.Acolyte]: shadowUrl,
+  [UnitKind.Herald]: corvetteUrl,
 };
 
 /** Sprite resolution. 3 px per world metre keeps even the scout's hull crisp. */
@@ -89,7 +97,7 @@ const PX_PER_M = 3;
 const MARGIN_PX = 10;
 
 const artImages = new Map<UnitKind, HTMLImageElement>();
-/** One decode per plate: five patches clad eighteen hulls. */
+/** One decode per plate: five patches clad twenty-three hulls. */
 const plateDecodes = new Map<string, Promise<HTMLImageElement>>();
 /** Hulls whose plate and maps are both decoded, keyed `kind:faction`. */
 const artReady = new Set<string>();

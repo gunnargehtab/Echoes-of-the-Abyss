@@ -458,6 +458,30 @@ export const SILENT_RUNNING = {
 } as const;
 
 /**
+ * Engine off — the state below Silent Running. docs/systems-echo.md §6.
+ *
+ * Silent Running trades weapons for quiet; this trades *movement* for it. A
+ * third posture rather than a second flag on the first: it is read by movement
+ * and by acoustics, and it is the one state in which a hull is not under power
+ * at all.
+ *
+ * **SIG_FACTOR is a factor on the Silent Running figure, not on idle**, and
+ * that is the whole reason the state is coherent. Derived from the quieter of
+ * the two postures a hull can already reach, "below silence" holds for every
+ * hull in the roster by construction — a Cruiser's engine-off figure is 3.8
+ * against the 7.6 it runs silent at, and stays below it whatever the roster
+ * does to idle SIG later. A factor on *idle* would have put the same Cruiser
+ * at 13.8, louder than the silence it is supposed to sit under, and the bug
+ * would have been four correct numbers and one wrong hull.
+ */
+export const ENGINE_OFF = {
+  /** Half of what the hull manages with its drive still turning. */
+  SIG_FACTOR: 0.5,
+  /** Nothing in the water is truly silent; a hull at rest is still a shape. */
+  SIG_FLOOR: 1,
+} as const;
+
+/**
  * A commander's one authored act — docs/characters.md, the seven *Commander
  * ability* entries (Varr-Kest, Osk, Marr, Anholt, Korrin, Adze, Sull), of which
  * Marr's is the only one with a mechanism behind it. These are campaign
@@ -1589,6 +1613,49 @@ const BASE_THRESHOLD =
   (ACTIVE_SONAR.EMITTER_SIG *
     Math.pow(REFERENCE_DISTANCE_M / ACTIVE_SONAR.SELF_REVEAL_RADIUS_M, ATTENUATION_EXPONENT)) /
   TIER_THRESHOLD_MULTIPLIER.TRACK;
+
+/**
+ * The picket's ping — a second set of figures for the same mechanism, and
+ * **derived from the first rather than authored beside it**.
+ * docs/systems-echo.md §5, "A ping a hull fires itself".
+ *
+ * One number is chosen: the emitter SIG, which docs/units.md fixes at 80 for
+ * the Beacon against the 95 a commander's button costs. Everything else falls
+ * out of the propagation model at that loudness. The range scale is the
+ * attenuation curve solved for the ratio of the two emitters, so:
+ *
+ *   - the Tier-4 reveal drops from 900 m to about 808 m, and
+ *   - the self-reveal from 2,400 m to about 2,156 m.
+ *
+ * The self-reveal figure is *not* applied anywhere in code, and that is the
+ * point: a quieter emitter is heard less far by the general detection pass,
+ * with no rule of its own. It is stated here because the doc quotes it, and
+ * there is a test that the model actually produces it.
+ *
+ * Consequence, and the reason for deriving: move ATTENUATION_EXPONENT or the
+ * spec'd 2,400 m and the cheap ping recalibrates with the expensive one,
+ * instead of quietly becoming the better button.
+ */
+const CADENCE_EMITTER_SIG = 80;
+
+const CADENCE_RANGE_SCALE = Math.pow(
+  CADENCE_EMITTER_SIG / ACTIVE_SONAR.EMITTER_SIG,
+  1 / ATTENUATION_EXPONENT
+);
+
+export const CADENCE_PING = {
+  /** SPEC — docs/units.md, Beacon. The one chosen number. */
+  EMITTER_SIG: CADENCE_EMITTER_SIG,
+  /** Derived: the hard Tier-4 radius, scaled by the attenuation curve. */
+  REVEAL_RADIUS_M: ACTIVE_SONAR.REVEAL_RADIUS_M * CADENCE_RANGE_SCALE,
+  /**
+   * Derived, and documentation rather than a rule — the general pass produces
+   * this radius on its own from EMITTER_SIG. Held by a test.
+   */
+  SELF_REVEAL_RADIUS_M: ACTIVE_SONAR.SELF_REVEAL_RADIUS_M * CADENCE_RANGE_SCALE,
+  /** The transmission is the same length; only its reach and cost differ. */
+  REVEAL_DURATION_S: ACTIVE_SONAR.REVEAL_DURATION_S,
+} as const;
 
 /**
  * The loudness a mine triggers at — **derived, not chosen**.

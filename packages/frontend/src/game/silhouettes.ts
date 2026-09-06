@@ -53,6 +53,10 @@ export const HULL_LENGTH_M: Record<UnitKind, number> = {
   [UnitKind.Drifter]: statsFor(UnitKind.Drifter).hullLengthM,
   [UnitKind.Verger]: statsFor(UnitKind.Verger).hullLengthM,
   [UnitKind.Antiphon]: statsFor(UnitKind.Antiphon).hullLengthM,
+  [UnitKind.Beacon]: statsFor(UnitKind.Beacon).hullLengthM,
+  [UnitKind.Glider]: statsFor(UnitKind.Glider).hullLengthM,
+  [UnitKind.Acolyte]: statsFor(UnitKind.Acolyte).hullLengthM,
+  [UnitKind.Herald]: statsFor(UnitKind.Herald).hullLengthM,
 };
 
 /**
@@ -338,6 +342,108 @@ export const HULL_OUTLINE: Record<UnitKind, number[][]> = {
     [0.1, -0.2],
     [0.36, -0.1],
     [0.5, -0.03],
+  ],
+
+  // --- The scouts (#506). None carries a gun, so what each silhouette has to
+  // say at RTS distance is its sensor argument — how this navy finds things —
+  // and for two of them that argument is a *state*: the Glider is drawn with
+  // its drive cut, the Herald with the cone's mouth open.
+
+  // A box with a drum: near-parallel riveted flanks, a square stern, and the
+  // transducer drum standing athwartships amidships, proud of both sides. A
+  // cylinder on a rectangle — the Consortium's two shapes — and the drum is
+  // the set it pings with. Reads apart from the Cantus's diamond by being
+  // round on a box rather than pointed on a lozenge.
+  [UnitKind.Beacon]: [
+    [0.5, 0.05],
+    [0.4, 0.12],
+    [0.18, 0.12],
+    [0.11, 0.19],
+    [0.0, 0.22],
+    [-0.11, 0.19],
+    [-0.18, 0.12],
+    [-0.44, 0.12],
+    [-0.5, 0.09],
+    [-0.5, -0.09],
+    [-0.44, -0.12],
+    [-0.18, -0.12],
+    [-0.11, -0.19],
+    [0.0, -0.22],
+    [0.11, -0.19],
+    [0.18, -0.12],
+    [0.4, -0.12],
+    [0.5, -0.05],
+  ],
+  // A winged seed, and the one outline in the roster not mirrored across its
+  // keel: a slim seed body, one broad wing swept aft off the starboard (+Y)
+  // flank, a short trim vane to port. The wing is the argument — a hull that
+  // coasts with its drive cut has to look like a thing that coasts
+  // (systems-echo.md §6) — and the asymmetry is the Commune's own law
+  // (factions.md), which every other Commune outline carries in its dressing
+  // rather than its plan.
+  [UnitKind.Glider]: [
+    [0.5, 0.0],
+    [0.38, 0.07],
+    [0.22, 0.11],
+    [0.06, 0.2],
+    [-0.14, 0.3],
+    [-0.36, 0.24],
+    [-0.5, 0.07],
+    [-0.5, -0.02],
+    [-0.32, -0.06],
+    [-0.14, -0.16],
+    [0.02, -0.1],
+    [0.24, -0.1],
+    [0.4, -0.06],
+  ],
+  // A squat carapace with six limbs planted: three a side, the forward pair
+  // raked ahead and the aft pair astern, standing out past the shell. The
+  // limbs are the array — walked out when it stops, which is when it hears at
+  // 85 — so the outline is the parked state. Spiky where the Chorister's is
+  // scalloped and the Precentor's is a bar.
+  [UnitKind.Acolyte]: [
+    [0.5, 0.0],
+    [0.4, 0.08],
+    [0.3, 0.12],
+    [0.34, 0.27],
+    [0.2, 0.13],
+    [0.06, 0.14],
+    [0.0, 0.28],
+    [-0.08, 0.14],
+    [-0.2, 0.13],
+    [-0.32, 0.27],
+    [-0.3, 0.12],
+    [-0.42, 0.08],
+    [-0.5, 0.03],
+    [-0.5, -0.03],
+    [-0.42, -0.08],
+    [-0.3, -0.12],
+    [-0.32, -0.27],
+    [-0.2, -0.13],
+    [-0.08, -0.14],
+    [0.0, -0.28],
+    [0.06, -0.14],
+    [0.2, -0.13],
+    [0.34, -0.27],
+    [0.3, -0.12],
+    [0.4, -0.08],
+  ],
+  // The cone with its mouth open: two tines forward with the throat between
+  // them, widest just abaft the fork, then a straight taper to a flat transom.
+  // The notch is at the bow and the points are the tines, so it reads
+  // bow-forward by the rule every dart does — the pointed end leads — where
+  // the Light Scout's notch is at the stern. Nothing astern to hear, and
+  // nothing astern to see.
+  [UnitKind.Herald]: [
+    [0.5, 0.12],
+    [0.08, 0.2],
+    [-0.26, 0.14],
+    [-0.5, 0.06],
+    [-0.5, -0.06],
+    [-0.26, -0.14],
+    [0.08, -0.2],
+    [0.5, -0.12],
+    [0.16, 0.0],
   ],
 };
 

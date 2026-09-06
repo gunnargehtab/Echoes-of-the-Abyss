@@ -206,7 +206,7 @@ is used four ways. Each wave is one pull request and one row in
 | --- | --- | --- | --- |
 | 0 — the ground | none | tests generalised, harness extended, kit keyed | every existing test green; the baseline unchanged |
 | 1 — transports (done, #501) | Freighter, Drifter, Verger, Antiphon | embark / disembark, carried hulls unresolvable | a carried force crosses the Shelf line in a mission test; the AI uses a transport in ≥ 1 of 4 doctrines |
-| 2 — scouts | Beacon, Glider, Acolyte, Herald | engine-off glide; cheap cadence ping | first-classified-enemy time per navy moves, and differently per navy |
+| 2 — scouts (done, #506) | Beacon, Glider, Acolyte, Herald | engine-off glide; cheap cadence ping | first-classified-enemy time per navy moves, and differently per navy |
 | 3 — ordnance | Broadside, Weaver, Thurible, Lance | noisemakers laid from a hull; upward depth charge | the weapon triangle reads in duels: torpedo navy beats heavy pushes, decoy navy survives them |
 | 4 — siege | Furnace, Blight, Lure, Tocsin | structure-only damage; spore over time; fauna weighting from a hull | match length falls without the win rates spreading |
 | 5 — line and anchor | Caisson, Reed, Bower | none | the Consortium and Commune doctrines stop buying Corvettes |
@@ -246,6 +246,25 @@ orders — where the hull is and how deep it is are the carrier's, and the rest 
 player's next order. The commander uses two of the four, the Freighter and the Verger
 ([tech-stack.md](tech-stack.md), "it moves a force in a hold"); the Drifter and the Antiphon
 are a human's until the harness can judge a raid.
+
+**Wave 2** landed the four scouts and both of its mechanisms
+([units.md](units.md), "The scouts"; [systems-echo.md](systems-echo.md) §5, §6). Three things
+it decided that the sketches had not. Engine off is derived from the *Silent Running* figure
+and not from idle — half of it, floored at 1 — because a factor on idle put a Cruiser above
+its own silence, so "the state below silence" is now true of every hull by construction; the
+Glider glides at 1.8 rather than the 3 §3 sketched, and the claim that survives is the
+sharper one, that nothing else *under way* is quieter. The cadence ping chooses exactly one
+number, the emitter's 80, and both radii fall out of the propagation curve at that loudness
+— 808 m of reveal, 2,156 m of self-reveal — so the cheap ping recalibrates with the
+expensive one instead of quietly becoming the better button. And a navy's own scout is
+declared in the commander's `OWN_SCOUT` table rather than on its `composition`: the
+composition cycle indexes on `army.length` modulo its own length, so adding an unarmed hull
+to it re-phases every selection that navy makes, which is a balance change dressed as a
+roster edit.
+
+The opening kit still sends a Light Scout. Moving it to each navy's own hull is wave 6's
+call, where the commons' fate is decided; wave 2 buys the scout as a want of its own on the
+first affordable observation instead, which is what makes the gate's column move.
 
 **Wave 6** is a decision the harness makes, not this document. If after five waves every
 doctrine builds its own line and the commons are dead weight on the bar, retire them from

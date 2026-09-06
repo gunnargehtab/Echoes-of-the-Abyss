@@ -309,6 +309,27 @@ This is the game's signature decision. Good players ping *late, briefly, and jus
 - **Silent-running** ambush stacks that specifically wait for a ping to reveal targets *for them*.
 - **Resonance Fields scatter pings**, returning one to three false contacts to the pinger and its true returns on bearings that lie by up to 30° (§3, "Scattered water") — the only terrain that punishes the button directly.
 
+### A ping a hull fires itself
+
+The button above is a *decision*: a commander spends it, once, at a moment it has chosen.
+Some hulls instead carry a small sonar set they fire on a **cadence** — every 20 seconds,
+without an order, for as long as the hull is told to picket. The Consortium's Beacon is the
+first ([units.md](units.md)), and the Klaxon is the navy it belongs to: a hull that does not
+sneak, but shouts and reads the echo.
+
+It is the same mechanism at a lower figure, and the figures are not chosen twice. The
+cadence emitter is **SIG 80** rather than 95, and both radii fall out of the propagation
+model at that loudness rather than being authored beside it — **2,156 m** of self-reveal
+against the button's 2,400, and **808 m** of Tier-4 reveal against its 900. Change the
+attenuation exponent and both move together, which is the whole reason the threshold is
+solved from the spec'd self-reveal instead of picked.
+
+**A cadence is a rhythm, and a rhythm can be read.** That is what makes the cheap ping a
+different object from the expensive one rather than a discount on it. A commander's ping
+arrives once and says nothing about when the next will come; a picket's ping arrives on a
+clock, and a patient attacker can time an approach into the twenty seconds between two of
+them. A Beacon buys its navy continuous coverage and sells its enemy a schedule.
+
 ---
 
 ## 6. Silent Running
@@ -322,6 +343,35 @@ Any unit can toggle **Silent Running**:
 - Cannot mine, build, or repair
 
 A silent-running force is functionally invisible and functionally harmless. It is a **bet on position** — you are spending time and offence to buy surprise. Breaking silence to fire produces a **SIG spike of +40 for 2 seconds** on top of the weapon's normal value: the first shot of an ambush is always the loudest, and always tells the whole map that an ambush happened.
+
+### Engine off — the state below silence
+
+Silent Running trades **weapons** for quiet. There is a state below it that trades
+**movement** instead: a hull may cut its drive entirely.
+
+- No thrust. The hull holds station, or rides a cold shock current where one runs
+  ([hazards.md](hazards.md) §8) — the water carries a stopped hull exactly as it carries a
+  moving one, which is the only way an engine-off hull travels.
+- SIG falls to the hull's **floor: half of what it manages with its drive still turning**,
+  never below 1. A Corvette sits at 2.7 against the 5.3 it runs silent at, a Cruiser at 3.8
+  against 7.6. Derived from the Silent Running figure rather than authored beside it, so
+  "below silence" is true of every hull in the roster by construction and not by four
+  numbers that happen to be right.
+- Weapons, unlike Silent Running, still work. Firing costs the usual spike, and a spike is
+  enormous relative to a floor: an engine-off ambush is the quietest one available and the
+  most conspicuous the instant it opens.
+- It cannot quieten a hull that is loud for another reason. Descent, laying, cutting and a
+  working hull's figure are floors applied over the whole posture chain — a hull cannot dive
+  with its engine off any more than it can dive silently.
+
+The trade is mobility, and it is total: an engine-off hull is not slow, it is *stopped*.
+That is the bet — you are worth less to your commander than a hull that can move, and you
+are the hardest thing on the map to hear.
+
+**The Pelagia Commune's Glider is the exception that makes the state a doctrine.** It is
+built to coast: with its drive cut it keeps steerage and glides at a third of its speed, so
+it is the only hull in the roster still *scouting* while it sits at its floor. Nothing else
+under way is quieter ([units.md](units.md)).
 
 ---
 

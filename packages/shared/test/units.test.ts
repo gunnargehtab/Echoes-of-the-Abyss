@@ -256,12 +256,19 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
    * quietly widening a navy.
    */
   const NAVY: Record<Faction, readonly UnitKind[]> = {
-    [Faction.Bathyarch]: [UnitKind.Tender, UnitKind.Bulwark, UnitKind.Freighter],
-    [Faction.Pelagia]: [UnitKind.Spinner, UnitKind.Sower, UnitKind.Drifter],
-    // The Verger is the Directorate's by its price and carries no lock, as
-    // the Chorister is and does (docs/units.md), so it is not in this row.
+    [Faction.Bathyarch]: [UnitKind.Tender, UnitKind.Bulwark, UnitKind.Freighter, UnitKind.Beacon],
+    [Faction.Pelagia]: [UnitKind.Spinner, UnitKind.Sower, UnitKind.Drifter, UnitKind.Glider],
+    // The Verger and the Acolyte are the Directorate's by their price and
+    // carry no lock, as the Chorister is and does (docs/units.md), so neither
+    // is in this row.
     [Faction.Directorate]: [UnitKind.Precentor, UnitKind.Dredge],
-    [Faction.Hadron]: [UnitKind.Clarion, UnitKind.Cantus, UnitKind.Reciter, UnitKind.Antiphon],
+    [Faction.Hadron]: [
+      UnitKind.Clarion,
+      UnitKind.Cantus,
+      UnitKind.Reciter,
+      UnitKind.Antiphon,
+      UnitKind.Herald,
+    ],
   };
   const factions = [Faction.Bathyarch, Faction.Pelagia, Faction.Directorate, Faction.Hadron];
   const own = (faction: Faction) => roster.filter((s) => s.faction === faction);

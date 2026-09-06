@@ -13,8 +13,12 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  ACTIVE_SONAR,
   BERTHS,
+  CADENCE_PING,
+  DEPTH,
   DIRECTIONAL_SIGNATURE,
+  ENGINE_OFF,
   Faction,
   HULL_EFFECTS,
   ORDNANCE,
@@ -36,6 +40,7 @@ import {
   MineMagazine,
   Position,
   Pressure,
+  Velocity,
 } from '../src/sim/components.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
@@ -476,5 +481,174 @@ describe('the Tender — the repair hull', () => {
     advance(match, 2);
     assert.equal(Health.hp[patient], 100, 'silent is not working');
     assert.equal(HullEffect.active[tender], 0);
+  });
+});
+
+/**
+ * The scouts (#506) — docs/units.md, "The scouts"; docs/systems-echo.md §5, §6.
+ *
+ * Four hulls and the two mechanisms the wave built for them. Each block holds
+ * one entry to the sentence its stat block makes: engine off is below silence
+ * for every hull and the Glider is the only one still moving there; the
+ * Acolyte's ears are its posture; a Beacon transmits on its own clock at a
+ * figure the propagation model, not the wave, chose.
+ */
+describe('engine off — the state below silence', () => {
+  it('is quieter than Silent Running, for every hull in the roster', () => {
+    // The claim ENGINE_OFF.SIG_FACTOR exists to make structural rather than
+    // lucky. A factor on idle would have put a Cruiser above its own silence.
+    const { match } = skirmish(Faction.Pelagia);
+    for (const kind of Object.values(UnitKind).filter((k) => typeof k === 'number')) {
+      const stats = statsFor(kind as UnitKind);
+      const eid = hull(match, Faction.Pelagia, kind as UnitKind, 3000, 3000);
+      match.setSilentRunning(0, eid, true);
+      advance(match, 0.1);
+      const silent = Acoustic.sig[eid]!;
+      match.setEngineOff(0, eid, true);
+      advance(match, 0.1);
+      const off = Acoustic.sig[eid]!;
+      assert.ok(
+        off < silent,
+        `${stats.name}: engine off ${off.toFixed(2)} is not below silent ${silent.toFixed(2)}`
+      );
+      assert.ok(off >= ENGINE_OFF.SIG_FLOOR, `${stats.name} fell through the floor at ${off}`);
+    }
+  });
+
+  it('stops a hull dead — unless it is the one built to coast', () => {
+    const { match } = skirmish(Faction.Pelagia);
+    const scout = hull(match, Faction.Pelagia, UnitKind.LightScout, 3000, 3000);
+    const glider = hull(match, Faction.Pelagia, UnitKind.Glider, 3000, 3200);
+    for (const eid of [scout, glider]) {
+      match.orderMove(0, eid, 9000, 3000);
+      match.setEngineOff(0, eid, true);
+    }
+    const scoutFrom = Position.x[scout]!;
+    const gliderFrom = Position.x[glider]!;
+    advance(match, 6);
+
+    assert.equal(
+      Math.round(Position.x[scout]! - scoutFrom),
+      0,
+      'a Light Scout with its drive cut is a rock'
+    );
+    // A third of 105 m/s over six seconds, less whatever the order cost it.
+    assert.ok(
+      Position.x[glider]! - gliderFrom > 100,
+      `the Glider coasted only ${(Position.x[glider]! - gliderFrom).toFixed(0)} m`
+    );
+  });
+
+  it('is the quietest thing in the roster that is still under way', () => {
+    // "Nothing else under way is quieter" (docs/units.md, Glider). A Light
+    // Scout is quieter with its engine off and is not going anywhere, which is
+    // the distinction the doc draws and the one worth holding.
+    const { match } = skirmish(Faction.Pelagia);
+    const glider = hull(match, Faction.Pelagia, UnitKind.Glider, 3000, 3000);
+    match.orderMove(0, glider, 9000, 3000);
+    match.setEngineOff(0, glider, true);
+    advance(match, 2);
+    const gliding = Acoustic.sig[glider]!;
+    assert.ok(gliding > 0, 'a gliding hull still emits something');
+
+    for (const kind of Object.values(UnitKind).filter((k) => typeof k === 'number')) {
+      const other = hull(match, Faction.Pelagia, kind as UnitKind, 5000, 5000);
+      match.orderMove(0, other, 9000, 5000);
+      match.setSilentRunning(0, other, true);
+      advance(match, 1);
+      if (Math.hypot(Velocity.x[other]!, Velocity.y[other]!) < 0.01) continue;
+      assert.ok(
+        Acoustic.sig[other]! >= gliding,
+        `${statsFor(kind as UnitKind).name} moves at ${Acoustic.sig[other]!.toFixed(2)}, ` +
+          `under the Glider's ${gliding.toFixed(2)}`
+      );
+    }
+  });
+
+  it('cannot hush a hull that is diving', () => {
+    // Descent is a floor over the whole posture chain (docs/systems-depth.md
+    // §2): there is no quiet way down, and a third posture does not add one.
+    const { match } = skirmish(Faction.Pelagia);
+    const glider = hull(match, Faction.Pelagia, UnitKind.Glider, 3000, 3000, 100);
+    match.setEngineOff(0, glider, true);
+    match.orderDepth(0, glider, 1200);
+    advance(match, 1);
+    assert.ok(
+      Acoustic.sig[glider]! >= DEPTH.DESCENT_SIG,
+      `a diving Glider was heard at ${Acoustic.sig[glider]!.toFixed(1)}`
+    );
+  });
+});
+
+describe('the Acolyte — the ears that sit still', () => {
+  it('hears at its stationary figure only while it is stopped', () => {
+    const { match } = skirmish(Faction.Directorate);
+    const stats = statsFor(UnitKind.Acolyte);
+    const acolyte = hull(match, Faction.Directorate, UnitKind.Acolyte, 3000, 3000);
+    advance(match, 0.5);
+    assert.equal(Acoustic.hyd[acolyte], stats.hydStationary);
+
+    match.orderMove(0, acolyte, 9000, 3000);
+    advance(match, 1);
+    assert.equal(Acoustic.hyd[acolyte], stats.hyd, 'an Acolyte under way hears like any hull');
+  });
+
+  it('keeps hearing 60 under way even when it is running silent', () => {
+    // docs/units.md design notes: "Silent Running changes what a unit emits,
+    // never what it hears." The step is keyed on the hull being still, not on
+    // a posture — a moving silent Acolyte is still moving.
+    const { match } = skirmish(Faction.Directorate);
+    const acolyte = hull(match, Faction.Directorate, UnitKind.Acolyte, 3000, 3000);
+    match.orderMove(0, acolyte, 9000, 3000);
+    match.setSilentRunning(0, acolyte, true);
+    advance(match, 1);
+    assert.equal(Acoustic.hyd[acolyte], statsFor(UnitKind.Acolyte).hyd);
+  });
+});
+
+describe('the Beacon — the picket that shouts', () => {
+  it('pings on its own clock, with nobody ordering it', () => {
+    const { match } = skirmish(Faction.Bathyarch);
+    const beacon = hull(match, Faction.Bathyarch, UnitKind.Beacon, 3000, 3000);
+    const cadenceS = statsFor(UnitKind.Beacon).pingCadenceS!;
+
+    // Nothing yet: the clock starts at a full interval so a Beacon does not
+    // announce its navy's build order the instant it leaves the yard.
+    advance(match, cadenceS - 2);
+    assert.equal(Acoustic.sig[beacon]! > CADENCE_PING.EMITTER_SIG - 1, false, 'pinged early');
+
+    advance(match, 3);
+    assert.ok(
+      Math.abs(Acoustic.sig[beacon]! - CADENCE_PING.EMITTER_SIG) < 1,
+      `the Beacon was heard at ${Acoustic.sig[beacon]!.toFixed(1)}, not its cadence figure`
+    );
+  });
+
+  it('transmits at the figures the propagation model chose, not at the button’s', () => {
+    // The whole point of deriving the cheap ping: it is the same mechanism at
+    // a lower emitter figure, and both radii fall out of that one number.
+    assert.equal(CADENCE_PING.EMITTER_SIG, 80);
+    assert.ok(CADENCE_PING.REVEAL_RADIUS_M < ACTIVE_SONAR.REVEAL_RADIUS_M);
+    assert.ok(CADENCE_PING.SELF_REVEAL_RADIUS_M < ACTIVE_SONAR.SELF_REVEAL_RADIUS_M);
+    // Both scale by the same factor, because both come from the same curve.
+    const reveal = CADENCE_PING.REVEAL_RADIUS_M / ACTIVE_SONAR.REVEAL_RADIUS_M;
+    const self = CADENCE_PING.SELF_REVEAL_RADIUS_M / ACTIVE_SONAR.SELF_REVEAL_RADIUS_M;
+    assert.ok(Math.abs(reveal - self) < 1e-9, 'the two radii came off different curves');
+    // The figures docs/units.md and docs/systems-echo.md §5 quote.
+    assert.equal(Math.round(CADENCE_PING.REVEAL_RADIUS_M), 808);
+    assert.equal(Math.round(CADENCE_PING.SELF_REVEAL_RADIUS_M), 2156);
+  });
+
+  it('stops transmitting when its owner tells it to be quiet', () => {
+    // The hull's only counter-play for its own side: a picket that could not
+    // be shut up is a hull you can never move past your own map quietly.
+    const { match } = skirmish(Faction.Bathyarch);
+    const beacon = hull(match, Faction.Bathyarch, UnitKind.Beacon, 3000, 3000);
+    match.setSilentRunning(0, beacon, true);
+    advance(match, statsFor(UnitKind.Beacon).pingCadenceS! + 3);
+    assert.ok(
+      Acoustic.sig[beacon]! < 20,
+      `a silenced Beacon was heard at ${Acoustic.sig[beacon]!.toFixed(1)}`
+    );
   });
 });

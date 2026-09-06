@@ -596,6 +596,20 @@ a commander that never went back would lay four mines a match. §6's counter-pla
 cannot see a minefield but you can hear one being built; a grown mine is the exception that
 doc makes, which is why this is the Commune's wall and nobody else's.
 
+**It scouts with its navy's own hull, and each navy's is a different argument.**
+[units.md](units.md) "The scouts" gives every navy one, and the commander buys it as a want
+of its own — cheap, one apiece, and deliberately *not* behind the escort gate the wall and
+the carrier sit behind, because a scout is not something a navy fields once it has an army,
+it is how it finds out what army to have. What it then does with it is four branches rather
+than one, because the hulls disagree about what scouting is. A Beacon is never told to run
+silent: silence stops its sonar set, and a picket that has been hushed has been switched
+off. A Glider cuts its drive for the last four hundred metres of every leg and coasts in at
+its floor, which is the one thing in the roster that arrives quieter than it travelled. An
+Acolyte runs no route at all — its ears are worth a tier only while it is stopped, so it
+walks to the first contested node and parks with its drive cut. And a Herald turns for home
+the moment anything comes inside seven hundred metres, because its protection is its wake
+and a wake only helps a hull already pointed away.
+
 **And, where its navy has one, it moves a force in a hold.** [units.md](units.md) "The
 transports" gives every navy a carrier and [systems-echo.md](systems-echo.md) §3 says what a
 hold does to the picture; two doctrines declare one — the Consortium's Freighter and the

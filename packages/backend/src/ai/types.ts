@@ -99,6 +99,7 @@ export type AiCommand =
   | { kind: 'harvest'; unitIds: number[]; nodeId: number }
   | { kind: 'throttle'; unitIds: number[]; throttle: HarvestThrottle }
   | { kind: 'silent'; unitIds: number[]; active: boolean }
+  | { kind: 'engineOff'; unitIds: number[]; active: boolean }
   | { kind: 'ping'; unitId: number }
   /**
    * Lay a mine where the hull is standing (docs/systems-combat.md §6).

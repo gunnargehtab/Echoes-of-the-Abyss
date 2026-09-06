@@ -63,6 +63,21 @@ export interface PlayerTelemetry {
   /** Seconds spent with someone holding Bearing or better on anything of theirs. */
   secondsTracked: number;
   /**
+   * First tick *this* player classified an enemy hull. Null if they never did.
+   *
+   * The batch-wide `firstEnemyContactTick` is the first tick **anyone** did,
+   * which cannot answer the question wave 2 is gated on: whether time to first
+   * contact moves per navy, and moves *differently* per navy (#506). One navy
+   * finding the other at 40 s and being found at 120 s is the whole point of a
+   * scout, and a single map-wide figure records it as 40 either way.
+   *
+   * Keyed on the same signal the batch-wide field is — a contact carrying a
+   * `faction`, which classification only ever produces for a hull — so the two
+   * mean the same thing at different scopes, and the honest limit at the top of
+   * this file applies to both.
+   */
+  firstEnemyContactTick: number | null;
+  /**
    * Hauling time, and how much of it was spent deliberately poor.
    *
    * Summed over the harvesters, so two hulls for a minute is two
@@ -178,6 +193,7 @@ export class MatchTelemetry {
         hulls: [],
         structures: [],
         secondsTracked: 0,
+        firstEnemyContactTick: null,
         secondsHardTracked: 0,
         harvesterSeconds: 0,
         harvesterSecondsQuiet: 0,
@@ -249,11 +265,12 @@ export class MatchTelemetry {
       }
 
       if (this.firstContact === null && snapshot.contacts.length > 0) this.firstContact = tick;
-      if (this.firstEnemyContact === null) {
-        // A faction on a contact means classification named a hull, which a
-        // creature can never produce. See the note at the top of this file.
+      // A faction on a contact means classification named a hull, which a
+      // creature can never produce. See the note at the top of this file.
+      if (this.firstEnemyContact === null || player.firstEnemyContactTick === null) {
         if (snapshot.contacts.some((c) => c.faction !== undefined)) {
-          this.firstEnemyContact = tick;
+          this.firstEnemyContact ??= tick;
+          player.firstEnemyContactTick ??= tick;
         }
       }
 

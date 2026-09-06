@@ -141,6 +141,32 @@ export interface UnitStats {
    * carried. Absent on every other hull.
    */
   holdBerths?: number;
+  /**
+   * Seconds between the pings this hull fires on its own, for a hull that
+   * carries a picket set rather than the commander's button
+   * (docs/systems-echo.md §5, "A ping a hull fires itself"). The figures the
+   * ping is heard at are the mechanism's and live in `ACTIVE_SONAR.CADENCE`;
+   * this is the hull's cycle, which is the part that differs per hull and the
+   * part an enemy can learn. The Beacon is the first to carry it.
+   */
+  pingCadenceS?: number;
+  /**
+   * Fraction of its speed this hull keeps with the drive cut, for a hull built
+   * to coast (docs/systems-echo.md §6, "Engine off"). Absent on every other
+   * hull, which is what makes engine off a full stop for them: the Glider is
+   * the only thing in the roster still under way at its acoustic floor.
+   */
+  glideSpeedFraction?: number;
+  /**
+   * Hydrophone rating while stationary, for a hull whose listening is its
+   * posture rather than its dome (docs/units.md, "The scouts"). The Acolyte
+   * hears at 85 parked and 60 under way; the step is worth about a resolution
+   * tier at the ranges a chokepoint watch is set at, which is the sketch
+   * roster-plan.md §3 asked for, written as a figure the Echo pass can read
+   * rather than as a special case in the tier ladder. Absent means `hyd` holds
+   * at every speed, which is every other hull.
+   */
+  hydStationary?: number;
 }
 
 /** Half a hull's length: the radius the simulation keeps clear around it. */
@@ -850,6 +876,152 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
      * The cone figure fails the Clarion test the way the Clarion does, and
      * the grant (HULL_EFFECTS.ANTIPHON) is the Spire's, which is the Order's
      * (docs/units.md).
+     */
+    faction: Faction.Hadron,
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: false,
+  },
+
+  /**
+   * The scouts — one a navy (docs/units.md, "The scouts"; wave 2 of
+   * docs/roster-plan.md, #506). None of the four carries a gun: the Light
+   * Scout is the scout that also shoots, and each of these is a sensor
+   * argument instead. Two of them are the wave's mechanisms made into hulls.
+   */
+  [UnitKind.Beacon]: {
+    kind: UnitKind.Beacon,
+    name: 'Beacon',
+    // SPEC — docs/units.md, Beacon: "30 / 42 / — (no weapon)". Loud at rest
+    // for a scout, which is the Klaxon's whole account of scouting: this hull
+    // was never going to sneak.
+    sigIdle: 30,
+    sigCruise: 42,
+    sigFiringBurst: 0,
+    // Mediocre ears on purpose. The Beacon does not listen its way to a
+    // contact, it pings and reads the return; a good hydrophone would make the
+    // cadence redundant and the hull incoherent.
+    hyd: 55,
+    pressureRating: 1,
+    maxHp: 260,
+    speed: 60,
+    hullLengthM: 70,
+    cost: 110,
+    buildTimeS: 22,
+    berths: 1,
+    /**
+     * A picket that pings every twenty seconds is only legible inside a navy
+     * whose doctrine is being heard (docs/factions.md, the Klaxon). Anywhere
+     * else it is a hull that reveals its owner on a clock for no compensating
+     * argument — the Clarion test, failed the same way.
+     */
+    faction: Faction.Bathyarch,
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: false,
+    /**
+     * The cycle. Twenty seconds is long enough that the schedule is a real
+     * gift to a patient enemy (docs/systems-echo.md §5) and short enough that
+     * the hull is genuinely holding a picket rather than decorating one.
+     */
+    pingCadenceS: 20,
+  },
+  [UnitKind.Glider]: {
+    kind: UnitKind.Glider,
+    name: 'Glider',
+    // SPEC — docs/units.md, Glider: "8 / 16 / — (no weapon)". The figures that
+    // matter are not these: with the drive cut it sits at 1.8, half its Silent
+    // Running figure, and it is the only hull that is still moving there.
+    sigIdle: 8,
+    sigCruise: 16,
+    sigFiringBurst: 0,
+    /**
+     * Deliberately poor. The Veil's scout is built to be *not heard* rather
+     * than to hear — it finds things by being able to go and look at them, and
+     * a Glider that also had ears would be the Acolyte with a better engine.
+     */
+    hyd: 45,
+    pressureRating: 1,
+    maxHp: 200,
+    speed: 105,
+    hullLengthM: 55,
+    cost: 70,
+    buildTimeS: 16,
+    berths: 1,
+    /**
+     * A floor no other economy could stand behind (docs/roster-plan.md §3).
+     * The Commune can field a hull that spends most of its life not moving
+     * usefully because the Commune fields many of everything; a navy of few
+     * heavy hulls cannot buy a scout that is switched off half the time.
+     */
+    faction: Faction.Pelagia,
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: false,
+    /**
+     * Steerage with the drive cut — 35 m/s of the hull's 105. The one thing
+     * that separates engine off from parking, and the reason this hull is a
+     * doctrine rather than a stat line (docs/systems-echo.md §6).
+     */
+    glideSpeedFraction: 1 / 3,
+  },
+  [UnitKind.Acolyte]: {
+    kind: UnitKind.Acolyte,
+    name: 'Acolyte',
+    // SPEC — docs/units.md, Acolyte: "10 / 20 / — (no weapon)".
+    sigIdle: 10,
+    sigCruise: 20,
+    sigFiringBurst: 0,
+    // Ordinary ears under way; see hydStationary for the ones it was built
+    // for. The gap between the two figures is the hull.
+    hyd: 60,
+    hydStationary: 85,
+    /**
+     * PR-2 on the hull, the Directorate's baseline lifting it to 3 — the
+     * Chorister's rule, and for the Chorister's reason.
+     */
+    pressureRating: 2,
+    maxHp: 200,
+    speed: 40,
+    hullLengthM: 58,
+    // Grown, and that is the lock. Not faction-bound: the Biomass column is
+    // what keeps this hull in the Directorate's hands, exactly as it keeps the
+    // Chorister there (docs/economy.md §8).
+    cost: 90,
+    biomassCost: 15,
+    buildTimeS: 20,
+    berths: 1,
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: false,
+  },
+  [UnitKind.Herald]: {
+    kind: UnitKind.Herald,
+    name: 'Herald',
+    // SPEC — docs/units.md, Herald: "14 / 45 / — (no weapon)". The cruise
+    // figure is the loudest of the four scouts and means the least: it is a
+    // cone figure, and the Order emits it forward (docs/systems-echo.md §8).
+    sigIdle: 14,
+    sigCruise: 45,
+    sigFiringBurst: 0,
+    hyd: 55,
+    pressureRating: 1,
+    maxHp: 240,
+    speed: 100,
+    hullLengthM: 65,
+    cost: 100,
+    buildTimeS: 20,
+    berths: 1,
+    /**
+     * The cone term is gated on the owner being Hadron — "one navy's doctrine,
+     * not physics" (docs/systems-echo.md §8, directional.ts), the same
+     * exclusion that locks the Clarion. Another navy's Herald would emit 45 in
+     * every direction: a scout as loud as a Cruiser at cruise, with nothing
+     * bought for it. The lock is the stat line being readable at all.
      */
     faction: Faction.Hadron,
     attackDamage: 0,

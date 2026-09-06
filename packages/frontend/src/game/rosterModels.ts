@@ -97,6 +97,12 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   [UnitKind.Drifter]: 'drifter',
   [UnitKind.Verger]: 'verger',
   [UnitKind.Antiphon]: 'antiphon',
+  // The scouts (#506). No model yet: the procedural bake is gate 1's
+  // sanctioned state until one clears intake, and the slug is where it lands.
+  [UnitKind.Beacon]: 'beacon',
+  [UnitKind.Glider]: 'glider',
+  [UnitKind.Acolyte]: 'acolyte',
+  [UnitKind.Herald]: 'herald',
 };
 
 /** Every structure kind has an approved model; the Partial stays for the

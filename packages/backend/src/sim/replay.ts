@@ -46,6 +46,15 @@ import { eidOfLocalId } from './world.ts';
  * each pair below 4, where it had been appended, which read as the numbers
  * having gone backwards. They did not; they were shared.
  *
+ * 16: a drive that can be cut, and a hull that pings itself (#506,
+ * docs/systems-echo.md §5, §6). One command a player did not have — engine
+ * off — and one thing that happens with no command at all: a picket's sonar
+ * set fires on its own clock, so a v15 file replayed under these rules gains
+ * transmissions its recording never contained. Both are visible to a hash: the
+ * posture is a third state where there were two, and a ping now carries the
+ * figures it was fired at rather than reading them from a constant. A v15 file
+ * is refused on the grounds every bump before it was.
+ *
  * 15: a hull in a hold (#501, docs/systems-echo.md §3). Two commands a
  * player did not have — embark and disembark — and a state a replayed hull
  * can be in that no v14 file can say: aboard a carrier, with no position of
@@ -181,7 +190,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 15;
+export const REPLAY_FORMAT_VERSION = 16;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =
@@ -220,6 +229,7 @@ export type ReplayCommand =
   | { tick: number; type: 'disembark'; slot: number; unit: number }
   | { tick: number; type: 'throttle'; slot: number; unit: number; throttle: HarvestThrottle }
   | { tick: number; type: 'silent'; slot: number; unit: number; active: boolean }
+  | { tick: number; type: 'engineOff'; slot: number; unit: number; active: boolean }
   | { tick: number; type: 'ping'; slot: number; unit: number }
   /**
    * The commander's one act — no unit, because an act is the commander's and
@@ -494,6 +504,9 @@ function applyCommand(match: Match, command: ReplayCommand): void {
       break;
     case 'silent':
       match.setSilentRunning(command.slot, eid(command.unit), command.active);
+      break;
+    case 'engineOff':
+      match.setEngineOff(command.slot, eid(command.unit), command.active);
       break;
     case 'ping':
       match.activeSonar(command.slot, eid(command.unit));

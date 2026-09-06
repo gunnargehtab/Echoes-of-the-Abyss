@@ -151,6 +151,7 @@ function hull(
   return {
     id,
     kind,
+    engineOff: false,
     x: at.x,
     y: at.y,
     depth: 300,

@@ -132,6 +132,19 @@ export enum UnitKind {
   Verger = 17,
   /** Knights, Slipway: three berths, and what it lands, lands with +1 PR. */
   Antiphon = 18,
+  /**
+   * The scouts — one a navy, and the two states a scout needs (docs/units.md,
+   * "The scouts"; wave 2 of docs/roster-plan.md, #506). Appended, for the same
+   * reason: the value crosses the wire and sits in replays.
+   */
+  /** Consortium, Foundry: the picket that pings on a cadence. */
+  Beacon = 19,
+  /** Commune, Foundry: the hull that cuts its drive and coasts. */
+  Glider = 20,
+  /** Directorate, Foundry: the ears that sit still. */
+  Acolyte = 21,
+  /** Knights, Foundry: the cone hull that scouts by leaving. */
+  Herald = 22,
 }
 
 /** Prototype structure roster. Stats live in structures.ts. See docs/units.md. */
@@ -481,6 +494,14 @@ export interface OwnUnit {
   /** Live acoustic signature, 0-100. Drives the HUD meter. */
   sig: number;
   silentRunning: boolean;
+  /**
+   * The drive is cut — the posture below Silent Running
+   * (docs/systems-echo.md §6). Its own field rather than a third value on
+   * `silentRunning`, for the reason the wire keeps them as two messages: they
+   * are two orders, and a HUD showing one toggle with three positions would be
+   * inventing a state machine the server does not have.
+   */
+  engineOff: boolean;
   /**
    * Depth the unit has been ordered to, when a depth change is in progress.
    * Absent once it arrives. The player's own order coming back to them, so

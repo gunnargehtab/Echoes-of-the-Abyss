@@ -169,19 +169,21 @@ describe('the roster’s prices', () => {
     // the rung's roster adds the Directorate's two — the Precentor at 30
     // and the Dredge at 60, "three accounts, the first hull priced in all of
     // them" (docs/units.md; #461) — and the transports add the Verger at 30
-    // (#501). The Abyssal Submersible is the crystal-locked deep hull and
+    // (#501), and the scouts the Acolyte at 15 (#506). The Abyssal
+    // Submersible is the crystal-locked deep hull and
     // stays priced as one, so a Biomass price on any hull outside the
     // Directorate's is a roster edit that needs its docs, and a Submersible
     // with one is the two hulls' roles drifting together.
     //
     // Two ways a Biomass hull is the Directorate's, and the roster uses both:
     // locked besides (the Precentor, the Dredge), or nobody's by lock with
-    // the price doing the whole job (the Chorister, the Verger — docs/units.md,
+    // the price doing the whole job (the Chorister, the Verger, the Acolyte —
+    // docs/units.md,
     // design notes). What it may not be is locked to *another* navy.
     const inBiomass = roster.filter((stats) => priceOf(stats).biomass > 0);
     assert.deepEqual(
       inBiomass.map((stats) => stats.name).sort(),
-      ['Chorister', 'Dredge', 'Precentor', 'Verger'],
+      ['Acolyte', 'Chorister', 'Dredge', 'Precentor', 'Verger'],
       'the Biomass column names the cohort programme’s hulls and nothing else'
     );
     for (const stats of inBiomass) {

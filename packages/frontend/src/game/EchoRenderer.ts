@@ -230,6 +230,7 @@ export interface RendererCallbacks {
   /** Where a selected yard sends the hulls it launches. */
   onRallyOrder(structureIds: number[], x: number, y: number): void;
   onToggleSilent(unitIds: number[], active: boolean): void;
+  onToggleEngineOff(unitIds: number[], active: boolean): void;
   onPing(unitId: number): void;
   onAttackOrder(unitIds: number[], contactId: number, queued: boolean): void;
   /** docs/systems-combat.md §5 — launch at a contact this player has resolved. */
@@ -645,6 +646,12 @@ const UNIT_SHORT: Record<UnitKind, string> = {
   [UnitKind.Drifter]: 'DRF',
   [UnitKind.Verger]: 'VRG',
   [UnitKind.Antiphon]: 'ANT',
+  // The scouts (#506). 'BCN' rather than 'BEA' so no two codes in the roster
+  // share their first two letters at a glance on a narrow bar.
+  [UnitKind.Beacon]: 'BCN',
+  [UnitKind.Glider]: 'GLD',
+  [UnitKind.Acolyte]: 'ACO',
+  [UnitKind.Herald]: 'HLD',
 };
 
 /** Compact structure names for the build buttons. */
@@ -1915,6 +1922,10 @@ export class EchoRenderer {
           e.preventDefault();
           this.commandToggleSilent();
           return;
+        case 'engineOff':
+          e.preventDefault();
+          this.commandToggleEngineOff();
+          return;
         case 'ping':
           this.commandPing();
           return;
@@ -2342,6 +2353,12 @@ export class EchoRenderer {
       // silent drop. Applies to the whole ordnance row below for the same
       // reason — every one of them is an ability a mission can withhold.
       buttons.push({
+        label: 'DRIVE OFF',
+        enabled: units.length > 0,
+        active: first?.engineOff ?? false,
+        action: () => this.commandToggleEngineOff(),
+      });
+      buttons.push({
         label: 'PING',
         enabled: units.length > 0 && this.missionLock('activeSonar') === null,
         active: false,
@@ -2721,6 +2738,19 @@ export class EchoRenderer {
     this.callbacks.onToggleSilent(
       units.map((u) => u.id),
       !(units[0]?.silentRunning ?? false)
+    );
+  }
+
+  private commandToggleEngineOff(): void {
+    const units = this.selectedUnits();
+    if (units.length === 0) return;
+    // The first selected unit's state decides, exactly as it does for silence.
+    // Nothing here clears the other posture: the server owns that rule
+    // (`Match.applyEngineOff`), and a client that also enforced it would be
+    // the second place it was written down.
+    this.callbacks.onToggleEngineOff(
+      units.map((u) => u.id),
+      !(units[0]?.engineOff ?? false)
     );
   }
 

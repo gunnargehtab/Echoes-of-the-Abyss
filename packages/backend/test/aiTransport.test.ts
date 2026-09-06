@@ -113,6 +113,7 @@ function hull(
     heading: 0,
     sig: 14,
     silentRunning: false,
+    engineOff: false,
     pressureBonus: 0,
     unhealableDamage: 0,
     ...(kind === UnitKind.Harvester ? { cargo: 0, throttle: HarvestThrottle.Standard } : {}),
@@ -165,7 +166,13 @@ describe('the doctrines that field a transport', () => {
   it('buys one Freighter, after the escort, and never a second', () => {
     const { commander, home } = commanderFor(Faction.Bathyarch);
     const escort = [1, 2, 3, 4].map((id) => hull(id, UnitKind.Corvette, home));
-    const harvesters = [5, 6, 7, 8].map((id) => hull(id, UnitKind.Harvester, home));
+    // Its own scout, already afloat. Wave 2 buys one ahead of the carrier
+    // (#506), so without it here every observation below would spend on a
+    // Beacon and this test would measure the scout want instead of the lift's.
+    const harvesters = [
+      ...[5, 6, 7, 8].map((id) => hull(id, UnitKind.Harvester, home)),
+      hull(30, UnitKind.Beacon, home),
+    ];
 
     // No escort: no carrier. A hold with nothing to carry is not a want.
     const alone = issued(commander, () => snapshot([...harvesters]), 'produce', 3);

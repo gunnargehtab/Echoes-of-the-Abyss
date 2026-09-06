@@ -364,6 +364,13 @@ export const PRODUCIBLE: Partial<Record<StructureKind, readonly UnitKind[]>> = {
     UnitKind.Freighter,
     UnitKind.Drifter,
     UnitKind.Verger,
+    // The scouts (docs/units.md, #506): all four at the Foundry, because a
+    // scout that arrives behind the rung has missed the part of the match it
+    // was bought for.
+    UnitKind.Beacon,
+    UnitKind.Glider,
+    UnitKind.Acolyte,
+    UnitKind.Herald,
   ],
   [StructureKind.Slipway]: [
     UnitKind.Bulwark,

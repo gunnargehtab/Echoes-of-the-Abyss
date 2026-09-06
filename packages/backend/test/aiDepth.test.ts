@@ -82,6 +82,7 @@ function hull(id: number, kind: UnitKind, depth: number): OwnUnit {
     heading: 0,
     sig: stats.sigCruise,
     silentRunning: false,
+    engineOff: false,
     pressureBonus: 0,
     unhealableDamage: 0,
   };

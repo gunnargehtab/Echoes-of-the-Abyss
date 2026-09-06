@@ -30,9 +30,18 @@ are contacts, drawn at earned fidelity, never world meshes
 2. **One Claude Design conversation per roster run.** Session context reinforces
    consistency; tell it "same series, same materials and lighting as the previous model"
    on every follow-up.
-3. **One model for the whole run.** Use the most capable model in the picker (Opus 5 at
-   time of writing; a stronger tier if offered) and do not switch mid-series — a model
-   switch is a second source of style drift.
+3. **One model for the whole run, and for this series it is Fable 5.1.** Hull generation
+   moves to Fable 5.1 in the Claude Design picker from the scout wave (#506) on; every GLB
+   approved in `docs/concept-art/models/` before it was generated under Opus 5. Do not
+   switch mid-series — a model switch is a second source of style drift, and that is the
+   reason this note exists: the move to Fable 5.1 is a *deliberate series break*, not an
+   exception to the rule. Everything generated under Fable 5.1 is a new series, and the
+   first hull generated under it is iterated and approved as that series' reference (rule
+   4) — held against the approved Opus 5 models on the consistency checklist, so the break
+   is a known quantity rather than a drift — before any other hull is batched. Nothing
+   moves back and forth between the two pickers to match an older model: if a Fable 5.1
+   hull will not converge on the series look, the fix is the prompt or the reference, never
+   the picker.
 4. **Approve a reference unit first.** Generate one unit, iterate until it is right,
    declare it the series reference, then batch the rest. Fixing one model is cheaper
    than re-converging five diverged ones.
@@ -303,6 +312,79 @@ three-bay landing deck let into its back, a crystal resonator ring around the
 deck that is the grant made visible, swept guard wings, and the drive in the
 spine. Lit from the bow back like every Order hull and dark astern; the
 resonator ring flares when the deck opens.
+```
+
+### The scouts — one a navy, and two ways of not being heard
+
+The four scouts of [units.md](units.md) "The scouts" (wave 2 of
+[roster-plan.md](roster-plan.md), #506). None carries a gun — the Light Scout is the scout
+that also shoots — so what a scout's silhouette has to say at RTS distance is its *sensor
+argument*, how this navy finds things: the Beacon pings, the Acolyte plants its ears, the
+Herald points its horn and runs. Two of the four are a *state* made into geometry, and the
+model is generated in that state: the Glider with its drive cut and its wing spread, the
+Herald with the cone's mouth open. The lighting clause is the idle/cruise pair as ever; the
+Beacon's ping is the one transient, and the Herald's cruise figure is a cone figure, lit
+ahead and dark astern like every Order hull.
+
+```text
+UNIT — Beacon (pair with Consortium): the picket that shouts, 70 m — a cheap
+active sonar fired every 20 s at SIG 80, and nothing else (SIG 30 idle, 42
+cruise; no weapon; HYD 55). A riveted box hull over a pressure-cylinder body
+with the transducer drum standing athwartships amidships in a bolted
+cradle: a banded cylinder wider than the hull and proud of both flanks, hoop
+flanges, a dogged inspection hatch, a stub lamp mast over it; ballast
+blisters low on the hull, one prop tunnel in a square stern, plate
+patchworked older-under-newer. Dim amber running lights along the hull line
+at rest, the drum's hoop lamps a sustained glow under way; the drum floods
+bright for the instant of a ping, once every twenty seconds, and is dim
+again between — the cadence is the light.
+```
+
+```text
+UNIT — Glider (pair with Pelagia): the quiet way out, 55 m — a hull that cuts
+its drive and coasts, still under way at 35 of its 105 m/s (SIG 8 idle, 16
+cruise, 1.8 gliding; no weapon; HYD 45). A winged seed, and the one plan in
+the roster not mirrored across its keel: a slim grown seed body on the
+centreline, one broad wing swept aft off the starboard flank with growth
+rings across its blade and a stiffening vein along its leading edge, a
+short trim vane to port, and the muscle-drive tail folded flat along the
+stem — the model is the hull with its drive cut, which is the state it was
+grown for. Nearly black: navigation marks only, the wing vein barely
+showing, and the tail's veins unlit, because they light only while the
+drive turns.
+```
+
+```text
+UNIT — Acolyte (pair with Directorate): the ears that sit still, 58 m — the
+Listening made a hull that holds a chokepoint rather than driving past it
+(SIG 10 idle, 20 cruise; no weapon; HYD 60 under way, 85 stationary; PR 2,
+3 under the Directorate's baseline; 40 m/s; 90 nodules and 15 Biomass). A
+squat three-tergite carapace, wider in its limbs than in its shell, with
+six hydrophone limbs walked out and planted — three a side, stout and
+jointed, the forward pair raked ahead and the aft pair astern — a short
+rostrum, a telson, and a listening dome sunk low into the middle tergite.
+The limbs are the array and the model shows them down, which is the posture
+it hears at 85 in; under way they fold flat under the shell. Nearly black: a
+photophore at each limb's joint, in a pattern that repeats on neither side.
+```
+
+The Acolyte carries no faction lock — the Biomass is the lock, as the Chorister's is — so a
+navy rendering for one fields the same plan, the squat shell, the six planted limbs and the
+sunk dome, composed with its own FACTION block, with the light kept nearly black.
+
+```text
+UNIT — Herald (pair with Hadron Knights): the scout that scouts by leaving,
+65 m — the cone with its mouth open (SIG 14 idle; 45 cruise ahead, 15.8 on
+the beam, 4.5 astern; no weapon; HYD 55; 100 m/s). A short faceted blade
+hull, bilaterally symmetric, forked at the bow into two crystal-edged tines
+with an emitter crystal standing in the throat between them — the fork is
+the horn and the slot is the cone's mouth — widest just abaft the fork and
+drawn aft to a flat transom with the drive prism in the spine: no guard
+wings, no canards, nothing astern to hear. Nearly black at rest but for the
+crystal in the throat; under way, sustained glow along the tines' inner
+edges, thrown forward out of the fork, and dark astern but for one mark —
+the quarter it is loud in is the quarter it faces, and the quarter it shows
+you is the one it runs in.
 ```
 
 ## Block 3b — STRUCTURE (one per generation)

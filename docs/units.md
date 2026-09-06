@@ -630,6 +630,96 @@ Antiphon (Slipway)
 - Faction-locked: yes — the cone figure fails the Clarion test the way the Clarion does, and
   the grant is the Spire's, which is the Order's
 
+The scouts — one a navy, and two ways of not being heard
+
+The Light Scout is nobody's, and it is the hull three navies out of four still find things
+with. These four are how each navy finds things *itself*. None of them carries a gun: the
+Light Scout is the scout that also shoots, and each of these spends its tonnage on one
+sensor argument instead. Two of them are the wave's mechanisms made into hulls — the Beacon
+is a ping on a cadence, the Glider is a drive that can be switched off
+([systems-echo.md](systems-echo.md) §5, §6) — and the other two are the two ways a hull can
+listen: by sitting still, and by being pointed the right way.
+
+Beacon (Foundry)
+
+- Role: The picket that shouts. A cheap active sonar fired every 20 s without an order, and
+  nothing else — the Klaxon does not sneak, it pings and reads the return
+- SIG: 30 / 42 / — (no weapon), and **80 on every ping**, against the 95 a commander's button
+  costs. Loud at rest for a scout, which is the point: this hull was never going to hide
+- HYD: 55 — deliberately mediocre. A Beacon that could listen its way to a contact would not
+  need the cadence, and the hull would stop meaning anything
+- PR: 1
+- Cost: 110
+- Build time: 22s
+- Berths: 1
+- Speed: 60
+- HP: 260
+- Effect: A ping every **20 s** while the hull is alive, at SIG 80 — **808 m** of Tier-4
+  reveal and **2,156 m** of self-reveal, both falling out of the propagation model at that
+  loudness rather than authored beside it ([systems-echo.md](systems-echo.md) §5). A cadence
+  is a rhythm and a rhythm can be read: a Beacon buys its navy continuous coverage and sells
+  its enemy a schedule
+- Faction-locked: yes. A picket that reveals its owner on a clock is only legible inside a
+  doctrine that plans to be heard; anywhere else it is the Clarion test failed the same way
+
+Glider (Foundry)
+
+- Role: The quiet way out. A hull that cuts its drive and coasts, still under way at an
+  acoustic floor nothing else in the roster reaches while moving
+- SIG: 8 / 16 / — (no weapon), and **1.8 gliding** — half its Silent Running figure, which is
+  what engine off is for every hull ([systems-echo.md](systems-echo.md) §6). A Light Scout
+  with its engine off is quieter still and is a rock; the Glider is the only thing that is
+  quiet *and going somewhere*
+- HYD: 45 — the worst ears of the four, and not an oversight. The Veil's scout is built to be
+  *not heard* rather than to hear: it finds things by being able to go and look
+- PR: 1 — the Commune baseline, and the hull's own
+- Cost: 70
+- Build time: 16s
+- Berths: 1
+- Speed: 105, and **35 gliding** — a third, kept when every other hull would be stopped dead
+- HP: 200
+- Faction-locked: yes. A hull that spends half its life switched off is a floor no other
+  economy could stand behind: the Commune fields many of everything, and a navy of few heavy
+  hulls cannot buy a scout that is not always scouting
+
+Acolyte (Foundry)
+
+- Role: The ears that sit still. The Listening's hydrophones made into a hull that holds a
+  chokepoint rather than one that drives past it
+- SIG: 10 / 20 / — (no weapon)
+- HYD: 60 under way, **85 stationary**. The gap between the two figures is the whole hull:
+  worth about a resolution tier at the ranges a chokepoint watch is set at, and paid for by
+  being the slowest scout in the game
+- PR: 2 — on the hull, the Directorate baseline lifting it to 3, which is the Chorister's rule
+- Cost: 90, plus 15 Biomass — the cohort programme's account, at a scout's scale
+- Build time: 20s
+- Berths: 1
+- Speed: 40
+- HP: 200
+- Faction-locked: no. The Biomass is the lock, as the Chorister's is: a stationary listening
+  step reads the same under any flag, and the rendering contracts price it for everyone else
+  ([economy.md](economy.md) §6)
+
+Herald (Foundry)
+
+- Role: The scout that scouts by leaving. 100 m/s, and a signature that is loudest exactly
+  where the enemy usually is not
+- SIG: **14 / 45 / —** (no weapon), and the figures are **cone** figures as every Order hull's
+  are ([systems-echo.md](systems-echo.md) §8): 45 ahead, 15.8 on the beam, 4.5 astern. A
+  Herald running away is the quietest fast hull on the map; a Herald facing you is the
+  loudest scout in the game
+- HYD: 55
+- PR: 1 — the Hadron baseline
+- Cost: 100
+- Build time: 20s
+- Berths: 1
+- Speed: 100
+- HP: 240
+- Faction-locked: yes. The cone term is one navy's doctrine and not physics
+  ([systems-echo.md](systems-echo.md) §8), so another navy's Herald would emit 45 in every
+  direction: a scout as loud at cruise as a Cruiser, with nothing bought for it. The lock is
+  the stat line being readable at all
+
 What this does to the summary table. [factions.md](factions.md)'s *Army* row becomes true in
 the roster: the Consortium fields the heaviest hull and the only repair; the Commune the most
 mines and the only terraformer; the Directorate the best ears and the only PR-4; the Knights
@@ -657,7 +747,9 @@ Design notes
 - Numbers are prototyping intent. Exact costs and timings are tuneable.
 - **HYD is a flat hull property.** Silent Running changes what a unit *emits* (SIG), never
   what it *hears* — throttling engines does not unplug the hydrophones. Anything that
-  modifies listening does so as an explicit HYD modifier (the Cantor's dome), so the
+  modifies listening does so as an explicit HYD modifier (the Cantor's dome, and the
+  Acolyte's own second figure, which is keyed on the hull being stationary and not on any
+  posture it has chosen — a silent Acolyte under way still hears 60), so the
   detection formula keeps exactly two listening-side inputs: distance and HYD.
 - **The Knights have a hull now, and it is solved from the multiplier rather than beside it
   (issue #401).** Directional signature is spec'd in systems-echo.md §8: a Knight hull's listed

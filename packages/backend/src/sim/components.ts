@@ -264,9 +264,48 @@ export const SilentRunning = defineComponent({
   active: Types.ui8,
 });
 
-/** An active sonar ping in flight. docs/systems-echo.md §5. */
+/**
+ * Engine off — the posture below Silent Running (docs/systems-echo.md §6).
+ *
+ * Its own component rather than a second flag on `SilentRunning`, because the
+ * two are read by different systems for different reasons: movement asks
+ * whether the drive is turning, acoustics asks how quiet the hull is, and a
+ * single field would have made "silent *and* stopped" representable when the
+ * design has three postures and not four. `Match.applyEngineOff` clears the
+ * other one, which is where that exclusivity is enforced.
+ */
+export const EngineOff = defineComponent({
+  active: Types.ui8,
+});
+
+/**
+ * The clock a picket's sonar set runs on (docs/systems-echo.md §5, "A ping a
+ * hull fires itself"). Only hulls whose stats carry `pingCadenceS` have one.
+ *
+ * A countdown rather than a modulo of the tick, so that two Beacons built ten
+ * seconds apart ping ten seconds apart. A cadence a whole navy fired in unison
+ * would be one loud event every twenty seconds instead of continuous coverage,
+ * which is the opposite of what the hull is bought for.
+ */
+export const PingCadence = defineComponent({
+  remainingS: Types.f32,
+});
+
+/**
+ * An active sonar ping in flight. docs/systems-echo.md §5.
+ *
+ * The figures ride on the component rather than being read from a constant at
+ * the point of use, because there are two pings now — the commander's button
+ * and a picket's cadence — and every consumer wants *this* transmission's
+ * reach and loudness. A second constant read at four call sites would have
+ * been four places to forget which ping was in flight.
+ */
 export const ActivePing = defineComponent({
   remainingS: Types.f32,
+  /** What the pinger is heard at while it transmits. */
+  emitterSig: Types.f32,
+  /** The hard Tier-4 radius this transmission punches, in metres. */
+  revealRadiusM: Types.f32,
 });
 
 /** Index into the StructureKind enum. Mutually exclusive with Unit. */

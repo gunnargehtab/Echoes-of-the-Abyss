@@ -64,6 +64,7 @@ import {
 import {
   Acoustic,
   ActivePing,
+  EngineOff,
   Carried,
   Countermeasure,
   DepthOrder,
@@ -90,6 +91,7 @@ import {
   Weapon,
 } from './components.ts';
 import { EchoLayer } from './systems/echoLayer.ts';
+import { cadencePingSystem } from './systems/cadencePing.ts';
 import { acousticsSystem } from './systems/acoustics.ts';
 import { aurasSystem } from './systems/auras.ts';
 import { standingWaveSystem } from './systems/standingWave.ts';
@@ -1311,6 +1313,37 @@ export class Match {
   private applySilent(slot: number, eid: number, active: boolean): void {
     if (!this.owns(slot, eid) || !hasComponent(this.world, SilentRunning, eid)) return;
     SilentRunning.active[eid] = active ? 1 : 0;
+    // Exclusive postures (docs/systems-echo.md §6): a hull told to run silent
+    // is being told to run.
+    if (active) EngineOff.active[eid] = 0;
+  }
+
+  /** Cut or restart the drive. docs/systems-echo.md §6, "Engine off". */
+  setEngineOff(slot: number, eid: number, active: boolean): void {
+    this.recordCommand({
+      tick: this.world.tick,
+      type: 'engineOff',
+      slot,
+      unit: this.localId(eid),
+      active,
+    });
+    this.applyEngineOff(slot, eid, active);
+  }
+
+  /** The unrecorded half of `setEngineOff` — see `applyMove`. */
+  private applyEngineOff(slot: number, eid: number, active: boolean): void {
+    if (!this.owns(slot, eid) || !hasComponent(this.world, EngineOff, eid)) return;
+    // The third posture displaces the second rather than stacking with it.
+    //
+    // The move order is deliberately **kept**. Movement multiplies the hull's
+    // speed by its `glideSpeedFraction`, which is zero for everything but the
+    // Glider, so an ordinary hull stops dead without the order having to be
+    // torn up — and restarting its drive resumes the course it was on, which
+    // is what a player who cut the engine to listen expects. Dropping the
+    // order here would also have left the one hull built to coast with nothing
+    // to coast along, which is how it was found.
+    EngineOff.active[eid] = active ? 1 : 0;
+    if (active) SilentRunning.active[eid] = 0;
   }
 
   /**
@@ -1422,9 +1455,14 @@ export class Match {
       addComponent(this.world, ActivePing, eid);
     }
     ActivePing.remainingS[eid] = ACTIVE_SONAR.REVEAL_DURATION_S;
+    ActivePing.emitterSig[eid] = ACTIVE_SONAR.EMITTER_SIG;
+    ActivePing.revealRadiusM[eid] = ACTIVE_SONAR.REVEAL_RADIUS_M;
     raiseSelfEvent(this.world, { kind: SelfEventKind.Ping, eid });
-    // Pinging breaks silence by definition.
+    // Pinging breaks silence by definition — and a hull cannot ping with its
+    // drive cut either: transmitting is the loudest thing a picket does, and
+    // the posture below silence is the one where it is doing nothing at all.
     SilentRunning.active[eid] = 0;
+    EngineOff.active[eid] = 0;
   }
 
   /**
@@ -1749,6 +1787,11 @@ export class Match {
     // falling rewrites the PF grid on this tick rather than at the next storm
     // boundary — the line is heard the tick it closes.
     if (standingWaveSystem(this.world, this.destroyedScratch)) rebuildPropagation(this.world);
+    // A picket's clock runs immediately before acoustics, for the reason auras
+    // do: a transmission that starts this tick must be heard on this tick's
+    // SIG pass, not the next one. The Echo pass runs at 5 Hz and would
+    // otherwise read a ping that had already been counted down.
+    cadencePingSystem(this.world);
     acousticsSystem(this.world);
     pressureSystem(this.world, this.destroyedScratch);
     // Hazards after pressure and before reap: a hull killed by an eruption
@@ -2329,6 +2372,7 @@ export class Match {
         heading: 0,
         sig: Acoustic.sig[eid]!,
         silentRunning: SilentRunning.active[eid] === 1,
+        engineOff: EngineOff.active[eid] === 1,
         pressureBonus: Pressure.bonus[eid]!,
         unhealableDamage: Pressure.unhealable[eid]!,
       };

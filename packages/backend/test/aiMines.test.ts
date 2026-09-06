@@ -132,6 +132,7 @@ function hull(
     heading: 0,
     sig: 14,
     silentRunning: false,
+    engineOff: false,
     pressureBonus: 0,
     unhealableDamage: 0,
     ...(kind === UnitKind.Harvester ? { cargo: 0, throttle: HarvestThrottle.Standard } : {}),
@@ -343,6 +344,11 @@ describe('the Commune lays a wall', () => {
         ...Array.from({ length: spinners }, (_, k) =>
           hull(20 + k, UnitKind.Spinner, home, { mines: HULL_EFFECTS.SPINNER.MAGAZINE })
         ),
+        // The navy's own scout, already afloat. Wave 2 buys it ahead of the
+        // wall (#506) — a scout is how a navy decides what wall to build — so
+        // without one here this fixture would measure the scout want and not
+        // the Spinner's.
+        hull(30, UnitKind.Glider, home),
       ];
       for (const command of commander.observe(snapshot(units, { tick: 6000 + i * 12 }))) {
         if (command.kind !== 'produce') continue;

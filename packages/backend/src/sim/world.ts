@@ -48,6 +48,8 @@ import {
   Position,
   Pressure,
   ResourceNode,
+  EngineOff,
+  PingCadence,
   SilentRunning,
   StaticEmitter,
   Structure,
@@ -936,6 +938,21 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
 
   addComponent(world, SilentRunning, eid);
   SilentRunning.active[eid] = 0;
+
+  // Every hull can cut its drive (docs/systems-echo.md §6). What differs is
+  // whether anything happens next: only a hull with `glideSpeedFraction` is
+  // still under way once it has, and the roster has one.
+  addComponent(world, EngineOff, eid);
+  EngineOff.active[eid] = 0;
+
+  // A picket set fires on the hull's own clock rather than on an order, so the
+  // clock is spawned with it. Started at the full interval rather than at zero:
+  // a Beacon that pinged the instant it left the yard would announce its navy's
+  // build order, which is a different game than the one the cadence is for.
+  if (stats.pingCadenceS !== undefined) {
+    addComponent(world, PingCadence, eid);
+    PingCadence.remainingS[eid] = stats.pingCadenceS;
+  }
 
   if (stats.attackDamage > 0 && opts.weaponsCold !== true) {
     addComponent(world, Weapon, eid);

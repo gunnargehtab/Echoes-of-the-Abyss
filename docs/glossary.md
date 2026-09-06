@@ -69,6 +69,14 @@ Hold
 - The berths a transport carries other hulls in — the Freighter's six, the Verger's four, the Antiphon's three, the Drifter's two (units.md, "The transports"). A carried hull is not in the water: no position, no SIG, no ears, unresolvable at any tier; it keeps its commander's berths, takes the carrier's depth and PR, and dies with it (systems-echo.md §3, "A hull in a hold").
 - The load is audible only as SIG — +3 per berth carried, Silent Running included — and a kill reveals nothing beyond the battle site any hull's death leaves.
 
+Engine Off
+
+- The posture below Silent Running (systems-echo.md §6): no thrust, and SIG at half the hull's Silent Running figure, floored at 1. Silent Running trades weapons for quiet; this trades movement. Weapons still work, and firing costs the usual spike. A hull with its drive cut rides a cold shock current if one runs and travels no other way — except the Glider, which keeps steerage and coasts at a third of its speed (units.md, "The scouts").
+
+Cadence Ping
+
+- An active ping a hull fires on its own clock rather than on a commander's order (systems-echo.md §5). The same mechanism as the button at one lower number — SIG 80 against 95 — from which both radii follow: 808 m of Tier-4 reveal, 2,156 m of self-reveal. The Beacon carries one, on a 20 s cycle. A cadence is a rhythm, so it buys continuous coverage and sells the enemy a schedule.
+
 Ghost Markers
 
 - The decaying last-known position of a contact a listener has already detected. Tier 1 and Tier 2 contacts persist this way and fade over 20 s (systems-echo.md §4). A ghost marker is your own stale reading of a live unit, and it lies to you by exactly as much as that unit has moved since you heard it.

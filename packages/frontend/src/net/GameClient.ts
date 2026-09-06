@@ -595,6 +595,17 @@ export class GameClient {
   }
 
   /**
+   * Cut or restart the drive — the posture below Silent Running
+   * (docs/systems-echo.md §6). The server owns the exclusivity: ordering this
+   * clears Silent Running, and ordering Silent Running clears this, so the
+   * client never has to send two messages to change one posture.
+   */
+  setEngineOff(unitIds: number[], active: boolean): void {
+    if (unitIds.length === 0) return;
+    this.order(CLIENT_MSG.engineOff, { unitIds, active });
+  }
+
+  /**
    * Order a depth change. Descent is fast and loud, ascent slow and silent —
    * the server owns both rates and refuses a depth outside the map's range.
    */

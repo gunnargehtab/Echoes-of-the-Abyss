@@ -69,6 +69,7 @@ export const CLIENT_MSG = {
   depth: 'depth',
   followFloor: 'followFloor',
   silent: 'silent',
+  engineOff: 'engineOff',
   ping: 'ping',
   ability: 'ability',
   // Ordnance.
@@ -167,6 +168,19 @@ export interface SilentRunningMessage {
   active: boolean;
 }
 
+/**
+ * Cut or restart the drive — the posture below Silent Running
+ * (docs/systems-echo.md §6). Its own message rather than a mode field on
+ * `SilentRunningMessage`, because the two are separate orders a player gives
+ * for separate reasons, and a client that had to send "silent: false" to mean
+ * "engine off" would be encoding the server's exclusivity rule on the wrong
+ * side of the socket.
+ */
+export interface EngineOffMessage {
+  unitIds: number[];
+  active: boolean;
+}
+
 export interface PingMessage {
   unitId: number;
 }
@@ -254,6 +268,7 @@ export interface ClientMessages {
   depth: DepthMessage;
   followFloor: FollowFloorMessage;
   silent: SilentRunningMessage;
+  engineOff: EngineOffMessage;
   ping: PingMessage;
   ability: AbilityMessage;
   torpedo: TorpedoMessage;

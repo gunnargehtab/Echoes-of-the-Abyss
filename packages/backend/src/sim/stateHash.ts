@@ -31,6 +31,7 @@ import {
   Posture,
   Pressure,
   ResourceNode,
+  EngineOff,
   SilentRunning,
   Structure,
   Unit,
@@ -124,6 +125,10 @@ export function hashWorld(world: SimWorld): number {
       h = mixU32(h, Structure.grantSlot[eid]!);
     }
     if (hasComponent(world, SilentRunning, eid)) h = mixU32(h, SilentRunning.active[eid]!);
+    // The third posture, hashed beside the second: a hull with its drive cut
+    // moves and is heard differently, so two runs that disagree about it have
+    // diverged (docs/systems-echo.md §6).
+    if (hasComponent(world, EngineOff, eid)) h = mixU32(h, EngineOff.active[eid]!);
     if (hasComponent(world, Pressure, eid)) {
       h = mixU32(h, Pressure.rating[eid]!);
       h = mixU32(h, Pressure.bonus[eid]!);

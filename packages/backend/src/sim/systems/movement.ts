@@ -32,6 +32,7 @@ import {
   MoveOrder,
   Owner,
   Position,
+  EngineOff,
   SilentRunning,
   Unit,
   Velocity,
@@ -39,7 +40,7 @@ import {
 import { currentModifiers, kelpModifiers, stormModifiers } from './hazards.ts';
 import type { SimWorld } from '../world.ts';
 
-const movable = defineQuery([Position, Velocity, MoveOrder, Unit, SilentRunning, Owner]);
+const movable = defineQuery([Position, Velocity, MoveOrder, Unit, SilentRunning, EngineOff, Owner]);
 
 /** Reused across hulls and ticks: resolveStep writes here rather than allocating. */
 const step = { x: 0, y: 0 };
@@ -185,6 +186,19 @@ function speedMultiplier(world: SimWorld, eid: number): number {
   // has two separate facts true about it, and neither cancels the other. Empty
   // in every skirmish, and the read is gated on that.
   const act = water * (world.commanderHaste.size === 0 ? 1 : (world.commanderHaste.get(eid) ?? 1));
+
+  // The drive is cut (docs/systems-echo.md §6). Checked before Silent
+  // Running's multiplier because the two are exclusive postures, and checked
+  // last among the terms above because weather still applies to a hull that is
+  // coasting: a Glider gliding into a cold shock current is carried by it.
+  //
+  // Every hull without `glideSpeedFraction` stops dead here. The Glider keeps a
+  // third of its speed, and is the only thing in the roster still under way at
+  // its acoustic floor — the one line that separates a doctrine from a parked
+  // hull.
+  if (EngineOff.active[eid]) {
+    return act * (statsFor(Unit.kind[eid] as UnitKind).glideSpeedFraction ?? 0);
+  }
 
   if (!SilentRunning.active[eid]) return act;
   // Immunity is to the **speed** penalty and to nothing else — the SIG floor

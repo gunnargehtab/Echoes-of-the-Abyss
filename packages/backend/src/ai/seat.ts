@@ -73,6 +73,11 @@ export class AiSeat {
           this.match.setSilentRunning(slot, id, command.active);
         }
         return;
+      case 'engineOff':
+        for (const id of command.unitIds) {
+          this.match.setEngineOff(slot, id, command.active);
+        }
+        return;
       case 'ping':
         this.match.activeSonar(slot, command.unitId);
         return;
