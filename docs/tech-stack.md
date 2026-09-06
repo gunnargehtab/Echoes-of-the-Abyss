@@ -637,19 +637,40 @@ to work and no rating to work with; the deficit goes to zero, the same arithmeti
 a raid prices a haul, and the field enters the ordinary distance-and-crowding score like any
 other. Walk, stop, *then* dive: the seed clock reads horizontal velocity, so a hull that
 arrives and settles is seeded before it crosses 1,800 m and pays nothing for the water it is
-about to make habitable. The Order's **Cantus** is the same mechanism on far cheaper terms — a
-400-nodule Foundry hull against a Slipway hull at 80 crystal behind a 120-crystal yard — so
-its first one still masses with the army and only a second is spare.
+about to make habitable. The Order's **Cantus** is the same mechanism a yard earlier — a 400-nodule
+Foundry hull against a 380-nodule Slipway one — so its first one still masses with the army
+and only a second is spare.
 
-On `ventfront-divide` the commander declines that raid every time, and the arithmetic is worth
-recording because nothing had done it before. The crystal sits 500 m inside *both* authored
+That raid used to be declined on every map, and the arithmetic is worth recording because
+nothing had done it before. On `ventfront-divide` the crystal sat 500 m inside *both* authored
 eruption plumes, where a combined pass is 175 HP — a figure solved so that a pass "wounds
 badly and leaves the trip possible" ([hazards.md](hazards.md) §1). It leaves a *crossing*
 possible. It does not leave possible a crossing that has also paid 238 HP of crush, and for
-the Commune, whose organic hulls take half as much again, the pass alone is 262. So the boat
-is not sent, the yard is not bought, and the Sower stays a hull a human fields. That is a map
-and roster question rather than an AI one — but it is now a question the commander asks out
-loud, in numbers, instead of one it never reached.
+the Commune, whose organic hulls take half again as much, the pass alone is 262. Each vent has
+since moved out 300 m **with its field**, so the plumes keep their reach and the fields they
+were authored to make dangerous, and the crystal keeps water of its own (#491).
+
+**And it saves.** Nothing in this commander had ever held money back for anything, which is
+why none of that was visible: measured over four four-seat matches, the branch that buys the
+rung was reached between 2,460 and 5,227 times and the *most* any commander held when it got
+there was 630 nodules — 180 for the Commune — against a 600 price. The 600 a navy starts with
+is the only time it is ever that rich. So a rung nobody could afford was never a pricing
+problem, and the two builds worth waiting for — the second yard, and the navy's own structure
+— are now saved for rather than bought out of pocket, guarded on the economy being staffed and
+never on being raided, because the turret above already answers a raid and returns first.
+Saving is only ever against a gap *waiting* can close: a build short of crystal is not short
+of savings, and holding its nodules back would starve the yards for something the wait will
+never deliver.
+
+Together those move the rung from unreachable to ordinary. Measured over 224 navy-matches on
+two maps and two seed runs, second yards went from **none in the thirty-two navy-matches
+measured on `main`** to **129 of 224** — the Directorate builds one almost always, the Knights
+in about two thirds, and the two navies that were locked out entirely now reach it about a
+third of the time. A Commune Sower reaches the water in three of fifty-six, and a signature
+structure — the only thing this commander spends crystal on — in three. Those last two are
+the far end of a long chain and they are the honest measure of how much further it has to
+run: the Commune reaches the rung least often because it is the navy that loses, which is a
+different problem from the one this fixed.
 
 **It decides for itself what counts as an attack on its base**, and that is a harder question
 than it sounds. A contact near the Bastion used to recall the whole army, unconditionally,

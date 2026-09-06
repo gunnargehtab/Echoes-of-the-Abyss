@@ -156,9 +156,26 @@ export const VENTFRONT_DIVIDE: MapDefinition = {
     { x: 1900, y: H - 1450, kind: ResourceKind.Nodule },
     { x: W - 1900, y: H - 1450, kind: ResourceKind.Nodule },
     // "Toxic brine pockets near mining rigs" — the contested fields sit inside
-    // the vent band, so working them is quiet and dangerous at once.
-    { x: 4000, y: 3500, kind: ResourceKind.Nodule, amount: 6000, note: 'Contested, in the vents' },
-    { x: 4000, y: 4500, kind: ResourceKind.Nodule, amount: 6000 },
+    // the vent band, so working them is quiet and dangerous at once. Each sits
+    // at its vent's centre, which is what makes working one the worst place on
+    // the map to be when it fires.
+    //
+    // They were 500 m either side of the crystal, and the vents with them, so
+    // the 700 m plumes covered the crystal too and #179's "one pass wounds
+    // badly and leaves the trip possible" was being asked of a hull that had
+    // also paid 238 HP of crush to be there (#491). Each pair moved out 500 m
+    // together: the plumes keep their reach and keep the fields they were
+    // authored to make dangerous — each still at a plume centre, where a pass
+    // is lethal — and the crystal gets 200 m of clearance instead of sitting
+    // inside both.
+    //
+    // 900 m and not further: these fields have to stay inside the Thermal Vein
+    // band (y 3,000-5,000), which is what makes working them "quiet and
+    // dangerous at once" and is asserted a few tests above. The vein band is
+    // the constraint, the plume radius is the requirement, and 900 is the only
+    // round number that satisfies both.
+    { x: 4000, y: 3100, kind: ResourceKind.Nodule, amount: 6000, note: 'Contested, in the vents' },
+    { x: 4000, y: 4900, kind: ResourceKind.Nodule, amount: 6000 },
     {
       x: 4000,
       y: 4000,
@@ -169,12 +186,12 @@ export const VENTFRONT_DIVIDE: MapDefinition = {
   hazards: [
     {
       x: 4000,
-      y: 3500,
+      y: 3100,
       radiusM: 700,
       kind: 'geothermal-eruption',
-      note: 'Predictable intervals (doc); the mid fields sit inside it',
+      note: 'Predictable intervals (doc); the mid field sits at its centre',
     },
-    { x: 4000, y: 4500, radiusM: 700, kind: 'geothermal-eruption' },
+    { x: 4000, y: 4900, radiusM: 700, kind: 'geothermal-eruption' },
     { x: 1900, y: 1450, radiusM: 400, kind: 'toxic-brine', note: 'Near mining rigs' },
     { x: W - 1900, y: H - 1450, radiusM: 400, kind: 'toxic-brine' },
   ],

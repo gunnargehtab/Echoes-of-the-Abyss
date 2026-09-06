@@ -311,18 +311,23 @@ describe('a bow that survives a stop', () => {
     // The half of this feature that is not the arithmetic. A sounding is twenty
     // seconds of a stationary hull, and `atan2(Velocity.y, Velocity.x)` on a
     // stopped hull is zero — due east — for every hull on the map.
+    // Run in the map's north-west quarter rather than down its middle. The
+    // middle is the vent band, and an eruption's knockback moves a hull — this
+    // test is about the heading a *stopped* hull keeps, so it needs water that
+    // will not shove it past the mark it was sent to (#491 moved the vents,
+    // and this fixture was sitting on one).
     const match = new Match(VENTFRONT_DIVIDE, { fauna: false, seed: 11 });
     match.addPlayer(0, Faction.Hadron);
     const hull = spawnUnit(match.world, {
       kind: UnitKind.Corvette,
       slot: 0,
       faction: Faction.Hadron,
-      x: 4000,
-      y: 4000,
+      x: 1500,
+      y: 1500,
     });
 
     // Due north, in this simulation's convention: +y, so atan2(+1, 0) = +π/2.
-    match.orderMove(0, hull, 4000, 5000);
+    match.orderMove(0, hull, 1500, 2500);
     for (let i = 0; i < SIM.TICK_HZ * 40; i++) match.update(STEP_MS);
 
     // Within the movement system's own arrival epsilon rather than exactly on
@@ -330,7 +335,7 @@ describe('a bow that survives a stop', () => {
     // so ~1e-7 rad is the most it can carry. That is four decimal places of a
     // degree — finer than any sector boundary by six orders of magnitude.
     assert.ok(
-      Math.abs(Position.y[hull]! - 5000) < MOVEMENT.ARRIVAL_EPSILON_M + 5,
+      Math.abs(Position.y[hull]! - 2500) < MOVEMENT.ARRIVAL_EPSILON_M + 5,
       `the hull stopped at ${Position.y[hull]}`
     );
     assert.ok(

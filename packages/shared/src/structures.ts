@@ -251,13 +251,27 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
     hyd: 30,
     maxHp: 2500,
     /**
-     * The same crystal price as a signature structure, because it is the same
-     * kind of decision: the deep, spent on a building. Every navy's — the
-     * rung is not one doctrine's — so no faction lock; the hulls it builds
-     * carry the locks instead (`unitAvailableTo`).
+     * Nodules only, and that is a correction rather than a discount.
+     *
+     * It carried a signature structure's 120 crystal on the reasoning that it
+     * was "the same kind of decision: the deep, spent on a building". The
+     * decision it actually made was the opposite one. docs/economy.md §8 names
+     * the crystal-locked producibles exactly — "the four faction signature
+     * structures ... cost 120 crystal each, and the Abyssal Submersible costs
+     * 80. That is one crystal-locked producible per navy plus the hull built
+     * to live where the crystal is" — and this yard is in neither group: it is
+     * shared, and #461 added the price beyond what the doc specifies.
+     *
+     * The consequence was circular. Crystal sits at 2,400 m, which needs PR-3;
+     * the only navy whose harvester has it is the Directorate; and of the
+     * three PR-granting sources in the game the Commune's is a hull *this yard
+     * builds* while the Consortium has none at all. So two of the four navies
+     * needed the rung to reach the crystal that bought the rung, and neither
+     * ever built one (#467, #491). Priced in nodules, the yard is what §2 says
+     * an upper tier is — expensive — and the crystal stays where §8 puts it,
+     * on what the yard lets you *field*.
      */
     cost: 600,
-    crystalCost: 120,
     buildTimeS: 120,
     // TUNABLE — a yard for the roster's heaviest hulls, a little wider than
     // the Foundry's 160.

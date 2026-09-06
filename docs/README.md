@@ -135,7 +135,7 @@ document already points at it:
   and closed with nothing said — is a beat kind the mission format does not have, and
   [mission-first-arrival.md](mission-first-arrival.md) §13 holds the decision.
 
-- **The rung, and two hulls a navy** — [units.md](units.md) designs a crystal-locked second yard
+- **The rung, and two hulls a navy** — [units.md](units.md) designs a second yard
   (the Slipway) and eight faction-locked hulls, one at the Foundry and one behind the rung for
   each navy, each argued from sound or depth (#436). Transcribed into `packages/shared` and the
   simulation in #461, and given approved models through the pipeline of record in #466 — the
