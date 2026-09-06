@@ -175,8 +175,11 @@ hulls ([factions.md](factions.md)). Each navy's siege hull is its way of taking 
 **Transports.** The one gap [units.md](units.md) names in words. A transport carries hulls:
 what it carries is silent and unresolvable while carried, and inherits the transport's PR
 and speed, which is what makes it a *depth* argument — a Freighter takes PR-1 hulls into
-water that would crush them, and if the Freighter dies they die with it. Embark and
-disembark are the new mechanism the wave builds (§5).
+water that would crush them, and if the Freighter dies they die with it. What a hold does to
+the acoustic picture is settled in [systems-echo.md](systems-echo.md) §3, "A hull in a hold":
+the load is audible as +3 SIG per berth carried and as nothing else, a carried hull neither
+emits nor hears, and a kill reveals nothing beyond the battle site. The SIG figures below are
+*empty* figures. Embark and disembark are the new mechanism the wave builds (§5).
 
 - *Freighter* (Consortium, Foundry). Six berths carried, 1,800 hull, 30 m/s, SIG 65 —
   the slow, loud way to move a heavy force and survive being heard doing it.
@@ -320,22 +323,25 @@ grants from a hull all exist and are reused, which is most of the matrix.
 
 ## 8. Open questions
 
-Two the plan does not settle, for the person who owns the design:
+One the plan does not settle, for the person who owns the design:
 
 1. **Retire the commons?** Wave 6 says the harness decides. The alternative is a design
    decision now — the Light Scout, Corvette and Cruiser become the *surplus market*,
    buildable by everyone at a premium, and the fiction ([culture.md](culture.md)) gets a
    sentence about who sells them.
-2. **Carried hulls and hidden information.** A Freighter that dies with six berths aboard
-   tells its killer what it carried the moment they are not there. Whether the carried hulls
-   are announced at Tier 3 on the carrier, or never, is a rule for
-   [systems-echo.md](systems-echo.md) before wave 1 writes a line of code.
 
-And one that was: **twelve a navy stays the target.** *Very many* is an argument about roster
-width too, and the Commune could end at seven and the Directorate at eleven — but that is a
-finding for a wave to make, not a shape to draw in advance. The matrix keeps even columns,
-and a cell that cannot be argued stays empty rather than being filled to reach the number
-(decided on #495 with wave 0).
+And two that were, both on #495:
+
+- **Twelve a navy stays the target** (with wave 0). *Very many* is an argument about roster
+  width too, and the Commune could end at seven and the Directorate at eleven — but that is
+  a finding for a wave to make, not a shape to draw in advance. The matrix keeps even
+  columns, and a cell that cannot be argued stays empty rather than being filled to reach the
+  number.
+- **Carried hulls are heard, never listed** (before wave 1). A Freighter that dies with six
+  berths aboard could have told its killer what it carried the moment they were not there.
+  It does not: the load is audible only as +3 SIG per berth carried, a carried hull neither
+  emits nor hears, and a kill reveals nothing beyond the battle site any hull's death leaves.
+  [systems-echo.md](systems-echo.md) §3, "A hull in a hold", is the rule.
 
 ---
 

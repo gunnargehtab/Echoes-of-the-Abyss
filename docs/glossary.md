@@ -64,6 +64,11 @@ Silent Running
 - A tactical mode that heavily reduces SIG (typically to single digits) at the cost of disabling weapons, shields/regeneration, and reducing movement speed.
 - Silent Running enables ambush and infiltration but requires a commitment: breaking silence produces a large SIG spike.
 
+Hold
+
+- The berths a transport carries other hulls in (roster-plan.md, wave 1). A carried hull is not in the water: no position, no SIG, no ears, unresolvable at any tier; it keeps its commander's berths, takes the carrier's depth and PR, and dies with it (systems-echo.md §3, "A hull in a hold").
+- The load is audible only as SIG — +3 per berth carried, Silent Running included — and a kill reveals nothing beyond the battle site any hull's death leaves.
+
 Ghost Markers
 
 - The decaying last-known position of a contact a listener has already detected. Tier 1 and Tier 2 contacts persist this way and fade over 20 s (systems-echo.md §4). A ghost marker is your own stale reading of a live unit, and it lies to you by exactly as much as that unit has moved since you heard it.
