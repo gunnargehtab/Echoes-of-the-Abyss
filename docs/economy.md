@@ -202,6 +202,26 @@ Spire, Spore Veil — cost 120 crystal each, and the Abyssal Submersible costs 8
 one crystal-locked producible per navy plus the hull built to live where the crystal is,
 which is §2's "every faction's upper tech tier is crystal-locked" at prototype scale.
 
+**Nothing on the path *to* crystal may be priced in crystal**, and that rule had to be
+enforced once. The rung (#461) put a crystal price on the Slipway and on the Sower, on the
+reasonable-sounding ground that a second yard is "the same kind of decision". It is not, and
+the difference is a circle. Only
+the Abyssal Directorate's harvester is rated for 2,400 m; every other navy reaches that water
+by renting a band, and there are exactly three sources of a rented band in the game — the
+Sounding Spire, the Cantus, and the Sower. The Order's is a 400-nodule Foundry hull, so it
+opens the deep whenever it likes. The Commune's was a Slipway hull at 80 crystal behind a
+yard at 120, so the navy whose entire doctrine is *changing* deep water needed the crystal to
+buy the key to the crystal. The Consortium has no source at all: its route is the Pressure
+Refit ([systems-progression.md](systems-progression.md) §2), which is designed and not built
+and would be produced on that same Slipway line. Two of four navies could not reach the
+Abyssal band by any implemented means, and none of them ever built a second yard — measured
+across every map (#491).
+
+Both prices are now nodules. Nothing here is cheaper to *field*: the crystal stays on the
+producibles above, and on the Dredge — a hull the Directorate fields, and the one navy that
+needs no path at all. What moved is that reaching the gate no longer requires having reached
+it.
+
 **What makes it a raid rather than an expansion** (§7) is that the harvest loop issues its
 own depth orders. A hauler dives to the field — loudly, because descent is deafening — cuts
 slowly, and then climbs home at a third of the speed it went down. The exposure is not a

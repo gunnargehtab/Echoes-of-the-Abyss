@@ -16,6 +16,11 @@ import assert from 'node:assert/strict';
 import { hasComponent } from 'bitecs';
 import {
   Biome,
+  CRYSTAL,
+  DEPTH,
+  DEPTH_BANDS,
+  DepthBand,
+  ECONOMY,
   Faction,
   HAZARDS,
   HazardPhase,
@@ -27,7 +32,11 @@ import {
   StructureKind,
   UNIT_STATS,
   UnitKind,
+  RESOURCE,
   ResourceKind,
+  crushAttritionPerSecond,
+  depthBandFor,
+  effectivePressureRating,
   statsFor,
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
@@ -721,28 +730,71 @@ describe('eruption lethality is solved, not picked', () => {
 
   it('leaves the Ventfront crystal field workable, which is what #179 was about', () => {
     // The map case, asserted as arithmetic rather than by running a harvester
-    // for three minutes. The field is 500 m from both authored plumes (see
-    // maps.test.ts), damage falls off linearly to the rim, and both vents fire
-    // effectively together.
+    // for three minutes — and asserted against the *whole* bill, which is the
+    // part #179 could not have known to check.
+    //
+    // #179 asked whether a hull survives the plumes over the crystal, and
+    // solved DAMAGE_PER_S so that it does. What nobody added to that was the
+    // price of *being there*: the field is at 2,400 m, which is Abyssal, and
+    // every harvester in the game except the Directorate's is PR-2. The round
+    // trip therefore costs 238 HP of unhealable crush before a vent fires at
+    // all, so the real question is the sum, and the sum was 413 against a 300
+    // HP hull — 500 for the Commune, whose organic hulls take half again as
+    // much (#491). Each vent has since moved out 300 m with its field, so the
+    // plume term is zero and the crush term is what a raid pays.
+    //
+    // Both terms are computed here rather than one asserted and the other
+    // assumed, because either one alone passes while the trip is impossible.
     const map = VENTFRONT_DIVIDE;
     const field = map.resources.find((r) => r.kind === ResourceKind.ResonanceCrystal)!;
-    const combined = map.hazards
+
+    const plume = map.hazards
       .filter((h) => h.kind === 'geothermal-eruption')
-      .map((h) => Math.hypot(h.x - field.x, h.y - field.y))
-      .filter((d) => d <= 700)
-      .reduce((sum, d) => sum + passDamageAtCentre() * (1 - d / 700), 0);
+      .map((h) => ({ d: Math.hypot(h.x - field.x, h.y - field.y), r: h.radiusM }))
+      .filter(({ d, r }) => d <= r)
+      .reduce((sum, { d, r }) => sum + passDamageAtCentre() * (1 - d / r), 0);
+
+    // The crush of one round trip, integrated over the bands the hull crosses
+    // below its rating. Restated here rather than imported because the
+    // commander's copy is private to it, and because writing it out is the
+    // point: this is the term that was missing from the bill.
+    const rating = effectivePressureRating(UnitKind.Harvester, Faction.Pelagia);
+    const transit = (ratePerS: number): number => {
+      let cost = 0;
+      let depth: number = CRYSTAL.FIELD_DEPTH_M;
+      for (let band = depthBandFor(depth); band >= DepthBand.Shelf; band--) {
+        const top = DEPTH_BANDS[band as DepthBand].min;
+        const dps = crushAttritionPerSecond(rating, top);
+        if (dps <= 0) break;
+        cost += ((depth - top) / ratePerS) * dps;
+        depth = top;
+      }
+      return cost;
+    };
+    const cutS =
+      CRYSTAL.CARGO_CAPACITY /
+      (ECONOMY.MINING_RATE_PER_S * RESOURCE[ResourceKind.ResonanceCrystal].rateMultiplier);
+    const crush =
+      transit(DEPTH.DESCENT_RATE_MPS) +
+      cutS * crushAttritionPerSecond(rating, CRYSTAL.FIELD_DEPTH_M) +
+      transit(DEPTH.ASCENT_RATE_MPS);
 
     const harvester = statsFor(UnitKind.Harvester).maxHp;
     assert.ok(
-      combined < harvester,
-      `a harvester on the crystal field must survive a combined pass: ${combined.toFixed(0)} ` +
-        `damage vs ${harvester} HP`
+      crush > 0,
+      'a PR-2 hull must still pay for the Abyssal band — this is not free water'
     );
-    // Pelagia's organic hulls take half again as much and are the binding case.
     assert.ok(
-      combined * HAZARDS.ERUPTION.PELAGIA_DAMAGE_MULTIPLIER < harvester,
-      `and so must a Commune harvester: ` +
-        `${(combined * HAZARDS.ERUPTION.PELAGIA_DAMAGE_MULTIPLIER).toFixed(0)} vs ${harvester} HP`
+      crush + plume < harvester,
+      `a harvester must survive one crystal round trip: ${crush.toFixed(0)} crush + ` +
+        `${plume.toFixed(0)} plume vs ${harvester} HP`
+    );
+    // Pelagia's organic hulls take half again as much from a vent and are the
+    // binding case — the navy whose own doctrine is to work this water.
+    assert.ok(
+      crush + plume * HAZARDS.ERUPTION.PELAGIA_DAMAGE_MULTIPLIER < harvester,
+      `and so must a Commune harvester: ${crush.toFixed(0)} + ` +
+        `${(plume * HAZARDS.ERUPTION.PELAGIA_DAMAGE_MULTIPLIER).toFixed(0)} vs ${harvester} HP`
     );
   });
 });

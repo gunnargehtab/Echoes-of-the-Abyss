@@ -371,50 +371,62 @@ describe('Ventfront Divide', () => {
   });
 });
 
-describe('Ventfront Divide — the crystal field sits inside both vents', () => {
-  it('records the overlap, which is what makes the eruption figure load-bearing', () => {
+describe('Ventfront Divide — the crystal field has its own water', () => {
+  it('keeps the vents off the crystal and on the fields they are for', () => {
     // Map *data*, asserted deliberately rather than as trivia, because the
-    // gameplay consequence was hidden for a while and should not be again.
+    // gameplay consequence was hidden once already and should not be again.
     //
-    // The Resonance Crystal field is at (4000, 4000). Both geothermal
-    // eruptions — (4000, 3500) and (4000, 4500), radius 700 — reach it, from
-    // 500 m away each, where the linear falloff leaves 0.286 of centre damage.
-    // Their staggers land about a second apart in an 84 s cycle, so they fire
-    // effectively together and the field takes a *double* pass.
+    // It used to be the opposite assertion. The two contested nodule fields
+    // sat 500 m either side of the crystal with a 700 m eruption on each, so
+    // both plumes reached the crystal and a hull working it took a *double*
+    // pass — 175 HP at the current DAMAGE_PER_S, a figure #179 solved so that
+    // one pass "wounds badly and leaves the trip possible".
     //
-    // This is the geometry that makes ERUPTION.DAMAGE_PER_S load-bearing rather
-    // than cosmetic, which is why it is asserted rather than left as trivia. At
-    // the old figure of 90 a combined pass was 334 against a 300 HP Harvester,
-    // so a hull put here by `Match.orderHarvest` — the ordinary standing order,
-    // which does not withdraw for a warning — died at t+41 s having banked
-    // nothing, and the resource gating the tech tree could not be worked at all
-    // (#179). The figure is now solved from the lethality rule instead, and the
-    // same pass is 175; measured, a harvester banks at t+159 s and comes home.
+    // It leaves a *crossing* possible. What #491 measured is that nobody ever
+    // makes only the crossing: the field is at 2,400 m, which is PR-3 water,
+    // and the round trip costs a PR-2 hull 238 HP of unhealable crush before
+    // the vent fires at all. 238 + 175 against 300, and 238 + 262 for the
+    // Commune's organic hulls, is a resource that gates the tech tree and
+    // cannot be worked by any navy that has to pay to get to it.
     //
-    // None of that was visible until hazard kills became real deaths: the
-    // harvester was being killed and carrying on hauling at zero HP, so the
-    // round trip appeared to work and was being completed by a corpse. The two
-    // round-trip tests in match.test.ts run on a hazard-free map, which is the
-    // right way to test an economy mechanic in isolation — but it means nothing
-    // there will ever notice this. Hence here.
+    // So each vent moved out 300 m *with its field*. The plumes keep their
+    // reach and keep the fields they were authored to make dangerous — each
+    // still sits at a plume centre, where the falloff is 1.0 and a pass is
+    // lethal — and the crystal keeps water of its own. Both halves are
+    // asserted here, because fixing one by breaking the other is the obvious
+    // wrong move: pulling the vents off the crystal by shrinking them, or by
+    // leaving the fields behind, would buy the crystal its water at the price
+    // of the thing that made the middle of this map worth arguing over.
     //
-    // If either the field or a vent moves, this test fails, and whoever moved
-    // it should check `hazards.test.ts`'s "leaves the Ventfront crystal field
+    // If either a field or a vent moves, this test fails, and whoever moved it
+    // should check `hazards.test.ts`'s "leaves the Ventfront crystal field
     // workable" alongside it — that one asserts the consequence this one only
     // records the cause of.
     const map = VENTFRONT_DIVIDE;
-    const field = map.resources.find((r) => r.kind === ResourceKind.ResonanceCrystal)!;
+    const field = map.resources.find((r) => r.kind === ResourceKind.ResonanceCrystal);
     assert.ok(field !== undefined, 'the map should seed a crystal field');
 
-    const reaching = map.hazards.filter(
-      (h) =>
-        h.kind === 'geothermal-eruption' && Math.hypot(h.x - field.x, h.y - field.y) <= h.radiusM
-    );
+    const vents = map.hazards.filter((h) => h.kind === 'geothermal-eruption');
+    assert.equal(vents.length, 2, 'the vent band is two eruptions');
+
+    const reaching = vents.filter((h) => Math.hypot(h.x - field.x, h.y - field.y) <= h.radiusM);
     assert.equal(
       reaching.length,
-      2,
-      'both vents currently cover the crystal field — see the note above if this changed'
+      0,
+      'no vent may reach the crystal — see the note above if this changed'
     );
+
+    // And the other half: every vent still has a contested field at its centre.
+    for (const vent of vents) {
+      const covered = map.resources.filter(
+        (r) => r.kind === ResourceKind.Nodule && Math.hypot(r.x - vent.x, r.y - vent.y) < 1
+      );
+      assert.equal(
+        covered.length,
+        1,
+        `the vent at ${vent.x},${vent.y} exists to make a field dangerous, and needs one on it`
+      );
+    }
   });
 });
 
