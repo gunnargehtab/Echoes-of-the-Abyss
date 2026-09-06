@@ -39,12 +39,20 @@ export function separationSystem(world: SimWorld): void {
   const units = movable(world);
   if (units.length === 0) return;
 
+  // Both grids' probe counters are zeroed here rather than by the grids
+  // themselves: a grid has no idea what a tick is, and the pair below is read
+  // back into `world.stepWork` at the end of the system.
+  world.unitGrid.cellsVisited = 0;
+  world.structureGrid.cellsVisited = 0;
+
   // The pair guard belongs to the pair pass, not to the system. It used to
   // guard both, so a player down to a single hull got no structure correction
   // at all: order that hull onto your own refinery and it sat inside the
   // footprint until you built a second one.
   if (units.length > 1) separateHulls(world, units);
   separateFromStructures(world, units);
+
+  world.stepWork.separationCells += world.unitGrid.cellsVisited + world.structureGrid.cellsVisited;
 }
 
 /** Reused across hulls and ticks: `resolveStep` writes here rather than allocating. */
@@ -113,6 +121,7 @@ function separateHulls(world: SimWorld, units: ArrayLike<number>): void {
       const dy = by - ay;
       const minD = ra + unitRadiusM(Unit.kind[b] as UnitKind);
       const d2 = dx * dx + dy * dy;
+      world.stepWork.separationPairs++;
       if (d2 >= minD * minD) continue;
 
       let nx: number;
@@ -192,6 +201,7 @@ function separateFromStructures(world: SimWorld, units: ArrayLike<number>): void
       const dy = Position.y[a]! - sy;
       const minD = ra + structureStatsFor(Structure.kind[s] as StructureKind).radiusM;
       const d2 = dx * dx + dy * dy;
+      world.stepWork.separationPairs++;
       if (d2 >= minD * minD) continue;
 
       if (d2 < SEPARATION.COINCIDENT_EPSILON_M * SEPARATION.COINCIDENT_EPSILON_M) {

@@ -31,7 +31,7 @@ import {
   Structure,
   Unit,
 } from './components.ts';
-import { FNV_OFFSET, mixFloat, mixU32 } from './fnv.ts';
+import { FNV_OFFSET, mixFloat, mixString, mixU32 } from './fnv.ts';
 import { economyFor, type SimWorld } from './world.ts';
 
 /**
@@ -55,6 +55,18 @@ export function hashWorld(world: SimWorld): number {
   let h = FNV_OFFSET;
   h = mixU32(h, world.tick);
   h = mixU32(h, world.rng.snapshot());
+
+  // Every sub-stream too, keyed by name and in key order — the root's position
+  // says nothing about where a fork has got to. `seedFauna` forks 'drift', and
+  // a fork is exactly the thing a subsystem reaches for when it wants draws
+  // that do not shift everybody else's, so the streams multiply where nobody
+  // is watching. Hashing the root alone would report a match that had drawn a
+  // different number of fauna dice as identical.
+  const streamKeys = [...world.rng.streams.keys()].sort();
+  for (const key of streamKeys) {
+    h = mixString(h, key);
+    h = mixU32(h, world.rng.streams.get(key)!.snapshot());
+  }
 
   // The world's own entities, ascending. Index in this list is the identity
   // the hash uses; see the note above.
@@ -157,6 +169,30 @@ export function hashWorld(world: SimWorld): number {
   // carry along with the list for one mix per write.
   h = mixU32(h, world.terrain.revision);
   h = mixU32(h, world.terrain.historyDigest);
+
+  // Acoustic residue. Not a client convenience and not derived state: a mark
+  // is written by the tick a thing died on, decays on its own clock, and is
+  // read back by the simulation — a scavenger picks a mark by id and strips
+  // it, so two runs whose residue disagrees put their Drift somewhere else a
+  // minute later. Unhashed, that divergence stayed invisible until it had
+  // moved a hull, which is the whole failure this fingerprint exists to catch
+  // early rather than late.
+  //
+  // Walked in list order, which is the order marks were laid and compacted in
+  // (`EchoMarkLayer.tick` keeps a stable write cursor) and so is itself part
+  // of what must agree. The id goes in with the rest: a layer that dropped its
+  // faintest mark under the cap and one that dropped a different mark can hold
+  // the same positions and still not be the same past.
+  h = mixU32(h, world.marks.count);
+  for (const mark of world.marks.all) {
+    h = mixU32(h, mark.id);
+    h = mixU32(h, mark.kind);
+    h = mixFloat(h, mark.x);
+    h = mixFloat(h, mark.y);
+    h = mixFloat(h, mark.depth);
+    h = mixFloat(h, mark.intensity);
+    h = mixFloat(h, mark.remainingS);
+  }
 
   // Economies live outside the ECS, and a match where one side is quietly
   // richer has diverged just as surely as one where a hull moved.

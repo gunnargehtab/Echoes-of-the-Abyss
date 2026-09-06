@@ -20,6 +20,19 @@ export function mixU32(hash: number, value: number): number {
 }
 
 /**
+ * Mix a string, character by character, with its length mixed in first.
+ *
+ * The length is not decoration: without it `mix('ab') + mix('c')` and
+ * `mix('a') + mix('bc')` are the same digest, so two differently named things
+ * hashed one after another could trade characters and still agree.
+ */
+export function mixString(hash: number, value: string): number {
+  let h = mixU32(hash, value.length);
+  for (let i = 0; i < value.length; i++) h = mixU32(h, value.charCodeAt(i));
+  return h;
+}
+
+/**
  * Mix a double by its exact bits rather than rounded first. Two runs of the
  * same build must agree bit-for-bit — rounding would mask a real divergence
  * of less than the rounding step, which is exactly the kind that compounds

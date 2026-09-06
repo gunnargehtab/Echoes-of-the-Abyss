@@ -107,6 +107,7 @@ import { productionSystem } from './systems/production.ts';
 import { randomSeed } from './rng.ts';
 import { ReplayRecorder, type Replay, type ReplayCommand } from './replay.ts';
 import { hashWorld } from './stateHash.ts';
+import { accumulateWorst, newStepWork, resetStepWork, type StepWork } from './stepWork.ts';
 import { Terrain } from './terrain.ts';
 import { VENTFRONT_DIVIDE, terrainFor, type MapDefinition } from './maps/index.ts';
 import { MissionRuntime } from './missions/runtime.ts';
@@ -319,6 +320,16 @@ export class Match {
    */
   private worstStepMs = 0;
   private worstPhysicsMs = 0;
+  /**
+   * The same rolling worst case, counted instead of timed.
+   *
+   * Both are kept because they answer different questions and only one of them
+   * can be asserted on. The milliseconds above say whether this machine kept up
+   * and are worth printing; the counts say whether the *algorithm* changed, and
+   * are the same on a loaded CI runner as on an idle laptop. sim/stepWork.ts
+   * records why the distinction cost a red build to learn.
+   */
+  private readonly worstWork = newStepWork();
   private matchResult: GameOverPayload | null = null;
   /**
    * The mission, running, or null for a skirmish.
@@ -437,6 +448,21 @@ export class Match {
   /** Worst-case cost of movement + depth + separation within a step. */
   get worstPhysicsMsCost(): number {
     return this.worstPhysicsMs;
+  }
+
+  /**
+   * Counted work the most recent fixed step did on the paths that scale.
+   *
+   * The 60 Hz counterpart to `contactPathWalksLastPass`, and asserted the same
+   * way — see sim/stepWork.ts for why a count and not a stopwatch.
+   */
+  get stepWorkLastTick(): Readonly<StepWork> {
+    return this.world.stepWork;
+  }
+
+  /** The same counters, at their worst over every step of this match so far. */
+  get worstStepWork(): Readonly<StepWork> {
+    return this.worstWork;
   }
 
   /**
@@ -1573,6 +1599,9 @@ export class Match {
     // Wall-clock only, and deliberately never mixed into the state hash: the
     // simulation must not be able to notice how long it took to run.
     const stepStarted = performance.now();
+    // The counted budget's other half, and unlike the clock it is the same on
+    // every machine. Zeroed here so a system may only ever add to it.
+    resetStepWork(this.world.stepWork);
     this.recorder?.maybeCheckpoint(this.world.tick, () => hashWorld(this.world));
     this.destroyedScratch.length = 0;
     this.world.environmentalDeaths.clear();
@@ -1648,6 +1677,7 @@ export class Match {
     }
     const stepCost = performance.now() - stepStarted;
     if (stepCost > this.worstStepMs) this.worstStepMs = stepCost;
+    accumulateWorst(this.worstWork, this.world.stepWork);
   }
 
   /**

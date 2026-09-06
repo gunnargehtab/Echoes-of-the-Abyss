@@ -16,6 +16,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  EchoMarkKind,
   Faction,
   HarvestThrottle,
   ResolutionTier,
@@ -143,6 +144,21 @@ describe('seeded RNG', () => {
     );
   });
 
+  it('hands back one stream per key rather than a fresh one per call', () => {
+    // Re-deriving on every call gave the second caller a stream rewound to the
+    // start, so two subsystems sharing a key drew the identical sequence and
+    // neither looked wrong from the call site. It is also what made a fork
+    // unhashable: a stream nothing holds has no position to fingerprint.
+    const root = new Rng(99);
+    const first = root.fork('fauna');
+    const drawn = [first.next(), first.next()];
+    const second = root.fork('fauna');
+
+    assert.equal(second, first, 'one key is one stream');
+    assert.notDeepEqual([second.next(), second.next()], drawn, 'and it kept its position');
+    assert.deepEqual([...root.streams.keys()], ['fauna'], 'the root knows what it forked');
+  });
+
   it('restores an exact stream position', () => {
     const rng = new Rng(7);
     rng.next();
@@ -188,6 +204,41 @@ describe('determinism', () => {
       hashWorld(second.world),
       'the hash must be sensitive to the commands actually issued'
     );
+  });
+
+  it('notices a forked stream that has moved on its own', () => {
+    // The root's position says nothing about where a fork has got to, and a
+    // fork is exactly what a subsystem reaches for when it wants draws that do
+    // not shift everybody else's. Hashing the root alone reported two matches
+    // that had drawn a different number of fauna dice as identical.
+    const match = twoPlayers(new Match(undefined, { fauna: false, seed: SEED }));
+    const rootBefore = match.world.rng.snapshot();
+    const before = hashWorld(match.world);
+    match.world.rng.fork('a-subsystem').next();
+
+    assert.notEqual(
+      hashWorld(match.world),
+      before,
+      'the hash must follow every stream, not only the root'
+    );
+    assert.equal(match.world.rng.snapshot(), rootBefore, 'and the root really was left alone');
+  });
+
+  it('notices acoustic residue the two runs do not share', () => {
+    // A mark is read back by the simulation — a scavenger picks one by id and
+    // strips it — so residue that disagrees puts the Drift somewhere else a
+    // minute later. Unhashed, that divergence stayed invisible until it had
+    // moved a hull.
+    const match = twoPlayers(new Match(undefined, { fauna: false, seed: SEED }));
+    const before = hashWorld(match.world);
+    match.world.marks.add(EchoMarkKind.Battle, 4000, 4000, 900);
+    const laid = hashWorld(match.world);
+    assert.notEqual(laid, before, 'the hash ignored a mark being laid');
+
+    // And its decay, which is state that keeps moving after the tick that
+    // wrote it: a checkpoint taken a second later must not agree with this one.
+    match.world.marks.tick(1);
+    assert.notEqual(hashWorld(match.world), laid, 'the hash ignored residue decaying');
   });
 
   it('is not sensitive to how wall-clock is chopped into steps', () => {

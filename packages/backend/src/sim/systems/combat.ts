@@ -192,6 +192,7 @@ function nearestInboundOrdnance(
 
   for (let i = 0; i < inbound.length; i++) {
     const other = inbound[i]!;
+    world.stepWork.acquisitionPairs++;
     if (other === shooter || Owner.slot[other] === slot) continue;
     if (Health.hp[other]! <= 0) continue;
     if (!isInterceptable(Ordnance.kind[other] as OrdnanceKind)) continue;
@@ -268,6 +269,11 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
         let bestDistance = profile.rangeM;
         for (let j = 0; j < candidates.length; j++) {
           const other = candidates[j]!;
+          // Counted before the filters, because the walk itself is the cost
+          // this budget is watching: every shooter reaching this loop touches
+          // every targetable entity on the map whether or not the pair
+          // survives a single test. See sim/stepWork.ts.
+          world.stepWork.acquisitionPairs++;
           if (Owner.slot[other] === slot || Health.hp[other]! <= 0) continue;
           // Ordnance is never auto-acquired by a gun.
           //
