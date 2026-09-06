@@ -144,6 +144,23 @@ working fine once bundled. `@colyseus/schema` needs legacy decorators, which is 
 `useDefineForClassFields` stays `false` in the backend tsconfig — flipping it silently
 wipes the `@type()` metadata.
 
+### The wire
+
+Every message that crosses the socket — 24 a client may send, 11 the room may send — is
+declared once in `packages/shared/src/wire.ts`, name and payload together. Neither package
+writes a message name as a string literal; both reach the wire through a thin generic
+wrapper (`MatchRoom.onClientMessage`/`sendTo`/`announce`, `GameClient.handle`/`order`) that
+takes the name and infers the payload from the same map. Adding a message means adding it
+to `CLIENT_MSG` or `SERVER_MSG` *and* to `ClientMessages` or `ServerMessages`; the
+`Exact<>` assertions at the foot of `wire.ts` fail the build if you do one and not the
+other.
+
+This is the constants rule applied to the protocol, and it was learned the hard way: a name
+renamed on one side alone used to compile, travel, and be silently dropped by a room with
+no handler registered for it. Colyseus *schema* state is a different channel and not
+covered here — it syncs to everyone, which is exactly why the per-observer payloads are
+messages instead.
+
 ### Frontend tests run under a Vite shim
 
 The client is authored for Vite, and two of its idioms are build-time transforms rather
@@ -165,10 +182,9 @@ than on a stopwatch.
   swallowing them, so routing and ducking are checkable. `AUDIO_BUDGET_MS` is a wall-clock
   number and is *not* what the test asserts; nodes built per tick is.
 - `test/gameClient.test.ts` — the message contract, against a stub room
-  (`test/support/colyseusStub.ts`). Its last two cases read `MatchRoom`'s own
-  registrations out of `packages/backend` and check both directions, because a renamed
-  message is silent everywhere else. That scan is a stopgap: by the rule above, these
-  names belong in `@echoes/shared`, which would make it a type error instead.
+  (`test/support/colyseusStub.ts`). A renamed or reshaped message is a compile error
+  since #489 (see "The wire" below), so what is left here is the half types cannot
+  reach: that the client actually registers a handler for every name the room can send.
 
 Three seams in production code exist for these and have no other caller: `EchoRenderer`'s
 constructor takes an optional `Application`, `PerspectiveView.mount` an optional renderer

@@ -44,9 +44,8 @@ import {
   type CommanderAbilityView,
   type EchoSnapshot,
   type MissionAbility,
-  type MissionSpeaker,
+  type MissionLine,
   type MissionView,
-  type MissionVoice,
   type MovementHold,
   type ObjectiveView,
 } from '@echoes/shared';
@@ -164,26 +163,16 @@ export interface MissionResolution {
   spent: readonly string[];
 }
 
-/** One authored line, spoken by a `say` beat. */
-export interface MissionLine {
-  tick: number;
-  speaker: string;
-  text: string;
-  /**
-   * The register it is spoken in — resolved here, never on the client, so a
-   * beat that names no voice arrives already in the player's own and the
-   * client has nothing to infer. The mix keys its hail on this
-   * (docs/audio-direction.md §13); the log ignores it.
-   */
-  voice: MissionVoice;
-  /**
-   * Who — the cast of docs/audio-direction.md §13, resolved here from the
-   * speaker string and never on the client, so the mix signs the hail with
-   * the speaker the server named and infers nothing from free text. Authored
-   * data about an authored line: it discloses nothing the string did not.
-   */
-  speakerId: MissionSpeaker;
-}
+/**
+ * One authored line, spoken by a `say` beat.
+ *
+ * Re-exported rather than declared: it is a wire payload, and it used to be
+ * written out in full in both packages (#489). `voice` and `speakerId` are
+ * resolved here and never on the client, so a beat that names no voice arrives
+ * already in the player's own and the mix signs the hail with the speaker the
+ * server named — it infers nothing from free text.
+ */
+export type { MissionLine } from '@echoes/shared';
 
 /**
  * The commands a beat may issue.

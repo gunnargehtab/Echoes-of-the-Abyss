@@ -7,23 +7,17 @@
  * (test/support/colyseusStub.ts) is all it actually needs.
  *
  * What this protects is a class of bug nothing else here can see. A message
- * the server sends that this client silently drops, or an order sent under a
- * name the room does not listen for, produces no error anywhere: the socket
- * carries it, the room ignores it, and the player's click does nothing. The
- * last test in this file reads the room's own registrations out of
- * `packages/backend` and checks both directions against them, which is the
- * only assertion here that can catch a rename made on one side alone.
+ * the server sends that this client silently drops produces no error anywhere:
+ * the socket carries it, nothing is listening, and the player's click does
+ * nothing.
  *
- * That cross-package scan is a stopgap rather than the right answer. Per
- * CLAUDE.md, "if a constant would need to exist in two packages, it belongs in
- * shared" — these names are exactly that, and moving them into
- * `@echoes/shared` would turn this from a test into a type error. Doing that
- * is a change to both packages and belongs in its own PR.
+ * Half of that class is gone as of #489 — the names and payloads live in
+ * `@echoes/shared` now, so a rename or a reshape on one side of the socket
+ * stops compiling on both. The half a type cannot reach is a wire-up simply
+ * forgotten, and the last two cases here are what hold it.
  */
 
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import {
   AiDifficulty,
@@ -31,6 +25,8 @@ import {
   HarvestThrottle,
   MatchPhase,
   encodeEcho,
+  CLIENT_MSG,
+  SERVER_MSG,
   StructureKind,
   UnitKind,
 } from '@echoes/shared';
@@ -518,49 +514,36 @@ describe('the match client: what the player asks for', () => {
 
 describe('the match client: the contract with the room', () => {
   /**
-   * The room's own registrations, read out of the backend source.
+   * These two used to read `MatchRoom.ts` out of `packages/backend` with a
+   * regex, because the names were string literals in both packages and nothing
+   * else could catch a rename made on one side alone. #489 moved them into
+   * `@echoes/shared`, so that is a compile error now and the scan is gone.
    *
-   * A regex over another package is not how this should be checked forever —
-   * see this file's header — but it is the only thing here that can catch a
-   * rename made on one side alone, and that bug is silent in every other test.
+   * What is left is the half the types still cannot see. Both sides can agree
+   * perfectly about what `missionLine` means and the client can simply never
+   * register a handler for it — a forgotten wire-up is not a type error, and
+   * its symptom is the same silence the old bug had.
    */
-  function roomSource(): string {
-    const here = fileURLToPath(new URL('.', import.meta.url));
-    return readFileSync(`${here}../../backend/src/rooms/MatchRoom.ts`, 'utf8');
-  }
+  it('registers a handler for every message the room can send', async () => {
+    const { room } = await connected({});
+    const handled = new Set(room.handled);
+    for (const type of Object.values(SERVER_MSG)) {
+      assert.ok(handled.has(type), `nothing handles '${type}' — the room's messages would be lost`);
+    }
+    assert.equal(handled.size, Object.values(SERVER_MSG).length, 'and nothing else is handled');
+  });
 
-  it('sends only messages the room is listening for', async () => {
-    const source = roomSource();
-    const listened = new Set([...source.matchAll(/onMessage\('([a-zA-Z]+)'/g)].map((m) => m[1]!));
-    assert.ok(listened.size > 20, `found the room's registrations (${listened.size})`);
-
-    // What the client *actually* puts on the wire, not what the table above
-    // expects it to. Going through the real call closes the chain — client to
-    // room — instead of checking the test's own expectation against the room
-    // and leaving the client unexamined.
+  it('sends nothing that is not in the contract', async () => {
+    const known = new Set<string>(Object.values(CLIENT_MSG));
     for (const [name, act] of ORDERS) {
       const { client, room } = await connected({});
       act(client);
       for (const message of room.sent) {
         assert.ok(
-          listened.has(message.type),
-          `${name} sends '${message.type}', which MatchRoom does not listen for`
+          known.has(message.type),
+          `${name} sends '${message.type}', which is not a message`
         );
       }
-    }
-  });
-
-  it('handles every message the room sends', async () => {
-    const source = roomSource();
-    const spoken = new Set(
-      [...source.matchAll(/(?:\.send|broadcast)\('([a-zA-Z]+)'/g)].map((m) => m[1]!)
-    );
-    assert.ok(spoken.size > 8, `found the room's outbound messages (${spoken.size})`);
-
-    const { room } = await connected({});
-    const handled = new Set(room.handled);
-    for (const type of spoken) {
-      assert.ok(handled.has(type), `MatchRoom sends '${type}', which this client would drop`);
     }
   });
 });
