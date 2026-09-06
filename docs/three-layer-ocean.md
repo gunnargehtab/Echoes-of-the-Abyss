@@ -478,8 +478,43 @@ no console errors — the scale is a transform on geometry already in the scene,
 of it. Before-and-after pairs at both survey distances, plus the close-zoom frame where
 the factor is 1, live in `docs/screenshots/issue-284/`.
 
+**The measurement instrument, ahead of the measurement.** The wall-clock debt is a
+hardware debt and stays open: it names a desktop with a real GPU and an Android device
+under Termux, and no container has either. What could be paid without them was the
+instrument, because the probe as it stood could not express the drive the debt asks for.
+Two things were wrong with it. `worstFrameMs` was raised and never lowered, so on a single
+page load every station of a five-station drive reported the load hitch that preceded all
+of them. And `avgFrameMs` ran on a fixed 240-frame window with no station boundary, so a
+station held for less than a windowful silently blended the station before it — worst on
+the Termux floor, where a windowful is twelve seconds rather than four.
+
+Both are fixed, and a third gap with them: the probe could not attribute cost between the
+two halves of the composited frame. The interval between shipped frames does include the
+overlay — the conn view's `requestAnimationFrame` loop and Pixi's ticker fire in the same
+browser frame — but it cannot say which painter spent the time, and all three remedies the
+debt lists (quantise ring redraws to the 5 Hz grid, drop `CIRCLE_SEGMENTS` at far zoom,
+cull marks before projecting) act on the overlay alone. A drive run against the old probe
+would have come back with a number that was real and could not have chosen among them, and
+the standing rule — no speculative optimisation without a number that demands it — would
+then have blocked all three.
+
+So `__perspectiveProbe` now reports the frame as three series rather than one — the shipped
+interval, time inside the conn view's `renderFrame`, time inside the overlay's `draw` — and
+`__perspectiveStation(label)` is a hard boundary that zeroes all three and hands back the
+station it closed. The five stations, and the harness that walks them, are written up in
+[graphics-standards.md](graphics-standards.md) gate 6.
+
+The one thing a container run of that drive establishes is about the container, and it is
+worth recording precisely because it is not a frame budget: across all five stations the
+composited interval sat at **~170–200 ms** while the two CPU halves inside it totalled
+**under 3 ms** — roughly 0.8–1.1 ms in the conn view and 1.2–1.8 ms in the overlay. So
+something like 98% of a container frame is SwiftShader, which is the clearest statement yet
+that the Phase-1/2/5 frame-time figures measured the software rasteriser and not the scene.
+The geometry the drive counted is unchanged and still inside the caps: 48 draw calls and
+~142 k triangles at rest, 52 and ~142 k with six own ordnance in the water.
+
 Debts still carried: the sour-exposure audio cue, and the real-GPU / Termux wall-clock
-validation.
+validation itself — the instrument is ready and the numbers are still owed.
 
 ## 10. Open questions
 

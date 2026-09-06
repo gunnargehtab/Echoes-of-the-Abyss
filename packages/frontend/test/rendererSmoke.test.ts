@@ -389,6 +389,74 @@ describe('renderer smoke test: the conn view', () => {
     }
   });
 
+  it('prices the composited frame as two halves, per station (#286)', async () => {
+    const world = await boot();
+    try {
+      const probes = (
+        globalThis as unknown as {
+          window: {
+            __perspectiveProbe?: () => Record<string, unknown>;
+            __perspectiveStation?: (label?: string) => Record<string, unknown>;
+          };
+        }
+      ).window;
+      assert.ok(probes.__perspectiveStation !== undefined, 'the station boundary is exposed');
+      const probe = probes.__perspectiveProbe!;
+      const station = probes.__perspectiveStation!;
+
+      world.frame(6);
+      const closed = station('marquee');
+      assert.equal(closed.station, null, 'the boot station was never named');
+      // Six overlay ticks in, none after: the pair is what makes the zeroes
+      // below a reset rather than a station that never ran.
+      assert.equal(closed.overlayFrames, 6, 'and it closes holding the frames it drew');
+
+      const opened = probe();
+      assert.equal(opened.station, 'marquee', 'the new station carries its label');
+      // The regression this exists for: a worst case that survived a station
+      // boundary reported the loading hitch at every station of the drive.
+      assert.equal(opened.worstFrameMs, 0, 'and no worst case from the station before it');
+      assert.equal(opened.avgFrameMs, 0, 'nor an average');
+      assert.equal(opened.stationFrames, 0, 'nor a frame count');
+      assert.equal(opened.overlayFrames, 0, 'nor the overlay half of one');
+
+      world.frame(5);
+      const held = probe();
+      // The overlay's count is exact where the composited interval's cannot
+      // be: `recordOverlayCost` is a duration inside a call, so nothing
+      // filters it, while a frame *interval* is dropped above 500 ms because
+      // a tab-hidden gap is not a frame. So this is the counted assertion and
+      // the one below it is the bounded one.
+      assert.equal(held.overlayFrames, 5, 'every overlay tick reported into the conn probe');
+      assert.ok(
+        (held.stationFrames as number) > 0 && (held.stationFrames as number) <= 5,
+        `the station counted its own frames, saw ${held.stationFrames}`
+      );
+      assert.equal(held.station, 'marquee', 'and stayed at the station across them');
+
+      // Two painters, two numbers. Both halves are timed inside a call, so
+      // both are present and neither is the other; what is asserted is that
+      // the probe reports them separately at all, because a drive that reads
+      // one number cannot choose which half to optimise.
+      for (const key of ['avgConnMs', 'worstConnMs', 'avgOverlayMs', 'worstOverlayMs', 'fps']) {
+        assert.equal(typeof held[key], 'number', `${key} is reported`);
+      }
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('takes the probes down with the view', async () => {
+    const world = await boot();
+    world.frame(2);
+    world.teardown();
+    const probes = globalThis as unknown as {
+      window: { __perspectiveProbe?: unknown; __perspectiveStation?: unknown };
+    };
+    assert.equal(probes.window.__perspectiveProbe, undefined, 'the reading went with it');
+    assert.equal(probes.window.__perspectiveStation, undefined, 'and so did the boundary');
+  });
+
   it('is the only opinion about where the water is: project and resolve round-trip', async () => {
     const world = await boot();
     try {

@@ -212,6 +212,64 @@ collapsed span moves the vertices within a cell of itself and re-shades those ce
 and a ring on the seabed canvas the join baked, on the seed and the depth ramp the join
 set — so the arch falls and nothing else on the map re-textures.
 
+#### The wall-clock half: the review drive
+
+Both budgets above are **counted geometry**, and counted geometry has been honest about
+the GL pass and silent about the rest of the shipped frame. Since the Phase-5 switch the
+frame is composited from two painters — the three.js world, and a transparent Pixi overlay
+that re-projects every ring vertex, symbol and route through the same camera on the CPU —
+and the second one spends no draw calls and no triangles. It is priced in milliseconds or
+not at all. The floor that pricing protects is real: [SETUP-ANDROID](../SETUP-ANDROID.md)
+promises the whole game, server included, on-device in Termux.
+
+So the probe reports the frame three ways, per **station**:
+
+| Reading | What it is |
+| --- | --- |
+| `avgFrameMs` / `worstFrameMs` | The interval between shipped frames — what a player feels |
+| `avgConnMs` / `worstConnMs` | Time inside the conn view's `renderFrame`: entity sync and the GL submit |
+| `avgOverlayMs` / `worstOverlayMs` | Time inside the overlay's `draw`: the projection and re-issue of every mark |
+
+The two halves do not sum to the interval and are not meant to — the gap is Pixi's own
+rasterisation, the browser's compositing, and whatever idle a frame finished early enough
+to have. They are separate because every remedy this gate would reach for (quantising ring
+redraws to the 5 Hz sonar grid, dropping `CIRCLE_SEGMENTS` at far zoom, culling marks
+against the ground quad before projecting) acts on the overlay half alone. A single number
+would be real and still could not choose among them.
+
+A **station** is a held view, and it is a hard boundary rather than a moment:
+`window.__perspectiveStation('<label>')` zeroes all three series and returns the reading of
+the station it just closed, so a worst case never survives into the station after it and an
+average never blends the station before it. The reading carries `stationFrames` and
+`avgFrames` for exactly this reason — the average runs on a 240-frame window, which is four
+seconds at 60 fps and twelve on a floor that manages twenty, so an average taken from a
+station shorter than its window is its tail rather than the whole of it, and the two counts
+say which happened rather than leaving it to be assumed.
+
+The drive is five stations, chosen because each loads a different part of the frame:
+
+| Station | What it loads |
+| --- | --- |
+| `base` | The opening view. The floor every other station is read against |
+| `marquee` | The fleet selected: a signature ring per hull, conforming to the terrain |
+| `ping-preview` | Alt held — two more projected rings per selected hull, the polyline worst case |
+| `survey-zoom` | Dollied out, where `CIRCLE_SEGMENTS` is spent on rings a few pixels across |
+| `fight` | Own ordnance in the water and hulls under orders, so the force layer is on the frame cadence rather than held by its layer stamps |
+
+`.claude/skills/run-game/scripts/stations.mjs` walks all five and prints the table
+(`drive.mjs --steps`, `STATION_SECONDS` to lengthen the dwell). Where Playwright will not
+run — which includes most Termux setups — drive the same five by hand and read the same two
+calls from the console.
+
+**No valid numbers exist yet, and none of the figures in the Phase-1/2/5 records are
+candidates.** Every one of them was taken under SwiftShader in a container, which is the
+software rasteriser rather than the scene: the container's composited frame runs ~170 ms
+while the two CPU halves it contains total under 3 ms, so what those figures measured was
+almost entirely the thing that will not be there on a GPU. The numbers this gate wants come
+from one desktop with a real GPU and one Android device under Termux, and they belong here
+and in the Phase-5 record ([three-layer-ocean.md](three-layer-ocean.md)) once taken. Until
+then this gate bounds geometry and says out loud that it does not bound the frame.
+
 ### 7. Readability outranks richness
 
 RTS readability beats realism, at every zoom the camera allows: faction from silhouette,

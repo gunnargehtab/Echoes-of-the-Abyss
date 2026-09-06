@@ -99,6 +99,7 @@ import {
 import { OwnMotion } from './ownMotion.ts';
 import { OrdnanceLayer } from './ordnanceLayer.ts';
 import { EnvironmentLayer } from './environmentLayer.ts';
+import { FrameCost, ms } from './frameCost.ts';
 
 /**
  * SPEC — docs/art-direction.md "Camera & Projection", settled by the Phase-1
@@ -288,9 +289,30 @@ export class PerspectiveView {
   private active = false;
   private frameHandle = 0;
   private lastFrameAt = 0;
-  /** Rolling frame-cost telemetry for the gate-6 measurement. */
-  private frameCostMs: number[] = [];
-  private worstFrameMs = 0;
+
+  /**
+   * Frame-cost telemetry for the gate-6 measurement drive, as three series
+   * rather than one (#286).
+   *
+   * The shipped frame is composited from two painters on separate loops — this
+   * view's `requestAnimationFrame` and the overlay's Pixi ticker — so the
+   * interval between consecutive `renderFrame` calls already prices both
+   * halves. What it cannot do is say *which* half spent the time, and every
+   * remedy the drive might reach for (quantising ring redraws to the 5 Hz
+   * sonar grid, dropping `CIRCLE_SEGMENTS` at far zoom, culling marks before
+   * projecting) acts on the overlay half alone. A single number would be real
+   * and still could not choose among them.
+   */
+  private readonly frameCost = new FrameCost();
+  /** Time inside `renderFrame`: entity sync plus the GL submit. */
+  private readonly connCost = new FrameCost();
+  /** Time inside the overlay painter's `draw`, reported by `EchoRenderer`. */
+  private readonly overlayCost = new FrameCost();
+  /** The station these three are measuring, or null before one is named. */
+  private stationLabel: string | null = null;
+  /** Set at construction so a probe read before the first frame still divides
+   * by an elapsed time that means something. */
+  private stationStartedAt = performance.now();
 
   constructor() {
     this.scene.add(
@@ -351,6 +373,9 @@ export class PerspectiveView {
     this.active = active;
     if (active) {
       this.lastFrameAt = performance.now();
+      // Nothing measured while the view was dark belongs to the station that
+      // starts now.
+      this.beginStation(this.stationLabel);
       const loop = () => {
         if (!this.active) return;
         this.frameHandle = requestAnimationFrame(loop);
@@ -469,6 +494,7 @@ export class PerspectiveView {
     this.renderer?.domElement.remove();
     this.renderer = null;
     delete (window as unknown as { __perspectiveProbe?: unknown }).__perspectiveProbe;
+    delete (window as unknown as { __perspectiveStation?: unknown }).__perspectiveStation;
     delete (window as unknown as { __perspectiveCamera?: unknown }).__perspectiveCamera;
   }
 
@@ -1246,12 +1272,11 @@ export class PerspectiveView {
     const now = performance.now();
     const frameMs = now - this.lastFrameAt;
     this.lastFrameAt = now;
-    if (frameMs < 500) {
-      // Ignore tab-hidden gaps; a 4-second "frame" is not a frame.
-      this.frameCostMs.push(frameMs);
-      if (this.frameCostMs.length > 240) this.frameCostMs.shift();
-      if (frameMs > this.worstFrameMs) this.worstFrameMs = frameMs;
-    }
+    // Ignore tab-hidden gaps; a 4-second "frame" is not a frame. The guard is
+    // on the *interval* only: the two duration series below are measured
+    // inside a call that a hidden tab never makes, so nothing there can be
+    // inflated by one and a 500 ms draw would be the finding, not the noise.
+    if (frameMs < 500) this.frameCost.add(frameMs);
 
     // Ember flicker steps on the 5 Hz sonar bucket, never smoothly — the
     // seabed's one light keeps the register (docs/art-direction.md).
@@ -1289,36 +1314,59 @@ export class PerspectiveView {
       this.syncOrdnance(now);
     }
     renderer.render(this.scene, this.camera);
+    this.connCost.add(performance.now() - now);
+  }
+
+  /**
+   * The overlay painter's per-frame CPU cost, handed over by `EchoRenderer`
+   * once per Pixi tick.
+   *
+   * It is the half of the composited frame that re-projects every ring vertex,
+   * symbol and route through this view's camera, and it is timed here rather
+   * than over there so the drive reads one probe and gets both halves of the
+   * frame it is standing in front of. What it covers is the overlay's
+   * scene-graph work — the projection and the re-issue of the draw
+   * instructions — because that is what the gate-6 remedies would act on; Pixi
+   * rasterises after its ticker callbacks return, and that cost lands in the
+   * composited interval like any other GPU work.
+   */
+  recordOverlayCost(costMs: number): void {
+    if (!this.active) return;
+    this.overlayCost.add(costMs);
+  }
+
+  /**
+   * Start a new measurement station, zeroing all three series.
+   *
+   * Gate 6's drive is five stations on one page load, and a worst case that
+   * survives a station boundary reports the loading hitch at every one of
+   * them.
+   */
+  private beginStation(label: string | null): void {
+    this.stationLabel = label;
+    this.stationStartedAt = performance.now();
+    this.frameCost.reset();
+    this.connCost.reset();
+    this.overlayCost.reset();
   }
 
   /** Read-only telemetry for the harness, like the audio and hazard probes. */
   private exposeProbe(): void {
-    (window as unknown as { __perspectiveProbe?: () => unknown }).__perspectiveProbe = () => {
-      const info = this.renderer?.info;
-      const frames = this.frameCostMs;
-      const average = frames.length === 0 ? 0 : frames.reduce((a, b) => a + b, 0) / frames.length;
-      return {
-        active: this.active,
-        pitchDeg: PITCH_DEG,
-        distance: Math.round(this.distance),
-        hullScale: Number(this.drawScale.toFixed(2)),
-        drawCalls: info?.render.calls ?? 0,
-        triangles: info?.render.triangles ?? 0,
-        avgFrameMs: Number(average.toFixed(2)),
-        worstFrameMs: Number(this.worstFrameMs.toFixed(2)),
-        units: this.unitHandles.size,
-        structures: this.structureHandles.size,
-        // Own ordnance in the water, drawn by the instanced layer (gate 6).
-        ordnance: this.ordnanceLayer.count,
-        // The prop layer's own ledger (gate 6): a prop regression is a
-        // number, not an impression.
-        ...this.environment.stats(),
-        modelBacked:
-          [...this.unitHandles.values()].filter((h) => h.model !== null).length +
-          [...this.structureHandles.values()].filter((h) => h.model !== null).length,
-        ownCentre: this.ownCentre(),
-      };
+    (window as unknown as { __perspectiveProbe?: () => unknown }).__perspectiveProbe = () =>
+      this.probeReading();
+
+    // The station boundary gate 6's drive walks. It closes the station being
+    // measured, hands back its reading, and opens the next one — one call
+    // rather than a read and a reset, so the frames between the two cannot go
+    // missing or, worse, land in the wrong station's average.
+    (
+      window as unknown as { __perspectiveStation?: (label?: string) => unknown }
+    ).__perspectiveStation = (label?: string) => {
+      const closed = this.probeReading();
+      this.beginStation(label ?? null);
+      return closed;
     };
+
     // The harness's tripod: point the camera, nothing else. It moves only
     // the view over the player's own resolved data — the same pan and zoom
     // the pointer already commands — and can neither read nor order anything.
@@ -1328,6 +1376,64 @@ export class PerspectiveView {
       }
     ).__perspectiveCamera = (x: number, z: number, distance?: number) => {
       this.focusWorld(x, z, distance);
+    };
+  }
+
+  /**
+   * One reading of the probe: the geometry ledger gates 6 already counted, and
+   * the composited frame as three numbers rather than one.
+   *
+   * `frameMs` is the interval between shipped frames — the thing a player
+   * feels. `connMs` and `overlayMs` split it into the two painters that fill
+   * it. They do not sum to it and are not meant to: the gap between them is
+   * Pixi's own rasterisation, the browser's compositing, and whatever idle a
+   * frame finished early enough to have. `fps` is counted over the whole
+   * station rather than inverted from `avgFrameMs`, so on a station longer
+   * than the average's window the two are different questions and may
+   * legitimately disagree.
+   */
+  private probeReading() {
+    const info = this.renderer?.info;
+    const elapsed = performance.now() - this.stationStartedAt;
+    return {
+      active: this.active,
+      pitchDeg: PITCH_DEG,
+      distance: Math.round(this.distance),
+      hullScale: Number(this.drawScale.toFixed(2)),
+      drawCalls: info?.render.calls ?? 0,
+      triangles: info?.render.triangles ?? 0,
+      // The station these frame numbers belong to, and the two counts that say
+      // whether to believe them: `stationFrames` is every frame since the
+      // boundary, `avgFrames` the window the average actually covers. Equal
+      // means the average blends nothing; `avgFrames` short of `stationFrames`
+      // means the station outran the window, which is fine, and the reverse
+      // never happens.
+      station: this.stationLabel,
+      stationMs: ms(elapsed),
+      stationFrames: this.frameCost.count,
+      avgFrames: this.frameCost.frames,
+      fps: elapsed <= 0 ? 0 : Number(((this.frameCost.count * 1000) / elapsed).toFixed(1)),
+      avgFrameMs: ms(this.frameCost.avg),
+      worstFrameMs: ms(this.frameCost.worst),
+      avgConnMs: ms(this.connCost.avg),
+      worstConnMs: ms(this.connCost.worst),
+      avgOverlayMs: ms(this.overlayCost.avg),
+      worstOverlayMs: ms(this.overlayCost.worst),
+      // Zero here means the overlay never reported, not that it was free —
+      // the two painters run on separate loops and only one of them is this
+      // class's.
+      overlayFrames: this.overlayCost.count,
+      units: this.unitHandles.size,
+      structures: this.structureHandles.size,
+      // Own ordnance in the water, drawn by the instanced layer (gate 6).
+      ordnance: this.ordnanceLayer.count,
+      // The prop layer's own ledger (gate 6): a prop regression is a
+      // number, not an impression.
+      ...this.environment.stats(),
+      modelBacked:
+        [...this.unitHandles.values()].filter((h) => h.model !== null).length +
+        [...this.structureHandles.values()].filter((h) => h.model !== null).length,
+      ownCentre: this.ownCentre(),
     };
   }
 
