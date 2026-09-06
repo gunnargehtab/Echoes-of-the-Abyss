@@ -37,6 +37,7 @@ import {
   Faction,
   HULL_EFFECTS,
   MAX_UNIT_RADIUS_M,
+  OPENING_ESCORT,
   PRODUCIBLE,
   StructureKind,
   UNIT_STATS,
@@ -241,21 +242,28 @@ describe('the Clarion carries the directional balance clause (#401)', () => {
   });
 });
 
-describe('the rung’s roster — two hulls a navy (#461)', () => {
-  /** Each navy's Foundry hull and Slipway hull, as docs/units.md writes them. */
-  const NAVY: Record<Faction, [UnitKind, UnitKind]> = {
+describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
+  /**
+   * Each navy's own hulls, as docs/units.md writes them — the table a wave of
+   * docs/roster-plan.md appends to. Everything below holds whatever a row's
+   * length: the rows are what a wave edits, the invariants are what it may
+   * not break, and a locked hull missing from its row fails here rather than
+   * quietly widening a navy.
+   */
+  const NAVY: Record<Faction, readonly UnitKind[]> = {
     [Faction.Bathyarch]: [UnitKind.Tender, UnitKind.Bulwark],
     [Faction.Pelagia]: [UnitKind.Spinner, UnitKind.Sower],
     [Faction.Directorate]: [UnitKind.Precentor, UnitKind.Dredge],
-    [Faction.Hadron]: [UnitKind.Cantus, UnitKind.Reciter],
+    [Faction.Hadron]: [UnitKind.Clarion, UnitKind.Cantus, UnitKind.Reciter],
   };
   const factions = [Faction.Bathyarch, Faction.Pelagia, Faction.Directorate, Faction.Hadron];
+  const own = (faction: Faction) => roster.filter((s) => s.faction === faction);
 
-  it('locks each of the eight to exactly the navy it is written for', () => {
-    // The acceptance line of the issue: `unitAvailableTo` returns true for
-    // exactly the navy each hull is written for. Every entry in the doc's
-    // section carries "Faction-locked: yes" with its reason, so the matrix
-    // is the whole rule — one true per row, three false.
+  it('locks each of a navy’s own hulls to exactly that navy, and lists every lock', () => {
+    // The acceptance line of #461: `unitAvailableTo` returns true for exactly
+    // the navy each hull is written for — one true per row, three false. And
+    // the table is complete: a hull that carries a lock appears in its
+    // navy's row and no other, so the rows *are* the locks.
     for (const owner of factions) {
       for (const kind of NAVY[owner]) {
         for (const asker of factions) {
@@ -266,26 +274,61 @@ describe('the rung’s roster — two hulls a navy (#461)', () => {
           );
         }
       }
+      assert.deepEqual(
+        own(owner).map((s) => s.kind),
+        [...NAVY[owner]].sort((a, b) => a - b),
+        `${Faction[owner]}'s row lists every hull locked to it`
+      );
     }
+    const listed = factions.flatMap((f) => NAVY[f]);
+    assert.equal(new Set(listed).size, listed.length, 'no hull sits in two rows');
   });
 
-  it('puts each navy’s first hull at the Foundry and its second behind the rung', () => {
+  it('gives each navy an opening at the Foundry and a decision behind the rung', () => {
     // "The first at the Foundry, so it is an opening; the second behind the
-    // rung, so the crystal is a decision about *what* to field." The Slipway
-    // "produces each navy's second exclusive hull, and nothing the Foundry
-    // already builds", so the two rows are disjoint.
+    // rung, so the crystal is a decision about *what* to field." Held as a
+    // rule about every navy rather than about a first and a second hull, so
+    // a wave that adds a third or a fourth to a row does not rewrite it. The
+    // Slipway "produces each navy's second exclusive hull, and nothing the
+    // Foundry already builds", so a locked hull is built at one yard only.
     const foundry = PRODUCIBLE[StructureKind.Foundry]!;
     const slipway = PRODUCIBLE[StructureKind.Slipway]!;
     for (const owner of factions) {
-      const [opening, decision] = NAVY[owner];
-      assert.ok(foundry.includes(opening), `${statsFor(opening).name} is a Foundry hull`);
-      assert.ok(slipway.includes(decision), `${statsFor(decision).name} is a Slipway hull`);
+      const row = NAVY[owner];
+      assert.ok(
+        row.some((k) => foundry.includes(k)),
+        `${Faction[owner]} has a Foundry hull`
+      );
+      assert.ok(
+        row.some((k) => slipway.includes(k)),
+        `${Faction[owner]} has a Slipway hull`
+      );
+      for (const kind of row) {
+        const yards = YARDS.filter((yard) => PRODUCIBLE[yard]!.includes(kind));
+        assert.equal(yards.length, 1, `${statsFor(kind).name} is built at one yard only`);
+      }
     }
     for (const kind of slipway) {
       assert.ok(!foundry.includes(kind), `${statsFor(kind).name} is built at one yard only`);
     }
     assert.ok(YARDS.includes(StructureKind.Foundry) && YARDS.includes(StructureKind.Slipway));
     assert.ok(!YARDS.includes(StructureKind.Bastion), 'the Bastion is a depot, not a yard');
+  });
+
+  it('opens each navy with hulls its own Foundry would build', () => {
+    // The kit is keyed per navy (docs/roster-plan.md §4, wave 0) so a navy's
+    // own scout and line hull can take the commons' place the day they
+    // exist. Whatever a row holds, it must be a hull the navy's one starting
+    // yard produces and its lock admits — an opening the Foundry could not
+    // reproduce would be a hull the commander can lose and never replace.
+    const foundry = PRODUCIBLE[StructureKind.Foundry]!;
+    for (const owner of factions) {
+      assert.ok(OPENING_ESCORT[owner].length > 0, `${Faction[owner]} opens with an escort`);
+      for (const kind of OPENING_ESCORT[owner]) {
+        assert.ok(unitAvailableTo(kind, owner), `${statsFor(kind).name} is ${Faction[owner]}'s`);
+        assert.ok(foundry.includes(kind), `${statsFor(kind).name} is a Foundry hull`);
+      }
+    }
   });
 
   it('carries the Reciter’s cone figure the way it carries the Clarion’s', () => {
@@ -320,21 +363,61 @@ describe('the rung’s roster — two hulls a navy (#461)', () => {
     const dredge = statsFor(UnitKind.Dredge);
     assert.ok(dredge.cost > 0 && dredge.crystalCost === 40 && dredge.biomassCost === 60);
     assert.equal(statsFor(UnitKind.Cantus).crystalCost, undefined);
-    assert.equal(statsFor(UnitKind.Dredge).pressureRating, 4, 'the only PR-4 entry');
-    for (const stats of roster) {
-      if (stats.kind === UnitKind.Dredge) continue;
-      assert.ok(stats.pressureRating < 4, `${stats.name} must not reach the Dredge's band`);
+  });
+
+  it('gives the Directorate every hull rated for the Hadal band', () => {
+    // docs/systems-depth.md §3: PR-4 is the Directorate's water. The Dredge
+    // was the only PR-4 entry when the rung landed; the rule that survives
+    // the roster growing is that whatever reaches the band is theirs — a
+    // Thurible or a Verger at PR-3 is fine, a PR-4 hull under another flag
+    // is a doctrine given away.
+    const hadal = roster.filter((s) => s.pressureRating >= 4);
+    assert.ok(
+      hadal.some((s) => s.kind === UnitKind.Dredge),
+      'the Dredge reaches the band'
+    );
+    for (const stats of hadal) {
+      assert.equal(stats.faction, Faction.Directorate, `${stats.name} is rated PR-4`);
     }
   });
 
   it('gives an effect clock to exactly the hulls with work to clock', () => {
     // `sigWorking` is what `spawnUnit` reads to attach a HullEffect, so the
-    // set has to be the doc's: the Tender welding, the Sower seeded, the
-    // Cantus singing — and the Spinner's magazine is the one grown magazine.
-    const working = roster.filter((s) => s.sigWorking !== undefined).map((s) => s.name);
-    assert.deepEqual(working.sort(), ['Cantus', 'Sower', 'Tender']);
-    const grown = roster.filter((s) => s.mineMagazine !== undefined).map((s) => s.name);
-    assert.deepEqual(grown, ['Spinner']);
+    // set has to be the doc's — per navy, because an effect is a doctrine:
+    // the Tender welding, the Sower seeded, the Cantus singing — and the
+    // Spinner's magazine is the one grown magazine. The commons carry
+    // neither, because a clock on a hull nobody owns is an effect without a
+    // doctrine to argue it.
+    const WORKING: Record<Faction, readonly UnitKind[]> = {
+      [Faction.Bathyarch]: [UnitKind.Tender],
+      [Faction.Pelagia]: [UnitKind.Sower],
+      [Faction.Directorate]: [],
+      [Faction.Hadron]: [UnitKind.Cantus],
+    };
+    const GROWN: Record<Faction, readonly UnitKind[]> = {
+      [Faction.Bathyarch]: [],
+      [Faction.Pelagia]: [UnitKind.Spinner],
+      [Faction.Directorate]: [],
+      [Faction.Hadron]: [],
+    };
+    for (const owner of factions) {
+      const working = own(owner).filter((s) => s.sigWorking !== undefined);
+      assert.deepEqual(
+        working.map((s) => s.kind),
+        WORKING[owner],
+        `${Faction[owner]} working`
+      );
+      const grown = own(owner).filter((s) => s.mineMagazine !== undefined);
+      assert.deepEqual(
+        grown.map((s) => s.kind),
+        GROWN[owner],
+        `${Faction[owner]} grown`
+      );
+    }
+    for (const stats of roster.filter((s) => s.faction === undefined)) {
+      assert.equal(stats.sigWorking, undefined, `${stats.name} is nobody's and clocks nothing`);
+      assert.equal(stats.mineMagazine, undefined, `${stats.name} grows nothing`);
+    }
     assert.equal(statsFor(UnitKind.Spinner).mineMagazine, HULL_EFFECTS.SPINNER.MAGAZINE);
   });
 });

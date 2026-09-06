@@ -32,6 +32,7 @@ import {
   SIM,
   STANDING_WAVE,
   UnitKind,
+  unitAvailableTo,
   type Contact,
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
@@ -530,6 +531,77 @@ describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.
     const a = ping(fieldsMap(), 5).phantoms.map((p) => [p.x, p.y, p.kind, p.heading]);
     const b = ping(fieldsMap(), 5).phantoms.map((p) => [p.x, p.y, p.kind, p.heading]);
     assert.deepEqual(a, b);
+  });
+
+  it('claims only hulls the enemy on the map could field — its own included', () => {
+    // The kind is derived from the roster, not listed beside it
+    // (docs/roster-plan.md §4, wave 0): a return that reads as a hull the
+    // enemy could never build is the one phantom a player dismisses by
+    // reading the roster, and a Spinner against the Commune is as plausible
+    // as a Corvette. Thirty transmissions is enough draws that the Commune's
+    // own two hulls appear, and that a hull of any other navy never does.
+    const seen = new Set<UnitKind>();
+    for (let seed = 1; seed <= 30; seed++) {
+      for (const phantom of ping(fieldsMap(), seed).phantoms) {
+        assert.ok(
+          unitAvailableTo(phantom.kind!, Faction.Pelagia),
+          `${UnitKind[phantom.kind!]} is not a hull the Commune could field`
+        );
+        seen.add(phantom.kind!);
+      }
+    }
+    assert.ok(
+      seen.has(UnitKind.Spinner) || seen.has(UnitKind.Sower),
+      `the Commune's own hulls are claimed too; saw ${[...seen].map((k) => UnitKind[k])}`
+    );
+    assert.ok(!seen.has(UnitKind.Tender) && !seen.has(UnitKind.Clarion), 'and nobody else’s');
+  });
+
+  it('impersonates every enemy on the map, and no navy that is not there', () => {
+    // Three seats: the pinger, and an enemy each from two navies. Each phantom
+    // picks one of the two and a hull that navy builds, so a Reciter is only
+    // ever flagged as the Order's and a Sower only ever as the Commune's; the
+    // Directorate has nothing on the map and is never impersonated.
+    const factions = new Set<Faction>();
+    for (let seed = 1; seed <= 30; seed++) {
+      const match = new Match(VENTFRONT_DIVIDE, { fauna: false, seed, terrain: fieldsMap() });
+      const pinger = spawnUnit(match.world, {
+        kind: UnitKind.Corvette,
+        slot: 0,
+        faction: Faction.Bathyarch,
+        x: 4000,
+        y: 4000,
+      });
+      spawnUnit(match.world, {
+        kind: UnitKind.Cruiser,
+        slot: 1,
+        faction: Faction.Pelagia,
+        x: 4700,
+        y: 4000,
+      });
+      spawnUnit(match.world, {
+        kind: UnitKind.Cruiser,
+        slot: 2,
+        faction: Faction.Hadron,
+        x: 4000,
+        y: 4700,
+      });
+      match.activeSonar(0, pinger);
+      const contacts = match.echo.run(match.world, [0, 1, 2]).contactsBySlot.get(0) ?? [];
+      for (const c of contacts) {
+        if (match.echo.entityForHandle(0, c.id) !== undefined) continue;
+        assert.ok(
+          c.faction === Faction.Pelagia || c.faction === Faction.Hadron,
+          'an enemy present'
+        );
+        assert.ok(
+          unitAvailableTo(c.kind!, c.faction!),
+          `${UnitKind[c.kind!]} under ${Faction[c.faction!]}'s flag is a hull that navy builds`
+        );
+        factions.add(c.faction!);
+      }
+    }
+    assert.deepEqual([...factions].sort(), [Faction.Pelagia, Faction.Hadron], 'both, over time');
   });
 
   function countOrdnance(match: Match): number {

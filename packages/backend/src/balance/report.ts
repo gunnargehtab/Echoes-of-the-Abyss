@@ -19,7 +19,7 @@
  * harness can honestly say.
  */
 
-import { Faction, SIM, ThermoclineZone } from '@echoes/shared';
+import { Faction, SIM, ThermoclineZone, UNIT_STATS, type UnitKind } from '@echoes/shared';
 import type { MatchTelemetryResult, PlayerTelemetry } from './telemetry.ts';
 
 const FACTION_NAME: Record<Faction, string> = {
@@ -62,6 +62,16 @@ export interface FactionSummary {
   throttledDownShare: number;
   /** Hulls lost per match. */
   lossesPerMatch: number;
+  /**
+   * The same losses, per hull kind — what the summed column hides.
+   *
+   * A wave of the roster expansion (docs/roster-plan.md §4) is judged on
+   * whether its hulls fought and died in proportion, and one number cannot
+   * say whether a navy lost twenty Corvettes or twenty of the hull the wave
+   * added; #458 read a loss column that could not tell a swarm of scouts from
+   * a line that broke. A kind that is absent was never lost.
+   */
+  lossesPerMatchByKind: Partial<Record<UnitKind, number>>;
   /** Share of hull-time spent below the Shelf. */
   deepTimeShare: number;
   /**
@@ -196,6 +206,25 @@ function distribution(values: number[]): Distribution {
   return { median: at(0.5), p10: at(0.1), p90: at(0.9), n: clean.length };
 }
 
+/**
+ * Losses per match for each hull kind any of these players lost, in
+ * `UnitKind` order so the report's rows never reorder between runs.
+ */
+function lossesByKind(players: readonly PlayerTelemetry[]): Partial<Record<UnitKind, number>> {
+  const totals = new Map<UnitKind, number>();
+  for (const player of players) {
+    for (const [kind, count] of Object.entries(player.lossesByKind)) {
+      const k = Number(kind) as UnitKind;
+      totals.set(k, (totals.get(k) ?? 0) + count);
+    }
+  }
+  const out: Partial<Record<UnitKind, number>> = {};
+  for (const kind of [...totals.keys()].sort((a, b) => a - b)) {
+    out[kind] = totals.get(kind)! / players.length;
+  }
+  return out;
+}
+
 const mean = (values: number[]): number =>
   values.length === 0 ? 0 : values.reduce((a, b) => a + b, 0) / values.length;
 
@@ -247,6 +276,7 @@ export function summarise(results: MatchTelemetryResult[]): BatchSummary {
       lossesPerMatch: mean(
         rows.map((r) => Object.values(r.player.lossesByKind).reduce((a, b) => a + b, 0))
       ),
+      lossesPerMatchByKind: lossesByKind(rows.map((r) => r.player)),
       deepTimeShare: mean(
         rows.map((r) => {
           const bands = Object.values(r.player.hullSecondsByBand);
@@ -537,6 +567,22 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
     );
   }
   lines.push('');
+  // One row per hull anybody lost, one column per navy, so a wave's hulls
+  // can be read against the commons they were meant to replace.
+  const lostKinds = [
+    ...new Set(summary.factions.flatMap((f) => Object.keys(f.lossesPerMatchByKind).map(Number))),
+  ].sort((a, b) => a - b) as UnitKind[];
+  if (lostKinds.length > 0) {
+    lines.push('## Losses per match, by hull');
+    lines.push('');
+    lines.push(`| Hull | ${summary.factions.map((f) => FACTION_NAME[f.faction]).join(' | ')} |`);
+    lines.push(`| --- |${summary.factions.map(() => ' --- |').join('')}`);
+    for (const kind of lostKinds) {
+      const cells = summary.factions.map((f) => (f.lossesPerMatchByKind[kind] ?? 0).toFixed(1));
+      lines.push(`| ${UNIT_STATS[kind].name} | ${cells.join(' | ')} |`);
+    }
+    lines.push('');
+  }
   lines.push(
     '_A verdict of "held" means the failure that guard-rail describes did not appear in ' +
       'these runs. It is evidence, not proof; weigh it against the sample size._'

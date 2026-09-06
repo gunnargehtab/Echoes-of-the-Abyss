@@ -719,6 +719,27 @@ export function unitAvailableTo(kind: UnitKind, faction: Faction): boolean {
 }
 
 /**
+ * The escort each navy opens with, beside its Harvester. TUNABLE — the docs
+ * fix that the opening kit is self-sufficient (docs/economy.md §8), not what
+ * sails in it.
+ *
+ * Keyed per navy so that a navy's own scout and line hull can take the
+ * commons' place in its opening the day they exist, without
+ * `Match.spawnStartingBase` learning anything new (docs/roster-plan.md §4,
+ * wave 0). Identical across the four today, and deliberately: wave 0's gate
+ * is a baseline that has not moved, and the Knights' Clarion swap is wave 5's
+ * change to make, when the other navies have a line hull to swap in too.
+ * Every entry must pass `unitAvailableTo` for its own navy; the shared tests
+ * hold that, so a kit can never open with a hull its yard would refuse.
+ */
+export const OPENING_ESCORT: Record<Faction, readonly UnitKind[]> = {
+  [Faction.Bathyarch]: [UnitKind.LightScout, UnitKind.Corvette, UnitKind.Corvette],
+  [Faction.Pelagia]: [UnitKind.LightScout, UnitKind.Corvette, UnitKind.Corvette],
+  [Faction.Directorate]: [UnitKind.LightScout, UnitKind.Corvette, UnitKind.Corvette],
+  [Faction.Hadron]: [UnitKind.LightScout, UnitKind.Corvette, UnitKind.Corvette],
+};
+
+/**
  * The largest radius in the roster, for sizing separation queries.
  *
  * Derived from the roster rather than written down: separation queries a

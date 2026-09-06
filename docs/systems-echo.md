@@ -195,10 +195,11 @@ player's ears earned twice over. §9 says what the HUD may draw from that.
 
 **A ping transmitted from scattered water returns phantoms.** One to three false contacts per
 transmission ([audio-direction.md](audio-direction.md) §5), each with a handle from the same
-counter a real contact's comes from, Tier 4, a plausible enemy hull with full health and a
-heading, and no entity behind it. They land 200–900 m from the pinger, never within 150 m of
-anything real inside the reveal, hold still for the three seconds the transmission lasts, and
-then fade as any ghost marker does. Every order that resolves a handle — an attack, a torpedo —
+counter a real contact's comes from, Tier 4, a hull one of the enemy navies on the map could
+field — drawn from that navy's roster, its own locked hulls included, so the class is never the
+tell — with full health and a heading, and no entity behind it. They land 200–900 m from the
+pinger, never within 150 m of anything real inside the reveal, hold still for the three seconds
+the transmission lasts, and then fade as any ghost marker does. Every order that resolves a handle — an attack, a torpedo —
 resolves a phantom to nothing and does nothing. The true returns from the same ping lie in
 bearing like any other contact. A phantom sounds and reads identical to a true one
 ([audio-direction.md](audio-direction.md) §9): the terrain teaches its own rule, and it teaches it

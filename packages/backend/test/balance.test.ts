@@ -21,6 +21,7 @@ import {
   HARVEST_THROTTLE,
   HarvestThrottle,
   SIM,
+  UnitKind,
 } from '@echoes/shared';
 import { runBatch, runMatch, seedHasAnyEffect, type Seat } from '../src/balance/runner.ts';
 import { summarise, toMarkdown } from '../src/balance/report.ts';
@@ -277,6 +278,34 @@ describe('a draw says how close it came (#223)', () => {
     assert.equal(summary.eliminations.median, 1);
     assert.equal(summary.eliminationsToWin, 2, 'three seats, so a win needs two kills');
     assert.match(toMarkdown(summary, 'eliminations'), /Commanders eliminated, of 2 needed \| 1/);
+  });
+
+  it('breaks the losses out by hull, and the rows add up to the column', () => {
+    // A wave of the roster is judged on *which* hulls died (docs/roster-plan.md
+    // §4, wave 0), and the summed column cannot say. A resigned seat loses its
+    // whole opening kit, which is the one loss list knowable in advance.
+    const { result } = matchWithOneDeadSeat();
+    const summary = summarise([result]);
+    const pelagia = summary.factions.find((f) => f.faction === Faction.Pelagia)!;
+    const byKind = pelagia.lossesPerMatchByKind;
+
+    assert.equal(byKind[UnitKind.Corvette], 2, 'the two Corvettes of the opening escort');
+    assert.equal(byKind[UnitKind.LightScout], 1);
+    assert.equal(byKind[UnitKind.Harvester], 1);
+    const rows = Object.values(byKind).reduce((a, b) => a + b, 0);
+    assert.ok(Math.abs(rows - pelagia.lossesPerMatch) < 1e-9, 'the rows sum to the column');
+    for (const f of summary.factions) {
+      if (f.faction === Faction.Pelagia) continue;
+      assert.deepEqual(f.lossesPerMatchByKind, {}, 'a navy that lost nothing has no rows');
+    }
+
+    const markdown = toMarkdown(summary, 'losses');
+    assert.match(markdown, /## Losses per match, by hull/);
+    assert.match(
+      markdown,
+      /\| Corvette \| 0\.0 \| 2\.0 \| 0\.0 \|/,
+      'Consortium, Commune, Directorate'
+    );
   });
 
   it('averages a dead commander over the match it was alive for', () => {

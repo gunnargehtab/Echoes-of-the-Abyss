@@ -26,6 +26,7 @@ import {
   Faction,
   HarvestThrottle,
   type HarvestIdleReason,
+  OPENING_ESCORT,
   PRODUCIBLE,
   ResourceKind,
   SIM,
@@ -760,14 +761,17 @@ export class Match {
       prebuilt: true,
     });
 
-    const escort: UnitKind[] = [UnitKind.LightScout, UnitKind.Corvette, UnitKind.Corvette];
+    // The navy's own kit, centred on the perpendicular whatever its length,
+    // so a navy that opens with four hulls one day spreads them the same way.
+    const escort = OPENING_ESCORT[faction];
     escort.forEach((kind, i) => {
+      const along = (i - (escort.length - 1) / 2) * 180;
       spawnUnit(this.world, {
         kind,
         slot,
         faction,
-        x: baseX + alongX * (i - 1) * 180 + awayX * 350,
-        y: baseY + alongY * (i - 1) * 180 + awayY * 350,
+        x: baseX + alongX * along + awayX * 350,
+        y: baseY + alongY * along + awayY * 350,
       });
     });
 

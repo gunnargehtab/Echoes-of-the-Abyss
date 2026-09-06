@@ -46,6 +46,16 @@ import { eidOfLocalId } from './world.ts';
  * each pair below 4, where it had been appended, which read as the numbers
  * having gone backwards. They did not; they were shared.
  *
+ * Still 14 after the roster's ground (#498): the opening kit is read from a
+ * per-navy table that holds the same three hulls for all four navies, and a
+ * phantom's kind is drawn from what the navy it impersonates could field
+ * rather than from a hand list. The first changes nothing a recording can
+ * see. The second draws the same dice on the same salts, so a phantom sits
+ * where it sat and claims a different hull only on scattered ground, where a
+ * kind decides nothing the simulation does — no order resolves a phantom,
+ * and the commander reads a contact's bearing, not its class. A v14 file
+ * replays identically, and the format still means what it meant.
+ *
  * 14: four commands a player did not have (#435) — attack-move, stop, hold
  * position and a yard's rally point — and one field a replayed hull carries
  * for them, its posture. None of them appears in a v13 file, so a v13 file

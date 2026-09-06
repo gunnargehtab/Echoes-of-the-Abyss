@@ -31,6 +31,7 @@ import {
   scatterContact,
   stableUnit,
   tierFromRatio,
+  unitAvailableTo,
   type Contact,
   type EchoMarkInfo,
   type FaunaSpecies,
@@ -39,6 +40,7 @@ import {
   Faction,
   type StructureKind,
   UnitKind,
+  type UnitStats,
 } from '@echoes/shared';
 import {
   Acoustic,
@@ -117,22 +119,41 @@ const PHANTOM_SALT_KIND = 13;
 const PHANTOM_SALT_BEARING = 14;
 const PHANTOM_SALT_RANGE = 15;
 const PHANTOM_SALT_HEADING = 16;
+const PHANTOM_SALT_NAVY = 17;
+
+const NAVIES: readonly Faction[] = [
+  Faction.Bathyarch,
+  Faction.Pelagia,
+  Faction.Directorate,
+  Faction.Hadron,
+];
 
 /**
- * What a phantom can claim to be: any hull a navy builds. The cohort hull is
- * grown, not built, and only by the Directorate (docs/economy.md §6), so a
- * Chorister return against any other navy would be the one phantom a player
- * could dismiss by reading the roster — which is exactly the tell a phantom
- * exists not to give.
+ * What a phantom can claim to be: any hull the navy it impersonates could
+ * field — docs/systems-echo.md §3, docs/roster-plan.md §4 (wave 0).
+ *
+ * Derived from the roster rather than listed beside it, because the list is
+ * the tell. A return that reads as a hull the enemy on the map could never
+ * build is the one phantom a player dismisses by reading the roster, and a
+ * hand list drifts from the roster the first time a wave adds a hull to one
+ * navy and not the list. `unitAvailableTo` is the rule the yards validate
+ * against, so a phantom is exactly as plausible as a production order: a
+ * Tender only ever against the Consortium, a Clarion only against the Order,
+ * and the Chorister against anyone — its lock is a price, and the price is
+ * faction-blind (docs/economy.md §6), so a Chorister under any flag is a hull
+ * the yard would build.
+ *
+ * In `UnitKind` order, which is stable across builds, so the kind die lands
+ * on the same hull in a replay.
  */
-const PHANTOM_HULLS: readonly UnitKind[] = [
-  UnitKind.LightScout,
-  UnitKind.Corvette,
-  UnitKind.Cruiser,
-  UnitKind.AbyssalSubmersible,
-  UnitKind.Harvester,
-];
-const PHANTOM_HULLS_DIRECTORATE: readonly UnitKind[] = [...PHANTOM_HULLS, UnitKind.Chorister];
+const PHANTOM_HULLS_BY_NAVY: ReadonlyMap<Faction, readonly UnitKind[]> = new Map(
+  NAVIES.map((navy) => [
+    navy,
+    (Object.values(UNIT_STATS) as UnitStats[])
+      .filter((stats) => unitAvailableTo(stats.kind, navy))
+      .map((stats) => stats.kind),
+  ])
+);
 
 /**
  * The false returns one transmission conjured — docs/systems-echo.md §3,
@@ -713,8 +734,10 @@ export class EchoLayer {
    * place in `PHANTOM_PLACEMENT_TRIES` is not placed — one fewer lie, never
    * a lie on top of a truth.
    *
-   * The hull it claims to be is one an *enemy* navy builds. With no enemy
-   * left on the map there is no plausible hull to fake, and no phantom.
+   * The hull it claims to be is one an *enemy* navy builds: each phantom
+   * picks a navy from those with something on the map, and a hull from what
+   * that navy could field. With no enemy left on the map there is no
+   * plausible hull to fake, and no phantom.
    */
   private conjurePhantoms(
     world: SimWorld,
@@ -725,19 +748,21 @@ export class EchoLayer {
     revealed: readonly number[],
     entities: readonly number[]
   ): void {
-    // An enemy to impersonate: the faction of any hull or structure that is
-    // not the pinger's own side and not the Drift's. Ordnance carries an
-    // Owner but no honest faction, and a creature belongs to nobody.
-    let faction: Faction | undefined;
+    // The enemies to impersonate: every navy with a hull or structure on the
+    // map that is not the pinger's own side and not the Drift's. Ordnance
+    // carries an Owner but no honest faction, and a creature belongs to
+    // nobody. A bitmask, then the navies in enum order, so the navy die below
+    // reads the same list whatever order the query returned the entities in.
+    let present = 0;
     for (let i = 0; i < entities.length; i++) {
       const eid = entities[i]!;
       const owner = Owner.slot[eid]!;
       if (owner === slot || owner >= MAX_SLOTS) continue;
       if (!hasComponent(world, Unit, eid) && !hasComponent(world, Structure, eid)) continue;
-      faction = Owner.faction[eid] as Faction;
-      break;
+      present |= 1 << Owner.faction[eid]!;
     }
-    if (faction === undefined) return;
+    if (present === 0) return;
+    const enemies = NAVIES.filter((navy) => (present & (1 << navy)) !== 0);
 
     const seed = world.rng.seed;
     const key = localIdOf(world, pinger) ?? pinger;
@@ -745,7 +770,6 @@ export class EchoLayer {
     const span = SCATTER.PHANTOMS_MAX - SCATTER.PHANTOMS_MIN + 1;
     const count =
       SCATTER.PHANTOMS_MIN + Math.floor(stableUnit(seed, key, PHANTOM_SALT_COUNT, began) * span);
-    const hulls = faction === Faction.Directorate ? PHANTOM_HULLS_DIRECTORATE : PHANTOM_HULLS;
     const terrain = world.terrain;
     const clearance2 = SCATTER.PHANTOM_CLEARANCE_M * SCATTER.PHANTOM_CLEARANCE_M;
     const depth = Position.depth[pinger]!;
@@ -778,6 +802,9 @@ export class EchoLayer {
         }
         if (!clear) continue;
 
+        const faction =
+          enemies[Math.floor(stableUnit(seed, key, PHANTOM_SALT_NAVY, step) * enemies.length)]!;
+        const hulls = PHANTOM_HULLS_BY_NAVY.get(faction)!;
         const kind =
           hulls[Math.floor(stableUnit(seed, key, PHANTOM_SALT_KIND, step) * hulls.length)]!;
         contacts.push({
