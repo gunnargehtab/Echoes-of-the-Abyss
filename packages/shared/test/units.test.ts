@@ -363,16 +363,21 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
       }
     }
 
-    // The tonnage rule (#509), which is what keeps four separate openings one
-    // decision: a kit is the same weight of hull for everybody, and what a navy
-    // spends it on is its doctrine — four one-berth Choristers or two Clarions,
-    // both four berths of escort behind a one-berth scout. Asserted as an
-    // equality across the four rather than as a number, so a wave that
-    // re-weighs the opening re-weighs it for everyone or fails here.
-    const tonnage = factions.map((owner) =>
-      OPENING_ESCORT[owner].reduce((n, kind) => n + statsFor(kind).berths, 0)
-    );
-    assert.equal(new Set(tonnage).size, 1, `one tonnage for every navy, not ${tonnage}`);
+    // The shape rule (#509), which is what keeps four separate openings one
+    // decision: every navy opens with the same *count* of hulls — a scout and a
+    // pair — and what its pair is worth is its doctrine. The Order's two
+    // Clarions cost three times the Directorate's two Choristers.
+    //
+    // Equal **tonnage** was the other candidate and was measured and rejected.
+    // Four berths of escort each (docs/economy.md §10 grants forty) gives the
+    // Directorate four one-berth Choristers, which reads as its doctrine and is
+    // not a tonnage change at all in a game about hidden information: it is
+    // four sets of the best ears in the roster against everybody else's two,
+    // from tick zero. Over the stored baseline's own thirty seeds it took that
+    // navy from 56% to 77% while every other column in its row stayed put, and
+    // took the Knights from 36% to 23%; the shape rule reads 64% and 36%.
+    const hulls = factions.map((owner) => OPENING_ESCORT[owner].length);
+    assert.equal(new Set(hulls).size, 1, `one shape for every navy, not ${hulls}`);
 
     // And wave 5's own gate, at the one place it is a fact about the roster
     // rather than about a commander: nobody opens in a hull nobody owns. The

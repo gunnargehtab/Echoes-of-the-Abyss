@@ -395,6 +395,61 @@ gate is now *readable*: what it reads is a list of named causes rather than a co
 zeros, and two of the three are now somebody's issue rather than an absence nobody could
 see.
 
+**Wave 5** landed the two line hulls and the anchor, and the thing it actually had to decide
+was not a hull. Every stat block followed its sketch — the Reed and the Bower as written, the
+Caisson with the one correction its sketch needed, because "a third more SIG" and "the
+Klaxon's +12% always lit" are two different hulls (a third more than 28 is 37, and 37 never
+lights anything). The claim that is an argument survived: the floor sits four above the line
+at every posture, so the noise is not a third more but two and a third times more, and the
+hull is priced for it. The Bower's clock covers only its cloud — the nursery runs whether the
+hull is moving or not, because an anchor a swarm could only rearm at once it had parked would
+be a second thing to protect rather than the thing the swarm forms around.
+
+**The opening kit is where the wave was decided, and the first answer was wrong.** §5 has
+always named the kit as this wave's, and wave 0 keyed `OPENING_ESCORT` per navy so the swap
+would cost nothing structural. What it did not settle is what "the same opening" means once
+the hulls differ, and the two candidates are not close:
+
+- **Equal tonnage** — four berths of escort each, against [economy.md](economy.md) §10's
+  grant of forty. The Directorate's line hull is a one-berth Chorister, so it opens with
+  *four* of them. On paper that is its doctrine, "very many, cheap, slow", stated in the
+  first three seconds of a match.
+- **Equal shape** — a scout and a pair, for everybody, which is the shape the kit has always
+  had. What a navy's pair is worth is then its doctrine: two Clarions cost three times two
+  Choristers.
+
+Measured on the stored baseline's own command (30 matches, seeds 4000–4029, 25 minute cap):
+
+| Navy | before | equal tonnage | equal shape |
+| --- | --- | --- | --- |
+| Consortium | 0% | 0% | 0% |
+| Commune | 8% | 0% | 0% |
+| Directorate | 56% | **77%** | 64% |
+| Knights | 36% | **23%** | 36% |
+
+Nothing else in the Directorate's row moved under either kit — income, mean SIG, tracked
+seconds and losses are all within a point or two of before — so the twenty-one points are the
+two extra Choristers and nothing else. In a game whose whole subject is hidden information,
+four sets of the best ears in the roster at tick zero is not a tonnage change; it is a
+different opening. The same finding shows up in the Echo pass, which is paid per
+observer-emitter pair: 129 path integrals before the wave, 174 under the shape rule, 206
+under tonnage. **The opening is a starting picture rather than a budget**, and the shape rule
+is what shipped. The Knights return to exactly their 36%, and the Directorate's remaining
+eight points sit inside the ten this document already says a win rate over twenty-odd decided
+matches carries.
+
+**The gate, half met, and the unmet half is not this wave's.** Neither the Consortium nor the
+Commune buys a Corvette any more — 0.0 against 2.8 and 0.3 — and they field 2.0 Caissons and
+0.2 Reeds a match instead. The Bower is never built: the Commune commissions 0.3 Slipways a
+match and the Sower's hold claims the purse first, which is the fourth cause recorded above
+and filed as #518. It is held by tests until that lands, exactly as the siege hulls are.
+
+One thing the wave read and did not act on, because it is wave 6's question rather than this
+one's: the Directorate still buys **Corvettes**, 4.5 a match, while §3 calls the Chorister its
+line hull "by doctrine and by price". The price half is true and the doctrine half is not —
+`doctrine.ts` names Corvettes on that navy's composition — and which of the two is wrong is
+exactly the decision the commons wave is for.
+
 **Wave 6** is a decision the harness makes, not this document. If after five waves every
 doctrine builds its own line and the commons are dead weight on the bar, retire them from
 `PRODUCIBLE` and keep them for missions and the campaign, where the prologue's hulls are

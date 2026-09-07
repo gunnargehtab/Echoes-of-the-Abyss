@@ -49,10 +49,11 @@ import { eidOfLocalId } from './world.ts';
  * 19: every navy opens in its own line hull (#509, docs/units.md, "The line
  * hulls, and the anchor"). `OPENING_ESCORT` no longer hands all four navies
  * two Corvettes: the Consortium opens with two Caissons, the Commune with two
- * Reeds, the Directorate with four Choristers and the Order with two Clarions
- * — four berths of escort each, whatever the hull. The commands in a v18 file
- * are still legible, and every one of them would be given to a different fleet
- * from tick zero, so a v18 recording diverges at its first checkpoint. No new
+ * Reeds, the Directorate with two Choristers and the Order with two Clarions
+ * — a scout and a pair each, and what the pair is worth is the doctrine. The
+ * commands in a v18 file are still legible, and every one of them would be
+ * given to a different fleet from tick zero, so a v18 recording diverges at
+ * its first checkpoint. No new
  * command: the wave's one hull with an effect, the Bower, works by standing
  * still and by being where it is, which are things a recording already says.
  *

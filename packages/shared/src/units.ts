@@ -1539,15 +1539,20 @@ export function unitAvailableTo(kind: UnitKind, faction: Faction): boolean {
  * Light Scout for now; the commons' fate is wave 6's decision, and moving that
  * slot is part of it.
  *
- * **Four berths of escort, whatever the hull.** That is the rule the swap is
- * held to (`packages/shared/test/units.test.ts`), and it is what keeps this a
- * roster change rather than four separate balance decisions: two Corvettes
- * were four berths against docs/economy.md §10's grant of forty, so the
- * Directorate — whose line hull is a one-berth Chorister — opens with four of
- * them and the other three with two apiece. The *value* differs, deliberately
- * and per doctrine: "very many, cheap, slow" opens with four cheap hulls and
- * the Order with two expensive ones, which is the whole difference between
- * those two navies stated in the first three seconds of a match.
+ * **A scout and a pair, for everybody.** The kit's *shape* is the rule the
+ * swap is held to (`packages/shared/test/units.test.ts`) — it is the shape the
+ * kit has always had — and what a navy's pair is worth is its doctrine: the
+ * Order's two Clarions cost three times the Directorate's two Choristers and
+ * the Consortium's two Caissons carry a third more plate than anybody's.
+ *
+ * Equal *tonnage* was the other candidate and was measured and rejected. Four
+ * berths of escort each gives the Directorate four one-berth Choristers, which
+ * is its doctrine on paper — "very many, cheap, slow" — and in a game about
+ * hidden information it is not a tonnage change at all: it is four sets of the
+ * best ears in the roster against everyone else's two, from tick zero. Over
+ * thirty matches it took that navy from 56% to 74% while nothing else in its
+ * row moved, and it cost the Echo pass a third more path integrals for the
+ * privilege. The opening is a starting picture rather than a budget.
  *
  * This moves the baseline, which is why the replay format bumps with it.
  * Every entry must pass `unitAvailableTo` for its own navy; the shared tests
@@ -1556,13 +1561,7 @@ export function unitAvailableTo(kind: UnitKind, faction: Faction): boolean {
 export const OPENING_ESCORT: Record<Faction, readonly UnitKind[]> = {
   [Faction.Bathyarch]: [UnitKind.LightScout, UnitKind.Caisson, UnitKind.Caisson],
   [Faction.Pelagia]: [UnitKind.LightScout, UnitKind.Reed, UnitKind.Reed],
-  [Faction.Directorate]: [
-    UnitKind.LightScout,
-    UnitKind.Chorister,
-    UnitKind.Chorister,
-    UnitKind.Chorister,
-    UnitKind.Chorister,
-  ],
+  [Faction.Directorate]: [UnitKind.LightScout, UnitKind.Chorister, UnitKind.Chorister],
   [Faction.Hadron]: [UnitKind.LightScout, UnitKind.Clarion, UnitKind.Clarion],
 };
 
