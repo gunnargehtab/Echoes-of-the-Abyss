@@ -625,6 +625,11 @@ export class Match {
         // Kelp has no cycle to wait in — it begins the match gripping
         // (docs/hazards.md §4). Everything else telegraphs first.
         phase: isPermanent(site.kind) ? HazardPhase.Active : HazardPhase.Dormant,
+        // Every bed starts with its canopy whole (docs/systems-flora.md §1).
+        // Full crop is the no-op case throughout — no PF modifier is listed
+        // and the grip is the one §4 always specified — so a map nobody
+        // harvests behaves exactly as it did before beds had a crop.
+        crop: 1,
         // Scaled by *this kind's* dormancy, not the eruption's. `elapsedS` is
         // wait already spent, so a site with a large stagger fires sooner —
         // and a span borrowed from another kind bunches every hazard of the
