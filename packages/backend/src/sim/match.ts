@@ -2077,8 +2077,9 @@ export class Match {
         // A creature the map killed pays nobody: biomass is *rendered* fauna,
         // and an eruption renders nothing (see SimWorld.environmentalDeaths).
         // The Drift still loses the creature, so recordKill stays.
-        if (!this.world.environmentalDeaths.has(eid)) this.payBiomass(eid);
-        this.world.drift.recordKill(Position.x[eid]!, Position.y[eid]!);
+        const rendered = !this.world.environmentalDeaths.has(eid);
+        if (rendered) this.payBiomass(eid);
+        this.world.drift.recordKill(Position.x[eid]!, Position.y[eid]!, rendered);
         // Living terrain stops living: the cluster's −0.10 comes off the PF
         // grid on the tick it dies, and never comes back (docs/bestiary.md
         // §4 — burning a lane through a jelly field is permanent).

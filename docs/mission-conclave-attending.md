@@ -668,8 +668,8 @@ else does, twice, and the stalls name it by what it is not.
 
 **Drift cells, priced and unpaid.** The health grid is 4 × 4 over 5,000 × 4,000, so 1,250 × 1,000 m
 a cell. Seated silent, the terrace's two cells sum **31 and 40** against a threshold of 60 and wear
-nothing at all. Sixteen hulls sitting idle-loud sum **124 and 156**, which is 1.28 and 1.92 points
-a second, and both cells are dead in sixty-nine seconds and forty-six. Nothing on this map pays
+nothing at all. Sixteen hulls sitting idle-loud sum **124 and 156**, which is 0.016 and 0.024 points
+a second, so both cells are Strained at 13:33 and 09:02 and neither dies inside the tide. Nothing on this map pays
 Biomass and no other mission uses this chart, so what a loud terrace kills is owed to nobody — but
 the arithmetic is stated rather than hidden, because it is the same ledger
 [Intake](mission-intake.md) §13 was priced by and a reader is entitled to check it.

@@ -463,9 +463,21 @@ describe('the hold, and the ledger under it — §6', () => {
     assert.equal(DRIFT.HEALTH_SIG_THRESHOLD, 60);
     const drain = (sum: number) =>
       (sum - DRIFT.HEALTH_SIG_THRESHOLD) * DRIFT.HEALTH_SIG_DRAIN_PER_S;
-    assert.equal(Number(drain(quiet).toFixed(2)), 1.12, '§6: 1.12 a second');
-    assert.equal(Math.round(DRIFT.HEALTH_START / drain(quiet)), 79, '§6: dead in seventy-nine');
-    assert.equal(Math.round(DRIFT.HEALTH_START / drain(idle)), 15, '§6: idle, in fifteen');
+    // Re-derived when #520 calibrated the drain against the sums a region
+    // actually carries. The mission's claim is unchanged and is now worth more:
+    // silent, the seat's cell is Strained a quarter of an hour in and never
+    // dies; idle, it is Strained at 02:54 and dead at 19:37 — so the silence
+    // order buys the ground rather than a delay.
+    const strainedS = (sum: number): number =>
+      Math.round((DRIFT.HEALTH_START - DRIFT.HEALTH_STRAINED) / drain(sum));
+    assert.equal(Number(drain(quiet).toFixed(3)), 0.014, '§6: 0.014 a second');
+    assert.equal(strainedS(quiet), 929, '§6: Strained at 15:29');
+    assert.ok(
+      DRIFT.HEALTH_START / drain(quiet) > MISSION.LENGTH_MAX_S,
+      '§6: and not dead inside the longest tide the campaign allows'
+    );
+    assert.equal(strainedS(idle), 174, '§6: idle, Strained at 02:54');
+    assert.equal(Math.round(DRIFT.HEALTH_START / drain(idle)), 1177, '§6: idle, dead at 19:37');
     // §6's spread, as the ground states it without being told to.
     assert.equal(2 * CHORISTER.sigIdle, 32, '§6: two Choristers on a face wear nothing');
     assert.ok(2 * CHORISTER.sigIdle < DRIFT.HEALTH_SIG_THRESHOLD);
@@ -474,8 +486,12 @@ describe('the hold, and the ledger under it — §6', () => {
       cellOf(FACES[4]!.x, FACES[4]!.y),
       '§6: faces four and five share a cell'
     );
-    assert.equal(Number(drain(4 * CHORISTER.sigIdle).toFixed(2)), 0.08, '§6: and wear it at 0.08');
-    assert.equal(Number(drain(6 * CHORISTER.sigIdle).toFixed(2)), 0.72, '§6: six on one face');
+    assert.equal(
+      Number(drain(4 * CHORISTER.sigIdle).toFixed(3)),
+      0.001,
+      '§6: and wear it at 0.001'
+    );
+    assert.equal(Number(drain(6 * CHORISTER.sigIdle).toFixed(3)), 0.009, '§6: six on one face');
     // And the reason none of it costs anything: nothing here is paid in Biomass.
     assert.ok(
       M.objectives.every((objective) => objective.predicate.kind !== 'deliver'),

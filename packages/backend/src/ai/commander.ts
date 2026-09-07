@@ -1332,6 +1332,8 @@ export class AiCommander implements AiPlayer {
       out.push({ kind: 'harvest', unitIds: [harvester.id], nodeId: node.id });
     }
 
+    this.workOwnCrystal(snapshot, harvesters, out);
+
     // Loudness is a dial on the economy, and this is the only place the
     // commander turns it. Exposure is a fact about *itself*, so reading it
     // reveals nothing — but acting on it is no longer free, which is why the
@@ -1351,6 +1353,90 @@ export class AiCommander implements AiPlayer {
       .filter((h) => h.throttle !== want && !this.crystalRun.has(h.id))
       .map((h) => h.id);
     if (wrong.length > 0) out.push({ kind: 'throttle', unitIds: wrong, throttle: want });
+  }
+
+  /**
+   * Put one hauler on a crystal field this navy's own haulers are rated for
+   * (#520).
+   *
+   * The gap this closes is a navy that is *supposed* to treat the Abyssal band
+   * as ground. `commandCrystal` declines a field that costs no crush — rightly,
+   * because a raid is not a shift and pinning haulers there is an economic
+   * decision that branch has no business making — and hands it to `pickNode`,
+   * which then never picks it. Measured on the four-faction baseline: a
+   * Directorate hauler spent **zero seconds** on the crystal field over a whole
+   * match and never went below 600 m, while the two navies that have to *raid*
+   * the same field banked 78 and 15 crystal a match from it.
+   *
+   * The arithmetic is `pickNode`'s and there is nothing wrong with it in
+   * isolation. It scores a node at `distance + 1,000 m per hauler already
+   * there`, and on Ventfront Divide a Directorate spawn sits 743 m from its
+   * first nodule field and 3,960 m from the crystal — so the crystal only wins
+   * once four haulers are stacked on the near field and one on the next, which
+   * is seven haulers against a doctrine that fields five. The field is not
+   * refused; it is simply always third.
+   *
+   * What a distance score cannot know is that the accounts are **not
+   * exchangeable** (docs/economy.md §6): a navy short one rendering is refused
+   * exactly as one short of crystal is, however many nodules it has. So the
+   * rule is not a better score, it is a *shift* — one hauler, on the one field
+   * whose account has a price the navy cannot otherwise pay.
+   *
+   * Every gate here is borrowed from the raid branch rather than invented,
+   * because they answer the same questions:
+   *
+   * - **Rated, and free.** Only water this navy's own hulls sit in without
+   *   paying crush — its baseline's, or a Sower's grant, which is what that
+   *   hull is for. Anything that costs hull is a raid and `commandCrystal`'s.
+   * - **Something to buy with it.** `crystalWanted`, the same test, so the
+   *   shift ends when the bank covers the yard rather than running forever.
+   * - **The economy first.** Not before the doctrine's harvester target is
+   *   met, which is the raid branch's own guard against buying a tech tier
+   *   with the income that was going to fill it.
+   * - **One.** The note in `commandCrystal` records what two cost when this
+   *   was last tried from that side: a fifth of the Directorate's nodule
+   *   income, held on a field that yields at 45%. One of five is the smallest
+   *   shift that collects the account at all.
+   */
+  private workOwnCrystal(
+    snapshot: EchoSnapshot,
+    harvesters: readonly OwnUnit[],
+    out: AiCommand[]
+  ): void {
+    const field = this.crystalField;
+    if (field === null) return;
+
+    const rating = this.ownRating(UnitKind.Harvester) + (this.grantedFields.get(field.id) ?? 0);
+    if (requiredPressureRating(field.depth) > rating) return;
+    // A trip that costs hull is a raid, and raids are not this branch's.
+    if (roundTripCrush(field.depth, rating) > 0) return;
+
+    const working = [...this.nodeByHarvester.entries()]
+      .filter(([, nodeId]) => nodeId === field.id)
+      .map(([id]) => id);
+
+    // Bought what the crystal was for. The shift ends the way the raid does —
+    // everybody comes home — or a navy would work a 45% field for the rest of
+    // a match it has nothing left to spend the account on.
+    if (snapshot.crystal >= this.crystalWanted(snapshot)) {
+      for (const harvester of harvesters) {
+        if (working.includes(harvester.id)) this.release(harvester, out);
+      }
+      return;
+    }
+
+    if (working.length > 0) return;
+    if (harvesters.length < this.doctrine.harvesterTarget) return;
+
+    // An empty hold only, and the same reason the raid gives: a hauler sent
+    // mid-haul carries its nodules to the field, discovers a hold cannot mix
+    // two resources, and turns straight round. By id after that, so the same
+    // hull is chosen on the next observation if this one does not take.
+    const pick = harvesters.filter((h) => (h.cargo ?? 0) <= 0).sort((a, b) => a.id - b.id)[0];
+    if (pick === undefined) return;
+
+    this.nodeByHarvester.set(pick.id, field.id);
+    out.push({ kind: 'harvest', unitIds: [pick.id], nodeId: field.id });
   }
 
   /**
