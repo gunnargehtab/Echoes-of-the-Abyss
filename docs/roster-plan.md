@@ -611,6 +611,56 @@ baseline — once, in thirty matches, by the Consortium — so #531's "zero, by 
 scenario" is now zero to three decimal places rather than absolutely. It does not change that
 issue's reading.
 
+### #531, and the two hulls the Cruiser was standing in for
+
+Wave 7, and the only wave that is two hulls rather than four: the mid-tier gap is the
+Consortium's and the Order's, because the Directorate's step up is the Precentor and the
+Commune's is nothing at all.
+
+**What the issue asked and what was measured first.** The Cruiser was named four times across
+two compositions and built 0.0 by everybody in every scenario. #536 found why, and it was not
+the Cruiser: the composition cycle had no way to save, so *every* entry above a navy's working
+capital was decorative. Instrumented over three matches, the Knights' Cruiser was the cycle's
+first choice **986 times** against a bank averaging 143–199. With the cycle taught to save, the
+four dead entries stopped being free — the Order lost thirty points of win rate holding a purse
+for a hull it could never reach — which is this issue's own finding measured as a win rate
+rather than as a zero in a table.
+
+**The rule the wave is built on.** SIG decides detection, resolution, aggro and lock speed, and
+no gun in the roster was aimed by it: a torpedo seeker and a committed creature were the only
+two things in the game that took the loudest rather than the nearest. The **Derrick** puts that
+on a hull a player builds; the **Responsory** does the other half, setting damage by how loud
+the target is. Both replace a Cruiser entry in place, so neither cycle re-phases.
+
+**The gate, and it is met.** Thirty matches on the stored seeds, against #536's head:
+
+| | stored (pre-#536) | #536 | wave 7 |
+| --- | --- | --- | --- |
+| Derrick built (Consortium) | — | — | **0.2** |
+| Responsory built (Knights) | — | — | **1.8** |
+| Cruiser built | 0.0 | 0.3 / 0.1 | **not named by anyone** |
+| Win rates (Con/Com/Dir/Kni) | 5 / 0 / 59 / 36 | 0 / 0 / 67 / 33 | **5 / 5 / 67 / 24** |
+| Spread, points | 59 | 67 | **62** |
+| Decided, of 30 | 22 | 18 | **21** |
+
+Both hulls are built, the spread is **narrower** than the composition bid left it rather than
+wider, three more matches reach a decision, and both navies that had been sitting on zero are
+off it. All five guard-rails held — and since #536 the Biomass one can actually breach when it
+says so.
+
+**What it moved, recorded rather than smoothed over.** The Knights go 36% to 24%, which is
+twelve points and therefore outside the ten a win rate over twenty-odd decided matches carries.
+The mechanism is visible in the hull table rather than mysterious: the Order builds 1.8
+Responsories and 0.7 Clarions where it built 3.8 Clarions, so a 230-nodule hull is displacing
+more than one 180-nodule hull's worth of purse and the navy fields fewer hulls in total. That
+is on-doctrine for *very few, elite, precise* and it is still a cost. It is left as measured
+rather than tuned away, because tuning a twelve-point move on twenty-one decided matches is
+fitting the noise — the figure to watch is whether it persists over the next wave's re-run.
+
+The Consortium's Derrick at 0.2 a match is the thinner of the two results and is the same
+shape: at 330 nodules it displaces Caissons (3.1 to 1.4) and the navy's losses fall with them.
+Better than the Cruiser's flat zero, and not yet a hull the Klaxon leans on.
+
 ## 5. What each wave touches
 
 The touch list for one hull, from the code as it stands. A wave is four of these plus its
