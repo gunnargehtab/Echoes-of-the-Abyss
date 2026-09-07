@@ -65,6 +65,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | **[hazards.md](hazards.md)** | Eight hazards with faction interactions |
 | **[maps.md](maps.md)** | Six map archetypes |
 | **[economy.md](economy.md)** | Four resources, the noise curve, and four faction economies |
+| **[systems-flora.md](systems-flora.md)** | The flora economy: beds, standing crop that is also the map's cover, the bio-reactor, cutting, sowing and bloom-share |
 | **[systems-combat.md](systems-combat.md)** | The weapon triangle: guns, torpedoes, mines, firing solutions, TTK bands |
 | **[systems-progression.md](systems-progression.md)** | The decision on upgrades, research and veterancy: five crystal-priced refits on the Slipway's line, rank earned per hull and paid in exposure, no research tree |
 | **[units.md](units.md)** | Prototype roster, SIG/PR stats, playtest plan |

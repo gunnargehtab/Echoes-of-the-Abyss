@@ -211,6 +211,8 @@ The structural consequence is the most elegant thing in the faction design: **fa
 
 Their counter-pressure is that harvesting is itself loud (SIG 45–60 sustained) and that over-harvesting kills the region that pays them — see below.
 
+**The herd is not the base of the account, though: the crop is.** Biomass is grown on kelp beds and harvested from them ([systems-flora.md](systems-flora.md)), and a rendering is the *windfall* taken on top — the animal that was there while you were loud. That is what makes the sentence above a doctrine rather than an accident of who stood nearest: the Directorate is paid by animals that are themselves fed by beds other navies are cutting, so a fleet stripping a plateau starves them at one remove, in fewer contacts long before it shows in an account. The rendering is credited to the hull that made the kill, and a death the map caused — an eruption, a hazard — renders nothing.
+
 ---
 
 ## 6. Drift Health — The Map Can Be Killed
@@ -228,6 +230,8 @@ Every map region carries a **Drift Health** value, 0–100, starting between 70 
 | 49–25 | Failing | No new spawns, Lampfry gone (**scatter tells stop working**), Tetherjelly fields thinning: local PF rises toward baseline |
 | 24–1 | Collapsing | Scavengers only, Biomass yield −75%, ambient audio bed audibly emptied |
 | 0 | Dead | No fauna, no masking bonus, no Biomass, permanent for the match |
+
+The same table governs the kelp. Standing crop regrows on these bands and stops regrowing where spawns stop, so a region worked past Strained is one that neither breeds animals nor grows the crop that feeds them ([systems-flora.md](systems-flora.md) §3). One instrument, read the same way for both halves of the Drift.
 
 A dead region is quieter, more legible, and worth less to everyone — which means **the Commune loses their concealment, the Directorate loses their income, and the Consortium barely notices.** That asymmetry is deliberate: environmental collapse in this game is not a moral event with a lecture attached, it is a strategic act that helps exactly one faction and is available to all four.
 
