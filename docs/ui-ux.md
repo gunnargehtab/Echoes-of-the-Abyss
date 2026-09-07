@@ -92,6 +92,80 @@ Rules that apply to all tiers:
 
 ---
 
+## 4.5 The Acoustic Veil
+
+The world view's ground goes **cold** where nothing of yours can hear. Not blurred, not
+blacked out — *drained*: a kelp shelf and a vent field both converge on the blue-grey the
+water already is, while every ridge, terrace and biome boundary the chart draws survives
+intact. Colour goes; shape stays. Water nobody is listening to, drawn as water nobody is
+listening to.
+
+![The same water at survey zoom with the veil on, the fleet's own basin in full colour and
+the far shelves gone cold](screenshots/issue-472/veil-on.png)
+
+![The same frame with the veil off, every shelf and vent field at full
+colour](screenshots/issue-472/veil-off.png)
+
+**Presentation only, and it buys nothing.** Detection is already resolved per player
+server-side ([tech-stack.md](tech-stack.md)), so the client holds no privileged data for a
+fog to filter — there is none. This is a drawing rule over data the room has always sent,
+and it must never be argued for as if the anti-maphack rule depended on it. That rule is
+upstream and unaffected. What the veil buys is the game's own thesis, stated by the
+picture: the chart is knowledge, and the water on it is not.
+
+**It is drawn from your own ears, and nothing else.** For every own hull and own structure
+— they are anchored hydrophone arrays — the propagation model answers one question at any
+point on the chart: *how loud would something have to be for you to register it here?*
+That is the relationship in §4 and [systems-echo.md](systems-echo.md) §2 solved for
+loudness instead of for distance, over the player's own HYD ratings and the public biome
+map. The best ear wins, and the answer shades the ground between two numbers the game
+already fixes:
+
+| Anchor | Value | Why that number |
+| --- | --- | --- |
+| **Clear** | SIG 8 | The loudest a hull in Silent Running can be (§7). Water you hold completely is water nothing can *try* to sneak through |
+| **Floor** | SIG 100 | The top of the SIG scale. Water where only a 100 would register is water you have no ear in at all |
+
+Neither is invented for the veil, and that is deliberate: a flat listening radius would
+need a reference SIG nobody specified, and would be **a lie the player could learn**. It
+would also draw the same circle in a Thermal Vein that swallows sound at PF 0.45 and in an
+Abyssal Trench that carries it at 1.6. A field priced against the actual propagation factor
+is wrong in neither, and it draws the design's central lever rather than hiding it: the
+biome shapes your ear, visibly, and moving a picket into a vein costs you the water you
+thought you had.
+
+### What fades, and what never does
+
+The veil touches **ground only** — the seabed, its props and the vent embers standing on
+it. Everything the player earned draws at full strength over it:
+
+| Never dimmed | Because |
+| --- | --- |
+| Contacts, at every tier | The server resolved them. Dimming a mark would price the same information twice, and §4 already forbids the renderer editing what it was sent |
+| Echo Marks | Residue is the past, and the past you heard is still yours (§5) |
+| Own force, its rings, bars, routes and depth cues | Gate 5's Asymmetric Fidelity Law: the own force is never in question |
+| Hazard warnings and their countdowns | A hazard announces itself ([hazards.md](hazards.md)); dread requires seeing it coming |
+| The chart register — tunnel routes, map rim, skirt | Instrument lines drawn *on* the water rather than things standing in it. An instrument does not go quiet because you stopped listening |
+| Every HUD element, the scope, the log | §3's rule: own loudness is always on screen |
+
+It is a fog of the **present tense**, and this is the load-bearing distinction. A hull that
+leaves stops hearing, and the water it held goes cold behind it. Nothing is remembered,
+nothing is "explored", and the veil never interpolates between two states — §4 and §12
+forbid smoothing a *contact* between snapshots, and a fog that crept would break the same
+rule by another route. It moves on the 5 Hz Echo tick with everything else.
+
+Two consequences worth writing down. A force of **nobody** is not a dark map: the veil
+comes off with the fleet rather than closing over the whole chart, because a player who has
+lost their last hull has been told so already, and a black map at that moment reads as a
+broken renderer rather than as dread. And the veil is **wrong in two known places** —
+a Cantor lending HYD makes it under-draw its own coverage, a spore veil blinding a hull
+makes it over-draw — because both are server-side auras the client cannot see without
+enemy structure state crossing the wire, which is the one thing this feature may not do.
+That is survivable precisely because of the table above: a wrong field costs atmosphere and
+never information.
+
+---
+
 ## 5. The Minimap Is a Sonar Scope
 
 Not a map with markers on it. A scope.
@@ -101,7 +175,7 @@ Not a map with markers on it. A scope.
 - **Terrain** — biome wash only, at the desaturated fills in `palette.ts`. No structures, no roads, no detail that competes with returns.
 - **Returns** — same tier fidelity as the world view, scaled down. A Tier-1 haze on the scope is a large soft smear, and a player must not be able to click one to select it.
 - **Echo Marks** — a separate dimmer layer, drawn beneath returns, in a colder hue. Past and present must never share an ink.
-- **No fog.** There is no explored/unexplored state anywhere in this game. Terrain is always fully drawn; what is hidden is *occupancy*, and occupancy is drawn only as returns. Any "unexplored black" would be the wrong game.
+- **No fog.** There is no explored/unexplored state anywhere in this game. Terrain is always fully drawn; what is hidden is *occupancy*, and occupancy is drawn only as returns. Any "unexplored black" would be the wrong game. §4.5's acoustic veil is not a counter-example and is not drawn here: it is present tense rather than memory, it drains the ground rather than withholding it, and it stays in the world view — this instrument's promise is own force at full clarity, and a mark's own size already says how much to trust it.
 
 Implemented: terrain wash, tier-fidelity returns, the sweep, the two range rings, and the
 camera viewport. Returns are sized *inversely* to tier — a Tier-1 return is the largest and
@@ -485,6 +559,7 @@ Audio carries primary information, so accessibility here is a correctness requir
 - **UI scale** 75%–200%, independent of world zoom, with the SIG meter and ping preview scaling first.
 - **Full rebinding**, including a one-handed layout, and no timing-critical chords.
 - **Motion and flash limits** — a reduced-motion mode replaces the sonar sweep, screen-edge exposure flash and meter pulse with static equivalents that carry the same information.
+- **The acoustic veil is a slider, 0–100%.** §4.5 drains contrast over the ground, and a contrast-reduced overlay owes a control the same way the colour-vision palettes do. It is the one setting here that can reach *off* without argument: the veil hides no information, so a player at 0% and a player at 100% are looking at the same facts.
 
 ### Audible cue to visual equivalent
 
@@ -499,7 +574,7 @@ The parity table. Every row is a claim that the mix tells the player nothing the
 | **Tier-4 lock tone** — one short tone on acquisition | **Acquisition brackets** that close onto the contact over 700 ms, once per acquisition, plus the log row for the tier change |
 | A voice fading as its contact goes stale | Ghost marker fading on the same clock, `PERSISTENCE.GHOST_MARKER_DECAY_S` |
 | A voice snapping back to full level | The marker returning to full alpha on the same tick |
-| Biome colouring of a return | Biome tint under the contact, and the propagation overlay on the player's own units |
+| Biome colouring of a return | Biome tint under the contact, the propagation overlay on the player's own units, and §4.5's veil — water that masks is water the chart draws you holding less of |
 | Self-noise bed rising with your SIG | The SIG meter, plus a band label naming what the plant is doing (`DRIVE HUM`, `FULL PLANT`) |
 | The world bus giving way to your own noise | `– masking` beside that label: you are drowning yourself out, and it says so |
 | Silent Running's inversion — the world opening up | `SILENT RUNNING – open`, and the dimmed hulls already drawn for the mode |
@@ -611,6 +686,7 @@ What the current client implements against this spec, so nobody re-implements wh
 | The match clock | Implemented (#208) — the log's T+ axis live in the top strip, from the server tick both share |
 | Own-force log rows | Implemented (§10, #206, #209) — `you were pinged`, `under fire`, `idle — mined out` |
 | The log's `MARK` row | Implemented (§10, #214) — residue derived by diffing the mark set by id, once per mark per match |
+| The acoustic veil | Implemented (§4.5, #472) — a min-audible-SIG field over the player's own hulls and structures, shading the seabed, its props and its embers as a vertex colour on the mesh that was already there, so the effect spends no draw call and no triangle. World view only; the scope keeps §5's promise. A slider in Settings (§14) |
 | The scatter envelope on a contact reported from crystal (§4) | Not implemented — the rule it draws shipped server-side with #438 (two ears at 30° tell the truth); the wedge and its collapse are the client's half and are owed |
 | Priced buttons, and the reason a greyed one gives | Implemented (#351) — a button carries its whole price from the sum the server charges (`SUB 260+80c`), greys when any account falls short, and a press on it says which — *Abyssal Submersible: 80 crystal short* — on the hint bar, the way a locked key does (§7). Biomass is the third column ([economy.md](economy.md) §8); nothing is priced in it yet |
 
@@ -1010,6 +1086,7 @@ the screen, not a technology.
 | Colour vision | standard · deuteranopia · protanopia · tritanopia | The four palettes in [style-neon-noir.md](style-neon-noir.md); tier *shape* never moves, only its ink (§11) |
 | UI scale | 75–200% | A transform on the HUD layer and the DOM panels, never on the world (§11) |
 | Reduced motion | toggle | Static equivalents for the scope sweep, the exposure flash and the crush badge — same information, no movement (§11) |
+| Acoustic veil | 0–100% | How cold the ground goes where nothing of yours is listening (§4.5). Reaches off, because the veil dims no mark and withholds nothing — a player who cannot read a drained chart gives up no information by turning it down |
 | Edge scrolling | toggle | The camera pans while the pointer rests on an edge of the water (§9). On by default; off for the trackpad player whose pointer lands there by accident. The arrows and the middle button pan either way |
 
 User volume lives on trim nodes *beside* the ducking chain, never on the ducked gains —

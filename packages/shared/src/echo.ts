@@ -109,6 +109,29 @@ export function maxAudibleRangeM(sig: number, pf: number, hyd: number): number {
 }
 
 /**
+ * The other inverse of the propagation model: the quietest SIG a listener of
+ * `hyd` would register at `distanceM` through water of factor `pf`.
+ *
+ * `maxAudibleRangeM` solves the same relationship for distance because the
+ * server knows the emitter and is asking how far it carries. A client asking
+ * where its own ears reach has the opposite unknown — it holds its listeners
+ * and the public map and knows nothing at all about what is out there — so it
+ * solves for loudness instead and gets a scalar field over the water rather
+ * than a radius. That field is what the conn view's acoustic veil is drawn
+ * from (docs/ui-ux.md §4.5); nothing hidden goes into it, which is why a
+ * presentation-only fog of war is available at all.
+ *
+ * Returns Infinity for water no listener could hear anything in — pf 0, or a
+ * hyd of 0 — because the honest answer is "louder than sound goes", not a
+ * large number a caller might mistake for a SIG.
+ */
+export function minAudibleSigAt(distanceM: number, pf: number, hyd: number): number {
+  if (pf <= 0 || hyd <= 0) return Infinity;
+  const d = Math.max(distanceM, REFERENCE_DISTANCE_M);
+  return (detectionThreshold(hyd) * Math.pow(d / REFERENCE_DISTANCE_M, ATTENUATION_EXPONENT)) / pf;
+}
+
+/**
  * Deterministic per-entity jitter in [-1, 1].
  *
  * Tier 2 reports a blurred position, but the blur must be *stable* — a blob

@@ -181,6 +181,27 @@ export function SettingsScreen({ onBack, onControls }: SettingsScreenProps) {
             <span className="menu-slider-value">{percent(settings.uiScale)}</span>
           </label>
 
+          <label
+            className="menu-slider-row"
+            title="The ground only — no mark, no contact and no reading is ever dimmed"
+          >
+            <span className="menu-slider-label">Acoustic veil</span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={5}
+              value={Math.round(settings.acousticVeil * 100)}
+              onChange={(event) => patch({ acousticVeil: Number(event.target.value) / 100 })}
+            />
+            <span className="menu-slider-value">{percent(settings.acousticVeil)}</span>
+          </label>
+          <p className="menu-choice-note">
+            The water goes cold where none of your hulls can hear. It hides nothing — every contact
+            you earned draws through it at full strength — so turning it down costs you no
+            information.
+          </p>
+
           <label className="menu-toggle-row">
             <input
               type="checkbox"

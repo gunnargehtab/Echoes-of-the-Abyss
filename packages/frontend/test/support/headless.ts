@@ -683,6 +683,15 @@ export class HeadlessWebGLRenderer {
   readonly shadowMap = { enabled: false, type: 0 };
   outputColorSpace = '';
   disposed = false;
+  /**
+   * The scene this renderer was last handed.
+   *
+   * The ledger above counts the frame; this is for the handful of assertions
+   * that need to look at *what* was counted — the acoustic veil writes into
+   * the ground's vertex colours and must be shown not to have written
+   * anywhere else (docs/ui-ux.md §4.5).
+   */
+  lastScene: Scene | null = null;
 
   setPixelRatio(): void {}
   setClearColor(): void {}
@@ -702,6 +711,7 @@ export class HeadlessWebGLRenderer {
   }
 
   render(scene: Scene): void {
+    this.lastScene = scene;
     let calls = 0;
     let triangles = 0;
     scene.traverseVisible((object) => {

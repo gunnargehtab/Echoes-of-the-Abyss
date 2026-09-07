@@ -31,6 +31,21 @@ async function slide(view: Rendered, node: { props: Record<string, unknown> }, v
   });
 }
 
+/**
+ * The one range input inside the `<label>` carrying this text. Named rather
+ * than picked out by its bounds, because two sliders can honestly share a
+ * range and only the label says which control a §-number is owed.
+ */
+function sliderLabelled(view: Rendered, label: string) {
+  const rows = view.root.findAll(
+    (node) =>
+      node.type === 'label' &&
+      node.findAll((child) => child.type === 'span' && child.props.children === label).length === 1
+  );
+  assert.equal(rows.length, 1, `expected exactly one control labelled "${label}"`);
+  return rows[0]!.findAll((node) => node.type === 'input' && node.props.type === 'range')[0]!;
+}
+
 /** Every `<input type="range">` on the screen, with its label. */
 function sliders(view: Rendered) {
   return view.root
@@ -59,6 +74,27 @@ describe('the settings screen: §11 commitments', () => {
       assert.equal(loadSettings().uiScale, UI_SCALE_MAX, 'the top of the range reaches the store');
       await slide(view, scale.node, 75);
       assert.equal(loadSettings().uiScale, UI_SCALE_MIN, 'and the bottom');
+    } finally {
+      await view.unmount();
+    }
+  });
+
+  it('lets the acoustic veil all the way down, because down costs nothing', async () => {
+    // §11 owes a control to any contrast-reduced overlay, and §4.5 is one.
+    // The range has to reach 0: the veil hides no information — every
+    // contact the player earned draws through it at full strength — so a
+    // player who cannot read a drained chart is entitled to switch it off
+    // without giving anything up for it.
+    const view = await settings();
+    try {
+      const veil = sliderLabelled(view, 'Acoustic veil');
+      assert.equal(Number(veil.props.min), 0, '§4.5: the veil reaches off');
+      assert.equal(Number(veil.props.max), 100);
+
+      await slide(view, veil, 0);
+      assert.equal(loadSettings().acousticVeil, 0, 'off is reachable');
+      await slide(view, veil, 100);
+      assert.equal(loadSettings().acousticVeil, 1, 'and so is the full wash');
     } finally {
       await view.unmount();
     }

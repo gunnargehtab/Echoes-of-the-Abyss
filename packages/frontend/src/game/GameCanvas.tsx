@@ -564,6 +564,7 @@ export function GameCanvas({
         setPalette(settings.palette);
         activeRenderer.setReducedMotion(settings.reducedMotion);
         perspective.setReducedMotion(settings.reducedMotion);
+        perspective.setVeilIntensity(settings.acousticVeil);
         activeRenderer.setEdgeScroll(settings.edgeScroll);
         activeRenderer.setUiScale(settings.uiScale);
         setUiScale(settings.uiScale);

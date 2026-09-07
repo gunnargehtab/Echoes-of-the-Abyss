@@ -1764,6 +1764,37 @@ export const PROPAGATION_MODEL = {
   MAX_EXPECTED_HYD: 90,
 } as const;
 
+/**
+ * The acoustic veil — how far the conn view draws the water as *live*
+ * (docs/ui-ux.md §4.5).
+ *
+ * Both anchors are read off the game rather than picked, because a veil that
+ * needed a reference SIG invented for it would be a lie the player could
+ * learn. The client evaluates `minAudibleSigAt` over the map against its own
+ * listeners and shades between these two numbers:
+ *
+ * - at `CLEAR_SIG` the water is drawn whole, because a hull running silent
+ *   could not cross it without being heard;
+ * - at `DEAF_SIG` it is drawn at the veil's floor, because nothing in this
+ *   game is loud enough to reach you there.
+ *
+ * Presentation only. Nothing here changes what the server resolves or what
+ * crosses the wire, and no mark the player earned is dimmed by it.
+ */
+export const ACOUSTIC_VEIL = {
+  /**
+   * SPEC-derived — `SILENT_RUNNING.SIG_MAX`. The loudest a hull that is
+   * *trying* not to be heard can be, so it is the right definition of water
+   * you genuinely hold: nothing can sneak through it.
+   */
+  CLEAR_SIG: SILENT_RUNNING.SIG_MAX,
+  /**
+   * SPEC — the top of the SIG scale (docs/systems-echo.md §2). Water where
+   * only a 100 would register is water you do not have an ear in at all.
+   */
+  DEAF_SIG: 100,
+} as const;
+
 /** SPEC — docs/tech-stack.md "Echo Layer Implementation Notes". */
 export const SIM = {
   /** Fixed simulation step. */

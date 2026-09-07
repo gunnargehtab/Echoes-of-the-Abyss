@@ -58,6 +58,17 @@ export interface Settings {
    */
   reducedMotion: boolean;
   /**
+   * The acoustic veil's strength in the conn view, 0-1 (docs/ui-ux.md §4.5
+   * and §11).
+   *
+   * A contrast-reduced overlay, so §11 owes it a control. It is the one
+   * accessibility setting here that cannot cost or gain a player anything,
+   * because the veil is presentation only: it dims the ground and never a
+   * mark, so a player at 0 sees exactly the same information as a player
+   * at 1.
+   */
+  acousticVeil: number;
+  /**
    * Screen-edge scrolling (§9): the camera pans while the pointer rests on
    * an edge of the water. On by default, as every RTS has it; a toggle
    * because a trackpad or a small window makes the edge a place the pointer
@@ -93,6 +104,7 @@ export const DEFAULT_SETTINGS: Settings = {
   palette: 'standard',
   uiScale: 1,
   reducedMotion: false,
+  acousticVeil: 1,
   edgeScroll: true,
 };
 
@@ -152,6 +164,7 @@ function sanitise(raw: unknown): Settings {
         : 1,
     reducedMotion:
       typeof record.reducedMotion === 'boolean' ? record.reducedMotion : prefersReducedMotion(),
+    acousticVeil: clamp01(record.acousticVeil, DEFAULT_SETTINGS.acousticVeil),
     edgeScroll: typeof record.edgeScroll === 'boolean' ? record.edgeScroll : true,
   };
 }

@@ -234,6 +234,16 @@ number, not an impression, and a test sums the registry's worst case over the sh
 maps so the reservation cannot be exceeded by accretion. Terrain never rebuilds
 per frame: props rebuild only when the ground does.
 
+The acoustic veil ([ui-ux.md](ui-ux.md) §4.5) is on this budget by costing nothing on it.
+The ground is already one unlit mesh carrying a baked map, so the veil rides it as a
+**vertex colour** and the props as an instance colour — no pass, no overlay geometry, no
+second draw of the seabed. It is written on the 5 Hz Echo tick rather than per frame,
+because where the fleet's ears are is a 5 Hz fact; and with the setting at 0 the writing
+stops after the one pass that puts the colour back. A veil that grew a render target, or
+that re-shaded the ground per frame, would be the regression — and a veil used as a
+*reason to draw less* would be a worse one: the ground under it still exists, still
+raycasts, and still gets its props.
+
 Own ordnance is instanced the same way (`ordnanceLayer.ts`, [art-direction.md](art-direction.md)
 "Own ordnance is geometry too"): one body and one lamp mesh per kind and one line object
 for every torpedo's trail — nine draw calls at most for any number of shots, none for a
@@ -316,6 +326,15 @@ state from glow, threat from motion. If a detail survives only at full zoom, it 
 garnish, not game information — fine to keep in the bake, never a reason to raise texture
 density. The glance test for any new visual: can a player who has read nothing tell *whose*
 it is, *how loud* it is, and *whether it is theirs* in under a second?
+
+The acoustic veil is held to this gate rather than excused from it. It is a **drain, not a
+blur and not a blackout**: at its floor the chart still carries its ridges, its biome
+boundaries and its route lines, and a player can still plan a move into water they cannot
+hear — which is the whole point of a chart both navies own. A veil that hid the seabed the
+player has already learned would read as a broken renderer rather than as dread
+(`CLAUDE.md`), and it would be re-fighting [ui-ux.md](ui-ux.md) §5's settled "no
+explored/unexplored state" by another route. The review question is one question: **can
+you still route through the cold corner?** If not, the floor is too deep.
 
 "At every zoom" is load-bearing, and true metre scale cannot satisfy it on its own: a 60 m
 hull against kilometres of ground is a speck at survey distance. The conn view answers with
