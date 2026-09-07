@@ -29,6 +29,7 @@ Run everything from the repository root.
 | Type-check | `npm run type-check` |
 | Lint | `npm run lint` |
 | Formatting check / fix | `npm run format:check` / `npm run format` |
+| Hull scripts ↔ GLBs ↔ outlines agree | `npm run check:models` |
 
 Single workspace: `npm -w packages/backend run dev`, `npm -w packages/frontend run dev`,
 `npm -w packages/shared run test`.
@@ -75,7 +76,14 @@ tools/hull-models  Hull GLBs authored as three.js scenes: kit.mjs (buildability)
                    factions/*.mjs (one navy's shape language), hulls/*.mjs (one
                    hull). Not an npm workspace; run a hull directly and it writes
                    into docs/concept-art/models/, which then goes through
-                   hull-intake like any other export.
+                   hull-intake like any other export. check.mjs rebuilds every
+                   hull in a scratch directory and fails on any drift from the
+                   committed GLB; CI runs it in the build job.
+tools/hull-maps    The committed outputs of the approved models: build.mjs bakes
+                   the sprite maps (Chromium), outlines.mjs writes each modelled
+                   kind's plan outline into packages/frontend/src/game/
+                   hullOutlines.generated.ts (no browser). models.mjs is the one
+                   table both read.
 tools/echo-sim     Standalone CommonJS harness for deterministic Echo scenarios.
                    Not an npm workspace; run it directly:
                    node tools/echo-sim/sim.js [tools/echo-sim/scenarios/<name>.json]
@@ -285,7 +293,8 @@ from those two.
 `.github/workflows/ci.yml` runs on every push to `main` and on every PR, as four parallel
 jobs that share one cached install (`.github/actions/setup`):
 
-- `build` — build shared → type-check → ESLint → Prettier check → full build.
+- `build` — build shared → type-check → ESLint → Prettier check → hull-model round-trip
+  check → full build.
 - `test (shard 1)` and `test (shard 2)` — the shared and frontend suites, then the backend
   suite split file-by-file with node's `--test-shard`. The mission tests play whole missions
   out at 60 Hz and are most of the suite's time; the shard count in the matrix is the one

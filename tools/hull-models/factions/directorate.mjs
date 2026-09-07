@@ -42,7 +42,7 @@
  *   same thing writ large. The Directorate's listed SIGs are baseline figures,
  *   so its light is spread along the plates, not thrown forward.
  */
-import { THREE, clad, lamp, add, box, cyl, plan, bothSides } from '../kit.mjs';
+import { THREE, clad, lamp, add, box, cyl, plan, bothSides, segmentSeries as series } from '../kit.mjs';
 
 /** The Directorate's palette, as the Dredge's own materials carry it. */
 export const ink = {
@@ -71,37 +71,13 @@ function refuseMirror(what, spots) {
 }
 
 /**
- * Stations for a run of tergites between `stern` and `bow`: `count` plates,
- * each overlapping the one ahead by `overlap` of its half-length, with girth
- * from `profile(t)` (0 at the stern, 1 at the bow) and a section of
- * `[height, beam]` as fractions of each plate's half-length. The default
- * profile is the crustacean swell — fullest just aft of amidships, drawn in
- * to both ends — and the default section is the Dredge's: plates wider than
- * they are long and far wider than tall. Returns `[[x, sx, sy, sz], ...]`,
- * stern first, which is the order the Dredge and Precentor number them in.
+ * Stations for a run of tergites: the kit's `segmentSeries` with the
+ * Directorate's section — plates wider than they are long and far wider
+ * than tall, the Dredge's 17 × 10 × 26 — so a hull passes only its length
+ * and its count. Stern first, which is the order the Dredge and the
+ * Precentor number them in.
  */
-export function segmentSeries(opts) {
-  const {
-    stern,
-    bow,
-    count,
-    section = [0.6, 1.5],
-    overlap = 0.3,
-    profile = (t) => 0.72 + 0.28 * Math.sin(Math.PI * (0.15 + 0.75 * t)),
-  } = opts;
-  const raw = Array.from({ length: count }, (_, i) => profile(i / (count - 1)));
-  let span = raw[0] + raw[count - 1];
-  for (let i = 1; i < count; i++) span += (raw[i - 1] + raw[i]) * (1 - overlap);
-  const k = (bow - stern) / span;
-  const out = [];
-  let x = stern + raw[0] * k;
-  raw.forEach((g, i) => {
-    if (i > 0) x += (raw[i - 1] + g) * k * (1 - overlap);
-    const sx = g * k;
-    out.push([+x.toFixed(2), +sx.toFixed(2), +(sx * section[0]).toFixed(2), +(sx * section[1]).toFixed(2)]);
-  });
-  return out;
-}
+export const segmentSeries = (opts) => series({ section: [0.6, 1.5], ...opts });
 
 /**
  * The tergites: a squashed orb per `[x, sx, sy, sz]` station, alternating
