@@ -382,13 +382,14 @@ the siege want the same duty-cycle hold the rung hulls now use changes nothing e
 win rates, and for the worse — the Knights fall seven points and the Directorate gain seven,
 on a hull that never arrives either way. The hold is spent and never closed.
 
-The reason is that `commandProduction` is a queue of separate wants that each `return`, and
-the siege hull is fifth in it: scout, ordnance, siege, wall, seeder, transport, heavy, then
-the composition cycle. A navy holding its purse for a Broadside never starts holding for a
-Furnace, because `rungSave` names one kind at a time and the ordnance want claims it first.
-So the fix is not another hold — it is that a navy can only be saving for one thing, and the
-roster now asks it to want five. That change belongs with #518's rather than inside a wave,
-and the siege hulls stay held by tests until it lands.
+The reason, as the code then stood, was that `commandProduction` was a queue of separate
+wants that each `return`, and the siege hull was fourth in it: scout, ordnance, heavy, siege,
+wall, seeder, transport, then the composition cycle. A navy holding its purse for a Broadside
+never started holding for a Furnace, because the saving state named one kind at a time and
+the ordnance want claimed it first. So the fix was not another hold — it is that a navy can
+only be saving for one thing, and the roster now asks it to want five. That change belonged
+with #518's rather than inside a wave; it has since landed, and the section below is what it
+measured.
 
 Wave 3's gate stays unmet and its hulls stay held by tests. What has changed is that the
 gate is now *readable*: what it reads is a list of named causes rather than a column of
@@ -449,6 +450,38 @@ one's: the Directorate still buys **Corvettes**, 4.5 a match, while §3 calls th
 line hull "by doctrine and by price". The price half is true and the doctrine half is not —
 `doctrine.ts` names Corvettes on that navy's composition — and which of the two is wrong is
 exactly the decision the commons wave is for.
+
+### The queue was a cause, and it was not the binding one
+
+The fourth cause above is fixed (#518): `commandProduction`'s wants no longer each `return`
+the moment they decide to save. Every want that is wanted, has a yard and cannot be paid for
+now **bids**, and one arbitrator picks the nearest bid — the cheapest reachable one, because
+that is the hold that closes soonest, and a hold that closes stops bidding so the next want
+takes the slot. The old order was the order the waves were implemented in, and it starved its
+own tail: a Consortium held for a Broadside it never reached while the cheaper Furnace three
+lines below was never read at all. A test holds that directly — the same commander, the same
+bank, buys nothing before the change and a Furnace after it.
+
+**And it moves the baseline by almost nothing.** On the stored thirty seeds the win rates,
+losses and incomes are identical to the digit; the one row that moves is the Commune's, which
+now builds 0.1 Bowers where it built 0.1 Sowers — the arbitration choosing the nearer of two
+unconditional bids, exactly as described. Every siege hull is still 0.0, and so is every
+ordnance hull behind the rung.
+
+That is worth stating plainly rather than dressing up: **the queue was a real bug and it was
+not what is keeping these hulls out of the water.** What the numbers now say is holding them
+there:
+
+- **The two navies whose rung hulls are priced in nodules barely raise the rung.** The
+  Consortium commissions 0.2 Slipways a match and the Commune 0.3, against the Directorate's
+  1.0 and the Knights' 0.9. A want that arbitrates perfectly still needs a yard.
+- **The two navies that do raise it cannot pay in the accounts their hulls are priced in.**
+  The Dredge is 40 crystal and 60 Biomass, the Thurible 40 Biomass, the Lure 50; measured
+  Directorate income is 0.0 crystal and 0.2 Biomass a minute. That is #520, and no saving rule
+  reaches it.
+
+So the honest reading is that this fix is **necessary and not sufficient**, and the next thing
+worth doing for #518 is #520 rather than another change to the commander's spending.
 
 **Wave 6** is a decision the harness makes, not this document. If after five waves every
 doctrine builds its own line and the commons are dead weight on the bar, retire them from

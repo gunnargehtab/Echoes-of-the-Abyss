@@ -126,12 +126,18 @@ function hull(
 /**
  * A navy with nothing else left to want.
  *
- * Every other branch of `commandProduction` sits in front of the rung's, and
- * any one of them still wanting something would answer this test's question for
- * it. So the economy is staffed to the doctrine's target, the navy's own scout
- * is in the water, its ordnance hull is bought, and the line is short of the
- * army target by enough that the composition cycle would happily buy the next
- * Corvette if it were allowed to.
+ * Every other want of `commandProduction` bids into the same purse as the
+ * rung's, and any one of them still wanting something would answer this test's
+ * question for it. So the economy is staffed to the doctrine's target, the
+ * navy's own scout, ordnance hull and siege hull are all in the water, and the
+ * line is short of the army target by enough that the composition cycle would
+ * happily buy the next Corvette if it were allowed to.
+ *
+ * The siege hull joined this list with #518. It has been a want since wave 4
+ * (#508), but under the queue that arbitration replaced it sat *behind* the
+ * heavy and was never reached — so a fixture that left it out happened to
+ * measure the right thing for the wrong reason, and stopped the moment every
+ * want was read on every observation.
  */
 function force(brief: AiBriefing): EchoSnapshot['units'] {
   const doctrine = DOCTRINE[brief.faction];
@@ -141,6 +147,7 @@ function force(brief: AiBriefing): EchoSnapshot['units'] {
     ...Array.from<UnitKind>({ length: doctrine.harvesterTarget }).fill(UnitKind.Harvester),
     OWN_SCOUT[brief.faction],
     OWN_ORDNANCE[brief.faction],
+    OWN_SIEGE[brief.faction],
     // Two, against an army target of `attackAtArmySize * patience + 2`: short
     // enough that the composition cycle is still buying, which is the thing
     // the hold has to be seen to interrupt.
@@ -151,7 +158,8 @@ function force(brief: AiBriefing): EchoSnapshot['units'] {
 }
 
 /**
- * The scout and the ordnance hull each navy buys by a want of its own.
+ * The scout, the ordnance hull and the siege hull each navy buys by a want of
+ * its own.
  *
  * Restated from the roster rather than imported from the commander's private
  * tables, so this test asserts the roster's shape rather than that a table
@@ -169,6 +177,12 @@ const OWN_ORDNANCE: Record<Faction, UnitKind> = {
   [Faction.Pelagia]: UnitKind.Weaver,
   [Faction.Directorate]: UnitKind.Thurible,
   [Faction.Hadron]: UnitKind.Lance,
+};
+const OWN_SIEGE: Record<Faction, UnitKind> = {
+  [Faction.Bathyarch]: UnitKind.Furnace,
+  [Faction.Pelagia]: UnitKind.Blight,
+  [Faction.Directorate]: UnitKind.Lure,
+  [Faction.Hadron]: UnitKind.Tocsin,
 };
 
 function snapshot(
@@ -224,6 +238,59 @@ function hullsBoughtOver(
 
 describe('the commander saves for the hull the rung was bought for', () => {
   const consortium = Faction.Bathyarch;
+
+  it('reaches a want the queue used to hide, and takes the nearest of them', () => {
+    // The fix #518's fourth cause needed, in one observation.
+    //
+    // A Consortium with the rung standing, no ordnance hull and no siege hull,
+    // and 380 nodules: exactly the Furnace's price and twenty short of the
+    // Broadside's. Both wants are *reachable* — each has more than half its
+    // price in the bank — so under the queue this replaced, the ordnance want
+    // came first, held the purse for its Broadside, and returned. The siege
+    // want three lines below it was never read, and nothing was bought, on this
+    // observation or on any other for the next two minutes.
+    //
+    // Arbitrated, the nearer bid wins and the nearer bid is affordable, so the
+    // hull is simply bought. That is the whole change: not a new hold, but
+    // every want being asked before one of them is chosen.
+    const brief = briefing(consortium);
+    const home = brief.spawns[brief.slot]!;
+    const at = (i: number): { x: number; y: number } => ({ x: home.x + i * 60, y: home.y });
+    const ordnance = OWN_ORDNANCE[consortium];
+    const siege = OWN_SIEGE[consortium];
+    assert.ok(
+      priceOf(statsFor(siege)).nodules < priceOf(statsFor(ordnance)).nodules,
+      'the premise: the siege hull is the nearer of the two'
+    );
+
+    // The economy staffed and the line short, as `force` builds it — but
+    // without the two hulls this test is about.
+    const doctrine = DOCTRINE[consortium];
+    const roster: UnitKind[] = [
+      ...Array.from<UnitKind>({ length: doctrine.harvesterTarget }).fill(UnitKind.Harvester),
+      OWN_SCOUT[consortium],
+      UnitKind.Corvette,
+      UnitKind.Corvette,
+    ];
+    const base = snapshot(brief, 6000);
+    const wanted = new AiCommander(brief).observe(
+      snapshot(brief, 6000, {
+        units: roster.map((kind, i) => hull(i + 1, kind, at(i))),
+        structures: [
+          ...base.structures,
+          structure(30, StructureKind.Slipway, { x: home.x - 400, y: home.y }),
+        ],
+        nodules: priceOf(statsFor(siege)).nodules,
+      })
+    );
+
+    const produced = wanted.filter((c) => c.kind === 'produce');
+    assert.deepEqual(
+      produced.map((c) => (c as { unit: UnitKind }).unit),
+      [siege],
+      'the want behind the holder is reached, and it is what the purse buys'
+    );
+  });
 
   it('buys its heavy the moment the yard and the price are both there', () => {
     const brief = briefing(consortium);
