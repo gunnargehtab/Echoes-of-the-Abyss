@@ -42,7 +42,9 @@ import {
   ORDNANCE,
   OrdnanceKind,
   PRODUCIBLE,
+  REFIT_TERMS,
   RESOURCE,
+  RefitKind,
   ResolutionTier,
   ResourceKind,
   SIM,
@@ -53,6 +55,9 @@ import {
   depthBandFor,
   effectivePressureRating,
   mineCapFor,
+  refitOfferedTo,
+  refitPriceFor,
+  refittedPressureRating,
   requiredPressureRating,
   statsFor,
   structureStatsFor,
@@ -66,6 +71,7 @@ import {
   type HazardState,
   type OwnStructure,
   type OwnUnit,
+  type Price,
   type ResourceNodeInfo,
   type Stockpile,
 } from '@echoes/shared';
@@ -1087,6 +1093,17 @@ export class AiCommander implements AiPlayer {
    */
   private readonly grantedFields = new Map<number, number>();
 
+  /**
+   * Whether this navy has bought the Pressure Refit
+   * (docs/systems-progression.md §2).
+   *
+   * Read off the snapshot every observation rather than remembered from the
+   * order that bought it, for `setCrossed`'s reason one floor up: an order the
+   * server refused would otherwise leave the commander believing its fleet was
+   * a band deeper than it is, and the belief would be spent on a dive.
+   */
+  private refitted = false;
+
   constructor(briefing: AiBriefing) {
     this.briefing = briefing;
     this.slot = briefing.slot;
@@ -1126,6 +1143,7 @@ export class AiCommander implements AiPlayer {
     this.remember(snapshot);
     this.forgetDeadHarvesters(harvesters);
     this.readGrants(snapshot);
+    this.refitted = snapshot.refits.includes(RefitKind.Pressure);
 
     // A running budget, so two decisions in one tick cannot both spend the
     // same nodule. The server would refuse the second anyway; spending it
@@ -1413,8 +1431,23 @@ export class AiCommander implements AiPlayer {
    * water that eats it (docs/economy.md §7). Pressure ratings are stat-table
    * data, not world state — the HUD prints them.
    */
+  /**
+   * What one of this navy's hulls is actually rated for, right now.
+   *
+   * `effectivePressureRating` is the roster's answer — the hull's own band or
+   * the faction baseline, whichever is deeper — and it cannot know about a
+   * band the navy *bought*. Everything that decides where a hull may go has to
+   * ask through here, or the commander that spent 120 crystal on the deep goes
+   * on treating the crystal field as a raid it has to bleed for, which is
+   * precisely the thing the refit was bought to end (#517).
+   */
+  private ownRating(kind: UnitKind): number {
+    const base = effectivePressureRating(kind, this.briefing.faction);
+    return this.refitted ? refittedPressureRating(base, this.briefing.faction) : base;
+  }
+
   private pickNode(harvester: OwnUnit, exclude: number | null = null): ResourceNodeInfo | null {
-    const own = effectivePressureRating(harvester.kind, this.briefing.faction);
+    const own = this.ownRating(harvester.kind);
     const crowd = new Map<number, number>();
     for (const nodeId of this.nodeByHarvester.values()) {
       crowd.set(nodeId, (crowd.get(nodeId) ?? 0) + 1);
@@ -1488,9 +1521,7 @@ export class AiCommander implements AiPlayer {
     const alive = new Set(harvesters.map((h) => h.id));
     for (const id of [...this.crystalRun]) if (!alive.has(id)) this.crystalRun.delete(id);
 
-    const rating =
-      effectivePressureRating(UnitKind.Harvester, this.briefing.faction) +
-      (this.grantedFields.get(field.id) ?? 0);
+    const rating = this.ownRating(UnitKind.Harvester) + (this.grantedFields.get(field.id) ?? 0);
 
     // Ordinary water, and therefore none of this branch's business. A field a
     // hauler is rated for is a field, and `pickNode` scores it against every
@@ -1613,16 +1644,99 @@ export class AiCommander implements AiPlayer {
    * budgets in the same three accounts the server charges in.
    */
   private crystalWanted(snapshot: EchoSnapshot): number {
+    // The Pressure Refit outranks both, when this navy wants one at all. It is
+    // the only crystal price in the game that makes the *next* crystal cheap:
+    // everything else the deep buys is a thing to field, and this is the end of
+    // paying 238 HP of a 300 HP hull for every hold of it
+    // (docs/systems-progression.md §2, #517). A `max` rather than a first
+    // return, so a navy that wants both keeps raiding until the dearer of the
+    // two is covered rather than stopping at the cheaper and buying nothing.
+    const refit = this.pressureRefitWanted(snapshot);
     const signature = FACTION_STRUCTURE[this.briefing.faction];
     if (signature !== undefined && !snapshot.structures.some((s) => s.kind === signature)) {
-      return priceOf(structureStatsFor(signature)).crystal;
+      return Math.max(refit, priceOf(structureStatsFor(signature)).crystal);
     }
-    let want = 0;
+    let want = refit;
     for (const kind of this.doctrine.composition) {
       const price = priceOf(statsFor(kind)).crystal;
       if (price > want && !snapshot.units.some((u) => u.kind === kind)) want = price;
     }
     return want;
+  }
+
+  /**
+   * The crystal the Pressure Refit would cost this navy, or zero if it does
+   * not want one.
+   *
+   * Wanted on exactly one test, and it is the test the refit is *for*: does
+   * buying it turn the map's crystal field from a raid into ground this navy's
+   * own haulers are rated for. That is the sentence docs/factions.md's depth
+   * row makes about the Consortium ("Buys access") and the Order ("Projects
+   * access — instant refits paid in Resonance"), and it is why neither of the
+   * other two appears here:
+   *
+   * - the **Directorate** is not offered the refit, because PR-3 is where it
+   *   starts;
+   * - the **Commune's** refit stops at PR-2 by §2's own table, so it never
+   *   reaches the field. Their answer to the deep is the Sower, which converts
+   *   the water rather than the hull (#503), and a commander that saved 180
+   *   crystal for a band it cannot reach would be buying the wall again.
+   *
+   * A commander that already owns it wants nothing: a refit is bought once.
+   */
+  private pressureRefitWanted(snapshot: EchoSnapshot): number {
+    const faction = this.briefing.faction;
+    if (!refitOfferedTo(RefitKind.Pressure, faction)) return 0;
+    if (snapshot.refits.includes(RefitKind.Pressure)) return 0;
+    const field = this.crystalField;
+    if (field === null) return 0;
+    const base = effectivePressureRating(UnitKind.Harvester, faction);
+    const required = requiredPressureRating(field.depth);
+    // Already ground, so there is nothing to buy — the Directorate's case
+    // stated generally, in case a map ever seats crystal shallower.
+    if (base >= required) return 0;
+    if (refittedPressureRating(base, faction) < required) return 0;
+    return refitPriceFor(RefitKind.Pressure, faction).crystal;
+  }
+
+  /**
+   * Buy the Pressure Refit, or hold the purse against it.
+   *
+   * Returns whether the branch spent this observation's decision, exactly as
+   * the structure wants below do: a commander that has just committed its bank
+   * to the deep should not also queue a Corvette out of the same nodules.
+   *
+   * Placed *before* the signature structure and after nothing, which is the
+   * ordering the yard makes for itself: three navies buy it on the Slipway's
+   * line, so the branch cannot fire until the rung stands, and the Order buys
+   * it at a Bastion that has stood since the first tick. That is §2's carve-out
+   * arriving as a placement rather than as a special case.
+   */
+  private commandRefit(snapshot: EchoSnapshot, purse: Stockpile, out: AiCommand[]): boolean {
+    if (this.pressureRefitWanted(snapshot) === 0) return false;
+    const boughtAt = REFIT_TERMS[this.briefing.faction].boughtAt;
+    // A yard still being commissioned has no line, and a yard already running
+    // a refit has no second one: "a second Slipway buys a second line, not a
+    // discount" (§2).
+    const yard = snapshot.structures.find(
+      (s) => s.kind === boughtAt && s.buildProgress >= 1 && s.refit === undefined
+    );
+    if (yard === undefined) return false;
+
+    const price = refitPriceFor(RefitKind.Pressure, this.briefing.faction);
+    if (affords(purse, price)) {
+      charge(purse, price);
+      out.push({ kind: 'refit', structureId: yard.id, refit: RefitKind.Pressure });
+      return true;
+    }
+    // Saving only helps where waiting helps, for the reason the structure
+    // branch gives at length: nodules arrive on their own and crystal does not,
+    // so a refit short of crystal is short of a hauler's trip rather than of
+    // savings, and holding nodules back for it would starve the yards for
+    // something the wait will never deliver.
+    if (price.crystal > purse.crystal) return false;
+    this.saveTowardPrice(price, purse);
+    return true;
   }
 
   /**
@@ -1678,9 +1792,7 @@ export class AiCommander implements AiPlayer {
     if (snapshot.crystal >= this.crystalWanted(snapshot)) return 0;
     if (this.crystalTrips >= CRYSTAL_RUN.HULL_BUDGET * 2) return 0;
 
-    const rating =
-      effectivePressureRating(UnitKind.Harvester, this.briefing.faction) +
-      (this.grantedFields.get(field.id) ?? 0);
+    const rating = this.ownRating(UnitKind.Harvester) + (this.grantedFields.get(field.id) ?? 0);
     const trip = roundTripCrush(field.depth, rating);
     // Habitable water needs no boats bought for it — and, the part that has to
     // be the *same* question the dispatch asks, neither does a trip the
@@ -1873,6 +1985,14 @@ export class AiCommander implements AiPlayer {
     // one building per navy, so before this branch existed a commander that
     // banked crystal had nothing to bank it for, and the whole trip to the
     // bottom was a hauler spent on a number going up.
+    // The rung's *other* purchase, and the one that ends the raiding
+    // (docs/systems-progression.md §2, #517). Ahead of the signature structure
+    // because it is what the crystal for the signature structure will be
+    // cheaper for; behind the Slipway without a test, because for three of the
+    // four navies it is bought on that yard's line and there is no line until
+    // the yard stands.
+    if (this.commandRefit(snapshot, purse, out)) return;
+
     const signature = FACTION_STRUCTURE[this.briefing.faction];
     for (const kind of [StructureKind.Slipway, signature]) {
       if (kind === undefined || has(kind)) continue;
@@ -1931,7 +2051,11 @@ export class AiCommander implements AiPlayer {
    * nodules quietly spent on Corvettes in the meantime.
    */
   private saveToward(kind: StructureKind, purse: Stockpile): void {
-    const price = priceOf(structureStatsFor(kind));
+    this.saveTowardPrice(priceOf(structureStatsFor(kind)), purse);
+  }
+
+  /** The same, for a price that is not a roster entry's — a refit's (§2). */
+  private saveTowardPrice(price: Price, purse: Stockpile): void {
     for (const account of ECONOMY_ACCOUNTS) {
       purse[account] = Math.max(0, purse[account] - price[account]);
     }
@@ -3206,10 +3330,7 @@ export class AiCommander implements AiPlayer {
     const byDepth = new Map<number, number[]>();
 
     for (const unit of army) {
-      const depthM = Math.min(
-        wanted,
-        ratedDepthCeiling(effectivePressureRating(unit.kind, this.briefing.faction))
-      );
+      const depthM = Math.min(wanted, ratedDepthCeiling(this.ownRating(unit.kind)));
       // Read the hull rather than a remembered intention. `armySilent` can get
       // away with a believed flag because silence is one bit for the whole
       // force; depth cannot, because reinforcements spawn at cruise depth long

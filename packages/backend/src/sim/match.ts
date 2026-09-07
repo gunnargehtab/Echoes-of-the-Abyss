@@ -28,6 +28,11 @@ import {
   type HarvestIdleReason,
   OPENING_ESCORT,
   PRODUCIBLE,
+  REFIT_TERMS,
+  RefitKind,
+  refitLineTimeS,
+  refitOfferedTo,
+  refitPriceFor,
   ResourceKind,
   SIM,
   StructureKind,
@@ -121,6 +126,7 @@ import {
 } from './systems/ordnance.ts';
 import { pressureSystem } from './systems/pressure.ts';
 import { productionSystem } from './systems/production.ts';
+import { grantRefit } from './systems/refit.ts';
 import { randomSeed } from './rng.ts';
 import { ReplayRecorder, type Replay, type ReplayCommand } from './replay.ts';
 import { hashWorld } from './stateHash.ts';
@@ -1656,6 +1662,79 @@ export class Match {
   }
 
   /**
+   * Buy a fleet-wide refit (docs/systems-progression.md §2).
+   *
+   * The same shape as `produce`, because it is the same yard-time: the price
+   * is paid on purchase through the same three accounts, and the line is
+   * taken for the duration. What differs is what comes off it — nothing.
+   * "A navy refitting is audibly refitting, and a navy refitting is a navy
+   * *not* building its second hull."
+   *
+   * The Knights are the carve-out §2 writes into the table itself: their
+   * Pressure Refit has no Nodules and no line time, so it has no line. It is
+   * struck at the Bastion instead, and it is *sounded* — an instant refit
+   * that emitted nothing would be the quiet tech-up §1's rule 1 forbids.
+   */
+  refit(slot: number, structureEid: number, kind: RefitKind): boolean {
+    this.recordCommand({
+      tick: this.world.tick,
+      type: 'refit',
+      slot,
+      structure: this.localId(structureEid),
+      kind,
+    });
+    // A mission that has taken construction away has taken the upgrade with
+    // it, for `produce`'s reason: a yard the mission lent the player is not a
+    // yard the player may tech on.
+    if (this.missionDenies(slot, 'construction')) return false;
+    if (!this.owns(slot, structureEid)) return false;
+    if (!hasComponent(this.world, Structure, structureEid)) return false;
+    if (hasComponent(this.world, UnderConstruction, structureEid)) return false;
+
+    const faction = this.factionOf(slot);
+    if (!refitOfferedTo(kind, faction)) return false;
+    if (this.world.refits.get(slot)?.has(kind) === true) return false;
+    // The yard §2 names for this navy, and no other — the Slipway's line for
+    // three of them, the Bastion for the one whose purchase is a chord rather
+    // than a shift.
+    if (Structure.kind[structureEid] !== REFIT_TERMS[faction].boughtAt) return false;
+
+    const economy = economyFor(this.world, slot);
+    const price = refitPriceFor(kind, faction);
+    if (!affords(economy, price)) return false;
+
+    const lineS = refitLineTimeS(kind, faction);
+    if (lineS <= 0) {
+      // Instant, and announced. The strike is written as a spike over the
+      // structure's own idle figure so the doc's 80 is what the map actually
+      // hears, whatever the Bastion's hum is tuned to.
+      charge(economy, price);
+      grantRefit(this.world, slot, kind);
+      const sounding = REFIT_TERMS[faction].sounding;
+      if (sounding !== undefined) {
+        const idle = structureStatsFor(Structure.kind[structureEid] as StructureKind).sigIdle;
+        Acoustic.spikeAmount[structureEid] = Math.max(0, sounding.sig - idle);
+        Acoustic.spikeRemainingS[structureEid] = sounding.seconds;
+      }
+      return true;
+    }
+
+    let line = this.world.production.get(structureEid);
+    if (line === undefined) {
+      line = { queue: [], remainingS: 0 };
+      this.world.production.set(structureEid, line);
+    }
+    // One refit at a time on one line. A second Slipway buys a second line,
+    // not a discount — which is §2's own sentence, and falls out of the state
+    // being per structure rather than per navy.
+    if (line.refit !== undefined) return false;
+
+    charge(economy, price);
+    line.refit = { kind, remainingS: lineS, totalS: lineS };
+    return true;
+  }
+
+  /**
    * The commander's berths (docs/economy.md §10): what the standing base
    * grants against what is afloat and queued.
    *
@@ -2318,6 +2397,9 @@ export class Match {
         draw: { ...drawFor(this.world, slot) },
         biomass: economyFor(this.world, slot).biomass,
         berths: this.berthsFor(slot),
+        // Own information, and sorted so a snapshot is a value rather than a
+        // record of insertion order: the delta compares the whole list.
+        refits: [...(this.world.refits.get(slot) ?? [])].sort((a, b) => a - b),
         driftHealth,
         shoals,
         jellies,
@@ -2530,6 +2612,13 @@ export class Match {
         queue: line !== undefined ? [...line.queue] : [],
         queueProgress,
       };
+      if (line?.refit !== undefined) {
+        const total = line.refit.totalS;
+        structure.refit = {
+          kind: line.refit.kind,
+          progress: total > 0 ? 1 - line.refit.remainingS / total : 1,
+        };
+      }
       const rally = this.world.rallies.get(eid);
       if (rally !== undefined) structure.rally = { x: rally.x, y: rally.y };
       out.push(structure);

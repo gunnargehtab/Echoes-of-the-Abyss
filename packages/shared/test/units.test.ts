@@ -37,6 +37,8 @@ import {
   FACTION_PRESSURE_BASELINE,
   FACTION_STRUCTURE,
   Faction,
+  RefitKind,
+  refitOfferedTo,
   HULL_EFFECTS,
   MAX_UNIT_RADIUS_M,
   OPENING_ESCORT,
@@ -414,21 +416,40 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
     // priced in the thing it unlocks is not a price, it is a wall: measured
     // across every map, no navy ever built a second yard.
     //
-    // Asserted for the two navies that have a source at all. The Consortium
-    // has none — its route is the Pressure Refit, designed and not built
-    // (systems-progression.md §2) — and that is the open half of #491 rather
-    // than something this file can hold.
+    // Asserted for every navy that has to rent or buy a band at all. The
+    // Consortium had no source of one until #517 built the Pressure Refit; its
+    // key is a *price* rather than a hull, so what has to be free of crystal
+    // there is not the refit itself — §2 prices it in crystal deliberately —
+    // but the yard the refit is bought on, which is the Slipway below.
     const free = (crystal: number, what: string) =>
       assert.equal(crystal, 0, `${what} is on the path to crystal and must not cost crystal`);
     free(priceOf(statsFor(UnitKind.Cantus)).crystal, "the Order's source");
     free(priceOf(statsFor(UnitKind.Sower)).crystal, "the Commune's source");
     free(priceOf(structureStatsFor(StructureKind.Slipway)).crystal, 'the yard that builds it');
+    // And the yard the Consortium's route is *bought on*, which is the same
+    // Slipway: a refit priced in crystal is fine, a yard priced in crystal is
+    // the wall again.
 
-    // Both navies that need a rented band have one they can buy without it.
-    for (const faction of [Faction.Pelagia, Faction.Hadron]) {
+    /** The hull that rents each navy a band, where one exists. */
+    const GRANTS_A_BAND: Partial<Record<Faction, UnitKind>> = {
+      [Faction.Pelagia]: UnitKind.Sower,
+      [Faction.Hadron]: UnitKind.Cantus,
+    };
+
+    // Every navy that does not start at PR-3 has a route to it that does not
+    // pass through crystal it cannot yet reach: the Cantus, the Sower, or —
+    // for the Consortium, whose doctrine line is that it *buys* access — the
+    // Pressure Refit, bought on a yard priced in nodules alone (#517).
+    for (const faction of [Faction.Bathyarch, Faction.Pelagia, Faction.Hadron]) {
       assert.ok(
         FACTION_PRESSURE_BASELINE[faction] < 3,
         `${Faction[faction]} is only in this test because it needs to rent a band`
+      );
+      assert.ok(
+        GRANTS_A_BAND[faction] !== undefined ||
+          refitOfferedTo(RefitKind.Pressure, faction) ||
+          FACTION_PRESSURE_BASELINE[faction] >= 3,
+        `${Faction[faction]} has no route to the Abyssal band at all`
       );
     }
 

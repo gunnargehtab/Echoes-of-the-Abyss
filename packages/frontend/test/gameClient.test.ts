@@ -26,6 +26,7 @@ import {
   MatchPhase,
   encodeEcho,
   CLIENT_MSG,
+  RefitKind,
   SERVER_MSG,
   StructureKind,
   UnitKind,
@@ -213,6 +214,11 @@ const ORDERS: Array<[string, (client: GameClient) => void, SentMessage]> = [
     'produce',
     (c) => c.produce(21, UnitKind.Corvette),
     { type: 'produce', payload: { structureId: 21, kind: UnitKind.Corvette } },
+  ],
+  [
+    'refit',
+    (c) => c.refit(21, RefitKind.Pressure),
+    { type: 'refit', payload: { structureId: 21, kind: RefitKind.Pressure } },
   ],
 ];
 

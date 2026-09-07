@@ -20,6 +20,7 @@ import {
   type MatchListingMetadata,
   type MissionResultPayload,
   type MissionView,
+  type RefitKind,
   type ResourceNodeInfo,
   type StructureKind,
   type UnitKind,
@@ -705,6 +706,11 @@ export class GameClient {
 
   produce(structureId: number, kind: UnitKind): void {
     this.order(CLIENT_MSG.produce, { structureId, kind });
+  }
+
+  /** Buy a fleet-wide refit at a yard (docs/systems-progression.md §2). */
+  refit(structureId: number, kind: RefitKind): void {
+    this.order(CLIENT_MSG.refit, { structureId, kind });
   }
 
   disconnect(): void {

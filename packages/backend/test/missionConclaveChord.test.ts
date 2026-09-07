@@ -883,6 +883,7 @@ describe('the rest, and the twelve ticks that make it read — §8 and §13', ()
       contacts: [],
       peakSig: 0,
       berths: { used: 0, granted: 0 },
+      refits: [],
       nodules: 0,
       crystal: 0,
       biomass: 0,

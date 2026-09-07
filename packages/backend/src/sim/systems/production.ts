@@ -12,6 +12,7 @@ import { statsFor, structureStatsFor, type Faction, type StructureKind } from '@
 import { Health, MoveOrder, Owner, Position, Structure, UnderConstruction } from '../components.ts';
 import { spawnUnit, type SimWorld } from '../world.ts';
 import { powerRate } from './thermal.ts';
+import { grantRefit } from './refit.ts';
 
 export function productionSystem(world: SimWorld): void {
   const dt = world.dt;
@@ -22,9 +23,23 @@ export function productionSystem(world: SimWorld): void {
       world.production.delete(eid);
       continue;
     }
-    if (line.queue.length === 0) continue;
+    if (line.queue.length === 0 && line.refit === undefined) continue;
     // A structure still being commissioned cannot run its line yet.
     if (hasComponent(world, UnderConstruction, eid)) continue;
+
+    // A refit takes the line *instead of* a hull, on the same clock and with
+    // the same starved-line rate (docs/systems-progression.md §2: "for its
+    // build time the Slipway runs at 70 and launches nothing"). Checked
+    // before the queue, so a hull mid-build is paused rather than delivered
+    // early or thrown away: the yard is busy, and the decision the refit
+    // exists to create is exactly that it is busy with this.
+    if (line.refit !== undefined) {
+      line.refit.remainingS -= dt * powerRate(world, Owner.slot[eid]!);
+      if (line.refit.remainingS > 0) continue;
+      grantRefit(world, Owner.slot[eid]!, line.refit.kind);
+      line.refit = undefined;
+      continue;
+    }
 
     // The single consequence of a Thermal Draw deficit: a starved line runs
     // slower. Slower and never stopped — a frozen line is a spiral, because a

@@ -34,6 +34,7 @@ import type {
   GameOverPayload,
   HarvestThrottle,
   MatchPhase,
+  RefitKind,
   ResourceNodeInfo,
   StructureKind,
   UnitKind,
@@ -87,6 +88,7 @@ export const CLIENT_MSG = {
   throttle: 'throttle',
   build: 'build',
   produce: 'produce',
+  refit: 'refit',
   // Lobby.
   faction: 'faction',
   ready: 'ready',
@@ -247,6 +249,18 @@ export interface ProduceMessage {
   kind: UnitKind;
 }
 
+/**
+ * Buy a fleet-wide refit (docs/systems-progression.md §2).
+ *
+ * Carries the yard because a refit is bought *at* one and occupies its line,
+ * exactly as a hull does — the Knights' instant Pressure Refit names their
+ * Bastion for the same reason, since that is what the purchase sounds.
+ */
+export interface RefitMessage {
+  structureId: number;
+  kind: RefitKind;
+}
+
 export interface FactionMessage {
   faction: Faction;
 }
@@ -295,6 +309,7 @@ export interface ClientMessages {
   throttle: ThrottleMessage;
   build: BuildMessage;
   produce: ProduceMessage;
+  refit: RefitMessage;
   faction: FactionMessage;
   ready: ReadyMessage;
   addAi: AddAiMessage;

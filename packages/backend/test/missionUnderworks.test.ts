@@ -49,6 +49,7 @@ function withNodules(tick: number, nodules: number): EchoSnapshot {
     contacts: [],
     peakSig: 0,
     berths: { used: 0, granted: 0 },
+    refits: [],
     nodules,
     crystal: 0,
     biomass: 0,

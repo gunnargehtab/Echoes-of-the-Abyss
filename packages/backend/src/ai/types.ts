@@ -35,6 +35,7 @@ import type {
   EchoSnapshot,
   Faction,
   HarvestThrottle,
+  RefitKind,
   ResourceNodeInfo,
   StructureKind,
   UnitKind,
@@ -116,6 +117,15 @@ export type AiCommand =
   | { kind: 'depthCharge'; unitId: number; depthM: number }
   | { kind: 'build'; structure: StructureKind; x: number; y: number }
   | { kind: 'produce'; structureId: number; unit: UnitKind }
+  /**
+   * Buy a fleet-wide refit at a yard (docs/systems-progression.md §2).
+   *
+   * Names the yard, like `produce`, because the refit takes that yard's line
+   * — and because the Knights' Pressure Refit takes no line and is struck at
+   * a Bastion instead, so which structure it is bought at is a decision and
+   * not an implementation detail.
+   */
+  | { kind: 'refit'; structureId: number; refit: RefitKind }
   /**
    * The vertical order. Carries one depth for a group, so a commander that
    * wants two depths emits two commands — which is what happens whenever the

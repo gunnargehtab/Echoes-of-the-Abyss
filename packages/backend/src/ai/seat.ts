@@ -99,6 +99,9 @@ export class AiSeat {
       case 'produce':
         this.match.produce(slot, command.structureId, command.unit);
         return;
+      case 'refit':
+        this.match.refit(slot, command.structureId, command.refit);
+        return;
       case 'depth':
         for (const id of command.unitIds) this.match.orderDepth(slot, id, command.depthM);
         return;

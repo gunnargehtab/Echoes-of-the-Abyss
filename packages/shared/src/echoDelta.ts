@@ -46,6 +46,7 @@ import type {
   OwnOrdnance,
   OwnStructure,
   OwnUnit,
+  RefitKind,
   SelfEvent,
   ShoalTell,
 } from './types.js';
@@ -90,6 +91,12 @@ export interface EchoPatch {
   crystal?: number;
   biomass?: number;
   berths?: BerthReport;
+  /**
+   * The whole list, whenever it changes. A navy buys at most five refits in a
+   * match and each purchase is one event, so there is nothing here a
+   * per-entry patch would save.
+   */
+  refits?: RefitKind[];
   exposure?: ExposureReport;
   draw?: DrawReport;
   /** [index, value] pairs for the regions that moved. */
@@ -247,6 +254,7 @@ export function encodeEcho(
   if (prev.crystal !== next.crystal) patch.crystal = next.crystal;
   if (prev.biomass !== next.biomass) patch.biomass = next.biomass;
   if (!wireEqual(prev.berths, next.berths)) patch.berths = next.berths;
+  if (!wireEqual(prev.refits, next.refits)) patch.refits = next.refits;
   if (!wireEqual(prev.exposure, next.exposure)) patch.exposure = next.exposure;
   if (!wireEqual(prev.draw, next.draw)) patch.draw = next.draw;
   if (prev.driftHealth.length !== next.driftHealth.length) {
@@ -294,6 +302,7 @@ export function applyEchoWire(
     crystal: wire.crystal ?? base.crystal,
     biomass: wire.biomass ?? base.biomass,
     berths: wire.berths ?? base.berths,
+    refits: wire.refits ?? base.refits,
     exposure: wire.exposure ?? base.exposure,
     draw: wire.draw ?? base.draw,
     driftHealth,

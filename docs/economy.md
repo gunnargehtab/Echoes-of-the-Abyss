@@ -167,7 +167,7 @@ drive to a field, mine, haul home, deposit at a Bastion or Refinery. Constants l
 | Resonance Crystal | **Implemented** — Abyssal field, second stockpile, tech gate | See below |
 | Depth economics (§7) | **Implemented** — the round trip has a clock on it | Harvesters issue their own depth orders: loud descent to the field, slow climb home |
 | Industrial hum (§5) | **Implemented** — a decaying Echo Mark at the depot, intensity per delivered cargo | Keyed to throughput, not to the building: a refinery nobody hauls to is silent, and throttling down drops the hum because the loads shrink with it |
-| Refits ([systems-progression.md](systems-progression.md) §2) | **Designed, not built** — five fleet-wide upgrades priced in Nodules and Crystal, the Pressure Refit at a signature structure's 120 | Each is a `Priced` roster entry through the same `priceOf`, `affords` and `charge`, produced on the Slipway's line, which #461 built |
+| Refits ([systems-progression.md](systems-progression.md) §2) | **Partly built** — the **Pressure Refit** is implemented, priced and charged like everything else; the other four (Plate, Drive, Magazine, Hold) are designed and not built | `REFIT_STATS` and `REFIT_TERMS` in `packages/shared/src/refits.ts`, priced through the same `priceOf`, `affords` and `charge`, bought on the Slipway's line — and, for the Order alone, struck instantly at the Bastion at SIG 80 for 15 s |
 
 ### Thermal Draw in the scaffold
 
