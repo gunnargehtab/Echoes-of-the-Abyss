@@ -27,3 +27,7 @@
 - name: triage
   color: fbca04
   description: Needs review to confirm validity, scope, or priority
+
+- name: fable-5.1
+  color: f4a6c8
+  description: Asset work executed under the design model of record (asset-prompts-3d.md rule 3)
