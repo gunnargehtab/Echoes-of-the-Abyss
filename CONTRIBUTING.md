@@ -104,6 +104,16 @@ The label set lives in [.github/labels.yml](.github/labels.yml) and is synced by
 workflow. Add, remove, or recolor labels by editing that file — never in the GitHub UI,
 where the sync will overwrite you.
 
+One label carries a routing rule rather than a category. **`fable-5.1`** marks an issue
+whose work is *shape* — a hull script, a faction module, a GLB, a prop, a prompt block —
+and is therefore executed under the design model of record that
+[docs/asset-prompts-3d.md](docs/asset-prompts-3d.md) rule 3 names for the whole series.
+It does not mark an issue merely because art is mentioned in it: the gates
+(`hull-intake`, the glow calibration, the screenshot review) stay adversarial to whoever
+authored the model, and every number that is not a shape — a stat block, a doctrine, the
+wire, the balance harness — stays outside it. A hull's SIG is an argument about sound;
+its silhouette is not.
+
 ## Code conventions
 
 - **Constants live in exactly one place**: `packages/shared/src/constants.ts`, tagged

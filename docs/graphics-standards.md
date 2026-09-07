@@ -30,6 +30,26 @@ Load-time sprite bake             packages/frontend/src/game/hullTextures.ts
                                   (lit per pixel, recoloured per faction)
 ```
 
+**Where the GLB comes from.** Every approved model in `docs/concept-art/models/` is
+`THREE.GLTFExporter` output — a scene of named primitive parts, no sculpts and no
+textures. The Bulwark is `hull_slab` + `armour_tier_1..3` + `flank_plate_p0..p3`; the
+Dredge is `tergite_0..n` + `tergite_ridge_0..n` + `tergite_spine_0..n`. Because those
+repeating series are loops, a hull can be *built* as well as exported, and
+`tools/hull-models/` is that path: a shared kit (metres, bow on +X, the export), one
+module a navy holding its shape language, and one script a hull composing from it.
+
+```text
+node tools/hull-models/hulls/<hull>.mjs → docs/concept-art/models/<hull>-<navy>.glb → intake
+```
+
+This changes where a GLB comes from, never whether it is checked: the script's output goes
+through `hull-intake` and gates 2–5 exactly as a hand-exported one does, and a warning-free
+bake is still the bar. What it buys is that a hull becomes editable, diffable and
+restylable — a navy's whole fleet can be re-proportioned by editing its faction module
+rather than by re-authoring seventeen binaries. The prompt kit stays canonical: a hull
+script transcribes its `docs/asset-prompts-3d.md` block the way the constants transcribe a
+design doc, and the prose is what it answers to when the two disagree.
+
 **Fallback:** a unit or structure with no approved model bakes procedurally — units from a
 distance-transform heightfield guessed from `HULL_OUTLINE`, clad in
 [Plate V](concept-art/plate-05-submarine-classes.png); structures from slab-and-landmark

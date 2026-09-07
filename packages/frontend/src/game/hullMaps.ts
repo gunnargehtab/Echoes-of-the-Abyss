@@ -126,6 +126,12 @@ import cantusEmissive from '../assets/hulls/maps/cantus-emissive.png';
 import reciterAlbedo from '../assets/hulls/maps/reciter-albedo.png';
 import reciterHeight from '../assets/hulls/maps/reciter-height.png';
 import reciterEmissive from '../assets/hulls/maps/reciter-emissive.png';
+import derrickAlbedo from '../assets/hulls/maps/derrick-albedo.png';
+import derrickHeight from '../assets/hulls/maps/derrick-height.png';
+import derrickEmissive from '../assets/hulls/maps/derrick-emissive.png';
+import responsoryAlbedo from '../assets/hulls/maps/responsory-albedo.png';
+import responsoryHeight from '../assets/hulls/maps/responsory-height.png';
+import responsoryEmissive from '../assets/hulls/maps/responsory-emissive.png';
 
 /**
  * Pixels per world metre the maps were baked at. The maps carry no metadata,
@@ -223,6 +229,18 @@ const KIND_MAP_URL: Partial<Record<UnitKind, MapUrls>> = {
     albedo: reciterAlbedo,
     height: reciterHeight,
     emissive: reciterEmissive,
+  },
+  // The mid-tier (#531), on the rung's rule: one navy's hull, so the kind's
+  // canonical model and no variant dimension.
+  [UnitKind.Derrick]: {
+    albedo: derrickAlbedo,
+    height: derrickHeight,
+    emissive: derrickEmissive,
+  },
+  [UnitKind.Responsory]: {
+    albedo: responsoryAlbedo,
+    height: responsoryHeight,
+    emissive: responsoryEmissive,
   },
 };
 
