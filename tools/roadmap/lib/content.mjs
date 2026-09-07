@@ -214,6 +214,11 @@ export const phases = {
     blurb:
       'Ranked matches, teams, and watching a game you are not in — without handing the audience a map the players cannot see.',
   },
+  12: {
+    title: 'After the game ships',
+    blurb:
+      'Decided, and deliberately not scheduled: a fifth navy of mercenaries, selling the hulls every side already builds.',
+  },
 };
 
 export const groups = {
@@ -322,6 +327,7 @@ export const items = {
   437: 'A population cap, sized to what the water can carry',
   438: 'A tighter map and redesigned superweapons',
   439: 'Competitive play: a map pool, a ladder, accounts and an observer mode',
+  543: 'Mercenaries — a fifth navy selling the hulls every side already builds',
   441: 'Hosting: a server you can join from anywhere on the internet',
   442: 'Faster loading: art fetched on demand, smaller downloads',
   443: 'More automated testing so updates do not break things',
