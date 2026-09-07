@@ -513,6 +513,20 @@ used to earn nine.
 Both were found by asking the issue's questions in the order it wrote them, and neither is a
 pricing question. The prices stand.
 
+**What it moved, on the stored thirty seeds.** Drift Health at the close is **75 (72–79)** against
+16 (9–25) — the map ends worn rather than dead. Biomass per minute is 2.8 for the Directorate
+against 0.2, and 2.3, 1.0 and 0.4 for the other three, so §9's "Directorate Biomass snowballs"
+guard-rail is measuring something for the first time instead of reading zero. Crystal is 2.2 for
+the Directorate against 0.0. And three hulls that had never been built in any baseline are:
+**the Thurible at 0.1 a match, the Verger at 0.3 and the Acolyte at 0.8** — every one of them
+priced in the accounts that had never paid. The Dredge is still 0.0, being the dearest of them at
+40 crystal *and* 60 Biomass.
+
+The win rates go 0 / 0 / 64 / 36 to **9 / 9 / 61 / 22**: the spread narrows from 64 points to 52,
+two navies come off zero, and the Knights lose fourteen — the one move outside the ten points a
+win rate over twenty-odd decided matches carries, and the one to watch. All five guard-rails
+held.
+
 **Wave 6** is a decision the harness makes, not this document. If after five waves every
 doctrine builds its own line and the commons are dead weight on the bar, retire them from
 `PRODUCIBLE` and keep them for missions and the campaign, where the prologue's hulls are
