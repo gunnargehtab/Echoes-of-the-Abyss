@@ -57,7 +57,10 @@ export interface UnitStats {
    * `crystalCost`, refused and debited on the same path as the other two and
    * never traded for them — see economy.ts, and docs/economy.md §8.
    *
-   * The Chorister is the one hull that carries it (issue #352). The Abyssal
+   * The Chorister was the one hull that carried it (issue #352) and is no
+   * longer: the Acolyte (#506), the Precentor and the Dredge (#461) and the
+   * Verger (#501) are all priced in it too, which is the cohort programme
+   * spreading across the roster rather than an exception to it. The Abyssal
    * Submersible is the crystal-locked deep hull and stays priced as one.
    */
   biomassCost?: number;

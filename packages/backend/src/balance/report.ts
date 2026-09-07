@@ -20,6 +20,7 @@
  */
 
 import {
+  DRIFT,
   Faction,
   SIM,
   STRUCTURE_STATS,
@@ -485,7 +486,20 @@ function judge(results: MatchTelemetryResult[], factions: FactionSummary[]): Gua
     );
   } else {
     const drift = distribution(results.map((r) => r.driftHealthFinal));
-    const breached = directorate.biomassPerMinute > 0 && drift.median > 95;
+    // Against the map's *start*, not against 100. The 95 this replaced was
+    // written when Drift Health was read as a 0-100 scale; regions are seeded
+    // at `DRIFT.HEALTH_START` (88) and `Drift.recover` caps recovery there, so
+    // a median above 95 was unreachable and this rail has been reporting
+    // "held" from a test that could not fail since it was written.
+    //
+    // What the rail is for is the mitigation in §9 failing: Biomass arriving
+    // *without* the region paying for it. So the question is whether the map
+    // ended roughly where it began while the income was arriving — within a
+    // tenth of the seed. It runs close, deliberately: the stored baseline ends
+    // at a median 73 against a 79.2 bar, which is the margin the guard-rail is
+    // supposed to have rather than the acre of slack a 95 gave it.
+    const untouched = DRIFT.HEALTH_START * 0.9;
+    const breached = directorate.biomassPerMinute > 0 && drift.median > untouched;
     verdicts.push({
       risk: 'Directorate Biomass snowballs',
       source: 'economy.md §9 · bestiary.md §8',
