@@ -7,16 +7,26 @@
  * instant** — the first press names the cost, the second pays it. Each has the
  * same failure mode, which is a player losing a seat they meant to keep.
  *
- * The fourth is focus, and it is honestly out of reach here. `EscMenu` places
- * focus on Stay while the leave entry is armed, "so the Enter that armed it
- * cannot also be the Enter that leaves" — but this renderer has no
- * `document.activeElement`, no tab order and no `inert`, and its host nodes are
- * keyed by class name, so the two `menu-entry` buttons that would have to be
- * told apart are one node. **"Focus is actually there" and "Tab cannot walk
- * under the glass onto a live button" are unobservable without jsdom**, which
- * #494 names as a separate decision. What is asserted below is everything that
- * does not depend on where focus is; nothing here should be read as covering
- * it.
+ * The fourth is focus, and #515 split it in three, because the three parts
+ * have different answers and only one of them ever needed a DOM.
+ *
+ * - **Where the menu *places* focus** is asserted below. It is what the
+ *   component controls and it needs no jsdom — only that `createNodeMock`
+ *   stop merging the two `menu-entry` buttons into one node, which is what
+ *   made this unassertable and is now fixed in `support/screen.ts`.
+ * - **That everything under the glass goes `inert`** is a write on the
+ *   `.game-under` host, and belongs to the shell that makes it:
+ *   `gameCanvas.test.ts`.
+ * - **That Tab cannot walk out of the dialog** is a fact about a real engine.
+ *   jsdom models neither `inert` nor sequential focus navigation, so it is
+ *   asserted in the browser the run-game skill already drives
+ *   (`.claude/skills/run-game/scripts/escFocus.mjs`) or nowhere. The foot of
+ *   `support/screen.ts` carries the research.
+ *
+ * So what is still out of reach here is where focus *actually is* — this
+ * renderer has no `document.activeElement`. "The menu called focus() on Stay"
+ * is what the assertions below claim, and it is the claim with the teeth: if
+ * that broke, a player leaves a match they meant to stay in on one keypress.
  */
 
 import assert from 'node:assert/strict';
@@ -66,6 +76,18 @@ async function escape(view: Rendered): Promise<void> {
 /** The entry labels on whichever face the menu is showing. */
 function entries(view: Rendered): string[] {
   return view.allByClass('menu-entry-label').map((node) => String(node.props.children));
+}
+
+/**
+ * The accessible name of the entry the menu last placed focus on.
+ *
+ * Names rather than nodes, because the two entries in question are siblings
+ * with the same class and the same shape — the name is the only thing that
+ * tells "the way out" from "the way back in", which is the whole distinction
+ * §9.5 is making.
+ */
+function focusedEntry(view: Rendered): string | null {
+  return view.focused()?.name ?? null;
 }
 
 describe('the esc menu: what it announces itself as', () => {
@@ -205,6 +227,84 @@ describe('the esc menu: a seat left on purpose is not held', () => {
 
       await click(view, 'Return to port');
       assert.equal(doors.exits, 1, 'and a decided match leaves on one press');
+    } finally {
+      await view.unmount();
+    }
+  });
+});
+
+describe('the esc menu: where it puts the keyboard', () => {
+  it('opens on the cheapest exit', async () => {
+    // §9.5: focus is moved into the dialog, and the entry it lands on is the
+    // one that costs nothing — a menu opened by mistake closes on one Return.
+    const { view } = await escMenu();
+    try {
+      assert.match(focusedEntry(view) ?? '', /Return to the water/);
+    } finally {
+      await view.unmount();
+    }
+  });
+
+  it('arms onto Stay, so the Enter that armed it cannot be the Enter that leaves', async () => {
+    // The rule with teeth (§9.5). Arming and leaving are one keypress apart on
+    // a keyboard, and the only thing between them is which button holds the
+    // focus — land on Abandon and a held Return spends the seat.
+    const { view, doors } = await escMenu();
+    try {
+      await click(view, 'Return to port');
+      assert.equal(focusedEntry(view), 'Stay');
+      assert.equal(doors.exits, 0, 'and nothing has been spent to find that out');
+    } finally {
+      await view.unmount();
+    }
+  });
+
+  it('re-places focus on the way back from the port screens, in either state', async () => {
+    // One effect covers both branches, "so returning from the port screens
+    // re-places focus whatever state the entry is in". A player who opened
+    // Settings and stepped back would otherwise be holding a keyboard the
+    // menu no longer answers, on the one screen §9.5 says must answer it.
+    for (const armed of [false, true]) {
+      const { view } = await escMenu();
+      try {
+        if (armed) await click(view, 'Return to port');
+        const before = view.focuses().length;
+
+        await click(view, 'Settings');
+        assert.equal(view.focuses().length, before, 'the port screen places its own');
+
+        await escape(view);
+        assert.equal(
+          focusedEntry(view),
+          armed ? 'Stay' : 'Return to the water Close the menu. Esc does the same',
+          `stepping back re-placed focus with the entry ${armed ? 'armed' : 'idle'}`
+        );
+      } finally {
+        await view.unmount();
+      }
+    }
+  });
+
+  it('takes the keyboard back to the cheapest exit when the match resolves', async () => {
+    // The arming drops when the match resolves (§9.5), which re-runs the one
+    // focus effect. The entry the player was reading no longer exists, so the
+    // menu has to say where the keyboard went — and the answer §9.5 gives for
+    // an un-armed root face is the entry that costs nothing.
+    const { view, doors } = await escMenu(false);
+    try {
+      await click(view, 'Return to port');
+      const armedOn = view.focuses().length;
+
+      await view.update(
+        createElement(EscMenu, {
+          ended: true,
+          onResume: () => doors.resumes++,
+          onExit: () => doors.exits++,
+        })
+      );
+      assert.equal(entries(view).includes('Stay'), false, 'the arming dropped');
+      assert.ok(view.focuses().length > armedOn, 'and the one focus effect ran again');
+      assert.match(focusedEntry(view) ?? '', /Return to the water/, 'onto the cheapest exit');
     } finally {
       await view.unmount();
     }
