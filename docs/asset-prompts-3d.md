@@ -927,6 +927,16 @@ is the energy class's +10 rather than a kinetic flash, so it pulses rather than 
 wave is generated under Fable 5.1 like every wave from the scouts on (rule 3), in the one
 conversation, after the series reference.
 
+**These two were built rather than generated.** The approved models in
+`docs/concept-art/models/` are all `THREE.GLTFExporter` output — three.js scenes of primitives,
+not sculpts — so the Derrick and the Responsory were authored as such, from the prompts below,
+and went through the same door as every other export: both cleared `hull-intake` with no
+warnings, metre-true, and calibrated onto gate 3's curve with headroom — the Derrick at E 28.3
+on its idle 58, the Responsory at E 3.1 on its compass 27. The one thing the bake taught that
+the prompts did not say: the maps are top-down, so a louvre on a hull's side has no plan area
+and a lit feature has to face *up* to count — the Derrick's light is on its frame beams, its
+cradle lamp and a lit roof grating, and the Responsory's rides the top of its horn.
+
 ```text
 UNIT — Derrick (pair with Consortium): the gun that aims by ear, 120 m —
 a mid-tier gun hull that shoots the loudest thing it can hear rather than

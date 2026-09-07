@@ -123,6 +123,15 @@ const UNITS = [
   { slug: 'dredge', model: 'dredge-directorate.glb', lengthM: 120, sig: 40 },
   { slug: 'cantus', model: 'cantus-hadron.glb', lengthM: 80, sig: 10 },
   { slug: 'reciter', model: 'reciter-hadron.glb', lengthM: 100, sig: 40.5 },
+  // The mid-tier (docs/units.md "The mid-tier", #531): one navy's each, so
+  // canonical for the kind. The Derrick's glow calibrates on its idle 58 —
+  // under the Klaxon's line at rest, which is the one figure on the hull that
+  // is a decision.
+  { slug: 'derrick', model: 'derrick-bathyarch.glb', lengthM: 120, sig: 58 },
+  // The Responsory's listed 60 is a cone figure like the Clarion's and the
+  // Reciter's (systems-echo.md §8); its emissive calibrates on the compass
+  // average, 27, and the light is placed on the bow array, where the 78 is.
+  { slug: 'responsory', model: 'responsory-hadron.glb', lengthM: 95, sig: 27 },
 ];
 
 /**

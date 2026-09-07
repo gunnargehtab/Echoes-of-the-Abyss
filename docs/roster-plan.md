@@ -661,6 +661,9 @@ The Consortium's Derrick at 0.2 a match is the thinner of the two results and is
 shape: at 330 nodules it displaces Caissons (3.1 to 1.4) and the navy's losses fall with them.
 Better than the Cruiser's flat zero, and not yet a hull the Klaxon leans on.
 
+Both models landed with the wave rather than lagging it (§5): authored as three.js scenes from
+their prompts and intaken like any other export, with no warnings and glow on the curve.
+
 ## 5. What each wave touches
 
 The touch list for one hull, from the code as it stands. A wave is four of these plus its
