@@ -32,8 +32,8 @@ node tools/balance/run.mjs --matchup consortium,commune,directorate,knights --ma
 | Faction | Matches | Decided | Win rate | Nodules/min | Crystal/min | Biomass/min | Mean SIG | Tracked, s | Found enemy, s | Throttled down | Losses | Below the Shelf | Under the layer |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Consortium | 30 | 22 | 0% | 216 | 0.2 | 0.0 | 29 | 382 | 30 | 0% | 15.7 | 100% | 2% |
-| Commune | 30 | 22 | 0% | 181 | 1.2 | 0.1 | 51 | 655 | 20 | 6% | 40.7 | 46% | 2% |
-| Directorate | 30 | 22 | 64% | 214 | 0.0 | 0.2 | 57 | 776 | 41 | 0% | 32.3 | 100% | 6% |
+| Commune | 30 | 22 | 0% | 181 | 1.3 | 0.1 | 51 | 654 | 20 | 6% | 40.7 | 46% | 2% |
+| Directorate | 30 | 22 | 64% | 214 | 0.0 | 0.2 | 57 | 775 | 41 | 0% | 32.3 | 100% | 6% |
 | Knights | 30 | 22 | 36% | 157 | 5.6 | 0.0 | 64 | 818 | 60 | 0% | 16.8 | 100% | 9% |
 
 ## Hulls per match — built / lost
@@ -47,7 +47,7 @@ node tools/balance/run.mjs --matchup consortium,commune,directorate,knights --ma
 | Chorister | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 2.0 | 0.0 / 0.0 |
 | Clarion | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 1.9 |
 | Spinner | 0.0 / 0.0 | 0.3 / 0.1 | 0.0 / 0.0 | 0.0 / 0.0 |
-| Sower | 0.0 / 0.0 | 0.1 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
+| Sower | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
 | Reciter | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 | 0.2 / 0.1 |
 | Freighter | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
 | Beacon | 2.1 / 2.1 | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
@@ -57,6 +57,7 @@ node tools/balance/run.mjs --matchup consortium,commune,directorate,knights --ma
 | Weaver | 0.0 / 0.0 | 0.4 / 0.2 | 0.0 / 0.0 | 0.0 / 0.0 |
 | Caisson | 2.0 / 4.0 | 0.0 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
 | Reed | 0.0 / 0.0 | 0.2 / 2.2 | 0.0 / 0.0 | 0.0 / 0.0 |
+| Bower | 0.0 / 0.0 | 0.1 / 0.0 | 0.0 / 0.0 | 0.0 / 0.0 |
 
 _The opening escort is not counted as built: it is a gift, not a decision._
 
