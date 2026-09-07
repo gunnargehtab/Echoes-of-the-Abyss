@@ -671,6 +671,19 @@ export class GameClient {
     this.order(CLIENT_MSG.layDecoy, { unitId });
   }
 
+  /**
+   * Seed a structure with the Blight's strain — by handle, like a launch, so
+   * the server can prove this slot resolved the wall it is touching.
+   */
+  seedSpore(unitId: number, contactHandle: number): void {
+    this.order(CLIENT_MSG.seedSpore, { unitId, contactHandle });
+  }
+
+  /** Sing, at the hull's own position. Nothing to name and nothing to aim. */
+  sing(unitId: number): void {
+    this.order(CLIENT_MSG.sing, { unitId });
+  }
+
   /** Lay a mine at the hull's own position. Loud to lay, silent once laid. */
   layMine(unitIds: number[]): void {
     if (unitIds.length === 0) return;

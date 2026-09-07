@@ -114,6 +114,8 @@ export type AiCommand =
   | { kind: 'layDecoy'; unitId: number }
   | { kind: 'torpedo'; unitId: number; contactId: number }
   | { kind: 'depthCharge'; unitId: number; depthM: number }
+  | { kind: 'seedSpore'; unitId: number; contactId: number }
+  | { kind: 'sing'; unitId: number }
   | { kind: 'build'; structure: StructureKind; x: number; y: number }
   | { kind: 'produce'; structureId: number; unit: UnitKind }
   /**

@@ -1079,11 +1079,17 @@ function assertOnlyKnown(command: AiCommand, known: Known): void {
       owns([command.unitId]);
       return;
     case 'torpedo':
+    case 'seedSpore':
       owns([command.unitId]);
       assert.ok(
         known.contactIds.has(command.contactId),
-        `torpedoed contact ${command.contactId}, which was never resolved for this slot`
+        `spent a weapon on contact ${command.contactId}, never resolved for this slot`
       );
+      return;
+    case 'sing':
+      // A song is sung where the hull stands. Nothing is named, so there is
+      // nothing to have resolved — only the hull to own.
+      owns([command.unitId]);
       return;
     case 'depthCharge':
       // A depth is water, not a contact — you are bombing a band, and there is
@@ -1170,6 +1176,12 @@ function applyTo(match: Match, slot: number, command: AiCommand): void {
       return;
     case 'depthCharge':
       match.orderDepthCharge(slot, command.unitId, command.depthM);
+      return;
+    case 'seedSpore':
+      match.seedSpore(slot, command.unitId, command.contactId);
+      return;
+    case 'sing':
+      match.sing(slot, command.unitId);
       return;
     case 'build':
       match.build(slot, command.structure, command.x, command.y);

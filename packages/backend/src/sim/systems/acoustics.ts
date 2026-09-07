@@ -189,6 +189,21 @@ export function acousticsSystem(world: SimWorld): void {
       if (holdSig !== undefined) sig = Math.max(sig, holdSig);
     }
 
+    // A siege hull at work (docs/systems-combat.md §9): the Furnace's cutters
+    // at 75, the Lure's song at 55, the Tocsin's bell at 88. A floor for the
+    // cut's and the sounding's reasons: it never quietens an already-louder
+    // hull, and it survives an order to run silent — not because the floor
+    // overrides the posture, but because the next cycle *breaks* the silence
+    // (docs/systems-combat.md §6) and the floor is simply still there when it
+    // does. You may have the wall or the silence, never both.
+    //
+    // The Blight is the exception that proves the rule and needs no branch: it
+    // has no `sigWorking` at all, and its spore is the one siege with no sound.
+    if (world.siegeWorkSig.size !== 0) {
+      const workSig = world.siegeWorkSig.get(eid);
+      if (workSig !== undefined) sig = Math.max(sig, workSig);
+    }
+
     sig = applySpikeDecay(world, eid, sig);
     // A Resonance Storm destabilises organic tech (docs/hazards.md §5), which
     // is added before the veil takes its cut: the cloud muffles whatever the

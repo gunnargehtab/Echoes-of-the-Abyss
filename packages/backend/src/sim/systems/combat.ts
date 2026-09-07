@@ -44,6 +44,7 @@ import {
   SilentRunning,
   StaticEmitter,
   Structure,
+  Velocity,
   UnderConstruction,
   Unit,
   Weapon,
@@ -69,8 +70,27 @@ const targetables = defineQuery([Position, Owner, Health]);
 /** Ordnance a gun could engage — the point-defence candidate set. */
 const interceptable = defineQuery([Ordnance, Position, Owner, Health]);
 
+/**
+ * Below this speed a hull counts as stationary for a gun gated on standing
+ * still. The same figure acoustics uses to tell idle from cruise, so "quiet
+ * because it stopped" and "able to fire because it stopped" agree about what
+ * stopped means.
+ */
+const STATIONARY_EPSILON_MPS = 0.01;
+
 interface WeaponProfile {
   damage: number;
+  /**
+   * What this weapon does to a *structure* (docs/systems-combat.md §9, "One
+   * weapon, two numbers").
+   *
+   * Carried beside `damage` rather than resolved at the call site, because
+   * `profileFor` is the single place a damage number is produced and the two
+   * faction traits that bend one bend both — a Consortium Furnace cutting at
+   * SIG 75 has the Klaxon's +12% on its cutters, and it would be strange for it
+   * not to.
+   */
+  structureDamage: number;
   rangeM: number;
   cooldownS: number;
   firingSig: number;
@@ -100,6 +120,9 @@ function profileFor(world: SimWorld, eid: number): WeaponProfile {
     const stats = statsFor(Unit.kind[eid] as UnitKind);
     return {
       damage: stats.attackDamage * multiplier,
+      // A hull that says nothing about walls hits one exactly as hard as it
+      // hits a hull, which is every hull outside the siege row.
+      structureDamage: (stats.attackDamageStructure ?? stats.attackDamage) * multiplier,
       rangeM: stats.attackRangeM,
       cooldownS: stats.attackCooldownS,
       firingSig: firingSigFor(faction, stats.sigFiringBurst),
@@ -108,6 +131,9 @@ function profileFor(world: SimWorld, eid: number): WeaponProfile {
   const stats = structureStatsFor(Structure.kind[eid] as StructureKind);
   return {
     damage: (stats.attackDamage ?? 0) * multiplier,
+    // No structure in the roster is a siege engine, so a turret shoots a wall
+    // with the same shell it shoots a hull with.
+    structureDamage: (stats.attackDamage ?? 0) * multiplier,
     rangeM: stats.attackRangeM ?? 0,
     cooldownS: stats.attackCooldownS ?? 1,
     firingSig: firingSigFor(faction, stats.sigFiringBurst ?? 0),
@@ -219,7 +245,21 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
     }
 
     const profile = profileFor(world, eid);
-    if (profile.damage <= 0) continue;
+    // A siege hull's hull figure can be tiny and its wall figure large, so a
+    // gate on the first alone would have switched the Furnace's cutters off.
+    if (profile.damage <= 0 && profile.structureDamage <= 0) continue;
+
+    // A gun gated on standing still (docs/units.md, the Tocsin). Read from
+    // velocity rather than from an order, for acoustics' reason: what matters
+    // is whether the hull is actually moving, not what it was told to do.
+    if (
+      hasComponent(world, Unit, eid) &&
+      statsFor(Unit.kind[eid] as UnitKind).firesOnlyStationary === true
+    ) {
+      if (Math.hypot(Velocity.x[eid] ?? 0, Velocity.y[eid] ?? 0) > STATIONARY_EPSILON_MPS) {
+        continue;
+      }
+    }
 
     const slot = Owner.slot[eid]!;
     const isMobile = hasComponent(world, MoveOrder, eid);
@@ -335,6 +375,22 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
     }
 
     const distance = engagementRangeM(eid, target);
+
+    // A siege hull at work is loud for as long as the work lasts, not only on
+    // the tick a cycle lands (docs/units.md, the Furnace's cutters at 75 and
+    // the Tocsin's bell at 88). Written as a floor for acoustics to read, the
+    // same arrangement `liftCutSig` and `soundingSig` use and for the same
+    // reason: the system that knows the hull is engaged is not the system that
+    // computes SIG, and this pass runs before that one.
+    //
+    // "Engaged and in range" rather than "fired", because a cutter between
+    // cycles is still cutting — the two-second gap is a reload, not a pause in
+    // the noise.
+    if (distance <= profile.rangeM && hasComponent(world, Unit, eid)) {
+      const working = statsFor(Unit.kind[eid] as UnitKind).sigWorking;
+      if (working !== undefined) world.siegeWorkSig.set(eid, working);
+    }
+
     if (distance > profile.rangeM) {
       // Only an explicit order chases; auto-acquired targets were in range by
       // construction. Turrets have no MoveOrder and simply wait, and so does
@@ -377,7 +433,12 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
     // authored transit happens when its document says it does, and twelve
     // idle guns at a muster are not the document (`isDriven`, #349).
     if (isDriven(world, target)) continue;
-    Health.hp[target] = Health.hp[target]! - profile.damage;
+    // One weapon, two numbers, chosen by what it hit (§9). A wall and a hull
+    // are different target classes and always were; until wave 4 no weapon had
+    // an opinion about which it was shooting.
+    Health.hp[target] =
+      Health.hp[target]! -
+      (hasComponent(world, Structure, target) ? profile.structureDamage : profile.damage);
     // Damage is a sound: a creature that gave hull is told what shot it, and
     // the Hollow answers a gun that outranges its trigger (`wound`, #353).
     wound(world, target, eid);

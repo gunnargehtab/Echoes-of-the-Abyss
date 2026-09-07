@@ -76,6 +76,8 @@ export const CLIENT_MSG = {
   torpedo: 'torpedo',
   noisemaker: 'noisemaker',
   layDecoy: 'layDecoy',
+  seedSpore: 'seedSpore',
+  sing: 'sing',
   mine: 'mine',
   // Lower-case on the wire, unlike every other multi-word name here. Kept as
   // it is because the name is the contract: correcting the casing would be a
@@ -196,6 +198,27 @@ export interface LayDecoyMessage {
   unitId: number;
 }
 
+/**
+ * Seed a structure with a Deepbloom strain (docs/units.md, the Blight).
+ *
+ * By opaque handle like a torpedo launch, and for the same reason: the handle
+ * is the proof that this slot resolved this structure. A client cannot seed its
+ * way to a map of the enemy base by guessing.
+ */
+export interface SeedSporeMessage {
+  unitId: number;
+  contactHandle: number;
+}
+
+/**
+ * Sing (docs/units.md, the Lure). No target and no handle: the song is sung at
+ * the hull's own position, so there is nothing to have resolved — you are
+ * calling the Drift to where you are standing, which is the decision.
+ */
+export interface SingMessage {
+  unitId: number;
+}
+
 export interface PingMessage {
   unitId: number;
 }
@@ -289,6 +312,8 @@ export interface ClientMessages {
   torpedo: TorpedoMessage;
   noisemaker: NoisemakerMessage;
   layDecoy: LayDecoyMessage;
+  seedSpore: SeedSporeMessage;
+  sing: SingMessage;
   mine: MineMessage;
   depthcharge: DepthChargeMessage;
   harvest: HarvestMessage;
