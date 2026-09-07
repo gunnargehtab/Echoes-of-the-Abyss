@@ -238,6 +238,59 @@ function hullsBoughtOver(
 describe('the commander saves for the hull the rung was bought for', () => {
   const consortium = Faction.Bathyarch;
 
+  it('reaches a want the queue used to hide, and takes the nearest of them', () => {
+    // The fix #518's fourth cause needed, in one observation.
+    //
+    // A Consortium with the rung standing, no ordnance hull and no siege hull,
+    // and 380 nodules: exactly the Furnace's price and twenty short of the
+    // Broadside's. Both wants are *reachable* — each has more than half its
+    // price in the bank — so under the queue this replaced, the ordnance want
+    // came first, held the purse for its Broadside, and returned. The siege
+    // want three lines below it was never read, and nothing was bought, on this
+    // observation or on any other for the next two minutes.
+    //
+    // Arbitrated, the nearer bid wins and the nearer bid is affordable, so the
+    // hull is simply bought. That is the whole change: not a new hold, but
+    // every want being asked before one of them is chosen.
+    const brief = briefing(consortium);
+    const home = brief.spawns[brief.slot]!;
+    const at = (i: number): { x: number; y: number } => ({ x: home.x + i * 60, y: home.y });
+    const ordnance = OWN_ORDNANCE[consortium];
+    const siege = OWN_SIEGE[consortium];
+    assert.ok(
+      priceOf(statsFor(siege)).nodules < priceOf(statsFor(ordnance)).nodules,
+      'the premise: the siege hull is the nearer of the two'
+    );
+
+    // The economy staffed and the line short, as `force` builds it — but
+    // without the two hulls this test is about.
+    const doctrine = DOCTRINE[consortium];
+    const roster: UnitKind[] = [
+      ...Array.from<UnitKind>({ length: doctrine.harvesterTarget }).fill(UnitKind.Harvester),
+      OWN_SCOUT[consortium],
+      UnitKind.Corvette,
+      UnitKind.Corvette,
+    ];
+    const base = snapshot(brief, 6000);
+    const wanted = new AiCommander(brief).observe(
+      snapshot(brief, 6000, {
+        units: roster.map((kind, i) => hull(i + 1, kind, at(i))),
+        structures: [
+          ...base.structures,
+          structure(30, StructureKind.Slipway, { x: home.x - 400, y: home.y }),
+        ],
+        nodules: priceOf(statsFor(siege)).nodules,
+      })
+    );
+
+    const produced = wanted.filter((c) => c.kind === 'produce');
+    assert.deepEqual(
+      produced.map((c) => (c as { unit: UnitKind }).unit),
+      [siege],
+      'the want behind the holder is reached, and it is what the purse buys'
+    );
+  });
+
   it('buys its heavy the moment the yard and the price are both there', () => {
     const brief = briefing(consortium);
     const heavy = heavyOf(consortium);
