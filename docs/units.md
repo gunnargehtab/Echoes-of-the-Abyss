@@ -852,7 +852,7 @@ Furnace (Slipway)
   Thirty seconds on a Refinery; ninety-four on a Corvette, which is four Corvettes' worth of
   losing. The cutter is a tool and the gap is deliberate — a siege hull that could also
   fight would be the best line hull in the game
-- Faction-locked: yes. A hull that must stand 200 m off a wall for half a minute at SIG 75
+- Faction-locked: yes. A hull that must stand 320 m off a wall for half a minute at SIG 75
   is only fieldable by a navy that brings a Bulwark to stand in front of it; every other
   doctrine would be buying a siege it cannot escort
 
@@ -921,6 +921,102 @@ Tocsin (Slipway)
   whole hull
 - Faction-locked: yes. A gun that announces its navy's position for as long as it works is
   the Order's doctrine stated as a weapon, and an unpriced liability under any other
+
+The line hulls, and the anchor — the fifth wave
+
+Two navies had been fighting with a hull nobody owns. The Order's line hull is the Clarion
+and the Directorate's is the Chorister — by doctrine and by price
+([economy.md](economy.md) §6) — but the Consortium and the Commune both opened, massed and
+died in Corvettes, which is the roster saying that half the game's navies fight the same
+way. These two hulls end that, and the third is the Commune's heavy, which is not a heavy.
+
+Nothing below is a new mechanism. Every effect the Bower carries already exists somewhere
+else in the simulation; what is new is that one hull carries all three, and that it grows
+*someone else's* magazine.
+
+Caisson (Foundry)
+
+- Role: The line hull that cannot hide and has stopped trying. A Corvette with a third more
+  plate, a slower drive, and a plant that runs at one volume whether or not it is moving
+- SIG: **64 / 64 / +25** — flat, like the Corvette's, because there is nothing aboard to
+  throttle. Four above the Klaxon's line and never under it while the drive turns, which is
+  the whole hull: [systems-combat.md](systems-combat.md) §11 gives the Consortium +12%
+  damage while SIG > 60, and this is the only hull in the roster that is always over it
+- HYD: 45 — plate, not sensors
+- PR: 2 — the Consortium baseline
+- Cost: 170
+- Build time: 38s
+- Berths: 2
+- Speed: 70 (a Corvette's 85, slowed by what it is carrying)
+- HP: 560
+- Effect: none, and that is the entry. **It carries a Corvette's gun** — 50 damage at 550 m
+  on a 1.8 s cycle — and the difference is that a Caisson's 50 is always 56 while a
+  Corvette's 50 almost never is: a Corvette firing reaches 53 and stays under the line, so
+  the Klaxon's bonus is something other Consortium hulls buy by descending, working or
+  standing in a storm, and this one simply has. Silent Running is still available and still
+  drops it below 60, which is the trade stated exactly once: **you may have the quiet or the
+  12%, never both**
+- Faction-locked: yes, and it fails the Clarion test the way the Clarion does. A hull whose
+  whole argument is one faction's damage rule reads as a slow, loud, overpriced Corvette to
+  the other three — 64 SIG bought nothing, and 560 HP does not pay for it
+
+Reed (Foundry)
+
+- Role: The line hull that wins the fight it chose. Faster, thinner and quieter than the
+  Corvette it replaces, with a shorter gun
+- SIG: **12 / 20 / +25** — 20 at 100 m/s against the Corvette's 28 at 85, which is the Veil's
+  whole argument written out as one row: the Commune arrives at a place the Corvette could
+  not have arrived at unheard
+- HYD: 50 — the baseline listener's ears, unchanged. The hull's difference is where it is,
+  not what it hears
+- PR: 1 — the Commune baseline, and one below the Corvette it replaces. "They don't survive
+  the deep; they terraform it" ([factions.md](factions.md)): the navy's line hull cannot
+  follow a fight under the Shelf, and that is the doctrine rather than an oversight
+- Cost: 105
+- Build time: 26s
+- Berths: 2
+- Speed: 100
+- HP: 340
+- Effect: none. **The Corvette's gun, 130 m shorter** — 50 damage at 420 m on the same 1.8 s
+  cycle — so the duel is the same duel and everything the Reed changed is about reaching it:
+  it dies in seven shots against a Corvette's nine, and a Corvette that has not closed can
+  fire at it from outside its reply
+- Faction-locked: yes. The SIG line is the argument: 20 at flank is unreadable outside a navy
+  whose economy is built to be poor and unheard, and any other doctrine buying this hull has
+  bought a Corvette that dies faster
+
+Bower (Slipway)
+
+- Role: The anchor a swarm forms around. Slow, quiet, no gun; a Spore Veil with a drive
+- SIG: 10 / 16 / — , and **45 while it is grown out** — the Sower's figure, because a bloom
+  is a bloom. It is heard at 18: the cloud it grows suppresses everything inside it and the
+  hull is inside it
+- HYD: 40, and **5 while grown out** — its own cloud blinds it exactly as it blinds everyone
+  else. The anchor is a deaf place, for both sides
+- PR: 1
+- Cost: 360 — nodules only, for the Sower's reason (#491): the hull that makes a field
+  workable may not be priced in what the field yields
+- Build time: 66s
+- Berths: 3
+- Speed: 40
+- HP: 620
+- Effect: three, all of them borrowed. **Stationary for 30 s it grows out**: a Spore Veil at
+  **half radius, 175 m** — SIG ×0.4 and HYD 5 inside it, friend and foe alike, which is the
+  structure's own rule and not a gentler one. **It is a nursery within 300 m**, so a Spinner
+  regrows a mine beside it and not only inside a veil or by a Bastion; that reach is the
+  Bastion's, and it is deliberately wider than the cloud, so the swarm can rearm without
+  going deaf. **It welds nothing** — repair is the Consortium's, and a hull that anchored and
+  healed would be both navies' heavy
+- Faction-locked: yes. It is a Spore Veil with a drive, and only the Commune has a Spore Veil
+
+What the wave decided that the sketches had not. The Caisson's sketch asked for "a third more
+SIG and the Klaxon's +12% always lit", and those are two different hulls: a third more than
+28 is 37, and 37 never lights anything. The claim that survives is the one that is an
+argument — the floor above the line — so the noise is not a third more but two and a third
+times more, and the hull is priced for it. And the Bower's clock covers only the cloud: the
+nursery runs whether the hull is moving or not, because an anchor that had to be parked
+before it could rearm anybody would be a second thing to protect rather than the thing the
+swarm forms around.
 
 What this does to the summary table. [factions.md](factions.md)'s *Army* row becomes true in
 the roster: the Consortium fields the heaviest hull and the only repair; the Commune the most

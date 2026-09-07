@@ -2050,6 +2050,16 @@ export const STRUCTURE_AURAS = {
  * Spinner's magazine is the mine cap's, and the Tender is the one mechanism
  * the simulation did not have. All SPEC, cited to the hull's stat block.
  */
+/**
+ * The reach of a nursery — a Bastion's, and the Bower's for the same reason.
+ *
+ * One number with two readers (docs/units.md: the Spinner "regrows one every
+ * 40 s while inside a Spore Veil or within 300 m of a Bastion", and the Bower
+ * "is a nursery within 300 m"), so the hull and the building cannot drift into
+ * disagreeing about how far a mine grows from its source.
+ */
+const NURSERY_RADIUS_M = 300;
+
 export const HULL_EFFECTS = {
   /** SPEC — Tender: "15 HP/s to one allied hull within 300 m, nearest first". */
   TENDER: {
@@ -2063,7 +2073,7 @@ export const HULL_EFFECTS = {
   SPINNER: {
     MAGAZINE: 4,
     REGROW_S: 40,
-    BASTION_RADIUS_M: 300,
+    BASTION_RADIUS_M: NURSERY_RADIUS_M,
   },
   /**
    * SPEC — Precentor: "+10 HYD within 500 m to allied hulls, capped at 95". The
@@ -2144,6 +2154,32 @@ export const HULL_EFFECTS = {
   ANTIPHON: {
     PR_BONUS: 1,
     GRANT_S: 20,
+  },
+
+  /**
+   * The Bower's cloud and its nursery — docs/units.md, "The line hulls, and
+   * the anchor". Nothing here is new: a Spore Veil at half the size, carried
+   * by a hull that can be killed, plus the Bastion's nursery reach.
+   *
+   * The radius is **derived** from the structure's rather than written down,
+   * because the claim the entry makes is "half a Spore Veil" and not "175 m".
+   * A cloud retuned on the building has to take the hull with it, or the
+   * sentence in the doc quietly stops being true.
+   */
+  BOWER: {
+    /** Half the structure's cloud. Everything else about it is identical. */
+    VEIL_RADIUS_M: STRUCTURE_AURAS.SPORE_VEIL.RADIUS_M / 2,
+    /**
+     * How far a Spinner may be and still regrow beside it. Deliberately wider
+     * than the cloud, so a swarm can rearm without also going deaf.
+     */
+    NURSERY_RADIUS_M,
+    /**
+     * Seconds stationary before the cloud is grown out — the longest clock in
+     * the roster, against the Cantus's 10 and the Sower's 20. An anchor is a
+     * decision to stop, and half a minute is what makes it one.
+     */
+    STATIONARY_S: 30,
   },
 } as const;
 

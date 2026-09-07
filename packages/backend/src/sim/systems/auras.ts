@@ -79,6 +79,10 @@ const veils: Aura[] = [];
 const precentors: Aura[] = [];
 const singers: Aura[] = [];
 const seeders: Aura[] = [];
+// A Bower grown out — the Spore Veil's cloud at half its radius, carried by a
+// hull that can be killed (#509). In this list rather than in `veils` because
+// the radius differs and nothing else does.
+const bowers: Aura[] = [];
 
 function inRange(unit: number, auras: Aura[], slot: number, radiusM: number): boolean {
   const ux = Position.x[unit]!;
@@ -99,6 +103,7 @@ export function aurasSystem(world: SimWorld): void {
   precentors.length = 0;
   singers.length = 0;
   seeders.length = 0;
+  bowers.length = 0;
   world.spireActive.clear();
 
   // A construction site projects nothing — the aura arrives with commission.
@@ -137,7 +142,7 @@ export function aurasSystem(world: SimWorld): void {
   }
 
   const { BAFFLE_BARGE, CANTOR, SOUNDING_SPIRE } = STRUCTURE_AURAS;
-  const { PRECENTOR, CANTUS, SOWER } = HULL_EFFECTS;
+  const { PRECENTOR, CANTUS, SOWER, BOWER } = HULL_EFFECTS;
   const roster = units(world);
 
   // The hull-borne sources, gathered before the grant pass for the reason the
@@ -156,7 +161,9 @@ export function aurasSystem(world: SimWorld): void {
           ? singers
           : kind === UnitKind.Sower && HullEffect.active[eid] === 1
             ? seeders
-            : null;
+            : kind === UnitKind.Bower && HullEffect.active[eid] === 1
+              ? bowers
+              : null;
     if (list === null) continue;
     list.push({ eid, x: Position.x[eid]!, y: Position.y[eid]!, slot: Owner.slot[eid]! });
   }
@@ -262,19 +269,32 @@ export function aurasSystem(world: SimWorld): void {
   // Spore Veil — last, and SYMMETRIC: everything inside the cloud, friend or
   // foe, structure or hull, emits muffled and listens blind. Deliberately
   // after the Cantor pass: inside the veil even a Listener's ears are moss.
-  if (veils.length > 0) {
+  //
+  // Two sources now and one rule: the building's cloud, and a grown-out
+  // Bower's at half the radius (docs/units.md, "The line hulls, and the
+  // anchor"). The hull's is not a gentler veil — it is the same 0.4× and the
+  // same blindness in a smaller circle, which is what makes the anchor a place
+  // a swarm hides *and* a place it cannot hear from. The Bower is in `all`
+  // like everything else, so its own 45 while grown out is suppressed by its
+  // own cloud without a line of code saying so.
+  if (veils.length > 0 || bowers.length > 0) {
     const { RADIUS_M, SIG_FACTOR, BLIND_HYD } = STRUCTURE_AURAS.SPORE_VEIL;
     for (let i = 0; i < all.length; i++) {
       const eid = all[i]!;
       const ex = Position.x[eid]!;
       const ey = Position.y[eid]!;
-      for (let v = 0; v < veils.length; v++) {
+      let veiled = false;
+      for (let v = 0; v < veils.length && !veiled; v++) {
         const veil = veils[v]!;
-        if (Math.hypot(veil.x - ex, veil.y - ey) > RADIUS_M) continue;
-        Acoustic.sigFactor[eid] = SIG_FACTOR;
-        Acoustic.hyd[eid] = BLIND_HYD;
-        break;
+        if (Math.hypot(veil.x - ex, veil.y - ey) <= RADIUS_M) veiled = true;
       }
+      for (let b = 0; b < bowers.length && !veiled; b++) {
+        const bower = bowers[b]!;
+        if (Math.hypot(bower.x - ex, bower.y - ey) <= BOWER.VEIL_RADIUS_M) veiled = true;
+      }
+      if (!veiled) continue;
+      Acoustic.sigFactor[eid] = SIG_FACTOR;
+      Acoustic.hyd[eid] = BLIND_HYD;
     }
   }
 }

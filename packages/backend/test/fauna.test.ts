@@ -429,9 +429,23 @@ describe('the Drift in a normal match', () => {
         `${worstWalks} path integrals, ${match.worstEchoPassMs.toFixed(3)} ms worst case`
     );
     assert.ok(countFauna(match.world) > 0, 'a normal match has animals in it');
-    // Headroom over the observed 126 for ordinary tuning and for the herds
+    // Headroom over the observed count for ordinary tuning and for the herds
     // moving, and far below the 597 a Drift that listens costs.
-    const WALK_BUDGET = 200;
+    //
+    // 206 since #509, against 126 when this was written and 129 measured on the
+    // commit before the wave. The opening kit is the whole of the difference,
+    // and it is a design consequence rather than a regression: every navy now
+    // opens in its own line hull, so the Consortium's two Caissons idle at 64
+    // and the Order's two Clarions at 62 where both used to idle at a
+    // Corvette's 28 — and this pass is paid per observer-emitter pair, so a
+    // hull built to be heard is heard by more listeners. The Directorate's four
+    // Choristers are 32 of the 77: four sets of the best ears in the game,
+    // which is that navy's doctrine costing exactly what it should.
+    //
+    // The wall clock stayed where it was, and the spread is why this test has
+    // never asserted on it: four runs of this identical 206-walk work measured
+    // 2.771, 1.339, 0.718 and 0.751 ms.
+    const WALK_BUDGET = 260;
     assert.ok(
       worstWalks <= WALK_BUDGET,
       `Echo pass did ${worstWalks} path integrals, budget ${WALK_BUDGET}`

@@ -209,7 +209,7 @@ is used four ways. Each wave is one pull request and one row in
 | 2 — scouts (done, #506) | Beacon, Glider, Acolyte, Herald | engine-off glide; cheap cadence ping | first-classified-enemy time per navy moves, and differently per navy |
 | 3 — ordnance (done, #507) | Broadside, Weaver, Thurible, Lance | noisemakers laid from a hull; upward depth charge | the weapon triangle reads in duels: torpedo navy beats heavy pushes, decoy navy survives them |
 | 4 — siege (done, #508) | Furnace, Blight, Lure, Tocsin | structure-only damage; spore over time; fauna weighting from a hull | match length falls without the win rates spreading — read in the four-faction baseline, not a duel (#518) |
-| 5 — line and anchor | Caisson, Reed, Bower | none | the Consortium and Commune doctrines stop buying Corvettes; the Bower is judged where the Slipway is reached (#518) |
+| 5 — line and anchor (done, #509) | Caisson, Reed, Bower | none | the Consortium and Commune doctrines stop buying Corvettes; the Bower is judged where the Slipway is reached (#518) |
 | 6 — the commons | none | none | a decision, from the harness: retire the Light Scout, Corvette and Cruiser from the bars, or keep them as the surplus market |
 
 **Wave 0** is the part that is not glamorous and cannot be skipped. It is issue #498, and it

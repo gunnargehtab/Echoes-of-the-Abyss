@@ -115,6 +115,12 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   [UnitKind.Blight]: 'blight',
   [UnitKind.Lure]: 'lure',
   [UnitKind.Tocsin]: 'tocsin',
+  // The line hulls and the anchor (#509). No model yet: the procedural bake
+  // is gate 1's sanctioned state until one clears intake, and the slug is
+  // where it lands.
+  [UnitKind.Caisson]: 'caisson',
+  [UnitKind.Reed]: 'reed',
+  [UnitKind.Bower]: 'bower',
 };
 
 /** Every structure kind has an approved model; the Partial stays for the

@@ -294,8 +294,16 @@ describe('the commander saves for the hull the rung was bought for', () => {
     // hold, buy one hull, and hold again for the rest of the match, paying for
     // a hull it was not going to reach with the line it needed instead.
     //
-    // Same commander, same yard, same want: only the bank differs, and a fifth
-    // of the price is not "nearly there".
+    // Same commander, same yard, same want: only the bank differs, and two
+    // fifths of the price is not "nearly there" — the rule's floor is half.
+    //
+    // Two fifths rather than the one fifth this test used to hold, because a
+    // fifth of a 700 nodule Bulwark is 140 and the Consortium's line hull is a
+    // 170 nodule Caisson since #509. At a fifth the control bought *nothing*,
+    // and a test that cannot afford the thing it is measuring the purchase of
+    // measures poverty rather than policy. The bank has to sit under the
+    // rule's floor and over the price of what the navy would otherwise buy;
+    // this is the band between them.
     const brief = briefing(consortium);
     const heavy = heavyOf(consortium);
     const home = brief.spawns[brief.slot]!;
@@ -309,7 +317,7 @@ describe('the commander saves for the hull the rung was bought for', () => {
     });
     const nowhereNear = hullsBoughtOver(brief, 600, {
       structures: [...base.structures, yard],
-      nodules: Math.floor(price * 0.2),
+      nodules: Math.floor(price * 0.4),
     });
 
     assert.ok(

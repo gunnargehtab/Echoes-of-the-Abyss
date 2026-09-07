@@ -25,6 +25,7 @@ import {
   LandingGrant,
   Laying,
   Magazine,
+  MineMagazine,
   Ordnance,
   Owner,
   Position,
@@ -193,6 +194,17 @@ export function hashWorld(world: SimWorld): number {
       // has diverged just as surely as one where a hull moved.
       h = mixU32(h, Magazine.torpedoes[eid]!);
       h = mixFloat(h, Magazine.rearmRemainingS[eid]!);
+    }
+    if (hasComponent(world, MineMagazine, eid)) {
+      // The same argument for the grown magazine, and it became worth making
+      // when the nursery learned to move (#509). A mine that has regrown is a
+      // mine that will be laid, and until it is laid nothing else the hash
+      // reads says it exists — so two runs that disagreed about a regrowth
+      // would agree on every other field until the wall appeared. A Spore Veil
+      // and a Bastion stand still; a Bower walks its 300 m reach around the
+      // map, which is a great many more chances to disagree.
+      h = mixU32(h, MineMagazine.mines[eid]!);
+      h = mixFloat(h, MineMagazine.regrowRemainingS[eid]!);
     }
   }
 

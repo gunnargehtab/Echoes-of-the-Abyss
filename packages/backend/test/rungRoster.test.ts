@@ -428,6 +428,104 @@ describe('the Spinner — the mine-layer', () => {
   });
 });
 
+describe('the Bower — the anchor a swarm forms around', () => {
+  it('is a nursery that moves, and needs no clock to be one', () => {
+    // The one of its three effects that is *not* on the stationary clock
+    // (docs/units.md, "The line hulls, and the anchor"). An anchor a swarm
+    // could only rearm at once it had parked would be a second thing to
+    // protect rather than the thing the swarm forms around.
+    const { match, bastion } = skirmish(Faction.Pelagia);
+    const bx = Position.x[bastion]!;
+    const by = Position.y[bastion]!;
+
+    // Both well out in the field, past the Bastion's own 300 m nursery.
+    const spinner = hull(match, Faction.Pelagia, UnitKind.Spinner, bx + 4000, by);
+    advance(match, 0.1);
+    for (let i = 0; i < HULL_EFFECTS.SPINNER.MAGAZINE; i++) {
+      match.layMine(0, spinner);
+      advance(match, ORDNANCE.MINE.ARMING_S + 0.2);
+    }
+    assert.equal(MineMagazine.mines[spinner], 0, 'spent, and nowhere near a nursery');
+
+    const bower = hull(match, Faction.Pelagia, UnitKind.Bower, bx + 4000, by + 150);
+    // Under way for the whole interval, and never still long enough to grow
+    // its cloud: walked between two points either side of the Spinner, each
+    // leg longer than five seconds of its 40 m/s, so it is always moving and
+    // never further than 150 m away.
+    for (let leg = 0; leg < 9; leg++) {
+      match.orderMove(0, bower, bx + 4000, by + (leg % 2 === 0 ? -150 : 150));
+      advance(match, 5);
+    }
+    assert.equal(HullEffect.active[bower], 0, 'walking, so no cloud');
+    assert.equal(MineMagazine.mines[spinner], 1, 'and a mine regrown anyway');
+  });
+
+  it('grows a Spore Veil at half radius after 30 s standing still, itself inside it', () => {
+    const { match, bastion } = skirmish(Faction.Pelagia);
+    const bx = Position.x[bastion]! + 4000;
+    const by = Position.y[bastion]!;
+    const { RADIUS_M, SIG_FACTOR, BLIND_HYD } = STRUCTURE_AURAS.SPORE_VEIL;
+    const { VEIL_RADIUS_M, STATIONARY_S } = HULL_EFFECTS.BOWER;
+    assert.equal(VEIL_RADIUS_M, RADIUS_M / 2, 'half the structure’s cloud, derived from it');
+
+    const bower = hull(match, Faction.Pelagia, UnitKind.Bower, bx, by);
+    advance(match, STATIONARY_S - 2);
+    assert.equal(HullEffect.active[bower], 0, 'not yet: half a minute is what makes it a decision');
+    advance(match, 3);
+    assert.equal(HullEffect.active[bower], 1, 'grown out');
+
+    // The bloom is the Sower's figure and the hull is inside its own cloud, so
+    // the 45 it makes is heard as 18 — `Acoustic.sig` carries the suppression
+    // already, which is why the stat block states both numbers.
+    // `Acoustic` is f32, so the veil's 0.4 comes back as 0.40000000596 — near
+    // enough, and never `assert.equal` on a factor that has been through a
+    // typed array.
+    const veiled = (eid: number) => Math.abs(Acoustic.sigFactor[eid]! - SIG_FACTOR) < 1e-6;
+    assert.ok(veiled(bower), 'suppressed by its own cloud');
+    assert.ok(
+      Math.abs(Acoustic.sig[bower]! - statsFor(UnitKind.Bower).sigWorking! * SIG_FACTOR) < 1e-4,
+      `the working figure through its own veil, got ${Acoustic.sig[bower]}`
+    );
+    assert.equal(Acoustic.hyd[bower], BLIND_HYD, 'and blinded by it: the anchor is a deaf place');
+
+    // Brought in *after* the clock ran, so nothing here disturbed it. One
+    // inside the half radius, one outside; separation leaves both alone at
+    // these distances.
+    const inside = hull(match, Faction.Pelagia, UnitKind.Reed, bx + VEIL_RADIUS_M - 25, by);
+    const outside = hull(match, Faction.Pelagia, UnitKind.Reed, bx + VEIL_RADIUS_M + 200, by);
+    advance(match, 0.2);
+    assert.equal(HullEffect.active[bower], 1, 'still standing there');
+    assert.ok(veiled(inside), 'muffled inside');
+    assert.equal(Acoustic.hyd[inside], BLIND_HYD, 'and deaf inside');
+    assert.equal(Acoustic.sigFactor[outside], 1, 'and untouched outside the half radius');
+    assert.equal(Acoustic.hyd[outside], statsFor(UnitKind.Reed).hyd);
+
+    // Silent Running is the off switch for every hull effect, so it is the
+    // off switch for this one: the cloud goes, and the hull it was hiding
+    // stops being hidden.
+    match.setSilentRunning(0, bower, true);
+    advance(match, 0.2);
+    assert.equal(HullEffect.active[bower], 0, 'told to be quiet, it stops working');
+    assert.equal(Acoustic.sigFactor[inside], 1, 'and the cloud goes with it');
+  });
+
+  it('welds nothing — repair is the other navy’s', () => {
+    // Stated in the entry because the hull is otherwise shaped like a Tender:
+    // slow, unarmed, and something a force stands next to. A hull that
+    // anchored *and* healed would be both navies' heavy.
+    const { match, bastion } = skirmish(Faction.Pelagia);
+    const bx = Position.x[bastion]! + 4000;
+    const by = Position.y[bastion]!;
+    const bower = hull(match, Faction.Pelagia, UnitKind.Bower, bx, by);
+    const hurt = hull(match, Faction.Pelagia, UnitKind.Reed, bx + 120, by);
+    advance(match, 0.2);
+    Health.hp[hurt] = 100;
+    advance(match, HULL_EFFECTS.BOWER.STATIONARY_S + 2);
+    assert.equal(HullEffect.active[bower], 1, 'it is working, whatever else it is not doing');
+    assert.equal(Health.hp[hurt], 100, 'and the plate it is standing over is still holed');
+  });
+});
+
 describe('the Tender — the repair hull', () => {
   it('welds the nearest damaged allied hull within 300 m at 15 HP/s, loudly, and stops when there is nothing to weld', () => {
     const { match, bastion } = skirmish(Faction.Bathyarch);

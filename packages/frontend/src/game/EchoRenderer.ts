@@ -663,6 +663,12 @@ const UNIT_SHORT: Record<UnitKind, string> = {
   [UnitKind.Blight]: 'BLT',
   [UnitKind.Lure]: 'LUR',
   [UnitKind.Tocsin]: 'TCS',
+  // The line hulls and the anchor (#509). 'REE' rather than 'RED', which is
+  // a colour word on a bar where colour already means something; 'BWR'
+  // rather than 'BOW', which is the end of a ship.
+  [UnitKind.Caisson]: 'CSN',
+  [UnitKind.Reed]: 'REE',
+  [UnitKind.Bower]: 'BWR',
 };
 
 /** Compact structure names for the build buttons. */

@@ -93,6 +93,10 @@ Song (a hull's)
 
 - The Lure's 60 s call at SIG 55, which doubles what fauna hear from anything within 500 m of the point it was sung at (bestiary.md §2's modifier table, with a source, a radius and a clock). A song is a thing that happened to a *place*: it outlives the singer leaving, and it weights the Directorate's own hulls too.
 
+Nursery
+
+- Anywhere a Spinner's grown magazine regrows: inside an allied Spore Veil, within 300 m of an own Bastion, or since the Bower (units.md, "The line hulls, and the anchor") within 300 m of that hull. The clock only runs in reach, so leaving mid-growth costs nothing and finishes nothing. The Bower is the one nursery that moves, and the one that does not have to be standing still to be one — its *cloud* is on a clock and its nursery is not.
+
 Ghost Markers
 
 - The decaying last-known position of a contact a listener has already detected. Tier 1 and Tier 2 contacts persist this way and fade over 20 s (systems-echo.md §4). A ghost marker is your own stale reading of a live unit, and it lies to you by exactly as much as that unit has moved since you heard it.

@@ -46,6 +46,16 @@ import { eidOfLocalId } from './world.ts';
  * each pair below 4, where it had been appended, which read as the numbers
  * having gone backwards. They did not; they were shared.
  *
+ * 19: every navy opens in its own line hull (#509, docs/units.md, "The line
+ * hulls, and the anchor"). `OPENING_ESCORT` no longer hands all four navies
+ * two Corvettes: the Consortium opens with two Caissons, the Commune with two
+ * Reeds, the Directorate with four Choristers and the Order with two Clarions
+ * — four berths of escort each, whatever the hull. The commands in a v18 file
+ * are still legible, and every one of them would be given to a different fleet
+ * from tick zero, so a v18 recording diverges at its first checkpoint. No new
+ * command: the wave's one hull with an effect, the Bower, works by standing
+ * still and by being where it is, which are things a recording already says.
+ *
  * 18: siege (#508, docs/systems-combat.md §9). Two commands a player did not
  * have — seeding a spore and singing — and three things that change what
  * existing play means: a weapon may now carry a second damage figure for
@@ -207,7 +217,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 18;
+export const REPLAY_FORMAT_VERSION = 19;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =
