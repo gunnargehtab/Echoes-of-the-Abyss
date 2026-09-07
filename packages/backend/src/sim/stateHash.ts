@@ -33,6 +33,8 @@ import {
   ResourceNode,
   EngineOff,
   SilentRunning,
+  Song,
+  Spore,
   Structure,
   Unit,
 } from './components.ts';
@@ -123,12 +125,27 @@ export function hashWorld(world: SimWorld): number {
       // re-derived the debt differently would otherwise diverge in what the
       // player can hear while every hashed field still agreed.
       h = mixU32(h, Structure.grantSlot[eid]!);
+      // A strain eating a wall in silence (docs/systems-combat.md §9). Hashed
+      // because it is the one thing in the game that changes a structure's hull
+      // without changing anything a listener could hear — so if two runs
+      // disagreed about it, every other hashed field would still agree.
+      if (hasComponent(world, Spore, eid)) {
+        h = mixFloat(h, Spore.remainingS[eid]!);
+        h = mixFloat(h, Spore.perS[eid]!);
+      }
     }
     if (hasComponent(world, SilentRunning, eid)) h = mixU32(h, SilentRunning.active[eid]!);
     // The third posture, hashed beside the second: a hull with its drive cut
     // moves and is heard differently, so two runs that disagree about it have
     // diverged (docs/systems-echo.md §6).
     if (hasComponent(world, EngineOff, eid)) h = mixU32(h, EngineOff.active[eid]!);
+    // A song is a clock and a place, and both decide where the Drift goes
+    // (docs/systems-combat.md §9), so two runs that disagree have diverged.
+    if (hasComponent(world, Song, eid)) {
+      h = mixFloat(h, Song.remainingS[eid]!);
+      h = mixFloat(h, Song.x[eid]!);
+      h = mixFloat(h, Song.y[eid]!);
+    }
     if (hasComponent(world, Pressure, eid)) {
       h = mixU32(h, Pressure.rating[eid]!);
       h = mixU32(h, Pressure.bonus[eid]!);

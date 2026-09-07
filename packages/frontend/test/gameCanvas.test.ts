@@ -422,6 +422,59 @@ describe('the shell: what it wires to what', () => {
   });
 });
 
+describe('the shell: the glass over the water', () => {
+  it('makes everything under the esc menu inert while it is up', async () => {
+    // §9.5: the menu is glass rather than blackout, so the match behind it is
+    // still on screen and still full of live controls. One `inert` on the
+    // `.game-under` wrapper is what stops Tab walking down into them — the
+    // wrapper exists for nothing else, and this is the only place the write
+    // is observable in software. *That the flag does what it says* is the
+    // browser's, and is driven in one (#515).
+    const world = await mount();
+    try {
+      await joinMatch(world);
+      const under = world.hosts.get('game-under');
+      assert.notEqual(under, undefined, "the wrapper one `inert` covers is ref'd");
+      assert.equal(under?.inert, false, 'and the water keeps its controls until asked');
+
+      // Escape with nothing left to cancel is the way out of the water — the
+      // renderer raises it, the shell decides, so this is the whole path.
+      dispatchWindow('keydown', { code: 'Escape' });
+      await world.settle();
+      assert.ok(shows(world.tree, 'Holding station'), 'the menu came up');
+      assert.equal(under?.inert, true, 'and took the tab order with it');
+
+      dispatchWindow('keydown', { code: 'Escape' });
+      await world.settle();
+      assert.equal(shows(world.tree, 'Holding station'), false, 'the menu stepped back out');
+      assert.equal(under?.inert, false, 'and gave the water its controls back');
+    } finally {
+      await world.unmount();
+    }
+  });
+
+  it('never leaves the water inert behind a menu a lost signal closed', async () => {
+    // A signal that is not 'connected' closes the menu, because the reconnect
+    // overlay is information the player must see. The flag has to come down
+    // with it: a match that reconnects into a keyboard that reaches nothing
+    // is unrecoverable without a reload.
+    const world = await mount();
+    try {
+      await joinMatch(world);
+      dispatchWindow('keydown', { code: 'Escape' });
+      await world.settle();
+      assert.equal(world.hosts.get('game-under')?.inert, true);
+
+      world.room.drop();
+      await world.settle();
+      assert.equal(shows(world.tree, 'Holding station'), false, 'the menu stood aside');
+      assert.equal(world.hosts.get('game-under')?.inert, false, 'and the water can be reached');
+    } finally {
+      await world.unmount();
+    }
+  });
+});
+
 describe('the shell: leaving', () => {
   it('releases every device it opened', async () => {
     const world = await mount();

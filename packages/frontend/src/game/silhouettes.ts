@@ -61,6 +61,10 @@ export const HULL_LENGTH_M: Record<UnitKind, number> = {
   [UnitKind.Weaver]: statsFor(UnitKind.Weaver).hullLengthM,
   [UnitKind.Thurible]: statsFor(UnitKind.Thurible).hullLengthM,
   [UnitKind.Lance]: statsFor(UnitKind.Lance).hullLengthM,
+  [UnitKind.Furnace]: statsFor(UnitKind.Furnace).hullLengthM,
+  [UnitKind.Blight]: statsFor(UnitKind.Blight).hullLengthM,
+  [UnitKind.Lure]: statsFor(UnitKind.Lure).hullLengthM,
+  [UnitKind.Tocsin]: statsFor(UnitKind.Tocsin).hullLengthM,
 };
 
 /**
@@ -571,6 +575,160 @@ export const HULL_OUTLINE: Record<UnitKind, number[][]> = {
     [0.14, -0.07],
     [0.16, -0.05],
     [0.42, -0.04],
+  ],
+
+  // --- The siege hulls (#508). What each silhouette has to say at RTS
+  // distance is what it does to a wall, and that only one of the four is a
+  // gun: the Furnace's cutters reach, the Blight's seeding arm does not, the
+  // Lure's fan is an instrument, and the Tocsin's barrel has the whole hull
+  // braced behind it. Three are drawn in their working state, as the Glider
+  // and the Herald are: cutters run out, fan spread, bell braced.
+
+  // A box with three prongs: a riveted hull with near-parallel flanks, and
+  // the three cutter ladders run out ahead of the bow from the gantry frame —
+  // one on the keel, one either side, each a boom with a hooded burner head
+  // at its tip — so the count is three teeth at the bow. Reads apart from the
+  // Broadside at a glance because that hull's teeth are on its flanks, toed
+  // outboard, and its bow is a plain chamfer; the Furnace's flanks are bare
+  // and its bow is the whole argument. The prongs sit inboard of the flanks:
+  // bow gear, not flank gear.
+  [UnitKind.Furnace]: [
+    [0.5, 0.045],
+    [0.43, 0.045],
+    [0.43, 0.03],
+    [0.28, 0.03],
+    [0.28, 0.105],
+    [0.43, 0.105],
+    [0.43, 0.09],
+    [0.5, 0.09],
+    [0.5, 0.17],
+    [0.43, 0.17],
+    [0.43, 0.155],
+    [0.28, 0.155],
+    [0.28, 0.21],
+    [-0.42, 0.21],
+    [-0.5, 0.13],
+    [-0.5, -0.13],
+    [-0.42, -0.21],
+    [0.28, -0.21],
+    [0.28, -0.155],
+    [0.43, -0.155],
+    [0.43, -0.17],
+    [0.5, -0.17],
+    [0.5, -0.09],
+    [0.43, -0.09],
+    [0.43, -0.105],
+    [0.28, -0.105],
+    [0.28, -0.03],
+    [0.43, -0.03],
+    [0.43, -0.045],
+    [0.5, -0.045],
+  ],
+  // A split seed: a slim pod, widest a little forward of amidships, with its
+  // husk parted at the bow into two rounded lobes and the seeding arm in the
+  // cleft between them — drawn open, which is the state it seeds in. The
+  // cleft is shallow and the lobes are narrower than the body, so it is a
+  // pod with a cleft nose rather than a fork: the Herald's tines are the
+  // width of its hull and its notch is a third of its length. A fluke
+  // astern. Never wider at the bow than at the waist, which keeps the
+  // Sower's leaf its own, and swollen once rather than three times, which
+  // keeps the Weaver's beads theirs.
+  [UnitKind.Blight]: [
+    [0.32, 0.0],
+    [0.47, 0.035],
+    [0.5, 0.075],
+    [0.44, 0.13],
+    [0.3, 0.175],
+    [0.1, 0.2],
+    [-0.1, 0.19],
+    [-0.28, 0.13],
+    [-0.42, 0.05],
+    [-0.5, 0.09],
+    [-0.5, -0.09],
+    [-0.42, -0.05],
+    [-0.28, -0.13],
+    [-0.1, -0.19],
+    [0.1, -0.2],
+    [0.3, -0.175],
+    [0.44, -0.13],
+    [0.5, -0.075],
+    [0.47, -0.035],
+  ],
+  // A rostrum forward and a fan astern: three scalloped tergites over a
+  // jointed abdomen, the Chorister's and the Dredge's family, and the last
+  // segment spread into five sounding plates — two a side about a telson,
+  // each a broad paddle with a squared end rather than a spine — drawn
+  // spread, which is the state it sings in. Widest at the very stern, where
+  // nothing else in the roster is: the Clarion's widest-aft blade tapers
+  // again before its transom and the Sower's leaf is wide at the other end.
+  // The plates are blunt and all at the stern where the Acolyte's limbs are
+  // pointed and all along the flanks, so the two Directorate plans that
+  // stand things out past the shell read apart.
+  [UnitKind.Lure]: [
+    [0.5, 0.0],
+    [0.4, 0.09],
+    [0.3, 0.15],
+    [0.2, 0.12],
+    [0.1, 0.17],
+    [-0.02, 0.14],
+    [-0.12, 0.16],
+    [-0.2, 0.11],
+    [-0.24, 0.1],
+    [-0.3, 0.25],
+    [-0.37, 0.22],
+    [-0.38, 0.13],
+    [-0.47, 0.17],
+    [-0.5, 0.1],
+    [-0.44, 0.05],
+    [-0.5, 0.02],
+    [-0.5, -0.02],
+    [-0.44, -0.05],
+    [-0.5, -0.1],
+    [-0.47, -0.17],
+    [-0.38, -0.13],
+    [-0.37, -0.22],
+    [-0.3, -0.25],
+    [-0.24, -0.1],
+    [-0.2, -0.11],
+    [-0.12, -0.16],
+    [-0.02, -0.14],
+    [0.1, -0.17],
+    [0.2, -0.12],
+    [0.3, -0.15],
+    [0.4, -0.09],
+  ],
+  // A bell in plan: a thin barrel standing out of the crown forward, and
+  // behind it the whole hull flaring in one unbroken curve to a lip astern
+  // that is the widest beam on any Order hull, the mouth recessed between
+  // the lip's two corners — the brace blades, swung out, which is the state
+  // it fires in. Widest at the very stern and thinnest at the bow, so it
+  // reads apart at a glance from the Lance (widest at its guard, amidships),
+  // the Reciter (a needle, no beam anywhere) and the Clarion (widest aft of
+  // amidships and tapering again before its transom); and the pointed end
+  // still leads, so it reads bow-forward by the rule every dart does.
+  [UnitKind.Tocsin]: [
+    [0.5, 0.07],
+    [0.44, 0.07],
+    [0.44, 0.045],
+    [0.14, 0.045],
+    [0.1, 0.09],
+    [-0.04, 0.12],
+    [-0.2, 0.15],
+    [-0.34, 0.2],
+    [-0.42, 0.24],
+    [-0.5, 0.3],
+    [-0.44, 0.14],
+    [-0.44, -0.14],
+    [-0.5, -0.3],
+    [-0.42, -0.24],
+    [-0.34, -0.2],
+    [-0.2, -0.15],
+    [-0.04, -0.12],
+    [0.1, -0.09],
+    [0.14, -0.045],
+    [0.44, -0.045],
+    [0.44, -0.07],
+    [0.5, -0.07],
   ],
 };
 

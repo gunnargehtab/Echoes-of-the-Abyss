@@ -19,6 +19,7 @@ import assert from 'node:assert/strict';
 import {
   FACTION_COMBAT,
   Faction,
+  HULL_EFFECTS,
   ORDNANCE,
   StructureKind,
   UnitKind,
@@ -62,6 +63,11 @@ const broadside = statsFor(UnitKind.Broadside);
 const weaver = statsFor(UnitKind.Weaver);
 const thurible = statsFor(UnitKind.Thurible);
 const lance = statsFor(UnitKind.Lance);
+const furnace = statsFor(UnitKind.Furnace);
+const blight = statsFor(UnitKind.Blight);
+const lure = statsFor(UnitKind.Lure);
+const tocsin = statsFor(UnitKind.Tocsin);
+const refinery = structureStatsFor(StructureKind.Refinery);
 const turret = structureStatsFor(StructureKind.SentinelTurret);
 const bastion = structureStatsFor(StructureKind.Bastion);
 
@@ -338,6 +344,45 @@ describe('§9 time-to-kill bands', () => {
     assert.equal(weaver.attackDamage, 0);
     assert.equal(weaver.carriesTorpedoes, false);
     assert.equal(weaver.decoyMagazine, ORDNANCE.LAID_DECOY.MAGAZINE);
+  });
+
+  it('holds the siege hulls to §9\u2019s structure column (#508)', () => {
+    // The column §9 grew for this wave. Every figure here is a *structure*
+    // figure, and the point of the pairs is that a siege hull must be good at
+    // exactly one of the two things.
+    const wallS = (hp: number, s: ReturnType<typeof statsFor>) =>
+      Math.ceil(hp / s.attackDamageStructure!) * s.attackCooldownS;
+    const hullS = (hp: number, s: ReturnType<typeof statsFor>) =>
+      Math.ceil(hp / s.attackDamage) * s.attackCooldownS;
+
+    const furnaceWall = wallS(refinery.maxHp, furnace);
+    assert.ok(furnaceWall >= 25 && furnaceWall <= 40, `Refinery in 25–40 s, got ${furnaceWall}`);
+    assert.ok(hullS(corvette.maxHp, furnace) >= 90, 'and ≥ 90 s on a Corvette');
+
+    const tocsinWall = wallS(turret.maxHp, tocsin);
+    assert.ok(tocsinWall >= 20 && tocsinWall <= 35, `turret in 20–35 s, got ${tocsinWall}`);
+    // 30 s against a Corvette's own 16.2 — not quite twice, and far enough
+    // past it that nothing mistakes a bell for a line hull.
+    assert.ok(
+      hullS(corvette.maxHp, tocsin) >=
+        1.8 * cyclesS(corvette.maxHp, corvette.attackDamage, corvette.attackCooldownS),
+      'and nearly twice a Corvette’s own duel band against one'
+    );
+    assert.equal(tocsin.firesOnlyStationary, true, 'and only while standing still');
+    assert.ok(tocsin.attackRangeM > reciter.attackRangeM, 'outranging the longest gun');
+
+    // Every siege weapon must out-reach the ring the separation system holds a
+    // hull on. A Bastion's is 278 m, measured — a 200 m cutter reached nothing
+    // at all, which is how the Furnace's range came to be 320.
+    assert.ok(furnace.attackRangeM > 278, 'a cutter that cannot reach a Bastion cuts air');
+    assert.ok(HULL_EFFECTS.BLIGHT.RANGE_M > 278, 'and neither can a seeder that cannot reach');
+
+    // The two that are not guns are held to being not guns.
+    assert.equal(blight.attackDamage, 0);
+    assert.equal(lure.attackDamage, 0);
+    // Sixty per cent of a wall and never the last of it (§9).
+    const eaten = HULL_EFFECTS.BLIGHT.PER_S * HULL_EFFECTS.BLIGHT.DURATION_S;
+    assert.ok(eaten > 0.5 && eaten < 1, `a spore takes ${eaten}, which must be most and not all`);
   });
 
   it('leaves the Light Scout unable to fight, whatever the retune did', () => {

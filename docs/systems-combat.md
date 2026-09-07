@@ -413,6 +413,35 @@ centred on the one hull it cannot hurt. The Directorate's Thurible is the hull b
 — PR-3, at home under the layer, reaching up into water it does not own
 ([units.md](units.md)).
 
+### A weapon that is not a weapon
+
+Three of the four siege hulls do not shoot the wall down, and each is its navy's argument
+about how a wall actually falls.
+
+- **A spore, and silence.** The Commune's Blight seeds a structure with a Deepbloom strain
+  that eats **1% of its maximum hull a second for 60 s** — 60% of the wall, and never the
+  last of it — and the structure's own SIG never moves while it does. A spore does not take
+  a base; it makes one takeable, and something still has to arrive. That silence is the design claim rather than an oversight: every
+  other way of taking a wall down announces itself — a cutter at 75, a bell at 88, a gun
+  at all — and this one is a Refinery whose hull is falling with nothing to hear. The
+  counter-play is *looking*, which is the one sense this game otherwise never asks for.
+- **A song, and the Drift.** The Directorate's Lure sings for **60 s at SIG 55** and
+  doubles what fauna hear from anything within **500 m of the point it sang at**
+  ([bestiary.md](bestiary.md) §2's modifier table, with a source and a clock). The
+  Listening does not knock the wall down; it tells the Drift where the wall is. A siege
+  that works this way costs nothing but time and is worth nothing against a base nothing
+  lives near, which is exactly the trade a Biomass price should buy.
+- **A bell, and a firing arc measured in kilometres.** The Order's Tocsin reaches
+  **1,400 m** and fires only while **stationary**, and stationary it is the loudest thing
+  in the water short of a ping. Standing still to work exists already — a Sower seeds and a
+  Cantus sings that way — but a *gun* gated on it is new, and it is the whole hull: nothing
+  outranges it, and anything that reaches it kills it.
+
+The Consortium's Furnace is the one that does shoot: thermal cutters, the same tool that
+opens kelp ([hazards.md](hazards.md) §4), turned on plate at 320 m and SIG 75 while they
+run — every siege weapon has to out-reach the ring the separation system holds a hull on,
+and a Bastion's is 278 m. Four navies, four answers, and only one of them is a gun.
+
 Ramming is parked as a design question — descent is fast and deafening, and a Consortium
 hull dropping onto a target is thematically irresistible, but it needs the collision model
 to earn it. Plain text until decided.
@@ -436,6 +465,26 @@ them* — a tuning change that leaves these bands is a bug.
 | Torpedo vs Cruiser | survives three, dies to four |
 | Mine (single) vs Light Scout | killed |
 | Mine (single) vs Corvette | survives, wounded |
+
+### One weapon, two numbers
+
+Until wave 4 a weapon had one damage figure and it applied to whatever it hit, which made
+every hull an equally bad wall-breaker and left the roster with no siege at all. A weapon
+may now carry a **second figure for structures**, and the triangle's *one damage number per
+weapon* stays true **per target class** rather than becoming two weapons on one hull.
+
+| Engagement (siege hulls) | TTK target |
+| --- | --- |
+| Furnace kills a Refinery | 25–40 s — a siege takes long enough that the defender can arrive |
+| Furnace vs Corvette | ≥ 90 s — a cutter is not a gun and must never read as one |
+| Tocsin kills a Sentinel Turret | 20–35 s, from 1,400 m, standing still the whole time |
+| Blight vs a Refinery | 60% of its maximum hull in 60 s, silently — a softener, not a kill |
+
+The bands above the line are what stops this becoming a second weapon system. A siege hull
+that could also fight would make the wall-breaker the best line hull in the game, which is
+why the Furnace's hull figure is floored so low that a Corvette out-trades it four to one —
+the cutter is a *tool*, and its escort is the argument
+([units.md](units.md), "The siege hulls").
 
 Every gun band is one and a half times what it was (#463): the first table had a Corvette
 duel at 8–10 s and a Scout dead in 4, and the stretch was made on the *cooldown* — every gun

@@ -69,6 +69,28 @@ export class StubElement {
   clientWidth = 0;
   clientHeight = 0;
 
+  /**
+   * Whether the shell has made this subtree inert (docs/ui-ux.md §9.5).
+   *
+   * A field rather than an incidental property write, so the flag is typed
+   * and readable: `GameCanvas` sets it on `.game-under` while the esc menu is
+   * up, and *that it is set* is the half of §9.5's inertness that software can
+   * check. What `inert` then does to the tab order is the browser's, and is
+   * asserted in one — see the foot of `support/screen.ts` (#515).
+   */
+  inert = false;
+
+  /**
+   * How many times this element has been given the focus.
+   *
+   * On `StubElement` rather than only on the test-renderer's `FocusableNode`,
+   * because a component that calls `ref.current.focus()` reaches whichever
+   * node its harness handed it — the esc menu does, and the shell test mounts
+   * it through plain hosts. A stub without this throws on mount, which is a
+   * harness gap wearing a component bug's clothes.
+   */
+  focusCount = 0;
+
   private readonly listeners = new Map<string, Registered[]>();
   private readonly captured = new Set<number>();
 
@@ -139,6 +161,12 @@ export class StubElement {
   hasPointerCapture(pointerId: number): boolean {
     return this.captured.has(pointerId);
   }
+
+  focus(): void {
+    this.focusCount++;
+  }
+
+  blur(): void {}
 
   getBoundingClientRect(): StubRect {
     return {
