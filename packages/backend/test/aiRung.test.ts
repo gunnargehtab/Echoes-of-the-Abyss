@@ -456,3 +456,126 @@ describe('the commander saves for the hull the rung was bought for', () => {
     );
   });
 });
+
+/**
+ * The same saving machinery, one tier down — the composition itself (#531).
+ *
+ * #518 gave every *want* a bid and one arbitrator to pick between them, and
+ * left the composition cycle exactly as it was: it buys whatever is affordable
+ * at the instant it is asked, and its rotation falls through to the doctrine's
+ * next entry rather than waiting. The fall-through is the deadlock guard the
+ * cycle needs and cannot lose. On a doctrine that carries a cheap hull it was
+ * also a leak — the fall-through spent the bank, so the bank never climbed, so
+ * the dearer entry was never affordable at any instant, for the whole match.
+ * Measured before the bid existed, over three matches on seeds 4000–4002: the
+ * Knights' 420-nodule Cruiser was the cycle's first choice 986 times and was
+ * bought **zero**; the Commune wanted its 105-nodule Reed 815 times, bought
+ * zero, and spent the difference on 50-nodule Light Scouts.
+ *
+ * So the cycle's first choice bids like every other want, and what is asserted
+ * here is the duty cycle's two halves again — it holds, and it lets go — plus
+ * the guard that keeps a hold from becoming a standing tax: below half the
+ * price a navy is not saving, it is idle, and it should buy the hull it can
+ * actually pay for.
+ *
+ * The Commune is the navy this reads on, because its composition is the one
+ * that carries both ends: a 105-nodule Reed it is meant to field and a
+ * 50-nodule Light Scout underneath it. And its fixture is one harvester short
+ * of the doctrine's target on purpose — `commandConstruction` holds the whole
+ * purse against the 600-nodule Slipway the moment the economy is staffed, and
+ * a test whose commander was saving for the yard would assert this one's
+ * silence and learn nothing from it.
+ */
+describe('the commander saves for its own line, not only for the rung', () => {
+  const commune = Faction.Pelagia;
+  const line = UnitKind.Reed;
+  const cheaper = UnitKind.LightScout;
+
+  /**
+   * A Commune with the economy one hauler short, so nothing above is saving,
+   * and a two-hull line, so the cycle's index lands on the Reed.
+   */
+  function shortOfALine(brief: AiBriefing): EchoSnapshot['units'] {
+    const home = brief.spawns[brief.slot]!;
+    const at = (i: number): { x: number; y: number } => ({ x: home.x + i * 60, y: home.y });
+    const roster: UnitKind[] = [
+      ...Array.from<UnitKind>({ length: DOCTRINE[commune].harvesterTarget - 1 }).fill(
+        UnitKind.Harvester
+      ),
+      OWN_SCOUT[commune],
+      OWN_ORDNANCE[commune],
+      OWN_SIEGE[commune],
+      UnitKind.Corvette,
+      UnitKind.Corvette,
+    ];
+    return roster.map((kind, i) => hull(i + 1, kind, at(i)));
+  }
+
+  it('is asked for the line hull, with the cheap one behind it', () => {
+    // The premise the three tests below all rest on, asserted rather than
+    // assumed: both hulls are on this doctrine's list, the fall-through is the
+    // cheaper of the two, and the army in `shortOfALine` puts the cycle's index
+    // on the Reed rather than on the Light Scout.
+    const composition = DOCTRINE[commune].composition;
+    assert.ok(composition.includes(line) && composition.includes(cheaper), 'both are on the list');
+    assert.ok(
+      priceOf(statsFor(cheaper)).nodules < priceOf(statsFor(line)).nodules,
+      'the fall-through is the cheaper hull'
+    );
+    const armed = shortOfALine(briefing(commune)).filter(
+      (u) => statsFor(u.kind).attackDamage > 0
+    ).length;
+    const start = armed % composition.length;
+    const first = composition
+      .map((_, k) => composition[(start + k) % composition.length]!)
+      .find((kind) => statsFor(kind).attackDamage > 0);
+    assert.equal(first, line, 'the cycle asks for the line hull first at this army size');
+  });
+
+  it('holds for the line hull rather than spending the bank on the cheap one', () => {
+    const brief = briefing(commune);
+    // Over half the Reed's price and under it: a gap a window can close, which
+    // is the only kind this commander opens a hold for.
+    const nodules = Math.ceil(priceOf(statsFor(line)).nodules * 0.6);
+
+    const bought = hullsBoughtOver(brief, 60, { nodules, units: shortOfALine(brief) });
+    assert.deepEqual(
+      bought,
+      [],
+      `a Commune holding ${nodules} nodules should buy nothing while it saves for a ${statsFor(line).name}, not a run of ${statsFor(cheaper).name}s`
+    );
+  });
+
+  it('buys the cheap hull instead when the gap is one no window will close', () => {
+    const brief = briefing(commune);
+    // Under half the Reed's price, and exactly the Light Scout's: the hold
+    // would be a standing tax on a hull this navy is not close to, so the
+    // fall-through is the right answer and the cycle takes it.
+    const nodules = priceOf(statsFor(cheaper)).nodules;
+    assert.ok(
+      nodules < priceOf(statsFor(line)).nodules * 0.5,
+      'the premise: the purse is below the fraction a hold opens at'
+    );
+
+    const bought = hullsBoughtOver(brief, 12, { nodules, units: shortOfALine(brief) });
+    assert.ok(
+      bought.length > 0 && bought.every((kind) => kind === cheaper),
+      `a Commune this far from a ${statsFor(line).name} should keep buying ${statsFor(cheaper).name}s, got ${bought.map((k) => statsFor(k).name).join(', ') || 'nothing'}`
+    );
+  });
+
+  it('lets go, so the army still grows while the saving happens', () => {
+    const brief = briefing(commune);
+    const nodules = Math.ceil(priceOf(statsFor(line)).nodules * 0.6);
+
+    // A purse that never grows is the worst case for a duty cycle: the hold can
+    // never close on its own, so if it were a strike rather than a window this
+    // navy would stand still for the rest of the match. The window is
+    // `RUNG.SAVE_S` — two minutes — and the far side of it is the fall-through.
+    const bought = hullsBoughtOver(brief, 180, { nodules, units: shortOfALine(brief) });
+    assert.ok(
+      bought.length > 0 && bought.every((kind) => kind === cheaper),
+      `the hold is a window: past it the ${statsFor(cheaper).name} is bought again, got ${bought.map((k) => statsFor(k).name).join(', ') || 'nothing'}`
+    );
+  });
+});

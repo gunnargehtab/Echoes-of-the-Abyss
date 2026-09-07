@@ -680,9 +680,9 @@ Three that were, one of them by wave 6 itself:
   | Common hull | Named by | Built per match | What the reading says |
   | --- | --- | --- | --- |
   | Light Scout | Commune, Directorate | 11.7–30.3 | Load-bearing, as the cheapest hull the cycle can fall through to — and both navies buy their *own* scout separately, so this entry is not the scout slot |
-  | Corvette | Knights | 5.9–7.1 | **Stale.** Named the Clarion instead and the Knights build 5.6 of them: a clean one-for-one, and wave 5's follow-through rather than a fact about the Corvette |
+  | Corvette | Knights | 5.9–7.1 | **Stale, and acted on (#529).** The Clarion stands in that slot now and the Order builds 4.8 of them a match over the stored thirty — the 5.6 here was a twenty-match probe, and the gap between the two is a useful calibration on how far a probe sits from a baseline. See §4 |
   | Corvette | Directorate | 0.4–2.4 | **Real.** Named the Chorister instead and it manages 1.1 a match — its 20 Biomass against about 55 a match — while Light Scout production *rose* to 30.3 to cover the gap |
-  | Cruiser | Consortium ×2, Knights ×2 | **0.0, everywhere** | Named four times across two compositions and built not once in the baseline or in any of the six duels. A dead entry for the one role neither navy has a hull of its own for |
+  | Cruiser | Consortium ×2, Knights ×2 | **0.0, everywhere** | Named four times across two compositions, and zero to three decimal places rather than absolutely — one Cruiser in thirty matches, by the Consortium, since #529 (§4). A dead entry for the one role neither navy has a hull of its own for |
 
   So the commons are neither dead weight nor a surplus market: they are one hull holding a
   gap open (the Cruiser's mid-tier, which nothing fills), one hull the Directorate needs
