@@ -71,6 +71,11 @@ packages/backend   Colyseus server. Owns the simulation. Node + esbuild bundle.
 packages/frontend  React shell + two-canvas renderer: three.js conn view (the
                    world) under a transparent PixiJS HUD, one shared camera
                    (EchoRenderer.setConn). A terminal, not a simulation.
+tools/hull-models  Hull GLBs authored as three.js scenes: kit.mjs (buildability),
+                   factions/*.mjs (one navy's shape language), hulls/*.mjs (one
+                   hull). Not an npm workspace; run a hull directly and it writes
+                   into docs/concept-art/models/, which then goes through
+                   hull-intake like any other export.
 tools/echo-sim     Standalone CommonJS harness for deterministic Echo scenarios.
                    Not an npm workspace; run it directly:
                    node tools/echo-sim/sim.js [tools/echo-sim/scenarios/<name>.json]
