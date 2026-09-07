@@ -123,6 +123,27 @@ export function plate(points, thicknessM) {
 }
 
 /**
+ * A thin plate from a plan outline, **centred on y = 0 and with `z` as given**.
+ *
+ * `plate` above carries two quirks of the extrude-then-rotate it is built
+ * from: its slab sits from half a thickness to one and a half above the
+ * origin, and the outline's second coordinate lands on **-z**. Neither shows
+ * on a symmetric outline placed by eye, which is how the Derrick and the
+ * Responsory were built, so `plate` keeps that frame rather than move two
+ * approved models. The Commune's leaves and the Directorate's scoops are
+ * asymmetric in plan on purpose, and an outline that comes out mirrored is
+ * the kind of error nothing downstream can see — so they build from this.
+ */
+export function plan(points, thicknessM) {
+  const geo = plate(
+    points.map(([x, z]) => [x, -z]),
+    thicknessM
+  );
+  geo.translate(0, -thicknessM, 0);
+  return geo;
+}
+
+/**
  * A faceted lofted body along X, from a profile of `[x, radius]` stations.
  *
  * The load-bearing shape for a hull that has to read as a *body* rather than a
