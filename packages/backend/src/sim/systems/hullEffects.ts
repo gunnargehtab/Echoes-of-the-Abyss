@@ -15,8 +15,11 @@
  *     have. Repair never touches unhealable hull: crush and sour stay crushed
  *     and sour (docs/systems-depth.md §2), which is what keeps depth a
  *     commitment even for the navy with the tenders;
- *   - the **Spinner** regrows a mine at a nursery — inside a Spore Veil or by
- *     a Bastion — and nowhere else.
+ *   - the **Spinner** regrows a mine at a nursery — inside a Spore Veil, by a
+ *     Bastion, or beside a **Bower**, and nowhere else. The Bower is the one
+ *     nursery that moves (#509), and the one that is not on a clock: only its
+ *     cloud waits for the hull to stand still, so a swarm rearms beside an
+ *     anchor that is still walking to where it will drop.
  *
  * Runs after movement and before auras: a hull's "stationary" is this tick's
  * velocity, and the grants that depend on it must be this tick's too.
@@ -54,6 +57,8 @@ function stationaryNeededS(kind: UnitKind): number {
       return HULL_EFFECTS.CANTUS.STATIONARY_S;
     case UnitKind.Sower:
       return HULL_EFFECTS.SOWER.STATIONARY_S;
+    case UnitKind.Bower:
+      return HULL_EFFECTS.BOWER.STATIONARY_S;
     default:
       return 0;
   }
@@ -153,6 +158,7 @@ function healableMax(world: SimWorld, eid: number): number {
 function regrow(world: SimWorld, growers: readonly number[], dt: number): void {
   const { MAGAZINE, REGROW_S, BASTION_RADIUS_M } = HULL_EFFECTS.SPINNER;
   const sites = structures(world);
+  const fleet = hulls(world);
 
   for (let i = 0; i < growers.length; i++) {
     const eid = growers[i]!;
@@ -187,6 +193,26 @@ function regrow(world: SimWorld, growers: readonly number[], dt: number): void {
       if (Math.hypot(Position.x[site]! - x, Position.y[site]! - y) <= reach) {
         nursed = true;
         break;
+      }
+    }
+    // The Bower, a nursery with a drive (docs/units.md, "The line hulls, and
+    // the anchor"). Checked after the buildings and on the same terms: alive,
+    // allied, in reach. Not gated on `HullEffect.active` — the hull's clock
+    // grows its *cloud*, and an anchor a swarm could only rearm at once it had
+    // parked would be a second thing to protect rather than the thing the
+    // swarm forms around.
+    if (!nursed) {
+      for (let j = 0; j < fleet.length; j++) {
+        const bower = fleet[j]!;
+        if (Unit.kind[bower] !== UnitKind.Bower) continue;
+        if (Health.hp[bower]! <= 0 || Owner.slot[bower] !== slot) continue;
+        if (
+          Math.hypot(Position.x[bower]! - x, Position.y[bower]! - y) <=
+          HULL_EFFECTS.BOWER.NURSERY_RADIUS_M
+        ) {
+          nursed = true;
+          break;
+        }
       }
     }
     if (!nursed) continue;

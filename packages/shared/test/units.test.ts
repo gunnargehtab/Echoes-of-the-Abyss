@@ -263,6 +263,7 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
       UnitKind.Beacon,
       UnitKind.Broadside,
       UnitKind.Furnace,
+      UnitKind.Caisson,
     ],
     [Faction.Pelagia]: [
       UnitKind.Spinner,
@@ -271,6 +272,8 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
       UnitKind.Glider,
       UnitKind.Weaver,
       UnitKind.Blight,
+      UnitKind.Reed,
+      UnitKind.Bower,
     ],
     // The Verger, the Acolyte, the Thurible and the Lure are the Directorate's
     // by their price and carry no lock, as the Chorister is and does
@@ -358,6 +361,33 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
         assert.ok(unitAvailableTo(kind, owner), `${statsFor(kind).name} is ${Faction[owner]}'s`);
         assert.ok(foundry.includes(kind), `${statsFor(kind).name} is a Foundry hull`);
       }
+    }
+
+    // The shape rule (#509), which is what keeps four separate openings one
+    // decision: every navy opens with the same *count* of hulls — a scout and a
+    // pair — and what its pair is worth is its doctrine. The Order's two
+    // Clarions cost three times the Directorate's two Choristers.
+    //
+    // Equal **tonnage** was the other candidate and was measured and rejected.
+    // Four berths of escort each (docs/economy.md §10 grants forty) gives the
+    // Directorate four one-berth Choristers, which reads as its doctrine and is
+    // not a tonnage change at all in a game about hidden information: it is
+    // four sets of the best ears in the roster against everybody else's two,
+    // from tick zero. Over the stored baseline's own thirty seeds it took that
+    // navy from 56% to 77% while every other column in its row stayed put, and
+    // took the Knights from 36% to 23%; the shape rule reads 64% and 36%.
+    const hulls = factions.map((owner) => OPENING_ESCORT[owner].length);
+    assert.equal(new Set(hulls).size, 1, `one shape for every navy, not ${hulls}`);
+
+    // And wave 5's own gate, at the one place it is a fact about the roster
+    // rather than about a commander: nobody opens in a hull nobody owns. The
+    // scout slot is the exception and stays one — retiring the commons is
+    // wave 6's decision (docs/roster-plan.md §4).
+    for (const owner of factions) {
+      assert.ok(
+        !OPENING_ESCORT[owner].includes(UnitKind.Corvette),
+        `${Faction[owner]} opens in its own line hull`
+      );
     }
   });
 
@@ -464,7 +494,10 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
     // knows they are engaged.
     const WORKING: Record<Faction, readonly UnitKind[]> = {
       [Faction.Bathyarch]: [UnitKind.Tender, UnitKind.Furnace],
-      [Faction.Pelagia]: [UnitKind.Sower],
+      // The Bower's 45 is the Sower's, for the Sower's reason — a bloom is a
+      // bloom — and it is on the same clock, which is why it is here rather
+      // than in the siege hulls' `siegeWorkSig` route (#509).
+      [Faction.Pelagia]: [UnitKind.Sower, UnitKind.Bower],
       [Faction.Directorate]: [],
       [Faction.Hadron]: [UnitKind.Cantus, UnitKind.Tocsin],
     };

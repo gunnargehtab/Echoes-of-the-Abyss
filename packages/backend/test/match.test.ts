@@ -15,6 +15,7 @@ import {
   Faction,
   HARVEST_THROTTLE,
   HarvestThrottle,
+  OPENING_ESCORT,
   ResolutionTier,
   ResourceKind,
   SIM,
@@ -61,6 +62,19 @@ function twoPlayerMatch(): Match {
   match.addPlayer(0, Faction.Bathyarch);
   match.addPlayer(1, Faction.Pelagia);
   return match;
+}
+
+/**
+ * The line hull a navy actually opens with, read from the kit rather than
+ * named.
+ *
+ * `OPENING_ESCORT` is `[scout, ...escort]` and since #509 the escort is each
+ * navy's own hull — Caissons, Reeds, Choristers, Clarions — so a test that
+ * named a Corvette was naming a hull three of the four navies no longer field.
+ * Read from the kit, these tests survive the next wave that re-keys it.
+ */
+function lineHullOf(faction: Faction): UnitKind {
+  return OPENING_ESCORT[faction][1]!;
 }
 
 describe('simulation loop', () => {
@@ -148,20 +162,23 @@ describe('Echo Layer', () => {
     const match = twoPlayerMatch();
     advance(match, 1);
 
-    const mine = advance(match, 0.2)!.get(0)!.units[0]!;
-    // A Corvette (idle SIG 28): loud enough to be tracked at this range, and
-    // quiet enough to vanish under Silent Running. The Light Scout would be
-    // inaudible here even when loud, proving nothing.
+    const mine = advance(match, 0.2)!.get(1)!.units[0]!;
+    // A Caisson (idle SIG 64): loud enough to be tracked at this range, and
+    // quiet enough to vanish under Silent Running, which collapses it to the
+    // figure's ceiling of 8. Watched from the Commune's seat rather than the
+    // Consortium's since #509, because the hull that used to be on both sides
+    // of this test is on neither: a Reed idles at 12 and would be inaudible
+    // here even when loud, proving nothing — the Light Scout's old problem.
     const theirs = advance(match, 0.2)!
-      .get(1)!
-      .units.find((u) => u.kind === UnitKind.Corvette)!;
+      .get(0)!
+      .units.find((u) => u.kind === lineHullOf(Faction.Bathyarch))!;
     Position.x[theirs.id] = Position.x[mine.id]! + 1200;
     Position.y[theirs.id] = Position.y[mine.id]!;
 
-    const loudTier = advance(match, 0.5)!.get(0)!.contacts[0]?.tier ?? ResolutionTier.Silent;
+    const loudTier = advance(match, 0.5)!.get(1)!.contacts[0]?.tier ?? ResolutionTier.Silent;
 
-    match.setSilentRunning(1, theirs.id, true);
-    const quiet = advance(match, 0.5)!.get(0)!.contacts;
+    match.setSilentRunning(0, theirs.id, true);
+    const quiet = advance(match, 0.5)!.get(1)!.contacts;
     const quietTier = quiet[0]?.tier ?? ResolutionTier.Silent;
 
     assert.ok(SilentRunning.active[theirs.id] === 1);
@@ -841,7 +858,7 @@ describe('combat', () => {
   function stageBrawl(match: Match): { attacker: number; victim: number } {
     advance(match, 0.5);
     const snapshots = advance(match, 0.2)!;
-    const attacker = snapshots.get(0)!.units.find((u) => u.kind === UnitKind.Corvette)!;
+    const attacker = snapshots.get(0)!.units.find((u) => u.kind === lineHullOf(Faction.Bathyarch))!;
     const victim = snapshots.get(1)!.units.find((u) => u.kind === UnitKind.LightScout)!;
     Position.x[victim.id] = Position.x[attacker.id]! + 300;
     Position.y[victim.id] = Position.y[attacker.id]!;
@@ -854,9 +871,9 @@ describe('combat', () => {
     const hpBefore = Health.hp[victim]!;
 
     advance(match, 1);
-    assert.ok(Health.hp[victim]! < hpBefore, 'a corvette must return fire at 300 m');
+    assert.ok(Health.hp[victim]! < hpBefore, 'a line hull must return fire at 300 m');
     assert.ok(
-      Acoustic.sig[attacker]! > statsFor(UnitKind.Corvette).sigIdle,
+      Acoustic.sig[attacker]! > statsFor(lineHullOf(Faction.Bathyarch)).sigIdle,
       'firing must spike SIG above idle'
     );
   });
@@ -886,7 +903,7 @@ describe('combat', () => {
     // park an enemy cruiser next to it instead.
     const cruiser = advance(match, 0.2)!
       .get(0)!
-      .units.find((u) => u.kind === UnitKind.Corvette)!;
+      .units.find((u) => u.kind === lineHullOf(Faction.Bathyarch))!;
     Position.x[cruiser.id] = Position.x[bastion.id]! + 200;
     Position.y[cruiser.id] = Position.y[bastion.id]!;
 
@@ -1258,7 +1275,9 @@ describe('faction structure auras', () => {
     match.addPlayer(1, Faction.Pelagia);
     advance(match, 0.5);
     const snapshots = advance(match, 0.2)!;
-    const corvette = snapshots.get(0)!.units.find((u) => u.kind === UnitKind.Corvette)!;
+    const corvette = snapshots
+      .get(0)!
+      .units.find((u) => u.kind === lineHullOf(Faction.Directorate))!;
 
     spawnStructure(match.world, {
       kind: StructureKind.Cantor,
@@ -1271,11 +1290,11 @@ describe('faction structure auras', () => {
     advance(match, 0.2);
 
     const { HYD_BONUS, HYD_CAP, RADIUS_M } = STRUCTURE_AURAS.CANTOR;
-    const base = statsFor(UnitKind.Corvette).hyd;
+    const base = statsFor(lineHullOf(Faction.Directorate)).hyd;
     assert.equal(
       Acoustic.hyd[corvette.id],
       Math.min(HYD_CAP, base + HYD_BONUS),
-      'corvette under the dome should listen sharper'
+      'a hull under the dome should listen sharper'
     );
 
     // Walk it out of the dome: HYD falls back to the hull rating.

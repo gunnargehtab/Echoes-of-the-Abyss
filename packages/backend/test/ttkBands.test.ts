@@ -63,6 +63,8 @@ const broadside = statsFor(UnitKind.Broadside);
 const weaver = statsFor(UnitKind.Weaver);
 const thurible = statsFor(UnitKind.Thurible);
 const lance = statsFor(UnitKind.Lance);
+const caisson = statsFor(UnitKind.Caisson);
+const reed = statsFor(UnitKind.Reed);
 const furnace = statsFor(UnitKind.Furnace);
 const blight = statsFor(UnitKind.Blight);
 const lure = statsFor(UnitKind.Lure);
@@ -344,6 +346,57 @@ describe('§9 time-to-kill bands', () => {
     assert.equal(weaver.attackDamage, 0);
     assert.equal(weaver.carriesTorpedoes, false);
     assert.equal(weaver.decoyMagazine, ORDNANCE.LAID_DECOY.MAGAZINE);
+  });
+
+  it('holds the two line hulls to §9\u2019s new rows (#509)', () => {
+    // Wave 5's whole claim is that these are Corvettes re-argued rather than
+    // Corvettes re-priced, so both are held against the hull they replace and
+    // against the duel band it sits at the centre of.
+
+    // The Caisson carries a Corvette's gun and is the one hull in the roster
+    // always over the Klaxon's line, so its 50 is always 56 — which is where
+    // the band comes from, and it is asserted with the multiplier applied
+    // rather than beside it.
+    assert.equal(caisson.attackDamage, corvette.attackDamage, 'a Corvette’s gun, unchanged');
+    assert.equal(caisson.attackRangeM, corvette.attackRangeM);
+    assert.equal(caisson.attackCooldownS, corvette.attackCooldownS);
+    assert.ok(
+      caisson.sigIdle > FACTION_COMBAT.KLAXON.SIG_THRESHOLD &&
+        caisson.sigCruise > FACTION_COMBAT.KLAXON.SIG_THRESHOLD,
+      `the bonus is lit at every posture: ${caisson.sigIdle} / ${caisson.sigCruise}`
+    );
+    const lit = caisson.attackDamage * FACTION_COMBAT.KLAXON.DAMAGE_MULTIPLIER;
+    const caissonKills = ttkS(corvette.maxHp, lit, caisson.attackCooldownS);
+    assert.ok(
+      caissonKills >= 12 && caissonKills <= 14,
+      `band is 12-14 s, got ${caissonKills.toFixed(2)} s`
+    );
+    const killsCaisson = ttkS(caisson.maxHp, corvette.attackDamage, corvette.attackCooldownS);
+    assert.ok(
+      killsCaisson >= 18 && killsCaisson <= 22,
+      `band is 18-22 s, got ${killsCaisson.toFixed(2)} s`
+    );
+    // And the floor the Corvette's own damage figure was solved against holds
+    // for the hull that carries the same gun: a line hull is not an answer to
+    // an anchor, whoever is firing it.
+    assert.ok(ttkS(cruiser.maxHp, lit, caisson.attackCooldownS) >= 37, 'anchors still do not fall');
+
+    // The Reed's gun is the Corvette's shortened, so the duel it fights is the
+    // Corvette duel and everything it changed is about reaching one.
+    assert.equal(reed.attackDamage, corvette.attackDamage, 'the same gun, 130 m shorter');
+    assert.equal(reed.attackCooldownS, corvette.attackCooldownS);
+    assert.ok(
+      reed.attackRangeM < corvette.attackRangeM,
+      `outranged by the hull it replaces: ${reed.attackRangeM} m against ${corvette.attackRangeM}`
+    );
+    const reedKills = ttkS(corvette.maxHp, reed.attackDamage, reed.attackCooldownS);
+    assert.ok(reedKills >= 12 && reedKills <= 15, `the duel band, got ${reedKills.toFixed(2)} s`);
+    const killsReed = ttkS(reed.maxHp, corvette.attackDamage, corvette.attackCooldownS);
+    assert.ok(killsReed <= 11, `band is ≤ 11 s, got ${killsReed.toFixed(2)} s`);
+    assert.ok(
+      killsReed < reedKills,
+      'the fight it did not choose is over first, which is the whole hull'
+    );
   });
 
   it('holds the siege hulls to §9\u2019s structure column (#508)', () => {

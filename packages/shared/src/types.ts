@@ -171,6 +171,18 @@ export enum UnitKind {
   Lure = 29,
   /** Knights, Slipway: a bell, and 1,400 m of reach. */
   Tocsin = 30,
+  /**
+   * The line hulls and the anchor — the two navies that were still fighting
+   * with a hull nobody owns, and the Commune's heavy, which is not a heavy
+   * (docs/units.md, "The line hulls, and the anchor"; wave 5 of
+   * docs/roster-plan.md, #509). Appended, for the same reason.
+   */
+  /** Consortium, Foundry: always over the Klaxon's line. */
+  Caisson = 31,
+  /** Commune, Foundry: quieter at flank, and thinner everywhere. */
+  Reed = 32,
+  /** Commune, Slipway: a Spore Veil with a drive. */
+  Bower = 33,
 }
 
 /** Prototype structure roster. Stats live in structures.ts. See docs/units.md. */

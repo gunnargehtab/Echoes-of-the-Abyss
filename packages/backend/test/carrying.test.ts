@@ -37,7 +37,7 @@ import { Match } from '../src/sim/match.ts';
 import { spawnUnit } from '../src/sim/world.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { hashWorld } from '../src/sim/stateHash.ts';
-import { playReplay } from '../src/sim/replay.ts';
+import { REPLAY_FORMAT_VERSION, playReplay } from '../src/sim/replay.ts';
 import {
   Acoustic,
   Carried,
@@ -402,7 +402,11 @@ describe('the hold — determinism', () => {
     // Hand-spawned hulls are not in a replay's opening, so playback cannot
     // reproduce this world; what it must do is *carry* the commands and
     // refuse nothing on the way in.
-    assert.equal(replay.version, 18);
+    // Against the build's own constant rather than a literal: the number moves
+    // whenever a wave changes what a recording means (#509 took it to 19), and
+    // the claim here is that a recording is stamped with the rules it was made
+    // under — not which wave made it.
+    assert.equal(replay.version, REPLAY_FORMAT_VERSION);
   });
 
   it('changes the hash while a hull is aboard, even though it has no position', () => {

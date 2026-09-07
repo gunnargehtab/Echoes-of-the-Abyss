@@ -637,6 +637,16 @@ standoff is 95% of the weapon's range for a measured reason: hulls are held off 
 a Bastion's ring is 278 m, and a comfortable fraction of a short reach parks a siege hull
 where it can never fire.
 
+**And, for one navy, it anchors.** The Bower (#509) is the Commune's heavy and it has no
+gun, so like the Sower and the Spinner before it, it is bought by a want of its own and moved
+by a branch of its own. `commandAnchor` gives it exactly one order — walk to the rally — and
+then leaves it alone, because its cloud needs thirty seconds of stillness and every
+horizontal order resets that clock: the branch that walked it somewhere better each
+observation would be the branch that never let it work. The arrival ring is the cloud's own
+175 m rather than the commander's usual 700, so the point the swarm masses at is inside the
+cloud; parked at 700 the hull would have been built, counted, and standing a quarter of a
+kilometre outside its own effect.
+
 **And, where its navy has one, it moves a force in a hold.** [units.md](units.md) "The
 transports" gives every navy a carrier and [systems-echo.md](systems-echo.md) §3 says what a
 hold does to the picture; two doctrines declare one — the Consortium's Freighter and the

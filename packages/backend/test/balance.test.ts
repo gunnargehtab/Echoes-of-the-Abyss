@@ -290,7 +290,9 @@ describe('a draw says how close it came (#223)', () => {
     const pelagia = summary.factions.find((f) => f.faction === Faction.Pelagia)!;
     const byKind = pelagia.lossesPerMatchByKind;
 
-    assert.equal(byKind[UnitKind.Corvette], 2, 'the two Corvettes of the opening escort');
+    // The Commune opens in its own line hull since #509, so the kit it loses
+    // when it resigns is two Reeds rather than two Corvettes.
+    assert.equal(byKind[UnitKind.Reed], 2, 'the two Reeds of the opening escort');
     assert.equal(byKind[UnitKind.LightScout], 1);
     assert.equal(byKind[UnitKind.Harvester], 1);
     const rows = Object.values(byKind).reduce((a, b) => a + b, 0);
@@ -304,7 +306,7 @@ describe('a draw says how close it came (#223)', () => {
     assert.match(markdown, /## Hulls per match — built \/ lost/);
     assert.match(
       markdown,
-      /\| Corvette \| 0\.0 \/ 0\.0 \| 0\.0 \/ 2\.0 \| 0\.0 \/ 0\.0 \|/,
+      /\| Reed \| 0\.0 \/ 0\.0 \| 0\.0 \/ 2\.0 \| 0\.0 \/ 0\.0 \|/,
       'Consortium, Commune, Directorate — nobody built one, the Commune lost two'
     );
   });

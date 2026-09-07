@@ -894,14 +894,20 @@ export interface SpawnOptions {
  */
 /**
  * The hulls whose work *is* standing still (docs/units.md, the rung's roster):
- * the Tender welding, the Sower seeded, the Cantus singing for PR. These are
- * the hulls `hullEffectsSystem` drives from a stationary clock, and the only
- * ones for which "stopped" and "working" are the same fact.
+ * the Tender welding, the Sower seeded, the Cantus singing for PR, and the
+ * Bower grown out (#509). These are the hulls `hullEffectsSystem` drives from
+ * a stationary clock, and the only ones for which "stopped" and "working" are
+ * the same fact.
+ *
+ * The Bower's *nursery* is not on this clock and deliberately: only its cloud
+ * is, so a Spinner regrows beside a Bower that is still under way
+ * (docs/units.md, "The line hulls, and the anchor").
  */
 const WORKS_BY_STANDING_STILL: ReadonlySet<UnitKind> = new Set([
   UnitKind.Tender,
   UnitKind.Sower,
   UnitKind.Cantus,
+  UnitKind.Bower,
 ]);
 
 export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {

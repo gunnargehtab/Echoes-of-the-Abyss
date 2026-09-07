@@ -146,14 +146,21 @@ export const DOCTRINE: Record<Faction, Doctrine> = {
     pingIntervalS: 25,
     attackAtArmySize: 4,
     harvesterTarget: 4,
-    // The Tender behind the first Corvette: repair is the navy's identity,
+    // The Tender behind the first Caisson: repair is the navy's identity,
     // and it only counts once there is something to weld. The Bulwark once
     // the rung stands.
     // The Freighter declared here and bought by its own want (#501): the
     // Klaxon's transport is the one heard coming that arrives anyway, which
     // is this navy's argument on every hull it fields.
+    //
+    // The **Caisson** replaces the Corvette in place (#509) rather than joining
+    // the list, which is what keeps this a roster change and not a balance one:
+    // the cycle indexes on `army.length` modulo the list's own length, so a
+    // sixth entry would re-phase every selection this navy makes. Same slot,
+    // same length, a hull that is this navy's — and the wave's gate is read
+    // here, in a doctrine that no longer names a hull nobody owns.
     composition: [
-      UnitKind.Corvette,
+      UnitKind.Caisson,
       UnitKind.Tender,
       UnitKind.Cruiser,
       UnitKind.Bulwark,
@@ -181,7 +188,7 @@ export const DOCTRINE: Record<Faction, Doctrine> = {
     attackAtArmySize: 6,
     harvesterTarget: 6,
     // The Spinner third: after the scout that finds the approach and the
-    // Corvette that can hold it, because a wall is worth laying only where
+    // line hull that can hold it, because a wall is worth laying only where
     // the commander already knows something walks. §6's counter-play is
     // hearing a field being built, and the Spinner's laying is silent — so
     // the Commune can wall where a Corvette could not.
@@ -191,11 +198,22 @@ export const DOCTRINE: Record<Faction, Doctrine> = {
     // unarmed hulls here are bought by a gate rather than by the cycle — see
     // `WANTED_SEPARATELY` in the commander — so their position on this list
     // declares that the navy fields them, not when.
+    //
+    // The **Reed** replaces the Corvette in both of its slots (#509), which is
+    // the wave's gate: a doctrine that no longer names a hull nobody owns.
+    // The **Bower** is the sixth entry, and unlike the Caisson's swap above it
+    // does lengthen the list — there is no Corvette left to spend on it. That
+    // re-phases the cycle for this navy, which is a real change and is read in
+    // the baseline rather than asserted away: the alternative was a faction
+    // literal in the commander, and the composition is where this codebase
+    // declares that a navy fields a hull (the Sower's entry, one line up, does
+    // nothing else either).
     composition: [
       UnitKind.LightScout,
-      UnitKind.Corvette,
+      UnitKind.Reed,
       UnitKind.Spinner,
-      UnitKind.Corvette,
+      UnitKind.Reed,
+      UnitKind.Bower,
       UnitKind.Sower,
     ],
   },

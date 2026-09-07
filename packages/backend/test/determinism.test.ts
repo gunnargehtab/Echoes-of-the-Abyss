@@ -23,6 +23,7 @@ import {
   SIM,
   StructureKind,
   UnitKind,
+  statsFor,
 } from '@echoes/shared';
 import { hasComponent } from 'bitecs';
 import { Match } from '../src/sim/match.ts';
@@ -388,11 +389,13 @@ describe('a recorded torpedo launch replays', () => {
 
     // Everything here has to be a *recorded command*, or the replay starts from
     // a different world and diverges at tick 0 for reasons that have nothing to
-    // do with the launch. So: the opening escort (which includes two Corvettes,
-    // the hull that carries torpedoes) driven together with orderMove.
-    const shooter = ownedUnit(0, (kind) => kind === UnitKind.Corvette);
-    const target = ownedUnit(1, (kind) => kind === UnitKind.Corvette);
-    assert.notEqual(shooter, 0, 'slot 0 should open with a Corvette');
+    // do with the launch. So: the opening escort, driven together with
+    // orderMove. Asked for by the property the test needs — a hull that carries
+    // torpedoes — rather than by name, because since #509 the kit is each
+    // navy's own line hull and both of these used to be Corvettes.
+    const shooter = ownedUnit(0, (kind) => statsFor(kind).carriesTorpedoes);
+    const target = ownedUnit(1, (kind) => statsFor(kind).carriesTorpedoes);
+    assert.notEqual(shooter, 0, 'slot 0 should open with a hull that carries torpedoes');
     assert.notEqual(target, 0, 'and so should slot 1');
 
     const midX = live.map.widthM / 2;

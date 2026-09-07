@@ -460,6 +460,10 @@ them* — a tuning change that leaves these bands is a bug.
 | Corvette vs Corvette | 12–15 s |
 | Cruiser kills Corvette | ~8 s |
 | Corvette kills Cruiser, guns alone | ≥ 37 s — anchors do not fall to chip damage |
+| Caisson kills Corvette | 12–14 s — a Corvette's gun, fired by the one hull that is always over the Klaxon's line |
+| Corvette kills Caisson, guns alone | 18–22 s — a third more plate is a third longer to chew through |
+| Reed kills Corvette | 12–15 s — the same gun, so the same duel; what the Reed changed is where it happens |
+| Corvette kills Reed | ≤ 11 s — thinner by a third, and the fight it did not choose is over first |
 | Sentinel Turret kills Corvette | ~18 s — a turret deters and punishes; it does not delete |
 | Torpedo vs Corvette | survives one, wounded; dies to two |
 | Torpedo vs Cruiser | survives three, dies to four |

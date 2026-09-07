@@ -667,6 +667,10 @@ const WANTED_SEPARATELY: readonly UnitKind[] = [
   // nearly so and none belongs in a line: a Furnace counted as army would be a
   // doctrine fielding one fewer Bulwark and calling it a heavy.
   ...Object.values(OWN_SIEGE),
+  // The Commune's anchor (#509), and the plainest case of the lot: no gun at
+  // all, and a hull whose whole job is to stop. Bought by the want beside the
+  // Sower's and walked by `commandAnchor`.
+  UnitKind.Bower,
 ];
 
 /**
@@ -1178,6 +1182,7 @@ export class AiCommander implements AiPlayer {
     this.commandSiege(snapshot, commands);
     this.commandLayers(snapshot, commands);
     this.commandSeeders(snapshot, commands);
+    this.commandAnchor(snapshot, commands);
     // The lift claims the hulls it orders aboard this observation, so the
     // army branch does not walk them back to the rally in the same breath.
     const lifted = this.commandTransports(snapshot, army, raiders, commands);
@@ -2181,10 +2186,11 @@ export class AiCommander implements AiPlayer {
     // the one least able to hold an army while it saves for what the yard
     // builds.
     //
-    // The Commune has no entry here: its composition's Slipway hull is the
-    // Sower, which is unarmed, is bought by `WANTED_SEPARATELY`'s own gate
-    // below, and is not a heavy at all — "the doctrine is many, fast, fragile,
-    // so the Commune's heavy is not a heavy" (docs/roster-plan.md §3).
+    // The Commune has no entry here, and since #509 it has two Slipway hulls
+    // that are not one: the Sower and the Bower are both unarmed, both bought
+    // by `WANTED_SEPARATELY`'s own gates below, and neither is a heavy — "the
+    // doctrine is many, fast, fragile, so the Commune's heavy is not a heavy"
+    // (docs/roster-plan.md §3).
     const ownHeavy = this.doctrine.composition.find(
       (kind) => atTheRung(kind) && !WANTED_SEPARATELY.includes(kind)
     );
@@ -2272,6 +2278,31 @@ export class AiCommander implements AiPlayer {
       if (seeders < 1 && yard !== null) {
         if (this.affordUnit(UnitKind.Sower, purse)) {
           out.push({ kind: 'produce', structureId: yard.id, unit: UnitKind.Sower });
+        }
+        return;
+      }
+    }
+
+    // The anchor (#509), on the seeder's terms and directly behind it: unarmed,
+    // so a want of its own; one, because a second cloud over the same water
+    // suppresses nothing the first did not; and **saved for** the same way,
+    // because a Commune spends what it earns and 360 nodules is never a moment
+    // away.
+    //
+    // Behind the Sower deliberately, and the order is the whole of the choice.
+    // This queue is a list of wants that each `return` and `rungSave` names one
+    // kind at a time (#518's fourth cause), so two unconditional holds on one
+    // purse are *sequential* whichever way round they go — and of the two, the
+    // Sower is the one that pays for the other. This is the navy's heavy and it
+    // is bought like one: after the economy that funds it.
+    if (this.doctrine.composition.includes(UnitKind.Bower)) {
+      const anchors =
+        snapshot.units.reduce((n, u) => n + (u.kind === UnitKind.Bower ? 1 : 0), 0) +
+        queuedOf(UnitKind.Bower);
+      const yard = this.freeYard(snapshot.structures, UnitKind.Bower);
+      if (anchors < 1 && yard !== null) {
+        if (this.affordUnit(UnitKind.Bower, purse)) {
+          out.push({ kind: 'produce', structureId: yard.id, unit: UnitKind.Bower });
         }
         return;
       }
@@ -2956,6 +2987,38 @@ export class AiCommander implements AiPlayer {
         if (Math.abs(hull.depth - field.depth) > CRYSTAL_RUN.SEED_DEPTH_M) {
           out.push({ kind: 'depth', unitIds: [hull.id], depthM: field.depth });
         }
+      }
+    }
+  }
+
+  /**
+   * Hold the rally with the Commune's anchor (docs/units.md, "The line hulls,
+   * and the anchor"; #509).
+   *
+   * One order and then none, which is the hull: a Bower's cloud needs 30 s of
+   * stillness to grow out, and every horizontal move order resets that clock —
+   * so the branch that walked it somewhere better every observation would be
+   * the branch that never let it work at all. It goes to the rally, because
+   * that is where this navy masses and a swarm is what forms around an anchor,
+   * and then it is left alone.
+   *
+   * The arrival ring is the **cloud's own radius**, not `RANGE.ARRIVE_M`'s
+   * 700: parked within 175 m of the rally, the rally is inside the cloud, and
+   * the hulls gathering there are suppressed and deaf together. Seven hundred
+   * would have parked it a quarter of a kilometre outside its own effect and
+   * read, in the report, as an anchor that was built and did nothing.
+   */
+  private commandAnchor(snapshot: EchoSnapshot, out: AiCommand[]): void {
+    const rally = this.rallyPoint();
+    // By id, so the same hull is asked every time — `commandSeeders`' rule, and
+    // for the same reason: a branch that changed its mind about which anchor
+    // was the anchor would keep both walking and neither grown out.
+    const anchors = snapshot.units
+      .filter((u) => u.kind === UnitKind.Bower)
+      .sort((a, b) => a.id - b.id);
+    for (const hull of anchors) {
+      if (distance(hull, rally) > HULL_EFFECTS.BOWER.VEIL_RADIUS_M) {
+        this.walk(hull, rally, snapshot.tick, out);
       }
     }
   }

@@ -374,6 +374,11 @@ export const PRODUCIBLE: Partial<Record<StructureKind, readonly UnitKind[]>> = {
     // The Weaver alone of the ordnance hulls (docs/units.md, #507): a screen is
     // an opening decision, and the other three are things the crystal buys.
     UnitKind.Weaver,
+    // The two line hulls (docs/units.md, #509). A line hull is an opening or it
+    // is nothing — a navy that reached the rung before it had a line to hold
+    // the water has already lost the minutes the rung was bought with.
+    UnitKind.Caisson,
+    UnitKind.Reed,
   ],
   [StructureKind.Slipway]: [
     UnitKind.Bulwark,
@@ -394,6 +399,9 @@ export const PRODUCIBLE: Partial<Record<StructureKind, readonly UnitKind[]>> = {
     UnitKind.Blight,
     UnitKind.Lure,
     UnitKind.Tocsin,
+    // The Commune's heavy, which is not a heavy (#509): the swarm's anchor,
+    // behind the rung because a mobile Spore Veil is what the crystal buys.
+    UnitKind.Bower,
   ],
 };
 

@@ -1384,6 +1384,127 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     // "the loudest thing in the water short of a ping".
     sigWorking: 88,
   },
+  [UnitKind.Caisson]: {
+    kind: UnitKind.Caisson,
+    name: 'Caisson',
+    /**
+     * SPEC — docs/units.md, Caisson: "64 / 64 / +25 — flat, like the
+     * Corvette's, because there is nothing aboard to throttle."
+     *
+     * Four above `FACTION_COMBAT.KLAXON.SIG_THRESHOLD`, which is the hull:
+     * the Consortium's +12% reads *live* SIG, so every other hull in the navy
+     * buys the bonus by descending, working or standing in a storm and this
+     * one simply has it. Silent Running still drops it under the line, which
+     * is the trade — the quiet or the 12%, never both.
+     */
+    sigIdle: 64,
+    sigCruise: 64,
+    sigFiringBurst: 25,
+    hyd: 45,
+    pressureRating: 2,
+    maxHp: 560,
+    speed: 70,
+    hullLengthM: 90,
+    cost: 170,
+    buildTimeS: 38,
+    berths: 2,
+    /**
+     * The Clarion test, failed the way the Clarion fails it: a hull whose
+     * whole argument is one navy's damage rule reads as a slow, loud,
+     * overpriced Corvette to the other three (docs/units.md).
+     */
+    faction: Faction.Bathyarch,
+    /**
+     * A Corvette's gun, unchanged, and that is the entry. Under the Klaxon it
+     * lands 56, so §9's bands are 8 cycles on a Corvette (12.6 s) against the
+     * Corvette's own 9, and 12 cycles the other way (19.8 s).
+     */
+    attackDamage: 50,
+    attackRangeM: 550,
+    attackCooldownS: 1.8,
+    carriesTorpedoes: true,
+  },
+  [UnitKind.Reed]: {
+    kind: UnitKind.Reed,
+    name: 'Reed',
+    /**
+     * SPEC — docs/units.md, Reed: "12 / 20 / +25 — 20 at 100 m/s against the
+     * Corvette's 28 at 85", which is the Veil's argument written out as one
+     * row.
+     */
+    sigIdle: 12,
+    sigCruise: 20,
+    sigFiringBurst: 25,
+    // The baseline listener's ears, unchanged: this hull's difference is where
+    // it is, not what it hears.
+    hyd: 50,
+    /**
+     * PR-1, one below the Corvette it replaces. "They don't survive the deep;
+     * they terraform it" (docs/factions.md) — the Commune's line hull cannot
+     * follow a fight under the Shelf, and the Sower stays the navy's only hull
+     * above the baseline.
+     */
+    pressureRating: 1,
+    maxHp: 340,
+    speed: 100,
+    hullLengthM: 70,
+    cost: 105,
+    buildTimeS: 26,
+    berths: 2,
+    /**
+     * 20 at flank is unreadable outside a navy whose economy is built to be
+     * poor and unheard; any other doctrine buying this has bought a Corvette
+     * that dies faster (docs/units.md).
+     */
+    faction: Faction.Pelagia,
+    /**
+     * The Corvette's gun, 130 m shorter. §9: 9 cycles on a Corvette (14.4 s,
+     * the Corvette's own duel band) and 7 cycles the other way (10.8 s).
+     */
+    attackDamage: 50,
+    attackRangeM: 420,
+    attackCooldownS: 1.8,
+    carriesTorpedoes: true,
+  },
+  [UnitKind.Bower]: {
+    kind: UnitKind.Bower,
+    name: 'Bower',
+    /**
+     * SPEC — docs/units.md, Bower: "10 / 16 / — , and 45 while it is grown
+     * out". The working figure is the Sower's, because a bloom is a bloom —
+     * and it is *heard* at 18, because the cloud suppresses everything inside
+     * it and the hull is inside it. Nothing here special-cases that: the veil
+     * pass in systems/auras.ts is symmetric and always was.
+     */
+    sigIdle: 10,
+    sigCruise: 16,
+    sigFiringBurst: 0,
+    sigWorking: 45,
+    // 40 under way, and 5 while grown out — its own cloud blinds it exactly as
+    // it blinds everyone else. The anchor is a deaf place, for both sides.
+    hyd: 40,
+    pressureRating: 1,
+    maxHp: 620,
+    speed: 40,
+    hullLengthM: 105,
+    /**
+     * Nodules only, for the Sower's reason (#491): a hull that makes a field
+     * workable may not be priced in what the field yields, or the navy needs
+     * the crystal to buy the key to the crystal.
+     */
+    cost: 360,
+    buildTimeS: 66,
+    berths: 3,
+    /**
+     * It is a Spore Veil with a drive, and only the Commune has a Spore Veil
+     * (docs/units.md).
+     */
+    faction: Faction.Pelagia,
+    attackDamage: 0,
+    attackRangeM: 0,
+    attackCooldownS: 0,
+    carriesTorpedoes: false,
+  },
 };
 
 export function statsFor(kind: UnitKind): UnitStats {
@@ -1412,17 +1533,36 @@ export function unitAvailableTo(kind: UnitKind, faction: Faction): boolean {
  * Keyed per navy so that a navy's own scout and line hull can take the
  * commons' place in its opening the day they exist, without
  * `Match.spawnStartingBase` learning anything new (docs/roster-plan.md §4,
- * wave 0). Identical across the four today, and deliberately: wave 0's gate
- * is a baseline that has not moved, and the Knights' Clarion swap is wave 5's
- * change to make, when the other navies have a line hull to swap in too.
+ * wave 0). Wave 5 is that day for the escort: every navy now has a line hull —
+ * the Caisson, the Reed, the Chorister by price and the Clarion — so the two
+ * Corvettes are gone and each navy opens in its own (#509). The scout stays a
+ * Light Scout for now; the commons' fate is wave 6's decision, and moving that
+ * slot is part of it.
+ *
+ * **A scout and a pair, for everybody.** The kit's *shape* is the rule the
+ * swap is held to (`packages/shared/test/units.test.ts`) — it is the shape the
+ * kit has always had — and what a navy's pair is worth is its doctrine: the
+ * Order's two Clarions cost three times the Directorate's two Choristers and
+ * the Consortium's two Caissons carry a third more plate than anybody's.
+ *
+ * Equal *tonnage* was the other candidate and was measured and rejected. Four
+ * berths of escort each gives the Directorate four one-berth Choristers, which
+ * is its doctrine on paper — "very many, cheap, slow" — and in a game about
+ * hidden information it is not a tonnage change at all: it is four sets of the
+ * best ears in the roster against everyone else's two, from tick zero. Over
+ * thirty matches it took that navy from 56% to 74% while nothing else in its
+ * row moved, and it cost the Echo pass a third more path integrals for the
+ * privilege. The opening is a starting picture rather than a budget.
+ *
+ * This moves the baseline, which is why the replay format bumps with it.
  * Every entry must pass `unitAvailableTo` for its own navy; the shared tests
  * hold that, so a kit can never open with a hull its yard would refuse.
  */
 export const OPENING_ESCORT: Record<Faction, readonly UnitKind[]> = {
-  [Faction.Bathyarch]: [UnitKind.LightScout, UnitKind.Corvette, UnitKind.Corvette],
-  [Faction.Pelagia]: [UnitKind.LightScout, UnitKind.Corvette, UnitKind.Corvette],
-  [Faction.Directorate]: [UnitKind.LightScout, UnitKind.Corvette, UnitKind.Corvette],
-  [Faction.Hadron]: [UnitKind.LightScout, UnitKind.Corvette, UnitKind.Corvette],
+  [Faction.Bathyarch]: [UnitKind.LightScout, UnitKind.Caisson, UnitKind.Caisson],
+  [Faction.Pelagia]: [UnitKind.LightScout, UnitKind.Reed, UnitKind.Reed],
+  [Faction.Directorate]: [UnitKind.LightScout, UnitKind.Chorister, UnitKind.Chorister],
+  [Faction.Hadron]: [UnitKind.LightScout, UnitKind.Clarion, UnitKind.Clarion],
 };
 
 /**

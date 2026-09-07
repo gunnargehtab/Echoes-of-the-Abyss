@@ -343,8 +343,8 @@ again between — the cadence is the light.
 ```text
 UNIT — Glider (pair with Pelagia): the quiet way out, 55 m — a hull that cuts
 its drive and coasts, still under way at 35 of its 105 m/s (SIG 8 idle, 16
-cruise, 1.8 gliding; no weapon; HYD 45). A winged seed, and the one plan in
-the roster not mirrored across its keel: a slim grown seed body on the
+cruise, 1.8 gliding; no weapon; HYD 45). A winged seed, and a plan not
+mirrored across its keel: a slim grown seed body on the
 centreline, one broad wing swept aft off the starboard flank with growth
 rings across its blade and a stiffening vein along its leading edge, a
 short trim vane to port, and the muscle-drive tail folded flat along the
@@ -610,6 +610,103 @@ and dark astern but for one mark; firing, burning bright — the rail lit from
 breech to muzzle, the crystal spine lit down the skirt, heat-shimmer about
 the collar — with the mouth of the bell still dark, because the quarter it is
 loud in is the quarter it fires into.
+```
+
+### The line hulls, and the anchor — the Corvette twice, and a bed with a drive
+
+The three hulls of [units.md](units.md) "The line hulls, and the anchor" (wave 5 of
+[roster-plan.md](roster-plan.md), #509): the two navies that had been opening, massing and
+dying in a hull nobody owns get their own line hull, and the Commune's heavy, which is not a
+heavy. What a line hull's silhouette has to say at RTS distance is *whose Corvette this is*,
+because the duel is the Corvette's duel — both carry its two hardpoints and its 50 — and
+everything that differs is what the doctrine did to the hull around them: the Caisson is the
+skirmisher's wedge made in plate and no longer tapering, the Reed the same wedge drawn out to
+a stem. The Bower is the third and a state made into geometry, as the Glider was with its
+drive cut and the Lure with its fan spread: the model is the hull grown out, because the
+anchor is the thing it is for. The lighting clauses are what the numbers give. The Caisson's
+is one band at every posture, as the Bulwark's is, because 64 idle and 64 cruise is a plant
+with no throttle; the Reed's is the idle/cruise pair as ever; the Bower's is three bands — at
+rest, under way and grown out — and its grown-out figure is the Sower's 45, *heard* at 18
+because the cloud it grows suppresses everything inside it, itself included. The model's
+lamps are the 45, the 36–60 band, and the 18 is the haze over them: the cloud is fog and not
+lamps, exactly as the Spore Veil's own prompt has it, so what dims a grown-out Bower is drawn
+around it and never on it. The wave is generated under Fable 5.1 like every wave from the
+scouts on (rule 3), in the one conversation, after the series reference.
+
+```text
+UNIT — Caisson (pair with Consortium): the line hull that cannot hide and
+has stopped trying, 90 m — a Corvette with a third more plate, a slower
+drive, and a plant that runs at one volume whether or not it is moving,
+four above the Klaxon's line at every posture (SIG 64 idle, 64 cruise, +25
+firing; the Corvette's gun, 50 at 550 m; 560 hull; 70 m/s; PR 2; 170
+nodules). A pressure box: the skirmisher's wedge made in riveted plate and
+no longer tapering — a blunt plough bow, a flat plate face with chamfered
+corners, flanks parallel from the shoulders for two thirds of the length,
+then a step in to the bare drive hull and a square stern with two prop
+tunnels. The caisson is the step: a box of heavier plate bolted over the
+forward two thirds, riveted, patchworked older-under-newer, its after edge
+standing proud of the drive hull as a shoulder — the third more plate,
+visible in the plan. On its back the plant: a riveted pressure cylinder
+lying fore-and-aft along the spine with dished heads, two stacks abreast
+of it, and a rank of exhaust louvres down each side that have no shutters,
+because there is nothing aboard to throttle. The Corvette's two torpedo
+tubes let into the bow face either side of the plough plate, with hinged
+muzzle doors; a low bridge citadel abaft the plant; ballast blisters low
+on the hull. No baffle, no shroud, no cowl on anything. Burning bright at
+rest and under way alike — the louvres the brightest thing on the hull,
+the stacks lit at the throat, floods along the caisson's edge and the
+bridge ports — because the loud state is the only state; the muzzle doors
+flood for the instant of a launch. No dim state is drawn: the one quiet
+this hull has is Silent Running, and that is the trade stated once — the
+quiet or the 12%, never both.
+```
+
+```text
+UNIT — Reed (pair with Pelagia): the line hull that wins the fight it chose,
+70 m — faster, thinner and quieter than the Corvette it replaces, with the
+Corvette's gun 130 m shorter, and the fight it loses is any other (SIG 12
+idle, 20 cruise at 100 m/s, +25 firing; 50 at 420 m; 340 hull; PR 1, a
+reed grows in the shallows; 105 nodules). A reed: a slim grown stem, the
+thinnest gun hull in the roster, with a fine nose, growth rings at two
+nodes where the stem swells, and a narrow leaf blade off each node swept
+aft — one to starboard at the forward node, one to port at the after node,
+alternate as a reed's leaves are, so the plan is not mirrored across its
+keel and is still balanced. The Corvette's two hardpoints grown into the
+stem below the nose as a pair of hollow nodes with lips, one a side, the
+seed torpedoes inside them; a narrow deep muscle-drive fluke astern, the
+drive of a 100 m/s hull. No wing, no bulbs, no sac, no bloom: a reed is
+hollow, and this stem is tubes and drive and nothing else. Nearly black at
+rest, navigation marks only; under way a dim vein along the stem from node
+to node, the leaves unlit; the two lips flare for the instant of a launch
+and the stem is dark again.
+```
+
+```text
+UNIT — Bower (pair with Pelagia): the anchor a swarm forms around, 105 m —
+a Spore Veil with a drive: slow, quiet, no gun, and stationary for 30 s it
+grows out a cloud at half the Veil's radius, 175 m, that suppresses
+everything inside it, itself included, and it is a nursery for Spinner
+magazines within 300 m whether it is moving or not (SIG 10 idle, 16 cruise,
+45 grown out and heard at 18; HYD 40, 5 grown out; no weapon; 620 hull;
+40 m/s; PR 1; 360 nodules). The Veil Mother's bed with a drive: a broad low
+grown body, an oval in plan and the widest Commune hull, its edge made of
+overlapping lobes that alternate a side at a time, a blunt grown nose, and
+a broad short muscle-drive fluke astern. Paired gill organs let into the
+back along each flank with vent slits, exhaling the haze; slender spore
+stalks standing off the back in a swaying rank, as the Veil's do; and the
+nursery under the lobes along each flank — brood pouches showing through
+the shell as rows of paler nubs, where a Spinner's mine regrows. No gun,
+no arm, no sac, no bloom-bed: this is the Veil's own bed and not the
+Sower's leaf, and nothing on it points at anything. The model is the hull
+grown out — lobes spread, stalks standing, gills open and the haze rising
+— which is the state it anchors in; under way the lobes fold in over the
+bed, the stalks lie flat along the back, the gills close, and it is a seed
+again. Nearly black at rest, navigation marks only; under way a dim
+breathing line around each gill; grown out, sustained glow — the breathing
+lines lit around the gills, the stalk tips lit, the brood nubs faint along
+the flanks — and all of it seen through its own haze, because the 45 is
+heard as 18 and the cloud is what does that: fog over the light, never
+less light, and the haze is drawn around the hull and not on it.
 ```
 
 ## Block 3b — STRUCTURE (one per generation)
