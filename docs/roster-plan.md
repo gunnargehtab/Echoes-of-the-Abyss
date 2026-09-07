@@ -94,7 +94,8 @@ of a service (Cantus, Reciter).
 
 Sixteen sketched hulls. With the fifteen that exist that is thirty-one, and each navy's bar
 reads twelve: its nine (or eight, with the Chorister and the Clarion counting where they
-fall), the Submersible, the Harvester, and the common trio the last wave decides the fate of.
+fall), the Submersible, the Harvester, and the common trio — which the last wave decided to
+keep (§8, #510), so twelve it is.
 
 ### The arguments, cell by cell
 
@@ -210,7 +211,7 @@ is used four ways. Each wave is one pull request and one row in
 | 3 — ordnance (done, #507) | Broadside, Weaver, Thurible, Lance | noisemakers laid from a hull; upward depth charge | the weapon triangle reads in duels: torpedo navy beats heavy pushes, decoy navy survives them |
 | 4 — siege (done, #508) | Furnace, Blight, Lure, Tocsin | structure-only damage; spore over time; fauna weighting from a hull | match length falls without the win rates spreading — read in the four-faction baseline, not a duel (#518) |
 | 5 — line and anchor (done, #509) | Caisson, Reed, Bower | none | the Consortium and Commune doctrines stop buying Corvettes; the Bower is judged where the Slipway is reached (#518) |
-| 6 — the commons | none | none | a decision, from the harness: retire the Light Scout, Corvette and Cruiser from the bars, or keep them as the surplus market |
+| 6 — the commons (done, #510) | none | none | a decision, from the harness: retire the Light Scout, Corvette and Cruiser from the bars, or keep them as the surplus market — **kept**, see §8 |
 
 **Wave 0** is the part that is not glamorous and cannot be skipped. It is issue #498, and it
 settled four things:
@@ -527,7 +528,18 @@ two navies come off zero, and the Knights lose fourteen — the one move outside
 win rate over twenty-odd decided matches carries, and the one to watch. All five guard-rails
 held.
 
-**Wave 6** is a decision the harness makes, not this document. If after five waves every
+**Wave 6** was a decision the harness made, not this document, and it made it against the
+plan's expectation. §4 predicted two outcomes — dead weight, or a surplus market — and the
+reading returned a third that §4's own rule had already provided for: *a navy still leaning on
+a common hull is a finding about the roster, not about the commons.* Four leanings, four
+different findings, and one of them is that the Cruiser is named four times by two navies and
+has never been built in a single measured match. §8 carries the table and the decision.
+
+What the plan itself gets wrong, now that the wave has read it: §3 calls the Chorister the
+Directorate's line hull "by doctrine and by price". The price half is true and the doctrine
+half is measurable and false — a composition that names it fields 1.1 a match against the
+Corvette's 2.4, because 20 Biomass is a third of what that navy earns in a match even now that
+the Drift survives (#520). The line the Directorate can actually hold is a Corvette's. If after five waves every
 doctrine builds its own line and the commons are dead weight on the bar, retire them from
 `PRODUCIBLE` and keep them for missions and the campaign, where the prologue's hulls are
 authored. If a navy still leans on a common hull for a role its own roster does not fill,
@@ -614,14 +626,33 @@ grants from a hull all exist and are reused, which is most of the matrix.
 
 ## 8. Open questions
 
-One the plan does not settle, for the person who owns the design:
+Three that were, one of them by wave 6 itself:
 
-1. **Retire the commons?** Wave 6 says the harness decides. The alternative is a design
-   decision now — the Light Scout, Corvette and Cruiser become the *surplus market*,
-   buildable by everyone at a premium, and the fiction ([culture.md](culture.md)) gets a
-   sentence about who sells them.
+- **Retire the commons? No — and the harness said so in three different ways** (#510). The
+  wave's own rule is that a navy still leaning on a common hull is *a finding about the
+  roster, not about the commons*, and the reading found four leanings, of which exactly one
+  is the commons doing a job nothing else could. Read over the four-faction baseline and all
+  six duels:
 
-And two that were, both on #495:
+  | Common hull | Named by | Built per match | What the reading says |
+  | --- | --- | --- | --- |
+  | Light Scout | Commune, Directorate | 11.7–30.3 | Load-bearing, as the cheapest hull the cycle can fall through to — and both navies buy their *own* scout separately, so this entry is not the scout slot |
+  | Corvette | Knights | 5.9–7.1 | **Stale.** Named the Clarion instead and the Knights build 5.6 of them: a clean one-for-one, and wave 5's follow-through rather than a fact about the Corvette |
+  | Corvette | Directorate | 0.4–2.4 | **Real.** Named the Chorister instead and it manages 1.1 a match — its 20 Biomass against about 55 a match — while Light Scout production *rose* to 30.3 to cover the gap |
+  | Cruiser | Consortium ×2, Knights ×2 | **0.0, everywhere** | Named four times across two compositions and built not once in the baseline or in any of the six duels. A dead entry for the one role neither navy has a hull of its own for |
+
+  So the commons are neither dead weight nor a surplus market: they are one hull holding a
+  gap open (the Cruiser's mid-tier, which nothing fills), one hull the Directorate needs
+  because its own line hull is priced in an account that yields two of them a match, one
+  stale entry, and one genuinely useful floor under a production cycle that must always be
+  able to afford *something*. **Retiring them would delete a floor and two findings and fix
+  nothing.** They stay, unpriced and unchanged — not a surplus market either, since nothing
+  is priced at a premium and no yard sells them. The findings are filed as #529 (the Knights'
+  stale Corvette, and the Clarion that replaces it one for one), #530 (the Chorister's 20
+  Biomass against 55 a match) and #531 (the Cruiser, and the mid-tier gap it is holding open
+  for two navies).
+
+And two others, both on #495:
 
 - **Twelve a navy stays the target** (with wave 0). *Very many* is an argument about roster
   width too, and the Commune could end at seven and the Directorate at eleven — but that is
