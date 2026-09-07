@@ -392,7 +392,7 @@ describe("the Fourth's Foot, as docs/mission-the-dome.md §11 paints it", () => 
     // §11, which now names the plant. What it used to say: three Choristers
     // idling west of the foot sum 48 and wear nothing, three east of it plus
     // the Cantor's own 35 sum 83 against a threshold of 60 and wear that cell
-    // at 0.46 a second, and so the one thing at the foot that damages the
+    // at what was then 0.46 a second, and so the one thing at the foot that damages the
     // ground is the Cantorate's instrument.
     //
     // The geometry was right and the arithmetic was read off the Chorister's
@@ -429,10 +429,14 @@ describe("the Fourth's Foot, as docs/mission-the-dome.md §11 paints it", () => 
       '§11: the instrument wears nothing'
     );
     assert.equal(3 * silent + cantor + plant.sig, 83, "§11's 83, with the plant in the count");
+    // 0.006 since #520 calibrated the drain against the sums a region actually
+    // carries — which changes nothing about *which* source crosses the bar,
+    // and everything about whether crossing it matters inside a tide. It does
+    // not: half an hour to Strained, on a cell nobody is paid for.
     assert.equal(
-      Number(((83 - DRIFT.HEALTH_SIG_THRESHOLD) * DRIFT.HEALTH_SIG_DRAIN_PER_S).toFixed(2)),
-      0.46,
-      '§11: 0.46 a second — for the two seconds in eight the plant is loud'
+      Number(((83 - DRIFT.HEALTH_SIG_THRESHOLD) * DRIFT.HEALTH_SIG_DRAIN_PER_S).toFixed(3)),
+      0.006,
+      '§11: 0.006 a second — for the two seconds in eight the plant is loud'
     );
   });
 });

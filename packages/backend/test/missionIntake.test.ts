@@ -777,12 +777,13 @@ describe('the shift, run out — docs/mission-intake.md §4, §6, §8, §9', () 
     assert.ok(payments.length >= 7, `§3: seven renderings, got ${payments.length}`);
     // Every rendering is the roster's thirty-five, or the region ledger's
     // discount of it — §3 and §13 (#350): three hulls cruising together are 84
-    // of SIG against a threshold of 60, so a column wears the cell it works
-    // and a rendering in a worn cell pays three quarters. The mission does not
-    // read the ledger out and is priced by it anyway, and the document says
-    // so rather than moving the band: seven of eight is slack only spread,
-    // and this column is the measurement it quotes. Each figure is stated
-    // here so a retune of the ledger is noticed rather than discovered.
+    // of SIG against a threshold of 60, so a column wears the cell it works.
+    // Each figure is stated here so a retune of the ledger is noticed rather
+    // than discovered, and #520 is that retune: at 0.006 a second, 24 over the
+    // threshold no longer takes a shift's cell out of Healthy, so every one of
+    // these renderings is now paid the roster's whole figure. The column still
+    // wears the ground it works; it no longer wears it far enough to be
+    // charged for it inside one shift.
     for (const payment of payments) {
       assert.ok(
         payment === HOLLOW.biomass || payment === HOLLOW.biomass * 0.75,
@@ -790,12 +791,8 @@ describe('the shift, run out — docs/mission-intake.md §4, §6, §8, §9', () 
       );
     }
     assert.ok(payments.includes(HOLLOW.biomass), '§3: thirty-five, the roster’s figure');
-    assert.ok(
-      payments.includes(HOLLOW.biomass * 0.75),
-      '§13 (#350): a column that works a wall together is paid the ledger’s discount'
-    );
     const seven = payments.slice(0, 7).reduce((sum, payment) => sum + payment, 0);
-    assert.ok(seven < 245, `§3: seven of eight is slack only spread — a column banked ${seven}`);
+    assert.ok(seven <= 245, `§3: seven of eight is slack only spread — a column banked ${seven}`);
     assert.ok(
       paid >= 245,
       `§3: the band, from the walls — ${paid} banked, as ${payments.join(', ')}`
@@ -887,20 +884,31 @@ describe('the shift, run out — docs/mission-intake.md §4, §6, §8, §9', () 
     // region ledger's row in §13 (#350): the twelve seats stand six either
     // side of x = 2,500, so twelve hulls idling at 22 are 132 of SIG in each
     // of the muster's two cells against a threshold of 60 — 72 over, 1.44 a
-    // second — and an intake that never moved has stripped both to nothing by
-    // 1:02 (#365 took recovery out from under the drain, so the 1.44 is now
-    // exact). While the colossus could still be killed,
-    // that dead ground was what kept the kill from paying the band; now it
-    // is stated for its own sake, so a retune of the ledger is noticed.
+    // second — and an intake that never moved used to have stripped both to
+    // nothing by 1:02 (#365 took recovery out from under the drain, so the
+    // 1.44 was exact).
+    //
+    // That retune has now happened, which is what this paragraph asked to be
+    // told about. #520 calibrated the drain against the sums a region actually
+    // carries, and the same 72 over the threshold is 0.018 a second: the
+    // muster's cells are worn rather than stripped, and are still Healthy when
+    // the intake ends. The finding the row was making — that an intake which
+    // never moves is charged for standing still — survives at a rate a shift
+    // can be judged against instead of one that emptied the ground before the
+    // first beat.
     let lowest = Number.POSITIVE_INFINITY;
     let loudest = 0;
     const run = runOut(intakeMatch(), (own, match) => {
       if (own.tick === T(1, 10)) {
         for (const x of [LINE_X - 100, LINE_X + 100]) {
-          assert.equal(
-            match.world.drift.at(x, MUSTER.y),
-            0,
-            `#350: the muster's cell at x=${x} is stripped inside the first minute`
+          const health = match.world.drift.at(x, MUSTER.y);
+          assert.ok(
+            health < DRIFT.HEALTH_START,
+            `#350: the muster's cell at x=${x} is being worn — ${health}`
+          );
+          assert.ok(
+            health > DRIFT.HEALTH_STRAINED,
+            `#520: and a minute of standing still is not enough to strip it — ${health}`
           );
         }
       }

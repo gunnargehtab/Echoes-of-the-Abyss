@@ -154,13 +154,19 @@ and paying Biomass at three quarters under 75, a quarter under 25 and nothing at
 | Cell | What stands in it at 00:00 | Summed SIG | What the ground does |
 | --- | --- | --- | --- |
 | x 0–1,250 | the plant | 35 | Under the threshold. Recovers at 0.02/s all tide |
-| x 1,250–2,500 | the dome, `row-one`, three Choristers | 105 | Wears at 0.90/s — Strained at 00:14, Dead at 01:38 |
-| x 2,500–3,750 | the grower, `row-two`, three Choristers | 95 idle, **125 producing** | Wears at 0.70/s idle and **1.30/s producing** — Strained at 00:10, Dead at 01:08 |
+| x 1,250–2,500 | the dome, `row-one`, three Choristers | 105 | Wears at 0.011/s — Strained at 19:16, and not Dead inside any tide |
+| x 2,500–3,750 | the grower, `row-two`, three Choristers | 95 idle, **125 producing** | Wears at 0.009/s idle and **0.016/s producing** — Strained at 13:20 producing, 24:46 idle |
 | x 3,750–5,000 | the stalls' berths | 12 | Under the threshold |
 
-All four rows are the shipped ledger's arithmetic and none of it is authored. A row that sits where
-the yard seats it has killed two of its own four cells inside two minutes, and every hull it grows
-stands in the grower's cell at 16 idle until it dives. The mission never says so in text (§10). It
+All four rows are the shipped ledger's arithmetic and none of it is authored, and they were
+re-derived when #520 calibrated the drain against the sums a region actually carries. A row that
+sits where the yard seats it wears two of its own four cells all tide without necessarily finishing
+the job: the grower's needs 13:20 of *continuous* production to reach Strained and a row that grows
+in bursts ends the tide short of it, around 77; the dome's needs 19:16 and does not get there at
+all. Before that calibration both cells were *dead* inside two minutes, which made the pay slip
+below a foregone conclusion rather than something a row could avoid. It is now the second thing,
+and a row that grows hard enough for long enough is the one that pays for it. The mission never
+says so in text (§10). It
 says it in the pay slip: a Hollow rendered over Strained ground pays 26.25 instead of 35, over
 Collapsing ground 8.75, over Dead ground nothing — and a colossus, at 260, pays 195, 65 or nothing.
 
@@ -333,7 +339,7 @@ over the row.
 own position, and the two are released in different cells. `the-first` stops at (2742.1, 839.2) —
 north of the row, in the ledger's cell x 2,500–3,750 by y 0–1,000, which nothing of the row's
 stands in at 00:00 and which pays 260. `the-second` is released at (2500, 1790), inside the
-grower's own cell, the one §3's table has Strained at 00:10 and Dead at 01:08 — so the same animal
+grower's own cell, the one §3's table has Strained at 13:20 while it produces — so the same animal
 is 260, 195, 65 or nothing depending entirely on what the row was doing beside its yard for the
 first two minutes of a tide that had not started yet. Nobody says so. The pay slip does.
 

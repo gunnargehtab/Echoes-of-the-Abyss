@@ -501,9 +501,13 @@ describe('the order, as docs/mission-conclave-attending.md §4 and §6 price it'
   it('wears the terrace’s two Drift cells at the rate §11 prices, and never pays for it', () => {
     // §11's arithmetic, from the roster: seated silent the two cells sum 31 and
     // 40 against a threshold of 60 and wear nothing; sitting idle-loud they sum
-    // 124 and 156, and both are dead inside seventy seconds. Nothing on this
-    // map pays Biomass, so what a loud terrace kills is owed to nobody — but a
-    // reader is entitled to check it.
+    // 124 and 156 and are Strained at 13:32 and 09:01, neither of them dying
+    // inside the tide. Nothing on this map pays Biomass, so what a loud terrace
+    // wears is owed to nobody — but a reader is entitled to check it.
+    //
+    // Re-derived when #520 calibrated the drain: before that both cells were
+    // dead inside seventy seconds, which made the silence order's whole value
+    // a formality on ground that was going to die either way.
     const cellWidth = UPPER_TERRACES.widthM / DRIFT.HEALTH_REGIONS;
     assert.equal(cellWidth, 1250);
     assert.equal(UPPER_TERRACES.heightM / DRIFT.HEALTH_REGIONS, 1000);
@@ -525,10 +529,18 @@ describe('the order, as docs/mission-conclave-attending.md §4 and §6 price it'
     );
     const wear = (sum: number): number =>
       (sum - DRIFT.HEALTH_SIG_THRESHOLD) * DRIFT.HEALTH_SIG_DRAIN_PER_S;
-    assert.equal(wear(124), 1.28);
-    assert.equal(Number(wear(156).toFixed(2)), 1.92);
-    assert.equal(Math.round(DRIFT.HEALTH_START / wear(124)), 69);
-    assert.equal(Math.round(DRIFT.HEALTH_START / wear(156)), 46);
+    assert.equal(wear(124), 0.016);
+    assert.equal(Number(wear(156).toFixed(3)), 0.024);
+    const strained = (sum: number): number =>
+      Math.round((DRIFT.HEALTH_START - DRIFT.HEALTH_STRAINED) / wear(sum));
+    assert.equal(strained(124), 813, 'Strained at 13:33');
+    assert.equal(strained(156), 542, 'and at 09:02');
+    for (const sum of [124, 156]) {
+      assert.ok(
+        DRIFT.HEALTH_START / wear(sum) > MISSION.LENGTH_MAX_S,
+        `a terrace at ${sum} wears its cell and does not kill it inside a tide`
+      );
+    }
     assert.ok(
       sums((unit) => silentSig(statsFor(unit.kind).sigIdle)).every(
         (sum) => sum < DRIFT.HEALTH_SIG_THRESHOLD

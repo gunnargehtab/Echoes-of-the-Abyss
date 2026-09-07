@@ -505,15 +505,25 @@ describe("the ground's pay slip, as docs/mission-trench-awakening.md §3 keeps i
       Math.max(0, sig - DRIFT.HEALTH_SIG_THRESHOLD) * DRIFT.HEALTH_SIG_DRAIN_PER_S;
     assert.equal(wear(35), 0, '§3: under the threshold — it recovers all tide');
     assert.equal(wear(12), 0);
-    assert.equal(Number(wear(105).toFixed(2)), 0.9, '§3: wears at 0.90/s');
-    assert.equal(Number(wear(95).toFixed(2)), 0.7, '§3: 0.70/s idle');
-    assert.equal(Number(wear(125).toFixed(2)), 1.3, '§3: and 1.30/s producing');
+    // Re-derived when #520 calibrated the drain against the sums a region
+    // actually carries. §3's finding is unchanged and lands better for it: a
+    // row seated where the yard puts it wears two of its own four cells to
+    // Strained *inside the tide* rather than killing them before the first
+    // objective, so the pay slip below is a consequence the player watches
+    // arrive instead of a foregone conclusion.
+    assert.equal(Number(wear(105).toFixed(3)), 0.011, '§3: wears at 0.011/s');
+    assert.equal(Number(wear(95).toFixed(3)), 0.009, '§3: 0.009/s idle');
+    assert.equal(Number(wear(125).toFixed(3)), 0.016, '§3: and 0.016/s producing');
     const strainedAt = (sig: number) => (DRIFT.HEALTH_START - DRIFT.HEALTH_STRAINED) / wear(sig);
     const deadAt = (sig: number) => DRIFT.HEALTH_START / wear(sig);
-    assert.equal(Math.round(strainedAt(105)), 14, '§3: Strained at 00:14');
-    assert.equal(Math.round(deadAt(105)), 98, '§3: Dead at 01:38');
-    assert.equal(Math.round(strainedAt(125)), 10, '§3: Strained at 00:10');
-    assert.equal(Math.round(deadAt(125)), 68, '§3: Dead at 01:08');
+    assert.equal(Math.round(strainedAt(105)), 1156, '§3: Strained at 19:16');
+    assert.equal(Math.round(strainedAt(125)), 800, '§3: Strained at 13:20 while it produces');
+    for (const sig of [105, 125]) {
+      assert.ok(
+        deadAt(sig) > MISSION.LENGTH_MAX_S,
+        `§3: and ${sig} does not kill its cell inside the longest tide the campaign allows`
+      );
+    }
     assert.equal(DRIFT.HEALTH_START, 88);
     assert.equal(DRIFT.HEALTH_SIG_THRESHOLD, 60);
   });
@@ -1446,6 +1456,13 @@ describe('the tide, run out — docs/mission-trench-awakening.md §4, §6, §8, 
   });
 
   it('is paid the full two hundred and sixty, in the cell §6 says it dies in', () => {
+    // Re-derived with #520. Two things moved and neither is §6's claim: healthy
+    // ground reads the biome's own 88 rather than 100, because recovery no
+    // longer climbs past what the biome opens at; and the row's two cells are
+    // *Strained* at the close rather than Dead, because a cell now takes a tide
+    // to wear rather than ninety seconds. The pay slip still says it — a
+    // colossus over untouched ground pays the whole 260 while the row's own
+    // water pays less — which is the sentence the mission was written around.
     // §6 — "`the-first`, rendered after 14:30: **260**", and "`payBiomass`
     // reads the ledger at the animal's own position". It stops north of the
     // row in a cell nothing of the row's stands in, so the ledger has not
@@ -1458,23 +1475,27 @@ describe('the tide, run out — docs/mission-trench-awakening.md §4, §6, §8, 
       Math.floor((x / SHALLOW_BAND.widthM) * DRIFT.HEALTH_REGIONS);
     assert.equal(
       run.last.driftHealth[cellIndex(stop.x, stop.y)],
-      100,
+      DRIFT.HEALTH_START,
       '§6: healthy ground, and a colossus over healthy ground pays 260'
     );
     // §3's own two rows, at the close: the dome's cell and the grower's cell
-    // are dead, and the row was never told. "The mission never says so in
+    // are worn, and the row was never told. "The mission never says so in
     // text. It says it in the pay slip."
     for (const structure of player.structures ?? []) {
       if (structure.kind === StructureKind.Bastion) continue;
-      assert.equal(
-        run.last.driftHealth[cellIndex(structure.x, structure.y)],
-        0,
-        `§3: the cell ${structure.tag} stands in is dead by 01:38 at the latest`
+      const health = run.last.driftHealth[cellIndex(structure.x, structure.y)]!;
+      assert.ok(
+        health < DRIFT.HEALTH_START,
+        `§3: the cell ${structure.tag} stands in is worn by the close, at ${health}`
+      );
+      assert.ok(
+        health > DRIFT.HEALTH_COLLAPSING,
+        `§3: worn by the tide rather than killed before it began — ${health}`
       );
     }
     assert.equal(
       run.last.driftHealth[cellIndex(1000, 1000)],
-      100,
+      DRIFT.HEALTH_START,
       '§3: and the plant’s own cell is under the threshold and recovers all tide'
     );
   });

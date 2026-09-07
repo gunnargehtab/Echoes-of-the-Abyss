@@ -72,10 +72,22 @@ export class DriftHealth {
     return Array.from(this.health);
   }
 
-  /** A kill takes a bite out of the region it happened in. */
-  recordKill(x: number, y: number): void {
+  /**
+   * A kill takes a bite out of the region it happened in — a bite the size of
+   * who took it (docs/bestiary.md §6).
+   *
+   * `rendered` is whether anybody harvested the creature. A commander that
+   * did is stripping the ground it stands on, which is the whole of §8's
+   * guard-rail; the map's own eruptions are not, and used to charge the same.
+   * See `DRIFT.HEALTH_PER_ENVIRONMENTAL_KILL_FACTOR` for what that cost the
+   * Drift when it was one number (#520).
+   */
+  recordKill(x: number, y: number, rendered = true): void {
     const i = this.index(x, y);
-    this.health[i] = Math.max(0, this.health[i]! - DRIFT.HEALTH_PER_KILL);
+    const cost = rendered
+      ? DRIFT.HEALTH_PER_KILL
+      : DRIFT.HEALTH_PER_KILL * DRIFT.HEALTH_PER_ENVIRONMENTAL_KILL_FACTOR;
+    this.health[i] = Math.max(0, this.health[i]! - cost);
   }
 
   /**
@@ -104,7 +116,12 @@ export class DriftHealth {
       if (excess > 0) {
         this.health[i] = Math.max(0, health - excess * DRIFT.HEALTH_SIG_DRAIN_PER_S * dt);
       } else {
-        this.health[i] = Math.min(100, health + DRIFT.HEALTH_RECOVERY_PER_S * dt);
+        // Back to what the biome opens at, and no further: §6's carry rule
+        // seeds a returning mission at "the lower of what the last mission
+        // left and what the biome opens at", so health above the start was
+        // never readable anyway — it just made two untouched regions report
+        // 100 against a map that begins at 88.
+        this.health[i] = Math.min(DRIFT.HEALTH_START, health + DRIFT.HEALTH_RECOVERY_PER_S * dt);
       }
     }
   }

@@ -483,6 +483,36 @@ there:
 So the honest reading is that this fix is **necessary and not sufficient**, and the next thing
 worth doing for #518 is #520 rather than another change to the commander's spending.
 
+### #520, and the reason no Biomass had ever been earned
+
+The Directorate's two rung hulls are priced at 40 crystal and 60 Biomass, and it had never built
+either. #520 asked three questions in order — is its crystal field ever worked, is Biomass earned
+as designed, and only then are the prices wrong — and the answers turned out to be *no*, *no*, and
+*the prices were never the problem*.
+
+**The crystal field was never assigned.** `commandCrystal` declines a field that costs no crush,
+rightly: a raid is not a shift. It hands the field to `pickNode`, which scores nodes at distance
+plus a kilometre per hauler already there — and on *Ventfront Divide* a Directorate spawn sits
+743 m from its first nodule field and 3,960 m from the crystal, so the crystal only wins once
+seven haulers are stacked on the near ones against a doctrine that fields five. Measured: a
+Directorate hauler spent **zero seconds** on the crystal field across a whole match and never went
+below 600 m, while the two navies that have to *raid* the same water banked 78 and 15 a match from
+it. One hauler now works it as a shift, on the raid branch's own gates.
+
+**And the Drift was dead before the first hull was built.** Health drains where a region's summed
+SIG is over 60, at a rate that had never been calibrated against a *sum*: a spawn carrying a
+Bastion, a Foundry, a Refinery and its haulers reads about 280, which at the old rate is 4.4
+health a second. Measured, all four spawn regions died between **20 and 27 seconds** into the
+match, and every region on the map was dead by 997 s — permanently, because dead is permanent.
+`yieldMultiplier` is zero at zero health, so **no skirmish had ever paid anybody any Biomass at
+all**, and every Biomass price in the roster was unpayable by construction. The drain is now
+0.00025, which takes a base's own ground to Strained at 03:51 and Failing at 11:16 — worn over a
+match rather than lost before it starts — and the Directorate earns 84 Biomass in a match where it
+used to earn nine.
+
+Both were found by asking the issue's questions in the order it wrote them, and neither is a
+pricing question. The prices stand.
+
 **Wave 6** is a decision the harness makes, not this document. If after five waves every
 doctrine builds its own line and the commons are dead weight on the bar, retire them from
 `PRODUCIBLE` and keep them for missions and the campaign, where the prologue's hulls are

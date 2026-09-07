@@ -1282,11 +1282,50 @@ export const DRIFT = {
    */
   HEALTH_REGIONS: 4,
   HEALTH_START: 88,
-  /** Health lost per fauna kill in a region. */
+  /** Health lost per fauna kill in a region — a kill somebody rendered. */
   HEALTH_PER_KILL: 4,
-  /** Health lost per second per unit of SIG above the threshold, in a region. */
+  /**
+   * SPEC — docs/bestiary.md §6: what a creature the *map* killed costs the
+   * region, as a fraction of a rendered one.
+   *
+   * The guard-rail in §8 is that Drift Health "degrades from things players
+   * already want to do", and an eruption boiling an Ashgrazer is nobody doing
+   * anything. Charging both at the same rate turned the guard-rail into a
+   * clock: on *Ventfront Divide*, ten of the fourteen creatures that died in a
+   * twelve-minute match were killed by the map's own plumes, and health fell
+   * 88 → 16 — past Failing, so nothing respawned, and into Collapsing, so what
+   * little was rendered paid a quarter of it (#520).
+   *
+   * Not zero, because §6 does name hazard damage among the things that wear a
+   * region down and the region has genuinely lost the creature. A quarter.
+   */
+  HEALTH_PER_ENVIRONMENTAL_KILL_FACTOR: 0.25,
+  /** The summed SIG a region carries before it starts wearing down. */
   HEALTH_SIG_THRESHOLD: 60,
-  HEALTH_SIG_DRAIN_PER_S: 0.02,
+  /**
+   * Health lost per second per unit of SIG above the threshold, in a region.
+   *
+   * TUNABLE, and calibrated against the *sum* the region actually carries
+   * rather than against the 0–100 scale the threshold is written on — which is
+   * what went wrong. `driftTick` sums every emitter in a region, so a spawn
+   * carrying a Bastion, a Foundry, a Refinery and its haulers reads about 280
+   * against a threshold of 60. At the previous 0.02 that is 4.4 health a
+   * second: measured, all four spawn regions on *Ventfront Divide* hit zero
+   * between **20 and 27 seconds** into the match and stayed there, because
+   * dead is permanent (§6). Every region on the map was dead by 997 s. Nobody
+   * had ever earned Biomass in a skirmish, because `yieldMultiplier` is zero
+   * at zero health and every base stands in a region it had already killed
+   * (#520).
+   *
+   * 0.00025 is set from the pacing docs/bestiary.md §6 now states: at that
+   * same excess of 220 a base takes its own ground from 88 to Failing in about
+   * eleven minutes and to Collapsing in nineteen, so a match is spent wearing
+   * the ground rather than having already lost it, and quiet water — an excess
+   * of 40 — survives any match at all. It stays *faster than recovery*, which
+   * needs about thirty-two minutes for the same distance: wearing a region
+   * down is quicker than healing one, and neither is instant.
+   */
+  HEALTH_SIG_DRAIN_PER_S: 0.00025,
   /**
    * Recovery, per second, for a cell whose SIG sum is under the threshold.
    *

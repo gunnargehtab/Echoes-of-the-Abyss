@@ -209,6 +209,10 @@ describe('drift noise is accumulated per region', () => {
         `${DRIFT.HEALTH_SIG_THRESHOLD} threshold for this test to be evidence of anything`
     );
 
+    // Knocked below the cap first, or there is no headroom to recover into:
+    // a cell heals to what the biome opens at and stops (#520), and an empty
+    // match starts every region exactly there.
+    match.world.drift.recordKill(MIDDLE_X, MIDDLE_Y);
     const before = match.world.drift.at(MIDDLE_X, MIDDLE_Y);
     for (let i = 0; i < 20 * SIM.TICK_HZ; i++) {
       match.update(STEP_MS);
@@ -375,10 +379,12 @@ describe('Drift Health recovery', () => {
       assert.equal(drift.at(0, 0), expected[0], `tick ${i}: the rate, no more and no less`);
     }
     // The kill's 4 comes back in HEALTH_PER_KILL / HEALTH_RECOVERY_PER_S
-    // seconds — about three and a half minutes — and then the cell keeps
-    // climbing to 100, where it stops.
+    // seconds — about three and a half minutes — and then the cell stops at
+    // what the biome opens at. Not 100: §6's carry rule seeds a returning
+    // mission at "the lower of what the last mission left and what the biome
+    // opens at", so health above the start was never readable (#520).
     for (let i = 0; i < 20 * 60 * SIM.TICK_HZ; i++) drift.tick(DT, QUIET);
-    assert.equal(drift.at(0, 0), 100, 'the cap');
+    assert.equal(drift.at(0, 0), DRIFT.HEALTH_START, 'the cap is where the biome opens');
   });
 
   it('wears a loud cell at exactly the drain, with no recovery under it', () => {
@@ -397,8 +403,11 @@ describe('Drift Health recovery', () => {
     );
     assert.ok(drift.at(0, 0) < DRIFT.HEALTH_START, 'and it is a loss, not a wash');
 
-    // Exactly at the threshold is quiet: §6's "over 60" means over.
+    // Exactly at the threshold is quiet: §6's "over 60" means over. Read from
+    // a cell with headroom, since recovery stops at the biome's start (#520)
+    // and one point of drain is far too little to have made any.
     noise[0] = DRIFT.HEALTH_SIG_THRESHOLD;
+    drift.recordKill(0, 0);
     const before = drift.at(0, 0);
     drift.tick(DT, noise);
     assert.equal(drift.at(0, 0), f32(before + DRIFT.HEALTH_RECOVERY_PER_S * DT));
@@ -417,7 +426,11 @@ describe('Drift Health recovery', () => {
     assert.equal(drift.spawnsAllowed(0, 0), false, 'and admits nothing');
     // Only that cell: death is a thing that happens to a place, and the
     // neighbour it did not happen to has been healing the whole time.
-    assert.equal(drift.at(7999, 7999), 100, 'an untouched neighbour reached the cap');
+    assert.equal(
+      drift.at(7999, 7999),
+      DRIFT.HEALTH_START,
+      'an untouched neighbour is still where the biome opened it'
+    );
   });
 });
 
