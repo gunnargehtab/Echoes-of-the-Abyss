@@ -99,7 +99,35 @@ import {
 import { OwnMotion } from './ownMotion.ts';
 import { OrdnanceLayer } from './ordnanceLayer.ts';
 import { EnvironmentLayer } from './environmentLayer.ts';
+import { VeilField, veilShade, type VeilListener } from './acousticVeil.ts';
 import { FrameCost, ms } from './frameCost.ts';
+
+/**
+ * Steps in the veil's shade table. 64 is finer than an 8-bit colour channel
+ * can resolve over the range the veil actually spans, so the table costs
+ * nothing in banding and saves a `pow` per vertex per Echo tick.
+ */
+const VEIL_STEPS = 64;
+
+/**
+ * The veil's linear-space shade, tabulated over the veil amount 0-1.
+ *
+ * Built once. `Color.setRGB(..., SRGBColorSpace)` is what does the
+ * conversion, so three owns the transfer function rather than this file
+ * carrying a hand-rolled gamma that would drift from it.
+ */
+const VEIL_TABLE = ((): Float32Array => {
+  const table = new Float32Array((VEIL_STEPS + 1) * 3);
+  const color = new Color();
+  for (let i = 0; i <= VEIL_STEPS; i++) {
+    const shade = veilShade(1 - i / VEIL_STEPS, 1);
+    color.setRGB(shade.r, shade.g, shade.b, SRGBColorSpace);
+    table[i * 3] = color.r;
+    table[i * 3 + 1] = color.g;
+    table[i * 3 + 2] = color.b;
+  }
+  return table;
+})();
 
 /**
  * SPEC — docs/art-direction.md "Camera & Projection", settled by the Phase-1
@@ -239,6 +267,30 @@ export class PerspectiveView {
   private embers: Points | null = null;
   private emberPhases: number[] = [];
   private emberBucket = -1;
+  /** Where each ember stands, for the veil's reshade. */
+  private emberPositions: Array<{ xM: number; yM: number }> = [];
+  /** Per-ember veil factor, parallel to `emberPhases`; 1 with no veil. */
+  private emberVeil: Float32Array = new Float32Array(0);
+
+  /**
+   * The acoustic veil (acousticVeil.ts, docs/ui-ux.md §4.5, issue #472): the
+   * ground goes cold where no listener of the player's reaches.
+   *
+   * It lives on the conn view because it is a statement about the *world*,
+   * not about the instrument: the scope stays unveiled, where §5's promise is
+   * own force at full clarity and a mark's own size already carries how much
+   * to trust it.
+   */
+  private readonly veil = new VeilField();
+  private veilIntensity = 1;
+  /** Whether anything on the ground currently carries a veil shade. */
+  private veilDrawn = false;
+  /** Scratch for the shade callbacks, consumed before the next call. */
+  private readonly veilColor = new Color();
+  /** Handed to the prop layer, which owns when its instances are re-coloured. */
+  private readonly propShade = (xM: number, yM: number, out: Color): void => {
+    this.linearShadeAt(xM, yM, out);
+  };
 
   private readonly unitGroup = new Group();
   private readonly structureGroup = new Group();
@@ -392,6 +444,23 @@ export class PerspectiveView {
     this.environment.setReducedMotion(reduced);
   }
 
+  /**
+   * The acoustic veil's strength, 0-1 (docs/ui-ux.md §4.5 and §11).
+   *
+   * A setting because the veil is a contrast-reduced overlay and §11 makes
+   * accessibility a correctness requirement — and it can be one without
+   * argument precisely because it is presentation only: the veil hides no
+   * information, so turning it off costs the player nothing and gains them
+   * nothing. Compare the colour-vision palettes, which change the ink and
+   * never the encoding.
+   */
+  setVeilIntensity(intensity: number): void {
+    const clamped = intensity < 0 ? 0 : intensity > 1 ? 1 : intensity;
+    if (clamped === this.veilIntensity) return;
+    this.veilIntensity = clamped;
+    this.applyVeil();
+  }
+
   setIdentity(_slot: number, faction: Faction): void {
     this.faction = faction;
     // The seat is the first moment the client knows which navy's art it will
@@ -416,6 +485,7 @@ export class PerspectiveView {
     this.refreshGroundCache();
     this.fitToMap();
     this.rebuildTerrain();
+    this.refreshVeil();
   }
 
   applyGround(
@@ -470,6 +540,9 @@ export class PerspectiveView {
       }
     }
     if (this.renderer !== null) this.syncEntities();
+    // The veil is a 5 Hz fact about where the fleet's ears are, so it moves
+    // with the snapshot rather than with the frame (docs/ui-ux.md §4.5).
+    this.refreshVeil();
   }
 
   resetForNewMatch(): void {
@@ -480,6 +553,10 @@ export class PerspectiveView {
     this.lastPositions.clear();
     this.motion.reset();
     this.ordnanceMotion.reset();
+    // A force of nobody is not a dark map (acousticVeil.ts): the veil comes
+    // off with the fleet rather than closing over the whole chart.
+    this.veil.clear();
+    this.applyVeil();
     if (this.renderer !== null) this.syncEntities();
   }
 
@@ -731,6 +808,13 @@ export class PerspectiveView {
     const geometry = new BufferGeometry();
     geometry.setAttribute('position', new BufferAttribute(positions, 3));
     geometry.setAttribute('uv', new BufferAttribute(uvs, 2));
+    // The acoustic veil rides the ground as a vertex colour, so it costs the
+    // frame no draw call and no triangle (gate 6): the terrain is already one
+    // unlit mesh with a baked map, and a vertex colour multiplies straight
+    // into it. White until a field exists — a chart with nothing shading it
+    // is a chart, not a black tile.
+    const shades = new Float32Array(grid.vertsX * grid.vertsZ * 3).fill(1);
+    geometry.setAttribute('color', new BufferAttribute(shades, 3));
     geometry.setIndex(new BufferAttribute(indices, 1));
 
     const canvas = bakeSeabed(terrain, this.groundSeed, this.seabedRange);
@@ -740,7 +824,10 @@ export class PerspectiveView {
     texture.flipY = false;
     texture.colorSpace = SRGBColorSpace;
     texture.anisotropy = Math.min(4, this.renderer.capabilities.getMaxAnisotropy());
-    this.terrainMesh = new Mesh(geometry, new MeshBasicMaterial({ map: texture }));
+    this.terrainMesh = new Mesh(
+      geometry,
+      new MeshBasicMaterial({ map: texture, vertexColors: true })
+    );
     this.scene.add(this.terrainMesh);
     this.terrainGrid = grid;
     this.seabedCanvas = canvas;
@@ -803,6 +890,10 @@ export class PerspectiveView {
     texture.needsUpdate = true;
 
     this.rebuildDressing();
+    // A ground delta can change a cell's biome, and the biome is the water's
+    // propagation factor — so the field this shades from moved, not just the
+    // heights it is written onto.
+    this.refreshVeil();
     this.syncEntities();
   }
 
@@ -890,6 +981,8 @@ export class PerspectiveView {
   private buildEmbers(terrain: TerrainPayload): void {
     const embers = ventEmbers(terrain, this.groundSeed);
     this.emberPhases = embers.map((e) => e.phase);
+    this.emberPositions = embers.map((e) => ({ xM: e.xM, yM: e.yM }));
+    this.emberVeil = new Float32Array(embers.length).fill(1);
     if (embers.length === 0) {
       this.embers = null;
       return;
@@ -919,6 +1012,117 @@ export class PerspectiveView {
     );
     this.embers.renderOrder = 1;
     this.scene.add(this.embers);
+    this.emberBucket = -1;
+  }
+
+  /**
+   * Rebuild the veil field from the fleet, then re-shade everything on the
+   * ground with it.
+   *
+   * Everything the player *earned* is deliberately absent from this list.
+   * Contacts, Echo Marks, acquisition brackets, the own force itself, its
+   * depth cues, the hazard countdowns and every line of the HUD draw at full
+   * strength over whatever the veil has done to the seabed. Dimming a mark
+   * would price the same information twice, and §4 and §12 already forbid the
+   * renderer editing what the server resolved.
+   *
+   * The chart register is absent for the other reason: the tunnel routes, the
+   * map rim and the skirt are instrument lines drawn on the water rather than
+   * things standing in it, and an instrument does not go quiet because you
+   * stopped listening.
+   */
+  private refreshVeil(): void {
+    const terrain = this.terrain;
+    if (terrain === null) return;
+    const listeners: VeilListener[] = [];
+    // Silent Running and a cut drive are postures of the *emitter*: a hull
+    // that has gone quiet still has its hydrophones, and holds its water.
+    for (const unit of this.units) {
+      listeners.push({ xM: unit.x, yM: unit.y, hyd: statsFor(unit.kind).hyd });
+    }
+    // Structures are anchored hydrophone arrays (shared/structures.ts), which
+    // is why a base with nothing left in the water still hears its own yard.
+    for (const structure of this.structures) {
+      listeners.push({
+        xM: structure.x,
+        yM: structure.y,
+        hyd: structureStatsFor(structure.kind).hyd,
+      });
+    }
+    this.veil.build(terrain, listeners);
+    this.applyVeil();
+  }
+
+  /**
+   * Push the current field onto the ground, the embers and the props.
+   *
+   * With the veil off this runs exactly once — the pass that puts the colour
+   * back — and then stops, so a player who turned it off is not paying for a
+   * 16k-vertex write of white at 5 Hz for the rest of the match.
+   */
+  private applyVeil(): void {
+    const wanted = this.veilIntensity > 0;
+    if (!wanted && !this.veilDrawn) return;
+    this.veilDrawn = wanted;
+    this.shadeGround();
+    this.shadeEmbers();
+    this.environment.setShade(wanted ? this.propShade : null);
+  }
+
+  /**
+   * The veil's multiplier at a point, written into `out` in the renderer's
+   * **linear** working space.
+   *
+   * The conversion is the gotcha this method exists to hold in one place.
+   * `veilShade` speaks in display terms — "a third of the chart's
+   * brightness" — because that is the only space the number can be reviewed
+   * in. Vertex colours and instance colours are consumed raw by the shader,
+   * with colour management on and `outputColorSpace` sRGB, so a display
+   * figure written straight into the buffer lands about twice as bright as it
+   * reads. `VEIL_TABLE` is that conversion done once at construction, over
+   * the veil amount rather than per vertex: three `pow`s in total instead of
+   * three per vertex per Echo tick over a 16k-vertex grid.
+   */
+  private linearShadeAt(xM: number, yM: number, out: Color): void {
+    const k = (1 - this.veil.at(xM, yM)) * this.veilIntensity;
+    const i = Math.round((k < 0 ? 0 : k > 1 ? 1 : k) * VEIL_STEPS) * 3;
+    out.setRGB(VEIL_TABLE[i]!, VEIL_TABLE[i + 1]!, VEIL_TABLE[i + 2]!);
+  }
+
+  private shadeGround(): void {
+    const mesh = this.terrainMesh;
+    const grid = this.terrainGrid;
+    if (mesh === null || grid === null) return;
+    const colors = mesh.geometry.getAttribute('color') as BufferAttribute | undefined;
+    if (colors === undefined) return;
+    const shade = this.veilColor;
+    for (let iz = 0; iz < grid.vertsZ; iz++) {
+      const z = iz * grid.stepM;
+      const row = iz * grid.vertsX;
+      for (let ix = 0; ix < grid.vertsX; ix++) {
+        this.linearShadeAt(ix * grid.stepM, z, shade);
+        colors.setXYZ(row + ix, shade.r, shade.g, shade.b);
+      }
+    }
+    colors.needsUpdate = true;
+  }
+
+  /**
+   * Embers take a plain drain rather than the cold tint the ground takes.
+   * A vent is a light, and deafness is not a filter over a light — it dims
+   * it. Recolouring the one warm thing on the seabed towards blue would be
+   * inventing a hue nobody specified (gate 4).
+   */
+  private shadeEmbers(): void {
+    if (this.emberVeil.length === 0) return;
+    const shade = this.veilColor;
+    for (let i = 0; i < this.emberPositions.length; i++) {
+      const at = this.emberPositions[i]!;
+      this.linearShadeAt(at.xM, at.yM, shade);
+      this.emberVeil[i] = (shade.r + shade.g + shade.b) / 3;
+    }
+    // The flicker only writes on a bucket change, so force the next frame to
+    // re-issue the colours the veil just moved.
     this.emberBucket = -1;
   }
 
@@ -1287,7 +1491,12 @@ export class PerspectiveView {
         const colors = this.embers.geometry.getAttribute('color') as BufferAttribute;
         const ember = EMBER_COLOR;
         for (let i = 0; i < this.emberPhases.length; i++) {
-          const level = 0.55 * emberFlicker(i, bucket, this.emberPhases[i]!);
+          // A vent seen through water nobody is listening to is still a vent,
+          // and still the seabed's one light — it just goes as cold as the
+          // ground it burns on. An unveiled ember over veiled ground would be
+          // the layer that got forgotten (docs/ui-ux.md §4.5).
+          const level =
+            0.55 * emberFlicker(i, bucket, this.emberPhases[i]!) * (this.emberVeil[i] ?? 1);
           colors.setXYZ(i, ember.r * level, ember.g * level, ember.b * level);
         }
         colors.needsUpdate = true;

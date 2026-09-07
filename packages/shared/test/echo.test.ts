@@ -21,6 +21,7 @@ import {
   depthBandFor,
   detectionRatio,
   maxAudibleRangeM,
+  minAudibleSigAt,
   perceivedLoudness,
   resolveTier,
   requiredPressureRating,
@@ -165,6 +166,55 @@ describe('maxAudibleRangeM', () => {
 
   it('returns zero for a silent emitter', () => {
     assert.equal(maxAudibleRangeM(0, 1, 50), 0);
+  });
+});
+
+describe('minAudibleSigAt', () => {
+  it('agrees with resolveTier about the quietest thing a listener registers', () => {
+    // The other inverse of the same relationship: the client asks it where
+    // its own ears reach (docs/ui-ux.md §4.5), so the two must not be able to
+    // disagree about the boundary. Just above the answer is audible, just
+    // below it is not.
+    for (const distance of [200, 900, 2400, 5000]) {
+      for (const pf of [0.45, 1.0, 1.6]) {
+        for (const hyd of [30, 50, 85]) {
+          const sig = minAudibleSigAt(distance, pf, hyd);
+          assert.notEqual(
+            resolveTier(sig * 1.01, pf, distance, hyd),
+            ResolutionTier.Silent,
+            `${distance} m, pf ${pf}, hyd ${hyd}: a shade louder should register`
+          );
+          assert.equal(
+            resolveTier(sig * 0.99, pf, distance, hyd),
+            ResolutionTier.Silent,
+            `${distance} m, pf ${pf}, hyd ${hyd}: a shade quieter should not`
+          );
+        }
+      }
+    }
+  });
+
+  it('is the exact inverse of maxAudibleRangeM', () => {
+    for (const sig of [8, 30, 95]) {
+      for (const pf of [0.45, 1.6]) {
+        const range = maxAudibleRangeM(sig, pf, 50);
+        assert.ok(Math.abs(minAudibleSigAt(range, pf, 50) - sig) < 1e-9);
+      }
+    }
+  });
+
+  it('does not attenuate inside the reference distance', () => {
+    // Point blank is point blank — `perceivedLoudness` clamps there, and a
+    // field sampled over a hull's own cell would otherwise run to zero.
+    assert.equal(minAudibleSigAt(0, 1, 50), minAudibleSigAt(50, 1, 50));
+  });
+
+  it('answers "louder than sound goes" rather than a number a caller could use', () => {
+    // Water no listener could hear anything in at all. Infinity is the honest
+    // answer; a large finite SIG would read as a threshold somebody could
+    // cross.
+    assert.equal(minAudibleSigAt(1000, 0, 50), Infinity);
+    assert.equal(minAudibleSigAt(1000, 1, 0), Infinity);
   });
 });
 

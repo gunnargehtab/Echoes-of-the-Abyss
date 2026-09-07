@@ -27,7 +27,7 @@
  */
 const SWAY_HOLD_S = 1.7;
 
-import { Group, InstancedMesh, Matrix4, Quaternion, Vector3 } from 'three';
+import { Color, Group, InstancedMesh, Matrix4, Quaternion, Vector3 } from 'three';
 import type { TerrainPayload } from '../net/GameClient.ts';
 import { placeProps, propSpec, type PropPlacement } from './environment.ts';
 import { envTemplate, type SwayUniforms } from './environmentModels.ts';
@@ -37,6 +37,7 @@ const TMP_QUAT = new Quaternion();
 const TMP_POS = new Vector3();
 const TMP_SCALE = new Vector3();
 const Y_AXIS = new Vector3(0, 1, 0);
+const TMP_COLOR = new Color();
 
 export class EnvironmentLayer {
   /** Added to the scene once by the view; rebuilt in place. */
@@ -50,6 +51,20 @@ export class EnvironmentLayer {
   /** Sway handles of the templates standing in this build, ticked per frame. */
   private swaying: SwayUniforms[] = [];
   private reducedMotion = false;
+  /**
+   * The acoustic veil's ground shade (acousticVeil.ts, docs/ui-ux.md §4.5),
+   * as the view's own linear-space multiplier at a point.
+   *
+   * Props take it because they stand *on* the ground: a kelp bed at full
+   * colour over a chart that has gone cold reads as a renderer that forgot
+   * one layer, not as water nobody is listening to. Held here rather than
+   * passed per rebuild because the two cadences differ — the ground rebuilds
+   * when it changes, the veil moves with the fleet — so a rebuild has to be
+   * able to re-apply the shade it last had.
+   */
+  private shade: ((xM: number, yM: number, out: Color) => void) | null = null;
+  /** What each instanced mesh in this build stands on, for a reshade. */
+  private shaded: Array<{ mesh: InstancedMesh; list: PropPlacement[] }> = [];
 
   /**
    * Rebuild the layer for a terrain. `groundY` is the view's own seabed
@@ -90,6 +105,8 @@ export class EnvironmentLayer {
           mesh.setMatrixAt(i, TMP_MATRIX.compose(TMP_POS, TMP_QUAT, TMP_SCALE));
         });
         mesh.instanceMatrix.needsUpdate = true;
+        this.shaded.push({ mesh, list });
+        this.applyShade(mesh, list);
         this.group.add(mesh);
       }
       this.props += list.length;
@@ -113,6 +130,29 @@ export class EnvironmentLayer {
     this.reducedMotion = reduced;
   }
 
+  /**
+   * Take the acoustic veil's shade, and re-apply it to everything standing.
+   *
+   * `null` restores full colour in one pass — the setting turned off, or a
+   * view with no field yet. Cheap enough to call on the Echo tick: a colour
+   * per instance, and the reservation caps the layer's instance count.
+   */
+  setShade(shade: ((xM: number, yM: number, out: Color) => void) | null): void {
+    this.shade = shade;
+    for (const { mesh, list } of this.shaded) this.applyShade(mesh, list);
+  }
+
+  private applyShade(mesh: InstancedMesh, list: readonly PropPlacement[]): void {
+    const shade = this.shade;
+    for (let i = 0; i < list.length; i++) {
+      const placement = list[i]!;
+      if (shade === null) TMP_COLOR.setRGB(1, 1, 1);
+      else shade(placement.xM, placement.yM, TMP_COLOR);
+      mesh.setColorAt(i, TMP_COLOR);
+    }
+    if (mesh.instanceColor !== null) mesh.instanceColor.needsUpdate = true;
+  }
+
   /** Probe telemetry (gate 6): bodies standing and triangles they cost. */
   stats(): { props: number; propTris: number } {
     return { props: this.props, propTris: this.propTris };
@@ -133,5 +173,6 @@ export class EnvironmentLayer {
     this.props = 0;
     this.propTris = 0;
     this.swaying = [];
+    this.shaded = [];
   }
 }

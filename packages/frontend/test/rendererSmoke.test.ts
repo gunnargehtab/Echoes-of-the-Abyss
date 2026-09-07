@@ -49,6 +49,7 @@ import {
 } from './support/cannedMatch.ts';
 import { EchoRenderer, type RendererCallbacks } from '../src/game/EchoRenderer.ts';
 import { PerspectiveView } from '../src/game/PerspectiveView.ts';
+import { BufferAttribute, Mesh, type Scene } from 'three';
 
 /** What the shell was told, in the order it was told. */
 interface CallbackLog {
@@ -334,6 +335,62 @@ describe('renderer smoke test: the chart', () => {
   });
 });
 
+/**
+ * Cut the canned force down to one hull in the north-west corner.
+ *
+ * The canned fleet is six listeners spread over a 4 km map and genuinely
+ * *holds* all of it — which is the veil working, and useless to assert on.
+ * A lone Corvette at a baseline rating leaves the far corner well outside
+ * anything it could hear, so the gradient is there to read.
+ */
+function loneListener(world: Booted): void {
+  const snapshot = cannedSnapshot(360);
+  world.conn.applySnapshot({
+    ...snapshot,
+    units: snapshot.units.slice(0, 1),
+    structures: [],
+  });
+  // Draw once on the reduced force, so a later ledger reading is about the
+  // veil rather than about the five entities this just took out of the scene.
+  world.frame(1);
+}
+
+/**
+ * The one mesh in the conn scene carrying a vertex-colour attribute: the
+ * terrain. Found rather than reached for, because the view owns its own scene
+ * graph and a test that indexed into `children` would break on any reorder.
+ */
+function terrainMesh(scene: Scene | null): Mesh {
+  assert.ok(scene !== null, 'the conn rendered at least once');
+  let found: Mesh | null = null;
+  scene.traverse((object) => {
+    if (found !== null || !(object instanceof Mesh)) return;
+    if (object.geometry.getAttribute('color') !== undefined) found = object;
+  });
+  assert.ok(found !== null, 'the ground carries the veil as a vertex colour');
+  return found;
+}
+
+/**
+ * The veil's brightness at a world point: the mean channel of the vertex
+ * nearest it, which is what a reviewer would read off the picture.
+ */
+function shadeAt(mesh: Mesh, shades: BufferAttribute, xM: number, zM: number): number {
+  const positions = mesh.geometry.getAttribute('position') as BufferAttribute;
+  let best = Infinity;
+  let index = 0;
+  for (let i = 0; i < positions.count; i++) {
+    const dx = positions.getX(i) - xM;
+    const dz = positions.getZ(i) - zM;
+    const distance = dx * dx + dz * dz;
+    if (distance < best) {
+      best = distance;
+      index = i;
+    }
+  }
+  return (shades.getX(index) + shades.getY(index) + shades.getZ(index)) / 3;
+}
+
 describe('renderer smoke test: the conn view', () => {
   it('builds a scene whose cost is a counted quantity, not a stopwatch', async () => {
     const world = await boot();
@@ -383,6 +440,85 @@ describe('renderer smoke test: the conn view', () => {
         Object.keys(report).some((key) => key.includes('contact')),
         false,
         'the conn view holds nothing about contacts'
+      );
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('lets the ground go cold where nothing of the fleet is listening (#472)', async () => {
+    const world = await boot();
+    try {
+      world.frame(3);
+      loneListener(world);
+
+      const ground = terrainMesh(world.gl.lastScene);
+      const shades = ground.geometry.getAttribute('color') as BufferAttribute;
+      assert.equal(
+        shades.count,
+        (ground.geometry.getAttribute('position') as BufferAttribute).count,
+        'the veil rides the ground it is drawn on, one shade per vertex'
+      );
+
+      // §4.5's claim is that the water reads as held where an ear reaches and
+      // cold where none does — so the corner the one hull has nothing in must
+      // be darker than the water it is standing in, and neither may be black.
+      const held = shadeAt(ground, shades, 800, 900);
+      const cold = shadeAt(ground, shades, COLS * CELL_M - 200, COLS * CELL_M - 200);
+      assert.ok(held > cold, `held water ${held} is brighter than cold water ${cold}`);
+      assert.ok(cold > 0, 'the chart is drained, never unexplored black (§5)');
+
+      // Gate 6: a vertex colour on a mesh that was already there. The veil
+      // spends no draw call and no triangle, which is why it can be a
+      // full-map effect at all.
+      const calls = world.gl.ledger.calls;
+      const triangles = world.gl.ledger.triangles;
+      world.conn.setVeilIntensity(0);
+      world.frame(2);
+      assert.equal(world.gl.ledger.calls, calls, 'the veil costs the frame no draw call');
+      assert.equal(world.gl.ledger.triangles, triangles, 'and no triangle');
+
+      // And off is off: a player who turned it down gets the chart back
+      // whole, because it never held anything back from them.
+      assert.equal(shadeAt(ground, shades, COLS * CELL_M - 200, COLS * CELL_M - 200), 1);
+      assert.equal(shadeAt(ground, shades, 800, 900), 1);
+    } finally {
+      world.teardown();
+    }
+  });
+
+  it('never dims a thing the player earned (#472)', async () => {
+    const world = await boot();
+    try {
+      world.frame(3);
+      loneListener(world);
+
+      // The own force is drawn at full fidelity whatever the water around it
+      // is doing (docs/graphics-standards.md gate 5): the veil is a statement
+      // about listening, and a hull of the player's own is not in question.
+      const scene = world.gl.lastScene;
+      assert.ok(scene !== null, 'the conn rendered at least once');
+      const opaque: number[] = [];
+      scene.traverse((object) => {
+        const material = (object as { material?: { opacity?: number; vertexColors?: boolean } })
+          .material;
+        if (material?.opacity === undefined) return;
+        if (object === terrainMesh(scene)) return;
+        opaque.push(material.opacity);
+      });
+      assert.ok(opaque.length > 0, 'the fleet and the dressing are in the scene');
+
+      // The chart painter is the one that draws every mark the player earned,
+      // and it has no idea the veil exists. Wiring it in later would be the
+      // regression this holds against: a contact resolved by the server is
+      // drawn at full strength through any amount of veil.
+      const before = drawInstructions(world.app.stage);
+      world.conn.setVeilIntensity(0);
+      world.frame(2);
+      assert.equal(
+        drawInstructions(world.app.stage),
+        before,
+        'no mark, ring or reading changes with the veil'
       );
     } finally {
       world.teardown();
