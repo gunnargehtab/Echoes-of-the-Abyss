@@ -1012,18 +1012,26 @@ export class AiCommander implements AiPlayer {
   private massingPeakTick = -1;
   /** While set, the army is committed to a push it started without the numbers. */
   private commitUntilTick = -1;
-  /** When the purse was first held for a transport, or -1 (see `LIFT.SAVE_S`). */
-  private transportSaveSinceTick = -1;
   /**
-   * The hull behind the rung the purse is currently being held for.
+   * The one hull the purse is currently being held for, whichever want asked.
+   *
+   * **One slot, and that is the point** (#518). This used to be two fields — a
+   * `rungSave` the ordnance and heavy wants shared, and a `transportSaveSinceTick`
+   * of its own — read by a queue of wants that each returned as soon as they
+   * decided to save. So the earliest want in the list that wanted something it
+   * could not afford stopped the observation dead, and every want behind it was
+   * never evaluated at all. With five hulls behind the rung by wave 5 that is a
+   * navy holding for a Broadside it never reaches while its Furnace, its Bower
+   * and its transport are never once considered.
+   *
+   * Now every want *bids* and `holdPurse` picks one. See it for the rule.
    *
    * `lastTick` is what makes the window a *streak* rather than a stopwatch left
-   * running while nobody is saving. Two wants share this record — the navy's
-   * ordnance hull and its heavy — and either can stop wanting between two
+   * running while nobody is saving: a want can stop wanting between two
    * observations, so a hold that is not renewed starts again from zero rather
    * than expiring the instant it is next asked for. See `RUNG.SAVE_S`.
    */
-  private rungSave: { kind: UnitKind; sinceTick: number; lastTick: number } | null = null;
+  private purseSave: { kind: UnitKind; sinceTick: number; lastTick: number } | null = null;
   /** The transport plan, if the navy has a carrier afloat (see `LIFT`). */
   private lift: { carrierId: number; phase: 'loading' | 'sailing'; sinceTick: number } | null =
     null;
@@ -2057,6 +2065,29 @@ export class AiCommander implements AiPlayer {
     const queuedOf = (kind: UnitKind): number =>
       snapshot.structures.reduce((total, s) => total + s.queue.filter((q) => q === kind).length, 0);
 
+    /**
+     * What this navy would save for, if it saved for anything (#518).
+     *
+     * Every want below that is *wanted, has a yard, and cannot be paid for
+     * now* adds itself here and carries on rather than returning. Nothing is
+     * held until `holdPurse` at the foot of the queue picks exactly one — so a
+     * want that is saving no longer hides the wants behind it, which is the
+     * whole of the bug: five hulls sit behind the rung as of wave 5 and the
+     * first one to want anything used to take the purse and end the
+     * observation.
+     *
+     * `windowS` is how long that want is willing to hold before the army gets
+     * a turn, or `null` for the two that hold until they close — see the
+     * Sower's note below for why that one is not a duty cycle.
+     */
+    const bids: { kind: UnitKind; windowS: number | null }[] = [];
+
+    /** Buy it, and let go of the purse if this is what was being saved for. */
+    const buy = (kind: UnitKind, yard: OwnStructure): void => {
+      if (this.purseSave?.kind === kind) this.purseSave = null;
+      out.push({ kind: 'produce', structureId: yard.id, unit: kind });
+    };
+
     // Harvesters first, always. An army built on four harvesters is a one-shot
     // army, and this game rewards the long economy.
     //
@@ -2152,19 +2183,16 @@ export class AiCommander implements AiPlayer {
         const yard = this.freeYard(snapshot.structures, ownOrdnance);
         if (yard !== null) {
           if (this.affordUnit(ownOrdnance, purse)) {
-            this.rungSave = null;
-            out.push({ kind: 'produce', structureId: yard.id, unit: ownOrdnance });
+            buy(ownOrdnance, yard);
             return;
           }
           // Three of the four are behind the rung, and out of pocket they were
           // bought by luck: 400 nodules had to be standing in the bank at one
           // of the observations between the yard rising and the duel ending.
-          // The Weaver is at the Foundry and is the one this never fires for —
+          // The Weaver is at the Foundry and is the one this never bids for —
           // it is affordable out of an opening, which is what §3's "a screen is
           // an opening decision" costs in nodules.
-          if (atTheRung(ownOrdnance) && this.holdForRung(ownOrdnance, purse, snapshot.tick)) {
-            return;
-          }
+          if (atTheRung(ownOrdnance)) bids.push({ kind: ownOrdnance, windowS: RUNG.SAVE_S });
         }
       }
     }
@@ -2201,11 +2229,10 @@ export class AiCommander implements AiPlayer {
         const yard = this.freeYard(snapshot.structures, ownHeavy);
         if (yard !== null) {
           if (this.affordUnit(ownHeavy, purse)) {
-            this.rungSave = null;
-            out.push({ kind: 'produce', structureId: yard.id, unit: ownHeavy });
+            buy(ownHeavy, yard);
             return;
           }
-          if (this.holdForRung(ownHeavy, purse, snapshot.tick)) return;
+          bids.push({ kind: ownHeavy, windowS: RUNG.SAVE_S });
         }
       }
     }
@@ -2213,15 +2240,25 @@ export class AiCommander implements AiPlayer {
     // The navy's siege hull, on the ordnance hull's terms: behind the escort,
     // one only. A wall-breaker with no fleet to hold the water while it works
     // is the most expensive way in the game to lose a hull.
+    //
+    // It bids like the two above it since #518, which is the change that makes
+    // the entry mean anything. Wave 4 tried giving this want the same window
+    // *inside the old queue* and it built nothing at all while moving the win
+    // rates seven points in both directions — because a window three wants deep
+    // in a list where each want returns is a window that is never reached with
+    // a purse. The window was not the problem; being fourth was.
     const ownSiege = OWN_SIEGE[this.briefing.faction];
     if (escorted) {
       const engines =
         snapshot.units.reduce((n, u) => n + (u.kind === ownSiege ? 1 : 0), 0) + queuedOf(ownSiege);
       if (engines < 1) {
         const yard = this.freeYard(snapshot.structures, ownSiege);
-        if (yard !== null && this.affordUnit(ownSiege, purse)) {
-          out.push({ kind: 'produce', structureId: yard.id, unit: ownSiege });
-          return;
+        if (yard !== null) {
+          if (this.affordUnit(ownSiege, purse)) {
+            buy(ownSiege, yard);
+            return;
+          }
+          bids.push({ kind: ownSiege, windowS: RUNG.SAVE_S });
         }
       }
     }
@@ -2277,24 +2314,24 @@ export class AiCommander implements AiPlayer {
       const yard = this.freeYard(snapshot.structures, UnitKind.Sower);
       if (seeders < 1 && yard !== null) {
         if (this.affordUnit(UnitKind.Sower, purse)) {
-          out.push({ kind: 'produce', structureId: yard.id, unit: UnitKind.Sower });
+          buy(UnitKind.Sower, yard);
+          return;
         }
-        return;
+        bids.push({ kind: UnitKind.Sower, windowS: null });
       }
     }
 
-    // The anchor (#509), on the seeder's terms and directly behind it: unarmed,
-    // so a want of its own; one, because a second cloud over the same water
-    // suppresses nothing the first did not; and **saved for** the same way,
-    // because a Commune spends what it earns and 360 nodules is never a moment
-    // away.
+    // The anchor (#509), on the seeder's terms: unarmed, so a want of its own;
+    // one, because a second cloud over the same water suppresses nothing the
+    // first did not; and **saved for** the same way, because a Commune spends
+    // what it earns and 360 nodules is never a moment away.
     //
-    // Behind the Sower deliberately, and the order is the whole of the choice.
-    // This queue is a list of wants that each `return` and `rungSave` names one
-    // kind at a time (#518's fourth cause), so two unconditional holds on one
-    // purse are *sequential* whichever way round they go — and of the two, the
-    // Sower is the one that pays for the other. This is the navy's heavy and it
-    // is bought like one: after the economy that funds it.
+    // Its position in this list stopped mattering with #518. Both it and the
+    // Sower bid, `holdPurse` takes the nearer of the two — the Bower, by
+    // twenty nodules — and the one that closes stops bidding, so the other has
+    // the purse on the next observation. Under the queue this replaced, the
+    // Sower's unconditional hold returned before the Bower was ever read, and
+    // wave 5's baseline duly built 0.1 Sowers and no Bowers at all.
     if (this.doctrine.composition.includes(UnitKind.Bower)) {
       const anchors =
         snapshot.units.reduce((n, u) => n + (u.kind === UnitKind.Bower ? 1 : 0), 0) +
@@ -2302,9 +2339,10 @@ export class AiCommander implements AiPlayer {
       const yard = this.freeYard(snapshot.structures, UnitKind.Bower);
       if (anchors < 1 && yard !== null) {
         if (this.affordUnit(UnitKind.Bower, purse)) {
-          out.push({ kind: 'produce', structureId: yard.id, unit: UnitKind.Bower });
+          buy(UnitKind.Bower, yard);
+          return;
         }
-        return;
+        bids.push({ kind: UnitKind.Bower, windowS: null });
       }
     }
 
@@ -2334,25 +2372,19 @@ export class AiCommander implements AiPlayer {
         const yard = this.freeYard(snapshot.structures, transport);
         if (yard !== null) {
           if (this.affordUnit(transport, purse)) {
-            this.transportSaveSinceTick = -1;
-            out.push({ kind: 'produce', structureId: yard.id, unit: transport });
+            buy(transport, yard);
             return;
           }
-          const price = priceOf(statsFor(transport));
-          if (purse.crystal >= price.crystal && purse.biomass >= price.biomass) {
-            // Hold the purse — for LIFT.SAVE_S at a time. Then the cycle gets
-            // a hull, and the holding starts again: a duty cycle, so the
-            // purse still climbs and the army still grows.
-            if (this.transportSaveSinceTick < 0) this.transportSaveSinceTick = snapshot.tick;
-            const heldS = (snapshot.tick - this.transportSaveSinceTick) / SIM.TICK_HZ;
-            if (heldS < LIFT.SAVE_S) return;
-            this.transportSaveSinceTick = -1;
-          }
+          // Its own window, shorter than the rung's, because a carrier is the
+          // cheapest of these wants and the one whose moment passes soonest.
+          bids.push({ kind: transport, windowS: LIFT.SAVE_S });
         }
-      } else {
-        this.transportSaveSinceTick = -1;
       }
     }
+
+    // One want gets the purse, and only after every want has said what it
+    // would do with it (#518).
+    if (this.holdPurse(bids, purse, snapshot.tick)) return;
 
     const target = Math.ceil(this.doctrine.attackAtArmySize * this.tuning.patience) + 2;
     if (army.length + queuedArmy >= target) return;
@@ -2402,13 +2434,23 @@ export class AiCommander implements AiPlayer {
   }
 
   /**
-   * Hold the purse against a hull behind the rung, for a window at a time.
+   * Pick one of this observation's bids and hold the purse for it (#518).
    *
    * True means *stop spending this observation*: the caller returns, nothing is
    * queued, and the bank the yards would have emptied climbs instead. False
-   * means the window is up (or waiting would not have helped), and the rest of
-   * the branch may buy what it likes — which is the half of the duty cycle that
+   * means nothing is worth saving for, or the window is up, and the
+   * composition cycle gets its turn — which is the half of the duty cycle that
    * keeps the army growing while the saving happens.
+   *
+   * **Nearest first, and that is the whole arbitration.** A navy saves for the
+   * cheapest thing it wants and cannot afford, because that is the hold that
+   * closes soonest — and a hold that closes stops bidding, so the next want
+   * takes the slot on the following observation. Any *fixed* order starves its
+   * own tail: the queue this replaced was ordered by the sequence the waves
+   * were implemented in (scouts, then ordnance, then siege, then the anchor),
+   * so the Broadside a Consortium never reaches sat in front of the Furnace it
+   * might have, forever. Nearest-first is also what a player does, and it is
+   * the one rule under which every want is eventually served.
    *
    * Waiting only ever closes a **nodule** gap, exactly as `commandConstruction`
    * argues one deck up: crystal and Biomass arrive because a hauler went and
@@ -2417,18 +2459,36 @@ export class AiCommander implements AiPlayer {
    * wait will never deliver. The Dredge and the Lance are both priced in a
    * second account, so this is not a hypothetical for two of the four navies.
    */
-  private holdForRung(kind: UnitKind, purse: Stockpile, tick: number): boolean {
-    const price = priceOf(statsFor(kind));
-    if (purse.crystal < price.crystal || purse.biomass < price.biomass) {
-      this.rungSave = null;
+  private holdPurse(
+    bids: readonly { kind: UnitKind; windowS: number | null }[],
+    purse: Stockpile,
+    tick: number
+  ): boolean {
+    let best: { kind: UnitKind; windowS: number | null } | null = null;
+    let bestNodules = Infinity;
+    for (const bid of bids) {
+      const price = priceOf(statsFor(bid.kind));
+      if (purse.crystal < price.crystal || purse.biomass < price.biomass) continue;
+      // Close enough that a window can finish it, or the hold is a standing tax
+      // on a hull the navy was never going to reach this match. See
+      // `RUNG.SAVE_FROM`. The two unconditional bids are exempt: their argument
+      // (the Sower's, above) is that a navy which spends what it earns never
+      // *reaches* the fraction, so the bank has to climb from wherever it is.
+      if (bid.windowS !== null && purse.nodules < price.nodules * RUNG.SAVE_FROM) continue;
+      if (price.nodules >= bestNodules) continue;
+      bestNodules = price.nodules;
+      best = bid;
+    }
+    if (best === null) {
+      this.purseSave = null;
       return false;
     }
-    // Close enough that a window can finish it, or the hold is a standing tax
-    // on a hull the navy was never going to reach this match. See
-    // `RUNG.SAVE_FROM`.
-    if (purse.nodules < price.nodules * RUNG.SAVE_FROM) {
-      this.rungSave = null;
-      return false;
+    // An unconditional bid holds until it closes. Measured with a duty cycle
+    // instead, the Commune's bank topped out at 320 against a 380 Sower in
+    // 11,902 observations: every window that reopened spent the savings.
+    if (best.windowS === null) {
+      this.purseSave = { kind: best.kind, sinceTick: tick, lastTick: tick };
+      return true;
     }
     // Two observations of slack, because that is what an *unbroken* hold looks
     // like at this commander's own cadence — a Veteran decides every 0.6 s and
@@ -2436,15 +2496,15 @@ export class AiCommander implements AiPlayer {
     // rule for one of them than for the other.
     const gapTicks = (SIM.TICK_HZ / SIM.ECHO_HZ) * this.tuning.cadenceTicks * 2;
     const held =
-      this.rungSave !== null &&
-      this.rungSave.kind === kind &&
-      tick - this.rungSave.lastTick <= gapTicks
-        ? this.rungSave
-        : { kind, sinceTick: tick, lastTick: tick };
+      this.purseSave !== null &&
+      this.purseSave.kind === best.kind &&
+      tick - this.purseSave.lastTick <= gapTicks
+        ? this.purseSave
+        : { kind: best.kind, sinceTick: tick, lastTick: tick };
     held.lastTick = tick;
-    this.rungSave = held;
-    if ((tick - held.sinceTick) / SIM.TICK_HZ < RUNG.SAVE_S) return true;
-    this.rungSave = null;
+    this.purseSave = held;
+    if ((tick - held.sinceTick) / SIM.TICK_HZ < best.windowS) return true;
+    this.purseSave = null;
     return false;
   }
 

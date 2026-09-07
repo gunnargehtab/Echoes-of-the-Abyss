@@ -126,12 +126,18 @@ function hull(
 /**
  * A navy with nothing else left to want.
  *
- * Every other branch of `commandProduction` sits in front of the rung's, and
- * any one of them still wanting something would answer this test's question for
- * it. So the economy is staffed to the doctrine's target, the navy's own scout
- * is in the water, its ordnance hull is bought, and the line is short of the
- * army target by enough that the composition cycle would happily buy the next
- * Corvette if it were allowed to.
+ * Every other want of `commandProduction` bids into the same purse as the
+ * rung's, and any one of them still wanting something would answer this test's
+ * question for it. So the economy is staffed to the doctrine's target, the
+ * navy's own scout, ordnance hull and siege hull are all in the water, and the
+ * line is short of the army target by enough that the composition cycle would
+ * happily buy the next Corvette if it were allowed to.
+ *
+ * The siege hull joined this list with #518. It has been a want since wave 4
+ * (#508), but under the queue that arbitration replaced it sat *behind* the
+ * heavy and was never reached — so a fixture that left it out happened to
+ * measure the right thing for the wrong reason, and stopped the moment every
+ * want was read on every observation.
  */
 function force(brief: AiBriefing): EchoSnapshot['units'] {
   const doctrine = DOCTRINE[brief.faction];
@@ -141,6 +147,7 @@ function force(brief: AiBriefing): EchoSnapshot['units'] {
     ...Array.from<UnitKind>({ length: doctrine.harvesterTarget }).fill(UnitKind.Harvester),
     OWN_SCOUT[brief.faction],
     OWN_ORDNANCE[brief.faction],
+    OWN_SIEGE[brief.faction],
     // Two, against an army target of `attackAtArmySize * patience + 2`: short
     // enough that the composition cycle is still buying, which is the thing
     // the hold has to be seen to interrupt.
@@ -151,7 +158,8 @@ function force(brief: AiBriefing): EchoSnapshot['units'] {
 }
 
 /**
- * The scout and the ordnance hull each navy buys by a want of its own.
+ * The scout, the ordnance hull and the siege hull each navy buys by a want of
+ * its own.
  *
  * Restated from the roster rather than imported from the commander's private
  * tables, so this test asserts the roster's shape rather than that a table
@@ -169,6 +177,12 @@ const OWN_ORDNANCE: Record<Faction, UnitKind> = {
   [Faction.Pelagia]: UnitKind.Weaver,
   [Faction.Directorate]: UnitKind.Thurible,
   [Faction.Hadron]: UnitKind.Lance,
+};
+const OWN_SIEGE: Record<Faction, UnitKind> = {
+  [Faction.Bathyarch]: UnitKind.Furnace,
+  [Faction.Pelagia]: UnitKind.Blight,
+  [Faction.Directorate]: UnitKind.Lure,
+  [Faction.Hadron]: UnitKind.Tocsin,
 };
 
 function snapshot(
