@@ -207,7 +207,7 @@ describe('the campaign board: one tab stop, and the arrows inside it', () => {
     const { view } = await board();
     try {
       assert.equal(tabStop(view), PROLOGUE, '§14: "the prologue, today"');
-      assert.equal(view.focused(), null, 'and nothing was focused by rendering');
+      assert.deepEqual(view.focuses(), [], 'and nothing was focused by rendering');
     } finally {
       await view.unmount();
     }
@@ -218,14 +218,24 @@ describe('the campaign board: one tab stop, and the arrows inside it', () => {
     try {
       await arrow(view, 'ArrowDown');
       assert.notEqual(tabStop(view), PROLOGUE, 'Down left the lane for the first column');
-      assert.notEqual(view.focused(), null, 'and the board now holds the focus it moved');
+      // Exactly one, and it is the slot the stop moved to. A roving tabindex
+      // that moved the stop without the focus leaves a keyboard on the slot
+      // the player just left; one that pulled focus more than once has taken
+      // it somewhere they did not steer.
+      assert.equal(view.focuses().length, 1, 'the first arrow pulled focus once');
+      assert.ok(
+        view.focused()?.name.includes(tabStop(view)),
+        'and onto the slot it moved the stop to'
+      );
 
       const first = tabStop(view);
       await arrow(view, 'ArrowRight');
       assert.notEqual(tabStop(view), first, 'Right crossed to the next campaign');
+      assert.ok(view.focused()?.name.includes(tabStop(view)), 'focus followed it across');
 
       await arrow(view, 'Home');
       assert.equal(tabStop(view), PROLOGUE, 'Home is the prologue, the top of every column');
+      assert.ok(view.focused()?.name.includes(PROLOGUE), 'and focus came back with it');
     } finally {
       await view.unmount();
     }
