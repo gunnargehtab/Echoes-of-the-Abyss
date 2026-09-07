@@ -35,7 +35,10 @@ describe('hull outlines', () => {
       assert.equal(Math.max(...outline.map(([x]) => x!)), 0.5, `${UnitKind[kind]} bow`);
       assert.ok(Math.abs(area(outline)) > 0.01, `${UnitKind[kind]} has no area`);
       for (const [x, y] of outline)
-        assert.ok(Math.abs(x!) <= 0.5 && Math.abs(y!) <= 0.5, `${UnitKind[kind]} leaves unit space`);
+        assert.ok(
+          Math.abs(x!) <= 0.5 && Math.abs(y!) <= 0.5,
+          `${UnitKind[kind]} leaves unit space`
+        );
     }
   });
 
