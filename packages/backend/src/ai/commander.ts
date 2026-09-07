@@ -557,11 +557,12 @@ const TRANSPORTS: readonly UnitKind[] = [
  * navy wants, which is also where "not before the escort" and "not before the
  * yard" belong.
  *
- * The Tender and the Precentor are the same shape and are deliberately *not*
- * here: they are on their navies' compositions today and go through the cycle,
- * which is a live bug of the same family and a wider blast radius than this
- * branch — it is filed rather than fixed in passing, so that the measurement
- * of this change is a measurement of this change.
+ * The Tender, the Precentor and the Cantus are the same shape and are *not*
+ * here, because they are not bought by a want of their own — they are on their
+ * navies' compositions and belong there. `joinsTheArmy` below is what keeps
+ * them out of the cycle instead. Until #531 they were kept out of it only by
+ * never being affordable at the instant they were asked for, which stopped
+ * being a guard the moment the cycle learned to save.
  */
 /**
  * Each navy's own scout, for `designateScout` (#506).
@@ -678,6 +679,25 @@ const WANTED_SEPARATELY: readonly UnitKind[] = [
   // Sower's and walked by `commandAnchor`.
   UnitKind.Bower,
 ];
+
+/**
+ * Whether the composition cycle may select this hull at all.
+ *
+ * The cycle's index is `army.length`, so a hull that never joins the army does
+ * not advance it: buy one and the next observation selects the same entry, and
+ * the next, until the yard's queue backs up. `WANTED_SEPARATELY` above lists
+ * the hulls that dodge this by being bought elsewhere; this is the same test
+ * asked of the roster rather than of a list, and it catches the three that are
+ * on a composition and nowhere else — the Consortium's Tender, the
+ * Directorate's Precentor, the Knights' Cantus, all unarmed.
+ *
+ * A doctrine still *declares* them by naming them, which is what a composition
+ * is for (see `Doctrine`). What it does not do is field them by accident, one
+ * at a time, in place of the line.
+ */
+function joinsTheArmy(kind: UnitKind): boolean {
+  return statsFor(kind).attackDamage > 0;
+}
 
 /**
  * The lift — how the commander uses a transport (docs/units.md "The
@@ -2592,12 +2612,47 @@ export class AiCommander implements AiPlayer {
       }
     }
 
+    // The composition's own next hull, and the last place in this commander
+    // that had no way to save (#531). Every want above bids; the cycle at the
+    // foot of this method never did, so it bought whatever was affordable at
+    // the instant it was asked — and a doctrine's dearer entries were
+    // decorative. Measured over three matches on seeds 4000–4002, before this
+    // bid existed: the Knights' 420-nodule Cruiser was the cycle's first choice
+    // 986 times and was bought **0**, against a bank that averaged 143–199
+    // nodules at that decision and never reached the price; the Commune wanted
+    // its 105-nodule Reed 815 times, bought 0, and fell through to a 50-nodule
+    // Light Scout on 27 of them. The fall-through was doing the same job the
+    // holds elsewhere were invented to stop: spending the bank so it never
+    // climbs.
+    //
+    // The rung's window, and for the rung's reason: a hold that does not close
+    // is an army that does not grow (#521 measured seven win-rate points for
+    // exactly that). `RUNG.SAVE_FROM` in `holdPurse` keeps it honest at the
+    // other end — a navy holding 40 nodules against a 420 hull is not saving,
+    // it is idle, so it spends and asks again.
+    //
+    // Gated on the army target below, not merely ordered in front of it: a
+    // navy already at its massing size wants no more line hulls, and a bid it
+    // would never spend is a standing tax on the wants that would.
+    //
+    // The fall-through underneath stays exactly as it was. It is the deadlock
+    // guard the cycle's own note argues for, and with a window in front of it
+    // that is now what a navy buys *while* the bank climbs rather than instead
+    // of ever climbing.
+    const target = Math.ceil(this.doctrine.attackAtArmySize * this.tuning.patience) + 2;
+    const atTarget = army.length + queuedArmy >= target;
+    if (!atTarget) {
+      const next = this.nextInComposition(snapshot, army);
+      if (next !== null && !affords(purse, priceOf(statsFor(next)))) {
+        bids.push({ kind: next, windowS: RUNG.SAVE_S });
+      }
+    }
+
     // One want gets the purse, and only after every want has said what it
     // would do with it (#518).
     if (this.holdPurse(bids, purse, snapshot.tick)) return;
 
-    const target = Math.ceil(this.doctrine.attackAtArmySize * this.tuning.patience) + 2;
-    if (army.length + queuedArmy >= target) return;
+    if (atTarget) return;
 
     // Composition cycles rather than being solved: it keeps the mix roughly
     // the doctrine's shape without needing a counter-composition model the
@@ -2624,23 +2679,56 @@ export class AiCommander implements AiPlayer {
     // reduce every navy to Corvettes for as long as it went unbuilt. The
     // cheapest-first list stays last, for the deadlock above.
     //
-    // The Spinner and the Sower are skipped here, having been bought above.
-    // They must be: the cycle index is `army.length`, a hull with no weapon
-    // never joins the army, so a navy whose index landed on one would select
-    // it again on the next observation and the one after — buying layers or
-    // seeders until the yard backed up and never buying the hulls that hold
-    // the wall. See `WANTED_SEPARATELY`.
+    // Hulls with no weapon are skipped here, and they must be: the cycle index
+    // is `army.length`, so one that never joins the army does not advance it —
+    // a navy whose index landed on one would select it again on the next
+    // observation and the one after, buying layers or seeders until the yard
+    // backed up and never buying the hulls that hold the wall. Two tests, for
+    // two reasons: `WANTED_SEPARATELY` for the hulls a want of their own buys
+    // (the Spinner and the Sower above), `joinsTheArmy` for the three that are
+    // on a composition and nowhere else.
     const { composition } = this.doctrine;
-    const start = army.length % composition.length;
-    const rotated = composition.map((_, k) => composition[(start + k) % composition.length]!);
+    const rotated = this.rotatedComposition(army);
     for (const wanted of [...rotated, ...affordableFirst(composition, purse)]) {
-      if (WANTED_SEPARATELY.includes(wanted)) continue;
+      if (WANTED_SEPARATELY.includes(wanted) || !joinsTheArmy(wanted)) continue;
       const yard = this.freeYard(snapshot.structures, wanted);
       if (yard === null) continue;
       if (!this.affordUnit(wanted, purse)) continue;
       out.push({ kind: 'produce', structureId: yard.id, unit: wanted });
       return;
     }
+  }
+
+  /**
+   * The doctrine's composition, read from wherever the army's size puts the
+   * index — the cycle's own order, and the order the bid above saves in.
+   *
+   * Extracted so those two cannot disagree. A bid that saved for one hull
+   * while the cycle bought another would be a duty cycle with nothing on the
+   * other side of it.
+   */
+  private rotatedComposition(army: readonly OwnUnit[]): UnitKind[] {
+    const { composition } = this.doctrine;
+    const start = army.length % composition.length;
+    return composition.map((_, k) => composition[(start + k) % composition.length]!);
+  }
+
+  /**
+   * What the composition cycle would buy first if price were no object, or
+   * `null` if there is nothing on the list this navy could build at all.
+   *
+   * A yard is required and a hull bought by its own want is skipped, for the
+   * cycle's own reasons (see `WANTED_SEPARATELY`): saving toward a hull with
+   * no yard standing is the circle #491 was about, and saving toward one that
+   * a want above already bids for would be two holds on one purse.
+   */
+  private nextInComposition(snapshot: EchoSnapshot, army: readonly OwnUnit[]): UnitKind | null {
+    for (const wanted of this.rotatedComposition(army)) {
+      if (WANTED_SEPARATELY.includes(wanted) || !joinsTheArmy(wanted)) continue;
+      if (this.freeYard(snapshot.structures, wanted) === null) continue;
+      return wanted;
+    }
+    return null;
   }
 
   /**
@@ -3909,6 +3997,7 @@ function distance(a: { x: number; y: number }, b: { x: number; y: number }): num
  * economy, and the answer to a bad economy is *something in the water now*,
  * not the grandest thing that happens to fit.
  */
+
 function affordableFirst(composition: readonly UnitKind[], purse: Stockpile): UnitKind[] {
   // Affordable in every account, ordered by the Nodule price — the bulk
   // account every hull is written in, so "cheapest" means the same thing for
