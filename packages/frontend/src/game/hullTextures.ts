@@ -23,10 +23,11 @@
  * primary. The models are dressed in one faction's palette, so their hue is
  * not shareable; their shape and shading are.
  *
- * A model-backed sprite no longer shares its exact outline with the flat
- * silhouette and the enemy track, which keep HULL_OUTLINE. That is the correct
- * asymmetry rather than a drift: a track is a sonar return the player earned,
- * and it was never meant to carry the fins.
+ * A model-backed sprite does not share its exact outline with the flat
+ * silhouette and the enemy track, which keep HULL_OUTLINE — since #540 the
+ * model's own plan section, smoothed and simplified (tools/hull-maps/
+ * outlines.mjs). That is the correct asymmetry rather than a drift: a track is
+ * a sonar return the player earned, and it was never meant to carry the fins.
  *
  * The Asymmetric Fidelity Law is enforced by who calls this: only the own-force
  * draw path ever requests a baked sprite. Enemy tracks stay on silhouettes.ts.

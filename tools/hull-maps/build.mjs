@@ -11,6 +11,10 @@
  * Not an npm workspace — run it directly, like tools/echo-sim:
  *   node tools/hull-maps/build.mjs
  *
+ * The model table it bakes from is models.mjs, shared with outlines.mjs —
+ * the second committed output of the same GLBs, which this script refreshes
+ * at the end of a run and check.mjs (tools/hull-models) holds to the files.
+ *
  * MAP_PPM is the contract with hullTextures.ts: the maps carry no metadata, so
  * their pixel dimensions divided by this constant ARE the hull's metre extents.
  * Change it in both places or sprites will scale wrong.
@@ -20,6 +24,8 @@ import { spawnSync } from 'node:child_process';
 import { copyFileSync, mkdirSync, rmSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { UNITS, STRUCTURES } from './models.mjs';
+import { writeOutlines } from './outlines.mjs';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const MAP_PPM = 4;
@@ -40,150 +46,6 @@ const PASSES = ['albedo', 'height', 'emissive'];
  * visual law (quiet subs outshining loud cruisers, sister hulls 7× apart).
  */
 const glowTarget = (sig) => 0.45 * Math.exp(sig / 14);
-
-/**
- * Which model clads which unit, the design length it is baked against
- * (HULL_LENGTH_M in packages/frontend/src/game/silhouettes.ts), and the
- * idle/cruise SIG its glow is calibrated to (docs/units.md). A unit absent
- * here keeps the distance-transform fallback — that is the intended state for
- * hulls whose model has not been approved yet.
- */
-const UNITS = [
-  { slug: 'light-scout', model: 'light-scout-pelagia.glb', lengthM: 60, sig: 6 },
-  { slug: 'corvette', model: 'corvette-pelagia.glb', lengthM: 80, sig: 28 },
-  { slug: 'cruiser', model: 'cruiser-pelagia.glb', lengthM: 130, sig: 55 },
-  { slug: 'harvester', model: 'harvester-pelagia.glb', lengthM: 75, sig: 18 },
-  {
-    slug: 'abyssal-submersible',
-    model: 'abyssal-submersible-directorate.glb',
-    lengthM: 95,
-    sig: 22,
-  },
-  // Faction variants: same kind, another navy's shape language. The slug's
-  // faction suffix pairs with VARIANT_MAP_URL in hullMaps.ts.
-  { slug: 'light-scout-bathyarch', model: 'light-scout-bathyarch.glb', lengthM: 60, sig: 6 },
-  { slug: 'corvette-bathyarch', model: 'corvette-bathyarch.glb', lengthM: 80, sig: 28 },
-  { slug: 'harvester-bathyarch', model: 'harvester-bathyarch.glb', lengthM: 75, sig: 18 },
-  { slug: 'cruiser-bathyarch', model: 'cruiser-bathyarch.glb', lengthM: 130, sig: 55 },
-  {
-    slug: 'light-scout-directorate',
-    model: 'light-scout-directorate.glb',
-    lengthM: 60,
-    sig: 6,
-  },
-  {
-    slug: 'abyssal-submersible-pelagia',
-    model: 'abyssal-submersible-pelagia.glb',
-    lengthM: 95,
-    sig: 22,
-  },
-  {
-    slug: 'abyssal-submersible-bathyarch',
-    model: 'abyssal-submersible-bathyarch.glb',
-    lengthM: 95,
-    sig: 22,
-  },
-  { slug: 'corvette-directorate', model: 'corvette-directorate.glb', lengthM: 80, sig: 28 },
-  { slug: 'harvester-directorate', model: 'harvester-directorate.glb', lengthM: 75, sig: 18 },
-  { slug: 'cruiser-directorate', model: 'cruiser-directorate.glb', lengthM: 130, sig: 55 },
-  { slug: 'light-scout-hadron', model: 'light-scout-hadron.glb', lengthM: 60, sig: 6 },
-  { slug: 'corvette-hadron', model: 'corvette-hadron.glb', lengthM: 80, sig: 28 },
-  { slug: 'cruiser-hadron', model: 'cruiser-hadron.glb', lengthM: 130, sig: 55 },
-  { slug: 'harvester-hadron', model: 'harvester-hadron.glb', lengthM: 75, sig: 18 },
-  {
-    slug: 'abyssal-submersible-hadron',
-    model: 'abyssal-submersible-hadron.glb',
-    lengthM: 95,
-    sig: 22,
-  },
-  // The rung's roster (docs/units.md "The rung, and two hulls a navy"): each
-  // hull is one navy's, so its model is canonical for the kind — the
-  // signature-structure rule, applied to hulls. Glow calibrates on the idle
-  // SIG; the Reciter's listed 90 is a cone figure (systems-echo.md §8), so
-  // its emissive sits on the compass average the doc gives, 40.5 — the light
-  // is *placed* forward on the lance, which is where the 90 is.
-  // The Chorister is the Directorate's without a lock (units.md, design
-  // notes), so its Directorate model is the kind's canonical one and serves
-  // any navy that renders for it, recoloured — the Submersible's rule. The
-  // Clarion's listed 62 is a cone figure like the Reciter's; its emissive
-  // calibrates on the compass average the doc gives, 27.9, and the light is
-  // placed on the bow array, which is where the 62 is.
-  { slug: 'chorister', model: 'chorister-directorate.glb', lengthM: 50, sig: 16 },
-  { slug: 'clarion', model: 'clarion-hadron.glb', lengthM: 90, sig: 27.9 },
-  // The Chorister as the other navies field it through a rendering contract:
-  // the cohort plan in each navy's shape language.
-  { slug: 'chorister-bathyarch', model: 'chorister-bathyarch.glb', lengthM: 50, sig: 16 },
-  { slug: 'chorister-pelagia', model: 'chorister-pelagia.glb', lengthM: 50, sig: 16 },
-  { slug: 'chorister-hadron', model: 'chorister-hadron.glb', lengthM: 50, sig: 16 },
-  { slug: 'tender', model: 'tender-bathyarch.glb', lengthM: 85, sig: 48 },
-  { slug: 'bulwark', model: 'bulwark-bathyarch.glb', lengthM: 150, sig: 70 },
-  { slug: 'spinner', model: 'spinner-pelagia.glb', lengthM: 55, sig: 8 },
-  { slug: 'sower', model: 'sower-pelagia.glb', lengthM: 90, sig: 20 },
-  { slug: 'precentor', model: 'precentor-directorate.glb', lengthM: 60, sig: 12 },
-  { slug: 'dredge', model: 'dredge-directorate.glb', lengthM: 120, sig: 40 },
-  { slug: 'cantus', model: 'cantus-hadron.glb', lengthM: 80, sig: 10 },
-  { slug: 'reciter', model: 'reciter-hadron.glb', lengthM: 100, sig: 40.5 },
-  // The mid-tier (docs/units.md "The mid-tier", #531): one navy's each, so
-  // canonical for the kind. The Derrick's glow calibrates on its idle 58 —
-  // under the Klaxon's line at rest, which is the one figure on the hull that
-  // is a decision.
-  { slug: 'derrick', model: 'derrick-bathyarch.glb', lengthM: 120, sig: 58 },
-  // The Responsory's listed 60 is a cone figure like the Clarion's and the
-  // Reciter's (systems-echo.md §8); its emissive calibrates on the compass
-  // average, 27, and the light is placed on the bow array, where the 78 is.
-  { slug: 'responsory', model: 'responsory-hadron.glb', lengthM: 95, sig: 27 },
-];
-
-/**
- * Structure models, baked against the footprint diameter (2 × radiusM in
- * packages/shared/src/structures.ts); SIG is the idle figure in docs/units.md.
- * Absent structures keep the procedural architecture bake in
- * structureTextures.ts.
- */
-const STRUCTURES = [
-  { slug: 'bastion', model: 'bastion-bathyarch.glb', lengthM: 440, sig: 35 },
-  { slug: 'refinery', model: 'refinery-bathyarch.glb', lengthM: 280, sig: 65 },
-  { slug: 'foundry', model: 'foundry-bathyarch.glb', lengthM: 320, sig: 25 },
-  { slug: 'sentinel-turret', model: 'sentinel-turret-bathyarch.glb', lengthM: 120, sig: 12 },
-  // Faction variants: the same settlement grown in another navy's
-  // architecture. Slug suffix pairs with VARIANT_MAP_URL in structureMaps.ts.
-  { slug: 'bastion-pelagia', model: 'bastion-pelagia.glb', lengthM: 440, sig: 35 },
-  { slug: 'refinery-pelagia', model: 'refinery-pelagia.glb', lengthM: 280, sig: 65 },
-  { slug: 'foundry-pelagia', model: 'foundry-pelagia.glb', lengthM: 320, sig: 25 },
-  { slug: 'sentinel-turret-pelagia', model: 'sentinel-turret-pelagia.glb', lengthM: 120, sig: 12 },
-  { slug: 'bastion-directorate', model: 'bastion-directorate.glb', lengthM: 440, sig: 35 },
-  { slug: 'refinery-directorate', model: 'refinery-directorate.glb', lengthM: 280, sig: 65 },
-  { slug: 'foundry-directorate', model: 'foundry-directorate.glb', lengthM: 320, sig: 25 },
-  {
-    slug: 'sentinel-turret-directorate',
-    model: 'sentinel-turret-directorate.glb',
-    lengthM: 120,
-    sig: 12,
-  },
-  { slug: 'bastion-hadron', model: 'bastion-hadron.glb', lengthM: 440, sig: 35 },
-  { slug: 'refinery-hadron', model: 'refinery-hadron.glb', lengthM: 280, sig: 65 },
-  { slug: 'foundry-hadron', model: 'foundry-hadron.glb', lengthM: 320, sig: 25 },
-  { slug: 'sentinel-turret-hadron', model: 'sentinel-turret-hadron.glb', lengthM: 120, sig: 12 },
-  // Faction signature structures: canonical per kind — only one navy ever
-  // builds each, so no variant dimension. Model filenames keep the
-  // <unit>-<faction> convention; glow calibrates on the idle SIG.
-  { slug: 'baffle-barge', model: 'baffle-barge-bathyarch.glb', lengthM: 180, sig: 30 },
-  { slug: 'cantor', model: 'cantor-directorate.glb', lengthM: 160, sig: 35 },
-  { slug: 'sounding-spire', model: 'sounding-spire-hadron.glb', lengthM: 140, sig: 30 },
-  { slug: 'spore-veil', model: 'spore-veil-pelagia.glb', lengthM: 170, sig: 20 },
-  // The Slipway (#466): every navy's yard, grown in each navy's architecture
-  // like the Foundry it stands beside. 340 m is 2 × radiusM 170.
-  { slug: 'slipway', model: 'slipway-bathyarch.glb', lengthM: 340, sig: 30 },
-  { slug: 'slipway-pelagia', model: 'slipway-pelagia.glb', lengthM: 340, sig: 30 },
-  { slug: 'slipway-directorate', model: 'slipway-directorate.glb', lengthM: 340, sig: 30 },
-  { slug: 'slipway-hadron', model: 'slipway-hadron.glb', lengthM: 340, sig: 30 },
-  // The Vent Tap: every navy's, on Thermal Vein ground only, and never quiet
-  // (economy.md §2: 55–75 sustained at the tap). 180 m is 2 × radiusM 90.
-  { slug: 'vent-tap', model: 'vent-tap-bathyarch.glb', lengthM: 180, sig: 55 },
-  { slug: 'vent-tap-pelagia', model: 'vent-tap-pelagia.glb', lengthM: 180, sig: 55 },
-  { slug: 'vent-tap-directorate', model: 'vent-tap-directorate.glb', lengthM: 180, sig: 55 },
-  { slug: 'vent-tap-hadron', model: 'vent-tap-hadron.glb', lengthM: 180, sig: 55 },
-];
 
 const JOBS = [
   { entries: UNITS, ppm: MAP_PPM, outDir: join(repo, 'packages/frontend/src/assets/hulls/maps') },
@@ -229,3 +91,7 @@ for (const job of JOBS) {
 
 rmSync(tmpRoot, { recursive: true, force: true });
 console.log(`\ndone: units at ${MAP_PPM} px/m, structures at ${STRUCT_PPM} px/m`);
+
+// The plan outlines are the other committed output of the same models, so
+// one run of this script leaves both current.
+await writeOutlines();

@@ -50,6 +50,25 @@ rather than by re-authoring seventeen binaries. The prompt kit stays canonical: 
 script transcribes its `docs/asset-prompts-3d.md` block the way the constants transcribe a
 design doc, and the prose is what it answers to when the two disagree.
 
+Two things hold a script and its file together. The kit measures the light rule before
+intake can: on every export it rasterises the scene from above at the maps' own 4 px/m and
+names each lit part that shows less than a cell of plan area — a lamp on a vertical face,
+a glow inside a horn, a flood under a deck. And `npm run check:models` (CI's `build` job)
+rebuilds every hull in a scratch directory and fails on any part that differs from the
+committed GLB, so a faction module cannot be edited without the hulls it moves being
+re-run and committed with it.
+
+**The plan outline is drawn once.** A kind with an approved model no longer carries its
+plan shape twice — once in the GLB and once typed out by hand as `HULL_OUTLINE` fractions.
+`tools/hull-maps/outlines.mjs` cuts each model's plan section from the GLB, normalised as
+the bake normalises it, smooths off anything narrower along the hull than a couple of
+metres (a spine, a folded limb — a return is the mass of the hull, not its bristles) and
+writes the result into `packages/frontend/src/game/hullOutlines.generated.ts`, which is
+committed and which the same round-trip check holds to the models. The runtime still reads
+an array for all thirty-six kinds — generated for the modelled ones, hand-drawn for the
+rest — and never a GLB, because the outline is what a Tier-4 TRACK renders under the
+Asymmetric Fidelity Law and has to be free.
+
 **Fallback:** a unit or structure with no approved model bakes procedurally — units from a
 distance-transform heightfield guessed from `HULL_OUTLINE`, clad in
 [Plate V](concept-art/plate-05-submarine-classes.png); structures from slab-and-landmark

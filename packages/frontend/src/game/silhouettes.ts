@@ -9,12 +9,19 @@
  *     art is still decoding: body + faction accent marks in the faction's
  *     shape language.
  *
- * HULL_OUTLINE is also the geometric source of truth for the sprite baker, so
- * the fallback, the track, and the textured sprite all share one hull shape.
+ * HULL_OUTLINE is drawn two ways. A kind with an approved model takes its plan
+ * outline *from* the model (hullOutlines.generated.ts, written by
+ * tools/hull-maps/outlines.mjs and held to the GLBs by
+ * tools/hull-models/check.mjs), so the track is a return of the hull that is
+ * actually there. A kind still waiting for art is hand-drawn below,
+ * silhouette-first, and that outline is also what the procedural sprite baker
+ * rasterises — so for those kinds the fallback, the track and the sprite share
+ * one shape. Either way the runtime reads an array, never a GLB.
  */
 
 import type { Graphics } from 'pixi.js';
 import { Faction, StructureKind, UnitKind, statsFor } from '@echoes/shared';
+import { GENERATED_HULL_OUTLINE, type ModelledUnitKind } from './hullOutlines.generated.ts';
 
 export interface SilhouetteStyle {
   color: number;
@@ -76,219 +83,13 @@ export const HULL_LENGTH_M: Record<UnitKind, number> = {
  * Hull outlines in unit space: length 1 along +X (bow at +0.5), beam on Y.
  * Silhouette-first, per docs/art-direction.md: each kind must read at a
  * glance from shape alone.
+ *
+ * Hand-drawn for the kinds without a model. The type is the completeness
+ * check: a kind that gains a model moves to hullOutlines.generated.ts, and
+ * its entry here becomes a compile error until it is deleted; a kind absent
+ * from both fails HULL_OUTLINE below.
  */
-export const HULL_OUTLINE: Record<UnitKind, number[][]> = {
-  // A dart: all bow, no belly. The scout is speed wearing a hull.
-  [UnitKind.LightScout]: [
-    [0.5, 0],
-    [-0.3, 0.26],
-    [-0.14, 0],
-    [-0.3, -0.26],
-  ],
-  // A skirmisher's wedge: fine entry, workmanlike stern.
-  [UnitKind.Corvette]: [
-    [0.5, 0],
-    [0.12, 0.2],
-    [-0.38, 0.16],
-    [-0.5, 0],
-    [-0.38, -0.16],
-    [0.12, -0.2],
-  ],
-  // The fleet anchor: long, heavy amidships, blunt everywhere.
-  [UnitKind.Cruiser]: [
-    [0.5, 0.06],
-    [0.34, 0.17],
-    [-0.2, 0.21],
-    [-0.48, 0.13],
-    [-0.48, -0.13],
-    [-0.2, -0.21],
-    [0.34, -0.17],
-    [0.5, -0.06],
-  ],
-  // A deep hull: teardrop body, the classic pressure shape.
-  [UnitKind.AbyssalSubmersible]: [
-    [0.5, 0],
-    [0.28, 0.19],
-    [-0.1, 0.22],
-    [-0.42, 0.14],
-    [-0.5, 0],
-    [-0.42, -0.14],
-    [-0.1, -0.22],
-    [0.28, -0.19],
-  ],
-  // A grown hull: segmented flanks, a crustacean's plates rather than a
-  // pressure hull's curve. Reads apart from the Submersible's teardrop at a
-  // glance, which is the whole job of an outline (art-direction.md).
-  [UnitKind.Chorister]: [
-    [0.5, 0],
-    [0.3, 0.17],
-    [0.18, 0.11],
-    [0.0, 0.19],
-    [-0.14, 0.12],
-    [-0.32, 0.17],
-    [-0.5, 0.05],
-    [-0.5, -0.05],
-    [-0.32, -0.17],
-    [-0.14, -0.12],
-    [0.0, -0.19],
-    [0.18, -0.11],
-    [0.3, -0.17],
-  ],
-  // The cone, drawn: a long forward spine flaring into a narrow bow array,
-  // and a hull that falls away sharply behind it. The shape is the doctrine —
-  // everything is in front, and there is almost nothing astern to hear
-  // (systems-echo.md §8). Reads apart from the Corvette's wedge by being
-  // longer, finer and asymmetric fore-and-aft.
-  [UnitKind.Clarion]: [
-    [0.5, 0.04],
-    [0.42, 0.11],
-    [0.1, 0.15],
-    [-0.16, 0.2],
-    [-0.36, 0.12],
-    [-0.5, 0.06],
-    [-0.5, -0.06],
-    [-0.36, -0.12],
-    [-0.16, -0.2],
-    [0.1, -0.15],
-    [0.42, -0.11],
-    [0.5, -0.04],
-  ],
-  // A barge with a mouth: wide scoop bow, box body. Built to carry, not fight.
-  [UnitKind.Harvester]: [
-    [0.5, 0.28],
-    [0.28, 0.16],
-    [-0.42, 0.22],
-    [-0.5, 0],
-    [-0.42, -0.22],
-    [0.28, -0.16],
-    [0.5, -0.28],
-    [0.38, 0],
-  ],
-
-  // --- The rung's roster (#461). Silhouette-first, as above: each must read
-  // apart from the seven it is built beside, and from its own navy's other
-  // hull, from shape alone.
-
-  // A workshop: a box hull with a notched stern where the gantry reaches out
-  // over the hull it is welding. Squarer than the Harvester, no mouth.
-  [UnitKind.Tender]: [
-    [0.5, 0.14],
-    [0.3, 0.24],
-    [-0.3, 0.24],
-    [-0.5, 0.12],
-    [-0.38, 0],
-    [-0.5, -0.12],
-    [-0.3, -0.24],
-    [0.3, -0.24],
-    [0.5, -0.14],
-  ],
-  // The heavy: a slab. Blunt bow, blunt stern, and the widest beam in the
-  // roster — a wall that moves, and the Cruiser's outline stretched until it
-  // stops looking like a Cruiser.
-  [UnitKind.Bulwark]: [
-    [0.5, 0.16],
-    [0.36, 0.26],
-    [-0.36, 0.26],
-    [-0.5, 0.16],
-    [-0.5, -0.16],
-    [-0.36, -0.26],
-    [0.36, -0.26],
-    [0.5, -0.16],
-  ],
-  // The mine-layer: a spindle with a swollen waist — the magazine it carries —
-  // and a fine bow either end. Reads as a seed pod, which is what it is.
-  [UnitKind.Spinner]: [
-    [0.5, 0],
-    [0.2, 0.18],
-    [0.0, 0.24],
-    [-0.2, 0.18],
-    [-0.5, 0],
-    [-0.2, -0.18],
-    [0.0, -0.24],
-    [0.2, -0.18],
-  ],
-  // The terraformer: a broad flat bloom-bed forward and a narrow stem aft, a
-  // leaf rather than a hull. Nothing else in the roster is wider at the bow
-  // than at the waist.
-  [UnitKind.Sower]: [
-    [0.5, 0.1],
-    [0.34, 0.28],
-    [0.02, 0.24],
-    [-0.2, 0.1],
-    [-0.5, 0.06],
-    [-0.5, -0.06],
-    [-0.2, -0.1],
-    [0.02, -0.24],
-    [0.34, -0.28],
-    [0.5, -0.1],
-  ],
-  // The ears: a short grown hull carrying a wide array athwartships, so the
-  // outline is a cross — the one hull that is broader than it is long in the
-  // middle. It is only ears, and the shape says so.
-  [UnitKind.Precentor]: [
-    [0.5, 0],
-    [0.18, 0.12],
-    [0.08, 0.3],
-    [-0.08, 0.3],
-    [-0.18, 0.12],
-    [-0.5, 0],
-    [-0.18, -0.12],
-    [-0.08, -0.3],
-    [0.08, -0.3],
-    [0.18, -0.12],
-  ],
-  // The floor hull: a segmented deep body like the Chorister's, but heavy —
-  // wide plates, a scoop bow. The Submersible's teardrop with the
-  // Directorate's armour grown over it.
-  [UnitKind.Dredge]: [
-    [0.5, 0.1],
-    [0.34, 0.22],
-    [0.1, 0.18],
-    [-0.1, 0.24],
-    [-0.36, 0.18],
-    [-0.5, 0.06],
-    [-0.5, -0.06],
-    [-0.36, -0.18],
-    [-0.1, -0.24],
-    [0.1, -0.18],
-    [0.34, -0.22],
-    [0.5, -0.1],
-  ],
-  // The node on a hull: a lozenge with a diamond amidships — the Spire's own
-  // top-down mark carried by a hull, so a singing Cantus reads as the thing
-  // it is doing the Spire's job.
-  [UnitKind.Cantus]: [
-    [0.5, 0],
-    [0.3, 0.14],
-    [0.12, 0.14],
-    [0.0, 0.26],
-    [-0.12, 0.14],
-    [-0.3, 0.14],
-    [-0.5, 0],
-    [-0.3, -0.14],
-    [-0.12, -0.14],
-    [0.0, -0.26],
-    [0.12, -0.14],
-    [0.3, -0.14],
-  ],
-  // The lance: the Clarion's forward spine drawn out further still, with
-  // almost no beam anywhere — a needle with a bow array. Longer and finer
-  // than the Clarion, which is the whole difference between the two.
-  [UnitKind.Reciter]: [
-    [0.5, 0.03],
-    [0.44, 0.09],
-    [0.14, 0.1],
-    [-0.1, 0.15],
-    [-0.4, 0.09],
-    [-0.5, 0.04],
-    [-0.5, -0.04],
-    [-0.4, -0.09],
-    [-0.1, -0.15],
-    [0.14, -0.1],
-    [0.44, -0.09],
-    [0.5, -0.03],
-  ],
-
+const HAND_DRAWN_OUTLINE: Record<Exclude<UnitKind, ModelledUnitKind>, number[][]> = {
   // --- The transports (#501). A hold with a drive: what each silhouette has
   // to say at RTS distance is *volume*, sized to the berths it carries, and
   // each in its navy's register — the Consortium's slab, the Commune's pod,
@@ -832,54 +633,11 @@ export const HULL_OUTLINE: Record<UnitKind, number[][]> = {
     [0.38, -0.15],
     [0.46, -0.07],
   ],
-  // A derrick, drawn: a blunt working hull with the lifting frame standing
-  // out to both beams amidships, which is the widest thing on it and the only
-  // part that is not plate. Industrial before it is naval, like the Caisson
-  // and the Freighter, and it reads apart from the Caisson by being widest in
-  // the middle where the Caisson is widest at its shoulders, and from the
-  // Harvester's scoop by having a bow at all.
-  [UnitKind.Derrick]: [
-    [0.5, 0.1],
-    [0.42, 0.2],
-    [0.2, 0.2],
-    [0.16, 0.31],
-    [-0.06, 0.31],
-    [-0.1, 0.2],
-    [-0.44, 0.2],
-    [-0.5, 0.14],
-    [-0.5, -0.14],
-    [-0.44, -0.2],
-    [-0.1, -0.2],
-    [-0.06, -0.31],
-    [0.16, -0.31],
-    [0.2, -0.2],
-    [0.42, -0.2],
-    [0.5, -0.1],
-  ],
-  // The Clarion's cone, answered: the same forward spine and the same fall
-  // away astern, because both are Order hulls and §8's shape is the faction's
-  // rather than one hull's — but broken amidships by a pair of resonator
-  // shoulders, the array that reads the other hull's loudness. Reads apart
-  // from the Clarion by that break and by being shorter and fuller, and from
-  // the Herald by having any beam at all.
-  [UnitKind.Responsory]: [
-    [0.5, 0.05],
-    [0.4, 0.13],
-    [0.14, 0.16],
-    [0.1, 0.26],
-    [-0.08, 0.26],
-    [-0.12, 0.16],
-    [-0.34, 0.14],
-    [-0.5, 0.07],
-    [-0.5, -0.07],
-    [-0.34, -0.14],
-    [-0.12, -0.16],
-    [-0.08, -0.26],
-    [0.1, -0.26],
-    [0.14, -0.16],
-    [0.4, -0.13],
-    [0.5, -0.05],
-  ],
+};
+
+export const HULL_OUTLINE: Record<UnitKind, number[][]> = {
+  ...HAND_DRAWN_OUTLINE,
+  ...GENERATED_HULL_OUTLINE,
 };
 
 /** Rotate + scale + translate an outline into world coordinates, flattened. */

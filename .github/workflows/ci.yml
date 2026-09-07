@@ -71,6 +71,15 @@ jobs:
       - name: Check formatting
         run: npm run format:check
 
+      # The hull scripts and their committed GLBs, and the models and their
+      # committed plan outlines, must agree (#540). Rebuilds every hull under
+      # tools/hull-models in a scratch directory — a few seconds, no browser —
+      # and diffs the parts against the file; a faction module edited without
+      # re-running the hulls it moves fails here rather than shipping a GLB the
+      # script no longer produces.
+      - name: Check hull models round-trip
+        run: npm run check:models
+
       - name: Build all packages
         run: npm run build
 
