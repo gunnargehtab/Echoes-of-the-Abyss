@@ -269,9 +269,20 @@ export const DOCTRINE: Record<Faction, Doctrine> = {
     // The Cantus is the Order's early tempo tool (docs/units.md): a Spire's
     // grant on a hull, at the Foundry, so the force that masses at the rally
     // masses with a band of depth under it. The Reciter once the rung stands.
+    //
+    // The **Clarion** replaces the Corvette in place (#529), which is wave 5's
+    // (#509) follow-through and not a new decision: that wave's gate named the
+    // Consortium and the Commune, so the Order was left naming a hull it has
+    // its own of. Same slot, same length — the cycle indexes on `army.length`
+    // modulo the list's own length, so a sixth entry would re-phase every
+    // selection this navy makes, which is the trap the Caisson's swap above
+    // records and the Bower's addition below it pays for. The substitution is
+    // one for one at the yard as well: both are Foundry hulls priced in
+    // nodules alone, and `OPENING_ESCORT` has opened the Order with Clarions
+    // since #509, so this is the doctrine catching up with its own opening.
     composition: [
       UnitKind.Cruiser,
-      UnitKind.Corvette,
+      UnitKind.Clarion,
       UnitKind.Cantus,
       UnitKind.Reciter,
       UnitKind.Cruiser,

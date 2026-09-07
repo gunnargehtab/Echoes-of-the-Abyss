@@ -246,7 +246,10 @@ describe('production does not deadlock', () => {
   }
 
   it('buys its second choice when it cannot afford its first', () => {
-    // 200 nodules: a Cruiser is 420, a Corvette 120. It must buy the Corvette.
+    // 200 nodules: a Cruiser is 420, the Order's Clarion 180. It must buy the
+    // Clarion — the doctrine's next entry since #529, where it used to be the
+    // Corvette at 120. Either way the claim is the same one: the second choice
+    // is the doctrine's, and it is priced under the purse.
     const built = produced(Faction.Hadron, 200);
     assert.ok(built.length > 0, 'a commander with money in hand must build something');
     assert.ok(
