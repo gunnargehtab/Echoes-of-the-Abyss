@@ -288,13 +288,17 @@ The two that are *not* free are the crop→PF ends: 0.55 is the biome's spec'd f
 
 ## 9. Prototype mapping
 
-**Nothing here is built.** Today `Match.payBiomass` credits a fauna death to the nearest
-non-Drift owner and there is no crop, no reactor, no sowing and no regrowth. The order of
-work, and why it is that order:
+**Step 1 is built; the rest is not.** A bed carries its standing crop and the water over it
+answers to it, but nothing consumes crop yet: `Match.payBiomass` still credits a fauna death
+to the nearest non-Drift owner, and there is no reactor, no sowing and no regrowth. The order
+of work, and why it is that order:
 
-1. **Beds get a crop, and crop drives PF and drag.** The sim change with no player-facing
-   part, and the one everything else reads. The PF grid already rebuilds when a Tetherjelly
-   cluster is born or dies (#480), which is the machinery this needs.
+1. **Beds get a crop, and crop drives PF and drag.** *Built (#549).* The sim change with no
+   player-facing part, and the one everything else reads. Crop rides the PF grid's existing
+   modifier path as an additive delta — the machinery the Tetherjelly already uses (#480) —
+   and is quantised before it reaches the grid, so a harvester eating crop every tick cannot
+   put a whole-map recompute on the 60 Hz budget. Every bed still stands full, so no figure
+   in the baseline moves.
 2. **Regrowth, on the §6 band table.** Turns the account from a stock into an income; needs
    its own 30-match baseline, because it moves every Biomass figure in the report.
 3. **The bio-reactor.** A structure kind, a radius, a rate and a payout.

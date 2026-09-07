@@ -28,6 +28,7 @@
 import {
   DRIFT,
   Faction,
+  FLORA,
   FaunaSpecies,
   HAZARDS,
   HazardPhase,
@@ -129,6 +130,21 @@ export interface Hazard {
    * commitment rather than a thing that happens because somebody walked past.
    */
   burnedS: number;
+  /**
+   * Standing crop, 0 to 1 — docs/systems-flora.md §1. Kelp only; 1 for every
+   * other kind, which is harmless because nothing else reads it.
+   *
+   * The bed's canopy, and the one number the flora economy is built on: it is
+   * what the field masks with (PF ramps from the biome's 0.55 at full to 0.90
+   * bare), what it grips with (drag and drag-SIG scale with it together), and
+   * from wave 3 what it pays. **The crop is the cover** — harvesting Biomass
+   * here spends the map's concealment, which is the argument about sound this
+   * account never had.
+   *
+   * Nothing consumes it yet (#549): every bed stands full, so PF and drag are
+   * what they have always been.
+   */
+  crop: number;
   /**
    * Extra dormancy bought by a Bathyarch presence.
    *
@@ -266,7 +282,14 @@ export function hazardsSystem(world: SimWorld, destroyed: number[]): void {
         ? Math.min(HAZARDS.KELP.BATHYARCH_BURN_S, hazard.burnedS + dt)
         : Math.max(0, hazard.burnedS - dt);
       hazard.suppressedS = Math.max(0, hazard.suppressedS - dt);
-      const open = hazard.burnedS >= HAZARDS.KELP.BATHYARCH_BURN_S || hazard.suppressedS > 0;
+      // A stripped bed is not a weak hazard, it is bare ground
+      // (docs/systems-flora.md §1) — so an empty canopy opens the field on the
+      // same terms a blast or a cutter does, and closes it again as the bed
+      // regrows.
+      const open =
+        hazard.burnedS >= HAZARDS.KELP.BATHYARCH_BURN_S ||
+        hazard.suppressedS > 0 ||
+        hazard.crop <= 0;
       hazard.phase = open ? HazardPhase.Dormant : HazardPhase.Active;
       continue;
     }
@@ -346,13 +369,68 @@ export function rebuildPropagation(world: SimWorld): void {
       delta: -DRIFT.JELLY_PF_DELTA,
     });
   }
-  // A third source on a third cadence: a Standing Wave corridor closes when
+  // A third source, and the slowest of the lot: a kelp bed thinned below full
+  // canopy stops masking (docs/systems-flora.md §1). An additive delta rather
+  // than a `set`, for the reason the Tetherjelly's is one — a bed is *water
+  // with less kelp in it*, so a storm standing over a half-cut plateau still
+  // degrades what is left, and a field authored over ground that is not Kelp
+  // Forest thins that ground by the same amount instead of overwriting it.
+  //
+  // Read from the quantised crop, never the raw figure: this rebuild runs on
+  // storm boundaries and jelly deaths as well as on crop steps, and all three
+  // have to write the same PF for the same canopy.
+  for (const hazard of world.hazards) {
+    if (hazard.kind !== 'kelp-entanglement') continue;
+    const delta = cropPropagationDelta(hazard.crop);
+    if (delta === 0) continue;
+    mods.push({ x: hazard.x, y: hazard.y, radiusM: hazard.radiusM, delta });
+  }
+  // A fourth source on a fourth cadence: a Standing Wave corridor closes when
   // its second node completes and falls when either node does, and
   // `standingWaveSystem` reports both so `Match` rebuilds on that tick. Listed
   // last, and it would not matter if it were first — a corridor's figure is
   // a `set`, and `propagationAtCell` composes a set after everything else.
   mods.push(...corridorModifiers(world));
   world.terrain.applyPropagationModifiers(mods);
+}
+
+/**
+ * Crop, rounded to the step the PF grid is written from.
+ *
+ * See `FLORA.CROP_PF_STEPS`: the grid is a whole-map recompute, so a bed pays
+ * for one at most this many times a match rather than once a tick.
+ */
+function cropStep(crop: number): number {
+  return Math.round(crop * FLORA.CROP_PF_STEPS);
+}
+
+/**
+ * How much a bed's PF rises above the biome it stands on, given its crop.
+ *
+ * Linear between the two ends docs/systems-flora.md §1 fixes — 0.55 with a
+ * full canopy, 0.90 bare — so half a canopy masks halfway to a bare plateau.
+ * Zero at full crop, which is why a match where nothing harvests pays nothing
+ * for this at all: the modifier is never even listed.
+ */
+function cropPropagationDelta(crop: number): number {
+  const step = cropStep(crop) / FLORA.CROP_PF_STEPS;
+  return (FLORA.BARE_CROP_PF - FLORA.FULL_CROP_PF) * (1 - step);
+}
+
+/**
+ * Set a bed's standing crop, rebuilding PF only when the canopy has actually
+ * moved a step — docs/systems-flora.md §1.
+ *
+ * The one way crop changes. Later waves call it from the reactor, the cutter
+ * and regrowth; wave 1 ships it with no caller but the tests, because the
+ * property worth pinning first is that thinning a bed un-hides the water.
+ */
+export function setKelpCrop(world: SimWorld, hazard: Hazard, crop: number): void {
+  if (hazard.kind !== 'kelp-entanglement') return;
+  const next = Math.max(0, Math.min(1, crop));
+  const before = cropStep(hazard.crop);
+  hazard.crop = next;
+  if (cropStep(next) !== before) rebuildPropagation(world);
 }
 
 /** Half-way back toward transparent, for the decay phase. */
@@ -446,18 +524,24 @@ export function kelpModifiers(world: SimWorld, eid: number): { speed: number; si
 
   const x = Position.x[eid]!;
   const y = Position.y[eid]!;
-  let gripping = false;
+  // The thickest canopy over this hull, where fields overlap: what grips is
+  // the kelp that is actually there, and a bed cut to nothing beside a full
+  // one does not thin its neighbour.
+  //
+  // Crop is tested rather than trusting the phase, because a bed stripped this
+  // tick is bare from this tick — the phase catches up in `hazardsSystem`, and
+  // in between a hull would otherwise still be paying cutter SIG for cutting a
+  // canopy that is gone.
+  let crop = 0;
   for (const hazard of world.hazards) {
     if (hazard.kind !== 'kelp-entanglement') continue;
     if (hazard.phase !== HazardPhase.Active) continue;
+    if (hazard.crop <= crop) continue;
     const dx = x - hazard.x;
     const dy = y - hazard.y;
-    if (dx * dx + dy * dy <= hazard.radiusM * hazard.radiusM) {
-      gripping = true;
-      break;
-    }
+    if (dx * dx + dy * dy <= hazard.radiusM * hazard.radiusM) crop = hazard.crop;
   }
-  if (!gripping) return none;
+  if (crop <= 0) return none;
 
   const faction = Owner.faction[eid];
   let speed: number;
@@ -473,6 +557,14 @@ export function kelpModifiers(world: SimWorld, eid: number): { speed: number; si
   if (hull >= HAZARDS.KELP.LARGE_HULL_M && faction !== Faction.Pelagia) {
     speed = Math.min(speed, HAZARDS.KELP.LARGE_SPEED_MULTIPLIER);
   }
+
+  // Half a canopy grips half as hard — docs/systems-flora.md §1. Applied last,
+  // so it thins the *whole* grip including the large-hull floor, and applied to
+  // the speed multiplier alone: the drag-SIG below is already a function of how
+  // hard the field is pulling, so scaling one number scales both and the two
+  // cannot drift apart. Pelagia stay at 1 whatever the crop, because nothing
+  // was dragging on them to thin.
+  speed = 1 - (1 - speed) * crop;
 
   // Thermal cutters run whether the hull is moving or not — unlike drag,
   // cutting is work you are doing on purpose, and it is what stops burning

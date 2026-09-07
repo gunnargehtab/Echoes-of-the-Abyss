@@ -1627,6 +1627,52 @@ export const HAZARDS = {
   },
 } as const;
 
+/**
+ * The flora economy — docs/systems-flora.md §1 and §7.
+ *
+ * A kelp field is a **bed**, and a bed carries one number: its **standing
+ * crop**, 0 to 1 of the canopy it started with. Crop is not an inventory
+ * hidden inside the field; it *is* the canopy, so the same number says what
+ * the field masks, what it grips, and (from wave 3 on) what it pays. That is
+ * the sentence the whole design hangs on — the crop is the cover — and it is
+ * why there is one figure here rather than three that can drift apart.
+ *
+ * Wave 1 of #547: nothing consumes crop yet, so every field stands full and
+ * the simulation behaves exactly as it did.
+ */
+export const FLORA = {
+  /**
+   * SPEC — docs/systems-flora.md §1. What a full bed masks at.
+   *
+   * Derived, not authored: it is the Kelp Forest biome's own figure, because a
+   * full canopy *is* the biome as docs/environments.md describes it. Writing
+   * 0.55 twice would let the bed and the ground it stands on disagree.
+   */
+  FULL_CROP_PF: PROPAGATION_FACTOR[Biome.KelpForest],
+  /**
+   * SPEC — docs/systems-flora.md §1. What a bare bed masks at.
+   *
+   * A stripped plateau, not open water (1.0): the ground is still a plateau
+   * with rock and stubble on it, and §7 marks this and FULL_CROP_PF as the two
+   * figures in the design that are *not* free to move, since together they
+   * decide which navies thrive on the shelf.
+   */
+  BARE_CROP_PF: 0.9,
+  /**
+   * TUNABLE — how finely crop is quantised before it reaches the PF grid.
+   *
+   * PF is a whole-grid recompute on the 60 Hz path, and from wave 3 a reactor
+   * eats crop every tick. Rebuilding for a hundredth of a per cent of canopy
+   * would put a per-tick grid walk on the step budget for a change no listener
+   * could hear: one step is 5% of a bed, or 0.0175 PF, spread over a 250 m
+   * cell. Quantising bounds the rebuilds a bed can cause across a whole match
+   * at this many, and the grid is written from the *quantised* figure so that
+   * a rebuild triggered by something else — a storm boundary — writes the same
+   * PF the crop step did.
+   */
+  CROP_PF_STEPS: 20,
+} as const;
+
 /** SPEC — docs/systems-echo.md §4 and §7. Seconds. */
 export const PERSISTENCE = {
   /** Tier 1-2 contacts linger as ghost markers, then fade. */
