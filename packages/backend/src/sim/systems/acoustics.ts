@@ -15,6 +15,7 @@ import {
   ENGINE_OFF,
   HARVEST_THROTTLE,
   ORDNANCE,
+  REFIT_STATS,
   RESOURCE,
   ResourceKind,
   SILENT_RUNNING,
@@ -35,6 +36,7 @@ import {
   HullEffect,
   Laying,
   MineMagazine,
+  Owner,
   Position,
   SilentRunning,
   StaticEmitter,
@@ -49,9 +51,23 @@ import type { SimWorld } from '../world.ts';
 // `Position` is what a hull in a hold lacks (systems/carrying.ts), and the
 // hazard modifiers below read one; a carried hull emits nothing and is not
 // walked here at all.
-const emitters = defineQuery([Acoustic, Unit, Velocity, SilentRunning, EngineOff, Position]);
+const emitters = defineQuery([Acoustic, Unit, Velocity, SilentRunning, EngineOff, Position, Owner]);
 const structureEmitters = defineQuery([Acoustic, Structure]);
 const staticEmitters = defineQuery([Acoustic, StaticEmitter]);
+
+/**
+ * What a navy's bought refits add to a hull at idle and at cruise.
+ *
+ * Summed rather than maxed: two refits that each cost noise cost both,
+ * because each is a separate piece of machinery running.
+ */
+function refitSigBonus(world: SimWorld, slot: number): number {
+  const owned = world.refits.get(slot);
+  if (owned === undefined) return 0;
+  let bonus = 0;
+  for (const kind of owned) bonus += REFIT_STATS[kind].sigBonus;
+  return bonus;
+}
 
 /** Below this speed the unit counts as stationary rather than cruising. */
 const MOVING_EPSILON = 0.01;
@@ -125,6 +141,20 @@ export function acousticsSystem(world: SimWorld): void {
     } else {
       const speed = Math.hypot(Velocity.x[eid]!, Velocity.y[eid]!);
       sig = speed > MOVING_EPSILON ? stats.sigCruise : stats.sigIdle;
+      // What the refits cost, and the only two states they cost it at
+      // (docs/systems-progression.md §2): "+2 SIG idle and cruise — a thicker
+      // pressure hull is quiet; the pumps that keep it trimmed are not."
+      //
+      // Inside this branch rather than after the chain on purpose. Silent
+      // Running, a drive cut, a ping and a mining throttle are each somebody
+      // else's figure — the band, the transmission, the throttle — and
+      // adding to them would make a bought strength quieten or re-price a
+      // state it was never sold against. Rule 2 of §1 only lets progression
+      // push SIG up; it does not let it push everything up.
+      //
+      // Gated on the map being empty, which it is in every match until
+      // somebody buys: one integer compare on the hot path.
+      if (world.refits.size !== 0) sig += refitSigBonus(world, Owner.slot[eid]!);
     }
 
     // Descent is a floor on loudness rather than a value that replaces the
@@ -244,7 +274,12 @@ export function acousticsSystem(world: SimWorld): void {
       // "Active" is per structure kind: a foundry is loud while its line
       // runs; a Sounding Spire is loud while its depth grant is load-bearing
       // (world.spireActive, written by the auras system this tick).
-      const producing = (world.production.get(eid)?.queue.length ?? 0) > 0;
+      // A line is a line: a yard running a refit is as audible as a yard
+      // running a hull, which is §1's rule 1 — "a purchased strength is bought
+      // on a production line, and a production line is audibly running"
+      // (docs/systems-progression.md).
+      const line = world.production.get(eid);
+      const producing = line !== undefined && (line.queue.length > 0 || line.refit !== undefined);
       const projecting = world.spireActive.has(eid);
       sig = producing || projecting ? stats.sigActive : stats.sigIdle;
     }

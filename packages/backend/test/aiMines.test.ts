@@ -100,6 +100,7 @@ function snapshot(
     contacts: [],
     peakSig: 30,
     berths: { used: 0, granted: 40 },
+    refits: [],
     nodules: 4000,
     crystal: 0,
     biomass: 0,

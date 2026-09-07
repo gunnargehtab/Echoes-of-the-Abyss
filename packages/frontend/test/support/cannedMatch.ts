@@ -306,6 +306,7 @@ export function cannedSnapshot(tick = 300): EchoSnapshot {
     crystal: 120,
     biomass: 60,
     berths: { used: 4, granted: 12 },
+    refits: [],
     exposure: { tier: ResolutionTier.Bearing, trackedCount: 2 },
     selfEvents: [{ kind: SelfEventKind.Damaged, unitId: 14 }],
     draw: { capacity: 40, demand: 34, satisfaction: 1 },

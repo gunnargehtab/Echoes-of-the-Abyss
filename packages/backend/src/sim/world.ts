@@ -19,6 +19,8 @@ import {
   ordnanceStatsFor,
   ORDNANCE,
   OrdnanceKind,
+  RefitKind,
+  refittedPressureRating,
   type AmbientBand,
   type DrawReport,
   type FaunaSpecies,
@@ -110,6 +112,18 @@ export interface ProductionQueue {
   queue: UnitKind[];
   /** Seconds of build time remaining on queue[0]. */
   remainingS: number;
+  /**
+   * The refit this line is running, if it is running one
+   * (docs/systems-progression.md §2).
+   *
+   * On the same record as the hull queue rather than beside it, because they
+   * are the same yard-time: "a refit occupies that line exactly as a hull
+   * does: for its build time the Slipway runs at 70 and launches nothing."
+   * `productionSystem` burns this clock *instead of* the queue's, so a hull
+   * mid-build is paused rather than cancelled — the yard is busy, not
+   * emptied.
+   */
+  refit?: { kind: RefitKind; remainingS: number; totalS: number };
 }
 
 export interface SimWorld extends IWorld {
@@ -129,6 +143,18 @@ export interface SimWorld extends IWorld {
   economies: Map<number, PlayerEconomy>;
   /** producing structure eid -> its queue. */
   production: Map<number, ProductionQueue>;
+  /**
+   * The fleet-wide refits each navy has bought, by slot
+   * (docs/systems-progression.md §2).
+   *
+   * Simulation state, like the order queue and the rallies, and for the same
+   * reason: a reconnecting player's fleet is still refitted. Hashed through
+   * the ratings it wrote rather than as a set — see `stateHash` — because a
+   * refit *is* the ratings it wrote, and a world that agreed about the
+   * purchase while disagreeing about the hulls would be the divergence the
+   * hash is for.
+   */
+  refits: Map<number, Set<RefitKind>>;
   /**
    * Rally points, by producing structure (#435): where a hull goes the tick
    * it launches. Simulation state, like the order queue and for the same
@@ -475,6 +501,7 @@ export function createSimWorld(
   world.dt = dt;
   world.economies = new Map();
   world.production = new Map();
+  world.refits = new Map();
   world.rallies = new Map();
   world.holds = new Map();
   world.spireActive = new Set();
@@ -926,7 +953,13 @@ export function spawnUnit(world: SimWorld, opts: SpawnOptions): number {
   // Shelf line, and they have to be: since the shallow-water penalty landed,
   // 300 m is inside their own faction's weakness, and a hull that begins the
   // match already bleeding is a stat rather than a trade.
-  const rating = effectivePressureRating(opts.kind, opts.faction);
+  // The navy's own baseline, and then whatever it has bought on top of it: a
+  // hull launched after the Pressure Refit is refitted from the keel
+  // (docs/systems-progression.md §2, "every hull it launches afterwards").
+  const rating =
+    world.refits.get(opts.slot)?.has(RefitKind.Pressure) === true
+      ? refittedPressureRating(effectivePressureRating(opts.kind, opts.faction), opts.faction)
+      : effectivePressureRating(opts.kind, opts.faction);
   Position.depth[eid] = opts.depth ?? (rating >= 2 ? 600 : 300);
 
   addComponent(world, Velocity, eid);

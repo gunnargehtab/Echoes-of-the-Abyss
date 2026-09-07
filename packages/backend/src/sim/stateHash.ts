@@ -269,6 +269,16 @@ export function hashWorld(world: SimWorld): number {
     h = mixU32(h, ordinalOf.get(eid) ?? -1);
     h = mixFloat(h, line.remainingS);
     for (const kind of line.queue) h = mixU32(h, kind);
+    // The refit on the line, on the same argument: two worlds whose yards
+    // agree about the hulls and disagree about the upgrade diverge a band of
+    // depth later, which is minutes after the tick that caused it
+    // (docs/systems-progression.md §2). The purchase itself needs no separate
+    // mixing — `Pressure.rating` above carries what a granted refit did, and
+    // a refit *is* what it did to the hulls.
+    if (line.refit !== undefined) {
+      h = mixU32(h, line.refit.kind);
+      h = mixFloat(h, line.refit.remainingS);
+    }
   }
 
   // Rally points, by ordinal like the lines: same yards, different places

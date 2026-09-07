@@ -50,6 +50,7 @@ function snapshot(tick: number, units: OwnUnit[], extra: Partial<EchoSnapshot> =
     crystal: 0,
     biomass: 0,
     berths: { used: 2, granted: 24 },
+    refits: [],
     exposure: { tier: ResolutionTier.Silent, trackedCount: 0 },
     selfEvents: [],
     draw: { capacity: 4, demand: 2, satisfaction: 1 },

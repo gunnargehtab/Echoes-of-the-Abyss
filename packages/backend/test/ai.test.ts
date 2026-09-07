@@ -943,6 +943,7 @@ function exposedSnapshot(): EchoSnapshot {
     contacts: [],
     peakSig: 40,
     berths: { used: 0, granted: 0 },
+    refits: [],
     nodules: 0,
     crystal: 0,
     biomass: 0,
@@ -1108,6 +1109,15 @@ function assertOnlyKnown(command: AiCommand, known: Known): void {
         `produced at structure ${command.structureId}, which is not one of its own`
       );
       return;
+    case 'refit':
+      // Same audit as `produce`, and for the same reason: a refit is bought at
+      // a yard, and the only yards a commander may name are the ones the
+      // snapshot told it about (docs/systems-progression.md §2).
+      assert.ok(
+        known.structureIds.has(command.structureId),
+        `refitted at structure ${command.structureId}, which is not one of its own`
+      );
+      return;
     case 'depth':
       owns(command.unitIds);
       assert.ok(
@@ -1188,6 +1198,9 @@ function applyTo(match: Match, slot: number, command: AiCommand): void {
       return;
     case 'produce':
       match.produce(slot, command.structureId, command.unit);
+      return;
+    case 'refit':
+      match.refit(slot, command.structureId, command.refit);
       return;
     case 'depth':
       for (const id of command.unitIds) match.orderDepth(slot, id, command.depthM);

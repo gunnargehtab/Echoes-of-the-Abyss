@@ -28,7 +28,7 @@
  * at the first checkpoint after them.
  */
 
-import { Faction, HarvestThrottle, StructureKind, UnitKind } from '@echoes/shared';
+import { Faction, HarvestThrottle, RefitKind, StructureKind, UnitKind } from '@echoes/shared';
 import { Match } from './match.ts';
 import { mapById, missionMapById } from './maps/index.ts';
 import { missionById } from './missions/index.ts';
@@ -268,7 +268,8 @@ export type ReplayCommand =
    */
   | { tick: number; type: 'ability'; slot: number }
   | { tick: number; type: 'build'; slot: number; kind: StructureKind; x: number; y: number }
-  | { tick: number; type: 'produce'; slot: number; structure: number; kind: UnitKind };
+  | { tick: number; type: 'produce'; slot: number; structure: number; kind: UnitKind }
+  | { tick: number; type: 'refit'; slot: number; structure: number; kind: RefitKind };
 
 export interface ReplayPlayer {
   slot: number;
@@ -559,6 +560,9 @@ function applyCommand(match: Match, command: ReplayCommand): void {
       break;
     case 'produce':
       match.produce(command.slot, eid(command.structure), command.kind);
+      break;
+    case 'refit':
+      match.refit(command.slot, eid(command.structure), command.kind);
       break;
   }
 }

@@ -353,6 +353,7 @@ export function GameCanvas({
           onThrottle: (unitIds, throttle) => client?.setThrottle(unitIds, throttle),
           onBuild: (kind, x, y) => client?.build(kind, x, y),
           onProduce: (structureId, kind) => client?.produce(structureId, kind),
+          onRefit: (structureId, kind) => client?.refit(structureId, kind),
           onDepthOrder: (unitIds, depth) => client?.setDepth(unitIds, depth),
           onFollowFloor: (unitIds, active) => client?.setFollowFloor(unitIds, active),
           // Contacts, reduced to what the mix is allowed to know. Buffered by

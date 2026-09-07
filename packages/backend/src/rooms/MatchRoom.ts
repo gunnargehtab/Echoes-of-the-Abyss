@@ -428,6 +428,13 @@ export class MatchRoom extends Room<MatchState> {
       this.match.produce(slot, message.structureId, message.kind);
     });
 
+    this.onClientMessage(CLIENT_MSG.refit, (client, message) => {
+      const slot = this.commandSlot(client);
+      if (slot === undefined || !Number.isFinite(message?.structureId)) return;
+      if (!Number.isFinite(message.kind)) return;
+      this.match.refit(slot, message.structureId, message.kind);
+    });
+
     // --- Lifecycle messages ------------------------------------------------
 
     this.onClientMessage(CLIENT_MSG.faction, (client, message) => {

@@ -67,6 +67,12 @@ import {
   PERSISTENCE,
   priceOf,
   PRODUCIBLE,
+  REFIT_KINDS,
+  REFIT_STATS,
+  REFIT_TERMS,
+  RefitKind,
+  refitOfferedTo,
+  refitPriceFor,
   PROPAGATION_FACTOR,
   PROPAGATION_MODEL,
   requiredPressureRating,
@@ -246,6 +252,8 @@ export interface RendererCallbacks {
   onThrottle(unitIds: number[], throttle: HarvestThrottle): void;
   onBuild(kind: StructureKind, x: number, y: number): void;
   onProduce(structureId: number, kind: UnitKind): void;
+  /** Buy a fleet-wide refit at a yard (docs/systems-progression.md §2). */
+  onRefit(structureId: number, kind: RefitKind): void;
   onDepthOrder(unitIds: number[], depth: number): void;
   /** Arm or disarm floor-following for the selection (docs/systems-depth.md §2). */
   onFollowFloor(unitIds: number[], active: boolean): void;
@@ -672,6 +680,14 @@ const UNIT_SHORT: Record<UnitKind, string> = {
 };
 
 /** Compact structure names for the build buttons. */
+/**
+ * The refits, as the bar abbreviates them (docs/systems-progression.md §2).
+ * Same three-letter register as the hulls and the structures beside them.
+ */
+const REFIT_SHORT: Record<RefitKind, string> = {
+  [RefitKind.Pressure]: 'PRS',
+};
+
 const STRUCTURE_SHORT: Record<StructureKind, string> = {
   [StructureKind.Bastion]: 'BAS',
   [StructureKind.Refinery]: 'REF',
@@ -1048,6 +1064,9 @@ export class EchoRenderer {
   private biomass = 0;
   /** Hulls afloat and queued against the base's grant (docs/economy.md §10). */
   private berths: BerthReport = { used: 0, granted: 0 };
+
+  /** The fleet-wide refits this navy owns (docs/systems-progression.md §2). */
+  private refits: readonly RefitKind[] = [];
   /** Drift Health per region — docs/bestiary.md §6. Public, like terrain. */
   private driftHealth: number[] = [];
   private nodules = 0;
@@ -2363,6 +2382,36 @@ export class EchoRenderer {
                 : (shortfallLine(stats.name, stockpile, price) ?? undefined),
         });
       }
+
+      // The refits, on the same page as the hulls they compete with for the
+      // yard's line (docs/systems-progression.md §2). Listed only where this
+      // navy is offered one at all — the Directorate's row of §2's per-faction
+      // table is "not offered", so a Directorate bar shows nothing here rather
+      // than a button that can only ever be refused.
+      for (const kind of REFIT_KINDS) {
+        if (!refitOfferedTo(kind, this.faction)) continue;
+        const refit = REFIT_STATS[kind];
+        const price = refitPriceFor(kind, this.faction);
+        const owned = this.refits.includes(kind);
+        const yard = this.refitTargetFor();
+        buttons.push({
+          label: `${REFIT_SHORT[kind]} ${owned ? 'FITTED' : priceTag(price)}`,
+          enabled: !owned && yard !== undefined && affords(stockpile, price),
+          active: owned,
+          action: () => this.commandRefit(kind),
+          // Greyed for a reason (docs/ui-ux.md §7), and the reasons are in the
+          // order they stop being fixable: bought once and never again, then
+          // the yard, then the account. The yard's name is the navy's own —
+          // the Order's is struck at a Bastion, and telling a Knight to build
+          // a Slipway for it would be the bar inventing a rule.
+          refusal: owned
+            ? `${refit.name}: bought — a refit is fleet-wide and bought once`
+            : yard === undefined
+              ? `${refit.name}: no ${structureStatsFor(REFIT_TERMS[this.faction].boughtAt).name} ` +
+                `with a free line`
+              : (shortfallLine(refit.name, stockpile, price) ?? undefined),
+        });
+      }
     } else if (this.shownTab === 'squad') {
       const units = this.selectedUnits();
       const first = units[0];
@@ -2746,6 +2795,36 @@ export class EchoRenderer {
     if (this.refusedByPrice(stats.name, priceOf(stats))) return;
     this.callbacks.onBuild(this.pendingBuild, water.x, water.y);
     this.pendingBuild = null;
+  }
+
+  /**
+   * The yard a refit would be bought at: this navy's own, completed, and not
+   * already running one — "a second Slipway buys a second line, not a
+   * discount" (docs/systems-progression.md §2). Prefers a selected yard, like
+   * `produceTargetFor`, so a commander with two can choose which line to
+   * spend.
+   */
+  private refitTargetFor(): OwnStructure | undefined {
+    const boughtAt = REFIT_TERMS[this.faction].boughtAt;
+    const eligible = (s: OwnStructure) =>
+      s.kind === boughtAt && s.buildProgress >= 1 && s.refit === undefined;
+    return (
+      this.structures.find((s) => this.selected.has(s.id) && eligible(s)) ??
+      this.structures.find(eligible)
+    );
+  }
+
+  /** Buy a fleet-wide refit at the yard `refitTargetFor` picked. */
+  private commandRefit(kind: RefitKind): void {
+    // The mission and the price are re-checked on the command rather than
+    // trusted from the button, for `commandProduce`'s reason: the button greys
+    // on the last snapshot, and an order the server would refuse between two
+    // of them should answer for itself rather than vanish into the socket.
+    if (this.refusedByMission('construction')) return;
+    const price = refitPriceFor(kind, this.faction);
+    if (this.refusedByPrice(REFIT_STATS[kind].name, price)) return;
+    const yard = this.refitTargetFor();
+    if (yard !== undefined) this.callbacks.onRefit(yard.id, kind);
   }
 
   /**
@@ -3438,6 +3517,7 @@ export class EchoRenderer {
     this.drawReport = { capacity: 0, demand: 0, satisfaction: 1 };
     this.biomass = 0;
     this.berths = { used: 0, granted: 0 };
+    this.refits = [];
     this.nodules = 0;
     this.crystal = 0;
     this.pendingBuild = null;
@@ -3471,6 +3551,7 @@ export class EchoRenderer {
     this.drawReport = snapshot.draw;
     this.biomass = snapshot.biomass;
     this.berths = snapshot.berths;
+    this.refits = snapshot.refits;
     this.driftHealth = snapshot.driftHealth;
     this.callbacks.onHazards(snapshot.hazards);
     this.nodules = snapshot.nodules;

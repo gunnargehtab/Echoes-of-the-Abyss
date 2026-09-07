@@ -225,6 +225,24 @@ export enum StructureKind {
 }
 
 /**
+ * The refits — fleet-wide upgrades, bought once each, on the Slipway's line
+ * (docs/systems-progression.md §2).
+ *
+ * One entry, and the enum exists anyway rather than being a boolean, because
+ * §2's list is five and the other four are the same mechanism pointed at the
+ * other stats a hull has. What is *not* here is a sixth: "five refits is the
+ * list. A sixth is a design change to this document, not a constant."
+ */
+export enum RefitKind {
+  /**
+   * **+1 PR, fleet-wide** — the depth gate, bought. The Consortium's whole
+   * doctrine line ("Buys access") and the only route to the Abyssal band a
+   * navy can purchase rather than position (#517).
+   */
+  Pressure = 0,
+}
+
+/**
  * Ordnance — things a weapon puts in the water rather than damage it applies.
  * docs/systems-combat.md §2, the weapon triangle.
  *
@@ -723,6 +741,13 @@ export interface OwnStructure {
   queue: UnitKind[];
   /** 0-1 progress of queue[0]. Meaningless when the queue is empty. */
   queueProgress: number;
+  /**
+   * The refit this yard's line is currently running, and how far through it is
+   * (docs/systems-progression.md §2). Absent on a yard running hulls or
+   * nothing — a refit takes the line *instead* of a hull, which is the whole
+   * decision it exists to create, so the two are never both present.
+   */
+  refit?: { kind: RefitKind; progress: number };
   /** Where this yard sends a hull the tick it launches, when it has been told. */
   rally?: { x: number; y: number };
 }
@@ -895,6 +920,18 @@ export interface EchoSnapshot {
   biomass: number;
   /** Hulls afloat and queued against the base's grant (docs/economy.md §10). */
   berths: BerthReport;
+  /**
+   * The fleet-wide refits this navy has bought (docs/systems-progression.md
+   * §2). Own information, and cheap: a refit is bought once, so this list is
+   * at most five long and is usually empty.
+   *
+   * On the wire because a refit changes what the player's own hulls *are* —
+   * the Pressure Refit is a band of depth every hull now owns — and the shell
+   * has to grey the button that would buy it a second time. The commander
+   * reads the same field for the same reason: after it, the crystal field is
+   * ground rather than a raid.
+   */
+  refits: RefitKind[];
   /** What the rest of the map currently knows about you. */
   exposure: ExposureReport;
   /** Discrete things that happened to your own force on this tick. */
