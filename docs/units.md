@@ -1182,6 +1182,9 @@ Next steps
   four Foundry hulls, the four Slipway hulls, the Tender last
 - Done (#501): the four transports above and the hold they carry, the first wave of
   roster-plan.md (#495), which sketches a full line per navy; the scouts are the second
+- Done (#509): the two line hulls and the anchor above, the fifth wave — with which the Line
+  row and the Heavy row are full, the matrix has no empty combat cell, and no navy opens in
+  a hull nobody owns. The commons are wave 6's decision
 - Transcribe the refits and rank of systems-progression.md (#462): the five refits as
   producibles on the Slipway's line, which #461 built, then rank, which needs the TTK band
   test to grow a rank-3 row
