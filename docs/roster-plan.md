@@ -545,6 +545,49 @@ doctrine builds its own line and the commons are dead weight on the bar, retire 
 authored. If a navy still leans on a common hull for a role its own roster does not fill,
 that is a finding about the roster, not about the commons.
 
+### #529, and the Corvette the Order had no reason to name
+
+The first of wave 6's four leanings to be acted on, and the only one that was simply **stale**.
+Wave 5's gate named the Consortium and the Commune, so the Order was never asked — and
+`DOCTRINE[Faction.Hadron].composition` went on naming a `Corvette` in a navy that has had its
+own line hull since #461. Measured before the change: **5.9 Corvettes a match**, the heaviest
+common-hull use by anybody other than the Light Scout.
+
+`UnitKind.Clarion` now stands in that slot. **In place**, which is the whole of the care this
+needed: the cycle indexes on `army.length` modulo the list's own length, so a sixth entry would
+re-phase every selection the Order makes — the trap the Caisson's swap avoided and the Bower's
+addition deliberately paid for. One for one at the yard as well, both being Foundry hulls priced
+in nodules alone, and `OPENING_ESCORT` has opened the Order with two Clarions since #509, so the
+doctrine has only caught up with its own opening.
+
+**The substitution is clean.** Over the stored thirty seeds the Order builds 144 Clarions where
+it built 177 Corvettes — 4.8 a match against 5.9, the shortfall being the Clarion's 180 nodules
+against the Corvette's 120 — and **nothing falls through to anything cheaper**. Its Light Scout
+column stays at 0.0, which is what separates this finding from the Directorate's Chorister
+(#530), where the cycle does fall through and the substitution therefore is not clean.
+
+| | Corvette named | Clarion named |
+| --- | --- | --- |
+| Knights' Corvettes built per match | 5.9 | **0.0** |
+| Knights' Clarions built per match | 0.0 | **4.8** |
+| Knights' Light Scouts built per match | 0.0 | 0.0 |
+| Knights' Reciters built per match | 0.3 | 0.5 |
+
+**Two things it moved, neither smoothed over.** The Knights go **22% to 36%**, which is the
+fourteen points #520's re-run took off them and the figure this document has recorded for them
+twice before — they return to exactly their 36% again. And the spread widens rather than
+narrowing: 9 / 9 / 61 / 22 becomes **5 / 0 / 59 / 36**, 52 points to 59, with the Commune at
+**0 of 22 decided**. The Commune's nine points are inside the ten a win rate over twenty-odd
+decided matches carries and the Knights' fourteen are not, so the honest reading is that this
+change moved one navy and the rest is noise — but a navy sitting on zero is worth watching
+whatever the arithmetic says, and no guard-rail catches it: §9's Commune rail asks whether a
+quiet economy *wins*, never whether it is losing everything.
+
+All five guard-rails held. One incidental: a Cruiser was built for the first time in a measured
+baseline — once, in thirty matches, by the Consortium — so #531's "zero, by everybody, in every
+scenario" is now zero to three decimal places rather than absolutely. It does not change that
+issue's reading.
+
 ## 5. What each wave touches
 
 The touch list for one hull, from the code as it stands. A wave is four of these plus its
