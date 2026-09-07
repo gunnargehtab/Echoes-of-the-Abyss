@@ -25,6 +25,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | **[characters.md](characters.md)** | Twelve commanders, the neutrals, and the campaign's secondary cast |
 | **[culture.md](culture.md)** | How the Rift speaks — five registers, names, rituals, writing guide |
 | **[campaign.md](campaign.md)** | 29 missions designed, four campaigns, four irreconcilable endings — the Consortium's seven, convergence and ending included, are specified and built, and all 29 now have a document of record |
+| **[campaign-read.md](campaign-read.md)** | The campaign read in play order at three checkpoints — what a player knows, what they are told twice, and eight findings about how the story arrives. Findings, not fixes |
 | **[mission-sorrowgate.md](mission-sorrowgate.md)** | The prologue, specified: the court, the flight, the silence order, the ping, and what answers it |
 | **[mission-asset-recovery.md](mission-asset-recovery.md)** | The Ledger 1, specified: Face Six, the manifest, the taps, and the Klaxon posture |
 | **[mission-shift-change.md](mission-shift-change.md)** | The Ledger 2, specified: the throttle handed over, a filed audit, and the layer as cover |
