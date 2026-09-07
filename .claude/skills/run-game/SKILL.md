@@ -204,6 +204,38 @@ under 3 ms. The draw-call and triangle columns are real; the millisecond columns
 are the software rasteriser. Real numbers need a real GPU and a Termux device
 (docs/graphics-standards.md gate 6).
 
+### The esc menu's focus trap
+
+```bash
+node .claude/skills/run-game/scripts/drive.mjs --out /tmp/esc-focus \
+  --url "http://localhost:5173/?mission=prologue-sorrowgate" \
+  --steps .claude/skills/run-game/scripts/escFocus.mjs
+```
+
+A `--steps` module that holds `docs/ui-ux.md` §9.5's keyboard contract: focus is
+moved into the dialog, every entry is reachable by Tab, arming lands on **Stay**
+rather than on the leave, and nothing under the menu's glass can be reached in
+either direction. Run it when the esc menu changes.
+
+It lives here rather than in `npm test` because the two ends of that sentence
+are unreachable in jsdom — it implements neither `inert`'s semantics nor
+sequential focus navigation, and `@testing-library/user-event`'s `tab()` walks a
+focusable list that does not filter on `inert`, so it would go green while Tab
+walked onto a live control (#515). Where the menu *places* focus needs no
+browser and is asserted in `packages/frontend/test/escMenu.test.ts`.
+
+**The `?mission=` in that URL is load-bearing.** Nearly all of the HUD is Pixi
+rather than DOM, and the contact log's rows are `disabled` until a contact has a
+position, so a duel against nobody has *nothing* focusable under the glass and
+the walk would pass without testing anything. The script counts the live
+controls first and refuses to run on zero. A prologue drive finds nine.
+
+One expected result that looks like a leak and is not: the walk passes through
+`<body>` once per cycle. §9.5 promises focus cannot reach a **live control**,
+and `inert` delivers that — with nothing else focusable left in the document the
+browser hands focus to the document itself before wrapping back to the first
+entry.
+
 ## 3. Stop the servers
 
 ```bash

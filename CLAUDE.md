@@ -216,10 +216,14 @@ than on a stopwatch.
   "already seen" variant attributed identically and left unmarked, and the two anti-reveal
   rules of the port — a setup screen that names no navy, and a listing row that says the
   water and the seat count and never the room's code. The esc menu's §9.5 contract is held
-  as far as it goes without a DOM: the dialog, Escape stepping back one level, and the
-  leave entry armed rather than instant. Where focus actually *is*, and whether Tab can
-  walk under the glass, stay unobservable here and are #494's separate jsdom question —
-  `escMenu.test.ts` says so at its head rather than leaving the gap to be inferred.
+  as far as it goes without a DOM: the dialog, Escape stepping back one level, the leave
+  entry armed rather than instant, and — since #515 — where the menu *places* focus,
+  which needed no jsdom, only a `createNodeMock` that stops merging sibling controls into
+  one host node. Where focus actually *is*, and whether Tab can walk under the glass, are
+  not a jsdom question after all: jsdom implements neither `inert` nor sequential focus
+  navigation, so those live in the browser drive at
+  `.claude/skills/run-game/scripts/escFocus.mjs` or nowhere. The foot of
+  `test/support/screen.ts` carries that research rather than leaving it to be re-derived.
 
 Five seams in production code exist for these and have no other caller: `EchoRenderer`'s
 constructor takes an optional `Application`, `PerspectiveView.mount` an optional renderer
