@@ -218,25 +218,34 @@ with no neutral case). Each opinion now has an economy attached, and none of the
 ### What folding bloom-share in costs, honestly
 
 Bloom-share pays **nodules** today, at 0.8 a second per tended node, out of authored map data
-with no supply behind it. Folding it into this account is not a rename, and three things move:
+with no supply behind it. Folding it into this account costs less than it looks like it
+should, and the reason is in the code rather than in the prose:
 
-- **The Commune spends Biomass.** They are the navy whose hulls are *grown* — chitin-and-algae
-  composites ([asset-prompts-3d.md](asset-prompts-3d.md)) — so their roster carries a Biomass
-  component beside its nodules, which is the Directorate's pattern at the Commune's scale and
-  the fiction they already had. **The split is the one number this document does not set**: it
-  is chosen by the wave that transcribes it and measured against the stored baseline, because
-  a price is only honest once the income under it has been read.
-- **Their nodule income becomes ordinary — quietly.** What is left is the extraction §6
-  already gives them and nobody has used: harvest SIG 18 where others sit at 50, and organic
-  refineries at 30–40 instead of 55–75. The most efficient extractor in the game starts
-  actually extracting.
+- **The Commune can already spend Biomass, and no hull is repriced.** Of the seven
+  Biomass-priced entries in the roster, only the Precentor and the Dredge are locked to the
+  Directorate. The Acolyte (15), the Chorister (20), the Verger (30), the Thurible (40) and
+  the Lure (50) are open to any navy — *the price is the lock*. That design has never
+  actually worked, because only one navy earns the account; giving the Commune an income
+  makes five unlocked hulls reachable by a second navy and the price-as-lock rule start
+  doing what [economy.md](economy.md) §8 says it does. Repricing the Commune's own grown
+  hulls in Biomass is a **later option, not a prerequisite** — worth doing for the fiction of
+  a navy that grows its ships, and worth measuring first.
+- **Nothing moves in a skirmish.** No skirmish map authors a bloom node, so the system
+  early-returns in every balance-harness match today and the Commune runs harvesters like
+  everybody else. The fold is therefore free to make now, and only bites when a map authors
+  its first bed — which is the point at which the harness can read it.
 - **A bloom node stops being infinite.** It was a tap with no supply; it becomes a bed with a
   crop, and the yield it pays is bounded by regrowth. That is the change that makes it a
   *share* rather than a subsidy, and it is what stops the Commune having two economies.
+- **Their nodules become ordinary.** In skirmish they already are. What §6 promises them and
+  the sim has never given them — harvest SIG 18 against everyone else's 50, organic refineries
+  at 30–40 instead of 55–75 — stays owed either way; this document does not pay that debt.
 
-[mission-tend.md](mission-tend.md) is the first thing to re-read when this is built: its
-§13 row is where bloom-share was specified, and the contract that mission teaches — *income
-without a broadcast* — is preserved exactly. The account it lands in is not.
+[mission-tend.md](mission-tend.md) is the one live consumer and the first thing to re-read
+when this is built. Its §13 row is where bloom-share was specified, and its objectives are
+scripted work-loads rather than account thresholds, so the swap does not touch a predicate.
+The contract that mission teaches — *income without a broadcast* — is preserved exactly. The
+account it lands in is not.
 
 ---
 

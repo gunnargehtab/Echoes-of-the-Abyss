@@ -153,6 +153,26 @@ Plateau
 - Terrain: a raised area of seabed — ground whose floor is shallower than the water around it. Becomes mechanical once floors are authored, since a plateau is ground that deep-running hulls cannot cross without rising.
 - The Commune's usage in culture.md and economy.md is the same word for the same ground, used for the community that tends it: bloom-share is anchored to Shelf-band plateau nodes, and a Commune name is the plateau a person farms. "The plateaus voted" is metonymy, not a second definition.
 
+Bed
+
+- A kelp field considered as an economy rather than as a hazard: the same object hazards.md §4 gives a shape, a position and a grip, carrying a standing crop. Beds are the map's Biomass income (systems-flora.md).
+
+Standing crop
+
+- How much canopy a bed still has, 0–100%. It is not an inventory inside the field; it *is* the canopy, so one number sets what the field pays, what it masks (PF 0.55 full, 0.90 bare) and how hard it drags. Harvesting a bed therefore removes cover, and that trade is the flora economy's whole argument about sound.
+
+Bio-reactor
+
+- The structure that renders standing crop in a radius around itself, loudly and continuously. It consumes the crop nearest it first, so a mature reactor stands in water it has un-hidden.
+
+Sowing
+
+- Restoring crop to a bed. A Commune act, quiet, and the only way the cover comes back faster than it grows. Sowing does not create a bed: ground becomes Kelp Forest only where a mission says so.
+
+Bloom-share
+
+- The Commune's income: a bed pays them continuously while a live, non-silent hull of theirs tends it, and stops the tick it is untended — held is *tended*, not possessed. It is bounded by what the bed regrows, so it takes the interest and never the principal, and it pays Biomass. Anchored to Shelf-band plateau ground, which is the guard-rail: the quietest navy earns on the most reachable water.
+
 Thermocline
 
 - The temperature boundary at 1,200 m, and the acoustic divide between the map's upper and lower halves. Not a biome and not terrain: it has no cells, and it modifies a listening pair rather than a place.

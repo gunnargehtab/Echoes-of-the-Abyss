@@ -76,6 +76,8 @@ Home of Pelagia Commune.
 
 **Faction Tie-In:** Pelagia's organic buildings blend into flora; bioluminescent trails mark territory.
 
+**Bio-rich is literal.** The kelp here is a standing crop and the map's Biomass income, harvested by reactor, cut by hull, or shared as a bloom — and because the crop is also the PF 0.55 that makes this the stealth biome, working a plateau is how a navy spends its own cover ([systems-flora.md](systems-flora.md)).
+
 ### 3. Abyssal Trenches — Deep Pressure Zones
 
 The domain of the Abyssal Directorate.

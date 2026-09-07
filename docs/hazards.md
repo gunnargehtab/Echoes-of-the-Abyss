@@ -117,6 +117,8 @@ The quiet route is the slow route. Take it fast and it stops being the quiet rou
 
 Cutting is also the whole of the Consortium's answer to kelp: they are dragged like anyone else while the canopy holds, because their doctrine is to destroy the obstacle rather than to swim better through it. Note that this means **every faction has an opinion about kelp** — there is no neutral case and no default multiplier to fall back on.
 
+**The canopy is also a crop, and that makes the field an economy as well as a hazard.** A bed carries standing crop; the crop *is* the canopy, so what a field masks and what it grips both fall as it is harvested, and a bare bed is not a hazard at all. Cutting one is therefore two things at once — a path opened and a payment taken — and the field's drag, its +30 SIG and its PF are all read off the same number. [systems-flora.md](systems-flora.md) is that system; this section stays the authority on how a field behaves at full canopy.
+
 A suppressed field is drawn but inert: no drag, no noise, nothing to route around. That is the counter-play, and it is loud in its own right — you either fire ordnance or park a hull where everyone can hear its cutters.
 
 *Bonus concealment for stealth units is not modelled either.* Kelp is already the masking biome, and stacking a second propagation multiplier on the one ground that already hides you risks turning the maze core into a hole in the map rather than cover. "Stealth units" also names no category the simulation has — Silent Running is a state any hull can enter, not a class of hull. If this clause returns it should say which of those two it means.
