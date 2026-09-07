@@ -1109,3 +1109,92 @@ describe('the Tocsin — the bell', () => {
     );
   });
 });
+
+/**
+ * The mid-tier's two rules — docs/systems-combat.md §11.5, #531.
+ *
+ * Both are guns that read `Acoustic.sig`, and both are asserted against a real
+ * `Match` rather than against arithmetic, because the number they read is one
+ * `acousticsSystem` writes every tick out of the posture chain, the hold, the
+ * Veil and the Klaxon's own line. A test that fed them a listed figure would
+ * be asserting the stat block, which `ttkBands.test.ts` already does.
+ */
+describe('the mid-tier — guns that read SIG', () => {
+  it('the Derrick shoots the loudest enemy in range, not the nearest', () => {
+    const { match } = skirmish(Faction.Bathyarch);
+    const shooter = hull(match, Faction.Bathyarch, UnitKind.Derrick, 6000, 6000);
+    const range = statsFor(UnitKind.Derrick).attackRangeM;
+
+    // Two enemies, both well inside the gun. The near one is a Light Scout at
+    // SIG 6 idle; the far one a Corvette at 28. Nearest-first would take the
+    // Scout every time — it is less than half the distance.
+    const near = spawnUnit(match.world, {
+      kind: UnitKind.LightScout,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: 6000 + range * 0.25,
+      y: 6000,
+    });
+    const far = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: 6000 + range * 0.7,
+      y: 6000,
+    });
+    advance(match, 0.2);
+    assert.ok(
+      Acoustic.sig[far]! > Acoustic.sig[near]!,
+      `the premise: the far hull is the loud one, ${Acoustic.sig[far]} against ${Acoustic.sig[near]}`
+    );
+
+    const nearHp = Health.hp[near]!;
+    const farHp = Health.hp[far]!;
+    advance(match, 6);
+    assert.ok(
+      Health.hp[far]! < farHp,
+      'the Derrick fires on the loudest thing it can hear, however far'
+    );
+    assert.equal(Health.hp[near]!, nearHp, 'and leaves the quiet hull standing closer alone');
+    assert.ok(Health.hp[shooter]! > 0, 'the shooter is alive to have done it');
+  });
+
+  it('the Responsory hits a loud hull harder than a quiet one with the same plate', () => {
+    const threshold = statsFor(UnitKind.Responsory).loudTargetSigThreshold!;
+    // Two identical Caissons, one under way and one with its drive cut. Same
+    // hull, same plate, same gun pointed at it — the only difference is what
+    // the shooter can hear, which is the whole of the rule.
+    const damageTo = (engineOff: boolean): { dealt: number; sig: number } => {
+      const { match } = skirmish(Faction.Hadron, 77);
+      hull(match, Faction.Hadron, UnitKind.Responsory, 6000, 6000);
+      const target = spawnUnit(match.world, {
+        kind: UnitKind.Caisson,
+        slot: 1,
+        faction: Faction.Bathyarch,
+        x: 6000 + statsFor(UnitKind.Responsory).attackRangeM * 0.5,
+        y: 6000,
+      });
+      if (engineOff) match.setEngineOff(1, target, true);
+      advance(match, 0.4);
+      const sig = Acoustic.sig[target]!;
+      const before = Health.hp[target]!;
+      advance(match, 8);
+      return { dealt: before - Health.hp[target]!, sig };
+    };
+
+    const loud = damageTo(false);
+    const quiet = damageTo(true);
+    assert.ok(
+      loud.sig > threshold && quiet.sig <= threshold,
+      `the premise: ${loud.sig.toFixed(1)} over the line and ${quiet.sig.toFixed(1)} under it`
+    );
+    assert.ok(
+      loud.dealt > 0 && quiet.dealt > 0,
+      `both were shot at: ${loud.dealt} loud, ${quiet.dealt} quiet`
+    );
+    assert.ok(
+      loud.dealt > quiet.dealt,
+      `a Caisson over the line takes more from the same gun: ${loud.dealt} against ${quiet.dealt}`
+    );
+  });
+});

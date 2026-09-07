@@ -226,6 +226,32 @@ export interface UnitStats {
    * nothing outranges it, and anything that reaches it kills it.
    */
   firesOnlyStationary?: boolean;
+  /**
+   * This gun auto-acquires the **loudest** live enemy in range rather than the
+   * nearest (docs/systems-combat.md §11.5, the Derrick).
+   *
+   * SIG decides detection, resolution, aggro and lock speed, and until #531 no
+   * gun in the roster was aimed by it: a torpedo seeker and a committed
+   * creature were the only two things that took the loudest. This puts that
+   * rule on a hull a player builds. The range bound and every filter the
+   * acquire loop already applies are untouched — an ordered target still
+   * overrides, because an order always does.
+   */
+  acquiresByLoudness?: boolean;
+  /**
+   * Perceived-loudness threshold above which this gun's damage is multiplied
+   * by `loudTargetDamageMultiplier` (docs/systems-combat.md §11.5, the
+   * Responsory).
+   *
+   * The Consortium's +12% is the only rule in the game paid by the *shooter's*
+   * SIG; this is the first paid by the target's, and it reads the same 60. It
+   * is the loudness the shooter actually hears — after the Veil's cut, the
+   * thermocline and terrain PF — which is what leaves the other player a
+   * defence rather than a stat to lose to.
+   */
+  loudTargetSigThreshold?: number;
+  /** Multiplier applied above `loudTargetSigThreshold`. */
+  loudTargetDamageMultiplier?: number;
 }
 
 /** Half a hull's length: the radius the simulation keeps clear around it. */
@@ -1507,6 +1533,81 @@ export const UNIT_STATS: Record<UnitKind, UnitStats> = {
     attackRangeM: 0,
     attackCooldownS: 0,
     carriesTorpedoes: false,
+  },
+  [UnitKind.Derrick]: {
+    kind: UnitKind.Derrick,
+    name: 'Derrick',
+    /**
+     * SPEC — docs/units.md, "The mid-tier". Under the Klaxon's line at rest
+     * and over it the moment the drive turns, which is the figure that is a
+     * decision: this hull buys §11's +12% by being *in* the fight, where the
+     * Caisson owns it by never dropping below 60 at all.
+     */
+    sigIdle: 58,
+    sigCruise: 66,
+    sigFiringBurst: 30,
+    /** A Corvette's, and the best on any Consortium gun: it has to hear the
+     * difference between two enemies to choose between them. */
+    hyd: 50,
+    pressureRating: 2,
+    maxHp: 1050,
+    speed: 50,
+    hullLengthM: 120,
+    cost: 330,
+    buildTimeS: 60,
+    berths: 3,
+    /**
+     * 35 damage a second against the Cruiser's 40 at 420 nodules. The cheaper
+     * hull and the weaker gun; what the difference buys is the trigger below.
+     */
+    attackDamage: 105,
+    attackRangeM: 700,
+    attackCooldownS: 3.0,
+    carriesTorpedoes: false,
+    acquiresByLoudness: true,
+    faction: Faction.Bathyarch,
+  },
+  [UnitKind.Responsory]: {
+    kind: UnitKind.Responsory,
+    name: 'Responsory',
+    /**
+     * SPEC — docs/systems-echo.md §8's balance clause, and cone figures like
+     * every Order hull's: 78 ahead, 27.3 on the beam, 7.8 astern, and 35.1
+     * over the compass against the Clarion's 27.9 and the Reciter's 40.5. It
+     * idles at the Clarion's compass figure and is louder under way, which is
+     * the shape every Order hull has (quiet stopped, loud moving, the heading
+     * the lever).
+     */
+    sigIdle: 60,
+    sigCruise: 78,
+    /**
+     * The Order's, not the hull's. Energy replaces a burst outright rather
+     * than scaling it (`firingSigFor`), so this is read from the faction like
+     * the Clarion's and the Reciter's instead of being listed beside them.
+     */
+    sigFiringBurst: FACTION_COMBAT.ENERGY.FIRING_SIG,
+    /** The baseline listener's. §8's term "changes what a Knight emits and
+     * never what a Knight hears". */
+    hyd: 50,
+    pressureRating: 2,
+    maxHp: 460,
+    speed: 62,
+    hullLengthM: 95,
+    cost: 230,
+    buildTimeS: 46,
+    berths: 2,
+    /**
+     * 27 damage a second against the quiet and 40 against the loud — the
+     * Clarion's base rate, and the Reciter's when the target is over the line.
+     */
+    attackDamage: 70,
+    attackRangeM: 750,
+    attackCooldownS: 2.6,
+    carriesTorpedoes: false,
+    /** The Klaxon's own threshold, read from the other side of the water. */
+    loudTargetSigThreshold: FACTION_COMBAT.KLAXON.SIG_THRESHOLD,
+    loudTargetDamageMultiplier: 1.5,
+    faction: Faction.Hadron,
   },
 };
 

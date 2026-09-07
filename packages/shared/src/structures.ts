@@ -379,6 +379,13 @@ export const PRODUCIBLE: Partial<Record<StructureKind, readonly UnitKind[]>> = {
     // the water has already lost the minutes the rung was bought with.
     UnitKind.Caisson,
     UnitKind.Reed,
+    // The mid-tier (docs/units.md, #531). At the Foundry for the line hulls'
+    // reason and one of their own: the role is the step *between* the line and
+    // the rung, so a hull that arrived behind the rung would be a step up from
+    // nothing — and the entries these replace were on the composition from the
+    // opening.
+    UnitKind.Derrick,
+    UnitKind.Responsory,
   ],
   [StructureKind.Slipway]: [
     UnitKind.Bulwark,

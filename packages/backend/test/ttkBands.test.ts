@@ -65,6 +65,8 @@ const thurible = statsFor(UnitKind.Thurible);
 const lance = statsFor(UnitKind.Lance);
 const caisson = statsFor(UnitKind.Caisson);
 const reed = statsFor(UnitKind.Reed);
+const derrick = statsFor(UnitKind.Derrick);
+const responsory = statsFor(UnitKind.Responsory);
 const furnace = statsFor(UnitKind.Furnace);
 const blight = statsFor(UnitKind.Blight);
 const lure = statsFor(UnitKind.Lure);
@@ -446,5 +448,82 @@ describe('§9 time-to-kill bands', () => {
     const t = ttkS(corvette.maxHp, scout.attackDamage, scout.attackCooldownS);
     assert.ok(t > 30, `a scout should still take an age to kill a Corvette, got ${t.toFixed(0)} s`);
     assert.equal(damageMultiplierFor(Faction.Pelagia, 99), 1, 'and no doctrine rescues it');
+  });
+});
+
+/**
+ * The mid-tier's bands — docs/systems-combat.md §9, the four rows #531 added.
+ *
+ * Both hulls are guns that read SIG (§11.5), so both bands have to be counted
+ * with the rule *in* them or they are measuring a different hull: the Derrick's
+ * shell carries the Klaxon's +12% because the hull sits over 60 the moment it
+ * moves, and the Responsory's carries its own 1.5 against anything over the
+ * same line. The second is the one worth having a test for — it is the only
+ * band in the roster where a third more plate buys nothing at all.
+ */
+describe('the mid-tier — two guns that read SIG', () => {
+  it('kills a Corvette between the Cruiser and the line hull, with the Klaxon in it', () => {
+    // The Derrick is over the Klaxon's line at cruise by construction, so the
+    // multiplier is not an optional extra here the way it is for every other
+    // Consortium gun — it is what the SIG line was chosen to buy.
+    assert.ok(
+      derrick.sigCruise > FACTION_COMBAT.KLAXON.SIG_THRESHOLD,
+      `the premise: a moving Derrick is over the Klaxon's line, got ${derrick.sigCruise}`
+    );
+    const lit = derrick.attackDamage * damageMultiplierFor(Faction.Bathyarch, derrick.sigCruise);
+    const t = ttkS(corvette.maxHp, lit, derrick.attackCooldownS);
+    assert.ok(t >= 9 && t <= 10, `Derrick kills a Corvette in 9-10 s, got ${t.toFixed(1)}`);
+  });
+
+  it('is nearly an anchor against chip damage, and deliberately not one', () => {
+    const t = ttkS(derrick.maxHp, corvette.attackDamage, corvette.attackCooldownS);
+    assert.ok(t >= 34 && t <= 38, `a Corvette needs 34-38 s on a Derrick, got ${t.toFixed(1)}`);
+    // The anchor floor is the Cruiser's, and the mid-tier sits under it: a step
+    // up from the line is not a hull the line cannot hurt.
+    const anchor = ttkS(cruiser.maxHp, corvette.attackDamage, corvette.attackCooldownS);
+    assert.ok(t < anchor, `a Derrick must be softer than an anchor: ${t} against ${anchor}`);
+  });
+
+  it('kills a quiet Corvette at the Clarion’s own rate', () => {
+    assert.ok(
+      corvette.sigCruise <= responsory.loudTargetSigThreshold!,
+      `the premise: a Corvette is under the line, got ${corvette.sigCruise}`
+    );
+    const t = ttkS(corvette.maxHp, responsory.attackDamage, responsory.attackCooldownS);
+    const asClarion = ttkS(corvette.maxHp, clarion.attackDamage, clarion.attackCooldownS);
+    assert.ok(t >= 12 && t <= 14, `Responsory kills a Corvette in 12-14 s, got ${t.toFixed(1)}`);
+    assert.ok(
+      Math.abs(t - asClarion) <= 1,
+      `and at the Clarion's rate: ${t.toFixed(1)} against ${asClarion.toFixed(1)}`
+    );
+  });
+
+  it('erases the Caisson’s extra plate, because a Caisson is never under the line', () => {
+    // The band this hull exists for. The Caisson is the one hull in the roster
+    // that is always over 60 (docs/units.md), which is what buys it the
+    // Klaxon's +12% — and it is exactly what this gun charges for.
+    assert.ok(
+      caisson.sigIdle > responsory.loudTargetSigThreshold! &&
+        caisson.sigCruise > responsory.loudTargetSigThreshold!,
+      'the premise: a Caisson is over the line at rest and under way both'
+    );
+    const loud = responsory.attackDamage * responsory.loudTargetDamageMultiplier!;
+    const onCaisson = ttkS(caisson.maxHp, loud, responsory.attackCooldownS);
+    const onCorvette = ttkS(corvette.maxHp, responsory.attackDamage, responsory.attackCooldownS);
+    assert.ok(
+      onCaisson >= 12 && onCaisson <= 14,
+      `Responsory kills a Caisson in 12-14 s, got ${onCaisson.toFixed(1)}`
+    );
+    assert.equal(
+      onCaisson,
+      onCorvette,
+      'a third more plate and the same band: that is the rule, stated as a number'
+    );
+    // And the guard: against something quiet the plate counts again, or the
+    // multiplier would be a flat buff wearing an argument.
+    assert.ok(
+      ttkS(caisson.maxHp, responsory.attackDamage, responsory.attackCooldownS) > onCaisson,
+      'a quiet hull with a Caisson’s plate must take longer'
+    );
   });
 });

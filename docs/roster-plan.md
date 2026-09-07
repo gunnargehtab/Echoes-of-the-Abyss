@@ -85,6 +85,7 @@ of a service (Cantus, Reciter).
 | --- | --- | --- | --- | --- |
 | **Scout** | *Beacon* — hears by shouting | *Glider* — engine off, the quietest hull | *Acolyte* — a listener that stays | *Herald* — a cone that runs away quiet |
 | **Line** | *Caisson* — armoured, loud, Klaxon-fed | *Reed* — fast, fragile, silent at flank | Chorister (exists, by price) | Clarion (exists) |
+| **Mid** | *Derrick* — the gun that aims by ear | none, on the Bower's reasoning | Precentor (exists) | *Responsory* — the gun paid by its target |
 | **Heavy** | Bulwark (exists) | *Bower* — a swarm's anchor, not a hull's | Dredge (exists) | Reciter (exists) |
 | **Support** | Tender (exists) | Sower (exists), Spinner (exists) | Precentor (exists) | Cantus (exists) |
 | **Ordnance** | *Broadside* — the torpedo salvo | *Weaver* — decoys, not mines | *Thurible* — depth charges from below | *Lance* — one torpedo, aimed by the cone |
@@ -92,7 +93,10 @@ of a service (Cantus, Reciter).
 | **Transport** | *Freighter* — armoured, loud, six berths | *Drifter* — two berths, nearly silent | *Verger* — carries cohorts down | *Antiphon* — carries three, projects depth |
 | **Deep** | Abyssal Submersible (shared) | Abyssal Submersible (shared) | Abyssal Submersible (shared) | Abyssal Submersible (shared) |
 
-Sixteen sketched hulls. With the fifteen that exist that is thirty-one, and each navy's bar
+Eighteen sketched hulls — sixteen, and the two the mid-tier row added in the seventh wave
+(#531), which is the only row that is not four wide because only two navies have the gap. With
+the fifteen that exist that is thirty-three, and the Consortium's bar and the Order's each read
+one more than the other two's. Otherwise each navy's bar
 reads twelve: its nine (or eight, with the Chorister and the Clarion counting where they
 fall), the Submersible, the Harvester, and the common trio — which the last wave decided to
 keep (§8, #510), so twelve it is.
@@ -132,6 +136,24 @@ is the Chorister by doctrine and by price. Two navies are missing theirs.
   at 100 m/s, against the Corvette's 28 at 85) with a shorter gun; the fight it wins is the
   one it chose, and the fight it loses is any other. Locked: the SIG line is the Veil's
   argument written out.
+
+**The mid-tier.** The step between the line hull and the rung's, and the only row here that is
+not four wide. The Directorate's is the Precentor and the Commune's is nothing, on the Bower's
+own reasoning — *many, fast, fragile* does not have a middle. The other two named the common
+**Cruiser** for it, four times between them, and built it 0.0 times in every measured scenario
+(#531). Both replacements are guns that read SIG, which no gun in the roster did before them.
+
+- *Derrick* (Consortium, Foundry). Auto-acquires the **loudest** live enemy in range rather
+  than the nearest — a torpedo seeker's rule and a committed creature's, on a hull a player
+  builds. Its shell goes to whoever just fired, broke silence, crossed the layer or is mining,
+  and never to the scout standing closest. Locked: on any other navy it is a targeting
+  convenience; on the one whose fights "happen next to the Consortium, on purpose" it is the
+  hull that chooses which fight that is.
+- *Responsory* (Knights, Foundry). Damage ×1.5 against a target whose *perceived* loudness is
+  over 60 — the Klaxon's own threshold, read from the other side of the water, and the first
+  rule in the game paid by the target's SIG rather than the shooter's. Perceived is the
+  counter-play: a Veil, the layer and terrain PF are all defences against it. Locked: any navy
+  could carry a gun that reads a number, and only the Order has a doctrine that says it must.
 
 **The Commune's heavy.** The doctrine is *many, fast, fragile*, so the Commune's heavy is not
 a heavy. *Bower* (Commune, Slipway) is a slow, quiet hull with no gun that regrows Spinner
@@ -212,6 +234,7 @@ is used four ways. Each wave is one pull request and one row in
 | 4 — siege (done, #508) | Furnace, Blight, Lure, Tocsin | structure-only damage; spore over time; fauna weighting from a hull | match length falls without the win rates spreading — read in the four-faction baseline, not a duel (#518) |
 | 5 — line and anchor (done, #509) | Caisson, Reed, Bower | none | the Consortium and Commune doctrines stop buying Corvettes; the Bower is judged where the Slipway is reached (#518) |
 | 6 — the commons (done, #510) | none | none | a decision, from the harness: retire the Light Scout, Corvette and Cruiser from the bars, or keep them as the surplus market — **kept**, see §8 |
+| 7 — the mid-tier (#531) | Derrick, Responsory | guns that read SIG: acquire-by-loudness, and damage paid by the target's | the Cruiser's four dead entries become two hulls that are built, without the win rates spreading further than the composition bid already moved them |
 
 **Wave 0** is the part that is not glamorous and cannot be skipped. It is issue #498, and it
 settled four things:
@@ -587,6 +610,56 @@ All five guard-rails held. One incidental: a Cruiser was built for the first tim
 baseline — once, in thirty matches, by the Consortium — so #531's "zero, by everybody, in every
 scenario" is now zero to three decimal places rather than absolutely. It does not change that
 issue's reading.
+
+### #531, and the two hulls the Cruiser was standing in for
+
+Wave 7, and the only wave that is two hulls rather than four: the mid-tier gap is the
+Consortium's and the Order's, because the Directorate's step up is the Precentor and the
+Commune's is nothing at all.
+
+**What the issue asked and what was measured first.** The Cruiser was named four times across
+two compositions and built 0.0 by everybody in every scenario. #536 found why, and it was not
+the Cruiser: the composition cycle had no way to save, so *every* entry above a navy's working
+capital was decorative. Instrumented over three matches, the Knights' Cruiser was the cycle's
+first choice **986 times** against a bank averaging 143–199. With the cycle taught to save, the
+four dead entries stopped being free — the Order lost thirty points of win rate holding a purse
+for a hull it could never reach — which is this issue's own finding measured as a win rate
+rather than as a zero in a table.
+
+**The rule the wave is built on.** SIG decides detection, resolution, aggro and lock speed, and
+no gun in the roster was aimed by it: a torpedo seeker and a committed creature were the only
+two things in the game that took the loudest rather than the nearest. The **Derrick** puts that
+on a hull a player builds; the **Responsory** does the other half, setting damage by how loud
+the target is. Both replace a Cruiser entry in place, so neither cycle re-phases.
+
+**The gate, and it is met.** Thirty matches on the stored seeds, against #536's head:
+
+| | stored (pre-#536) | #536 | wave 7 |
+| --- | --- | --- | --- |
+| Derrick built (Consortium) | — | — | **0.2** |
+| Responsory built (Knights) | — | — | **1.8** |
+| Cruiser built | 0.0 | 0.3 / 0.1 | **not named by anyone** |
+| Win rates (Con/Com/Dir/Kni) | 5 / 0 / 59 / 36 | 0 / 0 / 67 / 33 | **5 / 5 / 67 / 24** |
+| Spread, points | 59 | 67 | **62** |
+| Decided, of 30 | 22 | 18 | **21** |
+
+Both hulls are built, the spread is **narrower** than the composition bid left it rather than
+wider, three more matches reach a decision, and both navies that had been sitting on zero are
+off it. All five guard-rails held — and since #536 the Biomass one can actually breach when it
+says so.
+
+**What it moved, recorded rather than smoothed over.** The Knights go 36% to 24%, which is
+twelve points and therefore outside the ten a win rate over twenty-odd decided matches carries.
+The mechanism is visible in the hull table rather than mysterious: the Order builds 1.8
+Responsories and 0.7 Clarions where it built 3.8 Clarions, so a 230-nodule hull is displacing
+more than one 180-nodule hull's worth of purse and the navy fields fewer hulls in total. That
+is on-doctrine for *very few, elite, precise* and it is still a cost. It is left as measured
+rather than tuned away, because tuning a twelve-point move on twenty-one decided matches is
+fitting the noise — the figure to watch is whether it persists over the next wave's re-run.
+
+The Consortium's Derrick at 0.2 a match is the thinner of the two results and is the same
+shape: at 330 nodules it displaces Caissons (3.1 to 1.4) and the navy's losses fall with them.
+Better than the Cruiser's flat zero, and not yet a hull the Klaxon leans on.
 
 ## 5. What each wave touches
 

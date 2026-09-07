@@ -159,12 +159,20 @@ export const DOCTRINE: Record<Faction, Doctrine> = {
     // sixth entry would re-phase every selection this navy makes. Same slot,
     // same length, a hull that is this navy's — and the wave's gate is read
     // here, in a doctrine that no longer names a hull nobody owns.
+    // The **Derrick** replaces both Cruiser entries in place (#531), on the
+    // Caisson's terms: same slots, same length, so the cycle does not re-phase.
+    // The Cruiser was named here four times across two navies and built 0.0 by
+    // everybody in every measured scenario — 420 nodules against a bank that
+    // averaged under 100 at the moment the cycle asked — and once #531's
+    // composition bid taught that cycle to save, the entries stopped being free
+    // and started costing the Order thirty points of win rate. 330 is inside
+    // what the bid can reach.
     composition: [
       UnitKind.Caisson,
       UnitKind.Tender,
-      UnitKind.Cruiser,
+      UnitKind.Derrick,
       UnitKind.Bulwark,
-      UnitKind.Cruiser,
+      UnitKind.Derrick,
       UnitKind.Freighter,
     ],
   },
@@ -280,12 +288,20 @@ export const DOCTRINE: Record<Faction, Doctrine> = {
     // one for one at the yard as well: both are Foundry hulls priced in
     // nodules alone, and `OPENING_ESCORT` has opened the Order with Clarions
     // since #509, so this is the doctrine catching up with its own opening.
+    // The **Responsory** replaces both Cruiser entries in place (#531), on the
+    // Clarion's terms one line up: same slots, same length, no re-phasing. The
+    // Order's is the harder half of that issue — §8's balance clause fixes a
+    // Knight entry's listed SIG at a peer's over the compass average, and SIG
+    // clamps at 100, so no Knight hull can be a Cruiser-class peer at all
+    // (65 / 0.45 = 144). The gap this fills is therefore *below* the Reciter
+    // rather than beside the Cruiser, and the hull is priced at 230 against
+    // the 143-199 the Knights' bank measured at this decision.
     composition: [
-      UnitKind.Cruiser,
+      UnitKind.Responsory,
       UnitKind.Clarion,
       UnitKind.Cantus,
       UnitKind.Reciter,
-      UnitKind.Cruiser,
+      UnitKind.Responsory,
     ],
   },
 };
