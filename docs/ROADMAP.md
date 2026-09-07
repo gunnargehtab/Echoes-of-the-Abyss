@@ -1,10 +1,13 @@
 # Project Roadmap — Echoes of the Abyss
 
-The repo-side companion to the current backlog on GitHub: the September 2026 audit epic
-(<https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/428>). The epic carries the live
-checkboxes; this document carries the reasoning. The first development epic
-(<https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/97>) is closed, and its phases
-are kept below as the record of how the build got here.
+The repo-side companion to the backlog on GitHub. Two development epics are closed, and their
+phases are kept below as the record of how the build got here: the first
+(<https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/97>), and the September 2026
+audit (<https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/428>), which closed with
+twenty-eight of its thirty findings landed. The two it did not close outlived it and stand on
+their own: the duel balance reading, parked with its evidence in Phase 10, and competitive
+play — never really one finding so much as a whole mode the game does not have, which is
+Phase 11 below.
 
 This document is also what the roadmap site renders (`tools/roadmap/build.mjs`). The site
 reads the phase tables, asks GitHub whether each issue is open, and draws that — so a table
@@ -27,9 +30,10 @@ a sentence about what is open goes false on its own, with nobody touching the fi
 roadmap site reads every state live from the tracker on each build, which a paragraph
 cannot; the kinds are the part that keeps.
 
-- **What the audit still owes** — the audit epic itself, and the findings under it that
-  have not landed. It is the only kind that shrinks by being worked rather than by being
-  re-read.
+- **What the audit still owes** — the findings it filed that have not landed. The epic
+  itself is closed, and what is left of it no longer hangs under anything: one parked
+  balance reading, and the mode that became Phase 11. It is the only kind that shrinks by
+  being worked rather than by being re-read.
 - **Older than the audit** — issues filed before it and not superseded by it: the world
   epic, and the debts a presentation or platform decision left behind rather than paid.
 - **Parked** — issues labelled `wontfix`. The label means the investigation is written
@@ -462,8 +466,10 @@ The September 2026 audit (epic
 [#428](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/428)) read the backend
 simulation, the frontend renderer and netcode, the design bible against the RTS genre, and
 the engineering around all of it. Each finding is one issue with the evidence behind it and
-a concrete change, so an unattended run can take them one at a time. The epic ranks them by
-impact; this table groups them by what they are, and the ranking is on the issue.
+a concrete change, so an unattended run can take them one at a time. The epic ranked them by
+impact; this table groups them by what they are, and the ranking is on the issue. The epic is
+closed — twenty-eight of the thirty landed — and the rows below are what it leaves behind,
+read live from the tracker rather than from its checkboxes.
 
 Two groups below are not the audit's. **The opponent** is where the harness's own findings
 went once matches started ending, and **filed since the audit** holds what has been opened
@@ -511,7 +517,6 @@ the phase the build is in, not because the audit found them.
 | Wave 1 of that line — done: the four transports and carrying, the first of the five mechanisms the matrix asks for; follows wave 0 | [#501](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/501) |
 | A population cap, resolved against the Echo budget and the Directorate swarm doctrine | [#437](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/437) |
 | Bound scattered water so it is learnable, and redesign the superweapons before they are built | [#438](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/438) |
-| A competitive-mode document — map pool, ladder, accounts, observer mode | [#439](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/439) |
 | Combat depth — how many Echo snapshots a decided fight spans and what the losing side can still do inside one; answered by lengthening the TTK bands and giving the defender a mine astern | [#463](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/463) |
 
 **Shipping and hygiene**
@@ -552,6 +557,37 @@ is not on the table — a contact that glides is a contact the server never reso
 as the next thing to author for as long as the roster has existed. The population cap in particular has
 sat in the Planned section of [README.md](README.md) as a deferred question; it is an issue
 now because the Echo budget puts a number on what a cap can be.
+
+---
+
+## Phase 11 — Competitive play
+
+The audit filed competitive play as one document to write
+([#439](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/439)), which undersold it.
+[maps.md](maps.md) labels three archetypes "balanced competitive 1v1" and two "2v2 team
+battles", and none of the apparatus behind those words exists in any document: the words
+ladder, ranked and rating appear nowhere in [tech-stack.md](tech-stack.md), matchmaking is
+`joinOrCreate` filtered by map, progression is `localStorage` with no account behind it,
+[ui-ux.md](ui-ux.md) §5 states there are no allies in the water to signal, and the result
+screen reports one fact. That is a mode the game does not have, not a finding about the game
+it does — so it outlived the epic that filed it and gets a phase of its own.
+
+The hard part is the observer, and it is hard for the reason the rest of the game is
+interesting. A spectator handed unresolved state is a maphack, which is why spectators are
+deliberately absent today; the consequence is no casting, no tournament production and no
+coaching. Whatever gets written has to resolve a watcher's view the way the server already
+resolves a player's — delayed, per-side, or from a designated listener set — or the mode
+contradicts the one rule the architecture will not bend.
+
+| Work | Issue |
+| --- | --- |
+| A competitive-mode document — a 1v1 map pool of built maps, rating and ladder, server-side accounts, team-mode rules, a post-game that stays inside the hidden-information rule, and an observer mode that is not a maphack | [#439](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/439) |
+
+**This phase is where the mode is written down, not a claim that it is next.** A ladder
+measures skill against a game whose matches decide and whose navies are not 90/10, and the
+first two rows of "Where the build actually stands" are still the ones being worked. Three of
+the maps the pool would draw on are archetypes rather than built maps, which is its own
+prerequisite.
 
 ---
 

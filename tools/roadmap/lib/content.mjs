@@ -209,6 +209,11 @@ export const phases = {
     blurb:
       'A full review of the game in September 2026 produced this list. First on it: matches that end.',
   },
+  11: {
+    title: 'Playing it against other people',
+    blurb:
+      'Ranked matches, teams, and watching a game you are not in — without handing the audience a map the players cannot see.',
+  },
 };
 
 export const groups = {
