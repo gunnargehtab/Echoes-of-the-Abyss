@@ -486,7 +486,7 @@ the phase the build is in, not because the audit found them.
 
 | Work | Issue |
 | --- | --- |
-| The Consortium beats the Directorate 90 in 10 in duels. Parked with the evidence: no doctrine knob moves it, and thirty matches at even trades and even incomes still read 87/13, so what remains is the shallows poison on every Directorate attack, a Biomass income the commander never spends, and a line that arrives piecemeal | [#458](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/458) |
+| The Consortium beats the Directorate 90 in 10 in duels — closed as superseded, not as fixed. Three rounds of evidence agreed that no doctrine knob moves it and that the cause is an account rather than a doctrine: a Biomass income the Directorate cannot spend, out of a map that holds 916 of it once. The reading stands and the work moved to [#520](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/520), [#530](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/530) and [#535](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/535) | [#458](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/458) |
 | The Commune's own hulls in the commander's hands — the mine command and a Spinner doctrine landed; the Sower half waits on whether the Commune is meant to reach crystal at all | [#467](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/467) |
 
 **Performance and netcode**
@@ -506,7 +506,7 @@ the phase the build is in, not because the audit found them.
 | --- | --- |
 | Pathfinding — navigate hulls around blocked ground instead of steering straight and sliding | [#431](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/431) |
 | RTS control conventions — attack-move, rally points, stop and hold, edge scroll, a production queue | [#435](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/435) |
-| Mouse and keyboard on a PC — what the input surface owes a desk that the touch surface does not | [#294](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/294) |
+| Mouse and keyboard on a PC — done, and by the control conventions rather than by a separate input pass: left-drag select, right-click order, middle-drag pan, wheel zoom about the cursor, shift to queue and ctrl to subtract, alt or double-click for the class, groups on 1–9, the army on 0, arrows and the screen edge to scroll, and every fleet action rebindable on the controls screen | [#294](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/294) |
 
 **Design**
 
@@ -532,7 +532,7 @@ the phase the build is in, not because the audit found them.
 
 | Work | Issue |
 | --- | --- |
-| A fog of war for the chart — the world going vague where no hull of yours is listening, which is the Echo Layer's own rule drawn on the map | [#472](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/472) |
+| A fog of war for the chart — the world going vague where no hull of yours is listening, which is the Echo Layer's own rule drawn on the map. **Decided: presentation only.** The client already holds nothing it did not resolve, so the vagueness is a drawing rule over data the server has always sent, and no new state crosses the wire to make it | [#472](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/472) |
 | Harvesters that would not move in the Prologue, found by playing it | [#478](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/478) |
 | The Tetherjelly's second home — settled in [bestiary.md](bestiary.md) §4 as **one animal re-homed per map** rather than a second species: a canopy cluster is the same SIG 1 and the same −0.10 PF as a duct one, so the only thing that differs is depth, and depth is a property of the ground. `marr-plateau` names the Kelp Forest band in its `ambientBands`, and *Tend* seeds its own lane | [#480](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/480) |
 | The crystal tier no navy can reach — the round trip is longer than the match, the field sits 500 m inside two eruption plumes, and only the Directorate can work it without paying crush. Found by teaching the commander to raid for it (#467) | [#491](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/491) |
@@ -588,6 +588,34 @@ measures skill against a game whose matches decide and whose navies are not 90/1
 first two rows of "Where the build actually stands" are still the ones being worked. Three of
 the maps the pool would draw on are archetypes rather than built maps, which is its own
 prerequisite.
+
+---
+
+## Phase 12 — After the game ships
+
+The first thing on this roadmap deliberately placed after release, and it is here because a
+decision was made rather than because work started. Wave 6 of the roster plan
+([#510](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/510)) asked whether the three hulls every navy shares should be retired, and the
+harness said keep them: the Light Scout is the floor a production cycle falls through to,
+the Cruiser holds a mid-tier gap open for two navies with no hull of their own for it, and
+the Corvette is what the Directorate reaches for while its own line hull is priced in an
+account that yields two a match. What that reading could not answer is the fiction:
+[roster-plan.md](roster-plan.md) §8 records, in as many words, that nothing prices them at a
+premium and no yard sells them. Four navies at war build the same three hulls from nobody.
+
+So the commons get an owner, later — a **fifth navy of mercenaries**, with its own roster and
+its own storyline, outside the campaign and in multiplayer only. It is a faction whose
+contacts cannot be identified by their silhouette, which is an argument about sound and
+therefore allowed to exist; and it is a fifth seat's worth of entities in a detection pass
+that already breaks its budget at about 160, which is why it waits.
+
+| Work | Issue |
+| --- | --- |
+| A fifth navy of mercenaries — the commons given an owner, a doctrine anchored to sound, a roster across the role matrix and a storyline the twenty-nine missions never mention. Multiplayer only, after release | [#543](https://github.com/gunnargehtab/Echoes-of-the-Abyss/issues/543) |
+
+**Nothing in this phase is scheduled.** It carries the decision so that the next person to
+read the commons does not re-open the question, and it is placed after release so that
+reading it is not mistaken for planning it.
 
 ---
 

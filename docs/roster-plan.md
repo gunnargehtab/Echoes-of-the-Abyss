@@ -771,6 +771,13 @@ Three that were, one of them by wave 6 itself:
   Biomass against 55 a match) and #531 (the Cruiser, and the mid-tier gap it is holding open
   for two navies).
 
+  **Who sells them is answered later, and outside this plan.** The one thing the harness
+  could not read is the fiction — four navies at war building the same three hulls from
+  nobody — and the owner's answer is a fifth navy of mercenaries, with its own roster and
+  storyline, in multiplayer and never in the campaign. It is filed as #543 and placed after
+  release ([ROADMAP.md](ROADMAP.md) Phase 12), so nothing in this plan waits on it and no
+  price here moves for it.
+
 And two others, both on #495:
 
 - **Twelve a navy stays the target** (with wave 0). *Very many* is an argument about roster
