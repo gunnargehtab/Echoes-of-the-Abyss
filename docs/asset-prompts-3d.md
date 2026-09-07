@@ -906,3 +906,73 @@ For environment props (Block 4):
 - [style-neon-noir.md](style-neon-noir.md) — glow rules and palette tokens
 - [units.md](units.md) — the roster and the SIG/PR numbers cited here
 - [glossary.md](glossary.md) — SIG, PF, HYD, PR definitions
+
+### The mid-tier — two guns that read SIG
+
+The two hulls of [units.md](units.md) "The mid-tier" (wave 7 of
+[roster-plan.md](roster-plan.md), #531): the step between the line hull and the rung's, for
+the two navies that had been naming a common Cruiser for it and never building one. What
+these silhouettes have to say at RTS distance is **what the hull listens with**, because for
+the first time in the roster the gun is aimed by hearing rather than by range — the Derrick
+picks the loudest thing in its reach and the Responsory is paid by how loud that thing is. So
+both carry a visible listening organ that no other gun hull has, and it is the biggest thing
+on each: on the Derrick a lattice, industrial, standing out to both beams as the widest part
+of the hull; on the Responsory a pair of resonator shoulders let into the Order's own cone,
+breaking a Clarion's clean spine exactly where a Clarion has nothing. The lighting clauses
+are what the numbers give, as ever. The Derrick's is a pair — under the Klaxon's line at rest
+and over it under way — which is the one Consortium hull whose brightness is a decision
+rather than a constant, and the opposite of the Caisson's single band. The Responsory's is
+the Order's: dark at rest but not black, the cone lit and the flanks not, and the discharge
+is the energy class's +10 rather than a kinetic flash, so it pulses rather than flares. The
+wave is generated under Fable 5.1 like every wave from the scouts on (rule 3), in the one
+conversation, after the series reference.
+
+```text
+UNIT — Derrick (pair with Consortium): the gun that aims by ear, 120 m —
+a mid-tier gun hull that shoots the loudest thing it can hear rather than
+the nearest, under the Klaxon's line at rest and over it the moment the
+drive turns (SIG 58 idle, 66 cruise, +30 firing; one heavy shell, 105 at
+700 m on a 3.0 s cycle; 1,050 hull; 50 m/s; PR 2; 330 nodules). A pier
+under construction, made to swim: a blunt riveted working hull, squared
+bow with a rubbing strake across it, parallel flanks, square transom with
+two prop tunnels. Standing off both beams amidships and the widest thing
+on the hull, the derrick itself — an open riveted lattice frame, four legs
+braced in X, carried out over the water a third of the beam each side, and
+slung under it in a cradle the listening array: a rank of eight bare
+hydrophone drums hanging on cables, no fairing, no shroud, swaying. That
+frame is the hull's argument and must read at distance as the biggest
+thing on it. The single gun forward of the frame in an open barbette,
+short and thick, no shield. Behind the frame a riveted machinery house
+with louvred sides and one stack; a pile hammer stowed vertical against
+the after leg, head down; deck plating scuffed bare in a ring around the
+gun. No baffle, no cowl, no cone: this navy does not hide and does not
+point. Dim at rest — deck floods only, the drums dark — and burning under
+way, the louvres bright, the stack lit at the throat, and a hard lamp in
+the cradle throwing the lattice's shadow across the deck, because the loud
+state is the state this hull is bought to be in.
+```
+
+```text
+UNIT — Responsory (pair with Hadron): the reply, 95 m — an Order gun hull
+paid by how loud its target is, half again as hard against anything over
+the Klaxon's own line and ordinary against everything under it (SIG 60
+idle, 78 cruise as cone figures, 35.1 over the compass; the energy class's
++10 discharge; 70 at 750 m on a 2.6 s cycle, ×1.5 above 60; 460 hull;
+62 m/s; PR 2; 230 nodules). A Clarion interrupted: the same long forward
+spine and the same fall away astern, the faction's shape and not this
+hull's — a fine bow array, a hull that narrows to almost nothing at the
+transom — broken amidships by a pair of resonator shoulders, one each side,
+tuned bronze rings standing proud of the spine in a shallow cradle and
+canted outward, listening across the beam where the cone hears nothing.
+They are the hull's argument and must read at distance as the one thing a
+Clarion does not have. The single energy emitter runs forward along the
+spine to the bow array as a slim faired barrel, no muzzle, no doors. Fine
+ceramic panelling over the whole hull, seams tight, everything faired —
+the Order builds nothing bare. No lattice, no stack, no louvre, no rivet.
+Dark at rest but not black: the bow array holding a low standing glow and
+the rings cold. Under way the array brightens along its whole length and a
+thread runs the spine to the rings, which warm from the inside; the flanks
+stay unlit at every posture, because what this hull spends forward it does
+not spend abeam. A discharge is a pulse down the spine and out of the
+array, held for a beat and gone — not a flash, and never a muzzle flare.
+```

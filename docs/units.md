@@ -1040,6 +1040,94 @@ never its own plate; and a Spinner's grown mine still spends the arming interval
 magazine is not a volley. Hull lengths are TUNABLE and not authored here; the Freighter's 160 m is
 the roster's longest, and the Bulwark's 150 m was until it.
 
+The mid-tier, and the two navies that had none — the seventh wave
+
+Two hulls, not four, because only two navies have the gap. #531 measured it: `DOCTRINE` named
+the **Cruiser** four times — twice on the Consortium's composition and twice on the Knights' —
+and it was built 0.0 times by everybody in every scenario, for the role neither navy has a hull
+of its own for, the step between the line hull and the rung's. The Directorate's is the
+Precentor and the Commune's is not a hull at all, on the Bower's reasoning: many, fast and
+fragile does not have a middle.
+
+The wave carries **one idea in two halves**, which is what a wave is for: the roster's guns
+learn to read SIG. Acoustic Signature decides detection, resolution, aggro and lock speed, and
+until now not one gun was aimed by it — a seeker and a committed creature were the only two
+things in the game that took the loudest rather than the nearest. One hull picks *whom* to
+shoot by loudness and the other sets *how hard*, and each is its navy's argument rather than a
+general rule (systems-combat.md §11.5).
+
+Derrick (Foundry)
+
+- Role: The gun that aims by ear. One heavy shell a cycle, at the loudest thing it can hear
+  rather than the nearest — the Klaxon's answer to a fight whose shape it cannot see
+- SIG: **58 / 66 / +30** — under the Klaxon's line at rest and over it the moment the drive
+  turns. That is the one figure here that is a decision: this hull buys
+  [systems-combat.md](systems-combat.md) §11's +12% by being *in* the fight, where the Caisson
+  owns it by never dropping below 60 at all. Firing takes it past the active ping's own 95
+- HYD: 50 — a Corvette's, and the best ears on any Consortium gun. That is the entry rather
+  than a compliment: a hull that aims by loudness has to hear the difference
+- PR: 2 — the Consortium baseline
+- Cost: 330
+- Build time: 60s
+- Berths: 3
+- Speed: 50
+- HP: 1,050
+- Weapon: **105 damage at 700 m on a 3.0 s cycle** — 35 damage a second against the Cruiser's
+  40 at 420 nodules. It is the cheaper hull and the weaker gun, and what the difference buys
+  is the trigger
+- Effect: **it auto-acquires the loudest live enemy in range, not the nearest.** Range bound
+  unchanged, every existing filter unchanged, and an ordered target still overrides. So the
+  shell goes to the hull that just fired (+25), broke silence (+40), crossed the layer (72) or
+  is mining on Overburden (68), and never to the scout standing closest. It is the one gun in
+  the roster a player can decline by being quiet
+- Faction-locked: yes. "A Consortium fight happens next to the Consortium, on purpose"
+  ([factions.md](factions.md)) — this is the hull that decides which fight that is. On any
+  other navy it would be a targeting convenience; on the loudest navy in the game it is the
+  only gun whose own doctrine it can be pointed at
+
+Responsory (Foundry)
+
+- Role: The reply. A gun paid by how loud its target is — the Klaxon's own line read from the
+  other side of the water
+- SIG: **60 / 78 / +10** — cone figures, as every Order hull's
+  ([systems-echo.md](systems-echo.md) §8): 78 ahead, 27.3 on the beam, 7.8 astern, and **35.1
+  over the compass**, against the Clarion's 27.9 and the Reciter's 40.5. It idles at the
+  Clarion's compass figure and is louder than it under way, which is the shape every Order hull
+  has. The firing figure is the Order's and not the hull's — energy replaces a burst outright
+  at +10 ([systems-combat.md](systems-combat.md) §11), so it is read from `FACTION_COMBAT`
+  rather than listed
+- HYD: 50 — the baseline listener's, like every Knight gun. §8's term "changes what a Knight
+  emits and never what a Knight hears"
+- PR: 2 — the Knights' baseline; depth is a thing they project rather than buy
+- Cost: 230
+- Build time: 46s
+- Berths: 2
+- Speed: 62
+- HP: 460
+- Weapon: **70 damage at 750 m on a 2.6 s cycle**, and **×1.5 against a target whose perceived
+  loudness is over 60** — 27 damage a second against the quiet and 40 against the loud. The
+  threshold is the Consortium's own, and *perceived* is the whole of the counter-play: it is
+  the figure the shooter hears, after the Spore Veil's cut, the thermocline and terrain PF
+- Effect: none beyond that gun, and the entry is the gun. Two Responsories facing each other
+  read 78 and both strike at 1.5×; beam-on they read 27.3 and neither does — a duel between
+  them is decided by heading, which is the Order arguing with itself
+- Faction-locked: yes. Any navy could carry a gun that reads a number; only the Order has a
+  doctrine that says it must. "Something is speaking. It is discourteous not to reply"
+  ([factions.md](factions.md)), and the liturgy of the Answering is what this hull is a
+  transcription of
+
+What the wave refused, and why it is recorded. The first sketch for the Order was a hull that
+was near-silent until it fired, at a 95 burst. It cannot exist: `firingSigFor` discards any
+Hadron hull's own burst and substitutes the energy class's 10, which is SPEC and is why the
+Clarion and the Reciter both read theirs from `FACTION_COMBAT` instead of listing one. And a
+Knight entry's listed SIG is a *cone* figure, so 8/20 would average 3.6/9 over the compass —
+quieter than a Corvette running silent, and the opposite of §8's "a Knight hull is an ordinary
+hull with its loudness moved, not a quiet one". The first sketch for the Consortium was a
+hull-borne Spore Veil with a minus sign, and the clamp at 100 killed it: an amplifying aura is
+worth most against the quiet and nothing against the loud, so the navy that is always over 60
+would have paid nothing for a "symmetric" effect — and louder water is worth more to the better
+listener, which the Consortium is not.
+
 Design notes
 
 - Numbers are prototyping intent. Exact costs and timings are tuneable.

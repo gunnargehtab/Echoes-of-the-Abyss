@@ -234,11 +234,23 @@ describe('production does not deadlock', () => {
     };
   }
 
-  function produced(faction: Faction, nodules: number): UnitKind[] {
+  /**
+   * Hulls this commander queues over `observations` of standing still.
+   *
+   * The tick advances, and since #531 it has to. The composition cycle's first
+   * choice now bids into the arbitrated purse like every other want, so a
+   * commander that is *close* to its first choice holds rather than falling
+   * through — and a hold is a window measured in ticks. Handed the same tick
+   * forever, the window never elapses and the fallback never gets its turn,
+   * which would make this suite assert a deadlock that is really a duty cycle
+   * with its clock stopped.
+   */
+  function produced(faction: Faction, nodules: number, observations = 12): UnitKind[] {
     const commander = new AiCommander({ ...briefing(AiDifficulty.Veteran), faction });
     const built: UnitKind[] = [];
-    for (let i = 0; i < 12; i++) {
-      for (const command of commander.observe(broke(nodules))) {
+    for (let i = 0; i < observations; i++) {
+      const at = broke(nodules);
+      for (const command of commander.observe({ ...at, tick: at.tick + i * 12 })) {
         if (command.kind === 'produce') built.push(command.unit);
       }
     }
@@ -246,23 +258,41 @@ describe('production does not deadlock', () => {
   }
 
   it('buys its second choice when it cannot afford its first', () => {
-    // 200 nodules: a Cruiser is 420, the Order's Clarion 180. It must buy the
-    // Clarion — the doctrine's next entry since #529, where it used to be the
-    // Corvette at 120. Either way the claim is the same one: the second choice
-    // is the doctrine's, and it is priced under the purse.
-    const built = produced(Faction.Hadron, 200);
-    assert.ok(built.length > 0, 'a commander with money in hand must build something');
+    // 200 nodules: the Order's first choice at this army size is a 230-nodule
+    // Responsory (#531, where it was a 420-nodule Cruiser) and its Clarion is
+    // 180. It must buy the Clarion — the doctrine's next entry, priced under
+    // the purse.
+    //
+    // But not *immediately*, and that is the change #531 made rather than a
+    // weakening of this claim. 200 is over half the Responsory's price, so the
+    // composition bid opens a hold: the commander saves, correctly, and the
+    // fallback is what happens when the window closes. Run past `RUNG.SAVE_S`
+    // — 120 s, and an observation here is a fifth of a second — so the test
+    // reads the whole duty cycle instead of its first half.
+    const built = produced(Faction.Hadron, 200, 700);
+    assert.ok(built.length > 0, 'a commander with money in hand must eventually build something');
     assert.ok(
       built.every((kind) => statsFor(kind).cost <= 200),
       `it can only buy what it can pay for: ${built.map((k) => statsFor(k).name).join(', ')}`
     );
   });
 
+  it('holds for its first choice before it falls back', () => {
+    // The other half of that cycle, and the reason the test above had to grow
+    // a clock. Inside the window a commander two thirds of the way to its own
+    // hull buys nothing at all: the bank the yards would have spent on a
+    // cheaper hull climbs instead, which is the whole of #531.
+    assert.deepEqual(produced(Faction.Hadron, 200, 12), []);
+  });
+
   it('still takes its first choice when it can afford one', () => {
     // The guard on the test above: a fallback that fired unconditionally would
     // reduce every doctrine to whatever is cheapest, which is not a doctrine.
     const built = produced(Faction.Hadron, 5000);
-    assert.ok(built.includes(UnitKind.Cruiser), 'the Knights are supposed to field Cruisers');
+    assert.ok(
+      built.includes(UnitKind.Responsory),
+      'the Knights are supposed to field their own mid-tier'
+    );
   });
 
   it('builds nothing at all when it can afford nothing at all', () => {

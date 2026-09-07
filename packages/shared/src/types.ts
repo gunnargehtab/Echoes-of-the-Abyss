@@ -183,6 +183,10 @@ export enum UnitKind {
   Reed = 32,
   /** Commune, Slipway: a Spore Veil with a drive. */
   Bower = 33,
+  /** Consortium, Foundry: the gun that acquires by loudness. */
+  Derrick = 34,
+  /** Knights, Foundry: the gun paid by how loud its target is. */
+  Responsory = 35,
 }
 
 /** Prototype structure roster. Stats live in structures.ts. See docs/units.md. */

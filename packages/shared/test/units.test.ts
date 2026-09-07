@@ -266,6 +266,7 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
       UnitKind.Broadside,
       UnitKind.Furnace,
       UnitKind.Caisson,
+      UnitKind.Derrick,
     ],
     [Faction.Pelagia]: [
       UnitKind.Spinner,
@@ -289,6 +290,7 @@ describe('the rung’s roster — each navy’s own hulls (#461, #498)', () => {
       UnitKind.Herald,
       UnitKind.Lance,
       UnitKind.Tocsin,
+      UnitKind.Responsory,
     ],
   };
   const factions = [Faction.Bathyarch, Faction.Pelagia, Faction.Directorate, Faction.Hadron];

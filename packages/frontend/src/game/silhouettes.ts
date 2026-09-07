@@ -68,6 +68,8 @@ export const HULL_LENGTH_M: Record<UnitKind, number> = {
   [UnitKind.Caisson]: statsFor(UnitKind.Caisson).hullLengthM,
   [UnitKind.Reed]: statsFor(UnitKind.Reed).hullLengthM,
   [UnitKind.Bower]: statsFor(UnitKind.Bower).hullLengthM,
+  [UnitKind.Derrick]: statsFor(UnitKind.Derrick).hullLengthM,
+  [UnitKind.Responsory]: statsFor(UnitKind.Responsory).hullLengthM,
 };
 
 /**
@@ -829,6 +831,54 @@ export const HULL_OUTLINE: Record<UnitKind, number[][]> = {
     [0.28, -0.22],
     [0.38, -0.15],
     [0.46, -0.07],
+  ],
+  // A derrick, drawn: a blunt working hull with the lifting frame standing
+  // out to both beams amidships, which is the widest thing on it and the only
+  // part that is not plate. Industrial before it is naval, like the Caisson
+  // and the Freighter, and it reads apart from the Caisson by being widest in
+  // the middle where the Caisson is widest at its shoulders, and from the
+  // Harvester's scoop by having a bow at all.
+  [UnitKind.Derrick]: [
+    [0.5, 0.1],
+    [0.42, 0.2],
+    [0.2, 0.2],
+    [0.16, 0.31],
+    [-0.06, 0.31],
+    [-0.1, 0.2],
+    [-0.44, 0.2],
+    [-0.5, 0.14],
+    [-0.5, -0.14],
+    [-0.44, -0.2],
+    [-0.1, -0.2],
+    [-0.06, -0.31],
+    [0.16, -0.31],
+    [0.2, -0.2],
+    [0.42, -0.2],
+    [0.5, -0.1],
+  ],
+  // The Clarion's cone, answered: the same forward spine and the same fall
+  // away astern, because both are Order hulls and §8's shape is the faction's
+  // rather than one hull's — but broken amidships by a pair of resonator
+  // shoulders, the array that reads the other hull's loudness. Reads apart
+  // from the Clarion by that break and by being shorter and fuller, and from
+  // the Herald by having any beam at all.
+  [UnitKind.Responsory]: [
+    [0.5, 0.05],
+    [0.4, 0.13],
+    [0.14, 0.16],
+    [0.1, 0.26],
+    [-0.08, 0.26],
+    [-0.12, 0.16],
+    [-0.34, 0.14],
+    [-0.5, 0.07],
+    [-0.5, -0.07],
+    [-0.34, -0.14],
+    [-0.12, -0.16],
+    [-0.08, -0.26],
+    [0.1, -0.26],
+    [0.14, -0.16],
+    [0.4, -0.13],
+    [0.5, -0.05],
   ],
 };
 

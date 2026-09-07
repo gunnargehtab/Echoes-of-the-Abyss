@@ -94,6 +94,23 @@ interface WeaponProfile {
   rangeM: number;
   cooldownS: number;
   firingSig: number;
+  /**
+   * Auto-acquire takes the loudest live enemy in range rather than the nearest
+   * (docs/systems-combat.md §11.5, the Derrick).
+   *
+   * On the profile rather than read from the stat block at the loop, because
+   * the loop runs once per candidate per shooter and this is a property of the
+   * shooter: hoisting it keeps one branch out of the pair test that
+   * `stepWork.ts` counts.
+   */
+  byLoudness: boolean;
+  /**
+   * Perceived loudness above which this weapon's damage is multiplied
+   * (§11.5, the Responsory), or `undefined` for every other gun in the game.
+   */
+  loudTargetSig?: number;
+  /** The multiplier above that threshold; 1 where there is no threshold. */
+  loudTargetMultiplier: number;
 }
 
 /**
@@ -126,6 +143,11 @@ function profileFor(world: SimWorld, eid: number): WeaponProfile {
       rangeM: stats.attackRangeM,
       cooldownS: stats.attackCooldownS,
       firingSig: firingSigFor(faction, stats.sigFiringBurst),
+      // The two rules of the mid-tier (docs/systems-combat.md §11.5). Both are
+      // per-hull and absent everywhere else, so every other gun is untouched.
+      byLoudness: stats.acquiresByLoudness === true,
+      loudTargetSig: stats.loudTargetSigThreshold,
+      loudTargetMultiplier: stats.loudTargetDamageMultiplier ?? 1,
     };
   }
   const stats = structureStatsFor(Structure.kind[eid] as StructureKind);
@@ -137,6 +159,10 @@ function profileFor(world: SimWorld, eid: number): WeaponProfile {
     rangeM: stats.attackRangeM ?? 0,
     cooldownS: stats.attackCooldownS ?? 1,
     firingSig: firingSigFor(faction, stats.sigFiringBurst ?? 0),
+    // No structure in the roster carries either mid-tier rule: a turret is a
+    // Corvette bolted down, and both rules are a hull's argument.
+    byLoudness: false,
+    loudTargetMultiplier: 1,
   };
 }
 
@@ -307,6 +333,11 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
 
       if (target === 0 && !silent && !busy) {
         let bestDistance = profile.rangeM;
+        // Below every hull's SIG floor, so the first candidate that survives
+        // the filters always beats it — a Derrick with one silent enemy in
+        // range still shoots it.
+        let bestSig = -1;
+        const byLoudness = profile.byLoudness;
         for (let j = 0; j < candidates.length; j++) {
           const other = candidates[j]!;
           // Counted before the filters, because the walk itself is the cost
@@ -350,7 +381,26 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
             continue;
           }
           const d = engagementRangeM(eid, other);
-          if (d <= bestDistance) {
+          // The Derrick's rule (docs/systems-combat.md §11.5): the loudest in
+          // range, not the nearest. The range bound and every filter above are
+          // untouched — what changes is only which of the survivors wins.
+          //
+          // `Acoustic.sig` and not the hull's listed figure, because listed is
+          // not what anything is: the posture chain, a hold's load, a Veil's
+          // cut and the Klaxon's own line are all already in it by the time
+          // this runs (`acousticsSystem` writes it every tick, before this).
+          // So a hull that just fired is loud here, and one running silent is
+          // not, which is the whole of what the gun is for.
+          //
+          // Ties go to the lower entity id, as the distance rule's `<=` does —
+          // ordered from the same query, so a replay agrees with itself.
+          if (byLoudness) {
+            const sig = Acoustic.sig[other]!;
+            if (sig > bestSig) {
+              bestSig = sig;
+              target = other;
+            }
+          } else if (d <= bestDistance) {
             bestDistance = d;
             target = other;
           }
@@ -436,9 +486,24 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
     // One weapon, two numbers, chosen by what it hit (§9). A wall and a hull
     // are different target classes and always were; until wave 4 no weapon had
     // an opinion about which it was shooting.
+    // The Responsory's rule (docs/systems-combat.md §11.5): paid by how loud
+    // the target is. `Acoustic.sig` again, and for the same reason the
+    // Derrick reads it — it is the loudness the shooter actually hears, so a
+    // Veil, the layer and terrain PF are all defences against this gun rather
+    // than a stat the other player simply loses to.
+    //
+    // Structures are in it deliberately. A refinery hums at 55-75 and a
+    // running foundry at 55, so a yard is exactly the kind of loud thing this
+    // gun is written to punish, and exempting it would make the one rule paid
+    // by loudness blind to the loudest things on the map.
+    const loudBonus =
+      profile.loudTargetSig !== undefined && Acoustic.sig[target]! > profile.loudTargetSig
+        ? profile.loudTargetMultiplier
+        : 1;
     Health.hp[target] =
       Health.hp[target]! -
-      (hasComponent(world, Structure, target) ? profile.structureDamage : profile.damage);
+      (hasComponent(world, Structure, target) ? profile.structureDamage : profile.damage) *
+        loudBonus;
     // Damage is a sound: a creature that gave hull is told what shot it, and
     // the Hollow answers a gun that outranges its trigger (`wound`, #353).
     wound(world, target, eid);

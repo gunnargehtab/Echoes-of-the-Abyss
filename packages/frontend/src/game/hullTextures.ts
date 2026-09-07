@@ -117,6 +117,13 @@ const HULL_ART_URL: Record<UnitKind, string> = {
   [UnitKind.Caisson]: cruiserUrl,
   [UnitKind.Reed]: raiderUrl,
   [UnitKind.Bower]: shadowUrl,
+  // The mid-tier (#531), on the class each hull's tonnage and navy put it in.
+  // The Derrick is a Consortium warship heavier than the Caisson and lighter
+  // than the Bulwark, so the same cruiser plate both of those carry; the
+  // Responsory is an Order gun hull on the Clarion's own class, which is
+  // where every Knight hull that is neither a scout nor a colossus sits.
+  [UnitKind.Derrick]: cruiserUrl,
+  [UnitKind.Responsory]: cruiserUrl,
 };
 
 /** Sprite resolution. 3 px per world metre keeps even the scout's hull crisp. */

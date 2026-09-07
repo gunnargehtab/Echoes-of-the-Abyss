@@ -677,6 +677,11 @@ const UNIT_SHORT: Record<UnitKind, string> = {
   [UnitKind.Caisson]: 'CSN',
   [UnitKind.Reed]: 'REE',
   [UnitKind.Bower]: 'BWR',
+  // The mid-tier (#531). 'DRK' rather than 'DER', which reads as a fragment;
+  // 'RSP' rather than 'RES', which is the crystal's own three letters on a
+  // bar where a resource abbreviation already means something else.
+  [UnitKind.Derrick]: 'DRK',
+  [UnitKind.Responsory]: 'RSP',
 };
 
 /** Compact structure names for the build buttons. */

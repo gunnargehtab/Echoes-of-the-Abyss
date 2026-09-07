@@ -464,6 +464,10 @@ them* — a tuning change that leaves these bands is a bug.
 | Corvette kills Caisson, guns alone | 18–22 s — a third more plate is a third longer to chew through |
 | Reed kills Corvette | 12–15 s — the same gun, so the same duel; what the Reed changed is where it happens |
 | Corvette kills Reed | ≤ 11 s — thinner by a third, and the fight it did not choose is over first |
+| Derrick kills Corvette | 9–10 s — a mid-tier gun, between the Cruiser's 8 and the Caisson's 13, and the Klaxon's +12% is in it because the hull is over 60 the moment it moves |
+| Corvette kills Derrick, guns alone | 34–38 s — *nearly* the anchor floor and deliberately under it: a mid-tier is what a line hull cannot chew through in a hurry, not what it cannot chew through at all |
+| Responsory kills Corvette | 12–14 s — the Clarion's own rate. Against anything under the line this hull is its navy's line hull with a longer reach |
+| Responsory kills Caisson | 12–14 s — **the same band**, against a third more plate, because a Caisson is never under 60. §11.5's rule stated as the one number that shows it: being loud costs exactly the plate the Klaxon bought |
 | Sentinel Turret kills Corvette | ~18 s — a turret deters and punishes; it does not delete |
 | Torpedo vs Corvette | survives one, wounded; dies to two |
 | Torpedo vs Cruiser | survives three, dies to four |
@@ -595,6 +599,51 @@ argument about sound or depth, per the editing rules.
   Knight that is shooting at you is a Knight you can hear, and the reverse is the whole kit. Standing Wave corridors ([systems-echo.md](systems-echo.md)
   §8) are their fixed kill-lines, harming everyone equally, including them. Fights the
   Knights arranged are massacres; fights they didn't are losses they cannot replace.
+
+---
+
+## 11.5 Guns that read SIG — the mid-tier
+
+Acoustic Signature decides everything else in this game: detection radius, resolution tier,
+fauna aggro, how fast a solution locks (§5, [systems-echo.md](systems-echo.md) §2). Until the
+mid-tier hulls of #531, **not one gun in the roster was aimed by it.** Every weapon reads
+distance (auto-acquire takes the nearest live enemy in range) or identity (an ordered
+target), and the two things that *do* read loudness are not guns a player builds: a torpedo
+seeker takes the loudest emitter in its cone (§5), and a committed creature "attacks the
+loudest entity in range, not the nearest" ([bestiary.md](bestiary.md) §2).
+
+Two hulls change that, one rule each, and the rules are deliberately different halves of the
+same sentence — one picks *whom* to shoot, the other sets *how hard*.
+
+**Acquiring by ear — the Consortium's Derrick.** SPEC. A hull carrying this rule auto-acquires
+the **loudest** live enemy inside its weapon range rather than the nearest. The range bound
+and every existing filter are unchanged: ordnance is never auto-acquired, an authored static
+emitter is not a target, and ambient fauna are excluded exactly as they are for every other
+gun. An ordered target still overrides, because an order always does.
+
+What it costs the other player is the thing the whole design is about. Firing is +25.
+Breaking silence is +40. A descent floors at 72. A harvester on Overburden sits at 68 and a
+refinery hums at 55–75. So a Derrick's shell goes to the hull that just fired, the one that
+just crossed the layer, the one that is mining — and never to the scout closest to it. It is
+the one gun in the game that a player can *decline* by being quiet, and the Klaxon is the
+navy that should own it: "a Consortium fight happens next to the Consortium, on purpose."
+
+**Paid by the target — the Order's Responsory.** SPEC. Damage is multiplied by **1.5 against a
+target whose perceived loudness is over 60**, and is ordinary against anything under it. The
+threshold is the Klaxon's own (§11), read from the other side of the water: the Consortium's
++12% is the only rule in the game paid by the *shooter's* SIG, and this is the first paid by
+the target's.
+
+Perceived, not listed — the figure the shooter hears, after the Spore Veil's cut, the
+thermocline and terrain PF, which is what makes a Veil a defence against it and a Baffle
+Barge a place to stand. Until now loudness has only ever cost you information; this is the
+first hull that makes it cost hull, and it charges for exactly the acts the bible already
+prices as strong. The Order's doctrine line is the liturgy of the Answering
+([factions.md](factions.md)), and this is that sentence as arithmetic.
+
+Neither rule is a debuff and neither is a detection change: both read `Acoustic.sig` at the
+moment of the shot and write nothing back to it. A hull under Silent Running is quieter to
+both of them for the same reason it is quieter to everything else.
 
 ---
 
