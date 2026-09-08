@@ -339,3 +339,54 @@ export function ambientBandsFor(species: FaunaSpecies): readonly AmbientBand[] {
   const own: AmbientBand = { workingDepthM: stats.workingDepthM, seedSpreadM: stats.seedSpreadM };
   return species === FaunaSpecies.Tetherjelly ? [own, TETHERJELLY_KELP_BAND] : [own];
 }
+
+/**
+ * What a full map holds — docs/bestiary.md §4, and the ceiling `seedFauna`
+ * fills exactly.
+ *
+ * Here rather than beside the seeder because it is read three ways now: the
+ * seeder places it, `Match.repopulate` refills toward it (docs/bestiary.md
+ * §6), and `MEAN_RENDERED_BIOMASS` below weighs it to say what a region's
+ * health is worth per Biomass. Three copies of one table would be three
+ * chances for the map, the Drift and the economy to disagree about what the
+ * water holds.
+ */
+export const DRIFT_ROSTER: readonly { species: FaunaSpecies; count: number }[] = [
+  // A herd and a couple of packs, then the colossus.
+  { species: FaunaSpecies.Ashgrazer, count: 16 },
+  { species: FaunaSpecies.Draymaw, count: 15 },
+  { species: FaunaSpecies.Sounder, count: 1 },
+  // Swarms, each one entity (docs/bestiary.md §4 — "20-40 individuals treated
+  // as one entity"). Scattered anywhere: the Rasp's habitat is a verb, and
+  // where things will die is not knowable at seed time.
+  { species: FaunaSpecies.Rasp, count: 3 },
+  // Shoals, each one entity, spread across the Shelf band by spawnFauna's
+  // seeding — §6's Healthy row wants "Lampfry tells everywhere".
+  { species: FaunaSpecies.Lampfry, count: 6 },
+  // Clusters, each one entity, in the duct band. Their masking is a PF
+  // modifier rather than behaviour, so the grid is rebuilt once they exist.
+  { species: FaunaSpecies.Tetherjelly, count: 5 },
+  // Ambushers, solitary, on ground deep enough to be trench country. Last,
+  // because the roster fills the cap exactly and the predator that holds still
+  // is the one a thin map misses least.
+  { species: FaunaSpecies.Hollow, count: 2 },
+];
+
+/**
+ * What one rendered creature pays, averaged over the map's own seeding —
+ * about 19 Biomass, from 916 across 48 animals.
+ *
+ * Weighted by the roster rather than by the species list, because the two
+ * give wildly different answers and only one of them is about a match: the
+ * Sounder's 260 is a third of the map's whole Biomass and dies perhaps once,
+ * while sixteen Ashgrazers at 12 are what a fleet actually renders. The
+ * Lampfry's zero is counted too — a shoal killed pays nothing and still costs
+ * the region a creature, which is exactly the sort of thing an unweighted
+ * average would flatter away.
+ *
+ * Read by `FLORA.HEALTH_PER_BIOMASS` to price what harvesting a bed costs the
+ * water it stands in (docs/systems-flora.md §3).
+ */
+export const MEAN_RENDERED_BIOMASS =
+  DRIFT_ROSTER.reduce((sum, entry) => sum + FAUNA_STATS[entry.species].biomass * entry.count, 0) /
+  DRIFT_ROSTER.reduce((sum, entry) => sum + entry.count, 0);

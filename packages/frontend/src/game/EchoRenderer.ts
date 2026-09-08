@@ -704,6 +704,7 @@ const STRUCTURE_SHORT: Record<StructureKind, string> = {
   [StructureKind.SoundingSpire]: 'SPI',
   [StructureKind.SporeVeil]: 'VEI',
   [StructureKind.Slipway]: 'SLP',
+  [StructureKind.BioReactor]: 'BIO',
 };
 
 /** One command-bar button: screen-space bounds plus what pressing it does. */
@@ -2575,6 +2576,7 @@ export class EchoRenderer {
         StructureKind.Foundry,
         StructureKind.SentinelTurret,
         StructureKind.VentTap,
+        StructureKind.BioReactor,
         StructureKind.Slipway,
       ];
       const signature = FACTION_STRUCTURE[this.faction];

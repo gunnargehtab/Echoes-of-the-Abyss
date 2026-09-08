@@ -127,8 +127,11 @@ const UNIT_SLUG: Record<UnitKind, string> = {
   [UnitKind.Responsory]: 'responsory',
 };
 
-/** Every structure kind has an approved model; the Partial stays for the
- * decode-failure path and the next kind the docs design. */
+/** Every structure kind but one has an approved model; the Partial is what
+ * the exception rides on. The Bio-Reactor (#557) has none yet, so it has no
+ * slug: `slugFor` returns null, and `structureTextures.ts` gives it the
+ * procedural architecture bake, which is gate 1's sanctioned state until a
+ * model clears intake. */
 const STRUCTURE_SLUG: Partial<Record<StructureKind, string>> = {
   [StructureKind.Bastion]: 'bastion',
   [StructureKind.Refinery]: 'refinery',

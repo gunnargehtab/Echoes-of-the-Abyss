@@ -302,6 +302,39 @@ export const STRUCTURE_STATS: Record<StructureKind, StructureStats> = {
     drawCapacity: THERMAL_DRAW.CAPACITY_PER_TAP,
     requiresBiome: Biome.ThermalVein,
   },
+  [StructureKind.BioReactor]: {
+    kind: StructureKind.BioReactor,
+    name: 'Bio-Reactor',
+    // TUNABLE — a reactor with nothing to render is machinery ticking over,
+    // pitched at the Foundry's idle hum. It is the *working* figure that is
+    // spec'd, and the gap between the two is the tell: a reactor going quiet
+    // is a bed that has been stripped bare.
+    sigIdle: 25,
+    // SPEC — docs/systems-flora.md §2 and §7: "sustained SIG 50 while
+    // running", inside the 45-60 band docs/economy.md §2 has always specified
+    // for a harvest, and beside the Refinery in the register of loud
+    // permanent things you own.
+    sigActive: 50,
+    // Plant, not a listening post — the Vent Tap's figure, for the same
+    // reason.
+    hyd: 20,
+    // Deliberately fragile, exactly as the tap is: an income planted in the
+    // one biome built for hiding should be a raid target, and it spends its
+    // own concealment as it runs.
+    maxHp: 900,
+    // TUNABLE — the tap's price. The two are the same shape of decision: a
+    // claim on a piece of ground that pays while you hold it.
+    cost: 250,
+    buildTimeS: 35,
+    radiusM: 90,
+    acceptsDeposits: false,
+    constructible: true,
+    // No Thermal Draw demand, deliberately. §2 prices a reactor in *cover* —
+    // it eats the canopy it stands in — and a second dependency would make
+    // the first flora structure a two-decision purchase before the balance
+    // harness has ever read the first. TUNABLE, and easy to add later.
+    requiresBiome: Biome.KelpForest,
+  },
 };
 
 /**
