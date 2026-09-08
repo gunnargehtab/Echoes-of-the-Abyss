@@ -10,7 +10,7 @@
  * prototype numbers in the same spirit as units.ts.
  */
 
-import { THERMAL_DRAW } from './constants.js';
+import { COMMUNE_ECONOMY, THERMAL_DRAW } from './constants.js';
 import { Biome, Faction, StructureKind, UnitKind } from './types.js';
 
 export interface StructureStats {
@@ -351,6 +351,31 @@ export const FACTION_STRUCTURE: Partial<Record<Faction, StructureKind>> = {
 
 export function structureStatsFor(kind: StructureKind): StructureStats {
   return STRUCTURE_STATS[kind];
+}
+
+/**
+ * What a commissioned structure emits, for the navy that owns it —
+ * docs/economy.md §4 and §6.
+ *
+ * The roster is faction-blind and stays that way; this is the one place a
+ * doctrine bends it, and it bends exactly one row. §6 gives the Commune
+ * "organic refineries that run at 30–40 instead of 55–75", which is the other
+ * half of the sentence their harvest figure opens: the navy whose income is
+ * quiet is quiet at both ends of the chain, and a 65-SIG refinery standing
+ * over a Commune plateau undid the whole doctrine at the loudest permanent
+ * thing they own.
+ *
+ * Only the refinery. §6 names no other structure, and inventing a general
+ * "Commune buildings are quieter" rule here would be a doctrine change
+ * wearing a transcription's clothes — the objection the flora economy raised
+ * against giving the bio-reactor a second faction rate.
+ */
+export function structureSigFor(faction: Faction, kind: StructureKind, active: boolean): number {
+  if (faction === Faction.Pelagia && kind === StructureKind.Refinery) {
+    return COMMUNE_ECONOMY.REFINERY_SIG;
+  }
+  const stats = STRUCTURE_STATS[kind];
+  return active ? stats.sigActive : stats.sigIdle;
 }
 
 /**

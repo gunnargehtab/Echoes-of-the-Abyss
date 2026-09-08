@@ -243,8 +243,10 @@ should, and the reason is in the code rather than in the prose:
   crop, and the yield it pays is bounded by regrowth. That is the change that makes it a
   *share* rather than a subsidy, and it is what stops the Commune having two economies.
 - **Their nodules become ordinary.** In skirmish they already are. What §6 promises them and
-  the sim has never given them — harvest SIG 18 against everyone else's 50, organic refineries
-  at 30–40 instead of 55–75 — stays owed either way; this document does not pay that debt.
+  the sim had never given them — harvest SIG 18 against everyone else's 50, organic refineries
+  at 30–40 instead of 55–75 — was owed either way and this document did not pay it; it was
+  paid separately in #570, once the fold made "their nodules come from ordinary extraction,
+  *quietly*" a sentence with a missing half.
 
 [mission-tend.md](mission-tend.md) is the one live consumer and the first thing to re-read
 when this is built. Its §13 row is where bloom-share was specified, and its objectives are

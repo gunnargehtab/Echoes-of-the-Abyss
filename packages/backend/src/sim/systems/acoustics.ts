@@ -13,14 +13,14 @@ import {
   CONSTRUCTION,
   DEPTH,
   ENGINE_OFF,
-  HARVEST_THROTTLE,
+  Faction,
   ORDNANCE,
   REFIT_STATS,
-  RESOURCE,
   ResourceKind,
   SILENT_RUNNING,
+  harvestSigFor,
   statsFor,
-  structureStatsFor,
+  structureSigFor,
   type HarvestThrottle,
   type StructureKind,
   type UnitKind,
@@ -132,12 +132,16 @@ export function acousticsSystem(world: SimWorld): void {
     } else if (hasComponent(world, Harvester, eid) && Harvester.mode[eid] === HarvestMode.Mining) {
       // Mining loudness follows the throttle, not the hull — the economy's
       // central decision surface (docs/economy.md §3) — plus whatever the
-      // resource itself costs to cut. Crystal carries a premium, which puts
-      // Standard-throttle crystal work in the doc's 60-70 band (§2) without
-      // taking the throttle decision away from the player.
-      sig =
-        HARVEST_THROTTLE[Harvester.throttle[eid] as HarvestThrottle].sig +
-        RESOURCE[Harvester.cargoKind[eid] as ResourceKind].miningSigPremium;
+      // resource itself costs to cut, and scaled by whose gear is doing the
+      // cutting. Crystal carries a premium, which puts Standard-throttle
+      // crystal work in the doc's 60-70 band (§2) without taking the throttle
+      // decision away from the player; the Commune's own figure is §6's 18,
+      // and `harvestSigFor` owns how the two compose.
+      sig = harvestSigFor(
+        Owner.faction[eid] as Faction,
+        Harvester.throttle[eid] as HarvestThrottle,
+        Harvester.cargoKind[eid] as ResourceKind
+      );
     } else {
       const speed = Math.hypot(Velocity.x[eid]!, Velocity.y[eid]!);
       sig = speed > MOVING_EPSILON ? stats.sigCruise : stats.sigIdle;
@@ -270,7 +274,6 @@ export function acousticsSystem(world: SimWorld): void {
     if (hasComponent(world, UnderConstruction, eid)) {
       sig = CONSTRUCTION.SITE_SIG;
     } else {
-      const stats = structureStatsFor(Structure.kind[eid] as StructureKind);
       // "Active" is per structure kind: a foundry is loud while its line
       // runs; a Sounding Spire is loud while its depth grant is load-bearing
       // (world.spireActive, written by the auras system this tick).
@@ -285,7 +288,15 @@ export function acousticsSystem(world: SimWorld): void {
       // the tell that it has eaten its bed: a reactor going quiet is a
       // stripped field (docs/systems-flora.md §2).
       const rendering = world.reactorActive.has(eid);
-      sig = producing || projecting || rendering ? stats.sigActive : stats.sigIdle;
+      // Through the roster's own accessor rather than off the stats block, so
+      // the one row a doctrine bends — the Commune's organic refinery, at
+      // docs/economy.md §6's 30-40 rather than the roster's 65 — is bent in
+      // the same place for every reader.
+      sig = structureSigFor(
+        Owner.faction[eid] as Faction,
+        Structure.kind[eid] as StructureKind,
+        producing || projecting || rendering
+      );
     }
     sig = applySpikeDecay(world, eid, sig);
     sig *= Acoustic.sigFactor[eid]! || 1;

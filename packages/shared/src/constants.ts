@@ -2185,6 +2185,73 @@ export const HARVEST_THROTTLE: Record<HarvestThrottle, { cargoMultiplier: number
   [HarvestThrottle.Overburden]: { cargoMultiplier: 1.4, sig: 68 },
 };
 
+/**
+ * The Commune's quiet economy — docs/economy.md §6.
+ *
+ * §6 opens their section with two numbers the simulation has never had:
+ * "Harvest SIG 18 where others sit at 50, and organic refineries that run at
+ * 30–40 instead of 55–75." Everything else about the Commune was built — the
+ * kelp they move freely through, the bloom-share anchored to exposed ground,
+ * the bed it is paid out of — while the one figure that makes them *the quiet
+ * navy while working* was the roster's, same as anybody's.
+ *
+ * It is a doctrine number rather than a hull stat on purpose, and
+ * docs/mission-tend.md §3 says why: their answer to "how loud should the work
+ * be" is not a lever, it is "a number they bred into the equipment". So it
+ * scales what the gear emits and leaves the throttle a decision surface —
+ * see `harvestSigFor`.
+ */
+export const COMMUNE_ECONOMY = {
+  /**
+   * SPEC — §6's 18, the figure everyone else harvests at fifty against
+   * (docs/mission-tend.md §3). What a Commune hull working a node at Standard
+   * emits, and the anchor the whole curve is scaled to.
+   */
+  HARVEST_SIG: 18,
+  /**
+   * SPEC — §6's "organic refineries that run at 30–40", at the mid-point the
+   * roster's own Refinery takes from its 55–75 band. One figure rather than
+   * two because the Refinery is 65 idle *and* active: "a refinery hums
+   * forever; that is its identity" (docs/economy.md §4).
+   */
+  REFINERY_SIG: 35,
+} as const;
+
+/**
+ * What a hull working a node emits — docs/economy.md §3 and §6.
+ *
+ * The one statement of it, read by acoustics and by the AI commander's model
+ * of its own haulers, because a commander that mis-hears itself throttles at
+ * the wrong moments.
+ *
+ * Two things compose here and only one of them is the navy's:
+ *
+ * - **The throttle** is the gear running, and the Commune's gear is quieter.
+ *   Scaled rather than replaced, so Trickle stays quieter than Standard and
+ *   Overburden louder: their doctrine moves the whole curve down, it does not
+ *   flatten it into one figure.
+ * - **The resource premium** is the rock coming apart, and rock does not care
+ *   whose dredge is on it. Added after the scale, so a Commune hull cutting
+ *   crystal at Standard is 18 + 20 rather than a quieter 26 — quieter gear,
+ *   same loud rock.
+ *
+ * The ratio is derived at the call rather than stored, because the balance
+ * CLI can `--set HARVEST_THROTTLE.Standard.sig` and a cached multiplier would
+ * quietly stop meaning "the Commune's 18".
+ */
+export function harvestSigFor(
+  faction: Faction,
+  throttle: HarvestThrottle,
+  kind: ResourceKind
+): number {
+  const gear = HARVEST_THROTTLE[throttle].sig;
+  const scaled =
+    faction === Faction.Pelagia
+      ? gear * (COMMUNE_ECONOMY.HARVEST_SIG / HARVEST_THROTTLE[HarvestThrottle.Standard].sig)
+      : gear;
+  return scaled + RESOURCE[kind].miningSigPremium;
+}
+
 /** Base building. Construction is loud — SPEC in kind (docs/systems-echo.md §2), TUNABLE in number. */
 /**
  * Berths — the population cap (docs/economy.md §10). SPEC throughout.
