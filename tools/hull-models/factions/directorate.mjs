@@ -247,10 +247,16 @@ export function listeningDome(root, { red, violet, black }, opts) {
  * each in its socket, canted outward — and a tip spike at each end. `port`
  * and `starboard` are the rank sizes and must differ: the Precentor's port
  * rank is one longer, and a hull whose ranks match is not this navy's.
+ *
+ * The tip spike stands *beyond* `halfSpan` rather than straddling it, so the
+ * array's span is the boom plus both tips: the Precentor's 36 m boom and its
+ * two 4 m spikes are the 44 m the prompt block calls for, and seating the
+ * spikes on the boom's end instead would cost the hull 4 m of beam — enough
+ * to move a plan outline, on a hull whose plan is a cross.
  */
 export function arrayBoom(root, { steel, black, red }, opts) {
   const { x, y, halfSpan, r = 1.3, port = 6, starboard = 5, z0 = 5, pitch = 2.6 } = opts;
-  const { lengths = [6, 7.5], hr = 0.9, cant = 0.25 } = opts;
+  const { lengths = [6, 7.5], hr = 0.9, cant = 0.25, tip = 4 } = opts;
   if (port === starboard)
     throw new Error(`array_boom: ${port} hydrophones a side — the ranks never match`);
   add(root, 'array_boom', cyl(r, r, halfSpan * 2, 8), steel, [x, y, 0], [Math.PI / 2, 0, 0]);
@@ -267,7 +273,11 @@ export function arrayBoom(root, { steel, black, red }, opts) {
       ]);
       add(root, `hydrophone_socket_${side}${j}`, cyl(0.8, 0.8, 1.2, 6), steel, [x, y + 0.9, z]);
     }
-    add(root, `boom_tip_${side}`, spike(r, 4), black, [x, y, sgn * halfSpan], [sgn * Math.PI / 2, 0, 0]);
+    add(root, `boom_tip_${side}`, spike(r, tip), black, [x, y, sgn * (halfSpan + tip / 2)], [
+      sgn * Math.PI / 2,
+      0,
+      0,
+    ]);
   });
 }
 
@@ -281,11 +291,15 @@ export function spineGun(root, { steel, black }, { x, y, z, r = 0.7, length = 9 
  * The scoop bow: a plate from a plan outline with a steel lip over it, a
  * mandible each side converging on the tip, and the gullet — a lit patch
  * lying flat in the scoop's mouth, which is the loud thing on the Dredge.
+ *
+ * `bevel` chamfers the scoop's rim (kit.mjs `plan`), which the Dredge's has and
+ * its lip does not: a mouth that eats the seabed is rounded where it meets it,
+ * and the lip over it is sheet steel with an edge.
  */
 export function scoopBow(root, { red, steel, black, gullet }, opts) {
-  const { outline, y, depth, lip, mandibles, gullet: g } = opts;
-  add(root, 'scoop', plan(outline, depth), red, [0, y, 0]);
-  if (lip) add(root, 'scoop_lip', plan(lip.outline, lip.depth), steel, [0, lip.y, 0]);
+  const { outline, y, depth, bevel = 0, lip, mandibles, gullet: g } = opts;
+  add(root, 'scoop', plan(outline, depth, bevel), red, [0, y, 0]);
+  if (lip) add(root, 'scoop_lip', plan(lip.outline, lip.depth, lip.bevel ?? 0), steel, [0, lip.y, 0]);
   if (mandibles) {
     const { x, y: my = 0.5, z, r = 2.2, length = 16, pinch = 0.12 } = mandibles;
     bothSides((side, sgn) => {
@@ -306,12 +320,19 @@ export function claw(root, { steel, black }, opts) {
   const sgn = side === 'p' ? 1 : -1;
   const ax = x + arm.length / 2;
   add(root, 'claw_arm', cyl(arm.r, arm.r, arm.length, 8), steel, [ax, y, z], [0, 0, -Math.PI / 2]);
+  // The fold comes *inboard*, back toward the hull. Written down it bent the
+  // other way, which put the forearm outboard of the arm and made the claw the
+  // widest thing on the Dredge — 2.7 m of beam that is not in the approved
+  // model, and a claw that opens rather than folds.
   const fx = x + arm.length + (fore.length / 2) * Math.cos(fore.bend);
-  const fz = z + sgn * (fore.length / 2) * Math.sin(fore.bend) * 0.3;
-  add(root, 'claw_forearm', cyl(fore.r, fore.r, fore.length, 8), steel, [fx, y + 1, fz], [0, sgn * fore.bend, -Math.PI / 2]);
-  const tx = x + arm.length + fore.length * 0.55;
-  add(root, 'claw_tip_a', cyl(fore.r, 0, 9, 5), black, [tx, y + 1.5, fz], [0, sgn * 0.2, -Math.PI / 2]);
-  add(root, 'claw_tip_b', cyl(fore.r * 0.8, 0, 7, 5), black, [tx - 2, y + 1.5, fz - sgn * 5], [0, -sgn * 0.3, -Math.PI / 2]);
+  const fz = z - sgn * (fore.length / 2) * Math.sin(fore.bend) * 0.3;
+  add(root, 'claw_forearm', cyl(fore.r, fore.r, fore.length, 8), steel, [fx, y + 1, fz], [0, -sgn * fore.bend, -Math.PI / 2]);
+  // The tips close at the far end of the forearm, not half way along it. The
+  // written-down 0.55 buried both of them inside the forearm — a claw that
+  // cannot close — which is the sort of thing only building the hull finds.
+  const tx = x + arm.length + fore.length * Math.cos(fore.bend) * 0.95;
+  add(root, 'claw_tip_a', cyl(fore.r, 0, 9, 5), black, [tx, y + 1.5, fz], [0, -sgn * 0.2, -Math.PI / 2]);
+  add(root, 'claw_tip_b', cyl(fore.r * 0.8, 0, 7, 5), black, [tx - 2, y + 1.5, fz - sgn * 5], [0, sgn * 0.3, -Math.PI / 2]);
 }
 
 /** The dredge boom off the other beam: a spar along the hull with teeth stepped along it. */
