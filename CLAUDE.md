@@ -72,13 +72,15 @@ packages/backend   Colyseus server. Owns the simulation. Node + esbuild bundle.
 packages/frontend  React shell + two-canvas renderer: three.js conn view (the
                    world) under a transparent PixiJS HUD, one shared camera
                    (EchoRenderer.setConn). A terminal, not a simulation.
-tools/hull-models  Hull GLBs authored as three.js scenes: kit.mjs (buildability),
-                   factions/*.mjs (one navy's shape language), hulls/*.mjs (one
-                   hull). Not an npm workspace; run a hull directly and it writes
-                   into docs/concept-art/models/, which then goes through
-                   hull-intake like any other export. check.mjs rebuilds every
-                   hull in a scratch directory and fails on any drift from the
-                   committed GLB; CI runs it in the build job.
+tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs
+                   (buildability), factions/*.mjs (one navy's shape language),
+                   hulls/*.mjs (one hull), structures/*.mjs (one structure kind
+                   in one navy). Not an npm workspace; run a script directly and
+                   it writes into docs/concept-art/models/, which then goes
+                   through hull-intake like any other export. check.mjs rebuilds
+                   every script in both directories in a scratch directory and
+                   fails on any drift from the committed GLB; CI runs it in the
+                   build job.
 tools/hull-maps    The committed outputs of the approved models: build.mjs bakes
                    the sprite maps (Chromium), outlines.mjs writes each modelled
                    kind's plan outline into packages/frontend/src/game/

@@ -1,5 +1,5 @@
 /**
- * The round-trip check: every hull script rebuilds, and the build must be
+ * The round-trip check: every model script rebuilds, and the build must be
  * the committed GLB; every modelled kind's plan outline regenerates, and it
  * must be the committed TypeScript.
  *
@@ -8,7 +8,10 @@
  * A script and its binary can disagree silently — edit a faction module,
  * forget to re-run one of its hulls, and nothing downstream notices, because
  * intake and the map bake read the file and never the script. This is what
- * notices. Each hull runs as its own process with `HULL_MODELS_OUT` pointing
+ * notices. It walks both script directories — `hulls/` and, since #553,
+ * `structures/` — because a faction module now feeds both, and a structure
+ * script left un-run is exactly the silent disagreement this exists to
+ * catch. Each script runs as its own process with `HULL_MODELS_OUT` pointing
  * at a scratch directory (kit.mjs `outputPath`), so the committed files are
  * never touched; the scratch GLB and the committed one are then read back
  * (glb.mjs) and compared part by part — name, material, triangle count and
@@ -68,24 +71,27 @@ export function diffParts(built, committed) {
 const scratch = mkdtempSync(join(tmpdir(), 'hull-models-'));
 let failed = 0;
 try {
-  const hulls = readdirSync(join(here, 'hulls'))
-    .filter((f) => f.endsWith('.mjs'))
-    .sort();
-  for (const script of hulls) {
+  const scripts = ['hulls', 'structures'].flatMap((dir) =>
+    readdirSync(join(here, dir))
+      .filter((f) => f.endsWith('.mjs'))
+      .sort()
+      .map((file) => [dir, file])
+  );
+  for (const [dir, script] of scripts) {
     const out = join(scratch, script.replace(/\.mjs$/, ''));
-    const run = spawnSync('node', [join(here, 'hulls', script)], {
+    const run = spawnSync('node', [join(here, dir, script)], {
       env: { ...process.env, HULL_MODELS_OUT: out },
       encoding: 'utf8',
     });
     if (run.status !== 0) {
       failed++;
-      console.error(`✗ hulls/${script}: exited ${run.status}\n${run.stderr}`);
+      console.error(`✗ ${dir}/${script}: exited ${run.status}\n${run.stderr}`);
       continue;
     }
     const written = readdirSync(out).filter((f) => f.endsWith('.glb'));
     if (written.length !== 1) {
       failed++;
-      console.error(`✗ hulls/${script}: wrote ${written.length} GLBs, expected one`);
+      console.error(`✗ ${dir}/${script}: wrote ${written.length} GLBs, expected one`);
       continue;
     }
     const [file] = written;
@@ -95,7 +101,9 @@ try {
       committed = summarise(readGlb(join(models, file)).parts);
     } catch {
       failed++;
-      console.error(`✗ hulls/${script}: ${file} is not committed — run the script and commit it`);
+      console.error(
+        `✗ ${dir}/${script}: ${file} is not committed — run the script and commit it`
+      );
       continue;
     }
     const drift = diffParts(built, committed);
@@ -103,12 +111,12 @@ try {
     if (drift.length) {
       failed++;
       console.error(
-        `✗ hulls/${script} → ${file} drifted:\n    ${drift.join('\n    ')}\n` +
-          `  run \`node tools/hull-models/hulls/${script}\` and commit the GLB`
+        `✗ ${dir}/${script} → ${file} drifted:\n    ${drift.join('\n    ')}\n` +
+          `  run \`node tools/hull-models/${dir}/${script}\` and commit the GLB`
       );
     } else {
       console.log(
-        `✓ hulls/${script} → ${file}: ${built.length} parts agree` +
+        `✓ ${dir}/${script} → ${file}: ${built.length} parts agree` +
           (warnings ? ` (${warnings} light warnings)` : '')
       );
     }
