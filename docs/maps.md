@@ -25,12 +25,15 @@ A geothermal battlefield split by erupting thermal veins.
 - Two safe plateaus on each side for base building
 - Multiple narrow crossing points
 - Side tunnels for flanking
+- **Two bloom gardens**, one in each transit gap between the base plateaus and the vent
+  line — shallow kelp shelves in water that is otherwise deep and open
 
 ### Biome Distribution
 
 - Center: Thermal Veins (hot, bright, dangerous)
 - North/South: Abyssal Trenches
 - East/West: Kelp Forest Plateaus
+- Mid-north and mid-south: shallow Kelp Forest shelves, the bloom gardens
 
 ### Hazards
 
@@ -40,7 +43,8 @@ A geothermal battlefield split by erupting thermal veins.
 ### Strategic Dynamics
 
 - Bathyarch gains early control via vent stabilization
-- Pelagia uses kelp forests for stealth flanks
+- Pelagia uses kelp forests for stealth flanks, and earns on the gardens — which are the one
+  thing on this map two seats can reach at the same distance
 - Abyssal thrives in trench side routes
 - Hadron dominates crystal-rich corners
 
@@ -260,6 +264,24 @@ A map's **spawn list is its player count**, which is why the Abyssal Rift Corrid
 A mission map is the one carve-out, and it is not a counter-example. It carries a single spawn because the player commands a single force; every other party in the water is placed by the mission, with its own hulls and its own standing, and the map never hears about them. Reading a mission map's spawn list as a player count is therefore correct and tells you almost nothing about how crowded the water is.
 
 **Hazard sites are placed; two kinds are simulated.** Geothermal eruptions and resonance storms run a full lifecycle — see [hazards.md](hazards.md) for the status of all eight. A simulated hazard is drawn live, with a phase and a closing countdown ring; an inert site is drawn into the static terrain layer as hatched ground, because a solid marker would imply an effect that does not exist yet. Either way the site is visible from the first frame, which is what the telegraphing principle above requires.
+
+### Where a bloom garden goes
+
+A bloom node is a **bed**: the map authors a position and the simulation grows a full kelp
+field on it ([systems-flora.md](systems-flora.md) §2). Two rules bind where one may be
+authored, and both come from the same guard-rail — bloom-share is anchored to exposed ground
+so that the quietest navy earns on the most reachable water ([systems-echo.md](systems-echo.md)
+§10, [economy.md](economy.md) §9):
+
+- **Shelf band, 0–400 m.** Asserted in `maps.test.ts`, for every archetype and every mission
+  map. A garden over deeper water would hand the Commune a defensible economy and delete the
+  counter-play the guard-rail is.
+- **Nobody's apron.** A garden inside a base plateau is not contested ground, whatever its
+  depth. Site one where more than one seat can reach it, and site the set symmetrically, so no
+  seat is nearer to the map's income than another.
+
+A skirmish map with no bloom node is a map where one navy has no economy of its own, so the
+catalogue should not be all of them.
 
 `Terrain.demo()` remains, explicitly as a **test fixture**: a hand-built grid with no spawns, resources or hazards, for tests that want ground whose PF landscape is not also under test.
 

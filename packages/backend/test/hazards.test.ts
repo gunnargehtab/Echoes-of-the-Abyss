@@ -63,6 +63,10 @@ function hazardMap(kind: 'geothermal-eruption' | 'resonance-storm', radiusM = 70
     id: `test-${kind}`,
     regions: [],
     hazards: [{ x: 4000, y: 4000, radiusM, kind }],
+    // The spread carries the Ventfront's bloom gardens, and a bloom node is a
+    // kelp bed the match seeds into `world.hazards` (docs/systems-flora.md §2)
+    // — so a fixture that means "one hazard" has to say so about both lists.
+    blooms: [],
   };
 }
 
