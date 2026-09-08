@@ -265,6 +265,8 @@ account it lands in is not.
 | Bio-reactor rate | 12 Biomass/min, flat while crop is in reach | Not 20 minutes to a bed: regrowth returns 9.6 of every 12 taken, so in Healthy water a reactor takes mostly interest. See below |
 | Bio-reactor SIG | 50 sustained | Inside §2's 45–60 harvest band, beside the Refinery |
 | Cutter yield | 40% of crop cut | Raw mass, unprocessed; the yield is bad because the point is the cover |
+| Cutter rate | 20 Biomass/min of crop | Pinned by §2's own three clauses: above the reactor's 12 so it "eats it quickest", and 40% of it is below 12 so it stays "worst-paid" |
+| What the region is charged | the whole cut, not the banked share | §3 charges for "crop taken out of a field", so a cutter wrecks the water two and a half times as fast per Biomass earned. That is the arithmetic behind the word *wasteful* |
 | Bloom-share yield | Up to the bed's current regrowth, per tended bed | The interest and never the principal, which is what makes it endless |
 | Bloom-share tend radius / state | 400 m · live and not silent | Unchanged from #243; Silent Running still stops the work |
 | Sow time / SIG / restore | 45 s · SIG 18 · +25% crop over 2 min | Their harvest signature, and a quarter of a field per act |
@@ -317,10 +319,11 @@ spent inside a match, is a balance decision with a measurement behind it now.
 
 ## 9. Prototype mapping
 
-**Steps 1 to 4 are built; the rest is not.** A bed carries its standing crop, the water over
+**Steps 1 to 5 are built; the rest is not.** A bed carries its standing crop, the water over
 it answers to it, both halves of the Drift grow back on §6's bands, and a bio-reactor can
 render a bed into hulls and wear the water while it does. A rendered creature is paid to whoever
-killed it. What is still missing is the cutter's share, bloom-share's fold, and sowing. The order of work, and why it is that order:
+killed it, and a thermal cutter banks what it takes off a canopy. What is still missing is
+bloom-share's fold and sowing. The order of work, and why it is that order:
 
 1. **Beds get a crop, and crop drives PF and drag.** *Built (#549).* The sim change with no
    player-facing part, and the one everything else reads. Crop rides the PF grid's existing
@@ -343,7 +346,11 @@ killed it. What is still missing is the cutter's share, bloom-share's fold, and 
 4. **The fauna windfall, credited to the killer.** *Built (#560).* `payBiomass` reads the
    killer-of-record rather than scanning for the nearest hull, and the rate follows the
    killer's own navy. The map's half of §5 was already built; this is the other half.
-5. **The cutter's 40%**, on the burn mechanic that already exists.
+5. **The cutter's 40%**, on the burn mechanic that already exists. *Built (#565).* A
+   Consortium hull standing in a bed takes 20 Biomass of crop a minute out of it and banks
+   8 — and the region is charged for all 20, which is the difference between harvesting a
+   bed and destroying one. Silence stops the work, and one field pays one share however many
+   hulls stand in it.
 6. **Bloom-share re-founded on the crop** — the node becomes a bed, the payout becomes
    Biomass bounded by regrowth, and the Commune's roster gains its Biomass column. The
    largest single step, and the one that needs `mission-tend` re-read alongside it.

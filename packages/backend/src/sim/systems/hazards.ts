@@ -45,12 +45,13 @@ import {
   Health,
   Owner,
   Position,
+  SilentRunning,
   Structure,
   Unit,
   Velocity,
 } from '../components.ts';
 import type { PropagationModifier } from '../terrain.ts';
-import type { SimWorld } from '../world.ts';
+import { economyFor, type SimWorld } from '../world.ts';
 import { corridorModifiers } from './standingWave.ts';
 
 /**
@@ -224,6 +225,42 @@ function hasHadronWatcher(world: SimWorld, hazard: Hazard): boolean {
   return anyFactionWithin(world, hazard, Faction.Hadron, hazard.radiusM * 3);
 }
 
+/**
+ * The nearest Consortium hull actually cutting this field, or -1.
+ *
+ * "Actually cutting" is the whole of it: alive, inside the field, and not on
+ * Silent Running — a hull that has shut its systems down is not running
+ * thermal cutters, which is bloom-share's rule (#243, "silence stops the
+ * work") applied to the one navy whose answer to kelp is to destroy it.
+ *
+ * Nearest rather than any, so the one cut a field pays per tick has a single
+ * deterministic claimant: massing hulls on a bed buys nothing but exposure,
+ * exactly as massing gardeners on a bloom node does.
+ */
+function nearestCutter(world: SimWorld, hazard: Hazard): number {
+  const entities = affected(world);
+  let best = -1;
+  let bestD2 = Infinity;
+  for (let i = 0; i < entities.length; i++) {
+    const eid = entities[i]!;
+    if (Owner.faction[eid] !== Faction.Bathyarch) continue;
+    if (Health.hp[eid]! <= 0) continue;
+    // Hulls, not buildings. `affected` is every owned body on the map, which
+    // includes structures — and a Consortium *bio-reactor* standing in the bed
+    // it renders would otherwise also cut it, at 20 a minute on top of the 12
+    // it was already taking. Thermal cutters are something a hull carries.
+    if (!hasComponent(world, Unit, eid)) continue;
+    if (hasComponent(world, SilentRunning, eid) && SilentRunning.active[eid] === 1) continue;
+    const dx = Position.x[eid]! - hazard.x;
+    const dy = Position.y[eid]! - hazard.y;
+    const d2 = dx * dx + dy * dy;
+    if (d2 > hazard.radiusM * hazard.radiusM || d2 >= bestD2) continue;
+    bestD2 = d2;
+    best = eid;
+  }
+  return best;
+}
+
 function anyFactionWithin(
   world: SimWorld,
   hazard: Hazard,
@@ -298,6 +335,35 @@ export function hazardsSystem(world: SimWorld, destroyed: number[]): void {
       hazard.burnedS = cutters
         ? Math.min(HAZARDS.KELP.BATHYARCH_BURN_S, hazard.burnedS + dt)
         : Math.max(0, hazard.burnedS - dt);
+      // And what comes off the canopy is worth something (#565,
+      // docs/systems-flora.md §2). The burn has always opened a field without
+      // *taking* anything; after wave 1 there is a crop to take, so cutting
+      // finally pays for itself — badly, on purpose.
+      //
+      // Note what the two rules charge: the hull banks `CUTTER_YIELD` of what
+      // it cut, and the region is charged for **all** of it. That gap is the
+      // difference between harvesting a bed and destroying one, and it is why
+      // a cutter is the fastest way to wreck water you do not want anybody
+      // else hiding in.
+      //
+      // Here rather than in flora.ts with the reactor, because the fact this
+      // needs — a Consortium hull standing inside this field — is one the
+      // hazard tick has already computed for the burn above. A second pass
+      // over every field and every hull to learn it again would be the same
+      // walk twice on the 60 Hz path.
+      if (hazard.crop > 0) {
+        const cutter = nearestCutter(world, hazard);
+        if (cutter >= 0) {
+          const standing = hazard.crop * FLORA.FULL_CROP_BIOMASS;
+          const cut = Math.min(standing, (FLORA.CUTTER_CROP_PER_MIN / 60) * dt);
+          if (writeCrop(hazard, hazard.crop - cut / FLORA.FULL_CROP_BIOMASS)) {
+            modifiersChanged = true;
+          }
+          world.drift.recordHarvest(hazard.x, hazard.y, cut);
+          const yieldScale = world.drift.yieldMultiplier(hazard.x, hazard.y);
+          economyFor(world, Owner.slot[cutter]!).biomass += cut * FLORA.CUTTER_YIELD * yieldScale;
+        }
+      }
       hazard.suppressedS = Math.max(0, hazard.suppressedS - dt);
       // A stripped bed is not a weak hazard, it is bare ground
       // (docs/systems-flora.md §1) — so an empty canopy opens the field on the

@@ -46,6 +46,13 @@ import { eidOfLocalId } from './world.ts';
  * each pair below 4, where it had been appended, which read as the numbers
  * having gone backwards. They did not; they were shared.
  *
+ * 22: thermal cutters take the canopy they open (#565,
+ * docs/systems-flora.md §2). A Consortium hull standing in a kelp field has
+ * always held it open and paid SIG for doing it; now the field also *loses
+ * crop*, the hull banks 40% of what came off, and the region is charged for
+ * all of it. A v21 recording diverges at the first Consortium hull to stand
+ * in a bed, which on the Kelp Labyrinth is most of them.
+ *
  * 21: a rendered creature is paid to whoever killed it (#560,
  * docs/systems-flora.md §5). `payBiomass` credited the *nearest* player
  * entity, which handed the loud navy the quiet one's kills and inverted
@@ -238,7 +245,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 21;
+export const REPLAY_FORMAT_VERSION = 22;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =
