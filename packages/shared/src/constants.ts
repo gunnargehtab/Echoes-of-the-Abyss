@@ -1760,6 +1760,29 @@ export const FLORA = {
    * when the roster or the per-kill cost moves, and it should.
    */
   HEALTH_PER_BIOMASS: DRIFT.HEALTH_PER_KILL / MEAN_RENDERED_BIOMASS,
+  /**
+   * TUNABLE — Biomass of crop a thermal cutter takes out of a bed per minute,
+   * docs/systems-flora.md §2.
+   *
+   * Pinned between §2's own three clauses rather than chosen freely. The
+   * cutter "eats it quickest", so this is above the reactor's 12; it is
+   * "worst-paid", so 40% of it is below the reactor's 12; and "the point is
+   * rarely the money", so a run is worth making for the hole rather than the
+   * account. Twenty satisfies all three: a bed loses 20 a minute and the hull
+   * banks 8.
+   */
+  CUTTER_CROP_PER_MIN: 20,
+  /**
+   * SPEC — docs/systems-flora.md §2 and §7: "thermal cutters bank 40% of what
+   * they cut".
+   *
+   * Raw cut mass, unprocessed. The other 60% is the difference between
+   * *harvesting* a bed and *destroying* it, and it is why the region is
+   * charged for the whole cut while the hull is paid for this share — a
+   * cutter wrecks the water two and a half times as fast per Biomass earned
+   * as a reactor does, which is the word §2 uses for it arriving as a number.
+   */
+  CUTTER_YIELD: 0.4,
 } as const;
 
 /** SPEC — docs/systems-echo.md §4 and §7. Seconds. */
