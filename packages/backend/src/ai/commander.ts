@@ -37,6 +37,7 @@ import {
   Faction,
   HAZARDS,
   HARVEST_THROTTLE,
+  harvestSigFor,
   HULL_EFFECTS,
   HarvestThrottle,
   ORDNANCE,
@@ -1518,7 +1519,15 @@ export class AiCommander implements AiPlayer {
     // way keeps its clocks — it still ends when the bearing goes or HIDE_MAX_S
     // runs out — so a Cruiser passing through does not reopen the judgement
     // every five seconds; it only stops the paying while it is the loud one.
-    const haulerSig = HARVEST_THROTTLE[this.doctrine.restingThrottle].sig;
+    // Its own navy's figure, not the roster's: a Commune commander whose
+    // haulers work at 18 (docs/economy.md §6) and who thinks they work at 45
+    // throttles against a threat that was never the loud one, and pays for
+    // quiet it already had.
+    const haulerSig = harvestSigFor(
+      this.briefing.faction,
+      this.doctrine.restingThrottle,
+      ResourceKind.Nodule
+    );
     if (this.loudestUnthrottled(snapshot) >= haulerSig) return false;
 
     if (this.hidingSinceTick !== null) {

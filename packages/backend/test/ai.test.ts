@@ -21,12 +21,16 @@ import {
   AiDifficulty,
   DEPTH,
   Faction,
+  HARVEST_THROTTLE,
   HarvestThrottle,
   ResolutionTier,
+  ResourceKind,
   SIM,
   StructureKind,
   UnitKind,
+  harvestSigFor,
   statsFor,
+  structureStatsFor,
   type Contact,
   type EchoSnapshot,
 } from '@echoes/shared';
@@ -665,12 +669,17 @@ describe('quiet costs half an economy, so it is a judgement', () => {
   });
 
   it('does not pay for quiet that something it cannot throttle would spoil', () => {
-    // Rule 0 (#454). A Refinery idles at 65 SIG, louder than a hauler working
-    // at Standard, and it is the commander's first build, standing beside the
-    // field its haulers work. A bearing held on that base is not one Trickle
-    // can cut, so the bet is refused before it is placed — where a Bastion at
-    // 35 leaves the haulers the loudest thing in the water, and the judgement
-    // stands as it was.
+    // Rule 0 (#454). A Refinery idles at 65 SIG, louder than a Directorate
+    // hauler working at Standard, and it is the commander's first build,
+    // standing beside the field its haulers work. A bearing held on that base
+    // is not one Trickle can cut, so the bet is refused before it is placed —
+    // where a Bastion at 35 leaves the haulers the loudest thing in the water,
+    // and the judgement stands as it was.
+    //
+    // The Directorate rather than the Commune, which this case used to use:
+    // since #570 a Commune hauler works at 18, below its own Bastion's hum, so
+    // the rule refuses *every* bet it places and the second branch has no
+    // reading left. That is not a regression, and the case below says why.
     const standing = (kind: StructureKind, sig: number): EchoSnapshot['structures'][number] => ({
       id: 20,
       kind,
@@ -684,7 +693,7 @@ describe('quiet costs half an economy, so it is a judgement', () => {
       queue: [],
       queueProgress: 0,
     });
-    const refinery = watched(Faction.Pelagia, AiDifficulty.Veteran, [
+    const refinery = watched(Faction.Directorate, AiDifficulty.Veteran, [
       standing(StructureKind.Refinery, 65),
     ]);
     assert.equal(
@@ -696,13 +705,54 @@ describe('quiet costs half an economy, so it is a judgement', () => {
       refinery.ordered.length === 0,
       `it never ordered a throttle at all: ${refinery.ordered.join(', ')}`
     );
-    const bastion = watched(Faction.Pelagia, AiDifficulty.Veteran, [
+    const bastion = watched(Faction.Directorate, AiDifficulty.Veteran, [
       standing(StructureKind.Bastion, 35),
     ]);
+    // Forty seconds: past the Directorate's own 25-second hold and well short
+    // of the 90 at which a spell of quiet that did not work is abandoned.
     assert.equal(
-      bastion.feed(10, ResolutionTier.Bearing),
+      bastion.feed(40, ResolutionTier.Bearing),
       HarvestThrottle.Trickle,
       'a Bastion is quieter than a working hauler, so the haulers are what is heard'
+    );
+  });
+
+  it('leaves the Commune’s throttle alone, because their work is already the quiet part', () => {
+    // The consequence of docs/economy.md §6 finally being implemented (#570),
+    // stated rather than discovered in a baseline. A Commune hauler works at
+    // 18; their Bastion hums at 35 and cannot be silenced. So rule 0 refuses
+    // every bet the exposure watch would place, and the lever their doctrine
+    // authors goes unused.
+    //
+    // That is the rule being right, not the doctrine being lost. Trickle would
+    // take 54% of their income to move the loudest thing they own by nothing
+    // at all — and they do not need it, because 18 is already below every
+    // other navy's *Trickle*. The Commune stopped buying quiet with income at
+    // the moment their income stopped being loud.
+    const commune = watched(Faction.Pelagia, AiDifficulty.Veteran, [
+      {
+        id: 20,
+        kind: StructureKind.Bastion,
+        x: 1000,
+        y: 1000,
+        depth: 300,
+        hp: 5000,
+        maxHp: 5000,
+        sig: structureStatsFor(StructureKind.Bastion).sigIdle,
+        buildProgress: 1,
+        queue: [],
+        queueProgress: 0,
+      },
+    ]);
+    assert.equal(commune.feed(120, ResolutionTier.Bearing), HarvestThrottle.Standard);
+    assert.ok(
+      commune.ordered.length === 0,
+      `it bought quiet it could not keep: ${commune.ordered}`
+    );
+    assert.ok(
+      harvestSigFor(Faction.Pelagia, HarvestThrottle.Standard, ResourceKind.Nodule) <
+        HARVEST_THROTTLE[HarvestThrottle.Trickle].sig,
+      'and their Standard is quieter than everybody else’s Trickle, which is the point'
     );
   });
 
