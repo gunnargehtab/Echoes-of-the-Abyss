@@ -79,6 +79,7 @@ export const CLIENT_MSG = {
   layDecoy: 'layDecoy',
   seedSpore: 'seedSpore',
   sing: 'sing',
+  sow: 'sow',
   mine: 'mine',
   // Lower-case on the wire, unlike every other multi-word name here. Kept as
   // it is because the name is the contract: correcting the casing would be a
@@ -231,6 +232,18 @@ export interface PingMessage {
  */
 export type AbilityMessage = Record<string, never>;
 
+/**
+ * Sow the bed a hull is standing in — docs/systems-flora.md §2.
+ *
+ * No position: a sowing is served where the hull already is, and the server
+ * will not take the client's word for which field that is. Whether the hull
+ * may sow at all — Commune, alive, not silent, standing in a bed — is the
+ * server's question too.
+ */
+export interface SowMessage {
+  unitIds: number[];
+}
+
 /** Opaque per-observer contact handle, like AttackMessage — never an entity id. */
 export interface TorpedoMessage {
   unitIds: number[];
@@ -327,6 +340,7 @@ export interface ClientMessages {
   noisemaker: NoisemakerMessage;
   layDecoy: LayDecoyMessage;
   seedSpore: SeedSporeMessage;
+  sow: SowMessage;
   sing: SingMessage;
   mine: MineMessage;
   depthcharge: DepthChargeMessage;

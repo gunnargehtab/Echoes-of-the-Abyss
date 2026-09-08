@@ -336,12 +336,12 @@ together as the bed does. One number, read three ways, exactly as §1 sets out.
 
 ## 9. Prototype mapping
 
-**Steps 1 to 6 are built; only sowing is not.** A bed carries its standing crop, the water
-over it answers to it, both halves of the Drift grow back on §6's bands, and a bio-reactor can
-render a bed into hulls and wear the water while it does. A rendered creature is paid to whoever
-killed it, a thermal cutter banks what it takes off a canopy, and a bloom node is a bed that
-pays its interest in Biomass. What is still missing is sowing. The order of work, and why it
-is that order:
+**Steps 1 to 7 are built.** A bed carries its standing crop, the water over it answers to it,
+both halves of the Drift grow back on §6's bands, and a bio-reactor can render a bed into hulls
+and wear the water while it does. A rendered creature is paid to whoever killed it, a thermal
+cutter banks what it takes off a canopy, a bloom node is a bed that pays its interest in
+Biomass, and a Commune hull can put the cover back. The order of work, and why it is that
+order:
 
 1. **Beds get a crop, and crop drives PF and drag.** *Built (#549).* The sim change with no
    player-facing part, and the one everything else reads. Crop rides the PF grid's existing
@@ -379,7 +379,13 @@ is that order:
    income rather than with a repricing — the five unlocked Biomass hulls become reachable by
    a second navy on their own, which is the price-as-lock rule (§6) starting to work;
    repricing the Commune's *own* grown hulls stays the later option §6 says it is.
-7. **Sowing**, and the commander's opinion about all of it.
+7. **Sowing**, and the commander's opinion about all of it. *Sowing built (#576).* Forty-five
+   seconds on station at the Commune's own 18, and the bed is owed a quarter of a canopy which
+   it lays down over the two minutes after — so the hull that bought the cover is gone before
+   it arrives. Moving, going silent or dying breaks it and credits nothing; two hulls on one
+   bed owe it half a canopy; a full bed forgives the seed rather than banking it. The two
+   limits above hold in the code: `orderSow` needs a standing bed under the hull, so ground is
+   never created, and only the Commune may sow at all.
 
 Each step is measured against the stored four-faction baseline before the next one lands.
 Steps 1, 2 and 4 are what #535 filed as its three faults; they are not separate work. Steps 1,

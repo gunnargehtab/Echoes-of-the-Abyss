@@ -147,6 +147,18 @@ export interface Hazard {
    */
   crop: number;
   /**
+   * Canopy a Commune sowing has bought and not yet laid down, as a fraction of
+   * a full field — docs/systems-flora.md §2.
+   *
+   * An accumulator rather than a timer, so two hulls sowing one bed owe it
+   * half a canopy and take twice as long to lay it, and neither sowing can
+   * clip or cancel the other. Drained at `SOW_RESTORE / SOW_SPREAD_S` a
+   * second by the regrowth branch, on top of whatever the water is growing
+   * back on its own — a sown bed in Failing water still recovers, which is
+   * the point of sowing at all.
+   */
+  sownRemaining: number;
+  /**
    * Extra dormancy bought by a Bathyarch presence.
    *
    * doc §1: "Bathyarch can stabilize vents for energy boosts". Stabilising is
@@ -325,8 +337,27 @@ export function hazardsSystem(world: SimWorld, destroyed: number[]): void {
       // starts full, so on a map nobody has cut this is a comparison that
       // fails and nothing else.
       if (hazard.crop < 1) {
-        const grown = hazard.crop + regrowthPerS(world, hazard) * dt;
+        let grown = hazard.crop + regrowthPerS(world, hazard) * dt;
+        // And whatever a Commune sowing has bought and not yet laid down
+        // (docs/systems-flora.md §2). On top of the natural rate rather than
+        // instead of it, and unscaled by the water's band: a sowing is seed
+        // somebody carried here, so a sown bed recovers even in water that
+        // has stopped growing anything on its own. That is what sowing is
+        // *for*.
+        if (hazard.sownRemaining > 0) {
+          const laid = Math.min(
+            hazard.sownRemaining,
+            (FLORA.SOW_RESTORE / FLORA.SOW_SPREAD_S) * dt
+          );
+          hazard.sownRemaining -= laid;
+          grown += laid;
+        }
         if (grown > hazard.crop && writeCrop(hazard, grown)) modifiersChanged = true;
+      } else if (hazard.sownRemaining > 0) {
+        // A full canopy cannot hold more. The debt is forgiven rather than
+        // banked, so a bed sown while it is whole is seed spent on nothing —
+        // which is the honest price of sowing early.
+        hazard.sownRemaining = 0;
       }
       const cutters = anyFactionWithin(world, hazard, Faction.Bathyarch, hazard.radiusM);
       hazard.burnedS = cutters
@@ -511,6 +542,32 @@ function cropPropagationDelta(crop: number): number {
  */
 function standingCrop(crop: number): number {
   return cropStep(crop) / FLORA.CROP_PF_STEPS;
+}
+
+/**
+ * The bed a point stands in, thickest canopy first, or `undefined` for open
+ * ground — docs/systems-flora.md §2.
+ *
+ * Thickest rather than nearest, and for the grip's reason: where fields
+ * overlap, what a hull is standing in is the kelp that is actually there. A
+ * bed stripped to nothing is not a bed, so a hull over bare ground cannot sow
+ * "the field" it is technically inside — which is §2's "sowing restores a bed;
+ * it does not create one" arriving without a second rule to state it.
+ */
+export function bedAt(world: SimWorld, x: number, y: number): Hazard | undefined {
+  let best: Hazard | undefined;
+  let thickest = 0;
+  for (const hazard of world.hazards) {
+    if (hazard.kind !== 'kelp-entanglement') continue;
+    const standing = standingCrop(hazard.crop);
+    if (standing <= thickest) continue;
+    const dx = x - hazard.x;
+    const dy = y - hazard.y;
+    if (dx * dx + dy * dy > hazard.radiusM * hazard.radiusM) continue;
+    best = hazard;
+    thickest = standing;
+  }
+  return best;
 }
 
 /**

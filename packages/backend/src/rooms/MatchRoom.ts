@@ -375,6 +375,12 @@ export class MatchRoom extends Room<MatchState> {
       this.match.sing(slot, message.unitId);
     });
 
+    this.onClientMessage(CLIENT_MSG.sow, (client, message) => {
+      const slot = this.commandSlot(client);
+      if (slot === undefined || !Array.isArray(message?.unitIds)) return;
+      for (const unitId of message.unitIds) this.match.sow(slot, unitId);
+    });
+
     this.onClientMessage(CLIENT_MSG.mine, (client, message) => {
       const slot = this.commandSlot(client);
       if (slot === undefined || !Array.isArray(message?.unitIds)) return;

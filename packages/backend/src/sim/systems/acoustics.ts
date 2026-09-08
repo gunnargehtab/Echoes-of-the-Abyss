@@ -13,6 +13,7 @@ import {
   CONSTRUCTION,
   DEPTH,
   ENGINE_OFF,
+  COMMUNE_ECONOMY,
   Faction,
   ORDNANCE,
   REFIT_STATS,
@@ -39,6 +40,7 @@ import {
   Owner,
   Position,
   SilentRunning,
+  Sowing,
   StaticEmitter,
   Structure,
   UnderConstruction,
@@ -129,6 +131,13 @@ export function acousticsSystem(world: SimWorld): void {
       sig = engineOffSig(stats.sigIdle);
     } else if (SilentRunning.active[eid]) {
       sig = silentRunningSig(stats.sigIdle);
+    } else if (hasComponent(world, Sowing, eid) && Sowing.remainingS[eid]! > 0) {
+      // Sowing runs at the Commune's own working figure — docs/systems-flora.md
+      // §2 calls it "their harvest signature", and since #570 that is a number
+      // the simulation owns rather than a coincidence. Above Silent Running in
+      // this chain and below it in the file for the same reason mining is:
+      // silence stops the work, so a hull cannot be both.
+      sig = COMMUNE_ECONOMY.HARVEST_SIG;
     } else if (hasComponent(world, Harvester, eid) && Harvester.mode[eid] === HarvestMode.Mining) {
       // Mining loudness follows the throttle, not the hull — the economy's
       // central decision surface (docs/economy.md §3) — plus whatever the
