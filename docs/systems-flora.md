@@ -267,8 +267,8 @@ account it lands in is not.
 | Cutter yield | 40% of crop cut | Raw mass, unprocessed; the yield is bad because the point is the cover |
 | Cutter rate | 20 Biomass/min of crop | Pinned by §2's own three clauses: above the reactor's 12 so it "eats it quickest", and 40% of it is below 12 so it stays "worst-paid" |
 | What the region is charged | the whole cut, not the banked share | §3 charges for "crop taken out of a field", so a cutter wrecks the water two and a half times as fast per Biomass earned. That is the arithmetic behind the word *wasteful* |
-| Bloom-share yield | Up to the bed's current regrowth, per tended bed | The interest and never the principal, which is what makes it endless |
-| Bloom-share tend radius / state | 400 m · live and not silent | Unchanged from #243; Silent Running still stops the work |
+| Bloom-share yield | The bed's regrowth, scaled by the canopy standing — 9.6 Biomass/min per whole bed in Healthy water | The interest and never the principal, which is what makes it endless. Scaled by the crop because §2 promises a raid takes the income *and* the cover; see below |
+| Bloom-share tend radius / bed radius / state | 400 m · 400 m · live and not silent | Unchanged from #243, except that the tend radius is now the bed's own: a garden is the ground you stand in |
 | Sow time / SIG / restore | 45 s · SIG 18 · +25% crop over 2 min | Their harvest signature, and a quarter of a field per act |
 | Regrowth | 4%/min, by the §6 health band | A stripped field returns in one match, in healthy water only |
 | Drift Health cost | Per Biomass taken, at the rendered-fauna rate | Harvesting flora and rendering fauna wear a region the same way |
@@ -301,6 +301,21 @@ wants the hole faster has to strip the ground with cutters (§2) or wear the reg
 way. Whether that is the intended shape, or whether 12 and 4% should be retuned so a bed is
 spent inside a match, is a balance decision with a measurement behind it now.
 
+### Why the share is scaled by the crop
+
+§2 bounds bloom-share by "what it regrows", and a bed's regrowth is a flat 4% of a *full*
+field a minute whatever is standing on it — so read literally, a plateau somebody had
+stripped to bare rock would pay the Commune exactly what an untouched one does. That is the
+opposite of the sentence three paragraphs above it, which promises that a raid on a Commune
+plateau "takes their income and their concealment in the same act".
+
+So the regrowth is the **ceiling**, and only a whole bed reaches it: the share is the bed's
+regrowth times the canopy standing. Half a garden pays half; bare ground pays nothing; water
+worn past Failing pays nothing at full canopy, because Failing water grows nothing to take
+interest on. A Commune player who cuts into their own principal — with a reactor on their own
+bed, which they may — loses income at the same rate they lose cover, and both come back
+together as the bed does. One number, read three ways, exactly as §1 sets out.
+
 ---
 
 ## 8. Guard-rails
@@ -319,11 +334,12 @@ spent inside a match, is a balance decision with a measurement behind it now.
 
 ## 9. Prototype mapping
 
-**Steps 1 to 5 are built; the rest is not.** A bed carries its standing crop, the water over
-it answers to it, both halves of the Drift grow back on §6's bands, and a bio-reactor can
+**Steps 1 to 6 are built; only sowing is not.** A bed carries its standing crop, the water
+over it answers to it, both halves of the Drift grow back on §6's bands, and a bio-reactor can
 render a bed into hulls and wear the water while it does. A rendered creature is paid to whoever
-killed it, and a thermal cutter banks what it takes off a canopy. What is still missing is
-bloom-share's fold and sowing. The order of work, and why it is that order:
+killed it, a thermal cutter banks what it takes off a canopy, and a bloom node is a bed that
+pays its interest in Biomass. What is still missing is sowing. The order of work, and why it
+is that order:
 
 1. **Beds get a crop, and crop drives PF and drag.** *Built (#549).* The sim change with no
    player-facing part, and the one everything else reads. Crop rides the PF grid's existing
@@ -351,13 +367,23 @@ bloom-share's fold and sowing. The order of work, and why it is that order:
    8 — and the region is charged for all 20, which is the difference between harvesting a
    bed and destroying one. Silence stops the work, and one field pays one share however many
    hulls stand in it.
-6. **Bloom-share re-founded on the crop** — the node becomes a bed, the payout becomes
-   Biomass bounded by regrowth, and the Commune's roster gains its Biomass column. The
-   largest single step, and the one that needs `mission-tend` re-read alongside it.
+6. **Bloom-share re-founded on the crop.** *Built (#568).* A map's bloom nodes are seeded as
+   full kelp beds at the tend radius, and the share is the bed's regrowth in Biomass, scaled
+   by the canopy standing — the interest and never the principal, so tending takes no crop,
+   records no harvest and wears no Drift Health. `mission-tend` was re-read alongside it and
+   needs nothing: its objectives are scripted work-loads rather than account thresholds, and
+   kelp does not drag on the Commune, so the tenders are still at 18 under a SIG-20 ceiling
+   in gardens that now really are gardens. The Commune's Biomass column arrives with the
+   income rather than with a repricing — the five unlocked Biomass hulls become reachable by
+   a second navy on their own, which is the price-as-lock rule (§6) starting to work;
+   repricing the Commune's *own* grown hulls stays the later option §6 says it is.
 7. **Sowing**, and the commander's opinion about all of it.
 
 Each step is measured against the stored four-faction baseline before the next one lands.
-Steps 1, 2 and 4 are what #535 filed as its three faults; they are not separate work.
+Steps 1, 2 and 4 are what #535 filed as its three faults; they are not separate work. Steps 1,
+3, 5 and 6 move no baseline figure at all, and for one reason each time: only *Kelp Labyrinth*
+authors kelp fields, no skirmish map authors a bloom node, and no commander in the harness
+builds or cuts anything.
 
 ---
 

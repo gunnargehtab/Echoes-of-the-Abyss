@@ -188,13 +188,20 @@ export interface SimWorld extends IWorld {
    */
   reactorActive: Set<number>;
   /**
-   * Bloom-share nodes, copied from the map at construction — docs/economy.md
-   * §6. Plain positions rather than entities: a bloom is ground, not a thing
-   * in the water — never mined, never depleted, never a contact — so seating
-   * it in the ECS would hand it to queries (targeting, the Echo pass) that
-   * have no business seeing it. Read every tick by `bloomShareSystem`.
+   * Bloom-share gardens — docs/systems-flora.md §2, and docs/economy.md §6.
+   *
+   * The beds themselves, held by reference into `hazards` rather than copied:
+   * *a bloom node is a bed*, so the garden that pays the Commune and the kelp
+   * field that hides them are one object and cannot drift apart. A separate
+   * position list was what let bloom-share be a tap with no supply — the
+   * thing it paid out of was not the thing anybody could take away.
+   *
+   * Still ground rather than an entity, for the reason it always was: a bloom
+   * is never mined and never a contact, so seating it in the ECS would hand it
+   * to queries (targeting, the Echo pass) that have no business seeing it.
+   * Read every tick by `bloomShareSystem`.
    */
-  blooms: { x: number; y: number }[];
+  blooms: Hazard[];
   /**
    * Hulls whose SIG is floored at an authored figure while a mission's
    * hold-and-cut lift runs — eid to the stated loudness. Written by the

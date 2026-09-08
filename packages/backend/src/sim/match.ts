@@ -19,6 +19,7 @@ import {
   ACTIVE_SONAR,
   HULL_EFFECTS,
   BERTHS,
+  BLOOM_SHARE,
   type BerthReport,
   CONCESSION,
   CONSTRUCTION,
@@ -147,6 +148,7 @@ import {
   isPermanent,
   isSimulated,
   rebuildPropagation,
+  type Hazard,
 } from './systems/hazards.ts';
 import { drawFor, thermalSystem } from './systems/thermal.ts';
 import { titheSystem } from './systems/tithe.ts';
@@ -457,12 +459,10 @@ export class Match {
           )
         : null;
     this.seedResourceNodes();
-    // Bloom-share nodes are ground, not entities — copied off the map so the
-    // system reads match state rather than authoring data (docs/economy.md §6).
-    for (const bloom of this.map.blooms ?? []) {
-      this.world.blooms.push({ x: bloom.x, y: bloom.y });
-    }
     this.seedHazards();
+    // After the authored sites, so a bed's id continues the map's own run and
+    // a garden is the last thing seeded rather than the first.
+    this.seedBlooms();
     if (options.fauna !== false) this.seedFauna();
     // Last, so the authored forces are placed into a world whose nodes,
     // hazards and Drift already exist — and after the seeded systems have
@@ -691,6 +691,50 @@ export class Match {
         suppressedS: 0,
         burnedS: 0,
       });
+    }
+  }
+
+  /**
+   * Bloom-share gardens — docs/systems-flora.md §2.
+   *
+   * A bloom node **is a bed**: the map authors a position, and what stands
+   * there is an ordinary kelp field with a standing crop, seeded here rather
+   * than in the map literal so one authored fact stays one fact. That fold is
+   * the whole of wave 6 — it is what gives a garden all three readings of a
+   * crop at once (it masks, it grips, it pays) instead of a payout with no
+   * supply behind it, and it is why a raid on a Commune plateau now takes
+   * their income and their concealment in the same act.
+   *
+   * The bed's radius is the tend radius, because a garden is the ground you
+   * stand in: any wider and there would be kelp no hull could earn from, any
+   * narrower and the share would be paid from outside the field paying it.
+   *
+   * `world.blooms` holds the beds themselves, not copies — `bloomShareSystem`
+   * has to read the crop the cutter and the reactor write, or "the interest,
+   * never the principal" is a rule about a different object.
+   */
+  private seedBlooms(): void {
+    let id = this.world.hazards.length + 1;
+    for (const bloom of this.map.blooms ?? []) {
+      const bed: Hazard = {
+        id: id++,
+        kind: 'kelp-entanglement',
+        x: bloom.x,
+        y: bloom.y,
+        radiusM: BLOOM_SHARE.TEND_RADIUS_M,
+        // Kelp begins the match gripping, and every bed begins it whole
+        // (docs/systems-flora.md §1) — so a garden nobody has cut masks at
+        // its biome's own figure and lists no PF modifier at all.
+        phase: HazardPhase.Active,
+        crop: 1,
+        elapsedS: 0,
+        flowRad: 0,
+        stabilisedS: 0,
+        suppressedS: 0,
+        burnedS: 0,
+      };
+      this.world.hazards.push(bed);
+      this.world.blooms.push(bed);
     }
   }
 

@@ -46,6 +46,14 @@ import { eidOfLocalId } from './world.ts';
  * each pair below 4, where it had been appended, which read as the numbers
  * having gone backwards. They did not; they were shared.
  *
+ * 23: a bloom node is a bed (#568, docs/systems-flora.md §2). Bloom-share paid
+ * a flat rate of nodules out of an authored position with no supply behind
+ * it; now the map's garden nodes are seeded as full kelp fields — masking,
+ * gripping and payable like any other — and the share is Biomass bounded by
+ * what the bed regrows, scaled by the canopy standing. A v22 recording of any
+ * map that authors a bloom diverges on tick one, because the water over the
+ * gardens is a hazard it did not have.
+ *
  * 22: thermal cutters take the canopy they open (#565,
  * docs/systems-flora.md §2). A Consortium hull standing in a kelp field has
  * always held it open and paid SIG for doing it; now the field also *loses
@@ -245,7 +253,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 22;
+export const REPLAY_FORMAT_VERSION = 23;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =

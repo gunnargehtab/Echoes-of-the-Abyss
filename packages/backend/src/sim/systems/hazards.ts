@@ -325,11 +325,8 @@ export function hazardsSystem(world: SimWorld, destroyed: number[]): void {
       // starts full, so on a map nobody has cut this is a comparison that
       // fails and nothing else.
       if (hazard.crop < 1) {
-        const rate = world.drift.spawnRate(hazard.x, hazard.y);
-        if (rate > 0) {
-          const grown = hazard.crop + (FLORA.REGROWTH_PER_MIN / 60) * rate * dt;
-          if (writeCrop(hazard, grown)) modifiersChanged = true;
-        }
+        const grown = hazard.crop + regrowthPerS(world, hazard) * dt;
+        if (grown > hazard.crop && writeCrop(hazard, grown)) modifiersChanged = true;
       }
       const cutters = anyFactionWithin(world, hazard, Faction.Bathyarch, hazard.radiusM);
       hazard.burnedS = cutters
@@ -514,6 +511,36 @@ function cropPropagationDelta(crop: number): number {
  */
 function standingCrop(crop: number): number {
   return cropStep(crop) / FLORA.CROP_PF_STEPS;
+}
+
+/**
+ * How fast a bed is putting canopy back, as a fraction of a full field per
+ * second — docs/systems-flora.md §3.
+ *
+ * Exported, and the only statement of the rate anywhere, because two things
+ * now read it and they are required to agree: the regrowth branch above,
+ * which spends it on the canopy, and bloom-share, which is *defined* as the
+ * interest this number is (docs/systems-flora.md §2). A second copy would
+ * make "a tended bed pays up to what it regrows and no more" a coincidence
+ * that held until somebody retuned one of them.
+ *
+ * Zero in Failing water and below, which is wave 2's band ladder rather than
+ * a rule of its own: the water that stops breeding animals is the water that
+ * stops growing the crop that feeds them.
+ */
+export function regrowthPerS(world: SimWorld, hazard: Hazard): number {
+  return (FLORA.REGROWTH_PER_MIN / 60) * world.drift.spawnRate(hazard.x, hazard.y);
+}
+
+/**
+ * A bed's canopy, as everything outside this module must read it.
+ *
+ * Exported for bloom-share, which pays by the canopy standing and so has to
+ * see the same quantised figure the PF grid, the grip and the phase do — see
+ * `standingCrop` for why the raw number is not that figure.
+ */
+export function standingCropOf(hazard: Hazard): number {
+  return standingCrop(hazard.crop);
 }
 
 /**
