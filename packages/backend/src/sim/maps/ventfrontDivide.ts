@@ -94,6 +94,61 @@ export const VENTFRONT_DIVIDE: MapDefinition = {
     },
     { x: 0, y: 5000, widthM: 2000, heightM: 1750, biome: Biome.KelpForest, floorM: 700 },
     { x: W - 2000, y: 5000, widthM: 2000, heightM: 1750, biome: Biome.KelpForest, floorM: 700 },
+    // The bloom gardens — docs/maps.md, Map Type 1, and the guard-rail that
+    // sites them (docs/systems-echo.md §10, docs/economy.md §9): bloom-share is
+    // anchored to *exposed Shelf plateaus*, so the quietest navy earns on the
+    // most reachable water on the map.
+    //
+    // The two transit gaps are that water. Everything between the base
+    // plateaus and the vent line was unpainted — open water over the map's own
+    // 2,600 m floor — and it is the ground both seats on a side cross to reach
+    // the middle. A shallow kelp shelf here is 2,912 m from each of the two
+    // spawns beside it and 5,557 m from the other two: shared by a pair,
+    // owned by neither.
+    //
+    // Not the base plateaus, which are Mid-Water at 700 m and would be barred
+    // anyway; and not the crossing dividers, which are already Shelf and
+    // already contested but would put a *gripping* kelp field across the two
+    // lanes everyone uses to cross the vent line — three navies dragged and
+    // one not, which is a change to how the map is crossed rather than to who
+    // earns on it.
+    //
+    // 380 m is the dividers' figure, for the dividers' reason: inside the
+    // Shelf band with room to spare, and shallow enough that a garden reads as
+    // ground you rise onto. Nothing can be built on one — structures seat at
+    // 600 m, below this floor — which is the Commune's own doctrine as terrain:
+    // a garden is held with hulls or it is not held.
+    //
+    // Two cells square, and no larger, because this ground is spoken for. The
+    // only water on this map that is deep, off the vein, and outside every
+    // spawn's 2,600 m fauna exclusion is a corridor about 600 m wide running
+    // down x = 4,000 — which is to say the map's megafauna live exactly where
+    // a neutral garden wants to be, for the same reason: it is the one place
+    // far from everybody. A 1,000 m shelf here cost the map 42% of its
+    // Sounder seedings and 20% of its Draymaws over 200 seeds; 500 m costs
+    // 10% and 7%. The bed is 800 m across and spreads past the rim onto the
+    // drop, which is what a knoll with kelp on it looks like.
+    {
+      x: 3750,
+      y: 1750,
+      widthM: 500,
+      heightM: 500,
+      biome: Biome.KelpForest,
+      floorM: 380,
+      note: 'North garden — a shallow kelp shelf in the deep transit gap',
+    },
+    // Mirrored across the east-west axis to the metre. The map is asserted
+    // symmetric cell by cell from all four corners, and a garden a column out
+    // of place is an advantage handed to two seats.
+    {
+      x: 3750,
+      y: 5750,
+      widthM: 500,
+      heightM: 500,
+      biome: Biome.KelpForest,
+      floorM: 380,
+      note: 'South garden',
+    },
     // "Multiple narrow crossing points": coral pillars break the vent band up
     // so crossing it is a choice of lane rather than a straight line.
     {
@@ -182,6 +237,19 @@ export const VENTFRONT_DIVIDE: MapDefinition = {
       kind: ResourceKind.ResonanceCrystal,
       note: 'Dead centre and deep — nobody works it without committing',
     },
+  ],
+  // One node per garden, at the centre of its shelf — docs/systems-flora.md §2.
+  // The simulation grows a full kelp bed on each at `BLOOM_SHARE.TEND_RADIUS_M`,
+  // so the bed sits wholly inside the shelf it is authored on.
+  //
+  // Two rather than four: a garden is worth holding only if holding it costs
+  // something, and a node per seat would make the Commune's income a thing
+  // they collect at home rather than a thing they stand on contested ground
+  // for. Two nodes for four seats is the same arithmetic as the two contested
+  // nodule fields in the vents.
+  blooms: [
+    { x: 4000, y: 2000, note: 'North garden' },
+    { x: 4000, y: 6000, note: 'South garden' },
   ],
   hazards: [
     {

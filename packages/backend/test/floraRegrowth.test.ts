@@ -21,11 +21,12 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { hasComponent } from 'bitecs';
-import { Biome, DRIFT, FaunaSpecies, FLORA, SIM } from '@echoes/shared';
+import { Biome, DRIFT, DRIFT_ROSTER, FaunaSpecies, FLORA, SIM } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { countFauna, countFaunaOf } from '../src/sim/systems/fauna.ts';
 import { setKelpCrop, type Hazard } from '../src/sim/systems/hazards.ts';
 import { Fauna, Health } from '../src/sim/components.ts';
+import { spawnFauna } from '../src/sim/world.ts';
 import { terrainFor, VENTFRONT_DIVIDE, type MapDefinition } from '../src/sim/maps/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
@@ -255,8 +256,25 @@ describe('the Drift puts back what it loses', () => {
   it('keeps megafauna out of strained water', () => {
     // §6's Strained row has two clauses, and this is the second: the water is
     // thinner for everything and closed to the colossus outright.
+    //
+    // The colossus is placed rather than waited for. Whether the seeder seats
+    // one is a lottery on this map and always was: a Sounder needs 2,000 m of
+    // water off the vein and outside every spawn's 2,600 m exclusion, which on
+    // the Ventfront is a corridor about 600 m wide down the map's centre —
+    // under 5% of the draw box, so twelve attempts miss it about a third of
+    // the time. Asserting a seeded Sounder made this case fail on any change
+    // that moved a single cell of that corridor, while testing nothing about
+    // the band rule it is named for.
     const m = match(VENTFRONT_DIVIDE, true);
-    assert.equal(countFaunaOf(m.world, FaunaSpecies.Sounder), 1, 'there is only ever one colossus');
+    assert.equal(
+      DRIFT_ROSTER.filter((entry) => entry.species === FaunaSpecies.Sounder)[0]?.count,
+      1,
+      'there is only ever one colossus'
+    );
+    if (countFaunaOf(m.world, FaunaSpecies.Sounder) === 0) {
+      spawnFauna(m.world, { species: FaunaSpecies.Sounder, x: 4000, y: 2000, depth: 2000 });
+    }
+    assert.equal(countFaunaOf(m.world, FaunaSpecies.Sounder), 1, 'one colossus in the water');
     cull(m, FaunaSpecies.Sounder);
     wearMapTo(m, DRIFT.HEALTH_STRAINED - 5);
     advance(m, DRIFT.RESPAWN_INTERVAL_S * 4);

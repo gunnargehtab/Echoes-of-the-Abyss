@@ -201,6 +201,51 @@ describe('the map catalogue', () => {
     }
   });
 
+  it('gives at least one skirmish map a bloom garden', () => {
+    // The catalogue's own obligation, and the one this suite could not have
+    // caught before there was one to catch: bloom-share is the Commune's whole
+    // economy, and until #573 no map in `MAPS` authored a node — so in every
+    // skirmish and every balance-harness match the system early-returned and
+    // one navy had no economy of its own (docs/maps.md, "Where a bloom garden
+    // goes").
+    const withGardens = MAPS.filter((map) => (map.blooms ?? []).length > 0);
+    assert.ok(
+      withGardens.length > 0,
+      'no skirmish map authors a bloom node, so the Commune cannot earn on any of them'
+    );
+  });
+
+  it('sites every garden where more than one seat can reach it', () => {
+    // The other half of the guard-rail, and the half a depth check cannot see:
+    // a garden inside a base apron is not contested ground however shallow it
+    // is (docs/maps.md, "Where a bloom garden goes"). "Shared" is stated as
+    // the thing that can be measured — the two nearest seats are the same
+    // distance away — which is what makes the income something a pair fights
+    // over rather than something one of them collects.
+    for (const map of MAPS) {
+      for (const bloom of map.blooms ?? []) {
+        const ranges = map.spawns
+          .map((spawn) => Math.hypot(spawn.x - bloom.x, spawn.y - bloom.y))
+          .sort((a, b) => a - b);
+        assert.ok(ranges.length >= 2, `${map.id}: a garden needs two seats to be contested`);
+        assert.ok(
+          Math.abs(ranges[0]! - ranges[1]!) < 1,
+          `${map.id}: the garden at ${bloom.x},${bloom.y} is ${ranges[0]!.toFixed(0)} m from ` +
+            `one seat and ${ranges[1]!.toFixed(0)} m from the next — it belongs to somebody`
+        );
+        // And not so close to that pair that it is an apron by another name:
+        // further out than the home field each of them opens on.
+        const homeField = Math.min(
+          ...map.resources.map((node) => Math.hypot(node.x - bloom.x, node.y - bloom.y))
+        );
+        assert.ok(
+          ranges[0]! > homeField * 0.5,
+          `${map.id}: the garden is closer to a spawn than the map's own fields are to it`
+        );
+      }
+    }
+  });
+
   it('never starts a player in an Abyssal Trench', () => {
     // The Kelp Labyrinth's first draft put its corner pressure pockets exactly
     // on its corner spawns, starting two players in the deepest and loudest

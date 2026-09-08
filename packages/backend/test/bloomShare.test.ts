@@ -30,7 +30,7 @@ import { Terrain } from '../src/sim/terrain.ts';
 import { Harvester, Health, Owner, Position, SilentRunning } from '../src/sim/components.ts';
 import { setKelpCrop, type Hazard } from '../src/sim/systems/hazards.ts';
 import { economyFor, spawnUnit } from '../src/sim/world.ts';
-import { MARR_PLATEAU, terrainFor } from '../src/sim/maps/index.ts';
+import { MARR_PLATEAU, VENTFRONT_DIVIDE, terrainFor } from '../src/sim/maps/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 const PLAYER = 0;
@@ -323,6 +323,39 @@ describe('and the gardens a map authors really are beds', () => {
     // client draws is keyed by them.
     const ids = new Set(match.world.hazards.map((h) => h.id));
     assert.equal(ids.size, match.world.hazards.length);
+  });
+
+  it('pays a Commune player standing in a Ventfront garden', () => {
+    // The whole point of #573, at the only scale that proves it: a skirmish
+    // map, its own authored gardens, a hull standing in one, and Biomass in
+    // the account. Until that map had gardens, `bloomShareSystem` early-
+    // returned in every skirmish and every balance-harness match, and the
+    // Commune's economy existed only inside `mission-tend`.
+    const match = new Match(VENTFRONT_DIVIDE, {
+      fauna: false,
+      seed: 51,
+      terrain: terrainFor(VENTFRONT_DIVIDE),
+    });
+    assert.ok(match.world.blooms.length >= 1, 'the Ventfront must author a garden');
+    const bed = match.world.blooms[0]!;
+    spawnUnit(match.world, {
+      kind: UnitKind.LightScout,
+      slot: PLAYER,
+      faction: Faction.Pelagia,
+      // The garden is Shelf ground, so the tender stands in Shelf water.
+      x: bed.x,
+      y: bed.y,
+      depth: 300,
+      weaponsCold: true,
+    });
+    const before = economyFor(match.world, PLAYER).biomass;
+    advance(match, 60);
+    const earnedThere = economyFor(match.world, PLAYER).biomass - before;
+    assert.ok(
+      Math.abs(earnedThere - HEALTHY_SHARE_PER_S * 60) < 0.5,
+      `a tended Ventfront garden paid ${earnedThere} against its regrowth of ${HEALTHY_SHARE_PER_S * 60}`
+    );
+    assert.equal(bed.crop, 1, 'and took nothing off the canopy doing it');
   });
 
   it('costs the tenders working there nothing to stand in', () => {
