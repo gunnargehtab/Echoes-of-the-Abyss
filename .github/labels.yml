@@ -35,3 +35,7 @@
 - name: routine
   color: 006b75
   description: Opened by the unattended work-issue Routine
+
+- name: needs-hardware
+  color: 9c6b30
+  description: Real work that a container cannot do — needs a physical GPU or device
