@@ -36,11 +36,20 @@ textures. The Bulwark is `hull_slab` + `armour_tier_1..3` + `flank_plate_p0..p3`
 Dredge is `tergite_0..n` + `tergite_ridge_0..n` + `tergite_spine_0..n`. Because those
 repeating series are loops, a hull can be *built* as well as exported, and
 `tools/hull-models/` is that path: a shared kit (metres, bow on +X, the export), one
-module a navy holding its shape language, and one script a hull composing from it.
+module a navy holding its shape language, and one script a model composing from it.
 
 ```text
 node tools/hull-models/hulls/<hull>.mjs → docs/concept-art/models/<hull>-<navy>.glb → intake
+node tools/hull-models/structures/<kind>-<navy>.mjs → docs/concept-art/models/<kind>-<navy>.glb → intake
 ```
+
+A structure is the same path with a different vocabulary. A navy's module holds a
+base / mount / head / barrel family beside its hull builders, because a settlement is
+one architecture grown four ways and that repetition is exactly where a module pays.
+Two things differ from a hull and both come from the kind rather than the script:
+scale is held on the footprint diameter (`lengthM` in `tools/hull-maps/models.mjs` is
+2 × `radiusM`), and no plan outline is generated, because a structure renders from its
+map rather than from a polygon under the Asymmetric Fidelity Law.
 
 This changes where a GLB comes from, never whether it is checked: the script's output goes
 through `hull-intake` and gates 2–5 exactly as a hand-exported one does, and a warning-free
@@ -54,9 +63,9 @@ Two things hold a script and its file together. The kit measures the light rule 
 intake can: on every export it rasterises the scene from above at the maps' own 4 px/m and
 names each lit part that shows less than a cell of plan area — a lamp on a vertical face,
 a glow inside a horn, a flood under a deck. And `npm run check:models` (CI's `build` job)
-rebuilds every hull in a scratch directory and fails on any part that differs from the
-committed GLB, so a faction module cannot be edited without the hulls it moves being
-re-run and committed with it.
+rebuilds every hull and every structure in a scratch directory and fails on any part that
+differs from the committed GLB, so a faction module cannot be edited without the models it
+moves being re-run and committed with it.
 
 **The plan outline is drawn once.** A kind with an approved model no longer carries its
 plan shape twice — once in the GLB and once typed out by hand as `HULL_OUTLINE` fractions.

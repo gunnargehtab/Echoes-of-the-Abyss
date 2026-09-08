@@ -20,7 +20,7 @@
  * Light is machinery light: louvres, stack throats, deck floods, lit gratings —
  * and it goes on *upward* faces, because the maps are top-down (see kit.mjs).
  */
-import { THREE, clad, lamp, add, box, cyl, plate, bothSides } from '../kit.mjs';
+import { THREE, clad, lamp, add, box, cyl, torus, plate, bothSides } from '../kit.mjs';
 
 /** The Klaxon's palette, as the Bulwark's own materials carry it. */
 export const ink = {
@@ -199,6 +199,181 @@ export function barbette(root, { black, grey, rust, amber }, { x, deck, r, barre
 export function deckFloods(root, lampMat, { deck, spots }) {
   spots.forEach(([x, z], i) =>
     add(root, `deck_flood_${i}`, box(7, 0.6, 2.6), lampMat, [x, deck + 0.4, z])
+  );
+}
+
+/* --------------------------------------------------------------------------
+ * Structures. A settlement is the same architecture grown four ways, so the
+ * base / mount / head / barrel family lives here beside the hull vocabulary
+ * rather than in any one structure script (#553, off #540 Phase 3).
+ *
+ * The Klaxon's is the one that does not share the other three's skeleton. Its
+ * approved Sentinel Turret is from an earlier authoring pass and speaks a
+ * different vocabulary entirely — a bolted raft, a riveted drum, a housing
+ * and a glacis where the other navies grow a mound, a collar and a head. The
+ * port keeps that, because it *is* the Klaxon's language: "boxy, riveted,
+ * over-engineered rectangles and cylinders". A change to what it looks like
+ * is a separate PR with its own screenshot (#540).
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The structure palette: the one fixture a turret needs that no hull did.
+ *
+ * `amber_lamp` is a navigation light on a moving hull; a static mount carries
+ * a work lamp, brighter and warmer, and the approved turret names it. The
+ * structures carry their own names rather than a shared dimming factor
+ * applied to `ink` — see `structureInk` in factions/hadron.mjs for the
+ * argument. The value is the approved turret's own.
+ */
+export const structureInk = {
+  workLamp: () => lamp('work_lamp', [0.888, 0.445, 0.033], [0.02, 0.01, 0.0]),
+};
+
+/**
+ * The raft: a bolted slab on the seabed with a foot at each corner and a bolt
+ * through each foot. Feet are numbered 1..4 from the forward-starboard corner
+ * round, which is the approved turret's own order.
+ */
+export function anchoredRaft(root, { black, rust, grey }, opts) {
+  const { at, r, height, foot, bolt } = opts;
+  const [cx, cy, cz] = at;
+  // Eight-sided rather than square: the approved turret's raft is a faceted
+  // drum, and an octagon is what reads as *plate cut and welded* from above.
+  add(root, 'base_raft', cyl(r, r, height, 8), black, [cx, cy, cz]);
+  const corners = [
+    [1, 1, -1],
+    [2, 1, 1],
+    [3, -1, 1],
+    [4, -1, -1],
+  ];
+  for (const [n, sx, sz] of corners) {
+    const fx = cx + sx * foot.inset[0];
+    const fz = cz + sz * foot.inset[1];
+    // Yawed a quarter turn: the approved turret's feet are plate cut on the
+    // diagonal, and a square one reads as a bolted-on box from above.
+    add(
+      root,
+      `anchor_foot_${n}`,
+      box(foot.size[0], foot.size[1], foot.size[2]),
+      rust,
+      [fx, cy - height / 2 + foot.size[1] / 2, fz],
+      [0, foot.yaw ?? 0, 0]
+    );
+    add(root, `anchor_bolt_${n}`, cyl(bolt.r, bolt.r, bolt.height, 6), grey, [
+      fx + sx * bolt.offset[0],
+      cy - height / 2 + bolt.height / 2,
+      fz + sz * bolt.offset[1],
+    ]);
+  }
+}
+
+/**
+ * The mount: a drum on the raft, its ring, a rank of rivets round it at a
+ * fixed pitch, one patch of older plate showing through, and the feed pipe
+ * standing beside it.
+ *
+ * The rivets are a rank rather than a scatter — the Klaxon repairs in
+ * straight lines even when the thing repaired is round.
+ */
+export function mountDrum(root, { black, grey, rust }, opts) {
+  const { at, r, height, ring, rivets, patch, feed } = opts;
+  const [cx, cy, cz] = at;
+  add(root, 'mount_drum', cyl(r, r * 0.98, height, 10), black, [cx, cy, cz]);
+  add(root, 'mount_ring', torus(ring.r, ring.t, 5, 18), grey, [cx, ring.y, cz], [
+    Math.PI / 2,
+    0,
+    0,
+  ]);
+  for (let i = 0; i < rivets.count; i++) {
+    const a = ((rivets.from + (360 / rivets.count) * i) * Math.PI) / 180;
+    add(
+      root,
+      `rivet_${i + 1}`,
+      new THREE.SphereGeometry(rivets.r, 6, 5),
+      grey,
+      [cx + rivets.radius * Math.cos(a), rivets.y, cz + rivets.radius * Math.sin(a)]
+    );
+  }
+  add(root, 'mount_patch', box(patch.size[0], patch.size[1], patch.size[2]), rust, patch.at);
+  add(root, 'feed_pipe', cyl(feed.r, feed.r, feed.height, 8), rust, feed.at);
+}
+
+/** The housing that trains, its glacis, and the patch riveted over its roof. */
+export function turretHouse(root, { black, grey, rust }, { housing, glacis, roofPatch }) {
+  add(root, 'turret_housing', box(housing.size[0], housing.size[1], housing.size[2]), black, housing.at);
+  add(root, 'turret_glacis', box(glacis.size[0], glacis.size[1], glacis.size[2]), grey, glacis.at);
+  add(
+    root,
+    'turret_roof_patch',
+    box(roofPatch.size[0], roofPatch.size[1], roofPatch.size[2]),
+    rust,
+    roofPatch.at
+  );
+}
+
+/**
+ * A short thick gun on a static mount: breech, barrel, jacket, muzzle brake,
+ * the recoil cylinder alongside and the counterweight astern.
+ *
+ * `brake.at` is given rather than derived from the barrel's run. The approved
+ * turret's brake does not sit on its barrel's axis — it stands about 17 m off
+ * it in plan — and this is a port, so the offset is carried across rather
+ * than quietly corrected. Straightening it changes what the model looks like,
+ * which is a separate PR with its own screenshot (#540).
+ */
+export function heavyBarrel(root, { black, grey, rust }, opts) {
+  const { breech, barrel, jacket, brake, recoil, counterweight } = opts;
+  add(root, 'barrel_breech', box(breech.size[0], breech.size[1], breech.size[2]), grey, breech.at);
+  add(
+    root,
+    'barrel',
+    cyl(barrel.r, barrel.r * 1.1, barrel.to - barrel.from, 8),
+    black,
+    [(barrel.from + barrel.to) / 2, barrel.y, barrel.z],
+    [0, 0, Math.PI / 2]
+  );
+  add(
+    root,
+    'barrel_jacket',
+    cyl(jacket.r, jacket.r, jacket.to - jacket.from, 8),
+    rust,
+    [(jacket.from + jacket.to) / 2, barrel.y, barrel.z],
+    [0, 0, Math.PI / 2]
+  );
+  add(root, 'muzzle_brake', cyl(brake.r, brake.r, brake.length, 8), grey, brake.at, [
+    0,
+    0,
+    Math.PI / 2,
+  ]);
+  add(
+    root,
+    'recoil_cylinder',
+    cyl(recoil.r, recoil.r, recoil.to - recoil.from, 6),
+    grey,
+    [(recoil.from + recoil.to) / 2, recoil.y, recoil.z],
+    [0, 0, Math.PI / 2]
+  );
+  add(
+    root,
+    'counterweight',
+    box(counterweight.size[0], counterweight.size[1], counterweight.size[2]),
+    rust,
+    counterweight.at
+  );
+}
+
+/**
+ * The one work lamp on its bracket — the turret's whole resting light budget,
+ * flat on an upward face because the maps are top-down (kit.mjs).
+ */
+export function baseLamp(root, { lampMat, black }, { at, size, bracket }) {
+  add(root, 'base_lamp', box(size[0], size[1], size[2]), lampMat, at);
+  add(
+    root,
+    'base_lamp_bracket',
+    box(bracket.size[0], bracket.size[1], bracket.size[2]),
+    black,
+    bracket.at
   );
 }
 

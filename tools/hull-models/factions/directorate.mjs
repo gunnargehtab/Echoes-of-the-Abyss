@@ -42,7 +42,19 @@
  *   same thing writ large. The Directorate's listed SIGs are baseline figures,
  *   so its light is spread along the plates, not thrown forward.
  */
-import { THREE, clad, lamp, add, box, cyl, plan, bothSides, segmentSeries as series } from '../kit.mjs';
+import {
+  THREE,
+  clad,
+  lamp,
+  add,
+  box,
+  cyl,
+  torus,
+  plan,
+  cable,
+  bothSides,
+  segmentSeries as series,
+} from '../kit.mjs';
 
 /** The Directorate's palette, as the Dredge's own materials carry it. */
 export const ink = {
@@ -332,6 +344,177 @@ export function hopper(root, { black, steel, gullet }, { x, y, z = 0, w = 18, h 
   add(root, 'hopper', box(w, h, d), black, [x, y, z]);
   add(root, 'hopper_rim', box(w + 1, 0.8, d + 1), steel, [x, y + h / 2 + 0.2, z]);
   add(root, 'hopper_throat', box(w * 0.67, 0.3, d * 0.57), gullet, [x, y + h / 2 + 0.7, z]);
+}
+
+/* --------------------------------------------------------------------------
+ * Structures. A settlement is the same architecture grown four ways, so the
+ * base / mount / head / barrel family lives here beside the hull vocabulary
+ * rather than in any one structure script (#553, off #540 Phase 3).
+ *
+ * The Directorate's structures are the carapace laid down: a mound plated in
+ * scutes instead of tergites, a browed head, and a segmented stinger for a
+ * gun. Asymmetric, yet regimented — the rule that places the scutes is
+ * regular and the result never mirrors, so `photophores` refuses a mirrored
+ * pair on this navy's turret exactly as it does on its hulls.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The structure palette: the one body colour a turret needs that no hull did.
+ *
+ * A Sentinel Turret is "nearly black — an ambush predator, navigation marks
+ * only until it fires" (docs/asset-prompts-3d.md, the Sentinel Turret block),
+ * and `chitin_red` at [0.19, 0.01, 0.03] is not that. The structures carry
+ * their own names rather than a shared dimming factor applied to `ink` — see
+ * `structureInk` in factions/hadron.mjs for the argument. The value is the
+ * approved turret's own.
+ */
+export const structureInk = {
+  chitinRedDark: () => clad('chitin_red_dark', [0.076, 0.006, 0.014], 0.14, 0.55),
+};
+
+/** A carapace plate: a low-facet orb the caller squashes and lays on the mound. */
+const scute = (w = 10, h = 6) => new THREE.SphereGeometry(1, w, h);
+
+/**
+ * The mound: a chitinous dome, the skirt where it meets the ground, and the
+ * collar the head turns in.
+ */
+export function carapaceMound(root, { violet, black, steel }, opts) {
+  const { x = 0, z = 0, y, r, skirt, collar } = opts;
+  add(root, 'base_mound', scute(12, 6), violet, [x, y, z], [0, 0, 0], r);
+  // A torus is born in the XY plane; a skirt and a collar lie flat.
+  add(root, 'mound_skirt', torus(skirt.r, skirt.t, 4, 20), black, [x, skirt.y, z], [
+    Math.PI / 2,
+    0,
+    0,
+  ]);
+  add(root, 'base_collar', torus(collar.r, collar.t, 5, 18), steel, [x, collar.y, z], [
+    Math.PI / 2,
+    0,
+    0,
+  ]);
+}
+
+/**
+ * Scutes plated round the mound, each `[degrees, radius, [long, height,
+ * wide]]` with `long` running outward, alternating through `skins`. The rank
+ * is regular in rule and never regular in result — the sizes are the
+ * plates' own.
+ */
+export function baseScutes(root, skins, { x = 0, z = 0, y, scutes }) {
+  scutes.forEach(([deg, rad, size], i) => {
+    const a = (deg * Math.PI) / 180;
+    add(
+      root,
+      `base_scute_${i}`,
+      scute(10, 6),
+      skins[i % skins.length],
+      [x + rad * Math.cos(a), y, z + rad * Math.sin(a)],
+      [0, -a, 0],
+      [size[0] / 2, size[1] / 2, size[2] / 2]
+    );
+  });
+}
+
+/**
+ * The head: a pod that trains, the brow shelved over it, the antennae raked
+ * off the brow, and the counter-spike that balances the stinger astern.
+ */
+export function browHead(root, { red, black, violet }, opts) {
+  const { x, y, z = 0, podR, brow, antennae, counter } = opts;
+  add(root, 'head_pod', scute(10, 6), red, [x, y, z], [0, 0, 0], podR);
+  add(root, 'head_brow', scute(10, 6), black, brow.at, [0, 0, brow.tilt ?? 0], brow.r);
+  antennae.forEach(([ax, az, length, rake], i) =>
+    add(
+      root,
+      `brow_antenna_${i}`,
+      spike(length * 0.09, length, 4),
+      violet,
+      [ax, brow.at[1] + brow.r[1] * 0.55 + length / 2, az],
+      [rake, 0, 0]
+    )
+  );
+  add(root, 'counter_spike', spike(counter.r, counter.length, 4), violet, counter.at, [
+    0,
+    0,
+    counter.rake,
+  ]);
+}
+
+/**
+ * The gun as a stinger: `segments` tapering along the run from `from` to
+ * `to`, each barbed on its upper shoulder, closing on the tip and its one
+ * lit pip.
+ *
+ * Segmented rather than lathed, for the reason the tergites are: a carapace
+ * is plates, and the seams between them are the shape.
+ */
+export function stingerBarrel(root, { steel, violet, black, pip }, { from, to, r, segments = 3 }) {
+  const A = new THREE.Vector3(...from);
+  const B = new THREE.Vector3(...to);
+  const d = B.clone().sub(A);
+  const len = d.length();
+  const at = (t) => A.clone().addScaledVector(d, t);
+  const q = new THREE.Quaternion().setFromUnitVectors(
+    new THREE.Vector3(1, 0, 0),
+    d.clone().normalize()
+  );
+  const along = (name, geo, mat, t) => {
+    const mesh = add(root, name, geo, mat);
+    mesh.position.copy(at(t));
+    mesh.quaternion.copy(q);
+    return mesh;
+  };
+  const span = 0.86 / segments;
+  for (let i = 0; i < segments; i++) {
+    const t0 = i * span;
+    const t1 = t0 + span * 1.14;
+    const r0 = r * (1 - 0.22 * i);
+    const geo = cyl(r0 * 0.86, r0, len * (t1 - t0), 6);
+    geo.rotateZ(-Math.PI / 2);
+    along(`barrel_seg_${i}`, geo, i % 2 ? violet : steel, (t0 + t1) / 2);
+    along(
+      `barrel_barb_${i}`,
+      scute(8, 4),
+      black,
+      t0 + span * 0.28
+    ).scale.set(r0 * 0.5, r0 * 0.62, r0 * 0.5);
+  }
+  along('stinger_tip', spike(r * 0.4, len * 0.16, 4), black, 0.92).rotateZ(-Math.PI / 2);
+  along('muzzle_pip', new THREE.SphereGeometry(r * 0.2, 8, 6), pip, 1);
+}
+
+/**
+ * Claw grips on the seabed, each `[index, degrees, radius, [long, height,
+ * wide]]`. The index is given rather than counted because the approved
+ * turret's rank runs 0, 1, 2, 4, 5 — a gap where a claw was never grown, and
+ * "asymmetric, yet regimented" is exactly what a rank with a hole in it is.
+ */
+export function clawGrips(root, skins, { x = 0, z = 0, y, grips }) {
+  grips.forEach(([index, deg, rad, size], i) => {
+    const a = (deg * Math.PI) / 180;
+    // The cone is born apex-up; laid on its side once, it claws outward.
+    const geo = spike(1, 2, 5);
+    geo.rotateZ(-Math.PI / 2);
+    add(
+      root,
+      `claw_grip_${index}`,
+      geo,
+      skins[i % skins.length],
+      [x + rad * Math.cos(a), y, z + rad * Math.sin(a)],
+      [0, -a, 0],
+      [size[0] / 2, size[1] / 2, size[2] / 2]
+    );
+  });
+}
+
+/** The magazine on one flank, its feed, and the flange into the collar. */
+export function magazine(root, { steel, red }, { pod, pipe, flangeAt }) {
+  add(root, 'ammo_pod', scute(10, 6), steel, pod.at, [0, 0, pod.roll ?? 0], pod.r);
+  cable(root, 'feed_pipe', pipe.from, pipe.to, steel, { r: pipe.r, sag: pipe.sag ?? 0, facets: 6 });
+  const ring = torus(flangeAt.r, flangeAt.t, 4, 10);
+  ring.rotateX(Math.PI / 2);
+  add(root, 'feed_flange', ring, red, flangeAt.at);
 }
 
 export { THREE };

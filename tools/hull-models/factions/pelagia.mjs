@@ -41,7 +41,19 @@
  * Pod and ring facet counts are the approved models' own and stay low: the
  * style asks for something grown and faceted, not a smooth render.
  */
-import { THREE, clad, lamp, add, box, cyl, torus, plan, loft, bothSides } from '../kit.mjs';
+import {
+  THREE,
+  clad,
+  lamp,
+  add,
+  box,
+  cyl,
+  torus,
+  plan,
+  loft,
+  cable,
+  bothSides,
+} from '../kit.mjs';
 
 /** The Commune's palette, as the Sower's own materials carry it. */
 export const ink = {
@@ -400,6 +412,152 @@ export function tendrils(root, ridge, { tendrils: list }) {
     );
     add(root, `feed_tendril_${name}`, new THREE.TubeGeometry(curve, 6, r, 5, false), ridge);
   });
+}
+
+/* --------------------------------------------------------------------------
+ * Structures. A settlement is the same architecture grown four ways, so the
+ * base / mount / head / barrel family lives here beside the hull vocabulary
+ * rather than in any one structure script (#553, off #540 Phase 3).
+ *
+ * The Commune's structures are grown, not built: a mound holds the ground
+ * with roots rather than bolts, the head is a pod under a cowl, and the gun
+ * is a limb that thickens at the joint. Nothing here is a matched pair, for
+ * the same reason nothing on a Commune hull is.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The structure palette: the Commune's ink, grown dark.
+ *
+ * A Sentinel Turret is "nearly black — an ambush predator, navigation marks
+ * only until it fires" (docs/asset-prompts-3d.md, the Sentinel Turret block).
+ * The structures carry their own names rather than a shared dimming factor
+ * applied to `ink`, because the dimming is not uniform across the four
+ * navies — see `structureInk` in factions/hadron.mjs for the argument. Values
+ * are the approved turret's own.
+ */
+export const structureInk = {
+  deepChlorophyll: () => clad('deep_chlorophyll', [0.003, 0.018, 0.013], 0.1, 0.65),
+  grownSteel: () => clad('grown_steel', [0.016, 0.03, 0.025], 0.35, 0.45),
+  algaeHull: () => clad('algae_hull', [0.007, 0.133, 0.072], 0.08, 0.62),
+  biolightGreen: () => lamp('biolight_green', [0.275, 0.768, 0.147], [0.006, 0.03, 0.009]),
+};
+
+/** The mound: a grown dome, its growth ring, and the collar the head turns in. */
+export function grownMound(root, { body, ring, collar }, opts) {
+  const { x = 0, z = 0, y, r, squash, ringAt, collarAt } = opts;
+  add(root, 'base_mound', orb(12, 6), body, [x, y, z], [0, 0, 0], [r[0], r[1], r[2]]);
+  add(root, 'mound_ring', torus(ringAt.r, ringAt.t, 4, 20), ring, [x, ringAt.y, z], [
+    Math.PI / 2,
+    0,
+    0,
+  ]);
+  add(root, 'base_collar', torus(collarAt.r, collarAt.t, 5, 18), collar, [x, collarAt.y, z], [
+    Math.PI / 2,
+    0,
+    0,
+  ]);
+  return { squash };
+}
+
+/**
+ * Root grips: swollen holdfasts radiating from the mound onto the seabed,
+ * each `[degrees, radius, [long, height, wide]]` with `long` running outward.
+ * A matched pair is refused — the Commune grows each root its own size, and a
+ * turret that came out rotationally regular would read as a machine.
+ */
+export function rootGrips(root, skins, { x = 0, z = 0, y, grips }) {
+  refuseMirror('root_grip', grips, ([, , size]) => size.join());
+  grips.forEach(([deg, rad, size], i) => {
+    const a = (deg * Math.PI) / 180;
+    add(
+      root,
+      `root_grip_${i}`,
+      orb(10, 6),
+      skins[i % skins.length],
+      [x + rad * Math.cos(a), y, z + rad * Math.sin(a)],
+      [0, -a, 0],
+      [size[0] / 2, size[1] / 2, size[2] / 2]
+    );
+  });
+}
+
+/**
+ * The head: a pod that trains, a cowl grown over it, and the quills along the
+ * cowl's crown. The cowl sits off-centre because a grown thing is not
+ * centred on what it covers.
+ */
+export function grownHead(root, { pod, cowl }, opts) {
+  const { x, y, z = 0, podR, cowlR, cowlAt, quills } = opts;
+  add(root, 'head_pod', orb(10, 6), pod, [x, y, z], [0, 0, 0], podR);
+  add(root, 'head_cowl', orb(10, 6), cowl, cowlAt, [0, 0, 0], cowlR);
+  quills.forEach(([qx, qz, length, rake], i) =>
+    add(
+      root,
+      `cowl_quill_${i}`,
+      cyl(0, length * 0.12, length, 4),
+      cowl,
+      [qx, cowlAt[1] + cowlR[1] * 0.6 + length / 2, qz],
+      [rake, 0, 0]
+    )
+  );
+}
+
+/**
+ * The gun as a grown limb: root, mid and tip thickening at each joint along
+ * the run from `from` to `to`, ribs banding the root, and the iris and its
+ * one lit pip at the muzzle.
+ *
+ * A limb rather than a tube: the Commune's weapons come out of the body the
+ * way a claw does, so the joints are where it swells rather than where it
+ * steps.
+ */
+export function grownBarrel(root, { rootMat, mid, tip, iris, pip }, { from, to, r, ribs = 3 }) {
+  const A = new THREE.Vector3(...from);
+  const B = new THREE.Vector3(...to);
+  const d = B.clone().sub(A);
+  const len = d.length();
+  const at = (t) => A.clone().addScaledVector(d, t);
+  const q = new THREE.Quaternion().setFromUnitVectors(
+    new THREE.Vector3(1, 0, 0),
+    d.clone().normalize()
+  );
+  const along = (name, geo, mat, t) => {
+    const mesh = add(root, name, geo, mat);
+    mesh.position.copy(at(t));
+    mesh.quaternion.copy(q);
+    return mesh;
+  };
+  const limb = (name, t0, t1, r0, r1, mat) => {
+    const geo = cyl(r1, r0, len * (t1 - t0), 8);
+    geo.rotateZ(-Math.PI / 2);
+    return along(name, geo, mat, (t0 + t1) / 2);
+  };
+  limb('barrel_root', 0, 0.42, r, r * 0.86, rootMat);
+  limb('barrel_mid', 0.4, 0.74, r * 0.86, r * 0.7, mid);
+  limb('barrel_tip', 0.72, 0.94, r * 0.7, r * 0.55, tip);
+  const irisGeo = torus(r * 0.55, r * 0.16, 4, 12);
+  irisGeo.rotateY(Math.PI / 2);
+  along('muzzle_iris', irisGeo, iris, 0.97);
+  along('muzzle_pip', new THREE.SphereGeometry(r * 0.22, 8, 6), pip, 1);
+  for (let i = 0; i < ribs; i++) {
+    const t = 0.1 + (i * 0.26) / Math.max(ribs - 1, 1);
+    const rib = torus(r * 1.02, r * 0.2, 4, 12);
+    rib.rotateY(Math.PI / 2);
+    along(`recoil_rib_${i}`, rib, rootMat, t);
+  }
+}
+
+/**
+ * The magazine: a grown pod on the flank, the feed running up from it, and
+ * the flange where it enters the collar. One pod, never a pair — the
+ * Commune's turret feeds from the side it grew on.
+ */
+export function magazine(root, { pipe: pipeMat, pod: podMat, flange }, { pod, pipe, flangeAt }) {
+  add(root, 'ammo_pod', orb(10, 6), podMat, pod.at, [0, 0, pod.roll ?? 0], pod.r);
+  cable(root, 'feed_pipe', pipe.from, pipe.to, pipeMat, { r: pipe.r, sag: pipe.sag ?? 0, facets: 6 });
+  const ring = torus(flangeAt.r, flangeAt.t, 4, 10);
+  ring.rotateX(Math.PI / 2);
+  add(root, 'feed_flange', ring, flange, flangeAt.at);
 }
 
 export { THREE };
