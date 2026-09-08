@@ -216,6 +216,22 @@ export const DOCTRINE: Record<Faction, Doctrine> = {
     // literal in the commander, and the composition is where this codebase
     // declares that a navy fields a hull (the Sower's entry, one line up, does
     // nothing else either).
+    //
+    // The **Chorister** is the seventh, and it is the entry the flora economy
+    // was folded for. docs/systems-flora.md §6: giving the Commune an income
+    // "makes five unlocked hulls reachable by a second navy and the
+    // price-as-lock rule start doing what economy.md §8 says it does". Until
+    // this list named one, a tended garden paid the Commune an account they
+    // could not spend, and a commander that sent a hull to stand on one was
+    // simply down a hull.
+    //
+    // The Chorister rather than the other four because the price is the lock
+    // and this is the cheapest door through it: 30 Nodules and 20 Biomass is
+    // two minutes of one garden. It is the Directorate's hull by *rate* and
+    // nobody's by lock (docs/units.md, design notes) — which is the whole of
+    // what "faction-blind price, faction-specific rate" was for. For the
+    // Commune it is a PR-2 picket bought with the interest on a living bed;
+    // for the Directorate it is still cheaper, still deeper and still theirs.
     composition: [
       UnitKind.LightScout,
       UnitKind.Reed,
@@ -223,6 +239,7 @@ export const DOCTRINE: Record<Faction, Doctrine> = {
       UnitKind.Reed,
       UnitKind.Bower,
       UnitKind.Sower,
+      UnitKind.Chorister,
     ],
   },
   // "The Listening." Best hydrophones by a wide margin, so it pings least and

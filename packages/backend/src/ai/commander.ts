@@ -36,6 +36,8 @@ import {
   FACTION_STRUCTURE,
   Faction,
   HAZARDS,
+  BLOOM_SHARE,
+  Biome,
   HARVEST_THROTTLE,
   harvestSigFor,
   HULL_EFFECTS,
@@ -1230,10 +1232,15 @@ export class AiCommander implements AiPlayer {
     this.commandLayers(snapshot, commands);
     this.commandSeeders(snapshot, commands);
     this.commandAnchor(snapshot, commands);
+    // Before the lift, and claimed the same way: a tender is a hull the army
+    // does not have, and one that had been ordered aboard a transport in the
+    // same observation would be walked off the garden it is paying for.
+    const tending = this.commandGardens(snapshot, army, commands);
+    const free = tending.size === 0 ? army : army.filter((u) => !tending.has(u.id));
     // The lift claims the hulls it orders aboard this observation, so the
     // army branch does not walk them back to the rally in the same breath.
-    const lifted = this.commandTransports(snapshot, army, raiders, commands);
-    const afloat = lifted.size === 0 ? army : army.filter((u) => !lifted.has(u.id));
+    const lifted = this.commandTransports(snapshot, free, raiders, commands);
+    const afloat = lifted.size === 0 ? free : free.filter((u) => !lifted.has(u.id));
     this.commandArmy(snapshot, afloat, raiders, commands);
     this.commandSonar(snapshot, army, raiders, commands);
 
@@ -2086,6 +2093,33 @@ export class AiCommander implements AiPlayer {
       urgent = true;
     }
 
+    // A bio-reactor last of the cheap builds, and only behind a standing
+    // Refinery — docs/systems-flora.md §2 and §6.
+    //
+    // Gated on the roster rather than on the faction: §6 gives the reactor to
+    // every navy at one rate, and what decides whether one is worth its price
+    // is whether this commander's own composition names a hull priced in the
+    // account it fills. A navy whose list is all Nodules would be buying an
+    // income it cannot spend, which is the mistake this branch exists to not
+    // make.
+    //
+    // Behind the Refinery because the hauls are where the economy actually
+    // lives, and a commander that bought a second income before it had
+    // shortened its first one measured worse at exactly that: the nodule line
+    // stalled while 250 sat reserved for kelp.
+    if (this.wantsBiomass() && has(StructureKind.Refinery) && !has(StructureKind.BioReactor)) {
+      const site = this.reactorSite(snapshot);
+      if (site !== null) {
+        if (this.afford(StructureKind.BioReactor, purse)) {
+          out.push({ kind: 'build', structure: StructureKind.BioReactor, ...site });
+          this.buildAttempt++;
+          return;
+        }
+        // Deliberately not urgent. The reactor is the one build here a navy
+        // can do without, so it never holds the purse against the army.
+      }
+    }
+
     // The rung (docs/units.md, the Slipway; #461): the second yard, last, and
     // only once the crystal is aboard. The commander's crystal arrives the way
     // a player's does — a harvester rated for the field — so a navy that never
@@ -2270,6 +2304,73 @@ export class AiCommander implements AiPlayer {
    * the outer bound: a vent further away than that is not worth reaching for
    * even when something of ours happens to stand near it.
    */
+  /**
+   * Does this navy field anything priced in Biomass?
+   *
+   * The reactor's whole justification, and the reason it is a roster question
+   * rather than a faction one: an income nobody can spend is 250 Nodules and
+   * a SIG-50 building bought to make a number go up. Read off the doctrine's
+   * own composition, so a navy that gains or loses a Biomass hull gains or
+   * loses the opinion with it.
+   */
+  private wantsBiomass(): boolean {
+    return this.doctrine.composition.some((kind) => priceOf(statsFor(kind)).biomass > 0);
+  }
+
+  /**
+   * Where to stand a bio-reactor: on kelp, in reach of a bed with crop in it.
+   *
+   * Both halves are required and neither implies the other. The structure
+   * refuses ground that is not Kelp Forest (`requiresBiome`), and a reactor
+   * renders nothing unless a *field* overlaps its 400 m — a bed is an area,
+   * so reach is disc overlap exactly as `flora.ts` computes it.
+   *
+   * Nearest bed first, and the reactor placed at the bed's own centre when
+   * that cell is kelp: a reactor thins the water it stands in, so the hole it
+   * makes should be over the field rather than at the edge of one. Falls back
+   * to nothing rather than to a guess — a build order the server refuses
+   * costs the commander an observation and teaches it nothing.
+   */
+  private reactorSite(snapshot: EchoSnapshot): { x: number; y: number } | null {
+    const beds = snapshot.hazards
+      .filter((hazard) => hazard.kind === 'kelp-entanglement')
+      .sort((a, b) => distance(this.home, a) - distance(this.home, b));
+    for (const bed of beds) {
+      if (this.biomeAt(bed.x, bed.y) !== Biome.KelpForest) continue;
+      // And ground that will actually hold a building. A structure sits at
+      // `CONSTRUCTION.WORKING_DEPTH_M` wherever the floor is, so shallower
+      // ground refuses one outright — which is exactly what a bloom garden is
+      // (docs/maps.md: Shelf-band, and nothing can be built on it). Without
+      // this test the commander pushes a build the server refuses and returns
+      // from this branch on every observation, and the two builds below it
+      // are never reached again: measured as a Directorate that stopped
+      // buying Slipways and Vent Taps entirely.
+      if (this.floorAt(bed.x, bed.y) < CONSTRUCTION.WORKING_DEPTH_M) continue;
+      return { x: bed.x, y: bed.y };
+    }
+    return null;
+  }
+
+  /** The briefing's terrain, read by position. Map data, public to everyone. */
+  private biomeAt(x: number, y: number): Biome | undefined {
+    const cell = this.cellAt(x, y);
+    return cell === null ? undefined : (this.briefing.terrain.biomes[cell] as Biome);
+  }
+
+  /** The seabed under a point, from the same public grid. */
+  private floorAt(x: number, y: number): number {
+    const cell = this.cellAt(x, y);
+    return cell === null ? 0 : this.briefing.terrain.floor[cell]!;
+  }
+
+  private cellAt(x: number, y: number): number | null {
+    const { cols, rows, cellM } = this.briefing.terrain;
+    const cx = Math.floor(x / cellM);
+    const cy = Math.floor(y / cellM);
+    if (cx < 0 || cy < 0 || cx >= cols || cy >= rows) return null;
+    return cy * cols + cx;
+  }
+
   private nearestVent(structures: readonly OwnStructure[]): { x: number; y: number } | null {
     const { cols, rows, cellM, biomes } = this.briefing.terrain;
     let best: { x: number; y: number } | null = null;
@@ -3388,6 +3489,75 @@ export class AiCommander implements AiPlayer {
         this.walk(hull, rally, snapshot.tick, out);
       }
     }
+  }
+
+  /**
+   * The gardens — docs/systems-flora.md §2, docs/economy.md §6.
+   *
+   * Bloom-share pays while a live, non-silent Commune hull stands within
+   * `BLOOM_SHARE.TEND_RADIUS_M` of a bed, and stops the tick it does not. So
+   * the whole opinion a commander needs about it is *somebody stand there*,
+   * and the whole cost is the hull that is standing.
+   *
+   * One hull per garden and no more, because the share is per bed and never
+   * per gardener: a second tender on the same node buys nothing but a louder
+   * cluster of targets. Claimed by id like the anchors, so the same hull is
+   * asked every observation — a branch that changed its mind about which hull
+   * was the tender would keep both walking and neither earning.
+   *
+   * Drawn from the army and capped at half of it. Tending is the Commune
+   * spending exposure on income on the most reachable ground on the map,
+   * which is the guard-rail (docs/systems-echo.md §10) working as designed —
+   * but a navy that sent its whole fleet gardening would have answered the
+   * guard-rail by deleting itself.
+   *
+   * Returns the ids it claimed, for `observe` to keep out of the army branch,
+   * exactly as the lift does.
+   */
+  private commandGardens(
+    snapshot: EchoSnapshot,
+    army: readonly OwnUnit[],
+    out: AiCommand[]
+  ): Set<number> {
+    const claimed = new Set<number>();
+    if (this.briefing.faction !== Faction.Pelagia) return claimed;
+    const gardens = this.briefing.blooms;
+    if (gardens.length === 0 || army.length === 0) return claimed;
+
+    // Tended with what the army does not need, and never out of what it does.
+    //
+    // Tending is exposure spent on income on the most reachable ground on the
+    // map, and the doctrine already carries the number that means "enough
+    // hulls to act" — so a tender comes out of the *surplus* above that line
+    // and never out of the force itself. Anything else has the commander
+    // gardening its way below its own attack threshold, which measured
+    // exactly as it sounds: a navy that stopped approaching because two of
+    // its hulls were standing in kelp.
+    const spare = army.length - this.doctrine.attackAtArmySize;
+    const tenders = Math.min(gardens.length, Math.floor(spare / 2));
+    if (tenders <= 0) return claimed;
+
+    // Nearest gardens first: a commander that walked past one to reach
+    // another would spend the difference in travel for the same rate.
+    const wanted = [...gardens]
+      .sort((a, b) => distance(this.home, a) - distance(this.home, b))
+      .slice(0, tenders);
+    const available = [...army].sort((a, b) => a.id - b.id);
+
+    for (const garden of wanted) {
+      const hull = available.find((u) => !claimed.has(u.id));
+      if (hull === undefined) break;
+      claimed.add(hull.id);
+      // Inside the radius already: leave it alone. Re-issuing a move every
+      // observation is what `walk` throttles, but a tender that is *there*
+      // should not be given an order at all — an arriving hull that keeps
+      // being told to arrive never stops moving, and a moving hull is a
+      // louder hull.
+      if (distance(hull, garden) > BLOOM_SHARE.TEND_RADIUS_M * 0.8) {
+        this.walk(hull, garden, snapshot.tick, out);
+      }
+    }
+    return claimed;
   }
 
   // --- The lift -------------------------------------------------------------

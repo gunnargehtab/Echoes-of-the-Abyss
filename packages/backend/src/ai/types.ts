@@ -81,6 +81,19 @@ export interface AiBriefing {
   /** Every start on this map, in slot order. */
   spawns: { x: number; y: number }[];
   nodes: ResourceNodeInfo[];
+  /**
+   * The map's bloom gardens — docs/systems-flora.md §2, docs/maps.md.
+   *
+   * Public map data like `nodes` and `spawns`, and for the same reason a
+   * start position is here: a garden is authored ground that everybody can
+   * see, and the guard-rail that sites it on the most reachable water only
+   * works if everybody can find it (docs/systems-echo.md §10).
+   *
+   * Positions, not beds. What is *standing* on one is a kelp field whose crop
+   * moves, and that belongs to the snapshot's hazards where a commander has
+   * to have heard it.
+   */
+  blooms: { x: number; y: number }[];
   terrain: TerrainView;
 }
 
