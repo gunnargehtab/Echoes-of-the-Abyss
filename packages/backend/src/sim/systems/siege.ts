@@ -23,6 +23,7 @@ import {
 } from '@echoes/shared';
 import { Health, Position, Song, Spore, Structure, Unit } from '../components.ts';
 import type { SimWorld } from '../world.ts';
+import { creditWound } from './fauna.ts';
 
 const spored = defineQuery([Spore, Structure, Health]);
 const singers = defineQuery([Song, Position, Unit]);
@@ -106,6 +107,11 @@ export function siegeSystem(world: SimWorld, destroyed: number[]): void {
 
     Spore.remainingS[eid] = Math.max(0, Spore.remainingS[eid]! - dt);
     Health.hp[eid] = Health.hp[eid]! - Spore.perS[eid]! * dt;
+    // "Who seeded it, so a wall that falls to a spore falls to somebody"
+    // (Spore.slot) — and a creature that falls to one is rendered by the same
+    // somebody (docs/systems-flora.md §5). No `wound`: the silence is the
+    // weapon, and telling a Hollow what is eating it would be a tell.
+    creditWound(world, eid, Spore.slot[eid]!);
 
     // And nothing touches `Acoustic.sig`. Stated as a line rather than left as
     // an absence, because the silence *is* the weapon (§9) and the next person

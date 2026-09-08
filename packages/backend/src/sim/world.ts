@@ -666,6 +666,10 @@ export function spawnFauna(
   // Nor shot before it was born — the recycled-id argument below.
   Fauna.struck[eid] = 0;
   Fauna.struckBy[eid] = 0;
+  // Nobody has rendered it yet, and -1 is "nobody" rather than slot zero:
+  // bitecs recycles ids, so a creature born into a dead raider's id would
+  // otherwise arrive already owing its Biomass to whoever shot that hull.
+  Fauna.renderedBySlot[eid] = -1;
   // Written even for species that never scavenge or scatter — bitecs recycles
   // entity ids, and a creature born on a dead swarm's id must not inherit its
   // wreck, nor a shoal a dead shoal's fright.

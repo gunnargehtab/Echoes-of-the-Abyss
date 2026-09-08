@@ -46,6 +46,15 @@ import { eidOfLocalId } from './world.ts';
  * each pair below 4, where it had been appended, which read as the numbers
  * having gone backwards. They did not; they were shared.
  *
+ * 21: a rendered creature is paid to whoever killed it (#560,
+ * docs/systems-flora.md §5). `payBiomass` credited the *nearest* player
+ * entity, which handed the loud navy the quiet one's kills and inverted
+ * docs/bestiary.md §5's own claim about whose noise is paid for what it
+ * attracts. Fauna now carry the slot of the last player damage — a gun, a
+ * torpedo, a mine, a spore — and a creature nobody hurt pays nobody. The
+ * commands in a v20 file are still legible; every Biomass figure they produce
+ * is different, so a v20 recording diverges at its first rendered kill.
+ *
  * 20: the Drift breeds and the kelp grows back (#554, docs/bestiary.md §6,
  * docs/systems-flora.md §3). A map's fauna were a fixed stock — one seeding
  * from the constructor, and `spawnsAllowed` read only at seed time — and are
@@ -229,7 +238,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 20;
+export const REPLAY_FORMAT_VERSION = 21;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =
