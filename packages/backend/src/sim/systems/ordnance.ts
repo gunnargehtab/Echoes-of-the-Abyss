@@ -68,7 +68,7 @@ import {
   Velocity,
 } from '../components.ts';
 import { applyFiringSpike } from './acoustics.ts';
-import { isDriven, wound } from './fauna.ts';
+import { creditWound, isDriven, wound } from './fauna.ts';
 import { raiseSelfEvent, spawnOrdnance, type SimWorld } from '../world.ts';
 import { suppressKelpAt } from './hazards.ts';
 
@@ -224,6 +224,10 @@ function detonate(world: SimWorld, eid: number, target: number, destroyed: numbe
     // spent from wherever it fired, so the wound carries no direction: a
     // Hollow answers with a lunge at whatever it can hear.
     wound(world, target, 0);
+    // The *payout* is not in the same position: a torpedo has no hull behind
+    // it but it does have an owner, and that is who rendered what it kills
+    // (docs/systems-flora.md §5).
+    creditWound(world, target, Owner.slot[eid]!);
     // The blow is reported to its owner (docs/ui-ux.md §5), same as a gun's.
     raiseSelfEvent(world, { kind: SelfEventKind.Damaged, eid: target });
     if (Health.hp[target]! <= 0 && !destroyed.includes(target)) destroyed.push(target);
@@ -644,6 +648,9 @@ function blast(
     Health.hp[other] = Health.hp[other]! - options.damage * share;
     // Damage is a sound (`wound`, #353), and a blast has no hull behind it.
     wound(world, other, 0);
+    // A mine is laid by somebody, and what it kills is theirs to render
+    // (docs/systems-flora.md §5). `slot` above is the ordnance's own owner.
+    creditWound(world, other, slot);
     // Every hull the blast reached is told (docs/ui-ux.md §5) — structures
     // included, since a base under mine attrition is exactly the off-screen
     // fight the alert exists for.

@@ -100,6 +100,25 @@ export function wound(world: SimWorld, target: number, by: number): void {
   Fauna.struckBy[target] = by;
 }
 
+/**
+ * Record who hurt a creature, for the payout when it dies — docs/systems-flora.md
+ * §5, "the kill is credited to the killer".
+ *
+ * Beside `wound` rather than inside it, because they answer different
+ * questions about the same blow: `wound` is what the *creature* does about it
+ * (a Hollow lunges at what it can hear) and this is what the *economy* does
+ * about it. They also disagree about the source — a torpedo wound carries no
+ * direction because nothing is standing behind it, while the torpedo's owner
+ * is exactly who gets paid.
+ *
+ * A slot, not an entity: the hull that fired may be dead by the time the
+ * creature is, and the Biomass is owed to the player either way.
+ */
+export function creditWound(world: SimWorld, target: number, slot: number): void {
+  if (!hasComponent(world, Fauna, target)) return;
+  Fauna.renderedBySlot[target] = slot;
+}
+
 const creatures = defineQuery([Fauna, Position, Acoustic, Health]);
 
 /** Reused scratch for terrain step resolution — see movement.ts. */

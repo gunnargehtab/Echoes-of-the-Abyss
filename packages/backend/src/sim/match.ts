@@ -355,7 +355,6 @@ export class Match {
    * something tests and the client have always been allowed to rely on.
    */
   private readonly owners = defineQuery([Owner]);
-  private readonly placedOwners = defineQuery([Owner, Position]);
   private readonly emitters = defineQuery([Acoustic, Owner, Position]);
   private readonly faunaQuery = defineQuery([Fauna, Health, Position]);
   private readonly ordnanceOwners = defineQuery([Ordnance, Owner]);
@@ -2229,10 +2228,20 @@ export class Match {
       // (docs/bestiary.md §5, §6). Paid to whoever killed it, at the
       // Directorate's full rate or everyone else's rendering-contract share.
       if (hasComponent(this.world, Fauna, eid)) {
-        // A creature the map killed pays nobody: biomass is *rendered* fauna,
-        // and an eruption renders nothing (see SimWorld.environmentalDeaths).
-        // The Drift still loses the creature, so recordKill stays.
-        const rendered = !this.world.environmentalDeaths.has(eid);
+        // "Rendered" is now one fact rather than two guesses: somebody was
+        // paid for this creature. That needs both halves of §5 — a player
+        // dealt the last blow (`Fauna.renderedBySlot`) *and* the map did not
+        // finish it (`SimWorld.environmentalDeaths`) — and it is the same
+        // answer `payBiomass` acts on, so the payout and the health charge can
+        // never disagree about whether a harvest happened.
+        //
+        // Before the killer was recorded, "rendered" was merely "not a hazard
+        // kill", which charged a region the full harvesting rate for a
+        // creature another *creature* ate (docs/bestiary.md §6: a death nobody
+        // rendered costs a quarter of one somebody did). The Drift still loses
+        // the animal either way, which is why recordKill runs regardless.
+        const rendered =
+          Fauna.renderedBySlot[eid]! >= 0 && !this.world.environmentalDeaths.has(eid);
         if (rendered) this.payBiomass(eid);
         this.world.drift.recordKill(Position.x[eid]!, Position.y[eid]!, rendered);
         // Living terrain stops living: the cluster's −0.10 comes off the PF
@@ -2470,7 +2479,7 @@ export class Match {
   }
 
   /**
-   * Award Biomass for a kill.
+   * Award Biomass for a kill — docs/systems-flora.md §5.
    *
    * §5: only the Directorate processes it at scale; everyone else sells
    * remains through Consortium rendering contracts at a fraction. Yield also
@@ -2478,35 +2487,34 @@ export class Match {
    * Directorate snowball (docs/economy.md §9) — over-harvesting kills the
    * region that pays them.
    *
-   * The killer is whoever was shooting it, which the simulation does not
-   * record; attributed instead to the nearest player entity, which is the same
-   * answer in every case that matters and needs no new bookkeeping.
+   * **Paid to the killer** (#560). This used to attribute a kill to the
+   * nearest player entity and defend that with "the same answer in every case
+   * that matters"; #535 measured what that was worth, and it was the opposite
+   * of the doctrine it was standing in for. The Consortium — who render
+   * nothing, whose hulls are priced in nodules, and who happen to be loud
+   * enough to have something nearby — banked roughly three times the creature
+   * value the Directorate did, on ground the Directorate had cleared. §5's
+   * claim is that *fauna are drawn to your noise and the Directorate is paid
+   * for what your noise attracts*, which requires that the payout follow the
+   * gun and not the geometry.
+   *
+   * A creature nobody hurt pays nobody. That is the same answer §5 already
+   * gives for a death the map caused (`SimWorld.environmentalDeaths`, checked
+   * by the caller) rather than a consolation prize for standing nearby, and it
+   * is why the sentinel is -1 instead of a slot.
    */
   private payBiomass(eid: number): void {
+    const slot = Fauna.renderedBySlot[eid]!;
+    if (slot < 0) return;
+
     const stats = faunaStatsFor(Fauna.species[eid] as FaunaSpecies);
-    const x = Position.x[eid]!;
-    const y = Position.y[eid]!;
-
-    let bestSlot = -1;
-    let bestD2 = Infinity;
-    let bestFaction = Faction.Bathyarch;
-    // Ascending, because an exact tie in distance goes to the lower id — the
-    // answer this gave when it walked ids, kept so a replay agrees with it.
-    const placed = this.ascending(this.placedOwners(this.world));
-    for (let i = 0; i < placed.length; i++) {
-      const other = placed[i]!;
-      if (Owner.slot[other] === DRIFT_SLOT) continue;
-      const d2 = (Position.x[other]! - x) ** 2 + (Position.y[other]! - y) ** 2;
-      if (d2 >= bestD2) continue;
-      bestD2 = d2;
-      bestSlot = Owner.slot[other]!;
-      bestFaction = Owner.faction[other] as Faction;
-    }
-    if (bestSlot < 0) return;
-
-    const rate = bestFaction === Faction.Directorate ? 1 : DRIFT.RENDERING_CONTRACT_RATE;
-    const yieldScale = this.world.drift.yieldMultiplier(x, y);
-    economyFor(this.world, bestSlot).biomass += stats.biomass * rate * yieldScale;
+    // The faction the slot is seated as, which the match holds and the
+    // creature does not: a spore knows who seeded it but not what navy they
+    // are. `factionOf` rather than the map directly, so a slot the mission
+    // runtime seated is read the same way every other path reads it.
+    const rate = this.factionOf(slot) === Faction.Directorate ? 1 : DRIFT.RENDERING_CONTRACT_RATE;
+    const yieldScale = this.world.drift.yieldMultiplier(Position.x[eid]!, Position.y[eid]!);
+    economyFor(this.world, slot).biomass += stats.biomass * rate * yieldScale;
   }
 
   /**

@@ -51,7 +51,7 @@ import {
   Posture,
 } from '../components.ts';
 import { applyFiringSpike } from './acoustics.ts';
-import { isDriven, wound } from './fauna.ts';
+import { creditWound, isDriven, wound } from './fauna.ts';
 import { isInterceptable } from './ordnance.ts';
 import { raiseSelfEvent } from '../world.ts';
 import type { SimWorld } from '../world.ts';
@@ -507,6 +507,9 @@ export function combatSystem(world: SimWorld, destroyed: number[]): void {
     // Damage is a sound: a creature that gave hull is told what shot it, and
     // the Hollow answers a gun that outranges its trigger (`wound`, #353).
     wound(world, target, eid);
+    // And the shot is a claim: whoever fired renders what they kill
+    // (docs/systems-flora.md §5).
+    creditWound(world, target, Owner.slot[eid]!);
     // The victim's owner is told a blow landed (docs/ui-ux.md §5). An event,
     // not an inference: a client watching its own hp could not tell a shell
     // from crush attrition, and §8 keeps those on different channels.

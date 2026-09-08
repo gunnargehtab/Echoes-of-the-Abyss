@@ -192,14 +192,19 @@ four full beds are worth **960, and they grow back**. So rendering becomes the o
 half of the account — the windfall you take because the animal was there and you were loud —
 and the beds become the income anybody can plan against.
 
-Two corrections ride along, both of them things #535 filed as separate faults:
+Two corrections ride along, both of them things #535 filed as separate faults, and both now
+built:
 
-- **The kill is credited to the killer**, not to the nearest hull. Today a Consortium hull
-  standing near a corpse it had nothing to do with banks three times the creature value the
-  Directorate does, which inverts the one structural claim §5 makes.
+- **The kill is credited to the killer**, not to the nearest hull. Before this, a Consortium
+  hull standing near a corpse it had nothing to do with banked three times the creature value
+  the Directorate did, which inverts the one structural claim §5 makes. A creature carries the
+  slot of the last player damage it took — a gun, a torpedo, a mine, a spore — and **last hit
+  wins a shared kill**, which needs no arbitration and no ledger: a creature two navies shot is
+  a creature one of them finished. A creature nobody hurt pays nobody.
 - **Nothing is paid on a death the map caused.** An eruption boiling an Ashgrazer renders
   nothing, which [bestiary.md](bestiary.md) §6 already says about the health cost and which
-  the payout should have agreed with.
+  the payout now agrees with. The region still loses the animal either way: attribution is not
+  an argument about what the water lost.
 
 ---
 
@@ -312,11 +317,10 @@ spent inside a match, is a balance decision with a measurement behind it now.
 
 ## 9. Prototype mapping
 
-**Steps 1, 2 and 3 are built; the rest is not.** A bed carries its standing crop, the water over
+**Steps 1 to 4 are built; the rest is not.** A bed carries its standing crop, the water over
 it answers to it, both halves of the Drift grow back on §6's bands, and a bio-reactor can
-render a bed into hulls and wear the water while it does. What is still missing is the
-crediting — `Match.payBiomass` pays the nearest hull rather than the killer — the cutter's
-share, bloom-share's fold, and sowing. The order of work, and why it is that order:
+render a bed into hulls and wear the water while it does. A rendered creature is paid to whoever
+killed it. What is still missing is the cutter's share, bloom-share's fold, and sowing. The order of work, and why it is that order:
 
 1. **Beds get a crop, and crop drives PF and drag.** *Built (#549).* The sim change with no
    player-facing part, and the one everything else reads. Crop rides the PF grid's existing
@@ -336,8 +340,9 @@ share, bloom-share's fold, and sowing. The order of work, and why it is that ord
    §3's wear, which arrives with the first thing that can take crop. Buildable on Kelp Forest
    ground, SIG 50 while it renders and a hum when the bed under it is spent, taking the nearest
    crop first so the hole opens under the reactor rather than at the far edge of its reach.
-4. **The fauna windfall, credited to the killer.** `payBiomass` becomes opportunistic and
-   correct at the same time.
+4. **The fauna windfall, credited to the killer.** *Built (#560).* `payBiomass` reads the
+   killer-of-record rather than scanning for the nearest hull, and the rate follows the
+   killer's own navy. The map's half of §5 was already built; this is the other half.
 5. **The cutter's 40%**, on the burn mechanic that already exists.
 6. **Bloom-share re-founded on the crop** — the node becomes a bed, the payout becomes
    Biomass bounded by regrowth, and the Commune's roster gains its Biomass column. The

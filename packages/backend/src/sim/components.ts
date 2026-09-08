@@ -185,6 +185,23 @@ export const Unit = defineComponent({
  */
 export const Fauna = defineComponent({
   species: Types.ui8,
+  /**
+   * The slot of whoever last hurt this creature with something they own —
+   * a gun, a torpedo, a mine, a spore — or -1 if nobody has (#560).
+   *
+   * The killer-of-record, and the thing `payBiomass` was missing: Biomass is
+   * *rendered* fauna, so it belongs to whoever rendered it, and until this
+   * existed the payout went to the nearest hull instead. Last hit wins a
+   * shared kill, which needs no arbitration and no ledger: a creature two
+   * navies shot is a creature one of them finished.
+   *
+   * Deliberately not `struckBy` above, which is an *entity* consumed and
+   * cleared by every sense pass because it steers the Hollow's retaliation.
+   * This one persists until the creature dies, and survives the death of the
+   * hull that fired: a slot outlives its hulls, and the payout is owed to the
+   * player rather than to the gun.
+   */
+  renderedBySlot: Types.i16,
   /** FaunaStage. */
   stage: Types.ui8,
   /** Seconds spent at or above Interest, and below it. */
