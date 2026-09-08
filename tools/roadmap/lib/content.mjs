@@ -233,6 +233,9 @@ export const groups = {
   'How the project runs': 'Getting organised',
   'What the first read-through found': 'What the first read-through found',
   'The opponent': 'A better opponent',
+  'The roster, wave by wave': 'A fleet of your own',
+  'The fleet as buildable source': 'How the ships get made',
+  'The Biomass account': 'Kelp, herds, and what they pay',
   'Filed since the audit': 'Since then',
 };
 
@@ -342,6 +345,33 @@ export const items = {
   480: 'The tetherjelly forests one mission needs before it can grow them',
   491: 'Crystal worth going after: today the deep field is further away and more dangerous than any navy can afford',
   494: 'Automated testing for the menus, so key rebinding, UI scale and the colour-vision palettes keep working',
+  454: 'A fair fight between all four navies — the Knights used to win five decided matches in six',
+  518: 'Teaching the computer opponent to build the shipyard its best hulls come out of',
+  520: 'The Directorate able to afford the two hulls its own shipyard exists to build',
+  462: 'Upgrades and veteran crews: what a navy can improve mid-match, and how loud improving it is',
+  461: 'The nine hulls of the second tier, built into the game',
+  466: 'Models for those nine, so they look like the navy that sails them',
+  498: 'The groundwork for a fleet: the measurements every later wave gets judged by',
+  506: 'Scouts: hulls that run with the engine off, and ping on a cadence instead of on command',
+  507: 'Ordnance: torpedo boats, a screen you lay in the water, and a shot you commit to',
+  508: 'Siege: hulls that break bases, and damage that depends on what it hits',
+  509: 'A line ship for every navy, and an opening set of hulls that differs by who you are',
+  510: 'The three hulls every navy shares: kept, and the balance lab says why',
+  529: 'The Knights build their own corvette instead of the generic one',
+  531: 'A mid-sized warship for the two navies that lacked one — and the first two guns that aim at the loudest ship in range rather than the nearest',
+  517: 'A refit the Consortium can buy to take its whole fleet deeper',
+  540: 'Every ship in the game built from an editable script, so a navy can be redesigned in one place instead of seventeen',
+  546: 'The Commune\u2019s seeder and its minelayer, rebuilt that way',
+  553: 'The turrets, rebuilt that way, in each navy\u2019s own style',
+  530: 'The Directorate\u2019s own line ship, which today it can afford about once a match',
+  549: 'Kelp beds that thin as they are cut \u2014 and stop hiding you when they do',
+  554: 'Kelp that grows back, and sea life that repopulates, at a rate the health of the water sets',
+  487: 'Automated testing for the game shell, the network messages and the audio mix',
+  489: 'Every network message declared in one place, so a rename cannot quietly break the game',
+  515: 'Automated testing for the pause menu, down to where the keyboard goes',
+  504: 'This roadmap again: it kept stating things that go out of date on their own',
+  469: 'An outside read of the story \u2014 whether the world arrives for a player, not just whether it holds together on paper',
+  534: 'The campaign read start to finish, in play order, to see what a player actually learns and when',
 };
 
 export const sprints = {
@@ -351,6 +381,8 @@ export const sprints = {
     'Depth became an order, the game got its sound, the map grew sea life and hazards, and an AI opponent made it something one person can play.',
   'Sprint 3':
     'Currents and kelp with real teeth, the combat design built in full, all twenty-nine campaign missions, and the new 3D view of the ocean.',
+  'Sprint 4':
+    'Every navy got a fleet of its own \u2014 scouts, ordnance, siege, line ships and a mid-tier \u2014 the chart learned to go dark where nothing of yours is listening, and kelp became something you harvest and something you hide in.',
 };
 
 export const footer = {
