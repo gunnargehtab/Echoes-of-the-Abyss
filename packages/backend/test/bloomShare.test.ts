@@ -90,6 +90,7 @@ function garden(match: Match, x = GARDEN.x, y = GARDEN.y): Hazard {
     stabilisedS: 0,
     suppressedS: 0,
     burnedS: 0,
+    sownRemaining: 0,
   };
   match.world.hazards.push(bed);
   match.world.blooms.push(bed);

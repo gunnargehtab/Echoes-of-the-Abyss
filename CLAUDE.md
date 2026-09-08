@@ -161,7 +161,7 @@ wipes the `@type()` metadata.
 
 ### The wire
 
-Every message that crosses the socket — 31 a client may send, 11 the room may send — is
+Every message that crosses the socket — 32 a client may send, 11 the room may send — is
 declared once in `packages/shared/src/wire.ts`, name and payload together. Neither package
 writes a message name as a string literal; both reach the wire through a thin generic
 wrapper (`MatchRoom.onClientMessage`/`sendTo`/`announce`, `GameClient.handle`/`order`) that

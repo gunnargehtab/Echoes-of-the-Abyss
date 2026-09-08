@@ -1786,6 +1786,34 @@ export const FLORA = {
    * as a reactor does, which is the word §2 uses for it arriving as a number.
    */
   CUTTER_YIELD: 0.4,
+  /**
+   * SPEC — §2 and §7: "45 seconds on station". Seconds a Commune hull must
+   * hold station before a sowing takes.
+   *
+   * Served in full or not at all. Nothing is credited on a sowing that moved,
+   * went silent or died at forty-four seconds, which is what makes it a
+   * commitment to a piece of water rather than a button — the same shape the
+   * cutter's six-second burn has, at seven times the length and a third of
+   * the noise.
+   */
+  SOW_TIME_S: 45,
+  /**
+   * SPEC — §2 and §7: "restoring 25% crop", a quarter of a field per act.
+   *
+   * A fraction of a *full* canopy rather than of what is standing, so sowing
+   * a stripped bed is worth exactly what sowing a half-cut one is. The act is
+   * a quantity of seed, not a percentage recovery.
+   */
+  SOW_RESTORE: 0.25,
+  /**
+   * SPEC — §2: "over the two minutes that follow". Seconds the restoration is
+   * laid down across, once the sowing itself is served.
+   *
+   * The gap between the act and its effect is the mechanic: a sower is gone
+   * before the cover it bought arrives, so sowing is never an escape and
+   * never a defence. It is a thing done for the next fight.
+   */
+  SOW_SPREAD_S: 120,
 } as const;
 
 /** SPEC — docs/systems-echo.md §4 and §7. Seconds. */

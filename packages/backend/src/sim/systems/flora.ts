@@ -24,11 +24,21 @@
  * pays one query and returns.
  */
 
-import { FLORA, StructureKind } from '@echoes/shared';
-import { defineQuery, hasComponent } from 'bitecs';
-import { Health, Owner, Position, Structure, UnderConstruction } from '../components.ts';
+import { FLORA, Faction, StructureKind } from '@echoes/shared';
+import { addComponent, defineQuery, hasComponent, removeComponent } from 'bitecs';
+import {
+  Health,
+  Owner,
+  Position,
+  SilentRunning,
+  Sowing,
+  Structure,
+  UnderConstruction,
+  Unit,
+  Velocity,
+} from '../components.ts';
 import { economyFor, type SimWorld } from '../world.ts';
-import { setKelpCrop } from './hazards.ts';
+import { bedAt, setKelpCrop } from './hazards.ts';
 
 const plants = defineQuery([Structure, Position, Owner, Health]);
 
@@ -124,5 +134,97 @@ export function bioReactorSystem(world: SimWorld): void {
     // wearing a transcription's clothes.
     economyFor(world, Owner.slot[eid]!).biomass += rendered;
     world.reactorActive.add(eid);
+  }
+}
+
+const sowers = defineQuery([Sowing, Position, Owner, Health]);
+
+/**
+ * May this hull start a sowing here — docs/systems-flora.md §2.
+ *
+ * Everything the order is refused for, in one place, because the room and the
+ * tests both have to ask the same question. The rules are the doc's two
+ * limits plus the one every worked act in this game shares:
+ *
+ * - **Commune only.** §6 gives sowing to the one navy whose doctrine is cover;
+ *   it is the only entry in that table that puts something back.
+ * - **A hull, in a bed.** Sowing *restores* a bed and never creates one, so
+ *   there must already be a field under the hull. A skirmish player who could
+ *   grow cover on open water would be editing the map's acoustics at will,
+ *   which §2 rules out in as many words.
+ * - **Alive, and not silent.** Silence stops the work
+ *   (docs/systems-echo.md §6) — the same clause that stops a bloom-share and
+ *   a thermal cutter.
+ */
+export function canSow(world: SimWorld, eid: number): boolean {
+  if (!hasComponent(world, Unit, eid)) return false;
+  if (Owner.faction[eid] !== Faction.Pelagia) return false;
+  if (Health.hp[eid]! <= 0) return false;
+  if (SilentRunning.active[eid] === 1) return false;
+  return bedAt(world, Position.x[eid]!, Position.y[eid]!) !== undefined;
+}
+
+/**
+ * Begin a sowing. Returns whether the order took.
+ *
+ * Re-ordering a sowing that is already running is a no-op rather than a
+ * restart: a player spamming the key would otherwise hold a hull at
+ * forty-four seconds forever, paying SIG 18 the whole time and never
+ * finishing.
+ */
+export function startSowing(world: SimWorld, eid: number): boolean {
+  if (!canSow(world, eid)) return false;
+  if (hasComponent(world, Sowing, eid) && Sowing.remainingS[eid]! > 0) return false;
+  addComponent(world, Sowing, eid);
+  Sowing.remainingS[eid] = FLORA.SOW_TIME_S;
+  Sowing.x[eid] = Position.x[eid]!;
+  Sowing.y[eid] = Position.y[eid]!;
+  return true;
+}
+
+/**
+ * Serve the sowings in progress — docs/systems-flora.md §2.
+ *
+ * Forty-five seconds on station, and *on station* is the load-bearing half:
+ * moving breaks it, going silent breaks it, dying breaks it, and a broken
+ * sowing credits nothing at all. That is what makes it a commitment to a
+ * piece of water rather than a button — the cutter's burn at seven times the
+ * length and a third of the noise.
+ *
+ * What it buys is not applied here. The bed is *owed* a quarter of a canopy
+ * and lays it down over the two minutes that follow (`hazardsSystem`), so the
+ * hull that sowed is gone before the cover it bought arrives. Sowing is never
+ * an escape and never a defence; it is a thing done for the next fight.
+ *
+ * On the 60 Hz budget: one query over a component almost nothing carries, and
+ * a bed lookup per sower. Empty in every match where nobody sows.
+ */
+export function sowingSystem(world: SimWorld): void {
+  const hulls = sowers(world);
+  for (let i = 0; i < hulls.length; i++) {
+    const eid = hulls[i]!;
+    if (Sowing.remainingS[eid]! <= 0) continue;
+
+    // Off station, gone quiet, or dead: the seed does not go in. Velocity
+    // rather than a distance from the start, because a hull under way is not
+    // working whatever its displacement adds up to — the same test the drag
+    // SIG uses for "pushing" (hazards.ts).
+    const moving = Velocity.x[eid]! !== 0 || Velocity.y[eid]! !== 0;
+    if (moving || !canSow(world, eid)) {
+      Sowing.remainingS[eid] = 0;
+      removeComponent(world, Sowing, eid);
+      continue;
+    }
+
+    Sowing.remainingS[eid] = Sowing.remainingS[eid]! - world.dt;
+    if (Sowing.remainingS[eid]! > 0) continue;
+
+    // Served. The bed it started over, not the one it might have drifted to —
+    // `canSow` has already established there is one here, and a hull that has
+    // not moved is over the same field it began on.
+    const bed = bedAt(world, Sowing.x[eid]!, Sowing.y[eid]!);
+    if (bed !== undefined) bed.sownRemaining += FLORA.SOW_RESTORE;
+    Sowing.remainingS[eid] = 0;
+    removeComponent(world, Sowing, eid);
   }
 }

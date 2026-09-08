@@ -685,6 +685,18 @@ export class GameClient {
     this.order(CLIENT_MSG.sing, { unitId });
   }
 
+  /**
+   * Sow the bed these hulls are standing in — docs/systems-flora.md §2.
+   *
+   * No position and no target: a sowing is served where the hull already is,
+   * and which navy may sow, and whether there is a bed under it, are the
+   * server's questions. Unbound, like `sing` and `seedSpore`: the one-handed
+   * layout in `bindings.ts` has no left-hand key left to give it.
+   */
+  sow(unitIds: number[]): void {
+    this.order(CLIENT_MSG.sow, { unitIds });
+  }
+
   /** Lay a mine at the hull's own position. Loud to lay, silent once laid. */
   layMine(unitIds: number[]): void {
     if (unitIds.length === 0) return;

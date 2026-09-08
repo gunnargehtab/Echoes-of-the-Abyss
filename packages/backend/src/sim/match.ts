@@ -153,7 +153,7 @@ import {
 import { drawFor, thermalSystem } from './systems/thermal.ts';
 import { titheSystem } from './systems/tithe.ts';
 import { bloomShareSystem } from './systems/bloomShare.ts';
-import { bioReactorSystem } from './systems/flora.ts';
+import { bioReactorSystem, sowingSystem, startSowing } from './systems/flora.ts';
 import {
   ambientBandFor,
   createSimWorld,
@@ -690,6 +690,7 @@ export class Match {
         stabilisedS: 0,
         suppressedS: 0,
         burnedS: 0,
+        sownRemaining: 0,
       });
     }
   }
@@ -732,6 +733,7 @@ export class Match {
         stabilisedS: 0,
         suppressedS: 0,
         burnedS: 0,
+        sownRemaining: 0,
       };
       this.world.hazards.push(bed);
       this.world.blooms.push(bed);
@@ -1633,6 +1635,20 @@ export class Match {
     return startSong(this.world, eid);
   }
 
+  /**
+   * Sow — docs/systems-flora.md §2. The bed the hull is standing in, which is
+   * why there is nothing to name and nothing to resolve.
+   *
+   * Returns false when the hull is not a live, non-silent Commune hull over a
+   * standing bed, or is already sowing. Refusal is silent, like the Lure's:
+   * the client learns the answer from the hull's own SIG a tick later.
+   */
+  sow(slot: number, eid: number): boolean {
+    this.recordCommand({ tick: this.world.tick, type: 'sow', slot, unit: this.localId(eid) });
+    if (!this.owns(slot, eid)) return false;
+    return startSowing(this.world, eid);
+  }
+
   /** The unrecorded half of `activeSonar` — see `applyMove`. */
   private applyPing(slot: number, eid: number): void {
     if (!this.owns(slot, eid) || !hasComponent(this.world, Unit, eid)) return;
@@ -2079,6 +2095,9 @@ export class Match {
     // tick: crop rendered this tick wears its region this tick, so the health
     // a player is spending is charged in the same breath as the Biomass they
     // are paid (docs/systems-flora.md §3).
+    // Before the reactor, and before acoustics reads either: a sowing served
+    // this tick is a hull that stops being loud this tick.
+    sowingSystem(this.world);
     bioReactorSystem(this.world);
     faunaSystem(this.world, this.destroyedScratch);
     this.driftTick();

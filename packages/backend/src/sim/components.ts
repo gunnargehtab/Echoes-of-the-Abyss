@@ -537,6 +537,26 @@ export const HullEffect = defineComponent({
 });
 
 /**
+ * A Commune hull sowing a bed — docs/systems-flora.md §2.
+ *
+ * The countdown is the whole component: forty-five seconds on station, and
+ * nothing is credited until they are served. Added when the order is accepted
+ * and removed the tick it finishes or is broken, so a hull that is not
+ * carrying this is not sowing — there is no idle state to leave behind on a
+ * recycled entity id.
+ *
+ * The station is remembered rather than re-read, because "on station" is a
+ * claim about where the sowing started: a hull that drifts out of the bed it
+ * began in has not sown the bed it ends over.
+ */
+export const Sowing = defineComponent({
+  /** Seconds left of the forty-five. */
+  remainingS: Types.f32,
+  x: Types.f32,
+  y: Types.f32,
+});
+
+/**
  * Grown mines aboard a hull that carries more than the roster's one — the
  * Spinner (docs/units.md). A magazine and not a cooldown, for the torpedo's
  * reason: the decision is "is this worth one of my four", and the regrowth

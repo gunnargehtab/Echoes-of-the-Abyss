@@ -46,6 +46,11 @@ import { eidOfLocalId } from './world.ts';
  * each pair below 4, where it had been appended, which read as the numbers
  * having gone backwards. They did not; they were shared.
  *
+ * 24: the Commune sows (#576, docs/systems-flora.md §2). A new command in the
+ * stream — forty-five seconds on station restoring a quarter of a canopy over
+ * the two minutes after — so a v23 reader has no case for it, and a bed that
+ * was sown replays as a bed that was not.
+ *
  * 23: a bloom node is a bed (#568, docs/systems-flora.md §2). Bloom-share paid
  * a flat rate of nodules out of an authored position with no supply behind
  * it; now the map's garden nodes are seeded as full kelp fields — masking,
@@ -253,7 +258,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 23;
+export const REPLAY_FORMAT_VERSION = 24;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =
@@ -286,6 +291,7 @@ export type ReplayCommand =
   | { tick: number; type: 'layDecoy'; slot: number; unit: number }
   | { tick: number; type: 'seedSpore'; slot: number; unit: number; contact: number }
   | { tick: number; type: 'sing'; slot: number; unit: number }
+  | { tick: number; type: 'sow'; slot: number; unit: number }
   | { tick: number; type: 'mine'; slot: number; unit: number }
   | { tick: number; type: 'depthcharge'; slot: number; unit: number; depth: number }
   | { tick: number; type: 'harvest'; slot: number; unit: number; node: number; queued: boolean }
@@ -559,6 +565,9 @@ function applyCommand(match: Match, command: ReplayCommand): void {
       break;
     case 'sing':
       match.sing(command.slot, eid(command.unit));
+      break;
+    case 'sow':
+      match.sow(command.slot, eid(command.unit));
       break;
     case 'mine':
       match.layMine(command.slot, eid(command.unit));
