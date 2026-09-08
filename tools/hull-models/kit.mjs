@@ -118,14 +118,26 @@ export const octa = (r) => new THREE.OctahedronGeometry(r, 0);
  * Wings, fins, decks and fairings are all this. The Clarion's wings are 30 m
  * long and 0.9 m thick, which is the proportion to aim at: beam comes from
  * planar surfaces, not from a fat body.
+ *
+ * `bevelM` rounds the rim: the slab keeps `thicknessM` between its faces and
+ * grows a chamfer `bevelM` proud of the outline all round, so the plate ends
+ * up `thicknessM + 2·bevelM` tall. Square-edged is what an Order wing wants
+ * and is the default; the Commune is soft-edged by doctrine, and a hard rim
+ * on the Sower's bloom bed reads as sheet metal. The chamfer goes *outward*
+ * — three's `bevelSize` contracts the caps rather than swelling the waist —
+ * so the outline given is the plate's **top face** and its widest section
+ * sits a bevel below.
  */
-export function plate(points, thicknessM) {
+export function plate(points, thicknessM, bevelM = 0) {
   const shape = new THREE.Shape();
   points.forEach(([x, z], i) => (i === 0 ? shape.moveTo(x, z) : shape.lineTo(x, z)));
   shape.closePath();
   const geo = new THREE.ExtrudeGeometry(shape, {
     depth: thicknessM,
-    bevelEnabled: false,
+    bevelEnabled: bevelM > 0,
+    bevelThickness: bevelM,
+    bevelSize: bevelM,
+    bevelSegments: 1,
     steps: 1,
   });
   geo.rotateX(-Math.PI / 2);
@@ -144,11 +156,15 @@ export function plate(points, thicknessM) {
  * approved models. The Commune's leaves and the Directorate's scoops are
  * asymmetric in plan on purpose, and an outline that comes out mirrored is
  * the kind of error nothing downstream can see — so they build from this.
+ *
+ * `bevelM` is `plate`'s, and the centring survives it: the slab spans
+ * ±(thicknessM/2 + bevelM) about y = 0.
  */
-export function plan(points, thicknessM) {
+export function plan(points, thicknessM, bevelM = 0) {
   const geo = plate(
     points.map(([x, z]) => [x, -z]),
-    thicknessM
+    thicknessM,
+    bevelM
   );
   geo.translate(0, -thicknessM, 0);
   return geo;
