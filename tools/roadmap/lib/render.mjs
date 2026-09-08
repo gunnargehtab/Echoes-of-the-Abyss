@@ -102,17 +102,17 @@ function phaseCard(phase, states, repo, content, open) {
   return `<details class="phase ${status}" id="phase-${phase.number}"${open ? ' open' : ''}>
   <summary>
     <span class="node" aria-hidden="true"></span>
-    <span class="phase-head">
+    <span class="phase-eyebrow">
       <span class="phase-id">${escape(phase.id)}</span>
-      <span class="phase-title">${escape(title)}</span>
       ${when === null ? '' : `<span class="phase-when">${escape(when)}</span>`}
     </span>
+    <span class="phase-title">${escape(title)}</span>
     <span class="phase-meta">
       <span class="verdict">${verdict}</span>
       <span class="count"><b>${p.closed}</b> of ${p.total}</span>
-      <span class="bar small" role="progressbar" aria-valuenow="${p.pct}" aria-valuemin="0" aria-valuemax="100" aria-label="${escape(phase.id)} progress"><span style="width:${p.pct}%"></span></span>
       <span class="chevron" aria-hidden="true"></span>
     </span>
+    <span class="bar rail" role="progressbar" aria-valuenow="${p.pct}" aria-valuemin="0" aria-valuemax="100" aria-label="${escape(phase.id)} progress"><span style="width:${p.pct}%"></span></span>
   </summary>
   <div class="phase-body">
     ${copy.blurb ? `<p class="summary">${escape(copy.blurb)}</p>` : ''}
@@ -419,7 +419,6 @@ body::after {
 .readout .big small { font-size: 0.9rem; font-family: var(--mono); color: var(--text-dim); letter-spacing: 0.1em; margin-left: 0.6rem; text-shadow: none; }
 .bar { display: block; height: 6px; border-radius: 3px; background: rgba(53, 224, 255, 0.12); overflow: hidden; margin: 0.7rem 0 0.2rem; }
 .bar span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--neon-teal), var(--neon-cyan)); box-shadow: 0 0 10px rgba(53, 224, 255, 0.5); transition: width 1.1s cubic-bezier(0.2, 0.8, 0.2, 1); }
-.bar.small { height: 4px; width: 5rem; margin: 0; flex: 0 0 auto; }
 .js-ready .bar span { width: var(--w); }
 .no-js .bar span, html:not(.js-ready) .bar span { width: var(--w); transition: none; }
 
@@ -478,32 +477,50 @@ section { padding: 4.5rem 0 1rem; }
 .phase.complete { border-color: rgba(95, 208, 192, 0.32); }
 .phase.active { border-color: rgba(242, 178, 51, 0.4); }
 .phase[open] { border-color: rgba(255, 61, 166, 0.4); box-shadow: var(--magenta-halo); }
-.phase summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 1rem; padding: 0.85rem 1.1rem; flex-wrap: wrap; }
+/* A grid rather than a flex row: the title owns a row of its own, so it can
+   never be squeezed to its longest word by the nowrap date and status beside
+   it — which is exactly what a flex row did at narrow widths. */
+.phase summary { list-style: none; cursor: pointer; position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'eyebrow meta' 'title meta'; align-items: center; column-gap: 1.2rem; row-gap: 0.28rem; padding: 0.95rem 1.15rem 1.1rem; }
 .phase summary::-webkit-details-marker { display: none; }
+.phase summary:hover .phase-title, .phase summary:focus-visible .phase-title { color: var(--neon-cyan); }
 .node { position: absolute; left: -1.6rem; width: 11px; height: 11px; border-radius: 50%; border: 1px solid var(--text-dim); background: var(--abyss-void); top: 1.15rem; margin-left: 0.45rem; transform: translateX(-50%); }
 .phase.complete .node, .node.done { border-color: var(--neon-teal); background: var(--neon-teal); box-shadow: 0 0 8px rgba(95, 208, 192, 0.7); }
 .phase.active .node { border-color: var(--neon-amber); background: var(--neon-amber); box-shadow: 0 0 8px rgba(242, 178, 51, 0.7); }
-.phase-head { display: flex; align-items: baseline; gap: 0.7rem; flex: 1 1 14rem; min-width: 0; }
-.phase-id { font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-cyan); white-space: nowrap; }
-.phase-title { font-family: var(--display); font-size: 1.2rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-bright); font-weight: 600; }
-.phase-when { font-size: 0.66rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); white-space: nowrap; }
-.phase-meta { display: flex; align-items: center; gap: 0.8rem; font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; }
+.phase-eyebrow { grid-area: eyebrow; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem; min-width: 0; }
+.phase-id { font-size: 0.68rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-cyan); white-space: nowrap; }
+.phase-when { font-size: 0.64rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); white-space: nowrap; }
+.phase-when::before { content: '·'; margin-right: 0.5rem; color: rgba(111, 138, 156, 0.55); }
+/* Fluid, so a long title shrinks a little before it wraps, and balanced so
+   that when it does wrap it breaks into even lines instead of one orphan. */
+.phase-title { grid-area: title; min-width: 0; overflow-wrap: break-word; text-wrap: balance; font-family: var(--display); font-size: clamp(1.05rem, 0.92rem + 0.7vw, 1.4rem); line-height: 1.14; letter-spacing: 0.03em; text-transform: uppercase; color: var(--text-bright); font-weight: 600; transition: color 0.15s; }
+.phase-meta { grid-area: meta; display: flex; align-items: center; gap: 0.85rem; font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; }
 .verdict { color: var(--text-dim); border: 1px solid rgba(111, 138, 156, 0.35); border-radius: 2px; padding: 0.1rem 0.4rem; }
 .phase.complete .verdict { color: var(--neon-teal); border-color: rgba(95, 208, 192, 0.45); }
 .phase.active .verdict { color: var(--neon-amber); border-color: rgba(242, 178, 51, 0.45); }
 .count b { color: var(--text-bright); font-weight: 600; }
 .chevron { width: 7px; height: 7px; border-right: 1px solid var(--text-dim); border-bottom: 1px solid var(--text-dim); transform: rotate(45deg); transition: transform 0.2s; }
 .phase[open] .chevron { transform: rotate(-135deg); }
-.phase-body { padding: 0 1.1rem 1rem; border-top: 1px solid rgba(53, 224, 255, 0.1); }
+/* The old 5rem stub of a bar read as decoration. As the card's bottom edge it
+   is the same number at a glance, and it lines up across a stack of phases. */
+.bar.rail { position: absolute; left: 0; right: 0; bottom: 0; width: auto; height: 2px; margin: 0; border-radius: 0; background: rgba(53, 224, 255, 0.09); }
+.bar.rail span { box-shadow: none; }
+.phase.complete .bar.rail span { background: linear-gradient(90deg, var(--neon-teal), var(--neon-cyan)); }
+.phase.active .bar.rail span { background: linear-gradient(90deg, var(--neon-amber), var(--neon-magenta)); }
+.phase-body { padding: 0 1.15rem 1rem; border-top: 1px solid rgba(53, 224, 255, 0.1); }
 .summary { font-size: 0.86rem; margin: 0.9rem 0 0.4rem; max-width: 80ch; }
 .group h4 { font-size: 0.68rem; letter-spacing: 0.2em; color: var(--text-cyan); margin: 1rem 0 0.2rem; }
 .items { list-style: none; margin: 0.4rem 0 0; padding: 0; }
-.item { display: grid; grid-template-columns: 1rem 1fr auto auto; gap: 0.7rem; align-items: baseline; padding: 0.4rem 0; font-size: 0.82rem; }
+.item { display: grid; grid-template-columns: 1rem minmax(0, 1fr) auto auto; grid-template-areas: 'mark work tag ref'; gap: 0.7rem; align-items: baseline; padding: 0.45rem 0; font-size: 0.82rem; }
 .item + .item { border-top: 1px solid rgba(53, 224, 255, 0.07); }
-.item .mark { width: 9px; height: 9px; border-radius: 50%; align-self: center; border: 1px solid currentColor; }
+/* Aligned to the first line rather than the middle: on a row that wraps to
+   four lines a centred bullet floats away from the sentence it marks. */
+.item .mark { grid-area: mark; width: 9px; height: 9px; border-radius: 50%; align-self: start; margin-top: 0.34em; border: 1px solid currentColor; }
+.item .work { grid-area: work; }
+.item .state-tag { grid-area: tag; }
+.item .ref { grid-area: ref; }
 .item.closed { color: var(--neon-teal); }
 .item.closed .mark { background: var(--neon-teal); }
-.item.closed .work { text-decoration: line-through; opacity: 0.55; }
+.item.closed .work { text-decoration: line-through; text-decoration-thickness: 1px; text-decoration-color: rgba(95, 208, 192, 0.5); opacity: 0.62; }
 .item.open { color: var(--neon-amber); }
 .item.unknown { color: var(--text-dim); opacity: 0.7; }
 .item .work { color: var(--text-bright); }
@@ -532,6 +549,17 @@ footer .warn { color: var(--neon-amber); }
 footer p { margin: 0.3rem 0; }
 .reveal { opacity: 0; transform: translateY(10px); transition: opacity 0.5s ease, transform 0.5s ease; }
 .reveal.in { opacity: 1; transform: none; }
+/* Narrow: one column, and the status cluster drops under the title rather
+   than stealing width from it. The row's tag moves under its own text for the
+   same reason — four columns in 390px leaves the sentence a word wide. */
+@media (max-width: 34rem) {
+  .phase summary { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'eyebrow' 'title' 'meta'; row-gap: 0.5rem; }
+  .phase-meta { justify-content: flex-start; }
+  .phase-meta .chevron { margin-left: auto; }
+  .item { grid-template-columns: 1rem minmax(0, 1fr) auto; grid-template-areas: 'mark work ref' 'mark tag tag'; row-gap: 0.1rem; column-gap: 0.6rem; }
+  .item .state-tag { justify-self: start; font-size: 0.66rem; opacity: 0.75; }
+}
+
 @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } .bar span { transition: none; } }
 
 /* pillars, navies, playable */
