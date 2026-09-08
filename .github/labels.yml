@@ -39,3 +39,7 @@
 - name: needs-hardware
   color: 9c6b30
   description: Real work that a container cannot do — needs a physical GPU or device
+
+- name: routine-log
+  color: 4c5c63
+  description: The unattended loop writes here — a ledger, never a work item

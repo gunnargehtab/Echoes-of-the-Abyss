@@ -132,13 +132,17 @@ not.
 ## 3. Choose one issue
 
 From the open issues that are **not** claimed, **not** assigned, and **not**
-labelled `epic` or `needs-hardware`, take the oldest. Four exclusions, for
-different reasons:
+labelled `epic`, `needs-hardware` or `routine-log`, take the oldest. Five
+exclusions, for different reasons:
 
 - `epic` issues are trackers for work spanning many PRs (#212 is twenty-eight
   campaign missions). There is no single PR that closes one, so an agent that
   takes it produces a PR that cannot honestly say `Fixes`. Step 4 is what to do
   with them instead.
+- `routine-log` is #580, this loop's own ledger, which step 8 writes to. It is
+  open and unassigned by design — which, without this exclusion, is precisely
+  what *eligible* means. A firing that set out to fix its own logbook would be
+  an absurd way to spend an hour, and nothing else would stop it.
 - `needs-hardware` is work that is real but cannot be done where this loop runs.
   #286 wants wall-clock frame timings from an actual GPU and an actual Termux
   handset; a container can neither produce them nor honestly fake them. The
@@ -433,6 +437,34 @@ Then say what you passed over, as step 4 describes — the issues you considered
 before taking this one, and the one reason each was excluded. A run that stops
 is the run with the most to say about the state of the backlog, and it is the
 one whose reasoning nobody can otherwise see.
+
+## 8. Write the run down, whatever the run was
+
+End every firing with one comment on **#580**, the run log. *Every* firing —
+including the ones that touched nothing because the cap was reached or nothing
+was eligible, and the ones that stood down ten minutes in. Those are exactly the
+firings with no other trace, and a loop whose quiet runs are invisible is a loop
+nobody can audit.
+
+Keep it to what a person needs in order to decide whether to step in:
+
+> **HH:MM — took #n** / **filed #a, #b** / **stopped on #n** / **nothing to do**
+> One line: the branch and the pull request, or the epic and the boxes it came
+> from, or why a comment beat a pull request.
+> Passed over: older eligible issues, one clause each, or "nothing older".
+> Needs a person: a stale claim, a recurring skip that wants a label, a branch
+> left behind — or "nothing".
+
+This is the same list steps 3, 4 and 7 already ask for, and writing it twice is
+deliberate rather than redundant: the comment on an issue reaches whoever watches
+*that issue*, and the log reaches whoever watches *the loop*. Before #580 the
+second person had nowhere to look, which is why step 1 stayed blind for four days
+while every firing dutifully carried on.
+
+The Routine's own completion notifications are off, and there is no API that can
+turn them on — only the Routines UI. So treat this comment as the single record of
+the run, because that is what it is. Never close #580; when it grows unwieldy, a
+person closes it, opens a successor, and updates the number here.
 
 ## Related
 
