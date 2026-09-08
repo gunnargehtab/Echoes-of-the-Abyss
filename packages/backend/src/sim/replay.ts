@@ -46,6 +46,17 @@ import { eidOfLocalId } from './world.ts';
  * each pair below 4, where it had been appended, which read as the numbers
  * having gone backwards. They did not; they were shared.
  *
+ * 20: the Drift breeds and the kelp grows back (#554, docs/bestiary.md §6,
+ * docs/systems-flora.md §3). A map's fauna were a fixed stock — one seeding
+ * from the constructor, and `spawnsAllowed` read only at seed time — and are
+ * now an income: the Drift replaces losses toward the complement it was
+ * seeded with, at the rate §6's band table has always been written as, with
+ * Strained water closed to megafauna and thinned for everything else. Kelp
+ * beds regrow on the same bands. No new command, and no new field in the
+ * file: a v19 recording is still legible and diverges at the first creature
+ * the Drift puts back, which on a match that kills anything is inside the
+ * first minute.
+ *
  * 19: every navy opens in its own line hull (#509, docs/units.md, "The line
  * hulls, and the anchor"). `OPENING_ESCORT` no longer hands all four navies
  * two Corvettes: the Consortium opens with two Caissons, the Commune with two
@@ -218,7 +229,7 @@ import { eidOfLocalId } from './world.ts';
  * map would produce a divergence report about determinism when the real fault
  * was the replay's own age.
  */
-export const REPLAY_FORMAT_VERSION = 19;
+export const REPLAY_FORMAT_VERSION = 20;
 
 /** `unit`, `node` and `structure` are match-local ids — see the note above. */
 export type ReplayCommand =

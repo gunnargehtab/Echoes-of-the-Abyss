@@ -288,10 +288,11 @@ The two that are *not* free are the crop→PF ends: 0.55 is the biome's spec'd f
 
 ## 9. Prototype mapping
 
-**Step 1 is built; the rest is not.** A bed carries its standing crop and the water over it
-answers to it, but nothing consumes crop yet: `Match.payBiomass` still credits a fauna death
-to the nearest non-Drift owner, and there is no reactor, no sowing and no regrowth. The order
-of work, and why it is that order:
+**Steps 1 and 2 are built; the rest is not.** A bed carries its standing crop, the water over
+it answers to it, and both halves of the Drift now grow back on §6's bands — but nothing
+*consumes* crop yet, and `Match.payBiomass` still credits a fauna death to the nearest
+non-Drift owner. There is no reactor and no sowing. The order of work, and why it is that
+order:
 
 1. **Beds get a crop, and crop drives PF and drag.** *Built (#549).* The sim change with no
    player-facing part, and the one everything else reads. Crop rides the PF grid's existing
@@ -299,8 +300,14 @@ of work, and why it is that order:
    and is quantised before it reaches the grid, so a harvester eating crop every tick cannot
    put a whole-map recompute on the 60 Hz budget. Every bed still stands full, so no figure
    in the baseline moves.
-2. **Regrowth, on the §6 band table.** Turns the account from a stock into an income; needs
-   its own 30-match baseline, because it moves every Biomass figure in the report.
+2. **Regrowth, on the §6 band table.** *Built (#554).* Turns the account from a stock into an
+   income, and it is both halves of the Drift at once: kelp regrows at 4% a minute in Healthy
+   water and the Drift replaces the creatures it has lost, toward the complement the map was
+   seeded with, at the same bands. Strained water grows and breeds at the row's own −40% and
+   is closed to megafauna; Failing and below does neither. A region's respawn is scaled by the
+   standing crop of the beds in it, which is §4 above — inert until step 3 gives anyone a way
+   to cut a bed, and the reason the Directorate's income is paid by a crop it does not
+   harvest.
 3. **The bio-reactor.** A structure kind, a radius, a rate and a payout.
 4. **The fauna windfall, credited to the killer.** `payBiomass` becomes opportunistic and
    correct at the same time.

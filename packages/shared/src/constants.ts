@@ -1218,6 +1218,35 @@ export const DRIFT = {
    */
   SPAWN_EXCLUSION_M: 2600,
 
+  /**
+   * TUNABLE — how often the Drift replaces one creature it has lost, in
+   * seconds of Healthy water.
+   *
+   * docs/bestiary.md §6's band table is written as a *rate* — "full spawns",
+   * "spawn rate −40%", "no new spawns" — and the doc names no figure for the
+   * top row, because until #554 there was no spawning at all to put a number
+   * on. This is that number, and it is sized against the seeding rather than
+   * against the clock: at one creature every 45 s a match replaces roughly
+   * two thirds of a full map's 48 over its length, so a region that is worked
+   * recovers within a match while the map's whole population is still bounded
+   * by what it was seeded to hold.
+   *
+   * Refilling *toward the seeded complement* is what keeps this an income
+   * rather than a spring: the Drift replaces losses and never exceeds the
+   * ground's own carrying capacity.
+   */
+  RESPAWN_INTERVAL_S: 45,
+  /**
+   * SPEC — docs/bestiary.md §6, the Strained row: "Spawn rate −40%".
+   *
+   * The one figure the table states outright, and it is read twice: it scales
+   * fauna respawn here and kelp regrowth in `FLORA` (docs/systems-flora.md
+   * §3), because the band that stops breeding animals is the band that stops
+   * growing the crop that feeds them. One instrument, both halves of the
+   * Drift.
+   */
+  SPAWN_RATE_STRAINED: 0.6,
+
   /** SPEC — §5. Non-Directorate players sell remains through rendering contracts. */
   RENDERING_CONTRACT_RATE: 0.3,
 
@@ -1671,6 +1700,22 @@ export const FLORA = {
    * PF the crop step did.
    */
   CROP_PF_STEPS: 20,
+  /**
+   * TUNABLE — how much canopy a bed puts back per minute in Healthy water,
+   * as a fraction of a full field (docs/systems-flora.md §3 and §7).
+   *
+   * Sized so a field stripped bare and left alone is whole again in about
+   * twenty-five minutes — one match. That is the whole argument for the
+   * number: regrowth has to be real, or the map is shaved bare by minute ten
+   * and every match ends in open water; and it has to be slower than a match,
+   * or a bed is a tap rather than a claim worth defending.
+   *
+   * Scaled by the region's Drift Health band, exactly as fauna spawns are:
+   * `DRIFT.SPAWN_RATE_STRAINED` in Strained water, nothing at Failing and
+   * below. A region worked past Strained neither breeds animals nor grows the
+   * crop that feeds them.
+   */
+  REGROWTH_PER_MIN: 0.04,
 } as const;
 
 /** SPEC — docs/systems-echo.md §4 and §7. Seconds. */
