@@ -998,43 +998,46 @@ export const HADRON = {
 } as const;
 
 /**
- * Bloom-share — docs/economy.md §6, the Commune's economy.
+ * Bloom-share — docs/systems-flora.md §2, docs/economy.md §6.
  *
  * "Plateau blooms yield continuously, without a harvester loop, provided the
  * plateau is theirs." The tithe's idea anchored to ground
  * (docs/mission-tend.md §13): no drive-mine-haul-deposit cycle, no throttle,
- * no cargo — a node pays while a live Commune hull *tends* it, and stops the
+ * no cargo — a bed pays while a live Commune hull *tends* it, and stops the
  * tick it is untended. "Held" is tended, not possessed (docs/mission-tend.md
  * §4): a hull driven off, killed, or running silent stops the share, because
  * Silent Running stops the work (docs/systems-echo.md §6 — "SIG falls to
  * single digits, the share stops accruing", docs/mission-tend.md §3).
  *
- * The shape is SPEC; both numbers are TUNABLE. The balance guard-rail
- * (docs/systems-echo.md §10) prices the exposure rather than the rate:
- * bloom nodes are *surface plateau* ground — Shelf band, where everyone can
- * see them and almost anyone can reach them — so the quietest faction earns
- * its living on the most reachable ground on the map. maps.test.ts holds
- * authored nodes to that band, because the exposure is the mechanic.
+ * **There is no rate here, and that is the point of the fold.** Bloom-share
+ * paid a flat 0.8 nodules a second out of authored map data with no supply
+ * behind it — a tap. §2 re-founds it: a bloom node *is* a kelp bed, what it
+ * yields is Biomass, and what it yields is the **interest, never the
+ * principal** — up to what the bed regrows and no more, so it never depletes
+ * and never thins its own cover. The number therefore lives in
+ * `FLORA.REGROWTH_PER_MIN` where the regrowth does, and a second copy of it
+ * here would be the one thing this file exists to prevent. In Healthy water
+ * that is 9.6 Biomass a minute per tended bed.
+ *
+ * The balance guard-rail (docs/systems-echo.md §10) prices the exposure
+ * rather than the rate: bloom beds are *surface plateau* ground — Shelf band,
+ * where everyone can see them and almost anyone can reach them — so the
+ * quietest faction earns its living on the most reachable ground on the map.
+ * maps.test.ts holds authored nodes to that band, because the exposure is the
+ * mechanic. Folded onto the crop, that guard-rail gets sharper: the ground
+ * they earn on is now also the cover they hide in, so a raid on a Commune
+ * plateau takes their income and their concealment in the same act.
  */
 export const BLOOM_SHARE = {
   /**
-   * Nodules per second, per tended node. TUNABLE.
+   * How close a hull must stand to tend a bed, metres — and, since the fold,
+   * the bed's own radius. TUNABLE.
    *
-   * Set with the tithe's measurement lesson in mind — a flat income is
-   * proportionally larger in a poorer game — but not yet measured, because no
-   * skirmish map authors bloom nodes today; the balance harness prices this
-   * the day one does. Three tended nodes at 0.8/s are 144 nodules a minute,
-   * inside the 165-275/min band the harvester economies were measured at
-   * (docs/economy.md §6), for a faction that still runs harvesters.
-   */
-  PER_NODE_PER_S: 0.8,
-  /**
-   * How close a hull must stand to tend a node, metres. TUNABLE.
-   *
-   * Horizontal, like the Echo Layer's own geometry: the Shelf is 400 m of
-   * water at most, so a column check would price nothing the map does not
-   * already price. Sized to a garden rather than a territory — holding a
-   * plateau's nodes takes hulls *on* them, not a picket within earshot.
+   * One circle rather than two: a garden is the ground you stand in, and a
+   * tend radius that did not match the bed would mean either kelp nobody can
+   * reach or income from outside the field paying it. Horizontal, like the
+   * Echo Layer's own geometry — the Shelf is 400 m of water at most, so a
+   * column check would price nothing the map does not already price.
    */
   TEND_RADIUS_M: 400,
 } as const;

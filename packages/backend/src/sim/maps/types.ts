@@ -91,12 +91,18 @@ export interface MapResource {
 }
 
 /**
- * A bloom-share node — docs/economy.md §6.
+ * A bloom-share node — docs/systems-flora.md §2, docs/economy.md §6.
  *
- * Ground, not a stockpile: a bloom never depletes and is never mined, so it
- * carries no `kind` and no `amount`. It pays the Commune continuously while a
- * live, non-silent Pelagia hull stands inside `BLOOM_SHARE.TEND_RADIUS_M` of
- * it (`bloomShare.ts`), and pays nothing otherwise.
+ * A position, and what `Match.seedBlooms` grows on it is a **kelp bed**: a
+ * full-canopy field at `BLOOM_SHARE.TEND_RADIUS_M`, which is what the node
+ * has been since the flora economy folded bloom-share onto the crop. So an
+ * author writes one fact and the map gets all three readings of it — the
+ * garden masks, it grips, and it pays.
+ *
+ * Ground, not a stockpile: it carries no `kind` and no `amount`, and tending
+ * it takes nothing off it. It pays the Commune the bed's own regrowth while a
+ * live, non-silent Pelagia hull stands inside the same radius
+ * (`bloomShare.ts`), and pays nothing otherwise.
  *
  * Authored on *surface plateau* ground only — Shelf band, per the balance
  * guard-rail (docs/systems-echo.md §10): the exposure is the mechanic, and
