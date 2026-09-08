@@ -1,6 +1,6 @@
 ---
 name: work-issue
-description: Pick one open issue off the backlog, work it end to end, and open a pull request — the unattended loop. When nothing is eligible, file one sub-issue off an epic instead, so the next run has work. Use this when asked to work the backlog, pick up an issue, make progress on open issues, or when a scheduled Routine fires with no human watching. Prefer this over improvising a selection rule; the claim check, the self-assignment, and the open-PR cap are what keep two firings from colliding and what keep CI spend bounded.
+description: Pick one open issue off the backlog, work it end to end, and open a pull request — the unattended loop. When nothing is eligible, file the next sub-issues off an epic instead, so the following runs have work. Use this when asked to work the backlog, pick up an issue, make progress on open issues, or when a scheduled Routine fires with no human watching. Prefer this over improvising a selection rule; the claim check, the self-assignment, and the open-PR cap are what keep two firings from colliding and what keep CI spend bounded.
 ---
 
 # Working one issue, unattended
@@ -54,42 +54,80 @@ run is recoverable by hand rather than lost.
 
 ## 1. Take stock before you take an issue
 
+Two questions, in this order: what is in flight, and what merely *looks* like it.
+
 ```bash
-git fetch origin main && git ls-remote --heads origin 'refs/heads/claude/issue-*' \
-  | sed 's|.*refs/heads/||'
+git fetch origin main
+git ls-remote --heads origin 'refs/heads/claude/issue-*' | sed 's|.*refs/heads/||'
 ```
 
-That lists every issue branch an earlier firing created. Combine it with the
-open pull requests (their head refs and their `Fixes #<n>` lines) to get the set
-of **claimed** issue numbers. Both halves matter: a session that died before
-pushing leaves no branch, and a PR whose branch was renamed leaves no matching
-ref, so either source alone will let you collide with work already in flight.
+**An open pull request is a claim.** List them and read both halves — their head
+refs and their `Fixes #<n>` lines — because a PR whose branch was renamed leaves
+no matching ref, and the issue number in the body is the thing that is actually
+being closed.
 
-The third source, and the earliest, is the issue's **assignee** — step 3 reads
-it. An assignee exists from the moment somebody, person or loop, decides to
-start; a branch exists only once something has been pushed.
+**An assignee is a claim, and the earliest one there is.** Step 3 reads it. It
+exists from the moment somebody, person or loop, decides to start; a branch
+exists only once something has been pushed, and a session that dies before
+pushing leaves no branch at all.
+
+**A branch on its own is not a claim.** This repository does not delete a head
+branch when its pull request merges, so the refs accumulate — 86 of them by
+September — and under the old rule every one of them marked its issue claimed
+forever. #286 and #518 sat open and unassigned for days while this loop passed
+over them at every firing and filed new work instead, because their branches had
+outlived merged pull requests #519 and #523. So a `claude/issue-<n>-*` ref counts
+as a claim only when one of these holds:
+
+- an **open** pull request has it as its head, or
+- **no** pull request was ever opened from it *and* its tip commit is under 24
+  hours old — that is a run still going, or one that died mid-flight.
+
+You need the second test only for the issue you are about to take, so it is one
+command rather than eighty-six:
+
+```bash
+git fetch --depth=1 origin claude/issue-<n>-<slug> && git log -1 --format=%cI FETCH_HEAD
+```
+
+Do **not** try to settle this with `git merge-base --is-ancestor`. Some pull
+requests here are squash-merged, so 62 of those 86 branch tips are unreachable
+from `main` even though their work landed; the ancestry test calls them live and
+you are back where you started.
 
 ## 2. Stop early if the backlog is already saturated
 
-Count the open pull requests whose head ref starts with **`claude/issue-`**.
+Count the open pull requests **this loop opened** — the ones carrying the
+`routine` label, which step 6 puts on every pull request it opens.
 **If there are two or more, do nothing and end the run.** Say so plainly and exit
 — do not fall through to step 4 and file an issue instead. A saturated backlog
 means stop.
 
-The prefix is `claude/issue-`, not the broader `claude/`, and the difference
-matters: every interactive session in this account also pushes `claude/…`
-branches, so counting all of them lets a human working in parallel throttle the
-loop for reasons that have nothing to do with it. The loop budgets its own work
-only. This is also why step 5 insists on the issue number in the branch name —
-the same prefix does the counting here and the claim check in step 1.
+The label is the marker because a branch prefix is not one. This count used to
+read head refs beginning `claude/issue-`, on the reasoning that the prefix was
+the loop's own and a human working in parallel should not be able to throttle
+it. That reasoning was wrong: an interactive session working an issue in this
+account pushes `claude/issue-<n>-<rand>` too, and three such pull requests
+(#449, #475, #492) sat inside this count while a person drove them. Count what
+you can prove is yours.
+
+If the label is missing or a label write fails, fall back to counting
+`claude/issue-` head refs and say in the run summary that you did. That count is
+too *broad*, never too narrow, so falling back can only make the loop stop
+earlier than it needed to — which is the safe direction.
 
 This cap, not the schedule, is what bounds cost. A full CI run bills around six
 Actions minutes across its four jobs, and this account has run out of Actions
 minutes before — the incident is recorded in the header comment of
-`.github/workflows/ci.yml`. The loop is
-allowed to fire often precisely *because* it usually finds the cap reached and
-returns immediately. Raising the cap is a real spending decision; raising the
-cron frequency is not.
+`.github/workflows/ci.yml`.
+
+Do not read the cap as the loop's usual exit, though. Across the twenty-one
+firings measured in September it never once bound: at most one of the loop's own
+pull requests was open at any firing time, and its fourteen pull requests
+accounted for fourteen of the 181 CI runs the repository spent in that window —
+one run each, all green. What keeps the loop cheap is step 6, not this step.
+Raising the cap is still a real spending decision; raising the cron frequency is
+not.
 
 ## 3. Choose one issue
 
@@ -126,32 +164,44 @@ in the issue rather than in your judgement.
 
 **Found one? Skip to step 5.** Only when step 3 comes up empty do you do step 4.
 
-## 4. When nothing is eligible, file one sub-issue off an epic
+## 4. When nothing is eligible, file the next sub-issues off an epic
 
 An epic is not a reason to idle. `#212` carries eleven items under a
 `## Sub-issues` heading, and every one of them is a markdown checkbox rather
 than a real issue — `has_children` is false and the sub-issue list is empty. The
-author's intent is plain from the heading; nobody has done the filing. So do
-exactly one piece of it, and stop.
+author's intent is plain from the heading; nobody has done the filing. So do the
+next few pieces of it, and stop.
 
 1. Take the oldest open `epic`. Read its **existing sub-issues** — that list, not
    the checkbox ticks, is the record of what has already been filed. A ticked box
    means *done*; an unticked box with a sub-issue already linked means *filed*.
    Never tick a box yourself.
-2. Walk its unchecked, unfiled boxes in order and take the first one that is
-   **concrete enough**: you can state its acceptance criteria, name the files or
-   docs it touches, and believe it is one PR's worth of work.
-3. Open a normal issue for it. Title and body in the register of the epic, the
+2. Walk its unchecked, unfiled boxes in order and take **up to three** that are
+   **concrete enough**: you can state the acceptance criteria, name the files or
+   docs each touches, and believe each is one PR's worth of work.
+3. Open a normal issue for each. Title and body in the register of the epic, the
    epic's constraints restated where they bind, and a line saying which epic
-   box it came from. Label it by its nature — `enhancement`, `docs`, `infra`,
-   `bug` — and **never `epic`**, or the next run will skip it too. Leave it
+   box it came from. Label them by their nature — `enhancement`, `docs`, `infra`,
+   `bug` — and **never `epic`**, or the next run will skip them too. Leave them
    **unassigned** for the same reason: an assignee means taken, and you are not
-   taking it.
-4. Link it to the epic with the sub-issue API. This is what stops the next
+   taking them.
+4. Link each to the epic with the sub-issue API. This is what stops the next
    firing re-filing the same box, so it is not optional bookkeeping.
-5. **Stop.** Do not then work the issue you just filed. The gap until the next
-   firing is the window in which a human can look at the scope you chose, and
-   it only exists if you end the run here.
+5. **Stop.** Do not then work what you just filed. The gap until the next firing
+   is the window in which a human can look at the scope you chose, and it only
+   exists if you end the run here.
+
+Three rather than one, because the loop was otherwise spending every second
+firing on this step. Over the eight firings before this rule was written it
+alternated exactly — file #534, work #534, file #546, work #546 — and the gap it
+was protecting went unused every time: nobody commented on any of the four before
+the next firing claimed it. Keep the gap, so still stop here. But one filing run
+should stock the next three firings rather than the next one; a filing run costs
+a few dollars and a working run around twenty, and the cheap one should not be
+half of what the loop does.
+
+Three is a ceiling, not a quota. File one if only one box clears the bar above,
+and none if none do — the last paragraph of this step is what to do then.
 
 Those boxes are wildly uneven, and telling them apart is the whole skill in this
 step. "Coral Ruins mid-match biome change" is a scoped system with a named write
@@ -164,6 +214,21 @@ When no box is concrete enough, **comment on the epic** naming the box you would
 have taken and the scoping decision it needs from a human, and end the run. That
 comment is a good outcome. Filing a vague issue is not — it converts a design
 question into a work item that some later run will treat as settled.
+
+### Say what you passed over
+
+Reaching this step at all means you decided that nothing in the backlog was
+eligible, and that decision is invisible unless you write it down. Put it in the
+comment on the epic you filed against: every open issue you considered and the
+one reason each was excluded — assigned, `epic`, an open pull request, a live
+branch. A line each is enough.
+
+This is not bookkeeping. Step 1's blindness went unnoticed for four days
+precisely because no run ever said "#518 — skipped, branch
+`claude/issue-518-xx5501`"; from the outside, a correct skip and a broken rule
+look identical, and the loop is the only thing in a position to tell them apart.
+The same list belongs in the end-of-run summary, and in the stopping comment of
+step 7.
 
 ## 5. Claim it, then work it like any other change
 
@@ -248,10 +313,10 @@ over, you yield. Always.** Not a judgement call, and not a comparison of whose
 diff is better:
 
 1. Do not open your PR.
-2. **Delete the branch you pushed in step 5.** This matters more than it looks —
-   step 1 reads pushed `claude/issue-*` branches as claims, so a stood-down
-   branch left behind marks the issue claimed forever and every later firing
-   skips it.
+2. **Delete the branch you pushed in step 5.** A branch pushed in the last 24
+   hours is exactly what step 1 reads as a live run, so one left behind holds
+   the issue shut against the next firing or two — and it used to hold it shut
+   forever, which is how #286 and #518 were lost.
 3. **Release the claim.** Unassign the issue if it is still assigned and nobody
    has said they are taking it; if a person has, the assignee is theirs now and
    you leave it alone. Either way, post a one-line comment saying the Routine
@@ -267,7 +332,9 @@ complete. A person's in-flight branch is worth more than yours because they are
 not going to get another firing in four hours, and you are.
 
 Then open the PR against `main`, filling `.github/PULL_REQUEST_TEMPLATE.md` and
-referencing `Fixes #<n>`. Not a draft.
+referencing `Fixes #<n>`. Not a draft. **Label it `routine`** — that label is how
+step 2 counts the loop's own open pull requests, and one you forget to label is
+one the next firing cannot see when it budgets.
 
 ### The screenshot, when the change is visual
 
@@ -333,6 +400,11 @@ the assignee off, delete the branch if you pushed one, and say in the stopping
 comment that the Routine has let go of the issue. A stopped run that stays
 assigned looks, to the next firing and to every person, like work in progress
 that will never arrive.
+
+Then say what you passed over, as step 4 describes — the issues you considered
+before taking this one, and the one reason each was excluded. A run that stops
+is the run with the most to say about the state of the backlog, and it is the
+one whose reasoning nobody can otherwise see.
 
 ## Related
 

@@ -31,3 +31,7 @@
 - name: fable-5.1
   color: f4a6c8
   description: Asset work executed under the design model of record (asset-prompts-3d.md rule 3)
+
+- name: routine
+  color: 006b75
+  description: Opened by the unattended work-issue Routine
