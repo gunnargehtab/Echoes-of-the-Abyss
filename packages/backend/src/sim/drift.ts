@@ -153,4 +153,35 @@ export class DriftHealth {
   spawnsAllowed(x: number, y: number): boolean {
     return this.at(x, y) >= DRIFT.HEALTH_FAILING;
   }
+
+  /**
+   * How fast a region breeds and grows, as a fraction of a Healthy one —
+   * docs/bestiary.md §6's band table read as the rate it is written as.
+   *
+   * "Full spawns" is 1, "spawn rate −40%" is 0.6, "no new spawns" is 0, and
+   * Dead is 0 for good. The same figure scales kelp regrowth
+   * (docs/systems-flora.md §3), which is the point of putting it here rather
+   * than in either caller: the band that stops breeding animals is the band
+   * that stops growing the crop that feeds them, and a second copy of this
+   * ladder would be free to disagree with the first.
+   */
+  spawnRate(x: number, y: number): number {
+    const health = this.at(x, y);
+    if (health < DRIFT.HEALTH_FAILING) return 0;
+    if (health < DRIFT.HEALTH_STRAINED) return DRIFT.SPAWN_RATE_STRAINED;
+    return 1;
+  }
+
+  /**
+   * Whether a region is healthy enough for the colossus — §6's Strained row,
+   * "megafauna avoid the region".
+   *
+   * Separate from `spawnRate` because it is a different clause of the same
+   * row: Strained water is thinner for everything and closed to megafauna
+   * outright, so a map worked into Strained loses its Sounder for the rest of
+   * the match rather than getting a slower one.
+   */
+  admitsMegafauna(x: number, y: number): boolean {
+    return this.at(x, y) >= DRIFT.HEALTH_STRAINED;
+  }
 }

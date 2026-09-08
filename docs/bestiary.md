@@ -316,4 +316,6 @@ No creature is seeded within 2,600 m of a starting position. A creature that beg
 
 Capped at 48 live creatures. Fauna are entities in the Echo pass, which owns a 2 ms budget, so the cap turns "should be fine" into a guarantee. Measured with a full population on the Ventfront Divide and four players: **0.7–1.0 ms worst case**, against 2 ms.
 
+**The cap is a ceiling on what lives, not a stock spent once.** The Drift replaces what it loses, toward the complement the map was seeded with and never past it, at the rate §6's bands give — so a region that is worked recovers within a match, a region worked past Strained does not, and the population the budget above was measured against is the same population a twenty-fifth minute holds.
+
 Related: [economy.md](economy.md) · [systems-echo.md](systems-echo.md) · [audio-direction.md](audio-direction.md)

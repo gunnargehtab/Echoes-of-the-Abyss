@@ -119,6 +119,22 @@ export function countFauna(world: SimWorld): number {
 }
 
 /**
+ * How many of one species are alive — what `Match.repopulate` measures a
+ * region's losses against (docs/bestiary.md §6).
+ *
+ * A walk rather than a running tally kept beside the entities: it runs once
+ * per replacement, not per tick, and a counter maintained at every spawn and
+ * every death is the kind of bookkeeping that goes wrong quietly the first
+ * time a creature dies down a path nobody remembered to decrement.
+ */
+export function countFaunaOf(world: SimWorld, species: FaunaSpecies): number {
+  const live = creatures(world);
+  let count = 0;
+  for (let i = 0; i < live.length; i++) if (Fauna.species[live[i]!] === species) count++;
+  return count;
+}
+
+/**
  * Advance every creature.
  *
  * Sensing is staggered rather than run every tick: a creature re-evaluates what

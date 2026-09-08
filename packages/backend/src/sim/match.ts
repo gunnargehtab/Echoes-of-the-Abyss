@@ -129,7 +129,7 @@ import {
 import { pressureSystem } from './systems/pressure.ts';
 import { productionSystem } from './systems/production.ts';
 import { grantRefit } from './systems/refit.ts';
-import { randomSeed } from './rng.ts';
+import { randomSeed, type Rng } from './rng.ts';
 import { ReplayRecorder, type Replay, type ReplayCommand } from './replay.ts';
 import { hashWorld } from './stateHash.ts';
 import { accumulateWorst, newStepWork, resetStepWork, type StepWork } from './stepWork.ts';
@@ -139,7 +139,7 @@ import { MissionRuntime } from './missions/runtime.ts';
 import { fieldDefinition } from './missions/roster.ts';
 import type { MissionDefinition } from './missions/types.ts';
 import type { MissionLine, MissionResolution } from './missions/runtime.ts';
-import { countFauna, DRIFT_SLOT, faunaSystem } from './systems/fauna.ts';
+import { countFauna, countFaunaOf, DRIFT_SLOT, faunaSystem } from './systems/fauna.ts';
 import {
   dormantSecondsFor,
   hazardStates,
@@ -252,6 +252,42 @@ const MAX_QUEUE_LENGTH = 8;
 /** Minimum clearance between a new structure's footprint and anything else. */
 const PLACEMENT_CLEARANCE_M = 40;
 
+/**
+ * What a full map holds — docs/bestiary.md §4, and the ceiling `seedFauna`
+ * fills exactly.
+ *
+ * A table rather than a run of calls because it is read twice now: once to
+ * seed the Drift and once, per species, as the complement `repopulate` refills
+ * toward. Two lists would be free to disagree, and the one that disagreed
+ * would be the one deciding what the map is worth for the rest of the match.
+ */
+const FAUNA_ROSTER: readonly { species: FaunaSpecies; count: number }[] = [
+  // A herd and a couple of packs, then the colossus.
+  { species: FaunaSpecies.Ashgrazer, count: 16 },
+  { species: FaunaSpecies.Draymaw, count: 15 },
+  { species: FaunaSpecies.Sounder, count: 1 },
+  // Swarms, each one entity (docs/bestiary.md §4 — "20-40 individuals treated
+  // as one entity"). Scattered anywhere: the Rasp's habitat is a verb, and
+  // where things will die is not knowable at seed time.
+  { species: FaunaSpecies.Rasp, count: 3 },
+  // Shoals, each one entity, spread across the Shelf band by spawnFauna's
+  // seeding — §6's Healthy row wants "Lampfry tells everywhere".
+  { species: FaunaSpecies.Lampfry, count: 6 },
+  // Clusters, each one entity, in the duct band. Their masking is a PF
+  // modifier rather than behaviour, so the grid is rebuilt once they exist.
+  { species: FaunaSpecies.Tetherjelly, count: 5 },
+  // Ambushers, solitary, on ground deep enough to be trench country. Last,
+  // because the roster fills the cap exactly and the predator that holds still
+  // is the one a thin map misses least.
+  { species: FaunaSpecies.Hollow, count: 2 },
+];
+
+/**
+ * The colossus — docs/bestiary.md §4's Megafauna heading, which holds exactly
+ * one row. §6's Strained band closes a region to it entirely.
+ */
+const MEGAFAUNA: ReadonlySet<FaunaSpecies> = new Set([FaunaSpecies.Sounder]);
+
 export class Match {
   readonly world: SimWorld;
   /** Public for bench/echo-pass.mjs, which times the pass in isolation. */
@@ -347,6 +383,17 @@ export class Match {
    * they are the part of the step that scales with the fleet.
    */
   private worstStepMs = 0;
+  /**
+   * What the Drift was seeded to hold, per species — the carrying capacity
+   * `repopulate` refills toward and never exceeds (docs/bestiary.md §6).
+   *
+   * Empty for a match seeded without fauna, which is what makes the whole
+   * repopulate path free for every test and every mission that opens with
+   * `fauna: false`.
+   */
+  private readonly complement = new Map<FaunaSpecies, number>();
+  /** Seconds of match owed to the Drift, toward its next replacement. */
+  private repopulateCreditS = 0;
   private worstPhysicsMs = 0;
   /**
    * The same rolling worst case, counted instead of timed.
@@ -660,60 +707,65 @@ export class Match {
    * and a single Sounder, because there is only ever one colossus.
    */
   private seedFauna(): void {
-    const { widthM, heightM } = this.world.terrain;
     const rng = this.world.rng.fork('drift');
-    const budget = DRIFT.MAX_POPULATION;
-
-    const place = (species: FaunaSpecies, count: number, wantVein: boolean): void => {
+    for (const { species, count } of FAUNA_ROSTER) {
       for (let i = 0; i < count; i++) {
-        if (countFauna(this.world) >= budget) return;
-        // A handful of tries to find ground the species belongs on; if the map
-        // has none, the herd simply does not appear there.
-        for (let attempt = 0; attempt < 12; attempt++) {
-          const x = rng.range(400, widthM - 400);
-          const y = rng.range(400, heightM - 400);
-          const onVein = this.world.terrain.biomeAt(x, y) === Biome.ThermalVein;
-          if (wantVein !== onVein) continue;
-          if (!this.world.drift.spawnsAllowed(x, y)) continue;
-          // Deep enough for the species to live there. A Sounder seeded over a
-          // 700 m plateau would be a colossus in a puddle, and the roster's
-          // habitats are the reason the depths exist at all (bestiary.md §4).
-          // Against the band the species rests in *here*: a map that re-homed
-          // its Tetherjelly to the canopy has ground for it at 300 m.
-          if (
-            this.world.terrain.floorAt(x, y) < ambientBandFor(this.world, species).workingDepthM
-          ) {
-            continue;
-          }
-          // Never on someone's doorstep: see DRIFT.SPAWN_EXCLUSION_M.
-          if (this.map.spawns.some((s) => Math.hypot(s.x - x, s.y - y) < DRIFT.SPAWN_EXCLUSION_M)) {
-            continue;
-          }
-          spawnFauna(this.world, { species, x, y });
-          break;
-        }
+        if (countFauna(this.world) >= DRIFT.MAX_POPULATION) break;
+        if (!this.placeFauna(species, rng)) continue;
+        // What the map proved it can hold, which is what the Drift refills
+        // toward. Counted from placements rather than from the roster's ask:
+        // a map with no vent ground never seeded an Ashgrazer, and a Drift
+        // that spent every later attempt trying to put one there would be
+        // refilling a herd this water has never held.
+        this.complement.set(species, (this.complement.get(species) ?? 0) + 1);
       }
-    };
-
-    // A herd and a couple of packs, then the colossus.
-    place(FaunaSpecies.Ashgrazer, 16, true);
-    place(FaunaSpecies.Draymaw, 15, false);
-    place(FaunaSpecies.Sounder, 1, false);
-    // Swarms, each one entity (docs/bestiary.md §4 — "20-40 individuals
-    // treated as one entity"). Scattered anywhere: the Rasp's habitat is a
-    // verb, and where things will die is not knowable at seed time.
-    place(FaunaSpecies.Rasp, 3, false);
-    // Shoals, each one entity, spread across the Shelf band by spawnFauna's
-    // seeding — §6's Healthy row wants "Lampfry tells everywhere".
-    place(FaunaSpecies.Lampfry, 6, false);
-    // Clusters, each one entity, in the duct band. Their masking is a PF
-    // modifier rather than behaviour, so the grid is rebuilt once they exist.
-    place(FaunaSpecies.Tetherjelly, 5, false);
-    // Ambushers, solitary, on ground deep enough to be trench country. Last,
-    // because the roster now fills the cap exactly and the predator that
-    // holds still is the one a thin map misses least.
-    place(FaunaSpecies.Hollow, 2, false);
+    }
     rebuildPropagation(this.world);
+  }
+
+  /**
+   * Put one creature on ground it belongs on, or fail having placed nothing.
+   *
+   * Shared by the seeding and by `repopulate`, because the rules about where a
+   * creature may be are the same whether the match is two seconds or twenty
+   * minutes old: habitat, working depth, a living region, and never on
+   * somebody's doorstep. A handful of tries; if the map has no such ground,
+   * the herd simply does not appear there.
+   */
+  private placeFauna(
+    species: FaunaSpecies,
+    rng: Rng,
+    admitted?: (x: number, y: number) => boolean
+  ): boolean {
+    const { widthM, heightM } = this.world.terrain;
+    const wantVein = species === FaunaSpecies.Ashgrazer;
+    for (let attempt = 0; attempt < 12; attempt++) {
+      const x = rng.range(400, widthM - 400);
+      const y = rng.range(400, heightM - 400);
+      const onVein = this.world.terrain.biomeAt(x, y) === Biome.ThermalVein;
+      if (wantVein !== onVein) continue;
+      if (!this.world.drift.spawnsAllowed(x, y)) continue;
+      // Deep enough for the species to live there. A Sounder seeded over a
+      // 700 m plateau would be a colossus in a puddle, and the roster's
+      // habitats are the reason the depths exist at all (bestiary.md §4).
+      // Against the band the species rests in *here*: a map that re-homed
+      // its Tetherjelly to the canopy has ground for it at 300 m.
+      if (this.world.terrain.floorAt(x, y) < ambientBandFor(this.world, species).workingDepthM) {
+        continue;
+      }
+      // Never on someone's doorstep: see DRIFT.SPAWN_EXCLUSION_M.
+      if (this.map.spawns.some((s) => Math.hypot(s.x - x, s.y - y) < DRIFT.SPAWN_EXCLUSION_M)) {
+        continue;
+      }
+      // Last, and only for ground that has already passed every other test:
+      // the caller's rule may spend a draw, and a draw spent on water the
+      // species could never have lived in would make how fast a region breeds
+      // depend on how much of the map is wrong for it.
+      if (admitted !== undefined && !admitted(x, y)) continue;
+      spawnFauna(this.world, { species, x, y });
+      return true;
+    }
+    return false;
   }
 
   private addNode(x: number, y: number, amount?: number, kind = ResourceKind.Nodule): void {
@@ -1981,6 +2033,9 @@ export class Match {
     bloomShareSystem(this.world);
     faunaSystem(this.world, this.destroyedScratch);
     this.driftTick();
+    // After the health tick, so a region restocks against the water as it is
+    // this tick rather than as it was before this tick's noise wore it.
+    this.repopulate();
     this.reap();
     // Once a second, after reap, so a commander finished on this tick is
     // already out rather than briefly counting as somebody's live rival.
@@ -2029,6 +2084,95 @@ export class Match {
       this.world.driftNoise[region] = (this.world.driftNoise[region] ?? 0) + sig;
     }
     this.world.drift.tick(FIXED_DT, this.world.driftNoise);
+  }
+
+  /**
+   * Put back what the Drift has lost — docs/bestiary.md §6, read as the rate
+   * its band table is written as.
+   *
+   * Until #554 `seedFauna` ran once from the constructor and `spawnsAllowed`
+   * was read only at seed time, which made a map's fauna a **fixed stock**:
+   * one seeding, 48 creatures, about 916 Biomass for four navies for the whole
+   * match, and three of §6's four rows saying the same thing because the spawn
+   * rate was zero in all of them. This is the tick that makes the account an
+   * income and the table a rate.
+   *
+   * Three rules, all of them the table's own:
+   *
+   * - **Toward the complement, never past it.** The Drift replaces losses; it
+   *   does not breed a map fuller than the ground it stands on can feed.
+   * - **The band sets the rate.** Full in Healthy water, `−40%` in Strained,
+   *   nothing at Failing and below — and a Strained region is closed to
+   *   megafauna outright, which is the same row's second clause.
+   * - **The herd eats the crop** (docs/systems-flora.md §4). A region's rate
+   *   is scaled by the standing crop of the beds in it, so a plateau stripped
+   *   to bare rock feeds fewer animals. Inert until something can cut a bed,
+   *   and the reason the Directorate's income is paid by a crop it does not
+   *   harvest.
+   *
+   * Costs an accumulator a tick. The placement burst — at most twelve terrain
+   * probes — happens once per `DRIFT.RESPAWN_INTERVAL_S`, and the population
+   * cap that protects the Echo pass's 2 ms budget is untouched.
+   */
+  private repopulate(): void {
+    if (this.complement.size === 0) return;
+    this.repopulateCreditS += FIXED_DT;
+    if (this.repopulateCreditS < DRIFT.RESPAWN_INTERVAL_S) return;
+    this.repopulateCreditS -= DRIFT.RESPAWN_INTERVAL_S;
+    if (countFauna(this.world) >= DRIFT.MAX_POPULATION) return;
+
+    // Whichever species is furthest below what this map held, ties going to
+    // the roster's own order — a deterministic choice, because a replay that
+    // restocked a different animal diverges from the tick it did.
+    let wanted: FaunaSpecies | null = null;
+    let worst = 0;
+    for (const { species } of FAUNA_ROSTER) {
+      const deficit = (this.complement.get(species) ?? 0) - countFaunaOf(this.world, species);
+      if (deficit > worst) {
+        worst = deficit;
+        wanted = species;
+      }
+    }
+    if (wanted === null) return;
+
+    // Its own stream: the seeding's draws are all spent before the first tick,
+    // and a shared one would make how many attempts a restock took shift every
+    // later placement the seeder would have made.
+    const rng = this.world.rng.fork('drift-repopulate');
+    const species = wanted;
+    const admitted = (x: number, y: number): boolean => {
+      if (MEGAFAUNA.has(species) && !this.world.drift.admitsMegafauna(x, y)) return false;
+      const rate = this.world.drift.spawnRate(x, y) * this.cropDensityAt(x, y);
+      // A rate below 1 is a thinner region rather than a closed one: the draw
+      // spends the attempt, so Strained water breeds more slowly instead of
+      // searching harder for a spot inside itself.
+      return rate >= 1 || rng.next() < rate;
+    };
+    if (!this.placeFauna(species, rng, admitted)) return;
+    // A cluster masks by writing PF, so the grid has to learn about one the
+    // moment it exists — the same rebuild `Match.reap` runs when one dies.
+    if (species === FaunaSpecies.Tetherjelly) rebuildPropagation(this.world);
+  }
+
+  /**
+   * How much of a region's canopy is still standing, as a fraction — 1 where
+   * it has no beds at all (docs/systems-flora.md §4).
+   *
+   * Beds are few and this runs once per replacement, so a walk is the honest
+   * answer; a region with no kelp in it is every region on every map that
+   * authors no field, which is why this is 1 rather than 0 by default.
+   */
+  private cropDensityAt(x: number, y: number): number {
+    const region = this.world.drift.regionIndex(x, y);
+    let total = 0;
+    let beds = 0;
+    for (const hazard of this.world.hazards) {
+      if (hazard.kind !== 'kelp-entanglement') continue;
+      if (this.world.drift.regionIndex(hazard.x, hazard.y) !== region) continue;
+      total += hazard.crop;
+      beds++;
+    }
+    return beds === 0 ? 1 : total / beds;
   }
 
   /** One place where deaths are made real, so the win condition sees them all. */

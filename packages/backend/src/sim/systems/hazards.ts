@@ -277,6 +277,23 @@ export function hazardsSystem(world: SimWorld, destroyed: number[]): void {
     // thermal cutters, so suppression is refreshed while they stand in it and
     // lapses shortly after they leave. Burning a path is a commitment to stay.
     if (hazard.kind === 'kelp-entanglement') {
+      // The bed grows back, on docs/bestiary.md §6's own band table
+      // (docs/systems-flora.md §3): full rate in Healthy water, the row's own
+      // −40% in Strained, and nothing at Failing or below. The water that
+      // stops breeding animals is the water that stops growing the crop that
+      // feeds them, so this reads the same ladder `Match.repopulate` does
+      // rather than a second copy of it.
+      //
+      // Regrowth is the only thing that moves crop until wave 3, and every bed
+      // starts full, so on a map nobody has cut this is a comparison that
+      // fails and nothing else.
+      if (hazard.crop < 1) {
+        const rate = world.drift.spawnRate(hazard.x, hazard.y);
+        if (rate > 0) {
+          const grown = hazard.crop + (FLORA.REGROWTH_PER_MIN / 60) * rate * dt;
+          if (writeCrop(hazard, grown)) modifiersChanged = true;
+        }
+      }
       const cutters = anyFactionWithin(world, hazard, Faction.Bathyarch, hazard.radiusM);
       hazard.burnedS = cutters
         ? Math.min(HAZARDS.KELP.BATHYARCH_BURN_S, hazard.burnedS + dt)
@@ -289,7 +306,7 @@ export function hazardsSystem(world: SimWorld, destroyed: number[]): void {
       const open =
         hazard.burnedS >= HAZARDS.KELP.BATHYARCH_BURN_S ||
         hazard.suppressedS > 0 ||
-        hazard.crop <= 0;
+        standingCrop(hazard.crop) <= 0;
       hazard.phase = open ? HazardPhase.Dormant : HazardPhase.Active;
       continue;
     }
@@ -413,8 +430,24 @@ function cropStep(crop: number): number {
  * for this at all: the modifier is never even listed.
  */
 function cropPropagationDelta(crop: number): number {
-  const step = cropStep(crop) / FLORA.CROP_PF_STEPS;
-  return (FLORA.BARE_CROP_PF - FLORA.FULL_CROP_PF) * (1 - step);
+  return (FLORA.BARE_CROP_PF - FLORA.FULL_CROP_PF) * (1 - standingCrop(crop));
+}
+
+/**
+ * A bed's canopy as everything that reads it sees it: the crop, rounded to the
+ * step the PF grid is written from.
+ *
+ * One number read one way. The grid is quantised because it is a whole-map
+ * recompute (see `FLORA.CROP_PF_STEPS`), and if the grip and the phase read
+ * the raw figure instead they would disagree with it at the edges — a bed
+ * regrowing at 4% a minute is above zero a tick after it is stripped, so a
+ * field the map masks as bare ground would be gripping hulls again, and
+ * charging a Consortium cutter the full `CUTTER_SIG` for cutting a canopy of
+ * two hundredths of a per cent. Below half a step there is no canopy, in every
+ * reading.
+ */
+function standingCrop(crop: number): number {
+  return cropStep(crop) / FLORA.CROP_PF_STEPS;
 }
 
 /**
@@ -426,11 +459,23 @@ function cropPropagationDelta(crop: number): number {
  * property worth pinning first is that thinning a bed un-hides the water.
  */
 export function setKelpCrop(world: SimWorld, hazard: Hazard, crop: number): void {
-  if (hazard.kind !== 'kelp-entanglement') return;
+  if (writeCrop(hazard, crop)) rebuildPropagation(world);
+}
+
+/**
+ * Write a bed's crop and say whether the PF grid now disagrees with it.
+ *
+ * The rebuild is deliberately not done here: `hazardsSystem` regrows every bed
+ * on the map in one pass and already batches its rebuild to the foot of the
+ * tick, and a per-bed rebuild inside that loop would walk the whole grid once
+ * per field for a change no listener could hear.
+ */
+function writeCrop(hazard: Hazard, crop: number): boolean {
+  if (hazard.kind !== 'kelp-entanglement') return false;
   const next = Math.max(0, Math.min(1, crop));
   const before = cropStep(hazard.crop);
   hazard.crop = next;
-  if (cropStep(next) !== before) rebuildPropagation(world);
+  return cropStep(next) !== before;
 }
 
 /** Half-way back toward transparent, for the decay phase. */
@@ -536,10 +581,11 @@ export function kelpModifiers(world: SimWorld, eid: number): { speed: number; si
   for (const hazard of world.hazards) {
     if (hazard.kind !== 'kelp-entanglement') continue;
     if (hazard.phase !== HazardPhase.Active) continue;
-    if (hazard.crop <= crop) continue;
+    const standing = standingCrop(hazard.crop);
+    if (standing <= crop) continue;
     const dx = x - hazard.x;
     const dy = y - hazard.y;
-    if (dx * dx + dy * dy <= hazard.radiusM * hazard.radiusM) crop = hazard.crop;
+    if (dx * dx + dy * dy <= hazard.radiusM * hazard.radiusM) crop = standing;
   }
   if (crop <= 0) return none;
 
