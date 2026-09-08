@@ -132,12 +132,21 @@ not.
 ## 3. Choose one issue
 
 From the open issues that are **not** claimed, **not** assigned, and **not**
-labelled `epic`, take the oldest. Three exclusions, for different reasons:
+labelled `epic` or `needs-hardware`, take the oldest. Four exclusions, for
+different reasons:
 
 - `epic` issues are trackers for work spanning many PRs (#212 is twenty-eight
   campaign missions). There is no single PR that closes one, so an agent that
   takes it produces a PR that cannot honestly say `Fixes`. Step 4 is what to do
   with them instead.
+- `needs-hardware` is work that is real but cannot be done where this loop runs.
+  #286 wants wall-clock frame timings from an actual GPU and an actual Termux
+  handset; a container can neither produce them nor honestly fake them. The
+  label exists so that the judgement is made once, by a person, rather than
+  re-derived by every firing and re-explained in every claim comment. If you
+  find yourself passing over the same issue for this reason twice, propose the
+  label in your run summary — **applying it is a person's call**, because it is
+  a statement about the work rather than about your run.
 - Anything already claimed is someone else's — including an earlier you.
 - **An issue with an assignee is taken, whoever took it.** A person who
   assigned themselves is on it, and so is an earlier firing of this loop, which
@@ -170,6 +179,10 @@ loosened, the loop took an issue thirteen minutes old and left #286, nine days
 old and eligible, untouched and unexplained. From the outside that is
 indistinguishable from the rule not working. So name the older eligible issues
 you passed over, one clause each, where the next person to look will find them.
+
+If the same issue keeps appearing in that line, it wants an exclusion rather
+than a recurring explanation: `needs-hardware` when no container could do it, an
+assignee when a person is mid-way through it. Say which you would propose.
 
 **Found one? Skip to step 5.** Only when step 3 comes up empty do you do step 4.
 
