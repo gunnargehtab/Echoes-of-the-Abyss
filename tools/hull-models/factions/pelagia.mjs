@@ -70,6 +70,13 @@ function refuseMirror(what, items, key) {
  * `squash` of its beam in height. The Spinner's is 55 m on a 16.8 m beam,
  * squashed 0.7. This is the swimming-thing body every Commune hull that is
  * not a leaf starts from.
+ *
+ * The stations either side of the waist are the approved Spinner's own, and
+ * they are symmetric about it: the profile draws in to a point at the same
+ * rate forward and aft, and `waist` alone says which end the swelling favours.
+ * The first transcription of this builder was fuller amidships and asymmetric
+ * by a station, which is the kind of drift a vocabulary with no consumers
+ * cannot notice — building the Spinner from it is what noticed.
  */
 export function podBody(root, mat, opts) {
   const { bow, stern, maxR, waist = 0.5, squash = 0.7, facets = 12, name = 'pod_body' } = opts;
@@ -81,13 +88,13 @@ export function podBody(root, mat, opts) {
     loft(
       [
         [at(0), 0],
-        [at(0.06), maxR * 0.3],
-        [at(0.2), maxR * 0.68],
-        [at(waist - 0.14), maxR * 0.94],
+        [at(0.064), maxR * 0.19],
+        [at(0.209), maxR * 0.536],
+        [at(waist - 0.109), maxR * 0.905],
         [at(waist), maxR],
-        [at(waist + 0.14), maxR * 0.95],
-        [at(0.8), maxR * 0.7],
-        [at(0.93), maxR * 0.32],
+        [at(waist + 0.109), maxR * 0.905],
+        [at(0.791), maxR * 0.536],
+        [at(0.936), maxR * 0.19],
         [at(1), 0],
       ],
       facets
@@ -126,9 +133,16 @@ export function growthRings(root, mat, opts) {
  * centred on `y`, with a smaller chitin plate under it where the membrane is
  * backed. The Sower's is the one hull in the roster wider at the bow than at
  * the waist, and its whole 54 m beam is this plate — beam as body.
+ *
+ * `bevel` chamfers the leaf's margin (kit.mjs `plan`), and the Sower's is a
+ * metre: the margin is where a leaf reads as grown rather than cut, and it is
+ * also the part of this hull a scope sees most of. The backing plate takes no
+ * bevel — it is under the membrane and nothing looks at its rim.
  */
-export function bloomBed(root, { membrane, chitin }, { outline, y = 0, depth, underside }) {
-  add(root, 'bloom_bed', plan(outline, depth), membrane, [0, y, 0]);
+export function bloomBed(root, mats, opts) {
+  const { membrane, chitin } = mats;
+  const { outline, y = 0, depth, bevel = 0, underside } = opts;
+  add(root, 'bloom_bed', plan(outline, depth, bevel), membrane, [0, y, 0]);
   if (underside)
     add(root, 'bed_underside', plan(underside.outline, underside.depth), chitin, [
       0,
@@ -284,32 +298,33 @@ export function stem(root, { chitin, ridge }, opts) {
 
 /**
  * Membrane fins, port and starboard: thin plates in `algae_membrane` lying
- * flat at `y`. Each pair is `[name, [xAft, xFwd], [zInner, zOuter], opts]`
- * with `opts.t` the thickness (0.4–0.5 m on the approved models) and
- * `opts.taper` how far, as a fraction of the chord, each end draws in at the
- * outboard edge — 0 is the Spinner's straight-cut pectoral, 0.35 a leaf.
+ * flat, mirrored about the keel. Each entry is `[name, corners, opts]`, the
+ * corners four `[x, z]` in perimeter order on the **port** side; `opts.t` is
+ * the thickness (0.4 m on the Spinner's flukes, 0.5 m on its pectorals and on
+ * the Sower's caudals) and `opts.y` the height, defaulting to the call's.
  * Pectorals, flukes, caudals and paddles are all this.
+ *
+ * Four corners rather than a chord and a taper, because not one approved fin
+ * is a symmetric trapezoid: the Sower's caudal trails five metres aft of its
+ * root, the Spinner's pectoral rakes forward and its fluke aft. A taper about
+ * the chord's centreline can draw a fin that is *pointed* and never one that
+ * is *swept*, and a Commune fin that is not swept reads as a wing — the one
+ * thing this navy's beam is not.
  */
 export function fins(root, membrane, { y = 0, pairs }) {
-  pairs.forEach(([name, [x0, x1], [zi, zo], { t = 0.5, taper = 0 } = {}]) =>
-    bothSides((side, sgn) => {
-      const L = x1 - x0;
+  pairs.forEach(([name, corners, { t = 0.5, y: fy = y } = {}]) =>
+    bothSides((side, sgn) =>
       add(
         root,
         `${name}_${side}`,
         plan(
-          [
-            [x0, sgn * zi],
-            [x1, sgn * zi],
-            [x1 - taper * L, sgn * zo],
-            [x0 + taper * L, sgn * zo],
-          ],
+          corners.map(([x, z]) => [x, sgn * z]),
           t
         ),
         membrane,
-        [0, y, 0]
-      );
-    })
+        [0, fy, 0]
+      )
+    )
   );
 }
 
