@@ -367,6 +367,7 @@ export const items = {
   549: 'Kelp beds that thin as they are cut \u2014 and stop hiding you when they do',
   554: 'Kelp that grows back, and sea life that repopulates, at a rate the health of the water sets',
   557: 'A reactor that harvests a kelp bed \u2014 and eats the cover it is standing in while it works',
+  560: 'Sea life pays the navy that killed it, instead of whoever happened to be standing nearest',
   487: 'Automated testing for the game shell, the network messages and the audio mix',
   489: 'Every network message declared in one place, so a rename cannot quietly break the game',
   515: 'Automated testing for the pause menu, down to where the keyboard goes',
