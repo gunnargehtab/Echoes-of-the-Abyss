@@ -162,6 +162,15 @@ Prefer `bug` over `enhancement` when the ages are close: a bug is a statement
 about behaviour that is already wrong, and its acceptance criteria are usually
 in the issue rather than in your judgement.
 
+**Taking anything other than the oldest is a judgement call, and it goes in the
+claim comment.** Sometimes it is the right call — an issue can need hardware no
+container has (#286 says so in its own comments), or carry a live investigation
+somebody is mid-way through (#518). But on the first firing after step 1 was
+loosened, the loop took an issue thirteen minutes old and left #286, nine days
+old and eligible, untouched and unexplained. From the outside that is
+indistinguishable from the rule not working. So name the older eligible issues
+you passed over, one clause each, where the next person to look will find them.
+
 **Found one? Skip to step 5.** Only when step 3 comes up empty do you do step 4.
 
 ## 4. When nothing is eligible, file the next sub-issues off an epic
@@ -227,8 +236,13 @@ This is not bookkeeping. Step 1's blindness went unnoticed for four days
 precisely because no run ever said "#518 — skipped, branch
 `claude/issue-518-xx5501`"; from the outside, a correct skip and a broken rule
 look identical, and the loop is the only thing in a position to tell them apart.
-The same list belongs in the end-of-run summary, and in the stopping comment of
-step 7.
+
+**Every run owes this list, not only the ones that reach this step.** A run that
+files puts it on the epic, a run that stops puts it in the stopping comment of
+step 7, and a run that takes an issue puts it in the claim comment of step 5.
+The run that most needs to explain itself is the one that skipped four older
+issues and worked the fifth quite happily — it is the one nobody has any reason
+to look at.
 
 ## 5. Claim it, then work it like any other change
 
@@ -247,6 +261,7 @@ opening the issue — will see it first. Two writes, in this order:
 
    > Taken by the work-issue Routine, unattended. Branch
    > `claude/issue-<n>-<slug>`; session <link, when you have one>.
+   > Passed over: <older eligible issues, one clause each, or "nothing older">.
    > To take this over, unassign the issue or say so in a comment — the run
    > re-reads the issue before it opens a pull request and stands down.
 
