@@ -274,6 +274,11 @@ export const BUILD_ACTION_KIND: Partial<Record<BindableAction, StructureKind>> =
   buildFoundry: StructureKind.Foundry,
   buildTurret: StructureKind.SentinelTurret,
   buildVentTap: StructureKind.VentTap,
+  // No entry for the Bio-Reactor, and none for the Slipway either: §11's
+  // one-handed layout has to keep every bound action inside a left hand, and
+  // between the two layouts every left-hand key is already spoken for. A
+  // structure with no key is still built from the command bar, which is where
+  // the Slipway has always lived.
 };
 
 export interface Conflict {

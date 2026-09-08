@@ -226,6 +226,18 @@ export enum StructureKind {
    * a navy that wants forty berths has to want the rung.
    */
   Slipway = 9,
+  /**
+   * The bio-reactor — Biomass, and the only structure that consumes the map
+   * to make it (docs/systems-flora.md §2).
+   *
+   * Buildable only on Kelp Forest ground, where it renders the standing crop
+   * around itself into hulls. It is the Vent Tap's argument turned inside
+   * out: a tap makes the quietest ground audible, and a reactor *removes the
+   * quiet* — the canopy it eats is the map's cover, so a mature reactor
+   * stands in a hole of its own making, loudly, with nothing left to hide
+   * behind. The crop is the cover, and this is the thing that spends it.
+   */
+  BioReactor = 10,
 }
 
 /**

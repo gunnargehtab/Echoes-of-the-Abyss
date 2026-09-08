@@ -993,5 +993,27 @@ export function drawStructureSilhouette(
       }
       break;
     }
+    case StructureKind.BioReactor: {
+      // A digester drum with intake booms reaching out into the canopy. Read
+      // from above it is machinery *feeding* on the ground around it, which is
+      // what it is: the booms point outward because the crop it eats is the
+      // cover it stands in (docs/systems-flora.md §2).
+      g.circle(x, y, radiusM * 0.6).fill(body);
+      g.circle(x, y, radiusM * 0.6).stroke(edge);
+      for (let i = 0; i < 3; i++) {
+        const angle = (i / 3) * Math.PI * 2 - Math.PI / 2;
+        g.moveTo(x + Math.cos(angle) * radiusM * 0.6, y + Math.sin(angle) * radiusM * 0.6)
+          .lineTo(x + Math.cos(angle) * radiusM, y + Math.sin(angle) * radiusM)
+          .stroke(edge);
+      }
+      if (style.detail) {
+        // The vent stack, off-centre: a reactor is not a symmetrical building.
+        g.circle(x + radiusM * 0.22, y - radiusM * 0.22, radiusM * 0.16).fill({
+          color: style.accent,
+          alpha: style.alpha,
+        });
+      }
+      break;
+    }
   }
 }

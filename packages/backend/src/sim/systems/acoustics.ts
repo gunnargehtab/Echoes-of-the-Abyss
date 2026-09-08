@@ -281,7 +281,11 @@ export function acousticsSystem(world: SimWorld): void {
       const line = world.production.get(eid);
       const producing = line !== undefined && (line.queue.length > 0 || line.refit !== undefined);
       const projecting = world.spireActive.has(eid);
-      sig = producing || projecting ? stats.sigActive : stats.sigIdle;
+      // A bio-reactor is loud exactly while it is rendering crop, which is
+      // the tell that it has eaten its bed: a reactor going quiet is a
+      // stripped field (docs/systems-flora.md §2).
+      const rendering = world.reactorActive.has(eid);
+      sig = producing || projecting || rendering ? stats.sigActive : stats.sigIdle;
     }
     sig = applySpikeDecay(world, eid, sig);
     sig *= Acoustic.sigFactor[eid]! || 1;

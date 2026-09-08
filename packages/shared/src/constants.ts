@@ -8,6 +8,7 @@
  */
 
 import { Biome, DepthBand, Faction, HarvestThrottle, ResourceKind } from './types.js';
+import { MEAN_RENDERED_BIOMASS } from './fauna.js';
 
 /** SPEC — docs/systems-depth.md §1. Metres. */
 export const DEPTH_BANDS: Record<DepthBand, { min: number; max: number }> = {
@@ -1716,6 +1717,49 @@ export const FLORA = {
    * crop that feeds them.
    */
   REGROWTH_PER_MIN: 0.04,
+  /**
+   * SPEC — docs/systems-flora.md §1 and §7. What a full field's canopy is
+   * worth, rendered.
+   *
+   * Deliberately of the order of a whole map's fauna seeding (916) rather
+   * than a fraction of it: four beds are 960 and they grow back, which is
+   * what turns Biomass from a curiosity into an account a navy can be priced
+   * against — the thing #520 and #530 both ran aground on.
+   */
+  FULL_CROP_BIOMASS: 240,
+  /**
+   * SPEC — docs/systems-flora.md §2 and §7. What a bio-reactor reaches.
+   *
+   * Smaller than the Refinery's claim: a reactor covers a bed, not a plateau.
+   */
+  REACTOR_RADIUS_M: 400,
+  /**
+   * SPEC — docs/systems-flora.md §7. What a bio-reactor renders, per minute.
+   *
+   * A *flat* rate while there is crop in reach, not one that tapers with the
+   * canopy: §7's own arithmetic is "a full bed is 20 minutes of one reactor —
+   * a match", and 240 ÷ 12 is that number only if the last of a bed pays what
+   * the first did. A rate that thinned with the crop would take an hour to
+   * finish a field and would quietly turn a claim back into a tap.
+   */
+  REACTOR_BIOMASS_PER_MIN: 12,
+  /**
+   * Drift Health a region loses per Biomass of crop rendered out of it —
+   * docs/systems-flora.md §3, "harvesting wears the region, the way a
+   * rendering does".
+   *
+   * **Derived, not chosen.** The doc prices it at "the rendered-fauna rate",
+   * and that rate is a creature's `DRIFT.HEALTH_PER_KILL` over what a
+   * creature pays: about 19 Biomass across the map's own seeding
+   * (`MEAN_RENDERED_BIOMASS`). Stripping a full 240-Biomass bed therefore
+   * costs its region about 50 health — from the opening 88 that is 38, which
+   * is Failing, and Failing is where §3 says a stripped field lands: "the
+   * crop grows back at less than half speed and the animals stop arriving".
+   *
+   * Do not replace this with the number it currently evaluates to. It moves
+   * when the roster or the per-kill cost moves, and it should.
+   */
+  HEALTH_PER_BIOMASS: DRIFT.HEALTH_PER_KILL / MEAN_RENDERED_BIOMASS,
 } as const;
 
 /** SPEC — docs/systems-echo.md §4 and §7. Seconds. */

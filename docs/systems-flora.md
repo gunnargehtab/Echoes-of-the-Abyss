@@ -257,7 +257,7 @@ account it lands in is not.
 | Crop → PF | 0.55 at full, 0.90 at bare, linear | The biome's own figure at one end, open water at the other |
 | Crop → drag and drag-SIG | Scales linearly with crop | The field grips because there is kelp in it; less kelp, less grip |
 | Bio-reactor radius | 400 m | Smaller than the Refinery's claim; a reactor covers a bed, not a plateau |
-| Bio-reactor rate | 12 Biomass/min at full crop | A full bed is 20 minutes of one reactor — a match, so a bed is a claim rather than a tap |
+| Bio-reactor rate | 12 Biomass/min, flat while crop is in reach | Not 20 minutes to a bed: regrowth returns 9.6 of every 12 taken, so in Healthy water a reactor takes mostly interest. See below |
 | Bio-reactor SIG | 50 sustained | Inside §2's 45–60 harvest band, beside the Refinery |
 | Cutter yield | 40% of crop cut | Raw mass, unprocessed; the yield is bad because the point is the cover |
 | Bloom-share yield | Up to the bed's current regrowth, per tended bed | The interest and never the principal, which is what makes it endless |
@@ -269,6 +269,30 @@ account it lands in is not.
 Every figure above is **TUNABLE** and expected to move once the balance harness has read it.
 The two that are *not* free are the crop→PF ends: 0.55 is the biome's spec'd figure
 ([environments.md](environments.md)) and changing it changes which factions thrive where.
+
+### What the reactor rate and the regrowth rate do to each other
+
+The two were written apart and they work against each other, which the first measurement of a
+built reactor made plain (#557). A reactor wants 12 Biomass a minute; a bed puts back 4% of
+240 — **9.6 a minute** — so in Healthy water four fifths of what a reactor takes is *interest*
+and the canopy barely moves. What changes that is not a timer but §3's own guard-rail: every
+Biomass rendered wears the region, and once the water crosses into Strained the regrowth drops
+to 60% and the yield with it, so the canopy finally starts coming off.
+
+Measured, one reactor on a full 1,200 m bed in opening water:
+
+| Minute | Standing crop | Drift Health | PF over the reactor | Banked |
+| --- | --- | --- | --- | --- |
+| 0 | 100% | 88 | 0.55 | 0 |
+| 10 | 90% | 75 | 0.59 | 120 |
+| 25 | 51% | 55 | 0.73 | 255 |
+
+So the picture §2 draws is right — *a mature reactor sits in open water, loudly, having made
+the hole it sits in* — but it arrives on a fuse the reactor lights in the water rather than in
+the crop, and a match is long enough to see it half done rather than finished. A navy that
+wants the hole faster has to strip the ground with cutters (§2) or wear the region some other
+way. Whether that is the intended shape, or whether 12 and 4% should be retuned so a bed is
+spent inside a match, is a balance decision with a measurement behind it now.
 
 ---
 
@@ -288,11 +312,11 @@ The two that are *not* free are the crop→PF ends: 0.55 is the biome's spec'd f
 
 ## 9. Prototype mapping
 
-**Steps 1 and 2 are built; the rest is not.** A bed carries its standing crop, the water over
-it answers to it, and both halves of the Drift now grow back on §6's bands — but nothing
-*consumes* crop yet, and `Match.payBiomass` still credits a fauna death to the nearest
-non-Drift owner. There is no reactor and no sowing. The order of work, and why it is that
-order:
+**Steps 1, 2 and 3 are built; the rest is not.** A bed carries its standing crop, the water over
+it answers to it, both halves of the Drift grow back on §6's bands, and a bio-reactor can
+render a bed into hulls and wear the water while it does. What is still missing is the
+crediting — `Match.payBiomass` pays the nearest hull rather than the killer — the cutter's
+share, bloom-share's fold, and sowing. The order of work, and why it is that order:
 
 1. **Beds get a crop, and crop drives PF and drag.** *Built (#549).* The sim change with no
    player-facing part, and the one everything else reads. Crop rides the PF grid's existing
@@ -308,7 +332,10 @@ order:
    standing crop of the beds in it, which is §4 above — inert until step 3 gives anyone a way
    to cut a bed, and the reason the Directorate's income is paid by a crop it does not
    harvest.
-3. **The bio-reactor.** A structure kind, a radius, a rate and a payout.
+3. **The bio-reactor.** *Built (#557).* A structure kind, a radius, a rate and a payout — and
+   §3's wear, which arrives with the first thing that can take crop. Buildable on Kelp Forest
+   ground, SIG 50 while it renders and a hum when the bed under it is spent, taking the nearest
+   crop first so the hole opens under the reactor rather than at the far edge of its reach.
 4. **The fauna windfall, credited to the killer.** `payBiomass` becomes opportunistic and
    correct at the same time.
 5. **The cutter's 40%**, on the burn mechanic that already exists.

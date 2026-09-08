@@ -54,6 +54,9 @@ const STRUCT_ART_URL: Record<StructureKind, string> = {
   [StructureKind.VentTap]: siegeUrl,
   // A yard is a yard: the Foundry's plating, on a longer hall.
   [StructureKind.Slipway]: corvetteUrl,
+  // Rendering plant: the Refinery's own siege plating, because that is what a
+  // reactor is — the same machinery pointed at a canopy instead of at ore.
+  [StructureKind.BioReactor]: siegeUrl,
 };
 
 /**
@@ -153,6 +156,7 @@ function halfExtentsM(kind: StructureKind): { hx: number; hy: number } {
     case StructureKind.SoundingSpire:
     case StructureKind.SporeVeil:
     case StructureKind.VentTap:
+    case StructureKind.BioReactor:
       return { hx: r, hy: r };
   }
 }

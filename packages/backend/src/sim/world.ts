@@ -178,6 +178,16 @@ export interface SimWorld extends IWorld {
    */
   spireActive: Set<number>;
   /**
+   * Bio-reactors that actually rendered crop this tick — written by the flora
+   * system, read by acoustics: a working reactor sits at its spec'd SIG 50
+   * and one whose bed is bare drops back to a hum (docs/systems-flora.md §2).
+   *
+   * The same arrangement `spireActive` uses, and for the same reason: whether
+   * a structure is *working* is a question only its own system can answer,
+   * and acoustics rebuilds SIG from scratch every tick.
+   */
+  reactorActive: Set<number>;
+  /**
    * Bloom-share nodes, copied from the map at construction — docs/economy.md
    * §6. Plain positions rather than entities: a bloom is ground, not a thing
    * in the water — never mined, never depleted, never a contact — so seating
@@ -505,6 +515,7 @@ export function createSimWorld(
   world.rallies = new Map();
   world.holds = new Map();
   world.spireActive = new Set();
+  world.reactorActive = new Set();
   world.blooms = [];
   world.liftCutSig = new Map();
   world.soundingSig = new Map();

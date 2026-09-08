@@ -151,6 +151,7 @@ import {
 import { drawFor, thermalSystem } from './systems/thermal.ts';
 import { titheSystem } from './systems/tithe.ts';
 import { bloomShareSystem } from './systems/bloomShare.ts';
+import { bioReactorSystem } from './systems/flora.ts';
 import {
   ambientBandFor,
   createSimWorld,
@@ -2031,6 +2032,11 @@ export class Match {
     // tick should not pay out on the tick it dies.
     titheSystem(this.world);
     bloomShareSystem(this.world);
+    // Beside the other two ground-income passes, and before the Drift's own
+    // tick: crop rendered this tick wears its region this tick, so the health
+    // a player is spending is charged in the same breath as the Biomass they
+    // are paid (docs/systems-flora.md §3).
+    bioReactorSystem(this.world);
     faunaSystem(this.world, this.destroyedScratch);
     this.driftTick();
     // After the health tick, so a region restocks against the water as it is

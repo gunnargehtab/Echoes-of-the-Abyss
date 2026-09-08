@@ -17,7 +17,7 @@
  * kilometre away is untouched.
  */
 
-import { DRIFT } from '@echoes/shared';
+import { DRIFT, FLORA } from '@echoes/shared';
 
 export class DriftHealth {
   private readonly health: Float32Array;
@@ -88,6 +88,24 @@ export class DriftHealth {
       ? DRIFT.HEALTH_PER_KILL
       : DRIFT.HEALTH_PER_KILL * DRIFT.HEALTH_PER_ENVIRONMENTAL_KILL_FACTOR;
     this.health[i] = Math.max(0, this.health[i]! - cost);
+  }
+
+  /**
+   * Crop rendered out of a region wears it, the way a creature rendered out
+   * of it does — docs/systems-flora.md §3.
+   *
+   * The rate is `FLORA.HEALTH_PER_BIOMASS`, which is derived from this
+   * class's own `HEALTH_PER_KILL` over what a creature pays, so the two
+   * halves of the Drift cost the same per Biomass taken and neither can drift
+   * away from the other. §8's guard-rail against over-harvesting arrives here
+   * with the thing it guards against: strip a bed and you push its water
+   * toward the band where the crop grows back at less than half speed and the
+   * animals stop arriving.
+   */
+  recordHarvest(x: number, y: number, biomass: number): void {
+    if (biomass <= 0) return;
+    const i = this.index(x, y);
+    this.health[i] = Math.max(0, this.health[i]! - biomass * FLORA.HEALTH_PER_BIOMASS);
   }
 
   /**
