@@ -706,6 +706,85 @@ Better than the Cruiser's flat zero, and not yet a hull the Klaxon leans on.
 Both models landed with the wave rather than lagging it (§5): authored as three.js scenes from
 their prompts and intaken like any other export, with no warnings and glow on the curve.
 
+### The purse is arbitrated by price, and the rung's own hull is the dearest thing on the list
+
+Five causes have been named on #518 and four of them have been fixed. This is what the
+sixth candidate turned out to be, and what the measurement found instead.
+
+**The hauler guard is not a cause.** `commandConstruction` returns before either of its two
+saved-for builds whenever `harvesters + queued < harvesterTarget`, and the last reading of
+this issue proposed that guard as the thing keeping the Commune off the rung: it has the
+largest target in the game at six, it builds twelve haulers a match and loses thirteen, so
+it is under that target permanently and therefore never saves for anything. The arithmetic
+is right and the conclusion is wrong. Turning the guard from a veto into a floor — the hold
+leaves a hauler's price in the purse rather than abandoning the save — reproduces the stored
+thirty-seed baseline **byte for byte**, because the branch the guard is protecting returns
+too: a navy under its hauler target buys a hauler and stops, so the guard never had a bank
+to hand away.
+
+**The hauler want does leak, and closing it does not help either.** "Harvesters first,
+always" was true only of a navy that could afford one; below the price the want fell through
+in silence and the composition cycle caught the money. Traced on seed 4003, that is the
+Commune's whole middle game: from 02:25 to 03:30 it holds four to five haulers against a
+target of six, never rises above 120 nodules, and buys six Light Scouts and nothing else
+while its hauler count falls from five to three. Two repairs were measured on the stored
+seeds — a hold of the want's own, and a bid into `holdPurse` — and both do what they say:
+
+| | stored | its own hold | a bid |
+| --- | --- | --- | --- |
+| Slipways commissioned (Con/Com/Dir/Kni) | 0.5 / 0.3 / 1.0 / 0.9 | 0.8 / 0.5 / 1.0 / 0.7 | 0.7 / 0.5 / 1.0 / 0.5 |
+| Rung hulls built a match, all four navies | 1.4 | 1.2 | 1.0 |
+| Win rates (Con/Com/Dir/Kni) | 0 / 0 / 95 / 5 | 0 / 0 / 94 / 6 | 0 / 0 / 89 / 11 |
+
+Two navies raise the yard more often, one raises it less, and **fewer hulls come off it than
+before**. Neither shipped, on the rule #521 set when it reverted the siege hold: a change to
+how this commander spends nodules that moves the win rates and builds none of the hulls the
+issue is about is a change that buys nothing.
+
+**The yard is no longer the constraint.** Over seeds 4000–4009 the Directorate places a
+Slipway in ten matches of ten, the Knights in ten, the Consortium in six and the Commune in
+three, and seventeen of those nineteen sites rise. Placement refusals do happen — every one
+recorded was clearance against a structure already standing — and the spiral in `nearHome`
+recovers from them on the next observation rather than costing a saving cycle.
+
+**What is binding is the arbitration itself.** `holdPurse` takes the cheapest reachable bid,
+and that rule has no way to ever serve the dearest one. Counted over the same ten seeds, from
+the moment each navy's yard is standing:
+
+| Navy | Its heavy | Price | Hold opens at | Bids | Wins the purse | Built a match |
+| --- | --- | --- | --- | --- | --- | --- |
+| Consortium | Bulwark | 700 | 350 | 4,822 | **0** | 0.0 |
+| Commune | Bower | 360 | 180 | 728 | 700 | 0.1 |
+| Directorate | Dredge | 450 + 40 crystal + 60 Biomass | 225 | 19,228 | **0** | 0.0 |
+| Knights | Reciter | 260 | 130 | 11,526 | 1,624 | 0.6 |
+
+**The Bulwark is the clean case**, being the only heavy in the game priced in nodules alone:
+it bid 4,822 times, won nothing, and the two cheaper wants standing beside it — the Caisson on
+the line and the Derrick in the mid-tier — took 947 purses between them. Nearest-first is fair
+between wants that are bought *once*, because a hold that closes stops bidding and the next
+want takes the slot. It is not fair against a want that never closes, and the composition
+cycle's is exactly that: it bids while the army is below target, and a navy losing eighteen
+hulls a match is below target nearly always. The Knights are the exception for the reason the
+table gives rather than for a better commander — their heavy is the cheapest in the game, so
+nearest-first serves it, and they are the one navy that fields one.
+
+The Dredge's zero is not this finding and should not be read as it: priced in crystal and
+Biomass, it is skipped by the account gate in `holdPurse` before price is compared at all,
+which is #520's case rather than the arbitration's.
+
+The bank says the same thing from the other side. With a yard standing the Consortium's bank
+averages **70** nodules and tops out at 390 across ten matches — it clears the Bulwark's 350
+gate on 3.7% of observations and the Bulwark's own price on none of them — and the
+Directorate's tops out at 360 against a 450 hull. The Knights' averages 192 and clears 600 on
+543 observations.
+
+**So what is left is anti-starvation, not another saving rule.** Nearest-first is right about
+which hold closes soonest and silent about a want that never wins one; what it needs is a way
+for a bid that has lost for long enough to take the slot regardless of what is cheaper. The
+risk to measure is the one #521 and #536 both found from opposite directions: a purse held
+for a hull the navy cannot reach costs win rate immediately and buys nothing, so the window
+such a bid is allowed to win has to be short enough that the line keeps growing underneath it.
+
 ## 5. What each wave touches
 
 The touch list for one hull, from the code as it stands. A wave is four of these plus its
