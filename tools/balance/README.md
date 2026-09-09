@@ -28,6 +28,27 @@ node tools/balance/run.mjs --matchup consortium,commune --matches 10 \
 Both files are Markdown tables, so the pull request that changes the constant can carry the
 diff that justifies it.
 
+## One process per match
+
+The harness runs each match in its own process, `--jobs` of them at a time and one per core
+by default. That is a correctness rule before it is a speed one.
+
+`bitecs` keeps its entity cursor and its freed-id list in *module* scope, shared by every
+world in a process, and recycles a freed id once a thousand have been returned — which one
+twenty-five-minute four-faction match comfortably exceeds. Looped in one process, a batch
+therefore builds each new world on the previous matches' dead ids, with their component data
+still sitting behind those ids, and a match's result comes to depend on its position in the
+batch. Measured on `ventfront-divide`: seed 4001 alone matched the second match of a looped
+batch, and seeds 4007, 4014, 4021 and 4029 did not match the eighth, fifteenth, twenty-second
+and thirtieth. Resetting the entity cursor between matches is not enough — the ids come back,
+the component arrays behind them do not empty.
+
+Two consequences worth knowing. `--set` overrides are applied inside every worker, from the
+same argv each one re-parses, because constants are per-process and a batch whose overrides
+lived only in the parent would report a "before" as an "after". And `--in-process` still runs
+the old single-process loop, for attaching a debugger to a batch; it warns, because results
+past the first few matches are not reproducible.
+
 ## What a report says about a wave
 
 Three of the per-faction tables answer the question a roster wave is judged on, and they are
