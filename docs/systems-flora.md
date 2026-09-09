@@ -407,10 +407,17 @@ order:
    below its own attack threshold, which measures exactly as it sounds.
 
 Each step is measured against the stored four-faction baseline before the next one lands.
-Steps 1, 2 and 4 are what #535 filed as its three faults; they are not separate work. Steps 1,
-3, 5 and 6 move no baseline figure at all, and for one reason each time: only *Kelp Labyrinth*
-authors kelp fields, no skirmish map authors a bloom node, and no commander in the harness
-builds or cuts anything.
+Steps 1, 2 and 4 are what #535 filed as its three faults; they are not separate work.
+
+Steps 1, 3, 5 and 6 moved no baseline figure when they landed, and for one reason each time:
+only *Kelp Labyrinth* authored kelp fields, no skirmish map authored a bloom node, and no
+commander in the harness built or cut anything. Three of those four reasons have since been
+removed — the commander gained its opinion in step 7, the Ventfront gained its gardens, and it
+gained an ordinary bed behind each base — so a step that reads "moved nothing" is a statement
+about the run it landed in and not about the mechanism. **Step 3 is the one this mattered
+most for.** A reactor needs a bed on ground that seats a structure, the archetype's only beds
+were its Shelf-band gardens, and so for four waves the committed way to take Biomass was
+unreachable on the only map the harness plays: built, tested, and never once built by anybody.
 
 ---
 

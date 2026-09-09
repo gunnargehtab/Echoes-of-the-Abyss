@@ -25,6 +25,7 @@ import {
   CONSTRUCTION,
   CRYSTAL,
   DEPTH,
+  ECONOMY_ACCOUNTS,
   Faction,
   HarvestThrottle,
   type HarvestIdleReason,
@@ -334,10 +335,19 @@ export class Match {
   /**
    * What the scuttling rule remembers between checks, per slot.
    *
-   * `lastRiseTick` is the last time any stockpile of theirs went up — income,
-   * from whatever source: mining, the Hadron tithe, a bloom share, rendered
-   * remains. Spending is not a fall the rule cares about, so each field is
-   * compared against the previous sample rather than accumulated.
+   * `lastRiseTick` is the last time a stockpile of theirs went up **in an
+   * account the way back is priced in** — mining, the Hadron tithe, a
+   * salvaged hull. Spending is not a fall the rule cares about, so each field
+   * is compared against the previous sample rather than accumulated.
+   *
+   * The qualifier is the whole of it, and it was learned from a bio-reactor.
+   * A reactor is income with no hull and no harvester behind it: it renders
+   * kelp on its own, forever, for a navy that has nothing left. Counted as
+   * "still earning", that made a beaten commander immortal — the stall streak
+   * below can never close while a number somewhere is going up. And Biomass
+   * cannot buy a Harvester, so it was never a way back out of the position
+   * this rule is about; it was only a way to keep the clock running. Measured
+   * as six of thirty matches that stopped resolving at all.
    *
    * `stalledSince` is when the position first became one nothing can come out
    * of, or -1 while it is not. It is the streak that has to survive
@@ -2513,6 +2523,10 @@ export class Match {
     const pending = new Set<number>();
     const canRebuild = new Set<number>();
     const harvesterPrice = priceOf(statsFor(UnitKind.Harvester));
+    // The accounts the way back is actually priced in. Income arriving
+    // anywhere else cannot be spent on getting out of this position, and a
+    // position nothing can come out of is the only thing this rule ends.
+    const comeback = ECONOMY_ACCOUNTS.filter((account) => harvesterPrice[account] > 0);
     const structures = this.structureOwners(this.world);
     for (let i = 0; i < structures.length; i++) {
       const eid = structures[i]!;
@@ -2550,11 +2564,9 @@ export class Match {
         };
         this.concession.set(slot, watch);
       }
-      if (
-        economy.nodules > watch.nodules ||
-        economy.crystal > watch.crystal ||
-        economy.biomass > watch.biomass
-      ) {
+      // Read off the Harvester's own price rather than named here, so a hull
+      // repriced into a second account moves this rule with it.
+      if (comeback.some((account) => economy[account] > watch[account])) {
         watch.lastRiseTick = tick;
       }
       watch.nodules = economy.nodules;

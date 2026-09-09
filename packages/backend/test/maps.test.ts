@@ -54,6 +54,27 @@ function advanceToSnapshot(match: Match) {
   throw new Error('no snapshot within a second');
 }
 
+/**
+ * How far a site is from the straight run between two points.
+ *
+ * A hazard can clear both ends of a lane by a kilometre and still sit in the
+ * middle of it, so "off the working lane" is a question about the segment.
+ */
+function distanceToSegment(
+  site: { x: number; y: number },
+  a: { x: number; y: number },
+  b: { x: number; y: number }
+): number {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const lengthSq = dx * dx + dy * dy;
+  const t =
+    lengthSq === 0
+      ? 0
+      : Math.max(0, Math.min(1, ((site.x - a.x) * dx + (site.y - a.y) * dy) / lengthSq));
+  return Math.hypot(site.x - (a.x + t * dx), site.y - (a.y + t * dy));
+}
+
 /** Mean PF over a rectangle, sampled on a grid. */
 function meanPf(map: MapDefinition, x: number, y: number, w: number, h: number): number {
   const terrain = terrainFor(map);
@@ -411,6 +432,67 @@ describe('Ventfront Divide', () => {
         terrain.biomeAt(node.x, node.y),
         Biome.ThermalVein,
         'the expansion bait belongs in the vents'
+      );
+    }
+  });
+
+  it('gives every base a bed a bio-reactor can stand in', () => {
+    // docs/maps.md, "Where an ordinary bed goes". The archetype has called its
+    // aprons Kelp Forest since it was written and had no kelp field in them,
+    // which was invisible until the flora economy needed one: a reactor seats
+    // at CONSTRUCTION.WORKING_DEPTH_M, the two gardens are Shelf-band and
+    // refuse a building by construction, and so the map offered no legal
+    // reactor site at all (#535, #547). What is pinned is the property that
+    // was missing, not the rectangles that supply it.
+    const terrain = terrainFor(VENTFRONT_DIVIDE);
+    const beds = VENTFRONT_DIVIDE.hazards.filter((h) => h.kind === 'kelp-entanglement');
+    assert.equal(beds.length, VENTFRONT_DIVIDE.spawns.length, 'one bed per seat');
+    for (const bed of beds) {
+      assert.equal(terrain.biomeAt(bed.x, bed.y), Biome.KelpForest, 'a bed is kelp');
+      assert.ok(
+        terrain.floorAt(bed.x, bed.y) >= CONSTRUCTION.WORKING_DEPTH_M,
+        `a bed at ${bed.x},${bed.y} sits on ${terrain.floorAt(bed.x, bed.y)} m and holds nothing`
+      );
+    }
+  });
+
+  it('keeps its beds off the run every harvester makes', () => {
+    // Kelp grips unequally — the Knights snag at 0.5 where the Commune swim
+    // at 1.0 (docs/hazards.md §4) — so a bed over the haul from a home nodule
+    // field to its Bastion would be a movement tax three navies pay for the
+    // shape of their hulls and the fourth does not. Measured against the lane
+    // itself rather than against its ends: a field can clear both and still
+    // sit across the middle.
+    const beds = VENTFRONT_DIVIDE.hazards.filter((h) => h.kind === 'kelp-entanglement');
+    const home = VENTFRONT_DIVIDE.resources.filter(
+      (r) => r.kind === ResourceKind.Nodule && (r.amount ?? 0) <= 5000
+    );
+    assert.equal(home.length, VENTFRONT_DIVIDE.spawns.length, 'a home field per seat');
+    for (const bed of beds) {
+      for (const field of home) {
+        for (const spawn of VENTFRONT_DIVIDE.spawns) {
+          const gap = distanceToSegment(bed, field, spawn) - bed.radiusM;
+          assert.ok(gap > 0, `a bed at ${bed.x},${bed.y} lies across a haul by ${-gap} m`);
+        }
+      }
+    }
+  });
+
+  it('mirrors its beds like everything else on it', () => {
+    // The gardens' rule for the gardens' reason: a bed a column out of place
+    // is an advantage handed to a seat. Asserted on the sites rather than on
+    // the terrain grid, because a hazard paints no cells and so is invisible
+    // to the cell-by-cell symmetry test above.
+    const beds = VENTFRONT_DIVIDE.hazards.filter((h) => h.kind === 'kelp-entanglement');
+    const key = (x: number, y: number, r: number): string => `${x},${y},${r}`;
+    const sites = new Set(beds.map((bed) => key(bed.x, bed.y, bed.radiusM)));
+    for (const bed of beds) {
+      const w = VENTFRONT_DIVIDE.widthM;
+      const h = VENTFRONT_DIVIDE.heightM;
+      assert.ok(sites.has(key(w - bed.x, bed.y, bed.radiusM)), 'no bed across the east-west axis');
+      assert.ok(
+        sites.has(key(bed.x, h - bed.y, bed.radiusM)),
+        'no bed across the north-south axis'
       );
     }
   });

@@ -27,6 +27,9 @@ A geothermal battlefield split by erupting thermal veins.
 - Side tunnels for flanking
 - **Two bloom gardens**, one in each transit gap between the base plateaus and the vent
   line — shallow kelp shelves in water that is otherwise deep and open
+- **A kelp bed behind each base**, in the back corner of its plateau — the map's only ground
+  that is Kelp Forest and deep enough to seat a structure, and so the only place on it a
+  bio-reactor can stand
 
 ### Biome Distribution
 
@@ -39,6 +42,7 @@ A geothermal battlefield split by erupting thermal veins.
 
 - Geothermal eruptions (predictable intervals)
 - Toxic brine pockets near mining rigs
+- Kelp entanglement fields, one behind each base, off the harvester's run to its home field
 
 ### Strategic Dynamics
 
@@ -47,6 +51,9 @@ A geothermal battlefield split by erupting thermal veins.
   thing on this map two seats can reach at the same distance
 - Abyssal thrives in trench side routes
 - Hadron dominates crystal-rich corners
+- A navy that renders its own bed buys hulls with the quiet of its own apron: the reactor
+  holds SIG 50 while it works and eats the canopy nearest it first, so a base that funds
+  itself this way is heard from further out every minute it does
 
 ### Ideal Use
 
@@ -287,6 +294,28 @@ so that the quietest navy earns on the most reachable water ([systems-echo.md](s
 
 A skirmish map with no bloom node is a map where one navy has no economy of its own, so the
 catalogue should not be all of them.
+
+### Where an ordinary bed goes
+
+A garden is a bed nobody may build on. The other kind is the bed a **bio-reactor** works, and
+its requirements are the mirror image ([systems-flora.md](systems-flora.md) §2):
+
+- **Deep enough to build on.** A structure seats at 600 m wherever the floor is, so a bed on
+  Shelf-band ground refuses a reactor outright — which is the whole point of a garden and a
+  defect in a map that authors nothing else. A skirmish map whose only beds are its gardens has
+  no legal reactor site anywhere on it, and the commander's search says so silently: it returns
+  nothing on every observation, and the account is unspendable rather than merely expensive.
+- **Behind a base, not across a lane.** Kelp grips, and it grips unequally — Pelagia move
+  freely, the Directorate tear through, the Consortium cut and the Knights snag worst of all
+  ([hazards.md](hazards.md) §4). A bed laid over a crossing, or over a harvester's run to its
+  home field, is a movement tax three navies pay and the fourth does not, which changes how the
+  map is crossed rather than who earns on it.
+- **One per seat, mirrored.** The gardens' rule for the gardens' reason. A bed a column out of
+  place is an advantage handed to a seat.
+
+A bed's standing crop is **240 Biomass however large the field is**, so radius is not an income
+decision. It is a decision about how much water the bed hides and how much traffic it drags,
+and those are the only two things it buys.
 
 `Terrain.demo()` remains, explicitly as a **test fixture**: a hand-built grid with no spawns, resources or hazards, for tests that want ground whose PF landscape is not also under test.
 

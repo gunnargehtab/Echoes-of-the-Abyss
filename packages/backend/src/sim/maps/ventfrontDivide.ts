@@ -268,5 +268,53 @@ export const VENTFRONT_DIVIDE: MapDefinition = {
     { x: 4000, y: 4900, radiusM: 700, kind: 'geothermal-eruption' },
     { x: 1900, y: 1450, radiusM: 400, kind: 'toxic-brine', note: 'Near mining rigs' },
     { x: W - 1900, y: H - 1450, radiusM: 400, kind: 'toxic-brine' },
+    // The apron beds — docs/maps.md, "Where an ordinary bed goes".
+    //
+    // "East/West: Kelp Forest Plateaus" has been the biome under every base
+    // since the archetype was written, and until now there was no kelp in it:
+    // the map painted the ground and authored no field, so the plateaus were
+    // Kelp Forest the way a name is a name. That was invisible until the
+    // flora economy landed, and then it was the whole of it — a bio-reactor
+    // needs a bed on ground that seats a structure at 600 m, the gardens are
+    // Shelf-band at 380 m and refuse one by construction, and these four
+    // plateaus at 700 m were the only ground on the map that could hold one
+    // and had nothing standing on it. `reactorSite` returned null on every
+    // observation of every match, so the account the flora economy was built
+    // to make spendable had nowhere to be spent (#535, #547).
+    //
+    // Placed in each plateau's back corner, which is chosen against the two
+    // ways a bed here could be the wrong change:
+    //
+    // - **Off the working lane.** Kelp grips unequally — the Knights snag at
+    //   0.5 where the Commune swim at 1.0 (docs/hazards.md §4) — so a field
+    //   over the run from a home nodule field to its Bastion would be a tax
+    //   three navies pay for the shape of their hulls. The home field is at
+    //   (1900, 1450) and the Bastion at (1200, 1200); this bed's rim is
+    //   1,350 m from the first and 1,076 m from the second, and the lane
+    //   between them does not touch it.
+    // - **Not a fifth garden.** It is behind a base rather than in the water
+    //   between two, so it is the opposite decision to a bloom node: a
+    //   garden is contested ground the Commune must stand on, and this is
+    //   ground its owner already holds. What it costs is not distance, it is
+    //   the cover over the base itself — a reactor eats the nearest canopy
+    //   first, so a navy funding itself here un-hides its own apron while it
+    //   does (docs/systems-flora.md §2).
+    //
+    // The garden's radius, for the garden's reason: 400 m is a field a hull
+    // stands in rather than crosses, and a bed's 240 Biomass does not scale
+    // with its area, so a larger one would buy nothing but drag.
+    //
+    // Four, mirrored across both axes to the metre, like everything else on
+    // this map.
+    {
+      x: 500,
+      y: 2500,
+      radiusM: 400,
+      kind: 'kelp-entanglement',
+      note: 'North-west apron bed — the reactor ground behind the base',
+    },
+    { x: W - 500, y: 2500, radiusM: 400, kind: 'kelp-entanglement' },
+    { x: 500, y: H - 2500, radiusM: 400, kind: 'kelp-entanglement' },
+    { x: W - 500, y: H - 2500, radiusM: 400, kind: 'kelp-entanglement' },
   ],
 };
