@@ -85,6 +85,7 @@ The design bible for **Echoes of the Abyss**. Start with the two system docs —
 | **[habitats-art-brief.md](habitats-art-brief.md)** | The Rift's beauty as an art brief per habitat: thesis, key image, light, palette, ground, and a prompt seed for each city, inside the gates |
 | **[naming.md](naming.md)** | Title, taglines, logo direction |
 | **[concept-art/](concept-art/)** | Five survey plates in the Pressure Cartography language, plus two neon-noir presentation plates |
+| **[concept-art/menu-breathing.html](concept-art/menu-breathing.html)** | Five moving title-screen concepts beside the shipped one, live in a browser: what breathes, at what rate, what licenses it, and what each is left with when motion is off |
 
 ## Technical
 
