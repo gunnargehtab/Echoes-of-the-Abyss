@@ -31,7 +31,8 @@ import {
   LIFECYCLE,
   THERMAL_DRAW,
 } from '@echoes/shared';
-import { runBatch, seedHasAnyEffect, DEFAULT_MAX_MINUTES, type Seat } from './runner.ts';
+import { runBatch, runMatch, seedHasAnyEffect, DEFAULT_MAX_MINUTES, type Seat } from './runner.ts';
+import { runBatchIsolated } from './batch.ts';
 import { DEFAULT_MAP_ID, MAPS, mapById } from '../sim/maps/index.ts';
 import { summarise, toMarkdown } from './report.ts';
 
@@ -152,7 +153,7 @@ function parseMatchup(spec: string): Seat[] {
   });
 }
 
-function main(): void {
+async function main(): Promise<void> {
   if (process.argv.includes('--help')) {
     console.log(USAGE);
     return;
@@ -187,13 +188,39 @@ function main(): void {
     );
   }
 
+  const run = { seats, seed, mapId, maxMinutes, fauna };
+
+  // One match, this process, straight to JSON — `batch.ts` spawning us. Before
+  // any of the reporting below, because a worker's stderr is the parent's and
+  // thirty copies of the banner is not a progress report.
+  //
+  // The overrides above have already been applied, which is the whole reason a
+  // worker re-parses argv rather than being handed a parsed run: constants are
+  // per-process, and an override that only existed in the parent would leave
+  // every match measuring the unmodified game.
+  const workerOut = flag('worker-out');
+  if (workerOut !== undefined) {
+    writeFileSync(workerOut, JSON.stringify(runMatch(run)));
+    return;
+  }
+
+  // A batch is only reproducible one match to a process — see `batch.ts`. The
+  // in-process loop stays reachable for a single match, where there is nothing
+  // to isolate from, and behind a flag for debugging a batch under one
+  // debugger.
+  const inProcess = process.argv.includes('--in-process');
+  if (inProcess && matches > 1) {
+    console.error(
+      'WARNING: --in-process runs every match in one process, where bitecs recycles ' +
+        'entity ids across matches. Results past the first few are not reproducible.'
+    );
+  }
+
   const started = Date.now();
   console.error(
     `Running ${matches} matches, ${seats.length} seats, seed ${seed}, cap ${maxMinutes} min...`
   );
   if (overrides.length > 0) console.error(`Overrides: ${overrides.join('; ')}`);
-
-  const run = { seats, seed, mapId, maxMinutes, fauna };
   // The seed reaches exactly one thing in the simulation: where the Drift is
   // placed. Without it, every match in the batch is identical, and a
   // "distribution" over ten of them is a distribution over one sample.
@@ -205,7 +232,15 @@ function main(): void {
     );
   }
 
-  const results = runBatch(run, matches);
+  const results =
+    matches === 1 || inProcess
+      ? runBatch(run, matches)
+      : await runBatchIsolated(
+          process.argv.slice(2),
+          seed,
+          matches,
+          Number(flag('jobs', '0')) || undefined
+        );
   const summary = summarise(results);
   // Quoted so a title with spaces round-trips through a shell unchanged.
   const command = [
@@ -255,10 +290,17 @@ const USAGE = `Balance harness — headless matches, telemetry, and the guard-ra
                        --set HARVEST_THROTTLE.Overburden.cargoMultiplier=1.0
                        Roots: ${Object.keys(TUNABLE_ROOTS).join(' ')}
   --title <text>       Heading for the report.
+  --jobs <n>           Matches to run at once. Default: one per core.
+  --in-process         Run the batch in one process. Faster to attach a
+                       debugger to, and not reproducible past the first few
+                       matches — see src/balance/batch.ts.
   --out <file.md>      Write Markdown here, plus a .json sibling. Default
                        is stdout.
 
 Reproducible by construction: the seed is explicit and the commanders draw no
 dice, so the same command twice gives the same numbers.`;
 
-main();
+main().catch((err: unknown) => {
+  console.error(err instanceof Error ? err.message : String(err));
+  process.exit(1);
+});

@@ -48,6 +48,7 @@ import {
   priceOf,
   Biome,
   DRIFT,
+  DRIFT_ROSTER,
   EchoMarkKind,
   FaunaSpecies,
   faunaStatsFor,
@@ -257,51 +258,22 @@ const MAX_QUEUE_LENGTH = 8;
 const PLACEMENT_CLEARANCE_M = 40;
 
 /**
- * What a full map holds — docs/bestiary.md §4, and the ceiling `seedFauna`
- * fills exactly.
- *
- * A table rather than a run of calls because it is read twice now: once to
- * seed the Drift and once, per species, as the complement `repopulate` refills
- * toward. Two lists would be free to disagree, and the one that disagreed
- * would be the one deciding what the map is worth for the rest of the match.
- */
-const FAUNA_ROSTER: readonly { species: FaunaSpecies; count: number }[] = [
-  // A herd and a couple of packs, then the colossus.
-  { species: FaunaSpecies.Ashgrazer, count: 16 },
-  { species: FaunaSpecies.Draymaw, count: 15 },
-  { species: FaunaSpecies.Sounder, count: 1 },
-  // Swarms, each one entity (docs/bestiary.md §4 — "20-40 individuals treated
-  // as one entity"). Scattered anywhere: the Rasp's habitat is a verb, and
-  // where things will die is not knowable at seed time.
-  { species: FaunaSpecies.Rasp, count: 3 },
-  // Shoals, each one entity, spread across the Shelf band by spawnFauna's
-  // seeding — §6's Healthy row wants "Lampfry tells everywhere".
-  { species: FaunaSpecies.Lampfry, count: 6 },
-  // Clusters, each one entity, in the duct band. Their masking is a PF
-  // modifier rather than behaviour, so the grid is rebuilt once they exist.
-  { species: FaunaSpecies.Tetherjelly, count: 5 },
-  // Ambushers, solitary, on ground deep enough to be trench country. Last,
-  // because the roster fills the cap exactly and the predator that holds still
-  // is the one a thin map misses least.
-  { species: FaunaSpecies.Hollow, count: 2 },
-];
-
-/**
  * The colossus — docs/bestiary.md §4's Megafauna heading, which holds exactly
  * one row. §6's Strained band closes a region to it entirely.
  */
 const MEGAFAUNA: ReadonlySet<FaunaSpecies> = new Set([FaunaSpecies.Sounder]);
 
 /**
- * How finely `placeMegafauna` walks the map looking for ground a colossus may
+ * How finely `searchFauna` walks the map looking for ground a species may
  * stand on.
  *
- * 50 m because that is the resolution #578 measured the admissible fraction at
- * — 7.4% of the Ventfront Divide — so the search sees the same map the bug
- * report does. Finer would find pockets narrower than the animal is long
- * (60-90 m, docs/bestiary.md §4); coarser could miss a legitimate one.
+ * 50 m because that is the resolution #578 and #591 both measured the
+ * admissible fraction at — 7.4% of the Ventfront Divide for the colossus, 3.0%
+ * to 11.4% for the rest of the roster — so the search sees the same map the
+ * bug reports do. Finer would find pockets narrower than the largest animal is
+ * long (60-90 m, docs/bestiary.md §4); coarser could miss a legitimate one.
  */
-const MEGAFAUNA_SEARCH_STEP_M = 50;
+const FAUNA_SEARCH_STEP_M = 50;
 
 export class Match {
   readonly world: SimWorld;
@@ -664,11 +636,15 @@ export class Match {
    * without: the report printed Drift Health but never the complement, so a
    * third of the baseline's matches ran with no colossus and nothing said so.
    * A shortfall here is a statement about the map rather than a fault — a map
-   * with no vent ground never seeded an Ashgrazer and should not pretend to —
-   * which is precisely why it wants printing rather than asserting.
+   * with no vent ground cannot seat an Ashgrazer and should not pretend to —
+   * which is precisely why it wants printing rather than asserting. That
+   * reading only became true in #591: until the walk backed every species,
+   * these lines were short on all three shipping maps because twelve draws
+   * missed ground the map had thousands of cells of, and the report read that
+   * as the water's fault.
    */
   get faunaComplement(): readonly { species: FaunaSpecies; asked: number; seeded: number }[] {
-    return FAUNA_ROSTER.map(({ species, count }) => ({
+    return DRIFT_ROSTER.map(({ species, count }) => ({
       species,
       asked: count,
       seeded: this.complement.get(species) ?? 0,
@@ -791,27 +767,53 @@ export class Match {
    * they feed in, Draymaws in open mid-water where they can shadow industry,
    * and a single Sounder, because there is only ever one colossus.
    *
-   * That last one is the reason megafauna are placed by search when the draws
-   * miss (#578). A herd asks for sixteen placements and a shortfall of one is
-   * a herd of fifteen; the colossus asks for one, so a shortfall is the whole
-   * animal, and twelve draws against the 7.4% of the Ventfront Divide a
-   * Sounder may stand on lost it in a third of matches. The rarest animal had
-   * the least robust placement, which is exactly backwards.
+   * Every species is placed by twelve rejection draws and then, if those all
+   * miss, by a walk over the map (`searchFauna`). #578 found the draws losing
+   * the colossus in a third of Ventfront Divide matches and gave megafauna the
+   * walk; #591 found the same defect on the other six rows, where it showed as
+   * a partial herd rather than an absence and so went unnoticed for longer.
+   *
+   * The arithmetic is the whole argument. Twelve draws against an admissible
+   * fraction p seat one animal with probability 1 − (1 − p)¹², which for the
+   * Ashgrazer's 11.4% of the Ventfront Divide is 77% — so sixteen asked seated
+   * twelve, and the predicted figure matched the measured median on all three
+   * skirmish maps for all seven species. None of that was the map refusing the
+   * ground: the tightest row in the catalogue is 400 admissible 50 m cells for
+   * one animal, and most have thousands.
+   *
+   * So a roster line is a **target the map must seat**, not a ceiling the
+   * sampler may fall short of (docs/bestiary.md §4). Left as draws alone the
+   * shortfall was an unauthored cross-map asymmetry — 68%, 88% and 77% of the
+   * same roster on the three maps — and it silently understated megafauna
+   * Biomass, Drift Health pressure and the acoustic clutter every navy hunts
+   * through, on every map and in every stored baseline.
+   *
+   * The draws still come first, so a seed that already places an animal places
+   * it in exactly the same water it did before; the walk only supplies what
+   * the draws missed.
    */
   private seedFauna(): void {
     const rng = this.world.rng.fork('drift');
-    for (const { species, count } of FAUNA_ROSTER) {
+    // Where the walk may put each species, built the first time that species
+    // needs it and kept for the rest of its roster line. One walk is ~21,000
+    // terrain probes, so building it per *placement* would pay for a herd of
+    // sixteen sixteen times over; per species it is 40-57 ms for the whole
+    // roster, once, at seed time. Safe to hold across the seeding because
+    // nothing `faunaGroundAdmits` reads changes while it runs: Drift Health is
+    // still uniform, and placing a creature does not close ground to the next.
+    const ground = new Map<FaunaSpecies, { x: number; y: number }[]>();
+    for (const { species, count } of DRIFT_ROSTER) {
       for (let i = 0; i < count; i++) {
         if (countFauna(this.world) >= DRIFT.MAX_POPULATION) break;
-        const placed = MEGAFAUNA.has(species)
-          ? this.placeMegafauna(species, rng)
-          : this.placeFauna(species, rng);
-        if (!placed) continue;
+        if (!this.placeFauna(species, rng) && !this.searchFauna(species, ground)) continue;
         // What the map proved it can hold, which is what the Drift refills
-        // toward. Counted from placements rather than from the roster's ask:
-        // a map with no vent ground never seeded an Ashgrazer, and a Drift
-        // that spent every later attempt trying to put one there would be
-        // refilling a herd this water has never held.
+        // toward. Still counted from placements rather than from the roster's
+        // ask, because absence has to stay possible and stay a statement about
+        // the map: a map with no vent ground genuinely cannot seat an
+        // Ashgrazer, and a Drift that spent every later attempt trying to put
+        // one there would be refilling a herd this water has never held. What
+        // changed in #591 is that a shortfall now means the walk found nowhere
+        // rather than that twelve darts missed, so the two readings agree.
         this.complement.set(species, (this.complement.get(species) ?? 0) + 1);
       }
     }
@@ -851,10 +853,10 @@ export class Match {
   /**
    * Whether a point is ground this species may stand on.
    *
-   * Split out of `placeFauna` for `placeMegafauna`, which walks these same
-   * four tests over the map rather than throwing darts at them. One copy,
-   * because a search that admitted ground the sampler rejects would place a
-   * colossus somewhere the roster's own rules say it cannot be.
+   * Split out of `placeFauna` for `searchFauna`, which walks these same four
+   * tests over the map rather than throwing darts at them. One copy, because a
+   * search that admitted ground the sampler rejects would place a creature
+   * somewhere the roster's own rules say it cannot be.
    */
   private faunaGroundAdmits(species: FaunaSpecies, x: number, y: number): boolean {
     const wantVein = species === FaunaSpecies.Ashgrazer;
@@ -874,45 +876,56 @@ export class Match {
   }
 
   /**
-   * Place the colossus, and fail only if the map has nowhere to put one.
+   * Seat one creature by walking the map, and fail only if the map has nowhere
+   * to put one.
    *
-   * `docs/bestiary.md` §4 holds exactly one Megafauna row, and the roster asks
-   * for exactly one placement — so for this species alone, "the draws missed"
-   * and "the water cannot hold it" are the same outcome from the outside, and
-   * a third of Ventfront Divide matches were played without the map's largest
-   * acoustic event because of the difference (#578).
+   * The fallback behind `placeFauna`'s twelve draws, for every species since
+   * #591 and for the colossus alone before it. It is what makes a roster line
+   * a target the map fills rather than a number twelve darts aim at: absence
+   * now means the map genuinely admits nowhere, which is a statement about the
+   * map that a test can hold it to.
    *
-   * The draws come first, so every seed that already lands a Sounder lands it
-   * in the same water it did before; the walk is the fallback, and it is what
-   * makes "there is only ever one colossus" true by construction rather than
-   * by luck. Absence now means the map genuinely admits nowhere, which is a
-   * statement about the map that a test can hold it to.
-   *
-   * Cost is a grid of terrain probes, paid once per match at seed time on the
-   * ~30% of seeds that need it, and never on the 60 Hz path — `repopulate`
-   * keeps sampling deliberately, because its rate test is *meant* to spend a
-   * draw so that Strained water breeds more slowly rather than searching
-   * harder inside itself.
+   * Cost is a grid of terrain probes, paid once per species per match at seed
+   * time and never on the 60 Hz path — `repopulate` keeps sampling
+   * deliberately, because its rate test is *meant* to spend a draw so that
+   * Strained water breeds more slowly rather than searching harder inside
+   * itself.
    */
-  private placeMegafauna(species: FaunaSpecies, rng: Rng): boolean {
-    if (this.placeFauna(species, rng)) return true;
-
-    const { widthM, heightM } = this.world.terrain;
-    const admissible: { x: number; y: number }[] = [];
-    for (let y = 400; y <= heightM - 400; y += MEGAFAUNA_SEARCH_STEP_M) {
-      for (let x = 400; x <= widthM - 400; x += MEGAFAUNA_SEARCH_STEP_M) {
-        if (this.faunaGroundAdmits(species, x, y)) admissible.push({ x, y });
+  private searchFauna(
+    species: FaunaSpecies,
+    ground: Map<FaunaSpecies, { x: number; y: number }[]>
+  ): boolean {
+    let admissible = ground.get(species);
+    if (admissible === undefined) {
+      admissible = [];
+      const { widthM, heightM } = this.world.terrain;
+      for (let y = 400; y <= heightM - 400; y += FAUNA_SEARCH_STEP_M) {
+        for (let x = 400; x <= widthM - 400; x += FAUNA_SEARCH_STEP_M) {
+          if (this.faunaGroundAdmits(species, x, y)) admissible.push({ x, y });
+        }
       }
+      ground.set(species, admissible);
     }
     if (admissible.length === 0) return false;
 
     // Its own stream, for the reason `repopulate` gives for having one: the
     // twelve draws above are spent either way, so a search that drew from the
-    // shared stream would shift every species placed after it. Off this one,
-    // a seed that used to miss keeps every Rasp, shoal and cluster exactly
-    // where it had them and gains a colossus, which is the whole delta.
-    const pick = admissible[this.world.rng.fork('drift-megafauna').int(admissible.length)]!;
-    spawnFauna(this.world, { species, x: pick.x, y: pick.y });
+    // shared stream would shift every species placed after it. Off this one, a
+    // seed that used to miss keeps every animal the draws did find exactly
+    // where it had them and gains the ones they missed, which is the whole
+    // delta. `fork` memoises, so a herd walking sixteen times draws sixteen
+    // different positions rather than the same one sixteen times.
+    const pick = this.world.rng.fork('drift-search').int(admissible.length);
+    const cell = admissible[pick]!;
+    // Drawn without replacement, which the colossus never needed and a herd
+    // does: sixteen Ashgrazers over the Kelp Labyrinth's 636 admissible cells
+    // would otherwise stack two on one point about a tenth of the time. It
+    // also keeps "the map ran out of ground" an honest outcome rather than one
+    // the sampler can paper over by seating a second animal on the first's
+    // exact position.
+    admissible[pick] = admissible[admissible.length - 1]!;
+    admissible.pop();
+    spawnFauna(this.world, { species, x: cell.x, y: cell.y });
     return true;
   }
 
@@ -2296,7 +2309,7 @@ export class Match {
     // restocked a different animal diverges from the tick it did.
     let wanted: FaunaSpecies | null = null;
     let worst = 0;
-    for (const { species } of FAUNA_ROSTER) {
+    for (const { species } of DRIFT_ROSTER) {
       const deficit = (this.complement.get(species) ?? 0) - countFaunaOf(this.world, species);
       if (deficit > worst) {
         worst = deficit;

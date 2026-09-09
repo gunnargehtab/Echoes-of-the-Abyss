@@ -21,6 +21,7 @@ import {
   ACTIVE_SONAR,
   Biome,
   DRIFT,
+  DRIFT_ROSTER,
   Faction,
   FaunaSpecies,
   FaunaStage,
@@ -37,7 +38,13 @@ import { Terrain } from '../src/sim/terrain.ts';
 import { economyFor, spawnFauna, spawnUnit } from '../src/sim/world.ts';
 import { Fauna, Health, Position, Unit } from '../src/sim/components.ts';
 import { countFauna, DRIFT_SLOT } from '../src/sim/systems/fauna.ts';
-import { VENTFRONT_DIVIDE, terrainFor, type MapDefinition } from '../src/sim/maps/index.ts';
+import {
+  ABYSSAL_RIFT_CORRIDOR,
+  KELP_LABYRINTH,
+  VENTFRONT_DIVIDE,
+  terrainFor,
+  type MapDefinition,
+} from '../src/sim/maps/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 
@@ -449,7 +456,21 @@ describe('the Drift in a normal match', () => {
     // The wall clock stayed where it was, and the spread is why this test has
     // never asserted on it: two runs of this identical 174-walk work measured
     // 2.405 and 0.749 ms.
-    const WALK_BUDGET = 220;
+    //
+    // 223 since #591, against 174 above — and this one is the population
+    // itself rather than what the population emits. The Drift now seats all 48
+    // creatures the cap allows on every seed, where twelve rejection draws
+    // used to leave this map holding 34; the pass is paid per observer-emitter
+    // pair, so 14 more emitters is 64 more path integrals. It is the cost the
+    // cap was always meant to cover, and the first time the pass has actually
+    // been measured against a full one: the 159 walks at 34 fauna this replaced
+    // were a Drift two thirds assembled.
+    //
+    // Measured over thirty match-seconds rather than the twelve below, because
+    // the herds move and the twelve-second figure (218) is not the worst this
+    // scenario reaches. The budget keeps the same ~25% headroom over the
+    // observed count that 220 held over 174.
+    const WALK_BUDGET = 280;
     assert.ok(
       worstWalks <= WALK_BUDGET,
       `Echo pass did ${worstWalks} path integrals, budget ${WALK_BUDGET}`
@@ -544,6 +565,91 @@ describe('the colossus is placed, not drawn for', () => {
     const shallow = new Terrain(8000, 8000, 250, { floorM: 400 });
     const match = new Match(bareMap(), { fauna: true, seed: 4002, terrain: shallow });
     assert.equal(countSpecies(match, FaunaSpecies.Sounder), 0);
+  });
+
+  it('seats every roster line in full, on every skirmish map', () => {
+    // #591, and the reason docs/bestiary.md §4 now says a roster line is a
+    // target rather than a ceiling. Twelve rejection draws seat one animal
+    // with probability 1 - (1 - p)^12, so the Ashgrazer's 11.4% of the
+    // Ventfront Divide seated twelve of sixteen and the three maps between
+    // them seated 68%, 88% and 77% of the same roster — an asymmetry nobody
+    // authored, on maps whose tightest species still has hundreds of
+    // admissible cells for one animal.
+    //
+    // Asserted over all three maps rather than the reproduction's one, because
+    // the defect was invisible for as long as it was precisely by being read
+    // as a fact about the map. A per-map result cannot say that.
+    for (const map of [VENTFRONT_DIVIDE, ABYSSAL_RIFT_CORRIDOR, KELP_LABYRINTH]) {
+      for (let seed = 4000; seed < 4030; seed++) {
+        const match = new Match(map, { fauna: true, seed, terrain: terrainFor(map) });
+        const short = match.faunaComplement.filter((line) => line.seeded !== line.asked);
+        assert.deepEqual(
+          short,
+          [],
+          `${map.id} seed ${seed} seeded ${short.map((l) => `${l.seeded}/${l.asked}`).join(', ')}`
+        );
+      }
+    }
+  });
+
+  it('refills toward the roster, because the complement is now the roster', () => {
+    // The shortfall's permanence was the expensive half of #591: `repopulate`
+    // refills toward the complement and never past it, so a pack that seeded
+    // ten of fifteen stayed a pack of ten for the whole match and §6's bands
+    // were rated against a herd no map ever assembled. Seating the roster at
+    // t=0 is only half a fix if the complement still records the draws.
+    const match = new Match(VENTFRONT_DIVIDE, {
+      fauna: true,
+      seed: 4000,
+      terrain: terrainFor(VENTFRONT_DIVIDE),
+    });
+    assert.deepEqual(
+      match.faunaComplement.map((line) => line.seeded),
+      DRIFT_ROSTER.map((line) => line.count)
+    );
+  });
+
+  it('never stacks a herd two-deep on one cell', () => {
+    // The walk draws without replacement, which the colossus never needed and
+    // a herd does: it snaps to a 50 m grid, so two draws of one cell put two
+    // animals on one point exactly rather than near each other, and a stacked
+    // pair is two contacts no player can tell apart at any tier.
+    //
+    // The Kelp Labyrinth and this seed range because that is where the
+    // arithmetic bites — sixteen Ashgrazers over 636 admissible cells. Drawing
+    // with replacement stacks a pair on four of these thirty seeds and on
+    // neither of the other two maps, so a one-seed fixture, or either other
+    // map, would assert nothing.
+    //
+    // Same species as well as same point: a grazer and a shoal may share an
+    // (x, y) and routinely do, because they live at different depths and the
+    // roster's habitats are what keep them apart.
+    for (let seed = 4000; seed < 4030; seed++) {
+      const match = new Match(KELP_LABYRINTH, {
+        fauna: true,
+        seed,
+        terrain: terrainFor(KELP_LABYRINTH),
+      });
+      const seen = new Set<string>();
+      for (let eid = 0; eid <= match.world.maxEid; eid++) {
+        if (!hasComponent(match.world, Fauna, eid)) continue;
+        const at =
+          `${Fauna.species[eid]}@${Position.x[eid]},` + `${Position.y[eid]},${Position.depth[eid]}`;
+        assert.ok(!seen.has(at), `seed ${seed}: two of one species share ${at}`);
+        seen.add(at);
+      }
+    }
+  });
+
+  it('still lets a map refuse a species outright', () => {
+    // The other half of the guarantee, generalised past the colossus: the walk
+    // must not become a rule that a roster line appears regardless of the
+    // water, or `faunaComplement`'s shortfall stops meaning anything at all.
+    // Flat 400 m ground carries no Thermal Vein, so no Ashgrazer can stand
+    // anywhere on it however finely the map is walked.
+    const shallow = new Terrain(8000, 8000, 250, { floorM: 400 });
+    const match = new Match(bareMap(), { fauna: true, seed: 4002, terrain: shallow });
+    assert.equal(countSpecies(match, FaunaSpecies.Ashgrazer), 0);
   });
 });
 
