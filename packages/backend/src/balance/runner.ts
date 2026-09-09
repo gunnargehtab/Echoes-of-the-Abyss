@@ -91,7 +91,12 @@ export function runMatch(options: RunOptions): MatchTelemetryResult {
     }
   }
 
-  return telemetry.finish(match.tick, match.result?.winnerSlot ?? null, timedOut);
+  return telemetry.finish(
+    match.tick,
+    match.result?.winnerSlot ?? null,
+    timedOut,
+    match.faunaComplement
+  );
 }
 
 /**

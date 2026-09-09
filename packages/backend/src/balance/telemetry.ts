@@ -42,6 +42,7 @@ import {
   thermoclineZone,
   type EchoSnapshot,
   type Faction,
+  type FaunaSpecies,
 } from '@echoes/shared';
 
 /** How often a series is sampled, in seconds of simulated time. */
@@ -188,7 +189,24 @@ export interface MatchTelemetryResult {
   firstBloodTick: number | null;
   /** Mean Drift Health across regions at the end, 0-100. */
   driftHealthFinal: number;
+  /**
+   * What the Drift was seeded to hold against what the roster asked for.
+   *
+   * Recorded because a shortfall is silent everywhere else (#578): the
+   * colossus is one placement, so a map that misses it plays without its
+   * largest acoustic event and no column in the report changes.
+   */
+  faunaComplement: readonly FaunaComplement[];
   players: PlayerTelemetry[];
+}
+
+/** One species' line of `MatchTelemetryResult.faunaComplement`. */
+export interface FaunaComplement {
+  species: FaunaSpecies;
+  /** What `FAUNA_ROSTER` asks a full map for. */
+  asked: number;
+  /** What this map's ground actually admitted at seed time. */
+  seeded: number;
 }
 
 const SAMPLE_TICKS = SAMPLE_INTERVAL_S * SIM.TICK_HZ;
@@ -464,7 +482,12 @@ export class MatchTelemetry {
     this.lastComplete.set(player.slot, nowComplete);
   }
 
-  finish(finalTick: number, winnerSlot: number | null, timedOut: boolean): MatchTelemetryResult {
+  finish(
+    finalTick: number,
+    winnerSlot: number | null,
+    timedOut: boolean,
+    faunaComplement: readonly FaunaComplement[] = []
+  ): MatchTelemetryResult {
     return {
       seed: this.seed,
       mapId: this.mapId,
@@ -477,6 +500,7 @@ export class MatchTelemetry {
       firstBloodTick: this.firstBlood,
       driftHealthFinal:
         this.drift.length === 0 ? 100 : this.drift.reduce((a, b) => a + b, 0) / this.drift.length,
+      faunaComplement,
       players: [...this.players.values()].sort((a, b) => a.slot - b.slot),
     };
   }
