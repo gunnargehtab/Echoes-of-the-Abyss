@@ -31,7 +31,7 @@ import {
   cyl,
   torus,
   octa,
-  plate,
+  plan,
   loft,
   strut,
   bothSides,
@@ -50,8 +50,14 @@ export const ink = {
  * The blade hull: a faceted spar, full forward and narrowing aft to almost
  * nothing. `maxR` is the half-section amidships — keep it near a tenth of the
  * length, as the Clarion's 4 m on 75 m is.
+ *
+ * `squash` is the half-height as a fraction of the half-beam, and it is how
+ * the rung's three hulls differ from the Responsory: the carrier's spar is
+ * round in section, the Clarion, the Cantus and the Reciter are all near 0.37
+ * — a blade laid flat, not a tube. A lathe is round by construction, so the
+ * flattening is a scale on the mesh rather than a second profile.
  */
-export function bladeBody(root, mat, { bow, stern, maxR, facets = 10 }) {
+export function bladeBody(root, mat, { bow, stern, maxR, facets = 10, squash = 1 }) {
   const L = bow - stern;
   const at = (t) => stern + L * t;
   // Fine point aft, swelling a little forward of amidships, drawn down to a
@@ -72,18 +78,46 @@ export function bladeBody(root, mat, { bow, stern, maxR, facets = 10 }) {
       ],
       facets
     ),
-    mat
+    mat,
+    [0, 0, 0],
+    [0, 0, 0],
+    [1, squash, 1]
   );
 }
 
-/** The spine: a raised ridge along the back, its inlay, and the lit thread. */
-export function spine(root, { alloy, crystal, seam }, { from, to, y, thread = true }) {
+/**
+ * The spine: a raised ridge along the back, its inlay, and the lit thread.
+ *
+ * `section` is `[height, width]`; the rung's hulls carry a thinner ridge than
+ * the Responsory's. `inlay` is `false` on a hull that has none (the Cantus
+ * spends its back on the node instead) and `'defer'` on one that draws the
+ * inlay later in the file — the Reciter's lance comes between the two in the
+ * approved model, and part order is what `check.mjs` compares.
+ */
+export function spine(root, { alloy, crystal, seam }, opts) {
+  const { from, to, y, thread = true, section = [1.6, 2.4], inlay = {} } = opts;
   const L = to - from;
   const c = (from + to) / 2;
-  add(root, 'blade_spine', box(L, 1.6, 2.4), alloy, [c, y, 0]);
-  add(root, 'spine_inlay', box(L * 0.94, 0.5, 0.9), crystal, [c, y + 0.9, 0]);
+  add(root, 'blade_spine', box(L, section[0], section[1]), alloy, [c, y, 0]);
+  if (inlay && inlay !== 'defer')
+    spineInlay(root, crystal, {
+      from: c - L * 0.47,
+      to: c + L * 0.47,
+      section: [0.5, 0.9],
+      y: y + 0.9,
+      ...inlay,
+    });
   if (thread)
     add(root, 'spine_thread', box(L * 0.7, 0.25, 0.35), seam, [c - L * 0.05, y + 1.22, 0]);
+}
+
+/** The inlay alone: the crystal run let into the spine's top face. */
+export function spineInlay(root, crystal, { from, to, section, y }) {
+  add(root, 'spine_inlay', box(to - from, section[0], section[1]), crystal, [
+    (from + to) / 2,
+    y,
+    0,
+  ]);
 }
 
 /**
@@ -91,120 +125,326 @@ export function spine(root, { alloy, crystal, seam }, { from, to, y, thread = tr
  * and the standing glow, which rides the horn's *top* so the top-down bake can
  * see it. A glow inside the cone is invisible to gate 3.
  */
-export function bowArray(root, { alloy, crystal, seam, node }, { from, to, r, y = 0 }) {
+export function bowArray(root, { alloy, crystal, seam, node }, opts) {
+  const {
+    from,
+    to,
+    r,
+    y = 0,
+    facets = 6,
+    squash = 1,
+    lip = {},
+    ridges = true,
+    emitter = {},
+  } = opts;
   const L = to - from;
-  add(
-    root,
-    'array_horn',
-    cyl(r, r * 0.28, L, 6),
-    alloy,
-    [from + L / 2, y, 0],
-    [0, 0, -Math.PI / 2]
-  );
-  add(
-    root,
-    'array_lip',
-    cyl(r * 1.16, r * 1.16, 1.6, 6),
-    crystal,
-    [to - 0.8, y, 0],
-    [0, 0, Math.PI / 2]
-  );
-  add(root, 'array_ridge', box(L * 0.9, 0.5, 1.6), seam, [from + L / 2, y + r * 0.86, 0]);
-  bothSides((side, sgn) =>
-    add(root, `array_ridge_${side}`, box(L * 0.9, 0.4, 0.5), seam, [
-      from + L / 2,
-      y + r * 0.78,
-      sgn * 1.5,
-    ])
-  );
-  add(
-    root,
-    'emitter_crystal',
-    octa(r * 0.5),
-    crystal,
-    [to + r * 0.5, y, 0],
-    [0, 0, Math.PI / 2],
-    [1.4, 1, 1]
-  );
-  add(
-    root,
-    'emitter_core',
-    octa(r * 0.25),
-    node,
-    [to + r * 0.5, y, 0],
-    [0, 0, Math.PI / 2],
-    [1.4, 1, 1]
-  );
+  // The horn's section is a scale on the mesh rather than an elliptical
+  // profile: a cylinder's radius is one number, and the flattening the rung's
+  // hulls carry is the same one `bladeBody` takes. The mesh is rotated a
+  // quarter turn about Z to put its axis on +X, and three composes T·R·S, so
+  // the squash rides local **x**, which is the world's y once turned.
+  add(root, 'array_horn', cyl(r, r * 0.28, L, facets), alloy, [from + L / 2, y, 0], [
+    0,
+    0,
+    -Math.PI / 2,
+  ], [squash, 1, 1]);
+  const { mat: lipMat = crystal, r: lipR = r * 1.16, t: lipT = 1.6, x: lipX = to - 0.8 } = lip;
+  add(root, 'array_lip', cyl(lipR, lipR, lipT, facets), lipMat, [lipX, y, 0], [
+    0,
+    0,
+    Math.PI / 2,
+  ], [squash, 1, 1]);
+  // The Responsory's three lit ridges run the length of the horn. The rung's
+  // hulls ring theirs instead (`hornSeams`), which is why this is a switch and
+  // not a count.
+  if (ridges) {
+    add(root, 'array_ridge', box(L * 0.9, 0.5, 1.6), seam, [from + L / 2, y + r * 0.86, 0]);
+    bothSides((side, sgn) =>
+      add(root, `array_ridge_${side}`, box(L * 0.9, 0.4, 0.5), seam, [
+        from + L / 2,
+        y + r * 0.78,
+        sgn * 1.5,
+      ])
+    );
+  }
+  if (emitter !== false)
+    emitterHead(root, { crystal, node }, {
+      x: to + r * 0.5,
+      y,
+      r: r * 0.5,
+      scale: [1, 1.4, 1],
+      core: { x: to + r * 0.5, r: r * 0.25, scale: [1, 1.4, 1] },
+      ...emitter,
+    });
 }
 
-/** A thin swept wing, port and starboard, with a lit outboard edge. */
-export function wings(
-  root,
-  { alloy, crystal },
-  { aft, fwd, inner, outer, tipChord = 8.5, t = 0.9 }
-) {
+/**
+ * The emitter: a crystal and the lit core inside it, both octahedra stretched
+ * along one axis.
+ *
+ * The stretch is given in **world** axes. The Responsory reaches its through a
+ * quarter turn about Z with the scale on x, which is the same thing said
+ * twice — an octahedron is unchanged by that turn — and it hides which way the
+ * crystal is actually drawn out. The Clarion's runs along the hull where the
+ * carrier's stands up, and that difference should be legible in the call.
+ */
+export function emitterHead(root, { crystal, node }, { x, y = 0, r, scale, core }) {
+  add(root, 'emitter_crystal', octa(r), crystal, [x, y, 0], [0, 0, 0], scale);
+  add(root, 'emitter_core', octa(core.r), node, [core.x ?? x, core.y ?? y, 0], [0, 0, 0], core.scale);
+}
+
+/**
+ * Lit seams ringing the bow horn, `count` of them along an ellipse of
+ * `halfHeight` by `halfBeam` and each rolled to lie flat on the facet it sits
+ * on. `phase` is where seam 0 starts, in degrees from the top, and the ring
+ * runs the way the approved Clarion numbers its own: 0 up the port shoulder,
+ * 1 on the crown, and round.
+ *
+ * The Order's cone SIG is the argument for putting them here rather than on
+ * the flanks — they are the horn's own glow seen from above, and gate 3
+ * measures plan area, so a seam on the crown counts and one on the cheek
+ * barely does.
+ */
+export function hornSeams(root, mat, opts) {
+  const { x, length, y = 0, halfHeight, halfBeam, count = 6, section, phase = 0 } = opts;
+  for (let i = 0; i < count; i++) {
+    const a = ((phase - (360 / count) * i) * Math.PI) / 180;
+    add(root, `horn_seam_${i}`, box(length, section[0], section[1]), mat, [
+      x,
+      y + halfHeight * Math.cos(a),
+      halfBeam * Math.sin(a),
+    ], [a, 0, 0]);
+  }
+}
+
+/**
+ * A thin planar wing, port and starboard, with a lit outboard edge and, on the
+ * Reciter, a lamp inboard of it.
+ *
+ * `outline` is the **port** half's plan, `[x, z]` with z positive, and it is
+ * given rather than parametrised because every Order wing turns out to be a
+ * genuinely swept quadrilateral: the Clarion's tip sits 14 m aft of its root
+ * and spans z 15 to 17, which no aft/chord/span form can say. A four-number
+ * wing came out as a delta with a straight trailing edge, which is a different
+ * hull from above.
+ *
+ * The plate is drawn through `plan` rather than `plate`. `plate` lands its
+ * outline on **-z** (kit.mjs says so in its own header), while the edge and
+ * the lamp are boxes placed at +z, so a wing built the old way had its plate
+ * on one side of the keel and its light on the other. Nothing downstream can
+ * see that on a hull this symmetrical — which is exactly why it survived — but
+ * the Reciter puts three parts on each wing and they have to agree about which
+ * wing they are on. `y` keeps the plate where `plate` used to leave it, so
+ * the only thing that moves is the side.
+ *
+ * `name` and `edgeName` are for a hull whose wing is not called a wing: the
+ * Cantus's are guard blades, standing off a node rather than carrying lift.
+ */
+export function wings(root, { alloy, crystal, seam }, opts) {
+  const {
+    name = 'wing',
+    edgeName = `${name}_edge`,
+    outline,
+    t = 0.9,
+    y = t,
+    edge,
+    lamp = null,
+  } = opts;
   bothSides((side, sgn) => {
     add(
       root,
-      `wing_${side}`,
-      plate(
-        [
-          [aft, sgn * inner],
-          [aft, sgn * outer],
-          [aft + tipChord, sgn * outer],
-          [fwd, sgn * inner],
-        ],
+      `${name}_${side}`,
+      plan(
+        outline.map(([x, z]) => [x, sgn * z]),
         t
       ),
-      alloy
+      alloy,
+      [0, y, 0]
     );
-    add(root, `wing_edge_${side}`, box(tipChord * 0.95, t * 1.5, 0.8), crystal, [
-      aft + tipChord / 2,
-      0,
-      sgn * (outer - 0.4),
+    add(root, `${edgeName}_${side}`, box(edge.length, edge.h ?? t * 1.5, edge.w), crystal, [
+      edge.x,
+      edge.y ?? 0,
+      sgn * edge.z,
     ]);
+    if (lamp)
+      add(root, `${name}_lamp_${side}`, box(...lamp.size), seam, [lamp.x, lamp.y, sgn * lamp.z]);
   });
 }
 
 /** A small forward wing — the Clarion's canard, smaller and unlit. */
-export function canards(root, alloy, { from, to, inner, outer, t = 0.7 }) {
+export function canards(root, alloy, { outline, t = 0.7, y = t }) {
   bothSides((side, sgn) =>
     add(
       root,
       `canard_${side}`,
-      plate(
-        [
-          [to, sgn * inner],
-          [to, sgn * outer],
-          [from, sgn * (outer - 1.5)],
-          [from, sgn * inner],
-        ],
+      plan(
+        outline.map(([x, z]) => [x, sgn * z]),
         t
       ),
       alloy,
-      [0, 0, 0]
+      [0, y, 0]
     )
   );
 }
 
-/** The vertical blades: a dorsal fin above and a keel below. */
-export function finAndKeel(root, alloy, { fin, keel }) {
-  add(root, 'dorsal_fin', box(fin.length, fin.height, 0.6), alloy, [fin.x, fin.y, 0]);
-  add(root, 'keel', box(keel.length, keel.height, 0.6), alloy, [keel.x, keel.y, 0]);
+/** The vertical blades: a dorsal fin above and, on most hulls, a keel below. */
+export function finAndKeel(root, alloy, { fin, keel = null, t = 0.6 }) {
+  add(root, 'dorsal_fin', box(fin.length, fin.height, t), alloy, [fin.x, fin.y, 0]);
+  if (keel) add(root, 'keel', box(keel.length, keel.height, t), alloy, [keel.x, keel.y, 0]);
 }
 
-/** The stern: a prism drive, its crystal ring, and the one mark astern. */
-export function drive(root, { shadow, crystal, node }, { x, r }) {
-  add(root, 'drive_prism', cyl(r, r * 0.34, r * 3.4, 6), shadow, [x, 0, 0], [0, 0, Math.PI / 2]);
+/**
+ * The stern: the drive, its crystal ring where there is one, and the one mark
+ * astern.
+ *
+ * `shape` is the whole argument. The Responsory ends in a `'prism'` — a
+ * six-sided shadow-indigo cone, the drive of a hull big enough to need one.
+ * The rung's three end in a `'crystal'`: a single resonance octahedron, no
+ * ring and no cowling, which is what an Order hull looks like when the drive
+ * *is* the instrument.
+ */
+export function drive(root, { shadow, crystal, node }, opts) {
+  const {
+    x,
+    r,
+    shape = 'prism',
+    mat = shape === 'prism' ? shadow : crystal,
+    length = r * 3.4,
+    ring = shape === 'prism',
+    mark = {},
+  } = opts;
+  if (shape === 'prism')
+    add(root, 'drive_prism', cyl(r, r * 0.34, length, 6), mat, [x, 0, 0], [0, 0, Math.PI / 2]);
+  else
+    add(root, 'drive_prism', octa(r), mat, [x, 0, 0], [0, 0, 0], [length / (2 * r), 1, 1]);
+  if (ring)
+    add(
+      root,
+      'drive_ring',
+      cyl(r * 1.1, r * 1.1, 1, 6),
+      crystal,
+      [x + r * 1.6, 0, 0],
+      [0, 0, Math.PI / 2]
+    );
+  if (mark) {
+    const {
+      name = 'stern_mark',
+      mat: markMat = node,
+      size = [0.6, 0.6, 1.4],
+      x: markX = x - r * 0.6,
+      y: markY = r * 1.4,
+    } = mark;
+    add(root, name, box(...size), markMat, [markX, markY, 0]);
+  }
+}
+
+/**
+ * The lance: the Reciter's forward run, and the one Order weapon that is not a
+ * cone. A four-sided section — a diamond, not a tube — carried from `from` to
+ * `to`, with the rail let into its top, the crystal amidships along it, a lit
+ * seam each side, and the node at the muzzle.
+ *
+ * It lives here rather than in the hull because the next Knight hull is the
+ * Lance, whose prompt block asks for "nothing of the Lance's chevron or the
+ * Reciter's needle" — the two have to be told apart by construction, and that
+ * is only possible if one of them is a shape this module knows how to draw.
+ */
+export function lance(root, { alloy, crystal, seam, node }, opts) {
+  const { from, to, y, halfBeam, squash, rail, blade, seams, muzzle } = opts;
+  const L = to - from;
+  add(root, 'lance', cyl(halfBeam, halfBeam, L, 4), alloy, [from + L / 2, y, 0], [
+    0,
+    0,
+    -Math.PI / 2,
+  ], [squash, 1, 1]);
+  add(root, 'lance_rail', box(rail.to - rail.from, rail.section[0], rail.section[1]), seam, [
+    (rail.from + rail.to) / 2,
+    rail.y,
+    0,
+  ]);
   add(
     root,
-    'drive_ring',
-    cyl(r * 1.1, r * 1.1, 1, 6),
+    'lance_crystal',
+    cyl(blade.halfBeam, blade.halfBeam, blade.to - blade.from, 4),
     crystal,
-    [x + r * 1.6, 0, 0],
-    [0, 0, Math.PI / 2]
+    [(blade.from + blade.to) / 2, blade.y, 0],
+    [0, 0, -Math.PI / 2],
+    [blade.squash, 1, 1]
   );
-  add(root, 'stern_mark', box(0.6, 0.6, 1.4), node, [x - r * 0.6, r * 1.4, 0]);
+  bothSides((side, sgn) =>
+    add(root, `lance_seam_${side}`, box(seams.to - seams.from, seams.section[0], seams.section[1]), seam, [
+      (seams.from + seams.to) / 2,
+      seams.y,
+      sgn * seams.z,
+    ])
+  );
+  add(root, 'muzzle', octa(muzzle.r), node, [muzzle.x, muzzle.y, 0], [0, 0, 0], [
+    muzzle.length / (2 * muzzle.r),
+    1,
+    1,
+  ]);
+}
+
+/**
+ * A resonance node standing on the hull in a four-legged cradle: the two
+ * crystal frusta that make the node, the seam at its apex, the legs and their
+ * feet, and the four lit ridges running up its shoulders.
+ *
+ * The Responsory's `resonatorRing` listens across the beam through a pair of
+ * rings; this listens in every direction through one body. Both are the Order
+ * hearing where a cone cannot, which is why they are neighbours here, and the
+ * Cantus is "a resonance node on a hull" (docs/asset-prompts-3d.md, Block 3)
+ * rather than a hull that carries one.
+ */
+export function resonanceNode(root, { shadow, alloy, crystal, seam, node }, opts) {
+  const { lower, upper, apex, cradle, ridges } = opts;
+  const frustum = (name, f) =>
+    add(root, name, cyl(f.rTop, f.rBottom, f.height, 4), crystal, [0, f.y, 0], [0, 0, 0], [
+      f.length / (2 * Math.max(f.rTop, f.rBottom)),
+      1,
+      f.beam / (2 * Math.max(f.rTop, f.rBottom)),
+    ]);
+  frustum('node_lower', lower);
+  frustum('node_upper', upper);
+  add(root, 'node_apex', octa(apex.r), seam, [0, apex.y, 0], [0, 0, 0], [
+    1,
+    apex.height / (2 * apex.r),
+    1,
+  ]);
+  // Four legs, and the diagonals are the point: an Order cradle is exactly
+  // bilateral both ways, so the quadrants run +x+z, +x-z, -x+z, -x-z and the
+  // foot is drawn with its own leg rather than in a second loop.
+  const quadrants = [
+    [1, 1],
+    [1, -1],
+    [-1, 1],
+    [-1, -1],
+  ];
+  quadrants.forEach(([sx, sz], i) => {
+    strut(
+      root,
+      `cradle_strut_${i}`,
+      [sx * cradle.foot[0], cradle.foot[1], sz * cradle.foot[2]],
+      [sx * cradle.head[0], cradle.head[1], sz * cradle.head[2]],
+      alloy,
+      cradle.t
+    );
+    add(root, `cradle_foot_${i}`, box(...cradle.pad.size), shadow, [
+      sx * cradle.foot[0],
+      cradle.pad.y,
+      sz * cradle.foot[2],
+    ]);
+  });
+  quadrants.forEach(([sx, sz], i) =>
+    strut(
+      root,
+      `node_ridge_${i}`,
+      [sx * ridges.from[0], ridges.from[1], sz * ridges.from[2]],
+      [sx * ridges.to[0], ridges.to[1], sz * ridges.to[2]],
+      node,
+      ridges.t
+    )
+  );
 }
 
 /**

@@ -43,8 +43,11 @@ hadron.resonatorRing(root, { shadow, alloy, crystal, node },
   { x: 1, y: 5.2, z: 13.5, r: 5.8, cant: 0.42 });
 
 // Beam is wing, as it is on every Order hull.
-hadron.wings(root, { alloy, crystal }, { aft: -42, fwd: -8, inner: 1.2, outer: 17, tipChord: 9 });
-hadron.canards(root, alloy, { from: 12, to: 24, inner: 1.2, outer: 8 });
+hadron.wings(root, { alloy, crystal }, {
+  outline: [[-42, 1.2], [-42, 17], [-33, 17], [-8, 1.2]],
+  edge: { x: -37.5, length: 8.55, w: 0.8, z: 16.6 },
+});
+hadron.canards(root, alloy, { outline: [[24, 1.2], [24, 8], [12, 6.5], [12, 1.2]] });
 hadron.finAndKeel(root, alloy, {
   fin: { x: -33, y: 6.4, length: 11, height: 5.4 },
   keel: { x: -20, y: -4.6, length: 20, height: 3.2 },
