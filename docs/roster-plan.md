@@ -551,6 +551,67 @@ two navies come off zero, and the Knights lose fourteen — the one move outside
 win rate over twenty-odd decided matches carries, and the one to watch. All five guard-rails
 held.
 
+### #520 again, and the Dredge — a purse that could only ever wait for nodules
+
+The hull the issue is named after outlasted the account fix above, and the reason was not its
+price in either of the accounts the issue is about. Once the flora economy (#547) made Biomass an
+income, the Directorate earned **3.3 crystal and 6.1 Biomass a minute** — about 67 and 124 in a
+median match, against a Dredge priced at 40 and 60. Both accounts pay. The hull was still 0.0.
+
+**What the instrumentation said**, over three matches on seeds 4000–4002:
+
+| | Reading |
+| --- | --- |
+| Observations at which the Directorate bid for its Dredge | **4,584** — two thirds of the match, with a Slipway standing and no heavy in the water |
+| ... at which it won the hold | **0** |
+| Its Biomass when it bid | median **16**, against the 60 the hull is priced at |
+| Its nodule bank, peak across all three matches | **360**, against a 450 price |
+| Biomass it spent per match on Acolytes, Vergers and Thuribles | **73**, out of about 124 earned |
+
+Three faults, each of which alone is enough to keep the hull at zero.
+
+1. **The arbitration could not save in a narrow account at all.** `holdPurse` struck out any bid
+   short of crystal or Biomass, on the argument that those two arrive because a hauler went and
+   got them rather than because anyone waited. True when it was written, and true of neither
+   account since the crystal shift and the flora economy. Its floor is read against every
+   account now — half of 450 *and* half of 40 *and* half of 60 — which is the sentence
+   `RUNG.SAVE_FROM` already argued, applied to the whole price. An account at **zero** is still
+   not a gap worth waiting on, and that is the half of the old rule worth keeping.
+2. **A hold in a narrow account leaked.** `holdPurse` runs at the foot of the want list, so a
+   hold is not read until the next observation and the wants ahead of it buy on sight. In
+   nodules that costs nothing; in Biomass, where a handful of hulls share one thin account, it
+   is the whole failure. A live hold now reserves the narrow accounts from the wants in front of
+   it. **Nodules are deliberately not reserved** — every want is priced in them, and reserving
+   them would stop the army growing, which is the failure #521 measured at seven win-rate
+   points.
+3. **Nearest-first starved the one want the yard was bought for.** A Slipway is 600 nodules
+   behind a met harvester target, so a navy that has raised one has already said which hull it
+   wants — and the ordnance and siege hulls beside it are both cheaper and opportunistic, so the
+   queue in front of the heavy never emptied. Measured: the Dredge cleared the floors five times
+   in three matches and lost all five to a Lure 170 nodules cheaper, which then spent the bank it
+   had been waiting on. The heavy wins the arbitration once it is nearly affordable in all three
+   accounts, and stops the moment one is in the water.
+
+**What it moved, on the stored thirty seeds.** The Dredge is built **0.1 a match and lost 0.1** —
+the first time the hull has appeared in any baseline, and it dies, so it is fighting rather than
+sitting behind the wall. All five guard-rails held. Win rates barely move: 0 / 0 / 95 / 5 to
+**0 / 0 / 94 / 6**.
+
+**The cost, recorded rather than smoothed over.** Decided matches go **20 to 17 of 30** and the
+median match runs 1,224 s to **1,416 s**: a navy that holds for its heavy fields a slightly
+smaller army for slightly longer, which is the same trade #531's composition bid made and is
+inside the range this document has recorded for it. The Thurible falls 0.3 to 0.1, being the hull
+the heavy now beats in the arbitration — it is the same 40 Biomass either way, and which of the
+two spends it is now the doctrine's answer rather than the price list's.
+
+**What this does not answer.** The Dredge at 0.1 a match is a hull the Directorate reaches once in
+ten matches, not a hull it fields. At 450 nodules it is the second dearest in the roster and the
+navy's working capital sits near 20; the Consortium's 700-nodule Bulwark is still 0.0 for the same
+reason and is not helped by any of the above, because its price is in one account and nothing was
+ever wrong with how that account was saved. Whether the roster's top end is priced for an economy
+that never banks more than a few hundred nodules is a question about those two hulls, and §8 is
+where it belongs rather than here.
+
 **Wave 6** was a decision the harness made, not this document, and it made it against the
 plan's expectation. §4 predicted two outcomes — dead weight, or a surplus market — and the
 reading returned a third that §4's own rule had already provided for: *a navy still leaning on
@@ -777,6 +838,22 @@ Three that were, one of them by wave 6 itself:
   storyline, in multiplayer and never in the campaign. It is filed as #543 and placed after
   release ([ROADMAP.md](ROADMAP.md) Phase 12), so nothing in this plan waits on it and no
   price here moves for it.
+
+And one the second half of #520 leaves open:
+
+- **Is the top of the roster priced for an economy that never banks it?** The two dearest
+  hulls in the game are the Consortium's 700-nodule Bulwark and the Directorate's 450-nodule
+  Dredge, and they are the only two heavies never built. Every navy's *heavy* under 300 is
+  fielded — the Knights' 260-nodule Reciter at 0.5 a match — and everything from 330 to 400
+  lands between 0.1 and 0.5. Against that, a measured working capital near 20 nodules and a
+  bank that peaks in the low hundreds: 450 is roughly three minutes of a navy's entire
+  income, held against every other want. The composition bid (#531) and the purse rules
+  above have each taken one turn at this from the commander's side and moved the Dredge to
+  0.1; neither reaches the Bulwark, because nothing was ever wrong with how a nodule price
+  was saved for. So the remaining question is a pricing one and belongs to
+  [economy.md](economy.md) §8 before it belongs to a commander: either the top of the roster
+  is deliberately a hull a long match reaches once, in which case 0.1 a match is the design
+  working, or it is priced against a bank no navy in this simulation has ever held.
 
 And two others, both on #495:
 

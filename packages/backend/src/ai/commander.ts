@@ -2420,7 +2420,7 @@ export class AiCommander implements AiPlayer {
      * a turn, or `null` for the two that hold until they close — see the
      * Sower's note below for why that one is not a duty cycle.
      */
-    const bids: { kind: UnitKind; windowS: number | null }[] = [];
+    const bids: { kind: UnitKind; windowS: number | null; heavy?: boolean }[] = [];
 
     /** Buy it, and let go of the purse if this is what was being saved for. */
     const buy = (kind: UnitKind, yard: OwnStructure): void => {
@@ -2572,7 +2572,7 @@ export class AiCommander implements AiPlayer {
             buy(ownHeavy, yard);
             return;
           }
-          bids.push({ kind: ownHeavy, windowS: RUNG.SAVE_S });
+          bids.push({ kind: ownHeavy, windowS: RUNG.SAVE_S, heavy: true });
         }
       }
     }
@@ -2860,30 +2860,73 @@ export class AiCommander implements AiPlayer {
    * might have, forever. Nearest-first is also what a player does, and it is
    * the one rule under which every want is eventually served.
    *
-   * Waiting only ever closes a **nodule** gap, exactly as `commandConstruction`
-   * argues one deck up: crystal and Biomass arrive because a hauler went and
-   * got them (`commandCrystal`), so a hull short of either is not short of
-   * savings and holding its nodules back starves the yards for something the
-   * wait will never deliver. The Dredge and the Lance are both priced in a
-   * second account, so this is not a hypothetical for two of the four navies.
+   * Waiting closes a gap in **any** account the hull is priced in, and until
+   * #520 it closed one only in nodules: a bid short of crystal or Biomass was
+   * struck out of the arbitration entirely, on the argument that those two
+   * arrive because a hauler went and got them rather than because anyone
+   * waited. That argument was true of the accounts as they then were, and both
+   * have since stopped being errands. Crystal is a shift the commander posts
+   * (#528) and Biomass is an income the flora economy pays out continuously
+   * (#547) — so a gap in either is exactly what a wait closes, and striking
+   * the bid out instead is what kept the Dredge at zero for the whole of #520.
+   *
+   * Measured over three matches on seeds 4000-4002 before this changed: the
+   * Directorate bid for its Dredge at **4,584** observations — two thirds of
+   * the match, with a Slipway standing and no heavy in the water — and won the
+   * hold at **none** of them, because `purse.biomass` was under the 60 it is
+   * priced at on 94% of them. Nothing then held its nodules either, so the
+   * bank peaked at **360** across three whole matches against a 450 price and
+   * the hull was unreachable in two accounts at once.
+   *
+   * So the floor below is now read against every account rather than against
+   * nodules alone, which is the same sentence `RUNG.SAVE_FROM` already argues
+   * ("you stop when you can nearly afford one") applied to the whole price.
    */
   private holdPurse(
-    bids: readonly { kind: UnitKind; windowS: number | null }[],
+    bids: readonly { kind: UnitKind; windowS: number | null; heavy?: boolean }[],
     purse: Stockpile,
     tick: number
   ): boolean {
-    let best: { kind: UnitKind; windowS: number | null } | null = null;
+    let best: { kind: UnitKind; windowS: number | null; heavy?: boolean } | null = null;
     let bestNodules = Infinity;
     for (const bid of bids) {
       const price = priceOf(statsFor(bid.kind));
-      if (purse.crystal < price.crystal || purse.biomass < price.biomass) continue;
       // Close enough that a window can finish it, or the hold is a standing tax
       // on a hull the navy was never going to reach this match. See
       // `RUNG.SAVE_FROM`. The two unconditional bids are exempt: their argument
       // (the Sower's, above) is that a navy which spends what it earns never
       // *reaches* the fraction, so the bank has to climb from wherever it is.
-      if (bid.windowS !== null && purse.nodules < price.nodules * RUNG.SAVE_FROM) continue;
-      if (price.nodules >= bestNodules) continue;
+      //
+      // Every account, not just nodules: half a Dredge is 225 nodules *and* 20
+      // crystal *and* 30 Biomass, and a navy holding two of the three is as far
+      // from the hull as one holding none of it.
+      if (
+        bid.windowS !== null &&
+        ECONOMY_ACCOUNTS.some((account) => purse[account] < price[account] * RUNG.SAVE_FROM)
+      ) {
+        continue;
+      }
+      // The one exception to nearest-first, and the **yard** is what buys it.
+      //
+      // Nearest-first serves every want eventually only where the wants are of
+      // equal standing. The navy's heavy is not: a Slipway is 600 nodules
+      // behind a met harvester target, and a navy that has bought one has
+      // already said which hull it wants — "the reason the rung was bought".
+      // The ordnance and siege hulls are opportunistic by comparison, and they
+      // are also cheaper, so the queue in front of the heavy never empties:
+      // measured on seeds 4000-4002, the Dredge cleared the floors at 5
+      // observations in three matches and lost all 5 to a Lure 170 nodules
+      // cheaper, which then spent the bank the Dredge had been waiting on.
+      //
+      // This is not a fixed order restored — the tail nearest-first was invented
+      // to protect is still served, because the exception costs the other wants
+      // nothing until the heavy is *nearly affordable in all three accounts*
+      // and stops the moment one is in the water (`heavies < 1` above). It is a
+      // navy finishing what it started paying for.
+      // Nothing displaces the heavy once it stands, and the heavy displaces
+      // whatever does. There is only ever one of them in a list of bids.
+      if (best?.heavy === true) continue;
+      if (bid.heavy !== true && price.nodules >= bestNodules) continue;
       bestNodules = price.nodules;
       best = bid;
     }
@@ -2916,11 +2959,58 @@ export class AiCommander implements AiPlayer {
     return false;
   }
 
+  /**
+   * Pay for a hull out of what is not already spoken for, and spend it.
+   *
+   * The reservation is what makes a hold in a **narrow** account mean anything
+   * (#520). `holdPurse` runs at the foot of the want list, so a hold it sets
+   * this observation is not read until the next one — and by then the wants
+   * ahead of it have already bought on sight. That costs nothing while every
+   * want is priced in nodules, because a hold that fails to close simply
+   * reopens; it is fatal in crystal and Biomass, where a handful of hulls
+   * share a thin account. The Directorate earns 6.1 Biomass a minute and
+   * spends 73 of it a match on Acolytes, Vergers and Thuribles bought the
+   * instant each becomes affordable, so the account's median sat at 16 against
+   * the 60 its own heavy is priced at and pooled to 60 *and* 40 crystal at 6
+   * observations in three matches.
+   *
+   * So while a hold is live, the accounts it is closing are not the rest of
+   * the list's to spend. **Nodules are deliberately not reserved**: every want
+   * in the roster is priced in them, so reserving them would be a far stronger
+   * hold than `RUNG.SAVE_S`'s duty cycle was measured under — it would stop the
+   * army growing outright, which is the failure #521 put at seven win-rate
+   * points. The narrow accounts have no such traffic, and holding them back is
+   * the difference between saving for a hull and watching something cheaper
+   * spend the savings.
+   *
+   * The held hull itself is exempt, or the hold would refuse to close.
+   */
   private affordUnit(kind: UnitKind, purse: Stockpile): boolean {
     const price = priceOf(statsFor(kind));
-    if (!affords(purse, price)) return false;
+    if (!affords(this.unreserved(purse, kind), price)) return false;
     charge(purse, price);
     return true;
+  }
+
+  /**
+   * The purse less what a live hold has spoken for, in the narrow accounts.
+   *
+   * Read by the production wants and not by `commandConstruction`, which runs
+   * ahead of them and is deliberately senior: a yard outranks a hull, and no
+   * structure in the roster is priced in Biomass anyway. Four are priced in
+   * crystal, so a hold's crystal can in principle still go to a Spore Veil —
+   * left as it is, because a hull hold that could block a building would
+   * invert an order this commander has had since it had one.
+   */
+  private unreserved(purse: Stockpile, kind: UnitKind): Stockpile {
+    const saving = this.purseSave;
+    if (saving === null || saving.kind === kind) return purse;
+    const held = priceOf(statsFor(saving.kind));
+    return {
+      nodules: purse.nodules,
+      crystal: Math.max(0, purse.crystal - held.crystal),
+      biomass: Math.max(0, purse.biomass - held.biomass),
+    };
   }
 
   /** A structure that can build this hull and is not already backed up. */

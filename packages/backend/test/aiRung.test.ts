@@ -21,14 +21,28 @@
  *     for the fight the Bulwark was for, and a duel is decided in exactly the
  *     minutes the yard finishes in.
  *
- * And the two guards both halves sit behind. Waiting only ever closes a
- * **nodule** gap: crystal and Biomass arrive because a hauler went and got
- * them, so a hull short of either is not short of savings — the Dredge is
- * priced in both, and a Directorate that stopped building to wait for Biomass
- * it earns at well under one a minute would be a navy standing still for the
- * rest of the match. And a gap a window cannot close is not worth opening:
- * below half the price the commander keeps buying its line, or the hold becomes
- * a standing tax on a hull it was never going to reach.
+ * And the guards both halves sit behind. A gap a window cannot close is not
+ * worth opening: below half the price the commander keeps buying its line, or
+ * the hold becomes a standing tax on a hull it was never going to reach.
+ *
+ * That floor is read against **every** account since #520, and used to be read
+ * against nodules alone. The old rule struck any bid short of crystal or
+ * Biomass out of the arbitration entirely, on the argument that those two
+ * arrived because a hauler went and got them rather than because anyone
+ * waited — true of the accounts as they then were, and true of neither since
+ * the crystal shift (#528) and the flora economy (#547) made both of them
+ * incomes. What it cost was the one hull priced in all three: the Dredge bid at
+ * 4,584 observations across three matches and won the hold at none of them,
+ * so nothing held its nodules either and the bank peaked at 360 against a 450
+ * price. Three tests hold the parts of that: the floor still refuses an account
+ * at zero, it now waits in whichever account is short, and a hold in a narrow
+ * account is not spent by a cheaper hull while it waits.
+ *
+ * And one rule above nearest-first, for the same issue: the navy's heavy wins
+ * the arbitration once it is nearly affordable in all three accounts, because
+ * the 600-nodule yard in front of it is the navy already saying which hull it
+ * wants — the ordnance and siege hulls beside it are cheaper and opportunistic,
+ * and a queue ordered purely by price never empties in front of them.
  */
 
 import { describe, it } from 'node:test';
@@ -236,6 +250,37 @@ function hullsBoughtOver(
   return bought;
 }
 
+/**
+ * The same, with a bank that climbs the way an economy fills one.
+ *
+ * `hullsBoughtOver` hands the commander the same purse at every observation,
+ * which answers "does it hold?" and cannot answer "what does it hold *for*?" —
+ * a hold that never closes buys nothing whichever want won it. So this variant
+ * adds a fixed income and lets the holds close, and what a run returns is the
+ * order the navy actually reached its wants in.
+ *
+ * Purchases are not debited, because the fixture's units and queues do not
+ * change either: this measures which hull the commander reaches for first, not
+ * how many of them an economy could pay for.
+ */
+function hullsBoughtWhileEarning(
+  brief: AiBriefing,
+  seconds: number,
+  overrides: Partial<EchoSnapshot> & { nodules: number },
+  nodulesPerObservation: number
+): UnitKind[] {
+  const commander = new AiCommander(brief);
+  const bought: UnitKind[] = [];
+  const observations = seconds * 5;
+  for (let i = 0; i < observations; i++) {
+    const earned = { ...overrides, nodules: overrides.nodules + i * nodulesPerObservation };
+    for (const command of commander.observe(snapshot(brief, 6000 + i * ECHO_TICKS, earned))) {
+      if (command.kind === 'produce') bought.push(command.unit);
+    }
+  }
+  return bought;
+}
+
 describe('the commander saves for the hull the rung was bought for', () => {
   const consortium = Faction.Bathyarch;
 
@@ -396,11 +441,17 @@ describe('the commander saves for the hull the rung was bought for', () => {
   });
 
   it('does not wait for an account waiting cannot fill', () => {
-    // The Dredge is priced in crystal and Biomass as well as nodules, and both
-    // arrive because a hauler went and got them rather than because a commander
-    // sat still. A hold on those is `commandConstruction`'s Spore Veil circle
-    // one deck down: 450 nodules held against a Biomass price the wait will
-    // never deliver, for the rest of the match.
+    // The Dredge is priced in crystal and Biomass as well as nodules, and an
+    // account at *zero* is not a gap a window closes — it is
+    // `commandConstruction`'s Spore Veil circle one deck down: 450 nodules held
+    // against a price the wait will never deliver, for the rest of the match.
+    //
+    // Until #520 that was written as a blanket rule, and the blanket was the
+    // bug: any shortfall in crystal or Biomass struck the bid out of the
+    // arbitration entirely, so the one hull in the roster priced in all three
+    // accounts could never be saved for in any of them. The floor is what
+    // separates the two cases now, and this test holds the half of it that did
+    // not change — the test below holds the half that did.
     const directorate = Faction.Directorate;
     const brief = briefing(directorate);
     const heavy = heavyOf(directorate);
@@ -422,6 +473,148 @@ describe('the commander saves for the hull the rung was bought for', () => {
       'a navy short of Biomass keeps building rather than standing still for it'
     );
     assert.ok(!bought.includes(heavy), 'and it does not pretend it can afford the hull');
+  });
+
+  it('waits in whichever account the hull is short of, not only in nodules', () => {
+    // The other half of the floor, and the whole of #520. A Directorate with
+    // every nodule and every crystal the Dredge is priced at, and half its
+    // Biomass, is a navy one account away from the hull its yard exists to
+    // build — and it used to keep buying Corvettes, because the arbitration
+    // could only ever wait for nodules.
+    //
+    // Measured on seeds 4000-4002 before this changed: the Dredge bid at 4,584
+    // observations, two thirds of the match with a Slipway standing, and won
+    // the hold at none of them. Its Biomass sat at a median of 16 against the
+    // 60 it is priced at, because the cheaper Biomass hulls spent the account
+    // the instant it could pay for one of them.
+    const directorate = Faction.Directorate;
+    const brief = briefing(directorate);
+    const heavy = heavyOf(directorate);
+    const price = priceOf(statsFor(heavy));
+    const home = brief.spawns[brief.slot]!;
+    const yard = structure(30, StructureKind.Slipway, { x: home.x - 400, y: home.y });
+    const base = snapshot(brief, 0);
+    const banked = {
+      structures: [...base.structures, yard],
+      nodules: price.nodules,
+      crystal: price.crystal,
+    };
+
+    const halfway = hullsBoughtOver(brief, 60, {
+      ...banked,
+      biomass: Math.ceil(price.biomass * 0.5),
+    });
+    const empty = hullsBoughtOver(brief, 60, { ...banked, biomass: 0 });
+
+    assert.ok(empty.length > 0, 'the control spends: an empty account is not worth waiting on');
+    assert.ok(
+      halfway.length < empty.length / 2,
+      `half a Biomass price is a gap worth holding for: ${halfway.length} hulls bought ` +
+        `against ${empty.length} for the same navy with none of it`
+    );
+  });
+
+  /**
+   * A Directorate one rung hull short of two of them, with a bank that climbs.
+   *
+   * The ordnance hull is left out so both wants are live, and it is the cheaper
+   * of the two — 300 nodules against the heavy's 450 — so nearest-first reaches
+   * it first and a fixture whose units never change would go on reaching it
+   * first for the rest of the match. The bank starts between the heavy's floor
+   * and the ordnance hull's price, so at the opening observation neither is
+   * affordable and both bid.
+   *
+   * Half a nodule an observation is 150 a minute, under every navy's measured
+   * income, so the bank climbs past both prices inside the run without
+   * outrunning the window that is meant to close on it.
+   *
+   * Two Corvettes stand in for the ordnance hull rather than the roster simply
+   * being one hull shorter: the ordnance *want* is gated on the escort, the
+   * Directorate's siege hull carries no gun and so is not counted toward one,
+   * and a fixture under that gate would answer both of these tests with "the
+   * hull was never wanted" instead of with the rule under measurement.
+   */
+  function directorateShortOfBoth(satisfied: readonly UnitKind[] = []): {
+    brief: AiBriefing;
+    heavy: UnitKind;
+    ordnance: UnitKind;
+    bought: UnitKind[];
+  } {
+    const directorate = Faction.Directorate;
+    const brief = briefing(directorate);
+    const heavy = heavyOf(directorate);
+    const ordnance = OWN_ORDNANCE[directorate];
+    const price = priceOf(statsFor(heavy));
+    const home = brief.spawns[brief.slot]!;
+    const yard = structure(30, StructureKind.Slipway, { x: home.x - 400, y: home.y });
+    const base = snapshot(brief, 0);
+    const extra = satisfied.map((kind, i) => hull(90 + i, kind, { x: home.x, y: home.y + 120 }));
+
+    const bought = hullsBoughtWhileEarning(
+      brief,
+      180,
+      {
+        structures: [...base.structures, yard],
+        units: [
+          ...base.units.filter((u) => u.kind !== ordnance),
+          hull(88, UnitKind.Corvette, { x: home.x, y: home.y - 120 }),
+          hull(89, UnitKind.Corvette, { x: home.x, y: home.y - 180 }),
+          ...extra,
+        ],
+        nodules: Math.round(price.nodules * 0.6),
+        crystal: price.crystal,
+        biomass: price.biomass,
+      },
+      0.5
+    );
+    return { brief, heavy, ordnance, bought };
+  }
+
+  it('does not let a cheaper hull spend the account it is holding', () => {
+    // `holdPurse` runs at the foot of the want list, so the hold it sets is not
+    // read until the next observation — by which time the wants ahead of it
+    // have bought on sight. In nodules that costs nothing, because a hold that
+    // fails to close simply reopens. In Biomass it is the whole failure: the
+    // Directorate's ordnance hull is priced at 40 of the account its heavy needs
+    // 60 of, out of one bank, and it is wanted first.
+    //
+    // The control is the heavy already in the water rather than the yard taken
+    // away: with nothing to hold for, the same navy at the same bank buys the
+    // same ordnance hull the moment its nodules reach the price.
+    const held = directorateShortOfBoth();
+    const nothingToHold = directorateShortOfBoth([held.heavy]);
+    const name = (kind: UnitKind | undefined): string =>
+      kind === undefined ? 'nothing' : statsFor(kind).name;
+
+    assert.equal(
+      name(nothingToHold.bought[0]),
+      name(nothingToHold.ordnance),
+      'the control reaches it first: a navy with its heavy in the water holds nothing back, ' +
+        'and the ordnance hull is the cheaper of the two'
+    );
+    assert.equal(
+      name(held.bought[0]),
+      name(held.heavy),
+      'and a navy saving for its heavy does not let the cheaper hull spend the Biomass first'
+    );
+  });
+
+  it('finishes what the yard was bought for, rather than the nearest thing to it', () => {
+    // Nearest-first serves every want eventually only where the wants are of
+    // equal standing, and the navy's heavy is not: the Slipway in front of it
+    // cost 600 nodules and a met harvester target, and the ordnance hull beside
+    // it is both cheaper and opportunistic. So the queue in front of the heavy
+    // never empties — measured on seeds 4000-4002, the Dredge cleared the
+    // floors five times in three matches and lost all five to a Lure 170
+    // nodules cheaper, which then spent the bank it had been waiting on.
+    const { heavy, bought } = directorateShortOfBoth();
+
+    assert.ok(
+      bought.includes(heavy),
+      `the navy reaches the hull its yard was bought for: ${[...new Set(bought)]
+        .map((kind) => statsFor(kind).name)
+        .join(', ')}`
+    );
   });
 
   it('has a rung hull for every navy, so no navy is left with nothing to save for', () => {
