@@ -23,7 +23,18 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { BLOOM_SHARE, DRIFT, FLORA, Faction, HazardPhase, SIM, UnitKind } from '@echoes/shared';
+import {
+  BLOOM_SHARE,
+  DEPTH_BANDS,
+  DRIFT,
+  DepthBand,
+  FLORA,
+  Faction,
+  HazardPhase,
+  SIM,
+  UnitKind,
+  depthBandFor,
+} from '@echoes/shared';
 import { hasComponent } from 'bitecs';
 import { Match } from '../src/sim/match.ts';
 import { Terrain } from '../src/sim/terrain.ts';
@@ -259,6 +270,123 @@ describe('the share stops when the bed is not held', () => {
 
     SilentRunning.active[eid] = 0;
     assert.ok(earned(match, 10) > 0, 'the share did not resume when silence ended');
+  });
+});
+
+describe('the share is paid for exposure, so it reads the column too', () => {
+  // #577. The tend circle is horizontal, and used to be the whole test on the
+  // reasoning that the Shelf is 400 m of water at most. A bed is 400 m of
+  // *radius*, though, and a plateau is whatever the map authored: the
+  // Ventfront Divide's gardens are 500 m shelves in a 2,600 m transit gap, so
+  // half of every bed's ground is the gap. What the share buys is a gardener
+  // standing where it can be reached — docs/economy.md §6, "safe from being
+  // heard and permanently vulnerable to being reached" — and a hull hanging
+  // 2 km under the rim was buying that at no price at all.
+  //
+  // The Sower throughout, because it is the hull the rule is about: "the only
+  // Commune hull above PR-1", so it is the one that can sit in Mid-Water long
+  // enough to be asked whether it is paid there. A Light Scout would answer
+  // with crush attrition instead.
+
+  /** A Commune hull that can hold a Mid-Water station, parked at `depth`. */
+  function sower(match: Match, x: number, y: number, depth: number): number {
+    const eid = spawnUnit(match.world, {
+      kind: UnitKind.Sower,
+      slot: PLAYER,
+      faction: Faction.Pelagia,
+      x,
+      y,
+      depth,
+      weaponsCold: true,
+    });
+    assert.notEqual(eid, 0);
+    return eid;
+  }
+
+  it('pays a tender in the Shelf band and nothing to one below it', () => {
+    const match = quietMatch();
+    match.addPlayer(PLAYER, Faction.Pelagia);
+    advance(match, 1);
+    idleHarvesters(match, PLAYER);
+    garden(match);
+    // The fixture terrain is flat at DEPTH.MAX_M, so nothing here is the
+    // seabed's doing: same bed, same crop, same distance on the plan, and
+    // only the depth moves — across the band line and back.
+    const eid = sower(match, GARDEN.x, GARDEN.y, 200);
+
+    assert.ok(earned(match, 10) > 0, 'a Shelf-band tender was not paid');
+
+    Position.depth[eid] = DEPTH_BANDS[DepthBand.Shelf].max + 100;
+    assert.equal(earned(match, 10), 0, 'a Mid-Water tender kept earning the share');
+    assert.ok(Health.hp[eid]! > 0, 'the tender died, so this measured the wrong thing');
+
+    Position.depth[eid] = DEPTH_BANDS[DepthBand.Shelf].max - 100;
+    assert.ok(earned(match, 10) > 0, 'the share did not resume when the tender rose');
+  });
+
+  it('pays nothing at a Ventfront bed’s rim, where the plateau has run out', () => {
+    // The bug as the map actually shipped it. The rim is 400 m from the node
+    // and stands over 2,600 m of water, so a hull there may sit at any depth
+    // its Pressure Rating allows — and used to be paid the full share for it.
+    const match = new Match(VENTFRONT_DIVIDE, {
+      fauna: false,
+      seed: 51,
+      terrain: terrainFor(VENTFRONT_DIVIDE),
+    });
+    const bed = match.world.blooms[0]!;
+    const rimX = bed.x + BLOOM_SHARE.TEND_RADIUS_M - 1;
+    assert.ok(
+      match.world.terrain.floorAt(rimX, bed.y) > DEPTH_BANDS[DepthBand.Shelf].max,
+      'this test wants a rim that overhangs; the garden now covers its own bed'
+    );
+    const eid = sower(match, rimX, bed.y, 900);
+
+    const before = economyFor(match.world, PLAYER).biomass;
+    advance(match, 30);
+    assert.equal(
+      economyFor(match.world, PLAYER).biomass - before,
+      0,
+      'the garden paid a hull hanging under its rim in Mid-Water'
+    );
+    assert.ok(Health.hp[eid]! > 0, 'the rim killed the tender, so this proved nothing');
+    assert.ok(
+      Math.hypot(Position.x[eid]! - bed.x, Position.y[eid]! - bed.y) <= BLOOM_SHARE.TEND_RADIUS_M,
+      'and it drifted out of the bed, so this proved nothing'
+    );
+  });
+
+  it('still pays anywhere the plateau itself reaches, because the ground lifts', () => {
+    // The half of the change that has to be a no-op, and the reason this is a
+    // fix rather than a nerf. Over a plateau a hull cannot be below the band
+    // at all — the seabed holds it above itself (docs/systems-depth.md §2) —
+    // so a tender ordered deep and parked on the garden is lifted onto the
+    // Shelf and earns exactly what it always did.
+    const match = new Match(VENTFRONT_DIVIDE, {
+      fauna: false,
+      seed: 51,
+      terrain: terrainFor(VENTFRONT_DIVIDE),
+    });
+    const bed = match.world.blooms[0]!;
+    const eid = sower(match, bed.x, bed.y, 900);
+
+    const before = economyFor(match.world, PLAYER).biomass;
+    advance(match, 60);
+    assert.ok(
+      Position.depth[eid]! <= DEPTH_BANDS[DepthBand.Shelf].max,
+      `the plateau did not lift the tender: ${Position.depth[eid]} m`
+    );
+    assert.ok(
+      economyFor(match.world, PLAYER).biomass - before > 0,
+      'a tender standing on the plateau was not paid'
+    );
+  });
+
+  it('is the same Shelf line the rest of the game uses', () => {
+    // Not a second definition of the band. `bloomShare.ts` tests
+    // `depthBandFor(...) === Shelf`, the way the Directorate's shallow-water
+    // penalty does, so moving DEPTH_BANDS moves both together.
+    assert.equal(depthBandFor(DEPTH_BANDS[DepthBand.Shelf].max - 1), DepthBand.Shelf);
+    assert.notEqual(depthBandFor(DEPTH_BANDS[DepthBand.Shelf].max), DepthBand.Shelf);
   });
 });
 

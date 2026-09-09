@@ -128,6 +128,12 @@ export const VENTFRONT_DIVIDE: MapDefinition = {
     // Sounder seedings and 20% of its Draymaws over 200 seeds; 500 m costs
     // 10% and 7%. The bed is 800 m across and spreads past the rim onto the
     // drop, which is what a knoll with kelp on it looks like.
+    //
+    // That overhang is allowed and the guard-rail still binds, because since
+    // #577 the guard-rail binds the gardener rather than the ground:
+    // `bloomShare.ts` pays only a tender in the Shelf band, so the half of
+    // each bed standing over the 2,600 m gap is kelp a hull may hide in and
+    // not income it may earn from below.
     {
       x: 3750,
       y: 1750,

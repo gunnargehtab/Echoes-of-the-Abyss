@@ -573,7 +573,7 @@ Systems this asymmetric fail in predictable ways. Known risks and mitigations:
 
 | Risk | Mitigation |
 | --- | --- |
-| Stealth turtling — Commune never engages | Bloom-share economy requires *surface plateau* nodes; their income is on contested ground by design |
+| Stealth turtling — Commune never engages | Bloom-share economy requires *surface plateau* nodes **and a gardener in the Shelf band**; their income is on contested ground, worked from exposed water, by design |
 | Information starvation feels bad | Tier-1 contacts are generous. You always know *something* is happening |
 | Ping never worth pressing | Ping grants **Tier-4 firing solutions** for its 3 s window and sweeps minefields — an offensive tool, not just an info tool (see [systems-combat.md](systems-combat.md) §7; an earlier draft said "+20% accuracy buff", superseded by physical solution quality — there are no to-hit rolls) |
 | Directorate always knows everything | Their HYD advantage is passive-only; they are the worst faction at *acting* on late information (slowest units) |

@@ -112,7 +112,9 @@ Their weakness is structural rather than numerical — a Consortium economy at f
 
 Most efficient, least defensible. Harvest SIG 18 where others sit at 50, and organic refineries that run at 30–40 instead of 55–75. Their income is not extraction but **bloom-share**: plateau blooms yield continuously, without a harvester loop, provided the plateau is theirs — and what they yield is **Biomass**, because a bloom is a crop ([systems-flora.md](systems-flora.md)). A tended bed pays them up to what it regrows and never more, so the Commune is the one navy paid for keeping a bed alive while everyone else is paid for consuming one. Their Nodules come from ordinary extraction, quietly.
 
-The catch is deliberate and is the Commune's whole balance: **bloom-share requires surface plateau nodes** ([systems-echo.md](systems-echo.md) §10). The quietest faction earns its living on the most exposed ground on the map, in the Shelf band where the Directorate cannot follow and where everyone can see them. Their economy is safe from being *heard* and permanently vulnerable to being *reached*.
+The catch is deliberate and is the Commune's whole balance: **bloom-share requires surface plateau nodes, and pays only a tender that is itself in the Shelf band** ([systems-echo.md](systems-echo.md) §10). The quietest faction earns its living on the most exposed ground on the map, in the Shelf band where the Directorate cannot follow and where everyone can see them. Their economy is safe from being *heard* and permanently vulnerable to being *reached*.
+
+The second half of that rule is what makes the first half bind. A bed is 400 m of radius and a plateau is whatever the map authored, so a bed may spread past its rim onto the drop — and a hull hanging in the deep water there is inside the circle without being anywhere a raider can cheaply follow. Depth is the price of the income, not the seabed under it: work the bed shallow, in the open, or do not be paid for it ([maps.md](maps.md), "Where a bloom garden goes").
 
 ### Abyssal Directorate — biomass
 
@@ -267,7 +269,7 @@ the Precentor and the Dredge, locked besides), and the Chorister the cheapest in
 
 | Risk | Mitigation |
 | --- | --- |
-| Quiet economies simply win | Commune bloom-share is anchored to exposed Shelf plateaus; the quietest income is on the most reachable ground |
+| Quiet economies simply win | Commune bloom-share is anchored to exposed Shelf plateaus and paid only to a tender in the Shelf band; the quietest income is on the most reachable ground, earned from the most reachable water |
 | Loud economies are unplayable | Consortium yield premium, best repair, and the Baffle Barge; being found is survivable for exactly one faction, and that is their identity |
 | Directorate Biomass snowballs | Yield scales with Drift Health, which their own harvesting degrades, and every harvest cycle is a 45–60 SIG event at a location the region just heard |
 | A second navy earns Biomass and the Directorate stops being special | Different sources, one account: the Commune is paid the interest on a living bed, the Directorate is paid by the herd at full rate, and only the Directorate's roster is priced deep in it ([systems-flora.md](systems-flora.md) §6) |
