@@ -315,9 +315,26 @@ Run the same checks locally before pushing; the full sequence is cheap.
 
 The full conventions live in `CONTRIBUTING.md` — the short version: branch names use
 `feat/`, `fix/`, `ci/`, `docs/` prefixes; commit subjects use the matching prefixes; keep
-PRs focused and reference the issue they close (`Fixes #30`). Issue and PR templates live
-in `.github/`. Anything visual must clear the gates in `docs/graphics-standards.md`,
-screenshot included.
+PRs focused and reference the issue they close (`Fixes #30`). The PR template is
+`.github/PULL_REQUEST_TEMPLATE.md` — upper case is the only spelling here, so a probe for
+`.github/pull_request_template.md` finds nothing and says nothing about whether a template
+exists; issue templates are in `.github/ISSUE_TEMPLATE/`. Anything visual must clear the
+gates in `docs/graphics-standards.md`, screenshot included.
+
+### Claim the issue before you touch a file
+
+Assign the issue to the repository owner (`get_me` gives the login) **before** the first
+edit — in every session, interactive ones included, not only the unattended `work-issue`
+loop. The assignee is the only claim that exists before a branch does, and it is what
+keeps a Routine firing from starting work a person is already halfway through: an
+assignee is the loop's cheapest and earliest exclusion, and a branch scan cannot close
+the gap before the first push (`.claude/skills/work-issue/SKILL.md` §3).
+
+Assigning silently is worse than not assigning at all. The loop runs under the owner's
+own login, so the name cannot say which of the two took it; pair the assignment with a
+comment naming who took it and on what branch, as §5 does. If the work stops without a
+pull request, unassign and say so in a comment — an issue left assigned reads as in
+progress to the next firing and to every person.
 
 Related: `README.md` · `CONTRIBUTING.md` · `SETUP.md` · `SETUP-ANDROID.md` (the whole game — server included —
 runs on-device in Termux) · `docs/README.md` · `docs/DEVELOPER_QUICKSTART.md` ·

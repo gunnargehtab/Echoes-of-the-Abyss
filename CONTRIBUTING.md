@@ -102,7 +102,15 @@ Until then, `main` is the release, and the way to get a change to people is to m
 
 The label set lives in [.github/labels.yml](.github/labels.yml) and is synced by a
 workflow. Add, remove, or recolor labels by editing that file — never in the GitHub UI,
-where the sync will overwrite you.
+where the sync will overwrite you. The file is **exhaustive**: the sync deletes any label
+it does not list, so a label applied without being added there first is scheduled for
+deletion rather than merely unmanaged.
+
+That is the fix for how the set drifted. The sync ran with `skip-delete` until #599, which
+made the file additive: a label created in the UI, or shipped as a GitHub default, could
+never be removed by editing it. `documentation` sat next to `docs` that way — the same
+colour, the same description, two names for one thing, and ten issues filed under the
+wrong one. Where two labels would mean the same thing, **`docs` is the name.**
 
 One label carries a routing rule rather than a category. **`fable-5.1`** marks an issue
 whose work is *shape* — a hull script, a faction module, a GLB, a prop, a prompt block —
