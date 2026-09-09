@@ -25,7 +25,7 @@ import {
   UnitKind,
 } from '@echoes/shared';
 import { runBatch, runMatch, seedHasAnyEffect, type Seat } from '../src/balance/runner.ts';
-import { summarise, toMarkdown } from '../src/balance/report.ts';
+import { summarise, toMarkdown, type GuardRailVerdict } from '../src/balance/report.ts';
 import { MatchTelemetry, type MatchTelemetryResult } from '../src/balance/telemetry.ts';
 import { Match } from '../src/sim/match.ts';
 import { DEFAULT_MAP_ID, mapById } from '../src/sim/maps/index.ts';
@@ -417,6 +417,7 @@ describe('the guard-rail table answers the docs', () => {
     const rails = summarise(results).guardRails;
 
     const risks = rails.map((r) => r.risk);
+    assert.ok(risks.includes('One navy is simply stronger'));
     assert.ok(risks.includes('Quiet economies simply win'));
     assert.ok(risks.includes('Loud economies are unplayable'));
     assert.ok(risks.includes('Directorate Biomass snowballs'));
@@ -630,6 +631,95 @@ describe('a win-rate verdict needs a sample, not merely a non-zero one (#199)', 
     // nothing is still a perfectly good sample of when things start dying.
     const fauna = batch(30, 1).guardRails.find((r) => r.risk === 'Fauna decide matches')!;
     assert.equal(fauna.verdict, 'held', 'first blood does not care who won');
+  });
+});
+
+/**
+ * Four navies in one match, simulated once and shared, for the rail that names
+ * no faction.
+ *
+ * The spread rail's bar is a multiple of `1 / seats`, so in the two-seat duel
+ * every other fixture in this file uses it sits at 100% and the rail correctly
+ * declines to rule. Reading it at all needs four chairs, and one short match
+ * supplies the players every fabricated batch below is built from.
+ */
+const FOUR_SEATS: Seat[] = [
+  { slot: 0, faction: Faction.Bathyarch, difficulty: AiDifficulty.Veteran },
+  { slot: 1, faction: Faction.Pelagia, difficulty: AiDifficulty.Veteran },
+  { slot: 2, faction: Faction.Directorate, difficulty: AiDifficulty.Veteran },
+  { slot: 3, faction: Faction.Hadron, difficulty: AiDifficulty.Veteran },
+];
+
+let fourSeat: ReturnType<typeof runMatch> | undefined;
+function fourSeatMatch(): ReturnType<typeof runMatch> {
+  fourSeat ??= runMatch({ seats: FOUR_SEATS, seed: 4300, maxMinutes: 1, fauna: false });
+  return fourSeat;
+}
+
+describe('a rail that fails when one navy runs away with the batch (#592)', () => {
+  const RISK = 'One navy is simply stronger';
+
+  /**
+   * `matches` matches over four seats, `wins` of them taken by the Directorate
+   * and the rest dealt round-robin to the other three.
+   *
+   * Fabricated for the reason the #199 batches are: what is under test is the
+   * rail's arithmetic, and reaching a 95% honestly would mean simulating the
+   * imbalance that opened the issue.
+   */
+  function spread(matches: number, wins: number): GuardRailVerdict {
+    const one = fourSeatMatch();
+    const rivals = [0, 1, 3];
+    return summarise(
+      Array.from({ length: matches }, (_, i) => ({
+        ...one,
+        seed: 4300 + i,
+        winnerSlot: i < wins ? 2 : rivals[(i - wins) % rivals.length]!,
+      }))
+    ).guardRails.find((r) => r.risk === RISK)!;
+  }
+
+  it('breaches on the reading that went fourteen baselines unremarked', () => {
+    // 19 of 20 decided, which is what the 2026-09-09 four-faction baseline
+    // read while every rail in the table said "held".
+    const rail = spread(20, 19);
+    assert.equal(rail.verdict, 'breached');
+    assert.match(rail.reading, /Directorate 95%/);
+    assert.match(rail.reading, /parity 25%/);
+    assert.match(rail.reading, /bar 50%/);
+  });
+
+  it('holds when the seats share the batch out', () => {
+    assert.equal(spread(20, 5).verdict, 'held', 'five wins each is parity');
+  });
+
+  it('puts the line at exactly twice parity, and not a match earlier', () => {
+    // The bar is a bar, not a suggestion: a seat sitting on it has not
+    // breached, and the next win it takes does.
+    assert.equal(spread(20, 10).verdict, 'held', '50% is the bar, not past it');
+    assert.equal(spread(20, 11).verdict, 'breached');
+  });
+
+  it('needs the ten decided matches every win-rate rail needs', () => {
+    // A shutout of nine is a plausible run of luck, and this rail buys its
+    // sample floor from the same helper the other two do rather than
+    // inventing a second one.
+    const rail = spread(9, 9);
+    assert.equal(rail.verdict, 'no data', 'a 100% over nine decided matches rules on nothing');
+    assert.match(rail.reading, /n=9 decided, needs 10/);
+  });
+
+  it('declines a bar no win rate could clear', () => {
+    // Twice parity in a duel is 100%. A rail that returns "held" from a test
+    // that cannot fail is the defect the Drift Health bar was rebuilt to
+    // remove, so a two-seat matchup gets "you did not ask this question".
+    const one = sampleMatch();
+    const duel = summarise(
+      Array.from({ length: 20 }, (_, i) => ({ ...one, seed: 4244 + i, winnerSlot: 1 }))
+    ).guardRails.find((r) => r.risk === RISK)!;
+
+    assert.equal(duel.verdict, 'no data');
+    assert.match(duel.reading, /2 seats/);
   });
 });
 

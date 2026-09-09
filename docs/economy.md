@@ -269,6 +269,7 @@ the Precentor and the Dredge, locked besides), and the Chorister the cheapest in
 
 | Risk | Mitigation |
 | --- | --- |
+| One navy is simply stronger | Nothing in the design mitigates this, so it is measured instead: across a batch no navy may hold more than **twice parity** of the decided matches — 50% of a four-seat batch against the 25% an even field pays. The balance harness breaches a guard-rail on a wider spread than that ([tools/balance/README.md](../tools/balance/README.md)) |
 | Quiet economies simply win | Commune bloom-share is anchored to exposed Shelf plateaus and paid only to a tender in the Shelf band; the quietest income is on the most reachable ground, earned from the most reachable water |
 | Loud economies are unplayable | Consortium yield premium, best repair, and the Baffle Barge; being found is survivable for exactly one faction, and that is their identity |
 | Directorate Biomass snowballs | Yield scales with Drift Health, which their own harvesting degrades, and every harvest cycle is a 45–60 SIG event at a location the region just heard |
@@ -277,6 +278,29 @@ the Precentor and the Dredge, locked besides), and the Chorister the cheapest in
 | Knights starve out of every long game | The tithe is map-control-independent, so their floor never falls; their ceiling is meant to be low, and their win condition is meant to be early |
 | Economic scouting becomes mandatory busywork | Hum is passive, persistent, and readable from range — you find economies by listening from safety, not by sending scouts to die |
 | Throttling becomes a required micro chore | Three states, per-structure defaults, and a global toggle; a player who never touches it plays a coherent Standard-throttle game |
+
+**Why the first row is a number and not a mechanism.** Every other risk here names a
+specific shape the asymmetry could fail in, and each one is answered by something in the
+game. "One navy is simply stronger" is the residue — the failure left over when a doctrine
+is not too quiet, too loud, or too rich in any way this table can name, and simply wins
+anyway. There is no mechanism to point at, so the entry is a band, and the band is the
+design saying what it meant by *unequal in shape*: the four economies are meant to earn
+differently, be heard differently, and win by different routes at different points in a
+match. They are not meant to win at different rates.
+
+**Twice parity, and why that multiple.** Parity is one win per seat — 25% in a four-seat
+batch, 50% in a duel. Twice that is wide enough to leave the shapes room: a doctrine whose
+win condition is early ([§6](#6-the-four-economies), the Knights) beats a slow one on some
+maps and under some caps without being stronger. It is also tight enough that clearing it
+is news. At the ten decided matches the rail insists on, a seat with a genuinely even
+chance clears the bar about once in fifty runs; at the twenty a full baseline carries,
+about once in two hundred and fifty. So a breach is a finding and not the weather. Below
+ten decided matches the rail reports no data rather than a verdict.
+
+**It is a statement about the commanders too.** The harness seats an AI in every chair, so a
+spread this rail catches may be a doctrine that is stronger or an AI that plays one doctrine
+better. The rail does not distinguish them, and it is not meant to: either one is worth
+opening.
 
 ---
 

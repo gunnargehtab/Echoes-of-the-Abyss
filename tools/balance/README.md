@@ -64,12 +64,20 @@ than when the clock runs out — so raising `--max-minutes` on a duel changes no
 that arrives late in a match is measurable in the four-faction baseline (a 1,006 s median)
 and not in a duel: the Slipway rises around 420 s, which is most of a duel's whole length.
 
-**A win rate counts decided matches, and most batches are short of them.** Two rails read
+**A win rate counts decided matches, and most batches are short of them.** Three rails read
 win rates, and a win rate is a ratio over matches that ended with a winner — not over matches
 run. A thirty-match batch in which twenty-nine timed out carries one decided match, and the
-faction that won it reads 100%. Both rails refuse to rule below ten decided matches and say
+faction that won it reads 100%. All three refuse to rule below ten decided matches and say
 so in their reading; the per-faction table prints the denominator in its own column, and a
 win rate over no decided matches prints as `—` rather than as `0%`.
+
+**One of those three is about the batch and not about a faction.** "One navy is simply
+stronger" reads the best win rate in the table against twice parity — 50% of a four-seat
+batch — and it exists because the other five rails each test one named doctrine's failure,
+so a batch in which any single seat runs away reads five-for-five green. It did, for
+fourteen consecutive baselines. The bar scales with the seat count, which means it is 100%
+in a duel: no win rate can clear it, so a two-seat matchup gets `no data` rather than a
+`held` from a test that could not fail.
 
 ## `baselines/`
 
