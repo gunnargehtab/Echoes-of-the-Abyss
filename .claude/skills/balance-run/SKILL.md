@@ -55,6 +55,15 @@ suite alongside one. Background a long batch and read the report when it lands.
 - **A guard-rail verdict is not a win rate.** The table asserts what the design
   bible names as a risk. A change can leave every verdict `held` and still move
   a faction's win rate ten points, so read the per-faction table too.
+- **`--matchup` pins the chair as well as the roster**, because the entry index
+  is the spawn slot. One seating cannot separate a doctrine from the corner it
+  started in, and on `ventfront-divide` the corner is the bigger of the two:
+  four seats of one navy win 11% / 28% / 50% / 11% by slot over 109 decided
+  matches. Rotating the seat order moves the Directorate from 75% to 31% and
+  changes which navy the "one navy is simply stronger" rail names. Cycle the
+  matchup four ways and pool before you attribute a win rate to a navy —
+  `tools/balance/baselines/seat-rotation.md` is the measurement and the two
+  hypotheses it rules out.
 - **Refresh a baseline with the command recorded at the top of its own file**,
   which is the whole point of that line being there. Changing the matchup, the
   seed or the cap makes a different document, not a newer one.
