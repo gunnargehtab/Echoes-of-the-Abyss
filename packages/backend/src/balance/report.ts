@@ -251,6 +251,18 @@ function fromWinRates(decided: number, breached: boolean): GuardRailVerdict['ver
 }
 
 /**
+ * How far above an even share of the wins one navy may run.
+ *
+ * `docs/economy.md` §9, "One navy is simply stronger", is where this number is
+ * argued and where it has to be changed first. Parity is one win per seat, so
+ * the bar is a multiple of `1 / seats` rather than a fixed percentage: 50% of
+ * a four-seat batch, and the same rule in a matchup of any other size. The
+ * short version of the argument is that twice parity leaves the doctrines room
+ * to be shaped differently without leaving room for one of them to run away.
+ */
+const PARITY_MULTIPLE = 2;
+
+/**
  * The sample a win-rate rail is standing on, and whether it is enough.
  *
  * Printed inside the reading rather than left to the verdict, because "no
@@ -484,6 +496,55 @@ function judge(results: MatchTelemetryResult[], factions: FactionSummary[]): Gua
     factions.find((f) => f.faction === faction);
   const verdicts: GuardRailVerdict[] = [];
   const pct = (v: number): string => `${Math.round(v * 100)}%`;
+
+  // "One navy is simply stronger." The residue risk, and the only rail here
+  // that names no faction — which is exactly why it had to be written.
+  //
+  // Every other rail tests a *specific* documented failure, so a batch in
+  // which one seat runs away with everything can read five-for-five green
+  // indefinitely, and did, for fourteen consecutive baselines (#592). The
+  // Commune's rail printed the string "best rival 95%" in its own reading
+  // and still returned "held", because that rail is about the Commune.
+  //
+  // Parity is one win per seat, counted over the navies that actually appear
+  // in the batch rather than over a seat count assumed to be four.
+  const seats = factions.length;
+  const parity = seats === 0 ? 0 : 1 / seats;
+  const bar = PARITY_MULTIPLE * parity;
+  const leader = factions.reduce<FactionSummary | undefined>(
+    (best, f) => (best === undefined || f.winRate > best.winRate ? f : best),
+    undefined
+  );
+  const spread = {
+    risk: 'One navy is simply stronger',
+    source: 'economy.md §9',
+    metric: `Best win rate against ${PARITY_MULTIPLE}x parity`,
+  };
+  if (leader === undefined || bar >= 1) {
+    // In a duel twice parity is 100%, which no win rate can exceed. Reporting
+    // "held" from a bar nothing can clear is the defect the Drift Health rail
+    // below was rebuilt to remove; a rail that cannot fail is not evidence,
+    // and saying so is the honest cell.
+    verdicts.push({
+      ...spread,
+      reading:
+        seats < 2
+          ? 'no seats in this batch'
+          : `${seats} seats puts the bar at ${pct(bar)}, which no win rate can clear`,
+      verdict: 'no data',
+    });
+  } else {
+    verdicts.push({
+      ...spread,
+      reading:
+        `${FACTION_NAME[leader.faction]} ${pct(leader.winRate)} vs parity ${pct(parity)}, ` +
+        `bar ${pct(bar)} (${decidedSample(leader.decided)})`,
+      // The leader's own denominator, not the batch's. They are the same in a
+      // batch where every navy plays every match, and the per-faction column
+      // exists (#199) because that is not something to assume.
+      verdict: fromWinRates(leader.decided, leader.winRate > bar),
+    });
+  }
 
   // "Quiet economies simply win." The Commune is the quietest faction by
   // doctrine, so the failure looks like: quietest *and* winning most *and*

@@ -10,6 +10,7 @@ node tools/balance/run.mjs --matchup consortium,commune,directorate,knights --ma
 
 | Risk | Source | Metric | Reading | Verdict |
 | --- | --- | --- | --- | --- |
+| One navy is simply stronger | economy.md §9 | Best win rate against 2x parity | Directorate 82% vs parity 25%, bar 50% (n=17 decided) | **breached** |
 | Quiet economies simply win | economy.md §9 | Commune win rate, and nodules per minute per point of mean SIG | win 6% vs best rival 82%, premium 5.1 vs 7.2 (n=17 decided) | **held** |
 | Loud economies are unplayable | economy.md §9 | Consortium seconds tracked, against Consortium win rate | 514 s tracked per match, win 0% (n=17 decided) | **held** |
 | Directorate Biomass snowballs | economy.md §9 · bestiary.md §8 | Biomass per minute against final Drift Health | 13.1/min, Drift Health median 72 (n=30) | **held** |
