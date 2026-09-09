@@ -114,6 +114,18 @@ authored the model, and every number that is not a shape — a stat block, a doc
 wire, the balance harness — stays outside it. A hull's SIG is an argument about sound;
 its silhouette is not.
 
+Three labels are addressed to the unattended backlog Routine rather than to a person, and
+each takes an issue off its list for a different reason. **`routine-log`** marks the run
+ledger the loop writes to, so it is never mistaken for a work item. **`needs-hardware`**
+marks work that is real but cannot be done in a container — a wall-clock frame timing
+needs an actual GPU. **`needs-decision`** marks work that is doable there and blocked on a
+design call a person owes: the docs and the code disagree, or answering the issue means
+deciding what a mechanic should argue. Without it a blocked issue is the *most* selectable
+thing in the backlog, since being open, unassigned and unclaimed is precisely what being
+blocked looks like from outside. The loop applies `needs-decision` itself when it stands
+down, always alongside a comment saying what is owed; the other two are a person's to
+apply. Removing any of them puts the issue back in play on the next firing.
+
 ## Code conventions
 
 - **Constants live in exactly one place**: `packages/shared/src/constants.ts`, tagged
