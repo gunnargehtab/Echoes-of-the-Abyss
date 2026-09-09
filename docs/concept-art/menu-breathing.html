@@ -479,111 +479,237 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
 
 .c-listen .scr { display: flex; background: linear-gradient(var(--abyss-floor), var(--abyss-void) 60%, #000); }
 
-.c-listen .fall { position: relative; width: 34cqw; flex: 0 0 34cqw; border-right: 1px solid rgba(53, 224, 255, 0.16); }
-.c-listen .fall canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-.c-listen .fall-cap {
-  position: absolute;
-  z-index: 2;
-  left: 0;
-  right: 0;
-  top: 0;
+/* The display is a column, not a canvas with captions floating over it.
+   Both of its axes are named — bearing across the head, elapsed time down
+   the gutter — because an unlabelled spectrogram is wallpaper. */
+.c-listen .fall {
+  position: relative;
+  width: 34cqw;
+  flex: 0 0 34cqw;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(53, 224, 255, 0.16);
+}
+.c-listen .fall-head {
   display: flex;
   justify-content: space-between;
-  padding: 0.6cqw 0.8cqw 1.4cqw;
-  background: linear-gradient(rgba(3, 8, 14, 0.92), transparent);
-  font-size: 0.53cqw;
+  padding: 0.65cqw 0.9cqw 0.35cqw;
+  font-size: 0.52cqw;
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
-.c-listen .fall-cap b { font-weight: 400; color: var(--text-cyan); }
-.c-listen .fall-foot {
+.c-listen .fall-head b { font-weight: 400; color: var(--text-cyan); }
+.c-listen .fall-axis {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 0.9cqw 0.55cqw;
+  border-bottom: 1px solid rgba(53, 224, 255, 0.16);
+  font-size: 0.46cqw;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.c-listen .fall-axis span { position: relative; }
+.c-listen .fall-axis span::after {
+  content: '';
   position: absolute;
-  z-index: 2;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 1.4cqw 0.8cqw 0.6cqw;
-  background: linear-gradient(transparent, rgba(3, 8, 14, 0.92));
-  font-size: 0.53cqw;
+  left: 50%;
+  bottom: -0.55cqw;
+  width: 1px;
+  height: 0.32cqw;
+  background: rgba(53, 224, 255, 0.45);
+}
+.c-listen .fall-body { position: relative; flex: 1 1 auto; min-height: 0; }
+.c-listen .fall-body canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.c-listen .fall-time { position: absolute; inset: 0 0 0 auto; width: 5cqw; pointer-events: none; }
+.c-listen .fall-time i {
+  position: absolute;
+  right: 0.62cqw;
+  translate: 0 -50%;
+  padding: 0 0.24cqw;
+  font-style: normal;
+  font-size: 0.46cqw;
+  letter-spacing: 0.08em;
+  /* The gutter sits over the fall, so each label carries its own ground or
+     the noise reads straight through the digits. */
+  background: rgba(3, 8, 14, 0.78);
+  color: var(--text-cyan);
+  font-variant-numeric: tabular-nums;
+}
+.c-listen .fall-time i::after {
+  content: '';
+  position: absolute;
+  right: -0.62cqw;
+  top: 50%;
+  width: 0.48cqw;
+  height: 1px;
+  background: rgba(53, 224, 255, 0.4);
+}
+.c-listen .fall-foot {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5cqw 0.9cqw 0.6cqw;
+  border-top: 1px solid rgba(53, 224, 255, 0.16);
+  font-size: 0.5cqw;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  opacity: 0.6;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
 }
 
-.c-listen .side { flex: 1; min-width: 0; padding: 3.6cqw 3.8cqw 2.6cqw; display: flex; flex-direction: column; }
-.c-listen .head { margin-bottom: auto; }
+.c-listen .side { flex: 1; min-width: 0; padding: 5cqw 3.8cqw 2.6cqw; display: flex; flex-direction: column; }
 .c-listen .wordmark { align-items: flex-start; }
 .c-listen .head .mk { margin-bottom: 0.9cqw; }
 .c-listen .tagline { margin-top: 0.65cqw; }
-.c-listen .list { display: flex; flex-direction: column; margin: 2.4cqw 0 auto; }
+.c-listen .list { display: flex; flex-direction: column; margin: 3.2cqw 0 0; }
 
-/* No boxes. An entry is a rule with a name on it, because the plate VI card
-   is the in-match voice and this screen is not the instrument. */
+/* No boxes. An entry is a rule with a name on it and a port at the near end,
+   because the plate VI card is the in-match voice and this screen is not the
+   instrument. The three columns are fixed, so the notes form a column of
+   their own instead of a ragged right edge. */
 .c-listen .ent {
-  display: flex;
+  display: grid;
+  grid-template-columns: 0.9cqw 13cqw 1fr;
   align-items: baseline;
-  gap: 1cqw;
+  gap: 0 1cqw;
   padding: 0.62cqw 0.2cqw 0.6cqw;
   border-top: 1px solid rgba(111, 138, 156, 0.2);
-  font-size: 0.88cqw;
+  font-size: 0.86cqw;
+}
+.c-listen .ent::before {
+  content: '';
+  width: 0.34cqw;
+  height: 0.34cqw;
+  translate: 0 -0.06cqw;
+  border: 1px solid rgba(53, 224, 255, 0.4);
 }
 .c-listen .ent:last-child { border-bottom: 1px solid rgba(111, 138, 156, 0.2); }
-.c-listen .ent-note { font-size: 0.68cqw; text-align: right; margin-left: auto; max-width: 30cqw; opacity: 0.75; }
+.c-listen .ent-note { font-size: 0.64cqw; opacity: 0.68; }
 .c-listen .ent:hover, .c-listen .ent:focus-visible { background: rgba(255, 61, 166, 0.06); border-top-color: var(--neon-magenta); }
+.c-listen .ent:hover::before, .c-listen .ent:focus-visible::before { background: var(--neon-magenta); border-color: var(--neon-magenta); }
 .c-listen .ent:hover .ent-label, .c-listen .ent:focus-visible .ent-label { color: var(--neon-magenta); }
+.c-listen .ent:hover .ent-note, .c-listen .ent:focus-visible .ent-note { opacity: 1; }
 .c-listen .ent:focus-visible { outline: 1px solid var(--text-cyan); outline-offset: -1px; }
 .c-listen .ent.is-resume { border-top-color: rgba(255, 61, 166, 0.65); }
+.c-listen .ent.is-resume::before { border-color: var(--neon-magenta); }
 .c-listen .ent.is-resume .ent-label { color: var(--neon-magenta); }
+
+/* The left panel describes the instrument; this describes the port. */
+.c-listen .side-foot {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: max-content max-content;
+  gap: 0.3cqw 1.6cqw;
+  font-size: 0.52cqw;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.c-listen .side-foot dt { opacity: 0.5; }
+.c-listen .side-foot dd { margin: 0; color: var(--text-cyan); }
 
 /* =====================================================================
    4. SILENT RUNNING — the menu at the noise floor. Moving costs you light.
    ===================================================================== */
 
-.c-silent .scr {
-  --noise: 0;
-  --lvl: calc(0.72 + 0.28 * var(--noise));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #000;
-}
+.c-silent .scr { --noise: 0; background: #000; }
 .c-silent .veil {
   position: absolute;
   inset: 0;
-  background: radial-gradient(66% 58% at 50% 46%, rgba(10, 20, 36, calc(0.3 + 0.55 * var(--noise))), transparent 74%);
+  background: radial-gradient(56% 64% at 30% 48%, rgba(10, 20, 36, calc(0.26 + 0.55 * var(--noise))), transparent 78%);
 }
 [data-motion='breathing'] .c-silent .breath { animation: silent-breath 10s ease-in-out infinite; }
 @keyframes silent-breath { 0%, 100% { filter: brightness(0.93); } 50% { filter: brightness(1.07); } }
 
-.c-silent .breath { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-.c-silent .panel { position: relative; z-index: 2; width: 34cqw; opacity: var(--lvl); }
+.c-silent .breath { position: absolute; inset: 0; }
+.c-silent .panel { position: absolute; z-index: 2; left: 9cqw; top: 8.5cqw; width: 44cqw; }
 
 /* The silent-running lockup from docs/naming.md: monochrome text-bright, no
-   glow. "The logo running quiet is on-doctrine." */
+   glow. It is the one thing here that never dims — "the logo running quiet
+   is on-doctrine" already makes it the quietest lockup in the book. */
 .c-silent .wordmark { align-items: flex-start; margin-bottom: 0.7cqw; }
-.c-silent .wm-name { font-size: 3.5cqw; color: var(--text-bright); text-shadow: none; }
-.c-silent .wm-sub { color: var(--text-bright); opacity: 0.55; text-shadow: none; }
-.c-silent .tagline { margin-bottom: 2.4cqw; opacity: 0.58; }
+.c-silent .wm-name { font-size: 4.4cqw; color: var(--text-bright); text-shadow: none; }
+.c-silent .wm-sub { color: var(--text-bright); opacity: 0.6; text-shadow: none; }
+.c-silent .tagline { margin-bottom: 3cqw; opacity: 0.55; }
 
-.c-silent .list { display: flex; flex-direction: column; gap: 0.15cqw; }
-.c-silent .ent { position: relative; padding: 0.55cqw 1cqw; font-size: 0.88cqw; }
-.c-silent .ent-label { color: var(--text-bright); opacity: 0.72; }
-.c-silent .ent-note { font-size: 0.67cqw; opacity: 0; height: 0; overflow: hidden; transition: opacity 0.18s linear; }
+/* Each entry answers the pointer on its own rather than the screen answering
+   as one, because sound falls off with distance: --near is 1 under the
+   cursor and 0 a third of a frame away. */
+.c-silent .list { display: flex; flex-direction: column; gap: 0.2cqw; }
+/* The left edge is the column's spine, and it brightens with the row: the
+   structure of the list is drawn by how near you are to it. */
+.c-silent .ent {
+  position: relative;
+  padding: 0.55cqw 1.1cqw;
+  font-size: 1.02cqw;
+  --near: 0;
+  border-left: 1px solid rgba(111, 138, 156, calc(0.12 + 0.55 * var(--near)));
+}
+.c-silent .ent-label { color: var(--text-bright); opacity: calc(0.52 + 0.48 * var(--near)); }
+.c-silent .ent-note { font-size: 0.66cqw; opacity: calc(0.17 + var(--near) * 0.58); }
 .c-silent .ent:hover, .c-silent .ent:focus-visible { --tk: rgba(255, 61, 166, 0.75); }
-.c-silent .ent:hover .ent-label, .c-silent .ent:focus-visible .ent-label { opacity: 1; color: var(--text-bright); }
-.c-silent .ent:hover .ent-note, .c-silent .ent:focus-visible .ent-note { opacity: 0.8; height: auto; }
 .c-silent .ent:focus-visible { outline: 0; }
 .c-silent .ent:not(:hover):not(:focus-visible) { --tk: rgba(53, 224, 255, 0); }
-.c-silent .ent.is-resume .ent-label { color: var(--neon-magenta); opacity: 0.95; }
+.c-silent .ent.is-resume .ent-label { color: var(--neon-magenta); }
 
-.c-silent .sig { position: absolute; left: 2.6cqw; bottom: 2.2cqw; z-index: 3; display: flex; align-items: center; gap: 0.7cqw; font-size: 0.6cqw; letter-spacing: 0.18em; text-transform: uppercase; }
-.c-silent .sig-cells { display: flex; gap: 0.16cqw; }
-.c-silent .sig-cells i { width: 0.36cqw; height: 0.8cqw; background: rgba(111, 138, 156, 0.22); }
-.c-silent .sig-cells i.on { background: var(--neon-cyan); box-shadow: 0 0 0.4cqw rgba(53, 224, 255, 0.5); }
-.c-silent .sig-cells i.hot { background: var(--neon-amber); box-shadow: 0 0 0.4cqw rgba(242, 178, 51, 0.5); }
-.c-silent .sig-num { color: var(--text-bright); font-variant-numeric: tabular-nums; }
-.c-silent .sig-state { position: absolute; left: 2.6cqw; bottom: 3.9cqw; z-index: 3; font-size: 0.55cqw; letter-spacing: 0.2em; text-transform: uppercase; color: var(--neon-teal); opacity: 0.75; }
-.c-silent .sig-state.is-loud { color: var(--neon-amber); }
+/* The signature column, and all three of its marks are real numbers:
+   SILENT_RUNNING's floor of 3, the 8 it may not exceed, and the 43 that a
+   broken silence costs (8 + BREAK_SILENCE_SIG_SPIKE). */
+.c-silent .meter { position: absolute; z-index: 3; right: 6cqw; top: 11cqw; bottom: 13cqw; width: 10cqw; }
+.c-silent .meter-track { position: absolute; left: 0; top: 0; bottom: 0; width: 0.5cqw; border: 1px solid rgba(111, 138, 156, 0.3); }
+.c-silent .meter-fill {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0.5cqw;
+  height: calc(var(--noise) * 100%);
+  background: linear-gradient(var(--neon-amber), var(--neon-cyan));
+  opacity: 0.85;
+}
+.c-silent .meter-mark {
+  position: absolute;
+  left: 1.2cqw;
+  translate: 0 50%;
+  font-size: 0.5cqw;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+.c-silent .meter-mark::before { content: ''; position: absolute; left: -1.2cqw; top: 50%; width: 0.95cqw; height: 1px; background: rgba(111, 138, 156, 0.4); }
+.c-silent .meter-mark b { font-weight: 400; color: var(--text-bright); }
+.c-silent .meter-mark.is-silent { color: var(--neon-teal); opacity: 1; }
+.c-silent .meter-mark.is-silent::before { background: rgba(95, 208, 192, 0.55); }
+.c-silent .meter-mark.is-loud { color: var(--neon-amber); }
+.c-silent .meter-mark.is-loud::before { background: rgba(242, 178, 51, 0.5); }
+
+/* Left edge flush with the meter's track, so the number reads off the
+   column rather than floating beside it. */
+.c-silent .read { position: absolute; z-index: 3; right: 6cqw; bottom: 3.6cqw; width: 10cqw; }
+.c-silent .read-cap { display: block; font-size: 0.52cqw; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.5; }
+.c-silent .read-num {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 3.8cqw;
+  font-weight: 700;
+  line-height: 0.95;
+  color: var(--text-bright);
+  font-variant-numeric: tabular-nums;
+}
+.c-silent .read-state { display: block; font-size: 0.54cqw; letter-spacing: 0.2em; text-transform: uppercase; color: var(--neon-teal); }
+.c-silent .read-state.is-loud { color: var(--neon-amber); }
+
+.c-silent .hint {
+  position: absolute;
+  z-index: 3;
+  left: 9cqw;
+  bottom: 2.6cqw;
+  margin: 0;
+  font-size: 0.64cqw;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.52;
+}
 
 /* =====================================================================
    5. THE MOUTH — the mark at frame scale, and the list inside it.
@@ -591,29 +717,33 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
 
 .c-mouth .scr { background: radial-gradient(70% 52% at 50% 112%, rgba(139, 92, 246, 0.2), transparent 72%), linear-gradient(var(--abyss-floor), var(--abyss-void) 46%, #000); }
 .c-mouth .arcs { position: absolute; inset: 0; width: 100%; height: 100%; }
-.c-mouth .head { position: absolute; top: 1.8cqw; left: 0; right: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; }
-.c-mouth .wm-name { font-size: 3cqw; }
-.c-mouth .wm-sub { font-size: 0.95cqw; }
+/* The lockup sits down on the first arc rather than floating clear of it:
+   this is the vertical lockup of docs/naming.md at frame scale, mark and
+   wordmark in one object, not a wordmark with a drawing under it. */
+.c-mouth .head { position: absolute; top: 6.2cqw; left: 0; right: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; }
+.c-mouth .wm-name { font-size: 3.4cqw; }
+.c-mouth .wm-sub { font-size: 1.05cqw; }
 .c-mouth .tagline { margin-top: 0.6cqw; font-size: 0.62cqw; }
 
 .c-mouth .list { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
 .c-mouth .list .ent { pointer-events: auto; }
 /* One entry per band, ordered so the thing you want is deepest. The bands
    brighten downward and never the other way (docs/naming.md, "Rules"), so the
-   list has to descend into the light rather than climb out of it. */
+   list has to descend into the light rather than climb out of it. Each label
+   sits ON its arc, in a gap masked out of the stroke, so it is set into the
+   mark instead of floating near it. */
 .c-mouth .ent {
   position: absolute;
   left: 50%;
   translate: -50% 0;
   top: var(--y);
-  width: var(--w);
-  padding: 0.4cqw 0;
+  padding: 0.42cqw 1.1cqw;
   text-align: center;
   font-size: 0.9cqw;
   opacity: var(--o);
 }
 .c-mouth .ent-label { letter-spacing: 0.2em; }
-.c-mouth .ent-note { position: absolute; left: 50%; translate: -50% 0; top: 1.9cqw; width: 34cqw; font-size: 0.65cqw; opacity: 0; transition: opacity 0.18s linear; }
+.c-mouth .ent-note { position: absolute; left: 50%; translate: -50% 0; top: 2.1cqw; width: 34cqw; font-size: 0.65cqw; opacity: 0; transition: opacity 0.18s linear; }
 .c-mouth .ent:hover, .c-mouth .ent:focus-visible { opacity: 1; }
 .c-mouth .ent:hover .ent-note, .c-mouth .ent:focus-visible .ent-note { opacity: 0.85; }
 .c-mouth .ent:hover .ent-label, .c-mouth .ent:focus-visible .ent-label { color: var(--mouth-glow); text-shadow: 0 0 0.8cqw rgba(201, 166, 255, 0.55); }
@@ -644,7 +774,6 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
 [data-motion='still'] .c-sound .hrule { background: linear-gradient(90deg, transparent, rgba(53, 224, 255, 0.55), transparent); }
 [data-motion='still'] .c-sound .ent { --gain: 0.34; }
 [data-motion='still'] .c-therm .snow { display: none; }
-[data-motion='still'] .c-silent .panel { opacity: 0.82; }
 </style>
 
 <div class="wrap">
@@ -819,13 +948,16 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
     <dl class="spec">
       <dt>Breathes</dt>
       <dd>
-        One waterfall row every <b>200 ms</b>, which is the Echo Layer's own tick made literal. The
-        noise floor swells over roughly twelve seconds.
+        One waterfall row every <b>200 ms</b>, the Echo Layer's own tick made literal. The floor
+        swells over about twelve seconds, and the three standing ridges in it drift with it. Those
+        ridges are the port's own machinery: a real hydrophone floor has stationary lines in it,
+        and an even field of hiss reads as television snow rather than as water.
       </dd>
       <dt>Licensed by</dt>
       <dd>
         <code>ui-ux.md</code> §14, "the port has a sound". The waterfall says in the visual channel
-        what the menu bed already says in the mix.
+        what the menu bed already says in the mix. Both of its axes are named, bearing across the
+        head and elapsed time down the gutter, because an unlabelled spectrogram is wallpaper.
       </dd>
       <dt>Stilled</dt>
       <dd>
@@ -836,7 +968,8 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
       <dd>
         An instrument that shows nothing real can read as a lie. So the trace is cyan, the ink that
         tells, and it is labelled as an empty channel; the hover mark is magenta, the ink that asks.
-        <b>That is your hand on the console, not a contact.</b>
+        <b>That is your hand on the console, not a contact.</b> It also spends a third of the frame
+        on something nobody can act on, which is the price of the atmosphere.
       </dd>
     </dl>
   </section>
@@ -858,15 +991,19 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
     <dl class="spec">
       <dt>Breathes</dt>
       <dd>
-        A <b>10 s</b> luminance cycle at ±7%, and a pointer response that decays over about two
-        seconds. The readout runs 3 to 43, which is Silent Running's floor and its break-silence
-        spike.
+        A <b>10 s</b> luminance cycle at ±7%. Moving raises the signature and about two seconds of
+        stillness lets it fall back. Each row also answers on its own: <b>--near</b> is 1 under the
+        cursor and 0 a third of a frame away, falling off with the square of the distance, because
+        that is what sound does.
       </dd>
       <dt>Licensed by</dt>
       <dd>
         <code>systems-echo.md</code> §6, by way of <code>SILENT_RUNNING</code> in the shared
-        constants. The lockup is <code>naming.md</code>'s silent-running variant, monochrome and
-        unglowed, which that document calls on-doctrine.
+        constants: the column's three marks are its <code>SIG_MIN</code> of 3, its
+        <code>SIG_MAX</code> of 8, and the 43 that breaking silence costs on top. The silent band is
+        a twelfth of that scale, and the column says so. The lockup is <code>naming.md</code>'s
+        silent-running variant, monochrome and unglowed, which that document calls on-doctrine, and
+        it is the one thing here that never dims.
       </dd>
       <dt>Stilled</dt>
       <dd>
@@ -876,9 +1013,10 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
       </dd>
       <dt>Costs</dt>
       <dd>
-        A menu that dims when you stop touching it is a usability argument you have to win. The
-        floor is set so every entry is legible without moving and movement only adds. Test it on a
-        phone before believing it.
+        A menu that dims when you stop touching it is a usability argument you have to win. Every
+        label and every note sits at a readable floor and only brightens as you approach, so nothing
+        is behind a hover, and the row keeps its height at every level so the list never reflows
+        under your hand. It still wants a phone test, where there is no pointer to be near with.
       </dd>
     </dl>
   </section>
@@ -916,10 +1054,12 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
       <dt>Costs</dt>
       <dd>
         Reading order runs against importance, which is why Settings and Credits leave the bands for
-        the corner: five doors into the water, five bands. Note lines appear on hover only, so the
-        screen says less at rest than the others. And the throat stays the throat.
-        <b>Nothing in this picture is you</b>, which is why a held seat takes the deepest band and
-        not the light.
+        the corner: five doors into the water, five bands. Each label is cut out of the stroke it
+        sits on, by a mask rather than by a patch of background, so it is set into the mark instead
+        of floating near it. Note lines still appear on hover only, so the screen says less at rest
+        than the others, and with no seat held the shallowest band carries nothing. And the throat
+        stays the throat: <b>nothing in this picture is you</b>, which is why a held seat takes the
+        deepest band and not the light.
       </dd>
     </dl>
   </section>
@@ -1146,20 +1286,30 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
     }
 
     function buildListen() {
-      var list = doors();
-      var items = list
+      var items = doors()
         .map(function (e, i) {
-          return entry(e, { bin: 6 + i * 7 });
+          return entry(e, { bin: 5 + i * 7 });
+        })
+        .join('');
+      var bearings = ['000', '090', '180', '270', '359']
+        .map(function (b) {
+          return '<span>' + b + '</span>';
         })
         .join('');
       return (
-        '<div class="scr"><div class="fall"><canvas aria-hidden="true"></canvas>' +
-        '<div class="fall-cap"><span>Channel 01 <b>hydrophone</b></span><span>Noise floor' +
-        '</span></div>' +
-        '<div class="fall-foot">No contacts. Nothing of yours is in the water yet.</div></div>' +
+        '<div class="scr"><div class="fall">' +
+        '<div class="fall-head"><span>Channel 01 <b>hydrophone</b></span>' +
+        '<span>Noise floor</span></div>' +
+        '<div class="fall-axis">' + bearings + '</div>' +
+        '<div class="fall-body"><canvas aria-hidden="true"></canvas>' +
+        '<div class="fall-time" aria-hidden="true"></div></div>' +
+        '<div class="fall-foot"><span>Gain +6 db</span><span>20 to 2k hz</span></div></div>' +
         '<div class="side"><header class="head">' + mark('9.4cqw') + wordmark() +
         '<p class="tagline">' + TAGLINE + '</p></header>' +
-        nav('Listening Room title screen', items) + '</div><div class="scr-scan"></div></div>'
+        nav('Listening Room title screen', items) +
+        '<dl class="side-foot"><dt>Channel</dt><dd>Open</dd>' +
+        '<dt>Contacts</dt><dd>None</dd><dt>Room</dt><dd>None joined</dd></dl>' +
+        '</div><div class="scr-scan"></div></div>'
       );
     }
 
@@ -1169,37 +1319,76 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
           return entry(e, { cls: 'ticks' });
         })
         .join('');
-      var cells = '';
-      for (var i = 0; i < 12; i++) cells += '<i></i>';
+      /* 3 is SILENT_RUNNING.SIG_MIN, 8 is SIG_MAX, and 43 is what breaking
+         silence costs on top of it. The scale is the constant, not a look. */
+      var marks =
+        '<div class="meter-mark is-loud" style="bottom:100%"><b>43</b> Heard</div>' +
+        '<div class="meter-mark is-silent" style="bottom:12.5%"><b>08</b> Silent</div>' +
+        '<div class="meter-mark" style="bottom:0"><b>03</b> Floor</div>';
       return (
-        '<div class="scr"><div class="veil"></div><div class="breath"><div class="panel">' +
-        wordmark() + '<p class="tagline">' + TAGLINE + '</p>' +
-        nav('Silent Running title screen', items) + '</div></div>' +
-        '<p class="sig-state">Silent running</p>' +
-        '<div class="sig"><span>Sig</span><span class="sig-cells">' + cells + '</span>' +
-        '<span class="sig-num">03</span></div><div class="scr-scan"></div></div>'
+        '<div class="scr"><div class="veil"></div><div class="breath">' +
+        '<div class="panel">' + wordmark() + '<p class="tagline">' + TAGLINE + '</p>' +
+        nav('Silent Running title screen', items) + '</div>' +
+        '<div class="meter" aria-hidden="true"><div class="meter-track"></div>' +
+        '<div class="meter-fill"></div>' + marks + '</div>' +
+        '<p class="read"><span class="read-cap">Signature</span>' +
+        '<span class="read-num">03</span>' +
+        '<span class="read-state">Silent running</span></p>' +
+        '<p class="hint">The port is quiet until you move in it.</p>' +
+        '</div><div class="scr-scan"></div></div>'
       );
     }
 
     /* Five arcs, five bands, five doors into the water. Settings and Credits
-       are not ways into the water, so they leave the mark for the corner. */
+       are not ways into the water, so they leave the mark for the corner.
+       `apex` is where each curve actually peaks — (y0 + 2yc + y1) / 4 for a
+       quadratic — and it is both where the label sits and where the stroke is
+       cut away behind it. */
     var BANDS = [
-      { y: 19.9, w: 80, o: 0.5 },
-      { y: 27.7, w: 62, o: 0.62 },
-      { y: 35.1, w: 46, o: 0.74 },
-      { y: 41.8, w: 30, o: 0.87 },
-      { y: 47.6, w: 17, o: 1 },
+      { y: 17.59, apex: 300, o: 0.5 },
+      { y: 25.41, apex: 425, o: 0.62 },
+      { y: 32.75, apex: 542.5, o: 0.74 },
+      { y: 39.47, apex: 650, o: 0.87 },
+      { y: 45.25, apex: 742.5, o: 1 },
     ];
     var ARCS = [
-      ['M 100 250 Q 800 350 1500 250', 2.2, 0.45],
-      ['M 250 380 Q 800 470 1350 380', 2.5, 0.6],
-      ['M 400 505 Q 800 580 1200 505', 2.8, 0.75],
-      ['M 540 620 Q 800 680 1060 620', 3.1, 0.9],
-      ['M 655 720 Q 800 765 945 720', 3.4, 1],
+      ['M 100 250 Q 800 350 1500 250', 2.6, 0.45],
+      ['M 250 380 Q 800 470 1350 380', 2.9, 0.6],
+      ['M 400 505 Q 800 580 1200 505', 3.2, 0.75],
+      ['M 540 620 Q 800 680 1060 620', 3.5, 0.9],
+      ['M 655 720 Q 800 765 945 720', 3.8, 1],
     ];
+    /* One label glyph at 0.9cqw with 0.2em tracking is 11.52 viewBox units
+       wide; 52 is the padding either side plus slack. */
+    function cutWidth(label) {
+      return label.length * 11.52 + 52;
+    }
 
     function buildMouth() {
       var id = 'mth-' + ++uid;
+      var maskId = 'mthm-' + uid;
+
+      var byId = {};
+      doors().forEach(function (e) {
+        byId[e.id] = e;
+      });
+      /* Shallow to deep: the least committing door first, the deepest last. */
+      var water = ['tutorial', 'mp', 'campaign', 'solo'];
+      if (seat === 'held') water.push('resume');
+      var offset = BANDS.length - water.length;
+
+      var cuts = '';
+      var items = water
+        .map(function (key, i) {
+          var b = BANDS[offset + i];
+          var w = cutWidth(byId[key].label);
+          cuts +=
+            '<rect x="' + (800 - w / 2).toFixed(1) + '" y="' + (b.apex - 20) +
+            '" width="' + w.toFixed(1) + '" height="40" rx="4" fill="#000" />';
+          return entry(byId[key], { style: '--y:' + b.y + 'cqw;--o:' + b.o });
+        })
+        .join('');
+
       var halo = ARCS.map(function (a) {
         return '<path d="' + a[0] + '" />';
       }).join('');
@@ -1212,31 +1401,19 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
       var arcs =
         '<svg class="arcs" viewBox="0 0 1600 900" fill="none" aria-hidden="true">' +
         '<defs><filter id="' + id + '" x="-30%" y="-30%" width="160%" height="160%">' +
-        '<feGaussianBlur stdDeviation="9" /></filter></defs>' +
+        '<feGaussianBlur stdDeviation="9" /></filter>' +
+        '<mask id="' + maskId + '" maskUnits="userSpaceOnUse" x="0" y="0" width="1600" ' +
+        'height="900"><rect x="0" y="0" width="1600" height="900" fill="#fff" />' + cuts +
+        '</mask></defs>' +
+        '<g mask="url(#' + maskId + ')">' +
         '<g stroke="var(--neon-violet)" fill="none" filter="url(#' + id + ')" opacity="0.28" ' +
-        'stroke-width="8">' + halo + '</g>' +
-        '<g stroke="var(--neon-violet)" fill="none">' + core + '</g>' +
+        'stroke-width="9">' + halo + '</g>' +
+        '<g stroke="var(--neon-violet)" fill="none">' + core + '</g></g>' +
         '<circle class="throat-halo" cx="800" cy="838" r="26" fill="var(--mouth-glow)" ' +
         'opacity="0.24" filter="url(#' + id + ')" ' +
         'style="transform-box:view-box;transform-origin:800px 838px" />' +
         '<circle cx="800" cy="838" r="7" fill="var(--mouth-glow)" /></svg>';
 
-      var byId = {};
-      doors().forEach(function (e) {
-        byId[e.id] = e;
-      });
-      /* Shallow to deep: the least committing door first, the deepest last. */
-      var water = ['tutorial', 'mp', 'campaign', 'solo'];
-      if (seat === 'held') water.push('resume');
-      var offset = BANDS.length - water.length;
-      var items = water
-        .map(function (key, i) {
-          var b = BANDS[offset + i];
-          return entry(byId[key], {
-            style: '--y:' + b.y + 'cqw;--w:' + b.w + 'cqw;--o:' + b.o,
-          });
-        })
-        .join('');
       var corner = ['settings', 'credits']
         .map(function (key) {
           return entry(byId[key]);
@@ -1332,9 +1509,20 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
 
     /* The waterfall. One row every 200 ms, which is SIM.ECHO_HZ made visible.
        Cyan is the channel and never claims a contact; magenta is your pointer
-       on the console, and it is the only mark in here that means anything. */
+       on the console, and it is the only mark in here that means anything.
+
+       The three standing ridges are the port's own machinery. A real
+       hydrophone floor has stationary lines in it, and a field of even hiss
+       reads as television snow rather than as water. */
+    var RIDGES = [
+      { b: 9.5, w: 1.15, a: 0.4, drift: 0.6 },
+      { b: 26, w: 0.7, a: 0.3, drift: 0.3 },
+      { b: 41.5, w: 1.7, a: 0.22, drift: 0.9 },
+    ];
+
     function fallDriver(stage) {
-      var cv = stage.querySelector('.fall canvas');
+      var cv = stage.querySelector('.fall-body canvas');
+      var gutter = stage.querySelector('.fall-time');
       var ctx = cv.getContext('2d');
       var BINS = 54;
       var bearing = null;
@@ -1353,16 +1541,27 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
         b.addEventListener('blur', off);
       });
 
+      function step() {
+        var dpr = cv._dpr || 1;
+        return Math.max(2, Math.round(2.4 * dpr)) + Math.round(dpr);
+      }
+
       function drawRow(y, t, withMark) {
         var dpr = cv._dpr || 1;
         var rowH = Math.max(2, Math.round(2.4 * dpr));
         var binW = cv.width / BINS;
         var swell = 0.5 + 0.5 * Math.sin((t / 12) * 6.2832);
         for (var b = 0; b < BINS; b++) {
-          var v = 0.08 + 0.14 * swell + Math.random() * 0.3;
+          var v = 0.05 + 0.1 * swell + Math.random() * 0.2;
           /* A slow tilt across the array so the floor is not a flat wall. */
           v *= 0.72 + 0.28 * Math.sin((b / BINS) * 3.14159 + t * 0.35);
-          ctx.fillStyle = 'rgba(53, 224, 255, ' + (v * 0.55).toFixed(3) + ')';
+          for (var r = 0; r < RIDGES.length; r++) {
+            var g = RIDGES[r];
+            var d = (b - (g.b + Math.sin(t * 0.17 + r * 2.1) * g.drift)) / g.w;
+            if (d > -3 && d < 3) v += g.a * Math.exp(-d * d) * (0.7 + Math.random() * 0.6);
+          }
+          if (v > 1) v = 1;
+          ctx.fillStyle = 'rgba(53, 224, 255, ' + (v * 0.7).toFixed(3) + ')';
           ctx.fillRect(b * binW + dpr, y, binW - 2 * dpr, rowH);
         }
         if (withMark && bearing != null) {
@@ -1372,23 +1571,43 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
         }
       }
 
+      /* The gutter is labelled from what the canvas actually holds: rows are
+         200 ms apart, so how much history is on screen depends on its height. */
+      function labelTime() {
+        if (!gutter || cv.height < 2) return;
+        var dpr = cv._dpr || 1;
+        var hCss = cv.height / dpr;
+        var stepCss = step() / dpr;
+        var span = (hCss / stepCss) * 0.2;
+        var tick = span > 45 ? 20 : span > 22 ? 10 : 5;
+        var html = '';
+        for (var sec = 0; sec <= span; sec += tick) {
+          /* 0 s would sit half above the canvas; nudge it clear of the rule. */
+          var pct = sec === 0 ? 1.8 : (sec / span) * 100;
+          if (pct > 94) break;
+          html +=
+            '<i style="top:' + pct.toFixed(2) + '%">' + (sec === 0 ? '0 s' : '-' + sec + ' s') +
+            '</i>';
+        }
+        gutter.innerHTML = html;
+      }
+
       function prime() {
         if (cv.width < 2) return;
         ctx.clearRect(0, 0, cv.width, cv.height);
-        var dpr = cv._dpr || 1;
-        var step = Math.max(2, Math.round(2.4 * dpr)) + Math.round(dpr);
+        var st = step();
         var now = performance.now() / 1000;
-        for (var y = 0; y < cv.height; y += step) drawRow(y, now - (y / step) * 0.2, false);
+        for (var y = 0; y < cv.height; y += st) drawRow(y, now - (y / st) * 0.2, false);
+        labelTime();
       }
 
       function tick() {
         if (motion !== 'breathing' || !shown(stage) || cv.width < 2) return;
-        var dpr = cv._dpr || 1;
-        var step = Math.max(2, Math.round(2.4 * dpr)) + Math.round(dpr);
+        var st = step();
         ctx.globalCompositeOperation = 'copy';
-        ctx.drawImage(cv, 0, step);
+        ctx.drawImage(cv, 0, st);
         ctx.globalCompositeOperation = 'source-over';
-        ctx.clearRect(0, 0, cv.width, step);
+        ctx.clearRect(0, 0, cv.width, st);
         drawRow(0, performance.now() / 1000, true);
       }
 
@@ -1407,18 +1626,59 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
 
     /* Silent Running. Movement is signature; stillness is quiet. The numbers
        are SILENT_RUNNING's own: a floor of 3, silent to 8, and a
-       break-silence spike of 40 on top. */
+       break-silence spike of 40 on top.
+
+       Two separate quantities, because they answer different questions.
+       --noise is how much you are moving, and it drives the ground and the
+       column. --near is how close you are to one entry, and it drives that
+       entry alone: sound falls off with distance, so the row under your hand
+       hears you and the row four down does not. */
     function silentDriver(stage) {
       var scr = stage.querySelector('.scr');
-      var cells = stage.querySelectorAll('.sig-cells i');
-      var num = stage.querySelector('.sig-num');
-      var state = stage.querySelector('.sig-state');
+      var num = stage.querySelector('.read-num');
+      var state = stage.querySelector('.read-state');
+      var ents = [].slice.call(stage.querySelectorAll('.ent'));
+      var boxes = [];
       var noise = 0;
       var last = null;
+      var px = null;
+      var py = null;
       var lastT = performance.now();
       var raf = 0;
 
-      function move(e) {
+      function measure() {
+        var r = stage.getBoundingClientRect();
+        if (!r.width) return;
+        boxes = ents.map(function (el) {
+          var b = el.getBoundingClientRect();
+          return {
+            el: el,
+            x: b.left - r.left + b.width / 2,
+            y: b.top - r.top + b.height / 2,
+            reach: r.width * 0.3,
+          };
+        });
+      }
+
+      function proximity() {
+        if (px == null) return;
+        for (var i = 0; i < boxes.length; i++) {
+          var b = boxes[i];
+          var dx = px - b.x;
+          /* Rows are stacked, so a centimetre up the column is further away
+             than a centimetre across it. */
+          var dy = (py - b.y) * 1.7;
+          var d = Math.sqrt(dx * dx + dy * dy) / b.reach;
+          var n = d >= 1 ? 0 : (1 - d) * (1 - d);
+          b.el.style.setProperty('--near', n.toFixed(3));
+        }
+      }
+
+      function clearNear() {
+        for (var i = 0; i < boxes.length; i++) boxes[i].el.style.setProperty('--near', '0');
+      }
+
+      stage.addEventListener('pointermove', function (e) {
         var r = stage.getBoundingClientRect();
         var x = e.clientX - r.left;
         var y = e.clientY - r.top;
@@ -1427,29 +1687,38 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
           noise = Math.min(1, noise + d / (r.width * 0.5));
         }
         last = { x: x, y: y };
-      }
-
-      stage.addEventListener('pointermove', move);
+        px = x;
+        py = y;
+        proximity();
+      });
       stage.addEventListener('pointerleave', function () {
         last = null;
+        px = null;
+        py = null;
+        clearNear();
       });
-      /* Walking the list with a keyboard is movement too, or the readout would
-         only ever answer a mouse. */
-      stage.addEventListener('focusin', function () {
-        noise = Math.min(1, noise + 0.4);
+      /* Walking the list with a keyboard is movement too, or nothing here
+         would ever answer anything but a mouse. */
+      ents.forEach(function (el) {
+        el.addEventListener('focus', function () {
+          px = null;
+          py = null;
+          clearNear();
+          el.style.setProperty('--near', '1');
+          noise = Math.min(1, noise + 0.4);
+        });
+        el.addEventListener('blur', function () {
+          el.style.setProperty('--near', '0');
+        });
       });
 
       function paint() {
         scr.style.setProperty('--noise', noise.toFixed(4));
         var sig = Math.round(3 + noise * 40);
         num.textContent = sig < 10 ? '0' + sig : String(sig);
-        var lit = Math.round(noise * 12);
-        for (var i = 0; i < cells.length; i++) {
-          cells[i].className = i < lit ? (i >= 2 ? 'hot' : 'on') : '';
-        }
         var loud = sig > 8;
         state.textContent = loud ? 'Heard' : 'Silent running';
-        state.className = 'sig-state' + (loud ? ' is-loud' : '');
+        state.className = 'read-state' + (loud ? ' is-loud' : '');
       }
 
       function frame(now) {
@@ -1463,10 +1732,14 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
         }
       }
 
+      var ro = new ResizeObserver(measure);
+      ro.observe(stage);
+      measure();
       paint();
       frame(performance.now());
       return function () {
         cancelAnimationFrame(raf);
+        ro.disconnect();
       };
     }
 
