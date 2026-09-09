@@ -1,8 +1,18 @@
-# Standard label set for this repository, synced by
+# The complete label set for this repository, synced by
 # .github/workflows/labels.yml via crazy-max/ghaction-github-labeler.
 #
 # Edit this file to add/remove/recolor labels — do not edit labels
 # directly in the GitHub UI, since the sync workflow will overwrite them.
+#
+# This file is exhaustive, and the sync deletes any label it does not
+# list. That is deliberate: the sync used to run with skip-delete, so a
+# label created outside this file lived forever, and GitHub's default
+# `documentation` sat alongside `docs` with the same colour and the same
+# description until #599 folded it in. **`docs` is the name.** A label
+# missing from here is not "unmanaged", it is scheduled for deletion —
+# so add one here before it is applied to anything.
+
+# --- Kind: what sort of change an issue asks for ---
 
 - name: bug
   color: d73a4a
@@ -20,6 +30,16 @@
   color: 5319e7
   description: Build, CI/CD, tooling, and repository infrastructure
 
+- name: design
+  color: ededed
+  description: A design call about the game's systems, world, or fiction
+
+- name: frontend
+  color: ededed
+  description: The client — renderer, HUD, screens, and audio
+
+# --- Process: how an issue is tracked ---
+
 - name: epic
   color: 3e4b9e
   description: Large body of work tracked across multiple issues
@@ -27,6 +47,32 @@
 - name: triage
   color: fbca04
   description: Needs review to confirm validity, scope, or priority
+
+- name: duplicate
+  color: cfd3d7
+  description: This issue or pull request already exists
+
+- name: invalid
+  color: e4e669
+  description: This doesn't seem right
+
+- name: question
+  color: d876e3
+  description: Further information is requested
+
+- name: wontfix
+  color: ffffff
+  description: This will not be worked on
+
+- name: good first issue
+  color: 7057ff
+  description: Good for newcomers
+
+- name: help wanted
+  color: 008672
+  description: Extra attention is needed
+
+# --- Routing: addressed to a model or to the unattended Routine ---
 
 - name: fable-5.1
   color: f4a6c8

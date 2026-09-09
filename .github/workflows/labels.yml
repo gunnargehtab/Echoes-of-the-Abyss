@@ -16,8 +16,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # No skip-delete: .github/labels.yml is the complete set, so a label
+      # that is not in it is deleted here. It ran with skip-delete until #599,
+      # which is how GitHub's default `documentation` label survived next to
+      # `docs` — same colour, same description, two names for one thing. A
+      # label the file does not list is scheduled for deletion, not merely
+      # unmanaged, so add it there before applying it to anything.
       - name: Sync labels
         uses: crazy-max/ghaction-github-labeler@v5
         with:
           yaml-file: .github/labels.yml
-          skip-delete: true
+          skip-delete: false
