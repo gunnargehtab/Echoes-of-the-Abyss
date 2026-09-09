@@ -291,6 +291,17 @@ const FAUNA_ROSTER: readonly { species: FaunaSpecies; count: number }[] = [
  */
 const MEGAFAUNA: ReadonlySet<FaunaSpecies> = new Set([FaunaSpecies.Sounder]);
 
+/**
+ * How finely `placeMegafauna` walks the map looking for ground a colossus may
+ * stand on.
+ *
+ * 50 m because that is the resolution #578 measured the admissible fraction at
+ * — 7.4% of the Ventfront Divide — so the search sees the same map the bug
+ * report does. Finer would find pockets narrower than the animal is long
+ * (60-90 m, docs/bestiary.md §4); coarser could miss a legitimate one.
+ */
+const MEGAFAUNA_SEARCH_STEP_M = 50;
+
 export class Match {
   readonly world: SimWorld;
   /** Public for bench/echo-pass.mjs, which times the pass in isolation. */
@@ -637,6 +648,24 @@ export class Match {
   }
 
   /**
+   * What the roster asked for and what the map actually held, per species.
+   *
+   * For the balance harness, and it is the measurement #578 was invisible
+   * without: the report printed Drift Health but never the complement, so a
+   * third of the baseline's matches ran with no colossus and nothing said so.
+   * A shortfall here is a statement about the map rather than a fault — a map
+   * with no vent ground never seeded an Ashgrazer and should not pretend to —
+   * which is precisely why it wants printing rather than asserting.
+   */
+  get faunaComplement(): readonly { species: FaunaSpecies; asked: number; seeded: number }[] {
+    return FAUNA_ROSTER.map(({ species, count }) => ({
+      species,
+      asked: count,
+      seeded: this.complement.get(species) ?? 0,
+    }));
+  }
+
+  /**
    * Nodule fields are map data, like terrain: a home field off each starting
    * corner, and two richer contested fields in the middle — the expansion
    * bait every C&C map is built around.
@@ -751,13 +780,23 @@ export class Match {
    * Species are placed where the doc puts them: Ashgrazers on the vent fields
    * they feed in, Draymaws in open mid-water where they can shadow industry,
    * and a single Sounder, because there is only ever one colossus.
+   *
+   * That last one is the reason megafauna are placed by search when the draws
+   * miss (#578). A herd asks for sixteen placements and a shortfall of one is
+   * a herd of fifteen; the colossus asks for one, so a shortfall is the whole
+   * animal, and twelve draws against the 7.4% of the Ventfront Divide a
+   * Sounder may stand on lost it in a third of matches. The rarest animal had
+   * the least robust placement, which is exactly backwards.
    */
   private seedFauna(): void {
     const rng = this.world.rng.fork('drift');
     for (const { species, count } of FAUNA_ROSTER) {
       for (let i = 0; i < count; i++) {
         if (countFauna(this.world) >= DRIFT.MAX_POPULATION) break;
-        if (!this.placeFauna(species, rng)) continue;
+        const placed = MEGAFAUNA.has(species)
+          ? this.placeMegafauna(species, rng)
+          : this.placeFauna(species, rng);
+        if (!placed) continue;
         // What the map proved it can hold, which is what the Drift refills
         // toward. Counted from placements rather than from the roster's ask:
         // a map with no vent ground never seeded an Ashgrazer, and a Drift
@@ -784,25 +823,10 @@ export class Match {
     admitted?: (x: number, y: number) => boolean
   ): boolean {
     const { widthM, heightM } = this.world.terrain;
-    const wantVein = species === FaunaSpecies.Ashgrazer;
     for (let attempt = 0; attempt < 12; attempt++) {
       const x = rng.range(400, widthM - 400);
       const y = rng.range(400, heightM - 400);
-      const onVein = this.world.terrain.biomeAt(x, y) === Biome.ThermalVein;
-      if (wantVein !== onVein) continue;
-      if (!this.world.drift.spawnsAllowed(x, y)) continue;
-      // Deep enough for the species to live there. A Sounder seeded over a
-      // 700 m plateau would be a colossus in a puddle, and the roster's
-      // habitats are the reason the depths exist at all (bestiary.md §4).
-      // Against the band the species rests in *here*: a map that re-homed
-      // its Tetherjelly to the canopy has ground for it at 300 m.
-      if (this.world.terrain.floorAt(x, y) < ambientBandFor(this.world, species).workingDepthM) {
-        continue;
-      }
-      // Never on someone's doorstep: see DRIFT.SPAWN_EXCLUSION_M.
-      if (this.map.spawns.some((s) => Math.hypot(s.x - x, s.y - y) < DRIFT.SPAWN_EXCLUSION_M)) {
-        continue;
-      }
+      if (!this.faunaGroundAdmits(species, x, y)) continue;
       // Last, and only for ground that has already passed every other test:
       // the caller's rule may spend a draw, and a draw spent on water the
       // species could never have lived in would make how fast a region breeds
@@ -812,6 +836,74 @@ export class Match {
       return true;
     }
     return false;
+  }
+
+  /**
+   * Whether a point is ground this species may stand on.
+   *
+   * Split out of `placeFauna` for `placeMegafauna`, which walks these same
+   * four tests over the map rather than throwing darts at them. One copy,
+   * because a search that admitted ground the sampler rejects would place a
+   * colossus somewhere the roster's own rules say it cannot be.
+   */
+  private faunaGroundAdmits(species: FaunaSpecies, x: number, y: number): boolean {
+    const wantVein = species === FaunaSpecies.Ashgrazer;
+    const onVein = this.world.terrain.biomeAt(x, y) === Biome.ThermalVein;
+    if (wantVein !== onVein) return false;
+    if (!this.world.drift.spawnsAllowed(x, y)) return false;
+    // Deep enough for the species to live there. A Sounder seeded over a
+    // 700 m plateau would be a colossus in a puddle, and the roster's
+    // habitats are the reason the depths exist at all (bestiary.md §4).
+    // Against the band the species rests in *here*: a map that re-homed
+    // its Tetherjelly to the canopy has ground for it at 300 m.
+    if (this.world.terrain.floorAt(x, y) < ambientBandFor(this.world, species).workingDepthM) {
+      return false;
+    }
+    // Never on someone's doorstep: see DRIFT.SPAWN_EXCLUSION_M.
+    return !this.map.spawns.some((s) => Math.hypot(s.x - x, s.y - y) < DRIFT.SPAWN_EXCLUSION_M);
+  }
+
+  /**
+   * Place the colossus, and fail only if the map has nowhere to put one.
+   *
+   * `docs/bestiary.md` §4 holds exactly one Megafauna row, and the roster asks
+   * for exactly one placement — so for this species alone, "the draws missed"
+   * and "the water cannot hold it" are the same outcome from the outside, and
+   * a third of Ventfront Divide matches were played without the map's largest
+   * acoustic event because of the difference (#578).
+   *
+   * The draws come first, so every seed that already lands a Sounder lands it
+   * in the same water it did before; the walk is the fallback, and it is what
+   * makes "there is only ever one colossus" true by construction rather than
+   * by luck. Absence now means the map genuinely admits nowhere, which is a
+   * statement about the map that a test can hold it to.
+   *
+   * Cost is a grid of terrain probes, paid once per match at seed time on the
+   * ~30% of seeds that need it, and never on the 60 Hz path — `repopulate`
+   * keeps sampling deliberately, because its rate test is *meant* to spend a
+   * draw so that Strained water breeds more slowly rather than searching
+   * harder inside itself.
+   */
+  private placeMegafauna(species: FaunaSpecies, rng: Rng): boolean {
+    if (this.placeFauna(species, rng)) return true;
+
+    const { widthM, heightM } = this.world.terrain;
+    const admissible: { x: number; y: number }[] = [];
+    for (let y = 400; y <= heightM - 400; y += MEGAFAUNA_SEARCH_STEP_M) {
+      for (let x = 400; x <= widthM - 400; x += MEGAFAUNA_SEARCH_STEP_M) {
+        if (this.faunaGroundAdmits(species, x, y)) admissible.push({ x, y });
+      }
+    }
+    if (admissible.length === 0) return false;
+
+    // Its own stream, for the reason `repopulate` gives for having one: the
+    // twelve draws above are spent either way, so a search that drew from the
+    // shared stream would shift every species placed after it. Off this one,
+    // a seed that used to miss keeps every Rasp, shoal and cluster exactly
+    // where it had them and gains a colossus, which is the whole delta.
+    const pick = admissible[this.world.rng.fork('drift-megafauna').int(admissible.length)]!;
+    spawnFauna(this.world, { species, x: pick.x, y: pick.y });
+    return true;
   }
 
   private addNode(x: number, y: number, amount?: number, kind = ResourceKind.Nodule): void {

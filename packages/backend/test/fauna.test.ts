@@ -37,7 +37,7 @@ import { Terrain } from '../src/sim/terrain.ts';
 import { economyFor, spawnFauna, spawnUnit } from '../src/sim/world.ts';
 import { Fauna, Health, Position, Unit } from '../src/sim/components.ts';
 import { countFauna, DRIFT_SLOT } from '../src/sim/systems/fauna.ts';
-import { VENTFRONT_DIVIDE, type MapDefinition } from '../src/sim/maps/index.ts';
+import { VENTFRONT_DIVIDE, terrainFor, type MapDefinition } from '../src/sim/maps/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 
@@ -489,6 +489,61 @@ describe('the Drift in a normal match', () => {
     assert.ok(DRIFT_SLOT > 3, 'the Drift slot must be outside the player range');
     assert.ok(faunaStatsFor(FaunaSpecies.Sounder).biomass > 0);
     assert.ok(Position.x.length > 0);
+  });
+});
+
+describe('the colossus is placed, not drawn for', () => {
+  /**
+   * How many live creatures of a species a match holds.
+   *
+   * Via `hasComponent` rather than a raw read of the component array, because
+   * bitecs arrays are process-global: a bare `Fauna.species[eid]` sees every
+   * entity every other test in this process ever spawned.
+   */
+  function countSpecies(match: Match, species: FaunaSpecies): number {
+    let n = 0;
+    for (let eid = 0; eid <= match.world.maxEid; eid++) {
+      if (!hasComponent(match.world, Fauna, eid)) continue;
+      if (Fauna.species[eid] === species) n++;
+    }
+    return n;
+  }
+
+  it('seeds exactly one Sounder on every Ventfront Divide seed', () => {
+    // #578: twelve rejection draws against the 7.4% of this map a Sounder may
+    // stand on left eleven of these thirty seeds with no colossus at all, and
+    // nothing failed — `floraRegrowth.test.ts` and `drift.test.ts` each happen
+    // to use a seed that lands. A herd short one Ashgrazer is a herd; a roster
+    // short its one colossus is a match played without the map's largest
+    // single acoustic and physical event.
+    //
+    // The seeds are the issue's own reproduction, so a regression reads
+    // against the same numbers the bug was measured with.
+    const missing: number[] = [];
+    for (let seed = 4000; seed < 4030; seed++) {
+      const match = new Match(VENTFRONT_DIVIDE, {
+        fauna: true,
+        seed,
+        terrain: terrainFor(VENTFRONT_DIVIDE),
+      });
+      const sounders = countSpecies(match, FaunaSpecies.Sounder);
+      if (sounders === 0) missing.push(seed);
+      // docs/bestiary.md §4 holds exactly one Megafauna row, and the search
+      // must not become a second way to seed two.
+      assert.ok(sounders <= 1, `seed ${seed} seeded ${sounders} colossi`);
+    }
+    assert.deepEqual(missing, [], 'every seed of a map with deep water holds its colossus');
+  });
+
+  it('seeds none where the map genuinely has nowhere to put one', () => {
+    // The other half of the guarantee, and what stops the fallback becoming a
+    // rule that a colossus appears regardless of the water. Absence has to
+    // stay possible, and stay a statement about the map: flat 400 m ground is
+    // shallower than the Sounder's working depth everywhere, so there is no
+    // admissible cell for the walk to find.
+    const shallow = new Terrain(8000, 8000, 250, { floorM: 400 });
+    const match = new Match(bareMap(), { fauna: true, seed: 4002, terrain: shallow });
+    assert.equal(countSpecies(match, FaunaSpecies.Sounder), 0);
   });
 });
 

@@ -26,6 +26,8 @@ import {
   STRUCTURE_STATS,
   ThermoclineZone,
   UNIT_STATS,
+  faunaStatsFor,
+  type FaunaSpecies,
   type StructureKind,
   type UnitKind,
 } from '@echoes/shared';
@@ -163,8 +165,29 @@ export interface BatchSummary {
   firstEnemyContactS: Distribution;
   firstBloodS: Distribution;
   driftHealthFinal: Distribution;
+  /** What the map seeded of each species, against what the roster asked. */
+  drift: DriftComplementSummary[];
   factions: FactionSummary[];
   guardRails: GuardRailVerdict[];
+}
+
+/**
+ * One species' seeding across the batch.
+ *
+ * The measurement #578 was invisible without. A shortfall is not always a
+ * fault — a map with no vent ground never seeded an Ashgrazer, and the Drift
+ * refills toward what the map proved it can hold rather than toward the roster
+ * — but it changes what the batch measured, and it belongs in the report that
+ * says what the batch measured.
+ */
+export interface DriftComplementSummary {
+  species: FaunaSpecies;
+  name: string;
+  asked: number;
+  seeded: Distribution;
+  /** Matches that seeded fewer than the roster asked for. */
+  short: number;
+  matches: number;
 }
 
 export interface Distribution {
@@ -264,6 +287,38 @@ function distribution(values: number[]): Distribution {
   const at = (q: number): number =>
     clean[Math.min(clean.length - 1, Math.floor(q * clean.length))]!;
   return { median: at(0.5), p10: at(0.1), p90: at(0.9), n: clean.length };
+}
+
+/**
+ * What the batch's maps actually seeded, per species.
+ *
+ * Read off the first result's roster line rather than off `FAUNA_ROSTER`, so a
+ * batch of missions that seeded no fauna at all reports nothing instead of
+ * reporting every species as missing. Species order is the roster's, which is
+ * the enum's, so rows never reorder between runs.
+ */
+function driftComplement(results: MatchTelemetryResult[]): DriftComplementSummary[] {
+  const asked = new Map<FaunaSpecies, number>();
+  for (const r of results) {
+    for (const line of r.faunaComplement) asked.set(line.species, line.asked);
+  }
+  const out: DriftComplementSummary[] = [];
+  for (const [species, count] of asked) {
+    const seeded = results
+      .map((r) => r.faunaComplement.find((l) => l.species === species))
+      .filter((l): l is NonNullable<typeof l> => l !== undefined)
+      .map((l) => l.seeded);
+    if (seeded.length === 0) continue;
+    out.push({
+      species,
+      name: faunaStatsFor(species).name,
+      asked: count,
+      seeded: distribution(seeded),
+      short: seeded.filter((n) => n < count).length,
+      matches: seeded.length,
+    });
+  }
+  return out;
 }
 
 /**
@@ -410,6 +465,7 @@ export function summarise(results: MatchTelemetryResult[]): BatchSummary {
     ),
     firstBloodS: distribution(results.map((r) => (r.firstBloodTick ?? Number.NaN) / SIM.TICK_HZ)),
     driftHealthFinal: distribution(results.map((r) => r.driftHealthFinal)),
+    drift: driftComplement(results),
     factions,
     guardRails: judge(results, factions),
   };
@@ -653,6 +709,24 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
   lines.push(`| First blood, seconds | ${dist(summary.firstBloodS)} |`);
   lines.push(`| Drift Health at the end | ${dist(summary.driftHealthFinal)} |`);
   lines.push('');
+  if (summary.drift.length > 0) {
+    // What the water actually held, against what docs/bestiary.md §4 asked
+    // for. Printed because a shortfall changes what every row above measured
+    // and used to change none of them (#578) — the colossus is one placement,
+    // so a map that misses it plays without its largest single acoustic event
+    // and the report reads exactly as it does with one.
+    lines.push('## The Drift as seeded');
+    lines.push('');
+    lines.push('| Species | Asked | Seeded (p10–p90) | Matches short |');
+    lines.push('| --- | --- | --- | --- |');
+    for (const d of summary.drift) {
+      lines.push(
+        `| ${d.name} | ${d.asked} | ${dist(d.seeded)} | ` +
+          `${d.short} of ${d.matches}${d.short > 0 ? ` (${pct(d.short / d.matches)})` : ''} |`
+      );
+    }
+    lines.push('');
+  }
   lines.push('## Per faction');
   lines.push('');
   lines.push(
