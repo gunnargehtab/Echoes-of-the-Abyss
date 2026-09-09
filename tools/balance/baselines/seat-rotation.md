@@ -8,7 +8,7 @@ nobody else there.
 
 This file is what happens when you rotate that seating and change nothing else. It was
 produced for #600, whose first question is whether the Directorate's breach of
-[economy.md](../../docs/economy.md) §9 is its doctrine or its commander.
+[economy.md](../../../docs/economy.md) §9 is its doctrine or its commander.
 
 The answer is: partly neither. **The chair is worth more than any doctrine on this table.**
 
@@ -65,6 +65,7 @@ is the seating.
 node tools/balance/run.mjs --matchup directorate,directorate,directorate,directorate --matches 90 --seed 4000 --max-minutes 25
 node tools/balance/run.mjs --matchup knights,knights,knights,knights --matches 90 --seed 4000 --max-minutes 25
 node tools/balance/run.mjs --matchup commune,commune,commune,commune --matches 90 --seed 4000 --max-minutes 25
+node tools/balance/run.mjs --matchup directorate,directorate,directorate,directorate --matches 90 --seed 7000 --max-minutes 25
 ```
 
 | Mirror | Decided | slot 0 | slot 1 | slot 2 | slot 3 |
@@ -78,6 +79,19 @@ Slot 2 wins half of every decided match it plays in, against 11% for slot 0 and 
 Three different doctrines, all four seats identical within each batch, 109 decided matches.
 The spread is the furniture.
 
+**It is not the seed range either.** The same mirror on a different ninety seeds reproduces
+it:
+
+| Directorate mirror | Decided | slot 0 | slot 1 | slot 2 | slot 3 |
+| --- | --- | --- | --- | --- | --- |
+| seeds 4000–4089 | 37 | 5% | 38% | 51% | 5% |
+| seeds 7000–7089 | 39 | 8% | 44% | 46% | 3% |
+
+So this is a standing property of the placement rather than an accident of the seeds the
+committed baseline happens to use. The split is the same both times, and it is diagonal:
+across these two Directorate mirrors slots 1 and 2 take 89% of the decided matches between
+them, and slots 0 and 3 the remaining 11%.
+
 ## What it is not
 
 Two hypotheses were tested and both are dead, which is why they are recorded here rather
@@ -87,10 +101,11 @@ than left for the next person to re-derive.
 y-mirror and a 180° rotation in every field the simulation reads — all 13 terrain regions,
 every resource, every spawn. The single feature that breaks mirror symmetry is a pair of
 `toxic-brine` hazards sitting on two of the four home nodule fields (slots 0 and 3), and
-that pair is inert: [hazards.md](../../docs/hazards.md)'s Implementation Status table lists
-Toxic Brine Clouds as "site only — placed and telegraphed, no behaviour". Adding brine to all four home fields
-and re-running the Directorate mirror produced a **byte-identical** result — same 37
-decided, same 5/38/51/5 — which is the confirmation that nothing reads it.
+that pair is inert: the Implementation Status table in
+[hazards.md](../../../docs/hazards.md) lists Toxic Brine Clouds as "site only — placed and
+telegraphed, no behaviour". Adding brine to all four home fields and re-running the
+Directorate mirror produced a **byte-identical** result — same 37 decided, same
+5/38/51/5 — which is the confirmation that nothing reads it.
 
 **It is not an ordering bias in the simulation or the commander.** With `--no-fauna`, four
 identical Directorate seats on the symmetric map run the full 25 minutes and end with
@@ -118,5 +133,5 @@ attribute a win rate to a doctrine, because the doctrine and the chair arrive to
 this file measures the chair as the bigger of the two. Rotate the seating before you
 conclude anything about a navy, and pool the rotations.
 
-Related: [README.md](../README.md) · [economy.md](../../docs/economy.md) §9 ·
-[bestiary.md](../../docs/bestiary.md) §8
+Related: [README.md](../README.md) · [economy.md](../../../docs/economy.md) §9 ·
+[bestiary.md](../../../docs/bestiary.md) §8
