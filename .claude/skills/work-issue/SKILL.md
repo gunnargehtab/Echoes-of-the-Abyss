@@ -111,10 +111,18 @@ account pushes `claude/issue-<n>-<rand>` too, and three such pull requests
 (#449, #475, #492) sat inside this count while a person drove them. Count what
 you can prove is yours.
 
-If the label is missing or a label write fails, fall back to counting
-`claude/issue-` head refs and say in the run summary that you did. That count is
-too *broad*, never too narrow, so falling back can only make the loop stop
-earlier than it needed to — which is the safe direction.
+**An open pull request without the `routine` label is somebody else's, and does
+not count.** That is the whole point of the label, and it is the ordinary case,
+not a fallback.
+
+The fallback is for the label not existing in this repository at all, or a label
+write failing — never for a pull request that merely lacks one. When the label
+itself is unavailable, count `claude/issue-` head refs instead and say in the run
+summary that you did: that count is too *broad* rather than too narrow, so it can
+only stop the loop earlier than it needed to, which is the safe direction. The
+00:14 firing on 9 September read this the other way round and counted a
+hand-driven pull request (#583) against its own budget — under the cap either
+way, but that is exactly the over-broad count this step exists to end.
 
 This cap, not the schedule, is what bounds cost. A full CI run bills around six
 Actions minutes across its four jobs, and this account has run out of Actions
