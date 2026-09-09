@@ -132,8 +132,8 @@ not.
 ## 3. Choose one issue
 
 From the open issues that are **not** claimed, **not** assigned, and **not**
-labelled `epic`, `needs-hardware` or `routine-log`, take the oldest. Five
-exclusions, for different reasons:
+labelled `epic`, `needs-hardware`, `needs-decision` or `routine-log`, take the
+oldest. Six exclusions, for different reasons:
 
 - `epic` issues are trackers for work spanning many PRs (#212 is twenty-eight
   campaign missions). There is no single PR that closes one, so an agent that
@@ -151,6 +151,19 @@ exclusions, for different reasons:
   find yourself passing over the same issue for this reason twice, propose the
   label in your run summary — **applying it is a person's call**, because it is
   a statement about the work rather than about your run.
+- `needs-decision` is work that is real, doable here, and blocked on a design
+  call — the step 7 case, made durable. #577 is the one it was cut for: the
+  docs and a map disagree, the issue's own body says an unattended run should
+  not pick a side, and it is otherwise the *only* issue in the backlog that
+  passes every other test. A firing at 04:15 on 9 September claimed it,
+  measured it, and released it; the next firing four hours later would have
+  selected it again, re-derived the same conclusion, and posted the same
+  stand-down comment, and every firing after that likewise. Without this label
+  a blocked issue is not merely skipped, it is the *most* selectable thing
+  there is, because being open, unassigned and unclaimed is exactly what makes
+  it blocked. **You may apply this one yourself**, and step 7 says when — it is
+  a statement about a decision you were unable to make, which is a fact about
+  your own run.
 - Anything already claimed is someone else's — including an earlier you.
 - **An issue with an assignee is taken, whoever took it.** A person who
   assigned themselves is on it, and so is an earlier firing of this loop, which
@@ -185,8 +198,10 @@ indistinguishable from the rule not working. So name the older eligible issues
 you passed over, one clause each, where the next person to look will find them.
 
 If the same issue keeps appearing in that line, it wants an exclusion rather
-than a recurring explanation: `needs-hardware` when no container could do it, an
-assignee when a person is mid-way through it. Say which you would propose.
+than a recurring explanation: `needs-decision` when it is blocked on a call you
+cannot make, `needs-hardware` when no container could do it, an assignee when a
+person is mid-way through it. Apply the first yourself per step 7; say which of
+the others you would propose.
 
 **Found one? Skip to step 5.** Only when step 3 comes up empty do you do step 4.
 
@@ -433,6 +448,26 @@ comment that the Routine has let go of the issue. A stopped run that stays
 assigned looks, to the next firing and to every person, like work in progress
 that will never arrive.
 
+### Label the first two cases `needs-decision` on the way out
+
+Stopping for either of the first two reasons above means you have established
+something a later firing cannot establish more cheaply: that this issue is
+blocked on a person. **Add the `needs-decision` label as you release the claim**,
+and say in the stopping comment that you did and what decision is owed.
+
+This is the one label this loop applies to itself, and it is safe to because it
+is a statement about a run rather than about the work: you tried, and the thing
+that stopped you was a call that is not yours. It is also cheap to undo — a
+person who disagrees removes it, and the issue is eligible again on the next
+firing.
+
+Do **not** label the third case. A fix that did not converge is a fact about
+your hour, not about the issue, and the next firing deserves its own attempt.
+
+Applying it is not a substitute for the comment. A labelled issue with no
+finding written down is worse than an unlabelled one, because it is now
+invisible to the loop *and* says nothing to the person who has to decide.
+
 Then say what you passed over, as step 4 describes — the issues you considered
 before taking this one, and the one reason each was excluded. A run that stops
 is the run with the most to say about the state of the backlog, and it is the
@@ -452,7 +487,8 @@ Keep it to what a person needs in order to decide whether to step in:
 > One line: the branch and the pull request, or the epic and the boxes it came
 > from, or why a comment beat a pull request.
 > Passed over: older eligible issues, one clause each, or "nothing older".
-> Needs a person: a stale claim, a recurring skip that wants a label, a branch
+> Needs a person: a stale claim, a `needs-decision` you applied and the call it
+> is waiting on, a recurring skip that wants a label you cannot apply, a branch
 > left behind — or "nothing".
 
 This is the same list steps 3, 4 and 7 already ask for, and writing it twice is

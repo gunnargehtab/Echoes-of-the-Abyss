@@ -43,3 +43,7 @@
 - name: routine-log
   color: 4c5c63
   description: The unattended loop writes here — a ledger, never a work item
+
+- name: needs-decision
+  color: 6f42c1
+  description: Blocked on a design call a person must make — the unattended loop must not pick a side
