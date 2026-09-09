@@ -143,6 +143,16 @@ Design intent: the button that lets you see everything also calls the largest th
 
 **An authored transit cannot be brought down.** The 9,000 HP is the skirmish figure, and what protects it there is depth rather than plating: the colossus lives at 1,300–2,700 m, below anything but a pressure-rated navy, and "cannot be reliably killed before the twenty-minute mark" is a sentence about who can reach it by then. A Sounder a mission *drives* is a different object. It is a beat, and a mission's beats happen when the document says they happen ([mission-sorrowgate.md](mission-sorrowgate.md) §9) — so a driven creature takes **no weapon damage** for exactly the length of its commitment. Guns, torpedoes and blasts land on it, are as loud as ever, lay residue where they struck, and take nothing off it; the moment the beat ends it is the Drift's again, and a placed ambusher whose commitment expires on the first pass is rendered like any other. Settled this way (#349) after twelve Abyssal Submersibles idling at [mission-intake.md](mission-intake.md)'s muster brought its colossus down in seventeen seconds of auto-fire, before it reached the line, and were paid the mission's band for doing nothing. Retuning the hit points would only have set a different formation's stopwatch; a transit guns cannot end is what *transit is the weapon* already half-said.
 
+### How many of each, and what a roster line promises
+
+A full map holds **48 creatures**, and the roster divides them: sixteen Ashgrazers, fifteen Draymaws, six Lampfry shoals, five Tetherjelly clusters, three Rasp swarms, two Hollows, and the one Sounder. Shoals, clusters and swarms are each a single entity, so those are entity counts and not head counts — a Rasp line of three is three swarms of twenty to forty.
+
+**A roster line is a target the map must seat, not a ceiling the seeder may fall short of.** The seeder throws twelve darts at admissible ground and, when all twelve miss, walks the map on a 50 m grid and places the creature on ground the walk has proved admits one. A line comes up short only where the walk finds nowhere at all, and that is the reading a shortfall carries: a map with no vent ground seats no Ashgrazer and should not pretend to.
+
+That rule needs writing down because the alternative was run by accident for months and is measurably worse. The walk was the colossus's alone from #578 until #591; every other line was twelve darts and nothing else, and twelve darts against an admissible fraction *p* seat an animal with probability 1 − (1 − *p*)¹². The Ashgrazer's ground is 11.4% of the Ventfront Divide, so sixteen asked seated twelve; across the three skirmish maps the same roster seated 68%, 88% and 77%. None of that was ground refusing an animal — the tightest species in the whole catalogue still has 400 admissible 50 m cells for its one placement, and most rows have thousands. It was an asymmetry between maps that nobody authored and no doc could explain.
+
+**And it was permanent, not an opening-minutes wobble.** The Drift refills toward the complement the map was seeded with and never past it, so a pack that seeded ten of fifteen stayed a pack of ten for the whole match. §6's bands were being rated against a herd no map ever assembled, and the Directorate's income base differed by a third from map to map underneath them.
+
 ### Where the Drift lives, and what it can reach
 
 Every entry above names a habitat, and until now none of them meant anything: creatures were seeded at one depth and stayed there for the whole match, so a Draymaw documented as mid-water hunted from the Shelf and the Tetherjelly could never reach the boundary it is named for. Worse, a creature bit in **two dimensions** — a pack at 300 m took a hull at 2,400 m from full health to nothing without ever descending, because the attack test measured only the distance across the sea floor.
@@ -314,7 +324,9 @@ No creature is seeded within 2,600 m of a starting position. A creature that beg
 
 ### Population and cost
 
-Capped at 48 live creatures. Fauna are entities in the Echo pass, which owns a 2 ms budget, so the cap turns "should be fine" into a guarantee. Measured with a full population on the Ventfront Divide and four players: **0.7–1.0 ms worst case**, against 2 ms.
+Capped at 48 live creatures. Fauna are entities in the Echo pass, which owns a 2 ms budget, so the cap turns "should be fine" into a guarantee.
+
+**The cap is now what a map actually holds.** Until #591 it was a ceiling nothing reached: the Ventfront Divide seeded 34 and the earlier "measured with a full population" figure of 0.7–1.0 ms was taken against a Drift two thirds assembled. Seating the roster costs what the cap always promised to cover — the pass is paid per observer-emitter pair, so 14 more emitters took the worst case from **159 path integrals to 223** with four players on that map. Counted work rather than milliseconds, for the reason the whole codebase measures both budgets that way: a maximum wall-clock sample is the noisiest statistic a shared runner produces, and the same 159-walk work has read anywhere from 0.7 to 3.3 ms on one.
 
 **The cap is a ceiling on what lives, not a stock spent once.** The Drift replaces what it loses, toward the complement the map was seeded with and never past it, at the rate §6's bands give — so a region that is worked recovers within a match, a region worked past Strained does not, and the population the budget above was measured against is the same population a twenty-fifth minute holds.
 
