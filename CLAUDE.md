@@ -330,11 +330,11 @@ keeps a Routine firing from starting work a person is already halfway through: a
 assignee is the loop's cheapest and earliest exclusion, and a branch scan cannot close
 the gap before the first push (`.claude/skills/work-issue/SKILL.md` §3).
 
-Assigning silently is worse than not assigning at all. The loop runs under the owner's
-own login, so the name cannot say which of the two took it; pair the assignment with a
-comment naming who took it and on what branch, as §5 does. If the work stops without a
-pull request, unassign and say so in a comment — an issue left assigned reads as in
-progress to the next firing and to every person.
+The claim **comment** stays the loop's (§5). A firing needs one because nobody is at the
+keyboard to ask which of the two logins took the issue; in an interactive session you are,
+and an assignee carrying no loop claim comment already reads as a person's — which is how
+§3 tells a live claim from a stale one. Unassign if the work stops without a pull request:
+an issue left assigned reads as in progress to the next firing and to every person.
 
 Related: `README.md` · `CONTRIBUTING.md` · `SETUP.md` · `SETUP-ANDROID.md` (the whole game — server included —
 runs on-device in Termux) · `docs/README.md` · `docs/DEVELOPER_QUICKSTART.md` ·
