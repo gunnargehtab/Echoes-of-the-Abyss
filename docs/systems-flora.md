@@ -226,7 +226,9 @@ Bloom-share pays **nodules** today, at 0.8 a second per tended node, out of auth
 with no supply behind it. Folding it into this account costs less than it looks like it
 should, and the reason is in the code rather than in the prose:
 
-- **The Commune can already spend Biomass, and no hull is repriced.** Of the seven
+- **The Commune can already spend Biomass, and no hull is repriced.** *Since #580 their
+  doctrine names the Chorister, which is what makes the paragraph below true in a match rather
+  than only on paper.* Of the seven
   Biomass-priced entries in the roster, only the Precentor and the Dredge are locked to the
   Directorate. The Acolyte (15), the Chorister (20), the Verger (30), the Thurible (40) and
   the Lure (50) are open to any navy — *the price is the lock*. That design has never
@@ -379,13 +381,22 @@ order:
    income rather than with a repricing — the five unlocked Biomass hulls become reachable by
    a second navy on their own, which is the price-as-lock rule (§6) starting to work;
    repricing the Commune's *own* grown hulls stays the later option §6 says it is.
-7. **Sowing**, and the commander's opinion about all of it. *Sowing built (#576).* Forty-five
-   seconds on station at the Commune's own 18, and the bed is owed a quarter of a canopy which
-   it lays down over the two minutes after — so the hull that bought the cover is gone before
-   it arrives. Moving, going silent or dying breaks it and credits nothing; two hulls on one
-   bed owe it half a canopy; a full bed forgives the seed rather than banking it. The two
-   limits above hold in the code: `orderSow` needs a standing bed under the hull, so ground is
-   never created, and only the Commune may sow at all.
+7. **Sowing**, and the commander's opinion about all of it. *Built (#576, #580).* Sowing is
+   forty-five seconds on station at the Commune's own 18, and the bed is owed a quarter of a
+   canopy which it lays down over the two minutes after — so the hull that bought the cover is
+   gone before it arrives. Moving, going silent or dying breaks it and credits nothing; two
+   hulls on one bed owe it half a canopy; a full bed forgives the seed rather than banking it.
+   The two limits above hold in the code: `orderSow` needs a standing bed under the hull, so
+   ground is never created, and only the Commune may sow at all.
+
+   The commander's opinion is two judgements and no more. **A bio-reactor is worth having if
+   you can spend Biomass** — read off the doctrine's own composition rather than off a faction
+   list, and placed behind the Refinery, because a navy that bought a second income before
+   shortening its first one stalled the nodule line to reserve 250 for kelp. **A garden is
+   worth standing on**, at the price of the hull standing there, taken out of the force the
+   army does not need: the doctrine already carries the number that means "enough hulls to
+   act", and a tender comes from above that line. Anything else has a navy gardening its way
+   below its own attack threshold, which measures exactly as it sounds.
 
 Each step is measured against the stored four-faction baseline before the next one lands.
 Steps 1, 2 and 4 are what #535 filed as its three faults; they are not separate work. Steps 1,

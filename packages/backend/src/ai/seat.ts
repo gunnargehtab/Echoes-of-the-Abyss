@@ -152,6 +152,7 @@ export function briefingFor(
     heightM: match.map.heightM,
     spawns: match.map.spawns.map((spawn) => ({ x: spawn.x, y: spawn.y })),
     nodes: [...match.resourceNodes],
+    blooms: (match.map.blooms ?? []).map((bloom) => ({ x: bloom.x, y: bloom.y })),
     terrain: match.world.terrain.serialize(),
   };
 }
