@@ -114,17 +114,28 @@ authored the model, and every number that is not a shape — a stat block, a doc
 wire, the balance harness — stays outside it. A hull's SIG is an argument about sound;
 its silhouette is not.
 
-Three labels are addressed to the unattended backlog Routine rather than to a person, and
-each takes an issue off its list for a different reason. **`routine-log`** marks the run
-ledger the loop writes to, so it is never mistaken for a work item. **`needs-hardware`**
-marks work that is real but cannot be done in a container — a wall-clock frame timing
-needs an actual GPU. **`needs-decision`** marks work that is doable there and blocked on a
-design call a person owes: the docs and the code disagree, or answering the issue means
-deciding what a mechanic should argue. Without it a blocked issue is the *most* selectable
-thing in the backlog, since being open, unassigned and unclaimed is precisely what being
-blocked looks like from outside. The loop applies `needs-decision` itself when it stands
-down, always alongside a comment saying what is owed; the other two are a person's to
-apply. Removing any of them puts the issue back in play on the next firing.
+Routing away from a model is the other half of routing to one, so this label also takes
+the issue off the backlog Routine's list — the Routine is pinned to one model at its
+trigger and cannot switch mid-run. That half was implicit until #586, which the loop read
+as ordinary `enhancement` work and shipped as #594: green on every gate, and three shape
+decisions authored under the wrong model. The gates could not have caught it, since they
+are adversarial to the model rather than about which one authored it. So the loop skips
+`fable-5.1` outright, and the work waits for a session running the model of record. The
+cost is real and worth naming: #540's Phase 3 carries the label across all fifteen
+remaining hulls, so none of them is the loop's to take.
+
+Three further labels are addressed to the unattended backlog Routine rather than to a
+person, and each takes an issue off its list for a different reason. **`routine-log`**
+marks the run ledger the loop writes to, so it is never mistaken for a work item.
+**`needs-hardware`** marks work that is real but cannot be done in a container — a
+wall-clock frame timing needs an actual GPU. **`needs-decision`** marks work that is
+doable there and blocked on a design call a person owes: the docs and the code disagree,
+or answering the issue means deciding what a mechanic should argue. Without it a blocked
+issue is the *most* selectable thing in the backlog, since being open, unassigned and
+unclaimed is precisely what being blocked looks like from outside. The loop applies
+`needs-decision` itself when it stands down, always alongside a comment saying what is
+owed; the other two are a person's to apply. Removing any of them puts the issue back in
+play on the next firing.
 
 ## Code conventions
 

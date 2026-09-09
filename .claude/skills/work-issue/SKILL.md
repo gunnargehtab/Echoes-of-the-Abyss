@@ -140,8 +140,8 @@ not.
 ## 3. Choose one issue
 
 From the open issues that are **not** claimed, **not** assigned, and **not**
-labelled `epic`, `needs-hardware`, `needs-decision` or `routine-log`, take the
-oldest. Six exclusions, for different reasons:
+labelled `epic`, `needs-hardware`, `needs-decision`, `routine-log` or
+`fable-5.1`, take the oldest. Seven exclusions, for different reasons:
 
 - `epic` issues are trackers for work spanning many PRs (#212 is twenty-eight
   campaign missions). There is no single PR that closes one, so an agent that
@@ -172,6 +172,28 @@ oldest. Six exclusions, for different reasons:
   it blocked. **You may apply this one yourself**, and step 7 says when — it is
   a statement about a decision you were unable to make, which is a fact about
   your own run.
+- `fable-5.1` is a routing rule, and it routes away from this loop. `CONTRIBUTING.md`
+  says what it marks — an issue whose work is *shape*, a hull script, a faction
+  module, a GLB, a prop, a prompt block — and `docs/asset-prompts-3d.md` rule 3
+  names the model of record that shape is authored under for this whole series.
+  This loop is not that model, and it cannot become it mid-run: the Routine pins
+  one model at the trigger, so a firing that takes such an issue has already
+  decided to author shape under the wrong one. #586 is the case that cut this
+  exclusion. The 12:16 firing on 9 September read it as ordinary `enhancement`
+  work — it was the oldest eligible issue, the claim comment is correct, every
+  gate passed — and opened #594, 781 lines that straighten the Cantus's cradle
+  to bilateral, lift the Reciter's wing lamps half a metre, and redraw every
+  Order wing as a swept quadrilateral. Those are shape decisions, made under
+  Opus 5, on an issue whose own body says *"the `fable-5.1` label is here for
+  the reason `CONTRIBUTING.md` gives it: this work is shape."* The gates did not
+  catch it and were never going to: they are adversarial to the model, not about
+  which model authored it. The pull request was closed and the issue released.
+  **Do not apply this label yourself and do not remove it** — it is a statement
+  about the work, so it is a person's, like `needs-hardware`. Note in your run
+  summary if the backlog is mostly `fable-5.1`, because that is a fact about the
+  loop's remaining supply of work rather than about any one issue: #540's Phase 3
+  carries the label across all fifteen remaining hulls, so they are a
+  Fable-routed session's, never a firing's.
 - Anything already claimed is someone else's — including an earlier you.
 - **An issue with an assignee is taken, whoever took it.** A person who
   assigned themselves is on it, and so is an earlier firing of this loop, which
@@ -207,7 +229,8 @@ you passed over, one clause each, where the next person to look will find them.
 
 If the same issue keeps appearing in that line, it wants an exclusion rather
 than a recurring explanation: `needs-decision` when it is blocked on a call you
-cannot make, `needs-hardware` when no container could do it, an assignee when a
+cannot make, `needs-hardware` when no container could do it, `fable-5.1` when the
+work is shape and belongs to the design model of record, an assignee when a
 person is mid-way through it. Apply the first yourself per step 7; say which of
 the others you would propose.
 
