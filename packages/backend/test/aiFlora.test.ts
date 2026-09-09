@@ -28,6 +28,8 @@ import {
   Biome,
   CONSTRUCTION,
   Faction,
+  HazardPhase,
+  StructureKind,
   UnitKind,
   priceOf,
   statsFor,
@@ -98,6 +100,27 @@ describe('a reactor is worth having only if the account is spendable', () => {
         'and too shallow to build on, which is what makes it a garden'
       );
     }
+  });
+
+  it('has ground to stand one on, which this map did not until #535', () => {
+    // The other half of the test above, and the half that was false. A garden
+    // is Shelf-band by construction and refuses a building; until the aprons
+    // authored a bed of their own, that was every bed on the archetype, so
+    // `reactorSite` returned null on every observation of every match and the
+    // account the flora economy exists to fill had nowhere to be spent.
+    const brief = briefing(Faction.Directorate);
+    const cell = (x: number, y: number): number =>
+      Math.floor(y / brief.terrain.cellM) * brief.terrain.cols +
+      Math.floor(x / brief.terrain.cellM);
+    const beds = VENTFRONT_DIVIDE.hazards.filter((h) => h.kind === 'kelp-entanglement');
+    const sites = beds.filter((bed) => {
+      const at = cell(bed.x, bed.y);
+      return (
+        brief.terrain.biomes[at] === Biome.KelpForest &&
+        brief.terrain.floor[at]! >= CONSTRUCTION.WORKING_DEPTH_M
+      );
+    });
+    assert.equal(sites.length, beds.length, 'every authored bed should hold a reactor');
   });
 
   it('costs Biomass to field the hull the reactor is bought for', () => {
@@ -225,5 +248,86 @@ describe('and the commander actually does it', () => {
       }
     }
     assert.ok(sawGardenOrder, 'no hull was ever sent to a garden');
+  });
+
+  it('commissions a reactor on the bed behind its own base', () => {
+    // The branch end to end, through the real commander: a navy that can
+    // spend Biomass, with the Refinery it is gated behind already standing,
+    // asks for a reactor and asks for it on a bed rather than on open water.
+    //
+    // The snapshot carries the map's own hazards, because that is where
+    // `reactorSite` looks. A commander handed an empty hazard list is a
+    // commander on a map with no beds, which is the state this test exists to
+    // say the Ventfront is no longer in.
+    const brief = briefing(Faction.Directorate);
+    const commander = new AiCommander(brief);
+    const beds = VENTFRONT_DIVIDE.hazards.filter((h) => h.kind === 'kelp-entanglement');
+    assert.ok(beds.length > 0, 'the map must author a bed, or this tests nothing');
+
+    let site: { x: number; y: number } | null = null;
+    for (let i = 0; i < 8 && site === null; i++) {
+      const commands = commander.observe({
+        tick: i * 12,
+        nodules: 900,
+        crystal: 0,
+        biomass: 0,
+        power: { demand: 0, capacity: 6 },
+        draw: { demand: 0, capacity: 6 },
+        berths: { used: 1, granted: 40 },
+        units: [
+          {
+            id: 1,
+            kind: UnitKind.Harvester,
+            x: brief.spawns[0]!.x,
+            y: brief.spawns[0]!.y,
+            depth: 300,
+            hp: 400,
+            maxHp: 400,
+            sig: 30,
+          },
+        ],
+        structures: [
+          {
+            id: 20,
+            kind: StructureKind.Refinery,
+            x: brief.spawns[0]!.x,
+            y: brief.spawns[0]!.y,
+            depth: CONSTRUCTION.WORKING_DEPTH_M,
+            hp: 1200,
+            maxHp: 1200,
+            sig: 40,
+            buildProgress: 1,
+            queue: [],
+            queueProgress: 0,
+          },
+        ],
+        contacts: [],
+        marks: [],
+        hazards: beds.map((bed, id) => ({
+          id: id + 1,
+          kind: bed.kind,
+          x: bed.x,
+          y: bed.y,
+          radiusM: bed.radiusM,
+          phase: HazardPhase.Active,
+          progress: 0,
+          remainingS: 0,
+        })),
+        residue: [],
+        refits: [],
+        exposure: { tier: 0, trackedCount: 0 },
+      } as never);
+      for (const command of commands) {
+        if (command.kind !== 'build') continue;
+        if (command.structure !== StructureKind.BioReactor) continue;
+        site = { x: command.x, y: command.y };
+      }
+    }
+
+    assert.ok(site !== null, 'no reactor was ever asked for');
+    const standing = beds.some(
+      (bed) => Math.hypot(site!.x - bed.x, site!.y - bed.y) <= bed.radiusM
+    );
+    assert.ok(standing, `a reactor at ${site!.x},${site!.y} stands in no bed`);
   });
 });

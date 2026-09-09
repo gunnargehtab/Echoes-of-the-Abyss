@@ -161,7 +161,12 @@ describe('movement', () => {
     match.addPlayer(0, Faction.Bathyarch);
     advance(match, 0.5);
 
-    const START_X = 600;
+    // Clear of the west apron's kelp bed, which is the other thing on this map
+    // that changes a hull's speed. The lanes used to start at x = 600, inside
+    // a field the Ventfront did not author until #535 — and kelp drags harder
+    // the deeper into a bed you are, so the quiet hull sitting nearer the
+    // centre lost 10% of the ratio to the terrain rather than to the switch.
+    const START_X = 1200;
     const spawn = (y: number) =>
       spawnUnit(match.world, {
         kind: UnitKind.Corvette,

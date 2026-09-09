@@ -22,6 +22,7 @@ import { Match } from '../src/sim/match.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { Harvester, Health, Owner, Structure, Weapon } from '../src/sim/components.ts';
 import { economyFor, spawnUnit } from '../src/sim/world.ts';
+import { VENTFRONT_DIVIDE } from '../src/sim/maps/index.ts';
 
 const STEP_MS = 1000 / SIM.TICK_HZ;
 
@@ -213,5 +214,70 @@ describe('scuttling, against the position it must never call', () => {
     disarm(match, 1);
     advance(match, WINDOW_S + 10);
     assert.deepEqual(match.result, { winnerSlot: 0 });
+  });
+});
+
+describe('scuttling, against income that is not a way back', () => {
+  /**
+   * A finished Bio-Reactor on slot 1's own apron bed, on the real map.
+   *
+   * The flat `duel()` fixture cannot host one — a reactor needs a kelp bed on
+   * ground that seats a structure, which is a property of an authored map and
+   * not of a blank grid — and that is the whole reason this case went
+   * unnoticed until the Ventfront authored its beds.
+   */
+  function reactorDuel(): Match {
+    const match = new Match(VENTFRONT_DIVIDE, { fauna: false, seed: 0x5c07 });
+    match.addPlayer(0, Faction.Bathyarch);
+    match.addPlayer(1, Faction.Directorate);
+
+    const spawn = VENTFRONT_DIVIDE.spawns[1]!;
+    const bed = VENTFRONT_DIVIDE.hazards
+      .filter((hazard) => hazard.kind === 'kelp-entanglement')
+      .sort(
+        (a, b) =>
+          Math.hypot(a.x - spawn.x, a.y - spawn.y) - Math.hypot(b.x - spawn.x, b.y - spawn.y)
+      )[0]!;
+
+    economyFor(match.world, 1).nodules = 5000;
+    assert.ok(match.build(1, StructureKind.BioReactor, bed.x, bed.y), 'the reactor must seat');
+    // Long enough for construction to finish, so what follows is a plant
+    // rather than a building site.
+    advance(match, 60);
+    return match;
+  }
+
+  it('takes a commander whose only income is a reactor they cannot spend', () => {
+    // The rule ends positions nothing can come out of, and a Bio-Reactor is
+    // income with no hull and no harvester behind it: it renders kelp on its
+    // own, forever, for a navy that has nothing left. Biomass cannot buy a
+    // Harvester, so banking it is not a way back — it is only a way to keep
+    // the clock running, which is what six of thirty matches did.
+    const match = reactorDuel();
+    strand(match, 1);
+    disarm(match, 1);
+
+    advance(match, WINDOW_S + 10);
+    assert.ok(economyFor(match.world, 1).biomass > 0, 'the reactor must actually be running');
+    assert.deepEqual(match.result, { winnerSlot: 0 }, 'the match resolves anyway');
+  });
+
+  it('still spares one whose nodules are climbing toward a harvester', () => {
+    // The other side of the same rule, and the one it must not break: a
+    // commander saving up out of an account the way back is priced in has a
+    // move, however slow, and the rule does not get to call it in advance.
+    const match = reactorDuel();
+    strand(match, 1);
+    disarm(match, 1);
+
+    for (let i = 0; i < (WINDOW_S + 10) * SIM.TICK_HZ; i++) {
+      if (i % SIM.TICK_HZ === 0) {
+        economyFor(match.world, 0).nodules += 1;
+        economyFor(match.world, 1).nodules += 1;
+      }
+      match.update(STEP_MS);
+    }
+    assert.equal(match.result, null);
+    assert.ok(standing(match, 1));
   });
 });
