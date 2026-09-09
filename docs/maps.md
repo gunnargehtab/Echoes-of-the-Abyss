@@ -275,7 +275,12 @@ so that the quietest navy earns on the most reachable water ([systems-echo.md](s
 
 - **Shelf band, 0–400 m.** Asserted in `maps.test.ts`, for every archetype and every mission
   map. A garden over deeper water would hand the Commune a defensible economy and delete the
-  counter-play the guard-rail is.
+  counter-play the guard-rail is. The rule is read at the **node**, and the bed around it may
+  be larger than the plateau under it — a 400 m radius on a 500 m shelf spreads past the rim,
+  which is what a knoll with kelp on it looks like. What holds the guard-rail there is the
+  other half of the rule, which binds the gardener rather than the ground: the share is paid
+  only to a tender in the Shelf band ([systems-flora.md](systems-flora.md) §2), so working the
+  rim from deep water earns nothing.
 - **Nobody's apron.** A garden inside a base plateau is not contested ground, whatever its
   depth. Site one where more than one seat can reach it, and site the set symmetrically, so no
   seat is nearer to the map's income than another.

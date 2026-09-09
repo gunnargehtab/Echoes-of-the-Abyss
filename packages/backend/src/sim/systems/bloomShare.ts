@@ -41,6 +41,24 @@
  * (docs/systems-echo.md §10) puts the gardens on the most reachable ground
  * on the map so that somebody can.
  *
+ * Which is why the tender is read in the column as well as on the plan
+ * (#577). This used to be a horizontal test alone, on the reasoning that the
+ * Shelf is 400 m of water at most so a column check could price nothing the
+ * ground did not already price. That holds only while the bed sits wholly on
+ * its plateau, and a bed is 400 m of radius while a plateau is whatever the
+ * map authored: on the Ventfront Divide the gardens are 500 m shelves in a
+ * 2,600 m transit gap, so half of every bed's ground is the gap. A hull at
+ * the rim was paid the full share from any depth its Pressure Rating allowed
+ * — up to 2,200 m below the plateau it was tending — and the exposure the
+ * guard-rail prices was optional.
+ *
+ * So the rule is the gardener's depth, not the seabed's. Over the plateau it
+ * changes nothing, because the ground already holds a hull above itself
+ * (`depth.ts`, "terrain may raise a hull, never lower one") and mission-tend's
+ * three beds bottom out at 320 m. Past the rim it is the whole rule: work the
+ * bed from Shelf water, in the open, where you can be reached, or do not be
+ * paid for it.
+ *
  * Units only, deliberately. Tending is work done by hulls — a structure
  * parked on a garden would turn "held" back into "possessed", and the
  * exposure the guard-rail prices is the exposure of things that can be made
@@ -53,7 +71,7 @@
  */
 
 import { defineQuery } from 'bitecs';
-import { BLOOM_SHARE, FLORA, Faction } from '@echoes/shared';
+import { BLOOM_SHARE, DepthBand, FLORA, Faction, depthBandFor } from '@echoes/shared';
 import { Health, Owner, Position, SilentRunning, Unit } from '../components.ts';
 import { economyFor, type SimWorld } from '../world.ts';
 import { regrowthPerS, standingCropOf } from './hazards.ts';
@@ -84,6 +102,11 @@ export function bloomShareSystem(world: SimWorld): void {
       if (Health.hp[eid]! <= 0) continue;
       // Silence stops the work — docs/systems-echo.md §6.
       if (SilentRunning.active[eid] === 1) continue;
+      // And depth stops it too, past the rim of a bed that overhangs its
+      // plateau. `depthBandFor` rather than the 400 m line written out, so
+      // this moves with DEPTH_BANDS the way the Directorate's shallow-water
+      // penalty does and the Shelf line keeps one definition.
+      if (depthBandFor(Position.depth[eid]!) !== DepthBand.Shelf) continue;
       const dx = Position.x[eid]! - bed.x;
       const dy = Position.y[eid]! - bed.y;
       if (dx * dx + dy * dy > radiusSq) continue;

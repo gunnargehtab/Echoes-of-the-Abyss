@@ -1035,9 +1035,17 @@ export const BLOOM_SHARE = {
    *
    * One circle rather than two: a garden is the ground you stand in, and a
    * tend radius that did not match the bed would mean either kelp nobody can
-   * reach or income from outside the field paying it. Horizontal, like the
-   * Echo Layer's own geometry — the Shelf is 400 m of water at most, so a
-   * column check would price nothing the map does not already price.
+   * reach or income from outside the field paying it.
+   *
+   * The circle is horizontal, like the Echo Layer's own geometry, but the
+   * *share* is not: `bloomShare.ts` also requires the tender to be in the
+   * Shelf band. This radius used to carry the argument that it did not need
+   * to — the Shelf is 400 m of water at most, so a column check would price
+   * nothing the ground already priced — and #577 found the hole in it. A bed
+   * is 400 m of radius; a plateau is whatever the map authored, and the
+   * Ventfront Divide's gardens are 500 m shelves over a 2,600 m gap. Half of
+   * each bed is deep water, and a hull hanging in it was paid the same share
+   * as one standing in the open on the plateau.
    */
   TEND_RADIUS_M: 400,
 } as const;
