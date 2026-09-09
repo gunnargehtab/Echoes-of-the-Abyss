@@ -612,6 +612,7 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
    ===================================================================== */
 
 .c-silent .scr { --noise: 0; background: #000; }
+.c-silent .frame { position: absolute; inset: 2.6cqw; z-index: 1; pointer-events: none; --tk: rgba(53, 224, 255, 0.22); --tkl: 1.8cqw; }
 .c-silent .veil {
   position: absolute;
   inset: 0;
@@ -621,7 +622,7 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
 @keyframes silent-breath { 0%, 100% { filter: brightness(0.93); } 50% { filter: brightness(1.07); } }
 
 .c-silent .breath { position: absolute; inset: 0; }
-.c-silent .panel { position: absolute; z-index: 2; left: 9cqw; top: 8.5cqw; width: 44cqw; }
+.c-silent .panel { position: absolute; z-index: 2; left: 7.5cqw; top: 8.5cqw; width: 44cqw; }
 
 /* The silent-running lockup from docs/naming.md: monochrome text-bright, no
    glow. It is the one thing here that never dims — "the logo running quiet
@@ -634,18 +635,18 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
 /* Each entry answers the pointer on its own rather than the screen answering
    as one, because sound falls off with distance: --near is 1 under the
    cursor and 0 a third of a frame away. */
-.c-silent .list { display: flex; flex-direction: column; gap: 0.2cqw; }
+.c-silent .list { display: flex; flex-direction: column; }
 /* The left edge is the column's spine, and it brightens with the row: the
    structure of the list is drawn by how near you are to it. */
 .c-silent .ent {
   position: relative;
-  padding: 0.55cqw 1.1cqw;
+  padding: 0.72cqw 1.1cqw;
   font-size: 1.02cqw;
   --near: 0;
   border-left: 1px solid rgba(111, 138, 156, calc(0.12 + 0.55 * var(--near)));
 }
 .c-silent .ent-label { color: var(--text-bright); opacity: calc(0.52 + 0.48 * var(--near)); }
-.c-silent .ent-note { font-size: 0.66cqw; opacity: calc(0.17 + var(--near) * 0.58); }
+.c-silent .ent-note { font-size: 0.66cqw; opacity: calc(0.2 + var(--near) * 0.56); }
 .c-silent .ent:hover, .c-silent .ent:focus-visible { --tk: rgba(255, 61, 166, 0.75); }
 .c-silent .ent:focus-visible { outline: 0; }
 .c-silent .ent:not(:hover):not(:focus-visible) { --tk: rgba(53, 224, 255, 0); }
@@ -654,8 +655,20 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
 /* The signature column, and all three of its marks are real numbers:
    SILENT_RUNNING's floor of 3, the 8 it may not exceed, and the 43 that a
    broken silence costs (8 + BREAK_SILENCE_SIG_SPIKE). */
-.c-silent .meter { position: absolute; z-index: 3; right: 6cqw; top: 11cqw; bottom: 13cqw; width: 10cqw; }
-.c-silent .meter-track { position: absolute; left: 0; top: 0; bottom: 0; width: 0.5cqw; border: 1px solid rgba(111, 138, 156, 0.3); }
+.c-silent .meter { position: absolute; z-index: 3; right: 7.5cqw; top: 11cqw; bottom: 13cqw; width: 10cqw; }
+.c-silent .meter-track {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0.5cqw;
+  border: 1px solid rgba(111, 138, 156, 0.3);
+  background-image: repeating-linear-gradient(
+    to top,
+    rgba(111, 138, 156, 0.26) 0 1px,
+    transparent 1px 12.5%
+  );
+}
 .c-silent .meter-fill {
   position: absolute;
   left: 0;
@@ -685,7 +698,7 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
 
 /* Left edge flush with the meter's track, so the number reads off the
    column rather than floating beside it. */
-.c-silent .read { position: absolute; z-index: 3; right: 6cqw; bottom: 3.6cqw; width: 10cqw; }
+.c-silent .read { position: absolute; z-index: 3; right: 7.5cqw; bottom: 4.4cqw; width: 10cqw; }
 .c-silent .read-cap { display: block; font-size: 0.52cqw; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.5; }
 .c-silent .read-num {
   display: block;
@@ -702,8 +715,8 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
 .c-silent .hint {
   position: absolute;
   z-index: 3;
-  left: 9cqw;
-  bottom: 2.6cqw;
+  left: 7.5cqw;
+  bottom: 4.6cqw;
   margin: 0;
   font-size: 0.64cqw;
   letter-spacing: 0.18em;
@@ -758,8 +771,8 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
   30% { opacity: var(--o); }
 }
 @keyframes mouth-dilate {
-  0%, 100% { opacity: 0.24; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.5); }
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.56; transform: scale(1.45); }
 }
 
 /* =====================================================================
@@ -1003,7 +1016,9 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
         <code>SIG_MAX</code> of 8, and the 43 that breaking silence costs on top. The silent band is
         a twelfth of that scale, and the column says so. The lockup is <code>naming.md</code>'s
         silent-running variant, monochrome and unglowed, which that document calls on-doctrine, and
-        it is the one thing here that never dims.
+        it is the one thing here that never dims. The four survey marks at the frame's corners are
+        the plate VI card's registration ticks spent at frame scale, which is the quietest way to
+        make four objects on a dark field read as one plate.
       </dd>
       <dt>Stilled</dt>
       <dd>
@@ -1055,8 +1070,10 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
       <dd>
         Reading order runs against importance, which is why Settings and Credits leave the bands for
         the corner: five doors into the water, five bands. Each label is cut out of the stroke it
-        sits on, by a mask rather than by a patch of background, so it is set into the mark instead
-        of floating near it. Note lines still appear on hover only, so the screen says less at rest
+        sits on by a mask whose ends fade, not by a patch of background, so the arc dies into the
+        word rather than stopping square against it and the label is set into the mark instead of
+        floating near it. The fade is a fixed length, so even the narrowest band keeps a stub of arc
+        either side of the longest label it can be asked to hold. Note lines still appear on hover only, so the screen says less at rest
         than the others, and with no seat held the shallowest band carries nothing. And the throat
         stays the throat: <b>nothing in this picture is you</b>, which is why a held seat takes the
         deepest band and not the light.
@@ -1096,7 +1113,18 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
 .c-listen .head { margin-bottom: 0; }
 .c-listen .list { margin: 2.6cqw 0 0; }
 
-.c-mouth .corner { position: absolute; top: 2.6cqw; right: 3cqw; z-index: 4; display: flex; flex-direction: column; align-items: flex-end; gap: 0.35cqw; }
+.c-mouth .corner {
+  position: absolute;
+  top: 2.6cqw;
+  right: 3cqw;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35cqw;
+  padding-top: 0.55cqw;
+  border-top: 1px solid rgba(53, 224, 255, 0.22);
+}
 .c-mouth .corner .ent { position: static; translate: none; width: auto; padding: 0.16cqw 0; text-align: right; font-size: 0.72cqw; opacity: 0.6; }
 .c-mouth .corner .ent .ent-note { display: none; }
 .c-mouth .corner .ent:hover, .c-mouth .corner .ent:focus-visible { opacity: 1; }
@@ -1326,7 +1354,8 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
         '<div class="meter-mark is-silent" style="bottom:12.5%"><b>08</b> Silent</div>' +
         '<div class="meter-mark" style="bottom:0"><b>03</b> Floor</div>';
       return (
-        '<div class="scr"><div class="veil"></div><div class="breath">' +
+        '<div class="scr"><div class="veil"></div><div class="ticks frame"></div>' +
+        '<div class="breath">' +
         '<div class="panel">' + wordmark() + '<p class="tagline">' + TAGLINE + '</p>' +
         nav('Silent Running title screen', items) + '</div>' +
         '<div class="meter" aria-hidden="true"><div class="meter-track"></div>' +
@@ -1359,9 +1388,14 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
       ['M 655 720 Q 800 765 945 720', 3.8, 1],
     ];
     /* One label glyph at 0.9cqw with 0.2em tracking is 11.52 viewBox units
-       wide; 52 is the padding either side plus slack. */
+       wide. A cut is that, plus 22 units of clear space either side, plus a
+       FADE at each end — the stroke dies into the word rather than being
+       chopped off square, which is the difference between a gap and a break.
+       The fade is a fixed length so the narrowest band still keeps a stub of
+       arc showing either side of its label. */
+    var CUT_FADE = 34;
     function cutWidth(label) {
-      return label.length * 11.52 + 52;
+      return label.length * 11.52 + 44 + CUT_FADE * 2;
     }
 
     function buildMouth() {
@@ -1378,19 +1412,30 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
       var offset = BANDS.length - water.length;
 
       var cuts = '';
+      var fades = '';
       var items = water
         .map(function (key, i) {
           var b = BANDS[offset + i];
           var w = cutWidth(byId[key].label);
+          var stop = CUT_FADE / w;
+          var gid = 'cut-' + uid + '-' + i;
+          fades +=
+            '<linearGradient id="' + gid + '" x1="0" y1="0" x2="1" y2="0">' +
+            '<stop offset="0" stop-color="#fff" />' +
+            '<stop offset="' + stop.toFixed(4) + '" stop-color="#000" />' +
+            '<stop offset="' + (1 - stop).toFixed(4) + '" stop-color="#000" />' +
+            '<stop offset="1" stop-color="#fff" /></linearGradient>';
           cuts +=
             '<rect x="' + (800 - w / 2).toFixed(1) + '" y="' + (b.apex - 20) +
-            '" width="' + w.toFixed(1) + '" height="40" rx="4" fill="#000" />';
+            '" width="' + w.toFixed(1) + '" height="40" fill="url(#' + gid + ')" />';
           return entry(byId[key], { style: '--y:' + b.y + 'cqw;--o:' + b.o });
         })
         .join('');
 
+      /* The halo takes the same ramp as the core, or the glow would sit flat
+         under bands that are meant to brighten downward. */
       var halo = ARCS.map(function (a) {
-        return '<path d="' + a[0] + '" />';
+        return '<path d="' + a[0] + '" opacity="' + (a[2] * 0.4).toFixed(2) + '" />';
       }).join('');
       var core = ARCS.map(function (a, i) {
         return (
@@ -1402,15 +1447,16 @@ code { font-family: var(--font-data); color: var(--text-cyan); font-size: 0.94em
         '<svg class="arcs" viewBox="0 0 1600 900" fill="none" aria-hidden="true">' +
         '<defs><filter id="' + id + '" x="-30%" y="-30%" width="160%" height="160%">' +
         '<feGaussianBlur stdDeviation="9" /></filter>' +
+        fades +
         '<mask id="' + maskId + '" maskUnits="userSpaceOnUse" x="0" y="0" width="1600" ' +
         'height="900"><rect x="0" y="0" width="1600" height="900" fill="#fff" />' + cuts +
         '</mask></defs>' +
         '<g mask="url(#' + maskId + ')">' +
-        '<g stroke="var(--neon-violet)" fill="none" filter="url(#' + id + ')" opacity="0.28" ' +
+        '<g stroke="var(--neon-violet)" fill="none" filter="url(#' + id + ')" ' +
         'stroke-width="9">' + halo + '</g>' +
         '<g stroke="var(--neon-violet)" fill="none">' + core + '</g></g>' +
-        '<circle class="throat-halo" cx="800" cy="838" r="26" fill="var(--mouth-glow)" ' +
-        'opacity="0.24" filter="url(#' + id + ')" ' +
+        '<circle class="throat-halo" cx="800" cy="838" r="30" fill="var(--mouth-glow)" ' +
+        'opacity="0.3" filter="url(#' + id + ')" ' +
         'style="transform-box:view-box;transform-origin:800px 838px" />' +
         '<circle cx="800" cy="838" r="7" fill="var(--mouth-glow)" /></svg>';
 
