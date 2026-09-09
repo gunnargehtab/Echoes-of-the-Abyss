@@ -315,9 +315,11 @@ Run the same checks locally before pushing; the full sequence is cheap.
 
 The full conventions live in `CONTRIBUTING.md` — the short version: branch names use
 `feat/`, `fix/`, `ci/`, `docs/` prefixes; commit subjects use the matching prefixes; keep
-PRs focused and reference the issue they close (`Fixes #30`). Issue and PR templates live
-in `.github/`. Anything visual must clear the gates in `docs/graphics-standards.md`,
-screenshot included.
+PRs focused and reference the issue they close (`Fixes #30`). The PR template is
+`.github/PULL_REQUEST_TEMPLATE.md` — upper case is the only spelling here, so a probe for
+`.github/pull_request_template.md` finds nothing and says nothing about whether a template
+exists; issue templates are in `.github/ISSUE_TEMPLATE/`. Anything visual must clear the
+gates in `docs/graphics-standards.md`, screenshot included.
 
 Related: `README.md` · `CONTRIBUTING.md` · `SETUP.md` · `SETUP-ANDROID.md` (the whole game — server included —
 runs on-device in Termux) · `docs/README.md` · `docs/DEVELOPER_QUICKSTART.md` ·
