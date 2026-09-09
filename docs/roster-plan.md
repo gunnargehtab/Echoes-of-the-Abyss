@@ -551,22 +551,64 @@ two navies come off zero, and the Knights lose fourteen — the one move outside
 win rate over twenty-odd decided matches carries, and the one to watch. All five guard-rails
 held.
 
-**Wave 6** was a decision the harness made, not this document, and it made it against the
-plan's expectation. §4 predicted two outcomes — dead weight, or a surplus market — and the
-reading returned a third that §4's own rule had already provided for: *a navy still leaning on
-a common hull is a finding about the roster, not about the commons.* Four leanings, four
-different findings, and one of them is that the Cruiser is named four times by two navies and
-has never been built in a single measured match. §8 carries the table and the decision.
+### #520 again, and the Dredge — which turns out to be a nodule question
 
-What the plan itself gets wrong, now that the wave has read it: §3 calls the Chorister the
-Directorate's line hull "by doctrine and by price". The price half is true and the doctrine
-half is measurable and false — a composition that names it fields 1.1 a match against the
-Corvette's 2.4, because 20 Biomass is a third of what that navy earns in a match even now that
-the Drift survives (#520). The line the Directorate can actually hold is a Corvette's. If after five waves every
-doctrine builds its own line and the commons are dead weight on the bar, retire them from
-`PRODUCIBLE` and keep them for missions and the campaign, where the prologue's hulls are
-authored. If a navy still leans on a common hull for a role its own roster does not fill,
-that is a finding about the roster, not about the commons.
+The hull the issue is named after outlasted the account fix above, and the reason is not its
+price in either of the accounts the issue is about. This is the measurement that establishes
+that, and it is recorded here rather than acted on: the change it argued for was built, measured
+twice, and **withdrawn**, because after #596 it buys nothing and costs decided matches.
+
+**Both named accounts are now abundant.** Over the stored thirty seeds with the Ventfront's kelp
+beds running, the Directorate earns **3.5 crystal and 13.1 Biomass a minute** against a Dredge
+priced at 40 and 60 — about a quarter of a minute's crystal and five minutes' Biomass. Its purse
+carries a median of 53 Biomass and 20 crystal at the moment its production branch looks. So the
+answer to this issue's third question is the answer its own ladder reached twice before: **the
+prices were never the problem.**
+
+**The blocker is nodules, and only nodules.** Instrumented over three matches on seeds 4000–4002:
+
+| | Reading |
+| --- | --- |
+| Observations at which the Directorate bid for its Dredge | **820**, with a Slipway standing and no heavy in the water |
+| ... at which it cleared `RUNG.SAVE_FROM`'s floor | **0** |
+| The account it failed on | **nodules, at all 820** |
+| Its nodule purse | median **10**, p90 **110**, peak **300** across three whole matches — against a 450 price |
+
+Half a Dredge is 225 nodules and this navy's bank does not reach it, so the hold that would let
+it climb can never open. That is not a rule this commander can fix from the inside; it is §8's
+pricing question, and it is where the hull now sits.
+
+**What was tried, and why it is not here.** Before #596 the same instrumentation found a
+different picture — Biomass at a median of 16 against the 60 the hull is priced at — and three
+faults in the arbitration that followed from it: `holdPurse` struck out any bid short of crystal
+or Biomass entirely, a hold in a narrow account leaked to the wants ahead of it, and nearest-first
+starved the one want the yard was bought for. Fixing all three produced **0.1 Dredges a match**,
+the first time the hull had appeared in any baseline.
+
+Then #596 gave the map beds a reactor can stand on, Biomass went from 6.1 a minute to 13.1, and
+the same three fixes were re-measured against it. Two paired thirty-match sets, each against main
+at that commit:
+
+| | seeds 4000–4029 | | seeds 5000–5029 | |
+| --- | --- | --- | --- | --- |
+| | main | with the fix | main | with the fix |
+| Decided, of 30 | 17 | 16 | 22 | 17 |
+| Dredge built | 0.0 | **0.0** | 0.0 | **0.0** |
+| Directorate win rate | 82% | 63% | 73% | 82% |
+| Guard-rails held | 5 | 5 | 5 | 5 |
+
+**No hull, on either set.** The win rate moves nineteen points down on one seed set and nine up
+on the other, which is noise either side of the ten points a win rate over twenty-odd decided
+matches carries. What is *consistent* is the cost: 33 decided matches of 60 against main's 39,
+because a rule that can now save in narrow accounts means navies hold for the Lure, the Thurible
+and the Verger as well, and hold longer. The full three-fault version was worse again — 14
+decided and the "Knights starve" rail losing its reading for want of a long match.
+
+So the arbitration rule **is** wrong — a hull priced in a narrow account cannot be saved for in
+any account at all — and it is currently harmless, because nothing in the roster is short of a
+narrow account any more. Fixing it costs matches and buys nothing today. It is worth doing on
+the day something makes crystal or Biomass scarce again, and the measurement above is what to
+re-read then.
 
 ### #529, and the Corvette the Order had no reason to name
 
@@ -777,6 +819,25 @@ Three that were, one of them by wave 6 itself:
   storyline, in multiplayer and never in the campaign. It is filed as #543 and placed after
   release ([ROADMAP.md](ROADMAP.md) Phase 12), so nothing in this plan waits on it and no
   price here moves for it.
+
+And one the second half of #520 leaves open:
+
+- **Is the top of the roster priced for an economy that never banks it?** The two dearest
+  hulls in the game are the Consortium's 700-nodule Bulwark and the Directorate's 450-nodule
+  Dredge, and they are the only two heavies never built. Every navy's *heavy* under 300 is
+  fielded — the Knights' 260-nodule Reciter at 0.5 a match — and everything from 330 to 400
+  lands between 0.1 and 0.5. Against that, a Directorate nodule purse with a **median of 10**,
+  a p90 of 110 and a peak of 300 across three whole matches: 450 is more than twice the largest
+  bank that navy has ever been measured holding, and half of it is more than its p90. The
+  composition bid (#531) and the arbitration work recorded in §4 have each taken a turn at this
+  from the commander's side, and the second one measured the reason neither can finish it —
+  `RUNG.SAVE_FROM`'s floor is half the price, and a navy that never reaches half can never open
+  the hold that would take it there. Nothing reaches the Bulwark at all, because nothing was
+  ever wrong with how a nodule price was saved for. So the remaining question is a pricing one
+  and belongs to [economy.md](economy.md) §8 before it belongs to a commander: either the top of
+  the roster is deliberately a hull only a long match reaches, in which case these two should be
+  the only never-built heavies and that is the design working, or they are priced against a bank
+  no navy in this simulation has ever held.
 
 And two others, both on #495:
 
