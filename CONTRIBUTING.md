@@ -129,8 +129,9 @@ as ordinary `enhancement` work and shipped as #594: green on every gate, and thr
 decisions authored under the wrong model. The gates could not have caught it, since they
 are adversarial to the model rather than about which one authored it. So the loop skips
 `fable-5.1` outright, and the work waits for a session running the model of record. The
-cost is real and worth naming: #540's Phase 3 carries the label across all fifteen
-remaining hulls, so none of them is the loop's to take.
+cost is real and worth naming: #540 carries the label across every model still to be
+built — the eleven modelled hulls Phase 3 has left, the structure kinds beside them, and
+all nineteen of Phase 4's unmodelled hulls — so none of them is the loop's to take.
 
 Three further labels are addressed to the unattended backlog Routine rather than to a
 person, and each takes an issue off its list for a different reason. **`routine-log`**
