@@ -349,6 +349,20 @@ export const FACTION_STRUCTURE: Partial<Record<Faction, StructureKind>> = {
   [Faction.Hadron]: StructureKind.SoundingSpire,
 };
 
+/**
+ * Whether a number off the wire names a structure at all.
+ *
+ * Derived from the table rather than written out, for `MAX_STRUCTURE_RADIUS_M`'s
+ * reason: an eleventh structure must not be able to add a row on one reader and
+ * miss it on the other. `structureStatsFor` is a plain `Record` index and
+ * returns `undefined` outside the enum, so every caller that takes its argument
+ * from a client has to ask this first — and only one does (`Match.build`).
+ * Everything else passes a literal or a `Structure.kind` the world wrote.
+ */
+export function isStructureKind(kind: number): kind is StructureKind {
+  return Object.prototype.hasOwnProperty.call(STRUCTURE_STATS, kind);
+}
+
 export function structureStatsFor(kind: StructureKind): StructureStats {
   return STRUCTURE_STATS[kind];
 }
