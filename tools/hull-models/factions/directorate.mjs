@@ -112,8 +112,19 @@ export const segmentSeries = (opts) => series({ section: [0.6, 1.5], ...opts });
  * heavier carapace. `'none'` for a hull whose plates butt.
  *
  * `spines` puts one spine off each plate — alternating sides from port,
- * alternating between the two `lengths`, all raked forward by `rake` — which
- * is the regimented asymmetry the navy is built on. Omit for a smooth back.
+ * alternating between the two `lengths`, all raked forward by `rake`, each
+ * `offsets[0]` metres off the keel on the even plates and `offsets[1]` on the
+ * odd — which is the regimented asymmetry the navy is built on. Two constant
+ * offsets rather than a fraction of each plate's beam: the Dredge's stand 5 m
+ * and 6 m out on plates that run from 16 m to 25 m of half-beam, so a spine
+ * is not further out on a wider plate (#630 F5). Omit for a smooth back.
+ *
+ * The ridge's fractions are the Dredge's own, measured: its half-length is
+ * exactly a 3.9th of the plate's, it stands three of its own half-lengths
+ * aft of the plate's centre, and its beam is 0.9679 of the plate's (#630
+ * F4). Read against the plate's *measured* half-beam — a station rounded to
+ * the centimetre puts the ridge 5 mm off, which is where the diff starts to
+ * list it.
  */
 export function tergites(root, { violet, red, black }, opts) {
   const { segments, lip = 'seam', spines, facets = [12, 6] } = opts;
@@ -126,18 +137,18 @@ export function tergites(root, { violet, red, black }, opts) {
         0.9 * sz,
       ]);
     else if (lip === 'ridge')
-      add(root, `tergite_ridge_${i}`, orb(10, 6), black, [x - 0.75 * sx, 0.5, 0], [0, 0, 0], [
-        0.25 * sx,
+      add(root, `tergite_ridge_${i}`, orb(10, 6), black, [x - 0.7692 * sx, 0.5, 0], [0, 0, 0], [
+        0.2564 * sx,
         1.125 * sy,
-        0.92 * sz,
+        0.9679 * sz,
       ]);
     if (spines) {
-      const { lengths = [7, 10], r = 1.2, rake = -0.3, z = 0.28 } = spines;
+      const { lengths = [7, 10], r = 1.2, rake = -0.3, offsets = [5, 6] } = spines;
       const sgn = i % 2 ? -1 : 1;
       add(root, `tergite_spine_${i}`, spike(r, lengths[i % lengths.length]), black, [
         x + 2,
         sy + 2,
-        sgn * z * sz,
+        sgn * offsets[i % offsets.length],
       ], [0, 0, rake]);
     }
   });
@@ -208,14 +219,22 @@ export function photophores(root, crimson, { spots, size = 1.1, h = 0.4, depth }
  * the plate's height and `z` of its beam — on the shell where it faces up.
  * Port carries `port.count` on every plate; starboard `starboard.count` on
  * every `starboard.every`-th plate only. Regimented, and never symmetric.
+ *
+ * The defaults are the Dredge's rule as its approved model lays it, to four
+ * places — a rank of three runs 0.92 of a half-length, so a pitch given to
+ * three places is already a centimetre and a half out at the last lamp
+ * (#630 F1). The rule puts the last lamp of a plate under the raised ridge
+ * of the plate ahead on two of the Dredge's five, and the export says so;
+ * that is the approved model's own placement, and a builder does not move a
+ * rank to quiet an audit.
  */
 export function plateEdgePhotophores(root, crimson, opts) {
   const {
     segments,
-    port = { count: 3, start: -0.5, pitch: 0.45 },
-    starboard = { count: 2, start: -0.3, pitch: 0.55, every: 2 },
+    port = { count: 3, start: -0.5128, pitch: 0.4615 },
+    starboard = { count: 2, start: -0.3077, pitch: 0.5641, every: 2 },
     y = 0.72,
-    z = 0.66,
+    z = 0.6944,
     size = 1.4,
   } = opts;
   segments.forEach(([x, sx, sy, sz], i) => {
@@ -333,28 +352,45 @@ export function scoopBow(root, { red, steel, black, gullet }, opts) {
 }
 
 /**
- * One great folded claw off one beam: an arm along the hull, a forearm bent
- * `bend` radians back in toward the bow, and two tips closing on each other.
- * `side` is 'p' or 's' and there is no pair — the Dredge's is to starboard.
+ * One great folded claw off one beam: an arm along the hull from `x`, a
+ * forearm folded `fore.bend` radians *inboard* — back in toward the keel —
+ * off its end, and two tips off the forearm's end closing on each other:
+ * `tips.a` on the outboard side turning in by `close`, `tips.b` on the
+ * inboard side turning out (a negative `close`), each a cone with its point
+ * forward. `side` is 'p' or 's' and there is no pair — the Dredge's is to
+ * starboard.
+ *
+ * The arm is placed from `x`; the forearm and both tips are placed by their
+ * centres, `at`, because that is how the approved model placed them: no rule
+ * off the arm's length and the bend lands the forearm on (36, 2, −29), and
+ * the one the first transcription derived did not (#630 F3). That one also
+ * folded the forearm *outboard* by the same 0.25 rad — its comment said
+ * inboard; the sign said otherwise — which made the forearm the widest thing
+ * on the hull and grew the beam by a metre, and it pointed both tips aft.
+ * The fold's direction and the tips' are what this builder holds; every
+ * number is the hull's.
+ *
+ * `arm.r` and `fore.r` are `[root, end]`: both limbs *taper* toward the tips
+ * — the Dredge's arm from 2.4 m to 1.8 m, its forearm from 1.8 m to 1.4 m —
+ * which a bounding box cannot show, since only the fat end reaches it, and
+ * which the first transcription did not carry. A scalar is a straight limb.
  */
 export function claw(root, { steel, black }, opts) {
-  const { side = 's', x, y = 1, z, arm = { r: 2.4, length: 34 }, fore = { r: 1.8, length: 20, bend: 0.25 } } = opts;
+  const { side = 's', x, y = 1, z, arm, fore, tips } = opts;
   const sgn = side === 'p' ? 1 : -1;
-  const ax = x + arm.length / 2;
-  add(root, 'claw_arm', cyl(arm.r, arm.r, arm.length, 8), steel, [ax, y, z], [0, 0, -Math.PI / 2]);
-  // The fold comes *inboard*, back toward the hull. Written down it bent the
-  // other way, which put the forearm outboard of the arm and made the claw the
-  // widest thing on the Dredge — 2.7 m of beam that is not in the approved
-  // model, and a claw that opens rather than folds.
-  const fx = x + arm.length + (fore.length / 2) * Math.cos(fore.bend);
-  const fz = z - sgn * (fore.length / 2) * Math.sin(fore.bend) * 0.3;
-  add(root, 'claw_forearm', cyl(fore.r, fore.r, fore.length, 8), steel, [fx, y + 1, fz], [0, -sgn * fore.bend, -Math.PI / 2]);
-  // The tips close at the far end of the forearm, not half way along it. The
-  // written-down 0.55 buried both of them inside the forearm — a claw that
-  // cannot close — which is the sort of thing only building the hull finds.
-  const tx = x + arm.length + fore.length * Math.cos(fore.bend) * 0.95;
-  add(root, 'claw_tip_a', cyl(fore.r, 0, 9, 5), black, [tx, y + 1.5, fz], [0, -sgn * 0.2, -Math.PI / 2]);
-  add(root, 'claw_tip_b', cyl(fore.r * 0.8, 0, 7, 5), black, [tx - 2, y + 1.5, fz - sgn * 5], [0, sgn * 0.3, -Math.PI / 2]);
+  // A cylinder is born along Y with `rTop` at +Y; rolled onto X, +Y is the
+  // far end, and a yaw about Y turns that end toward −Z. Inboard is −Z to
+  // port and +Z to starboard, so `inboard` radians toward the keel is a yaw
+  // of `sgn · inboard`.
+  const turn = (inboard) => [0, sgn * inboard, -Math.PI / 2];
+  const limb = (r, length) => {
+    const [root, end] = Array.isArray(r) ? r : [r, r];
+    return cyl(end, root, length, 8);
+  };
+  add(root, 'claw_arm', limb(arm.r, arm.length), steel, [x + arm.length / 2, y, z], turn(0));
+  add(root, 'claw_forearm', limb(fore.r, fore.length), steel, fore.at, turn(fore.bend));
+  add(root, 'claw_tip_a', spike(tips.a.r, tips.a.length, 5), black, tips.a.at, turn(tips.a.close));
+  add(root, 'claw_tip_b', spike(tips.b.r, tips.b.length, 5), black, tips.b.at, turn(tips.b.close));
 }
 
 /** The dredge boom off the other beam: a spar along the hull with teeth stepped along it. */
