@@ -24,7 +24,13 @@ import {
   StructureKind,
   UnitKind,
 } from '@echoes/shared';
-import { runBatch, runMatch, seedHasAnyEffect, type Seat } from '../src/balance/runner.ts';
+import {
+  runBatch,
+  runMatch,
+  rotateSeats,
+  seedHasAnyEffect,
+  type Seat,
+} from '../src/balance/runner.ts';
 import { summarise, toMarkdown, type GuardRailVerdict } from '../src/balance/report.ts';
 import { MatchTelemetry, type MatchTelemetryResult } from '../src/balance/telemetry.ts';
 import { Match } from '../src/sim/match.ts';
@@ -762,5 +768,193 @@ describe('the per-faction table carries its own denominator (#199)', () => {
     );
     assert.match(markdown, /\| Consortium \| 1 \| 0 \| — \|/);
     assert.doesNotMatch(markdown, /\| 0 \| 0% \|/, 'a rate over no decided matches is not 0%');
+  });
+});
+
+/**
+ * The chair, and the batch that can tell it from the doctrine.
+ *
+ * `--matchup` binds a faction to a spawn by its position in the list, so a
+ * batch measures one seating and a win rate out of it names a spawn as much as
+ * a navy. `tools/balance/baselines/seat-rotation.md` is how much that is worth
+ * on `ventfront-divide`: with four seats of one navy, so nothing but the
+ * furniture left, slot 2 takes 50% of 109 decided matches against 11% for
+ * slot 0.
+ *
+ * What is under test here is the arithmetic that lets a report say so, not the
+ * simulation — so the batches are fabricated out of one short match's players
+ * for the reason the #199 and #592 batches are. The rotation of a *live* batch
+ * is the CLI's, and it is checked where it can be checked cheaply: that
+ * rotating by nothing is the seating as typed.
+ */
+describe('the seating is a variable, and a rotated batch pools it (#600)', () => {
+  it('cycles the factions and leaves the slots where the map put them', () => {
+    const once = rotateSeats(FOUR_SEATS, 1);
+    assert.deepEqual(
+      once.map((s) => s.slot),
+      [0, 1, 2, 3],
+      'a slot is an index into the map spawns, so it must not move'
+    );
+    assert.deepEqual(
+      once.map((s) => s.faction),
+      [Faction.Pelagia, Faction.Directorate, Faction.Hadron, Faction.Bathyarch]
+    );
+  });
+
+  it('carries the difficulty round with the faction that was given it', () => {
+    // A seat is a faction *and* a commander, and `--matchup` spells both in one
+    // entry. A rotation that moved the faction and left the difficulty behind
+    // would quietly re-pair them and measure a matchup nobody asked for.
+    const mixed: Seat[] = [
+      { slot: 0, faction: Faction.Bathyarch, difficulty: AiDifficulty.Recruit },
+      { slot: 1, faction: Faction.Pelagia, difficulty: AiDifficulty.Veteran },
+    ];
+    assert.deepEqual(rotateSeats(mixed, 1), [
+      { slot: 0, faction: Faction.Pelagia, difficulty: AiDifficulty.Veteran },
+      { slot: 1, faction: Faction.Bathyarch, difficulty: AiDifficulty.Recruit },
+    ]);
+  });
+
+  it('rotating by nothing is the seating as typed', () => {
+    // The property that keeps `--rotate-seats` opt-in honestly: a worker is
+    // handed `--rotation 0` for the first seating, and a batch without the
+    // flag is that seating alone. If this drifted, every committed baseline's
+    // own command would stop reproducing it.
+    assert.deepEqual(rotateSeats(FOUR_SEATS, 0), FOUR_SEATS);
+  });
+
+  it('normalises a shift past the table and behind it', () => {
+    assert.deepEqual(rotateSeats(FOUR_SEATS, 4), FOUR_SEATS, 'all the way round is a no-op');
+    assert.deepEqual(rotateSeats(FOUR_SEATS, -1), rotateSeats(FOUR_SEATS, 3));
+    assert.deepEqual(rotateSeats([], 2), []);
+  });
+
+  it('puts each faction in each chair exactly once over a full cycle', () => {
+    // The whole reason cyclic rotation is enough, and why the harness does not
+    // need all 24 permutations: n rotations balance both marginals against
+    // each other at n batches rather than n! of them.
+    const cycle = FOUR_SEATS.map((_, by) => rotateSeats(FOUR_SEATS, by));
+    for (let slot = 0; slot < FOUR_SEATS.length; slot++) {
+      assert.deepEqual(
+        [...new Set(cycle.map((seating) => seating[slot]!.faction))].sort((a, b) => a - b),
+        [Faction.Bathyarch, Faction.Pelagia, Faction.Directorate, Faction.Hadron].sort(
+          (a, b) => a - b
+        ),
+        `slot ${slot} did not host every navy`
+      );
+    }
+  });
+
+  /**
+   * `matches` matches per seating, over `seatings` cyclic rotations, with the
+   * win in each one handed to whoever is sitting in `winningSlot`.
+   *
+   * Built so that the two marginals disagree on purpose: the chair takes
+   * everything and no doctrine does, which is the shape of the finding and the
+   * thing a single-seating report cannot distinguish from the opposite.
+   */
+  function rotated(
+    seatings: number,
+    matches: number,
+    winningSlot: number
+  ): ReturnType<typeof summarise> {
+    const one = fourSeatMatch();
+    const results: MatchTelemetryResult[] = [];
+    for (let by = 0; by < seatings; by++) {
+      const seating = rotateSeats(FOUR_SEATS, by);
+      for (let i = 0; i < matches; i++) {
+        results.push({
+          ...one,
+          seed: 4400 + i,
+          winnerSlot: winningSlot,
+          players: one.players.map((p) => ({ ...p, faction: seating[p.slot]!.faction })),
+        });
+      }
+    }
+    return summarise(results);
+  }
+
+  it('counts the seatings it was played under, not the factions in it', () => {
+    assert.equal(rotated(4, 5, 2).seatings, 4);
+    assert.equal(rotated(1, 20, 2).seatings, 1, 'one seating, twenty matches');
+  });
+
+  it('reads the chair off the slots and the doctrine off the factions', () => {
+    // Slot 2 wins every match; each navy sits there for a quarter of them. So
+    // the chair reads 100% and every doctrine reads 25% — the two marginals of
+    // one table, and the pair that a single seating collapses into one number.
+    const summary = rotated(4, 5, 2);
+    assert.equal(summary.slots.find((s) => s.slot === 2)!.winRate, 1);
+    assert.deepEqual(
+      summary.slots.filter((s) => s.slot !== 2).map((s) => s.winRate),
+      [0, 0, 0]
+    );
+    for (const faction of summary.factions) {
+      assert.equal(faction.winRate, 0.25, 'every navy took a quarter, by taking that chair');
+    }
+  });
+
+  it('names the navies that sat in each chair', () => {
+    const summary = rotated(4, 5, 2);
+    for (const slot of summary.slots) {
+      assert.equal(slot.factions.length, 4, `slot ${slot.slot} should have hosted every navy`);
+    }
+    assert.deepEqual(
+      rotated(1, 5, 2).slots.map((s) => s.factions.length),
+      [1, 1, 1, 1]
+    );
+  });
+
+  it('says in the report how many seatings a win rate is pooled over', () => {
+    // The sentence the fourteen baselines behind #592 could not carry. A reader
+    // cannot tell a pooled batch from a single-seating one out of the seed
+    // range, and it is the difference between a win rate that names a doctrine
+    // and one that names a spawn.
+    const pooled = toMarkdown(rotated(4, 5, 2), 'Rotated', 'test');
+    assert.match(pooled, /4 seatings, pooled/);
+    assert.doesNotMatch(pooled, /One seating/);
+
+    const single = toMarkdown(rotated(1, 20, 2), 'Single', 'test');
+    assert.match(single, /One seating/);
+    assert.match(single, /cannot separate the doctrine from the chair/);
+  });
+
+  it('prints the chair beside the doctrine, and only when they can differ', () => {
+    assert.match(toMarkdown(rotated(4, 5, 2), 'Rotated', 'test'), /## Per chair/);
+    assert.doesNotMatch(
+      toMarkdown(rotated(1, 20, 2), 'Single', 'test'),
+      /## Per chair/,
+      'one navy per chair and one chair per navy is the faction table relabelled'
+    );
+  });
+
+  it('prints the chair for a mirror, where the doctrine cannot vary at all', () => {
+    // The other batch in which the two marginals differ, and the one #607
+    // measured the chair with: four seats of one navy, so the faction column
+    // is a single row and every difference left is the furniture.
+    const one = fourSeatMatch();
+    const mirror = summarise(
+      Array.from({ length: 20 }, (_, i) => ({
+        ...one,
+        seed: 4500 + i,
+        winnerSlot: 2,
+        players: one.players.map((p) => ({ ...p, faction: Faction.Directorate })),
+      }))
+    );
+    assert.equal(mirror.seatings, 1, 'one assignment — it is the doctrine that is repeated');
+    assert.equal(mirror.factions.length, 1);
+    assert.match(toMarkdown(mirror, 'Mirror', 'test'), /## Per chair/);
+  });
+
+  it('tells the spread rail how many seatings it is ruling on', () => {
+    // The rail #600 rests on. Its reading was "Directorate 75%" out of one
+    // seating and is 57% pooled over four, and it had no way to say which
+    // claim it was making.
+    const RISK = 'One navy is simply stronger';
+    const railOf = (summary: ReturnType<typeof summarise>): GuardRailVerdict =>
+      summary.guardRails.find((r) => r.risk === RISK)!;
+
+    assert.match(railOf(rotated(4, 5, 2)).reading, /4 seatings pooled/);
+    assert.match(railOf(rotated(1, 20, 2)).reading, /one seating/);
   });
 });
