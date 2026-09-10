@@ -302,6 +302,17 @@ spread this rail catches may be a doctrine that is stronger or an AI that plays 
 better. The rail does not distinguish them, and it is not meant to: either one is worth
 opening.
 
+**And a statement about the seating, which turned out to be the larger of the two.** The
+harness binds a faction to a spawn by its position in the matchup, so a batch measures one
+*seating* rather than one matchup — and on `ventfront-divide` the chair outweighs the
+doctrine. Four seats of one navy, so nothing but the furniture is left, take 11% / 28% /
+50% / 11% of 109 decided matches by slot, and rotating the four-faction baseline's seat
+order moves its leader from 75% to 31% on identical seeds
+([tools/balance/baselines/seat-rotation.md](../tools/balance/baselines/seat-rotation.md)).
+So this rail's reading may be attributed to a *navy* only out of a seat-rotated, pooled
+batch; out of a single seating it names a spawn as much as a doctrine, and it named one for
+fourteen consecutive baselines before anybody checked.
+
 ---
 
 ## 10. Berths — the population cap
