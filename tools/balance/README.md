@@ -76,6 +76,29 @@ from site positions, combat rolls nothing, and the AI draws no dice. `--no-fauna
 makes the seed inert, and ten runs become one match ten times — the CLI warns and marks the
 report when that happens.
 
+**"And nothing else" is not "and so it barely matters".** Placing the Drift is the largest
+single determinant of who wins a match on `ventfront-divide` — larger, measured, than the
+difference between two navies' doctrines. See the next entry.
+
+**The chair is a variable, and `--matchup` pins it.** The spec binds each faction to a spawn
+by its position in the list: the entry index *is* the slot. So a batch measures one seating,
+and a win rate out of one seating cannot separate a doctrine from the corner it started in.
+
+That is not a theoretical caveat. Four seats of *one* navy — doctrine held perfectly
+constant, so every remaining difference is the furniture — win 11% / 28% / 50% / 11% by
+slot across 109 decided matches and three different navies. Rotating the seat order in the
+four-faction baseline moves the Directorate from 75% to 31% and the Knights from 15% to 56%
+on identical seeds, and moves which navy the "one navy is simply stronger" rail names.
+
+`baselines/seat-rotation.md` is that measurement, including the two hypotheses it kills:
+the map is symmetric in every field the simulation reads, and with fauna off a mirror match
+is a perfect tie, so the asymmetry is the Drift's placement rather than the ground or a slot
+ordering in the sim.
+
+**Rotate the seating before you attribute a win rate to a navy**, and pool the rotations —
+four batches with the matchup cycled gives each faction each chair exactly once, which is
+what makes the per-faction column mean the doctrine again.
+
 **"Held" is evidence, not proof.** It means the failure that guard-rail describes did not
 appear in these runs. The sample size is printed beside every verdict.
 
