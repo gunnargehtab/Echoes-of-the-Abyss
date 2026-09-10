@@ -31,6 +31,16 @@
  *   47 changed parts buries the one part that really moved. The factor is
  *   measured off the whole-model extents and divided out; what survives is
  *   shape.
+ * - **Canonicalise as the bake and the runtime do, then subtract the one
+ *   translation too.** Both yaw a Z-long export onto +X and centre it on its
+ *   bounding box before anything reads it (`rosterModels.ts`,
+ *   hull-intake's `page.html`), so a port that builds bow-on-X and centred —
+ *   the four Light Scouts were drawn along Z, off-centre, at four arbitrary
+ *   scales (#588) — has changed nothing either of them can see. Each file is
+ *   yawed here the same way when its Z extent is the longer, and the
+ *   whole-hull shift is measured as the per-axis median of the parts' centre
+ *   moves, for the reason the scale is a median, and divided out. Both are
+ *   printed, because a yaw or a shift is still worth a sentence in the PR.
  *
  * Nothing here is a gate and nothing here exits non-zero on a difference: a
  * port is allowed to move a bound, and only a person reading the report can
@@ -47,6 +57,38 @@ import { readGlb, boundsOf } from './glb.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
 const models = 'docs/concept-art/models';
+
+/**
+ * The bake's yaw, applied when a file is longer along Z than X: `x' = z,
+ * `z' = -x`, which is +π/2 about Y as `rosterModels.ts` and the intake page
+ * apply it. Returns the parts rotated, and whether it had to.
+ */
+function yawOntoX(parts) {
+  const { min, max } = boundsOf(parts);
+  if (max[2] - min[2] <= max[0] - min[0]) return { parts, yawed: false };
+  return {
+    yawed: true,
+    parts: parts.map((p) => {
+      const a = Float32Array.from(p.positions);
+      for (let i = 0; i < a.length; i += 3) {
+        const x = a[i];
+        a[i] = a[i + 2];
+        a[i + 2] = -x;
+      }
+      return { ...p, positions: a };
+    }),
+  };
+}
+
+/** Per-axis median of `values` (an array of `[x, y, z]`), or zeros when empty. */
+function medianAxis(values) {
+  return [0, 1, 2].map((axis) => {
+    const v = values.map((r) => r[axis]).sort((x, y) => x - y);
+    if (!v.length) return 0;
+    const m = v.length >> 1;
+    return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2;
+  });
+}
 
 /** Extents and centre of a part or a whole model, in the file's own units. */
 function box(parts) {
@@ -112,8 +154,10 @@ function extract(rev, path, dir) {
 }
 
 function report(beforePath, afterPath, label) {
-  const before = readGlb(beforePath).parts;
-  const after = readGlb(afterPath).parts;
+  const b0 = yawOntoX(readGlb(beforePath).parts);
+  const a0 = yawOntoX(readGlb(afterPath).parts);
+  const before = b0.parts;
+  const after = a0.parts;
   const scale = rootScale(before, after);
   const uniform = Math.max(...scale) / Math.min(...scale) - 1;
 
@@ -122,6 +166,11 @@ function report(beforePath, afterPath, label) {
   console.log(
     `  tris    ${before.reduce((s, p) => s + p.tris, 0)} → ${after.reduce((s, p) => s + p.tris, 0)}`
   );
+  if (b0.yawed || a0.yawed)
+    console.log(
+      `  yaw     ${b0.yawed ? 'before' : ''}${b0.yawed && a0.yawed ? ' and ' : ''}${a0.yawed ? 'after' : ''}` +
+        ' drawn along Z — yawed onto +X as the bake does, before comparing'
+    );
   const scaleNote =
     uniform < 1e-3
       ? '(uniform — divided out below)'
@@ -130,6 +179,23 @@ function report(beforePath, afterPath, label) {
 
   const beforeByName = new Map(before.map((p) => [p.name, p]));
   const afterByName = new Map(after.map((p) => [p.name, p]));
+
+  // The one translation the whole hull moved by — a port that centres a hull
+  // the approved export left off-centre moves every part by the same vector,
+  // which the bake and the runtime undo and which is therefore not shape.
+  const shift = medianAxis(
+    before
+      .filter((p) => afterByName.has(p.name))
+      .map((p) => {
+        const a = box(p).centre;
+        const b = box(afterByName.get(p.name)).centre;
+        return [0, 1, 2].map((i) => b[i] - a[i] * scale[i]);
+      })
+  );
+  if (shift.some((v) => Math.abs(v) > 0.005))
+    console.log(
+      `  shift   ${shift.map((v) => v.toFixed(3)).join('  ')}  (whole hull, m — divided out below)`
+    );
 
   const gone = before.filter((p) => !afterByName.has(p.name)).map((p) => p.name);
   const added = after.filter((p) => !beforeByName.has(p.name)).map((p) => p.name);
@@ -159,7 +225,7 @@ function report(beforePath, afterPath, label) {
     const b = box(q);
     const d = Math.max(
       ...[0, 1, 2].map((i) => Math.abs(b.extent[i] - a.extent[i] * scale[i])),
-      ...[0, 1, 2].map((i) => Math.abs(b.centre[i] - a.centre[i] * scale[i]))
+      ...[0, 1, 2].map((i) => Math.abs(b.centre[i] - shift[i] - a.centre[i] * scale[i]))
     );
     const note = [];
     if (p.tris !== q.tris) note.push(`tris ${p.tris}→${q.tris}`);
@@ -169,10 +235,10 @@ function report(beforePath, afterPath, label) {
   moved.sort((x, y) => y.d - x.d);
 
   if (!moved.length) {
-    console.log('  shape   unchanged beyond the root scale — every part is where it was');
+    console.log('  shape   unchanged beyond the root scale and shift — every part is where it was');
     return;
   }
-  console.log(`  shape   ${moved.length} of ${before.length} parts differ beyond the root scale:`);
+  console.log(`  shape   ${moved.length} of ${before.length} parts differ beyond the root scale and shift:`);
   for (const m of moved)
     console.log(`    ${m.name.padEnd(22)} ${m.d.toFixed(3)} m${m.note ? `  ${m.note}` : ''}`);
   console.log(

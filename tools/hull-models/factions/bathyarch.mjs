@@ -20,17 +20,22 @@
  * Light is machinery light: louvres, stack throats, deck floods, lit gratings —
  * and it goes on *upward* faces, because the maps are top-down (see kit.mjs).
  */
-import { THREE, clad, lamp, add, box, cyl, torus, plate, bothSides } from '../kit.mjs';
+import { THREE, clad, lamp, hex, add, box, cyl, torus, plate, bothSides } from '../kit.mjs';
 
-/** The Klaxon's palette, as the Bulwark's own materials carry it. */
+/**
+ * The Klaxon's palette, as the Bulwark's own materials carry it: the four
+ * tokens of docs/art-direction.md, and — where the approved model needed a
+ * colour the docs do not name — that model's own hex, exactly (kit.mjs `hex`).
+ * The vent is the amber banked down, the flood is it thrown wide open.
+ */
 export const ink = {
-  hullBlack: () => clad('hull_black', [0.0, 0.01, 0.01], 0.25, 0.85),
-  ironGrey: () => clad('iron_grey', [0.26, 0.23, 0.19], 0.32, 0.72),
-  oxideRust: () => clad('oxide_rust', [0.05, 0.02, 0.01], 0.1, 0.95),
-  hazardAmber: () => clad('hazard_amber', [0.89, 0.45, 0.03], 0.15, 0.6),
-  amberLamp: () => lamp('amber_lamp', [0.89, 0.45, 0.03]),
-  amberVent: () => lamp('amber_vent', [0.43, 0.19, 0.01]),
-  amberFlood: () => lamp('amber_flood', [1.0, 0.63, 0.16]),
+  hullBlack: () => clad('hull_black', hex('#0E1418'), 0.25, 0.85),
+  ironGrey: () => clad('iron_grey', hex('#8C8378'), 0.32, 0.72),
+  oxideRust: () => clad('oxide_rust', hex('#3D2B1F'), 0.1, 0.95),
+  hazardAmber: () => clad('hazard_amber', hex('#F2B233'), 0.15, 0.6),
+  amberLamp: () => lamp('amber_lamp', hex('#F2B233'), hex('#1A1408')),
+  amberVent: () => lamp('amber_vent', hex('#B07A1E'), hex('#120E06')),
+  amberFlood: () => lamp('amber_flood', hex('#FFD070'), hex('#2A2210')),
 };
 
 /** The body: a flat-sided slab from a plan outline, with a bow face and transom. */
@@ -226,7 +231,9 @@ export function deckFloods(root, lampMat, { deck, spots }) {
  * argument. The value is the approved turret's own.
  */
 export const structureInk = {
-  workLamp: () => lamp('work_lamp', [0.888, 0.445, 0.033], [0.02, 0.01, 0.0]),
+  // The approved turret's lamp is amber through and through — its base is the
+  // token, not a near-black — so it reads as a fixture in the albedo map too.
+  workLamp: () => lamp('work_lamp', hex('#F2B233'), hex('#F2B233'), 0.35),
 };
 
 /**

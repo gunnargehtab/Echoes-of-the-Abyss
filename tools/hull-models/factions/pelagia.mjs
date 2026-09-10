@@ -45,6 +45,7 @@ import {
   THREE,
   clad,
   lamp,
+  hex,
   add,
   box,
   cyl,
@@ -55,14 +56,20 @@ import {
   bothSides,
 } from '../kit.mjs';
 
-/** The Commune's palette, as the Sower's own materials carry it. */
+/**
+ * The Commune's palette, as the Sower's own materials carry it: the four
+ * tokens of docs/art-direction.md, and — where the approved model needed a
+ * colour the docs do not name — that model's own hex, exactly (kit.mjs `hex`).
+ * The vein is the biolight token at half strength, which is the difference
+ * between a thread along a rib and a bud.
+ */
 export const ink = {
-  chitinHull: () => clad('chitin_hull', [0.0, 0.02, 0.01], 0.08, 0.6),
-  growthRidge: () => clad('growth_ridge', [0.01, 0.04, 0.03], 0.1, 0.65),
-  algaeMembrane: () => clad('algae_membrane', [0.01, 0.38, 0.19], 0.05, 0.55),
-  sporePod: () => clad('spore_pod', [0.81, 0.87, 0.37], 0.05, 0.5),
-  bioVein: () => lamp('bio_vein', [0.11, 0.42, 0.05], [0.0, 0.01, 0.0]),
-  bioLight: () => lamp('bio_light', [0.27, 0.77, 0.15], [0.0, 0.01, 0.0]),
+  chitinHull: () => clad('chitin_hull', hex('#0B241E'), 0.08, 0.6),
+  growthRidge: () => clad('growth_ridge', hex('#14382C'), 0.1, 0.65),
+  algaeMembrane: () => clad('algae_membrane', hex('#1FA67A'), 0.05, 0.55),
+  sporePod: () => clad('spore_pod', hex('#E8F0A3'), 0.05, 0.5),
+  bioVein: () => lamp('bio_vein', hex('#5FAE42'), hex('#061206')),
+  bioLight: () => lamp('bio_light', hex('#8FE36B'), hex('#0A1A08')),
 };
 
 /** A grown orb: few facets, and squashed by the caller — never round in section. */
@@ -436,10 +443,10 @@ export function tendrils(root, ridge, { tendrils: list }) {
  * are the approved turret's own.
  */
 export const structureInk = {
-  deepChlorophyll: () => clad('deep_chlorophyll', [0.003, 0.018, 0.013], 0.1, 0.65),
-  grownSteel: () => clad('grown_steel', [0.016, 0.03, 0.025], 0.35, 0.45),
-  algaeHull: () => clad('algae_hull', [0.007, 0.133, 0.072], 0.08, 0.62),
-  biolightGreen: () => lamp('biolight_green', [0.275, 0.768, 0.147], [0.006, 0.03, 0.009]),
+  deepChlorophyll: () => clad('deep_chlorophyll', hex('#0B241E'), 0.1, 0.65),
+  grownSteel: () => clad('grown_steel', hex('#22302C'), 0.35, 0.45),
+  algaeHull: () => clad('algae_hull', hex('#14664C'), 0.08, 0.62),
+  biolightGreen: () => lamp('biolight_green', hex('#8FE36B'), hex('#123018'), 0.35),
 };
 
 /** The mound: a grown dome, its growth ring, and the collar the head turns in. */

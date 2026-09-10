@@ -72,6 +72,18 @@ import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { sceneParts, topDown } from './glb.mjs';
 export { THREE };
 
+/**
+ * A colour as the docs write it. `hex('#7A1B2E')` is `docs/art-direction.md`'s
+ * abyssal red, converted by three from sRGB to the linear value the exporter
+ * carries — which is also, to four decimals, what every approved binary in
+ * `docs/concept-art/models/` carries, because they were all authored from the
+ * same tokens. The first faction modules transcribed those linear values by
+ * hand and rounded them, and one rounding zeroed two channels of the
+ * Directorate's trench black (#630). A module cites the token; nothing here
+ * types out a linear triple.
+ */
+export const hex = (token) => new THREE.Color(token).toArray();
+
 /** Cladding: a plain PBR surface. Metalness and roughness are the navy's. */
 export function clad(name, rgb, metalness, roughness) {
   const m = new THREE.MeshStandardMaterial({
@@ -83,12 +95,16 @@ export function clad(name, rgb, metalness, roughness) {
   return m;
 }
 
-/** A lamp: near-black base, the light in `emissive`. See the header. */
-export function lamp(name, rgb, base = [0.01, 0.01, 0.0]) {
+/**
+ * A lamp: near-black base, the light in `emissive`. See the header. The
+ * roughness is the approved models' 0.4 unless a navy's fixture says
+ * otherwise — the Order's structure lights are polished to 0.15 and 0.3.
+ */
+export function lamp(name, rgb, base = [0.01, 0.01, 0.0], roughness = 0.4) {
   const m = new THREE.MeshStandardMaterial({
     color: new THREE.Color(...base),
     metalness: 0,
-    roughness: 0.4,
+    roughness,
     emissive: new THREE.Color(...rgb),
   });
   m.name = name;

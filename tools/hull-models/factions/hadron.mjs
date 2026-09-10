@@ -26,6 +26,7 @@ import {
   THREE,
   clad,
   lamp,
+  hex,
   add,
   box,
   cyl,
@@ -37,13 +38,19 @@ import {
   bothSides,
 } from '../kit.mjs';
 
-/** The Order's palette, as the Clarion's own materials carry it. */
+/**
+ * The Order's palette, as the Clarion's own materials carry it: the four
+ * tokens of docs/art-direction.md, and — where the approved model needed a
+ * colour the docs do not name — that model's own hex, exactly (kit.mjs `hex`).
+ */
 export const ink = {
-  shadowIndigo: () => clad('shadow_indigo', [0.04, 0.03, 0.1], 0.35, 0.45),
-  paleAlloy: () => clad('pale_alloy', [0.79, 0.81, 0.89], 0.85, 0.22),
-  resonanceCrystal: () => clad('resonance_crystal', [0.26, 0.11, 0.92], 0.4, 0.18),
-  crystalSeam: () => lamp('crystal_seam', [0.58, 0.38, 1.0], [0.01, 0.01, 0.03]),
-  resonanceNode: () => lamp('resonance_node', [0.39, 0.2, 1.0], [0.02, 0.01, 0.08]),
+  shadowIndigo: () => clad('shadow_indigo', hex('#3B2E5A'), 0.35, 0.45),
+  paleAlloy: () => clad('pale_alloy', hex('#E6E9F2'), 0.85, 0.22),
+  resonanceCrystal: () => clad('resonance_crystal', hex('#8B5CF6'), 0.4, 0.18),
+  crystalSeam: () => lamp('crystal_seam', hex('#C9A6FF'), hex('#1A1030')),
+  // The node's glow is not the crystal-glow token: it is the Clarion's own,
+  // a shade bluer, and every Order hull since has carried it.
+  resonanceNode: () => lamp('resonance_node', hex('#A77CFF'), hex('#2A1A50')),
 };
 
 /**
@@ -137,7 +144,15 @@ export function bowArray(root, { alloy, crystal, seam, node }, { from, to, r, y 
   );
 }
 
-/** A thin swept wing, port and starboard, with a lit outboard edge. */
+/**
+ * A thin swept wing, port and starboard, with a lit outboard edge.
+ *
+ * `plate` lands an outline's second coordinate on **-z** (kit.mjs), so the
+ * outline is drawn at `-sgn` to put the port plate at +z beside the port
+ * edge. Written without the sign, `wing_p` and `wing_edge_p` sat on opposite
+ * sides of the hull: invisible on a symmetric pair, and the Reciter's
+ * three-part wing is where a bounds comparison stops agreeing (#586).
+ */
 export function wings(
   root,
   { alloy, crystal },
@@ -149,10 +164,10 @@ export function wings(
       `wing_${side}`,
       plate(
         [
-          [aft, sgn * inner],
-          [aft, sgn * outer],
-          [aft + tipChord, sgn * outer],
-          [fwd, sgn * inner],
+          [aft, -sgn * inner],
+          [aft, -sgn * outer],
+          [aft + tipChord, -sgn * outer],
+          [fwd, -sgn * inner],
         ],
         t
       ),
@@ -166,7 +181,7 @@ export function wings(
   });
 }
 
-/** A small forward wing — the Clarion's canard, smaller and unlit. */
+/** A small forward wing — the Clarion's canard, smaller and unlit. Drawn at `-sgn`, as `wings` is. */
 export function canards(root, alloy, { from, to, inner, outer, t = 0.7 }) {
   bothSides((side, sgn) =>
     add(
@@ -174,10 +189,10 @@ export function canards(root, alloy, { from, to, inner, outer, t = 0.7 }) {
       `canard_${side}`,
       plate(
         [
-          [to, sgn * inner],
-          [to, sgn * outer],
-          [from, sgn * (outer - 1.5)],
-          [from, sgn * inner],
+          [to, -sgn * inner],
+          [to, -sgn * outer],
+          [from, -sgn * (outer - 1.5)],
+          [from, -sgn * inner],
         ],
         t
       ),
@@ -298,10 +313,10 @@ export function panelSeams(root, alloy, { from, to, count, halfBeam }) {
  * four. Values are the approved turret's own.
  */
 export const structureInk = {
-  darkSteel: () => clad('dark_steel', [0.012, 0.016, 0.03], 0.4, 0.4),
-  alloyDim: () => clad('alloy_dim', [0.25, 0.27, 0.37], 0.35, 0.32),
-  crystalDim: () => lamp('resonance_crystal_dim', [0.26, 0.11, 0.92], [0.01, 0.01, 0.04]),
-  navLight: () => lamp('nav_light', [0.58, 0.38, 1.0], [0.02, 0.01, 0.06]),
+  darkSteel: () => clad('dark_steel', hex('#1C2230'), 0.4, 0.4),
+  alloyDim: () => clad('alloy_dim', hex('#8A8FA3'), 0.35, 0.32),
+  crystalDim: () => lamp('resonance_crystal_dim', hex('#8B5CF6'), hex('#1E1038'), 0.15),
+  navLight: () => lamp('nav_light', hex('#C9A6FF'), hex('#241744'), 0.3),
 };
 
 /** A mirrored pair, tagged `r` and `l` — the Order's exact bilateral symmetry. */

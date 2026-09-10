@@ -46,6 +46,7 @@ import {
   THREE,
   clad,
   lamp,
+  hex,
   add,
   box,
   cyl,
@@ -56,14 +57,23 @@ import {
   segmentSeries as series,
 } from '../kit.mjs';
 
-/** The Directorate's palette, as the Dredge's own materials carry it. */
+/**
+ * The Directorate's palette, as the Dredge's own materials carry it: the four
+ * tokens of docs/art-direction.md, and — where the approved model needed a
+ * colour the docs do not name — that model's own hex, exactly (kit.mjs `hex`).
+ *
+ * Exactly, because the first transcription rounded each linear channel to two
+ * decimals and trench black came out `[0, 0, 0.01]`: red and green zeroed,
+ * blue doubled, a 3.4× drop in the luminance the bake ships (#630, F2). It
+ * clads the ridges, the spines, the mandible roots and the hopper.
+ */
 export const ink = {
-  chitinViolet: () => clad('chitin_violet', [0.03, 0.01, 0.05], 0.1, 0.62),
-  chitinRed: () => clad('chitin_red', [0.19, 0.01, 0.03], 0.14, 0.52),
-  trenchBlack: () => clad('trench_black', [0.0, 0.0, 0.01], 0.32, 0.42),
-  weldSteel: () => clad('weld_steel', [0.04, 0.05, 0.07], 0.38, 0.44),
-  biolightCrimson: () => lamp('biolight_crimson', [0.54, 0.06, 0.11], [0.01, 0.0, 0.01]),
-  gulletGlow: () => lamp('gullet_glow', [0.75, 0.08, 0.14], [0.02, 0.0, 0.01]),
+  chitinViolet: () => clad('chitin_violet', hex('#2D1B3D'), 0.1, 0.62),
+  chitinRed: () => clad('chitin_red', hex('#7A1B2E'), 0.14, 0.52),
+  trenchBlack: () => clad('trench_black', hex('#0A0710'), 0.32, 0.42),
+  weldSteel: () => clad('weld_steel', hex('#3A3F4A'), 0.38, 0.44),
+  biolightCrimson: () => lamp('biolight_crimson', hex('#C2465E'), hex('#1A0810')),
+  gulletGlow: () => lamp('gullet_glow', hex('#E0506A'), hex('#2A0C14')),
 };
 
 /** A carapace orb: a low-facet sphere the caller squashes into a plate. */
@@ -384,13 +394,13 @@ export function hopper(root, { black, steel, gullet }, { x, y, z = 0, w = 18, h 
  *
  * A Sentinel Turret is "nearly black — an ambush predator, navigation marks
  * only until it fires" (docs/asset-prompts-3d.md, the Sentinel Turret block),
- * and `chitin_red` at [0.19, 0.01, 0.03] is not that. The structures carry
+ * and `chitin_red` at #7A1B2E is not that. The structures carry
  * their own names rather than a shared dimming factor applied to `ink` — see
  * `structureInk` in factions/hadron.mjs for the argument. The value is the
  * approved turret's own.
  */
 export const structureInk = {
-  chitinRedDark: () => clad('chitin_red_dark', [0.076, 0.006, 0.014], 0.14, 0.55),
+  chitinRedDark: () => clad('chitin_red_dark', hex('#4E1220'), 0.14, 0.55),
 };
 
 /** A carapace plate: a low-facet orb the caller squashes and lays on the mound. */
