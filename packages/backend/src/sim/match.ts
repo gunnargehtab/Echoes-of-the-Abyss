@@ -1320,9 +1320,24 @@ export class Match {
     if (this.missionDenies(slot, 'weapons')) return;
     if (!this.owns(slot, eid) || !hasComponent(this.world, Weapon, eid)) return;
     const target = this.echo.entityForHandle(slot, contactHandle);
-    if (target === undefined) return;
-    if (!hasComponent(this.world, Owner, target) || Owner.slot[target] === slot) return;
-    if (!hasComponent(this.world, Health, target) || Health.hp[target]! <= 0) return;
+    // A phantom's handle names no entity by construction, and refusing it here
+    // was the same leak, one terrain over. The Fields' whole charge for the
+    // ping is that one to three of the returns are lies you cannot sort from
+    // the truth (docs/systems-echo.md §3); a refusal that returns before the
+    // plan is touched publishes the sort straight back to the only player who
+    // was lied to, in `queuedOrders`, for nothing. So a phantom handle is
+    // taken like any other and aimed at the point that slot was shown — the
+    // only point an order on a lie can honestly go to. `targetAlive` declines
+    // entity 0 at combat.ts, so the gun falls through to auto-acquire exactly
+    // as it does for a contact that died between the resolve and the click.
+    const phantom =
+      target === undefined ? this.echo.resolvePhantom(slot, contactHandle) : undefined;
+    if (target === undefined) {
+      if (phantom === undefined) return;
+    } else {
+      if (!hasComponent(this.world, Owner, target) || Owner.slot[target] === slot) return;
+      if (!hasComponent(this.world, Health, target) || Health.hp[target]! <= 0) return;
+    }
     // Deliberately NOT refused here when the target is ordnance with no hull to
     // shoot off. That check lives in combat.ts's `targetAlive`, because
     // refusing at the order leaks: this path returns before the plan is
@@ -1344,19 +1359,33 @@ export class Match {
       // the contact went silent); with nothing reported this pass the anchor
       // falls back to the truth, which is the pre-existing behaviour and a
       // smaller disclosure than it looks — the hull is being ordered there.
-      const shown = this.echo.firingSolution(slot, target);
+      if (phantom !== undefined) {
+        enqueue(this.world, eid, { kind: 'attack', x: phantom.x, y: phantom.y, target: 0 });
+        return;
+      }
+      const shown = this.echo.firingSolution(slot, target!);
       enqueue(this.world, eid, {
         kind: 'attack',
-        x: shown?.x ?? Position.x[target]!,
-        y: shown?.y ?? Position.y[target]!,
-        target,
+        x: shown?.x ?? Position.x[target!]!,
+        y: shown?.y ?? Position.y[target!]!,
+        target: target!,
       });
       return;
     }
     clearQueue(this.world, eid);
     this.world.paths.delete(eid);
-    Weapon.orderedTargetEid[eid] = target;
+    Weapon.orderedTargetEid[eid] = target ?? 0;
     cancelEmbark(this.world, eid);
+    if (phantom !== undefined && hasComponent(this.world, MoveOrder, eid)) {
+      // A real ordered target is chased: combat.ts republishes its position
+      // into `MoveOrder` every tick while it is out of range. A hull that
+      // simply stood still would be the same tell in another field, so the
+      // order becomes what it looks like from the outside — go to where the
+      // contact was reported. It gets there and finds water.
+      MoveOrder.x[eid] = phantom.x;
+      MoveOrder.y[eid] = phantom.y;
+      MoveOrder.active[eid] = 1;
+    }
   }
 
   /**

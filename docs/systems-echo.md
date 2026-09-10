@@ -199,8 +199,13 @@ counter a real contact's comes from, Tier 4, a hull one of the enemy navies on t
 field — drawn from that navy's roster, its own locked hulls included, so the class is never the
 tell — with full health and a heading, and no entity behind it. They land 200–900 m from the
 pinger, never within 150 m of anything real inside the reveal, hold still for the three seconds
-the transmission lasts, and then fade as any ghost marker does. Every order that resolves a handle — an attack, a torpedo —
-resolves a phantom to nothing and does nothing. The true returns from the same ping lie in
+the transmission lasts, and then fade as any ghost marker does. An order that resolves a
+phantom's handle is *taken*, not refused: the plan is replaced exactly as it would be for a true
+return, the hull is sent to the point the phantom was reported at, and it arrives to find water.
+Refusing at the order was the mistake — the refusal returned before the plan was touched, and a
+plan is published back to its owner, so a single click sorted the lies from the truth for free.
+A torpedo is still not launched at a phantom, and that refusal is readable too, but only at the
+price of a fish for every return probed. The true returns from the same ping lie in
 bearing like any other contact. A phantom sounds and reads identical to a true one
 ([audio-direction.md](audio-direction.md) §9): the terrain teaches its own rule, and it teaches it
 to the pinger.

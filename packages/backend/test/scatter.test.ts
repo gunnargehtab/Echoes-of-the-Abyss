@@ -17,12 +17,17 @@
  *   listener could otherwise exploit. Two listeners on a cross bearing are
  *   told the truth, and that is the rule that makes the Fields learnable
  *   rather than dice (§3, "Two ears").
- * - **A phantom has to be indistinguishable on the wire and refused by every
+ * - **A phantom has to be indistinguishable on the wire and takeable by every
  *   order.** A Tier-4 return with a handle from the same counter, a kind, a
- *   faction, health and a heading, and no entity behind it.
+ *   faction, health and a heading, and no entity behind it — and an order at
+ *   one has to leave the ordering player's own hull looking exactly as an
+ *   order at a true return does, because that payload is the one thing they
+ *   read for free. Refusing at the order was the leak (#616).
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import {
   ACTIVE_SONAR,
   Biome,
@@ -34,11 +39,12 @@ import {
   UnitKind,
   unitAvailableTo,
   type Contact,
+  type OwnUnit,
 } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { spawnUnit } from '../src/sim/world.ts';
-import { ActivePing, Ordnance, Position, Weapon } from '../src/sim/components.ts';
+import { ActivePing, MoveOrder, Ordnance, Position, Weapon } from '../src/sim/components.ts';
 import { VENTFRONT_DIVIDE } from '../src/sim/maps/index.ts';
 import { hasComponent } from 'bitecs';
 
@@ -442,6 +448,24 @@ describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.
     return { match, pinger, enemy, contacts, phantoms, real };
   }
 
+  /**
+   * Drive the clock to the next Echo snapshot and hand back slot 0's own hull.
+   *
+   * The own-unit payload rather than the world: what a cheating client can
+   * read for free is exactly this, and a tell that never reaches it is not a
+   * tell at all.
+   */
+  function nextOwnUnit(match: Match, eid: number): OwnUnit {
+    for (let i = 0; i < SIM.TICK_HZ; i++) {
+      const unit = match
+        .update(STEP_MS)
+        ?.get(0)
+        ?.units.find((u) => u.id === eid);
+      if (unit !== undefined) return unit;
+    }
+    assert.fail('no snapshot for the ordering hull inside a second');
+  }
+
   it('returns one to three phantoms from inside the Fields, and none from open water', () => {
     const open = ping(new Terrain(MAP_M, MAP_M, 250));
     assert.equal(open.real.length, 1, 'the premise: the ping lights the enemy');
@@ -485,18 +509,142 @@ describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.
     assert.equal(new Set(handles).size, handles.length, 'every handle distinct');
   });
 
-  it('refuses every order that resolves a handle', () => {
+  /**
+   * Every `Match` method that turns a contact handle into something to act on.
+   *
+   * The enumeration is the mechanism rather than the decoration. A phantom is
+   * only indistinguishable while *every* handle-consuming path treats it as
+   * one, and the way that stops being true is a fourth path arriving without
+   * anyone thinking about phantoms — so the guard below reads match.ts and
+   * fails if this list stops naming all of them.
+   */
+  const HANDLE_PATHS = ['orderAttackContact', 'orderLaunchTorpedo', 'seedSpore'];
+
+  it('names every order path that resolves a contact handle', () => {
+    const source = readFileSync(fileURLToPath(new URL('../src/sim/match.ts', import.meta.url)), {
+      encoding: 'utf-8',
+    }).split('\n');
+    const found = new Set<string>();
+    for (let i = 0; i < source.length; i++) {
+      if (!source[i]!.includes('this.echo.entityForHandle(')) continue;
+      let method: string | undefined;
+      for (let j = i; j >= 0 && method === undefined; j--) {
+        // A member declaration at the class's own indent, and nothing else is.
+        const decl = /^ {2}(?:private |protected |public )?(?:async )?(\w+)\(/.exec(source[j]!);
+        if (decl !== null) method = decl[1];
+      }
+      assert.ok(method !== undefined, `no enclosing method for match.ts:${i + 1}`);
+      found.add(method);
+    }
+    assert.deepEqual(
+      [...found].sort(),
+      [...HANDLE_PATHS].sort(),
+      'a handle-consuming path was added or renamed — decide what it does with a phantom, then name it here'
+    );
+  });
+
+  it('takes an attack on a phantom exactly as it takes one on a true return', () => {
+    // Both probes read the one field the ordering player can read for free:
+    // their own hull's published plan, on the next snapshot. Before the fix
+    // the phantom answered `undefined` here and the true return answered with
+    // an anchored order, which is a certain sort of the lies from the truth
+    // for the price of one click (docs/systems-echo.md §3).
+    const probe = (pick: 'phantom' | 'real'): OwnUnit => {
+      const { match, pinger, phantoms, real } = ping(fieldsMap());
+      // Seated, because the own-unit payload only exists for a slot the match
+      // knows about. Both probes are seated identically, so whatever the two
+      // bases add they add to both.
+      match.addPlayer(0, Faction.Bathyarch);
+      match.addPlayer(1, Faction.Pelagia);
+      // A long leg first, so the attack is still *queued* when the snapshot
+      // goes out rather than begun and drained. That is the state the tell
+      // was read from: a plan with something in it, published back.
+      match.orderMove(0, pinger, 7500, 7500);
+      const handle = pick === 'phantom' ? phantoms[0]!.id : real[0]!.id;
+      match.orderAttackContact(0, pinger, handle, true);
+      return nextOwnUnit(match, pinger);
+    };
+
+    const lie = probe('phantom');
+    const truth = probe('real');
+    assert.equal(lie.queuedOrders?.length, 1, 'the phantom order is planned, not refused');
+    assert.deepEqual(
+      lie.queuedOrders?.map((o) => o.kind),
+      truth.queuedOrders?.map((o) => o.kind),
+      'the same plan, of the same kind, for both'
+    );
+    assert.deepEqual(
+      Object.keys(lie).sort(),
+      Object.keys(truth).sort(),
+      'and the same own-unit payload — no field of it partitions the two'
+    );
+  });
+
+  it('sends the hull to where the phantom was reported, rather than nowhere', () => {
+    // An unqueued attack on a real target is a chase: combat.ts republishes
+    // the target's position into MoveOrder for as long as it is out of range.
+    // A hull that simply stood still would be the same tell in the position
+    // field, so the order goes to the point the player was shown.
     const { match, pinger, phantoms } = ping(fieldsMap());
     const phantom = phantoms[0]!;
-
     match.orderAttackContact(0, pinger, phantom.id);
-    assert.equal(Weapon.orderedTargetEid[pinger], 0, 'an attack on a phantom orders nothing');
+
+    assert.equal(Weapon.orderedTargetEid[pinger], 0, 'nothing is behind it to engage');
+    assert.equal(MoveOrder.active[pinger], 1, 'but the hull is under way');
+    // `MoveOrder` is a Float32 store, so the round trip is the comparison.
+    assert.equal(MoveOrder.x[pinger], Math.fround(phantom.x), 'to the reported point');
+    assert.equal(MoveOrder.y[pinger], Math.fround(phantom.y));
+  });
+
+  it('forgets a phantom handle with the transmission that minted it', () => {
+    // The index that makes the order takeable must die with the returns it
+    // describes, or it answers for lies the client can no longer see — the
+    // stale-handle hole `EchoLayer.forget` closes, in the one handle space
+    // with no entity to hang a death on.
+    const { match, pinger, phantoms } = ping(fieldsMap());
+    const phantom = phantoms[0]!;
+    assert.ok(match.echo.resolvePhantom(0, phantom.id) !== undefined, 'live while it is lit');
+
+    while (ActivePing.remainingS[pinger]! > 0) {
+      match.update(STEP_MS);
+    }
+    match.echo.run(match.world, [0, 1]);
+    assert.equal(match.echo.resolvePhantom(0, phantom.id), undefined, 'and gone with the ping');
+
+    const before = match.world.orderQueues.get(pinger)?.length ?? 0;
     match.orderAttackContact(0, pinger, phantom.id, true);
-    assert.equal(match.world.orderQueues.get(pinger), undefined, 'queued, it is not even planned');
+    assert.equal(
+      match.world.orderQueues.get(pinger)?.length ?? 0,
+      before,
+      'a handle nobody holds plans nothing, phantom or not'
+    );
+  });
+
+  it('spends no ordnance and no spore on a phantom', () => {
+    // The torpedo still refuses, and that refusal is still readable — but only
+    // by spending. A fish per return probed is the expensive tell, not the
+    // free one, and moving it needs docs/systems-echo.md §3 to say first
+    // whether a shot at a lie is spent (#616, decision 1).
+    const { match, pinger, phantoms, real } = ping(fieldsMap());
+    const phantom = phantoms[0]!;
 
     const before = countOrdnance(match);
     assert.equal(match.orderLaunchTorpedo(0, pinger, phantom.id), 0, 'no torpedo launches at it');
     assert.equal(countOrdnance(match), before);
+
+    // The spore needed nothing and still needs nothing: `seedSpore` refuses
+    // every non-Structure target at the same line, and a phantom is always a
+    // hull — so the lie and the truth are declined for the same reason and
+    // read the same way. A Blight to ask with, since nothing else may.
+    const blight = spawnUnit(match.world, {
+      kind: UnitKind.Blight,
+      slot: 0,
+      faction: Faction.Pelagia,
+      x: 4100,
+      y: 4100,
+    });
+    assert.equal(match.seedSpore(0, blight, phantom.id), false, 'no spore at the phantom');
+    assert.equal(match.seedSpore(0, blight, real[0]!.id), false, 'and none at the true return');
   });
 
   it('holds the phantoms for the transmission and drops them with it, so they decay', () => {
