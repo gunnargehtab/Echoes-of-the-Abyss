@@ -176,6 +176,13 @@ export const REFIT_KINDS: readonly RefitKind[] = (
 
 /** Whether this navy may buy this refit at all. */
 export function refitOfferedTo(kind: RefitKind, faction: Faction): boolean {
+  // A kind with no row is offered to nobody. This is the gate `Match.refit`
+  // already looks like it has: the number reaches here straight off the wire,
+  // and without this line the `true` below waved every kind but Pressure
+  // through to `refitPriceFor`, which reads `REFIT_STATS[kind].cost` and threw.
+  // Asked of the table rather than the enum so the second refit is covered by
+  // existing, and only the four rows §2 still owes have to be written.
+  if (REFIT_STATS[kind] === undefined) return false;
   // Written against the kind as well as the navy so the other four refits,
   // which every navy including the Directorate is offered, do not have to
   // rewrite this signature when they arrive.

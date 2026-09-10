@@ -41,6 +41,7 @@ import {
   StructureKind,
   UnitKind,
   statsFor,
+  isStructureKind,
   structureStatsFor,
   unitAvailableTo,
   affords,
@@ -1781,6 +1782,14 @@ export class Match {
     // stockpile for some other reason would quietly let them build a refinery
     // in the middle of somebody else's court.
     if (this.missionDenies(slot, 'construction')) return false;
+    // The kind is a number a client chose, and `structureStatsFor` is a plain
+    // record index — so this is the range check every other enum off the wire
+    // already has (`setThrottle`'s `in HarvestThrottle`, the lobby's
+    // `FACTION_ORDER.includes`), and the one place that needs it. Without it
+    // the dereference below threw a TypeError out of an unwrapped Colyseus
+    // handler, which the default process hook turns into an exit — one message
+    // ending every match on the box.
+    if (!isStructureKind(kind)) return false;
     const stats = structureStatsFor(kind);
     if (!stats.constructible) return false;
     // Faction signature structures are exactly that — another navy's order
