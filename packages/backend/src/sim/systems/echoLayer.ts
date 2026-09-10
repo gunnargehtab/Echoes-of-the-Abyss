@@ -168,6 +168,12 @@ interface PhantomReturns {
   contacts: Contact[];
 }
 
+/** Where a phantom was reported — the only aim point an order on one has. */
+interface PhantomPoint {
+  x: number;
+  y: number;
+}
+
 interface BestContact {
   tier: ResolutionTier;
   /** Position of the listener that resolved it, for bearing blur. */
@@ -357,6 +363,23 @@ export class EchoLayer {
   /** Pinger -> the phantoms its current transmission returned. */
   private readonly phantoms = new Map<number, PhantomReturns>();
   /**
+   * Slot -> the phantom handles it currently holds, and where each was
+   * *reported*.
+   *
+   * The mirror of `byHandle`, and it exists for the same reason that map
+   * does: an order arrives naming a handle and nothing else, and the server
+   * has to be able to take it. Without this, resolving a phantom's handle
+   * failed and the order was refused before the ordering hull's plan was
+   * touched — which published "that return was a lie" straight back to the
+   * one player the lie was told to (docs/systems-echo.md §3).
+   *
+   * Deliberately keyed by slot, so a client can still only resolve handles it
+   * was issued, and deliberately holding the reported point rather than a
+   * truth: there is no truth behind a phantom, and the point the player was
+   * shown is the only thing an order at it can honestly aim at.
+   */
+  private readonly phantomByHandle = new Map<number, Map<number, PhantomPoint>>();
+  /**
    * Per-HYD lookup tables, indexed by the integer rating (HYD is 0-100 and
    * every source of it — stats, auras, the blind floor — is integral).
    *
@@ -422,6 +445,19 @@ export class EchoLayer {
    */
   entityForHandle(slot: number, handle: number): number | undefined {
     return this.byHandle.get(slot)?.get(handle);
+  }
+
+  /**
+   * The point a phantom handle was reported at, or undefined.
+   *
+   * The companion to `entityForHandle`, and an order path needs both: a
+   * well-formed handle resolves to an entity or to a phantom, and the two
+   * must be equally orderable. Only the slot the transmission belonged to can
+   * resolve its own phantoms, exactly as with real handles — a client cannot
+   * guess its way to a lie it was never told either.
+   */
+  resolvePhantom(slot: number, handle: number): PhantomPoint | undefined {
+    return this.phantomByHandle.get(slot)?.get(handle);
   }
 
   /**
@@ -503,7 +539,25 @@ export class EchoLayer {
     }
     for (const slotBest of this.best.values()) slotBest.delete(eid);
     this.litAlready.delete(eid);
-    this.phantoms.delete(eid);
+    this.dropPhantoms(eid);
+  }
+
+  /**
+   * Drop a transmission's phantoms and the handles that could resolve them.
+   *
+   * Both halves or neither: an index left behind would keep answering orders
+   * for returns the client can no longer see, which is the stale-handle hole
+   * `forget` was written to close, in the one handle space that has no entity
+   * to hang a death on.
+   */
+  private dropPhantoms(pinger: number): void {
+    const returns = this.phantoms.get(pinger);
+    if (returns === undefined) return;
+    this.phantoms.delete(pinger);
+    const index = this.phantomByHandle.get(returns.slot);
+    if (index === undefined) return;
+    for (const contact of returns.contacts) index.delete(contact.id);
+    if (index.size === 0) this.phantomByHandle.delete(returns.slot);
   }
 
   private handleFor(slot: number, eid: number): number {
@@ -532,8 +586,10 @@ export class EchoLayer {
    * A phantom's handle comes from here and from nowhere else, so it is
    * indistinguishable from a real one — a client that could sort handles
    * into "issued for an entity" and "issued for nothing" would have the
-   * phantom's whole secret. It is never entered in `handles`, which is what
-   * makes `entityForHandle` refuse it.
+   * phantom's whole secret. It is never entered in `handles`, which is why
+   * `entityForHandle` cannot name an entity for it; `resolvePhantom` is what
+   * keeps that from being an answer the client can read, by giving every
+   * order path something to take instead of a refusal to publish.
    */
   private mintHandle(slot: number): number {
     const handle = (this.nextHandle.get(slot) ?? 1) + 1;
@@ -824,7 +880,14 @@ export class EchoLayer {
         break;
       }
     }
-    if (contacts.length > 0) this.phantoms.set(pinger, { slot, contacts });
+    if (contacts.length === 0) return;
+    this.phantoms.set(pinger, { slot, contacts });
+    let index = this.phantomByHandle.get(slot);
+    if (index === undefined) {
+      index = new Map();
+      this.phantomByHandle.set(slot, index);
+    }
+    for (const contact of contacts) index.set(contact.id, { x: contact.x, y: contact.y });
   }
 
   /**
@@ -1286,7 +1349,7 @@ export class EchoLayer {
         // The phantoms go with the transmission that conjured them. Nothing
         // re-sends them after this tick, so on the client they fade exactly
         // as a real hull the ping lit and then lost.
-        this.phantoms.delete(pinger);
+        this.dropPhantoms(pinger);
       }
     }
 
