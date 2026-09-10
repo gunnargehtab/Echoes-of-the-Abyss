@@ -9,7 +9,8 @@
  * later Order hull answers to — its own node names are the parts list, and its
  * proportions are the rule that matters most:
  *
- *   blade_hull   75 m long, 8 m tall, **8 m in beam**
+ *   blade_hull   75 m long, 4.4 m tall, **11.9 m in beam** — a four-facet
+ *                lathe laid flat and pressed to 0.55 × 1.5 (hulls/clarion.mjs)
  *   wing_p/s     30 m long, **0.9 m thick**, reaching to 17 m each side
  *   canard_p/s   12 m long, 0.7 m thick, forward
  *   dorsal_fin   5 m ·  keel 3 m ·  drive_prism at the stern
