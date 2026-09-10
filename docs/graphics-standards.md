@@ -67,6 +67,18 @@ rebuilds every hull and every structure in a scratch directory and fails on any 
 differs from the committed GLB, so a faction module cannot be edited without the models it
 moves being re-run and committed with it.
 
+**Neither holds a port to the model it ported.** A port replaces the hand-exported binary
+with the script's own output, so from that commit on the round-trip check is comparing the
+script against itself, and a shape the port moved moved in both halves at once. The only
+witness to what the hull used to be is the pre-port binary in git history:
+`node tools/hull-models/diff.mjs <slug>` reads it back, divides out the one uniform root
+scale a metre-true port is expected to introduce, and lists what survives — per part, in
+metres, with triangle-count and ordering changes called out separately. It is not a gate
+and fails nothing: a port is allowed to move a bound, and only a reader can say whether a
+given millimetre was a transcription or a decision. It exists so that reading costs a
+minute, because the alternative is what #594 demonstrated — three shape decisions, green
+on every gate, because every gate was reading the file the port had already rewritten.
+
 **The plan outline is drawn once.** A kind with an approved model no longer carries its
 plan shape twice — once in the GLB and once typed out by hand as `HULL_OUTLINE` fractions.
 `tools/hull-maps/outlines.mjs` cuts each model's plan section from the GLB, normalised as

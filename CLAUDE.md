@@ -80,7 +80,11 @@ tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs
                    through hull-intake like any other export. check.mjs rebuilds
                    every script in both directories in a scratch directory and
                    fails on any drift from the committed GLB; CI runs it in the
-                   build job.
+                   build job. diff.mjs answers the one thing check.mjs cannot —
+                   what a port changed about a shape — by reading the pre-port
+                   binary out of git history, since after a port the committed
+                   file is the script's own output and the check is comparing it
+                   against itself.
 tools/hull-maps    The committed outputs of the approved models: build.mjs bakes
                    the sprite maps (Chromium), outlines.mjs writes each modelled
                    kind's plan outline into packages/frontend/src/game/
