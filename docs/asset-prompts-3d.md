@@ -30,21 +30,43 @@ are contacts, drawn at earned fidelity, never world meshes
 2. **One Claude Design conversation per roster run.** Session context reinforces
    consistency; tell it "same series, same materials and lighting as the previous model"
    on every follow-up.
-3. **One model for the whole run, and for this series it is Fable 5.1.** Hull generation
-   moves to Fable 5.1 in the Claude Design picker from the scout wave (#506) on; every GLB
-   approved in `docs/concept-art/models/` before it was generated under Opus 5. Do not
-   switch mid-series — a model switch is a second source of style drift, and that is the
-   reason this note exists: the move to Fable 5.1 is a *deliberate series break*, not an
-   exception to the rule. Everything generated under Fable 5.1 is a new series, and the
-   first hull generated under it is iterated and approved as that series' reference (rule
-   4) — held against the approved Opus 5 models on the consistency checklist, so the break
-   is a known quantity rather than a drift — before any other hull is batched. Nothing
-   moves back and forth between the two pickers to match an older model: if a Fable 5.1
-   hull will not converge on the series look, the fix is the prompt or the reference, never
-   the picker.
-4. **Approve a reference unit first.** Generate one unit, iterate until it is right,
-   declare it the series reference, then batch the rest. Fixing one model is cheaper
-   than re-converging five diverged ones.
+3. **One model for the whole run, and for this series it is Fable 5.1.** That holds
+   whichever door a model comes through, and there are two. Every GLB approved in
+   `docs/concept-art/models/` to date was authored under Opus 5; anything authored under
+   Fable 5.1 is a new series, and the break is *deliberate* rather than an exception to
+   the rule.
+
+   **Generated** — a prompt in the Claude Design picker, which is how the roster to date
+   was made; in roster terms the move to Fable 5.1 lands from the scout wave on. Do not
+   switch mid-series: a model switch is a second source of style drift, and that is the
+   reason this note exists. The first hull generated under Fable 5.1 is iterated and
+   approved as that series' reference (rule 4) — held against the approved Opus 5 models
+   on the consistency checklist, so the break is a known quantity rather than a drift —
+   before any other hull is batched. Nothing moves back and forth between the two pickers
+   to match an older model: if a Fable 5.1 hull will not converge on the series look, the
+   fix is the prompt or the reference, never the picker.
+
+   **Built** — a script under `tools/hull-models/` composing its navy's shape vocabulary,
+   run to produce the GLB, described in [graphics-standards.md](graphics-standards.md)
+   § "Where the GLB comes from". The Derrick and the Responsory took this path, and #540
+   is making it the path for everything, so it is the one a hull authored from here on
+   should be expected to take. There is no picker, so the series reference does not gate
+   it. A **port** — a script reproducing a model already approved — is not a series break
+   at all: it matches its GLB part for part, `npm run check:models` fails on any drift,
+   and that ties it to the old series harder than a consistency checklist could, so a
+   shape decision taken inside a port is a bug rather than a judgement call. A **new**
+   hull built this way is a series break like any other, and its script and its block
+   below are one author's work (#540).
+
+   Either way this is *shape*, which is what the `fable-5.1` label routes
+   ([CONTRIBUTING.md](../CONTRIBUTING.md)), and either way the gates are unchanged and
+   stay adversarial to whoever authored the model: `hull-intake`, the glow calibration,
+   the screenshot review.
+4. **Approve a reference unit first — on the generated path.** Generate one unit, iterate
+   until it is right, declare it the series reference, then batch the rest. Fixing one
+   model is cheaper than re-converging five diverged ones. A built hull has no batch to
+   diverge and no picker to converge, so it answers to its block and to the round-trip
+   check instead.
 5. **Skip the "Design system" attachment.** That Claude Design feature carries UI tokens
    (typography, components); it does not steer 3D-object generation. For UI mockups it
    *is* the right tool — feed it [style-neon-noir.md](style-neon-noir.md).
