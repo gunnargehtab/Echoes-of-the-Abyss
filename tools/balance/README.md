@@ -112,7 +112,9 @@ rather than twenty-four.
 
 It is **opt-in**, and that is a decision rather than an oversight: on by default it would
 multiply every batch's cost by its seat count and make every baseline committed here
-incomparable with the next one. `baselines/four-faction-rotated.md` is the committed pool.
+incomparable with the next one. `baselines/four-faction-rotated.md` is the committed pool,
+and `baselines/directorate-leads.md` is what #600's four leads read off it — which is the
+short answer to what a rotated batch is for.
 
 Two things the report then says that it cannot say without this:
 
