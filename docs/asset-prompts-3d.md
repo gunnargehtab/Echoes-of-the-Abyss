@@ -652,8 +652,7 @@ rest, under way and grown out — and its grown-out figure is the Sower's 45, *h
 because the cloud it grows suppresses everything inside it, itself included. The model's
 lamps are the 45, the 36–60 band, and the 18 is the haze over them: the cloud is fog and not
 lamps, exactly as the Spore Veil's own prompt has it, so what dims a grown-out Bower is drawn
-around it and never on it. The wave is generated under Fable 5.1 like every wave from the
-scouts on (rule 3), in the one conversation, after the series reference.
+around it and never on it.
 
 ```text
 UNIT — Caisson (pair with Consortium): the line hull that cannot hide and
@@ -945,11 +944,10 @@ are what the numbers give, as ever. The Derrick's is a pair — under the Klaxon
 and over it under way — which is the one Consortium hull whose brightness is a decision
 rather than a constant, and the opposite of the Caisson's single band. The Responsory's is
 the Order's: dark at rest but not black, the cone lit and the flanks not, and the discharge
-is the energy class's +10 rather than a kinetic flash, so it pulses rather than flares. The
-wave is generated under Fable 5.1 like every wave from the scouts on (rule 3), in the one
-conversation, after the series reference.
+is the energy class's +10 rather than a kinetic flash, so it pulses rather than flares.
 
-**These two were built rather than generated.** The approved models in
+**These two were built rather than generated, and that is now the path rather than the
+exception** (rule 3, "Built"). The approved models in
 `docs/concept-art/models/` are all `THREE.GLTFExporter` output — three.js scenes of primitives,
 not sculpts — so the Derrick and the Responsory were authored as such, from the prompts below,
 and went through the same door as every other export: both cleared `hull-intake` with no
