@@ -613,6 +613,82 @@ describe('Abyssal Rift Corridor', () => {
 });
 
 describe('Kelp Labyrinth', () => {
+  it('is the same chair from all four corners', () => {
+    // KELP_LABYRINTH_HEADER declares four seats. Until #626 the map authored
+    // its corner pressure pockets, both bio-reactor beds and two of its three
+    // outer cold-shock sites on the NW-SE diagonal alone, so two of those four
+    // chairs played a measurably different map: the nearest bed at 4,465 m
+    // against 3,536 m, the nearest cold shock at 4,384 m against 1,697 m, the
+    // nearest pocket at 5,124 m against 1,732 m, and — because a pocket is
+    // PF 1.6 and sits on the run — a crystal approach at 0.9139 against
+    // 1.1222. The beds are the sharp one: this map authors no `blooms`, so
+    // they are its only legal bio-reactor ground, and `reactorSite` picks
+    // between them by distance from home.
+    //
+    // Asserted as a *spread across the seats* rather than as those numbers, so
+    // it keeps holding whatever this map is authored to be next. The Ventfront
+    // and the Rift Corridor assert cell-perfect symmetry instead; this map
+    // cannot yet, because its MAZE array is asymmetric block for block and
+    // straightening it is a redesign of its own (#631). What this holds is the
+    // half that decides a match rather than the half that decides a corridor.
+    const t = terrainFor(KELP_LABYRINTH);
+    const nearest = (x: number, y: number, to: ReadonlyArray<{ x: number; y: number }>) =>
+      Math.min(...to.map((p) => Math.hypot(x - p.x, y - p.y)));
+
+    const beds = KELP_LABYRINTH.hazards.filter((h) => h.kind === 'kelp-entanglement');
+    const cold = KELP_LABYRINTH.hazards.filter((h) => h.kind === 'cold-shock');
+    const deep = KELP_LABYRINTH.regions
+      .filter((r) => r.biome === Biome.AbyssalTrench)
+      .map((r) => ({ x: r.x + r.widthM / 2, y: r.y + r.heightM / 2 }));
+    const home = KELP_LABYRINTH.resources.filter(
+      (r) => r.kind === ResourceKind.Nodule && r.amount === undefined
+    );
+
+    const seats = KELP_LABYRINTH.spawns.map((s) => ({
+      'nearest bio-reactor bed': nearest(s.x, s.y, beds),
+      'nearest cold shock': nearest(s.x, s.y, cold),
+      'nearest pressure pocket': nearest(s.x, s.y, deep),
+      'nearest home field': nearest(s.x, s.y, home),
+      'PF to the crystal': t.pathPropagation(
+        s.x,
+        s.y,
+        KELP_LABYRINTH.widthM / 2,
+        KELP_LABYRINTH.heightM / 2
+      ),
+    }));
+
+    for (const metric of Object.keys(seats[0]!) as Array<keyof (typeof seats)[number]>) {
+      const values = seats.map((seat) => seat[metric]);
+      assert.ok(
+        Math.max(...values) - Math.min(...values) < 1e-9,
+        `the four seats disagree on ${metric}: ${values.map((v) => v.toFixed(4)).join(' / ')}`
+      );
+    }
+  });
+
+  it('does not drift further out of symmetry than its maze already is', () => {
+    // A ratchet, not the answer. #631 decides whether this map wants
+    // cell-perfect symmetry like the other two archetypes, or whether a maze
+    // is allowed to be a maze and this becomes a documented property. Until
+    // then the only wrong direction is up: every one of these cells is a
+    // MAZE block's, and the seat-fairness test above is what stops that
+    // mattering to a player.
+    const worst = { ew: 56, ns: 64, half: 80 };
+    assert.ok(
+      asymmetricCells(KELP_LABYRINTH, (col, row, cols) => [cols - 1 - col, row]) <= worst.ew,
+      'the east and west halves drifted further apart'
+    );
+    assert.ok(
+      asymmetricCells(KELP_LABYRINTH, (col, row, _cols, rows) => [col, rows - 1 - row]) <= worst.ns,
+      'the north and south halves drifted further apart'
+    );
+    assert.ok(
+      asymmetricCells(KELP_LABYRINTH, (col, row, cols, rows) => [cols - 1 - col, rows - 1 - row]) <=
+        worst.half,
+      'the two diagonals drifted further apart'
+    );
+  });
+
   it('is mostly kelp and coral rather than open water', () => {
     // "A dense maze of kelp forests" with a coral outer ring. If open water
     // dominates, the maze is not a maze.

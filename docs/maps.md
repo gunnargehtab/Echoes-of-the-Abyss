@@ -89,7 +89,9 @@ A dense maze of kelp forests with hidden paths and stealth zones.
 
 ### Ideal Use
 
-Asymmetric campaign missions; stealth-heavy gameplay.
+Four-seat skirmish; stealth-heavy, broken-sightline gameplay.
+
+It read *asymmetric campaign missions* until #626, and the map was authored to that reading: the corner pressure pockets, both bio-reactor beds and two of the three outer cold-shock sites sat on the NW-SE diagonal alone, so two of its four seats reached everything measurably later and approached the crystal through different water. An archetype is a member of the public catalogue by definition — a mission map is authored per mission, resolved by mission id, and cannot be selected in a skirmish at all — so this one had to be one thing or the other. It is a four-seat skirmish map, and its content now says so on both diagonals. The asymmetry the maze itself still carries is #631's.
 
 ## Map Type 3 — Abyssal Rift Corridor
 

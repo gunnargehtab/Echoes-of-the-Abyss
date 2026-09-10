@@ -95,9 +95,20 @@ export const KELP_LABYRINTH: MapDefinition = {
     // is exposed — which is the trade the resource is supposed to create.
     { x: 3000, y: 750, widthM: 2000, heightM: 750, biome: Biome.ThermalVein },
     { x: 3000, y: H - 1500, widthM: 2000, heightM: 750, biome: Biome.ThermalVein },
-    // "Hidden tunnels connecting corners" — on the diagonals, and clear of
-    // the spawns. They sat *on* the corner spawns in the first draft, which
-    // would have started two players in the deepest, loudest biome on the map.
+    // "Hidden tunnels connecting corners" — clear of the spawns. They sat *on*
+    // the corner spawns in the first draft, which would have started two
+    // players in the deepest, loudest biome on the map.
+    //
+    // Four of them, one per corner. Two corners had none, so two seats reached
+    // their nearest pocket at 5,124 m against 1,732 m, and approached the
+    // centre crystal through quieter water for it — PF 0.9139 against 1.1222,
+    // because the pocket a seat crosses is PF 1.6 (#626).
+    //
+    // This equalises upward rather than down: every seat now has a pocket at
+    // 1,732 m and every crystal approach reads 1.1222. Removing the two would
+    // have equalised just as well and quieter, and would have deleted the
+    // doc's own Layout Logic bullet to do it — it says corners, plural, and
+    // now every corner has one.
     { x: 1750, y: 1750, widthM: 750, heightM: 750, biome: Biome.AbyssalTrench, floorM: 2600 },
     {
       x: W - 2500,
@@ -107,6 +118,8 @@ export const KELP_LABYRINTH: MapDefinition = {
       biome: Biome.AbyssalTrench,
       floorM: 2600,
     },
+    { x: W - 2500, y: 1750, widthM: 750, heightM: 750, biome: Biome.AbyssalTrench, floorM: 2600 },
+    { x: 1750, y: H - 2500, widthM: 750, heightM: 750, biome: Biome.AbyssalTrench, floorM: 2600 },
     // "Hidden tunnels connecting corners" — the Layout Logic bullet this map
     // has carried since it was written, with no way to express it until ground
     // could have a roof.
@@ -116,11 +129,16 @@ export const KELP_LABYRINTH: MapDefinition = {
     // fields are seated at, so nothing can be built in one: it is a road, not
     // ground. Entering costs a dive, and a maze whose walls you can pass under
     // is a different maze to a scout who thought of it.
+    //
+    // Centred on the map's east-west axis. They ran y 2,000 to 6,250, whose
+    // midpoint is 4,125 — half a cell north of centre, worth twelve cells of
+    // north-south disagreement on its own, which is the cheapest asymmetry
+    // this map had and the least visible (#626).
     {
       x: 250,
       y: 2000,
       widthM: 750,
-      heightM: 4250,
+      heightM: 4000,
       biome: Biome.CoralRuins,
       ceilingM: 700,
       floorM: 1800,
@@ -130,15 +148,18 @@ export const KELP_LABYRINTH: MapDefinition = {
       x: W - 1000,
       y: 2000,
       widthM: 750,
-      heightM: 4250,
+      heightM: 4000,
       biome: Biome.CoralRuins,
       ceilingM: 700,
       floorM: 1800,
       note: 'East wall tunnel',
     },
   ],
-  // Diagonal spawns: the doc's "hidden tunnels connecting corners" makes the
-  // diagonal the interesting axis, so the two players sit on it.
+  // Four corners, listed NW-SE first because the doc's "hidden tunnels
+  // connecting corners" makes the diagonal the interesting axis. The header
+  // says four seats, so all four corners have to be the same chair — which
+  // they were not until #626: the content sat on one diagonal and the other
+  // two seats played a measurably different map.
   spawns: [
     { x: 900, y: 900, foundryOffsetX: 500, foundryOffsetY: 200 },
     { x: W - 900, y: H - 900, foundryOffsetX: -500, foundryOffsetY: -200 },
@@ -162,22 +183,57 @@ export const KELP_LABYRINTH: MapDefinition = {
     },
   ],
   hazards: [
-    { x: 3400, y: 3400, radiusM: 1200, kind: 'kelp-entanglement', note: 'Maze core' },
-    { x: 4600, y: 4600, radiusM: 1200, kind: 'kelp-entanglement' },
-    // "Cold shock currents in deeper pockets" (doc), and all three sit on the
-    // NW-SE diagonal — the same axis the two primary spawns and the hidden
-    // corner tunnels are on. So they are one current sampled three times, not
-    // three unrelated ones, and they all run the same way: 45 degrees, which
-    // is NW to SE.
+    // The maze core beds, and the only legal bio-reactor ground on this map:
+    // it authors no `blooms`, so these two fields are all there is, and
+    // `reactorSite` (ai/commander.ts) picks between them by distance from
+    // home.
     //
-    // That is deliberately asymmetric, on the one map whose stated ideal use
-    // is asymmetric play. The north-west player attacks with the water and
-    // withdraws against it; the south-east player approaches against it and
-    // pulls out with it. Neither is strictly better — it is the depth bargain
-    // (fast in, slow out) rotated into the horizontal plane, handed to one
-    // side and reversed for the other. Worth watching in playtests; if it
-    // reads as a straight advantage rather than a different shape of game,
-    // turn the outer two to flow inward and leave the centre alone.
+    // On the map's vertical centre line rather than on the NW-SE diagonal,
+    // where they sat. From the diagonal they were 3,536 m from two seats and
+    // 4,465 m from the other two, so two navies funded a reactor 929 m nearer
+    // than their opposite numbers, on a map that declares four seats (#626).
+    // At x = 4,000, ±850 m about the centre, both beds are 3,830 m from every
+    // seat — the same arithmetic without adding a third and a fourth and
+    // doubling what the map grows.
+    //
+    // ±850 and not ±600, because how far apart they sit is a mechanic and not
+    // a layout detail: `bedsInReach` gives a reactor every bed within
+    // FLORA.REACTOR_RADIUS_M of its rim, so the water that reaches both is
+    // worth more than the water that reaches one. On the diagonal they were
+    // 1,697 m apart; ±850 keeps them 1,700 m apart, which is the same map to
+    // within the 3 m a round number costs. ±600 would have closed them to
+    // 1,200 m and widened the reaches-both lens by a third without saying so.
+    { x: W / 2, y: 3150, radiusM: 1200, kind: 'kelp-entanglement', note: 'Maze core' },
+    { x: W / 2, y: 4850, radiusM: 1200, kind: 'kelp-entanglement' },
+    // "Cold shock currents in deeper pockets" (doc). Two currents, one per
+    // diagonal, each sampled twice, plus the one over the crystal.
+    //
+    // They were three, all on the NW-SE diagonal, and the argument for that
+    // was a real one: one current sampled three times, running 45 degrees, so
+    // the north-west player attacked with the water and withdrew against it
+    // while the south-east player did the reverse. The depth bargain — fast
+    // in, slow out — rotated into the horizontal plane, handed to one side and
+    // reversed for the other.
+    //
+    // That argument is kept. What broke it is the seat count: it describes two
+    // players, and this map declares four. The other two seats had no outer
+    // site within 4,384 m of a spawn, against 1,697 m for the pair on the
+    // diagonal (#626). A trade handed to one side and reversed for the other
+    // is a bargain; the same trade handed to two seats and withheld from two
+    // is a handicap.
+    //
+    // So the NE-SW pair runs 135 degrees, which is the identical rotation seen
+    // from the other diagonal: `flowX = cos`, `flowY = sin`, so 45 pushes
+    // toward +x +y and 135 toward -x +y, which is NE to SW.
+    //
+    // The bargain survives intact rather than being flattened. Two seats still
+    // find the water running out of their corner and two find it running in —
+    // seats NW and NE get the outward half, SE and SW the inward — and every
+    // seat now has an outer site at 1,697 m to have it at. That is the same
+    // trade the original argument describes, dealt to four chairs instead of
+    // two. The file's own stated alternative, "turn the outer two to flow
+    // inward and leave the centre alone", moves the flow and not the distance,
+    // so it could never have answered this.
     {
       x: W / 2,
       y: H / 2,
@@ -188,5 +244,7 @@ export const KELP_LABYRINTH: MapDefinition = {
     },
     { x: 2100, y: 2100, radiusM: 400, kind: 'cold-shock', flowDeg: 45 },
     { x: W - 2100, y: H - 2100, radiusM: 400, kind: 'cold-shock', flowDeg: 45 },
+    { x: W - 2100, y: 2100, radiusM: 400, kind: 'cold-shock', flowDeg: 135 },
+    { x: 2100, y: H - 2100, radiusM: 400, kind: 'cold-shock', flowDeg: 135 },
   ],
 };
