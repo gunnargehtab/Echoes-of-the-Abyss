@@ -197,10 +197,16 @@ export function plan(points, thicknessM, bevelM = 0) {
  * station, which at sprite scale reads as a segmented worm.
  *
  * `facets` stays low on purpose — the style asks for "crisp facets", not a tube.
+ *
+ * `phase` is where the first seam sits, in radians round from the beam (three's
+ * `phiStart`). At 0, the default, a vertex lies on +z; at `π / facets` a flat
+ * does instead — which is how a four-facet section becomes a rectangle once it
+ * is scaled, and a six-facet one carries a vertex on the crown. The Order's
+ * blades and horn are cut that way (factions/hadron.mjs `spar`).
  */
-export function loft(profile, facets = 10) {
+export function loft(profile, facets = 10, phase = 0) {
   const pts = profile.map(([x, r]) => new THREE.Vector2(Math.max(r, 0.001), x));
-  const geo = new THREE.LatheGeometry(pts, facets);
+  const geo = new THREE.LatheGeometry(pts, facets, phase);
   geo.rotateZ(-Math.PI / 2);
   return geo;
 }
