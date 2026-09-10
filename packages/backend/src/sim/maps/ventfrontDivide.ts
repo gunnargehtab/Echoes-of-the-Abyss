@@ -21,10 +21,17 @@ const H = VENTFRONT_DIVIDE_HEADER.heightM;
  * Every rectangle below lands on the 250 m cell grid, so each paints exactly
  * the metres it reads (issue #157, docs/maps.md "How a map is written"). They
  * were re-stated that way when the centre rule landed: the cells this map
- * paints are the cells it has always played on, apart from the west plateaus,
- * which had quietly grown a column the east ones could not have — the map edge
- * clipped that same column on the far side, so a map that says it is symmetric
- * across both axes was 250 m of kelp wider on the west.
+ * painted were the cells it had always played on, apart from the west
+ * plateaus, which had quietly grown a column the east ones could not have —
+ * the map edge clipped that same column on the far side, so a map that says it
+ * is symmetric across both axes was 250 m of kelp wider on the west.
+ *
+ * The four plateaus have since grown a column deliberately, on all four at
+ * once, to close the gutter their own bases stood in (#622). Read that as the
+ * opposite of the #157 fault rather than a repeat of it: a column added to one
+ * plateau is a bug, and the same column added to all four is a map change with
+ * a price. Symmetry is what tells the two apart, which is why it is asserted
+ * cell by cell rather than trusted.
  */
 export const VENTFRONT_DIVIDE: MapDefinition = {
   ...VENTFRONT_DIVIDE_HEADER,
@@ -71,29 +78,41 @@ export const VENTFRONT_DIVIDE: MapDefinition = {
     },
     // "East/West: Kelp Forest Plateaus" — the base aprons, quiet enough to
     // build on without announcing every structure.
+    //
+    // Each runs from the trench lip to the vent band, with nothing between.
+    // They used to stop a cell row short at y 1,250 and y 6,750, and the four
+    // spawns sit at y 1,200 and y 6,800 — one row inside that gutter, which no
+    // region painted. So every Bastion and Foundry on the default map opened
+    // in open water over the map's own 2,600 m seabed at PF 1.0, which is
+    // neither of the two things this rectangle claims to be, on all four seats
+    // identically (#622). Symmetric, which is exactly why nothing ever looked
+    // odd about it.
     {
       x: 0,
-      y: 1250,
+      y: 1000,
       widthM: 2000,
-      heightM: 1750,
+      heightM: 2000,
       biome: Biome.KelpForest,
-      // A plateau in the literal sense now. 700 m clears the 600 m that
-      // structures and nodule fields are seated at, and nothing more: you
-      // cannot lurk deep over your own base.
+      // A plateau in the literal sense, and now under the bases as well. 700 m
+      // clears the 600 m that structures and nodule fields are seated at, and
+      // nothing more: you cannot lurk deep over your own base. In the gutter
+      // you could — 2,600 m of water with THERMOCLINE.DEPTH_M inside the
+      // column, so a loiter position under someone's Bastion existed and was
+      // heard across the layer at 0.3.
       floorM: 700,
       note: 'West plateau',
     },
     {
       x: W - 2000,
-      y: 1250,
+      y: 1000,
       widthM: 2000,
-      heightM: 1750,
+      heightM: 2000,
       biome: Biome.KelpForest,
       floorM: 700,
       note: 'East plateau',
     },
-    { x: 0, y: 5000, widthM: 2000, heightM: 1750, biome: Biome.KelpForest, floorM: 700 },
-    { x: W - 2000, y: 5000, widthM: 2000, heightM: 1750, biome: Biome.KelpForest, floorM: 700 },
+    { x: 0, y: 5000, widthM: 2000, heightM: 2000, biome: Biome.KelpForest, floorM: 700 },
+    { x: W - 2000, y: 5000, widthM: 2000, heightM: 2000, biome: Biome.KelpForest, floorM: 700 },
     // The bloom gardens — docs/maps.md, Map Type 1, and the guard-rail that
     // sites them (docs/systems-echo.md §10, docs/economy.md §9): bloom-share is
     // anchored to *exposed Shelf plateaus*, so the quietest navy earns on the

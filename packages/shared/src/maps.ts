@@ -50,7 +50,7 @@ export const ABYSSAL_RIFT_CORRIDOR_HEADER: MapHeader = {
 export const KELP_LABYRINTH_HEADER: MapHeader = {
   id: 'kelp-labyrinth',
   name: 'Kelp Labyrinth',
-  idealUse: 'Asymmetric campaign missions; stealth-heavy gameplay.',
+  idealUse: 'Four-seat skirmish; stealth-heavy, broken-sightline gameplay.',
   seats: 4,
   widthM: 8000,
   heightM: 8000,
