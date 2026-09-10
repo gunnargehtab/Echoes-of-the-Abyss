@@ -42,6 +42,14 @@
  *   moves, for the reason the scale is a median, and divided out. Both are
  *   printed, because a yaw or a shift is still worth a sentence in the PR.
  *
+ * - **Compare surface area as well as bounds.** A drum and a frustum of the
+ *   same length and larger radius have the same axis-aligned bounds and the
+ *   same triangle count, so a nose cone flattened into a cylinder passes
+ *   every check above — the Tender's four ballast caps did (#587 review, F1).
+ *   Area is the cheapest measure of a part's shape that bounds cannot stand
+ *   in for; it is compared per part, divided by the root scale squared, and
+ *   a change over a quarter of a percent is listed with the part.
+ *
  * Nothing here is a gate and nothing here exits non-zero on a difference: a
  * port is allowed to move a bound, and only a person reading the report can
  * say whether a given millimetre was a transcription or a decision. It exists
@@ -90,6 +98,19 @@ function medianAxis(values) {
   });
 }
 
+/** Surface area of a part, from its triangles, in the file's own units squared. */
+function area(part) {
+  const a = part.positions;
+  let sum = 0;
+  for (let t = 0; t < a.length; t += 9) {
+    const ux = a[t + 3] - a[t], uy = a[t + 4] - a[t + 1], uz = a[t + 5] - a[t + 2];
+    const vx = a[t + 6] - a[t], vy = a[t + 7] - a[t + 1], vz = a[t + 8] - a[t + 2];
+    const cx = uy * vz - uz * vy, cy = uz * vx - ux * vz, cz = ux * vy - uy * vx;
+    sum += Math.sqrt(cx * cx + cy * cy + cz * cz) / 2;
+  }
+  return sum;
+}
+
 /** Extents and centre of a part or a whole model, in the file's own units. */
 function box(parts) {
   const { min, max } = boundsOf(parts);
@@ -110,11 +131,17 @@ function box(parts) {
  * moved, and measured off the parts it is one uniform squeeze with a handful of
  * genuine movers. A median ignores the outliers, which is the whole job.
  *
- * Parts thinner than a metre on an axis are skipped for that axis: a 4 cm seam
- * that lands 1 cm thicker is a 25% ratio and pure noise.
+ * Parts thinner than a hundredth of the hull on an axis are skipped for that
+ * axis: a 4 cm seam that lands 1 cm thicker is a 25% ratio and pure noise.
+ * The threshold is a fraction of the model's own longest extent rather than a
+ * metre, because the file's units are the thing in question — the approved
+ * turrets were drawn ten times under scale and the Light Scouts up to
+ * eleven, and against a fixed metre no part of theirs qualifies, the scale
+ * silently defaults to 1 and every part reads as moved.
  */
 function rootScale(before, after) {
   const afterByName = new Map(after.map((p) => [p.name, p]));
+  const floor = Math.max(...box(before).extent) / 100;
   return [0, 1, 2].map((axis) => {
     const ratios = [];
     for (const p of before) {
@@ -122,7 +149,7 @@ function rootScale(before, after) {
       if (!q) continue;
       const a = box(p).extent[axis];
       const b = box(q).extent[axis];
-      if (a >= 1) ratios.push(b / a);
+      if (a >= floor) ratios.push(b / a);
     }
     if (!ratios.length) return 1;
     ratios.sort((x, y) => x - y);
@@ -230,6 +257,13 @@ function report(beforePath, afterPath, label) {
     const note = [];
     if (p.tris !== q.tris) note.push(`tris ${p.tris}→${q.tris}`);
     if (p.material !== q.material) note.push(`material ${p.material}→${q.material}`);
+    // Area is a scalar, so the root scale enters squared; one axis's factor
+    // stands for all three, since a non-uniform scale is already flagged above.
+    const areaA = area(p) * scale[0] * scale[1];
+    const areaB = area(q);
+    const areaPct = areaA > 0 ? ((areaB - areaA) / areaA) * 100 : 0;
+    if (Math.abs(areaPct) > 0.25)
+      note.push(`area ${areaPct > 0 ? '+' : ''}${areaPct.toFixed(1)}%`);
     if (d > 0.005 || note.length) moved.push({ name: p.name, d, note: note.join(', ') });
   }
   moved.sort((x, y) => y.d - x.d);

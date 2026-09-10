@@ -389,12 +389,26 @@ export function ballastBlisters(root, { grey, rust }, opts) {
   const onX = [0, 0, Math.PI / 2];
   bothSides((side, sgn) => {
     add(root, `ballast_${side}`, cyl(r, r, length, 12), grey, [x, y, sgn * z], onX);
-    if (caps)
-      for (const [end, cx] of [
-        ['f', caps.fore],
-        ['a', caps.aft],
+    // The caps are nose cones, not drums: each tapers from the blister's radius
+    // to `caps.tipR` away from the hull, so the fore cap's small end faces +X
+    // and the aft cap's -X. A drum has the same bounds and the same triangle
+    // count as the frustum, which is how the first port shipped one past
+    // every gate (#587 review, F1); diff.mjs now compares surface area too.
+    if (caps) {
+      const tipR = caps.tipR ?? r;
+      for (const [end, cx, rTop, rBottom] of [
+        ['f', caps.fore, r, tipR],
+        ['a', caps.aft, tipR, r],
       ])
-        add(root, `ballast_cap_${side}${end}`, cyl(r, r, caps.length, 12), rust, [cx, y, sgn * z], onX);
+        add(
+          root,
+          `ballast_cap_${side}${end}`,
+          cyl(rTop, rBottom, caps.length, 12),
+          rust,
+          [cx, y, sgn * z],
+          onX
+        );
+    }
     if (skid) add(root, `keel_skid_${side}`, box(...skid.size), rust, [skid.x, skid.y, sgn * skid.z]);
     if (pipe)
       add(

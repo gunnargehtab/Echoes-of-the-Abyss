@@ -75,7 +75,7 @@ bathyarch.boxHull(root, { black, grey, rust }, {
   strakes: { x: -4, y: 0.5, z: 20.4, size: [60, 2.2, 1.4] },
 });
 bathyarch.ballastBlisters(root, { grey, rust }, {
-  x: -6, y: -3, z: 17.5, r: 3, length: 46, caps: { length: 2, fore: 18, aft: -30 },
+  x: -6, y: -3, z: 17.5, r: 3, length: 46, caps: { length: 2, fore: 18, aft: -30, tipR: 2.4 },
 });
 
 // The workshop deckhouse amidships and its fittings.
