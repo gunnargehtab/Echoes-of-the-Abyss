@@ -168,7 +168,46 @@ export interface BatchSummary {
   /** What the map seeded of each species, against what the roster asked. */
   drift: DriftComplementSummary[];
   factions: FactionSummary[];
+  /**
+   * Distinct slot-to-faction assignments the batch's matches were played under.
+   *
+   * The number a per-faction win rate has to be read against. `--matchup`
+   * binds a faction to a spawn by its position in the list, so at 1 the
+   * factions column and the chair below it are the same measurement wearing
+   * two hats, and neither can say which of the two it caught — the finding
+   * `tools/balance/baselines/seat-rotation.md` records, and the reason
+   * `--rotate-seats` exists.
+   *
+   * Counted off the results rather than taken from the CLI, so a pooled report
+   * built by hand out of four JSON siblings reports the same 4 that
+   * `--rotate-seats` does.
+   */
+  seatings: number;
+  /** Wins by spawn slot — the chair, with whatever sat in it. */
+  slots: SlotSummary[];
   guardRails: GuardRailVerdict[];
+}
+
+/**
+ * One spawn's record across the batch, whoever sat in it.
+ *
+ * The other marginal of the same table the per-faction rows are one marginal
+ * of. It is worth printing because on `ventfront-divide` it is the larger of
+ * the two: four seats of one navy — doctrine held perfectly constant — take
+ * 11% / 28% / 50% / 11% of 109 decided matches by slot, so a chair is a bigger
+ * determinant of a win here than the difference between two doctrines.
+ *
+ * Meaningless in a batch of one seating, where it is the per-faction column
+ * relabelled, and `toMarkdown` prints it only when the two differ.
+ */
+export interface SlotSummary {
+  slot: number;
+  matches: number;
+  decided: number;
+  wins: number;
+  winRate: number;
+  /** The navies that sat here across the batch, in enum order. */
+  factions: Faction[];
 }
 
 /**
@@ -291,6 +330,68 @@ function noSeat(risk: string, source: string, faction: string): GuardRailVerdict
     reading: `no ${faction} seat in this matchup`,
     verdict: 'no data',
   };
+}
+
+/**
+ * How many distinct seatings the batch was played under.
+ *
+ * A signature per match rather than a count of factions or of slots: a mirror
+ * batch has one seating and four slots, a rotated four-faction batch has four
+ * of each, and only the assignment itself separates them.
+ */
+function countSeatings(results: MatchTelemetryResult[]): number {
+  const seen = new Set<string>();
+  for (const result of results) {
+    seen.add(
+      result.players
+        .map((p) => `${p.slot}:${p.faction}`)
+        .sort()
+        .join(',')
+    );
+  }
+  return seen.size;
+}
+
+function slotSummaries(results: MatchTelemetryResult[]): SlotSummary[] {
+  const bySlot = new Map<number, { player: PlayerTelemetry; result: MatchTelemetryResult }[]>();
+  for (const result of results) {
+    for (const player of result.players) {
+      const rows = bySlot.get(player.slot) ?? [];
+      rows.push({ player, result });
+      bySlot.set(player.slot, rows);
+    }
+  }
+  const slots: SlotSummary[] = [];
+  for (const [slot, rows] of bySlot) {
+    const decided = rows.filter((r) => r.result.winnerSlot !== null);
+    const wins = decided.filter((r) => r.result.winnerSlot === slot).length;
+    slots.push({
+      slot,
+      matches: rows.length,
+      decided: decided.length,
+      wins,
+      winRate: decided.length === 0 ? 0 : wins / decided.length,
+      factions: [...new Set(rows.map((r) => r.player.faction))].sort((a, b) => a - b),
+    });
+  }
+  return slots.sort((a, b) => a.slot - b.slot);
+}
+
+/**
+ * Whether the chair and the doctrine are separable in this batch at all.
+ *
+ * They are not when each faction sat in exactly one slot and each slot held
+ * exactly one faction — the two marginals are then the same numbers twice, and
+ * printing both would suggest a comparison the batch cannot support. A
+ * rotation makes a slot hold several navies; a mirror makes one navy hold
+ * several slots. Either is worth a table.
+ */
+export function chairIsSeparable(summary: BatchSummary): boolean {
+  return (
+    summary.slots.length > 1 &&
+    (summary.factions.length < summary.slots.length ||
+      summary.slots.some((s) => s.factions.length > 1))
+  );
 }
 
 function distribution(values: number[]): Distribution {
@@ -479,6 +580,8 @@ export function summarise(results: MatchTelemetryResult[]): BatchSummary {
     driftHealthFinal: distribution(results.map((r) => r.driftHealthFinal)),
     drift: driftComplement(results),
     factions,
+    seatings: countSeatings(results),
+    slots: slotSummaries(results),
     guardRails: judge(results, factions),
   };
 }
@@ -510,6 +613,15 @@ function judge(results: MatchTelemetryResult[], factions: FactionSummary[]): Gua
   // in the batch rather than over a seat count assumed to be four.
   const seats = factions.length;
   const parity = seats === 0 ? 0 : 1 / seats;
+  // How many seatings the leader's win rate is pooled over, printed inside the
+  // reading. A win rate out of one seating cannot separate a doctrine from the
+  // spawn it was dealt, and on `ventfront-divide` the spawn is the larger of
+  // the two — so "Directorate 75%" out of a single seating and "Directorate
+  // 57%" pooled over four are different claims, and this rail spent fourteen
+  // baselines unable to say which it was making. See
+  // `tools/balance/baselines/seat-rotation.md` and #600.
+  const seatings = countSeatings(results);
+  const pooled = seatings === 1 ? 'one seating' : `${seatings} seatings pooled`;
   const bar = PARITY_MULTIPLE * parity;
   const leader = factions.reduce<FactionSummary | undefined>(
     (best, f) => (best === undefined || f.winRate > best.winRate ? f : best),
@@ -538,7 +650,7 @@ function judge(results: MatchTelemetryResult[], factions: FactionSummary[]): Gua
       ...spread,
       reading:
         `${FACTION_NAME[leader.faction]} ${pct(leader.winRate)} vs parity ${pct(parity)}, ` +
-        `bar ${pct(bar)} (${decidedSample(leader.decided)})`,
+        `bar ${pct(bar)} (${decidedSample(leader.decided)}, ${pooled})`,
       // The leader's own denominator, not the batch's. They are the same in a
       // batch where every navy plays every match, and the per-faction column
       // exists (#199) because that is not something to assume.
@@ -746,6 +858,20 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
       `${summary.eliminationsToWin === 1 ? 'elimination' : 'eliminations'} a win needs.`
   );
   lines.push('');
+  // What the per-faction column is entitled to claim. A reader cannot tell a
+  // 120-match rotated batch from a 120-match single-seating one out of the
+  // line above — the seed range is the same either way — and it is the whole
+  // difference between a win rate that names a doctrine and one that names a
+  // spawn.
+  lines.push(
+    summary.seatings === 1
+      ? '_One seating: every match dealt each navy the same spawn. A win rate here cannot ' +
+          'separate the doctrine from the chair — see `baselines/seat-rotation.md`, and ' +
+          '`--rotate-seats`._'
+      : `_${summary.seatings} seatings, pooled. Each navy played more than one spawn, so the ` +
+          'per-faction column is about the doctrine rather than about the chair._'
+  );
+  lines.push('');
   lines.push('## Guard-rails');
   lines.push('');
   lines.push('| Risk | Source | Metric | Reading | Verdict |');
@@ -809,6 +935,29 @@ export function toMarkdown(summary: BatchSummary, title: string, command?: strin
     );
   }
   lines.push('');
+  if (chairIsSeparable(summary)) {
+    // The other marginal of the same table, printed only when it is not the
+    // one above relabelled. On this map it is the larger of the two, which is
+    // an unusual thing for a report to have to say and the reason it says it.
+    lines.push('## Per chair');
+    lines.push('');
+    lines.push('| Slot | Matches | Decided | Win rate | Navies that sat here |');
+    lines.push('| --- | --- | --- | --- | --- |');
+    for (const slot of summary.slots) {
+      lines.push(
+        `| ${slot.slot} | ${slot.matches} | ${slot.decided} | ` +
+          `${slot.decided === 0 ? '—' : pct(slot.winRate)} | ` +
+          `${slot.factions.map((f) => FACTION_NAME[f]).join(', ')} |`
+      );
+    }
+    lines.push('');
+    lines.push(
+      '_The spawn, not the navy. `--matchup` binds a faction to a spawn by its position in ' +
+        'the list, so this column and the one above it are the two marginals of one table — ' +
+        'and on `ventfront-divide` this is the bigger of them._'
+    );
+    lines.push('');
+  }
   // One row per hull anybody built or lost, one column per navy, so a wave's
   // hulls can be read against the commons they were meant to replace.
   //

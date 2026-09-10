@@ -133,5 +133,12 @@ attribute a win rate to a doctrine, because the doctrine and the chair arrive to
 this file measures the chair as the bigger of the two. Rotate the seating before you
 conclude anything about a navy, and pool the rotations.
 
+`--rotate-seats` is that, since #600's second run: it plays every seed once per cyclic
+rotation and reports the pool, and it reproduces the four rotations above exactly — the
+cyclic orders of `consortium,commune,directorate,knights` are the same four seatings this
+file measured by hand. [four-faction-rotated.md](four-faction-rotated.md) is the committed
+result, and the report now carries the seating count under its header so a pooled batch
+cannot be mistaken for a single-seating one.
+
 Related: [README.md](../README.md) · [economy.md](../../../docs/economy.md) §9 ·
 [bestiary.md](../../../docs/bestiary.md) §8

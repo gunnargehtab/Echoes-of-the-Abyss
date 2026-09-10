@@ -45,8 +45,21 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import type { MatchTelemetryResult } from './telemetry.ts';
 
-/** Flags the parent owns; a worker is told its own seed and where to write. */
-const PARENT_ONLY = new Set(['--matches', '--seed', '--out', '--jobs']);
+/**
+ * Flags the parent owns; a worker is told its own seed, its own seating, and
+ * where to write.
+ */
+const PARENT_ONLY = new Set(['--matches', '--seed', '--out', '--jobs', '--rotation']);
+
+/**
+ * The same, for the flags that take no value.
+ *
+ * `--rotate-seats` asks the *parent* to expand one command into a rotation per
+ * chair, so a worker must not see it — and it cannot be stripped by the loop
+ * below, which skips the argument after every parent-only flag and would eat a
+ * real one.
+ */
+const PARENT_ONLY_BOOLEAN = new Set(['--rotate-seats']);
 
 function workerArgv(argv: string[]): string[] {
   const rest: string[] = [];
@@ -55,6 +68,7 @@ function workerArgv(argv: string[]): string[] {
       i++;
       continue;
     }
+    if (PARENT_ONLY_BOOLEAN.has(argv[i]!)) continue;
     rest.push(argv[i]!);
   }
   return rest;
@@ -66,18 +80,26 @@ function workerArgv(argv: string[]): string[] {
  *
  * `jobs` processes run at once. More than one per core only adds contention:
  * a match is pure computation with no IO to overlap.
+ *
+ * `rotations` is the seatings to play every one of those seeds under — one
+ * entry per `--rotation` the workers are to be given, defaulting to the single
+ * unrotated seating. The results come back seating-major and seed-minor, so a
+ * `--rotate-seats` batch reads as the rotations concatenated in order and the
+ * seed range in the report's header stays the range the user asked for.
  */
 export async function runBatchIsolated(
   argv: string[],
   seed: number,
   matches: number,
-  jobs = availableParallelism()
+  jobs = availableParallelism(),
+  rotations: readonly number[] = [0]
 ): Promise<MatchTelemetryResult[]> {
   const entry = fileURLToPath(new URL('./cli.ts', import.meta.url));
   const scratch = mkdtempSync(join(tmpdir(), 'balance-batch-'));
   const forwarded = workerArgv(argv);
-  const results = new Array<MatchTelemetryResult | undefined>(matches);
-  const width = Math.max(1, Math.min(jobs, matches));
+  const total = matches * rotations.length;
+  const results = new Array<MatchTelemetryResult | undefined>(total);
+  const width = Math.max(1, Math.min(jobs, total));
 
   let next = 0;
   let failure: Error | null = null;
@@ -85,6 +107,8 @@ export async function runBatchIsolated(
   const run = (index: number): Promise<void> =>
     new Promise((resolve, reject) => {
       const out = join(scratch, `match-${index}.json`);
+      const rotation = rotations[Math.floor(index / matches)]!;
+      const matchSeed = seed + (index % matches);
       const child = spawn(
         process.execPath,
         [
@@ -95,7 +119,9 @@ export async function runBatchIsolated(
           '--matches',
           '1',
           '--seed',
-          String(seed + index),
+          String(matchSeed),
+          '--rotation',
+          String(rotation),
           '--worker-out',
           out,
         ],
@@ -106,7 +132,7 @@ export async function runBatchIsolated(
       child.on('error', reject);
       child.on('exit', (code) => {
         if (code !== 0) {
-          reject(new Error(`match ${index} (seed ${seed + index}) exited ${code}`));
+          reject(new Error(`match ${index} (seed ${matchSeed}) exited ${code}`));
           return;
         }
         // A clean exit that wrote nothing is a worker that took some other
@@ -116,7 +142,7 @@ export async function runBatchIsolated(
         try {
           results[index] = JSON.parse(readFileSync(out, 'utf8')) as MatchTelemetryResult;
         } catch {
-          reject(new Error(`match ${index} (seed ${seed + index}) wrote no result`));
+          reject(new Error(`match ${index} (seed ${matchSeed}) wrote no result`));
           return;
         }
         resolve();
@@ -126,7 +152,7 @@ export async function runBatchIsolated(
   const worker = async (): Promise<void> => {
     while (failure === null) {
       const index = next++;
-      if (index >= matches) return;
+      if (index >= total) return;
       try {
         await run(index);
       } catch (err) {
@@ -141,7 +167,7 @@ export async function runBatchIsolated(
     rmSync(scratch, { recursive: true, force: true });
   }
   if (failure !== null) throw failure;
-  // Non-null by construction: every index below `matches` is claimed exactly
+  // Non-null by construction: every index below `total` is claimed exactly
   // once, and a worker that fails sets `failure` and is rethrown above.
   return results as MatchTelemetryResult[];
 }

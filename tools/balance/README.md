@@ -97,7 +97,36 @@ ordering in the sim.
 
 **Rotate the seating before you attribute a win rate to a navy**, and pool the rotations —
 four batches with the matchup cycled gives each faction each chair exactly once, which is
-what makes the per-faction column mean the doctrine again.
+what makes the per-faction column mean the doctrine again. `--rotate-seats` is that, in one
+command:
+
+```bash
+node tools/balance/run.mjs --matchup consortium,commune,directorate,knights \
+  --matches 30 --seed 4000 --max-minutes 25 --rotate-seats
+```
+
+Every seed is played once per cyclic rotation, so the batch is four times the size and the
+report is the pool. Cyclic rather than all twenty-four permutations because balancing the
+two marginals against each other is the whole requirement, and that costs four batches
+rather than twenty-four.
+
+It is **opt-in**, and that is a decision rather than an oversight: on by default it would
+multiply every batch's cost by its seat count and make every baseline committed here
+incomparable with the next one. `baselines/four-faction-rotated.md` is the committed pool.
+
+Two things the report then says that it cannot say without this:
+
+- **A seating line under the header.** `4 seatings, pooled` or `One seating: ... a win rate
+  here cannot separate the doctrine from the chair`. The seed range is identical either way,
+  so nothing else on the page distinguishes them.
+- **A `Per chair` table**, the other marginal of the same table the per-faction rows are one
+  marginal of, printed only when the two can differ — a rotation, where a slot hosts several
+  navies, or a mirror, where a navy holds several slots. In a single-seating four-faction
+  batch it would be the faction table relabelled, so it is omitted.
+
+The `one navy is simply stronger` rail also prints the count inside its own reading, because
+`Directorate 75%` out of one seating and `Directorate 57%` pooled over four are different
+claims and it spent fourteen baselines unable to say which it was making (#600).
 
 **"Held" is evidence, not proof.** It means the failure that guard-rail describes did not
 appear in these runs. The sample size is printed beside every verdict.

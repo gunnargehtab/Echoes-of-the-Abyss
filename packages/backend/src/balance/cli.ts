@@ -14,6 +14,17 @@
  * pairing rather than about "the game" in the abstract. Faction balance
  * claims are pairwise, and averaging over every pairing hides the pairing that
  * is broken.
+ *
+ * **`--rotate-seats`** answers the objection to that: the spec's entry index
+ * *is* the spawn slot, so `--matchup` names a seating and not only a roster,
+ * and on `ventfront-divide` the chair is a larger determinant of a win than
+ * the difference between two doctrines (`baselines/seat-rotation.md`). The
+ * flag plays every seed once per cyclic rotation, which puts each faction in
+ * each chair exactly once, so the per-faction column means the doctrine again.
+ *
+ * It is opt-in, and that is a deliberate choice rather than an oversight: on
+ * by default it would multiply every batch's cost by its seat count and make
+ * every baseline this repository has committed incomparable with the next one.
  */
 
 import { writeFileSync, mkdirSync } from 'node:fs';
@@ -31,7 +42,14 @@ import {
   LIFECYCLE,
   THERMAL_DRAW,
 } from '@echoes/shared';
-import { runBatch, runMatch, seedHasAnyEffect, DEFAULT_MAX_MINUTES, type Seat } from './runner.ts';
+import {
+  runBatch,
+  runMatch,
+  rotateSeats,
+  seedHasAnyEffect,
+  DEFAULT_MAX_MINUTES,
+  type Seat,
+} from './runner.ts';
 import { runBatchIsolated } from './batch.ts';
 import { DEFAULT_MAP_ID, MAPS, mapById } from '../sim/maps/index.ts';
 import { summarise, toMarkdown } from './report.ts';
@@ -160,7 +178,12 @@ async function main(): Promise<void> {
   }
 
   const overrides = flags('set').map(applyOverride);
-  const seats = parseMatchup(flag('matchup', 'consortium,commune')!);
+  const matchup = flag('matchup', 'consortium,commune')!;
+  const roster = parseMatchup(matchup);
+  // A worker is handed its seating as a rotation index rather than as a
+  // re-spelled `--matchup`, so the command in the report stays the command the
+  // user typed and the rotation cannot disagree with the roster it came from.
+  const seats = rotateSeats(roster, Number(flag('rotation', '0')));
   const matches = Number(flag('matches', '10'));
   const seed = Number(flag('seed', '1000'));
   const maxMinutes = Number(flag('max-minutes', String(DEFAULT_MAX_MINUTES)));
@@ -188,6 +211,13 @@ async function main(): Promise<void> {
     );
   }
 
+  // One rotation per chair, so every faction sits in every one of them
+  // exactly once. `[0]` — the seating as typed — when the flag is absent, which
+  // keeps an existing baseline's command producing that baseline's batch.
+  const rotations = process.argv.includes('--rotate-seats')
+    ? Array.from({ length: seats.length }, (_, i) => i)
+    : [0];
+
   const run = { seats, seed, mapId, maxMinutes, fauna };
 
   // One match, this process, straight to JSON — `batch.ts` spawning us. Before
@@ -209,7 +239,8 @@ async function main(): Promise<void> {
   // to isolate from, and behind a flag for debugging a batch under one
   // debugger.
   const inProcess = process.argv.includes('--in-process');
-  if (inProcess && matches > 1) {
+  const total = matches * rotations.length;
+  if (inProcess && total > 1) {
     console.error(
       'WARNING: --in-process runs every match in one process, where bitecs recycles ' +
         'entity ids across matches. Results past the first few are not reproducible.'
@@ -218,8 +249,20 @@ async function main(): Promise<void> {
 
   const started = Date.now();
   console.error(
-    `Running ${matches} matches, ${seats.length} seats, seed ${seed}, cap ${maxMinutes} min...`
+    `Running ${total} matches, ${seats.length} seats, seed ${seed}, cap ${maxMinutes} min...`
   );
+  if (rotations.length > 1) {
+    // The entries as typed, cycled — the banner is about the seating, and the
+    // spec is the only spelling of it the reader already recognises.
+    const entries = matchup.split(',').map((e) => e.trim());
+    console.error(
+      `Rotating the seating: ${matches} matches on seeds ${seed}-${seed + matches - 1} for ` +
+        `each of ${rotations.length} cyclic orders — ` +
+        rotations
+          .map((by) => entries.map((_, i) => entries[(i + by) % entries.length]!).join(','))
+          .join(' | ')
+    );
+  }
   if (overrides.length > 0) console.error(`Overrides: ${overrides.join('; ')}`);
   // The seed reaches exactly one thing in the simulation: where the Drift is
   // placed. Without it, every match in the batch is identical, and a
@@ -233,13 +276,14 @@ async function main(): Promise<void> {
   }
 
   const results =
-    matches === 1 || inProcess
-      ? runBatch(run, matches)
+    total === 1 || inProcess
+      ? rotations.flatMap((by) => runBatch({ ...run, seats: rotateSeats(roster, by) }, matches))
       : await runBatchIsolated(
           process.argv.slice(2),
           seed,
           matches,
-          Number(flag('jobs', '0')) || undefined
+          Number(flag('jobs', '0')) || undefined,
+          rotations
         );
   const summary = summarise(results);
   // Quoted so a title with spaces round-trips through a shell unchanged.
@@ -252,7 +296,8 @@ async function main(): Promise<void> {
     markdown +=
       `\n> **These runs are not independent.** \`--no-fauna\` makes the seed inert, ` +
       `because placing the Drift is the only thing the simulation draws from it. ` +
-      `The ${matches} matches below are the same match ${matches} times.\n`;
+      `The ${matches} matches ${rotations.length > 1 ? 'in each seating' : 'below'} are ` +
+      `the same match ${matches} times.\n`;
   }
   if (overrides.length > 0) {
     markdown += `\n**Overrides applied:** ${overrides.map((o) => `\`${o}\``).join(', ')}\n`;
@@ -286,6 +331,13 @@ const USAGE = `Balance harness — headless matches, telemetry, and the guard-ra
                        Default ${DEFAULT_MAX_MINUTES}.
   --map <id>           Map archetype. Default is the room's default.
   --no-fauna           Empty the Drift. Off by default: a normal match has it.
+  --rotate-seats       Play every seed once per cyclic rotation of --matchup,
+                       so each faction sits in each spawn exactly once, and
+                       pool the lot. Costs one batch per seat. Off by default:
+                       it would make every committed baseline incomparable
+                       with the next one. Read baselines/seat-rotation.md for
+                       why a single seating cannot attribute a win rate to a
+                       navy.
   --set <Path=value>   Patch a TUNABLE constant before the batch, e.g.
                        --set HARVEST_THROTTLE.Overburden.cargoMultiplier=1.0
                        Roots: ${Object.keys(TUNABLE_ROOTS).join(' ')}
