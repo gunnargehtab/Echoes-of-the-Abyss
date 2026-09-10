@@ -49,6 +49,13 @@
  *   Area is the cheapest measure of a part's shape that bounds cannot stand
  *   in for; it is compared per part, divided by the root scale squared, and
  *   a change over a quarter of a percent is listed with the part.
+ * - **Compare the surface centroid too.** A cone built the wrong way round
+ *   has the bounds, the triangle count *and* the area of the right one; only
+ *   where its surface sits inside that box changes. The Dredge's telson and
+ *   both tail spines shipped reversed through two ports and one review that
+ *   way (#630). The area-weighted centroid of each part's triangles moves by
+ *   a third of the cone's length when it flips, so it is compared beside the
+ *   bounds and listed when it moves more than the bounds did.
  *
  * Nothing here is a gate and nothing here exits non-zero on a difference: a
  * port is allowed to move a bound, and only a person reading the report can
@@ -98,17 +105,23 @@ function medianAxis(values) {
   });
 }
 
-/** Surface area of a part, from its triangles, in the file's own units squared. */
-function area(part) {
+/**
+ * Surface area of a part, from its triangles, in the file's own units
+ * squared — and the area-weighted centroid of that surface.
+ */
+function surface(part) {
   const a = part.positions;
   let sum = 0;
+  const c = [0, 0, 0];
   for (let t = 0; t < a.length; t += 9) {
     const ux = a[t + 3] - a[t], uy = a[t + 4] - a[t + 1], uz = a[t + 5] - a[t + 2];
     const vx = a[t + 6] - a[t], vy = a[t + 7] - a[t + 1], vz = a[t + 8] - a[t + 2];
     const cx = uy * vz - uz * vy, cy = uz * vx - ux * vz, cz = ux * vy - uy * vx;
-    sum += Math.sqrt(cx * cx + cy * cy + cz * cz) / 2;
+    const tri = Math.sqrt(cx * cx + cy * cy + cz * cz) / 2;
+    sum += tri;
+    for (let d = 0; d < 3; d++) c[d] += (tri * (a[t + d] + a[t + 3 + d] + a[t + 6 + d])) / 3;
   }
-  return sum;
+  return { area: sum, centroid: sum > 0 ? c.map((v) => v / sum) : c };
 }
 
 /** Extents and centre of a part or a whole model, in the file's own units. */
@@ -259,12 +272,19 @@ function report(beforePath, afterPath, label) {
     if (p.material !== q.material) note.push(`material ${p.material}→${q.material}`);
     // Area is a scalar, so the root scale enters squared; one axis's factor
     // stands for all three, since a non-uniform scale is already flagged above.
-    const areaA = area(p) * scale[0] * scale[1];
-    const areaB = area(q);
-    const areaPct = areaA > 0 ? ((areaB - areaA) / areaA) * 100 : 0;
+    const sa = surface(p);
+    const sb = surface(q);
+    const areaA = sa.area * scale[0] * scale[1];
+    const areaPct = areaA > 0 ? ((sb.area - areaA) / areaA) * 100 : 0;
     if (Math.abs(areaPct) > 0.25)
       note.push(`area ${areaPct > 0 ? '+' : ''}${areaPct.toFixed(1)}%`);
-    if (d > 0.005 || note.length) moved.push({ name: p.name, d, note: note.join(', ') });
+    // The surface centroid, under the same scale and shift as the bounds. A
+    // move here beyond what the bounds moved is a part re-laid inside its box.
+    const cd = Math.max(
+      ...[0, 1, 2].map((i) => Math.abs(sb.centroid[i] - shift[i] - sa.centroid[i] * scale[i]))
+    );
+    if (cd > 0.005 && cd > d + 0.005) note.push(`centroid ${cd.toFixed(3)} m`);
+    if (d > 0.005 || note.length) moved.push({ name: p.name, d: Math.max(d, cd), note: note.join(', ') });
   }
   moved.sort((x, y) => y.d - x.d);
 
