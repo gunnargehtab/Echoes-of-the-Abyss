@@ -71,16 +71,32 @@ export function validateSpent(spent: unknown, definition: MissionDefinition): Se
 }
 
 /**
- * A predicate as it reads over what was actually seated, or `null` for one
- * that now reads over nothing.
+ * A predicate as it reads over what was actually seated.
  *
- * Only `extract` and `survive` address a role with a count, so only they can
- * ask for more hulls than came. The count is clamped to what was fielded — a
- * `survive` over three cutters when two were seated asks for two — and a
- * predicate whose role has no hull left is removed with whatever carried it,
- * because a sentence about hulls that were never seated is a sentence about
- * nothing. Clamping such a row to zero instead would have it read met-with-
- * nothing at the close, in words the author wrote for a hull that came home.
+ * **The record moves hulls. It never moves a rung** (#612): a mission's ladder
+ * — its rows, its `terminal` set, its `keystone` set — is what §8 authored,
+ * whatever the campaign has spent. Nothing is removed here, and only one kind
+ * of count moves, because "count" means two different things in the objective
+ * table and only one of them is about the roster:
+ *
+ * - A **`survive` count is a roll call of the party that sailed.** "Three
+ *   cutters. Three is the number of hulls the Order can put under two nodes"
+ *   (docs/mission-rim-deposits.md §8) asks whether everyone came home, and
+ *   asking it of two hulls when two sailed is the same question, not a
+ *   different one. So it clamps.
+ * - An **`extract` count is a fact about the water**, and does not care what
+ *   the Order brought. The Chord is two loaded carriers because the rim's
+ *   crystal takes two carriers — "below that there is no Chord and no reason
+ *   for the week" — so a raid with one cutter has no Chord, and the row says
+ *   so. Clamping it to one bought a winnable raid by printing "Two cutters are
+ *   above the line with the rim aboard" over a single hull, which is the lie
+ *   this rule exists to stop telling.
+ *
+ * A `survive` row whose role has *no* hull left keeps its authored count
+ * rather than clamping to zero, so it reads unmet instead of met-with-nothing.
+ * Its unmet line is a roll call — "A cutter is entered. Say the name to the
+ * house yourself." — and that is true of a cutter entered at the Rest, which
+ * is exactly when this case arises.
  *
  * `quiet` addresses a role too, and is left alone: a ceiling over an empty
  * set is trivially kept, which is the truth and costs no sentence.
@@ -88,10 +104,10 @@ export function validateSpent(spent: unknown, definition: MissionDefinition): Se
 function fielded(
   predicate: MissionPredicate,
   countByRole: ReadonlyMap<MissionRole, number>
-): MissionPredicate | null {
-  if (predicate.kind !== 'extract' && predicate.kind !== 'survive') return predicate;
+): MissionPredicate {
+  if (predicate.kind !== 'survive') return predicate;
   const seated = countByRole.get(predicate.role) ?? 0;
-  if (seated === 0) return null;
+  if (seated === 0) return predicate;
   return predicate.count > seated ? { ...predicate, count: seated } : predicate;
 }
 
@@ -102,9 +118,9 @@ function fielded(
  * and every mission outside the Knights' campaign — so the identity check
  * every caller already makes on a definition keeps meaning what it meant.
  * Otherwise a derived definition: the player party's `units` without the
- * hulls whose `cadre` is spent, and every `extract`/`survive` predicate over
- * a role that now has fewer hulls than it asks for clamped or removed (see
- * `fielded`), on objectives and on conditional beats alike.
+ * hulls whose `cadre` is spent, and the authored ladder otherwise intact —
+ * every objective and every conditional beat still there, with only a
+ * `survive` count re-read against the party that sailed (see `fielded`).
  *
  * **Everything else stays authored, and the runtime already does the right
  * thing with it.** A `move` beat, a lift or a sounding that names a spent
@@ -134,21 +150,17 @@ export function fieldDefinition(
     if (unit.role !== undefined) countByRole.set(unit.role, (countByRole.get(unit.role) ?? 0) + 1);
   }
 
-  const objectives: MissionObjective[] = [];
-  for (const objective of definition.objectives) {
+  const objectives: MissionObjective[] = definition.objectives.map((objective) => {
     const predicate = fielded(objective.predicate, countByRole);
-    if (predicate === null) continue;
-    objectives.push(predicate === objective.predicate ? objective : { ...objective, predicate });
-  }
+    return predicate === objective.predicate ? objective : { ...objective, predicate };
+  });
 
   let conditionalBeats: MissionConditionalBeat[] | undefined;
   if (definition.conditionalBeats !== undefined) {
-    conditionalBeats = [];
-    for (const beat of definition.conditionalBeats) {
+    conditionalBeats = definition.conditionalBeats.map((beat) => {
       const when = fielded(beat.when, countByRole);
-      if (when === null) continue;
-      conditionalBeats.push(when === beat.when ? beat : { ...beat, when });
-    }
+      return when === beat.when ? beat : { ...beat, when };
+    });
   }
 
   return {
