@@ -722,6 +722,50 @@ describe('every map has water where it seats things', () => {
   const STRUCTURE_DEPTH_M = CONSTRUCTION.WORKING_DEPTH_M;
   const NODULE_DEPTH_M = CONSTRUCTION.WORKING_DEPTH_M;
 
+  /**
+   * docs/maps.md, "How a map is written": a spawn and its Foundry stand on
+   * ground the map paints.
+   *
+   * Containment in *some* authored rectangle, and deliberately not "a floor
+   * different from the map's own". A region setting neither floor nor ceiling
+   * still satisfies this — the doc sanctions a base on the base seabed inside
+   * an authored region — and strengthening the predicate to the floor flags
+   * fourteen legitimate placements across kelp-labyrinth, sorrowgate,
+   * holding-board and the-first.
+   *
+   * This is the invariant that was missing while the Ventfront seated all
+   * eight of its placements in an unpainted 250 m gutter (#622). Neither of
+   * the assertions below could see it. The water there was 2,600 m, which is
+   * comfortably deep enough for a 600 m structure, so the depth test passed;
+   * and the fault was identical on all four seats, so the cell-by-cell
+   * symmetry count read zero. Written over every map, catalogue and mission
+   * alike, because a test scoped to the one instance somebody had in mind is
+   * how the next one gets in — and this was the third time this exact shape of
+   * fault reached the tree.
+   */
+  it('paints the ground under every base it seats, on every map', () => {
+    const paints = (map: MapDefinition, x: number, y: number) =>
+      map.regions.some((r) => x >= r.x && x < r.x + r.widthM && y >= r.y && y < r.y + r.heightM);
+
+    const unpainted: string[] = [];
+    for (const map of [...MAPS, ...MISSION_MAPS]) {
+      for (const spawn of map.spawns) {
+        if (!paints(map, spawn.x, spawn.y)) {
+          unpainted.push(`${map.id}: a Bastion at ${spawn.x},${spawn.y}`);
+        }
+        const fx = spawn.x + spawn.foundryOffsetX;
+        const fy = spawn.y + spawn.foundryOffsetY;
+        if (!paints(map, fx, fy)) unpainted.push(`${map.id}: a Foundry at ${fx},${fy}`);
+      }
+    }
+
+    assert.deepEqual(
+      unpainted,
+      [],
+      `these stand on ground no region paints:\n  ${unpainted.join('\n  ')}`
+    );
+  });
+
   for (const map of MAPS) {
     describe(map.name, () => {
       it('seats every spawn and its Foundry over deep enough water', () => {

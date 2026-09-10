@@ -270,6 +270,8 @@ A map's **spawn list is its player count**, which is why the Abyssal Rift Corrid
 
 A mission map is the one carve-out, and it is not a counter-example. It carries a single spawn because the player commands a single force; every other party in the water is placed by the mission, with its own hulls and its own standing, and the map never hears about them. Reading a mission map's spawn list as a player count is therefore correct and tells you almost nothing about how crowded the water is.
 
+**A spawn and its Foundry stand on ground the map paints.** Both seat at a fixed depth and cannot rise, so the region under a base is the author's statement about what a base opens on. The test is containment in *some* authored rectangle, and deliberately not a floor that differs from the map's own: a region setting neither floor nor ceiling still satisfies the rule, because open water over the base seabed is ground a map may mean to put a base on. Painting is the statement; the seabed under an unpainted spawn is nobody's statement about anything. Every spawn and Foundry in `sim/maps/` satisfies this, mission maps included, and the map tests refuse any that does not.
+
 **Hazard sites are placed; two kinds are simulated.** Geothermal eruptions and resonance storms run a full lifecycle — see [hazards.md](hazards.md) for the status of all eight. A simulated hazard is drawn live, with a phase and a closing countdown ring; an inert site is drawn into the static terrain layer as hatched ground, because a solid marker would imply an effect that does not exist yet. Either way the site is visible from the first frame, which is what the telegraphing principle above requires.
 
 ### Where a bloom garden goes
@@ -346,11 +348,12 @@ Every mission map the bible specifies now exists. The last to land was Standing 
 
 Sorrowgate is cut from Map Type 5's shape, which is what that archetype's *Ideal Use* line asks of it; it is not a Sunken Metropolis, and Map Type 5 stays *Not yet* in the archetype table, because ticking it would promise a four-seat competitive layout that nobody has written. The three that followed it are cut from no archetype at all — a mission map answers to its mission, and none of these four could be offered to a player choosing a map.
 
-### Two authoring faults the tests caught
+### Three authoring faults the tests caught
 
-Both were found by writing down an invariant rather than by looking at the map:
+All three were found by writing down an invariant rather than by looking at the map, and all three are the same shape: a spawn seated on ground the map did not intend.
 
 - The Kelp Labyrinth's corner pressure pockets sat exactly on its corner spawns, which would have started two players in the deepest and loudest biome on the map.
 - The Abyssal Rift Corridor's trench ran the full width, putting both bases inside PF 1.6 and making the opening a permanent broadcast. The trench is now *central*, with coral base aprons at either end — committing to the rift is something a player does, not something they wake up in.
+- The Ventfront Divide seated all four Bastions and all four Foundries in a 250 m gutter no region painted, between the trenches at 1,000 m and the plateaus that began at 1,250 m. Every base on the default map opened in open water over the map's own 2,600 m seabed at PF 1.0, under plateaus whose comment promises 700 m of kelp and no room to lurk beneath a base. It survived for so long because it was *symmetric*: identical on all four seats, so the cell-by-cell symmetry assertion read 0 and nothing ever looked odd. The depth assertion could not see it either, because it asks only whether the water is deep enough for a 600 m structure, and 2,600 m is comfortably that. The rule above is what the third fault bought: the invariant that would have caught it is containment, not depth and not symmetry.
 
 Related: [environments.md](environments.md) · [hazards.md](hazards.md) · [systems-echo.md](systems-echo.md) · [mission-sorrowgate.md](mission-sorrowgate.md)
