@@ -11,8 +11,10 @@
  *   keep only the names this mission could act on. That asymmetry is stated
  *   in `roster.ts` and tested rather than trusted here.
  * - **The derived definition** (`fieldDefinition`). A mission fielded short
- *   is a new object and the authored literal is untouched; counts clamp to
- *   what came; a row over hulls that never came is gone with its reading.
+ *   is a new object and the authored literal is untouched. The record moves
+ *   hulls and never a rung (#612): no row is removed, no `terminal` or
+ *   `keystone` flag changes, and the one count that is re-read is a `survive`
+ *   count, which is a roll call of the party that sailed.
  * - **The acceptance, played.** A hull entered at the Rest is named at
  *   Nineteen's close, and *Conclave* seats five under that name; a hull lost
  *   on a tide that does not spend is named nowhere. Driven against the real
@@ -61,6 +63,8 @@ interface Run {
   seated: number;
   /** The seated hulls' positions, so an absence can be named. */
   positions: readonly { x: number; y: number }[];
+  /** The close as the player reads it — epilogue, then the objective readings. */
+  epilogue: string;
 }
 
 /**
@@ -109,7 +113,7 @@ function play(
   const over = match.missionOver;
   assert.ok(over !== null, `${mission.id} never closed`);
   assert.ok(killed, `${mission.id}: "${kill}" was never found to kill`);
-  return { outcome: over.outcome, spent: over.spent, seated, positions };
+  return { outcome: over.outcome, spent: over.spent, seated, positions, epilogue: over.epilogue };
 }
 
 describe('validateSpent — the bound the room puts on a client’s record', () => {
@@ -213,40 +217,66 @@ describe('fieldDefinition — the mission as it is fielded once the record has s
       escort,
       CHORD_RIM_DEPOSITS.objectives.find((o) => o.id === 'the-escort')
     );
-    // The keystone asks two loaded cutters home and two cutters came, so it
-    // still asks two. A count inside what was fielded is not a count to clamp.
-    const keystone = fielded.objectives.find((o) => o.keystone === true)!;
-    assert.equal(keystone.predicate.kind, 'extract');
-    assert.equal((keystone.predicate as { count: number }).count, 2);
+    // The keystone asks two loaded cutters home and always will: an `extract`
+    // count is a fact about the water, not a roll call of the party, and the
+    // Chord is two carriers because the rim's crystal takes two (#612). It is
+    // the authored object rather than a copy, at any spend.
+    for (const spent of [['first'], ['first', 'second'], ['first', 'second', 'third']]) {
+      const short = fieldDefinition(CHORD_RIM_DEPOSITS, new Set(spent));
+      const keystone = short.objectives.find((o) => o.keystone === true)!;
+      assert.equal(
+        keystone,
+        CHORD_RIM_DEPOSITS.objectives.find((o) => o.keystone === true),
+        `[${spent.join(',')}] rewrote the keystone`
+      );
+      assert.deepEqual(keystone.predicate, {
+        kind: 'extract',
+        role: 'cutter',
+        region: 'staging',
+        count: 2,
+        loaded: true,
+      });
+    }
   });
 
-  it('clamps a conditional beat the same way', () => {
+  it('leaves a conditional beat’s extract count where the author put it', () => {
     // Rim's "both loads home" announcement fires on two loaded cutters at the
-    // Staging. Two of the three cutters spent leaves one, so it fires on one.
+    // Staging. Two of the three cutters spent leaves one — and the beat still
+    // asks two, because two loads home is the thing being announced and one
+    // load home is not it. The announcement simply never fires, which is the
+    // truth about a raid that brought one cutter (#612).
     const fielded = fieldDefinition(CHORD_RIM_DEPOSITS, new Set(['first', 'second']));
     const both = fielded.conditionalBeats!.filter(
       (b) => b.when.kind === 'extract' && b.when.role === 'cutter'
     );
     assert.ok(both.length >= 2, 'the two announcements over the cutters are still there');
-    for (const beat of both) {
-      assert.ok(
-        (beat.when as { count: number }).count <= 1,
-        `${beat.kind} asks for more than came`
-      );
-    }
+    const authored = CHORD_RIM_DEPOSITS.conditionalBeats!.filter(
+      (b) => b.when.kind === 'extract' && b.when.role === 'cutter'
+    );
+    // Identity, not equality: an extract predicate is never rewritten, so the
+    // derived definition hands back the authored objects themselves.
+    assert.deepEqual(both, authored);
+    for (const beat of both) assert.ok(authored.includes(beat), `${beat.kind} was rebuilt`);
   });
 
-  it('removes an objective whose role has nobody left, and its reading with it', () => {
+  it('keeps an objective whose role has nobody left, at its authored count', () => {
     // The Second Chord's escort is the Voice and the raid's two escort hulls,
     // all three of them named. Spend all three and `the-escort` — "three of
-    // the escort answer" — is a sentence about hulls that were never seated,
-    // so it is gone rather than clamped to zero and read met-with-nothing.
+    // the escort answer" — stays on the ladder and reads unmet, because the
+    // Order counting three and getting none is the truth and is the sentence
+    // its author already wrote. Removing it took a *terminal* rung off the
+    // ladder the close is graded against; clamping it to zero would have read
+    // met-with-nothing (#612).
     const fielded = fieldDefinition(CHORD_SECOND_CHORD, new Set(['voice', 'fourth', 'fifth']));
     assert.equal(playerUnits(fielded).length, playerUnits(CHORD_SECOND_CHORD).length - 3);
+    const escort = fielded.objectives.find((o) => o.id === 'the-escort');
+    assert.ok(escort !== undefined, 'a row over an empty role is kept');
+    assert.equal(escort.terminal, true, 'and it is still a rung');
+    assert.deepEqual(escort.predicate, { kind: 'survive', role: 'escort', count: 3 });
     assert.equal(
-      fielded.objectives.find((o) => o.id === 'the-escort'),
-      undefined,
-      'a row over an empty role is removed'
+      escort,
+      CHORD_SECOND_CHORD.objectives.find((o) => o.id === 'the-escort'),
+      'and it is the authored object, not a copy'
     );
     // Rows over roles that still have hulls are kept: the tender's, and the
     // carriers', neither of which is named at all.
@@ -262,6 +292,71 @@ describe('fieldDefinition — the mission as it is fielded once the record has s
       ),
       'the tender’s row stays'
     );
+  });
+
+  it('moves hulls and never a rung, for every mission and every spent set', () => {
+    // The class rather than the four cases (#612). Driven off `MISSIONS`, so a
+    // fifth mission that authors cadres is covered the day it lands rather
+    // than the day somebody remembers to add it here.
+    //
+    // What a derived definition is allowed to differ in is exactly one thing:
+    // a `survive` count re-read against the party that sailed. Everything
+    // else — which rows exist, which are terminal, which are keystones, and
+    // every `extract` count — is the document's, and this walks the whole
+    // cross-product to say so.
+    const spendable = MISSIONS.filter((m) => cadreOf(m).length > 0);
+    assert.ok(spendable.length > 0, 'some mission authors cadres');
+
+    for (const mission of spendable) {
+      const cadres = [...new Set(cadreOf(mission))];
+      assert.ok(cadres.length <= 8, `${mission.id}: ${cadres.length} cadres is too many to walk`);
+
+      for (let mask = 0; mask < 1 << cadres.length; mask++) {
+        const spent = new Set(cadres.filter((_, i) => (mask >> i) & 1));
+        const where = `${mission.id} [${[...spent].join(',') || 'nothing spent'}]`;
+        const fielded = fieldDefinition(mission, spent);
+
+        // The seated party, by role, is what a `survive` count may be re-read
+        // against — and the only thing the record is allowed to have moved.
+        const seats = new Map<string, number>();
+        for (const unit of playerUnits(fielded)) {
+          if (unit.role !== undefined) seats.set(unit.role, (seats.get(unit.role) ?? 0) + 1);
+        }
+
+        assert.deepEqual(
+          fielded.objectives.map((o) => o.id),
+          mission.objectives.map((o) => o.id),
+          `${where}: the ladder's rows moved`
+        );
+
+        let terminal = 0;
+        for (const [i, objective] of fielded.objectives.entries()) {
+          const authored = mission.objectives[i]!;
+          assert.equal(objective.terminal, authored.terminal, `${where}: ${objective.id} terminal`);
+          assert.equal(objective.keystone, authored.keystone, `${where}: ${objective.id} keystone`);
+          if (objective.terminal === true) terminal++;
+
+          const now = objective.predicate as { kind: string; role?: string; count?: number };
+          const was = authored.predicate as { kind: string; role?: string; count?: number };
+          if (now.count !== undefined) {
+            assert.ok(now.count >= 1, `${where}: ${objective.id} counts nobody`);
+          }
+          if (now.kind !== 'survive') {
+            assert.equal(
+              objective.predicate,
+              authored.predicate,
+              `${where}: ${objective.id} is a ${now.kind} and was rewritten`
+            );
+            continue;
+          }
+          const seated = seats.get(now.role!) ?? 0;
+          const expected = seated === 0 ? was.count : Math.min(was.count!, seated);
+          assert.equal(now.count, expected, `${where}: ${objective.id} count`);
+        }
+
+        assert.ok(terminal > 0, `${where}: the terminal ladder is empty`);
+      }
+    }
   });
 
   it('never mutates the authored literal', () => {
@@ -340,6 +435,43 @@ describe('the acceptance, played — docs/campaign.md §7 row 3', () => {
     for (const mission of MISSIONS) {
       if (mission.attrition !== true) continue;
       assert.ok(cadreOf(mission).length > 0, `${mission.id} spends and names nobody to spend`);
+    }
+  });
+
+  it('does not certify a chord the Order sent nobody to stand', () => {
+    // #612's first close. Conclave's six voice rows are `extract role: party`,
+    // and removing them left only `the-rest` — an `endure` meaning *nothing is
+    // struck*, which an empty map keeps for free — so the mission read every
+    // terminal row met and closed **Complete** over a party of nobody, on the
+    // epilogue "Six stood, nothing struck."
+    const run = play(CHORD_CONCLAVE, null, new Set(cadreOf(CHORD_CONCLAVE)));
+    assert.equal(run.seated, 0, 'the whole cadre is spent, so nobody sails');
+    assert.notEqual(run.outcome, MissionOutcome.Complete, 'a chord nobody stood is not certified');
+    // And the close is the one its author wrote for a chord that did not
+    // happen, read voice by voice rather than passed over in silence.
+    for (const voice of ['Descant', 'Tenor', 'Treble', 'Alto', 'Bass', 'The Drone']) {
+      assert.ok(
+        run.epilogue.includes(`${voice} was not stood.`),
+        `the close does not say what became of ${voice}`
+      );
+    }
+  });
+
+  it('reads the rim out cut by cut when the cutters are gone', () => {
+    // #612's second close. Every terminal row at the Rim is an `extract` over
+    // `cutter`, so spending the three cutters emptied the whole ladder: the
+    // verdict survived, because the Lost epilogue is authored per outcome, but
+    // the six readings underneath it that say *which* cuts are still on the
+    // rim went with the rows. The account is what the player is owed.
+    const cutters = ['first', 'second', 'third'];
+    const run = play(CHORD_RIM_DEPOSITS, null, new Set(cutters));
+    assert.equal(run.seated, playerUnits(CHORD_RIM_DEPOSITS).length - cutters.length);
+    assert.ok(
+      run.epilogue.includes('Fewer than two cutters came off the rim loaded.'),
+      'the keystone does not say why the Chord does not exist'
+    );
+    for (const cut of ['first cut of the fourth', 'cut of the sixth']) {
+      assert.ok(run.epilogue.includes(cut), `the close does not account for the ${cut} face`);
     }
   });
 });
