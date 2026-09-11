@@ -1079,14 +1079,18 @@ export function launchTorpedo(
     // Inherited, per §8: the ordnance is only rated for the water its launcher
     // was rated for, so a shallow hull cannot reach into the deep by proxy.
     pressureRating: Pressure.rating[launcher]!,
+    // A locked shot acquires once, on its first seeker pass, and keeps what it
+    // found. Decided here rather than resolved here because the launcher's
+    // picture is not the weapon's: the torpedo is 20 m ahead by the time it
+    // looks, and the one thing this hull is buying is that what it looks at
+    // *first* is what it hits (docs/units.md, the Lance).
+    //
+    // Passed into the spawn rather than written after it returns (#617): a
+    // field written afterwards is a field the spawn never writes, and an
+    // ordinary tube's torpedo born on a reaped Lance shot's recycled id
+    // inherited the commitment along with the id.
+    locked: stats.coneLockedTorpedo === true,
   });
-
-  // A locked shot acquires once, on its first seeker pass, and keeps what it
-  // found. Set here rather than resolved here because the launcher's picture is
-  // not the weapon's: the torpedo is 20 m ahead by the time it looks, and the
-  // one thing this hull is buying is that what it looks at *first* is what it
-  // hits (docs/units.md, the Lance).
-  if (stats.coneLockedTorpedo === true) Ordnance.locked[eid] = 1;
 
   // Launching is loud, and launching out of Silent Running is the loudest
   // moment an ambush has (docs/systems-combat.md §3).

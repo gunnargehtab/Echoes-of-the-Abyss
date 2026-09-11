@@ -790,6 +790,17 @@ export interface SpawnOrdnanceOptions {
    * mistaken for a hull for an approach.
    */
   laid?: boolean;
+  /**
+   * This shot is committed: it acquires on its first seeker pass and keeps what
+   * it found, so a screen laid across its run does not turn it
+   * (docs/units.md, the Lance).
+   *
+   * An option rather than a field the caller writes after the spawn returns,
+   * because the spawn is the only place that can promise every `Ordnance` field
+   * is written — see the "every field, every time" note below. Left off, the
+   * shot is an ordinary one and re-acquires every pass.
+   */
+  locked?: boolean;
 }
 
 /**
@@ -891,9 +902,17 @@ export function spawnOrdnance(world: SimWorld, opts: SpawnOrdnanceOptions): numb
   // were missed when mines were added, and a torpedo born on a detonated
   // mine's id came into the world already ringing: it emitted the mine's
   // detonation SIG, never ran, and expired a fraction of a second later.
+  //
+  // `locked` was the third to be missed (#617), and it failed the same way one
+  // step further out: a plain tube's torpedo handed a reaped Lance shot's id
+  // came into the world already committed, so it ignored the noisemaker its
+  // living target dropped in front of it. The invariant is now held by a test
+  // that enumerates this component's fields rather than by this comment —
+  // test/ordnanceSpawn.test.ts.
   Ordnance.armingS[eid] = 0;
   Ordnance.detonatingS[eid] = 0;
   Ordnance.targetDepthM[eid] = opts.targetDepthM ?? opts.depth;
+  Ordnance.locked[eid] = opts.locked === true ? 1 : 0;
 
   return eid;
 }

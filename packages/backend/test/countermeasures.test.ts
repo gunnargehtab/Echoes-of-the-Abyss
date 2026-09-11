@@ -11,6 +11,13 @@
  *   - **point defence** is a gun choosing, not a shield. It costs the same
  *     cooldown as any other shot, which is what keeps a saturation volley an
  *     answer to it and gives the launcher a free cycle for every torpedo spent.
+ *
+ * Each answer is exercised in **both arms** — the defending hull idle, and the
+ * defending hull under a standing attack order (#617). Whether a countermeasure
+ * depends on what its owner happens to have ordered is a fact about the game
+ * that a player has to be able to predict, so it is asserted rather than left
+ * to whichever arm a test happened to be written in. Two of the three do not
+ * depend on the order. The third does, and the test that says so says why.
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
@@ -18,7 +25,14 @@ import { hasComponent } from 'bitecs';
 import { Faction, ORDNANCE, OrdnanceKind, SIM, UnitKind, statsFor } from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { spawnUnit } from '../src/sim/world.ts';
-import { Acoustic, Countermeasure, Health, Ordnance, Position } from '../src/sim/components.ts';
+import {
+  Acoustic,
+  Countermeasure,
+  Health,
+  Ordnance,
+  Position,
+  Weapon,
+} from '../src/sim/components.ts';
 import { launchTorpedo } from '../src/sim/systems/ordnance.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 
@@ -87,6 +101,51 @@ describe('countermeasures', () => {
       Ordnance.targetEid[torpedo],
       decoy,
       'the seeker should re-acquire onto the louder decoy'
+    );
+  });
+
+  it('turns the seeker just the same while the hull it protects is under an order', () => {
+    // The decoy arm of #617's both-arms rule. A noisemaker is an argument
+    // between two sources of sound and the defender's order is not one of the
+    // terms, so this is the same assertion as above with a live ordered target
+    // on the hull being protected. It is here because "the order makes no
+    // difference" is worth an assertion precisely where, one countermeasure
+    // over, it makes all of it.
+    const match = openWaterMatch();
+    const launcher = spawnUnit(match.world, {
+      kind: UnitKind.Corvette,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: 3000,
+      y: 6000,
+    });
+    const prey = spawnUnit(match.world, {
+      kind: UnitKind.Cruiser,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: 5500,
+      y: 6000,
+    });
+    advance(match, 0.2);
+
+    // Written to the field rather than ordered through `Match`, which wants a
+    // contact handle the defender has not been given: what is under test is the
+    // state `combatSystem` reads, not the path that sets it.
+    Weapon.orderedTargetEid[prey] = launcher;
+
+    const torpedo = launchTorpedo(match.world, launcher, 5500, 6000);
+    advance(match, 1);
+    assert.equal(Ordnance.targetEid[torpedo], prey, 'the seeker should start on the hull');
+    assert.equal(Weapon.orderedTargetEid[prey], launcher, 'and the order should still stand');
+
+    const decoy = match.deployNoisemaker(1, prey);
+    assert.notEqual(decoy, 0, 'an ordered hull can still deploy');
+
+    advance(match, ORDNANCE.TORPEDO.SEEKER_INTERVAL_S * 3);
+    assert.equal(
+      Ordnance.targetEid[torpedo],
+      decoy,
+      'and the seeker should take the decoy regardless of what its target was told to shoot'
     );
   });
 
@@ -205,6 +264,90 @@ describe('countermeasures', () => {
     assert.ok(
       Health.hp[defender]! === statsFor(UnitKind.Cruiser).maxHp,
       'and a Cruiser that shot it down should be untouched'
+    );
+  });
+
+  it('does not look for the torpedo at all while an attack order stands', () => {
+    // A characterisation test (#617): it records what the simulation does
+    // today, in both arms, and it is deliberately not a statement that today's
+    // answer is right.
+    //
+    // `combatSystem` reads the ordered target, and the whole auto-acquire block
+    // — point defence included — sits inside `if (!ordered)`. So a hull with a
+    // live ordered target never calls `nearestInboundOrdnance`: it is not
+    // losing a contention between two things it could shoot, it never runs the
+    // scan. The geometry makes that unmistakable rather than arguable. The
+    // ordered target is an unarmed Harvester 3 km away — a Cruiser reaches 900
+    // and closes at 45 m/s, so the gun has nothing in range for the whole run
+    // and fires at nothing. The single existing carve-out does not apply: it is
+    // for a hull in *hold* posture, and this one is not.
+    //
+    // The text this rests on is §5's Countermeasures bullet — guns engage
+    // torpedoes in their terminal 250 m "if the gun is idle". That adjective
+    // carries both readings. *Idle* can mean free this cycle, which is how the
+    // very next sentence prices point defence ("every cycle spent on a torpedo
+    // is a cycle not spent on the hull that launched it"), and then the code is
+    // wrong. It can equally mean under no order, which is what the code
+    // implements, and then §2:50, §9.5:532 and §13:676 are each stating the
+    // rule without its condition. Nothing in docs/ resolves it, so #617
+    // reserves the call for the owner. Whichever way it lands, this test
+    // changes shape rather than being deleted — it is the both-arms coverage
+    // the other two countermeasures in this file have.
+    const torpedoedWith = (ordered: boolean): { defenderHp: number; torpedoes: number } => {
+      const match = openWaterMatch();
+      const launcher = spawnUnit(match.world, {
+        kind: UnitKind.Corvette,
+        slot: 0,
+        faction: Faction.Bathyarch,
+        x: 3000,
+        y: 6000,
+      });
+      const quarry = spawnUnit(match.world, {
+        kind: UnitKind.Harvester,
+        slot: 0,
+        faction: Faction.Bathyarch,
+        x: 4000,
+        y: 9000,
+      });
+      const defender = spawnUnit(match.world, {
+        kind: UnitKind.Cruiser,
+        slot: 1,
+        faction: Faction.Pelagia,
+        x: 4000,
+        y: 6000,
+      });
+      advance(match, 0.2);
+      // Written to the field rather than ordered through `Match`, which wants a
+      // contact handle the defender has not been given: what is under test is
+      // the state `combatSystem` reads, not the path that sets it.
+      if (ordered) Weapon.orderedTargetEid[defender] = quarry;
+
+      launchTorpedo(match.world, launcher, 4000, 6000);
+      advance(match, 10);
+
+      if (ordered) {
+        assert.equal(
+          Weapon.orderedTargetEid[defender],
+          quarry,
+          'the order must stand for the whole run, or this arm measures nothing'
+        );
+      }
+      assert.equal(Health.hp[launcher], statsFor(UnitKind.Corvette).maxHp, 'nothing shot back');
+      return {
+        defenderHp: Health.hp[defender]!,
+        torpedoes: liveOrdnanceOf(match, OrdnanceKind.Torpedo).length,
+      };
+    };
+
+    const idle = torpedoedWith(false);
+    assert.equal(idle.torpedoes, 0, 'idle: the gun shoots the torpedo down');
+    assert.equal(idle.defenderHp, statsFor(UnitKind.Cruiser).maxHp, 'and the hull is untouched');
+
+    const underOrder = torpedoedWith(true);
+    assert.equal(
+      underOrder.defenderHp,
+      statsFor(UnitKind.Cruiser).maxHp - ORDNANCE.TORPEDO.DAMAGE,
+      'ordered: the identical torpedo arrives, and takes the whole 350'
     );
   });
 
