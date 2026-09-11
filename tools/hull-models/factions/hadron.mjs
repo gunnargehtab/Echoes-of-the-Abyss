@@ -9,7 +9,8 @@
  * later Order hull answers to — its own node names are the parts list, and its
  * proportions are the rule that matters most:
  *
- *   blade_hull   75 m long, 8 m tall, **8 m in beam**
+ *   blade_hull   75 m long, 4.4 m tall, **11.9 m in beam** — a four-facet
+ *                lathe laid flat and pressed to 0.55 × 1.5 (hulls/clarion.mjs)
  *   wing_p/s     30 m long, **0.9 m thick**, reaching to 17 m each side
  *   canard_p/s   12 m long, 0.7 m thick, forward
  *   dorsal_fin   5 m ·  keel 3 m ·  drive_prism at the stern
@@ -26,32 +27,47 @@ import {
   THREE,
   clad,
   lamp,
+  hex,
   add,
   box,
   cyl,
   torus,
   octa,
   plate,
+  plan,
   loft,
   strut,
   bothSides,
+  polar,
+  part,
 } from '../kit.mjs';
 
-/** The Order's palette, as the Clarion's own materials carry it. */
+/**
+ * The Order's palette, as the Clarion's own materials carry it: the four
+ * tokens of docs/art-direction.md, and — where the approved model needed a
+ * colour the docs do not name — that model's own hex, exactly (kit.mjs `hex`).
+ */
 export const ink = {
-  shadowIndigo: () => clad('shadow_indigo', [0.04, 0.03, 0.1], 0.35, 0.45),
-  paleAlloy: () => clad('pale_alloy', [0.79, 0.81, 0.89], 0.85, 0.22),
-  resonanceCrystal: () => clad('resonance_crystal', [0.26, 0.11, 0.92], 0.4, 0.18),
-  crystalSeam: () => lamp('crystal_seam', [0.58, 0.38, 1.0], [0.01, 0.01, 0.03]),
-  resonanceNode: () => lamp('resonance_node', [0.39, 0.2, 1.0], [0.02, 0.01, 0.08]),
+  shadowIndigo: () => clad('shadow_indigo', hex('#3B2E5A'), 0.35, 0.45),
+  paleAlloy: () => clad('pale_alloy', hex('#E6E9F2'), 0.85, 0.22),
+  resonanceCrystal: () => clad('resonance_crystal', hex('#8B5CF6'), 0.4, 0.18),
+  crystalSeam: () => lamp('crystal_seam', hex('#C9A6FF'), hex('#1A1030')),
+  // The node's glow is not the crystal-glow token: it is the Clarion's own,
+  // a shade bluer, and every Order hull since has carried it.
+  resonanceNode: () => lamp('resonance_node', hex('#A77CFF'), hex('#2A1A50')),
 };
 
 /**
  * The blade hull: a faceted spar, full forward and narrowing aft to almost
  * nothing. `maxR` is the half-section amidships — keep it near a tenth of the
  * length, as the Clarion's 4 m on 75 m is.
+ *
+ * The rung's three are drawn on their own `profile` instead — the approved
+ * models' `[x, r]` stations, four facets laid `flat` (`spar` below) — because
+ * a port transcribes, and none of them is the fraction-of-length swell here.
  */
-export function bladeBody(root, mat, { bow, stern, maxR, facets = 10 }) {
+export function bladeBody(root, mat, { bow, stern, maxR, facets = 10, profile = null, flat }) {
+  if (profile) return spar(root, 'blade_hull', mat, { profile, facets, flat });
   const L = bow - stern;
   const at = (t) => stern + L * t;
   // Fine point aft, swelling a little forward of amidships, drawn down to a
@@ -76,8 +92,21 @@ export function bladeBody(root, mat, { bow, stern, maxR, facets = 10 }) {
   );
 }
 
-/** The spine: a raised ridge along the back, its inlay, and the lit thread. */
-export function spine(root, { alloy, crystal, seam }, { from, to, y, thread = true }) {
+/**
+ * The spine: a raised ridge along the back, its inlay, and the lit thread.
+ *
+ * Given a `profile` it is the rung's spine instead: a four-facet ridge lathed
+ * on its own stations (`spar`), the inlay another (`spineInlay`) — drawn here
+ * when `inlay` is given, or by the hull itself when something comes between
+ * the two in the approved order, as the Reciter's lance does.
+ */
+export function spine(root, { alloy, crystal, seam }, opts) {
+  const { from, to, y, thread = true, profile = null, flat, inlay = null } = opts;
+  if (profile) {
+    spar(root, 'blade_spine', alloy, { profile, y, flat });
+    if (inlay) spineInlay(root, crystal, inlay);
+    return;
+  }
   const L = to - from;
   const c = (from + to) / 2;
   add(root, 'blade_spine', box(L, 1.6, 2.4), alloy, [c, y, 0]);
@@ -91,32 +120,50 @@ export function spine(root, { alloy, crystal, seam }, { from, to, y, thread = tr
  * and the standing glow, which rides the horn's *top* so the top-down bake can
  * see it. A glow inside the cone is invisible to gate 3.
  */
-export function bowArray(root, { alloy, crystal, seam, node }, { from, to, r, y = 0 }) {
+export function bowArray(root, { alloy, crystal, seam, node }, opts) {
+  const { from, to, r, y = 0, horn = null, lip = null, ridges = true, emitter = null } = opts;
   const L = to - from;
-  add(
-    root,
-    'array_horn',
-    cyl(r, r * 0.28, L, 6),
-    alloy,
-    [from + L / 2, y, 0],
-    [0, 0, -Math.PI / 2]
-  );
-  add(
-    root,
-    'array_lip',
-    cyl(r * 1.16, r * 1.16, 1.6, 6),
-    crystal,
-    [to - 0.8, y, 0],
-    [0, 0, Math.PI / 2]
-  );
-  add(root, 'array_ridge', box(L * 0.9, 0.5, 1.6), seam, [from + L / 2, y + r * 0.86, 0]);
-  bothSides((side, sgn) =>
-    add(root, `array_ridge_${side}`, box(L * 0.9, 0.4, 0.5), seam, [
-      from + L / 2,
-      y + r * 0.78,
-      sgn * 1.5,
-    ])
-  );
+  // The Clarion's array is the Responsory's said in the rung's forms: a horn
+  // and a lip that are six-facet lathes on their own stations with a vertex on
+  // the crown (`spar`), a lip that is lit, no ridges — its ring of `hornSeams`
+  // is drawn after this — and an emitter that is a crystal `point` rather
+  // than a stood-up octahedron. Each is an option so that, given none, the
+  // Responsory's array is exactly what it was.
+  if (horn) spar(root, 'array_horn', alloy, { facets: 6, y, ...horn });
+  else
+    add(
+      root,
+      'array_horn',
+      cyl(r, r * 0.28, L, 6),
+      alloy,
+      [from + L / 2, y, 0],
+      [0, 0, -Math.PI / 2]
+    );
+  if (lip) spar(root, 'array_lip', lip.mat ?? crystal, { facets: 6, y, ...lip });
+  else
+    add(
+      root,
+      'array_lip',
+      cyl(r * 1.16, r * 1.16, 1.6, 6),
+      crystal,
+      [to - 0.8, y, 0],
+      [0, 0, Math.PI / 2]
+    );
+  if (ridges) {
+    add(root, 'array_ridge', box(L * 0.9, 0.5, 1.6), seam, [from + L / 2, y + r * 0.86, 0]);
+    bothSides((side, sgn) =>
+      add(root, `array_ridge_${side}`, box(L * 0.9, 0.4, 0.5), seam, [
+        from + L / 2,
+        y + r * 0.78,
+        sgn * 1.5,
+      ])
+    );
+  }
+  if (emitter) {
+    point(root, 'emitter_crystal', crystal, { y, ...emitter });
+    point(root, 'emitter_core', node, { y, ...emitter.core });
+    return;
+  }
   add(
     root,
     'emitter_crystal',
@@ -137,22 +184,48 @@ export function bowArray(root, { alloy, crystal, seam, node }, { from, to, r, y 
   );
 }
 
-/** A thin swept wing, port and starboard, with a lit outboard edge. */
-export function wings(
-  root,
-  { alloy, crystal },
-  { aft, fwd, inner, outer, tipChord = 8.5, t = 0.9 }
-) {
+/**
+ * A thin swept wing, port and starboard, with a lit outboard edge.
+ *
+ * `plate` lands an outline's second coordinate on **-z** (kit.mjs), so the
+ * outline is drawn at `-sgn` to put the port plate at +z beside the port
+ * edge. Written without the sign, `wing_p` and `wing_edge_p` sat on opposite
+ * sides of the hull: invisible on a symmetric pair, and the Reciter's
+ * three-part wing is where a bounds comparison stops agreeing (#586).
+ *
+ * The rung's wings are given as an `outline` — the port half's plan, `[x, z]`
+ * with z positive, drawn through `plan` so the side is the side it names —
+ * rather than parametrised, because each is a swept quadrilateral no
+ * aft/chord/span form can say, and its `edge` is a second plan hugging the
+ * tip rather than a box. `y` centres the plate. A `lamp` (the Reciter's) or a
+ * `canard` (the Clarion's) is drawn *inside* each side's group, because the
+ * approved files write `wing_p wing_edge_p canard_p` before the starboard
+ * three and `check.mjs` compares in order; `name` and `edgeName` are for the
+ * Cantus, whose wings are guard blades. Given no outline, the Responsory's
+ * wing is exactly what it was.
+ */
+export function wings(root, { alloy, crystal, seam }, opts) {
+  const { aft, fwd, inner, outer, tipChord = 8.5, t = 0.9 } = opts;
+  const { outline = null, y = t, edge, lamp = null, canard = null, name = 'wing' } = opts;
+  const { edgeName = `${name}_edge` } = opts;
   bothSides((side, sgn) => {
+    if (outline) {
+      plane(root, `${name}_${side}`, alloy, { outline, t, y }, sgn);
+      plane(root, `${edgeName}_${side}`, crystal, edge, sgn);
+      if (lamp)
+        add(root, `${name}_lamp_${side}`, box(...lamp.size), seam, [lamp.x, lamp.y, sgn * lamp.z]);
+      if (canard) plane(root, `canard_${side}`, alloy, canard, sgn);
+      return;
+    }
     add(
       root,
       `wing_${side}`,
       plate(
         [
-          [aft, sgn * inner],
-          [aft, sgn * outer],
-          [aft + tipChord, sgn * outer],
-          [fwd, sgn * inner],
+          [aft, -sgn * inner],
+          [aft, -sgn * outer],
+          [aft + tipChord, -sgn * outer],
+          [fwd, -sgn * inner],
         ],
         t
       ),
@@ -166,7 +239,7 @@ export function wings(
   });
 }
 
-/** A small forward wing — the Clarion's canard, smaller and unlit. */
+/** A small forward wing — the Clarion's canard, smaller and unlit. Drawn at `-sgn`, as `wings` is. */
 export function canards(root, alloy, { from, to, inner, outer, t = 0.7 }) {
   bothSides((side, sgn) =>
     add(
@@ -174,10 +247,10 @@ export function canards(root, alloy, { from, to, inner, outer, t = 0.7 }) {
       `canard_${side}`,
       plate(
         [
-          [to, sgn * inner],
-          [to, sgn * outer],
-          [from, sgn * (outer - 1.5)],
-          [from, sgn * inner],
+          [to, -sgn * inner],
+          [to, -sgn * outer],
+          [from, -sgn * (outer - 1.5)],
+          [from, -sgn * inner],
         ],
         t
       ),
@@ -187,24 +260,39 @@ export function canards(root, alloy, { from, to, inner, outer, t = 0.7 }) {
   );
 }
 
-/** The vertical blades: a dorsal fin above and a keel below. */
-export function finAndKeel(root, alloy, { fin, keel }) {
-  add(root, 'dorsal_fin', box(fin.length, fin.height, 0.6), alloy, [fin.x, fin.y, 0]);
-  add(root, 'keel', box(keel.length, keel.height, 0.6), alloy, [keel.x, keel.y, 0]);
+/** The vertical blades: a dorsal fin above and, but for the Cantus, a keel below; `t` is the blade's thickness. */
+export function finAndKeel(root, alloy, { fin, keel = null, t = 0.6 }) {
+  add(root, 'dorsal_fin', box(fin.length, fin.height, t), alloy, [fin.x, fin.y, 0]);
+  if (keel) add(root, 'keel', box(keel.length, keel.height, t), alloy, [keel.x, keel.y, 0]);
 }
 
-/** The stern: a prism drive, its crystal ring, and the one mark astern. */
-export function drive(root, { shadow, crystal, node }, { x, r }) {
-  add(root, 'drive_prism', cyl(r, r * 0.34, r * 3.4, 6), shadow, [x, 0, 0], [0, 0, Math.PI / 2]);
-  add(
-    root,
-    'drive_ring',
-    cyl(r * 1.1, r * 1.1, 1, 6),
-    crystal,
-    [x + r * 1.6, 0, 0],
-    [0, 0, Math.PI / 2]
-  );
-  add(root, 'stern_mark', box(0.6, 0.6, 1.4), node, [x - r * 0.6, r * 1.4, 0]);
+/**
+ * The stern: the drive, its crystal ring, and the one mark astern.
+ *
+ * The Responsory's drive is a six-sided shadow-indigo frustum with a ring —
+ * the defaults. The rung's three end in a crystal point instead: four
+ * `facets`, no `taper`, no `ring`, cut in `mat` crystal — and each marks its
+ * stern in its own way (`mark`: a name, a material, a size and a place) or,
+ * the Cantus, not at all (`mark: null`).
+ */
+export function drive(root, { shadow, crystal, node }, opts) {
+  const { x, r, facets = 6, taper = 0.34, length = r * 3.4, mat = shadow, ring = true } = opts;
+  const { mark = {} } = opts;
+  add(root, 'drive_prism', cyl(r, r * taper, length, facets), mat, [x, 0, 0], [0, 0, Math.PI / 2]);
+  if (ring)
+    add(
+      root,
+      'drive_ring',
+      cyl(r * 1.1, r * 1.1, 1, 6),
+      crystal,
+      [x + r * 1.6, 0, 0],
+      [0, 0, Math.PI / 2]
+    );
+  if (mark) {
+    const { name = 'stern_mark', mat: lit = node, size = [0.6, 0.6, 1.4] } = mark;
+    const { x: markX = x - r * 0.6, y: markY = r * 1.4 } = mark;
+    add(root, name, box(...size), lit, [markX, markY, 0]);
+  }
 }
 
 /**
@@ -275,6 +363,180 @@ export function panelSeams(root, alloy, { from, to, count, halfBeam }) {
 }
 
 /* --------------------------------------------------------------------------
+ * The rung's three — the Clarion, the Cantus and the Reciter (#586). Their
+ * approved models share a construction the Responsory does not use: every
+ * body, spar and crystal is an open lathe of few facets laid flat (`spar`),
+ * every point is a four-sided pyramid (`point`), and every wing is its own
+ * plan. The builders below are read off those three binaries and take their
+ * numbers as parameters; the next Order hull composes from them.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * A faceted lathe along X — the section every Order spar and crystal is cut
+ * to. `profile` is the approved model's own `[x, r]` stations; `facets` sides
+ * with the first seam half a facet round from the beam (kit.mjs `loft`), so
+ * four facets sit on a flat and six carry a vertex on the crown; `flat` is
+ * `[height, beam]` as multiples of the lathe radius. `[0.55, 1.5]` is a square
+ * on its corner pressed into the blade every rung hull is, and the reason
+ * none of them reads as a tube from above.
+ */
+export function spar(root, name, mat, { profile, facets = 4, y = 0, flat = [1, 1] }) {
+  const geo = loft(profile, facets, Math.PI / facets);
+  return add(root, name, geo, mat, [0, y, 0], [0, 0, 0], [1, flat[0], flat[1]]);
+}
+
+/**
+ * A crystal point: a four-sided pyramid `length` long on a square base of
+ * half-diagonal `r`, laid along the hull with its tip forward. The rung's
+ * emitter and its core, the muzzle, the bow prism and the drive are all this
+ * shape; the Cantus's apex is the same pyramid stood on its base.
+ */
+export function point(root, name, mat, { x, y = 0, r, length }) {
+  return add(root, name, cyl(r, 0, length, 4), mat, [x, y, 0], [0, 0, Math.PI / 2]);
+}
+
+/** A thin plane from its port plan `outline`, `t` thick, centred at `y`, drawn on `sgn`'s side. */
+function plane(root, name, mat, { outline, t, y }, sgn) {
+  const geo = plan(
+    outline.map(([x, z]) => [x, sgn * z]),
+    t
+  );
+  return add(root, name, geo, mat, [0, y, 0]);
+}
+
+/**
+ * Lit seams ringing the bow horn: `count` boxes of `length` by `section`
+ * (`[height, width]`) on an ellipse `halfHeight` by `halfBeam` about the
+ * horn's axis at `x`, `y`. Seam 0 sits `phase` radians round from the crown
+ * toward port and the rest follow at equal steps the other way — the order
+ * the approved Clarion numbers its own. Each is rolled to lie flat on its
+ * facet and then turned `skew` radians about its own radial axis, so the ring
+ * spirals a little and dives into the horn toward the lip; the approved model
+ * does exactly that, and a port keeps it.
+ */
+export function hornSeams(root, mat, opts) {
+  const { x, y = 0, length, section, halfHeight, halfBeam, count = 6, phase = 0, skew = 0 } = opts;
+  for (let i = 0; i < count; i++) {
+    const a = phase - (i * 2 * Math.PI) / count;
+    add(
+      root,
+      `horn_seam_${i}`,
+      box(length, section[0], section[1]),
+      mat,
+      [x, y + halfHeight * Math.cos(a), halfBeam * Math.sin(a)],
+      [a, skew, 0]
+    );
+  }
+}
+
+/** The inlay alone: the crystal run let into the spine's top, a four-facet lathe like the spine it rides. */
+export function spineInlay(root, crystal, { profile, y, flat }) {
+  return spar(root, 'spine_inlay', crystal, { profile, y, flat });
+}
+
+/**
+ * The lance: the Reciter's forward run, and the one Order weapon that is not
+ * a cone. The `needle` is a four-facet spar drawn out to a point, the `rail` a
+ * lit bar let into its top, the `crystal` a second spar amidships along it,
+ * the `seams` a lit pair either side, and the `muzzle` a crystal point on the
+ * end. It lives here rather than in the hull because the next Knight hull is
+ * the Lance, whose block asks for "nothing of the Lance's chevron or the
+ * Reciter's needle" — the two are told apart by construction only if the
+ * needle is a shape the module draws.
+ */
+export function lance(root, ink, { needle, rail, crystal, seams, muzzle }) {
+  spar(root, 'lance', ink.alloy, needle);
+  add(root, 'lance_rail', box(rail.length, rail.section[0], rail.section[1]), ink.seam, [
+    rail.x,
+    rail.y,
+    0,
+  ]);
+  spar(root, 'lance_crystal', ink.crystal, crystal);
+  bothSides((side, sgn) =>
+    add(root, `lance_seam_${side}`, box(seams.length, seams.section[0], seams.section[1]), ink.seam, [
+      seams.x,
+      seams.y,
+      sgn * seams.z,
+    ])
+  );
+  point(root, 'muzzle', ink.node, muzzle);
+}
+
+/** The four quadrants of a hull as `[sx, sz]`, in the order the approved Cantus numbers its cradle. */
+const QUADRANTS = [
+  [1, 1],
+  [1, -1],
+  [-1, 1],
+  [-1, -1],
+];
+
+/**
+ * A resonance node standing on the hull in a four-legged cradle — the Cantus,
+ * "a resonance node on a hull" (docs/asset-prompts-3d.md, Block 3). Two
+ * flattened lozenges (`lower`, `upper`: four-facet spars) make the crystal, a
+ * point stands at its `apex`, and four legs run down to feet on the flanks,
+ * strut then foot a quadrant at a time — each a six-facet rod tapering from
+ * `r[0]` at the node to `r[1]` at the foot. Two lit `spineSeams` sit on the
+ * spine fore and aft of it, and four lit `ridges` run down its shoulders
+ * last — the order the approved model writes and the order `check.mjs` holds.
+ *
+ * Three things here are the approved binary's own geometry, transcribed and
+ * not corrected, because a port is not where a shape gets decided (#594
+ * straightened the first of them to bilateral, and that was the decision
+ * that closed it): the legs lean as Euler angles, `lean` about X and then
+ * about Z, so none lands on a diagonal; each ridge is turned `yaw` about Y
+ * and then dipped `pitch` (Y then X), which is not a diagonal either; and the
+ * aft pair carries that pitch with its sign reversed, so where the forward
+ * ridges fall outboard from the apex the aft ones *rise* toward the flank.
+ */
+export function resonanceNode(root, ink, { lower, upper, apex, cradle, spineSeams, ridges }) {
+  spar(root, 'node_lower', ink.crystal, lower);
+  spar(root, 'node_upper', ink.crystal, upper);
+  add(root, 'node_apex', cyl(0, apex.r, apex.length, 4), ink.seam, [0, apex.y, 0]);
+  QUADRANTS.forEach(([sx, sz], i) => {
+    add(
+      root,
+      `cradle_strut_${i}`,
+      cyl(cradle.r[0], cradle.r[1], cradle.length, 6),
+      ink.alloy,
+      [sx * cradle.at[0], cradle.at[1], sz * cradle.at[2]],
+      [-sz * cradle.lean, 0, sx * cradle.lean]
+    );
+    add(root, `cradle_foot_${i}`, box(...cradle.foot.size), ink.shadow, [
+      sx * cradle.foot.at[0],
+      cradle.foot.at[1],
+      sz * cradle.foot.at[2],
+    ]);
+  });
+  for (const [name, sgn] of [
+    ['seam_fore', 1],
+    ['seam_aft', -1],
+  ])
+    add(
+      root,
+      name,
+      box(spineSeams.length, spineSeams.section[0], spineSeams.section[1]),
+      ink.seam,
+      [sgn * spineSeams.x, spineSeams.y, 0]
+    );
+  QUADRANTS.forEach(([sx, sz], i) => {
+    const ridge = add(root, `node_ridge_${i}`, box(...ridges.size), ink.node, [
+      sx * ridges.at[0],
+      ridges.at[1],
+      sz * ridges.at[2],
+    ]);
+    const yaw = sx * (sz > 0 ? ridges.yaw : Math.PI - ridges.yaw);
+    ridge.rotation.set(sx * ridges.pitch, yaw, 0, 'YXZ');
+  });
+}
+
+/** The Cantus's bow: a plain alloy point where the Clarion has its horn, and one navigation mark abaft it. */
+export function bowPrism(root, { alloy, seam }, { x, r, length, mark }) {
+  point(root, 'bow_prism', alloy, { x, r, length });
+  add(root, 'nav_bow', box(...mark.size), seam, [mark.x, mark.y, 0]);
+}
+
+/* --------------------------------------------------------------------------
  * Structures. A settlement is the same architecture grown four ways, so the
  * base / mount / head / barrel family lives here beside the hull vocabulary
  * rather than in any one structure script (#553, off #540 Phase 3).
@@ -298,11 +560,52 @@ export function panelSeams(root, alloy, { from, to, count, halfBeam }) {
  * four. Values are the approved turret's own.
  */
 export const structureInk = {
-  darkSteel: () => clad('dark_steel', [0.012, 0.016, 0.03], 0.4, 0.4),
-  alloyDim: () => clad('alloy_dim', [0.25, 0.27, 0.37], 0.35, 0.32),
-  crystalDim: () => lamp('resonance_crystal_dim', [0.26, 0.11, 0.92], [0.01, 0.01, 0.04]),
-  navLight: () => lamp('nav_light', [0.58, 0.38, 1.0], [0.02, 0.01, 0.06]),
+  darkSteel: () => clad('dark_steel', hex('#1C2230'), 0.4, 0.4),
+  alloyDim: () => clad('alloy_dim', hex('#8A8FA3'), 0.35, 0.32),
+  crystalDim: () => lamp('resonance_crystal_dim', hex('#8B5CF6'), hex('#1E1038'), 0.15),
+  navLight: () => lamp('nav_light', hex('#C9A6FF'), hex('#241744'), 0.3),
 };
+
+/**
+ * The exchanger on the end of a Vent Tap's draw arm, on `bearing` (#608): a
+ * crystal prism square in section with pyramid ends, the alloy frame bar
+ * over it, the lit seam between them, the crystal spine — a slim pyramid —
+ * standing off the top, and the buttress blade wedged between the platform and the exchanger
+ * — an instrument, not a vessel, and the one head of the four whose every
+ * part is a straight edge. Distances are metres out along the bearing, as
+ * the kit's `ventDrawArm` takes them.
+ *
+ * The prism and the frame are four-facet lofts turned an eighth about their
+ * axis, so a flat face is up rather than an edge (kit.mjs `loft`). The
+ * approved seam lies inside the frame's section, under its top face, where
+ * the top-down bake has never seen it; `exportGlb`'s light audit says so on
+ * every arm, and it is carried across rather than lifted (#540).
+ */
+export function exchangerHead(root, { crystal, alloy, seam }, opts) {
+  const { bearing: a, at, prism, frame, seam: strip, spine: crest, buttress: blade } = opts;
+  const yaw = [0, -a, 0];
+  add(root, 'exchanger_prism', loft(prism.profile, 4, Math.PI / 4), crystal, polar(a, at, prism.y), yaw);
+  add(root, 'exchanger_frame', loft(frame.profile, 4, Math.PI / 4), alloy, polar(a, at, frame.y), yaw);
+  add(root, 'exchanger_seam', box(...strip.size), seam, polar(a, at, strip.y), yaw);
+  // A four-sided pyramid, not an octahedron: the approved file's eight
+  // triangles are four faces on a square base with a vertex at its centre
+  // (three r169 draws `cyl(0, r, …)` as 2n triangles). The two share a
+  // bounding box and differ by a twelfth of their area.
+  add(root, 'crystal_spine', cyl(0, crest.r, crest.h, 4), crystal, polar(a, at, crest.y));
+  // A triangle in plan — base across the arm at `blade.at`, point reaching
+  // `blade.reach` back toward the wellhead — stood on its base rather than
+  // centred, which is how the approved file carries it.
+  const wedge = plan(
+    [
+      [-blade.halfBase, 0],
+      [blade.halfBase, 0],
+      [0, blade.reach],
+    ],
+    blade.t
+  );
+  wedge.translate(0, blade.t / 2, 0);
+  add(root, 'buttress', wedge, alloy, polar(a, blade.at, blade.y), [0, -(a + Math.PI / 2), 0]);
+}
 
 /** A mirrored pair, tagged `r` and `l` — the Order's exact bilateral symmetry. */
 export function pair(fn) {
@@ -447,6 +750,40 @@ export function magazine(root, steel, { pods, pipe }) {
 export function navMarks(root, light, { marks, w = 3.2, d = 3.2 }) {
   for (const [name, x, y, z] of marks)
     pair((tag, sgn) => add(root, `nav_mark_${name}_${tag}`, box(w, 0.6, d), light, [x, y, sgn * z]));
+}
+
+/* --------------------------------------------------------------------------
+ * Shared kinds. The Light Scout is the first of the six kinds every navy
+ * models (#588, off #540 Phase 3), and the Order's is blades: a fore blade
+ * and an aft one, four-sided crystal prisms drawn to a point and edged in
+ * pale alloy, a canopy, guard wings, four fins and a drive — the same prism
+ * fourteen times — and a lit seam on the spine that is its whole resting
+ * light. The builders take the approved export's own numbers (kit.mjs
+ * `drawn`); hulls/light-scout-pelagia.mjs states the scale decision the
+ * shared kinds follow.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The Light Scout's palette: the Clarion's three claddings to the value, and
+ * a seam that is the crystal-glow token through and through, burning at 1.6
+ * — not `ink`'s near-black-based lamp. Values are the approved export's own.
+ */
+export const scoutInk = {
+  shadowIndigo: () => clad('shadow_indigo', hex('#3B2E5A'), 0.35, 0.45),
+  paleAlloy: () => clad('pale_alloy', hex('#E6E9F2'), 0.85, 0.22),
+  resonanceCrystal: () => clad('resonance_crystal', hex('#8B5CF6'), 0.4, 0.18),
+  crystalSeam: () => lamp('crystal_seam', hex('#C9A6FF'), hex('#C9A6FF'), 0.3, 1.6),
+};
+
+/**
+ * A crystal prism: a four-sided spar along the length, `fore` and `aft` its
+ * two end radii — a blade when one end is drawn to a point, a fin when it is
+ * short and stood on end, a nozzle when it tapers astern — squashed flat by
+ * its node's scale. "Blade-like, crystalline silhouettes" (Block 2) is a
+ * facet count, and on this hull the count is four.
+ */
+export function prism(root, mat, { name, fore, aft, length, ...placement }) {
+  return part(root, name, cyl(fore, aft, length, 4).rotateX(Math.PI / 2), mat, placement);
 }
 
 export { THREE };

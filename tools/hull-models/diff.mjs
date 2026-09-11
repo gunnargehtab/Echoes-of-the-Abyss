@@ -24,13 +24,73 @@
  *   (the Sower's moved `stem_keel` ahead of its caudal pair), and an
  *   index-matched diff reports that single reorder as three separate parts
  *   changing shape. Order is worth reporting — `check.mjs` compares in order,
- *   so it is load-bearing — but it is its own finding, not a reshape.
+ *   so it is load-bearing — but it is its own finding, not a reshape. A name
+ *   a file uses more than once — the Vent Tap's draw arm repeats its eleven
+ *   parts four times under the same names (#608) — is matched by occurrence,
+ *   the k-th `anchor_foot` of one file to the k-th of the other.
  * - **Subtract the root scale before judging.** A port is metre-true where its
  *   approved model was not, so the whole hull is expected to move by one
  *   uniform factor (`hulls/sower.mjs` documents its 0.947). Reporting that as
  *   47 changed parts buries the one part that really moved. The factor is
  *   measured off the whole-model extents and divided out; what survives is
  *   shape.
+ * - **Canonicalise as the bake and the runtime do, then subtract the one
+ *   translation too.** Both yaw a Z-long export onto +X and centre it on its
+ *   bounding box before anything reads it (`rosterModels.ts`,
+ *   hull-intake's `page.html`), so a port that builds bow-on-X and centred —
+ *   the four Light Scouts were drawn along Z, off-centre, at four arbitrary
+ *   scales (#588) — has changed nothing either of them can see. Each file is
+ *   yawed here the same way when its Z extent is the longer, and the
+ *   whole-hull shift is measured as the per-axis median of the parts' centre
+ *   moves, for the reason the scale is a median, and divided out. Both are
+ *   printed, because a yaw or a shift is still worth a sentence in the PR.
+ *
+ * - **Compare surface area as well as bounds.** A drum and a frustum of the
+ *   same length and larger radius have the same axis-aligned bounds and the
+ *   same triangle count, so a nose cone flattened into a cylinder passes
+ *   every check above — the Tender's four ballast caps did (#587 review, F1).
+ *   Area is the cheapest measure of a part's shape that bounds cannot stand
+ *   in for; it is compared per part, divided by the root scale squared, and
+ *   a change over a quarter of a percent is listed with the part.
+ * - **A square plan is compared at whichever yaw agrees.** The bake yaws a
+ *   file only when Z is the longer, and on a plan that is square to the
+ *   bit — the Knights' Vent Tap — that rule is a coin toss the exporter's
+ *   rounding decides. A port that has to carry the toss the approved export
+ *   won (#608) would otherwise read as every part moved, so when either file
+ *   is square to within a thousandth the other's yaw is tried as well and
+ *   the orientation with fewer movers is reported, with a line saying so.
+ *   Both of those are this tool's tolerant reading, made to compare shapes;
+ *   what the bake will actually do with a given file is decided by its own
+ *   strict `raw.z > raw.x`, and hull-intake's `rotatedZtoX` in `meta.json`
+ *   is the only authority on that.
+ * - **Compare the triangles themselves, and their winding.** Two files can
+ *   agree in every vertex, every area and every centroid and still cut a
+ *   quad along the other diagonal — the Order scout's `drive_prism`, written
+ *   as a rotation where the export carries a reflection (#588 review), which
+ *   moves nothing a bounds, area or centroid check reads and moves the
+ *   normal map on every smooth-shaded facet it re-cuts. Each part's triangle
+ *   multiset is compared after the scale and shift, and a triangle that
+ *   survives with its vertices in the opposite cyclic order is counted as
+ *   reversed. A re-cut of a flat cap is harmless (an extrusion's earcut is
+ *   not stable across builds); a re-cut of a smooth-shaded face is not, and
+ *   a reversed winding is a reflection swapped for a rotation. Both are
+ *   reported as their own lines, for the reader to judge, rather than as
+ *   moved parts. Two limits, and the failure direction of both is silence:
+ *   vertices are merged at 5 mm, so two genuinely distinct vertices closer
+ *   than that inside one part fuse and a re-cut among them goes unreported —
+ *   a part whose closest distinct vertices sit within four times that floor
+ *   is named on a `fine` line so the silence is not read as a pass (the
+ *   Order scout's guard edge is 10 mm from it); and triangles are read but
+ *   normals are not, so a hand-written normal buffer over the same triangles
+ *   — which only a table-built part like the Commune scout's hull could carry
+ *   — is a reviewer's check, not this tool's.
+ * - **Compare the surface centroid too.** A cone built the wrong way round
+ *   has the bounds, the triangle count *and* the area of the right one; only
+ *   where its surface sits inside that box changes. The Dredge's telson and
+ *   both tail spines shipped reversed through two ports and one review that
+ *   way (#630). The area-weighted centroid of each part's triangles moves by
+ *   a third of the cone's length when it flips, so it is compared beside the
+ *   bounds and listed when it moves more than the bounds did.
  *
  * Nothing here is a gate and nothing here exits non-zero on a difference: a
  * port is allowed to move a bound, and only a person reading the report can
@@ -47,6 +107,151 @@ import { readGlb, boundsOf } from './glb.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
 const models = 'docs/concept-art/models';
+
+/**
+ * The bake's yaw, applied when a file is longer along Z than X: `x' = z,
+ * `z' = -x`, which is +π/2 about Y as `rosterModels.ts` and the intake page
+ * apply it. Returns the parts rotated, and whether it had to.
+ */
+function yawOntoX(parts, force = false) {
+  const { min, max } = boundsOf(parts);
+  if (!force && max[2] - min[2] <= (max[0] - min[0]) * (1 + 1e-6)) return { parts, yawed: false };
+  return {
+    yawed: true,
+    parts: parts.map((p) => {
+      const a = Float32Array.from(p.positions);
+      for (let i = 0; i < a.length; i += 3) {
+        const x = a[i];
+        a[i] = a[i + 2];
+        a[i + 2] = -x;
+      }
+      return { ...p, positions: a };
+    }),
+  };
+}
+
+/** Per-axis median of `values` (an array of `[x, y, z]`), or zeros when empty. */
+function medianAxis(values) {
+  return [0, 1, 2].map((axis) => {
+    const v = values.map((r) => r[axis]).sort((x, y) => x - y);
+    if (!v.length) return 0;
+    const m = v.length >> 1;
+    return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2;
+  });
+}
+
+/**
+ * Surface area of a part, from its triangles, in the file's own units
+ * squared — and the area-weighted centroid of that surface.
+ */
+function surface(part) {
+  const a = part.positions;
+  let sum = 0;
+  const c = [0, 0, 0];
+  for (let t = 0; t < a.length; t += 9) {
+    const ux = a[t + 3] - a[t], uy = a[t + 4] - a[t + 1], uz = a[t + 5] - a[t + 2];
+    const vx = a[t + 6] - a[t], vy = a[t + 7] - a[t + 1], vz = a[t + 8] - a[t + 2];
+    const cx = uy * vz - uz * vy, cy = uz * vx - ux * vz, cz = ux * vy - uy * vx;
+    const tri = Math.sqrt(cx * cx + cy * cy + cz * cz) / 2;
+    sum += tri;
+    for (let d = 0; d < 3; d++) c[d] += (tri * (a[t + d] + a[t + 3 + d] + a[t + 6 + d])) / 3;
+  }
+  return { area: sum, centroid: sum > 0 ? c.map((v) => v / sum) : c };
+}
+
+/**
+ * How `after`'s triangles differ from `before`'s once the root scale and
+ * shift are divided out: triangles whose vertex set exists in neither file
+ * (`recut`) and triangles whose vertex set survives with the opposite cyclic
+ * order (`reversed`). Vertices are matched to their nearest counterpart
+ * within 5 mm through a 1 cm spatial hash, not by rounding — a part
+ * reproduced to a tenth of a millimetre must not read as re-cut because one
+ * vertex sat on a grid line.
+ */
+function triangleDiff(p, q, scale, shift) {
+  const TOL = 0.005;
+  const CELL = 0.01;
+  const cellKey = (x, y, z) =>
+    `${Math.floor(x / CELL)},${Math.floor(y / CELL)},${Math.floor(z / CELL)}`;
+  // Unique vertices of the before part, after the scale and shift, in a hash.
+  const verts = [];
+  const grid = new Map();
+  const a = p.positions;
+  for (let i = 0; i < a.length; i += 3) {
+    const v = [a[i] * scale[0] + shift[0], a[i + 1] * scale[1] + shift[1], a[i + 2] * scale[2] + shift[2]];
+    const id = nearest(v);
+    if (id !== -1) continue;
+    const n = verts.push(v) - 1;
+    const k = cellKey(...v);
+    if (!grid.has(k)) grid.set(k, []);
+    grid.get(k).push(n);
+  }
+  function nearest([x, y, z]) {
+    let best = -1;
+    let bestD = TOL;
+    const cx = Math.floor(x / CELL), cy = Math.floor(y / CELL), cz = Math.floor(z / CELL);
+    for (let dx = -1; dx <= 1; dx++)
+      for (let dy = -1; dy <= 1; dy++)
+        for (let dz = -1; dz <= 1; dz++) {
+          const bucket = grid.get(`${cx + dx},${cy + dy},${cz + dz}`);
+          if (!bucket) continue;
+          for (const id of bucket) {
+            const w = verts[id];
+            const d = Math.hypot(w[0] - x, w[1] - y, w[2] - z);
+            if (d < bestD) {
+              bestD = d;
+              best = id;
+            }
+          }
+        }
+    return best;
+  }
+  // The closest two distinct merged vertices, off the same grid: the margin
+  // the 5 mm merge floor has on this part.
+  let minSep = Infinity;
+  for (let id = 0; id < verts.length; id++) {
+    const [x, y, z] = verts[id];
+    const cx = Math.floor(x / CELL), cy = Math.floor(y / CELL), cz = Math.floor(z / CELL);
+    for (let dx = -2; dx <= 2; dx++)
+      for (let dy = -2; dy <= 2; dy++)
+        for (let dz = -2; dz <= 2; dz++)
+          for (const other of grid.get(`${cx + dx},${cy + dy},${cz + dz}`) ?? []) {
+            if (other === id) continue;
+            const w = verts[other];
+            const d = Math.hypot(w[0] - x, w[1] - y, w[2] - z);
+            if (d < minSep) minSep = d;
+          }
+  }
+  const tri = (ids) => {
+    const sorted = [...ids].sort((u, v) => u - v);
+    const [v0, v1] = ids;
+    // The parity of the cyclic order relative to the sorted order tells the winding.
+    const even = v0 === sorted[0] ? v1 === sorted[1] : v0 === sorted[1] ? v1 === sorted[2] : v1 === sorted[0];
+    return { set: sorted.join('|'), even };
+  };
+  const beforeTris = new Map();
+  for (let i = 0; i < a.length; i += 9) {
+    const ids = [0, 1, 2].map((k) =>
+      nearest([a[i + 3 * k] * scale[0] + shift[0], a[i + 3 * k + 1] * scale[1] + shift[1], a[i + 3 * k + 2] * scale[2] + shift[2]])
+    );
+    const t = tri(ids);
+    beforeTris.set(t.set, t.even);
+  }
+  let recut = 0;
+  let reversed = 0;
+  const b = q.positions;
+  for (let i = 0; i < b.length; i += 9) {
+    const ids = [0, 1, 2].map((k) => nearest([b[i + 3 * k], b[i + 3 * k + 1], b[i + 3 * k + 2]]));
+    if (ids.includes(-1)) {
+      recut++;
+      continue;
+    }
+    const t = tri(ids);
+    if (!beforeTris.has(t.set)) recut++;
+    else if (beforeTris.get(t.set) !== t.even) reversed++;
+  }
+  return { recut, reversed, total: b.length / 9, minSep, floor: TOL };
+}
 
 /** Extents and centre of a part or a whole model, in the file's own units. */
 function box(parts) {
@@ -68,19 +273,38 @@ function box(parts) {
  * moved, and measured off the parts it is one uniform squeeze with a handful of
  * genuine movers. A median ignores the outliers, which is the whole job.
  *
- * Parts thinner than a metre on an axis are skipped for that axis: a 4 cm seam
- * that lands 1 cm thicker is a 25% ratio and pure noise.
+ * Parts thinner than a hundredth of the hull on an axis are skipped for that
+ * axis: a 4 cm seam that lands 1 cm thicker is a 25% ratio and pure noise.
+ * The threshold is a fraction of the model's own longest extent rather than a
+ * metre, because the file's units are the thing in question — the approved
+ * turrets were drawn ten times under scale and the Light Scouts up to
+ * eleven, and against a fixed metre no part of theirs qualifies, the scale
+ * silently defaults to 1 and every part reads as moved.
  */
+/**
+ * A part's key: its name, and which occurrence of that name it is in the
+ * file — so that a repeated arm's fourth `valve_block` matches the fourth.
+ */
+function keyed(parts) {
+  const seen = new Map();
+  return parts.map((p) => {
+    const n = (seen.get(p.name) ?? 0) + 1;
+    seen.set(p.name, n);
+    return { ...p, key: n === 1 ? p.name : `${p.name}#${n}` };
+  });
+}
+
 function rootScale(before, after) {
-  const afterByName = new Map(after.map((p) => [p.name, p]));
+  const afterByName = new Map(after.map((p) => [p.key, p]));
+  const floor = Math.max(...box(before).extent) / 100;
   return [0, 1, 2].map((axis) => {
     const ratios = [];
     for (const p of before) {
-      const q = afterByName.get(p.name);
+      const q = afterByName.get(p.key);
       if (!q) continue;
       const a = box(p).extent[axis];
       const b = box(q).extent[axis];
-      if (a >= 1) ratios.push(b / a);
+      if (a >= floor) ratios.push(b / a);
     }
     if (!ratios.length) return 1;
     ratios.sort((x, y) => x - y);
@@ -111,9 +335,76 @@ function extract(rev, path, dir) {
   return out;
 }
 
+/** Whether a plan is square to within a thousandth — where the bake's yaw rule is a coin toss. */
+function isSquare(parts) {
+  const { min, max } = boundsOf(parts);
+  const x = max[0] - min[0];
+  const z = max[2] - min[2];
+  return Math.abs(x - z) <= 1e-3 * Math.max(x, z);
+}
+
+/** How many parts of `after` differ from `before` beyond scale and shift — the tie-break for a square plan. */
+function moverCount(before, after) {
+  const afterByName = new Map(after.map((p) => [p.key, p]));
+  const scale = rootScale(before, after);
+  const shift = medianAxis(
+    before
+      .filter((p) => afterByName.has(p.key))
+      .map((p) => {
+        const a = box(p).centre;
+        const b = box(afterByName.get(p.key)).centre;
+        return [0, 1, 2].map((i) => b[i] - a[i] * scale[i]);
+      })
+  );
+  let n = 0;
+  for (const p of before) {
+    const q = afterByName.get(p.key);
+    if (!q) continue;
+    const a = box(p);
+    const b = box(q);
+    const d = Math.max(
+      ...[0, 1, 2].map((i) => Math.abs(b.extent[i] - a.extent[i] * scale[i])),
+      ...[0, 1, 2].map((i) => Math.abs(b.centre[i] - shift[i] - a.centre[i] * scale[i]))
+    );
+    if (d > 0.005) n++;
+  }
+  return n;
+}
+
 function report(beforePath, afterPath, label) {
-  const before = readGlb(beforePath).parts;
-  const after = readGlb(afterPath).parts;
+  const rawBefore = readGlb(beforePath).parts;
+  const rawAfter = readGlb(afterPath).parts;
+  let b0 = yawOntoX(rawBefore);
+  let a0 = yawOntoX(rawAfter);
+  // What the bake's own rule did, before any square-plan search below.
+  const autoYaw = { before: b0.yawed, after: a0.yawed };
+  let before = keyed(b0.parts);
+  let after = keyed(a0.parts);
+  let squareNote = null;
+  if (isSquare(rawBefore) || isSquare(rawAfter)) {
+    // Every relative orientation the bake's coin toss can produce: either
+    // file as it stands or turned the quarter the bake would have added.
+    const alts = (raw, cur) => [cur, cur.yawed ? { parts: raw, yawed: false } : yawOntoX(raw, true)];
+    let best = null;
+    for (const b of alts(rawBefore, b0))
+      for (const a of alts(rawAfter, a0)) {
+        const kb = keyed(b.parts);
+        const ka = keyed(a.parts);
+        const n = moverCount(kb, ka);
+        if (!best || n < best.n) best = { n, b, a, kb, ka };
+      }
+    const asIs = moverCount(before, after);
+    if (best.n < asIs) {
+      b0 = best.b;
+      a0 = best.a;
+      before = best.kb;
+      after = best.ka;
+      const turned = [b0.yawed ? 'before' : null, a0.yawed ? 'after' : null].filter(Boolean);
+      squareNote = `square plan — the ${turned.join(' and ')} file turned a quarter, which agrees (${best.n} movers against ${asIs})`;
+    } else {
+      squareNote = `square plan — no other yaw agrees better (${asIs} movers as compared)`;
+    }
+  }
   const scale = rootScale(before, after);
   const uniform = Math.max(...scale) / Math.min(...scale) - 1;
 
@@ -122,24 +413,47 @@ function report(beforePath, afterPath, label) {
   console.log(
     `  tris    ${before.reduce((s, p) => s + p.tris, 0)} → ${after.reduce((s, p) => s + p.tris, 0)}`
   );
+  if (autoYaw.before || autoYaw.after)
+    console.log(
+      `  yaw     ${autoYaw.before ? 'before' : ''}${autoYaw.before && autoYaw.after ? ' and ' : ''}${autoYaw.after ? 'after' : ''}` +
+        ' drawn along Z — yawed onto +X as the bake does, before comparing'
+    );
+  if (squareNote) console.log(`  yaw     ${squareNote}`);
   const scaleNote =
     uniform < 1e-3
       ? '(uniform — divided out below)'
       : `⚠ not uniform, ${(uniform * 100).toFixed(2)}% apart: reproportioned, not rescaled`;
   console.log(`  scale   ${scale.map((v) => v.toFixed(4)).join('  ')}  ${scaleNote}`);
 
-  const beforeByName = new Map(before.map((p) => [p.name, p]));
-  const afterByName = new Map(after.map((p) => [p.name, p]));
+  const beforeByName = new Map(before.map((p) => [p.key, p]));
+  const afterByName = new Map(after.map((p) => [p.key, p]));
 
-  const gone = before.filter((p) => !afterByName.has(p.name)).map((p) => p.name);
-  const added = after.filter((p) => !beforeByName.has(p.name)).map((p) => p.name);
+  // The one translation the whole hull moved by — a port that centres a hull
+  // the approved export left off-centre moves every part by the same vector,
+  // which the bake and the runtime undo and which is therefore not shape.
+  const shift = medianAxis(
+    before
+      .filter((p) => afterByName.has(p.key))
+      .map((p) => {
+        const a = box(p).centre;
+        const b = box(afterByName.get(p.key)).centre;
+        return [0, 1, 2].map((i) => b[i] - a[i] * scale[i]);
+      })
+  );
+  if (shift.some((v) => Math.abs(v) > 0.005))
+    console.log(
+      `  shift   ${shift.map((v) => v.toFixed(3)).join('  ')}  (whole hull, m — divided out below)`
+    );
+
+  const gone = before.filter((p) => !afterByName.has(p.key)).map((p) => p.key);
+  const added = after.filter((p) => !beforeByName.has(p.key)).map((p) => p.key);
   if (gone.length) console.log(`  removed ${gone.length}: ${gone.join(' ')}`);
   if (added.length) console.log(`  added   ${added.length}: ${added.join(' ')}`);
 
   // Order is its own finding: check.mjs compares in order, so a reorder is a
   // real change to the file even when every part kept its shape.
-  const beforeNames = before.map((p) => p.name);
-  const afterNames = after.map((p) => p.name);
+  const beforeNames = before.map((p) => p.key);
+  const afterNames = after.map((p) => p.key);
   const reordered = [];
   if (gone.length === 0 && added.length === 0) {
     beforeNames.forEach((n, i) => {
@@ -152,27 +466,67 @@ function report(beforePath, afterPath, label) {
   // What survives the root scale is shape. Reported in metres of the *after*
   // file, because that is the hull the reviewer is looking at.
   const moved = [];
+  const recut = [];
+  const reversed = [];
+  const fine = [];
   for (const p of before) {
-    const q = afterByName.get(p.name);
+    const q = afterByName.get(p.key);
     if (!q) continue;
     const a = box(p);
     const b = box(q);
     const d = Math.max(
       ...[0, 1, 2].map((i) => Math.abs(b.extent[i] - a.extent[i] * scale[i])),
-      ...[0, 1, 2].map((i) => Math.abs(b.centre[i] - a.centre[i] * scale[i]))
+      ...[0, 1, 2].map((i) => Math.abs(b.centre[i] - shift[i] - a.centre[i] * scale[i]))
     );
     const note = [];
     if (p.tris !== q.tris) note.push(`tris ${p.tris}→${q.tris}`);
     if (p.material !== q.material) note.push(`material ${p.material}→${q.material}`);
-    if (d > 0.005 || note.length) moved.push({ name: p.name, d, note: note.join(', ') });
+    // Area is a scalar, so the root scale enters squared; one axis's factor
+    // stands for all three, since a non-uniform scale is already flagged above.
+    const sa = surface(p);
+    const sb = surface(q);
+    const areaA = sa.area * scale[0] * scale[1];
+    const areaPct = areaA > 0 ? ((sb.area - areaA) / areaA) * 100 : 0;
+    if (Math.abs(areaPct) > 0.25)
+      note.push(`area ${areaPct > 0 ? '+' : ''}${areaPct.toFixed(1)}%`);
+    // The surface centroid, under the same scale and shift as the bounds. A
+    // move here beyond what the bounds moved is a part re-laid inside its box.
+    const cd = Math.max(
+      ...[0, 1, 2].map((i) => Math.abs(sb.centroid[i] - shift[i] - sa.centroid[i] * scale[i]))
+    );
+    if (cd > 0.005 && cd > d + 0.005) note.push(`centroid ${cd.toFixed(3)} m`);
+    // Only a part that has not moved is worth reading at the triangle: a moved
+    // part's triangles are all elsewhere, and the move is the finding.
+    if (p.tris === q.tris && d <= 0.005 && cd <= 0.005) {
+      const t = triangleDiff(p, q, scale, shift);
+      if (t.recut) recut.push(`${p.key} ${t.recut}/${t.total}`);
+      if (t.reversed) reversed.push(`${p.key} ${t.reversed}/${t.total}`);
+      if (t.minSep < 4 * t.floor) fine.push(`${p.key} ${(t.minSep * 1000).toFixed(1)} mm`);
+    }
+    if (d > 0.005 || note.length) moved.push({ name: p.key, d: Math.max(d, cd), note: note.join(', ') });
   }
   moved.sort((x, y) => y.d - x.d);
 
+  if (recut.length)
+    console.log(
+      `  re-cut  ${recut.length} part${recut.length > 1 ? 's' : ''} triangulated differently at the same vertices` +
+        ` (harmless on a flat cap, a normal-map change on a smooth face):\n    ${recut.join('  ')}`
+    );
+  if (reversed.length)
+    console.log(
+      `  winding ${reversed.length} part${reversed.length > 1 ? 's' : ''} with triangles in the opposite order` +
+        ` — a reflection swapped for a rotation, or the reverse:\n    ${reversed.join('  ')}`
+    );
+  if (fine.length)
+    console.log(
+      `  fine    ${fine.length} part${fine.length > 1 ? 's' : ''} with distinct vertices within 20 mm of each other` +
+        ` — the 5 mm merge behind the re-cut check has little margin there:\n    ${fine.join('  ')}`
+    );
   if (!moved.length) {
-    console.log('  shape   unchanged beyond the root scale — every part is where it was');
+    console.log('  shape   unchanged beyond the root scale and shift — every part is where it was');
     return;
   }
-  console.log(`  shape   ${moved.length} of ${before.length} parts differ beyond the root scale:`);
+  console.log(`  shape   ${moved.length} of ${before.length} parts differ beyond the root scale and shift:`);
   for (const m of moved)
     console.log(`    ${m.name.padEnd(22)} ${m.d.toFixed(3)} m${m.note ? `  ${m.note}` : ''}`);
   console.log(

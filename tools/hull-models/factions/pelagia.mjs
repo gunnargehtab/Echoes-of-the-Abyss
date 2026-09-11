@@ -45,6 +45,7 @@ import {
   THREE,
   clad,
   lamp,
+  hex,
   add,
   box,
   cyl,
@@ -53,16 +54,24 @@ import {
   loft,
   cable,
   bothSides,
+  polar,
+  part,
 } from '../kit.mjs';
 
-/** The Commune's palette, as the Sower's own materials carry it. */
+/**
+ * The Commune's palette, as the Sower's own materials carry it: the four
+ * tokens of docs/art-direction.md, and — where the approved model needed a
+ * colour the docs do not name — that model's own hex, exactly (kit.mjs `hex`).
+ * The vein is the biolight token at half strength, which is the difference
+ * between a thread along a rib and a bud.
+ */
 export const ink = {
-  chitinHull: () => clad('chitin_hull', [0.0, 0.02, 0.01], 0.08, 0.6),
-  growthRidge: () => clad('growth_ridge', [0.01, 0.04, 0.03], 0.1, 0.65),
-  algaeMembrane: () => clad('algae_membrane', [0.01, 0.38, 0.19], 0.05, 0.55),
-  sporePod: () => clad('spore_pod', [0.81, 0.87, 0.37], 0.05, 0.5),
-  bioVein: () => lamp('bio_vein', [0.11, 0.42, 0.05], [0.0, 0.01, 0.0]),
-  bioLight: () => lamp('bio_light', [0.27, 0.77, 0.15], [0.0, 0.01, 0.0]),
+  chitinHull: () => clad('chitin_hull', hex('#0B241E'), 0.08, 0.6),
+  growthRidge: () => clad('growth_ridge', hex('#14382C'), 0.1, 0.65),
+  algaeMembrane: () => clad('algae_membrane', hex('#1FA67A'), 0.05, 0.55),
+  sporePod: () => clad('spore_pod', hex('#E8F0A3'), 0.05, 0.5),
+  bioVein: () => lamp('bio_vein', hex('#5FAE42'), hex('#061206')),
+  bioLight: () => lamp('bio_light', hex('#8FE36B'), hex('#0A1A08')),
 };
 
 /** A grown orb: few facets, and squashed by the caller — never round in section. */
@@ -436,11 +445,60 @@ export function tendrils(root, ridge, { tendrils: list }) {
  * are the approved turret's own.
  */
 export const structureInk = {
-  deepChlorophyll: () => clad('deep_chlorophyll', [0.003, 0.018, 0.013], 0.1, 0.65),
-  grownSteel: () => clad('grown_steel', [0.016, 0.03, 0.025], 0.35, 0.45),
-  algaeHull: () => clad('algae_hull', [0.007, 0.133, 0.072], 0.08, 0.62),
-  biolightGreen: () => lamp('biolight_green', [0.275, 0.768, 0.147], [0.006, 0.03, 0.009]),
+  deepChlorophyll: () => clad('deep_chlorophyll', hex('#0B241E'), 0.1, 0.65),
+  grownSteel: () => clad('grown_steel', hex('#22302C'), 0.35, 0.45),
+  algaeHull: () => clad('algae_hull', hex('#14664C'), 0.08, 0.62),
+  biolightGreen: () => lamp('biolight_green', hex('#8FE36B'), hex('#123018'), 0.35),
 };
+
+/**
+ * The exchanger on the end of a Vent Tap's draw arm, on `bearing` (#608),
+ * grown as a bladder: a squashed orb ringed three times, the pale bud on its
+ * crown, the one vein along its back, and three roots leaning out into the
+ * ground beyond. The rings are lofts round the arm's own axis, squashed with
+ * the bladder — the Sower's `bladder` rings are toruses round a hull's
+ * length, and a ring grown round a pipe is a different shape. Distances are
+ * metres out along the bearing, as the kit's `ventDrawArm` takes them;
+ * `roots.across` are metres to the right of it, looking out.
+ */
+export function bladderHead(root, { membrane, ridge, spore, vein }, opts) {
+  const { bearing: a, at, bladder: body, rings, bud: crown, vein: thread, roots } = opts;
+  add(root, 'bladder', orb(12, 6), membrane, polar(a, at, body.y), [0, -a, 0], body.r);
+  rings.stations.forEach(([r, shoulder], i) =>
+    add(
+      root,
+      `bladder_ring_${i}`,
+      loft(
+        [
+          [-rings.halfWidth, shoulder],
+          [0, r],
+          [rings.halfWidth, shoulder],
+        ],
+        12
+      ),
+      ridge,
+      polar(a, rings.from + rings.pitch * i, body.y),
+      [0, -a, 0],
+      [1, rings.squash, 1]
+    )
+  );
+  add(root, 'bud', orb(8, 6), spore, polar(a, crown.at, crown.y), [0, 0, 0], crown.r);
+  add(root, 'bladder_vein', box(...thread.size), vein, polar(a, at, thread.y), [0, -a, 0]);
+  // Each root is laid along the arm as the draw pipe is, then raised
+  // `roots.raise` radians toward vertical: the approved file's lean is
+  // π/2 − 0.9 to the bit.
+  roots.across.forEach((d, i) => {
+    const [x, y, z] = polar(a, roots.at, roots.y);
+    add(
+      root,
+      `root_${i}`,
+      cyl(roots.r[0], roots.r[1], roots.length, 6),
+      ridge,
+      [x + d * Math.sin(a), y, z - d * Math.cos(a)],
+      [0, -a, roots.raise - Math.PI / 2]
+    );
+  });
+}
 
 /** The mound: a grown dome, its growth ring, and the collar the head turns in. */
 export function grownMound(root, { body, ring, collar }, opts) {
@@ -558,6 +616,172 @@ export function magazine(root, { pipe: pipeMat, pod: podMat, flange }, { pod, pi
   const ring = torus(flangeAt.r, flangeAt.t, 4, 10);
   ring.rotateX(Math.PI / 2);
   add(root, 'feed_flange', ring, flange, flangeAt.at);
+}
+
+/* --------------------------------------------------------------------------
+ * Shared kinds. The Light Scout is the first of the six kinds every navy
+ * models (#588, off #540 Phase 3), and the Commune's is a grown pod on a
+ * 60 m brief: a displaced orb for a hull, four rings that lean as they grew,
+ * a feeler curling forward to its light, five leaf membranes and the five
+ * lamps that are its whole resting light. The builders take the approved
+ * export's own numbers (kit.mjs `drawn`) and are named for what the export
+ * named them; hulls/light-scout-pelagia.mjs is their first consumer and
+ * states the scale decision the other shared kinds follow.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The Light Scout's palette: an earlier authoring pass than the Sower's,
+ * the same four names with their own finish, and a lamp that is the
+ * biolight token through and through, burning at 1.6. Values are the
+ * approved export's own. `ink` above is the Sower's, and the two are not
+ * interchangeable: a part is compared by its material's *name*, but the
+ * conn view renders its finish.
+ */
+export const scoutInk = {
+  chitinHull: () => clad('chitin_hull', hex('#0B241E'), 0.05, 0.55),
+  growthRidge: () => clad('growth_ridge', hex('#14332A'), 0.03, 0.7),
+  algaeMembrane: () => {
+    // Two-sided, as the export has it: a membrane is a leaf, and a leaf is
+    // seen from both faces.
+    const m = clad('algae_membrane', hex('#1FA67A'), 0.04, 0.5);
+    m.side = THREE.DoubleSide;
+    return m;
+  },
+  bioLight: () => lamp('bio_light', hex('#8FE36B'), hex('#8FE36B'), 0.35, 1.6),
+};
+
+/**
+ * A grown body: a low-facet orb whose every vertex the approved export
+ * pushed by hand — the one part of the four scouts that is a table rather
+ * than a construction. `buffer` is the export's own local buffer, its unique
+ * points in row order: the top pole, each ring from the top down, the bottom
+ * pole. The orb's squash and station come from its node like any other
+ * part's. The displacement is partly formulaic — every station is scaled by
+ * 1 − 0.06·cos ψ about the length axis, and the waist by
+ * 1.093 + 0.07·cos(ψ + 0.7) + 0.06·sin 3ψ — but not wholly, and a port
+ * transcribes rather than guesses: the table is the export's, to five
+ * decimals, and a formula that nearly fit it would be a different hull.
+ */
+export function grownBody(root, mat, opts) {
+  const { name = 'hull', facets = [16, 10], buffer, ...placement } = opts;
+  const [w, h] = facets;
+  if (buffer.length !== (h - 1) * w + 2)
+    throw new Error(
+      `${name}: ${buffer.length} points for a ${w}×${h} orb, want ${(h - 1) * w + 2}`
+    );
+  const geo = new THREE.SphereGeometry(1, w, h);
+  const pos = geo.attributes.position;
+  for (let iy = 0; iy <= h; iy++)
+    for (let ix = 0; ix <= w; ix++) {
+      const p =
+        iy === 0
+          ? buffer[0]
+          : iy === h
+            ? buffer[buffer.length - 1]
+            : buffer[1 + (iy - 1) * w + (ix % w)];
+      pos.setXYZ(iy * (w + 1) + ix, p[0], p[1], p[2]);
+    }
+  geo.computeVertexNormals();
+  return part(root, name, geo, mat, placement);
+}
+
+/**
+ * A lobe grown on the body: an orb squashed to its node's three radii and
+ * rolled. The scout's ballast lobe hangs under the belly, rolled 0.22 to one
+ * side — there is no second.
+ */
+export function lobe(root, mat, { name = 'ballast_lobe', facets = [9, 6], ...placement }) {
+  return part(root, name, orb(...facets), mat, placement);
+}
+
+/**
+ * Growth rings as the scout grows them: a unit torus each, `tube` thick,
+ * squashed to the body's own profile and leaned a few degrees off square by
+ * its node — no two alike, which is the whole difference between grown and
+ * turned. One-based, as the export numbers them. `growthRings` above is the
+ * Spinner's rule, a wobble from the index; this takes each ring's own.
+ */
+export function grownRings(
+  root,
+  mat,
+  { name = 'growth_ring', first = 1, facets = [5, 20], rings }
+) {
+  rings.forEach(({ tube, ...placement }, i) =>
+    part(root, `${name}_${first + i}`, torus(1, tube, ...facets), mat, placement)
+  );
+}
+
+/**
+ * A feeler: a thin tube along a Catmull-Rom curve `through` points in the
+ * kit's frame, out to the light it carries. The tube is laid down in the
+ * frame the export laid it in and turned with it (kit.mjs `yawed`), because
+ * a TubeGeometry's frames follow which way its tangent leans and an X-long
+ * rebuild would twist its facets.
+ */
+export function feeler(root, mat, opts) {
+  const { name = 'sensor_feeler', through, r = 0.03, steps = 16, facets = 5, ...placement } = opts;
+  const asDrawn = through.map(([x, y, z]) => new THREE.Vector3(-z, y, x));
+  const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(asDrawn), steps, r, facets, false);
+  return part(root, name, tube, mat, placement);
+}
+
+/**
+ * A leaf membrane's outline: three quadratic curves from the root, over the
+ * crown to the tip and back under it, at fixed fractions of a span `L` and
+ * a depth `h` — the one leaf every membrane on the scout is cut from, at
+ * five sizes.
+ */
+export function leafOutline(L, h) {
+  const s = new THREE.Shape();
+  s.moveTo(0, 0);
+  s.quadraticCurveTo(0.35 * L, h, 0.95 * L, 0.85 * h);
+  s.quadraticCurveTo(1.15 * L, 0.45 * h, 0.75 * L, 0.1 * h);
+  s.quadraticCurveTo(0.4 * L, -0.05 * h, 0, 0);
+  return s;
+}
+
+/**
+ * Membranes: leaves `thickness` thick, each `[span, depth]` its own size and
+ * hung by its own node — the dorsal blade stands, the pectorals rake forward
+ * and down, the tail flukes stand above and below the peduncle, the lower
+ * one the upper's mirror in its node's scale. None is a matched pair. `fins`
+ * above is the Spinner's flat mirrored plan; this is the scout's.
+ */
+export function membranes(root, mat, { fins, thickness = 0.028, segments = 8 }) {
+  fins.forEach(({ name, span, depth, ...placement }) =>
+    part(
+      root,
+      name,
+      new THREE.ExtrudeGeometry(leafOutline(span, depth), {
+        depth: thickness,
+        bevelEnabled: false,
+        curveSegments: segments,
+      }),
+      mat,
+      placement
+    )
+  );
+}
+
+/**
+ * A stalk: a tapered faceted spar, `radii` [top, bottom] as drawn and laid
+ * along the keel by its node — the tail peduncle, seven-sided and leaned
+ * 0.08 off the keel line.
+ */
+export function stalk(root, mat, opts) {
+  const { name = 'tail_peduncle', radii, length, facets = 7, ...placement } = opts;
+  return part(root, name, cyl(radii[0], radii[1], length, facets), mat, placement);
+}
+
+/**
+ * Light buds: the scout's lamps, orbs in `bio_light` at `[name, r,
+ * placement]` — a feeler tip, two flank marks, a throat and a tail. Five,
+ * and that is the resting light of the quietest hull in the roster.
+ */
+export function lightBuds(root, light, { buds, facets = [8, 6] }) {
+  buds.forEach(([name, r, placement]) =>
+    part(root, name, new THREE.SphereGeometry(r, ...facets), light, placement)
+  );
 }
 
 export { THREE };

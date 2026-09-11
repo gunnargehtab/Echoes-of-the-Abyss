@@ -20,17 +20,22 @@
  * Light is machinery light: louvres, stack throats, deck floods, lit gratings —
  * and it goes on *upward* faces, because the maps are top-down (see kit.mjs).
  */
-import { THREE, clad, lamp, add, box, cyl, torus, plate, bothSides } from '../kit.mjs';
+import { THREE, clad, lamp, hex, add, box, cyl, torus, plate, plan, bothSides, polar, part } from '../kit.mjs';
 
-/** The Klaxon's palette, as the Bulwark's own materials carry it. */
+/**
+ * The Klaxon's palette, as the Bulwark's own materials carry it: the four
+ * tokens of docs/art-direction.md, and — where the approved model needed a
+ * colour the docs do not name — that model's own hex, exactly (kit.mjs `hex`).
+ * The vent is the amber banked down, the flood is it thrown wide open.
+ */
 export const ink = {
-  hullBlack: () => clad('hull_black', [0.0, 0.01, 0.01], 0.25, 0.85),
-  ironGrey: () => clad('iron_grey', [0.26, 0.23, 0.19], 0.32, 0.72),
-  oxideRust: () => clad('oxide_rust', [0.05, 0.02, 0.01], 0.1, 0.95),
-  hazardAmber: () => clad('hazard_amber', [0.89, 0.45, 0.03], 0.15, 0.6),
-  amberLamp: () => lamp('amber_lamp', [0.89, 0.45, 0.03]),
-  amberVent: () => lamp('amber_vent', [0.43, 0.19, 0.01]),
-  amberFlood: () => lamp('amber_flood', [1.0, 0.63, 0.16]),
+  hullBlack: () => clad('hull_black', hex('#0E1418'), 0.25, 0.85),
+  ironGrey: () => clad('iron_grey', hex('#8C8378'), 0.32, 0.72),
+  oxideRust: () => clad('oxide_rust', hex('#3D2B1F'), 0.1, 0.95),
+  hazardAmber: () => clad('hazard_amber', hex('#F2B233'), 0.15, 0.6),
+  amberLamp: () => lamp('amber_lamp', hex('#F2B233'), hex('#1A1408')),
+  amberVent: () => lamp('amber_vent', hex('#B07A1E'), hex('#120E06')),
+  amberFlood: () => lamp('amber_flood', hex('#FFD070'), hex('#2A2210')),
 };
 
 /** The body: a flat-sided slab from a plan outline, with a bow face and transom. */
@@ -50,13 +55,24 @@ export function hullSlab(root, { black, grey, amber }, { outline, lengthM, depth
   add(root, 'transom_plate', box(2, depth * 0.85, 30), grey, [stern + 1.3, -0.5, 0]);
 }
 
-/** Patchworked flank plate, older under newer, with its seam and rivet rows. */
-export function flankPlates(root, { grey, rust }, { z, plates, seamLength, rivets }) {
+/**
+ * Patchworked flank plate, older under newer, with its seam and rivet rows.
+ *
+ * The Derrick's flank is the default: 1.2 m plate, the seam a 0.5 × 1.4 m bar
+ * at y 2.2 on the plates' own z, and a rivet row per `rivets` entry. The
+ * Bulwark's is the same family in a heavier gauge — `plateT` 2.4 and the seam
+ * given outright as `{ y, h, t, z }` — and carries no rivets *here*: its
+ * sixty-four are `rivetRows` at the tail of the file, where the approved
+ * export put them (#587).
+ */
+export function flankPlates(root, { grey, rust }, opts) {
+  const { z, plates, plateT = 1.2, seamLength, seam = {}, rivets = [] } = opts;
+  const { y: seamY = 2.2, h: seamH = 0.5, t: seamT = 1.4, z: seamZ = z } = seam;
   bothSides((side, sgn) => {
     plates.forEach(([x, len, h, y, old], i) =>
-      add(root, `flank_plate_${side}${i}`, box(len, h, 1.2), old ? rust : grey, [x, y, sgn * z])
+      add(root, `flank_plate_${side}${i}`, box(len, h, plateT), old ? rust : grey, [x, y, sgn * z])
     );
-    add(root, `flank_seam_${side}`, box(seamLength, 0.5, 1.4), rust, [0, 2.2, sgn * z]);
+    add(root, `flank_seam_${side}`, box(seamLength, seamH, seamT), rust, [0, seamY, sgn * seamZ]);
     for (const [tag, y] of rivets) {
       for (let i = 0; i < 14; i++) {
         const x = -seamLength / 2 + 4 + ((seamLength - 8) * i) / 13;
@@ -203,6 +219,411 @@ export function deckFloods(root, lampMat, { deck, spots }) {
 }
 
 /* --------------------------------------------------------------------------
+ * The Bulwark's and the Tender's own families (#587). The builders above
+ * were read off those two hulls and written down; these were built *against*
+ * them, part for part, and every one takes the approved model's numbers as
+ * parameters rather than carrying them as defaults, so the Freighter, the
+ * Caisson and the Baffle Barge can call the same vocabulary with their own.
+ *
+ * Positions are `at: [x, y, z]` in metres and boxes are `size: [x, y, z]`;
+ * anything built a side takes scalar `x, y, z` and mirrors z. Facet counts
+ * are the two hulls' own, and they agree: a pressure vessel or a prop shroud
+ * is a twelve-facet drum, a stack or a gun ten, a pipe eight, a fall six.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The armoured body: the slab, then the tiers stepped up it (the Bulwark's
+ * `hull_slab · armour_tier_1..3`). Each is a plan outline in absolute
+ * metres, cut `depth` thick and centred on `y` (kit.mjs `plan`). The slab's
+ * rim carries a chamfer, `bevel`, so the caps sit at the outline and the
+ * waist a bevel proud of it; the tiers are square-edged. A tier is new
+ * `grey` plate unless it names `'black'` — the hull's own, showing through
+ * where an older tier was never replated.
+ */
+export function armouredSlab(root, mats, { slab, tiers }) {
+  add(root, 'hull_slab', plan(slab.outline, slab.depth, slab.bevel ?? 0), mats.black, [
+    0,
+    slab.y,
+    0,
+  ]);
+  tiers.forEach((t, i) =>
+    add(root, `armour_tier_${i + 1}`, plan(t.outline, t.depth), mats[t.mat ?? 'grey'], [0, t.y, 0])
+  );
+}
+
+/**
+ * The ram: a plough plate driven out past the slab — a chamfered plan like
+ * the slab, so it reads as one casting rather than a box on a box — a rank
+ * of teeth across its face and the hazard band painted behind them (the
+ * Bulwark's `ram_plate · ram_tooth_0..4 · bow_band`).
+ */
+export function ramBow(root, { grey, rust, amber }, { plough, teeth, band }) {
+  add(root, 'ram_plate', plan(plough.outline, plough.depth, plough.bevel ?? 0), grey, [
+    0,
+    plough.y,
+    0,
+  ]);
+  teeth.z.forEach((z, i) =>
+    add(root, `ram_tooth_${i}`, box(...teeth.size), rust, [teeth.x, teeth.y, z])
+  );
+  add(root, 'bow_band', box(...band.size), amber, band.at);
+}
+
+/**
+ * The forward twin turret: the ring it trains on, the drum drawn in toward
+ * its top, the face plate and the hatch, then a barrel and its muzzle collar
+ * a side, port first (the Bulwark's `turret_ring … muzzle_s`). The barrels
+ * lie along +X and taper from `r` at the breech to `rMuzzle` at the mouth —
+ * a cylinder's top lands on −X once it is rolled onto its side, so the
+ * breech radius is the geometry's `rTop`.
+ */
+export function twinTurret(root, { black, grey, rust, amber }, opts) {
+  const { x, ring, drum, face, hatch, barrel } = opts;
+  add(root, 'turret_ring', cyl(ring.r, ring.r, ring.h, 16), rust, [x, ring.y, 0]);
+  add(root, 'turret', cyl(drum.rTop, drum.r, drum.h, 12), black, [x, drum.y, 0]);
+  add(root, 'turret_face', box(...face.size), grey, face.at);
+  add(root, 'turret_hatch', box(...hatch.size), amber, hatch.at);
+  bothSides((side, sgn) => {
+    add(
+      root,
+      `barrel_${side}`,
+      cyl(barrel.r, barrel.rMuzzle, barrel.length, 10),
+      grey,
+      [barrel.x, barrel.y, sgn * barrel.z],
+      [0, 0, Math.PI / 2]
+    );
+    add(
+      root,
+      `muzzle_${side}`,
+      cyl(barrel.muzzle.r, barrel.muzzle.r, barrel.muzzle.length, 10),
+      rust,
+      [barrel.muzzle.x, barrel.y, sgn * barrel.z],
+      [0, 0, Math.PI / 2]
+    );
+  });
+}
+
+/**
+ * The bridge citadel aft: the block, the top it carries, the visor plate on
+ * its forward face, a rank of lit ports along each flank, and the bridge
+ * ports across the top's forward face (the Bulwark's `citadel …
+ * bridge_port_3`). The ports are lamps on vertical faces, which the top-down
+ * bake barely sees — they are the citadel's resting light, not its floods.
+ */
+export function citadel(root, { black, grey, rust, lampM }, opts) {
+  const { block, top, visor, ports, bridgePorts } = opts;
+  add(root, 'citadel', box(...block.size), black, block.at);
+  add(root, 'citadel_top', box(...top.size), grey, top.at);
+  add(root, 'citadel_visor', box(...visor.size), rust, visor.at);
+  bothSides((side, sgn) => {
+    for (let i = 0; i < ports.count; i++)
+      add(root, `citadel_port_${side}${i}`, box(...ports.size), lampM, [
+        ports.x + i * ports.pitch,
+        ports.y,
+        sgn * ports.z,
+      ]);
+  });
+  bridgePorts.z.forEach((z, i) =>
+    add(root, `bridge_port_${i}`, box(...bridgePorts.size), lampM, [bridgePorts.x, bridgePorts.y, z])
+  );
+}
+
+/**
+ * A stack — a ten-facet drum standing on Y, drawn in toward the top — and,
+ * separately, the hazard band ringed round it. Separate because the two
+ * hulls order them differently (the Bulwark each band after its stack, the
+ * Tender both stacks and then both bands) and name them differently
+ * (`stack_band_0` against `stack_a_band`); the hull script spells both.
+ */
+export function stack(root, mat, { name, at, r, rTop, height }) {
+  add(root, name, cyl(rTop, r, height, 10), mat, at);
+}
+
+export function stackBand(root, mat, { name, at, r, h }) {
+  add(root, name, cyl(r, r, h, 10), mat, at);
+}
+
+/** A rank of engine vents across the transom: lit boxes, numbered (`engine_vent_0..n`). */
+export function engineVents(root, vent, { x, y, z, size }) {
+  z.forEach((vz, i) => add(root, `engine_vent_${i}`, box(...size), vent, [x, y, vz]));
+}
+
+/**
+ * Floodlit deck: flat lamps laid on the armour tiers (`flood_deck_<tag>`) —
+ * the Bulwark's resting light, the loudest in the roster, and every square
+ * metre of it on an upward face where gate 3 can count it.
+ */
+export function floodDecks(root, flood, { patches }) {
+  for (const [tag, at, size] of patches) add(root, `flood_deck_${tag}`, box(...size), flood, at);
+}
+
+/**
+ * The rows of floods along both deck edges: a lit strip the length of the
+ * deck and a rank of lamp housings outboard of it, the port strip and its
+ * lamps before starboard's (`flood_strip_p · flood_lamp_p0..7 · …`).
+ */
+export function floodStrips(root, { flood, lampM }, { strip, lamps }) {
+  bothSides((side, sgn) => {
+    add(root, `flood_strip_${side}`, box(...strip.size), flood, [strip.x, strip.y, sgn * strip.z]);
+    for (let i = 0; i < lamps.count; i++)
+      add(root, `flood_lamp_${side}${i}`, box(...lamps.size), lampM, [
+        lamps.x + i * lamps.pitch,
+        lamps.y,
+        sgn * lamps.z,
+      ]);
+  });
+}
+
+/**
+ * Ballast blisters low on both flanks — a twelve-facet drum along X a side
+ * — with what the hull hangs on each: end caps (the Tender's
+ * `ballast_cap_pf/pa`, fore then aft), a keel skid under it and a pipe run
+ * above it (the Bulwark's `keel_skid_p · pipe_p`). Written as a whole port
+ * group then a whole starboard group, which is how both approved files
+ * order them. `ballastAndKeel` above is the Derrick's lighter pair with one
+ * keel on the centreline; this exists because neither of these hulls has
+ * that keel.
+ */
+export function ballastBlisters(root, { grey, rust }, opts) {
+  const { x, y, z, r, length, caps, skid, pipe } = opts;
+  const onX = [0, 0, Math.PI / 2];
+  bothSides((side, sgn) => {
+    add(root, `ballast_${side}`, cyl(r, r, length, 12), grey, [x, y, sgn * z], onX);
+    // The caps are nose cones, not drums: each tapers from the blister's radius
+    // to `caps.tipR` away from the hull, so the fore cap's small end faces +X
+    // and the aft cap's -X. A drum has the same bounds and the same triangle
+    // count as the frustum, which is how the first port shipped one past
+    // every gate (#587 review, F1); diff.mjs now compares surface area too.
+    if (caps) {
+      const tipR = caps.tipR ?? r;
+      for (const [end, cx, rTop, rBottom] of [
+        ['f', caps.fore, r, tipR],
+        ['a', caps.aft, tipR, r],
+      ])
+        add(
+          root,
+          `ballast_cap_${side}${end}`,
+          cyl(rTop, rBottom, caps.length, 12),
+          rust,
+          [cx, y, sgn * z],
+          onX
+        );
+    }
+    if (skid) add(root, `keel_skid_${side}`, box(...skid.size), rust, [skid.x, skid.y, sgn * skid.z]);
+    if (pipe)
+      add(
+        root,
+        `pipe_${side}`,
+        cyl(pipe.r, pipe.r, pipe.length, 8),
+        rust,
+        [pipe.x, pipe.y, sgn * pipe.z],
+        onX
+      );
+  });
+}
+
+/** A riser: an eight-facet pipe standing on Y, named by the caller (`pipe_riser_a`, `pump_riser`). */
+export function riser(root, rust, { name, at, r, h }) {
+  add(root, name, cyl(r, r, h, 8), rust, at);
+}
+
+/**
+ * One prop tunnel in the transom: a twelve-facet shroud ring on X with an
+ * eight-facet hub through it and — where the hull shows its screw — blade
+ * plates on the hub a half-turn apart between them, and the engine vent
+ * beside it. Named by the caller: the Tender has one a side
+ * (`prop_shroud_p`), the Bulwark a rank of three (`prop_shroud_0..2`).
+ * `propTunnels` above is the Derrick's pair in one call; this is the single
+ * tunnel the other two hulls compose.
+ */
+export function propTunnel(root, { grey, black, vent }, opts) {
+  const { name, at, r, length, hub, blades, vent: ev } = opts;
+  const onX = [0, 0, Math.PI / 2];
+  add(root, `prop_shroud_${name}`, cyl(r, r, length, 12), grey, at, onX);
+  add(root, `prop_hub_${name}`, cyl(hub.r, hub.r, hub.length, 8), black, at, onX);
+  if (blades)
+    for (let i = 0; i < blades.count; i++)
+      add(
+        root,
+        `prop_blade_${name}${i}`,
+        box(...blades.size),
+        grey,
+        [at[0] + blades.dx, at[1], at[2]],
+        [(i * Math.PI) / blades.count, 0, 0]
+      );
+  if (ev) add(root, `engine_vent_${name}`, box(...ev.size), vent, ev.at);
+}
+
+/** The rudder: one plate on the centreline astern of the screws. */
+export function rudder(root, grey, { at, size }) {
+  add(root, 'rudder', box(...size), grey, at);
+}
+
+/**
+ * A row of rivet heads along each flank — `count` of them spread over
+ * `[from, to]` at mid-cell, port row then starboard row, each a box.
+ *
+ * Numbered by their index in the file, not from zero: the approved exports
+ * named each rivet by the running part count, so the Bulwark's run
+ * `rivet_96 … rivet_159` and the Tender's `rivet_72 … rivet_99`, and
+ * check.mjs holds those names. `numberFrom` is that count and defaults to
+ * the root's own child count, which is exactly what the approved files did.
+ */
+export function rivetRows(root, mat, opts) {
+  const { from, to, count, y, z, size, numberFrom = root.children.length } = opts;
+  let n = numberFrom;
+  bothSides((side, sgn) => {
+    for (let i = 0; i < count; i++) {
+      const x = from + ((to - from) * (i + 0.5)) / count;
+      add(root, `rivet_${n++}`, box(...size), mat, [x, y, sgn * z]);
+    }
+  });
+}
+
+/** The bow stencil, painted flat on the foredeck, and the bow lamp — separate, because the two hulls write them in opposite orders. */
+export function bowStencil(root, amber, { at, size }) {
+  add(root, 'stencil_bow', box(...size), amber, at);
+}
+
+export function bowLamp(root, lampM, { at, size }) {
+  add(root, 'bow_lamp', box(...size), lampM, at);
+}
+
+/**
+ * The Tender's body (`hull_lower · deck · strake_p/s`): a chamfered plan
+ * with the stern notched between the prop tunnels, the deck plate laid on
+ * it a metre or two inside its rim, and a rubbing strake along each flank.
+ * `hullSlab` above is the Derrick's — square-edged, with a bow plate and a
+ * transom of its own — and this is the working box hull the prompt
+ * describes, which has neither.
+ */
+export function boxHull(root, { black, grey, rust }, { hull, deck, strakes }) {
+  add(root, 'hull_lower', plan(hull.outline, hull.depth, hull.bevel ?? 0), black, [0, hull.y, 0]);
+  add(root, 'deck', plan(deck.outline, deck.depth), grey, [0, deck.y, 0]);
+  bothSides((side, sgn) =>
+    add(root, `strake_${side}`, box(...strakes.size), rust, [strakes.x, strakes.y, sgn * strakes.z])
+  );
+}
+
+/**
+ * The riveted workshop deckhouse amidships (`workshop … roof_skylight`): the
+ * house, its roof and ridge, one patch of repair a side — older plate to
+ * port and newer to starboard, and not the same size, because the Klaxon
+ * repairs what broke rather than what would match — the hazard band under
+ * the eaves, a rank of lit ports a side, and the skylight in the roof, which
+ * is the one of those lights the top-down bake can see. `machineryHouse`
+ * above is the Derrick's louvred engine house; a workshop carries a
+ * workshop's fittings.
+ */
+export function workshop(root, { black, grey, rust, amber, lampM, vent }, opts) {
+  const { house, roof, ridge, patches, band, ports, skylight } = opts;
+  add(root, 'workshop', box(...house.size), black, house.at);
+  add(root, 'workshop_roof', box(...roof.size), grey, roof.at);
+  add(root, 'workshop_ridge', box(...ridge.size), rust, ridge.at);
+  for (const side of ['p', 's']) {
+    const patch = patches[side];
+    add(root, `workshop_patch_${side}`, box(...patch.size), patch.old ? rust : grey, patch.at);
+  }
+  add(root, 'hazard_band', box(...band.size), amber, band.at);
+  bothSides((side, sgn) => {
+    for (let i = 0; i < ports.count; i++)
+      add(root, `port_${side}${i}`, box(...ports.size), lampM, [
+        ports.x + i * ports.pitch,
+        ports.y,
+        sgn * ports.z,
+      ]);
+  });
+  add(root, 'roof_skylight', box(...skylight.size), vent, skylight.at);
+}
+
+/**
+ * The open work deck forward (`work_deck · weld_bay_p/s · hull_plate_in_repair`):
+ * a plate laid on the deck, a lit welding bay each side of the centreline,
+ * and the job in hand between them — the light that is the Tender's +12
+ * while welding, and the whole of its glow forward.
+ */
+export function workDeck(root, { black, flood, rust }, { deck, bays, job }) {
+  add(root, 'work_deck', box(...deck.size), black, deck.at);
+  bothSides((side, sgn) =>
+    add(root, `weld_bay_${side}`, box(...bays.size), flood, [bays.x, bays.y, sgn * bays.z])
+  );
+  add(root, 'hull_plate_in_repair', box(...job.size), rust, job.at);
+}
+
+/**
+ * A derrick a side over the work deck (`derrick_mast_p … derrick_floodlamp_p`,
+ * then starboard): a tapered mast standing on the deck with a hazard-amber
+ * head, the boom — a tube tapering to its tip — swung up `pitch` and in
+ * `yaw` toward the centreline, the fall hanging plumb to its hook, and a
+ * flood lamp on the head looking down at the work. The Caisson and the
+ * Baffle Barge are the same navy's lifting gear.
+ *
+ * The boom is placed by its centre under Euler (0, ±yaw, pitch − π/2): laid
+ * along +X, raised, then swung inboard — the approved rig's own frame, which
+ * is why its eight facets land where they do. The tip is the geometry's top.
+ */
+export function derrickRig(root, { grey, amber, black, lampM }, opts) {
+  const { mast, head, boom, fall, hook, lamp: flood } = opts;
+  bothSides((side, sgn) => {
+    add(root, `derrick_mast_${side}`, cyl(mast.rTop, mast.r, mast.height, 8), grey, [
+      mast.x,
+      mast.y,
+      sgn * mast.z,
+    ]);
+    add(root, `derrick_head_${side}`, box(...head.size), amber, [mast.x, head.y, sgn * mast.z]);
+    add(
+      root,
+      `derrick_boom_${side}`,
+      cyl(boom.rTip, boom.r, boom.length, 8),
+      grey,
+      [boom.x, boom.y, sgn * boom.z],
+      [0, sgn * boom.yaw, boom.pitch - Math.PI / 2]
+    );
+    add(root, `derrick_cable_${side}`, cyl(fall.r, fall.r, fall.length, 6), black, [
+      fall.x,
+      fall.y,
+      sgn * fall.z,
+    ]);
+    add(root, `derrick_hook_${side}`, box(...hook.size), amber, [fall.x, hook.y, sgn * fall.z]);
+    add(root, `derrick_floodlamp_${side}`, box(...flood.size), lampM, [
+      flood.x,
+      flood.y,
+      sgn * flood.z,
+    ]);
+  });
+}
+
+/**
+ * The spare-plate rack: plates stacked on the deck, each narrower than the
+ * one under it, older plate between newer (`spare_plate_0..n`), each given
+ * as `[y, size, old]`.
+ */
+export function spareRack(root, { grey, rust }, { x, z, plates }) {
+  plates.forEach(([y, size, old], i) =>
+    add(root, `spare_plate_${i}`, box(...size), old ? rust : grey, [x, y, z])
+  );
+}
+
+/** Gas bottles in a rank on the deck: eight-facet cylinders `pitch` apart (`gas_bottle_0..n`). */
+export function gasBottles(root, amber, { x, y, z, count, pitch, r, h }) {
+  for (let i = 0; i < count; i++)
+    add(root, `gas_bottle_${i}`, cyl(r, r, h, 8), amber, [x + i * pitch, y, z]);
+}
+
+/** A pipe run along each side of the deck (`pipe_run_p/s`): an eight-facet tube on X. */
+export function pipeRuns(root, rust, { x, y, z, r, length }) {
+  bothSides((side, sgn) =>
+    add(root, `pipe_run_${side}`, cyl(r, r, length, 8), rust, [x, y, sgn * z], [0, 0, Math.PI / 2])
+  );
+}
+
+/** The pump house and the riser standing out of it (`pump_house · pump_riser`). */
+export function pumpHouse(root, { grey, rust }, { house, riser: up }) {
+  add(root, 'pump_house', box(...house.size), grey, house.at);
+  riser(root, rust, { name: 'pump_riser', ...up });
+}
+
+/* --------------------------------------------------------------------------
  * Structures. A settlement is the same architecture grown four ways, so the
  * base / mount / head / barrel family lives here beside the hull vocabulary
  * rather than in any one structure script (#553, off #540 Phase 3).
@@ -226,8 +647,54 @@ export function deckFloods(root, lampMat, { deck, spots }) {
  * argument. The value is the approved turret's own.
  */
 export const structureInk = {
-  workLamp: () => lamp('work_lamp', [0.888, 0.445, 0.033], [0.02, 0.01, 0.0]),
+  // The approved turret's lamp is amber through and through — its base is the
+  // token, not a near-black — so it reads as a fixture in the albedo map too.
+  workLamp: () => lamp('work_lamp', hex('#F2B233'), hex('#F2B233'), 0.35),
 };
+
+/**
+ * The heat exchanger on the end of a Vent Tap's draw arm, on `bearing`
+ * (#608): a black box with five iron fins through it, the hazard band round
+ * its roof, a stack behind it banded amber, the vent grating on the roof, the
+ * anchor foot beyond, and a rank of four rivets. Distances are metres out
+ * along the bearing, as the kit's `ventDrawArm` takes them.
+ *
+ * Two things are the approved file's and are carried across rather than
+ * corrected (#540). The rivets stagger `rivets.stagger` either side of their
+ * rank in *global* z on every arm, not across the arm, so the rank leans one
+ * way on two arms and the other way on the other two. And the grating sits
+ * inside the hazard band, under its roof, where the top-down bake has never
+ * seen it; `exportGlb`'s light audit says so on every arm.
+ */
+export function exchangerHead(root, { black, grey, rust, amber, vent }, opts) {
+  const { bearing: a, at, y, size, fins, band, stack, grating, foot, rivets } = opts;
+  const yaw = [0, -a, 0];
+  add(root, 'exchanger', box(...size), black, polar(a, at, y), yaw);
+  for (let i = 0; i < fins.count; i++)
+    add(root, `fin_${i}`, box(...fins.size), grey, polar(a, fins.from + fins.pitch * i, fins.y), yaw);
+  add(root, 'hazard_band', box(...band.size), amber, polar(a, at, band.y), yaw);
+  add(root, 'stack', cyl(stack.r[0], stack.r[1], stack.h, 8), black, polar(a, stack.at, stack.y));
+  add(
+    root,
+    'stack_band',
+    cyl(stack.band.r, stack.band.r, stack.band.h, 8),
+    amber,
+    polar(a, stack.at, stack.band.y)
+  );
+  add(root, 'exchanger_vent', box(...grating.size), vent, polar(a, grating.at, grating.y), yaw);
+  add(root, 'anchor_foot', box(...foot.size), rust, polar(a, foot.at, foot.y), yaw);
+  for (let i = 0; i < rivets.count; i++) {
+    const [x, ry, z] = polar(a, at + (rivets.from + rivets.pitch * i), rivets.y);
+    add(
+      root,
+      `rivet_${i}`,
+      box(...rivets.size),
+      grey,
+      [x, ry, z + (i % 2 ? rivets.stagger : -rivets.stagger)],
+      yaw
+    );
+  }
+}
 
 /**
  * The raft: a bolted slab on the seabed with a foot at each corner and a bolt
@@ -375,6 +842,108 @@ export function baseLamp(root, { lampMat, black }, { at, size, bracket }) {
     black,
     bracket.at
   );
+}
+
+/* --------------------------------------------------------------------------
+ * Shared kinds. The Light Scout is the first of the six kinds every navy
+ * models (#588, off #540 Phase 3), and the Klaxon's is a pressure vessel
+ * with the fittings bolted on: a twenty-sided drum and its cap, a square
+ * wedge for a nose, a boxed sensor head with two whips, a spine plate and a
+ * skid, three patches and twelve rivets, a shrouded screw, four fins, two
+ * stencils and the amber that is its whole resting light. The builders take
+ * the approved export's own numbers (kit.mjs `drawn`);
+ * hulls/light-scout-pelagia.mjs states the scale decision the shared kinds
+ * follow.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The Light Scout's palette: the Bulwark's four claddings to the value, and
+ * a lamp that is the hazard-amber token through and through, burning at
+ * 3.5 — the fixture `structureInk.workLamp` also is, not `ink`'s
+ * near-black-based navigation light. Values are the approved export's own.
+ */
+export const scoutInk = {
+  hullBlack: () => clad('hull_black', hex('#0E1418'), 0.25, 0.85),
+  ironGrey: () => clad('iron_grey', hex('#8C8378'), 0.32, 0.72),
+  oxideRust: () => clad('oxide_rust', hex('#3D2B1F'), 0.1, 0.95),
+  hazardAmber: () => clad('hazard_amber', hex('#F2B233'), 0.15, 0.6),
+  amberLamp: () => lamp('amber_lamp', hex('#F2B233'), hex('#F2B233'), 0.4, 3.5),
+};
+
+/**
+ * A drum: a closed cylinder, `radii` [top, bottom] as drawn and laid along
+ * the keel by its node, `facets` round — the one curve a pressure vessel
+ * demanded. The hull, the cap that closes it astern, and the screw's hub.
+ */
+export function drum(root, mat, { name, radii, length, facets = 20, ...placement }) {
+  return part(root, name, cyl(radii[0], radii[1], length, facets), mat, placement);
+}
+
+/**
+ * A square wedge: a four-sided frustum stood on its corners, so its section
+ * is a square rather than a diamond — plate cut and welded, which is what
+ * the Klaxon's nose is.
+ */
+export function squareWedge(root, mat, { name = 'nose_wedge', radii, length, ...placement }) {
+  const geo = cyl(radii[0], radii[1], length, 4, Math.PI / 4).rotateX(Math.PI / 2);
+  return part(root, name, geo, mat, placement);
+}
+
+/**
+ * Whip aerials: thin cylinders standing off the sensor head, `[name, r,
+ * length, placement]` each — two, at their own heights, off the centreline
+ * each its own way.
+ */
+export function whips(root, mat, { whips: list, facets = 8 }) {
+  list.forEach(([name, r, length, placement]) =>
+    part(root, name, cyl(r, r, length, facets), mat, placement)
+  );
+}
+
+/**
+ * Flank rivets: a rank of square-headed rivets along each flank at fixed
+ * `stations` along the length, one box shared by all — the Klaxon repairs in
+ * straight lines even when the thing repaired is round. Named
+ * `rivet_<side><i>` in station order; `z` is the flank's beam in the kit's
+ * frame, which for the export's `_p` rank is the -z its +x lands on. Not
+ * `rivetRows` above: that one numbers a running rank the way the Bulwark and
+ * the Tender count theirs (`rivet_96..159`), this one names a side.
+ */
+export function flankRivets(root, mat, { name = 'rivet', size = 0.14, y, rows }) {
+  const head = box(size, size, size);
+  rows.forEach(({ side, z, stations }) =>
+    stations.forEach((x, i) => part(root, `${name}_${side}${i}`, head, mat, { at: [x, y, z] }))
+  );
+}
+
+/** The screw's shroud: a ring of `tube` section on radius `R`, across the keel once turned. */
+export function shroud(
+  root,
+  mat,
+  { name = 'prop_shroud', R, tube, facets = [10, 20], ...placement }
+) {
+  return part(root, name, torus(R, tube, ...facets), mat, placement);
+}
+
+/**
+ * Screw blades: `count` flat blades of one `size` fanned `pitch` apart about
+ * the shaft, all at `at`, numbered from the one that stands upright.
+ */
+export function screwBlades(root, mat, opts) {
+  const { name = 'prop_blade', size, at, count = 3, pitch = Math.PI / 3 } = opts;
+  const blade = box(...size);
+  for (let i = 0; i < count; i++)
+    part(root, `${name}_${i}`, blade, mat, { at, rot: [i * pitch, 0, 0] });
+}
+
+/**
+ * Navigation domes: lit orbs of one radius, `[name, placement]` each, one
+ * geometry shared — on the mast and one each side, which is the light gate 3
+ * measures on this hull.
+ */
+export function domes(root, light, { r, facets = [8, 6], domes: list }) {
+  const dome = new THREE.SphereGeometry(r, ...facets);
+  list.forEach(([name, placement]) => part(root, name, dome, light, placement));
 }
 
 export { THREE };

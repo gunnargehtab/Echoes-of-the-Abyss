@@ -46,6 +46,7 @@ import {
   THREE,
   clad,
   lamp,
+  hex,
   add,
   box,
   cyl,
@@ -53,17 +54,28 @@ import {
   plan,
   cable,
   bothSides,
+  polar,
+  part,
   segmentSeries as series,
 } from '../kit.mjs';
 
-/** The Directorate's palette, as the Dredge's own materials carry it. */
+/**
+ * The Directorate's palette, as the Dredge's own materials carry it: the four
+ * tokens of docs/art-direction.md, and — where the approved model needed a
+ * colour the docs do not name — that model's own hex, exactly (kit.mjs `hex`).
+ *
+ * Exactly, because the first transcription rounded each linear channel to two
+ * decimals and trench black came out `[0, 0, 0.01]`: red and green zeroed,
+ * blue doubled, a 3.4× drop in the luminance the bake ships (#630, F2). It
+ * clads the ridges, the spines, the mandible roots and the hopper.
+ */
 export const ink = {
-  chitinViolet: () => clad('chitin_violet', [0.03, 0.01, 0.05], 0.1, 0.62),
-  chitinRed: () => clad('chitin_red', [0.19, 0.01, 0.03], 0.14, 0.52),
-  trenchBlack: () => clad('trench_black', [0.0, 0.0, 0.01], 0.32, 0.42),
-  weldSteel: () => clad('weld_steel', [0.04, 0.05, 0.07], 0.38, 0.44),
-  biolightCrimson: () => lamp('biolight_crimson', [0.54, 0.06, 0.11], [0.01, 0.0, 0.01]),
-  gulletGlow: () => lamp('gullet_glow', [0.75, 0.08, 0.14], [0.02, 0.0, 0.01]),
+  chitinViolet: () => clad('chitin_violet', hex('#2D1B3D'), 0.1, 0.62),
+  chitinRed: () => clad('chitin_red', hex('#7A1B2E'), 0.14, 0.52),
+  trenchBlack: () => clad('trench_black', hex('#0A0710'), 0.32, 0.42),
+  weldSteel: () => clad('weld_steel', hex('#3A3F4A'), 0.38, 0.44),
+  biolightCrimson: () => lamp('biolight_crimson', hex('#C2465E'), hex('#1A0810')),
+  gulletGlow: () => lamp('gullet_glow', hex('#E0506A'), hex('#2A0C14')),
 };
 
 /** A carapace orb: a low-facet sphere the caller squashes into a plate. */
@@ -102,8 +114,18 @@ export const segmentSeries = (opts) => series({ section: [0.6, 1.5], ...opts });
  * heavier carapace. `'none'` for a hull whose plates butt.
  *
  * `spines` puts one spine off each plate — alternating sides from port,
- * alternating between the two `lengths`, all raked forward by `rake` — which
- * is the regimented asymmetry the navy is built on. Omit for a smooth back.
+ * alternating between the two `lengths`, all raked forward by `rake`, each
+ * `offsets[0]` metres off the keel on the even plates and `offsets[1]` on the
+ * odd — which is the regimented asymmetry the navy is built on. Two constant
+ * offsets rather than a fraction of each plate's beam: the Dredge's stand 5 m
+ * and 6 m out on plates that run from 17 m to 26 m of half-beam, so a spine
+ * is not further out on a wider plate (#630 F5). Omit for a smooth back.
+ *
+ * A station is the orb's *scale*, not its bounding box. A low-facet sphere
+ * never reaches its radius on every axis — an `orb(14, 7)` stops at 0.975 of
+ * sx and 0.950 of sz — so a station read off a box is a few percent short,
+ * and every fraction hung on it then comes out a few percent long (#630,
+ * the second pass).
  */
 export function tergites(root, { violet, red, black }, opts) {
   const { segments, lip = 'seam', spines, facets = [12, 6] } = opts;
@@ -122,12 +144,12 @@ export function tergites(root, { violet, red, black }, opts) {
         0.92 * sz,
       ]);
     if (spines) {
-      const { lengths = [7, 10], r = 1.2, rake = -0.3, z = 0.28 } = spines;
+      const { lengths = [7, 10], r = 1.2, rake = -0.3, offsets = [5, 6] } = spines;
       const sgn = i % 2 ? -1 : 1;
       add(root, `tergite_spine_${i}`, spike(r, lengths[i % lengths.length]), black, [
         x + 2,
         sy + 2,
-        sgn * z * sz,
+        sgn * offsets[i % offsets.length],
       ], [0, 0, rake]);
     }
   });
@@ -139,16 +161,25 @@ export function rostrum(root, red, { tip, r, length, facets = 6 }) {
 }
 
 /**
- * The telson: a cone astern, apex at `tip`, and the pair of tail spines
- * splayed `splay` radians outward off it.
+ * The telson: a cone astern with its base ring at `tip` — the sternmost
+ * point of the hull — and its apex `length` forward, buried in the last
+ * plate, so the stern is a blunt transom `2r` across; and the pair of tail
+ * spines off it, each centred at `[x, y, ±z]` with its base aft and outboard
+ * and its point forward and inboard, `splay` radians off the keel.
+ *
+ * Both cones go base-aft, point-forward: `cyl(0, r, …)` puts the apex at +X
+ * after the −π/2 roll, as `rostrum` does. The first transcription had both
+ * the other way round — the point at the stern — and every gate passed,
+ * because a cone's bounding box is the same end for end; the approved Dredge
+ * and Precentor both draw them this way (#630, beyond F1–F5).
  */
 export function telson(root, { violet, black }, opts) {
   const { tip, r, length, facets = 6, tailSpines } = opts;
-  add(root, 'telson', cyl(r, 0, length, facets), violet, [tip + length / 2, 0, 0], [0, 0, -Math.PI / 2]);
+  add(root, 'telson', cyl(0, r, length, facets), violet, [tip + length / 2, 0, 0], [0, 0, -Math.PI / 2]);
   if (tailSpines) {
     const { x, y = 1, z, r: sr, length: sl, splay = 0.4 } = tailSpines;
     bothSides((side, sgn) =>
-      add(root, `tail_spine_${side}`, cyl(sr, 0, sl, 5), black, [x, y, sgn * z], [0, sgn * splay, -Math.PI / 2])
+      add(root, `tail_spine_${side}`, cyl(0, sr, sl, 5), black, [x, y, sgn * z], [0, sgn * splay, -Math.PI / 2])
     );
   }
 }
@@ -186,9 +217,11 @@ export function dorsalSpines(root, black, { spines, r = 0.7, rake = -0.3 }) {
  * upward face. A mirrored pair is refused — a pattern that repeats on
  * neither side is the Block 2 rule, and the Chorister's four-and-one is it.
  */
-export function photophores(root, crimson, { spots, size = 1.1, h = 0.4, depth }) {
+export function photophores(root, crimson, { spots, size = 1.1, h = 0.4, depth, yaw = 0 }) {
   refuseMirror('photophore', spots);
-  spots.forEach(([name, x, y, z]) => add(root, name, box(size, h, depth ?? size), crimson, [x, y, z]));
+  spots.forEach(([name, x, y, z]) =>
+    add(root, name, box(size, h, depth ?? size), crimson, [x, y, z], [0, yaw, 0])
+  );
 }
 
 /**
@@ -323,28 +356,45 @@ export function scoopBow(root, { red, steel, black, gullet }, opts) {
 }
 
 /**
- * One great folded claw off one beam: an arm along the hull, a forearm bent
- * `bend` radians back in toward the bow, and two tips closing on each other.
- * `side` is 'p' or 's' and there is no pair — the Dredge's is to starboard.
+ * One great folded claw off one beam: an arm along the hull from `x`, a
+ * forearm folded `fore.bend` radians *inboard* — back in toward the keel —
+ * off its end, and two tips off the forearm's end closing on each other:
+ * `tips.a` on the outboard side turning in by `close`, `tips.b` on the
+ * inboard side turning out (a negative `close`), each a cone with its point
+ * forward. `side` is 'p' or 's' and there is no pair — the Dredge's is to
+ * starboard.
+ *
+ * The arm is placed from `x`; the forearm and both tips are placed by their
+ * centres, `at`, because that is how the approved model placed them: no rule
+ * off the arm's length and the bend lands the forearm on (36, 2, −29), and
+ * the one the first transcription derived did not (#630 F3). That one also
+ * folded the forearm *outboard* by the same 0.25 rad — its comment said
+ * inboard; the sign said otherwise — which made the forearm the widest thing
+ * on the hull and grew the beam by a metre, and it pointed both tips aft.
+ * The fold's direction and the tips' are what this builder holds; every
+ * number is the hull's.
+ *
+ * `arm.r` and `fore.r` are `[root, end]`: both limbs *taper* toward the tips
+ * — the Dredge's arm from 2.4 m to 1.8 m, its forearm from 1.8 m to 1.4 m —
+ * which a bounding box cannot show, since only the fat end reaches it, and
+ * which the first transcription did not carry. A scalar is a straight limb.
  */
 export function claw(root, { steel, black }, opts) {
-  const { side = 's', x, y = 1, z, arm = { r: 2.4, length: 34 }, fore = { r: 1.8, length: 20, bend: 0.25 } } = opts;
+  const { side = 's', x, y = 1, z, arm, fore, tips } = opts;
   const sgn = side === 'p' ? 1 : -1;
-  const ax = x + arm.length / 2;
-  add(root, 'claw_arm', cyl(arm.r, arm.r, arm.length, 8), steel, [ax, y, z], [0, 0, -Math.PI / 2]);
-  // The fold comes *inboard*, back toward the hull. Written down it bent the
-  // other way, which put the forearm outboard of the arm and made the claw the
-  // widest thing on the Dredge — 2.7 m of beam that is not in the approved
-  // model, and a claw that opens rather than folds.
-  const fx = x + arm.length + (fore.length / 2) * Math.cos(fore.bend);
-  const fz = z - sgn * (fore.length / 2) * Math.sin(fore.bend) * 0.3;
-  add(root, 'claw_forearm', cyl(fore.r, fore.r, fore.length, 8), steel, [fx, y + 1, fz], [0, -sgn * fore.bend, -Math.PI / 2]);
-  // The tips close at the far end of the forearm, not half way along it. The
-  // written-down 0.55 buried both of them inside the forearm — a claw that
-  // cannot close — which is the sort of thing only building the hull finds.
-  const tx = x + arm.length + fore.length * Math.cos(fore.bend) * 0.95;
-  add(root, 'claw_tip_a', cyl(fore.r, 0, 9, 5), black, [tx, y + 1.5, fz], [0, -sgn * 0.2, -Math.PI / 2]);
-  add(root, 'claw_tip_b', cyl(fore.r * 0.8, 0, 7, 5), black, [tx - 2, y + 1.5, fz - sgn * 5], [0, sgn * 0.3, -Math.PI / 2]);
+  // A cylinder is born along Y with `rTop` at +Y; rolled onto X, +Y is the
+  // far end, and a yaw about Y turns that end toward −Z. Inboard is −Z to
+  // port and +Z to starboard, so `inboard` radians toward the keel is a yaw
+  // of `sgn · inboard`.
+  const turn = (inboard) => [0, sgn * inboard, -Math.PI / 2];
+  const limb = (r, length) => {
+    const [root, end] = Array.isArray(r) ? r : [r, r];
+    return cyl(end, root, length, 8);
+  };
+  add(root, 'claw_arm', limb(arm.r, arm.length), steel, [x + arm.length / 2, y, z], turn(0));
+  add(root, 'claw_forearm', limb(fore.r, fore.length), steel, fore.at, turn(fore.bend));
+  add(root, 'claw_tip_a', spike(tips.a.r, tips.a.length, 5), black, tips.a.at, turn(tips.a.close));
+  add(root, 'claw_tip_b', spike(tips.b.r, tips.b.length, 5), black, tips.b.at, turn(tips.b.close));
 }
 
 /** The dredge boom off the other beam: a spar along the hull with teeth stepped along it. */
@@ -384,14 +434,62 @@ export function hopper(root, { black, steel, gullet }, { x, y, z = 0, w = 18, h 
  *
  * A Sentinel Turret is "nearly black — an ambush predator, navigation marks
  * only until it fires" (docs/asset-prompts-3d.md, the Sentinel Turret block),
- * and `chitin_red` at [0.19, 0.01, 0.03] is not that. The structures carry
+ * and `chitin_red` at #7A1B2E is not that. The structures carry
  * their own names rather than a shared dimming factor applied to `ink` — see
  * `structureInk` in factions/hadron.mjs for the argument. The value is the
  * approved turret's own.
  */
 export const structureInk = {
-  chitinRedDark: () => clad('chitin_red_dark', [0.076, 0.006, 0.014], 0.14, 0.55),
+  chitinRedDark: () => clad('chitin_red_dark', hex('#4E1220'), 0.14, 0.55),
 };
+
+/**
+ * The exchanger on the end of a Vent Tap's draw arm, on `bearing` (#608),
+ * grown as a carapace: a squashed orb in `skin`, the dark seam orb where it
+ * meets the pipe, three spines raked off its back, four photophores lying on
+ * it, and the claw that grips the ground beyond. The script passes `skin`
+ * violet on the even arms and red on the odd, as the tergites alternate
+ * along a hull. Distances are metres out along the bearing, as the kit's
+ * `ventDrawArm` takes them.
+ *
+ * Three things are the approved file's and are carried across rather than
+ * corrected (#540): the spines rake toward *global* +x on every arm, not out
+ * along their own; the spines and the photophores stagger either side of
+ * their rank in global z; and three of the four photophores lie under the
+ * shell of the carapace or its seam, where the top-down bake has never seen
+ * them. `exportGlb`'s light audit names them on every arm. The photophores
+ * are `photophores` below, yawed with the arm, so the no-mirrored-pair rule
+ * holds on the tap as it does on a hull.
+ */
+export function carapaceHead(root, { skin, black, steel, crimson }, opts) {
+  const { bearing: a, at, carapace, seam, spines, photophores: rank, claw } = opts;
+  add(root, 'carapace', scute(12, 6), skin, polar(a, at, carapace.y), [0, -a, 0], carapace.r);
+  add(root, 'carapace_seam', scute(8, 6), black, polar(a, seam.at, seam.y), [0, -a, 0], seam.r);
+  spines.lengths.forEach((length, i) => {
+    const [x, y, z] = polar(a, at + (spines.from + spines.pitch * i), spines.y);
+    add(root, `spine_${i}`, spike(spines.r, length, 5), black, [x, y, z + spines.stagger[i]], [
+      0,
+      0,
+      spines.rake,
+    ]);
+  });
+  photophores(root, crimson, {
+    size: rank.size,
+    h: rank.h,
+    yaw: -a,
+    spots: rank.ys.map((y, i) => {
+      const [x, , z] = polar(a, at + (rank.from + rank.pitch * i), y);
+      return [`photophore_${i}`, x, y, z + (i % 2 ? rank.stagger : -rank.stagger)];
+    }),
+  });
+  // Laid along the arm as the draw pipe is, then raised `claw.raise` radians
+  // toward vertical: the approved file's lean is π/2 − 0.8 to the bit.
+  add(root, 'anchor_claw', spike(claw.r, claw.length, 5), steel, polar(a, claw.at, claw.y), [
+    0,
+    -a,
+    claw.raise - Math.PI / 2,
+  ]);
+}
 
 /** A carapace plate: a low-facet orb the caller squashes and lays on the mound. */
 const scute = (w = 10, h = 6) => new THREE.SphereGeometry(1, w, h);
@@ -536,6 +634,118 @@ export function magazine(root, { steel, red }, { pod, pipe, flangeAt }) {
   const ring = torus(flangeAt.r, flangeAt.t, 4, 10);
   ring.rotateX(Math.PI / 2);
   add(root, 'feed_flange', ring, red, flangeAt.at);
+}
+
+/* --------------------------------------------------------------------------
+ * Shared kinds. The Light Scout is the first of the six kinds every navy
+ * models (#588, off #540 Phase 3), and the Directorate's is a carapace of
+ * boxes rather than orbs: five butted plates each with a red trailing lip, a
+ * squared wedge for a rostrum, two eyes of different sizes, two antennae
+ * raked back off their sockets, two folded limbs, two dorsal ridges, a keel,
+ * two tail plates, a four-bladed telson and its spike, and three photophore
+ * domes that are its whole resting light — nothing on it mirrored. The
+ * builders take the approved export's own numbers (kit.mjs `drawn`);
+ * hulls/light-scout-pelagia.mjs states the scale decision the shared kinds
+ * follow.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The Light Scout's palette: an earlier authoring pass than the Dredge's,
+ * naming the tokens as docs/art-direction.md names them — bruise violet,
+ * abyssal red, trench chitin — with its own finish, and a photophore that is
+ * the crimson token through and through, burning at 2.6. Values are the
+ * approved export's own; the names are what the model *is* and stay.
+ */
+export const scoutInk = {
+  bruiseViolet: () => clad('bruise_violet', hex('#2D1B3D'), 0.15, 0.5),
+  abyssalRed: () => clad('abyssal_red', hex('#7A1B2E'), 0.12, 0.48),
+  trenchChitin: () => clad('trench_chitin', hex('#0A0710'), 0.18, 0.42),
+  redPhotophore: () => lamp('red_photophore', hex('#C2465E'), hex('#C2465E'), 0.4, 2.6),
+};
+
+/**
+ * Plate segments: the scout's carapace, boxes butted along the keel, each
+ * in its own `skin` and each trailed by a red lip — a thin box `lip.ratio`
+ * of the plate's width and height, `lip.thickness` thick, set `lip.inset`
+ * inside the plate's forward face and `lip.lift` above its axis, leaned
+ * with the plate it belongs to. One-based and interleaved, seg_1,
+ * seg_1_edge, seg_2 …, as the export numbers them; `tergites` above is the
+ * Dredge's orb series and this is not it.
+ */
+export function plateSegments(root, lipMat, { first = 1, lip, segments }) {
+  segments.forEach(({ skin, size, ...placement }, i) => {
+    const n = first + i;
+    part(root, `seg_${n}`, box(...size), skin, placement);
+    const [x, y, z] = placement.at;
+    part(
+      root,
+      `seg_${n}_edge`,
+      box(size[0] * lip.ratio[0], size[1] * lip.ratio[1], lip.thickness),
+      lipMat,
+      {
+        ...placement,
+        at: [x + size[2] / 2 - lip.inset, y + lip.lift, z],
+      }
+    );
+  });
+}
+
+/**
+ * A wedge rostrum: a four-sided frustum stood on its corners, `radii` [tip,
+ * base] along `length`, and squashed `squash` [x, y] in the geometry itself,
+ * as the export has it — wider than it is tall, a beak rather than a spike.
+ */
+export function wedgeRostrum(root, mat, opts) {
+  const { name = 'rostrum', radii, length, squash = [1, 1], ...placement } = opts;
+  const geo = cyl(radii[0], radii[1], length, 4, Math.PI / 4).rotateX(Math.PI / 2);
+  geo.scale(squash[0], squash[1], 1);
+  return part(root, name, geo, mat, placement);
+}
+
+/** Eyes: low-facet orbs, `[name, r, placement]` each — two, of different sizes at different heights. */
+export function eyes(root, mat, { eyes: list, facets = [6, 4] }) {
+  list.forEach(([name, r, placement]) =>
+    part(root, name, new THREE.SphereGeometry(r, ...facets), mat, placement)
+  );
+}
+
+/**
+ * Spikes: tapered cones, `radii` [tip, base] along `length` with `facets`
+ * sides, each placed by its own node — the antennae (five-sided, raked back
+ * off the head), the dorsal ridges (four-sided, leaned) and the telson's
+ * spike. Drawn as the export drew them, tip up, and laid over by the node.
+ */
+export function spikes(root, mat, { spikes: list }) {
+  list.forEach(({ name, radii, length, facets = 5, ...placement }) =>
+    part(root, name, cyl(radii[0], radii[1], length, facets), mat, placement)
+  );
+}
+
+/**
+ * The telson fan: plates of one `size` at one point, each rolled its own way
+ * about the tail so they fan rather than cross, alternating through `skins`
+ * from `telson_0`. The spike astern of them is a `spikes` entry.
+ */
+export function telsonFan(root, skins, { name = 'telson', size, blades }) {
+  const plate = box(...size);
+  blades.forEach((placement, i) =>
+    part(root, `${name}_${i}`, plate, skins[i % skins.length], placement)
+  );
+}
+
+/**
+ * Photophore domes: lit orbs of one radius, `[name, placement]` each, one
+ * geometry shared — a head, one flank and the tail, three in a pattern that
+ * repeats on neither side. A mirrored pair is refused, as `photophores`
+ * refuses one.
+ */
+export function photophoreDomes(root, light, { r = 0.32, facets = [8, 6], domes }) {
+  refuseMirror(
+    'photophore_dome',
+    domes.map(([name, { at }]) => [name, ...at])
+  );
+  const dome = new THREE.SphereGeometry(r, ...facets);
+  domes.forEach(([name, placement]) => part(root, name, dome, light, placement));
 }
 
 export { THREE };

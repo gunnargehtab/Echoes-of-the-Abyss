@@ -69,8 +69,20 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as THREE from 'three';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
-import { sceneParts, topDown } from './glb.mjs';
+import { sceneParts, topDown, boundsOf } from './glb.mjs';
 export { THREE };
+
+/**
+ * A colour as the docs write it. `hex('#7A1B2E')` is `docs/art-direction.md`'s
+ * abyssal red, converted by three from sRGB to the linear value the exporter
+ * carries — which is also, to four decimals, what every approved binary in
+ * `docs/concept-art/models/` carries, because they were all authored from the
+ * same tokens. The first faction modules transcribed those linear values by
+ * hand and rounded them, and one rounding zeroed two channels of the
+ * Directorate's trench black (#630). A module cites the token; nothing here
+ * types out a linear triple.
+ */
+export const hex = (token) => new THREE.Color(token).toArray();
 
 /** Cladding: a plain PBR surface. Metalness and roughness are the navy's. */
 export function clad(name, rgb, metalness, roughness) {
@@ -83,13 +95,21 @@ export function clad(name, rgb, metalness, roughness) {
   return m;
 }
 
-/** A lamp: near-black base, the light in `emissive`. See the header. */
-export function lamp(name, rgb, base = [0.01, 0.01, 0.0]) {
+/**
+ * A lamp: near-black base, the light in `emissive`. See the header. The
+ * roughness is the approved models' 0.4 unless a navy's fixture says
+ * otherwise — the Order's structure lights are polished to 0.15 and 0.3.
+ * `intensity` is the `KHR_materials_emissive_strength` an export carries
+ * (the four Light Scouts' lamps burn at 1.6 to 3.5); the bake caps it at 1,
+ * so it moves nothing on a map, and the conn view shows it.
+ */
+export function lamp(name, rgb, base = [0.01, 0.01, 0.0], roughness = 0.4, intensity = 1) {
   const m = new THREE.MeshStandardMaterial({
     color: new THREE.Color(...base),
     metalness: 0,
-    roughness: 0.4,
+    roughness,
     emissive: new THREE.Color(...rgb),
+    emissiveIntensity: intensity,
   });
   m.name = name;
   return m;
@@ -106,8 +126,11 @@ export function add(root, name, geo, mat, p = [0, 0, 0], r = [0, 0, 0], s = [1, 
 }
 
 export const box = (x, y, z) => new THREE.BoxGeometry(x, y, z);
-export const cyl = (rTop, rBottom, h, seg = 12) =>
-  new THREE.CylinderGeometry(rTop, rBottom, h, seg);
+// `thetaStart` turns the first facet: a four-sided cylinder is a diamond in
+// section at 0 and a square at π/4, which is the Klaxon's nose and the
+// Directorate's rostrum.
+export const cyl = (rTop, rBottom, h, seg = 12, thetaStart = 0) =>
+  new THREE.CylinderGeometry(rTop, rBottom, h, seg, 1, false, thetaStart);
 export const torus = (r, t, rs = 8, ts = 24) => new THREE.TorusGeometry(r, t, rs, ts);
 export const octa = (r) => new THREE.OctahedronGeometry(r, 0);
 
@@ -181,10 +204,17 @@ export function plan(points, thicknessM, bevelM = 0) {
  * station, which at sprite scale reads as a segmented worm.
  *
  * `facets` stays low on purpose — the style asks for "crisp facets", not a tube.
+ *
+ * `phase` is where the first seam sits, in radians round from the beam (three's
+ * `phiStart`). At 0, the default, a vertex lies on +z; at `π / facets` a flat
+ * does instead — which is how a four-facet section becomes a rectangle once it
+ * is scaled, and a six-facet one carries a vertex on the crown. The Order's
+ * blades and horn are cut that way (factions/hadron.mjs `spar`), and so is its
+ * exchanger prism on the Vent Tap (a square with a flat face up, at π/4).
  */
-export function loft(profile, facets = 10) {
+export function loft(profile, facets = 10, phase = 0) {
   const pts = profile.map(([x, r]) => new THREE.Vector2(Math.max(r, 0.001), x));
-  const geo = new THREE.LatheGeometry(pts, facets);
+  const geo = new THREE.LatheGeometry(pts, facets, phase);
   geo.rotateZ(-Math.PI / 2);
   return geo;
 }
@@ -398,6 +428,193 @@ export function lightAudit(root, { ppm = 4, minM2 = 0.25 } = {}) {
   };
 }
 
+/* --------------------------------------------------------------------------
+ * Radial placement, and the Vent Tap's faction-neutral skeleton.
+ *
+ * A settlement is one architecture grown four ways, and #553 put each navy's
+ * growth in its own module. The Vent Tap is the opposite case: a piece of the
+ * seabed four navies bolt the same clamp onto. Two thirds of every approved
+ * Vent Tap — the wellhead, the four draw arms and the eight floods, 62 parts —
+ * is identical to the centimetre across the four files, and only the
+ * exchanger on the end of each arm is the navy's (#608). So the skeleton is
+ * built here, once, taking the navy's materials the way `plate` and `louvres`
+ * take theirs, and a structure script contributes its exchanger alone. The
+ * Foundry, the Refinery, the Slipway and the Bastion share the same
+ * faction-neutral core and inherit the decision.
+ *
+ * The numbers are the approved files' own and are the defaults, because all
+ * four carry them unchanged: repeating them in four scripts is the
+ * identical-by-hand drift the epic exists to stop. A tap that wants a taller
+ * chimney passes its own.
+ *
+ * Every part is placed as the approved files place it — a loft stood on end
+ * by a quarter turn on its node, a unit orb scaled and yawed rather than a
+ * pre-scaled geometry — because the bake and the runtime measure a model with
+ * three's `Box3.setFromObject`, which takes each part's *local* box through
+ * its transform (see `fitFootprint`): two builds with the same vertices and
+ * different transforms bake at different scales.
+ * ------------------------------------------------------------------------ */
+
+/** A point `r` metres out along bearing `a` (radians, anticlockwise from +X in plan), `y` up. */
+export const polar = (a, r, y = 0) => [r * Math.cos(a), y, r * Math.sin(a)];
+
+/**
+ * A builder repeated round a centre: `count` times, at `phase` plus `i` turns
+ * of `2π / count`, each call given its bearing and its index. The rotational
+ * counterpart of `bothSides`, as `segmentSeries` is the linear one: a Vent
+ * Tap's four draw arms, its five basalt lobes and its eight wellhead floods
+ * are each one of these, and the Sounding Spire's fins and the Bastion's
+ * docking collars will be.
+ */
+export function radialSeries({ count, phase = 0 }, fn) {
+  for (let i = 0; i < count; i++) fn(phase + (i * 2 * Math.PI) / count, i);
+}
+
+/**
+ * Hold a structure at its footprint diameter by the measure the bake and the
+ * runtime take (hull-intake's page.html, rosterModels.ts): three's
+ * `Box3.setFromObject`, which takes each part's local bounding box through
+ * its transform — wider than the vertices for a part that is yawed or leaned
+ * — on the longer horizontal axis, which is the one the bake scales after
+ * yawing a Z-long file onto X. Scales the root so that measure is `lengthM`,
+ * and returns what it measured. This is what makes intake report ×1.000
+ * instead of guessing, and what keeps a scripted file's frame exactly where
+ * its approved export's was: a file that is metre-true by its vertices and
+ * not by this measure bakes a few percent under size.
+ */
+export function fitFootprint(root, lengthM) {
+  root.scale.setScalar(1);
+  root.updateMatrixWorld(true);
+  const size = new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3());
+  root.scale.setScalar(lengthM / Math.max(size.x, size.z));
+  return size;
+}
+
+/**
+ * The wellhead: the basalt chimney with five lobes round its foot, the ember
+ * mouth in it, the apron of scorched ground, the wellhead clamp and the draw
+ * manifold over the mouth — "a basalt chimney at the centre with a wellhead
+ * clamp and a draw manifold over its mouth" (docs/asset-prompts-3d.md,
+ * STRUCTURE — Vent Tap). `rock` clads the chimney, its lobes, the apron and
+ * the clamp; `steel` the manifold; `mouth` is the lit ember under it.
+ *
+ * The chimney and both rings are lofts stood on end — lathed along X as every
+ * kit body is, then turned upright on the node — which is how the approved
+ * files carry them. The rings have a crown station so they read as a clamp
+ * and a manifold rather than two washers.
+ */
+export function ventWellhead(root, { rock, mouth, steel }, opts = {}) {
+  const {
+    chimney = {
+      profile: [
+        [-6, 0.2],
+        [-4, 30],
+        [8, 24],
+        [18, 16],
+        [24, 12],
+      ],
+      facets: 10,
+    },
+    lobes = { count: 5, phase: 0.6, r: 34, y: 1, size: [14, 6, 10] },
+    ember = { r: 11.5, y: 24.4, t: 1.2 },
+    apron = { r: 64, rTop: 60, y: -3.5, t: 3 },
+    clamp = { y: 26, r: 16, crown: 19, halfWidth: 3 },
+    manifold = { y: 31, r: 14.5, crown: 19.5, halfWidth: 1.2 },
+  } = opts;
+  const upright = [0, 0, Math.PI / 2];
+  add(root, 'vent_chimney', loft(chimney.profile, chimney.facets), rock, [0, 0, 0], upright);
+  radialSeries(lobes, (a, i) =>
+    add(
+      root,
+      `basalt_lobe_${i}`,
+      new THREE.SphereGeometry(1, 8, 6),
+      rock,
+      polar(a, lobes.r, lobes.y),
+      [0, -a, 0],
+      lobes.size
+    )
+  );
+  add(root, 'vent_mouth', cyl(ember.r, ember.r, ember.t, 12), mouth, [0, ember.y, 0]);
+  add(root, 'apron', cyl(apron.rTop, apron.r, apron.t, 16), rock, [0, apron.y, 0]);
+  const ring = ({ r, crown, halfWidth }) =>
+    loft(
+      [
+        [-halfWidth, r],
+        [0, crown],
+        [halfWidth, r],
+      ],
+      16
+    );
+  add(root, 'clamp_ring', ring(clamp), rock, [0, clamp.y, 0], upright);
+  add(root, 'manifold_ring', ring(manifold), steel, [0, manifold.y, 0], upright);
+}
+
+/**
+ * One draw arm on `bearing`: the pipe from the manifold out to the riser, the
+ * valve block and stem where it leaves the clamp, three lamps along the run,
+ * the riser the exchanger hangs off, and the floodlit working platform on
+ * two legs under the pipe — "four radial draw pipes running out to heat
+ * exchangers on the corners ... floodlit working platforms around the
+ * wellhead, lamps along every pipe run". Distances are metres out along the
+ * bearing. Call it once an arm and put the navy's exchanger on the same
+ * bearing straight after it: the approved files order each arm's parts so.
+ *
+ * `rock` clads the valve, `steel` the pipe, the riser and the legs, `deck`
+ * the platform; `lamp` and `flood` are the lit parts.
+ */
+export function ventDrawArm(root, { rock, steel, deck, lamp, flood }, opts) {
+  const {
+    bearing: a,
+    pipe = { from: 18, to: 62, r: 2.6, y: 20 },
+    valve = { at: 30, block: 6, stem: { r: 0.8, h: 6, y: 25 } },
+    lamps = { from: 24, pitch: 12, count: 3, size: [2, 0.6, 2], y: 22.9 },
+    riser = { at: 64, r: 2.4, h: 20, y: 10 },
+    platform = { at: 40, size: [14, 1.2, 10], y: 8, flood: { size: [12, 0.4, 8], y: 8.9 } },
+    legs = { spread: 6, r: [0.9, 1.1], h: 10, y: 2.5 },
+  } = opts;
+  const yaw = [0, -a, 0];
+  // A cylinder is born on Y; laid along the bearing this way it keeps a
+  // vertex on top, which is where the approved pipe's is.
+  add(
+    root,
+    'draw_pipe',
+    cyl(pipe.r, pipe.r, pipe.to - pipe.from, 8),
+    steel,
+    polar(a, (pipe.from + pipe.to) / 2, pipe.y),
+    [0, -a, -Math.PI / 2]
+  );
+  add(root, 'valve_block', box(valve.block, valve.block, valve.block), rock, polar(a, valve.at, pipe.y), yaw);
+  add(root, 'valve_stem', cyl(valve.stem.r, valve.stem.r, valve.stem.h, 6), rock, polar(a, valve.at, valve.stem.y));
+  for (let i = 0; i < lamps.count; i++)
+    add(root, `pipe_lamp_${i}`, box(...lamps.size), lamp, polar(a, lamps.from + lamps.pitch * i, lamps.y), yaw);
+  add(root, 'riser', cyl(riser.r, riser.r, riser.h, 8), steel, polar(a, riser.at, riser.y));
+  add(root, 'platform', box(...platform.size), deck, polar(a, platform.at, platform.y), yaw);
+  add(root, 'platform_flood', box(...platform.flood.size), flood, polar(a, platform.at, platform.flood.y), yaw);
+  for (const [tag, sgn] of [
+    ['a', -1],
+    ['b', 1],
+  ])
+    add(
+      root,
+      `platform_leg_${tag}`,
+      cyl(legs.r[0], legs.r[1], legs.h, 6),
+      steel,
+      polar(a, platform.at + sgn * legs.spread, legs.y)
+    );
+}
+
+/**
+ * The floods round the wellhead: `count` lamps on the manifold at radius `r`,
+ * each turned to face out along its bearing — the ring of light the bake sees
+ * first on a structure that is never quiet.
+ */
+export function wellheadFloods(root, flood, opts = {}) {
+  const { count = 8, r = 22, y = 31.8, size = [5, 0.5, 3.2] } = opts;
+  radialSeries({ count }, (a, i) =>
+    add(root, `wellhead_flood_${i}`, box(...size), flood, polar(a, r, y), [0, -a, 0])
+  );
+}
+
 /**
  * Where a hull script writes: docs/concept-art/models/ by default, or the
  * directory in `HULL_MODELS_OUT`, which is how check.mjs rebuilds every hull
@@ -436,4 +653,109 @@ export async function exportGlb(root, filename) {
     console.warn(
       `  WARNING: ${name} shows under 0.25 m² from above — the maps are top-down, and gate 3 cannot see it`
     );
+}
+
+/* --------------------------------------------------------------------------
+ * Z-long exports — the shared kinds' ports (#588, off #540 Phase 3).
+ *
+ * The four Light Scouts, and the Corvettes, Cruisers, Submersibles,
+ * Harvesters and Choristers behind them, were hand-exported along Z rather
+ * than X, at arbitrary scales (a 60 m hull drawn 5.3 to 28.2 units long),
+ * off-centre, with every part's transform on its node and its primitive in
+ * the node's own frame. Nothing downstream ever minded: the bake and the
+ * runtime both yaw a Z-long file onto +X (x' = z, z' = -x: +π/2 about Y),
+ * rescale it to the design length and centre it on its bounding box before
+ * reading it (hull-intake's page.html, rosterModels.ts). A port does those
+ * three things once, in the script, so that the file it writes is metre-true
+ * and bow-on-X like every other script's — and so that `lightAudit` measures
+ * its lamps in square metres rather than in the square of a unit nobody
+ * chose (#588: every lamp on all four scouts sat under the audit's floor).
+ *
+ * The rule a port follows is `drawn`: every number stays the export's own —
+ * the primitive as its buffer holds it, the node's translation, XYZ Euler
+ * and scale as the file carries them — and one function turns the lot onto
+ * +X. A part written that way audits line by line against the file, which
+ * is what a port is for; the shape decisions are the export's, not the
+ * script's.
+ * ------------------------------------------------------------------------ */
+
+/** The one yaw: the export's +Z, its bow, onto the kit's +X. */
+const YAW_Z_TO_X = Math.PI / 2;
+const yawedOnce = new WeakSet();
+
+/**
+ * A primitive as a Z-long export built it, turned onto +X — in place, so
+ * its facets land exactly where the export's did, and once, however many
+ * parts share the geometry (the Klaxon scout's twelve rivets are one box).
+ * A cylinder's first vertex, a torus's seam and a tube's Frenet frames all
+ * depend on which way the primitive was born; rebuilt X-long they move,
+ * and a bounds check would never know.
+ */
+export function yawed(geo) {
+  if (!yawedOnce.has(geo)) {
+    geo.rotateY(YAW_Z_TO_X);
+    yawedOnce.add(geo);
+  }
+  return geo;
+}
+
+/**
+ * A node transform as a Z-long export carries it, in the kit's frame. The
+ * export's (x, y, z) lands on (z, y, -x), and so do its three scale axes;
+ * its XYZ Euler (a, b, c) becomes the ZYX Euler (c, b, -a): roll and yaw
+ * survive the turn, pitch changes sign, and the order follows the axes
+ * round. So a part the export drew at its +x — every `_p` on all four
+ * scouts — lands on the kit's -z, because that is where the file has it and
+ * a port reproduces the file, not the name.
+ */
+export function drawn(t = [0, 0, 0], e = [0, 0, 0], s = [1, 1, 1]) {
+  return {
+    at: [t[2], t[1], -t[0]],
+    rot: [e[2], e[1], -e[0], 'ZYX'],
+    scale: [s[2], s[1], s[0]],
+  };
+}
+
+/**
+ * A part as the export built and placed it: `geo` in the export's own
+ * frame, the placement from `drawn`. The builders the shared kinds compose
+ * from all end here.
+ */
+export function part(root, name, geo, mat, placement = {}) {
+  const { at = [0, 0, 0], rot = [0, 0, 0], scale = [1, 1, 1] } = placement;
+  return add(root, name, yawed(geo), mat, at, rot, scale);
+}
+
+/**
+ * Metre-true and centred, once the parts are in. The built length along X
+ * is measured and checked against the `drawn` figure the script's header
+ * states — a mistyped station would pass every other gate and fail this one
+ * — then the root is scaled to `lengthM`, the length is centred on x = 0,
+ * and `datum`, the height the export drew its hull axis at, is brought to
+ * y = 0. Returns the scale, for the record.
+ *
+ * The length is measured as intake and the runtime measure it — three's
+ * `Box3.setFromObject`, the axis-aligned boxes of the parts, which a
+ * rotated plate's box overhangs (the Commune scout's raked tail flukes add
+ * 1.4 % to its length that way) — and not off the vertices, which `bounds`
+ * above also does not do. That measure is homogeneous and a yaw does not
+ * change it, so the bake and the conn view normalise the approved export and
+ * the port to the same size whatever scale the file carries; scaling to it
+ * here is what makes their own rescale exactly 1, and leaves the maps and
+ * the sprite where the approved export put them. `outlines.mjs` and
+ * `diff.mjs` measure vertices and normalise, and see no difference either
+ * way.
+ */
+export function metreTrue(root, lengthM, { drawn: expected, datum = 0, tolerance = 1e-3 } = {}) {
+  root.updateMatrixWorld(true);
+  const bb = new THREE.Box3().setFromObject(root);
+  const length = bb.max.x - bb.min.x;
+  if (Math.abs(length - expected) > tolerance)
+    throw new Error(
+      `${root.name}: drawn ${length.toFixed(4)} units long; the header says ${expected}`
+    );
+  const k = lengthM / length;
+  root.scale.setScalar(k);
+  root.position.set((-k * (bb.max.x + bb.min.x)) / 2, -k * datum, 0);
+  return k;
 }
