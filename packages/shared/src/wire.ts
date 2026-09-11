@@ -92,7 +92,8 @@ export const CLIENT_MSG = {
   build: 'build',
   produce: 'produce',
   refit: 'refit',
-  // Lobby.
+  // Lobby. Phase-gated, and declared again as `LOBBY_MSG` below — that tuple
+  // is the one a type can read, and these five names must agree with it.
   faction: 'faction',
   ready: 'ready',
   addAi: 'addAi',
@@ -101,6 +102,29 @@ export const CLIENT_MSG = {
 } as const;
 
 export type ClientMessageName = (typeof CLIENT_MSG)[keyof typeof CLIENT_MSG];
+
+/**
+ * The five names a room only accepts before the match starts.
+ *
+ * Declared rather than commented, because two things downstream need the
+ * in-match set as a *type* and a `// Lobby.` banner is not one (#621). The
+ * room already phase-gates each of these on `MatchPhase.Lobby`; this tuple is
+ * the same fact where a compiler can read it.
+ */
+export const LOBBY_MSG = ['faction', 'ready', 'addAi', 'removeAi', 'aiDifficulty'] as const;
+
+/** A key of `CLIENT_MSG` the room answers only in the lobby. */
+export type LobbyClientMessageKey = (typeof LOBBY_MSG)[number];
+
+/**
+ * A key of `CLIENT_MSG` a seated commander may send — 27 of the 32.
+ *
+ * A **key**, deliberately, not a `ClientMessageName`. The two differ in one
+ * place: `depthCharge` travels as `depthcharge` (above), so anything keyed on
+ * the wire values needs a special case for that one name and anything keyed on
+ * the keys does not. The casing oddity stays a fact about this file.
+ */
+export type InMatchClientMessageKey = Exclude<keyof typeof CLIENT_MSG, LobbyClientMessageKey>;
 
 export interface MoveMessage {
   unitIds: number[];
@@ -521,3 +545,14 @@ const _clientNamesAreExhaustive: Exact<ClientMessageName, keyof ClientMessages> 
 const _serverNamesAreExhaustive: Exact<ServerMessageName, keyof ServerMessages> = true;
 void _clientNamesAreExhaustive;
 void _serverNamesAreExhaustive;
+
+/**
+ * Every name in `LOBBY_MSG` is a real key of `CLIENT_MSG`.
+ *
+ * Without this a typo there is not a build error but a *widening*: the
+ * misspelling excludes nothing, the real name stays in
+ * `InMatchClientMessageKey`, and the downstream check fails somewhere else
+ * naming a verb that was never the problem.
+ */
+const _lobbyNamesAreClientKeys: readonly (keyof typeof CLIENT_MSG)[] = LOBBY_MSG;
+void _lobbyNamesAreClientKeys;

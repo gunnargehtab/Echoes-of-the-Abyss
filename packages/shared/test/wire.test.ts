@@ -6,14 +6,19 @@
  * or a payload has no name, and both packages reach every message through the
  * same map, so a rename or a reshape on one side stops compiling on both.
  *
- * What remains is the one hazard the type system cannot see: two keys mapping
+ * What remains is what the type system cannot see. Chiefly: two keys mapping
  * to the *same* wire string. That does not widen the name union or break the
  * exhaustiveness check — it silently collapses two messages into one, and the
  * second handler registered wins. Cheap to rule out, invisible otherwise.
+ *
+ * Since #621 also the sizes of the two halves. `LOBBY_MSG` names the five
+ * phase-gated messages so the in-match set can be subtracted as a type, and a
+ * name missing from both tuples is absent rather than wrong — which a count
+ * catches and a type cannot.
  */
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { CLIENT_MSG, SERVER_MSG } from '../dist/index.js';
+import { CLIENT_MSG, LOBBY_MSG, SERVER_MSG } from '../dist/index.js';
 
 /** Wire names that appear more than once in a map. */
 function duplicates(map: Record<string, string>): string[] {
@@ -37,6 +42,24 @@ describe('the message contract', () => {
   it('gives every server message its own name on the wire', () => {
     assert.deepEqual(duplicates(SERVER_MSG), []);
     assert.equal(Object.keys(SERVER_MSG).length, 11, 'the messages the room sends');
+  });
+
+  it('splits the client names into a lobby set and an in-match set', () => {
+    // `InMatchClientMessageKey` is `CLIENT_MSG`'s keys minus these, and it is
+    // what `ai/types.ts` holds the commander's vocabulary against (#621). The
+    // subtraction happens in the type system, where a name that is in neither
+    // tuple is simply absent rather than wrong — so the runtime half is here:
+    // every lobby name is a real key, and the remainder is the 27 a seated
+    // commander may send.
+    for (const name of LOBBY_MSG) {
+      assert.ok(name in CLIENT_MSG, `${name} is a client message`);
+    }
+    assert.equal(LOBBY_MSG.length, 5, 'the names a room answers only before the match starts');
+    assert.equal(
+      Object.keys(CLIENT_MSG).filter((k) => !(LOBBY_MSG as readonly string[]).includes(k)).length,
+      27,
+      'the orders a seated commander may send'
+    );
   });
 
   it('keeps the one name whose casing differs from its key', () => {
