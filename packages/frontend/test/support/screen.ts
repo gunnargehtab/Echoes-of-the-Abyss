@@ -289,8 +289,8 @@ export async function click(view: Rendered, label: string): Promise<void> {
  * `.claude/skills/run-game/scripts/escFocus.mjs`, against the Chromium the
  * run-game skill already drives. It is deliberately not part of `npm test` —
  * Playwright is a global install rather than a devDependency and the harness
- * needs both dev servers, and .github/workflows/ci.yml's header records this
- * account running out of Actions minutes.
+ * needs both dev servers, and CI minutes are a budget worth spending on the
+ * gates that catch regressions every run.
  *
  * Worth reopening only if a screen arrives that needs real layout or real
  * event dispatch. None does today.

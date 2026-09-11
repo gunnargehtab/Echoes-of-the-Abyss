@@ -7,8 +7,8 @@ description: Repo-specific guidance for driving an open pull request to green �
 
 A session subscribed to a PR already knows the general drill: fix red CI,
 resolve conflicts, answer reviewers, never skip a test to get green. What it
-cannot know from those rules is that this account has run out of Actions
-minutes before, that the doc gates reproduce locally in under a minute, that a
+cannot know from those rules is that every gate in this repository reproduces
+locally in seconds, that the doc gates need no install at all, that a
 type error on a `packages/shared` PR is usually a stale build, and that a
 "small" review ask can be a design call the design bible has to answer first.
 Those are the differences. This file is deliberately short; `work-issue`
@@ -61,34 +61,44 @@ If none of those reproduces, look at the `setup` step before the test body: a
 `package.json` edited without its lockfile makes `npm ci` refuse the install,
 and that is this PR's failure, not infrastructure.
 
-## 2. Re-runs are not free here — the one case they are allowed
+## 2. Re-run almost nothing — a local run answers the same question sooner
 
-The header of `.github/workflows/ci.yml` records the account **running out of
-Actions minutes on 2026-08-25**, and `work-issue` §2 caps open `claude/issue-`
-PRs at two for the same reason. A full run bills about six minutes across its
-four jobs. The generic rules allow one re-run per failure; here the rule is
-tighter:
+A full run bills about six Actions minutes across its four jobs and takes about
+two of wall clock, so a re-run is never the fast way to learn anything §1 can
+tell you in seconds. The generic rules allow one re-run per failure; here the
+rule is tighter:
 
 - **A re-run is allowed only when the job died before any test body ran** —
   checkout, install, or the runner itself lost — and at most once. Everything
   else reproduces locally per §1, so a re-run tells you nothing a local run
   would not, and costs six minutes to say it.
-- **Jobs completing in about three seconds with `runner_id: 0` and no logs are
-  not a flake.** That is the signature of the minutes being exhausted, and it
-  is written down in the workflow header precisely so nobody re-runs it. A
-  re-run does nothing; say what it is in one comment on the PR, and stop. The
-  fix is a person's, outside the repository. Tell it apart from a real run by
-  the per-job durations, not by the suite finishing fast: the four jobs run in
-  parallel and a healthy run is over in under two minutes of wall clock. PR
-  #482's run is the reference — `docs` 21 s, `test (shard 1)` 37 s, `build`
-  49 s, `test (shard 2)` 72 s, every job with a runner and a log, and the
-  suite complete 80 s after it started. Green with those durations is green;
-  green at three seconds a job is nothing having run at all, and a red at three
-  seconds is the same nothing.
 - **Batch fixes into one push.** The workflow cancels a branch's in-progress
   run when a new push starts one, but the minutes already spent stay billed.
   Three speculative pushes start three runs; one validated push starts one.
   Run §1's gates on the whole change before pushing, not after.
+
+### The 2026-08-25 minutes exhaustion is over — do not diagnose it again
+
+This account ran out of Actions minutes once, on 2026-08-25, when the workflow
+still fired a `push` run and a `pull_request` run for every commit. That is
+history. The minutes were restored, the double-run was removed in the same
+fix, and CI has run normally since: every run in the days before this was
+written completed with all four jobs logged, in about two minutes of wall
+clock. Treat a red check here as this PR's failure, not as an account problem,
+and never tell a reviewer the minutes are out without the evidence below.
+
+The signature is written down only so it stays recognisable if it ever
+recurs: **jobs completing in about three seconds with `runner_id: 0` and no
+logs at all**. That is not a flake and not a re-run candidate. Tell it apart
+from a real run by the per-job durations rather than by the suite finishing
+fast — the four jobs run in parallel, so a healthy run is over quickly too.
+PR #482's run is the reference for healthy: `docs` 21 s, `test (shard 1)`
+37 s, `build` 49 s, `test (shard 2)` 72 s, every job with a runner and a log,
+the suite complete 80 s after it started. Green with those durations is green;
+green at three seconds a job is nothing having run at all. If you ever see the
+three-second shape again, say so in one comment on the PR with the job
+durations and `runner_id` quoted, and stop — the fix is a person's, outside
+the repository.
 
 ## 3. Merge conflicts on `claude/` branches: merge `main` in, never rebase
 
@@ -195,5 +205,5 @@ Everything else is this PR's to root-cause, and §1 is where that starts.
   needs
 - `CLAUDE.md` — build order, the two clocks, where constants live, CI layout
 - `CONTRIBUTING.md` — branch and commit conventions, the gate list
-- `.github/workflows/ci.yml` — the jobs, the shard split, and the incident
-  that makes minutes a budget
+- `.github/workflows/ci.yml` — the jobs, the shard split, and the header note
+  recording the 2026-08-25 incident and its fix

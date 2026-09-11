@@ -329,6 +329,17 @@ PRs focused and reference the issue they close (`Fixes #30`). The PR template is
 exists; issue templates are in `.github/ISSUE_TEMPLATE/`. Anything visual must clear the
 gates in `docs/graphics-standards.md`, screenshot included.
 
+### Push in instalments, and open the PR before the session ends
+
+A session — interactive or unattended — can hit a context or session limit part
+way through a long change, and the container goes with it. Commit and push at
+every self-contained step rather than once at the end, and open the pull request
+as soon as the branch carries an increment that stands on its own and passes the
+gates above, not when the whole issue is finished. Keep working on the same
+branch afterwards; the pull request follows it. If the work stops half done, say
+in the PR body what is done and what is left, so the next session picks up a
+branch instead of re-deriving one.
+
 ### Claim the issue before you touch a file
 
 Assign the issue to the repository owner (`get_me` gives the login) **before** the first
