@@ -15,7 +15,12 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
+import { readFileSync } from 'node:fs';
+
 import {
+  Biome,
+  DRIFT,
+  ECONOMY_ACCOUNTS,
   EchoMarkKind,
   Faction,
   HarvestThrottle,
@@ -27,11 +32,11 @@ import {
 } from '@echoes/shared';
 import { hasComponent } from 'bitecs';
 import { Match } from '../src/sim/match.ts';
-import { Owner, Structure, Unit } from '../src/sim/components.ts';
-import type { SimWorld } from '../src/sim/world.ts';
+import { Fauna, Owner, Structure, Unit } from '../src/sim/components.ts';
+import { economyFor, type SimWorld } from '../src/sim/world.ts';
 import { Rng } from '../src/sim/rng.ts';
 import { hashWorld } from '../src/sim/stateHash.ts';
-import { playReplay, type Replay } from '../src/sim/replay.ts';
+import { REPLAY_COMMAND_TYPES, playReplay, type Replay } from '../src/sim/replay.ts';
 
 const SEED = 0x5eed;
 
@@ -429,5 +434,404 @@ describe('a recorded torpedo launch replays', () => {
       liveHash,
       'and the replayed world must end up identical — a refused launch shows up here'
     );
+  });
+});
+
+/**
+ * What the fingerprint actually covers — #620.
+ *
+ * `hashWorld` is the whole evidence for the determinism claim above, and the
+ * tests before this block never asked it what it covered. They asked whether
+ * two runs agreed, which a hash of nothing at all answers perfectly. That gap
+ * was not theoretical: the economy block could be replaced with a no-op and
+ * this file stayed green, while Biomass, every hazard timer, the whole Drift
+ * Health grid and all of fauna behaviour were outside the hash entirely.
+ *
+ * So these are residue tests, shaped like the acoustic-residue case above:
+ * perturb one thing, assert the hash moves. Each one is the failure a deleted
+ * or forgotten block produces, which is the only property that generalises —
+ * a hash is evidence exactly to the extent that no-oping part of it breaks a
+ * test.
+ */
+describe('the fingerprint covers what it certifies', () => {
+  /**
+   * Perturb, hash, restore — and report whether the hash noticed.
+   *
+   * Restoring matters because these run against one match: a mutation left
+   * behind would be carried into the next assertion, where a hash that moved
+   * for the *previous* reason reads as a pass.
+   */
+  function moved(match: Match, mutate: () => void, restore: () => void): boolean {
+    const before = hashWorld(match.world);
+    mutate();
+    const after = hashWorld(match.world);
+    restore();
+    assert.equal(hashWorld(match.world), before, 'the probe must leave the world as it found it');
+    return after !== before;
+  }
+
+  it('follows every banked account, by iterating them rather than naming them', () => {
+    // Written over ECONOMY_ACCOUNTS on purpose. Naming the accounts here would
+    // reproduce the bug in the test: `crystal` and `nodules` were hashed and
+    // `biomass` was not, and a test that listed the two hashed ones would have
+    // agreed with the hash about which accounts exist. A fourth account added
+    // to `Stockpile` is covered by this assertion the day it is added.
+    const match = twoPlayers(new Match(undefined, { fauna: false, seed: SEED }));
+    assert.ok(ECONOMY_ACCOUNTS.length >= 3, 'the roster banks at least the documented three');
+
+    for (const account of ECONOMY_ACCOUNTS) {
+      const economy = economyFor(match.world, 0);
+      const held = economy[account];
+      assert.ok(
+        moved(
+          match,
+          () => {
+            economy[account] = held + 100;
+          },
+          () => {
+            economy[account] = held;
+          }
+        ),
+        `a slot quietly richer in ${account} must not hash as one that is not`
+      );
+    }
+  });
+
+  it('follows every mutable field of a hazard, not the site it sits on', () => {
+    // The seven that move. A hazard's site comes from the map and never
+    // changes; its phase and its timers are the match's, and `crop` and
+    // `sownRemaining` in particular are what the sow command writes — the
+    // thing REPLAY_FORMAT_VERSION 24 was bumped for and the checker could not
+    // see. Listed by key so a new mutable field arriving with a new hazard
+    // kind fails the length assertion rather than slipping past unhashed.
+    const match = twoPlayers(new Match(undefined, { fauna: false, seed: SEED }));
+    const hazard = match.world.hazards[0];
+    assert.ok(hazard !== undefined, 'the default map has to author a hazard at all');
+
+    const mutable = [
+      'phase',
+      'elapsedS',
+      'suppressedS',
+      'burnedS',
+      'crop',
+      'sownRemaining',
+      'stabilisedS',
+    ] as const;
+    assert.equal(mutable.length, 7, 'seven fields of a Hazard are simulation state');
+
+    for (const field of mutable) {
+      const held = hazard[field];
+      assert.ok(
+        moved(
+          match,
+          () => {
+            hazard[field] = held + 7;
+          },
+          () => {
+            hazard[field] = held;
+          }
+        ),
+        `a bed whose ${field} differs is not the same bed`
+      );
+    }
+  });
+
+  it('follows every region of the Drift Health grid', () => {
+    // Sixteen cells, and the hash must read all sixteen rather than the first
+    // or the ones a kill happened to touch. These are the same values
+    // `MatchRoom.driftResult()` carries into the campaign record, where they
+    // seed the next mission on this map — so a divergence here outlives the
+    // match it happened in, which no other state in the fingerprint does.
+    const match = twoPlayers(new Match(undefined, { fauna: false, seed: SEED }));
+    const grid = match.world.drift.snapshot();
+    assert.equal(
+      grid.length,
+      DRIFT.HEALTH_REGIONS * DRIFT.HEALTH_REGIONS,
+      'the carried grid is the region grid, squared'
+    );
+
+    const widthM = match.map.widthM;
+    const heightM = match.map.heightM;
+    for (let index = 0; index < grid.length; index++) {
+      const col = index % DRIFT.HEALTH_REGIONS;
+      const row = Math.floor(index / DRIFT.HEALTH_REGIONS);
+      // The centre of the region, so `index()`'s clamping cannot land the
+      // probe in a neighbour and make a covered cell look covered twice.
+      const x = ((col + 0.5) / DRIFT.HEALTH_REGIONS) * widthM;
+      const y = ((row + 0.5) / DRIFT.HEALTH_REGIONS) * heightM;
+
+      const before = hashWorld(match.world);
+      match.world.drift.recordKill(x, y);
+      assert.notEqual(
+        hashWorld(match.world),
+        before,
+        `region ${index} was worn down and the hash did not notice`
+      );
+    }
+  });
+
+  it('follows what a creature is doing, not only that one is there', () => {
+    // Position, Health and Acoustic already said a creature was here and how
+    // loud it was. Nothing said whether it was grazing or committed, what it
+    // was answering, or who is owed its Biomass — and the Drift is the sim's
+    // only source of dice, so a divergence confined to fauna behaviour was
+    // both the likeliest to exist and the certain one to report a clean replay.
+    const match = twoPlayers(new Match(undefined, { seed: SEED }));
+    matchWorld = match.world;
+    for (let i = 0; i < 120; i++) match.stepOnce();
+
+    let creature = 0;
+    for (let eid = 0; eid <= match.world.maxEid; eid++) {
+      if (hasComponent(match.world, Fauna, eid)) {
+        creature = eid;
+        break;
+      }
+    }
+    assert.notEqual(creature, 0, 'a populated Drift has to hold a creature');
+
+    const fields = ['stage', 'interestS', 'quietS', 'interestedS', 'coolingS'] as const;
+    for (const field of fields) {
+      const held = Fauna[field][creature]!;
+      assert.ok(
+        moved(
+          match,
+          () => {
+            Fauna[field][creature] = held + 3;
+          },
+          () => {
+            Fauna[field][creature] = held;
+          }
+        ),
+        `a creature whose ${field} differs is doing something else`
+      );
+    }
+
+    // The two that decide where Biomass goes and what the creature answers.
+    const owed = Fauna.renderedBySlot[creature]!;
+    assert.ok(
+      moved(
+        match,
+        () => {
+          Fauna.renderedBySlot[creature] = owed === 1 ? 0 : 1;
+        },
+        () => {
+          Fauna.renderedBySlot[creature] = owed;
+        }
+      ),
+      'a creature owed to the other commander pays the other commander'
+    );
+
+    const target = Fauna.targetEid[creature]!;
+    const other = firstUnit(match, 0);
+    assert.notEqual(other, 0, 'need a hull for the creature to be answering');
+    assert.ok(
+      moved(
+        match,
+        () => {
+          Fauna.targetEid[creature] = target === other ? 0 : other;
+        },
+        () => {
+          Fauna.targetEid[creature] = target;
+        }
+      ),
+      'a creature answering a different hull swims somewhere else'
+    );
+  });
+
+  it('follows the tick and the root stream position', () => {
+    // Both were unfalsifiable: no-op either and every test in this file still
+    // passed, because the assertions above compare two runs that agree about
+    // the tick by construction. A checkpoint is a promise about a *tick*, so a
+    // hash that ignores which tick it was taken at cannot keep it.
+    const match = twoPlayers(new Match(undefined, { fauna: false, seed: SEED }));
+
+    const tick = match.world.tick;
+    assert.ok(
+      moved(
+        match,
+        () => {
+          match.world.tick = tick + 1;
+        },
+        () => {
+          match.world.tick = tick;
+        }
+      ),
+      'two worlds at different ticks are not the same world'
+    );
+
+    // The root, beside the fork case above. A draw nobody has consumed yet is
+    // still a divergence: the next system to ask for a number gets a different
+    // one, and the tick that exposes it is minutes away.
+    const before = hashWorld(match.world);
+    const mark = match.world.rng.snapshot();
+    match.world.rng.next();
+    assert.notEqual(hashWorld(match.world), before, 'the hash ignored the root stream advancing');
+    match.world.rng.restore(mark);
+    assert.equal(hashWorld(match.world), before, 'and the probe put it back');
+  });
+
+  it('follows ground a mission wrote mid-match', () => {
+    // The digest is kept by the terrain as it writes, so this probe has to be
+    // a real write rather than a poked field — which is the honest test
+    // anyway, since what must agree is *what a beat wrote*, not a number.
+    const match = twoPlayers(new Match(undefined, { fauna: false, seed: SEED }));
+    const before = hashWorld(match.world);
+    const revision = match.world.terrain.revision;
+
+    match.world.terrain.fillGround(1000, 1000, 400, 400, { biome: Biome.AbyssalTrench });
+    assert.ok(match.world.terrain.revision > revision, 'the write has to have changed a cell');
+    assert.notEqual(
+      hashWorld(match.world),
+      before,
+      'a match whose ground came down on a different tick is a different match'
+    );
+  });
+
+  it('follows the production line and the rally point it walks off to', () => {
+    // Both blocks were unfalsifiable for the same reason as the economies:
+    // nothing perturbed them. Same hulls on the map and different things
+    // coming off the line is a divergence that surfaces minutes later as an
+    // army that should not exist.
+    const match = twoPlayers(new Match(undefined, { fauna: false, seed: SEED }));
+    matchWorld = match.world;
+    const foundry = firstFoundry(match, 0);
+    assert.notEqual(foundry, 0, 'slot 0 opens with a Foundry');
+
+    // Paid for outright: what is under test is the queue, not whether the
+    // opening economy can afford a hull sixty ticks in.
+    const economy = economyFor(match.world, 0);
+    for (const account of ECONOMY_ACCOUNTS) economy[account] = 100_000;
+    match.produce(0, foundry, UnitKind.Corvette);
+    const line = match.world.production.get(foundry);
+    assert.ok(line !== undefined, 'the order has to have opened a line');
+
+    const remaining = line.remainingS;
+    assert.ok(
+      moved(
+        match,
+        () => {
+          line.remainingS = remaining + 5;
+        },
+        () => {
+          line.remainingS = remaining;
+        }
+      ),
+      'two yards at different points in the same build are not the same yard'
+    );
+
+    match.setRally(0, foundry, 2500, 2500);
+    const rally = match.world.rallies.get(foundry);
+    assert.ok(rally !== undefined, 'the rally point was set');
+    const x = rally.x;
+    assert.ok(
+      moved(
+        match,
+        () => {
+          rally.x = x + 100;
+        },
+        () => {
+          rally.x = x;
+        }
+      ),
+      'hulls walking off to a different place are an army in a different place'
+    );
+  });
+});
+
+describe('every mutating entry point is in the replay stream', () => {
+  it('records a command for every member of the command union', () => {
+    // Reads the source, deliberately, and the alternative is what this test is
+    // about. `ReplayCommand` and `applyCommand` are now held together at
+    // compile time — the `Exact<>` check beside REPLAY_COMMAND_TYPES and the
+    // `never` at the foot of the dispatcher — so a command declared and not
+    // dispatched is a build error. The third leg is the one types cannot
+    // reach: that something on `Match` actually *records* it. `resign` failed
+    // exactly there for the life of the replay system, declared nowhere and
+    // recorded nowhere while the room called it on every walk-out.
+    //
+    // A round-trip of all twenty-eight in one recorded match would be the
+    // stronger form and is not what this is: half of them need a particular
+    // navy's hull to exist first. This holds the property the next command
+    // needs held — that it cannot be added on one side only.
+    const source = readFileSync(new URL('../src/sim/match.ts', import.meta.url), 'utf8');
+
+    const missing = REPLAY_COMMAND_TYPES.filter((type) => !source.includes(`type: '${type}'`));
+    assert.deepEqual(missing, [], 'these command types are declared but never recorded');
+
+    const recorded = [...source.matchAll(/recordCommand\(\{[^}]*type: '(\w+)'/g)].map((m) => m[1]);
+    const unknown = recorded.filter(
+      (type) => !(REPLAY_COMMAND_TYPES as readonly string[]).includes(type!)
+    );
+    assert.deepEqual(
+      unknown,
+      [],
+      'these commands are recorded under a type the union has no case for'
+    );
+  });
+
+  it('replays a match that was resigned', () => {
+    // The trap, reproduced and then closed. The room resigns a slot on every
+    // consented walk-out and every out-of-grace disconnect, and the balance
+    // harness resigns too — so before this, the majority of real matches would
+    // have replayed as `divergedAtTick`, a determinism-failure report whose
+    // real fault was an unrecorded command.
+    const live = twoPlayers(new Match(undefined, { fauna: false, seed: SEED, record: true }));
+    runScripted(live, 400);
+    live.resign(1);
+    for (let i = 0; i < 200; i++) live.stepOnce();
+
+    const hash = hashWorld(live.world);
+    const replay = live.replay()!;
+    assert.ok(
+      replay.commands.some((c) => c.type === 'resign' && c.slot === 1),
+      'the resignation was recorded'
+    );
+
+    const played = playReplay(replay);
+    assert.equal(played.divergedAtTick, null, 'no checkpoint disagreed');
+    assert.equal(played.finalHash, hash, 'and the replayed world ends where the live one did');
+  });
+});
+
+describe('the stochastic half of the simulation is certified, not skipped', () => {
+  // Every Match in this file before these two passes `fauna: false`, and so do
+  // carrying.test.ts, pathfinding.test.ts and missionRuntime.test.ts. No
+  // same-seed assertion and no replay assertion in the repository has ever run
+  // with the Drift populated — which is to say the sim's only source of dice
+  // was outside the only tests that could catch it drifting. Both cases pass
+  // today; the point is that they are now asserted rather than assumed.
+  //
+  // Run past DRIFT.RESPAWN_INTERVAL_S so repopulation actually draws: the
+  // Drift replaces its losses on that interval, and a run that stops short of
+  // it certifies the seeding and nothing else.
+  const TICKS = Math.ceil(DRIFT.RESPAWN_INTERVAL_S * 1.5) * SIM.TICK_HZ;
+
+  it('runs the same populated match twice from one seed', () => {
+    const first = twoPlayers(new Match(undefined, { seed: SEED }));
+    const second = twoPlayers(new Match(undefined, { seed: SEED }));
+
+    for (let i = 0; i < TICKS; i++) first.stepOnce();
+    for (let i = 0; i < TICKS; i++) second.stepOnce();
+
+    assert.ok(
+      first.world.rng.streams.has('drift'),
+      'the Drift has to have been populated for this to be worth asserting'
+    );
+    assert.equal(
+      hashWorld(first.world),
+      hashWorld(second.world),
+      'one seed must produce one Drift'
+    );
+  });
+
+  it('replays a populated match past the respawn interval', () => {
+    const live = twoPlayers(new Match(undefined, { seed: SEED, record: true }));
+    runScripted(live, TICKS);
+
+    const hash = hashWorld(live.world);
+    const played = playReplay(live.replay()!);
+
+    assert.equal(played.divergedAtTick, null, 'no checkpoint disagreed');
+    assert.equal(played.finalHash, hash, 'and a match with the Drift running still reproduces');
   });
 });
