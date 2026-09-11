@@ -136,6 +136,14 @@ tools/hull-maps    The committed outputs of the approved models: build.mjs bakes
                    kind's plan outline into packages/frontend/src/game/
                    hullOutlines.generated.ts (no browser). models.mjs is the one
                    table both read.
+tools/hull-renders The same models photographed rather than measured:
+                   render.mjs drives Chromium/three.js to write one beauty
+                   frame per hull into docs/concept-art/renders/, in the
+                   water its navy lives in, under the neon-noir rig.
+                   shots.mjs is the table of which hull in whose biome. Not
+                   an npm workspace and not a gate — a portrait is a
+                   presentation artifact, and a model is still approved by
+                   hull-intake and check.mjs, which measure.
 tools/echo-sim     Standalone CommonJS harness for deterministic Echo scenarios.
                    Not an npm workspace; run it directly:
                    node tools/echo-sim/sim.js [tools/echo-sim/scenarios/<name>.json]

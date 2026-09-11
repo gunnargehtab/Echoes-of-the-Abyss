@@ -141,6 +141,37 @@ Five survey plates establish the visual language: **the discipline of measuring 
 | [VI — Build Menu UI](concept-art/plate-06-build-menu-ui.jpg) | Neon-noir command panel mock: glass cards, magenta bevels, cyan headers |
 | [VII — The Pelagion Rift](concept-art/plate-07-rift-chart.png) | Survey chart of the whole Rift: the Lid, the named places, the Mouth ([world-map.md](world-map.md)). SVG source alongside |
 
+## Hull portraits — the roster photographed
+
+The plates above are *drawn*. These are **rendered**: each approved hull model
+photographed in the water its navy lives in, by
+`node tools/hull-renders/render.mjs`, which writes into
+[concept-art/renders/](concept-art/renders). One hull, a three-quarter hero
+angle, a displaced seabed, the biome's own environment props, and the rig this
+doc's [Lighting](#lighting) section and
+[style-neon-noir.md](style-neon-noir.md) describe — key, faction rim, fill, one
+bloom over the lamps.
+
+Everything about a portrait is transcribed rather than invented. The dressing
+is each navy's biome and licensed world light; the accent is its neon signal;
+the lamps burn at the hull's own idle SIG through the same
+loudness-encodes-glow law the sprite maps bake with, so a Cruiser at SIG 55
+visibly outshines a Chorister at 16. What the renderer adds is the seabed and
+the water, because a portrait needs a floor and a volume and neither is in the
+model.
+
+| Navy | Water | What the frame carries |
+| --- | --- | --- |
+| [Bathyarch Consortium](concept-art/renders/cruiser-bathyarch.png) | Thermal Vein | Sodium work-lamps over basalt, ember at a vent mouth |
+| [Pelagia Commune](concept-art/renders/abyssal-submersible-pelagia.png) | Kelp Forest | Biolight seams in forty-metre kelp |
+| [Abyssal Directorate](concept-art/renders/cruiser-directorate.png) | Abyssal Trench | Rows of crimson points, and no world light at all |
+| [Hadron Knights](concept-art/renders/cruiser-hadron.png) | Resonance Field | Razor-thin violet on blade hulls, lit crystal underfoot |
+
+These are presentation artifacts, not evidence. A model is approved by the
+hull-intake bake and by `tools/hull-models/check.mjs`, both of which measure;
+a portrait flatters, which is its job and its disqualification. Nothing in
+[graphics-standards.md](graphics-standards.md) is settled by one.
+
 ## Unit Art Direction
 
 3D concept models of the roster are generated from the prompt kit in
