@@ -192,9 +192,9 @@ labelled `epic`, `needs-hardware`, `needs-decision`, `routine-log` or
   about the work, so it is a person's, like `needs-hardware`. Note in your run
   summary if the backlog is mostly `fable-5.1`, because that is a fact about the
   loop's remaining supply of work rather than about any one issue: #540 carries
-  the label across every model still to be built — the eleven modelled hulls
-  Phase 3 has left, the structure kinds beside them, and all nineteen of Phase
-  4's unmodelled hulls — so they are a Fable-routed session's, never a firing's.
+  the label across every model still to be built — the structure kinds Phase 3
+  has left, and all nineteen of Phase 4's unmodelled hulls — so they are a
+  Fable-routed session's, never a firing's.
 - Anything already claimed is someone else's — including an earlier you.
 - **An issue with an assignee is taken, whoever took it.** A person who
   assigned themselves is on it, and so is an earlier firing of this loop, which

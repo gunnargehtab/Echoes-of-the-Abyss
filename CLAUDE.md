@@ -84,7 +84,11 @@ tools/hull-models  Model GLBs authored as three.js scenes: kit.mjs
                    what a port changed about a shape — by reading the pre-port
                    binary out of git history, since after a port the committed
                    file is the script's own output and the check is comparing it
-                   against itself.
+                   against itself. parts.mjs reads a file the way a script is
+                   written — each node's transform, which primitive its buffer
+                   is, which nodes share one — and is what a port transcribes
+                   from. Port is -z: the bow is on +X and Y is up, so +z is
+                   starboard (kit.mjs `bothSides`, #642).
 tools/hull-maps    The committed outputs of the approved models: build.mjs bakes
                    the sprite maps (Chromium), outlines.mjs writes each modelled
                    kind's plan outline into packages/frontend/src/game/
