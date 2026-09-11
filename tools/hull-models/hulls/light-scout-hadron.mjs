@@ -152,16 +152,19 @@ hadron.prism(root, shadow, {
 
 // The drive: a crystal prism tapering astern, turned an eighth so it reads
 // as a square nozzle, in a square alloy collar; and the keel blade under the
-// spine. The export's node carries the prism with a reflection in it (a
-// scale of -1 beside a three-eighths turn); a four-sided prism is its own
-// mirror image and its own quarter turn, so the vertices are those of this
-// plain half-turn and eighth-turn, which is what is written.
+// spine. The export's node carries the prism with a reflection in it — a
+// scale of -1 beside the eighth turn — and the reflection is written as the
+// export has it. A four-sided prism has the same vertices under a rotation,
+// but not the same triangles: the rotation cuts the four side quads along the
+// other diagonal and winds them the other way, which moves the normal map on
+// every facet (#588 review, F1). `drawn` carries a mirrored scale as
+// `tail_fluke_lower` on the Commune's scout already does.
 hadron.prism(root, crystal, {
   name: 'drive_prism',
   fore: 0.14,
   aft: 0.42,
   length: 2.2,
-  ...drawn([0, 2.6, -12.8], [Math.PI, 0, Math.PI / 4]),
+  ...drawn([0, 2.6, -12.8], [0, 0, Math.PI / 4], [1, 1, -1]),
 });
 bar('drive_collar', alloy, [1.1, 1.1, 0.6], [0, 2.6, -11.7]);
 bar('keel_blade', alloy, [0.16, 0.6, 9], [0, 2.05, -2]);

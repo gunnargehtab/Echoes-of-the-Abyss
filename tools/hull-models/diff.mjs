@@ -63,6 +63,19 @@
  *   what the bake will actually do with a given file is decided by its own
  *   strict `raw.z > raw.x`, and hull-intake's `rotatedZtoX` in `meta.json`
  *   is the only authority on that.
+ * - **Compare the triangles themselves, and their winding.** Two files can
+ *   agree in every vertex, every area and every centroid and still cut a
+ *   quad along the other diagonal — the Order scout's `drive_prism`, written
+ *   as a rotation where the export carries a reflection (#588 review), which
+ *   moves nothing a bounds, area or centroid check reads and moves the
+ *   normal map on every smooth-shaded facet it re-cuts. Each part's triangle
+ *   multiset is compared after the scale and shift, and a triangle that
+ *   survives with its vertices in the opposite cyclic order is counted as
+ *   reversed. A re-cut of a flat cap is harmless (an extrusion's earcut is
+ *   not stable across builds); a re-cut of a smooth-shaded face is not, and
+ *   a reversed winding is a reflection swapped for a rotation. Both are
+ *   reported as their own lines, for the reader to judge, rather than as
+ *   moved parts.
  * - **Compare the surface centroid too.** A cone built the wrong way round
  *   has the bounds, the triangle count *and* the area of the right one; only
  *   where its surface sits inside that box changes. The Dredge's telson and
@@ -136,6 +149,84 @@ function surface(part) {
     for (let d = 0; d < 3; d++) c[d] += (tri * (a[t + d] + a[t + 3 + d] + a[t + 6 + d])) / 3;
   }
   return { area: sum, centroid: sum > 0 ? c.map((v) => v / sum) : c };
+}
+
+/**
+ * How `after`'s triangles differ from `before`'s once the root scale and
+ * shift are divided out: triangles whose vertex set exists in neither file
+ * (`recut`) and triangles whose vertex set survives with the opposite cyclic
+ * order (`reversed`). Vertices are matched to their nearest counterpart
+ * within 5 mm through a 1 cm spatial hash, not by rounding — a part
+ * reproduced to a tenth of a millimetre must not read as re-cut because one
+ * vertex sat on a grid line.
+ */
+function triangleDiff(p, q, scale, shift) {
+  const TOL = 0.005;
+  const CELL = 0.01;
+  const cellKey = (x, y, z) =>
+    `${Math.floor(x / CELL)},${Math.floor(y / CELL)},${Math.floor(z / CELL)}`;
+  // Unique vertices of the before part, after the scale and shift, in a hash.
+  const verts = [];
+  const grid = new Map();
+  const a = p.positions;
+  for (let i = 0; i < a.length; i += 3) {
+    const v = [a[i] * scale[0] + shift[0], a[i + 1] * scale[1] + shift[1], a[i + 2] * scale[2] + shift[2]];
+    const id = nearest(v);
+    if (id !== -1) continue;
+    const n = verts.push(v) - 1;
+    const k = cellKey(...v);
+    if (!grid.has(k)) grid.set(k, []);
+    grid.get(k).push(n);
+  }
+  function nearest([x, y, z]) {
+    let best = -1;
+    let bestD = TOL;
+    const cx = Math.floor(x / CELL), cy = Math.floor(y / CELL), cz = Math.floor(z / CELL);
+    for (let dx = -1; dx <= 1; dx++)
+      for (let dy = -1; dy <= 1; dy++)
+        for (let dz = -1; dz <= 1; dz++) {
+          const bucket = grid.get(`${cx + dx},${cy + dy},${cz + dz}`);
+          if (!bucket) continue;
+          for (const id of bucket) {
+            const w = verts[id];
+            const d = Math.hypot(w[0] - x, w[1] - y, w[2] - z);
+            if (d < bestD) {
+              bestD = d;
+              best = id;
+            }
+          }
+        }
+    return best;
+  }
+  const tri = (ids) => {
+    const sorted = [...ids].sort((u, v) => u - v);
+    const [v0, v1] = ids;
+    // The parity of the cyclic order relative to the sorted order tells the winding.
+    const even = v0 === sorted[0] ? v1 === sorted[1] : v0 === sorted[1] ? v1 === sorted[2] : v1 === sorted[0];
+    return { set: sorted.join('|'), even };
+  };
+  const beforeTris = new Map();
+  for (let i = 0; i < a.length; i += 9) {
+    const ids = [0, 1, 2].map((k) =>
+      nearest([a[i + 3 * k] * scale[0] + shift[0], a[i + 3 * k + 1] * scale[1] + shift[1], a[i + 3 * k + 2] * scale[2] + shift[2]])
+    );
+    const t = tri(ids);
+    beforeTris.set(t.set, t.even);
+  }
+  let recut = 0;
+  let reversed = 0;
+  const b = q.positions;
+  for (let i = 0; i < b.length; i += 9) {
+    const ids = [0, 1, 2].map((k) => nearest([b[i + 3 * k], b[i + 3 * k + 1], b[i + 3 * k + 2]]));
+    if (ids.includes(-1)) {
+      recut++;
+      continue;
+    }
+    const t = tri(ids);
+    if (!beforeTris.has(t.set)) recut++;
+    else if (beforeTris.get(t.set) !== t.even) reversed++;
+  }
+  return { recut, reversed, total: b.length / 9 };
 }
 
 /** Extents and centre of a part or a whole model, in the file's own units. */
@@ -351,6 +442,8 @@ function report(beforePath, afterPath, label) {
   // What survives the root scale is shape. Reported in metres of the *after*
   // file, because that is the hull the reviewer is looking at.
   const moved = [];
+  const recut = [];
+  const reversed = [];
   for (const p of before) {
     const q = afterByName.get(p.key);
     if (!q) continue;
@@ -377,10 +470,27 @@ function report(beforePath, afterPath, label) {
       ...[0, 1, 2].map((i) => Math.abs(sb.centroid[i] - shift[i] - sa.centroid[i] * scale[i]))
     );
     if (cd > 0.005 && cd > d + 0.005) note.push(`centroid ${cd.toFixed(3)} m`);
+    // Only a part that has not moved is worth reading at the triangle: a moved
+    // part's triangles are all elsewhere, and the move is the finding.
+    if (p.tris === q.tris && d <= 0.005 && cd <= 0.005) {
+      const t = triangleDiff(p, q, scale, shift);
+      if (t.recut) recut.push(`${p.key} ${t.recut}/${t.total}`);
+      if (t.reversed) reversed.push(`${p.key} ${t.reversed}/${t.total}`);
+    }
     if (d > 0.005 || note.length) moved.push({ name: p.key, d: Math.max(d, cd), note: note.join(', ') });
   }
   moved.sort((x, y) => y.d - x.d);
 
+  if (recut.length)
+    console.log(
+      `  re-cut  ${recut.length} part${recut.length > 1 ? 's' : ''} triangulated differently at the same vertices` +
+        ` (harmless on a flat cap, a normal-map change on a smooth face):\n    ${recut.join('  ')}`
+    );
+  if (reversed.length)
+    console.log(
+      `  winding ${reversed.length} part${reversed.length > 1 ? 's' : ''} with triangles in the opposite order` +
+        ` — a reflection swapped for a rotation, or the reverse:\n    ${reversed.join('  ')}`
+    );
   if (!moved.length) {
     console.log('  shape   unchanged beyond the root scale and shift — every part is where it was');
     return;
