@@ -374,7 +374,11 @@ place where a match is not.
 
 Contacts are sonified (§3): a voice per contact, panned with the authority its tier earned,
 filtered by the biome it arrived through (§9), and carrying the faction's drive signature
-from Tier 3 up (§8).
+from Tier 3 up (§8). A contact that carries **no** faction — a creature, a piece of ordnance
+— carries no drive signature either: a tonal voice with no events, clear of every navy
+fundamental, which is §7's "unmistakably not a fleet" in the only form the mix can state
+without claiming something the server never sent. What a non-navy contact should sound like
+*in its own right* is unwritten, and §8's table cannot hold it — that table is about navies.
 
 The player's own loudness is implemented too — §4's four bands with their world-bus
 attenuation, Silent Running's inversion, §5's three active-sonar events, the break-silence

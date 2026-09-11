@@ -225,8 +225,16 @@ export class ContactVoice {
       const wander = 1 + (Math.sin(now * 3.7) * timbre.jitter) / 2;
       period = (1 / timbre.rateHz) * wander;
     } else if (inputs.tier >= ResolutionTier.Classification) {
-      // A drone has no events; keep it sounding without re-triggering.
-      period = 1.5;
+      // An eventless mechanism has no pulse at all, so emit nothing and just
+      // push the next check forward — the bump below is a *re-trigger*, and
+      // "keep it sounding without re-triggering" is what this branch always
+      // meant to say. Scheduling one here gave the Knights' drone, and every
+      // no-faction contact with it, a 1.5000 s period with zero variation,
+      // which is the beat docs/audio-direction.md §8 reserves to the
+      // Consortium. The oscillator is already running at its own level; an
+      // eventless voice stays audible without any amplitude event.
+      this.nextPulseAt = now + 1.5 * stretch;
+      return;
     } else {
       // 1.2-2.5 s, wandering. Deterministic in shape but not periodic.
       period = 1.85 + Math.sin(now * 1.3) * 0.65;
