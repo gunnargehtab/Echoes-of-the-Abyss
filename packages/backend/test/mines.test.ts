@@ -42,6 +42,7 @@ import {
   Position,
   Structure,
   Unit,
+  Weapon,
 } from '../src/sim/components.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 
@@ -702,7 +703,15 @@ describe('mines', () => {
       diedFromPrey: number;
     }
 
-    function chase(astern: number, preyKind: UnitKind): Chase {
+    /**
+     * `ordered` puts a standing attack order on the hull making the drop
+     * (#617). The quarry it names is an unarmed hull 5 km further along the
+     * course the prey is already running, so the order changes what the prey's
+     * *gun* is doing and nothing about where it goes — which is the point: a
+     * mine is the detection formula pointed backwards and the dropper's order
+     * is not one of its terms.
+     */
+    function chase(astern: number, preyKind: UnitKind, ordered = false): Chase {
       const match = openWaterMatch();
       // One depth for both, spelled out: a hull spawns at the depth its
       // pressure rating picks, and a torpedo follows its target down at
@@ -731,6 +740,20 @@ describe('mines', () => {
       advance(match, 0.4);
 
       match.orderMove(1, prey, 11000, 6000);
+      if (ordered) {
+        const quarry = spawnUnit(match.world, {
+          kind: UnitKind.Harvester,
+          slot: 0,
+          faction: Faction.Bathyarch,
+          x: 11000,
+          y: 6000,
+          depth: 400,
+        });
+        // Written to the field rather than ordered through `Match`, which wants
+        // a contact handle the prey has not been given: what is under test is
+        // the state `combatSystem` reads, not the path that sets it.
+        Weapon.orderedTargetEid[prey] = quarry;
+      }
       const mine = match.layMine(1, prey);
       assert.notEqual(mine, 0, 'the drop should be accepted');
       const torpedo = launchTorpedo(match.world, launcher, Position.x[prey]!, Position.y[prey]!);
@@ -764,6 +787,24 @@ describe('mines', () => {
       assert.ok(
         diedFromPrey > ORDNANCE.POINT_DEFENCE.RANGE_M,
         `and taken it well astern of the hull, not at its gun: ${diedFromPrey.toFixed(0)} m`
+      );
+      assert.equal(preyHp, statsFor(UnitKind.Corvette).maxHp, 'the hull that dropped it is whole');
+    });
+
+    it('works the same while the hull that drops it is under an attack order', () => {
+      // The mine arm of #617's both-arms rule, against the 900 m case above.
+      // A mine astern is a bomb on a timer and a listener: neither reads the
+      // dropper's orders, so the outcome is the outcome, and asserting that is
+      // worth more here than it looks — one countermeasure over, in the same
+      // §5, the order decides everything. It is also the reason this arm uses
+      // the 900 m case and not the 300 m one: inside 250 m the Corvette's point
+      // defence would be the thing the order changed, and this test is about
+      // the mine.
+      const { preyHp, mineSpent, diedFromPrey } = chase(900, UnitKind.Corvette, true);
+      assert.ok(mineSpent, 'the mine should still have gone off on the torpedo');
+      assert.ok(
+        diedFromPrey > ORDNANCE.POINT_DEFENCE.RANGE_M,
+        `and still well astern of the hull rather than at its gun: ${diedFromPrey.toFixed(0)} m`
       );
       assert.equal(preyHp, statsFor(UnitKind.Corvette).maxHp, 'the hull that dropped it is whole');
     });
