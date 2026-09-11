@@ -12,6 +12,7 @@
  * compounds over a twenty-minute match.
  */
 
+import { ECONOMY_ACCOUNTS } from '@echoes/shared';
 import { hasComponent } from 'bitecs';
 import {
   Acoustic,
@@ -19,6 +20,7 @@ import {
   Countermeasure,
   DepthOrder,
   Embarking,
+  Fauna,
   Harvester,
   Health,
   Hold,
@@ -119,6 +121,44 @@ export function hashWorld(world: SimWorld): number {
       h = mixU32(h, Owner.faction[eid]!);
     }
     if (hasComponent(world, Unit, eid)) h = mixU32(h, Unit.kind[eid]!);
+    // A creature, and what it is *doing* — which is the half the walk used to
+    // miss. Position, Health and Acoustic above already said a creature was
+    // here and how loud it was; nothing said whether it was grazing or
+    // committed, what it was answering, how long it had been interested, or
+    // who is owed its Biomass. The Drift is the simulation's only source of
+    // dice, so a divergence that lives entirely inside fauna behaviour is the
+    // one most likely to exist and was the one certain to be reported as a
+    // clean replay (#620).
+    //
+    // `species` and the home triple are mixed although they never change after
+    // the spawn that drew them: repopulation is a fork of the Drift stream, so
+    // two runs that repopulated a different creature in a different place
+    // disagree here at the tick it happened rather than a minute later when it
+    // has swum somewhere.
+    if (hasComponent(world, Fauna, eid)) {
+      h = mixU32(h, Fauna.species[eid]!);
+      h = mixU32(h, Fauna.stage[eid]!);
+      h = mixU32(h, Fauna.renderedBySlot[eid]!);
+      h = mixFloat(h, Fauna.interestS[eid]!);
+      h = mixFloat(h, Fauna.quietS[eid]!);
+      h = mixFloat(h, Fauna.interestedS[eid]!);
+      h = mixFloat(h, Fauna.coolingS[eid]!);
+      h = mixFloat(h, Fauna.heard[eid]!);
+      h = mixFloat(h, Fauna.senseS[eid]!);
+      h = mixFloat(h, Fauna.scatterS[eid]!);
+      h = mixU32(h, Fauna.driven[eid]!);
+      h = mixU32(h, Fauna.struck[eid]!);
+      h = mixU32(h, Fauna.scavengeMarkId[eid]!);
+      h = mixFloat(h, Fauna.homeX[eid]!);
+      h = mixFloat(h, Fauna.homeY[eid]!);
+      h = mixFloat(h, Fauna.homeDepth[eid]!);
+      // Both entity references by ordinal, for the reason the whole function
+      // exists. `targetEid` is what it is answering; `struckBy` is consumed by
+      // every sense pass and is still state between the hit and the pass that
+      // reads it, which is where a retaliation is decided.
+      h = mixU32(h, ordinalOf.get(Fauna.targetEid[eid]!) ?? -1);
+      h = mixU32(h, ordinalOf.get(Fauna.struckBy[eid]!) ?? -1);
+    }
     if (hasComponent(world, Structure, eid)) {
       h = mixU32(h, Structure.kind[eid]!);
       // Hashed because a mission moves it: the Prologue's silence ledger
@@ -250,13 +290,65 @@ export function hashWorld(world: SimWorld): number {
 
   // Economies live outside the ECS, and a match where one side is quietly
   // richer has diverged just as surely as one where a hull moved.
+  //
+  // Iterated over `ECONOMY_ACCOUNTS` rather than named one by one, which is
+  // the difference between a hash that covers the economy and one that covers
+  // the accounts somebody remembered. It named `nodules` and `crystal` and
+  // stopped; Biomass was the third and had been banked, priced into seven
+  // hulls and spent for a release before anyone noticed it was outside the
+  // fingerprint (#620). A fourth account now cannot escape the same way,
+  // because there is no line here to forget to add.
   const slots = [...world.economies.keys()].sort((a, b) => a - b);
   for (const slot of slots) {
     const economy = economyFor(world, slot);
     h = mixU32(h, slot);
-    h = mixFloat(h, economy.nodules);
-    h = mixFloat(h, economy.crystal);
+    for (const account of ECONOMY_ACCOUNTS) h = mixFloat(h, economy[account]);
   }
+
+  // Hazards, in list order — their sites come from the map and never move, but
+  // their phase and their timers are the match's (`world.hazards` says so in
+  // as many words). Walked rather than folded into a write digest the way
+  // terrain is: terrain's objection is that hashing "300-odd constructed
+  // cells" would cost the walk and prove nothing, and the default map holds
+  // eight hazards. At that size the objection does not reach, and a state walk
+  // keeps the hash path-independent. Revisit if a map ever authors hazards by
+  // the hundred.
+  //
+  // Every mutable field, not a chosen few: the phase and its clock, both
+  // suspensions, the canopy, the sowing owed on it, and the dormancy a
+  // Bathyarch presence has bought. `crop` and `sownRemaining` in particular
+  // are what `REPLAY_FORMAT_VERSION` was bumped to 24 for — the sow command
+  // writes them, so a replay checker blind to them could not have kept that
+  // bump honest. The site fields are mixed too, cheaply, so that two worlds
+  // whose beds are in different places cannot agree here.
+  for (const hazard of world.hazards) {
+    h = mixU32(h, hazard.id);
+    h = mixString(h, hazard.kind);
+    h = mixFloat(h, hazard.x);
+    h = mixFloat(h, hazard.y);
+    h = mixFloat(h, hazard.radiusM);
+    h = mixU32(h, hazard.phase);
+    h = mixFloat(h, hazard.elapsedS);
+    h = mixFloat(h, hazard.flowRad);
+    h = mixFloat(h, hazard.suppressedS);
+    h = mixFloat(h, hazard.burnedS);
+    h = mixFloat(h, hazard.crop);
+    h = mixFloat(h, hazard.sownRemaining);
+    h = mixFloat(h, hazard.stabilisedS);
+  }
+
+  // Drift Health, by region index. Sixteen cells on every map
+  // (`DRIFT.HEALTH_REGIONS` squared), read-modify-write from four directions —
+  // kills, harvest, sustained noise and the slow recovery — and *durable*:
+  // `MatchRoom.driftResult()` snapshots exactly these values into the campaign
+  // record, where they seed the next mission on this map. So two runs that
+  // disagree here disagree about the map the player takes into the next
+  // mission, which is the longest-lived divergence the simulation can produce.
+  //
+  // Through the allocating `snapshot()` rather than a new non-allocating
+  // accessor: checkpoints are interval-gated, and sixteen floats out of
+  // `Array.from` is noise against the entity walk above it.
+  for (const health of world.drift.snapshot()) h = mixFloat(h, health);
 
   // Production queues, likewise: same hulls on the map, different things
   // coming off the line, is a divergence that would otherwise surface minutes

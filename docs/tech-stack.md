@@ -246,7 +246,7 @@ now *tested* rather than assumed.
 | --- | --- | --- |
 | Seeded RNG | `packages/backend/src/sim/rng.ts` | The simulation's only randomness. `world.rng`, seeded per match; `fork(name)` gives a subsystem its own stream, so adding a die roll to fauna cannot shift every later hazard roll |
 | Lint gate | `.eslintrc.cjs` | `Math.random()` and `Date` are errors anywhere under `sim/`. `rng.ts` is the single exemption, because picking a seed is the one place entropy legitimately enters |
-| State hash | `sim/stateHash.ts` | FNV-1a over positions, health, acoustics, orders, economies and production queues |
+| State hash | `sim/stateHash.ts` | FNV-1a over the tick, every RNG stream, each entity's position, health, acoustics, orders and fauna behaviour, the ground a mission wrote, acoustic residue, all three banked accounts, every hazard's phase and timers, the Drift Health grid, production queues and rally points |
 | Replay | `sim/replay.ts` | Map, seed, roster, and every command attempt with the tick it landed on, plus periodic checkpoints |
 
 Two details are load-bearing and easy to get wrong, both for the same underlying reason:
@@ -267,6 +267,25 @@ a divergence rather than as a subtly different match nobody notices.
 Checkpoints are what make a divergence *findable*. `playReplay` reports the first tick whose
 hash disagreed, so the answer is "it broke at tick 300", not "the twenty-minute match ended
 differently".
+
+A fingerprint is evidence exactly as far as it can *fail*, which is a different property
+from the one the tests above assert. Two runs that agree prove nothing about a hash that
+covers nothing, and for a while the hash covered rather less than this section claimed:
+Biomass, every hazard timer, the whole Drift Health grid and all of fauna behaviour were
+outside it, and the economy block could be replaced with a no-op without turning the suite
+red. So the standing rule for `stateHash.ts` is that **no-oping any single block of
+`hashWorld` must fail at least one test in `determinism.test.ts`** — checked by trying it,
+block by block, rather than by reading the function. Adding state to `SimWorld` means adding
+a mix here and the residue test that makes the mix load-bearing.
+
+The same rule applies to the replay stream from the other end. Every mutating entry point on
+`Match` has a `ReplayCommand` variant, and the three ways to break that are now three build
+errors: `REPLAY_COMMAND_TYPES` is tied to the union by the `Exact<>` idiom that polices the
+wire, `applyCommand`'s switch ends in a `never`, and a test asserts that every declared type
+is actually recorded somewhere in `match.ts`. `resign` is what cut the rule — the room
+resigns a slot on every consented walk-out and every out-of-grace disconnect, and it
+recorded nothing, so most real matches would have replayed as a determinism failure whose
+real fault was the checker's own blind spot.
 
 A replay also records **which map it was played on** and **whether the Drift was
 populated**, since both are part of the setup rather than of the play. Format version 3
