@@ -367,6 +367,16 @@ The engine exists (`packages/frontend/src/audio/`): the bus graph above, the 24-
 contact budget with its stealing policy, tick-aligned scheduling, tab-blur suspend, and the
 first-gesture unlock.
 
+The **-1 dBTP ceiling in the table above is now held by the graph** rather than assumed of
+the material. It has to be: the buses are summed, the world bus doubles under Silent
+Running, the contact trim may add 12 dB, and the exposure strike is meant to be the loudest
+event in the game — all correct on their own, and together they reached 1.85, or 5.3 dB past
+full scale, which the device turned into broadband distortion. The last node before the
+output is a soft-clip curve that is exactly transparent below 0.6 and asymptotic to -1 dBTP
+above it. Deliberately *not* a compressor: Chromium's `DynamicsCompressorNode` applies an
+internal makeup gain of 3-7 dB depending on threshold, which would move the integrated
+target by an amount no other engine need match.
+
 The **music bus now carries the port's bed** (§10, "The port") — the shell's own engine,
 opened on the first gesture in a menu and closed on the way into a match. The in-game score
 is still unwritten: the bus ducks and trims correctly and has one piece to play, in the

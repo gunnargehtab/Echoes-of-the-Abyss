@@ -15,6 +15,9 @@
  *   ├── selfBus   ──────────► trim ──┤
  *   └── uiBus     ──────────► trim ──┘
  *
+ * The one node after master is the output ceiling — see CEILING below. Nothing
+ * reaches the device without passing through it.
+ *
  * The trims are user volume (docs/audio-direction.md §11 — independent buses,
  * contacts boostable to +12 dB) and are deliberately separate nodes: the bus
  * gains belong to the Precedence Law and the self mixer, which write them on
@@ -76,6 +79,94 @@ const MASTER_GAIN = 0.5;
 /** How far music ducks when the contact bus is busy, and how fast it recovers. */
 const DUCK = { FLOOR: 0.35, ATTACK_S: 0.08, RELEASE_S: 0.6 } as const;
 
+/**
+ * SPEC — docs/audio-direction.md §12: "-18 LUFS integrated, -1 dBTP".
+ *
+ * The integrated figure is a property of the material and MASTER_GAIN above
+ * serves it. The true-peak figure is not: six buses sum into master, the world
+ * bus goes to +6 dB under Silent Running (§4), the contact trim may add +12 dB
+ * (§11), and the exposure strike is "deliberately the loudest event in the
+ * game" (§5). Those are all correct individually and their *sum* is what
+ * reaches the device, so nothing in the graph was holding the ceiling the doc
+ * states — the mix simply ran past full scale and the device hard-clipped it.
+ * Measured at the worst case the self bus alone can produce: 1.85, or +5.3 dB
+ * past full scale.
+ *
+ * Clipping is not a quieter or dirtier version of the mix. It is broadband
+ * distortion that arrives fastest exactly when the player is loudest, which
+ * made a rising SIG band audibly painful rather than oppressive.
+ *
+ * A trim would be the wrong fix: it buys headroom by making the quiet mix
+ * quieter, spending the dynamic range §4 needs in order to make being loud
+ * *feel* like something, and it still clips whenever enough cues land at once.
+ *
+ * **Not a DynamicsCompressorNode**, which is the obvious tool and the wrong
+ * one: Chromium's implementation applies an internal makeup gain that grows as
+ * the threshold falls — measured at +3.4 dB with a -6 dB threshold and +7.0 dB
+ * with -12 dB, on signal far below either. That silently raises the whole mix,
+ * moves the integrated target this file's MASTER_GAIN exists to hold, and does
+ * it by an amount no part of the spec predicts and other engines need not
+ * match.
+ *
+ * So: a static soft-clip curve. It is exactly transparent below KNEE, bends
+ * smoothly above it, and cannot exceed PEAK however hard it is driven. Every
+ * engine renders it identically because it is arithmetic rather than a
+ * behaviour, and it adds no latency, no gain, and nothing to pump.
+ *
+ * What it does not do is what a true look-ahead limiter would: the bend is
+ * harmonic distortion rather than transparent gain reduction. That is the
+ * trade being made deliberately — the material above KNEE was previously
+ * being hard-clipped by the device, and a soft knee is strictly the gentler
+ * of the two. A look-ahead limiter needs an AudioWorklet and is a larger
+ * change than a hearing-safety fix should carry.
+ */
+const CEILING = {
+  /** Linear. Below this the curve is the identity and the mix is untouched. */
+  KNEE: 0.6,
+  /** -1 dBTP, as a linear peak. The curve approaches this and never passes it. */
+  PEAK: 0.891,
+  /**
+   * Input range the curve covers, as a multiple of full scale.
+   *
+   * A WaveShaperNode clamps its input to ±1 before looking the curve up, so
+   * the curve has to be driven through a pre-gain of 1/RANGE for anything
+   * above full scale to be shaped rather than flattened. 3 is comfortably
+   * past the 1.85 worst case measured above.
+   */
+  RANGE: 3,
+  /** Samples in the curve. Odd, so the midpoint is exactly zero. */
+  POINTS: 8193,
+} as const;
+
+/**
+ * The soft-clip curve, as a pure function of level — exported so the shape can
+ * be asserted directly rather than inferred from node settings.
+ *
+ * Identity below the knee; above it, a tanh bend whose slope is continuous at
+ * the knee (so there is no audible corner where limiting begins) and whose
+ * asymptote is exactly PEAK.
+ */
+export function ceilingShape(level: number): number {
+  const sign = level < 0 ? -1 : 1;
+  const magnitude = Math.abs(level);
+  if (magnitude <= CEILING.KNEE) return level;
+  const span = CEILING.PEAK - CEILING.KNEE;
+  return sign * (CEILING.KNEE + span * Math.tanh((magnitude - CEILING.KNEE) / span));
+}
+
+/** The curve as a WaveShaperNode wants it: POINTS samples over [-RANGE, RANGE]. */
+export function ceilingCurve(): Float32Array<ArrayBuffer> {
+  // Allocated over an explicit ArrayBuffer for the same reason the analyser's
+  // read buffer is: the default Float32Array type admits a SharedArrayBuffer
+  // and `WaveShaperNode.curve` does not.
+  const curve = new Float32Array(new ArrayBuffer(CEILING.POINTS * 4));
+  const last = CEILING.POINTS - 1;
+  for (let i = 0; i <= last; i++) {
+    curve[i] = ceilingShape(((i / last) * 2 - 1) * CEILING.RANGE);
+  }
+  return curve;
+}
+
 /** Decibels to linear gain — the settings screen speaks dB, the graph gain. */
 export function dbToGain(db: number): number {
   return Math.pow(10, db / 20);
@@ -121,6 +212,7 @@ export type AudioEngineState = 'idle' | 'running' | 'suspended' | 'unsupported';
 export class AudioEngine {
   private context: AudioContext | null = null;
   private buses: AudioBuses | null = null;
+  private ceiling: WaveShaperNode | null = null;
   private duckGain: GainNode | null = null;
   private contactAnalyser: AnalyserNode | null = null;
   /**
@@ -229,6 +321,16 @@ export class AudioEngine {
   }
 
   /**
+   * The output ceiling, once started — the last node before the device.
+   *
+   * Exposed so the harness can assert the graph actually holds §12's true-peak
+   * target, which is otherwise only observable by listening to a clipped mix.
+   */
+  get outputCeiling(): WaveShaperNode | null {
+    return this.ceiling;
+  }
+
+  /**
    * Build the graph. Safe to call repeatedly; only the first call does work.
    *
    * Browsers refuse to start an AudioContext without a user gesture, so this
@@ -246,9 +348,24 @@ export class AudioEngine {
     const context = new Ctor();
     this.context = context;
 
+    // The output ceiling stands between master and the device, so every bus,
+    // every trim and every one-shot is behind it — including the ones added
+    // after this was written.
+    //
+    // The pre-gain is not a level change: it scales master's output into the
+    // ±1 the shaper reads a curve over, and the curve puts it back (see
+    // CEILING.RANGE). Nothing here is audible until the mix passes the knee.
+    const headroom = context.createGain();
+    headroom.gain.value = 1 / CEILING.RANGE;
+    const ceiling = context.createWaveShaper();
+    ceiling.curve = ceilingCurve();
+    ceiling.oversample = '4x';
+    headroom.connect(ceiling).connect(context.destination);
+    this.ceiling = ceiling;
+
     const master = context.createGain();
     master.gain.value = MASTER_GAIN * this.masterVolume;
-    master.connect(context.destination);
+    master.connect(headroom);
 
     const make = (): GainNode => {
       const bus = context.createGain();
@@ -652,6 +769,7 @@ export class AudioEngine {
     const context = this.context;
     this.context = null;
     this.buses = null;
+    this.ceiling = null;
     this.duckGain = null;
     this.contactAnalyser = null;
     this.trimNodes = null;

@@ -229,6 +229,20 @@ export class StubBiquadFilterNode extends StubAudioNode {
   }
 }
 
+/**
+ * The output ceiling (`engine.ts` CEILING). The curve is kept verbatim, which
+ * is the whole of what this node does — a WaveShaper has no state and no
+ * parameters, so the curve *is* the behaviour and a test can check it
+ * arithmetically rather than trusting a rendered signal.
+ */
+export class StubWaveShaperNode extends StubAudioNode {
+  curve: Float32Array | null = null;
+  oversample: 'none' | '2x' | '4x' = 'none';
+  constructor(context: HeadlessAudioContext) {
+    super('WaveShaperNode', context);
+  }
+}
+
 export class StubStereoPannerNode extends StubAudioNode {
   readonly pan: StubAudioParam;
   constructor(context: HeadlessAudioContext) {
@@ -334,6 +348,10 @@ export class HeadlessAudioContext {
 
   createStereoPanner(): StubStereoPannerNode {
     return this.track(new StubStereoPannerNode(this));
+  }
+
+  createWaveShaper(): StubWaveShaperNode {
+    return this.track(new StubWaveShaperNode(this));
   }
 
   createDelay(): StubDelayNode {
