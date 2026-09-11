@@ -238,16 +238,45 @@ function hasHadronWatcher(world: SimWorld, hazard: Hazard): boolean {
 }
 
 /**
- * The nearest Consortium hull actually cutting this field, or -1.
+ * Is this body running thermal cutters?
  *
- * "Actually cutting" is the whole of it: alive, inside the field, and not on
- * Silent Running — a hull that has shut its systems down is not running
- * thermal cutters, which is bloom-share's rule (#243, "silence stops the
- * work") applied to the one navy whose answer to kelp is to destroy it.
+ * The one fact three rules read, and the reason it is a function: a canopy
+ * opening, a crop being taken and the noise of taking it are three consequences
+ * of a single thing happening, and #653 was what it costs to answer the same
+ * question three times. A field used to come apart under a hull that took no
+ * crop, and charge cutter SIG to a hull that was cutting nothing.
+ *
+ * Four clauses, each of which some rule already had:
+ *
+ * - **Consortium.** Thermal cutters are their gear (docs/hazards.md §4).
+ * - **Alive.** A wreck cuts nothing.
+ * - **A hull, not a building.** `affected` is every owned body on the map,
+ *   which includes structures — and a Consortium *bio-reactor* standing in the
+ *   bed it renders would otherwise cut it too, at 20 a minute on top of the 12
+ *   it was already taking, and hold that bed open the whole time it ran.
+ *   Thermal cutters are something a hull carries.
+ * - **Not on Silent Running.** A hull that has shut its systems down is not
+ *   running industrial machinery, which is bloom-share's rule (#243, "silence
+ *   stops the work") applied to the one navy whose answer to kelp is to
+ *   destroy it. It is also the only way a Consortium hull can be quiet in
+ *   kelp, which doc §4's "a hull sitting still in kelp is silent, and hidden"
+ *   promises every navy and the unconditional cutter SIG used to deny theirs.
+ */
+function isCutting(world: SimWorld, eid: number): boolean {
+  if (Owner.faction[eid] !== Faction.Bathyarch) return false;
+  if (Health.hp[eid]! <= 0) return false;
+  if (!hasComponent(world, Unit, eid)) return false;
+  return !(hasComponent(world, SilentRunning, eid) && SilentRunning.active[eid] === 1);
+}
+
+/**
+ * The nearest Consortium hull actually cutting this field, or -1.
  *
  * Nearest rather than any, so the one cut a field pays per tick has a single
  * deterministic claimant: massing hulls on a bed buys nothing but exposure,
- * exactly as massing gardeners on a bloom node does.
+ * exactly as massing gardeners on a bloom node does. The burn reads the same
+ * walk for its own answer — whether there is a cutter here at all — because
+ * the two questions used to be two passes over every owned body on the map.
  */
 function nearestCutter(world: SimWorld, hazard: Hazard): number {
   const entities = affected(world);
@@ -255,14 +284,7 @@ function nearestCutter(world: SimWorld, hazard: Hazard): number {
   let bestD2 = Infinity;
   for (let i = 0; i < entities.length; i++) {
     const eid = entities[i]!;
-    if (Owner.faction[eid] !== Faction.Bathyarch) continue;
-    if (Health.hp[eid]! <= 0) continue;
-    // Hulls, not buildings. `affected` is every owned body on the map, which
-    // includes structures — and a Consortium *bio-reactor* standing in the bed
-    // it renders would otherwise also cut it, at 20 a minute on top of the 12
-    // it was already taking. Thermal cutters are something a hull carries.
-    if (!hasComponent(world, Unit, eid)) continue;
-    if (hasComponent(world, SilentRunning, eid) && SilentRunning.active[eid] === 1) continue;
+    if (!isCutting(world, eid)) continue;
     const dx = Position.x[eid]! - hazard.x;
     const dy = Position.y[eid]! - hazard.y;
     const d2 = dx * dx + dy * dy;
@@ -359,10 +381,16 @@ export function hazardsSystem(world: SimWorld, destroyed: number[]): void {
         // which is the honest price of sowing early.
         hazard.sownRemaining = 0;
       }
-      const cutters = anyFactionWithin(world, hazard, Faction.Bathyarch, hazard.radiusM);
-      hazard.burnedS = cutters
-        ? Math.min(HAZARDS.KELP.BATHYARCH_BURN_S, hazard.burnedS + dt)
-        : Math.max(0, hazard.burnedS - dt);
+      // Who is cutting here, asked once (#653). The burn wants to know whether
+      // there is a cutter at all and the cut below wants to know which one, and
+      // both used to walk every owned body on the map to find out — the burn
+      // over a predicate that tested faction and presence and nothing else, so
+      // a hull on Silent Running and a *building* each held a canopy open.
+      const cutter = nearestCutter(world, hazard);
+      hazard.burnedS =
+        cutter >= 0
+          ? Math.min(HAZARDS.KELP.BATHYARCH_BURN_S, hazard.burnedS + dt)
+          : Math.max(0, hazard.burnedS - dt);
       // And what comes off the canopy is worth something (#565,
       // docs/systems-flora.md §2). The burn has always opened a field without
       // *taking* anything; after wave 1 there is a crop to take, so cutting
@@ -380,7 +408,6 @@ export function hazardsSystem(world: SimWorld, destroyed: number[]): void {
       // over every field and every hull to learn it again would be the same
       // walk twice on the 60 Hz path.
       if (hazard.crop > 0) {
-        const cutter = nearestCutter(world, hazard);
         if (cutter >= 0) {
           const standing = hazard.crop * FLORA.FULL_CROP_BIOMASS;
           const cut = Math.min(standing, (FLORA.CUTTER_CROP_PER_MIN / 60) * dt);
@@ -764,8 +791,11 @@ export function kelpModifiers(world: SimWorld, eid: number): { speed: number; si
 
   // Thermal cutters run whether the hull is moving or not — unlike drag,
   // cutting is work you are doing on purpose, and it is what stops burning
-  // being a free counter to the map (doc §4).
-  const cutting = Owner.faction[eid] === Faction.Bathyarch ? HAZARDS.KELP.CUTTER_SIG : 0;
+  // being a free counter to the map (doc §4). The same predicate the canopy
+  // and the crop read, so a hull cannot be charged for cutters it is not
+  // running (#653): before it, a Consortium hull on Silent Running paid 40 SIG
+  // for a bed it was taking nothing from.
+  const cutting = isCutting(world, eid) ? HAZARDS.KELP.CUTTER_SIG : 0;
 
   const vx = Velocity.x[eid]!;
   const vy = Velocity.y[eid]!;
