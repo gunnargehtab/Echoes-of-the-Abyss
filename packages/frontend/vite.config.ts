@@ -1,5 +1,8 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+// Plain JS, and deliberately: a node:test imports the same module to check
+// the expectation arithmetic, and the config tree has no TypeScript loader.
+import { modelManifestGate } from './vite/modelManifest.mjs';
 
 /** Which vendor chunk a module belongs in, by its resolved id; undefined leaves it to Rollup. */
 function vendorChunk(id: string): string | undefined {
@@ -20,7 +23,7 @@ function vendorChunk(id: string): string | undefined {
 }
 
 export default defineConfig(({ mode }) => ({
-  plugins: [react()],
+  plugins: [react(), modelManifestGate()],
   server: {
     port: 5173,
     strictPort: false,

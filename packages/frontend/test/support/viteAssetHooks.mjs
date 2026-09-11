@@ -29,18 +29,33 @@
  */
 
 /** Everything Vite would hand back as a URL rather than as a module. */
-const ASSET = /\.(?:png|jpe?g|gif|svg|webp|avif|woff2?|ttf|otf|glb|gltf|mp3|ogg|wav|css)(?:\?.*)?$/i;
+const ASSET =
+  /\.(?:png|jpe?g|gif|svg|webp|avif|woff2?|ttf|otf|glb|gltf|mp3|ogg|wav|css)(?:\?.*)?$/i;
 
 /**
  * The two `import.meta` extensions, assigned from inside the module — the only
  * place `import.meta` is writable.
  *
  * `glob` returns nothing, so no roster or environment model is ever offered and
- * every hull draws as its vector shape. `env` is an empty bag, so a module
- * reading `import.meta.env.VITE_SERVER_URL` gets `undefined` and falls through
- * to its own default rather than throwing on a property of `undefined`.
+ * every hull draws as its vector shape.
+ *
+ * `env` is a live view of `process.env`, restricted to the `VITE_` prefix Vite
+ * itself exposes. A plain empty object would only ever reproduce one of the
+ * three states a build variable can be in, and the other two are where the bugs
+ * were: `VITE_SERVER_URL` *set* is what every image does, and set to the *empty
+ * string* is what a Dockerfile's `ENV VAR=$ARG` bakes when the argument is not
+ * passed — which `??` does not treat as absent (#624). Reading through on every
+ * access rather than snapshotting means a test can move the variable between
+ * two calls, which is the only way to reach all three from one module instance.
  */
-const META_SHIM = 'import.meta.glob ??= () => ({}); import.meta.env ??= {};';
+const META_SHIM =
+  'import.meta.glob ??= () => ({});' +
+  'import.meta.env ??= new Proxy({}, {' +
+  '  get: (_t, key) => (typeof key === "string" && key.startsWith("VITE_")' +
+  '    ? process.env[key]' +
+  '    : undefined),' +
+  '  has: (_t, key) => typeof key === "string" && key.startsWith("VITE_") && key in process.env,' +
+  '});';
 
 /** Cheap test for whether a module needs the shim at all. */
 const USES_META = /import\.meta\.(?:glob|env)/;
@@ -56,7 +71,11 @@ export async function resolve(specifier, context, nextResolve) {
 
 export async function load(url, context, nextLoad) {
   if (ASSET.test(url)) {
-    return { format: 'module', shortCircuit: true, source: `export default ${JSON.stringify(url)};` };
+    return {
+      format: 'module',
+      shortCircuit: true,
+      source: `export default ${JSON.stringify(url)};`,
+    };
   }
 
   const loaded = await nextLoad(url, context);

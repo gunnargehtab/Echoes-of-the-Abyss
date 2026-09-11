@@ -91,7 +91,36 @@ export interface GameClientHandlers {
 
 export type ConnectionStatus = 'connecting' | 'connected' | 'reconnecting' | 'error' | 'closed';
 
-const DEFAULT_ENDPOINT = import.meta.env.VITE_SERVER_URL ?? `ws://${window.location.hostname}:3000`;
+/**
+ * Where to dial when the caller names no endpoint.
+ *
+ * Three things this deliberately does not do, each of them a way the shipped
+ * client used to be undiagnosable (#624) — and the failure is always the same
+ * screen, because `listMatches` turns an unreachable server into an empty room
+ * list rather than an error:
+ *
+ * - **It does not hard-code a scheme.** A page served over `https:` may not
+ *   open a `ws:` socket; the browser blocks it as active mixed content, and
+ *   blocks the `http:` `/matchmake/` POST colyseus derives from the same URL
+ *   too. So the scheme is the page's own.
+ * - **It does not treat an empty `VITE_SERVER_URL` as a value.** A Dockerfile's
+ *   `ENV VITE_SERVER_URL=$VITE_SERVER_URL` bakes `''` when the build argument
+ *   is not passed, and `'' ?? x` does not fall through. `new Client('')` then
+ *   reaches `new URL('')` and throws — at construction, in a default parameter,
+ *   where nothing is catching.
+ * - **It does not drop the port.** Colyseus's own default takes the page's port
+ *   as well as its host, which on :8080 or :5173 dials the machine serving the
+ *   client.
+ *
+ * A function rather than a module constant so the page's protocol is read when
+ * a connection is made, not when this module is first imported.
+ */
+export function defaultEndpoint(): string {
+  const configured = import.meta.env.VITE_SERVER_URL;
+  if (configured !== undefined && configured !== '') return configured;
+  const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  return `${scheme}://${window.location.hostname}:3000`;
+}
 
 /** Reconnection backoff: first retry is quick, then it backs off to this. */
 const RECONNECT_MIN_DELAY_MS = 400;
@@ -179,7 +208,7 @@ export function storedMissionId(): string | null {
  * instead of guessed at — a row that could not say which water it was on would
  * be asking the player to click and find out.
  */
-export async function listMatches(endpoint: string = DEFAULT_ENDPOINT): Promise<MatchListing[]> {
+export async function listMatches(endpoint: string = defaultEndpoint()): Promise<MatchListing[]> {
   try {
     const rooms = await new Client(endpoint).getAvailableRooms<MatchListingMetadata>('match');
     return toListings(rooms);
@@ -274,7 +303,7 @@ export class GameClient {
    */
   constructor(
     handlers: GameClientHandlers,
-    endpoint: string = DEFAULT_ENDPOINT,
+    endpoint: string = defaultEndpoint(),
     client: Client = new Client(endpoint)
   ) {
     this.client = client;

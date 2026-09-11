@@ -136,7 +136,7 @@ npm run lint
 | `PORT` | backend | `3000` | Port the game server listens on. |
 | `NODE_ENV` | backend | unset | `production` arms the origin lock below. |
 | `CORS_ORIGIN` | backend | loopback | Origins allowed to reach matchmaking. |
-| `VITE_SERVER_URL` | frontend, **at build time** | `ws://<page host>:3000` | Where the client dials the server. |
+| `VITE_SERVER_URL` | frontend, **at build time** | the page's own scheme and host, on `:3000` | Where the client dials the server. |
 
 `CORS_ORIGIN` is the one to understand. The WebSocket upgrade is not subject to
 CORS, but colyseus.js POSTs to `/matchmake/` first, so this decides whether a
@@ -159,6 +159,22 @@ browser can reach the server at all:
 argument rather than a runtime one — pointing the client at a different server
 means rebuilding it.
 
+Left unset — including set to the empty string, which is what a Dockerfile's
+`ENV VAR=$ARG` bakes when no `--build-arg` is passed — the client derives the
+endpoint from the page that served it: `wss://` from an `https:` page and `ws://`
+from an `http:` one, at the page's own hostname on `:3000`. That fallback is the
+whole configuration when client and server share a name, and it is why no image
+carries a baked default any more: one used to, and it named `localhost`, which in
+a browser is the *player's* machine.
+
+**Over TLS the scheme is not optional.** A page served over `https:` may not open
+a `ws:` socket — the browser blocks it as active mixed content, and blocks the
+`http:` `/matchmake/` POST colyseus derives from the same URL too. So a
+two-origin deployment sets `VITE_SERVER_URL` to a `wss://` URL and terminates TLS
+in front of the game server; `CORS_ORIGIN` then names the client's own origin.
+The symptom of getting this wrong is not an error: `listMatches` turns an
+unreachable server into an empty room list, so the client simply shows no rooms.
+
 ### Containers
 
 ```bash
@@ -173,7 +189,13 @@ lockfile:
   `node_modules` at all. It sets `NODE_ENV=production`, which means the image
   will not start without `CORS_ORIGIN`; `docker-compose.yml` supplies it.
 - `packages/frontend/Dockerfile` — Vite build, served by nginx, with
-  `VITE_SERVER_URL` as a build argument.
+  `VITE_SERVER_URL` as an optional build argument. It also copies
+  `docs/concept-art/models/` into the build stage, because that directory is the
+  only home of the approved runtime GLBs and the client reaches them across the
+  tree; `.dockerignore` excludes `docs` and re-includes exactly that path. The
+  build fails if the bundle ends up carrying fewer models than
+  `tools/hull-maps/models.mjs` and `ENVIRONMENT_PROPS` between them declare, so a
+  context that loses the art is a red build rather than a bare seabed.
 
 This is the deployed shape rather than the development loop: the client is a
 static build, so a source edit needs a rebuild. Use `npm run dev` for iterating;
