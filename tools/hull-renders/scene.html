@@ -1,0 +1,718 @@
+<!doctype html>
+<!--
+  Beauty-render page for tools/hull-renders. Loaded by render.mjs in headless
+  Chromium; not a standalone tool and not a gate.
+
+  This is the opposite end of the pipeline from hull-intake's page.html. That
+  page renders a hull flat, from directly above, with no lighting at all,
+  because its output is measured. This one renders the same GLB as a
+  photograph — one hull hanging in its navy's water over a displaced seabed,
+  under the three-light noir rig, with the biome's own props standing around
+  it and the marine snow that gives black water its depth.
+
+  Everything the frame is made of comes from the design bible:
+
+  - the blacks, the neons and the faction accents are docs/style-neon-noir.md;
+  - the rule that near-black fills 85-90% of a frame is why the rig is three
+    small lights and a very dark seabed rather than an evenly lit studio;
+  - the rule that glow encodes loudness is why emissive is driven from the
+    hull's SIG and recoloured to the faction accent, exactly as the runtime
+    does it (packages/frontend/src/game/rosterModels.ts, gate 4);
+  - the props are the shipped environment registry, canonicalised to the same
+    footprint metres packages/frontend/src/game/environmentModels.ts uses.
+
+  Query params (all set by render.mjs): id, lengthM, sig, width, height, seed.
+  The navy's dressing arrives as a JSON blob in window.__shot, set by the
+  driver before the module runs, because it is too big for a query string.
+-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/deps/node_modules/three/build/three.module.js",
+          "three/addons/": "/deps/node_modules/three/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body style="margin: 0; background: #000; overflow: hidden">
+    <script type="module">
+      import * as THREE from 'three';
+      import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+      import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+      import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+      import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+      import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+      const params = new URLSearchParams(location.search);
+      const num = (k, d) => (params.has(k) ? Number(params.get(k)) : d);
+      const lengthM = num('lengthM', 100);
+      const sig = num('sig', 20);
+      const W = num('width', 1600);
+      const H = num('height', 900);
+      const shot = window.__shot;
+
+      // --- a seeded RNG, because a portrait has to be reproducible ---------
+      // The props scatter, the seabed's mottle and the marine snow are all
+      // random, and a render that moved every run could not be reviewed
+      // against its predecessor. One seed per shot, mixed from the shot id.
+      let seedState = num('seed', 1) >>> 0 || 1;
+      const rnd = () => {
+        // xorshift32 — the same cheap deterministic generator the sim's
+        // scenarios use; quality is irrelevant here, repeatability is not.
+        seedState ^= seedState << 13;
+        seedState ^= seedState >>> 17;
+        seedState ^= seedState << 5;
+        return ((seedState >>> 0) % 1e6) / 1e6;
+      };
+      const between = (a, b) => a + (b - a) * rnd();
+
+      // --- value noise for the seabed --------------------------------------
+      // Two octaves of hashed lattice noise. The seabed is not terrain from
+      // the simulation — a portrait needs ground with relief to catch a rim
+      // light, not the authored map archetypes — so it is generated here and
+      // never leaves this page.
+      const hash2 = (x, y) => {
+        const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+        return s - Math.floor(s);
+      };
+      const smooth = (t) => t * t * (3 - 2 * t);
+      const valueNoise = (x, y) => {
+        const xi = Math.floor(x);
+        const yi = Math.floor(y);
+        const xf = smooth(x - xi);
+        const yf = smooth(y - yi);
+        const a = hash2(xi, yi);
+        const b = hash2(xi + 1, yi);
+        const c = hash2(xi, yi + 1);
+        const d = hash2(xi + 1, yi + 1);
+        return (a + (b - a) * xf) * (1 - yf) + (c + (d - c) * xf) * yf;
+      };
+      /** Seabed height in metres at a world XZ, relative to the floor plane. */
+      const groundAt = (x, z) => {
+        const s = 1 / (lengthM * 1.1);
+        return (
+          (valueNoise(x * s, z * s) - 0.5) * lengthM * 0.34 +
+          (valueNoise(x * s * 3.7 + 11, z * s * 3.7 + 7) - 0.5) * lengthM * 0.1
+        );
+      };
+
+      // --- renderer ---------------------------------------------------------
+      const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+      renderer.setSize(W, H);
+      renderer.setPixelRatio(1);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      // ACES filmic, because the rig is deliberately high-contrast: a hard
+      // rim against near-black clips instantly under linear tone mapping, and
+      // the clipped edge is the one thing a hull portrait cannot afford to
+      // lose. Exposure sits under 1 so the frame stays in the 85-90% dark the
+      // style guide asks for.
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 0.88;
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      document.body.appendChild(renderer.domElement);
+
+      const scene = new THREE.Scene();
+      const water = new THREE.Color(shot.water);
+      // Exponential fog scaled to the subject: the same density that makes a
+      // 50 m Chorister sit in deep water would erase a 130 m Cruiser's stern.
+      scene.fog = new THREE.FogExp2(water.getHex(), 1.75 / (lengthM * 9));
+
+      // --- camera: the hero three-quarter ----------------------------------
+      // A long lens (fov 30) and a low elevation. Both are the same decision:
+      // a hull photographed from above reads as a counter on a board, and
+      // these ships are meant to read as tonnage. Bow to frame-left.
+      const camera = new THREE.PerspectiveCamera(30, W / H, 0.5, lengthM * 60);
+      const dist = lengthM * 2.15;
+      const az = THREE.MathUtils.degToRad(38);
+      const el = THREE.MathUtils.degToRad(9.5);
+      camera.position.set(
+        Math.cos(az) * Math.cos(el) * dist,
+        Math.sin(el) * dist,
+        Math.sin(az) * Math.cos(el) * dist
+      );
+      // Not dead centre. The target sits below and inboard of the hull, which
+      // lifts the ship above the middle of the frame and lets the seabed take
+      // the bottom third — a ship centred in a black rectangle reads as a
+      // product shot, and a ship with no floor under it reads as a decal.
+      camera.lookAt(lengthM * 0.08, -lengthM * 0.14, -lengthM * 0.05);
+      // Where the camera stands, in plan. The rim light and the light shafts
+      // are both placed relative to it rather than in world space: a rim
+      // light is only a rim light from one side, and a rig written in world
+      // coordinates stops being a rig the moment the camera moves.
+      const camAz = Math.atan2(camera.position.z, camera.position.x);
+
+      // --- something for the metal to reflect -------------------------------
+      // A metallic surface with no environment reflects nothing but its
+      // direct speculars, which under a three-light rig in black water means
+      // a hull that renders as a silhouette with two highlights on it. So the
+      // water gets an actual environment: a vertical gradient, near-black at
+      // the floor and the water's own colour overhead, with the faction
+      // accent banded low where the rim light comes from. It is never seen
+      // directly — only in the plate — and it is what turns "dark" into
+      // "wet".
+      const envSize = 64;
+      const envData = new Uint8Array(envSize * envSize * 4);
+      {
+        // The navy's water, lifted toward a common cool. Straight water at
+        // a multiple is fine for the Commune and useless for the Directorate,
+        // whose #04070C has nothing in it to multiply — and a metal hull with
+        // an empty environment renders as a black cut-out whatever else the
+        // rig does.
+        const top = water.clone().multiplyScalar(2.6).lerp(new THREE.Color('#0E2432'), 0.42);
+        const low = new THREE.Color(shot.accent).multiplyScalar(0.22);
+        const c = new THREE.Color();
+        for (let y = 0; y < envSize; y++) {
+          const t = y / (envSize - 1); // 0 at the top of the sphere
+          c.copy(top).lerp(low, Math.pow(t, 1.8));
+          for (let x = 0; x < envSize; x++) {
+            const i = (y * envSize + x) * 4;
+            envData[i] = Math.round(THREE.MathUtils.clamp(c.r, 0, 1) * 255);
+            envData[i + 1] = Math.round(THREE.MathUtils.clamp(c.g, 0, 1) * 255);
+            envData[i + 2] = Math.round(THREE.MathUtils.clamp(c.b, 0, 1) * 255);
+            envData[i + 3] = 255;
+          }
+        }
+      }
+      const envTex = new THREE.DataTexture(envData, envSize, envSize, THREE.RGBAFormat);
+      envTex.mapping = THREE.EquirectangularReflectionMapping;
+      envTex.colorSpace = THREE.SRGBColorSpace;
+      envTex.needsUpdate = true;
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      scene.environment = pmrem.fromEquirectangular(envTex).texture;
+      // The background is the same gradient, so the water behind the ship and
+      // the water in its plate are the same water.
+      scene.background = scene.environment;
+      scene.backgroundIntensity = 0.55;
+
+      // --- the hull ---------------------------------------------------------
+      const accent = new THREE.Color(shot.accent);
+      /**
+       * The lamp colour, which is not quite the accent.
+       *
+       * The faction accents are *signal* colours, picked to be legible as
+       * thin linework on a HUD, so they are pale — `#C9A6FF` is a violet with
+       * a 0.65 floor under every channel. Emitted at glow brightness and put
+       * through ACES, a colour with a high floor arrives white, and a white
+       * lamp tells you nothing about whose ship it is. So a lamp takes the
+       * accent's *hue* at full saturation and mid lightness: the core keeps
+       * the navy, and the halo bloom spreads that same hue instead of a wash.
+       */
+      const lampColor = (() => {
+        const hsl = { h: 0, s: 0, l: 0 };
+        accent.getHSL(hsl);
+        return new THREE.Color().setHSL(hsl.h, Math.min(1, hsl.s * 1.6), 0.52);
+      })();
+      const gltf = await new GLTFLoader().loadAsync('/model.glb');
+      const hull = gltf.scene;
+
+      // Canonicalise exactly as hull-intake does, so a render and a bake are
+      // looking at the same ship: length onto X if the export drew it on Z,
+      // scale to the design metres, centre on the origin.
+      const rawSize = new THREE.Box3().setFromObject(hull).getSize(new THREE.Vector3());
+      if (rawSize.z > rawSize.x) hull.rotation.y = Math.PI / 2;
+      const preSize = new THREE.Box3().setFromObject(hull).getSize(new THREE.Vector3());
+      hull.scale.setScalar(preSize.x > 0 ? lengthM / preSize.x : 1);
+      const box = new THREE.Box3().setFromObject(hull);
+      hull.position.sub(box.getCenter(new THREE.Vector3()));
+      const hullSize = box.getSize(new THREE.Vector3());
+
+      // A hull under way is not level. A degree and a half of bow-up and a
+      // couple of degrees of roll is the difference between a photograph and
+      // an orthographic elevation.
+      const pitched = new THREE.Group();
+      pitched.add(hull);
+      pitched.rotation.z = THREE.MathUtils.degToRad(1.6);
+      pitched.rotation.x = THREE.MathUtils.degToRad(-2.2);
+      scene.add(pitched);
+
+      /**
+       * Glow encodes loudness (docs/style-neon-noir.md §3), and the runtime
+       * keeps only a lamp's luminance and recolours it to the faction glow
+       * (rosterModels.ts). Both rules applied here: every emissive material
+       * burns in the navy's accent at its own relative brightness, scaled by
+       * the hull's SIG, so sister ships in one frame differ by how loud they
+       * are rather than by whatever hue the model script happened to choose.
+       *
+       * The curve is the sprite baker's, flattened hard. build.mjs uses
+       * 0.45·e^(SIG/14) on a map where the glow *is* the whole dynamic range.
+       * A photograph has no such room. The composer's buffer clips at 1.0
+       * (see makeTarget below) and ACES desaturates hard on the way there, so
+       * a lamp driven anywhere near that stops being violet or amber and goes
+       * white — losing both its hue, which is the navy, and its shape, which
+       * is the lit feature. So the ordering is kept and the range is not: a fourth
+       * root of the same ratio spans roughly 1.3× from a Light Scout at SIG 6
+       * to a Cruiser at 55, which is a visible step up in a frame and still
+       * inside the colour.
+       */
+      const glowGain = Math.pow(Math.exp(sig / 14) / Math.exp(6 / 14), 0.25);
+      const lamps = [];
+      // Layer 1 is "the subject". A three.js light only illuminates objects
+      // whose layer mask it shares, so putting the hull on a second layer and
+      // aiming the rim at that layer alone is what keeps the rim a rim. A
+      // directional light strong enough to draw a hard edge on a 130 m hull
+      // also floods twenty thousand square metres of seabed behind it, and a
+      // crimson floor is not the Directorate's water — it is a studio.
+      const SUBJECT_LAYER = 1;
+      hull.traverse((o) => {
+        if (!o.isMesh) return;
+        o.layers.enable(SUBJECT_LAYER);
+        o.castShadow = true;
+        o.receiveShadow = true;
+        for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
+          if (!m) continue;
+          // Hull plate: dark and wet, and the metalness is the trap. A
+          // metal's diffuse response is (1 − metalness), so plate at 0.85
+          // answers a light almost entirely in specular — and specular from a
+          // distant directional is one small highlight. Under an environment
+          // as dark as this water, that renders a black cut-out with a glint
+          // on it, whatever the key is set to. So metalness stays low enough
+          // to keep a diffuse term and the wet look comes from roughness and
+          // the environment instead — and the environment's own weight stays
+          // under 1, because an up-facing deck sees the whole sky of it and
+          // a flat-topped hull like the Harvester turns into a pale slab
+          // long before the key is what is doing it. Roughness is held in a narrow band so no
+          // part of a hull turns into a mirror or into felt.
+          m.metalness = THREE.MathUtils.clamp(m.metalness ?? 0.5, 0.18, 0.42);
+          m.roughness = THREE.MathUtils.clamp(m.roughness ?? 0.5, 0.26, 0.5);
+          m.envMapIntensity = 0.95;
+          // Plate is remapped into a noir band — and it is remapped at both
+          // ends, which is the part that took a while to see.
+          //
+          // The model scripts author across the whole range because the
+          // sprite bake only ever reads relative values: the Consortium's
+          // alloy is a genuinely light grey, and a lamp's base is a genuine
+          // near-black, sometimes #000. Photograph either as authored and it
+          // fails — the alloy comes back a model kit on a table, and the
+          // near-black comes back a cut-out no amount of key can lift,
+          // because zero times anything is zero.
+          //
+          // So lightness is squeezed into [0.08, 0.18] by a linear remap in
+          // HSL: hue and saturation are the model's, the ordering between
+          // parts survives, and both ends land somewhere a light can reach.
+          // Saturation is capped as well — plate is steel, and a saturated
+          // hull would compete with the lamps, which are the only things in
+          // this style allowed to carry colour as information.
+          if (m.color) {
+            const hsl = { h: 0, s: 0, l: 0 };
+            m.color.getHSL(hsl);
+            m.color.setHSL(hsl.h, Math.min(hsl.s, 0.5), 0.08 + hsl.l * 0.1);
+          }
+          if (!m.emissive) continue;
+          const lum = 0.2126 * m.emissive.r + 0.7152 * m.emissive.g + 0.0722 * m.emissive.b;
+          if (lum <= 0.002) continue;
+          // Hue from the navy, brightness from the model's own relative
+          // luminance and the hull's SIG.
+          m.emissive = lampColor.clone();
+          m.emissiveIntensity = THREE.MathUtils.clamp(
+            Math.pow(THREE.MathUtils.clamp(lum, 0, 1), 0.5) * 0.62 * glowGain,
+            0,
+            1.0
+          );
+          lamps.push(o);
+        }
+      });
+
+      // Float the ship over the floor at a little under a hull length, so the
+      // seabed reads as ground the ship is above rather than a table it rests
+      // on, and the key light has room to throw a shadow onto it.
+      const floorY = -(hullSize.y / 2) - lengthM * 0.62;
+
+      // --- seabed -----------------------------------------------------------
+      // A wide displaced plane. `rock-face` #11161C is the brightness ceiling
+      // for any rock pixel (docs/style-neon-noir.md "The stone"), so the
+      // material sits well under it and lets the rig carry it the rest of the
+      // way; the ramp is hue-neutral by construction, and stays so here.
+      const groundSpan = lengthM * 30;
+      const groundGeo = new THREE.PlaneGeometry(groundSpan, groundSpan, 220, 220);
+      groundGeo.rotateX(-Math.PI / 2);
+      const pos = groundGeo.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        pos.setY(i, groundAt(pos.getX(i), pos.getZ(i)));
+      }
+      groundGeo.computeVertexNormals();
+      const ground = new THREE.Mesh(
+        groundGeo,
+        new THREE.MeshStandardMaterial({
+          color: new THREE.Color('#0C1218'),
+          roughness: 0.88,
+          metalness: 0.12,
+        })
+      );
+      ground.position.y = floorY;
+      ground.receiveShadow = true;
+      scene.add(ground);
+
+      // --- the biome's own props -------------------------------------------
+      // The registry's models, at the registry's footprint metres, standing
+      // on the displaced floor. A scatter ring: nothing inside the subject's
+      // own footprint, nothing so far out the fog has eaten it.
+      const propLights = [];
+      for (const spec of shot.props) {
+        const prop = await new GLTFLoader().loadAsync(`/props/${spec.slug}.glb`);
+        const size = new THREE.Box3().setFromObject(prop.scene).getSize(new THREE.Vector3());
+        const base = Math.max(size.x, size.z);
+        const unit = base > 0 ? spec.footprintM / base : 1;
+        const count = spec.slug.includes('crag') || spec.slug.includes('slab') ? 9 : 7;
+        for (let i = 0; i < count; i++) {
+          const inst = prop.scene.clone(true);
+          const jitter = between(0.8, 1.45);
+          inst.scale.setScalar(unit * jitter);
+          // Inside the fog and outside the subject: far enough out that
+          // nothing crowds the hull, near enough in that the water has
+          // something *in* it rather than a lit ship over an empty plain.
+          const r = between(lengthM * 0.95, lengthM * 3.4);
+          const a = between(0, Math.PI * 2);
+          const x = Math.cos(a) * r;
+          const z = Math.sin(a) * r;
+          // Props stand: base at the floor, sunk a touch so no prop hovers
+          // on a slope the plane's own normal disagrees with.
+          const local = new THREE.Box3().setFromObject(inst);
+          inst.position.set(
+            x,
+            floorY + groundAt(x, z) - local.min.y - spec.footprintM * jitter * 0.06,
+            z
+          );
+          inst.rotation.y = between(0, Math.PI * 2);
+          inst.traverse((o) => {
+            if (!o.isMesh) return;
+            o.castShadow = true;
+            o.receiveShadow = true;
+            for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
+              if (!m) continue;
+              if (m.color) {
+                const cl = 0.2126 * m.color.r + 0.7152 * m.color.g + 0.0722 * m.color.b;
+                // `rock-face` #11161C is the brightness ceiling for a rock
+                // pixel (docs/style-neon-noir.md "The stone"), and ground you
+                // cannot enter never outshines ground you can.
+                if (cl > 0.07) m.color.multiplyScalar(0.07 / cl);
+              }
+              if (!m.emissive || !shot.worldLight) continue;
+              // Only what the prop already lights. Every MeshStandardMaterial
+              // carries an `emissive` — black, by default — so recolouring on
+              // the property's mere presence set whole rocks glowing: an
+              // ember-orange chimney rather than a chimney with an ember in
+              // its mouth, which is the exact style bug the env branch of
+              // hull-intake exists to catch.
+              const lum =
+                0.2126 * m.emissive.r + 0.7152 * m.emissive.g + 0.0722 * m.emissive.b;
+              if (lum <= 0.002) continue;
+              // World light is the biome's, never the navy's — a vent is
+              // ember whoever is standing over it.
+              m.emissive = new THREE.Color(shot.worldLight);
+              m.emissiveIntensity = 0.85 * shot.worldLightPower;
+            }
+          });
+          scene.add(inst);
+          // One practical light per lit prop, close and steeply falling off,
+          // so the ground around a vent or a crystal is lit by the thing
+          // that glows rather than by a global tint pretending to be it.
+          if (spec.lit && shot.worldLight && propLights.length < 6) {
+            const p = new THREE.PointLight(
+              new THREE.Color(shot.worldLight),
+              lengthM * lengthM * 0.55 * shot.worldLightPower,
+              lengthM * 7,
+              2
+            );
+            p.position.set(x, inst.position.y + spec.footprintM * jitter * 0.7, z);
+            scene.add(p);
+            propLights.push(p);
+          }
+        }
+      }
+
+      // --- the rig ----------------------------------------------------------
+      // Key, rim, fill, and nothing else. Noir is a subtraction: what makes
+      // the frame is the black between them.
+      //
+      // 1. Key — forward, camera-left, cool, and deliberately *low*: about
+      //    twenty degrees off the horizontal. A high key lands square on
+      //    every deck and turns a flat-topped hull like the Harvester into a
+      //    pale slab; a low one rakes across the decks and down the flanks,
+      //    which is what puts relief on a shape built out of boxes. It is the
+      //    only shadow-caster.
+      //    Cyan because cyan is the interface voice and the water's memory
+      //    (docs/style-neon-noir.md), so the light that *describes* the hull
+      //    speaks in it and the accent is left to mean the navy.
+      const key = new THREE.DirectionalLight(new THREE.Color('#9EDCF2'), 4.4);
+      key.position.set(-lengthM * 1.95, lengthM * 1.15, lengthM * 2.35);
+      key.castShadow = true;
+      key.shadow.mapSize.set(2048, 2048);
+      key.shadow.bias = -0.0009;
+      key.shadow.normalBias = lengthM * 0.004;
+      {
+        const s = lengthM * 1.7;
+        const c = key.shadow.camera;
+        c.left = -s;
+        c.right = s;
+        c.top = s;
+        c.bottom = -s;
+        c.near = lengthM * 0.2;
+        c.far = lengthM * 9;
+        c.updateProjectionMatrix();
+      }
+      scene.add(key);
+
+      // ...and the same key again, on the subject's layer alone. A hull is
+      // held to a near-black ceiling (see the plate clamp above) while the
+      // seabed around it is lit stone, so the two need different amounts of
+      // light to read: raise the field until the hull's shape is legible and
+      // the water stops being water. This is one light in two intensities,
+      // not a fourth direction — the shadow, the falloff and the bearing are
+      // the key's.
+      const subjectKey = key.clone();
+      subjectKey.castShadow = false;
+      subjectKey.intensity = key.intensity * 1.2;
+      subjectKey.layers.set(SUBJECT_LAYER);
+      scene.add(subjectKey);
+      scene.add(subjectKey.target);
+
+      // 2. Rim — behind and low, the navy's accent, hard. This is the light
+      //    that draws the silhouette: hull plate is metallic and rough under
+      //    0.55 precisely so this one grazes an edge instead of washing a
+      //    face. Turn it off and the ship disappears into the water, which is
+      //    the correct behaviour and the whole reason the style works.
+      // Behind the subject, not beside it: a light at 165° off the camera's
+      // own bearing lands on the far side of every surface, so what reaches
+      // the lens is the grazing edge and nothing else. Placed in world space
+      // it was lighting the side of the hull the camera cannot see, which is
+      // an expensive way to render a black shape.
+      const rimAz = camAz + Math.PI * (165 / 180);
+      const rim = new THREE.DirectionalLight(accent.clone(), 6.0);
+      rim.layers.set(SUBJECT_LAYER);
+      rim.position.set(
+        Math.cos(rimAz) * lengthM * 2.4,
+        lengthM * 0.55,
+        Math.sin(rimAz) * lengthM * 2.4
+      );
+      scene.add(rim);
+
+      // 3. Fill — a hemisphere so faint it is really just a floor for the
+      //    blacks. Sky is the water's own colour; ground is the ember or the
+      //    biolight bouncing back up, or nothing at all in the trench.
+      const fill = new THREE.HemisphereLight(
+        water.clone().multiplyScalar(2.4),
+        shot.worldLight ? new THREE.Color(shot.worldLight) : new THREE.Color('#04070C'),
+        shot.worldLight ? 0.55 : 0.3
+      );
+      scene.add(fill);
+
+      // --- light shafts -----------------------------------------------------
+      // Downwelling light, six of them, each a cone that widens as it falls.
+      // There is no sun at this depth and the game knows it; what these are
+      // is the same thing the HUD's scanline is — a reminder that the water
+      // is a volume. Additive, depth-write off, and faint enough that they
+      // never read as geometry.
+      const shaftMat = new THREE.ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+        uniforms: {
+          uColor: { value: new THREE.Color('#7FC7E8') },
+          uPower: { value: 0.05 },
+        },
+        vertexShader: `
+          varying vec2 vUv;
+          varying vec3 vNormalV;
+          varying vec3 vViewV;
+          void main() {
+            vUv = uv;
+            vec4 mv = modelViewMatrix * vec4(position, 1.0);
+            vNormalV = normalize(normalMatrix * normal);
+            vViewV = normalize(-mv.xyz);
+            gl_Position = projectionMatrix * mv;
+          }
+        `,
+        fragmentShader: `
+          varying vec2 vUv;
+          varying vec3 vNormalV;
+          varying vec3 vViewV;
+          uniform vec3 uColor;
+          uniform float uPower;
+          void main() {
+            // Fade at both ends so a shaft has no cut edge, and fade where
+            // the cone faces the camera so the silhouette stays soft: the
+            // same grazing-angle trick a volumetric would give for free.
+            float ends = smoothstep(0.0, 0.35, vUv.y) * (1.0 - smoothstep(0.55, 1.0, vUv.y));
+            float graze = 1.0 - abs(dot(normalize(vNormalV), normalize(vViewV)));
+            gl_FragColor = vec4(uColor, ends * pow(graze, 1.6) * uPower);
+          }
+        `,
+      });
+      // Four, all of them far out and on the camera's far side. Two rules
+      // learned by getting them wrong: a shaft the camera stands *inside*
+      // renders as a ring of banded contours rather than as light, and a
+      // shaft bright enough to notice reads as a pillar — as geometry — which
+      // is the one thing it must not be. At 0.085 they are barely there,
+      // which is the correct amount of there.
+      for (let i = 0; i < 4; i++) {
+        const h = lengthM * 10;
+        const shaft = new THREE.Mesh(
+          new THREE.CylinderGeometry(lengthM * 0.2, lengthM * between(0.8, 1.5), h, 24, 1, true),
+          shaftMat
+        );
+        const r = between(lengthM * 5.5, lengthM * 9.5);
+        const a = camAz + Math.PI + between(-1.1, 1.1);
+        shaft.position.set(Math.cos(a) * r, floorY + h * 0.5, Math.sin(a) * r);
+        shaft.rotation.z = between(-0.1, 0.1);
+        shaft.rotation.x = between(-0.08, 0.08);
+        scene.add(shaft);
+      }
+
+      // --- marine snow ------------------------------------------------------
+      // Detritus falling through the beams. It costs one draw call and it is
+      // the single cheapest thing that makes black water read as water rather
+      // than as an empty buffer.
+      const SNOW = 5200;
+      const snowPos = new Float32Array(SNOW * 3);
+      const snowSize = new Float32Array(SNOW);
+      const span = lengthM * 9;
+      for (let i = 0; i < SNOW; i++) {
+        snowPos[i * 3] = between(-span, span);
+        snowPos[i * 3 + 1] = floorY + between(0, span * 1.2);
+        snowPos[i * 3 + 2] = between(-span, span);
+        snowSize[i] = between(0.25, 1.5);
+      }
+      const snowGeo = new THREE.BufferGeometry();
+      snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPos, 3));
+      snowGeo.setAttribute('aSize', new THREE.BufferAttribute(snowSize, 1));
+      const snow = new THREE.Points(
+        snowGeo,
+        new THREE.ShaderMaterial({
+          transparent: true,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+          uniforms: {
+            uColor: { value: new THREE.Color('#A8D0E0') },
+            uScale: { value: H * 0.9 },
+            uFog: { value: scene.fog.density },
+          },
+          vertexShader: `
+            attribute float aSize;
+            varying float vFade;
+            uniform float uScale;
+            uniform float uFog;
+            void main() {
+              vec4 mv = modelViewMatrix * vec4(position, 1.0);
+              float d = -mv.z;
+              gl_PointSize = aSize * uScale / max(d, 1.0);
+              // Snow obeys the same fog the solids do, or it floats in front
+              // of a scene it is supposed to be inside.
+              vFade = exp(-uFog * uFog * d * d);
+              gl_Position = projectionMatrix * mv;
+            }
+          `,
+          fragmentShader: `
+            varying float vFade;
+            uniform vec3 uColor;
+            void main() {
+              vec2 p = gl_PointCoord - 0.5;
+              float a = smoothstep(0.5, 0.0, length(p));
+              gl_FragColor = vec4(uColor, a * vFade * 0.75);
+            }
+          `,
+        })
+      );
+      scene.add(snow);
+
+      // --- post -------------------------------------------------------------
+      /**
+       * The composer's intermediate buffer, and the one hard-won thing on
+       * this page.
+       *
+       * EffectComposer defaults to a HalfFloatType target, which is the right
+       * choice everywhere with a real GPU: it is what lets a bloom threshold
+       * sit above 1.0 and pick out only genuine highlights. Under this
+       * container's SwiftShader it renders **pure black** through
+       * UnrealBloomPass — not dim, not wrong, zero in every channel, with no
+       * GL error and no page error to find it by. Multisampling is not the
+       * cause; a half-float target fails the same way at samples=0. An
+       * UnsignedByteType target renders correctly with the identical pass
+       * chain, so that is what this asks for.
+       *
+       * The cost is that the buffer clamps at 1.0, so bloom sees a clipped
+       * highlight rather than an HDR one. That is survivable here and
+       * arguably on-style: everything the rig puts on hull plate stays well
+       * under the threshold, and what crosses it is the lamps, which is
+       * exactly what is supposed to bloom.
+       */
+      function makeTarget() {
+        const t = new THREE.WebGLRenderTarget(W, H, {
+          type: THREE.UnsignedByteType,
+          colorSpace: THREE.LinearSRGBColorSpace,
+        });
+        t.samples = 4;
+        return t;
+      }
+
+      // One bloom, and the threshold is the whole decision.
+      // "Bloom-everything is the failure mode of this style"
+      // (docs/style-neon-noir.md, the glow recipe), so 0.4 is set above
+      // anything the rig puts on hull plate — which is dark albedo under a
+      // key that peaks well below it — and under the lamps, which are the
+      // only things in the frame that are supposed to bleed. The radius is
+      // deliberately tight: a wide one spreads the pass's own low mips, and
+      // on a byte buffer those show up as faint rectangles ringing the
+      // subject.
+      const composer = new EffectComposer(renderer, makeTarget());
+      composer.setSize(W, H);
+      composer.addPass(new RenderPass(scene, camera));
+      composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), 0.55, 0.34, 0.42));
+      composer.addPass(new OutputPass());
+
+      composer.render();
+
+      // Debug hooks (render.mjs does not call these; they exist for probing
+      // the pipeline when a frame comes back wrong).
+      window.__debug = {
+        noPost: () => {
+          renderer.render(scene, camera);
+          return renderer.domElement.toDataURL('image/png');
+        },
+        post: () => {
+          composer.render();
+          return renderer.domElement.toDataURL('image/png');
+        },
+        peak: () => {
+          const gl = renderer.getContext();
+          const px = new Uint8Array(W * H * 4);
+          gl.readPixels(0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, px);
+          let max = 0, sum = 0;
+          for (let i = 0; i < px.length; i += 4) {
+            const m = Math.max(px[i], px[i + 1], px[i + 2]);
+            if (m > max) max = m;
+            sum += m;
+          }
+          return { max, mean: sum / (W * H) };
+        },
+        cam: () => ({
+          pos: camera.position.toArray(),
+          floorY,
+          hullSize: hullSize.toArray(),
+          fog: scene.fog.density,
+        }),
+      };
+
+      window.__stats = {
+        hullSizeM: { x: hullSize.x, y: hullSize.y, z: hullSize.z },
+        lamps: lamps.length,
+        propLights: propLights.length,
+        glowGain,
+      };
+      window.__png = () => renderer.domElement.toDataURL('image/png');
+      window.__ready = true;
+    </script>
+    <script>
+      window.addEventListener('error', (e) => {
+        window.__error = String((e.error && e.error.message) || e.message);
+      });
+      window.addEventListener('unhandledrejection', (e) => {
+        window.__error = String((e.reason && e.reason.message) || e.reason);
+      });
+    </script>
+  </body>
+</html>
