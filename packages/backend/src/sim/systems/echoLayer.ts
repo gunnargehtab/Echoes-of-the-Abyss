@@ -167,6 +167,43 @@ const PHANTOM_HULLS_BY_NAVY: ReadonlyMap<Faction, readonly UnitKind[]> = new Map
 interface PhantomReturns {
   slot: number;
   contacts: Contact[];
+  /** What each contact's reported point is re-derived from, parallel to it. */
+  anchors: PhantomAnchor[];
+}
+
+/**
+ * The fixed place a phantom's lie is told about — docs/systems-echo.md §3.
+ *
+ * A true return has a truth behind it and a report in front of it, and the
+ * report is re-derived from the truth every pass. A phantom has no truth, so
+ * it is given one that never goes on the wire: the point `conjurePhantoms`
+ * placed it at. Everything below is what `scatterContact` needs to lie about
+ * that point the way it lies about a hull, and it is stored rather than
+ * recomputed because none of it moves.
+ */
+interface PhantomAnchor {
+  x: number;
+  y: number;
+  /**
+   * The scattered share of the path from the pinger to that point, walked
+   * once when the transmission conjured it.
+   *
+   * A real contact's fraction is re-walked per pass because its emitter moves
+   * and the anchor does not. Re-walking this one would buy a number that
+   * barely changes and cannot be observed — the fraction only scales the lie,
+   * and a client that could measure the scale would already know the truth —
+   * at the price of a path integral per phantom per pass on the 2 ms budget.
+   */
+  fraction: number;
+  /**
+   * This phantom's key into the lie, stable for the life of the transmission.
+   *
+   * Negative, and no real emitter key ever is: `scatterContact` takes a
+   * match-local entity id there, so a negative key cannot collide with one
+   * and a phantom's drift can never be the exact drift of some hull on the
+   * map. Server-side either way — the client is shown only the outcome.
+   */
+  key: number;
 }
 
 /** Where a phantom was reported — the only aim point an order on one has. */
@@ -628,11 +665,14 @@ export class EchoLayer {
    * keeps that from being an answer the client can read, by giving every
    * order path something to take instead of a refusal to publish.
    *
-   * What is left of the three is the freeze: a phantom's reported position is
-   * written once and a real contact in scattered water is re-lied every pass,
-   * so cross-pass equality still separates them. That one is *specified* —
-   * §3 says a phantom holds still for the three seconds — so it is a doc
-   * change before it is a code change, and neither has happened.
+   * The third channel was the freeze, and it is closed too: a phantom's
+   * reported point used to be written once while a real contact in scattered
+   * water was re-lied every pass, so cross-pass equality separated them with
+   * no threshold. §3 specified that freeze, so the sentence moved first and
+   * `run` now retells each phantom's lie on every pass about a conjured
+   * anchor that never goes on the wire. What remains is the tell §3 says is
+   * the whole of it — a phantom is a return no second ear confirms — and it
+   * is the one a player earns rather than reads.
    */
   private mintHandle(slot: number): number {
     const index = (this.nextHandle.get(slot) ?? 0) + 1;
@@ -875,6 +915,7 @@ export class EchoLayer {
     const depth = Position.depth[pinger]!;
 
     const contacts: Contact[] = [];
+    const anchors: PhantomAnchor[] = [];
     for (let n = 0; n < count; n++) {
       for (let attempt = 0; attempt < SCATTER.PHANTOM_PLACEMENT_TRIES; attempt++) {
         // One step per (phantom, attempt) so a rejected placement re-rolls
@@ -910,6 +951,9 @@ export class EchoLayer {
         contacts.push({
           id: this.mintHandle(slot),
           tier: ResolutionTier.Track,
+          // The conjured point, which `run` overwrites with the lie about it
+          // before anything sees this contact. Seeded here so a phantom that
+          // is never published still has a position, like any other contact.
           x,
           y,
           tick: began,
@@ -920,17 +964,30 @@ export class EchoLayer {
           maxHp: UNIT_STATS[kind].maxHp,
           heading: stableUnit(seed, key, PHANTOM_SALT_HEADING, step) * Math.PI * 2,
         });
+        anchors.push({
+          x,
+          y,
+          fraction: terrain.scatteredFraction(px, py, x, y),
+          // One key per phantom per transmission, and distinct from its
+          // neighbours' so three lies from one ping do not slide in lockstep.
+          key: -(key * SCATTER.PHANTOMS_MAX + n) - 1,
+        });
         break;
       }
     }
     if (contacts.length === 0) return;
-    this.phantoms.set(pinger, { slot, contacts });
+    this.phantoms.set(pinger, { slot, contacts, anchors });
     let index = this.phantomByHandle.get(slot);
     if (index === undefined) {
       index = new Map();
       this.phantomByHandle.set(slot, index);
     }
-    for (const contact of contacts) index.set(contact.id, { x: contact.x, y: contact.y });
+    // The contact itself, not a copy of where it started. An order on a
+    // phantom aims at the point the player was last *shown*, and that point
+    // is re-derived every pass now — a snapshot of the anchor would aim the
+    // hull at a place no snapshot ever drew, which is its own small tell in
+    // `queuedOrders`.
+    for (const contact of contacts) index.set(contact.id, contact);
   }
 
   /**
@@ -1630,17 +1687,47 @@ export class EchoLayer {
       }
     }
 
-    // Phantoms, appended here and sorted into place below, under the same
-    // handle space the real returns were drawn from. A
+    // Phantoms, re-lied and appended here and sorted into place below, under
+    // the same handle space the real returns were drawn from. A
     // slot's phantoms ride in its own payload only: the AI seat reads that
     // payload and is deceived exactly as a player is (docs/systems-echo.md
     // §3 "Symmetric"), and nothing here raises anybody's exposure, because
     // nobody is being heard.
     if (this.phantoms.size > 0) {
-      for (const returns of this.phantoms.values()) {
+      for (const [pinger, returns] of this.phantoms) {
         const out = this.results.get(returns.slot);
         if (out === undefined) continue;
-        for (const phantom of returns.contacts) {
+        // The listener the lie is rotated about is the pinger, exactly as it
+        // is for the true returns of the same transmission (§5) — and its
+        // *current* position, because a real contact's is. A pinger that has
+        // lost its Position is one `forget` has not reached yet; its last
+        // report stands rather than snapping to the origin.
+        const px = Position.x[pinger];
+        const py = Position.y[pinger];
+        for (let i = 0; i < returns.contacts.length; i++) {
+          const phantom = returns.contacts[i]!;
+          const anchor = returns.anchors[i]!;
+          if (px !== undefined && py !== undefined) {
+            // docs/systems-echo.md §3: the lie is retold, not repeated. A
+            // phantom whose reported point was written once and a true return
+            // re-lied every pass were separated by an equality test over two
+            // snapshots, for nothing. Same function, same drift period, same
+            // bound as every other contact resolved through crystal; what is
+            // different is only that there is no hull under the anchor.
+            const lied = scatterContact(
+              anchor.x,
+              anchor.y,
+              px,
+              py,
+              anchor.fraction,
+              seed,
+              returns.slot,
+              anchor.key,
+              world.tick
+            );
+            phantom.x = lied.x;
+            phantom.y = lied.y;
+          }
           phantom.tick = world.tick;
           out.push(phantom);
         }
