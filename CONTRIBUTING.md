@@ -81,22 +81,22 @@ Until then, `main` is the release, and the way to get a change to people is to m
 
 - One concern per PR, referencing the issue it closes (`Fixes #30`).
 - Fill in the template in [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md).
-- Run the CI gates locally first — the full sequence is cheap:
+- Run the CI gates locally first — the full sequence is cheap, and it is one command:
 
   ```bash
-  npm run build:shared
-  npm run type-check
-  npm run lint
-  npm run format:check
-  npm test
-  npm run build
-  npx -y markdownlint-cli "docs/**/*.md" "docs/*.md" --ignore node_modules
-  git ls-files -z ':(glob)docs/**/*.md' \
-    | xargs -0 npx -y markdown-link-check --config .markdown-link-check.json
+  npm run gates
   ```
 
-  All of these are blocking in CI (`.github/workflows/ci.yml`) — including both doc
-  gates, so a dead link in `docs/` fails the build.
+  That is `preflight`, `build:shared`, `type-check`, `lint`, `format:check`,
+  `check:models`, `test`, `build`, and both doc gates — every blocking check in
+  `.github/workflows/ci.yml`, so a dead link in `docs/` fails here exactly as it fails
+  there. It runs them in one pass rather than stopping at the first red one, prints a
+  pass/fail summary, and exits non-zero if any gate failed. `npm run gates -- --list`
+  names them; `--only=`, `--skip=` and `--bail` narrow a run while you iterate on one.
+
+  The list this replaces was missing `check:models`, which is the argument for having a
+  single command: prose that repeats a gate list drifts from the workflow that runs it,
+  and drifts quietly.
 
 ## Labels
 
