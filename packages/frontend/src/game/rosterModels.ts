@@ -14,12 +14,17 @@
  *
  * - **Gate 4 — hue belongs to the faction constant.** Models are dressed in a
  *   faction's palette for generation, so their hue is not shippable. Each
- *   material keeps only its *luminance* (this hull's panel and ridge value)
- *   and is recoloured in the owning faction's primary; lamps keep their
- *   placement and strength and are recoloured to the faction glow — the same
- *   law bake.ts applies to the 2D maps, so the chart and the conn view cannot
- *   drift into different-looking navies. Recolouring reads the active palette,
- *   so the colour-vision palettes (ui-ux.md §11) reach the meshes too.
+ *   material keeps only the *ratio* it holds to the model's brightest one
+ *   (this hull's panel against its ridge) and is recoloured in the owning
+ *   faction's primary; lamps keep their placement and their approved strength
+ *   and are recoloured to the faction glow — the same law bake.ts applies to
+ *   the 2D maps, so the chart and the conn view cannot drift into
+ *   different-looking navies. Recolouring reads the active palette, so the
+ *   colour-vision palettes (ui-ux.md §11) reach the meshes too.
+ *
+ *   What the ink does *not* set is how bright a navy is. Hue is the faction's
+ *   and brightness is the renderer's, and the register every model is put on
+ *   is `CLADDING_CEILING` — without which a navy inked dark rendered dark.
  * - **Gate 3 — glow encodes loudness.** A model's resting light budget was
  *   approved at intake against its SIG band; at runtime that resting strength
  *   is modulated by the hull's *live* SIG along the spec curve's exponent
@@ -46,10 +51,46 @@ import { ACTIVE_PALETTE, FACTION_PALETTE } from './palette.ts';
 import { HULL_LENGTH_M } from './silhouettes.ts';
 import { glowFactor } from './glow.ts';
 
-/** TUNABLE — the bake's dark-livery lift, restated for materials: bake.ts
- * lifts cladding luminance ×1.5 so near-black hulls still carry their
- * faction's colour. Same number, same reason. */
-const LUMINANCE_LIFT = 1.5;
+/**
+ * TUNABLE — the linear diffuse luminance a model's *brightest* cladding
+ * material renders at under the shared light rig. Every other material on the
+ * model keeps its ratio to that one, floored at `CLADDING_FLOOR`.
+ *
+ * Normalising rather than lifting is the argument environmentModels.ts already
+ * makes for props, and it repairs two faults the old ×1.5 lift could not.
+ *
+ * An export's *absolute* darkness is arbitrary: across the approved roster the
+ * brightest cladding material spans 0.05 linear (the Directorate's Light
+ * Scout) to 0.82 (the Hadron foundry's `alloy_white`), because each design
+ * brief was honoured on its own terms and nothing ever compared two of them.
+ * Lifting all of them by one factor keeps that spread; normalising deletes it.
+ *
+ * Worse, the faction ink's own luminance used to multiply straight into the
+ * result — `primary × value` — so a navy inked in a dark colour rendered dark.
+ * The Directorate's `#7A1B2E` is 0.051 linear against the Consortium's
+ * `#F2B233` at 0.510, and its hulls came out at 0.0002–0.004: a tenth of the
+ * seabed they sat on, and a black smudge at every zoom. Hue is the ink's
+ * (gate 4); brightness never was. Both navies now land on this number, which
+ * is also what makes the colour-vision palettes safe — `DEUTERANOPIA` re-inks
+ * the Directorate to `#5E3A0F`, a different luminance again.
+ *
+ * The value sits above `ENV_LUMINANCE_CEILING` by exactly the floor below —
+ * 0.16 × 0.42 = 0.067 against the props' 0.06 — which is the ordering
+ * environmentModels.ts documents and could not previously satisfy.
+ */
+const CLADDING_CEILING = 0.16;
+
+/**
+ * TUNABLE — how far below the ceiling a model's *darkest* cladding may sit, as
+ * a fraction of it. Transcribes the compression bake.ts applies to the 2D maps
+ * (`v = 0.22 + 0.3·luma`, a range that bottoms out at 0.42 of its top).
+ *
+ * There is one lighting model in this game and the conn view does not get a
+ * second: without the floor a 50:1 spread inside a single export — the Hadron
+ * foundry's `alloy_white` against its `dark_steel` — renders half a structure
+ * as a hole, which is what a ratio-preserving normalisation alone would do.
+ */
+const CLADDING_FLOOR = 0.42;
 
 /**
  * Every approved model, keyed by its docs filename. Lazy URLs: the build
@@ -198,27 +239,57 @@ function luminance(color: Color): number {
 }
 
 /**
- * Gate 4, applied in place: keep the material's value, replace its hue with
- * the faction's inks from the active palette. Metalness and roughness are the
- * designed surface and stay the model's own.
+ * Gate 4, applied in place: keep the *ratio* between the model's materials,
+ * replace their hue with the faction's inks from the active palette, and set
+ * the absolute register here rather than inheriting the export's or the ink's.
+ * Metalness and roughness are the designed surface and stay the model's own.
+ *
+ * Both passes divide the ink out by its own luminance before scaling to the
+ * target, so what the ink contributes is its chromaticity and nothing else. A
+ * dark ink no longer darkens a navy — see `CLADDING_CEILING`.
+ *
+ * Emissive is treated differently from cladding on purpose. A lamp's resting
+ * strength was approved at intake against the hull's SIG band (gate 3), so it
+ * is preserved exactly: the correction goes into `emissiveIntensity`, which is
+ * where `applyLiveGlow` already reads the resting value from, and the emitted
+ * luminance comes out as the model's own. Recolouring it to the glow ink's
+ * chromaticity keeps the emissive colour inside gamut, which writing the
+ * scaled ink straight into `emissive` would not — the Directorate's `#C2465E`
+ * normalised to unit luminance clips its red channel past 3.
  */
 function recolor(root: Group, faction: Faction): void {
   const ink = FACTION_PALETTE[faction];
   const primary = new Color(ink.primary);
   const glow = new Color(ink.glow);
+  const primaryLum = luminance(primary);
+  const glowLum = luminance(glow);
+
+  // Deduplicated: parts that shared a glTF material share one clone, and a
+  // per-mesh walk would otherwise recolour that clone once per part — each
+  // pass reading the value the pass before it wrote.
+  const materials = new Set<MeshStandardMaterial>();
   root.traverse((child) => {
     if (!(child instanceof Mesh)) return;
-    const materials = Array.isArray(child.material) ? child.material : [child.material];
-    for (const material of materials) {
-      if (!(material instanceof MeshStandardMaterial)) continue;
-      const value = Math.min(1, luminance(material.color) * LUMINANCE_LIFT);
-      material.color.copy(primary).multiplyScalar(value);
-      if (luminance(material.emissive) > 0) {
-        const strength = Math.min(1, luminance(material.emissive) * LUMINANCE_LIFT);
-        material.emissive.copy(glow).multiplyScalar(strength);
-      }
+    for (const material of Array.isArray(child.material) ? child.material : [child.material]) {
+      if (material instanceof MeshStandardMaterial) materials.add(material);
     }
   });
+
+  const brightest = Math.max(0, ...[...materials].map((material) => luminance(material.color)));
+  for (const material of materials) {
+    if (primaryLum > 0) {
+      // A flat-coloured export has no ratios to keep, so every material takes
+      // the ceiling rather than collapsing onto the floor.
+      const ratio = brightest > 0 ? luminance(material.color) / brightest : 1;
+      const target = CLADDING_CEILING * (CLADDING_FLOOR + (1 - CLADDING_FLOOR) * ratio);
+      material.color.copy(primary).multiplyScalar(target / primaryLum);
+    }
+    const emissiveLum = luminance(material.emissive);
+    if (emissiveLum > 0 && glowLum > 0) {
+      material.emissive.copy(glow);
+      material.emissiveIntensity *= emissiveLum / glowLum;
+    }
+  }
 }
 
 /**

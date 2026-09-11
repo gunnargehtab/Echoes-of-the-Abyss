@@ -139,6 +139,34 @@ export const PITCH_DEG = 55;
  * ring foreshortening gentle; wide reads fisheye at RTS distance. */
 const FOV_DEG = 40;
 
+/**
+ * TUNABLE — the gain the flat baked sprite is drawn through, so the fallback
+ * and the modelled roster share one register.
+ *
+ * A sprite is an unlit `MeshBasicMaterial` showing the bake's own composite,
+ * and that composite is already lit: `lightAndCompose` gives it a diffuse
+ * term, a specular of up to 235 and a rim, because on the 2D chart nothing
+ * else ever will. Drawn unlit in a scene that *does* light its meshes, it
+ * simply arrives brighter than everything around it — measured over a mid
+ * zoom, a Caisson's sprite ran a mean of 0.299 against a modelled hull's
+ * 0.165, and clipped to pure white, which the style guide reserves for
+ * one-frame cores (ping front, commit flash) and denies any steady element.
+ *
+ * Gate 1 sanctions the procedural fallback for a hull with no approved model
+ * — the Caisson, the transports, three navies' Choristers. It does not
+ * sanction that hull outshining the modelled roster, which under gate 3 reads
+ * as the loudest thing on the field rather than as the quietest.
+ *
+ * The gain is what closes that gap, and it is a *linear* one — a
+ * `MeshBasicMaterial`'s colour multiplies the decoded map in working space,
+ * so the 0.55 ratio those encoded means describe is this number, not 0.55.
+ * It lives here, on the conn view's own material, rather than in `bake.ts`:
+ * the chart is a scope and keeps the register it was drawn for. Measured back
+ * over the same frame, the sprite lands at 0.145 against the two modelled
+ * hulls beside it at 0.107 and 0.175, and peaks at 0.525 rather than clipping.
+ */
+const SPRITE_REGISTER = 0.24;
+
 /** Pixel-ratio cap: a little sharpness traded for headroom on the low-spec
  * floor (graphics-standards.md gate 6). */
 const MAX_PIXEL_RATIO = 1.5;
@@ -1210,6 +1238,8 @@ export class PerspectiveView {
           transparent: true,
           side: DoubleSide,
           depthWrite: false,
+          // Multiplies the baked map down onto the lit scene's register.
+          color: new Color().setScalar(SPRITE_REGISTER),
         })
       );
       mesh.rotation.order = 'YXZ';

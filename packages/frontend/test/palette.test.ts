@@ -19,8 +19,9 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { Faction, ResolutionTier, ResourceKind } from '@echoes/shared';
+import { Biome, Faction, ResolutionTier, ResourceKind } from '@echoes/shared';
 import {
+  BIOME_COLOR,
   PALETTE_LABEL,
   PALETTE_NAMES,
   PALETTES,
@@ -327,6 +328,41 @@ describe('what each palette is for', () => {
         );
       }
     }
+  });
+});
+
+describe('the ground palette', () => {
+  // Rec. 709 on the encoded bytes: the seafloor is authored as hexes and read
+  // off screenshots, and both of those live in the encoded space.
+  const encodedLuminance = (c: number) =>
+    (0.2126 * ((c >> 16) & 0xff) + 0.7152 * ((c >> 8) & 0xff) + 0.0722 * (c & 0xff)) / 255;
+
+  it('keeps every enterable biome fill inside the documented 5–10% band', () => {
+    // docs/style-neon-noir.md §"Colour-vision palettes": "The seafloor is
+    // deliberately desaturated to 5–10 % luminance." This is the assertion the
+    // sentence never had, and four of the six fills had drifted to 12.2–13.9%
+    // without it — which is most of a frame, since the seabed is most of a
+    // frame. depthShade and reliefShade only ever darken, so an authored fill
+    // is the brightest that biome's ground can render: checking the constants
+    // checks every ground pixel in the game.
+    for (const [biome, fill] of Object.entries(BIOME_COLOR)) {
+      if (Number(biome) === Biome.AbyssalTrench) continue;
+      const lum = encodedLuminance(fill);
+      assert.ok(
+        lum >= 0.05 && lum <= 0.1,
+        `biome ${biome} fills at ${(lum * 100).toFixed(1)}%, outside the 5–10% band`
+      );
+    }
+  });
+
+  it('leaves the trench below the band, where the art direction puts it', () => {
+    // The one exception, and a deliberate one: "dark -> darker -> pitch black"
+    // ends somewhere, and the Abyssal Trench is where. A test that folded it
+    // into the band would be asking for the trench to be lit.
+    assert.ok(
+      encodedLuminance(BIOME_COLOR[Biome.AbyssalTrench]) < 0.05,
+      'the trench has come up into the band with the rest of the seabed'
+    );
   });
 });
 
