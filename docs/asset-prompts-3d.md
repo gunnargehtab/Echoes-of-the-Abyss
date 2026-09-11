@@ -84,6 +84,34 @@ the louder it is in the Echo Layer. Set each unit's glow from its idle/cruise SI
 | 36–60 | "Sustained glow from vents, sensor arrays and lit ports" |
 | 61+ | "Burning bright; floodlit working surfaces, visible machinery light" |
 
+**Where the light sits matters as much as how much of it there is**, and the 36–60 row is
+where that first bit. "Lit ports" asks for exactly what the phrase says — a window in a
+wall — and a window in a wall is a vertical face. The Consortium's Tender honoured it with
+ten `port_*` panels down its deckhouse and two `engine_vent_*` astern; the ports sit under
+the roof's eaves and the vents under the deck, so the chart's straight-down bake sees
+neither. The hull is not wrong and neither is its prompt. What is wrong is the UNIT block
+reading as a light budget when it is a description of a hull.
+
+The two renderers see different halves of a model, and a light budget has to satisfy both:
+
+- **The conn view draws the mesh**, at a 55° tilt, so vertical and tucked-under faces read.
+  Ports, hull-side running lights and stern vents all do their job here, and this is where
+  most of a player's time is spent.
+- **The chart's sprite bake is straight down**, so only unoccluded upward-facing area
+  reaches it. A hull whose light budget is all vertical reads as unlit on the chart — the
+  layer that tells a player how loud something is at a glance.
+
+The Tender passes, but not on the three things its block names. What the bake actually
+counts is 202 m² of upward area: the two `weld_bay_*` floodlights at 112 m², the
+`roof_skylight` at 80, the derrick floods and the bow lamp for the rest. The skylight alone
+is more than a third of it and the block does not mention it, while two of the three sources
+the block does name are invisible from above. Both halves are true of the hull; neither
+half is the whole picture.
+
+So write a UNIT block to name the light the **chart** reads first, and the rest as the bonus
+the conn view collects. Every hull needs at least one unoccluded upward emitter — a deck
+flood, a vent grille in the top plate, a lit hatch — whatever else it carries.
+
 ## Block 1 — STYLE (every prompt starts with this)
 
 ```text
@@ -138,6 +166,86 @@ pale alloy with violet resonance crystal, mirror facets, heat-shimmer around
 active crystal. Palette: resonance violet #8B5CF6, alloy white #E6E9F2,
 shadow indigo #3B2E5A, crystal glow #C9A6FF.
 ```
+
+## Block 2b — the derived palette, and why it is not a palette
+
+Block 2's four values a navy are the brief. The approved models carry 51 distinct hex
+values between them, and 35 of those appear in no table in this repository. That looks like
+a breach of gate 4 in [graphics-standards.md](graphics-standards.md) — "never introduce an
+unlisted hex value" — and it is not one. The reason is worth stating once, because it
+decides what a model author owes the palette and what they do not.
+
+**A model's hue never reaches a pixel.** Gate 4 says so itself: dressing a model in a
+faction's palette is a generation convenience, so its hue is "not shippable". Both
+renderers act on that, and both discard it completely. The chart's sprite bake takes each
+material's luminance and multiplies it into the owning faction's primary
+(`bake.ts`), then flattens the emissive map to one alpha channel and paints the faction's
+glow through it. The conn view does the same to the mesh (`rosterModels.ts`): every
+material's colour is replaced by the faction primary's chromaticity, every emissive by the
+glow ink's. A Commune corvette authored in teal and a Directorate one authored in crimson
+render through the same two lines of code.
+
+So what an author picks for `algae_hull` is an authoring value, like a placeholder name in
+code. What survives into the game is the **ratio** between one material and the next — the
+panel against the ridge, the ridge against the lamp base — because that ratio is what the
+recolour preserves and what a player reads as form.
+
+That is the rule, and it is the whole rule:
+
+1. **Derive freely, within the navy's language.** A dimmed alloy, a warmer vent, a
+   near-black base for a lamp to sit on: all licensed, and none needs a token, because none
+   of them ships as itself.
+2. **Never rely on a derived hue being seen.** A part that only reads because it is a
+   different colour from its neighbour will read as one flat colour in both renderers. If
+   it must be distinguishable, separate it in *value*, not in hue.
+3. **One name, one value, across a navy.** This is the one that bites, and the only one the
+   render can tell you got wrong. Two parts called `weld_steel` at two different values are
+   two different greys after the recolour, on two hulls that a player sees side by side.
+
+The registry below exists for rule 3 — so the next author copies rather than re-derives —
+and for nothing else. It is not a palette table and nothing in it is a token.
+
+### What the approved models derived
+
+Lamp bases are the near-black a `lamp()` puts in `color` for its emissive to sit on
+(`kit.mjs`); emissives are that lamp's light; cladding is a `clad()` surface.
+
+| Navy | Role | Values |
+| --- | --- | --- |
+| Consortium | emissive | `#B07A1E` `amber_vent` · `#F28A1E` `amber_vent` (cruiser) · `#FFD070` `amber_flood` |
+| Consortium | lamp base | `#1A1408` · `#120E06` · `#2A2210` · `#1A1206` |
+| Commune | cladding | `#14332A` / `#14382C` `growth_ridge` · `#123C2E` `growth-ring-dark` · `#14664C` `algae_hull` · `#22302C` `grown_steel` |
+| Commune | emissive | `#5FAE42` `bio_vein` |
+| Commune | lamp base | `#061206` · `#0A1A08` · `#123018` · `#14301A` · `#2A4A20` · `#3F6B2E` |
+| Directorate | cladding | `#3A3F4A` / `#27313B` `weld_steel` · `#4E1220` `chitin_red_dark` |
+| Directorate | emissive | `#E0506A` `gullet_glow` |
+| Directorate | lamp base | `#1A0810` / `#2C0A12` `biolight_crimson` · `#2A0C14` `gullet_glow` |
+| Knights | cladding | `#1C2230` `dark_steel` · `#2C2244` `shadow_indigo` · `#8A8FA3` `alloy_dim` |
+| Knights | emissive | `#9B6CF9` `crystal_panel_glow` · `#A77CFF` `resonance_node` |
+| Knights | lamp base | `#1A1030` · `#1E1038` · `#241744` · `#2A1A50` |
+
+Four names carry two values, which rule 3 forbids and which the approved binaries
+nonetheless contain. They are recorded here rather than corrected, because correcting one
+means re-exporting a model and that is a change of shape, not of prose:
+
+| Name | Values | Where they split |
+| --- | --- | --- |
+| `growth_ridge` | `#14332A` · `#14382C` | the Commune's scout against its Sower |
+| `weld_steel` | `#27313B` · `#3A3F4A` | the Directorate's Sentinel Turret against its Dredge and Precentor |
+| `biolight_crimson` base | `#2C0A12` · `#1A0810` | the same turret against the hulls |
+| `shadow_indigo` | `#2C2244` · `#3B2E5A` | the Knights' Sentinel Turret against the hulls, and `#3B2E5A` is the Block 2 token |
+
+The split runs the same way three times out of four — a structure against the hulls of its
+own navy — which says the structure passes were authored without the hull modules open
+rather than that anyone disagreed. The hull value is canonical in all four cases, and
+`#3B2E5A` doubly so, being the token. A model PR that touches any of these four should
+bring the structure onto the hull's value on its way past; none of them is worth a PR of
+its own, because none of them is visible until two of the parts are on screen together.
+
+One correction landed with the #649 ports and belongs here rather than in a module comment:
+`#5FAE42` was described as the biolight token at half strength. It is not a scaling of
+`#8FE36B` at all — its linear channels are 0.42, 0.55 and 0.37 of it — but a hue of its
+own, the Sower's.
 
 ## Block 3 — UNIT (one per generation)
 
@@ -216,9 +324,10 @@ UNIT — Tender (pair with Consortium): the repair hull, 85 m — a floating
 workshop, not a warship (SIG 48 idle, +12 while welding; no weapon). Box
 hull with an open work deck forward under two derricks, a riveted workshop
 deckhouse amidships, spare-plate racks, gas bottles, pump houses and pipe
-runs, twin prop tunnels notched into the stern. Sustained glow from the
-welding bay, the workshop's lit ports and the stern vents; floodlit when it
-works.
+runs, twin prop tunnels notched into the stern. Sustained glow from the two
+welding bays and a long roof skylight over the workshop — the light the chart
+reads — with lit ports under the deckhouse eaves and vents tucked under the
+stern for the eye that gets closer; floodlit when it works.
 ```
 
 ```text

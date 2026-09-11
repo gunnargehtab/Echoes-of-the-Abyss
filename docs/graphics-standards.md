@@ -222,6 +222,12 @@ generation, so their hue is **not shippable** — the bake takes the albedo's *l
 primary at load time. Never bake a faction hue into a shared shape asset, and never
 introduce an unlisted hex value to make one sprite pop.
 
+"Unlisted hex" means one that reaches a **pixel**, which a model's own material colours
+never do — both renderers replace them, so the values an approved GLB carries are authoring
+conveniences rather than palette entries. What they owe each other instead is consistency:
+see "Block 2b — the derived palette" in [asset-prompts-3d.md](asset-prompts-3d.md), which
+carries the registry and the one-name-one-value rule.
+
 ### 5. The Asymmetric Fidelity Law is a rendering gate
 
 The player's own force renders at full fidelity. The enemy renders **only at the fidelity

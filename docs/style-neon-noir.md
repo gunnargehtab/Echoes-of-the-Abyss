@@ -168,8 +168,39 @@ running lights, wireframe silhouettes, and the player-colour trim only.
 | --- | --- | --- |
 | Bathyarch Consortium | Hazard amber `#F2B233` | Sodium work-lamps, flicker on damage — industrial light that *labours* |
 | Pelagia Commune | Biolight green `#8FE36B` | Soft pulse (~0.5 Hz breathing), no hard edges — glow dims as hull drops |
-| Abyssal Directorate | Biolight crimson `#C2465E` | Rows of small points (plate II's eye-lines), never area glow |
+| Abyssal Directorate | Biolight crimson `#C2465E` | Rows of small points (plate II's eye-lines), never area glow — except a maw, below |
 | Hadron Knights | Resonance violet `#C9A6FF` | Razor-thin constant lines, mirror speculars — the only faction whose light never flickers |
+
+### The Directorate's one area glow: a maw is not livery
+
+"Never area glow" was written about *livery* — how a hull signs itself as Directorate — and
+the eye-lines are what does that signing. It was never a claim about apertures, and the
+approved roster makes the distinction unavoidable: the Dredge's gullet is a 10 × 9 m lit
+plate and its hopper throat a 12 × 8 m one, and between them they carry about 77 % of the
+hull's upward-facing lit area against 26 crimson points sharing the other 23 %. The hull's
+own UNIT block in [asset-prompts-3d.md](asset-prompts-3d.md) names both, so the conflict
+predates any port of it.
+
+Read literally, the rule condemns the best thing on that hull. A navy that eats — one paid
+in Biomass for the fauna its noise draws in ([factions.md](factions.md)) — wants a lit
+throat, and a glowing gullet on a deep-sea scavenger is the oldest lure in the ocean. So
+the rule keeps its teeth and gains a boundary rather than an exception:
+
+1. **Livery is points, always.** Every surface that says *whose hull this is* — the
+   eye-lines, running marks, sensor blisters — stays rows of small points. Nothing below
+   licenses a glowing panel on a flank.
+2. **An aperture may glow as area, and an aperture is a hole.** It has to read as an
+   opening *into* the hull: recessed, bounded by unlit chitin on every side, and shaped by
+   the geometry it sits in rather than applied to a face. A plate stuck on the outside is
+   livery wearing an aperture's name.
+3. **One per hull, and only where the hull's function is ingestion.** The Dredge earns two
+   because the second is the throat the first feeds. A gunboat does not get a maw.
+4. **It is still on the navy's glow token and still on the gate-3 curve**
+   ([graphics-standards.md](graphics-standards.md)), so a maw dims with SIG exactly as the
+   eye-lines do. A hull running silent closes its mouth.
+
+The Dredge passes on all four. No other approved hull has an aperture, and the rule above
+is what the next one is measured against.
 
 ## Colour-vision palettes
 
@@ -248,8 +279,9 @@ organic outline, which is the identifier the bestiary always intended. These
 palettes put the colour back to work; they do not change the standard one,
 because that is an art-direction decision and this is an accessibility issue. Bathyarch keeps amber, because
 hazard amber is doctrine and amber is the one hue these deficiencies keep, and
-the Directorate takes the dark end of the same axis — its noir treatment is
-"rows of small points, never area glow", which survives being dim.
+the Directorate takes the dark end of the same axis — its livery is "rows of
+small points, never area glow", which survives being dim. (The maw carve-out
+above is an aperture rather than livery, and a hull carries at most one.)
 
 ### Tritanopia — red and green, no yellow, no violet
 
