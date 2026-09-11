@@ -75,7 +75,15 @@
  *   not stable across builds); a re-cut of a smooth-shaded face is not, and
  *   a reversed winding is a reflection swapped for a rotation. Both are
  *   reported as their own lines, for the reader to judge, rather than as
- *   moved parts.
+ *   moved parts. Two limits, and the failure direction of both is silence:
+ *   vertices are merged at 5 mm, so two genuinely distinct vertices closer
+ *   than that inside one part fuse and a re-cut among them goes unreported —
+ *   a part whose closest distinct vertices sit within four times that floor
+ *   is named on a `fine` line so the silence is not read as a pass (the
+ *   Order scout's guard edge is 10 mm from it); and triangles are read but
+ *   normals are not, so a hand-written normal buffer over the same triangles
+ *   — which only a table-built part like the Commune scout's hull could carry
+ *   — is a reviewer's check, not this tool's.
  * - **Compare the surface centroid too.** A cone built the wrong way round
  *   has the bounds, the triangle count *and* the area of the right one; only
  *   where its surface sits inside that box changes. The Dredge's telson and
@@ -198,6 +206,22 @@ function triangleDiff(p, q, scale, shift) {
         }
     return best;
   }
+  // The closest two distinct merged vertices, off the same grid: the margin
+  // the 5 mm merge floor has on this part.
+  let minSep = Infinity;
+  for (let id = 0; id < verts.length; id++) {
+    const [x, y, z] = verts[id];
+    const cx = Math.floor(x / CELL), cy = Math.floor(y / CELL), cz = Math.floor(z / CELL);
+    for (let dx = -2; dx <= 2; dx++)
+      for (let dy = -2; dy <= 2; dy++)
+        for (let dz = -2; dz <= 2; dz++)
+          for (const other of grid.get(`${cx + dx},${cy + dy},${cz + dz}`) ?? []) {
+            if (other === id) continue;
+            const w = verts[other];
+            const d = Math.hypot(w[0] - x, w[1] - y, w[2] - z);
+            if (d < minSep) minSep = d;
+          }
+  }
   const tri = (ids) => {
     const sorted = [...ids].sort((u, v) => u - v);
     const [v0, v1] = ids;
@@ -226,7 +250,7 @@ function triangleDiff(p, q, scale, shift) {
     if (!beforeTris.has(t.set)) recut++;
     else if (beforeTris.get(t.set) !== t.even) reversed++;
   }
-  return { recut, reversed, total: b.length / 9 };
+  return { recut, reversed, total: b.length / 9, minSep, floor: TOL };
 }
 
 /** Extents and centre of a part or a whole model, in the file's own units. */
@@ -444,6 +468,7 @@ function report(beforePath, afterPath, label) {
   const moved = [];
   const recut = [];
   const reversed = [];
+  const fine = [];
   for (const p of before) {
     const q = afterByName.get(p.key);
     if (!q) continue;
@@ -476,6 +501,7 @@ function report(beforePath, afterPath, label) {
       const t = triangleDiff(p, q, scale, shift);
       if (t.recut) recut.push(`${p.key} ${t.recut}/${t.total}`);
       if (t.reversed) reversed.push(`${p.key} ${t.reversed}/${t.total}`);
+      if (t.minSep < 4 * t.floor) fine.push(`${p.key} ${(t.minSep * 1000).toFixed(1)} mm`);
     }
     if (d > 0.005 || note.length) moved.push({ name: p.key, d: Math.max(d, cd), note: note.join(', ') });
   }
@@ -490,6 +516,11 @@ function report(beforePath, afterPath, label) {
     console.log(
       `  winding ${reversed.length} part${reversed.length > 1 ? 's' : ''} with triangles in the opposite order` +
         ` — a reflection swapped for a rotation, or the reverse:\n    ${reversed.join('  ')}`
+    );
+  if (fine.length)
+    console.log(
+      `  fine    ${fine.length} part${fine.length > 1 ? 's' : ''} with distinct vertices within 20 mm of each other` +
+        ` — the 5 mm merge behind the re-cut check has little margin there:\n    ${fine.join('  ')}`
     );
   if (!moved.length) {
     console.log('  shape   unchanged beyond the root scale and shift — every part is where it was');
