@@ -11,86 +11,120 @@
  * The Order's is the one that reads as an *instrument* — an exact bilateral
  * emplacement, a crested head, and a straight vaned rail instead of a tube.
  *
- * Two things about the frame, and they are the same for all four turrets:
+ * A port of the approved export
+ * (docs/concept-art/models/sentinel-turret-hadron.glb at 0522b01~1), part for
+ * part in its order, every number the export's own (#639 — the first port,
+ * #553, reproportioned it: 27 of 27 parts moved and the scale came out 7 %
+ * apart across the axes). An eight-facet frustum turned an eighth on its
+ * node, under a nine-facet collar; six skirt blades that are four-sided
+ * pyramids stood off one anchor circle; two five-facet recoil struts; a
+ * `turret_head` node at 2.6 carrying a six-facet frustum of a wedge squeezed
+ * to 0.8 across, a visor box and a pyramid crest, and inside it a
+ * `barrel_group` pitched 0.12 with the rail's two bars, a crystal vane each
+ * side, a pyramid tip and a five-by-four sphere of a pip; four such spheres
+ * for marks; two six-facet feed pipes and two capsules for magazines. Where
+ * the export is odd the script is odd with it: the third pair of blades has
+ * its `_r` at the export's -x, and the pods are a later three's
+ * `CapsuleGeometry`, degenerate pole fans and all (kit.mjs `capsule`).
  *
- * - **Metre-true, and long on X.** The committed exports were neither, so
- *   intake rescaled them (×10.2 here) and yawed them off Z, warning twice
- *   about it. Both the bake and the runtime canonicalise the same way
- *   (`rosterModels.ts` yaws when `raw.z > raw.x`, then scales the long axis to
- *   the design size), so building at 120 m with the muzzle on +X lands the
- *   *same* orientation those warnings were correcting to — and passes
- *   warning-free.
- * - **The origin is the bounding box, not the base.** x runs -60 to +60
- *   because that is the footprint the table prices; the emplacement sits aft
- *   of centre because the rail overhangs forward, which is the shape.
+ * THE FRAME is the one every turret here keeps: metre-true at 120 m with the
+ * muzzle on +X, which is what the bake and the runtime both canonicalise a
+ * Z-long export to (rosterModels.ts yaws when the raw Z extent exceeds X,
+ * then scales the long axis to the design size). Drawn along Z, `DRAWN`
+ * units long by the measure those two take — three's `Box3.setFromObject`,
+ * each part's box through its node, and the turned frustum's box overhangs
+ * its vertices by a third, which is why the approved bake reported ×10.242
+ * against a vertex length of 10.482 — the ground at y = 0. Every number below
+ * is the export's, through kit.mjs `drawn`; `metreTrue` measures the same
+ * way, so intake reports ×1.000 and the maps land where the approved
+ * export's did.
  */
-import { exportGlb } from '../kit.mjs';
+import { THREE, metreTrue, exportGlb } from '../kit.mjs';
 import * as hadron from '../factions/hadron.mjs';
 
-const BASE_X = -26.2; // the emplacement's centre; the rail reaches +60 from it
+const L = 120;
+const DRAWN = 11.7165;
 
-const shadow = hadron.ink.shadowIndigo();
+const shadow = hadron.structureInk.shadowIndigo();
 const steel = hadron.structureInk.darkSteel();
 const dim = hadron.structureInk.alloyDim();
-const crystal = hadron.structureInk.crystalDim();
-const navLight = hadron.structureInk.navLight();
+const crystal = hadron.structureInk.crystalDim(0.8);
+const navLight = hadron.structureInk.navLight(0.9);
 
-const root = new hadron.THREE.Group();
-root.name = 'hadron_sentinel_turret';
+const root = new THREE.Group();
+root.name = 'sentinel_turret_hadron';
 
-// The emplacement: a faceted frustum, its collar, and three mirrored pairs of
-// skirt blades raking off the rim.
+// The emplacement: the frustum, its collar, and three mirrored pairs of skirt
+// blades at 0.55, 1.5 and 2.45 rad round the anchor circle.
 hadron.emplacement(
   root,
   { shadow, steel, dim },
   {
-    x: BASE_X,
-    r: 33.8,
-    rTop: 28,
-    height: 17.2,
-    collar: { r: 18.9, t: 1.95, y: 18.9 },
-    blades: [
-      [59.2, 34.5, [16, 9, 4.5]],
-      [3.6, 34.2, [15, 7.5, 4]],
-      [50.7, 34.3, [15, 8.1, 4.2]],
-    ],
+    at: [0, 0.75, 0],
+    yaw: Math.PI / 8,
+    r: 3.2,
+    rTop: 2.2,
+    height: 1.5,
+    collar: { r: 1.5, t: 0.18, y: 1.65, facets: 9 },
+    blades: {
+      r: 0.2,
+      anchor: [2.9, 0.55],
+      lift: 0.55,
+      seat: 0.35,
+      each: [
+        [0.55, 1.3],
+        [1.5, 1.0],
+        [2.45, 1.2],
+      ],
+    },
   }
 );
 
-// The head that trains, and the crest that makes the kind readable from above.
-hadron.gunHead(
+// The recoil struts, then the head that trains: wedge, visor and the crest
+// that makes the kind readable from above.
+const head = hadron.gunHead(
   root,
   { shadow, steel, dim },
   {
-    x: BASE_X,
-    y: 29.8,
-    wedge: [27.5, 16, 29.8],
-    visor: [15.9, 9.9, 21.8],
-    crest: [11, 24.6, 5],
-    struts: { from: [-13.5, 24.5, 3.5], to: [-1.5, 33.5, 11.5], t: 3 },
+    at: [0, 2.6, 0],
+    struts: { r: [0.08, 0.1], length: 1.5, at: [0.65, 2.55, 1.65], rot: [0.9, 0, 0.5] },
+    wedge: { r: [1.15, 1.5], height: 1.4, scale: [1, 1, 0.8] },
+    visor: { size: [1.9, 0.5, 1.3], at: [0, 0.55, 0.75], rot: [0.3, 0, 0] },
+    crest: { r: 0.22, length: 2.2, at: [0, 1.5, -0.5], rot: [-0.35, 0, 0] },
   }
 );
 
-// The rail: one straight run, vaned in crystal, pip on the end.
+// The rail, hung off the head: one straight run, vaned in crystal, pip on
+// the end.
 hadron.railGun(
-  root,
+  head,
   { steel, dim, vane: crystal, pip: navLight },
-  { from: [-19.7, 34.6, 0], to: [59, 42.1, 0], r: 2.9 }
+  {
+    at: [0, 0.25, 0.6],
+    pitch: -0.12,
+    root: { size: [0.5, 0.6, 3], z: 1.5 },
+    mid: { size: [0.32, 0.42, 2.8], z: 4.2 },
+    vanes: { size: [0.1, 0.28, 2.2], x: 0.28, z: 4.1 },
+    tip: { r: 0.24, length: 1.3, z: 6.2 },
+    pip: { r: 0.08, z: 6.9 },
+  }
 );
 
-// Magazines abaft the emplacement, feeding up into the collar.
-hadron.magazine(root, steel, {
-  pods: { x: -39.9, y: 8, z: 26.1, size: [22, 11.2, 14] },
-  pipe: { from: [-36.6, 7, 22], to: [-36.6, 27, 10], t: 3.6 },
-});
-
-// The whole resting light budget: four marks, flat, on faces the top-down bake
-// can see. Everything else stays dark until it fires.
+// The whole resting light budget: four marks on the emplacement. Everything
+// else stays dark until it fires.
 hadron.navMarks(root, navLight, {
+  r: 0.08,
   marks: [
-    ['fore', -10.2, 10.3, 29.7],
-    ['aft', -51.4, 17.3, 21.7],
+    ['fore', 2.6, 0.9, 1.4],
+    ['aft', 1.9, 1.5, -2.2],
   ],
 });
 
+// Magazines abaft the emplacement, feeding up into the collar.
+hadron.magazine(root, steel, {
+  pipe: { r: [0.12, 0.15], length: 2.1, at: [1.4, 1.5, -0.9], rot: [0.2, 0, 0.5] },
+  pods: { r: 0.5, waist: 1, at: [2.3, 0.7, -1.2], rot: [Math.PI / 2, 0, 0.3] },
+});
+
+metreTrue(root, L, { drawn: DRAWN });
 await exportGlb(root, 'sentinel-turret-hadron.glb');

@@ -20,7 +20,22 @@
  * Light is machinery light: louvres, stack throats, deck floods, lit gratings —
  * and it goes on *upward* faces, because the maps are top-down (see kit.mjs).
  */
-import { THREE, clad, lamp, hex, add, box, cyl, torus, plate, plan, bothSides, polar, part } from '../kit.mjs';
+import {
+  THREE,
+  clad,
+  lamp,
+  hex,
+  add,
+  box,
+  cyl,
+  torus,
+  plate,
+  plan,
+  bothSides,
+  polar,
+  part,
+  drawn,
+} from '../kit.mjs';
 
 /**
  * The Klaxon's palette, as the Bulwark's own materials carry it: the four
@@ -638,18 +653,27 @@ export function pumpHouse(root, { grey, rust }, { house, riser: up }) {
  * ------------------------------------------------------------------------ */
 
 /**
- * The structure palette: the one fixture a turret needs that no hull did.
+ * The structure palette: the one fixture a turret needs that no hull did, and
+ * the turret's own three claddings.
  *
  * `amber_lamp` is a navigation light on a moving hull; a static mount carries
  * a work lamp, brighter and warmer, and the approved turret names it. The
  * structures carry their own names rather than a shared dimming factor
  * applied to `ink` — see `structureInk` in factions/hadron.mjs for the
- * argument. The value is the approved turret's own.
+ * argument. The values are the approved turret's own: its plate is the
+ * Bulwark's to the hex but not to the value — a shade more metal and a good
+ * deal less rough, the black 0.3/0.45 against `ink`'s 0.25/0.85 — and its
+ * lamp burns at an emissive strength of 2.4 (`intensity`; the default of 1
+ * writes no strength, as before) (#639).
  */
 export const structureInk = {
+  hullBlack: () => clad('hull_black', hex('#0E1418'), 0.3, 0.45),
+  ironGrey: () => clad('iron_grey', hex('#8C8378'), 0.3, 0.52),
+  oxideRust: () => clad('oxide_rust', hex('#3D2B1F'), 0.1, 0.75),
   // The approved turret's lamp is amber through and through — its base is the
   // token, not a near-black — so it reads as a fixture in the albedo map too.
-  workLamp: () => lamp('work_lamp', hex('#F2B233'), hex('#F2B233'), 0.35),
+  workLamp: (intensity = 1) =>
+    lamp('work_lamp', hex('#F2B233'), hex('#F2B233'), 0.35, intensity),
 };
 
 /**
@@ -700,10 +724,30 @@ export function exchangerHead(root, { black, grey, rust, amber, vent }, opts) {
  * The raft: a bolted slab on the seabed with a foot at each corner and a bolt
  * through each foot. Feet are numbered 1..4 from the forward-starboard corner
  * round, which is the approved turret's own order.
+ *
+ * Given `foot.radius` it is the approved turret's own (#639), through kit.mjs
+ * `drawn`: the raft an eight-facet frustum, `rTop` over `r`, and on each of
+ * the four diagonal bearings — π/4 + n·π/2 round from +X toward +Z, which is
+ * the numbering above — a foot at `foot.radius` yawed by minus its bearing so
+ * its long side lies tangential, and its bolt outboard at `bolt.radius`, both
+ * standing on the ground. Given `foot.inset` it is the #553 draft's.
  */
 export function anchoredRaft(root, { black, rust, grey }, opts) {
-  const { at, r, height, foot, bolt } = opts;
+  const { at, r, rTop = r, height, foot, bolt } = opts;
   const [cx, cy, cz] = at;
+  if (foot.radius !== undefined) {
+    part(root, 'base_raft', cyl(rTop, r, height, 8), black, drawn(at));
+    const ground = cy - height / 2;
+    for (let n = 1; n <= 4; n++) {
+      const a = Math.PI / 4 + ((n - 1) * Math.PI) / 2;
+      const [dx, dz] = [Math.cos(a), Math.sin(a)];
+      const footAt = [cx + foot.radius * dx, ground + foot.size[1] / 2, cz + foot.radius * dz];
+      part(root, `anchor_foot_${n}`, box(...foot.size), rust, drawn(footAt, [0, -a, 0]));
+      const boltAt = [cx + bolt.radius * dx, ground + bolt.height / 2, cz + bolt.radius * dz];
+      part(root, `anchor_bolt_${n}`, cyl(bolt.r, bolt.r, bolt.height, 6), grey, drawn(boltAt));
+    }
+    return;
+  }
   // Eight-sided rather than square: the approved turret's raft is a faceted
   // drum, and an octagon is what reads as *plate cut and welded* from above.
   add(root, 'base_raft', cyl(r, r, height, 8), black, [cx, cy, cz]);
@@ -741,10 +785,31 @@ export function anchoredRaft(root, { black, rust, grey }, opts) {
  *
  * The rivets are a rank rather than a scatter — the Klaxon repairs in
  * straight lines even when the thing repaired is round.
+ *
+ * Given `r` as `[top, bottom]` it is the approved turret's own (#639), through
+ * kit.mjs `drawn`: the drum a frustum of `facets`, the ring a torus of five by
+ * `ring.facets`, the rivets spheres of `rivets.segments` from `rivets.from`
+ * *radians* round from +X toward +Z, the patch a box at `patch.at` turned
+ * `patch.rot` — and no feed: the approved file writes that after the gun
+ * (`feedPipe` below). Given a scalar `r` it is the #553 draft's.
  */
 export function mountDrum(root, { black, grey, rust }, opts) {
-  const { at, r, height, ring, rivets, patch, feed } = opts;
+  const { at, r, height, ring, rivets, patch, feed, facets = 10 } = opts;
   const [cx, cy, cz] = at;
+  if (Array.isArray(r)) {
+    part(root, 'mount_drum', cyl(r[0], r[1], height, facets), black, drawn(at));
+    const collar = torus(ring.r, ring.t, 5, ring.facets ?? 18);
+    part(root, 'mount_ring', collar, grey, drawn([cx, ring.y, cz], [Math.PI / 2, 0, 0]));
+    const [w, h] = rivets.segments ?? [6, 5];
+    for (let i = 0; i < rivets.count; i++) {
+      const a = rivets.from + ((2 * Math.PI) / rivets.count) * i;
+      const head = new THREE.SphereGeometry(rivets.r, w, h);
+      const [dx, dz] = [rivets.radius * Math.cos(a), rivets.radius * Math.sin(a)];
+      part(root, `rivet_${i + 1}`, head, grey, drawn([cx + dx, rivets.y, cz + dz]));
+    }
+    part(root, 'mount_patch', box(...patch.size), rust, drawn(patch.at, patch.rot));
+    return;
+  }
   add(root, 'mount_drum', cyl(r, r * 0.98, height, 10), black, [cx, cy, cz]);
   add(root, 'mount_ring', torus(ring.r, ring.t, 5, 18), grey, [cx, ring.y, cz], [
     Math.PI / 2,
@@ -765,8 +830,50 @@ export function mountDrum(root, { black, grey, rust }, opts) {
   add(root, 'feed_pipe', cyl(feed.r, feed.r, feed.height, 8), rust, feed.at);
 }
 
-/** The housing that trains, its glacis, and the patch riveted over its roof. */
-export function turretHouse(root, { black, grey, rust }, { housing, glacis, roofPatch }) {
+/**
+ * The feed pipe beside the mount: a six-facet pipe of radius `r` stood
+ * between two points of the export's frame — at their midpoint, turned by
+ * the one rotation that carries +Y onto the run (three's
+ * `setFromUnitVectors`), which is exactly the node matrix the approved file
+ * holds for (0.5, 0.4, -0.45) to (0.2, 0.95, -0.25). The pipe runs from the
+ * drum's foot up toward the housing, leaning two ways to do it, and the file
+ * writes it after the gun rather than with the drum — so it is its own
+ * builder, and `mountDrum` draws the #553 draft's upright one only when given
+ * `feed` (#639).
+ */
+export function feedPipe(root, rust, { from, to, r, facets = 6 }) {
+  const A = new THREE.Vector3(...from);
+  const B = new THREE.Vector3(...to);
+  const run = B.clone().sub(A);
+  const up = new THREE.Vector3(0, 1, 0);
+  const e = new THREE.Euler().setFromQuaternion(
+    new THREE.Quaternion().setFromUnitVectors(up, run.clone().normalize()),
+    'XYZ'
+  );
+  const mid = A.clone().add(B).multiplyScalar(0.5).toArray();
+  part(root, 'feed_pipe', cyl(r, r, run.length(), facets), rust, drawn(mid, [e.x, e.y, e.z]));
+}
+
+/**
+ * The housing that trains, its glacis, and the patch riveted over its roof.
+ *
+ * Given `bearing` it is the approved turret's own (#639), through kit.mjs
+ * `drawn`: the gun is trained `bearing` radians off the export's +Z toward
+ * +X, so the housing and the roof patch are yawed by it where they stand
+ * (`at`), and the glacis sits `along` the bearing at height `y`, pitched
+ * `pitch` and yawed with them. Otherwise the #553 draft's three axis-aligned
+ * boxes.
+ */
+export function turretHouse(root, { black, grey, rust }, opts) {
+  const { housing, glacis, roofPatch, bearing = null } = opts;
+  if (bearing !== null) {
+    part(root, 'turret_housing', box(...housing.size), black, drawn(housing.at, [0, bearing, 0]));
+    const at = [glacis.along * Math.sin(bearing), glacis.y, glacis.along * Math.cos(bearing)];
+    part(root, 'turret_glacis', box(...glacis.size), grey, drawn(at, [glacis.pitch, bearing, 0]));
+    const roof = box(...roofPatch.size);
+    part(root, 'turret_roof_patch', roof, rust, drawn(roofPatch.at, [0, bearing, 0]));
+    return;
+  }
   add(root, 'turret_housing', box(housing.size[0], housing.size[1], housing.size[2]), black, housing.at);
   add(root, 'turret_glacis', box(glacis.size[0], glacis.size[1], glacis.size[2]), grey, glacis.at);
   add(
@@ -782,14 +889,37 @@ export function turretHouse(root, { black, grey, rust }, { housing, glacis, roof
  * A short thick gun on a static mount: breech, barrel, jacket, muzzle brake,
  * the recoil cylinder alongside and the counterweight astern.
  *
- * `brake.at` is given rather than derived from the barrel's run. The approved
- * turret's brake does not sit on its barrel's axis — it stands about 17 m off
- * it in plan — and this is a port, so the offset is carried across rather
- * than quietly corrected. Straightening it changes what the model looks like,
- * which is a separate PR with its own screenshot (#540).
+ * Given `bearing` it is the approved turret's own (#639), through kit.mjs
+ * `drawn`: every part sits at its own round distance `along` the bearing the
+ * gun is trained on (radians off the export's +Z toward +X) at height `y`;
+ * the five tubes are eight-facet frusta, `r` `[top, bottom]` by `length`
+ * (the recoil cylinder six-facet), each node turned `[π/2 − tilt, bearing,
+ * 0]`; the counterweight a box yawed by the bearing. That Euler, in three's
+ * XYZ order, yaws *before* it lays the tube down, so every tube ends up
+ * parallel to the export's +Z rather than along the bearing its centre was
+ * put on: the approved model's breech, jacket, barrel and brake are staggered
+ * across its line of fire, each on its own axis, and the brake stands 17 m
+ * off the barrel's at 120 m. That is the approved shape and it is carried
+ * across, not straightened — a change to it is a separate PR with its own
+ * screenshot (#540). Given `barrel.from` it is the #553 draft's, which kept
+ * only the brake off the axis.
  */
 export function heavyBarrel(root, { black, grey, rust }, opts) {
-  const { breech, barrel, jacket, brake, recoil, counterweight } = opts;
+  const { breech, barrel, jacket, brake, recoil, counterweight, bearing = null, tilt = 0 } = opts;
+  if (bearing !== null) {
+    const at = (p) => [p.along * Math.sin(bearing), p.y, p.along * Math.cos(bearing)];
+    const laid = [Math.PI / 2 - tilt, bearing, 0];
+    const tube = (name, p, mat, facets = 8) =>
+      part(root, name, cyl(p.r[0], p.r[1], p.length, facets), mat, drawn(at(p), laid));
+    tube('barrel_breech', breech, grey);
+    tube('barrel', barrel, black);
+    tube('barrel_jacket', jacket, rust);
+    tube('muzzle_brake', brake, grey);
+    tube('recoil_cylinder', recoil, grey, 6);
+    const weight = box(...counterweight.size);
+    part(root, 'counterweight', weight, rust, drawn(at(counterweight), [0, bearing, 0]));
+    return;
+  }
   add(root, 'barrel_breech', box(breech.size[0], breech.size[1], breech.size[2]), grey, breech.at);
   add(
     root,
@@ -831,9 +961,16 @@ export function heavyBarrel(root, { black, grey, rust }, opts) {
 
 /**
  * The one work lamp on its bracket — the turret's whole resting light budget,
- * flat on an upward face because the maps are top-down (kit.mjs).
+ * flat on an upward face because the maps are top-down (kit.mjs). Given `r`
+ * it is the approved turret's own (#639): a sphere of `segments` at `at` with
+ * the bracket box under it, through kit.mjs `drawn`; given `size`, a box.
  */
-export function baseLamp(root, { lampMat, black }, { at, size, bracket }) {
+export function baseLamp(root, { lampMat, black }, { at, size, bracket, r, segments = [6, 4] }) {
+  if (r !== undefined) {
+    part(root, 'base_lamp', new THREE.SphereGeometry(r, ...segments), lampMat, drawn(at));
+    part(root, 'base_lamp_bracket', box(...bracket.size), black, drawn(bracket.at));
+    return;
+  }
   add(root, 'base_lamp', box(size[0], size[1], size[2]), lampMat, at);
   add(
     root,
