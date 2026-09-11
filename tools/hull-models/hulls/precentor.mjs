@@ -97,7 +97,9 @@ directorate.telson(root, { violet, black }, { tip: -34, r: 2.5, length: 8 });
 // body, six sockets to port against five to starboard. `arrayBoom` refuses
 // matched ranks, so the asymmetry cannot be lost to a tidy edit. The spines'
 // centres sit 3 m and 3.7 m over the boom's axis — the short one's base on
-// the axis, the long one's 5 cm under it — each in a 1.6 m square socket.
+// the axis, the long one's 5 cm under it — each in a 1.6 m square socket,
+// and the sleeve where the boom passes the body is 1.9 in radius exactly,
+// not the 1.46 · r the module transcribed it as (2 mm short).
 directorate.arrayBoom(root, { steel, black, red }, {
   x: 0,
   y: 2.5,
@@ -106,6 +108,7 @@ directorate.arrayBoom(root, { steel, black, red }, {
   starboard: 5,
   z0: 5,
   pitch: 2.6,
+  sleeveR: 1.9,
   seat: [3, 3.7],
   socket: 'box',
 });

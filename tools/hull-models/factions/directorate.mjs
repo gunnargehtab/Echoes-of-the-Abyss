@@ -337,18 +337,21 @@ export function listeningDome(root, { red, violet, black }, opts) {
  *
  * `seat` lifts the hydrophones' centres above the boom's axis, in metres,
  * alternating as `lengths` do, in place of the socket's height plus half
- * the spine; `socket` is `'drum'` or `'box'`. The Precentor's approved rank
- * sits at 3 m and 3.7 m — the short spine's base on the boom's axis, the
- * long one's 5 cm under it — in 1.6 m square boxes 1.2 m tall, and the hull
- * passes both (#638).
+ * the spine; `socket` is `'drum'` or `'box'`; `sleeveR` is the sleeve's
+ * radius in place of `r · 1.46`. The Precentor's approved rank sits at 3 m
+ * and 3.7 m — the short spine's base on the boom's axis, the long one's
+ * 5 cm under it — in 1.6 m square boxes 1.2 m tall, round a sleeve of
+ * exactly 1.9, which 1.46 transcribed 2 mm short; the hull passes all three
+ * (#638).
  */
 export function arrayBoom(root, { steel, black, red }, opts) {
   const { x, y, halfSpan, r = 1.3, port = 6, starboard = 5, z0 = 5, pitch = 2.6 } = opts;
   const { lengths = [6, 7.5], hr = 0.9, cant = 0.25, tip = 4, seat, socket = 'drum' } = opts;
+  const { sleeveR = r * 1.46 } = opts;
   if (port === starboard)
     throw new Error(`array_boom: ${port} hydrophones a side — the ranks never match`);
   add(root, 'array_boom', cyl(r, r, halfSpan * 2, 8), steel, [x, y, 0], [Math.PI / 2, 0, 0]);
-  add(root, 'array_boom_sleeve', cyl(r * 1.46, r * 1.46, 6, 8), black, [x, y, 0], [Math.PI / 2, 0, 0]);
+  add(root, 'array_boom_sleeve', cyl(sleeveR, sleeveR, 6, 8), black, [x, y, 0], [Math.PI / 2, 0, 0]);
   bothSides((side, sgn) => {
     const count = sgn > 0 ? port : starboard;
     for (let j = 0; j < count; j++) {
