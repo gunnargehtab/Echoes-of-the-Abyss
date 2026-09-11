@@ -52,7 +52,6 @@ import {
   torus,
   plan,
   loft,
-  cable,
   bothSides,
   polar,
   part,
@@ -366,8 +365,7 @@ export const mineSacs = (root, mats, opts) =>
 
 /**
  * The grown stem aft of a leaf: a squashed loft from a closed point at `from`
- * swelling to `r` at `to`, where it meets the node, ringed at `rings`, and
- * carrying a keel blade on its back if `keel` says so.
+ * swelling to `r` at `to`, where it meets the node, ringed at `rings`.
  *
  * `profile` replaces that parametric body with the hull's own `[x, r]`
  * stations — the Sower's is open at both ends, 0.3 m at the tail and 4.2 m
@@ -379,7 +377,7 @@ export const mineSacs = (root, mats, opts) =>
  * needs none of them.
  */
 export function stem(root, { chitin, ridge }, opts) {
-  const { from, to, r, y = 0, squash = 0.8, rings = [], keel, facets = 8 } = opts;
+  const { from, to, r, y = 0, squash = 0.8, rings = [], facets = 8 } = opts;
   const { profile, ring } = opts;
   const L = to - from;
   const at = (t) => from + L * t;
@@ -414,7 +412,6 @@ export function stem(root, { chitin, ridge }, opts) {
       [1, squash, 1]
     )
   );
-  if (keel) stemKeel(root, ridge, { y: y + r * squash + keel.height / 2 - 0.3, ...keel });
 }
 
 /**
@@ -422,8 +419,7 @@ export function stem(root, { chitin, ridge }, opts) {
  * `height` tall and `t` thick, centred at `y`. Its own builder because the
  * approved Sower exports it *after* the caudal pair and `check.mjs` compares
  * in order — the first port drew it in the stem's turn and read as three
- * parts changed (#639). `stem`'s `keel` option still draws it there, for a
- * hull whose export does.
+ * parts changed (#639).
  */
 export function stemKeel(root, ridge, { from, to, height, y, t = 0.8 }) {
   add(root, 'stem_keel', blade(from, to, height, t), ridge, [0, y, 0]);
@@ -729,31 +725,13 @@ export function bladderHead(root, { membrane, ridge, spore, vein }, opts) {
  * its own numbers and its `drawn` placement, built in the file's order
  * (mound, collar, ring): the mound a `shell` of radius `r` cut `down` of the
  * way to the pole, the collar and the ring toruses of `R` and `tube` with
- * `facets` [radial, tubular]. The first port's form — `x, z, y, r, squash,
- * ringAt, collarAt`: a closed orb and two toruses in the module's default
- * facets, ring before collar — still builds what it built.
+ * `facets` [radial, tubular].
  */
 export function grownMound(root, { body, ring, collar }, opts) {
-  if (opts.mound) {
-    const { mound, collar: c, ring: g } = opts;
-    part(root, 'base_mound', shell(mound.r, mound.facets, mound), body, mound);
-    part(root, 'base_collar', torus(c.R, c.tube, ...c.facets), collar, c);
-    part(root, 'mound_ring', torus(g.R, g.tube, ...g.facets), ring, g);
-    return;
-  }
-  const { x = 0, z = 0, y, r, squash, ringAt, collarAt } = opts;
-  add(root, 'base_mound', orb(12, 6), body, [x, y, z], [0, 0, 0], [r[0], r[1], r[2]]);
-  add(root, 'mound_ring', torus(ringAt.r, ringAt.t, 4, 20), ring, [x, ringAt.y, z], [
-    Math.PI / 2,
-    0,
-    0,
-  ]);
-  add(root, 'base_collar', torus(collarAt.r, collarAt.t, 5, 18), collar, [x, collarAt.y, z], [
-    Math.PI / 2,
-    0,
-    0,
-  ]);
-  return { squash };
+  const { mound, collar: c, ring: g } = opts;
+  part(root, 'base_mound', shell(mound.r, mound.facets, mound), body, mound);
+  part(root, 'base_collar', torus(c.R, c.tube, ...c.facets), collar, c);
+  part(root, 'mound_ring', torus(g.R, g.tube, ...g.facets), ring, g);
 }
 
 /**
@@ -766,34 +744,13 @@ export function grownMound(root, { body, ring, collar }, opts) {
  * its own node — laid over 0.13 rad short of flat and yawed each its own way,
  * which puts every root *across* the mound's radius rather than out along it.
  * That is where the file has them, and a port reproduces the file. Skins
- * alternate from the first grip. The first port's `[degrees, radius, [long,
- * height, wide]]` orbs, radial from `x, z` with `long` running outward, still
- * build what they built.
+ * alternate from the first grip.
  */
-export function rootGrips(root, skins, opts) {
-  const { grips } = opts;
-  if (!Array.isArray(grips[0])) {
-    const { facets = [3, 6] } = opts;
-    refuseMirror('root_grip', grips, ({ r, length }) => `${r},${length}`);
-    grips.forEach((g, i) =>
-      part(root, `root_grip_${i}`, capsule(g.r, g.length, ...facets), skins[i % skins.length], g)
-    );
-    return;
-  }
-  const { x = 0, z = 0, y } = opts;
-  refuseMirror('root_grip', grips, ([, , size]) => size.join());
-  grips.forEach(([deg, rad, size], i) => {
-    const a = (deg * Math.PI) / 180;
-    add(
-      root,
-      `root_grip_${i}`,
-      orb(10, 6),
-      skins[i % skins.length],
-      [x + rad * Math.cos(a), y, z + rad * Math.sin(a)],
-      [0, -a, 0],
-      [size[0] / 2, size[1] / 2, size[2] / 2]
-    );
-  });
+export function rootGrips(root, skins, { grips, facets = [3, 6] }) {
+  refuseMirror('root_grip', grips, ({ r, length }) => `${r},${length}`);
+  grips.forEach((g, i) =>
+    part(root, `root_grip_${i}`, capsule(g.r, g.length, ...facets), skins[i % skins.length], g)
+  );
 }
 
 /**
@@ -808,33 +765,16 @@ export function rootGrips(root, skins, opts) {
  * foot and `length` tall, each by its own node. The placement at the top of
  * `opts` is the frame's (kit.mjs `group`), and the frame is returned so the
  * gun can be grown in it, as the file hangs `barrel_group` off `turret_head`.
- * The first port's form — `x, y, z, podR, cowlR, cowlAt`, quills as `[x, z,
- * length, rake]` stood on the cowl — still builds what it built.
  */
 export function grownHead(root, { pod, cowl }, opts) {
-  if (opts.pod) {
-    const head = group(root, 'turret_head', opts);
-    const { pod: p, cowl: c, quills } = opts;
-    part(head, 'head_pod', shell(p.r, p.facets), pod, p);
-    part(head, 'head_cowl', shell(c.r, c.facets, c), cowl, c);
-    quills.forEach((q, i) =>
-      part(head, `cowl_quill_${i}`, cyl(0, q.r, q.length, q.facets ?? 4), cowl, q)
-    );
-    return head;
-  }
-  const { x, y, z = 0, podR, cowlR, cowlAt, quills } = opts;
-  add(root, 'head_pod', orb(10, 6), pod, [x, y, z], [0, 0, 0], podR);
-  add(root, 'head_cowl', orb(10, 6), cowl, cowlAt, [0, 0, 0], cowlR);
-  quills.forEach(([qx, qz, length, rake], i) =>
-    add(
-      root,
-      `cowl_quill_${i}`,
-      cyl(0, length * 0.12, length, 4),
-      cowl,
-      [qx, cowlAt[1] + cowlR[1] * 0.6 + length / 2, qz],
-      [rake, 0, 0]
-    )
+  const head = group(root, 'turret_head', opts);
+  const { pod: p, cowl: c, quills } = opts;
+  part(head, 'head_pod', shell(p.r, p.facets), pod, p);
+  part(head, 'head_cowl', shell(c.r, c.facets, c), cowl, c);
+  quills.forEach((q, i) =>
+    part(head, `cowl_quill_${i}`, cyl(0, q.r, q.length, q.facets ?? 4), cowl, q)
   );
+  return head;
 }
 
 /**
@@ -852,60 +792,23 @@ export function grownHead(root, { pod, cowl }, opts) {
  * frusta of `radii` [muzzle end, breech end], `length` and `facets`; `iris`
  * and each of `ribs` a torus of `R`, `tube` and `facets`; `pip` an orb. The
  * ribs are clad in `rib`, which the file has in the cowl's ink and not the
- * steel's. The first port's `{ from, to, r, ribs }` still builds what it
- * built.
+ * steel's.
  */
 export function grownBarrel(root, mats, opts) {
   const { rootMat, mid, tip, iris, pip, rib: ribMat = rootMat } = mats;
-  if (opts.from === undefined) {
-    const g = group(root, 'barrel_group', opts);
-    const seg = (name, s, mat) =>
-      part(g, name, cyl(s.radii[0], s.radii[1], s.length, s.facets), mat, s);
-    seg('barrel_root', opts.root, rootMat);
-    seg('barrel_mid', opts.mid, mid);
-    seg('barrel_tip', opts.tip, tip);
-    const { iris: ir, pip: pp, ribs } = opts;
-    part(g, 'muzzle_iris', torus(ir.R, ir.tube, ...ir.facets), iris, ir);
-    part(g, 'muzzle_pip', new THREE.SphereGeometry(pp.r, ...pp.facets), pip, pp);
-    ribs.forEach((rb, i) =>
-      part(g, `recoil_rib_${i}`, torus(rb.R, rb.tube, ...rb.facets), ribMat, rb)
-    );
-    return g;
-  }
-  const { from, to, r, ribs = 3 } = opts;
-  const A = new THREE.Vector3(...from);
-  const B = new THREE.Vector3(...to);
-  const d = B.clone().sub(A);
-  const len = d.length();
-  const at = (t) => A.clone().addScaledVector(d, t);
-  const q = new THREE.Quaternion().setFromUnitVectors(
-    new THREE.Vector3(1, 0, 0),
-    d.clone().normalize()
+  const g = group(root, 'barrel_group', opts);
+  const seg = (name, s, mat) =>
+    part(g, name, cyl(s.radii[0], s.radii[1], s.length, s.facets), mat, s);
+  seg('barrel_root', opts.root, rootMat);
+  seg('barrel_mid', opts.mid, mid);
+  seg('barrel_tip', opts.tip, tip);
+  const { iris: ir, pip: pp, ribs } = opts;
+  part(g, 'muzzle_iris', torus(ir.R, ir.tube, ...ir.facets), iris, ir);
+  part(g, 'muzzle_pip', new THREE.SphereGeometry(pp.r, ...pp.facets), pip, pp);
+  ribs.forEach((rb, i) =>
+    part(g, `recoil_rib_${i}`, torus(rb.R, rb.tube, ...rb.facets), ribMat, rb)
   );
-  const along = (name, geo, mat, t) => {
-    const mesh = add(root, name, geo, mat);
-    mesh.position.copy(at(t));
-    mesh.quaternion.copy(q);
-    return mesh;
-  };
-  const limb = (name, t0, t1, r0, r1, mat) => {
-    const geo = cyl(r1, r0, len * (t1 - t0), 8);
-    geo.rotateZ(-Math.PI / 2);
-    return along(name, geo, mat, (t0 + t1) / 2);
-  };
-  limb('barrel_root', 0, 0.42, r, r * 0.86, rootMat);
-  limb('barrel_mid', 0.4, 0.74, r * 0.86, r * 0.7, mid);
-  limb('barrel_tip', 0.72, 0.94, r * 0.7, r * 0.55, tip);
-  const irisGeo = torus(r * 0.55, r * 0.16, 4, 12);
-  irisGeo.rotateY(Math.PI / 2);
-  along('muzzle_iris', irisGeo, iris, 0.97);
-  along('muzzle_pip', new THREE.SphereGeometry(r * 0.22, 8, 6), pip, 1);
-  for (let i = 0; i < ribs; i++) {
-    const t = 0.1 + (i * 0.26) / Math.max(ribs - 1, 1);
-    const rib = torus(r * 1.02, r * 0.2, 4, 12);
-    rib.rotateY(Math.PI / 2);
-    along(`recoil_rib_${i}`, rib, rootMat, t);
-  }
+  return g;
 }
 
 /**
@@ -916,24 +819,12 @@ export function grownBarrel(root, mats, opts) {
  * As the approved turret draws it, in the file's order — `pipe`, `pod`,
  * `flange`: the feed a straight frustum of `radii`, `length` and `facets`,
  * leaned by its node; the pod a capsule (kit.mjs `capsule`, `facets` [cap,
- * radial]); the flange a torus. The first port's `{ pod, pipe, flangeAt }` —
- * an orb, a sagging cable and a torus, pod first — still builds what it
- * built.
+ * radial]); the flange a torus.
  */
-export function magazine(root, { pipe: pipeMat, pod: podMat, flange }, opts) {
-  if (opts.flange) {
-    const { pipe: p, pod: d, flange: f } = opts;
-    part(root, 'feed_pipe', cyl(p.radii[0], p.radii[1], p.length, p.facets), pipeMat, p);
-    part(root, 'ammo_pod', capsule(d.r, d.length, ...d.facets), podMat, d);
-    part(root, 'feed_flange', torus(f.R, f.tube, ...f.facets), flange, f);
-    return;
-  }
-  const { pod, pipe, flangeAt } = opts;
-  add(root, 'ammo_pod', orb(10, 6), podMat, pod.at, [0, 0, pod.roll ?? 0], pod.r);
-  cable(root, 'feed_pipe', pipe.from, pipe.to, pipeMat, { r: pipe.r, sag: pipe.sag ?? 0, facets: 6 });
-  const ring = torus(flangeAt.r, flangeAt.t, 4, 10);
-  ring.rotateX(Math.PI / 2);
-  add(root, 'feed_flange', ring, flange, flangeAt.at);
+export function magazine(root, { pipe: pipeMat, pod: podMat, flange }, { pipe, pod, flange: f }) {
+  part(root, 'feed_pipe', cyl(pipe.radii[0], pipe.radii[1], pipe.length, pipe.facets), pipeMat, pipe);
+  part(root, 'ammo_pod', capsule(pod.r, pod.length, ...pod.facets), podMat, pod);
+  part(root, 'feed_flange', torus(f.R, f.tube, ...f.facets), flange, f);
 }
 
 /* --------------------------------------------------------------------------
