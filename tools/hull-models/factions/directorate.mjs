@@ -54,6 +54,7 @@ import {
   plan,
   cable,
   bothSides,
+  polar,
   segmentSeries as series,
 } from '../kit.mjs';
 
@@ -215,9 +216,11 @@ export function dorsalSpines(root, black, { spines, r = 0.7, rake = -0.3 }) {
  * upward face. A mirrored pair is refused — a pattern that repeats on
  * neither side is the Block 2 rule, and the Chorister's four-and-one is it.
  */
-export function photophores(root, crimson, { spots, size = 1.1, h = 0.4, depth }) {
+export function photophores(root, crimson, { spots, size = 1.1, h = 0.4, depth, yaw = 0 }) {
   refuseMirror('photophore', spots);
-  spots.forEach(([name, x, y, z]) => add(root, name, box(size, h, depth ?? size), crimson, [x, y, z]));
+  spots.forEach(([name, x, y, z]) =>
+    add(root, name, box(size, h, depth ?? size), crimson, [x, y, z], [0, yaw, 0])
+  );
 }
 
 /**
@@ -438,6 +441,54 @@ export function hopper(root, { black, steel, gullet }, { x, y, z = 0, w = 18, h 
 export const structureInk = {
   chitinRedDark: () => clad('chitin_red_dark', hex('#4E1220'), 0.14, 0.55),
 };
+
+/**
+ * The exchanger on the end of a Vent Tap's draw arm, on `bearing` (#608),
+ * grown as a carapace: a squashed orb in `skin`, the dark seam orb where it
+ * meets the pipe, three spines raked off its back, four photophores lying on
+ * it, and the claw that grips the ground beyond. The script passes `skin`
+ * violet on the even arms and red on the odd, as the tergites alternate
+ * along a hull. Distances are metres out along the bearing, as the kit's
+ * `ventDrawArm` takes them.
+ *
+ * Three things are the approved file's and are carried across rather than
+ * corrected (#540): the spines rake toward *global* +x on every arm, not out
+ * along their own; the spines and the photophores stagger either side of
+ * their rank in global z; and three of the four photophores lie under the
+ * shell of the carapace or its seam, where the top-down bake has never seen
+ * them. `exportGlb`'s light audit names them on every arm. The photophores
+ * are `photophores` below, yawed with the arm, so the no-mirrored-pair rule
+ * holds on the tap as it does on a hull.
+ */
+export function carapaceHead(root, { skin, black, steel, crimson }, opts) {
+  const { bearing: a, at, carapace, seam, spines, photophores: rank, claw } = opts;
+  add(root, 'carapace', scute(12, 6), skin, polar(a, at, carapace.y), [0, -a, 0], carapace.r);
+  add(root, 'carapace_seam', scute(8, 6), black, polar(a, seam.at, seam.y), [0, -a, 0], seam.r);
+  spines.lengths.forEach((length, i) => {
+    const [x, y, z] = polar(a, at + (spines.from + spines.pitch * i), spines.y);
+    add(root, `spine_${i}`, spike(spines.r, length, 5), black, [x, y, z + spines.stagger[i]], [
+      0,
+      0,
+      spines.rake,
+    ]);
+  });
+  photophores(root, crimson, {
+    size: rank.size,
+    h: rank.h,
+    yaw: -a,
+    spots: rank.ys.map((y, i) => {
+      const [x, , z] = polar(a, at + (rank.from + rank.pitch * i), y);
+      return [`photophore_${i}`, x, y, z + (i % 2 ? rank.stagger : -rank.stagger)];
+    }),
+  });
+  // Laid along the arm as the draw pipe is, then raised `claw.raise` radians
+  // toward vertical: the approved file's lean is π/2 − 0.8 to the bit.
+  add(root, 'anchor_claw', spike(claw.r, claw.length, 5), steel, polar(a, claw.at, claw.y), [
+    0,
+    -a,
+    claw.raise - Math.PI / 2,
+  ]);
+}
 
 /** A carapace plate: a low-facet orb the caller squashes and lays on the mound. */
 const scute = (w = 10, h = 6) => new THREE.SphereGeometry(1, w, h);

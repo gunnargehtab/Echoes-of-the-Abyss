@@ -54,6 +54,7 @@ import {
   loft,
   cable,
   bothSides,
+  polar,
 } from '../kit.mjs';
 
 /**
@@ -448,6 +449,55 @@ export const structureInk = {
   algaeHull: () => clad('algae_hull', hex('#14664C'), 0.08, 0.62),
   biolightGreen: () => lamp('biolight_green', hex('#8FE36B'), hex('#123018'), 0.35),
 };
+
+/**
+ * The exchanger on the end of a Vent Tap's draw arm, on `bearing` (#608),
+ * grown as a bladder: a squashed orb ringed three times, the pale bud on its
+ * crown, the one vein along its back, and three roots leaning out into the
+ * ground beyond. The rings are lofts round the arm's own axis, squashed with
+ * the bladder — the Sower's `bladder` rings are toruses round a hull's
+ * length, and a ring grown round a pipe is a different shape. Distances are
+ * metres out along the bearing, as the kit's `ventDrawArm` takes them;
+ * `roots.across` are metres to the right of it, looking out.
+ */
+export function bladderHead(root, { membrane, ridge, spore, vein }, opts) {
+  const { bearing: a, at, bladder: body, rings, bud: crown, vein: thread, roots } = opts;
+  add(root, 'bladder', orb(12, 6), membrane, polar(a, at, body.y), [0, -a, 0], body.r);
+  rings.stations.forEach(([r, shoulder], i) =>
+    add(
+      root,
+      `bladder_ring_${i}`,
+      loft(
+        [
+          [-rings.halfWidth, shoulder],
+          [0, r],
+          [rings.halfWidth, shoulder],
+        ],
+        12
+      ),
+      ridge,
+      polar(a, rings.from + rings.pitch * i, body.y),
+      [0, -a, 0],
+      [1, rings.squash, 1]
+    )
+  );
+  add(root, 'bud', orb(8, 6), spore, polar(a, crown.at, crown.y), [0, 0, 0], crown.r);
+  add(root, 'bladder_vein', box(...thread.size), vein, polar(a, at, thread.y), [0, -a, 0]);
+  // Each root is laid along the arm as the draw pipe is, then raised
+  // `roots.raise` radians toward vertical: the approved file's lean is
+  // π/2 − 0.9 to the bit.
+  roots.across.forEach((d, i) => {
+    const [x, y, z] = polar(a, roots.at, roots.y);
+    add(
+      root,
+      `root_${i}`,
+      cyl(roots.r[0], roots.r[1], roots.length, 6),
+      ridge,
+      [x + d * Math.sin(a), y, z - d * Math.cos(a)],
+      [0, -a, roots.raise - Math.PI / 2]
+    );
+  });
+}
 
 /** The mound: a grown dome, its growth ring, and the collar the head turns in. */
 export function grownMound(root, { body, ring, collar }, opts) {

@@ -20,7 +20,7 @@
  * Light is machinery light: louvres, stack throats, deck floods, lit gratings —
  * and it goes on *upward* faces, because the maps are top-down (see kit.mjs).
  */
-import { THREE, clad, lamp, hex, add, box, cyl, torus, plate, plan, bothSides } from '../kit.mjs';
+import { THREE, clad, lamp, hex, add, box, cyl, torus, plate, plan, bothSides, polar } from '../kit.mjs';
 
 /**
  * The Klaxon's palette, as the Bulwark's own materials carry it: the four
@@ -651,6 +651,50 @@ export const structureInk = {
   // token, not a near-black — so it reads as a fixture in the albedo map too.
   workLamp: () => lamp('work_lamp', hex('#F2B233'), hex('#F2B233'), 0.35),
 };
+
+/**
+ * The heat exchanger on the end of a Vent Tap's draw arm, on `bearing`
+ * (#608): a black box with five iron fins through it, the hazard band round
+ * its roof, a stack behind it banded amber, the vent grating on the roof, the
+ * anchor foot beyond, and a rank of four rivets. Distances are metres out
+ * along the bearing, as the kit's `ventDrawArm` takes them.
+ *
+ * Two things are the approved file's and are carried across rather than
+ * corrected (#540). The rivets stagger `rivets.stagger` either side of their
+ * rank in *global* z on every arm, not across the arm, so the rank leans one
+ * way on two arms and the other way on the other two. And the grating sits
+ * inside the hazard band, under its roof, where the top-down bake has never
+ * seen it; `exportGlb`'s light audit says so on every arm.
+ */
+export function exchangerHead(root, { black, grey, rust, amber, vent }, opts) {
+  const { bearing: a, at, y, size, fins, band, stack, grating, foot, rivets } = opts;
+  const yaw = [0, -a, 0];
+  add(root, 'exchanger', box(...size), black, polar(a, at, y), yaw);
+  for (let i = 0; i < fins.count; i++)
+    add(root, `fin_${i}`, box(...fins.size), grey, polar(a, fins.from + fins.pitch * i, fins.y), yaw);
+  add(root, 'hazard_band', box(...band.size), amber, polar(a, at, band.y), yaw);
+  add(root, 'stack', cyl(stack.r[0], stack.r[1], stack.h, 8), black, polar(a, stack.at, stack.y));
+  add(
+    root,
+    'stack_band',
+    cyl(stack.band.r, stack.band.r, stack.band.h, 8),
+    amber,
+    polar(a, stack.at, stack.band.y)
+  );
+  add(root, 'exchanger_vent', box(...grating.size), vent, polar(a, grating.at, grating.y), yaw);
+  add(root, 'anchor_foot', box(...foot.size), rust, polar(a, foot.at, foot.y), yaw);
+  for (let i = 0; i < rivets.count; i++) {
+    const [x, ry, z] = polar(a, at + (rivets.from + rivets.pitch * i), rivets.y);
+    add(
+      root,
+      `rivet_${i}`,
+      box(...rivets.size),
+      grey,
+      [x, ry, z + (i % 2 ? rivets.stagger : -rivets.stagger)],
+      yaw
+    );
+  }
+}
 
 /**
  * The raft: a bolted slab on the seabed with a foot at each corner and a bolt

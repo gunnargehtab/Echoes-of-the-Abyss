@@ -38,6 +38,7 @@ import {
   loft,
   strut,
   bothSides,
+  polar,
 } from '../kit.mjs';
 
 /**
@@ -563,6 +564,47 @@ export const structureInk = {
   crystalDim: () => lamp('resonance_crystal_dim', hex('#8B5CF6'), hex('#1E1038'), 0.15),
   navLight: () => lamp('nav_light', hex('#C9A6FF'), hex('#241744'), 0.3),
 };
+
+/**
+ * The exchanger on the end of a Vent Tap's draw arm, on `bearing` (#608): a
+ * crystal prism square in section with pyramid ends, the alloy frame bar
+ * over it, the lit seam between them, the crystal spine — a slim pyramid —
+ * standing off the top, and the buttress blade wedged between the platform and the exchanger
+ * — an instrument, not a vessel, and the one head of the four whose every
+ * part is a straight edge. Distances are metres out along the bearing, as
+ * the kit's `ventDrawArm` takes them.
+ *
+ * The prism and the frame are four-facet lofts turned an eighth about their
+ * axis, so a flat face is up rather than an edge (kit.mjs `loft`). The
+ * approved seam lies inside the frame's section, under its top face, where
+ * the top-down bake has never seen it; `exportGlb`'s light audit says so on
+ * every arm, and it is carried across rather than lifted (#540).
+ */
+export function exchangerHead(root, { crystal, alloy, seam }, opts) {
+  const { bearing: a, at, prism, frame, seam: strip, spine: crest, buttress: blade } = opts;
+  const yaw = [0, -a, 0];
+  add(root, 'exchanger_prism', loft(prism.profile, 4, Math.PI / 4), crystal, polar(a, at, prism.y), yaw);
+  add(root, 'exchanger_frame', loft(frame.profile, 4, Math.PI / 4), alloy, polar(a, at, frame.y), yaw);
+  add(root, 'exchanger_seam', box(...strip.size), seam, polar(a, at, strip.y), yaw);
+  // A four-sided pyramid, not an octahedron: the approved file's eight
+  // triangles are four faces on a square base with a vertex at its centre
+  // (three r169 draws `cyl(0, r, …)` as 2n triangles). The two share a
+  // bounding box and differ by a twelfth of their area.
+  add(root, 'crystal_spine', cyl(0, crest.r, crest.h, 4), crystal, polar(a, at, crest.y));
+  // A triangle in plan — base across the arm at `blade.at`, point reaching
+  // `blade.reach` back toward the wellhead — stood on its base rather than
+  // centred, which is how the approved file carries it.
+  const wedge = plan(
+    [
+      [-blade.halfBase, 0],
+      [blade.halfBase, 0],
+      [0, blade.reach],
+    ],
+    blade.t
+  );
+  wedge.translate(0, blade.t / 2, 0);
+  add(root, 'buttress', wedge, alloy, polar(a, blade.at, blade.y), [0, -(a + Math.PI / 2), 0]);
+}
 
 /** A mirrored pair, tagged `r` and `l` — the Order's exact bilateral symmetry. */
 export function pair(fn) {
