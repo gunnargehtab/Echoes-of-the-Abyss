@@ -77,6 +77,47 @@ export const ink = {
 /** A grown orb: few facets, and squashed by the caller — never round in section. */
 const orb = (w = 12, h = 6) => new THREE.SphereGeometry(1, w, h);
 
+/**
+ * A growth ring as the approved Sower and Spinner carry every one of theirs:
+ * a ridge lathed round the length axis, from `shoulder` up to `crown` and
+ * back over ±`halfWidth`, `facets` round — not a torus. A torus of the same
+ * crown reads the same from a sprite away and carries twice the triangles
+ * and twice the surface; the first port of these hulls drew toruses, and
+ * `diff.mjs` against the approved binaries is what caught it (#639). The
+ * Vent Tap's `bladderHead` below lathes its rings the same way.
+ */
+const ridgeRing = ({ crown, shoulder, halfWidth, facets }) =>
+  loft(
+    [
+      [-halfWidth, shoulder],
+      [0, crown],
+      [halfWidth, shoulder],
+    ],
+    facets
+  );
+
+/**
+ * A blade standing on a back — the Spinner's dorsal blade, the Sower's stem
+ * keel: a plan rectangle from `from` to `to`, `t` across, raised `height`
+ * and centred on y = 0. An extrusion rather than a box because that is what
+ * both approved exports are: the same eight vertices, but an extrusion cuts
+ * its two caps on one diagonal and its walls from its first corner, where a
+ * box cuts opposite faces opposite ways, and `diff.mjs` reads a box in an
+ * extrusion's place as ten of twelve triangles re-cut (#639). The corners
+ * run from the fore end's starboard side, the start the exports were cut
+ * from.
+ */
+const blade = (from, to, height, t) =>
+  plan(
+    [
+      [to, -t / 2],
+      [to, t / 2],
+      [from, t / 2],
+      [from, -t / 2],
+    ],
+    height
+  );
+
 /** Refuse a mirrored pair: the Commune grows each side its own way. */
 function refuseMirror(what, items, key) {
   for (let i = 0; i < items.length; i++)
@@ -98,16 +139,23 @@ function refuseMirror(what, items, key) {
  * The first transcription of this builder was fuller amidships and asymmetric
  * by a station, which is the kind of drift a vocabulary with no consumers
  * cannot notice — building the Spinner from it is what noticed.
+ *
+ * `profile` replaces those stations with the hull's own `[x, r]` list. The
+ * fractions above are the Spinner's stations rounded to three places, and
+ * rounding moves its ±24 m rings two centimetres and closes its ends to a
+ * point where the export leaves them 0.2 m open; a port passes the stations
+ * as the binary carries them (#639).
  */
 export function podBody(root, mat, opts) {
   const { bow, stern, maxR, waist = 0.5, squash = 0.7, facets = 12, name = 'pod_body' } = opts;
+  const { profile } = opts;
   const L = bow - stern;
   const at = (t) => stern + L * t;
   return add(
     root,
     name,
     loft(
-      [
+      profile ?? [
         [at(0), 0],
         [at(0.064), maxR * 0.19],
         [at(0.209), maxR * 0.536],
@@ -133,17 +181,34 @@ export function podBody(root, mat, opts) {
  * pattern fixed by its index so a rebuild is a rebuild — the Harvester's rings
  * lean up to five degrees, and it is the one thing that makes them read as
  * grown rather than turned.
+ *
+ * `ring` = `{ rise, facets, halfWidth? }` lathes each ring as a ridge instead
+ * (`ridgeRing`): the crown at `r + tube`, the shoulders `rise` below it,
+ * `halfWidth` (the tube, unless said) either side. The Spinner's three are
+ * 0.7 m ridges on eighteen facets, which is what its approved export holds;
+ * without `ring` the ring is a torus, as this builder first drew them.
  */
 export function growthRings(root, mat, opts) {
-  const { stations, squash = 0.72, tube = 0.9, wobble = 0, name = 'growth_ring' } = opts;
+  const { stations, squash = 0.72, tube = 0.9, wobble = 0, name = 'growth_ring', ring } = opts;
   stations.forEach(([x, r], i) =>
     add(
       root,
       `${name}_${i}`,
-      torus(r, tube, 6, 12),
+      ring
+        ? ridgeRing({
+            crown: r + tube,
+            shoulder: r + tube - ring.rise,
+            halfWidth: ring.halfWidth ?? tube,
+            facets: ring.facets,
+          })
+        : torus(r, tube, 6, 12),
       mat,
       [x, 0, 0],
-      [wobble * Math.sin(1 + i * 2.4), Math.PI / 2 + wobble * Math.cos(2 + i * 1.7), 0],
+      [
+        wobble * Math.sin(1 + i * 2.4),
+        (ring ? 0 : Math.PI / 2) + wobble * Math.cos(2 + i * 1.7),
+        0,
+      ],
       [1, squash, 1]
     )
   );
@@ -179,9 +244,15 @@ export function bloomBed(root, mats, opts) {
  * side is mirrored — the Sower's ribs are the one Commune series that is
  * bilateral, because a leaf's venation is. Numbered as the Sower numbers
  * them: the midrib is rib_0, then port, then starboard.
+ *
+ * `r` is a rib's radius where it springs from the node and `tip` its radius
+ * at the far end — the Sower's taper from 1.1 m to 0.5 m, as a leaf's ribs
+ * do, and drawn untapered (the default, and the first port's reading) each
+ * carries a third again the surface and its centroid three metres further
+ * out (#639).
  */
 export function ribFan(root, { ridge, vein }, opts) {
-  const { node, y, midrib, port, r = 0.95, veinFrac = 0.8, lift = 1.15 } = opts;
+  const { node, y, midrib, port, r = 0.95, tip = r, veinFrac = 0.8, lift = 1.15 } = opts;
   const [nx, nz] = node;
   const ribs = [[midrib, 0]];
   for (const [len, yaw] of port) ribs.push([len, -Math.abs(yaw)]);
@@ -189,7 +260,7 @@ export function ribFan(root, { ridge, vein }, opts) {
   ribs.forEach(([len, yaw], i) => {
     const cx = nx + (len / 2) * Math.cos(yaw);
     const cz = nz - (len / 2) * Math.sin(yaw);
-    add(root, `rib_${i}`, cyl(r, r, len, 6), ridge, [cx, y, cz], [0, yaw, -Math.PI / 2]);
+    add(root, `rib_${i}`, cyl(tip, r, len, 6), ridge, [cx, y, cz], [0, yaw, -Math.PI / 2]);
     add(root, `rib_vein_${i}`, box(len * veinFrac, 0.2, 0.5), vein, [cx, y + lift, cz], [
       0,
       yaw,
@@ -201,18 +272,29 @@ export function ribFan(root, { ridge, vein }, opts) {
 /**
  * The pressure bladder at a leaf's node, ringed. A squashed orb — `squash`
  * is height over beam, and the Sower's is 0.5, the flattest body in the
- * navy — with growth rings at `rings` = `[dx, r]` offsets along it.
+ * navy — with growth rings at `rings` = `[dx, r]` offsets along it. `ring`
+ * is `growthRings`' option and means the same here: each ring a lathed ridge
+ * cresting at `r + 0.8`, its shoulders `rise` below, `halfWidth` 0.8 unless
+ * said — the Sower's two are 0.7 m ridges on sixteen facets.
  */
-export function bladder(root, { chitin, ridge }, { x, y, r, squash = 0.5, rings = [] }) {
+export function bladder(root, { chitin, ridge }, { x, y, r, squash = 0.5, rings = [], ring }) {
+  const tube = 0.8;
   add(root, 'bladder', orb(16, 8), chitin, [x, y, 0], [0, 0, 0], [r, r * squash, r]);
   rings.forEach(([dx, rr], i) =>
     add(
       root,
       `bladder_ring_${i}`,
-      torus(rr, 0.8, 5, 16),
+      ring
+        ? ridgeRing({
+            crown: rr + tube,
+            shoulder: rr + tube - ring.rise,
+            halfWidth: ring.halfWidth ?? tube,
+            facets: ring.facets,
+          })
+        : torus(rr, tube, 5, 16),
       ridge,
       [x + dx, y, 0],
-      [0, Math.PI / 2, 0],
+      ring ? [0, 0, 0] : [0, Math.PI / 2, 0],
       [1, squash, 1]
     )
   );
@@ -228,13 +310,16 @@ export function bud(root, light, { x, y, z = 0, r, squash = 0.54 }) {
  * `[x, y, z, r]`. Every pod is its own size and sits where it grew — a
  * matched pair is refused. The Sower's seed pods and the Spinner's mine sacs
  * are the same construction with different proportions and names, so both
- * are exported from one builder below.
+ * are exported from one builder below. `facets` is the pod orb's
+ * `[widthSegments, heightSegments]`: ten by six on a seed pod, twelve by six
+ * on the Spinner's sacs, whose export carries a vertex on both beams of the
+ * equator and so a hundred and twenty triangles to a seed pod's hundred.
  */
 function grownPods(root, { skin, cap }, opts) {
-  const { pods, names, squash, capR, capLift, capSquash } = opts;
+  const { pods, names, squash, capR, capLift, capSquash, facets = [10, 6] } = opts;
   refuseMirror(names[0], pods, ([, , , r]) => r);
   pods.forEach(([x, y, z, r], i) => {
-    add(root, `${names[0]}_${i}`, orb(10, 6), skin, [x, y, z], [0, 0, 0], [r, r * squash, r]);
+    add(root, `${names[0]}_${i}`, orb(...facets), skin, [x, y, z], [0, 0, 0], [r, r * squash, r]);
     add(
       root,
       `${names[1]}_${i}`,
@@ -273,16 +358,26 @@ export const mineSacs = (root, mats, opts) =>
  * The grown stem aft of a leaf: a squashed loft from a closed point at `from`
  * swelling to `r` at `to`, where it meets the node, ringed at `rings`, and
  * carrying a keel blade on its back if `keel` says so.
+ *
+ * `profile` replaces that parametric body with the hull's own `[x, r]`
+ * stations — the Sower's is open at both ends, 0.3 m at the tail and 4.2 m
+ * where it meets the node, on fourteen facets — and `ring` (`{ crown,
+ * shoulder, halfWidth, facets }`, absolute metres) lathes each ring as a
+ * ridge (`ridgeRing`) in place of the torus the default draws. `from`, `to`
+ * and `r` are what the parametric body, the torus rings and the keel's
+ * default height are read from; a hull that passes `profile` and `ring`
+ * needs none of them.
  */
 export function stem(root, { chitin, ridge }, opts) {
   const { from, to, r, y = 0, squash = 0.8, rings = [], keel, facets = 8 } = opts;
+  const { profile, ring } = opts;
   const L = to - from;
   const at = (t) => from + L * t;
   add(
     root,
     'stem',
     loft(
-      [
+      profile ?? [
         [at(0), 0],
         [at(0.03), r * 0.4],
         [at(0.15), r * 0.62],
@@ -302,19 +397,26 @@ export function stem(root, { chitin, ridge }, opts) {
     add(
       root,
       `stem_ring_${i}`,
-      torus(r * 0.76, r * 0.19, 5, 12),
+      ring ? ridgeRing(ring) : torus(r * 0.76, r * 0.19, 5, 12),
       ridge,
       [x, y, 0],
-      [0, Math.PI / 2, 0],
+      ring ? [0, 0, 0] : [0, Math.PI / 2, 0],
       [1, squash, 1]
     )
   );
-  if (keel)
-    add(root, 'stem_keel', box(keel.to - keel.from, keel.height, 0.8), ridge, [
-      (keel.from + keel.to) / 2,
-      y + r * squash + keel.height / 2 - 0.3,
-      0,
-    ]);
+  if (keel) stemKeel(root, ridge, { y: y + r * squash + keel.height / 2 - 0.3, ...keel });
+}
+
+/**
+ * The keel blade on a stem's back: a `blade` (above) from `from` to `to`,
+ * `height` tall and `t` thick, centred at `y`. Its own builder because the
+ * approved Sower exports it *after* the caudal pair and `check.mjs` compares
+ * in order — the first port drew it in the stem's turn and read as three
+ * parts changed (#639). `stem`'s `keel` option still draws it there, for a
+ * hull whose export does.
+ */
+export function stemKeel(root, ridge, { from, to, height, y, t = 0.8 }) {
+  add(root, 'stem_keel', blade(from, to, height, t), ridge, [0, y, 0]);
 }
 
 /**
@@ -331,22 +433,25 @@ export function stem(root, { chitin, ridge }, opts) {
  * the chord's centreline can draw a fin that is *pointed* and never one that
  * is *swept*, and a Commune fin that is not swept reads as a wing — the one
  * thing this navy's beam is not.
+ *
+ * `bySide` exports every port fin before any starboard one — pectoral_p,
+ * fluke_p, pectoral_s, fluke_s, which is the order the approved Spinner
+ * carries; the default goes pair by pair.
  */
-export function fins(root, membrane, { y = 0, pairs }) {
-  pairs.forEach(([name, corners, { t = 0.5, y: fy = y } = {}]) =>
-    bothSides((side, sgn) =>
-      add(
-        root,
-        `${name}_${side}`,
-        plan(
-          corners.map(([x, z]) => [x, sgn * z]),
-          t
-        ),
-        membrane,
-        [0, fy, 0]
-      )
-    )
-  );
+export function fins(root, membrane, { y = 0, pairs, bySide = false }) {
+  const fin = ([name, corners, { t = 0.5, y: fy = y } = {}], side, sgn) =>
+    add(
+      root,
+      `${name}_${side}`,
+      plan(
+        corners.map(([x, z]) => [x, sgn * z]),
+        t
+      ),
+      membrane,
+      [0, fy, 0]
+    );
+  if (bySide) bothSides((side, sgn) => pairs.forEach((pair) => fin(pair, side, sgn)));
+  else pairs.forEach((pair) => bothSides((side, sgn) => fin(pair, side, sgn)));
 }
 
 /**
@@ -357,14 +462,18 @@ export function nose(root, mat, { name = 'leaf_tip', tip, y = 0, r, length, face
   add(root, name, cyl(0, r, length, facets), mat, [tip - length / 2, y, 0], [0, 0, -Math.PI / 2]);
 }
 
-/** A dorsal blade standing on the back, `height` above `y`. */
+/** A dorsal blade standing on the back, `height` above `y` (`blade` above). */
 export function dorsalBlade(root, mat, { name = 'dorsal_blade', from, to, y, height, t = 1 }) {
-  add(root, name, box(to - from, height, t), mat, [(from + to) / 2, y + height / 2, 0]);
+  add(root, name, blade(from, to, height, t), mat, [0, y + height / 2, 0]);
 }
 
-/** Navigation marks: flat `bio_light` strips, one each at `[name, x, y, z]`. */
-export function navMarks(root, light, { marks, w = 1.2, d = 0.9 }) {
-  marks.forEach(([name, x, y, z = 0]) => add(root, name, box(w, 0.5, d), light, [x, y, z]));
+/**
+ * Navigation marks: flat `bio_light` strips, one each at `[name, x, y, z]`,
+ * `w` by `h` by `d`. The Spinner's bow mark is the default half-metre tall;
+ * its dorsal mark and the Sower's stem light are 0.4.
+ */
+export function navMarks(root, light, { marks, w = 1.2, h = 0.5, d = 0.9 }) {
+  marks.forEach(([name, x, y, z = 0]) => add(root, name, box(w, h, d), light, [x, y, z]));
 }
 
 /**
