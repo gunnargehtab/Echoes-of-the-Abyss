@@ -32,6 +32,22 @@ const DECAY_PERIOD_STRETCH = 0.4;
 const FALLOFF_REFERENCE_M = 900;
 
 /**
+ * The oscillator's level, by what the tier is allowed to say, and how far a
+ * drive-signature pulse lifts it.
+ *
+ * Named because `scheduleThump` has to anchor to the level rather than read one
+ * back — see the comment there for what reading it back cost.
+ */
+const DRIVE_LEVEL = {
+  /** Tier 3+: the faction's drive signature (§8). */
+  CLASSIFIED: 0.5,
+  /** Tier 1-2: a low pressure-thump that identifies nothing (§3). */
+  THUMP: 0.35,
+  /** How far a pulse lifts the voice above its own level. */
+  BUMP: 1.6,
+} as const;
+
+/**
  * Authority a tier has over stereo position, 0-1.
  *
  * The numbers, not the prose, are what stop the mix from lying. Tier 1 is 0
@@ -103,6 +119,8 @@ export class ContactVoice {
   private readonly noiseGain: GainNode;
 
   private tier: ResolutionTier = ResolutionTier.Silent;
+  /** The level the oscillator is being held at, which a pulse bumps around. */
+  private oscBase: number = DRIVE_LEVEL.THUMP;
   private lockToneFired = false;
   private nextPulseAt = 0;
   private stopped = false;
@@ -180,13 +198,15 @@ export class ContactVoice {
       // not: §3 forbids Tier 2 from "carrying class information in its timbre".
       this.osc.type = timbre.wave;
       this.osc.frequency.setTargetAtTime(timbre.baseHz, now, 0.25);
-      this.oscGain.gain.setTargetAtTime(0.5, now, 0.25);
+      this.oscBase = DRIVE_LEVEL.CLASSIFIED;
+      this.oscGain.gain.setTargetAtTime(this.oscBase, now, 0.25);
       this.noiseGain.gain.setTargetAtTime(voicing.noiseFloor * 0.4, now, 0.3);
     } else {
       // Tier 1-2: a low pressure-thump, 40-90 Hz, and nothing that identifies.
       this.osc.type = 'sine';
       this.osc.frequency.setTargetAtTime(isContactTier ? 55 : 72, now, 0.25);
-      this.oscGain.gain.setTargetAtTime(0.35, now, 0.25);
+      this.oscBase = DRIVE_LEVEL.THUMP;
+      this.oscGain.gain.setTargetAtTime(this.oscBase, now, 0.25);
       // Tier 2's "filtered wash"; Tier 1 stays a bare thump.
       const wash = inputs.tier === ResolutionTier.Bearing ? 0.18 : 0;
       this.noiseGain.gain.setTargetAtTime(wash + voicing.noiseFloor * 0.3, now, 0.3);
@@ -243,10 +263,25 @@ export class ContactVoice {
 
     // A short amplitude bump on the oscillator rather than a new source: it
     // reads as the same thing breathing, which is what a drive signature is.
-    const peak = this.oscGain.gain.value;
+    //
+    // Both ends of the bump are anchored to the voice's *own* level, never to
+    // whatever the parameter happens to read. Reading it back was two bugs at
+    // once, because the `cancelScheduledValues` below cancels the ramp `update`
+    // scheduled at this same instant, so the read never saw the level the voice
+    // was being set to — only the level it was leaving.
+    //
+    // A contact already at Tier 3+ on its first frame therefore read 0, bumped
+    // to 0, settled at 0, and its drive signature never sounded at all. And a
+    // contact promoted while sounding read its *previous bump's tail* and
+    // settled back onto that, so every pulse started higher than the last: a
+    // ratchet with no ceiling, worst where §8 puts the fastest mechanism. The
+    // Directorate's swarm is 9 events per second, so its pulse fires on every
+    // 5 Hz tick and never gets an un-pulsed tick to fall back on — measured at
+    // 260x the voice's own level after eight seconds of being tracked, and
+    // still climbing.
     this.oscGain.gain.cancelScheduledValues(now);
-    this.oscGain.gain.setValueAtTime(peak * 1.6, now);
-    this.oscGain.gain.setTargetAtTime(peak, now + 0.02, 0.18);
+    this.oscGain.gain.setValueAtTime(this.oscBase * DRIVE_LEVEL.BUMP, now);
+    this.oscGain.gain.setTargetAtTime(this.oscBase, now + 0.02, 0.18);
   }
 
   private fireLockTone(now: number): void {

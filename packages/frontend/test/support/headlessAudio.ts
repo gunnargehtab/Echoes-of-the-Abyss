@@ -52,13 +52,31 @@ export interface ParamWrite {
 /**
  * An `AudioParam` that remembers.
  *
- * `value` follows the last write rather than the clock — nothing here advances
- * time on its own — so a test reads the target a ramp was aimed at, not an
- * interpolated sample. That is the right quantity anyway: the engine's
- * promises are about what it *asked* the graph to do.
+ * `value` follows the last write rather than the clock, so a test reads the
+ * target a ramp was aimed at rather than an interpolated sample. That is
+ * usually the right quantity: the engine's promises are about what it *asked*
+ * the graph to do.
+ *
+ * With one exception, and it is here because a real bug hid behind its
+ * absence. Production code that *reads* a parameter back and writes a value
+ * derived from what it read — `contactVoice.ts`'s drive-signature thump, which
+ * bumps a voice above its own level and eases back down — is asking what the
+ * value is **now**, mid-decay. A stub that answers with the settled target
+ * makes every such read look correct, so a pulse that eased back to its own
+ * peak instead of the voice's level (and so climbed, tick after tick, without
+ * bound) was invisible here while being unmissable in a browser.
+ *
+ * So `setTargetAtTime` is modelled for real: `value` is the exponential
+ * approach evaluated at `context.currentTime`. Every other method still lands
+ * immediately, which is what the assertions about ducking and trims want, and
+ * a test that never advances the clock sees exactly what it saw before —
+ * `setTargetAtTime` at time `now`, read at time `now`, is its start value, and
+ * its start value is the previous target.
  */
 export class StubAudioParam {
-  value: number;
+  private settled: number;
+  /** Where the current `setTargetAtTime` approach started, and when. */
+  private approach: { from: number; to: number; at: number; tau: number } | null = null;
   readonly writes: ParamWrite[] = [];
   readonly defaultValue: number;
   readonly minValue = -3.4e38;
@@ -67,14 +85,35 @@ export class StubAudioParam {
 
   constructor(
     value: number,
-    private readonly ledger: AudioLedger
+    private readonly ledger: AudioLedger,
+    private readonly clock: { currentTime: number } = { currentTime: 0 }
   ) {
-    this.value = value;
+    this.settled = value;
     this.defaultValue = value;
   }
 
+  /**
+   * The value right now — mid-decay if a `setTargetAtTime` is still running,
+   * which is the whole point (see the class comment).
+   */
+  get value(): number {
+    const approach = this.approach;
+    if (approach === null) return this.settled;
+    const elapsed = this.clock.currentTime - approach.at;
+    if (elapsed <= 0) return approach.from;
+    if (approach.tau <= 0) return approach.to;
+    return approach.to + (approach.from - approach.to) * Math.exp(-elapsed / approach.tau);
+  }
+
+  /** Writing a value directly is what the engine does before a graph runs. */
+  set value(value: number) {
+    this.approach = null;
+    this.settled = value;
+  }
+
   private record(method: ParamWrite['method'], value: number, at: number): this {
-    this.value = value;
+    this.approach = null;
+    this.settled = value;
     this.writes.push({ method, value, at });
     this.ledger.scheduled++;
     return this;
@@ -84,8 +123,11 @@ export class StubAudioParam {
     return this.record('setValueAtTime', value, at);
   }
 
-  setTargetAtTime(target: number, at: number, _timeConstant: number): this {
-    return this.record('setTargetAtTime', target, at);
+  setTargetAtTime(target: number, at: number, timeConstant: number): this {
+    const from = this.value;
+    this.record('setTargetAtTime', target, at);
+    this.approach = { from, to: target, at, tau: timeConstant };
+    return this;
   }
 
   linearRampToValueAtTime(value: number, at: number): this {
@@ -102,6 +144,11 @@ export class StubAudioParam {
 
   cancelAndHoldAtTime(at: number): this {
     return this.record('cancel', this.value, at);
+  }
+
+  /** Where a still-running approach is heading, ignoring how far it has got. */
+  get target(): number {
+    return this.approach?.to ?? this.settled;
   }
 
   setValueCurveAtTime(curve: ArrayLike<number>, at: number): this {
@@ -175,8 +222,8 @@ class StubSourceNode extends StubAudioNode {
 
   constructor(kind: string, context: HeadlessAudioContext) {
     super(kind, context);
-    this.playbackRate = new StubAudioParam(1, context.ledger);
-    this.detune = new StubAudioParam(0, context.ledger);
+    this.playbackRate = new StubAudioParam(1, context.ledger, context);
+    this.detune = new StubAudioParam(0, context.ledger, context);
   }
 
   start(at = 0): void {
@@ -194,7 +241,7 @@ export class StubGainNode extends StubAudioNode {
   readonly gain: StubAudioParam;
   constructor(context: HeadlessAudioContext) {
     super('GainNode', context);
-    this.gain = new StubAudioParam(1, context.ledger);
+    this.gain = new StubAudioParam(1, context.ledger, context);
   }
 }
 
@@ -203,7 +250,7 @@ export class StubOscillatorNode extends StubSourceNode {
   readonly frequency: StubAudioParam;
   constructor(context: HeadlessAudioContext) {
     super('OscillatorNode', context);
-    this.frequency = new StubAudioParam(440, context.ledger);
+    this.frequency = new StubAudioParam(440, context.ledger, context);
   }
   setPeriodicWave(): void {}
 }
@@ -222,10 +269,10 @@ export class StubBiquadFilterNode extends StubAudioNode {
   readonly detune: StubAudioParam;
   constructor(context: HeadlessAudioContext) {
     super('BiquadFilterNode', context);
-    this.frequency = new StubAudioParam(350, context.ledger);
-    this.Q = new StubAudioParam(1, context.ledger);
-    this.gain = new StubAudioParam(0, context.ledger);
-    this.detune = new StubAudioParam(0, context.ledger);
+    this.frequency = new StubAudioParam(350, context.ledger, context);
+    this.Q = new StubAudioParam(1, context.ledger, context);
+    this.gain = new StubAudioParam(0, context.ledger, context);
+    this.detune = new StubAudioParam(0, context.ledger, context);
   }
 }
 
@@ -247,7 +294,7 @@ export class StubStereoPannerNode extends StubAudioNode {
   readonly pan: StubAudioParam;
   constructor(context: HeadlessAudioContext) {
     super('StereoPannerNode', context);
-    this.pan = new StubAudioParam(0, context.ledger);
+    this.pan = new StubAudioParam(0, context.ledger, context);
   }
 }
 
@@ -255,7 +302,7 @@ export class StubDelayNode extends StubAudioNode {
   readonly delayTime: StubAudioParam;
   constructor(context: HeadlessAudioContext) {
     super('DelayNode', context);
-    this.delayTime = new StubAudioParam(0, context.ledger);
+    this.delayTime = new StubAudioParam(0, context.ledger, context);
   }
 }
 
