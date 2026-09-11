@@ -114,7 +114,6 @@ directorate.dorsalSpines(root, black, {
   ],
   r: 0.7,
   rake: -0.3,
-  facets: 5,
 });
 
 // The walking limbs: two matched ranks of three at 8 off the keel, 6 long,

@@ -89,9 +89,19 @@ const orb = (w = 12, h = 6) => new THREE.SphereGeometry(1, w, h);
  * and twice the surface; the first port of these hulls drew toruses, and
  * `diff.mjs` against the approved binaries is what caught it (#639). The
  * Vent Tap's `bladderHead` below lathes its rings the same way.
+ *
+ * Two option shapes in this module end here — `ring`, a rise over the station
+ * radius the builder already knows, and `band`, the four radii in metres for
+ * a run of rings all one size — and handing it the other one lathed a profile
+ * of `NaN`: three writes that out as a part with no vertices and no bounds,
+ * and every gate downstream counts it as a part that agrees (#646). So it
+ * refuses rather than lathing it.
  */
-const ridgeRing = ({ crown, shoulder, halfWidth, facets }) =>
-  loft(
+const ridgeRing = ({ crown, shoulder, halfWidth, facets }) => {
+  for (const [k, v] of Object.entries({ crown, shoulder, halfWidth, facets }))
+    if (!Number.isFinite(v))
+      throw new Error(`ridgeRing: ${k} is ${v} — a ridge is crown, shoulder, halfWidth, facets`);
+  return loft(
     [
       [-halfWidth, shoulder],
       [0, crown],
@@ -99,6 +109,7 @@ const ridgeRing = ({ crown, shoulder, halfWidth, facets }) =>
     ],
     facets
   );
+};
 
 /**
  * A blade standing on a back — the Spinner's dorsal blade, the Sower's stem
@@ -185,11 +196,13 @@ export function podBody(root, mat, opts) {
  * lean up to five degrees, and it is the one thing that makes them read as
  * grown rather than turned.
  *
- * `ring` = `{ rise, facets, halfWidth? }` lathes each ring as a ridge instead
+ * `ring` = `{ rise, facets, halfWidth? }` says how each one is lathed
  * (`ridgeRing`): the crown at `r + tube`, the shoulders `rise` below it,
  * `halfWidth` (the tube, unless said) either side. The Spinner's three are
- * 0.7 m ridges on eighteen facets, which is what its approved export holds;
- * without `ring` the ring is a torus, as this builder first drew them.
+ * 0.7 m ridges on eighteen facets, which is what its approved export holds.
+ * It is not optional, and the torus this builder first drew is gone with it:
+ * every ring on every approved Commune hull is a ridge, so a torus here was
+ * a default no model has and only the caller's `ring` kept out of the file.
  */
 export function growthRings(root, mat, opts) {
   const { stations, squash = 0.72, tube = 0.9, wobble = 0, name = 'growth_ring', ring } = opts;
@@ -197,21 +210,15 @@ export function growthRings(root, mat, opts) {
     add(
       root,
       `${name}_${i}`,
-      ring
-        ? ridgeRing({
-            crown: r + tube,
-            shoulder: r + tube - ring.rise,
-            halfWidth: ring.halfWidth ?? tube,
-            facets: ring.facets,
-          })
-        : torus(r, tube, 6, 12),
+      ridgeRing({
+        crown: r + tube,
+        shoulder: r + tube - ring.rise,
+        halfWidth: ring.halfWidth ?? tube,
+        facets: ring.facets,
+      }),
       mat,
       [x, 0, 0],
-      [
-        wobble * Math.sin(1 + i * 2.4),
-        (ring ? 0 : Math.PI / 2) + wobble * Math.cos(2 + i * 1.7),
-        0,
-      ],
+      [wobble * Math.sin(1 + i * 2.4), wobble * Math.cos(2 + i * 1.7), 0],
       [1, squash, 1]
     )
   );
@@ -249,13 +256,13 @@ export function bloomBed(root, mats, opts) {
  * them: the midrib is rib_0, then the starboard ribs, then the port.
  *
  * `r` is a rib's radius where it springs from the node and `tip` its radius
- * at the far end — the Sower's taper from 1.1 m to 0.5 m, as a leaf's ribs
- * do, and drawn untapered (the default, and the first port's reading) each
- * carries a third again the surface and its centroid three metres further
- * out (#639).
+ * at the far end — the approved Sower's taper from 1.1 m to 0.5 m, as a
+ * leaf's ribs do, and the defaults here. Drawn untapered, as the first port
+ * read them, each rib carries a third again the surface and its centroid
+ * three metres further out (#639).
  */
 export function ribFan(root, { ridge, vein }, opts) {
-  const { node, y, midrib, flank, r = 0.95, tip = r, veinFrac = 0.8, lift = 1.15 } = opts;
+  const { node, y, midrib, flank, r = 1.1, tip = 0.5, veinFrac = 0.8, lift = 1.15 } = opts;
   const [nx, nz] = node;
   const ribs = [[midrib, 0]];
   for (const [len, yaw] of flank) ribs.push([len, -Math.abs(yaw)]);
@@ -276,9 +283,10 @@ export function ribFan(root, { ridge, vein }, opts) {
  * The pressure bladder at a leaf's node, ringed. A squashed orb — `squash`
  * is height over beam, and the Sower's is 0.5, the flattest body in the
  * navy — with growth rings at `rings` = `[dx, r]` offsets along it. `ring`
- * is `growthRings`' option and means the same here: each ring a lathed ridge
- * cresting at `r + 0.8`, its shoulders `rise` below, `halfWidth` 0.8 unless
- * said — the Sower's two are 0.7 m ridges on sixteen facets.
+ * is `growthRings`' option and means the same here, torus and all gone the
+ * same way: each ring a lathed ridge cresting at `r + 0.8`, its shoulders
+ * `rise` below, `halfWidth` 0.8 unless said — the Sower's two are 0.7 m
+ * ridges on sixteen facets.
  */
 export function bladder(root, { chitin, ridge }, { x, y, r, squash = 0.5, rings = [], ring }) {
   const tube = 0.8;
@@ -287,17 +295,15 @@ export function bladder(root, { chitin, ridge }, { x, y, r, squash = 0.5, rings 
     add(
       root,
       `bladder_ring_${i}`,
-      ring
-        ? ridgeRing({
-            crown: rr + tube,
-            shoulder: rr + tube - ring.rise,
-            halfWidth: ring.halfWidth ?? tube,
-            facets: ring.facets,
-          })
-        : torus(rr, tube, 5, 16),
+      ridgeRing({
+        crown: rr + tube,
+        shoulder: rr + tube - ring.rise,
+        halfWidth: ring.halfWidth ?? tube,
+        facets: ring.facets,
+      }),
       ridge,
       [x + dx, y, 0],
-      ring ? [0, 0, 0] : [0, Math.PI / 2, 0],
+      [0, 0, 0],
       [1, squash, 1]
     )
   );
@@ -305,12 +311,14 @@ export function bladder(root, { chitin, ridge }, { x, y, r, squash = 0.5, rings 
 
 /**
  * The one lit bud at the node: a squashed orb in `bio_light`, facing up.
- * `name` and `facets` are the Chorister's `bladder_bud` — the bladder
- * showing through the middle segment as a paler dome, a ten-by-six orb in
- * spore pale rather than a lamp (hulls/chorister-pelagia.mjs).
+ * `squash` is height over beam, and the default is the approved Sower's bud
+ * — 1.4 m tall on 2.6 m across. `name` and `facets` are the Chorister's
+ * `bladder_bud` — the bladder showing through the middle segment as a paler
+ * dome, a ten-by-six orb in spore pale rather than a lamp
+ * (hulls/chorister-pelagia.mjs), and squashed its own way.
  */
 export function bud(root, light, opts) {
-  const { name = 'bud', facets = [12, 6], x, y, z = 0, r, squash = 0.54 } = opts;
+  const { name = 'bud', facets = [12, 6], x, y, z = 0, r, squash = 1.4 / 2.6 } = opts;
   add(root, name, orb(...facets), light, [x, y, z], [0, 0, 0], [r, r * squash, r]);
 }
 
@@ -319,13 +327,15 @@ export function bud(root, light, opts) {
  * `[x, y, z, r]`. Every pod is its own size and sits where it grew — a
  * matched pair is refused. The Sower's seed pods and the Spinner's mine sacs
  * are the same construction with different proportions and names, so both
- * are exported from one builder below. `facets` is the pod orb's
- * `[widthSegments, heightSegments]`: ten by six on a seed pod, twelve by six
- * on the Spinner's sacs, whose export carries a vertex on both beams of the
- * equator and so a hundred and twenty triangles to a seed pod's hundred.
+ * are exported from one builder below. Everything that differs between them
+ * is a default on the export rather than on this shared body, `facets`
+ * included — the pod orb's `[widthSegments, heightSegments]`, ten by six on
+ * a seed pod and twelve by six on the Spinner's sacs, whose export carries a
+ * vertex on both beams of the equator and so a hundred and twenty triangles
+ * to a seed pod's hundred.
  */
 function grownPods(root, { skin, cap }, opts) {
-  const { pods, names, squash, capR, capLift, capSquash, facets = [10, 6] } = opts;
+  const { pods, names, squash, capR, capLift, capSquash, facets } = opts;
   refuseMirror(names[0], pods, ([, , , r]) => r);
   pods.forEach(([x, y, z, r], i) => {
     add(root, `${names[0]}_${i}`, orb(...facets), skin, [x, y, z], [0, 0, 0], [r, r * squash, r]);
@@ -341,18 +351,26 @@ function grownPods(root, { skin, cap }, opts) {
   });
 }
 
-/** Seed pods on a bloom bed: pale `spore_pod` skin, a ridge cap. */
+/**
+ * Seed pods on a bloom bed: pale `spore_pod` skin, a ridge cap. The numbers
+ * are the approved Sower's — a cap 0.45 of its pod across and two thirds of
+ * that tall, on a ten-by-six orb.
+ */
 export const seedPods = (root, mats, opts) =>
   grownPods(root, mats, {
     names: ['seed_pod', 'pod_cap'],
     squash: 0.7,
     capR: 0.45,
     capLift: 0.6,
-    capSquash: 0.67,
+    capSquash: 2 / 3,
+    facets: [10, 6],
     ...opts,
   });
 
-/** Mine sacs at a pod's waist: membrane skin, a ridge bud — fuller than a seed pod. */
+/**
+ * Mine sacs at a pod's waist: membrane skin, a ridge bud — fuller than a seed
+ * pod. The numbers are the approved Spinner's, twelve-facet orbs included.
+ */
 export const mineSacs = (root, mats, opts) =>
   grownPods(root, mats, {
     names: ['mine_sac', 'sac_bud'],
@@ -360,57 +378,33 @@ export const mineSacs = (root, mats, opts) =>
     capR: 0.4,
     capLift: 0.7,
     capSquash: 0.75,
+    facets: [12, 6],
     ...opts,
   });
 
 /**
- * The grown stem aft of a leaf: a squashed loft from a closed point at `from`
- * swelling to `r` at `to`, where it meets the node, ringed at `rings`.
+ * The grown stem aft of a leaf: a squashed lathe of the hull's own `[x, r]`
+ * stations, ringed at `rings`.
  *
- * `profile` replaces that parametric body with the hull's own `[x, r]`
- * stations — the Sower's is open at both ends, 0.3 m at the tail and 4.2 m
- * where it meets the node, on fourteen facets — and `ring` (`{ crown,
- * shoulder, halfWidth, facets }`, absolute metres) lathes each ring as a
- * ridge (`ridgeRing`) in place of the torus the default draws. `from`, `to`
- * and `r` are what the parametric body, the torus rings and the keel's
- * default height are read from; a hull that passes `profile` and `ring`
- * needs none of them.
+ * `profile` is those stations and there is no parametric body behind it. The
+ * approved Sower's stem is open at both ends — 0.3 m at the tail, 4.2 m where
+ * it meets the node — on fourteen facets, which is the default cut; the body
+ * the first port drew instead was closed to a point at both ends on eight,
+ * and the numbers it was swelled from (`from`, `to`, `r`) went with it.
+ *
+ * `band` is the ring, lathed as a ridge (`ridgeRing`) in place of the torus
+ * that stood there: `{ crown, shoulder, halfWidth, facets }` in **absolute
+ * metres**, because a stem's rings are all one size and it has no per-station
+ * radius to hang a fraction on. That is the other option shape in this module
+ * and the reason it is not called `ring`: `growthRings` and `bladder` take a
+ * `ring` that is a rise over the station radius they already know, and the
+ * two were one name until #646.
  */
 export function stem(root, { chitin, ridge }, opts) {
-  const { from, to, r, y = 0, squash = 0.8, rings = [], facets = 8 } = opts;
-  const { profile, ring } = opts;
-  const L = to - from;
-  const at = (t) => from + L * t;
-  add(
-    root,
-    'stem',
-    loft(
-      profile ?? [
-        [at(0), 0],
-        [at(0.03), r * 0.4],
-        [at(0.15), r * 0.62],
-        [at(0.38), r * 0.82],
-        [at(0.62), r * 0.94],
-        [at(0.82), r],
-        [at(1), r * 0.98],
-      ],
-      facets
-    ),
-    chitin,
-    [0, y, 0],
-    [0, 0, 0],
-    [1, squash, 1]
-  );
+  const { profile, facets = 14, y = 0, squash = 0.8, rings = [], band } = opts;
+  add(root, 'stem', loft(profile, facets), chitin, [0, y, 0], [0, 0, 0], [1, squash, 1]);
   rings.forEach((x, i) =>
-    add(
-      root,
-      `stem_ring_${i}`,
-      ring ? ridgeRing(ring) : torus(r * 0.76, r * 0.19, 5, 12),
-      ridge,
-      [x, y, 0],
-      ring ? [0, 0, 0] : [0, Math.PI / 2, 0],
-      [1, squash, 1]
-    )
+    add(root, `stem_ring_${i}`, ridgeRing(band), ridge, [x, y, 0], [0, 0, 0], [1, squash, 1])
   );
 }
 

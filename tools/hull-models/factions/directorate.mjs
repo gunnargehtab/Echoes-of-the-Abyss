@@ -137,11 +137,14 @@ export const segmentSeries = (opts) => series({ section: [0.6, 1.5], ...opts });
  * `seam` shapes the `'seam'` lip: its centre `at` of the half-length forward
  * of the plate's, and its `size` as fractions of the plate's `[sx, sy, sz]`.
  * The defaults are the Chorister's seam as its approved binary carries it.
- * The Precentor's approved plates carry a heavier one — 0.35 long at 0.8,
- * and 0.7 of the *half-beam* tall, which on plates drawn 0.65 of their
- * half-beam tall is 14/13 of the plate's height: a lip that stands a little
- * proud of its plate above and below rather than shading under the plate
- * ahead — and the hull passes it (#638).
+ * The Precentor's approved plates carry a heavier one — 0.35 long at 0.8 and
+ * 0.7 tall, a lip that stands a little proud of its plate above and below
+ * rather than shading under the plate ahead — and the hull passes it (#638).
+ * That 0.7 is of the *half-beam*, which is what `tallOf: 'beam'` says: read
+ * the height fraction against `sz` rather than `sy`. It was written as
+ * `0.7 / 0.65` against `sy` instead, exact only while every station on that
+ * hull keeps `sy = 0.65 · sz` — true of all four today, and silently wrong
+ * the first time one of them is redrawn (#646).
  *
  * A station is the orb's *scale*, not its bounding box. A low-facet sphere
  * never reaches its radius on every axis — an `orb(14, 7)` stops at 0.975 of
@@ -151,13 +154,15 @@ export const segmentSeries = (opts) => series({ section: [0.6, 1.5], ...opts });
  */
 export function tergites(root, { violet, red, black }, opts) {
   const { segments, lip = 'seam', seam = {}, spines, facets = [12, 6] } = opts;
-  const { at: seamAt = 0.85, size: seamSize = [0.3, 0.95, 0.9] } = seam;
+  const { at: seamAt = 0.85, size: seamSize = [0.3, 0.95, 0.9], tallOf = 'height' } = seam;
+  if (tallOf !== 'height' && tallOf !== 'beam')
+    throw new Error(`tergites: seam.tallOf is '${tallOf}' — 'height' (sy) or 'beam' (sz)`);
   segments.forEach(([x, sx, sy, sz], i) => {
     add(root, `tergite_${i}`, orb(...facets), i % 2 ? red : violet, [x, 0, 0], [0, 0, 0], [sx, sy, sz]);
     if (lip === 'seam')
       add(root, `tergite_seam_${i}`, orb(10, 6), black, [x + seamAt * sx, 0, 0], [0, 0, 0], [
         seamSize[0] * sx,
-        seamSize[1] * sy,
+        seamSize[1] * (tallOf === 'beam' ? sz : sy),
         seamSize[2] * sz,
       ]);
     else if (lip === 'ridge')
@@ -237,11 +242,11 @@ export function limbs(root, steel, { xs, y, z, r = 0.6, length = 6, fold = 0.45 
 /**
  * Dorsal spines along the back, `[x, y, z, length]` each, all raked forward
  * by `rake`. The hull alternates their sides; the builder holds the rake.
- * `facets` is the cone's cut: both approved hulls with a dorsal rank, the
- * Precentor and the Chorister, cut theirs five-sided, and the Precentor
- * passes 5 with its own rake of 0.35 (#638).
+ * `facets` is the cone's cut, and five is the default because five is what
+ * both approved hulls with a dorsal rank have — the Precentor and the
+ * Chorister — and this builder has no third caller to want six (#638, #646).
  */
-export function dorsalSpines(root, black, { spines, r = 0.7, rake = -0.3, facets = 6 }) {
+export function dorsalSpines(root, black, { spines, r = 0.7, rake = -0.3, facets = 5 }) {
   refuseMirror('dorsal_spine', spines.map((s, i) => [i, ...s]));
   spines.forEach(([x, y, z, length], i) =>
     add(root, `dorsal_spine_${i}`, spike(r, length, facets), black, [x, y, z], [0, 0, rake])
@@ -305,18 +310,20 @@ export function bladderDome(root, violet, { x, y, z, r, squash = 0.64, stretch =
  * `studs.ring` of its radius, each tilted outward by `studs.tilt` — with a
  * smaller violet dome behind it. The Precentor's ears, and the Cantor's.
  *
- * `ry` is the dome's half-height in metres in place of `r · squash`, and
- * `aft.ry` the aft dome's; `studs.radius` and `studs.lift` place the ring
- * in metres — out from the dome's centre and up from it — in place of the
- * fractions, and `studs.facets` is the spines' cut. The Precentor's
- * approved dome is 5.5 m by 4.2 m with six five-sided spines 3.2 m out and
- * 3.4 m up, and its aft dome 2.6 m by 2.2 m: typed numbers, not fractions
- * of anything, and the hull passes them (#638).
+ * `ry` is the dome's half-height in metres and `aft.ry` the aft dome's;
+ * `studs.radius` and `studs.lift` place the ring in metres, out from the
+ * dome's centre and up from it. All three are typed numbers because the
+ * approved dome's are: 5.5 m by 4.2 m with six spines 3.2 m out and 3.4 m
+ * up, and an aft dome 2.6 m by 2.2 m. The fractions of `r` that once stood
+ * behind them — squash 0.76, ring 0.58, height 0.81 — are gone: they were
+ * a back-solve from this one dome, they missed it, and the hull passed the
+ * metres over the top of them (#638, #646). `studs.facets` is the spines'
+ * cut, five as the approved dome cuts them.
  */
 export function listeningDome(root, { red, violet, black }, opts) {
-  const { x, y, z = 0, r, squash = 0.76, ry = r * squash, studs = {}, aft } = opts;
-  const { count = 6, ring = 0.58, height = 0.81, tilt = 0.5, length = 3.2, r: sr = 0.5, phase = 0.4 } = studs;
-  const { facets = 6, radius = r * ring, lift = ry * height } = studs;
+  const { x, y, z = 0, r, ry, studs = {}, aft } = opts;
+  const { count = 6, tilt = 0.5, length = 3.2, r: sr = 0.5, phase = 0.4 } = studs;
+  const { facets = 5, radius, lift } = studs;
   add(root, 'dome', orb(14, 7), red, [x, y, z], [0, 0, 0], [r, ry, r]);
   for (let i = 0; i < count; i++) {
     const a = phase + (i * 2 * Math.PI) / count;
@@ -350,18 +357,18 @@ export function listeningDome(root, { red, violet, black }, opts) {
  * to move a plan outline, on a hull whose plan is a cross.
  *
  * `seat` lifts the hydrophones' centres above the boom's axis, in metres,
- * alternating as `lengths` do, in place of the socket's height plus half
- * the spine; `socket` is `'drum'` or `'box'`; `sleeveR` is the sleeve's
- * radius in place of `r · 1.46`. The Precentor's approved rank sits at 3 m
- * and 3.7 m — the short spine's base on the boom's axis, the long one's
- * 5 cm under it — in 1.6 m square boxes 1.2 m tall, round a sleeve of
- * exactly 1.9, which 1.46 transcribed 2 mm short; the hull passes all three
- * (#638).
+ * alternating as `lengths` do, and `sleeveR` is the sleeve's radius. Both are
+ * given rather than ruled, because the rules that stood behind them missed
+ * the only model there is: the approved rank sits at 3 m and 3.7 m — the
+ * short spine's base on the boom's axis, the long one's 5 cm under it, which
+ * is not the socket's height plus half the spine — round a sleeve of exactly
+ * 1.9, which `r · 1.46` transcribed 2 mm short (#638, #646). The socket is a
+ * 1.6 m square box 1.2 m tall, as that model has it; the drum this builder
+ * first drew had no caller left.
  */
 export function arrayBoom(root, { steel, black, red }, opts) {
   const { x, y, halfSpan, r = 1.3, starboard = 6, port = 5, z0 = 5, pitch = 2.6 } = opts;
-  const { lengths = [6, 7.5], hr = 0.9, cant = 0.25, tip = 4, seat, socket = 'drum' } = opts;
-  const { sleeveR = r * 1.46 } = opts;
+  const { lengths = [6, 7.5], hr = 0.9, cant = 0.25, tip = 4, seat, sleeveR } = opts;
   if (port === starboard)
     throw new Error(`array_boom: ${port} hydrophones a side — the ranks never match`);
   add(root, 'array_boom', cyl(r, r, halfSpan * 2, 8), steel, [x, y, 0], [Math.PI / 2, 0, 0]);
@@ -371,19 +378,13 @@ export function arrayBoom(root, { steel, black, red }, opts) {
     for (let j = 0; j < count; j++) {
       const len = lengths[j % lengths.length];
       const z = sgn * (z0 + pitch * j);
-      const lift = seat ? y + seat[j % seat.length] : y + 0.9 + len / 2;
+      const lift = y + seat[j % seat.length];
       add(root, `hydrophone_${side}${j}`, spike(hr, len), red, [x, lift, z], [
         sgn * cant,
         0,
         0.15,
       ]);
-      add(
-        root,
-        `hydrophone_socket_${side}${j}`,
-        socket === 'box' ? box(1.6, 1.2, 1.6) : cyl(0.8, 0.8, 1.2, 6),
-        steel,
-        [x, y + 0.9, z]
-      );
+      add(root, `hydrophone_socket_${side}${j}`, box(1.6, 1.2, 1.6), steel, [x, y + 0.9, z]);
     }
     add(root, `boom_tip_${side}`, spike(r, tip), black, [x, y, sgn * (halfSpan + tip / 2)], [
       sgn * Math.PI / 2,

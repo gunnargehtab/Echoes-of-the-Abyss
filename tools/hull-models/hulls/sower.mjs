@@ -110,8 +110,6 @@ pelagia.bloomBed(root, { membrane, chitin }, {
 pelagia.ribFan(root, { ridge, vein }, {
   node: [NODE_X, 0],
   y: 1.9,
-  r: 1.1,
-  tip: 0.5,
   midrib: 54,
   flank: [ribTo(38, 14), ribTo(26, 22), ribTo(10, 22)],
 });
@@ -130,7 +128,7 @@ pelagia.bladder(root, { chitin, ridge }, {
   ],
   ring: { rise: 0.7, facets: 16 },
 });
-pelagia.bud(root, light, { x: -2, y: 6.4, r: 2.6, squash: 1.4 / 2.6 });
+pelagia.bud(root, light, { x: -2, y: 6.4, r: 2.6 });
 
 // Six seed pods grown on the bed, each its own size and none in a rank. A cap
 // is 0.45 of its pod across and 0.3 of it tall.
@@ -143,7 +141,6 @@ pelagia.seedPods(root, { skin: spore, cap: ridge }, {
     [34, 2.5, 3, 1.8],
     [20, 2.6, 0, 2.0],
   ],
-  capSquash: 2 / 3,
 });
 
 // The stem: 35 m of narrow grown body aft of the node, an open lathe on
@@ -157,11 +154,10 @@ pelagia.stem(root, { chitin, ridge }, {
     [-20, 3.8],
     [-10, 4.2],
   ],
-  facets: 14,
   y: 0.6,
   squash: 0.8,
   rings: [-36, -28, -20],
-  ring: { crown: 4, shoulder: 3.4, halfWidth: 0.7, facets: 14 },
+  band: { crown: 4, shoulder: 3.4, halfWidth: 0.7, facets: 14 },
 });
 // The caudal's corners from its root aft round the tip — the start the
 // approved export's caps are cut from, as with the bed above.

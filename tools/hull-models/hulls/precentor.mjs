@@ -86,12 +86,12 @@ root.scale.setScalar(L / DRAWN);
 // red from the stern. No spines off them — this hull's back carries a dorsal
 // rank of its own, and a plate spine as well would crowd the dome. The seam
 // is this hull's own rather than the module's: 0.35 of the half-length,
-// centred 0.8 forward, and 0.7 of the half-beam tall on plates that are 0.65
-// of it — so it stands a little proud of its plate above and below instead
-// of sinking under the one ahead.
+// centred 0.8 forward, and 0.7 of the half-beam tall — `tallOf: 'beam'`, so
+// it stands a little proud of its plate above and below instead of sinking
+// under the one ahead, and stays that whatever a station's height becomes.
 directorate.tergites(root, { violet, red, black }, {
   segments: SEGMENTS,
-  seam: { at: 0.8, size: [0.35, 0.7 / 0.65, 0.9] },
+  seam: { at: 0.8, size: [0.35, 0.7, 0.9], tallOf: 'beam' },
 });
 directorate.rostrum(root, red, { tip: 30, r: 3.2, length: 12, facets: 8 });
 directorate.telson(root, { violet, black }, { tip: -34, r: 2.5, length: 8 });
@@ -113,7 +113,6 @@ directorate.arrayBoom(root, { steel, black, red }, {
   pitch: 2.6,
   sleeveR: 1.9,
   seat: [3, 3.7],
-  socket: 'box',
 });
 
 // The listening dome forward of the boom, 5.5 m by 4.2 m, studded with six
@@ -125,7 +124,7 @@ directorate.listeningDome(root, { red, violet, black }, {
   y: 3.2,
   r: 5.5,
   ry: 4.2,
-  studs: { facets: 5, radius: 3.2, lift: 3.4 },
+  studs: { radius: 3.2, lift: 3.4 },
   aft: { x: -14, y: 3.6, z: -3.5, r: 2.6, ry: 2.2 },
 });
 
@@ -141,7 +140,6 @@ directorate.dorsalSpines(root, black, {
     [13, 4.5, 2, 6],
   ],
   rake: -0.35,
-  facets: 5,
 });
 
 // The walking limbs, folded under the flanks: two matched ranks of three, 7 m

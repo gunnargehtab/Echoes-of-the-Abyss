@@ -79,10 +79,10 @@ pelagia.growthRings(root, ridge, {
 });
 
 // The four mine sacs, on the waist where the pod is widest and able to carry
-// them. Sizes, stations and facets are the approved model's: no two alike, no
-// two opposite, two a side but not a pair.
+// them. Sizes and stations are the approved model's — no two alike, no two
+// opposite, two a side but not a pair — and so is the twelve-facet cut
+// `mineSacs` now defaults to.
 pelagia.mineSacs(root, { skin: membrane, cap: ridge }, {
-  facets: [12, 6],
   pods: [
     [-4, 3.2, 6.2, 3.4],
     [6, 2.6, 6.6, 3.0],
