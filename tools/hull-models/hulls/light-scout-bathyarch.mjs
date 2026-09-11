@@ -91,7 +91,7 @@ bar('patch_s1', rust, [0.12, 1, 1.9], [-1.47, 2.3, 2.5]);
 bar('patch_s2', grey, [0.12, 0.8, 1.3], [-1.45, 3.1, -5]);
 bar('patch_top', rust, [1.1, 0.12, 2], [0.4, 4.32, -4.5]);
 const STATIONS = [-6, -3.6, -1.2, 1.2, 3.6, 6];
-bathyarch.rivetRows(root, black, {
+bathyarch.flankRivets(root, black, {
   y: 2.6,
   rows: [
     { side: 'p', z: -1.5, stations: STATIONS },

@@ -901,13 +901,15 @@ export function whips(root, mat, { whips: list, facets = 8 }) {
 }
 
 /**
- * Rivet rows: a rank of square-headed rivets along each flank at fixed
+ * Flank rivets: a rank of square-headed rivets along each flank at fixed
  * `stations` along the length, one box shared by all — the Klaxon repairs in
  * straight lines even when the thing repaired is round. Named
  * `rivet_<side><i>` in station order; `z` is the flank's beam in the kit's
- * frame, which for the export's `_p` rank is the -z its +x lands on.
+ * frame, which for the export's `_p` rank is the -z its +x lands on. Not
+ * `rivetRows` above: that one numbers a running rank the way the Bulwark and
+ * the Tender count theirs (`rivet_96..159`), this one names a side.
  */
-export function rivetRows(root, mat, { name = 'rivet', size = 0.14, y, rows }) {
+export function flankRivets(root, mat, { name = 'rivet', size = 0.14, y, rows }) {
   const head = box(size, size, size);
   rows.forEach(({ side, z, stations }) =>
     stations.forEach((x, i) => part(root, `${name}_${side}${i}`, head, mat, { at: [x, y, z] }))
