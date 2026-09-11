@@ -56,6 +56,8 @@ import {
   bothSides,
   polar,
   part,
+  capsule,
+  group,
 } from '../kit.mjs';
 
 /**
@@ -76,6 +78,47 @@ export const ink = {
 
 /** A grown orb: few facets, and squashed by the caller — never round in section. */
 const orb = (w = 12, h = 6) => new THREE.SphereGeometry(1, w, h);
+
+/**
+ * A growth ring as the approved Sower and Spinner carry every one of theirs:
+ * a ridge lathed round the length axis, from `shoulder` up to `crown` and
+ * back over ±`halfWidth`, `facets` round — not a torus. A torus of the same
+ * crown reads the same from a sprite away and carries twice the triangles
+ * and twice the surface; the first port of these hulls drew toruses, and
+ * `diff.mjs` against the approved binaries is what caught it (#639). The
+ * Vent Tap's `bladderHead` below lathes its rings the same way.
+ */
+const ridgeRing = ({ crown, shoulder, halfWidth, facets }) =>
+  loft(
+    [
+      [-halfWidth, shoulder],
+      [0, crown],
+      [halfWidth, shoulder],
+    ],
+    facets
+  );
+
+/**
+ * A blade standing on a back — the Spinner's dorsal blade, the Sower's stem
+ * keel: a plan rectangle from `from` to `to`, `t` across, raised `height`
+ * and centred on y = 0. An extrusion rather than a box because that is what
+ * both approved exports are: the same eight vertices, but an extrusion cuts
+ * its two caps on one diagonal and its walls from its first corner, where a
+ * box cuts opposite faces opposite ways, and `diff.mjs` reads a box in an
+ * extrusion's place as ten of twelve triangles re-cut (#639). The corners
+ * run from the fore end's starboard side, the start the exports were cut
+ * from.
+ */
+const blade = (from, to, height, t) =>
+  plan(
+    [
+      [to, -t / 2],
+      [to, t / 2],
+      [from, t / 2],
+      [from, -t / 2],
+    ],
+    height
+  );
 
 /** Refuse a mirrored pair: the Commune grows each side its own way. */
 function refuseMirror(what, items, key) {
@@ -98,16 +141,23 @@ function refuseMirror(what, items, key) {
  * The first transcription of this builder was fuller amidships and asymmetric
  * by a station, which is the kind of drift a vocabulary with no consumers
  * cannot notice — building the Spinner from it is what noticed.
+ *
+ * `profile` replaces those stations with the hull's own `[x, r]` list. The
+ * fractions above are the Spinner's stations rounded to three places, and
+ * rounding moves its ±24 m rings two centimetres and closes its ends to a
+ * point where the export leaves them 0.2 m open; a port passes the stations
+ * as the binary carries them (#639).
  */
 export function podBody(root, mat, opts) {
   const { bow, stern, maxR, waist = 0.5, squash = 0.7, facets = 12, name = 'pod_body' } = opts;
+  const { profile } = opts;
   const L = bow - stern;
   const at = (t) => stern + L * t;
   return add(
     root,
     name,
     loft(
-      [
+      profile ?? [
         [at(0), 0],
         [at(0.064), maxR * 0.19],
         [at(0.209), maxR * 0.536],
@@ -133,17 +183,34 @@ export function podBody(root, mat, opts) {
  * pattern fixed by its index so a rebuild is a rebuild — the Harvester's rings
  * lean up to five degrees, and it is the one thing that makes them read as
  * grown rather than turned.
+ *
+ * `ring` = `{ rise, facets, halfWidth? }` lathes each ring as a ridge instead
+ * (`ridgeRing`): the crown at `r + tube`, the shoulders `rise` below it,
+ * `halfWidth` (the tube, unless said) either side. The Spinner's three are
+ * 0.7 m ridges on eighteen facets, which is what its approved export holds;
+ * without `ring` the ring is a torus, as this builder first drew them.
  */
 export function growthRings(root, mat, opts) {
-  const { stations, squash = 0.72, tube = 0.9, wobble = 0, name = 'growth_ring' } = opts;
+  const { stations, squash = 0.72, tube = 0.9, wobble = 0, name = 'growth_ring', ring } = opts;
   stations.forEach(([x, r], i) =>
     add(
       root,
       `${name}_${i}`,
-      torus(r, tube, 6, 12),
+      ring
+        ? ridgeRing({
+            crown: r + tube,
+            shoulder: r + tube - ring.rise,
+            halfWidth: ring.halfWidth ?? tube,
+            facets: ring.facets,
+          })
+        : torus(r, tube, 6, 12),
       mat,
       [x, 0, 0],
-      [wobble * Math.sin(1 + i * 2.4), Math.PI / 2 + wobble * Math.cos(2 + i * 1.7), 0],
+      [
+        wobble * Math.sin(1 + i * 2.4),
+        (ring ? 0 : Math.PI / 2) + wobble * Math.cos(2 + i * 1.7),
+        0,
+      ],
       [1, squash, 1]
     )
   );
@@ -179,9 +246,15 @@ export function bloomBed(root, mats, opts) {
  * side is mirrored — the Sower's ribs are the one Commune series that is
  * bilateral, because a leaf's venation is. Numbered as the Sower numbers
  * them: the midrib is rib_0, then port, then starboard.
+ *
+ * `r` is a rib's radius where it springs from the node and `tip` its radius
+ * at the far end — the Sower's taper from 1.1 m to 0.5 m, as a leaf's ribs
+ * do, and drawn untapered (the default, and the first port's reading) each
+ * carries a third again the surface and its centroid three metres further
+ * out (#639).
  */
 export function ribFan(root, { ridge, vein }, opts) {
-  const { node, y, midrib, port, r = 0.95, veinFrac = 0.8, lift = 1.15 } = opts;
+  const { node, y, midrib, port, r = 0.95, tip = r, veinFrac = 0.8, lift = 1.15 } = opts;
   const [nx, nz] = node;
   const ribs = [[midrib, 0]];
   for (const [len, yaw] of port) ribs.push([len, -Math.abs(yaw)]);
@@ -189,7 +262,7 @@ export function ribFan(root, { ridge, vein }, opts) {
   ribs.forEach(([len, yaw], i) => {
     const cx = nx + (len / 2) * Math.cos(yaw);
     const cz = nz - (len / 2) * Math.sin(yaw);
-    add(root, `rib_${i}`, cyl(r, r, len, 6), ridge, [cx, y, cz], [0, yaw, -Math.PI / 2]);
+    add(root, `rib_${i}`, cyl(tip, r, len, 6), ridge, [cx, y, cz], [0, yaw, -Math.PI / 2]);
     add(root, `rib_vein_${i}`, box(len * veinFrac, 0.2, 0.5), vein, [cx, y + lift, cz], [
       0,
       yaw,
@@ -201,18 +274,29 @@ export function ribFan(root, { ridge, vein }, opts) {
 /**
  * The pressure bladder at a leaf's node, ringed. A squashed orb — `squash`
  * is height over beam, and the Sower's is 0.5, the flattest body in the
- * navy — with growth rings at `rings` = `[dx, r]` offsets along it.
+ * navy — with growth rings at `rings` = `[dx, r]` offsets along it. `ring`
+ * is `growthRings`' option and means the same here: each ring a lathed ridge
+ * cresting at `r + 0.8`, its shoulders `rise` below, `halfWidth` 0.8 unless
+ * said — the Sower's two are 0.7 m ridges on sixteen facets.
  */
-export function bladder(root, { chitin, ridge }, { x, y, r, squash = 0.5, rings = [] }) {
+export function bladder(root, { chitin, ridge }, { x, y, r, squash = 0.5, rings = [], ring }) {
+  const tube = 0.8;
   add(root, 'bladder', orb(16, 8), chitin, [x, y, 0], [0, 0, 0], [r, r * squash, r]);
   rings.forEach(([dx, rr], i) =>
     add(
       root,
       `bladder_ring_${i}`,
-      torus(rr, 0.8, 5, 16),
+      ring
+        ? ridgeRing({
+            crown: rr + tube,
+            shoulder: rr + tube - ring.rise,
+            halfWidth: ring.halfWidth ?? tube,
+            facets: ring.facets,
+          })
+        : torus(rr, tube, 5, 16),
       ridge,
       [x + dx, y, 0],
-      [0, Math.PI / 2, 0],
+      ring ? [0, 0, 0] : [0, Math.PI / 2, 0],
       [1, squash, 1]
     )
   );
@@ -228,13 +312,16 @@ export function bud(root, light, { x, y, z = 0, r, squash = 0.54 }) {
  * `[x, y, z, r]`. Every pod is its own size and sits where it grew — a
  * matched pair is refused. The Sower's seed pods and the Spinner's mine sacs
  * are the same construction with different proportions and names, so both
- * are exported from one builder below.
+ * are exported from one builder below. `facets` is the pod orb's
+ * `[widthSegments, heightSegments]`: ten by six on a seed pod, twelve by six
+ * on the Spinner's sacs, whose export carries a vertex on both beams of the
+ * equator and so a hundred and twenty triangles to a seed pod's hundred.
  */
 function grownPods(root, { skin, cap }, opts) {
-  const { pods, names, squash, capR, capLift, capSquash } = opts;
+  const { pods, names, squash, capR, capLift, capSquash, facets = [10, 6] } = opts;
   refuseMirror(names[0], pods, ([, , , r]) => r);
   pods.forEach(([x, y, z, r], i) => {
-    add(root, `${names[0]}_${i}`, orb(10, 6), skin, [x, y, z], [0, 0, 0], [r, r * squash, r]);
+    add(root, `${names[0]}_${i}`, orb(...facets), skin, [x, y, z], [0, 0, 0], [r, r * squash, r]);
     add(
       root,
       `${names[1]}_${i}`,
@@ -273,16 +360,26 @@ export const mineSacs = (root, mats, opts) =>
  * The grown stem aft of a leaf: a squashed loft from a closed point at `from`
  * swelling to `r` at `to`, where it meets the node, ringed at `rings`, and
  * carrying a keel blade on its back if `keel` says so.
+ *
+ * `profile` replaces that parametric body with the hull's own `[x, r]`
+ * stations — the Sower's is open at both ends, 0.3 m at the tail and 4.2 m
+ * where it meets the node, on fourteen facets — and `ring` (`{ crown,
+ * shoulder, halfWidth, facets }`, absolute metres) lathes each ring as a
+ * ridge (`ridgeRing`) in place of the torus the default draws. `from`, `to`
+ * and `r` are what the parametric body, the torus rings and the keel's
+ * default height are read from; a hull that passes `profile` and `ring`
+ * needs none of them.
  */
 export function stem(root, { chitin, ridge }, opts) {
   const { from, to, r, y = 0, squash = 0.8, rings = [], keel, facets = 8 } = opts;
+  const { profile, ring } = opts;
   const L = to - from;
   const at = (t) => from + L * t;
   add(
     root,
     'stem',
     loft(
-      [
+      profile ?? [
         [at(0), 0],
         [at(0.03), r * 0.4],
         [at(0.15), r * 0.62],
@@ -302,19 +399,26 @@ export function stem(root, { chitin, ridge }, opts) {
     add(
       root,
       `stem_ring_${i}`,
-      torus(r * 0.76, r * 0.19, 5, 12),
+      ring ? ridgeRing(ring) : torus(r * 0.76, r * 0.19, 5, 12),
       ridge,
       [x, y, 0],
-      [0, Math.PI / 2, 0],
+      ring ? [0, 0, 0] : [0, Math.PI / 2, 0],
       [1, squash, 1]
     )
   );
-  if (keel)
-    add(root, 'stem_keel', box(keel.to - keel.from, keel.height, 0.8), ridge, [
-      (keel.from + keel.to) / 2,
-      y + r * squash + keel.height / 2 - 0.3,
-      0,
-    ]);
+  if (keel) stemKeel(root, ridge, { y: y + r * squash + keel.height / 2 - 0.3, ...keel });
+}
+
+/**
+ * The keel blade on a stem's back: a `blade` (above) from `from` to `to`,
+ * `height` tall and `t` thick, centred at `y`. Its own builder because the
+ * approved Sower exports it *after* the caudal pair and `check.mjs` compares
+ * in order — the first port drew it in the stem's turn and read as three
+ * parts changed (#639). `stem`'s `keel` option still draws it there, for a
+ * hull whose export does.
+ */
+export function stemKeel(root, ridge, { from, to, height, y, t = 0.8 }) {
+  add(root, 'stem_keel', blade(from, to, height, t), ridge, [0, y, 0]);
 }
 
 /**
@@ -331,22 +435,25 @@ export function stem(root, { chitin, ridge }, opts) {
  * the chord's centreline can draw a fin that is *pointed* and never one that
  * is *swept*, and a Commune fin that is not swept reads as a wing — the one
  * thing this navy's beam is not.
+ *
+ * `bySide` exports every port fin before any starboard one — pectoral_p,
+ * fluke_p, pectoral_s, fluke_s, which is the order the approved Spinner
+ * carries; the default goes pair by pair.
  */
-export function fins(root, membrane, { y = 0, pairs }) {
-  pairs.forEach(([name, corners, { t = 0.5, y: fy = y } = {}]) =>
-    bothSides((side, sgn) =>
-      add(
-        root,
-        `${name}_${side}`,
-        plan(
-          corners.map(([x, z]) => [x, sgn * z]),
-          t
-        ),
-        membrane,
-        [0, fy, 0]
-      )
-    )
-  );
+export function fins(root, membrane, { y = 0, pairs, bySide = false }) {
+  const fin = ([name, corners, { t = 0.5, y: fy = y } = {}], side, sgn) =>
+    add(
+      root,
+      `${name}_${side}`,
+      plan(
+        corners.map(([x, z]) => [x, sgn * z]),
+        t
+      ),
+      membrane,
+      [0, fy, 0]
+    );
+  if (bySide) bothSides((side, sgn) => pairs.forEach((pair) => fin(pair, side, sgn)));
+  else pairs.forEach((pair) => bothSides((side, sgn) => fin(pair, side, sgn)));
 }
 
 /**
@@ -357,14 +464,18 @@ export function nose(root, mat, { name = 'leaf_tip', tip, y = 0, r, length, face
   add(root, name, cyl(0, r, length, facets), mat, [tip - length / 2, y, 0], [0, 0, -Math.PI / 2]);
 }
 
-/** A dorsal blade standing on the back, `height` above `y`. */
+/** A dorsal blade standing on the back, `height` above `y` (`blade` above). */
 export function dorsalBlade(root, mat, { name = 'dorsal_blade', from, to, y, height, t = 1 }) {
-  add(root, name, box(to - from, height, t), mat, [(from + to) / 2, y + height / 2, 0]);
+  add(root, name, blade(from, to, height, t), mat, [0, y + height / 2, 0]);
 }
 
-/** Navigation marks: flat `bio_light` strips, one each at `[name, x, y, z]`. */
-export function navMarks(root, light, { marks, w = 1.2, d = 0.9 }) {
-  marks.forEach(([name, x, y, z = 0]) => add(root, name, box(w, 0.5, d), light, [x, y, z]));
+/**
+ * Navigation marks: flat `bio_light` strips, one each at `[name, x, y, z]`,
+ * `w` by `h` by `d`. The Spinner's bow mark is the default half-metre tall;
+ * its dorsal mark and the Sower's stem light are 0.4.
+ */
+export function navMarks(root, light, { marks, w = 1.2, h = 0.5, d = 0.9 }) {
+  marks.forEach(([name, x, y, z = 0]) => add(root, name, box(w, h, d), light, [x, y, z]));
 }
 
 /**
@@ -442,22 +553,38 @@ export function tendrils(root, ridge, { tendrils: list }) {
  * The structures carry their own names rather than a shared dimming factor
  * applied to `ink`, because the dimming is not uniform across the four
  * navies — see `structureInk` in factions/hadron.mjs for the argument. Values
- * are the approved turret's own.
+ * are the approved turret's own. `biolightGreen` takes the emissive strength
+ * a file carries: the approved turret's lamp burns at 0.953
+ * (`KHR_materials_emissive_strength`), which the bake multiplies in
+ * (hull-intake's page.html) and the conn view shows; the default is the full
+ * strength every other lamp here has.
  */
 export const structureInk = {
   deepChlorophyll: () => clad('deep_chlorophyll', hex('#0B241E'), 0.1, 0.65),
   grownSteel: () => clad('grown_steel', hex('#22302C'), 0.35, 0.45),
   algaeHull: () => clad('algae_hull', hex('#14664C'), 0.08, 0.62),
-  biolightGreen: () => lamp('biolight_green', hex('#8FE36B'), hex('#123018'), 0.35),
+  biolightGreen: (intensity = 1) =>
+    lamp('biolight_green', hex('#8FE36B'), hex('#123018'), 0.35, intensity),
 };
+
+/**
+ * A grown shell: an orb of `r` and `facets` [round, down] that may stop
+ * short of a full turn (`round`, the fraction of one it goes round) or short
+ * of the bottom pole (`down`, the fraction of a half-turn it comes down from
+ * the crown). The approved turret's mound is an orb cut off 0.42 of the way
+ * down; its cowl a half-shell open 0.525 of a turn. `orb` above is the closed
+ * case, and a shell with both at 1 is one.
+ */
+const shell = (r, [w, h], { round = 1, down = 1 } = {}) =>
+  new THREE.SphereGeometry(r, w, h, 0, Math.PI * 2 * round, 0, Math.PI * down);
 
 /**
  * The exchanger on the end of a Vent Tap's draw arm, on `bearing` (#608),
  * grown as a bladder: a squashed orb ringed three times, the pale bud on its
  * crown, the one vein along its back, and three roots leaning out into the
  * ground beyond. The rings are lofts round the arm's own axis, squashed with
- * the bladder — the Sower's `bladder` rings are toruses round a hull's
- * length, and a ring grown round a pipe is a different shape. Distances are
+ * the bladder — the same shoulder–crown–shoulder ridge `ridgeRing` lathes for
+ * the Sower's `bladder` rings, turned to the pipe's axis. Distances are
  * metres out along the bearing, as the kit's `ventDrawArm` takes them;
  * `roots.across` are metres to the right of it, looking out.
  */
@@ -500,8 +627,26 @@ export function bladderHead(root, { membrane, ridge, spore, vein }, opts) {
   });
 }
 
-/** The mound: a grown dome, its growth ring, and the collar the head turns in. */
+/**
+ * The mound: a grown dome, the collar the head turns in, and the growth ring
+ * where the dome meets the ground.
+ *
+ * As the approved turret draws it — `mound`, `collar` and `ring`, each with
+ * its own numbers and its `drawn` placement, built in the file's order
+ * (mound, collar, ring): the mound a `shell` of radius `r` cut `down` of the
+ * way to the pole, the collar and the ring toruses of `R` and `tube` with
+ * `facets` [radial, tubular]. The first port's form — `x, z, y, r, squash,
+ * ringAt, collarAt`: a closed orb and two toruses in the module's default
+ * facets, ring before collar — still builds what it built.
+ */
 export function grownMound(root, { body, ring, collar }, opts) {
+  if (opts.mound) {
+    const { mound, collar: c, ring: g } = opts;
+    part(root, 'base_mound', shell(mound.r, mound.facets, mound), body, mound);
+    part(root, 'base_collar', torus(c.R, c.tube, ...c.facets), collar, c);
+    part(root, 'mound_ring', torus(g.R, g.tube, ...g.facets), ring, g);
+    return;
+  }
   const { x = 0, z = 0, y, r, squash, ringAt, collarAt } = opts;
   add(root, 'base_mound', orb(12, 6), body, [x, y, z], [0, 0, 0], [r[0], r[1], r[2]]);
   add(root, 'mound_ring', torus(ringAt.r, ringAt.t, 4, 20), ring, [x, ringAt.y, z], [
@@ -518,12 +663,30 @@ export function grownMound(root, { body, ring, collar }, opts) {
 }
 
 /**
- * Root grips: swollen holdfasts radiating from the mound onto the seabed,
- * each `[degrees, radius, [long, height, wide]]` with `long` running outward.
- * A matched pair is refused — the Commune grows each root its own size, and a
- * turret that came out rotationally regular would read as a machine.
+ * Root grips: swollen holdfasts on the seabed round the mound, no two alike —
+ * a matched pair is refused, because the Commune grows each root its own size
+ * and a turret that came out rotationally regular would read as a machine.
+ *
+ * As the approved turret draws them: a capsule each (kit.mjs `capsule`,
+ * `facets` [cap, radial]), `r` thick and `length` between its caps, placed by
+ * its own node — laid over 0.13 rad short of flat and yawed each its own way,
+ * which puts every root *across* the mound's radius rather than out along it.
+ * That is where the file has them, and a port reproduces the file. Skins
+ * alternate from the first grip. The first port's `[degrees, radius, [long,
+ * height, wide]]` orbs, radial from `x, z` with `long` running outward, still
+ * build what they built.
  */
-export function rootGrips(root, skins, { x = 0, z = 0, y, grips }) {
+export function rootGrips(root, skins, opts) {
+  const { grips } = opts;
+  if (!Array.isArray(grips[0])) {
+    const { facets = [3, 6] } = opts;
+    refuseMirror('root_grip', grips, ({ r, length }) => `${r},${length}`);
+    grips.forEach((g, i) =>
+      part(root, `root_grip_${i}`, capsule(g.r, g.length, ...facets), skins[i % skins.length], g)
+    );
+    return;
+  }
+  const { x = 0, z = 0, y } = opts;
   refuseMirror('root_grip', grips, ([, , size]) => size.join());
   grips.forEach(([deg, rad, size], i) => {
     const a = (deg * Math.PI) / 180;
@@ -543,8 +706,28 @@ export function rootGrips(root, skins, { x = 0, z = 0, y, grips }) {
  * The head: a pod that trains, a cowl grown over it, and the quills along the
  * cowl's crown. The cowl sits off-centre because a grown thing is not
  * centred on what it covers.
+ *
+ * As the approved turret draws it, the head is a frame of its own — the
+ * file's `turret_head` node, trained 0.3 rad off the mound's axis — and every
+ * part carries its numbers in that frame: `pod` an orb of `r` and `facets`,
+ * `cowl` a half-`shell` open `round` of a turn, `quills` cones `r` at the
+ * foot and `length` tall, each by its own node. The placement at the top of
+ * `opts` is the frame's (kit.mjs `group`), and the frame is returned so the
+ * gun can be grown in it, as the file hangs `barrel_group` off `turret_head`.
+ * The first port's form — `x, y, z, podR, cowlR, cowlAt`, quills as `[x, z,
+ * length, rake]` stood on the cowl — still builds what it built.
  */
 export function grownHead(root, { pod, cowl }, opts) {
+  if (opts.pod) {
+    const head = group(root, 'turret_head', opts);
+    const { pod: p, cowl: c, quills } = opts;
+    part(head, 'head_pod', shell(p.r, p.facets), pod, p);
+    part(head, 'head_cowl', shell(c.r, c.facets, c), cowl, c);
+    quills.forEach((q, i) =>
+      part(head, `cowl_quill_${i}`, cyl(0, q.r, q.length, q.facets ?? 4), cowl, q)
+    );
+    return head;
+  }
   const { x, y, z = 0, podR, cowlR, cowlAt, quills } = opts;
   add(root, 'head_pod', orb(10, 6), pod, [x, y, z], [0, 0, 0], podR);
   add(root, 'head_cowl', orb(10, 6), cowl, cowlAt, [0, 0, 0], cowlR);
@@ -568,8 +751,34 @@ export function grownHead(root, { pod, cowl }, opts) {
  * A limb rather than a tube: the Commune's weapons come out of the body the
  * way a claw does, so the joints are where it swells rather than where it
  * steps.
+ *
+ * As the approved turret draws it, the limb is a frame off the head — the
+ * file's `barrel_group`, placed by the top of `opts` — and each part is its
+ * own primitive at its own station up the frame's Y: `root`, `mid` and `tip`
+ * frusta of `radii` [muzzle end, breech end], `length` and `facets`; `iris`
+ * and each of `ribs` a torus of `R`, `tube` and `facets`; `pip` an orb. The
+ * ribs are clad in `rib`, which the file has in the cowl's ink and not the
+ * steel's. The first port's `{ from, to, r, ribs }` still builds what it
+ * built.
  */
-export function grownBarrel(root, { rootMat, mid, tip, iris, pip }, { from, to, r, ribs = 3 }) {
+export function grownBarrel(root, mats, opts) {
+  const { rootMat, mid, tip, iris, pip, rib: ribMat = rootMat } = mats;
+  if (opts.from === undefined) {
+    const g = group(root, 'barrel_group', opts);
+    const seg = (name, s, mat) =>
+      part(g, name, cyl(s.radii[0], s.radii[1], s.length, s.facets), mat, s);
+    seg('barrel_root', opts.root, rootMat);
+    seg('barrel_mid', opts.mid, mid);
+    seg('barrel_tip', opts.tip, tip);
+    const { iris: ir, pip: pp, ribs } = opts;
+    part(g, 'muzzle_iris', torus(ir.R, ir.tube, ...ir.facets), iris, ir);
+    part(g, 'muzzle_pip', new THREE.SphereGeometry(pp.r, ...pp.facets), pip, pp);
+    ribs.forEach((rb, i) =>
+      part(g, `recoil_rib_${i}`, torus(rb.R, rb.tube, ...rb.facets), ribMat, rb)
+    );
+    return g;
+  }
+  const { from, to, r, ribs = 3 } = opts;
   const A = new THREE.Vector3(...from);
   const B = new THREE.Vector3(...to);
   const d = B.clone().sub(A);
@@ -609,8 +818,23 @@ export function grownBarrel(root, { rootMat, mid, tip, iris, pip }, { from, to, 
  * The magazine: a grown pod on the flank, the feed running up from it, and
  * the flange where it enters the collar. One pod, never a pair — the
  * Commune's turret feeds from the side it grew on.
+ *
+ * As the approved turret draws it, in the file's order — `pipe`, `pod`,
+ * `flange`: the feed a straight frustum of `radii`, `length` and `facets`,
+ * leaned by its node; the pod a capsule (kit.mjs `capsule`, `facets` [cap,
+ * radial]); the flange a torus. The first port's `{ pod, pipe, flangeAt }` —
+ * an orb, a sagging cable and a torus, pod first — still builds what it
+ * built.
  */
-export function magazine(root, { pipe: pipeMat, pod: podMat, flange }, { pod, pipe, flangeAt }) {
+export function magazine(root, { pipe: pipeMat, pod: podMat, flange }, opts) {
+  if (opts.flange) {
+    const { pipe: p, pod: d, flange: f } = opts;
+    part(root, 'feed_pipe', cyl(p.radii[0], p.radii[1], p.length, p.facets), pipeMat, p);
+    part(root, 'ammo_pod', capsule(d.r, d.length, ...d.facets), podMat, d);
+    part(root, 'feed_flange', torus(f.R, f.tube, ...f.facets), flange, f);
+    return;
+  }
+  const { pod, pipe, flangeAt } = opts;
   add(root, 'ammo_pod', orb(10, 6), podMat, pod.at, [0, 0, pod.roll ?? 0], pod.r);
   cable(root, 'feed_pipe', pipe.from, pipe.to, pipeMat, { r: pipe.r, sag: pipe.sag ?? 0, facets: 6 });
   const ring = torus(flangeAt.r, flangeAt.t, 4, 10);

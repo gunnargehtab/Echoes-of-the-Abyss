@@ -40,6 +40,9 @@ import {
   bothSides,
   polar,
   part,
+  drawn,
+  group,
+  capsule,
 } from '../kit.mjs';
 
 /**
@@ -557,13 +560,19 @@ export function bowPrism(root, { alloy, seam }, { x, r, length, mark }) {
  * Order dulls a *metal*, the Directorate darkens a *body* colour, and the
  * Consortium's `work_lamp` is a different fixture rather than a dimmed
  * `amber_lamp` — so one factor would have to be overridden three times in
- * four. Values are the approved turret's own.
+ * four. Values are the approved turret's own — its `shadow_indigo` included,
+ * which is not the Clarion's `ink.shadowIndigo` but a shade darker and duller
+ * (#2C2244 at 0.25 against #3B2E5A at 0.35), and the emissive strength of its
+ * two lamps, banked below the token at 0.8 and 0.9 (`intensity`; the default
+ * of 1 writes no strength, as before) (#639).
  */
 export const structureInk = {
+  shadowIndigo: () => clad('shadow_indigo', hex('#2C2244'), 0.25, 0.45),
   darkSteel: () => clad('dark_steel', hex('#1C2230'), 0.4, 0.4),
   alloyDim: () => clad('alloy_dim', hex('#8A8FA3'), 0.35, 0.32),
-  crystalDim: () => lamp('resonance_crystal_dim', hex('#8B5CF6'), hex('#1E1038'), 0.15),
-  navLight: () => lamp('nav_light', hex('#C9A6FF'), hex('#241744'), 0.3),
+  crystalDim: (intensity = 1) =>
+    lamp('resonance_crystal_dim', hex('#8B5CF6'), hex('#1E1038'), 0.15, intensity),
+  navLight: (intensity = 1) => lamp('nav_light', hex('#C9A6FF'), hex('#241744'), 0.3, intensity),
 };
 
 /**
@@ -614,13 +623,62 @@ export function pair(fn) {
 }
 
 /**
+ * The export's own `_r` placement, on `sgn`'s side of a `pair`: x negated
+ * for the `_l`, and the y and z angles with it, which is the mirror of an XYZ
+ * Euler across the export's x. The approved turret's every pair decomposes
+ * exactly so (#639).
+ */
+const sided = (sgn, [x, y, z], [a = 0, b = 0, c = 0] = []) =>
+  drawn([-sgn * x, y, z], [a, -sgn * b, -sgn * c]);
+
+/**
  * The emplacement: a faceted frustum on the ground, a collar where the head
- * turns, and skirt blades raking outward from it. `blades` are
- * `[degrees, radius, [length, height, width]]` about the frustum's axis and
- * are mirrored, so the emplacement cannot come out lopsided.
+ * turns, and skirt blades raking outward from it.
+ *
+ * Two forms. Given `x`/`z`, the #553 draft's: `blades` are `[degrees, radius,
+ * [length, height, width]]` octahedra about the frustum's axis, mirrored, and
+ * the collar a sixteen-facet torus. Given `at`, the approved turret's own
+ * (#639), every number the export's through kit.mjs `drawn`: the frustum's
+ * centre and its `yaw` on the node — the approved octagon is turned an eighth
+ * there, and the bake measures the turned box (kit.mjs `fitFootprint`) —
+ * `collar.facets` round, and `blades` an object: each blade a four-sided
+ * pyramid of radius `r` with its own `[bearing, length]` (radians from +X
+ * toward +Z), stood on the `anchor` circle `[radius, y]`, its axis the outward
+ * radial with `lift` added to y before normalising, its centre `seat` of its
+ * length out along that axis, and turned onto the axis by the one rotation
+ * that carries +Y there. That construction regenerates the approved node
+ * matrices to the sixth decimal; each pair's `_l` mirrors its `_r` in x, which
+ * puts the third pair's `_r` at -x, as the file has it.
  */
 export function emplacement(root, { shadow, steel, dim }, opts) {
   const { x = 0, z = 0, r, rTop = r * 0.84, height, collar, blades = [] } = opts;
+  const { at = null, yaw = 0 } = opts;
+  if (at) {
+    part(root, 'base_frustum', cyl(rTop, r, height, 8), shadow, drawn(at, [0, yaw, 0]));
+    const ring = torus(collar.r, collar.t, 5, collar.facets ?? 16);
+    part(root, 'base_collar', ring, steel, drawn([at[0], collar.y, at[2]], [Math.PI / 2, 0, 0]));
+    const up = new THREE.Vector3(0, 1, 0);
+    blades.each.forEach(([bearing, length], i) => {
+      const out = new THREE.Vector3(Math.cos(bearing), 0, Math.sin(bearing));
+      const axis = out.clone().setY(blades.lift).normalize();
+      const c = out
+        .multiplyScalar(blades.anchor[0])
+        .setY(blades.anchor[1])
+        .addScaledVector(axis, blades.seat * length);
+      const q = new THREE.Quaternion().setFromUnitVectors(up, axis);
+      const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+      pair((tag, sgn) =>
+        part(
+          root,
+          `skirt_blade_${i}_${tag}`,
+          cyl(0, blades.r, length, 4),
+          i % 2 ? dim : steel,
+          sided(sgn, c.toArray(), [e.x, e.y, e.z])
+        )
+      );
+    });
+    return;
+  }
   add(root, 'base_frustum', cyl(rTop, r, height, 8), shadow, [x, height / 2, z]);
   // A torus is born in the XY plane; a collar lies flat, so it is laid down.
   add(root, 'base_collar', torus(collar.r, collar.t, 5, 16), steel, [x, collar.y, z], [
@@ -649,9 +707,35 @@ export function emplacement(root, { shadow, steel, dim }, opts) {
  * of struts that take the recoil back into the collar. The crest is the one
  * part of an Order structure that stands proud of everything else, which is
  * what makes the kind readable from above at 120 m.
+ *
+ * Given `at` it is the approved turret's own (#639), through kit.mjs `drawn`
+ * and in the file's order: the two struts first — five-facet rods, `r` `[top,
+ * bottom]` by `length`, the `_l` mirroring the `_r` placement in x — on the
+ * root, then a `turret_head` node at `at` carrying the wedge (a six-facet
+ * frustum, `r` `[top, bottom]` by `height`, its node scaled `scale`), the
+ * visor box and the crest, a four-sided pyramid. Returns the head node, which
+ * is where `railGun` hangs the rail. Given `x`/`y` and array sizes it is the
+ * #553 draft's: six-sided wedge and visor, octahedral crest, box struts.
  */
 export function gunHead(root, { shadow, steel, dim }, opts) {
-  const { x, y, wedge, visor, crest, struts } = opts;
+  const { x, y, wedge, visor, crest, struts, at = null } = opts;
+  if (at) {
+    pair((tag, sgn) =>
+      part(
+        root,
+        `recoil_strut_${tag}`,
+        cyl(struts.r[0], struts.r[1], struts.length, 5),
+        steel,
+        sided(sgn, struts.at, struts.rot)
+      )
+    );
+    const head = group(root, 'turret_head', drawn(at));
+    const wedgeGeo = cyl(wedge.r[0], wedge.r[1], wedge.height, 6);
+    part(head, 'head_wedge', wedgeGeo, dim, drawn([0, 0, 0], [0, 0, 0], wedge.scale));
+    part(head, 'head_visor', box(...visor.size), shadow, drawn(visor.at, visor.rot));
+    part(head, 'head_crest', cyl(0, crest.r, crest.length, 4), steel, drawn(crest.at, crest.rot));
+    return head;
+  }
   // Six-sided rather than square. "Blade-like, crystalline silhouettes"
   // (docs/asset-prompts-3d.md, Block 2) is a facet count as much as a
   // proportion, and a rectangle is the one plan shape this navy never has.
@@ -689,8 +773,31 @@ export function gunHead(root, { shadow, steel, dim }, opts) {
  * A rail rather than a barrel because the Order's weapons are instruments —
  * and because a straight run is the shape a top-down map can still read once
  * the emplacement below it has gone dark.
+ *
+ * Given `at` it is the approved turret's own (#639): a `barrel_group` node
+ * under `parent` — the head node `gunHead` returns — at `at`, pitched `pitch`
+ * about x, and inside it, each at its own `z` along the group: the root and
+ * mid bars (`size`), a vane box each side at ±`x`, the tip — a four-sided
+ * pyramid `r` by `length`, stood on its base — and the pip, a sphere of five
+ * by four segments. Returns the group. Given `from`/`to` it is the #553
+ * draft's run of six-facet tubes.
  */
-export function railGun(root, { steel, dim, vane, pip }, { from, to, r }) {
+export function railGun(parent, { steel, dim, vane, pip }, opts) {
+  if (opts.at) {
+    const { at, pitch, root: bar, mid, vanes, tip, pip: dot } = opts;
+    const g = group(parent, 'barrel_group', drawn(at, [pitch, 0, 0]));
+    part(g, 'rail_root', box(...bar.size), steel, drawn([0, 0, bar.z]));
+    part(g, 'rail_mid', box(...mid.size), dim, drawn([0, 0, mid.z]));
+    pair((tag, sgn) =>
+      part(g, `rail_vane_${tag}`, box(...vanes.size), vane, sided(sgn, [vanes.x, 0, vanes.z]))
+    );
+    const stood = drawn([0, 0, tip.z], [Math.PI / 2, 0, 0]);
+    part(g, 'rail_tip', cyl(0, tip.r, tip.length, 4), steel, stood);
+    part(g, 'muzzle_pip', new THREE.SphereGeometry(dot.r, 5, 4), pip, drawn([0, 0, dot.z]));
+    return g;
+  }
+  const root = parent;
+  const { from, to, r } = opts;
   const A = new THREE.Vector3(...from);
   const B = new THREE.Vector3(...to);
   const d = B.clone().sub(A);
@@ -719,8 +826,39 @@ export function railGun(root, { steel, dim, vane, pip }, { from, to, r }) {
   p.position.copy(at(1));
 }
 
-/** Magazines abaft the emplacement, a feed pipe from each into the collar. */
+/**
+ * Magazines abaft the emplacement, a feed pipe from each into the collar.
+ *
+ * Given `pipe.length` it is the approved turret's own (#639), in the file's
+ * order — both pipes, then both pods: each pipe a six-facet rod, `r` `[top,
+ * bottom]`; each pod a capsule of radius `r` and `waist` with three-step caps
+ * and seven facets, laid out as three r184 lays a capsule (kit.mjs
+ * `capsule`); the `_l` of each mirroring the `_r` placement in x. Given
+ * `pipe.from` it is the #553 draft's spheres and box struts, a pod and its
+ * pipe a side.
+ */
 export function magazine(root, steel, { pods, pipe }) {
+  if (pipe.length !== undefined) {
+    pair((tag, sgn) =>
+      part(
+        root,
+        `feed_pipe_${tag}`,
+        cyl(pipe.r[0], pipe.r[1], pipe.length, 6),
+        steel,
+        sided(sgn, pipe.at, pipe.rot)
+      )
+    );
+    pair((tag, sgn) =>
+      part(
+        root,
+        `ammo_pod_${tag}`,
+        capsule(pods.r, pods.waist, 3, 7),
+        steel,
+        sided(sgn, pods.at, pods.rot)
+      )
+    );
+    return;
+  }
   pair((tag, sgn) => {
     add(
       root,
@@ -745,11 +883,17 @@ export function magazine(root, steel, { pods, pipe }) {
 /**
  * Navigation marks, flat on an upward face — the only light a turret shows
  * until it fires. Named rather than numbered, because the Order places them
- * in mirrored pairs and a bare index would hide which pair is which.
+ * in mirrored pairs and a bare index would hide which pair is which. Given
+ * `r` they are the approved turret's spheres of five by four segments at the
+ * export's own `[x, y, z]`, the `_r` at +x (#639); otherwise boxes `w` by `d`.
  */
-export function navMarks(root, light, { marks, w = 3.2, d = 3.2 }) {
+export function navMarks(root, light, { marks, w = 3.2, d = 3.2, r = null }) {
   for (const [name, x, y, z] of marks)
-    pair((tag, sgn) => add(root, `nav_mark_${name}_${tag}`, box(w, 0.6, d), light, [x, y, sgn * z]));
+    pair((tag, sgn) => {
+      const mark = `nav_mark_${name}_${tag}`;
+      if (r) part(root, mark, new THREE.SphereGeometry(r, 5, 4), light, sided(sgn, [x, y, z]));
+      else add(root, mark, box(w, 0.6, d), light, [x, y, sgn * z]);
+    });
 }
 
 /* --------------------------------------------------------------------------
