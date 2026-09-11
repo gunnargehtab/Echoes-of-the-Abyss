@@ -52,6 +52,13 @@
  *   Area is the cheapest measure of a part's shape that bounds cannot stand
  *   in for; it is compared per part, divided by the root scale squared, and
  *   a change over a quarter of a percent is listed with the part.
+ * - **A square plan is compared at whichever yaw agrees.** The bake yaws a
+ *   file only when Z is the longer, and on a plan that is square to the
+ *   bit — the Knights' Vent Tap — that rule is a coin toss the exporter's
+ *   rounding decides. A port that has to carry the toss the approved export
+ *   won (#608) would otherwise read as every part moved, so when either file
+ *   is square to within a thousandth the other's yaw is tried as well and
+ *   the orientation with fewer movers is reported, with a line saying so.
  * - **Compare the surface centroid too.** A cone built the wrong way round
  *   has the bounds, the triangle count *and* the area of the right one; only
  *   where its surface sits inside that box changes. The Dredge's telson and
@@ -81,9 +88,9 @@ const models = 'docs/concept-art/models';
  * `z' = -x`, which is +π/2 about Y as `rosterModels.ts` and the intake page
  * apply it. Returns the parts rotated, and whether it had to.
  */
-function yawOntoX(parts) {
+function yawOntoX(parts, force = false) {
   const { min, max } = boundsOf(parts);
-  if (max[2] - min[2] <= max[0] - min[0]) return { parts, yawed: false };
+  if (!force && max[2] - min[2] <= (max[0] - min[0]) * (1 + 1e-6)) return { parts, yawed: false };
   return {
     yawed: true,
     parts: parts.map((p) => {
@@ -209,11 +216,76 @@ function extract(rev, path, dir) {
   return out;
 }
 
+/** Whether a plan is square to within a thousandth — where the bake's yaw rule is a coin toss. */
+function isSquare(parts) {
+  const { min, max } = boundsOf(parts);
+  const x = max[0] - min[0];
+  const z = max[2] - min[2];
+  return Math.abs(x - z) <= 1e-3 * Math.max(x, z);
+}
+
+/** How many parts of `after` differ from `before` beyond scale and shift — the tie-break for a square plan. */
+function moverCount(before, after) {
+  const afterByName = new Map(after.map((p) => [p.key, p]));
+  const scale = rootScale(before, after);
+  const shift = medianAxis(
+    before
+      .filter((p) => afterByName.has(p.key))
+      .map((p) => {
+        const a = box(p).centre;
+        const b = box(afterByName.get(p.key)).centre;
+        return [0, 1, 2].map((i) => b[i] - a[i] * scale[i]);
+      })
+  );
+  let n = 0;
+  for (const p of before) {
+    const q = afterByName.get(p.key);
+    if (!q) continue;
+    const a = box(p);
+    const b = box(q);
+    const d = Math.max(
+      ...[0, 1, 2].map((i) => Math.abs(b.extent[i] - a.extent[i] * scale[i])),
+      ...[0, 1, 2].map((i) => Math.abs(b.centre[i] - shift[i] - a.centre[i] * scale[i]))
+    );
+    if (d > 0.005) n++;
+  }
+  return n;
+}
+
 function report(beforePath, afterPath, label) {
-  const b0 = yawOntoX(readGlb(beforePath).parts);
-  const a0 = yawOntoX(readGlb(afterPath).parts);
-  const before = keyed(b0.parts);
-  const after = keyed(a0.parts);
+  const rawBefore = readGlb(beforePath).parts;
+  const rawAfter = readGlb(afterPath).parts;
+  let b0 = yawOntoX(rawBefore);
+  let a0 = yawOntoX(rawAfter);
+  // What the bake's own rule did, before any square-plan search below.
+  const autoYaw = { before: b0.yawed, after: a0.yawed };
+  let before = keyed(b0.parts);
+  let after = keyed(a0.parts);
+  let squareNote = null;
+  if (isSquare(rawBefore) || isSquare(rawAfter)) {
+    // Every relative orientation the bake's coin toss can produce: either
+    // file as it stands or turned the quarter the bake would have added.
+    const alts = (raw, cur) => [cur, cur.yawed ? { parts: raw, yawed: false } : yawOntoX(raw, true)];
+    let best = null;
+    for (const b of alts(rawBefore, b0))
+      for (const a of alts(rawAfter, a0)) {
+        const kb = keyed(b.parts);
+        const ka = keyed(a.parts);
+        const n = moverCount(kb, ka);
+        if (!best || n < best.n) best = { n, b, a, kb, ka };
+      }
+    const asIs = moverCount(before, after);
+    if (best.n < asIs) {
+      b0 = best.b;
+      a0 = best.a;
+      before = best.kb;
+      after = best.ka;
+      const turned = [b0.yawed ? 'before' : null, a0.yawed ? 'after' : null].filter(Boolean);
+      squareNote = `square plan — the ${turned.join(' and ')} file turned a quarter, which agrees (${best.n} movers against ${asIs})`;
+    } else {
+      squareNote = `square plan — no other yaw agrees better (${asIs} movers as compared)`;
+    }
+  }
   const scale = rootScale(before, after);
   const uniform = Math.max(...scale) / Math.min(...scale) - 1;
 
@@ -222,11 +294,12 @@ function report(beforePath, afterPath, label) {
   console.log(
     `  tris    ${before.reduce((s, p) => s + p.tris, 0)} → ${after.reduce((s, p) => s + p.tris, 0)}`
   );
-  if (b0.yawed || a0.yawed)
+  if (autoYaw.before || autoYaw.after)
     console.log(
-      `  yaw     ${b0.yawed ? 'before' : ''}${b0.yawed && a0.yawed ? ' and ' : ''}${a0.yawed ? 'after' : ''}` +
+      `  yaw     ${autoYaw.before ? 'before' : ''}${autoYaw.before && autoYaw.after ? ' and ' : ''}${autoYaw.after ? 'after' : ''}` +
         ' drawn along Z — yawed onto +X as the bake does, before comparing'
     );
+  if (squareNote) console.log(`  yaw     ${squareNote}`);
   const scaleNote =
     uniform < 1e-3
       ? '(uniform — divided out below)'

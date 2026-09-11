@@ -27,15 +27,18 @@
  * them.
  *
  * One thing about this file is worth knowing before its bake is read. By its
- * vertices it is square to the millimetre; by the bake's measure it is
- * square to 3e-14, and the bake's rule is "yaw when Z is longer". The
- * approved binary lands on the long side of that tie, so intake yaws it a
- * quarter turn and says so, and that is the frame the shipped maps were
- * baked in. The port keeps the approved file's own placement to the bit —
- * the same tie, the same yaw, the same maps — rather than turn the root to
- * silence the warning, because a quarter turn on the root would leave every
- * later `diff.mjs` of this file reporting seventy-odd moved parts against
- * the binary it ports. The warning is the approved binary's own.
+ * vertices it is square to the millimetre; by the bake's measure the approved
+ * binary is square to 2.8e-14, on the long-Z side, and the bake's rule is
+ * "yaw when Z is longer" — so intake yawed the approved export a quarter
+ * turn, and that is the frame the shipped maps were baked in and the frame
+ * the conn view has always shown. Built metre-true the file lands on an
+ * exact tie and intake would not yaw it, which would turn the five basalt
+ * lobes and the chimney's facet phase a quarter turn in the height map and
+ * in the conn view inside a port (#608 review, F1). So the root carries that
+ * quarter turn explicitly, below, and the shipped maps re-bake pixel for
+ * pixel. The cost is on the audit side only: against the un-turned approved
+ * binary `diff.mjs` would read every part as moved, which is why it compares
+ * a square plan at whichever yaw agrees and says that it did.
  */
 import {
   THREE,
@@ -100,5 +103,10 @@ radialSeries({ count: 4, phase: Math.PI / 4 }, (a) => {
 // the "burning bright" of a structure at SIG 55, in the node's violet.
 wellheadFloods(root, node);
 
+// The quarter turn intake gave the approved export on its one-ulp tie, made
+// explicit so the shipped maps and the conn view keep the frame they have
+// always had (see the header). Before the fit, so the fit measures the file
+// as the bake will.
+root.rotation.y = Math.PI / 2;
 fitFootprint(root, L);
 await exportGlb(root, 'vent-tap-hadron.glb');
