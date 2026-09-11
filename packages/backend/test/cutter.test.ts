@@ -16,10 +16,20 @@
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { Biome, DRIFT, Faction, FLORA, SIM, StructureKind, UnitKind } from '@echoes/shared';
+import {
+  Biome,
+  DRIFT,
+  Faction,
+  FLORA,
+  HAZARDS,
+  HazardPhase,
+  SIM,
+  StructureKind,
+  UnitKind,
+} from '@echoes/shared';
 import { Match } from '../src/sim/match.ts';
 import { spawnStructure, spawnUnit } from '../src/sim/world.ts';
-import { SilentRunning } from '../src/sim/components.ts';
+import { Acoustic, SilentRunning } from '../src/sim/components.ts';
 import { type Hazard } from '../src/sim/systems/hazards.ts';
 import { terrainFor, VENTFRONT_DIVIDE, type MapDefinition } from '../src/sim/maps/index.ts';
 
@@ -237,6 +247,114 @@ describe('and who may do it', () => {
     assert.ok(
       biomass(m) - banked < FLORA.CUTTER_CROP_PER_MIN * FLORA.CUTTER_YIELD,
       'and pays little from bare ground'
+    );
+  });
+});
+
+/**
+ * The canopy and the noise, under the same rule as the crop (#653).
+ *
+ * Wave 5 gated what a hull *takes*. It left what a hull *opens* on a predicate
+ * that asked only whether a Consortium body was present and alive — so a scout
+ * on silent watch held a field open for nothing, and a bio-reactor held open
+ * the very bed it was rendering. The third consequence ran the other way: a
+ * hull was charged the noise of cutters whether or not it was running any.
+ *
+ * All three are one fact now — is this hull running its cutters — so what is
+ * pinned here is that the three answers cannot disagree again.
+ */
+describe('a canopy opens only for what is actually cutting', () => {
+  it('does not open for a hull on Silent Running', () => {
+    const m = match();
+    const eid = inTheBed(m);
+    SilentRunning.active[eid] = 1;
+    advance(m, HAZARDS.KELP.BATHYARCH_BURN_S * 3);
+    assert.equal(
+      bed(m).phase,
+      HazardPhase.Active,
+      'a hull that has shut its systems down is not burning a path'
+    );
+  });
+
+  it('closes a canopy it had already opened when the hull goes quiet', () => {
+    // The half of the rule a gate on its own would not give you: burnedS
+    // decays on the tick the cutters stop, so going silent is leaving as far
+    // as the field is concerned. Doc §4's "closes just as slowly once they
+    // go", which is the same seconds either way.
+    const m = match();
+    const eid = inTheBed(m);
+    advance(m, HAZARDS.KELP.BATHYARCH_BURN_S + 2);
+    assert.equal(bed(m).phase, HazardPhase.Dormant, 'it was open');
+
+    SilentRunning.active[eid] = 1;
+    advance(m, HAZARDS.KELP.BATHYARCH_BURN_S + 2);
+    assert.equal(bed(m).phase, HazardPhase.Active, 'and the canopy closes over a silent hull');
+  });
+
+  it('does not open for a bio-reactor standing in the bed it renders', () => {
+    // A structure is not a cutter. This one is the Consortium's own building
+    // on its own bed, which is the case that made the old predicate wrong:
+    // the reactor would have held its bed permanently open, and a permanently
+    // open bed is bare ground as far as cover goes — a navy un-hiding its own
+    // apron by funding itself there, at no cost it chose to pay.
+    const m = match();
+    spawnStructure(m.world, {
+      kind: StructureKind.BioReactor,
+      slot: 0,
+      faction: Faction.Bathyarch,
+      x: BED_X,
+      y: BED_Y,
+      prebuilt: true,
+    });
+    advance(m, HAZARDS.KELP.BATHYARCH_BURN_S * 3);
+    assert.equal(bed(m).phase, HazardPhase.Active, 'thermal cutters are something a hull carries');
+  });
+
+  it('charges no cutter SIG to a hull that is not cutting', () => {
+    // The consequence that ran the other way, and the one that gives the
+    // Consortium something they never had: a way to be quiet in kelp. Doc §4
+    // promises every navy that "a hull sitting still in kelp is silent, and
+    // hidden", and an unconditional 40 denied theirs.
+    // Against a Commune hull rather than against its own louder self: silent
+    // running lowers the baseline too, so a Consortium hull compared with a
+    // Consortium hull would read as quieter whether or not it was still being
+    // charged for cutters. Two silent hulls of the same class in the same bed
+    // differ by exactly the thing under test.
+    const m = match();
+    const consortium = inTheBed(m);
+    const commune = spawnUnit(m.world, {
+      kind: UnitKind.Corvette,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: BED_X + 100,
+      y: BED_Y,
+      depth: 300,
+    });
+    SilentRunning.active[consortium] = 1;
+    SilentRunning.active[commune] = 1;
+    advance(m, 2);
+
+    assert.equal(
+      Acoustic.sig[consortium],
+      Acoustic.sig[commune],
+      `cutters off is cutters off: ${Acoustic.sig[consortium]} against ${Acoustic.sig[commune]}`
+    );
+
+    // And the charge is still there for a hull that is running them.
+    const cutting = match();
+    const loud = inTheBed(cutting);
+    const idle = spawnUnit(cutting.world, {
+      kind: UnitKind.Corvette,
+      slot: 1,
+      faction: Faction.Pelagia,
+      x: BED_X + 100,
+      y: BED_Y,
+      depth: 300,
+    });
+    advance(cutting, 2);
+    assert.ok(
+      Acoustic.sig[loud]! - Acoustic.sig[idle]! >= HAZARDS.KELP.CUTTER_SIG,
+      `and cutters on is loud: ${Acoustic.sig[loud]} against ${Acoustic.sig[idle]}`
     );
   });
 });

@@ -1653,6 +1653,11 @@ export const HAZARDS = {
      * kelp. Charging up means burning a path is what §4 says it is: a
      * commitment to stand in the quietest biome on the map, being loud, while
      * the canopy comes apart.
+     *
+     * Being loud is a condition of it since #653, rather than a thing the
+     * charge-up was assumed to imply: the seconds are counted only while a
+     * hull with its cutters running stands there, so a silent scout no longer
+     * opens a field by waiting in it and a building no longer opens one at all.
      */
     BATHYARCH_BURN_S: 6,
     /**
@@ -1663,6 +1668,11 @@ export const HAZARDS = {
      * one biome built for hiding, so clearing the maze core announces that you
      * are clearing the maze core. Paid whether the hull is moving or not —
      * unlike drag, cutting is work you are doing on purpose.
+     *
+     * "Cutters running" is a condition and not a description (#653): Silent
+     * Running turns them off, and a hull that has turned them off pays none of
+     * this and takes no crop. It is the one way a Consortium hull is quiet in
+     * kelp.
      */
     CUTTER_SIG: 40,
   },
