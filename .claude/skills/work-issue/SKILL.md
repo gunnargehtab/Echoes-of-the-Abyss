@@ -10,7 +10,7 @@ watching. It picks **one** issue, assigns it to itself so everyone can see it
 is taken, takes it to a pull request, and stops. The selection rule, the claim,
 and the cap below are the whole reason the loop is safe to leave running —
 skipping them is how you get two sessions on the same issue, or six open PRs
-each burning a twenty-minute CI run.
+each burning a full CI run on every push.
 
 **The one thing this loop must not do is guess.** `docs/` is canonical and code
 transcribes it; when they disagree, that is a bug in one of them, and which one
@@ -125,9 +125,12 @@ hand-driven pull request (#583) against its own budget — under the cap either
 way, but that is exactly the over-broad count this step exists to end.
 
 This cap, not the schedule, is what bounds cost. A full CI run bills around six
-Actions minutes across its four jobs, and this account has run out of Actions
-minutes before — the incident is recorded in the header comment of
-`.github/workflows/ci.yml`.
+Actions minutes across its four jobs, and every push to an open pull request
+starts one. The account did run out of Actions minutes once, on 2026-08-25, but
+that is over — the minutes were restored and the duplicate-run bug behind it was
+fixed in the same change, as the header comment of `.github/workflows/ci.yml`
+records. Keep the cap because unattended spend deserves a bound, not because the
+budget is currently in trouble.
 
 Do not read the cap as the loop's usual exit, though. Across the twenty-one
 firings measured in September it never once bound: at most one of the loop's own
@@ -339,6 +342,37 @@ is not cosmetic — step 1 is how the next firing sees your claim in git, and it
 only works if the number is there. Push the branch early, before the work is
 finished, so the claim is visible to a firing that starts while you are still
 going, and so the branch named in your claim comment actually exists.
+
+### Land it in instalments — the session can end before the issue does
+
+A firing has a finite context window and a finite session, and a long issue can
+reach either. Whatever has not reached GitHub when that happens dies with the
+container: an unpushed commit is gone, and a pushed branch nobody opened a pull
+request for is invisible to review and reads to the next firing as a stale
+claim.
+
+So treat the pull request as something you open **during** the work, not after
+it:
+
+- **Commit and push at every self-contained step**, not once at the end. The
+  push is what makes the work survivable, and the branch is already public per
+  the paragraph above.
+- **Open the pull request as soon as the branch carries one increment that
+  stands on its own** and passes the gates in step 6 — do the claim re-check
+  below first, since that is what decides whether you open at all. Then keep
+  working on the same branch; the pull request follows it, and the reviewer sees
+  the change grow instead of arriving whole at midnight.
+- **When the session starts to run short** — context tight, a limit warning, a
+  gate you cannot finish — stop adding scope rather than racing. Push what is
+  green, make sure the pull request exists, and say in its body what is done and
+  what is left. Half an issue in an open pull request is work the next firing or
+  a person can pick up; the same half in a container that has been reclaimed is
+  not.
+
+The cap in step 2 is not a reason to delay opening. It counts the loop's open
+pull requests at the *start* of a firing, so a pull request you open mid-run
+costs the same whenever you open it, and one that never got opened saved
+nothing.
 
 Commit subjects take the `feat:` / `fix:` / `docs:` / `test:` / `refactor:`
 prefixes from `CONTRIBUTING.md`, imperative mood. Read `CLAUDE.md` before

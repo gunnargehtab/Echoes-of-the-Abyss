@@ -6,9 +6,15 @@ name: CI
 # to a branch with an open PR — a `push` run and a `pull_request` run, on the
 # same commit, doing identical work. A full run was 15-22 minutes at the time,
 # so each push was billing ~40 minutes of Actions time and throwing half of it
-# away. That is what exhausted the account's minutes on 2026-08-25, which shows
+# away. That is what exhausted the account's minutes on 2026-08-25, which showed
 # up not as a test failure but as jobs completing in three seconds with
 # `runner_id: 0` and no logs at all.
+#
+# That incident is closed: the minutes were restored, this scoping removed the
+# duplicate run, and runs have completed normally ever since — four logged jobs
+# in about two minutes of wall clock. The symptom is recorded here so it stays
+# recognisable, not because it is a live constraint. A red check on a PR is that
+# PR's failure; reproduce it locally before calling it anything else.
 #
 # `push` is therefore limited to main, which keeps every merge verified, and
 # branches are covered by their pull request. The trade is real and worth

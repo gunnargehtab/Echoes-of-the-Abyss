@@ -27,9 +27,8 @@
  * So the traversal is asserted in a real engine or nowhere, and this is the
  * engine the skill already drives. It is deliberately **not** part of
  * `npm test`: Playwright is a global install rather than a devDependency, the
- * harness needs both dev servers, and .github/workflows/ci.yml's header
- * records this account running out of Actions minutes. Run it when the esc
- * menu changes.
+ * harness needs both dev servers, and a browser drive on every push is not what
+ * the CI budget is best spent on. Run it when the esc menu changes.
  *
  * It fails loudly — a thrown error, which drive.mjs turns into a non-zero exit
  * and a `steps-failed` screenshot — because a focus trap that leaks is a
