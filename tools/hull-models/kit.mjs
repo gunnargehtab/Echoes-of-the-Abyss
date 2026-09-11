@@ -759,3 +759,121 @@ export function metreTrue(root, lengthM, { drawn: expected, datum = 0, tolerance
   root.position.set((-k * (bb.max.x + bb.min.x)) / 2, -k * datum, 0);
   return k;
 }
+
+/* --------------------------------------------------------------------------
+ * The Sentinel Turrets' restoration (#639, off #540) — three things the four
+ * approved turret exports use that nothing above provides. The exports are
+ * one Claude Design template drawn four ways, along Z at about a thirteenth
+ * of a metre to the unit, with a `turret_head` frame trained off the mound
+ * and a `barrel_group` frame pitched and yawed off the head, and every part
+ * placed by its node inside whichever frame it belongs to.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * A named frame inside a model, placed as `part` places a mesh, for the
+ * export's group nodes. `drawn` conjugates one node's transform by the one
+ * yaw, and conjugation composes — Y·(A·B)·Y⁻¹ = (Y·A·Y⁻¹)·(Y·B·Y⁻¹) — so a
+ * frame placed through `drawn` holding parts placed through `drawn`, with the
+ * geometry turned once by `part`, lands every vertex where the export's
+ * nested nodes put it. The exporter writes the frame back out as a node of
+ * the same name, which is where the approved files have it.
+ */
+export function group(parent, name, placement = {}) {
+  const { at = [0, 0, 0], rot = [0, 0, 0], scale = [1, 1, 1] } = placement;
+  const g = new THREE.Group();
+  g.name = name;
+  g.position.set(...at);
+  g.rotation.set(...rot);
+  g.scale.set(...scale);
+  parent.add(g);
+  return g;
+}
+
+/**
+ * An Euler the export wrote in another `order`, as the XYZ triple `drawn`
+ * takes. The turrets' barrel frames are `(0.9, 0.35, 0)` in YXZ — a 0.35 yaw
+ * and then 0.9 of pitch about the frame's own beam — and their cowls and
+ * brows `(0, −π/2, −0.12)` in the same order; read as XYZ the same rotations
+ * are three numbers nobody chose.
+ */
+export function eulerXYZ(e, order) {
+  const r = new THREE.Euler(e[0], e[1], e[2], order).reorder('XYZ');
+  return [r.x, r.y, r.z];
+}
+
+/**
+ * A capsule as three r184 lays one out, which is what the four turrets' ammo
+ * pods and the Commune's root grips are. r169's `CapsuleGeometry` is a lathe
+ * of `Path.getPoints` and puts its rings elsewhere, so it cannot reproduce
+ * the buffers; this does, ring for ring and cut for cut: `capSegments` rings
+ * up each hemisphere from the bottom pole, `heightSegments` up the side,
+ * `radialSegments` round, every quad cut `(i1, i2, i3), (i2, i4, i3)`, and
+ * the pole rows kept as rows — so the two fans at the poles are degenerate
+ * triangles rather than absent ones, and the count is 2·radial·(2·cap +
+ * height), not less. Normals are the analytic ones, as r184 writes them.
+ */
+export function capsule(radius, length, capSegments = 4, radialSegments = 8, heightSegments = 1) {
+  const half = length / 2;
+  const rows = capSegments * 2 + heightSegments;
+  const perRow = radialSegments + 1;
+  const capArc = (Math.PI / 2) * radius;
+  const total = 2 * capArc + length;
+  const positions = [];
+  const normals = [];
+  const uvs = [];
+  const indices = [];
+  for (let iy = 0; iy <= rows; iy++) {
+    let y, rho, ny, nr, arc;
+    if (iy <= capSegments) {
+      const p = iy / capSegments;
+      const a = p * (Math.PI / 2);
+      y = -half - radius * Math.cos(a);
+      rho = radius * Math.sin(a);
+      ny = -Math.cos(a);
+      nr = Math.sin(a);
+      arc = p * capArc;
+    } else if (iy <= capSegments + heightSegments) {
+      const p = (iy - capSegments) / heightSegments;
+      y = -half + p * length;
+      rho = radius;
+      ny = 0;
+      nr = 1;
+      arc = capArc + p * length;
+    } else {
+      const p = (iy - capSegments - heightSegments) / capSegments;
+      const a = p * (Math.PI / 2);
+      y = half + radius * Math.sin(a);
+      rho = radius * Math.cos(a);
+      ny = Math.sin(a);
+      nr = Math.cos(a);
+      arc = capArc + length + p * capArc;
+    }
+    const v = arc / total;
+    const uOffset = iy === 0 ? 0.5 / radialSegments : iy === rows ? -0.5 / radialSegments : 0;
+    for (let ix = 0; ix <= radialSegments; ix++) {
+      const u = ix / radialSegments;
+      const theta = u * Math.PI * 2;
+      const s = Math.sin(theta);
+      const c = Math.cos(theta);
+      positions.push(-rho * c, y, rho * s);
+      normals.push(-nr * c, ny, nr * s);
+      uvs.push(u + uOffset, v);
+    }
+    if (iy > 0) {
+      const prev = (iy - 1) * perRow;
+      for (let ix = 0; ix < radialSegments; ix++) {
+        const i1 = prev + ix;
+        const i2 = prev + ix + 1;
+        const i3 = iy * perRow + ix;
+        const i4 = iy * perRow + ix + 1;
+        indices.push(i1, i2, i3, i2, i4, i3);
+      }
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setIndex(indices);
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  return geo;
+}

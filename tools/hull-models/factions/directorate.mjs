@@ -480,18 +480,34 @@ export function hopper(root, { black, steel, gullet }, { x, y, z = 0, w = 18, h 
  * ------------------------------------------------------------------------ */
 
 /**
- * The structure palette: the one body colour a turret needs that no hull did.
+ * The structure palette: what a turret needs that no hull did.
  *
  * A Sentinel Turret is "nearly black — an ambush predator, navigation marks
  * only until it fires" (docs/asset-prompts-3d.md, the Sentinel Turret block),
  * and `chitin_red` at #7A1B2E is not that. The structures carry
  * their own names rather than a shared dimming factor applied to `ink` — see
- * `structureInk` in factions/hadron.mjs for the argument. The value is the
- * approved turret's own.
+ * `structureInk` in factions/hadron.mjs for the argument. The values are the
+ * approved turret's own — including two that share a *name* with the hull
+ * palette's and not its value: the turret's `weld_steel` is #27313B where the
+ * Dredge's is #3A3F4A, and its `biolight_crimson` sits on a #2C0A12 base
+ * where the Dredge's is #1A0810. A part is compared by its material's name,
+ * but the conn view renders its finish, so the turret cites its own file.
+ * `biolightCrimson` takes the emissive strength a file carries: the approved
+ * turret's lamp burns at 0.905 (`KHR_materials_emissive_strength`), which the
+ * bake multiplies in (hull-intake's page.html); the default is full strength.
  */
 export const structureInk = {
   chitinRedDark: () => clad('chitin_red_dark', hex('#4E1220'), 0.14, 0.55),
+  weldSteel: () => clad('weld_steel', hex('#27313B'), 0.38, 0.44),
+  biolightCrimson: (intensity = 1) =>
+    lamp('biolight_crimson', hex('#C2465E'), hex('#2C0A12'), 0.4, intensity),
 };
+
+// Two kit primitives the turret's port reaches for and nothing above did —
+// imported beside the builders that use them: the head of this file is the
+// hull vocabulary's and was being edited in parallel when these were written
+// (#639). Folding this line into the import above is a one-line tidy.
+import { capsule, group } from '../kit.mjs';
 
 /**
  * The exchanger on the end of a Vent Tap's draw arm, on `bearing` (#608),
@@ -545,10 +561,36 @@ export function carapaceHead(root, { skin, black, steel, crimson }, opts) {
 const scute = (w = 10, h = 6) => new THREE.SphereGeometry(1, w, h);
 
 /**
- * The mound: a chitinous dome, the skirt where it meets the ground, and the
- * collar the head turns in.
+ * A carapace shell: an orb of `r` and `facets` [round, down] that may stop
+ * short of a full turn (`round`, the fraction of one it goes round) or short
+ * of the bottom pole (`down`, the fraction of a half-turn it comes down from
+ * the crown). The approved turret's mound is an orb cut off 0.42 of the way
+ * down; its brow a shell open 0.55 of a turn and 0.48 deep. `scute` above is
+ * the closed unit case.
+ */
+const shell = (r, [w, h], { round = 1, down = 1 } = {}) =>
+  new THREE.SphereGeometry(r, w, h, 0, Math.PI * 2 * round, 0, Math.PI * down);
+
+/**
+ * The mound: a chitinous dome, the collar the head turns in, and the skirt
+ * where the dome meets the ground.
+ *
+ * As the approved turret draws it — `mound`, `collar` and `skirt`, each with
+ * its own numbers and its `drawn` placement, built in the file's order
+ * (mound, collar, skirt): the mound a `shell` of radius `r` cut `down` of the
+ * way to the pole, the collar and the skirt toruses of `R` and `tube` with
+ * `facets` [radial, tubular]. The first port's form — `x, z, y, r, skirt,
+ * collar`: a closed orb and two toruses in the module's default facets, skirt
+ * before collar — still builds what it built.
  */
 export function carapaceMound(root, { violet, black, steel }, opts) {
+  if (opts.mound) {
+    const { mound, collar: c, skirt: k } = opts;
+    part(root, 'base_mound', shell(mound.r, mound.facets, mound), violet, mound);
+    part(root, 'base_collar', torus(c.R, c.tube, ...c.facets), steel, c);
+    part(root, 'mound_skirt', torus(k.R, k.tube, ...k.facets), black, k);
+    return;
+  }
   const { x = 0, z = 0, y, r, skirt, collar } = opts;
   add(root, 'base_mound', scute(12, 6), violet, [x, y, z], [0, 0, 0], r);
   // A torus is born in the XY plane; a skirt and a collar lie flat.
@@ -565,12 +607,27 @@ export function carapaceMound(root, { violet, black, steel }, opts) {
 }
 
 /**
- * Scutes plated round the mound, each `[degrees, radius, [long, height,
- * wide]]` with `long` running outward, alternating through `skins`. The rank
- * is regular in rule and never regular in result — the sizes are the
- * plates' own.
+ * Scutes plated round the mound, alternating through `skins`. The rank is
+ * regular in rule and never regular in result — the sizes are the plates'
+ * own.
+ *
+ * As the approved turret draws them: an orb each of its own `r` and the
+ * shared `facets`, squashed to a plate and laid on the flank by its own node
+ * (`drawn`, with the plate's scale) — yawed near its bearing, pitched down the
+ * slope and rolled a little, each its own way. The first port's `[degrees,
+ * radius, [long, height, wide]]` orbs, radial from `x, z` with `long` running
+ * outward, still build what they built.
  */
-export function baseScutes(root, skins, { x = 0, z = 0, y, scutes }) {
+export function baseScutes(root, skins, opts) {
+  const { scutes } = opts;
+  if (!Array.isArray(scutes[0])) {
+    const { facets = [7, 5] } = opts;
+    scutes.forEach((s, i) =>
+      part(root, `base_scute_${i}`, shell(s.r, facets), skins[i % skins.length], s)
+    );
+    return;
+  }
+  const { x = 0, z = 0, y } = opts;
   scutes.forEach(([deg, rad, size], i) => {
     const a = (deg * Math.PI) / 180;
     add(
@@ -588,8 +645,31 @@ export function baseScutes(root, skins, { x = 0, z = 0, y, scutes }) {
 /**
  * The head: a pod that trains, the brow shelved over it, the antennae raked
  * off the brow, and the counter-spike that balances the stinger astern.
+ *
+ * As the approved turret draws it, the head is a frame of its own — the
+ * file's `turret_head` node, trained 0.3 rad off the mound's axis — and every
+ * part carries its numbers in that frame: `pod` an orb of `r` and `facets`,
+ * `brow` a `shell` open `round` of a turn and `down` deep, `antennae` cones
+ * `r` at the foot and `length` tall, each by its own node. The placement at
+ * the top of `opts` is the frame's (kit.mjs `group`), and the frame is
+ * returned so the stinger can be grown in it, as the file hangs
+ * `barrel_group` off `turret_head`; the counter-spike is `counterSpike`
+ * below, because the file grows it *after* the stinger and the order is part
+ * of what the model is (check.mjs compares in order). The first port's form —
+ * `x, y, z, podR, brow, antennae as [x, z, length, rake], counter` — still
+ * builds what it built, spike included.
  */
 export function browHead(root, { red, black, violet }, opts) {
+  if (opts.pod) {
+    const head = group(root, 'turret_head', opts);
+    const { pod: p, brow: b, antennae } = opts;
+    part(head, 'head_pod', shell(p.r, p.facets), red, p);
+    part(head, 'head_brow', shell(b.r, b.facets, b), black, b);
+    antennae.forEach((a, i) =>
+      part(head, `brow_antenna_${i}`, spike(a.r, a.length, a.facets ?? 4), violet, a)
+    );
+    return head;
+  }
   const { x, y, z = 0, podR, brow, antennae, counter } = opts;
   add(root, 'head_pod', scute(10, 6), red, [x, y, z], [0, 0, 0], podR);
   add(root, 'head_brow', scute(10, 6), black, brow.at, [0, 0, brow.tilt ?? 0], brow.r);
@@ -611,14 +691,46 @@ export function browHead(root, { red, black, violet }, opts) {
 }
 
 /**
+ * The counter-spike on the head's frame, as the approved turret draws it: a
+ * cone `r` at the foot and `length` tall with `facets` sides, laid by its own
+ * node — pitched back 1.9 rad and yawed 0.5 in the file. Its own builder
+ * rather than a line of `browHead`, because the file grows it after the
+ * stinger.
+ */
+export function counterSpike(head, violet, opts) {
+  part(head, 'counter_spike', spike(opts.r, opts.length, opts.facets ?? 5), violet, opts);
+}
+
+/**
  * The gun as a stinger: `segments` tapering along the run from `from` to
  * `to`, each barbed on its upper shoulder, closing on the tip and its one
  * lit pip.
  *
  * Segmented rather than lathed, for the reason the tergites are: a carapace
  * is plates, and the seams between them are the shape.
+ *
+ * As the approved turret draws it, the stinger is a frame off the head — the
+ * file's `barrel_group`, placed by the top of `opts` — and `segments` is the
+ * list of them: each a frustum of `radii` [tip end, root end], `length` and
+ * `facets` at its own station up the frame's Y, alternating steel and violet
+ * from the root, with its `barb` — a torus of `R`, `tube` and `facets` — at
+ * its foot; then `tip`, a cone, and `pip`, an orb. The first port's `{ from,
+ * to, r, segments: 3 }` still builds what it built.
  */
-export function stingerBarrel(root, { steel, violet, black, pip }, { from, to, r, segments = 3 }) {
+export function stingerBarrel(root, { steel, violet, black, pip }, opts) {
+  if (Array.isArray(opts.segments)) {
+    const g = group(root, 'barrel_group', opts);
+    opts.segments.forEach(({ barb, ...s }, i) => {
+      const skin = i % 2 ? violet : steel;
+      part(g, `barrel_seg_${i}`, cyl(s.radii[0], s.radii[1], s.length, s.facets), skin, s);
+      part(g, `barrel_barb_${i}`, torus(barb.R, barb.tube, ...barb.facets), black, barb);
+    });
+    const { tip: t, pip: p } = opts;
+    part(g, 'stinger_tip', spike(t.r, t.length, t.facets), black, t);
+    part(g, 'muzzle_pip', new THREE.SphereGeometry(p.r, ...p.facets), pip, p);
+    return g;
+  }
+  const { from, to, r, segments = 3 } = opts;
   const A = new THREE.Vector3(...from);
   const B = new THREE.Vector3(...to);
   const d = B.clone().sub(A);
@@ -654,12 +766,35 @@ export function stingerBarrel(root, { steel, violet, black, pip }, { from, to, r
 }
 
 /**
- * Claw grips on the seabed, each `[index, degrees, radius, [long, height,
- * wide]]`. The index is given rather than counted because the approved
- * turret's rank runs 0, 1, 2, 4, 5 — a gap where a claw was never grown, and
- * "asymmetric, yet regimented" is exactly what a rank with a hole in it is.
+ * Claw grips on the seabed. The `index` is given rather than counted because
+ * the approved turret's rank runs 0, 1, 2, 4, 5 — a gap where a claw was never
+ * grown, and "asymmetric, yet regimented" is exactly what a rank with a hole
+ * in it is.
+ *
+ * As the approved turret draws them: a cone each, `r` at the foot and
+ * `length` tall with `facets` sides, laid by its own node so that its point
+ * rises out and up from a base near the mound. Skins alternate by the claw's
+ * *number*, so the gap leaves 4 red beside 5 black — the file's rule, which a
+ * count along the list gets the other way round. The first port's `[index,
+ * degrees, radius, [long, height, wide]]`, radial from `x, z` and skinned
+ * along the list, still builds what it built.
  */
-export function clawGrips(root, skins, { x = 0, z = 0, y, grips }) {
+export function clawGrips(root, skins, opts) {
+  const { grips } = opts;
+  if (!Array.isArray(grips[0])) {
+    const { facets = 5 } = opts;
+    grips.forEach((c) =>
+      part(
+        root,
+        `claw_grip_${c.index}`,
+        spike(c.r, c.length, facets),
+        skins[c.index % skins.length],
+        c
+      )
+    );
+    return;
+  }
+  const { x = 0, z = 0, y } = opts;
   grips.forEach(([index, deg, rad, size], i) => {
     const a = (deg * Math.PI) / 180;
     // The cone is born apex-up; laid on its side once, it claws outward.
@@ -677,8 +812,25 @@ export function clawGrips(root, skins, { x = 0, z = 0, y, grips }) {
   });
 }
 
-/** The magazine on one flank, its feed, and the flange into the collar. */
-export function magazine(root, { steel, red }, { pod, pipe, flangeAt }) {
+/**
+ * The magazine on one flank, its feed, and the flange into the collar.
+ *
+ * As the approved turret draws it, in the file's order — `pipe`, `pod`,
+ * `flange`: the feed a straight frustum of `radii`, `length` and `facets`,
+ * leaned by its node; the pod a capsule (kit.mjs `capsule`, `facets` [cap,
+ * radial]); the flange a torus. The first port's `{ pod, pipe, flangeAt }` —
+ * an orb, a sagging cable and a torus, pod first — still builds what it
+ * built.
+ */
+export function magazine(root, { steel, red }, opts) {
+  if (opts.flange) {
+    const { pipe: p, pod: d, flange: f } = opts;
+    part(root, 'feed_pipe', cyl(p.radii[0], p.radii[1], p.length, p.facets), steel, p);
+    part(root, 'ammo_pod', capsule(d.r, d.length, ...d.facets), steel, d);
+    part(root, 'feed_flange', torus(f.R, f.tube, ...f.facets), red, f);
+    return;
+  }
+  const { pod, pipe, flangeAt } = opts;
   add(root, 'ammo_pod', scute(10, 6), steel, pod.at, [0, 0, pod.roll ?? 0], pod.r);
   cable(root, 'feed_pipe', pipe.from, pipe.to, steel, { r: pipe.r, sag: pipe.sag ?? 0, facets: 6 });
   const ring = torus(flangeAt.r, flangeAt.t, 4, 10);
