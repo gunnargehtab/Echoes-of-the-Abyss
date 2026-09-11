@@ -34,6 +34,7 @@ import {
 import { clearStorage, installStorage } from './support/headless.ts';
 import { StubClient, StubRoom, type SentMessage } from './support/colyseusStub.ts';
 import {
+  defaultEndpoint,
   GameClient,
   hasStoredSession,
   storedMissionId,
@@ -221,6 +222,69 @@ const ORDERS: Array<[string, (client: GameClient) => void, SentMessage]> = [
     { type: 'refit', payload: { structureId: 21, kind: RefitKind.Pressure } },
   ],
 ];
+
+/**
+ * Where the client dials when nobody tells it (#624).
+ *
+ * Three states, because `VITE_SERVER_URL` has three at build time and only one
+ * of them used to be exercised. Set is what every image does. *Empty* is what a
+ * Dockerfile's `ENV VAR=$ARG` bakes when the argument is not passed, and `??`
+ * does not treat it as absent — it reaches colyseus as `new Client('')`, which
+ * throws `TypeError: Invalid URL` from a default parameter, so the failure is a
+ * crash at construction rather than anything `listMatches` can swallow. Unset is
+ * the dev server and CI.
+ *
+ * The shim in test/support/viteAssetHooks.mjs reads `import.meta.env` through to
+ * `process.env` on every access, which is why moving the variable between two
+ * calls here reaches a module that was imported once.
+ */
+describe('the match client: where it dials when nobody says', () => {
+  const location = (
+    globalThis as unknown as { window: { location: { protocol: string; hostname: string } } }
+  ).window.location;
+  const originalUrl = process.env.VITE_SERVER_URL;
+  const originalProtocol = location.protocol;
+
+  afterEach(() => {
+    if (originalUrl === undefined) delete process.env.VITE_SERVER_URL;
+    else process.env.VITE_SERVER_URL = originalUrl;
+    location.protocol = originalProtocol;
+  });
+
+  /** Constructing is the assertion: colyseus parses the endpoint eagerly. */
+  function constructs(): string {
+    const { handlers } = recordingHandlers();
+    const endpoint = defaultEndpoint();
+    new GameClient(handlers);
+    return endpoint;
+  }
+
+  it("takes the page's own scheme and host when the variable is unset", () => {
+    delete process.env.VITE_SERVER_URL;
+    assert.equal(constructs(), `ws://${location.hostname}:3000`);
+  });
+
+  it('treats an empty variable as unset rather than as an address', () => {
+    process.env.VITE_SERVER_URL = '';
+    assert.equal(constructs(), `ws://${location.hostname}:3000`);
+  });
+
+  it('uses the variable when the operator supplied one', () => {
+    process.env.VITE_SERVER_URL = 'wss://games.example:3000';
+    assert.equal(constructs(), 'wss://games.example:3000');
+  });
+
+  /**
+   * A page served over https: may not open a ws: socket — the browser blocks it
+   * as active mixed content, and blocks the http: /matchmake/ POST colyseus
+   * derives from the same URL too, so the symptom is an empty room list.
+   */
+  it('answers wss on a secure page, and keeps the port', () => {
+    delete process.env.VITE_SERVER_URL;
+    location.protocol = 'https:';
+    assert.equal(defaultEndpoint(), `wss://${location.hostname}:3000`);
+  });
+});
 
 describe('the match client: getting into a room', () => {
   it('takes the three doors in the documented order of specificity', async () => {

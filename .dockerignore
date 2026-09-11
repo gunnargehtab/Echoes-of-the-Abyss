@@ -16,7 +16,20 @@ build
 .github
 .claude
 
+# The design bible is prose and no image needs it — with one exception, which
+# is why this entry now carries a comment and the two below it exist at all.
+# docs/concept-art/models/ is the *only* home of the approved runtime GLBs, and
+# packages/frontend/src/game/{rosterModels,environmentModels}.ts reach them by a
+# cross-tree `import.meta.glob`. Excluded, that glob resolves to nothing and the
+# client ships with no models at all — silently, since a missing hull falls back
+# to its sprite (#624). The frontend build now fails rather than shipping that,
+# so if the re-inclusion below ever stops taking it is loud.
+#
+# Both spellings: the directory itself, so the context walker descends into it,
+# and everything under it.
 docs
+!docs/concept-art/models
+!docs/concept-art/models/**
 *.md
 
 coverage
