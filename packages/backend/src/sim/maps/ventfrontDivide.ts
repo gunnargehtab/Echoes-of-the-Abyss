@@ -26,12 +26,15 @@ const H = VENTFRONT_DIVIDE_HEADER.heightM;
  * the map edge clipped that same column on the far side, so a map that says it
  * is symmetric across both axes was 250 m of kelp wider on the west.
  *
- * The four plateaus have since grown a column deliberately, on all four at
- * once, to close the gutter their own bases stood in (#622). Read that as the
- * opposite of the #157 fault rather than a repeat of it: a column added to one
- * plateau is a bug, and the same column added to all four is a map change with
- * a price. Symmetry is what tells the two apart, which is why it is asserted
- * cell by cell rather than trusted.
+ * The four plateaus have since grown deliberately, all four at once, to close
+ * the gutter their own bases stood in (#622). On the other axis: the #157
+ * fault was a *column*, 250 m of extra kelp along x on the west pair, and this
+ * was a *row* — the north pair took the cell row centred 1,125 and the south
+ * pair its mirror centred 6,875, thirty-two cells in total. Read it as the
+ * opposite of #157 rather than a repeat: one plateau growing is a bug, and all
+ * four growing into their own mirror images is a map change with a price.
+ * Symmetry is what tells the two apart, which is why it is asserted cell by
+ * cell rather than trusted.
  */
 export const VENTFRONT_DIVIDE: MapDefinition = {
   ...VENTFRONT_DIVIDE_HEADER,
@@ -300,6 +303,13 @@ export const VENTFRONT_DIVIDE: MapDefinition = {
     // and had nothing standing on it. `reactorSite` returned null on every
     // observation of every match, so the account the flora economy was built
     // to make spendable had nowhere to be spent (#535, #547).
+    //
+    // Each plateau does carry a Bastion and a Foundry now: they stood in the
+    // gutter north of it until #622 and stand on the plateau's own front edge
+    // since. That does not take the ground back, because a bed is a field
+    // rather than a footprint and the distances in the bullet below are
+    // measured from this bed to those two buildings — but the sentence above
+    // was written of an empty plateau and is no longer one.
     //
     // Placed in each plateau's back corner, which is chosen against the two
     // ways a bed here could be the wrong change:
