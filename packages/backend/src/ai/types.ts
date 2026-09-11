@@ -10,17 +10,25 @@
  * already-resolved payload a human receives, with contacts under opaque
  * handles that name no entity.
  *
- * **Out**: `AiCommand`s, one variant per message a client can send. Not a
- * resemblance — the list below and the room's in-match `onMessage` handlers
- * are the same set, because "the AI plays through the interface a player plays
+ * **Out**: `AiCommand`s, drawn from the same list of verbs a client may send.
+ * Not a resemblance — "the AI plays through the interface a player plays
  * through" has to be literally true or it is decoration.
  *
- * It was not literally true for most of this file's life: `depth` was the
- * exact set difference, so the sentence above described an intention rather
- * than the code, and an AI that could not dive read as one that had chosen not
- * to. The seat's switch now has no `default`, so the next variant to go
- * missing is a compile error rather than a commander with a silent gap in its
- * vocabulary.
+ * Today it is true with **six named exceptions**: 21 variants against the 27
+ * in-match client messages, the difference listed and justified in
+ * `AiUnbuilt` below. That is a narrower claim than this comment used to make,
+ * and the reason it is written down rather than asserted is #621 — this
+ * comment claimed the two sets were identical, and for the whole of this
+ * file's life that was false. `depth` was the set difference once; then five
+ * more accumulated behind it, because nothing checked.
+ *
+ * **Both directions are checked now, and by different machinery.** A variant
+ * the seat forgets to handle is caught by the `never` at the foot of its
+ * switch (`seat.ts`), which has caught that direction since `depth`. A client
+ * message with no variant was invisible to it — there is nothing in the union
+ * for a switch to fail on — and is caught by the `Exclude<>` assertion just
+ * beneath the union below. Adding a 28th in-match message now fails
+ * `npm run type-check` until someone writes the verb or names it as a gap.
  *
  * A conventional RTS AI reads the world and nobody minds. Here that would not
  * be unfair so much as a *category error*: the game is the act of deciding
@@ -35,6 +43,7 @@ import type {
   EchoSnapshot,
   Faction,
   HarvestThrottle,
+  InMatchClientMessageKey,
   RefitKind,
   ResourceNodeInfo,
   StructureKind,
@@ -156,6 +165,99 @@ export type AiCommand =
   | { kind: 'embark'; unitIds: number[]; carrierId: number }
   /** Land the hold of each of these carriers where it stands. */
   | { kind: 'disembark'; unitIds: number[] };
+
+// --- The vocabularies are held against each other --------------------------
+//
+// #621. `seat.ts` ends with `const unhandled: never = command`, which fails
+// the build when the commander can say something the seat cannot act on. The
+// other direction — a message a *client* can send that the commander cannot
+// say — was invisible to it, and six verbs accumulated there. The three
+// assertions below close it, and their shape matters: `Exclude<>` rather than the
+// `Exact<>` that polices `wire.ts`, because when `Exact<>` fails it reports
+// `Type 'true' is not assignable to type 'never'` and names nothing, while
+// `Exclude<>` quotes the offending verb. The diagnostic is the whole point —
+// a build error that does not say which message is missing sends the next
+// author to diff two lists by eye, which is what produced this gap.
+//
+// Each is a never-called function rather than the `const x: never = y` the
+// same idea reads as, because that form wants a `declare const` to stand in
+// for the impossible value — and a `declare` is erased while the *reference*
+// to it survives into the emitted JS. It type-checks, then throws
+// `ReferenceError` in every file that imports this one. A parameter is the
+// same assertion with nothing to resolve at runtime.
+
+/**
+ * In-match verbs the commander cannot say, each with what closes it.
+ *
+ * Every entry here is a hole, not a decision, and the price of listing one is
+ * naming the issue that fills it. An entry with no issue number is this
+ * defect again with a rubber stamp on it: the list stops being a record of
+ * known gaps and becomes a place to put inconvenient verbs.
+ *
+ * **Not written yet** — the commander has no rule that would spend them:
+ *
+ * - `hold` (`Match.orderHold`) — approximated today by `engineOff`, which
+ *   `commandWatchPost` uses to park an Acolyte by cutting its drive. That is
+ *   a strictly quieter posture than a hold, so the gap costs tidiness rather
+ *   than strength. #621.
+ * - `rally` (`Match.setRally`) — a *structure's* spawn point, which is why it
+ *   cannot be conflated with the per-hull walks that send a siege hull back
+ *   to the fleet. #621.
+ * - `followFloor` (`Match.orderFollowFloor`). #621.
+ * - `noisemaker` (`Match.deployNoisemaker`) — the one of the four that buys
+ *   strength. Spending `NOISEMAKER` SIG 70 at your real position is a
+ *   doctrinal choice rather than a reflex, so it wants a `Doctrine` gate and
+ *   a measured trigger threshold, not a variant. It also would not cover
+ *   every navy: a cone-locked torpedo acquires on its first pass and never
+ *   looks again, so the Order's Lance is immune to the countermeasure. #621.
+ *
+ * **Written, and an AI seat has no use for it** — these two look permanent,
+ * and the evidence is below. They sit here rather than in a separate
+ * `AiExempt` union because "permanent exemption or deferred work" is the one
+ * design call #621 reserves to the owner; answering it is a one-line move.
+ *
+ * - `ability` — `MatchRoom` refuses `addAi` in any room where
+ *   `this.mission !== null`, and `Match.commanderAbility` is
+ *   `missionRuntime?.fireAbility(slot) === true`. An AI seat can never sit in
+ *   a room where the verb does anything. #621.
+ * - `sow` — docs/systems-flora.md §"the commander's opinion is two judgements
+ *   and no more", and neither of the two is sowing. #621.
+ */
+type AiUnbuilt = 'hold' | 'rally' | 'followFloor' | 'noisemaker' | 'ability' | 'sow';
+
+/**
+ * A message a seated client may send that the commander can neither say nor
+ * account for. There are none, and the build fails while there are.
+ */
+function _everyInMatchVerbIsSaidOrNamed(
+  verb: Exclude<InMatchClientMessageKey, AiCommand['kind'] | AiUnbuilt>
+): never {
+  return verb;
+}
+void _everyInMatchVerbIsSaidOrNamed;
+
+/**
+ * A verb listed as a gap that the commander has since learned to say.
+ *
+ * The other way `AiUnbuilt` rots: a variant lands, nobody prunes the list,
+ * and the count in the comment above drifts again. Filling a gap is now
+ * *required* to remove its entry rather than merely polite.
+ */
+function _noGapIsAlreadyBuilt(verb: Extract<AiUnbuilt, AiCommand['kind']>): never {
+  return verb;
+}
+void _noGapIsAlreadyBuilt;
+
+/**
+ * A gap naming something no seated client could send in the first place.
+ *
+ * Catches a typo and catches a lobby name wandering in — either would make
+ * the first assertion pass by excluding a verb that was never in the set.
+ */
+function _everyGapIsARealMessage(verb: Exclude<AiUnbuilt, InMatchClientMessageKey>): never {
+  return verb;
+}
+void _everyGapIsARealMessage;
 
 /** What a commander is: snapshot in, commands out, and nothing else. */
 export interface AiPlayer {

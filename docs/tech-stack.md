@@ -846,11 +846,31 @@ stealth would have been modelling a mechanic the simulation did not have — and
 after it, because a pair straddling 1,200 m is cut to 0.3× and the AI was the only commander
 in the repository that could not reach the cheapest hiding place in the game.
 
-Closing it cost a ninth verb. `AiCommand` had eight variants against the room's nine in-match
-handlers, and `depth` was the exact set difference, so "the AI plays through the interface a
-player plays through" was an intention rather than a fact. The seat's switch now has no
-`default`, which makes the next missing verb a compile error instead of a commander with a
-silent hole in its vocabulary.
+Closing it cost a verb, and `depth` was the exact set difference at the time, so "the AI plays
+through the interface a player plays through" was an intention rather than a fact. Removing the
+seat switch's `default` made that direction a compile error — a variant the commander emits and
+the seat ignores no longer reads as a commander that chose not to act.
+
+**That check only ever held one of the two directions**, and the arithmetic above went stale
+while nobody noticed. A client message with *no* variant is invisible to a `never` on a switch,
+because there is nothing in the union for the switch to fail on; five more verbs accumulated
+behind `depth` in exactly that blind spot. The counts today are **21 variants against 27
+in-match client messages** — `hold`, `rally`, `followFloor`, `ability`, `noisemaker` and `sow`
+are the difference — and the reason this paragraph can state them is that both directions are
+now checked rather than asserted (#621). `wire.ts` declares `LOBBY_MSG` beside `CLIENT_MSG`, so
+the five phase-gated names are a type rather than a comment and the in-match set can be
+subtracted; `ai/types.ts` carries an `Exclude<>` assertion against it, and a 28th in-match
+message fails `npm run type-check` until someone writes the verb or names it in `AiUnbuilt`
+with the issue that fills it. `Exclude<>` and not the `Exact<>` that polices the wire, because
+`Exact<>` reports only `Type 'true' is not assignable to type 'never'` while `Exclude<>` quotes
+the missing verb — and a build error that does not say which message is missing sends the next
+author to diff two lists by eye, which is how six of them got there.
+
+Two of the six look permanent rather than deferred. An AI seat cannot use `ability` at all —
+`MatchRoom` refuses `addAi` in any room carrying a mission, and the verb does nothing outside
+one — and `docs/systems-flora.md` gives the commander two judgements about flora, neither of
+which is sowing. They are listed with the other four until that is decided, because a narrower
+claim that is true beats a wider one that is not.
 
 The rule itself is in `commandArmy`, and its shape is the argument. The army crosses **on the
 attack run** and surfaces on contact, so the layer prices a commitment
