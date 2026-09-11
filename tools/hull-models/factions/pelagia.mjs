@@ -56,16 +56,19 @@ import {
   bothSides,
   polar,
   part,
+  drawn,
   capsule,
   group,
+  pointLight,
 } from '../kit.mjs';
 
 /**
  * The Commune's palette, as the Sower's own materials carry it: the four
  * tokens of docs/art-direction.md, and — where the approved model needed a
  * colour the docs do not name — that model's own hex, exactly (kit.mjs `hex`).
- * The vein is the biolight token at half strength, which is the difference
- * between a thread along a rib and a bud.
+ * The vein's `#5FAE42` is the Sower's own — a hue of its own, not the
+ * biolight token dimmed (its linear channels are 0.42, 0.55 and 0.37 of the
+ * bud's) — which is the difference between a thread along a rib and a bud.
  */
 export const ink = {
   chitinHull: () => clad('chitin_hull', hex('#0B241E'), 0.08, 0.6),
@@ -301,9 +304,15 @@ export function bladder(root, { chitin, ridge }, { x, y, r, squash = 0.5, rings 
   );
 }
 
-/** The one lit bud at the node: a squashed orb in `bio_light`, facing up. */
-export function bud(root, light, { x, y, z = 0, r, squash = 0.54 }) {
-  add(root, 'bud', orb(), light, [x, y, z], [0, 0, 0], [r, r * squash, r]);
+/**
+ * The one lit bud at the node: a squashed orb in `bio_light`, facing up.
+ * `name` and `facets` are the Chorister's `bladder_bud` — the bladder
+ * showing through the middle segment as a paler dome, a ten-by-six orb in
+ * spore pale rather than a lamp (hulls/chorister-pelagia.mjs).
+ */
+export function bud(root, light, opts) {
+  const { name = 'bud', facets = [12, 6], x, y, z = 0, r, squash = 0.54 } = opts;
+  add(root, name, orb(...facets), light, [x, y, z], [0, 0, 0], [r, r * squash, r]);
 }
 
 /**
@@ -439,34 +448,48 @@ export function stemKeel(root, ridge, { from, to, height, y, t = 0.8 }) {
  * fluke_s, pectoral_p, fluke_p, which is the order the approved Spinner
  * carries (+z first; the names turned round with #642); the default goes
  * pair by pair.
+ *
+ * `stand` is the Chorister's: the early pass extruded its fins and never
+ * re-centred them, so each plate stands *on* its node's height, from y = 0
+ * up to `t`, rather than straddling it as `plan` lays a slab. The approved
+ * export carries them so (hulls/chorister-pelagia.mjs), and a port
+ * reproduces the file.
  */
-export function fins(root, membrane, { y = 0, pairs, bySide = false }) {
-  const fin = ([name, corners, { t = 0.5, y: fy = y } = {}], side, sgn) =>
-    add(
-      root,
-      `${name}_${side}`,
-      plan(
-        corners.map(([x, z]) => [x, sgn * z]),
-        t
-      ),
-      membrane,
-      [0, fy, 0]
+export function fins(root, membrane, { y = 0, pairs, bySide = false, stand = false }) {
+  const fin = ([name, corners, { t = 0.5, y: fy = y } = {}], side, sgn) => {
+    const geo = plan(
+      corners.map(([x, z]) => [x, sgn * z]),
+      t
     );
+    if (stand) geo.translate(0, t / 2, 0);
+    return add(root, `${name}_${side}`, geo, membrane, [0, fy, 0]);
+  };
   if (bySide) bothSides((side, sgn) => pairs.forEach((pair) => fin(pair, side, sgn)));
   else pairs.forEach((pair) => bothSides((side, sgn) => fin(pair, side, sgn)));
 }
 
 /**
  * The grown point at the bow — the Sower's `leaf_tip`, the Spinner's
- * `spinneret`: a faceted cone whose apex is at `tip`.
+ * `spinneret`: a faceted cone whose apex is at `tip`. `z` is off the keel
+ * line: the Chorister's `spine_gun` is the same cone, five-sided, two units
+ * to port of it (hulls/chorister-pelagia.mjs), and its `stem_tail` is one
+ * with the apex *forward*, buried in the last lobe, so that the stern is a
+ * transom — the approved export's own, kept.
  */
-export function nose(root, mat, { name = 'leaf_tip', tip, y = 0, r, length, facets = 6 }) {
-  add(root, name, cyl(0, r, length, facets), mat, [tip - length / 2, y, 0], [0, 0, -Math.PI / 2]);
+export function nose(root, mat, { name = 'leaf_tip', tip, y = 0, z = 0, r, length, facets = 6 }) {
+  add(root, name, cyl(0, r, length, facets), mat, [tip - length / 2, y, z], [0, 0, -Math.PI / 2]);
 }
 
-/** A dorsal blade standing on the back, `height` above `y` (`blade` above). */
-export function dorsalBlade(root, mat, { name = 'dorsal_blade', from, to, y, height, t = 1 }) {
-  add(root, name, blade(from, to, height, t), mat, [0, y + height / 2, 0]);
+/**
+ * A dorsal blade standing on the back, `height` above `y` (`blade` above).
+ * `stand` is `fins`' — the Chorister's `dorsal_leaf` is the same plate with
+ * its foot at its node rather than its middle.
+ */
+export function dorsalBlade(root, mat, opts) {
+  const { name = 'dorsal_blade', from, to, y, height, t = 1, stand = false } = opts;
+  const geo = blade(from, to, height, t);
+  if (stand) geo.translate(0, height / 2, 0);
+  add(root, name, geo, mat, [0, stand ? y : y + height / 2, 0]);
 }
 
 /**
@@ -499,8 +522,21 @@ export function vein(root, veinMat, { name = 'dorsal_vein', from, to, y, z = 0, 
  * Cargo lobes slung under the flanks, `[side, x, y, z, rx, ry, rz, roll]`
  * each — the Harvester's are different sizes and sit at different heights,
  * and a matched pair is refused for it.
+ *
+ * As the approved Harvester draws them (hulls/harvester-pelagia.mjs): an
+ * entry is `{ side, ...placement }` through kit.mjs `drawn`, the orb ten by
+ * seven rather than the first reading's ten by six — `facets` — and the
+ * roll and the three radii in the node, as the file carries them. The array
+ * form above still builds what it built.
  */
-export function cargoLobes(root, chitin, { lobes }) {
+export function cargoLobes(root, chitin, { lobes, facets = [10, 6] }) {
+  if (!Array.isArray(lobes[0])) {
+    refuseMirror('cargo_lobe', lobes, (l) => l.scale.join());
+    lobes.forEach(({ side, ...placement }) =>
+      part(root, `cargo_lobe_${side}`, orb(...facets), chitin, placement)
+    );
+    return;
+  }
   refuseMirror('cargo_lobe', lobes, ([, , , , rx, ry, rz]) => `${rx},${ry},${rz}`);
   lobes.forEach(([side, x, y, z, rx, ry, rz, roll = 0]) =>
     add(root, `cargo_lobe_${side}`, orb(10, 6), chitin, [x, y, z], [0, 0, roll], [rx, ry, rz])
@@ -510,8 +546,32 @@ export function cargoLobes(root, chitin, { lobes }) {
 /**
  * A rank of baleen plates across an intake, athwartships at `x`, each yawed
  * `splay` further than the last and all raked `rake` about the beam.
+ *
+ * `rank` is the rank as the approved Harvester draws it, in the export's
+ * own frame through kit.mjs `drawn` (hulls/harvester-pelagia.mjs): `count`
+ * plates `pitch` apart across the beam about `at`, each `t` thick and `d`
+ * deep, `h` tall at the middle and `taper` shorter for every plate out from
+ * it, all raked `rake` about the beam and each *rolled* `splay` further than
+ * the last about the keel — the file's splay is a roll, where the first
+ * reading above yawed the plates — and numbered from `first`. The form
+ * above still builds what it built.
  */
 export function baleen(root, ridge, opts) {
+  if (opts.rank) {
+    const { count, pitch, at, t, h, taper, d, rake, splay, first = 1 } = opts.rank;
+    const [x, y, z] = at;
+    for (let i = 0; i < count; i++) {
+      const k = i - (count - 1) / 2;
+      part(
+        root,
+        `baleen_plate_${first + i}`,
+        box(t, h - taper * Math.abs(k), d),
+        ridge,
+        drawn([x + k * pitch, y, z], [rake, 0, k * splay])
+      );
+    }
+    return;
+  }
   const { x, y, z = 0, count, pitch, h, d, splay = 0.045, rake = -0.35, t = 0.4 } = opts;
   for (let i = 0; i < count; i++) {
     const k = i - (count - 1) / 2;
@@ -522,8 +582,42 @@ export function baleen(root, ridge, opts) {
 /**
  * Feed tendrils: soft tubes hung from an anchor, sagging by `sag` of their
  * length and trailing aft. `[name, [x, y, z], length, r, sag]` each.
+ *
+ * As the approved Harvester grows them (hulls/harvester-pelagia.mjs), an
+ * entry is `{ name, x, droop, phase, length }` and the tendril is a tube of
+ * `steps` along a centripetal Catmull-Rom through `knots` stations forward
+ * from `z0` over `length`, in the export's own frame: at the k-th, t =
+ * k/(knots − 1), it sits at x + 0.1·sin(3t + phase) across, hangs to
+ * −0.45 − droop·t + 0.12·sin(4t + phase), and lies at z0 + length·t — one
+ * wobble each way and a phase of its own, which is what makes three
+ * tendrils hang three ways. Every constant is the file's, recovered to the
+ * float and checked against all sixty-three tube stations (the three
+ * curves' 21 each). The array form above still builds what it built.
  */
-export function tendrils(root, ridge, { tendrils: list }) {
+export function tendrils(root, ridge, opts) {
+  const { tendrils: list } = opts;
+  if (!Array.isArray(list[0])) {
+    const { r = 0.045, steps = 20, facets = 5, z0 = 1.35, knots = 6 } = opts;
+    list.forEach(({ name, x, droop, phase, length }) => {
+      const through = [];
+      for (let k = 0; k < knots; k++) {
+        const t = k / (knots - 1);
+        through.push([
+          x + 0.1 * Math.sin(3 * t + phase),
+          -0.45 - droop * t + 0.12 * Math.sin(4 * t + phase),
+          z0 + length * t,
+        ]);
+      }
+      feeler(root, ridge, {
+        name: `feed_tendril_${name}`,
+        through: through.map((p) => drawn(p).at),
+        r,
+        steps,
+        facets,
+      });
+    });
+    return;
+  }
   list.forEach(([name, [x, y, z], length, r, sag = 0.5]) => {
     const curve = new THREE.QuadraticBezierCurve3(
       new THREE.Vector3(x, y, z),
@@ -905,6 +999,12 @@ export function grownBody(root, mat, opts) {
             : buffer[1 + (iy - 1) * w + (ix % w)];
       pos.setXYZ(iy * (w + 1) + ix, p[0], p[1], p[2]);
     }
+  // The last vertex of each pole row is referenced by no triangle, so
+  // `computeVertexNormals` leaves it at zero and the exporter writes it as
+  // (1, 0, 0) in whatever frame the geometry is authored in — the export's
+  // Z-long frame in the approved files, the yawed one here — which is the one
+  // normal on a table-built hull that a world-space comparison finds moved
+  // (#649 review). Orphans in both files; nothing renders from them.
   geo.computeVertexNormals();
   return part(root, name, geo, mat, placement);
 }
@@ -924,15 +1024,30 @@ export function lobe(root, mat, { name = 'ballast_lobe', facets = [9, 6], ...pla
  * its node — no two alike, which is the whole difference between grown and
  * turned. One-based, as the export numbers them. `growthRings` above is the
  * Spinner's rule, a wobble from the index; this takes each ring's own.
+ *
+ * `lit` lights every ring the Cruiser's way (hulls/cruiser-pelagia.mjs): a
+ * thinner torus of `lit.tube` on `lit.facets` in `lit.mat` rides each ring
+ * at the same station and lean, named `lit.name` with the ring's number and
+ * exported straight after it, scaled by the ring's own `vein` — a shade
+ * wider than the ridge it lights. "Living bioluminescent veins" as a
+ * growth ring.
  */
 export function grownRings(
   root,
   mat,
-  { name = 'growth_ring', first = 1, facets = [5, 20], rings }
+  { name = 'growth_ring', first = 1, facets = [5, 20], rings, lit }
 ) {
-  rings.forEach(({ tube, ...placement }, i) =>
-    part(root, `${name}_${first + i}`, torus(1, tube, ...facets), mat, placement)
-  );
+  rings.forEach(({ tube, vein, ...placement }, i) => {
+    part(root, `${name}_${first + i}`, torus(1, tube, ...facets), mat, placement);
+    if (lit)
+      part(
+        root,
+        `${lit.name ?? 'vein_ring'}_${first + i}`,
+        torus(1, lit.tube, ...lit.facets),
+        lit.mat,
+        { ...placement, scale: vein }
+      );
+  });
 }
 
 /**
@@ -1006,6 +1121,348 @@ export function lightBuds(root, light, { buds, facets = [8, 6] }) {
   buds.forEach(([name, r, placement]) =>
     part(root, name, new THREE.SphereGeometry(r, ...facets), light, placement)
   );
+}
+
+/* --------------------------------------------------------------------------
+ * The other five shared kinds (#649, off #540 Phase 3): the Corvette, the
+ * Harvester and the Cruiser — one authoring pass, three r184, drawn along
+ * Z like the scout and built through kit.mjs `drawn` and `part` like it —
+ * and the Abyssal Submersible and the Chorister, which the same pass and an
+ * earlier one drew along X, so their builders take the export's numbers
+ * verbatim and yaw nothing. hulls/corvette-pelagia.mjs, harvester-,
+ * cruiser-, abyssal-submersible- and chorister-pelagia.mjs are the
+ * consumers, and each states where its export is odd.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The Corvette's, the Harvester's and the Cruiser's palette: the scout's
+ * four names with a third finish — chitin at 0.2 metal and 0.28 rough, a
+ * ridge at 0.12 and 0.45, the membrane two-sided at 0.15 and 0.32 — and a
+ * lamp that is the biolight token through and through at 0.35 rough,
+ * burning at the strength each file carries: 1.3 on the Corvette, 0.9 on
+ * the Harvester, 1.6 on the Cruiser (`KHR_materials_emissive_strength`).
+ * The Cruiser adds two of its own, `bio_vein_lit` for the lit rings and the
+ * four veins along its flanks and `sensor_frill_lit` for its three
+ * hydrophone frills, a lamp two-sided like a membrane. Values are the
+ * approved exports' own; `ink` and `scoutInk` above are other passes and
+ * not interchangeable with this one.
+ */
+export const fleetInk = {
+  chitinHull: () => clad('chitin_hull', hex('#0B241E'), 0.2, 0.28),
+  growthRidge: () => clad('growth_ridge', hex('#14332A'), 0.12, 0.45),
+  sporePod: () => clad('spore_pod', hex('#E8F0A3'), 0.05, 0.5),
+  algaeMembrane: () => {
+    const m = clad('algae_membrane', hex('#1FA67A'), 0.15, 0.32);
+    m.side = THREE.DoubleSide;
+    return m;
+  },
+  bioLight: (intensity) => lamp('bio_light', hex('#8FE36B'), hex('#8FE36B'), 0.35, intensity),
+  bioVeinLit: () => lamp('bio_vein_lit', hex('#8FE36B'), hex('#2A4A20'), 0.4, 1.5),
+  sensorFrillLit: () => {
+    const m = lamp('sensor_frill_lit', hex('#8FE36B'), hex('#3F6B2E'), 0.4, 0.9);
+    m.side = THREE.DoubleSide;
+    return m;
+  },
+};
+
+/**
+ * The Abyssal Submersible's palette, hyphenated as its export names it and
+ * matte as a deep hull is — chitin at 0.75 rough, the dark ring at 0.85 —
+ * with the one lamp, `biolum-vein`, a near-black base under the biolight
+ * token burning at 2.2, the strongest on any Commune hull. Values are the
+ * approved export's own (hulls/abyssal-submersible-pelagia.mjs).
+ */
+export const submersibleInk = {
+  chitinHull: () => clad('chitin-hull', hex('#0B241E'), 0.15, 0.75),
+  algaeTeal: () => clad('algae-teal', hex('#1FA67A'), 0.1, 0.7),
+  growthRingDark: () => clad('growth-ring-dark', hex('#123C2E'), 0.1, 0.85),
+  sporePale: () => clad('spore-pale', hex('#E8F0A3'), 0.05, 0.65),
+  biolumVein: () => lamp('biolum-vein', hex('#8FE36B'), hex('#14301A'), 0.4, 2.2),
+};
+
+/**
+ * A point of glow inside the hull: the `KHR_lights_punctual` point light
+ * the r184 exports carry beside their lamps — two on the Corvette and the
+ * Harvester, three on the Cruiser, two named ones on the Submersible — at
+ * the export's own colour, intensity and range. Neither the bake nor the
+ * kit's audit ever sees one (hull-intake's page.html renders every pass
+ * unlit; `lightAudit` and `check.mjs` read meshes), and the conn view loads
+ * it with the file, so a port carries the file's and chooses none. `at` is
+ * in the kit's frame, as `drawn` gives it. The light itself is the kit's
+ * `pointLight` (#649) — the Consortium's Submersible carries the same two —
+ * and this is the Commune's colour on it.
+ */
+export function glow(root, { name, color = hex('#8FE36B'), intensity, range, at }) {
+  return pointLight(root, { name, color, intensity, range, at });
+}
+
+/**
+ * A seed launcher — "visible torpedo hardpoints", grown: a frame of its own
+ * (the export's `launcher_*` group, rolled out from the flank by its node),
+ * a sheath of ridge in it, and a row of pale seeds along the sheath's back.
+ * Three on the Corvette, three on the Cruiser, each its own `length` and
+ * its own count of `seeds`, and the rest is the export's one rule, which
+ * reproduces every node matrix in both files to the double: the sheath is
+ * a unit orb scaled [0.32, 0.24, 0.68] of the length; the k-th of n seeds
+ * is a seven-by-five orb of radius 0.15·length·(1 − 0.125·|2t − 1|),
+ * t = k/(n − 1) — fullest amidships — at z = length·(t − ½) along the
+ * sheath, y = 0.14·length above it and x = 0.12·length·sin 2.4k across,
+ * so the row wobbles as it grew.
+ */
+export function seedLauncher(root, { sheath, seed }, { name, length, seeds, ...placement }) {
+  const frame = group(root, name, placement);
+  part(
+    frame,
+    `${name}_sheath`,
+    orb(8, 6),
+    sheath,
+    drawn([0, 0, 0], [0, 0, 0], [0.32 * length, 0.24 * length, 0.68 * length])
+  );
+  for (let k = 0; k < seeds; k++) {
+    const t = k / (seeds - 1);
+    part(
+      frame,
+      `${name}_seed_${k + 1}`,
+      new THREE.SphereGeometry(0.15 * length * (1 - 0.125 * Math.abs(2 * t - 1)), 7, 5),
+      seed,
+      drawn([0.12 * length * Math.sin(2.4 * k), 0.14 * length, length * (t - 0.5)])
+    );
+  }
+  return frame;
+}
+
+/**
+ * An intake scoop's outline: a crescent between two quadratic arcs on one
+ * chord of ±`w`, the outer sagging to `outer` at its control point and the
+ * inner to `inner` — a lip, open toward the chord. The Harvester's is the
+ * one the roster has (hulls/harvester-pelagia.mjs).
+ */
+export function scoopOutline(w, outer, inner) {
+  const s = new THREE.Shape();
+  s.moveTo(-w, 0);
+  s.quadraticCurveTo(0, -outer, w, 0);
+  s.quadraticCurveTo(0, -inner, -w, 0);
+  return s;
+}
+
+/**
+ * The intake scoop: `scoopOutline` extruded `depth` forward along the keel
+ * — the mouth of the "external intake dredge gear", hung under the jaw by
+ * its node. Eight curve segments, as the export sampled its arcs.
+ */
+export function intakeScoop(root, mat, opts) {
+  const { name = 'intake_scoop', halfWidth, outer, inner, depth, segments = 8 } = opts;
+  const { at, rot, scale } = opts;
+  return part(
+    root,
+    name,
+    new THREE.ExtrudeGeometry(scoopOutline(halfWidth, outer, inner), {
+      depth,
+      bevelEnabled: false,
+      curveSegments: segments,
+    }),
+    mat,
+    { at, rot, scale }
+  );
+}
+
+/**
+ * Veins along a body — the Cruiser's four, "living bioluminescent veins"
+ * drawn the length of the hull (hulls/cruiser-pelagia.mjs): each a tube of
+ * `steps` along a centripetal Catmull-Rom through `knots` stations at even
+ * intervals of the body's half-length from `from` to `to`, every station on
+ * the ellipsoid `lift` times the hull's own scale, round the length axis at
+ * an angle of base + 0.3·sin(2.6·z' + phase) — one slow wave down the
+ * flank, each vein's own base and phase. The rule is the export's, recovered
+ * to the float from all eighty-four stations; the constants are the file's
+ * and not a choice here.
+ */
+export function hullVeins(root, mat, opts) {
+  const { hull, lift = 1.1, knots = 21, steps = 56, r = 0.03, facets = 5, veins } = opts;
+  const [sx, sy, sz] = hull;
+  veins.forEach(({ name, from, to, base, phase }) => {
+    const through = [];
+    for (let k = 0; k < knots; k++) {
+      const z = from + ((to - from) * k) / (knots - 1);
+      const a = base + 0.3 * Math.sin(2.6 * z + phase);
+      const rr = lift * Math.sqrt(1 - z * z);
+      through.push([sx * rr * Math.cos(a), sy * rr * Math.sin(a), sz * z]);
+    }
+    feeler(root, mat, { name, through: through.map((p) => drawn(p).at), r, steps, facets });
+  });
+}
+
+/**
+ * Hydrophone masts — "fixed hydrophone masts", grown: a tube of `steps`
+ * along a centripetal Catmull-Rom through `knots` stations from the back at
+ * `from` aft to `to`, rising as y + 0.9t − 0.25t² and swaying across as
+ * x + 0.25·sin(phase)·t + 0.08·sin(4t + phase), with a lit bud at its tip
+ * — the Cruiser's two, exported mast then tip (hulls/cruiser-pelagia.mjs).
+ * The rule is the export's, recovered to the float from both masts.
+ */
+export function hydrophoneMasts(root, { mast, tip }, opts) {
+  const { masts, knots = 7, steps = 24, r = 0.035, facets = 5, tipR = 0.05 } = opts;
+  masts.forEach(({ name, x, phase, y, from, to }) => {
+    const through = [];
+    for (let k = 0; k < knots; k++) {
+      const t = k / (knots - 1);
+      through.push([
+        x + 0.25 * Math.sin(phase) * t + 0.08 * Math.sin(4 * t + phase),
+        y + 0.9 * t - 0.25 * t * t,
+        from + (to - from) * t,
+      ]);
+    }
+    feeler(root, mast, { name, through: through.map((p) => drawn(p).at), r, steps, facets });
+    lightBuds(root, tip, { buds: [[`${name}_tip`, tipR, drawn(through[knots - 1])]] });
+  });
+}
+
+/**
+ * The X-long twins of kit.mjs `drawn` and `part`, for the Submersible and
+ * the Chorister, whose exports already run along +X: `verbatim` is a node's
+ * translation, XYZ Euler and scale as the file prints them, and `placed`
+ * puts the primitive there un-yawed. The same builder signatures as the
+ * Z-long ones, so a hull reads the same either way. Navy-neutral, like
+ * `glow` above.
+ */
+export const verbatim = (t = [0, 0, 0], e = [0, 0, 0], s = [1, 1, 1]) => ({
+  at: t,
+  rot: e,
+  scale: s,
+});
+const placed = (root, name, geo, mat, placement = {}) => {
+  const { at = [0, 0, 0], rot = [0, 0, 0], scale = [1, 1, 1] } = placement;
+  return add(root, name, geo, mat, at, rot, scale);
+};
+
+/**
+ * Grown orbs, placed verbatim: the Submersible's whole body is these — a
+ * `seed-hull` of radius 1.5 on twelve by nine, squashed and rolled by its
+ * node; a keel, a bulge, a prow tip, three eye sacs, two aft pods and two
+ * fins, each an orb of its own radius and facets. `[name, mat, r, facets,
+ * placement]` each (hulls/abyssal-submersible-pelagia.mjs).
+ */
+export function grownOrbs(root, { orbs }) {
+  orbs.forEach(([name, mat, r, facets, placement]) =>
+    placed(root, name, new THREE.SphereGeometry(r, ...facets), mat, placement)
+  );
+}
+
+/**
+ * Grown cones, placed verbatim: `radii` [top, bottom] as kit `cyl` takes
+ * them, `length` between, `facets` round — the Submersible's prow beak and
+ * aft nozzle drawn to a point, its nozzle throat open at both ends, and
+ * each tendril's tip (hulls/abyssal-submersible-pelagia.mjs). Which way a
+ * cone points is its node's: −π/2 about the keel puts the apex forward,
+ * +π/2 aft.
+ */
+export function grownCones(root, { cones }) {
+  cones.forEach(([name, mat, [rTop, rBottom], length, facets, placement]) =>
+    placed(root, name, cyl(rTop, rBottom, length, facets), mat, placement)
+  );
+}
+
+/**
+ * Hoops round an X-long body, placed verbatim: a torus each of `R` and
+ * `tube` on `facets` [radial, tubular], open over `arc` radians when it is
+ * less than a turn — the Submersible's six growth rings, its five vein
+ * rings (open 4.6, 5.2, 4.4, 5.0 and 3.8 of the way round, each turned its
+ * own way about the keel) and the vein along its port fin, a 3.6 rad arc
+ * (hulls/abyssal-submersible-pelagia.mjs). `[name, mat, R, tube, facets,
+ * arc, placement]` each.
+ */
+export function grownHoops(root, { hoops }) {
+  hoops.forEach(([name, mat, R, tube, [radial, tubular], arc, placement]) =>
+    placed(
+      root,
+      name,
+      new THREE.TorusGeometry(R, tube, radial, tubular, arc ?? Math.PI * 2),
+      mat,
+      placement
+    )
+  );
+}
+
+/**
+ * A vein swept along a centripetal Catmull-Rom `through` points in the
+ * export's own frame, un-yawed — `feeler` for an X-long file. The
+ * Submersible's `spine-vein` runs bow to stern over five stations
+ * (hulls/abyssal-submersible-pelagia.mjs).
+ */
+export function sweptVein(root, mat, { name, through, steps, r, facets = 4 }) {
+  const curve = new THREE.CatmullRomCurve3(through.map((p) => new THREE.Vector3(...p)));
+  return add(root, name, new THREE.TubeGeometry(curve, steps, r, facets, false), mat);
+}
+
+/**
+ * The Submersible's tendrils — "folded manipulator limbs", grown as four
+ * feelers trailing aft from under the bow, each tipped with a pale cone
+ * (hulls/abyssal-submersible-pelagia.mjs). Each is a tube of `steps` along
+ * a centripetal Catmull-Rom through `knots` stations from x = `from` back
+ * to its own `xEnd`, hanging as −0.95 − 0.25t − 0.35·sin(2.6t + seed) and
+ * swaying as z + 0.28·sin(3.2t + 1.7·seed) — one `seed` a tendril, so no
+ * two hang alike — and its tip is a six-sided cone 1.4 times the tube's
+ * radius across and 0.45 long, apex aft, 0.2 behind the tube's end. The
+ * rule is the export's, recovered to the float from all twenty-eight
+ * stations, and the tip nodes carry the end stations to the double.
+ * Exported tube then tip, as the file has them.
+ */
+export function abyssalTendrils(root, { tube, tip }, opts) {
+  const { tendrils: list, from = 1.6, knots = 7, steps = 20, facets = 5 } = opts;
+  list.forEach(({ name, seed, z, xEnd, r }) => {
+    const through = [];
+    for (let k = 0; k < knots; k++) {
+      const t = k / (knots - 1);
+      through.push([
+        from + (xEnd - from) * t,
+        -0.95 - 0.25 * t - 0.35 * Math.sin(2.6 * t + seed),
+        z + 0.28 * Math.sin(3.2 * t + 1.7 * seed),
+      ]);
+    }
+    sweptVein(root, tube, { name, through, steps, r, facets });
+    const [ex, ey, ez] = through[knots - 1];
+    placed(
+      root,
+      `${name}-tip`,
+      cyl(0, 1.4 * r, 0.45, 6),
+      tip,
+      verbatim([ex - 0.2, ey, ez], [0, 0, Math.PI / 2])
+    );
+  });
+}
+
+/**
+ * The cohort segments — "three overlapping segments with the bladder
+ * showing through the middle one": three lobes along the keel, each an orb
+ * on `facets` squashed to its own three `radii` by its node, in its own
+ * `skin` (the middle one membrane, where the bladder shows), and each with
+ * a growth ring lathed round it (`ridgeRing`, the Sower's and Spinner's
+ * own), `dx` ahead of its centre, cresting at `crown` from `shoulder` over
+ * ±`ring.halfWidth`, squashed with the lobe. The Chorister's `lobe_0..2`
+ * and `lobe_ring_0..2`, lobe then ring as the file orders them
+ * (hulls/chorister-pelagia.mjs). Its rings crest at 0.9 of the lobe's beam
+ * radius from a shoulder at 0.82 of it, two units forward — passed as the
+ * numbers, which are the export's.
+ */
+export function cohortLobes(root, ridge, opts) {
+  const { lobes, facets = [14, 7], ring: rf = { halfWidth: 0.6, facets: 14 } } = opts;
+  lobes.forEach(({ skin, at: [x, y, z], radii: [rx, ry, rz], ring }, i) => {
+    add(root, `lobe_${i}`, orb(...facets), skin, [x, y, z], [0, 0, 0], [rx, ry, rz]);
+    add(
+      root,
+      `lobe_ring_${i}`,
+      ridgeRing({
+        crown: ring.crown,
+        shoulder: ring.shoulder,
+        halfWidth: rf.halfWidth,
+        facets: rf.facets,
+      }),
+      ridge,
+      [x + ring.dx, y, z],
+      [0, 0, 0],
+      [1, ry / rz, 1]
+    );
+  });
 }
 
 export { THREE };
