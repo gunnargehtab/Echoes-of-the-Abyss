@@ -1414,7 +1414,26 @@ export class Match {
     if (this.missionDenies(slot, 'torpedoes')) return 0;
     if (!this.owns(slot, eid) || !hasComponent(this.world, Magazine, eid)) return 0;
     const target = this.echo.entityForHandle(slot, contactHandle);
-    if (target === undefined) return 0;
+    // A phantom is launched at, and the fish is spent — docs/systems-echo.md
+    // §3. Refusing it kept the *cheap* half of the leak `orderAttackContact`
+    // closed and left the expensive half open: `Magazine.torpedoes` is
+    // published back to its owner in the own-unit payload, so a count that
+    // moved on a true return and not on a lie sorted the two with certainty,
+    // at one fish per return probed. A difference in price, not in kind. The
+    // shot goes to the point the slot was shown, which is the only point an
+    // order on a lie can honestly go to, and the seeker finds water there.
+    const phantom =
+      target === undefined ? this.echo.resolvePhantom(slot, contactHandle) : undefined;
+    if (target === undefined) {
+      if (phantom === undefined) return 0;
+      // Straight to the launch, and deliberately past the tier gate below: a
+      // phantom is Tier 4 by construction (a ping resolves everything it
+      // touches to Track), so the gate would pass it anyway and asking would
+      // only invent a way for it to answer differently. `launchTorpedo` still
+      // decides the rest — an empty magazine and a cone-locked tube refuse a
+      // lie exactly as they refuse a truth.
+      return launchTorpedo(this.world, eid, phantom.x, phantom.y);
+    }
     if (!hasComponent(this.world, Owner, target) || Owner.slot[target] === slot) return 0;
     if (!hasComponent(this.world, Health, target) || Health.hp[target]! <= 0) return 0;
 

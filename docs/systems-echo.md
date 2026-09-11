@@ -202,15 +202,25 @@ the wire: a handle is a per-match, per-observer permutation of it, and a slot's 
 listed in handle order, so neither a handle's value nor its place in the list says when it was
 issued. It must not, because the mint order is not arbitrary — a ping's phantoms are minted
 before the pass resolves its true returns, so a counter published raw sorted the lies to the
-front of the list for free, from a stock client, with no order given and nothing spent. They land
-200–900 m from the pinger, never within 150 m of anything real inside the reveal, hold still for
-the three seconds the transmission lasts, and then fade as any ghost marker does. An order that
+front of the list for free, from a stock client, with no order given and nothing spent. Each is conjured
+200–900 m from the pinger, clear by 150 m of anything real inside the reveal — and the point it is
+*reported* at is the lie about that place, retold every pass exactly as a true return's is, for the
+three seconds the transmission lasts, before it fades as any ghost marker does. A phantom that held
+still while the truth slid was separable by an equality test over two snapshots, with no order given
+and nothing spent, so the lie is uniform instead: the phantom drifts rather than the truth settling
+down. Nothing in the world moves — there is nothing behind a phantom to move — the lie about where
+it is simply gets told again. A contact a second ear has solved is reported truly and does stop
+sliding, and only a true return can ever be solved, which is this section's own tell below and not
+a new one. An order that
 resolves a phantom's handle is *taken*, not refused: the plan is replaced exactly as it would be
 for a true return, the hull is sent to the point the phantom was reported at, and it arrives to
 find water. Refusing at the order was the mistake — the refusal returned before the plan was
 touched, and a plan is published back to its owner, so a single click sorted the lies from the
-truth for free. A torpedo is still not launched at a phantom, and that refusal is readable too,
-but only at the price of a fish for every return probed. The true returns from the same ping lie
+truth for free. A torpedo launched at a phantom is *spent*: the round leaves the
+tube, swims to the point the phantom was reported at, and finds water. Refusing it left a magazine
+that moved on the truth and not on the lie, and a magazine count is published back to its owner —
+the same sort in another field, priced at one fish per return probed rather than free, which is a
+difference in price and not in kind. The true returns from the same ping lie
 in bearing like any other contact. A phantom sounds and reads identical to a true one
 ([audio-direction.md](audio-direction.md) §9): the terrain teaches its own rule, and it teaches it
 to the pinger.

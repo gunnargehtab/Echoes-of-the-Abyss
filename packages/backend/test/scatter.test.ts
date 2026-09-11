@@ -44,7 +44,14 @@ import {
 import { Match } from '../src/sim/match.ts';
 import { Terrain } from '../src/sim/terrain.ts';
 import { spawnUnit } from '../src/sim/world.ts';
-import { ActivePing, MoveOrder, Ordnance, Position, Weapon } from '../src/sim/components.ts';
+import {
+  ActivePing,
+  Magazine,
+  MoveOrder,
+  Ordnance,
+  Position,
+  Weapon,
+} from '../src/sim/components.ts';
 import { VENTFRONT_DIVIDE } from '../src/sim/maps/index.ts';
 import { hasComponent } from 'bitecs';
 
@@ -382,8 +389,10 @@ describe('two ears solve the Fields — docs/systems-echo.md §3, "Two ears"', (
   it('a pinger in the Fields is an ear, and a phantom is never confirmed by one', () => {
     // The pinger's own return lies (§3), unless a second hull holds a cross
     // bearing on the same emitter — then the true return is true and the
-    // phantoms, which no second ear can ever hear, stay exactly where the
-    // transmission put them.
+    // phantoms, which no second ear can ever hear, go on being lied about.
+    // That asymmetry is §3's own tell and the whole of it: what separates a
+    // phantom is that no second ear ever confirms it, which is a thing the
+    // player earns rather than a thing the snapshot hands over.
     const match = new Match(VENTFRONT_DIVIDE, { fauna: false, seed: 31, terrain: fieldsMap() });
     const pinger = spawnUnit(match.world, {
       kind: UnitKind.Corvette,
@@ -481,7 +490,7 @@ describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.
   });
 
   it('makes a phantom identical to a true return on the wire', () => {
-    const { match, pinger, enemy, phantoms, real } = ping(fieldsMap());
+    const { match, pinger, phantoms, real } = ping(fieldsMap());
     const truth = real[0]!;
     for (const phantom of phantoms) {
       assert.equal(phantom.tier, ResolutionTier.Track, 'a ping resolves everything to Track');
@@ -495,11 +504,23 @@ describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.
         Object.keys(truth).sort(),
         'the same fields as the true return — nothing on the wire tells them apart'
       );
+      // Bounded where a *reported* point can be bounded, which since the
+      // freeze came off is not quite where the anchor is. `conjurePhantoms`
+      // places the anchor 200–900 m out and 150 m clear of anything real, and
+      // then the same lie every contact in crystal carries is told about it:
+      // range stretches outward by up to `MAX_RANGE_STRETCH` and bearing turns
+      // by up to `MAX_BEARING_ERROR_RAD`. So the floor survives untouched — the
+      // stretch is one-sided and a rotation keeps range — and the ceiling is
+      // the reveal plus that stretch. The clearance does not survive at all,
+      // and must not be asserted here: two contacts lied about independently
+      // can be reported anywhere relative to each other, which is already true
+      // of two true returns and is the price of the lie being uniform.
       const range = Math.hypot(phantom.x - Position.x[pinger]!, phantom.y - Position.y[pinger]!);
       assert.ok(range >= SCATTER.PHANTOM_MIN_RANGE_M, 'a plausible range from the pinger');
-      assert.ok(range <= ACTIVE_SONAR.REVEAL_RADIUS_M, 'inside the reveal');
-      const fromEnemy = Math.hypot(phantom.x - Position.x[enemy]!, phantom.y - Position.y[enemy]!);
-      assert.ok(fromEnemy >= SCATTER.PHANTOM_CLEARANCE_M, 'never on top of a real contact');
+      assert.ok(
+        range <= ACTIVE_SONAR.REVEAL_RADIUS_M * (1 + SCATTER.MAX_RANGE_STRETCH),
+        'inside the reveal, as the reveal is reported'
+      );
     }
     // One counter issues them all, and `contactHandle` is a permutation of it,
     // so distinctness is a property of the construction rather than luck. What
@@ -729,17 +750,51 @@ describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.
     );
   });
 
-  it('spends no ordnance and no spore on a phantom', () => {
-    // The torpedo still refuses, and that refusal is still readable — but only
-    // by spending. A fish per return probed is the expensive tell, not the
-    // free one, and moving it needs docs/systems-echo.md §3 to say first
-    // whether a shot at a lie is spent (#616, decision 1).
-    const { match, pinger, phantoms, real } = ping(fieldsMap());
-    const phantom = phantoms[0]!;
+  it('spends a torpedo on a phantom exactly as it spends one on a true return', () => {
+    // docs/systems-echo.md §3, and the last of the three free tells of #616.
+    // The refusal was readable in `Magazine.torpedoes`, which is published to
+    // its owner in the own-unit payload: a count that moved on the truth and
+    // not on the lie sorted the two with certainty for one fish per return
+    // probed. Both probes below read the magazine, because that is the field
+    // the cheating client reads.
+    const probe = (pick: 'phantom' | 'real') => {
+      const { match, pinger, phantoms, real } = ping(fieldsMap());
+      const handle = pick === 'phantom' ? phantoms[0]!.id : real[0]!.id;
+      const ordnanceBefore = countOrdnance(match);
+      const magazineBefore = Magazine.torpedoes[pinger]!;
+      const fish = match.orderLaunchTorpedo(0, pinger, handle);
+      return {
+        launched: fish !== 0,
+        ordnance: countOrdnance(match) - ordnanceBefore,
+        magazine: magazineBefore - Magazine.torpedoes[pinger]!,
+      };
+    };
 
-    const before = countOrdnance(match);
-    assert.equal(match.orderLaunchTorpedo(0, pinger, phantom.id), 0, 'no torpedo launches at it');
-    assert.equal(countOrdnance(match), before);
+    const lie = probe('phantom');
+    const truth = probe('real');
+    assert.ok(lie.launched, 'the round leaves the tube at a phantom');
+    assert.deepEqual(lie, truth, 'and every observable of the launch matches the true return');
+    assert.equal(lie.magazine, 1, 'one fish, spent');
+  });
+
+  it('aims a torpedo at a phantom where the phantom was reported', () => {
+    // The shot has to go somewhere, and the only honest somewhere is the point
+    // the player was shown — the seeker swims there and finds water. Aiming it
+    // at the anchor instead would send it to a place no snapshot ever drew.
+    const { match, pinger, phantoms } = ping(fieldsMap());
+    const phantom = phantoms[0]!;
+    const fish = match.orderLaunchTorpedo(0, pinger, phantom.id);
+    assert.notEqual(fish, 0, 'launched');
+    // The round is born at the tube and steers at what it was aimed at, so the
+    // aim point is `Ordnance.aimX/aimY` rather than where it starts. Float32
+    // stores, so the round trip is the comparison.
+    assert.equal(Ordnance.aimX[fish], Math.fround(phantom.x), 'to the reported point');
+    assert.equal(Ordnance.aimY[fish], Math.fround(phantom.y));
+  });
+
+  it('spends no spore on a phantom, and none on a true return either', () => {
+    const { match, phantoms, real } = ping(fieldsMap());
+    const phantom = phantoms[0]!;
 
     // The spore needed nothing and still needs nothing: `seedSpore` refuses
     // every non-Structure target at the same line, and a phantom is always a
@@ -754,6 +809,56 @@ describe('phantoms on a ping — docs/systems-echo.md §3, docs/audio-direction.
     });
     assert.equal(match.seedSpore(0, blight, phantom.id), false, 'no spore at the phantom');
     assert.equal(match.seedSpore(0, blight, real[0]!.id), false, 'and none at the true return');
+  });
+
+  /**
+   * Acceptance criterion 2 of #616, its cross-pass half — the third and last
+   * of the free tells.
+   *
+   * A phantom's reported point used to be written once by `conjurePhantoms`
+   * and never rewritten, while a true return in crystal is re-lied every pass
+   * because `scatterContact` takes the tick. Two consecutive snapshots then
+   * separated the lies from the truth with an equality test: no threshold, no
+   * seed, no order given and nothing spent, off a stock client's own log. The
+   * fix is the lie told again rather than the truth settling down
+   * (docs/systems-echo.md §3), so what is asserted is that no contact in the
+   * pass holds still while another moves.
+   *
+   * Driven with the world frozen and only the clock advancing, which is the
+   * measurement the issue reported: any movement seen here is the lie's and
+   * nothing else's.
+   */
+  it('re-lies every phantom each pass, so cross-pass equality sorts nothing', () => {
+    const PASSES = 6;
+    const { match, pinger } = ping(fieldsMap());
+    const seen = new Map<number, Set<string>>();
+    const lies = new Set<number>();
+
+    for (let pass = 0; pass < PASSES; pass++) {
+      match.world.tick += SIM.TICK_HZ / SIM.ECHO_HZ;
+      for (const contact of match.echo.run(match.world, [0, 1]).contactsBySlot.get(0) ?? []) {
+        if (match.echo.entityForHandle(0, contact.id) === undefined) lies.add(contact.id);
+        let places = seen.get(contact.id);
+        if (places === undefined) {
+          places = new Set();
+          seen.set(contact.id, places);
+        }
+        places.add(`${contact.x},${contact.y}`);
+      }
+      // The transmission has to outlast the passes, or the phantoms fade
+      // part way through and the counts below compare different lifetimes.
+      assert.ok(ActivePing.remainingS[pinger]! > 0, `still transmitting, pass ${pass}`);
+    }
+
+    assert.ok(lies.size > 0, 'the premise: the ping returned phantoms');
+    assert.ok(seen.size > lies.size, 'and a true return to hold them against');
+    for (const [handle, places] of seen) {
+      assert.equal(
+        places.size,
+        PASSES,
+        `${lies.has(handle) ? 'a phantom' : 'a true return'} reported at ${places.size} places over ${PASSES} passes`
+      );
+    }
   });
 
   it('holds the phantoms for the transmission and drops them with it, so they decay', () => {

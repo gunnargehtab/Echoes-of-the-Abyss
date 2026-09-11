@@ -108,7 +108,7 @@ Scattered Water
 
 Phantom
 
-- A false contact returned by an active ping transmitted from scattered water: a handle, Tier 4, a plausible enemy hull with health and a heading, and no entity behind it. One to three per transmission (audio-direction.md §5); an attack or torpedo order on one resolves to nothing; it is held for the transmission's three seconds and then fades like a ghost marker. It sounds and reads identical to a true return (systems-echo.md §3) — and it is a return no second ear ever confirms: no cross bearing straightens it, no friendly hull holds it after the transmission fades, and a scout sent to the spot finds water.
+- A false contact returned by an active ping transmitted from scattered water: a handle, Tier 4, a plausible enemy hull with health and a heading, and no entity behind it. One to three per transmission (audio-direction.md §5); an attack or torpedo order on one is taken exactly as one on a true return is — the plan is replaced, the hull goes, the fish is spent, and there is water at the end of it; it is held for the transmission's three seconds, its reported point re-lied every pass like any other contact resolved through crystal, and then fades like a ghost marker. It sounds and reads identical to a true return (systems-echo.md §3) — and it is a return no second ear ever confirms: no cross bearing straightens it, no friendly hull holds it after the transmission fades, and a scout sent to the spot finds water.
 - **Not a Ghost Marker**, which is a stale reading of a real unit. A phantom was never anything.
 
 Echo Marks
