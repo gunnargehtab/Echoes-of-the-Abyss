@@ -35,6 +35,9 @@ import {
   polar,
   part,
   drawn,
+  group,
+  flanks,
+  pointLight,
 } from '../kit.mjs';
 
 /**
@@ -358,8 +361,17 @@ export function stackBand(root, mat, { name, at, r, h }) {
   add(root, name, cyl(r, r, h, 10), mat, at);
 }
 
-/** A rank of engine vents across the transom: lit boxes, numbered (`engine_vent_0..n`). */
-export function engineVents(root, vent, { x, y, z, size }) {
+/**
+ * A rank of engine vents across the transom: lit boxes, numbered
+ * (`engine_vent_0..n`). Given `at`, a list of the export's own positions, it
+ * is the Cruiser's four through kit.mjs `drawn` — two a side in the quarter,
+ * not a rank across the stern (#649).
+ */
+export function engineVents(root, vent, { x, y, z, size, at }) {
+  if (at) {
+    at.forEach((p, i) => part(root, `engine_vent_${i}`, box(...size), vent, drawn(p)));
+    return;
+  }
   z.forEach((vz, i) => add(root, `engine_vent_${i}`, box(...size), vent, [x, y, vz]));
 }
 
@@ -1020,17 +1032,25 @@ export function drum(root, mat, { name, radii, length, facets = 20, ...placement
 /**
  * A square wedge: a four-sided frustum stood on its corners, so its section
  * is a square rather than a diamond — plate cut and welded, which is what
- * the Klaxon's nose is.
+ * the Klaxon's nose is. `squash` stretches the section `[across, tall]`
+ * after the turn, the way the Cruiser's bow wedge is drawn 1.9 times as
+ * wide as it is tall and the Harvester's bow apron 2.6 (#649): the buffer's
+ * first vertex then reads at atan2(across, −tall) rather than 3π/4, which
+ * is what parts.mjs prints for those two.
  */
-export function squareWedge(root, mat, { name = 'nose_wedge', radii, length, ...placement }) {
+export function squareWedge(root, mat, opts) {
+  const { name = 'nose_wedge', radii, length, squash = [1, 1], ...placement } = opts;
   const geo = cyl(radii[0], radii[1], length, 4, Math.PI / 4).rotateX(Math.PI / 2);
+  if (squash[0] !== 1 || squash[1] !== 1) geo.scale(squash[0], squash[1], 1);
   return part(root, name, geo, mat, placement);
 }
 
 /**
- * Whip aerials: thin cylinders standing off the sensor head, `[name, r,
- * length, placement]` each — two, at their own heights, off the centreline
- * each its own way.
+ * Standing pipes: thin cylinders on Y, `[name, r, length, placement]` each,
+ * `facets` round — the scout's two whip aerials off its sensor head, at
+ * their own heights and off the centreline each its own way; the Corvette's
+ * two masts and the Harvester's one; the Cruiser's three hydrophones (#649).
+ * A riser or a vent in its own plate is `drum` with no turn on its node.
  */
 export function whips(root, mat, { whips: list, facets = 8 }) {
   list.forEach(([name, r, length, placement]) =>
@@ -1046,11 +1066,23 @@ export function whips(root, mat, { whips: list, facets = 8 }) {
  * frame, which for the export's `_p` rank is the -z its +x lands on. Not
  * `rivetRows` above: that one numbers a running rank the way the Bulwark and
  * the Tender count theirs (`rivet_96..159`), this one names a side.
+ *
+ * `running` numbers one rank straight through instead — `rivet_0..33` down
+ * the Corvette's two rows a side, `rivet_0..39` the Harvester's, `rivet_0..19`
+ * the Cruiser's, which is how those three exports count theirs (#649); a row
+ * may then carry its own `y`, since the lower rank sits on the hull and the
+ * upper on the deck edge. `size` as a triple is the box the Corvette's and
+ * the Harvester's running lights share (`runningLights` below).
  */
-export function flankRivets(root, mat, { name = 'rivet', size = 0.14, y, rows }) {
-  const head = box(size, size, size);
-  rows.forEach(({ side, z, stations }) =>
-    stations.forEach((x, i) => part(root, `${name}_${side}${i}`, head, mat, { at: [x, y, z] }))
+export function flankRivets(root, mat, { name = 'rivet', size = 0.14, y, rows, running = false }) {
+  const head = Array.isArray(size) ? box(...size) : box(size, size, size);
+  let n = 0;
+  rows.forEach(({ side, z, stations, y: rowY = y }) =>
+    stations.forEach((x, i) =>
+      part(root, running ? `${name}_${n++}` : `${name}_${side}${i}`, head, mat, {
+        at: [x, rowY, z],
+      })
+    )
   );
 }
 
@@ -1065,13 +1097,17 @@ export function shroud(
 
 /**
  * Screw blades: `count` flat blades of one `size` fanned `pitch` apart about
- * the shaft, all at `at`, numbered from the one that stands upright.
+ * the shaft, all at `at`, numbered from the one that stands upright —
+ * `prop_blade_<side><i>`, the side empty on a single screw and `p`/`s` on
+ * the Cruiser's pair. The scout's three share one box; the Corvette's and the
+ * Cruiser's exports carry a box a blade (`shared: false`), and a port keeps
+ * the file's buffers as it keeps its names (#649).
  */
 export function screwBlades(root, mat, opts) {
-  const { name = 'prop_blade', size, at, count = 3, pitch = Math.PI / 3 } = opts;
-  const blade = box(...size);
+  const { name = 'prop_blade', side = '', size, at, count = 3, pitch = Math.PI / 3, shared = true } = opts;
+  const blade = shared ? box(...size) : null;
   for (let i = 0; i < count; i++)
-    part(root, `${name}_${i}`, blade, mat, { at, rot: [i * pitch, 0, 0] });
+    part(root, `${name}_${side}${i}`, blade ?? box(...size), mat, { at, rot: [i * pitch, 0, 0] });
 }
 
 /**
@@ -1082,6 +1118,549 @@ export function screwBlades(root, mat, opts) {
 export function domes(root, light, { r, facets = [8, 6], domes: list }) {
   const dome = new THREE.SphereGeometry(r, ...facets);
   list.forEach(([name, placement]) => part(root, name, dome, light, placement));
+}
+
+/* --------------------------------------------------------------------------
+ * The Corvette, the Harvester and the Cruiser (#649, off #540 Phase 3): the
+ * three Z-long exports behind the Light Scout, in its vocabulary — a
+ * pressure drum with the fittings bolted on, patched and riveted — plus the
+ * families the scout has no call for: ballast, torpedo racks, holds, the
+ * dredge gear, sensor towers, light lines. Every builder takes the export's
+ * own numbers through kit.mjs `drawn`, and every pair is written port then
+ * starboard, because that is how all three files order theirs: `_p` is
+ * drawn at the export's +x, which `drawn` lands on -z, port (#642).
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The one turn these exports put on every drum laid along the keel: born on
+ * Y, pitched onto the export's Z by its node.
+ */
+export const ALONG_KEEL = [Math.PI / 2, 0, 0];
+
+// Port then starboard, with the sign of the export's x — the order every
+// Z-long pair is written in — is the kit's `flanks` (#649); the Order's
+// module grew the same helper, and one copy is the rule.
+
+/**
+ * The Cruiser's vent: `scoutInk`'s amber-through lamp base with the light
+ * itself banked to #F28A1E, burning at 2.2 and a shade rougher — not
+ * `ink.amberVent`, the Bulwark's near-black-based fixture at 1. Values the
+ * approved export's own; the other five of its materials are `scoutInk`'s.
+ */
+export const cruiserInk = {
+  amberVent: () => lamp('amber_vent', hex('#F28A1E'), hex('#F2B233'), 0.5, 2.2),
+};
+
+/**
+ * Running lights along the hull line — "dim accent running lights along the
+ * hull line" (docs/asset-prompts-3d.md, UNIT — Corvette): the same rank as
+ * `flankRivets`, one shared box a side at fixed stations, in a lamp. Named
+ * `runlight_<side><i>` on the Corvette and `marker_<side><i>` on the
+ * Harvester.
+ */
+export function runningLights(root, lampM, { name = 'runlight', ...opts }) {
+  flankRivets(root, lampM, { name, ...opts });
+}
+
+/**
+ * Ballast blisters, the shared-kind way: a drum a side laid along the keel,
+ * then a fore cap a side — a frustum drawn in to `cap.tipR` forward, and no
+ * aft cap on any of the three exports — then, on the Harvester, two straps a
+ * side, a box each (`ballast_p · ballast_s · ballast_cap_pf · ballast_cap_sf ·
+ * ballast_strap_p1 …`). `ballastBlisters` above is the Tender's and the
+ * Bulwark's, capped both ends and written a whole side at a time; these
+ * files write each family across both sides before the next.
+ */
+export function ballastPair(root, { blister, cap: capMat, strap }, opts) {
+  const { x, y, z, r, length, facets, cap, straps } = opts;
+  flanks((side, sgn) =>
+    drum(root, blister, {
+      name: `ballast_${side}`,
+      radii: [r, r],
+      length,
+      facets,
+      ...drawn([sgn * x, y, z], ALONG_KEEL),
+    })
+  );
+  flanks((side, sgn) =>
+    drum(root, capMat, {
+      name: `ballast_cap_${side}f`,
+      radii: [cap.tipR, r],
+      length: cap.length,
+      facets,
+      ...drawn([sgn * x, y, cap.z], ALONG_KEEL),
+    })
+  );
+  if (straps)
+    flanks((side, sgn) =>
+      straps.z.forEach((sz, i) =>
+        part(root, `ballast_strap_${side}${i + 1}`, box(...straps.size), strap, drawn([sgn * x, straps.y, sz]))
+      )
+    );
+}
+
+/**
+ * Torpedo racks — "visible torpedo hardpoints" (UNIT — Corvette). A frame
+ * plate a rack standing off the flank with the tubes racked on it: one
+ * cylinder shared by every tube, each laid along the keel by its node at
+ * its own height and stand-off (`tubes`, `[x, y]` as the +x rack carries
+ * them; a rack's `side` is the sign of its x), rack by rack in the file's
+ * order. Then, where the export fits them, a collar fore and aft of every
+ * tube, one ring shared, numbered straight through the tubes
+ * (`torp_collar_0f · torp_collar_0a · …`). The Corvette racks four of three
+ * with collars; the Cruiser two of three without. `tubeName` spells a tube:
+ * `torp_p1_0` on the one, `torp_p0` on the other.
+ */
+export function torpedoRacks(root, { frame: frameMat, tube: tubeMat, collar: collarMat }, opts) {
+  const { racks, frame, tubes, tube, collar, tubeName = (tag, i) => `torp_${tag}_${i}` } = opts;
+  const bore = cyl(tube.r, tube.r, tube.length, tube.facets ?? 14);
+  const placed = [];
+  for (const { tag, side, z } of racks) {
+    part(root, `rack_frame_${tag}`, box(...frame.size), frameMat, drawn([side * frame.x, frame.y, z]));
+    tubes.forEach(([tx, ty], i) => {
+      const at = [side * tx, ty, z];
+      part(root, tubeName(tag, i), bore, tubeMat, drawn(at, ALONG_KEEL));
+      placed.push(at);
+    });
+  }
+  if (!collar) return;
+  const ring = cyl(collar.r, collar.r, collar.length, tube.facets ?? 14);
+  placed.forEach(([x, y, z], k) => {
+    part(root, `torp_collar_${k}f`, ring, collarMat, drawn([x, y, z + collar.stand], ALONG_KEEL));
+    part(root, `torp_collar_${k}a`, ring, collarMat, drawn([x, y, z - collar.stand], ALONG_KEEL));
+  });
+}
+
+/**
+ * A cargo hold — "wide cargo body" (UNIT — Harvester): four walls standing
+ * on the deck, the two sides then the fore and aft ends `reach` either way
+ * of the hold's centre, and a hazard stripe along the outside of each side
+ * wall (`hold_<tag>_wall_p · _s · _f · _a · hold_<tag>_stripe_p · _s`). The
+ * Harvester has one forward and one aft with a divider between.
+ */
+export function cargoHold(root, { grey, amber }, { tag, y, z, side, ends, stripe }) {
+  flanks((s, sgn) =>
+    part(root, `hold_${tag}_wall_${s}`, box(...side.size), grey, drawn([sgn * side.x, y, z]))
+  );
+  part(root, `hold_${tag}_wall_f`, box(...ends.size), grey, drawn([0, y, z + ends.reach]));
+  part(root, `hold_${tag}_wall_a`, box(...ends.size), grey, drawn([0, y, z - ends.reach]));
+  flanks((s, sgn) =>
+    part(root, `hold_${tag}_stripe_${s}`, box(...stripe.size), amber, drawn([sgn * stripe.x, y, z]))
+  );
+}
+
+/**
+ * The bucket wheel — "external intake dredge gear" (UNIT — Harvester): the
+ * wheel and its hub, drums turned across the beam by a quarter turn about
+ * the export's z, and `count` buckets round the rim at `buckets.r` — a box
+ * each, stood at its bearing from the bow round over the crown and turned
+ * back by that bearing on its node, so every bucket's mouth faces the way
+ * the wheel turns. parts.mjs prints the bearings past a half turn wrapped
+ * into (−π, π]; they are the same rotations.
+ */
+export function bucketWheel(root, { black, rust, grey }, { at, wheel, hub, buckets }) {
+  const [x, y, z] = at;
+  const acrossBeam = [0, 0, Math.PI / 2];
+  drum(root, black, {
+    name: 'dredge_wheel',
+    radii: [wheel.r, wheel.r],
+    length: wheel.width,
+    facets: 12,
+    ...drawn(at, acrossBeam),
+  });
+  drum(root, rust, {
+    name: 'dredge_hub',
+    radii: [hub.r, hub.r],
+    length: hub.width,
+    facets: 10,
+    ...drawn(at, acrossBeam),
+  });
+  for (let i = 0; i < buckets.count; i++) {
+    const a = (i * 2 * Math.PI) / buckets.count;
+    part(
+      root,
+      `bucket_${i}`,
+      box(...buckets.size),
+      grey,
+      drawn([x, y + buckets.r * Math.sin(a), z + buckets.r * Math.cos(a)], [-a, 0, 0])
+    );
+  }
+}
+
+/**
+ * The conveyor from the wheel up to the crusher: the ramp pitched up on its
+ * node with a rail a side pitched with it, `count` ribs across it climbing
+ * `rise` and running `run` a rib from the first, and a leg a side under the
+ * top (`conveyor_ramp · conveyor_rail_p · _s · conveyor_rib_0..3 ·
+ * conveyor_leg_p · _s`). Numbers the Harvester's own.
+ */
+export function conveyor(root, { black, grey, rust }, { ramp, rails, ribs, legs }) {
+  const pitched = [ramp.pitch, 0, 0];
+  part(root, 'conveyor_ramp', box(...ramp.size), black, drawn(ramp.at, pitched));
+  flanks((side, sgn) =>
+    part(root, `conveyor_rail_${side}`, box(...rails.size), grey, drawn([sgn * rails.x, rails.y, rails.z], pitched))
+  );
+  for (let i = 0; i < ribs.count; i++)
+    part(root, `conveyor_rib_${i}`, box(...ribs.size), rust, drawn([0, ribs.y + i * ribs.rise, ribs.z + i * ribs.run]));
+  flanks((side, sgn) =>
+    part(root, `conveyor_leg_${side}`, box(...legs.size), grey, drawn([sgn * legs.x, legs.y, legs.z]))
+  );
+}
+
+/**
+ * A sensor tower — "prominent sensor arrays and fixed hydrophone masts"
+ * (UNIT — Cruiser): four legs, port fore, port aft, starboard fore,
+ * starboard aft, `reach` either way of the tower's station; a brace low and
+ * high; the platform; and the floodlight laid flat on it, which is where the
+ * top-down bake can count it. The Cruiser stands one forward under the dish
+ * and one aft under the hydrophones.
+ */
+export function sensorTower(root, { grey, rust, lampM }, { tag, z, legs, braces, platform, flood }) {
+  flanks((side, sgn) =>
+    [
+      ['f', legs.reach],
+      ['a', -legs.reach],
+    ].forEach(([end, dz]) =>
+      part(root, `tower_${tag}_leg_${side}${end}`, box(...legs.size), grey, drawn([sgn * legs.x, legs.y, z + dz]))
+    )
+  );
+  part(root, `tower_${tag}_brace_lo`, box(...braces.lo.size), rust, drawn([0, braces.lo.y, z]));
+  part(root, `tower_${tag}_brace_hi`, box(...braces.hi.size), rust, drawn([0, braces.hi.y, z]));
+  part(root, `tower_${tag}_platform`, box(...platform.size), grey, drawn([0, platform.y, z]));
+  part(root, `tower_${tag}_floodlight`, box(...flood.size), lampM, drawn([0, flood.y, z]));
+}
+
+/**
+ * Light lines — "sustained glow from vents, sensor arrays and lit ports —
+ * this is a loud ship and it looks it" (UNIT — Cruiser): a lit strip the
+ * length of each hull tier along the flank, the port run written first and
+ * the starboard run sharing its boxes, then the one across the stern
+ * (`lightline_low_p · _mid_p · _up_p · _low_s … · lightline_stern`).
+ */
+export function lightLines(root, lampM, { lines, stern }) {
+  const strips = lines.map((l) => box(...l.size));
+  flanks((side, sgn) =>
+    lines.forEach((l, i) =>
+      part(root, `lightline_${l.tag}_${side}`, strips[i], lampM, drawn([sgn * l.x, l.y, l.z]))
+    )
+  );
+  part(root, 'lightline_stern', box(...stern.size), lampM, drawn(stern.at));
+}
+
+/* --------------------------------------------------------------------------
+ * The Abyssal Submersible (#649). "Heavy segmented pressure carapace, folded
+ * manipulator limbs" (docs/asset-prompts-3d.md, UNIT — Abyssal Submersible)
+ * said the Klaxon's way: a banded pressure drum bolted shut at both ends, a
+ * conning tower, two ballast tanks strapped on, four riveted patches, two
+ * manipulator arms in frames of their own, and running lights. The export
+ * is X-long, hyphenates every name and carries its own finishes, so its
+ * builders place with kit `add` in the file's own frame — nothing is yawed —
+ * and its palette is the set below.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The Submersible's palette: the Klaxon's three tokens in a heavier finish
+ * than `ink` — the black 0.55/0.82 against 0.25/0.85, the grey 0.6/0.7, the
+ * brown named for what it is at 0.25/0.95 — and a running light on the
+ * near-black base #1A1206 burning at 2.6. Values the approved export's own.
+ */
+export const submersibleInk = {
+  hullBlack: () => clad('hull-black', hex('#0E1418'), 0.55, 0.82),
+  ironGrey: () => clad('iron-grey', hex('#8C8378'), 0.6, 0.7),
+  oxideBrown: () => clad('oxide-brown', hex('#3D2B1F'), 0.25, 0.95),
+  runningLight: () => lamp('amber-running-light', hex('#F2B233'), hex('#1A1206'), 0.4, 2.6),
+};
+
+/**
+ * Every drum on the Submersible is born on Y and laid along the keel by a
+ * quarter turn about Z on its node, top astern.
+ */
+const LAID = [0, 0, Math.PI / 2];
+
+/**
+ * The pressure hull: the drum, a reinforcement band at each of `bands.x`,
+ * and at each end the cap, its core, and a ring of `bolts.count` bolts at
+ * `bolts.radius`, numbered from the crown round through starboard
+ * (`pressure-hull · reinforcement-band-1..5 · end-cap-fore ·
+ * end-cap-fore-core · bolt-fore-1..12 · end-cap-aft …`). Every part is a
+ * buffer of its own, as the export carries them.
+ */
+export function bandedHull(root, { black, grey, brown }, { hull, bands, caps, bolts }) {
+  add(root, 'pressure-hull', cyl(hull.r, hull.r, hull.length, hull.facets), black, [0, 0, 0], LAID);
+  bands.x.forEach((x, i) =>
+    add(root, `reinforcement-band-${i + 1}`, cyl(bands.r, bands.r, bands.width, hull.facets), grey, [x, 0, 0], LAID)
+  );
+  for (const [end, sgn] of [
+    ['fore', 1],
+    ['aft', -1],
+  ]) {
+    add(root, `end-cap-${end}`, cyl(caps.r, caps.r, caps.width, hull.facets), grey, [sgn * caps.x, 0, 0], LAID);
+    add(
+      root,
+      `end-cap-${end}-core`,
+      cyl(caps.core.r, caps.core.r, caps.core.width, caps.core.facets),
+      black,
+      [sgn * caps.core.x, 0, 0],
+      LAID
+    );
+    for (let k = 0; k < bolts.count; k++) {
+      const a = (k * 2 * Math.PI) / bolts.count;
+      add(
+        root,
+        `bolt-${end}-${k + 1}`,
+        cyl(bolts.r, bolts.r, bolts.h, 6),
+        brown,
+        [sgn * bolts.x, bolts.radius * Math.cos(a), bolts.radius * Math.sin(a)],
+        LAID
+      );
+    }
+  }
+}
+
+/**
+ * The conning tower: base, tower and cap stacked; the dome light on the cap,
+ * a short lit frustum facing up; the periscope mast and its head; and the
+ * snorkel mast (`tower-base · tower · tower-cap · tower-dome-light ·
+ * periscope-mast · periscope-head · snorkel-mast`).
+ */
+export function conningTower(root, { black, grey, brown, lampM }, opts) {
+  const { base, tower, cap, dome, periscope, snorkel } = opts;
+  add(root, 'tower-base', box(...base.size), black, base.at);
+  add(root, 'tower', box(...tower.size), grey, tower.at);
+  add(root, 'tower-cap', box(...cap.size), brown, cap.at);
+  add(root, 'tower-dome-light', cyl(dome.rTop, dome.r, dome.h, 8), lampM, dome.at);
+  add(root, 'periscope-mast', cyl(periscope.r, periscope.r, periscope.h, 8), grey, periscope.at);
+  add(root, 'periscope-head', box(...periscope.head.size), brown, periscope.head.at);
+  add(root, 'snorkel-mast', cyl(snorkel.r, snorkel.r, snorkel.h, 8), brown, snorkel.at);
+}
+
+/**
+ * Ballast tanks: a ten-facet drum a side laid along the keel at `z` either
+ * beam, each with a cap fore and aft and a strap aft and fore, port first
+ * (`ballast-tank-port · ballast-cap-fore-port · ballast-cap-aft-port ·
+ * tank-strap-port-a · tank-strap-port-f · …-stb`).
+ */
+export function ballastTanks(root, { brown, grey, black }, { z, y, tank, caps, straps }) {
+  for (const [side, sgn] of [
+    ['port', -1],
+    ['stb', 1],
+  ]) {
+    add(root, `ballast-tank-${side}`, cyl(tank.r, tank.r, tank.length, 10), brown, [tank.x, y, sgn * z], LAID);
+    add(root, `ballast-cap-fore-${side}`, cyl(caps.r, caps.r, caps.width, 10), grey, [caps.fore, y, sgn * z], LAID);
+    add(root, `ballast-cap-aft-${side}`, cyl(caps.r, caps.r, caps.width, 10), grey, [caps.aft, y, sgn * z], LAID);
+    for (const [end, x] of [
+      ['a', straps.aft],
+      ['f', straps.fore],
+    ])
+      add(root, `tank-strap-${side}-${end}`, cyl(straps.r, straps.r, straps.width, 10), black, [x, y, sgn * z], LAID);
+  }
+}
+
+/**
+ * The pipework over the hull: a main run laid along the keel to an elbow, a
+ * drop off its after end leaning `drop.lean` about Z, and a second run to a
+ * second elbow on the other side of the tower, in the file's order
+ * (`pipe-main · pipe-elbow-a · pipe-drop · pipe-main-2 · pipe-elbow-b`).
+ */
+export function deckPipework(root, { grey, brown }, { main, elbowA, drop, main2, elbowB }) {
+  add(root, 'pipe-main', cyl(main.r, main.r, main.length, 8), grey, main.at, LAID);
+  add(root, 'pipe-elbow-a', box(...elbowA.size), brown, elbowA.at);
+  add(root, 'pipe-drop', cyl(drop.r, drop.r, drop.length, 8), grey, drop.at, [0, 0, drop.lean]);
+  add(root, 'pipe-main-2', cyl(main2.r, main2.r, main2.length, 8), grey, main2.at, LAID);
+  add(root, 'pipe-elbow-b', box(...elbowB.size), brown, elbowB.at);
+}
+
+/**
+ * A riveted patch on the hull: the plate, a box turned `roll` about X on its
+ * node, and four six-facet rivets turned with it — aft-port, fore-port,
+ * aft-starboard, fore-starboard — each `rivet.inset.x` in from the plate's
+ * ends and, along its depth, `inset.p` in from the port edge and `inset.s`
+ * from the starboard, placed in the plate's own frame and carried through
+ * its roll (`patch-1 · patch-1-rivetap · -rivetfp · -rivetas · -rivetfs`).
+ *
+ * Two things here are the export's and are kept because the approved model
+ * does them. The plate's roll is its bearing round the hull *plus a quarter
+ * turn*: the patch centre sits on the hull at radius 1.02, but the box
+ * stands on edge, its depth radial and its thin face tangential, on all
+ * four patches. And the rivets are not centred on the plate — the port pair
+ * sits 0.07 in from its edge and the starboard pair 0.13, on every patch;
+ * the insets are read off the four exports' sixteen rivets and reproduce
+ * them to the fifth decimal.
+ */
+export function rivetedPatch(root, { plate, rivet: rivetMat }, { name, size, at, roll, rivet }) {
+  add(root, name, box(...size), plate, at, [roll, 0, 0]);
+  const [w, , d] = size;
+  const c = Math.cos(roll);
+  const s = Math.sin(roll);
+  for (const [tag, lz] of [
+    ['p', -(d / 2 - rivet.inset.p)],
+    ['s', d / 2 - rivet.inset.s],
+  ])
+    for (const [end, lx] of [
+      ['a', -(w / 2 - rivet.inset.x)],
+      ['f', w / 2 - rivet.inset.x],
+    ])
+      add(
+        root,
+        `${name}-rivet${end}${tag}`,
+        cyl(rivet.r, rivet.r, rivet.h, 6),
+        rivetMat,
+        [at[0] + lx, at[1] - lz * s, at[2] + lz * c],
+        [roll, 0, 0]
+      );
+}
+
+/**
+ * A manipulator arm, folded: a frame at the shoulder (`manipulator-<side>`)
+ * holding the shoulder block at its origin, the pin through it, the upper
+ * arm rolled back along the hull, the elbow, the forearm rolled the other
+ * way, the wrist, and the two claws yawed apart — every part placed inside
+ * the frame by the export's own numbers, which are the same numbers on both
+ * arms: the port arm is not the starboard one's reflection but the same arm
+ * hung at −z. The exporter writes the frame back out under its name, which
+ * is where the approved file has it. "Folded manipulator limbs".
+ */
+export function manipulator(root, { grey, brown, black }, opts) {
+  const { side, at, shoulder, pin, upperArm, elbow, forearm, wrist, claws } = opts;
+  const frame = group(root, `manipulator-${side}`, { at });
+  const hinge = [Math.PI / 2, 0, 0];
+  add(frame, `shoulder-${side}`, box(...shoulder.size), grey);
+  add(frame, `shoulder-pin-${side}`, cyl(pin.r, pin.r, pin.length, 8), brown, pin.at, hinge);
+  add(frame, `upper-arm-${side}`, box(...upperArm.size), black, upperArm.at, [0, 0, upperArm.roll]);
+  add(frame, `elbow-${side}`, cyl(elbow.r, elbow.r, elbow.length, 8), grey, elbow.at, hinge);
+  add(frame, `forearm-${side}`, box(...forearm.size), black, forearm.at, [0, 0, forearm.roll]);
+  add(frame, `wrist-${side}`, box(...wrist.size), brown, wrist.at);
+  add(frame, `claw-a-${side}`, box(...claws.size), grey, claws.a, [0, claws.yaw, 0]);
+  add(frame, `claw-b-${side}`, box(...claws.size), grey, claws.b, [0, -claws.yaw, 0]);
+}
+
+/**
+ * The screw: a six-by-twelve torus of a shroud yawed across the keel, the
+ * hub drawn in astern, and four blades of a box each, a quarter turn apart
+ * about the keel and every one pitched `blades.pitch` about Y (`prop-shroud
+ * · prop-hub · prop-blade-1..4`). parts.mjs prints the fourth blade's
+ * three-quarter turn as −π/2; it is the same rotation.
+ */
+export function submersibleScrew(root, { grey, brown, black }, { at, shroud, hub, blades }) {
+  add(root, 'prop-shroud', torus(shroud.R, shroud.tube, 6, 12), grey, at, [0, Math.PI / 2, 0]);
+  add(root, 'prop-hub', cyl(hub.radii[0], hub.radii[1], hub.length, 8), brown, at, LAID);
+  for (let i = 0; i < blades.count; i++)
+    add(root, `prop-blade-${i + 1}`, box(...blades.size), black, at, [
+      (i * 2 * Math.PI) / blades.count,
+      blades.pitch,
+      0,
+    ]);
+}
+
+/** Dive planes: an aft plane and a fore plane a side, port first, each pair its own size and plate. */
+export function divePlanes(root, { grey, brown }, { aft, fore }) {
+  for (const [side, sgn] of [
+    ['port', -1],
+    ['stb', 1],
+  ]) {
+    add(root, `dive-plane-aft-${side}`, box(...aft.size), grey, [aft.x, aft.y, sgn * aft.z]);
+    add(root, `dive-plane-fore-${side}`, box(...fore.size), brown, [fore.x, fore.y, sgn * fore.z]);
+  }
+}
+
+/** Landing skids: a runner a side under the tanks on a fore and an aft leg, port first. */
+export function skids(root, { brown, black }, { z, skid, legs }) {
+  for (const [side, sgn] of [
+    ['port', -1],
+    ['stb', 1],
+  ]) {
+    add(root, `skid-${side}`, box(...skid.size), brown, [skid.x, skid.y, sgn * z]);
+    add(root, `skid-leg-f-${side}`, box(...legs.size), black, [legs.fore, legs.y, sgn * z]);
+    add(root, `skid-leg-a-${side}`, box(...legs.size), black, [legs.aft, legs.y, sgn * z]);
+  }
+}
+
+/**
+ * The lights: four running lights a side along the hull line, port first, a
+ * box each; the strip on the tower's starboard face; and the aft beacon, a
+ * lit frustum standing on the stern. With the nose viewport and the tower
+ * dome, the whole light of a hull that idles at SIG 22.
+ */
+export function hullLights(root, lampM, { running, strip, beacon }) {
+  for (const [side, sgn] of [
+    ['port', -1],
+    ['stb', 1],
+  ])
+    running.stations.forEach((x, i) =>
+      add(root, `running-light-${side}-${i + 1}`, box(...running.size), lampM, [x, running.y, sgn * running.z])
+    );
+  add(root, 'tower-light-strip', box(...strip.size), lampM, strip.at);
+  add(root, 'aft-beacon', cyl(beacon.rTop, beacon.r, beacon.h, 8), lampM, beacon.at);
+}
+
+/**
+ * Two point lights the export carries as `KHR_lights_punctual` nodes, one
+ * either beam (`glow-port · glow-stb`). No mesh, so nothing any gate reads —
+ * but the file has them and a loader instantiates them, so the port writes
+ * them back with the colour, intensity and range the export's own. r169's
+ * exporter writes a `PointLight` exactly as r184 wrote these.
+ */
+export function glowLamps(root, { color, intensity, range, lamps }) {
+  for (const [name, at] of lamps) pointLight(root, { name, color, intensity, range, at });
+}
+
+/* --------------------------------------------------------------------------
+ * The Chorister (#649): the cohort hull — "three overlapping segments over a
+ * pressure bladder" (docs/asset-prompts-3d.md, UNIT — Chorister) said the
+ * Klaxon's way: three riveted cans on a keel, the middle one the fattest and
+ * in newer plate, a bow block with a ram, a stern block with the screw in
+ * its shroud, and a spine-gun off the centreline. An r169 export of the
+ * early pass, X-long like the Tender's, so its builders place with kit
+ * `add` in the file's own frame and nothing is yawed; every one of its
+ * cylinders is born on Y and laid along +X by −π/2 about Z on its node, top
+ * to the bow.
+ * ------------------------------------------------------------------------ */
+
+const TO_BOW = [0, 0, -Math.PI / 2];
+
+/**
+ * The cans: a twelve-facet drum each, centred at `x` on the keel in its own
+ * plate, capped fore and aft with a frustum in older plate drawn in to
+ * `cap.tip` of the can's radius and standing `cap.proud` past the can's
+ * end, and five rivets along its crown at `pitch`, `rivet.proud` above the
+ * plate — numbered by their place in the file, the way the Bulwark and the
+ * Tender count theirs (`can_0 · can_cap_0f · can_cap_0a · rivet_3..7 ·
+ * can_1 …`), a box each.
+ */
+export function cans(root, { rust, grey }, { cans: list, cap, rivet }) {
+  list.forEach(({ mat, x, r, length, pitch }, i) => {
+    add(root, `can_${i}`, cyl(r, r, length, 12), mat, [x, 0, 0], TO_BOW);
+    const reach = length / 2 + cap.proud;
+    add(root, `can_cap_${i}f`, cyl(cap.tip * r, r, cap.length, 12), rust, [x + reach, 0, 0], TO_BOW);
+    add(root, `can_cap_${i}a`, cyl(r, cap.tip * r, cap.length, 12), rust, [x - reach, 0, 0], TO_BOW);
+    for (let k = -2; k <= 2; k++)
+      add(root, `rivet_${root.children.length}`, box(...rivet.size), grey, [x + k * pitch, r + rivet.proud, 0]);
+  });
+}
+
+/** Pipe runs laid along the keel, `[name, r, length, at]` each, six-facet — two, neither where the other is. */
+export function keelPipes(root, mat, { pipes, facets = 6 }) {
+  pipes.forEach(([name, r, length, at]) => add(root, name, cyl(r, r, length, facets), mat, at, TO_BOW));
+}
+
+/** The ram: a six-facet cone drawn to a point ahead of the bow block (`bow_ram`). */
+export function ramCone(root, mat, { r, length, at, facets = 6 }) {
+  add(root, 'bow_ram', cyl(0, r, length, facets), mat, at, TO_BOW);
+}
+
+/** The tail screw: a ten-facet shroud and a six-facet hub on one axis astern (`prop_shroud · prop_hub`). */
+export function tailScrew(root, { grey, black }, { at, shroud, hub }) {
+  add(root, 'prop_shroud', cyl(shroud.r, shroud.r, shroud.length, 10), grey, at, TO_BOW);
+  add(root, 'prop_hub', cyl(hub.r, hub.r, hub.length, 6), black, at, TO_BOW);
+}
+
+/**
+ * The spine-gun: its mount block on the crown and the gun, a six-facet tube
+ * drawn in toward the muzzle, laid forward off it (`gun_mount · gun`).
+ */
+export function spineGun(root, { grey, black }, { mount, gun }) {
+  add(root, 'gun_mount', box(...mount.size), grey, mount.at);
+  add(root, 'gun', cyl(gun.radii[0], gun.radii[1], gun.length, 6), black, gun.at, TO_BOW);
 }
 
 export { THREE };
