@@ -20,7 +20,34 @@ const MAGIC = 0x46546c67; // 'glTF'
 const CHUNK_JSON = 0x4e4f534a;
 const CHUNK_BIN = 0x004e4942;
 
-/** A part: `{ name, material, tris, positions }`, positions 9 floats a triangle, world space. */
+/**
+ * A material's *values*, as glTF carries them and with glTF's own defaults
+ * filled in — an omitted `metallicFactor` is 1, not absent. A name is not a
+ * finish: #553's turret ports kept every material name and moved the values
+ * under them (the Knights' `shadow_indigo` from #2C2244/0.25 to #3B2E5A/0.35,
+ * emissive strengths written at 1 over files carrying 0.8 to 2.4), and every
+ * tool that compared materials by name alone read that as no change (#646).
+ * Colour is linear here, as the file has it; `diff.mjs` renders it sRGB.
+ */
+function finishOf(m) {
+  const pbr = m.pbrMetallicRoughness ?? {};
+  const base = pbr.baseColorFactor ?? [1, 1, 1, 1];
+  return {
+    colour: base.slice(0, 3),
+    opacity: base[3] ?? 1,
+    metalness: pbr.metallicFactor ?? 1,
+    roughness: pbr.roughnessFactor ?? 1,
+    emissive: m.emissiveFactor ?? [0, 0, 0],
+    strength: m.extensions?.KHR_materials_emissive_strength?.emissiveStrength ?? 1,
+    doubleSided: m.doubleSided === true,
+  };
+}
+
+/**
+ * A part: `{ name, material, finish, tris, positions }` — `material` the
+ * name, `finish` the values behind it — positions 9 floats a triangle, world
+ * space.
+ */
 export function readGlb(path) {
   const buf = readFileSync(path);
   if (buf.readUInt32LE(0) !== MAGIC || buf.readUInt32LE(4) !== 2)
@@ -89,6 +116,7 @@ export function readGlb(path) {
     const mesh = json.meshes[node.mesh];
     const out = [];
     let material = null;
+    let finish = null;
     for (const prim of mesh.primitives) {
       if (prim.mode !== undefined && prim.mode !== 4)
         throw new Error(`${path}: ${node.name} is not a triangle list`);
@@ -104,9 +132,18 @@ export function readGlb(path) {
           m[2] * x + m[6] * y + m[10] * z + m[14]
         );
       }
-      material ??= prim.material !== undefined ? json.materials[prim.material].name : null;
+      if (material === null && prim.material !== undefined) {
+        material = json.materials[prim.material].name;
+        finish = finishOf(json.materials[prim.material]);
+      }
     }
-    parts.push({ name: node.name, material, tris: out.length / 9, positions: Float32Array.from(out) });
+    parts.push({
+      name: node.name,
+      material,
+      finish,
+      tris: out.length / 9,
+      positions: Float32Array.from(out),
+    });
   });
   return { name: json.nodes[json.scenes[json.scene ?? 0].nodes[0]]?.name ?? null, parts };
 }
@@ -130,7 +167,27 @@ export function sceneParts(root) {
       out[k * 3 + 1] = m[1] * x + m[5] * y + m[9] * z + m[13];
       out[k * 3 + 2] = m[2] * x + m[6] * y + m[10] * z + m[14];
     }
-    parts.push({ name: o.name, material: o.material?.name ?? null, tris: count / 3, positions: out });
+    const mat = o.material;
+    parts.push({
+      name: o.name,
+      material: mat?.name ?? null,
+      // The same record the file side reads, off the live material — three's
+      // own defaults, and `side === 2` is THREE.DoubleSide without importing
+      // three into a parser that deliberately has no dependency on it.
+      finish: mat
+        ? {
+            colour: mat.color?.toArray() ?? [1, 1, 1],
+            opacity: mat.opacity ?? 1,
+            metalness: mat.metalness ?? 1,
+            roughness: mat.roughness ?? 1,
+            emissive: mat.emissive?.toArray() ?? [0, 0, 0],
+            strength: mat.emissiveIntensity ?? 1,
+            doubleSided: mat.side === 2,
+          }
+        : null,
+      tris: count / 3,
+      positions: out,
+    });
   });
   return { name: root.name, parts };
 }
