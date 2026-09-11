@@ -496,8 +496,9 @@ export function lightAudit(root, { ppm = 4, minM2 = 0.25 } = {}) {
  * exchanger on the end of each arm is the navy's (#608). So the skeleton is
  * built here, once, taking the navy's materials the way `plate` and `louvres`
  * take theirs, and a structure script contributes its exchanger alone. The
- * Foundry, the Refinery, the Slipway and the Bastion share the same
- * faction-neutral core and inherit the decision.
+ * Slipway inherits the decision whole, the Foundry and the Refinery by name
+ * rather than by number, and the Bastion not at all — the yards' section
+ * below says why, file by file (#652).
  *
  * The numbers are the approved files' own and are the defaults, because all
  * four carry them unchanged: repeating them in four scripts is the
@@ -670,6 +671,419 @@ export function wellheadFloods(root, flood, opts = {}) {
   radialSeries({ count }, (a, i) =>
     add(root, `wellhead_flood_${i}`, box(...size), flood, polar(a, r, y), [0, -a, 0])
   );
+}
+
+/* --------------------------------------------------------------------------
+ * The yards' faction-neutral skeletons — the Slipway's slip, gantries and
+ * head gate, the Foundry's bay and cranes, the Refinery's conveyor gantry,
+ * hopper, pipes, masts and stacks (#652, Phase 3's last box).
+ *
+ * #608 put the Vent Tap's skeleton here because two thirds of every approved
+ * tap is identical to the centimetre across the four files. Read the same
+ * way, the sixteen four-variant yard files give three answers, and the
+ * builders below follow the files rather than the rule:
+ *
+ * - **The Slipway is the Vent Tap's case.** All four are r169 exports of one
+ *   template — slab, slip floor, line lights, keel blocks, the hull on the
+ *   blocks, its deck, the launch sill, three gantries and the head gate,
+ *   forty-five names in the same order — the trolleys and cables identical
+ *   to the digit and the rest the same skeleton at the navy's numbers: the
+ *   Commune's beams are wider, its and the Directorate's legs lean, the
+ *   Order's legs are pyramids. So the skeleton is built here and the leg,
+ *   the ornament on it, the hull on the blocks and the head pylons come from
+ *   the navy, the way `ventDrawArm` takes its exchanger; the two halls are
+ *   the navy's module's whole.
+ * - **The Foundry's and the Refinery's are shared by name, not by number.**
+ *   The Directorate's and the Commune's r184 files are one template at the
+ *   same numbers — bay, forge line, lips and guides, two cranes; conveyor
+ *   gantry, hopper, pipes, masts, stacks — and the Order's is the same
+ *   template at its own numbers (its crane is 0.94 of theirs), under its own
+ *   `_r`/`_l` names, with its pipes, masts and stacks written by kind rather
+ *   than by station. So every number is a parameter whose default is the
+ *   Directorate's, every name is a parameter, and a family builder takes its
+ *   stations as a table with `interleaved` saying which order the file wrote
+ *   them in. The Consortium's Foundry and Refinery are from the earlier
+ *   authoring pass, share nothing, and port from `factions/bathyarch.mjs`
+ *   alone, as its turret did (#639).
+ * - **The Bastion shares nothing** — no node name in common across the four
+ *   files — and has no builder here. Each navy's module holds its own.
+ *
+ * The Slipway files name their sides the way the eleven `bothSides` hulls
+ * did before #642, `_p` at +z. Port is -z, so the builders here write the
+ * +z part `_s` and the -z part `_p`, first and second as the files have
+ * them, through `bothSides` — a relabel that keeps every buffer in the
+ * file's order and turns only the names round, which is the one form of
+ * side change a port is allowed. The Foundry's Directorate and Commune
+ * files are the same the other way about on a Z-long export (their
+ * `_starboard` parts sit at the export's +x, the kit's -z), so their lips
+ * are named by the script, port first; the Order's `_r`/`_l` are the
+ * export's own and stay.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The slip slab's plan: a 340 × 176 m rectangle with 5 × 18 m cut off each
+ * corner, which with the 2 m bevel reads 344 × 180 at the waist. The point
+ * order is the one that reproduces the approved files' triangles in their
+ * order through `plate` (earcut starts where the outline does).
+ */
+export const SLIP_SLAB = [
+  [-165, -88],
+  [165, -88],
+  [170, -70],
+  [170, 70],
+  [165, 88],
+  [-165, 88],
+  [-170, 70],
+  [-170, -70],
+];
+
+/**
+ * The slip: the bevelled slab sunk to `slab.y`, the slip floor over it, the
+ * two line lights and the seven crosses of a line at rest, the five keel
+ * blocks, the hull on the blocks — the navy's, added by `hull(root)` between
+ * the last block and the deck, where the files have it — the working deck
+ * over it, and the launch sill at the mouth. "The slip cut through its whole
+ * length and open at both ends … a keel on blocks two thirds down the slip …
+ * the line lights along the slip floor … and the launch sill"
+ * (docs/asset-prompts-3d.md, STRUCTURE — Slipway). The mouth is -x and the
+ * head gate +x.
+ *
+ * `slab` clads the slab and, unless `block` is given, the keel blocks;
+ * `floor` the slip floor; `deck` the deck; `line` is the lit ink of the
+ * lights, the crosses and the sill. Every number is the four approved
+ * files' and is the default; the Consortium's deck is wider and higher and
+ * passes its own.
+ */
+export function slipBed(root, { slab, floor, line, deck, block = slab }, opts = {}) {
+  const {
+    slab: slabOpts = {},
+    floor: floorOpts = {},
+    lines = {},
+    crosses = {},
+    blocks = {},
+    hull = null,
+    deck: deckOpts = {},
+    sill = {},
+  } = opts;
+  const { outline = SLIP_SLAB, thickness = 5, bevel = 2, y: slabY = -8 } = slabOpts;
+  // `plate` stands its slab half a thickness up; the files carry the waist
+  // from y = 0 to the thickness and the caps a bevel beyond it.
+  const slabGeo = plate(outline, thickness, bevel);
+  slabGeo.translate(0, -thickness / 2, 0);
+  add(root, 'foundation_slab', slabGeo, slab, [0, slabY, 0]);
+  const { size: floorSize = [340, 1.5, 46], y: floorY = -0.5 } = floorOpts;
+  add(root, 'slip_floor', box(...floorSize), floor, [0, floorY, 0]);
+  const { size: lineSize = [310, 0.4, 2.2], y: lineY = 0.5, z: lineZ = 19 } = lines;
+  bothSides((tag, sgn) =>
+    add(root, `line_light_${tag}`, box(...lineSize), line, [0, lineY, sgn * lineZ])
+  );
+  const { size: crossSize = [1.6, 0.4, 36], y: crossY = 0.5, from = -140, pitch = 46, count = 7 } =
+    crosses;
+  for (let i = 0; i < count; i++)
+    add(root, `line_cross_${i}`, box(...crossSize), line, [from + pitch * i, crossY, 0]);
+  const {
+    size: blockSize = [6, 4, 14],
+    y: blockY = 2,
+    from: blockFrom = -70,
+    pitch: blockPitch = 22,
+    count: blockCount = 5,
+  } = blocks;
+  for (let i = 0; i < blockCount; i++)
+    add(root, `keel_block_${i}`, box(...blockSize), block, [blockFrom + blockPitch * i, blockY, 0]);
+  hull?.(root);
+  const { size: deckSize = [60, 1, 8], at: deckAt = [-60, 12, 0] } = deckOpts;
+  add(root, 'hull_in_progress_deck', box(...deckSize), deck, deckAt);
+  const { size: sillSize = [4, 0.6, 42], at: sillAt = [-160, 0.6, 0] } = sill;
+  add(root, 'launch_sill', box(...sillSize), line, sillAt);
+}
+
+/**
+ * One of the slip's three gantries, at station `x`: a `gantry_<index>`
+ * frame holding a leg each side with the navy's ornament on it — the
+ * Consortium's brace, the Directorate's claw, the Order's finial, the
+ * Commune's knuckle, added by `ornament(gantry, tag, sgn)` straight after
+ * its leg — the beam across, the trolley and its cable at `trolley.z`
+ * along the beam, and the working light over the span. "Walked down the
+ * line under three gantries … the gantry working lights."
+ *
+ * `legs.geo` is a factory for the navy's leg — a box, a frustum, a pyramid —
+ * called once a side so each leg keeps its own buffer as the files do;
+ * `legs.lean` is the roll the +z leg carries, and the -z leg carries its
+ * negative. `leg`, `beam`, `trolley`, `cable` and `light` are the navy's
+ * inks for those parts.
+ */
+export function slipGantry(root, index, { leg, beam, trolley, cable, light }, opts) {
+  const {
+    x,
+    legs,
+    ornament = null,
+    beam: beamOpts = {},
+    trolley: trolleyOpts,
+    cable: cableOpts = {},
+    worklight = {},
+  } = opts;
+  const g = group(root, `gantry_${index}`);
+  const { geo, y: legY = 22, z: legZ = 32, lean = 0 } = legs;
+  bothSides((tag, sgn) => {
+    add(g, `gantry_leg_${tag}`, geo(), leg, [x, legY, sgn * legZ], [sgn * lean, 0, 0]);
+    ornament?.(g, tag, sgn);
+  });
+  const { size: beamSize = [5, 4, 70], y: beamY = 44 } = beamOpts;
+  add(g, 'gantry_beam', box(...beamSize), beam, [x, beamY, 0]);
+  const { z: tz, y: ty = 40, size: trolleySize = [8, 5, 8] } = trolleyOpts;
+  add(g, 'gantry_trolley', box(...trolleySize), trolley, [x, ty, tz]);
+  const { y: cy = 26, r: cr = 0.4, h: ch = 24, facets: cf = 4 } = cableOpts;
+  add(g, 'gantry_cable', cyl(cr, cr, ch, cf), cable, [x, cy, tz]);
+  const { dx = 3.5, y: wy = 46.2, size: wSize = [3, 0.8, 62] } = worklight;
+  add(g, 'gantry_worklight', box(...wSize), light, [x + dx, wy, 0]);
+  return g;
+}
+
+/**
+ * The head gate at the top of the slip: a pylon each side in the navy's
+ * geometry (`pylons.geo`, a factory as `slipGantry` takes one; `pylons.lean`
+ * as its legs') and the lintel across them. "A hull is laid at the head
+ * gate."
+ */
+export function headGate(root, { pylon, lintel }, opts) {
+  const { x = 158, pylons, lintel: lintelOpts = {} } = opts;
+  const { geo, y, z = 34, lean = 0, scale = [1, 1, 1] } = pylons;
+  bothSides((tag, sgn) =>
+    add(root, `head_pylon_${tag}`, geo(), pylon, [x, y, sgn * z], [sgn * lean, 0, 0], scale)
+  );
+  const { size = [10, 6, 80], y: ly = 52 } = lintelOpts;
+  add(root, 'head_lintel', box(...size), lintel, [x, ly, 0]);
+}
+
+/**
+ * The two halls that flank the slip, "each grown in the navy's own
+ * architecture": a `hall_s` frame at +z and a `hall_p` frame at -z, in that
+ * order, each filled by `fn(hall, tag, sgn)` — the navy's module's, which
+ * places every part at `sgn` times its z. The approved files draw the -z
+ * hall as the +z one mirrored, part for part with its own buffer.
+ */
+export function slipHalls(root, fn) {
+  bothSides((tag, sgn) => fn(group(root, `hall_${tag}`), tag, sgn));
+}
+
+/**
+ * The Foundry's bay, on a Z-long r184 export through `drawn`: the bay floor
+ * and the forge line lit along it, the hull on the line — the navy's, added
+ * by `hull(root)` between the line and the lips, where the files have it —
+ * and a lip each side with its rank of guide lights. "Unit production hall
+ * with a recessed launch bay … interior forge light spilling from the bay."
+ *
+ * `lips` is a table, first lip first: `{ name, x, guides: { name(j), at } }`,
+ * the lip's export x and which guides of the rank it carries — the
+ * Directorate's port lip is missing its third. Names are the script's
+ * because the files disagree on them (`_starboard`/`_port` in two, `_r`/`_l`
+ * in the Order's) and because two of the three sit the other way about
+ * from #642. Every number is the Directorate's unless given.
+ */
+export function foundryBay(root, { floor, forge, lip, guide }, opts) {
+  const {
+    floor: floorOpts = {},
+    forge: forgeOpts = {},
+    hull = null,
+    lips,
+    lip: lipOpts = {},
+    guide: guideOpts = {},
+  } = opts;
+  const { size: floorSize = [3.4, 0.4, 12], at: floorAt = [0, 0.35, 0] } = floorOpts;
+  part(root, 'bay_floor', box(...floorSize), floor, drawn(floorAt));
+  const { size: forgeSize = [1.1, 0.18, 10.6], at: forgeAt = [0.15, 0.58, 0.4] } = forgeOpts;
+  part(root, 'forge_line', box(...forgeSize), forge, drawn(forgeAt));
+  hull?.(root);
+  const { size: lipSize = [0.5, 1.5, 12.2], y: lipY = 0.9 } = lipOpts;
+  const { r = 0.1, facets = [5, 4], y: guideY = 1.72, from = -5, pitch = 2.5 } = guideOpts;
+  for (const l of lips) {
+    part(root, l.name, box(...lipSize), lip, drawn([l.x, lipY, 0]));
+    for (const j of l.guides.at)
+      part(
+        root,
+        l.guides.name(j),
+        new THREE.SphereGeometry(r, ...facets),
+        guide,
+        drawn([l.x, guideY, from + pitch * j])
+      );
+  }
+}
+
+/**
+ * One of the Foundry's two gantry cranes, a `gantry_crane_<index>` frame at
+ * export z: two legs, the beam, a finial on each end of it (or none — the
+ * Commune's carry none), the trolley with its cable and load hung at
+ * `trolley.x` along the beam, and the warning light on the crest. Through
+ * `drawn`, as `foundryBay`. `load` is a box unless `load.geo` gives the
+ * navy's own — the Order hangs a crystal.
+ */
+export function foundryCrane(root, index, { leg, beam, finial, trolley, cable, load, warn }, opts) {
+  const {
+    z,
+    legs: legOpts = {},
+    beam: beamOpts = {},
+    finials = null,
+    trolley: trolleyOpts,
+    cable: cableOpts,
+    load: loadOpts,
+    warnlight: warnOpts = {},
+  } = opts;
+  const g = group(root, `gantry_crane_${index}`, drawn([0, 0, z]));
+  const { x: lx = 2.6, y: ly = 2.8, size: legSize = [0.35, 5.6, 0.35] } = legOpts;
+  part(g, `gantry_leg_${index}_0`, box(...legSize), leg, drawn([lx, ly, 0]));
+  part(g, `gantry_leg_${index}_1`, box(...legSize), leg, drawn([-lx, ly, 0]));
+  const { y: by = 5.75, size: beamSize = [6, 0.45, 0.6] } = beamOpts;
+  part(g, `gantry_beam_${index}`, box(...beamSize), beam, drawn([0, by, 0]));
+  if (finials) {
+    const { x: fx = 3, y: fy = 6.4, r: fr = 0.12, h: fh = 0.9 } = finials;
+    part(g, `gantry_finial_${index}_0`, cyl(0, fr, fh, 4), finial, drawn([fx, fy, 0]));
+    part(g, `gantry_finial_${index}_1`, cyl(0, fr, fh, 4), finial, drawn([-fx, fy, 0]));
+  }
+  const { x: tx, y: ty = 5.3, size: trolleySize = [0.8, 0.5, 0.7] } = trolleyOpts;
+  part(g, `gantry_trolley_${index}`, box(...trolleySize), trolley, drawn([tx, ty, 0]));
+  const { y: cy, h: ch, r: cr = 0.05, facets: cf = 5 } = cableOpts;
+  part(g, `gantry_cable_${index}`, cyl(cr, cr, ch, cf), cable, drawn([tx, cy, 0]));
+  const { y: loy, size: loadSize = [0.55, 0.4, 0.5], geo: loadGeo = null, scale } = loadOpts;
+  part(
+    g,
+    `gantry_load_${index}`,
+    loadGeo ? loadGeo() : box(...loadSize),
+    load,
+    drawn([tx, loy, 0], [0, 0, 0], scale)
+  );
+  const { y: wy = 6.08, r: wr = 0.09, facets: wf = [5, 4] } = warnOpts;
+  part(g, `gantry_warnlight_${index}`, new THREE.SphereGeometry(wr, ...wf), warn, drawn([0, wy, 0]));
+  return g;
+}
+
+/**
+ * A nodule as the Refineries carry their ore: a dodecahedron, whose
+ * vertices stand 0.934 of the constructor's radius out along an axis — so
+ * a nodule whose buffer reads ±0.30185 was built at 0.32312. `r` is the
+ * constructor's.
+ */
+export const dodeca = (r) => new THREE.DodecahedronGeometry(r, 0);
+
+/**
+ * The Refinery's conveyor gantry, on an X-long r184 export in its own
+ * frame: a `conveyor_gantry` frame at `at` and `rot` holding the bed, the
+ * belt on it, the nodules riding it, then the rails — each side a rail and
+ * the gantry lights along it, in the order the file writes them — and the
+ * legs down to the ground. "A rank of upright silos with conveyor and
+ * crusher machinery … floodlit working surfaces, visible machinery light."
+ *
+ * `nodules` is a table of `{ name, mat, r, at, rot }`, each its own ink and
+ * radius; `sides` a table of `{ rail: { name, z }, lights: [{ name, x, z }] }`
+ * — the Directorate writes a rail and its four lights, then the other rail
+ * and its four; the Order writes both rails and then four lights down the
+ * middle, which is a first side with no lights; `legs` a table of
+ * `{ name, x, y, h }`. Every number is the Directorate's unless given.
+ */
+export function conveyorGantry(root, { bed, belt, rail, light, leg }, opts) {
+  const {
+    name = 'conveyor_gantry',
+    at,
+    rot = [0, 0, 0],
+    bed: bedOpts = {},
+    belt: beltOpts = {},
+    nodules,
+    sides,
+    rail: railOpts = {},
+    light: lightOpts = {},
+    legs,
+    leg: legOpts = {},
+  } = opts;
+  const g = group(root, name, { at, rot });
+  const { name: bedName = 'conveyor_bed', size: bedSize = [9.5, 0.35, 1.7] } = bedOpts;
+  add(g, bedName, box(...bedSize), bed);
+  const { name: beltName = 'conveyor_belt', size: beltSize = [9.12, 0.12, 1.15], y: beltY = 0.24 } =
+    beltOpts;
+  add(g, beltName, box(...beltSize), belt, [0, beltY, 0]);
+  for (const n of nodules) add(g, n.name, dodeca(n.r), n.mat, n.at, n.rot);
+  const { y: railY = 0.55, size: railSize = [9.5, 0.16, 0.16] } = railOpts;
+  const { y: lightY = 0.72, r: lightR = 0.09, facets: lightFacets = [5, 4] } = lightOpts;
+  for (const side of sides) {
+    add(g, side.rail.name, box(...railSize), rail, [0, railY, side.rail.z]);
+    for (const l of side.lights)
+      add(g, l.name, new THREE.SphereGeometry(lightR, ...lightFacets), light, [l.x, lightY, l.z]);
+  }
+  const { r: legR = [0.14, 0.18], facets: legFacets = 6 } = legOpts;
+  for (const l of legs) add(g, l.name, cyl(legR[0], legR[1], l.h, legFacets), leg, [l.x, l.y, 0]);
+  return g;
+}
+
+/**
+ * The Refinery's intake: the hopper, a frustum open upward, and the lit
+ * mouth in it. `names` are `[hopper, mouth]`; `at` is the hopper's centre
+ * and `mouth.y` the mouth's height. The Directorate's numbers unless given.
+ */
+export function intakeHopper(root, { hopper, mouth }, opts = {}) {
+  const {
+    names = ['intake_hopper', 'intake_mouth'],
+    at = [13.4, 0.65, 6.9],
+    hopper: h = {},
+    mouth: m = {},
+  } = opts;
+  const { r = [1.5, 0.9], h: hh = 1.3, facets = 8 } = h;
+  const { r: mr = 1.1, h: mh = 0.18, y: my = 1.35, facets: mf = 8 } = m;
+  add(root, names[0], cyl(r[0], r[1], hh, facets), hopper, at);
+  add(root, names[1], cyl(mr, mr, mh, mf), mouth, [at[0], my, at[2]]);
+}
+
+/**
+ * The Refinery's transfer pipes and the flange on each: `pipes` a table of
+ * `{ name, at, rot, r, h }` and `flanges` of `{ name, at, rot, R, tube }`,
+ * a flange a five-by-ten torus. The Directorate writes each pipe with its
+ * flange (`interleaved`); the Order writes its two pipes and then its two
+ * flanges.
+ */
+export function transferPipes(root, { pipe, flange }, opts) {
+  const { pipes, flanges, interleaved = true, facets = 7, flangeFacets = [5, 10] } = opts;
+  const pipeOf = (p) => add(root, p.name, cyl(p.r, p.r, p.h, facets), pipe, p.at, p.rot);
+  const flangeOf = (f) =>
+    add(root, f.name, torus(f.R, f.tube, flangeFacets[0], flangeFacets[1]), flange, f.at, f.rot);
+  if (interleaved) pipes.forEach((p, i) => (pipeOf(p), flangeOf(flanges[i])));
+  else {
+    pipes.forEach(pipeOf);
+    flanges.forEach(flangeOf);
+  }
+}
+
+/**
+ * The Refinery's flood masts: `masts` a table of `{ name, at, r, h }` (a
+ * six-facet frustum standing on `at`), `heads` of `{ name, at, rot, size }`
+ * and `lamps` the same, the lamp the lit face of the head. The Directorate
+ * writes each mast with its head and lamp (`interleaved`); the Order writes
+ * its masts, then its heads, then its lamps.
+ */
+export function floodMasts(root, { mast, head, lamp }, opts) {
+  const { masts, heads, lamps, interleaved = true, facets = 6 } = opts;
+  const mastOf = (m) => add(root, m.name, cyl(m.r[0], m.r[1], m.h, facets), mast, m.at);
+  const headOf = (h) => add(root, h.name, box(...h.size), head, h.at, h.rot);
+  const lampOf = (l) => add(root, l.name, box(...l.size), lamp, l.at, l.rot);
+  if (interleaved) masts.forEach((m, i) => (mastOf(m), headOf(heads[i]), lampOf(lamps[i])));
+  else {
+    masts.forEach(mastOf);
+    heads.forEach(headOf);
+    lamps.forEach(lampOf);
+  }
+}
+
+/**
+ * The Refinery's exhaust stacks: `stacks` a table of `{ name, at, rot, r, h }`
+ * (a seven-facet frustum) and `tips` of `{ name, at, r, h }`, the lit ring
+ * on top. The Directorate writes each stack with its tip (`interleaved`);
+ * the Order writes both stacks and then both tips.
+ */
+export function exhaustStacks(root, { stack, tip }, opts) {
+  const { stacks, tips, interleaved = true, facets = 7 } = opts;
+  const stackOf = (s) => add(root, s.name, cyl(s.r[0], s.r[1], s.h, facets), stack, s.at, s.rot);
+  const tipOf = (t) => add(root, t.name, cyl(t.r[0], t.r[1], t.h, facets), tip, t.at, t.rot);
+  if (interleaved) stacks.forEach((s, i) => (stackOf(s), tipOf(tips[i])));
+  else {
+    stacks.forEach(stackOf);
+    tips.forEach(tipOf);
+  }
 }
 
 /**
