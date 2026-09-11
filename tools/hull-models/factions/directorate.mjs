@@ -55,6 +55,7 @@ import {
   cable,
   bothSides,
   polar,
+  part,
   segmentSeries as series,
 } from '../kit.mjs';
 
@@ -633,6 +634,118 @@ export function magazine(root, { steel, red }, { pod, pipe, flangeAt }) {
   const ring = torus(flangeAt.r, flangeAt.t, 4, 10);
   ring.rotateX(Math.PI / 2);
   add(root, 'feed_flange', ring, red, flangeAt.at);
+}
+
+/* --------------------------------------------------------------------------
+ * Shared kinds. The Light Scout is the first of the six kinds every navy
+ * models (#588, off #540 Phase 3), and the Directorate's is a carapace of
+ * boxes rather than orbs: five butted plates each with a red trailing lip, a
+ * squared wedge for a rostrum, two eyes of different sizes, two antennae
+ * raked back off their sockets, two folded limbs, two dorsal ridges, a keel,
+ * two tail plates, a four-bladed telson and its spike, and three photophore
+ * domes that are its whole resting light — nothing on it mirrored. The
+ * builders take the approved export's own numbers (kit.mjs `drawn`);
+ * hulls/light-scout-pelagia.mjs states the scale decision the shared kinds
+ * follow.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The Light Scout's palette: an earlier authoring pass than the Dredge's,
+ * naming the tokens as docs/art-direction.md names them — bruise violet,
+ * abyssal red, trench chitin — with its own finish, and a photophore that is
+ * the crimson token through and through, burning at 2.6. Values are the
+ * approved export's own; the names are what the model *is* and stay.
+ */
+export const scoutInk = {
+  bruiseViolet: () => clad('bruise_violet', hex('#2D1B3D'), 0.15, 0.5),
+  abyssalRed: () => clad('abyssal_red', hex('#7A1B2E'), 0.12, 0.48),
+  trenchChitin: () => clad('trench_chitin', hex('#0A0710'), 0.18, 0.42),
+  redPhotophore: () => lamp('red_photophore', hex('#C2465E'), hex('#C2465E'), 0.4, 2.6),
+};
+
+/**
+ * Plate segments: the scout's carapace, boxes butted along the keel, each
+ * in its own `skin` and each trailed by a red lip — a thin box `lip.ratio`
+ * of the plate's width and height, `lip.thickness` thick, set `lip.inset`
+ * inside the plate's forward face and `lip.lift` above its axis, leaned
+ * with the plate it belongs to. One-based and interleaved, seg_1,
+ * seg_1_edge, seg_2 …, as the export numbers them; `tergites` above is the
+ * Dredge's orb series and this is not it.
+ */
+export function plateSegments(root, lipMat, { first = 1, lip, segments }) {
+  segments.forEach(({ skin, size, ...placement }, i) => {
+    const n = first + i;
+    part(root, `seg_${n}`, box(...size), skin, placement);
+    const [x, y, z] = placement.at;
+    part(
+      root,
+      `seg_${n}_edge`,
+      box(size[0] * lip.ratio[0], size[1] * lip.ratio[1], lip.thickness),
+      lipMat,
+      {
+        ...placement,
+        at: [x + size[2] / 2 - lip.inset, y + lip.lift, z],
+      }
+    );
+  });
+}
+
+/**
+ * A wedge rostrum: a four-sided frustum stood on its corners, `radii` [tip,
+ * base] along `length`, and squashed `squash` [x, y] in the geometry itself,
+ * as the export has it — wider than it is tall, a beak rather than a spike.
+ */
+export function wedgeRostrum(root, mat, opts) {
+  const { name = 'rostrum', radii, length, squash = [1, 1], ...placement } = opts;
+  const geo = cyl(radii[0], radii[1], length, 4, Math.PI / 4).rotateX(Math.PI / 2);
+  geo.scale(squash[0], squash[1], 1);
+  return part(root, name, geo, mat, placement);
+}
+
+/** Eyes: low-facet orbs, `[name, r, placement]` each — two, of different sizes at different heights. */
+export function eyes(root, mat, { eyes: list, facets = [6, 4] }) {
+  list.forEach(([name, r, placement]) =>
+    part(root, name, new THREE.SphereGeometry(r, ...facets), mat, placement)
+  );
+}
+
+/**
+ * Spikes: tapered cones, `radii` [tip, base] along `length` with `facets`
+ * sides, each placed by its own node — the antennae (five-sided, raked back
+ * off the head), the dorsal ridges (four-sided, leaned) and the telson's
+ * spike. Drawn as the export drew them, tip up, and laid over by the node.
+ */
+export function spikes(root, mat, { spikes: list }) {
+  list.forEach(({ name, radii, length, facets = 5, ...placement }) =>
+    part(root, name, cyl(radii[0], radii[1], length, facets), mat, placement)
+  );
+}
+
+/**
+ * The telson fan: plates of one `size` at one point, each rolled its own way
+ * about the tail so they fan rather than cross, alternating through `skins`
+ * from `telson_0`. The spike astern of them is a `spikes` entry.
+ */
+export function telsonFan(root, skins, { name = 'telson', size, blades }) {
+  const plate = box(...size);
+  blades.forEach((placement, i) =>
+    part(root, `${name}_${i}`, plate, skins[i % skins.length], placement)
+  );
+}
+
+/**
+ * Photophore domes: lit orbs of one radius, `[name, placement]` each, one
+ * geometry shared — a head, one flank and the tail, three in a pattern that
+ * repeats on neither side. A mirrored pair is refused, as `photophores`
+ * refuses one.
+ */
+export function photophoreDomes(root, light, { r = 0.32, facets = [8, 6], domes }) {
+  refuseMirror(
+    'photophore_dome',
+    domes.map(([name, { at }]) => [name, ...at])
+  );
+  const dome = new THREE.SphereGeometry(r, ...facets);
+  domes.forEach(([name, placement]) => part(root, name, dome, light, placement));
 }
 
 export { THREE };

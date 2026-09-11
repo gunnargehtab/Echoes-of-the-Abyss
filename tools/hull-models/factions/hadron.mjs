@@ -39,6 +39,7 @@ import {
   strut,
   bothSides,
   polar,
+  part,
 } from '../kit.mjs';
 
 /**
@@ -749,6 +750,40 @@ export function magazine(root, steel, { pods, pipe }) {
 export function navMarks(root, light, { marks, w = 3.2, d = 3.2 }) {
   for (const [name, x, y, z] of marks)
     pair((tag, sgn) => add(root, `nav_mark_${name}_${tag}`, box(w, 0.6, d), light, [x, y, sgn * z]));
+}
+
+/* --------------------------------------------------------------------------
+ * Shared kinds. The Light Scout is the first of the six kinds every navy
+ * models (#588, off #540 Phase 3), and the Order's is blades: a fore blade
+ * and an aft one, four-sided crystal prisms drawn to a point and edged in
+ * pale alloy, a canopy, guard wings, four fins and a drive — the same prism
+ * fourteen times — and a lit seam on the spine that is its whole resting
+ * light. The builders take the approved export's own numbers (kit.mjs
+ * `drawn`); hulls/light-scout-pelagia.mjs states the scale decision the
+ * shared kinds follow.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The Light Scout's palette: the Clarion's three claddings to the value, and
+ * a seam that is the crystal-glow token through and through, burning at 1.6
+ * — not `ink`'s near-black-based lamp. Values are the approved export's own.
+ */
+export const scoutInk = {
+  shadowIndigo: () => clad('shadow_indigo', hex('#3B2E5A'), 0.35, 0.45),
+  paleAlloy: () => clad('pale_alloy', hex('#E6E9F2'), 0.85, 0.22),
+  resonanceCrystal: () => clad('resonance_crystal', hex('#8B5CF6'), 0.4, 0.18),
+  crystalSeam: () => lamp('crystal_seam', hex('#C9A6FF'), hex('#C9A6FF'), 0.3, 1.6),
+};
+
+/**
+ * A crystal prism: a four-sided spar along the length, `fore` and `aft` its
+ * two end radii — a blade when one end is drawn to a point, a fin when it is
+ * short and stood on end, a nozzle when it tapers astern — squashed flat by
+ * its node's scale. "Blade-like, crystalline silhouettes" (Block 2) is a
+ * facet count, and on this hull the count is four.
+ */
+export function prism(root, mat, { name, fore, aft, length, ...placement }) {
+  return part(root, name, cyl(fore, aft, length, 4).rotateX(Math.PI / 2), mat, placement);
 }
 
 export { THREE };

@@ -20,7 +20,7 @@
  * Light is machinery light: louvres, stack throats, deck floods, lit gratings —
  * and it goes on *upward* faces, because the maps are top-down (see kit.mjs).
  */
-import { THREE, clad, lamp, hex, add, box, cyl, torus, plate, plan, bothSides, polar } from '../kit.mjs';
+import { THREE, clad, lamp, hex, add, box, cyl, torus, plate, plan, bothSides, polar, part } from '../kit.mjs';
 
 /**
  * The Klaxon's palette, as the Bulwark's own materials carry it: the four
@@ -842,6 +842,106 @@ export function baseLamp(root, { lampMat, black }, { at, size, bracket }) {
     black,
     bracket.at
   );
+}
+
+/* --------------------------------------------------------------------------
+ * Shared kinds. The Light Scout is the first of the six kinds every navy
+ * models (#588, off #540 Phase 3), and the Klaxon's is a pressure vessel
+ * with the fittings bolted on: a twenty-sided drum and its cap, a square
+ * wedge for a nose, a boxed sensor head with two whips, a spine plate and a
+ * skid, three patches and twelve rivets, a shrouded screw, four fins, two
+ * stencils and the amber that is its whole resting light. The builders take
+ * the approved export's own numbers (kit.mjs `drawn`);
+ * hulls/light-scout-pelagia.mjs states the scale decision the shared kinds
+ * follow.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The Light Scout's palette: the Bulwark's four claddings to the value, and
+ * a lamp that is the hazard-amber token through and through, burning at
+ * 3.5 — the fixture `structureInk.workLamp` also is, not `ink`'s
+ * near-black-based navigation light. Values are the approved export's own.
+ */
+export const scoutInk = {
+  hullBlack: () => clad('hull_black', hex('#0E1418'), 0.25, 0.85),
+  ironGrey: () => clad('iron_grey', hex('#8C8378'), 0.32, 0.72),
+  oxideRust: () => clad('oxide_rust', hex('#3D2B1F'), 0.1, 0.95),
+  hazardAmber: () => clad('hazard_amber', hex('#F2B233'), 0.15, 0.6),
+  amberLamp: () => lamp('amber_lamp', hex('#F2B233'), hex('#F2B233'), 0.4, 3.5),
+};
+
+/**
+ * A drum: a closed cylinder, `radii` [top, bottom] as drawn and laid along
+ * the keel by its node, `facets` round — the one curve a pressure vessel
+ * demanded. The hull, the cap that closes it astern, and the screw's hub.
+ */
+export function drum(root, mat, { name, radii, length, facets = 20, ...placement }) {
+  return part(root, name, cyl(radii[0], radii[1], length, facets), mat, placement);
+}
+
+/**
+ * A square wedge: a four-sided frustum stood on its corners, so its section
+ * is a square rather than a diamond — plate cut and welded, which is what
+ * the Klaxon's nose is.
+ */
+export function squareWedge(root, mat, { name = 'nose_wedge', radii, length, ...placement }) {
+  const geo = cyl(radii[0], radii[1], length, 4, Math.PI / 4).rotateX(Math.PI / 2);
+  return part(root, name, geo, mat, placement);
+}
+
+/**
+ * Whip aerials: thin cylinders standing off the sensor head, `[name, r,
+ * length, placement]` each — two, at their own heights, off the centreline
+ * each its own way.
+ */
+export function whips(root, mat, { whips: list, facets = 8 }) {
+  list.forEach(([name, r, length, placement]) =>
+    part(root, name, cyl(r, r, length, facets), mat, placement)
+  );
+}
+
+/**
+ * Rivet rows: a rank of square-headed rivets along each flank at fixed
+ * `stations` along the length, one box shared by all — the Klaxon repairs in
+ * straight lines even when the thing repaired is round. Named
+ * `rivet_<side><i>` in station order; `z` is the flank's beam in the kit's
+ * frame, which for the export's `_p` rank is the -z its +x lands on.
+ */
+export function rivetRows(root, mat, { name = 'rivet', size = 0.14, y, rows }) {
+  const head = box(size, size, size);
+  rows.forEach(({ side, z, stations }) =>
+    stations.forEach((x, i) => part(root, `${name}_${side}${i}`, head, mat, { at: [x, y, z] }))
+  );
+}
+
+/** The screw's shroud: a ring of `tube` section on radius `R`, across the keel once turned. */
+export function shroud(
+  root,
+  mat,
+  { name = 'prop_shroud', R, tube, facets = [10, 20], ...placement }
+) {
+  return part(root, name, torus(R, tube, ...facets), mat, placement);
+}
+
+/**
+ * Screw blades: `count` flat blades of one `size` fanned `pitch` apart about
+ * the shaft, all at `at`, numbered from the one that stands upright.
+ */
+export function screwBlades(root, mat, opts) {
+  const { name = 'prop_blade', size, at, count = 3, pitch = Math.PI / 3 } = opts;
+  const blade = box(...size);
+  for (let i = 0; i < count; i++)
+    part(root, `${name}_${i}`, blade, mat, { at, rot: [i * pitch, 0, 0] });
+}
+
+/**
+ * Navigation domes: lit orbs of one radius, `[name, placement]` each, one
+ * geometry shared — on the mast and one each side, which is the light gate 3
+ * measures on this hull.
+ */
+export function domes(root, light, { r, facets = [8, 6], domes: list }) {
+  const dome = new THREE.SphereGeometry(r, ...facets);
+  list.forEach(([name, placement]) => part(root, name, dome, light, placement));
 }
 
 export { THREE };

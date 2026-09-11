@@ -69,7 +69,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as THREE from 'three';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
-import { sceneParts, topDown } from './glb.mjs';
+import { sceneParts, topDown, boundsOf } from './glb.mjs';
 export { THREE };
 
 /**
@@ -99,13 +99,17 @@ export function clad(name, rgb, metalness, roughness) {
  * A lamp: near-black base, the light in `emissive`. See the header. The
  * roughness is the approved models' 0.4 unless a navy's fixture says
  * otherwise — the Order's structure lights are polished to 0.15 and 0.3.
+ * `intensity` is the `KHR_materials_emissive_strength` an export carries
+ * (the four Light Scouts' lamps burn at 1.6 to 3.5); the bake caps it at 1,
+ * so it moves nothing on a map, and the conn view shows it.
  */
-export function lamp(name, rgb, base = [0.01, 0.01, 0.0], roughness = 0.4) {
+export function lamp(name, rgb, base = [0.01, 0.01, 0.0], roughness = 0.4, intensity = 1) {
   const m = new THREE.MeshStandardMaterial({
     color: new THREE.Color(...base),
     metalness: 0,
     roughness,
     emissive: new THREE.Color(...rgb),
+    emissiveIntensity: intensity,
   });
   m.name = name;
   return m;
@@ -122,8 +126,11 @@ export function add(root, name, geo, mat, p = [0, 0, 0], r = [0, 0, 0], s = [1, 
 }
 
 export const box = (x, y, z) => new THREE.BoxGeometry(x, y, z);
-export const cyl = (rTop, rBottom, h, seg = 12) =>
-  new THREE.CylinderGeometry(rTop, rBottom, h, seg);
+// `thetaStart` turns the first facet: a four-sided cylinder is a diamond in
+// section at 0 and a square at π/4, which is the Klaxon's nose and the
+// Directorate's rostrum.
+export const cyl = (rTop, rBottom, h, seg = 12, thetaStart = 0) =>
+  new THREE.CylinderGeometry(rTop, rBottom, h, seg, 1, false, thetaStart);
 export const torus = (r, t, rs = 8, ts = 24) => new THREE.TorusGeometry(r, t, rs, ts);
 export const octa = (r) => new THREE.OctahedronGeometry(r, 0);
 
@@ -646,4 +653,109 @@ export async function exportGlb(root, filename) {
     console.warn(
       `  WARNING: ${name} shows under 0.25 m² from above — the maps are top-down, and gate 3 cannot see it`
     );
+}
+
+/* --------------------------------------------------------------------------
+ * Z-long exports — the shared kinds' ports (#588, off #540 Phase 3).
+ *
+ * The four Light Scouts, and the Corvettes, Cruisers, Submersibles,
+ * Harvesters and Choristers behind them, were hand-exported along Z rather
+ * than X, at arbitrary scales (a 60 m hull drawn 5.3 to 28.2 units long),
+ * off-centre, with every part's transform on its node and its primitive in
+ * the node's own frame. Nothing downstream ever minded: the bake and the
+ * runtime both yaw a Z-long file onto +X (x' = z, z' = -x: +π/2 about Y),
+ * rescale it to the design length and centre it on its bounding box before
+ * reading it (hull-intake's page.html, rosterModels.ts). A port does those
+ * three things once, in the script, so that the file it writes is metre-true
+ * and bow-on-X like every other script's — and so that `lightAudit` measures
+ * its lamps in square metres rather than in the square of a unit nobody
+ * chose (#588: every lamp on all four scouts sat under the audit's floor).
+ *
+ * The rule a port follows is `drawn`: every number stays the export's own —
+ * the primitive as its buffer holds it, the node's translation, XYZ Euler
+ * and scale as the file carries them — and one function turns the lot onto
+ * +X. A part written that way audits line by line against the file, which
+ * is what a port is for; the shape decisions are the export's, not the
+ * script's.
+ * ------------------------------------------------------------------------ */
+
+/** The one yaw: the export's +Z, its bow, onto the kit's +X. */
+const YAW_Z_TO_X = Math.PI / 2;
+const yawedOnce = new WeakSet();
+
+/**
+ * A primitive as a Z-long export built it, turned onto +X — in place, so
+ * its facets land exactly where the export's did, and once, however many
+ * parts share the geometry (the Klaxon scout's twelve rivets are one box).
+ * A cylinder's first vertex, a torus's seam and a tube's Frenet frames all
+ * depend on which way the primitive was born; rebuilt X-long they move,
+ * and a bounds check would never know.
+ */
+export function yawed(geo) {
+  if (!yawedOnce.has(geo)) {
+    geo.rotateY(YAW_Z_TO_X);
+    yawedOnce.add(geo);
+  }
+  return geo;
+}
+
+/**
+ * A node transform as a Z-long export carries it, in the kit's frame. The
+ * export's (x, y, z) lands on (z, y, -x), and so do its three scale axes;
+ * its XYZ Euler (a, b, c) becomes the ZYX Euler (c, b, -a): roll and yaw
+ * survive the turn, pitch changes sign, and the order follows the axes
+ * round. So a part the export drew at its +x — every `_p` on all four
+ * scouts — lands on the kit's -z, because that is where the file has it and
+ * a port reproduces the file, not the name.
+ */
+export function drawn(t = [0, 0, 0], e = [0, 0, 0], s = [1, 1, 1]) {
+  return {
+    at: [t[2], t[1], -t[0]],
+    rot: [e[2], e[1], -e[0], 'ZYX'],
+    scale: [s[2], s[1], s[0]],
+  };
+}
+
+/**
+ * A part as the export built and placed it: `geo` in the export's own
+ * frame, the placement from `drawn`. The builders the shared kinds compose
+ * from all end here.
+ */
+export function part(root, name, geo, mat, placement = {}) {
+  const { at = [0, 0, 0], rot = [0, 0, 0], scale = [1, 1, 1] } = placement;
+  return add(root, name, yawed(geo), mat, at, rot, scale);
+}
+
+/**
+ * Metre-true and centred, once the parts are in. The built length along X
+ * is measured and checked against the `drawn` figure the script's header
+ * states — a mistyped station would pass every other gate and fail this one
+ * — then the root is scaled to `lengthM`, the length is centred on x = 0,
+ * and `datum`, the height the export drew its hull axis at, is brought to
+ * y = 0. Returns the scale, for the record.
+ *
+ * The length is measured as intake and the runtime measure it — three's
+ * `Box3.setFromObject`, the axis-aligned boxes of the parts, which a
+ * rotated plate's box overhangs (the Commune scout's raked tail flukes add
+ * 1.4 % to its length that way) — and not off the vertices, which `bounds`
+ * above also does not do. That measure is homogeneous and a yaw does not
+ * change it, so the bake and the conn view normalise the approved export and
+ * the port to the same size whatever scale the file carries; scaling to it
+ * here is what makes their own rescale exactly 1, and leaves the maps and
+ * the sprite where the approved export put them. `outlines.mjs` and
+ * `diff.mjs` measure vertices and normalise, and see no difference either
+ * way.
+ */
+export function metreTrue(root, lengthM, { drawn: expected, datum = 0, tolerance = 1e-3 } = {}) {
+  root.updateMatrixWorld(true);
+  const bb = new THREE.Box3().setFromObject(root);
+  const length = bb.max.x - bb.min.x;
+  if (Math.abs(length - expected) > tolerance)
+    throw new Error(
+      `${root.name}: drawn ${length.toFixed(4)} units long; the header says ${expected}`
+    );
+  const k = lengthM / length;
+  root.scale.setScalar(k);
+  root.position.set((-k * (bb.max.x + bb.min.x)) / 2, -k * datum, 0);
+  return k;
 }
