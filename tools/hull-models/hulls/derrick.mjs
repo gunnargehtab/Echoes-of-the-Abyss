@@ -65,8 +65,8 @@ const frame = bathyarch.lattice(root, { grey, rust, flood }, {
   fwd: 14, aft: -4, z: 34, deck: DECK, height: 22,
 });
 const faces = [
-  ['brace_p', [frame.aft, frame.deck, 34], [frame.fwd, frame.top, 34], [frame.fwd, frame.deck, 34], [frame.aft, frame.top, 34]],
-  ['brace_s', [frame.aft, frame.deck, -34], [frame.fwd, frame.top, -34], [frame.fwd, frame.deck, -34], [frame.aft, frame.top, -34]],
+  ['brace_s', [frame.aft, frame.deck, 34], [frame.fwd, frame.top, 34], [frame.fwd, frame.deck, 34], [frame.aft, frame.top, 34]],
+  ['brace_p', [frame.aft, frame.deck, -34], [frame.fwd, frame.top, -34], [frame.fwd, frame.deck, -34], [frame.aft, frame.top, -34]],
   ['brace_fwd', [14, frame.deck, -34], [14, frame.top, 34], [14, frame.deck, 34], [14, frame.top, -34]],
   ['brace_aft', [-4, frame.deck, -34], [-4, frame.top, 34], [-4, frame.deck, 34], [-4, frame.top, -34]],
 ];

@@ -16,18 +16,21 @@
  *
  * Two rules of the navy are load-bearing here rather than decorative:
  *
- * - **Nothing mirrors.** The claw is to starboard and the boom to port, and
+ * - **Nothing mirrors.** The claw is to port and the boom to starboard — the
+ *   other way about from the block above, as the approved model has it once
+ *   +z is read as starboard (#642); which of the two is the bug is a design
+ *   call filed off that issue, and a port reproduces the model — and
  *   they are not the same object flipped: one folds and closes, the other is a
  *   spar with teeth stepped along it. The plate lights carry the same rule at
- *   a smaller scale — port three to a plate, starboard two on every other
+ *   a smaller scale — starboard three to a plate, port two on every other
  *   plate — which is the "asymmetric, yet regimented" line made countable.
  * - **The glow is the loudness.** SIG 40 idle is the third-loudest resting
  *   figure in the roster, and the hull spends it on twenty-one plate-edge
  *   photophores, five dorsal marks, the gullet and the hopper throat. They lie
  *   flat on upward faces, because the maps are top-down and a lamp on a flank
  *   is a lamp gate 3 cannot see — with three exceptions the approved model
- *   made and this script keeps: the last lamp of plate 0's port rank, of its
- *   starboard rank, and of plate 1's port rank sit under the raised ridge of
+ *   made and this script keeps: the last lamp of plate 0's starboard rank, of
+ *   its port rank, and of plate 1's starboard rank sit under the raised ridge of
  *   the plate ahead, and the export warns on each. The approved bake never
  *   saw them either, and a rank re-laid to clear three lamps moves twenty-one
  *   (#630 F1). The gullet is the one lamp moved, and it is declared below.
@@ -90,7 +93,7 @@ directorate.tergites(root, { violet, red, black }, {
   segments: SEGMENTS,
   lip: 'ridge',
   facets: [14, 7],
-  // Port 5 m off the keel on the even plates, starboard 6 m on the odd: two
+  // Starboard 5 m off the keel on the even plates, port 6 m on the odd: two
   // constant offsets on plates from 16 m to 25 m of half-beam, which is the
   // approved model's rule and not a fraction of the beam (#630 F5).
   spines: { offsets: [5, 6] },
@@ -149,7 +152,8 @@ directorate.scoopBow(root, { red, steel, black, gullet }, {
   gullet: { x: 51, y: 3.5, w: 10, d: 9 },
 });
 
-// One great folded claw to starboard and the dredge boom to port. There is no
+// One great folded claw to port and the dredge boom to starboard (the block
+// says the reverse; #642 has the call). There is no
 // pair anywhere here: the claw is 34 m of arm, a 20 m forearm folded a quarter
 // radian back in toward the keel, and two tips closing on each other off its
 // end — the outboard one turning in, the inboard one turning out, points
@@ -160,7 +164,7 @@ directorate.scoopBow(root, { red, steel, black, gullet }, {
 // line: folded the other way it was the widest thing instead, and the beam
 // grew a metre (#630 F3).
 directorate.claw(root, { steel, black }, {
-  side: 's',
+  side: 'p',
   x: -5,
   y: 1,
   z: -31,
@@ -171,24 +175,24 @@ directorate.claw(root, { steel, black }, {
     b: { r: 1.6, length: 7, close: -0.3, at: [46, 2.5, -24] },
   },
 });
-directorate.dredgeBoom(root, { steel, black }, { side: 'p', x: -8, y: 0.5, z: 29 });
+directorate.dredgeBoom(root, { steel, black }, { side: 's', x: -8, y: 0.5, z: 29 });
 
 // The hopper amidships, lit around its throat — the second of the two places
 // this hull puts a lamp large enough to read as a patch rather than a mark.
 directorate.hopper(root, { black, steel, gullet }, { x: -6, y: 8, z: 2 });
 
-// "Rows of photophores along every plate edge": three a plate to port on all
-// five, two to starboard on every other one. Twenty-one lights that follow a
+// "Rows of photophores along every plate edge": three a plate to starboard on
+// all five, two to port on every other one. Twenty-one lights that follow a
 // rule and never once answer each other across the keel. The rule is the
 // module's own and the approved model's exactly, and it leaves
-// photophore_p_02, _s_01 and _p_12 under the ridge of the plate ahead: the
+// photophore_s_02, _p_01 and _s_12 under the ridge of the plate ahead: the
 // export warns on those three, and they stay, because the approved bake never
 // saw them either and a rank re-laid to clear them is a shape decision
 // (#630 F1).
 directorate.plateEdgePhotophores(root, crimson, {
   segments: SEGMENTS,
-  port: { count: 3, start: -0.5, pitch: 0.45 },
-  starboard: { count: 2, start: -0.3, pitch: 0.55, every: 2 },
+  starboard: { count: 3, start: -0.5, pitch: 0.45 },
+  port: { count: 2, start: -0.3, pitch: 0.55, every: 2 },
   y: 0.72,
   z: 0.66,
   size: 1.4,

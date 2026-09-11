@@ -35,8 +35,9 @@ Load-time sprite bake             packages/frontend/src/game/hullTextures.ts
 textures. The Bulwark is `hull_slab` + `armour_tier_1..3` + `flank_plate_p0..p3`; the
 Dredge is `tergite_0..n` + `tergite_ridge_0..n` + `tergite_spine_0..n`. Because those
 repeating series are loops, a hull can be *built* as well as exported, and
-`tools/hull-models/` is that path: a shared kit (metres, bow on +X, the export), one
-module a navy holding its shape language, and one script a model composing from it.
+`tools/hull-models/` is that path: a shared kit (metres, bow on +X, port on -z, the
+export), one module a navy holding its shape language, and one script a model composing
+from it.
 
 ```text
 node tools/hull-models/hulls/<hull>.mjs → docs/concept-art/models/<hull>-<navy>.glb → intake
@@ -78,6 +79,10 @@ and fails nothing: a port is allowed to move a bound, and only a reader can say 
 given millimetre was a transcription or a decision. It exists so that reading costs a
 minute, because the alternative is what #594 demonstrated — three shape decisions, green
 on every gate, because every gate was reading the file the port had already rewritten.
+`node tools/hull-models/parts.mjs <model.glb>` is the reader on the other side of a port:
+it prints a committed file the way a script is written — each node's transform, which
+primitive its buffer is, every material with its finish — so a port is transcribed from
+the file rather than from an issue's description of it.
 
 **The plan outline is drawn once.** A kind with an approved model no longer carries its
 plan shape twice — once in the GLB and once typed out by hand as `HULL_OUTLINE` fractions.

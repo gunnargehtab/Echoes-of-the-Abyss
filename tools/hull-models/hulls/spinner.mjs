@@ -93,7 +93,8 @@ pelagia.mineSacs(root, { skin: membrane, cap: ridge }, {
 
 // Leaf pectorals forward and tail flukes aft — swept, and swept opposite ways:
 // the pectoral rakes forward off its root and the fluke trails aft off its own.
-// Exported port side first, as the approved model orders them.
+// Exported starboard side first (+z), as the approved model orders them; the
+// names turned round with #642.
 pelagia.fins(root, membrane, {
   y: 0.45,
   bySide: true,

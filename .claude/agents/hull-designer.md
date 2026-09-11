@@ -63,9 +63,11 @@ the brief; the numbers are constraints, not suggestions.
    **A port is not a redesign.** When the script reproduces a model that is already
    approved, it must match the committed GLB part for part — name, material, triangle
    count and bounds to the centimetre, in export order. Read the file first with
-   `tools/hull-models/glb.mjs` and build against what it says, not against what an issue
-   says it says. A shape decision taken inside a port is a bug; if the model is wrong, say
-   so and let it be a separate change with its own screenshot.
+   `node tools/hull-models/parts.mjs <model.glb>` — every node's transform, which
+   primitive its buffer is, which nodes share one, every material with its finish — and
+   build against what it says, not against what an issue says it says. A shape decision
+   taken inside a port is a bug; if the model is wrong, say so and let it be a separate
+   change with its own screenshot.
 
    Before you hand the port on, run `node tools/hull-models/diff.mjs <slug>` and read it
    yourself. `npm run check:models` cannot catch you here — your script's output *is* the
@@ -81,6 +83,10 @@ the brief; the numbers are constraints, not suggestions.
   `tools/hull-maps/models.mjs` rather than from `units.ts` — the two disagree on several
   hulls by design (the Clarion bakes at 27.9 against a `sigIdle` of 62), and the table's
   number is what `E(SIG) = 0.45 · e^(SIG/14)` is fed.
+- **Port is -z.** The kit's frame has the bow on +X and Y up, so +z is starboard and a
+  part named `_p`, `port` or `_port` sits at -z — the export's +x on a Z-long file
+  (`kit.mjs` `bothSides`, #642). A model that names its sides the other way is
+  relabelled in its port, buffers untouched, never mirrored to make a name true.
 - **Silhouette carries faction.** The consistency checklist asks whether the navy is
   readable from the shape alone, with the lights off. If your description needs the glow to
   identify the navy, the shape is wrong.

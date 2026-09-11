@@ -130,8 +130,8 @@ decisions authored under the wrong model. The gates could not have caught it, si
 are adversarial to the model rather than about which one authored it. So the loop skips
 `fable-5.1` outright, and the work waits for a session running the model of record. The
 cost is real and worth naming: #540 carries the label across every model still to be
-built — the eleven modelled hulls Phase 3 has left, the structure kinds beside them, and
-all nineteen of Phase 4's unmodelled hulls — so none of them is the loop's to take.
+built — the structure kinds Phase 3 has left, and all nineteen of Phase 4's unmodelled
+hulls — so none of them is the loop's to take.
 
 Three further labels are addressed to the unattended backlog Routine rather than to a
 person, and each takes an issue off its list for a different reason. **`routine-log`**

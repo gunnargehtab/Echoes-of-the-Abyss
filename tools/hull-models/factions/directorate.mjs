@@ -15,12 +15,13 @@
  *              claw_tip_a/b · dredge_boom · dredge_tooth_0..2 · hopper ·
  *              hopper_rim · hopper_throat · photophore_p_ij / s_ij / dorsal_i
  *   Precentor  tergite_0..3 · tergite_seam_0..3 · rostrum · telson · array_boom ·
- *              array_boom_sleeve · hydrophone_p0..5 / s0..4 · boom_tip_p/s ·
+ *              array_boom_sleeve · hydrophone_s0..5 / p0..4 · boom_tip_p/s ·
  *              dome · dome_spine_0..5 · dome_aft · dorsal_spine_0..3 ·
  *              limb_p0..2 / s0..2 · photophore_0..3
  *   Chorister  tergite_0..2 · tergite_seam_0..2 · bladder_dome · rostrum ·
  *              telson · tail_spine_p/s · dorsal_spine_0..2 · limb_p0..2 / s0..2 ·
- *              spine_gun · spine_gun_mount · photophore_p0..3 / s0
+ *              spine_gun · spine_gun_mount · photophore_s0..3 / p0 (the export
+ *              wrote its row `_p`; its port turned the names round, #642 / #649)
  *
  * Three rules fall out of those, and they are what this module holds rather
  * than any one hull:
@@ -32,9 +33,13 @@
  *   lathed: a carapace is plates, and the seams between them are the shape.
  * - **Asymmetric, yet regimented.** The spines rake the same way and alternate
  *   sides; the limbs fold at one angle in two matched ranks; the photophores
- *   run in ranks at a fixed pitch — port three to a plate, starboard two on
- *   every other plate — and the Precentor's port hydrophone rank is one longer
- *   than its starboard. The *rule* is regular and the *result* never mirrors,
+ *   run in ranks at a fixed pitch — starboard three to a plate, port two on
+ *   every other plate — and the Precentor's starboard hydrophone rank is one
+ *   longer than its port. (Both blocks say port. The approved models were
+ *   named and read with +z as port, and #642 settled +z as starboard, so the
+ *   models and their blocks now disagree; a port keeps the model, and the
+ *   call is filed off #642.) The *rule* is regular and the *result* never
+ *   mirrors,
  *   so the builders that place light refuse a mirrored pair outright.
  * - **Light is a photophore, and it lies flat.** A photophore is a small flat
  *   box in `biolight_crimson` on an upward face of the carapace, because the
@@ -56,6 +61,7 @@ import {
   bothSides,
   polar,
   part,
+  drawn,
   segmentSeries as series,
   capsule,
   group,
@@ -85,13 +91,19 @@ const orb = (w = 12, h = 6) => new THREE.SphereGeometry(1, w, h);
 /** A spine: a faceted cone, apex at +Y until the caller rakes it. */
 const spike = (r, length, facets = 6) => cyl(0, r, length, facets);
 
-/** Refuse a mirrored pair: nothing on this navy is symmetrical. */
-function refuseMirror(what, spots) {
+/**
+ * Refuse a mirrored pair: nothing on this navy is symmetrical. `tol` is
+ * half a metre in the frame the spots are given in — the kit's metres for
+ * a hull built in them, and a hull's own units for a shared-kind export
+ * built in *its* frame, where the Submersible draws 95 m in 4.53 units and
+ * half a unit is ten metres (#649).
+ */
+function refuseMirror(what, spots, tol = 0.5) {
   for (let i = 0; i < spots.length; i++)
     for (let j = i + 1; j < spots.length; j++) {
       const [, ax, ay, az] = spots[i];
       const [, bx, by, bz] = spots[j];
-      if (Math.abs(ax - bx) < 0.5 && Math.abs(ay - by) < 0.5 && Math.abs(az + bz) < 0.5)
+      if (Math.abs(ax - bx) < tol && Math.abs(ay - by) < tol && Math.abs(az + bz) < tol)
         throw new Error(`${what}: ${spots[i][0]} and ${spots[j][0]} mirror — nothing here does`);
     }
 }
@@ -115,7 +127,7 @@ export const segmentSeries = (opts) => series({ section: [0.6, 1.5], ...opts });
  * the aft edge standing *proud* of the plate, the raised trailing lip of a
  * heavier carapace. `'none'` for a hull whose plates butt.
  *
- * `spines` puts one spine off each plate — alternating sides from port,
+ * `spines` puts one spine off each plate — alternating sides from starboard,
  * alternating between the two `lengths`, all raked forward by `rake`, each
  * `offsets[0]` metres off the keel on the even plates and `offsets[1]` on the
  * odd — which is the regimented asymmetry the navy is built on. Two constant
@@ -206,9 +218,9 @@ export function telson(root, { violet, black }, opts) {
  * bounding box cannot show, as `claw` says of the Dredge's; the first port
  * matched their boxes to the centimetre with a straight 6.9 m leg at a
  * shallower fold and a sixth more surface. The tip is the cylinder's +Y end,
- * and the same Euler folds it forward and outboard to port but aft and
- * *inboard* to starboard, so the approved model's starboard roots stand
- * outboard; a port reproduces that.
+ * and the same Euler folds it forward and outboard to starboard but aft and
+ * *inboard* to port, so the approved model's port roots stand outboard; a
+ * port reproduces that.
  */
 export function limbs(root, steel, { xs, y, z, r = 0.6, length = 6, fold = 0.45 }) {
   const [rootR, tipR] = Array.isArray(r) ? r : [r, r];
@@ -254,14 +266,14 @@ export function photophores(root, crimson, { spots, size = 1.1, h = 0.4, depth, 
  * plate's edge, each rank starting `start` of the plate's half-length from
  * its centre and running aft-to-forward at `pitch` of it, sitting at `y` of
  * the plate's height and `z` of its beam — on the shell where it faces up.
- * Port carries `port.count` on every plate; starboard `starboard.count` on
- * every `starboard.every`-th plate only. Regimented, and never symmetric.
+ * Starboard carries `starboard.count` on every plate; port `port.count` on
+ * every `port.every`-th plate only. Regimented, and never symmetric.
  */
 export function plateEdgePhotophores(root, crimson, opts) {
   const {
     segments,
-    port = { count: 3, start: -0.5, pitch: 0.45 },
-    starboard = { count: 2, start: -0.3, pitch: 0.55, every: 2 },
+    starboard = { count: 3, start: -0.5, pitch: 0.45 },
+    port = { count: 2, start: -0.3, pitch: 0.55, every: 2 },
     y = 0.72,
     z = 0.66,
     size = 1.4,
@@ -275,8 +287,8 @@ export function plateEdgePhotophores(root, crimson, opts) {
           sgn * z * sz,
         ]);
     };
-    rank('p', 1, port);
-    if (i % (starboard.every ?? 1) === 0) rank('s', -1, starboard);
+    rank('s', 1, starboard);
+    if (i % (port.every ?? 1) === 0) rank('p', -1, port);
   });
 }
 
@@ -328,8 +340,9 @@ export function listeningDome(root, { red, violet, black }, opts) {
  * with a sleeve where it passes the body, a rank of hydrophone spines each
  * side stepping outward at `pitch` — alternating between the two `lengths`,
  * each in its socket, canted outward — and a tip spike at each end. `port`
- * and `starboard` are the rank sizes and must differ: the Precentor's port
- * rank is one longer, and a hull whose ranks match is not this navy's.
+ * and `starboard` are the rank sizes and must differ: the Precentor's
+ * starboard rank is one longer (its block says port; #642), and a hull whose
+ * ranks match is not this navy's.
  *
  * The tip spike stands *beyond* `halfSpan` rather than straddling it, so the
  * array's span is the boom plus both tips: the Precentor's 36 m boom and its
@@ -347,7 +360,7 @@ export function listeningDome(root, { red, violet, black }, opts) {
  * (#638).
  */
 export function arrayBoom(root, { steel, black, red }, opts) {
-  const { x, y, halfSpan, r = 1.3, port = 6, starboard = 5, z0 = 5, pitch = 2.6 } = opts;
+  const { x, y, halfSpan, r = 1.3, starboard = 6, port = 5, z0 = 5, pitch = 2.6 } = opts;
   const { lengths = [6, 7.5], hr = 0.9, cant = 0.25, tip = 4, seat, socket = 'drum' } = opts;
   const { sleeveR = r * 1.46 } = opts;
   if (port === starboard)
@@ -355,7 +368,7 @@ export function arrayBoom(root, { steel, black, red }, opts) {
   add(root, 'array_boom', cyl(r, r, halfSpan * 2, 8), steel, [x, y, 0], [Math.PI / 2, 0, 0]);
   add(root, 'array_boom_sleeve', cyl(sleeveR, sleeveR, 6, 8), black, [x, y, 0], [Math.PI / 2, 0, 0]);
   bothSides((side, sgn) => {
-    const count = sgn > 0 ? port : starboard;
+    const count = sgn > 0 ? starboard : port;
     for (let j = 0; j < count; j++) {
       const len = lengths[j % lengths.length];
       const z = sgn * (z0 + pitch * j);
@@ -381,10 +394,23 @@ export function arrayBoom(root, { steel, black, red }, opts) {
   });
 }
 
-/** The spine-gun: one short barrel off the centreline, on its mount. */
-export function spineGun(root, { steel, black }, { x, y, z, r = 0.7, length = 9 }) {
-  add(root, 'spine_gun', cyl(r, r, length, 6), steel, [x, y, z], [0, 0, -Math.PI / 2]);
-  add(root, 'spine_gun_mount', box(2.4, 1.6, 2), black, [x - length / 2, y - 0.2, z]);
+/**
+ * The spine-gun: one short barrel off the centreline, on its mount.
+ *
+ * `r` is one radius or `[breech, muzzle]`: the approved Chorister's barrel
+ * tapers from 0.7 m at the breech to 0.5 m at the muzzle over 9 m, as its
+ * limbs taper (`limbs` above), and a straight barrel matches its box and
+ * not its shape. `mount` places the mount block by its own `x`, `y`, `z`
+ * where given, in place of the rule — half the barrel aft of the barrel's
+ * centre, 0.2 m under it — which the Chorister's approved file does not
+ * follow: its mount sits at x = 15 under a barrel centred at 20, 0.5 m
+ * further aft than the rule puts it (#649).
+ */
+export function spineGun(root, { steel, black }, { x, y, z, r = 0.7, length = 9, mount = {} }) {
+  const [breech, muzzle] = Array.isArray(r) ? r : [r, r];
+  add(root, 'spine_gun', cyl(muzzle, breech, length, 6), steel, [x, y, z], [0, 0, -Math.PI / 2]);
+  const { x: mx = x - length / 2, y: my = y - 0.2, z: mz = z } = mount;
+  add(root, 'spine_gun_mount', box(2.4, 1.6, 2), black, [mx, my, mz]);
 }
 
 /**
@@ -417,7 +443,7 @@ export function scoopBow(root, { red, steel, black, gullet }, opts) {
  * `tips.a` on the outboard side turning in by `close`, `tips.b` on the
  * inboard side turning out (a negative `close`), each a cone with its point
  * forward. `side` is 'p' or 's' and there is no pair — the Dredge's is to
- * starboard.
+ * port (its block says starboard; #642).
  *
  * The arm is placed from `x`; the forearm and both tips are placed by their
  * centres, `at`, because that is how the approved model placed them: no rule
@@ -435,11 +461,11 @@ export function scoopBow(root, { red, steel, black, gullet }, opts) {
  * which the first transcription did not carry. A scalar is a straight limb.
  */
 export function claw(root, { steel, black }, opts) {
-  const { side = 's', x, y = 1, z, arm, fore, tips } = opts;
-  const sgn = side === 'p' ? 1 : -1;
+  const { side = 'p', x, y = 1, z, arm, fore, tips } = opts;
+  const sgn = side === 'p' ? -1 : 1;
   // A cylinder is born along Y with `rTop` at +Y; rolled onto X, +Y is the
-  // far end, and a yaw about Y turns that end toward −Z. Inboard is −Z to
-  // port and +Z to starboard, so `inboard` radians toward the keel is a yaw
+  // far end, and a yaw about Y turns that end toward −Z. Inboard is +Z to
+  // port and −Z to starboard, so `inboard` radians toward the keel is a yaw
   // of `sgn · inboard`.
   const turn = (inboard) => [0, sgn * inboard, -Math.PI / 2];
   const limb = (r, length) => {
@@ -454,8 +480,8 @@ export function claw(root, { steel, black }, opts) {
 
 /** The dredge boom off the other beam: a spar along the hull with teeth stepped along it. */
 export function dredgeBoom(root, { steel, black }, opts) {
-  const { side = 'p', x, y = 0.5, z, r = 1.2, length = 30, teeth = 3 } = opts;
-  const sgn = side === 'p' ? 1 : -1;
+  const { side = 's', x, y = 0.5, z, r = 1.2, length = 30, teeth = 3 } = opts;
+  const sgn = side === 'p' ? -1 : 1;
   add(root, 'dredge_boom', cyl(r, r, length, 8), steel, [x, y, z], [0, 0, -Math.PI / 2]);
   for (let i = 0; i < teeth; i++)
     add(root, `dredge_tooth_${i}`, box(2.2, 2.2, 3), black, [
@@ -856,12 +882,20 @@ export function magazine(root, { steel, red }, opts) {
  * abyssal red, trench chitin — with its own finish, and a photophore that is
  * the crimson token through and through, burning at 2.6. Values are the
  * approved export's own; the names are what the model *is* and stay.
+ *
+ * The Corvette, the Harvester and the Cruiser carry the same four names
+ * and finishes, and only the photophore's strength differs — 2.6, 2.4 and
+ * 6 (`KHR_materials_emissive_strength`; the bake caps it at 1, so it moves
+ * nothing on a map): `redPhotophore` takes the figure a file carries, as
+ * `structureInk.biolightCrimson` does, and the scout's 2.6 stays the
+ * default (#649).
  */
 export const scoutInk = {
   bruiseViolet: () => clad('bruise_violet', hex('#2D1B3D'), 0.15, 0.5),
   abyssalRed: () => clad('abyssal_red', hex('#7A1B2E'), 0.12, 0.48),
   trenchChitin: () => clad('trench_chitin', hex('#0A0710'), 0.18, 0.42),
-  redPhotophore: () => lamp('red_photophore', hex('#C2465E'), hex('#C2465E'), 0.4, 2.6),
+  redPhotophore: (intensity = 2.6) =>
+    lamp('red_photophore', hex('#C2465E'), hex('#C2465E'), 0.4, intensity),
 };
 
 /**
@@ -872,20 +906,33 @@ export const scoutInk = {
  * with the plate it belongs to. One-based and interleaved, seg_1,
  * seg_1_edge, seg_2 …, as the export numbers them; `tergites` above is the
  * Dredge's orb series and this is not it.
+ *
+ * The same series is every plated back on the shared kinds (#649), under
+ * the export's own names: `name` is the plate's stem (the Corvette's
+ * `carapace_1..5` and `tail_1..4`, the Cruiser's `plate_rank_0..7`), and
+ * `first` its numbering. The lip is `${name}_${n}_edge` unless `lip.name`
+ * gives it a stem of its own — the Harvester's `carapace_rim_0..4`, the
+ * Cruiser's `plate_rim_0..7`. Those two carry the rim the other way: not a
+ * fraction of the plate's height but a fixed `lip.height` (1 and 1.1),
+ * seated `lip.seat` above the plate's *bottom* face rather than `lip.lift`
+ * above its axis — a rim along the plate's lower edge where the scout's and
+ * the Corvette's lip is a trailing face. Both rules are the files' own.
  */
-export function plateSegments(root, lipMat, { first = 1, lip, segments }) {
+export function plateSegments(root, lipMat, { name = 'seg', first = 1, lip, segments }) {
   segments.forEach(({ skin, size, ...placement }, i) => {
     const n = first + i;
-    part(root, `seg_${n}`, box(...size), skin, placement);
+    part(root, `${name}_${n}`, box(...size), skin, placement);
     const [x, y, z] = placement.at;
+    const height = lip.height ?? size[1] * lip.ratio[1];
+    const lift = lip.seat !== undefined ? lip.seat - size[1] / 2 : lip.lift;
     part(
       root,
-      `seg_${n}_edge`,
-      box(size[0] * lip.ratio[0], size[1] * lip.ratio[1], lip.thickness),
+      lip.name ? `${lip.name}_${n}` : `${name}_${n}_edge`,
+      box(size[0] * lip.ratio[0], height, lip.thickness),
       lipMat,
       {
         ...placement,
-        at: [x + size[2] / 2 - lip.inset, y + lip.lift, z],
+        at: [x + size[2] / 2 - lip.inset, y + lift, z],
       }
     );
   });
@@ -939,14 +986,332 @@ export function telsonFan(root, skins, { name = 'telson', size, blades }) {
  * geometry shared — a head, one flank and the tail, three in a pattern that
  * repeats on neither side. A mirrored pair is refused, as `photophores`
  * refuses one.
+ *
+ * A dome given as `[name, r, placement]` is an orb of its own radius and
+ * its own buffer, which is how the Submersible's ten photophores and the
+ * Cruiser's seven light domes are drawn — the Cruiser's as unit orbs
+ * squashed by their nodes, no two alike (#649). `tolerance` is
+ * `refuseMirror`'s, in the frame the placements are in.
  */
-export function photophoreDomes(root, light, { r = 0.32, facets = [8, 6], domes }) {
+export function photophoreDomes(root, light, { r = 0.32, facets = [8, 6], domes, tolerance }) {
   refuseMirror(
     'photophore_dome',
-    domes.map(([name, { at }]) => [name, ...at])
+    domes.map((d) => [d[0], ...d[d.length - 1].at]),
+    tolerance
   );
   const dome = new THREE.SphereGeometry(r, ...facets);
-  domes.forEach(([name, placement]) => part(root, name, dome, light, placement));
+  domes.forEach((d) =>
+    d.length === 3
+      ? part(root, d[0], new THREE.SphereGeometry(d[1], ...facets), light, d[2])
+      : part(root, d[0], dome, light, d[1])
+  );
+}
+
+/* --------------------------------------------------------------------------
+ * The other shared kinds (#649, off #540 Phase 3). The Corvette, the
+ * Harvester, the Cruiser and the Abyssal Submersible are Z-long exports of
+ * the same authoring pass as the Light Scout, drawn at four more arbitrary
+ * scales (94.4, 81.0 and 146.3 units, and the Submersible's 4.55 for 95 m);
+ * the Chorister is an X-long r169 export of the Dredge's pass and builds
+ * from the hull vocabulary at the top of this module, with `spineGun` and
+ * `bladderDome` — written for it and never before run — as its first
+ * consumer. What the four add to the vocabulary is read off their node
+ * names, as the scout's was:
+ *
+ *   Corvette     carapace_1..5 / _edge · ridge_0..4 · rostrum · rostrum_blade ·
+ *                eye_p/s · antenna_p/s · limb_p/s_{shoulder,upper,forearm,claw} ·
+ *                dart_p0..5 / s0..3 (+ _socket) · ventral_keel · keel_spur_a/b ·
+ *                tail_1..4 / _edge · telson_0..4 · telson_spike ·
+ *                photophore_p0..4 / s0..2 / tail
+ *   Harvester    cargo_gut · gut_band_a..c · carapace_0..4 / carapace_rim_0..4 ·
+ *                dorsal_dome · nub_0..3 · skirt_p0..3 / s0..2 (+ skirt_tip) ·
+ *                mill_housing · mill_mouth · mill_tooth_0..5 ·
+ *                claw_p/s_{shoulder,arm,hand,finger_up,finger_lo,tip,knuckle} ·
+ *                tail_1 / _edge · tail_2..3 · paddle_0..3 · seam_strip_bow/mid/aft ·
+ *                flank_strip_p/s · maw_bar · maw_ring · dome_bow/flank_p/tail
+ *   Cruiser      body_core · plate_rank_0..7 / plate_rim_0..7 · dspike_p0..7 / s0..7 ·
+ *                head_shield · head_crest · eye_p/s · antenna_fore/aft_p/s (+ _tip) ·
+ *                whisker_fwd_p0..3 / aft_s0..4 (+ _tip) · dart_p0..6 / s0..4 ·
+ *                ventral_keel · light_organ_strip · keel_spur_a/b · tail_1..3 / _edge ·
+ *                telson_0..5 · telson_spike · light_band_p/s · band_rib_p/s0..2 ·
+ *                dome_p0..3 / s0..2 · gill_p/s0..1 · photophore_head/tail
+ *   Submersible  keel · carapace_1..5 / plate_rim_1..5 · head · rostrum ·
+ *                mandible_port/starboard · spike_dorsal_1..4 · spike_flank_p1..3 /
+ *                s1..2 · limb_port_1..4 / starboard_1..3 (_femur, _claw) ·
+ *                tail_seg_1..4 / tail_joint_1..4 · telson_mid/port/starboard ·
+ *                photophore_port_1..5 / starboard_1..3 / jaw / tail
+ *
+ * Every builder below takes the export's own numbers through kit.mjs
+ * `drawn` and places the primitive as the file's node does; the rules they
+ * hold — a limb's sizes scaled by side, a rim cut from its plate's radius,
+ * a spike aimed at its lamp, a tooth's station round the mill — are the
+ * files' own, read off them and checked by `diff.mjs` against them.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The Abyssal Submersible's palette: its own four names, from the same
+ * authoring pass as the scout's and finished its own way — a harder,
+ * glossier chitin for the one PR-3 hull of the shared kinds (0.25 / 0.38
+ * and 0.22 / 0.32 against the scout's 0.18 / 0.42 and 0.15 / 0.5), a
+ * photophore polished to 0.35 and burning at 2.2, and `edge_red`, which is
+ * a *lit cladding*: abyssal red with metalness 0.15 and its own colour as
+ * emissive at 0.12 — the plate rims, the tail joints, the rostrum and the
+ * limb claws all glow faintly. Values are the approved export's own; the
+ * names are what the model is and stay (#649).
+ */
+export const submersibleInk = {
+  chitinTrench: () => clad('chitin_trench', hex('#0A0710'), 0.25, 0.38),
+  plateViolet: () => clad('plate_violet', hex('#2D1B3D'), 0.22, 0.32),
+  edgeRed: () => {
+    // `lamp` sets metalness 0; this one is a metal that glows.
+    const m = clad('edge_red', hex('#7A1B2E'), 0.15, 0.42);
+    m.emissive = new THREE.Color(...hex('#7A1B2E'));
+    m.emissiveIntensity = 0.12;
+    return m;
+  },
+  photophore: () => lamp('photophore', hex('#C2465E'), hex('#C2465E'), 0.35, 2.2),
+};
+
+/**
+ * A jointed limb: the boxes and the one cone of a folded manipulator, each
+ * placed by its own node under `prefix` — the Corvette's `limb_p` and
+ * `limb_s` (shoulder, upper, forearm, claw) and the Harvester's `claw_p` and
+ * `claw_s` (shoulder, arm, hand, finger_up, finger_lo, tip, knuckle), in
+ * the file's order, cone wherever it falls. `scale` is the side's: both
+ * hulls draw the two limbs from one set of base sizes, the port one larger
+ * (the Corvette's 1.15 against 0.9, the Harvester's 1.2 against 0.95) —
+ * asymmetric, yet regimented. A joint is `{ name, skin, size }` for a box
+ * or `{ name, skin, r, length, facets }` for a cone; every dimension is
+ * scaled but the cone's 0.02 point, which both files leave at 0.02 on both
+ * sides. The placements are the file's own, not mirrored from one side.
+ */
+export function jointedLimb(root, { prefix, scale = 1, point = 0.02, joints }) {
+  joints.forEach(({ name, skin, size, r, length, facets = 4, ...placement }) => {
+    const geo = size
+      ? box(...size.map((d) => d * scale))
+      : cyl(point, r * scale, length * scale, facets);
+    part(root, `${prefix}_${name}`, geo, skin, placement);
+  });
+}
+
+/**
+ * Darts: the torpedo hardpoints, "visible torpedo hardpoints" (the Corvette
+ * block) — one tapered spar, `radii` [nose, tail] over `length` with
+ * `facets` sides, shared by every dart and laid on its rank by its own
+ * node, raked forward and canted outboard; with, where the hull mounts
+ * them, a `socket` box under each, placed by its node in the file's
+ * interleaved order (dart_p0, dart_p0_socket, dart_p1 …). Both hulls that
+ * carry them rank more to port than to starboard: the Corvette six to four,
+ * the Cruiser seven to five.
+ */
+export function darts(root, { dart: dartMat, socket: socketMat }, opts) {
+  const { radii, length, facets = 6, socket, darts: list } = opts;
+  const geo = cyl(radii[0], radii[1], length, facets);
+  list.forEach(({ name, socket: socketAt, ...placement }) => {
+    part(root, name, geo, dartMat, placement);
+    if (socketAt) part(root, `${name}_socket`, box(...socket.size), socketMat, socketAt);
+  });
+}
+
+/**
+ * Photophore marks: the shared kinds' running lights as boxes rather than
+ * domes — one box of `size` shared by every mark, `[name, placement]`
+ * each, in a rank that repeats on neither side (the Corvette's five to
+ * port against three to starboard). A mirrored pair is refused, as
+ * `photophores` refuses one; `tolerance` is `refuseMirror`'s.
+ */
+export function photophoreMarks(root, light, { size, marks, tolerance }) {
+  refuseMirror(
+    'photophore',
+    marks.map(([name, { at }]) => [name, ...at]),
+    tolerance
+  );
+  const mark = box(...size);
+  marks.forEach(([name, placement]) => part(root, name, mark, light, placement));
+}
+
+/**
+ * Carapace orbs: plates that are orbs rather than boxes, each an orb of its
+ * own `r` and the shared `facets`, squashed and leaned by its own node —
+ * the Submersible's `carapace_1..5` (seven meridians, four stacks, scaled
+ * 1.3 × 0.62 × 1.02) and its `tail_seg_1..4`, and the Harvester's
+ * `cargo_gut`, one unit orb of ten by seven drawn 23 × 8.4 × 44 by its node.
+ * `n` numbers the plate; a plate without one takes `name` alone.
+ *
+ * `rim` cuts a rim under each plate as the Submersible does: an *open*
+ * frustum — no caps — `rim.h` tall with `rim.facets` sides, its radii
+ * `rim.ratio` [forward, aft] of the plate's own radius, laid across the
+ * keel by its node and named `${rim.name}_${n}`. The plate rims are 1.06
+ * and 1.12 of their plate, nine-sided and 0.07 tall; the tail joints 0.92
+ * and 0.98, eight-sided and 0.05 tall. `parts.mjs` reads them as an open
+ * cylinder first and offers a 3 × 4 displaced orb second; the buffer has
+ * two rows at ±h/2, the top at the smaller radius, and is the cylinder.
+ */
+export function carapaceOrbs(root, { skin, rim: rimMat }, opts) {
+  const { name = 'carapace', facets = [7, 4], rim, plates } = opts;
+  plates.forEach(({ n, r, rim: rimAt, ...placement }) => {
+    part(
+      root,
+      n === undefined ? name : `${name}_${n}`,
+      new THREE.SphereGeometry(r, ...facets),
+      skin,
+      placement
+    );
+    if (rim)
+      part(
+        root,
+        `${rim.name}_${n}`,
+        new THREE.CylinderGeometry(r * rim.ratio[0], r * rim.ratio[1], rim.h, rim.facets, 1, true),
+        rimMat,
+        rimAt
+      );
+  });
+}
+
+/**
+ * Skirt plates: the Harvester's "external intake dredge gear" — a rank of
+ * plates hung off each flank, each a box of one `size` in its own `skin`
+ * (alternating violet and chitin down the rank), leaned outboard and down
+ * by its node, with a four-sided `tip` spike off its outer edge, placed by
+ * its own node; `skirt_${name}` and `skirt_tip_${name}`, interleaved as
+ * the file has them. Four to port, three to starboard.
+ */
+export function skirtPlates(root, { tip: tipMat }, { size, tip, plates }) {
+  plates.forEach(({ name, skin, tip: tipAt, ...placement }) => {
+    part(root, `skirt_${name}`, box(...size), skin, placement);
+    part(
+      root,
+      `skirt_tip_${name}`,
+      cyl(tip.radii[0], tip.radii[1], tip.length, tip.facets ?? 4),
+      tipMat,
+      tipAt
+    );
+  });
+}
+
+/**
+ * The mill: the Harvester's mining mouth at the bow — `housing`, a box;
+ * `mouth`, a drum of `r` and `h` with `facets` sides stood on the housing's
+ * face by its node; and `teeth`, `count` four-sided cones in a ring of
+ * radius `r` about `at` in the export's bow plane, each at its station
+ * `k · 2π / count` anticlockwise from +x, leaned back by `tilt` and rolled
+ * to its station (an XYZ Euler of `[tilt, 0, −a]`) — which is the rule the
+ * file's six teeth follow to the seventh decimal (mill_tooth_1 at
+ * y = 5.2 + 1.7 · sin 60°). The maw's light is the hull's, laid over it.
+ */
+export function millMouth(root, mats, { housing, mouth, teeth }) {
+  part(root, 'mill_housing', box(...housing.size), mats.housing, housing);
+  part(root, 'mill_mouth', cyl(mouth.r, mouth.r, mouth.h, mouth.facets ?? 8), mats.mouth, mouth);
+  const { count, r, at, tilt, radii, length, facets = 4 } = teeth;
+  for (let k = 0; k < count; k++) {
+    const a = (k * 2 * Math.PI) / count;
+    part(
+      root,
+      `mill_tooth_${k}`,
+      cyl(radii[0], radii[1], length, facets),
+      mats.teeth,
+      drawn([at[0] + r * Math.cos(a), at[1] + r * Math.sin(a), at[2]], [tilt, 0, -a])
+    );
+  }
+}
+
+/**
+ * Drums: frusta that are not spikes — `radii` [top, bottom] over `length`
+ * with `facets` sides, each placed by its own node. The Submersible's keel
+ * (seven-sided, 0.26 to 0.2, squashed to 0.75 across by its node) and the
+ * Harvester's `maw_ring`, the lit collar round the mill's mouth. `spikes`
+ * above builds the same primitive; this is the name for one that is a
+ * body rather than a point.
+ */
+export function drums(root, mat, { drums: list }) {
+  list.forEach(({ name, radii, length, facets, ...placement }) =>
+    part(root, name, cyl(radii[0], radii[1], length, facets), mat, placement)
+  );
+}
+
+/**
+ * Aimed spikes: the Cruiser's four antennae and nine whiskers — "prominent
+ * sensor arrays and fixed hydrophone masts" — each a five-sided spike
+ * `radii` [tip, root] run `from` a root on the carapace `to` the lamp at
+ * its tip, and each carrying that lamp: `tip.name`, a cube of `tip.size` in
+ * the light, at `to`.
+ *
+ * The file draws each one *aimed*: its node sits at the midpoint of root
+ * and tip, its length is their distance (the antennae's 20.4424 and the
+ * whiskers' 5.8386 are nothing anyone typed), and its rotation is the
+ * minimal one taking +Y onto that direction — three's
+ * `Quaternion.setFromUnitVectors`, which reproduces every one of the
+ * thirteen Eulers the file carries to 6 × 10⁻⁸ rad (#649), where a look-at
+ * does not. The roots are round numbers (antenna_fore_p from (5.2, 9.5,
+ * 50)); a script holds root and tip, and the builder holds the rule. A
+ * lamp given `buffer` shares the box of the named earlier lamp in the same
+ * call, as `antenna_tip_as` shares `antenna_tip_fp`'s in the file; a spike
+ * given its own `skin` wears it in place of the call's — the aft antennae
+ * are chitin where the fore are violet, and the four are one call because
+ * of that shared lamp.
+ */
+export function aimedSpikes(root, { spike: spikeMat, tip: tipMat }, { spikes: list }) {
+  const tips = new Map();
+  const up = new THREE.Vector3(0, 1, 0);
+  list.forEach(({ name, skin = spikeMat, radii, facets = 5, from, to, tip }) => {
+    const A = new THREE.Vector3(...from);
+    const B = new THREE.Vector3(...to);
+    const d = B.clone().sub(A);
+    const q = new THREE.Quaternion().setFromUnitVectors(up, d.clone().normalize());
+    const e = new THREE.Euler().setFromQuaternion(q, 'XYZ');
+    const mid = A.clone().add(B).multiplyScalar(0.5).toArray();
+    const placement = drawn(mid, [e.x, e.y, e.z]);
+    part(root, name, cyl(radii[0], radii[1], d.length(), facets), skin, placement);
+    if (tip) {
+      const geo = tip.buffer ? tips.get(tip.buffer) : box(tip.size, tip.size, tip.size);
+      tips.set(tip.name, geo);
+      part(root, tip.name, geo, tipMat, drawn(to));
+    }
+  });
+}
+
+/**
+ * Walking limbs: the Submersible's "folded manipulator limbs" — seven,
+ * four to port and three to starboard, `limb_${side}_${n}`, each a femur
+ * box and a claw box in `edge_red` so the claws glow faintly. One rule
+ * places all seven, read off the file: the femur is `femur` [wide, thick]
+ * by the limb's own `length`, at `at` in the export's frame, folded
+ * `fold.femur` (pitched 0.35, rolled 1.15 outboard); the claw is `claw`
+ * [wide, thick] by `clawRatio` of that length, `offset` outboard, down and
+ * forward of the femur, folded `fold.claw` (pitched back 2.1, yawed 0.25
+ * and rolled 0.35 outboard). Outboard is +x to port on this export, so a
+ * starboard limb's roll, yaw and outboard offset change sign. The lengths
+ * and the femur stations are each limb's own.
+ */
+export function walkingLimbs(root, { chitin, red }, opts) {
+  const {
+    femur = [0.07, 0.06],
+    claw = [0.045, 0.04],
+    clawRatio = 0.6,
+    offset = [0.16, -0.08, 0.14],
+    fold = { femur: [0.35, 1.15], claw: [-2.1, 0.25, 0.35] },
+    limbs: list,
+  } = opts;
+  list.forEach(({ side, n, length, at: [x, y, z] }) => {
+    const sgn = side === 'port' ? 1 : -1;
+    part(
+      root,
+      `limb_${side}_${n}_femur`,
+      box(femur[0], length, femur[1]),
+      chitin,
+      drawn([x, y, z], [fold.femur[0], 0, sgn * fold.femur[1]])
+    );
+    part(
+      root,
+      `limb_${side}_${n}_claw`,
+      box(claw[0], length * clawRatio, claw[1]),
+      red,
+      drawn(
+        [x + sgn * offset[0], y + offset[1], z + offset[2]],
+        [fold.claw[0], sgn * fold.claw[1], sgn * fold.claw[2]]
+      )
+    );
+  });
 }
 
 export { THREE };

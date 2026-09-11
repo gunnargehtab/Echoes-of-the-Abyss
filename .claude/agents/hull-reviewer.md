@@ -76,6 +76,13 @@ Judge what it prints:
   of scope even when it looks better.
 - A **reorder** matters even when every part kept its shape, because `check.mjs`
   compares in order.
+- A **material's finish** is not something `diff.mjs` reads (#646): run
+  `node tools/hull-models/parts.mjs` on the approved binary (`git show <rev>:<path>`)
+  and on the port's output and compare the material lines — base, metalness, roughness,
+  emissive and its strength — and the node lines' names and order.
+- A part named `_p`, `port` or `_port` at +z, or `_s` at -z, is a finding since #642:
+  port is -z. The one allowed exception is a relabel that keeps every buffer in the
+  file's order and turns only the names round, which the PR must say it did.
 
 **2. The intake report.** Run the `hull-intake` skill, or read the run the author
 already did, and check `meta.json` rather than the summary: scale against the design

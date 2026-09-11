@@ -191,33 +191,41 @@ export function bowArray(root, { alloy, crystal, seam, node }, opts) {
  * A thin swept wing, port and starboard, with a lit outboard edge.
  *
  * `plate` lands an outline's second coordinate on **-z** (kit.mjs), so the
- * outline is drawn at `-sgn` to put the port plate at +z beside the port
- * edge. Written without the sign, `wing_p` and `wing_edge_p` sat on opposite
- * sides of the hull: invisible on a symmetric pair, and the Reciter's
- * three-part wing is where a bounds comparison stops agreeing (#586).
+ * outline is drawn at `-sgn` to put the starboard plate at +z beside the
+ * starboard edge. Written without the sign, `wing_p` and `wing_edge_p` sat
+ * on opposite sides of the hull: invisible on a symmetric pair, and the
+ * Reciter's three-part wing is where a bounds comparison stops agreeing
+ * (#586).
  *
- * The rung's wings are given as an `outline` — the port half's plan, `[x, z]`
- * with z positive, drawn through `plan` so the side is the side it names —
+ * The rung's wings are given as an `outline` — the starboard half's plan,
+ * `[x, z]` with z positive, drawn through `plan` so the side is the side it
+ * names —
  * rather than parametrised, because each is a swept quadrilateral no
  * aft/chord/span form can say, and its `edge` is a second plan hugging the
  * tip rather than a box. `y` centres the plate. A `lamp` (the Reciter's) or a
  * `canard` (the Clarion's) is drawn *inside* each side's group, because the
- * approved files write `wing_p wing_edge_p canard_p` before the starboard
- * three and `check.mjs` compares in order; `name` and `edgeName` are for the
+ * approved files write the +z three — `wing_s wing_edge_s canard_s`, since
+ * #642 turned the names round — before the port three and `check.mjs`
+ * compares in order; `name` and `edgeName` are for the
  * Cantus, whose wings are guard blades. Given no outline, the Responsory's
  * wing is exactly what it was.
+ *
+ * The Chorister's guards and canards are the same pairs without an edge —
+ * `edge` left out draws none — and `seated` (see `plane`) stands each plate
+ * on its node's height as the early pass did; the canard takes its own
+ * `seated` if it says so, and the wing's otherwise (#649).
  */
 export function wings(root, { alloy, crystal, seam }, opts) {
   const { aft, fwd, inner, outer, tipChord = 8.5, t = 0.9 } = opts;
-  const { outline = null, y = t, edge, lamp = null, canard = null, name = 'wing' } = opts;
-  const { edgeName = `${name}_edge` } = opts;
+  const { outline = null, y = t, edge = null, lamp = null, canard = null, name = 'wing' } = opts;
+  const { edgeName = `${name}_edge`, seated = false } = opts;
   bothSides((side, sgn) => {
     if (outline) {
-      plane(root, `${name}_${side}`, alloy, { outline, t, y }, sgn);
-      plane(root, `${edgeName}_${side}`, crystal, edge, sgn);
+      plane(root, `${name}_${side}`, alloy, { outline, t, y, seated }, sgn);
+      if (edge) plane(root, `${edgeName}_${side}`, crystal, edge, sgn);
       if (lamp)
         add(root, `${name}_lamp_${side}`, box(...lamp.size), seam, [lamp.x, lamp.y, sgn * lamp.z]);
-      if (canard) plane(root, `canard_${side}`, alloy, canard, sgn);
+      if (canard) plane(root, `canard_${side}`, alloy, { seated, ...canard }, sgn);
       return;
     }
     add(
@@ -263,9 +271,20 @@ export function canards(root, alloy, { from, to, inner, outer, t = 0.7 }) {
   );
 }
 
-/** The vertical blades: a dorsal fin above and, but for the Cantus, a keel below; `t` is the blade's thickness. */
+/**
+ * The vertical blades: a dorsal fin above and, but for the Cantus, a keel
+ * below; `t` is the blade's thickness. Given `fin.outline` — its plan,
+ * `[x, z]` in the file's own order — the fin is instead a plate stood on
+ * its base and extruded `fin.height` up from `fin.y` (`plane`, seated): the
+ * early pass's Chorister raised its fin from a plan rather than boxing it,
+ * twelve unshared triangles where a box has twelve indexed, and a port keeps
+ * the buffer (chorister-hadron.glb, #649).
+ */
 export function finAndKeel(root, alloy, { fin, keel = null, t = 0.6 }) {
-  add(root, 'dorsal_fin', box(fin.length, fin.height, t), alloy, [fin.x, fin.y, 0]);
+  if (fin.outline) {
+    const { outline, height, y } = fin;
+    plane(root, 'dorsal_fin', alloy, { outline, t: height, y, seated: true }, 1);
+  } else add(root, 'dorsal_fin', box(fin.length, fin.height, t), alloy, [fin.x, fin.y, 0]);
   if (keel) add(root, 'keel', box(keel.length, keel.height, t), alloy, [keel.x, keel.y, 0]);
 }
 
@@ -382,10 +401,15 @@ export function panelSeams(root, alloy, { from, to, count, halfBeam }) {
  * `[height, beam]` as multiples of the lathe radius. `[0.55, 1.5]` is a square
  * on its corner pressed into the blade every rung hull is, and the reason
  * none of them reads as a tube from above.
+ *
+ * `x` places the spar along the hull. The rung's three draw every station
+ * absolute and leave it at 0; the Chorister's three segments are one spar
+ * drawn at three stations, its own profile about its own middle, and each
+ * node carries the station (chorister-hadron.glb, #649).
  */
-export function spar(root, name, mat, { profile, facets = 4, y = 0, flat = [1, 1] }) {
+export function spar(root, name, mat, { profile, facets = 4, x = 0, y = 0, flat = [1, 1] }) {
   const geo = loft(profile, facets, Math.PI / facets);
-  return add(root, name, geo, mat, [0, y, 0], [0, 0, 0], [1, flat[0], flat[1]]);
+  return add(root, name, geo, mat, [x, y, 0], [0, 0, 0], [1, flat[0], flat[1]]);
 }
 
 /**
@@ -393,17 +417,38 @@ export function spar(root, name, mat, { profile, facets = 4, y = 0, flat = [1, 1
  * half-diagonal `r`, laid along the hull with its tip forward. The rung's
  * emitter and its core, the muzzle, the bow prism and the drive are all this
  * shape; the Cantus's apex is the same pyramid stood on its base.
+ *
+ * `tipUp` is the early pass's cut of the same point: born with its apex on
+ * +y (`cyl(0, r, …)`) and laid forward by -π/2, where the rung's three are
+ * born apex-down and laid by +π/2. The eight triangles land on the same
+ * vertices with the same winding either way — only the buffer's order
+ * differs — and the Chorister's bow and drive prisms keep the file's
+ * (chorister-hadron.glb, #649), because a port reproduces the buffer.
  */
-export function point(root, name, mat, { x, y = 0, r, length }) {
+export function point(root, name, mat, { x, y = 0, r, length, tipUp = false }) {
+  if (tipUp) return add(root, name, cyl(0, r, length, 4), mat, [x, y, 0], [0, 0, -Math.PI / 2]);
   return add(root, name, cyl(r, 0, length, 4), mat, [x, y, 0], [0, 0, Math.PI / 2]);
 }
 
-/** A thin plane from its port plan `outline`, `t` thick, centred at `y`, drawn on `sgn`'s side. */
-function plane(root, name, mat, { outline, t, y }, sgn) {
+/**
+ * A thin plane from its starboard plan `outline`, `t` thick, centred at `y`,
+ * drawn on `sgn`'s side. `seated` stands it on y = 0 instead — the slab from
+ * 0 to `t` — which is where the early pass left the Chorister's five plates,
+ * their node carrying the height (chorister-hadron.glb, #649). The mirrored
+ * side comes out exactly as that file has it, and for a reason worth
+ * knowing: `plan` closes its path, so the outline reaches ExtrudeGeometry
+ * with its first point repeated, and a mirrored outline — now
+ * counter-clockwise — is reversed *before* that duplicate is dropped, so the
+ * `_p` contour keeps the `_s` contour's first point and walks the other
+ * way. The approved plates were built through the same call, and a port
+ * that wrote the mirrored points by hand would re-cut every lid.
+ */
+function plane(root, name, mat, { outline, t, y, seated = false }, sgn) {
   const geo = plan(
     outline.map(([x, z]) => [x, sgn * z]),
     t
   );
+  if (seated) geo.translate(0, t / 2, 0);
   return add(root, name, geo, mat, [0, y, 0]);
 }
 
@@ -411,7 +456,7 @@ function plane(root, name, mat, { outline, t, y }, sgn) {
  * Lit seams ringing the bow horn: `count` boxes of `length` by `section`
  * (`[height, width]`) on an ellipse `halfHeight` by `halfBeam` about the
  * horn's axis at `x`, `y`. Seam 0 sits `phase` radians round from the crown
- * toward port and the rest follow at equal steps the other way — the order
+ * toward starboard and the rest follow at equal steps the other way — the order
  * the approved Clarion numbers its own. Each is rolled to lie flat on its
  * facet and then turned `skew` radians about its own radial axis, so the ring
  * spirals a little and dives into the horn toward the lip; the approved model
@@ -925,9 +970,91 @@ export const scoutInk = {
  * short and stood on end, a nozzle when it tapers astern — squashed flat by
  * its node's scale. "Blade-like, crystalline silhouettes" (Block 2) is a
  * facet count, and on this hull the count is four.
+ *
+ * The four Z-long kinds behind the scout (#649) are the same prism at their
+ * own sizes, with two more readings of it. `facets` is eight on the
+ * Submersible's pressure hull — its three lengths of hull, four pressure
+ * bands and bow tip are one drum drawn rounder, and "heavy segmented
+ * pressure carapace" said the Order's way is a faceted tube — and four
+ * everywhere else. `upright` leaves the prism standing on the export's y
+ * exactly as its buffer holds it, and `fore` is then the +y end: the guard
+ * wings of the Corvette and the Cruiser, and their edges, were drawn as
+ * struts between two points — a cylinder born on y and carried to the tip
+ * by a full three-axis Euler on the node — and a port keeps the buffer and
+ * the node rather than turning the one to simplify the other.
  */
-export function prism(root, mat, { name, fore, aft, length, ...placement }) {
-  return part(root, name, cyl(fore, aft, length, 4).rotateX(Math.PI / 2), mat, placement);
+export function prism(root, mat, opts) {
+  const { name, fore, aft, length, facets = 4, upright = false, ...placement } = opts;
+  const geo = cyl(fore, aft, length, facets);
+  return part(root, name, upright ? geo : geo.rotateX(Math.PI / 2), mat, placement);
+}
+
+/**
+ * The Submersible's palette: the scout's three claddings to the value, and
+ * the same crystal-glow seam banked to 1.1 — the one resting light on a hull
+ * that idles at SIG 22 and is "born to crush depth" (docs/asset-prompts-3d.md,
+ * the Abyssal Submersible block, read with the Hadron FACTION block). Values
+ * are the approved export's own (abyssal-submersible-hadron.glb, #649).
+ */
+export const submersibleInk = {
+  ...scoutInk,
+  crystalSeam: () => lamp('crystal_seam', hex('#C9A6FF'), hex('#C9A6FF'), 0.3, 1.1),
+};
+
+/**
+ * The Cruiser's palette: the scout's two claddings, and two lamps of its own
+ * on the crystal-glow base — a core glow that is the token through and
+ * through at 4.5, on the dorsal and ventral spines, the fork crystals of
+ * the hydrophone masts and the drive, and a panel glow a shade deeper
+ * (#9B6CF9) at 3.2 on the eight facet panels along the flanks. "Sustained
+ * glow from vents, sensor arrays and lit ports — this is a loud ship and it
+ * looks it" (the Cruiser block); these are the strongest lamps on any Order
+ * hull, and the bake caps both at 1 (kit.mjs `lamp`). Values are the
+ * approved export's own (cruiser-hadron.glb, #649).
+ */
+export const cruiserInk = {
+  shadowIndigo: scoutInk.shadowIndigo,
+  paleAlloy: scoutInk.paleAlloy,
+  crystalCoreGlow: () => lamp('crystal_core_glow', hex('#C9A6FF'), hex('#C9A6FF'), 0.3, 4.5),
+  crystalPanelGlow: () => lamp('crystal_panel_glow', hex('#9B6CF9'), hex('#C9A6FF'), 0.3, 3.2),
+};
+
+/**
+ * The mirrored pair as the four Z-long shared-kind exports draw one — `_p`
+ * first, at the export's +x, and `_s` its mirror across it — is the kit's
+ * `flanks`/`flank` (#649): it was written here first, the Consortium's
+ * module grew the same one, and two copies of a side rule is what #642 was
+ * about. Re-exported so the Order's hulls read as one vocabulary.
+ */
+export { flanks, flank } from '../kit.mjs';
+
+/**
+ * The Chorister's cage: four struts of alloy holding the bladder's segments
+ * in line — "grown chitin over a pressure bladder" (the Chorister block)
+ * said the Order's way is a bladder held in a frame. Each is a four-facet
+ * rod tapering from `r[0]` at its head to `r[1]` at its foot, `length`
+ * long, born standing on y, at ±`at[0]` along the hull and ±`at[2]` across
+ * it at height `at[1]`, leaned `lean` about x toward the centreline —
+ * numbered aft first and the +z one of each pair first, which is how the
+ * approved file counts them (chorister-hadron.glb, #649). An X-long export,
+ * so nothing here is yawed.
+ */
+export function cage(root, alloy, { r, length, at, lean }) {
+  [
+    [-1, 1],
+    [-1, -1],
+    [1, 1],
+    [1, -1],
+  ].forEach(([sx, sz], i) =>
+    add(
+      root,
+      `cage_strut_${i}`,
+      cyl(r[0], r[1], length, 4),
+      alloy,
+      [sx * at[0], at[1], sz * at[2]],
+      [-sz * lean, 0, 0]
+    )
+  );
 }
 
 export { THREE };

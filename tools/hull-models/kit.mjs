@@ -378,11 +378,68 @@ export function strut(root, name, a, b, mat, t = 0.8) {
   return mesh;
 }
 
-/** Mirror a builder across the keel: called once with +1 and once with -1. */
+/**
+ * Mirror a builder across the keel: called once a side, with the side's tag
+ * and its sign. **`p` is port, and port is -z; `s` is starboard, +z.** The
+ * kit's frame has the bow on +X and Y up, so +z is the right-hand side of a
+ * hull facing forward — the word means what it says at sea, and it means
+ * the same thing here (#642). It is the side the sprite and the conn view
+ * put on a ship's right when it heads right across the screen, the side
+ * `outlines.mjs` cuts first, and the side every prompt block means by
+ * "starboard".
+ *
+ * It was the other way round until #642: this helper handed `p` the +z
+ * side, and the eleven hulls built through it before then — Bulwark,
+ * Cantus, Clarion, Derrick, Dredge, Precentor, Reciter, Responsory, Sower,
+ * Spinner, Tender — carried the mirrored names into their approved files,
+ * while the four Light Scouts, and the twenty shared-kind exports behind
+ * them, name their sides the nautical way (port at the export's +x, which
+ * `drawn` lands on -z). Two conventions in the same four modules meant the
+ * next author would "fix" a scout to match the helper or the helper to match
+ * a scout, and either is a change to what a model is, since `check.mjs`
+ * compares names. So the helper turned round and the eleven were re-run as
+ * a relabel: starboard is drawn first, because +z is the side the first
+ * call always drew, which leaves every buffer of every one of the eleven
+ * byte-identical to its approved binary and changes only the node names.
+ * Where a script chose a side by its tag — the Tender's patches, the
+ * Precentor's ranks, the Dredge's claw and boom — the tag was swapped so the
+ * part stayed where the approved model has it. The four Choristers, X-long
+ * exports of the same early pass, carry the same mirrored names and were
+ * relabelled the same way in their ports, as were the Commune Harvester's
+ * two feed tendrils, the one pair on a Z-long export named the other way.
+ * What the relabel showed about two of those models against their prompt
+ * blocks is on #642. `hadron.pair` is the turrets' own `r`/`l`, the
+ * export's, and not this.
+ */
 export function bothSides(fn) {
+  fn('s', 1);
+  fn('p', -1);
+}
+
+/**
+ * The mirrored pair as the Z-long shared-kind exports draw one (#649): `p`
+ * first, at the export's +x — which `drawn` below lands on the kit's -z,
+ * port, so the name and the side agree — and `s` its mirror. Every pair on
+ * the sixteen Z-long exports of the five shared kinds writes its `_p` before
+ * its `_s`, singly or a whole assembly at a time, and `check.mjs` compares
+ * in the file's order, so a port of one cannot use `bothSides`, which draws
+ * starboard first for the eleven relabelled hulls' sake. `sgn` is the sign
+ * of the export's x; `flank` turns it into a placement.
+ */
+export function flanks(fn) {
   fn('p', 1);
   fn('s', -1);
 }
+
+/**
+ * A pair's placement on `sgn`'s flank from its `_p` numbers: `drawn` of the
+ * export's translation with x on that side, and the y and z angles with it,
+ * which is the mirror of an XYZ Euler across the export's x (`hadron.sided`
+ * says the same of the turrets' `r`/`l`). Every pair on the Order's four
+ * Z-long shared kinds decomposes exactly so.
+ */
+export const flank = (sgn, [x, y, z], [a = 0, b = 0, c = 0] = [], s) =>
+  drawn([sgn * x, y, z], [a, sgn * b, sgn * c], s);
 
 export function bounds(root) {
   root.updateMatrixWorld(true);
@@ -706,7 +763,8 @@ export function yawed(geo) {
  * survive the turn, pitch changes sign, and the order follows the axes
  * round. So a part the export drew at its +x — every `_p` on all four
  * scouts — lands on the kit's -z, because that is where the file has it and
- * a port reproduces the file, not the name.
+ * a port reproduces the file, not the name; and -z is port (`bothSides`
+ * above, #642), so on a shared-kind export the name and the side agree.
  */
 export function drawn(t = [0, 0, 0], e = [0, 0, 0], s = [1, 1, 1]) {
   return {
@@ -724,6 +782,25 @@ export function drawn(t = [0, 0, 0], e = [0, 0, 0], s = [1, 1, 1]) {
 export function part(root, name, geo, mat, placement = {}) {
   const { at = [0, 0, 0], rot = [0, 0, 0], scale = [1, 1, 1] } = placement;
   return add(root, name, yawed(geo), mat, at, rot, scale);
+}
+
+/**
+ * A point light, as the r184 shared-kind exports carry them beside their
+ * lamps (`KHR_lights_punctual`): two on the Commune's Corvette and
+ * Harvester, three on its Cruiser, two named a side on both Submersibles.
+ * No mesh, so nothing any gate reads — the bake renders every pass unlit,
+ * and `readGlb`, `lightAudit` and `check.mjs` read meshes — but a loader
+ * instantiates one and the conn view loads the file with it, so a port
+ * writes the file's back at its own colour, intensity and range and chooses
+ * none. r169's exporter writes a `PointLight` exactly as r184 wrote these;
+ * `at` is in the kit's frame, as `drawn` gives it.
+ */
+export function pointLight(root, { name, color, intensity, range, at }) {
+  const light = new THREE.PointLight(new THREE.Color(...color), intensity, range);
+  if (name) light.name = name;
+  light.position.set(...at);
+  root.add(light);
+  return light;
 }
 
 /**
