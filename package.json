@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "preflight": "node tools/preflight-deps.mjs",
+    "gates": "node tools/gates.mjs",
     "dev": "npm run preflight && npm run build:shared && concurrently -n backend,frontend -c cyan,magenta \"npm -w packages/backend run dev\" \"npm -w packages/frontend run dev\"",
     "build:shared": "npm -w packages/shared run build",
     "build": "npm run preflight && npm run build:shared && npm -w packages/frontend run build && npm -w packages/backend run build",

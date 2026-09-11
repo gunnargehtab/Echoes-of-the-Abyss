@@ -58,6 +58,7 @@ Run everything from the repository root.
 | Lint | `npm run lint` |
 | Formatting check / fix | `npm run format:check` / `npm run format` |
 | Hull scripts ↔ GLBs ↔ outlines agree | `npm run check:models` |
+| Every blocking gate, in one pass | `npm run gates` |
 
 Single workspace: `npm -w packages/backend run dev`, `npm -w packages/frontend run dev`,
 `npm -w packages/shared run test`.
@@ -71,6 +72,19 @@ npx -y markdownlint-cli "docs/**/*.md" "docs/*.md" --ignore node_modules
 git ls-files -z ':(glob)docs/**/*.md' \
   | xargs -0 npx -y markdown-link-check --config .markdown-link-check.json
 ```
+
+`npm run gates` is those two plus every other blocking check in
+`.github/workflows/ci.yml`, run in one pass and summarised: one exit code for "this branch
+would pass CI". It is the finish line to work against — a condition a machine can settle,
+rather than a judgement about whether the work looks done — which is what makes it the
+sensible thing to hand a `/goal`. It does not stop at the first failure, so one run tells
+you everything that is red; `--bail` when you want the old behaviour, `--only=` and
+`--skip=` while you iterate on a single gate, `--list` to see their names.
+
+Not every task has such a finish line, and inventing one is worse than not having one.
+Exploratory and design work does not get a gate that can settle it, and **nothing about
+balance does** — see the freeze above. A green `npm run gates` says the tree is sound. It
+never says a number is right.
 
 **Node 22+ is required.** The backend dev and test scripts use `node --import tsx` and the
 stable `node:test` runner, and CI pins Node 22. Older runtimes fail with errors that do not
